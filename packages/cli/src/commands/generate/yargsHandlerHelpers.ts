@@ -11,14 +11,15 @@ import path from 'node:path'
 
 import { camelCase } from 'change-case'
 import { Listr } from 'listr2'
-import type { ListrTask } from 'listr2'
+import type { ListrDefaultRendererValue, ListrTask } from 'listr2'
 import pascalcase from 'pascalcase'
-import type { Argv, Options, PositionalOptions } from 'yargs'
+import type { Options, PositionalOptions } from 'yargs'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { ensurePosixPath, getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
+// @ts-expect-error - Types not available for JS files
 import { generateTemplate, getPaths, writeFilesTask } from '../../lib/index.js'
 import { prepareForRollback } from '../../lib/rollback.js'
 
@@ -31,7 +32,7 @@ import {
 } from './yargsCommandHelpers.js'
 
 interface CustomOrDefaultTemplatePathArgs {
-  side: 'web' | 'api'
+  side: 'web' | 'api' | 'scripts'
   generator: string
   templatePath: string
 }
@@ -65,12 +66,8 @@ export const customOrDefaultTemplatePath = ({
 
   // Old, deprecated, custom template path, e.g.
   // /path/to/app/web/generators/page/page.tsx.template
-  const deprecatedCustomPath = getPaths()[side as 'web' | 'api'].generators
-    ? path.join(
-        getPaths()[side as 'web' | 'api'].generators as string,
-        generator,
-        templatePath,
-      )
+  const deprecatedCustomPath = getPaths()[side].generators
+    ? path.join(getPaths()[side].generators as string, generator, templatePath)
     : undefined
 
   if (fs.existsSync(customPath)) {
@@ -109,20 +106,12 @@ export const templateForFile = async ({
   templateVars,
 }: TemplateForFileArgs): Promise<[string, string]> => {
   const sideBase = getPaths()[side]
-  let basePath: string
-  if (sidePathSection) {
-    const value = Object.entries(sideBase).find(
-      ([k]) => k === sidePathSection,
-    )?.[1]
-    if (typeof value !== 'string') {
-      throw new Error(
-        `Unknown or non-string path section: "${sidePathSection}"`,
-      )
-    }
-    basePath = value
-  } else {
-    basePath = sideBase.src
+  const basePath = sidePathSection ? sideBase[sidePathSection] : sideBase
+
+  if (typeof basePath !== 'string') {
+    throw new Error(`Invalid path section: "${sidePathSection}"`)
   }
+
   const fullOutputPath = path.join(basePath, outputPath)
   const fullTemplatePath = customOrDefaultTemplatePath({
     generator,
@@ -237,7 +226,14 @@ export function createHandler({
     try {
       argv = await preTasksFn(argv)
 
-      const tasks = new Listr(
+      const listrOptions = {
+        exitOnError: true,
+        ...(argv.verbose
+          ? { renderer: 'verbose' as const }
+          : { rendererOptions: { collapseSubtasks: false } }),
+      }
+
+      const tasks = new Listr<unknown, 'verbose' | ListrDefaultRendererValue>(
         [
           {
             title: `Generating ${componentName} files...`,
@@ -248,28 +244,31 @@ export function createHandler({
           },
           ...includeAdditionalTasks(argv),
         ],
-        {
-          rendererOptions: { collapseSubtasks: false },
-          exitOnError: true,
-          renderer: argv.verbose ? 'verbose' : undefined,
-        },
+        listrOptions,
       )
 
       if (argv.rollback && !argv.force) {
         prepareForRollback(tasks)
       }
+
       await tasks.run()
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e)
-      const exitCode =
-        e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
-          ? e.exitCode
-          : 1
+
       errorTelemetry(process.argv, message)
       console.error(c.error(message))
-      process.exit(exitCode)
+      process.exit(errorExitCode(e))
     }
   }
+}
+
+function errorExitCode(e: unknown) {
+  return typeof e === 'object' &&
+    e !== null &&
+    'exitCode' in e &&
+    typeof e.exitCode === 'number'
+    ? e.exitCode
+    : 1
 }
 
 interface CreateYargsForComponentGenerationConfig {

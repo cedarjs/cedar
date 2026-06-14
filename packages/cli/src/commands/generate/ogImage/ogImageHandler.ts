@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import fg from 'fast-glob'
 import { Listr } from 'listr2'
+import type { ListrDefaultRendererValue } from 'listr2'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { ensurePosixPath } from '@cedarjs/project-config'
@@ -13,6 +14,7 @@ import {
   getPaths,
   transformTSToJS,
   writeFilesTask,
+  // @ts-expect-error no types for JS files
 } from '../../../lib/index.js'
 import { prepareForRollback } from '../../../lib/rollback.js'
 import { customOrDefaultTemplatePath } from '../yargsHandlerHelpers.js'
@@ -120,7 +122,14 @@ export const handler = async (options: HandlerOptions) => {
   try {
     await validatePath(normalizedPagePath, extension)
 
-    const tasks = new Listr(
+    const listrOptions = {
+      exitOnError: true,
+      ...(options.verbose
+        ? { renderer: 'verbose' as const }
+        : { rendererOptions: { collapseSubtasks: false } }),
+    }
+
+    const tasks = new Listr<unknown, 'verbose' | ListrDefaultRendererValue>(
       [
         {
           title: `Generating og:image component...`,
@@ -133,25 +142,28 @@ export const handler = async (options: HandlerOptions) => {
           },
         },
       ],
-      {
-        rendererOptions: { collapseSubtasks: false },
-        exitOnError: true,
-        renderer: options.verbose ? 'verbose' : undefined,
-      },
+      listrOptions,
     )
 
     if (options.rollback && !options.force) {
       prepareForRollback(tasks)
     }
+
     await tasks.run()
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
-    const exitCode =
-      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
-        ? e.exitCode
-        : 1
+
     errorTelemetry(process.argv, message)
     console.error(c.error(message))
-    process.exit(exitCode)
+    process.exit(errorExitCode(e))
   }
+}
+
+function errorExitCode(e: unknown) {
+  return typeof e === 'object' &&
+    e !== null &&
+    'exitCode' in e &&
+    typeof e.exitCode === 'number'
+    ? e.exitCode
+    : 1
 }
