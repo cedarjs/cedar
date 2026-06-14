@@ -27,7 +27,6 @@ export default (file: FileInfo, api: API) => {
   // Add `import { validateEmail } from '@my-org/validators'` to the top of the
   // file
   root.get().node.program.body.unshift(validateImport)
-  root.get().node.program.body.unshift(serviceValidationErrorImport)
 
   // Add `import { ServiceValidationError } from '@cedarjs/api'` after the
   // types/graphql import
