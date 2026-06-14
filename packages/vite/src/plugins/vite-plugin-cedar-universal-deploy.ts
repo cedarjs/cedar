@@ -313,8 +313,8 @@ async function bundleDistFile(distPath: string): Promise<string> {
         name: 'ud-external',
         setup(build) {
           build.onResolve({ filter: /^[^.]/ }, (args) => {
-            // Let esbuild resolve absolute paths and node: imports normally
-            if (args.path.startsWith('node:') || args.path.startsWith('/')) {
+            // Let esbuild resolve absolute paths normally
+            if (args.path.startsWith('/')) {
               return
             }
 
@@ -325,7 +325,8 @@ async function bundleDistFile(distPath: string): Promise<string> {
               return
             }
 
-            // Externalize all other bare specifiers (npm packages).
+            // Externalize all other bare specifiers (node: builtins and npm
+            // packages).
             return { external: true }
           })
         },
@@ -381,8 +382,8 @@ async function generateGraphQLModule(distPath: string): Promise<string> {
   // directly, so this legacy handler init is unnecessary and introduces
   // wasteful eager Yoga initialization (plus the Prisma client import) on
   // module load.
-  // Note: no $ anchor — the dead call appears in the middle of the bundled code,
-  // followed by the Lambda-shaped handler wrapper from api/dist/functions/graphql.ts.
+  // Note: the dead call appears in the middle of the bundled code, followed by
+  // the Lambda-shaped handler wrapper from api/dist/functions/graphql.ts.
   const cleanedCode = bundledCode.replace(
     /\n\s*(?:var|const)\s+\w+\s*=\s*createGraphQLHandler\s*\(.*\)\s*;?/,
     '\n',
