@@ -7,11 +7,12 @@ import { vi, describe, afterEach, it, expect } from 'vitest'
 
 import { getConfig } from '@cedarjs/project-config'
 import type * as ProjectConfig from '@cedarjs/project-config'
+import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 import { generatePrismaClient } from '../../../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../../lib/index.js'
-import { getFreePort } from '../../../lib/ports'
+import { getFreePort } from '../../../lib/ports.js'
 import '../../../lib/mockTelemetry.js'
 import { serverFileExists } from '../../../lib/project.js'
 import { handler } from '../devHandler.js'
@@ -74,6 +75,10 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     getConfigPath: vi.fn(() => '/mocked/project/cedar.toml'),
   }
 })
+
+vi.mock('@cedarjs/project-config/packageManager', () => ({
+  getPackageManager: vi.fn(() => 'yarn'),
+}))
 
 vi.mock('../../../lib/generatePrismaClient', () => {
   return {
@@ -283,7 +288,9 @@ describe('yarn cedar dev', () => {
         // test environments (vite sets this in their vite-ecosystem-ci tests)
         .replace(/--max-old-space-size=\d+\s/, ''),
     ).toEqual(
-      'yarn nodemon --quiet --watch "/mocked/project/cedar.toml" --exec "yarn cedar-api-server-watch --port 8911 --debug-port 18911 | cedar-log-formatter"',
+      'yarn nodemon --quiet --watch "/mocked/project/cedar.toml" ' +
+        '--exec "yarn cedar-api-server-watch --port 8911 ' +
+        '--debug-port 18911 | yarn cedar-log-formatter"',
     )
     expect(apiCommand?.env?.NODE_ENV).toEqual('development')
     expect(apiCommand?.env?.NODE_OPTIONS).toContain('--enable-source-maps')
@@ -416,5 +423,47 @@ describe('yarn cedar dev', () => {
     // The configured API port must still be forwarded in the command.
     const { apiCommand } = findSeparateCommands()
     expect(apiCommand?.command).toContain('--port 8911')
+  })
+})
+
+describe('npm and pnpm', () => {
+  afterEach(async () => {
+    // Reset spy counters
+    vi.clearAllMocks()
+    vi.mocked(getPaths).mockReset()
+    vi.mocked(getConfig).mockReset()
+    mockCedarToml = ''
+    vi.mocked(getPackageManager).mockReset()
+    vi.mocked(getPackageManager).mockReturnValue('yarn')
+  })
+
+  it('can generate npm commands', async () => {
+    vi.mocked(getPackageManager).mockReturnValue('npm')
+
+    await handler({ workspace: ['api', 'web'] })
+
+    const { webCommand, apiCommand, generateCommand } = findSeparateCommands()
+
+    // npm uses npx for local binaries
+    expect(webCommand?.command).toContain('npx cross-env')
+    expect(webCommand?.command).toContain('cedar-vite-dev')
+    expect(apiCommand?.command).toContain('npx nodemon')
+    expect(apiCommand?.command).toContain('cedar-api-server-watch')
+    expect(generateCommand?.command).toEqual('npx cedar-gen-watch')
+  })
+
+  it('can generate pnpm commands', async () => {
+    vi.mocked(getPackageManager).mockReturnValue('pnpm')
+
+    await handler({ workspace: ['api', 'web'] })
+
+    const { webCommand, apiCommand, generateCommand } = findSeparateCommands()
+
+    // pnpm uses pnpm exec for local binaries
+    expect(webCommand?.command).toContain('pnpm exec cross-env')
+    expect(webCommand?.command).toContain('cedar-vite-dev')
+    expect(apiCommand?.command).toContain('pnpm exec nodemon')
+    expect(apiCommand?.command).toContain('cedar-api-server-watch')
+    expect(generateCommand?.command).toEqual('pnpm exec cedar-gen-watch')
   })
 })
