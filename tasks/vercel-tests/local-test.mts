@@ -28,7 +28,7 @@ if (args.help) {
   console.log(`Usage: node local-test.mts [--deploy] [--keep]
 
   --deploy, -d   Deploy to Vercel and run tests against live URL
-  --keep, -k     Don't delete the test project directory on exit`)
+  --keep, -k     Don't delete the test project directory or the Vercel project on exit`)
   process.exit(0)
 }
 
@@ -57,9 +57,9 @@ function run(
   return typeof result === 'string' ? result.trim() : ''
 }
 
-function runQuiet(cmd: string): string {
+function runQuiet(cmd: string, opts?: ExecSyncOptions): string {
   try {
-    return run(cmd, { stdio: ['ignore', 'pipe', 'pipe'] })
+    return run(cmd, { stdio: ['ignore', 'pipe', 'pipe'], ...opts })
   } catch {
     return ''
   }
@@ -119,18 +119,55 @@ function step3setupUniversalDeployAndVercel() {
   }
 }
 
-function step4buildApp() {
+function step4SetupNeon() {
+  if (!args.deploy) {
+    return
+  }
+
+  log('Setting up Neon database...')
+  run('rm -rf api/db/migrations', { cwd: testProjectDir })
+  run('yarn cedar setup neon', { cwd: testProjectDir })
+}
+
+function step5buildApp() {
   log('Building app with --ud...')
 
-  process.env.DATABASE_URL = 'file:./db/dev.db'
-  process.env.DIRECT_DATABASE_URL = 'file:./db/dev.db'
+  // Read DATABASE_URL from .env if available (after Neon setup)
+  const envPath = path.join(testProjectDir, '.env')
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf-8')
+    const dbUrl = envContent.match(/^DATABASE_URL=(.+)$/m)?.[1]
+    const directDbUrl = envContent.match(/^DIRECT_DATABASE_URL=(.+)$/m)?.[1]
+    if (dbUrl) {
+      process.env.DATABASE_URL = dbUrl
+    }
+    if (directDbUrl) {
+      process.env.DIRECT_DATABASE_URL = directDbUrl
+    }
+    if (dbUrl) {
+      log(`Using DATABASE_URL from .env (Neon)`)
+    }
+  } else {
+    process.env.DATABASE_URL = 'file:./db/dev.db'
+    process.env.DIRECT_DATABASE_URL = 'file:./db/dev.db'
+  }
 
   run('yarn cedar build --ud --apiRootPath=/.api/functions --no-prerender', {
     cwd: testProjectDir,
   })
 }
 
-function step5verifyOutput() {
+function step6RunMigrations() {
+  if (!args.deploy) {
+    return
+  }
+
+  log('Running Prisma migrations...')
+  run('yarn cedar prisma migrate deploy', { cwd: testProjectDir })
+  run('yarn cedar data-migrate up', { cwd: testProjectDir })
+}
+
+function step7verifyOutput() {
   log('Verifying .vercel/output/ structure...')
 
   const vercelOut = path.join(testProjectDir, '.vercel', 'output')
@@ -203,7 +240,7 @@ function step5verifyOutput() {
   files.sort().forEach((f) => console.log(f))
 }
 
-async function step6deploy() {
+async function step8deploy() {
   if (!args.deploy) {
     console.log()
     log('Skipping deploy (run with --deploy to deploy to Vercel)')
@@ -226,7 +263,46 @@ async function step6deploy() {
     vercelFlag = `--token ${process.env.VERCEL_TOKEN}`
   }
 
-  // Deploy (creates project if it doesn't exist)
+  // Create Vercel project (ignore error if already exists)
+  log(`Creating Vercel project: ${testProjectName}...`)
+  runQuiet(`npx vercel project add "${testProjectName}" ${vercelFlag}`)
+
+  // Link the project so env commands work
+  log('Linking Vercel project...')
+  runQuiet(
+    `npx vercel link --project "${testProjectName}" --yes ${vercelFlag}`,
+    { cwd: testProjectDir },
+  )
+
+  // Set DATABASE_URL as Vercel project environment variables
+  const envPath = path.join(testProjectDir, '.env')
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf-8')
+    const dbUrl = envContent.match(/^DATABASE_URL=(.+)$/m)?.[1]
+    const directDbUrl = envContent.match(/^DIRECT_DATABASE_URL=(.+)$/m)?.[1]
+    if (dbUrl) {
+      log('Setting DATABASE_URL on Vercel project...')
+      runQuiet(
+        `echo "$CEDAR_DB_URL" | npx vercel env add DATABASE_URL production --yes ${vercelFlag}`,
+        {
+          cwd: testProjectDir,
+          env: { ...process.env, CEDAR_DB_URL: dbUrl },
+        },
+      )
+    }
+    if (directDbUrl) {
+      log('Setting DIRECT_DATABASE_URL on Vercel project...')
+      runQuiet(
+        `echo "$CEDAR_DIRECT_DB_URL" | npx vercel env add DIRECT_DATABASE_URL production --yes ${vercelFlag}`,
+        {
+          cwd: testProjectDir,
+          env: { ...process.env, CEDAR_DIRECT_DB_URL: directDbUrl },
+        },
+      )
+    }
+  }
+
+  // Deploy
   log('Deploying to Vercel...')
   try {
     run(
@@ -262,15 +338,21 @@ async function step6deploy() {
   ok('All tests passed!')
 
   // Cleanup Vercel project
-  log(`Cleaning up Vercel project: ${testProjectName}`)
-  runQuiet(
-    `echo "y" | npx vercel projects rm "${testProjectName}" ${vercelFlag}`,
-  )
+  if (args.keep) {
+    log(`Keeping Vercel project: ${testProjectName}`)
+  } else {
+    log(`Cleaning up Vercel project: ${testProjectName}`)
+    runQuiet(
+      `echo "y" | npx vercel projects rm "${testProjectName}" ${vercelFlag}`,
+    )
+  }
 }
 
 step1buildPackages()
 step2setupTestProject()
 step3setupUniversalDeployAndVercel()
-step4buildApp()
-step5verifyOutput()
-await step6deploy()
+step4SetupNeon()
+step5buildApp()
+step6RunMigrations()
+step7verifyOutput()
+await step8deploy()

@@ -70,6 +70,14 @@ jobs:
           ls .vercel/output/functions/ 2>/dev/null || echo "No functions directory"
           cat .vercel/output/config.json 2>/dev/null | head -20 || echo "No config.json"
 
+      - name: 🔑 Set DATABASE_URL on Vercel project
+        working-directory: ../cedar-test-app
+        run: |
+          DATABASE_URL="$(sed -n 's/^DATABASE_URL=//p' .env)"
+          DIRECT_DATABASE_URL="$(sed -n 's/^DIRECT_DATABASE_URL=//p' .env)"
+          echo "$DATABASE_URL" | npx vercel env add DATABASE_URL production --token "$VERCEL_TOKEN" --yes || echo "DATABASE_URL already set or failed"
+          echo "$DIRECT_DATABASE_URL" | npx vercel env add DIRECT_DATABASE_URL production --token "$VERCEL_TOKEN" --yes || echo "DIRECT_DATABASE_URL already set or failed"
+
       - name: 🚀 Deploy to Vercel
         id: vercel-deploy
         working-directory: ../cedar-test-app
