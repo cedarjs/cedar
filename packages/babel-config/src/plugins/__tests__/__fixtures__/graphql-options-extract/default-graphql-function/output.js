@@ -4,7 +4,7 @@ import sdls from 'src/graphql/**/*.sdl.{js,ts}'
 import services from 'src/services/**/*.{js,ts}'
 import { db } from 'src/lib/db'
 import { logger } from 'src/lib/logger'
-export const __rw_graphqlOptions = {
+export const __cedar_graphqlOptions = {
   loggerConfig: {
     logger,
     options: {},
@@ -17,4 +17,4 @@ export const __rw_graphqlOptions = {
     db.$disconnect()
   },
 }
-export const handler = createGraphQLHandler(__rw_graphqlOptions)
+export const handler = createGraphQLHandler(__cedar_graphqlOptions)

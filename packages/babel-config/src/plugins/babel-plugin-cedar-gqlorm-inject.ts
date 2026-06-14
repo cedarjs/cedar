@@ -161,10 +161,10 @@ export default function ({ types: t }: { types: typeof types }): PluginObj {
         //
         // We use Object.assign (mutate in-place) rather than
         //   sdls = { ...sdls, __gqlorm__: ... }
-        // because pluginRedwoodGraphqlOptionsExtract has already run and
-        // captured `sdls` by reference inside __rw_graphqlOptions:
-        //   const __rw_graphqlOptions = { ..., sdls, ... }
-        // Both __rw_graphqlOptions.sdls and the `sdls` variable point at the
+        // because pluginCedarGraphqlOptionsExtract has already run and captured
+        // `sdls` by reference inside __cedar_graphqlOptions:
+        //   const __cedar_graphqlOptions = { ..., sdls, ... }
+        // Both __cedar_graphqlOptions.sdls and the `sdls` variable point at the
         // same object, so mutating it in-place ensures createGraphQLHandler
         // sees the __gqlorm__ addition.
         const sdlsMutation = t.expressionStatement(
