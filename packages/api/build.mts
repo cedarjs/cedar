@@ -14,6 +14,7 @@ const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8')) as {
 if (!pkg.version) {
   throw new Error('build error: No version specified')
 }
+
 if (!pkg.dependencies['@prisma/client']) {
   throw new Error('build error: @prisma/client is not available')
 }
