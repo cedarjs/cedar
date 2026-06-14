@@ -15,9 +15,9 @@ import {
   registerBabel,
 } from './common.js'
 import pluginCedarGqlormInject from './plugins/babel-plugin-cedar-gqlorm-inject.js'
+import pluginCedarGraphqlOptionsExtract from './plugins/babel-plugin-cedar-graphql-options-extract.js'
 import pluginRedwoodContextWrapping from './plugins/babel-plugin-redwood-context-wrapping.js'
 import pluginRedwoodDirectoryNamedImport from './plugins/babel-plugin-redwood-directory-named-import.js'
-import pluginRedwoodGraphqlOptionsExtract from './plugins/babel-plugin-redwood-graphql-options-extract.js'
 import pluginRedwoodImportDir from './plugins/babel-plugin-redwood-import-dir.js'
 import pluginRedwoodJobPathInjector from './plugins/babel-plugin-redwood-job-path-injector.js'
 import pluginRedwoodOTelWrapping from './plugins/babel-plugin-redwood-otel-wrapping.js'
@@ -175,7 +175,7 @@ export const getApiSideBabelOverrides = ({ projectIsEsm = false } = {}) => {
     {
       // match */api/src/functions/graphql.js|ts
       test: /.+api(?:[\\|/])src(?:[\\|/])functions(?:[\\|/])graphql\.(?:js|ts)$/,
-      plugins: [pluginRedwoodGraphqlOptionsExtract, pluginCedarGqlormInject],
+      plugins: [pluginCedarGraphqlOptionsExtract, pluginCedarGqlormInject],
     },
     // Apply context wrapping to all functions
     {

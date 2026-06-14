@@ -6,7 +6,7 @@ import services from 'src/services/**/*.{js,ts}'
 import { db } from 'src/lib/db'
 import { executionContext } from 'src/lib/executionContext'
 import { logger } from 'src/lib/logger'
-export const __rw_graphqlOptions = {
+export const __cedar_graphqlOptions = {
   loggerConfig: {
     logger,
     options: {},
@@ -19,7 +19,7 @@ export const __rw_graphqlOptions = {
     db.$disconnect()
   },
 }
-const graphQLHandler = someOtherFunctionName(__rw_graphqlOptions)
+const graphQLHandler = someOtherFunctionName(__cedar_graphqlOptions)
 export const handler = async (event, context) => {
   const requestIdHeader = 'x-request-id'
   const requestId = event.headers[requestIdHeader] ?? scuid()

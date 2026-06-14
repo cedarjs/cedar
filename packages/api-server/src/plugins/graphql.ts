@@ -53,16 +53,16 @@ export async function redwoodFastifyGraphQLServer(
 
       // This comes from a babel plugin that's applied to
       // api/dist/functions/graphql.{ts,js} in user projects
-      const { __rw_graphqlOptions } = await import(filePath)
+      const { __cedar_graphqlOptions } = await import(filePath)
 
-      if (!__rw_graphqlOptions) {
+      if (!__cedar_graphqlOptions) {
         // Our babel plugin couldn't find any grapqhql config options, so we
         // assume the user is doing their own thing.
         // Return here and skip creating a Cedar specific server
         return
       }
 
-      redwoodOptions.graphql = __rw_graphqlOptions as GraphQLYogaOptions
+      redwoodOptions.graphql = __cedar_graphqlOptions as GraphQLYogaOptions
     }
 
     const graphqlOptions = redwoodOptions.graphql

@@ -129,8 +129,9 @@ async function internalLoadApiFunctions(viteServer: ViteDevServer) {
         )
       }
 
-      if (routeName === 'graphql' && '__rw_graphqlOptions' in mod) {
-        extractedGraphqlOptions = mod.__rw_graphqlOptions as GraphQLYogaOptions
+      if (routeName === 'graphql' && '__cedar_graphqlOptions' in mod) {
+        extractedGraphqlOptions =
+          mod.__cedar_graphqlOptions as GraphQLYogaOptions
       }
     } catch (err) {
       viteServer.ssrFixStacktrace(err as Error)

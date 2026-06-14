@@ -34,9 +34,9 @@ const config = {
 /**
  * Comments...
  */
-export const __rw_graphqlOptions = process.env.EVIL
+export const __cedar_graphqlOptions = process.env.EVIL
   ? config
   : {
       sadness: true,
     }
-export const handler = createGraphQLHandler(__rw_graphqlOptions)
+export const handler = createGraphQLHandler(__cedar_graphqlOptions)
