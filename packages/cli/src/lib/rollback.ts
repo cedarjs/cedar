@@ -1,6 +1,13 @@
 import fs from 'node:fs'
 import path from 'path'
 
+import type {
+  Listr,
+  ListrRendererFactory,
+  ListrRendererValue,
+  ListrTaskFn,
+} from 'listr2'
+
 interface RollbackStepFunc {
   type: 'func'
   func: () => unknown
@@ -54,18 +61,21 @@ export function addFileToRollback(filePath: string, atEnd = false) {
 /**
  * Executes a rollback by processing the contents of the rollback stack
  *
- * @param {object|null} [ctx=null] - The listr2 ctx
- * @param {object|null} [task=null] - The listr2 task
+ * @param _ - The listr2 ctx (not used)
+ * @param task - The listr2 task
  */
-export async function executeRollback(
-  _: unknown = null,
-  task: { title: string; task: { message: { error: string } } } | null = null,
-) {
+export const executeRollback: ListrTaskFn<
+  any,
+  ListrRendererFactory,
+  ListrRendererFactory
+> = async (_, task) => {
   if (task) {
     task.title = 'Reverting generator actions...'
   }
+
   while (rollback.length > 0) {
     const step = rollback.pop() as RollbackStep
+
     switch (step.type) {
       case 'func':
         await step.func()
@@ -75,10 +85,13 @@ export async function executeRollback(
           fs.unlinkSync(step.path)
           // Remove any empty parent/grandparent directories, only need 2 levels so just do it manually
           let parent = path.dirname(step.path)
+
           if (parent !== '.' && fs.readdirSync(parent).length === 0) {
             fs.rmdirSync(parent)
           }
+
           parent = path.dirname(parent)
+
           if (parent !== '.' && fs.readdirSync(parent).length === 0) {
             fs.rmdirSync(parent)
           }
@@ -91,6 +104,7 @@ export async function executeRollback(
         break
     }
   }
+
   if (task) {
     task.title = `Reverted because: ${task.task.message?.error ?? 'unknown error'}`
   }
@@ -107,9 +121,11 @@ export function resetRollback() {
  * Resets the current rollback stack and assigns all of the tasks to have a
  * listr2 rollback function which call {@link executeRollback}
  */
-export function prepareForRollback(tasks: {
-  tasks?: { task: { rollback: typeof executeRollback } }[]
-}) {
+export function prepareForRollback<
+  Ctx,
+  Renderer extends ListrRendererValue,
+  FallbackRenderer extends ListrRendererValue,
+>(tasks: Listr<Ctx, Renderer, FallbackRenderer>) {
   resetRollback()
   tasks.tasks?.forEach((task) => {
     task.task.rollback = executeRollback

@@ -12,11 +12,8 @@ import {
   transformTSToJS,
   // @ts-expect-error - Types not available for JS files
 } from '../../../lib/index.js'
-// @ts-expect-error - Types not available for JS files
 import { prepareForRollback } from '../../../lib/rollback.js'
-// @ts-expect-error - Types not available for JS files
 import { validateName } from '../helpers.js'
-// @ts-expect-error - Types not available for JS files
 import { customOrDefaultTemplatePath } from '../yargsHandlerHelpers.js'
 
 type ScriptArgs = {

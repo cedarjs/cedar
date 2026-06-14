@@ -1,10 +1,11 @@
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
 import { createHandler, getYargsDefaults } from '../yargsCommandHelpers.js'
 
 export const command = 'script <name>'
 export const description = 'Generate a command line script'
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   yargs
     .positional('name', {
       description: 'A descriptor of what this script does',
