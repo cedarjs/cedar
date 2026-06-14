@@ -21,7 +21,7 @@ function link(topicId: string, isTerminal = false) {
 export function getEpilogue(
   command: string,
   description: string,
-  topicId: string,
+  topicId?: string,
   isTerminal = false,
 ): string {
   let epilogue =
