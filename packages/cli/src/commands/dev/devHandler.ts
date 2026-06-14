@@ -12,13 +12,11 @@ import { generateGqlormArtifacts } from '@cedarjs/internal/dist/generate/gqlormS
 import { getConfig, getConfigPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-// @ts-expect-error - Types not available for JS files
 import { exitWithError } from '../../lib/exit.js'
 import { generatePrismaClient } from '../../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../lib/index.js'
 import { getFreePort } from '../../lib/ports.js'
-// @ts-expect-error - Types not available for JS files
 import { serverFileExists } from '../../lib/project.js'
 
 import { getApiDebugFlag } from './apiDebugFlag.js'
@@ -50,26 +48,22 @@ export const handler = async ({
   const serverFile = serverFileExists()
 
   const apiPreferredPort = parseInt(String(getConfig().api.port))
-  let apiAvailablePort: number | undefined
+  // This can forward the configured port even though we don't know it's free.
+  let apiAvailablePort = apiPreferredPort
   let apiPortChangeNeeded = false
 
-  if (workspace.includes('api')) {
-    if (!serverFile) {
-      // Check api port availability. If there's a serverFile we don't know
-      // what port will end up being used — it's up to the author to decide.
-      apiAvailablePort = await getFreePort(apiPreferredPort)
+  if (workspace.includes('api') && !serverFile) {
+    // Check api port availability. If there's a serverFile we don't know what
+    // port will end up being used — it's up to the author to decide.
+    apiAvailablePort = await getFreePort(apiPreferredPort)
 
-      if (apiAvailablePort === -1) {
-        exitWithError(undefined, {
-          message: `Could not determine a free port for the api server`,
-        })
-      }
-
-      apiPortChangeNeeded = apiAvailablePort !== apiPreferredPort
-    } else {
-      // Forward the configured port even though we don't verify it's free.
-      apiAvailablePort = apiPreferredPort
+    if (apiAvailablePort === -1) {
+      exitWithError(undefined, {
+        message: `Could not determine a free port for the api server`,
+      })
     }
+
+    apiPortChangeNeeded = apiAvailablePort !== apiPreferredPort
   }
 
   let webPreferredPort: number | undefined = parseInt(
@@ -162,6 +156,12 @@ export const handler = async ({
     }
 
     if (!ud && !serverFile) {
+      if (typeof apiAvailablePort === 'undefined' || apiAvailablePort === -1) {
+        exitWithError(undefined, {
+          message: `Could not determine a free port for the api server`,
+        })
+      }
+
       try {
         await shutdownPort(apiAvailablePort)
       } catch (e) {
@@ -321,7 +321,10 @@ export const handler = async ({
         command: formatRunBinCommand('nodemon', [
           '--quiet',
           `--watch "${cedarConfigPath}"`,
-          `--exec "${formatRunBinCommand(serverWatchCommand)} --port ${apiAvailablePort} ${getApiDebugFlag(apiDebugPort, apiAvailablePort)} | cedar-log-formatter"`,
+          `--exec "${formatRunBinCommand(serverWatchCommand)} ` +
+            `--port ${apiAvailablePort} ` +
+            `${getApiDebugFlag(apiDebugPort, apiAvailablePort)} ` +
+            `| ${formatRunBinCommand('cedar-log-formatter')}"`,
         ]),
         env: {
           NODE_ENV: 'development',

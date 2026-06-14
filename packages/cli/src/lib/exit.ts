@@ -32,7 +32,7 @@ export function exitWithError(
     includeEpilogue,
     includeReferenceCode,
   }: ExitWithErrorOptions = {},
-) {
+): never {
   // Set the default values
   if (error && typeof error === 'object' && 'exitCode' in error) {
     exitCode ??= typeof error.exitCode === 'number' ? error.exitCode : 1
