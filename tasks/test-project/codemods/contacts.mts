@@ -36,7 +36,7 @@ export default (file: FileInfo, api: API) => {
 
   // Insert this if-statment at the top of the `createContact` service function
   // if (!validateEmail(input.email)) {
-  //   throw new Error('Invalid email')
+  //   throw new ServiceValidationError('Invalid email')
   // } else {
   //   console.log('Creating contact with email:', input.email)
   // }
