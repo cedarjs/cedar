@@ -408,9 +408,9 @@ async function generateGraphQLModule(distPath: string): Promise<string> {
   // createGraphQLYoga directly, so the legacy createGraphQLHandler call and
   // its handler export are unnecessary and would trigger wasteful eager Yoga
   // initialization (plus the Prisma client import) on module load. By only
-  // requesting __rw_graphqlOptions, esbuild tree-shakes the rest away.
+  // requesting __cedar_graphqlOptions, esbuild tree-shakes the rest away.
   const bundledCode = await bundleDistFile(distPath, {
-    include: ['__rw_graphqlOptions'],
+    include: ['__cedar_graphqlOptions'],
   })
 
   return `
