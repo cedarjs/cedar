@@ -1,4 +1,5 @@
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
 import { isTypeScriptProject } from '../../../lib/project.js'
 import { createHandler } from '../yargsCommandHelpers.js'
@@ -6,7 +7,7 @@ import { createHandler } from '../yargsCommandHelpers.js'
 export const description = 'Generate an og:image component'
 export const command = 'og-image <path>'
 export const aliases = ['ogImage', 'ogimage']
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   yargs
     .positional('path', {
       description: `Path to the page to create the og:image component for (ex: \`Products/ProductPage\`)`,

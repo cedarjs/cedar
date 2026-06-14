@@ -15,8 +15,6 @@ export interface NodeTargetPaths {
   functions: string
   graphql: string
   lib: string
-  /** @deprecated - Please use the root `generatorTemplates` directory */
-  generators: string
   services: string
   subscriptions: string
   config: string
@@ -37,8 +35,6 @@ export interface WebPaths {
   storybook: string
   app: string
   document: string
-  /** @deprecated - Please use the root `generatorTemplates` directory */
-  generators: string
   html: string
   routes: string
   pages: string
@@ -172,7 +168,6 @@ export function getPaths(BASE_DIR: string = getBaseDir()) {
       functions: path.join(BASE_DIR, 'api/src/functions'),
       graphql: path.join(BASE_DIR, 'api/src/graphql'),
       lib: path.join(BASE_DIR, 'api/src/lib'),
-      generators: path.join(BASE_DIR, 'api/generators'),
       config: path.join(BASE_DIR, 'api/src/config'),
       services: path.join(BASE_DIR, 'api/src/services'),
       directives: path.join(BASE_DIR, 'api/src/directives'),
@@ -199,7 +194,6 @@ export function getPaths(BASE_DIR: string = getBaseDir()) {
       layouts: path.join(BASE_DIR, 'web/src/layouts/'),
       src: path.join(BASE_DIR, 'web/src'),
       storybook: path.join(BASE_DIR, 'web/.storybook'),
-      generators: path.join(BASE_DIR, 'web/generators'),
       app: resolveFile(path.join(BASE_DIR, 'web/src/App')) as string,
       document: resolveFile(path.join(BASE_DIR, 'web/src/Document')) as string,
       html: path.join(BASE_DIR, 'web/index.html'),

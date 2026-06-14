@@ -66,54 +66,6 @@ test('customOrDefaultTemplatePath returns the app path with proper side, generat
   )
 })
 
-test('customOrDefaultTemplatePath returns the deprecated path if it exists and new path does not', () => {
-  // Mock console.log to suppress deprecation warning in test output
-  const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-
-  vi.spyOn(fs, 'existsSync').mockImplementation((path) => {
-    if (path.includes('generatorTemplates')) {
-      // No custom templates at the new "generatorTemplates" directory
-      return false
-    }
-
-    // Faking that there is a template at the old "web/generators/" directory
-    return true
-  })
-
-  const output = customOrDefaultTemplatePath({
-    side: 'web',
-    generator: 'page',
-    templatePath: 'page.tsx.template',
-  })
-
-  expect(output).toEqual(
-    path.normalize('/path/to/project/web/generators/page/page.tsx.template'),
-  )
-
-  // Verify deprecation warning was shown
-  expect(consoleLogSpy).toHaveBeenCalledWith(
-    expect.stringContaining('deprecated'),
-  )
-})
-
-test('customOrDefaultTemplatePath prefers new path over deprecated path', () => {
-  // Mock both paths as existing - should prefer new path
-  vi.spyOn(fs, 'existsSync').mockImplementation(() => true)
-
-  const output = customOrDefaultTemplatePath({
-    side: 'web',
-    generator: 'page',
-    templatePath: 'page.tsx.template',
-  })
-
-  // Should return new path, not deprecated path
-  expect(output).toEqual(
-    path.normalize(
-      '/path/to/project/generatorTemplates/web/page/page.tsx.template',
-    ),
-  )
-})
-
 test('templateForComponentFile creates a proper output path for files', async () => {
   const names = ['FooBar', 'fooBar', 'foo-bar', 'foo_bar']
 

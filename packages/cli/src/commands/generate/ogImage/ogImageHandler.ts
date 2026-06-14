@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import fg from 'fast-glob'
 import { Listr } from 'listr2'
+import type { ListrDefaultRendererValue } from 'listr2'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { ensurePosixPath } from '@cedarjs/project-config'
@@ -13,11 +14,20 @@ import {
   getPaths,
   transformTSToJS,
   writeFilesTask,
+  // @ts-expect-error no types for JS files
 } from '../../../lib/index.js'
 import { prepareForRollback } from '../../../lib/rollback.js'
 import { customOrDefaultTemplatePath } from '../yargsHandlerHelpers.js'
 
-export const files = async ({ pagePath, typescript = false }) => {
+interface FilesOptions {
+  pagePath: string
+  typescript?: boolean
+}
+
+export const files = async ({
+  pagePath,
+  typescript = false,
+}: FilesOptions): Promise<Record<string, string>> => {
   const extension = typescript ? '.tsx' : '.jsx'
   const componentOutputPath = path.join(
     getPaths().web.pages,
@@ -44,7 +54,7 @@ export const files = async ({ pagePath, typescript = false }) => {
   }
 }
 
-export const normalizedPath = (pagePath) => {
+export const normalizedPath = (pagePath: string): string => {
   const parts = pagePath.split('/')
 
   // did it start with a leading `pages/`?
@@ -66,7 +76,15 @@ export const normalizedPath = (pagePath) => {
   }
 }
 
-export const validatePath = async (pagePath, extension, options) => {
+interface ValidatePathOptions {
+  fs?: typeof fs
+}
+
+export const validatePath = async (
+  pagePath: string,
+  extension: string,
+  options?: ValidatePathOptions,
+): Promise<true> => {
   const finalPath = `${pagePath}.${extension}`
 
   // Optionally pass in a file system to make things easier to test!
@@ -82,7 +100,15 @@ export const validatePath = async (pagePath, extension, options) => {
   return true
 }
 
-export const handler = async (options) => {
+interface HandlerOptions {
+  path: string
+  typescript: boolean
+  verbose: boolean
+  rollback: boolean
+  force: boolean
+}
+
+export const handler = async (options: HandlerOptions) => {
   recordTelemetryAttributes({
     command: `generate og-image`,
     verbose: options.verbose,
@@ -96,7 +122,14 @@ export const handler = async (options) => {
   try {
     await validatePath(normalizedPagePath, extension)
 
-    const tasks = new Listr(
+    const listrOptions = {
+      exitOnError: true,
+      ...(options.verbose
+        ? { renderer: 'verbose' as const }
+        : { rendererOptions: { collapseSubtasks: false } }),
+    }
+
+    const tasks = new Listr<unknown, 'verbose' | ListrDefaultRendererValue>(
       [
         {
           title: `Generating og:image component...`,
@@ -109,20 +142,28 @@ export const handler = async (options) => {
           },
         },
       ],
-      {
-        rendererOptions: { collapseSubtasks: false },
-        exitOnError: true,
-        renderer: options.verbose && 'verbose',
-      },
+      listrOptions,
     )
 
     if (options.rollback && !options.force) {
       prepareForRollback(tasks)
     }
+
     await tasks.run()
   } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+    const message = e instanceof Error ? e.message : String(e)
+
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    process.exit(errorExitCode(e))
   }
+}
+
+function errorExitCode(e: unknown) {
+  return typeof e === 'object' &&
+    e !== null &&
+    'exitCode' in e &&
+    typeof e.exitCode === 'number'
+    ? e.exitCode
+    : 1
 }

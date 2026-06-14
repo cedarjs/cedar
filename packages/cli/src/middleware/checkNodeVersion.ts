@@ -2,12 +2,22 @@ import semver from 'semver'
 
 import { colors as c } from '@cedarjs/cli-helpers'
 
-export function checkNodeVersion() {
-  const checks = { ok: true }
+interface NodeVersionCheck {
+  ok: boolean
+  message?: string
+}
+
+export function checkNodeVersion(): NodeVersionCheck {
+  const checks: NodeVersionCheck = { ok: true }
 
   const pVersion = process.version
   const pVersionC = semver.clean(pVersion)
   const LOWER_BOUND = 'v24.0.0'
+
+  if (!pVersionC) {
+    // If semver can't parse the version string, let it through
+    return checks
+  }
 
   if (semver.gte(pVersionC, LOWER_BOUND)) {
     return checks
