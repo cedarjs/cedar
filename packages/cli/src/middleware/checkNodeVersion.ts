@@ -14,7 +14,7 @@ export function checkNodeVersion(): NodeVersionCheck {
   const pVersionC = semver.clean(pVersion)
   const LOWER_BOUND = 'v24.0.0'
 
-  if (semver.gte(pVersionC, LOWER_BOUND)) {
+  if (pVersionC && semver.gte(pVersionC, LOWER_BOUND)) {
     return checks
   }
 
