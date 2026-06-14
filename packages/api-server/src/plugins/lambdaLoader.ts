@@ -51,7 +51,7 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
   const imports = foundFunctions.map(async (fnPath) => {
     const ts = Date.now()
     const routeName = path.basename(fnPath).replace('.js', '')
-    const routePath = routeName === 'graphql' ? '/graphql' : `/${routeName}`
+    const routePath = `/${routeName}`
 
     const fnImport = await import(pathToFileURL(fnPath).href)
     const handler: Handler | undefined = (() => {
