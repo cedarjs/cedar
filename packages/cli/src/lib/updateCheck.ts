@@ -6,9 +6,10 @@ import boxen from 'boxen'
 import latestVersion from 'latest-version'
 import semver from 'semver'
 
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { getConfig } from '@cedarjs/project-config'
+import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
-// @ts-expect-error - Types not available for JS files
 import { spawnBackgroundProcess } from './background.js'
 import { isLockSet, setLock, unsetLock } from './locking.js'
 
@@ -182,8 +183,7 @@ function getUpdateMessage() {
   const localTag = extractTagFromVersion(data.localVersion) || 'latest'
 
   let updateCount = 0
-  let message =
-    ' New updates to Cedar are available via `yarn cedar upgrade#REPLACEME#` '
+  let message = ` New updates to Cedar are available via \`${formatCedarCommand(['upgrade#REPLACEME#'])}\` `
   data.remoteVersions.forEach((version, tag) => {
     if (semver.gt(version, data.localVersion)) {
       updateCount += 1
@@ -304,10 +304,24 @@ export function updateCheckMiddleware(argv: { _: (string | number)[] }) {
   // notification based on stale local/remote versions in the same run.
   if (shouldCheck()) {
     setLock(CHECK_LOCK_IDENTIFIER)
-    spawnBackgroundProcess('updateCheck', 'yarn', [
-      'node',
-      path.join(import.meta.dirname, 'updateCheckExecute.js'),
-    ])
+    const pm = getPackageManager()
+    const [bgCmd, ...bgArgs] =
+      pm === 'npm'
+        ? ['node', [path.join(import.meta.dirname, 'updateCheckExecute.js')]]
+        : pm === 'pnpm'
+          ? [
+              'pnpm',
+              [
+                'exec',
+                'node',
+                path.join(import.meta.dirname, 'updateCheckExecute.js'),
+              ],
+            ]
+          : [
+              'yarn',
+              ['node', path.join(import.meta.dirname, 'updateCheckExecute.js')],
+            ]
+    spawnBackgroundProcess('updateCheck', bgCmd, bgArgs)
   } else if (shouldShow()) {
     setLock(SHOW_LOCK_IDENTIFIER)
     process.on('exit', () => {

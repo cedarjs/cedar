@@ -1,6 +1,7 @@
 import execa from 'execa'
 
 import { colors as c } from '@cedarjs/cli-helpers'
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { getPaths } from '@cedarjs/project-config'
 
 export const deployHandler = ({ build, prisma, dm: dataMigrate }) => {
@@ -8,13 +9,13 @@ export const deployHandler = ({ build, prisma, dm: dataMigrate }) => {
 
   let commandSet = []
   if (build) {
-    commandSet.push('yarn cedar build --verbose')
+    commandSet.push(formatCedarCommand(['build', '--verbose']))
   }
   if (prisma) {
-    commandSet.push('yarn cedar prisma migrate deploy')
+    commandSet.push(formatCedarCommand(['prisma', 'migrate', 'deploy']))
   }
   if (dataMigrate) {
-    commandSet.push('yarn cedar data-migrate up')
+    commandSet.push(formatCedarCommand(['data-migrate', 'up']))
   }
 
   const joinedCommands = commandSet.join(' && ')

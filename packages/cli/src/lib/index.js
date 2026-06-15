@@ -16,6 +16,10 @@ import { format } from 'prettier'
 
 import { colors as c } from '@cedarjs/cli-helpers'
 import {
+  addRootPackages,
+  addWorkspacePackages,
+} from '@cedarjs/cli-helpers/packageManager/packages'
+import {
   getConfig as getRedwoodConfig,
   getPaths as getRedwoodPaths,
   resolveFile as internalResolveFile,
@@ -521,32 +525,18 @@ export const addPackagesTask = async ({
     }
   })
 
-  let installCommand
-  // if web,api
-  if (side !== 'project') {
-    installCommand = [
-      'yarn',
-      [
-        'workspace',
-        side,
-        'add',
-        devDependency && '--dev',
-        ...packagesWithSameRWVersion,
-      ].filter(Boolean),
-    ]
-  } else {
-    installCommand = [
-      'yarn',
-      ['add', devDependency && '--dev', ...packagesWithSameRWVersion].filter(
-        Boolean,
-      ),
-    ]
-  }
-
   return {
     title: `Adding dependencies to ${side}`,
     task: async () => {
-      await execa(...installCommand)
+      if (side !== 'project') {
+        await addWorkspacePackages(side, packagesWithSameRWVersion, {
+          dev: devDependency,
+        })
+      } else {
+        await addRootPackages(packagesWithSameRWVersion, {
+          dev: devDependency,
+        })
+      }
     },
   }
 }

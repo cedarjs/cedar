@@ -9,17 +9,27 @@ import { Listr } from 'listr2'
 import prompts from 'prompts'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import {
+  formatAddRootPackagesCommand,
+  formatRunBinCommand,
+} from '@cedarjs/cli-helpers/packageManager/display'
+import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 
 import { getPaths } from '../../lib/index.js'
 
 export const preRequisites = () => [
   {
     title: 'Checking if Serverless framework is installed...',
-    command: ['yarn serverless', ['--version']],
-    errorMessage: [
-      'Looks like Serverless is not installed.',
-      'Please run yarn add -W --dev serverless.',
-    ],
+    task: async () => {
+      try {
+        await runBin('serverless', ['--version'], { shell: true })
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error)
+        throw new Error(
+          `${msg}\nLooks like Serverless is not installed.\nPlease run ${formatAddRootPackagesCommand(['serverless'], true)}.`,
+        )
+      }
+    },
   },
 ]
 
@@ -27,7 +37,9 @@ export const buildCommands = ({ sides }) => {
   return [
     {
       title: `Building ${sides.join(' & ')}...`,
-      command: ['yarn', ['cedar', 'build', ...sides]],
+      task: async () => {
+        await runBin('cedar', ['build', ...sides], { shell: true })
+      },
     },
     {
       title: 'Packing Functions...',
@@ -50,7 +62,7 @@ export const deployCommands = ({ stage, sides, firstRun, packOnly }) => {
     return {
       title: `Deploying ${side}....`,
       task: async () => {
-        await execa('yarn', ['serverless', 'deploy', ...slsStage], {
+        await runBin('serverless', ['deploy', ...slsStage], {
           cwd: path.join(getPaths().base, side),
           shell: true,
           stdio: 'inherit',
@@ -114,8 +126,9 @@ export const handler = async (yargs) => {
 
       console.log(SETUP_MARKER, c.success('Starting first setup wizard...'))
 
-      const { stdout: slsInfo } = await execa(
-        `yarn serverless info --verbose --stage=${yargs.stage}`,
+      const { stdout: slsInfo } = await runBin(
+        'serverless',
+        ['info', '--verbose', `--stage=${yargs.stage}`],
         {
           shell: true,
           cwd: getPaths().api.base,
@@ -172,8 +185,9 @@ export const handler = async (yargs) => {
         // Deploy the web side now that the API_URL has been configured
         await webDeployTasks.run()
 
-        const { stdout: slsInfo } = await execa(
-          `yarn serverless info --verbose --stage=${yargs.stage}`,
+        const { stdout: slsInfo } = await runBin(
+          'serverless',
+          ['info', '--verbose', `--stage=${yargs.stage}`],
           {
             shell: true,
             cwd: getPaths().web.base,
@@ -188,7 +202,7 @@ export const handler = async (yargs) => {
           `View your deployed site at: ${c.success(deployedWebUrl)}`,
           '',
           'You can use serverless.com CI/CD by connecting/creating an app',
-          'To do this run `yarn serverless` on each of the sides, and connect your account',
+          `To do this run \`${formatRunBinCommand('serverless')}\` on each of the sides, and connect your account`,
           '',
           'Find more information in our docs:',
           c.underline('https://cedarjs.com/docs/deploy#serverless'),
