@@ -68,12 +68,16 @@ describe('getPostRunInstructions', () => {
 
   test('shows yarn cedar command for yarn', () => {
     vi.mocked(getPackageManager).mockReturnValue('yarn')
-    expect(generator.getPostRunInstructions()).toContain('yarn cedar dataMigrate up')
+    expect(generator.getPostRunInstructions()).toContain(
+      'yarn cedar dataMigrate up',
+    )
   })
 
   test('shows npx cedar command for npm', () => {
     vi.mocked(getPackageManager).mockReturnValue('npm')
-    expect(generator.getPostRunInstructions()).toContain('npx cedar dataMigrate up')
+    expect(generator.getPostRunInstructions()).toContain(
+      'npx cedar dataMigrate up',
+    )
   })
 
   test('shows pnpm exec cedar command for pnpm', () => {
