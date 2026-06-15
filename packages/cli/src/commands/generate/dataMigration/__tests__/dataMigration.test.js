@@ -62,7 +62,6 @@ test('can generate a TS file with expected contents', async () => {
 
 describe('getPostRunInstructions', () => {
   afterEach(() => {
-    vi.mocked(getPackageManager).mockReset()
     vi.mocked(getPackageManager).mockReturnValue('yarn')
   })
 
