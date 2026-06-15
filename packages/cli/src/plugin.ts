@@ -1,4 +1,4 @@
-import type { Argv } from 'yargs'
+import type { Argv, CommandModule } from 'yargs'
 
 import { getConfig } from './lib/index.js'
 import {
