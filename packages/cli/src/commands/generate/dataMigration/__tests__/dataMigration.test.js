@@ -2,7 +2,9 @@ globalThis.__dirname = __dirname
 import path from 'path'
 import '../../../../lib/test'
 
-import { afterEach, test, expect } from 'vitest'
+import { afterEach, describe, test, expect, vi } from 'vitest'
+
+import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 import * as generator from '../dataMigration.js'
 
@@ -56,4 +58,31 @@ test('can generate a TS file with expected contents', async () => {
   const files = await generator.files({ name: 'MoveUser', typescript: true })
   const filename = Object.keys(files)[0]
   expect(files[filename]).toMatchSnapshot()
+})
+
+describe('getPostRunInstructions', () => {
+  afterEach(() => {
+    vi.mocked(getPackageManager).mockReturnValue('yarn')
+  })
+
+  test('shows yarn cedar command for yarn', () => {
+    vi.mocked(getPackageManager).mockReturnValue('yarn')
+    expect(generator.getPostRunInstructions()).toContain(
+      'yarn cedar dataMigrate up',
+    )
+  })
+
+  test('shows npx cedar command for npm', () => {
+    vi.mocked(getPackageManager).mockReturnValue('npm')
+    expect(generator.getPostRunInstructions()).toContain(
+      'npx cedar dataMigrate up',
+    )
+  })
+
+  test('shows pnpm exec cedar command for pnpm', () => {
+    vi.mocked(getPackageManager).mockReturnValue('pnpm')
+    expect(generator.getPostRunInstructions()).toContain(
+      'pnpm exec cedar dataMigrate up',
+    )
+  })
 })

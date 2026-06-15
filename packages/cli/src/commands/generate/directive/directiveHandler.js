@@ -1,9 +1,9 @@
 import camelcase from 'camelcase'
-import execa from 'execa'
 import { Listr } from 'listr2'
 import prompts from 'prompts'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 import { getConfig } from '@cedarjs/project-config'
 
 import { writeFilesTask, transformTSToJS } from '../../../lib/index.js'
@@ -137,10 +137,10 @@ export const handler = async (args) => {
         task: () => {
           // Regenerate again at the end if we rollback changes
           addFunctionToRollback(async () => {
-            await execa('yarn', ['cedar-gen'], { stdio: 'pipe' })
+            await runBin('cedar-gen', [], { stdio: 'pipe' })
           }, true)
 
-          return execa('yarn', ['cedar-gen'], { stdio: 'inherit' })
+          return runBin('cedar-gen', [], { stdio: 'inherit' })
         },
       },
       {
