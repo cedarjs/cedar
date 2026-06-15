@@ -18,7 +18,13 @@ import {
 } from './setupReactCompiler.js'
 import { printTaskEpilogue } from './util.js'
 
-export const handler = async ({ force, verbose }) => {
+export const handler = async ({
+  force,
+  verbose,
+}: {
+  force: boolean
+  verbose: boolean
+}) => {
   const rwPaths = getPaths()
   const configTomlPath = getConfigPath()
   const configFileName = path.basename(configTomlPath)
@@ -46,7 +52,10 @@ export const handler = async ({ force, verbose }) => {
           )
           const reactVersion = webPkgJson['dependencies']['react']
           const coercedReactVersion = semver.coerce(reactVersion)
-          if (!semver.gte(coercedReactVersion, '19.0.0')) {
+          if (
+            !coercedReactVersion ||
+            !semver.gte(coercedReactVersion, '19.0.0')
+          ) {
             throw new Error(
               'You need to be using at least React version 19 to enable the React Compiler',
             )
@@ -128,8 +137,13 @@ export const handler = async ({ force, verbose }) => {
   try {
     await tasks.run()
   } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+    const message = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    process.exit(exitCode)
   }
 }

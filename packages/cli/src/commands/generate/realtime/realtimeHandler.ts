@@ -21,7 +21,7 @@ import {
 import { isTypeScriptProject } from '../../../lib/project.js'
 import { isRealtimeSetup, isServerFileSetup } from '../../experimental/util.js'
 
-const templateVariables = (name) => {
+const templateVariables = (name: string) => {
   name = pluralize.singular(name.toLowerCase())
 
   return {
@@ -42,7 +42,19 @@ const templateVariables = (name) => {
   }
 }
 
-export async function handler({ name, type, force, verbose, silent }) {
+export async function handler({
+  name,
+  type,
+  force,
+  verbose,
+  silent,
+}: {
+  name: string
+  type?: string
+  force: boolean
+  verbose: boolean
+  silent: boolean
+}) {
   const cedarPaths = getPaths()
   const ts = isTypeScriptProject()
   name = pluralize.singular(name.toLowerCase())
@@ -77,7 +89,8 @@ export async function handler({ name, type, force, verbose, silent }) {
       {
         title: 'Checking for realtime environment prerequisites ...',
         task: () => {
-          isServerFileSetup() && isRealtimeSetup()
+          isServerFileSetup()
+          isRealtimeSetup()
         },
       },
       {
@@ -255,8 +268,13 @@ export async function handler({ name, type, force, verbose, silent }) {
   try {
     await tasks.run()
   } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+    const message = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    process.exit(exitCode)
   }
 }

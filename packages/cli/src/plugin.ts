@@ -1,18 +1,29 @@
+import type { Argv, CommandModule } from 'yargs'
+
+// @ts-expect-error - No types for JS files
 import { getConfig } from './lib/index.js'
 import {
   loadCommandCache,
   checkPluginListAndWarn,
   saveCommandCache,
   loadPluginPackage,
+  // @ts-expect-error - No types for JS files
 } from './lib/plugin.js'
+
+type PluginCommandCache = {
+  _builtin: string[]
+  [packageName: string]:
+    | Record<string, { aliases?: string[]; description?: string }>
+    | string[]
+}
 
 /**
  * Attempts to load all CLI plugins as defined in the cedar.toml file
  *
- * @param {*} yargs A yargs instance
+ * @param yargs A yargs instance
  * @returns The yargs instance with plugins loaded
  */
-export async function loadPlugins(yargs) {
+export async function loadPlugins(yargs: Argv): Promise<Argv> {
   // Extract some useful information from the command line args
   const namespaceIsExplicit = process.argv[2]?.startsWith('@')
   const namespaceInUse =
@@ -28,9 +39,10 @@ export async function loadPlugins(yargs) {
     return yargs
   }
 
-  // TODO: We should have some mechanism to fetch the cache from an online or precomputed
-  // source this will allow us to have a cache hit on the first run of a command
-  const pluginCommandCache = loadCommandCache()
+  // TODO: We should have some mechanism to fetch the cache from an online or
+  // precomputed source this will allow us to have a cache hit on the first run
+  // of a command
+  const pluginCommandCache = loadCommandCache() as PluginCommandCache
 
   // Check if the command is built in to the base CLI package
   if (
@@ -46,24 +58,27 @@ export async function loadPlugins(yargs) {
 
   // Plugins are enabled unless explicitly disabled
   const enabledPlugins = plugins.filter(
-    (p) => p.package !== undefined && (p.enabled ?? true),
+    (p: { package?: string; enabled?: boolean }) =>
+      p.package !== undefined && (p.enabled ?? true),
   )
 
   // Print warnings about any invalid plugins
   checkPluginListAndWarn(enabledPlugins)
 
   // Extract some useful information from the enabled plugins
-  const redwoodPackages = new Set()
-  const thirdPartyPackages = new Set()
+  const redwoodPackages = new Set<string>()
+  const thirdPartyPackages = new Set<string>()
   for (const plugin of enabledPlugins) {
     // Skip invalid plugins
     if (!plugin.package) {
       continue
     }
+
     // Skip non-scoped packages
     if (!plugin.package.startsWith('@')) {
       continue
     }
+
     if (plugin.package.startsWith('@cedarjs/')) {
       redwoodPackages.add(plugin.package)
     } else {
@@ -156,7 +171,7 @@ export async function loadPlugins(yargs) {
         yargs.command({
           command: `${namespaceInUse} <command>`,
           describe: `Commands from ${namespaceInUse}`,
-          builder: (yargs) => {
+          builder: (yargs: Argv) => {
             yargs.command(commands).demandCommand()
           },
           handler: () => {},
@@ -178,18 +193,23 @@ export async function loadPlugins(yargs) {
   // Now we need to try to cull based on the namespace and the specific command
 
   // Try to find the package for this command from the cache
-  const packagesToLoad = new Set()
+  const packagesToLoad = new Set<string>()
   for (const [packageName, cacheEntry] of Object.entries(pluginCommandCache)) {
     if (packageName === '_builtin') {
       continue
     }
-    const commandFirstWords = []
-    for (const [command, info] of Object.entries(cacheEntry)) {
+
+    const commandFirstWords: string[] = []
+
+    for (const [command, info] of Object.entries(
+      cacheEntry as Record<string, { aliases?: string[] }>,
+    )) {
       commandFirstWords.push(command.split(' ')[0])
       commandFirstWords.push(
         ...(info.aliases?.map((a) => a.split(' ')[0]) ?? []),
       )
     }
+
     if (
       commandFirstWords.includes(commandFirstWord) &&
       packageName.startsWith(namespaceInUse)
@@ -210,11 +230,11 @@ export async function loadPlugins(yargs) {
     }
   }
 
-  const commandsToRegister = []
+  const commandsToRegister: CommandModule[] = []
   // If we nailed down the package to load we can go ahead and load it now
   if (foundMatchingPackage) {
-    // We'll have to load the plugin package since we may need to actually execute
-    // the command builder/handler functions
+    // We'll have to load the plugin package since we may need to actually
+    // execute the command builder/handler functions
     const packageToLoad = packagesToLoad.values().next().value
     const commands = await loadCommandsFromCacheOrPackage(
       packageToLoad,
@@ -222,11 +242,12 @@ export async function loadPlugins(yargs) {
       autoInstall,
       false,
     )
+
     commandsToRegister.push(...commands)
   } else {
     // It's safe to try and load the plugin information from the cache since any
-    // that are present in the cache didn't match the command we're trying to run
-    // so they'll never be executed and will only be used for help output
+    // that are present in the cache didn't match the command we're trying to
+    // run so they'll never be executed and will only be used for help output
     for (const packageToLoad of packagesToLoad) {
       const commands = await loadCommandsFromCacheOrPackage(
         packageToLoad,
@@ -234,6 +255,7 @@ export async function loadPlugins(yargs) {
         autoInstall,
         true,
       )
+
       commandsToRegister.push(...commands)
     }
   }
@@ -246,7 +268,7 @@ export async function loadPlugins(yargs) {
     yargs.command({
       command: `${namespaceInUse} <command>`,
       describe: `Commands from ${namespaceInUse}`,
-      builder: (yargs) => {
+      builder: (yargs: Argv) => {
         yargs.command(commandsToRegister).demandCommand()
       },
       handler: () => {},
@@ -276,32 +298,56 @@ export async function loadPlugins(yargs) {
 }
 
 async function loadCommandsFromCacheOrPackage(
-  packageName,
-  cache,
-  autoInstall,
-  readFromCache,
-) {
-  let cacheEntry = undefined
+  packageName: string,
+  cache: PluginCommandCache | undefined,
+  autoInstall: boolean,
+  readFromCache: boolean,
+): Promise<CommandModule[]> {
+  let cacheEntry:
+    | Record<string, { aliases?: string[]; description?: string }>
+    | undefined = undefined
+
   if (readFromCache) {
-    cacheEntry = cache !== undefined ? cache[packageName] : undefined
+    cacheEntry =
+      cache !== undefined
+        ? (cache[packageName] as Record<
+            string,
+            { aliases?: string[]; description?: string }
+          >)
+        : undefined
   }
+
   if (cacheEntry !== undefined) {
+    // Cache entries are stubs used only for help output — handler is never called
     const commands = Object.entries(cacheEntry).map(([command, info]) => {
       return {
         command,
         describe: info.description,
         aliases: info.aliases,
-      }
+        handler: () => {},
+      } satisfies CommandModule
     })
+
     return commands
   }
 
   // We'll have to load the plugin package to get the command information
   const plugin = await loadPluginPackage(packageName, undefined, autoInstall)
   if (plugin) {
-    const commands = plugin.commands ?? []
-    const cacheUpdate = {}
-    for (const command of commands) {
+    // Plugin packages export commands with a flat shape (command string, description, aliases).
+    // This is a different shape from yargs CommandModule (which uses 'describe' not 'description').
+    type RawPluginCommand = {
+      command: string
+      aliases?: string[]
+      description?: string
+    }
+    const rawCommands: RawPluginCommand[] = plugin.commands ?? []
+    const cacheUpdate: Record<
+      string,
+      { aliases?: string[]; description?: string }
+    > = {}
+
+    for (const command of rawCommands) {
       const info = {
         aliases: command.aliases,
         description: command.description,
@@ -314,10 +360,12 @@ async function loadCommandsFromCacheOrPackage(
     }
 
     // Only update the entry if we got any cache information
-    if (Object.keys(cacheUpdate).length > 0) {
+    if (cache && Object.keys(cacheUpdate).length > 0) {
       cache[packageName] = cacheUpdate
     }
-    return commands
+
+    // plugin.commands are proper yargs CommandModule objects from the plugin package
+    return (plugin.commands ?? []) as CommandModule[]
   }
 
   // NOTE: If the plugin failed to load there should have been a warning printed

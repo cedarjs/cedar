@@ -1,3 +1,5 @@
+import type { Options } from 'yargs'
+
 import {
   createCommand,
   createDescription,
@@ -10,7 +12,7 @@ export const command = createCommand('cell')
 export const description = createDescription('cell')
 export const builder = createBuilder({
   componentName: 'cell',
-  optionsObj: () => {
+  optionsObj: (): Record<string, Options> => {
     return {
       ...getYargsDefaults(),
       list: {

@@ -6,7 +6,17 @@ import {
 
 const REDWOOD_WEB_PATH_NAME = 'components'
 
-export const files = async ({ name, typescript = false, ...argv }) => {
+export const files = async ({
+  name,
+  typescript = false,
+  ...argv
+}: {
+  name: string
+  typescript?: boolean
+  stories?: boolean
+  tests?: boolean
+  [key: string]: unknown
+}): Promise<Record<string, string>> => {
   const extension = typescript ? '.tsx' : '.jsx'
   const componentFile = await templateForComponentFile({
     name,
@@ -46,18 +56,21 @@ export const files = async ({ name, typescript = false, ...argv }) => {
   //    "path/to/fileA": "<<<template>>>",
   //    "path/to/fileB": "<<<template>>>",
   // }
-  return files.reduce(async (accP, [outputPath, content]) => {
-    const acc = await accP
+  return files.reduce(
+    async (accP, [outputPath, content]) => {
+      const acc = await accP
 
-    const template = typescript
-      ? content
-      : await transformTSToJS(outputPath, content)
+      const template = typescript
+        ? content
+        : await transformTSToJS(outputPath, content)
 
-    return {
-      [outputPath]: template,
-      ...acc,
-    }
-  }, Promise.resolve({}))
+      return {
+        [outputPath]: template,
+        ...acc,
+      }
+    },
+    Promise.resolve({} as Record<string, string>),
+  )
 }
 
 export const handler = createHandler({

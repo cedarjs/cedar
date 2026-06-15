@@ -1,8 +1,9 @@
 import { terminalLink } from 'termi-link'
+import type { Argv, Options } from 'yargs'
 
 import { createHandler, getYargsDefaults } from '../yargsCommandHelpers.js'
 
-export const getDefaults = () => {
+export const getDefaults = (): Record<string, Options> => {
   return {
     ...getYargsDefaults(),
     crud: {
@@ -16,7 +17,7 @@ export const getDefaults = () => {
 export const command = 'sdl <model>'
 export const description =
   'Generate a GraphQL schema and service component based on a given DB schema Model'
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   yargs
     .positional('model', {
       description: 'Model to generate the sdl for',
