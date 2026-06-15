@@ -1,6 +1,5 @@
 import type { Argv } from 'yargs'
 
-// @ts-expect-error - No types for JS files
 import { getConfig } from './lib/index.js'
 import {
   loadCommandCache,
