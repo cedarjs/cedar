@@ -1,16 +1,20 @@
 import type { Argv } from 'yargs'
 
+// @ts-expect-error - No types for JS files
 import { getConfig } from './lib/index.js'
 import {
   loadCommandCache,
   checkPluginListAndWarn,
   saveCommandCache,
   loadPluginPackage,
+  // @ts-expect-error - No types for JS files
 } from './lib/plugin.js'
 
 type PluginCommandCache = {
   _builtin: string[]
-  [packageName: string]: Record<string, { aliases?: string[]; description?: string }> | string[]
+  [packageName: string]:
+    | Record<string, { aliases?: string[]; description?: string }>
+    | string[]
 }
 
 /**
@@ -35,13 +39,14 @@ export async function loadPlugins(yargs: Argv): Promise<Argv> {
     return yargs
   }
 
-  // TODO: We should have some mechanism to fetch the cache from an online or precomputed
-  // source this will allow us to have a cache hit on the first run of a command
+  // TODO: We should have some mechanism to fetch the cache from an online or
+  // precomputed source this will allow us to have a cache hit on the first run
+  // of a command
   const pluginCommandCache = loadCommandCache() as PluginCommandCache
 
   // Check if the command is built in to the base CLI package
   if (
-    (pluginCommandCache._builtin as string[]).includes(commandFirstWord) &&
+    pluginCommandCache._builtin.includes(commandFirstWord) &&
     namespaceInUse === '@cedarjs'
   ) {
     // If the command is built in we don't need to load any plugins
@@ -68,10 +73,12 @@ export async function loadPlugins(yargs: Argv): Promise<Argv> {
     if (!plugin.package) {
       continue
     }
+
     // Skip non-scoped packages
     if (!plugin.package.startsWith('@')) {
       continue
     }
+
     if (plugin.package.startsWith('@cedarjs/')) {
       redwoodPackages.add(plugin.package)
     } else {
@@ -191,7 +198,9 @@ export async function loadPlugins(yargs: Argv): Promise<Argv> {
     if (packageName === '_builtin') {
       continue
     }
+
     const commandFirstWords: string[] = []
+
     for (const [command, info] of Object.entries(
       cacheEntry as Record<string, { aliases?: string[] }>,
     )) {
@@ -200,6 +209,7 @@ export async function loadPlugins(yargs: Argv): Promise<Argv> {
         ...(info.aliases?.map((a) => a.split(' ')[0]) ?? []),
       )
     }
+
     if (
       commandFirstWords.includes(commandFirstWord) &&
       packageName.startsWith(namespaceInUse)
@@ -223,8 +233,8 @@ export async function loadPlugins(yargs: Argv): Promise<Argv> {
   const commandsToRegister: unknown[] = []
   // If we nailed down the package to load we can go ahead and load it now
   if (foundMatchingPackage) {
-    // We'll have to load the plugin package since we may need to actually execute
-    // the command builder/handler functions
+    // We'll have to load the plugin package since we may need to actually
+    // execute the command builder/handler functions
     const packageToLoad = packagesToLoad.values().next().value
     const commands = await loadCommandsFromCacheOrPackage(
       packageToLoad,
@@ -232,11 +242,12 @@ export async function loadPlugins(yargs: Argv): Promise<Argv> {
       autoInstall,
       false,
     )
+
     commandsToRegister.push(...commands)
   } else {
     // It's safe to try and load the plugin information from the cache since any
-    // that are present in the cache didn't match the command we're trying to run
-    // so they'll never be executed and will only be used for help output
+    // that are present in the cache didn't match the command we're trying to
+    // run so they'll never be executed and will only be used for help output
     for (const packageToLoad of packagesToLoad) {
       const commands = await loadCommandsFromCacheOrPackage(
         packageToLoad,
@@ -244,6 +255,7 @@ export async function loadPlugins(yargs: Argv): Promise<Argv> {
         autoInstall,
         true,
       )
+
       commandsToRegister.push(...commands)
     }
   }
@@ -293,12 +305,20 @@ async function loadCommandsFromCacheOrPackage(
   autoInstall: boolean,
   readFromCache: boolean,
 ): Promise<unknown[]> {
-  let cacheEntry: Record<string, { aliases?: string[]; description?: string }> | undefined = undefined
+  let cacheEntry:
+    | Record<string, { aliases?: string[]; description?: string }>
+    | undefined = undefined
+
   if (readFromCache) {
-    cacheEntry = cache !== undefined
-      ? (cache[packageName] as Record<string, { aliases?: string[]; description?: string }>)
-      : undefined
+    cacheEntry =
+      cache !== undefined
+        ? (cache[packageName] as Record<
+            string,
+            { aliases?: string[]; description?: string }
+          >)
+        : undefined
   }
+
   if (cacheEntry !== undefined) {
     const commands = Object.entries(cacheEntry).map(([command, info]) => {
       return {
@@ -307,18 +327,23 @@ async function loadCommandsFromCacheOrPackage(
         aliases: info.aliases,
       }
     })
+
     return commands
   }
 
   // We'll have to load the plugin package to get the command information
   const plugin = await loadPluginPackage(packageName, undefined, autoInstall)
   if (plugin) {
-    const commands: Array<{
+    const commands: {
       command: string
       aliases?: string[]
       description?: string
-    }> = plugin.commands ?? []
-    const cacheUpdate: Record<string, { aliases?: string[]; description?: string }> = {}
+    }[] = plugin.commands ?? []
+    const cacheUpdate: Record<
+      string,
+      { aliases?: string[]; description?: string }
+    > = {}
+
     for (const command of commands) {
       const info = {
         aliases: command.aliases,
@@ -335,6 +360,7 @@ async function loadCommandsFromCacheOrPackage(
     if (cache && Object.keys(cacheUpdate).length > 0) {
       cache[packageName] = cacheUpdate
     }
+
     return commands
   }
 
