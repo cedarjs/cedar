@@ -1,6 +1,7 @@
 import pascalcase from 'pascalcase'
 
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { isPlural, singularize } from '@cedarjs/utils/cedarPluralize'
 
 import { nameVariants, transformTSToJS } from '../../../lib/index.js'
@@ -187,7 +188,7 @@ export const handler = createHandler({
             task.skip(
               'Skipping type generation: no SDL defined for ' +
                 `"${queryFieldName}". To generate types, run ` +
-                `'yarn cedar generate sdl ${queryFieldName}'.`,
+                `'${formatCedarCommand(['generate', 'sdl', queryFieldName])}'.`,
             )
           }
         },

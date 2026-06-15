@@ -3,7 +3,6 @@ import path from 'node:path'
 
 import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import { paramCase, camelCase } from 'change-case'
-import execa from 'execa'
 import { modify, applyEdits } from 'jsonc-parser'
 import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
@@ -11,6 +10,8 @@ import ts from 'typescript'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { workspacePackageSpecifier } from '@cedarjs/cli-helpers/packageManager'
+import { installPackages } from '@cedarjs/cli-helpers/packageManager/packages'
+import { runScript, runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
 import { getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -352,9 +353,9 @@ export function updateWorkspaceTsconfigReferences(
 
 async function installAndBuild(folderName) {
   const packagePath = path.join('packages', folderName)
-  await execa('yarn', ['install'], { stdio: 'inherit', cwd: getPaths().base })
+  await installPackages({ stdio: 'inherit', cwd: getPaths().base })
   // TODO: `yarn cedar build <packageName>`
-  await execa('yarn', ['build'], { stdio: 'inherit', cwd: packagePath })
+  await runScript('build', [], { stdio: 'inherit', cwd: packagePath })
 }
 
 /**
@@ -598,8 +599,7 @@ export const handler = async ({ name, force, ...rest }) => {
       {
         title: 'Cleaning up...',
         task: () => {
-          execa.sync('yarn', [
-            'eslint',
+          runBinSync('eslint', [
             '--fix',
             '--config',
             `${getPaths().base}/node_modules/@cedarjs/eslint-config/index.js`,

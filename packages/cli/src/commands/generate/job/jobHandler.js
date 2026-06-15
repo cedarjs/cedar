@@ -2,10 +2,10 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 import * as changeCase from 'change-case'
-import execa from 'execa'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import {
@@ -130,8 +130,7 @@ export const handler = async ({ name, force, ...rest }) => {
       {
         title: 'Cleaning up...',
         task: () => {
-          execa.sync('yarn', [
-            'eslint',
+          runBinSync('eslint', [
             '--fix',
             '--config',
             `${getPaths().base}/node_modules/@cedarjs/eslint-config/shared.js`,

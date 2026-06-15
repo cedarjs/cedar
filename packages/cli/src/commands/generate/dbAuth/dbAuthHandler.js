@@ -3,11 +3,12 @@ import path from 'node:path'
 
 import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import { camelCase } from 'camel-case'
-import execa from 'execa'
 import { Listr } from 'listr2'
 import { titleCase } from 'title-case'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 
 import {
   addRoutesToRouterTask,
@@ -43,7 +44,7 @@ function getPostInstallMessage(isDbAuthSetup) {
     !isDbAuthSetup &&
       "   Oh, and if you haven't already, add the necessary dbAuth functions and\n" +
         '   app setup by running:\n\n' +
-        '     yarn cedar setup auth dbAuth\n',
+        `     ${formatCedarCommand(['setup', 'auth', 'dbAuth'])}\n`,
     '   Happy authenticating!',
   ]
     .filter(Boolean)
@@ -67,7 +68,7 @@ function getPostInstallWebauthnMessage(isDbAuthSetup) {
     !isDbAuthSetup &&
       "   Oh, and if you haven't already, add the necessary dbAuth functions and\n" +
         '   app setup by running:\n\n' +
-        '     yarn cedar setup auth dbAuth\n',
+        `     ${formatCedarCommand(['setup', 'auth', 'dbAuth'])}\n`,
     '   Happy authenticating!',
   ]
     .filter(Boolean)
@@ -357,7 +358,7 @@ const tasks = ({
       {
         title: 'Generate types...',
         task: () => {
-          execa.commandSync('yarn cedar g types')
+          runBinSync('cedar', ['g', 'types'])
         },
       },
       {
