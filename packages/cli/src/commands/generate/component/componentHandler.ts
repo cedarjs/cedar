@@ -56,18 +56,21 @@ export const files = async ({
   //    "path/to/fileA": "<<<template>>>",
   //    "path/to/fileB": "<<<template>>>",
   // }
-  return files.reduce(async (accP, [outputPath, content]) => {
-    const acc = await accP
+  return files.reduce(
+    async (accP, [outputPath, content]) => {
+      const acc = await accP
 
-    const template = typescript
-      ? content
-      : await transformTSToJS(outputPath, content)
+      const template = typescript
+        ? content
+        : await transformTSToJS(outputPath, content)
 
-    return {
-      [outputPath]: template,
-      ...acc,
-    }
-  }, Promise.resolve({} as Record<string, string>))
+      return {
+        [outputPath]: template,
+        ...acc,
+      }
+    },
+    Promise.resolve({} as Record<string, string>),
+  )
 }
 
 export const handler = createHandler({

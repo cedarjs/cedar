@@ -223,6 +223,8 @@ export const handler = async ({
   } catch (e) {
     errorTelemetry(process.argv, (e as Error).message)
     console.error(c.error((e as Error).message))
-    process.exit((e as NodeJS.ErrnoException & { exitCode?: number })?.exitCode || 1)
+    process.exit(
+      (e as NodeJS.ErrnoException & { exitCode?: number })?.exitCode || 1,
+    )
   }
 }

@@ -58,18 +58,21 @@ export const files = async ({
     outputFiles.push(scenarioFile)
   }
 
-  return outputFiles.reduce(async (accP, [outputPath, content]) => {
-    const acc = await accP
+  return outputFiles.reduce(
+    async (accP, [outputPath, content]) => {
+      const acc = await accP
 
-    const template = generateTypescript
-      ? content
-      : await transformTSToJS(outputPath, content)
+      const template = generateTypescript
+        ? content
+        : await transformTSToJS(outputPath, content)
 
-    return {
-      [outputPath]: template,
-      ...acc,
-    }
-  }, Promise.resolve({} as Record<string, string>))
+      return {
+        [outputPath]: template,
+        ...acc,
+      }
+    },
+    Promise.resolve({} as Record<string, string>),
+  )
 }
 
 // This could be built using createYargsForComponentGeneration;
@@ -132,8 +135,11 @@ export const handler = async ({
     )
     console.info('')
   } catch (e) {
-    errorTelemetry(process.argv, (e as Error).message)
-    console.error(c.error((e as Error).message))
-    process.exit((e as NodeJS.ErrnoException & { exitCode?: number })?.exitCode || 1)
+    const message = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error ? (e as NodeJS.ErrnoException).exitCode ?? 1 : 1
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    process.exit(exitCode)
   }
 }

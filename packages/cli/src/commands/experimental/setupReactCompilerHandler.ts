@@ -52,7 +52,10 @@ export const handler = async ({
           )
           const reactVersion = webPkgJson['dependencies']['react']
           const coercedReactVersion = semver.coerce(reactVersion)
-          if (!coercedReactVersion || !semver.gte(coercedReactVersion, '19.0.0')) {
+          if (
+            !coercedReactVersion ||
+            !semver.gte(coercedReactVersion, '19.0.0')
+          ) {
             throw new Error(
               'You need to be using at least React version 19 to enable the React Compiler',
             )
@@ -136,6 +139,8 @@ export const handler = async ({
   } catch (e) {
     errorTelemetry(process.argv, (e as Error).message)
     console.error(c.error((e as Error).message))
-    process.exit((e as NodeJS.ErrnoException & { exitCode?: number })?.exitCode || 1)
+    process.exit(
+      (e as NodeJS.ErrnoException & { exitCode?: number })?.exitCode || 1,
+    )
   }
 }

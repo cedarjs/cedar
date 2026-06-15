@@ -1,6 +1,5 @@
-import type { Argv, Options } from 'yargs'
-
 import { terminalLink } from 'termi-link'
+import type { Argv, Options } from 'yargs'
 
 import { createHandler, getYargsDefaults } from '../yargsCommandHelpers.js'
 

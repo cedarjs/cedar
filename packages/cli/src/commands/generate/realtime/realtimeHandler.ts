@@ -89,7 +89,8 @@ export async function handler({
       {
         title: 'Checking for realtime environment prerequisites ...',
         task: () => {
-          isServerFileSetup() && isRealtimeSetup()
+          isServerFileSetup()
+          isRealtimeSetup()
         },
       },
       {
@@ -267,8 +268,13 @@ export async function handler({
   try {
     await tasks.run()
   } catch (e) {
-    errorTelemetry(process.argv, (e as Error).message)
-    console.error(c.error((e as Error).message))
-    process.exit((e as NodeJS.ErrnoException & { exitCode?: number })?.exitCode || 1)
+    const message = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error
+        ? (e as NodeJS.ErrnoException).exitCode ?? 1
+        : 1
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    process.exit(exitCode)
   }
 }
