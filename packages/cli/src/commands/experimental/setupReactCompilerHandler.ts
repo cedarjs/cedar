@@ -52,7 +52,7 @@ export const handler = async ({
           )
           const reactVersion = webPkgJson['dependencies']['react']
           const coercedReactVersion = semver.coerce(reactVersion)
-          if (!semver.gte(coercedReactVersion, '19.0.0')) {
+          if (!coercedReactVersion || !semver.gte(coercedReactVersion, '19.0.0')) {
             throw new Error(
               'You need to be using at least React version 19 to enable the React Compiler',
             )
