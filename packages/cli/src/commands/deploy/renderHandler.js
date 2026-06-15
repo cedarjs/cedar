@@ -72,7 +72,7 @@ export const handler = async ({ side, prisma, dataMigrate }) => {
   }
 
   async function runWebCommands() {
-    installPackages(execaConfig)
+    await installPackages(execaConfig)
     runBinSync('cedar', ['build', 'web', '--verbose'], execaConfig)
   }
 
