@@ -1,6 +1,5 @@
 import type { Argv, CommandModule } from 'yargs'
 
-// @ts-expect-error - No types for JS files
 import { getConfig } from './lib/index.js'
 import {
   loadCommandCache,
@@ -263,7 +262,7 @@ export async function loadPlugins(yargs: Argv): Promise<Argv> {
   // We need to nest the commands under the namespace remembering that the
   // @cedarjs namespace is special and doesn't need to be nested
   if (namespaceInUse === '@cedarjs') {
-    yargs.command(commandsToRegister)
+    yargs.command(commandsToRegister as Parameters<typeof yargs.command>[0])
   } else {
     yargs.command({
       command: `${namespaceInUse} <command>`,
