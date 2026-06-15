@@ -14,10 +14,15 @@ export const files = async ({
   typescript: generateTypescript = false,
   tests: generateTests = true,
   ...rest
-}) => {
+}: {
+  name: string
+  typescript?: boolean
+  tests?: boolean
+  [key: string]: unknown
+}): Promise<Record<string, string>> => {
   const extension = generateTypescript ? '.ts' : '.js'
 
-  const outputFiles = []
+  const outputFiles: [string, string][] = []
 
   const functionFiles = await templateForComponentFile({
     name,
@@ -53,23 +58,35 @@ export const files = async ({
     outputFiles.push(scenarioFile)
   }
 
-  return outputFiles.reduce(async (accP, [outputPath, content]) => {
-    const acc = await accP
+  return outputFiles.reduce(
+    async (accP, [outputPath, content]) => {
+      const acc = await accP
 
-    const template = generateTypescript
-      ? content
-      : await transformTSToJS(outputPath, content)
+      const template = generateTypescript
+        ? content
+        : await transformTSToJS(outputPath, content)
 
-    return {
-      [outputPath]: template,
-      ...acc,
-    }
-  }, Promise.resolve({}))
+      return {
+        [outputPath]: template,
+        ...acc,
+      }
+    },
+    Promise.resolve({} as Record<string, string>),
+  )
 }
 
 // This could be built using createYargsForComponentGeneration;
 // however, we need to add a message after generating the function files
-export const handler = async ({ name, force, ...rest }) => {
+export const handler = async ({
+  name,
+  force,
+  ...rest
+}: {
+  name: string
+  force: boolean
+  rollback?: boolean
+  [key: string]: unknown
+}) => {
   recordTelemetryAttributes({
     command: 'generate function',
     force,
@@ -118,8 +135,13 @@ export const handler = async ({ name, force, ...rest }) => {
     )
     console.info('')
   } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+    const message = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    process.exit(exitCode)
   }
 }

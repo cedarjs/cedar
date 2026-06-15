@@ -18,7 +18,13 @@ import {
 } from './setupStreamingSsr.js'
 import { printTaskEpilogue } from './util.js'
 
-export const handler = async ({ force, verbose }) => {
+export const handler = async ({
+  force,
+  verbose,
+}: {
+  force: boolean
+  verbose: boolean
+}) => {
   const rwPaths = getPaths()
   const configPath = getConfigPath()
   const configContent = fs.readFileSync(configPath, 'utf-8')
@@ -193,7 +199,7 @@ export const handler = async ({ force, verbose }) => {
           // TODO: Remove this when Redwood switches to ESM
           const pkgJsonPath = path.join(rwPaths.base, 'package.json')
           const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8'))
-          const resolutions = pkgJson.resolutions || {}
+          const resolutions: Record<string, string> = pkgJson.resolutions || {}
           resolutions['@apollo/client-react-streaming/superjson'] = '^1.12.2'
           pkgJson.resolutions = resolutions
           fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2))
@@ -215,8 +221,13 @@ export const handler = async ({ force, verbose }) => {
   try {
     await tasks.run()
   } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+    const message = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    process.exit(exitCode)
   }
 }
