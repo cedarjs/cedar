@@ -270,8 +270,8 @@ export async function handler({
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
     const exitCode =
-      e instanceof Error
-        ? (e as NodeJS.ErrnoException).exitCode ?? 1
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
         : 1
     errorTelemetry(process.argv, message)
     console.error(c.error(message))

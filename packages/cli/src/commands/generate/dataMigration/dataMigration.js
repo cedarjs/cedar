@@ -5,6 +5,7 @@ import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { getDataMigrationsPath } from '@cedarjs/project-config'
 
 import {
@@ -16,12 +17,12 @@ import { prepareForRollback } from '../../../lib/rollback.js'
 import { validateName } from '../helpers.js'
 import { getYargsDefaults } from '../yargsCommandHelpers.js'
 
-const POST_RUN_INSTRUCTIONS = `Next steps...\n\n   ${c.warning(
-  'After writing your migration, you can run it with:',
-)}
+export function getPostRunInstructions() {
+  const text = c.warning('After writing your migration, you can run it with:')
+  const command = formatCedarCommand(['dataMigrate', 'up'])
 
-     yarn cedar dataMigrate up
-`
+  return `Next steps...\n\n   ${text}\n\n   ${command}\n`
+}
 
 const TEMPLATE_PATHS = {
   js: path.resolve(
@@ -104,7 +105,7 @@ export const handler = async (args) => {
       {
         title: 'Next steps...',
         task: (_ctx, task) => {
-          task.title = POST_RUN_INSTRUCTIONS
+          task.title = getPostRunInstructions()
         },
       },
     ].filter(Boolean),
