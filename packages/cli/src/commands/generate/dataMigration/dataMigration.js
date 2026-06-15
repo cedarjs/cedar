@@ -17,8 +17,8 @@ import { prepareForRollback } from '../../../lib/rollback.js'
 import { validateName } from '../helpers.js'
 import { getYargsDefaults } from '../yargsCommandHelpers.js'
 
-const getPostRunInstructions = () => {
-  const text = c.orange('After writing your migration, you can run it with:')
+export function getPostRunInstructions() {
+  const text = c.warning('After writing your migration, you can run it with:')
   const command = formatCedarCommand(['dataMigrate', 'up'])
 
   return `Next steps...\n\n   ${text}\n\n   ${command}\n`

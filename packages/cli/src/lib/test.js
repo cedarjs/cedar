@@ -93,8 +93,8 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
 })
 
 vi.mock('@cedarjs/project-config/packageManager', () => ({
-  getPackageManager: () => 'yarn',
-  resetPackageManagerCache: () => {},
+  getPackageManager: vi.fn(() => 'yarn'),
+  resetPackageManagerCache: vi.fn(),
 }))
 
 vi.mock('@cedarjs/cli-helpers', async (importOriginal) => {
