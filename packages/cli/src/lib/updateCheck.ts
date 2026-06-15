@@ -7,8 +7,8 @@ import latestVersion from 'latest-version'
 import semver from 'semver'
 
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
+import { getNodeRunnerArgs } from '@cedarjs/cli-helpers/packageManager/exec'
 import { getConfig } from '@cedarjs/project-config'
-import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 import { spawnBackgroundProcess } from './background.js'
 import { isLockSet, setLock, unsetLock } from './locking.js'
@@ -24,38 +24,34 @@ interface UpdateData {
 }
 
 /**
- * @const {number} The number of milliseconds between update checks (24 hours)
+ * @const The number of milliseconds between update checks (24 hours)
  */
 const CHECK_PERIOD = 24 * 60 * 60_000
 
 /**
- * @const {number} The number of milliseconds between showing a user an update notification (24 hours)
+ * The number of milliseconds between showing a user an update notification (24
+ * hours)
  */
 const SHOW_PERIOD = 24 * 60 * 60_000
 
 /**
- * @const {number} The default datetime for shownAt and checkedAt in milliseconds, corresponds to 2000-01-01T00:00:00.000Z
+ * The default datetime for shownAt and checkedAt in milliseconds, corresponds
+ * to 2000-01-01T00:00:00.000Z
  */
 export const DEFAULT_DATETIME_MS = 946684800000
 
-/**
- * @const {string} The identifier used for the lock within the check function
- */
+/** The identifier used for the lock within the check function */
 export const CHECK_LOCK_IDENTIFIER = 'UPDATE_CHECK'
 
-/**
- * @const {string} The identifier used for the lock when showing an update message
- */
+/** The identifier used for the lock when showing an update message */
 export const SHOW_LOCK_IDENTIFIER = 'UPDATE_CHECK_SHOW'
 
-/**
- * @const {string[]} The name of commands which should NOT execute the update checker
- */
+/** The name of commands which should NOT execute the update checker */
 export const EXCLUDED_COMMANDS = ['upgrade', 'ts-to-js']
 
 /**
- * @const {string} Filepath of the file which persists update check data within
- * the .cedar directory
+ * Filepath of the file which persists update check data within the .cedar
+ * directory
  */
 let persistenceDirectory: string | undefined
 
@@ -304,23 +300,9 @@ export function updateCheckMiddleware(argv: { _: (string | number)[] }) {
   // notification based on stale local/remote versions in the same run.
   if (shouldCheck()) {
     setLock(CHECK_LOCK_IDENTIFIER)
-    const pm = getPackageManager()
-    const [bgCmd, ...bgArgs] =
-      pm === 'npm'
-        ? ['node', [path.join(import.meta.dirname, 'updateCheckExecute.js')]]
-        : pm === 'pnpm'
-          ? [
-              'pnpm',
-              [
-                'exec',
-                'node',
-                path.join(import.meta.dirname, 'updateCheckExecute.js'),
-              ],
-            ]
-          : [
-              'yarn',
-              ['node', path.join(import.meta.dirname, 'updateCheckExecute.js')],
-            ]
+    const [bgCmd, bgArgs] = getNodeRunnerArgs(
+      path.join(import.meta.dirname, 'updateCheckExecute.js'),
+    )
     spawnBackgroundProcess('updateCheck', bgCmd, bgArgs)
   } else if (shouldShow()) {
     setLock(SHOW_LOCK_IDENTIFIER)
