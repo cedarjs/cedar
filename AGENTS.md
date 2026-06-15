@@ -35,6 +35,12 @@
 - Every non-obvious cast must include a short comment describing why it is safe or necessary.
 - Avoid chained assertions unless required (e.g. `as unknown as X` at library typing boundaries); document why when used.
 - When filtering arrays, prefer typed predicates (e.g. `(v): v is T => Boolean(v)`) instead of broad casts like `as T[]`.
+- **Never use `e as Error` in try/catch clauses.** The caught value is `unknown` and may not be an `Error`. Always narrow the type properly, e.g.:
+  ```ts
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e)
+  }
+  ```
 
 ## Testing Guidelines
 
