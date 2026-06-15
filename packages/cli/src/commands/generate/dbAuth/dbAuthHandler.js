@@ -7,8 +7,8 @@ import { Listr } from 'listr2'
 import { titleCase } from 'title-case'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
-import { runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
+import { runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
 
 import {
   addRoutesToRouterTask,

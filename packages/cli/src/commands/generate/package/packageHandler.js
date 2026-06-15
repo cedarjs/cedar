@@ -10,8 +10,8 @@ import ts from 'typescript'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { workspacePackageSpecifier } from '@cedarjs/cli-helpers/packageManager'
-import { installPackages } from '@cedarjs/cli-helpers/packageManager/packages'
 import { runScript, runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
+import { installPackages } from '@cedarjs/cli-helpers/packageManager/packages'
 import { getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 

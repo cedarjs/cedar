@@ -1,7 +1,7 @@
 import pascalcase from 'pascalcase'
 
-import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
+import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { isPlural, singularize } from '@cedarjs/utils/cedarPluralize'
 
 import { nameVariants, transformTSToJS } from '../../../lib/index.js'
