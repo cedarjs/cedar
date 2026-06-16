@@ -1,5 +1,9 @@
 # Repository Guidelines
 
+## Project Overview
+
+**CedarJS** is an opinionated, full-stack React framework (frontend: React, API: GraphQL, database: Prisma) forked from [RedwoodJS](https://github.com/redwoodjs/redwood). Active maintenance, experimental ESM support, recurring jobs, and modern Node support (Node 24+). Monorepo managed with Yarn Workspaces, Lerna, and Nx.
+
 ## Project Structure & Module Organization
 
 - Monorepo managed with Nx + Yarn workspaces.
@@ -11,13 +15,30 @@
 
 ## Build, Test, and Development Commands
 
-- `yarn install`: install dependencies (Yarn v4 as pinned in `package.json`).
+- `yarn install`: install dependencies (Yarn v4 as pinned in `package.json`). Do not use npm.
 - `yarn build`: build all packages via Nx.
 - `yarn build:clean`: remove prior build output, then rebuild.
 - `yarn lint` / `yarn lint:fix`: run ESLint across packages (or auto-fix).
 - `yarn format` / `yarn format:check`: run Prettier write/check.
-- `yarn test`: run package tests via Nx.
+- `yarn test`: run package tests via Nx. Use `CI=1` for non-interactive mode.
 - `yarn test:types`: run type-level tests.
+- `yarn e2e`: run end-to-end tests (requires Cypress). Use `CI=1` for headless mode.
+
+To run commands on a single package:
+```bash
+yarn workspace @cedarjs/cli build
+yarn workspace @cedarjs/internal test
+```
+
+## Development Workflow
+
+To test framework changes against a real Cedar project:
+
+1. **Sync method (recommended):** navigate to your target Cedar project and run `CFW_PATH=/path/to/cedar yarn cfw project:sync` — builds the framework, copies dependencies, watches for changes.
+2. **CLI dev method:** useful for testing CLI changes without a full sync: `cd packages/cli && yarn dev <command> --cwd /path/to/target/project`
+3. **Test project generation:** create a fresh test project with current framework code: `yarn build:test-project <path-to-new-project>`
+
+Use `yarn dedupe` to manage duplicate packages. Keep `package.json` files sorted (`yarn check`).
 
 ## Coding Style & Naming Conventions
 
@@ -25,6 +46,8 @@
 - ESLint config is in `eslint.config.mjs` and is expected to pass on CI.
 - Prefer consistent package naming and scopes: `packages/<area>/<name>`.
 - Keep file and symbol names aligned with existing package conventions.
+- Place comments on a separate line immediately above the affected code using `//`. For documenting function/variable usage, use JSDoc. Avoid inline or end-of-line comments.
+- Avoid introducing new dependencies unless necessary.
 
 ## Type Safety & Casting
 
@@ -35,6 +58,7 @@
 - Every non-obvious cast must include a short comment describing why it is safe or necessary.
 - Avoid chained assertions unless required (e.g. `as unknown as X` at library typing boundaries); document why when used.
 - When filtering arrays, prefer typed predicates (e.g. `(v): v is T => Boolean(v)`) instead of broad casts like `as T[]`.
+- **Never use `@ts-ignore`.** Always prefer `@ts-expect-error` with a clear explanation of why it's needed.
 - **Never use `e as Error` in try/catch clauses.** The caught value is `unknown` and may not be an `Error`. Always narrow the type properly, e.g.:
   ```ts
   } catch (e) {
@@ -44,8 +68,9 @@
 
 ## Testing Guidelines
 
-- Unit/integration tests are executed through `yarn test` (Nx targets).
+- Unit/integration tests are executed through `yarn test` (Nx targets). When running `vitest` directly, use `--run` to disable watch mode.
 - Type tests use `yarn test:types`.
+- E2E: Cypress and Playwright.
 - When adding tests, follow local package naming patterns and keep tests colocated with the package.
 - For larger changes, run `yarn build && yarn build:pack` to generate package tarballs, then run `yarn install` inside `local-testing-project` to verify your changes inside an actual Cedar application.
 
