@@ -4,7 +4,6 @@ import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { isPlural, singularize } from '@cedarjs/utils/cedarPluralize'
 
-// @ts-expect-error - No types for JS files
 import { nameVariants, transformTSToJSMap } from '../../../lib/index.js'
 import { isWordPluralizable } from '../../../lib/pluralHelpers.js'
 import { addFunctionToRollback } from '../../../lib/rollback.js'
