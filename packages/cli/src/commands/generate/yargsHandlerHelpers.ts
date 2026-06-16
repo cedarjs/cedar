@@ -169,7 +169,7 @@ export const validateName = (name: string): void => {
   }
 }
 
-interface HandlerArgv {
+export interface HandlerArgv {
   name: string
   tests?: boolean
   stories?: boolean
