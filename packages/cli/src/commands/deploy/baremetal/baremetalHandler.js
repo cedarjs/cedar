@@ -9,6 +9,7 @@ import { env as envInterpolation } from 'string-env-interpolation'
 import { titleCase } from 'title-case'
 
 import { colors as c } from '@cedarjs/cli-helpers'
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 
 import { getPaths } from '../../../lib/index.js'
 
@@ -39,7 +40,7 @@ export const throwMissingConfig = (name) => {
 export const verifyConfig = (config, yargs) => {
   if (!yargs.environment) {
     throw new Error(
-      'Must specify an environment to deploy to, ex: `yarn cedar deploy baremetal production`',
+      `Must specify an environment to deploy to, ex: \`${formatCedarCommand(['deploy', 'baremetal', 'production'])}\``,
     )
   }
 
@@ -671,7 +672,7 @@ export const handler = async (yargs) => {
   if (!fs.existsSync(tomlPath) || !fs.existsSync(ecosystemPath)) {
     console.error(
       c.error('\nError: Baremetal deploy has not been properly setup.\n') +
-        'Please run `yarn cedar setup deploy baremetal` before deploying',
+        `Please run \`${formatCedarCommand(['setup', 'deploy', 'baremetal'])}\` before deploying`,
     )
     process.exit(1)
   }

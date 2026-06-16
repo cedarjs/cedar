@@ -4,6 +4,12 @@ import path from 'path'
 import execa from 'execa'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { formatAddRootPackagesCommand } from '@cedarjs/cli-helpers/packageManager/display'
+import {
+  getNodeRunnerArgs,
+  runBinSync,
+} from '@cedarjs/cli-helpers/packageManager/exec'
+import { installPackages } from '@cedarjs/cli-helpers/packageManager/packages'
 import { getPaths } from '@cedarjs/project-config'
 
 export const handler = async ({ side, prisma, dataMigrate }) => {
@@ -47,12 +53,12 @@ export const handler = async ({ side, prisma, dataMigrate }) => {
             "If you want to run data migrations, add the package to your project's root package.json and deploy again:",
             '',
             '```',
-            'yarn add -D @cedarjs/cli-data-migrate',
+            formatAddRootPackagesCommand(['@cedarjs/cli-data-migrate'], true),
             '```',
           ].join('\n'),
         )
       } else {
-        execa.commandSync('yarn cedar dataMigrate up', execaConfig)
+        runBinSync('cedar', ['dataMigrate', 'up'], execaConfig)
       }
     }
 
@@ -60,7 +66,7 @@ export const handler = async ({ side, prisma, dataMigrate }) => {
     const hasServerFile = fs.existsSync(serverFilePath)
 
     if (hasServerFile) {
-      execa(`yarn node ${serverFilePath}`, execaConfig)
+      execa(...getNodeRunnerArgs(serverFilePath), execaConfig)
     } else {
       const { handler } =
         await import('@cedarjs/api-server/apiCliConfigHandler')
@@ -69,8 +75,8 @@ export const handler = async ({ side, prisma, dataMigrate }) => {
   }
 
   async function runWebCommands() {
-    execa.commandSync('yarn install', execaConfig)
-    execa.commandSync('yarn cedar build web --verbose', execaConfig)
+    await installPackages(execaConfig)
+    runBinSync('cedar', ['build', 'web', '--verbose'], execaConfig)
   }
 
   if (side === 'api') {
