@@ -23,7 +23,7 @@ export const handler = async ({
   verbose,
 }: {
   force: boolean
-  verbose: boolean
+  verbose?: boolean
 }) => {
   const rwPaths = getPaths()
   const configTomlPath = getConfigPath()
