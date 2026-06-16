@@ -7715,9 +7715,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@npmcli/arborist@npm:9.4.3":
-  version: 9.4.3
-  resolution: "@npmcli/arborist@npm:9.4.3"
+"@npmcli/arborist@npm:9.8.0":
+  version: 9.8.0
+  resolution: "@npmcli/arborist@npm:9.8.0"
   dependencies:
     "@gar/promise-retry": "npm:^1.0.0"
     "@isaacs/string-locale-compare": "npm:^1.1.0"
@@ -7755,7 +7755,7 @@ __metadata:
     walk-up-path: "npm:^4.0.0"
   bin:
     arborist: bin/index.js
-  checksum: 10c0/a6b84c15345c9cc124e15aba5bd3db69a662f4de87de8d711fdd872f4886da1c28cbaf12d5bce6ee92d4e4d55aae6bc8888e9634529448bf728575ac08bcc49f
+  checksum: 10c0/e19089f5e44e54b511a817afc2ff0d7291dac078c1d25ea73671973c4cf78d8c8043b6ea1f24a72c4eddf3910fe72dbd0b809ea01ac59660d5fd65c9746787b1
   languageName: node
   linkType: hard
 
@@ -25619,7 +25619,7 @@ __metadata:
     "@babel/preset-env": "npm:7.29.5"
     "@babel/preset-react": "npm:7.28.5"
     "@babel/preset-typescript": "npm:7.28.5"
-    "@npmcli/arborist": "npm:9.4.3"
+    "@npmcli/arborist": "npm:9.8.0"
     "@playwright/test": "npm:1.60.0"
     "@prisma/dev": "npm:0.24.14"
     "@testing-library/jest-dom": "npm:6.9.1"
