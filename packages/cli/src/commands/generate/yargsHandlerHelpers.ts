@@ -17,6 +17,7 @@ import type { Options, PositionalOptions } from 'yargs'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { ensurePosixPath, getConfig } from '@cedarjs/project-config'
+import type { NodeTargetPaths, WebPaths } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { generateTemplate, getPaths, writeFilesTask } from '../../lib/index.js'
@@ -70,10 +71,12 @@ export const customOrDefaultTemplatePath = ({
   }
 }
 
+type SidePathSection = keyof WebPaths | keyof NodeTargetPaths
+
 interface TemplateForFileArgs {
   name: string
   side: 'web' | 'api' | 'scripts'
-  sidePathSection?: string
+  sidePathSection?: SidePathSection
   generator: string
   outputPath: string
   templatePath: string
@@ -92,8 +95,22 @@ export const templateForFile = async ({
   templatePath,
   templateVars,
 }: TemplateForFileArgs): Promise<[string, string]> => {
-  const sideBase = getPaths()[side]
-  const basePath = sidePathSection ? sideBase[sidePathSection] : sideBase
+  const paths = getPaths()
+  // Resolve basePath by side. When `sidePathSection` is provided, we narrow
+  // it via an `as` cast to the matching paths type because TS can't prove at
+  // the call site that the section is a valid key for the chosen side. The
+  // runtime `typeof basePath !== 'string'` check below is the real safety
+  // net: an invalid section throws a clear error.
+  const basePath =
+    side === 'scripts'
+      ? paths.scripts
+      : side === 'web'
+        ? sidePathSection
+          ? paths.web[sidePathSection as keyof WebPaths]
+          : paths.web.base
+        : sidePathSection
+          ? paths.api[sidePathSection as keyof NodeTargetPaths]
+          : paths.api.base
 
   if (typeof basePath !== 'string') {
     throw new Error(`Invalid path section: "${sidePathSection}"`)
@@ -121,8 +138,8 @@ interface TemplateForComponentFileArgs {
   name: string
   suffix?: string
   extension?: string
-  webPathSection?: string
-  apiPathSection?: string
+  webPathSection?: keyof WebPaths
+  apiPathSection?: keyof NodeTargetPaths
   generator: string
   templatePath: string
   templateVars?: Record<string, unknown>

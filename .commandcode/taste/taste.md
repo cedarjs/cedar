@@ -5,6 +5,7 @@
 - When JS→TS converting CLI command files: use `import type { Argv } from 'yargs'`, add type annotations to builders, keep handler signatures as narrow as possible. Confidence: 0.60
 - Prefer `interface` over `type` for object type declarations. Confidence: 0.70
 - Avoid barrel/index.ts export files; use package.json exports map for entrypoints instead. Confidence: 0.70
+- When fixing type errors caused by callers passing `undefined` to a util: prefer making the caller consistent (e.g., default at destructure like `typescript = false`) over loosening the util's signature with `?`. Keep util types strict; push defaults to caller sites to match the rest of the codebase. Confidence: 0.80
 
 # Prisma
 
@@ -61,4 +62,3 @@ See [code-style/taste.md](code-style/taste.md)
 # node
 
 - Cedar requires Node 24+. --experimental-strip-types is unflagged and not needed. Confidence: 0.90
-- When fixing type errors caused by callers passing `undefined` to a util: prefer making the caller consistent (e.g., default at destructure like `typescript = false`) over loosening the util's signature with `?`. Keep util types strict; push defaults to caller sites to match the rest of the codebase. Confidence: 0.75

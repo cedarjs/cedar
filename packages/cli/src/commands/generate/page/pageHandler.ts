@@ -13,7 +13,6 @@ import {
   addRoutesToRouterTask,
   transformTSToJSMap,
   writeFilesTask,
-  // @ts-expect-error - No types for JS files
 } from '../../../lib/index.js'
 import {
   prepareForRollback,
@@ -28,7 +27,7 @@ import {
 import { templateForComponentFile } from '../yargsHandlerHelpers.js'
 
 const COMPONENT_SUFFIX = 'Page'
-const REDWOOD_WEB_PATH_NAME = 'pages'
+const CEDAR_WEB_PATH_NAME = 'pages'
 
 function mapRouteParamTypeToDefaultValue(paramType: string) {
   switch (paramType) {
@@ -87,7 +86,7 @@ export const files = async ({
   name,
   tests,
   stories,
-  typescript,
+  typescript = false,
   ...rest
 }: {
   name: string
@@ -101,7 +100,7 @@ export const files = async ({
     name,
     suffix: COMPONENT_SUFFIX,
     extension,
-    webPathSection: REDWOOD_WEB_PATH_NAME,
+    webPathSection: CEDAR_WEB_PATH_NAME,
     generator: 'page',
     templatePath: 'page.tsx.template',
     templateVars: {
@@ -114,7 +113,7 @@ export const files = async ({
     name,
     suffix: COMPONENT_SUFFIX,
     extension: `.test${extension}`,
-    webPathSection: REDWOOD_WEB_PATH_NAME,
+    webPathSection: CEDAR_WEB_PATH_NAME,
     generator: 'page',
     templatePath: 'test.tsx.template',
     templateVars: rest,
@@ -124,7 +123,7 @@ export const files = async ({
     name,
     suffix: COMPONENT_SUFFIX,
     extension: `.stories${extension}`,
-    webPathSection: REDWOOD_WEB_PATH_NAME,
+    webPathSection: CEDAR_WEB_PATH_NAME,
     generator: 'page',
     templatePath:
       rest.paramName !== ''

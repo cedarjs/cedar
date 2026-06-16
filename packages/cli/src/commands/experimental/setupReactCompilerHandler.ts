@@ -20,7 +20,7 @@ import { printTaskEpilogue } from './util.js'
 
 interface Opts {
   force: boolean
-  verbose: boolean
+  verbose?: boolean
 }
 
 interface TaskHandle {
