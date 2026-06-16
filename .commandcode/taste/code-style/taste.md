@@ -6,3 +6,5 @@
 - Avoid using try/catch as a control flow mechanism for normal code paths. Use explicit checks (e.g., checking return values, existence checks) instead. Confidence: 0.70
 - Add blank lines after the closing curly brace of if statements, and generally prefer more vertical whitespace ("air") in code for readability. Confidence: 0.95
 - Use `&apos;` HTML entities for apostrophes in JSX to avoid react/no-unescaped-entities lint errors. Confidence: 0.95
+- Use `T[]` array type syntax, not `Array<T>`. Confidence: 0.90
+- When the same pattern repeats 3+ times across files, extract it into a shared util function. Confidence: 0.75

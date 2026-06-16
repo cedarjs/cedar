@@ -6,7 +6,7 @@ import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 import { getConfig } from '@cedarjs/project-config'
 
-import { writeFilesTask, transformTSToJS } from '../../../lib/index.js'
+import { writeFilesTask, transformTSToJSMap } from '../../../lib/index.js'
 import {
   prepareForRollback,
   addFunctionToRollback,
@@ -64,21 +64,7 @@ export const files = async ({
   //    "path/to/fileA": "<<<template>>>",
   //    "path/to/fileB": "<<<template>>>",
   // }
-  return files.reduce(
-    async (accP, [outputPath, content]) => {
-      const acc = await accP
-
-      const template = typescript
-        ? content
-        : await transformTSToJS(outputPath, content)
-
-      return {
-        [outputPath]: template,
-        ...acc,
-      }
-    },
-    Promise.resolve({} as Record<string, string>),
-  )
+  return transformTSToJSMap(files, typescript)
 }
 
 export const handler = async (args: {

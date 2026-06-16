@@ -11,8 +11,9 @@ import { errorTelemetry } from '@cedarjs/telemetry'
 
 import {
   addRoutesToRouterTask,
-  transformTSToJS,
+  transformTSToJSMap,
   writeFilesTask,
+  // @ts-expect-error - No types for JS files
 } from '../../../lib/index.js'
 import {
   prepareForRollback,
@@ -29,12 +30,10 @@ import { templateForComponentFile } from '../yargsHandlerHelpers.js'
 const COMPONENT_SUFFIX = 'Page'
 const REDWOOD_WEB_PATH_NAME = 'pages'
 
-const mapRouteParamTypeToDefaultValue = (
-  paramType: 'Int' | 'Float' | 'Boolean' | string,
-): number | boolean | string => {
+function mapRouteParamTypeToDefaultValue(paramType: string) {
   switch (paramType) {
     case 'Int':
-      // "42" is just a value used for demonstrating parameter usage in the
+      // `42` is just a value used for demonstrating parameter usage in the
       // generated page-, test-, and story-files.
       return 42
 
@@ -45,7 +44,7 @@ const mapRouteParamTypeToDefaultValue = (
       return true
 
     default:
-      // Boolean -> boolean, String -> string
+      // String -> string
       return '42'
   }
 }
@@ -65,7 +64,7 @@ export const paramVariants = (path: string | undefined) => {
     }
   }
 
-  // set paramType param includes type (e.g. {id:Int}), else use string
+  // set paramType param includes type (e.g. {id:Int}), else use String
   const routeParamType = param?.match(/:/)
     ? param?.replace(/[^:]+/, '').slice(1, -1)
     : 'String'
@@ -149,21 +148,7 @@ export const files = async ({
   //    "path/to/fileA": "<<<template>>>",
   //    "path/to/fileB": "<<<template>>>",
   // }
-  return files.reduce(
-    async (accP, [outputPath, content]) => {
-      const acc = await accP
-
-      const template = typescript
-        ? content
-        : await transformTSToJS(outputPath, content)
-
-      return {
-        [outputPath]: template,
-        ...acc,
-      }
-    },
-    Promise.resolve({} as Record<string, string>),
-  )
+  return transformTSToJSMap(files, typescript)
 }
 
 export const routes = ({

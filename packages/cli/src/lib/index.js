@@ -288,6 +288,36 @@ export const transformTSToJS = async (filename, content) => {
 }
 
 /**
+ * Reduces a list of [outputPath, content] tuples to a `Record<outputPath,
+ * content>` map, converting each entry's content from TypeScript to JavaScript
+ * when `typescript` is false.
+ *
+ * Returns
+ * {
+ *    "path/to/fileA": "<<<template>>>",
+ *    "path/to/fileB": "<<<template>>>",
+ * }
+ *
+ * @param files - Array of [outputPath, content] tuples
+ * @param typescript - If true, content is kept as TypeScript; otherwise it's
+ * converted to JS
+ */
+export const transformTSToJSMap = async (files, typescript) => {
+  return files.reduce(async (accP, [outputPath, content]) => {
+    const acc = await accP
+
+    const template = typescript
+      ? content
+      : await transformTSToJS(outputPath, content)
+
+    return {
+      [outputPath]: template,
+      ...acc,
+    }
+  }, {})
+}
+
+/**
  * Creates a list of tasks that write files to the disk.
  *
  * @param files - {[filepath]: contents}

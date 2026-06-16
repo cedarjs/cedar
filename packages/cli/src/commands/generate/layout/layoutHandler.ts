@@ -1,4 +1,4 @@
-import { transformTSToJS } from '../../../lib/index.js'
+import { transformTSToJSMap } from '../../../lib/index.js'
 import { removeGeneratorName } from '../helpers.js'
 import {
   templateForComponentFile,
@@ -63,21 +63,7 @@ export const files = async ({
   //    "path/to/fileA": "<<<template>>>",
   //    "path/to/fileB": "<<<template>>>",
   // }
-  return files.reduce(
-    async (accP, [outputPath, content]) => {
-      const acc = await accP
-
-      const template = typescript
-        ? content
-        : await transformTSToJS(outputPath, content)
-
-      return {
-        [outputPath]: template,
-        ...acc,
-      }
-    },
-    Promise.resolve({} as Record<string, string>),
-  )
+  return transformTSToJSMap(files, typescript)
 }
 
 export const handler = createHandler({
