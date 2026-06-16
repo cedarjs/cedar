@@ -6,7 +6,7 @@ import {
 } from '../yargsHandlerHelpers.js'
 
 const COMPONENT_SUFFIX = 'Layout'
-const REDWOOD_WEB_PATH_NAME = 'layouts'
+const CEDAR_WEB_PATH_NAME = 'layouts'
 
 export const files = async ({
   name,
@@ -25,7 +25,7 @@ export const files = async ({
   const layoutFile = await templateForComponentFile({
     name: layoutName,
     suffix: COMPONENT_SUFFIX,
-    webPathSection: REDWOOD_WEB_PATH_NAME,
+    webPathSection: CEDAR_WEB_PATH_NAME,
     extension,
     generator: 'layout',
     templatePath: options.skipLink
@@ -36,7 +36,7 @@ export const files = async ({
     name: layoutName,
     suffix: COMPONENT_SUFFIX,
     extension: `.test${extension}`,
-    webPathSection: REDWOOD_WEB_PATH_NAME,
+    webPathSection: CEDAR_WEB_PATH_NAME,
     generator: 'layout',
     templatePath: 'test.tsx.template',
   })
@@ -44,7 +44,7 @@ export const files = async ({
     name: layoutName,
     suffix: COMPONENT_SUFFIX,
     extension: `.stories${extension}`,
-    webPathSection: REDWOOD_WEB_PATH_NAME,
+    webPathSection: CEDAR_WEB_PATH_NAME,
     generator: 'layout',
     templatePath: 'stories.tsx.template',
   })
