@@ -4,9 +4,10 @@ import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { isPlural, singularize } from '@cedarjs/utils/cedarPluralize'
 
-import { nameVariants, transformTSToJS } from '../../../lib/index.js'
+import { nameVariants, transformTSToJSMap } from '../../../lib/index.js'
 import { isWordPluralizable } from '../../../lib/pluralHelpers.js'
 import { addFunctionToRollback } from '../../../lib/rollback.js'
+// @ts-expect-error - No types for JS files
 import { getSchema } from '../../../lib/schemaHelpers.js'
 import { forcePluralizeWord, removeGeneratorName } from '../helpers.js'
 import {
@@ -23,13 +24,25 @@ import {
 } from './utils/utils.js'
 
 const COMPONENT_SUFFIX = 'Cell'
-const REDWOOD_WEB_PATH_NAME = 'components'
+const CEDAR_WEB_PATH_NAME = 'components'
 
-export const files = async ({ name, typescript, ...argv }) => {
+export const files = async ({
+  name,
+  typescript = false,
+  ...argv
+}: {
+  name: string
+  typescript?: boolean
+  list?: boolean
+  query?: string
+  stories?: boolean
+  tests?: boolean
+  [key: string]: unknown
+}): Promise<Record<string, string>> => {
   let cellName = removeGeneratorName(name, 'cell')
-  let idName = 'id'
-  let idType
-  let mockIdValues = [42, 43, 44]
+  let idName: string | undefined = 'id'
+  let idType: string | undefined
+  let mockIdValues: (number | string)[] = [42, 43, 44]
   let model = null
   let templateNameSuffix = ''
   let typeName = cellName
@@ -63,10 +76,11 @@ export const files = async ({ name, typescript, ...argv }) => {
     // override operationName so that its find_operationName
   }
 
-  let operationName = argv.query
+  let operationName: string | undefined = argv.query
   if (operationName) {
     const userSpecifiedOperationNameIsUnique =
       await operationNameIsUnique(operationName)
+
     if (!userSpecifiedOperationNameIsUnique) {
       throw new Error(`Specified query name: "${operationName}" is not unique!`)
     }
@@ -81,7 +95,7 @@ export const files = async ({ name, typescript, ...argv }) => {
     name: cellName,
     suffix: COMPONENT_SUFFIX,
     extension,
-    webPathSection: REDWOOD_WEB_PATH_NAME,
+    webPathSection: CEDAR_WEB_PATH_NAME,
     generator: 'cell',
     templatePath: `cell${templateNameSuffix}.tsx.template`,
     templateVars: {
@@ -95,7 +109,7 @@ export const files = async ({ name, typescript, ...argv }) => {
     name: cellName,
     suffix: COMPONENT_SUFFIX,
     extension: `.test${extension}`,
-    webPathSection: REDWOOD_WEB_PATH_NAME,
+    webPathSection: CEDAR_WEB_PATH_NAME,
     generator: 'cell',
     templatePath: 'test.js.template',
     templateVars: {
@@ -108,7 +122,7 @@ export const files = async ({ name, typescript, ...argv }) => {
     name: cellName,
     suffix: COMPONENT_SUFFIX,
     extension: `.stories${extension}`,
-    webPathSection: REDWOOD_WEB_PATH_NAME,
+    webPathSection: CEDAR_WEB_PATH_NAME,
     generator: 'cell',
     templatePath: 'stories.tsx.template',
   })
@@ -117,7 +131,7 @@ export const files = async ({ name, typescript, ...argv }) => {
     name: cellName,
     suffix: COMPONENT_SUFFIX,
     extension: typescript ? '.mock.ts' : '.mock.js',
-    webPathSection: REDWOOD_WEB_PATH_NAME,
+    webPathSection: CEDAR_WEB_PATH_NAME,
     generator: 'cell',
     templatePath: `mock${templateNameSuffix}.ts.template`,
     templateVars: {
@@ -141,33 +155,17 @@ export const files = async ({ name, typescript, ...argv }) => {
     files.push(mockFile)
   }
 
-  // Returns
-  // {
-  //    "path/to/fileA": "<<<template>>>",
-  //    "path/to/fileB": "<<<template>>>",
-  // }
-  return files.reduce(async (accP, [outputPath, content]) => {
-    const acc = await accP
-
-    const template = typescript
-      ? content
-      : await transformTSToJS(outputPath, content)
-
-    return {
-      [outputPath]: template,
-      ...acc,
-    }
-  }, Promise.resolve({}))
+  return transformTSToJSMap(files, typescript)
 }
 
 export const handler = createHandler({
   componentName: 'cell',
   filesFn: files,
-  includeAdditionalTasks: ({ name: cellName }) => {
+  includeAdditionalTasks: ({ name: cellName }: { name: string }) => {
     return [
       {
         title: `Generating types ...`,
-        task: async (_ctx, task) => {
+        task: async (_ctx: unknown, task: { skip: (msg: string) => void }) => {
           const queryFieldName = nameVariants(
             removeGeneratorName(cellName, 'cell'),
           ).camelName

@@ -15,13 +15,12 @@ import {
   command,
   description,
   EXPERIMENTAL_TOPIC_ID,
-  // @ts-expect-error - No types for JS files
 } from './setupReactCompiler.js'
 import { printTaskEpilogue } from './util.js'
 
 interface Opts {
   force: boolean
-  verbose: boolean
+  verbose?: boolean
 }
 
 interface TaskHandle {

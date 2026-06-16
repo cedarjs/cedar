@@ -1,10 +1,11 @@
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
 import { createHandler, getYargsDefaults } from '../yargsCommandHelpers.js'
 
 export const command = 'model <name>'
 export const description = 'Generate a RedwoodRecord model'
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   yargs
     .positional('name', {
       description: 'Name of the model to create',
