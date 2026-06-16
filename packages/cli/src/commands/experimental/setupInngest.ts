@@ -9,7 +9,7 @@ export const command = 'setup-inngest'
 export const description =
   'Setup Inngest for background, scheduled, delayed, multi-step, and fan-out jobs'
 
-export const EXPERIMENTAL_TOPIC_ID = 4866
+export const EXPERIMENTAL_TOPIC_ID = '4866'
 
 export const builder = (yargs: Argv) => {
   yargs

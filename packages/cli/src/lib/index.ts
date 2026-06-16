@@ -1,6 +1,6 @@
-import https from 'https'
 import fs from 'node:fs'
-import path from 'path'
+import https from 'node:https'
+import path from 'node:path'
 
 import * as babel from '@babel/core'
 import boxen from 'boxen'
@@ -9,10 +9,12 @@ import { paramCase } from 'change-case'
 import decamelize from 'decamelize'
 import execa from 'execa'
 import { Listr } from 'listr2'
+import type { ListrTaskWrapper } from 'listr2'
 import memoize from 'lodash/memoize.js'
 import template from 'lodash/template.js'
 import pascalcase from 'pascalcase'
 import { format } from 'prettier'
+import type { Options as PrettierOptions } from 'prettier'
 
 import { colors as c } from '@cedarjs/cli-helpers'
 import {
@@ -30,7 +32,7 @@ export { findUp }
 /**
  * Returns variants of the passed `name` for usage in templates. If the given
  * name was "fooBar" then these would be:
-
+ *
  * pascalName: FooBar
  * singularPascalName: FooBar
  * pluralPascalName: FooBars
@@ -40,8 +42,8 @@ export { findUp }
  * pluralParamName: foo-bars
  * singularConstantName: FOO_BAR
  * pluralConstantName: FOO_BARS
-*/
-export const nameVariants = (name) => {
+ */
+export const nameVariants = (name: string) => {
   const normalizedName = pascalcase(paramCase(singularize(name)))
 
   return {
@@ -58,7 +60,10 @@ export const nameVariants = (name) => {
   }
 }
 
-export const generateTemplate = (templateFilename, { name, ...rest }) => {
+export const generateTemplate = <T extends Record<string, unknown>>(
+  templateFilename: string,
+  { name, ...rest }: { name: string } & T,
+) => {
   try {
     const templateFn = template(readFile(templateFilename).toString())
     const renderedTemplate = templateFn({
@@ -69,22 +74,31 @@ export const generateTemplate = (templateFilename, { name, ...rest }) => {
 
     return prettify(templateFilename, renderedTemplate)
   } catch (error) {
-    error.message = `Error applying template at ${templateFilename} for ${name}: ${error.message}`
-    throw error
+    const originalMessage =
+      error instanceof Error ? error.message : String(error)
+    const wrappedError = new Error(
+      `Error applying template at ${templateFilename} for ${name}: ${originalMessage}`,
+    )
+    throw wrappedError
   }
 }
 
-export const prettify = async (templateFilename, renderedTemplate) => {
+export const prettify = async (
+  templateFilename: string,
+  renderedTemplate: string,
+) => {
   // We format .js and .css templates, we need to tell prettier which parser
   // we're using.
   // https://prettier.io/docs/en/options.html#parser
-  const parser = {
+  const parserMap: Record<string, 'css' | 'babel' | 'babel-ts'> = {
     '.css': 'css',
     '.js': 'babel',
     '.jsx': 'babel',
     '.ts': 'babel-ts',
     '.tsx': 'babel-ts',
-  }[path.extname(templateFilename.replace('.template', ''))]
+  }
+  const parser =
+    parserMap[path.extname(templateFilename.replace('.template', ''))]
 
   if (typeof parser === 'undefined') {
     return renderedTemplate
@@ -98,12 +112,12 @@ export const prettify = async (templateFilename, renderedTemplate) => {
   })
 }
 
-export const readFile = (target) =>
+export const readFile = (target: string): string =>
   fs.readFileSync(target, { encoding: 'utf8' })
 
 const SUPPORTED_EXTENSIONS = ['.js', '.jsx', '.ts', '.tsx']
 
-export const deleteFile = (file) => {
+export const deleteFile = (file: string) => {
   const extension = path.extname(file)
   if (SUPPORTED_EXTENSIONS.includes(extension)) {
     const baseFile = getBaseFile(file)
@@ -118,9 +132,9 @@ export const deleteFile = (file) => {
   }
 }
 
-const getBaseFile = (file) => file.replace(/\.\w*$/, '')
+const getBaseFile = (file: string) => file.replace(/\.\w*$/, '')
 
-export const existsAnyExtensionSync = (file) => {
+export const existsAnyExtensionSync = (file: string): boolean => {
   const extension = path.extname(file)
   if (SUPPORTED_EXTENSIONS.includes(extension)) {
     const baseFile = getBaseFile(file)
@@ -130,11 +144,19 @@ export const existsAnyExtensionSync = (file) => {
   return fs.existsSync(file)
 }
 
+interface WriteFileOptions {
+  overwriteExisting?: boolean
+}
+
+interface ListrTask {
+  title?: string
+}
+
 export const writeFile = (
-  target,
-  contents,
-  { overwriteExisting = false } = {},
-  task = {},
+  target: string,
+  contents: string,
+  { overwriteExisting = false }: WriteFileOptions = {},
+  task: ListrTask = {},
 ) => {
   const { base } = getPaths()
   task.title = `Writing \`./${path.relative(base, target)}\``
@@ -152,15 +174,15 @@ export const writeFile = (
 }
 
 export const saveRemoteFileToDisk = (
-  url,
-  localPath,
-  { overwriteExisting = false } = {},
+  url: string,
+  localPath: string,
+  { overwriteExisting = false }: WriteFileOptions = {},
 ) => {
   if (!overwriteExisting && fs.existsSync(localPath)) {
     throw new Error(`${localPath} already exists.`)
   }
 
-  const downloadPromise = new Promise((resolve, reject) =>
+  const downloadPromise = new Promise<void>((resolve, reject) =>
     https.get(url, (response) => {
       if (response.statusCode === 200) {
         response.pipe(fs.createWriteStream(localPath))
@@ -176,19 +198,22 @@ export const saveRemoteFileToDisk = (
   return downloadPromise
 }
 
-export async function getInstalledCedarVersion() {
+export async function getInstalledCedarVersion(): Promise<string> {
   try {
     const packageJson = await import('../../package.json', {
       with: { type: 'json' },
     })
     return packageJson.default.version
   } catch (e) {
+    const message = e instanceof Error ? e.message : String(e)
     console.error(c.error('Could not find installed Cedar version'))
+    console.error(c.error(message))
     process.exit(1)
   }
 }
 
-export const bytes = (contents) => Buffer.byteLength(contents, 'utf8')
+export const bytes = (contents: string): number =>
+  Buffer.byteLength(contents, 'utf8')
 
 /**
  * This wraps the core version of getPaths into something that catches the exception
@@ -198,25 +223,36 @@ export const _getPaths = () => {
   try {
     return getRedwoodPaths()
   } catch (e) {
-    console.error(c.error(e.message))
+    const message = e instanceof Error ? e.message : String(e)
+    console.error(c.error(message))
     process.exit(1)
   }
 }
 export const getPaths = memoize(_getPaths)
 export const resolveFile = internalResolveFile
 
-export const getGraphqlPath = () =>
-  resolveFile(path.join(getPaths().api.functions, 'graphql'))
+export const getGraphqlPath = () => {
+  const functionsDir = getPaths().api.functions
+  if (!functionsDir) {
+    throw new Error('Could not resolve the API functions directory')
+  }
+  return resolveFile(path.join(functionsDir, 'graphql'))
+}
 
-export const graphFunctionDoesExist = () => {
-  return fs.existsSync(getGraphqlPath())
+export const graphFunctionDoesExist = (): boolean => {
+  const graphqlPath = getGraphqlPath()
+  if (!graphqlPath) {
+    return false
+  }
+  return fs.existsSync(graphqlPath)
 }
 
 export const getConfig = () => {
   try {
     return getRedwoodConfig()
   } catch (e) {
-    console.error(c.error(e.message))
+    const message = e instanceof Error ? e.message : String(e)
+    console.error(c.error(message))
     process.exit(1)
   }
 }
@@ -225,7 +261,9 @@ export const getConfig = () => {
  * This returns the config present in `prettier.config.cjs` or
  * `prettier.config.mjs` of a Cedar project.
  */
-export const getPrettierOptions = async () => {
+export const getPrettierOptions = async (): Promise<
+  PrettierOptions | undefined
+> => {
   try {
     const cjsPath = path.join(getPaths().base, 'prettier.config.cjs')
     const mjsPath = path.join(getPaths().base, 'prettier.config.mjs')
@@ -236,7 +274,7 @@ export const getPrettierOptions = async () => {
     )
 
     return prettierOptions
-  } catch (e) {
+  } catch {
     // If we're in our vitest environment we want to return a consistent set of prettier options
     // such that snapshots don't change unexpectedly.
     if (process.env.VITEST_POOL_ID !== undefined) {
@@ -265,8 +303,11 @@ export const getPrettierOptions = async () => {
 /*
  * Convert a generated TS template file into JS.
  */
-export const transformTSToJS = async (filename, content) => {
-  const { code } = babel.transform(content, {
+export const transformTSToJS = async (
+  filename: string,
+  content: string,
+): Promise<string> => {
+  const result = babel.transform(content, {
     filename,
     // If you ran `yarn cedar generate` in `./web` transformSync would import the `.babelrc.js` file,
     // in `./web`? despite us setting `configFile: false`.
@@ -284,7 +325,12 @@ export const transformTSToJS = async (filename, content) => {
     retainLines: true,
   })
 
-  return prettify(filename.replace(/\.ts(x)?$/, '.js$1'), code)
+  if (result?.code == null) {
+    throw new Error(
+      `Could not transform ${filename} from TypeScript to JavaScript`,
+    )
+  }
+  return prettify(filename.replace(/\.ts(x)?$/, '.js$1'), result.code)
 }
 
 /**
@@ -302,19 +348,25 @@ export const transformTSToJS = async (filename, content) => {
  * @param typescript - If true, content is kept as TypeScript; otherwise it's
  * converted to JS
  */
-export const transformTSToJSMap = async (files, typescript) => {
-  return files.reduce(async (accP, [outputPath, content]) => {
-    const acc = await accP
+export const transformTSToJSMap = async (
+  files: [string, string][],
+  typescript: boolean,
+): Promise<Record<string, string>> => {
+  return files.reduce(
+    async (accP: Promise<Record<string, string>>, [outputPath, content]) => {
+      const acc = await accP
 
-    const template = typescript
-      ? content
-      : await transformTSToJS(outputPath, content)
+      const template = typescript
+        ? content
+        : await transformTSToJS(outputPath, content)
 
-    return {
-      [outputPath]: template,
-      ...acc,
-    }
-  }, {})
+      return {
+        [outputPath]: template,
+        ...acc,
+      }
+    },
+    Promise.resolve({}),
+  )
 }
 
 /**
@@ -322,14 +374,18 @@ export const transformTSToJSMap = async (files, typescript) => {
  *
  * @param files - {[filepath]: contents}
  */
-export const writeFilesTask = (files, options) => {
+export const writeFilesTask = (
+  files: Record<string, string>,
+  options: WriteFileOptions = {},
+) => {
   const { base } = getPaths()
   return new Listr(
     Object.keys(files).map((file) => {
       const contents = files[file]
       return {
         title: `...waiting to write file \`./${path.relative(base, file)}\`...`,
-        task: (ctx, task) => writeFile(file, contents, options, task),
+        task: (_ctx: unknown, task: ListrTaskWrapper<unknown, never, never>) =>
+          writeFile(file, contents, options, task),
       }
     }),
   )
@@ -340,7 +396,7 @@ export const writeFilesTask = (files, options) => {
  *
  * @param files - {[filepath]: contents}
  */
-export const deleteFilesTask = (files) => {
+export const deleteFilesTask = (files: Record<string, string>) => {
   const { base } = getPaths()
 
   return new Listr([
@@ -363,12 +419,12 @@ export const deleteFilesTask = (files) => {
  * Deletes any empty directories that are more than three levels deep below the base directory
  * i.e. any directory below /web/src/components
  */
-export const cleanupEmptyDirsTask = (files) => {
+export const cleanupEmptyDirsTask = (files: Record<string, string>) => {
   const { base } = getPaths()
   const endDirs = Object.keys(files).map((file) => path.dirname(file))
   const uniqueEndDirs = [...new Set(endDirs)]
   // get the additional path directories not at the end of the path
-  const pathDirs = []
+  const pathDirs: string[] = []
   uniqueEndDirs.forEach((dir) => {
     const relDir = path.relative(base, dir)
     const splitDir = relDir.split(path.sep)
@@ -401,15 +457,15 @@ export const cleanupEmptyDirsTask = (files) => {
 }
 
 const wrapWithSet = (
-  routesContent,
-  layout,
-  routes,
-  newLineAndIndent,
-  props = {},
+  routesContent: string,
+  layout: string,
+  routes: string[],
+  newLineAndIndent: string,
+  props: Record<string, string> = {},
 ) => {
-  const [_, indentOne, indentTwo] = routesContent.match(
-    /([ \t]*)<Router.*?>[^<]*[\r\n]+([ \t]+)/,
-  ) || ['', 0, 2]
+  const match = routesContent.match(/([ \t]*)<Router.*?>[^<]*[\r\n]+([ \t]+)/)
+  const indentOne = match?.[1] ?? ''
+  const indentTwo = match?.[2] ?? '  '
   const oneLevelIndent = indentTwo.slice(0, indentTwo.length - indentOne.length)
   const newRoutesWithExtraIndent = routes.map((route) => oneLevelIndent + route)
 
@@ -428,15 +484,20 @@ const wrapWithSet = (
 /**
  * Update the project's routes file.
  */
-export const addRoutesToRouterTask = (routes, layout, setProps = {}) => {
+export const addRoutesToRouterTask = (
+  routes: string[],
+  layout?: string,
+  setProps: Record<string, string> = {},
+) => {
   const cedarPaths = getPaths()
   const routesContent = readFile(cedarPaths.web.routes).toString()
   let newRoutes = routes.filter((route) => !routesContent.match(route))
 
   if (newRoutes.length) {
-    const [routerStart, routerParams, newLineAndIndent] = routesContent.match(
-      /\s*<Router(.*?)>(\s*)/s,
-    )
+    const routerMatch = routesContent.match(/\s*<Router(.*?)>(\s*)/s)
+    const routerStart = routerMatch?.[0] ?? ''
+    const routerParams = routerMatch?.[1] ?? ''
+    const newLineAndIndent = routerMatch?.[2] ?? '\n  '
 
     if (/trailingSlashes={?(["'])always\1}?/.test(routerParams)) {
       // newRoutes will be something like:
@@ -488,16 +549,19 @@ export const addScaffoldImport = () => {
   return 'Added scaffold import to App.{jsx,tsx}'
 }
 
-const removeEmtpySet = (routesContent, layout) => {
+const removeEmtpySet = (routesContent: string, layout: string) => {
   const setWithLayoutReg = new RegExp(
     `\\s*<Set[^>]*wrap={${layout}}[^<]*>([^<]*)<\/Set>`,
   )
-  const [matchedSet, childContent] = routesContent.match(setWithLayoutReg) || []
+  const match = routesContent.match(setWithLayoutReg)
+  const matchedSet = match?.[0] ?? ''
+  const childContent = match?.[1] ?? ''
   if (!matchedSet) {
     return routesContent
   }
 
   const child = childContent.replace(/\s/g, '')
+
   if (child.length > 0) {
     return routesContent
   }
@@ -509,7 +573,10 @@ const removeEmtpySet = (routesContent, layout) => {
  *
  * @param {string[]} routes - Route names
  */
-export const removeRoutesFromRouterTask = (routes, layout) => {
+export const removeRoutesFromRouterTask = (
+  routes: string[],
+  layout?: string,
+) => {
   const cedarPaths = getPaths()
   const routesContent = readFile(cedarPaths.web.routes).toString()
   const newRoutesContent = routes.reduce((content, route) => {
@@ -540,6 +607,10 @@ export const addPackagesTask = async ({
   packages,
   side = 'project',
   devDependency = false,
+}: {
+  packages: string[]
+  side?: 'project' | 'web' | 'api'
+  devDependency?: boolean
 }) => {
   const cedarVersion = await getInstalledCedarVersion()
 
@@ -551,7 +622,7 @@ export const addPackagesTask = async ({
     }
   })
 
-  let installCommand
+  let installCommand: [string, string[]]
   // if web,api
   if (side !== 'project') {
     installCommand = [
@@ -562,13 +633,13 @@ export const addPackagesTask = async ({
         'add',
         devDependency && '--dev',
         ...packagesWithSameRWVersion,
-      ].filter(Boolean),
+      ].filter((s): s is string => Boolean(s)),
     ]
   } else {
     installCommand = [
       'yarn',
       ['add', devDependency && '--dev', ...packagesWithSameRWVersion].filter(
-        Boolean,
+        (s): s is string => Boolean(s),
       ),
     ]
   }
@@ -583,23 +654,34 @@ export const addPackagesTask = async ({
 
 // TODO: Move this to generatePrismaClient.js. Possibly just inlining it
 // instead of creating a new Listr for generating the client
-export const runCommandTask = async (commands, { verbose, silent }) => {
+export const runCommandTask = async (
+  commands: {
+    title: string
+    cmd: string
+    args?: string[]
+    opts?: execa.Options
+    cwd?: string
+  }[],
+  { verbose, silent }: { verbose?: boolean; silent?: boolean } = {},
+) => {
   const tasks = new Listr(
-    commands.map(({ title, cmd, args, opts = {}, cwd = getPaths().base }) => ({
-      title,
-      task: async () => {
-        return execa(cmd, args, {
-          cwd,
-          stdio: verbose && !silent ? 'inherit' : 'pipe',
-          extendEnv: true,
-          cleanup: true,
-          ...opts,
-        })
-      },
-    })),
+    commands.map(
+      ({ title, cmd, args = [], opts = {}, cwd = getPaths().base }) => ({
+        title,
+        task: async () => {
+          return execa(cmd, args, {
+            cwd,
+            stdio: verbose && !silent ? 'inherit' : 'pipe',
+            extendEnv: true,
+            cleanup: true,
+            ...opts,
+          })
+        },
+      }),
+    ),
     {
       renderer: silent ? 'silent' : verbose ? 'verbose' : 'default',
-      rendererOptions: { collapseSubtasks: false, dateFormat: false },
+      rendererOptions: { collapseSubtasks: false },
     },
   )
 
@@ -607,14 +689,17 @@ export const runCommandTask = async (commands, { verbose, silent }) => {
     await tasks.run()
     return true
   } catch (e) {
-    console.log(c.error(e.message))
+    const message = e instanceof Error ? e.message : String(e)
+    console.log(c.error(message))
     return false
   }
 }
 
 /** Extract default CLI args from an exported builder */
-export const getDefaultArgs = (builder) => {
-  return Object.entries(builder).reduce(
+export const getDefaultArgs = (
+  builder: Record<string, { default?: unknown }>,
+) => {
+  return Object.entries(builder).reduce<Record<string, unknown>>(
     (options, [optionName, optionConfig]) => {
       // If a default is defined use it
       options[optionName] = optionConfig.default
@@ -629,20 +714,20 @@ export const getDefaultArgs = (builder) => {
  *
  * i.e. check for the existence of .vscode folder in root project directory
  */
-export const usingVSCode = () => {
+export const usingVSCode = (): boolean => {
   const cedarPaths = getPaths()
   const VS_CODE_PATH = path.join(cedarPaths.base, '.vscode')
   return fs.existsSync(VS_CODE_PATH)
 }
 
-export const printSetupNotes = (notes) => {
+export const printSetupNotes = (notes: string[]) => {
   return {
     title: 'One more thing...',
-    task: (_ctx, task) => {
+    task: (_ctx: unknown, task: ListrTaskWrapper<unknown, never, never>) => {
       task.title = `One more thing...\n\n ${boxen(notes.join('\n'), {
         padding: { top: 1, bottom: 1, right: 1, left: 1 },
         margin: 1,
-        borderColour: 'gray',
+        borderColor: 'gray',
       })}  \n`
     },
   }
