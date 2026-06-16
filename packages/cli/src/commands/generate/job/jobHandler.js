@@ -10,7 +10,7 @@ import { errorTelemetry } from '@cedarjs/telemetry'
 
 import {
   getPaths,
-  transformTSToJS,
+  transformTSToJSMap,
   writeFilesTask,
 } from '../../../lib/index.js'
 import { prepareForRollback } from '../../../lib/rollback.js'
@@ -81,18 +81,7 @@ export const files = async ({
     outputFiles.push(scenarioFile)
   }
 
-  return outputFiles.reduce(async (accP, [outputPath, content]) => {
-    const acc = await accP
-
-    const template = typescript
-      ? content
-      : await transformTSToJS(outputPath, content)
-
-    return {
-      [outputPath]: template,
-      ...acc,
-    }
-  }, Promise.resolve({}))
+  return transformTSToJSMap(outputFiles, typescript)
 }
 
 // This could be built using createYargsForComponentGeneration;

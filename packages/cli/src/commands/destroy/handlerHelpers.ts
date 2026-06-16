@@ -4,9 +4,7 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
 import { deleteFilesTask } from '../../lib/index.js'
 
-type FilesFunction = (
-  args: Record<string, unknown>,
-) => Promise<Record<string, string>>
+type FilesFunction<TArgs> = (args: TArgs) => Promise<Record<string, string>>
 
 type HandlerOptions = { name: string; isDestroyer?: boolean } & Record<
   string,
@@ -17,13 +15,13 @@ type PreTasksFn = (
   options: HandlerOptions,
 ) => Promise<HandlerOptions> | HandlerOptions
 
-const tasks = ({
+const tasks = <TFilesArgs>({
   componentName,
   filesFn,
   name,
 }: {
   componentName: string
-  filesFn: FilesFunction
+  filesFn: FilesFunction<TFilesArgs>
   name: string
 }) =>
   new Listr(
@@ -31,7 +29,14 @@ const tasks = ({
       {
         title: `Destroying ${componentName} files...`,
         task: async () => {
-          const f = await filesFn({ name, stories: true, tests: true })
+          // The destroy flow always passes the same fixed set of fields to
+          // the generator's `files` function. We assert to TFilesArgs here
+          // because the caller is generic over what those extra fields are.
+          const f = await filesFn({
+            name,
+            stories: true,
+            tests: true,
+          } as unknown as TFilesArgs)
           return deleteFilesTask(f)
         },
       },
@@ -39,14 +44,14 @@ const tasks = ({
     { rendererOptions: { collapseSubtasks: false }, exitOnError: true },
   )
 
-export function createHandler({
+export function createHandler<TFilesArgs>({
   componentName,
   preTasksFn = (options) => options,
   filesFn,
 }: {
   componentName: string
   preTasksFn?: PreTasksFn
-  filesFn: FilesFunction
+  filesFn: FilesFunction<TFilesArgs>
 }) {
   return {
     handler: async (options: HandlerOptions) => {

@@ -14,6 +14,7 @@ import {
   createHandler,
   templateForComponentFile,
 } from '../yargsHandlerHelpers.js'
+import type { HandlerArgv } from '../yargsHandlerHelpers.js'
 
 import {
   checkProjectForQueryField,
@@ -26,19 +27,20 @@ import {
 const COMPONENT_SUFFIX = 'Cell'
 const CEDAR_WEB_PATH_NAME = 'components'
 
-export const files = async ({
-  name,
-  typescript = false,
-  ...argv
-}: {
-  name: string
+type CellArgv = HandlerArgv & {
   typescript?: boolean
   list?: boolean
   query?: string
-  stories?: boolean
-  tests?: boolean
-  [key: string]: unknown
-}): Promise<Record<string, string>> => {
+}
+
+export const files = async ({
+  name,
+  typescript = false,
+  list = false,
+  query,
+  stories,
+  tests,
+}: CellArgv): Promise<Record<string, string>> => {
   let cellName = removeGeneratorName(name, 'cell')
   let idName: string | undefined = 'id'
   let idType: string | undefined
@@ -49,7 +51,7 @@ export const files = async ({
   // Create a unique operation name.
 
   const shouldGenerateList =
-    (isWordPluralizable(cellName) ? isPlural(cellName) : argv.list) || argv.list
+    (isWordPluralizable(cellName) ? isPlural(cellName) : list) || list
 
   // needed for the singular cell GQL query find by id case
   try {
@@ -76,7 +78,7 @@ export const files = async ({
     // override operationName so that its find_operationName
   }
 
-  let operationName: string | undefined = argv.query
+  let operationName: string | undefined = query
   if (operationName) {
     const userSpecifiedOperationNameIsUnique =
       await operationNameIsUnique(operationName)
@@ -143,15 +145,15 @@ export const files = async ({
 
   const files = [cellFile]
 
-  if (argv.stories) {
+  if (stories) {
     files.push(storiesFile)
   }
 
-  if (argv.tests) {
+  if (tests) {
     files.push(testFile)
   }
 
-  if (argv.stories || argv.tests) {
+  if (stories || tests) {
     files.push(mockFile)
   }
 

@@ -51,7 +51,16 @@ function mapRouteParamTypeToDefaultValue(paramType: string) {
   }
 }
 
-export const paramVariants = (path: string | undefined) => {
+type ParamVariants = {
+  propParam: string
+  propValueParam: string
+  argumentParam: string
+  paramName: string | undefined
+  paramValue: string | number | boolean
+  paramType: string
+}
+
+export const paramVariants = (path: string | undefined): ParamVariants => {
   const param = path?.match(/(\{[\w:]+\})/)?.[1]
   const paramName = param?.replace(/:[^}]+/, '').slice(1, -1)
 
@@ -87,7 +96,7 @@ export const paramVariants = (path: string | undefined) => {
 
 type PageArgv = HandlerArgv & {
   typescript?: boolean
-}
+} & Partial<ParamVariants>
 
 type PageHandlerArgv = PageArgv & {
   path: string
@@ -227,7 +236,6 @@ export const handler = async ({
           path = pathName(path, pageName)
           const f = await files({
             name: pageName,
-            path,
             tests,
             stories,
             typescript,

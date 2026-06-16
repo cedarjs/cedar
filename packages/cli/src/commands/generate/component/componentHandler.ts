@@ -1,22 +1,22 @@
-import { transformTSToJS } from '../../../lib/index.js'
+import { transformTSToJSMap } from '../../../lib/index.js'
 import {
   createHandler,
   templateForComponentFile,
 } from '../yargsHandlerHelpers.js'
+import type { HandlerArgv } from '../yargsHandlerHelpers.js'
 
 const REDWOOD_WEB_PATH_NAME = 'components'
+
+type ComponentArgv = HandlerArgv & {
+  typescript?: boolean
+}
 
 export const files = async ({
   name,
   typescript = false,
-  ...argv
-}: {
-  name: string
-  typescript?: boolean
-  stories?: boolean
-  tests?: boolean
-  [key: string]: unknown
-}): Promise<Record<string, string>> => {
+  stories,
+  tests,
+}: ComponentArgv): Promise<Record<string, string>> => {
   const extension = typescript ? '.tsx' : '.jsx'
   const componentFile = await templateForComponentFile({
     name,
@@ -43,34 +43,15 @@ export const files = async ({
   })
 
   const files = [componentFile]
-  if (argv.stories) {
+  if (stories) {
     files.push(storiesFile)
   }
 
-  if (argv.tests) {
+  if (tests) {
     files.push(testFile)
   }
 
-  // Returns
-  // {
-  //    "path/to/fileA": "<<<template>>>",
-  //    "path/to/fileB": "<<<template>>>",
-  // }
-  return files.reduce(
-    async (accP, [outputPath, content]) => {
-      const acc = await accP
-
-      const template = typescript
-        ? content
-        : await transformTSToJS(outputPath, content)
-
-      return {
-        [outputPath]: template,
-        ...acc,
-      }
-    },
-    Promise.resolve({} as Record<string, string>),
-  )
+  return transformTSToJSMap(files, typescript)
 }
 
 export const handler = createHandler({

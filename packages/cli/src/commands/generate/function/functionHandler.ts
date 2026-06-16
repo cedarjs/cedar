@@ -4,22 +4,23 @@ import { terminalLink } from 'termi-link'
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import { transformTSToJS, writeFilesTask } from '../../../lib/index.js'
+import { transformTSToJSMap, writeFilesTask } from '../../../lib/index.js'
 import { prepareForRollback } from '../../../lib/rollback.js'
 import { validateName } from '../helpers.js'
 import { templateForComponentFile } from '../yargsHandlerHelpers.js'
+import type { HandlerArgv } from '../yargsHandlerHelpers.js'
+
+type FunctionFilesArgv = HandlerArgv & {
+  typescript?: boolean
+  tests?: boolean
+}
 
 export const files = async ({
   name,
   typescript: generateTypescript = false,
   tests: generateTests = true,
   ...rest
-}: {
-  name: string
-  typescript?: boolean
-  tests?: boolean
-  [key: string]: unknown
-}): Promise<Record<string, string>> => {
+}: FunctionFilesArgv): Promise<Record<string, string>> => {
   const extension = generateTypescript ? '.ts' : '.js'
 
   const outputFiles: [string, string][] = []
@@ -58,35 +59,20 @@ export const files = async ({
     outputFiles.push(scenarioFile)
   }
 
-  return outputFiles.reduce(
-    async (accP, [outputPath, content]) => {
-      const acc = await accP
-
-      const template = generateTypescript
-        ? content
-        : await transformTSToJS(outputPath, content)
-
-      return {
-        [outputPath]: template,
-        ...acc,
-      }
-    },
-    Promise.resolve({} as Record<string, string>),
-  )
+  return transformTSToJSMap(outputFiles, generateTypescript)
 }
 
 // This could be built using createYargsForComponentGeneration;
 // however, we need to add a message after generating the function files
+type FunctionHandlerArgv = HandlerArgv & {
+  force: boolean
+}
+
 export const handler = async ({
   name,
   force,
   ...rest
-}: {
-  name: string
-  force: boolean
-  rollback?: boolean
-  [key: string]: unknown
-}) => {
+}: FunctionHandlerArgv) => {
   recordTelemetryAttributes({
     command: 'generate function',
     force,
