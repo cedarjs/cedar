@@ -10,6 +10,7 @@ import {
   generateTemplate,
 } from '../../../lib/index.js'
 import { prepareForRollback } from '../../../lib/rollback.js'
+// @ts-expect-error - No types for JS files
 import { verifyModelName } from '../../../lib/schemaHelpers.js'
 import { validateName } from '../helpers.js'
 
@@ -62,6 +63,7 @@ export const handler = async ({
       {
         title: 'Parsing datamodel, generating api/src/models/index.js...',
         task: async () => {
+          // @ts-expect-error - No types for JS files
           const redwoodRecordModule = await import('@cedarjs/record')
           await redwoodRecordModule.default.parseDatamodel()
         },

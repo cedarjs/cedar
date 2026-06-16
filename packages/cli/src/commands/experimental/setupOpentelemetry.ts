@@ -8,7 +8,7 @@ export const command = 'setup-opentelemetry'
 
 export const description = 'Setup OpenTelemetry within the API side'
 
-export const EXPERIMENTAL_TOPIC_ID = 4772
+export const EXPERIMENTAL_TOPIC_ID = '4772'
 
 export const builder = (yargs: Argv) => {
   yargs
@@ -36,6 +36,7 @@ export const handler = async (options: {
     force: options.force,
     verbose: options.verbose,
   })
+  // @ts-expect-error - No types for JS files
   const { handler } = await import('./setupOpentelemetryHandler.js')
   return handler(options)
 }
