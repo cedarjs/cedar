@@ -11,7 +11,7 @@ import { errorTelemetry } from '@cedarjs/telemetry'
 
 import {
   addRoutesToRouterTask,
-  transformTSToJS,
+  transformTSToJSMap,
   writeFilesTask,
 } from '../../../lib/index.js'
 import {
@@ -24,16 +24,18 @@ import {
   removeGeneratorName,
   validateName,
 } from '../helpers.js'
-import { templateForComponentFile } from '../yargsHandlerHelpers.js'
+import {
+  type HandlerArgv,
+  templateForComponentFile,
+} from '../yargsHandlerHelpers.js'
 
 const COMPONENT_SUFFIX = 'Page'
-const REDWOOD_WEB_PATH_NAME = 'pages'
+const CEDAR_WEB_PATH_NAME = 'pages'
 
-/** @type {(paramType: 'Int' | 'Boolean' | 'String') } **/
-const mapRouteParamTypeToDefaultValue = (paramType) => {
+function mapRouteParamTypeToDefaultValue(paramType: string) {
   switch (paramType) {
     case 'Int':
-      // "42" is just a value used for demonstrating parameter usage in the
+      // `42` is just a value used for demonstrating parameter usage in the
       // generated page-, test-, and story-files.
       return 42
 
@@ -44,12 +46,12 @@ const mapRouteParamTypeToDefaultValue = (paramType) => {
       return true
 
     default:
-      // Boolean -> boolean, String -> string
+      // String -> string
       return '42'
   }
 }
 
-export const paramVariants = (path) => {
+export const paramVariants = (path: string | undefined) => {
   const param = path?.match(/(\{[\w:]+\})/)?.[1]
   const paramName = param?.replace(/:[^}]+/, '').slice(1, -1)
 
@@ -64,7 +66,7 @@ export const paramVariants = (path) => {
     }
   }
 
-  // set paramType param includes type (e.g. {id:Int}), else use string
+  // set paramType param includes type (e.g. {id:Int}), else use String
   const routeParamType = param?.match(/:/)
     ? param?.replace(/[^:]+/, '').slice(1, -1)
     : 'String'
@@ -83,13 +85,27 @@ export const paramVariants = (path) => {
   }
 }
 
-export const files = async ({ name, tests, stories, typescript, ...rest }) => {
+type PageArgv = HandlerArgv & {
+  typescript?: boolean
+}
+
+type PageHandlerArgv = PageArgv & {
+  path: string
+}
+
+export const files = async ({
+  name,
+  tests,
+  stories,
+  typescript = false,
+  ...rest
+}: PageArgv): Promise<Record<string, string>> => {
   const extension = typescript ? '.tsx' : '.jsx'
   const pageFile = await templateForComponentFile({
     name,
     suffix: COMPONENT_SUFFIX,
     extension,
-    webPathSection: REDWOOD_WEB_PATH_NAME,
+    webPathSection: CEDAR_WEB_PATH_NAME,
     generator: 'page',
     templatePath: 'page.tsx.template',
     templateVars: {
@@ -102,7 +118,7 @@ export const files = async ({ name, tests, stories, typescript, ...rest }) => {
     name,
     suffix: COMPONENT_SUFFIX,
     extension: `.test${extension}`,
-    webPathSection: REDWOOD_WEB_PATH_NAME,
+    webPathSection: CEDAR_WEB_PATH_NAME,
     generator: 'page',
     templatePath: 'test.tsx.template',
     templateVars: rest,
@@ -112,7 +128,7 @@ export const files = async ({ name, tests, stories, typescript, ...rest }) => {
     name,
     suffix: COMPONENT_SUFFIX,
     extension: `.stories${extension}`,
-    webPathSection: REDWOOD_WEB_PATH_NAME,
+    webPathSection: CEDAR_WEB_PATH_NAME,
     generator: 'page',
     templatePath:
       rest.paramName !== ''
@@ -131,26 +147,16 @@ export const files = async ({ name, tests, stories, typescript, ...rest }) => {
     files.push(storiesFile)
   }
 
-  // Returns
-  // {
-  //    "path/to/fileA": "<<<template>>>",
-  //    "path/to/fileB": "<<<template>>>",
-  // }
-  return files.reduce(async (accP, [outputPath, content]) => {
-    const acc = await accP
-
-    const template = typescript
-      ? content
-      : await transformTSToJS(outputPath, content)
-
-    return {
-      [outputPath]: template,
-      ...acc,
-    }
-  }, Promise.resolve({}))
+  return transformTSToJSMap(files, typescript)
 }
 
-export const routes = ({ name, path }) => {
+export const routes = ({
+  name,
+  path,
+}: {
+  name: string
+  path: string
+}): string[] => {
   return [
     `<Route path="${path}" page={${pascalcase(name)}Page} name="${camelcase(
       name,
@@ -166,7 +172,7 @@ export const handler = async ({
   stories,
   typescript = false,
   rollback,
-}) => {
+}: PageHandlerArgv) => {
   const pageName = removeGeneratorName(name, 'page')
   validateName(pageName)
 
@@ -254,7 +260,7 @@ export const handler = async ({
       },
       {
         title: 'One more thing...',
-        task: (ctx, task) => {
+        task: (_ctx: unknown, task: { title: string }) => {
           task.title =
             `One more thing...\n\n` +
             `   ${c.warning('Page created! A note about <Metadata>:')}\n\n` +
@@ -274,8 +280,13 @@ export const handler = async ({
     }
     await tasks.run()
   } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+    const message = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    process.exit(exitCode)
   }
 }

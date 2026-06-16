@@ -1,20 +1,30 @@
-import { transformTSToJS } from '../../../lib/index.js'
+import { transformTSToJSMap } from '../../../lib/index.js'
 import { removeGeneratorName } from '../helpers.js'
 import {
-  templateForComponentFile,
   createHandler,
+  templateForComponentFile,
 } from '../yargsHandlerHelpers.js'
+import type { HandlerArgv } from '../yargsHandlerHelpers.js'
 
 const COMPONENT_SUFFIX = 'Layout'
-const REDWOOD_WEB_PATH_NAME = 'layouts'
+const CEDAR_WEB_PATH_NAME = 'layouts'
 
-export const files = async ({ name, typescript = false, ...options }) => {
+type LayoutArgv = HandlerArgv & {
+  typescript?: boolean
+  skipLink?: boolean
+}
+
+export const files = async ({
+  name,
+  typescript = false,
+  ...options
+}: LayoutArgv): Promise<Record<string, string>> => {
   const layoutName = removeGeneratorName(name, 'layout')
   const extension = typescript ? '.tsx' : '.jsx'
   const layoutFile = await templateForComponentFile({
     name: layoutName,
     suffix: COMPONENT_SUFFIX,
-    webPathSection: REDWOOD_WEB_PATH_NAME,
+    webPathSection: CEDAR_WEB_PATH_NAME,
     extension,
     generator: 'layout',
     templatePath: options.skipLink
@@ -25,7 +35,7 @@ export const files = async ({ name, typescript = false, ...options }) => {
     name: layoutName,
     suffix: COMPONENT_SUFFIX,
     extension: `.test${extension}`,
-    webPathSection: REDWOOD_WEB_PATH_NAME,
+    webPathSection: CEDAR_WEB_PATH_NAME,
     generator: 'layout',
     templatePath: 'test.tsx.template',
   })
@@ -33,7 +43,7 @@ export const files = async ({ name, typescript = false, ...options }) => {
     name: layoutName,
     suffix: COMPONENT_SUFFIX,
     extension: `.stories${extension}`,
-    webPathSection: REDWOOD_WEB_PATH_NAME,
+    webPathSection: CEDAR_WEB_PATH_NAME,
     generator: 'layout',
     templatePath: 'stories.tsx.template',
   })
@@ -47,23 +57,7 @@ export const files = async ({ name, typescript = false, ...options }) => {
     files.push(testFile)
   }
 
-  // Returns
-  // {
-  //    "path/to/fileA": "<<<template>>>",
-  //    "path/to/fileB": "<<<template>>>",
-  // }
-  return files.reduce(async (accP, [outputPath, content]) => {
-    const acc = await accP
-
-    const template = typescript
-      ? content
-      : await transformTSToJS(outputPath, content)
-
-    return {
-      [outputPath]: template,
-      ...acc,
-    }
-  }, Promise.resolve({}))
+  return transformTSToJSMap(files, typescript)
 }
 
 export const handler = createHandler({
