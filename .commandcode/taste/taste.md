@@ -61,3 +61,4 @@ See [code-style/taste.md](code-style/taste.md)
 # node
 
 - Cedar requires Node 24+. --experimental-strip-types is unflagged and not needed. Confidence: 0.90
+- When fixing type errors caused by callers passing `undefined` to a util: prefer making the caller consistent (e.g., default at destructure like `typescript = false`) over loosening the util's signature with `?`. Keep util types strict; push defaults to caller sites to match the rest of the codebase. Confidence: 0.75

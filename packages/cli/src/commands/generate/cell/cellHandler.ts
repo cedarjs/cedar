@@ -28,7 +28,7 @@ const CEDAR_WEB_PATH_NAME = 'components'
 
 export const files = async ({
   name,
-  typescript,
+  typescript = false,
   ...argv
 }: {
   name: string
