@@ -14,6 +14,11 @@ vi.mock('../background.js', () => {
   }
 })
 
+vi.mock('@cedarjs/project-config/packageManager', () => ({
+  getPackageManager: vi.fn(() => 'yarn'),
+  resetPackageManagerCache: vi.fn(),
+}))
+
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
 

@@ -178,3 +178,27 @@ export function dlx(
 
   return execa(pm, ['dlx', command, ...args], options)
 }
+
+/**
+ * Returns spawn-compatible `[cmd, args]` for running a node script through the
+ * current package manager. Use with `child_process.spawn` (not execa).
+ *
+ * Yarn PnP requires wrapping node via `yarn node` so module resolution works.
+ *
+ * - yarn:  `yarn node <script>`
+ * - npm:   `node <script>`
+ * - pnpm:  `pnpm exec node <script>`
+ */
+export function getNodeRunnerArgs(scriptPath: string): [string, string[]] {
+  const pm = getPackageManager()
+
+  if (pm === 'npm') {
+    return ['node', [scriptPath]]
+  }
+
+  if (pm === 'pnpm') {
+    return ['pnpm', ['exec', 'node', scriptPath]]
+  }
+
+  return ['yarn', ['node', scriptPath]]
+}

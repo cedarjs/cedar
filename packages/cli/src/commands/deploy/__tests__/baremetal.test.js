@@ -11,7 +11,16 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
   }
 })
 
+<<<<<<< HEAD
 import * as baremetalHandler from '../baremetal/baremetalHandler.js'
+=======
+vi.mock('@cedarjs/project-config/packageManager', () => ({
+  getPackageManager: vi.fn(() => 'yarn'),
+  resetPackageManagerCache: vi.fn(),
+}))
+
+import * as baremetal from '../baremetal/baremetalHandler.js'
+>>>>>>> 7982d76ba7 (feat(pm): Package manager agnostic deploy commands (#1925))
 
 describe('verifyConfig', () => {
   it('throws an error if no environment specified', () => {

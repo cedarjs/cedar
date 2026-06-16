@@ -14,6 +14,10 @@ vi.mock('@cedarjs/project-config', async () => ({
   }),
 }))
 
+vi.mock('@cedarjs/project-config/packageManager', () => ({
+  getPackageManager: () => 'yarn',
+}))
+
 vi.mock('@cedarjs/cli-helpers', async () => ({
   colors: Object.fromEntries(
     [
