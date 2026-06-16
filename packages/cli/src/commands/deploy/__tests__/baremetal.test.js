@@ -11,6 +11,11 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
   }
 })
 
+vi.mock('@cedarjs/project-config/packageManager', () => ({
+  getPackageManager: vi.fn(() => 'yarn'),
+  resetPackageManagerCache: vi.fn(),
+}))
+
 import * as baremetal from '../baremetal/baremetalHandler.js'
 
 describe('verifyConfig', () => {

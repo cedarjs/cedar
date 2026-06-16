@@ -15,6 +15,10 @@ import pascalcase from 'pascalcase'
 import { format } from 'prettier'
 
 import { colors as c } from '@cedarjs/cli-helpers'
+import {
+  addRootPackages,
+  addWorkspacePackages,
+} from '@cedarjs/cli-helpers/packageManager/packages'
 import type { Config, Paths } from '@cedarjs/project-config'
 import {
   getConfig as getCedarConfig,
@@ -212,8 +216,8 @@ export async function getInstalledCedarVersion(): Promise<string> {
 }
 
 /**
- * This wraps the core version of getPaths into something that catches the exception
- * and displays a helpful error message.
+ * This wraps the core version of getPaths into something that catches the
+ * exception and displays a helpful error message.
  */
 export const _getPaths = (): Paths => {
   try {
@@ -263,8 +267,8 @@ export const getPrettierOptions = async (): Promise<
 
     return prettierOptions
   } catch {
-    // If we're in our vitest environment we want to return a consistent set of prettier options
-    // such that snapshots don't change unexpectedly.
+    // If we're in our vitest environment we want to return a consistent set of
+    // prettier options such that snapshots don't change unexpectedly.
     if (process.env.VITEST_POOL_ID !== undefined) {
       return {
         trailingComma: 'es5',
@@ -283,6 +287,7 @@ export const getPrettierOptions = async (): Promise<
         ],
       }
     }
+
     return undefined
   }
 }
@@ -297,8 +302,8 @@ export const transformTSToJS = async (
 ): Promise<string> => {
   const result = babel.transform(content, {
     filename,
-    // If you ran `yarn cedar generate` in `./web` transformSync would import the `.babelrc.js` file,
-    // in `./web`? despite us setting `configFile: false`.
+    // If you ran `yarn cedar generate` in `./web` transformSync would import
+    // the `.babelrc.js` file, in `./web` despite us setting `configFile: false`
     cwd: process.env.NODE_ENV === 'test' ? undefined : getPaths().base,
     configFile: false,
     plugins: [
@@ -568,33 +573,18 @@ export const addPackagesTask = async ({
     }
   })
 
-  let installCommand: [string, string[]]
-
-  // if web,api
-  if (side !== 'project') {
-    installCommand = [
-      'yarn',
-      [
-        'workspace',
-        side,
-        'add',
-        devDependency && '--dev',
-        ...packagesWithSameRWVersion,
-      ].filter(Boolean) as string[],
-    ]
-  } else {
-    installCommand = [
-      'yarn',
-      ['add', devDependency && '--dev', ...packagesWithSameRWVersion].filter(
-        Boolean,
-      ) as string[],
-    ]
-  }
-
   return {
     title: `Adding dependencies to ${side}`,
     task: async () => {
-      await execa(...installCommand)
+      if (side !== 'project') {
+        await addWorkspacePackages(side, packagesWithSameRWVersion, {
+          dev: devDependency,
+        })
+      } else {
+        await addRootPackages(packagesWithSameRWVersion, {
+          dev: devDependency,
+        })
+      }
     },
   }
 }
