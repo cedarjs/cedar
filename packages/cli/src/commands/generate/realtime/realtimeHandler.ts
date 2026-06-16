@@ -84,8 +84,8 @@ export async function handler({
     functionType = response.functionType
   }
 
-  const tasks = new Listr(
-    [
+  function buildTaskData() {
+    return [
       {
         title: 'Checking for realtime environment prerequisites ...',
         task: () => {
@@ -258,15 +258,32 @@ export async function handler({
           )
         },
       },
-    ],
-    {
-      rendererOptions: { collapseSubtasks: false, persistentOutput: true },
-      renderer: silent ? 'silent' : verbose ? 'verbose' : 'default',
-    },
-  )
+    ]
+  }
 
   try {
-    await tasks.run()
+    if (silent) {
+      await new Listr(buildTaskData(), {
+        exitOnError: true,
+        renderer: 'silent',
+      }).run()
+    } else if (verbose) {
+      await new Listr(buildTaskData(), {
+        exitOnError: true,
+        renderer: 'verbose',
+      }).run()
+    } else {
+      await new Listr(
+        buildTaskData().map((t) => ({
+          ...t,
+          rendererOptions: { persistentOutput: true },
+        })),
+        {
+          exitOnError: true,
+          rendererOptions: { collapseSubtasks: false },
+        },
+      ).run()
+    }
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
     const exitCode =

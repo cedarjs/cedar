@@ -19,7 +19,6 @@ import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { ensurePosixPath, getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-// @ts-expect-error - Types not available for JS files
 import { generateTemplate, getPaths, writeFilesTask } from '../../lib/index.js'
 import { prepareForRollback } from '../../lib/rollback.js'
 

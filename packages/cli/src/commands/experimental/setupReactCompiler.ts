@@ -8,7 +8,7 @@ export const command = 'setup-react-compiler'
 
 export const description = 'Enable the experimental React Compiler'
 
-export const EXPERIMENTAL_TOPIC_ID = 7128
+export const EXPERIMENTAL_TOPIC_ID = '7128'
 
 export const builder = (yargs: Argv) => {
   yargs

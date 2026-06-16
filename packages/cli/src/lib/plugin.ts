@@ -10,7 +10,31 @@ import { installModule, isModuleInstalled } from './packages.js'
 
 import { getPaths } from './index.js'
 
-const { Select } = enquirer
+// enquirer's type declarations (the .d.ts file) don't include a declaration for
+// Select. The type file only declares Enquirer.prompt() and Enquirer.Prompt,
+// but the actual enquirer module also exports Select, Input, MultiSelect, etc.
+// at runtime.
+// There's an open issue about adding better ESM support, and a PR for better
+// types
+// https://github.com/enquirer/enquirer/issues/439
+// https://github.com/enquirer/enquirer/pull/307
+const { Select } = enquirer as unknown as {
+  Select: new (options: {
+    name: string
+    message: string
+    choices: { name: string; message: string }[]
+  }) => { run(): Promise<string> }
+}
+
+export type CacheEntry = Record<
+  string,
+  { aliases?: string[]; description?: string }
+>
+
+export interface PluginCommandCache {
+  _builtin: string[]
+  [packageName: string]: CacheEntry | string[]
+}
 
 /**
  * The file inside .cedar which will contain cached plugin command mappings
@@ -18,13 +42,14 @@ const { Select } = enquirer
 export const PLUGIN_CACHE_FILENAME = 'commandCache.json'
 
 /**
- * A cache of yargs information for redwood commands that are available from plugins.
+ * A cache of yargs information for redwood commands that are available from
+ * plugins.
  *
- * This is intended to be used for commands which lazy install their dependencies so that
- * this information otherwise would not be available and help output would be unavailable/
- * incorrect.
+ * This is intended to be used for commands which lazy install their
+ * dependencies so that this information otherwise would not be available and
+ * help output would be unavailable/incorrect.
  */
-export const PLUGIN_CACHE_DEFAULT = {
+export const PLUGIN_CACHE_DEFAULT: Record<string, CacheEntry> = {
   '@cedarjs/cli-storybook-vite': {
     storybook: {
       aliases: ['sb'],
@@ -41,7 +66,8 @@ export const PLUGIN_CACHE_DEFAULT = {
 }
 
 /**
- * A list of commands that are built into the CLI and require no plugin to be loaded.
+ * A list of commands that are built into the CLI and require no plugin to be
+ * loaded.
  */
 export const PLUGIN_CACHE_BUILTIN = [
   'build',
@@ -72,21 +98,34 @@ export const PLUGIN_CACHE_BUILTIN = [
   'tsc',
   'tc',
   'upgrade',
-]
+] satisfies string[]
 
-export function loadCommandCache() {
+function isErrorWithCode(error: unknown, code: string): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === code
+  )
+}
+
+export function loadCommandCache(): PluginCommandCache {
   // Always default to the default cache
-  let pluginCommandCache = PLUGIN_CACHE_DEFAULT
+  let pluginCommandCache: Record<string, unknown> = { ...PLUGIN_CACHE_DEFAULT }
   const commandCachePath = path.join(
     getPaths().generated.base,
     PLUGIN_CACHE_FILENAME,
   )
   try {
-    const localCommandCache = JSON.parse(fs.readFileSync(commandCachePath))
+    const localCommandCache = JSON.parse(
+      fs.readFileSync(commandCachePath, 'utf8'),
+    )
     // This validity check is rather naive but it exists to invalidate a
     // previous format of the cache file
     let valid = true
-    for (const [key, value] of Object.entries(localCommandCache)) {
+    for (const [key, value] of Object.entries(
+      localCommandCache as Record<string, unknown>,
+    )) {
       if (key === '_builtin') {
         continue
       }
@@ -97,23 +136,23 @@ export function loadCommandCache() {
       // cache takes precedence - this ensure the cache is consistent with the
       // current version of the framework
       pluginCommandCache = {
-        ...localCommandCache,
+        ...(localCommandCache as Record<string, unknown>),
         ...PLUGIN_CACHE_DEFAULT,
       }
     }
-  } catch (error) {
+  } catch (error: unknown) {
     // If the cache file doesn't exist we can just ignore it and continue
-    if (error.code !== 'ENOENT') {
+    if (!isErrorWithCode(error, 'ENOENT')) {
       console.error(`Error loading plugin command cache at ${commandCachePath}`)
       console.error(error)
     }
   }
   // Built in commands must be in sync with the framework code
   pluginCommandCache._builtin = PLUGIN_CACHE_BUILTIN
-  return pluginCommandCache
+  return pluginCommandCache as PluginCommandCache
 }
 
-export function saveCommandCache(pluginCommandCache) {
+export function saveCommandCache(pluginCommandCache: PluginCommandCache): void {
   const commandCachePath = path.join(
     getPaths().generated.base,
     PLUGIN_CACHE_FILENAME,
@@ -123,7 +162,7 @@ export function saveCommandCache(pluginCommandCache) {
       commandCachePath,
       JSON.stringify(pluginCommandCache, undefined, 2),
     )
-  } catch (error) {
+  } catch (error: unknown) {
     console.error(`Error saving plugin command cache at ${commandCachePath}`)
     console.error(error)
   }
@@ -131,10 +170,10 @@ export function saveCommandCache(pluginCommandCache) {
 
 /**
  * Logs warnings for any plugins that have invalid definitions in cedar.toml
- *
- * @param {any[]} plugins An array of plugin objects read from cedar.toml
  */
-export function checkPluginListAndWarn(plugins) {
+export function checkPluginListAndWarn(
+  plugins: { package?: string; enabled?: boolean }[],
+): void {
   // Plugins must define a package
   for (const plugin of plugins) {
     if (!plugin.package) {
@@ -147,7 +186,7 @@ export function checkPluginListAndWarn(plugins) {
   // Plugins should only occur once in the list
   const pluginPackages = plugins
     .map((p) => p.package)
-    .filter((p) => p !== undefined)
+    .filter((p): p is string => p !== undefined)
   if (pluginPackages.length !== new Set(pluginPackages).size) {
     console.warn(
       ansis.yellow(
@@ -173,20 +212,22 @@ export function checkPluginListAndWarn(plugins) {
 }
 
 /**
- * Attempts to load a plugin package and return it. Returns null if the plugin failed to load.
+ * Attempts to load a plugin package and return it. Returns null if the plugin
+ * failed to load.
  *
- * @param {string} packageName The npm package name of the plugin
- * @param {string | undefined} packageVersion The npm package version of the plugin, defaults to loading the plugin at the
- * same version as the cli
- * @param {boolean} autoInstall Whether to automatically install the plugin package if it is not installed already
- * @returns The plugin package or null if it failed to load
+ * @param packageName The npm package name of the plugin
+ * @param packageVersion The npm package version of the plugin, defaults to
+ * loading the plugin at the same version as the cli
+ * @param autoInstall Whether to automatically install the plugin package if it
+ * is not installed already
  */
 export async function loadPluginPackage(
-  packageName,
-  packageVersion,
-  autoInstall,
-) {
-  // NOTE: This likely does not handle mismatch versions between what is installed and what is requested
+  packageName: string,
+  packageVersion: string | undefined,
+  autoInstall: boolean,
+): Promise<Record<string, unknown> | null> {
+  // NOTE: This likely does not handle mismatch versions between what is
+  // installed and what is requested
   if (isModuleInstalled(packageName)) {
     return await import(packageName)
   }
@@ -194,9 +235,11 @@ export async function loadPluginPackage(
   if (!autoInstall) {
     console.warn(
       ansis.yellow(
-        `⚠️  Plugin "${packageName}" cannot be loaded because it is not installed and "autoInstall" is disabled.`,
+        `⚠️  Plugin "${packageName}" cannot be loaded because it is not ` +
+          'installed and "autoInstall" is disabled.',
       ),
     )
+
     return null
   }
 
@@ -210,16 +253,20 @@ export async function loadPluginPackage(
 }
 
 /**
- * Attempts to install a plugin package. Installs the package as a dev dependency.
+ * Attempts to install a plugin package. Installs the package as a dev
+ * dependency.
  *
- * @param {string} packageName The npm package name of the plugin
- * @param {string} packageVersion The npm package version of the plugin to install or undefined
- * to install the same version as the cli
+ * @param packageName The npm package name of the plugin
+ * @param packageVersion The npm package version of the plugin to install or
+ * undefined to install the same version as the cli
  * @returns True if the plugin was installed successfully, false otherwise
  */
-async function installPluginPackage(packageName, packageVersion) {
-  // We use a simple heuristic here to try and be a little more convenient for the user
-  // when no version is specified.
+async function installPluginPackage(
+  packageName: string,
+  packageVersion: string | undefined,
+): Promise<boolean> {
+  // We use a simple heuristic here to try and be a little more convenient for
+  // the user when no version is specified.
 
   let versionToInstall = packageVersion
   const isRedwoodPackage = packageName.startsWith('@cedarjs/')
@@ -236,11 +283,12 @@ async function installPluginPackage(packageName, packageVersion) {
           `Installing the latest compatible version: ${versionToInstall}`,
         ),
       )
-    } catch (error) {
+    } catch (error: unknown) {
       console.log(
         'The following error occurred while checking plugin compatibility for automatic installation:',
       )
-      const errorMessage = error.message ?? error
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
       console.log(errorMessage)
 
       // Exit without a chance to continue if it makes sense to do so
@@ -273,11 +321,13 @@ async function installPluginPackage(packageName, packageVersion) {
   }
 
   try {
-    // Note that installModule does the cli version matching for us if versionToInstall is undefined
+    // Note that installModule does the cli version matching for us if
+    // versionToInstall is undefined
     await installModule(packageName, versionToInstall)
     return true
   } catch (error) {
     console.error(error)
+
     return false
   }
 }

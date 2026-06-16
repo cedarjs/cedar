@@ -6,8 +6,14 @@ import { builder } from '../flightcontrol.js'
 import { handler } from '../flightcontrolHandler.js'
 
 vi.mock('path')
-vi.mock('execa')
+vi.mock('execa', () => {
+  const mockExeca = vi.fn(() => Promise.resolve({ stdout: 'mocked' }))
+  return { default: mockExeca, command: vi.fn() }
+})
 vi.mock('node:fs')
+vi.mock('@cedarjs/project-config/packageManager', () => ({
+  getPackageManager: () => 'yarn',
+}))
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const originalProjectConfig: object = await importOriginal()
 
@@ -67,8 +73,8 @@ describe('handler', () => {
     vi.spyOn(console, 'log').mockImplementation(() => {})
 
     const execa = await import('execa')
-    const cmdMock = execa.command as unknown as Mock
-    cmdMock.mockImplementation(() => Promise.resolve({ stdout: 'mocked' }))
+    const defaultMock = execa.default as unknown as Mock
+    defaultMock.mockImplementation(() => Promise.resolve({ stdout: 'mocked' }))
   })
 
   describe('side: web', () => {
@@ -86,8 +92,8 @@ describe('handler', () => {
 
     it('should have non-zero exit code when build fails', async () => {
       const execa = await import('execa')
-      const cmdMock = execa.command
-      vi.mocked(cmdMock).mockImplementation(() =>
+      const defaultMock = execa.default
+      vi.mocked(defaultMock).mockImplementation(() =>
         // @ts-expect-error - only partially mocked
         Promise.resolve({ failed: true }),
       )
@@ -99,7 +105,7 @@ describe('handler', () => {
           prisma: false,
           dm: false,
         }),
-      ).rejects.toThrow('Command (yarn cedar build web --verbose) failed')
+      ).rejects.toThrow('Command (cedar build web --verbose) failed')
     })
   })
 })
