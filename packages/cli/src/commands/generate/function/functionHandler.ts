@@ -17,11 +17,11 @@ type FunctionFilesArgv = HandlerArgv & {
 
 export const files = async ({
   name,
-  typescript: generateTypescript = false,
-  tests: generateTests = true,
+  typescript = false,
+  tests = true,
   ...rest
 }: FunctionFilesArgv): Promise<Record<string, string>> => {
-  const extension = generateTypescript ? '.ts' : '.js'
+  const extension = typescript ? '.ts' : '.js'
 
   const outputFiles: [string, string][] = []
 
@@ -31,12 +31,12 @@ export const files = async ({
     apiPathSection: 'functions',
     generator: 'function',
     templatePath: 'function.ts.template',
-    templateVars: { ...rest, typescript: generateTypescript },
+    templateVars: { ...rest, typescript },
   })
 
   outputFiles.push(functionFiles)
 
-  if (generateTests) {
+  if (tests) {
     const testFile = await templateForComponentFile({
       name,
       extension: `.test${extension}`,
@@ -59,15 +59,15 @@ export const files = async ({
     outputFiles.push(scenarioFile)
   }
 
-  return transformTSToJSMap(outputFiles, generateTypescript)
+  return transformTSToJSMap(outputFiles, typescript)
 }
 
-// This could be built using createYargsForComponentGeneration;
-// however, we need to add a message after generating the function files
 type FunctionHandlerArgv = HandlerArgv & {
   force: boolean
 }
 
+// This could be built using createYargsForComponentGeneration;
+// however, we need to add a message after generating the function files
 export const handler = async ({
   name,
   force,
