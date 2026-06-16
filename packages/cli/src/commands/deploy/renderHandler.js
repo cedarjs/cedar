@@ -5,7 +5,10 @@ import execa from 'execa'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { formatAddRootPackagesCommand } from '@cedarjs/cli-helpers/packageManager/display'
-import { getNodeRunnerArgs, runBin, runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
+import {
+  getNodeRunnerArgs,
+  runBinSync,
+} from '@cedarjs/cli-helpers/packageManager/exec'
 import { installPackages } from '@cedarjs/cli-helpers/packageManager/packages'
 import { getPaths } from '@cedarjs/project-config'
 

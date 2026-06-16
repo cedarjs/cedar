@@ -4,7 +4,10 @@ import path from 'node:path'
 import execa from 'execa'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-import { getNodeRunnerArgs, runBin } from '@cedarjs/cli-helpers/packageManager/exec'
+import {
+  getNodeRunnerArgs,
+  runBin,
+} from '@cedarjs/cli-helpers/packageManager/exec'
 import { getPaths } from '@cedarjs/project-config'
 
 export interface HandlerArgs {
