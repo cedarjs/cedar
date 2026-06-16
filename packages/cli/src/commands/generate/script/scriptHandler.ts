@@ -10,7 +10,6 @@ import {
   getPaths,
   writeFilesTask,
   transformTSToJS,
-  // @ts-expect-error - Types not available for JS files
 } from '../../../lib/index.js'
 import { prepareForRollback } from '../../../lib/rollback.js'
 import { validateName } from '../helpers.js'

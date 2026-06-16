@@ -1,6 +1,6 @@
-import https from 'https'
 import fs from 'node:fs'
-import path from 'path'
+import https from 'node:https'
+import path from 'node:path'
 
 import * as babel from '@babel/core'
 import boxen from 'boxen'
@@ -19,9 +19,10 @@ import {
   addRootPackages,
   addWorkspacePackages,
 } from '@cedarjs/cli-helpers/packageManager/packages'
+import type { Config, Paths } from '@cedarjs/project-config'
 import {
-  getConfig as getRedwoodConfig,
-  getPaths as getRedwoodPaths,
+  getConfig as getCedarConfig,
+  getPaths as getCedarPaths,
   resolveFile as internalResolveFile,
   findUp,
 } from '@cedarjs/project-config'
@@ -30,6 +31,19 @@ import { pluralize, singularize } from '@cedarjs/utils/cedarPluralize'
 import { addFileToRollback } from './rollback.js'
 
 export { findUp }
+
+interface NameVariants {
+  pascalName: string
+  camelName: string
+  singularPascalName: string
+  pluralPascalName: string
+  singularCamelName: string
+  pluralCamelName: string
+  singularParamName: string
+  pluralParamName: string
+  singularConstantName: string
+  pluralConstantName: string
+}
 
 /**
  * Returns variants of the passed `name` for usage in templates. If the given
@@ -44,8 +58,8 @@ export { findUp }
  * pluralParamName: foo-bars
  * singularConstantName: FOO_BAR
  * pluralConstantName: FOO_BARS
-*/
-export const nameVariants = (name) => {
+ */
+export const nameVariants = (name: string): NameVariants => {
   const normalizedName = pascalcase(paramCase(singularize(name)))
 
   return {
@@ -62,7 +76,10 @@ export const nameVariants = (name) => {
   }
 }
 
-export const generateTemplate = (templateFilename, { name, ...rest }) => {
+export const generateTemplate = (
+  templateFilename: string,
+  { name, ...rest }: { name: string } & Record<string, unknown>,
+): Promise<string> => {
   try {
     const templateFn = template(readFile(templateFilename).toString())
     const renderedTemplate = templateFn({
@@ -73,21 +90,25 @@ export const generateTemplate = (templateFilename, { name, ...rest }) => {
 
     return prettify(templateFilename, renderedTemplate)
   } catch (error) {
-    error.message = `Error applying template at ${templateFilename} for ${name}: ${error.message}`
+    ;(error as Error).message =
+      `Error applying template at ${templateFilename} for ${name}: ${(error as Error).message}`
     throw error
   }
 }
 
-export const prettify = async (templateFilename, renderedTemplate) => {
+export const prettify = async (
+  templateFilename: string,
+  renderedTemplate: string,
+): Promise<string> => {
   // We format .js and .css templates, we need to tell prettier which parser
   // we're using.
   // https://prettier.io/docs/en/options.html#parser
   const parser = {
-    '.css': 'css',
-    '.js': 'babel',
-    '.jsx': 'babel',
-    '.ts': 'babel-ts',
-    '.tsx': 'babel-ts',
+    '.css': 'css' as const,
+    '.js': 'babel' as const,
+    '.jsx': 'babel' as const,
+    '.ts': 'babel-ts' as const,
+    '.tsx': 'babel-ts' as const,
   }[path.extname(templateFilename.replace('.template', ''))]
 
   if (typeof parser === 'undefined') {
@@ -102,12 +123,12 @@ export const prettify = async (templateFilename, renderedTemplate) => {
   })
 }
 
-export const readFile = (target) =>
+export const readFile = (target: string): string =>
   fs.readFileSync(target, { encoding: 'utf8' })
 
 const SUPPORTED_EXTENSIONS = ['.js', '.jsx', '.ts', '.tsx']
 
-export const deleteFile = (file) => {
+export const deleteFile = (file: string): void => {
   const extension = path.extname(file)
   if (SUPPORTED_EXTENSIONS.includes(extension)) {
     const baseFile = getBaseFile(file)
@@ -122,9 +143,9 @@ export const deleteFile = (file) => {
   }
 }
 
-const getBaseFile = (file) => file.replace(/\.\w*$/, '')
+const getBaseFile = (file: string) => file.replace(/\.\w*$/, '')
 
-export const existsAnyExtensionSync = (file) => {
+export const existsAnyExtensionSync = (file: string): boolean => {
   const extension = path.extname(file)
   if (SUPPORTED_EXTENSIONS.includes(extension)) {
     const baseFile = getBaseFile(file)
@@ -135,11 +156,11 @@ export const existsAnyExtensionSync = (file) => {
 }
 
 export const writeFile = (
-  target,
-  contents,
-  { overwriteExisting = false } = {},
-  task = {},
-) => {
+  target: string,
+  contents: string,
+  { overwriteExisting = false }: { overwriteExisting?: boolean } = {},
+  task: { title?: string } = {},
+): void => {
   const { base } = getPaths()
   task.title = `Writing \`./${path.relative(base, target)}\``
   if (!overwriteExisting && fs.existsSync(target)) {
@@ -156,15 +177,15 @@ export const writeFile = (
 }
 
 export const saveRemoteFileToDisk = (
-  url,
-  localPath,
-  { overwriteExisting = false } = {},
-) => {
+  url: string,
+  localPath: string,
+  { overwriteExisting = false }: { overwriteExisting?: boolean } = {},
+): Promise<void> => {
   if (!overwriteExisting && fs.existsSync(localPath)) {
     throw new Error(`${localPath} already exists.`)
   }
 
-  const downloadPromise = new Promise((resolve, reject) =>
+  const downloadPromise = new Promise<void>((resolve, reject) =>
     https.get(url, (response) => {
       if (response.statusCode === 200) {
         response.pipe(fs.createWriteStream(localPath))
@@ -180,47 +201,50 @@ export const saveRemoteFileToDisk = (
   return downloadPromise
 }
 
-export async function getInstalledCedarVersion() {
+export async function getInstalledCedarVersion(): Promise<string> {
   try {
-    const packageJson = await import('../../package.json', {
-      with: { type: 'json' },
-    })
+    const packageJson: { default: { version: string } } = await import(
+      '../../package.json',
+      { with: { type: 'json' } }
+    )
+
     return packageJson.default.version
-  } catch (e) {
+  } catch {
     console.error(c.error('Could not find installed Cedar version'))
     process.exit(1)
   }
 }
 
-export const bytes = (contents) => Buffer.byteLength(contents, 'utf8')
-
 /**
- * This wraps the core version of getPaths into something that catches the exception
- * and displays a helpful error message.
+ * This wraps the core version of getPaths into something that catches the
+ * exception and displays a helpful error message.
  */
-export const _getPaths = () => {
+export const _getPaths = (): Paths => {
   try {
-    return getRedwoodPaths()
+    return getCedarPaths()
   } catch (e) {
-    console.error(c.error(e.message))
+    const message = e instanceof Error ? e.message : String(e)
+    console.error(c.error(message))
     process.exit(1)
   }
 }
-export const getPaths = memoize(_getPaths)
+export const getPaths: () => Paths = memoize(_getPaths)
 export const resolveFile = internalResolveFile
 
-export const getGraphqlPath = () =>
+export const getGraphqlPath = (): string | null =>
   resolveFile(path.join(getPaths().api.functions, 'graphql'))
 
-export const graphFunctionDoesExist = () => {
-  return fs.existsSync(getGraphqlPath())
+export const graphFunctionDoesExist = (): boolean => {
+  const graphqlPath = getGraphqlPath()
+  return graphqlPath ? fs.existsSync(graphqlPath) : false
 }
 
-export const getConfig = () => {
+export const getConfig = (): Config => {
   try {
-    return getRedwoodConfig()
+    return getCedarConfig()
   } catch (e) {
-    console.error(c.error(e.message))
+    const message = e instanceof Error ? e.message : String(e)
+    console.error(c.error(message))
     process.exit(1)
   }
 }
@@ -229,20 +253,22 @@ export const getConfig = () => {
  * This returns the config present in `prettier.config.cjs` or
  * `prettier.config.mjs` of a Cedar project.
  */
-export const getPrettierOptions = async () => {
+export const getPrettierOptions = async (): Promise<
+  Record<string, unknown> | undefined
+> => {
   try {
     const cjsPath = path.join(getPaths().base, 'prettier.config.cjs')
     const mjsPath = path.join(getPaths().base, 'prettier.config.mjs')
     const prettierConfigPath = fs.existsSync(cjsPath) ? cjsPath : mjsPath
 
-    const { default: prettierOptions } = await import(
+    const { default: prettierOptions } = (await import(
       `file://${prettierConfigPath}`
-    )
+    )) as { default: Record<string, unknown> }
 
     return prettierOptions
-  } catch (e) {
-    // If we're in our vitest environment we want to return a consistent set of prettier options
-    // such that snapshots don't change unexpectedly.
+  } catch {
+    // If we're in our vitest environment we want to return a consistent set of
+    // prettier options such that snapshots don't change unexpectedly.
     if (process.env.VITEST_POOL_ID !== undefined) {
       return {
         trailingComma: 'es5',
@@ -261,6 +287,7 @@ export const getPrettierOptions = async () => {
         ],
       }
     }
+
     return undefined
   }
 }
@@ -269,11 +296,14 @@ export const getPrettierOptions = async () => {
 /*
  * Convert a generated TS template file into JS.
  */
-export const transformTSToJS = async (filename, content) => {
-  const { code } = babel.transform(content, {
+export const transformTSToJS = async (
+  filename: string,
+  content: string,
+): Promise<string> => {
+  const result = babel.transform(content, {
     filename,
-    // If you ran `yarn cedar generate` in `./web` transformSync would import the `.babelrc.js` file,
-    // in `./web`? despite us setting `configFile: false`.
+    // If you ran `yarn cedar generate` in `./web` transformSync would import
+    // the `.babelrc.js` file, in `./web` despite us setting `configFile: false`
     cwd: process.env.NODE_ENV === 'test' ? undefined : getPaths().base,
     configFile: false,
     plugins: [
@@ -288,6 +318,8 @@ export const transformTSToJS = async (filename, content) => {
     retainLines: true,
   })
 
+  const code = result?.code ?? ''
+
   return prettify(filename.replace(/\.ts(x)?$/, '.js$1'), code)
 }
 
@@ -296,14 +328,18 @@ export const transformTSToJS = async (filename, content) => {
  *
  * @param files - {[filepath]: contents}
  */
-export const writeFilesTask = (files, options) => {
+export const writeFilesTask = (
+  files: Record<string, string>,
+  options?: { overwriteExisting?: boolean },
+) => {
   const { base } = getPaths()
   return new Listr(
     Object.keys(files).map((file) => {
       const contents = files[file]
       return {
         title: `...waiting to write file \`./${path.relative(base, file)}\`...`,
-        task: (ctx, task) => writeFile(file, contents, options, task),
+        task: (_ctx: unknown, task: { title?: string }) =>
+          writeFile(file, contents, options, task),
       }
     }),
   )
@@ -314,7 +350,7 @@ export const writeFilesTask = (files, options) => {
  *
  * @param files - {[filepath]: contents}
  */
-export const deleteFilesTask = (files) => {
+export const deleteFilesTask = (files: Record<string, string>) => {
   const { base } = getPaths()
 
   return new Listr([
@@ -334,15 +370,16 @@ export const deleteFilesTask = (files) => {
 
 /**
  * @param files - {[filepath]: contents}
- * Deletes any empty directories that are more than three levels deep below the base directory
- * i.e. any directory below /web/src/components
+ * Deletes any empty directories that are more than three levels deep below the
+ * base directory i.e. any directory below /web/src/components
  */
-export const cleanupEmptyDirsTask = (files) => {
+export const cleanupEmptyDirsTask = (files: Record<string, string>) => {
   const { base } = getPaths()
   const endDirs = Object.keys(files).map((file) => path.dirname(file))
   const uniqueEndDirs = [...new Set(endDirs)]
+
   // get the additional path directories not at the end of the path
-  const pathDirs = []
+  const pathDirs: string[] = []
   uniqueEndDirs.forEach((dir) => {
     const relDir = path.relative(base, dir)
     const splitDir = relDir.split(path.sep)
@@ -353,6 +390,7 @@ export const cleanupEmptyDirsTask = (files) => {
       splitDir.pop()
     }
   })
+
   const uniqueDirs = uniqueEndDirs.concat([...new Set(pathDirs)])
 
   return new Listr(
@@ -364,9 +402,11 @@ export const cleanupEmptyDirsTask = (files) => {
           if (!fs.existsSync(dir)) {
             return `Doesn't exist`
           }
+
           if (fs.readdirSync(dir).length > 0) {
             return 'Not empty'
           }
+
           return false
         },
       }
@@ -375,15 +415,15 @@ export const cleanupEmptyDirsTask = (files) => {
 }
 
 const wrapWithSet = (
-  routesContent,
-  layout,
-  routes,
-  newLineAndIndent,
-  props = {},
-) => {
+  routesContent: string,
+  layout: string,
+  routes: string[],
+  newLineAndIndent: string,
+  props: Record<string, string> = {},
+): string => {
   const [_, indentOne, indentTwo] = routesContent.match(
     /([ \t]*)<Router.*?>[^<]*[\r\n]+([ \t]+)/,
-  ) || ['', 0, 2]
+  ) || ['', '', '']
   const oneLevelIndent = indentTwo.slice(0, indentTwo.length - indentOne.length)
   const newRoutesWithExtraIndent = routes.map((route) => oneLevelIndent + route)
 
@@ -399,10 +439,12 @@ const wrapWithSet = (
   ].join(newLineAndIndent)
 }
 
-/**
- * Update the project's routes file.
- */
-export const addRoutesToRouterTask = (routes, layout, setProps = {}) => {
+/** Update the project's routes file */
+export function addRoutesToRouterTask(
+  routes: string[],
+  layout?: string,
+  setProps: Record<string, string> = {},
+) {
   const cedarPaths = getPaths()
   const routesContent = readFile(cedarPaths.web.routes).toString()
   let newRoutes = routes.filter((route) => !routesContent.match(route))
@@ -410,7 +452,7 @@ export const addRoutesToRouterTask = (routes, layout, setProps = {}) => {
   if (newRoutes.length) {
     const [routerStart, routerParams, newLineAndIndent] = routesContent.match(
       /\s*<Router(.*?)>(\s*)/s,
-    )
+    )!
 
     if (/trailingSlashes={?(["'])always\1}?/.test(routerParams)) {
       // newRoutes will be something like:
@@ -445,7 +487,7 @@ export const addRoutesToRouterTask = (routes, layout, setProps = {}) => {
   }
 }
 
-export const addScaffoldImport = () => {
+export const addScaffoldImport = (): string => {
   const appJsPath = getPaths().web.app
   let appJsContents = readFile(appJsPath).toString()
 
@@ -462,7 +504,7 @@ export const addScaffoldImport = () => {
   return 'Added scaffold import to App.{jsx,tsx}'
 }
 
-const removeEmtpySet = (routesContent, layout) => {
+function removeEmtpySet(routesContent: string, layout: string) {
   const setWithLayoutReg = new RegExp(
     `\\s*<Set[^>]*wrap={${layout}}[^<]*>([^<]*)<\/Set>`,
   )
@@ -481,9 +523,9 @@ const removeEmtpySet = (routesContent, layout) => {
 /**
  * Remove named routes from the project's routes file.
  *
- * @param {string[]} routes - Route names
+ * @param routes - Route names
  */
-export const removeRoutesFromRouterTask = (routes, layout) => {
+export function removeRoutesFromRouterTask(routes: string[], layout?: string) {
   const cedarPaths = getPaths()
   const routesContent = readFile(cedarPaths.web.routes).toString()
   const newRoutesContent = routes.reduce((content, route) => {
@@ -501,7 +543,6 @@ export const removeRoutesFromRouterTask = (routes, layout) => {
 }
 
 /**
- *
  * Use this util to install dependencies on a user's Cedar app
  *
  * @example await addPackagesTask({
@@ -514,7 +555,14 @@ export const addPackagesTask = async ({
   packages,
   side = 'project',
   devDependency = false,
-}) => {
+}: {
+  packages: string[]
+  side?: string
+  devDependency?: boolean
+}): Promise<{
+  title: string
+  task: () => Promise<void>
+}> => {
   const cedarVersion = await getInstalledCedarVersion()
 
   const packagesWithSameRWVersion = packages.map((pkg) => {
@@ -543,7 +591,16 @@ export const addPackagesTask = async ({
 
 // TODO: Move this to generatePrismaClient.js. Possibly just inlining it
 // instead of creating a new Listr for generating the client
-export const runCommandTask = async (commands, { verbose, silent }) => {
+export const runCommandTask = async (
+  commands: {
+    title: string
+    cmd: string
+    args: string[]
+    opts?: Record<string, unknown>
+    cwd?: string
+  }[],
+  { verbose, silent }: { verbose?: boolean; silent?: boolean },
+): Promise<boolean> => {
   const tasks = new Listr(
     commands.map(({ title, cmd, args, opts = {}, cwd = getPaths().base }) => ({
       title,
@@ -559,7 +616,7 @@ export const runCommandTask = async (commands, { verbose, silent }) => {
     })),
     {
       renderer: silent ? 'silent' : verbose ? 'verbose' : 'default',
-      rendererOptions: { collapseSubtasks: false, dateFormat: false },
+      rendererOptions: { collapseSubtasks: false },
     },
   )
 
@@ -567,15 +624,17 @@ export const runCommandTask = async (commands, { verbose, silent }) => {
     await tasks.run()
     return true
   } catch (e) {
-    console.log(c.error(e.message))
+    console.log(c.error((e as Error).message))
     return false
   }
 }
 
 /** Extract default CLI args from an exported builder */
-export const getDefaultArgs = (builder) => {
+export const getDefaultArgs = (
+  builder: Record<string, any>,
+): Record<string, any> => {
   return Object.entries(builder).reduce(
-    (options, [optionName, optionConfig]) => {
+    (options: Record<string, any>, [optionName, optionConfig]) => {
       // If a default is defined use it
       options[optionName] = optionConfig.default
       return options
@@ -589,20 +648,20 @@ export const getDefaultArgs = (builder) => {
  *
  * i.e. check for the existence of .vscode folder in root project directory
  */
-export const usingVSCode = () => {
+export const usingVSCode = (): boolean => {
   const cedarPaths = getPaths()
   const VS_CODE_PATH = path.join(cedarPaths.base, '.vscode')
   return fs.existsSync(VS_CODE_PATH)
 }
 
-export const printSetupNotes = (notes) => {
+export const printSetupNotes = (notes: string[]) => {
   return {
     title: 'One more thing...',
-    task: (_ctx, task) => {
+    task: (_ctx: unknown, task: { title: string }) => {
       task.title = `One more thing...\n\n ${boxen(notes.join('\n'), {
         padding: { top: 1, bottom: 1, right: 1, left: 1 },
         margin: 1,
-        borderColour: 'gray',
+        borderColor: 'gray',
       })}  \n`
     },
   }

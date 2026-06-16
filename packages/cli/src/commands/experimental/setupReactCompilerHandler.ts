@@ -15,35 +15,42 @@ import {
   command,
   description,
   EXPERIMENTAL_TOPIC_ID,
+  // @ts-expect-error - No types for JS files
 } from './setupReactCompiler.js'
 import { printTaskEpilogue } from './util.js'
 
-export const handler = async ({
-  force,
-  verbose,
-}: {
+interface Opts {
   force: boolean
   verbose: boolean
-}) => {
+}
+
+interface TaskHandle {
+  output: string
+  skip(message?: string): void
+}
+
+export const handler = async (options: Opts) => {
   const rwPaths = getPaths()
   const configTomlPath = getConfigPath()
   const configFileName = path.basename(configTomlPath)
   const configContent = fs.readFileSync(configTomlPath, 'utf-8')
 
-  const tasks = new Listr(
-    [
+  function buildTaskData() {
+    return [
       {
         title: 'Check prerequisites',
-        skip: force,
+        skip: options.force,
         task: () => {
-          // We require vite as that is how we have conditionally integrated the compiler
+          // We require vite as that is how we have conditionally integrated the
+          // compiler
           if (!rwPaths.web.entryClient || !rwPaths.web.viteConfig) {
             throw new Error(
               'Vite needs to be setup before you can enable React Compiler',
             )
           }
 
-          // Check that the project is using at least react version 19, as required by the compiler
+          // Check that the project is using at least react version 19, as
+          // required by the compiler
           const webPkgJson = JSON.parse(
             fs.readFileSync(
               path.join(rwPaths.web.base, 'package.json'),
@@ -64,19 +71,21 @@ export const handler = async ({
       },
       {
         title: `Adding config to ${configFileName}...`,
-        task: (_ctx, task) => {
+        task: (_ctx: unknown, task: TaskHandle) => {
           if (!configContent.includes('[experimental.reactCompiler]')) {
             writeFile(
               configTomlPath,
               configContent.concat(
-                '\n[experimental.reactCompiler]\n  enabled = true\n  lintOnly = false\n',
+                '\n[experimental.reactCompiler]\n' +
+                  '  enabled = true\n' +
+                  '  lintOnly = false\n',
               ),
               {
                 overwriteExisting: true, // configuration file always exists
               },
             )
           } else {
-            if (force) {
+            if (options.force) {
               task.output = `Overwriting config in ${configFileName}`
 
               writeFile(
@@ -98,10 +107,9 @@ export const handler = async ({
             }
           }
         },
-        rendererOptions: { persistentOutput: true },
       },
-      // We are using two different yarn commands here which is fine because they're operating on different
-      // workspaces - web and the root
+      // We are using two different yarn commands here which is fine because
+      // they're operating on different workspaces - web and the root
       {
         title: 'Installing eslint-plugin-react-compiler',
         task: async () => {
@@ -127,15 +135,27 @@ export const handler = async ({
           printTaskEpilogue(command, description, EXPERIMENTAL_TOPIC_ID)
         },
       },
-    ],
-    {
-      rendererOptions: { collapseSubtasks: false, persistentOutput: true },
-      renderer: verbose ? 'verbose' : 'default',
-    },
-  )
+    ]
+  }
 
   try {
-    await tasks.run()
+    if (options.verbose) {
+      await new Listr(buildTaskData(), {
+        exitOnError: true,
+        renderer: 'verbose',
+      }).run()
+    } else {
+      await new Listr(
+        buildTaskData().map((t) => ({
+          ...t,
+          rendererOptions: { persistentOutput: true },
+        })),
+        {
+          exitOnError: true,
+          rendererOptions: { collapseSubtasks: false },
+        },
+      ).run()
+    }
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
     const exitCode =

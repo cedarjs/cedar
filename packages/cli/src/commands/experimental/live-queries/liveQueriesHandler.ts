@@ -15,9 +15,7 @@ import {
 } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-// @ts-expect-error - No types for JS files
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
-// @ts-expect-error - No types for JS files
 import { isTypeScriptProject } from '../../../lib/project.js'
 
 function getApiPackageJson() {

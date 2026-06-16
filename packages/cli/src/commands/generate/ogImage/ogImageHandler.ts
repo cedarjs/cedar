@@ -14,7 +14,6 @@ import {
   getPaths,
   transformTSToJS,
   writeFilesTask,
-  // @ts-expect-error no types for JS files
 } from '../../../lib/index.js'
 import { prepareForRollback } from '../../../lib/rollback.js'
 import { customOrDefaultTemplatePath } from '../yargsHandlerHelpers.js'
