@@ -9,7 +9,7 @@ export const command = 'setup-streaming-ssr'
 export const description =
   'Enable React Streaming and Server Side Rendering (SSR)'
 
-export const EXPERIMENTAL_TOPIC_ID = 5052
+export const EXPERIMENTAL_TOPIC_ID = '5052'
 
 export const builder = (yargs: Argv) => {
   yargs

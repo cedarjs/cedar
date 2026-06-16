@@ -1,21 +1,14 @@
 import type { Argv, CommandModule } from 'yargs'
 
-// @ts-expect-error - No types for JS files
 import { getConfig } from './lib/index.js'
 import {
   loadCommandCache,
   checkPluginListAndWarn,
   saveCommandCache,
   loadPluginPackage,
-  // @ts-expect-error - No types for JS files
+  type CacheEntry,
+  type PluginCommandCache,
 } from './lib/plugin.js'
-
-type PluginCommandCache = {
-  _builtin: string[]
-  [packageName: string]:
-    | Record<string, { aliases?: string[]; description?: string }>
-    | string[]
-}
 
 /**
  * Attempts to load all CLI plugins as defined in the cedar.toml file
@@ -42,7 +35,7 @@ export async function loadPlugins(yargs: Argv): Promise<Argv> {
   // TODO: We should have some mechanism to fetch the cache from an online or
   // precomputed source this will allow us to have a cache hit on the first run
   // of a command
-  const pluginCommandCache = loadCommandCache() as PluginCommandCache
+  const pluginCommandCache: PluginCommandCache = loadCommandCache()
 
   // Check if the command is built in to the base CLI package
   if (
@@ -126,7 +119,6 @@ export async function loadPlugins(yargs: Argv): Promise<Argv> {
         yargs.command({
           command: `${namespace} <command>`,
           describe: `Commands from ${namespace}`,
-          builder: () => {},
           handler: () => {},
         })
       }
@@ -173,6 +165,7 @@ export async function loadPlugins(yargs: Argv): Promise<Argv> {
           describe: `Commands from ${namespaceInUse}`,
           builder: (yargs: Argv) => {
             yargs.command(commands).demandCommand()
+            return yargs
           },
           handler: () => {},
         })
@@ -195,15 +188,13 @@ export async function loadPlugins(yargs: Argv): Promise<Argv> {
   // Try to find the package for this command from the cache
   const packagesToLoad = new Set<string>()
   for (const [packageName, cacheEntry] of Object.entries(pluginCommandCache)) {
-    if (packageName === '_builtin') {
+    if (packageName === '_builtin' || Array.isArray(cacheEntry)) {
       continue
     }
 
     const commandFirstWords: string[] = []
 
-    for (const [command, info] of Object.entries(
-      cacheEntry as Record<string, { aliases?: string[] }>,
-    )) {
+    for (const [command, info] of Object.entries(cacheEntry)) {
       commandFirstWords.push(command.split(' ')[0])
       commandFirstWords.push(
         ...(info.aliases?.map((a) => a.split(' ')[0]) ?? []),
@@ -236,6 +227,11 @@ export async function loadPlugins(yargs: Argv): Promise<Argv> {
     // We'll have to load the plugin package since we may need to actually
     // execute the command builder/handler functions
     const packageToLoad = packagesToLoad.values().next().value
+
+    if (!packageToLoad) {
+      throw new Error(`Invalid first value in ${packagesToLoad}`)
+    }
+
     const commands = await loadCommandsFromCacheOrPackage(
       packageToLoad,
       pluginCommandCache,
@@ -270,6 +266,7 @@ export async function loadPlugins(yargs: Argv): Promise<Argv> {
       describe: `Commands from ${namespaceInUse}`,
       builder: (yargs: Argv) => {
         yargs.command(commandsToRegister).demandCommand()
+        return yargs
       },
       handler: () => {},
     })
@@ -285,7 +282,6 @@ export async function loadPlugins(yargs: Argv): Promise<Argv> {
       yargs.command({
         command: `${namespace} <command>`,
         describe: `Commands from ${namespace}`,
-        builder: () => {},
         handler: () => {},
       })
     }
@@ -302,19 +298,15 @@ async function loadCommandsFromCacheOrPackage(
   cache: PluginCommandCache | undefined,
   autoInstall: boolean,
   readFromCache: boolean,
-): Promise<CommandModule[]> {
-  let cacheEntry:
-    | Record<string, { aliases?: string[]; description?: string }>
-    | undefined = undefined
+) {
+  let cacheEntry: CacheEntry | undefined = undefined
 
-  if (readFromCache) {
-    cacheEntry =
-      cache !== undefined
-        ? (cache[packageName] as Record<
-            string,
-            { aliases?: string[]; description?: string }
-          >)
-        : undefined
+  if (readFromCache && cache) {
+    const entry = cache[packageName]
+
+    if (entry && !Array.isArray(entry)) {
+      cacheEntry = entry
+    }
   }
 
   if (cacheEntry !== undefined) {
@@ -332,20 +324,26 @@ async function loadCommandsFromCacheOrPackage(
   }
 
   // We'll have to load the plugin package to get the command information
-  const plugin = await loadPluginPackage(packageName, undefined, autoInstall)
-  if (plugin) {
-    // Plugin packages export commands with a flat shape (command string, description, aliases).
-    // This is a different shape from yargs CommandModule (which uses 'describe' not 'description').
-    type RawPluginCommand = {
+  // Plugin packages export commands with a flat shape (command, aliases,
+  // description).
+  // This shape is compatible with yargs CommandModule at runtime.
+  const plugin: {
+    commands?: {
       command: string
       aliases?: string[]
       description?: string
-    }
-    const rawCommands: RawPluginCommand[] = plugin.commands ?? []
-    const cacheUpdate: Record<
-      string,
-      { aliases?: string[]; description?: string }
-    > = {}
+      describe?: string
+      handler: (...args: any[]) => void | Promise<void>
+    }[]
+  } | null = await loadPluginPackage(packageName, undefined, autoInstall)
+
+  if (plugin) {
+    const rawCommands: {
+      command: string
+      aliases?: string[]
+      description?: string
+    }[] = plugin.commands ?? []
+    const cacheUpdate: CacheEntry = {}
 
     for (const command of rawCommands) {
       const info = {
@@ -365,7 +363,7 @@ async function loadCommandsFromCacheOrPackage(
     }
 
     // plugin.commands are proper yargs CommandModule objects from the plugin package
-    return (plugin.commands ?? []) as CommandModule[]
+    return plugin.commands ?? []
   }
 
   // NOTE: If the plugin failed to load there should have been a warning printed
