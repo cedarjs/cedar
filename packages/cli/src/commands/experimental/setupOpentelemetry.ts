@@ -1,3 +1,5 @@
+import type { Argv } from 'yargs'
+
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
 import { getEpilogue } from './util.js'
@@ -8,7 +10,7 @@ export const description = 'Setup OpenTelemetry within the API side'
 
 export const EXPERIMENTAL_TOPIC_ID = 4772
 
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   yargs
     .option('force', {
       alias: 'f',
@@ -25,7 +27,10 @@ export const builder = (yargs) => {
     .epilogue(getEpilogue(command, description, EXPERIMENTAL_TOPIC_ID, true))
 }
 
-export const handler = async (options) => {
+export const handler = async (options: {
+  force: boolean
+  verbose: boolean
+}) => {
   recordTelemetryAttributes({
     command: 'experimental setup-opentelemetry',
     force: options.force,

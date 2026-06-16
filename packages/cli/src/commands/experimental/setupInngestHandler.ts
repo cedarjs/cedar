@@ -9,7 +9,7 @@ import { getPaths } from '../../lib/index.js'
 import { command, description, EXPERIMENTAL_TOPIC_ID } from './setupInngest.js'
 import { printTaskEpilogue } from './util.js'
 
-export const handler = async ({ force }) => {
+export const handler = async ({ force }: { force: boolean }) => {
   const tasks = new Listr([
     {
       title: `Adding Inngest setup packages for RedwoodJS ...`,
@@ -43,8 +43,13 @@ export const handler = async ({ force }) => {
   try {
     await tasks.run()
   } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+    const message = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    process.exit(exitCode)
   }
 }

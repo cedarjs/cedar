@@ -14,7 +14,17 @@ import {
 import { validateName } from '../helpers.js'
 import { templateForComponentFile } from '../yargsHandlerHelpers.js'
 
-export const files = async ({ name, typescript = false, type, tests }) => {
+export const files = async ({
+  name,
+  typescript = false,
+  type,
+  tests,
+}: {
+  name: string
+  typescript?: boolean
+  type?: string
+  tests?: boolean
+}): Promise<Record<string, string>> => {
   if (tests === undefined) {
     tests = getConfig().generate.tests
   }
@@ -54,21 +64,31 @@ export const files = async ({ name, typescript = false, type, tests }) => {
   //    "path/to/fileA": "<<<template>>>",
   //    "path/to/fileB": "<<<template>>>",
   // }
-  return files.reduce(async (accP, [outputPath, content]) => {
-    const acc = await accP
+  return files.reduce(
+    async (accP, [outputPath, content]) => {
+      const acc = await accP
 
-    const template = typescript
-      ? content
-      : await transformTSToJS(outputPath, content)
+      const template = typescript
+        ? content
+        : await transformTSToJS(outputPath, content)
 
-    return {
-      [outputPath]: template,
-      ...acc,
-    }
-  }, Promise.resolve({}))
+      return {
+        [outputPath]: template,
+        ...acc,
+      }
+    },
+    Promise.resolve({} as Record<string, string>),
+  )
 }
 
-export const handler = async (args) => {
+export const handler = async (args: {
+  name: string
+  type?: string
+  typescript?: boolean
+  tests?: boolean
+  force?: boolean
+  rollback?: boolean
+}) => {
   recordTelemetryAttributes({
     command: 'generate directive',
     type: args.type,
@@ -165,7 +185,7 @@ export const handler = async (args) => {
       console.log(notes)
     }
   } catch (e) {
-    console.log(c.error(e.message))
+    console.log(c.error(e instanceof Error ? e.message : String(e)))
     process.exit(1)
   }
 }

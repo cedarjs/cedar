@@ -25,11 +25,23 @@ import {
 const COMPONENT_SUFFIX = 'Cell'
 const REDWOOD_WEB_PATH_NAME = 'components'
 
-export const files = async ({ name, typescript, ...argv }) => {
+export const files = async ({
+  name,
+  typescript,
+  ...argv
+}: {
+  name: string
+  typescript?: boolean
+  list?: boolean
+  query?: string
+  stories?: boolean
+  tests?: boolean
+  [key: string]: unknown
+}): Promise<Record<string, string>> => {
   let cellName = removeGeneratorName(name, 'cell')
   let idName = 'id'
-  let idType
-  let mockIdValues = [42, 43, 44]
+  let idType: string | undefined
+  let mockIdValues: Array<number | string> = [42, 43, 44]
   let model = null
   let templateNameSuffix = ''
   let typeName = cellName
@@ -63,7 +75,7 @@ export const files = async ({ name, typescript, ...argv }) => {
     // override operationName so that its find_operationName
   }
 
-  let operationName = argv.query
+  let operationName = argv.query as string | undefined
   if (operationName) {
     const userSpecifiedOperationNameIsUnique =
       await operationNameIsUnique(operationName)
@@ -146,28 +158,31 @@ export const files = async ({ name, typescript, ...argv }) => {
   //    "path/to/fileA": "<<<template>>>",
   //    "path/to/fileB": "<<<template>>>",
   // }
-  return files.reduce(async (accP, [outputPath, content]) => {
-    const acc = await accP
+  return files.reduce(
+    async (accP, [outputPath, content]) => {
+      const acc = await accP
 
-    const template = typescript
-      ? content
-      : await transformTSToJS(outputPath, content)
+      const template = typescript
+        ? content
+        : await transformTSToJS(outputPath, content)
 
-    return {
-      [outputPath]: template,
-      ...acc,
-    }
-  }, Promise.resolve({}))
+      return {
+        [outputPath]: template,
+        ...acc,
+      }
+    },
+    Promise.resolve({} as Record<string, string>),
+  )
 }
 
 export const handler = createHandler({
   componentName: 'cell',
   filesFn: files,
-  includeAdditionalTasks: ({ name: cellName }) => {
+  includeAdditionalTasks: ({ name: cellName }: { name: string }) => {
     return [
       {
         title: `Generating types ...`,
-        task: async (_ctx, task) => {
+        task: async (_ctx: unknown, task: { skip: (msg: string) => void }) => {
           const queryFieldName = nameVariants(
             removeGeneratorName(cellName, 'cell'),
           ).camelName

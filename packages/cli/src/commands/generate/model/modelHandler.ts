@@ -12,13 +12,20 @@ import {
 import { prepareForRollback } from '../../../lib/rollback.js'
 import { verifyModelName } from '../../../lib/schemaHelpers.js'
 import { validateName } from '../helpers.js'
+
 const TEMPLATE_PATH = path.resolve(
   import.meta.dirname,
   'templates',
   'model.js.template',
 )
 
-const files = async ({ name, typescript = false }) => {
+const files = async ({
+  name,
+  typescript = false,
+}: {
+  name: string
+  typescript?: boolean
+}): Promise<Record<string, string>> => {
   const outputFilename = `${name}.${typescript ? 'ts' : 'js'}`
   const outputPath = path.join(getPaths().api.models, outputFilename)
 
@@ -27,7 +34,15 @@ const files = async ({ name, typescript = false }) => {
   }
 }
 
-export const handler = async ({ force, ...args }) => {
+export const handler = async ({
+  force,
+  ...args
+}: {
+  force: boolean
+  name: string
+  typescript?: boolean
+  rollback?: boolean
+}) => {
   recordTelemetryAttributes({
     command: 'generate model',
     force,
@@ -62,7 +77,7 @@ export const handler = async ({ force, ...args }) => {
     }
     await tasks.run()
   } catch (e) {
-    console.log(c.error(e.message))
+    console.log(c.error(e instanceof Error ? e.message : String(e)))
     process.exit(1)
   }
 }
