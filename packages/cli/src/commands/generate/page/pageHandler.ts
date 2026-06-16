@@ -142,11 +142,6 @@ export const files = async ({
     files.push(storiesFile)
   }
 
-  // Returns
-  // {
-  //    "path/to/fileA": "<<<template>>>",
-  //    "path/to/fileB": "<<<template>>>",
-  // }
   return transformTSToJSMap(files, typescript)
 }
 

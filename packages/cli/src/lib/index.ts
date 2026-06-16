@@ -512,9 +512,12 @@ export function addRoutesToRouterTask(
 
   if (newRoutes.length) {
     const routerMatch = routesContent.match(/\s*<Router(.*?)>(\s*)/s)
-    const routerStart = routerMatch?.[0] ?? ''
-    const routerParams = routerMatch?.[1] ?? ''
-    const newLineAndIndent = routerMatch?.[2] ?? '\n  '
+
+    if (!routerMatch) {
+      throw new Error('Could not find a <Router> element in the routes file')
+    }
+
+    const [routerStart, routerParams, newLineAndIndent] = routerMatch
 
     if (/trailingSlashes={?(["'])always\1}?/.test(routerParams)) {
       // newRoutes will be something like:

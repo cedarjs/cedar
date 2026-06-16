@@ -153,8 +153,12 @@ export function createBuilder({
 
 export function createHandler(componentName: string) {
   return async function handler(argv: unknown) {
+    // Drop the explicit extension so the dynamic import resolves in both
+    // vitest (where the source is .ts) and the built output (where TS
+    // compiles to .js).
+    // TODO: Add .ts when all handlers are migrated to TypeScript
     const { handler: importedHandler } = await import(
-      `./${componentName}/${componentName}Handler.js`
+      `./${componentName}/${componentName}Handler`
     )
 
     return importedHandler(argv)
