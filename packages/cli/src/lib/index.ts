@@ -333,7 +333,7 @@ export const writeFilesTask = (
       const contents = files[file]
       return {
         title: `...waiting to write file \`./${path.relative(base, file)}\`...`,
-        task: (ctx: unknown, task: { title?: string }) =>
+        task: (_ctx: unknown, task: { title?: string }) =>
           writeFile(file, contents, options, task),
       }
     }),

@@ -3,6 +3,7 @@ import path from 'path'
 
 import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import { Listr } from 'listr2'
+import type { ListrPromptAdapter } from 'listr2'
 
 import { addWebPackages, colors as c } from '@cedarjs/cli-helpers'
 import { getConfigPath } from '@cedarjs/project-config'
@@ -18,25 +19,34 @@ import {
 } from './setupStreamingSsr.js'
 import { printTaskEpilogue } from './util.js'
 
-export const handler = async ({
-  force,
-  verbose,
-}: {
+interface Opts {
   force: boolean
   verbose: boolean
-}) => {
-  const rwPaths = getPaths()
+}
+
+interface TaskHandle {
+  output: string
+  skip(message?: string): void
+  // The any[] rest parameter in prompt's constructor arg is very difficult to
+  // get rid of because the actual TaskWrapper.prompt constructor takes Task and
+  // TaskWrapper types with generic renderer params that can't be known at the
+  // factory function level (they differ between verbose/default branches).
+  prompt<T extends ListrPromptAdapter>(adapter: new (...args: any[]) => T): T
+}
+
+export const handler = async (options: Opts) => {
+  const cedarPaths = getPaths()
   const configPath = getConfigPath()
   const configContent = fs.readFileSync(configPath, 'utf-8')
   const ts = isTypeScriptProject()
-  const ext = path.extname(rwPaths.web.entryClient || '')
+  const ext = path.extname(cedarPaths.web.entryClient || '')
 
-  const tasks = new Listr(
-    [
+  function buildTaskData() {
+    return [
       {
         title: 'Check prerequisites',
         task: () => {
-          if (!rwPaths.web.entryClient || !rwPaths.web.viteConfig) {
+          if (!cedarPaths.web.entryClient || !cedarPaths.web.viteConfig) {
             throw new Error(
               'Vite needs to be setup before you can enable Streaming SSR',
             )
@@ -45,7 +55,7 @@ export const handler = async ({
       },
       {
         title: 'Adding config to cedar.toml...',
-        task: (_ctx, task) => {
+        task: (_ctx: unknown, task: TaskHandle) => {
           if (!configContent.includes('[experimental.streamingSsr]')) {
             writeFile(
               configPath,
@@ -57,7 +67,7 @@ export const handler = async ({
               },
             )
           } else {
-            if (force) {
+            if (options.force) {
               task.output = 'Overwriting config in cedar.toml'
 
               writeFile(
@@ -79,11 +89,10 @@ export const handler = async ({
             }
           }
         },
-        rendererOptions: { persistentOutput: true },
       },
       {
         title: `Adding entry.client${ext}...`,
-        task: async (_ctx, task) => {
+        task: async (_ctx: unknown, task: TaskHandle) => {
           const entryClientTemplate = fs.readFileSync(
             path.resolve(
               import.meta.dirname,
@@ -93,15 +102,21 @@ export const handler = async ({
             ),
             'utf-8',
           )
-          let entryClientPath = rwPaths.web.entryClient
+          let entryClientPath = cedarPaths.web.entryClient
+
+          if (!entryClientPath) {
+            throw new Error('entryClient is not set')
+          }
+
           const entryClientContent = ts
             ? entryClientTemplate
             : await transformTSToJS(entryClientPath, entryClientTemplate)
 
-          let overwriteExisting = force
+          let overwriteExisting = options.force
 
-          if (!force) {
+          if (!options.force) {
             const prompt = task.prompt(ListrEnquirerPromptAdapter)
+
             overwriteExisting = await prompt.run({
               type: 'Confirm',
               message: `Overwrite ${entryClientPath}?`,
@@ -117,7 +132,6 @@ export const handler = async ({
 
           writeFile(entryClientPath, entryClientContent, { overwriteExisting })
         },
-        rendererOptions: { persistentOutput: true },
       },
       {
         title: `Adding entry.server${ext}...`,
@@ -133,7 +147,7 @@ export const handler = async ({
           )
           // Can't use rwPaths.web.entryServer because it might not be not created yet
           const entryServerPath = path.join(
-            rwPaths.web.src,
+            cedarPaths.web.src,
             `entry.server${ext}`,
           )
           const entryServerContent = ts
@@ -141,7 +155,7 @@ export const handler = async ({
             : await transformTSToJS(entryServerPath, entryServerTemplate)
 
           writeFile(entryServerPath, entryServerContent, {
-            overwriteExisting: force,
+            overwriteExisting: options.force,
           })
         },
       },
@@ -157,13 +171,13 @@ export const handler = async ({
             ),
             'utf-8',
           )
-          const documentPath = path.join(rwPaths.web.src, `Document${ext}`)
+          const documentPath = path.join(cedarPaths.web.src, `Document${ext}`)
           const documentContent = ts
             ? documentTemplate
             : await transformTSToJS(documentPath, documentTemplate)
 
           writeFile(documentPath, documentContent, {
-            overwriteExisting: force,
+            overwriteExisting: options.force,
           })
         },
       },
@@ -181,12 +195,12 @@ export const handler = async ({
           )
 
           const tsconfigPath = path.join(
-            rwPaths.web.base,
+            cedarPaths.web.base,
             ts ? 'tsconfig.json' : 'jsconfig.json',
           )
 
           writeFile(tsconfigPath, tsconfigTemplate, {
-            overwriteExisting: force,
+            overwriteExisting: options.force,
           })
         },
       },
@@ -197,7 +211,7 @@ export const handler = async ({
           // We need this to make sure we get a version of superjson that works
           // with CommonJS.
           // TODO: Remove this when Redwood switches to ESM
-          const pkgJsonPath = path.join(rwPaths.base, 'package.json')
+          const pkgJsonPath = path.join(cedarPaths.base, 'package.json')
           const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8'))
           const resolutions: Record<string, string> = pkgJson.resolutions || {}
           resolutions['@apollo/client-react-streaming/superjson'] = '^1.12.2'
@@ -211,15 +225,27 @@ export const handler = async ({
           printTaskEpilogue(command, description, EXPERIMENTAL_TOPIC_ID)
         },
       },
-    ],
-    {
-      rendererOptions: { collapseSubtasks: false, persistentOutput: true },
-      renderer: verbose ? 'verbose' : 'default',
-    },
-  )
+    ]
+  }
 
   try {
-    await tasks.run()
+    if (options.verbose) {
+      await new Listr(buildTaskData(), {
+        exitOnError: true,
+        renderer: 'verbose',
+      }).run()
+    } else {
+      await new Listr(
+        buildTaskData().map((t) => ({
+          ...t,
+          rendererOptions: { persistentOutput: true },
+        })),
+        {
+          exitOnError: true,
+          rendererOptions: { collapseSubtasks: false },
+        },
+      ).run()
+    }
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
     const exitCode =
