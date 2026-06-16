@@ -32,7 +32,7 @@ import {
 } from './yargsCommandHelpers.js'
 
 interface CustomOrDefaultTemplatePathArgs {
-  side: 'web' | 'api' | 'scripts'
+  side: 'web' | 'api' | 'scripts' | 'packages'
   generator: string
   templatePath: string
 }
@@ -75,7 +75,7 @@ type SidePathSection = keyof WebPaths | keyof NodeTargetPaths
 
 interface TemplateForFileArgs {
   name: string
-  side: 'web' | 'api' | 'scripts'
+  side: 'web' | 'api' | 'scripts' | 'packages'
   sidePathSection?: SidePathSection
   generator: string
   outputPath: string
@@ -108,9 +108,11 @@ export const templateForFile = async ({
         ? sidePathSection
           ? paths.web[sidePathSection as keyof WebPaths]
           : paths.web.base
-        : sidePathSection
-          ? paths.api[sidePathSection as keyof NodeTargetPaths]
-          : paths.api.base
+        : side === 'packages'
+          ? paths.packages
+          : sidePathSection
+            ? paths.api[sidePathSection as keyof NodeTargetPaths]
+            : paths.api.base
 
   if (typeof basePath !== 'string') {
     throw new Error(`Invalid path section: "${sidePathSection}"`)
