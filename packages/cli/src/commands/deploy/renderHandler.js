@@ -5,7 +5,7 @@ import execa from 'execa'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { formatAddRootPackagesCommand } from '@cedarjs/cli-helpers/packageManager/display'
-import { runBin, runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
+import { getNodeRunnerArgs, runBin, runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
 import { installPackages } from '@cedarjs/cli-helpers/packageManager/packages'
 import { getPaths } from '@cedarjs/project-config'
 
@@ -63,7 +63,7 @@ export const handler = async ({ side, prisma, dataMigrate }) => {
     const hasServerFile = fs.existsSync(serverFilePath)
 
     if (hasServerFile) {
-      runBin('node', [serverFilePath], execaConfig)
+      execa(...getNodeRunnerArgs(serverFilePath), execaConfig)
     } else {
       const { handler } =
         await import('@cedarjs/api-server/apiCliConfigHandler')
