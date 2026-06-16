@@ -626,7 +626,7 @@ export const runCommandTask = async (
     })),
     {
       renderer: silent ? 'silent' : verbose ? 'verbose' : 'default',
-      rendererOptions: { collapseSubtasks: false } as Record<string, unknown>,
+      rendererOptions: { collapseSubtasks: false },
     },
   )
 
