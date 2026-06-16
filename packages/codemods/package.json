@@ -56,7 +56,7 @@
     "publint": "0.3.21",
     "ts-dedent": "2.2.0",
     "tsx": "4.21.0",
-    "vitest": "3.2.4"
+    "vitest": "3.2.6"
   },
   "engines": {
     "node": ">=24"

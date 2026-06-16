@@ -48,7 +48,7 @@
     "@types/node": "24.10.4",
     "babel-plugin-tester": "11.0.4",
     "tsx": "4.21.0",
-    "vitest": "3.2.4"
+    "vitest": "3.2.6"
   },
   "engines": {
     "node": ">=24"
