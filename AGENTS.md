@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**CedarJS** is an opinionated, full-stack React framework (frontend: React, API: GraphQL, database: Prisma) forked from [RedwoodJS](https://github.com/redwoodjs/redwood). Active maintenance, experimental ESM support, recurring jobs, and modern Node support (Node 24+). Monorepo managed with Yarn Workspaces, Lerna, and Nx.
+**CedarJS** is an opinionated, full-stack React framework (frontend: React, API: GraphQL, database: Prisma) forked from [RedwoodJS](https://github.com/redwoodjs/redwood). Active maintenance, experimental ESM support, recurring jobs, and modern Node support (Node 24+).
 
 ## Project Structure & Module Organization
 
@@ -25,6 +25,7 @@
 - `yarn e2e`: run end-to-end tests (requires Cypress). Use `CI=1` for headless mode.
 
 To run commands on a single package:
+
 ```bash
 yarn workspace @cedarjs/cli build
 yarn workspace @cedarjs/internal test
