@@ -8,7 +8,10 @@ type FilesFunction = (
   args: Record<string, unknown>,
 ) => Promise<Record<string, string>>
 
-type HandlerOptions = { name: string } & Record<string, unknown>
+type HandlerOptions = { name: string; isDestroyer?: boolean } & Record<
+  string,
+  unknown
+>
 
 type PreTasksFn = (
   options: HandlerOptions,

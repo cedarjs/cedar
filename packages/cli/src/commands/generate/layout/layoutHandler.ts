@@ -1,25 +1,24 @@
 import { transformTSToJSMap } from '../../../lib/index.js'
 import { removeGeneratorName } from '../helpers.js'
 import {
-  templateForComponentFile,
   createHandler,
+  templateForComponentFile,
 } from '../yargsHandlerHelpers.js'
+import type { HandlerArgv } from '../yargsHandlerHelpers.js'
 
 const COMPONENT_SUFFIX = 'Layout'
 const CEDAR_WEB_PATH_NAME = 'layouts'
+
+type LayoutArgv = HandlerArgv & {
+  typescript?: boolean
+  skipLink?: boolean
+}
 
 export const files = async ({
   name,
   typescript = false,
   ...options
-}: {
-  name: string
-  typescript?: boolean
-  skipLink?: boolean
-  stories?: boolean
-  tests?: boolean
-  [key: string]: unknown
-}): Promise<Record<string, string>> => {
+}: LayoutArgv): Promise<Record<string, string>> => {
   const layoutName = removeGeneratorName(name, 'layout')
   const extension = typescript ? '.tsx' : '.jsx'
   const layoutFile = await templateForComponentFile({

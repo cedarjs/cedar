@@ -24,7 +24,10 @@ import {
   removeGeneratorName,
   validateName,
 } from '../helpers.js'
-import { templateForComponentFile } from '../yargsHandlerHelpers.js'
+import {
+  type HandlerArgv,
+  templateForComponentFile,
+} from '../yargsHandlerHelpers.js'
 
 const COMPONENT_SUFFIX = 'Page'
 const CEDAR_WEB_PATH_NAME = 'pages'
@@ -82,19 +85,21 @@ export const paramVariants = (path: string | undefined) => {
   }
 }
 
+type PageArgv = HandlerArgv & {
+  typescript?: boolean
+}
+
+type PageHandlerArgv = PageArgv & {
+  path: string
+}
+
 export const files = async ({
   name,
   tests,
   stories,
   typescript = false,
   ...rest
-}: {
-  name: string
-  tests?: boolean
-  stories?: boolean
-  typescript?: boolean
-  [key: string]: unknown
-}): Promise<Record<string, string>> => {
+}: PageArgv): Promise<Record<string, string>> => {
   const extension = typescript ? '.tsx' : '.jsx'
   const pageFile = await templateForComponentFile({
     name,
@@ -167,15 +172,7 @@ export const handler = async ({
   stories,
   typescript = false,
   rollback,
-}: {
-  name: string
-  path: string
-  force?: boolean
-  tests?: boolean
-  stories?: boolean
-  typescript?: boolean
-  rollback?: boolean
-}) => {
+}: PageHandlerArgv) => {
   const pageName = removeGeneratorName(name, 'page')
   validateName(pageName)
 
