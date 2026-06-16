@@ -60,7 +60,7 @@
     "react": "19.2.3",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
-    "vitest": "3.2.4"
+    "vitest": "3.2.6"
   },
   "peerDependencies": {
     "@auth0/auth0-spa-js": "2.20.0"

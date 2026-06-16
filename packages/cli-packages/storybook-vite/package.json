@@ -31,7 +31,7 @@
     "storybook": "8.6.18",
     "storybook-framework-cedarjs": "workspace:*",
     "termi-link": "1.1.0",
-    "vitest": "3.2.4",
+    "vitest": "3.2.6",
     "yargs": "17.7.2"
   },
   "devDependencies": {

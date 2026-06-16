@@ -204,7 +204,7 @@
     "graphql-tag": "2.12.6",
     "publint": "0.3.21",
     "tsx": "4.21.0",
-    "vitest": "3.2.4"
+    "vitest": "3.2.6"
   },
   "engines": {
     "node": ">=24"

@@ -10,7 +10,7 @@
     "@cedarjs/eslint-config": "4.2.0",
     "@cedarjs/project-config": "4.2.0",
     "@cedarjs/testing": "4.2.0",
-    "vitest": "3.2.4"
+    "vitest": "3.2.6"
   },
   "engines": {
     "node": "=24.x"
