@@ -8,7 +8,6 @@ import { dedupe } from '@cedarjs/cli-helpers/packageManager'
 import { addRootPackages } from '@cedarjs/cli-helpers/packageManager/packages'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
-// @ts-expect-error - No types for JS files
 import { getPaths } from './index.js'
 
 // Note: Have to add backslash (\) before @ below for intellisense to display
@@ -100,15 +99,19 @@ export async function installCedarModule(module: string) {
       stdio: 'inherit',
       cwd: getPaths().base,
     })
+
     const dedupeCommand = dedupe()
+
     if (dedupeCommand) {
       await execa(getPackageManager(), [dedupeCommand], {
         stdio: 'inherit',
         cwd: getPaths().base,
       })
     }
+
     return true
   }
+
   return false
 }
 
