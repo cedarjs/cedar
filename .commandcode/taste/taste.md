@@ -41,9 +41,14 @@ See [code-style/taste.md](code-style/taste.md)
 - Cedar ships a CLI that Cedar Apps use. The CLI is invoked by the `yarn cedar` prefix (e.g., `yarn cedar dev`, `yarn cedar build`), not bare `yarn dev`/`yarn build`. Confidence: 0.80
 - Always use `yarn cedar` (not bare `cedar`) in CLI usage examples since Cedar is not installed as a global binary. Confidence: 0.70
 
+# Cedar Deploy Config
+
+- The `packageManagerCommand` config field in `deploy.toml` / `DEFAULT_SERVER_CONFIG` is a deliberate user-facing escape hatch: it lets users run a different package manager (or a wrapper like `doppler run -- yarn`) on the deployment server than they use locally. When restructuring deploy code, preserve the ability for this field to override PM behavior — don't collapse it into a PM auto-detected value. Confidence: 0.85
+
 # Architecture
 
 - Neon Postgres (`@prisma/adapter-pg`) does not require ESM at runtime. The `--esm` requirement in `create-cedar-app`'s `handle-args.ts` is a scaffolding-time guard only. Do not force CJS→ESM conversion when adding Neon to existing projects. Confidence: 0.85
+- For invoking package binaries (e.g. `cedar`) across PMs, prefer the universal `<pm> exec <bin>` pattern (`yarn exec`, `npm exec`, `pnpm exec`) rather than PM-specific quirks like `npm run <script>`. It works identically for yarn/npm/pnpm and avoids adding PM-specific config fields. Confidence: 0.80
 
 # CLI
 
