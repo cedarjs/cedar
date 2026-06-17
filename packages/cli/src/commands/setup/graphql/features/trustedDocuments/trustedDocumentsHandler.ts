@@ -1,11 +1,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import execa from 'execa'
 import { Listr } from 'listr2'
 import { format } from 'prettier'
 
 import { getPrettierOptions, setTomlSetting } from '@cedarjs/cli-helpers'
+import { runScriptSync } from '@cedarjs/cli-helpers/packageManager/exec'
 import { getConfig, getPaths, resolveFile } from '@cedarjs/project-config'
 
 import { runTransform } from '../../../../../lib/runTransform.js'
@@ -36,7 +36,7 @@ export async function handler({ force }: { force: boolean }) {
       {
         title: 'Generating Trusted Documents store ...',
         task: () => {
-          execa.commandSync('yarn cedar generate types', { stdio: 'ignore' })
+          runScriptSync('cedar', ['generate', 'types'], { stdio: 'ignore' })
         },
       },
       {

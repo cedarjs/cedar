@@ -1,12 +1,59 @@
 vi.mock('node:fs', async () => ({ ...memfsFs, default: { ...memfsFs } }))
-vi.mock('execa', () => ({
-  default: (...args: any[]) => {
+vi.mock('@cedarjs/cli-helpers/packageManager/exec', () => ({
+  runBin: (_bin: string, args: string[] = []) => {
     // Create an empty config file when `tailwindcss init` is called.
     // If we don't do this, later stages of the setup will fail.
-    if (args[0] === 'yarn' && args[1].join(' ').includes('tailwindcss init')) {
-      memfsFs.writeFileSync(args[1][args[1].length - 1], '')
+    if (args[0] === 'init') {
+      memfsFs.writeFileSync(args[args.length - 1], '')
     }
   },
+  runBinSync: (_bin: string, args: string[] = []) => {
+    if (args[0] === 'init') {
+      memfsFs.writeFileSync(args[args.length - 1], '')
+    }
+  },
+  runScript: () => {},
+  runScriptSync: () => {},
+  runWorkspaceScript: () => {},
+  runWorkspaceBin: () => {},
+  dlx: () => {},
+  getNodeRunnerArgs: () => ['node', []],
+}))
+
+vi.mock('@cedarjs/cli-helpers/packageManager/packages', () => ({
+  addRootPackages: () => {},
+  addWorkspacePackages: () => {},
+  removeWorkspacePackages: () => {},
+  installPackages: () => {},
+}))
+
+vi.mock('@cedarjs/cli-helpers/packageManager/display', () => ({
+  formatInstallCommand: () => 'yarn install',
+  formatCedarCommand: (args: string[] = []) => `yarn cedar ${args.join(' ')}`,
+  formatRunBinCommand: (bin: string, args: string[] = []) =>
+    `yarn ${bin} ${args.join(' ')}`,
+  formatRunWorkspaceBinCommand: () => '',
+  formatRunScriptCommand: () => '',
+  formatRunWorkspaceScriptCommand: () => '',
+  formatDlxCommand: () => '',
+  formatAddRootPackagesCommand: () => '',
+  formatAddWorkspacePackagesCommand: () => '',
+  formatRemoveWorkspacePackagesCommand: () => '',
+}))
+
+vi.mock('@cedarjs/cli-helpers/packageManager', () => ({
+  add: () => 'add',
+  install: () => 'install',
+  dedupe: () => undefined,
+  dedupeIsSupported: () => false,
+  installationErrorMessage: () => 'install error',
+  workspacePackageSpecifier: () => '*',
+  prettyPrintCedarCommand: (args: string[] = []) =>
+    `yarn cedar ${args.join(' ')}`,
+}))
+
+vi.mock('@cedarjs/project-config/packageManager', () => ({
+  getPackageManager: () => 'yarn',
 }))
 
 vi.mock('listr2', () => {
