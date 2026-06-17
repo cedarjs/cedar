@@ -219,6 +219,35 @@ export const builder = async (yargs: Argv) => {
                   // @ts-expect-error - `duplex` is required when forwarding a
                   // request body via fetch (Node 18+).
                   duplex: 'half',
+                }).then((apiRes) => {
+                  // Rewrite Set-Cookie headers so cookies set by the API
+                  // are bound to the web port's origin, not the API port's.
+                  const setCookie = apiRes.headers.getSetCookie
+                    ? apiRes.headers.getSetCookie()
+                    : (apiRes.headers
+                        .get('set-cookie')
+                        ?.split(',')
+                        .map((s) => s.trim()) ?? [])
+
+                  if (setCookie.length > 0) {
+                    const rewritten = setCookie.map((cookie) =>
+                      cookie
+                        .split(';')
+                        .map((part) =>
+                          part
+                            .trim()
+                            .replace(
+                              new RegExp(`Domain=${apiHost}`, 'i'),
+                              `Domain=${webHost}`,
+                            )
+                            .replace(new RegExp(`Secure`, 'i'), ''),
+                        )
+                        .join(';'),
+                    )
+                    apiRes.headers.set('set-cookie', rewritten.join(', '))
+                  }
+
+                  return apiRes
                 })
               },
               () => {

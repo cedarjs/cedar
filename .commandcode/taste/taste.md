@@ -70,3 +70,7 @@ See [code-style/taste.md](code-style/taste.md)
 # Web Serve
 
 - For SPA fallback in `cedar serve` (both Fastify and `--ud` srvx paths), use `web/dist/200.html` (unprerendered shell) when it exists, otherwise fall back to `web/dist/index.html`. Returning the prerendered `index.html` for non-prerendered routes makes the client think the page was prerendered and crashes on `prerenderLoader(name).default` when the page module isn't in `__REDWOOD__PRERENDER_PAGES`. Mirror the Fastify web adapter's logic at `packages/adapters/fastify/web/src/web.ts`. Confidence: 0.85
+
+# CI / GitHub Actions
+
+- When a workflow step uses `working-directory` and passes a path to the test project via an env var (e.g., `CEDAR_TEST_PROJECT_PATH`), use `${{ github.workspace }}/../path` rather than a relative path. The relative path resolves against the `working-directory`, not the workspace root. Confidence: 0.80
