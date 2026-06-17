@@ -24,10 +24,8 @@ import {
   removeGeneratorName,
   validateName,
 } from '../helpers.js'
-import {
-  type HandlerArgv,
-  templateForComponentFile,
-} from '../yargsHandlerHelpers.js'
+import { templateForComponentFile } from '../yargsHandlerHelpers.js'
+import type { TypescriptHandlerArgv } from '../yargsHandlerHelpers.js'
 
 const COMPONENT_SUFFIX = 'Page'
 const CEDAR_WEB_PATH_NAME = 'pages'
@@ -51,7 +49,16 @@ function mapRouteParamTypeToDefaultValue(paramType: string) {
   }
 }
 
-export const paramVariants = (path: string | undefined) => {
+type ParamVariants = {
+  propParam: string
+  propValueParam: string
+  argumentParam: string
+  paramName: string | undefined
+  paramValue: string | number | boolean
+  paramType: string
+}
+
+export const paramVariants = (path: string | undefined): ParamVariants => {
   const param = path?.match(/(\{[\w:]+\})/)?.[1]
   const paramName = param?.replace(/:[^}]+/, '').slice(1, -1)
 
@@ -85,9 +92,7 @@ export const paramVariants = (path: string | undefined) => {
   }
 }
 
-type PageArgv = HandlerArgv & {
-  typescript?: boolean
-}
+type PageArgv = TypescriptHandlerArgv & Partial<ParamVariants>
 
 type PageHandlerArgv = PageArgv & {
   path: string
@@ -227,7 +232,6 @@ export const handler = async ({
           path = pathName(path, pageName)
           const f = await files({
             name: pageName,
-            path,
             tests,
             stories,
             typescript,

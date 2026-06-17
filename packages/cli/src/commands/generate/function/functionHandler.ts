@@ -4,23 +4,22 @@ import { terminalLink } from 'termi-link'
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import { transformTSToJS, writeFilesTask } from '../../../lib/index.js'
+import { transformTSToJSMap, writeFilesTask } from '../../../lib/index.js'
 import { prepareForRollback } from '../../../lib/rollback.js'
 import { validateName } from '../helpers.js'
 import { templateForComponentFile } from '../yargsHandlerHelpers.js'
+import type {
+  HandlerArgv,
+  TypescriptHandlerArgv,
+} from '../yargsHandlerHelpers.js'
 
 export const files = async ({
   name,
-  typescript: generateTypescript = false,
-  tests: generateTests = true,
+  typescript = false,
+  tests = true,
   ...rest
-}: {
-  name: string
-  typescript?: boolean
-  tests?: boolean
-  [key: string]: unknown
-}): Promise<Record<string, string>> => {
-  const extension = generateTypescript ? '.ts' : '.js'
+}: TypescriptHandlerArgv): Promise<Record<string, string>> => {
+  const extension = typescript ? '.ts' : '.js'
 
   const outputFiles: [string, string][] = []
 
@@ -30,12 +29,12 @@ export const files = async ({
     apiPathSection: 'functions',
     generator: 'function',
     templatePath: 'function.ts.template',
-    templateVars: { ...rest, typescript: generateTypescript },
+    templateVars: { ...rest, typescript },
   })
 
   outputFiles.push(functionFiles)
 
-  if (generateTests) {
+  if (tests) {
     const testFile = await templateForComponentFile({
       name,
       extension: `.test${extension}`,
@@ -58,35 +57,12 @@ export const files = async ({
     outputFiles.push(scenarioFile)
   }
 
-  return outputFiles.reduce(
-    async (accP, [outputPath, content]) => {
-      const acc = await accP
-
-      const template = generateTypescript
-        ? content
-        : await transformTSToJS(outputPath, content)
-
-      return {
-        [outputPath]: template,
-        ...acc,
-      }
-    },
-    Promise.resolve({} as Record<string, string>),
-  )
+  return transformTSToJSMap(outputFiles, typescript)
 }
 
 // This could be built using createYargsForComponentGeneration;
 // however, we need to add a message after generating the function files
-export const handler = async ({
-  name,
-  force,
-  ...rest
-}: {
-  name: string
-  force: boolean
-  rollback?: boolean
-  [key: string]: unknown
-}) => {
+export const handler = async ({ name, force, ...rest }: HandlerArgv) => {
   recordTelemetryAttributes({
     command: 'generate function',
     force,
