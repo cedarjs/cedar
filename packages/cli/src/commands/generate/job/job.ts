@@ -1,4 +1,5 @@
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
 import { isTypeScriptProject } from '../../../lib/project.js'
 import { getYargsDefaults, createHandler } from '../yargsCommandHelpers.js'
@@ -10,7 +11,7 @@ export const description = 'Generate a Background Job'
 // however, functions shouldn't have a `stories` option. createYargs...
 // should be reversed to provide `getYargsDefaults` as the default configuration
 // and accept a configuration such as its CURRENT default to append onto a command.
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   yargs
     .positional('name', {
       description: 'Name of the Job',

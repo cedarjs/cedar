@@ -4,10 +4,18 @@ import { colors as c } from '@cedarjs/cli-helpers'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { getPaths } from '@cedarjs/project-config'
 
-export const deployHandler = ({ build, prisma, dm: dataMigrate }) => {
+export const deployHandler = ({
+  build,
+  prisma,
+  dm: dataMigrate,
+}: {
+  build: boolean
+  prisma: boolean
+  dm: boolean
+}) => {
   const paths = getPaths()
 
-  let commandSet = []
+  const commandSet: string[] = []
   if (build) {
     commandSet.push(formatCedarCommand(['build', '--verbose']))
   }

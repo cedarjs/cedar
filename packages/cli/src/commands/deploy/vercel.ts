@@ -1,3 +1,5 @@
+import type { Argv } from 'yargs'
+
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
 import { deployBuilder } from './helpers/deployBuilder.js'
@@ -5,9 +7,14 @@ import { deployBuilder } from './helpers/deployBuilder.js'
 export const command = 'vercel [...commands]'
 export const description = 'Build command for Vercel deploy'
 
-export const builder = (yargs) => deployBuilder(yargs)
+export const builder = (yargs: Argv) => deployBuilder(yargs)
 
-export async function handler(yargs) {
+export async function handler(yargs: {
+  build: boolean
+  prisma: boolean
+  dataMigrate: boolean
+  dm: boolean
+}) {
   recordTelemetryAttributes({
     command: 'deploy vercel',
     build: yargs.build,

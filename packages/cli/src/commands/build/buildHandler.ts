@@ -28,7 +28,6 @@ import { buildCedarApp } from '@cedarjs/vite/build'
 import { buildUDApiServer } from '@cedarjs/vite/buildUDApiServer'
 
 import { generatePrismaCommand } from '../../lib/generatePrismaClient.js'
-// @ts-expect-error - Types not available for JS files
 import { getPaths, getConfig } from '../../lib/index.js'
 
 // @ts-expect-error - Types not available for JS files
@@ -173,7 +172,7 @@ export const handler = async ({
     .filter(Boolean)
     .join(' and ')} support...`
 
-  const tasks = [
+  const tasks: (ListrTask | false)[] = [
     shouldGeneratePrismaClient && {
       title: 'Generating Prisma Client...',
       task: async () => {
@@ -403,7 +402,7 @@ export const handler = async ({
           return buildUDApiServer({ verbose })
         },
       },
-  ].filter((t): t is ListrTask => Boolean(t))
+  ]
 
   // When --apiRootPath is passed via CLI we propagate it to
   // cedarUniversalDeployPlugin via an env var so the plugin can use the cli
@@ -415,7 +414,8 @@ export const handler = async ({
 
   try {
     await timedTelemetry(process.argv, { type: 'build' }, async () => {
-      const jobs = new Listr(tasks, {
+      const listrTasks = tasks.filter((t): t is ListrTask => Boolean(t))
+      const jobs = new Listr(listrTasks, {
         renderer: verbose ? 'verbose' : undefined,
       })
 
