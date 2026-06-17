@@ -61,7 +61,7 @@
     "eslint/minimatch": "npm:3.1.5",
     "jake/minimatch": "npm:3.1.5",
     "multimatch/minimatch": "npm:3.1.5",
-    "prettier-plugin-packagejson/sort-package-json": "3.6.1",
+    "prettier-plugin-packagejson/sort-package-json": "3.7.1",
     "test-exclude/minimatch": "npm:3.1.5",
     "vite": "7.3.5"
   },
