@@ -8,14 +8,16 @@ See [typescript/taste.md](typescript/taste.md)
 
 # Architecture
 
-- Cedar only supports Apollo Client for GraphQL. Remove abstractions/wrappers that suggest alternative GraphQL clients are supported. Confidence: 0.75
-- Cedar owns zero deployment adapters. The framework's only UD responsibility is calling `addEntry()` from `@universal-deploy/store` with WinterTC-compatible handler paths. All provider-specific adapter logic (Node, Netlify, Vercel, Cloudflare) belongs to Universal Deploy adapters, not Cedar. Confidence: 0.85
+- CedarJS only supports Apollo Client for GraphQL. Remove abstractions/wrappers that suggest alternative GraphQL clients are supported. Confidence: 0.75
+- CedarJS owns zero deployment adapters. The framework's only UD responsibility is calling `addEntry()` from `@universal-deploy/store` with WinterTC-compatible handler paths. All provider-specific adapter logic (Node, Netlify, Vercel, Cloudflare) belongs to Universal Deploy adapters, not Cedar. Confidence: 0.85
+- Cedar apps default to CJS + Jest (not vitest). Only ESM-template apps use vitest. Confidence: 0.85
 
 # Workflow
 
 - After making code changes, verify by running: prettier, eslint, unit tests, and tsc on changed files before considering the change complete. Confidence: 0.80
 - Add tests one at a time, verifying each passes before adding the next test. Confidence: 0.70
 - Maintain backwards compatibility in semver minor releases; no mandatory breaking changes. Confidence: 0.75
+- Users never regenerate Cedar apps from templates. CedarJS guides them through manual updates and provides codemods to help them upgrade. Don't assume changes to template files will reach existing apps. Assume instead that they need migration paths. Confidence: 0.85
 
 # Code-Style
 

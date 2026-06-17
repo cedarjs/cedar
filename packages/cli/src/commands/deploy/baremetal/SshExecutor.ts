@@ -1,6 +1,16 @@
 import { NodeSSH } from 'node-ssh'
 import type { Config, SSHExecCommandResponse } from 'node-ssh'
 
+class ExecError extends Error {
+  exitCode: number | null
+
+  constructor(message: string, exitCode: number | null) {
+    super(message)
+    this.name = 'ExecError'
+    this.exitCode = exitCode
+  }
+}
+
 export class SshExecutor {
   private ssh: NodeSSH
   private verbose: boolean
@@ -33,12 +43,11 @@ export class SshExecutor {
     })
 
     if (result.code !== 0) {
-      const error = new Error(
+      throw new ExecError(
         `Error while running command \`${sshCommand}\` in ${path}\n` +
           result.stderr,
-      ) as Error & { exitCode: number | null }
-      error.exitCode = result.code
-      throw error
+        result.code,
+      )
     }
 
     return result
