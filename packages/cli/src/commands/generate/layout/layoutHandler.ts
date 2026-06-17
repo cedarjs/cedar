@@ -4,13 +4,12 @@ import {
   createHandler,
   templateForComponentFile,
 } from '../yargsHandlerHelpers.js'
-import type { HandlerArgv } from '../yargsHandlerHelpers.js'
+import type { TypescriptHandlerArgv } from '../yargsHandlerHelpers.js'
 
 const COMPONENT_SUFFIX = 'Layout'
 const CEDAR_WEB_PATH_NAME = 'layouts'
 
-type LayoutArgv = HandlerArgv & {
-  typescript?: boolean
+type LayoutArgv = TypescriptHandlerArgv & {
   skipLink?: boolean
 }
 

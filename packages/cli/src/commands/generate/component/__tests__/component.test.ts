@@ -44,13 +44,11 @@ beforeAll(async () => {
   })
   withoutTestFiles = await componentHandler.files({
     name: 'withoutTests',
-    javascript: true,
     stories: true,
     tests: false,
   })
   withoutStoryFiles = await componentHandler.files({
     name: 'withoutStories',
-    javascript: true,
     tests: true,
     stories: false,
   })

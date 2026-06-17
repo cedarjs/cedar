@@ -211,7 +211,10 @@ export interface HandlerArgv {
   verbose?: boolean
   rollback?: boolean
   force?: boolean
-  [key: string]: unknown
+}
+
+export type TypescriptHandlerArgv = HandlerArgv & {
+  typescript?: boolean
 }
 
 interface CreateHandlerConfig {
