@@ -235,7 +235,7 @@ describe('serverConfigWithDefaults', () => {
     expect(config).toEqual(baremetal.DEFAULT_SERVER_CONFIG)
   })
 
-  it('overrides defaults with custom', () => {
+  it('allows overriding defaults with custom settings', () => {
     const serverConfig = {
       port: 12345,
       branch: 'venus',
