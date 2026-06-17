@@ -177,15 +177,21 @@ export const builder = async (yargs: Argv) => {
           // 1. serveStatic: serve files from web/dist/ (SPA assets)
           // 2. apiProxy: forward API-prefixed requests to UD Fetchable on API
           //    port
-          // 3. spaFallback: serve index.html for client-side routing
+          // 3. spaFallback: serve the unprerendered SPA shell for client-side
+          //    routing
           const { serveStatic } = await import('srvx/static')
           const apiUrl = getConfig().web.apiUrl
           const webDist = getPaths().web.dist
 
-          const indexHtml = fs.readFileSync(
-            path.join(webDist, 'index.html'),
-            'utf-8',
-          )
+          // SPA fallback: use `200.html` (unprerendered shell) if it exists,
+          // otherwise `index.html`. This matches the Fastify web adapter
+          // behaviour and prevents client-side prerender detection from
+          // triggering on routes that weren't actually prerendered.
+          const prerenderIndexPath = path.join(webDist, '200.html')
+          const fallbackIndexPath = fs.existsSync(prerenderIndexPath)
+            ? prerenderIndexPath
+            : path.join(webDist, 'index.html')
+          const spaHtml = fs.readFileSync(fallbackIndexPath, 'utf-8')
 
           const webServer = serveSrvx({
             // Dummy fetch handler. All requests are handled by middleware
@@ -210,11 +216,14 @@ export const builder = async (yargs: Argv) => {
                   method: req.method,
                   headers: req.headers,
                   body: req.body,
+                  // @ts-expect-error - `duplex` is required when forwarding a
+                  // request body via fetch (Node 18+).
+                  duplex: 'half',
                 })
               },
               () => {
                 const headers = { 'Content-Type': 'text/html' }
-                return new Response(indexHtml, { headers })
+                return new Response(spaHtml, { headers })
               },
             ],
             port: webPort,

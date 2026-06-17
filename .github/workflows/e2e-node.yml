@@ -1,0 +1,62 @@
+name: 🟢 E2E - Node Self-host
+
+on:
+  workflow_call:
+
+jobs:
+  e2e-node:
+    runs-on: ubuntu-latest
+
+    env:
+      CEDAR_CI: 1
+      CEDAR_VERBOSE_TELEMETRY: 1
+      YARN_ENABLE_HARDENED_MODE: 0
+      YARN_ENABLE_IMMUTABLE_INSTALLS: false
+
+    steps:
+      - name: Checkout the framework code
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - name: 📋 Set up test project
+        run: cp -r __fixtures__/test-project-esm ../cedar-test-app
+
+      - name: 🔗 Link local packages via tarsync
+        run: yarn project:tarsync ../cedar-test-app
+
+      - name: 🔧 Set up Universal Deploy
+        working-directory: ../cedar-test-app
+        run: yarn cedar setup deploy universal-deploy
+
+      - name: 🔑 Generate dbAuth secret
+        working-directory: ../cedar-test-app
+        run: |
+          SECRET=$(yarn cedar g secret --raw)
+          echo "SESSION_SECRET='$SECRET'" >> .env
+
+      - name: 🗄️ Set up SQLite database (migrate + seed)
+        working-directory: ../cedar-test-app
+        run: |
+          yarn cedar prisma migrate reset --force
+          yarn cedar prisma db seed
+
+      - name: 🏗️ Build with --ud
+        working-directory: ../cedar-test-app
+        run: yarn cedar build --ud
+
+      - name: 🎭 Install Playwright OS dependencies
+        if: runner.os == 'Linux'
+        run: npx playwright install-deps chromium
+
+      - name: 🎭 Install Playwright dependencies
+        run: npx playwright install chromium
+
+      - name: 🧪 Run Node self-host e2e tests
+        working-directory: ./tasks/smoke-tests/serve
+        run: npx playwright test
+        env:
+          CEDAR_TEST_PROJECT_PATH: ../cedar-test-app
+          CEDAR_SERVE_UD: '1'
+          REDWOOD_DISABLE_TELEMETRY: 1

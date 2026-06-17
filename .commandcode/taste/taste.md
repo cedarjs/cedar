@@ -9,7 +9,7 @@ See [typescript/taste.md](typescript/taste.md)
 # Architecture
 
 - CedarJS only supports Apollo Client for GraphQL. Remove abstractions/wrappers that suggest alternative GraphQL clients are supported. Confidence: 0.75
-- CedarJS owns zero deployment adapters. The framework's only UD responsibility is calling `addEntry()` from `@universal-deploy/store` with WinterTC-compatible handler paths. All provider-specific adapter logic (Node, Netlify, Vercel, Cloudflare) belongs to Universal Deploy adapters, not Cedar. Confidence: 0.85
+- CedarJS owns zero deployment adapters. The framework's only UD responsibility is calling `addEntry()` from `@universal-deploy/store` with WinterTC-compatible handler paths. Cloudless server-side serving uses `srvx` in the Cedar CLI directly (no Cedar-owned adapter package for Node, and no UD adapter needed for that path). Provider-specific adapter logic for Netlify/Vercel/Cloudflare belongs to Universal Deploy adapters, not Cedar. Confidence: 0.90
 - Cedar apps default to CJS + Jest (not vitest). Only ESM-template apps use vitest. Confidence: 0.85
 
 # Workflow
@@ -52,6 +52,7 @@ See [code-style/taste.md](code-style/taste.md)
 # Debugging
 
 - When reproducing bugs, validate against realistic production code paths (e.g., curl against a running server) rather than synthetic/unit-level demonstrations that load modules in isolation. The repro should prove the bug happens in real usage. Confidence: 0.75
+- When designing E2E tests for deployment paths, exercise the same boot path users actually run in production (e.g., `cedar serve api --ud` matching the systemd `ExecStart`), not a synthetic test-only entrypoint. Tests should validate the documented production recipe directly. Confidence: 0.80
 - When testing detection logic that checks generated files for specific strings (e.g., checking if a Prisma client has been generated), the test should verify that the expected strings still appear in real generated output. The goal is a regression canary that catches upstream changes to the generated output format. Confidence: 0.75
 - Prefer `fs.globSync`/`fsPromises.glob` (Node 22+ built-in) over hand-rolled `readdirSync({ recursive: true })` for file pattern matching — it's simpler, more declarative, and already handles extension filtering and exclusion. Confidence: 0.65
 - When warning about packages found outside expected locations, don't label them as "stray" — users may have legitimate non-Prisma uses for those packages, which means they shouldn't be removed. Confidence: 0.65
@@ -59,3 +60,8 @@ See [code-style/taste.md](code-style/taste.md)
 # node
 
 - Cedar requires Node 24+. --experimental-strip-types is unflagged and not needed. Confidence: 0.90
+- When forwarding a request body via `fetch()` in Cedar server code (e.g., API proxy middleware), include `duplex: 'half'` in the `RequestInit` with a `@ts-expect-error` and explanatory comment. Node 18+ fetch requires this option when streaming a body; without it, POST requests silently fail with `TypeError: RequestInit: duplex option is required when sending a body.` The DOM lib types don't yet include it. Confidence: 0.90
+
+# Web Serve
+
+- For SPA fallback in `cedar serve` (both Fastify and `--ud` srvx paths), use `web/dist/200.html` (unprerendered shell) when it exists, otherwise fall back to `web/dist/index.html`. Returning the prerendered `index.html` for non-prerendered routes makes the client think the page was prerendered and crashes on `prerenderLoader(name).default` when the page module isn't in `__REDWOOD__PRERENDER_PAGES`. Mirror the Fastify web adapter's logic at `packages/adapters/fastify/web/src/web.ts`. Confidence: 0.85
