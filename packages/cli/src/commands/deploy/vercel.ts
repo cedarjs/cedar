@@ -12,6 +12,7 @@ export async function handler(yargs: {
   build: boolean
   prisma: boolean
   dataMigrate: boolean
+  dm: boolean
 }) {
   recordTelemetryAttributes({
     command: 'deploy vercel',
