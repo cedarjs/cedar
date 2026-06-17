@@ -1,7 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import execa from 'execa'
 import { Listr } from 'listr2'
 import { format } from 'prettier'
 
@@ -10,6 +9,7 @@ import {
   getPrettierOptions,
   setTomlSetting,
 } from '@cedarjs/cli-helpers'
+import { runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
 import { getConfig, getPaths } from '@cedarjs/project-config'
 
 import { runTransform } from '../../../../../lib/runTransform.js'
@@ -45,7 +45,7 @@ export async function handler({ force }: Args) {
       {
         title: 'Generate possibleTypes.ts',
         task: () => {
-          execa.commandSync('yarn cedar generate types', { stdio: 'ignore' })
+          runBinSync('cedar', ['generate', 'types'], { stdio: 'ignore' })
         },
       },
       {

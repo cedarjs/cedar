@@ -7,6 +7,12 @@ import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
+import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
+import {
+  addRootPackages,
+  addWorkspacePackages,
+} from '@cedarjs/cli-helpers/packageManager/packages'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { getPaths, usingVSCode } from '../../../../lib/index.js'
@@ -27,7 +33,7 @@ const tailwindImportsAndNotes = [
   '/**',
   ' * START --- SETUP TAILWINDCSS EDIT',
   ' *',
-  ' * `yarn cedar setup ui tailwindcss` placed these directives here',
+  ` * \`${formatCedarCommand(['setup', 'ui', 'tailwindcss'])}\` placed these directives here`,
   " * to inject Tailwind's styles into your CSS.",
   ' * For more information, see: https://tailwindcss.com/docs/installation',
   ' */',
@@ -115,8 +121,9 @@ export const handler = async ({ force, install }) => {
               {
                 title: `Install ${projectPackages.join(', ')}`,
                 task: async () => {
-                  await execa('yarn', ['add', '-D', ...projectPackages], {
+                  await addRootPackages(projectPackages, {
                     cwd: rwPaths.base,
+                    dev: true,
                   })
                 },
               },
@@ -134,19 +141,16 @@ export const handler = async ({ force, install }) => {
               {
                 title: `Install ${webWorkspacePackages.join(', ')}`,
                 task: async () => {
-                  await execa(
-                    'yarn',
-                    ['workspace', 'web', 'add', '-D', ...webWorkspacePackages],
-                    {
-                      cwd: rwPaths.base,
-                      env: {
-                        // For some reason yarn started installing deprecated
-                        // typescript types when installing tailwind. This
-                        // prevents it from happening.
-                        YARN_TS_ENABLE_AUTO_TYPES: 'false',
-                      },
+                  await addWorkspacePackages('web', webWorkspacePackages, {
+                    cwd: rwPaths.base,
+                    env: {
+                      // For some reason yarn started installing deprecated
+                      // typescript types when installing tailwind. This
+                      // prevents it from happening. (yarn-only env var.)
+                      YARN_TS_ENABLE_AUTO_TYPES: 'false',
                     },
-                  )
+                    dev: true,
+                  })
                 },
               },
             ],
@@ -192,7 +196,7 @@ export const handler = async ({ force, install }) => {
 
           if (fs.existsSync(tailwindConfigPath)) {
             if (force) {
-              // `yarn tailwindcss init` will fail if these files already exists
+              // `tailwindcss init` will fail if these files already exists
               fs.unlinkSync(tailwindConfigPath)
             } else {
               throw new Error(
@@ -201,7 +205,7 @@ export const handler = async ({ force, install }) => {
             }
           }
 
-          await execa('yarn', ['tailwindcss', 'init', tailwindConfigPath], {
+          await runBin('tailwindcss', ['init', tailwindConfigPath], {
             cwd: rwPaths.web.base,
           })
 

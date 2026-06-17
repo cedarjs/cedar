@@ -10,6 +10,7 @@ import { titleCase } from 'title-case'
 
 import { colors as c } from '@cedarjs/cli-helpers'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
+import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 import { getPaths } from '../../../lib/index.js'
 
@@ -20,7 +21,7 @@ const LIFECYCLE_HOOKS = ['before', 'after']
 export const DEFAULT_SERVER_CONFIG = {
   port: 22,
   branch: 'main',
-  packageManagerCommand: 'yarn',
+  packageManagerCommand: getPackageManager(),
   monitorCommand: 'pm2',
   sides: ['api', 'web'],
   keepReleases: 5,
@@ -377,17 +378,20 @@ export const deployTasks = (yargs, ssh, serverConfig, serverLifecycle) => {
         title: `DB Migrations...`,
         task: async () => {
           await ssh.exec(cmdPath, serverConfig.packageManagerCommand, [
+            'exec',
             'cedar',
             'prisma',
             'migrate',
             'deploy',
           ])
           await ssh.exec(cmdPath, serverConfig.packageManagerCommand, [
+            'exec',
             'cedar',
             'prisma',
             'generate',
           ])
           await ssh.exec(cmdPath, serverConfig.packageManagerCommand, [
+            'exec',
             'cedar',
             'dataMigrate',
             'up',
@@ -407,6 +411,7 @@ export const deployTasks = (yargs, ssh, serverConfig, serverLifecycle) => {
           title: `Building ${side}...`,
           task: async () => {
             await ssh.exec(cmdPath, serverConfig.packageManagerCommand, [
+              'exec',
               'cedar',
               'build',
               side,

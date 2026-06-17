@@ -1,11 +1,11 @@
 import fs from 'node:fs'
 import path from 'path'
 
-import execa from 'execa'
 import { Listr } from 'listr2'
 import prompts from 'prompts'
 
 import { addApiPackages, colors as c } from '@cedarjs/cli-helpers'
+import { runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { projectIsEsm } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
@@ -427,9 +427,9 @@ export async function handler(args) {
             `graphql.${isTypeScriptProject() ? 'ts' : 'js'}`,
           )
 
-          execa.sync(
-            'yarn',
-            ['cedar', 'lint', '--fix', graphqlHandlerPath, realtimeLibFilePath],
+          runBinSync(
+            'cedar',
+            ['lint', '--fix', graphqlHandlerPath, realtimeLibFilePath],
             {
               cwd: getPaths().base,
               // Silently ignore errors

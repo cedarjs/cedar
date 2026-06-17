@@ -10,6 +10,7 @@ import {
   getPrettierOptions,
   colors as c,
 } from '@cedarjs/cli-helpers'
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
@@ -146,7 +147,7 @@ export const handler = async ({ force }) => {
 
           ${c.success('\nUploads and storage configured!\n')}
 
-          Remember to add UPLOADS_SECRET to your .env file. You can generate one with ${c.highlight('yarn cedar generate secret')}
+          Remember to add UPLOADS_SECRET to your .env file. You can generate one with ${c.highlight(formatCedarCommand(['generate', 'secret']))}
 
           Check out the docs for more info:
           ${terminalLink('', 'https://cedarjs.com/docs/uploads')}

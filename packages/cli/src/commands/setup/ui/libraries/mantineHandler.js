@@ -1,10 +1,10 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import execa from 'execa'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { addWorkspacePackages } from '@cedarjs/cli-helpers/packageManager/packages'
 
 import extendStorybookConfiguration from '../../../../lib/configureStorybook.js'
 import { extendJSXFile, fileIncludes } from '../../../../lib/extendFile.js'
@@ -66,14 +66,14 @@ export async function handler({ force, install, packages }) {
               {
                 title: `Install ${installPackages.join(', ')}`,
                 task: async () => {
-                  await execa('yarn', [
-                    'workspace',
-                    'web',
-                    'add',
-                    '-D',
-                    '@emotion/react',
-                    ...installPackages,
-                  ])
+                  await addWorkspacePackages('web', installPackages, {
+                    cwd: cedarPaths.base,
+                    dev: true,
+                  })
+                  await addWorkspacePackages('web', ['@emotion/react'], {
+                    cwd: cedarPaths.base,
+                    dev: true,
+                  })
                 },
               },
             ],

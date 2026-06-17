@@ -32,12 +32,15 @@ vi.mock('@cedarjs/cli-helpers', () => {
   }
 })
 vi.mock('node:fs')
-vi.mock('execa', () => ({
-  default: vi.fn((cmd, params) => ({
-    cmd,
-    params,
-  })),
-}))
+vi.mock('@cedarjs/cli-helpers/packageManager/exec', async () => {
+  const actual = await vi.importActual(
+    '@cedarjs/cli-helpers/packageManager/exec',
+  )
+  return {
+    ...actual,
+    dlx: vi.fn(),
+  }
+})
 
 vi.mock('enquirer', () => {
   return {
@@ -56,11 +59,11 @@ vi.mock('enquirer', () => {
 import path from 'path'
 
 import enq from 'enquirer'
-import execa from 'execa'
 import { vol } from 'memfs'
 import { vi, describe, beforeEach, afterEach, test, expect } from 'vitest'
 
 import { getCompatibilityData } from '@cedarjs/cli-helpers'
+import { dlx } from '@cedarjs/cli-helpers/packageManager/exec'
 
 import { handler } from '../packageHandler.js'
 
@@ -137,7 +140,7 @@ describe('packageHandler', () => {
       _: ['setup', 'package'],
     })
     expect(enq.Select).toHaveBeenCalledTimes(1)
-    expect(execa).not.toHaveBeenCalled()
+    expect(dlx).not.toHaveBeenCalled()
 
     enq.Select.mockImplementation(() => {
       return {
@@ -150,7 +153,7 @@ describe('packageHandler', () => {
       _: ['setup', 'package'],
     })
     expect(enq.Select).toHaveBeenCalledTimes(2)
-    expect(execa).toHaveBeenCalledWith('yarn', ['dlx', 'some-package@latest'], {
+    expect(dlx).toHaveBeenCalledWith('some-package@latest', [], {
       stdio: 'inherit',
       cwd: path.join('mocked', 'project'),
     })
@@ -176,7 +179,7 @@ describe('packageHandler', () => {
       _: ['setup', 'package'],
     })
     expect(getCompatibilityData).toHaveBeenCalledWith('some-package', 'latest')
-    expect(execa).toHaveBeenCalledWith('yarn', ['dlx', 'some-package@1.0.0'], {
+    expect(dlx).toHaveBeenCalledWith('some-package@1.0.0', [], {
       stdio: 'inherit',
       cwd: path.join('mocked', 'project'),
     })
@@ -212,15 +215,10 @@ describe('packageHandler', () => {
       'latest',
     )
     expect(enq.Select).toHaveBeenCalledTimes(1)
-    expect(execa).toHaveBeenNthCalledWith(
-      1,
-      'yarn',
-      ['dlx', 'some-package@1.0.0'],
-      {
-        stdio: 'inherit',
-        cwd: path.join('mocked', 'project'),
-      },
-    )
+    expect(dlx).toHaveBeenNthCalledWith(1, 'some-package@1.0.0', [], {
+      stdio: 'inherit',
+      cwd: path.join('mocked', 'project'),
+    })
 
     enq.Select.mockImplementation(() => {
       return {
@@ -238,15 +236,10 @@ describe('packageHandler', () => {
       'latest',
     )
     expect(enq.Select).toHaveBeenCalledTimes(2)
-    expect(execa).toHaveBeenNthCalledWith(
-      2,
-      'yarn',
-      ['dlx', 'some-package@2.0.0'],
-      {
-        stdio: 'inherit',
-        cwd: path.join('mocked', 'project'),
-      },
-    )
+    expect(dlx).toHaveBeenNthCalledWith(2, 'some-package@2.0.0', [], {
+      stdio: 'inherit',
+      cwd: path.join('mocked', 'project'),
+    })
 
     enq.Select.mockImplementation(() => {
       return {
@@ -264,7 +257,7 @@ describe('packageHandler', () => {
       'latest',
     )
     expect(enq.Select).toHaveBeenCalledTimes(3)
-    expect(execa).toBeCalledTimes(2) // Only called for the previous two select options
+    expect(dlx).toBeCalledTimes(2) // Only called for the previous two select options
   })
 
   test('tag is compatible', async () => {
@@ -288,7 +281,7 @@ describe('packageHandler', () => {
     })
 
     expect(getCompatibilityData).toHaveBeenCalledWith('some-package', 'stable')
-    expect(execa).toHaveBeenCalledWith('yarn', ['dlx', 'some-package@1.0.0'], {
+    expect(dlx).toHaveBeenCalledWith('some-package@1.0.0', [], {
       stdio: 'inherit',
       cwd: path.join('mocked', 'project'),
     })
@@ -324,15 +317,10 @@ describe('packageHandler', () => {
       'stable',
     )
     expect(enq.Select).toHaveBeenCalledTimes(1)
-    expect(execa).toHaveBeenNthCalledWith(
-      1,
-      'yarn',
-      ['dlx', 'some-package@1.0.0'],
-      {
-        stdio: 'inherit',
-        cwd: path.join('mocked', 'project'),
-      },
-    )
+    expect(dlx).toHaveBeenNthCalledWith(1, 'some-package@1.0.0', [], {
+      stdio: 'inherit',
+      cwd: path.join('mocked', 'project'),
+    })
 
     enq.Select.mockImplementation(() => {
       return {
@@ -350,15 +338,10 @@ describe('packageHandler', () => {
       'stable',
     )
     expect(enq.Select).toHaveBeenCalledTimes(2)
-    expect(execa).toHaveBeenNthCalledWith(
-      2,
-      'yarn',
-      ['dlx', 'some-package@2.0.0'],
-      {
-        stdio: 'inherit',
-        cwd: path.join('mocked', 'project'),
-      },
-    )
+    expect(dlx).toHaveBeenNthCalledWith(2, 'some-package@2.0.0', [], {
+      stdio: 'inherit',
+      cwd: path.join('mocked', 'project'),
+    })
 
     enq.Select.mockImplementation(() => {
       return {
@@ -376,7 +359,7 @@ describe('packageHandler', () => {
       'stable',
     )
     expect(enq.Select).toHaveBeenCalledTimes(3)
-    expect(execa).toBeCalledTimes(2) // Only called for the previous two select options
+    expect(dlx).toBeCalledTimes(2) // Only called for the previous two select options
   })
 
   test('specific version is compatible', async () => {
@@ -399,7 +382,7 @@ describe('packageHandler', () => {
       _: ['setup', 'package'],
     })
     expect(getCompatibilityData).toHaveBeenCalledWith('some-package', '1.0.0')
-    expect(execa).toHaveBeenCalledWith('yarn', ['dlx', 'some-package@1.0.0'], {
+    expect(dlx).toHaveBeenCalledWith('some-package@1.0.0', [], {
       stdio: 'inherit',
       cwd: path.join('mocked', 'project'),
     })
@@ -435,15 +418,10 @@ describe('packageHandler', () => {
       '1.0.0',
     )
     expect(enq.Select).toHaveBeenCalledTimes(1)
-    expect(execa).toHaveBeenNthCalledWith(
-      1,
-      'yarn',
-      ['dlx', 'some-package@1.0.0'],
-      {
-        stdio: 'inherit',
-        cwd: path.join('mocked', 'project'),
-      },
-    )
+    expect(dlx).toHaveBeenNthCalledWith(1, 'some-package@1.0.0', [], {
+      stdio: 'inherit',
+      cwd: path.join('mocked', 'project'),
+    })
 
     enq.Select.mockImplementation(() => {
       return {
@@ -461,15 +439,10 @@ describe('packageHandler', () => {
       '1.0.0',
     )
     expect(enq.Select).toHaveBeenCalledTimes(2)
-    expect(execa).toHaveBeenNthCalledWith(
-      2,
-      'yarn',
-      ['dlx', 'some-package@2.0.0'],
-      {
-        stdio: 'inherit',
-        cwd: path.join('mocked', 'project'),
-      },
-    )
+    expect(dlx).toHaveBeenNthCalledWith(2, 'some-package@2.0.0', [], {
+      stdio: 'inherit',
+      cwd: path.join('mocked', 'project'),
+    })
 
     enq.Select.mockImplementation(() => {
       return {
@@ -487,7 +460,7 @@ describe('packageHandler', () => {
       '1.0.0',
     )
     expect(enq.Select).toHaveBeenCalledTimes(3)
-    expect(execa).toBeCalledTimes(2) // Only called for the previous two select options
+    expect(dlx).toBeCalledTimes(2) // Only called for the previous two select options
   })
 
   test('specific version is experimental', async () => {
@@ -531,14 +504,9 @@ describe('packageHandler', () => {
       '0.0.1',
     )
     expect(enq.Select).toHaveBeenCalledTimes(1)
-    expect(execa).toHaveBeenNthCalledWith(
-      1,
-      'yarn',
-      ['dlx', 'some-package@0.0.1'],
-      {
-        stdio: 'inherit',
-        cwd: path.join('mocked', 'project'),
-      },
-    )
+    expect(dlx).toHaveBeenNthCalledWith(1, 'some-package@0.0.1', [], {
+      stdio: 'inherit',
+      cwd: path.join('mocked', 'project'),
+    })
   })
 })

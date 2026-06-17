@@ -11,7 +11,7 @@
     "@cedarjs/eslint-config": "4.1.0",
     "@cedarjs/project-config": "4.1.0",
     "@cedarjs/testing": "4.1.0",
-    "prettier-plugin-tailwindcss": "^0.7.0"
+    "prettier-plugin-tailwindcss": "^0.8.0"
   },
   "engines": {
     "node": "=24.x"
