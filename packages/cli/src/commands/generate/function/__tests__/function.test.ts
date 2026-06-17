@@ -18,7 +18,6 @@ type WordFilesType = { [key: string]: string }
 describe('Single word default files', async () => {
   const singleWordDefaultFiles: WordFilesType = await functionHandler.files({
     name: 'foo',
-    tests: true,
   })
 
   it('returns tests, scenario and function file', () => {
@@ -123,7 +122,6 @@ test('creates a .ts file if --typescript=true', async () => {
 test('creates a test file with correct import for dashed function name', async () => {
   const dashedFunctionFiles = await functionHandler.files({
     name: 'dashed-function',
-    tests: true,
   })
 
   const testFile =

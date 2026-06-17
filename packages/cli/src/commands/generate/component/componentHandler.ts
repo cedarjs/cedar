@@ -3,24 +3,20 @@ import {
   createHandler,
   templateForComponentFile,
 } from '../yargsHandlerHelpers.js'
-import type { HandlerArgv } from '../yargsHandlerHelpers.js'
+import type { TypescriptHandlerArgv } from '../yargsHandlerHelpers.js'
 
-const REDWOOD_WEB_PATH_NAME = 'components'
-
-type ComponentArgv = HandlerArgv & {
-  typescript?: boolean
-}
+const CEDAR_WEB_PATH_NAME = 'components'
 
 export const files = async ({
   name,
   typescript = false,
   stories,
   tests,
-}: ComponentArgv): Promise<Record<string, string>> => {
+}: TypescriptHandlerArgv): Promise<Record<string, string>> => {
   const extension = typescript ? '.tsx' : '.jsx'
   const componentFile = await templateForComponentFile({
     name,
-    webPathSection: REDWOOD_WEB_PATH_NAME,
+    webPathSection: CEDAR_WEB_PATH_NAME,
     extension,
     generator: 'component',
     templatePath: 'component.tsx.template',
@@ -28,14 +24,14 @@ export const files = async ({
   const testFile = await templateForComponentFile({
     name,
     extension: `.test${extension}`,
-    webPathSection: REDWOOD_WEB_PATH_NAME,
+    webPathSection: CEDAR_WEB_PATH_NAME,
     generator: 'component',
     templatePath: 'test.tsx.template',
   })
   const storiesFile = await templateForComponentFile({
     name,
     extension: `.stories${extension}`,
-    webPathSection: REDWOOD_WEB_PATH_NAME,
+    webPathSection: CEDAR_WEB_PATH_NAME,
     generator: 'component',
     // Using two different template files here because we have a TS-specific
     // information in a comment in the .tsx template

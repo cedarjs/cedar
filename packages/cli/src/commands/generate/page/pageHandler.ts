@@ -24,10 +24,8 @@ import {
   removeGeneratorName,
   validateName,
 } from '../helpers.js'
-import {
-  type HandlerArgv,
-  templateForComponentFile,
-} from '../yargsHandlerHelpers.js'
+import { templateForComponentFile } from '../yargsHandlerHelpers.js'
+import type { TypescriptHandlerArgv } from '../yargsHandlerHelpers.js'
 
 const COMPONENT_SUFFIX = 'Page'
 const CEDAR_WEB_PATH_NAME = 'pages'
@@ -94,9 +92,7 @@ export const paramVariants = (path: string | undefined): ParamVariants => {
   }
 }
 
-type PageArgv = HandlerArgv & {
-  typescript?: boolean
-} & Partial<ParamVariants>
+type PageArgv = TypescriptHandlerArgv & Partial<ParamVariants>
 
 type PageHandlerArgv = PageArgv & {
   path: string

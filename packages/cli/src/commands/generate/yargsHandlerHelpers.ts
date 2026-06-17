@@ -196,6 +196,10 @@ export interface HandlerArgv {
   force?: boolean
 }
 
+export type TypescriptHandlerArgv = HandlerArgv & {
+  typescript?: boolean
+}
+
 interface CreateHandlerConfig {
   componentName: string
   preTasksFn?: (argv: HandlerArgv) => HandlerArgv | Promise<HandlerArgv>

@@ -14,7 +14,7 @@ import {
   createHandler,
   templateForComponentFile,
 } from '../yargsHandlerHelpers.js'
-import type { HandlerArgv } from '../yargsHandlerHelpers.js'
+import type { TypescriptHandlerArgv } from '../yargsHandlerHelpers.js'
 
 import {
   checkProjectForQueryField,
@@ -27,8 +27,7 @@ import {
 const COMPONENT_SUFFIX = 'Cell'
 const CEDAR_WEB_PATH_NAME = 'components'
 
-type CellArgv = HandlerArgv & {
-  typescript?: boolean
+type CellArgv = TypescriptHandlerArgv & {
   list?: boolean
   query?: string
 }

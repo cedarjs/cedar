@@ -4,7 +4,13 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
 import { deleteFilesTask } from '../../lib/index.js'
 
-type FilesFunction<TArgs> = (args: TArgs) => Promise<Record<string, string>>
+type FilesArgsBase = {
+  name: string
+  stories: boolean
+  tests: boolean
+}
+
+type FilesFunction = (args: FilesArgsBase) => Promise<Record<string, string>>
 
 type HandlerOptions = { name: string; isDestroyer?: boolean } & Record<
   string,
@@ -15,51 +21,42 @@ type PreTasksFn = (
   options: HandlerOptions,
 ) => Promise<HandlerOptions> | HandlerOptions
 
-const tasks = <TFilesArgs>({
-  componentName,
-  filesFn,
-  name,
-}: {
+export interface TasksArgs {
   componentName: string
-  filesFn: FilesFunction<TFilesArgs>
+  filesFn: FilesFunction
   name: string
-}) =>
-  new Listr(
+}
+
+function tasks({ componentName, filesFn, name }: TasksArgs) {
+  return new Listr(
     [
       {
         title: `Destroying ${componentName} files...`,
         task: async () => {
-          // The destroy flow always passes the same fixed set of fields to
-          // the generator's `files` function. We assert to TFilesArgs here
-          // because the caller is generic over what those extra fields are.
-          const f = await filesFn({
-            name,
-            stories: true,
-            tests: true,
-          } as unknown as TFilesArgs)
+          const f = await filesFn({ name, stories: true, tests: true })
           return deleteFilesTask(f)
         },
       },
     ],
     { rendererOptions: { collapseSubtasks: false }, exitOnError: true },
   )
+}
 
-export function createHandler<TFilesArgs>({
+export function createHandler({
   componentName,
   preTasksFn = (options) => options,
   filesFn,
 }: {
   componentName: string
   preTasksFn?: PreTasksFn
-  filesFn: FilesFunction<TFilesArgs>
+  filesFn: FilesFunction
 }) {
   return {
     handler: async (options: HandlerOptions) => {
-      recordTelemetryAttributes({
-        command: `destroy ${componentName}`,
-      })
-      options = await preTasksFn({ ...options, isDestroyer: true })
-      await tasks({ componentName, filesFn, name: options.name }).run()
+      recordTelemetryAttributes({ command: `destroy ${componentName}` })
+
+      const { name } = await preTasksFn({ ...options, isDestroyer: true })
+      await tasks({ componentName, filesFn, name }).run()
     },
     tasks,
   }

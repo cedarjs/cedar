@@ -8,19 +8,16 @@ import { transformTSToJSMap, writeFilesTask } from '../../../lib/index.js'
 import { prepareForRollback } from '../../../lib/rollback.js'
 import { validateName } from '../helpers.js'
 import { templateForComponentFile } from '../yargsHandlerHelpers.js'
-import type { HandlerArgv } from '../yargsHandlerHelpers.js'
-
-type FunctionFilesArgv = HandlerArgv & {
-  typescript?: boolean
-  tests?: boolean
-}
+import type {
+  HandlerArgv,
+  TypescriptHandlerArgv,
+} from '../yargsHandlerHelpers.js'
 
 export const files = async ({
   name,
   typescript = false,
-  tests = true,
   ...rest
-}: FunctionFilesArgv): Promise<Record<string, string>> => {
+}: TypescriptHandlerArgv): Promise<Record<string, string>> => {
   const extension = typescript ? '.ts' : '.js'
 
   const outputFiles: [string, string][] = []
@@ -36,43 +33,33 @@ export const files = async ({
 
   outputFiles.push(functionFiles)
 
-  if (tests) {
-    const testFile = await templateForComponentFile({
-      name,
-      extension: `.test${extension}`,
-      apiPathSection: 'functions',
-      generator: 'function',
-      templatePath: 'test.ts.template',
-      templateVars: { ...rest },
-    })
+  const testFile = await templateForComponentFile({
+    name,
+    extension: `.test${extension}`,
+    apiPathSection: 'functions',
+    generator: 'function',
+    templatePath: 'test.ts.template',
+    templateVars: { ...rest },
+  })
 
-    const scenarioFile = await templateForComponentFile({
-      name,
-      extension: `.scenarios${extension}`,
-      apiPathSection: 'functions',
-      generator: 'function',
-      templatePath: 'scenarios.ts.template',
-      templateVars: { ...rest },
-    })
+  const scenarioFile = await templateForComponentFile({
+    name,
+    extension: `.scenarios${extension}`,
+    apiPathSection: 'functions',
+    generator: 'function',
+    templatePath: 'scenarios.ts.template',
+    templateVars: { ...rest },
+  })
 
-    outputFiles.push(testFile)
-    outputFiles.push(scenarioFile)
-  }
+  outputFiles.push(testFile)
+  outputFiles.push(scenarioFile)
 
   return transformTSToJSMap(outputFiles, typescript)
 }
 
-type FunctionHandlerArgv = HandlerArgv & {
-  force: boolean
-}
-
 // This could be built using createYargsForComponentGeneration;
 // however, we need to add a message after generating the function files
-export const handler = async ({
-  name,
-  force,
-  ...rest
-}: FunctionHandlerArgv) => {
+export const handler = async ({ name, force, ...rest }: HandlerArgv) => {
   recordTelemetryAttributes({
     command: 'generate function',
     force,
