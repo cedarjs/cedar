@@ -1,5 +1,6 @@
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import type { Argv } from 'yargs'
+
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
 import { deployBuilder } from './helpers/deployBuilder.js'
 

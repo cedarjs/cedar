@@ -1,5 +1,6 @@
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import type { Argv } from 'yargs'
+
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
 export const command = 'realtime'
 
@@ -39,6 +40,8 @@ export async function handler(options: {
     force: options.force,
     verbose: options.verbose,
   })
+
+  // @ts-expect-error - no types for JS files
   const { handler } = await import('./realtimeHandler.js')
   return handler(options)
 }

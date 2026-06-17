@@ -15,7 +15,7 @@ export const deployHandler = ({
 }) => {
   const paths = getPaths()
 
-  let commandSet: string[] = []
+  const commandSet: string[] = []
   if (build) {
     commandSet.push(formatCedarCommand(['build', '--verbose']))
   }
