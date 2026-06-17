@@ -18494,15 +18494,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"human-id@npm:^4.1.1":
-  version: 4.2.0
-  resolution: "human-id@npm:4.2.0"
-  bin:
-    human-id: dist/cli.js
-  checksum: 10c0/80071f3b785b2e91080b5f9aa2d079c2e9a464e009ea12c035255b61d1b70beefe7eda42209dff9c1bb9a9fa58e50ada38c1b314ba3a23266a72cd5e9a453e1f
-  languageName: node
-  linkType: hard
-
 "human-signals@npm:^1.1.1":
   version: 1.1.1
   resolution: "human-signals@npm:1.1.1"
@@ -25653,7 +25644,6 @@ __metadata:
     execa: "npm:5.1.1"
     fast-glob: "npm:3.3.3"
     globals: "npm:16.5.0"
-    human-id: "npm:^4.1.1"
     jest: "npm:29.7.0"
     jscodeshift: "npm:17.3.0"
     lefthook: "npm:2.1.9"
