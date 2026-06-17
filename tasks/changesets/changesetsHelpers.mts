@@ -1,6 +1,5 @@
 import { fileURLToPath } from 'node:url'
 
-import { humanId } from 'human-id'
 import type { ProcessPromise } from 'zx'
 import { $, argv, path, fs } from 'zx'
 
@@ -27,10 +26,7 @@ export function getChangesetFilePath(prNumber?: number) {
   if (prNumber) {
     changesetId = prNumber
   } else {
-    changesetId = humanId({
-      separator: '-',
-      capitalize: false,
-    })
+    changesetId = new Date().toISOString().replace(/[:.]/g, '-')
   }
 
   return path.join(CHANGESETS_DIR, `${changesetId}.md`)
