@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
 import { loginAsTestUser, signUpTestUser } from '../../shared/common.js'
 
@@ -55,12 +56,11 @@ const post = {
 }
 
 test('requireAuth graphql checks', async ({ page }) => {
-  if (process.env.CEDAR_SERVE_UD) {
-    return test.skip(
-      undefined,
-      'Skipped on UD until cookie proxying is fixed in serve.ts',
-    )
-  }
+  test.fixme(
+    !!process.env.CEDAR_SERVE_UD,
+    'Skipped on UD until cookie proxying is fixed in serve.ts',
+  )
+
   // Try to create a post as an anonymous user.
   await createNewPost({ page })
 
@@ -96,7 +96,7 @@ test('requireAuth graphql checks', async ({ page }) => {
     .click()
 })
 
-async function createNewPost({ page }) {
+async function createNewPost({ page }: { page: Page }) {
   await page.goto('/posts/new')
 
   await page.getByLabel('Title').fill(post.title)

@@ -50,12 +50,11 @@ const isUD = !!process.env.CEDAR_SERVE_UD
 test('RBAC: Should not be able to delete contact as non-admin user', async ({
   page,
 }) => {
-  if (process.env.CEDAR_SERVE_UD) {
-    return test.skip(
-      undefined,
-      'Skipped on UD until cookie proxying is fixed in serve.ts',
-    )
-  }
+  test.fixme(
+    !!process.env.CEDAR_SERVE_UD,
+    'Skipped on UD until cookie proxying is fixed in serve.ts',
+  )
+
   // Login as non-admin user
   await loginAsTestUser({ page })
 
