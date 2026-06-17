@@ -5,7 +5,7 @@ import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import { Listr } from 'listr2'
 
 import { addApiPackages, colors as c } from '@cedarjs/cli-helpers'
-import { runScript } from '@cedarjs/cli-helpers/packageManager/exec'
+import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 import {
   getConfigPath,
   resolveFile,
@@ -189,7 +189,7 @@ export const handler = async ({ force, verbose }) => {
     {
       title: 'Regenerate the Prisma client...',
       task: (_ctx, _task) => {
-        return runScript('cedar', ['prisma', 'generate'], {
+        return runBin('cedar', ['prisma', 'generate'], {
           stdio: 'inherit',
           cwd: getPaths().web.base,
         })
