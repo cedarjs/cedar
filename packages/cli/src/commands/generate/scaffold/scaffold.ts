@@ -1,11 +1,12 @@
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
 import { createHandler, getYargsDefaults } from '../yargsCommandHelpers.js'
 
 export const command = 'scaffold <model>'
 export const description =
   'Generate Pages, SDL, and Services files based on a given DB schema Model. Also accepts <path/model>'
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   yargs
     .positional('model', {
       description:

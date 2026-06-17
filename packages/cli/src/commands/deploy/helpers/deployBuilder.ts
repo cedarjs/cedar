@@ -1,6 +1,7 @@
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
-export const deployBuilder = (yargs) => {
+export const deployBuilder = (yargs: Argv) => {
   yargs
     .option('build', {
       description: 'Build for production',

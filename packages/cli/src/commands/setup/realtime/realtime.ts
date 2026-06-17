@@ -1,10 +1,11 @@
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import type { Argv } from 'yargs'
 
 export const command = 'realtime'
 
 export const description = 'Setup RedwoodJS Realtime'
 
-export function builder(yargs) {
+export function builder(yargs: Argv) {
   yargs
     .option('includeExamples', {
       alias: ['e', 'examples'],
@@ -27,7 +28,11 @@ export function builder(yargs) {
     })
 }
 
-export async function handler(options) {
+export async function handler(options: {
+  includeExamples: boolean | undefined
+  force: boolean
+  verbose: boolean
+}) {
   recordTelemetryAttributes({
     command: 'setup realtime',
     includeExamples: options.includeExamples,

@@ -1,4 +1,5 @@
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
 import {
   createCommand,
@@ -25,7 +26,7 @@ export const defaults = () => {
 
 export const command = createCommand('service')
 export const description = createDescription('service')
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   yargs
     .positional('name', {
       description: 'Name of the service',
