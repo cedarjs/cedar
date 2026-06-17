@@ -12,7 +12,9 @@ export default defineConfig({
 
   // Run your local dev server before starting the tests
   webServer: {
-    command: 'yarn cedar serve',
+    command: process.env.CEDAR_SERVE_UD
+      ? 'yarn cedar serve --ud'
+      : 'yarn cedar serve',
     cwd: process.env.CEDAR_TEST_PROJECT_PATH,
     url: 'http://127.0.0.1:8910',
     reuseExistingServer: !process.env.CI,
