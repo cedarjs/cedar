@@ -12,7 +12,7 @@
     "@cedarjs/project-config": "4.2.0",
     "@cedarjs/testing": "4.2.0",
     "vitest": "3.2.6",
-    "prettier-plugin-tailwindcss": "^0.8.0"
+    "prettier-plugin-tailwindcss": "^0.7.0"
   },
   "engines": {
     "node": "=24.x"
