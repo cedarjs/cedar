@@ -39,7 +39,8 @@
 │  Browser ──GET──▶ static files/prerender           │                         │
 │                    │                                ▼                        │
 │               SPA fallback                      GraphQL Yoga                  │
-│               (index.html)                   (services use @cedarjs/context)  │
+│               (200.html if present,           (services use @cedarjs/context)  │
+│                else index.html)                                               │
 │                    │                                                          │
 │                    ▼                                                         │
 │               React (client)                                                  │

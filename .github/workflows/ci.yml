@@ -257,6 +257,11 @@ jobs:
     uses: ./.github/workflows/e2e-vercel.yml
     secrets: inherit
 
+  e2e-node:
+    needs: check
+    name: 🖥️ E2E Node self-host
+    uses: ./.github/workflows/e2e-node.yml
+
   ci-status-check:
     needs:
       - check
@@ -276,6 +281,7 @@ jobs:
       - background-jobs-e2e
       - e2e-netlify
       - e2e-vercel
+      - e2e-node
     if: always()
 
     name: ✅ CI Status Check
