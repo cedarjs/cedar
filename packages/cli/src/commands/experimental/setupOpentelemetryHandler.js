@@ -2,10 +2,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
-import execa from 'execa'
 import { Listr } from 'listr2'
 
 import { addApiPackages, colors as c } from '@cedarjs/cli-helpers'
+import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 import {
   getConfigPath,
   resolveFile,
@@ -189,9 +189,8 @@ export const handler = async ({ force, verbose }) => {
     {
       title: 'Regenerate the Prisma client...',
       task: (_ctx, _task) => {
-        return execa(`yarn cedar prisma generate`, {
+        return runBin('cedar', ['prisma', 'generate'], {
           stdio: 'inherit',
-          shell: true,
           cwd: getPaths().web.base,
         })
       },

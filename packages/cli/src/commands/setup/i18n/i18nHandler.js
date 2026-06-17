@@ -1,11 +1,11 @@
 import fs from 'node:fs'
 import path from 'path'
 
-import execa from 'execa'
 import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 
 import { colors as c } from '@cedarjs/cli-helpers'
+import { addWorkspacePackages } from '@cedarjs/cli-helpers/packageManager/packages'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import extendStorybookConfiguration from '../../../lib/configureStorybook.js'
@@ -51,14 +51,15 @@ export const handler = async ({ force }) => {
                   /**
                    * Install i18next, react-i18next and i18next-browser-languagedetector
                    */
-                  await execa('yarn', [
-                    'workspace',
+                  await addWorkspacePackages(
                     'web',
-                    'add',
-                    'i18next',
-                    'react-i18next',
-                    'i18next-browser-languagedetector',
-                  ])
+                    [
+                      'i18next',
+                      'react-i18next',
+                      'i18next-browser-languagedetector',
+                    ],
+                    { cwd: rwPaths.base },
+                  )
                 },
               },
             ],

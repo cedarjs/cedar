@@ -17,6 +17,7 @@ See [typescript/taste.md](typescript/taste.md)
 - After making code changes, verify by running: prettier, eslint, unit tests, and tsc on changed files before considering the change complete. Confidence: 0.80
 - Add tests one at a time, verifying each passes before adding the next test. Confidence: 0.70
 - Maintain backwards compatibility in semver minor releases; no mandatory breaking changes. Confidence: 0.75
+- When uncertain whether a command/pattern works across package managers or platforms, test it empirically on the user's machine rather than deferring to existing patterns or speculating about edge cases. "Is this PM-agnostic?" is a question to answer by running the command, not by trusting prior assumptions. Confidence: 0.75
 - Users never regenerate Cedar apps from templates. CedarJS guides them through manual updates and provides codemods to help them upgrade. Don't assume changes to template files will reach existing apps. Assume instead that they need migration paths. Confidence: 0.85
 
 # Code-Style
@@ -40,6 +41,10 @@ See [code-style/taste.md](code-style/taste.md)
 
 - Cedar ships a CLI that Cedar Apps use. The CLI is invoked by the `yarn cedar` prefix (e.g., `yarn cedar dev`, `yarn cedar build`), not bare `yarn dev`/`yarn build`. Confidence: 0.80
 - Always use `yarn cedar` (not bare `cedar`) in CLI usage examples since Cedar is not installed as a global binary. Confidence: 0.70
+
+# Cedar Deploy Config
+
+- The `packageManagerCommand` config field in `deploy.toml` / `DEFAULT_SERVER_CONFIG` is a deliberate user-facing escape hatch: it lets users run a different package manager (or a wrapper like `doppler run -- yarn`) on the deployment server than they use locally. When restructuring deploy code, preserve the ability for this field to override PM behavior — don't collapse it into a PM auto-detected value. Confidence: 0.85
 
 # Architecture
 

@@ -422,7 +422,7 @@ export const handler = async ({ force, verbose }) => {
             },
           )
 
-          // Run yarn install to apply the changes
+          // Run the package manager's install command to apply the changes
           const pm = getPackageManager()
           await execa(pm, [install()], { cwd: getPaths().web.base })
         },

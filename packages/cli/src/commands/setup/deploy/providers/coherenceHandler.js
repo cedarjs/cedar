@@ -10,6 +10,10 @@ import {
   isTypeScriptProject,
   getConfigPath,
 } from '@cedarjs/cli-helpers'
+import {
+  formatCedarCommand,
+  formatRunBinCommand,
+} from '@cedarjs/cli-helpers/packageManager/display'
 import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -108,21 +112,37 @@ async function getCoherenceConfigFileContent() {
     db = 'postgres'
   }
 
-  const apiProdCommand = ['yarn', 'cedar', 'build', 'api', '&&']
+  const apiProdCommandSegments = [formatCedarCommand(['build', 'api']), '&&']
   if (serverFileExists()) {
-    apiProdCommand.push(
-      'yarn',
-      'node',
-      'api/dist/server.js',
-      '--apiRootPath=/api',
+    apiProdCommandSegments.push(
+      formatRunBinCommand('node', ['api/dist/server.js', '--apiRootPath=/api']),
     )
   } else {
-    apiProdCommand.push('yarn', 'cedar', 'serve', 'api', '--apiRootPath=/api')
+    apiProdCommandSegments.push(
+      formatCedarCommand(['serve', 'api', '--apiRootPath=/api']),
+    )
   }
+
+  const apiDevCommandSegments = [
+    formatCedarCommand(['build', 'api']),
+    '&&',
+    formatCedarCommand(['dev', 'api', '--apiRootPath=/api']),
+  ]
+
+  const migrationCommandSegments = [
+    formatCedarCommand(['prisma', 'migrate', 'deploy']),
+    '&&',
+    formatCedarCommand(['data-migrate', 'up']),
+  ]
 
   return coherenceFiles.yamlTemplate({
     db,
-    apiProdCommand: `[${apiProdCommand.map((cmd) => `"${cmd}"`).join(', ')}]`,
+    apiProdCommand: `[${apiProdCommandSegments.map((cmd) => `"${cmd}"`).join(', ')}]`,
+    apiDevCommand: `[${apiDevCommandSegments.map((cmd) => `"${cmd}"`).join(', ')}]`,
+    migrationCommand: `[${migrationCommandSegments.map((cmd) => `"${cmd}"`).join(', ')}]`,
+    webProdCommand: `["${formatCedarCommand(['serve', 'web'])}"]`,
+    webDevCommand: `["${formatCedarCommand(['dev', 'web', '--fwd=\\"--allowed-hosts all\\"'])}"]`,
+    webBuildCommand: `["${formatCedarCommand(['build', 'web', '--no-prerender'])}"]`,
   })
 }
 
@@ -207,7 +227,15 @@ const PORT_REGEXP = /port(\s*)=(\s*)(?<port>\d{4})/g
 // ------------------------
 
 const coherenceFiles = {
-  yamlTemplate({ db, apiProdCommand }) {
+  yamlTemplate({
+    db,
+    apiProdCommand,
+    apiDevCommand,
+    migrationCommand,
+    webProdCommand,
+    webDevCommand,
+    webBuildCommand,
+  }) {
     return `\
 api:
   type: backend
@@ -215,7 +243,7 @@ api:
   prod:
     command: ${apiProdCommand}
   dev:
-    command: ["yarn", "cedar", "build", "api", "&&", "yarn", "cedar", "dev", "api", "--apiRootPath=/api"]
+    command: ${apiDevCommand}
   local_packages: ["node_modules"]
 
   system:
@@ -231,20 +259,20 @@ api:
       ${db === 'postgres' ? 'adapter: postgresql' : ''}
 
   # If you use data migrations, use the following instead:
-  # migration: ["yarn", "cedar", "prisma", "migrate", "deploy", "&&", "yarn", "cedar", "data-migrate", "up"]
-  migration: ["yarn", "cedar", "prisma", "migrate", "deploy"]
+  # migration: ["${formatCedarCommand(['prisma', 'migrate', 'deploy'])}", "&&", "${formatCedarCommand(['data-migrate', 'up'])}"]
+  migration: ${migrationCommand}
 
 web:
   type: frontend
   assets_path: "web/dist"
   prod:
-    command: ["yarn", "cedar", "serve", "web"]
+    command: ${webProdCommand}
   dev:
-    command: ["yarn", "cedar", "dev", "web", "--fwd=\\"--allowed-hosts all\\""]
+    command: ${webDevCommand}
 
   # Heads up: Redwood's prerender doesn't work with Coherence yet.
   # For current status and updates, see https://github.com/redwoodjs/redwood/issues/8333.
-  build: ["yarn", "cedar", "build", "web", "--no-prerender"]
+  build: ${webBuildCommand}
   local_packages: ["node_modules"]
 
   system:

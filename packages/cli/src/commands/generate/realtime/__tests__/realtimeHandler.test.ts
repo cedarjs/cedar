@@ -90,7 +90,7 @@ describe('realtimeHandler', () => {
     expect(vi.mocked(console).error).toHaveBeenCalledWith(
       expect.stringMatching(
         'CedarJS Realtime requires a serverful environment. Please run `yarn ' +
-          'cedarjs setup server-file` first.',
+          'cedar setup server-file` first.',
       ),
     )
     expect(vi.mocked(process).exit).toHaveBeenCalledWith(1)

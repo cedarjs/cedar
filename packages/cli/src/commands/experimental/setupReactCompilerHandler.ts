@@ -1,11 +1,14 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import execa from 'execa'
 import { Listr } from 'listr2'
 import semver from 'semver'
 
 import { colors as c } from '@cedarjs/cli-helpers'
+import {
+  addRootPackages,
+  addWorkspacePackages,
+} from '@cedarjs/cli-helpers/packageManager/packages'
 import { getConfigPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -107,26 +110,25 @@ export const handler = async (options: Opts) => {
           }
         },
       },
-      // We are using two different yarn commands here which is fine because
-      // they're operating on different workspaces - web and the root
+      // We are using two different package manager commands here which is
+      // fine because they're operating on different workspaces - web and the
+      // root
       {
         title: 'Installing eslint-plugin-react-compiler',
         task: async () => {
-          await execa('yarn', ['add', '-D', 'eslint-plugin-react-compiler'], {
+          await addRootPackages(['eslint-plugin-react-compiler'], {
             cwd: getPaths().base,
+            dev: true,
           })
         },
       },
       {
         title: 'Installing babel-plugin-react-compiler',
         task: async () => {
-          await execa(
-            'yarn',
-            ['web/', 'add', '-D', 'babel-plugin-react-compiler'],
-            {
-              cwd: getPaths().base,
-            },
-          )
+          await addWorkspacePackages('web', ['babel-plugin-react-compiler'], {
+            cwd: getPaths().base,
+            dev: true,
+          })
         },
       },
       {
