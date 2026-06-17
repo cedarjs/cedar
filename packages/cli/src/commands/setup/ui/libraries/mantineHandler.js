@@ -68,6 +68,7 @@ export async function handler({ force, install, packages }) {
                 task: async () => {
                   await addWorkspacePackages('web', installPackages, {
                     cwd: cedarPaths.base,
+                    dev: true,
                   })
                   await addWorkspacePackages('web', ['@emotion/react'], {
                     cwd: cedarPaths.base,

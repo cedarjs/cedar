@@ -10,8 +10,10 @@ import {
   isTypeScriptProject,
   getConfigPath,
 } from '@cedarjs/cli-helpers'
-import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
-import { formatRunBinCommand } from '@cedarjs/cli-helpers/packageManager/display'
+import {
+  formatCedarCommand,
+  formatRunBinCommand,
+} from '@cedarjs/cli-helpers/packageManager/display'
 import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -257,7 +259,7 @@ api:
       ${db === 'postgres' ? 'adapter: postgresql' : ''}
 
   # If you use data migrations, use the following instead:
-  # migration: ["${formatCedarCommand(['prisma', 'migrate', 'deploy'])} && ${formatCedarCommand(['data-migrate', 'up'])}"]
+  # migration: ["${formatCedarCommand(['prisma', 'migrate', 'deploy'])}", "&&", "${formatCedarCommand(['data-migrate', 'up'])}"]
   migration: ${migrationCommand}
 
 web:

@@ -17,6 +17,7 @@ See [typescript/taste.md](typescript/taste.md)
 - After making code changes, verify by running: prettier, eslint, unit tests, and tsc on changed files before considering the change complete. Confidence: 0.80
 - Add tests one at a time, verifying each passes before adding the next test. Confidence: 0.70
 - Maintain backwards compatibility in semver minor releases; no mandatory breaking changes. Confidence: 0.75
+- When uncertain whether a command/pattern works across package managers or platforms, test it empirically on the user's machine rather than deferring to existing patterns or speculating about edge cases. "Is this PM-agnostic?" is a question to answer by running the command, not by trusting prior assumptions. Confidence: 0.75
 - Users never regenerate Cedar apps from templates. CedarJS guides them through manual updates and provides codemods to help them upgrade. Don't assume changes to template files will reach existing apps. Assume instead that they need migration paths. Confidence: 0.85
 
 # Code-Style
@@ -48,7 +49,6 @@ See [code-style/taste.md](code-style/taste.md)
 # Architecture
 
 - Neon Postgres (`@prisma/adapter-pg`) does not require ESM at runtime. The `--esm` requirement in `create-cedar-app`'s `handle-args.ts` is a scaffolding-time guard only. Do not force CJS→ESM conversion when adding Neon to existing projects. Confidence: 0.85
-- For invoking package binaries (e.g. `cedar`) across PMs, prefer the universal `<pm> exec <bin>` pattern (`yarn exec`, `npm exec`, `pnpm exec`) rather than PM-specific quirks like `npm run <script>`. It works identically for yarn/npm/pnpm and avoids adding PM-specific config fields. Confidence: 0.80
 
 # CLI
 
