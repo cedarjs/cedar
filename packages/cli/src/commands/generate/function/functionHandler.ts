@@ -16,6 +16,7 @@ import type {
 export const files = async ({
   name,
   typescript = false,
+  tests = true,
   ...rest
 }: TypescriptHandlerArgv): Promise<Record<string, string>> => {
   const extension = typescript ? '.ts' : '.js'
@@ -33,26 +34,28 @@ export const files = async ({
 
   outputFiles.push(functionFiles)
 
-  const testFile = await templateForComponentFile({
-    name,
-    extension: `.test${extension}`,
-    apiPathSection: 'functions',
-    generator: 'function',
-    templatePath: 'test.ts.template',
-    templateVars: { ...rest },
-  })
+  if (tests) {
+    const testFile = await templateForComponentFile({
+      name,
+      extension: `.test${extension}`,
+      apiPathSection: 'functions',
+      generator: 'function',
+      templatePath: 'test.ts.template',
+      templateVars: { ...rest },
+    })
 
-  const scenarioFile = await templateForComponentFile({
-    name,
-    extension: `.scenarios${extension}`,
-    apiPathSection: 'functions',
-    generator: 'function',
-    templatePath: 'scenarios.ts.template',
-    templateVars: { ...rest },
-  })
+    const scenarioFile = await templateForComponentFile({
+      name,
+      extension: `.scenarios${extension}`,
+      apiPathSection: 'functions',
+      generator: 'function',
+      templatePath: 'scenarios.ts.template',
+      templateVars: { ...rest },
+    })
 
-  outputFiles.push(testFile)
-  outputFiles.push(scenarioFile)
+    outputFiles.push(testFile)
+    outputFiles.push(scenarioFile)
+  }
 
   return transformTSToJSMap(outputFiles, typescript)
 }
