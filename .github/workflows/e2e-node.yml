@@ -1,4 +1,4 @@
-name: 🟢 E2E - Node Self-host
+name: 🖥️ E2E - Node Self-host
 
 on:
   workflow_call:
@@ -57,6 +57,6 @@ jobs:
         working-directory: ./tasks/smoke-tests/serve
         run: npx playwright test
         env:
-          CEDAR_TEST_PROJECT_PATH: ../cedar-test-app
+          CEDAR_TEST_PROJECT_PATH: ${{ github.workspace }}/../cedar-test-app
           CEDAR_SERVE_UD: '1'
           REDWOOD_DISABLE_TELEMETRY: 1

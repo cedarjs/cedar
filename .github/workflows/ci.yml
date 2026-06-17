@@ -259,8 +259,7 @@ jobs:
 
   e2e-node:
     needs: check
-    if: github.repository == 'cedarjs/cedar' && (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork)
-    name: 🟢 E2E Node self-host
+    name: 🖥️ E2E Node self-host
     uses: ./.github/workflows/e2e-node.yml
 
   ci-status-check:
