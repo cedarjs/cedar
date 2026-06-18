@@ -172,7 +172,7 @@ async function fillOutContactFormAsAnonymousUser({
 }
 
 function waitForContact(page: Page) {
-  const MAX_INTERVALS = 30
+  const MAX_INTERVALS = 10
 
   return new Promise<number>((resolve, reject) => {
     let intervals = 0
@@ -193,6 +193,6 @@ function waitForContact(page: Page) {
       }
 
       intervals++
-    }, 500)
+    }, 100)
   })
 }
