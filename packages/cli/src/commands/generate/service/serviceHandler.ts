@@ -273,7 +273,9 @@ export const fieldsToUpdate = async (model: string) => {
     // depending on the field type, append/update the value to something different
     switch (field.type) {
       case 'BigInt':
-        newValue = `${(newValue as bigint) + 1n}`
+        if (typeof value === 'bigint') {
+          newValue = `${value + 1n}`
+        }
         break
       case 'Boolean': {
         newValue = !value
@@ -287,11 +289,15 @@ export const fieldsToUpdate = async (model: string) => {
       }
       case 'Decimal':
       case 'Float': {
-        newValue = (newValue as number) + 1.1
+        if (typeof value === 'number') {
+          newValue = value + 1.1
+        }
         break
       }
       case 'Int': {
-        newValue = (newValue as number) + 1
+        if (typeof value === 'number') {
+          newValue = value + 1
+        }
         break
       }
       case 'Json': {
@@ -299,7 +305,9 @@ export const fieldsToUpdate = async (model: string) => {
         break
       }
       case 'String': {
-        newValue = (newValue as string) + '2'
+        if (typeof value === 'string') {
+          newValue = value + '2'
+        }
         break
       }
       default: {
@@ -315,12 +323,12 @@ export const fieldsToUpdate = async (model: string) => {
     }
   }
 
-  // TODO: `fieldName` is typed as `string | string[]`. When it's a `string[]`
-  // (multi-field composite key via `Object.values(relations)[0].foreignKey`),
-  // the array is coerced to a comma-separated string (e.g. `"postId,otherId"`),
-  // producing an incorrect object key. Fix in a separate PR by handling the
-  // composite-key case explicitly.
-  return { [fieldName as string]: newValue }
+  if (Array.isArray(fieldName)) {
+    // Composite FK: build one entry per key. The scenario value is the same
+    // for all parts of the composite key (same as the original intent).
+    return Object.fromEntries(fieldName.map((key) => [key, newValue]))
+  }
+  return { [fieldName]: newValue }
 }
 
 const getIdName = async (model: string): Promise<string | undefined> => {

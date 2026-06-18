@@ -243,9 +243,13 @@ export const handler = async ({
   try {
     await tasks.run()
   } catch (e: unknown) {
-    const err = e as { message: string; exitCode?: number }
-    errorTelemetry(process.argv, err.message)
-    console.error(c.error(err.message))
-    process.exit(err?.exitCode || 1)
+    const message = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    process.exit(exitCode)
   }
 }

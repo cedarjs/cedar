@@ -93,17 +93,15 @@ const modelFieldToSDL = ({
   types?: Record<string, ModelSchema>
   docs?: boolean
 }): string => {
-  if (Object.entries(types).length) {
+  if (Object.entries(types).length && field.kind === 'object') {
     // TODO: `idType()` called without `crud` always returns `undefined`, so
-    // `field.type` silently becomes `undefined` at runtime whenever
-    // `field.kind === 'object'`. The `as ModelSchema` and `as string` casts
-    // hide both problems. Fix in a separate PR by threading `crud` through or
-    // restructuring the call-site so the object-field type is resolved
-    // differently.
-    field.type =
-      field.kind === 'object'
-        ? (idType(types[field.type]) as string)
-        : field.type
+    // this branch is a no-op in practice. Fix in a separate PR by threading
+    // `crud` through the call-site. The string guard below prevents silently
+    // corrupting `field.type` to `undefined` (which the original JS did).
+    const resolvedType = idType(types[field.type])
+    if (typeof resolvedType === 'string') {
+      field.type = resolvedType
+    }
   }
 
   const prismaTypeToGraphqlType: Record<string, string> = {
@@ -190,14 +188,12 @@ const idType = (
   // When using a composite primary key, we need to return an array of fields
   if (model.primaryKey?.fields.length) {
     const { fields: fieldNames } = model.primaryKey
-    // TODO: `Array.find()` can return `undefined` when a field name from
-    // `primaryKey.fields` doesn't exist in `model.fields`. The cast hides
-    // potential `undefined` elements in the returned array, which would cause
-    // silent runtime failures downstream. Fix in a separate PR by filtering out
-    // undefined results and deciding how to handle missing fields.
-    return fieldNames.map((name) =>
-      model.fields.find((f) => f.name === name),
-    ) as ModelSchemaField[]
+    // Note: a field name in `primaryKey.fields` might not exist in
+    // `model.fields` (schema inconsistency). We filter out undefined results
+    // rather than including them — the original JS cast silently included them.
+    return fieldNames
+      .map((name) => model.fields.find((f) => f.name === name))
+      .filter((f): f is ModelSchemaField => f !== undefined)
   }
 
   const idField = model.fields.find((field) => field.isId)

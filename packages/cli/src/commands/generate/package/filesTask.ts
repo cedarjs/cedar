@@ -105,20 +105,17 @@ export const files = async ({
     outputFiles.push(testFile)
   }
 
-  return outputFiles.reduce(
-    async (accP, [outputPath, content]) => {
-      const acc = await accP
+  return outputFiles.reduce(async (accP, [outputPath, content]) => {
+    const acc = await accP
 
-      const template =
-        typescript || outputPath.endsWith('.md') || outputPath.endsWith('.json')
-          ? content
-          : await transformTSToJS(outputPath, content)
+    const template =
+      typescript || outputPath.endsWith('.md') || outputPath.endsWith('.json')
+        ? content
+        : await transformTSToJS(outputPath, content)
 
-      return {
-        [outputPath]: template,
-        ...acc,
-      }
-    },
-    Promise.resolve({} as Record<string, string>),
-  )
+    return {
+      [outputPath]: template,
+      ...acc,
+    }
+  }, Promise.resolve<Record<string, string>>({}))
 }

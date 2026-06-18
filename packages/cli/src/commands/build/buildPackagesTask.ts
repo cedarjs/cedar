@@ -27,7 +27,7 @@ export async function buildPackagesTask(
         .map((w) => {
           const workspacePath = path.join(
             cedarPaths.packages,
-            w.split('/').at(-1) as string,
+            w.split('/').at(-1) ?? '',
           )
 
           if (!fs.existsSync(workspacePath)) {
@@ -53,17 +53,21 @@ export async function buildPackagesTask(
           try {
             await runScript('build', [], { cwd: workspacePath })
           } catch (e: unknown) {
-            const err = e as { message: string; stderr?: string }
+            const message = e instanceof Error ? e.message : String(e)
+            const stderr =
+              e instanceof Error &&
+              'stderr' in e &&
+              typeof e.stderr === 'string'
+                ? e.stderr
+                : undefined
             errorTelemetry(
               process.argv,
-              `Error building package "${name}": ${err.message}`,
+              `Error building package "${name}": ${message}`,
             )
 
             // execa includes stderr in the error message, which contains
             // the actual compilation errors (e.g. TypeScript errors)
-            throw new Error(
-              `Building "${name}" failed\n\n${err.stderr || err.message}`,
-            )
+            throw new Error(`Building "${name}" failed\n\n${stderr || message}`)
           }
         },
       }
