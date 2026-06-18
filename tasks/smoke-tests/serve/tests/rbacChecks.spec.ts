@@ -45,16 +45,9 @@ test.beforeAll(async ({ browser }) => {
   ])
 })
 
-const isUD = !!process.env.CEDAR_SERVE_UD
-
 test('RBAC: Should not be able to delete contact as non-admin user', async ({
   page,
 }) => {
-  test.fixme(
-    !!process.env.CEDAR_SERVE_UD,
-    'Skipped on UD until cookie proxying is fixed in serve.ts',
-  )
-
   // Login as non-admin user
   await loginAsTestUser({ page })
 
@@ -88,7 +81,6 @@ test('RBAC: Should not be able to delete contact as non-admin user', async ({
 })
 
 test('RBAC: Admin user should be able to delete contacts', async ({ page }) => {
-  test.skip(isUD, 'Skipped on UD until cookie proxying is fixed in serve.ts')
   fs.writeFileSync(
     path.join(
       process.env.CEDAR_TEST_PROJECT_PATH as string,
@@ -112,10 +104,9 @@ export default async ({ args }) => {
   )
 
   console.log(`Giving ${adminEmail} ADMIN role....`)
-  await execa(`yarn cedar exec makeAdmin --email ${adminEmail}`, {
+  await execa('yarn', ['cedar', 'exec', 'makeAdmin', '--email', adminEmail], {
     cwd: process.env.CEDAR_TEST_PROJECT_PATH,
     stdio: 'inherit',
-    shell: true,
   })
 
   await loginAsTestUser({
@@ -181,7 +172,7 @@ async function fillOutContactFormAsAnonymousUser({
 }
 
 function waitForContact(page: Page) {
-  const MAX_INTERVALS = 10
+  const MAX_INTERVALS = 30
 
   return new Promise<number>((resolve, reject) => {
     let intervals = 0
@@ -202,6 +193,6 @@ function waitForContact(page: Page) {
       }
 
       intervals++
-    }, 100)
+    }, 500)
   })
 }

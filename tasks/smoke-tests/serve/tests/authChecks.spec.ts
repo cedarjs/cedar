@@ -56,11 +56,6 @@ const post = {
 }
 
 test('requireAuth graphql checks', async ({ page }) => {
-  test.fixme(
-    !!process.env.CEDAR_SERVE_UD,
-    'Skipped on UD until cookie proxying is fixed in serve.ts',
-  )
-
   // Try to create a post as an anonymous user.
   await createNewPost({ page })
 
@@ -84,7 +79,7 @@ test('requireAuth graphql checks', async ({ page }) => {
   await expect(page.getByText(post.title)).toBeVisible()
 
   // Delete the post to keep this test idempotent.
-  // Clicking "Delete" opens a confirmation dialog that we havee to accept.
+  // Clicking "Delete" opens a confirmation dialog that we have to accept.
   await page.goto('/posts')
 
   page.once('dialog', (dialog) => dialog.accept())

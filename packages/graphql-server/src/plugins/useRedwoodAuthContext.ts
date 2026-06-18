@@ -35,6 +35,13 @@ export const useRedwoodAuthContext = (
         )
       }
 
+      if (process.env.DEBUG_AUTH === 'true') {
+        console.log('[useRedwoodAuthContext]', {
+          hasAuthContext: !!authContext,
+          authContextKeys: authContext ? Object.keys(authContext) : null,
+        })
+      }
+
       try {
         if (authContext) {
           const currentUser = getCurrentUser
