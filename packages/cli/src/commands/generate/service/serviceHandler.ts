@@ -131,7 +131,10 @@ export const fieldsToScenario = async (
 // creates the scenario data based on the data definitions in schema.prisma
 export const buildScenario = async (model: string) => {
   const scenarioModelName = camelcase(model)
-  const standardScenario: Record<string, Record<string, { data?: Record<string, unknown> }>> = {
+  const standardScenario: Record<
+    string,
+    Record<string, { data?: Record<string, unknown> }>
+  > = {
     [scenarioModelName]: {},
   }
   const { scalarFields, relations, foreignKeys } = await parseSchema(model)
@@ -202,10 +205,13 @@ export const fieldTypes = async (model: string) => {
   //   isGenerated: false,
   //   isUpdatedAt: false
   // }
-  return scalarFields.reduce((acc: Record<string, string>, value: PrismaField) => {
-    acc[value.name] = value.type
-    return acc
-  }, {})
+  return scalarFields.reduce(
+    (acc: Record<string, string>, value: PrismaField) => {
+      acc[value.name] = value.type
+      return acc
+    },
+    {},
+  )
 }
 
 // outputs fields necessary to create an object in the test file
@@ -238,7 +244,9 @@ export const fieldsToUpdate = async (model: string) => {
     fieldName: string | string[]
 
   // find an editable scalar field, ideally one that isn't a foreign key
-  field = scalarFields.find((scalar: PrismaField) => !foreignKeys.includes(scalar.name))
+  field = scalarFields.find(
+    (scalar: PrismaField) => !foreignKeys.includes(scalar.name),
+  )
 
   // no non-foreign keys, so just take the first one
   if (!field) {
@@ -307,6 +315,11 @@ export const fieldsToUpdate = async (model: string) => {
     }
   }
 
+  // TODO: `fieldName` is typed as `string | string[]`. When it's a `string[]`
+  // (multi-field composite key via `Object.values(relations)[0].foreignKey`),
+  // the array is coerced to a comma-separated string (e.g. `"postId,otherId"`),
+  // producing an incorrect object key. Fix in a separate PR by handling the
+  // composite-key case explicitly.
   return { [fieldName as string]: newValue }
 }
 
@@ -414,7 +427,7 @@ export const files = async ({
       [outputPath]: content,
       ...acc,
     }
-  }, Promise.resolve({} as Record<string, string>))
+  }, Promise.resolve<Record<string, string>>({}))
 }
 
 export const handler = createHandler({

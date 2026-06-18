@@ -94,6 +94,12 @@ const modelFieldToSDL = ({
   docs?: boolean
 }): string => {
   if (Object.entries(types).length) {
+    // TODO: `idType()` called without `crud` always returns `undefined`, so
+    // `field.type` silently becomes `undefined` at runtime whenever
+    // `field.kind === 'object'`. The `as ModelSchema` and `as string` casts
+    // hide both problems. Fix in a separate PR by threading `crud` through or
+    // restructuring the call-site so the object-field type is resolved
+    // differently.
     field.type =
       field.kind === 'object'
         ? (idType(types[field.type] as ModelSchema) as string)
@@ -156,16 +162,30 @@ const idInputSDL = (idType: ReturnType<typeof idType>, docs: boolean) => {
 }
 
 // creates the CreateInput type (all fields are required)
-const createInputSDL = (model: ModelSchema, types: Record<string, ModelSchema> = {}, docs = false) => {
+const createInputSDL = (
+  model: ModelSchema,
+  types: Record<string, ModelSchema> = {},
+  docs = false,
+) => {
   return inputSDL(model, true, types, docs)
 }
 
 // creates the UpdateInput type (not all fields are required)
-const updateInputSDL = (model: ModelSchema, types: Record<string, ModelSchema> = {}, docs = false) => {
+const updateInputSDL = (
+  model: ModelSchema,
+  types: Record<string, ModelSchema> = {},
+  docs = false,
+) => {
   return inputSDL(model, false, types, docs)
 }
 
-const idType = (model: ModelSchema | undefined, crud?: boolean): string | Array<{ isId: boolean; name: string; type: string }> | undefined => {
+const idType = (
+  model: ModelSchema | undefined,
+  crud?: boolean,
+):
+  | string
+  | Array<{ isId: boolean; name: string; type: string }>
+  | undefined => {
   if (!crud || !model) {
     return undefined
   }
@@ -173,7 +193,14 @@ const idType = (model: ModelSchema | undefined, crud?: boolean): string | Array<
   // When using a composite primary key, we need to return an array of fields
   if (model.primaryKey?.fields.length) {
     const { fields: fieldNames } = model.primaryKey
-    return fieldNames.map((name) => model.fields.find((f) => f.name === name)) as Array<{ isId: boolean; name: string; type: string }>
+    // TODO: `Array.find()` can return `undefined` when a field name from
+    // `primaryKey.fields` doesn't exist in `model.fields`. The cast hides
+    // potential `undefined` elements in the returned array, which would cause
+    // silent runtime failures downstream. Fix in a separate PR by filtering out
+    // undefined results and deciding how to handle missing fields.
+    return fieldNames.map((name) =>
+      model.fields.find((f) => f.name === name),
+    ) as Array<{ isId: boolean; name: string; type: string }>
   }
 
   const idField = model.fields.find((field) => field.isId)
@@ -198,7 +225,11 @@ const idName = (model: ModelSchema, crud?: boolean): string | undefined => {
   return idField.name
 }
 
-const sdlFromSchemaModel = async (name: string, crud: boolean, docs = false) => {
+const sdlFromSchemaModel = async (
+  name: string,
+  crud: boolean,
+  docs = false,
+) => {
   const model = await getSchema(name)
 
   // get models for referenced user-defined types
@@ -211,7 +242,10 @@ const sdlFromSchemaModel = async (name: string, crud: boolean, docs = false) => 
           return model
         }),
     )
-  ).reduce((acc, cur) => ({ ...acc, [cur.name]: cur }), {} as Record<string, ModelSchema>)
+  ).reduce<Record<string, ModelSchema>>(
+    (acc, cur) => ({ ...acc, [cur.name]: cur }),
+    {},
+  )
 
   // Get enum definition and fields from user-defined types
   const enums = (
@@ -359,9 +393,13 @@ export const handler = async ({
     }
     await tasks.run()
   } catch (e: unknown) {
-    const err = e as { message: string; exitCode?: number }
-    errorTelemetry(process.argv, err.message)
-    console.error(c.error(err.message))
-    process.exit(err?.exitCode || 1)
+    const message = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    process.exit(exitCode)
   }
 }
