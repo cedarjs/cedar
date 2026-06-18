@@ -22,7 +22,7 @@ interface PrismaField {
   hasDefaultValue?: boolean
   relationName?: string
   relationFromFields?: string[]
-  enumValues?: Array<{ name: string; dbName?: string }>
+  enumValues?: { name: string; dbName?: string }[]
 }
 
 // parses the schema into scalar fields, relations and an array of foreign keys
@@ -32,7 +32,7 @@ export const parseSchema = async (model: string) => {
   let foreignKeys: string[] = []
 
   // aggregate the plain String, Int and DateTime fields
-  let scalarFields = schema.fields.filter((field: PrismaField) => {
+  const scalarFields = schema.fields.filter((field: PrismaField) => {
     if (field.relationFromFields) {
       // only build relations for those that are required
       if (field.isRequired && field.relationFromFields.length !== 0) {

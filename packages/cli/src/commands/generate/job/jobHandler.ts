@@ -116,7 +116,7 @@ export const handler = async ({
     const jobsManagerFile = getPaths().api.distJobsConfig
     const jobManager = await import(pathToFileURL(jobsManagerFile).href)
     queueName = jobManager.jobs?.queues[0] ?? 'default'
-  } catch (_e) {
+  } catch {
     // We don't care if this fails because we'll fall back to 'default'
   }
 

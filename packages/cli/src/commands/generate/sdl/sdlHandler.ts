@@ -102,7 +102,7 @@ const modelFieldToSDL = ({
     // differently.
     field.type =
       field.kind === 'object'
-        ? (idType(types[field.type] as ModelSchema) as string)
+        ? (idType(types[field.type]) as string)
         : field.type
   }
 
@@ -143,11 +143,11 @@ const inputSDL = (
       const idField = model.fields.find((field) => field.isId)
 
       // Only ignore the id field if it has a default value
-      if (idField && idField.default) {
+      if (idField?.default) {
         ignoredFields.push(idField.name)
       }
 
-      return ignoredFields.indexOf(field.name) === -1 && field.kind !== 'object'
+      return !ignoredFields.includes(field.name) && field.kind !== 'object'
     })
     .map((field) => modelFieldToSDL({ field, required, types, docs }))
 }
@@ -182,10 +182,7 @@ const updateInputSDL = (
 const idType = (
   model: ModelSchema | undefined,
   crud?: boolean,
-):
-  | string
-  | Array<{ isId: boolean; name: string; type: string }>
-  | undefined => {
+): string | ModelSchemaField[] | undefined => {
   if (!crud || !model) {
     return undefined
   }
@@ -200,7 +197,7 @@ const idType = (
     // undefined results and deciding how to handle missing fields.
     return fieldNames.map((name) =>
       model.fields.find((f) => f.name === name),
-    ) as Array<{ isId: boolean; name: string; type: string }>
+    ) as ModelSchemaField[]
   }
 
   const idField = model.fields.find((field) => field.isId)
