@@ -8,4 +8,5 @@
 - Use `&apos;` HTML entities for apostrophes in JSX to avoid react/no-unescaped-entities lint errors. Confidence: 0.95
 - Use `T[]` array type syntax, not `Array<T>`. Confidence: 0.90
 - When the same pattern repeats 3+ times across files, extract it into a shared util function. Confidence: 0.75
+- When explaining bug fixes or architectural changes, include concrete file:line references (e.g., `packages/foo/src/bar.ts:232`) so the user can navigate the code paths themselves. Don't stop at conceptual explanations — name the exact files and lines, especially when comparing a new/fixed path to an existing legacy path. Confidence: 0.80
 - Always use separate `import type` statements for type-only imports, even when the same module also has a regular `import`. Do not mix inline `type` keyword with value imports in a single `import` statement. Confidence: 0.95
