@@ -7,7 +7,13 @@ import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { getPaths } from '../../lib/index.js'
 
-export async function buildPackagesTask(task, nonApiWebWorkspaces) {
+export async function buildPackagesTask(
+  task: {
+    skip: (msg: string) => void
+    newListr: (...args: unknown[]) => unknown
+  },
+  nonApiWebWorkspaces: string[],
+) {
   const cedarPaths = getPaths()
 
   const globPattern = path.join(cedarPaths.packages, '*').replaceAll('\\', '/')
@@ -21,7 +27,7 @@ export async function buildPackagesTask(task, nonApiWebWorkspaces) {
         .map((w) => {
           const workspacePath = path.join(
             cedarPaths.packages,
-            w.split('/').at(-1),
+            w.split('/').at(-1) ?? '',
           )
 
           if (!fs.existsSync(workspacePath)) {
@@ -46,17 +52,22 @@ export async function buildPackagesTask(task, nonApiWebWorkspaces) {
         task: async () => {
           try {
             await runScript('build', [], { cwd: workspacePath })
-          } catch (e) {
+          } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : String(e)
+            const stderr =
+              e instanceof Error &&
+              'stderr' in e &&
+              typeof e.stderr === 'string'
+                ? e.stderr
+                : undefined
             errorTelemetry(
               process.argv,
-              `Error building package "${name}": ${e.message}`,
+              `Error building package "${name}": ${message}`,
             )
 
             // execa includes stderr in the error message, which contains
             // the actual compilation errors (e.g. TypeScript errors)
-            throw new Error(
-              `Building "${name}" failed\n\n${e.stderr || e.message}`,
-            )
+            throw new Error(`Building "${name}" failed\n\n${stderr || message}`)
           }
         },
       }

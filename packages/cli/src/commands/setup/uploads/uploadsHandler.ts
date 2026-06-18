@@ -17,7 +17,7 @@ import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject } from '../../../lib/project.js'
 import { runTransform } from '../../../lib/runTransform.js'
 
-export const handler = async ({ force }) => {
+export const handler = async ({ force }: { force: boolean }) => {
   const projectIsTypescript = isTypeScriptProject()
   const redwoodVersion =
     (await import(path.join(getPaths().base, 'package.json'), {
@@ -163,9 +163,14 @@ export const handler = async ({ force }) => {
 
   try {
     await tasks.run()
-  } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    process.exit(exitCode)
   }
 }

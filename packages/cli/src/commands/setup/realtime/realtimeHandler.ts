@@ -23,7 +23,9 @@ const { version } = JSON.parse(
   ),
 )
 
-async function handleExamplesPreference(includeExamples) {
+async function handleExamplesPreference(
+  includeExamples: boolean | undefined,
+): Promise<boolean> {
   let incl = includeExamples
 
   if (typeof includeExamples === 'undefined') {
@@ -39,10 +41,14 @@ async function handleExamplesPreference(includeExamples) {
     incl = response.includeExamples
   }
 
-  return incl
+  return incl ?? false
 }
 
-export async function handler(args) {
+export async function handler(args: {
+  force?: boolean
+  verbose?: boolean
+  includeExamples?: boolean
+}) {
   const cedarPaths = getPaths()
   const ts = isTypeScriptProject()
 
@@ -86,7 +92,10 @@ export async function handler(args) {
       },
       {
         title: 'Enabling realtime support in the GraphQL handler...',
-        task: (ctx, task) => {
+        task: (
+          ctx: { realtimeHandlerSkipped?: boolean },
+          task: { skip: (msg: string) => void },
+        ) => {
           addRealtimeToGraphqlHandler(ctx, task, force)
         },
       },
@@ -473,9 +482,14 @@ export async function handler(args) {
           'call to `createGraphQLHandler`.',
       )
     }
-  } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    process.exit(exitCode)
   }
 }
