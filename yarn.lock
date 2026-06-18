@@ -3809,7 +3809,7 @@ __metadata:
     fastify-raw-body: "npm:5.0.0"
     find-my-way: "npm:8.2.2"
     glob: "npm:11.1.0"
-    http-proxy-middleware: "npm:3.0.6"
+    http-proxy-middleware: "npm:3.0.7"
     isbot: "npm:5.1.42"
     memfs: "npm:4.57.7"
     publint: "npm:0.3.21"
@@ -18431,9 +18431,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"http-proxy-middleware@npm:3.0.6":
-  version: 3.0.6
-  resolution: "http-proxy-middleware@npm:3.0.6"
+"http-proxy-middleware@npm:3.0.7":
+  version: 3.0.7
+  resolution: "http-proxy-middleware@npm:3.0.7"
   dependencies:
     "@types/http-proxy": "npm:^1.17.15"
     debug: "npm:^4.3.6"
@@ -18441,7 +18441,7 @@ __metadata:
     is-glob: "npm:^4.0.3"
     is-plain-object: "npm:^5.0.0"
     micromatch: "npm:^4.0.8"
-  checksum: 10c0/50c76da35e0695dba3e6110d5ca21e65718a1f7478f5c35cf2e9aa13b2d5f9b163f15312ce7f15a0d3d706ed40c9e6037a6fbba33ec44431698578b1d4875e41
+  checksum: 10c0/2308a09b1ae7682bb91bed45653d3b17379b87e2bb8cad4e7e71c68eeb2cedb8fd5506f80f6890178d8aa4132a3ce71eaf58979e7ef04cfefac923117da41817
   languageName: node
   linkType: hard
 
