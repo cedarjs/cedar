@@ -116,15 +116,6 @@ export async function buildUDApiServer({
           },
         },
       },
-      // @cedarjs/context must be externalized so all UD chunks share
-      // the same module instance. Without this, Vite bundles the context
-      // package into each chunk separately, and setContext() calls in
-      // one chunk (e.g. the auth handler via Yoga's onContextBuilding)
-      // are invisible to context reads in another (e.g. the graphql
-      // handler's @requireAuth directive validators).
-      ssr: {
-        external: ['@cedarjs/context'],
-      },
     })
 
     // Write a package.json to mark the UD output directory as ESM. This ensures
