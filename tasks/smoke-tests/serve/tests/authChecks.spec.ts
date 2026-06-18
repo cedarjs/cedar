@@ -59,11 +59,11 @@ test('requireAuth graphql checks', async ({ page }) => {
   // Try to create a post as an anonymous user.
   await createNewPost({ page })
 
-  expect(
+  await expect(
     page
       .locator('.rw-form-error-title')
       .locator("text=You don't have permission to do that"),
-  ).toBeTruthy()
+  ).toBeVisible()
 
   await page.goto('/')
 
