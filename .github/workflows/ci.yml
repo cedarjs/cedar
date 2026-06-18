@@ -27,6 +27,7 @@ jobs:
 
     outputs:
       code: ${{ steps.detect-changes.outputs.code }}
+      cli: ${{ steps.detect-changes.outputs.cli }}
       rsc: ${{ steps.detect-changes.outputs.rsc }}
       ssr: ${{ steps.detect-changes.outputs.ssr }}
 
@@ -221,6 +222,20 @@ jobs:
     name: 🌲 Create Cedar App
     uses: ./.github/workflows/create-cedar-app-test.yml
 
+  cli-pm-smoke-tests:
+    needs: [check, detect-changes]
+    if: needs.detect-changes.outputs.cli == 'true'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        packageManager: [npm, pnpm]
+
+    name: 🔄 CLI ${{ matrix.packageManager }} smoke tests
+    uses: ./.github/workflows/package-manager-smoke-tests.yml
+    with:
+      packageManager: ${{ matrix.packageManager }}
+
   server-tests:
     needs: check
     name: Server tests
@@ -276,6 +291,7 @@ jobs:
       - fragments-smoke-tests
       - live-smoke-tests
       - create-cedar-app
+      - cli-pm-smoke-tests
       - server-tests
       - ud-tests
       - background-jobs-e2e

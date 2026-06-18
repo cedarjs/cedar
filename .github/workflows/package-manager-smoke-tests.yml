@@ -1,6 +1,11 @@
-name: 🔄 Package Manager Matrix
+name: 🔄 Package Manager Smoke Tests
 
 on:
+  workflow_call:
+    inputs:
+      packageManager:
+        required: true
+        type: string
   schedule:
     # Run daily at 4am UTC
     - cron: '0 4 * * *'
@@ -8,7 +13,7 @@ on:
 
 # Cancel in-progress runs of this workflow.
 concurrency:
-  group: ${{ github.workflow }}
+  group: ${{ github.workflow }}-${{ inputs.packageManager || 'scheduled' }}
   cancel-in-progress: true
 
 permissions: {}
@@ -85,3 +90,44 @@ jobs:
             yarn cedar test api --no-watch
           fi
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Scaffold fresh project with ${{ matrix.packageManager }}
+        shell: bash
+        run: |
+          set -o pipefail
+          SCAFFOLD_PATH=$(mktemp -d)/cedar-pm-test
+          yarn build:pack
+          yarn node dist/create-cedar-app.js "$SCAFFOLD_PATH" \
+            --pm ${{ matrix.packageManager }} \
+            --yes --typescript --no-git
+          echo "SCAFFOLD_PATH=$SCAFFOLD_PATH" >> $GITHUB_ENV
+        working-directory: ./packages/create-cedar-app
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
+
+      - name: Build scaffolded project
+        shell: bash
+        run: |
+          if [ "${{ matrix.packageManager }}" = "npm" ]; then
+            npx cedar build --no-prerender
+          elif [ "${{ matrix.packageManager }}" = "pnpm" ]; then
+            pnpm exec cedar build --no-prerender
+          else
+            yarn cedar build --no-prerender
+          fi
+        working-directory: ${{ env.SCAFFOLD_PATH }}
+
+      - name: Test scaffolded project
+        shell: bash
+        run: |
+          if [ "${{ matrix.packageManager }}" = "npm" ]; then
+            npx cedar test web --no-watch
+            npx cedar test api --no-watch
+          elif [ "${{ matrix.packageManager }}" = "pnpm" ]; then
+            pnpm exec cedar test web --no-watch
+            pnpm exec cedar test api --no-watch
+          else
+            yarn cedar test web --no-watch
+            yarn cedar test api --no-watch
+          fi
+        working-directory: ${{ env.SCAFFOLD_PATH }}

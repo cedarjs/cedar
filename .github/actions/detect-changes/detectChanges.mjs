@@ -4,6 +4,7 @@ import fs from 'node:fs'
 
 import core from '@actions/core'
 
+import { cliChanged } from './cases/cli.mjs'
 import { codeChanges } from './cases/code_changes.mjs'
 import { rscChanged } from './cases/rsc.mjs'
 import { ssrChanged } from './cases/ssr.mjs'
@@ -273,6 +274,7 @@ async function main() {
   // If there's no branch, we're not in a pull request.
   if (!branch) {
     core.setOutput('code', true)
+    core.setOutput('cli', true)
     core.setOutput('rsc', false)
     core.setOutput('ssr', false)
     return
@@ -324,6 +326,7 @@ async function main() {
         'to running all tests.',
     )
     core.setOutput('code', true)
+    core.setOutput('cli', true)
     core.setOutput('rsc', true)
     core.setOutput('ssr', true)
     return
@@ -341,10 +344,12 @@ async function main() {
         'Previous run did not succeed. Falling back to running all tests.',
       )
       core.setOutput('code', true)
+      core.setOutput('cli', true)
       core.setOutput('rsc', true)
       core.setOutput('ssr', true)
     } else {
       core.setOutput('code', false)
+      core.setOutput('cli', false)
       core.setOutput('rsc', false)
       core.setOutput('ssr', false)
     }
@@ -354,8 +359,10 @@ async function main() {
 
   const rscChangesDetected = rscChanged(changedFiles)
   const ssrChangesDetected = ssrChanged(changedFiles)
+  const cliChangesDetected = cliChanged(changedFiles)
 
   core.setOutput('code', true)
+  core.setOutput('cli', cliChangesDetected)
   core.setOutput(
     'rsc',
     rscChangesDetected || (rscJobs.hadJobs && !rscJobs.succeeded),

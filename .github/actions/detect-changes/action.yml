@@ -4,6 +4,8 @@ description: Determines what areas of the framework have been changed
 outputs:
   docs:
     description: If *only* docs have changed
+  cli:
+    description: If CLI-related packages have changed
   rsc:
     description: If RSC-related changes have been made
   ssr:
