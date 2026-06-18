@@ -23,7 +23,13 @@ import {
 } from './setupOpentelemetry.js'
 import { printTaskEpilogue } from './util.js'
 
-export const handler = async ({ force, verbose }) => {
+export const handler = async ({
+  force,
+  verbose,
+}: {
+  force: boolean
+  verbose: boolean
+}) => {
   const ts = isTypeScriptProject()
   const configTomlPath = getConfigPath()
   const configFileName = path.basename(configTomlPath)
@@ -72,7 +78,7 @@ export const handler = async ({ force, verbose }) => {
     },
     {
       title: `Adding config to ${configFileName}...`,
-      task: (_ctx, task) => {
+      task: (_ctx: unknown, task: { skip: (msg: string) => void }) => {
         if (!configContent.includes('[experimental.opentelemetry]')) {
           // Use string replace to preserve comments and formatting
           writeFile(
@@ -99,7 +105,7 @@ export const handler = async ({ force, verbose }) => {
           resolveFile(path.join(getPaths().api.functions, 'graphql')),
         )
       },
-      task: (_ctx, task) => {
+      task: (_ctx: unknown, task: { output: string }) => {
         task.output = [
           "Please add the following to your 'createGraphQLHandler' function options to enable OTel for your graphql",
           'openTelemetryOptions: {',
@@ -122,7 +128,7 @@ export const handler = async ({ force, verbose }) => {
           resolveFile(path.join(getPaths().api.src, 'server')),
         )
       },
-      task: (_ctx, task) => {
+      task: (_ctx: unknown, task: { output: string }) => {
         task.output = [
           "Please add the following to your 'redwoodFastifyGraphQLServer' plugin options to enable OTel for your graphql",
           'openTelemetryOptions: {',
@@ -144,7 +150,7 @@ export const handler = async ({ force, verbose }) => {
   const prismaTasks = [
     {
       title: 'Setup Prisma OpenTelemetry...',
-      task: async (_ctx, task) => {
+      task: async (_ctx: unknown, task: { skip: (msg: string) => void }) => {
         const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
         const schemaContent = fs.readFileSync(schemaPath, {
           encoding: 'utf-8',
@@ -188,7 +194,7 @@ export const handler = async ({ force, verbose }) => {
     },
     {
       title: 'Regenerate the Prisma client...',
-      task: (_ctx, _task) => {
+      task: (_ctx: unknown, _task: unknown) => {
         return runBin('cedar', ['prisma', 'generate'], {
           stdio: 'inherit',
           cwd: getPaths().web.base,
@@ -201,7 +207,14 @@ export const handler = async ({ force, verbose }) => {
     [
       {
         title: 'Confirmation',
-        task: async (_ctx, task) => {
+        task: async (
+          _ctx: unknown,
+          task: {
+            prompt: (adapter: unknown) => {
+              run: (opts: Record<string, unknown>) => Promise<boolean>
+            }
+          },
+        ) => {
           const prompt = task.prompt(ListrEnquirerPromptAdapter)
           const confirmation = await prompt.run({
             type: 'Confirm',
@@ -229,9 +242,14 @@ export const handler = async ({ force, verbose }) => {
 
   try {
     await tasks.run()
-  } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    process.exit(exitCode)
   }
 }

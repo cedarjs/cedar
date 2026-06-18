@@ -16,7 +16,13 @@ import { isTypeScriptProject } from '../../lib/project.js'
 import { command, description, EXPERIMENTAL_TOPIC_ID } from './setupRsc.js'
 import { printTaskEpilogue } from './util.js'
 
-export const handler = async ({ force, verbose }) => {
+export const handler = async ({
+  force,
+  verbose,
+}: {
+  force: boolean
+  verbose: boolean
+}) => {
   const rwPaths = getPaths()
   const configTomlPath = getConfigPath()
   const configContent = fs.readFileSync(configTomlPath, 'utf-8')
@@ -46,7 +52,10 @@ export const handler = async ({ force, verbose }) => {
       },
       {
         title: 'Adding config to cedar.toml...',
-        task: (_ctx, task) => {
+        task: (
+          _ctx: unknown,
+          task: { skip: (msg: string) => void; output: string },
+        ) => {
           if (!configContent.includes('[experimental.rsc]')) {
             writeFile(
               configTomlPath,
@@ -92,14 +101,13 @@ export const handler = async ({ force, verbose }) => {
             ),
             'utf-8',
           )
+          // entryClient is guaranteed non-null by the 'Check prerequisites' task
+          const entryClient = rwPaths.web.entryClient ?? ''
           const entryClientContent = isTypeScriptProject()
             ? entryClientTemplate
-            : await transformTSToJS(
-                rwPaths.web.entryClient,
-                entryClientTemplate,
-              )
+            : await transformTSToJS(entryClient, entryClientTemplate)
 
-          writeFile(rwPaths.web.entryClient, entryClientContent, {
+          writeFile(entryClient, entryClientContent, {
             overwriteExisting: true,
           })
         },
@@ -243,7 +251,7 @@ export const handler = async ({ force, verbose }) => {
       {
         title: 'Adding CSS files...',
         task: async () => {
-          const files = [
+          const cssFiles = [
             {
               template: 'Counter.css.template',
               path: ['components', 'Counter', 'Counter.css'],
@@ -266,7 +274,7 @@ export const handler = async ({ force, verbose }) => {
             },
           ]
 
-          files.forEach((file) => {
+          cssFiles.forEach((file) => {
             const template = fs.readFileSync(
               path.resolve(
                 import.meta.dirname,
@@ -441,9 +449,14 @@ export const handler = async ({ force, verbose }) => {
 
   try {
     await tasks.run()
-  } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    process.exit(exitCode)
   }
 }

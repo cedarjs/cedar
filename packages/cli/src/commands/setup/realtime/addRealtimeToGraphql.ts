@@ -4,7 +4,11 @@ import path from 'node:path'
 import { isTypeScriptProject } from '@cedarjs/cli-helpers'
 import { getPaths } from '@cedarjs/project-config'
 
-export function addRealtimeToGraphqlHandler(ctx, task, force) {
+export function addRealtimeToGraphqlHandler(
+  ctx: { realtimeHandlerSkipped?: boolean },
+  task: { skip: (msg: string) => void },
+  force: boolean,
+) {
   const graphqlHandlerPath = path.join(
     getPaths().api.functions,
     `graphql.${isTypeScriptProject() ? 'ts' : 'js'}`,

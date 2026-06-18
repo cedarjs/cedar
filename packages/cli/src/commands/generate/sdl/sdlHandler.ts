@@ -45,7 +45,10 @@ const missingIdConsoleMessage = () => {
   )
 }
 
-const addFieldGraphQLComment = (field, str) => {
+const addFieldGraphQLComment = (
+  field: { documentation?: string; name: string },
+  str: string,
+): string => {
   const description = field.documentation || `Description for ${field.name}.`
 
   return `
@@ -53,18 +56,55 @@ const addFieldGraphQLComment = (field, str) => {
   ${str}`
 }
 
+interface ModelSchemaField {
+  isId: boolean
+  name: string
+  type: string
+  documentation?: string
+  kind: string
+  isList: boolean
+  isRequired: boolean
+  default?: unknown
+}
+
+interface ModelSchema {
+  name: string
+  fields: ModelSchemaField[]
+  primaryKey?: { fields: string[] }
+  documentation?: string
+}
+
 const modelFieldToSDL = ({
   field,
   required = true,
   types = {},
   docs = false,
-}) => {
-  if (Object.entries(types).length) {
-    field.type =
-      field.kind === 'object' ? idType(types[field.type]) : field.type
+}: {
+  field: {
+    name: string
+    type: string
+    kind: string
+    isList: boolean
+    isRequired: boolean
+    isId: boolean
+    documentation?: string
+  }
+  required?: boolean
+  types?: Record<string, ModelSchema>
+  docs?: boolean
+}): string => {
+  if (Object.entries(types).length && field.kind === 'object') {
+    // TODO: `idType()` called without `crud` always returns `undefined`, so
+    // this branch is a no-op in practice. Fix in a separate PR by threading
+    // `crud` through the call-site. The string guard below prevents silently
+    // corrupting `field.type` to `undefined` (which the original JS did).
+    const resolvedType = idType(types[field.type])
+    if (typeof resolvedType === 'string') {
+      field.type = resolvedType
+    }
   }
 
-  const prismaTypeToGraphqlType = {
+  const prismaTypeToGraphqlType: Record<string, string> = {
     Json: 'JSON',
     Decimal: 'Float',
     Bytes: 'Byte',
@@ -84,11 +124,16 @@ const modelFieldToSDL = ({
   }
 }
 
-const querySDL = (model, docs = false) => {
+const querySDL = (model: ModelSchema, docs = false) => {
   return model.fields.map((field) => modelFieldToSDL({ field, docs }))
 }
 
-const inputSDL = (model, required, types = {}, docs = false) => {
+const inputSDL = (
+  model: ModelSchema,
+  required: boolean,
+  types: Record<string, ModelSchema> = {},
+  docs = false,
+) => {
   const ignoredFields = DEFAULT_IGNORE_FIELDS_FOR_INPUT
 
   return model.fields
@@ -96,16 +141,16 @@ const inputSDL = (model, required, types = {}, docs = false) => {
       const idField = model.fields.find((field) => field.isId)
 
       // Only ignore the id field if it has a default value
-      if (idField && idField.default) {
+      if (idField?.default) {
         ignoredFields.push(idField.name)
       }
 
-      return ignoredFields.indexOf(field.name) === -1 && field.kind !== 'object'
+      return !ignoredFields.includes(field.name) && field.kind !== 'object'
     })
     .map((field) => modelFieldToSDL({ field, required, types, docs }))
 }
 
-const idInputSDL = (idType, docs) => {
+const idInputSDL = (idType: ReturnType<typeof idType>, docs: boolean) => {
   if (!Array.isArray(idType)) {
     return []
   }
@@ -115,24 +160,40 @@ const idInputSDL = (idType, docs) => {
 }
 
 // creates the CreateInput type (all fields are required)
-const createInputSDL = (model, types = {}, docs = false) => {
+const createInputSDL = (
+  model: ModelSchema,
+  types: Record<string, ModelSchema> = {},
+  docs = false,
+) => {
   return inputSDL(model, true, types, docs)
 }
 
 // creates the UpdateInput type (not all fields are required)
-const updateInputSDL = (model, types = {}, docs = false) => {
+const updateInputSDL = (
+  model: ModelSchema,
+  types: Record<string, ModelSchema> = {},
+  docs = false,
+) => {
   return inputSDL(model, false, types, docs)
 }
 
-const idType = (model, crud) => {
-  if (!crud) {
+const idType = (
+  model: ModelSchema | undefined,
+  crud?: boolean,
+): string | ModelSchemaField[] | undefined => {
+  if (!crud || !model) {
     return undefined
   }
 
   // When using a composite primary key, we need to return an array of fields
   if (model.primaryKey?.fields.length) {
     const { fields: fieldNames } = model.primaryKey
-    return fieldNames.map((name) => model.fields.find((f) => f.name === name))
+    // Note: a field name in `primaryKey.fields` might not exist in
+    // `model.fields` (schema inconsistency). We filter out undefined results
+    // rather than including them — the original JS cast silently included them.
+    return fieldNames
+      .map((name) => model.fields.find((f) => f.name === name))
+      .filter((f): f is ModelSchemaField => f !== undefined)
   }
 
   const idField = model.fields.find((field) => field.isId)
@@ -144,7 +205,7 @@ const idType = (model, crud) => {
   return idField.type
 }
 
-const idName = (model, crud) => {
+const idName = (model: ModelSchema, crud?: boolean): string | undefined => {
   if (!crud) {
     return undefined
   }
@@ -157,7 +218,11 @@ const idName = (model, crud) => {
   return idField.name
 }
 
-const sdlFromSchemaModel = async (name, crud, docs = false) => {
+const sdlFromSchemaModel = async (
+  name: string,
+  crud: boolean,
+  docs = false,
+) => {
   const model = await getSchema(name)
 
   // get models for referenced user-defined types
@@ -170,7 +235,10 @@ const sdlFromSchemaModel = async (name, crud, docs = false) => {
           return model
         }),
     )
-  ).reduce((acc, cur) => ({ ...acc, [cur.name]: cur }), {})
+  ).reduce<Record<string, ModelSchema>>(
+    (acc, cur) => ({ ...acc, [cur.name]: cur }),
+    {},
+  )
 
   // Get enum definition and fields from user-defined types
   const enums = (
@@ -182,7 +250,7 @@ const sdlFromSchemaModel = async (name, crud, docs = false) => {
           return enumDef
         }),
     )
-  ).reduce((acc, curr) => acc.concat(curr), [])
+  ).reduce((acc: unknown[], curr) => acc.concat(curr), [])
 
   const modelName = model.name
   const modelDescription =
@@ -210,6 +278,12 @@ export const files = async ({
   docs = false,
   tests,
   typescript,
+}: {
+  name: string
+  crud?: boolean
+  docs?: boolean
+  tests?: boolean
+  typescript?: boolean
 }) => {
   const extension = typescript ? 'ts' : 'js'
   const sdlData = await sdlFromSchemaModel(name, crud, docs)
@@ -249,6 +323,14 @@ export const handler = async ({
   typescript,
   docs,
   rollback,
+}: {
+  model: string
+  crud: boolean
+  force: boolean
+  tests?: boolean
+  typescript?: boolean
+  docs: boolean
+  rollback: boolean
 }) => {
   if (tests === undefined) {
     tests = getConfig().generate.tests
@@ -303,9 +385,14 @@ export const handler = async ({
       prepareForRollback(tasks)
     }
     await tasks.run()
-  } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    process.exit(exitCode)
   }
 }

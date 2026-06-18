@@ -38,6 +38,14 @@ export const files = async ({
   typescript,
   tests: generateTests = true,
   ...rest
+}: {
+  name: string
+  folderName: string
+  packageName: string
+  fileName: string
+  typescript?: boolean
+  tests?: boolean
+  [key: string]: unknown
 }) => {
   const extension = typescript ? '.ts' : '.js'
 
@@ -109,5 +117,5 @@ export const files = async ({
       [outputPath]: template,
       ...acc,
     }
-  }, Promise.resolve({}))
+  }, Promise.resolve<Record<string, string>>({}))
 }
