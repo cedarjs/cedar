@@ -56,6 +56,24 @@ const addFieldGraphQLComment = (
   ${str}`
 }
 
+interface ModelSchemaField {
+  isId: boolean
+  name: string
+  type: string
+  documentation?: string
+  kind: string
+  isList: boolean
+  isRequired: boolean
+  default?: unknown
+}
+
+interface ModelSchema {
+  name: string
+  fields: ModelSchemaField[]
+  primaryKey?: { fields: string[] }
+  documentation?: string
+}
+
 const modelFieldToSDL = ({
   field,
   required = true,
@@ -72,12 +90,14 @@ const modelFieldToSDL = ({
     documentation?: string
   }
   required?: boolean
-  types?: Record<string, unknown>
+  types?: Record<string, ModelSchema>
   docs?: boolean
 }): string => {
   if (Object.entries(types).length) {
     field.type =
-      field.kind === 'object' ? idType(types[field.type]) : field.type
+      field.kind === 'object'
+        ? (idType(types[field.type] as ModelSchema) as string)
+        : field.type
   }
 
   const prismaTypeToGraphqlType: Record<string, string> = {
@@ -100,14 +120,14 @@ const modelFieldToSDL = ({
   }
 }
 
-const querySDL = (model: { fields: unknown[] }, docs = false) => {
-  return model.fields.map((field) => modelFieldToSDL({ field: field as Parameters<typeof modelFieldToSDL>[0]['field'], docs }))
+const querySDL = (model: ModelSchema, docs = false) => {
+  return model.fields.map((field) => modelFieldToSDL({ field, docs }))
 }
 
 const inputSDL = (
-  model: { fields: Array<{ name: string; isId: boolean; default?: unknown; kind: string }> },
+  model: ModelSchema,
   required: boolean,
-  types = {},
+  types: Record<string, ModelSchema> = {},
   docs = false,
 ) => {
   const ignoredFields = DEFAULT_IGNORE_FIELDS_FOR_INPUT
@@ -123,37 +143,37 @@ const inputSDL = (
 
       return ignoredFields.indexOf(field.name) === -1 && field.kind !== 'object'
     })
-    .map((field) => modelFieldToSDL({ field: field as Parameters<typeof modelFieldToSDL>[0]['field'], required, types, docs }))
+    .map((field) => modelFieldToSDL({ field, required, types, docs }))
 }
 
-const idInputSDL = (idType: unknown, docs: boolean) => {
+const idInputSDL = (idType: ReturnType<typeof idType>, docs: boolean) => {
   if (!Array.isArray(idType)) {
     return []
   }
   return idType.map((field) =>
-    modelFieldToSDL({ field: field as Parameters<typeof modelFieldToSDL>[0]['field'], required: true, types: {}, docs }),
+    modelFieldToSDL({ field, required: true, types: {}, docs }),
   )
 }
 
 // creates the CreateInput type (all fields are required)
-const createInputSDL = (model: Parameters<typeof inputSDL>[0], types = {}, docs = false) => {
+const createInputSDL = (model: ModelSchema, types: Record<string, ModelSchema> = {}, docs = false) => {
   return inputSDL(model, true, types, docs)
 }
 
 // creates the UpdateInput type (not all fields are required)
-const updateInputSDL = (model: Parameters<typeof inputSDL>[0], types = {}, docs = false) => {
+const updateInputSDL = (model: ModelSchema, types: Record<string, ModelSchema> = {}, docs = false) => {
   return inputSDL(model, false, types, docs)
 }
 
-const idType = (model: { fields: Array<{ isId: boolean; type: string }>; primaryKey?: { fields: string[] } }, crud?: boolean): unknown => {
-  if (!crud) {
+const idType = (model: ModelSchema | undefined, crud?: boolean): string | Array<{ isId: boolean; name: string; type: string }> | undefined => {
+  if (!crud || !model) {
     return undefined
   }
 
   // When using a composite primary key, we need to return an array of fields
   if (model.primaryKey?.fields.length) {
     const { fields: fieldNames } = model.primaryKey
-    return fieldNames.map((name) => model.fields.find((f) => f.name === name))
+    return fieldNames.map((name) => model.fields.find((f) => f.name === name)) as Array<{ isId: boolean; name: string; type: string }>
   }
 
   const idField = model.fields.find((field) => field.isId)
@@ -165,7 +185,7 @@ const idType = (model: { fields: Array<{ isId: boolean; type: string }>; primary
   return idField.type
 }
 
-const idName = (model: { fields: Array<{ isId: boolean; name: string }> }, crud?: boolean): string | undefined => {
+const idName = (model: ModelSchema, crud?: boolean): string | undefined => {
   if (!crud) {
     return undefined
   }
@@ -191,7 +211,7 @@ const sdlFromSchemaModel = async (name: string, crud: boolean, docs = false) => 
           return model
         }),
     )
-  ).reduce((acc, cur) => ({ ...acc, [cur.name]: cur }), {} as Record<string, unknown>)
+  ).reduce((acc, cur) => ({ ...acc, [cur.name]: cur }), {} as Record<string, ModelSchema>)
 
   // Get enum definition and fields from user-defined types
   const enums = (
@@ -203,7 +223,7 @@ const sdlFromSchemaModel = async (name: string, crud: boolean, docs = false) => 
           return enumDef
         }),
     )
-  ).reduce((acc, curr) => acc.concat(curr), [] as unknown[])
+  ).reduce((acc: unknown[], curr) => acc.concat(curr), [])
 
   const modelName = model.name
   const modelDescription =
