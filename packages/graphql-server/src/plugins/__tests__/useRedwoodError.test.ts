@@ -13,8 +13,7 @@ import { createGraphQLHandler } from '../../functions/graphql.js'
 vi.mock('../../makeMergedSchema', async () => {
   const { createGraphQLError } = await import('graphql-yoga')
   const { makeExecutableSchema } = await import('@graphql-tools/schema')
-  const { ForbiddenError, RedwoodGraphQLError } =
-    await import('../../errors.js')
+  const { ForbiddenError, CedarGraphQLError } = await import('../../errors.js')
   const { CurrencyResolver } = await import('graphql-scalars')
   const { RedwoodError, EmailValidationError } =
     (await import('@cedarjs/api')) as {
@@ -85,8 +84,8 @@ vi.mock('../../makeMergedSchema', async () => {
               throw createGraphQLError('You are forbidden by a GraphQLError')
             },
             redwoodGraphQLErrorUser: () => {
-              throw new RedwoodGraphQLError(
-                'You are forbidden by a RedwoodGraphQLError',
+              throw new CedarGraphQLError(
+                'You are forbidden by a CedarGraphQLError',
               )
             },
             invalidUser: () => {
@@ -291,7 +290,7 @@ describe('useRedwoodError', () => {
       })
     })
 
-    describe('with a RedwoodGraphQLError', () => {
+    describe('with a CedarGraphQLError', () => {
       it('does not mask error message', async () => {
         const handler = createGraphQLHandler({
           loggerConfig: { logger: createLogger({}), options: {} },
@@ -317,7 +316,7 @@ describe('useRedwoodError', () => {
         expect(response.statusCode).toBe(200)
         expect(data).toBeNull()
         expect(errors[0].message).toContain(
-          'You are forbidden by a RedwoodGraphQLError',
+          'You are forbidden by a CedarGraphQLError',
         )
       })
     })

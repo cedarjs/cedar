@@ -53,3 +53,10 @@ export const handle = async (request, ctx) => {
   // query.page       → '1'          for ?page=1
 }
 ```
+
+## Deprecations
+
+- **`RedwoodGraphQLError` has been renamed to `CedarGraphQLError`.** The old
+  name `RedwoodGraphQLError` is still exported as a deprecated alias for
+  backwards compatibility. Please migrate to importing `CedarGraphQLError` from
+  `@cedarjs/graphql-server` instead.
