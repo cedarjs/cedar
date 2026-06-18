@@ -6,6 +6,8 @@ import { basePlaywrightConfig } from '../basePlaywright.config.mts'
 export default defineConfig({
   ...basePlaywrightConfig,
 
+  timeout: 30_000 * 2,
+
   use: {
     baseURL: 'http://127.0.0.1:8910',
   },

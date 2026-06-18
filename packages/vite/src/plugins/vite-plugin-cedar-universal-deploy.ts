@@ -442,15 +442,20 @@ async function generateGraphQLModule(distPath: string): Promise<string> {
           authDecoder: graphqlOptions ? graphqlOptions.authDecoder : undefined,
         });
         const event = await requestToLegacyEvent(request, cedarContext);
-        const response = await yoga.handle(request, { request, cedarContext, event, requestContext: undefined });
-        // GraphQL Yoga returns a PonyfillResponse from @whatwg-node/fetch
-        // which is not an instanceof the native Response class. Netlify's
-        // bootstrap checks instanceof Response, so we wrap it.
-        return new Response(response.body, {
+        // Wrap yoga.handle in an AsyncLocalStorage run so directive
+        // validators can read from the global @cedarjs/context. Without
+        // this, the auth plugin's setContext() call writes to a store
+        // that's only visible inside the plugin's own callback — not
+        // during directive validation.
+        const { getAsyncStoreInstance } = await import('@cedarjs/context/dist/store');
+        const store = getAsyncStoreInstance();
+        return store.run(new Map(), () =>
+          yoga.handle(request, { request, cedarContext, event, requestContext: undefined })
+        ).then((response) => new Response(response.body, {
           status: response.status,
           statusText: response.statusText,
           headers: response.headers,
-        });
+        }));
       }
     };
   `
