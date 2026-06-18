@@ -77,7 +77,7 @@ each carrying a stable `extensions.code`:
 | `UserInputError`      | `BAD_USER_INPUT`            |
 | `ValidationError`     | `GRAPHQL_VALIDATION_FAILED` |
 | `SyntaxError`         | `GRAPHQL_PARSE_FAILED`      |
-| `RedwoodGraphQLError` | `REDWOODJS_ERROR` (default) |
+| `CedarGraphQLError`   | `REDWOODJS_ERROR` (default) |
 
 This gives clients a consistent, parseable `extensions.code` field to branch on.
 
@@ -185,10 +185,10 @@ exposedErrorCodes?: string[]
 
 **Scope clarification:** this allowlist only applies to errors that already carry
 an `extensions.code` — that is, `GraphQLError` instances and subclasses
-(including `RedwoodGraphQLError`). Plain `Error` throws have no `extensions`
+(including `CedarGraphQLError`). Plain `Error` throws have no `extensions`
 property and will never match a code in this list; they will continue to be
 masked regardless. The allowlist is therefore an ergonomic alternative to
-subclassing `RedwoodGraphQLError` for teams that already throw `GraphQLError`
+subclassing `CedarGraphQLError` for teams that already throw `GraphQLError`
 instances with a known code (e.g. from a third-party library), not a general
 mechanism for exposing arbitrary thrown errors.
 
@@ -211,7 +211,7 @@ The `useRedwoodError` plugin would consult this list alongside the
 ### 3. Standardised error envelope (low effort, high consistency value)
 
 Define a canonical `extensions` shape for all Cedar GraphQL errors and enforce
-it in `RedwoodGraphQLError`:
+it in `CedarGraphQLError`:
 
 ```ts
 interface CedarErrorExtensions {
