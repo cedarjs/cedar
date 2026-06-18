@@ -11,14 +11,28 @@ import { createHandler, templateForFile } from '../yargsHandlerHelpers.js'
 
 const DEFAULT_SCENARIO_NAMES = ['one', 'two']
 
+interface PrismaField {
+  name: string
+  type: string
+  kind: string
+  isList: boolean
+  isRequired: boolean
+  isId: boolean
+  isUnique?: boolean
+  hasDefaultValue?: boolean
+  relationName?: string
+  relationFromFields?: string[]
+  enumValues?: Array<{ name: string; dbName?: string }>
+}
+
 // parses the schema into scalar fields, relations and an array of foreign keys
-export const parseSchema = async (model) => {
+export const parseSchema = async (model: string) => {
   const schema = await getSchema(model)
-  const relations = {}
-  let foreignKeys = []
+  const relations: Record<string, { foreignKey: string[]; type: string }> = {}
+  let foreignKeys: string[] = []
 
   // aggregate the plain String, Int and DateTime fields
-  let scalarFields = schema.fields.filter((field) => {
+  let scalarFields = schema.fields.filter((field: PrismaField) => {
     if (field.relationFromFields) {
       // only build relations for those that are required
       if (field.isRequired && field.relationFromFields.length !== 0) {
@@ -40,13 +54,13 @@ export const parseSchema = async (model) => {
   return { scalarFields, relations, foreignKeys }
 }
 
-export function scenarioFieldValue(field) {
+export function scenarioFieldValue(field: PrismaField): unknown {
   const randFloat = Math.random() * 10000000
-  const randInt = parseInt(Math.random() * 10000000)
+  const randInt = parseInt(String(Math.random() * 10000000))
   const randIntArray = [
-    parseInt(Math.random() * 300),
-    parseInt(Math.random() * 300),
-    parseInt(Math.random() * 300),
+    parseInt(String(Math.random() * 300)),
+    parseInt(String(Math.random() * 300)),
+    parseInt(String(Math.random() * 300)),
   ]
 
   switch (field.type) {
@@ -72,7 +86,7 @@ export function scenarioFieldValue(field) {
     case 'Bytes':
       return `new Uint8Array([${randIntArray}])`
     default: {
-      if (field.kind === 'enum' && field.enumValues[0]) {
+      if (field.kind === 'enum' && field.enumValues?.[0]) {
         return field.enumValues[0].dbName || field.enumValues[0].name
       }
     }
@@ -80,11 +94,11 @@ export function scenarioFieldValue(field) {
 }
 
 export const fieldsToScenario = async (
-  scalarFields,
-  relations,
-  foreignKeys,
-) => {
-  const data = {}
+  scalarFields: PrismaField[],
+  relations: Record<string, { foreignKey: string[]; type: string }>,
+  foreignKeys: string[],
+): Promise<Record<string, unknown>> => {
+  const data: Record<string, unknown> = {}
 
   // remove foreign keys from scalars
   scalarFields.forEach((field) => {
@@ -115,9 +129,9 @@ export const fieldsToScenario = async (
 }
 
 // creates the scenario data based on the data definitions in schema.prisma
-export const buildScenario = async (model) => {
+export const buildScenario = async (model: string) => {
   const scenarioModelName = camelcase(model)
-  const standardScenario = {
+  const standardScenario: Record<string, Record<string, { data?: Record<string, unknown> }>> = {
     [scenarioModelName]: {},
   }
   const { scalarFields, relations, foreignKeys } = await parseSchema(model)
@@ -149,10 +163,10 @@ export const buildScenario = async (model) => {
 
 // creates the scenario data based on the data definitions in schema.prisma
 // and transforms data types to strings and other values that are compatible with Prisma
-export const buildStringifiedScenario = async (model) => {
+export const buildStringifiedScenario = async (model: string) => {
   const scenario = await buildScenario(model)
 
-  const jsonString = JSON.stringify(scenario, (_key, value) => {
+  const jsonString = JSON.stringify(scenario, (_key, value: unknown) => {
     if (typeof value === 'bigint') {
       return value.toString()
     }
@@ -171,7 +185,7 @@ export const buildStringifiedScenario = async (model) => {
   )
 }
 
-export const fieldTypes = async (model) => {
+export const fieldTypes = async (model: string) => {
   const { scalarFields } = await parseSchema(model)
 
   // Example value
@@ -188,19 +202,19 @@ export const fieldTypes = async (model) => {
   //   isGenerated: false,
   //   isUpdatedAt: false
   // }
-  return scalarFields.reduce((acc, value) => {
+  return scalarFields.reduce((acc: Record<string, string>, value: PrismaField) => {
     acc[value.name] = value.type
     return acc
   }, {})
 }
 
 // outputs fields necessary to create an object in the test file
-export const fieldsToInput = async (model) => {
+export const fieldsToInput = async (model: string) => {
   const { scalarFields, foreignKeys } = await parseSchema(model)
   const modelName = camelcase(singularize(model))
-  let inputObj = {}
+  const inputObj: Record<string, unknown> = {}
 
-  scalarFields.forEach((field) => {
+  scalarFields.forEach((field: PrismaField) => {
     if (foreignKeys.includes(field.name)) {
       inputObj[field.name] = `scenario.${modelName}.two.${field.name}`
     } else {
@@ -216,13 +230,15 @@ export const fieldsToInput = async (model) => {
 }
 
 // outputs fields necessary to update an object in the test file
-export const fieldsToUpdate = async (model) => {
+export const fieldsToUpdate = async (model: string) => {
   const { scalarFields, relations, foreignKeys } = await parseSchema(model)
   const modelName = camelcase(singularize(model))
-  let field, newValue, fieldName
+  let field: PrismaField | undefined,
+    newValue: unknown,
+    fieldName: string | string[]
 
   // find an editable scalar field, ideally one that isn't a foreign key
-  field = scalarFields.find((scalar) => !foreignKeys.includes(scalar.name))
+  field = scalarFields.find((scalar: PrismaField) => !foreignKeys.includes(scalar.name))
 
   // no non-foreign keys, so just take the first one
   if (!field) {
@@ -249,25 +265,25 @@ export const fieldsToUpdate = async (model) => {
     // depending on the field type, append/update the value to something different
     switch (field.type) {
       case 'BigInt':
-        newValue = `${newValue + 1n}`
+        newValue = `${(newValue as bigint) + 1n}`
         break
       case 'Boolean': {
         newValue = !value
         break
       }
       case 'DateTime': {
-        let date = new Date()
+        const date = new Date()
         date.setDate(date.getDate() + 1)
         newValue = date
         break
       }
       case 'Decimal':
       case 'Float': {
-        newValue = newValue + 1.1
+        newValue = (newValue as number) + 1.1
         break
       }
       case 'Int': {
-        newValue = newValue + 1
+        newValue = (newValue as number) + 1
         break
       }
       case 'Json': {
@@ -275,13 +291,13 @@ export const fieldsToUpdate = async (model) => {
         break
       }
       case 'String': {
-        newValue = newValue + '2'
+        newValue = (newValue as string) + '2'
         break
       }
       default: {
         if (
           field.kind === 'enum' &&
-          field.enumValues[field.enumValues.length - 1]
+          field.enumValues?.[field.enumValues.length - 1]
         ) {
           const enumVal = field.enumValues[field.enumValues.length - 1]
           newValue = enumVal.dbName || enumVal.name
@@ -291,12 +307,12 @@ export const fieldsToUpdate = async (model) => {
     }
   }
 
-  return { [fieldName]: newValue }
+  return { [fieldName as string]: newValue }
 }
 
-const getIdName = async (model) => {
+const getIdName = async (model: string): Promise<string | undefined> => {
   const schema = await getSchema(model)
-  return schema.fields.find((field) => field.isId)?.name
+  return schema.fields.find((field: PrismaField) => field.isId)?.name
 }
 
 export const files = async ({
@@ -305,6 +321,12 @@ export const files = async ({
   relations,
   typescript,
   ...rest
+}: {
+  name: string
+  tests?: boolean
+  relations?: unknown[]
+  typescript?: boolean
+  [key: string]: unknown
 }) => {
   const componentName = camelcase(pluralize(name))
   const model = name
@@ -342,7 +364,7 @@ export const files = async ({
       update: await fieldsToUpdate(model),
       types: await fieldTypes(model),
       prismaImport: (await parseSchema(model)).scalarFields.some(
-        (field) => field.type === 'Decimal',
+        (field: PrismaField) => field.type === 'Decimal',
       ),
       prismaModel: model,
       idName,
@@ -392,7 +414,7 @@ export const files = async ({
       [outputPath]: content,
       ...acc,
     }
-  }, Promise.resolve({}))
+  }, Promise.resolve({} as Record<string, string>))
 }
 
 export const handler = createHandler({

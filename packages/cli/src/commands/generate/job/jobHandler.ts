@@ -19,7 +19,7 @@ import { templateForFile } from '../yargsHandlerHelpers.js'
 
 // Try to make the name end up looking like: `WelcomeNotice` even if the user
 // called it `welcome-notice` or `welcomeNoticeJob` or something like that
-const normalizeName = (name) => {
+const normalizeName = (name: string): string => {
   return changeCase.pascalCase(name).replace(/Job$/, '')
 }
 
@@ -29,6 +29,12 @@ export const files = async ({
   typescript,
   tests: generateTests = true,
   ...rest
+}: {
+  name: string
+  queueName: string
+  typescript?: boolean
+  tests?: boolean
+  [key: string]: unknown
 }) => {
   // TODO: Fix the two TODOs below, and update tests to reflect the fact that
   // jobs are camelCase instead of PascalCase, which I prefer
@@ -86,7 +92,15 @@ export const files = async ({
 
 // This could be built using createYargsForComponentGeneration;
 // however, we need to add a message after generating the function files
-export const handler = async ({ name, force, ...rest }) => {
+export const handler = async ({
+  name,
+  force,
+  ...rest
+}: {
+  name: string
+  force: boolean
+  [key: string]: unknown
+}) => {
   recordTelemetryAttributes({
     command: 'generate job',
     force,
@@ -106,7 +120,7 @@ export const handler = async ({ name, force, ...rest }) => {
     // We don't care if this fails because we'll fall back to 'default'
   }
 
-  let jobFiles = {}
+  let jobFiles: Record<string, string> = {}
   const tasks = new Listr(
     [
       {
@@ -137,9 +151,10 @@ export const handler = async ({ name, force, ...rest }) => {
       prepareForRollback(tasks)
     }
     await tasks.run()
-  } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+  } catch (e: unknown) {
+    const err = e as { message: string; exitCode?: number }
+    errorTelemetry(process.argv, err.message)
+    console.error(c.error(err.message))
+    process.exit(err?.exitCode || 1)
   }
 }

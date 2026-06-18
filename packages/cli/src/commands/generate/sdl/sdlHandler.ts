@@ -45,7 +45,10 @@ const missingIdConsoleMessage = () => {
   )
 }
 
-const addFieldGraphQLComment = (field, str) => {
+const addFieldGraphQLComment = (
+  field: { documentation?: string; name: string },
+  str: string,
+): string => {
   const description = field.documentation || `Description for ${field.name}.`
 
   return `
@@ -58,13 +61,26 @@ const modelFieldToSDL = ({
   required = true,
   types = {},
   docs = false,
-}) => {
+}: {
+  field: {
+    name: string
+    type: string
+    kind: string
+    isList: boolean
+    isRequired: boolean
+    isId: boolean
+    documentation?: string
+  }
+  required?: boolean
+  types?: Record<string, unknown>
+  docs?: boolean
+}): string => {
   if (Object.entries(types).length) {
     field.type =
       field.kind === 'object' ? idType(types[field.type]) : field.type
   }
 
-  const prismaTypeToGraphqlType = {
+  const prismaTypeToGraphqlType: Record<string, string> = {
     Json: 'JSON',
     Decimal: 'Float',
     Bytes: 'Byte',
@@ -84,11 +100,16 @@ const modelFieldToSDL = ({
   }
 }
 
-const querySDL = (model, docs = false) => {
-  return model.fields.map((field) => modelFieldToSDL({ field, docs }))
+const querySDL = (model: { fields: unknown[] }, docs = false) => {
+  return model.fields.map((field) => modelFieldToSDL({ field: field as Parameters<typeof modelFieldToSDL>[0]['field'], docs }))
 }
 
-const inputSDL = (model, required, types = {}, docs = false) => {
+const inputSDL = (
+  model: { fields: Array<{ name: string; isId: boolean; default?: unknown; kind: string }> },
+  required: boolean,
+  types = {},
+  docs = false,
+) => {
   const ignoredFields = DEFAULT_IGNORE_FIELDS_FOR_INPUT
 
   return model.fields
@@ -102,29 +123,29 @@ const inputSDL = (model, required, types = {}, docs = false) => {
 
       return ignoredFields.indexOf(field.name) === -1 && field.kind !== 'object'
     })
-    .map((field) => modelFieldToSDL({ field, required, types, docs }))
+    .map((field) => modelFieldToSDL({ field: field as Parameters<typeof modelFieldToSDL>[0]['field'], required, types, docs }))
 }
 
-const idInputSDL = (idType, docs) => {
+const idInputSDL = (idType: unknown, docs: boolean) => {
   if (!Array.isArray(idType)) {
     return []
   }
   return idType.map((field) =>
-    modelFieldToSDL({ field, required: true, types: {}, docs }),
+    modelFieldToSDL({ field: field as Parameters<typeof modelFieldToSDL>[0]['field'], required: true, types: {}, docs }),
   )
 }
 
 // creates the CreateInput type (all fields are required)
-const createInputSDL = (model, types = {}, docs = false) => {
+const createInputSDL = (model: Parameters<typeof inputSDL>[0], types = {}, docs = false) => {
   return inputSDL(model, true, types, docs)
 }
 
 // creates the UpdateInput type (not all fields are required)
-const updateInputSDL = (model, types = {}, docs = false) => {
+const updateInputSDL = (model: Parameters<typeof inputSDL>[0], types = {}, docs = false) => {
   return inputSDL(model, false, types, docs)
 }
 
-const idType = (model, crud) => {
+const idType = (model: { fields: Array<{ isId: boolean; type: string }>; primaryKey?: { fields: string[] } }, crud?: boolean): unknown => {
   if (!crud) {
     return undefined
   }
@@ -144,7 +165,7 @@ const idType = (model, crud) => {
   return idField.type
 }
 
-const idName = (model, crud) => {
+const idName = (model: { fields: Array<{ isId: boolean; name: string }> }, crud?: boolean): string | undefined => {
   if (!crud) {
     return undefined
   }
@@ -157,7 +178,7 @@ const idName = (model, crud) => {
   return idField.name
 }
 
-const sdlFromSchemaModel = async (name, crud, docs = false) => {
+const sdlFromSchemaModel = async (name: string, crud: boolean, docs = false) => {
   const model = await getSchema(name)
 
   // get models for referenced user-defined types
@@ -170,7 +191,7 @@ const sdlFromSchemaModel = async (name, crud, docs = false) => {
           return model
         }),
     )
-  ).reduce((acc, cur) => ({ ...acc, [cur.name]: cur }), {})
+  ).reduce((acc, cur) => ({ ...acc, [cur.name]: cur }), {} as Record<string, unknown>)
 
   // Get enum definition and fields from user-defined types
   const enums = (
@@ -182,7 +203,7 @@ const sdlFromSchemaModel = async (name, crud, docs = false) => {
           return enumDef
         }),
     )
-  ).reduce((acc, curr) => acc.concat(curr), [])
+  ).reduce((acc, curr) => acc.concat(curr), [] as unknown[])
 
   const modelName = model.name
   const modelDescription =
@@ -210,6 +231,12 @@ export const files = async ({
   docs = false,
   tests,
   typescript,
+}: {
+  name: string
+  crud?: boolean
+  docs?: boolean
+  tests?: boolean
+  typescript?: boolean
 }) => {
   const extension = typescript ? 'ts' : 'js'
   const sdlData = await sdlFromSchemaModel(name, crud, docs)
@@ -249,6 +276,14 @@ export const handler = async ({
   typescript,
   docs,
   rollback,
+}: {
+  model: string
+  crud: boolean
+  force: boolean
+  tests?: boolean
+  typescript?: boolean
+  docs: boolean
+  rollback: boolean
 }) => {
   if (tests === undefined) {
     tests = getConfig().generate.tests
@@ -303,9 +338,10 @@ export const handler = async ({
       prepareForRollback(tasks)
     }
     await tasks.run()
-  } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+  } catch (e: unknown) {
+    const err = e as { message: string; exitCode?: number }
+    errorTelemetry(process.argv, err.message)
+    console.error(c.error(err.message))
+    process.exit(err?.exitCode || 1)
   }
 }
