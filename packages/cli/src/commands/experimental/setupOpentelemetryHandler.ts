@@ -207,7 +207,14 @@ export const handler = async ({
     [
       {
         title: 'Confirmation',
-        task: async (_ctx: unknown, task: { prompt: (adapter: unknown) => { run: (opts: Record<string, unknown>) => Promise<boolean> } }) => {
+        task: async (
+          _ctx: unknown,
+          task: {
+            prompt: (adapter: unknown) => {
+              run: (opts: Record<string, unknown>) => Promise<boolean>
+            }
+          },
+        ) => {
           const prompt = task.prompt(ListrEnquirerPromptAdapter)
           const confirmation = await prompt.run({
             type: 'Confirm',

@@ -8,7 +8,10 @@ import { errorTelemetry } from '@cedarjs/telemetry'
 import { getPaths } from '../../lib/index.js'
 
 export async function buildPackagesTask(
-  task: { skip: (msg: string) => void; newListr: (...args: unknown[]) => unknown },
+  task: {
+    skip: (msg: string) => void
+    newListr: (...args: unknown[]) => unknown
+  },
   nonApiWebWorkspaces: string[],
 ) {
   const cedarPaths = getPaths()

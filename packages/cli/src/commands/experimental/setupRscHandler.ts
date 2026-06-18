@@ -52,7 +52,10 @@ export const handler = async ({
       },
       {
         title: 'Adding config to cedar.toml...',
-        task: (_ctx: unknown, task: { skip: (msg: string) => void; output: string }) => {
+        task: (
+          _ctx: unknown,
+          task: { skip: (msg: string) => void; output: string },
+        ) => {
           if (!configContent.includes('[experimental.rsc]')) {
             writeFile(
               configTomlPath,

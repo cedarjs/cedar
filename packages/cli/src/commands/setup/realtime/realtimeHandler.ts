@@ -92,7 +92,10 @@ export async function handler(args: {
       },
       {
         title: 'Enabling realtime support in the GraphQL handler...',
-        task: (ctx: { realtimeHandlerSkipped?: boolean }, task: { skip: (msg: string) => void }) => {
+        task: (
+          ctx: { realtimeHandlerSkipped?: boolean },
+          task: { skip: (msg: string) => void },
+        ) => {
           addRealtimeToGraphqlHandler(ctx, task, force)
         },
       },
