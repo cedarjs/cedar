@@ -77,7 +77,7 @@ each carrying a stable `extensions.code`:
 | `UserInputError`      | `BAD_USER_INPUT`            |
 | `ValidationError`     | `GRAPHQL_VALIDATION_FAILED` |
 | `SyntaxError`         | `GRAPHQL_PARSE_FAILED`      |
-| `CedarGraphQLError` | `REDWOODJS_ERROR` (default) |
+| `CedarGraphQLError`   | `REDWOODJS_ERROR` (default) |
 
 This gives clients a consistent, parseable `extensions.code` field to branch on.
 
