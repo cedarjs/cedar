@@ -188,9 +188,6 @@ const idType = (
   // When using a composite primary key, we need to return an array of fields
   if (model.primaryKey?.fields.length) {
     const { fields: fieldNames } = model.primaryKey
-    // Note: a field name in `primaryKey.fields` might not exist in
-    // `model.fields` (schema inconsistency). We filter out undefined results
-    // rather than including them — the original JS cast silently included them.
     return fieldNames
       .map((name) => model.fields.find((f) => f.name === name))
       .filter((f): f is ModelSchemaField => f !== undefined)

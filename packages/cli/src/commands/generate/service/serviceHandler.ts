@@ -324,8 +324,8 @@ export const fieldsToUpdate = async (model: string) => {
   }
 
   if (Array.isArray(fieldName)) {
-    // Composite FK: build one entry per key. The scenario value is the same
-    // for all parts of the composite key (same as the original intent).
+    // Composite FK: spread one entry per key so the test scenario object has
+    // the correct shape (e.g. { postId: value, tagId: value }).
     return Object.fromEntries(fieldName.map((key) => [key, newValue]))
   }
   return { [fieldName]: newValue }
