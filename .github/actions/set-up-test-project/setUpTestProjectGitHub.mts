@@ -20,4 +20,5 @@ setUpTestProject({
   execInFramework,
   cedarFrameworkPath: CEDAR_FRAMEWORK_PATH,
   testProjectPath,
+  packageManager: core.getInput('packageManager'),
 })

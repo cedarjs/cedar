@@ -72,6 +72,7 @@
     "@cedarjs/api": "workspace:*",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/babel-config": "workspace:*",
+    "@cedarjs/cli-helpers": "workspace:*",
     "@cedarjs/context": "workspace:*",
     "@cedarjs/cookie-jar": "workspace:*",
     "@cedarjs/graphql-server": "workspace:*",

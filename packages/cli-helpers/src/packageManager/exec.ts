@@ -202,3 +202,17 @@ export function getNodeRunnerArgs(scriptPath: string): [string, string[]] {
 
   return ['yarn', ['node', scriptPath]]
 }
+
+/**
+ * Run a node script through the current package manager via execa.
+ *
+ * Yarn PnP requires wrapping node via `yarn node` so module resolution works.
+ *
+ * - yarn:  `yarn node <script>`
+ * - npm:   `node <script>`
+ * - pnpm:  `pnpm exec node <script>`
+ */
+export function runWithNode(scriptPath: string, options?: ExecaOptions) {
+  const [cmd, args] = getNodeRunnerArgs(scriptPath)
+  return execa(cmd, args, options)
+}
