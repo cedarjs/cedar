@@ -66,7 +66,7 @@ test('RBAC: Should not be able to delete contact as non-admin user', async ({
   await expect(
     page
       .locator('.rw-scaffold')
-      .locator("text=You don't have permission to do that"),
+      .locator("text=You don't have access to do that"),
   ).toBeVisible()
 
   // @NOTE we do this because the scaffold content is actually on the page,
