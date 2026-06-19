@@ -9,7 +9,14 @@ on:
   schedule:
     # Run daily at 4am UTC
     - cron: '0 4 * * *'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      packageManager:
+        required: true
+        type: choice
+        options:
+          - npm
+          - pnpm
 
 # Cancel in-progress runs of this workflow.
 concurrency:
@@ -24,13 +31,15 @@ env:
 
 jobs:
   pm-smoke-tests:
-    if: github.repository == 'cedarjs/cedar'
+    if: github.repository == 'cedarjs/cedar' && (!inputs.packageManager || inputs.packageManager == matrix.packageManager)
 
     strategy:
       fail-fast: false
       matrix:
         packageManager: [npm, pnpm]
 
+    # When called via workflow_call (e.g. from ci.yml), only run the PM
+    # specified by the input. When triggered by schedule, run both.
     name: 🔄 ${{ matrix.packageManager }} smoke tests
     runs-on: ubuntu-latest
 

@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import type { PackageManager } from '@cedarjs/project-config'
+import type { PackageManager } from '@cedarjs/project-config/packageManager'
 
 function cedarPrefix(pm: PackageManager): string {
   if (pm === 'npm') {

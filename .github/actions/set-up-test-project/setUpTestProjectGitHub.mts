@@ -2,6 +2,8 @@ import path from 'node:path'
 
 import core from '@actions/core'
 
+import type { PackageManager } from '@cedarjs/project-config/packageManager'
+
 import {
   createExecWithEnvInCwd,
   execInFramework,
@@ -20,5 +22,13 @@ setUpTestProject({
   execInFramework,
   cedarFrameworkPath: CEDAR_FRAMEWORK_PATH,
   testProjectPath,
-  packageManager: core.getInput('packageManager'),
+  packageManager: pmOrThrow(core.getInput('packageManager')),
 })
+
+function pmOrThrow(pm: string): PackageManager {
+  if (pm !== 'yarn' && pm !== 'npm' && pm !== 'pnpm') {
+    throw new Error('packageManager is required')
+  }
+
+  return pm
+}
