@@ -28,7 +28,7 @@ export function formatCedarCommand(args: string[]): string {
   }
 
   if (pm === 'pnpm') {
-    return `pnpm exec cedar${argStr}`
+    return `pnpm cedar${argStr}`
   }
 
   return `yarn cedar${argStr}`
