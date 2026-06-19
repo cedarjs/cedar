@@ -143,11 +143,9 @@ export async function setUpTestProject({
   const cedar = cedarPrefix(packageManager)
 
   if (canary) {
-    console.log(`Upgrading project to canary`)
+    console.log('Upgrading project to canary')
 
-    await execInProject(`${cedar} upgrade -t canary`, {
-      input: Buffer.from('Y'),
-    })
+    await execInProject(`${cedar} upgrade -t canary`)
 
     console.log()
   }
@@ -173,7 +171,7 @@ export async function setUpTestProject({
 
   fs.appendFileSync(
     path.join(testProjectPath, '.env'),
-    `SESSION_SECRET='${secretResult.stdout}'`,
+    `\nSESSION_SECRET='${secretResult.stdout}'\n`,
   )
 
   console.log()

@@ -22,12 +22,12 @@ setUpTestProject({
   execInFramework,
   cedarFrameworkPath: CEDAR_FRAMEWORK_PATH,
   testProjectPath,
-  packageManager: pmOrThrow(core.getInput('packageManager')),
+  packageManager: optionalPackageManager(core.getInput('packageManager')),
 })
 
-function pmOrThrow(pm: string): PackageManager {
+function optionalPackageManager(pm: string): PackageManager | undefined {
   if (pm !== 'yarn' && pm !== 'npm' && pm !== 'pnpm') {
-    throw new Error('packageManager is required')
+    return undefined
   }
 
   return pm
