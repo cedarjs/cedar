@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'path'
 
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
@@ -15,7 +16,7 @@ const EXCLUDE_GENERATORS = ['dataMigration', 'dbAuth', 'generator', 'secret']
 // however, functions wouldn't have a `stories` option. createYargs...
 // should be reversed to provide `getYargsDefaults` as the default configuration
 // and accept a configuration such as its CURRENT default to append onto a command.
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   const availableGenerators = fs
     .readdirSync(path.join(import.meta.dirname, '../../generate'), {
       withFileTypes: true,
@@ -44,12 +45,13 @@ export const builder = (yargs) => {
     )
 }
 
-export const handler = async (options) => {
+export const handler = async (options: { name: string; force: boolean }) => {
   recordTelemetryAttributes({
     command: 'setup generator',
     name: options.name,
     force: options.force,
   })
+  // @ts-expect-error - no types for JS file yet
   const { handler } = await import('./generatorHandler.js')
   return handler(options)
 }

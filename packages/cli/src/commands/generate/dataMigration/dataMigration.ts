@@ -3,8 +3,10 @@ import path from 'node:path'
 import { paramCase } from 'change-case'
 import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { getDataMigrationsPath } from '@cedarjs/project-config'
 
 import {
@@ -16,12 +18,12 @@ import { prepareForRollback } from '../../../lib/rollback.js'
 import { validateName } from '../helpers.js'
 import { getYargsDefaults } from '../yargsCommandHelpers.js'
 
-const POST_RUN_INSTRUCTIONS = `Next steps...\n\n   ${c.warning(
-  'After writing your migration, you can run it with:',
-)}
+export function getPostRunInstructions() {
+  const text = c.warning('After writing your migration, you can run it with:')
+  const command = formatCedarCommand(['dataMigrate', 'up'])
 
-     yarn cedar dataMigrate up
-`
+  return `Next steps...\n\n   ${text}\n\n   ${command}\n`
+}
 
 const TEMPLATE_PATHS = {
   js: path.resolve(
@@ -36,7 +38,12 @@ const TEMPLATE_PATHS = {
   ),
 }
 
-export const files = async ({ name, typescript }) => {
+interface FilesArgs {
+  name: string
+  typescript: boolean
+}
+
+export const files = async ({ name, typescript }: FilesArgs) => {
   const now = new Date().toISOString()
   const timestamp = now.split('.')[0].replace(/\D/g, '')
   const basename = `${timestamp}-${paramCase(name)}`
@@ -60,7 +67,7 @@ export const files = async ({ name, typescript }) => {
 export const command = 'data-migration <name>'
 export const aliases = ['dataMigration', 'dm']
 export const description = 'Generate a data migration'
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   yargs
     .positional('name', {
       description: 'A descriptor of what this data migration does',
@@ -84,7 +91,14 @@ export const builder = (yargs) => {
   })
 }
 
-export const handler = async (args) => {
+interface HandlerArgs {
+  name: string
+  force: boolean
+  rollback: boolean
+  typescript: boolean
+}
+
+export const handler = async (args: HandlerArgs) => {
   recordTelemetryAttributes({
     command: 'generate data-migration',
     force: args.force,
@@ -104,7 +118,7 @@ export const handler = async (args) => {
       {
         title: 'Next steps...',
         task: (_ctx, task) => {
-          task.title = POST_RUN_INSTRUCTIONS
+          task.title = getPostRunInstructions()
         },
       },
     ].filter(Boolean),
@@ -117,7 +131,7 @@ export const handler = async (args) => {
     }
     await tasks.run()
   } catch (e) {
-    console.log(c.error(e.message))
+    console.log(c.error(e instanceof Error ? e.message : String(e)))
     process.exit(1)
   }
 }
