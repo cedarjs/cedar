@@ -37,7 +37,7 @@
     "zx": "8.8.5"
   },
   "devDependencies": {
-    "tsx": "4.21.0",
+    "tsx": "4.22.4",
     "type-fest": "5.6.0",
     "typescript": "5.9.3"
   },

@@ -28,7 +28,7 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@types/mjml": "4",
-    "tsx": "4.21.0",
+    "tsx": "4.22.4",
     "typescript": "5.9.3"
   },
   "publishConfig": {
