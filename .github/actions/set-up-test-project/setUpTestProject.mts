@@ -99,32 +99,34 @@ export async function setUpTestProject({
     const pkgPath = path.join(testProjectPath, 'package.json')
     const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
 
-    pkg.packageManager = packageManager
+    // delete packageManager to let the `<pm> install` command set it
+    delete pkg.packageManager
 
     if (packageManager === 'npm') {
       // The test-project fixture uses workspace:* for internal workspace
-      // packages like @my-org/validators in api/ and web/. npm doesn't
-      // support workspace:* protocol, so replace with file: references
-      // across all package.json files in the project.
+      // packages like @my-org/validators. npm doesn't support workspace:*
+      // protocol, so replace with file: references across all
+      // package.json files in the project.
       const pkgJsonFiles = [
         'package.json',
         'api/package.json',
         'web/package.json',
       ]
 
-      for (const pkgJsonPath of pkgJsonFiles) {
-        const fullPath = path.join(testProjectPath, pkgJsonPath)
+      for (const relPath of pkgJsonFiles) {
+        const fullPath = path.join(testProjectPath, relPath)
         if (!fs.existsSync(fullPath)) {
           continue
         }
 
-        const pkgFile = JSON.parse(fs.readFileSync(fullPath, 'utf-8'))
+        // Reuse the already-parsed root `pkg` for the root file.
+        const pkgFile =
+          relPath === 'package.json'
+            ? pkg
+            : JSON.parse(fs.readFileSync(fullPath, 'utf-8'))
 
         for (const deps of [pkgFile.dependencies, pkgFile.devDependencies]) {
-          if (!deps) {
-            continue
-          }
-          for (const [name, version] of Object.entries(deps)) {
+          for (const [name, version] of Object.entries(deps || {})) {
             if (version === 'workspace:*') {
               const bareName = name.startsWith('@') ? name.split('/')[1] : name
               deps[name] = `file:packages/${bareName}`
@@ -135,9 +137,10 @@ export async function setUpTestProject({
 
         fs.writeFileSync(fullPath, JSON.stringify(pkgFile, null, 2) + '\n')
       }
+    } else {
+      // for pnpm we just write the root with the deleted packageManager field
+      fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n')
     }
-
-    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n')
 
     console.log(
       `Updated packageManager field to "${packageManager}"` +
