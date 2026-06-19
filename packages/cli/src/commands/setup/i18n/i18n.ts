@@ -18,7 +18,8 @@ export const handler = async (options: { force: boolean }) => {
     command: 'setup i18n',
     force: options.force,
   })
-  // @ts-expect-error - no types for JS file yet
+
+  // @ts-expect-error - no types for JS files
   const { handler } = await import('./i18nHandler.js')
   return handler(options)
 }

@@ -51,7 +51,8 @@ export const handler = async (options: { name: string; force: boolean }) => {
     name: options.name,
     force: options.force,
   })
-  // @ts-expect-error - no types for JS file yet
+
+  // @ts-expect-error - no types for JS files
   const { handler } = await import('./generatorHandler.js')
   return handler(options)
 }

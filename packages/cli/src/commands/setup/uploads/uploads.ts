@@ -25,6 +25,7 @@ export const handler = async (options: {
     force: options.force,
     skipExamples: options.skipExamples,
   })
+
   const { handler } = await import('./uploadsHandler.js')
   return handler(options)
 }

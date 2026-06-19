@@ -22,7 +22,7 @@ export async function handler(options: { force: boolean; verbose?: boolean }) {
     verbose: options.verbose,
   })
 
-  // @ts-expect-error - no types for JS file yet
+  // @ts-expect-error - no types for JS files
   const { handler } = await import('./dockerHandler.js')
   return handler(options)
 }
