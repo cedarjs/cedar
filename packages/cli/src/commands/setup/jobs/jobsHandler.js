@@ -6,6 +6,7 @@ import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 
 import { addApiPackages, colors as c } from '@cedarjs/cli-helpers'
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { getSchemaPath, getPrismaSchemas } from '@cedarjs/project-config'
 
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
@@ -116,10 +117,10 @@ const tasks = async ({ force }) => {
           ${c.success('\nBackground jobs configured!\n')}
 
           ${!modelExists ? 'Migrate your database to finish setting up jobs:\n' : ''}
-          ${!modelExists ? c.highlight('\n\u00A0\u00A0yarn cedar prisma migrate dev\n') : ''}
+          ${!modelExists ? c.highlight(`\n\u00A0\u00A0${formatCedarCommand(['prisma', 'migrate', 'dev'])}\n`) : ''}
 
-          Generate jobs with: ${c.highlight('yarn cedar g job <name>')}
-          Execute jobs with:  ${c.highlight('yarn cedar jobs work\n')}
+          Generate jobs with: ${c.highlight(formatCedarCommand(['g', 'job', '<name>']))}
+          Execute jobs with:  ${c.highlight(`${formatCedarCommand(['jobs', 'work'])}\n`)}
 
           Check out the docs for more info:
           ${terminalLink('', 'https://cedarjs.com/docs/background-jobs')}

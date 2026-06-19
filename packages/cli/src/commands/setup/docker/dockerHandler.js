@@ -6,7 +6,10 @@ import execa from 'execa'
 import { Listr } from 'listr2'
 
 import { writeFile, colors as c } from '@cedarjs/cli-helpers'
+import { dedupe } from '@cedarjs/cli-helpers/packageManager'
+import { addWorkspacePackages } from '@cedarjs/cli-helpers/packageManager/packages'
 import { getConfig, getConfigPath, getPaths } from '@cedarjs/project-config'
+import { getPackageManager } from '@cedarjs/project-config/packageManager'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 export async function handler({ force }) {
@@ -47,10 +50,17 @@ export async function handler({ force }) {
     [
       {
         title: 'Adding the official yarn workspace-tools plugin...',
+        // The `yarn plugin` commands only exist in yarn. Docker setup is a
+        // yarn-specific workflow (workspace-tools plugin has no npm/pnpm
+        // equivalent), so we invoke yarn directly here.
         task: async (_ctx, task) => {
-          const { stdout } = await execa.command('yarn plugin runtime --json', {
-            cwd: getPaths().base,
-          })
+          const { stdout } = await execa(
+            'yarn',
+            ['plugin', 'runtime', '--json'],
+            {
+              cwd: getPaths().base,
+            },
+          )
 
           const hasWorkspaceToolsPlugin = stdout
             .trim()
@@ -65,7 +75,7 @@ export async function handler({ force }) {
             return
           }
 
-          return execa.command('yarn plugin import workspace-tools', {
+          return execa('yarn', ['plugin', 'import', 'workspace-tools'], {
             cwd: getPaths().base,
           }).stdout
         },
@@ -104,11 +114,10 @@ export async function handler({ force }) {
             const apiServerPackageVersion =
               await getVersionOfRedwoodPackageToInstall(apiServerPackageName)
 
-            await execa.command(
-              `yarn workspace api add ${apiServerPackageName}@${apiServerPackageVersion}`,
-              {
-                cwd: getPaths().base,
-              },
+            await addWorkspacePackages(
+              'api',
+              [`${apiServerPackageName}@${apiServerPackageVersion}`],
+              { cwd: getPaths().base },
             )
           }
 
@@ -116,17 +125,19 @@ export async function handler({ force }) {
             const webServerPackageVersion =
               await getVersionOfRedwoodPackageToInstall(webServerPackageName)
 
-            await execa.command(
-              `yarn workspace web add ${webServerPackageName}@${webServerPackageVersion}`,
-              {
-                cwd: getPaths().base,
-              },
+            await addWorkspacePackages(
+              'web',
+              [`${webServerPackageName}@${webServerPackageVersion}`],
+              { cwd: getPaths().base },
             )
           }
 
-          return execa.command(`yarn dedupe`, {
-            cwd: getPaths().base,
-          }).stdout
+          const dedupeCommand = dedupe()
+          if (dedupeCommand) {
+            await execa(getPackageManager(), [dedupeCommand], {
+              cwd: getPaths().base,
+            })
+          }
         },
       },
       {

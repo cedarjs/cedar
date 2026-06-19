@@ -4,7 +4,8 @@ import path from 'node:path'
 import ansis from 'ansis'
 import { terminalLink } from 'termi-link'
 
-// @ts-expect-error - no types for JS files
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
+
 import { getPaths } from '../../lib/index.js'
 import { isTypeScriptProject, serverFileExists } from '../../lib/project.js'
 
@@ -59,8 +60,8 @@ export function printTaskEpilogue(
 export const isServerFileSetup = (): true => {
   if (!serverFileExists()) {
     throw new Error(
-      'CedarJS Realtime requires a serverful environment. Please run `yarn ' +
-        'cedarjs setup server-file` first.',
+      'CedarJS Realtime requires a serverful environment. Please run ' +
+        `\`${formatCedarCommand(['setup', 'server-file'])}\` first.`,
     )
   }
 
@@ -79,7 +80,7 @@ export const isRealtimeSetup = (): true => {
   if (!realtimeExists()) {
     throw new Error(
       'Adding realtime events requires that CedarJS Realtime is setup. ' +
-        'Please run `yarn cedar setup realtime` first.',
+        `Please run \`${formatCedarCommand(['setup', 'realtime'])}\` first.`,
     )
   }
 

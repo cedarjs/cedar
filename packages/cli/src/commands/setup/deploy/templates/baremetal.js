@@ -1,3 +1,5 @@
+import { getPackageManager } from '@cedarjs/project-config/packageManager'
+
 export const ECOSYSTEM = `module.exports = {
   apps: [
     {
@@ -33,7 +35,7 @@ host = "server.com"
 username = "user"
 agentForward = true
 sides = ["api","web"]
-packageManagerCommand = "yarn"
+packageManagerCommand = "${getPackageManager()}"
 monitorCommand = "pm2"
 path = "/var/www/app"
 processNames = ["serve"]

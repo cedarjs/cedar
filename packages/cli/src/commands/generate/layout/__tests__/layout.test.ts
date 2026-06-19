@@ -92,7 +92,6 @@ describe('Multi word default files', async () => {
 describe('JS Files', async () => {
   const javascriptFiles = await layoutHandler.files({
     name: 'JavascriptPage',
-    javascript: true,
     tests: true,
     stories: true,
   })
@@ -224,7 +223,6 @@ describe('TS files', async () => {
 test("doesn't include storybook file when --stories is set to false", async () => {
   const withoutStoryFiles = await layoutHandler.files({
     name: 'withoutStories',
-    javascript: true,
     tests: true,
     stories: false,
   })

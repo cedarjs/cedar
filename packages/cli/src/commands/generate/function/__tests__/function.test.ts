@@ -7,9 +7,7 @@ import path from 'path'
 import { describe, it, expect, test } from 'vitest'
 import yargs from 'yargs/yargs'
 
-// @ts-expect-error - importing js
 import * as functionGenerator from '../function.js'
-// @ts-expect-error - importing js
 import * as functionHandler from '../functionHandler.js'
 
 // Should be refactored as it's repeated

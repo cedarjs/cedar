@@ -61,7 +61,7 @@
     "react": "19.2.3",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
-    "vitest": "3.2.4"
+    "vitest": "3.2.6"
   },
   "peerDependencies": {
     "@supabase/supabase-js": "2.105.1"

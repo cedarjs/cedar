@@ -1,0 +1,176 @@
+import fs from 'node:fs'
+import path from 'node:path'
+
+import { Listr } from 'listr2'
+import { format } from 'prettier'
+import { terminalLink } from 'termi-link'
+
+import {
+  addApiPackages,
+  getPrettierOptions,
+  colors as c,
+} from '@cedarjs/cli-helpers'
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
+import { errorTelemetry } from '@cedarjs/telemetry'
+
+import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
+import { isTypeScriptProject } from '../../../lib/project.js'
+import { runTransform } from '../../../lib/runTransform.js'
+
+export const handler = async ({ force }: { force: boolean }) => {
+  const projectIsTypescript = isTypeScriptProject()
+  const redwoodVersion =
+    (await import(path.join(getPaths().base, 'package.json'), {
+      with: { type: 'json ' },
+    }).default.devDependencies['@cedarjs/core']) ?? 'latest'
+
+  const tasks = new Listr(
+    [
+      {
+        title: `Adding api/src/lib/uploads.${
+          projectIsTypescript ? 'ts' : 'js'
+        }...`,
+        task: async () => {
+          const templatePath = path.resolve(
+            import.meta.dirname,
+            'templates',
+            'srcLibUploads.ts.template',
+          )
+          const templateContent = fs.readFileSync(templatePath, {
+            encoding: 'utf8',
+            flag: 'r',
+          })
+
+          const uploadsPath = path.join(
+            getPaths().api.lib,
+            `uploads.${projectIsTypescript ? 'ts' : 'js'}`,
+          )
+          const uploadsContent = projectIsTypescript
+            ? templateContent
+            : await transformTSToJS(uploadsPath, templateContent)
+
+          return writeFile(uploadsPath, uploadsContent, {
+            overwriteExisting: force,
+          })
+        },
+      },
+      {
+        title: `Adding signedUrl function...`,
+        task: async () => {
+          const templatePath = path.resolve(
+            import.meta.dirname,
+            'templates',
+            'signedUrl.ts.template',
+          )
+          const templateContent = fs.readFileSync(templatePath, {
+            encoding: 'utf8',
+            flag: 'r',
+          })
+
+          const uploadsPath = path.join(
+            getPaths().api.functions,
+            `signedUrl.${projectIsTypescript ? 'ts' : 'js'}`,
+          )
+          const uploadsContent = projectIsTypescript
+            ? templateContent
+            : await transformTSToJS(uploadsPath, templateContent)
+
+          return writeFile(uploadsPath, uploadsContent, {
+            overwriteExisting: force,
+          })
+        },
+      },
+      {
+        ...addApiPackages([`@cedarjs/storage@${redwoodVersion}`]),
+        title: 'Adding dependencies to your api side...',
+      },
+      {
+        title: 'Modifying api/src/lib/db to add uploads prisma extension..',
+        task: async () => {
+          const dbPath = path.join(
+            getPaths().api.lib,
+            `db.${projectIsTypescript ? 'ts' : 'js'}`,
+          )
+
+          const transformResult = await runTransform({
+            transformPath: path.join(import.meta.dirname, 'dbCodemod.js'),
+            targetPaths: [dbPath],
+          })
+
+          if (transformResult.error) {
+            if (transformResult.error === 'RW_CODEMOD_ERR_OLD_FORMAT') {
+              throw new Error(
+                'It looks like your src/lib/db file is using the old format. Please update it as per the v8 upgrade guide: https://cedarjs.com/docs/upgrade-guides/v8#database-file-structure-change. And run again. \n\nYou can also manually modify your api/src/lib/db to include the prisma extension: https://cedarjs.com/docs/uploads/#attaching-the-prisma-extension',
+              )
+            }
+
+            throw new Error(
+              'Could not add the prisma extension. \n Please modify your api/src/lib/db to include the prisma extension: https://cedarjs.com/docs/uploads/#attaching-the-prisma-extension',
+            )
+          }
+        },
+      },
+      {
+        title: 'Prettifying changed files',
+        task: async (_ctx, task) => {
+          const prettifyPaths = [
+            path.join(getPaths().api.lib, 'db.js'),
+            path.join(getPaths().api.lib, 'db.ts'),
+            path.join(getPaths().api.lib, 'uploads.js'),
+            path.join(getPaths().api.lib, 'uploads.ts'),
+          ]
+
+          for (const prettifyPath of prettifyPaths) {
+            try {
+              if (!fs.existsSync(prettifyPath)) {
+                continue
+              }
+              const source = fs.readFileSync(prettifyPath, 'utf-8')
+              const prettierOptions = await getPrettierOptions()
+              const prettifiedApp = await format(source, {
+                ...prettierOptions,
+                parser: 'babel-ts',
+              })
+
+              fs.writeFileSync(prettifyPath, prettifiedApp, 'utf-8')
+            } catch {
+              task.output =
+                "Couldn't prettify the changes. Please reformat the files manually if needed."
+            }
+          }
+        },
+      },
+      {
+        title: 'One more thing...',
+        task: (_ctx, task) => {
+          task.title = `One more thing...
+
+          ${c.success('\nUploads and storage configured!\n')}
+
+          Remember to add UPLOADS_SECRET to your .env file. You can generate one with ${c.highlight(formatCedarCommand(['generate', 'secret']))}
+
+          Check out the docs for more info:
+          ${terminalLink('', 'https://cedarjs.com/docs/uploads')}
+
+        `
+        },
+      },
+    ],
+    {
+      rendererOptions: { collapseSubtasks: false },
+    },
+  )
+
+  try {
+    await tasks.run()
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    process.exit(exitCode)
+  }
+}

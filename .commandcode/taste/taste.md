@@ -1,9 +1,6 @@
 # TypeScript
 
-- Avoid `as any` — prefer proper types, then `unknown`, then type casts. Use `as any` only as absolute last resort and always document with a code comment why it was necessary. Confidence: 0.95
-- When JS→TS converting CLI command files: use `import type { Argv } from 'yargs'`, add type annotations to builders, keep handler signatures as narrow as possible. Confidence: 0.60
-- Prefer `interface` over `type` for object type declarations. Confidence: 0.70
-- Avoid barrel/index.ts export files; use package.json exports map for entrypoints instead. Confidence: 0.70
+See [typescript/taste.md](typescript/taste.md)
 
 # Prisma
 
@@ -11,14 +8,13 @@
 
 # Architecture
 
-- Cedar only supports Apollo Client for GraphQL. Remove abstractions/wrappers that suggest alternative GraphQL clients are supported. Confidence: 0.75
-- Cedar owns zero deployment adapters. The framework's only UD responsibility is calling `addEntry()` from `@universal-deploy/store` with WinterTC-compatible handler paths. All provider-specific adapter logic (Node, Netlify, Vercel, Cloudflare) belongs to Universal Deploy adapters, not Cedar. Confidence: 0.85
+- CedarJS only supports Apollo Client for GraphQL. Remove abstractions/wrappers that suggest alternative GraphQL clients are supported. Confidence: 0.75
+- CedarJS owns zero deployment adapters. The framework's only UD responsibility is calling `addEntry()` from `@universal-deploy/store` with WinterTC-compatible handler paths. Cloudless server-side serving uses `srvx` in the Cedar CLI directly (no Cedar-owned adapter package for Node, and no UD adapter needed for that path). Provider-specific adapter logic for Netlify/Vercel/Cloudflare belongs to Universal Deploy adapters, not Cedar. Confidence: 0.90
+- Cedar apps default to CJS + Jest (not vitest). Only ESM-template apps use vitest. Confidence: 0.85
 
 # Workflow
 
-- After making code changes, verify by running: prettier, eslint, unit tests, and tsc on changed files before considering the change complete. Confidence: 0.80
-- Add tests one at a time, verifying each passes before adding the next test. Confidence: 0.70
-- Maintain backwards compatibility in semver minor releases; no mandatory breaking changes. Confidence: 0.75
+See [workflow/taste.md](workflow/taste.md)
 
 # Code-Style
 
@@ -42,6 +38,10 @@ See [code-style/taste.md](code-style/taste.md)
 - Cedar ships a CLI that Cedar Apps use. The CLI is invoked by the `yarn cedar` prefix (e.g., `yarn cedar dev`, `yarn cedar build`), not bare `yarn dev`/`yarn build`. Confidence: 0.80
 - Always use `yarn cedar` (not bare `cedar`) in CLI usage examples since Cedar is not installed as a global binary. Confidence: 0.70
 
+# Cedar Deploy Config
+
+- The `packageManagerCommand` config field in `deploy.toml` / `DEFAULT_SERVER_CONFIG` is a deliberate user-facing escape hatch: it lets users run a different package manager (or a wrapper like `doppler run -- yarn`) on the deployment server than they use locally. When restructuring deploy code, preserve the ability for this field to override PM behavior — don't collapse it into a PM auto-detected value. Confidence: 0.85
+
 # Architecture
 
 - Neon Postgres (`@prisma/adapter-pg`) does not require ESM at runtime. The `--esm` requirement in `create-cedar-app`'s `handle-args.ts` is a scaffolding-time guard only. Do not force CJS→ESM conversion when adding Neon to existing projects. Confidence: 0.85
@@ -52,11 +52,21 @@ See [code-style/taste.md](code-style/taste.md)
 
 # Debugging
 
-- When reproducing bugs, validate against realistic production code paths (e.g., curl against a running server) rather than synthetic/unit-level demonstrations that load modules in isolation. The repro should prove the bug happens in real usage. Confidence: 0.75
-- When testing detection logic that checks generated files for specific strings (e.g., checking if a Prisma client has been generated), the test should verify that the expected strings still appear in real generated output. The goal is a regression canary that catches upstream changes to the generated output format. Confidence: 0.75
-- Prefer `fs.globSync`/`fsPromises.glob` (Node 22+ built-in) over hand-rolled `readdirSync({ recursive: true })` for file pattern matching — it's simpler, more declarative, and already handles extension filtering and exclusion. Confidence: 0.65
-- When warning about packages found outside expected locations, don't label them as "stray" — users may have legitimate non-Prisma uses for those packages, which means they shouldn't be removed. Confidence: 0.65
+See [debugging/taste.md](debugging/taste.md)
 
 # node
 
 - Cedar requires Node 24+. --experimental-strip-types is unflagged and not needed. Confidence: 0.90
+- When forwarding a request body via `fetch()` in Cedar server code (e.g., API proxy middleware), include `duplex: 'half'` in the `RequestInit` with a `@ts-expect-error` and explanatory comment. Node 18+ fetch requires this option when streaming a body; without it, POST requests silently fail with `TypeError: RequestInit: duplex option is required when sending a body.` The DOM lib types don't yet include it. Confidence: 0.90
+
+# Web Serve
+
+- For SPA fallback in `cedar serve` (both Fastify and `--ud` srvx paths), use `web/dist/200.html` (unprerendered shell) when it exists, otherwise fall back to `web/dist/index.html`. Returning the prerendered `index.html` for non-prerendered routes makes the client think the page was prerendered and crashes on `prerenderLoader(name).default` when the page module isn't in `__REDWOOD__PRERENDER_PAGES`. Mirror the Fastify web adapter's logic at `packages/adapters/fastify/web/src/web.ts`. Confidence: 0.85
+
+# Process Management
+
+- Never use `pkill` or `killall` to mass-kill processes by name (e.g., `pkill -9 node`). Only kill specific PIDs that you know are safe to terminate. Mass-killing can destroy the user's browser sessions, chat apps, and other work. Confidence: 0.85
+
+# CI / GitHub Actions
+
+- When a workflow step uses `working-directory` and passes a path to the test project via an env var (e.g., `CEDAR_TEST_PROJECT_PATH`), use `${{ github.workspace }}/../path` rather than a relative path. The relative path resolves against the `working-directory`, not the workspace root. Confidence: 0.80

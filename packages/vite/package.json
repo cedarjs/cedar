@@ -81,7 +81,7 @@
     "@cedarjs/testing": "workspace:*",
     "@cedarjs/web": "workspace:*",
     "@fastify/url-data": "6.0.3",
-    "@swc/core": "1.15.33",
+    "@swc/core": "1.15.41",
     "@universal-deploy/store": "^0.2.1",
     "@universal-deploy/vite": "^0.1.9",
     "@vitejs/plugin-react": "4.7.0",
@@ -99,7 +99,7 @@
     "fastify": "5.8.5",
     "fastify-raw-body": "5.0.0",
     "find-my-way": "8.2.2",
-    "http-proxy-middleware": "3.0.6",
+    "http-proxy-middleware": "3.0.7",
     "isbot": "5.1.42",
     "react": "19.2.3",
     "react-server-dom-webpack": "19.2.4",
@@ -127,7 +127,7 @@
     "rollup": "4.60.4",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
-    "vitest": "3.2.4"
+    "vitest": "3.2.6"
   },
   "engines": {
     "node": ">=24"

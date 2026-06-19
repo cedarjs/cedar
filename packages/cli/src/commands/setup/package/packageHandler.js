@@ -1,8 +1,8 @@
 import enq from 'enquirer'
-import execa from 'execa'
 import semver from 'semver'
 
 import { getCompatibilityData } from '@cedarjs/cli-helpers'
+import { dlx } from '@cedarjs/cli-helpers/packageManager/exec'
 import { getPaths } from '@cedarjs/project-config'
 
 export async function handler({ npmPackage, force, _: _args }) {
@@ -143,12 +143,12 @@ async function runPackage(packageName, version, options = []) {
   const versionString = version === undefined ? '' : `@${version}`
   console.log(`Running ${packageName}${versionString}...`)
   try {
-    await execa('yarn', ['dlx', `${packageName}${versionString}`, ...options], {
+    await dlx(`${packageName}${versionString}`, options, {
       stdio: 'inherit',
       cwd: getPaths().base,
     })
   } catch (error) {
-    // The execa process should have already printed any errors
+    // The dlx process should have already printed any errors
     process.exitCode = error.exitCode ?? 1
   }
 }

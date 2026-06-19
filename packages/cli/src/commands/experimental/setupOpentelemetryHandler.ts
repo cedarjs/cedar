@@ -1,0 +1,255 @@
+import fs from 'node:fs'
+import path from 'node:path'
+
+import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
+import { Listr } from 'listr2'
+
+import { addApiPackages, colors as c } from '@cedarjs/cli-helpers'
+import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
+import {
+  getConfigPath,
+  resolveFile,
+  getSchemaPath,
+} from '@cedarjs/project-config'
+import { errorTelemetry } from '@cedarjs/telemetry'
+
+import { getPaths, transformTSToJS, writeFile } from '../../lib/index.js'
+import { isTypeScriptProject } from '../../lib/project.js'
+
+import {
+  command,
+  description,
+  EXPERIMENTAL_TOPIC_ID,
+} from './setupOpentelemetry.js'
+import { printTaskEpilogue } from './util.js'
+
+export const handler = async ({
+  force,
+  verbose,
+}: {
+  force: boolean
+  verbose: boolean
+}) => {
+  const ts = isTypeScriptProject()
+  const configTomlPath = getConfigPath()
+  const configFileName = path.basename(configTomlPath)
+  const configContent = fs.readFileSync(configTomlPath, 'utf-8')
+
+  // Used in multiple tasks
+  const opentelemetryScriptPath = `${getPaths().api.src}/opentelemetry.${
+    ts ? 'ts' : 'js'
+  }`
+
+  // TODO: Consider extracting these from the templates? Consider version pinning?
+  const opentelemetryPackages = [
+    '@opentelemetry/api',
+    '@opentelemetry/instrumentation',
+    '@opentelemetry/exporter-trace-otlp-http',
+    '@opentelemetry/resources',
+    '@opentelemetry/sdk-node',
+    '@opentelemetry/semantic-conventions',
+    '@opentelemetry/instrumentation-http',
+    '@opentelemetry/instrumentation-fastify',
+    '@prisma/instrumentation',
+  ]
+
+  const opentelemetryTasks = [
+    {
+      title: `Adding OpenTelemetry setup files...`,
+      task: async () => {
+        const setupTemplateContent = fs.readFileSync(
+          path.resolve(
+            import.meta.dirname,
+            'templates',
+            'opentelemetry.ts.template',
+          ),
+          'utf-8',
+        )
+        const setupScriptContent = ts
+          ? setupTemplateContent
+          : await transformTSToJS(opentelemetryScriptPath, setupTemplateContent)
+
+        return [
+          writeFile(opentelemetryScriptPath, setupScriptContent, {
+            overwriteExisting: force,
+          }),
+        ]
+      },
+    },
+    {
+      title: `Adding config to ${configFileName}...`,
+      task: (_ctx: unknown, task: { skip: (msg: string) => void }) => {
+        if (!configContent.includes('[experimental.opentelemetry]')) {
+          // Use string replace to preserve comments and formatting
+          writeFile(
+            configTomlPath,
+            configContent.concat(
+              `\n[experimental.opentelemetry]\n\tenabled = true\n\twrapApi = true`,
+            ),
+            {
+              overwriteExisting: true, // cedar.toml or redwood.toml always exists
+            },
+          )
+        } else {
+          task.skip(
+            'The [experimental.opentelemetry] config block already exists in ' +
+              `your ${configFileName} file.`,
+          )
+        }
+      },
+    },
+    {
+      title: 'Notice: GraphQL function update...',
+      enabled: () => {
+        return fs.existsSync(
+          resolveFile(path.join(getPaths().api.functions, 'graphql')),
+        )
+      },
+      task: (_ctx: unknown, task: { output: string }) => {
+        task.output = [
+          "Please add the following to your 'createGraphQLHandler' function options to enable OTel for your graphql",
+          'openTelemetryOptions: {',
+          '  resolvers: true,',
+          '  result: true,',
+          '  variables: true,',
+          '}',
+          '',
+          `Which can found at ${c.info(
+            path.join(getPaths().api.functions, 'graphql'),
+          )}`,
+        ].join('\n')
+      },
+      rendererOptions: { persistentOutput: true },
+    },
+    {
+      title: 'Notice: GraphQL function update (server file)...',
+      enabled: () => {
+        return fs.existsSync(
+          resolveFile(path.join(getPaths().api.src, 'server')),
+        )
+      },
+      task: (_ctx: unknown, task: { output: string }) => {
+        task.output = [
+          "Please add the following to your 'redwoodFastifyGraphQLServer' plugin options to enable OTel for your graphql",
+          'openTelemetryOptions: {',
+          '  resolvers: true,',
+          '  result: true,',
+          '  variables: true,',
+          '}',
+          '',
+          `Which can found at ${c.info(
+            path.join(getPaths().api.src, 'server'),
+          )}`,
+        ].join('\n')
+      },
+      rendererOptions: { persistentOutput: true },
+    },
+    addApiPackages(opentelemetryPackages),
+  ]
+
+  const prismaTasks = [
+    {
+      title: 'Setup Prisma OpenTelemetry...',
+      task: async (_ctx: unknown, task: { skip: (msg: string) => void }) => {
+        const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
+        const schemaContent = fs.readFileSync(schemaPath, {
+          encoding: 'utf-8',
+          flag: 'r',
+        })
+
+        const clientConfig = schemaContent
+          .slice(
+            schemaContent.indexOf('generator client') +
+              'generator client'.length,
+            schemaContent.indexOf(
+              '}',
+              schemaContent.indexOf('generator client'),
+            ) + 1,
+          )
+          .trim()
+
+        const previewLineExists = clientConfig.includes('previewFeatures')
+        let newSchemaContents = schemaContent
+        if (previewLineExists) {
+          task.skip(
+            'Please add "tracing" to your previewFeatures in prisma.schema',
+          )
+        } else {
+          const newClientConfig = clientConfig.trim().split('\n')
+          newClientConfig.splice(
+            newClientConfig.length - 1,
+            0,
+            'previewFeatures = ["tracing"]',
+          )
+          newSchemaContents = newSchemaContents.replace(
+            clientConfig,
+            newClientConfig.join('\n'),
+          )
+        }
+
+        return writeFile(schemaPath, newSchemaContents, {
+          overwriteExisting: true, // We'll likely always already have this file in the project
+        })
+      },
+    },
+    {
+      title: 'Regenerate the Prisma client...',
+      task: (_ctx: unknown, _task: unknown) => {
+        return runBin('cedar', ['prisma', 'generate'], {
+          stdio: 'inherit',
+          cwd: getPaths().web.base,
+        })
+      },
+    },
+  ]
+
+  const tasks = new Listr(
+    [
+      {
+        title: 'Confirmation',
+        task: async (
+          _ctx: unknown,
+          task: {
+            prompt: (adapter: unknown) => {
+              run: (opts: Record<string, unknown>) => Promise<boolean>
+            }
+          },
+        ) => {
+          const prompt = task.prompt(ListrEnquirerPromptAdapter)
+          const confirmation = await prompt.run({
+            type: 'Confirm',
+            message: 'OpenTelemetry support is experimental. Continue?',
+          })
+
+          if (!confirmation) {
+            throw new Error('User aborted')
+          }
+        },
+      },
+      ...opentelemetryTasks,
+      ...prismaTasks,
+      {
+        task: () => {
+          printTaskEpilogue(command, description, EXPERIMENTAL_TOPIC_ID)
+        },
+      },
+    ],
+    {
+      rendererOptions: { collapseSubtasks: false, persistentOutput: true },
+      renderer: verbose ? 'verbose' : 'default',
+    },
+  )
+
+  try {
+    await tasks.run()
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    process.exit(exitCode)
+  }
+}

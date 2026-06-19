@@ -33,7 +33,7 @@
     "fastify": "5.8.5",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
-    "vitest": "3.2.4"
+    "vitest": "3.2.6"
   },
   "engines": {
     "node": ">=24"

@@ -9,6 +9,8 @@ import { env as envInterpolation } from 'string-env-interpolation'
 import { titleCase } from 'title-case'
 
 import { colors as c } from '@cedarjs/cli-helpers'
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
+import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 import { getPaths } from '../../../lib/index.js'
 
@@ -19,7 +21,7 @@ const LIFECYCLE_HOOKS = ['before', 'after']
 export const DEFAULT_SERVER_CONFIG = {
   port: 22,
   branch: 'main',
-  packageManagerCommand: 'yarn',
+  packageManagerCommand: getPackageManager(),
   monitorCommand: 'pm2',
   sides: ['api', 'web'],
   keepReleases: 5,
@@ -39,7 +41,7 @@ export const throwMissingConfig = (name) => {
 export const verifyConfig = (config, yargs) => {
   if (!yargs.environment) {
     throw new Error(
-      'Must specify an environment to deploy to, ex: `yarn cedar deploy baremetal production`',
+      `Must specify an environment to deploy to, ex: \`${formatCedarCommand(['deploy', 'baremetal', 'production'])}\``,
     )
   }
 
@@ -376,17 +378,20 @@ export const deployTasks = (yargs, ssh, serverConfig, serverLifecycle) => {
         title: `DB Migrations...`,
         task: async () => {
           await ssh.exec(cmdPath, serverConfig.packageManagerCommand, [
+            'exec',
             'cedar',
             'prisma',
             'migrate',
             'deploy',
           ])
           await ssh.exec(cmdPath, serverConfig.packageManagerCommand, [
+            'exec',
             'cedar',
             'prisma',
             'generate',
           ])
           await ssh.exec(cmdPath, serverConfig.packageManagerCommand, [
+            'exec',
             'cedar',
             'dataMigrate',
             'up',
@@ -406,6 +411,7 @@ export const deployTasks = (yargs, ssh, serverConfig, serverLifecycle) => {
           title: `Building ${side}...`,
           task: async () => {
             await ssh.exec(cmdPath, serverConfig.packageManagerCommand, [
+              'exec',
               'cedar',
               'build',
               side,
@@ -671,7 +677,7 @@ export const handler = async (yargs) => {
   if (!fs.existsSync(tomlPath) || !fs.existsSync(ecosystemPath)) {
     console.error(
       c.error('\nError: Baremetal deploy has not been properly setup.\n') +
-        'Please run `yarn cedar setup deploy baremetal` before deploying',
+        `Please run \`${formatCedarCommand(['setup', 'deploy', 'baremetal'])}\` before deploying`,
     )
     process.exit(1)
   }

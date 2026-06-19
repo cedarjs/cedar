@@ -1,8 +1,8 @@
-import execa from 'execa'
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
 
 // @ts-expect-error - Types not available for JS files
 import * as generateCell from './generate/cell/cell.js'
@@ -60,7 +60,7 @@ export const builder = (yargs: Argv) =>
       recordTelemetryAttributes({ command: 'generate types' })
 
       try {
-        execa.sync('yarn', ['cedar-gen'], { stdio: 'inherit' })
+        runBinSync('cedar-gen', [], { stdio: 'inherit' })
       } catch (error: unknown) {
         // cedar-gen is responsible for logging its own errors but we need to
         // make sure we exit with a non-zero exit code

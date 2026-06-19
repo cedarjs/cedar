@@ -1,0 +1,296 @@
+import { execSync } from 'child_process'
+
+import camelcase from 'camelcase'
+import { Listr } from 'listr2'
+import pascalcase from 'pascalcase'
+
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
+import { getConfig } from '@cedarjs/project-config'
+import { errorTelemetry } from '@cedarjs/telemetry'
+
+import {
+  addRoutesToRouterTask,
+  transformTSToJSMap,
+  writeFilesTask,
+} from '../../../lib/index.js'
+import {
+  prepareForRollback,
+  addFunctionToRollback,
+} from '../../../lib/rollback.js'
+import {
+  pathName,
+  mapRouteParamTypeToTsType,
+  removeGeneratorName,
+  validateName,
+} from '../helpers.js'
+import { templateForComponentFile } from '../yargsHandlerHelpers.js'
+import type { TypescriptHandlerArgv } from '../yargsHandlerHelpers.js'
+
+const COMPONENT_SUFFIX = 'Page'
+const CEDAR_WEB_PATH_NAME = 'pages'
+
+function mapRouteParamTypeToDefaultValue(paramType: string) {
+  switch (paramType) {
+    case 'Int':
+      // `42` is just a value used for demonstrating parameter usage in the
+      // generated page-, test-, and story-files.
+      return 42
+
+    case 'Float':
+      return 42.1
+
+    case 'Boolean':
+      return true
+
+    default:
+      // String -> string
+      return '42'
+  }
+}
+
+type ParamVariants = {
+  propParam: string
+  propValueParam: string
+  argumentParam: string
+  paramName: string | undefined
+  paramValue: string | number | boolean
+  paramType: string
+}
+
+export const paramVariants = (path: string | undefined): ParamVariants => {
+  const param = path?.match(/(\{[\w:]+\})/)?.[1]
+  const paramName = param?.replace(/:[^}]+/, '').slice(1, -1)
+
+  if (param === undefined) {
+    return {
+      propParam: '',
+      propValueParam: '',
+      argumentParam: '',
+      paramName: '',
+      paramValue: '',
+      paramType: '',
+    }
+  }
+
+  // set paramType param includes type (e.g. {id:Int}), else use String
+  const routeParamType = param?.match(/:/)
+    ? param?.replace(/[^:]+/, '').slice(1, -1)
+    : 'String'
+
+  const defaultValue = mapRouteParamTypeToDefaultValue(routeParamType)
+  const defaultValueAsProp =
+    routeParamType === 'String' ? `'${defaultValue}'` : defaultValue
+
+  return {
+    propParam: `{ ${paramName} }`,
+    propValueParam: `${paramName}={${defaultValueAsProp}}`, // used in story
+    argumentParam: `{ ${paramName}: ${defaultValueAsProp} }`,
+    paramName,
+    paramValue: defaultValue,
+    paramType: mapRouteParamTypeToTsType(routeParamType),
+  }
+}
+
+type PageArgv = TypescriptHandlerArgv & Partial<ParamVariants>
+
+type PageHandlerArgv = PageArgv & {
+  path: string
+}
+
+export const files = async ({
+  name,
+  tests,
+  stories,
+  typescript = false,
+  ...rest
+}: PageArgv): Promise<Record<string, string>> => {
+  const extension = typescript ? '.tsx' : '.jsx'
+  const pageFile = await templateForComponentFile({
+    name,
+    suffix: COMPONENT_SUFFIX,
+    extension,
+    webPathSection: CEDAR_WEB_PATH_NAME,
+    generator: 'page',
+    templatePath: 'page.tsx.template',
+    templateVars: {
+      rscEnabled: getConfig().experimental?.rsc?.enabled,
+      ...rest,
+    },
+  })
+
+  const testFile = await templateForComponentFile({
+    name,
+    suffix: COMPONENT_SUFFIX,
+    extension: `.test${extension}`,
+    webPathSection: CEDAR_WEB_PATH_NAME,
+    generator: 'page',
+    templatePath: 'test.tsx.template',
+    templateVars: rest,
+  })
+
+  const storiesFile = await templateForComponentFile({
+    name,
+    suffix: COMPONENT_SUFFIX,
+    extension: `.stories${extension}`,
+    webPathSection: CEDAR_WEB_PATH_NAME,
+    generator: 'page',
+    templatePath:
+      rest.paramName !== ''
+        ? 'stories.tsx.parameters.template'
+        : 'stories.tsx.template',
+    templateVars: rest,
+  })
+
+  const files = [pageFile]
+
+  if (tests) {
+    files.push(testFile)
+  }
+
+  if (stories) {
+    files.push(storiesFile)
+  }
+
+  return transformTSToJSMap(files, typescript)
+}
+
+export const routes = ({
+  name,
+  path,
+}: {
+  name: string
+  path: string
+}): string[] => {
+  return [
+    `<Route path="${path}" page={${pascalcase(name)}Page} name="${camelcase(
+      name,
+    )}" />`,
+  ]
+}
+
+export const handler = async ({
+  name,
+  path,
+  force,
+  tests,
+  stories,
+  typescript = false,
+  rollback,
+}: PageHandlerArgv) => {
+  const pageName = removeGeneratorName(name, 'page')
+  validateName(pageName)
+
+  if (tests === undefined) {
+    tests = getConfig().generate.tests
+  }
+  if (stories === undefined) {
+    stories = getConfig().generate.stories
+  }
+
+  recordTelemetryAttributes({
+    command: 'generate page',
+    force,
+    tests,
+    stories,
+    typescript,
+    rollback,
+  })
+
+  if (process.platform === 'win32') {
+    // running `yarn cedar g page home /` on Windows using GitBash
+    // POSIX-to-Windows path conversion will kick in.
+    // See https://github.com/git-for-windows/build-extra/blob/d715c9e/ReleaseNotes.md
+    // As a workaround we try to detect when this has happened, and reverse
+    // the action
+
+    try {
+      // `cygpath -m /` will return something like 'C:/Program Files/Git/\n'
+      const slashPath = execSync('cygpath -m /', {
+        stdio: ['ignore', 'pipe', 'ignore'],
+      })
+        .toString()
+        .trim()
+
+      // `yarn cedar g page home /` =>
+      //   page === 'C:/Program Files/Git'
+      // `yarn cedar g page about /about` =>
+      //   page === 'C:/Program Files/Git/about'
+      // Sometimes there is a / after 'Git' to match, sometimes there isn't
+      path = path.replace(new RegExp(`^${slashPath}?`), '/')
+    } catch {
+      // probably using PowerShell or cmd, in which case no special handling
+      // is needed
+    }
+  }
+
+  const tasks = new Listr(
+    [
+      {
+        title: 'Generating page files...',
+        task: async () => {
+          path = pathName(path, pageName)
+          const f = await files({
+            name: pageName,
+            tests,
+            stories,
+            typescript,
+            ...paramVariants(path),
+          })
+          return writeFilesTask(f, { overwriteExisting: force })
+        },
+      },
+      {
+        title: 'Updating routes file...',
+        task: async () => {
+          addRoutesToRouterTask(
+            routes({ name: pageName, path: pathName(path, pageName) }),
+          )
+        },
+      },
+      {
+        title: `Generating types...`,
+        task: async () => {
+          const { errors } = await generateTypes()
+
+          for (const { message, error } of errors) {
+            console.error(message)
+            console.log()
+            console.error(error)
+            console.log()
+          }
+          addFunctionToRollback(generateTypes, true)
+        },
+      },
+      {
+        title: 'One more thing...',
+        task: (_ctx: unknown, task: { title: string }) => {
+          task.title =
+            `One more thing...\n\n` +
+            `   ${c.warning('Page created! A note about <Metadata>:')}\n\n` +
+            `   At the top of your newly created page is a <Metadata> component,\n` +
+            `   which contains the title and description for your page, essential\n` +
+            `   to good SEO. Check out this page for best practices: \n\n` +
+            `   https://developers.google.com/search/docs/advanced/appearance/good-titles-snippets\n`
+        },
+      },
+    ].filter(Boolean),
+    { rendererOptions: { collapseSubtasks: false } },
+  )
+
+  try {
+    if (rollback && !force) {
+      prepareForRollback(tasks)
+    }
+    await tasks.run()
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    process.exit(exitCode)
+  }
+}

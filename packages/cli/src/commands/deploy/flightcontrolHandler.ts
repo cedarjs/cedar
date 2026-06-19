@@ -4,6 +4,10 @@ import path from 'node:path'
 import execa from 'execa'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  getNodeRunnerArgs,
+  runBin,
+} from '@cedarjs/cli-helpers/packageManager/exec'
 import { getPaths } from '@cedarjs/project-config'
 
 export interface HandlerArgs {
@@ -11,6 +15,24 @@ export interface HandlerArgs {
   prisma: boolean
   serve: boolean
   dm: boolean
+}
+
+/**
+ * Wraps runBin to throw a consistent error on failure, matching the previous
+ * execa.command pattern used by flightcontrol deploy.
+ */
+async function runBinWithError(
+  bin: string,
+  args: string[],
+  options?: execa.Options,
+) {
+  const result = await runBin(bin, args, options)
+
+  if (result.failed) {
+    throw new Error(`Command (${bin} ${args.join(' ')}) failed`)
+  }
+
+  return result
 }
 
 export const handler = async ({
@@ -34,31 +56,22 @@ export const handler = async ({
     stdio: 'inherit',
   }
 
-  async function runExecaCommand(command: string) {
-    const result = await execa.command(command, execaConfig)
-
-    if (result.failed) {
-      throw new Error(`Command (${command}) failed`)
-    }
-
-    return result
-  }
-
   async function runApiCommands() {
     if (!serve) {
       console.log('Building api...')
-      await runExecaCommand('yarn cedar build api --verbose')
+      await runBinWithError('cedar', ['build', 'api', '--verbose'], execaConfig)
 
       if (prisma) {
         console.log('Running database migrations...')
-        await runExecaCommand(
+        await execa.command(
           `node_modules/.bin/prisma migrate deploy --config "${cedarPaths.api.prismaConfig}"`,
+          execaConfig,
         )
       }
 
       if (dataMigrate) {
         console.log('Running data migrations...')
-        await runExecaCommand('yarn cedar dataMigrate up')
+        await runBinWithError('cedar', ['dataMigrate', 'up'], execaConfig)
       }
 
       return
@@ -68,7 +81,7 @@ export const handler = async ({
     const hasServerFile = fs.existsSync(serverFilePath)
 
     if (hasServerFile) {
-      execa(`yarn node ${serverFilePath}`, execaConfig)
+      execa(...getNodeRunnerArgs(serverFilePath), execaConfig)
     } else {
       const { handler } =
         await import('@cedarjs/api-server/apiCliConfigHandler')
@@ -78,7 +91,7 @@ export const handler = async ({
 
   async function runWebCommands() {
     console.log('Building web...')
-    await runExecaCommand('yarn cedar build web --verbose')
+    await runBinWithError('cedar', ['build', 'web', '--verbose'], execaConfig)
   }
 
   if (side === 'api') {

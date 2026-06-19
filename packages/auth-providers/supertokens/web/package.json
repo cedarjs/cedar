@@ -60,7 +60,7 @@
     "supertokens-auth-react": "0.51.2",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
-    "vitest": "3.2.4"
+    "vitest": "3.2.6"
   },
   "peerDependencies": {
     "supertokens-auth-react": "0.51.2"

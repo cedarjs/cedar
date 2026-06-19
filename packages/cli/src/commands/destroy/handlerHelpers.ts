@@ -4,26 +4,31 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
 import { deleteFilesTask } from '../../lib/index.js'
 
-type FilesFunction = (
-  args: Record<string, unknown>,
-) => Promise<Record<string, string>>
+type FilesArgsBase = {
+  name: string
+  stories: boolean
+  tests: boolean
+}
 
-type HandlerOptions = { name: string } & Record<string, unknown>
+type FilesFunction = (args: FilesArgsBase) => Promise<Record<string, string>>
+
+type HandlerOptions = { name: string; isDestroyer?: boolean } & Record<
+  string,
+  unknown
+>
 
 type PreTasksFn = (
   options: HandlerOptions,
 ) => Promise<HandlerOptions> | HandlerOptions
 
-const tasks = ({
-  componentName,
-  filesFn,
-  name,
-}: {
+export interface TasksArgs {
   componentName: string
   filesFn: FilesFunction
   name: string
-}) =>
-  new Listr(
+}
+
+function tasks({ componentName, filesFn, name }: TasksArgs) {
+  return new Listr(
     [
       {
         title: `Destroying ${componentName} files...`,
@@ -35,6 +40,7 @@ const tasks = ({
     ],
     { rendererOptions: { collapseSubtasks: false }, exitOnError: true },
   )
+}
 
 export function createHandler({
   componentName,
@@ -47,11 +53,10 @@ export function createHandler({
 }) {
   return {
     handler: async (options: HandlerOptions) => {
-      recordTelemetryAttributes({
-        command: `destroy ${componentName}`,
-      })
-      options = await preTasksFn({ ...options, isDestroyer: true })
-      await tasks({ componentName, filesFn, name: options.name }).run()
+      recordTelemetryAttributes({ command: `destroy ${componentName}` })
+
+      const { name } = await preTasksFn({ ...options, isDestroyer: true })
+      await tasks({ componentName, filesFn, name }).run()
     },
     tasks,
   }

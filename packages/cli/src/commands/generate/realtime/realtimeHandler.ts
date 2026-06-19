@@ -1,0 +1,297 @@
+import path from 'path'
+
+import camelcase from 'camelcase'
+import { Listr } from 'listr2'
+import pascalcase from 'pascalcase'
+import pluralize from 'pluralize'
+import prompts from 'prompts'
+
+import { colors as c } from '@cedarjs/cli-helpers'
+import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
+import { projectIsEsm } from '@cedarjs/project-config'
+import { errorTelemetry } from '@cedarjs/telemetry'
+
+// Move this check out of experimental when server file is moved as well
+import {
+  generateTemplate,
+  getPaths,
+  transformTSToJS,
+  writeFile,
+} from '../../../lib/index.js'
+import { isTypeScriptProject } from '../../../lib/project.js'
+import { isRealtimeSetup, isServerFileSetup } from '../../experimental/util.js'
+
+const templateVariables = (name: string) => {
+  name = pluralize.singular(name.toLowerCase())
+
+  return {
+    name,
+    collectionName: pluralize(name),
+    pluralName: pluralize(name),
+    pluralPascalName: pascalcase(pluralize(name)),
+    camelName: camelcase(name),
+    functionName: camelcase(name),
+    liveQueryName: `recent${pascalcase(pluralize(name))}`,
+    subscriptionQueryName: `recent${pascalcase(pluralize(name))}`,
+    subscriptionName: `listenTo${pascalcase(name)}Channel`,
+    modelName: pascalcase(name),
+    typeName: pascalcase(name),
+    channelName: `${pascalcase(name)}Channel`,
+    subscriptionInputType: `Publish${pascalcase(name)}Input`,
+    subscriptionServiceResolver: `publishTo${pascalcase(name)}Channel`,
+  }
+}
+
+export async function handler({
+  name,
+  type,
+  force,
+  verbose,
+  silent,
+}: {
+  name: string
+  type?: string
+  force: boolean
+  verbose: boolean
+  silent: boolean
+}) {
+  const cedarPaths = getPaths()
+  const ts = isTypeScriptProject()
+  name = pluralize.singular(name.toLowerCase())
+
+  let functionType = type
+
+  // Prompt to select what type if not specified
+  if (!functionType) {
+    const response = await prompts({
+      type: 'select',
+      name: 'functionType',
+      choices: [
+        {
+          value: 'liveQuery',
+          title: 'Live Query',
+          description: 'Create a Live Query to watch for changes in data',
+        },
+        {
+          value: 'subscription',
+          title: 'Subscription',
+          description: 'Create a Subscription to watch for events',
+        },
+      ],
+      message: 'What type of realtime event would you like to create?',
+    })
+
+    functionType = response.functionType
+  }
+
+  function buildTaskData() {
+    return [
+      {
+        title: 'Checking for realtime environment prerequisites ...',
+        task: () => {
+          isServerFileSetup()
+          isRealtimeSetup()
+        },
+      },
+      {
+        title: `Adding ${name} example subscription ...`,
+        enabled: () => functionType === 'subscription',
+        task: async () => {
+          // sdl
+
+          const exampleSdlTemplateContent = path.resolve(
+            import.meta.dirname,
+            'templates',
+            'subscriptions',
+            'blank',
+            `blank.sdl.ts.template`,
+          )
+
+          const sdlFile = path.join(
+            cedarPaths.api.graphql,
+            `${name}.sdl.${isTypeScriptProject() ? 'ts' : 'js'}`,
+          )
+
+          const sdlContent = ts
+            ? exampleSdlTemplateContent
+            : await transformTSToJS(sdlFile, exampleSdlTemplateContent)
+
+          // service
+
+          const exampleServiceTemplateContent = path.resolve(
+            import.meta.dirname,
+            'templates',
+            'subscriptions',
+            'blank',
+            `blank.service.ts.template`,
+          )
+          const serviceFile = path.join(
+            cedarPaths.api.services,
+            `${name}`,
+            `${name}.${isTypeScriptProject() ? 'ts' : 'js'}`,
+          )
+
+          const serviceContent = ts
+            ? exampleServiceTemplateContent
+            : await transformTSToJS(serviceFile, exampleServiceTemplateContent)
+
+          // subscription
+
+          const exampleSubscriptionTemplateContent = path.resolve(
+            import.meta.dirname,
+            'templates',
+            'subscriptions',
+            'blank',
+            `blank.ts.template`,
+          )
+
+          const exampleFile = path.join(
+            cedarPaths.api.subscriptions,
+            `${name}`,
+            `${name}.${isTypeScriptProject() ? 'ts' : 'js'}`,
+          )
+
+          const setupScriptContent = ts
+            ? exampleSubscriptionTemplateContent
+            : await transformTSToJS(
+                exampleFile,
+                exampleSubscriptionTemplateContent,
+              )
+
+          let blankTemplateContent = await generateTemplate(
+            setupScriptContent,
+            templateVariables(name),
+          )
+
+          if (projectIsEsm()) {
+            blankTemplateContent = blankTemplateContent.replace(
+              "import gql from 'graphql-tag'",
+              "import { gql } from 'graphql-tag'",
+            )
+          }
+
+          // write all files
+          return [
+            writeFile(
+              sdlFile,
+              await generateTemplate(sdlContent, templateVariables(name)),
+              {
+                overwriteExisting: force,
+              },
+            ),
+            writeFile(
+              serviceFile,
+              await generateTemplate(serviceContent, templateVariables(name)),
+              {
+                overwriteExisting: force,
+              },
+            ),
+            writeFile(exampleFile, blankTemplateContent, {
+              overwriteExisting: force,
+            }),
+          ]
+        },
+      },
+      {
+        title: `Adding ${name} example live query ...`,
+        enabled: () => functionType === 'liveQuery',
+        task: async () => {
+          // sdl
+          const exampleSdlTemplateContent = path.resolve(
+            import.meta.dirname,
+            'templates',
+            'liveQueries',
+            'blank',
+            `blank.sdl.ts.template`,
+          )
+          const sdlFile = path.join(
+            cedarPaths.api.graphql,
+            `${name}.sdl.${isTypeScriptProject() ? 'ts' : 'js'}`,
+          )
+          const sdlContent = ts
+            ? exampleSdlTemplateContent
+            : await transformTSToJS(sdlFile, exampleSdlTemplateContent)
+
+          // service
+          const exampleServiceTemplateContent = path.resolve(
+            import.meta.dirname,
+            'templates',
+            'liveQueries',
+            'blank',
+            'blank.service.ts.template',
+          )
+
+          const serviceFile = path.join(
+            cedarPaths.api.services,
+            `${name}`,
+            `${name}.${isTypeScriptProject() ? 'ts' : 'js'}`,
+          )
+          const serviceContent = ts
+            ? exampleServiceTemplateContent
+            : await transformTSToJS(serviceFile, exampleServiceTemplateContent)
+
+          // write all files
+          return [
+            writeFile(
+              sdlFile,
+              await generateTemplate(sdlContent, templateVariables(name)),
+              {
+                overwriteExisting: force,
+              },
+            ),
+            writeFile(
+              serviceFile,
+              await generateTemplate(serviceContent, templateVariables(name)),
+              {
+                overwriteExisting: force,
+              },
+            ),
+          ]
+        },
+      },
+      {
+        title: `Generating types ...`,
+        task: async () => {
+          await generateTypes()
+          console.log(
+            'Note: You may need to manually restart GraphQL in VSCode to see the new types take effect.\n\n',
+          )
+        },
+      },
+    ]
+  }
+
+  try {
+    if (silent) {
+      await new Listr(buildTaskData(), {
+        exitOnError: true,
+        renderer: 'silent',
+      }).run()
+    } else if (verbose) {
+      await new Listr(buildTaskData(), {
+        exitOnError: true,
+        renderer: 'verbose',
+      }).run()
+    } else {
+      await new Listr(
+        buildTaskData().map((t) => ({
+          ...t,
+          rendererOptions: { persistentOutput: true },
+        })),
+        {
+          exitOnError: true,
+          rendererOptions: { collapseSubtasks: false },
+        },
+      ).run()
+    }
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    process.exit(exitCode)
+  }
+}
