@@ -41,23 +41,19 @@ jobs:
       - name: Set up job
         uses: ./.github/actions/set-up-job
 
-      - name: Scaffold fresh project with ${{ matrix.packageManager }}
+      - name: 🌲 Set up test project
+        id: set-up-test-project
+        uses: ./.github/actions/set-up-test-project
+        with:
+          packageManager: ${{ matrix.packageManager }}
+        env:
+          REDWOOD_DISABLE_TELEMETRY: 1
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
+
+      - name: Run `cedar build --no-prerender`
         shell: bash
         run: |
           set -o pipefail
-          SCAFFOLD_PATH=$(mktemp -d)/cedar-pm-test
-          yarn build:pack
-          yarn node dist/create-cedar-app.js "$SCAFFOLD_PATH" \
-            --pm ${{ matrix.packageManager }} \
-            --yes --typescript --no-git
-          echo "SCAFFOLD_PATH=$SCAFFOLD_PATH" >> $GITHUB_ENV
-        working-directory: ./packages/create-cedar-app
-        env:
-          YARN_ENABLE_IMMUTABLE_INSTALLS: false
-
-      - name: Build scaffolded project
-        shell: bash
-        run: |
           if [ "${{ matrix.packageManager }}" = "npm" ]; then
             npx cedar build --no-prerender
           elif [ "${{ matrix.packageManager }}" = "pnpm" ]; then
@@ -65,19 +61,28 @@ jobs:
           else
             yarn cedar build --no-prerender
           fi
-        working-directory: ${{ env.SCAFFOLD_PATH }}
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
-      - name: Test scaffolded project
+      - name: Run `cedar test web`
         shell: bash
         run: |
           if [ "${{ matrix.packageManager }}" = "npm" ]; then
             npx cedar test web --no-watch
-            npx cedar test api --no-watch
           elif [ "${{ matrix.packageManager }}" = "pnpm" ]; then
             pnpm exec cedar test web --no-watch
-            pnpm exec cedar test api --no-watch
           else
             yarn cedar test web --no-watch
+          fi
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run `cedar test api`
+        shell: bash
+        run: |
+          if [ "${{ matrix.packageManager }}" = "npm" ]; then
+            npx cedar test api --no-watch
+          elif [ "${{ matrix.packageManager }}" = "pnpm" ]; then
+            pnpm exec cedar test api --no-watch
+          else
             yarn cedar test api --no-watch
           fi
-        working-directory: ${{ env.SCAFFOLD_PATH }}
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}

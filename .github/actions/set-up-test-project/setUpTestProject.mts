@@ -87,17 +87,22 @@ export async function setUpTestProject({
     env: { CEDAR_CWD: testProjectPath },
   })
 
-  // For npm/pnpm: run the project's own install to create the correct
-  // lockfile. This replaces yarn.lock with the appropriate lockfile for the
-  // configured PM.
+  // For npm/pnpm: update the packageManager field in package.json so that
+  // the CLI's PM detection (getPackageManager()) reports the correct PM.
+  // We skip the {pm} install step because tarsync already produced a working
+  // node_modules via yarn. The node_modules/.bin/cedar binary is available
+  // regardless of which PM is configured.
   if (packageManager !== 'yarn') {
+    const pkgPath = path.join(testProjectPath, 'package.json')
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
+
+    pkg.packageManager = packageManager
+
+    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n')
+
     console.log(
-      `Running ${packageManager} install to create ${lockfileName(packageManager)}`,
+      `Updated packageManager field to "${packageManager}" (skipping {pm} install; using tarsync's node_modules)`,
     )
-
-    await execInProject(`${packageManager} install`)
-
-    console.log()
   } else {
     // Verify tarsync produced a yarn.lock. A missing lockfile means the
     // `yarn install` inside tarsync failed (possibly due to the V8 Maglev JIT
