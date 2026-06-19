@@ -65,14 +65,14 @@ describe('formatCedarCommand', () => {
     expect(formatCedarCommand([])).toBe('npx cedar')
   })
 
-  it('pnpm: returns pnpm exec cedar <args>', () => {
+  it('pnpm: returns pnpm cedar <args>', () => {
     vi.mocked(getPackageManager).mockReturnValue('pnpm')
-    expect(formatCedarCommand(['build'])).toBe('pnpm exec cedar build')
+    expect(formatCedarCommand(['build'])).toBe('pnpm cedar build')
   })
 
-  it('pnpm: returns pnpm exec cedar with no args', () => {
+  it('pnpm: returns pnpm cedar with no args', () => {
     vi.mocked(getPackageManager).mockReturnValue('pnpm')
-    expect(formatCedarCommand([])).toBe('pnpm exec cedar')
+    expect(formatCedarCommand([])).toBe('pnpm cedar')
   })
 })
 
