@@ -15,9 +15,9 @@ export function formatInstallCommand(): string {
  * Returns a formatted string for running a Cedar CLI command via the detected
  * package manager.
  *
- * yarn → `yarn cedar <args>`
  * npm  → `npx cedar <args>`
- * pnpm → `pnpm exec cedar <args>`
+ * yarn → `yarn cedar <args>`
+ * pnpm → `pnpm cedar <args>`
  */
 export function formatCedarCommand(args: string[]): string {
   const pm = getPackageManager()
@@ -27,19 +27,15 @@ export function formatCedarCommand(args: string[]): string {
     return `npx cedar${argStr}`
   }
 
-  if (pm === 'pnpm') {
-    return `pnpm cedar${argStr}`
-  }
-
-  return `yarn cedar${argStr}`
+  return `${pm} cedar${argStr}`
 }
 
 /**
  * Returns a formatted string for running a package.json script via the
  * detected package manager.
  *
- * yarn → `yarn <script> [args]`
  * npm  → `npm run <script>[ -- args]`
+ * yarn → `yarn <script> [args]`
  * pnpm → `pnpm <script> [args]`
  */
 export function formatRunScriptCommand(
