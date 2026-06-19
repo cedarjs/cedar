@@ -226,15 +226,8 @@ jobs:
     needs: [check, detect-changes]
     if: needs.detect-changes.outputs.cli == 'true'
 
-    strategy:
-      fail-fast: false
-      matrix:
-        packageManager: [npm, pnpm]
-
-    name: 🔄 CLI ${{ matrix.packageManager }} smoke tests
+    name: 🔄 CLI PM smoke tests
     uses: ./.github/workflows/package-manager-smoke-tests.yml
-    with:
-      packageManager: ${{ matrix.packageManager }}
 
   server-tests:
     needs: check
