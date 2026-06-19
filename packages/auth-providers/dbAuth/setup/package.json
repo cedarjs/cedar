@@ -34,7 +34,7 @@
     "@simplewebauthn/types": "10.0.0",
     "@types/yargs": "17.0.35",
     "nodemon": "3.1.14",
-    "ts-dedent": "2.2.0",
+    "ts-dedent": "2.3.0",
     "typescript": "5.9.3",
     "vitest": "3.2.6"
   },
