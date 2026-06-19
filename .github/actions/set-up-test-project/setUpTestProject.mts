@@ -27,18 +27,6 @@ function lockfileName(pm: PackageManager): string {
   return 'yarn.lock'
 }
 
-function lockfileName(pm: PackageManager): string {
-  if (pm === 'npm') {
-    return 'package-lock.json'
-  }
-
-  if (pm === 'pnpm') {
-    return 'pnpm-lock.yaml'
-  }
-
-  return 'yarn.lock'
-}
-
 interface Args {
   setOutput: (key: string, value: string) => void
   getInput: (key: string) => string
@@ -138,7 +126,6 @@ export async function setUpTestProject({
           }
           for (const [name, version] of Object.entries(deps)) {
             if (version === 'workspace:*') {
-              const scope = name.startsWith('@') ? name.split('/')[0] + '/' : ''
               const bareName = name.startsWith('@') ? name.split('/')[1] : name
               deps[name] = `file:packages/${bareName}`
               console.log(`  ${name}: workspace:* → file:packages/${bareName}`)
