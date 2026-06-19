@@ -1,6 +1,5 @@
-export const command = 'deploy <target>'
-export const description = 'Setup deployment to various targets'
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
 import * as setupDeployBaremetal from './providers/baremetal.js'
 import * as setupDeployCoherence from './providers/coherence.js'
@@ -8,11 +7,13 @@ import * as setupDeployFlightcontrol from './providers/flightcontrol.js'
 import * as setupDeployNetlify from './providers/netlify.js'
 import * as setupDeployRender from './providers/render.js'
 import * as setupDeployServerless from './providers/serverless.js'
-// @ts-expect-error - No types for JS files
 import * as setupDeployUniversalDeploy from './providers/universal-deploy.js'
 import * as setupDeployVercel from './providers/vercel.js'
 
-export const builder = (yargs) =>
+export const command = 'deploy <target>'
+export const description = 'Setup deployment to various targets'
+
+export const builder = (yargs: Argv) =>
   yargs
     .command(setupDeployBaremetal)
     .command(setupDeployCoherence)

@@ -1,11 +1,12 @@
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
 import { getYargsDefaults, createHandler } from '../yargsCommandHelpers.js'
 
 export const command = 'dbAuth'
 export const description =
   'Generate Login, Signup and Forgot Password pages for dbAuth'
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   yargs
     .option('skip-forgot', {
       description: 'Skip generating the Forgot Password page',
