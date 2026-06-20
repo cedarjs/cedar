@@ -39,7 +39,7 @@
     "@prisma/internals": "7.8.0",
     "esbuild": "0.27.7",
     "publint": "0.3.21",
-    "tsx": "4.21.0",
+    "tsx": "4.22.4",
     "vitest": "3.2.6"
   },
   "engines": {
