@@ -59,7 +59,7 @@ export async function createProjectFiles(
   // See https://github.com/yarnpkg/berry/issues/6488
   await fs.promises.cp(templateDir, newAppDir, {
     recursive: true,
-    force: overwrite,
+    force: true,
   })
   await fs.promises.cp(overlayDir, newAppDir, { recursive: true, force: true })
 
@@ -236,15 +236,8 @@ async function doesDirectoryAlreadyExist(
           initial: 0,
         })
 
-        // overwrite the existing files
+        // specify a different directory
         if (
-          response.projectDirectoryAlreadyExists ===
-          `Overwrite files in '${styledAppDir}' and continue install`
-        ) {
-          // blow away the existing directory and create a new one
-          await fs.promises.rm(newAppDir, { recursive: true, force: true })
-        } // specify a different directory
-        else if (
           response.projectDirectoryAlreadyExists ===
           'Specify a different directory'
         ) {
