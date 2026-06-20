@@ -15,7 +15,7 @@ export const command = 'secret'
 export const description =
   'Generates a secret key using a cryptographically-secure source of entropy'
 
-export const builder = (yargs: Argv) =>
+export const builder = (yargs: Argv) => {
   yargs
     .option('length', {
       description: 'Length of the generated secret',
@@ -35,6 +35,9 @@ export const builder = (yargs: Argv) =>
         'https://cedarjs.com/docs/cli-commands#generate-secret',
       )}`,
     )
+
+  return yargs
+}
 
 export const handler = ({ length, raw }: { length: number; raw: boolean }) => {
   recordTelemetryAttributes({

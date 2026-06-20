@@ -33,6 +33,8 @@ export function builder(yargs: Argv) {
       description: 'Print more logs',
       type: 'boolean',
     })
+
+  return yargs
 }
 
 interface RealtimeOptions {

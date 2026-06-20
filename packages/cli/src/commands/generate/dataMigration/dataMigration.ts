@@ -89,6 +89,8 @@ export const builder = (yargs: Argv) => {
   Object.entries(getYargsDefaults()).forEach(([option, config]) => {
     yargs.option(option, config)
   })
+
+  return yargs
 }
 
 interface HandlerArgs {
@@ -117,7 +119,7 @@ export const handler = async (args: HandlerArgs) => {
       },
       {
         title: 'Next steps...',
-        task: (_ctx, task) => {
+        task: (_ctx: unknown, task: { title: string }) => {
           task.title = getPostRunInstructions()
         },
       },
