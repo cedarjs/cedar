@@ -48,7 +48,7 @@
     "prepublishOnly": "NODE_ENV=production yarn build"
   },
   "dependencies": {
-    "@babel/cli": "7.28.6",
+    "@babel/cli": "7.29.7",
     "@cedarjs/api-server": "4.2.0",
     "@cedarjs/cli": "4.2.0",
     "@cedarjs/eslint-config": "4.2.0",
