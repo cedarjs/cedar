@@ -224,7 +224,7 @@ jobs:
 
   cli-pm-smoke-tests:
     needs: [check, detect-changes]
-    if: needs.detect-changes.outputs.cli == 'true'
+    if: always() && needs.detect-changes.outputs.cli == 'true'
 
     strategy:
       matrix:
