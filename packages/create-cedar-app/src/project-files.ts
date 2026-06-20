@@ -236,11 +236,12 @@ async function doesDirectoryAlreadyExist(
           initial: 0,
         })
 
-        // specify a different directory
-        if (
-          response.projectDirectoryAlreadyExists ===
-          'Specify a different directory'
-        ) {
+        if (responseIsOverwrite(response, styledAppDir)) {
+          // "Overwrite" falls through intentionally. force:true on cp handles
+          // the merge
+        } else if (responseIsDifferentDir(response)) {
+          // specify a different directory
+
           const newDirectoryName = await handleNewDirectoryNamePreference()
 
           if (/^~\w/.test(newDirectoryName)) {
@@ -263,8 +264,7 @@ async function doesDirectoryAlreadyExist(
 
           // check to see if the new directory exists
           newAppDir = await doesDirectoryAlreadyExist(newAppDir, { overwrite })
-        } // Quit Install and Throw and Error
-        else if (response.projectDirectoryAlreadyExists === 'Quit install') {
+        } else if (responseIsQuit(response)) {
           // quit and throw an error
           recordErrorViaTelemetry(
             'User quit after directory already exists error',
@@ -272,7 +272,6 @@ async function doesDirectoryAlreadyExist(
           await shutdownTelemetry()
           process.exit(1)
         }
-        // overwrite the existing files
       } catch {
         recordErrorViaTelemetry(
           `User cancelled install after directory already exists error`,
@@ -284,4 +283,28 @@ async function doesDirectoryAlreadyExist(
   }
 
   return newAppDir
+}
+
+function responseIsOverwrite(
+  response: { projectDirectoryAlreadyExists: string },
+  styledAppDir: string,
+): boolean {
+  return (
+    response.projectDirectoryAlreadyExists ===
+    `Overwrite files in '${styledAppDir}' and continue install`
+  )
+}
+
+function responseIsDifferentDir(response: {
+  projectDirectoryAlreadyExists: string
+}): boolean {
+  return (
+    response.projectDirectoryAlreadyExists === 'Specify a different directory'
+  )
+}
+
+function responseIsQuit(response: {
+  projectDirectoryAlreadyExists: string
+}): boolean {
+  return response.projectDirectoryAlreadyExists === 'Quit install'
 }
