@@ -1,0 +1,88 @@
+name: 🔄 Package Manager Smoke Tests
+
+on:
+  workflow_call:
+  schedule:
+    # Run daily at 4am UTC
+    - cron: '0 4 * * *'
+  workflow_dispatch: {}
+
+# Cancel in-progress runs of this workflow for the same branch/PR.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+env:
+  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+  YARN_ENABLE_HARDENED_MODE: 0
+
+jobs:
+  pm-smoke-tests:
+    if: github.repository == 'cedarjs/cedar'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        packageManager: [npm, pnpm]
+
+    name: 🔄 ${{ matrix.packageManager }} smoke tests
+    runs-on: ubuntu-latest
+
+    env:
+      CEDAR_CI: 1
+      CEDAR_VERBOSE_TELEMETRY: 1
+
+    steps:
+      - name: Checkout the framework code
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - name: 🌲 Set up test project
+        id: set-up-test-project
+        uses: ./.github/actions/set-up-test-project
+        with:
+          packageManager: ${{ matrix.packageManager }}
+        env:
+          REDWOOD_DISABLE_TELEMETRY: 1
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
+
+      - name: Run `cedar build --no-prerender`
+        shell: bash
+        run: |
+          set -o pipefail
+          if [ "${{ matrix.packageManager }}" = "npm" ]; then
+            npx cedar build --no-prerender
+          elif [ "${{ matrix.packageManager }}" = "pnpm" ]; then
+            pnpm exec cedar build --no-prerender
+          else
+            yarn cedar build --no-prerender
+          fi
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run `cedar test web`
+        shell: bash
+        run: |
+          if [ "${{ matrix.packageManager }}" = "npm" ]; then
+            npx cedar test web --no-watch
+          elif [ "${{ matrix.packageManager }}" = "pnpm" ]; then
+            pnpm exec cedar test web --no-watch
+          else
+            yarn cedar test web --no-watch
+          fi
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run `cedar test api`
+        shell: bash
+        run: |
+          if [ "${{ matrix.packageManager }}" = "npm" ]; then
+            npx cedar test api --no-watch
+          elif [ "${{ matrix.packageManager }}" = "pnpm" ]; then
+            pnpm exec cedar test api --no-watch
+          else
+            yarn cedar test api --no-watch
+          fi
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}

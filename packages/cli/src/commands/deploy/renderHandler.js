@@ -1,13 +1,11 @@
 import fs from 'node:fs'
 import path from 'path'
 
-import execa from 'execa'
-
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { formatAddRootPackagesCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import {
-  getNodeRunnerArgs,
   runBinSync,
+  runWithNode,
 } from '@cedarjs/cli-helpers/packageManager/exec'
 import { installPackages } from '@cedarjs/cli-helpers/packageManager/packages'
 import { getPaths } from '@cedarjs/project-config'
@@ -31,8 +29,9 @@ export const handler = async ({ side, prisma, dataMigrate }) => {
   async function runApiCommands() {
     if (prisma) {
       console.log('Running database migrations...')
-      execa.commandSync(
-        `node_modules/.bin/prisma migrate deploy --config "${cedarPaths.api.prismaConfig}"`,
+      runBinSync(
+        'prisma',
+        ['migrate', 'deploy', '--config', cedarPaths.api.prismaConfig],
         execaConfig,
       )
     }
@@ -66,7 +65,7 @@ export const handler = async ({ side, prisma, dataMigrate }) => {
     const hasServerFile = fs.existsSync(serverFilePath)
 
     if (hasServerFile) {
-      execa(...getNodeRunnerArgs(serverFilePath), execaConfig)
+      runWithNode(serverFilePath, execaConfig)
     } else {
       const { handler } =
         await import('@cedarjs/api-server/apiCliConfigHandler')
