@@ -3144,7 +3144,7 @@ __metadata:
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
-    "@fastify/http-proxy": "npm:11.4.4"
+    "@fastify/http-proxy": "npm:11.5.0"
     "@fastify/static": "npm:8.3.0"
     "@fastify/url-data": "npm:6.0.3"
     fast-glob: "npm:3.3.3"
@@ -5198,15 +5198,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fastify/http-proxy@npm:11.4.4":
-  version: 11.4.4
-  resolution: "@fastify/http-proxy@npm:11.4.4"
+"@fastify/http-proxy@npm:11.5.0":
+  version: 11.5.0
+  resolution: "@fastify/http-proxy@npm:11.5.0"
   dependencies:
     "@fastify/reply-from": "npm:^12.6.2"
     fast-querystring: "npm:^1.1.2"
     fastify-plugin: "npm:^5.1.0"
     ws: "npm:^8.18.3"
-  checksum: 10c0/bd2acab59e4cb4a253bf6f51410480e020a4d738a80b694caf3c45775b4828b4edac291365acbb12523ee3e93977e1b7a898cd77c275badbeab611c8ccdac9fa
+  checksum: 10c0/83d1cad9584ea36e737eb36cfec249088176f15253d03df94db2f6d99352d3c93980f25c31c532f3371772ca63ff1d3d1e8815ad3a20da587354a07714a155ef
   languageName: node
   linkType: hard
 
