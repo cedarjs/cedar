@@ -44,8 +44,8 @@
   },
   "dependencies": {
     "@babel/core": "^7.26.10",
-    "@babel/eslint-parser": "7.28.6",
-    "@babel/eslint-plugin": "7.27.1",
+    "@babel/eslint-parser": "7.29.7",
+    "@babel/eslint-plugin": "7.29.7",
     "@cedarjs/babel-config": "workspace:*",
     "@cedarjs/eslint-plugin": "workspace:*",
     "@cedarjs/internal": "workspace:*",
@@ -68,7 +68,7 @@
     "typescript-eslint": "8.60.1"
   },
   "devDependencies": {
-    "@babel/cli": "7.28.6",
+    "@babel/cli": "7.29.7",
     "typescript": "5.9.3"
   },
   "engines": {
