@@ -1,7 +1,8 @@
 import fs from 'node:fs'
 import path from 'path'
 
-import { Listr, type ListrTask } from 'listr2'
+import { Listr } from 'listr2'
+import type { ListrTask } from 'listr2'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
