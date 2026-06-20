@@ -12,7 +12,7 @@ import {
   saveRemoteFileToDisk,
 } from '../../../lib/index.js'
 
-export const handler = async ({ force }) => {
+export const handler = async ({ force }: { force: boolean }) => {
   const installedRwVersion = await getInstalledCedarVersion()
   const GITHUB_VERSION_TAG = installedRwVersion.match('canary')
     ? 'main'
@@ -48,7 +48,7 @@ export const handler = async ({ force }) => {
       },
       {
         title: 'One more thing...',
-        task: (_ctx, task) => {
+        task: (_ctx: unknown, task: { title: string }) => {
           task.title = `One more thing...\n
           ${c.tip('Quick link to the docs on configuring TypeScript')}
           ${terminalLink('', 'https://cedarjs.com/docs/typescript')}
@@ -62,8 +62,14 @@ export const handler = async ({ force }) => {
   try {
     await tasks.run()
   } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+    const message = e instanceof Error ? e.message : String(e)
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    // exitCode is a non-standard property Listr2 errors may carry
+    const exitCode =
+      e instanceof Error && 'exitCode' in e
+        ? (e as Error & { exitCode: unknown }).exitCode
+        : undefined
+    process.exit(typeof exitCode === 'number' ? exitCode : 1)
   }
 }

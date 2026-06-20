@@ -7,14 +7,14 @@ import { colors as c } from '@cedarjs/cli-helpers'
 
 import { getPaths } from '../../../lib/index.js'
 
-const SIDE_MAP = {
+const SIDE_MAP: Record<string, string[]> = {
   web: ['cell', 'component', 'layout', 'page', 'scaffold'],
   api: ['function', 'sdl', 'service'],
   scripts: ['script'],
   packages: ['package'],
 }
 
-const copyGenerator = (name, { force }) => {
+const copyGenerator = (name: string, { force }: { force: boolean }) => {
   const side = Object.keys(SIDE_MAP).find((key) => SIDE_MAP[key].includes(name))
 
   if (!side) {
@@ -35,9 +35,9 @@ const copyGenerator = (name, { force }) => {
   return to
 }
 
-let destination
+let destination: string
 
-const tasks = ({ name, force }) => {
+const tasks = ({ name, force }: { name: string; force: boolean }) => {
   return new Listr(
     [
       {
@@ -48,7 +48,7 @@ const tasks = ({ name, force }) => {
       },
       {
         title: 'Destination:',
-        task: (ctx, task) => {
+        task: (_ctx: unknown, task: { title: string }) => {
           task.title = `  Wrote templates to ${destination.replace(
             getPaths().base,
             '',
@@ -60,12 +60,13 @@ const tasks = ({ name, force }) => {
   )
 }
 
-export const handler = async ({ name, force }) => {
+export const handler = async ({ name, force }: { name: string; force: boolean }) => {
   const t = tasks({ name, force })
 
   try {
     await t.run()
   } catch (e) {
-    console.log(c.error(e.message))
+    const message = e instanceof Error ? e.message : String(e)
+    console.log(c.error(message))
   }
 }

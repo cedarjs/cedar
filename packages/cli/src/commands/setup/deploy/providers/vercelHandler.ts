@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'path'
 
-import { Listr } from 'listr2'
+import { Listr, type ListrTask } from 'listr2'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
@@ -18,7 +18,13 @@ import {
   verifyUDSetupTask,
 } from '../helpers/index.js'
 
-export async function handler({ force, ud }) {
+export async function handler({
+  force,
+  ud,
+}: {
+  force: boolean
+  ud: boolean
+}) {
   recordTelemetryAttributes({
     command: 'setup deploy vercel',
     force,
@@ -35,7 +41,7 @@ export async function handler({ force, ud }) {
         ? writeVercelUDConfigTask({ overwriteExisting: force })
         : writeVercelConfigTask({ overwriteExisting: force }),
       printSetupNotes(ud ? udNotes : notes),
-    ].filter(Boolean),
+    ].filter((task): task is ListrTask => Boolean(task)),
     {
       rendererOptions: { collapseSubtasks: false },
     },
@@ -44,16 +50,22 @@ export async function handler({ force, ud }) {
   try {
     await tasks.run()
   } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+    const message = e instanceof Error ? e.message : String(e)
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    // exitCode is a non-standard property Listr2 errors may carry
+    const exitCode =
+      e instanceof Error && 'exitCode' in e
+        ? (e as Error & { exitCode: unknown }).exitCode
+        : undefined
+    process.exit(typeof exitCode === 'number' ? exitCode : 1)
   }
 }
 
-function addVercelPluginToViteConfigTask() {
+function addVercelPluginToViteConfigTask(): ListrTask {
   return {
     title: 'Adding Vercel plugin to vite config...',
-    task: async (_ctx, task) => {
+    task: async (_ctx: unknown, task: { skip: (msg: string) => void }) => {
       const paths = getPaths()
       const viteConfigTs = path.join(paths.web.base, 'vite.config.ts')
       const viteConfigJs = path.join(paths.web.base, 'vite.config.js')
@@ -113,17 +125,19 @@ function addVercelPluginToViteConfigTask() {
   }
 }
 
-function installVercelPackagesTask() {
+async function installVercelPackagesTask(): Promise<ListrTask> {
   return addPackagesTask({
     packages: ['vite-plugin-vercel'],
     devDependency: true,
   })
 }
 
-function writeVercelConfigTask({ overwriteExisting = false } = {}) {
+function writeVercelConfigTask({
+  overwriteExisting = false,
+}: { overwriteExisting?: boolean } = {}): ListrTask {
   return {
     title: 'Writing vercel.json...',
-    task: (_ctx, task) => {
+    task: (_ctx: unknown, task: { title?: string }) => {
       writeFile(
         path.join(getPaths().base, 'vercel.json'),
         JSON.stringify(vercelConfig, null, 2),
@@ -162,10 +176,12 @@ const udNotes = [
   'See: https://cedarjs.com/docs/deploy#vercel-deploy',
 ]
 
-function writeVercelUDConfigTask({ overwriteExisting = false } = {}) {
+function writeVercelUDConfigTask({
+  overwriteExisting = false,
+}: { overwriteExisting?: boolean } = {}): ListrTask {
   return {
     title: 'Writing vercel.json for Universal Deploy...',
-    task: (_ctx, task) => {
+    task: (_ctx: unknown, task: { title?: string }) => {
       writeFile(
         path.join(getPaths().base, 'vercel.json'),
         JSON.stringify(vercelUDConfig, null, 2),
