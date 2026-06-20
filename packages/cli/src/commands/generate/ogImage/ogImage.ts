@@ -41,5 +41,7 @@ export const builder = (yargs: Argv) => {
       type: 'boolean',
       default: true,
     })
+
+  return yargs
 }
 export const handler = createHandler('ogImage')

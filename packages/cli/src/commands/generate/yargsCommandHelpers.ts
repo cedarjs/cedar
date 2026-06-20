@@ -12,19 +12,19 @@ import { isTypeScriptProject } from '@cedarjs/cli-helpers'
  * and that has side effects that will break `cwd` functionality if called
  * before `cwd` is initialized.
  */
-export function getYargsDefaults(): Record<string, Options> {
+export function getYargsDefaults() {
   return {
     force: {
       alias: 'f',
       default: false,
       description: 'Overwrite existing files',
-      type: 'boolean',
+      type: 'boolean' as const,
     },
     typescript: {
       alias: 'ts',
       default: isTypeScriptProject(),
       description: 'Generate TypeScript files',
-      type: 'boolean',
+      type: 'boolean' as const,
     },
   }
 }
@@ -68,19 +68,16 @@ interface CreateBuilderConfig {
  * The builder configures all the options and positionals for a generator
  * command.
  *
- * @param {object} config - Configuration object
- * @param {string} config.componentName - Name of the component being generated
- * (e.g. 'page', 'cell', 'component')
- * @param {Record<string, import('yargs').Options> | (() => Record<string, import('yargs').Options>)} [config.optionsObj] -
- * Options to add to the command. Can be an object or a function that returns an
- * object. Defaults to getYargsDefaults()
- * @param {Record<string, import('yargs').PositionalOptions>} [config.positionalsObj] -
- * Positional arguments to add to the command beyond the default 'name'
- * positional
- * @param {boolean} [config.addStories] - Whether to add the --stories option.
- * Defaults to true for backward compatibility
- * @returns {(yargs: import('yargs').Argv) => void} A yargs builder function
- * that configures the command
+ * @param config - Configuration object
+ * @param config.componentName - Name of the component being generated (e.g.
+ * 'page', 'cell', 'component')
+ * @param [config.optionsObj] - Options to add to the command. Can be an object
+ * or a function that returns an object. Defaults to getYargsDefaults()
+ * @param [config.positionalsObj] - Positional arguments to add to the command
+ * beyond the default 'name' positional
+ * @param [config.addStories] - Whether to add the --stories option. Defaults to
+ * true for backward compatibility
+ * @returns A yargs builder function that configures the command
  *
  * @example
  * const builder = createBuilder({
@@ -148,6 +145,8 @@ export function createBuilder({
     Object.entries(opts).forEach(([option, config]) => {
       yargs.option(option, config)
     })
+
+    return yargs
   }
 }
 

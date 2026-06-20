@@ -1,6 +1,5 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
 
 import { Listr } from 'listr2'
 
@@ -10,13 +9,21 @@ import { errorTelemetry } from '@cedarjs/telemetry'
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject } from '../../../lib/project.js'
 
-export const handler = async ({ force, skipExamples }) => {
+interface PkgJson {
+  devDependencies?: Record<string, string>
+}
+
+export const handler = async ({
+  force,
+  skipExamples,
+}: {
+  force: boolean
+  skipExamples: boolean
+}) => {
   const projectIsTypescript = isTypeScriptProject()
   const pkgJsonPath = path.join(getPaths().base, 'package.json')
-  const { default: pkgJson } = await import(pathToFileURL(pkgJsonPath), {
-    with: { type: 'json' },
-  })
-  const cedarVersion = pkgJson.devDependencies['@cedarjs/core'] ?? 'latest'
+  const pkgJson: PkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8'))
+  const cedarVersion = pkgJson.devDependencies?.['@cedarjs/core'] ?? 'latest'
 
   const extension = projectIsTypescript ? 'ts' : 'js'
 
@@ -113,8 +120,14 @@ export const handler = async ({ force, skipExamples }) => {
   try {
     await tasks.run()
   } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+    const message = e instanceof Error ? e.message : String(e)
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    // exitCode is a non-standard property Listr2 errors may carry
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    process.exit(exitCode)
   }
 }

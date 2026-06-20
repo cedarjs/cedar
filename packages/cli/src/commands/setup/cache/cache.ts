@@ -1,4 +1,5 @@
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
@@ -6,7 +7,7 @@ export const command = 'cache <client>'
 
 export const description = 'Sets up an init file for service caching'
 
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   yargs
     .positional('client', {
       choices: ['memcached', 'redis'],
@@ -28,7 +29,7 @@ export const builder = (yargs) => {
     )
 }
 
-export const handler = async (options) => {
+export const handler = async (options: { client: string; force: boolean }) => {
   recordTelemetryAttributes({
     command: 'setup cache',
     client: options.client,

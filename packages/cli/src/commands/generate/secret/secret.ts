@@ -11,22 +11,25 @@ export const generateSecret = (length = DEFAULT_LENGTH): string => {
   return crypto.randomBytes(Math.trunc(length)).toString('base64')
 }
 
+export interface SecretOptions {
+  length: number
+  raw: boolean
+}
+
 export const command = 'secret'
 export const description =
   'Generates a secret key using a cryptographically-secure source of entropy'
 
-export const builder = (yargs: Argv) =>
-  yargs
+export function builder(yargs: Argv): Argv<SecretOptions> {
+  return yargs
     .option('length', {
       description: 'Length of the generated secret',
-      type: 'number',
-      required: false,
+      type: 'number' as const,
       default: DEFAULT_LENGTH,
     })
     .option('raw', {
       description: 'Prints just the raw secret',
-      type: 'boolean',
-      required: false,
+      type: 'boolean' as const,
       default: false,
     })
     .epilogue(
@@ -35,8 +38,11 @@ export const builder = (yargs: Argv) =>
         'https://cedarjs.com/docs/cli-commands#generate-secret',
       )}`,
     )
+}
 
-export const handler = ({ length, raw }: { length: number; raw: boolean }) => {
+export function handler(options: SecretOptions) {
+  const { length, raw } = options
+
   recordTelemetryAttributes({
     command: 'generate secret',
     length,
