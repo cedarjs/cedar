@@ -16,8 +16,11 @@ import {
   insertPluginsBeforeCedar,
   updateApiURLTask,
   verifyUDSetupTask,
+  // @ts-expect-error - No types for JS files
 } from '../helpers/index.js'
+// @ts-expect-error - No types for JS files
 import { NETLIFY_TOML } from '../templates/netlify.js'
+// @ts-expect-error - No types for JS files
 import { NETLIFY_UD_TOML } from '../templates/netlifyUD.js'
 
 const files = [
@@ -135,19 +138,25 @@ function addNetlifyPluginsToViteConfigTask(): ListrTask {
   }
 }
 
-async function installNetlifyPackagesTask(): Promise<ListrTask> {
+function installNetlifyPackagesTask(): Promise<ListrTask> {
   return addPackagesTask({
     packages: ['@netlify/vite-plugin', '@universal-deploy/netlify'],
     devDependency: true,
   })
 }
 
-export const handler = async ({ force, ud }: { force: boolean; ud: boolean }) => {
+interface HandlerArgs {
+  force: boolean
+  ud: boolean
+}
+
+export const handler = async ({ force, ud }: HandlerArgs) => {
   recordTelemetryAttributes({
     command: 'setup deploy netlify',
     force,
     ud,
   })
+
   const tasks = new Listr(
     [
       ud && verifyUDSetupTask(),
@@ -159,17 +168,20 @@ export const handler = async ({ force, ud }: { force: boolean; ud: boolean }) =>
     ].filter((task): task is ListrTask => Boolean(task)),
     { rendererOptions: { collapseSubtasks: false } },
   )
+
   try {
     await tasks.run()
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
+
     errorTelemetry(process.argv, message)
     console.error(c.error(message))
+
     // exitCode is a non-standard property Listr2 errors may carry
     const exitCode =
-      e instanceof Error && 'exitCode' in e
-        ? (e as Error & { exitCode: unknown }).exitCode
-        : undefined
-    process.exit(typeof exitCode === 'number' ? exitCode : 1)
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    process.exit(exitCode)
   }
 }

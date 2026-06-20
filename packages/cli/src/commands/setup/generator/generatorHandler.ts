@@ -56,11 +56,16 @@ const tasks = ({ name, force }: { name: string; force: boolean }) => {
         },
       },
     ],
-    { rendererOptions: { collapseSubtasks: false }, errorOnExist: true },
+    { rendererOptions: { collapseSubtasks: false } },
   )
 }
 
-export const handler = async ({ name, force }: { name: string; force: boolean }) => {
+interface HandlerArgs {
+  name: string
+  force: boolean
+}
+
+export const handler = async ({ name, force }: HandlerArgs) => {
   const t = tasks({ name, force })
 
   try {

@@ -16,15 +16,10 @@ import {
   insertPluginsBeforeCedar,
   updateApiURLTask,
   verifyUDSetupTask,
+  // @ts-expect-error - No types for JS files
 } from '../helpers/index.js'
 
-export async function handler({
-  force,
-  ud,
-}: {
-  force: boolean
-  ud: boolean
-}) {
+export async function handler({ force, ud }: { force: boolean; ud: boolean }) {
   recordTelemetryAttributes({
     command: 'setup deploy vercel',
     force,
@@ -53,12 +48,13 @@ export async function handler({
     const message = e instanceof Error ? e.message : String(e)
     errorTelemetry(process.argv, message)
     console.error(c.error(message))
+
     // exitCode is a non-standard property Listr2 errors may carry
     const exitCode =
-      e instanceof Error && 'exitCode' in e
-        ? (e as Error & { exitCode: unknown }).exitCode
-        : undefined
-    process.exit(typeof exitCode === 'number' ? exitCode : 1)
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    process.exit(exitCode)
   }
 }
 
@@ -125,7 +121,7 @@ function addVercelPluginToViteConfigTask(): ListrTask {
   }
 }
 
-async function installVercelPackagesTask(): Promise<ListrTask> {
+function installVercelPackagesTask(): Promise<ListrTask> {
   return addPackagesTask({
     packages: ['vite-plugin-vercel'],
     devDependency: true,
