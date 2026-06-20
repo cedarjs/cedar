@@ -2,10 +2,14 @@ import type FS from 'node:fs'
 
 import { vi, describe, afterEach, beforeEach, it, expect } from 'vitest'
 
-// @ts-expect-error - no types for JS files
 import { handler } from '../realtimeHandler.js'
 
-const mocks = vi.hoisted(() => ({
+const mocks: {
+  realtimeTs: string
+  serverTs: string
+  isEsm: boolean
+  writtenFiles: Record<string, string>
+} = vi.hoisted(() => ({
   realtimeTs: '',
   serverTs: '',
   isEsm: false,
@@ -85,6 +89,8 @@ describe('realtimeHandler', () => {
       name: 'noRealtime',
       type: 'subscription',
       silent: true,
+      force: false,
+      verbose: false,
     })
 
     expect(vi.mocked(console).error).toHaveBeenCalledWith(
@@ -103,6 +109,8 @@ describe('realtimeHandler', () => {
       name: 'noRealtime',
       type: 'subscription',
       silent: true,
+      force: false,
+      verbose: false,
     })
 
     expect(vi.mocked(console).error).toHaveBeenCalledWith(
@@ -119,6 +127,8 @@ describe('realtimeHandler', () => {
       name: 'foobar',
       type: 'subscription',
       silent: true,
+      force: false,
+      verbose: false,
     })
 
     expect(mocks.writtenFiles['foobar/foobar.ts']).toMatch(
@@ -133,6 +143,8 @@ describe('realtimeHandler', () => {
       name: 'foobar',
       type: 'subscription',
       silent: true,
+      force: false,
+      verbose: false,
     })
 
     expect(mocks.writtenFiles['foobar/foobar.ts']).toMatch(

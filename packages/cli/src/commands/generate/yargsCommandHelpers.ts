@@ -12,19 +12,19 @@ import { isTypeScriptProject } from '@cedarjs/cli-helpers'
  * and that has side effects that will break `cwd` functionality if called
  * before `cwd` is initialized.
  */
-export function getYargsDefaults(): Record<string, Options> {
+export function getYargsDefaults() {
   return {
     force: {
       alias: 'f',
       default: false,
       description: 'Overwrite existing files',
-      type: 'boolean',
+      type: 'boolean' as const,
     },
     typescript: {
       alias: 'ts',
       default: isTypeScriptProject(),
       description: 'Generate TypeScript files',
-      type: 'boolean',
+      type: 'boolean' as const,
     },
   }
 }

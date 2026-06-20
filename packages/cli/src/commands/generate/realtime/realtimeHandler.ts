@@ -53,7 +53,7 @@ export async function handler({
   type?: string
   force: boolean
   verbose: boolean
-  silent: boolean
+  silent?: boolean
 }) {
   const cedarPaths = getPaths()
   const ts = isTypeScriptProject()
