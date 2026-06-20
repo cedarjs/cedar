@@ -8,22 +8,25 @@ import { colors as c } from '@cedarjs/cli-helpers'
 import { addWorkspacePackages } from '@cedarjs/cli-helpers/packageManager/packages'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
+// @ts-expect-error - No types for JS files
 import extendStorybookConfiguration from '../../../lib/configureStorybook.js'
+// @ts-expect-error - No types for JS files
 import { fileIncludes } from '../../../lib/extendFile.js'
 import { getPaths, writeFile } from '../../../lib/index.js'
 
 const APP_JS_PATH = getPaths().web.app
 
-const i18nImportExist = (appJS) => {
-  let content = appJS.toString()
+const i18nImportExist = (appJS: Buffer) => {
+  const content = appJS.toString()
 
   const hasBaseImport = () => /import '.\/i18n'/.test(content)
 
   return hasBaseImport()
 }
-const addI18nImport = (appJS) => {
-  var content = appJS.toString().split('\n').reverse()
-  const index = content.findIndex((value) => /import/.test(value))
+
+const addI18nImport = (appJS: Buffer) => {
+  const content = appJS.toString().split('\n').reverse()
+  const index = content.findIndex((value) => value.includes('import'))
   content.splice(index, 0, "import './i18n'")
   return content.reverse().join(`\n`)
 }
@@ -31,11 +34,12 @@ const addI18nImport = (appJS) => {
 const i18nConfigExists = () => {
   return fs.existsSync(path.join(getPaths().web.src, 'i18n.js'))
 }
-const localesExists = (lng) => {
+
+const localesExists = (lng: string) => {
   return fs.existsSync(path.join(getPaths().web.src, 'locales', lng + '.json'))
 }
 
-export const handler = async ({ force }) => {
+export const handler = async ({ force }: { force: boolean }) => {
   const rwPaths = getPaths()
   const tasks = new Listr(
     [
@@ -162,14 +166,14 @@ export const handler = async ({ force }) => {
       },
       {
         title: 'Adding import to App.{jsx,tsx}...',
-        task: (_ctx, task) => {
+        task: (_ctx: unknown, task: { skip: (message: string) => void }) => {
           /**
            * Add i18n import to the last import of App.{jsx,tsx}
            *
            * Check if i18n import already exists.
            * If it exists, throw an error.
            */
-          let appJS = fs.readFileSync(APP_JS_PATH)
+          const appJS = fs.readFileSync(APP_JS_PATH)
           if (i18nImportExist(appJS)) {
             task.skip('Import already exists in App.js')
           } else {
@@ -192,7 +196,7 @@ export const handler = async ({ force }) => {
       },
       {
         title: 'One more thing...',
-        task: (_ctx, task) => {
+        task: (_ctx: unknown, task: { title: string }) => {
           task.title = `One more thing...\n
           ${c.tip('Quick link to the docs:')}\n
           ${terminalLink('react-i18next quick start guide', 'https://react.i18next.com/guides/quick-start/')}
@@ -206,8 +210,14 @@ export const handler = async ({ force }) => {
   try {
     await tasks.run()
   } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+    const message = e instanceof Error ? e.message : String(e)
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    // exitCode is a non-standard property Listr2 errors may carry
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    process.exit(exitCode)
   }
 }

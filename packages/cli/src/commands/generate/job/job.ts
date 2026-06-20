@@ -45,6 +45,8 @@ export const builder = (yargs: Argv) => {
   Object.entries(getYargsDefaults()).forEach(([option, config]) => {
     yargs.option(option, config)
   })
+
+  return yargs
 }
 
 export const handler = createHandler('job')

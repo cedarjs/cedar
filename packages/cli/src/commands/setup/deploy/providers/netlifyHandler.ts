@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'path'
 
-import { Listr } from 'listr2'
+import { Listr, type ListrTask } from 'listr2'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
@@ -16,8 +16,11 @@ import {
   insertPluginsBeforeCedar,
   updateApiURLTask,
   verifyUDSetupTask,
+  // @ts-expect-error - No types for JS files
 } from '../helpers/index.js'
+// @ts-expect-error - No types for JS files
 import { NETLIFY_TOML } from '../templates/netlify.js'
+// @ts-expect-error - No types for JS files
 import { NETLIFY_UD_TOML } from '../templates/netlifyUD.js'
 
 const files = [
@@ -45,10 +48,10 @@ const udNotes = [
   'See: https://cedarjs.com/docs/deploy/netlify',
 ]
 
-function addNetlifyPluginsToViteConfigTask() {
+function addNetlifyPluginsToViteConfigTask(): ListrTask {
   return {
     title: 'Adding Netlify plugins to vite config...',
-    task: async (_ctx, task) => {
+    task: async (_ctx: unknown, task: { skip: (msg: string) => void }) => {
       const paths = getPaths()
       const viteConfigTs = path.join(paths.web.base, 'vite.config.ts')
       const viteConfigJs = path.join(paths.web.base, 'vite.config.js')
@@ -135,19 +138,25 @@ function addNetlifyPluginsToViteConfigTask() {
   }
 }
 
-function installNetlifyPackagesTask() {
+function installNetlifyPackagesTask(): Promise<ListrTask> {
   return addPackagesTask({
     packages: ['@netlify/vite-plugin', '@universal-deploy/netlify'],
     devDependency: true,
   })
 }
 
-export const handler = async ({ force, ud }) => {
+interface HandlerArgs {
+  force: boolean
+  ud: boolean
+}
+
+export const handler = async ({ force, ud }: HandlerArgs) => {
   recordTelemetryAttributes({
     command: 'setup deploy netlify',
     force,
     ud,
   })
+
   const tasks = new Listr(
     [
       ud && verifyUDSetupTask(),
@@ -156,14 +165,23 @@ export const handler = async ({ force, ud }) => {
       !ud && updateApiURLTask('/.netlify/functions'),
       addFilesTask({ files: ud ? filesUd : files, force }),
       printSetupNotes(ud ? udNotes : notes),
-    ].filter(Boolean),
+    ].filter((task): task is ListrTask => Boolean(task)),
     { rendererOptions: { collapseSubtasks: false } },
   )
+
   try {
     await tasks.run()
   } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+    const message = e instanceof Error ? e.message : String(e)
+
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+
+    // exitCode is a non-standard property Listr2 errors may carry
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    process.exit(exitCode)
   }
 }

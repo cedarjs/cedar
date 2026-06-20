@@ -8,17 +8,26 @@ import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { writeFilesTask, printSetupNotes } from '../../../../lib/index.js'
+// @ts-expect-error - no types for JS files
 import { addFilesTask } from '../helpers/index.js'
 import {
   POSTGRES_YAML,
   RENDER_HEALTH_CHECK,
   RENDER_YAML,
   SQLITE_YAML,
+  // @ts-expect-error - no types for JS files
 } from '../templates/render.js'
 
 const { getConfig } = prismaInternals
 
-const getRenderYamlContent = async (database) => {
+interface RenderFileData {
+  path: string
+  content: string
+}
+
+const getRenderYamlContent = async (
+  database: string,
+): Promise<RenderFileData> => {
   if (database === 'none') {
     return {
       path: path.join(getPaths().base, 'render.yaml'),
@@ -74,7 +83,13 @@ const additionalFiles = [
   },
 ]
 
-export const handler = async ({ force, database }) => {
+export const handler = async ({
+  force,
+  database,
+}: {
+  force: boolean
+  database: string
+}) => {
   recordTelemetryAttributes({
     command: 'setup deploy render',
     force,
@@ -86,7 +101,7 @@ export const handler = async ({ force, database }) => {
         title: 'Adding render.yaml',
         task: async () => {
           const fileData = await getRenderYamlContent(database)
-          let files = {}
+          const files: Record<string, string> = {}
           files[fileData.path] = fileData.content
           return writeFilesTask(files, { overwriteExisting: force })
         },
@@ -104,8 +119,14 @@ export const handler = async ({ force, database }) => {
   try {
     await tasks.run()
   } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+    const message = e instanceof Error ? e.message : String(e)
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    // exitCode is a non-standard property Listr2 errors may carry
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    process.exit(exitCode)
   }
 }

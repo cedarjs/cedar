@@ -16,7 +16,6 @@ import {
 } from '../../../lib/index.js'
 import { prepareForRollback } from '../../../lib/rollback.js'
 import { validateName } from '../helpers.js'
-import { getYargsDefaults } from '../yargsCommandHelpers.js'
 
 export function getPostRunInstructions() {
   const text = c.warning('After writing your migration, you can run it with:')
@@ -36,6 +35,13 @@ const TEMPLATE_PATHS = {
     'templates',
     'dataMigration.ts.template',
   ),
+}
+
+interface HandlerArgs {
+  name: string
+  force: boolean
+  rollback: boolean
+  typescript: boolean
 }
 
 interface FilesArgs {
@@ -67,16 +73,29 @@ export const files = async ({ name, typescript }: FilesArgs) => {
 export const command = 'data-migration <name>'
 export const aliases = ['dataMigration', 'dm']
 export const description = 'Generate a data migration'
-export const builder = (yargs: Argv) => {
-  yargs
+export const builder = (yargs: Argv): Argv<HandlerArgs> => {
+  return yargs
     .positional('name', {
       description: 'A descriptor of what this data migration does',
       type: 'string',
+      demandOption: true,
     })
     .option('rollback', {
       description: 'Revert all generator actions if an error occurs',
-      type: 'boolean',
+      type: 'boolean' as const,
       default: true,
+    })
+    .option('force', {
+      alias: 'f',
+      default: false,
+      description: 'Overwrite existing files',
+      type: 'boolean' as const,
+    })
+    .option('typescript', {
+      alias: 'ts',
+      default: false,
+      description: 'Generate TypeScript files',
+      type: 'boolean' as const,
     })
     .epilogue(
       `Also see the ${terminalLink(
@@ -84,18 +103,6 @@ export const builder = (yargs: Argv) => {
         'https://cedarjs.com/docs/cli-commands#generate-datamigration',
       )}`,
     )
-
-  // Merge generator defaults in
-  Object.entries(getYargsDefaults()).forEach(([option, config]) => {
-    yargs.option(option, config)
-  })
-}
-
-interface HandlerArgs {
-  name: string
-  force: boolean
-  rollback: boolean
-  typescript: boolean
 }
 
 export const handler = async (args: HandlerArgs) => {
@@ -117,7 +124,7 @@ export const handler = async (args: HandlerArgs) => {
       },
       {
         title: 'Next steps...',
-        task: (_ctx, task) => {
+        task: (_ctx: unknown, task: { title: string }) => {
           task.title = getPostRunInstructions()
         },
       },
