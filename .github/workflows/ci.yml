@@ -226,7 +226,14 @@ jobs:
     needs: [check, detect-changes]
     if: needs.detect-changes.outputs.cli == 'true'
 
-    name: 🔄 CLI PM smoke tests
+    strategy:
+      matrix:
+        # Single OS here just for GitHub to create a single "skipped" job entry
+        # that `ci-status-check` can see. Without this `ci-status-check` would
+        # not pass for PRs with no cli-related changes
+        os: [ubuntu-latest]
+
+    name: 🔄 CLI PM smoke tests / ${{ matrix.os }}
     uses: ./.github/workflows/package-manager-smoke-tests.yml
 
   server-tests:
