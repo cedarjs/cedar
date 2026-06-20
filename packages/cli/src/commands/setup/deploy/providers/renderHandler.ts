@@ -8,12 +8,14 @@ import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { writeFilesTask, printSetupNotes } from '../../../../lib/index.js'
+// @ts-expect-error - no types for JS files
 import { addFilesTask } from '../helpers/index.js'
 import {
   POSTGRES_YAML,
   RENDER_HEALTH_CHECK,
   RENDER_YAML,
   SQLITE_YAML,
+  // @ts-expect-error - no types for JS files
 } from '../templates/render.js'
 
 const { getConfig } = prismaInternals
@@ -122,9 +124,9 @@ export const handler = async ({
     console.error(c.error(message))
     // exitCode is a non-standard property Listr2 errors may carry
     const exitCode =
-      e instanceof Error && 'exitCode' in e
-        ? (e as Error & { exitCode: unknown }).exitCode
-        : undefined
-    process.exit(typeof exitCode === 'number' ? exitCode : 1)
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    process.exit(exitCode)
   }
 }
