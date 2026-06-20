@@ -2,7 +2,7 @@ import type { Argv } from 'yargs'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
-interface RealtimeOptions {
+export interface RealtimeOptions {
   name: string
   type?: 'liveQuery' | 'subscription'
   force: boolean
@@ -15,7 +15,7 @@ export const command = 'realtime <name>'
 export const description =
   'Generate a subscription or live query used with RedwoodJS Realtime'
 
-export function builder(yargs: Argv<RealtimeOptions>) {
+export function builder(yargs: Argv): Argv<RealtimeOptions> {
   return yargs
     .positional('name', {
       type: 'string',
@@ -25,7 +25,7 @@ export function builder(yargs: Argv<RealtimeOptions>) {
     })
     .option('type', {
       alias: 't',
-      type: 'string',
+      type: 'string' as const,
       choices: ['liveQuery', 'subscription'] as const,
       description: 'Type of realtime event to setup',
     })
@@ -33,13 +33,13 @@ export function builder(yargs: Argv<RealtimeOptions>) {
       alias: 'f',
       default: false,
       description: 'Overwrite existing configuration',
-      type: 'boolean',
+      type: 'boolean' as const,
     })
     .option('verbose', {
       alias: 'v',
       default: false,
       description: 'Print more logs',
-      type: 'boolean',
+      type: 'boolean' as const,
     })
 }
 
