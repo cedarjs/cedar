@@ -41,7 +41,7 @@
     "@prisma/client": "7.8.0",
     "@types/yargs": "17.0.35",
     "memfs": "4.57.7",
-    "tsx": "4.21.0",
+    "tsx": "4.22.4",
     "typescript": "5.9.3",
     "vitest": "3.2.6"
   },

@@ -32,7 +32,7 @@
     "@types/estree": "1.0.9",
     "@typescript-eslint/parser": "8.60.1",
     "@typescript-eslint/rule-tester": "8.60.1",
-    "tsx": "4.21.0",
+    "tsx": "4.22.4",
     "typescript": "5.9.3",
     "vitest": "3.2.6"
   },
