@@ -40,9 +40,7 @@ export function builder(yargs: Argv): Argv<SecretOptions> {
     )
 }
 
-export function handler(options: SecretOptions) {
-  const { length, raw } = options
-
+export function handler({ length, raw }: SecretOptions) {
   recordTelemetryAttributes({
     command: 'generate secret',
     length,
