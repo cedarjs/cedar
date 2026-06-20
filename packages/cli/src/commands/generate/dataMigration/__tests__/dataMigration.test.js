@@ -82,7 +82,7 @@ describe('getPostRunInstructions', () => {
   test('shows pnpm exec cedar command for pnpm', () => {
     vi.mocked(getPackageManager).mockReturnValue('pnpm')
     expect(generator.getPostRunInstructions()).toContain(
-      'pnpm exec cedar dataMigrate up',
+      'pnpm cedar dataMigrate up',
     )
   })
 })

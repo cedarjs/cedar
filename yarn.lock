@@ -2832,7 +2832,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/cli-helpers@npm:4.2.0, @cedarjs/cli-helpers@workspace:packages/cli-helpers":
+"@cedarjs/cli-helpers@npm:4.2.0, @cedarjs/cli-helpers@workspace:*, @cedarjs/cli-helpers@workspace:packages/cli-helpers":
   version: 0.0.0-use.local
   resolution: "@cedarjs/cli-helpers@workspace:packages/cli-helpers"
   dependencies:
@@ -3772,6 +3772,7 @@ __metadata:
     "@cedarjs/api": "npm:4.2.0"
     "@cedarjs/auth": "npm:4.2.0"
     "@cedarjs/babel-config": "npm:4.2.0"
+    "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/context": "npm:4.2.0"
     "@cedarjs/cookie-jar": "npm:4.2.0"
     "@cedarjs/graphql-server": "npm:4.2.0"

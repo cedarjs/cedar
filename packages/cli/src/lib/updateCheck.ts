@@ -13,7 +13,6 @@ import { getConfig } from '@cedarjs/project-config'
 import { spawnBackgroundProcess } from './background.js'
 import { isLockSet, setLock, unsetLock } from './locking.js'
 
-// @ts-expect-error - Types not available for JS files
 import { getPaths } from './index.js'
 
 interface UpdateData {
@@ -300,10 +299,10 @@ export function updateCheckMiddleware(argv: { _: (string | number)[] }) {
   // notification based on stale local/remote versions in the same run.
   if (shouldCheck()) {
     setLock(CHECK_LOCK_IDENTIFIER)
-    const [bgCmd, bgArgs] = getNodeRunnerArgs(
+    const [bgCmd, bgCmdArgs] = getNodeRunnerArgs(
       path.join(import.meta.dirname, 'updateCheckExecute.js'),
     )
-    spawnBackgroundProcess('updateCheck', bgCmd, bgArgs)
+    spawnBackgroundProcess('updateCheck', bgCmd, bgCmdArgs)
   } else if (shouldShow()) {
     setLock(SHOW_LOCK_IDENTIFIER)
     process.on('exit', () => {

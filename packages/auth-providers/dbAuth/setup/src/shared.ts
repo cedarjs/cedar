@@ -2,9 +2,9 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { getDMMF } from '@prisma/internals'
-import execa from 'execa'
 
 import { getPaths } from '@cedarjs/cli-helpers'
+import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 import {
   processPagesDir,
   getSchemaPath,
@@ -84,7 +84,7 @@ export function generateAuthPagesTask(generatingUserModel: boolean) {
     task: async () => {
       const rwjsPaths = getPaths()
 
-      const args = ['cedar', 'g', 'dbAuth']
+      const args = ['g', 'dbAuth']
 
       if (generatingUserModel) {
         args.push(
@@ -95,9 +95,8 @@ export function generateAuthPagesTask(generatingUserModel: boolean) {
         )
       }
 
-      await execa('yarn', args, {
+      await runBin('cedar', args, {
         stdio: 'inherit',
-        shell: true,
         cwd: rwjsPaths.base,
       })
     },

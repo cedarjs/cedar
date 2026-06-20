@@ -1,4 +1,5 @@
 vi.mock('node:fs', async () => ({ ...memfsFs, default: { ...memfsFs } }))
+
 vi.mock('@cedarjs/cli-helpers/packageManager/exec', () => ({
   runBin: (_bin: string, args: string[] = []) => {
     // Create an empty config file when `tailwindcss init` is called.
@@ -17,7 +18,6 @@ vi.mock('@cedarjs/cli-helpers/packageManager/exec', () => ({
   runWorkspaceScript: () => {},
   runWorkspaceBin: () => {},
   dlx: () => {},
-  getNodeRunnerArgs: () => ['node', []],
 }))
 
 vi.mock('@cedarjs/cli-helpers/packageManager/packages', () => ({

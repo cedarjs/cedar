@@ -74,10 +74,18 @@ const args = yargs(hideBin(process.argv))
     type: 'boolean',
     describe: 'Rebuild the esm test-project',
   })
+  .option('packageManager', {
+    alias: 'pm',
+    default: 'yarn',
+    type: 'string',
+    choices: ['yarn', 'npm', 'pnpm'] as const,
+    describe: 'Package manager to use for the test-project',
+  })
   .help()
   .parseSync()
 
-const { verbose, resume, resumePath, resumeStep, live, esm } = args
+const { verbose, resume, resumePath, resumeStep, live, esm, packageManager } =
+  args
 
 // If the current Node.js version is outside of the recommended range the Cedar
 // setup command will pause and ask the user if they want to continue. This
@@ -348,7 +356,7 @@ const createProject = () => {
     [
       '--no-install',
       '--pm',
-      'yarn',
+      packageManager,
       '--typescript',
       '--overwrite',
       '--no-git',
@@ -897,6 +905,8 @@ async function rebuildTestProject() {
       await rimraf(`${OUTPUT_PROJECT_PATH}/web/node_modules`)
       await rimraf(`${OUTPUT_PROJECT_PATH}/.env`)
       await rimraf(`${OUTPUT_PROJECT_PATH}/yarn.lock`)
+      await rimraf(`${OUTPUT_PROJECT_PATH}/package-lock.json`)
+      await rimraf(`${OUTPUT_PROJECT_PATH}/pnpm-lock.yaml`)
       await rimraf(`${OUTPUT_PROJECT_PATH}/step.txt`)
       await rimraf(`${OUTPUT_PROJECT_PATH}/.nx`)
       await rimraf(`${OUTPUT_PROJECT_PATH}/tarballs`)
@@ -920,7 +930,7 @@ async function rebuildTestProject() {
         'templates',
         'overlays',
         esm ? 'esm' : 'cjs',
-        'yarn',
+        packageManager,
         'package.json',
       )
       const templatePackageJsonPath = path.join(
