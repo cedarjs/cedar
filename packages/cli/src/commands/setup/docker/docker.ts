@@ -4,7 +4,7 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
 export const command = 'docker'
 
-export const description = 'Setup the default Redwood Dockerfile'
+export const description = 'Setup the default Cedar Dockerfile'
 
 export function builder(yargs: Argv) {
   yargs.option('force', {
