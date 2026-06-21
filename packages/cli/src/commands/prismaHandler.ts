@@ -1,7 +1,7 @@
-import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 
 import boxen from 'boxen'
+import execa from 'execa'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import {
@@ -98,7 +98,9 @@ export const handler = async ({
     // bin it tries to run to be a direct dependency of the project, and Cedar
     // apps don't declare Prisma as a dependency. They get it as a transitive
     // dependency via Cedar's framework dependencies.
-    spawnSync('npx', ['prisma', ...args], {
+    // Using execa.sync (not spawnSync) because on Windows `npx` is
+    // `npx.cmd` and spawnSync can't resolve batch file extensions.
+    execa.sync('npx', ['prisma', ...args], {
       cwd: cedarPaths.base,
       stdio: 'inherit',
     })
