@@ -3,6 +3,10 @@ import fs from 'node:fs'
 import boxen from 'boxen'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import {
+  formatCedarCommand,
+  formatRunBinCommand,
+} from '@cedarjs/cli-helpers/packageManager/display'
 import { runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -86,7 +90,7 @@ export const handler = async ({
 
   console.log()
   console.log(c.note('Running Prisma CLI...'))
-  console.log(c.underline(`$ yarn prisma ${args.join(' ')}`))
+  console.log(c.underline(`$ ${formatRunBinCommand('prisma', args)}`))
   console.log()
 
   try {
@@ -111,8 +115,8 @@ const printWrapInfo = () => {
   const message = [
     c.bold('Cedar CLI wraps Prisma CLI'),
     '',
-    'Use `yarn cedar prisma` to automatically pass `--config` and `--preview-feature` options.',
-    "Use `yarn prisma` to skip Cedar's automatic CLI options.",
+    `Use \`${formatCedarCommand(['prisma'])}\` to automatically pass \`--config\` and \`--preview-feature\` options.`,
+    `Use \`${formatRunBinCommand('prisma')}\` to skip Cedar's automatic CLI options.`,
     '',
     'Find more information in our docs:',
     c.underline('https://cedarjs.com/docs/cli-commands#prisma'),
