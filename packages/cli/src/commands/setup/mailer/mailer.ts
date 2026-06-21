@@ -1,3 +1,5 @@
+import type { Argv } from 'yargs'
+
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
 export const command = 'mailer'
@@ -6,7 +8,7 @@ export const description =
   'Setup the Cedar mailer. This will install the required packages and add ' +
   'the required initial configuration to your Cedar app.'
 
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   yargs
     .option('force', {
       alias: 'f',
@@ -21,7 +23,10 @@ export const builder = (yargs) => {
     })
 }
 
-export const handler = async (options) => {
+export const handler = async (options: {
+  force: boolean
+  skipExamples: boolean
+}) => {
   recordTelemetryAttributes({
     command: 'setup mailer',
     force: options.force,

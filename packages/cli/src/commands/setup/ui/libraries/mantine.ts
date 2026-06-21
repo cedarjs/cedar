@@ -1,3 +1,5 @@
+import type { Argv } from 'yargs'
+
 import { createHandler } from '../helpers/helpers.js'
 
 export const command = 'mantine'
@@ -5,7 +7,7 @@ export const description = 'Set up Mantine UI'
 
 export const ALL_KEYWORD = 'all'
 
-export function builder(yargs) {
+export function builder(yargs: Argv) {
   yargs.option('force', {
     alias: 'f',
     default: false,

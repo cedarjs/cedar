@@ -1,10 +1,12 @@
+import type { Argv } from 'yargs'
+
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
 export const command = 'server-file'
 
 export const description = 'Setup the server file'
 
-export function builder(yargs) {
+export function builder(yargs: Argv) {
   yargs
     .option('force', {
       alias: 'f',
@@ -20,7 +22,7 @@ export function builder(yargs) {
     })
 }
 
-export async function handler(options) {
+export async function handler(options: { force: boolean; verbose: boolean }) {
   recordTelemetryAttributes({
     command: 'setup server-file',
     force: options.force,

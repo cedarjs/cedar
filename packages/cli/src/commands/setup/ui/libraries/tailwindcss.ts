@@ -1,15 +1,19 @@
+import type { Argv } from 'yargs'
+
 import { createHandler } from '../helpers/helpers.js'
 
-export const command = 'chakra-ui'
-export const description = 'Set up Chakra UI'
+export const command = 'tailwindcss'
+export const aliases = ['tailwind', 'tw']
+export const description = 'Set up tailwindcss and PostCSS'
 
-export function builder(yargs) {
+export const builder = (yargs: Argv) => {
   yargs.option('force', {
     alias: 'f',
     default: false,
     description: 'Overwrite existing configuration',
     type: 'boolean',
   })
+
   yargs.option('install', {
     alias: 'i',
     default: true,
