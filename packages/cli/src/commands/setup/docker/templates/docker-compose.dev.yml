@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
       target: base
-    command: yarn cedar dev
+    command: '{{DEV_CMD}}'
     volumes:
       - .:/home/node/app
       - node_modules:/home/node/app/node_modules

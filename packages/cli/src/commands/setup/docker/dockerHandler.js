@@ -7,6 +7,7 @@ import { Listr } from 'listr2'
 
 import { writeFile, colors as c } from '@cedarjs/cli-helpers'
 import { dedupe } from '@cedarjs/cli-helpers/packageManager'
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { addWorkspacePackages } from '@cedarjs/cli-helpers/packageManager/packages'
 import { getConfig, getConfigPath, getPaths } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
@@ -14,12 +15,14 @@ import { errorTelemetry } from '@cedarjs/telemetry'
 
 export async function handler({ force }) {
   const TEMPLATE_DIR = path.join(import.meta.dirname, 'templates')
+  const pm = getPackageManager()
 
   let dockerfileTemplateContent = fs.readFileSync(
-    path.resolve(TEMPLATE_DIR, 'Dockerfile'),
+    path.resolve(TEMPLATE_DIR, `Dockerfile.${pm}`),
     'utf-8',
   )
-  const dockerComposeDevTemplateContent = fs.readFileSync(
+
+  let dockerComposeDevTemplateContent = fs.readFileSync(
     path.resolve(TEMPLATE_DIR, 'docker-compose.dev.yml'),
     'utf-8',
   )
@@ -46,40 +49,55 @@ export async function handler({ force }) {
   const configTomlPath = getConfigPath()
   const configFileName = path.basename(configTomlPath)
 
+  // Replace PM-specific placeholders in templates
+  dockerComposeDevTemplateContent = dockerComposeDevTemplateContent.replace(
+    /'{{DEV_CMD}}'/g,
+    formatCedarCommand(['dev']),
+  )
+
   const tasks = new Listr(
     [
-      {
-        title: 'Adding the official yarn workspace-tools plugin...',
-        // The `yarn plugin` commands only exist in yarn. Docker setup is a
-        // yarn-specific workflow (workspace-tools plugin has no npm/pnpm
-        // equivalent), so we invoke yarn directly here.
-        task: async (_ctx, task) => {
-          const { stdout } = await execa(
-            'yarn',
-            ['plugin', 'runtime', '--json'],
+      // The yarn workspace-tools plugin only exists for yarn.
+      // For pnpm, pnpm install --prod --filter api is built-in. Workspaces are
+      // a first-class feature with no plugin needed. For npm, there's no
+      // workspace-focus equivalent at all, so npm ci --omit=dev installs
+      // production deps for all workspaces (slightly less optimized but
+      // functionally correct).
+      ...(pm === 'yarn'
+        ? [
             {
-              cwd: getPaths().base,
+              title: 'Adding the official yarn workspace-tools plugin...',
+              task: async (_ctx, task) => {
+                const { stdout } = await execa(
+                  'yarn',
+                  ['plugin', 'runtime', '--json'],
+                  {
+                    cwd: getPaths().base,
+                  },
+                )
+
+                const hasWorkspaceToolsPlugin = stdout
+                  .trim()
+                  .split('\n')
+                  .map(JSON.parse)
+                  .some(
+                    ({ name }) => name === '@yarnpkg/plugin-workspace-tools',
+                  )
+
+                if (hasWorkspaceToolsPlugin) {
+                  task.skip(
+                    'The official yarn workspace-tools plugin is already installed',
+                  )
+                  return
+                }
+
+                return execa('yarn', ['plugin', 'import', 'workspace-tools'], {
+                  cwd: getPaths().base,
+                }).stdout
+              },
             },
-          )
-
-          const hasWorkspaceToolsPlugin = stdout
-            .trim()
-            .split('\n')
-            .map(JSON.parse)
-            .some(({ name }) => name === '@yarnpkg/plugin-workspace-tools')
-
-          if (hasWorkspaceToolsPlugin) {
-            task.skip(
-              'The official yarn workspace-tools plugin is already installed',
-            )
-            return
-          }
-
-          return execa('yarn', ['plugin', 'import', 'workspace-tools'], {
-            cwd: getPaths().base,
-          }).stdout
-        },
-      },
+          ]
+        : []),
       {
         title: 'Adding @cedarjs/api-server and @cedarjs/web-server...',
         task: async (_ctx, task) => {
@@ -285,7 +303,8 @@ export async function handler({ force }) {
         'Then, connect to the container and migrate your database:',
         '',
         '  docker compose -f ./docker-compose.dev.yml run --rm -it console /bin/bash',
-        '  root@...:/home/node/app# yarn cedar prisma migrate dev',
+        '  root@...:/home/node/app# ' +
+          formatCedarCommand(['prisma', 'migrate', 'dev']),
         '',
         "We assume you're using Postgres. If you're not, you'll need to make other changes to switch over.",
         "Lastly, ensure you have Docker. If you don't, see https://docs.docker.com/desktop/",
