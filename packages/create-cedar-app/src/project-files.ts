@@ -59,7 +59,7 @@ export async function createProjectFiles(
   // See https://github.com/yarnpkg/berry/issues/6488
   await fs.promises.cp(templateDir, newAppDir, {
     recursive: true,
-    force: overwrite,
+    force: true,
   })
   await fs.promises.cp(overlayDir, newAppDir, { recursive: true, force: true })
 
@@ -236,18 +236,12 @@ async function doesDirectoryAlreadyExist(
           initial: 0,
         })
 
-        // overwrite the existing files
-        if (
-          response.projectDirectoryAlreadyExists ===
-          `Overwrite files in '${styledAppDir}' and continue install`
-        ) {
-          // blow away the existing directory and create a new one
-          await fs.promises.rm(newAppDir, { recursive: true, force: true })
-        } // specify a different directory
-        else if (
-          response.projectDirectoryAlreadyExists ===
-          'Specify a different directory'
-        ) {
+        if (responseIsOverwrite(response, styledAppDir)) {
+          // "Overwrite" falls through intentionally. force:true on cp handles
+          // the merge
+        } else if (responseIsDifferentDir(response)) {
+          // specify a different directory
+
           const newDirectoryName = await handleNewDirectoryNamePreference()
 
           if (/^~\w/.test(newDirectoryName)) {
@@ -270,8 +264,7 @@ async function doesDirectoryAlreadyExist(
 
           // check to see if the new directory exists
           newAppDir = await doesDirectoryAlreadyExist(newAppDir, { overwrite })
-        } // Quit Install and Throw and Error
-        else if (response.projectDirectoryAlreadyExists === 'Quit install') {
+        } else if (responseIsQuit(response)) {
           // quit and throw an error
           recordErrorViaTelemetry(
             'User quit after directory already exists error',
@@ -279,7 +272,6 @@ async function doesDirectoryAlreadyExist(
           await shutdownTelemetry()
           process.exit(1)
         }
-        // overwrite the existing files
       } catch {
         recordErrorViaTelemetry(
           `User cancelled install after directory already exists error`,
@@ -291,4 +283,28 @@ async function doesDirectoryAlreadyExist(
   }
 
   return newAppDir
+}
+
+function responseIsOverwrite(
+  response: { projectDirectoryAlreadyExists: string },
+  styledAppDir: string,
+): boolean {
+  return (
+    response.projectDirectoryAlreadyExists ===
+    `Overwrite files in '${styledAppDir}' and continue install`
+  )
+}
+
+function responseIsDifferentDir(response: {
+  projectDirectoryAlreadyExists: string
+}): boolean {
+  return (
+    response.projectDirectoryAlreadyExists === 'Specify a different directory'
+  )
+}
+
+function responseIsQuit(response: {
+  projectDirectoryAlreadyExists: string
+}): boolean {
+  return response.projectDirectoryAlreadyExists === 'Quit install'
 }
