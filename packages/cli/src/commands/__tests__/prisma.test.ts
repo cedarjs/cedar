@@ -5,6 +5,10 @@ import { vi, beforeEach, afterEach, test, expect } from 'vitest'
 
 import type * as ProjectConfig from '@cedarjs/project-config'
 
+vi.mock('@cedarjs/project-config/packageManager', () => ({
+  getPackageManager: () => 'yarn',
+}))
+
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
   return {
@@ -23,13 +27,11 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
 
 vi.mock('execa', () => ({
   default: {
-    sync: vi.fn((cmd, params, options) => {
-      return {
-        cmd,
-        params,
-        options,
-      }
-    }),
+    sync: vi.fn((cmd, params, options) => ({
+      cmd,
+      params,
+      options,
+    })),
   },
 }))
 
@@ -56,6 +58,7 @@ test('the prisma command handles spaces', async () => {
   })
 
   expect(vi.mocked(execa.sync).mock.calls[0][1]).toEqual([
+    'prisma',
     'migrate',
     'dev',
     '-n',

@@ -5,7 +5,7 @@ export const ECOSYSTEM = `module.exports = {
     {
       name: 'serve',
       cwd: 'current',
-      script: 'node_modules/.bin/rw',
+      script: 'node_modules/.bin/cedar',
       args: 'serve',
       instances: 'max',
       exec_mode: 'cluster',

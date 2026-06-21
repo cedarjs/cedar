@@ -95,12 +95,25 @@ export async function setUpTestProject({
   //    says yarn.
   // 2. Replace workspace:* protocols with file: references — npm doesn't
   //    understand workspace:*.
+  // 3. Pin dependency versions to what yarn resolved in yarn.lock so that
+  //    npm/pnpm don't pick up newer versions (which can change test output
+  //    like snapshot serialization).
   if (packageManager !== 'yarn') {
     const pkgPath = path.join(testProjectPath, 'package.json')
     const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
 
     // delete packageManager to let the `<pm> install` command set it
     delete pkg.packageManager
+
+    // The fixture pins react-is via yarn's `resolutions`, but npm uses
+    // `overrides` instead. Without this override, npm resolves react-is to
+    // 17.x (from pretty-format's dep range), which doesn't properly
+    // recognize React 19 elements — breaking snapshot serialization.
+    if (packageManager === 'npm') {
+      pkg.overrides = { 'react-is': '19.2.3' }
+    } else {
+      pkg.pnpm = { overrides: { 'react-is': '19.2.3' } }
+    }
 
     if (packageManager === 'npm') {
       // The test-project fixture uses workspace:* for internal workspace
@@ -138,7 +151,8 @@ export async function setUpTestProject({
         fs.writeFileSync(fullPath, JSON.stringify(pkgFile, null, 2) + '\n')
       }
     } else {
-      // for pnpm we just write the root with the deleted packageManager field
+      // pnpm — just write the root with updated fields
+      // (the pnpm overrides for react-is were set above alongside npm's)
       fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n')
     }
 

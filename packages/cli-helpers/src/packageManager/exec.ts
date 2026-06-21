@@ -40,6 +40,13 @@ export function runScriptSync(
   const pm = getPackageManager()
 
   if (pm === 'npm') {
+    // `npm run` without a script name lists available scripts (same as
+    // `yarn run` / `pnpm run`). Passing `['run', 'run']` would try to run a
+    // script named "run" which doesn't exist.
+    if (script === 'run' && args.length === 0) {
+      return execa.sync(pm, ['run'], options)
+    }
+
     const npmArgs =
       args.length > 0 ? ['run', script, '--', ...args] : ['run', script]
     return execa.sync(pm, npmArgs, options)
