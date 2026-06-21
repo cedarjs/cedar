@@ -7,11 +7,6 @@ on:
     - cron: '0 4 * * *'
   workflow_dispatch: {}
 
-# Cancel in-progress runs of this workflow for the same branch/PR.
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 permissions: {}
 
 env:

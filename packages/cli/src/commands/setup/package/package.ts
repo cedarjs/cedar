@@ -1,4 +1,5 @@
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
@@ -6,7 +7,7 @@ export const command = 'package <npm-package>'
 export const description =
   'Run a bin from an NPM package with version compatibility checks'
 
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   yargs
     .positional('npm-package', {
       description:
@@ -28,11 +29,17 @@ export const builder = (yargs) => {
     )
 }
 
-export const handler = async (options) => {
+export const handler = async (options: {
+  'npm-package': string
+  // yargs auto-generates a camelCase alias alongside the kebab-case positional
+  npmPackage: string
+  force: boolean
+}) => {
   recordTelemetryAttributes({
     command: 'setup package',
   })
 
+  // @ts-expect-error - No types for JS files
   const { handler } = await import('./packageHandler.js')
   return handler(options)
 }
