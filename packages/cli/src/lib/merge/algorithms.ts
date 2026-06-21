@@ -24,8 +24,9 @@ export function sieve<T>(...listRulePairs: ListRulePair<T>[]): T[][] {
           continue elementLoop
         }
       }
-      // We haven't found an array appropriate to hold element. Assume that any element can
-      // appear alone in a list, and create a new array holding that element:
+      // We haven't found an array appropriate to hold element. Assume that any
+      // element can appear alone in a list, and create a new array holding that
+      // element:
       result.push([element])
     }
   }
@@ -34,14 +35,17 @@ export function sieve<T>(...listRulePairs: ListRulePair<T>[]): T[][] {
 
 type AnyFn = (...args: unknown[]) => unknown
 
+function isAnyFn(value: unknown): value is AnyFn {
+  return typeof value === 'function'
+}
+
 export function forEachFunctionOn(
   object: Record<string, unknown>,
   callback: (key: string, value: AnyFn) => void,
 ): void {
   forOwn(object, (value, key) => {
-    if (typeof value === 'function') {
-      // value is narrowed to Function here; cast to AnyFn to satisfy the callback signature
-      callback(key, value as AnyFn)
+    if (isAnyFn(value)) {
+      callback(key, value)
     }
   })
 }

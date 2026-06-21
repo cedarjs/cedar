@@ -30,8 +30,8 @@ export const builder = (yargs: Argv) => {
 }
 
 export const handler = async (options: {
-  // yargs auto-generates a camelCase alias alongside the kebab-case positional
   'npm-package': string
+  // yargs auto-generates a camelCase alias alongside the kebab-case positional
   npmPackage: string
   force: boolean
 }) => {
@@ -39,6 +39,7 @@ export const handler = async (options: {
     command: 'setup package',
   })
 
+  // @ts-expect-error - No types for JS files
   const { handler } = await import('./packageHandler.js')
   return handler(options)
 }
