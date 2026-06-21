@@ -1,13 +1,11 @@
 import fs from 'node:fs'
-import path from 'node:path'
 
 import boxen from 'boxen'
-import execa from 'execa'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-// @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
 
 type PrismaHandlerArgs = Record<string, unknown> & {
@@ -92,11 +90,9 @@ export const handler = async ({
   console.log()
 
   try {
-    const prismaBin = path.join(cedarPaths.base, 'node_modules/.bin/prisma')
-    execa.sync(prismaBin, args, {
+    runBinSync('prisma', args, {
       cwd: cedarPaths.base,
       stdio: 'inherit',
-      cleanup: true,
     })
 
     if (hasHelpOption || args.length === 0) {

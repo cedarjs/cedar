@@ -240,8 +240,7 @@ export const handler = async (upgradeOptions: UpgradeOptions) => {
 
 async function packageManagerInstall({ verbose }: { verbose?: boolean }) {
   try {
-    await execa(`${getPackageManager()} ${install()}`, {
-      shell: true,
+    await execa(getPackageManager(), [install()], {
       stdio: verbose ? 'inherit' : 'pipe',
       cwd: getPaths().base,
     })
@@ -606,8 +605,7 @@ async function dedupeDeps(_task: unknown, { verbose }: { verbose?: boolean }) {
   }
 
   try {
-    await execa(`${getPackageManager()} ${dedupeCmd}`, {
-      shell: true,
+    await execa(getPackageManager(), [dedupeCmd], {
       stdio: verbose ? 'inherit' : 'pipe',
       cwd: getPaths().base,
     })

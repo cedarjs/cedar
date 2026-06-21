@@ -8,6 +8,7 @@ import execa from 'execa'
 import { terminalLink } from 'termi-link'
 
 import { getConfigPath } from '@cedarjs/project-config'
+import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 const config = new Configstore('@cedarjs/cli')
 
@@ -47,7 +48,7 @@ try {
   // This used to look like `execa.sync('yarn', [...command], {`, but then Node
   // deprecated passing args in that way.
   // See https://nodejs.org/api/deprecations.html#DEP0190
-  execa.sync('yarn', [...command], {
+  execa.sync(getPackageManager(), [...command], {
     stdio: 'inherit',
     cwd: absCfwPath,
     // @ts-expect-error - testUtils.d.ts augments ProcessEnv with
