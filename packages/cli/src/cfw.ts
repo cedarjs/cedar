@@ -4,11 +4,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import Configstore from 'configstore'
-import execa from 'execa'
 import { terminalLink } from 'termi-link'
 
+import { runScriptSync } from '@cedarjs/cli-helpers/packageManager/exec'
 import { getConfigPath } from '@cedarjs/project-config'
-import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 const config = new Configstore('@cedarjs/cli')
 
@@ -41,14 +40,18 @@ console.log('Cedar Framework Tools Path:', terminalLink(absCfwPath, absCfwPath))
 let command = process.argv.slice(2)
 const helpCommands = ['help', '--help']
 if (!command.length || command.some((cmd) => helpCommands.includes(cmd))) {
+  // yarn run / npm run / pnpm run – all list available scripts
   command = ['run']
 }
+
+const script = command[0]
+const args = command.slice(1)
 
 try {
   // This used to look like `execa.sync('yarn', [...command], {`, but then Node
   // deprecated passing args in that way.
   // See https://nodejs.org/api/deprecations.html#DEP0190
-  execa.sync(getPackageManager(), [...command], {
+  runScriptSync(script, args, {
     stdio: 'inherit',
     cwd: absCfwPath,
     // @ts-expect-error - testUtils.d.ts augments ProcessEnv with
