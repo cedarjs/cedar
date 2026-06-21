@@ -8,6 +8,7 @@ See [typescript/taste.md](typescript/taste.md)
 
 # Architecture
 
+- Keep package-manager-specific logic out of handler files. Extract PM logic into helpers from `cli-helpers` rather than inlining it in individual command handlers. Confidence: 0.80
 - CedarJS only supports Apollo Client for GraphQL. Remove abstractions/wrappers that suggest alternative GraphQL clients are supported. Confidence: 0.75
 - CedarJS owns zero deployment adapters. The framework's only UD responsibility is calling `addEntry()` from `@universal-deploy/store` with WinterTC-compatible handler paths. Cloudless server-side serving uses `srvx` in the Cedar CLI directly (no Cedar-owned adapter package for Node, and no UD adapter needed for that path). Provider-specific adapter logic for Netlify/Vercel/Cloudflare belongs to Universal Deploy adapters, not Cedar. Confidence: 0.90
 - Cedar apps default to CJS + Jest (not vitest). Only ESM-template apps use vitest. Confidence: 0.85
@@ -48,7 +49,15 @@ See [code-style/taste.md](code-style/taste.md)
 
 # CLI
 
-- Avoid using `rg` (ripgrep) in CLI tools that run on user machines — it's not guaranteed to be installed, especially on Windows. Use Node.js built-in `fs` methods or other universally available approaches instead. Confidence: 0.70
+See [cli/taste.md](cli/taste.md)
+
+# CI / GitHub Actions
+
+See [debugging/taste.md](debugging/taste.md)
+
+# CLI
+
+See [cli/taste.md](cli/taste.md)
 
 # Debugging
 
@@ -70,3 +79,5 @@ See [debugging/taste.md](debugging/taste.md)
 # CI / GitHub Actions
 
 - When a workflow step uses `working-directory` and passes a path to the test project via an env var (e.g., `CEDAR_TEST_PROJECT_PATH`), use `${{ github.workspace }}/../path` rather than a relative path. The relative path resolves against the `working-directory`, not the workspace root. Confidence: 0.80
+- When a conditional job (`if:`) has no `strategy.matrix`, GitHub creates no job entry at all if the condition is false. Jobs referencing it in `needs` then fail. Always add a dummy matrix (e.g., `strategy.matrix: { os: [ubuntu-latest] }`) so skipped jobs appear as "skipped" entries that `ci-status-check` handles correctly. Confidence: 0.90
+- Do not use `inputs` expressions (e.g., `inputs.packageManager`) in job-level `if:` or `concurrency.group` of a `workflow_call` workflow that also has a `schedule` trigger. GitHub cannot resolve `inputs` at parse time for `schedule` triggers, causing the workflow to silently fail with 0 jobs. Remove `inputs` entirely or use a separate matrix approach. Confidence: 0.85

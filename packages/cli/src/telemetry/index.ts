@@ -9,6 +9,8 @@ import {
 } from '@opentelemetry/sdk-trace-node'
 import { hideBin } from 'yargs/helpers'
 
+import { getNodeRunnerArgs } from '@cedarjs/cli-helpers/packageManager/exec'
+
 import { spawnBackgroundProcess } from '../lib/background.js'
 
 import { CustomFileExporter } from './exporter.js'
@@ -97,10 +99,10 @@ export function shutdownTelemetry() {
     traceExporter?.shutdown()
 
     // Send the telemetry in a background process, so we don't block the CLI
-    spawnBackgroundProcess('telemetry', 'yarn', [
-      'node',
+    const [cmd, args] = getNodeRunnerArgs(
       path.join(import.meta.dirname, 'send.js'),
-    ])
+    )
+    spawnBackgroundProcess('telemetry', cmd, args)
   } catch (error) {
     console.error('Telemetry error')
     console.error(error)

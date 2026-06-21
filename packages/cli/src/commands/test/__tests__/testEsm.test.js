@@ -79,7 +79,7 @@ test('Runs tests specified side even with additional filters', async () => {
     filter: ['web', 'bazinga'],
   })
 
-  expect(execa.mock.results[0].value.cmd).not.toBe('yarn rw')
+  expect(execa.mock.results[0].value.cmd).toBe('yarn')
   expect(execa.mock.results[0].value.params).not.toContain('api')
 
   expect(execa.mock.results[0].value.cmd).toBe('yarn')
