@@ -6,7 +6,7 @@ import { deleteFilesTask } from '../../../lib/index.js'
 import { verifyModelName } from '../../../lib/schemaHelpers.js'
 import { files } from '../../generate/sdl/sdlHandler.js'
 
-export const tasks = ({ model }) =>
+export const tasks = ({ model }: { model: string }) =>
   new Listr(
     [
       {
@@ -20,7 +20,7 @@ export const tasks = ({ model }) =>
     { rendererOptions: { collapseSubtasks: false }, exitOnError: true },
   )
 
-export const handler = async ({ model }) => {
+export const handler = async ({ model }: { model: string }) => {
   recordTelemetryAttributes({
     command: 'destroy sdl',
   })
@@ -28,6 +28,6 @@ export const handler = async ({ model }) => {
     const { name } = await verifyModelName({ name: model, isDestroyer: true })
     await tasks({ model: name }).run()
   } catch (e) {
-    console.log(c.error(e.message))
+    console.log(c.error(e instanceof Error ? e.message : String(e)))
   }
 }
