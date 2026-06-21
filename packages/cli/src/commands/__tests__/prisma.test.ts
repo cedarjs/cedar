@@ -1,6 +1,6 @@
+import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 
-import execa from 'execa'
 import { vi, beforeEach, afterEach, test, expect } from 'vitest'
 
 import type * as ProjectConfig from '@cedarjs/project-config'
@@ -25,16 +25,15 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
   }
 })
 
-vi.mock('execa', () => ({
-  default: {
-    sync: vi.fn((cmd, params, options) => {
-      return {
-        cmd,
-        params,
-        options,
-      }
-    }),
-  },
+vi.mock('node:child_process', () => ({
+  spawnSync: vi.fn((cmd, params, options) => {
+    return {
+      cmd,
+      params,
+      options,
+      status: 0,
+    }
+  }),
 }))
 
 import { handler } from '../prisma.js'
@@ -59,7 +58,7 @@ test('the prisma command handles spaces', async () => {
     n: 'add bazingas',
   })
 
-  expect(vi.mocked(execa.sync).mock.calls[0][1]).toEqual([
+  expect(vi.mocked(spawnSync).mock.calls[0][1]).toEqual([
     'prisma',
     'migrate',
     'dev',

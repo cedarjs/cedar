@@ -51,6 +51,14 @@ See [code-style/taste.md](code-style/taste.md)
 
 See [cli/taste.md](cli/taste.md)
 
+# CI / GitHub Actions
+
+See [debugging/taste.md](debugging/taste.md)
+
+# CLI
+
+See [cli/taste.md](cli/taste.md)
+
 # Debugging
 
 See [debugging/taste.md](debugging/taste.md)

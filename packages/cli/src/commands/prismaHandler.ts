@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 
 import boxen from 'boxen'
@@ -7,7 +8,6 @@ import {
   formatCedarCommand,
   formatRunBinCommand,
 } from '@cedarjs/cli-helpers/packageManager/display'
-import { runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { getPaths } from '../lib/index.js'
@@ -90,11 +90,15 @@ export const handler = async ({
 
   console.log()
   console.log(c.note('Running Prisma CLI...'))
-  console.log(c.underline(`$ ${formatRunBinCommand('prisma', args)}`))
+  console.log(c.underline(`$ npx prisma ${args.join(' ')}`))
   console.log()
 
   try {
-    runBinSync('prisma', args, {
+    // Using npx here instead of `runBinSync` because `yarn prisma` needs the
+    // bin it tries to run to be a direct dependency of the project, and Cedar
+    // apps don't declare Prisma as a dependency. They get it as a transitive
+    // dependency via Cedar's framework dependencies.
+    spawnSync('npx', ['prisma', ...args], {
       cwd: cedarPaths.base,
       stdio: 'inherit',
     })
