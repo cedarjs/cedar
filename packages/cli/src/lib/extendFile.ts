@@ -85,7 +85,7 @@ export function extendJSXFile(
     })
   }
 
-  fs.writeFileSync(filePath, content.filter((e) => e !== undefined).join('\n'))
+  fs.writeFileSync(filePath, content.join('\n'))
 }
 
 interface InternalInsertComponentConfig {
@@ -146,12 +146,12 @@ function insertComponent(
   content.splice(
     open,
     close - open, // "Delete" the wrapped component contents. We put it back below.
-    insertBefore ? componentDepth + insertBefore : undefined,
+    ...(insertBefore ? [componentDepth + insertBefore] : []),
     componentDepth + buildOpeningTag(component, props),
     // Increase indent of each now-nested tag by one tab (two spaces)
     ...content.slice(open, close).map((line) => '  ' + line),
     componentDepth + `</${component}>`,
-    insertAfter ? componentDepth + insertAfter : undefined,
+    ...(insertAfter ? [componentDepth + insertAfter] : []),
   )
 }
 
