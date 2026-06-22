@@ -105,17 +105,17 @@ export async function setUpTestProject({
     // delete packageManager to let the `<pm> install` command set it
     delete pkg.packageManager
 
-    // The fixture pins react-is via yarn's `resolutions`, but npm uses
-    // `overrides` instead. Without this override, npm resolves react-is to
-    // 17.x (from pretty-format's dep range), which doesn't properly
-    // recognize React 19 elements — breaking snapshot serialization.
-    if (packageManager === 'npm') {
+    // The fixture pins react-is via yarn's `resolutions`, but npm and pnpm uses
+    // `overrides` instead. Without this override, react-is resolves to 17.x
+    // (from pretty-format's dep range), which doesn't properly recognize React
+    // 19 elements. This breaks snapshot serialization.
+    if (packageManager === 'npm' || packageManager === 'pnpm') {
       pkg.overrides = { 'react-is': '19.2.3' }
-    } else {
-      // pnpm 11 no longer reads the `pnpm` field from package.json. Settings
-      // must go in pnpm-workspace.yaml. The `overrides` for react-is is set
-      // at root-level package.json too (where both npm and pnpm can read it).
-      pkg.overrides = { 'react-is': '19.2.3' }
+    }
+
+    if (packageManager === 'pnpm') {
+      // Tell pnpm what workspaces we have, and what 3rd-party packages are
+      // allowed to run build scripts.
 
       const yaml = [
         'packages:',
@@ -129,9 +129,6 @@ export async function setUpTestProject({
         '  msw: true',
         '  prisma: true',
         '  protobufjs: true',
-        '',
-        'overrides:',
-        "  'react-is': '19.2.3'",
         '',
       ].join('\n')
 

@@ -9,6 +9,3 @@ allowBuilds:
   msw: true
   prisma: true
   protobufjs: true
-
-overrides:
-  'react-is': '19.2.3'
