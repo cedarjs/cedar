@@ -2,12 +2,30 @@ import fs from 'node:fs'
 
 /**
  * Convenience function to check if a file includes a particular string.
- * @param {string} path File to read and search for str.
- * @param {string} str The value to search for.
+ * @param filePath File to read and search for str.
+ * @param str The value to search for.
  * @returns true if the file exists and the contents thereof include the given string, else false.
  */
-export function fileIncludes(path, str) {
-  return fs.existsSync(path) && fs.readFileSync(path).toString().includes(str)
+export function fileIncludes(filePath: string, str: string): boolean {
+  return (
+    fs.existsSync(filePath) &&
+    fs.readFileSync(filePath).toString().includes(str)
+  )
+}
+
+interface InsertComponentConfig {
+  name?: string
+  props?: Record<string, unknown> | string
+  around?: string
+  within?: string
+  insertBefore?: string
+  insertAfter?: string
+}
+
+interface ExtendJSXFileOptions {
+  insertComponent: InsertComponentConfig
+  imports?: string[]
+  moduleScopeLines?: string[]
 }
 
 /**
@@ -17,25 +35,12 @@ export function fileIncludes(path, str) {
  * Imports are added after the last redwoodjs import.
  * moduleScopeLines are added after the last import.
  *
- * @param {string} path Path to JSX file to extend.
- * @param {Object} options Configure behavior
- * @param {Object} options.insertComponent Configure component-inserting behavior.
- * @param {Object} options.insertComponent.name Name of component to insert.
- * @param {Object|string} options.insertComponent.props Properties to pass to the inserted component.
- * @param {string} options.insertComponent.around Name of the component around which the new
- * component will be inserted. Mutually exclusive with insertComponent.within.
- * @param {string} options.insertComponent.within Name of the component within which the new
- * component will be inserted. Mutually exclusive with insertComponent.around.
- * @param {string} options.insertComponent.insertBefore Content to insert before the inserted
- * component.
- * @param {string} options.insertComponent.insertAfter Content to insert after the inserted
- * component.
- * @param {Array} options.imports Import declarations to inject after the last redwoodjs import.
- * @param {Array} options.moduleScopeLines Lines of code to inject after the last import statement.
+ * @param filePath Path to JSX file to extend.
+ * @param options Configure behavior
  * @returns Nothing; writes changes directly into the file at the given path.
  */
 export function extendJSXFile(
-  path,
+  filePath: string,
   {
     insertComponent: {
       name = undefined,
@@ -47,9 +52,9 @@ export function extendJSXFile(
     },
     imports = [],
     moduleScopeLines = [],
-  },
-) {
-  const content = fs.readFileSync(path).toString().split('\n')
+  }: ExtendJSXFileOptions,
+): void {
+  const content = fs.readFileSync(filePath).toString().split('\n')
 
   if (moduleScopeLines?.length) {
     content.splice(
@@ -80,28 +85,37 @@ export function extendJSXFile(
     })
   }
 
-  fs.writeFileSync(path, content.filter((e) => e !== undefined).join('\n'))
+  fs.writeFileSync(filePath, content.filter((e) => e !== undefined).join('\n'))
+}
+
+interface InternalInsertComponentConfig {
+  component: string
+  props?: Record<string, unknown> | string
+  around?: string
+  within?: string
+  insertBefore?: string
+  insertAfter?: string
 }
 
 /**
  * Inject lines of code into an array of lines to wrap the specified component in a new component tag.
  * Increases the indentation of newly-wrapped content by two spaces (one tab).
  *
- * @param {Array} content A JSX file split by newlines.
- * @param {String} component Name of the component to insert.
- * @param {String|Object} props Properties to pass to the new component.
- * @param {String} around Name of the component around which to insert the new component. Mutually
- * exclusive with within.
- * @param {String} within Name of the component within which to insert the new component. Mutually
- * exclusive with around.
- * @param {String} insertBefore Content to insert before the inserted component.
- * @param {String} insertAfter Content to insert after the inserted component.
+ * @param content A JSX file split by newlines.
+ * @param config Component insertion configuration.
  * @returns Nothing; modifies content in place.
  */
 function insertComponent(
-  content,
-  { component, props, around, within, insertBefore, insertAfter },
-) {
+  content: string[],
+  {
+    component,
+    props,
+    around,
+    within,
+    insertBefore,
+    insertAfter,
+  }: InternalInsertComponentConfig,
+): void {
   if ((around && within) || !(around || within)) {
     throw new Error(
       'Exactly one of (around | within) must be defined. Choose one.',
@@ -109,7 +123,8 @@ function insertComponent(
   }
 
   const target = around ?? within
-  const findTagIndex = (regex) => content.findIndex((line) => regex.test(line))
+  const findTagIndex = (regex: RegExp) =>
+    content.findIndex((line) => regex.test(line))
 
   let open = findTagIndex(new RegExp(`([^\\S\r\n]*)<${target}\\s*(.*)\\s*>`))
   let close = findTagIndex(new RegExp(`([^\\S\r\n]*)<\/${target}>`)) + 1
@@ -124,27 +139,31 @@ function insertComponent(
   }
 
   // Assuming close line has same indent depth.
-  const [, componentDepth] = content[open].match(/([^\S\r\n]*).*/)
+  // The regex always matches (.*) can be empty), so the result is never null.
+  const depthMatch = content[open].match(/([^\S\r\n]*).*/)
+  const componentDepth = depthMatch?.[1] ?? ''
 
   content.splice(
     open,
     close - open, // "Delete" the wrapped component contents. We put it back below.
-    insertBefore && componentDepth + insertBefore,
+    insertBefore ? componentDepth + insertBefore : undefined,
     componentDepth + buildOpeningTag(component, props),
     // Increase indent of each now-nested tag by one tab (two spaces)
     ...content.slice(open, close).map((line) => '  ' + line),
     componentDepth + `</${component}>`,
-    insertAfter && componentDepth + insertAfter,
+    insertAfter ? componentDepth + insertAfter : undefined,
   )
 }
 
 /**
- *
- * @param {string} componentName Name of the component to create a tag for.
- * @param {Object|string|undefined} props Properties object, or string, to pass to the tag.
+ * @param componentName Name of the component to create a tag for.
+ * @param props Properties object, or string, to pass to the tag.
  * @returns A string containing a valid JSX opening tag.
  */
-function buildOpeningTag(componentName, props) {
+function buildOpeningTag(
+  componentName: string,
+  props: Record<string, unknown> | string | undefined,
+): string {
   const propsString = (() => {
     switch (typeof props) {
       case 'undefined':
@@ -167,22 +186,25 @@ function buildOpeningTag(componentName, props) {
 /**
  * Transform an object to JSX props syntax
  *
- * @param {Record<string, any>} obj
- * @param {{exclude?: string[], raw?: boolean | string[]}} options
- * @returns {string[]}
+ * @param obj
+ * @param options
+ * @returns
  */
 export function objectToComponentProps(
-  obj,
-  options = { exclude: [], raw: false },
-) {
-  const props = []
+  obj: Record<string, unknown>,
+  options: { exclude?: string[]; raw?: boolean | string[] } = {
+    exclude: [],
+    raw: false,
+  },
+): string[] {
+  const props: string[] = []
 
-  const doRaw = (key) =>
+  const doRaw = (key: string) =>
     options.raw === true ||
     (Array.isArray(options.raw) && options.raw.includes(key))
 
   for (const [key, value] of Object.entries(obj)) {
-    if (options.exclude && options.exclude.includes(key)) {
+    if (options.exclude?.includes(key)) {
       continue
     }
     if (doRaw(key)) {

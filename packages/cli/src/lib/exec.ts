@@ -18,7 +18,7 @@ import {
 // alternative extensions on it. This helper resolves the actual file on disk,
 // handling both bare paths (src/lib/jobs) and .js/.jsx paths that map to .ts
 // files in a TypeScript project (e.g. db.js → db.ts).
-function resolveExtension(id) {
+function resolveExtension(id: string): string {
   if (existsSync(id)) {
     return id
   }
@@ -32,11 +32,17 @@ function resolveExtension(id) {
   return id
 }
 
+interface RunScriptFunctionArgs {
+  path: string
+  functionName: string
+  args: unknown
+}
+
 export async function runScriptFunction({
   path: scriptPath,
   functionName,
   args,
-}) {
+}: RunScriptFunctionArgs): Promise<unknown> {
   // Setting 'production' here mainly to silence some Prisma output they have in
   // dev mode
   const NODE_ENV = process.env.NODE_ENV
@@ -90,11 +96,11 @@ export async function runScriptFunction({
             // where only a .ts file exists, we resolve the correct extension
             // ourselves — the customResolver result is final and Vite won't
             // try alternative extensions on it.
-            if (importer.startsWith(apiImportBase)) {
+            if (importer?.startsWith(apiImportBase)) {
               const apiImportSrc = importStatementPath(getPaths().api.src)
               const resolvedId = id.replace('src', apiImportSrc)
               return { id: resolveExtension(resolvedId) }
-            } else if (importer.startsWith(webImportBase)) {
+            } else if (importer?.startsWith(webImportBase)) {
               const webImportSrc = importStatementPath(getPaths().web.src)
               const resolvedId = id.replace('src', webImportSrc)
               return { id: resolveExtension(resolvedId) }
@@ -122,28 +128,29 @@ export async function runScriptFunction({
     throw new Error('Vite environment is not runnable.')
   }
 
-  let returnValue
-  let scriptError = null
+  let returnValue: unknown
 
   try {
-    const script = await env.runner.import(scriptPath)
-    returnValue = await script[functionName](args)
-  } catch (error) {
-    scriptError = error
-  }
+    // Dynamic module import boundary — shape is not statically known
+    const module = await env.runner.import(scriptPath)
+    const fn = module[functionName]
+    if (typeof fn !== 'function') {
+      throw new Error(`Function '${functionName}' not found in script`)
+    }
+    returnValue = await fn(args)
+  } finally {
+    try {
+      // Dynamic import boundary — db module shape is determined at runtime
+      const dbModule = await env.runner.import(
+        path.join(getPaths().api.lib, 'db'),
+      )
+      dbModule.db?.$disconnect?.()
+    } catch {
+      // silence
+    }
 
-  try {
-    const { db } = await env.runner.import(path.join(getPaths().api.lib, 'db'))
-    db.$disconnect()
-  } catch (e) {
-    // silence
-  }
-
-  await server.close()
-  process.env.NODE_ENV = NODE_ENV
-
-  if (scriptError) {
-    throw scriptError
+    await server.close()
+    process.env.NODE_ENV = NODE_ENV
   }
 
   return returnValue

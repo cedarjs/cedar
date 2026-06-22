@@ -13,7 +13,12 @@ import {
   paramVariants as templateVars,
 } from '../../generate/page/pageHandler.js'
 
-export const tasks = ({ name, path }) =>
+interface PageHandlerArgs {
+  name: string
+  path: string
+}
+
+export const tasks = ({ name, path }: PageHandlerArgs) =>
   new Listr(
     [
       {
@@ -38,7 +43,7 @@ export const tasks = ({ name, path }) =>
     { rendererOptions: { collapseSubtasks: false }, exitOnError: true },
   )
 
-export const handler = async ({ name, path }) => {
+export const handler = async ({ name, path }: PageHandlerArgs) => {
   recordTelemetryAttributes({
     command: 'destroy page',
   })
@@ -46,6 +51,6 @@ export const handler = async ({ name, path }) => {
   try {
     await t.run()
   } catch (e) {
-    console.log(c.error(e.message))
+    console.log(c.error(e instanceof Error ? e.message : String(e)))
   }
 }

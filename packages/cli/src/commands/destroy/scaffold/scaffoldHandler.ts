@@ -18,7 +18,20 @@ import {
   splitPathAndModel,
 } from '../../generate/scaffold/scaffoldHandler.js'
 
-const removeRoutesWithSet = async ({ model, path, nestScaffoldByModel }) => {
+interface ScaffoldTaskArgs {
+  model: string
+  path?: string
+  tests?: boolean
+  nestScaffoldByModel?: boolean
+}
+
+const removeRoutesWithSet = async ({
+  model,
+  path,
+  nestScaffoldByModel,
+}: ScaffoldTaskArgs): Promise<
+  ReturnType<typeof removeRoutesFromRouterTask>
+> => {
   const routes = await scaffoldRoutes({ model, path, nestScaffoldByModel })
   const routeNames = routes.map(extractRouteName)
   const pluralPascalName = pascalcase(pluralize(model))
@@ -26,16 +39,20 @@ const removeRoutesWithSet = async ({ model, path, nestScaffoldByModel }) => {
   return removeRoutesFromRouterTask(routeNames, layoutName)
 }
 
-const removeSetImport = () => {
+const removeSetImport = (): string => {
   const routesPath = getPaths().web.routes
   const routesContent = readFile(routesPath).toString()
   if (routesContent.match('<Set')) {
     return 'Skipping removal of Set import in Routes.{jsx,tsx}'
   }
 
-  const [cedarRouterImport] = routesContent.match(
+  const cedarRouterImportMatch = routesContent.match(
     /import {[^]*} from '@cedarjs\/router'/,
   )
+  if (!cedarRouterImportMatch) {
+    return 'No @cedarjs/router import found in Routes.{jsx,tsx}'
+  }
+  const [cedarRouterImport] = cedarRouterImportMatch
   const removedSetImport = cedarRouterImport.replace(/,*\s*Set,*/, '')
   const newRoutesContent = routesContent.replace(
     cedarRouterImport,
@@ -46,7 +63,13 @@ const removeSetImport = () => {
   return 'Removed Set import in Routes.{jsx,tsx}'
 }
 
-const removeLayoutImport = ({ model: name, path: scaffoldPath = '' }) => {
+const removeLayoutImport = ({
+  model: name,
+  path: scaffoldPath = '',
+}: {
+  model: string
+  path?: string
+}): string => {
   const pluralPascalName = pascalcase(pluralize(name))
   const pascalScaffoldPath =
     scaffoldPath === ''
@@ -67,7 +90,12 @@ const removeLayoutImport = ({ model: name, path: scaffoldPath = '' }) => {
   return 'Removed layout import from Routes.{jsx,tsx}'
 }
 
-export const tasks = ({ model, path, tests, nestScaffoldByModel }) =>
+export const tasks = ({
+  model,
+  path,
+  tests,
+  nestScaffoldByModel,
+}: ScaffoldTaskArgs) =>
   new Listr(
     [
       {
@@ -100,7 +128,7 @@ export const tasks = ({ model, path, tests, nestScaffoldByModel }) =>
     { rendererOptions: { collapseSubtasks: false }, exitOnError: true },
   )
 
-export const handler = async ({ model: modelArg }) => {
+export const handler = async ({ model: modelArg }: { model: string }) => {
   recordTelemetryAttributes({
     command: 'destory scaffold',
   })
@@ -109,11 +137,14 @@ export const handler = async ({ model: modelArg }) => {
     const { name } = await verifyModelName({ name: model, isDestroyer: true })
     await tasks({ model: name, path }).run()
   } catch (e) {
-    console.log(c.error(e.message))
+    console.log(c.error(e instanceof Error ? e.message : String(e)))
   }
 }
 
-const extractRouteName = (route) => {
-  const { groups } = route.match(/.*name="?(?<routeName>\w+)"?/)
-  return groups.routeName
+const extractRouteName = (route: string): string => {
+  const match = route.match(/.*name="?(?<routeName>\w+)"?/)
+  if (!match?.groups?.routeName) {
+    throw new Error(`Could not extract route name from route: ${route}`)
+  }
+  return match.groups.routeName
 }

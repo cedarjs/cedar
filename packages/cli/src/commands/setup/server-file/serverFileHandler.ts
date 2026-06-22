@@ -14,9 +14,11 @@ const { version } = JSON.parse(
     path.resolve(import.meta.dirname, '../../../../package.json'),
     'utf-8',
   ),
-)
+) as { version: string }
 
-export function setupServerFileTasks({ force = false } = {}) {
+export function setupServerFileTasks({
+  force = false,
+}: { force?: boolean } = {}) {
   return [
     {
       title: 'Adding the server file...',
@@ -48,17 +50,29 @@ export function setupServerFileTasks({ force = false } = {}) {
   ]
 }
 
-export async function handler({ force, verbose }) {
-  const tasks = new Listr(setupServerFileTasks({ force }), {
+export async function handler({
+  force,
+  verbose,
+}: {
+  force: boolean
+  verbose: boolean
+}) {
+  const listr = new Listr(setupServerFileTasks({ force }), {
     rendererOptions: { collapseSubtasks: false, persistentOutput: true },
     renderer: verbose ? 'verbose' : 'default',
   })
 
   try {
-    await tasks.run()
+    await listr.run()
   } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+    const message = e instanceof Error ? e.message : String(e)
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    // exitCode is a non-standard property Listr2 errors may carry
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    process.exit(exitCode)
   }
 }
