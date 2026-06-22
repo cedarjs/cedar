@@ -118,6 +118,19 @@ export async function setUpTestProject({
       // to run build scripts, and what versions of react-is to use (see also
       // npm comment above)
 
+      pkg.engines = {
+        ...pkg.engines,
+        pnpm: '>=11.8.0 <12.0.0',
+      }
+
+      pkg.devEngines = {
+        packageManager: {
+          name: 'pnpm',
+          version: '>=11.8.0 <12.0.0',
+          onFail: 'download',
+        },
+      }
+
       const yaml = [
         'packages:',
         '  - api',
@@ -126,6 +139,7 @@ export async function setUpTestProject({
         'allowBuilds:',
         "  '@prisma/engines': true",
         "  '@swc/core': true",
+        '  better-sqlite3: true',
         '  esbuild: true',
         '  msw: true',
         '  prisma: true',
