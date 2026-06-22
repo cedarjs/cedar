@@ -118,9 +118,10 @@ export const keepBothStatementParents = opaquely(
     // keepBothStatementParents marks the node as opaque. If it's the latter, this is wrong - again,
     // the node marked is opaque, but nodes which are children of base.getStatementParent(), but
     // parents of base will still be recursively merged by other strategies. I'm not sure what to do.
-    base.path
-      .getStatementParent()
-      ?.insertAfter(ext.path.getStatementParent()?.node)
+    const extParent = ext.path.getStatementParent()
+    if (extParent) {
+      base.path.getStatementParent()?.insertAfter(extParent.node)
+    }
   },
 )
 
