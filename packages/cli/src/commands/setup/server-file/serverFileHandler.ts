@@ -9,12 +9,13 @@ import { errorTelemetry } from '@cedarjs/telemetry'
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject } from '../../../lib/project.js'
 
-const { version } = JSON.parse(
+const packageJson: { version: string } = JSON.parse(
   fs.readFileSync(
     path.resolve(import.meta.dirname, '../../../../package.json'),
     'utf-8',
   ),
-) as { version: string }
+)
+const { version } = packageJson
 
 export function setupServerFileTasks({
   force = false,

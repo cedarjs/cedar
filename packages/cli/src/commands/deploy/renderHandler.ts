@@ -48,9 +48,10 @@ export const handler = async ({
 
     if (dataMigrate) {
       console.log('Running data migrations...')
-      const packageJson = JSON.parse(
-        fs.readFileSync(path.join(cedarPaths.base, 'package.json'), 'utf-8'),
-      ) as { devDependencies?: Record<string, string> }
+      const packageJson: { devDependencies?: Record<string, string> } =
+        JSON.parse(
+          fs.readFileSync(path.join(cedarPaths.base, 'package.json'), 'utf-8'),
+        )
       const hasDataMigratePackage =
         !!packageJson.devDependencies?.['@cedarjs/cli-data-migrate']
 

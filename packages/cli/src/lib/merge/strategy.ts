@@ -40,14 +40,31 @@ function requireStrategyExists(
 }
 
 const strictEquality = (lhs: unknown, rhs: unknown) => lhs === rhs
-const byName = (lhs: { name: string }, rhs: { name: string }) =>
-  lhs.name === rhs.name
-const byKeyName = (
-  lhs: { key: { name: string } },
-  rhs: { key: { name: string } },
-) => lhs.key.name === rhs.key.name
-const byValue = (lhs: { value: unknown }, rhs: { value: unknown }) =>
-  lhs.value === rhs.value
+// Accept unknown params so these can be stored in Record<string, EqualityFn>
+// without casts. The Babel AST nodes we receive are guaranteed to have the
+// required shape by the time the function is called.
+function hasName(v: unknown): v is { name: string } {
+  return typeof v === 'object' && v !== null && 'name' in v
+}
+function hasKeyName(v: unknown): v is { key: { name: string } } {
+  return (
+    typeof v === 'object' &&
+    v !== null &&
+    'key' in v &&
+    typeof (v as { key?: unknown }).key === 'object' &&
+    (v as { key?: unknown }).key !== null &&
+    'name' in (v as { key: object }).key
+  )
+}
+function hasValue(v: unknown): v is { value: unknown } {
+  return typeof v === 'object' && v !== null && 'value' in v
+}
+const byName = (lhs: unknown, rhs: unknown): boolean =>
+  hasName(lhs) && hasName(rhs) && lhs.name === rhs.name
+const byKeyName = (lhs: unknown, rhs: unknown): boolean =>
+  hasKeyName(lhs) && hasKeyName(rhs) && lhs.key.name === rhs.key.name
+const byValue = (lhs: unknown, rhs: unknown): boolean =>
+  hasValue(lhs) && hasValue(rhs) && lhs.value === rhs.value
 
 function defaultEquality(
   baseContainer: unknown[],
@@ -58,12 +75,12 @@ function defaultEquality(
     (extContainer.length && extContainer[0])
 
   const defaults: Record<string, (lhs: unknown, rhs: unknown) => boolean> = {
-    BigIntLiteral: byValue as (lhs: unknown, rhs: unknown) => boolean,
-    BooleanLiteral: byValue as (lhs: unknown, rhs: unknown) => boolean,
-    Identifier: byName as (lhs: unknown, rhs: unknown) => boolean,
-    NumericLiteral: byValue as (lhs: unknown, rhs: unknown) => boolean,
-    ObjectProperty: byKeyName as (lhs: unknown, rhs: unknown) => boolean,
-    StringLiteral: byValue as (lhs: unknown, rhs: unknown) => boolean,
+    BigIntLiteral: byValue,
+    BooleanLiteral: byValue,
+    Identifier: byName,
+    NumericLiteral: byValue,
+    ObjectProperty: byKeyName,
+    StringLiteral: byValue,
   }
 
   return sample &&
@@ -131,13 +148,20 @@ const interleaveStrategy: Partial<
     const importSpecifierEquality = (
       lhs: t.ImportDeclaration['specifiers'][number],
       rhs: t.ImportDeclaration['specifiers'][number],
-    ) =>
-      lhs.type === rhs.type &&
-      (lhs as t.ImportSpecifier).imported?.type === 'Identifier' &&
-      (rhs as t.ImportSpecifier).imported?.type === 'Identifier' &&
-      ((lhs as t.ImportSpecifier).imported as t.Identifier)?.name ===
-        ((rhs as t.ImportSpecifier).imported as t.Identifier)?.name &&
-      lhs.local?.name == rhs.local?.name
+    ) => {
+      if (lhs.type !== rhs.type) {
+        return false
+      }
+      if (lhs.type === 'ImportSpecifier' && rhs.type === 'ImportSpecifier') {
+        return (
+          lhs.imported.type === 'Identifier' &&
+          rhs.imported.type === 'Identifier' &&
+          lhs.imported.name === rhs.imported.name &&
+          lhs.local?.name === rhs.local?.name
+        )
+      }
+      return lhs.local?.name === rhs.local?.name
+    }
 
     const uniqueSpecifiersOfType = (type: string) =>
       uniqWith(
@@ -174,12 +198,7 @@ const interleaveStrategy: Partial<
     baseImport.specifiers = firstSpecifierList
     if (rest.length) {
       baseImport.path.insertAfter(
-        rest.map((specs) =>
-          t.importDeclaration(
-            specs,
-            baseImport.source,
-          ),
-        ),
+        rest.map((specs) => t.importDeclaration(specs, baseImport.source)),
       )
     }
   },
@@ -245,9 +264,10 @@ export function concatUnique(
   baseOrEq: MergeProxy | EqualityFn,
   ext?: MergeProxy,
 ): NodeReducer | void {
-  if (ext === undefined) {
-    // Factory mode: called with an equality function, returns a reducer
-    const eq = baseOrEq as EqualityFn
+  if (typeof baseOrEq === 'function') {
+    // Factory mode: MergeProxy is always an object (Babel AST node), so
+    // typeof === 'function' reliably narrows to EqualityFn.
+    const eq = baseOrEq
     return (base: MergeProxy, innerExt: MergeProxy) => {
       requireSameType(base, innerExt)
       requireStrategyExists(
@@ -260,8 +280,11 @@ export function concatUnique(
     }
   }
 
-  // Reducer mode: called directly with base and ext
-  const base = baseOrEq as MergeProxy
+  // Reducer mode: baseOrEq is MergeProxy, ext is defined (guaranteed by overloads)
+  const base = baseOrEq
+  if (!ext) {
+    return
+  }
   requireSameType(base, ext)
   requireStrategyExists(base, ext, concatUniqueStrategy, 'concatUnique')
   // The type-specific concatUnique implementations will provide an appropriate equality operator.
