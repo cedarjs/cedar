@@ -132,7 +132,6 @@ ENV NODE_ENV=production \
   API_PROXY_TARGET=http://api:8911
 
 # We use the shell form here for variable expansion.
-# We use the shell form here for variable expansion.
 CMD node_modules/.bin/cedar-web-server --api-proxy-target $API_PROXY_TARGET
 
 # console

@@ -51,12 +51,10 @@ export async function handler({ force }) {
 
   // Replace PM-specific placeholders in templates.
   // The command line uses `'{{DEV_CMD}}'` (quoted to keep YAML valid with
-  // the replacement marker), while the inline comment uses `{{DEV_CMD}}`
-  // unquoted. Handles both with optional quote matching.
-  dockerComposeDevTemplateContent = dockerComposeDevTemplateContent.replace(
-    /'?\{\{DEV_CMD}}'?/g,
-    formatCedarCommand(['dev']),
-  )
+  // the replacement marker), while the inline comment uses `{{CEDAR_CMD}}`.
+  dockerComposeDevTemplateContent = dockerComposeDevTemplateContent
+    .replace(/'{{DEV_CMD}}'/g, formatCedarCommand(['dev']))
+    .replace(/{{CEDAR_CMD}}/g, formatCedarCommand([]))
 
   const tasks = new Listr(
     [

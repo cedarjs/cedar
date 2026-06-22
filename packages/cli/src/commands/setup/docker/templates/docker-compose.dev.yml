@@ -36,7 +36,7 @@ services:
   #
   # ```
   # docker compose -f ./docker-compose.dev.yml run --rm -it console /bin/bash
-  # root@...:/home/node/app# {{DEV_CMD}} prisma migrate dev
+  # root@...:/home/node/app# {{CEDAR_CMD}} prisma migrate dev
   # ```
   console:
     user: root
