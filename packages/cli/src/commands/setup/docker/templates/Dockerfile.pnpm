@@ -67,6 +67,10 @@ RUN apt-get update && apt-get install -y \
 USER node
 WORKDIR /home/node/app
 
+COPY --chown=node:node cedar.toml* redwood.toml* ./
+COPY --chown=node:node graphql.config.cjs .
+COPY --chown=node:node .env.defaults .env.defaults
+
 COPY --chown=node:node --from=deploy /home/node/app/dist/api /home/node/app
 
 COPY --chown=node:node --from=api_build /home/node/app/api/db /home/node/app/api/db
@@ -84,6 +88,10 @@ RUN npm install --global corepack
 
 USER node
 WORKDIR /home/node/app
+
+COPY --chown=node:node cedar.toml* redwood.toml* ./
+COPY --chown=node:node graphql.config.cjs .
+COPY --chown=node:node .env.defaults .env.defaults
 
 COPY --chown=node:node --from=deploy /home/node/app/dist/web /home/node/app
 
