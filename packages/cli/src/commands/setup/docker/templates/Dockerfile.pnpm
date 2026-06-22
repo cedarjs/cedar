@@ -73,6 +73,7 @@ COPY --chown=node:node .env.defaults .env.defaults
 
 COPY --chown=node:node --from=deploy /home/node/app/dist/api /home/node/app
 
+COPY --chown=node:node --from=api_build /home/node/app/api/dist /home/node/app/api/dist
 COPY --chown=node:node --from=api_build /home/node/app/api/db /home/node/app/api/db
 COPY --chown=node:node --from=api_build /home/node/app/node_modules/.prisma /home/node/app/node_modules/.prisma
 
@@ -94,6 +95,8 @@ COPY --chown=node:node graphql.config.cjs .
 COPY --chown=node:node .env.defaults .env.defaults
 
 COPY --chown=node:node --from=deploy /home/node/app/dist/web /home/node/app
+
+COPY --chown=node:node --from=web_build /home/node/app/web/dist /home/node/app/web/dist
 
 ENV NODE_ENV=production \
   API_PROXY_TARGET=http://api:8911
