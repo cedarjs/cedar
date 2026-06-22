@@ -112,7 +112,17 @@ export async function setUpTestProject({
     if (packageManager === 'npm') {
       pkg.overrides = { 'react-is': '19.2.3' }
     } else {
-      pkg.pnpm = { overrides: { 'react-is': '19.2.3' } }
+      pkg.pnpm = {
+        overrides: { 'react-is': '19.2.3' },
+        onlyBuiltDependencies: [
+          '@prisma/engines',
+          '@swc/core',
+          'esbuild',
+          'msw',
+          'prisma',
+          'protobufjs',
+        ],
+      }
     }
 
     if (packageManager === 'npm') {
