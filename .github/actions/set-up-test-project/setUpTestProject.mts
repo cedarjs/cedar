@@ -106,23 +106,51 @@ export async function setUpTestProject({
     delete pkg.packageManager
 
     // The fixture pins react-is via yarn's `resolutions`, but npm uses
-    // `overrides` instead. Without this override, npm resolves react-is to
-    // 17.x (from pretty-format's dep range), which doesn't properly
-    // recognize React 19 elements — breaking snapshot serialization.
+    // `overrides` instead. Without this override, react-is resolves to 17.x
+    // (from pretty-format's dep range), which doesn't properly recognize React
+    // 19 elements. This breaks snapshot serialization.
     if (packageManager === 'npm') {
       pkg.overrides = { 'react-is': '19.2.3' }
-    } else {
-      pkg.pnpm = {
-        overrides: { 'react-is': '19.2.3' },
-        onlyBuiltDependencies: [
-          '@prisma/engines',
-          '@swc/core',
-          'esbuild',
-          'msw',
-          'prisma',
-          'protobufjs',
-        ],
+    }
+
+    if (packageManager === 'pnpm') {
+      // Tell pnpm what workspaces we have, what 3rd-party packages are allowed
+      // to run build scripts, and what versions of react-is to use (see also
+      // npm comment above)
+
+      pkg.engines = {
+        ...pkg.engines,
+        pnpm: '>=11.8.0 <12.0.0',
       }
+
+      pkg.devEngines = {
+        packageManager: {
+          name: 'pnpm',
+          version: '11.8.0',
+          onFail: 'download',
+        },
+      }
+
+      const yaml = [
+        'packages:',
+        '  - api',
+        '  - web',
+        '',
+        'allowBuilds:',
+        "  '@prisma/engines': true",
+        "  '@swc/core': true",
+        '  better-sqlite3: true',
+        '  esbuild: true',
+        '  msw: true',
+        '  prisma: true',
+        '  protobufjs: true',
+        '',
+        'overrides:',
+        "  'react-is': '19.2.3'",
+        '',
+      ].join('\n')
+
+      fs.writeFileSync(path.join(testProjectPath, 'pnpm-workspace.yaml'), yaml)
     }
 
     if (packageManager === 'npm') {
