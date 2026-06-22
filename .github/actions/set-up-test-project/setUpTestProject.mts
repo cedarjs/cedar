@@ -120,13 +120,13 @@ export async function setUpTestProject({
 
       pkg.engines = {
         ...pkg.engines,
-        pnpm: '=11.x',
+        pnpm: '>=11.8.0 <12.0.0',
       }
 
       pkg.devEngines = {
         packageManager: {
           name: 'pnpm',
-          version: '=11.x',
+          version: '11.8.0',
           onFail: 'download',
         },
       }
