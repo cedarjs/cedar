@@ -12,6 +12,14 @@
   },
   "packageManager": "pnpm@10.34.3",
   "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/engines",
+      "@swc/core",
+      "esbuild",
+      "msw",
+      "prisma",
+      "protobufjs"
+    ],
     "overrides": {
       "react-is": "19.2.3"
     }
