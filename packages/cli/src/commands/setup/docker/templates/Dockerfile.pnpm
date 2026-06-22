@@ -19,6 +19,7 @@ WORKDIR /home/node/app
 COPY --chown=node:node .npmrc .
 COPY --chown=node:node package.json .
 COPY --chown=node:node pnpm-lock.yaml .
+COPY --chown=node:node pnpm-workspace.yaml .
 COPY --chown=node:node api/package.json api/
 COPY --chown=node:node web/package.json web/
 
@@ -66,6 +67,7 @@ WORKDIR /home/node/app
 COPY --chown=node:node .npmrc .
 COPY --chown=node:node package.json .
 COPY --chown=node:node pnpm-lock.yaml .
+COPY --chown=node:node pnpm-workspace.yaml .
 COPY --chown=node:node api/package.json api/
 
 RUN --mount=type=cache,target=/home/node/.pnpm-store,uid=1000 \
@@ -95,6 +97,7 @@ WORKDIR /home/node/app
 COPY --chown=node:node .npmrc .
 COPY --chown=node:node package.json .
 COPY --chown=node:node pnpm-lock.yaml .
+COPY --chown=node:node pnpm-workspace.yaml .
 COPY --chown=node:node web/package.json web/
 
 RUN --mount=type=cache,target=/home/node/.pnpm-store,uid=1000 \
@@ -109,7 +112,8 @@ COPY --chown=node:node --from=web_build /home/node/app/web/dist /home/node/app/w
 ENV NODE_ENV=production \
   API_PROXY_TARGET=http://api:8911
 
-CMD ["node_modules/.bin/cedar-web-server", "--api-proxy-target", "$API_PROXY_TARGET"]
+# We use the shell form here for variable expansion.
+CMD node_modules/.bin/cedar-web-server --api-proxy-target $API_PROXY_TARGET
 
 # console
 # -------

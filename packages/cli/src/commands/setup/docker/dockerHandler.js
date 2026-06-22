@@ -49,9 +49,12 @@ export async function handler({ force }) {
   const configTomlPath = getConfigPath()
   const configFileName = path.basename(configTomlPath)
 
-  // Replace PM-specific placeholders in templates
+  // Replace PM-specific placeholders in templates.
+  // The command line uses `'{{DEV_CMD}}'` (quoted to keep YAML valid with
+  // the replacement marker), while the inline comment uses `{{DEV_CMD}}`
+  // unquoted. Handles both with optional quote matching.
   dockerComposeDevTemplateContent = dockerComposeDevTemplateContent.replace(
-    /'{{DEV_CMD}}'/g,
+    /'?\{\{DEV_CMD}}'?/g,
     formatCedarCommand(['dev']),
   )
 
