@@ -230,7 +230,7 @@ test('Should run prerender for web (packagesWorkspace disabled)', async () => {
   )
 })
 
-test('UD server entry task is included when --ud is passed', async () => {
+test('--ud triggers the Universal Deploy build', async () => {
   vi.spyOn(console, 'log').mockImplementation(() => {})
 
   await handler({ ud: true })
@@ -242,7 +242,6 @@ test('UD server entry task is included when --ud is passed', async () => {
       "Generating Prisma Client...",
       "Verifying graphql schema...",
       "Building App...",
-      "Bundling API server entry (Universal Deploy)...",
     ]
   `)
 })

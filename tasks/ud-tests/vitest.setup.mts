@@ -8,7 +8,7 @@ import { getConfig } from '@cedarjs/project-config'
 
 $.verbose = !!process.env.VERBOSE
 
-const fixtureUrl = new URL('./fixtures/cedar-app', import.meta.url)
+const fixtureUrl = new URL('../../__fixtures__/cedar-ud-app', import.meta.url)
 export const FIXTURE_PATH = fileURLToPath(fixtureUrl)
 
 /** Resolve the cedar CLI binary from the monorepo */

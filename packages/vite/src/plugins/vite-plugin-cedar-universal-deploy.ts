@@ -15,15 +15,6 @@ export interface CedarUniversalDeployPluginOptions {
 const VIRTUAL_CEDAR_FN_PREFIX = 'virtual:cedar-api:fn:'
 const RESOLVED_CEDAR_FN_PREFIX = '\0virtual:cedar-api:fn:'
 
-/**
- * The Symbol.for key used by @universal-deploy/store to persist entries on
- * globalThis across Vite plugin instances and separate build calls.
- * We need direct access here so that cedarUniversalDeployPlugin can clear
- * stale entries before re-registering.
- *
- */
-const UD_STORE_SYMBOL = Symbol.for('ud:store')
-
 const GRAPHQL_METHODS = ['GET', 'POST', 'OPTIONS'] as const
 
 /**
@@ -128,39 +119,6 @@ function toEntryMeta(route: CedarRouteRecord): EntryMeta {
   }
 }
 
-/**
- * Remove any previously registered Cedar UD entries from the global store.
- *
- * This prevents stale entries (registered by an earlier Vite build step or by
- * a different plugin instance) from being picked up by UD's catchAll()
- * dispatcher. For example, when `cedar build --ud` runs the web client build
- * before the API server build, the user's web vite.config.ts may include
- * cedarUniversalDeployPlugin with a different apiRootPath, producing stale
- * entry IDs that the API build's load handler cannot resolve.
- */
-function clearCedarEntries(): void {
-  // This couples directly to @universal-deploy/store internals (the symbol key
-  // and the { entries: { id?: string }[] } shape are not part of that library's
-  // public API). If the library ever renames its symbol or changes the entry
-  // shape, clearCedarEntries will silently become a no-op. The proper fix is to
-  // eliminate the need for clearing entirely, see
-  // docs/implementation-plans/universal-deploy-serve-refactoring.md which
-  // proposes merging buildCedarApp and buildUDApiServer into a single
-  // build step, removing the cross-build-step entry accumulation issue.
-  // TODO: Remove the need for this
-  const store: { entries: { id?: string }[] } | undefined = (
-    globalThis as Record<symbol, unknown>
-  )[UD_STORE_SYMBOL] as { entries: { id?: string }[] } | undefined
-
-  if (!store) {
-    return
-  }
-
-  store.entries = store.entries.filter(
-    (entry) => !entry.id?.startsWith(VIRTUAL_CEDAR_FN_PREFIX),
-  )
-}
-
 export function cedarUniversalDeployPlugin(
   options: CedarUniversalDeployPluginOptions = {},
 ): Plugin {
@@ -171,8 +129,6 @@ export function cedarUniversalDeployPlugin(
     process.env.CEDAR_API_ROOT_PATH ?? options.apiRootPath
   const routes = discoverCedarRoutes(effectiveApiRootPath ?? '/')
 
-  let entriesInjected = false
-
   return {
     name: 'cedar-universal-deploy',
     apply: 'build',
@@ -180,22 +136,12 @@ export function cedarUniversalDeployPlugin(
     config: {
       order: 'pre',
       handler() {
-        if (entriesInjected) {
-          return
-        }
-
-        entriesInjected = true
-
-        // Clear any stale Cedar entries from previous build steps (e.g. the web
-        // client build, which may use a different apiRootPath).
-        clearCedarEntries()
-
         // Register per-route API entries so UD adapters can split on
-        // individual functions (e.g. Cloudflare Workers). Entries are
-        // registered unconditionally so that they are available in the UD
-        // store before provider plugins (e.g. vite-plugin-vercel) read them
-        // during their configEnvironment hooks. The virtual module hooks
-        // below gate resolution to SSR-like environments only.
+        // individual functions. Entries are registered unconditionally so
+        // that they are available in the UD store before provider plugins
+        // (e.g. vite-plugin-vercel) read them during their configEnvironment
+        // hooks. The virtual module hooks below gate resolution to server
+        // environments only.
         for (const route of routes) {
           addEntry(toEntryMeta(route))
         }
@@ -203,13 +149,12 @@ export function cedarUniversalDeployPlugin(
     },
 
     buildStart() {
-      // Only run during the default 'ssr' build.
-      // The emitted chunks reference Node.js builtins and paths that are only
-      // relevant for server builds, so we can't run this for client builds.
-      // We also skip custom environments (they'd have other names) because
-      // those custom environments all currently get their inputs from the UD
-      // store via configEnvironment hooks instead
-      if (this.environment.name !== 'ssr') {
+      // Only run during the 'ud_server' build. This is a single-pass model
+      // where buildCedarApp({ ud: true }) declares a ud_server environment
+      // alongside client and api. Provider environments (vercel_edge,
+      // vercel_node, Netlify equivalents) get per-function bundles from the
+      // resolveId/load hooks below, not from chunk emission here.
+      if (this.environment.name !== 'ud_server') {
         return
       }
 

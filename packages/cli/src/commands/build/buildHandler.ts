@@ -25,12 +25,10 @@ import { detectPrerenderRoutes } from '@cedarjs/prerender/detection'
 import { type Paths } from '@cedarjs/project-config'
 import { timedTelemetry } from '@cedarjs/telemetry'
 import { buildCedarApp } from '@cedarjs/vite/build'
-import { buildUDApiServer } from '@cedarjs/vite/buildUDApiServer'
 
 import { generatePrismaCommand } from '../../lib/generatePrismaClient.js'
 import { getPaths, getConfig } from '../../lib/index.js'
 
-// @ts-expect-error - Types not available for JS files
 import { buildPackagesTask } from './buildPackagesTask.js'
 
 interface PackageJson {
@@ -187,8 +185,7 @@ export const handler = async ({
     nonApiWebWorkspaces.length > 0 &&
       usePackagesWorkspace && {
         title: 'Building Packages...',
-        task: (_ctx: unknown, task: unknown) =>
-          buildPackagesTask(task, nonApiWebWorkspaces),
+        task: (_ctx, task) => buildPackagesTask(task, nonApiWebWorkspaces),
       },
     (workspace.includes('web') || workspace.includes('api')) &&
       usePackagesWorkspace && {
@@ -377,7 +374,7 @@ export const handler = async ({
           process.chdir(cedarPaths.web.base)
 
           try {
-            await buildCedarApp({ verbose, workspace })
+            await buildCedarApp({ verbose, workspace, ud: true })
           } finally {
             process.chdir(originalCwd)
           }
@@ -393,13 +390,6 @@ export const handler = async ({
               path.join(getPaths().web.dist, '200.html'),
             )
           }
-        },
-      },
-    ud &&
-      workspace.includes('api') && {
-        title: 'Bundling API server entry (Universal Deploy)...',
-        task: () => {
-          return buildUDApiServer({ verbose })
         },
       },
   ]

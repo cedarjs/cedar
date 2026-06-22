@@ -1,6 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { catchAllEntry, getAllEntries } from '@universal-deploy/store'
+import { catchAll } from '@universal-deploy/vite'
 import type { EnvironmentOptions, PluginOption } from 'vite'
 import { createBuilder, normalizePath } from 'vite'
 
@@ -29,6 +31,7 @@ function resolveWithExtensions(id: string): string {
 export interface BuildCedarAppOptions {
   verbose?: boolean
   workspace?: string[]
+  ud?: boolean
 }
 
 /**
@@ -43,6 +46,7 @@ export interface BuildCedarAppOptions {
 export async function buildCedarApp({
   verbose = false,
   workspace = ['api', 'web'],
+  ud = false,
 }: BuildCedarAppOptions = {}) {
   const cedarPaths = getPaths()
   const cedarConfig = getConfig()
@@ -96,6 +100,33 @@ export async function buildCedarApp({
           },
         },
       },
+    }
+
+    if (ud) {
+      environments['ud_server'] = {
+        build: {
+          ssr: true,
+          outDir: path.join(cedarPaths.api.dist, 'ud'),
+          emptyOutDir: true,
+          rollupOptions: {
+            input: catchAllEntry,
+            output: {
+              entryFileNames: 'index.js',
+            },
+            external: (id: string) => {
+              if (id.startsWith('virtual:')) {
+                return false
+              } else if (id.startsWith('node:')) {
+                return true
+              } else if (!id.startsWith('.') && !path.isAbsolute(id)) {
+                return true
+              }
+
+              return false
+            },
+          },
+        },
+      }
     }
   }
 
@@ -227,10 +258,54 @@ export async function buildCedarApp({
           ) {
             await builder.build(builder.environments.api)
           }
+
+          if (
+            workspace.includes('api') &&
+            builder.environments['ud_server'] &&
+            !builder.environments['ud_server'].isBuilt
+          ) {
+            await builder.build(builder.environments['ud_server'])
+          }
         },
       },
     },
   ]
+
+  if (ud) {
+    plugins.push(catchAll())
+
+    plugins.push({
+      name: 'cedar-ud-verify-routes',
+      configResolved() {
+        const entries = getAllEntries()
+        if (entries.length === 0) {
+          console.warn(
+            '\n',
+            ' Warning: No Universal Deploy API routes were registered.\n',
+            ' The built server entry will be an empty router (404 for all\n',
+            ' requests). Check that you have API functions under\n',
+            ' `api/src/functions/` and that your vite config includes\n',
+            ' `cedarUniversalDeployPlugin()`.\n',
+          )
+        }
+      },
+    })
+
+    plugins.push({
+      name: 'cedar-ud-write-package-json',
+      applyToEnvironment(env) {
+        return env.name === 'ud_server'
+      },
+      closeBundle() {
+        const dir = path.join(cedarPaths.api.dist, 'ud')
+        fs.mkdirSync(dir, { recursive: true })
+        fs.writeFileSync(
+          path.join(dir, 'package.json'),
+          JSON.stringify({ type: 'module' }, null, 2),
+        )
+      },
+    })
+  }
 
   if (workspace.includes('api')) {
     plugins.push({
@@ -240,11 +315,13 @@ export async function buildCedarApp({
         if (!importer?.startsWith(cedarPaths.api.src)) {
           return null
         }
+
         if (id.startsWith('src/')) {
           return resolveWithExtensions(
             path.join(cedarPaths.api.src, id.slice(4)),
           )
         }
+
         return null
       },
     })
