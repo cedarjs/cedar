@@ -135,6 +135,7 @@ export async function setUpTestProject({
         'packages:',
         '  - api',
         '  - web',
+        '  - packages/*',
         '',
         'allowBuilds:',
         "  '@prisma/engines': true",
