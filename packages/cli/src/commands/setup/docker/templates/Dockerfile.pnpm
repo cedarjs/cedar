@@ -16,7 +16,6 @@ RUN apt-get update && apt-get install -y \
 USER node
 WORKDIR /home/node/app
 
-COPY --chown=node:node .npmrc .
 COPY --chown=node:node package.json .
 COPY --chown=node:node pnpm-lock.yaml .
 COPY --chown=node:node pnpm-workspace.yaml .
@@ -64,7 +63,6 @@ RUN apt-get update && apt-get install -y \
 USER node
 WORKDIR /home/node/app
 
-COPY --chown=node:node .npmrc .
 COPY --chown=node:node package.json .
 COPY --chown=node:node pnpm-lock.yaml .
 COPY --chown=node:node pnpm-workspace.yaml .
@@ -94,7 +92,6 @@ RUN npm install --global corepack
 USER node
 WORKDIR /home/node/app
 
-COPY --chown=node:node .npmrc .
 COPY --chown=node:node package.json .
 COPY --chown=node:node pnpm-lock.yaml .
 COPY --chown=node:node pnpm-workspace.yaml .

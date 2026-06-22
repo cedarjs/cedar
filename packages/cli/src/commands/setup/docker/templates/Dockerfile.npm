@@ -16,7 +16,6 @@ RUN apt-get update && apt-get install -y \
 USER node
 WORKDIR /home/node/app
 
-COPY --chown=node:node .npmrc .
 COPY --chown=node:node package*.json .
 COPY --chown=node:node api/package.json api/
 COPY --chown=node:node web/package.json web/
@@ -64,7 +63,6 @@ WORKDIR /home/node/app
 
 # npm doesn't have a workspace focus command, so we copy all workspace
 # package.json files and install production deps for all workspaces.
-COPY --chown=node:node .npmrc .
 COPY --chown=node:node package*.json .
 COPY --chown=node:node api/package.json api/
 COPY --chown=node:node web/package.json web/
@@ -93,7 +91,6 @@ RUN npm install --global corepack
 USER node
 WORKDIR /home/node/app
 
-COPY --chown=node:node .npmrc .
 COPY --chown=node:node package*.json .
 COPY --chown=node:node api/package.json api/
 COPY --chown=node:node web/package.json web/
