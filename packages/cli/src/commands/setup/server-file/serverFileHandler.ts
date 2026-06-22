@@ -71,7 +71,10 @@ export async function handler({
     console.error(c.error(message))
     // exitCode is a non-standard property Listr2 errors may carry
     const exitCode =
-      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+      typeof e === 'object' &&
+      e !== null &&
+      'exitCode' in e &&
+      typeof e.exitCode === 'number'
         ? e.exitCode
         : 1
     process.exit(exitCode)

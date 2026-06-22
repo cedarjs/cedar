@@ -78,10 +78,8 @@ export const handler = async ({
     if (hasServerFile) {
       runWithNode(serverFilePath, execaConfig)
     } else {
-      const { handler: apiHandler } =
-        (await import('@cedarjs/api-server/apiCliConfigHandler')) as {
-          handler: () => void
-        }
+      const { handler: apiHandler }: { handler: () => void } =
+        await import('@cedarjs/api-server/apiCliConfigHandler')
       apiHandler()
     }
   }

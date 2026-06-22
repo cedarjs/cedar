@@ -5,7 +5,7 @@ import uniqWith from 'lodash/uniqWith.js'
 import { nodeIs, sieve } from './algorithms.js'
 
 const OPAQUE_UID_TAG =
-  'RW_MERGE_OPAQUE_UID_Q2xldmVyIHlvdSEgSGF2ZSBhIGNvb2tpZS4='
+  'CEDAR_MERGE_OPAQUE_UID_Q2xldmVyIHlvdSEgSGF2ZSBhIGNvb2tpZS4='
 
 // A MergeProxy wraps a Babel NodePath and exposes the underlying node's
 // properties directly, plus a `path` property pointing back to the NodePath.
@@ -46,15 +46,11 @@ const strictEquality = (lhs: unknown, rhs: unknown) => lhs === rhs
 function hasName(v: unknown): v is { name: string } {
   return typeof v === 'object' && v !== null && 'name' in v
 }
+function hasKey(v: unknown): v is Record<'key', unknown> {
+  return typeof v === 'object' && v !== null && 'key' in v
+}
 function hasKeyName(v: unknown): v is { key: { name: string } } {
-  return (
-    typeof v === 'object' &&
-    v !== null &&
-    'key' in v &&
-    typeof (v as { key?: unknown }).key === 'object' &&
-    (v as { key?: unknown }).key !== null &&
-    'name' in (v as { key: object }).key
-  )
+  return hasKey(v) && hasName(v.key)
 }
 function hasValue(v: unknown): v is { value: unknown } {
   return typeof v === 'object' && v !== null && 'value' in v
@@ -125,26 +121,16 @@ export const keepBothStatementParents = opaquely(
   },
 )
 
-// Each interleave/concat strategy function is stored keyed by node type name
-// and is only ever called when the proxy's runtime type matches the key.
-// The casts inside each function are safe because the strategy map key
-// guarantees the node type at the call site.
-type ImportDeclarationProxy = MergeProxy<t.ImportDeclaration>
-type ArrayExpressionProxy = MergeProxy<t.ArrayExpression>
-type ObjectExpressionProxy = MergeProxy<t.ObjectExpression>
-type StringLiteralProxy = MergeProxy<t.StringLiteral>
-
 const interleaveStrategy: Partial<
   Record<string, (base: MergeProxy, ext: MergeProxy) => void>
 > = {
   ImportDeclaration(base, ext) {
-    // Safe: interleaveStrategy['ImportDeclaration'] is only called when
-    // base.path.type === 'ImportDeclaration'
-    const baseImport = base as unknown as ImportDeclarationProxy
-    const extImport = ext as unknown as ImportDeclarationProxy
+    if (!t.isImportDeclaration(base) || !t.isImportDeclaration(ext)) {
+      return
+    }
 
-    const baseSpecs = baseImport.specifiers
-    const extSpecs = extImport.specifiers
+    const baseSpecs = base.specifiers
+    const extSpecs = ext.specifiers
 
     const importSpecifierEquality = (
       lhs: t.ImportDeclaration['specifiers'][number],
@@ -173,7 +159,7 @@ const interleaveStrategy: Partial<
     // Rule 1: If there's exactly 1 import with 0 specifiers, it's a side-effect import and should
     // not be merged, because adding specifiers would change its meaning.
     if (!baseSpecs.length !== !extSpecs.length) {
-      return keepBothStatementParents(baseImport, extImport)
+      return keepBothStatementParents(base, ext)
     }
 
     // Rule 2: Default specifiers must appear first, and be unique in a statement.
@@ -196,10 +182,10 @@ const interleaveStrategy: Partial<
       [uniqueSpecifiersOfType('ImportSpecifier'), importPosition],
     )
 
-    baseImport.specifiers = firstSpecifierList
+    base.specifiers = firstSpecifierList
     if (rest.length) {
-      baseImport.path.insertAfter(
-        rest.map((specs) => t.importDeclaration(specs, baseImport.source)),
+      base.path.insertAfter(
+        rest.map((specs) => t.importDeclaration(specs, base.source)),
       )
     }
   },
@@ -208,33 +194,36 @@ const interleaveStrategy: Partial<
 export function interleave(base: MergeProxy, ext: MergeProxy): void {
   requireSameType(base, ext)
   requireStrategyExists(base, ext, interleaveStrategy, 'interleave')
-  interleaveStrategy[base.path.type]!(base, ext)
+  interleaveStrategy[base.path.type]?.(base, ext)
 }
 
 const concatStrategy: Partial<
   Record<string, (base: MergeProxy, ext: MergeProxy) => void>
 > = {
   ArrayExpression(base, ext) {
-    const b = base as unknown as ArrayExpressionProxy
-    const e = ext as unknown as ArrayExpressionProxy
-    b.elements = [...b.elements, ...e.elements]
+    if (!t.isArrayExpression(base) || !t.isArrayExpression(ext)) {
+      return
+    }
+    base.elements = [...base.elements, ...ext.elements]
   },
   ObjectExpression(base, ext) {
-    const b = base as unknown as ObjectExpressionProxy
-    const e = ext as unknown as ObjectExpressionProxy
-    b.properties = [...b.properties, ...e.properties]
+    if (!t.isObjectExpression(base) || !t.isObjectExpression(ext)) {
+      return
+    }
+    base.properties = [...base.properties, ...ext.properties]
   },
   StringLiteral(base, ext) {
-    const b = base as unknown as StringLiteralProxy
-    const e = ext as unknown as StringLiteralProxy
-    b.value = b.value.concat(e.value)
+    if (!t.isStringLiteral(base) || !t.isStringLiteral(ext)) {
+      return
+    }
+    base.value = base.value.concat(ext.value)
   },
 }
 
 export function concat(base: MergeProxy, ext: MergeProxy): void {
   requireSameType(base, ext)
   requireStrategyExists(base, ext, concatStrategy, 'concat')
-  concatStrategy[base.path.type]!(base, ext)
+  concatStrategy[base.path.type]?.(base, ext)
 }
 
 type EqualityFn = (lhs: unknown, rhs: unknown) => boolean
@@ -243,16 +232,18 @@ const concatUniqueStrategy: Partial<
   Record<string, (base: MergeProxy, ext: MergeProxy, eq?: EqualityFn) => void>
 > = {
   ArrayExpression(base, ext, eq) {
-    const b = base as unknown as ArrayExpressionProxy
-    const e = ext as unknown as ArrayExpressionProxy
-    const equalFn = eq ?? defaultEquality(b.elements, e.elements)
-    b.elements = uniqWith([...b.elements, ...e.elements], equalFn)
+    if (!t.isArrayExpression(base) || !t.isArrayExpression(ext)) {
+      return
+    }
+    const equalFn = eq ?? defaultEquality(base.elements, ext.elements)
+    base.elements = uniqWith([...base.elements, ...ext.elements], equalFn)
   },
   ObjectExpression(base, ext, eq) {
-    const b = base as unknown as ObjectExpressionProxy
-    const e = ext as unknown as ObjectExpressionProxy
-    const equalFn = eq ?? defaultEquality(b.properties, e.properties)
-    b.properties = uniqWith([...b.properties, ...e.properties], equalFn)
+    if (!t.isObjectExpression(base) || !t.isObjectExpression(ext)) {
+      return
+    }
+    const equalFn = eq ?? defaultEquality(base.properties, ext.properties)
+    base.properties = uniqWith([...base.properties, ...ext.properties], equalFn)
   },
 }
 
@@ -277,7 +268,7 @@ export function concatUnique(
         concatUniqueStrategy,
         'concatUnique',
       )
-      concatUniqueStrategy[base.path.type]!(base, innerExt, eq)
+      concatUniqueStrategy[base.path.type]?.(base, innerExt, eq)
     }
   }
 
@@ -289,5 +280,5 @@ export function concatUnique(
   requireSameType(base, ext)
   requireStrategyExists(base, ext, concatUniqueStrategy, 'concatUnique')
   // The type-specific concatUnique implementations will provide an appropriate equality operator.
-  concatUniqueStrategy[base.path.type]!(base, ext)
+  concatUniqueStrategy[base.path.type]?.(base, ext)
 }
