@@ -23,7 +23,7 @@ COPY --chown=node:node api/package.json api/
 COPY --chown=node:node web/package.json web/
 
 RUN --mount=type=cache,target=/home/node/.pnpm-store,uid=1000 \
-  pnpm install --frozen-lockfile
+  pnpm install --frozen-lockfile --store-dir /home/node/.pnpm-store
 
 COPY --chown=node:node cedar.toml* redwood.toml* ./
 COPY --chown=node:node graphql.config.cjs .
@@ -69,7 +69,7 @@ COPY --chown=node:node pnpm-workspace.yaml .
 COPY --chown=node:node api/package.json api/
 
 RUN --mount=type=cache,target=/home/node/.pnpm-store,uid=1000 \
-  pnpm install --prod --filter api --frozen-lockfile
+  pnpm install --prod --filter api --frozen-lockfile --store-dir /home/node/.pnpm-store
 
 COPY --chown=node:node cedar.toml* redwood.toml* ./
 COPY --chown=node:node graphql.config.cjs .
@@ -98,7 +98,7 @@ COPY --chown=node:node pnpm-workspace.yaml .
 COPY --chown=node:node web/package.json web/
 
 RUN --mount=type=cache,target=/home/node/.pnpm-store,uid=1000 \
-  pnpm install --prod --filter web --frozen-lockfile
+  pnpm install --prod --filter web --frozen-lockfile --store-dir /home/node/.pnpm-store
 
 COPY --chown=node:node cedar.toml* redwood.toml* ./
 COPY --chown=node:node graphql.config.cjs .
