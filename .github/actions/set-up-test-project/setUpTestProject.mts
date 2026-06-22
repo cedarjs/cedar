@@ -112,17 +112,30 @@ export async function setUpTestProject({
     if (packageManager === 'npm') {
       pkg.overrides = { 'react-is': '19.2.3' }
     } else {
-      pkg.pnpm = {
-        overrides: { 'react-is': '19.2.3' },
-        onlyBuiltDependencies: [
-          '@prisma/engines',
-          '@swc/core',
-          'esbuild',
-          'msw',
-          'prisma',
-          'protobufjs',
-        ],
-      }
+      // pnpm 11 no longer reads the `pnpm` field from package.json. Settings
+      // must go in pnpm-workspace.yaml. The `overrides` for react-is is set
+      // at root-level package.json too (where both npm and pnpm can read it).
+      pkg.overrides = { 'react-is': '19.2.3' }
+
+      const yaml = [
+        'packages:',
+        '  - api',
+        '  - web',
+        '',
+        'allowBuilds:',
+        "  '@prisma/engines': true",
+        "  '@swc/core': true",
+        '  esbuild: true',
+        '  msw: true',
+        '  prisma: true',
+        '  protobufjs: true',
+        '',
+        'overrides:',
+        "  'react-is': '19.2.3'",
+        '',
+      ].join('\n')
+
+      fs.writeFileSync(path.join(testProjectPath, 'pnpm-workspace.yaml'), yaml)
     }
 
     if (packageManager === 'npm') {

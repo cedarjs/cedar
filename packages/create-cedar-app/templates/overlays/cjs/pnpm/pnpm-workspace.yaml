@@ -1,3 +1,14 @@
 packages:
   - api
   - web
+
+allowBuilds:
+  '@prisma/engines': true
+  '@swc/core': true
+  esbuild: true
+  msw: true
+  prisma: true
+  protobufjs: true
+
+overrides:
+  'react-is': '19.2.3'
