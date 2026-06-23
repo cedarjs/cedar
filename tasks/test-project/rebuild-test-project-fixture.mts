@@ -12,10 +12,7 @@ import yargs from 'yargs/yargs'
 import { RedwoodTUI, ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 
 import { apiTasksList } from './base-tasks.mts'
-import {
-  addFrameworkDepsToProject,
-  copyFrameworkPackages,
-} from './frameworkLinking.mts'
+import { copyFrameworkPackages } from './frameworkLinking.mts'
 import { setOutputPath } from './paths.mts'
 import { webTasks } from './tui-tasks.mts'
 import { isAwaitable, isTuiError } from './typing.mts'
@@ -421,22 +418,8 @@ async function rebuildTestProject() {
     task: createProject,
   })
 
-  // TODO: See if this is needed now with tarsync
   await tuiTask({
     step: 2,
-    title: '[link] Adding framework dependencies to project',
-    content: 'Adding framework dependencies to project...',
-    task: () => {
-      return addFrameworkDepsToProject(
-        CEDAR_FRAMEWORK_PATH,
-        OUTPUT_PROJECT_PATH,
-        'pipe', // TODO: Remove this when everything is using @rwjs/tui
-      )
-    },
-  })
-
-  await tuiTask({
-    step: 3,
     title: 'Installing node_modules',
     content: 'yarn install',
     task: async () => {
@@ -453,7 +436,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 4,
+    step: 3,
     title: 'Updating ports in cedar.toml (or redwood.toml)...',
     task: () => {
       // We do this, to make it easier to run multiple test projects in parallel
@@ -481,7 +464,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 5,
+    step: 4,
     title: '[link] Copying framework packages to project',
     task: () => {
       return copyFrameworkPackages(
@@ -493,7 +476,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 6,
+    step: 5,
     title: 'Prep for env var tests',
     task: () => {
       // Prisma's `env()` helper will throw an error if it cannot find the
@@ -536,7 +519,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 7,
+    step: 6,
     title: 'Apply web codemods',
     task: () => {
       return webTasks(OUTPUT_PROJECT_PATH, live)
@@ -544,7 +527,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 8,
+    step: 7,
     title: 'Apply api codemods',
     task: async () => {
       setOutputPath(OUTPUT_PROJECT_PATH)
@@ -554,7 +537,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 9,
+    step: 8,
     title: 'Add workspace packages',
     task: async () => {
       const cedarTomlPath = path.join(OUTPUT_PROJECT_PATH, 'cedar.toml')
@@ -708,7 +691,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 10,
+    step: 9,
     title: 'Add scripts',
     task: async () => {
       const nestedPath = path.join(OUTPUT_PROJECT_PATH, 'scripts', 'one', 'two')
@@ -778,7 +761,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 11,
+    step: 10,
     title: 'Add test functions',
     task: async () => {
       const functionsDir = path.join(
@@ -837,7 +820,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 12,
+    step: 11,
     title: 'Running prisma migrate reset',
     task: () => {
       return exec(
@@ -849,7 +832,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 13,
+    step: 12,
     title: 'Lint --fix all the things',
     task: async () => {
       try {
@@ -880,7 +863,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 14,
+    step: 13,
     title: 'Replace and Cleanup Fixture',
     task: async () => {
       // @TODO: This only works on UNIX, we should use path.join everywhere
@@ -964,7 +947,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 15,
+    step: 14,
     title: 'All done!',
     task: () => {
       console.log('-'.repeat(30))
