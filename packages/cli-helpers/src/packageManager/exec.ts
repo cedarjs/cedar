@@ -158,7 +158,7 @@ export function runTransitiveBinSync(
   }
 
   // npm and yarn
- return execa.sync('npx', [bin, ...args], options)
+  return execa.sync('npx', [bin, ...args], options)
 }
 
 /**
