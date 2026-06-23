@@ -4,6 +4,7 @@ import 'dotenv-defaults/config'
 import execa from 'execa'
 
 import { getPaths } from '@cedarjs/project-config'
+import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 export default async function () {
   if (process.env.SKIP_DB_PUSH === '1') {
@@ -21,7 +22,11 @@ export default async function () {
       ? ['prisma', 'migrate', 'reset', '--force']
       : ['prisma', 'db', 'push', '--force-reset', '--accept-data-loss']
 
-  execa.sync('yarn', ['cedar', ...command], {
+  const pm = getPackageManager()
+  const pmExec = pm === 'npm' ? 'npx' : pm
+  const pmArgs =
+    pm === 'pnpm' ? ['exec', 'cedar', ...command] : ['cedar', ...command]
+  execa.sync(pmExec, pmArgs, {
     cwd: cedarPaths.api.base,
     stdio: 'inherit',
     env: process.env,

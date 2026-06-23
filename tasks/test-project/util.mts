@@ -35,18 +35,25 @@ export async function applyCodemod(codemod: string, target: string) {
 export const getExecaOptions = (
   cwd: string,
   stdio: 'inherit' | 'pipe' = 'pipe',
-): ExecaOptions => ({
-  shell: true,
-  stdio,
-  cleanup: true,
-  cwd,
-  env: {
-    ...process.env,
-    RW_PATH: path.join(__dirname, '../../'),
-    CFW_PATH: path.join(__dirname, '../../'),
-    RWFW_PATH: path.join(__dirname, '../../'),
-  },
-})
+): ExecaOptions => {
+  // Yarn sets PROJECT_CWD which causes @cedarjs/web/dist/cjs/bins/cedar.js to
+  // chdir to the Yarn project root, overriding our explicit cwd. Unset it so
+  // that the child process inherits our intended working directory.
+  const env = Object.fromEntries(
+    Object.entries(process.env).filter(([key]) => key !== 'PROJECT_CWD'),
+  )
+  env.RW_PATH = path.join(__dirname, '../../')
+  env.CFW_PATH = path.join(__dirname, '../../')
+  env.RWFW_PATH = path.join(__dirname, '../../')
+
+  return {
+    shell: true,
+    stdio,
+    cleanup: true,
+    cwd,
+    env,
+  }
+}
 
 // Confirmation prompt when using --no-copyFromFixture --no-link'
 export async function confirmNoFixtureNoLink(

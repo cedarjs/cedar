@@ -10,18 +10,26 @@ import {
   getExecaOptions,
 } from './util.mts'
 
-export async function contactTask({ esm } = { esm: false }) {
+export async function contactTask({
+  esm = false,
+  packageManager = 'yarn',
+}: {
+  esm?: boolean
+  packageManager?: string
+} = {}) {
+  const cedarBin = packageManager === 'npm' ? 'npx' : packageManager
+
   const { contact } = await import('./codemods/models.mts')
 
   await addModel(contact)
 
   await exec(
-    `yarn cedar prisma migrate dev --name create_contact`,
+    `${cedarBin} cedar prisma migrate dev --name create_contact`,
     [],
     getExecaOptions(path.join(getOutputPath())),
   )
 
-  const generateScaffold = createBuilder('yarn cedar g scaffold')
+  const generateScaffold = createBuilder(`${cedarBin} cedar g scaffold`)
   await generateScaffold('contacts')
 
   const contactsServicePath = fullPath('api/src/services/contacts/contacts')

@@ -3,6 +3,8 @@ packages:
   - web
 
 allowBuilds:
+  '@clerk/shared': false
+  '@firebase/util': true
   '@prisma/client': true
   '@prisma/engines': true
   '@swc/core': true
@@ -13,6 +15,7 @@ allowBuilds:
   msw: true
   prisma: true
   protobufjs: true
+  unrs-resolver: false
 
 overrides:
   'react-is': '19.2.3'

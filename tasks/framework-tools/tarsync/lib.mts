@@ -166,19 +166,71 @@ export async function updateResolutions(projectPath: string) {
   let updatedPackageJson: Record<string, unknown>
 
   if (packageManager === 'pnpm') {
-    const existingOverrides = projectPackageJson.pnpm?.overrides ?? {}
-
-    updatedPackageJson = {
-      ...projectPackageJson,
-      pnpm: {
-        ...projectPackageJson.pnpm,
-        overrides: {
-          ...existingOverrides,
-          ...resolutions,
-          ...reactResolutions,
-        },
-      },
+    const allOverrides = {
+      ...resolutions,
+      ...reactResolutions,
     }
+
+    const pnpmWorkspacePath = path.join(projectPath, 'pnpm-workspace.yaml')
+    let workspaceContent = await fs.promises.readFile(
+      pnpmWorkspacePath,
+      'utf-8',
+    )
+
+    const overrideLines = Object.entries(allOverrides)
+      .map(([key, value]) => `  '${key}': '${value}'`)
+      .join('\n')
+
+    const overridesMatch = workspaceContent.match(/^(overrides:.*)$/m)
+    if (overridesMatch) {
+      const overrideStart = overridesMatch.index! + overridesMatch[0].length
+      const afterHeader = workspaceContent.slice(overrideStart)
+      const existingLines = afterHeader.split('\n')
+      let lastOverrideLine = 0
+      const overrideEnd = (() => {
+        for (let i = 1; i < existingLines.length; i++) {
+          if (/^\S/.test(existingLines[i]) && existingLines[i].trim()) {
+            return i
+          }
+          if (/^\s+'.+':/.test(existingLines[i])) {
+            lastOverrideLine = i
+          }
+        }
+        return lastOverrideLine + 1
+      })()
+
+      const existingBlock = existingLines.slice(1, overrideEnd).join('\n')
+      const existingKeys = new Set(
+        existingBlock
+          .split('\n')
+          .map((l) => l.match(/^\s+'([^']+)':/)?.[1])
+          .filter(Boolean),
+      )
+
+      const newLines = Object.entries(allOverrides)
+        .filter(([key]) => !existingKeys.has(key))
+        .map(([key, value]) => `  '${key}': '${value}'`)
+        .join('\n')
+
+      if (newLines) {
+        const insertAt =
+          overrideStart +
+          existingLines.slice(0, lastOverrideLine + 1).join('\n').length
+
+        workspaceContent =
+          workspaceContent.slice(0, insertAt + 1) +
+          '\n' +
+          newLines +
+          workspaceContent.slice(insertAt + 1)
+      }
+    } else {
+      workspaceContent += '\noverrides:\n' + overrideLines + '\n'
+    }
+
+    await fs.promises.writeFile(pnpmWorkspacePath, workspaceContent)
+
+    updatedPackageJson = { ...projectPackageJson }
+    delete updatedPackageJson.pnpm
   } else {
     updatedPackageJson = {
       ...projectPackageJson,
