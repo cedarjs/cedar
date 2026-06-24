@@ -57,16 +57,20 @@ describe('addRootPackages', () => {
     )
   })
 
-  it('pnpm: runs pnpm add <packages>', async () => {
+  it('pnpm: runs pnpm add -w <packages>', async () => {
     vi.mocked(getPackageManager).mockReturnValue('pnpm')
     await addRootPackages(['lodash'])
-    expect(execa).toHaveBeenCalledWith('pnpm', ['add', 'lodash'], {})
+    expect(execa).toHaveBeenCalledWith('pnpm', ['add', 'lodash', '-w'], {})
   })
 
-  it('pnpm: runs pnpm add -D <packages> with dev flag', async () => {
+  it('pnpm: runs pnpm add -D -w <packages> with dev flag', async () => {
     vi.mocked(getPackageManager).mockReturnValue('pnpm')
     await addRootPackages(['typescript'], { dev: true })
-    expect(execa).toHaveBeenCalledWith('pnpm', ['add', '-D', 'typescript'], {})
+    expect(execa).toHaveBeenCalledWith(
+      'pnpm',
+      ['add', '-D', 'typescript', '-w'],
+      {},
+    )
   })
 
   it('passes execa options without the dev flag', async () => {

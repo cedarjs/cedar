@@ -17,8 +17,9 @@ export function addRootPackages(packages: string[], options?: AddOptions) {
   const { dev, ...execaOptions } = options ?? {}
   const addCmd = pm === 'npm' ? 'install' : 'add'
   const devFlag = dev ? ['-D'] : []
+  const rootFlag = pm === 'pnpm' ? ['-w'] : []
 
-  return execa(pm, [addCmd, ...devFlag, ...packages], execaOptions)
+  return execa(pm, [addCmd, ...devFlag, ...packages, ...rootFlag], execaOptions)
 }
 
 /**
