@@ -31,8 +31,8 @@ export async function replacePlaceholders(
   }
 
   const patterns = [
-    '**/*.{cjs,json,md,mjs,js,ts,yml,yaml}',
-    '**/.*/**/*.{json,md,js,ts,yml,yaml}',
+    '**/*.{json,md,js,ts,mjs,cjs,yml,yaml}',
+    '**/.*/**/*.{json,md,js,ts,mjs,cjs,yml,yaml}',
     '**/.env*',
   ]
 
