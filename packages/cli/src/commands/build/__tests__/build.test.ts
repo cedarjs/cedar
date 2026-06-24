@@ -15,6 +15,10 @@ vi.mock('@cedarjs/telemetry', () => {
   }
 })
 
+vi.mock('@cedarjs/project-config/workspaces', () => ({
+  getNonApiWebWorkspaces: () => ['packages/*'],
+}))
+
 vi.mock('@cedarjs/project-config', () => {
   return {
     getPaths: () => {
@@ -196,6 +200,7 @@ test('Should run prerender for web (packagesWorkspace enabled)', async () => {
   const tasks = Array.isArray(firstCallArg) ? firstCallArg : [firstCallArg]
   expect(tasks.map((x: ListrTask) => x.title)).toMatchInlineSnapshot(`
     [
+      "Building Packages...",
       "Checking workspace packages...",
       "Building Web...",
     ]
