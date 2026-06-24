@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import type { ListrRenderer, ListrTaskWrapper } from 'listr2'
+import type { ListrRendererFactory, ListrTaskWrapper } from 'listr2'
 
 import { runScript } from '@cedarjs/cli-helpers/packageManager/exec'
 import { importStatementPath } from '@cedarjs/project-config'
@@ -10,7 +10,7 @@ import { errorTelemetry } from '@cedarjs/telemetry'
 import { getPaths } from '../../lib/index.js'
 
 export async function buildPackagesTask(
-  task: ListrTaskWrapper<unknown, typeof ListrRenderer, typeof ListrRenderer>,
+  task: ListrTaskWrapper<unknown, ListrRendererFactory, ListrRendererFactory>,
   nonApiWebWorkspaces: string[],
 ) {
   const cedarPaths = getPaths()
