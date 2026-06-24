@@ -28,6 +28,16 @@
         "types": "./dist/cjs/packageManager.d.ts",
         "default": "./dist/cjs/packageManager.js"
       }
+    },
+    "./workspaces": {
+      "import": {
+        "types": "./dist/workspaces.d.ts",
+        "default": "./dist/workspaces.js"
+      },
+      "default": {
+        "types": "./dist/cjs/workspaces.d.ts",
+        "default": "./dist/cjs/workspaces.js"
+      }
     }
   },
   "types": "./dist/index.d.ts",

@@ -78,6 +78,16 @@
         "types": "./dist/cjs/packageManager/display.d.ts",
         "default": "./dist/cjs/packageManager/display.js"
       }
+    },
+    "./packageManager/workspaces": {
+      "import": {
+        "types": "./dist/packageManager/workspaces.d.ts",
+        "default": "./dist/packageManager/workspaces.js"
+      },
+      "default": {
+        "types": "./dist/cjs/packageManager/workspaces.d.ts",
+        "default": "./dist/cjs/packageManager/workspaces.js"
+      }
     }
   },
   "types": "./dist/index.d.ts",

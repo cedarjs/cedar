@@ -22,7 +22,8 @@ import { generate } from '@cedarjs/internal/dist/generate/generate'
 import { generateGqlormArtifacts } from '@cedarjs/internal/dist/generate/gqlormSchema'
 import { loadAndValidateSdls } from '@cedarjs/internal/dist/validateSchema'
 import { detectPrerenderRoutes } from '@cedarjs/prerender/detection'
-import { type Paths } from '@cedarjs/project-config'
+import type { Paths } from '@cedarjs/project-config'
+import { getNonApiWebWorkspaces } from '@cedarjs/project-config/workspaces'
 import { timedTelemetry } from '@cedarjs/telemetry'
 import { buildCedarApp } from '@cedarjs/vite/build'
 import { buildUDApiServer } from '@cedarjs/vite/buildUDApiServer'
@@ -154,15 +155,7 @@ export const handler = async ({
     prismaSchemaExists &&
     (workspace.includes('api') || prerenderRoutes.length > 0)
 
-  const packageJsonPath = path.join(cedarPaths.base, 'package.json')
-  const packageJson: { workspaces?: unknown } = JSON.parse(
-    fs.readFileSync(packageJsonPath, 'utf8'),
-  )
-  const packageJsonWorkspaces = packageJson.workspaces
-  const nonApiWebWorkspaces =
-    Array.isArray(packageJsonWorkspaces) && packageJsonWorkspaces.length > 2
-      ? workspace.filter((w) => w !== 'api' && w !== 'web')
-      : []
+  const nonApiWebWorkspaces = getNonApiWebWorkspaces(cedarPaths.base)
 
   const gqlFeaturesTaskTitle = `Generating types needed for ${[
     useFragments && 'GraphQL Fragments',
