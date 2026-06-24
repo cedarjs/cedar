@@ -22,10 +22,13 @@
   },
   "dependenciesMeta": {
     "@clerk/shared": {
-      "built": true
+      "built": false
     },
     "@firebase/util": {
       "built": true
+    },
+    "@prisma/client": {
+      "built": false
     },
     "@prisma/engines": {
       "built": true
@@ -36,6 +39,12 @@
     "better-sqlite3": {
       "built": true
     },
+    "core-js": {
+      "built": false
+    },
+    "core-js-pure": {
+      "built": false
+    },
     "esbuild": {
       "built": true
     },
@@ -43,13 +52,13 @@
       "built": true
     },
     "prisma": {
-      "built": true
+      "built": false
     },
     "protobufjs": {
-      "built": true
+      "built": false
     },
     "unrs-resolver": {
-      "built": true
+      "built": false
     }
   }
 }
