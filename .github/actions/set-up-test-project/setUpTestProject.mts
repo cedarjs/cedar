@@ -288,6 +288,21 @@ export async function setUpTestProject({
 
   console.log()
 
+  if (packageManager === 'pnpm') {
+    // Update the seed command in prisma.config.cjs
+    const prismaConfigPath = path.join(
+      testProjectPath,
+      'api',
+      'prisma.config.cjs',
+    )
+    const prismaConfigContent = fs.readFileSync(prismaConfigPath, 'utf-8')
+    const updatedContent = prismaConfigContent.replace(
+      /seed:\s*'yarn cedar exec seed'/,
+      "seed: 'pnpm cedar exec seed'",
+    )
+    fs.writeFileSync(prismaConfigPath, updatedContent)
+  }
+
   console.log('Running prisma migrate reset')
   await execInProject(`${cedar} prisma migrate reset --force`)
 

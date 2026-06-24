@@ -1,10 +1,12 @@
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
+
 import { getConfig } from '../../../../lib/index.js'
 
 const config = getConfig()
 
 export const NETLIFY_UD_TOML = `\
 [build]
-command = "yarn cedar build --ud --apiRootPath=/.api/functions && yarn cedar prisma migrate deploy && yarn cedar data-migrate up"
+command = "${formatCedarCommand(['build', '--ud', '--apiRootPath=/.api/functions'])} && ${formatCedarCommand(['prisma', 'migrate', 'deploy'])} && ${formatCedarCommand(['data-migrate', 'up'])}"
 publish = "web/dist"
 
 [build.environment]

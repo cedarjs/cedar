@@ -92,6 +92,7 @@ export function runWorkspaceScript(
 
 /**
  * Run a local binary from node_modules/.bin (PnP-safe for Yarn).
+ * Does not support running transitive dependencies, like prisma
  *
  * - yarn:  `yarn <bin> [args]`
  * - npm:   `npx <bin> [args]`
@@ -116,9 +117,7 @@ export function runBin(
   return execa(pm, [bin, ...args], options)
 }
 
-/**
- * Synchronous variant of {@link runBin}.
- */
+/** Synchronous variant of {@link runBin} */
 export function runBinSync(
   bin: string,
   args: string[] = [],
@@ -136,6 +135,30 @@ export function runBinSync(
 
   // yarn
   return execa.sync(pm, [bin, ...args], options)
+}
+
+// `runBinSync` doesn't work for transitive dependencies because it uses
+// `yarn <bin>` for yarn, and yarn requires the bin to be a direct dependency of
+// the project. Cedar apps get some dependencies, like Prisma, as a transitive
+// dependency via the framework, so `yarn prisma` wouldn't work.
+// `npx` works also for transitive dependencies (or it'll download the
+// dependency if it can't find it, which is the case for Yarn PnP). `npx`
+// however verifies the `devEngines.packageManager` field, which we add for
+// pnpm. So we can't use `npx` for all package managers we support. pnpm does
+// however support `pnpm exec` also for transitive dependencies, so we use that
+export function runTransitiveBinSync(
+  bin: string,
+  args: string[] = [],
+  options?: ExecaSyncOptions,
+) {
+  const pm = getPackageManager()
+
+  if (pm === 'pnpm') {
+    return execa.sync(pm, ['exec', bin, ...args], options)
+  }
+
+  // npm and yarn
+  return execa.sync('npx', [bin, ...args], options)
 }
 
 /**
