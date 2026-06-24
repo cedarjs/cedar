@@ -35,7 +35,7 @@ describe('setupDocker', () => {
 
   test("description didn't change unintentionally", () => {
     expect(description).toMatchInlineSnapshot(
-      `"Setup the default Redwood Dockerfile"`,
+      `"Setup the default Cedar Dockerfile"`,
     )
   })
 
