@@ -5,6 +5,7 @@ import { Listr } from 'listr2'
 import type { ListrTask } from 'listr2'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import {
@@ -153,15 +154,6 @@ const vercelConfig = {
   },
 }
 
-const vercelUDConfig = {
-  build: {
-    command: 'yarn cedar build --ud --verbose --apiRootPath=/.api/functions',
-    env: {
-      ENABLE_EXPERIMENTAL_COREPACK: '1',
-    },
-  },
-}
-
 const notes = [
   'You are ready to deploy to Vercel!',
   'See: https://cedarjs.com/docs/deploy#vercel-deploy',
@@ -169,19 +161,33 @@ const notes = [
 
 const udNotes = [
   'You are ready to deploy to Vercel with Universal Deploy!',
-  'Build with: yarn cedar build --ud',
+  `Build with: ${formatCedarCommand(['build', '--ud'])}`,
   'See: https://cedarjs.com/docs/deploy#vercel-deploy',
 ]
 
 function writeVercelUDConfigTask({
   overwriteExisting = false,
 }: { overwriteExisting?: boolean } = {}): ListrTask {
+  const config = {
+    build: {
+      command: formatCedarCommand([
+        'build',
+        '--ud',
+        '--verbose',
+        '--apiRootPath=/.api/functions',
+      ]),
+      env: {
+        ENABLE_EXPERIMENTAL_COREPACK: '1',
+      },
+    },
+  }
+
   return {
     title: 'Writing vercel.json for Universal Deploy...',
     task: (_ctx: unknown, task: { title?: string }) => {
       writeFile(
         path.join(getPaths().base, 'vercel.json'),
-        JSON.stringify(vercelUDConfig, null, 2),
+        JSON.stringify(config, null, 2),
         { overwriteExisting },
         task,
       )

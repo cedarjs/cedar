@@ -1,10 +1,12 @@
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
+
 import { getConfig } from '../../../../lib/index.js'
 
 const config = getConfig()
 
 export const NETLIFY_TOML = `\
 [build]
-  command = "yarn cedar deploy netlify"
+  command = "${formatCedarCommand(['deploy', 'netlify'])}"
   publish = "web/dist"
   functions = "api/dist/functions"
 
