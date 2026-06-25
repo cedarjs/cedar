@@ -2144,7 +2144,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/types@npm:^7.0.0, @babel/types@npm:^7.1.6, @babel/types@npm:^7.18.13, @babel/types@npm:^7.18.9, @babel/types@npm:^7.20.7, @babel/types@npm:^7.21.3, @babel/types@npm:^7.26.10, @babel/types@npm:^7.29.7, @babel/types@npm:^7.3.3, @babel/types@npm:^7.4.4":
+"@babel/types@npm:7.29.7, @babel/types@npm:^7.0.0, @babel/types@npm:^7.1.6, @babel/types@npm:^7.18.13, @babel/types@npm:^7.18.9, @babel/types@npm:^7.20.7, @babel/types@npm:^7.21.3, @babel/types@npm:^7.26.10, @babel/types@npm:^7.29.7, @babel/types@npm:^7.3.3, @babel/types@npm:^7.4.4":
   version: 7.29.7
   resolution: "@babel/types@npm:7.29.7"
   dependencies:
@@ -2922,6 +2922,7 @@ __metadata:
     ansis: "npm:4.2.0"
     archiver: "npm:7.0.1"
     boxen: "npm:5.1.2"
+    camel-case: "npm:4.1.2"
     camelcase: "npm:6.3.0"
     change-case: "npm:4.1.2"
     ci-info: "npm:4.4.0"
@@ -3293,13 +3294,19 @@ __metadata:
     "@graphql-codegen/client-preset": "npm:5.3.0"
     "@graphql-codegen/core": "npm:5.0.2"
     "@graphql-codegen/fragment-matcher": "npm:6.0.1"
+    "@graphql-codegen/plugin-helpers": "npm:6.3.0"
     "@graphql-codegen/schema-ast": "npm:5.0.2"
     "@graphql-codegen/typed-document-node": "npm:6.1.8"
     "@graphql-codegen/typescript": "npm:5.0.10"
     "@graphql-codegen/typescript-operations": "npm:5.1.0"
     "@graphql-codegen/typescript-react-apollo": "npm:4.4.2"
     "@graphql-codegen/typescript-resolvers": "npm:5.1.8"
+    "@graphql-codegen/visitor-plugin-common": "npm:6.3.0"
+    "@graphql-tools/code-file-loader": "npm:8.1.29"
     "@graphql-tools/documents": "npm:1.0.1"
+    "@graphql-tools/graphql-file-loader": "npm:8.1.12"
+    "@graphql-tools/load": "npm:8.1.8"
+    "@graphql-tools/merge": "npm:9.1.9"
     "@prisma/dmmf": "npm:7.8.0"
     "@prisma/internals": "npm:7.8.0"
     "@sdl-codegen/node": "npm:2.0.1"
@@ -3307,6 +3314,7 @@ __metadata:
     concurrently: "npm:9.2.1"
     deepmerge: "npm:4.3.1"
     esbuild: "npm:0.27.7"
+    execa: "npm:5.1.1"
     fast-glob: "npm:3.3.3"
     graphql: "npm:16.13.2"
     graphql-tag: "npm:2.12.6"
@@ -3770,6 +3778,7 @@ __metadata:
     "@babel/generator": "npm:7.29.7"
     "@babel/parser": "npm:7.29.7"
     "@babel/traverse": "npm:7.29.7"
+    "@babel/types": "npm:7.29.7"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/babel-config": "workspace:*"
@@ -6128,7 +6137,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-codegen/plugin-helpers@npm:^6.3.0":
+"@graphql-codegen/plugin-helpers@npm:6.3.0, @graphql-codegen/plugin-helpers@npm:^6.3.0":
   version: 6.3.0
   resolution: "@graphql-codegen/plugin-helpers@npm:6.3.0"
   dependencies:
@@ -6240,7 +6249,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-codegen/visitor-plugin-common@npm:^6.3.0":
+"@graphql-codegen/visitor-plugin-common@npm:6.3.0, @graphql-codegen/visitor-plugin-common@npm:^6.3.0":
   version: 6.3.0
   resolution: "@graphql-codegen/visitor-plugin-common@npm:6.3.0"
   dependencies:
@@ -6295,7 +6304,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/code-file-loader@npm:^8.1.28":
+"@graphql-tools/code-file-loader@npm:8.1.29, @graphql-tools/code-file-loader@npm:^8.1.28":
   version: 8.1.29
   resolution: "@graphql-tools/code-file-loader@npm:8.1.29"
   dependencies:
@@ -6452,7 +6461,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/graphql-file-loader@npm:^8.0.0, @graphql-tools/graphql-file-loader@npm:^8.1.11":
+"@graphql-tools/graphql-file-loader@npm:8.1.12, @graphql-tools/graphql-file-loader@npm:^8.0.0, @graphql-tools/graphql-file-loader@npm:^8.1.11":
   version: 8.1.12
   resolution: "@graphql-tools/graphql-file-loader@npm:8.1.12"
   dependencies:
@@ -6511,7 +6520,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/load@npm:^8.1.0, @graphql-tools/load@npm:^8.1.8":
+"@graphql-tools/load@npm:8.1.8, @graphql-tools/load@npm:^8.1.0, @graphql-tools/load@npm:^8.1.8":
   version: 8.1.8
   resolution: "@graphql-tools/load@npm:8.1.8"
   dependencies:
@@ -13612,6 +13621,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"camel-case@npm:4.1.2, camel-case@npm:^4.1.2":
+  version: 4.1.2
+  resolution: "camel-case@npm:4.1.2"
+  dependencies:
+    pascal-case: "npm:^3.1.2"
+    tslib: "npm:^2.0.3"
+  checksum: 10c0/bf9eefaee1f20edbed2e9a442a226793bc72336e2b99e5e48c6b7252b6f70b080fc46d8246ab91939e2af91c36cdd422e0af35161e58dd089590f302f8f64c8a
+  languageName: node
+  linkType: hard
+
 "camel-case@npm:^3.0.0":
   version: 3.0.0
   resolution: "camel-case@npm:3.0.0"
@@ -13619,16 +13638,6 @@ __metadata:
     no-case: "npm:^2.2.0"
     upper-case: "npm:^1.1.1"
   checksum: 10c0/491c6bbf986b9d8355e12cca6beb719b44c2fe96e8526c09958a1b4e0dbb081a82ea59c13b5a6ccf9158ce5979cbe56a8a10d7322bfeed2d84725c6b89d8f934
-  languageName: node
-  linkType: hard
-
-"camel-case@npm:^4.1.2":
-  version: 4.1.2
-  resolution: "camel-case@npm:4.1.2"
-  dependencies:
-    pascal-case: "npm:^3.1.2"
-    tslib: "npm:^2.0.3"
-  checksum: 10c0/bf9eefaee1f20edbed2e9a442a226793bc72336e2b99e5e48c6b7252b6f70b080fc46d8246ab91939e2af91c36cdd422e0af35161e58dd089590f302f8f64c8a
   languageName: node
   linkType: hard
 

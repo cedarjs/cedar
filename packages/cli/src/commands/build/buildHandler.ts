@@ -30,7 +30,6 @@ import { buildUDApiServer } from '@cedarjs/vite/buildUDApiServer'
 import { generatePrismaCommand } from '../../lib/generatePrismaClient.js'
 import { getPaths, getConfig } from '../../lib/index.js'
 
-// @ts-expect-error - Types not available for JS files
 import { buildPackagesTask } from './buildPackagesTask.js'
 
 interface PackageJson {
@@ -187,7 +186,7 @@ export const handler = async ({
     nonApiWebWorkspaces.length > 0 &&
       usePackagesWorkspace && {
         title: 'Building Packages...',
-        task: (_ctx: unknown, task: unknown) =>
+        task: (_ctx: unknown, task) =>
           buildPackagesTask(task, nonApiWebWorkspaces),
       },
     (workspace.includes('web') || workspace.includes('api')) &&
