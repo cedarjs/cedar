@@ -35,7 +35,7 @@ function readPnpmWorkspaces(baseDir: string): string[] {
 
   try {
     const content = fs.readFileSync(yamlPath, 'utf8')
-    const match = content.match(/^packages:\n([\s\S]*?)(?=^\w|\Z)/m)
+    const match = content.match(/^packages:\n([\s\S]*?)(?=^\w|(?![\\s\\S]))/m)
     if (!match) {
       return []
     }
