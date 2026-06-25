@@ -1,5 +1,11 @@
 import { spawn } from 'node:child_process'
-import { copyFileSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
+import {
+  copyFileSync,
+  existsSync,
+  readFileSync,
+  renameSync,
+  writeFileSync,
+} from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -8,12 +14,7 @@ import type { PackageJson } from 'type-fest'
 async function runYarnScript(script: string) {
   const isWindows = process.platform === 'win32'
   const yarnPath = process.env.npm_execpath
-  const command = isWindows ? 'cmd.exe' : yarnPath ? process.execPath : 'yarn'
-  const args = isWindows
-    ? ['/d', '/s', '/c', `corepack yarn ${script}`]
-    : yarnPath
-      ? [yarnPath, script]
-      : [script]
+  const { args, command } = getYarnCommand({ isWindows, script, yarnPath })
 
   await new Promise<void>((resolve, reject) => {
     const child = spawn(command, args, {
@@ -22,14 +23,71 @@ async function runYarnScript(script: string) {
     })
 
     child.on('error', reject)
-    child.on('exit', (code) => {
+    child.on('exit', (code, signal) => {
       if (code === 0) {
         resolve()
-      } else {
+      } else if (code !== null) {
         reject(new Error(`yarn ${script} exited with code ${code}`))
+      } else {
+        reject(new Error(`yarn ${script} was killed by signal ${signal}`))
       }
     })
   })
+}
+
+function getYarnCommand({
+  isWindows,
+  script,
+  yarnPath,
+}: {
+  isWindows: boolean
+  script: string
+  yarnPath?: string
+}) {
+  if (isWindows) {
+    if (yarnPath) {
+      const yarnCmdPath = `${yarnPath}.cmd`
+
+      if (existsSync(yarnCmdPath)) {
+        return {
+          command: 'cmd.exe',
+          args: ['/d', '/c', 'call', yarnCmdPath, script],
+        }
+      }
+
+      const extension = path.extname(yarnPath).toLowerCase()
+
+      if (['.cjs', '.js', '.mjs'].includes(extension)) {
+        return { command: process.execPath, args: [yarnPath, script] }
+      }
+
+      if (['.bat', '.cmd'].includes(extension)) {
+        return {
+          command: 'cmd.exe',
+          args: ['/d', '/c', 'call', yarnPath, script],
+        }
+      }
+
+      return { command: yarnPath, args: [script] }
+    }
+
+    return {
+      command: 'cmd.exe',
+      args: ['/d', '/c', 'corepack', 'yarn', script],
+    }
+  }
+
+  if (!yarnPath) {
+    return { command: 'yarn', args: [script] }
+  }
+
+  const extension = path.extname(yarnPath).toLowerCase()
+
+  if (['.cjs', '.js', '.mjs'].includes(extension)) {
+    return { command: process.execPath, args: [yarnPath, script] }
+  }
+
+  return { command: yarnPath, args: [script] }
 }
 
 /**
