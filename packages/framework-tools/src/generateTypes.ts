@@ -1,4 +1,3 @@
-import { spawn } from 'node:child_process'
 import {
   copyFileSync,
   existsSync,
@@ -9,6 +8,7 @@ import {
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import execa from 'execa'
 import type { PackageJson } from 'type-fest'
 
 async function runYarnScript(script: string) {
@@ -16,23 +16,7 @@ async function runYarnScript(script: string) {
   const yarnPath = process.env.npm_execpath
   const { args, command } = getYarnCommand({ isWindows, script, yarnPath })
 
-  await new Promise<void>((resolve, reject) => {
-    const child = spawn(command, args, {
-      stdio: 'inherit',
-      shell: false,
-    })
-
-    child.on('error', reject)
-    child.on('exit', (code, signal) => {
-      if (code === 0) {
-        resolve()
-      } else if (code !== null) {
-        reject(new Error(`yarn ${script} exited with code ${code}`))
-      } else {
-        reject(new Error(`yarn ${script} was killed by signal ${signal}`))
-      }
-    })
-  })
+  await execa(command, args, { stdio: 'inherit' })
 }
 
 function getYarnCommand({
@@ -49,10 +33,7 @@ function getYarnCommand({
       const yarnCmdPath = `${yarnPath}.cmd`
 
       if (existsSync(yarnCmdPath)) {
-        return {
-          command: 'cmd.exe',
-          args: ['/d', '/c', 'call', yarnCmdPath, script],
-        }
+        return { command: yarnCmdPath, args: [script] }
       }
 
       const extension = path.extname(yarnPath).toLowerCase()
@@ -61,19 +42,12 @@ function getYarnCommand({
         return { command: process.execPath, args: [yarnPath, script] }
       }
 
-      if (['.bat', '.cmd'].includes(extension)) {
-        return {
-          command: 'cmd.exe',
-          args: ['/d', '/c', 'call', yarnPath, script],
-        }
-      }
-
       return { command: yarnPath, args: [script] }
     }
 
     return {
-      command: 'cmd.exe',
-      args: ['/d', '/c', 'corepack', 'yarn', script],
+      command: 'corepack',
+      args: ['yarn', script],
     }
   }
 
@@ -114,8 +88,8 @@ export async function generateTypesCjs() {
     await runYarnScript('build:types-cjs')
   } catch (e) {
     console.error('---- Error building CJS types ----')
-    process.exitCode = 1
-    throw new Error(String(e))
+    process.exitCode = getExitCode(e) ?? 1
+    throw e
   } finally {
     renameSync('package.json.bak', 'package.json')
   }
@@ -130,9 +104,21 @@ export async function generateTypesEsm() {
     await runYarnScript('build:types')
   } catch (e) {
     console.error('---- Error building ESM types ----')
-    process.exitCode = 1
-    throw new Error(String(e))
+    process.exitCode = getExitCode(e) ?? 1
+    throw e
   }
+}
+
+function getExitCode(e: unknown): number | undefined {
+  if (typeof e === 'object' && e !== null && 'exitCode' in e) {
+    const exitCode = e.exitCode
+
+    if (typeof exitCode === 'number') {
+      return exitCode
+    }
+  }
+
+  return undefined
 }
 
 /**
