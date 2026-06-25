@@ -2,7 +2,7 @@ name: 🧹 Cleanup Vercel projects
 
 on:
   schedule:
-    - cron: '0 * * * *' # hourly
+    - cron: '0 3 * * *' # daily at 03:00 UTC
   workflow_dispatch:
 
 jobs:
@@ -18,17 +18,31 @@ jobs:
           # Delete any whose timestamp is more than 2 hours old so active
           # deployments are never removed mid-run.
           CUTOFF=$(( $(date +%s) - 7200 ))
+          NEXT_CURSOR=""
 
-          curl -s "https://api.vercel.com/v9/projects?search=cedar-e2e-&limit=100" \
-            -H "Authorization: Bearer $VERCEL_TOKEN" | \
-          jq -r --argjson cutoff "$CUTOFF" \
-            '.projects[]
-             | select(.name | test("^cedar-e2e-[0-9]+$"))
-             | select((.name | ltrimstr("cedar-e2e-") | tonumber) < $cutoff)
-             | .id' | \
-          while read -r id; do
-            echo "Deleting project $id"
-            curl -s -X DELETE "https://api.vercel.com/v9/projects/$id" \
-              -H "Authorization: Bearer $VERCEL_TOKEN"
-            echo
+          while true; do
+            URL="https://api.vercel.com/v9/projects?search=cedar-e2e-&limit=100"
+            if [ -n "$NEXT_CURSOR" ]; then
+              URL="$URL&until=$NEXT_CURSOR"
+            fi
+
+            RESPONSE=$(curl -sf "https://api.vercel.com/v9/projects?search=cedar-e2e-&limit=100${NEXT_CURSOR:+&until=$NEXT_CURSOR}" \
+              -H "Authorization: Bearer $VERCEL_TOKEN")
+
+            echo "$RESPONSE" | \
+            jq -r --argjson cutoff "$CUTOFF" \
+              '.projects[]
+               | select(.name | test("^cedar-e2e-[0-9]+$"))
+               | select((.name | ltrimstr("cedar-e2e-") | tonumber) < $cutoff)
+               | .id' | \
+            while read -r id; do
+              echo "Deleting project $id"
+              curl -sf -X DELETE "https://api.vercel.com/v9/projects/$id" \
+                -H "Authorization: Bearer $VERCEL_TOKEN"
+            done
+
+            NEXT_CURSOR=$(echo "$RESPONSE" | jq -r '.pagination.next // empty')
+            if [ -z "$NEXT_CURSOR" ]; then
+              break
+            fi
           done
