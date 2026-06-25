@@ -4,6 +4,7 @@ import path from 'node:path'
 import { normalizePath } from 'vite'
 
 import type { Config, Paths } from '@cedarjs/project-config'
+import { getNonApiWebWorkspaces } from '@cedarjs/project-config/workspaces'
 
 /**
  * Given a workspace package directory and its parsed package.json, attempts to
@@ -90,20 +91,7 @@ export function getWorkspacePackageAliases(
   }
 
   try {
-    const rootPkgPath = path.join(cedarPaths.base, 'package.json')
-    const rootPkg = JSON.parse(fs.readFileSync(rootPkgPath, 'utf-8')) as {
-      workspaces?: unknown
-    }
-
-    if (!Array.isArray(rootPkg.workspaces) || rootPkg.workspaces.length <= 2) {
-      return {}
-    }
-
-    // Find workspaces that are not 'api' or 'web' (i.e. packages/* entries),
-    // mirroring the nonApiWebWorkspaces check in buildHandler.ts
-    const nonApiWebWorkspaces = (rootPkg.workspaces as string[]).filter(
-      (w) => w !== 'api' && w !== 'web',
-    )
+    const nonApiWebWorkspaces = getNonApiWebWorkspaces(cedarPaths.base)
 
     if (nonApiWebWorkspaces.length === 0) {
       return {}
