@@ -23,7 +23,6 @@ import { generateGqlormArtifacts } from '@cedarjs/internal/dist/generate/gqlormS
 import { loadAndValidateSdls } from '@cedarjs/internal/dist/validateSchema'
 import { detectPrerenderRoutes } from '@cedarjs/prerender/detection'
 import type { Paths } from '@cedarjs/project-config'
-import { getNonApiWebWorkspaces } from '@cedarjs/project-config/workspaces'
 import { timedTelemetry } from '@cedarjs/telemetry'
 import { buildCedarApp } from '@cedarjs/vite/build'
 import { buildUDApiServer } from '@cedarjs/vite/buildUDApiServer'
@@ -155,7 +154,9 @@ export const handler = async ({
     prismaSchemaExists &&
     (workspace.includes('api') || prerenderRoutes.length > 0)
 
-  const nonApiWebWorkspaces = getNonApiWebWorkspaces(cedarPaths.base)
+  const nonApiWebWorkspaces = workspace.filter(
+    (w) => w !== 'api' && w !== 'web',
+  )
 
   const gqlFeaturesTaskTitle = `Generating types needed for ${[
     useFragments && 'GraphQL Fragments',
