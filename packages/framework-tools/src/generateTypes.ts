@@ -1,9 +1,36 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+import { spawn } from 'node:child_process'
+import { copyFileSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import type { PackageJson } from 'type-fest'
-import { $ } from 'zx'
+
+async function runYarnScript(script: string) {
+  const isWindows = process.platform === 'win32'
+  const yarnPath = process.env.npm_execpath
+  const command = isWindows ? 'cmd.exe' : yarnPath ? process.execPath : 'yarn'
+  const args = isWindows
+    ? ['/d', '/s', '/c', `corepack yarn ${script}`]
+    : yarnPath
+      ? [yarnPath, script]
+      : [script]
+
+  await new Promise<void>((resolve, reject) => {
+    const child = spawn(command, args, {
+      stdio: 'inherit',
+      shell: false,
+    })
+
+    child.on('error', reject)
+    child.on('exit', (code) => {
+      if (code === 0) {
+        resolve()
+      } else {
+        reject(new Error(`yarn ${script} exited with code ${code}`))
+      }
+    })
+  })
+}
 
 /**
  * This function will run `yarn build:types-cjs` to generate the CJS type
@@ -17,7 +44,7 @@ import { $ } from 'zx'
  * [1]: https://github.com/arethetypeswrong/arethetypeswrong.github.io/issues/21#issuecomment-1494618930
  */
 export async function generateTypesCjs() {
-  await $`cp package.json package.json.bak`
+  copyFileSync('package.json', 'package.json.bak')
 
   const packageJson: PackageJson = JSON.parse(
     readFileSync('./package.json', 'utf-8'),
@@ -26,13 +53,13 @@ export async function generateTypesCjs() {
   writeFileSync('./package.json', JSON.stringify(packageJson, null, 2))
 
   try {
-    await $`yarn build:types-cjs`
-  } catch (e: any) {
+    await runYarnScript('build:types-cjs')
+  } catch (e) {
     console.error('---- Error building CJS types ----')
-    process.exitCode = e.exitCode
-    throw new Error(e)
+    process.exitCode = 1
+    throw new Error(String(e))
   } finally {
-    await $`mv package.json.bak package.json`
+    renameSync('package.json.bak', 'package.json')
   }
 }
 
@@ -42,11 +69,11 @@ export async function generateTypesCjs() {
  */
 export async function generateTypesEsm() {
   try {
-    await $`yarn build:types`
-  } catch (e: any) {
+    await runYarnScript('build:types')
+  } catch (e) {
     console.error('---- Error building ESM types ----')
-    process.exitCode = e.exitCode
-    throw new Error(e)
+    process.exitCode = 1
+    throw new Error(String(e))
   }
 }
 
