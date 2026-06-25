@@ -3,8 +3,8 @@ import { pathToFileURL } from 'node:url'
 import type { Request as ExpressRequest } from 'express'
 import type { ViteDevServer } from 'vite'
 
-import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { getPaths } from '@cedarjs/project-config'
+import { prettyPrintCedarCommand } from '@cedarjs/project-config/packageManager'
 
 import type { EntryServer } from './types.js'
 
@@ -19,7 +19,7 @@ export function ensureProcessDirWeb(webDir: string = getPaths().web.base) {
     console.error('⚠️  Warning: CWD is ', process.cwd())
     console.warn('~'.repeat(50))
     console.warn(
-      `The cwd must be web/. Please use \`${formatCedarCommand(['<command>'])}\` or run the command from the web/ directory.`,
+      `The cwd must be web/. Please use \`${prettyPrintCedarCommand(['<command>'])}\` or run the command from the web/ directory.`,
     )
     console.log(`Changing cwd to ${webDir}....`)
     console.log()
