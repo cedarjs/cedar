@@ -1,0 +1,34 @@
+name: 🧹 Cleanup Vercel projects
+
+on:
+  schedule:
+    - cron: '0 * * * *' # hourly
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Delete stale cedar-e2e-* projects
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          # cedar-e2e projects are named cedar-e2e-<epoch seconds>.
+          # Delete any whose timestamp is more than 2 hours old so active
+          # deployments are never removed mid-run.
+          CUTOFF=$(( $(date +%s) - 7200 ))
+
+          curl -s "https://api.vercel.com/v9/projects?search=cedar-e2e-&limit=100" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" | \
+          jq -r --argjson cutoff "$CUTOFF" \
+            '.projects[]
+             | select(.name | test("^cedar-e2e-[0-9]+$"))
+             | select((.name | ltrimstr("cedar-e2e-") | tonumber) < $cutoff)
+             | .id' | \
+          while read -r id; do
+            echo "Deleting project $id"
+            curl -s -X DELETE "https://api.vercel.com/v9/projects/$id" \
+              -H "Authorization: Bearer $VERCEL_TOKEN"
+            echo
+          done
