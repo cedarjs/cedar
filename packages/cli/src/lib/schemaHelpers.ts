@@ -1,3 +1,4 @@
+import type * as DMMF from '@prisma/dmmf'
 import prismaInternals from '@prisma/internals'
 
 import { getPrismaSchemas } from '@cedarjs/project-config'
@@ -6,19 +7,31 @@ import { singularize, isPlural } from '@cedarjs/utils/cedarPluralize'
 import { ensureUniquePlural } from './pluralHelpers.js'
 
 const { getConfig, getDMMF } = prismaInternals
+
+// Prisma's DMMF.Field is ReadonlyDeep and doesn't include enumValues.
+// We attach enumValues after loading the schema, so we use this enriched type.
+type EnrichedField = Omit<DMMF.Field, never> & {
+  enumValues?: DMMF.DatamodelEnum['values']
+}
+type EnrichedModel = Omit<DMMF.Model, 'fields'> & {
+  readonly fields: readonly EnrichedField[]
+}
+
 /**
  * Used to memoize results from `getSchema()` so we don't have to go through
  * the work of opening and parsing the file from scratch each time `getSchema()`
  * is called with the same model name.
  */
-const schemaMemo = {}
+const schemaMemo: Record<string, EnrichedModel> = {}
 
 /**
  * Searches for the given model (ignoring case) in `schema.prisma`
  * and returns the name as it is written by the user, or
  * `undefined` if no model could be found
  */
-const getExistingModelName = async (name) => {
+const getExistingModelName = async (
+  name: string | undefined,
+): Promise<string | undefined> => {
   if (!name) {
     return undefined
   }
@@ -26,14 +39,14 @@ const getExistingModelName = async (name) => {
   // Support PascalCase, camelCase, kebab-case, UPPER_CASE,
   // and lowercase model names
   const modelName = name.replace(/[_-]/g, '').toLowerCase()
-  for (let model of Object.values(schemaMemo)) {
+  for (const model of Object.values(schemaMemo)) {
     if (model.name.toLowerCase() === modelName) {
       return model.name
     }
   }
 
   const schema = (await getSchemaDefinitions()).datamodel
-  for (let model of schema.models) {
+  for (const model of schema.models) {
     if (model.name.toLowerCase() === modelName) {
       return model.name
     }
@@ -47,7 +60,9 @@ const getExistingModelName = async (name) => {
  * the schema.prisma of the target application. If no `name` is given then the
  * entire schema is returned.
  */
-export const getSchema = async (name) => {
+export const getSchema = async (
+  name?: string,
+): Promise<DMMF.Datamodel | EnrichedModel | undefined> => {
   const schema = (await getSchemaDefinitions()).datamodel
 
   if (!name) {
@@ -65,25 +80,26 @@ export const getSchema = async (name) => {
     return schemaMemo[modelName]
   }
 
-  const model = schema.models.find((model) => model.name === modelName)
+  const model = schema.models.find((m) => m.name === modelName)
   if (!model) {
     // TODO: Can this happen, and if yes, should we prefer throwing an error?
     return undefined
   }
 
   // Look for any fields that are enums and attach the possible enum values
-  // so we can put them in generated test files
-  model.fields.forEach((field) => {
+  // so we can put them in generated test files.
+  // We create new enriched field objects rather than mutating the readonly Prisma types.
+  const enrichedFields: EnrichedField[] = model.fields.map((field) => {
     const fieldEnum = schema.enums.find((e) => field.type === e.name)
-    if (fieldEnum) {
-      field.enumValues = fieldEnum.values
-    }
+    return fieldEnum ? { ...field, enumValues: fieldEnum.values } : { ...field }
   })
 
-  // Memoize based on the model name
-  schemaMemo[modelName] = model
+  const enrichedModel: EnrichedModel = { ...model, fields: enrichedFields }
 
-  return model
+  // Memoize based on the model name
+  schemaMemo[modelName] = enrichedModel
+
+  return enrichedModel
 }
 
 /**
@@ -91,13 +107,15 @@ export const getSchema = async (name) => {
  * `schema.prisma` of the target application. If no `name` is given
  * then all enum definitions are returned
  */
-export const getEnum = async (name) => {
+export const getEnum = async (
+  name?: string,
+): Promise<DMMF.DatamodelEnum[] | DMMF.DatamodelEnum> => {
   const schema = await getSchemaDefinitions()
   if (!name) {
     return schema.metadata.datamodel.enums
   }
 
-  const model = schema.datamodel.enums.find((model) => model.name === name)
+  const model = schema.datamodel.enums.find((e) => e.name === name)
   if (!model) {
     throw new Error(
       `No enum schema definition found for \`${name}\` in schema.prisma file`,
@@ -118,7 +136,7 @@ export const getDataModel = async () => {
 /**
  * Returns the DMMF defined by `prisma` resolving the relevant `schema.prisma` path.
  */
-export const getSchemaDefinitions = async () => {
+export const getSchemaDefinitions = async (): Promise<DMMF.Document> => {
   return getDMMF({ datamodel: await getDataModel() })
 }
 
@@ -131,7 +149,14 @@ export const getSchemaConfig = async () => {
   })
 }
 
-export async function verifyModelName(options) {
+interface VerifyModelNameOptions {
+  name: string
+  isDestroyer?: boolean
+}
+
+export async function verifyModelName(
+  options: VerifyModelNameOptions,
+): Promise<VerifyModelNameOptions> {
   const modelName =
     (await getExistingModelName(options.name)) ||
     (await getExistingModelName(singularize(options.name)))

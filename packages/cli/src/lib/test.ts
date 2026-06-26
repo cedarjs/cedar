@@ -13,6 +13,9 @@ import path from 'path'
 
 import { vi } from 'vitest'
 
+import type * as CedarCliHelpers from '@cedarjs/cli-helpers'
+import type * as CedarProjectConfig from '@cedarjs/project-config'
+
 import './mockTelemetry.js'
 
 vi.mock('@cedarjs/internal/dist/generate/generate', () => {
@@ -24,7 +27,8 @@ vi.mock('@cedarjs/internal/dist/generate/generate', () => {
 })
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const originalProjectConfig = await importOriginal()
+  const originalProjectConfig =
+    await importOriginal<typeof CedarProjectConfig>()
 
   return {
     ...originalProjectConfig,
@@ -98,7 +102,7 @@ vi.mock('@cedarjs/project-config/packageManager', () => ({
 }))
 
 vi.mock('@cedarjs/cli-helpers', async (importOriginal) => {
-  const originalCliHelpers = await importOriginal()
+  const originalCliHelpers = await importOriginal<typeof CedarCliHelpers>()
 
   return {
     ...originalCliHelpers,
@@ -135,7 +139,10 @@ export const generatorsRootPath = path.join(
  *
  *   `cli/src/commands/generate/scaffold/__tests__/fixtures/NamePage.js`
  */
-export const loadGeneratorFixture = (generator, name) => {
+export const loadGeneratorFixture = (
+  generator: string,
+  name: string,
+): string => {
   return loadFixture(
     path.join(
       import.meta.dirname,
@@ -153,6 +160,6 @@ export const loadGeneratorFixture = (generator, name) => {
 /**
  * Returns the contents of a text file in a `fixtures` directory
  */
-export const loadFixture = (filepath) => {
+export const loadFixture = (filepath: string): string => {
   return fs.readFileSync(filepath).toString()
 }
