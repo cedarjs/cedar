@@ -6,4 +6,3 @@
 - Prefer `interface` over `type` for object type declarations. Confidence: 0.70
 - Avoid barrel/index.ts export files; use package.json exports map for entrypoints instead. Confidence: 0.70
 - When fixing type errors caused by callers passing `undefined` to a util: prefer making the caller consistent (e.g., default at destructure like `typescript = false`) over loosening the util's signature with `?`. Keep util types strict; push defaults to caller sites to match the rest of the codebase. Confidence: 0.80
-- Prefer `.mts` (TypeScript) over `.mjs` (JavaScript) for Node scripts — since Node 24+ runs TypeScript natively without flags, `.mts` files provide type-checking benefits without a compilation step. Confidence: 0.70
