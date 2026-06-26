@@ -3,7 +3,11 @@ import { useFilterAllowedOperations } from '@envelop/filter-operation-type'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { OperationTypeNode } from 'graphql'
 import type { GraphQLSchema } from 'graphql'
-import { useReadinessCheck, createYoga } from 'graphql-yoga'
+import {
+  useReadinessCheck,
+  createYoga,
+  useExecutionCancellation,
+} from 'graphql-yoga'
 import type { Plugin } from 'graphql-yoga'
 
 import { mapRwCorsOptionsToYoga } from './cors.js'
@@ -113,6 +117,13 @@ export const createGraphQLYoga = async ({
       const { useCedarRealtime } = await import('@cedarjs/realtime')
       plugins.push(useCedarRealtime(realtime))
     }
+
+    // Abort resolver execution when the client disconnects (e.g., page
+    // navigation, tab close). Without this, resolvers continue running
+    // unnecessarily and the response stream write may fail with
+    // ERR_STREAM_PREMATURE_CLOSE, producing a logged 500 even though the client
+    // is already gone.
+    plugins.push(useExecutionCancellation())
 
     const { disableIntrospection } = configureGraphQLIntrospection({
       allowIntrospection,
