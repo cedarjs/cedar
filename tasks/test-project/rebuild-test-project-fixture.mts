@@ -100,8 +100,12 @@ if (!semver.satisfies(process.version, recommendedNodeVersion({ esm }))) {
 
 let folderSuffix = ''
 
+if (packageManager !== 'yarn') {
+  folderSuffix += '-' + packageManager
+}
+
 if (live) {
-  folderSuffix = '-live'
+  folderSuffix += '-live'
 } else if (esm) {
   folderSuffix += '-esm'
 }
