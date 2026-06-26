@@ -268,7 +268,7 @@ async function bundleDistFile(distPath: string, options: Opts = {}) {
         setup(build) {
           build.onResolve({ filter: /^[^.]/ }, (args) => {
             // Let esbuild resolve absolute paths normally
-            if (args.path.startsWith('/')) {
+            if (path.isAbsolute(args.path)) {
               return
             }
 
