@@ -8,15 +8,19 @@ import { getExecaOptions, getCfwBin } from './util.mts'
 interface WebTasksOptions {
   linkWithLatestFwBuild: boolean
   verbose: boolean
+  packageManager?: 'yarn' | 'npm' | 'pnpm'
 }
 
 export async function webTasks(
   outputPath: string,
-  { linkWithLatestFwBuild, verbose }: WebTasksOptions,
+  { linkWithLatestFwBuild, verbose, packageManager = 'yarn' }: WebTasksOptions,
 ) {
   setOutputPath(outputPath)
 
-  const baseTasks = webTasksList()
+  const cedarBin = packageManager === 'npm' ? 'npx' : packageManager
+  const cfwBin = packageManager === 'npm' ? 'npx' : packageManager
+
+  const baseTasks = webTasksList(false, packageManager)
 
   // Some tasks returns an array of tasks, those needs to be wrapped in a Listr
   // instance
@@ -38,12 +42,19 @@ export async function webTasks(
       {
         title: 'Install tailwind dependencies',
         // @NOTE: use cfw, because calling the copy function doesn't seem to work here
-        task: () =>
-          execa(
-            'yarn workspace web add -D postcss postcss-loader tailwindcss autoprefixer prettier-plugin-tailwindcss@^0.8.0',
+        task: () => {
+          const workspaceCmd =
+            packageManager === 'yarn'
+              ? 'yarn workspace web add -D'
+              : packageManager === 'pnpm'
+                ? 'pnpm --filter web add -D'
+                : 'npm install -w web --save-dev'
+          return execa(
+            `${workspaceCmd} postcss postcss-loader tailwindcss autoprefixer prettier-plugin-tailwindcss@^0.8.0`,
             [],
             getExecaOptions(outputPath),
-          ),
+          )
+        },
         enabled: () => linkWithLatestFwBuild,
       },
       {
@@ -51,7 +62,7 @@ export async function webTasks(
         // @NOTE: use cfw, because calling the copy function doesn't seem to work here
         task: () =>
           execa(
-            `yarn ${getCfwBin(outputPath)} project:copy`,
+            `${cfwBin} ${getCfwBin(outputPath)} project:copy`,
             [],
             getExecaOptions(outputPath),
           ),
@@ -62,7 +73,7 @@ export async function webTasks(
         title: 'Adding Tailwind',
         task: () => {
           return execa(
-            'yarn cedar setup ui tailwindcss',
+            `${cedarBin} cedar setup ui tailwindcss`,
             ['--force', linkWithLatestFwBuild && '--no-install'].filter(
               (i: string | boolean): i is string => Boolean(i),
             ),
@@ -82,11 +93,17 @@ interface ApiTasksOptions {
   verbose: boolean
   linkWithLatestFwBuild: boolean
   esm: boolean
+  packageManager?: 'yarn' | 'npm' | 'pnpm'
 }
 
 export async function apiTasks(
   outputPath: string,
-  { verbose, linkWithLatestFwBuild, esm }: ApiTasksOptions,
+  {
+    verbose,
+    linkWithLatestFwBuild,
+    esm,
+    packageManager = 'yarn',
+  }: ApiTasksOptions,
 ) {
   setOutputPath(outputPath)
 
@@ -94,6 +111,7 @@ export async function apiTasks(
     dbAuth: 'canary',
     linkWithLatestFwBuild,
     esm,
+    packageManager,
   })
 
   // Some tasks returns an array of tasks, those needs to be wrapped in a Listr

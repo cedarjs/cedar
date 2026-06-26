@@ -166,19 +166,85 @@ export async function updateResolutions(projectPath: string) {
   let updatedPackageJson: Record<string, unknown>
 
   if (packageManager === 'pnpm') {
-    const existingOverrides = projectPackageJson.pnpm?.overrides ?? {}
-
-    updatedPackageJson = {
-      ...projectPackageJson,
-      pnpm: {
-        ...projectPackageJson.pnpm,
-        overrides: {
-          ...existingOverrides,
-          ...resolutions,
-          ...reactResolutions,
-        },
-      },
+    const allOverrides = {
+      ...resolutions,
+      ...reactResolutions,
+      graphql: '16.13.2',
     }
+
+    const pnpmWorkspacePath = path.join(projectPath, 'pnpm-workspace.yaml')
+    let workspaceContent = await fs.promises.readFile(
+      pnpmWorkspacePath,
+      'utf-8',
+    )
+
+    const overrideLines = Object.entries(allOverrides)
+      .map(([key, value]) => `  '${key}': '${value}'`)
+      .join('\n')
+
+    const overridesMatch = workspaceContent.match(/^(overrides:.*)$/m)
+    if (overridesMatch) {
+      const overrideStart = overridesMatch.index! + overridesMatch[0].length
+      const afterHeader = workspaceContent.slice(overrideStart)
+      const existingLines = afterHeader.split('\n')
+      let lastOverrideLine = 0
+      const overrideEnd = (() => {
+        for (let i = 1; i < existingLines.length; i++) {
+          if (/^\S/.test(existingLines[i]) && existingLines[i].trim()) {
+            return i
+          }
+          if (/^\s+'.+':/.test(existingLines[i])) {
+            lastOverrideLine = i
+          }
+        }
+        return lastOverrideLine + 1
+      })()
+
+      const existingBlock = existingLines.slice(1, overrideEnd).join('\n')
+      const existingKeys = new Set(
+        existingBlock
+          .split('\n')
+          .map((l) => l.match(/^\s+'([^']+)':/)?.[1])
+          .filter(Boolean),
+      )
+
+      const newLines = Object.entries(allOverrides)
+        .filter(([key]) => !existingKeys.has(key))
+        .map(([key, value]) => `  '${key}': '${value}'`)
+        .join('\n')
+
+      if (newLines) {
+        const insertAt =
+          overrideStart +
+          existingLines.slice(0, lastOverrideLine + 1).join('\n').length
+
+        workspaceContent =
+          workspaceContent.slice(0, insertAt + 1) +
+          '\n' +
+          newLines +
+          workspaceContent.slice(insertAt + 1)
+      }
+    } else {
+      workspaceContent += '\noverrides:\n' + overrideLines + '\n'
+    }
+
+    await fs.promises.writeFile(pnpmWorkspacePath, workspaceContent)
+
+    // Add direct dependencies for workspace packages that are normally
+    // hoisted by yarn but need to be explicit for pnpm's strict isolation.
+    const webPkgPath = path.join(projectPath, 'web/package.json')
+    const webPkg = JSON.parse(await fs.promises.readFile(webPkgPath, 'utf-8'))
+    webPkg.dependencies['graphql-tag'] = '2.12.6'
+    webPkg.dependencies['react-hook-form'] = '7.74.0'
+    await fs.promises.writeFile(webPkgPath, JSON.stringify(webPkg, null, 2))
+
+    const apiPkgPath = path.join(projectPath, 'api/package.json')
+    const apiPkg = JSON.parse(await fs.promises.readFile(apiPkgPath, 'utf-8'))
+    apiPkg.dependencies['@prisma/client'] = '7.8.0'
+    await fs.promises.writeFile(apiPkgPath, JSON.stringify(apiPkg, null, 2))
+
+    updatedPackageJson = { ...projectPackageJson }
+    delete updatedPackageJson.pnpm
   } else {
     updatedPackageJson = {
       ...projectPackageJson,

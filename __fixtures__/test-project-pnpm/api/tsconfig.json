@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "allowJs": true,
+    "esModuleInterop": true,
+    "target": "es2023",
+    "module": "node20",
+    "moduleResolution": "node16",
+    "allowImportingTsExtensions": true,
+    "skipLibCheck": false,
+    "rootDirs": ["./src", "../.cedar/types/mirror/api/src"],
+    "paths": {
+      "src/*": ["./src/*", "../.cedar/types/mirror/api/src/*"],
+      "types/*": ["./types/*", "../types/*"],
+      "@cedarjs/testing": ["../node_modules/@cedarjs/testing/api"]
+    },
+    "typeRoots": ["../node_modules/@types", "./node_modules/@types"],
+    "types": ["jest"],
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "src",
+    "../.cedar/types/includes/all-*",
+    "../.cedar/types/includes/api-*",
+    "../types"
+  ],
+  "references": [{ "path": "../packages/validators" }]
+}

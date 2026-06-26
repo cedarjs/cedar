@@ -12,11 +12,10 @@ import yargs from 'yargs/yargs'
 import { RedwoodTUI, ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 
 import { apiTasksList } from './base-tasks.mts'
-import { copyFrameworkPackages } from './frameworkLinking.mts'
 import { setOutputPath } from './paths.mts'
 import { webTasks } from './tui-tasks.mts'
 import { isAwaitable, isTuiError } from './typing.mts'
-import type { TuiTaskDef } from './typing.mts'
+import type { PackageManager, TuiTaskDef } from './typing.mts'
 import {
   getExecaOptions as utilGetExecaOptions,
   ExecaError,
@@ -38,6 +37,18 @@ function recommendedNodeVersion({ esm } = { esm: false }) {
   const json = JSON.parse(fs.readFileSync(templatePackageJsonPath, 'utf8'))
 
   return json.engines.node
+}
+
+function isPackageManager(pm: unknown): pm is PackageManager {
+  return pm === 'npm' || pm === 'pnpm' || pm === 'yarn'
+}
+
+function assertPackageManager(pm: unknown): PackageManager {
+  if (!isPackageManager(pm)) {
+    throw new Error(`Unsupported package manager: ${pm}`)
+  }
+
+  return pm
 }
 
 const args = yargs(hideBin(process.argv))
@@ -81,8 +92,10 @@ const args = yargs(hideBin(process.argv))
   .help()
   .parseSync()
 
-const { verbose, resume, resumePath, resumeStep, live, esm, packageManager } =
-  args
+const { verbose, resume, resumePath, resumeStep, live, esm } = args
+
+const packageManager: PackageManager = assertPackageManager(args.packageManager)
+const cedarBin = packageManager === 'npm' ? 'npx' : packageManager
 
 // If the current Node.js version is outside of the recommended range the Cedar
 // setup command will pause and ask the user if they want to continue. This
@@ -98,8 +111,12 @@ if (!semver.satisfies(process.version, recommendedNodeVersion({ esm }))) {
 
 let folderSuffix = ''
 
+if (packageManager !== 'yarn') {
+  folderSuffix += '-' + packageManager
+}
+
 if (live) {
-  folderSuffix = '-live'
+  folderSuffix += '-live'
 } else if (esm) {
   folderSuffix += '-esm'
 }
@@ -345,7 +362,7 @@ if (
 }
 
 const createProject = () => {
-  const cmd = `yarn node ./packages/create-cedar-app/dist/create-cedar-app.js ${OUTPUT_PROJECT_PATH}`
+  const cmd = `node ./packages/create-cedar-app/dist/create-cedar-app.js ${OUTPUT_PROJECT_PATH}`
 
   const subprocess = exec(
     cmd,
@@ -421,14 +438,19 @@ async function rebuildTestProject() {
   await tuiTask({
     step: 2,
     title: 'Installing node_modules',
-    content: 'yarn install',
+    content: `${packageManager} install`,
     task: async () => {
       // TODO: See if this is needed now with tarsync
-      await exec('yarn install', [], getExecaOptions(OUTPUT_PROJECT_PATH))
+      await exec(
+        `${packageManager} install`,
+        [],
+        getExecaOptions(OUTPUT_PROJECT_PATH),
+      )
 
       // TODO: Now that I've added this, I wonder what other steps I can remove
+      const cfwBin = packageManager === 'npm' ? 'npx' : packageManager
       return exec(
-        `yarn ${getCfwBin(OUTPUT_PROJECT_PATH)} project:tarsync`,
+        `${cfwBin} ${getCfwBin(OUTPUT_PROJECT_PATH)} project:tarsync`,
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
@@ -510,7 +532,7 @@ async function rebuildTestProject() {
     step: 5,
     title: 'Apply web codemods',
     task: () => {
-      return webTasks(OUTPUT_PROJECT_PATH, live)
+      return webTasks(OUTPUT_PROJECT_PATH, live, packageManager)
     },
   })
 
@@ -520,7 +542,7 @@ async function rebuildTestProject() {
     task: async () => {
       setOutputPath(OUTPUT_PROJECT_PATH)
 
-      return apiTasksList({ dbAuth: 'local', live, esm })
+      return apiTasksList({ dbAuth: 'local', live, esm, packageManager })
     },
   })
 
@@ -538,7 +560,7 @@ async function rebuildTestProject() {
       fs.writeFileSync(tomlPath, newCedarToml)
 
       await exec(
-        'yarn cedar g package @my-org/validators --workspace both',
+        `${cedarBin} cedar g package @my-org/validators --workspace both`,
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
@@ -599,10 +621,14 @@ async function rebuildTestProject() {
         JSON.stringify(webPackageJson, null, 2),
       )
 
-      await exec('yarn install', [], getExecaOptions(OUTPUT_PROJECT_PATH))
+      await exec(
+        `${packageManager} install`,
+        [],
+        getExecaOptions(OUTPUT_PROJECT_PATH),
+      )
 
       const build = await exec(
-        'yarn cedar build --no-prerender',
+        `${cedarBin} cedar build --no-prerender`,
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
@@ -621,9 +647,15 @@ async function rebuildTestProject() {
 
       // TODO: Update this when we refine the build process
       if (!build.stdout.includes('validators')) {
-        console.error('yarn cedar build output', build.stdout, build.stderr)
+        console.error(
+          `${cedarBin} cedar build output`,
+          build.stdout,
+          build.stderr,
+        )
         throw new Error(
-          'Unexpected output from `yarn cedar build` ' +
+          'Unexpected output from `' +
+            `${cedarBin}` +
+            ' cedar build` ' +
             build.stdout +
             ' ' +
             build.stderr,
@@ -632,7 +664,9 @@ async function rebuildTestProject() {
 
       if (build.exitCode !== 0) {
         throw new Error(
-          'Unexpected exitCode from `yarn cedar build` ' +
+          'Unexpected exitCode from `' +
+            `${cedarBin}` +
+            ' cedar build` ' +
             build.exitCode +
             ' ' +
             build.stdout +
@@ -641,8 +675,8 @@ async function rebuildTestProject() {
         )
       }
 
-      // Verify that `yarn cedar <cmd>` works inside package directories
-      // Starting with `yarn cedar info`
+      // Verify that `${cedarBin} cedar <cmd>` works inside package directories
+      // Starting with `${cedarBin} cedar info`
       // TODO: Enable code below
       // const info = await exec(
       //   'yarn cedar info',
@@ -696,7 +730,7 @@ async function rebuildTestProject() {
       )
 
       await exec(
-        'yarn cedar g script i/am/nested',
+        `${cedarBin} cedar g script i/am/nested`,
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
@@ -704,7 +738,7 @@ async function rebuildTestProject() {
       // Verify that the scripts are added and included in the list of
       // available scripts
       const list = await exec(
-        'yarn cedar exec',
+        `${cedarBin} cedar exec`,
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
@@ -714,33 +748,37 @@ async function rebuildTestProject() {
         !list.stdout.includes('i/am/nested') ||
         !list.stdout.includes('one/two/myNestedScript')
       ) {
-        console.error('yarn cedar exec output', list.stdout, list.stderr)
+        console.error(`${cedarBin} cedar exec output`, list.stdout, list.stderr)
 
         throw new Error('Scripts not included in list')
       }
 
       // Verify that the scripts can be executed
       const runFromRoot = await exec(
-        'yarn cedar exec one/two/myNestedScript',
+        `${cedarBin} cedar exec one/two/myNestedScript`,
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
 
       if (!runFromRoot.stdout.includes('Hello from myNestedScript')) {
-        console.error('`yarn cedar exec one/two/myNestedScript` output')
+        console.error(
+          '`' + `${cedarBin}` + ' cedar exec one/two/myNestedScript` output',
+        )
         console.error(runFromRoot.stdout, runFromRoot.stderr)
 
         throw new Error('Script not executed successfully')
       }
 
       const runFromScripts = await exec(
-        'yarn cedar exec one/two/myNestedScript',
+        `${cedarBin} cedar exec one/two/myNestedScript`,
         [],
         getExecaOptions(path.join(OUTPUT_PROJECT_PATH, 'scripts', 'one')),
       )
 
       if (!runFromScripts.stdout.includes('Hello from myNestedScript')) {
-        console.error('`yarn cedar exec one/two/myNestedScript` output')
+        console.error(
+          '`' + `${cedarBin}` + ' cedar exec one/two/myNestedScript` output',
+        )
         console.error(runFromScripts.stdout, runFromScripts.stderr)
 
         throw new Error('Script not executed successfully')
@@ -812,8 +850,8 @@ async function rebuildTestProject() {
     title: 'Running prisma migrate reset',
     task: () => {
       return exec(
-        'yarn cedar prisma migrate reset',
-        ['--force'],
+        `${cedarBin} cedar prisma migrate reset --force`,
+        [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
     },
@@ -824,14 +862,13 @@ async function rebuildTestProject() {
     title: 'Lint --fix all the things',
     task: async () => {
       try {
-        await exec('yarn', ['cedar', 'lint', '--fix'], {
-          stdio: 'pipe',
-          cleanup: true,
-          cwd: OUTPUT_PROJECT_PATH,
-          env: {
-            RW_PATH: path.join(import.meta.dirname, '../../'),
-          },
-        })
+        const execaOptions = getExecaOptions(OUTPUT_PROJECT_PATH)
+        execaOptions.env ??= {}
+
+        execaOptions.env['RW_PATH'] = path.join(import.meta.dirname, '../../')
+        execaOptions.env['CFW_PATH'] = path.join(import.meta.dirname, '../../')
+
+        await exec(`${cedarBin} cedar lint --fix`, [], execaOptions)
       } catch (e) {
         if (
           e instanceof ExecaError &&
@@ -919,7 +956,51 @@ async function rebuildTestProject() {
         : JSON.parse(fs.readFileSync(templatePackageJsonPath, 'utf8'))
       newRootPackageJson.devDependencies['prettier-plugin-tailwindcss'] =
         rootPackageJson.devDependencies['prettier-plugin-tailwindcss']
-      newRootPackageJson.workspaces.push('packages/*')
+
+      if (packageManager === 'pnpm') {
+        const pnpmWorkspacePath = path.join(
+          OUTPUT_PROJECT_PATH,
+          'pnpm-workspace.yaml',
+        )
+        const templatePnpmWorkspacePath = path.join(
+          import.meta.dirname,
+          '..',
+          '..',
+          'packages',
+          'create-cedar-app',
+          'templates',
+          'overlays',
+          esm ? 'esm' : 'cjs',
+          'pnpm',
+          'pnpm-workspace.yaml',
+        )
+        // Read from the template overlay, not from the existing (tainted) file,
+        // so that tarsync-added overrides like stale tarball paths are cleaned up
+        let workspaceYaml = fs.readFileSync(templatePnpmWorkspacePath, 'utf8')
+        if (!workspaceYaml.includes('packages/*')) {
+          // Insert packages/* after the last existing entry in the packages section
+          const packagesMatch = workspaceYaml.match(
+            /^(packages:[\s\S]*?)(?=^\w|\Z)/m,
+          )
+          if (packagesMatch) {
+            const lines = packagesMatch[1].split('\n')
+            const lastPackageLine = lines
+              .map((line, i) => ({ line, i }))
+              .filter(({ line }) => line.trimStart().startsWith('- '))
+              .pop()
+            if (lastPackageLine) {
+              lines.splice(lastPackageLine.i + 1, 0, '  - packages/*')
+              workspaceYaml = workspaceYaml.replace(
+                packagesMatch[1],
+                lines.join('\n'),
+              )
+              fs.writeFileSync(pnpmWorkspacePath, workspaceYaml, 'utf8')
+            }
+          }
+        }
+      } else {
+        newRootPackageJson.workspaces.push('packages/*')
+      }
       if (live) {
         newRootPackageJson.type = 'module'
       }
