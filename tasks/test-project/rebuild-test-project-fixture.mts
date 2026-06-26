@@ -12,11 +12,10 @@ import yargs from 'yargs/yargs'
 import { RedwoodTUI, ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 
 import { apiTasksList } from './base-tasks.mts'
-import { copyFrameworkPackages } from './frameworkLinking.mts'
 import { setOutputPath } from './paths.mts'
 import { webTasks } from './tui-tasks.mts'
 import { isAwaitable, isTuiError } from './typing.mts'
-import type { TuiTaskDef } from './typing.mts'
+import type { PackageManager, TuiTaskDef } from './typing.mts'
 import {
   getExecaOptions as utilGetExecaOptions,
   ExecaError,
@@ -38,6 +37,18 @@ function recommendedNodeVersion({ esm } = { esm: false }) {
   const json = JSON.parse(fs.readFileSync(templatePackageJsonPath, 'utf8'))
 
   return json.engines.node
+}
+
+function isPackageManager(pm: unknown): pm is PackageManager {
+  return pm === 'npm' || pm === 'pnpm' || pm === 'yarn'
+}
+
+function assertPackageManager(pm: unknown): PackageManager {
+  if (!isPackageManager(pm)) {
+    throw new Error(`Unsupported package manager: ${pm}`)
+  }
+
+  return pm
 }
 
 const args = yargs(hideBin(process.argv))
@@ -81,9 +92,9 @@ const args = yargs(hideBin(process.argv))
   .help()
   .parseSync()
 
-const { verbose, resume, resumePath, resumeStep, live, esm, packageManager } =
-  args
+const { verbose, resume, resumePath, resumeStep, live, esm } = args
 
+const packageManager: PackageManager = assertPackageManager(args.packageManager)
 const cedarBin = packageManager === 'npm' ? 'npx' : packageManager
 
 // If the current Node.js version is outside of the recommended range the Cedar
@@ -852,7 +863,14 @@ async function rebuildTestProject() {
     task: async () => {
       try {
         const execaOptions = getExecaOptions(OUTPUT_PROJECT_PATH)
+        execaOptions.env ??= {}
+
         execaOptions.env['RW_PATH'] = path.join(import.meta.dirname, '../../')
+        execaOptions.env['CEDAR_PATH'] = path.join(
+          import.meta.dirname,
+          '../../',
+        )
+
         await exec(`${cedarBin} cedar lint --fix`, [], execaOptions)
       } catch (e) {
         if (
