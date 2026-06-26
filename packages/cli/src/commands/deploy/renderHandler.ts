@@ -10,7 +10,17 @@ import {
 import { installPackages } from '@cedarjs/cli-helpers/packageManager/packages'
 import { getPaths } from '@cedarjs/project-config'
 
-export const handler = async ({ side, prisma, dataMigrate }) => {
+interface RenderHandlerArgs {
+  side: 'api' | 'web'
+  prisma: boolean
+  dataMigrate: boolean
+}
+
+export const handler = async ({
+  side,
+  prisma,
+  dataMigrate,
+}: RenderHandlerArgs) => {
   recordTelemetryAttributes({
     command: 'deploy render',
     side,
@@ -23,7 +33,7 @@ export const handler = async ({ side, prisma, dataMigrate }) => {
   const execaConfig = {
     cwd: cedarPaths.base,
     shell: true,
-    stdio: 'inherit',
+    stdio: 'inherit' as const,
   }
 
   async function runApiCommands() {
@@ -38,11 +48,12 @@ export const handler = async ({ side, prisma, dataMigrate }) => {
 
     if (dataMigrate) {
       console.log('Running data migrations...')
-      const packageJson = JSON.parse(
-        fs.readFileSync(path.join(cedarPaths.base, 'package.json'), 'utf-8'),
-      )
+      const packageJson: { devDependencies?: Record<string, string> } =
+        JSON.parse(
+          fs.readFileSync(path.join(cedarPaths.base, 'package.json'), 'utf-8'),
+        )
       const hasDataMigratePackage =
-        !!packageJson.devDependencies['@cedarjs/cli-data-migrate']
+        !!packageJson.devDependencies?.['@cedarjs/cli-data-migrate']
 
       if (!hasDataMigratePackage) {
         console.error(
@@ -67,9 +78,9 @@ export const handler = async ({ side, prisma, dataMigrate }) => {
     if (hasServerFile) {
       runWithNode(serverFilePath, execaConfig)
     } else {
-      const { handler } =
+      const { handler: apiHandler }: { handler: () => void } =
         await import('@cedarjs/api-server/apiCliConfigHandler')
-      handler()
+      apiHandler()
     }
   }
 

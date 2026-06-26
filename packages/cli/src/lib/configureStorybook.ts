@@ -16,17 +16,18 @@ import { getPaths, transformTSToJS, writeFile } from './index.js'
 
 /**
  * Extends the Storybook configuration file with the new configuration file
- * @param {string} newConfigPath - The path to the new configuration file
+ * @param newConfigPath - The path to the new configuration file
  */
 export default async function extendStorybookConfiguration(
-  newConfigPath = undefined,
-) {
+  newConfigPath?: string,
+): Promise<void> {
   const webPaths = getPaths().web
   const ts = isTypeScriptProject()
   const sbPreviewConfigPath =
     webPaths.storybookPreviewConfig ??
     `${webPaths.storybook}/preview.${ts ? 'tsx' : 'js'}`
-  const read = (path) => fse.readFileSync(path, { encoding: 'utf-8' })
+  const read = (filePath: string) =>
+    fse.readFileSync(filePath, { encoding: 'utf-8' })
 
   if (!fse.existsSync(sbPreviewConfigPath)) {
     // If the Storybook preview config file doesn't exist, create it from the template

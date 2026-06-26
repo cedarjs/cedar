@@ -30,9 +30,9 @@ const CedarApiVitestEnvironment: Environment = {
         : ['prisma', 'db', 'push', '--force-reset', '--accept-data-loss']
 
     const pm = getPackageManager()
-    // This kind of logic should not live here. We have it in cli-helpers, but it
-    // also doesn't make sense to have the testing package depend on cli-helpers
-    // I don't think. So I duplicate the logic here.
+    // This kind of logic should not live here. We have it in cli-helpers, but
+    // it also doesn't make sense to have the testing package depend on
+    // cli-helpers I don't think. So I duplicate the logic here.
     // see `runTransitiveBinSync` in packages/cli-helpers/src/packageManager/exec.ts
     const pmExec = pm === 'pnpm' ? pm : 'npx'
     execa.sync(pmExec, ['cedar', ...command], {

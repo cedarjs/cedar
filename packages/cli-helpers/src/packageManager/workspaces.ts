@@ -33,7 +33,7 @@ function addPnpmWorkspaceDir(
     return 'exists'
   }
 
-  const match = content.match(/^(packages:[\s\S]*?)(?=^\w|\Z)/m)
+  const match = content.match(/^(packages:[\s\S]*?)(?=^\w|(?![\\s\\S]))/m)
   if (!match) {
     throw new Error('Invalid workspace config in ' + yamlPath)
   }
