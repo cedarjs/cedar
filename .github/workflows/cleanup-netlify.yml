@@ -30,17 +30,27 @@ jobs:
               break
             fi
 
-            echo "$RESPONSE" | \
-            jq -r --argjson cutoff "$CUTOFF" \
-              '.[]
-               | select(.name | test("^cedar-e2e-[0-9]+$"))
-               | select((.name | ltrimstr("cedar-e2e-") | tonumber) < $cutoff)
-               | .id' | \
+            DELETED=0
             while read -r id; do
               echo "Deleting site $id"
               curl -sf -X DELETE "https://api.netlify.com/api/v1/sites/$id" \
                 -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN"
-            done
+              DELETED=$((DELETED + 1))
+            done < <(
+              echo "$RESPONSE" | \
+              jq -r --argjson cutoff "$CUTOFF" \
+                '.[]
+                 | select(.name | test("^cedar-e2e-[0-9]+$"))
+                 | select((.name | ltrimstr("cedar-e2e-") | tonumber) < $cutoff)
+                 | .id'
+            )
+
+            # Restart from page 1 after deletions so shifting items from
+            # subsequent pages aren't missed by the offset pagination.
+            if [ "$DELETED" -gt 0 ]; then
+              PAGE=1
+              continue
+            fi
 
             if [ "$COUNT" -lt "$PER_PAGE" ]; then
               break

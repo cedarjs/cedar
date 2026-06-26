@@ -38,9 +38,11 @@ jobs:
 
       - name: 🆕 Create Netlify site
         id: create-site
+        # Run from /tmp so the CLI doesn't detect the monorepo packages and
+        # refuse to create a new site.
+        working-directory: /tmp
         run: |
           SITE_NAME="cedar-e2e-$(date +%s)"
-          echo "site-name=$SITE_NAME" >> "$GITHUB_OUTPUT"
           OUTPUT=$(npx netlify sites:create --name "$SITE_NAME" --json)
           echo "site-id=$(echo "$OUTPUT" | jq -r '.id')" >> "$GITHUB_OUTPUT"
 
