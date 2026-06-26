@@ -12,7 +12,9 @@ import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { workspacePackageSpecifier } from '@cedarjs/cli-helpers/packageManager'
 import { runScript, runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
 import { installPackages } from '@cedarjs/cli-helpers/packageManager/packages'
+import { addWorkspaceDir } from '@cedarjs/cli-helpers/packageManager/workspaces'
 import { getConfig } from '@cedarjs/project-config'
+import { getPackageManager } from '@cedarjs/project-config/packageManager'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { getPaths, writeFilesTask } from '../../../lib/index.js'
@@ -431,41 +433,14 @@ export const handler = async ({ name, force, ...rest }) => {
       },
       {
         title: 'Updating workspace config...',
-        task: async (ctx, task) => {
-          const rootPackageJsonPath = path.join(getPaths().base, 'package.json')
-          const packageJson = JSON.parse(
-            await fs.promises.readFile(rootPackageJsonPath, 'utf8'),
-          )
-
-          if (!Array.isArray(packageJson.workspaces)) {
-            throw new Error(
-              'Invalid workspace config in ' + rootPackageJsonPath,
-            )
-          }
-
+        task: (ctx, task) => {
+          const pm = getPackageManager()
           const packagePath = `packages/${ctx.nameVariants.folderName}`
-          const hasWildcardPackagesWorkspace =
-            packageJson.workspaces.includes('packages/*')
-          const hasNamedPackagesWorkspace =
-            packageJson.workspaces.includes(packagePath)
-          const hasOtherNamedPackages = packageJson.workspaces.some(
-            (workspace) =>
-              workspace.startsWith('packages/') && workspace !== packagePath,
-          )
 
-          if (hasWildcardPackagesWorkspace || hasNamedPackagesWorkspace) {
+          const result = addWorkspaceDir(getPaths().base, packagePath, pm)
+
+          if (result === 'exists') {
             task.skip('Workspaces already configured')
-          } else {
-            if (hasOtherNamedPackages) {
-              packageJson.workspaces.push(packagePath)
-            } else {
-              packageJson.workspaces.push('packages/*')
-            }
-
-            await fs.promises.writeFile(
-              rootPackageJsonPath,
-              JSON.stringify(packageJson, null, 2),
-            )
           }
         },
       },

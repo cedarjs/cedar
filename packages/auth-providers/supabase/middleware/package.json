@@ -40,7 +40,7 @@
   "dependencies": {
     "@cedarjs/auth-supabase-api": "workspace:*",
     "@cedarjs/web": "workspace:*",
-    "@supabase/ssr": "0.10.3"
+    "@supabase/ssr": "0.12.0"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.3",

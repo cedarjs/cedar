@@ -1,13 +1,13 @@
 import fs from 'node:fs'
 
 import boxen from 'boxen'
-import execa from 'execa'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import {
   formatCedarCommand,
   formatRunBinCommand,
 } from '@cedarjs/cli-helpers/packageManager/display'
+import { runTransitiveBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { getPaths } from '../lib/index.js'
@@ -90,17 +90,11 @@ export const handler = async ({
 
   console.log()
   console.log(c.note('Running Prisma CLI...'))
-  console.log(c.underline(`$ npx prisma ${args.join(' ')}`))
+  console.log(c.underline(`$ <pm exec> prisma ${args.join(' ')}`))
   console.log()
 
   try {
-    // Using npx here instead of `runBinSync` because `yarn prisma` needs the
-    // bin it tries to run to be a direct dependency of the project, and Cedar
-    // apps don't declare Prisma as a dependency. They get it as a transitive
-    // dependency via Cedar's framework dependencies.
-    // Using execa.sync (not spawnSync) because on Windows `npx` is
-    // `npx.cmd` and spawnSync can't resolve batch file extensions.
-    execa.sync('npx', ['prisma', ...args], {
+    runTransitiveBinSync('prisma', args, {
       cwd: cedarPaths.base,
       stdio: 'inherit',
     })
