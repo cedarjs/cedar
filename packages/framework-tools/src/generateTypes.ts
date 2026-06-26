@@ -1,68 +1,9 @@
-import {
-  copyFileSync,
-  existsSync,
-  readFileSync,
-  renameSync,
-  writeFileSync,
-} from 'node:fs'
+import { copyFileSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import execa from 'execa'
 import type { PackageJson } from 'type-fest'
-
-async function runYarnScript(script: string) {
-  const isWindows = process.platform === 'win32'
-  const yarnPath = process.env.npm_execpath
-  const { args, command } = getYarnCommand({ isWindows, script, yarnPath })
-
-  await execa(command, args, { stdio: 'inherit' })
-}
-
-function getYarnCommand({
-  isWindows,
-  script,
-  yarnPath,
-}: {
-  isWindows: boolean
-  script: string
-  yarnPath?: string
-}) {
-  if (isWindows) {
-    if (yarnPath) {
-      const yarnCmdPath = `${yarnPath}.cmd`
-
-      if (existsSync(yarnCmdPath)) {
-        return { command: yarnCmdPath, args: [script] }
-      }
-
-      const extension = path.extname(yarnPath).toLowerCase()
-
-      if (['.cjs', '.js', '.mjs'].includes(extension)) {
-        return { command: process.execPath, args: [yarnPath, script] }
-      }
-
-      return { command: yarnPath, args: [script] }
-    }
-
-    return {
-      command: 'corepack',
-      args: ['yarn', script],
-    }
-  }
-
-  if (!yarnPath) {
-    return { command: 'yarn', args: [script] }
-  }
-
-  const extension = path.extname(yarnPath).toLowerCase()
-
-  if (['.cjs', '.js', '.mjs'].includes(extension)) {
-    return { command: process.execPath, args: [yarnPath, script] }
-  }
-
-  return { command: yarnPath, args: [script] }
-}
 
 /**
  * This function will run `yarn build:types-cjs` to generate the CJS type
@@ -85,7 +26,7 @@ export async function generateTypesCjs() {
   writeFileSync('./package.json', JSON.stringify(packageJson, null, 2))
 
   try {
-    await runYarnScript('build:types-cjs')
+    await execa('yarn', ['build:types-cjs'], { stdio: 'inherit' })
   } catch (e) {
     console.error('---- Error building CJS types ----')
     process.exitCode = getExitCode(e) ?? 1
@@ -101,7 +42,7 @@ export async function generateTypesCjs() {
  */
 export async function generateTypesEsm() {
   try {
-    await runYarnScript('build:types')
+    await execa('yarn', ['build:types'], { stdio: 'inherit' })
   } catch (e) {
     console.error('---- Error building ESM types ----')
     process.exitCode = getExitCode(e) ?? 1
