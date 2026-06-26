@@ -866,10 +866,7 @@ async function rebuildTestProject() {
         execaOptions.env ??= {}
 
         execaOptions.env['RW_PATH'] = path.join(import.meta.dirname, '../../')
-        execaOptions.env['CEDAR_PATH'] = path.join(
-          import.meta.dirname,
-          '../../',
-        )
+        execaOptions.env['CFW_PATH'] = path.join(import.meta.dirname, '../../')
 
         await exec(`${cedarBin} cedar lint --fix`, [], execaOptions)
       } catch (e) {
