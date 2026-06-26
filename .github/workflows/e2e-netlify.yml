@@ -86,4 +86,5 @@ jobs:
 
       - name: 🧹 Delete Netlify site
         if: always() && steps.create-site.outputs.site-id != ''
+        working-directory: /tmp
         run: npx netlify sites:delete --force "${{ steps.create-site.outputs.site-id }}"
