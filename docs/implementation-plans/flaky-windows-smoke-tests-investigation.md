@@ -857,3 +857,52 @@ done
 - What command triggers exit 127? (Not yet known — the failing command is inside
   a closed `##[group]` log block)
 - Is this the same intermittent failure as the V8 crash, or a separate issue?
+
+---
+
+## Update 2026-06-26 — Exit code 127 in main workspace yarn install (PR #2000)
+
+### Evidence
+
+From run [28216733101](https://github.com/cedarjs/cedar/actions/runs/28216733101/job/83589389309)
+(PR #2000 `fix(gql): Handle ERR_STREAM_PREMATURE_CLOSE`, Windows Smoke tests React 18):
+
+```
+➤ YN0000: · Yarn 4.14.1
+➤ YN0000: ┌ Resolution step
+##[error]Process completed with exit code 127.
+```
+
+The failure occurs in the `set-up-job` action's `🐈 Yarn install` step — the
+**main workspace** `yarn install --inline-builds`, not the `create-cedar-rsc-app`
+install. The process exits with code 127 approximately 1–2 seconds into the
+Resolution step.
+
+Key context from the logs:
+
+- The `create-cedar-rsc-app` node_modules **cache hit** — so the gated
+  `🐈 Yarn install (create-cedar-rsc-app)` step was correctly skipped
+- The main workspace install (which has no retry logic) ran immediately after
+  and crashed
+
+### Relation to previous entry
+
+Same exit-127 class of failure on Windows, same signature (`➤ YN0000: ┌
+Resolution step` → `##[error]Process completed with exit code 127.`), but
+affecting the **main workspace** `yarn install --inline-builds` rather than
+the `create-cedar-rsc-app` install.
+
+The mitigations applied in PR #1811 (cache-hit skip + retry) only cover the
+`create-cedar-rsc-app` install step. The main workspace install still runs
+without any retry.
+
+### Fixes applied
+
+None yet. A re-run of the job passed, confirming this is transient.
+
+### Open questions
+
+- Should the main workspace `yarn install --inline-builds` also get a retry
+  loop on Windows?
+- What command triggers exit 127 in the Resolution step? Still unknown — the
+  failing command is inside a closed `##[group]` log block.
