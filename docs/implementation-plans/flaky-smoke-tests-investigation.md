@@ -907,6 +907,8 @@ None yet. A re-run of the job passed, confirming this is transient.
 - What command triggers exit 127 in the Resolution step? Still unknown — the
   failing command is inside a closed `##[group]` log block.
 
+---
+
 ## Update 2026-06-26 — UD test harness startup race: esbuild service crash (Ubuntu)
 
 ### Evidence
@@ -975,15 +977,17 @@ not from Vite directly. It fires when the esbuild child process dies while
 A re-run should clear it — this is a transient flaky test in the UD test
 harness, not a code bug. For long-term hardening:
 
-1. **Harden the `afterEach` hook** — use a SIGKILL fallback after a short grace
-   period instead of relying on SIGTERM + `await p`:
+1. **Harden the `afterEach` hook** — the naive `p.kill()` + `await p` pattern
+   hangs forever if SIGTERM is ignored. Use a grace-period race instead:
    ```
    p.kill('SIGTERM')
-   try {
-     await p
-   } catch {
-     p.kill('SIGKILL')  // force-kill if SIGTERM doesn't exit quickly
-     await p
+   await Promise.race([
+     p.catch(() => {}),
+     sleep(5000),
+   ])
+   if (p.exitCode === null) {
+     p.kill('SIGKILL')
+     await p.catch(() => {})
    }
    ```
 2. **Increase the hook timeout** from the default 10s to 30s to account for
