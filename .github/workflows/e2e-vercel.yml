@@ -101,4 +101,4 @@ jobs:
 
       - name: 🧹 Delete Vercel project
         if: always() && steps.create-project.outputs.project-name != ''
-        run: npx vercel projects rm "${{ steps.create-project.outputs.project-name }}" --token "$VERCEL_TOKEN" --yes
+        run: npx vercel rm "${{ steps.create-project.outputs.project-name }}" --token "$VERCEL_TOKEN" --yes
