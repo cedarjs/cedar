@@ -43,12 +43,12 @@ buildCedarApp({ ud: true })
 │  builder.build()                   │
 │  - client        → web/dist/       │
 │  - api           → api/dist/       │
-│  - ud_server     → api/dist/ud/    │  ← NEW
+│  - ssr     → api/dist/ud/    │  ← NEW
 └────────────────────────────────────┘
 ```
 
 The user's config is loaded once. `catchAll()` generates the rou3 router during
-the `ud_server` environment's build. No stale entries, no provider dir
+the `ssr` environment's build. No stale entries, no provider dir
 save/restore, one config load, one builder orchestration. The output location
 (`api/dist/ud/index.js`, `api/dist/ud/package.json`, `api/dist/ud/chunks/*`) is
 unchanged, so `cedar serve`, `cedar serve api --ud`, and the deployed artifacts
@@ -116,16 +116,16 @@ Today `buildUDApiServer()` calls `vite.build()` with the legacy top-level
 `resolveId`, and `load` hooks on `this.environment.name === 'ssr'` to run only
 during this server build.
 
-In the new model, we declare a named `ud_server` environment in
+In the new model, we declare a named `ssr` environment in
 `buildCedarApp()`'s environment map. The `cedarUniversalDeployPlugin` gates
-`buildStart` on `this.environment.name === 'ud_server'`, but its `resolveId` and
+`buildStart` on `this.environment.name === 'ssr'`, but its `resolveId` and
 `load` hooks remain permissive (skip `client` and `api`, accept all other server
 environments). The `catchAll()` plugin from `@universal-deploy/vite` is added to
-the builder's plugin list and activates when the `ud_server` environment's
+the builder's plugin list and activates when the `ssr` environment's
 Rollup build resolves its `virtual:ud:catch-all` entry.
 
 The gate asymmetry is intentional and required for provider-plugin
-compatibility. The `buildStart` gate only fires chunk emission for `ud_server`
+compatibility. The `buildStart` gate only fires chunk emission for `ssr`
 (so the catchAll's dynamic imports resolve to chunks in `api/dist/ud/chunks/`).
 The `resolveId` and `load` gates must still accept provider environments
 (`vercel_edge`, `vercel_node`, Netlify equivalents) so the per-function virtual
@@ -148,7 +148,7 @@ builder.buildApp()
   → cedar-build-app hook (order: pre)
     → builder.build(client)   → builds web SPA
     → builder.build(api)      → builds API functions with Babel
-    → builder.build(ud_server) → builds UD Fetchable
+    → builder.build(ssr) → builds UD Fetchable
   → vercel buildApp hook (order: post)
     → builder.build(vercel_client) → copies static assets
     → builder.build(vercel_edge)   → builds edge functions
@@ -164,7 +164,7 @@ save/restore.
 
 | Concern                 | Current                           | New                                              |
 | ----------------------- | --------------------------------- | ------------------------------------------------ |
-| `buildStart` gate       | `this.environment.name !== 'ssr'` | `this.environment.name !== 'ud_server'`          |
+| `buildStart` gate       | `this.environment.name !== 'ssr'` | `this.environment.name !== 'ssr'`                |
 | `resolveId`/`load` gate | Skip `client` and `api`           | Skip `client` and `api` (unchanged — permissive) |
 | `clearCedarEntries()`   | Called in `config` hook           | Removed entirely                                 |
 | `UD_STORE_SYMBOL`       | Used by `clearCedarEntries`       | Removed entirely                                 |
@@ -172,9 +172,9 @@ save/restore.
 
 The `config` hook runs once (Vite resolves the config once for the single
 builder pass) and registers all routes in the UD store. The `buildStart` hook
-emits per-function handler chunks during the `ud_server` environment's build
+emits per-function handler chunks during the `ssr` environment's build
 only. The `resolveId`/`load` hooks serve virtual modules to any non-client
-non-api environment — including `ud_server` and any provider environment
+non-api environment — including `ssr` and any provider environment
 (`vercel_edge`, `vercel_node`, Netlify equivalents) — so per-function bundles
 are produced for each provider's per-function target.
 
@@ -186,11 +186,11 @@ and dead code in the single-pass model.
 #### `packages/vite/src/buildApp.ts`
 
 Add a `ud?: boolean` option to `BuildCedarAppOptions`. When `ud` is true and
-`workspace` includes `api`, declare a `ud_server` environment:
+`workspace` includes `api`, declare a `ssr` environment:
 
 ```ts
 if (ud && workspace.includes('api')) {
-  environments['ud_server'] = {
+  environments['ssr'] = {
     build: {
       ssr: true,
       outDir: path.join(cedarPaths.api.dist, 'ud'),
@@ -252,11 +252,11 @@ if (ud) {
 
   // Write a package.json marking the UD output as ESM. closeBundle is a
   // Rollup hook that fires once per environment after all chunks are
-  // written; applyToEnvironment restricts it to the ud_server env.
+  // written; applyToEnvironment restricts it to the ssr env.
   plugins.push({
     name: 'cedar-ud-write-package-json',
     applyToEnvironment(env) {
-      return env.name === 'ud_server'
+      return env.name === 'ssr'
     },
     closeBundle() {
       fs.writeFileSync(
@@ -287,22 +287,22 @@ function isPluginWithName(p: unknown, name: string): boolean {
 }
 ```
 
-Update the `cedar-build-app` plugin handler to build the `ud_server`
+Update the `cedar-build-app` plugin handler to build the `ssr`
 environment:
 
 ```ts
 if (
   workspace.includes('api') &&
-  builder.environments['ud_server'] &&
-  !builder.environments['ud_server'].isBuilt
+  builder.environments['ssr'] &&
+  !builder.environments['ssr'].isBuilt
 ) {
-  await builder.build(builder.environments['ud_server'])
+  await builder.build(builder.environments['ssr'])
 }
 ```
 
 The existing default-`ssr` environment deletion in `cedar-build-app-cleanup`
 (buildApp.ts:198-200) still applies: when `ud: true` and no user-declared `ssr`
-environment exists, Vite's default `ssr` env is removed. The `ud_server` env is
+environment exists, Vite's default `ssr` env is removed. The `ssr` env is
 declared explicitly so it survives this cleanup.
 
 **`devServer()` is intentionally not included** in the new plugins array. The
@@ -349,7 +349,7 @@ in the e2e CI workflows `.github/workflows/e2e-vercel.yml` and
 `.github/workflows/e2e-netlify.yml`):
 
 - Provider plugins add their own named environments (e.g., `vercel_edge`,
-  `vercel_node`). These do not collide with `ud_server`.
+  `vercel_node`). These do not collide with `ssr`.
 - Provider `buildApp` hooks use `order: 'post'`; Cedar's uses `order: 'pre'`.
   Cedar's environments build first, then the provider's environments build.
 - Provider cleanup plugins use `sharedDuringBuild: true` with `sequential: true`
@@ -362,7 +362,7 @@ in the e2e CI workflows `.github/workflows/e2e-vercel.yml` and
 - The cedar plugin's per-function `load` hook returns self-contained code (the
   function bundled inline via esbuild), so provider environments build
   per-function bundles without depending on the cedar-emitted chunks in
-  `api/dist/ud/chunks/`. The chunks are only used by the `ud_server`
+  `api/dist/ud/chunks/`. The chunks are only used by the `ssr`
   environment's `catchAll` dynamic imports.
 
 ### What about `vite-plugin-vercel`'s `buildStart` cleanup?
@@ -375,7 +375,7 @@ The current save/restore dance in `buildUDApiServer.ts:54-63, 130-139` saves
   the `alreadyRun` guard skips subsequent calls).
 - Provider cleanup runs on the first `buildStart` (before any environment's
   Rollup build actually starts).
-- The `ud_server` environment builds normally — no second cleanup event.
+- The `ssr` environment builds normally — no second cleanup event.
 
 The save/restore code is removed along with `buildUDApiServer.ts`.
 
@@ -398,8 +398,8 @@ without coupling to provider-plugin internals.
 
 | File                                                                             | Change                                                                                                                                                                 |
 | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/vite/src/plugins/vite-plugin-cedar-universal-deploy.ts`                | Remove `clearCedarEntries`, `UD_STORE_SYMBOL`, `entriesInjected`; change `buildStart` gate to `ud_server`                                                              |
-| `packages/vite/src/buildApp.ts`                                                  | Add `ud` option, `ud_server` environment, detect-and-inject `catchAll`, verify-routes plugin, package.json writer                                                      |
+| `packages/vite/src/plugins/vite-plugin-cedar-universal-deploy.ts`                | Remove `clearCedarEntries`, `UD_STORE_SYMBOL`, `entriesInjected`; change `buildStart` gate to `ssr`                                                                    |
+| `packages/vite/src/buildApp.ts`                                                  | Add `ud` option, `ssr` environment, detect-and-inject `catchAll`, verify-routes plugin, package.json writer                                                            |
 | `packages/cli/src/commands/build/buildHandler.ts`                                | Remove `buildUDApiServer` task and import, pass `ud: true` to `buildCedarApp`                                                                                          |
 | `packages/vite/src/buildUDApiServer.ts`                                          | Delete                                                                                                                                                                 |
 | `packages/vite/package.json`                                                     | Remove `./buildUDApiServer` export                                                                                                                                     |
@@ -424,9 +424,9 @@ Edit `packages/vite/src/plugins/vite-plugin-cedar-universal-deploy.ts`:
 - [ ] Remove the `entriesInjected` flag and the `if (entriesInjected) return`
       guard.
 - [ ] Change the `buildStart` gate from `this.environment.name !== 'ssr'` to
-      `this.environment.name !== 'ud_server'`.
+      `this.environment.name !== 'ssr'`.
 - [ ] Leave the `resolveId` and `load` gates as-is (skip `client` and `api`). Do
-      **not** tighten to `ud_server`-only — provider environments
+      **not** tighten to `ssr`-only — provider environments
       (`vercel_edge`, `vercel_node`, Netlify equivalents) need these hooks to
       resolve and bundle per-function virtual modules.
 
@@ -439,7 +439,7 @@ Create
       `getAllEntries()` contains the expected number of entries after
       invocation.
 - [ ] Construct the plugin with a fake
-      `this.environment = { name: 'ud_server' }` and exercise `buildStart` —
+      `this.environment = { name: 'ssr' }` and exercise `buildStart` —
       assert chunks are emitted.
 - [ ] Construct the plugin with a fake `this.environment = { name: 'client' }`
       and exercise `buildStart` — assert no chunks are emitted.
@@ -458,22 +458,22 @@ This is the first unit test for the cedar plugin (no existing test file). It
 locks in the gate behavior so future refactors can't silently regress provider
 compatibility.
 
-### Step 3: Add `ud_server` environment to `buildCedarApp`
+### Step 3: Add `ssr` environment to `buildCedarApp`
 
 Edit `packages/vite/src/buildApp.ts`:
 
 - [ ] Import `catchAllEntry` and `getAllEntries` from `@universal-deploy/store`.
 - [ ] Import `catchAll` from `@universal-deploy/vite`.
 - [ ] Add `ud?: boolean` to `BuildCedarAppOptions`.
-- [ ] Add the `ud_server` environment declaration (conditional on
+- [ ] Add the `ssr` environment declaration (conditional on
       `ud && workspace.includes('api')`).
 - [ ] Add the `cedar-ud-inject-catchall` plugin (conditional on `ud`).
 - [ ] Add the `cedar-ud-verify-routes` plugin (conditional on `ud`).
 - [ ] Add the `cedar-ud-write-package-json` plugin (conditional on `ud`, with
-      `applyToEnvironment(env) { return env.name === 'ud_server' }`).
-- [ ] Add the `ud_server` build call to the `cedar-build-app` handler.
+      `applyToEnvironment(env) { return env.name === 'ssr' }`).
+- [ ] Add the `ssr` build call to the `cedar-build-app` handler.
 - [ ] Confirm the existing default-`ssr` environment deletion in
-      `cedar-build-app-cleanup` still applies (it does — `ud_server` is not
+      `cedar-build-app-cleanup` still applies (it does — `ssr` is not
       named `ssr`).
 
 ### Step 4: Write the fixture generation script

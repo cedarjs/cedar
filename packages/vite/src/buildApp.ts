@@ -103,7 +103,7 @@ export async function buildCedarApp({
     }
 
     if (ud) {
-      environments['ud_server'] = {
+      environments['ssr'] = {
         build: {
           ssr: true,
           outDir: path.join(cedarPaths.api.dist, 'ud'),
@@ -261,10 +261,10 @@ export async function buildCedarApp({
 
           if (
             workspace.includes('api') &&
-            builder.environments['ud_server'] &&
-            !builder.environments['ud_server'].isBuilt
+            builder.environments['ssr'] &&
+            !builder.environments['ssr'].isBuilt
           ) {
-            await builder.build(builder.environments['ud_server'])
+            await builder.build(builder.environments['ssr'])
           }
         },
       },
@@ -294,7 +294,7 @@ export async function buildCedarApp({
     plugins.push({
       name: 'cedar-ud-write-package-json',
       applyToEnvironment(env) {
-        return env.name === 'ud_server'
+        return env.name === 'ssr'
       },
       closeBundle() {
         const dir = path.join(cedarPaths.api.dist, 'ud')

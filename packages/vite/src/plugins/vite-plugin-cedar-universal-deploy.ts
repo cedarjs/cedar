@@ -149,12 +149,12 @@ export function cedarUniversalDeployPlugin(
     },
 
     buildStart() {
-      // Only run during the 'ud_server' build. This is a single-pass model
-      // where buildCedarApp({ ud: true }) declares a ud_server environment
+      // Only run during the 'ssr' build. This is a single-pass model
+      // where buildCedarApp({ ud: true }) declares an ssr environment
       // alongside client and api. Provider environments (vercel_edge,
       // vercel_node, Netlify equivalents) get per-function bundles from the
       // resolveId/load hooks below, not from chunk emission here.
-      if (this.environment.name !== 'ud_server') {
+      if (this.environment.name !== 'ssr') {
         return
       }
 
