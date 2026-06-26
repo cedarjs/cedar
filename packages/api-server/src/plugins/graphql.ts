@@ -3,7 +3,12 @@ import { pathToFileURL } from 'node:url'
 import fastifyMultiPart from '@fastify/multipart'
 import fastifyUrlData from '@fastify/url-data'
 import fg from 'fast-glob'
-import type { FastifyInstance, FastifyRequest, HTTPMethods } from 'fastify'
+import type {
+  FastifyInstance,
+  FastifyReply,
+  FastifyRequest,
+  HTTPMethods,
+} from 'fastify'
 
 import { buildCedarContext } from '@cedarjs/api/runtime'
 import type { GlobalContext } from '@cedarjs/context'
@@ -81,8 +86,8 @@ export async function redwoodFastifyGraphQLServer(
       fastify.route({
         url: `${redwoodOptions.apiRootPath}${graphqlEndpoint}${routePath}`,
         method,
-        handler: async (req, _reply) => {
-          const request = createFetchRequest(req)
+        handler: async (req, reply) => {
+          const request = createFetchRequest(req, reply)
           const cedarContext = await buildCedarContext(request, {
             authDecoder: graphqlOptions.authDecoder,
           })
@@ -149,15 +154,23 @@ function trimSlashes(path: string) {
   return path.replace(/^\/|\/$/g, '')
 }
 
-function createFetchRequest(req: FastifyRequest) {
+function createFetchRequest(req: FastifyRequest, reply: FastifyReply) {
   const controller = new AbortController()
 
-  // Abort the signal when the underlying socket closes (client navigated away,
-  // tab closed, etc.). This lets Yoga's useExecutionCancellation stop resolver
+  // Abort the signal when the response stream closes before the response was
+  // fully written, i.e. when the client disconnected (navigated away, tab
+  // closed, etc.). This lets Yoga's useExecutionCancellation stop resolver
   // execution instead of continuing to waste work on a response nobody will
-  // receive
-  req.raw.on('close', () => {
-    controller.abort()
+  // receive.
+  //
+  // We listen on reply.raw (the Node.js ServerResponse) rather than req.raw
+  // (the IncomingMessage) because req.raw's 'close' event fires on every normal
+  // end-of-stream, causing every request to be spuriously aborted. reply.raw
+  // only closes before writableFinished when the client genuinely disconnects
+  reply.raw.on('close', () => {
+    if (!reply.raw.writableFinished) {
+      controller.abort()
+    }
   })
 
   const requestBody =
