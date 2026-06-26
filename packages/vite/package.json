@@ -33,9 +33,6 @@
       "require": "./dist/cjs/buildFeServer.js",
       "import": "./dist/buildFeServer.js"
     },
-    "./buildUDApiServer": {
-      "import": "./dist/buildUDApiServer.js"
-    },
     "./build": {
       "import": "./dist/build/build.js",
       "default": "./dist/cjs/build/build.js"
