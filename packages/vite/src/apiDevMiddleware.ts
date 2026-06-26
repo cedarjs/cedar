@@ -363,7 +363,18 @@ export function createApiFetchHandler() {
       const yoga = graphqlYoga
 
       return getAsyncStoreInstance().run(new Map(), async () => {
-        return yoga.handle(request, { request })
+        try {
+          return await yoga.handle(request, { request })
+        } catch (e: any) {
+          if (e?.code === 'ERR_STREAM_PREMATURE_CLOSE') {
+            // Client disconnected while the request was being processed
+            // (e.g., page navigation, tab close). Return a 499 so the
+            // dev server doesn't log this as a 500.
+            return new Response(null, { status: 499 })
+          }
+
+          throw e
+        }
       })
     }
 

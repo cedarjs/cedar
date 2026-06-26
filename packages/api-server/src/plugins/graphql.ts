@@ -103,12 +103,28 @@ export async function redwoodFastifyGraphQLServer(
           // @live query connections open for as long as the client is
           // connected. This is the fetch-native adapter pattern described in
           // the Universal Deploy integration plan.
-          return yoga.handle(request, {
-            request,
-            cedarContext,
-            event: lambdaEventForFastifyRequest(req),
-            requestContext: undefined,
-          })
+          try {
+            return await yoga.handle(request, {
+              request,
+              cedarContext,
+              event: lambdaEventForFastifyRequest(req),
+              requestContext: undefined,
+            })
+          } catch (e) {
+            if (
+              !!e &&
+              typeof e === 'object' &&
+              'code' in e &&
+              e.code === 'ERR_STREAM_PREMATURE_CLOSE'
+            ) {
+              // Client disconnected while the request was being processed
+              // (e.g., page navigation, tab close). Return a 499 so Fastify
+              // doesn't log this as a 500.
+              return new Response(null, { status: 499 })
+            }
+
+            throw e
+          }
         },
       })
     }

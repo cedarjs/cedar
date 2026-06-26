@@ -466,6 +466,15 @@ async function generateGraphQLModule(distPath: string): Promise<string> {
             statusText: response.statusText,
             headers: response.headers,
           })
+        }).catch((e) => {
+          if (e?.code === 'ERR_STREAM_PREMATURE_CLOSE') {
+            // Client disconnected while the request was being processed (e.g.,
+            // page navigation, tab close). Return a 499 so the runtime doesn't
+            // treat this as a 500.
+            return new Response(null, { status: 499 })
+          }
+
+          throw e
         })
       }
     };
