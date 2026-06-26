@@ -150,6 +150,16 @@ function trimSlashes(path: string) {
 }
 
 function createFetchRequest(req: FastifyRequest) {
+  const controller = new AbortController()
+
+  // Abort the signal when the underlying socket closes (client navigated away,
+  // tab closed, etc.). This lets Yoga's useExecutionCancellation stop resolver
+  // execution instead of continuing to waste work on a response nobody will
+  // receive
+  req.raw.on('close', () => {
+    controller.abort()
+  })
+
   const requestBody =
     req.method === 'GET' || req.method === 'HEAD'
       ? undefined
@@ -164,5 +174,6 @@ function createFetchRequest(req: FastifyRequest) {
     method: req.method,
     headers: req.headers as HeadersInit,
     body: requestBody,
+    signal: controller.signal,
   })
 }
