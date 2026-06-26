@@ -907,7 +907,7 @@ None yet. A re-run of the job passed, confirming this is transient.
 - What command triggers exit 127 in the Resolution step? Still unknown — the
   failing command is inside a closed `##[group]` log block.
 
-## Update 2026-06-26 — UD test harness startup race: esbuild service crash
+## Update 2026-06-26 — UD test harness startup race: esbuild service crash (Ubuntu)
 
 ### Evidence
 
