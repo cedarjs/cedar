@@ -12,15 +12,23 @@ Ensure that there is only one instance of "graphql" in the node_modules
 directory.
 ```
 
-The stack trace shows two different copies of `graphql` loaded simultaneously:
+The stack trace shows the calling path:
 
 ```
-at instanceOf (node_modules/.pnpm/graphql@16.14.2/node_modules/graphql/...)
-at isObjectType (node_modules/.pnpm/graphql@16.13.2/node_modules/graphql/...)
+at instanceOf (node_modules/.pnpm/graphql@16.14.2/node_modules/graphql/jsutils/instanceOf.js)
+at isObjectType (node_modules/.pnpm/graphql@16.14.2/node_modules/graphql/type/definition.js)
+at mapSchema (node_modules/.pnpm/@graphql-tools+utils@11.1.0_graphql@16.14.2/)
+at addResolversToSchema (node_modules/.pnpm/@graphql-tools+schema@10.0.33_graphql@16.13.2/)
 ```
 
-Both in `.pnpm/`, both in the same process — but they're different module
-instances.
+`instanceOf` and `isObjectType` are from the **same** graphql copy (`16.14.2`),
+as expected for co-resident functions. The cross-version collision is in the
+**data flow**: `addResolversToSchema` (resolved with graphql@16.13.2) calls
+`mapSchema` (resolved with graphql@16.14.2) and passes a `GraphQLObjectType`
+instance constructed by 16.13.2's constructors. When `instanceOf` checks
+`value instanceof GraphQLObjectType` using 16.14.2's `GraphQLObjectType`
+constructor against an object whose prototype chain connects to 16.13.2's
+constructor, `instanceof` returns `false`.
 
 ## Why This Happens
 
@@ -75,16 +83,17 @@ Here is the concrete path through the Cedar CLI that triggers the error:
    (e.g., via `graphql-yoga` within `@cedarjs/graphql-server`, or via
    `@graphql-tools/load` within `@cedarjs/internal`) — this chain's nearest
    provider may be graphql@16.14.2 instead
-5. Now within the same process, `makeExecutableSchema` (from one chain) creates
-   a `GraphQLSchema` containing `GraphQLObjectType` instances constructed by
-   graphql@16.13.2
-6. That schema is passed to `mergeSchemas` → `addResolversToSchema` →
-   `mapSchema` (from the other chain), which internally calls
-   `isObjectType(type)`
-7. `isObjectType` does `type instanceof GraphQLObjectType` using **its own**
-   graphql's `GraphQLObjectType` constructor — which is the one from
-   graphql@16.14.2, not 16.13.2
-8. `instanceof` returns `false` → error
+5. Now within the same process, `addResolversToSchema` (from the
+   graphql@16.13.2 chain, via `@graphql-tools/schema@10.0.33`) receives a
+   schema containing `GraphQLObjectType` instances constructed by
+   graphql@16.13.2's constructors
+6. It passes that schema to `mapSchema` (from the graphql@16.14.2 chain, via
+   `@graphql-tools/utils@11.1.0`), which internally calls `isObjectType(type)`
+7. `isObjectType` does `(0, instanceOf)(type, GraphQLObjectType)` — both
+   `instanceOf` and `GraphQLObjectType` are from graphql@16.14.2
+8. `instanceOf` checks `type instanceof GraphQLObjectType` — but `type`'s
+   prototype chain connects to graphql@16.13.2's `GraphQLObjectType.prototype`,
+   not 16.14.2's → `instanceof` returns `false` → error
 
 The workspaces (`api/`, `web/`) don't interact directly. The collision happens
 because `@cedarjs/internal` and `@cedarjs/graphql-server` both end up as
