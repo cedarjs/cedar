@@ -906,3 +906,85 @@ None yet. A re-run of the job passed, confirming this is transient.
   loop on Windows?
 - What command triggers exit 127 in the Resolution step? Still unknown — the
   failing command is inside a closed `##[group]` log block.
+
+## Update 2026-06-26 — UD test harness startup race: esbuild service crash
+
+### Evidence
+
+From run
+[28217399024](https://github.com/cedarjs/cedar/actions/runs/28217399024/job/83591358851?pr=2001)
+(PR #2001 `feat(testing): Make testing work with prisma for yarn, npm and pnpm`):
+
+```
+Error: Hook timed out in 10000ms. If this is a long-running hook, pass a timeout
+value as the last argument or configure it globally with "hookTimeout".
+❯ vitest.setup.mts:46:1
+```
+
+The visible error is the `afterEach` hook (line 46) in `tasks/ud-tests/vitest.setup.mts`
+timing out while cleaning up child processes. The underlying failure is an
+esbuild crash during module loading in the unified dev server's startup:
+
+```
+"The service is no longer running"
+```
+
+This error originates from **esbuild** (`node_modules/esbuild/lib/main.js:893`),
+not from Vite directly. It fires when the esbuild child process dies while
+`ssrLoadModule` is loading `hello.ts` (in `apiDevMiddleware.ts:88`).
+
+### Root cause analysis
+
+1. **Esbuild's service is a global singleton** — a single child process shared
+   across the entire Node.js process. `"The service is no longer running"` is
+   thrown when `sendRequest` detects `closeData.didClose = true`, meaning the
+   child process has exited. Vite itself never calls `esbuild.stop()`, so the
+   crash is the child process dying (segfault, OOM, or resource pressure on CI).
+
+2. **Failure sequence in the test:**
+   - `udDev.test.mts` starts the unified dev server as a child process
+   - `startApiDevMiddleware()` creates two ViteDevServer instances (API + web)
+     and loads API functions via `ssrLoadModule`
+   - If esbuild crashes during `ssrLoadModule`, the error is caught at
+     `apiDevMiddleware.ts:136` and logged, but `hello.ts` is **never
+     registered** in `LAMBDA_FUNCTIONS`
+   - The web server starts anyway → `pollForReady` succeeds (SPA shell responds)
+   - The request to `/.api/functions/hello` returns 404 → test assertion fails
+   - `afterEach` runs: `p.kill()` (SIGTERM) → `await p`. If the dev server
+     shutdown takes longer than 10s (e.g. Vite server.close() hangs), the
+     hook times out, producing the message above.
+
+3. **PR #2001 is unrelated** — it only touches `packages/testing/` (Vitest env +
+   Jest setup for Prisma compat with different package managers). Zero overlap
+   with UD infrastructure, esbuild, or the test fixture.
+
+### Why it's a startup race
+
+- The crash occurs during **startup** (`ssrLoadModule` in
+  `internalLoadApiFunctions`), not during steady-state request handling or
+  cleanup.
+- Esbuild's child process crash is non-deterministic — it depends on CI runner
+  resource pressure (memory, CPU contention) at the moment of startup.
+- Two ViteDevServer instances are created in the same process; while the esbuild
+  protocol is multiplexed by request ID and should be safe, both servers can
+  trigger concurrent esbuild operations that increase the likelihood of
+  triggering the crash.
+
+### Recommendation
+
+A re-run should clear it — this is a transient flaky test in the UD test
+harness, not a code bug. For long-term hardening:
+
+1. **Harden the `afterEach` hook** — use a SIGKILL fallback after a short grace
+   period instead of relying on SIGTERM + `await p`:
+   ```
+   p.kill('SIGTERM')
+   try {
+     await p
+   } catch {
+     p.kill('SIGKILL')  // force-kill if SIGTERM doesn't exit quickly
+     await p
+   }
+   ```
+2. **Increase the hook timeout** from the default 10s to 30s to account for
+   slow Vite server shutdown on resource-constrained CI runners.
