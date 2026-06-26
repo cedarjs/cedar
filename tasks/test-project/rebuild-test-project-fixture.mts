@@ -967,7 +967,21 @@ async function rebuildTestProject() {
           OUTPUT_PROJECT_PATH,
           'pnpm-workspace.yaml',
         )
-        let workspaceYaml = fs.readFileSync(pnpmWorkspacePath, 'utf8')
+        const templatePnpmWorkspacePath = path.join(
+          import.meta.dirname,
+          '..',
+          '..',
+          'packages',
+          'create-cedar-app',
+          'templates',
+          'overlays',
+          esm ? 'esm' : 'cjs',
+          'pnpm',
+          'pnpm-workspace.yaml',
+        )
+        // Read from the template overlay, not from the existing (tainted) file,
+        // so that tarsync-added overrides like stale tarball paths are cleaned up
+        let workspaceYaml = fs.readFileSync(templatePnpmWorkspacePath, 'utf8')
         if (!workspaceYaml.includes('packages/*')) {
           // Insert packages/* after the last existing entry in the packages section
           const packagesMatch = workspaceYaml.match(
