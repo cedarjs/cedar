@@ -1,3 +1,5 @@
+export type PackageManager = 'yarn' | 'npm' | 'pnpm'
+
 export interface TuiTaskDef {
   /** 0 based step number */
   step: number
