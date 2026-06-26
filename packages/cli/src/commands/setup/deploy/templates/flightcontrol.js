@@ -1,54 +1,67 @@
-export const flightcontrolConfig = {
-  $schema: 'https://app.flightcontrol.dev/schema.json',
-  environments: [
-    {
-      id: 'development',
-      name: 'Development',
-      region: 'us-east-1',
-      source: {
-        branch: 'main',
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
+
+export function getFlightcontrolConfig() {
+  const apiBuildCommand = formatCedarCommand(['deploy', 'flightcontrol', 'api'])
+  const apiStartCommand = formatCedarCommand([
+    'deploy',
+    'flightcontrol',
+    'api',
+    '--serve',
+  ])
+  const webBuildCommand = formatCedarCommand(['deploy', 'flightcontrol', 'web'])
+
+  return {
+    $schema: 'https://app.flightcontrol.dev/schema.json',
+    environments: [
+      {
+        id: 'development',
+        name: 'Development',
+        region: 'us-east-1',
+        source: {
+          branch: 'main',
+        },
+        services: [
+          {
+            id: 'cedar-api',
+            name: 'Cedar API',
+            type: 'web',
+            buildType: 'nixpacks',
+            cpu: 0.5,
+            memory: 1,
+            buildCommand: apiBuildCommand,
+            startCommand: apiStartCommand,
+            port: 8911,
+            healthCheckPath: '/graphql/health',
+            ci: {
+              type: 'ec2',
+            },
+            envVariables: {
+              CEDAR_WEB_URL: {
+                fromService: { id: 'cedar-web', value: 'origin' },
+              },
+            },
+          },
+          {
+            id: 'cedar-web',
+            name: 'Cedar Web',
+            type: 'static',
+            buildType: 'nixpacks',
+            singlePageApp: true,
+            buildCommand: webBuildCommand,
+            outputDirectory: 'web/dist',
+            ci: {
+              type: 'ec2',
+            },
+            envVariables: {
+              CEDAR_API_URL: {
+                fromService: { id: 'cedar-api', value: 'origin' },
+              },
+            },
+          },
+        ],
       },
-      services: [
-        {
-          id: 'cedar-api',
-          name: 'Cedar API',
-          type: 'web',
-          buildType: 'nixpacks',
-          cpu: 0.5,
-          memory: 1,
-          buildCommand: 'yarn cedar deploy flightcontrol api',
-          startCommand: 'yarn cedar deploy flightcontrol api --serve',
-          port: 8911,
-          healthCheckPath: '/graphql/health',
-          ci: {
-            type: 'ec2',
-          },
-          envVariables: {
-            CEDAR_WEB_URL: {
-              fromService: { id: 'cedar-web', value: 'origin' },
-            },
-          },
-        },
-        {
-          id: 'cedar-web',
-          name: 'Cedar Web',
-          type: 'static',
-          buildType: 'nixpacks',
-          singlePageApp: true,
-          buildCommand: 'yarn cedar deploy flightcontrol web',
-          outputDirectory: 'web/dist',
-          ci: {
-            type: 'ec2',
-          },
-          envVariables: {
-            CEDAR_API_URL: {
-              fromService: { id: 'cedar-api', value: 'origin' },
-            },
-          },
-        },
-      ],
-    },
-  ],
+    ],
+  }
 }
 
 export const postgresDatabaseService = {

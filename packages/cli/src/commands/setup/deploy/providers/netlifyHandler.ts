@@ -4,6 +4,7 @@ import path from 'path'
 import { Listr, type ListrTask } from 'listr2'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import {
@@ -44,7 +45,7 @@ const notes = [
 
 const udNotes = [
   'You are ready to deploy to Netlify with Universal Deploy!',
-  'Build with: yarn cedar build --ud',
+  `Build with: ${formatCedarCommand(['build', '--ud'])}`,
   'See: https://cedarjs.com/docs/deploy/netlify',
 ]
 

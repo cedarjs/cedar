@@ -2144,7 +2144,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/types@npm:^7.0.0, @babel/types@npm:^7.1.6, @babel/types@npm:^7.18.13, @babel/types@npm:^7.18.9, @babel/types@npm:^7.20.7, @babel/types@npm:^7.21.3, @babel/types@npm:^7.26.10, @babel/types@npm:^7.29.7, @babel/types@npm:^7.3.3, @babel/types@npm:^7.4.4":
+"@babel/types@npm:7.29.7, @babel/types@npm:^7.0.0, @babel/types@npm:^7.1.6, @babel/types@npm:^7.18.13, @babel/types@npm:^7.18.9, @babel/types@npm:^7.20.7, @babel/types@npm:^7.21.3, @babel/types@npm:^7.26.10, @babel/types@npm:^7.29.7, @babel/types@npm:^7.3.3, @babel/types@npm:^7.4.4":
   version: 7.29.7
   resolution: "@babel/types@npm:7.29.7"
   dependencies:
@@ -2632,7 +2632,7 @@ __metadata:
     "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@supabase/ssr": "npm:0.10.3"
+    "@supabase/ssr": "npm:0.12.0"
     "@types/aws-lambda": "npm:8.10.162"
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:9.2.1"
@@ -2655,7 +2655,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/graphql-server": "workspace:*"
     "@cedarjs/web": "workspace:*"
-    "@supabase/ssr": "npm:0.10.3"
+    "@supabase/ssr": "npm:0.12.0"
     "@types/aws-lambda": "npm:8.10.162"
     concurrently: "npm:9.2.1"
     publint: "npm:0.3.21"
@@ -2687,7 +2687,7 @@ __metadata:
   dependencies:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@supabase/ssr": "npm:0.10.3"
+    "@supabase/ssr": "npm:0.12.0"
     "@supabase/supabase-js": "npm:2.105.1"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:9.2.1"
@@ -2922,6 +2922,7 @@ __metadata:
     ansis: "npm:4.2.0"
     archiver: "npm:7.0.1"
     boxen: "npm:5.1.2"
+    camel-case: "npm:4.1.2"
     camelcase: "npm:6.3.0"
     change-case: "npm:4.1.2"
     ci-info: "npm:4.4.0"
@@ -3189,11 +3190,11 @@ __metadata:
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.3"
     esbuild: "npm:0.27.7"
+    execa: "npm:5.1.1"
     fast-glob: "npm:3.3.3"
     tsx: "npm:4.22.4"
     type-fest: "npm:5.6.0"
     typescript: "npm:5.9.3"
-    zx: "npm:8.8.5"
   bin:
     cedar-fwtools-attw: ./dist/bins/cedar-fwtools-attw.js
   languageName: unknown
@@ -3293,13 +3294,19 @@ __metadata:
     "@graphql-codegen/client-preset": "npm:5.3.0"
     "@graphql-codegen/core": "npm:5.0.2"
     "@graphql-codegen/fragment-matcher": "npm:6.0.1"
+    "@graphql-codegen/plugin-helpers": "npm:6.3.0"
     "@graphql-codegen/schema-ast": "npm:5.0.2"
     "@graphql-codegen/typed-document-node": "npm:6.1.8"
     "@graphql-codegen/typescript": "npm:5.0.10"
     "@graphql-codegen/typescript-operations": "npm:5.1.0"
     "@graphql-codegen/typescript-react-apollo": "npm:4.4.2"
     "@graphql-codegen/typescript-resolvers": "npm:5.1.8"
+    "@graphql-codegen/visitor-plugin-common": "npm:6.3.0"
+    "@graphql-tools/code-file-loader": "npm:8.1.29"
     "@graphql-tools/documents": "npm:1.0.1"
+    "@graphql-tools/graphql-file-loader": "npm:8.1.12"
+    "@graphql-tools/load": "npm:8.1.8"
+    "@graphql-tools/merge": "npm:9.1.9"
     "@prisma/dmmf": "npm:7.8.0"
     "@prisma/internals": "npm:7.8.0"
     "@sdl-codegen/node": "npm:2.0.1"
@@ -3307,6 +3314,7 @@ __metadata:
     concurrently: "npm:9.2.1"
     deepmerge: "npm:4.3.1"
     esbuild: "npm:0.27.7"
+    execa: "npm:5.1.1"
     fast-glob: "npm:3.3.3"
     graphql: "npm:16.13.2"
     graphql-tag: "npm:2.12.6"
@@ -3770,10 +3778,10 @@ __metadata:
     "@babel/generator": "npm:7.29.7"
     "@babel/parser": "npm:7.29.7"
     "@babel/traverse": "npm:7.29.7"
+    "@babel/types": "npm:7.29.7"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/babel-config": "workspace:*"
-    "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/context": "workspace:*"
     "@cedarjs/cookie-jar": "workspace:*"
     "@cedarjs/graphql-server": "workspace:*"
@@ -6128,7 +6136,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-codegen/plugin-helpers@npm:^6.3.0":
+"@graphql-codegen/plugin-helpers@npm:6.3.0, @graphql-codegen/plugin-helpers@npm:^6.3.0":
   version: 6.3.0
   resolution: "@graphql-codegen/plugin-helpers@npm:6.3.0"
   dependencies:
@@ -6240,7 +6248,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-codegen/visitor-plugin-common@npm:^6.3.0":
+"@graphql-codegen/visitor-plugin-common@npm:6.3.0, @graphql-codegen/visitor-plugin-common@npm:^6.3.0":
   version: 6.3.0
   resolution: "@graphql-codegen/visitor-plugin-common@npm:6.3.0"
   dependencies:
@@ -6295,7 +6303,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/code-file-loader@npm:^8.1.28":
+"@graphql-tools/code-file-loader@npm:8.1.29, @graphql-tools/code-file-loader@npm:^8.1.28":
   version: 8.1.29
   resolution: "@graphql-tools/code-file-loader@npm:8.1.29"
   dependencies:
@@ -6452,7 +6460,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/graphql-file-loader@npm:^8.0.0, @graphql-tools/graphql-file-loader@npm:^8.1.11":
+"@graphql-tools/graphql-file-loader@npm:8.1.12, @graphql-tools/graphql-file-loader@npm:^8.0.0, @graphql-tools/graphql-file-loader@npm:^8.1.11":
   version: 8.1.12
   resolution: "@graphql-tools/graphql-file-loader@npm:8.1.12"
   dependencies:
@@ -6511,7 +6519,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/load@npm:^8.1.0, @graphql-tools/load@npm:^8.1.8":
+"@graphql-tools/load@npm:8.1.8, @graphql-tools/load@npm:^8.1.0, @graphql-tools/load@npm:^8.1.8":
   version: 8.1.8
   resolution: "@graphql-tools/load@npm:8.1.8"
   dependencies:
@@ -10073,14 +10081,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@supabase/ssr@npm:0.10.3":
-  version: 0.10.3
-  resolution: "@supabase/ssr@npm:0.10.3"
+"@supabase/ssr@npm:0.12.0":
+  version: 0.12.0
+  resolution: "@supabase/ssr@npm:0.12.0"
   dependencies:
     cookie: "npm:^1.0.2"
   peerDependencies:
-    "@supabase/supabase-js": ^2.105.3
-  checksum: 10c0/c143197c4dc6d90b917ac992a9e1bc077e586a4cd78c2da9b31c390a760bed2bc224a8ea2852aaf234a104c86c6839e2e4dc0c47f6d274d933e91d9455b48def
+    "@supabase/supabase-js": ^2.108.0
+  checksum: 10c0/1cdc7e4305d310c76488da5c5ab3801683889264bd5e2dcde79ef6de985c72d8a45d9690eae373c9a74e724bc69d34307c87e89de02e22aba0269c7ffa6ed3c5
   languageName: node
   linkType: hard
 
@@ -13047,12 +13055,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"baseline-browser-mapping@npm:^2.9.0":
-  version: 2.10.34
-  resolution: "baseline-browser-mapping@npm:2.10.34"
+"baseline-browser-mapping@npm:^2.10.38":
+  version: 2.10.38
+  resolution: "baseline-browser-mapping@npm:2.10.38"
   bin:
     baseline-browser-mapping: dist/cli.cjs
-  checksum: 10c0/5c29d5c053ced64a016f2977f70b87bcc85c014b425971cf8a96c14675efe4fedf13871bc7d25030c926e7cbf22959249ffe6b35d5c1e7299578fcdf4e7dc371
+  checksum: 10c0/44bbea61ec54df6845f5f6f149c99057370081f1041d6e8dbc92835630ce37da9adc102528ebebd37f563342da2a5eea525d24698ced6674cdcfadb2ed613136
   languageName: node
   linkType: hard
 
@@ -13367,17 +13375,17 @@ __metadata:
   linkType: hard
 
 "browserslist@npm:^4.24.0, browserslist@npm:^4.28.1":
-  version: 4.28.1
-  resolution: "browserslist@npm:4.28.1"
+  version: 4.28.4
+  resolution: "browserslist@npm:4.28.4"
   dependencies:
-    baseline-browser-mapping: "npm:^2.9.0"
-    caniuse-lite: "npm:^1.0.30001759"
-    electron-to-chromium: "npm:^1.5.263"
-    node-releases: "npm:^2.0.27"
-    update-browserslist-db: "npm:^1.2.0"
+    baseline-browser-mapping: "npm:^2.10.38"
+    caniuse-lite: "npm:^1.0.30001799"
+    electron-to-chromium: "npm:^1.5.376"
+    node-releases: "npm:^2.0.48"
+    update-browserslist-db: "npm:^1.2.3"
   bin:
     browserslist: cli.js
-  checksum: 10c0/545a5fa9d7234e3777a7177ec1e9134bb2ba60a69e6b95683f6982b1473aad347c77c1264ccf2ac5dea609a9731fbfbda6b85782bdca70f80f86e28a402504bd
+  checksum: 10c0/d86f7319c0e3243ca5122335a98b9de8e007fb10fb5643e5f3ed69428fe81ee8646cf1a7663bcfb65bdfddbe505d39406da7ce30052e65c99df9d02336635a7c
   languageName: node
   linkType: hard
 
@@ -13612,6 +13620,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"camel-case@npm:4.1.2, camel-case@npm:^4.1.2":
+  version: 4.1.2
+  resolution: "camel-case@npm:4.1.2"
+  dependencies:
+    pascal-case: "npm:^3.1.2"
+    tslib: "npm:^2.0.3"
+  checksum: 10c0/bf9eefaee1f20edbed2e9a442a226793bc72336e2b99e5e48c6b7252b6f70b080fc46d8246ab91939e2af91c36cdd422e0af35161e58dd089590f302f8f64c8a
+  languageName: node
+  linkType: hard
+
 "camel-case@npm:^3.0.0":
   version: 3.0.0
   resolution: "camel-case@npm:3.0.0"
@@ -13619,16 +13637,6 @@ __metadata:
     no-case: "npm:^2.2.0"
     upper-case: "npm:^1.1.1"
   checksum: 10c0/491c6bbf986b9d8355e12cca6beb719b44c2fe96e8526c09958a1b4e0dbb081a82ea59c13b5a6ccf9158ce5979cbe56a8a10d7322bfeed2d84725c6b89d8f934
-  languageName: node
-  linkType: hard
-
-"camel-case@npm:^4.1.2":
-  version: 4.1.2
-  resolution: "camel-case@npm:4.1.2"
-  dependencies:
-    pascal-case: "npm:^3.1.2"
-    tslib: "npm:^2.0.3"
-  checksum: 10c0/bf9eefaee1f20edbed2e9a442a226793bc72336e2b99e5e48c6b7252b6f70b080fc46d8246ab91939e2af91c36cdd422e0af35161e58dd089590f302f8f64c8a
   languageName: node
   linkType: hard
 
@@ -13646,10 +13654,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"caniuse-lite@npm:^1.0.30001759":
-  version: 1.0.30001797
-  resolution: "caniuse-lite@npm:1.0.30001797"
-  checksum: 10c0/8357f6a70432ad1f1dd39ceeabe6fa7597c76ff45cda2994e4aca3e625bdeb3154b4dfd90b984d343883b2fe4e6abf901739f9f11aa2dfd0254c1de3282ccb76
+"caniuse-lite@npm:^1.0.30001799":
+  version: 1.0.30001799
+  resolution: "caniuse-lite@npm:1.0.30001799"
+  checksum: 10c0/f24f9834edc7b60188f368ce44714695c3901bc4acb7f2a977dd9b7b697e39ddc0f9947fad6224a955b789f36a73432cb888d620aa7280d728f582d3bd8927a7
   languageName: node
   linkType: hard
 
@@ -15631,10 +15639,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron-to-chromium@npm:^1.5.263":
-  version: 1.5.267
-  resolution: "electron-to-chromium@npm:1.5.267"
-  checksum: 10c0/0732bdb891b657f2e43266a3db8cf86fff6cecdcc8d693a92beff214e136cb5c2ee7dc5945ed75fa1db16e16bad0c38695527a020d15f39e79084e0b2e447621
+"electron-to-chromium@npm:^1.5.376":
+  version: 1.5.376
+  resolution: "electron-to-chromium@npm:1.5.376"
+  checksum: 10c0/c57e306ef12ad258e427218f90e14d155dfba68b23699674d7b66e528ce41ff69b46a78f38545ee7690d080d25d3ebb98338282e95d65510e8fa5fd4f7455a86
   languageName: node
   linkType: hard
 
@@ -22746,10 +22754,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-releases@npm:^2.0.27":
-  version: 2.0.27
-  resolution: "node-releases@npm:2.0.27"
-  checksum: 10c0/f1e6583b7833ea81880627748d28a3a7ff5703d5409328c216ae57befbced10ce2c991bea86434e8ec39003bd017f70481e2e5f8c1f7e0a7663241f81d6e00e2
+"node-releases@npm:^2.0.48":
+  version: 2.0.48
+  resolution: "node-releases@npm:2.0.48"
+  checksum: 10c0/17eac8493c0be99130793e87fd67feb6291aecb9f4e473dea3b00f59c002cc8b9c0bdc923227c9aa84968da6b2e4c58e75251981503eb367ec9c742715175a34
   languageName: node
   linkType: hard
 
@@ -28705,9 +28713,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"update-browserslist-db@npm:^1.2.0":
-  version: 1.2.2
-  resolution: "update-browserslist-db@npm:1.2.2"
+"update-browserslist-db@npm:^1.2.3":
+  version: 1.2.3
+  resolution: "update-browserslist-db@npm:1.2.3"
   dependencies:
     escalade: "npm:^3.2.0"
     picocolors: "npm:^1.1.1"
@@ -28715,7 +28723,7 @@ __metadata:
     browserslist: ">= 4.21.0"
   bin:
     update-browserslist-db: cli.js
-  checksum: 10c0/39c3ea08b397ffc8dc3a1c517f5c6ed5cc4179b5e185383dab9bf745879623c12062a2e6bf4f9427cc59389c7bfa0010e86858b923c1e349e32fdddd9b043bb2
+  checksum: 10c0/13a00355ea822388f68af57410ce3255941d5fb9b7c49342c4709a07c9f230bbef7f7499ae0ca7e0de532e79a82cc0c4edbd125f1a323a1845bf914efddf8bec
   languageName: node
   linkType: hard
 

@@ -98,3 +98,7 @@ jobs:
         working-directory: tasks/vercel-tests
         env:
           VERCEL_DEPLOY_URL: ${{ steps.vercel-deploy.outputs.deploy-url }}
+
+      - name: 🧹 Delete Vercel project
+        if: always() && steps.create-project.outputs.project-name != ''
+        run: npx vercel rm "${{ steps.create-project.outputs.project-name }}" --token "$VERCEL_TOKEN" --yes

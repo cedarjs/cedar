@@ -1,0 +1,22 @@
+packages:
+  - api
+  - web
+  - packages/*
+
+allowBuilds:
+  '@clerk/shared': false
+  '@firebase/util': true
+  '@prisma/client': false
+  '@prisma/engines': true
+  '@swc/core': true
+  better-sqlite3: true
+  core-js: false
+  core-js-pure: false
+  esbuild: true
+  msw: true
+  prisma: false
+  protobufjs: false
+  unrs-resolver: false
+
+overrides:
+  'react-is': '19.2.3'
