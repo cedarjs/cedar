@@ -2,10 +2,12 @@
 
 import { spawnSync } from 'node:child_process'
 
-try {
-  spawnSync('git', ['config', 'core.hooksPath', '.git-hooks'], {
-    stdio: 'ignore',
-  })
-} catch {
-  // .git/config may not be writable (e.g. in CI or read-only checkout)
+const result = spawnSync('git', ['config', 'core.hooksPath', '.git-hooks'], {
+  stdio: 'ignore',
+})
+
+// Non-zero status means .git/config wasn't writable (CI, read-only checkout,
+// etc.)
+if (result.status !== 0) {
+  process.exitCode = result.status ?? 1
 }

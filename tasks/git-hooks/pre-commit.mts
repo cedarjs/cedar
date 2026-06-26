@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process'
-import { extname } from 'node:path'
+import path from 'node:path'
 
 import { execAsync } from './shared.mts'
 
@@ -53,7 +53,7 @@ function isExcluded(file: string): boolean {
 
 const lintExts = new Set(['.js', '.ts', '.jsx', '.tsx', '.cjs', '.mjs'])
 const lintFiles = stagedFiles.filter(
-  (f) => lintExts.has(extname(f)) && !isExcluded(f),
+  (f) => lintExts.has(path.extname(f)) && !isExcluded(f),
 )
 
 const formatExts = new Set([
@@ -73,11 +73,11 @@ const formatExts = new Set([
 ])
 const formatExactNames = new Set(['Dockerfile', '.gitignore', '.gitattributes'])
 const formatFiles = stagedFiles.filter((f) => {
-  if (formatExactNames.has(f)) {
+  if (formatExactNames.has(path.basename(f))) {
     return !isExcluded(f)
   }
 
-  return formatExts.has(extname(f)) && !isExcluded(f)
+  return formatExts.has(path.extname(f)) && !isExcluded(f)
 })
 
 const results = await Promise.allSettled([
