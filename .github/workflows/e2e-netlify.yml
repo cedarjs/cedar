@@ -86,5 +86,6 @@ jobs:
 
       - name: 🧹 Delete Netlify site
         if: always() && steps.create-site.outputs.site-id != ''
+        # Run from /tmp so the CLI doesn't detect the monorepo packages.
         working-directory: /tmp
         run: npx netlify sites:delete --force "${{ steps.create-site.outputs.site-id }}"
