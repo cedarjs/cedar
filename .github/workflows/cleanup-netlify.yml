@@ -1,0 +1,59 @@
+name: 🧹 Cleanup Netlify sites
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # daily at 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Delete stale cedar-e2e-* sites
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        run: |
+          # cedar-e2e sites are named cedar-e2e-<epoch seconds>.
+          # Delete any whose timestamp is more than 2 hours old so active
+          # deployments are never removed mid-run.
+          CUTOFF=$(( $(date +%s) - 7200 ))
+          PAGE=1
+          PER_PAGE=100
+
+          while true; do
+            RESPONSE=$(curl -sf "https://api.netlify.com/api/v1/sites?filter=all&page=$PAGE&per_page=$PER_PAGE" \
+              -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN")
+
+            COUNT=$(echo "$RESPONSE" | jq length)
+            if [ "$COUNT" -eq 0 ]; then
+              break
+            fi
+
+            DELETED=0
+            while read -r id; do
+              echo "Deleting site $id"
+              curl -sf -X DELETE "https://api.netlify.com/api/v1/sites/$id" \
+                -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN"
+              DELETED=$((DELETED + 1))
+            done < <(
+              echo "$RESPONSE" | \
+              jq -r --argjson cutoff "$CUTOFF" \
+                '.[]
+                 | select(.name | test("^cedar-e2e-[0-9]+$"))
+                 | select((.name | ltrimstr("cedar-e2e-") | tonumber) < $cutoff)
+                 | .id'
+            )
+
+            # Restart from page 1 after deletions so shifting items from
+            # subsequent pages aren't missed by the offset pagination.
+            if [ "$DELETED" -gt 0 ]; then
+              PAGE=1
+              continue
+            fi
+
+            if [ "$COUNT" -lt "$PER_PAGE" ]; then
+              break
+            fi
+            PAGE=$((PAGE + 1))
+          done
