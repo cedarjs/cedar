@@ -12,8 +12,12 @@ import {
   getPaths,
   printSetupNotes,
 } from '../../../../lib/index.js'
-// @ts-expect-error - No types for JS file
-import { addToGitIgnoreTask, addToDotEnvTask, addFilesTask } from '../helpers/index.js'
+import {
+  addToGitIgnoreTask,
+  addToDotEnvTask,
+  addFilesTask,
+  // @ts-expect-error - No types for JS file
+} from '../helpers/index.js'
 // @ts-expect-error - No types for JS file
 import { SERVERLESS_API_YML } from '../templates/serverless/api.js'
 // @ts-expect-error - No types for JS file

@@ -80,7 +80,10 @@ export const deployCommands = ({
   sides,
   firstRun,
   packOnly,
-}: Pick<ServerlessArgs, 'stage' | 'sides' | 'firstRun' | 'packOnly'>): ListrTaskDef[] => {
+}: Pick<
+  ServerlessArgs,
+  'stage' | 'sides' | 'firstRun' | 'packOnly'
+>): ListrTaskDef[] => {
   const slsStage = stage ? ['--stage', stage] : []
 
   return sides.map((side) => {
@@ -282,18 +285,24 @@ const mapCommandsToListr = ({
       : async () => {
           try {
             if (!command) {
-              throw new Error('No command or task provided to mapCommandsToListr')
+              throw new Error(
+                'No command or task provided to mapCommandsToListr',
+              )
             }
+
             const executingCommand = execa(command[0], command[1], {
               cwd: cwd || getPaths().base,
               shell: true,
             })
+
             executingCommand.stdout?.pipe(process.stdout)
+
             await executingCommand
           } catch (error) {
             if (errorMessage && error instanceof Error) {
               error.message = error.message + '\n' + errorMessage.join(' ')
             }
+
             throw error
           }
         },
