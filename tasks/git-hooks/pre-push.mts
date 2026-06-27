@@ -16,8 +16,13 @@ if (currentBranch === 'next' || currentBranch.startsWith('release/')) {
   process.exit(0)
 }
 
+const buildResult = await execAsync('yarn', ['build'], { NX_TUI: 'false' })
+
+if (buildResult !== 0) {
+  process.exit(buildResult)
+}
+
 const results = await Promise.allSettled([
-  execAsync('yarn', ['build'], { NX_TUI: 'false' }),
   execAsync('yarn', ['lint']),
   execAsync('yarn', ['prettier', '--check', '.']),
   execAsync('yarn', ['check']),
