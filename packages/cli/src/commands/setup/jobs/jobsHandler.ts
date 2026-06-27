@@ -132,7 +132,7 @@ const tasks = async ({ force }: { force: boolean }) => {
         },
       },
     ],
-    { rendererOptions: { collapseSubtasks: false } },
+    { rendererOptions: { collapseSubtasks: false }, exitOnError: true },
   )
 }
 
