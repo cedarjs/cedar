@@ -15,7 +15,8 @@ export const builder = (yargs: Argv) => {
 
   yargs.option('first-run', {
     describe:
-      'Set this flag the first time you deploy: starts server processes from scratch',
+      'Set this flag the first time you deploy: starts server processes from ' +
+      'scratch',
     default: false,
     type: 'boolean',
   })
@@ -80,7 +81,9 @@ export const builder = (yargs: Argv) => {
   yargs.option('maintenance', {
     describe: 'Add/remove the maintenance page',
     choices: ['up', 'down'],
-    help: 'Put up a maintenance page by replacing the content of web/dist/index.html with the content of web/src/maintenance.html',
+    help:
+      'Put up a maintenance page by replacing the content of ' +
+      'web/dist/index.html with the content of web/src/maintenance.html',
   })
 
   yargs.option('rollback', {
@@ -100,11 +103,12 @@ export const builder = (yargs: Argv) => {
     type: 'boolean',
   })
 
-  // TODO: Allow option to pass --sides and only deploy select sides instead of all, always
+  // TODO: Allow option to pass --sides and only deploy select sides instead of
+  // always deploying all sides
 
   yargs.epilogue(
     `Also see the ${terminalLink(
-      'Redwood Baremetal Deploy Reference',
+      'Cedar Baremetal Deploy Reference',
       'https://cedarjs.com/docs/cli-commands#deploy',
     )}\n`,
   )
@@ -145,7 +149,8 @@ export async function handler(yargs: BaremetalArgs) {
   })
 
   // @ts-expect-error - baremetalHandler.js has no type declarations yet
-  const { handler: baremetalHandler } = await import('./baremetal/baremetalHandler.js')
+  const { handler: baremetalHandler } =
+    await import('./baremetal/baremetalHandler.js')
 
   return baremetalHandler(yargs)
 }
