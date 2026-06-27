@@ -16,8 +16,11 @@ import {
   addToGitIgnoreTask,
   addToDotEnvTask,
   addFilesTask,
+  // @ts-expect-error - No types for JS file
 } from '../helpers/index.js'
+// @ts-expect-error - No types for JS file
 import { SERVERLESS_API_YML } from '../templates/serverless/api.js'
+// @ts-expect-error - No types for JS file
 import { SERVERLESS_WEB_YML } from '../templates/serverless/web.js'
 
 const notes = [
@@ -95,7 +98,7 @@ const updateConfigTomlTask = () => {
   }
 }
 
-export const handler = async ({ force }) => {
+export const handler = async ({ force }: { force: boolean }) => {
   recordTelemetryAttributes({
     command: 'setup deploy serverless',
     force,
@@ -146,8 +149,13 @@ export const handler = async ({ force }) => {
   try {
     await tasks.run()
   } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+    const message = e instanceof Error ? e.message : String(e)
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    process.exit(exitCode)
   }
 }

@@ -1,10 +1,13 @@
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
+
+import type { ServerlessArgs } from './serverlessHandler.js'
 
 export const command = 'serverless'
 export const aliases = ['aws serverless', 'sls']
 export const description = 'Deploy to AWS via the serverless framework'
 
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   yargs.option('stage', {
     describe:
       'serverless stage pass through param: https://www.serverless.com/blog/stages-and-environments',
@@ -47,7 +50,7 @@ export const builder = (yargs) => {
   )
 }
 
-export async function handler(yargs) {
+export async function handler(yargs: ServerlessArgs) {
   const { handler: importedHandler } = await import('./serverlessHandler.js')
 
   return importedHandler(yargs)
