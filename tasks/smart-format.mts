@@ -67,4 +67,3 @@ function quoteAll(files: string[]): string {
 
   return files.map((f) => `'${f.replaceAll("'", "'\\''")}'`).join(' ')
 }
-
