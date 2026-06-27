@@ -148,8 +148,8 @@ export async function handler(yargs: BaremetalArgs) {
     gitCheck: yargs.gitCheck,
   })
 
-  // @ts-expect-error - baremetalHandler.js has no type declarations yet
   const { handler: baremetalHandler } =
+    // @ts-expect-error - baremetalHandler.js has no type declarations yet
     await import('./baremetal/baremetalHandler.js')
 
   return baremetalHandler(yargs)

@@ -8,6 +8,8 @@ import archiver from 'archiver'
 import { findApiDistFunctions } from '@cedarjs/internal/dist/files'
 import { ensurePosixPath, getPaths } from '@cedarjs/project-config'
 
+import * as nftPacker from '../packing/nft.js'
+
 const ZIPBALL_DIR = './api/dist/zipball'
 
 export function zipDirectory(source: string, out: string): Promise<void> {
@@ -81,5 +83,5 @@ export async function packageSingleFunction(
 
 export function nftPack(): Promise<void[]> {
   const filesToBePacked = findApiDistFunctions({ cwd: getPaths().api.base })
-  return Promise.all(filesToBePacked.map(packageSingleFunction))
+  return Promise.all(filesToBePacked.map(nftPacker.packageSingleFunction))
 }

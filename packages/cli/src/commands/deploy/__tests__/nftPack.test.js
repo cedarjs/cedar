@@ -14,11 +14,11 @@ vi.mock('@cedarjs/internal/dist/files', () => {
   return {
     findApiDistFunctions: () => {
       return [
-        '/Users/carmack/dev/redwood/__fixtures__/example-todo-main/api/dist/functions/graphql.js',
-        '/Users/carmack/dev/redwood/__fixtures__/example-todo-main/api/dist/functions/healthz/healthz.js',
-        '/Users/carmack/dev/redwood/__fixtures__/example-todo-main/api/dist/functions/invalid/x.js',
-        '/Users/carmack/dev/redwood/__fixtures__/example-todo-main/api/dist/functions/nested/nested.js',
-        '/Users/carmack/dev/redwood/__fixtures__/example-todo-main/api/dist/functions/x/index.js',
+        '/Users/carmack/dev/cedar/__fixtures__/example-todo-main/api/dist/functions/graphql.js',
+        '/Users/carmack/dev/cedar/__fixtures__/example-todo-main/api/dist/functions/healthz/healthz.js',
+        '/Users/carmack/dev/cedar/__fixtures__/example-todo-main/api/dist/functions/invalid/x.js',
+        '/Users/carmack/dev/cedar/__fixtures__/example-todo-main/api/dist/functions/nested/nested.js',
+        '/Users/carmack/dev/cedar/__fixtures__/example-todo-main/api/dist/functions/x/index.js',
       ]
     },
   }
@@ -28,7 +28,10 @@ vi.mock('@cedarjs/project-config', () => {
   return {
     getPaths: () => {
       return {
-        base: '/Users/carmack/dev/redwood/__fixtures__/example-todo-main/',
+        base: '/Users/carmack/dev/cedar/__fixtures__/example-todo-main/',
+        api: {
+          base: '/Users/carmack/dev/cedar/__fixtures__/example-todo-main/api/',
+        },
       }
     },
     ensurePosixPath: (path) => {
