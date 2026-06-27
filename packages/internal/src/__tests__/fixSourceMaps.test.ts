@@ -19,7 +19,10 @@ afterEach(() => {
 function writeMap(relPath: string, sources: string[]) {
   const absPath = path.join(tmpDir, relPath)
   fs.mkdirSync(path.dirname(absPath), { recursive: true })
-  fs.writeFileSync(absPath, JSON.stringify({ version: 3, sources, mappings: '' }))
+  fs.writeFileSync(
+    absPath,
+    JSON.stringify({ version: 3, sources, mappings: '' }),
+  )
 }
 
 function readMapSources(relPath: string): string[] {

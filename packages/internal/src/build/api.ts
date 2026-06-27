@@ -212,10 +212,9 @@ export async function fixSourceMaps(
           return
         }
 
-        // Source map `sources` must always use forward slashes, even on Windows
-        const correctRelPath = path
-          .relative(path.dirname(mapFile), srcFile)
-          .replaceAll('\\', '/')
+        const correctRelPath = normalizePath(
+          path.relative(path.dirname(mapFile), srcFile),
+        )
 
         if (map.sources[0] === correctRelPath) {
           return // already correct
