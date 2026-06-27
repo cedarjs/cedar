@@ -1,4 +1,5 @@
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
@@ -6,7 +7,7 @@ import { getPackageManager } from '@cedarjs/project-config/packageManager'
 export const command = 'baremetal [environment]'
 export const description = 'Deploy to baremetal server(s)'
 
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   yargs.positional('environment', {
     describe: 'The environment to deploy to',
     type: 'string',
@@ -109,7 +110,24 @@ export const builder = (yargs) => {
   )
 }
 
-export async function handler(yargs) {
+interface BaremetalArgs {
+  firstRun: boolean
+  df: boolean
+  update: boolean
+  install: boolean
+  migrate: boolean
+  build: boolean
+  restart: boolean
+  cleanup: boolean
+  maintenance?: string
+  rollback?: number
+  verbose: boolean
+  gitCheck: boolean
+  releaseDir: string
+  branch?: string
+}
+
+export async function handler(yargs: BaremetalArgs) {
   recordTelemetryAttributes({
     command: 'deploy baremetal',
     firstRun: yargs.firstRun,
@@ -126,8 +144,8 @@ export async function handler(yargs) {
     gitCheck: yargs.gitCheck,
   })
 
-  const { handler: baremetalHandler } =
-    await import('./baremetal/baremetalHandler.js')
+  // @ts-expect-error - baremetalHandler.js has no type declarations yet
+  const { handler: baremetalHandler } = await import('./baremetal/baremetalHandler.js')
 
   return baremetalHandler(yargs)
 }

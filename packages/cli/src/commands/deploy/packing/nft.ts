@@ -1,17 +1,16 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+// @ts-expect-error - @vercel/nft has no bundled type declarations
 import { nodeFileTrace } from '@vercel/nft'
 import archiver from 'archiver'
 
 import { findApiDistFunctions } from '@cedarjs/internal/dist/files'
 import { ensurePosixPath, getPaths } from '@cedarjs/project-config'
 
-import * as nftPacker from '../packing/nft.js'
-
 const ZIPBALL_DIR = './api/dist/zipball'
 
-export function zipDirectory(source, out) {
+export function zipDirectory(source: string, out: string): Promise<void> {
   const archive = archiver('zip', { zlib: { level: 5 } })
   const stream = fs.createWriteStream(out)
 
@@ -27,7 +26,10 @@ export function zipDirectory(source, out) {
 }
 
 // returns a tuple of [filePath, fileContent]
-export function generateEntryFile(functionAbsolutePath, name) {
+export function generateEntryFile(
+  functionAbsolutePath: string,
+  name: string,
+): [string, string] {
   const relativeImport = ensurePosixPath(
     path.relative(getPaths().base, functionAbsolutePath),
   )
@@ -37,13 +39,15 @@ export function generateEntryFile(functionAbsolutePath, name) {
   ]
 }
 
-export async function packageSingleFunction(functionFile) {
+export async function packageSingleFunction(
+  functionFile: string,
+): Promise<void> {
   const { name: functionName } = path.parse(functionFile)
 
   const { fileList: functionDependencyFileList } = await nodeFileTrace([
     functionFile,
   ])
-  const copyPromises = []
+  const copyPromises: Promise<void>[] = []
   for (const singleDependencyPath of functionDependencyFileList) {
     copyPromises.push(
       fs.promises.cp(
@@ -73,10 +77,9 @@ export async function packageSingleFunction(functionFile) {
     recursive: true,
     force: true,
   })
-  return
 }
 
-export function nftPack() {
-  const filesToBePacked = findApiDistFunctions()
-  return Promise.all(filesToBePacked.map(nftPacker.packageSingleFunction))
+export function nftPack(): Promise<void[]> {
+  const filesToBePacked = findApiDistFunctions({ cwd: getPaths().api.base })
+  return Promise.all(filesToBePacked.map(packageSingleFunction))
 }
