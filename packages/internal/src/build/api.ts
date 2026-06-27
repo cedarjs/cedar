@@ -172,7 +172,10 @@ const transpileApi = async (files: string[]) => {
 // which breaks debugger breakpoints. This mirrors the known workaround from
 // issue #24: recompute the correct relative path from each .js.map file to its
 // corresponding .ts source file and overwrite the sources entry.
-async function fixSourceMaps(distDir: string, srcDir: string): Promise<void> {
+export async function fixSourceMaps(
+  distDir: string,
+  srcDir: string,
+): Promise<void> {
   let entries: fs.Dirent[]
   try {
     entries = await fs.promises.readdir(distDir, {
