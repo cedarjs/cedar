@@ -27,7 +27,10 @@ export const rebuildApi = async () => {
   if (!BUILD_CTX) {
     BUILD_CTX = await context(getEsbuildOptions(apiFiles))
   }
-  return BUILD_CTX.rebuild()
+  const result = await BUILD_CTX.rebuild()
+  const cedarPaths = getPaths()
+  await fixSourceMaps(cedarPaths.api.dist, cedarPaths.api.src)
+  return result
 }
 
 export const cleanApiBuild = async () => {
@@ -158,7 +161,67 @@ export const buildApiWithVite = async () => {
 }
 
 const transpileApi = async (files: string[]) => {
-  return build(getEsbuildOptions(files))
+  const result = await build(getEsbuildOptions(files))
+  const cedarPaths = getPaths()
+  await fixSourceMaps(cedarPaths.api.dist, cedarPaths.api.src)
+  return result
+}
+
+// esbuild combines Babel's inline source maps with its own, but the resulting
+// `sources` paths are often wrong (absolute or relative to the wrong base),
+// which breaks debugger breakpoints. This mirrors the known workaround from
+// issue #24: recompute the correct relative path from each .js.map file to its
+// corresponding .ts source file and overwrite the sources entry.
+async function fixSourceMaps(distDir: string, srcDir: string): Promise<void> {
+  let entries: fs.Dirent[]
+  try {
+    entries = await fs.promises.readdir(distDir, {
+      recursive: true,
+      withFileTypes: true,
+    })
+  } catch {
+    return
+  }
+
+  const mapFiles = entries
+    .filter((e) => e.isFile() && e.name.endsWith('.js.map'))
+    .map((e) => path.join((e as any).parentPath ?? (e as any).path, e.name))
+
+  await Promise.all(
+    mapFiles.map(async (mapFile) => {
+      try {
+        const raw = await fs.promises.readFile(mapFile, 'utf8')
+        const map = JSON.parse(raw)
+
+        if (!Array.isArray(map.sources) || map.sources.length === 0) {
+          return
+        }
+
+        // Derive the source file path: dist/functions/graphql.js.map → src/functions/graphql.ts
+        const jsFile = mapFile.slice(0, -4) // strip '.map'
+        const baseName = path.relative(distDir, jsFile).replace(/\.js$/, '')
+
+        const srcFile = ['.ts', '.tsx', '.jsx', '.js']
+          .map((ext) => path.join(srcDir, baseName + ext))
+          .find((f) => fs.existsSync(f))
+
+        if (!srcFile) {
+          return
+        }
+
+        const correctRelPath = path.relative(path.dirname(mapFile), srcFile)
+
+        if (map.sources[0] === correctRelPath) {
+          return // already correct
+        }
+
+        map.sources = [correctRelPath]
+        await fs.promises.writeFile(mapFile, JSON.stringify(map), 'utf8')
+      } catch {
+        // skip files that can't be read/parsed
+      }
+    }),
+  )
 }
 
 function getEsbuildOptions(files: string[]): BuildOptions {
