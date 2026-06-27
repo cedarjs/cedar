@@ -13,7 +13,6 @@ jobs:
       YARN_ENABLE_HARDENED_MODE: 0
       YARN_ENABLE_IMMUTABLE_INSTALLS: false
       NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-      SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
 
     steps:
       - name: Checkout the framework code
@@ -37,9 +36,19 @@ jobs:
           rm -rf api/db/migrations
           yarn cedar setup neon
 
+      - name: 🆕 Create Netlify site
+        id: create-site
+        # Run from /tmp so the CLI doesn't detect the monorepo packages and
+        # refuse to create a new site.
+        working-directory: /tmp
+        run: |
+          SITE_NAME="cedar-e2e-$(date +%s)"
+          OUTPUT=$(npx netlify sites:create --name "$SITE_NAME" --json)
+          echo "site-id=$(echo "$OUTPUT" | jq -r '.id')" >> "$GITHUB_OUTPUT"
+
       - name: 🔗 Link Netlify site
         working-directory: ../cedar-test-app
-        run: npx netlify link --id "$SITE_ID" --filter web
+        run: npx netlify link --id "${{ steps.create-site.outputs.site-id }}" --filter web
 
       - name: 🔧 Set up Universal Deploy
         working-directory: ../cedar-test-app
@@ -74,3 +83,9 @@ jobs:
         working-directory: tasks/netlify-tests
         env:
           NETLIFY_DEPLOY_URL: ${{ steps.netlify-deploy.outputs.deploy-url }}
+
+      - name: 🧹 Delete Netlify site
+        if: always() && steps.create-site.outputs.site-id != ''
+        # Run from /tmp so the CLI doesn't detect the monorepo packages.
+        working-directory: /tmp
+        run: npx netlify sites:delete --force "${{ steps.create-site.outputs.site-id }}"
