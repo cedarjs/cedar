@@ -38,7 +38,15 @@ const theme = {}
 export default createTheme(theme)
 `
 
-export async function handler({ force, install, packages }) {
+export async function handler({
+  force,
+  install,
+  packages,
+}: {
+  force: boolean
+  install: boolean
+  packages: string[]
+}) {
   recordTelemetryAttributes({
     command: 'setup ui mantine',
     force,
@@ -135,8 +143,12 @@ export async function handler({ force, install, packages }) {
       },
       {
         title: 'Configure Storybook...',
-        skip: () =>
-          fileIncludes(cedarPaths.web.storybookPreviewConfig, 'withMantine'),
+        skip: () => {
+          const previewConfig = cedarPaths.web.storybookPreviewConfig
+          return previewConfig != null
+            ? fileIncludes(previewConfig, 'withMantine')
+            : false
+        },
         task: async () =>
           await extendStorybookConfiguration(
             path.join(
@@ -154,7 +166,11 @@ export async function handler({ force, install, packages }) {
   try {
     await tasks.run()
   } catch (e) {
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+    console.error(c.error(e instanceof Error ? e.message : String(e)))
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    process.exit(exitCode)
   }
 }

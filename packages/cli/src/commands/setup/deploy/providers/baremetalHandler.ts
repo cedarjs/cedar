@@ -12,7 +12,9 @@ import {
   getPaths,
   printSetupNotes,
 } from '../../../../lib/index.js'
+// @ts-expect-error - No types for JS file
 import { addFilesTask } from '../helpers/index.js'
+// @ts-expect-error - No types for JS file
 import { DEPLOY, ECOSYSTEM, MAINTENANCE } from '../templates/baremetal.js'
 
 export const configFilename = 'deploy.toml'
@@ -39,7 +41,7 @@ const notes = [
   'config and setup required before you can perform your first deploy.',
 ]
 
-export const handler = async ({ force }) => {
+export const handler = async ({ force }: { force: boolean }) => {
   recordTelemetryAttributes({
     command: 'setup deploy baremetal',
     force,
@@ -91,8 +93,13 @@ export const handler = async ({ force }) => {
   try {
     await tasks.run()
   } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+    const message = e instanceof Error ? e.message : String(e)
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    process.exit(exitCode)
   }
 }

@@ -32,15 +32,15 @@ model BackgroundJob {
 }
 `
 
-const getModelNames = async () => {
+const getModelNames = async (): Promise<string[]> => {
   const { schemas } = await getPrismaSchemas()
   const schema = await getDMMF({ datamodel: schemas })
 
-  return schema.datamodel.models.map((model) => model.name)
+  return schema.datamodel.models.map((model: { name: string }) => model.name)
 }
 
 // TODO(jgmw): This won't handle prisma with schema folder preview feature
-const addDatabaseModel = async () => {
+const addDatabaseModel = async (): Promise<void> => {
   const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
   const schema = fs.readFileSync(schemaPath, 'utf-8')
 
@@ -49,11 +49,13 @@ const addDatabaseModel = async () => {
   fs.writeFileSync(schemaPath, schemaWithUser)
 }
 
-const tasks = async ({ force }) => {
+const tasks = async ({ force }: { force: boolean }) => {
   const modelExists = (await getModelNames()).includes('BackgroundJob')
 
   const packageJsonPath = path.join(getPaths().base, 'package.json')
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'))
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8')) as {
+    devDependencies?: Record<string, string>
+  }
   const cedarjsVersion =
     packageJson.devDependencies?.['@cedarjs/core'] ?? 'latest'
   const jobsPackage = `@cedarjs/jobs@${cedarjsVersion}`
@@ -65,10 +67,11 @@ const tasks = async ({ force }) => {
         task: async () => {
           await addDatabaseModel()
         },
-        skip: () => {
+        skip: (): string | boolean => {
           if (modelExists) {
             return 'BackgroundJob model exists, skipping'
           }
+          return false
         },
       },
       {
@@ -111,7 +114,7 @@ const tasks = async ({ force }) => {
       addApiPackages([jobsPackage]),
       {
         title: 'One more thing...',
-        task: (_ctx, task) => {
+        task: (_ctx: unknown, task: { title: string }) => {
           task.title = `One more thing...
 
           ${c.success('\nBackground jobs configured!\n')}
@@ -129,16 +132,16 @@ const tasks = async ({ force }) => {
         },
       },
     ],
-    { rendererOptions: { collapseSubtasks: false }, errorOnExist: true },
+    { rendererOptions: { collapseSubtasks: false }, exitOnError: true },
   )
 }
 
-export const handler = async ({ force }) => {
+export const handler = async ({ force }: { force: boolean }) => {
   const t = await tasks({ force })
 
   try {
     await t.run()
   } catch (e) {
-    console.error(c.error(e.message))
+    console.error(c.error(e instanceof Error ? e.message : String(e)))
   }
 }

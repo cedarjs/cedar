@@ -17,7 +17,25 @@ import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 
 import { getPaths } from '../../lib/index.js'
 
-export const preRequisites = () => [
+export interface ServerlessArgs {
+  stage: string
+  sides: string[]
+  verbose: boolean
+  packOnly: boolean
+  firstRun: boolean
+}
+
+interface ListrTaskDef {
+  title: string
+  command?: [string, string[]]
+  task?: (() => Promise<void>) | (() => void)
+  cwd?: string
+  errorMessage?: string[]
+  skip?: () => string | boolean
+  enabled?: () => boolean
+}
+
+export const preRequisites = (): ListrTaskDef[] => [
   {
     title: 'Checking if Serverless framework is installed...',
     task: async () => {
@@ -33,7 +51,9 @@ export const preRequisites = () => [
   },
 ]
 
-export const buildCommands = ({ sides }) => {
+export const buildCommands = ({
+  sides,
+}: Pick<ServerlessArgs, 'sides'>): ListrTaskDef[] => {
   return [
     {
       title: `Building ${sides.join(' & ')}...`,
@@ -55,7 +75,15 @@ export const buildCommands = ({ sides }) => {
   ]
 }
 
-export const deployCommands = ({ stage, sides, firstRun, packOnly }) => {
+export const deployCommands = ({
+  stage,
+  sides,
+  firstRun,
+  packOnly,
+}: Pick<
+  ServerlessArgs,
+  'stage' | 'sides' | 'firstRun' | 'packOnly'
+>): ListrTaskDef[] => {
   const slsStage = stage ? ['--stage', stage] : []
 
   return sides.map((side) => {
@@ -77,12 +105,14 @@ export const deployCommands = ({ stage, sides, firstRun, packOnly }) => {
         if (packOnly) {
           return 'Finishing early due to --pack-only flag. Your Redwood project is packaged and ready to deploy'
         }
+
+        return false
       },
     }
   })
 }
 
-const loadDotEnvForStage = (dotEnvPath) => {
+const loadDotEnvForStage = (dotEnvPath: string) => {
   // Make sure we use the correct .env based on the stage
   config({
     path: dotEnvPath,
@@ -91,7 +121,7 @@ const loadDotEnvForStage = (dotEnvPath) => {
   })
 }
 
-export const handler = async (yargs) => {
+export const handler = async (yargs: ServerlessArgs) => {
   recordTelemetryAttributes({
     command: 'deploy serverless',
     sides: JSON.stringify(yargs.sides),
@@ -108,13 +138,13 @@ export const handler = async (yargs) => {
 
   const tasks = new Listr(
     [
-      ...preRequisites(yargs).map(mapCommandsToListr),
+      ...preRequisites().map(mapCommandsToListr),
       ...buildCommands(yargs).map(mapCommandsToListr),
       ...deployCommands(yargs).map(mapCommandsToListr),
     ],
     {
       exitOnError: true,
-      renderer: yargs.verbose && 'verbose',
+      renderer: yargs.verbose ? 'verbose' : undefined,
     },
   )
   try {
@@ -135,7 +165,13 @@ export const handler = async (yargs) => {
         },
       )
 
-      const deployedApiUrl = slsInfo.match(/HttpApiUrl: (https:\/\/.*)/)[1]
+      const apiMatch = slsInfo.match(/HttpApiUrl: (https:\/\/.*)/)
+      if (!apiMatch) {
+        throw new Error(
+          'Could not find HttpApiUrl in serverless info output. Deploy may have failed.',
+        )
+      }
+      const deployedApiUrl = apiMatch[1]
 
       console.log()
       console.log(SETUP_MARKER, `Found ${c.success(deployedApiUrl)}`)
@@ -167,7 +203,7 @@ export const handler = async (yargs) => {
         const webDeployTasks = new Listr(
           [
             // Rebuild web with the new API_URL
-            ...buildCommands({ ...yargs, sides: ['web'], firstRun: false }).map(
+            ...buildCommands({ ...yargs, sides: ['web'] }).map(
               mapCommandsToListr,
             ),
             ...deployCommands({
@@ -178,14 +214,14 @@ export const handler = async (yargs) => {
           ],
           {
             exitOnError: true,
-            renderer: yargs.verbose && 'verbose',
+            renderer: yargs.verbose ? 'verbose' : undefined,
           },
         )
 
         // Deploy the web side now that the API_URL has been configured
         await webDeployTasks.run()
 
-        const { stdout: slsInfo } = await runBin(
+        const { stdout: webSlsInfo } = await runBin(
           'serverless',
           ['info', '--verbose', `--stage=${yargs.stage}`],
           {
@@ -194,7 +230,13 @@ export const handler = async (yargs) => {
           },
         )
 
-        const deployedWebUrl = slsInfo.match(/url: (https:\/\/.*)/)[1]
+        const webMatch = webSlsInfo.match(/url: (https:\/\/.*)/)
+        if (!webMatch) {
+          throw new Error(
+            'Could not find url in serverless info output. Deploy may have failed.',
+          )
+        }
+        const deployedWebUrl = webMatch[1]
 
         const message = [
           c.bold('Successful first deploy!'),
@@ -218,8 +260,12 @@ export const handler = async (yargs) => {
       }
     }
   } catch (e) {
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+    console.error(c.error(e instanceof Error ? e.message : String(e)))
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    process.exit(exitCode)
   }
 }
 
@@ -231,23 +277,32 @@ const mapCommandsToListr = ({
   errorMessage,
   skip,
   enabled,
-}) => {
+}: ListrTaskDef) => {
   return {
     title,
     task: task
       ? task
       : async () => {
           try {
-            const executingCommand = execa(...command, {
+            if (!command) {
+              throw new Error(
+                'No command or task provided to mapCommandsToListr',
+              )
+            }
+
+            const executingCommand = execa(command[0], command[1], {
               cwd: cwd || getPaths().base,
               shell: true,
             })
-            executingCommand.stdout.pipe(process.stdout)
+
+            executingCommand.stdout?.pipe(process.stdout)
+
             await executingCommand
           } catch (error) {
-            if (errorMessage) {
+            if (errorMessage && error instanceof Error) {
               error.message = error.message + '\n' + errorMessage.join(' ')
             }
+
             throw error
           }
         },

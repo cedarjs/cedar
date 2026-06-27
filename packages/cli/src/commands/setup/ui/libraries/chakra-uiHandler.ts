@@ -16,7 +16,13 @@ const theme = {}
 export default theme
 `
 
-export async function handler({ force, install }) {
+export async function handler({
+  force,
+  install,
+}: {
+  force: boolean
+  install: boolean
+}) {
   recordTelemetryAttributes({
     command: 'setup ui chakra-ui',
     force,
@@ -102,7 +108,11 @@ export async function handler({ force, install }) {
   try {
     await tasks.run()
   } catch (e) {
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+    console.error(c.error(e instanceof Error ? e.message : String(e)))
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    process.exit(exitCode)
   }
 }
