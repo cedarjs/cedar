@@ -40,7 +40,7 @@ export function getUserApiUrl(): string {
 
 export interface PreRequisite {
   title: string
-  command: [string, string[], ...unknown[]]
+  command: Parameters<typeof execa>
   errorMessage: string
 }
 
