@@ -34,7 +34,7 @@ interface ListrContext {
 
 interface TsConfigJson {
   compilerOptions?: Record<string, unknown>
-  references?: Array<{ path?: string }>
+  references?: { path?: string }[]
   [key: string]: unknown
 }
 
@@ -107,10 +107,7 @@ export async function updateTsconfig(task: {
 
     // Only update tsconfigs that explicitly set a "module" value. We don't
     // want to add a new module entry where none existed before.
-    if (
-      !tsconfig?.compilerOptions ||
-      typeof tsconfig.compilerOptions.module === 'undefined'
-    ) {
+    if (tsconfig.compilerOptions?.module === undefined) {
       // If there is no "module" entry, skip this tsconfig
       continue
     }
@@ -251,11 +248,11 @@ export function updateWorkspaceTsconfigReferences(
   }
 
   // Update workspace tsconfigs (api/web/scripts)
-  const workspaces: Array<{
+  const workspaces: {
     name: string
     tsconfigPath: string
     packageDir: string
-  }> = []
+  }[] = []
 
   const packageDir = path.join(getPaths().base, 'packages', folderName)
 
@@ -281,13 +278,13 @@ export function updateWorkspaceTsconfigReferences(
     return
   }
 
-  const subtasks: Array<{
+  const subtasks: {
     title: string
     task: (
       _ctx: unknown,
       subtask: { skip: (msg?: string) => void },
     ) => Promise<void>
-  }> = workspaces.map((ws) => {
+  }[] = workspaces.map((ws) => {
     return {
       title: `Updating ${ws.name} tsconfig references...`,
       task: async (_ctx: unknown, subtask: { skip: (msg?: string) => void }) => {
@@ -319,7 +316,7 @@ export function updateWorkspaceTsconfigReferences(
             readFile: (p: string) => {
               try {
                 return fs.readFileSync(p, 'utf8')
-              } catch (e) {
+              } catch {
                 return ts.sys.readFile(p)
               }
             },
@@ -333,7 +330,7 @@ export function updateWorkspaceTsconfigReferences(
           path.dirname(ws.tsconfigPath),
         )
 
-        if (configParseResult.errors && configParseResult.errors.length) {
+        if (configParseResult.errors?.length) {
           console.error('Parse errors:', configParseResult.errors)
         }
 
@@ -350,7 +347,7 @@ export function updateWorkspaceTsconfigReferences(
 
         const references = tsconfig.references
 
-        if (references.some((ref) => ref && ref.path === referencePath)) {
+        if (references.some((ref) => ref?.path === referencePath)) {
           subtask.skip('tsconfig already up to date')
           return
         }
@@ -527,13 +524,13 @@ export const handler = async ({
             return
           }
 
-          const subtasks: Array<{
+          const subtasks: {
             title: string
             task: (
               _subCtx: unknown,
               subtask: { skip: (msg?: string) => void },
             ) => Promise<void>
-          }> = []
+          }[] = []
 
           if (
             ctx.targetWorkspaces === 'api' ||
