@@ -40,7 +40,7 @@ export function getUserApiUrl(): string {
 
 export interface PreRequisite {
   title: string
-  command: [file: string, arguments?: readonly string[]]
+  command: [file: string, arguments: readonly string[]]
   errorMessage: string
 }
 
