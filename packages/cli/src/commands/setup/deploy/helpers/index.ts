@@ -288,7 +288,11 @@ export function insertPluginsBeforeCedar({
     return null
   }
 
-  const cedarNode = elements[cedarIndex] as t.CallExpression
+  const cedarElement = elements[cedarIndex]
+  if (!cedarElement || !t.isCallExpression(cedarElement)) {
+    return null
+  }
+  const cedarNode = cedarElement
 
   // Check if the array is inline (all elements on the same line as [)
   const arrayNode = arrayExpr
