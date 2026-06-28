@@ -281,16 +281,17 @@ async function getAuthSetupHandler(module: string) {
       )
     }
 
-    const versions =
-      packument !== null &&
-      typeof packument === 'object' &&
-      'versions' in packument &&
-      packument.versions !== null &&
-      typeof packument.versions === 'object'
-        ? packument.versions
-        : {}
+    if (
+      packument === null ||
+      typeof packument !== 'object' ||
+      !('versions' in packument) ||
+      packument.versions === null ||
+      typeof packument.versions !== 'object'
+    ) {
+      throw new Error(`Invalid packument for ${module}: missing versions field`)
+    }
 
-    const versionIsPublished = Object.keys(versions).includes(version)
+    const versionIsPublished = Object.keys(packument.versions).includes(version)
 
     if (!versionIsPublished) {
       // Fallback to canary. This is most likely because it's a new package
