@@ -77,7 +77,10 @@ export async function handler({ force }: { force: boolean }) {
         ? [
             {
               title: 'Adding the official yarn workspace-tools plugin...',
-              task: async (_ctx: unknown, task: { skip: (msg?: string) => void }) => {
+              task: async (
+                _ctx: unknown,
+                task: { skip: (msg?: string) => void },
+              ) => {
                 const { stdout } = await execa(
                   'yarn',
                   ['plugin', 'runtime', '--json'],

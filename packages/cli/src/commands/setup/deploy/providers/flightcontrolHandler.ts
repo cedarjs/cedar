@@ -60,7 +60,10 @@ const getFlightcontrolJson = async (database: Database) => {
             ...flightcontrolConfig.environments[0],
             services: [
               ...flightcontrolConfig.environments[0].services.map(
-                (service: { id: string; envVariables?: Record<string, unknown> }) => {
+                (service: {
+                  id: string
+                  envVariables?: Record<string, unknown>
+                }) => {
                   if (service.id === 'cedar-api') {
                     return {
                       ...service,

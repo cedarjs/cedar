@@ -254,7 +254,15 @@ export const handler = async ({
             "No 'scaffold.css' file to update"
           )
         },
-        task: async (_ctx: unknown, task: { skip: (msg?: string) => void; prompt: (adapter: unknown) => { run: (config: unknown) => Promise<boolean> } }) => {
+        task: async (
+          _ctx: unknown,
+          task: {
+            skip: (msg?: string) => void
+            prompt: (adapter: unknown) => {
+              run: (config: unknown) => Promise<boolean>
+            }
+          },
+        ) => {
           const prompt = task.prompt(ListrEnquirerPromptAdapter)
           const overrideScaffoldCss =
             force ||
@@ -306,9 +314,9 @@ export const handler = async ({
               'utf-8',
             )
 
-            originalExtensionsJson = JSON.parse(
-              originalExtensionsFile,
-            ) as { recommendations: string[] }
+            originalExtensionsJson = JSON.parse(originalExtensionsFile) as {
+              recommendations: string[]
+            }
           }
 
           const newExtensionsJson = {
