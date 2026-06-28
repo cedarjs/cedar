@@ -30,6 +30,28 @@ function isApiRequest(url: string, apiUrl: string, apiGqlUrl: string): boolean {
   )
 }
 
+export function parseCliArgs(argv = process.argv) {
+  const {
+    force: forceOptimize,
+    debug,
+    port: portArg,
+    apiPort: _apiPortArg,
+    'debug-port': debugPort,
+    _: _positional,
+    ...serverArgs
+  } = yargsParser(argv.slice(2), {
+    boolean: ['https', 'open', 'strictPort', 'force', 'cors', 'debug'],
+    number: ['port', 'apiPort', 'debug-port'],
+  })
+
+  return { forceOptimize, debug, portArg, debugPort, serverArgs }
+}
+
+export async function openDebugger(port: number) {
+  const inspector = await import('node:inspector')
+  inspector.open(port, '127.0.0.1')
+}
+
 const startUnifiedDevServer = async () => {
   // Signal to Cedar plugins (e.g. cedarWaitForApiServer) that we're running
   // in unified-dev mode so they can skip behaviours that assume a separate
@@ -44,17 +66,12 @@ const startUnifiedDevServer = async () => {
     throw new Error('Could not locate your web/vite.config.{js,ts} file')
   }
 
-  const {
-    force: forceOptimize,
-    debug,
-    port: portArg,
-    apiPort: _apiPortArg,
-    _: _positional,
-    ...serverArgs
-  } = yargsParser(process.argv.slice(2), {
-    boolean: ['https', 'open', 'strictPort', 'force', 'cors', 'debug'],
-    number: ['port', 'apiPort'],
-  })
+  const { forceOptimize, debug, portArg, debugPort, serverArgs } =
+    parseCliArgs()
+
+  if (debugPort) {
+    await openDebugger(debugPort)
+  }
 
   const webPort =
     (portArg as number | undefined) ?? cedarConfig.web.port ?? 8910
