@@ -1,9 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import type { Argv } from 'yargs'
-
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
 import {
   recordTelemetryAttributes,
