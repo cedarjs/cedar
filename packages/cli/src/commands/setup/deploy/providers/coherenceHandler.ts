@@ -65,7 +65,7 @@ export async function handler({ force }: { force: boolean }) {
  * Adds a health check file and a coherence.yml file by introspecting the prisma schema.
  */
 async function getAddCoherenceFilesTask(force: boolean) {
-  const files: Array<{ path: string; content: string }> = [
+  const files: { path: string; content: string }[] = [
     {
       path: path.join(cedarPaths.api.functions, `health.${EXTENSION}`),
       content: coherenceFiles.healthCheck,
