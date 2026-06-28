@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import { camelCase } from 'camel-case'
-import { Listr, ListrRendererFactory, ListrTaskWrapper } from 'listr2'
+import { Listr, type ListrRendererFactory, type ListrTaskWrapper } from 'listr2'
 import { titleCase } from 'title-case'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
@@ -108,7 +108,7 @@ export const files = async ({
   usernameLabel,
   passwordLabel,
 }: DbAuthFilesOptions): Promise<Record<string, string>> => {
-  const filesList: Array<[string, string]> = []
+  const filesList: [string, string][] = []
 
   usernameLabel = usernameLabel || 'username'
   passwordLabel = passwordLabel || 'password'
