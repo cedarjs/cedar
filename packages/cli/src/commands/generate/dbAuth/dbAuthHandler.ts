@@ -46,6 +46,11 @@ interface DbAuthTasksOptions extends DbAuthFilesOptions {
   tests?: boolean
 }
 
+interface DbAuthCtx {
+  enquirer?: unknown
+  webauthn?: boolean
+}
+
 function getPostInstallMessage(isDbAuthSetup: boolean) {
   return [
     `   ${c.warning("Pages created! But you're not done yet:")}\n`,
@@ -230,14 +235,14 @@ const tasks = ({
   usernameLabel,
   passwordLabel,
 }: DbAuthTasksOptions) => {
-  return new Listr(
+  return new Listr<DbAuthCtx>(
     [
       {
         title: 'Determining UI labels...',
         skip: () => {
           return !!(usernameLabel && passwordLabel)
         },
-        task: async (ctx: { enquirer?: unknown; webauthn?: boolean }, task: ListrTaskWrapper<unknown, ListrRendererFactory, ListrRendererFactory>) => {
+        task: async (ctx: DbAuthCtx, task: ListrTaskWrapper<unknown, ListrRendererFactory, ListrRendererFactory>) => {
           return task.newListr(
             [
               {
@@ -293,7 +298,7 @@ const tasks = ({
       },
       {
         title: 'Querying WebAuthn addition...',
-        task: async (ctx: { enquirer?: unknown; webauthn?: boolean }, task: { skip: (msg?: string) => void; prompt: (adapter: unknown) => { run: (config: unknown, opts: unknown) => Promise<boolean> }; title: string }) => {
+        task: async (ctx: DbAuthCtx, task: ListrTaskWrapper<unknown, ListrRendererFactory, ListrRendererFactory>) => {
           if (webauthn != null) {
             // We enter here if the user passed the `--webauthn` flag. The flag
             // always takes precedence.
@@ -425,7 +430,7 @@ export const handler = async (
 
     console.log('')
     console.log(
-      yargs.webauthn || (t.ctx as { webauthn?: boolean }).webauthn
+      yargs.webauthn || t.ctx?.webauthn
         ? getPostInstallWebauthnMessage(isDbAuthSetup())
         : getPostInstallMessage(isDbAuthSetup()),
     )
