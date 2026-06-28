@@ -3,8 +3,8 @@ import path from 'node:path'
 
 import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import { camelCase } from 'camel-case'
+import type Enquirer from 'enquirer'
 import { Listr } from 'listr2'
-import type { ListrRendererFactory, ListrTaskWrapper } from 'listr2'
 import { titleCase } from 'title-case'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
@@ -41,13 +41,13 @@ export interface DbAuthFilesOptions {
 }
 
 interface DbAuthTasksOptions extends DbAuthFilesOptions {
-  enquirer?: unknown
+  enquirer?: Enquirer
   listr2?: { silentRendererCondition?: boolean }
   force?: boolean
 }
 
 interface DbAuthCtx {
-  enquirer?: unknown
+  enquirer?: Enquirer
   webauthn?: boolean
 }
 
@@ -241,26 +241,12 @@ const tasks = ({
         skip: () => {
           return !!(usernameLabel && passwordLabel)
         },
-        task: async (
-          ctx: DbAuthCtx,
-          task: ListrTaskWrapper<
-            unknown,
-            ListrRendererFactory,
-            ListrRendererFactory
-          >,
-        ) => {
+        task: async (ctx, task) => {
           return task.newListr(
             [
               {
                 title: 'Username label',
-                task: async (
-                  subCtx: { enquirer?: unknown },
-                  subtask: ListrTaskWrapper<
-                    unknown,
-                    ListrRendererFactory,
-                    ListrRendererFactory
-                  >,
-                ) => {
+                task: async (subCtx, subtask) => {
                   if (usernameLabel) {
                     subtask.skip(
                       `Argument username-label is set, using: "${usernameLabel}"`,
@@ -283,14 +269,7 @@ const tasks = ({
               },
               {
                 title: 'Password label',
-                task: async (
-                  subCtx: { enquirer?: unknown },
-                  subtask: ListrTaskWrapper<
-                    unknown,
-                    ListrRendererFactory,
-                    ListrRendererFactory
-                  >,
-                ) => {
+                task: async (subCtx, subtask) => {
                   if (passwordLabel) {
                     subtask.skip(
                       `Argument password-label passed, using: "${passwordLabel}"`,
@@ -318,14 +297,7 @@ const tasks = ({
       },
       {
         title: 'Querying WebAuthn addition...',
-        task: async (
-          ctx: DbAuthCtx,
-          task: ListrTaskWrapper<
-            unknown,
-            ListrRendererFactory,
-            ListrRendererFactory
-          >,
-        ) => {
+        task: async (ctx, task) => {
           if (webauthn != null) {
             // We enter here if the user passed the `--webauthn` flag. The flag
             // always takes precedence.
@@ -425,7 +397,7 @@ const tasks = ({
       },
     ],
     {
-      silentRendererCondition: () => listr2?.silentRendererCondition,
+      silentRendererCondition: () => listr2?.silentRendererCondition ?? false,
       rendererOptions: { collapseSubtasks: false },
       ctx: { enquirer },
       exitOnError: true,
@@ -442,7 +414,7 @@ export const handler = async (
     skipLogin: yargs.skipLogin,
     skipReset: yargs.skipReset,
     skipSignup: yargs.skipSignup,
-    webauthn: yargs.webauthn,
+    webauthn: yargs.webauthn ?? undefined,
     force: yargs.force,
     rollback: yargs.rollback,
   })
