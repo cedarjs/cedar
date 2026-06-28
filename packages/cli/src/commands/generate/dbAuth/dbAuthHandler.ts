@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import { camelCase } from 'camel-case'
-import { Listr } from 'listr2'
+import { Listr, ListrRendererFactory, ListrTaskWrapper } from 'listr2'
 import { titleCase } from 'title-case'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
@@ -29,7 +29,6 @@ const ROUTES = [
 ]
 
 export interface DbAuthFilesOptions {
-  _tests?: boolean
   typescript?: boolean
   skipForgot?: boolean
   skipLogin?: boolean
@@ -95,7 +94,6 @@ function getPostInstallWebauthnMessage(isDbAuthSetup: boolean) {
 }
 
 export const files = async ({
-  _tests,
   typescript,
   skipForgot,
   skipLogin,
@@ -239,12 +237,12 @@ const tasks = ({
         skip: () => {
           return !!(usernameLabel && passwordLabel)
         },
-        task: async (ctx: { enquirer?: unknown; webauthn?: boolean }, task: { newListr: (...args: unknown[]) => unknown; prompt: (adapter: unknown) => { run: (config: unknown, opts: unknown) => Promise<string> }; title: string }) => {
+        task: async (ctx: { enquirer?: unknown; webauthn?: boolean }, task: ListrTaskWrapper<unknown, ListrRendererFactory, ListrRendererFactory>) => {
           return task.newListr(
             [
               {
                 title: 'Username label',
-                task: async (subCtx: { enquirer?: unknown }, subtask: { skip: (msg?: string) => void; prompt: (adapter: unknown) => { run: (config: unknown, opts: unknown) => Promise<string> }; title: string }) => {
+                task: async (subCtx: { enquirer?: unknown }, subtask: ListrTaskWrapper<unknown, ListrRendererFactory, ListrRendererFactory>) => {
                   if (usernameLabel) {
                     subtask.skip(
                       `Argument username-label is set, using: "${usernameLabel}"`,
@@ -267,7 +265,7 @@ const tasks = ({
               },
               {
                 title: 'Password label',
-                task: async (subCtx: { enquirer?: unknown }, subtask: { skip: (msg?: string) => void; prompt: (adapter: unknown) => { run: (config: unknown, opts: unknown) => Promise<string> }; title: string }) => {
+                task: async (subCtx: { enquirer?: unknown }, subtask: ListrTaskWrapper<unknown, ListrRendererFactory, ListrRendererFactory>) => {
                   if (passwordLabel) {
                     subtask.skip(
                       `Argument password-label passed, using: "${passwordLabel}"`,
