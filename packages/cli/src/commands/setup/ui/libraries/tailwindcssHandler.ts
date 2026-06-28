@@ -23,8 +23,7 @@ const tailwindDirectives = [
   '@tailwind utilities;',
 ]
 
-/** @param {string} indexCSS */
-const tailwindDirectivesExist = (indexCSS) =>
+const tailwindDirectivesExist = (indexCSS: string) =>
   tailwindDirectives.every((tailwindDirective) =>
     indexCSS.includes(tailwindDirective),
   )
@@ -43,12 +42,12 @@ const tailwindImportsAndNotes = [
   ' */\n',
 ]
 
-const recommendedVSCodeExtensions = [
+const recommendedVSCodeExtensions: string[] = [
   'csstools.postcss',
   'bradlc.vscode-tailwindcss',
 ]
 
-const recommendationTexts = {
+const recommendationTexts: Record<string, string> = {
   'csstools.postcss': terminalLink(
     'PostCSS Language Support',
     'https://marketplace.visualstudio.com/items?itemName=csstools.postcss',
@@ -64,7 +63,7 @@ async function recommendExtensionsToInstall() {
     return
   }
 
-  let recommendations = []
+  let recommendations: string[] = []
 
   try {
     const { stdout } = await execa('code', ['--list-extensions'])
@@ -93,7 +92,13 @@ async function recommendExtensionsToInstall() {
   }
 }
 
-export const handler = async ({ force, install }) => {
+export const handler = async ({
+  force,
+  install,
+}: {
+  force: boolean
+  install: boolean
+}) => {
   recordTelemetryAttributes({
     command: 'setup ui tailwindcss',
     force,
@@ -228,7 +233,7 @@ export const handler = async ({ force, install }) => {
       },
       {
         title: 'Adding directives to index.css...',
-        task: (_ctx, task) => {
+        task: (_ctx: unknown, task: { skip: (msg?: string) => void }) => {
           const INDEX_CSS_PATH = path.join(rwPaths.web.src, 'index.css')
           const indexCSS = fs.readFileSync(INDEX_CSS_PATH, 'utf-8')
 
@@ -249,7 +254,7 @@ export const handler = async ({ force, install }) => {
             "No 'scaffold.css' file to update"
           )
         },
-        task: async (_ctx, task) => {
+        task: async (_ctx: unknown, task: { skip: (msg?: string) => void; prompt: (adapter: unknown) => { run: (config: unknown) => Promise<boolean> } }) => {
           const prompt = task.prompt(ListrEnquirerPromptAdapter)
           const overrideScaffoldCss =
             force ||
@@ -291,7 +296,9 @@ export const handler = async ({ force, install }) => {
             '.vscode/extensions.json',
           )
 
-          let originalExtensionsJson = { recommendations: [] }
+          let originalExtensionsJson: { recommendations: string[] } = {
+            recommendations: [],
+          }
 
           if (fs.existsSync(VS_CODE_EXTENSIONS_PATH)) {
             const originalExtensionsFile = fs.readFileSync(
@@ -299,7 +306,9 @@ export const handler = async ({ force, install }) => {
               'utf-8',
             )
 
-            originalExtensionsJson = JSON.parse(originalExtensionsFile)
+            originalExtensionsJson = JSON.parse(
+              originalExtensionsFile,
+            ) as { recommendations: string[] }
           }
 
           const newExtensionsJson = {
@@ -343,7 +352,7 @@ export const handler = async ({ force, install }) => {
             'errorClassName',
           ]
 
-          let newSettingsJson = {
+          let newSettingsJson: Record<string, unknown> = {
             ['tailwindCSS.classAttributes']: classAttributes,
           }
 
@@ -354,9 +363,11 @@ export const handler = async ({ force, install }) => {
             )
             const originalSettingsJson = JSON.parse(
               originalSettingsFile || '{}',
-            )
+            ) as Record<string, unknown>
             const originalTwClassAttributesJson =
-              originalSettingsJson['tailwindCSS.classAttributes'] || []
+              (originalSettingsJson['tailwindCSS.classAttributes'] as
+                | string[]
+                | undefined) || []
 
             const mergedClassAttributes = Array.from(
               new Set([...classAttributes, ...originalTwClassAttributesJson]),
@@ -376,7 +387,7 @@ export const handler = async ({ force, install }) => {
       },
       {
         title: 'Adding tailwind config entry in prettier...',
-        task: async (_ctx) => {
+        task: async (_ctx: unknown) => {
           const prettierConfigPath = path.join(
             rwPaths.base,
             'prettier.config.cjs',
@@ -414,7 +425,7 @@ export const handler = async ({ force, install }) => {
       },
       {
         title: 'Adding tailwind prettier plugin...',
-        task: async (_ctx, task) => {
+        task: async (_ctx: unknown, task: { skip: (msg?: string) => void }) => {
           const prettierConfigPath = path.join(
             rwPaths.base,
             'prettier.config.cjs',
@@ -428,7 +439,8 @@ export const handler = async ({ force, install }) => {
               /plugins: \[[\sa-z\(\)'\-,]*]/,
             )
 
-            const matched = pluginsMatch && pluginsMatch[0]
+            const matched: string | undefined =
+              pluginsMatch != null ? pluginsMatch[0] : undefined
 
             if (
               matched &&
@@ -461,9 +473,14 @@ export const handler = async ({ force, install }) => {
   try {
     await tasks.run()
     await recommendExtensionsToInstall()
-  } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    errorTelemetry(process.argv, msg)
+    console.error(c.error(msg))
+    process.exit(exitCode)
   }
 }

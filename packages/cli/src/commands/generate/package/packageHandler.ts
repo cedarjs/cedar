@@ -22,17 +22,23 @@ import { prepareForRollback } from '../../../lib/rollback.js'
 
 import { files } from './filesTask.js'
 
-/**
- * @typedef {Object} ListrContext
- * @property {Object} nameVariants - The parsed name variants for the package
- * @property {string} nameVariants.name - The base name
- * @property {string} nameVariants.folderName - The param-case folder name
- * @property {string} nameVariants.packageName - The full scoped package name
- * @property {string} nameVariants.fileName - The camelCase file name
- */
+interface ListrContext {
+  nameVariants: {
+    name: string
+    folderName: string
+    packageName: string
+    fileName: string
+  }
+  targetWorkspaces: string
+}
 
 // Exported for testing
-export function nameVariants(nameArg) {
+export function nameVariants(nameArg: string): {
+  name: string
+  folderName: string
+  packageName: string
+  fileName: string
+} {
   const base = path.basename(getPaths().base)
 
   const [orgName, name] = nameArg.startsWith('@')
@@ -47,7 +53,9 @@ export function nameVariants(nameArg) {
 }
 
 // Exported for testing
-export async function updateTsconfig(task) {
+export async function updateTsconfig(task: {
+  skip: (msg?: string) => void
+}) {
   const targets = [
     {
       name: 'api',
@@ -152,7 +160,7 @@ export async function updateTsconfig(task) {
 }
 
 // Exported for testing
-export async function updateGitignore(task) {
+export async function updateGitignore(task: { skip: (msg?: string) => void }) {
   const gitignorePath = path.join(getPaths().base, '.gitignore')
   const gitignore = await fs.promises.readFile(gitignorePath, 'utf8')
   const gitignoreLines = gitignore.split('\n')
@@ -177,9 +185,9 @@ export async function updateGitignore(task) {
 
 // Exported for testing
 export async function addDependencyToPackageJson(
-  task,
-  packageJsonPath,
-  packageName,
+  task: { skip: (msg?: string) => void },
+  packageJsonPath: string,
+  packageName: string,
 ) {
   if (!fs.existsSync(packageJsonPath)) {
     task.skip('package.json not found')
@@ -188,7 +196,7 @@ export async function addDependencyToPackageJson(
 
   const packageJson = JSON.parse(
     await fs.promises.readFile(packageJsonPath, 'utf8'),
-  )
+  ) as { dependencies?: Record<string, string> }
 
   if (!packageJson.dependencies) {
     packageJson.dependencies = {}
@@ -208,7 +216,7 @@ export async function addDependencyToPackageJson(
 }
 
 // Exported for testing
-export function parseWorkspaceFlag(workspace) {
+export function parseWorkspaceFlag(workspace: unknown): string | undefined {
   if (workspace === undefined || workspace === null) {
     return undefined
   }
@@ -226,9 +234,9 @@ export function parseWorkspaceFlag(workspace) {
 }
 
 export function updateWorkspaceTsconfigReferences(
-  task,
-  folderName,
-  targetWorkspaces,
+  task: { skip: (msg?: string) => void },
+  folderName: string,
+  targetWorkspaces: string,
 ) {
   if (!targetWorkspaces || targetWorkspaces === 'none') {
     task.skip('No workspace selected')
@@ -236,7 +244,11 @@ export function updateWorkspaceTsconfigReferences(
   }
 
   // Update workspace tsconfigs (api/web/scripts)
-  const workspaces = []
+  const workspaces: Array<{
+    name: string
+    tsconfigPath: string
+    packageDir: string
+  }> = []
 
   const packageDir = path.join(getPaths().base, 'packages', folderName)
 
@@ -262,10 +274,16 @@ export function updateWorkspaceTsconfigReferences(
     return
   }
 
-  const subtasks = workspaces.map((ws) => {
+  const subtasks: Array<{
+    title: string
+    task: (
+      _ctx: unknown,
+      subtask: { skip: (msg?: string) => void },
+    ) => Promise<void>
+  }> = workspaces.map((ws) => {
     return {
       title: `Updating ${ws.name} tsconfig references...`,
-      task: async (_ctx, subtask) => {
+      task: async (_ctx: unknown, subtask: { skip: (msg?: string) => void }) => {
         if (!fs.existsSync(ws.tsconfigPath)) {
           subtask.skip('tsconfig.json not found')
           return
@@ -291,14 +309,14 @@ export function updateWorkspaceTsconfigReferences(
           tsconfig,
           {
             ...ts.sys,
-            readFile: (p) => {
+            readFile: (p: string) => {
               try {
                 return fs.readFileSync(p, 'utf8')
               } catch (e) {
                 return ts.sys.readFile(p)
               }
             },
-            fileExists: (p) => {
+            fileExists: (p: string) => {
               if (typeof fs.existsSync === 'function') {
                 return fs.existsSync(p)
               }
@@ -316,14 +334,14 @@ export function updateWorkspaceTsconfigReferences(
           tsconfig.references = []
         }
 
-        const packageDir =
+        const wsPackageDir =
           ws.packageDir || path.join(getPaths().base, 'packages', folderName)
         const referencePath = path
-          .relative(path.dirname(ws.tsconfigPath), packageDir)
+          .relative(path.dirname(ws.tsconfigPath), wsPackageDir)
           .split(path.sep)
           .join('/')
 
-        const references = tsconfig.references
+        const references = tsconfig.references as Array<{ path?: string }>
 
         if (references.some((ref) => ref && ref.path === referencePath)) {
           subtask.skip('tsconfig already up to date')
@@ -332,7 +350,7 @@ export function updateWorkspaceTsconfigReferences(
 
         const newReferences = references.concat([{ path: referencePath }])
 
-        let text = await fs.promises.readFile(ws.tsconfigPath, 'utf8')
+        const text = await fs.promises.readFile(ws.tsconfigPath, 'utf8')
 
         const edits = modify(text, ['references'], newReferences, {
           formattingOptions: { insertSpaces: true, tabSize: 2 },
@@ -353,7 +371,7 @@ export function updateWorkspaceTsconfigReferences(
   return new Listr(subtasks)
 }
 
-async function installAndBuild(folderName) {
+async function installAndBuild(folderName: string) {
   const packagePath = path.join('packages', folderName)
   await installPackages({ stdio: 'inherit', cwd: getPaths().base })
   // TODO: `yarn cedar build <packageName>`
@@ -368,16 +386,11 @@ async function installAndBuild(folderName) {
  * Sets up the package structure including source files, tests, configuration
  * files, and updates the workspace configuration.
  *
- * @param {Object} options - The command options
- * @param {string} options.name - The package name (can be scoped like
+ * @param options - The command options
+ * @param options.name - The package name (can be scoped like
  * '@org/package' or just 'package')
- * @param {boolean} [options.force] - Whether to overwrite existing files
- * @param {boolean} [options.typescript] - Whether to generate TypeScript files
- * (passed in rest)
- * @param {boolean} [options.tests] - Whether to generate test files (passed in
- * rest)
- * @param {boolean} [options.rollback] - Whether to enable rollback on failure
- * (passed in rest)
+ * @param options.force - Whether to overwrite existing files
+ * @param rest - Remaining options (typescript, tests, rollback, workspace, etc.)
  *
  * @returns {Promise<void>}
  *
@@ -392,7 +405,14 @@ async function installAndBuild(folderName) {
  * // Generate a scoped TypeScript package with tests
  * await handler({ name: '@myorg/my-package', force: false, typescript: true, tests: true })
  */
-export const handler = async ({ name, force, ...rest }) => {
+export const handler = async ({
+  name,
+  force,
+  ...rest
+}: {
+  name: string
+  force: boolean
+} & Record<string, unknown>) => {
   recordTelemetryAttributes({
     command: 'generate package',
     force,
@@ -422,9 +442,9 @@ export const handler = async ({ name, force, ...rest }) => {
     return
   }
 
-  let packageFiles = {}
-  const tasks = new Listr(
-    /** @type {import('listr2').ListrTask<ListrContext>[]} */ ([
+  let packageFiles: Record<string, string> = {}
+  const tasks = new Listr<ListrContext>(
+    [
       {
         title: 'Parsing package name...',
         task: (ctx) => {
@@ -457,9 +477,9 @@ export const handler = async ({ name, force, ...rest }) => {
               )
               return
             }
-          } catch (e) {
+          } catch (e: unknown) {
             // Bubble up validation errors to the user
-            throw new Error(e.message)
+            throw new Error(e instanceof Error ? e.message : String(e))
           }
 
           const prompt = task.prompt(ListrEnquirerPromptAdapter)
@@ -500,7 +520,13 @@ export const handler = async ({ name, force, ...rest }) => {
             return
           }
 
-          const subtasks = []
+          const subtasks: Array<{
+            title: string
+            task: (
+              _subCtx: unknown,
+              subtask: { skip: (msg?: string) => void },
+            ) => Promise<void>
+          }> = []
 
           if (
             ctx.targetWorkspaces === 'api' ||
@@ -582,7 +608,7 @@ export const handler = async ({ name, force, ...rest }) => {
           ])
         },
       },
-    ]),
+    ],
     { rendererOptions: { collapseSubtasks: false }, exitOnError: true },
   )
 
@@ -593,9 +619,14 @@ export const handler = async ({ name, force, ...rest }) => {
     }
 
     await tasks.run()
-  } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    errorTelemetry(process.argv, msg)
+    console.error(c.error(msg))
+    process.exit(exitCode)
   }
 }

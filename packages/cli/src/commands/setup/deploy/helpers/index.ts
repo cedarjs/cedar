@@ -11,7 +11,7 @@ import { getConfigPath, getConfig } from '@cedarjs/project-config'
 
 import { getPaths, writeFilesTask } from '../../../../lib/index.js'
 
-export const updateApiURLTask = (apiUrl) => {
+export const updateApiURLTask = (apiUrl: string) => {
   const configTomlPath = getConfigPath()
   const configFileName = path.basename(configTomlPath)
 
@@ -34,8 +34,14 @@ export const updateApiURLTask = (apiUrl) => {
   }
 }
 
-export function getUserApiUrl() {
+export function getUserApiUrl(): string {
   return getConfig().web.apiUrl
+}
+
+export interface PreRequisite {
+  title: string
+  command: [string, string[], ...unknown[]]
+  errorMessage: string
 }
 
 /**
@@ -53,7 +59,7 @@ export function getUserApiUrl() {
     },
   ])
  */
-export const preRequisiteCheckTask = (preRequisites) => {
+export const preRequisiteCheckTask = (preRequisites: PreRequisite[]) => {
   return {
     title: 'Checking pre-requisites',
     task: () =>
@@ -64,15 +70,27 @@ export const preRequisiteCheckTask = (preRequisites) => {
             task: async () => {
               try {
                 await execa(...preReq.command)
-              } catch (error) {
-                error.message = error.message + '\n' + preReq.errorMessage
-                throw error
+              } catch (e: unknown) {
+                const baseMsg = e instanceof Error ? e.message : String(e)
+                const err = new Error(baseMsg + '\n' + preReq.errorMessage)
+                throw err
               }
             },
           }
         }),
       ),
   }
+}
+
+export interface FileData {
+  path: string
+  content: string
+}
+
+export interface AddFilesTaskOptions {
+  files: FileData[]
+  force?: boolean
+  title?: string
 }
 
 /**
@@ -88,11 +106,11 @@ export const addFilesTask = ({
   files,
   force = false,
   title = 'Adding config',
-}) => {
+}: AddFilesTaskOptions) => {
   return {
     title: `${title}...`,
     task: () => {
-      let fileNameToContentMap = {}
+      const fileNameToContentMap: Record<string, string> = {}
       files.forEach((fileData) => {
         fileNameToContentMap[fileData.path] = fileData.content
       })
@@ -130,7 +148,7 @@ export const verifyUDSetupTask = () => {
 /**
  * Converts a 1-based line/column position to a character index.
  */
-function posToIndex(str, line, column) {
+function posToIndex(str: string, line: number, column: number): number {
   const lines = str.split('\n')
   let index = 0
   for (let i = 0; i < line - 1; i++) {
@@ -148,10 +166,12 @@ function posToIndex(str, line, column) {
  *   defineConfig(() => { return {...} })   → ObjectExpression   (arrow, explicit return)
  *   defineConfig(function() { return {} }) → ObjectExpression   (function expression)
  *
- * @param {object} arg - A babel AST node.
+ * @param arg - A babel AST node.
  * @returns The inner ObjectExpression, or `null` if not found.
  */
-function resolveConfigObject(arg) {
+function resolveConfigObject(
+  arg: t.Node,
+): t.ObjectExpression | null {
   if (t.isObjectExpression(arg)) {
     return arg
   }
@@ -164,7 +184,12 @@ function resolveConfigObject(arg) {
     // Block body with explicit return: { return {...} }
     if (t.isBlockStatement(arg.body)) {
       const returnStmt = arg.body.body.find((s) => t.isReturnStatement(s))
-      if (returnStmt && t.isObjectExpression(returnStmt.argument)) {
+      if (
+        returnStmt &&
+        t.isReturnStatement(returnStmt) &&
+        returnStmt.argument &&
+        t.isObjectExpression(returnStmt.argument)
+      ) {
         return returnStmt.argument
       }
     }
@@ -174,7 +199,12 @@ function resolveConfigObject(arg) {
   if (t.isFunctionExpression(arg)) {
     if (t.isBlockStatement(arg.body)) {
       const returnStmt = arg.body.body.find((s) => t.isReturnStatement(s))
-      if (returnStmt && t.isObjectExpression(returnStmt.argument)) {
+      if (
+        returnStmt &&
+        t.isReturnStatement(returnStmt) &&
+        returnStmt.argument &&
+        t.isObjectExpression(returnStmt.argument)
+      ) {
         return returnStmt.argument
       }
     }
@@ -191,15 +221,21 @@ function resolveConfigObject(arg) {
  * Uses recast only for position-finding, then does text-level insertion to
  * preserve all original formatting, comments, and blank lines.
  *
- * @param {string}        content       - The full file content.
- * @param {string[]}      pluginCodes   - Source strings for each plugin call
- *                                        (e.g. `["netlifyCompat()"]`).
+ * @param content     - The full file content.
+ * @param pluginCodes - Source strings for each plugin call
+ *                      (e.g. `["netlifyCompat()"]`).
  * @returns Modified source string, or `null` if `cedar()` was not found.
  */
-export function insertPluginsBeforeCedar({ content, pluginCodes }) {
+export function insertPluginsBeforeCedar({
+  content,
+  pluginCodes,
+}: {
+  content: string
+  pluginCodes: string[]
+}): string | null {
   const ast = recast.parse(content, {
     parser: {
-      parse(source) {
+      parse(source: string) {
         return parser.parse(source, {
           sourceType: 'module',
           plugins: ['typescript', 'jsx'],
@@ -209,18 +245,19 @@ export function insertPluginsBeforeCedar({ content, pluginCodes }) {
   })
 
   const defaultExport = ast.program.body.find(
-    (node) =>
+    (node: t.Node) =>
       t.isExportDefaultDeclaration(node) &&
       t.isCallExpression(node.declaration) &&
       t.isIdentifier(node.declaration.callee) &&
       node.declaration.callee.name === 'defineConfig',
-  )
+  ) as t.ExportDefaultDeclaration | undefined
 
   if (!defaultExport) {
     return null
   }
 
-  const configArg = resolveConfigObject(defaultExport.declaration.arguments[0])
+  const declaration = defaultExport.declaration as t.CallExpression
+  const configArg = resolveConfigObject(declaration.arguments[0])
   if (!configArg) {
     return null
   }
@@ -231,15 +268,17 @@ export function insertPluginsBeforeCedar({ content, pluginCodes }) {
       t.isIdentifier(prop.key) &&
       prop.key.name === 'plugins' &&
       t.isArrayExpression(prop.value),
-  )
+  ) as t.ObjectProperty | undefined
 
   if (!pluginsProp) {
     return null
   }
 
-  const elements = pluginsProp.value.elements
+  const arrayExpr = pluginsProp.value as t.ArrayExpression
+  const elements = arrayExpr.elements
   const cedarIndex = elements.findIndex(
     (el) =>
+      el !== null &&
       t.isCallExpression(el) &&
       t.isIdentifier(el.callee) &&
       el.callee.name === 'cedar',
@@ -249,37 +288,39 @@ export function insertPluginsBeforeCedar({ content, pluginCodes }) {
     return null
   }
 
-  const cedarNode = elements[cedarIndex]
+  const cedarNode = elements[cedarIndex] as t.CallExpression
 
   // Check if the array is inline (all elements on the same line as [)
-  const arrayNode = pluginsProp.value
-  const isInline = cedarNode.loc.start.line === arrayNode.loc.start.line
+  const arrayNode = arrayExpr
+  const isInline =
+    cedarNode.loc!.start.line === arrayNode.loc!.start.line
 
   if (isInline) {
     const startPos = posToIndex(
       content,
-      arrayNode.loc.start.line,
-      arrayNode.loc.start.column,
+      arrayNode.loc!.start.line,
+      arrayNode.loc!.start.column,
     )
     const endPos = posToIndex(
       content,
-      arrayNode.loc.end.line,
-      arrayNode.loc.end.column,
+      arrayNode.loc!.end.line,
+      arrayNode.loc!.end.column,
     )
 
     const precedingText = content.slice(0, startPos)
     const followingText = content.slice(endPos)
 
-    const existingCodes = elements.map((el) =>
-      content.slice(
-        posToIndex(content, el.loc.start.line, el.loc.start.column),
-        posToIndex(content, el.loc.end.line, el.loc.end.column),
-      ),
-    )
+    const existingCodes = elements.map((el) => {
+      const node = el as t.Node & { loc: { start: { line: number; column: number }; end: { line: number; column: number } } }
+      return content.slice(
+        posToIndex(content, node.loc.start.line, node.loc.start.column),
+        posToIndex(content, node.loc.end.line, node.loc.end.column),
+      )
+    })
 
     const lines = content.split('\n')
-    const pluginsLine = pluginsProp.loc.start.line
-    const pluginsIndent = lines[pluginsLine - 1].match(/^\s*/)[0]
+    const pluginsLine = pluginsProp.loc!.start.line
+    const pluginsIndent = (lines[pluginsLine - 1].match(/^\s*/) ?? [''])[0]
     const elemIndent = pluginsIndent + '  '
 
     const allCodes = [...existingCodes]
@@ -295,24 +336,25 @@ export function insertPluginsBeforeCedar({ content, pluginCodes }) {
   }
 
   // Multiline: insert at start of cedar()'s line (after the preceding \n)
-  const cedarLine = cedarNode.loc.start.line
+  const cedarLine = cedarNode.loc!.start.line
   const insertPos = posToIndex(content, cedarLine, 0)
   const lines = content.split('\n')
-  const indent = lines[cedarLine - 1].match(/^\s*/)[0]
+  const indent = (lines[cedarLine - 1].match(/^\s*/) ?? [''])[0]
   const insertion = pluginCodes.map((code) => `${indent}${code},\n`).join('')
 
   return content.slice(0, insertPos) + insertion + content.slice(insertPos)
 }
 
-export const addToGitIgnoreTask = ({ paths }) => {
+export const addToGitIgnoreTask = ({ paths }: { paths: string[] }) => {
   return {
     title: 'Updating .gitignore...',
-    skip: () => {
+    skip: (): string | undefined => {
       if (!fs.existsSync(path.resolve(getPaths().base, '.gitignore'))) {
         return 'No gitignore present, skipping.'
       }
+      return undefined
     },
-    task: async (_ctx, task) => {
+    task: async (_ctx: unknown, task: { skip: (msg: string) => void }) => {
       const gitIgnore = path.resolve(getPaths().base, '.gitignore')
       const content = fs.readFileSync(gitIgnore).toString()
 
@@ -325,15 +367,16 @@ export const addToGitIgnoreTask = ({ paths }) => {
   }
 }
 
-export const addToDotEnvTask = ({ lines }) => {
+export const addToDotEnvTask = ({ lines }: { lines: string[] }) => {
   return {
     title: 'Updating .env...',
-    skip: () => {
+    skip: (): string | undefined => {
       if (!fs.existsSync(path.resolve(getPaths().base, '.env'))) {
         return 'No .env present, skipping.'
       }
+      return undefined
     },
-    task: async (_ctx, task) => {
+    task: async (_ctx: unknown, task: { skip: (msg: string) => void }) => {
       const env = path.resolve(getPaths().base, '.env')
       const content = fs.readFileSync(env).toString()
 

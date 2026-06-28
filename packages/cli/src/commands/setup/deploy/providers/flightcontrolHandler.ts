@@ -22,7 +22,9 @@ import {
 
 const { getConfig } = prismaInternals
 
-const getFlightcontrolJson = async (database) => {
+type Database = 'postgresql' | 'mysql' | 'none'
+
+const getFlightcontrolJson = async (database: Database) => {
   const flightcontrolConfig = getFlightcontrolConfig()
 
   if (database === 'none') {
@@ -57,18 +59,20 @@ const getFlightcontrolJson = async (database) => {
           {
             ...flightcontrolConfig.environments[0],
             services: [
-              ...flightcontrolConfig.environments[0].services.map((service) => {
-                if (service.id === 'cedar-api') {
-                  return {
-                    ...service,
-                    envVariables: {
-                      ...service.envVariables,
-                      ...databaseEnvVariables,
-                    },
+              ...flightcontrolConfig.environments[0].services.map(
+                (service: { id: string; envVariables?: Record<string, unknown> }) => {
+                  if (service.id === 'cedar-api') {
+                    return {
+                      ...service,
+                      envVariables: {
+                        ...service.envVariables,
+                        ...databaseEnvVariables,
+                      },
+                    }
                   }
-                }
-                return service
-              }),
+                  return service
+                },
+              ),
               dbService,
             ],
           },
@@ -89,7 +93,7 @@ const getFlightcontrolJson = async (database) => {
 const updateGraphQLFunction = () => {
   return {
     title: 'Adding CORS config to createGraphQLHandler...',
-    task: (_ctx) => {
+    task: (_ctx: unknown) => {
       const graphqlTsPath = path.join(
         getPaths().base,
         'api/src/functions/graphql.ts',
@@ -99,7 +103,7 @@ const updateGraphQLFunction = () => {
         'api/src/functions/graphql.js',
       )
 
-      let graphqlFunctionsPath
+      let graphqlFunctionsPath: string | undefined
       if (fs.existsSync(graphqlTsPath)) {
         graphqlFunctionsPath = graphqlTsPath
       } else if (fs.existsSync(graphqlJsPath)) {
@@ -145,11 +149,11 @@ const updateGraphQLFunction = () => {
 const updateDbAuth = () => {
   return {
     title: 'Updating dbAuth cookie config (if used)...',
-    task: (_ctx) => {
+    task: (_ctx: unknown) => {
       const authTsPath = path.join(getPaths().base, 'api/src/functions/auth.ts')
       const authJsPath = path.join(getPaths().base, 'api/src/functions/auth.js')
 
-      let authFnPath
+      let authFnPath: string | undefined
       if (fs.existsSync(authTsPath)) {
         authFnPath = authTsPath
       } else if (fs.existsSync(authJsPath)) {
@@ -200,18 +204,16 @@ const updateDbAuth = () => {
 const updateApp = () => {
   return {
     title: 'Updating App.jsx fetch config...',
-    task: (_ctx) => {
-      // TODO Can improve in the future with RW getPaths()
+    task: (_ctx: unknown) => {
       const appTsPath = path.join(getPaths().base, 'web/src/App.tsx')
       const appJsPath = path.join(getPaths().base, 'web/src/App.jsx')
 
-      let appPath
+      let appPath: string | undefined
       if (fs.existsSync(appTsPath)) {
         appPath = appTsPath
       } else if (fs.existsSync(appJsPath)) {
         appPath = appJsPath
       } else {
-        // TODO this should never happen. Throw instead?
         console.log(`Skipping, did not detect web/src/App.jsx|tsx`)
         return
       }
@@ -227,7 +229,6 @@ const updateApp = () => {
 
     config={{ fetchConfig: { credentials: 'include' } }}
     `)
-        // This is CORS config for cookies, which is currently only dbAuth Currently only dbAuth uses cookies and would require this config
       } else if (appContent.toString().match(/dbAuth/)) {
         appContent[authLineIndex] =
           `      <AuthProvider type="dbAuth" config={{ fetchConfig: { credentials: 'include' } }}>
@@ -244,7 +245,6 @@ const updateApp = () => {
 
     graphQLClientConfig={{ httpLinkConfig: { credentials: 'include' }}}
     `)
-        // This is CORS config for cookies, which is currently only dbAuth Currently only dbAuth uses cookies and would require this config
       } else if (appContent.toString().match(/dbAuth/)) {
         appContent[gqlLineIndex] =
           `        <RedwoodApolloProvider graphQLClientConfig={{ httpLinkConfig: { credentials: 'include' }}} >
@@ -256,11 +256,10 @@ const updateApp = () => {
   }
 }
 
-// We need to set the apiUrl evn var for local dev
 const addToDotEnvDefaultTask = () => {
   return {
     title: 'Updating .env.defaults...',
-    skip: () => {
+    skip: (): string | undefined => {
       if (!fs.existsSync(path.resolve(getPaths().base, '.env.defaults'))) {
         return `
         WARNING: could not update .env.defaults
@@ -270,8 +269,9 @@ const addToDotEnvDefaultTask = () => {
         CEDAR_API_URL=${getUserApiUrl()}
         `
       }
+      return undefined
     },
-    task: async (_ctx) => {
+    task: async (_ctx: unknown) => {
       const env = path.resolve(getPaths().base, '.env.defaults')
       const apiUrl = getUserApiUrl()
       const line = `\n\nCEDAR_API_URL=${apiUrl}\n`
@@ -281,7 +281,6 @@ const addToDotEnvDefaultTask = () => {
   }
 }
 
-// any notes to print out when the job is done
 const notes = [
   'You are ready to deploy to Flightcontrol!\n',
   '👉 Create your project at https://app.flightcontrol.dev/signup?ref=redwood\n',
@@ -289,7 +288,13 @@ const notes = [
   "NOTE: If you are using yarn v1, remove the installCommand's from flightcontrol.json",
 ]
 
-export const handler = async ({ force, database }) => {
+export const handler = async ({
+  force,
+  database,
+}: {
+  force: boolean
+  database: Database
+}) => {
   recordTelemetryAttributes({
     command: 'setup deploy flightcontrol',
     force,
@@ -301,7 +306,7 @@ export const handler = async ({ force, database }) => {
         title: 'Adding flightcontrol.json',
         task: async () => {
           const fileData = await getFlightcontrolJson(database)
-          let files = {}
+          const files: Record<string, string> = {}
           files[fileData.path] = JSON.stringify(fileData.content, null, 2)
           return writeFilesTask(files, { overwriteExisting: force })
         },
@@ -318,9 +323,14 @@ export const handler = async ({ force, database }) => {
 
   try {
     await tasks.run()
-  } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e)
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    process.exit(exitCode)
   }
 }

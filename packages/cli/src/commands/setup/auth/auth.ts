@@ -1,6 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import type { Argv } from 'yargs'
+
 import { terminalLink } from 'termi-link'
 
 import {
@@ -15,7 +17,7 @@ export const command = 'auth <provider>'
 
 export const description = 'Set up an auth configuration'
 
-export async function builder(yargs) {
+export async function builder(yargs: Argv) {
   yargs
     .demandCommand()
     .epilogue(
@@ -34,8 +36,8 @@ export async function builder(yargs) {
     .command(
       'auth0',
       'Set up auth for Auth0',
-      (yargs) => standardAuthBuilder(yargs),
-      async (args) => {
+      (yargs: Argv) => standardAuthBuilder(yargs),
+      async (args: Record<string, unknown>) => {
         recordTelemetryAttributes({
           command: 'setup auth auth0',
           force: args.force,
@@ -49,8 +51,8 @@ export async function builder(yargs) {
     .command(
       ['azure-active-directory', 'azureActiveDirectory'],
       'Set up auth for Azure Active Directory',
-      (yargs) => standardAuthBuilder(yargs),
-      async (args) => {
+      (yargs: Argv) => standardAuthBuilder(yargs),
+      async (args: Record<string, unknown>) => {
         recordTelemetryAttributes({
           command: 'setup auth azure-active-directory',
           force: args.force,
@@ -66,8 +68,8 @@ export async function builder(yargs) {
     .command(
       'clerk',
       'Set up auth for Clerk',
-      (yargs) => standardAuthBuilder(yargs),
-      async (args) => {
+      (yargs: Argv) => standardAuthBuilder(yargs),
+      async (args: Record<string, unknown>) => {
         recordTelemetryAttributes({
           command: 'setup auth clerk',
           force: args.force,
@@ -81,8 +83,8 @@ export async function builder(yargs) {
     .command(
       'custom',
       'Set up a custom auth provider',
-      (yargs) => standardAuthBuilder(yargs),
-      async (args) => {
+      (yargs: Argv) => standardAuthBuilder(yargs),
+      async (args: Record<string, unknown>) => {
         recordTelemetryAttributes({
           command: 'setup auth custom',
           force: args.force,
@@ -96,7 +98,7 @@ export async function builder(yargs) {
     .command(
       'dbAuth',
       'Set up auth for dbAuth',
-      (yargs) => {
+      (yargs: Argv) => {
         return standardAuthBuilder(yargs)
           .option('webauthn', {
             alias: 'w',
@@ -117,7 +119,7 @@ export async function builder(yargs) {
             type: 'boolean',
           })
       },
-      async (args) => {
+      async (args: Record<string, unknown>) => {
         recordTelemetryAttributes({
           command: 'setup auth dbAuth',
           force: args.force,
@@ -132,8 +134,8 @@ export async function builder(yargs) {
     .command(
       'firebase',
       'Set up auth for Firebase',
-      (yargs) => standardAuthBuilder(yargs),
-      async (args) => {
+      (yargs: Argv) => standardAuthBuilder(yargs),
+      async (args: Record<string, unknown>) => {
         recordTelemetryAttributes({
           command: 'setup auth firebase',
           force: args.force,
@@ -149,8 +151,8 @@ export async function builder(yargs) {
     .command(
       'netlify',
       'Set up auth for Netlify',
-      (yargs) => standardAuthBuilder(yargs),
-      async (args) => {
+      (yargs: Argv) => standardAuthBuilder(yargs),
+      async (args: Record<string, unknown>) => {
         recordTelemetryAttributes({
           command: 'setup auth netlify',
           force: args.force,
@@ -164,8 +166,8 @@ export async function builder(yargs) {
     .command(
       'supabase',
       'Set up auth for Supabase',
-      (yargs) => standardAuthBuilder(yargs),
-      async (args) => {
+      (yargs: Argv) => standardAuthBuilder(yargs),
+      async (args: Record<string, unknown>) => {
         recordTelemetryAttributes({
           command: 'setup auth supabase',
           force: args.force,
@@ -181,8 +183,8 @@ export async function builder(yargs) {
     .command(
       'supertokens',
       'Set up auth for SuperTokens',
-      (yargs) => standardAuthBuilder(yargs),
-      async (args) => {
+      (yargs: Argv) => standardAuthBuilder(yargs),
+      async (args: Record<string, unknown>) => {
         recordTelemetryAttributes({
           command: 'setup auth supertokens',
           force: args.force,
@@ -197,11 +199,9 @@ export async function builder(yargs) {
     )
 }
 
-/**
- * @param {string} provider
- * @returns {[string, boolean, () => void, () => void]}
- */
-function directToCustomAuthCommand(provider) {
+function directToCustomAuthCommand(
+  provider: string,
+): [string, boolean, () => void, () => void] {
   // cmd, description, builder, handler
   return [
     provider,
@@ -225,14 +225,11 @@ function directToCustomAuthCommand(provider) {
   ]
 }
 
-/**
- * @param {string} module
- */
-async function getAuthSetupHandler(module) {
+async function getAuthSetupHandler(module: string) {
   // Conditionally create a require function that works in ESM or use the
   // native one in CJS
   // TODO (ESM): Remove this once we've fully moved to ESM
-  let customRequire
+  let customRequire: NodeRequire
 
   try {
     // Check if we're in an ESM context
@@ -243,13 +240,15 @@ async function getAuthSetupHandler(module) {
       // We're in a CJS context, so we use the native require
       customRequire = require
     }
-  } catch (error) {
+  } catch {
     // Fallback to native require if something goes wrong
     customRequire = require
   }
 
   const packageJsonPath = customRequire.resolve('@cedarjs/cli/package.json')
-  let { version } = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
+  let { version } = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as {
+    version: string
+  }
 
   if (!isInstalled(module)) {
     // If the version includes a plus, like '4.0.0-rc.428+dd79f1726'
@@ -259,7 +258,7 @@ async function getAuthSetupHandler(module) {
       version = version.split('+')[0]
     }
 
-    let packument
+    let packument: unknown
 
     try {
       const packumentResponse = await fetch(
@@ -268,16 +267,30 @@ async function getAuthSetupHandler(module) {
 
       packument = await packumentResponse.json()
 
-      if (packument.error) {
-        throw new Error(packument.error)
+      if (
+        packument !== null &&
+        typeof packument === 'object' &&
+        'error' in packument &&
+        packument.error
+      ) {
+        throw new Error(String(packument.error))
       }
-    } catch (error) {
+    } catch (e: unknown) {
       throw new Error(
-        `Couldn't fetch packument for ${module}: ${error.message}`,
+        `Couldn't fetch packument for ${module}: ${e instanceof Error ? e.message : String(e)}`,
       )
     }
 
-    const versionIsPublished = Object.keys(packument.versions).includes(version)
+    const versions =
+      packument !== null &&
+      typeof packument === 'object' &&
+      'versions' in packument &&
+      packument.versions !== null &&
+      typeof packument.versions === 'object'
+        ? packument.versions
+        : {}
+
+    const versionIsPublished = Object.keys(versions).includes(version)
 
     if (!versionIsPublished) {
       // Fallback to canary. This is most likely because it's a new package
@@ -301,15 +314,16 @@ async function getAuthSetupHandler(module) {
 /**
  * Check if a user's project's package.json has a module listed as a dependency
  * or devDependency. If not, check node_modules.
- *
- * @param {string} module
  */
-function isInstalled(module) {
+function isInstalled(module: string): boolean {
   const { dependencies, devDependencies } = JSON.parse(
     fs.readFileSync(path.join(getPaths().base, 'package.json'), 'utf8'),
-  )
+  ) as {
+    dependencies?: Record<string, string>
+    devDependencies?: Record<string, string>
+  }
 
-  const deps = {
+  const deps: Record<string, string> = {
     ...dependencies,
     ...devDependencies,
   }
@@ -329,7 +343,7 @@ function isInstalled(module) {
     return possiblePaths.some((modulePath) => {
       return fs.existsSync(path.join(modulePath, 'package.json'))
     })
-  } catch (error) {
+  } catch {
     // If there's an error checking, assume it's not installed
     return false
   }

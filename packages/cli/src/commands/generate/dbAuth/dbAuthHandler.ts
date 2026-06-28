@@ -28,7 +28,26 @@ const ROUTES = [
   `<Route path="/reset-password" page={ResetPasswordPage} name="resetPassword" />`,
 ]
 
-function getPostInstallMessage(isDbAuthSetup) {
+export interface DbAuthFilesOptions {
+  _tests?: boolean
+  typescript?: boolean
+  skipForgot?: boolean
+  skipLogin?: boolean
+  skipReset?: boolean
+  skipSignup?: boolean
+  webauthn?: boolean | null
+  usernameLabel?: string
+  passwordLabel?: string
+}
+
+interface DbAuthTasksOptions extends DbAuthFilesOptions {
+  enquirer?: unknown
+  listr2?: { silentRendererCondition?: boolean }
+  force?: boolean
+  tests?: boolean
+}
+
+function getPostInstallMessage(isDbAuthSetup: boolean) {
   return [
     `   ${c.warning("Pages created! But you're not done yet:")}\n`,
     "   You'll need to tell your pages where to redirect after a user has logged in,",
@@ -51,7 +70,7 @@ function getPostInstallMessage(isDbAuthSetup) {
     .join('\n')
 }
 
-function getPostInstallWebauthnMessage(isDbAuthSetup) {
+function getPostInstallWebauthnMessage(isDbAuthSetup: boolean) {
   return [
     `   ${c.warning("Pages created! But you're not done yet:")}\n`,
     "   You'll need to tell your pages where to redirect after a user has logged in,",
@@ -85,8 +104,8 @@ export const files = async ({
   webauthn,
   usernameLabel,
   passwordLabel,
-}) => {
-  const files = []
+}: DbAuthFilesOptions): Promise<Record<string, string>> => {
+  const filesList: Array<[string, string]> = []
 
   usernameLabel = usernameLabel || 'username'
   passwordLabel = passwordLabel || 'password'
@@ -101,7 +120,7 @@ export const files = async ({
   }
 
   if (!skipForgot) {
-    files.push(
+    filesList.push(
       await templateForComponentFile({
         name: 'ForgotPassword',
         suffix: 'Page',
@@ -115,7 +134,7 @@ export const files = async ({
   }
 
   if (!skipLogin) {
-    files.push(
+    filesList.push(
       await templateForComponentFile({
         name: 'Login',
         suffix: 'Page',
@@ -131,7 +150,7 @@ export const files = async ({
   }
 
   if (!skipReset) {
-    files.push(
+    filesList.push(
       await templateForComponentFile({
         name: 'ResetPassword',
         suffix: 'Page',
@@ -145,7 +164,7 @@ export const files = async ({
   }
 
   if (!skipSignup) {
-    files.push(
+    filesList.push(
       await templateForComponentFile({
         name: 'Signup',
         suffix: 'Page',
@@ -158,7 +177,7 @@ export const files = async ({
     )
   }
 
-  if (files.length === 0) {
+  if (filesList.length === 0) {
     console.info(c.error('\nNo files to generate.\n'))
     process.exit(0)
   }
@@ -174,23 +193,29 @@ export const files = async ({
       { name: 'scaffold' },
     )
 
-    files.push([scaffoldOutputPath, scaffoldTemplate])
+    filesList.push([scaffoldOutputPath, scaffoldTemplate])
   }
 
-  return files.reduce(async (accP, [outputPath, content]) => {
-    const acc = await accP
+  return filesList.reduce(
+    async (
+      accP: Promise<Record<string, string>>,
+      [outputPath, content]: [string, string],
+    ) => {
+      const acc = await accP
 
-    let template = content
+      let template = content
 
-    if (outputPath.match(/\.[jt]sx?/) && !typescript) {
-      template = await transformTSToJS(outputPath, content)
-    }
+      if (outputPath.match(/\.[jt]sx?/) && !typescript) {
+        template = await transformTSToJS(outputPath, content)
+      }
 
-    return {
-      [outputPath]: template,
-      ...acc,
-    }
-  }, Promise.resolve({}))
+      return {
+        [outputPath]: template,
+        ...acc,
+      }
+    },
+    Promise.resolve({}),
+  )
 }
 
 const tasks = ({
@@ -206,7 +231,7 @@ const tasks = ({
   webauthn,
   usernameLabel,
   passwordLabel,
-}) => {
+}: DbAuthTasksOptions) => {
   return new Listr(
     [
       {
@@ -214,12 +239,12 @@ const tasks = ({
         skip: () => {
           return !!(usernameLabel && passwordLabel)
         },
-        task: async (ctx, task) => {
+        task: async (ctx: { enquirer?: unknown; webauthn?: boolean }, task: { newListr: (...args: unknown[]) => unknown; prompt: (adapter: unknown) => { run: (config: unknown, opts: unknown) => Promise<string> }; title: string }) => {
           return task.newListr(
             [
               {
                 title: 'Username label',
-                task: async (subCtx, subtask) => {
+                task: async (subCtx: { enquirer?: unknown }, subtask: { skip: (msg?: string) => void; prompt: (adapter: unknown) => { run: (config: unknown, opts: unknown) => Promise<string> }; title: string }) => {
                   if (usernameLabel) {
                     subtask.skip(
                       `Argument username-label is set, using: "${usernameLabel}"`,
@@ -242,7 +267,7 @@ const tasks = ({
               },
               {
                 title: 'Password label',
-                task: async (subCtx, subtask) => {
+                task: async (subCtx: { enquirer?: unknown }, subtask: { skip: (msg?: string) => void; prompt: (adapter: unknown) => { run: (config: unknown, opts: unknown) => Promise<string> }; title: string }) => {
                   if (passwordLabel) {
                     subtask.skip(
                       `Argument password-label passed, using: "${passwordLabel}"`,
@@ -270,7 +295,7 @@ const tasks = ({
       },
       {
         title: 'Querying WebAuthn addition...',
-        task: async (ctx, task) => {
+        task: async (ctx: { enquirer?: unknown; webauthn?: boolean }, task: { skip: (msg?: string) => void; prompt: (adapter: unknown) => { run: (config: unknown, opts: unknown) => Promise<boolean> }; title: string }) => {
           if (webauthn != null) {
             // We enter here if the user passed the `--webauthn` flag. The flag
             // always takes precedence.
@@ -379,7 +404,9 @@ const tasks = ({
   )
 }
 
-export const handler = async (yargs) => {
+export const handler = async (
+  yargs: DbAuthTasksOptions & { rollback?: boolean },
+) => {
   recordTelemetryAttributes({
     command: 'generate dbAuth',
     skipForgot: yargs.skipForgot,
@@ -400,12 +427,13 @@ export const handler = async (yargs) => {
 
     console.log('')
     console.log(
-      yargs.webauthn || t.ctx.webauthn
+      yargs.webauthn || (t.ctx as { webauthn?: boolean }).webauthn
         ? getPostInstallWebauthnMessage(isDbAuthSetup())
         : getPostInstallMessage(isDbAuthSetup()),
     )
-  } catch (e) {
-    console.log(c.error(e.message))
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e)
+    console.log(c.error(msg))
   }
 }
 

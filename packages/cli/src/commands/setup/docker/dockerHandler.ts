@@ -13,7 +13,16 @@ import { getConfig, getConfigPath, getPaths } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-export async function handler({ force }) {
+interface PackageJson {
+  dependencies: Record<string, string>
+}
+
+interface Packument {
+  versions: Record<string, unknown>
+  error?: string
+}
+
+export async function handler({ force }: { force: boolean }) {
   const TEMPLATE_DIR = path.join(import.meta.dirname, 'templates')
   const pm = getPackageManager()
 
@@ -68,7 +77,7 @@ export async function handler({ force }) {
         ? [
             {
               title: 'Adding the official yarn workspace-tools plugin...',
-              task: async (_ctx, task) => {
+              task: async (_ctx: unknown, task: { skip: (msg?: string) => void }) => {
                 const { stdout } = await execa(
                   'yarn',
                   ['plugin', 'runtime', '--json'],
@@ -80,7 +89,7 @@ export async function handler({ force }) {
                 const hasWorkspaceToolsPlugin = stdout
                   .trim()
                   .split('\n')
-                  .map(JSON.parse)
+                  .map(JSON.parse as (text: string) => { name: string })
                   .some(
                     ({ name }) => name === '@yarnpkg/plugin-workspace-tools',
                   )
@@ -101,14 +110,14 @@ export async function handler({ force }) {
         : []),
       {
         title: 'Adding @cedarjs/api-server and @cedarjs/web-server...',
-        task: async (_ctx, task) => {
+        task: async (_ctx: unknown, task: { skip: (msg?: string) => void }) => {
           const apiServerPackageName = '@cedarjs/api-server'
           const { dependencies: apiDependencies } = JSON.parse(
             fs.readFileSync(
               path.join(getPaths().api.base, 'package.json'),
               'utf-8',
             ),
-          )
+          ) as PackageJson
           const hasApiServerPackage =
             Object.keys(apiDependencies).includes(apiServerPackageName)
 
@@ -118,7 +127,7 @@ export async function handler({ force }) {
               path.join(getPaths().web.base, 'package.json'),
               'utf-8',
             ),
-          )
+          ) as PackageJson
           const hasWebServerPackage =
             Object.keys(webDependencies).includes(webServerPackageName)
 
@@ -161,7 +170,7 @@ export async function handler({ force }) {
       },
       {
         title: 'Adding the Dockerfile and compose files...',
-        task: (_ctx, task) => {
+        task: (_ctx: unknown, task: { skip: (msg?: string) => void }) => {
           const shouldSkip = [
             dockerfilePath,
             dockerComposeDevFilePath,
@@ -240,7 +249,7 @@ export async function handler({ force }) {
       },
       {
         title: 'Adding postgres to .gitignore...',
-        task: (_ctx, task) => {
+        task: (_ctx: unknown, task: { skip: (msg?: string) => void }) => {
           const gitignoreFilePath = path.join(getPaths().base, '.gitignore')
           const gitignoreFileContent = fs.readFileSync(
             gitignoreFilePath,
@@ -314,22 +323,31 @@ export async function handler({ force }) {
         'Be sure to check out the docs: https://cedarjs.com/docs/docker',
       ].join('\n'),
     )
-  } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    errorTelemetry(process.argv, msg)
+    console.error(c.error(msg))
+    process.exit(exitCode)
   }
 }
 
-export async function getVersionOfRedwoodPackageToInstall(module) {
+export async function getVersionOfRedwoodPackageToInstall(
+  module: string,
+): Promise<string> {
   const createdRequire = createRequire(import.meta.url)
   const packageJsonPath = createdRequire.resolve('@cedarjs/cli/package.json', {
     paths: [getPaths().base],
   })
-  let { version } = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
+  let { version } = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as {
+    version: string
+  }
 
   const packumentP = await fetch(`https://registry.npmjs.org/${module}`)
-  const packument = await packumentP.json()
+  const packument = (await packumentP.json()) as Packument
 
   // If the version includes a plus, like '4.0.0-rc.428+dd79f1726'
   // (all @canary, @next, and @rc packages do), get rid of everything after the plus.
