@@ -3,7 +3,8 @@ import path from 'node:path'
 
 import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import { camelCase } from 'camel-case'
-import { Listr, type ListrRendererFactory, type ListrTaskWrapper } from 'listr2'
+import { Listr } from 'listr2'
+import type { ListrRendererFactory, ListrTaskWrapper } from 'listr2'
 import { titleCase } from 'title-case'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
@@ -43,7 +44,6 @@ interface DbAuthTasksOptions extends DbAuthFilesOptions {
   enquirer?: unknown
   listr2?: { silentRendererCondition?: boolean }
   force?: boolean
-  tests?: boolean
 }
 
 interface DbAuthCtx {
@@ -225,7 +225,6 @@ const tasks = ({
   enquirer,
   listr2,
   force,
-  tests,
   typescript,
   skipForgot,
   skipLogin,
@@ -385,7 +384,6 @@ const tasks = ({
         title: 'Creating pages...',
         task: async () => {
           const filesObj = await files({
-            tests,
             typescript,
             skipForgot,
             skipLogin,
@@ -482,7 +480,7 @@ function isDbAuthSetup() {
     )
 
     return /^import (.*) from ['"]@cedarjs\/auth-dbauth-web['"]/m.test(
-      fs.readFileSync(webAuthPath),
+      fs.readFileSync(webAuthPath, 'utf-8'),
     )
   }
 

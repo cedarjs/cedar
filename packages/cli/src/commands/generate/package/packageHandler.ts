@@ -32,12 +32,6 @@ interface ListrContext {
   targetWorkspaces: string
 }
 
-interface TsConfigJson {
-  compilerOptions?: Record<string, unknown>
-  references?: { path?: string }[]
-  [key: string]: unknown
-}
-
 // Exported for testing
 export function nameVariants(nameArg: string): {
   name: string
@@ -195,16 +189,15 @@ export async function addDependencyToPackageJson(
     return
   }
 
-  // JSON.parse returns `any`, so we assert the expected shape here
+  // JSON.parse returns `any`, so we explictly cast the return value here. This
+  // is unsafe, so we have to be careful with how we use it.
   const packageJson = JSON.parse(
     await fs.promises.readFile(packageJsonPath, 'utf8'),
   ) as { dependencies?: Record<string, string> }
 
-  if (!packageJson.dependencies) {
-    packageJson.dependencies = {}
-  }
+  packageJson.dependencies ??= {}
 
-  if (packageJson.dependencies[packageName]) {
+  if (packageJson?.dependencies[packageName]) {
     task.skip('Dependency already exists')
     return
   }
@@ -295,11 +288,10 @@ export function updateWorkspaceTsconfigReferences(
         }
 
         const tsconfigText = await fs.promises.readFile(ws.tsconfigPath, 'utf8')
-        const {
-          config: tsconfig,
-          error,
-        }: { config: TsConfigJson; error: ts.Diagnostic | undefined } =
-          ts.parseConfigFileTextToJson(ws.tsconfigPath, tsconfigText)
+        const { config: tsconfig, error } = ts.parseConfigFileTextToJson(
+          ws.tsconfigPath,
+          tsconfigText,
+        )
 
         if (error) {
           throw new Error(
@@ -347,7 +339,7 @@ export function updateWorkspaceTsconfigReferences(
           .split(path.sep)
           .join('/')
 
-        const references = tsconfig.references
+        const references: { path?: string }[] = tsconfig.references
 
         if (references.some((ref) => ref?.path === referencePath)) {
           subtask.skip('tsconfig already up to date')
@@ -398,10 +390,8 @@ async function installAndBuild(folderName: string) {
  * @param options.force - Whether to overwrite existing files
  * @param rest - Remaining options (typescript, tests, rollback, workspace, etc.)
  *
- * @returns {Promise<void>}
- *
- * @throws {Error} If the package name contains more than one slash
- * @throws {Error} If the workspace configuration is invalid
+ * @throws If the package name contains more than one slash
+ * @throws If the workspace configuration is invalid
  *
  * @example
  * // Generate a basic package
@@ -422,7 +412,7 @@ export const handler = async ({
   recordTelemetryAttributes({
     command: 'generate package',
     force,
-    rollback: rest.rollback,
+    rollback: typeof rest.rollback === 'boolean' ? rest.rollback : undefined,
   })
 
   if (name.replaceAll('/', '').length < name.length - 1) {
