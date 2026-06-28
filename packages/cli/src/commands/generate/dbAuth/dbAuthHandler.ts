@@ -242,12 +242,26 @@ const tasks = ({
         skip: () => {
           return !!(usernameLabel && passwordLabel)
         },
-        task: async (ctx: DbAuthCtx, task: ListrTaskWrapper<unknown, ListrRendererFactory, ListrRendererFactory>) => {
+        task: async (
+          ctx: DbAuthCtx,
+          task: ListrTaskWrapper<
+            unknown,
+            ListrRendererFactory,
+            ListrRendererFactory
+          >,
+        ) => {
           return task.newListr(
             [
               {
                 title: 'Username label',
-                task: async (subCtx: { enquirer?: unknown }, subtask: ListrTaskWrapper<unknown, ListrRendererFactory, ListrRendererFactory>) => {
+                task: async (
+                  subCtx: { enquirer?: unknown },
+                  subtask: ListrTaskWrapper<
+                    unknown,
+                    ListrRendererFactory,
+                    ListrRendererFactory
+                  >,
+                ) => {
                   if (usernameLabel) {
                     subtask.skip(
                       `Argument username-label is set, using: "${usernameLabel}"`,
@@ -270,7 +284,14 @@ const tasks = ({
               },
               {
                 title: 'Password label',
-                task: async (subCtx: { enquirer?: unknown }, subtask: ListrTaskWrapper<unknown, ListrRendererFactory, ListrRendererFactory>) => {
+                task: async (
+                  subCtx: { enquirer?: unknown },
+                  subtask: ListrTaskWrapper<
+                    unknown,
+                    ListrRendererFactory,
+                    ListrRendererFactory
+                  >,
+                ) => {
                   if (passwordLabel) {
                     subtask.skip(
                       `Argument password-label passed, using: "${passwordLabel}"`,
@@ -298,7 +319,14 @@ const tasks = ({
       },
       {
         title: 'Querying WebAuthn addition...',
-        task: async (ctx: DbAuthCtx, task: ListrTaskWrapper<unknown, ListrRendererFactory, ListrRendererFactory>) => {
+        task: async (
+          ctx: DbAuthCtx,
+          task: ListrTaskWrapper<
+            unknown,
+            ListrRendererFactory,
+            ListrRendererFactory
+          >,
+        ) => {
           if (webauthn != null) {
             // We enter here if the user passed the `--webauthn` flag. The flag
             // always takes precedence.

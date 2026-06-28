@@ -169,9 +169,7 @@ function posToIndex(str: string, line: number, column: number): number {
  * @param arg - A babel AST node.
  * @returns The inner ObjectExpression, or `null` if not found.
  */
-function resolveConfigObject(
-  arg: t.Node,
-): t.ObjectExpression | null {
+function resolveConfigObject(arg: t.Node): t.ObjectExpression | null {
   if (t.isObjectExpression(arg)) {
     return arg
   }
@@ -296,8 +294,7 @@ export function insertPluginsBeforeCedar({
 
   // Check if the array is inline (all elements on the same line as [)
   const arrayNode = arrayExpr
-  const isInline =
-    cedarNode.loc!.start.line === arrayNode.loc!.start.line
+  const isInline = cedarNode.loc!.start.line === arrayNode.loc!.start.line
 
   if (isInline) {
     const startPos = posToIndex(
@@ -315,7 +312,12 @@ export function insertPluginsBeforeCedar({
     const followingText = content.slice(endPos)
 
     const existingCodes = elements.map((el) => {
-      const node = el as t.Node & { loc: { start: { line: number; column: number }; end: { line: number; column: number } } }
+      const node = el as t.Node & {
+        loc: {
+          start: { line: number; column: number }
+          end: { line: number; column: number }
+        }
+      }
       return content.slice(
         posToIndex(content, node.loc.start.line, node.loc.start.column),
         posToIndex(content, node.loc.end.line, node.loc.end.column),

@@ -178,11 +178,7 @@ function updateConfigTomlTask() {
 
       configContent = configContent.replaceAll(
         HOST_REGEXP,
-        (
-          _match: string,
-          spaceBeforeAssign: string,
-          spaceAfterAssign: string,
-        ) =>
+        (_match: string, spaceBeforeAssign: string, spaceAfterAssign: string) =>
           ['host', spaceBeforeAssign, '=', spaceAfterAssign, '"0.0.0.0"'].join(
             '',
           ),
@@ -190,11 +186,7 @@ function updateConfigTomlTask() {
 
       configContent = configContent.replace(
         API_URL_REGEXP,
-        (
-          _match: string,
-          spaceBeforeAssign: string,
-          spaceAfterAssign: string,
-        ) =>
+        (_match: string, spaceBeforeAssign: string, spaceAfterAssign: string) =>
           ['apiUrl', spaceBeforeAssign, '=', spaceAfterAssign, '"/api"'].join(
             '',
           ),

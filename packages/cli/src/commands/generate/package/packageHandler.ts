@@ -59,9 +59,7 @@ export function nameVariants(nameArg: string): {
 }
 
 // Exported for testing
-export async function updateTsconfig(task: {
-  skip: (msg?: string) => void
-}) {
+export async function updateTsconfig(task: { skip: (msg?: string) => void }) {
   const targets = [
     {
       name: 'api',
@@ -287,17 +285,21 @@ export function updateWorkspaceTsconfigReferences(
   }[] = workspaces.map((ws) => {
     return {
       title: `Updating ${ws.name} tsconfig references...`,
-      task: async (_ctx: unknown, subtask: { skip: (msg?: string) => void }) => {
+      task: async (
+        _ctx: unknown,
+        subtask: { skip: (msg?: string) => void },
+      ) => {
         if (!fs.existsSync(ws.tsconfigPath)) {
           subtask.skip('tsconfig.json not found')
           return
         }
 
         const tsconfigText = await fs.promises.readFile(ws.tsconfigPath, 'utf8')
-        const { config: tsconfig, error }: { config: TsConfigJson; error: ts.Diagnostic | undefined } = ts.parseConfigFileTextToJson(
-          ws.tsconfigPath,
-          tsconfigText,
-        )
+        const {
+          config: tsconfig,
+          error,
+        }: { config: TsConfigJson; error: ts.Diagnostic | undefined } =
+          ts.parseConfigFileTextToJson(ws.tsconfigPath, tsconfigText)
 
         if (error) {
           throw new Error(
