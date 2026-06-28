@@ -286,7 +286,8 @@ async function getAuthSetupHandler(module: string) {
       typeof packument !== 'object' ||
       !('versions' in packument) ||
       packument.versions === null ||
-      typeof packument.versions !== 'object'
+      typeof packument.versions !== 'object' ||
+      Array.isArray(packument.versions)
     ) {
       throw new Error(`Invalid packument for ${module}: missing versions field`)
     }
