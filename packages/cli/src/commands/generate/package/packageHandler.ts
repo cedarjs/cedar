@@ -32,6 +32,12 @@ interface ListrContext {
   targetWorkspaces: string
 }
 
+interface TsConfigJson {
+  compilerOptions?: Record<string, unknown>
+  references?: Array<{ path?: string }>
+  [key: string]: unknown
+}
+
 // Exported for testing
 export function nameVariants(nameArg: string): {
   name: string
@@ -194,6 +200,7 @@ export async function addDependencyToPackageJson(
     return
   }
 
+  // JSON.parse returns `any`, so we assert the expected shape here
   const packageJson = JSON.parse(
     await fs.promises.readFile(packageJsonPath, 'utf8'),
   ) as { dependencies?: Record<string, string> }
@@ -290,7 +297,7 @@ export function updateWorkspaceTsconfigReferences(
         }
 
         const tsconfigText = await fs.promises.readFile(ws.tsconfigPath, 'utf8')
-        const { config: tsconfig, error } = ts.parseConfigFileTextToJson(
+        const { config: tsconfig, error }: { config: TsConfigJson; error: ts.Diagnostic | undefined } = ts.parseConfigFileTextToJson(
           ws.tsconfigPath,
           tsconfigText,
         )
@@ -341,7 +348,7 @@ export function updateWorkspaceTsconfigReferences(
           .split(path.sep)
           .join('/')
 
-        const references = tsconfig.references as Array<{ path?: string }>
+        const references = tsconfig.references
 
         if (references.some((ref) => ref && ref.path === referencePath)) {
           subtask.skip('tsconfig already up to date')
