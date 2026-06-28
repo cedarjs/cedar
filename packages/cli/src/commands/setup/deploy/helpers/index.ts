@@ -245,12 +245,12 @@ export function insertPluginsBeforeCedar({
   })
 
   const defaultExport = ast.program.body.find(
-    (node: t.Node) =>
+    (node: t.Node): node is t.ExportDefaultDeclaration =>
       t.isExportDefaultDeclaration(node) &&
       t.isCallExpression(node.declaration) &&
       t.isIdentifier(node.declaration.callee) &&
       node.declaration.callee.name === 'defineConfig',
-  ) as t.ExportDefaultDeclaration | undefined
+  )
 
   if (!defaultExport) {
     return null
@@ -263,12 +263,12 @@ export function insertPluginsBeforeCedar({
   }
 
   const pluginsProp = configArg.properties.find(
-    (prop) =>
+    (prop): prop is t.ObjectProperty =>
       t.isObjectProperty(prop) &&
       t.isIdentifier(prop.key) &&
       prop.key.name === 'plugins' &&
       t.isArrayExpression(prop.value),
-  ) as t.ObjectProperty | undefined
+  )
 
   if (!pluginsProp) {
     return null
