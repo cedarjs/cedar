@@ -368,7 +368,11 @@ export async function getVersionOfRedwoodPackageToInstall(
     )
   }
 
-  if (!packument.versions || Array.isArray(packument.versions)) {
+  if (
+    !packument.versions ||
+    typeof packument.versions !== 'object' ||
+    Array.isArray(packument.versions)
+  ) {
     throw new Error(
       `Couldn't fetch packument for ${module}: invalid versions field`,
     )
