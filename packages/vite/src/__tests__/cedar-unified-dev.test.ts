@@ -16,10 +16,6 @@ vi.mock('@cedarjs/project-config', () => ({
   getConfig: () => ({}),
 }))
 
-// Suppress the module-level startUnifiedDevServer() auto-execution side effects
-vi.spyOn(process, 'exit').mockImplementation(() => undefined as never)
-vi.spyOn(console, 'error').mockImplementation(() => {})
-
 const { parseCliArgs, openDebugger } = await import('../cedar-unified-dev.js')
 
 describe('parseCliArgs', () => {
