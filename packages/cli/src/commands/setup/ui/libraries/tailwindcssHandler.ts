@@ -304,9 +304,7 @@ export const handler = async ({
             '.vscode/extensions.json',
           )
 
-          let originalExtensionsJson: { recommendations: string[] } = {
-            recommendations: [],
-          }
+          let originalExtensionsJson: { recommendations?: string[] } = {}
 
           if (fs.existsSync(VS_CODE_EXTENSIONS_PATH)) {
             const originalExtensionsFile = fs.readFileSync(
@@ -314,15 +312,17 @@ export const handler = async ({
               'utf-8',
             )
 
+            // JSON.parse returns `any`; we assert the expected extensions.json shape here.
+            // `recommendations` is optional so we default to [] when spreading below.
             originalExtensionsJson = JSON.parse(originalExtensionsFile) as {
-              recommendations: string[]
+              recommendations?: string[]
             }
           }
 
           const newExtensionsJson = {
             ...originalExtensionsJson,
             recommendations: [
-              ...originalExtensionsJson.recommendations,
+              ...(originalExtensionsJson.recommendations ?? []),
               ...recommendedVSCodeExtensions,
             ],
           }
@@ -369,13 +369,18 @@ export const handler = async ({
               VS_CODE_SETTINGS_PATH,
               'utf-8',
             )
+            // JSON.parse returns `any`; Record<string, unknown> is the safest
+            // general shape for a VS Code settings JSON object.
             const originalSettingsJson = JSON.parse(
               originalSettingsFile || '{}',
             ) as Record<string, unknown>
-            const originalTwClassAttributesJson =
-              (originalSettingsJson['tailwindCSS.classAttributes'] as
-                | string[]
-                | undefined) || []
+            const existingAttributes =
+              originalSettingsJson['tailwindCSS.classAttributes']
+            const originalTwClassAttributesJson = Array.isArray(
+              existingAttributes,
+            )
+              ? existingAttributes
+              : []
 
             const mergedClassAttributes = Array.from(
               new Set([...classAttributes, ...originalTwClassAttributesJson]),

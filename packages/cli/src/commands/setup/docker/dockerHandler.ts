@@ -14,11 +14,11 @@ import { getPackageManager } from '@cedarjs/project-config/packageManager'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 interface PackageJson {
-  dependencies: Record<string, string>
+  dependencies?: Record<string, string>
 }
 
 interface Packument {
-  versions: Record<string, unknown>
+  versions?: Record<string, unknown>
   error?: string
 }
 
@@ -114,10 +114,11 @@ export async function handler({ force }: { force: boolean }) {
         : []),
       {
         title: 'Adding @cedarjs/api-server and @cedarjs/web-server...',
-        task: async (_, task) => {
+        task: async (_ctx, task) => {
           const apiServerPackageName = '@cedarjs/api-server'
-          // JSON.parse returns `any`; we assert the expected package.json shape here
-          const { dependencies: apiDependencies } = JSON.parse(
+          // JSON.parse returns `any`; we assert the expected package.json shape here.
+          // `dependencies` is optional so we default to {} if absent.
+          const { dependencies: apiDependencies = {} } = JSON.parse(
             fs.readFileSync(
               path.join(getPaths().api.base, 'package.json'),
               'utf-8',
@@ -127,8 +128,9 @@ export async function handler({ force }: { force: boolean }) {
             Object.keys(apiDependencies).includes(apiServerPackageName)
 
           const webServerPackageName = '@cedarjs/web-server'
-          // JSON.parse returns `any`; we assert the expected package.json shape here
-          const { dependencies: webDependencies } = JSON.parse(
+          // JSON.parse returns `any`; we assert the expected package.json shape here.
+          // `dependencies` is optional so we default to {} if absent.
+          const { dependencies: webDependencies = {} } = JSON.parse(
             fs.readFileSync(
               path.join(getPaths().web.base, 'package.json'),
               'utf-8',
@@ -176,7 +178,7 @@ export async function handler({ force }: { force: boolean }) {
       },
       {
         title: 'Adding the Dockerfile and compose files...',
-        task: (_, task) => {
+        task: (_ctx, task) => {
           const shouldSkip = [
             dockerfilePath,
             dockerComposeDevFilePath,
@@ -255,7 +257,7 @@ export async function handler({ force }: { force: boolean }) {
       },
       {
         title: 'Adding postgres to .gitignore...',
-        task: (_, task) => {
+        task: (_ctx, task) => {
           const gitignoreFilePath = path.join(getPaths().base, '.gitignore')
           const gitignoreFileContent = fs.readFileSync(
             gitignoreFilePath,
@@ -348,9 +350,12 @@ export async function getVersionOfRedwoodPackageToInstall(
   const packageJsonPath = createdRequire.resolve('@cedarjs/cli/package.json', {
     paths: [getPaths().base],
   })
-  // JSON.parse returns `any`; we assert the expected package.json shape here
-  let { version } = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as {
-    version: string
+  // JSON.parse returns `any`; we assert the expected package.json shape here.
+  // `version` is optional so we default to '' if absent.
+  let { version = '' } = JSON.parse(
+    fs.readFileSync(packageJsonPath, 'utf8'),
+  ) as {
+    version?: string
   }
 
   const packumentP = await fetch(`https://registry.npmjs.org/${module}`)
@@ -363,7 +368,9 @@ export async function getVersionOfRedwoodPackageToInstall(
     version = version.split('+')[0]
   }
 
-  const versionIsPublished = Object.keys(packument.versions).includes(version)
+  const versionIsPublished = Object.keys(packument.versions ?? {}).includes(
+    version,
+  )
 
   // Fallback to canary. This is most likely because it's a new package
   if (!versionIsPublished) {
