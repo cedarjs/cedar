@@ -81,7 +81,7 @@ const startUnifiedDevServer = async () => {
   const { forceOptimize, debug, portArg, debugPort, debugBrk, serverArgs } =
     parseCliArgs()
 
-  if (debugPort) {
+  if (debugPort !== undefined) {
     await openDebugger(debugPort, debugBrk)
   }
 
