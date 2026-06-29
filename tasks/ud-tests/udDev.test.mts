@@ -11,7 +11,7 @@ import {
 const WEB_PORT = 18910
 const BASE_URL = `http://localhost:${WEB_PORT}`
 
-async function fetchJson(url, init) {
+async function fetchJson(url: string, init?: RequestInit) {
   const res = await fetch(url, init)
   const text = await res.text()
   try {
@@ -21,9 +21,15 @@ async function fetchJson(url, init) {
   }
 }
 
-// Resolve the cedar-unified-dev binary path directly so we can test the
-// unified dev server without going through `cedar dev --ud` (which requires
-// the fixture to be a fully set-up Yarn project with lockfiles).
+// Resolve the cedar-unified-dev binary path directly instead of going through
+// `cedar dev --ud`. The CLI adds orchestration steps that the fixture can't
+// satisfy (Prisma generation, yarn workspace resolution via concurrently)
+// because it has an empty yarn.lock, no node_modules, and no Prisma schema.
+// Running cedar-unified-dev directly isolates the test to just the dev server
+// behaviour, which is what we want to test here.
+// Note: even though the CLI is launched from the monorepo root, concurrently
+// overrides cwd to the fixture (cedarPaths.web.base), so yarn resolves against
+// the fixture's empty lockfile rather than the monorepo's.
 function resolveUnifiedDevBin() {
   const vitePackagePath = path.resolve(
     import.meta.dirname,
