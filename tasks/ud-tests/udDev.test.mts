@@ -368,3 +368,88 @@ describe('cedar dev --ud --debug-port', () => {
     }
   }, 60_000)
 })
+
+// ---------------------------------------------------------------------------
+// debug-brk integration test — early-connect flow
+// ---------------------------------------------------------------------------
+
+describe('cedar dev --ud --debug-brk', () => {
+  it('blocks the server until a debugger connects, then serves requests normally', async () => {
+    // Use distinct ports — no overlap with the other two test blocks
+    const WEB_PORT = 18930
+    const API_PORT = 18931
+    const DEBUG_PORT = 38912
+    const BASE_URL = `http://localhost:${WEB_PORT}`
+
+    // 1. Start the unified dev server with --debug-brk.
+    //    inspector.open() runs first (logged to stderr), then
+    //    inspector.waitForDebugger() blocks.
+    const unifiedDevBin = resolveUnifiedDevBin()
+
+    let stderrBuffer = ''
+    const devProcess = $`yarn node ${unifiedDevBin} --port ${WEB_PORT} --apiPort ${API_PORT} --debug-port ${DEBUG_PORT} --debug-brk --no-open`
+    devProcess.stderr.on('data', (data: Buffer) => {
+      stderrBuffer += data.toString()
+    })
+    testContext.processes.push(devProcess)
+
+    // 2. Wait for the inspector message on stderr.
+    const inspectorUrl = await new Promise<string>((resolve, reject) => {
+      const inspectorTimeout = 15_000
+      const start = Date.now()
+      const poll = setInterval(() => {
+        const match = stderrBuffer.match(
+          /Debugger listening on (ws:\/\/127\.0\.0\.1:\d+\/[a-f0-9-]+)/,
+        )
+        if (match) {
+          clearInterval(poll)
+          resolve(match[1])
+        } else if (Date.now() - start > inspectorTimeout) {
+          clearInterval(poll)
+          reject(
+            new Error(
+              `Inspector did not start within ${inspectorTimeout}ms. stderr so far:\n${stderrBuffer}`,
+            ),
+          )
+        }
+      }, 100)
+    })
+
+    expect(inspectorUrl).toContain(`:${DEBUG_PORT}/`)
+
+    // 3. Verify the web server is NOT ready — waitForDebugger is blocking.
+    //    pollForReady with a short timeout should throw.
+    await expect(
+      pollForReady(`${BASE_URL}/`, { timeout: 3_000, interval: 300 }),
+    ).rejects.toThrow()
+
+    // 4. Connect to the inspector.  The process is still blocked at
+    //    waitForDebugger, so the connection establishes quickly.
+    const cdp = await createCdpSession(inspectorUrl, { timeout: 10_000 })
+
+    try {
+      // 5. Enable the debugger and unblock waitForDebugger().
+      //    Runtime.runIfWaitingForDebugger is what the inspector waits for —
+      //    it tells V8 to continue execution.  This must be sent after
+      //    Debugger.enable so the client can receive events immediately.
+      await cdp.send('Debugger.enable')
+      await cdp.send('Runtime.runIfWaitingForDebugger')
+
+      // 6. The server should now become available.
+      await pollForReady(`${BASE_URL}/`)
+
+      // 7. Verify basic CDP messaging works.
+      const evalResult = (await cdp.send('Runtime.evaluate', {
+        expression: '1 + 1',
+      })) as { result?: { value?: unknown } }
+      expect(evalResult.result?.value).toBe(2)
+
+      // 8. Verify the API function works.
+      const helloRes = await fetchJson(`${BASE_URL}/.api/functions/hello`)
+      expect(helloRes.status).toEqual(200)
+      expect(helloRes.body).toEqual({ data: 'hello from cedar' })
+    } finally {
+      cdp.close()
+    }
+  }, 60_000)
+})

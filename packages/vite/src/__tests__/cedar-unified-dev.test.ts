@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockOpen = vi.fn()
+const mockWaitForDebugger = vi.fn()
 
 vi.mock('node:inspector', () => ({
-  default: { open: mockOpen },
+  default: { open: mockOpen, waitForDebugger: mockWaitForDebugger },
   open: mockOpen,
+  waitForDebugger: mockWaitForDebugger,
 }))
 
 vi.mock('@cedarjs/project-config', () => ({
@@ -70,16 +72,44 @@ describe('parseCliArgs', () => {
 
     expect(result.debugPort).toBeUndefined()
   })
+
+  it('extracts debugBrk from --debug-brk flag', () => {
+    const result = parseCliArgs(['node', 'cedar-unified-dev', '--debug-brk'])
+
+    expect(result.debugBrk).toBe(true)
+  })
+
+  it('returns undefined debugBrk when --debug-brk is absent', () => {
+    const result = parseCliArgs(['node', 'cedar-unified-dev', '--port', '8910'])
+
+    expect(result.debugBrk).toBeUndefined()
+  })
 })
 
 describe('openDebugger', () => {
   beforeEach(() => {
     mockOpen.mockClear()
+    mockWaitForDebugger.mockClear()
   })
 
   it('opens the inspector on the given port and 127.0.0.1', async () => {
     await openDebugger(18911)
 
     expect(mockOpen).toHaveBeenCalledExactlyOnceWith(18911, '127.0.0.1')
+    expect(mockWaitForDebugger).not.toHaveBeenCalled()
+  })
+
+  it('calls waitForDebugger when the second argument is true', async () => {
+    await openDebugger(18911, true)
+
+    expect(mockOpen).toHaveBeenCalledExactlyOnceWith(18911, '127.0.0.1')
+    expect(mockWaitForDebugger).toHaveBeenCalledOnce()
+  })
+
+  it('does not call waitForDebugger when the second argument is false', async () => {
+    await openDebugger(18911, false)
+
+    expect(mockOpen).toHaveBeenCalledExactlyOnceWith(18911, '127.0.0.1')
+    expect(mockWaitForDebugger).not.toHaveBeenCalled()
   })
 })

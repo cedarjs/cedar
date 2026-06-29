@@ -37,19 +37,31 @@ export function parseCliArgs(argv = process.argv) {
     port: portArg,
     apiPort: _apiPortArg,
     'debug-port': debugPort,
+    'debug-brk': debugBrk,
     _: _positional,
     ...serverArgs
   } = yargsParser(argv.slice(2), {
-    boolean: ['https', 'open', 'strictPort', 'force', 'cors', 'debug'],
+    boolean: [
+      'https',
+      'open',
+      'strictPort',
+      'force',
+      'cors',
+      'debug',
+      'debug-brk',
+    ],
     number: ['port', 'apiPort', 'debug-port'],
   })
 
-  return { forceOptimize, debug, portArg, debugPort, serverArgs }
+  return { forceOptimize, debug, portArg, debugPort, debugBrk, serverArgs }
 }
 
-export async function openDebugger(port: number) {
+export async function openDebugger(port: number, waitForDebugger = false) {
   const inspector = await import('node:inspector')
   inspector.open(port, '127.0.0.1')
+  if (waitForDebugger) {
+    inspector.waitForDebugger()
+  }
 }
 
 const startUnifiedDevServer = async () => {
@@ -66,11 +78,11 @@ const startUnifiedDevServer = async () => {
     throw new Error('Could not locate your web/vite.config.{js,ts} file')
   }
 
-  const { forceOptimize, debug, portArg, debugPort, serverArgs } =
+  const { forceOptimize, debug, portArg, debugPort, debugBrk, serverArgs } =
     parseCliArgs()
 
   if (debugPort) {
-    await openDebugger(debugPort)
+    await openDebugger(debugPort, debugBrk)
   }
 
   const webPort =
