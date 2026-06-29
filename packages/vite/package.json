@@ -42,7 +42,7 @@
   "bin": {
     "cedar-dev-fe": "./dist/devFeServer.js",
     "cedar-serve-fe": "./dist/runFeServer.js",
-    "cedar-unified-dev": "./dist/cedar-unified-dev.js",
+    "cedar-unified-dev": "./bins/cedar-unified-dev.mjs",
     "cedar-vite-build": "./bins/cedar-vite-build.mjs",
     "cedar-vite-dev": "./bins/cedar-vite-dev.mjs",
     "vite": "./bins/vite.mjs"
