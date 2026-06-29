@@ -315,7 +315,7 @@ export function insertPluginsBeforeCedar({
     const followingText = content.slice(endPos)
 
     const existingCodes = elements.flatMap((el) => {
-      if (!el || !el.loc) {
+      if (!el?.loc) {
         return []
       }
       return [
