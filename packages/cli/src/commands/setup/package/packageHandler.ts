@@ -5,7 +5,15 @@ import { getCompatibilityData } from '@cedarjs/cli-helpers'
 import { dlx } from '@cedarjs/cli-helpers/packageManager/exec'
 import { getPaths } from '@cedarjs/project-config'
 
-export async function handler({ npmPackage, force, _: _args }) {
+export async function handler({
+  npmPackage,
+  force,
+  _: _args,
+}: {
+  npmPackage: string
+  force: boolean
+  _: string[]
+}) {
   // Extract package name and version which the user provided
   const isScoped = npmPackage.startsWith('@')
   const packageName =
@@ -37,9 +45,9 @@ export async function handler({ npmPackage, force, _: _args }) {
   let compatibilityData
   try {
     compatibilityData = await getCompatibilityData(packageName, packageVersion)
-  } catch (error) {
+  } catch (e: unknown) {
     console.log('The following error occurred while checking compatibility:')
-    const errorMessage = error.message ?? error
+    const errorMessage = e instanceof Error ? e.message : String(e)
     console.log(errorMessage)
 
     // Exit without a chance to continue if it makes sense to do so
@@ -112,7 +120,7 @@ export async function handler({ npmPackage, force, _: _args }) {
   await runPackage(packageName, versionToUse, additionalOptionsToForward)
 }
 
-async function showExperimentalWarning(version) {
+async function showExperimentalWarning(version: string | undefined) {
   if (
     version === undefined ||
     semver.parse(version) === null ||
@@ -139,7 +147,11 @@ async function showExperimentalWarning(version) {
   }
 }
 
-async function runPackage(packageName, version, options = []) {
+async function runPackage(
+  packageName: string,
+  version: string | undefined,
+  options: string[] = [],
+) {
   const versionString = version === undefined ? '' : `@${version}`
   console.log(`Running ${packageName}${versionString}...`)
   try {
@@ -147,13 +159,24 @@ async function runPackage(packageName, version, options = []) {
       stdio: 'inherit',
       cwd: getPaths().base,
     })
-  } catch (error) {
+  } catch (e: unknown) {
     // The dlx process should have already printed any errors
-    process.exitCode = error.exitCode ?? 1
+    process.exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
   }
 }
 
-async function promptWithChoices(message, choices) {
+interface Choice {
+  name: string
+  message: string
+}
+
+async function promptWithChoices(
+  message: string,
+  choices: Choice[],
+): Promise<string | null> {
   try {
     const prompt = new enq.Select({
       name: message.substring(0, 8).toLowerCase(),
@@ -161,10 +184,10 @@ async function promptWithChoices(message, choices) {
       choices,
     })
     return await prompt.run()
-  } catch (error) {
+  } catch (e: unknown) {
     // SIGINT seems to throw a "" error so we'll attempt to ignore that
-    if (error) {
-      throw error
+    if (e) {
+      throw e
     }
   }
   return null

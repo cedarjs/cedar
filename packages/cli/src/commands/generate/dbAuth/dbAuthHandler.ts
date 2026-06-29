@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import { camelCase } from 'camel-case'
+import type Enquirer from 'enquirer'
 import { Listr } from 'listr2'
 import { titleCase } from 'title-case'
 
@@ -28,7 +29,29 @@ const ROUTES = [
   `<Route path="/reset-password" page={ResetPasswordPage} name="resetPassword" />`,
 ]
 
-function getPostInstallMessage(isDbAuthSetup) {
+export interface DbAuthFilesOptions {
+  typescript?: boolean
+  skipForgot?: boolean
+  skipLogin?: boolean
+  skipReset?: boolean
+  skipSignup?: boolean
+  webauthn?: boolean | null
+  usernameLabel?: string
+  passwordLabel?: string
+}
+
+interface DbAuthTasksOptions extends DbAuthFilesOptions {
+  enquirer?: Enquirer
+  listr2?: { silentRendererCondition?: boolean }
+  force?: boolean
+}
+
+interface DbAuthCtx {
+  enquirer?: Enquirer
+  webauthn?: boolean
+}
+
+function getPostInstallMessage(isDbAuthSetup: boolean) {
   return [
     `   ${c.warning("Pages created! But you're not done yet:")}\n`,
     "   You'll need to tell your pages where to redirect after a user has logged in,",
@@ -51,7 +74,7 @@ function getPostInstallMessage(isDbAuthSetup) {
     .join('\n')
 }
 
-function getPostInstallWebauthnMessage(isDbAuthSetup) {
+function getPostInstallWebauthnMessage(isDbAuthSetup: boolean) {
   return [
     `   ${c.warning("Pages created! But you're not done yet:")}\n`,
     "   You'll need to tell your pages where to redirect after a user has logged in,",
@@ -76,7 +99,6 @@ function getPostInstallWebauthnMessage(isDbAuthSetup) {
 }
 
 export const files = async ({
-  _tests,
   typescript,
   skipForgot,
   skipLogin,
@@ -85,8 +107,8 @@ export const files = async ({
   webauthn,
   usernameLabel,
   passwordLabel,
-}) => {
-  const files = []
+}: DbAuthFilesOptions): Promise<Record<string, string>> => {
+  const filesList: [string, string][] = []
 
   usernameLabel = usernameLabel || 'username'
   passwordLabel = passwordLabel || 'password'
@@ -101,7 +123,7 @@ export const files = async ({
   }
 
   if (!skipForgot) {
-    files.push(
+    filesList.push(
       await templateForComponentFile({
         name: 'ForgotPassword',
         suffix: 'Page',
@@ -115,7 +137,7 @@ export const files = async ({
   }
 
   if (!skipLogin) {
-    files.push(
+    filesList.push(
       await templateForComponentFile({
         name: 'Login',
         suffix: 'Page',
@@ -131,7 +153,7 @@ export const files = async ({
   }
 
   if (!skipReset) {
-    files.push(
+    filesList.push(
       await templateForComponentFile({
         name: 'ResetPassword',
         suffix: 'Page',
@@ -145,7 +167,7 @@ export const files = async ({
   }
 
   if (!skipSignup) {
-    files.push(
+    filesList.push(
       await templateForComponentFile({
         name: 'Signup',
         suffix: 'Page',
@@ -158,7 +180,7 @@ export const files = async ({
     )
   }
 
-  if (files.length === 0) {
+  if (filesList.length === 0) {
     console.info(c.error('\nNo files to generate.\n'))
     process.exit(0)
   }
@@ -174,30 +196,35 @@ export const files = async ({
       { name: 'scaffold' },
     )
 
-    files.push([scaffoldOutputPath, scaffoldTemplate])
+    filesList.push([scaffoldOutputPath, scaffoldTemplate])
   }
 
-  return files.reduce(async (accP, [outputPath, content]) => {
-    const acc = await accP
+  return filesList.reduce(
+    async (
+      accP: Promise<Record<string, string>>,
+      [outputPath, content]: [string, string],
+    ) => {
+      const acc = await accP
 
-    let template = content
+      let template = content
 
-    if (outputPath.match(/\.[jt]sx?/) && !typescript) {
-      template = await transformTSToJS(outputPath, content)
-    }
+      if (outputPath.match(/\.[jt]sx?/) && !typescript) {
+        template = await transformTSToJS(outputPath, content)
+      }
 
-    return {
-      [outputPath]: template,
-      ...acc,
-    }
-  }, Promise.resolve({}))
+      return {
+        [outputPath]: template,
+        ...acc,
+      }
+    },
+    Promise.resolve({}),
+  )
 }
 
 const tasks = ({
   enquirer,
   listr2,
   force,
-  tests,
   typescript,
   skipForgot,
   skipLogin,
@@ -206,8 +233,8 @@ const tasks = ({
   webauthn,
   usernameLabel,
   passwordLabel,
-}) => {
-  return new Listr(
+}: DbAuthTasksOptions) => {
+  return new Listr<DbAuthCtx>(
     [
       {
         title: 'Determining UI labels...',
@@ -329,7 +356,6 @@ const tasks = ({
         title: 'Creating pages...',
         task: async () => {
           const filesObj = await files({
-            tests,
             typescript,
             skipForgot,
             skipLogin,
@@ -371,7 +397,7 @@ const tasks = ({
       },
     ],
     {
-      silentRendererCondition: () => listr2?.silentRendererCondition,
+      silentRendererCondition: () => listr2?.silentRendererCondition ?? false,
       rendererOptions: { collapseSubtasks: false },
       ctx: { enquirer },
       exitOnError: true,
@@ -379,14 +405,16 @@ const tasks = ({
   )
 }
 
-export const handler = async (yargs) => {
+export const handler = async (
+  yargs: DbAuthTasksOptions & { rollback?: boolean },
+) => {
   recordTelemetryAttributes({
     command: 'generate dbAuth',
     skipForgot: yargs.skipForgot,
     skipLogin: yargs.skipLogin,
     skipReset: yargs.skipReset,
     skipSignup: yargs.skipSignup,
-    webauthn: yargs.webauthn,
+    webauthn: yargs.webauthn ?? undefined,
     force: yargs.force,
     rollback: yargs.rollback,
   })
@@ -400,12 +428,13 @@ export const handler = async (yargs) => {
 
     console.log('')
     console.log(
-      yargs.webauthn || t.ctx.webauthn
+      yargs.webauthn || t.ctx?.webauthn
         ? getPostInstallWebauthnMessage(isDbAuthSetup())
         : getPostInstallMessage(isDbAuthSetup()),
     )
-  } catch (e) {
-    console.log(c.error(e.message))
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e)
+    console.log(c.error(msg))
   }
 }
 
@@ -423,7 +452,7 @@ function isDbAuthSetup() {
     )
 
     return /^import (.*) from ['"]@cedarjs\/auth-dbauth-web['"]/m.test(
-      fs.readFileSync(webAuthPath),
+      fs.readFileSync(webAuthPath, 'utf-8'),
     )
   }
 
