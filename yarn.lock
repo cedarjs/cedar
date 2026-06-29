@@ -25848,6 +25848,7 @@ __metadata:
     typescript: "npm:5.9.3"
     typescript-eslint: "npm:8.60.1"
     vitest: "npm:3.2.6"
+    ws: "npm:8.20.0"
     yargs: "npm:17.7.2"
     zx: "npm:8.8.5"
   dependenciesMeta:

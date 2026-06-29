@@ -44,6 +44,12 @@ export const builder = (yargs: Argv) => {
         'with no value it defaults to 1 prepended to the api port (e.g. api ' +
         'port 8913 -> debug port 18913).',
     })
+    .option('debugBrk', {
+      type: 'boolean',
+      description:
+        'Wait for a debugger to connect before starting the API dev server, ' +
+        'similar to Node.js --inspect-brk. Only works in --ud mode.',
+    })
     .option('ud', {
       type: 'boolean',
       default: false,
