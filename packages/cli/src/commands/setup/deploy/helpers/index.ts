@@ -182,30 +182,24 @@ function resolveConfigObject(arg: t.Node): t.ObjectExpression | null {
     // Block body with explicit return: { return {...} }
     if (t.isBlockStatement(arg.body)) {
       const returnStmt = arg.body.body.find((s) => t.isReturnStatement(s))
-      if (
-        returnStmt &&
-        t.isReturnStatement(returnStmt) &&
-        returnStmt.argument &&
-        t.isObjectExpression(returnStmt.argument)
-      ) {
+
+      if (t.isObjectExpression(returnStmt?.argument)) {
         return returnStmt.argument
       }
     }
+
     return null
   }
 
   if (t.isFunctionExpression(arg)) {
     if (t.isBlockStatement(arg.body)) {
-      const returnStmt = arg.body.body.find((s) => t.isReturnStatement(s))
-      if (
-        returnStmt &&
-        t.isReturnStatement(returnStmt) &&
-        returnStmt.argument &&
-        t.isObjectExpression(returnStmt.argument)
-      ) {
+      const returnStmt = arg.body.body.find(t.isReturnStatement)
+
+      if (t.isObjectExpression(returnStmt?.argument)) {
         return returnStmt.argument
       }
     }
+
     return null
   }
 
@@ -242,13 +236,7 @@ export function insertPluginsBeforeCedar({
     },
   })
 
-  const defaultExport = ast.program.body.find(
-    (node: t.Node): node is t.ExportDefaultDeclaration =>
-      t.isExportDefaultDeclaration(node) &&
-      t.isCallExpression(node.declaration) &&
-      t.isIdentifier(node.declaration.callee) &&
-      node.declaration.callee.name === 'defineConfig',
-  )
+  const defaultExport = ast.program.body.find(t.isExportDefaultDeclaration)
 
   if (!defaultExport) {
     return null
@@ -260,23 +248,16 @@ export function insertPluginsBeforeCedar({
     return null
   }
 
-  const pluginsProp = configArg.properties.find(
-    (prop): prop is t.ObjectProperty =>
-      t.isObjectProperty(prop) &&
-      t.isIdentifier(prop.key) &&
-      prop.key.name === 'plugins' &&
-      t.isArrayExpression(prop.value),
-  )
+  const pluginsProp = configArg.properties.find(t.isObjectProperty)
 
-  if (!pluginsProp) {
+  if (!t.isArrayExpression(pluginsProp?.value)) {
     return null
   }
 
-  const arrayExpr = pluginsProp.value as t.ArrayExpression
+  const arrayExpr = pluginsProp.value
   const elements = arrayExpr.elements
   const cedarIndex = elements.findIndex(
     (el) =>
-      el !== null &&
       t.isCallExpression(el) &&
       t.isIdentifier(el.callee) &&
       el.callee.name === 'cedar',
