@@ -362,15 +362,25 @@ export async function getVersionOfRedwoodPackageToInstall(
   // fetch().json() returns `any`; we assert the expected npm packument shape here
   const packument = (await packumentP.json()) as Packument
 
+  if (packument.error) {
+    throw new Error(
+      `Couldn't fetch packument for ${module}: ${packument.error}`,
+    )
+  }
+
+  if (!packument.versions || Array.isArray(packument.versions)) {
+    throw new Error(
+      `Couldn't fetch packument for ${module}: invalid versions field`,
+    )
+  }
+
   // If the version includes a plus, like '4.0.0-rc.428+dd79f1726'
   // (all @canary, @next, and @rc packages do), get rid of everything after the plus.
   if (version.includes('+')) {
     version = version.split('+')[0]
   }
 
-  const versionIsPublished = Object.keys(packument.versions ?? {}).includes(
-    version,
-  )
+  const versionIsPublished = Object.keys(packument.versions).includes(version)
 
   // Fallback to canary. This is most likely because it's a new package
   if (!versionIsPublished) {
