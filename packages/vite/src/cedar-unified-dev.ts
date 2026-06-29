@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import { createServerAdapter } from '@whatwg-node/server'
@@ -64,7 +63,7 @@ export async function openDebugger(port: number, waitForDebugger = false) {
   }
 }
 
-const startUnifiedDevServer = async () => {
+export async function startUnifiedDevServer() {
   // Signal to Cedar plugins (e.g. cedarWaitForApiServer) that we're running
   // in unified-dev mode so they can skip behaviours that assume a separate
   // API listener.
@@ -194,8 +193,3 @@ const startUnifiedDevServer = async () => {
   process.on('SIGINT', shutdown)
   process.on('SIGTERM', shutdown)
 }
-
-startUnifiedDevServer().catch((err) => {
-  console.error('Failed to start unified dev server:', err)
-  process.exit(1)
-})
