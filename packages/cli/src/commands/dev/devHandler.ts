@@ -27,6 +27,7 @@ interface DevHandlerOptions {
   forward?: string
   generate?: boolean
   apiDebugPort?: number
+  debugBrk?: boolean
   ud?: boolean
 }
 
@@ -35,6 +36,7 @@ export const handler = async ({
   forward = '',
   generate = true,
   apiDebugPort,
+  debugBrk,
   ud = false,
 }: DevHandlerOptions) => {
   recordTelemetryAttributes({
@@ -257,6 +259,7 @@ export const handler = async ({
       `  --port ${webAvailablePort}`,
       `  --apiPort ${apiAvailablePort}`,
       getApiDebugFlag(apiDebugPort, apiAvailablePort),
+      debugBrk ? '--debug-brk' : '',
       forward,
     ]
       .join(' ')
