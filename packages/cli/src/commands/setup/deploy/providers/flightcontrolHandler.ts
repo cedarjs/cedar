@@ -96,7 +96,7 @@ const getFlightcontrolJson = async (database: Database) => {
 const updateGraphQLFunction = () => {
   return {
     title: 'Adding CORS config to createGraphQLHandler...',
-    task: (_ctx: unknown) => {
+    task: () => {
       const graphqlTsPath = path.join(
         getPaths().base,
         'api/src/functions/graphql.ts',
@@ -152,7 +152,7 @@ const updateGraphQLFunction = () => {
 const updateDbAuth = () => {
   return {
     title: 'Updating dbAuth cookie config (if used)...',
-    task: (_ctx: unknown) => {
+    task: () => {
       const authTsPath = path.join(getPaths().base, 'api/src/functions/auth.ts')
       const authJsPath = path.join(getPaths().base, 'api/src/functions/auth.js')
 
@@ -207,7 +207,7 @@ const updateDbAuth = () => {
 const updateApp = () => {
   return {
     title: 'Updating App.jsx fetch config...',
-    task: (_ctx: unknown) => {
+    task: () => {
       const appTsPath = path.join(getPaths().base, 'web/src/App.tsx')
       const appJsPath = path.join(getPaths().base, 'web/src/App.jsx')
 
@@ -262,7 +262,7 @@ const updateApp = () => {
 const addToDotEnvDefaultTask = () => {
   return {
     title: 'Updating .env.defaults...',
-    skip: (): string | undefined => {
+    skip: () => {
       if (!fs.existsSync(path.resolve(getPaths().base, '.env.defaults'))) {
         return `
         WARNING: could not update .env.defaults
@@ -274,7 +274,7 @@ const addToDotEnvDefaultTask = () => {
       }
       return undefined
     },
-    task: async (_ctx: unknown) => {
+    task: async () => {
       const env = path.resolve(getPaths().base, '.env.defaults')
       const apiUrl = getUserApiUrl()
       const line = `\n\nCEDAR_API_URL=${apiUrl}\n`

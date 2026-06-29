@@ -65,7 +65,7 @@ export async function handler({ force }: { force: boolean }) {
     .replace(/'{{DEV_CMD}}'/g, formatCedarCommand(['dev']))
     .replace(/{{CEDAR_CMD}}/g, formatCedarCommand([]))
 
-  const tasks = new Listr(
+  const tasks = new Listr<never>(
     [
       // The yarn workspace-tools plugin only exists for yarn.
       // For pnpm, pnpm install --prod --filter api is built-in. Workspaces are
@@ -78,7 +78,7 @@ export async function handler({ force }: { force: boolean }) {
             {
               title: 'Adding the official yarn workspace-tools plugin...',
               task: async (
-                _ctx: unknown,
+                _: unknown,
                 task: { skip: (msg?: string) => void },
               ) => {
                 const { stdout } = await execa(
@@ -92,7 +92,8 @@ export async function handler({ force }: { force: boolean }) {
                 const hasWorkspaceToolsPlugin = stdout
                   .trim()
                   .split('\n')
-                  .map(JSON.parse as (text: string) => { name: string })
+                  // JSON.parse returns `any`; each line is a yarn plugin object
+                  .map((line) => JSON.parse(line) as { name: string })
                   .some(
                     ({ name }) => name === '@yarnpkg/plugin-workspace-tools',
                   )
@@ -113,8 +114,9 @@ export async function handler({ force }: { force: boolean }) {
         : []),
       {
         title: 'Adding @cedarjs/api-server and @cedarjs/web-server...',
-        task: async (_ctx: unknown, task: { skip: (msg?: string) => void }) => {
+        task: async (_, task) => {
           const apiServerPackageName = '@cedarjs/api-server'
+          // JSON.parse returns `any`; we assert the expected package.json shape here
           const { dependencies: apiDependencies } = JSON.parse(
             fs.readFileSync(
               path.join(getPaths().api.base, 'package.json'),
@@ -125,6 +127,7 @@ export async function handler({ force }: { force: boolean }) {
             Object.keys(apiDependencies).includes(apiServerPackageName)
 
           const webServerPackageName = '@cedarjs/web-server'
+          // JSON.parse returns `any`; we assert the expected package.json shape here
           const { dependencies: webDependencies } = JSON.parse(
             fs.readFileSync(
               path.join(getPaths().web.base, 'package.json'),
@@ -173,7 +176,7 @@ export async function handler({ force }: { force: boolean }) {
       },
       {
         title: 'Adding the Dockerfile and compose files...',
-        task: (_ctx: unknown, task: { skip: (msg?: string) => void }) => {
+        task: (_, task) => {
           const shouldSkip = [
             dockerfilePath,
             dockerComposeDevFilePath,
@@ -252,7 +255,7 @@ export async function handler({ force }: { force: boolean }) {
       },
       {
         title: 'Adding postgres to .gitignore...',
-        task: (_ctx: unknown, task: { skip: (msg?: string) => void }) => {
+        task: (_, task) => {
           const gitignoreFilePath = path.join(getPaths().base, '.gitignore')
           const gitignoreFileContent = fs.readFileSync(
             gitignoreFilePath,
@@ -345,11 +348,13 @@ export async function getVersionOfRedwoodPackageToInstall(
   const packageJsonPath = createdRequire.resolve('@cedarjs/cli/package.json', {
     paths: [getPaths().base],
   })
+  // JSON.parse returns `any`; we assert the expected package.json shape here
   let { version } = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as {
     version: string
   }
 
   const packumentP = await fetch(`https://registry.npmjs.org/${module}`)
+  // fetch().json() returns `any`; we assert the expected npm packument shape here
   const packument = (await packumentP.json()) as Packument
 
   // If the version includes a plus, like '4.0.0-rc.428+dd79f1726'

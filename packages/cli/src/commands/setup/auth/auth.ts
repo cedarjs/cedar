@@ -257,38 +257,28 @@ async function getAuthSetupHandler(module: string) {
       version = version.split('+')[0]
     }
 
-    let packument: unknown
+    interface Packument {
+      versions: Record<string, unknown>
+      error?: string
+    }
+
+    let packument: Packument | undefined
 
     try {
       const packumentResponse = await fetch(
         `https://registry.npmjs.org/${module}`,
       )
 
-      packument = await packumentResponse.json()
+      // fetch().json() returns `any`; we assert the expected npm packument shape
+      packument = (await packumentResponse.json()) as Packument
 
-      if (
-        packument !== null &&
-        typeof packument === 'object' &&
-        'error' in packument &&
-        packument.error
-      ) {
-        throw new Error(String(packument.error))
+      if (packument.error) {
+        throw new Error(packument.error)
       }
     } catch (e: unknown) {
       throw new Error(
         `Couldn't fetch packument for ${module}: ${e instanceof Error ? e.message : String(e)}`,
       )
-    }
-
-    if (
-      packument === null ||
-      typeof packument !== 'object' ||
-      !('versions' in packument) ||
-      packument.versions === null ||
-      typeof packument.versions !== 'object' ||
-      Array.isArray(packument.versions)
-    ) {
-      throw new Error(`Invalid packument for ${module}: missing versions field`)
     }
 
     const versionIsPublished = Object.keys(packument.versions).includes(version)

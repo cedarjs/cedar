@@ -292,40 +292,42 @@ export function insertPluginsBeforeCedar({
   }
   const cedarNode = cedarElement
 
+  if (!cedarNode.loc || !arrayExpr.loc || !pluginsProp.loc) {
+    return null
+  }
+
   // Check if the array is inline (all elements on the same line as [)
-  const arrayNode = arrayExpr
-  const isInline = cedarNode.loc!.start.line === arrayNode.loc!.start.line
+  const isInline = cedarNode.loc.start.line === arrayExpr.loc.start.line
 
   if (isInline) {
     const startPos = posToIndex(
       content,
-      arrayNode.loc!.start.line,
-      arrayNode.loc!.start.column,
+      arrayExpr.loc.start.line,
+      arrayExpr.loc.start.column,
     )
     const endPos = posToIndex(
       content,
-      arrayNode.loc!.end.line,
-      arrayNode.loc!.end.column,
+      arrayExpr.loc.end.line,
+      arrayExpr.loc.end.column,
     )
 
     const precedingText = content.slice(0, startPos)
     const followingText = content.slice(endPos)
 
-    const existingCodes = elements.map((el) => {
-      const node = el as t.Node & {
-        loc: {
-          start: { line: number; column: number }
-          end: { line: number; column: number }
-        }
+    const existingCodes = elements.flatMap((el) => {
+      if (!el || !el.loc) {
+        return []
       }
-      return content.slice(
-        posToIndex(content, node.loc.start.line, node.loc.start.column),
-        posToIndex(content, node.loc.end.line, node.loc.end.column),
-      )
+      return [
+        content.slice(
+          posToIndex(content, el.loc.start.line, el.loc.start.column),
+          posToIndex(content, el.loc.end.line, el.loc.end.column),
+        ),
+      ]
     })
 
     const lines = content.split('\n')
-    const pluginsLine = pluginsProp.loc!.start.line
+    const pluginsLine = pluginsProp.loc.start.line
     const pluginsIndent = (lines[pluginsLine - 1].match(/^\s*/) ?? [''])[0]
     const elemIndent = pluginsIndent + '  '
 
@@ -342,7 +344,7 @@ export function insertPluginsBeforeCedar({
   }
 
   // Multiline: insert at start of cedar()'s line (after the preceding \n)
-  const cedarLine = cedarNode.loc!.start.line
+  const cedarLine = cedarNode.loc.start.line
   const insertPos = posToIndex(content, cedarLine, 0)
   const lines = content.split('\n')
   const indent = (lines[cedarLine - 1].match(/^\s*/) ?? [''])[0]
@@ -360,7 +362,7 @@ export const addToGitIgnoreTask = ({ paths }: { paths: string[] }) => {
       }
       return undefined
     },
-    task: async (_ctx: unknown, task: { skip: (msg: string) => void }) => {
+    task: async (_ctx: unknown, task: { skip: (message: string) => void }) => {
       const gitIgnore = path.resolve(getPaths().base, '.gitignore')
       const content = fs.readFileSync(gitIgnore).toString()
 
@@ -382,7 +384,7 @@ export const addToDotEnvTask = ({ lines }: { lines: string[] }) => {
       }
       return undefined
     },
-    task: async (_ctx: unknown, task: { skip: (msg: string) => void }) => {
+    task: async (_ctx: unknown, task: { skip: (message: string) => void }) => {
       const env = path.resolve(getPaths().base, '.env')
       const content = fs.readFileSync(env).toString()
 
