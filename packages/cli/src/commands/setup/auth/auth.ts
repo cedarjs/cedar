@@ -281,6 +281,12 @@ async function getAuthSetupHandler(module: string) {
       )
     }
 
+    if (!packument.versions || Array.isArray(packument.versions)) {
+      throw new Error(
+        `Couldn't fetch packument for ${module}: invalid versions field`,
+      )
+    }
+
     const versionIsPublished = Object.keys(packument.versions).includes(version)
 
     if (!versionIsPublished) {
