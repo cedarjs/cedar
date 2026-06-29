@@ -26,7 +26,7 @@ const cedarPaths = getPaths()
 
 const EXTENSION = isTypeScriptProject ? 'ts' : 'js'
 
-export async function handler({ force }) {
+export async function handler({ force }: { force: boolean }) {
   try {
     const addCoherenceFilesTask = await getAddCoherenceFilesTask(force)
 
@@ -45,10 +45,15 @@ export async function handler({ force }) {
     )
 
     await tasks.run()
-  } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e)
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    process.exit(exitCode)
   }
 }
 
@@ -59,21 +64,19 @@ export async function handler({ force }) {
 /**
  * Adds a health check file and a coherence.yml file by introspecting the prisma schema.
  */
-async function getAddCoherenceFilesTask(force) {
-  const files = [
+async function getAddCoherenceFilesTask(force: boolean) {
+  const files: { path: string; content: string }[] = [
     {
       path: path.join(cedarPaths.api.functions, `health.${EXTENSION}`),
       content: coherenceFiles.healthCheck,
     },
   ]
 
-  const coherenceConfigFile = {
+  const coherenceConfigContent = await getCoherenceConfigFileContent()
+  files.push({
     path: path.join(cedarPaths.base, 'coherence.yml'),
-  }
-
-  coherenceConfigFile.content = await getCoherenceConfigFileContent()
-
-  files.push(coherenceConfigFile)
+    content: coherenceConfigContent,
+  })
 
   return addFilesTask({
     title: `Adding coherence.yml and health.${EXTENSION}`,
@@ -84,14 +87,8 @@ async function getAddCoherenceFilesTask(force) {
 
 /**
  * Check the value of `provider` in the datasource block in `schema.prisma`:
- *
- * ```prisma title="schema.prisma"
- * datasource db {
- *   provider = "sqlite"
- * }
- * ```
  */
-async function getCoherenceConfigFileContent() {
+async function getCoherenceConfigFileContent(): Promise<string> {
   const result = await getPrismaSchemas()
   const prismaConfig = await getConfig({ datamodel: result.schemas })
 
@@ -148,11 +145,6 @@ async function getCoherenceConfigFileContent() {
 
 const SUPPORTED_DATABASES = ['mysql', 'postgresql']
 
-/**
- * should probably parse toml at this point...
- * if host, set host
- * Updates the ports in cedar.toml to use an environment variable.
- */
 function updateConfigTomlTask() {
   const configTomlPath = getConfigPath()
   const configFileName = path.basename(configTomlPath)
@@ -161,10 +153,11 @@ function updateConfigTomlTask() {
     title: `Updating ${configFileName}...`,
     task: () => {
       let configContent = fs.readFileSync(configTomlPath, 'utf-8')
-      const configObject = toml.parse(configContent)
+      const configObject = toml.parse(configContent) as {
+        web: { host?: string }
+        api: { host?: string }
+      }
 
-      // Replace or add the host
-      // How to handle matching one vs the other...
       if (!configObject.web.host) {
         const [beforeWeb, afterWeb] = configContent.split(/\[web\]\s/)
         configContent = [
@@ -185,25 +178,28 @@ function updateConfigTomlTask() {
 
       configContent = configContent.replaceAll(
         HOST_REGEXP,
-        (match, spaceBeforeAssign, spaceAfterAssign) =>
+        (_match: string, spaceBeforeAssign: string, spaceAfterAssign: string) =>
           ['host', spaceBeforeAssign, '=', spaceAfterAssign, '"0.0.0.0"'].join(
             '',
           ),
       )
 
-      // Replace the apiUrl
       configContent = configContent.replace(
         API_URL_REGEXP,
-        (match, spaceBeforeAssign, spaceAfterAssign) =>
+        (_match: string, spaceBeforeAssign: string, spaceAfterAssign: string) =>
           ['apiUrl', spaceBeforeAssign, '=', spaceAfterAssign, '"/api"'].join(
             '',
           ),
       )
 
-      // Replace the web and api ports.
       configContent = configContent.replaceAll(
         PORT_REGEXP,
-        (_match, spaceBeforeAssign, spaceAfterAssign, port) =>
+        (
+          _match: string,
+          spaceBeforeAssign: string,
+          spaceAfterAssign: string,
+          port: string,
+        ) =>
           [
             'port',
             spaceBeforeAssign,
@@ -226,6 +222,16 @@ const PORT_REGEXP = /port(\s*)=(\s*)(?<port>\d{4})/g
 // Files
 // ------------------------
 
+interface YamlTemplateArgs {
+  db: string
+  apiProdCommand: string
+  apiDevCommand: string
+  migrationCommand: string
+  webProdCommand: string
+  webDevCommand: string
+  webBuildCommand: string
+}
+
 const coherenceFiles = {
   yamlTemplate({
     db,
@@ -235,7 +241,7 @@ const coherenceFiles = {
     webProdCommand,
     webDevCommand,
     webBuildCommand,
-  }) {
+  }: YamlTemplateArgs): string {
     return `\
 api:
   type: backend
