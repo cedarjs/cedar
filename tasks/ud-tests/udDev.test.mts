@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import WebSocket from 'ws'
 import { fs, path, $ } from 'zx'
 
 import {
@@ -107,6 +108,263 @@ describe('cedar dev --ud', () => {
     } finally {
       // Always restore the original source
       fs.writeFileSync(helloSrcPath, originalSrc)
+    }
+  }, 60_000)
+})
+
+// ---------------------------------------------------------------------------
+// CDP (Chrome DevTools Protocol) helper
+// ---------------------------------------------------------------------------
+
+interface CdpSession {
+  send(method: string, params?: Record<string, unknown>): Promise<unknown>
+  on(
+    event: string,
+    callback: (params: Record<string, unknown>) => void,
+  ): () => void
+  close(): void
+}
+
+function createCdpSession(
+  wsUrl: string,
+  opts: { timeout?: number } = {},
+): Promise<CdpSession> {
+  const { timeout = 5_000 } = opts
+
+  return new Promise((resolve, reject) => {
+    const ws = new WebSocket(wsUrl)
+    const pending = new Map<
+      number,
+      { resolve: (v: unknown) => void; reject: (e: Error) => void }
+    >()
+    const listeners = new Map<
+      string,
+      ((params: Record<string, unknown>) => void)[]
+    >()
+    let nextId = 1
+    let settled = false
+
+    const timer = setTimeout(() => {
+      if (!settled) {
+        settled = true
+        ws.close()
+        reject(
+          new Error(`CDP connection to ${wsUrl} timed out after ${timeout}ms`),
+        )
+      }
+    }, timeout)
+
+    ws.on('open', () => {
+      settled = true
+      clearTimeout(timer)
+      resolve({
+        send(method: string, params?: Record<string, unknown>) {
+          return new Promise((res, rej) => {
+            const id = nextId++
+            pending.set(id, { resolve: res, reject: rej })
+
+            // Safety timeout per-message so a single hung CDP command
+            // can't stall the test forever.
+            setTimeout(() => {
+              if (pending.has(id)) {
+                pending.delete(id)
+                rej(
+                  new Error(
+                    `CDP ${method} (id=${id}) timed out after ${timeout}ms`,
+                  ),
+                )
+              }
+            }, timeout)
+
+            ws.send(JSON.stringify({ id, method, params }))
+          })
+        },
+        on(event: string, callback: (params: Record<string, unknown>) => void) {
+          if (!listeners.has(event)) {
+            listeners.set(event, [])
+          }
+          listeners.get(event)!.push(callback)
+          return () => {
+            const cbs = listeners.get(event)
+            if (cbs) {
+              const idx = cbs.indexOf(callback)
+              if (idx !== -1) {
+                cbs.splice(idx, 1)
+              }
+            }
+          }
+        },
+        close() {
+          ws.close()
+        },
+      })
+    })
+
+    ws.on('message', (data) => {
+      const msg = JSON.parse(data.toString())
+
+      if (msg.id !== undefined && pending.has(msg.id)) {
+        const p = pending.get(msg.id)!
+        pending.delete(msg.id)
+        if (msg.error) {
+          p.reject(new Error(`CDP error: ${msg.error.message}`))
+        } else {
+          p.resolve(msg.result)
+        }
+      } else if (msg.method) {
+        const cbs = listeners.get(msg.method)
+        if (cbs) {
+          for (const cb of cbs) {
+            cb(msg.params)
+          }
+        }
+      }
+    })
+
+    ws.on('error', (err) => {
+      if (!settled) {
+        settled = true
+        clearTimeout(timer)
+        reject(err)
+      }
+    })
+
+    ws.on('close', () => {
+      clearTimeout(timer)
+      for (const [, p] of pending) {
+        p.reject(new Error('CDP WebSocket closed unexpectedly'))
+      }
+      pending.clear()
+    })
+  })
+}
+
+// ---------------------------------------------------------------------------
+// debug-port integration test
+// ---------------------------------------------------------------------------
+
+describe('cedar dev --ud --debug-port', () => {
+  it('opens the inspector on the given port, allows CDP interaction, and can pause/resume execution', async () => {
+    // Use distinct ports to avoid accidental overlap if tests ever parallelise
+    const WEB_PORT = 18920
+    const API_PORT = 18921
+    const DEBUG_PORT = 38911
+    const BASE_URL = `http://localhost:${WEB_PORT}`
+
+    // 1. Start the unified dev server with --debug-port. We pass the flag
+    //    directly to cedar-unified-dev (bypassing the CLI) because the fixture
+    //    has an empty yarn.lock and no node_modules — see
+    //    resolveUnifiedDevBin() above. CEDAR_CWD is set globally by beforeAll
+    //    in vitest.setup.mts.
+    const unifiedDevBin = resolveUnifiedDevBin()
+
+    let stderrBuffer = ''
+    const devProcess = $`yarn node ${unifiedDevBin} --port ${WEB_PORT} --apiPort ${API_PORT} --debug-port ${DEBUG_PORT} --no-open`
+    devProcess.stderr.on('data', (data: Buffer) => {
+      stderrBuffer += data.toString()
+    })
+    testContext.processes.push(devProcess)
+
+    // 2. Wait for the inspector message on stderr and verify the port.
+    //    inspector.open() logs:  Debugger listening on ws://127.0.0.1:<port>/<uuid>
+    const inspectorUrl = await new Promise<string>((resolve, reject) => {
+      const inspectorTimeout = 15_000
+      const start = Date.now()
+      const poll = setInterval(() => {
+        const match = stderrBuffer.match(
+          /Debugger listening on (ws:\/\/127\.0\.0\.1:\d+\/[a-f0-9-]+)/,
+        )
+        if (match) {
+          clearInterval(poll)
+          resolve(match[1])
+        } else if (Date.now() - start > inspectorTimeout) {
+          clearInterval(poll)
+          reject(
+            new Error(
+              `Inspector did not start within ${inspectorTimeout}ms. stderr so far:\n${stderrBuffer}`,
+            ),
+          )
+        }
+      }, 100)
+    })
+
+    const inspectorPort = parseInt(inspectorUrl.match(/:(\d+)\//)![1], 10)
+    expect(inspectorPort).toBe(DEBUG_PORT)
+
+    // 3. Wait for the web server to be ready
+    await pollForReady(`${BASE_URL}/`)
+
+    // 4. Connect to the inspector via CDP using the full WebSocket URL
+    //    (including the UUID path, which the inspector requires — connecting
+    //    to ws://host:port without the UUID returns HTTP 400).
+    const cdp = await createCdpSession(inspectorUrl, { timeout: 10_000 })
+
+    try {
+      // 5. Verify basic CDP messaging works by evaluating a simple expression
+      const evalResult = (await cdp.send('Runtime.evaluate', {
+        expression: '1 + 1',
+      })) as { result?: { value?: unknown } }
+      expect(evalResult.result?.value).toBe(2)
+
+      // 6. Enable the debugger so we can pause execution
+      await cdp.send('Debugger.enable')
+
+      // 7. Test that the debugger halts on a `debugger;` statement and can
+      //    resume. The evaluate response only arrives after we resume.
+      let pausedResolve!: (params: Record<string, unknown>) => void
+      const pausedOnce = new Promise<Record<string, unknown>>((resolve) => {
+        pausedResolve = resolve
+      })
+      const unsubPause = cdp.on('Debugger.paused', (params) => {
+        unsubPause()
+        pausedResolve(params)
+      })
+
+      const evalPromise = cdp.send('Runtime.evaluate', {
+        expression: '(() => { debugger; return 42; })()',
+      })
+
+      const paused = await pausedOnce
+      expect(paused.reason).toBe('other')
+      expect((paused.callFrames as unknown[]).length).toBeGreaterThan(0)
+
+      await cdp.send('Debugger.resume')
+      const pausedEvalResult = (await evalPromise) as {
+        result?: { value?: unknown }
+      }
+      expect(pausedEvalResult.result?.value).toBe(42)
+
+      // 8. Test that Debugger.pause() can interrupt a real API request.
+      //    Arm the pause BEFORE issuing the request so V8 halts on the next
+      //    statement the dev server executes. This is deterministic — it
+      //    avoids the race where a trivial handler (hello.ts returns a static
+      //    response) completes before the pause is armed, which would leave
+      //    the pause pending forever and time out the test.
+      let requestPausedResolve!: (params: Record<string, unknown>) => void
+      const requestPausedOnce = new Promise<Record<string, unknown>>(
+        (resolve) => {
+          requestPausedResolve = resolve
+        },
+      )
+      const unsubRequestPause = cdp.on('Debugger.paused', (params) => {
+        unsubRequestPause()
+        requestPausedResolve(params)
+      })
+
+      await cdp.send('Debugger.pause')
+      const fetchPromise = fetchJson(`${BASE_URL}/.api/functions/hello`)
+
+      const requestPaused = await requestPausedOnce
+      expect(requestPaused.reason).toBeDefined()
+      expect((requestPaused.callFrames as unknown[]).length).toBeGreaterThan(0)
+
+      // 9. Resume and verify the HTTP response completes successfully
+      await cdp.send('Debugger.resume')
+      const helloRes = await fetchPromise
+      expect(helloRes.status).toEqual(200)
+      expect(helloRes.body).toEqual({ data: 'hello from cedar' })
+    } finally {
+      cdp.close()
     }
   }, 60_000)
 })
