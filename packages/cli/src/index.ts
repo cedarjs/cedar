@@ -258,7 +258,7 @@ async function runYargs() {
   })
 }
 
-function getTomlDir(cwd) {
+function getTomlDir(cwd: string | undefined): string {
   const configFiles = ['cedar.toml', 'redwood.toml']
   let tomlDir = ''
 
@@ -272,7 +272,9 @@ function getTomlDir(cwd) {
       // for when the cli calls itself (which it unfortunately does for example
       // when generating the Prisma client).
       const absCwd = path.resolve(process.cwd(), cwd)
-      const found = configFiles.some((f) => fs.existsSync(path.join(absCwd, f)))
+      const found = configFiles.some((f) =>
+        fs.existsSync(path.join(absCwd, f)),
+      )
       if (!found) {
         const tomls = configFiles.join('" or "')
         throw new Error(`Couldn't find a "${tomls}" file in ${absCwd}`)
@@ -296,7 +298,7 @@ function getTomlDir(cwd) {
       tomlDir = path.dirname(configTomlPath)
     }
   } catch (error) {
-    console.error(error.message)
+    console.error(error instanceof Error ? error.message : String(error))
     process.exit(1)
   }
 

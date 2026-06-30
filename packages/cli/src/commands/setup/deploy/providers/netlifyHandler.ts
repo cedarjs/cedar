@@ -19,9 +19,7 @@ import {
   verifyUDSetupTask,
   // @ts-expect-error - No types for JS files
 } from '../helpers/index.js'
-// @ts-expect-error - No types for JS files
 import { NETLIFY_TOML } from '../templates/netlify.js'
-// @ts-expect-error - No types for JS files
 import { NETLIFY_UD_TOML } from '../templates/netlifyUD.js'
 
 const files = [

@@ -18,9 +18,7 @@ import {
   addFilesTask,
   // @ts-expect-error - No types for JS file
 } from '../helpers/index.js'
-// @ts-expect-error - No types for JS file
 import { SERVERLESS_API_YML } from '../templates/serverless/api.js'
-// @ts-expect-error - No types for JS file
 import { SERVERLESS_WEB_YML } from '../templates/serverless/web.js'
 
 const notes = [
