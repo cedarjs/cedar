@@ -65,22 +65,24 @@ import { startTelemetry, shutdownTelemetry } from './telemetry/index.js'
 // yarn cedar info
 // ```
 
-const { telemetry, help, version, cwd: parsedCwd } = Parser(
-  hideBin(process.argv),
-  {
-    // Telemetry is enabled by default, but can be disabled in two ways
-    // - by passing a `--telemetry false` option
-    // - by setting a `CEDAR_DISABLE_TELEMETRY` env var
-    boolean: ['telemetry'],
-    default: {
-      telemetry:
-        (process.env.CEDAR_DISABLE_TELEMETRY === undefined ||
-          process.env.CEDAR_DISABLE_TELEMETRY === '') &&
-        (process.env.REDWOOD_DISABLE_TELEMETRY === undefined ||
-          process.env.REDWOOD_DISABLE_TELEMETRY === ''),
-    },
+const {
+  telemetry,
+  help,
+  version,
+  cwd: parsedCwd,
+} = Parser(hideBin(process.argv), {
+  // Telemetry is enabled by default, but can be disabled in two ways
+  // - by passing a `--telemetry false` option
+  // - by setting a `CEDAR_DISABLE_TELEMETRY` env var
+  boolean: ['telemetry'],
+  default: {
+    telemetry:
+      (process.env.CEDAR_DISABLE_TELEMETRY === undefined ||
+        process.env.CEDAR_DISABLE_TELEMETRY === '') &&
+      (process.env.REDWOOD_DISABLE_TELEMETRY === undefined ||
+        process.env.REDWOOD_DISABLE_TELEMETRY === ''),
   },
-)
+})
 let cwd = parsedCwd
 cwd ??= process.env.CEDAR_CWD
 cwd ??= process.env.RWJS_CWD
@@ -276,9 +278,7 @@ function getTomlDir(cwd: string | undefined): string {
       // for when the cli calls itself (which it unfortunately does for example
       // when generating the Prisma client).
       const absCwd = path.resolve(process.cwd(), cwd)
-      const found = configFiles.some((f) =>
-        fs.existsSync(path.join(absCwd, f)),
-      )
+      const found = configFiles.some((f) => fs.existsSync(path.join(absCwd, f)))
       if (!found) {
         const tomls = configFiles.join('" or "')
         throw new Error(`Couldn't find a "${tomls}" file in ${absCwd}`)

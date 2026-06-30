@@ -560,10 +560,7 @@ export const deployTasks = (
               task: async () => {
                 await ssh.exec(serverConfig.path, serverConfig.monitorCommand, [
                   'start',
-                  pathJoin(
-                    CURRENT_RELEASE_SYMLINK_NAME,
-                    'ecosystem.config.js',
-                  ),
+                  pathJoin(CURRENT_RELEASE_SYMLINK_NAME, 'ecosystem.config.js'),
                   '--only',
                   processName,
                 ])
