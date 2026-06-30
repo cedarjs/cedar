@@ -2,11 +2,31 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockOpen = vi.fn()
 const mockWaitForDebugger = vi.fn()
+const mockSessionConnect = vi.fn()
+const mockSessionPost = vi.fn((method, _params) => {
+  if (method === 'Runtime.evaluate') {
+    return Promise.resolve({ result: { value: 1 } })
+  }
+  return Promise.resolve({})
+})
+const mockSessionOnce = vi.fn()
+const mockSessionDisconnect = vi.fn()
+const mockSession = vi.fn(() => ({
+  connect: mockSessionConnect,
+  post: mockSessionPost,
+  once: mockSessionOnce,
+  disconnect: mockSessionDisconnect,
+}))
 
 vi.mock('node:inspector', () => ({
-  default: { open: mockOpen, waitForDebugger: mockWaitForDebugger },
+  default: {
+    open: mockOpen,
+    waitForDebugger: mockWaitForDebugger,
+    Session: mockSession,
+  },
   open: mockOpen,
   waitForDebugger: mockWaitForDebugger,
+  Session: mockSession,
 }))
 
 vi.mock('@cedarjs/project-config', () => ({
@@ -86,6 +106,11 @@ describe('openDebugger', () => {
   beforeEach(() => {
     mockOpen.mockClear()
     mockWaitForDebugger.mockClear()
+    mockSessionConnect.mockClear()
+    mockSessionPost.mockClear()
+    mockSessionOnce.mockClear()
+    mockSessionDisconnect.mockClear()
+    mockSession.mockClear()
   })
 
   it('opens the inspector on the given port and 127.0.0.1', async () => {
@@ -93,13 +118,7 @@ describe('openDebugger', () => {
 
     expect(mockOpen).toHaveBeenCalledExactlyOnceWith(18911, '127.0.0.1')
     expect(mockWaitForDebugger).not.toHaveBeenCalled()
-  })
-
-  it('calls waitForDebugger when the second argument is true', async () => {
-    await openDebugger(18911, true)
-
-    expect(mockOpen).toHaveBeenCalledExactlyOnceWith(18911, '127.0.0.1')
-    expect(mockWaitForDebugger).toHaveBeenCalledOnce()
+    expect(mockSession).not.toHaveBeenCalled()
   })
 
   it('does not call waitForDebugger when the second argument is false', async () => {
@@ -107,5 +126,37 @@ describe('openDebugger', () => {
 
     expect(mockOpen).toHaveBeenCalledExactlyOnceWith(18911, '127.0.0.1')
     expect(mockWaitForDebugger).not.toHaveBeenCalled()
+    expect(mockSession).not.toHaveBeenCalled()
+  })
+
+  it('calls waitForDebugger, creates Session, posts Debugger.enable + Debugger.pause, fires Runtime.evaluate, and waits for Debugger.resumed when true', async () => {
+    mockSessionPost.mockImplementation((method, _params) => {
+      if (method === 'Runtime.evaluate') {
+        return Promise.resolve({ result: { value: 1 } })
+      }
+      return Promise.resolve({})
+    })
+    mockSessionOnce.mockImplementation((_event, callback) => {
+      setImmediate(() => callback())
+    })
+
+    await openDebugger(18911, true)
+
+    expect(mockOpen).toHaveBeenCalledExactlyOnceWith(18911, '127.0.0.1')
+    expect(mockWaitForDebugger).toHaveBeenCalledOnce()
+    expect(mockSession).toHaveBeenCalledOnce()
+    expect(mockSessionConnect).toHaveBeenCalledOnce()
+    expect(mockSessionPost).toHaveBeenNthCalledWith(1, 'Debugger.enable')
+    expect(mockSessionOnce).toHaveBeenCalledWith(
+      'Debugger.resumed',
+      expect.any(Function),
+    )
+    expect(mockSessionPost).toHaveBeenNthCalledWith(2, 'Debugger.pause')
+    expect(mockSessionPost).toHaveBeenNthCalledWith(3, 'Runtime.evaluate', {
+      expression: '1',
+    })
+    // Session is not disconnected — it stays alive for the process lifetime.
+    // Disconnecting would make Node.js think the debugger left and exit.
+    expect(mockSessionDisconnect).not.toHaveBeenCalled()
   })
 })

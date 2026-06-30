@@ -59,7 +59,45 @@ export async function openDebugger(port: number, waitForDebugger = false) {
   const inspector = await import('node:inspector')
   inspector.open(port, '127.0.0.1')
   if (waitForDebugger) {
+    // Wait for the debugger to connect and send
+    // Runtime.runIfWaitingForDebugger.  Editors send Debugger.enable before
+    // Runtime.runIfWaitingForDebugger, so the Debugger domain is already
+    // active when waitForDebugger() unblocks.
     inspector.waitForDebugger()
+
+    // Use inspector.Session to arm a pause and wait for the debugger's
+    // Debugger.resume.  This gives the user time to set breakpoints on
+    // API functions before loadApiFunctions() runs.
+    const session = new inspector.Session()
+    session.connect()
+
+    // Node.js inspector.Session.post() returns a Promise at runtime despite
+    // being typed as void.  We await it because the Debugger must be enabled
+    // before we fire Debugger.pause.
+    // eslint-disable-next-line @typescript-eslint/await-thenable
+    await session.post('Debugger.enable')
+
+    // Register the resumed listener BEFORE firing pause/evaluate so it
+    // doesn't miss the event.  session.post() dispatches the command
+    // synchronously — V8 may process it and emit Debugger.resumed on
+    // the Session before session.post() returns.
+    let resumedResolve: () => void
+    const resumedPromise = new Promise<void>((resolve) => {
+      resumedResolve = resolve
+    })
+    session.once('Debugger.resumed', () => {
+      resumedResolve()
+    })
+
+    // Fire Debugger.pause and Runtime.evaluate — these execute
+    // synchronously within V8, arming the pause flag and then executing
+    // JS (which checks the flag and pauses).  We do not await the
+    // returned promises because the commands will complete after the
+    // debugger resumes.
+    void session.post('Debugger.pause')
+    void session.post('Runtime.evaluate', { expression: '1' })
+
+    await resumedPromise
   }
 }
 

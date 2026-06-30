@@ -169,7 +169,7 @@ server startup, after Vite is initialized but before `loadApiFunctions()`
 completes. However, by the time a test or external tool connects via WebSocket,
 the SSR module scripts have already been loaded and potentially GC'd.
 
-### The solution: `Debugger.pause()`
+### The solution: `Debugger.pause()` (for connected sessions)
 
 `Debugger.pause()` tells V8 to pause at the **next JavaScript statement
 execution**, regardless of how the code was loaded. This works with Vite's SSR
@@ -185,14 +185,51 @@ This approach is robust against Vite's module caching, TypeScript transforms,
 the source-map line mismatch, and any future changes to how `ssrLoadModule`
 works.
 
+### The `--debug-brk` / Session-based pause approach
+
+For `--debug-brk`, the debugger must be connected and given time to set
+breakpoints **before** modules load. The mechanism uses `inspector.Session`
+internally:
+
+1. `inspector.open()` opens the WebSocket port
+2. `inspector.waitForDebugger()` blocks until the debugger sends
+   `Runtime.runIfWaitingForDebugger`
+3. Since editors (VS Code, Chrome DevTools) send `Debugger.enable` before
+   `Runtime.runIfWaitingForDebugger`, the `Debugger` domain is already active
+   when `waitForDebugger()` unblocks
+4. An internal `inspector.Session` is created and connected
+5. `Debugger.enable` and `Debugger.pause` are posted via the Session
+6. A trivial `Runtime.evaluate({ expression: '1' })` is fired to force V8 to
+   execute JavaScript — this causes V8 to check the debugger pause flag and
+   actually pause, broadcasting `Debugger.paused` to all sessions
+7. The internal Session waits for `Debugger.resumed`
+8. The external debugger (VS Code, Chrome DevTools) receives `Debugger.paused`
+   — the user sets breakpoints and clicks Resume
+9. `Debugger.resume` is sent → V8 resumes → `Debugger.resumed` is broadcast to
+   all sessions
+10. The internal Session's `Debugger.resumed` event fires → the internal
+    Session is disconnected → `loadApiFunctions()` runs → SSR modules load
+    with breakpoints attached
+
+The key insight is that `Debugger.pause` alone is insufficient. It arms a flag
+saying "pause at the next JavaScript statement," but after `waitForDebugger()`
+unblocks, V8 is idle in the event loop with no JavaScript to execute — the
+pause flag is never checked. The `Runtime.evaluate` trigger forces V8 to
+execute something, which causes the pause check to run immediately.
+
+This approach avoids showing framework code to the user — the pause is
+initiated via the internal CDP Session, not via a `debugger;` statement in
+source code.
+
 ### Comparison of CDP approaches
 
-| Approach                               | Works with Vite SSR? | Notes                                        |
-| -------------------------------------- | -------------------- | -------------------------------------------- |
-| `Debugger.setBreakpointByUrl`          | No                   | Source files don't appear as V8 scripts      |
-| `Debugger.setBreakpoint` (by scriptId) | No                   | Same reason — no scriptId for function files |
-| `Debugger.pause()`                     | Yes                  | Pauses at next statement execution           |
-| `Debugger.breakOnExceptions`           | Partially            | Only pauses on thrown exceptions             |
+| Approach                               | Works with Vite SSR? | Notes                                                                   |
+| -------------------------------------- | -------------------- | ----------------------------------------------------------------------- |
+| `Debugger.setBreakpointByUrl`          | No                   | Source files don't appear as V8 scripts                                 |
+| `Debugger.setBreakpoint` (by scriptId) | No                   | Same reason — no scriptId for function files                            |
+| `Debugger.pause()`                     | Yes                  | Pauses at next statement execution                                      |
+| `Debugger.breakOnExceptions`           | Partially            | Only pauses on thrown exceptions                                        |
+| Session + `Runtime.evaluate` trigger   | Yes                  | Forces pause when idle event loop prevents `Debugger.pause` from firing |
 
 ### Practical debugging approaches that work
 
@@ -296,6 +333,11 @@ existing test block, though tests run serially (`singleThread: true`).
 | `package.json` (root)                                   | Add `ws` as devDependency                                          |
 | `yarn.lock` (root)                                      | Reference `ws` from the root workspace                             |
 | `tasks/ud-tests/udDev.test.mts`                         | Add `createCdpSession` helper and `--debug-port` integration test  |
+| `packages/cli/src/commands/dev.ts`                      | Add `--debug-brk` yargs option                                     |
+| `packages/cli/src/commands/dev/devHandler.ts`           | Thread `debugBrk` through to cedar-unified-dev command string      |
+| `packages/vite/src/cedar-unified-dev.ts`                | Parse `'debug-brk'`, pass to `openDebugger(waitForDebugger=true)`  |
+| `packages/vite/src/__tests__/cedar-unified-dev.test.ts` | Tests for `debugBrk` flag parsing and `waitForDebugger` behavior   |
+| `tasks/ud-tests/udDev.test.mts`                         | `--debug-brk` integration test                                     |
 
 ## Related
 
