@@ -138,7 +138,14 @@ export async function setUpTestProject({
         (pkg.resolutions as Record<string, string>) || {},
       )
         .filter(([, value]) => typeof value === 'string' && value.endsWith('.tgz'))
-        .map(([name, value]) => `  '${name}': 'file:${value}'`)
+        .map(([name, value]) => {
+          // In YAML single-quoted scalars, a literal single quote is escaped by
+          // doubling it. Package names like @cedarjs/foo never contain quotes,
+          // but the tarball path could on unusual runner configs.
+          const safeName = name.replace(/'/g, "''")
+          const safePath = value.replace(/'/g, "''")
+          return `  '${safeName}': 'file:${safePath}'`
+        })
         .join('\n')
 
       const yaml = [
