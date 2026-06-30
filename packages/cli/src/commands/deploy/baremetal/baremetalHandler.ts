@@ -824,7 +824,7 @@ export const handler = async (yargs: BaremetalYargs) => {
           : String(e)
     const exitCode =
       e instanceof Error && 'exitCode' in e
-        ? ((e as NodeJS.ErrnoException).errno ?? 1)
+        ? ((e as Error & { exitCode?: number | null }).exitCode ?? 1)
         : 1
     console.error(
       boxen(errMessage, {
