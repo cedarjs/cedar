@@ -131,6 +131,16 @@ export async function setUpTestProject({
         },
       }
 
+      // Translate tarsync's yarn-style resolutions into pnpm overrides so
+      // pnpm install uses the local framework tarballs instead of fetching
+      // the published canary from the registry.
+      const tarsyncOverrideLines = Object.entries(
+        (pkg.resolutions as Record<string, string>) || {},
+      )
+        .filter(([, value]) => typeof value === 'string' && value.endsWith('.tgz'))
+        .map(([name, value]) => `  '${name}': 'file:${value}'`)
+        .join('\n')
+
       const yaml = [
         'packages:',
         '  - api',
@@ -154,6 +164,7 @@ export async function setUpTestProject({
         '',
         'overrides:',
         "  'react-is': '19.2.3'",
+        tarsyncOverrideLines,
         '',
       ].join('\n')
 
