@@ -59,7 +59,7 @@ interface ScaffoldField {
   isRequired: boolean
   isList: boolean
   default?: unknown
-  enumValues?: Array<{ name: string }>
+  enumValues?: { name: string }[]
   relationName?: string
   component?: string
 }
@@ -417,7 +417,7 @@ const modelRelatedVariables = (model: ScaffoldModel) => {
       if (typeof validationDef === 'function') {
         validation = validationDef(column.isRequired)
       } else if (validationDef !== undefined) {
-        validation = column.isRequired ? (validationDef as string) : null
+        validation = column.isRequired ? validationDef : null
       } else {
         validation = column.isRequired
           ? (componentMetadata.default.validation as string)

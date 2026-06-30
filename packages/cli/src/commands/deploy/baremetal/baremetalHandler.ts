@@ -13,6 +13,7 @@ import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 import { getPaths } from '../../../lib/index.js'
+
 import type { SshExecutor } from './SshExecutor.js'
 
 const CONFIG_FILENAME = 'deploy.toml'
