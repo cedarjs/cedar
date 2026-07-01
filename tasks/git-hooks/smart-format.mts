@@ -30,10 +30,12 @@ function runYarn(yarnCmd: string, yarnArgs: string[], prettierArgs: string[]) {
 
   if (result.status !== 0) {
     const stderr = result.stderr?.toString().trim() || '<no stderr>'
+    const spawnError = result.error?.message || ''
     console.error(
       `[smart-format] yarn exited with status ${result.status ?? 'null'}\n` +
         `  command: ${yarnCmd} ${[...yarnArgs, ...prettierArgs].join(' ')}\n` +
-        `  stderr: ${stderr}`,
+        `  stderr: ${stderr}\n` +
+        `  error: ${spawnError}`,
     )
     process.exit(result.status ?? 1)
   }
