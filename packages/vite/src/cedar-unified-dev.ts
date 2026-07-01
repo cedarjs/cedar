@@ -93,9 +93,12 @@ export async function openDebugger(port: number, waitForDebugger = false) {
     // synchronously within V8, arming the pause flag and then executing
     // JS (which checks the flag and pauses).  We do not await the
     // returned promises because the commands will complete after the
-    // debugger resumes.
-    void session.post('Debugger.pause')
-    void session.post('Runtime.evaluate', { expression: '1' })
+    // debugger resumes.  Catch rejections so startup doesn't hang if
+    // the debugger disconnects or changes state unexpectedly.
+    session.post('Debugger.pause').catch(() => {
+      resumedResolve?.()
+    })
+    session.post('Runtime.evaluate', { expression: '1' }).catch(() => {})
 
     await resumedPromise
   }

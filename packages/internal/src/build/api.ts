@@ -71,6 +71,7 @@ function createCedarViteApiPlugin(): Plugin {
 
   return {
     name: 'cedar-vite-api-babel-transform',
+    enforce: 'pre',
     async transform(code, id) {
       if (!/\.(js|ts|tsx|jsx)$/.test(id)) {
         return null
