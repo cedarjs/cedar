@@ -147,24 +147,32 @@ export async function openDebugger(port: number, waitForDebugger = false) {
     // armed — without this resume, the next JavaScript execution (e.g. inside
     // loadApiFunctions) would pause V8 again with no one to resume it.
     //
-    // If the session was detached (e.g. by an external debugger disconnect),
-    // posting on it fails silently.  Create a new session to send the resume.
-    await new Promise<void>((resolve) => {
-      session.post('Debugger.resume', (err) => {
-        if (!err) {
-          return resolve()
-        }
+    // Retry with throwaway sessions if the original session was detached.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const s = attempt === 0 ? session : new inspector.Session()
+      if (attempt > 0) {
+        s.connect()
+      }
 
-        // Current session is detached — create a throwaway session to
-        // clear the pause flag on the isolate.
-        const fallbackSession = new inspector.Session()
-        fallbackSession.connect()
-        fallbackSession.post('Debugger.resume', () => {
-          fallbackSession.disconnect()
-          resolve()
-        })
+      const resumeOk = await new Promise<boolean>((resolve) => {
+        s.post('Debugger.resume', (err) => resolve(!err))
       })
-    })
+
+      if (attempt > 0) {
+        s.disconnect()
+      }
+      if (resumeOk) {
+        break
+      }
+
+      if (attempt === 2) {
+        console.warn(
+          '[cedar-unified-dev] Failed to clear debugger pause after ' +
+            'external debugger disconnect. API functions may pause on ' +
+            'next execution.',
+        )
+      }
+    }
   }
 }
 
