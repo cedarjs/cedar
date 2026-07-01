@@ -4,7 +4,7 @@ import { getConfig } from '@cedarjs/project-config'
 
 import { getApiSideBabelPlugins, transformWithBabel } from '../api.js'
 
-const CEDAR_CWD = path.join(__dirname, '__fixtures__/redwood-app')
+const CEDAR_CWD = path.join(__dirname, '__fixtures__/cedar-app')
 process.env.CEDAR_CWD = CEDAR_CWD
 
 let code: string
