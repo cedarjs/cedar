@@ -13,8 +13,8 @@ import {
 
 vi.mock('node:fs', async () => ({ ...memfs, default: { ...memfs } }))
 
-const redwoodProjectPath = '/redwood-app'
-process.env.CEDAR_CWD = redwoodProjectPath
+const cedarProjectPath = '/cedar-app'
+process.env.CEDAR_CWD = cedarProjectPath
 
 afterEach(() => {
   vol.reset()
@@ -90,27 +90,27 @@ describe('api', () => {
     it("gets babel.config.js if it's there", () => {
       vol.fromNestedJSON(
         {
-          'redwood.toml': '',
+          'cedar.toml': '',
           api: {
             'babel.config.js': '',
           },
         },
-        redwoodProjectPath,
+        cedarProjectPath,
       )
 
       const apiSideBabelConfigPath = getApiSideBabelConfigPath()
       expect(ensurePosixPath(apiSideBabelConfigPath || '')).toMatch(
-        '/redwood-app/api/babel.config.js',
+        '/cedar-app/api/babel.config.js',
       )
     })
 
     it("returns undefined if it's not there", () => {
       vol.fromNestedJSON(
         {
-          'redwood.toml': '',
+          'cedar.toml': '',
           api: {},
         },
-        redwoodProjectPath,
+        cedarProjectPath,
       )
 
       const apiSideBabelConfigPath = getApiSideBabelConfigPath()
@@ -122,10 +122,10 @@ describe('api', () => {
     it('returns babel plugins', () => {
       vol.fromNestedJSON(
         {
-          'redwood.toml': '',
+          'cedar.toml': '',
           api: {},
         },
-        redwoodProjectPath,
+        cedarProjectPath,
       )
 
       const apiSideBabelPlugins = getApiSideBabelPlugins()
@@ -212,10 +212,10 @@ describe('api', () => {
     it('can include openTelemetry', () => {
       vol.fromNestedJSON(
         {
-          'redwood.toml': '',
+          'cedar.toml': '',
           api: {},
         },
-        redwoodProjectPath,
+        cedarProjectPath,
       )
 
       const apiSideBabelPlugins = getApiSideBabelPlugins({
