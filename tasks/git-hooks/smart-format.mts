@@ -9,8 +9,6 @@
  */
 
 import { type SpawnSyncOptions, spawnSync } from 'node:child_process'
-import { statSync } from 'node:fs'
-import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { dim } from 'ansis'
@@ -23,51 +21,6 @@ function isNewFile(file: string): boolean {
   })
 
   return result.status !== 0
-}
-
-function resolveYarn() {
-  const envPath = process.env.npm_execpath
-
-  if (!envPath) {
-    return { command: 'yarn', args: [] as string[] }
-  }
-
-  // If npm_execpath points to a temp/PnP directory that no longer exists
-  // (common with Yarn's xfs temp dirs), fall back to resolving from PATH
-  let envPathExists = false
-  try {
-    envPathExists = statSync(envPath).isFile()
-  } catch {
-    // file doesn't exist
-  }
-
-  if (!envPathExists) {
-    return { command: 'yarn', args: [] as string[] }
-  }
-
-  const ext = path.extname(envPath).toLowerCase()
-
-  if (ext === '.cmd') {
-    return { command: envPath, args: [] as string[] }
-  }
-
-  // .js / .mjs / .cjs – on Windows we need the .cmd sibling or node
-  if (['.js', '.mjs', '.cjs'].includes(ext)) {
-    let exists = false
-    try {
-      exists = statSync(`${envPath}.cmd`).isFile()
-    } catch {
-      // file doesn't exist
-    }
-
-    if (process.platform === 'win32' && exists) {
-      return { command: `${envPath}.cmd`, args: [] as string[] }
-    }
-
-    return { command: process.execPath, args: [envPath] }
-  }
-
-  return { command: envPath, args: [] as string[] }
 }
 
 function runYarn(yarnCmd: string, yarnArgs: string[], prettierArgs: string[]) {
@@ -116,26 +69,25 @@ if (isMainModule) {
       'file(s)...'
     console.log(dim(logMsg))
 
-    const { command: yarnCmd, args: yarnArgs } = resolveYarn()
-
-    runYarn(yarnCmd, yarnArgs, [
-      'prettier',
-      '--write',
-      '--log-level=silent',
-      '--prose-wrap',
-      'always',
-      ...newMdFiles,
-    ])
+    runYarn(
+      'yarn',
+      [],
+      [
+        'prettier',
+        '--write',
+        '--log-level=silent',
+        '--prose-wrap',
+        'always',
+        ...newMdFiles,
+      ],
+    )
   }
 
   if (existingFiles.length > 0) {
-    const { command: yarnCmd, args: yarnArgs } = resolveYarn()
-
-    runYarn(yarnCmd, yarnArgs, [
-      'prettier',
-      '--write',
-      '--log-level=silent',
-      ...existingFiles,
-    ])
+    runYarn(
+      'yarn',
+      [],
+      ['prettier', '--write', '--log-level=silent', ...existingFiles],
+    )
   }
 }

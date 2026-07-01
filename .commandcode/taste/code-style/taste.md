@@ -1,7 +1,9 @@
 # Code-Style
 
+- When uncertain about a file's configuration or contents, read the file directly instead of speculating with qualifiers like "likely" or "probably." Verifying by reading is faster and more reliable than guessing and can be done instantly with the read_file tool. Confidence: 0.90
+
 - Always document non-obvious code with comments — including why type casts are needed, and why certain workarounds exist. Confidence: 0.75
-- When analyzing/debugging: distinguish facts from speculation clearly. If a claim isn't backed by direct evidence, label it as a hypothesis ("This suggests...", "One possible explanation...") rather than stating it as a conclusion. Verify claims before presenting them as facts. Confidence: 0.90
+- When analyzing/debugging: distinguish facts from speculation clearly. If a claim isn't backed by direct evidence, label it as a hypothesis ("This suggests...", "One possible explanation...") rather than stating it as a conclusion. Verify claims before presenting them as facts. Confidence: 0.95
 - Use regular function declarations (`function name() {}`) instead of arrow function expressions (`const name = () => {}`). Confidence: 0.85
 - Avoid using try/catch as a control flow mechanism for normal code paths. Use explicit checks (e.g., checking return values, existence checks) instead. Confidence: 0.70
 - Add blank lines after the closing curly brace of if statements, and generally prefer more vertical whitespace ("air") in code for readability. Confidence: 0.95
