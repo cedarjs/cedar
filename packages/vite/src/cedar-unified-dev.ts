@@ -96,11 +96,17 @@ export async function openDebugger(port: number, waitForDebugger = false) {
         resumedResolve?.()
       })
 
-    // There is no timeout on this wait so that we match Node.js's
-    // --inspect-brk behavior, where the user has unlimited time to attach a
-    // debugger and resume.
     session.once('Debugger.resumed', () => {
       resumedResolve?.()
+    })
+
+    // Bounded fallback: if the external debugger disconnects without sending
+    // Debugger.resume (e.g. DevTools is closed), the timeout unblocks so the
+    // dev server doesn't hang with API functions never loaded.
+    let timeout: ReturnType<typeof setTimeout>
+    const timeoutPromise = new Promise<void>((resolve) => {
+      const fiveMinutes = 5 * 60 * 1000
+      timeout = setTimeout(resolve, fiveMinutes)
     })
 
     // Fire Debugger.pause and Runtime.evaluate. These execute synchronously
@@ -133,7 +139,8 @@ export async function openDebugger(port: number, waitForDebugger = false) {
       resumedResolve?.()
     })
 
-    await resumedPromise
+    await Promise.race([resumedPromise, timeoutPromise])
+    clearTimeout(timeout)
   }
 }
 
