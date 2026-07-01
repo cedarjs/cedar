@@ -8,7 +8,8 @@
  * Usage: node tasks/git-hooks/smart-format.mts <file> [<file> ...]
  */
 
-import { type SpawnSyncOptions, spawnSync } from 'node:child_process'
+import { spawnSync } from 'node:child_process'
+import type { SpawnSyncOptions } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
 import { dim } from 'ansis'
@@ -23,8 +24,14 @@ function isNewFile(file: string): boolean {
   return result.status !== 0
 }
 
-function runYarn(yarnCmd: string, yarnArgs: string[], prettierArgs: string[]) {
-  const result = spawnSync(yarnCmd, [...yarnArgs, ...prettierArgs], {
+// Just using `spawnSync` with plain 'yarn' fails on Windows:
+//   [smart-format] yarn exited with status null
+//   command: yarn prettier --write --log-level=silent C:\Users\RUNNER~1\AppData\Local\Temp\smart-format-test-Dk0Npf\hello world.ts
+//   stderr: <no stderr>
+//   error: spawnSync yarn ENOENT
+function runYarn(args: string[]) {
+  const yarnCmd =  process.platform === 'win32' ? 'yarn.cmd' : 'yarn'
+  const result = spawnSync(yarnCmd, args, {
     stdio: ['inherit', 'inherit', 'pipe'],
   } satisfies SpawnSyncOptions)
 
@@ -33,7 +40,7 @@ function runYarn(yarnCmd: string, yarnArgs: string[], prettierArgs: string[]) {
     const spawnError = result.error?.message || ''
     console.error(
       `[smart-format] yarn exited with status ${result.status ?? 'null'}\n` +
-        `  command: ${yarnCmd} ${[...yarnArgs, ...prettierArgs].join(' ')}\n` +
+        `  command: ${yarnCmd} ${args.join(' ')}\n` +
         `  stderr: ${stderr}\n` +
         `  error: ${spawnError}`,
     )
@@ -72,8 +79,6 @@ if (isMainModule) {
     console.log(dim(logMsg))
 
     runYarn(
-      'yarn',
-      [],
       [
         'prettier',
         '--write',
@@ -87,8 +92,6 @@ if (isMainModule) {
 
   if (existingFiles.length > 0) {
     runYarn(
-      'yarn',
-      [],
       ['prettier', '--write', '--log-level=silent', ...existingFiles],
     )
   }
