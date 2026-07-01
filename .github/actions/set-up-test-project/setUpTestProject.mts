@@ -27,6 +27,19 @@ function lockfileName(pm: PackageManager): string {
   return 'yarn.lock'
 }
 
+function isString(value: unknown): value is string {
+  return typeof value === 'string'
+}
+
+/**
+ * In YAML single-quoted scalars, a literal single quote is escaped by doubling
+ * it. Package names like @cedarjs/foo never contain quotes, but the tarball
+ * path could on unusual runner configs.
+ */
+function quotes(value: string) {
+  return value.replace(/'/g, "''")
+}
+
 interface Args {
   setOutput: (key: string, value: string) => void
   getInput: (key: string) => string
@@ -137,15 +150,8 @@ export async function setUpTestProject({
       const tarsyncOverrideLines = Object.entries(
         (pkg.resolutions as Record<string, string>) || {},
       )
-        .filter(([, value]) => typeof value === 'string' && value.endsWith('.tgz'))
-        .map(([name, value]) => {
-          // In YAML single-quoted scalars, a literal single quote is escaped by
-          // doubling it. Package names like @cedarjs/foo never contain quotes,
-          // but the tarball path could on unusual runner configs.
-          const safeName = name.replace(/'/g, "''")
-          const safePath = value.replace(/'/g, "''")
-          return `  '${safeName}': 'file:${safePath}'`
-        })
+        .filter(([, value]) => isString(value) && value.endsWith('.tgz'))
+        .map(([name, value]) => `  '${quotes(name)}': 'file:${quotes(value)}'`)
         .join('\n')
 
       const yaml = [
