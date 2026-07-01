@@ -1,20 +1,10 @@
-import { spawn, spawnSync } from 'node:child_process'
-import path from 'node:path'
+import { spawnSync } from 'node:child_process'
+import path, { dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-function execAsync(
-  command: string,
-  args: string[],
-  extraEnv: Record<string, string> = {},
-) {
-  return new Promise<number>((resolve, reject) => {
-    const child = spawn(command, args, {
-      stdio: 'inherit',
-      env: { ...process.env, ...extraEnv },
-    })
-    child.on('exit', (code) => resolve(code ?? 1))
-    child.on('error', reject)
-  })
-}
+import { execAsync, getYarnCommand } from './shared.mts'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 function isExcluded(file: string): boolean {
   // __fixtures__ at any depth (covers __fixtures__/* and **/__fixtures__/**)
@@ -94,13 +84,17 @@ function getFilesToFormat(files: string[]) {
 }
 
 function runEslint(lintFiles: string[]) {
-  return execAsync('yarn', ['eslint', ...lintFiles], {
+  const { command, args } = getYarnCommand()
+  return execAsync(command, [...args, 'eslint', ...lintFiles], {
     CEDAR_CWD: 'packages/create-cedar-app/templates/ts',
   })
 }
 
 function runSmartFormat(formatFiles: string[]) {
-  return execAsync('node', ['tasks/git-hooks/smart-format.mts', ...formatFiles])
+  return execAsync('node', [
+    path.join(__dirname, '..', 'smart-format.mts'),
+    ...formatFiles,
+  ])
 }
 
 export async function runPreCommitTasks(): Promise<boolean> {
@@ -135,12 +129,14 @@ export async function runPrePushTasks(): Promise<boolean> {
     return true
   }
 
+  const { command: yarnCmd, args: yarnArgs } = getYarnCommand()
+
   const results = await Promise.allSettled([
-    execAsync('yarn', ['build'], { NX_TUI: 'false' }),
-    execAsync('yarn', ['lint']),
-    execAsync('yarn', ['prettier', '--check', '.']),
-    execAsync('yarn', ['check']),
-    execAsync('node', ['tasks/check-no-only.mts']),
+    execAsync(yarnCmd, [...yarnArgs, 'build'], { NX_TUI: 'false' }),
+    execAsync(yarnCmd, [...yarnArgs, 'lint']),
+    execAsync(yarnCmd, [...yarnArgs, 'prettier', '--check', '.']),
+    execAsync(yarnCmd, [...yarnArgs, 'check']),
+    execAsync('node', [path.join(__dirname, '..', 'check-no-only.mts')]),
   ])
 
   const failed = results.filter((r) => r.status === 'rejected' || r.value !== 0)
