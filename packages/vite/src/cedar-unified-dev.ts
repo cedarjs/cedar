@@ -103,7 +103,7 @@ export async function openDebugger(port: number, waitForDebugger = false) {
     // Bounded fallback: if the external debugger disconnects without sending
     // Debugger.resume (e.g. DevTools is closed), the timeout unblocks so the
     // dev server doesn't hang with API functions never loaded.
-    let timeout: ReturnType<typeof setTimeout>
+    let timeout: ReturnType<typeof setTimeout> | undefined
     const timeoutPromise = new Promise<void>((resolve) => {
       const fiveMinutes = 5 * 60 * 1000
       timeout = setTimeout(resolve, fiveMinutes)
