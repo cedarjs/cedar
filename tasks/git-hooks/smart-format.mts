@@ -32,6 +32,19 @@ function resolveYarn() {
     return { command: 'yarn', args: [] as string[] }
   }
 
+  // If npm_execpath points to a temp/PnP directory that no longer exists
+  // (common with Yarn's xfs temp dirs), fall back to resolving from PATH
+  let envPathExists = false
+  try {
+    envPathExists = statSync(envPath).isFile()
+  } catch {
+    // file doesn't exist
+  }
+
+  if (!envPathExists) {
+    return { command: 'yarn', args: [] as string[] }
+  }
+
   const ext = path.extname(envPath).toLowerCase()
 
   if (ext === '.cmd') {
