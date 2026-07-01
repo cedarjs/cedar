@@ -53,7 +53,7 @@ function assertMapsToSource(
 }
 
 describe('Vite SSR source map chain', () => {
-  it('maps __rw_handler to the correct source line after SSR transform', async () => {
+  it('maps SSR output to correct source lines after SSR transform', async () => {
     const babelResult = transformSync(simpleHandlerInput, {
       filename: 'graphql.ts',
       plugins: [[pluginRedwoodContextWrapping, {}]],
@@ -78,8 +78,13 @@ describe('Vite SSR source map chain', () => {
     const tracer = new TraceMap(ssrResult!.map!)
     const codeLines = ssrResult.code.split('\n')
 
-    // __rw_handler = createGraphQLHandler should map to original line 4
-    assertMapsToSource(codeLines, tracer, 'createGraphQLHandler', 4)
+    // createGraphQLHandler appears in Vite's import metadata ("importedNames")
+    // which was generated from the original import statement on line 2
+    assertMapsToSource(codeLines, tracer, 'createGraphQLHandler', 2)
+
+    // createGraphQLHandler)({ uniquely matches the handler call on SSR line 6.
+    // It should trace back to the handler call on original line 4.
+    assertMapsToSource(codeLines, tracer, 'createGraphQLHandler)({', 4)
   })
 
   it('maps async handler body to correct source lines after SSR', async () => {

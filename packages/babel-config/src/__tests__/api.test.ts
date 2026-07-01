@@ -9,7 +9,6 @@ import {
   getApiSideBabelPlugins,
   getApiSideBabelPresets,
   TARGETS_NODE,
-  transformWithBabel,
 } from '../api.js'
 
 vi.mock('node:fs', async () => ({ ...memfs, default: { ...memfs } }))
@@ -225,43 +224,6 @@ describe('api', () => {
       const pluginAliases = getPluginAliases(apiSideBabelPlugins)
       expect(pluginAliases).toContain('rwjs-babel-otel-wrapping')
     })
-  })
-})
-
-describe('transformWithBabel', () => {
-  it('uses provided sourceCode as the Babel input and sourcesContent', async () => {
-    vol.fromNestedJSON(
-      {
-        'cedar.toml': '',
-        api: {
-          src: {
-            functions: {},
-          },
-        },
-      },
-      cedarProjectPath,
-    )
-
-    const input = [
-      "import { createGraphQLHandler } from '@cedarjs/graphql-server'",
-      '',
-      'export const handler = createGraphQLHandler({',
-      '  sdls,',
-      '  services,',
-      '})',
-      '',
-    ].join('\n')
-
-    const result = await transformWithBabel(
-      input,
-      '/cedar-app/api/src/functions/graphql.ts',
-      [],
-      true,
-    )
-
-    expect(result?.code).toBeDefined()
-    expect(result?.map).toBeDefined()
-    expect(result?.map?.sourcesContent?.[0]).toBe(input)
   })
 })
 

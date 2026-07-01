@@ -8,7 +8,10 @@
   },
   "license": "MIT",
   "type": "commonjs",
-  "exports": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./dist/plugins/*": "./dist/plugins/*"
+  },
   "types": "./dist/index.d.ts",
   "files": [
     "dist"

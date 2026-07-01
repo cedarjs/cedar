@@ -11,12 +11,18 @@ const mockSessionPost = vi.fn((method, _params) => {
 })
 const mockSessionOnce = vi.fn()
 const mockSessionDisconnect = vi.fn()
-const mockSession = vi.fn(() => ({
-  connect: mockSessionConnect,
-  post: mockSessionPost,
-  once: mockSessionOnce,
-  disconnect: mockSessionDisconnect,
-}))
+const mockSession = vi.fn(() => {
+  const sessionObj = {
+    connect: mockSessionConnect,
+    post: mockSessionPost,
+    once: (...args: any[]) => {
+      mockSessionOnce(...args)
+      return sessionObj
+    },
+    disconnect: mockSessionDisconnect,
+  }
+  return sessionObj
+})
 
 vi.mock('node:inspector', () => ({
   default: {
