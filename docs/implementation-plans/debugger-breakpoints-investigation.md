@@ -240,7 +240,7 @@ real-world scenarios using `@jridgewell/trace-mapping`.
 
 ---
 
-## Root Cause: URL Matching in V8
+## URL Format Investigation
 
 ### Script URL Format
 
@@ -600,19 +600,6 @@ are not required.
 Change `inlineSourceMap` to emit `file:///` URLs — validated to work in raw
 CDP tests, but unnecessary because the debug adapter uses `urlRegex` which
 matches both formats.
-graph or the evaluation pipeline. This approach:
-
-- Only affects Cedar's dev server (no wider Vite impact)
-- Survives yarn upgrades (hook loads the installed Vite version)
-- Can use `pathToFileURL()` for correct cross-platform file URL generation
-- Still needs to handle the `/var` vs `/private/var` realpath issue
-
-**Risk:** Monkey-patching Vite internals is fragile across Vite versions. The
-hook would need to be updated when Vite changes its internal module structure.
-
-**Alternative:** Use Node.js's `--experimental-loader` API to create an ESM
-loader that transforms the evaluated code and rewrites `sourceURL` before V8
-parses it.
 
 ### D. Rely on Editor `sourceMapPathOverrides`
 

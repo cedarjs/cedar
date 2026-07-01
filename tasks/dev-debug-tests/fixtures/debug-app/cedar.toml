@@ -1,9 +1,0 @@
-[web]
-  port = 8910
-  apiUrl = "/.api/functions"
-[api]
-  port = 8911
-[browser]
-  open = false
-[notifications]
-  versionUpdates = ["latest"]
