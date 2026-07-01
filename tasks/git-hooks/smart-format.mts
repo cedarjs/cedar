@@ -8,7 +8,7 @@
  * Usage: node tasks/git-hooks/smart-format.mts <file> [<file> ...]
  */
 
-import { execSync, spawnSync } from 'node:child_process'
+import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
 import { dim } from 'ansis'
@@ -53,18 +53,33 @@ if (isMainModule) {
       'file(s)...'
     console.log(dim(logMsg))
 
-    execSync(
+    const newResult = spawnSync(
       'yarn',
-      ['prettier', '--write', '--log-level=silent', '--prose-wrap', 'always', ...newMdFiles],
+      [
+        'prettier',
+        '--write',
+        '--log-level=silent',
+        '--prose-wrap',
+        'always',
+        ...newMdFiles,
+      ],
       { stdio: 'inherit' },
     )
+
+    if (newResult.status !== 0) {
+      process.exit(newResult.status ?? 1)
+    }
   }
 
   if (existingFiles.length > 0) {
-    execSync(
+    const existingResult = spawnSync(
       'yarn',
       ['prettier', '--write', '--log-level=silent', ...existingFiles],
       { stdio: 'inherit' },
     )
+
+    if (existingResult.status !== 0) {
+      process.exit(existingResult.status ?? 1)
+    }
   }
 }
