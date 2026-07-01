@@ -30,7 +30,7 @@ function isNewFile(file: string): boolean {
 //   stderr: <no stderr>
 //   error: spawnSync yarn ENOENT
 function runYarn(args: string[]) {
-  const yarnCmd =  process.platform === 'win32' ? 'yarn.cmd' : 'yarn'
+  const yarnCmd = process.platform === 'win32' ? 'yarn.cmd' : 'yarn'
   const result = spawnSync(yarnCmd, args, {
     stdio: ['inherit', 'inherit', 'pipe'],
   } satisfies SpawnSyncOptions)
@@ -78,21 +78,17 @@ if (isMainModule) {
       'file(s)...'
     console.log(dim(logMsg))
 
-    runYarn(
-      [
-        'prettier',
-        '--write',
-        '--log-level=silent',
-        '--prose-wrap',
-        'always',
-        ...newMdFiles,
-      ],
-    )
+    runYarn([
+      'prettier',
+      '--write',
+      '--log-level=silent',
+      '--prose-wrap',
+      'always',
+      ...newMdFiles,
+    ])
   }
 
   if (existingFiles.length > 0) {
-    runYarn(
-      ['prettier', '--write', '--log-level=silent', ...existingFiles],
-    )
+    runYarn(['prettier', '--write', '--log-level=silent', ...existingFiles])
   }
 }
