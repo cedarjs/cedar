@@ -9,7 +9,6 @@
  */
 
 import { spawnSync } from 'node:child_process'
-import type { SpawnSyncOptions } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
 import { dim } from 'ansis'
@@ -24,23 +23,36 @@ function isNewFile(file: string): boolean {
   return result.status !== 0
 }
 
+function quote(files: string[]) {
+  return files.map((f) => `"${f}"`).join(' ')
+}
+
 // Just using `spawnSync` with plain 'yarn' fails on Windows:
 //   [smart-format] yarn exited with status null
-//   command: yarn prettier --write --log-level=silent C:\Users\RUNNER~1\AppData\Local\Temp\smart-format-test-Dk0Npf\hello world.ts
-//   stderr: <no stderr>
-//   error: spawnSync yarn ENOENT
-function runYarn(args: string[]) {
-  const yarnCmd = process.platform === 'win32' ? 'yarn.cmd' : 'yarn'
-  const result = spawnSync(yarnCmd, args, {
+//     command: yarn prettier --write --log-level=silent C:\Users\RUNNER~1\AppData\Local\Temp\smart-format-test-Dk0Npf\hello world.ts
+//     stderr: <no stderr>
+//     error: spawnSync yarn ENOENT
+//
+// With 'yarn.cmd' on Windows, I instead get this:
+//  [smart-format] yarn exited with status null
+//    command: yarn.cmd prettier --write --log-level=silent C:\Users\RUNNER~1\AppData\Local\Temp\smart-format-test-yNVejx\hello world.ts
+//    stderr: <no stderr>
+//    error: spawnSync yarn.cmd EINVAL
+// DEP0190 fires when passing an args array to spawnSync with shell: true.
+// Using a command string avoids it entirely.
+function runYarn(cmd: string) {
+  const result = spawnSync(cmd, {
     stdio: ['inherit', 'inherit', 'pipe'],
-  } satisfies SpawnSyncOptions)
+    // `shell: true` is required on all platforms when using a command string
+    shell: true,
+  })
 
   if (result.status !== 0) {
     const stderr = result.stderr?.toString().trim() || '<no stderr>'
     const spawnError = result.error?.message || ''
     console.error(
       `[smart-format] yarn exited with status ${result.status ?? 'null'}\n` +
-        `  command: ${yarnCmd} ${args.join(' ')}\n` +
+        `  command: ${cmd}\n` +
         `  stderr: ${stderr}\n` +
         `  error: ${spawnError}`,
     )
@@ -78,17 +90,12 @@ if (isMainModule) {
       'file(s)...'
     console.log(dim(logMsg))
 
-    runYarn([
-      'prettier',
-      '--write',
-      '--log-level=silent',
-      '--prose-wrap',
-      'always',
-      ...newMdFiles,
-    ])
+    runYarn(
+      `yarn prettier --write --log-level=silent --prose-wrap always ${quote(newMdFiles)}`,
+    )
   }
 
   if (existingFiles.length > 0) {
-    runYarn(['prettier', '--write', '--log-level=silent', ...existingFiles])
+    runYarn(`yarn prettier --write --log-level=silent ${quote(existingFiles)}`)
   }
 }
