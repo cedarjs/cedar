@@ -194,7 +194,8 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
     plugins: [
       {
         name: 'cedar-api-babel-transform',
-        async transform(_code, id) {
+        enforce: 'pre',
+        async transform(code, id) {
           if (!/\.(ts|tsx|js|jsx)$/.test(id)) {
             return null
           }
@@ -208,7 +209,10 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
           }
 
           try {
-            const result = await transformWithBabel(id, babelPlugins)
+            // Use the code Vite already loaded instead of reading from disk, so
+            // Vite's originalCode matches the Babel input. This ensures the SSR
+            // transform's sourcesContent is consistent with the map.
+            const result = await transformWithBabel(code, id, babelPlugins)
 
             if (!result?.code) {
               return null

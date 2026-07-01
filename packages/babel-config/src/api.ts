@@ -233,18 +233,18 @@ export const registerApiSideBabelHook = ({
 }
 
 export const transformWithBabel = async (
-  srcPath: string,
+  sourceCode: string,
+  filename: string,
   plugins: TransformOptions['plugins'],
 ) => {
-  const code = await fs.promises.readFile(srcPath, 'utf-8')
   const defaultOptions = getApiSideDefaultBabelConfig({
     projectIsEsm: projectSideIsEsm('api'),
   })
 
-  const result = transformAsync(code, {
+  const result = transformAsync(sourceCode, {
     ...defaultOptions,
     cwd: getPaths().api.base,
-    filename: srcPath,
+    filename,
     // we need inline sourcemaps at this level
     // because this file will eventually be fed to esbuild
     // when esbuild finds an inline sourcemap, it tries to "combine" it

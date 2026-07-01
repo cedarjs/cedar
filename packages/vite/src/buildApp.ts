@@ -344,7 +344,11 @@ export async function buildCedarApp({
             return null
           }
 
-          const transformedCode = await transformWithBabel(id, babelPlugins)
+          const transformedCode = await transformWithBabel(
+            await fs.promises.readFile(id, 'utf-8'),
+            id,
+            babelPlugins,
+          )
 
           if (transformedCode?.code) {
             return {
