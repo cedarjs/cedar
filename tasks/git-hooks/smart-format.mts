@@ -8,7 +8,7 @@
  * Usage: node tasks/git-hooks/smart-format.mts <file> [<file> ...]
  */
 
-import { spawnSync } from 'node:child_process'
+import { type SpawnSyncOptions, spawnSync } from 'node:child_process'
 import { statSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -57,6 +57,22 @@ function resolveYarn() {
   return { command: envPath, args: [] as string[] }
 }
 
+function runYarn(yarnCmd: string, yarnArgs: string[], prettierArgs: string[]) {
+  const result = spawnSync(yarnCmd, [...yarnArgs, ...prettierArgs], {
+    stdio: ['inherit', 'inherit', 'pipe'],
+  } satisfies SpawnSyncOptions)
+
+  if (result.status !== 0) {
+    const stderr = result.stderr?.toString().trim() || '<no stderr>'
+    console.error(
+      `[smart-format] yarn exited with status ${result.status ?? 'null'}\n` +
+        `  command: ${yarnCmd} ${[...yarnArgs, ...prettierArgs].join(' ')}\n` +
+        `  stderr: ${stderr}`,
+    )
+    process.exit(result.status ?? 1)
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Guard: only run the main logic when executed directly (not imported)
 // ---------------------------------------------------------------------------
@@ -89,42 +105,24 @@ if (isMainModule) {
 
     const { command: yarnCmd, args: yarnArgs } = resolveYarn()
 
-    const newResult = spawnSync(
-      yarnCmd,
-      [
-        ...yarnArgs,
-        'prettier',
-        '--write',
-        '--log-level=silent',
-        '--prose-wrap',
-        'always',
-        ...newMdFiles,
-      ],
-      { stdio: 'inherit' },
-    )
-
-    if (newResult.status !== 0) {
-      process.exit(newResult.status ?? 1)
-    }
+    runYarn(yarnCmd, yarnArgs, [
+      'prettier',
+      '--write',
+      '--log-level=silent',
+      '--prose-wrap',
+      'always',
+      ...newMdFiles,
+    ])
   }
 
   if (existingFiles.length > 0) {
     const { command: yarnCmd, args: yarnArgs } = resolveYarn()
 
-    const existingResult = spawnSync(
-      yarnCmd,
-      [
-        ...yarnArgs,
-        'prettier',
-        '--write',
-        '--log-level=silent',
-        ...existingFiles,
-      ],
-      { stdio: 'inherit' },
-    )
-
-    if (existingResult.status !== 0) {
-      process.exit(existingResult.status ?? 1)
-    }
+    runYarn(yarnCmd, yarnArgs, [
+      'prettier',
+      '--write',
+      '--log-level=silent',
+      ...existingFiles,
+    ])
   }
 }
