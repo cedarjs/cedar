@@ -86,27 +86,25 @@ export async function openDebugger(port: number, waitForDebugger = false) {
       resumedResolve = resolve
     })
 
-    // If the debugger never resumes (e.g. disconnect), unblock startup
-    // after a timeout so the dev server doesn't hang indefinitely.
-    const resumeTimeout = setTimeout(() => {
-      console.warn(
-        '[cedar-unified-dev] Timed out waiting for debugger to resume. ' +
-          'Continuing startup.',
-      )
+    // Resolve promptly on session error (e.g. debugger disconnect or crash)
+    // rather than waiting for the resume event.
+    session.once('error', () => {
       resumedResolve?.()
-    }, 300_000)
-
-    session.once('Debugger.resumed', () => {
-      clearTimeout(resumeTimeout)
-      resumedResolve()
     })
 
-    // Fire Debugger.pause and Runtime.evaluate — these execute
-    // synchronously within V8, arming the pause flag and then executing
-    // JS (which checks the flag and pauses).  We do not await the
-    // returned promises because the commands will complete after the
-    // debugger resumes.  Catch rejections so startup doesn't hang if
-    // the debugger disconnects or changes state unexpectedly.
+    // There is no timeout on this wait so that we match Node.js's
+    // --inspect-brk behavior, where the user has unlimited time to attach a
+    // debugger and resume.
+    session.once('Debugger.resumed', () => {
+      resumedResolve?.()
+    })
+
+    // Fire Debugger.pause and Runtime.evaluate. These execute synchronously
+    // within V8, arming the pause flag and then executing JS (which checks the
+    // flag and pauses). We do not await the returned promises because the
+    // commands will complete after the debugger resumes. Catch rejections so
+    // startup doesn't hang if the debugger disconnects or changes state
+    // unexpectedly.
     void new Promise<void>((resolve, reject) => {
       session.post('Debugger.pause', (err) => {
         if (err) {
