@@ -155,11 +155,14 @@ export async function handler(yargs: BaremetalArgs) {
   })
 
   const { handler: baremetalHandler } =
+<<<<<<< HEAD
 <<<<<<< HEAD:packages/cli/src/commands/deploy/baremetal.js
 >>>>>>> 727aa28c93 (feat(baremetal)!: warn on unpushed commits before deploying (#1904))
 =======
     // @ts-expect-error - baremetalHandler.js has no type declarations yet
 >>>>>>> 28c0c97f08 (chore(cli): migrate serverless, baremetal, nft, chakra-ui, mantine, jobs, merge/index from JS to TS (#2011)):packages/cli/src/commands/deploy/baremetal.ts
+=======
+>>>>>>> 495830166f (chore(cli): migrate index, scaffoldHandler, baremetalHandler, and deploy templates from JS to TS (#2018))
     await import('./baremetal/baremetalHandler.js')
 
   return importedHandler(yargs)

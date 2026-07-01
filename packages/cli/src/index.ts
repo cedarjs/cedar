@@ -65,7 +65,12 @@ import { startTelemetry, shutdownTelemetry } from './telemetry/index.js'
 // yarn cedar info
 // ```
 
-let { cwd, telemetry, help, version } = Parser(hideBin(process.argv), {
+const {
+  telemetry,
+  help,
+  version,
+  cwd: parsedCwd,
+} = Parser(hideBin(process.argv), {
   // Telemetry is enabled by default, but can be disabled in two ways
   // - by passing a `--telemetry false` option
   // - by setting a `CEDAR_DISABLE_TELEMETRY` env var
@@ -78,6 +83,7 @@ let { cwd, telemetry, help, version } = Parser(hideBin(process.argv), {
         process.env.REDWOOD_DISABLE_TELEMETRY === ''),
   },
 })
+let cwd = parsedCwd
 cwd ??= process.env.CEDAR_CWD
 cwd ??= process.env.RWJS_CWD
 cwd = getTomlDir(cwd)
@@ -258,7 +264,7 @@ async function runYargs() {
   })
 }
 
-function getTomlDir(cwd) {
+function getTomlDir(cwd: string | undefined): string {
   const configFiles = ['cedar.toml', 'redwood.toml']
   let tomlDir = ''
 
@@ -296,7 +302,7 @@ function getTomlDir(cwd) {
       tomlDir = path.dirname(configTomlPath)
     }
   } catch (error) {
-    console.error(error.message)
+    console.error(error instanceof Error ? error.message : String(error))
     process.exit(1)
   }
 
