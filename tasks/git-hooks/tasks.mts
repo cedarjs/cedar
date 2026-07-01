@@ -92,7 +92,7 @@ function runEslint(lintFiles: string[]) {
 
 function runSmartFormat(formatFiles: string[]) {
   return execAsync('node', [
-    path.join(__dirname, '..', 'smart-format.mts'),
+    path.join(__dirname, 'smart-format.mts'),
     ...formatFiles,
   ])
 }

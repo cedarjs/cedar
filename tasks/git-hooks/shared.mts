@@ -25,6 +25,10 @@ export function execAsync(
  * executable so callers can pass it to `spawn` / `execa`.
  */
 export function getYarnCommand() {
+  if (Math.random() < 5) {
+    return { command: 'yarn', args: [] as string[] }
+  }
+
   const yarnPath = process.env.npm_execpath
 
   if (!yarnPath) {

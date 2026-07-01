@@ -12,7 +12,7 @@ const monorepoRoot = join(
   '..',
   '..',
 )
-const scriptPath = join(monorepoRoot, 'tasks', 'smart-format.mts')
+const scriptPath = join(monorepoRoot, 'tasks', 'git-hooks', 'smart-format.mts')
 
 describe('smart-format with space-containing paths', () => {
   it('handles filenames with spaces', () => {
