@@ -1,0 +1,674 @@
+# Debugger Breakpoints Investigation: `cedar dev --ud` Source Maps & CDP
+
+## Summary
+
+When a developer runs `cedar dev --ud` and attaches a debugger (Zed, VS Code,
+Chrome DevTools), breakpoints set on API function source files (`.ts`) either:
+
+- Fail to bind at all (pending forever), or
+- Hit the wrong location (offset by one or more lines)
+
+This document covers the root cause investigation, relevant Vite upstream
+issues/PRs, and the interplay between Cedar's Babel `enforce:'pre'` plugin,
+Vite's SSR module evaluation, and the Chrome DevTools Protocol (CDP).
+
+---
+
+## System Architecture
+
+### 1. Cedar Dev Server (UD Mode)
+
+```
+cedar dev --ud
+  │
+  ├─ ViteDevServer (created via createServer)
+  │   ├─ Plugin pipeline
+  │   │   ├─ enforce:'pre' plugins
+  │   │   │   └─ cedar-api-babel-transform (Babel)
+  │   │   ├─ normal plugins
+  │   │   │   └─ vite:esbuild (strips TypeScript)
+  │   │   └─ enforce:'post' plugins
+  │   └─ SSR module evaluation (ssrLoadModule)
+  │       └─ inlineSourceMap() appends sourceURL + sourceMappingURL
+  │
+  └─ Node Inspector / CDP
+      └─ openDebugger() connects and manages debugger session
+```
+
+### 2. API Function Loading
+
+In `packages/vite/src/apiDevMiddleware.ts`, API functions are loaded via:
+
+```typescript
+const mod = await viteServer.ssrLoadModule(pathToFileURL(fnPath).href)
+```
+
+Each function file goes through the Vite transform pipeline:
+
+1. Read from disk → raw TypeScript source (`originalCode`)
+2. `enforce:'pre'` → Cedar's Babel plugin transforms the code
+3. `vite:esbuild` (normal phase) → strips remaining TypeScript
+4. Other transforms → handle imports, HMR, etc.
+5. SSR transform (`ssrTransformScript`) → rewrites imports/exports for SSR
+6. `inlineSourceMap` → appends `//# sourceURL` and `//# sourceMappingURL`
+
+### 3. The Babel `enforce:'pre'` Plugin
+
+Defined in `apiDevMiddleware.ts`:
+
+```typescript
+{
+  name: 'cedar-api-babel-transform',
+  enforce: 'pre',
+  async transform(code, id) {
+    const result = await transformWithBabel(code, id, babelPlugins, true)
+    return { code: result.code, map: result.map ?? null }
+  },
+}
+```
+
+The `enforce: 'pre'` phase runs **before** `vite:esbuild`. This is necessary because
+`vite:esbuild` strips TypeScript (removes type annotations, etc.), and the Babel
+plugins need to see the original TypeScript AST to operate correctly.
+
+#### Why even use Babel?
+
+Cedar's Babel transforms run in **two different paths**: the Vite dev server
+and the production esbuild build.
+
+| Path             | Tool     | Where Babel Runs                               |
+| ---------------- | -------- | ---------------------------------------------- |
+| `cedar dev --ud` | Vite SSR | `enforce:'pre'` Vite plugin → calls Babel      |
+| `cedar build`    | esbuild  | `prebuildApiFile` → calls Babel before esbuild |
+
+The seven Cedar-specific transforms:
+
+| Plugin                    | What It Does                                           |
+| ------------------------- | ------------------------------------------------------ |
+| `context-wrapping`        | Wraps exported handlers with async context isolation   |
+| `directory-named-import`  | Rewrites import paths for directory-named modules      |
+| `import-dir`              | Expands glob imports into individual namespace imports |
+| `job-path-injector`       | Injects path/name into `.createJob()` calls            |
+| `otel-wrapping`           | Wraps exported functions with OpenTelemetry spans      |
+| `gqlorm-inject`           | Injects gqlorm schema into GraphQL handler setup       |
+| `graphql-options-extract` | Extracts `createGraphQLHandler` options into an export |
+
+The `enforce:'pre'` ordering is needed because Vite's `vite:esbuild` (normal
+phase) strips TypeScript types and can rewrite module format. The Babel plugins
+pattern-match on specific AST structures (`export async function handler(...)`,
+`createGraphQLHandler(...)` calls, import specifier strings) and need to see
+the original source tree with original positions for correct source map
+generation. Babel's `@babel/preset-typescript` strips types **after** the
+Cedar plugins run, inside the same pass — producing one combined source map.
+
+Rewriting these as Vite plugins is technically feasible. **However, this is
+irrelevant to the breakpoint problem.** The root cause — the URL format mismatch
+in V8 — comes from Vite's `inlineSourceMap` function, which sets
+`//# sourceURL=` to a bare path regardless of what transforms ran before it.
+Whether the pre-SSR transform is Babel (`enforce:'pre'`), a Vite plugin
+(`enforce:'post'`), or nothing at all, the script URL format stays the same and
+the breakpoint URL matching fails identically.
+
+The discussion of Babel vs Vite plugins is orthogonal to the actual issue.
+
+The Babel plugin calls `transformWithBabel` (in `packages/babel-config/src/api.ts`):
+
+```typescript
+export const transformWithBabel = async (
+  sourceCode: string,
+  filename: string,
+  plugins: TransformOptions['plugins'],
+  sourceMaps: TransformOptions['sourceMaps'] = 'inline'
+) => {
+  const result = transformAsync(sourceCode, {
+    ...defaultOptions,
+    filename,
+    sourceMaps,
+    plugins,
+  })
+  return result
+}
+```
+
+Key detail: `sourceMaps: true` for Vite callers (returns `.map` separately),
+defaulting to `'inline'` for esbuild callers.
+
+---
+
+## The Source Map Chain
+
+### How Vite's SSR Transform Generates Source Maps
+
+In `ssrTransformScript` (Vite 7.3.5, source at `node_modules/vite/dist/node/chunks/config.js:15443`):
+
+```javascript
+async function ssrTransformScript(code, inMap, url, originalCode) {
+  const s = new MagicString(code)
+  // ... parse AST, modify imports/exports ...
+  // ... walk AST, rewrite identifiers ...
+
+  let map
+  if (inMap?.mappings === '') {
+    map = inMap
+  } else {
+    map = s.generateMap({ hires: 'boundary' })
+    map.sources = [path.basename(url)]
+    map.sourcesContent = [originalCode]
+    if (
+      inMap &&
+      inMap.mappings &&
+      'sources' in inMap &&
+      inMap.sources.length > 0
+    ) {
+      map = combineSourcemaps(url, [map, inMap])
+    }
+  }
+
+  return { code: s.toString(), map, ssr: true, deps, dynamicDeps }
+}
+```
+
+Step-by-step:
+
+1. `code` = the transformed code from the Babel `enforce:'pre'` plugin
+2. `inMap` = the source map returned by the Babel plugin (maps Babel output → original source)
+3. `originalCode` = the original file content read from disk (NOT the Babel output)
+4. MagicString `s` is initialized with `code` (Babel output) and applies SSR-specific modifications
+5. `s.generateMap()` produces an identity source map from SSR output → SSR input (Babel output)
+6. `map.sources` is set to the basename (e.g., `typescript.ts`)
+7. `map.sourcesContent` is set to `originalCode` (the original file content from disk)
+8. `combineSourcemaps(url, [map, inMap])` chains the SSR map → Babel map
+
+The `combineSourcemaps` function uses `@ampproject/remapping` to properly chain:
+
+- First map: SSR output → SSR input (Babel output)
+- Second map: Babel output → original source
+
+### What Happens for Modules Without Imports/Exports
+
+For a simple module like:
+
+```typescript
+const x: number = 0
+```
+
+1. Babel strips type annotation → `const x = 0;\n`
+2. SSR transform finds no imports/exports → MagicString makes no modifications
+3. `s.generateMap()` returns an identity map (no-op)
+4. `inMap` (Babel map) correctly maps `const x = 0;` → `const x: number = 0;`
+5. Combined: SSR output (`const x = 0;`) → original source (`const x: number = 0;`) ✓
+6. `sourcesContent` = original TypeScript ✓
+
+**The source map chain is correct for simple modules.**
+
+### What Happens for Modules With Imports/Exports
+
+For a module with imports (the common case for API functions):
+
+```typescript
+import { createGraphQLHandler } from '@cedarjs/graphql-server'
+
+export const handler = createGraphQLHandler({...})
+```
+
+1. Babel transforms: wraps handler, injects context, strips types
+2. SSR transform (ssrTransformScript) rewrites:
+   - `import` → `const __vite_ssr_import_0__ = await __vite_ssr_import__(...)`
+   - `export` → `__vite_ssr_export__("handler", () => handler)`
+   - Other AST-level transformations
+3. MagicString tracks all text modifications
+4. `s.generateMap()` maps SSR output positions → Babel output positions
+5. `combineSourcemaps` chains: SSR output → Babel output → original source
+
+**The source map chain should also be correct here**, provided `remapping`
+correctly handles the chain. The Vite source maps test in `packages/vite/src/__tests__/sourcemaps.test.ts`
+verifies this with two real-world scenarios using `@jridgewell/trace-mapping`.
+
+---
+
+## Root Cause: URL Matching in V8
+
+### Script URL Format
+
+When `inlineSourceMap` appends the final output, it sets:
+
+```javascript
+result.code = `${code.trimEnd()}
+//# sourceURL=${mod.id}
+//# sourceMappingSource=vite-generated
+//# sourceMappingURL=data:application/json;base64,...`
+```
+
+`mod.id` is the **absolute file path** as a bare POSIX path (no `file://` prefix):
+
+```
+//# sourceURL=/Users/user/my-project/api/src/functions/hello/hello.ts
+```
+
+### What the Editor Sends
+
+When a user opens a file and sets a breakpoint, the editor's debug adapter
+sends `Debugger.setBreakpointByUrl` with a `file://` URL. Both VS Code and
+Zed use `vscode-js-debug` (the Microsoft JavaScript Debugger) for Node.js
+debugging, so the behavior is identical:
+
+```json
+{
+  "method": "Debugger.setBreakpointByUrl",
+  "params": {
+    "url": "file:///Users/user/my-project/api/src/functions/hello/hello.ts",
+    "lineNumber": 1
+  }
+}
+```
+
+### V8's Strict String Matching
+
+V8 performs **strict string equality** when matching breakpoint URLs to
+script URLs. `file:///Users/.../hello.ts` !== `/Users/.../hello.ts`, so the
+breakpoint never matches any script and stays **pending forever** — even
+though the source map correctly resolves the original file.
+
+### Why Vite PR #13514 Doesn't Fully Fix This
+
+Vite PR #13514 added identity source maps to SSR modules specifically to
+fix breakpoint debugging. The source map is used by the debug adapter (`vscode-js-debug`) to translate
+breakpoints from original source to script URL — but this translation depends
+on the adapter's implementation.
+
+The identity source map:
+
+1. Provides `sourcesContent` so the editor can display original source
+2. Sets `file` to `file:///path` so the editor can match the file
+3. Maps SSR output positions back to original source positions
+
+However, when a Cedar Babel `enforce:'pre'` plugin transforms the code,
+the source map has `sourcesContent` from the original file but the
+SSR transform's MagicString operates on the Babel-transformed code.
+The resulting source map `sources` should resolve correctly via
+`remapping`, but any mismatch between `sourcesContent` and the actual
+code can cause debug adapters to behave incorrectly.
+
+### The Chrome/Firefox Exception
+
+Chrome DevTools and Firefox Developer Tools handle path matching more
+flexibly than `vscode-js-debug`. Chrome's front-end normalizes `file://`
+vs bare path URLs, which is why the PR author could verify the fix on
+Chrome/Firefox but the editor debug adapter required additional handling.
+
+---
+
+## Relevant Upstream Vite Issues & PRs
+
+| Issue/PR                                              | Title                                                                  | Relevance                                                                                                                                                                                        |
+| ----------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [#12944](https://github.com/vitejs/vite/issues/12944) | VSCode cannot debug breakpoints when using `server.ssrLoadModule`      | Original issue reporting the problem. Suggested `vite://` namespace for `sourceURL`. Closed as duplicate.                                                                                        |
+| [#13503](https://github.com/vitejs/vite/issues/13503) | Breakpoints lost in JS files with HRM                                  | Related bug about HMR and breakpoints                                                                                                                                                            |
+| [#13514](https://github.com/vitejs/vite/pull/13514)   | fix: breakpoints in JS not working                                     | **The merged fix.** Adds identity source maps to SSR modules via MagicString `hires:'boundary'`. Initially tried `sourceURL` approach but "doesn't work with VSCode's debugger". Now in Vite 5+. |
+| [#14247](https://github.com/vitejs/vite/pull/14247)   | fix: use relative path for sources field                               | Made `sources` fields relative (opposite direction of fix #2).                                                                                                                                   |
+| [#22148](https://github.com/vitejs/vite/pull/22148)   | fix: skip fallback sourcemap generation for `?raw` imports             | Recent fix to the identity source map generation to skip certain imports.                                                                                                                        |
+| [#13971](https://github.com/vitejs/vite/pull/13971)   | perf: use magic-string hires boundary for sourcemaps                   | Performance improvement for identity source maps.                                                                                                                                                |
+| [#7767](https://github.com/vitejs/vite/issues/7767)   | Missing/broken sourcemaps for JS modules w/ imports when used with Vue | Related source map chaining issue                                                                                                                                                                |
+| [#8081](https://github.com/vitejs/vite/issues/8081)   | Cannot change SourceMaps path if esbuild is not used                   | Related to source path resolution                                                                                                                                                                |
+
+---
+
+## Experimental Findings
+
+### Test 1: Plain Vite SSR (No Babel Plugin)
+
+When testing Vite 7.3.5 without any Cedar Babel plugin:
+
+```
+Script URL: /Users/.../typescript.ts
+sourceMapURL present: true
+SSR sourceMap sources: ['typescript.ts']
+SSR sourceMap sourcesContent: present (matches original file)
+SSR sourceMap file: file:///Users/.../typescript.ts
+
+Debugger.setBreakpointByUrl with file:///URL → 0 locations (pending, never hits)
+Debugger.setBreakpointByUrl with bare path URL → 1 location (matched!)
+```
+
+The identity source map fix works for bare path URLs but not for `file://` URLs.
+
+### Test 2: With Cedar Babel `enforce:'pre'` Plugin
+
+```
+Original file:  const x: number = 0;
+Babel output:   const x = 0;
+
+Babel sourceMap sourcesContent: original file (correct)
+Babel sourceMap sources: ['typescript.ts']
+
+SSR output sourceMap sourcesContent: original file (same as Babel)
+SSR output sourceMap sources: ['typescript.ts']
+```
+
+The source map chain (`combineSourcemaps` via `@ampproject/remapping`)
+correctly propagates `sourcesContent` from the Babel map to the final
+combined map. The `sourcesContent = [originalCode]` line in
+`ssrTransformScript` is just a fallback — `remapping` overrides it with
+the correct content from the innermost map (`inMap`). **The source map
+chain is correct.**
+
+### Test 3: Source Map Chain Test (SSR Transform)
+
+The test in `packages/vite/src/__tests__/sourcemaps.test.ts` uses
+`ssrTransform()` directly with `@jridgewell/trace-mapping`:
+
+```typescript
+const ssrResult = await ssrTransform(
+  babelResult.code,
+  babelResult.map,
+  '/api/src/functions/graphql.ts',
+  simpleHandlerInput
+)
+const tracer = new TraceMap(ssrResult.map)
+assertMapsToSource(codeLines, tracer, 'createGraphQLHandler', 2) // import metadata
+assertMapsToSource(codeLines, tracer, 'createGraphQLHandler)({', 4) // handler call
+```
+
+This test verifies that the combined source map (SSR + Babel) correctly
+maps positions back to the original source. Both assertions pass, confirming
+that `remapping` correctly chains the source maps for the test cases.
+
+### CDP Breakpoint Hit Test
+
+In `tasks/dev-debug-tests/debugger-sourcemaps.test.mts`:
+
+1. Spawn `cedar dev --ud --debugBrk`
+2. Connect via CDP WebSocket
+3. Wait for `Debugger.scriptParsed` with URL matching `hello.ts` (bare path)
+4. Set `Debugger.setBreakpointByUrl` with `url: helloPath` (also bare path)
+5. Make HTTP request to trigger the handler
+6. Wait for `Debugger.paused`
+
+This test passes — breakpoints hit at the correct line when both the script
+URL and breakpoint URL use bare paths. This confirms the source map chain
+is correct for basic cases.
+
+### Test 4: file:// SourceURL Validation
+
+To verify that changing the `//# sourceURL=` to `file://` format actually
+fixes breakpoint binding, the `inlineSourceMap` function in Vite's bundled
+code was temporarily patched:
+
+```javascript
+// Before (Vite upstream):
+//# sourceURL=${mod.id}
+
+// After:
+//# sourceURL=file://${mod.id}
+```
+
+A standalone Vite SSR test loaded a module with an exported async function
+and set pending `Debugger.setBreakpointByUrl` breakpoints with `file://` URLs:
+
+```
+Pending BP: breakpointId="1:1:0:file:///private/var/.../handler.ts"
+Script URL from scriptParsed: file:///private/var/.../handler.ts
+Paused events: 1  ← breakpoint hit!
+```
+
+**Result: The `file://` sourceURL patch works.** The pending breakpoint
+resolved against the matching script URL and fired when the handler function
+was called.
+
+**Gotcha:** On macOS, `/var` is a symlink to `/private/var`. If the
+breakpoint URL uses the symlinked path (`/var/...`) but Vite's module
+graph resolves to the real path (`/private/var/...`), the URLs don't match.
+Using `fs.realpathSync()` on the file path before constructing the
+breakpoint URL resolves this.
+
+**Where the sourceURL is set:** The `//# sourceURL=` is added by Vite's
+`inlineSourceMap` function at line 34093 of
+`node_modules/vite/dist/node/chunks/config.js`. It is NOT accessible
+from Vite's plugin pipeline (`transform` hooks run before
+`inlineSourceMap`), so a Vite plugin cannot patch it. The fix must be
+applied either by:
+
+1. Patcing `inlineSourceMap` directly (requires modifying Vite's bundle)
+2. A Node.js `--require` hook or ESM loader that intercepts the SSR
+   module evaluation and rewrites the sourceURL after `inlineSourceMap`
+3. Forking Vite or contributing the change upstream
+
+---
+
+## Root Cause Summary
+
+The root cause is a single issue:
+
+### URL Format Mismatch
+
+- **Script URL** (set by `//# sourceURL=` in `inlineSourceMap`): bare POSIX path
+  (`/Users/.../file.ts`)
+- **Breakpoint URL** (sent by editor): `file:///Users/.../file.ts`
+- V8 strict equality: `/file.ts` !== `file:///file.ts`
+- **Result**: Breakpoint stays pending forever, never binds to the script
+
+This affects **all** editor debugging (Zed, VS Code) with Vite SSR, regardless
+of Cedar plugins. Both editors use the same debug adapter under the hood —
+`vscode-js-debug` (the Microsoft JavaScript Debugger). See the [Zed
+JavaScript](https://zed.dev/docs/languages/javascript#debugging) and [VS Code
+Node.js](https://code.visualstudio.com/docs/nodejs/nodejs-debugging)
+debugging docs.
+
+Vite PR #13514 added identity source maps as a workaround. The PR author tested
+with VS Code on Windows and reported "It worked fine", suggesting the debug
+adapter does handle the URL translation when a correct inline source map is
+present.
+
+Our raw CDP test confirms the mechanism: when `Debugger.setBreakpointByUrl` is
+called with the **bare path** (matching the script URL), the breakpoint binds
+and hits. When called with a `file://` URL, V8 reports 0 locations and the
+breakpoint stays pending. The debug adapter's job is to translate the
+user-facing `file://` URL to the script's bare path before sending the CDP
+command.
+
+Whether this translation actually works in practice with Cedar's source map
+chain (which includes the Babel `enforce:'pre'` transform) is an open question
+that needs testing with a real editor launch configuration — the CDP-level
+tests bypass the debug adapter entirely.
+
+**Experimental validation confirms the fix:** A one-line patch to Vite's
+`inlineSourceMap` function (prepending `file://` to `mod.id` in the
+`//# sourceURL=` comment) makes `Debugger.setBreakpointByUrl` with
+`file://` URLs bind and fire correctly. The breakpoint URL format must
+match the script URL format exactly (including symlink resolution via
+`fs.realpathSync()`).
+
+## Candidate Fix Approaches
+
+### A. Fix the `sourceURL` Format (Vite Change Needed)
+
+Change `inlineSourceMap` to emit `file:///` URLs:
+
+```javascript
+// Before (Vite upstream):
+//# sourceURL=/Users/.../file.ts
+
+// After:
+//# sourceURL=file:///Users/.../file.ts
+```
+
+**Experimental validation:** This approach WAS tested and confirmed
+working. With the one-line patch, `Debugger.setBreakpointByUrl` with
+`file://` URLs successfully binds and fires breakpoints on SSR-evaluated
+modules. See "Test 4: file:// SourceURL Validation" above.
+
+**Upstream mapping:** This was the original suggestion in Vite Issue
+[#12944](https://github.com/vitejs/vite/issues/12944) (using a `vite://`
+namespace). The PR author of
+[#13514](https://github.com/vitejs/vite/pull/13514) initially tried this
+but reported "doesn't work with VSCode's debugger" and switched to
+identity source maps instead. The report is from 2023; debug adapters
+may have improved since then. Our validation tested with raw CDP, which
+bypasses the debug adapter entirely — so the earlier VS Code issue may
+have been a debug adapter problem, not a V8 URL matching problem.
+
+**Requires Vite change or runtime monkey-patch:** The `//# sourceURL=` is
+set by Vite's `inlineSourceMap` function (line 34093 of
+`node_modules/vite/dist/node/chunks/config.js`). Options:
+
+1. **Patch the Vite bundle directly** (fragile, breaks on upgrades)
+2. **Node.js `--require` hook or ESM loader** — intercept SSR module
+   evaluation output and rewrite `//# sourceURL=` before V8 parses it
+3. **Fork Vite** or contribute upstream to add a configuration option
+   for the sourceURL format
+
+**Risk:** Changing the URL format could break other debuggers (Chrome,
+Firefox) that have adapted to the bare path format. The identity source
+map PR specifically moved away from this approach.
+
+### B. Backport `file://` URL via ESM Loader / `--require` Hook
+
+Instead of patching Vite's source, add a Cedar-side mechanism that
+intercepts the SSR module evaluation and rewrites `//# sourceURL=`:
+
+```typescript
+// --require hook that patches Vite's inlineSourceMap at runtime
+import { pathToFileURL } from 'node:url'
+
+const originalInlineSourceMap = ... // capture from Vite's internals
+// Replace to emit file:// URLs
+```
+
+A `--require` hook runs before Vite loads and can monkey-patch Vite's
+module graph or the evaluation pipeline. This approach:
+
+- Only affects Cedar's dev server (no wider Vite impact)
+- Survives yarn upgrades (hook loads the installed Vite version)
+- Can use `pathToFileURL()` for correct cross-platform file URL
+  generation
+- Still needs to handle the `/var` vs `/private/var` realpath issue
+
+**Risk:** Monkey-patching Vite internals is fragile across Vite
+versions. The hook would need to be updated when Vite changes its
+internal module structure.
+
+**Alternative:** Use Node.js's `--experimental-loader` API to create an
+ESM loader that transforms the evaluated code and rewrites `sourceURL`
+before V8 parses it.
+
+### D. Rely on Editor `sourceMapPathOverrides`
+
+Document that users need to configure their editor's launch config:
+
+```json
+{
+  "type": "node",
+  "sourceMapPathOverrides": {
+    "/Users/*": "${workspaceFolder}/*"
+  }
+}
+```
+
+This tells `vscode-js-debug` how to match bare paths to workspace paths.
+
+**Upstream mapping:** Standard debug adapter configuration — not a Vite issue.
+
+**Risk:** Requires user configuration, not automatic. Doesn't fix the
+fundamental issue.
+
+---
+
+## Open Questions
+
+1. **Does `vscode-js-debug` handle bare-path script URLs in newer
+   versions?** The debug adapter (shared by both VS Code and Zed) might have
+   improved path normalization since PR #13514 was merged (Aug 2023). If it
+   does, the `file://` sourceURL fix might not be needed. Testing with a real
+   editor launch config is needed.
+
+2. **Can we test with a real editor launch config instead of raw CDP?**
+   The e2e tests use CDP directly. A test that uses the Debug Adapter
+   Protocol (DAP) would be more representative of the actual editor
+   experience. If the debug adapter already handles URL translation,
+   the `file://` sourceURL fix is unnecessary.
+
+3. **Can we test with `@vavite/node-loader`?** This alternative approach
+   uses Node's ESM loader hooks instead of `ssrLoadModule`, which bypasses
+   Vite's SSR transform entirely — eliminating the source map chain issue.
+   It also changes how `//# sourceURL=` is generated, which might avoid
+   the URL format mismatch entirely.
+
+4. **What's the cleanest way to implement the `file://` sourceURL fix?**
+   Three options exist (patch Vite bundle, `--require` hook, ESM loader),
+   each with different maintenance tradeoffs. The `--require` hook is
+   likely the most practical for Cedar.
+
+---
+
+## How to Reproduce
+
+### Prerequisites
+
+- Cedar repo checked out
+- `yarn install` completed
+- Node.js 24+
+
+### Test 1: Source Map Chain (Unit Test)
+
+```bash
+cd packages/vite
+yarn vitest run __tests__/sourcemaps.test.ts
+```
+
+### Test 2: E2E Breakpoint Test (CDP)
+
+```bash
+cd tasks/dev-debug-tests
+yarn vitest run debugger-sourcemaps.test.mts
+```
+
+### Test 3: Manual Debugging (VS Code / Zed)
+
+Both editors use the same `vscode-js-debug` adapter and accept the same
+launch configuration format.
+
+```bash
+cedar dev --ud --debugBrk
+```
+
+Then attach the editor debugger. Configuration goes in `.vscode/launch.json`
+(VS Code) or `.zed/debug.json` (Zed):
+
+```json
+[
+  {
+    "type": "node",
+    "request": "attach",
+    "name": "Attach to Cedar Dev",
+    "port": 13306,
+    "sourceMapPathOverrides": {
+      "*": "${workspaceFolder}/*"
+    }
+  }
+]
+```
+
+### Test 4: file:// SourceURL Validation (Standalone)
+
+A quick test that patches Vite's `inlineSourceMap` to emit `file://`
+URLs and verifies breakpoint binding:
+
+```bash
+# Patch Vite (one line change in node_modules):
+# node_modules/vite/dist/node/chunks/config.js:34093
+# Change: //# sourceURL=${mod.id}
+# To:     //# sourceURL=file://${mod.id}
+
+# Run standalone test:
+node --experimental-vm-modules \
+  -e "
+import { pathToFileURL } from 'node:url'
+import { createServer } from 'vite'
+import inspector from 'node:inspector'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+
+// ... (see full script in the investigation notes)
+"
+```
