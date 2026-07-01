@@ -5,7 +5,7 @@
  * (not tracked in HEAD). Existing files get the default prettier config
  * (proseWrap: preserve).
  *
- * Usage: node tasks/smart-format.mts <file> [<file> ...]
+ * Usage: node tasks/git-hooks/smart-format.mts <file> [<file> ...]
  */
 
 import { execSync, spawnSync } from 'node:child_process'
