@@ -63,7 +63,7 @@ if (isMainModule) {
         'always',
         ...newMdFiles,
       ],
-      { stdio: 'inherit' },
+      { stdio: 'inherit', shell: process.platform === 'win32' },
     )
 
     if (newResult.status !== 0) {
@@ -75,7 +75,7 @@ if (isMainModule) {
     const existingResult = spawnSync(
       'yarn',
       ['prettier', '--write', '--log-level=silent', ...existingFiles],
-      { stdio: 'inherit' },
+      { stdio: 'inherit', shell: process.platform === 'win32' },
     )
 
     if (existingResult.status !== 0) {
