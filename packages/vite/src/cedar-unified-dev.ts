@@ -85,7 +85,19 @@ export async function openDebugger(port: number, waitForDebugger = false) {
     const resumedPromise = new Promise<void>((resolve) => {
       resumedResolve = resolve
     })
+
+    // If the debugger never resumes (e.g. disconnect), unblock startup
+    // after a timeout so the dev server doesn't hang indefinitely.
+    const resumeTimeout = setTimeout(() => {
+      console.warn(
+        '[cedar-unified-dev] Timed out waiting for debugger to resume. ' +
+          'Continuing startup.',
+      )
+      resumedResolve?.()
+    }, 300_000)
+
     session.once('Debugger.resumed', () => {
+      clearTimeout(resumeTimeout)
       resumedResolve()
     })
 
