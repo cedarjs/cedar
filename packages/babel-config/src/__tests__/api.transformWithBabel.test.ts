@@ -1,11 +1,9 @@
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
 import { describe, expect, it } from 'vitest'
 
 import { transformWithBabel } from '../api.js'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const FIXTURE_PATH = path.join(__dirname, '__fixtures__/cedar-app')
 process.env.CEDAR_CWD = FIXTURE_PATH
 
