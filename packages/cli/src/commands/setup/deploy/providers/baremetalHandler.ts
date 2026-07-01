@@ -14,7 +14,6 @@ import {
 } from '../../../../lib/index.js'
 // @ts-expect-error - No types for JS file
 import { addFilesTask } from '../helpers/index.js'
-// @ts-expect-error - No types for JS file
 import { DEPLOY, ECOSYSTEM, MAINTENANCE } from '../templates/baremetal.js'
 
 export const configFilename = 'deploy.toml'

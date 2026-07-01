@@ -149,7 +149,6 @@ export async function handler(yargs: BaremetalArgs) {
   })
 
   const { handler: baremetalHandler } =
-    // @ts-expect-error - baremetalHandler.js has no type declarations yet
     await import('./baremetal/baremetalHandler.js')
 
   return baremetalHandler(yargs)

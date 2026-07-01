@@ -5,7 +5,7 @@ import { getUserApiUrl } from '../helpers/index.js'
 
 export const PROJECT_NAME = path.basename(getPaths().base)
 
-export const RENDER_YAML = (database) => {
+export const RENDER_YAML = (database: string) => {
   const apiUrl = getUserApiUrl().replace(/\/$/, '')
   return `# Quick links to the docs:
 # - Redwood on Render: https://render.com/docs/deploy-redwood

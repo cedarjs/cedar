@@ -15,7 +15,6 @@ import {
   RENDER_HEALTH_CHECK,
   RENDER_YAML,
   SQLITE_YAML,
-  // @ts-expect-error - no types for JS files
 } from '../templates/render.js'
 
 const { getConfig } = prismaInternals
