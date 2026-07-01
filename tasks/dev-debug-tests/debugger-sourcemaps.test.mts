@@ -40,11 +40,10 @@ describe('debugger sourcemaps', () => {
         'yarn',
         [
           'node',
+          `--inspect-brk=${DEBUG_PORT}`,
           cedar,
           'dev',
           '--ud',
-          '--debugBrk',
-          `--apiDebugPort=${DEBUG_PORT}`,
           '--fwd=--open=false',
         ],
         {
@@ -63,20 +62,18 @@ describe('debugger sourcemaps', () => {
         }
       })
 
-      // Wait for inspector WebSocket URL
+      // Wait for inspector WebSocket URL (includes UUID path) in stderr
       const wsUrl = await new Promise<string | null>((resolve) => {
         const timer = setTimeout(() => resolve(null), 15_000)
         const pattern = new RegExp(`ws://127\\.0\\.0\\.1:${DEBUG_PORT}[^\\s]*`)
         const check = (data: Buffer) => {
           const text = data.toString()
           const m = text.match(pattern)
-
           if (m) {
             clearTimeout(timer)
             resolve(m[0].trim())
           }
         }
-
         devProcess!.stdout!.on('data', check)
         devProcess!.stderr!.on('data', check)
       })
