@@ -151,10 +151,17 @@ describe('openDebugger', () => {
       'Debugger.resumed',
       expect.any(Function),
     )
-    expect(mockSessionPost).toHaveBeenNthCalledWith(2, 'Debugger.pause')
-    expect(mockSessionPost).toHaveBeenNthCalledWith(3, 'Runtime.evaluate', {
-      expression: '1',
-    })
+    expect(mockSessionPost).toHaveBeenNthCalledWith(
+      2,
+      'Debugger.pause',
+      expect.any(Function),
+    )
+    expect(mockSessionPost).toHaveBeenNthCalledWith(
+      3,
+      'Runtime.evaluate',
+      { expression: '1' },
+      expect.any(Function),
+    )
     // Session is not disconnected — it stays alive for the process lifetime.
     // Disconnecting would make Node.js think the debugger left and exit.
     expect(mockSessionDisconnect).not.toHaveBeenCalled()

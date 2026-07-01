@@ -156,9 +156,9 @@ describe('debugger sourcemaps (non-UD / Fastify)', () => {
         'hello.ts script should be parsed (via source map resolution)',
       ).not.toBeNull()
 
-      // Set breakpoint at hello.ts:5 (const n = 5)
+      // Set breakpoint at hello.ts:2 (const n = 5)
       const bpResult = await send('Debugger.setBreakpointByUrl', {
-        lineNumber: 4,
+        lineNumber: 1,
         url: helloPath,
         columnNumber: 0,
         condition: '',
@@ -193,7 +193,7 @@ describe('debugger sourcemaps (non-UD / Fastify)', () => {
 
       const frame = paused!.params.callFrames?.[0]
       expect(frame?.url).toBe(helloPath)
-      expect(frame?.location?.lineNumber).toBe(4)
+      expect(frame?.location?.lineNumber).toBe(1)
 
       // Verify local scope is accessible
       const localScope = paused!.params.callFrames?.[0]?.scopeChain?.find(

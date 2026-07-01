@@ -87,10 +87,14 @@ export async function openDebugger(port: number, waitForDebugger = false) {
     })
 
     // Resolve promptly on session error (e.g. debugger disconnect or crash)
-    // rather than waiting for the resume event.
-    session.once('error', () => {
-      resumedResolve?.()
-    })
+    // or Inspector.detached (CDP signal from a clean debugger disconnect).
+    session
+      .once('error', () => {
+        resumedResolve?.()
+      })
+      .once('Inspector.detached', () => {
+        resumedResolve?.()
+      })
 
     // There is no timeout on this wait so that we match Node.js's
     // --inspect-brk behavior, where the user has unlimited time to attach a
