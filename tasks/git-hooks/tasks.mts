@@ -1,4 +1,5 @@
 import { spawn, spawnSync } from 'node:child_process'
+import { statSync } from 'node:fs'
 import path, { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
