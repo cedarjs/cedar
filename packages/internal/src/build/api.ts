@@ -95,6 +95,7 @@ function createCedarViteApiPlugin(): Plugin {
             cedarConfig.experimental.opentelemetry.wrapApi,
           projectIsEsm: isEsm,
         }),
+        true,
       )
 
       if (transformedCode?.code) {

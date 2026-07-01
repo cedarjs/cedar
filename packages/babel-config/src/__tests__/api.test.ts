@@ -256,6 +256,7 @@ describe('transformWithBabel', () => {
       input,
       '/cedar-app/api/src/functions/graphql.ts',
       [],
+      true,
     )
 
     expect(result?.code).toBeDefined()

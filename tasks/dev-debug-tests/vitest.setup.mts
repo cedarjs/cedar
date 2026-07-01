@@ -5,12 +5,11 @@ import { fs, path } from 'zx'
 
 /** Utility function to find bin path from package.json */
 function findBinPath(packagePath: string, binName: string) {
-  const packageJson = JSON.parse(
-    fs.readFileSync(path.join(packagePath, 'package.json'), 'utf8'),
-  )
+  const packageJsonPath = path.join(packagePath, 'package.json')
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
 
   if (packageJson.bin?.[binName]) {
-    return path.resolve(path.dirname(packagePath), packageJson.bin[binName])
+    return path.resolve(path.dirname(packageJsonPath), packageJson.bin[binName])
   }
 
   throw new Error(`Bin '${binName}' not found in ${packagePath} package.json`)

@@ -212,7 +212,12 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
             // Use the code Vite already loaded instead of reading from disk, so
             // Vite's originalCode matches the Babel input. This ensures the SSR
             // transform's sourcesContent is consistent with the map.
-            const result = await transformWithBabel(code, id, babelPlugins)
+            const result = await transformWithBabel(
+              code,
+              id,
+              babelPlugins,
+              true,
+            )
 
             if (!result?.code) {
               return null

@@ -236,6 +236,7 @@ export const transformWithBabel = async (
   sourceCode: string,
   filename: string,
   plugins: TransformOptions['plugins'],
+  sourceMaps: TransformOptions['sourceMaps'] = 'inline',
 ) => {
   const defaultOptions = getApiSideDefaultBabelConfig({
     projectIsEsm: projectSideIsEsm('api'),
@@ -245,11 +246,11 @@ export const transformWithBabel = async (
     ...defaultOptions,
     cwd: getPaths().api.base,
     filename,
-    // we need inline sourcemaps at this level
-    // because this file will eventually be fed to esbuild
-    // when esbuild finds an inline sourcemap, it tries to "combine" it
-    // so the final sourcemap (the one that esbuild generates) combines both mappings
-    sourceMaps: 'inline',
+    // The default 'inline' embeds the map as a data URL in result.code,
+    // which esbuild consumes when it reads from the result.  Vite callers
+    // pass sourceMaps: true because they extract result.map separately for
+    // SSR source map chaining.
+    sourceMaps,
     plugins,
   })
 

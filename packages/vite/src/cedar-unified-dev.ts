@@ -95,10 +95,29 @@ export async function openDebugger(port: number, waitForDebugger = false) {
     // returned promises because the commands will complete after the
     // debugger resumes.  Catch rejections so startup doesn't hang if
     // the debugger disconnects or changes state unexpectedly.
-    session.post('Debugger.pause').catch(() => {
+    void new Promise<void>((resolve, reject) => {
+      session.post('Debugger.pause', (err) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve()
+        }
+      })
+    }).catch(() => {
       resumedResolve?.()
     })
-    session.post('Runtime.evaluate', { expression: '1' }).catch(() => {})
+
+    void new Promise<void>((resolve, reject) => {
+      session.post('Runtime.evaluate', { expression: '1' }, (err) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve()
+        }
+      })
+    }).catch(() => {
+      resumedResolve?.()
+    })
 
     await resumedPromise
   }
