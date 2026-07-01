@@ -146,7 +146,25 @@ export async function openDebugger(port: number, waitForDebugger = false) {
     // disconnected or the timeout won, the Debugger.pause flag may still be
     // armed — without this resume, the next JavaScript execution (e.g. inside
     // loadApiFunctions) would pause V8 again with no one to resume it.
-    session.post('Debugger.resume', () => {})
+    //
+    // If the session was detached (e.g. by an external debugger disconnect),
+    // posting on it fails silently.  Create a new session to send the resume.
+    await new Promise<void>((resolve) => {
+      session.post('Debugger.resume', (err) => {
+        if (!err) {
+          return resolve()
+        }
+
+        // Current session is detached — create a throwaway session to
+        // clear the pause flag on the isolate.
+        const fallbackSession = new inspector.Session()
+        fallbackSession.connect()
+        fallbackSession.post('Debugger.resume', () => {
+          fallbackSession.disconnect()
+          resolve()
+        })
+      })
+    })
   }
 }
 
