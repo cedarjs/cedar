@@ -23,10 +23,6 @@ function isNewFile(file: string): boolean {
   return result.status !== 0
 }
 
-export function quoteAll(files: string[]): string {
-  return files.map((f) => `'${f.replaceAll("'", "'\\''")}'`).join(' ')
-}
-
 // ---------------------------------------------------------------------------
 // Guard: only run the main logic when executed directly (not imported)
 // ---------------------------------------------------------------------------
@@ -58,14 +54,16 @@ if (isMainModule) {
     console.log(dim(logMsg))
 
     execSync(
-      `yarn prettier --write --log-level=silent --prose-wrap always ${quoteAll(newMdFiles)}`,
+      'yarn',
+      ['prettier', '--write', '--log-level=silent', '--prose-wrap', 'always', ...newMdFiles],
       { stdio: 'inherit' },
     )
   }
 
   if (existingFiles.length > 0) {
     execSync(
-      `yarn prettier --write --log-level=silent ${quoteAll(existingFiles)}`,
+      'yarn',
+      ['prettier', '--write', '--log-level=silent', ...existingFiles],
       { stdio: 'inherit' },
     )
   }
