@@ -27,6 +27,19 @@ function lockfileName(pm: PackageManager): string {
   return 'yarn.lock'
 }
 
+function isString(value: unknown): value is string {
+  return typeof value === 'string'
+}
+
+/**
+ * In YAML single-quoted scalars, a literal single quote is escaped by doubling
+ * it. Package names like @cedarjs/foo never contain quotes, but the tarball
+ * path could on unusual runner configs.
+ */
+function quotes(value: string) {
+  return value.replace(/'/g, "''")
+}
+
 interface Args {
   setOutput: (key: string, value: string) => void
   getInput: (key: string) => string
@@ -131,6 +144,16 @@ export async function setUpTestProject({
         },
       }
 
+      // Translate tarsync's yarn-style resolutions into pnpm overrides so
+      // pnpm install uses the local framework tarballs instead of fetching
+      // the published canary from the registry.
+      const tarsyncOverrideLines = Object.entries(
+        (pkg.resolutions as Record<string, string>) || {},
+      )
+        .filter(([, value]) => isString(value) && value.endsWith('.tgz'))
+        .map(([name, value]) => `  '${quotes(name)}': 'file:${quotes(value)}'`)
+        .join('\n')
+
       const yaml = [
         'packages:',
         '  - api',
@@ -154,6 +177,7 @@ export async function setUpTestProject({
         '',
         'overrides:',
         "  'react-is': '19.2.3'",
+        tarsyncOverrideLines,
         '',
       ].join('\n')
 
