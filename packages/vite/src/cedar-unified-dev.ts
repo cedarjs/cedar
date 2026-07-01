@@ -141,6 +141,12 @@ export async function openDebugger(port: number, waitForDebugger = false) {
 
     await Promise.race([resumedPromise, timeoutPromise])
     clearTimeout(timeout)
+
+    // Ensure the pause is cleared before returning.  If the external debugger
+    // disconnected or the timeout won, the Debugger.pause flag may still be
+    // armed — without this resume, the next JavaScript execution (e.g. inside
+    // loadApiFunctions) would pause V8 again with no one to resume it.
+    session.post('Debugger.resume', () => {})
   }
 }
 
