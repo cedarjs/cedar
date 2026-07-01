@@ -48,3 +48,7 @@ packages/testing/config
 
 /.nx/cache
 /.nx/workspace-data
+
+# Ignore agent instruction symlinks that are checked out as placeholder files on Windows
+/CLAUDE.md
+/GEMINI.md
