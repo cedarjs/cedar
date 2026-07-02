@@ -90,12 +90,18 @@ export async function openDebugger(port: number, waitForDebugger = false) {
     // unblock immediately rather than waiting for a pause that can never come.
     // If V8 already paused, still try to resume via fallback sessions.
     session.once('error', () => {
-      if (paused) tryResume()
-      else resumedResolve?.()
+      if (paused) {
+        tryResume()
+      } else {
+        resumedResolve?.()
+      }
     })
     session.once('Inspector.detached', () => {
-      if (paused) tryResume()
-      else resumedResolve?.()
+      if (paused) {
+        tryResume()
+      } else {
+        resumedResolve?.()
+      }
     })
 
     let paused = false
@@ -113,8 +119,11 @@ export async function openDebugger(port: number, waitForDebugger = false) {
     // If V8 never paused, the session may be stuck — resolve to unblock.
     const FIVE_MINUTES_MS = 5 * 60 * 1000
     const timeout = setTimeout(() => {
-      if (paused) tryResume()
-      else resumedResolve?.()
+      if (paused) {
+        tryResume()
+      } else {
+        resumedResolve?.()
+      }
     }, FIVE_MINUTES_MS)
 
     let hasTriedResume = false
