@@ -7,11 +7,13 @@ function execAsync(
   command: string,
   args: string[],
   extraEnv: Record<string, string> = {},
+  extraOptions: { cwd?: string } = {},
 ) {
   return new Promise<number>((resolve, reject) => {
     const child = spawn(command, args, {
       stdio: 'inherit',
       env: { ...process.env, ...extraEnv },
+      ...extraOptions,
     })
     child.on('exit', (code) => resolve(code ?? 1))
     child.on('error', reject)
@@ -67,6 +69,8 @@ function fileExists(filePath: string): boolean {
   }
 }
 const __dirname = dirname(fileURLToPath(import.meta.url))
+
+const monorepoRoot = path.join(__dirname, '..', '..')
 
 function isExcluded(file: string): boolean {
   // __fixtures__ at any depth (covers __fixtures__/* and **/__fixtures__/**)
@@ -153,10 +157,15 @@ function runEslint(lintFiles: string[]) {
 }
 
 function runSmartFormat(formatFiles: string[]) {
-  return execAsync('node', [
-    path.join(__dirname, 'smart-format.mts'),
-    ...formatFiles,
-  ])
+  // Resolve relative paths to absolute so they work regardless of cwd
+  const absolutePaths = formatFiles.map((f) => path.resolve(process.cwd(), f))
+
+  return execAsync(
+    'node',
+    [path.join(__dirname, 'smart-format.mts'), ...absolutePaths],
+    undefined,
+    { cwd: monorepoRoot },
+  )
 }
 
 export async function runPreCommitTasks(): Promise<boolean> {
