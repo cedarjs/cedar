@@ -38,6 +38,7 @@ function quote(files: string[]) {
 //    command: yarn.cmd prettier --write --log-level=silent C:\Users\RUNNER~1\AppData\Local\Temp\smart-format-test-yNVejx\hello world.ts
 //    stderr: <no stderr>
 //    error: spawnSync yarn.cmd EINVAL
+//
 // DEP0190 fires when passing an args array to spawnSync with shell: true.
 // Using a command string avoids it entirely.
 function runYarn(cmd: string) {
