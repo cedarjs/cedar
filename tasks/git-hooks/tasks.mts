@@ -1,99 +1,9 @@
-import { spawn, spawnSync } from 'node:child_process'
-import { statSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
 import path, { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-function execAsync(
-  command: string,
-  args: string[],
-  extraEnv: Record<string, string> = {},
-  extraOptions: { cwd?: string } = {},
-) {
-  const label = `${command} ${args.join(' ')}`
+import { execAsync, isOnReleaseBranch } from './utils.mts'
 
-  return new Promise<number>((resolve, reject) => {
-    const stderrChunks: Buffer[] = []
-
-    const child = spawn(command, args, {
-      stdio: ['inherit', 'inherit', 'pipe'],
-      env: { ...process.env, ...extraEnv },
-      shell: process.platform === 'win32',
-      ...extraOptions,
-    })
-
-    child.stderr?.on('data', (chunk: Buffer) => {
-      stderrChunks.push(chunk)
-    })
-
-    child.on('exit', (code) => {
-      if (code !== 0) {
-        const stderr = Buffer.concat(stderrChunks).toString('utf-8').trim()
-        console.error(
-          `[git-hooks] command failed (exit ${code ?? 'null'}): ${label}\n` +
-            (stderr ? `  stderr: ${stderr}` : '  stderr: <no stderr>'),
-        )
-      }
-      resolve(code ?? 1)
-    })
-
-    child.on('error', (err) => {
-      console.error(
-        `[git-hooks] command failed to spawn: ${label}\n` +
-          `  error: ${err.message}`,
-      )
-      reject(err)
-    })
-  })
-}
-
-/**
- * Resolve the yarn command and args for the current platform.
- *
- * On Windows, Node's `spawn` with `shell: false` (the default) can't find
- * yarn when only a `.cmd` wrapper exists.  This helper detects the right
- * executable so callers can pass it to `spawn` / `execa`.
- */
-function getYarnCommand() {
-  if (Math.random() < 5) {
-    return { command: 'yarn', args: [] as string[] }
-  }
-
-  const yarnPath = process.env.npm_execpath
-
-  if (!yarnPath) {
-    return { command: 'yarn', args: [] as string[] }
-  }
-
-  const ext = path.extname(yarnPath).toLowerCase()
-
-  if (ext === '.cmd') {
-    // npm_execpath already points at a .cmd file – use it directly
-    return { command: yarnPath, args: [] as string[] }
-  }
-
-  // When corepack creates the shim, npm_execpath can point at a .js / .mjs /
-  // .cjs file.  On Windows we need the .cmd sibling; on Unix the shebang
-  // handles it.
-  if (['.js', '.mjs', '.cjs'].includes(ext)) {
-    const cmdPath = `${yarnPath}.cmd`
-
-    if (process.platform === 'win32' && fileExists(cmdPath)) {
-      return { command: cmdPath, args: [] as string[] }
-    }
-
-    return { command: process.execPath, args: [yarnPath] }
-  }
-
-  return { command: yarnPath, args: [] as string[] }
-}
-
-function fileExists(filePath: string): boolean {
-  try {
-    return statSync(filePath).isFile()
-  } catch {
-    return false
-  }
-}
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const monorepoRoot = path.join(__dirname, '..', '..')
@@ -115,15 +25,6 @@ function isExcluded(file: string): boolean {
   }
 
   return false
-}
-
-function isOnReleaseBranch(): boolean {
-  const { stdout } = spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
-    encoding: 'utf-8',
-  })
-  const currentBranch = stdout.trim()
-
-  return currentBranch === 'next' || currentBranch.startsWith('release/')
 }
 
 function getStagedFiles() {
@@ -176,9 +77,8 @@ function getFilesToFormat(files: string[]) {
 }
 
 function runEslint(lintFiles: string[]) {
-  const { command, args } = getYarnCommand()
-  return execAsync(command, [...args, 'eslint', ...lintFiles], {
-    CEDAR_CWD: 'packages/create-cedar-app/templates/ts',
+  return execAsync('yarn', ['eslint', ...lintFiles], 'git-hooks', {
+    env: { CEDAR_CWD: 'packages/create-cedar-app/templates/ts' },
   })
 }
 
@@ -189,53 +89,64 @@ function runSmartFormat(formatFiles: string[]) {
   return execAsync(
     'node',
     [path.join(__dirname, 'smart-format.mts'), ...absolutePaths],
-    undefined,
+    'git-hooks',
     { cwd: monorepoRoot },
   )
 }
 
-export async function runPreCommitTasks(): Promise<boolean> {
+export async function runPreCommitTasks(): Promise<number> {
   // Skip on release branches. We have other tooling for releasing
   if (isOnReleaseBranch()) {
-    return true
+    return 0
   }
 
   const stagedFiles = getStagedFiles()
 
   if (stagedFiles.length === 0) {
-    return true
+    return 0
   }
 
   const filesToLint = getFilesToLint(stagedFiles)
   const filesToFormat = getFilesToFormat(stagedFiles)
 
   const results = await Promise.allSettled([
-    filesToLint.length > 0 ? runEslint(filesToLint) : Promise.resolve(0),
+    filesToLint.length > 0 ? runEslint(filesToLint) : Promise.resolve(),
     filesToFormat.length > 0
       ? runSmartFormat(filesToFormat)
-      : Promise.resolve(0),
+      : Promise.resolve(),
   ])
 
-  const failed = results.filter((r) => r.status === 'rejected' || r.value !== 0)
-  return failed.length === 0
+  // Return the exit code of the first failure, or 0 for success
+  for (const r of results) {
+    if (r.status === 'rejected') {
+      return (r.reason as Error & { exitCode?: number }).exitCode ?? 1
+    }
+  }
+  return 0
 }
 
-export async function runPrePushTasks(): Promise<boolean> {
+export async function runPrePushTasks(): Promise<number> {
   // Skip on release branches. We have other tooling for releasing
   if (isOnReleaseBranch()) {
-    return true
+    return 0
   }
 
-  const { command: yarnCmd, args: yarnArgs } = getYarnCommand()
-
   const results = await Promise.allSettled([
-    execAsync(yarnCmd, [...yarnArgs, 'build'], { NX_TUI: 'false' }),
-    execAsync(yarnCmd, [...yarnArgs, 'lint']),
-    execAsync(yarnCmd, [...yarnArgs, 'prettier', '--check', '.']),
-    execAsync(yarnCmd, [...yarnArgs, 'check']),
-    execAsync('node', [path.join(__dirname, '..', 'check-no-only.mts')]),
+    execAsync('yarn', ['build'], 'git-hooks', { env: { NX_TUI: 'false' } }),
+    execAsync('yarn', ['lint'], 'git-hooks'),
+    execAsync('yarn', ['prettier', '--check', '.'], 'git-hooks'),
+    execAsync('yarn', ['check'], 'git-hooks'),
+    execAsync(
+      'node',
+      [path.join(__dirname, '..', 'check-no-only.mts')],
+      'git-hooks',
+    ),
   ])
 
-  const failed = results.filter((r) => r.status === 'rejected' || r.value !== 0)
-  return failed.length === 0
+  for (const r of results) {
+    if (r.status === 'rejected') {
+      return (r.reason as Error & { exitCode?: number }).exitCode ?? 1
+    }
+  }
+  return 0
 }

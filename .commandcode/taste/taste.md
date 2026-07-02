@@ -1,3 +1,6 @@
+# Code-Style
+- Prefer `async/await` with `try/catch` over `.then()` promise chains. When refactoring a function that uses `.then()`, convert to `async function` + `try/catch` rather than keeping `.then()` style. Confidence: 0.70
+
 # TypeScript
 
 See [typescript/taste.md](typescript/taste.md)

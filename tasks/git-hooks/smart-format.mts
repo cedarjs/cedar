@@ -9,9 +9,10 @@
  */
 
 import { spawnSync } from 'node:child_process'
-import { fileURLToPath } from 'node:url'
 
 import { dim } from 'ansis'
+
+import { execAsync } from './utils.mts'
 
 const mdGlobs = /\.(md|mdx)$/i
 
@@ -23,80 +24,47 @@ function isNewFile(file: string): boolean {
   return result.status !== 0
 }
 
-function quote(files: string[]) {
-  return files.map((f) => `"${f}"`).join(' ')
+const args = process.argv.slice(2)
+
+if (args.length === 0) {
+  process.exit(0)
 }
 
-// Just using `spawnSync` with plain 'yarn' fails on Windows:
-//   [smart-format] yarn exited with status null
-//     command: yarn prettier --write --log-level=silent C:\Users\RUNNER~1\AppData\Local\Temp\smart-format-test-Dk0Npf\hello world.ts
-//     stderr: <no stderr>
-//     error: spawnSync yarn ENOENT
-//
-// With 'yarn.cmd' on Windows, I instead get this:
-//  [smart-format] yarn exited with status null
-//    command: yarn.cmd prettier --write --log-level=silent C:\Users\RUNNER~1\AppData\Local\Temp\smart-format-test-yNVejx\hello world.ts
-//    stderr: <no stderr>
-//    error: spawnSync yarn.cmd EINVAL
-//
-// DEP0190 fires when passing an args array to spawnSync with shell: true.
-// Using a command string avoids it entirely.
-function runYarn(cmd: string) {
-  const result = spawnSync(cmd, {
-    stdio: ['inherit', 'inherit', 'pipe'],
-    // `shell: true` is required on all platforms when using a command string
-    shell: true,
-  })
+const newMdFiles: string[] = []
+const existingFiles: string[] = []
 
-  if (result.status !== 0) {
-    const stderr = result.stderr?.toString().trim() || '<no stderr>'
-    const spawnError = result.error?.message || ''
-    console.error(
-      `[smart-format] yarn exited with status ${result.status ?? 'null'}\n` +
-        `  command: ${cmd}\n` +
-        `  stderr: ${stderr}\n` +
-        `  error: ${spawnError}`,
-    )
-    process.exit(result.status ?? 1)
+for (const file of args) {
+  if (mdGlobs.test(file) && isNewFile(file)) {
+    newMdFiles.push(file)
+  } else {
+    existingFiles.push(file)
   }
 }
 
-// ---------------------------------------------------------------------------
-// Guard: only run the main logic when executed directly (not imported)
-// ---------------------------------------------------------------------------
-const isMainModule =
-  process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]
+const numNewFiles = newMdFiles.length
 
-if (isMainModule) {
-  const args = process.argv.slice(2)
+if (numNewFiles > 0) {
+  const logMsg = `Applying \`proseWrap: always\` to ${numNewFiles} new markdown file(s)...`
+  console.log(dim(logMsg))
 
-  if (args.length === 0) {
-    process.exit(0)
-  }
+  await execAsync(
+    'yarn',
+    [
+      'prettier',
+      '--write',
+      '--log-level=silent',
+      '--prose-wrap',
+      'always',
+      ...newMdFiles,
+    ],
+    'smart-format',
+  )
+}
 
-  const newMdFiles: string[] = []
-  const existingFiles: string[] = []
-
-  for (const file of args) {
-    if (mdGlobs.test(file) && isNewFile(file)) {
-      newMdFiles.push(file)
-    } else {
-      existingFiles.push(file)
-    }
-  }
-
-  if (newMdFiles.length > 0) {
-    const logMsg =
-      `Applying \`proseWrap: always\` to ${newMdFiles.length} new markdown ` +
-      'file(s)...'
-    console.log(dim(logMsg))
-
-    runYarn(
-      `yarn prettier --write --log-level=silent --prose-wrap always ${quote(newMdFiles)}`,
-    )
-  }
-
-  if (existingFiles.length > 0) {
-    runYarn(`yarn prettier --write --log-level=silent ${quote(existingFiles)}`)
-  }
+if (existingFiles.length > 0) {
+  await execAsync(
+    'yarn',
+    ['prettier', '--write', '--log-level=silent', ...existingFiles],
+    'smart-format',
+  )
 }

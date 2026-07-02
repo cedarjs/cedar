@@ -2,5 +2,5 @@
 
 import { runPrePushTasks } from './tasks.mts'
 
-const ok = await runPrePushTasks()
-process.exit(ok ? 0 : 1)
+const exitCode = await runPrePushTasks()
+process.exit(exitCode)
