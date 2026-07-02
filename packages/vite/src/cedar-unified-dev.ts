@@ -165,7 +165,9 @@ export async function openDebugger(port: number, waitForDebugger = false) {
           if (attempt > 0) {
             s.disconnect()
           }
+
           if (ok) {
+            resumedResolve?.()
             return
           }
         }
