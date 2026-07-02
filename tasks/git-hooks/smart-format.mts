@@ -10,8 +10,7 @@
 
 import { spawnSync } from 'node:child_process'
 import path from 'node:path'
-
-import { dim } from 'ansis'
+import { styleText } from 'node:util'
 
 import { execAsync } from './utils.mts'
 
@@ -57,7 +56,7 @@ const numNewFiles = newMdFiles.length
 
 if (numNewFiles > 0) {
   const logMsg = `Applying \`proseWrap: always\` to ${numNewFiles} new markdown file(s)...`
-  console.log(dim(logMsg))
+  console.log(styleText('dim', logMsg))
 
   await execAsync(
     'yarn',
