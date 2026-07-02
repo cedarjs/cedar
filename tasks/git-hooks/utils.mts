@@ -22,7 +22,7 @@ export function sanitizeArg(arg: string): string {
 /**
  * Build a command string for Windows cmd.exe from a command and args array.
  */
-function buildWindowsCommand(command: string, args: string[]): string {
+export function buildWindowsCommand(command: string, args: string[]): string {
   return `${command} ${args.map((a) => sanitizeArg(a)).join(' ')}`
 }
 

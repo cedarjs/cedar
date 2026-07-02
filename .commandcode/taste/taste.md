@@ -2,6 +2,10 @@
 
 - Prefer `async/await` with `try/catch` over `.then()` promise chains. When refactoring a function that uses `.then()`, convert to `async function` + `try/catch` rather than keeping `.then()` style. Confidence: 0.70
 
+# Testing
+
+- Testing Windows-specific code paths on Linux is reasonable when the branch logic is simple enough to exercise via platform mocking (e.g., `process.platform = 'win32'`). This catches regressions before they reach the Windows runner. The blanket rule of "never test Windows paths on Linux" oversimplifies — apply judgment: simple mocking is worth doing, complex Windows-only integration tests belong on Windows CI runners. Confidence: 0.65
+
 # TypeScript
 
 See [typescript/taste.md](typescript/taste.md)
