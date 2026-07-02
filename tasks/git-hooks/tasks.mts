@@ -9,14 +9,39 @@ function execAsync(
   extraEnv: Record<string, string> = {},
   extraOptions: { cwd?: string } = {},
 ) {
+  const label = `${command} ${args.join(' ')}`
+
   return new Promise<number>((resolve, reject) => {
+    const stderrChunks: Buffer[] = []
+
     const child = spawn(command, args, {
-      stdio: 'inherit',
+      stdio: ['inherit', 'inherit', 'pipe'],
       env: { ...process.env, ...extraEnv },
       ...extraOptions,
     })
-    child.on('exit', (code) => resolve(code ?? 1))
-    child.on('error', reject)
+
+    child.stderr?.on('data', (chunk: Buffer) => {
+      stderrChunks.push(chunk)
+    })
+
+    child.on('exit', (code) => {
+      if (code !== 0) {
+        const stderr = Buffer.concat(stderrChunks).toString('utf-8').trim()
+        console.error(
+          `[git-hooks] command failed (exit ${code ?? 'null'}): ${label}\n` +
+            (stderr ? `  stderr: ${stderr}` : '  stderr: <no stderr>'),
+        )
+      }
+      resolve(code ?? 1)
+    })
+
+    child.on('error', (err) => {
+      console.error(
+        `[git-hooks] command failed to spawn: ${label}\n` +
+          `  error: ${err.message}`,
+      )
+      reject(err)
+    })
   })
 }
 
