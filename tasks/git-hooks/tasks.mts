@@ -17,6 +17,7 @@ function execAsync(
     const child = spawn(command, args, {
       stdio: ['inherit', 'inherit', 'pipe'],
       env: { ...process.env, ...extraEnv },
+      shell: process.platform === 'win32',
       ...extraOptions,
     })
 
