@@ -206,8 +206,11 @@ export async function openDebugger(port: number, waitForDebugger = false) {
         }
       })
     }).catch(() => {
-      // Evaluate failure -> V8 won't pause.  Unblock.
-      resumedResolve?.()
+      // Evaluate failure -> the pause flag from Debugger.pause may persist.
+      // Best-effort: try to resume to clear it before unblocking.
+      session.post('Debugger.resume', () => {
+        resumedResolve?.()
+      })
     })
 
     await resumedPromise
