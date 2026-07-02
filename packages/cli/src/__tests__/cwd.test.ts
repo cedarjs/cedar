@@ -1,4 +1,4 @@
-import { spawnSync } from 'child_process'
+import { spawnSync, type SpawnSyncOptions } from 'child_process'
 import path from 'path'
 
 import { describe, it, expect } from 'vitest'
@@ -6,7 +6,7 @@ import { describe, it, expect } from 'vitest'
 const BASE_DIR = path.resolve(import.meta.dirname, '..', '..', '..', '..')
 const CLI = path.join(BASE_DIR, 'packages', 'cli', 'dist', 'index.js')
 
-function cedar(args, options) {
+function cedar(args: string[], options?: SpawnSyncOptions) {
   const { status, stdout, stderr } = spawnSync('node', [CLI, ...args], {
     cwd: BASE_DIR,
     ...options,

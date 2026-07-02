@@ -14,12 +14,12 @@ afterEach(() => {
   globalThis.Date = RealDate
 })
 
-const mockDate = (isoDate) => {
+const mockDate = (isoDate: string) => {
   globalThis.Date = class extends RealDate {
     constructor() {
       return new RealDate(isoDate)
     }
-  }
+  } as typeof Date
 }
 
 test('returns exactly 1 file', async () => {

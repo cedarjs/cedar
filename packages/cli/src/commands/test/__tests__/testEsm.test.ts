@@ -2,7 +2,7 @@ globalThis.__dirname = import.meta.dirname
 import '../../../lib/test.js'
 
 vi.mock('execa', () => ({
-  default: vi.fn((cmd, params) => ({
+  default: vi.fn((cmd: string, params: string[]) => ({
     cmd,
     params,
   })),
