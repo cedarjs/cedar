@@ -1,7 +1,7 @@
 globalThis.__dirname = __dirname
 vi.mock('node:fs')
 vi.mock('../../../../lib', async (importOriginal) => {
-  const originalLib = await importOriginal<typeof import('../../../../lib/index.js')>()
+  const originalLib = await importOriginal<typeof Lib>()
   return {
     ...originalLib,
     generateTemplate: () => '',
@@ -15,6 +15,7 @@ import { vi, beforeEach, afterEach, test, expect } from 'vitest'
 
 import '../../../../lib/test'
 
+import type * as Lib from '../../../../lib/index.js'
 import { files } from '../../../generate/function/functionHandler.js'
 import { tasks } from '../functionHandler.js'
 

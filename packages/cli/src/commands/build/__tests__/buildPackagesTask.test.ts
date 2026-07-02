@@ -59,7 +59,11 @@ vi.mock('../../../lib/index.js', () => {
 vi.mock('@cedarjs/telemetry', () => {
   return {
     errorTelemetry: vi.fn(),
-    timedTelemetry: (_argv: unknown, _options: unknown, callback: () => unknown) => {
+    timedTelemetry: (
+      _argv: unknown,
+      _options: unknown,
+      callback: () => unknown,
+    ) => {
       return callback()
     },
   }
@@ -118,7 +122,9 @@ describe('buildPackagesTask', () => {
     await buildPackagesTask(mockTask, ['packages/*'])
 
     // Execute each subtask and verify execa is called correctly
-    for (const subtask of mockTask._subtasks as Array<{ task: () => Promise<void> }>) {
+    for (const subtask of mockTask._subtasks as {
+      task: () => Promise<void>
+    }[]) {
       await subtask.task()
     }
 
@@ -203,7 +209,9 @@ describe('buildPackagesTask', () => {
       { stderr: 'error TS2345: Type string is not assignable to number' },
     )
 
-    const fooSubtask = (mockTask._subtasks as Array<{ task: () => Promise<void> }>)[0]
+    const fooSubtask = (
+      mockTask._subtasks as { task: () => Promise<void> }[]
+    )[0]
 
     vi.mocked(execa).mockRejectedValueOnce(execaError)
     await expect(fooSubtask.task()).rejects.toThrow('Building "foo" failed')
@@ -224,7 +232,9 @@ describe('buildPackagesTask', () => {
     )
     vi.mocked(execa).mockRejectedValueOnce(execaError)
 
-    const fooSubtask = (mockTask._subtasks as Array<{ task: () => Promise<void> }>)[0]
+    const fooSubtask = (
+      mockTask._subtasks as { task: () => Promise<void> }[]
+    )[0]
     await expect(fooSubtask.task()).rejects.toThrow(
       'Command failed with exit code 1',
     )
@@ -240,7 +250,9 @@ describe('buildPackagesTask', () => {
     )
     vi.mocked(execa).mockRejectedValueOnce(execaError)
 
-    const fooSubtask = (mockTask._subtasks as Array<{ task: () => Promise<void> }>)[0]
+    const fooSubtask = (
+      mockTask._subtasks as { task: () => Promise<void> }[]
+    )[0]
 
     try {
       await fooSubtask.task()
@@ -260,7 +272,9 @@ describe('buildPackagesTask', () => {
     await buildPackagesTask(mockTask, ['packages/*'])
 
     // execa resolves by default in our mock
-    for (const subtask of mockTask._subtasks as Array<{ task: () => Promise<void> }>) {
+    for (const subtask of mockTask._subtasks as {
+      task: () => Promise<void>
+    }[]) {
       await expect(subtask.task()).resolves.toBeUndefined()
     }
   })
