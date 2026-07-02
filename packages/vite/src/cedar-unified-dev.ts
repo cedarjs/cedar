@@ -86,35 +86,79 @@ export async function openDebugger(port: number, waitForDebugger = false) {
       resumedResolve = resolve
     })
 
-    // Resolve promptly on session error (e.g. debugger disconnect or crash)
-    // or Inspector.detached (CDP signal from a clean debugger disconnect).
-    session
-      .once('error', () => {
-        resumedResolve?.()
-      })
-      .once('Inspector.detached', () => {
-        resumedResolve?.()
-      })
+    session.once('error', () => tryResume())
+    session.once('Inspector.detached', () => tryResume())
+
+    let paused = false
+    session.once('Debugger.paused', () => {
+      paused = true
+      tryResume()
+    })
 
     session.once('Debugger.resumed', () => {
       resumedResolve?.()
     })
 
-    // Bounded fallback: if the external debugger disconnects without sending
-    // Debugger.resume (e.g. DevTools is closed), the timeout unblocks so the
-    // dev server doesn't hang with API functions never loaded.
-    let timeout: ReturnType<typeof setTimeout> | undefined
-    const timeoutPromise = new Promise<void>((resolve) => {
-      const fiveMinutes = 5 * 60 * 1000
-      timeout = setTimeout(resolve, fiveMinutes)
-    })
+    // Safety net: if neither paused, resumed, nor error fires within 5
+    // minutes, force a resume attempt so the dev server doesn't hang.
+    const FIVE_MINUTES_MS = 5 * 60 * 1000
+    const timeout = setTimeout(() => tryResume(), FIVE_MINUTES_MS)
 
-    // Fire Debugger.pause and Runtime.evaluate. These execute synchronously
-    // within V8, arming the pause flag and then executing JS (which checks the
-    // flag and pauses). We do not await the returned promises because the
-    // commands will complete after the debugger resumes. Catch rejections so
-    // startup doesn't hang if the debugger disconnects or changes state
-    // unexpectedly.
+    let hasTriedResume = false
+    const tryResume = () => {
+      if (hasTriedResume) {
+        return
+      }
+      // Only proceed when V8 has actually paused.  If the external debugger
+      // disconnected before the pause took effect, wait for Debugger.paused
+      // to fire — the Runtime.evaluate we queued will trigger it on the next
+      // tick.
+      if (!paused) {
+        return
+      }
+      hasTriedResume = true
+
+      // Attempt to resume.  Retry with throwaway sessions if the original
+      // session was detached or its resume command was rejected.
+      ;(async () => {
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const s = attempt === 0 ? session : new inspector.Session()
+          if (attempt > 0) {
+            try {
+              s.connect()
+              await new Promise<void>((resolve, reject) => {
+                s.post('Debugger.enable', (err) =>
+                  err ? reject(err) : resolve(),
+                )
+              })
+            } catch {
+              continue
+            }
+          }
+
+          const ok = await new Promise<boolean>((resolve) => {
+            s.post('Debugger.resume', (err) => resolve(!err))
+          })
+
+          if (attempt > 0) {
+            s.disconnect()
+          }
+          if (ok) {
+            return
+          }
+        }
+
+        console.warn(
+          '[cedar-unified-dev] Failed to clear debugger pause after ' +
+            'external debugger disconnect.  API functions may pause on ' +
+            'next execution.',
+        )
+        resumedResolve?.()
+      })()
+    }
+
+    // Fire Debugger.pause and Runtime.evaluate. Fire-and-forget (void the
+    // returned promise) — the post callback handles the response.
     void new Promise<void>((resolve, reject) => {
       session.post('Debugger.pause', (err) => {
         if (err) {
@@ -124,6 +168,8 @@ export async function openDebugger(port: number, waitForDebugger = false) {
         }
       })
     }).catch(() => {
+      // If the pause command itself failed, nothing will pause V8.  Unblock
+      // so startup can continue.
       resumedResolve?.()
     })
 
@@ -136,43 +182,12 @@ export async function openDebugger(port: number, waitForDebugger = false) {
         }
       })
     }).catch(() => {
+      // Evaluate failure -> V8 won't pause.  Unblock.
       resumedResolve?.()
     })
 
-    await Promise.race([resumedPromise, timeoutPromise])
+    await resumedPromise
     clearTimeout(timeout)
-
-    // Ensure the pause is cleared before returning.  If the external debugger
-    // disconnected or the timeout won, the Debugger.pause flag may still be
-    // armed — without this resume, the next JavaScript execution (e.g. inside
-    // loadApiFunctions) would pause V8 again with no one to resume it.
-    //
-    // Retry with throwaway sessions if the original session was detached.
-    for (let attempt = 0; attempt < 3; attempt++) {
-      const s = attempt === 0 ? session : new inspector.Session()
-      if (attempt > 0) {
-        s.connect()
-      }
-
-      const resumeOk = await new Promise<boolean>((resolve) => {
-        s.post('Debugger.resume', (err) => resolve(!err))
-      })
-
-      if (attempt > 0) {
-        s.disconnect()
-      }
-      if (resumeOk) {
-        break
-      }
-
-      if (attempt === 2) {
-        console.warn(
-          '[cedar-unified-dev] Failed to clear debugger pause after ' +
-            'external debugger disconnect. API functions may pause on ' +
-            'next execution.',
-        )
-      }
-    }
   }
 }
 
