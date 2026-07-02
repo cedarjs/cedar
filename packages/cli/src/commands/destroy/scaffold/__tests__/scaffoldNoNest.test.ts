@@ -29,15 +29,16 @@ vi.mock('../../../../lib/schemaHelpers', async (importOriginal) => {
   const originalSchemaHelpers =
     await importOriginal<typeof import('../../../../lib/schemaHelpers.js')>()
   const nodePath = await import('node:path')
-  const nodeFs = await import('node:fs')
+  // Use importActual to bypass the node:fs mock (memfs) and read from real disk
+  const nodeFs = await vi.importActual<typeof import('node:fs')>('node:fs')
   return {
     ...originalSchemaHelpers,
     getSchema: () =>
       JSON.parse(
-        nodeFs.default.readFileSync(
+        nodeFs.readFileSync(
           nodePath.join(globalThis.__dirname, 'fixtures', 'post.json'),
           'utf-8',
-        ),
+        ) as string,
       ),
   }
 })
