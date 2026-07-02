@@ -34,78 +34,20 @@ vi.mock('../lib/packages', () => {
   }
 })
 
-const MOCK_PATHS: ProjectConfig.Paths = {
-  base: '',
-  generated: {
-    base: '',
-    schema: '',
-    types: { includes: '', mirror: '' },
-    prebuild: '',
-  },
-  web: {
-    base: '',
-    src: '',
-    storybook: '',
-    app: '',
-    document: '',
-    html: '',
-    routes: '',
-    pages: '',
-    components: '',
-    layouts: '',
-    config: '',
-    viteConfig: '',
-    entryClient: null,
-    entryServer: null,
-    postcss: '',
-    storybookConfig: '',
-    storybookPreviewConfig: null,
-    storybookManagerConfig: '',
-    dist: '',
-    distBrowser: '',
-    distRsc: '',
-    distSsr: '',
-    distSsrDocument: '',
-    distSsrEntryServer: '',
-    distRouteHooks: '',
-    distRscEntries: '',
-    routeManifest: '',
-    types: '',
-    graphql: '',
-  },
-  api: {
-    base: '',
-    directives: '',
-    prismaConfig: '',
-    src: '',
-    functions: '',
-    graphql: '',
-    lib: '',
-    services: '',
-    subscriptions: '',
-    config: '',
-    dist: '',
-    types: '',
-    models: '',
-    mail: '',
-    jobs: '',
-    distJobs: '',
-    jobsConfig: null,
-    distJobsConfig: null,
-    logger: null,
-  },
-  scripts: '',
-  packages: '',
-  generatorTemplates: '',
-}
+const MOCK_PATHS = {
+  generated: { base: '' },
+  // Type casting here isn't great, but it's the pragmatic choice to avoid
+  // having to write a full mock for the paths object (~50 lines of `blah: ''`)
+} as unknown as ProjectConfig.Paths
 
 function getMockYargsInstance() {
   return yargs(hideBin(process.argv))
     .scriptName('cedar')
     .command({
       command: 'built-in',
-      description: 'Some builtin command',
+      describe: 'Some builtin command',
       aliases: ['bi', 'builtIn'],
+      handler: () => {},
     })
     .exitProcess(false)
 }
@@ -253,21 +195,17 @@ describe('plugin loading', () => {
           },
         },
       })
-      vi.mock(
-        '@cedarjs/cli-some-package-not-in-cache',
-        () => {
-          return {
-            commands: [
-              {
-                command: 'some-other-command',
-                description: 'Some example other command',
-                aliases: ['soc', 'someOtherCommand'],
-              },
-            ],
-          }
-        },
-        { virtual: true },
-      )
+      vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
+        return {
+          commands: [
+            {
+              command: 'some-other-command',
+              description: 'Some example other command',
+              aliases: ['soc', 'someOtherCommand'],
+            },
+          ],
+        }
+      })
       vol.fromJSON({
         ['commandCache.json']: JSON.stringify({
           '@cedarjs/cli-some-package': {
@@ -356,21 +294,17 @@ describe('plugin loading', () => {
           },
         },
       })
-      vi.mock(
-        '@cedarjs/cli-some-package-not-in-cache',
-        () => {
-          return {
-            commands: [
-              {
-                command: 'some-other-command',
-                description: 'Some example other command',
-                aliases: ['soc', 'someOtherCommand'],
-              },
-            ],
-          }
-        },
-        { virtual: true },
-      )
+      vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
+        return {
+          commands: [
+            {
+              command: 'some-other-command',
+              description: 'Some example other command',
+              aliases: ['soc', 'someOtherCommand'],
+            },
+          ],
+        }
+      })
       vol.fromJSON({
         ['commandCache.json']: JSON.stringify({
           '@cedarjs/cli-some-package': {
@@ -459,21 +393,17 @@ describe('plugin loading', () => {
           },
         },
       })
-      vi.mock(
-        '@cedarjs/cli-some-package-not-in-cache',
-        () => {
-          return {
-            commands: [
-              {
-                command: 'some-other-command',
-                description: 'Some example other command',
-                aliases: ['soc', 'someOtherCommand'],
-              },
-            ],
-          }
-        },
-        { virtual: true },
-      )
+      vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
+        return {
+          commands: [
+            {
+              command: 'some-other-command',
+              description: 'Some example other command',
+              aliases: ['soc', 'someOtherCommand'],
+            },
+          ],
+        }
+      })
       vol.fromJSON({
         ['commandCache.json']: JSON.stringify({
           '@cedarjs/cli-some-package': {
@@ -550,21 +480,17 @@ describe('plugin loading', () => {
         },
       },
     })
-    vi.mock(
-      '@cedarjs/cli-some-package-not-in-cache',
-      () => {
-        return {
-          commands: [
-            {
-              command: 'some-other-command',
-              description: 'Some example other command',
-              aliases: ['soc', 'someOtherCommand'],
-            },
-          ],
-        }
-      },
-      { virtual: true },
-    )
+    vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
+      return {
+        commands: [
+          {
+            command: 'some-other-command',
+            description: 'Some example other command',
+            aliases: ['soc', 'someOtherCommand'],
+          },
+        ],
+      }
+    })
     vol.fromJSON({
       ['commandCache.json']: JSON.stringify({
         '@cedarjs/cli-some-package': {
@@ -649,21 +575,17 @@ describe('plugin loading', () => {
         },
       },
     })
-    vi.mock(
-      '@cedarjs/cli-some-package-not-in-cache',
-      () => {
-        return {
-          commands: [
-            {
-              command: 'some-other-command',
-              description: 'Some example other command',
-              aliases: ['soc', 'someOtherCommand'],
-            },
-          ],
-        }
-      },
-      { virtual: true },
-    )
+    vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
+      return {
+        commands: [
+          {
+            command: 'some-other-command',
+            description: 'Some example other command',
+            aliases: ['soc', 'someOtherCommand'],
+          },
+        ],
+      }
+    })
     vol.fromJSON({
       ['commandCache.json']: JSON.stringify({
         '@cedarjs/cli-some-package': {
@@ -749,21 +671,17 @@ describe('plugin loading', () => {
         },
       },
     })
-    vi.mock(
-      '@cedarjs/cli-some-package-not-in-cache',
-      () => {
-        return {
-          commands: [
-            {
-              command: 'some-other-command',
-              description: 'Some example other command',
-              aliases: ['soc', 'someOtherCommand'],
-            },
-          ],
-        }
-      },
-      { virtual: true },
-    )
+    vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
+      return {
+        commands: [
+          {
+            command: 'some-other-command',
+            description: 'Some example other command',
+            aliases: ['soc', 'someOtherCommand'],
+          },
+        ],
+      }
+    })
     vol.fromJSON({
       ['commandCache.json']: JSON.stringify({
         '@cedarjs/cli-some-package': {
@@ -781,24 +699,26 @@ describe('plugin loading', () => {
       }),
     })
 
-    vi.mocked(pluginLib.loadPluginPackage).mockImplementation((packageName) => {
-      if (packageName === '@cedarjs/cli-some-package') {
-        return {
-          commands: [
-            {
-              command: 'some-command',
-              description: 'Some example command',
-              aliases: ['sc', 'someCommand'],
-              builder: () => {},
-              handler: () => {
-                console.log('MARKER')
+    vi.mocked(pluginLib.loadPluginPackage).mockImplementation(
+      async (packageName, _packageVersion, _autoInstall) => {
+        if (packageName === '@cedarjs/cli-some-package') {
+          return {
+            commands: [
+              {
+                command: 'some-command',
+                description: 'Some example command',
+                aliases: ['sc', 'someCommand'],
+                builder: () => {},
+                handler: () => {
+                  console.log('MARKER')
+                },
               },
-            },
-          ],
+            ],
+          }
         }
-      }
-      throw new Error(`Unexpected behaviour: loading ${packageName}`)
-    })
+        throw new Error(`Unexpected behaviour: loading ${packageName}`)
+      },
+    )
 
     const yargsInstance = getMockYargsInstance()
     await loadPlugins(yargsInstance)
@@ -857,73 +777,67 @@ describe('plugin loading', () => {
         },
       },
     })
-    vi.mock(
-      '@cedarjs/cli-some-package-not-in-cache',
-      () => {
-        return {
-          commands: [
-            {
-              command: 'some-other-command',
-              description: 'Some example other command',
-              aliases: ['soc', 'someOtherCommand'],
-            },
-          ],
-        }
-      },
-      { virtual: true },
-    )
-    vi.mock(
-      '@cedarjs/cli-some-package',
-      () => {
-        return {
-          commands: [
-            {
-              command: 'some-command',
-              description: 'Some example command',
-              aliases: ['sc', 'someCommand'],
-            },
-          ],
-        }
-      },
-      { virtual: true },
-    )
+    vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
+      return {
+        commands: [
+          {
+            command: 'some-other-command',
+            description: 'Some example other command',
+            aliases: ['soc', 'someOtherCommand'],
+          },
+        ],
+      }
+    })
+    vi.mock('@cedarjs/cli-some-package', () => {
+      return {
+        commands: [
+          {
+            command: 'some-command',
+            description: 'Some example command',
+            aliases: ['sc', 'someCommand'],
+          },
+        ],
+      }
+    })
     vol.fromJSON({
       ['commandCache.json']: JSON.stringify({}),
     })
 
-    vi.mocked(pluginLib.loadPluginPackage).mockImplementation((packageName) => {
-      if (packageName === '@cedarjs/cli-some-package') {
-        return {
-          commands: [
-            {
-              command: 'some-command',
-              description: 'Some example command',
-              aliases: ['sc', 'someCommand'],
-              builder: () => {},
-              handler: () => {
-                console.log('MARKER SOME')
+    vi.mocked(pluginLib.loadPluginPackage).mockImplementation(
+      async (packageName, _packageVersion, _autoInstall) => {
+        if (packageName === '@cedarjs/cli-some-package') {
+          return {
+            commands: [
+              {
+                command: 'some-command',
+                description: 'Some example command',
+                aliases: ['sc', 'someCommand'],
+                builder: () => {},
+                handler: () => {
+                  console.log('MARKER SOME')
+                },
               },
-            },
-          ],
+            ],
+          }
         }
-      }
-      if (packageName === '@cedarjs/cli-some-package-not-in-cache') {
-        return {
-          commands: [
-            {
-              command: 'some-other-command',
-              description: 'Some example other command',
-              aliases: ['soc', 'someOtherCommand'],
-              builder: () => {},
-              handler: () => {
-                console.log('MARKER SOME OTHER')
+        if (packageName === '@cedarjs/cli-some-package-not-in-cache') {
+          return {
+            commands: [
+              {
+                command: 'some-other-command',
+                description: 'Some example other command',
+                aliases: ['soc', 'someOtherCommand'],
+                builder: () => {},
+                handler: () => {
+                  console.log('MARKER SOME OTHER')
+                },
               },
-            },
-          ],
+            ],
+          }
         }
-      }
-      throw new Error(`Unexpected behaviour: loading ${packageName}`)
-    })
+        throw new Error(`Unexpected behaviour: loading ${packageName}`)
+      },
+    )
 
     const yargsInstance = getMockYargsInstance()
     await loadPlugins(yargsInstance)
@@ -988,21 +902,17 @@ describe('plugin loading', () => {
         },
       },
     })
-    vi.mock(
-      '@cedarjs/cli-some-package-not-in-cache',
-      () => {
-        return {
-          commands: [
-            {
-              command: 'some-other-command',
-              description: 'Some example other command',
-              aliases: ['soc', 'someOtherCommand'],
-            },
-          ],
-        }
-      },
-      { virtual: true },
-    )
+    vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
+      return {
+        commands: [
+          {
+            command: 'some-other-command',
+            description: 'Some example other command',
+            aliases: ['soc', 'someOtherCommand'],
+          },
+        ],
+      }
+    })
     vol.fromJSON({
       ['commandCache.json']: JSON.stringify({
         '@cedarjs/cli-some-package': {
@@ -1020,39 +930,41 @@ describe('plugin loading', () => {
       }),
     })
 
-    vi.mocked(pluginLib.loadPluginPackage).mockImplementation((packageName) => {
-      if (packageName === '@cedarjs/cli-some-package') {
-        return {
-          commands: [
-            {
-              command: 'some-command',
-              description: 'Some example command',
-              aliases: ['sc', 'someCommand'],
-              builder: () => {},
-              handler: () => {
-                console.log('MARKER SOME')
+    vi.mocked(pluginLib.loadPluginPackage).mockImplementation(
+      async (packageName, _packageVersion, _autoInstall) => {
+        if (packageName === '@cedarjs/cli-some-package') {
+          return {
+            commands: [
+              {
+                command: 'some-command',
+                description: 'Some example command',
+                aliases: ['sc', 'someCommand'],
+                builder: () => {},
+                handler: () => {
+                  console.log('MARKER SOME')
+                },
               },
-            },
-          ],
+            ],
+          }
         }
-      }
-      if (packageName === '@cedarjs/cli-some-package-not-in-cache') {
-        return {
-          commands: [
-            {
-              command: 'some-other-command',
-              description: 'Some example other command',
-              aliases: ['soc', 'someOtherCommand'],
-              builder: () => {},
-              handler: () => {
-                console.log('MARKER SOME OTHER')
+        if (packageName === '@cedarjs/cli-some-package-not-in-cache') {
+          return {
+            commands: [
+              {
+                command: 'some-other-command',
+                description: 'Some example other command',
+                aliases: ['soc', 'someOtherCommand'],
+                builder: () => {},
+                handler: () => {
+                  console.log('MARKER SOME OTHER')
+                },
               },
-            },
-          ],
+            ],
+          }
         }
-      }
-      throw new Error(`Unexpected behaviour: loading ${packageName}`)
-    })
+        throw new Error(`Unexpected behaviour: loading ${packageName}`)
+      },
+    )
 
     const yargsInstance = getMockYargsInstance()
     await loadPlugins(yargsInstance)
@@ -1127,21 +1039,17 @@ describe('plugin loading', () => {
         },
       },
     })
-    vi.mock(
-      '@cedarjs/cli-some-package-not-in-cache',
-      () => {
-        return {
-          commands: [
-            {
-              command: 'some-other-command',
-              description: 'Some example other command',
-              aliases: ['soc', 'someOtherCommand'],
-            },
-          ],
-        }
-      },
-      { virtual: true },
-    )
+    vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
+      return {
+        commands: [
+          {
+            command: 'some-other-command',
+            description: 'Some example other command',
+            aliases: ['soc', 'someOtherCommand'],
+          },
+        ],
+      }
+    })
     vol.fromJSON({
       ['commandCache.json']: JSON.stringify({
         '@cedarjs/cli-some-package': {
@@ -1159,24 +1067,26 @@ describe('plugin loading', () => {
       }),
     })
 
-    vi.mocked(pluginLib.loadPluginPackage).mockImplementation((packageName) => {
-      if (packageName === '@bluewoodjs/cli-some-package') {
-        return {
-          commands: [
-            {
-              command: 'third-party',
-              description: 'Some third party command',
-              aliases: ['tp', 'thirdParty'],
-              builder: () => {},
-              handler: () => {
-                console.log('MARKER')
+    vi.mocked(pluginLib.loadPluginPackage).mockImplementation(
+      async (packageName, _packageVersion, _autoInstall) => {
+        if (packageName === '@bluewoodjs/cli-some-package') {
+          return {
+            commands: [
+              {
+                command: 'third-party',
+                description: 'Some third party command',
+                aliases: ['tp', 'thirdParty'],
+                builder: () => {},
+                handler: () => {
+                  console.log('MARKER')
+                },
               },
-            },
-          ],
+            ],
+          }
         }
-      }
-      throw new Error(`Unexpected behaviour: loading ${packageName}`)
-    })
+        throw new Error(`Unexpected behaviour: loading ${packageName}`)
+      },
+    )
 
     const yargsInstance = getMockYargsInstance()
     await loadPlugins(yargsInstance)
@@ -1242,39 +1152,41 @@ describe('plugin loading', () => {
       ['commandCache.json']: JSON.stringify({}),
     })
 
-    vi.mocked(pluginLib.loadPluginPackage).mockImplementation((packageName) => {
-      if (packageName === '@bluewoodjs/cli-some-package') {
-        return {
-          commands: [
-            {
-              command: 'third-party',
-              description: 'Some third party command',
-              aliases: ['tp', 'thirdParty'],
-              builder: () => {},
-              handler: () => {
-                console.log('MARKER TP')
+    vi.mocked(pluginLib.loadPluginPackage).mockImplementation(
+      async (packageName, _packageVersion, _autoInstall) => {
+        if (packageName === '@bluewoodjs/cli-some-package') {
+          return {
+            commands: [
+              {
+                command: 'third-party',
+                description: 'Some third party command',
+                aliases: ['tp', 'thirdParty'],
+                builder: () => {},
+                handler: () => {
+                  console.log('MARKER TP')
+                },
               },
-            },
-          ],
+            ],
+          }
         }
-      }
-      if (packageName === '@bluewoodjs/cli-some-package-second-example') {
-        return {
-          commands: [
-            {
-              command: 'third-party-other',
-              description: 'Some other third party command',
-              aliases: ['tpo', 'thirdPartyOther'],
-              builder: () => {},
-              handler: () => {
-                console.log('MARKER TPO')
+        if (packageName === '@bluewoodjs/cli-some-package-second-example') {
+          return {
+            commands: [
+              {
+                command: 'third-party-other',
+                description: 'Some other third party command',
+                aliases: ['tpo', 'thirdPartyOther'],
+                builder: () => {},
+                handler: () => {
+                  console.log('MARKER TPO')
+                },
               },
-            },
-          ],
+            ],
+          }
         }
-      }
-      throw new Error(`Unexpected behaviour: loading ${packageName}`)
-    })
+        throw new Error(`Unexpected behaviour: loading ${packageName}`)
+      },
+    )
 
     const yargsInstance = getMockYargsInstance()
     await loadPlugins(yargsInstance)
@@ -1356,24 +1268,26 @@ describe('plugin loading', () => {
       }),
     })
 
-    vi.mocked(pluginLib.loadPluginPackage).mockImplementation((packageName) => {
-      if (packageName === '@bluewoodjs/cli-some-package') {
-        return {
-          commands: [
-            {
-              command: 'third-party',
-              description: 'Some third party command',
-              aliases: ['tp', 'thirdParty'],
-              builder: () => {},
-              handler: () => {
-                console.log('MARKER SOME')
+    vi.mocked(pluginLib.loadPluginPackage).mockImplementation(
+      async (packageName, _packageVersion, _autoInstall) => {
+        if (packageName === '@bluewoodjs/cli-some-package') {
+          return {
+            commands: [
+              {
+                command: 'third-party',
+                description: 'Some third party command',
+                aliases: ['tp', 'thirdParty'],
+                builder: () => {},
+                handler: () => {
+                  console.log('MARKER SOME')
+                },
               },
-            },
-          ],
+            ],
+          }
         }
-      }
-      throw new Error(`Unexpected behaviour: loading ${packageName}`)
-    })
+        throw new Error(`Unexpected behaviour: loading ${packageName}`)
+      },
+    )
 
     const yargsInstance = getMockYargsInstance()
     await loadPlugins(yargsInstance)
