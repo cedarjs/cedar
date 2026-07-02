@@ -4,6 +4,12 @@
     "allowJs": true,
     "esModuleInterop": true,
     "baseUrl": "./",
+    "rootDirs": [
+      "../api/src",
+      "../.cedar/types/mirror/api/src",
+      "../web/src",
+      "../.cedar/types/mirror/web/src"
+    ],
     "paths": {
       "$api/*": [
         "../api/*",
