@@ -63,7 +63,7 @@ function spawnSafe(
       stderrChunks.push(chunk)
     })
 
-    child.on('exit', (code) => {
+    child.on('close', (code) => {
       const stderr = Buffer.concat(stderrChunks).toString('utf-8').trim()
       resolve({ code, stderr })
     })
