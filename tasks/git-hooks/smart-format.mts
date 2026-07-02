@@ -8,24 +8,37 @@
  * Usage: node tasks/git-hooks/smart-format.mts <file> [<file> ...]
  */
 
-import { execSync, spawnSync } from 'node:child_process'
+import { spawnSync } from 'node:child_process'
+import path from 'node:path'
+import { styleText } from 'node:util'
 
-import { dim } from 'ansis'
+import { execAsync } from './utils.mts'
+
+const mdGlobs = /\.(md|mdx)$/i
+
+function isNewFile(file: string): boolean {
+  // git cat-file -e expects a repo-relative path after HEAD:
+  // If an absolute path was passed, try to make it relative to cwd
+  let relativePath = file
+  if (path.isAbsolute(file)) {
+    const cwd = process.cwd()
+    const relative = path.relative(cwd, file)
+    if (!relative.startsWith('..')) {
+      relativePath = relative
+    }
+  }
+
+  const result = spawnSync('git', ['cat-file', '-e', `HEAD:${relativePath}`], {
+    stdio: 'ignore',
+  })
+
+  return result.status !== 0
+}
 
 const args = process.argv.slice(2)
 
 if (args.length === 0) {
   process.exit(0)
-}
-
-const mdGlobs = /\.(md|mdx)$/i
-
-function isNewFile(file: string): boolean {
-  const result = spawnSync('git', ['cat-file', '-e', `HEAD:${file}`], {
-    stdio: 'ignore',
-  })
-
-  return result.status !== 0
 }
 
 const newMdFiles: string[] = []
@@ -39,25 +52,30 @@ for (const file of args) {
   }
 }
 
-if (newMdFiles.length > 0) {
-  const logMsg =
-    `Applying \`proseWrap: always\` to ${newMdFiles.length} new markdown ` +
-    'file(s)...'
-  console.log(dim(logMsg))
+const numNewFiles = newMdFiles.length
 
-  execSync(
-    `yarn prettier --write --log-level=silent --prose-wrap always ${quoteAll(newMdFiles)}`,
-    { stdio: 'inherit' },
+if (numNewFiles > 0) {
+  const logMsg = `Applying \`proseWrap: always\` to ${numNewFiles} new markdown file(s)...`
+  console.log(styleText('dim', logMsg))
+
+  await execAsync(
+    'yarn',
+    [
+      'prettier',
+      '--write',
+      '--log-level=silent',
+      '--prose-wrap',
+      'always',
+      ...newMdFiles,
+    ],
+    'smart-format',
   )
 }
 
 if (existingFiles.length > 0) {
-  execSync(
-    `yarn prettier --write --log-level=silent ${quoteAll(existingFiles)}`,
-    { stdio: 'inherit' },
+  await execAsync(
+    'yarn',
+    ['prettier', '--write', '--log-level=silent', ...existingFiles],
+    'smart-format',
   )
-}
-
-function quoteAll(files: string[]): string {
-  return files.map((f) => `'${f.replaceAll("'", "'\\''")}'`).join(' ')
 }

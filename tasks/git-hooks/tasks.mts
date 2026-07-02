@@ -1,20 +1,12 @@
-import { spawn, spawnSync } from 'node:child_process'
-import path from 'node:path'
+import { spawnSync } from 'node:child_process'
+import path, { dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-function execAsync(
-  command: string,
-  args: string[],
-  extraEnv: Record<string, string> = {},
-) {
-  return new Promise<number>((resolve, reject) => {
-    const child = spawn(command, args, {
-      stdio: 'inherit',
-      env: { ...process.env, ...extraEnv },
-    })
-    child.on('exit', (code) => resolve(code ?? 1))
-    child.on('error', reject)
-  })
-}
+import { execAsync, isOnReleaseBranch } from './utils.mts'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
+const monorepoRoot = path.join(__dirname, '..', '..')
 
 function isExcluded(file: string): boolean {
   // __fixtures__ at any depth (covers __fixtures__/* and **/__fixtures__/**)
@@ -33,15 +25,6 @@ function isExcluded(file: string): boolean {
   }
 
   return false
-}
-
-function isOnReleaseBranch(): boolean {
-  const { stdout } = spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
-    encoding: 'utf-8',
-  })
-  const currentBranch = stdout.trim()
-
-  return currentBranch === 'next' || currentBranch.startsWith('release/')
 }
 
 function getStagedFiles() {
@@ -94,55 +77,76 @@ function getFilesToFormat(files: string[]) {
 }
 
 function runEslint(lintFiles: string[]) {
-  return execAsync('yarn', ['eslint', ...lintFiles], {
-    CEDAR_CWD: 'packages/create-cedar-app/templates/ts',
+  return execAsync('yarn', ['eslint', ...lintFiles], 'git-hooks', {
+    env: { CEDAR_CWD: 'packages/create-cedar-app/templates/ts' },
   })
 }
 
 function runSmartFormat(formatFiles: string[]) {
-  return execAsync('node', ['tasks/git-hooks/smart-format.mts', ...formatFiles])
+  // Resolve relative paths to absolute so they work regardless of cwd
+  const absolutePaths = formatFiles.map((f) => path.resolve(process.cwd(), f))
+
+  return execAsync(
+    'node',
+    [path.join(__dirname, 'smart-format.mts'), ...absolutePaths],
+    'git-hooks',
+    { cwd: monorepoRoot },
+  )
 }
 
-export async function runPreCommitTasks(): Promise<boolean> {
+export async function runPreCommitTasks(): Promise<number> {
   // Skip on release branches. We have other tooling for releasing
   if (isOnReleaseBranch()) {
-    return true
+    return 0
   }
 
   const stagedFiles = getStagedFiles()
 
   if (stagedFiles.length === 0) {
-    return true
+    return 0
   }
 
   const filesToLint = getFilesToLint(stagedFiles)
   const filesToFormat = getFilesToFormat(stagedFiles)
 
   const results = await Promise.allSettled([
-    filesToLint.length > 0 ? runEslint(filesToLint) : Promise.resolve(0),
+    filesToLint.length > 0 ? runEslint(filesToLint) : Promise.resolve(),
     filesToFormat.length > 0
       ? runSmartFormat(filesToFormat)
-      : Promise.resolve(0),
+      : Promise.resolve(),
   ])
 
-  const failed = results.filter((r) => r.status === 'rejected' || r.value !== 0)
-  return failed.length === 0
+  // Return the exit code of the first failure, or 0 for success
+  for (const r of results) {
+    if (r.status === 'rejected') {
+      return (r.reason as Error & { exitCode?: number }).exitCode ?? 1
+    }
+  }
+  return 0
 }
 
-export async function runPrePushTasks(): Promise<boolean> {
+export async function runPrePushTasks(): Promise<number> {
   // Skip on release branches. We have other tooling for releasing
   if (isOnReleaseBranch()) {
-    return true
+    return 0
   }
 
   const results = await Promise.allSettled([
-    execAsync('yarn', ['build'], { NX_TUI: 'false' }),
-    execAsync('yarn', ['lint']),
-    execAsync('yarn', ['prettier', '--check', '.']),
-    execAsync('yarn', ['check']),
-    execAsync('node', ['tasks/check-no-only.mts']),
+    execAsync('yarn', ['build'], 'git-hooks', { env: { NX_TUI: 'false' } }),
+    execAsync('yarn', ['lint'], 'git-hooks'),
+    execAsync('yarn', ['prettier', '--check', '.'], 'git-hooks'),
+    execAsync('yarn', ['check'], 'git-hooks'),
+    execAsync(
+      'node',
+      [path.join(__dirname, '..', 'check-no-only.mts')],
+      'git-hooks',
+    ),
   ])
 
-  const failed = results.filter((r) => r.status === 'rejected' || r.value !== 0)
-  return failed.length === 0
+  for (const r of results) {
+    if (r.status === 'rejected') {
+      return (r.reason as Error & { exitCode?: number }).exitCode ?? 1
+    }
+  }
+  return 0
 }
