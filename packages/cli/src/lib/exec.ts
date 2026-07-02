@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs'
+import { existsSync, statSync } from 'node:fs'
 import path from 'node:path'
 
 import { createServer, isRunnableDevEnvironment } from 'vite'
@@ -14,14 +14,16 @@ import {
   cedarCjsCompatPlugin,
 } from '@cedarjs/vite'
 
-// When the customResolver returns an id, that id is final — Vite won't try
+// When the customResolver returns an id, that id is final – Vite won't try
 // alternative extensions on it. This helper resolves the actual file on disk,
 // handling both bare paths (src/lib/jobs) and .js/.jsx paths that map to .ts
-// files in a TypeScript project (e.g. db.js → db.ts).
-function resolveExtension(id: string): string {
-  if (existsSync(id)) {
+// files in a TypeScript project (e.g. db.js -> db.ts). For bare paths it also
+// handles resolving index files and directory-named modules.
+export function resolveId(id: string): string {
+  if (existsSync(id) && statSync(id).isFile()) {
     return id
   }
+
   // Strip .js/.jsx extension if present, then try TypeScript and JS extensions
   const withoutExt = /\.jsx?$/.test(id) ? id.replace(/\.jsx?$/, '') : id
   for (const ext of ['.ts', '.tsx', '.js', '.jsx']) {
@@ -29,6 +31,22 @@ function resolveExtension(id: string): string {
       return withoutExt + ext
     }
   }
+
+  // If the path refers to a directory, try resolving index files and
+  // directory-named modules (e.g. src/lib/auth -> src/lib/auth/auth.ts,
+  // src/events -> src/events/index.ts)
+  if (existsSync(id) && statSync(id).isDirectory()) {
+    for (const base of ['index', path.basename(id)]) {
+      for (const ext of ['.ts', '.tsx', '.js', '.jsx']) {
+        const candidate = path.join(id, base + ext)
+
+        if (existsSync(candidate)) {
+          return candidate
+        }
+      }
+    }
+  }
+
   return id
 }
 
@@ -94,16 +112,16 @@ export async function runScriptFunction({
             // is doing the importing.
             // Also, to support imports like 'src/lib/db.js' in TS projects
             // where only a .ts file exists, we resolve the correct extension
-            // ourselves — the customResolver result is final and Vite won't
+            // ourselves – the customResolver result is final and Vite won't
             // try alternative extensions on it.
             if (importer?.startsWith(apiImportBase)) {
               const apiImportSrc = importStatementPath(getPaths().api.src)
-              const resolvedId = id.replace('src', apiImportSrc)
-              return { id: resolveExtension(resolvedId) }
+              const apiId = id.replace('src', apiImportSrc)
+              return { id: resolveId(apiId) }
             } else if (importer?.startsWith(webImportBase)) {
               const webImportSrc = importStatementPath(getPaths().web.src)
-              const resolvedId = id.replace('src', webImportSrc)
-              return { id: resolveExtension(resolvedId) }
+              const webId = id.replace('src', webImportSrc)
+              return { id: resolveId(webId) }
             }
 
             return null
