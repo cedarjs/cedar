@@ -3,8 +3,7 @@ global.__dirname = __dirname
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const path = await import('node:path')
   const fs = await import('node:fs')
-  const originalProjectConfig =
-    await importOriginal<typeof import('@cedarjs/project-config')>()
+  const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
 
   return {
     ...originalProjectConfig,
@@ -35,6 +34,8 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
 
 import prompts from 'prompts'
 import { vi, test, expect, describe, it } from 'vitest'
+
+import type * as ProjectConfig from '@cedarjs/project-config'
 
 import { getSchema, verifyModelName } from '../schemaHelpers.js'
 

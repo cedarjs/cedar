@@ -32,8 +32,12 @@ describe('generateSecret', () => {
 
     let output = ''
 
-    console.log = (...args: unknown[]) => { output += args.join(' ') + '\n' }
-    console.info = (...args: unknown[]) => { output += args.join(' ') + '\n' }
+    console.log = (...args: unknown[]) => {
+      output += args.join(' ') + '\n'
+    }
+    console.info = (...args: unknown[]) => {
+      output += args.join(' ') + '\n'
+    }
     // Genuine typing boundary: replacing Node's write with a simplified test stub
     process.stdout.write = ((str: string | Uint8Array) => {
       output += str.toString()

@@ -12,6 +12,7 @@ import {
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 
+import type * as ProjectConfig from '@cedarjs/project-config'
 import { getConfig, getPaths } from '@cedarjs/project-config'
 
 import * as pluginLib from '../lib/plugin.js'
@@ -19,8 +20,7 @@ import { loadPlugins } from '../plugin.js'
 
 vi.mock('node:fs')
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const originalProjectConfig =
-    await importOriginal<typeof import('@cedarjs/project-config')>()
+  const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
   return {
     ...originalProjectConfig,
     getPaths: vi.fn(),
@@ -240,8 +240,9 @@ describe('plugin loading', () => {
 
       // Should have saved the cache with the new package
       expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(1)
-      const knownPlugins =
-        vi.mocked(getConfig).mock.results[0].value.experimental.cli.plugins.map(
+      const knownPlugins = vi
+        .mocked(getConfig)
+        .mock.results[0].value.experimental.cli.plugins.map(
           (plugin: { package: string }) => plugin.package,
         )
       const saveCommandCacheArg = Object.entries(
@@ -340,8 +341,9 @@ describe('plugin loading', () => {
 
       // Should have saved the cache with the new package
       expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(1)
-      const knownPlugins =
-        vi.mocked(getConfig).mock.results[0].value.experimental.cli.plugins.map(
+      const knownPlugins = vi
+        .mocked(getConfig)
+        .mock.results[0].value.experimental.cli.plugins.map(
           (plugin: { package: string }) => plugin.package,
         )
       const saveCommandCacheArg = Object.entries(
@@ -436,8 +438,9 @@ describe('plugin loading', () => {
 
       // Should have saved the cache with the new package
       expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(1)
-      const knownPlugins =
-        vi.mocked(getConfig).mock.results[0].value.experimental.cli.plugins.map(
+      const knownPlugins = vi
+        .mocked(getConfig)
+        .mock.results[0].value.experimental.cli.plugins.map(
           (plugin: { package: string }) => plugin.package,
         )
       const saveCommandCacheArg = Object.entries(
@@ -528,8 +531,9 @@ describe('plugin loading', () => {
 
     // Should have saved the cache with the new package
     expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(1)
-    const knownPlugins =
-      vi.mocked(getConfig).mock.results[0].value.experimental.cli.plugins.map(
+    const knownPlugins = vi
+      .mocked(getConfig)
+      .mock.results[0].value.experimental.cli.plugins.map(
         (plugin: { package: string }) => plugin.package,
       )
     const saveCommandCacheArg = Object.entries(
@@ -624,8 +628,9 @@ describe('plugin loading', () => {
 
     // Should have saved the cache with the new package
     expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(1)
-    const knownPlugins =
-      vi.mocked(getConfig).mock.results[0].value.experimental.cli.plugins.map(
+    const knownPlugins = vi
+      .mocked(getConfig)
+      .mock.results[0].value.experimental.cli.plugins.map(
         (plugin: { package: string }) => plugin.package,
       )
     const saveCommandCacheArg = Object.entries(
@@ -740,8 +745,9 @@ describe('plugin loading', () => {
 
     // Should have saved the cache with the new package
     expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(1)
-    const knownPlugins =
-      vi.mocked(getConfig).mock.results[0].value.experimental.cli.plugins.map(
+    const knownPlugins = vi
+      .mocked(getConfig)
+      .mock.results[0].value.experimental.cli.plugins.map(
         (plugin: { package: string }) => plugin.package,
       )
     const saveCommandCacheArg = Object.entries(
@@ -867,8 +873,9 @@ describe('plugin loading', () => {
 
     // Should have saved the cache with the new package
     expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(1)
-    const knownPlugins =
-      vi.mocked(getConfig).mock.results[0].value.experimental.cli.plugins.map(
+    const knownPlugins = vi
+      .mocked(getConfig)
+      .mock.results[0].value.experimental.cli.plugins.map(
         (plugin: { package: string }) => plugin.package,
       )
     const saveCommandCacheArg = Object.entries(
@@ -988,8 +995,9 @@ describe('plugin loading', () => {
 
     // Should have saved the cache with the new package
     expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(1)
-    const knownPlugins =
-      vi.mocked(getConfig).mock.results[0].value.experimental.cli.plugins.map(
+    const knownPlugins = vi
+      .mocked(getConfig)
+      .mock.results[0].value.experimental.cli.plugins.map(
         (plugin: { package: string }) => plugin.package,
       )
     const saveCommandCacheArg = Object.entries(
@@ -1109,8 +1117,9 @@ describe('plugin loading', () => {
 
     // Should have saved the cache with the new package
     expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(1)
-    const knownPlugins =
-      vi.mocked(getConfig).mock.results[0].value.experimental.cli.plugins.map(
+    const knownPlugins = vi
+      .mocked(getConfig)
+      .mock.results[0].value.experimental.cli.plugins.map(
         (plugin: { package: string }) => plugin.package,
       )
     const saveCommandCacheArg = Object.entries(
@@ -1209,8 +1218,9 @@ describe('plugin loading', () => {
 
     // Should have saved the cache with the new package
     expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(1)
-    const knownPlugins =
-      vi.mocked(getConfig).mock.results[0].value.experimental.cli.plugins.map(
+    const knownPlugins = vi
+      .mocked(getConfig)
+      .mock.results[0].value.experimental.cli.plugins.map(
         (plugin: { package: string }) => plugin.package,
       )
     const saveCommandCacheArg = Object.entries(
@@ -1295,8 +1305,9 @@ describe('plugin loading', () => {
 
     // Should have saved the cache with the new package
     expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(1)
-    const knownPlugins =
-      vi.mocked(getConfig).mock.results[0].value.experimental.cli.plugins.map(
+    const knownPlugins = vi
+      .mocked(getConfig)
+      .mock.results[0].value.experimental.cli.plugins.map(
         (plugin: { package: string }) => plugin.package,
       )
     const saveCommandCacheArg = Object.entries(
