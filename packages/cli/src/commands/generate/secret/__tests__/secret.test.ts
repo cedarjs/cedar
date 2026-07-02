@@ -32,9 +32,16 @@ describe('generateSecret', () => {
 
     let output = ''
 
-    console.log = (...args) => (output += args.join(' ') + '\n')
-    console.info = (...args) => (output += args.join(' ') + '\n')
-    process.stdout.write = (str) => (output += str)
+    console.log = (...args: unknown[]) => {
+      output += args.join(' ') + '\n'
+    }
+    console.info = (...args: unknown[]) => {
+      output += args.join(' ') + '\n'
+    }
+    process.stdout.write = (str: string | Uint8Array) => {
+      output += str.toString()
+      return true
+    }
 
     const { raw } = yargs()
       .command('secret', false, builder, handler)

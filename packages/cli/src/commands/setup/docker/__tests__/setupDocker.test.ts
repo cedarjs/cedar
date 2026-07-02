@@ -22,7 +22,7 @@ vi.mock('@cedarjs/cli-helpers', () => {
         'important',
         'caution',
         'link',
-      ].map((k) => [k, (s) => s]),
+      ].map((k) => [k, (s: string) => s]),
     ),
     recordTelemetryAttributes: vi.fn(),
   }
@@ -40,15 +40,17 @@ describe('setupDocker', () => {
   })
 
   test('builder configures command options force and verbose ', () => {
-    const yargs = {
-      option: vi.fn(() => yargs),
-      epilogue: vi.fn(() => yargs),
+    const mockYargs = {
+      option: vi.fn(),
+      epilogue: vi.fn(),
     }
+    mockYargs.option.mockReturnValue(mockYargs)
+    mockYargs.epilogue.mockReturnValue(mockYargs)
 
-    builder(yargs)
+    builder(mockYargs)
 
-    expect(yargs.option.mock.calls[0][0]).toMatchInlineSnapshot(`"force"`)
-    expect(yargs.option.mock.calls[0][1]).toMatchInlineSnapshot(`
+    expect(mockYargs.option.mock.calls[0][0]).toMatchInlineSnapshot(`"force"`)
+    expect(mockYargs.option.mock.calls[0][1]).toMatchInlineSnapshot(`
       {
         "alias": "f",
         "default": false,
