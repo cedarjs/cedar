@@ -1,30 +1,12 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import { sanitizeArg, buildWindowsCommand } from '../utils.mts'
-
-describe('sanitizeArg', () => {
-  it('wraps a plain string in double quotes', () => {
-    expect(sanitizeArg('hello.ts')).toBe('"hello.ts"')
-  })
-
-  it('escapes double quotes with double-double quotes', () => {
-    expect(sanitizeArg('hello"world.ts')).toBe('"hello""world.ts"')
-  })
-
-  it('passes percent signs through (no reliable escape in cmd.exe inline mode)', () => {
-    expect(sanitizeArg('%USERNAME%.ts')).toBe('"%USERNAME%.ts"')
-  })
-
-  it('handles a path with spaces', () => {
-    expect(sanitizeArg('hello world.ts')).toBe('"hello world.ts"')
-  })
-
-  it('handles mixed escaping', () => {
-    expect(sanitizeArg('"hello" %world%.ts')).toBe('"""hello"" %world%.ts"')
-  })
-})
+import { buildWindowsCommand } from '../utils.mts'
 
 describe('buildWindowsCommand', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
   it('builds a command string with all args sanitized', () => {
     expect(
       buildWindowsCommand('yarn', ['prettier', '--write', 'file.ts']),
@@ -37,9 +19,18 @@ describe('buildWindowsCommand', () => {
     )
   })
 
-  it('passes percent signs through', () => {
-    expect(buildWindowsCommand('yarn', ['prettier', '%TEMP%.ts'])).toBe(
-      'yarn "prettier" "%TEMP%.ts"',
+  it('skips args with percent signs and warns', () => {
+    const result = buildWindowsCommand('yarn', ['prettier', '%TEMP%.ts'])
+    expect(result).toBe('yarn "prettier"')
+    expect(console.warn).toHaveBeenCalledOnce()
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining('%TEMP%.ts'),
     )
+  })
+
+  it('skips all args if all contain percent signs', () => {
+    const result = buildWindowsCommand('yarn', ['%A%', '%B%'])
+    expect(result).toBe('yarn')
+    expect(console.warn).toHaveBeenCalledTimes(2)
   })
 })

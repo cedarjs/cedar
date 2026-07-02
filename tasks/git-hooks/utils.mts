@@ -11,22 +11,25 @@ export function isOnReleaseBranch(): boolean {
 }
 
 /**
- * Escape a filename for safe use in a cmd.exe command string.
- * Inside double quotes, `"` needs escaping as `""`.
- *
- * Note: `%VAR%` expansion cannot be escaped in `cmd.exe /d /s /c "..."` inline
- * mode. A file named `%USERNAME%.ts` would have `%USERNAME%` expanded by the
- * shell. This is an accepted limitation — such filenames are extremely rare.
- */
-export function sanitizeArg(arg: string): string {
-  return `"${arg.replace(/"/g, '""')}"`
-}
-
-/**
  * Build a command string for Windows cmd.exe from a command and args array.
+ * Any arg containing `%` is skipped with a warning — `%VAR%` expansion
+ * cannot be escaped in `cmd.exe /d /s /c "..."` inline mode.
  */
 export function buildWindowsCommand(command: string, args: string[]): string {
-  return `${command} ${args.map((a) => sanitizeArg(a)).join(' ')}`
+  const safeArgs: string[] = []
+
+  for (const arg of args) {
+    if (arg.includes('%')) {
+      console.warn(
+        `[git-hooks] skipping arg with "%": ${arg} (cannot be safely passed ` +
+          'through cmd.exe)',
+      )
+    } else {
+      safeArgs.push(`"${arg.replace(/"/g, '""')}"`)
+    }
+  }
+
+  return safeArgs.length > 0 ? `${command} ${safeArgs.join(' ')}` : command
 }
 
 /**

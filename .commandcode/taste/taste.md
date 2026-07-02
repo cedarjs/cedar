@@ -88,6 +88,7 @@ See [debugging/taste.md](debugging/taste.md)
 # Code Design
 
 - Do not add complexity to production code just to accommodate test scenarios. If a test requires extra production logic (e.g., absolute path handling in `isNewFile()`), prefer adapting the test instead — or removing the test — rather than adding branching logic to production code. Production code should reflect real usage, not test environment workarounds. Confidence: 0.70
+- Don't export a utility function whose name implies more safety than it actually delivers, even with JSDoc warnings. Inline such logic within the single caller instead, so other developers aren't misled into importing a function with hidden limitations. Confidence: 0.70
 
 # CI / GitHub Actions
 
