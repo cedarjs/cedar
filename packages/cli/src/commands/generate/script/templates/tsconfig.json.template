@@ -17,6 +17,14 @@
       "api/*": [
         "../api/*",
       ],
+      "$api/src/*": [
+        "../api/src/*",
+        "../.cedar/types/mirror/api/src/*"
+      ],
+      "api/src/*": [
+        "../api/src/*",
+        "../.cedar/types/mirror/api/src/*"
+      ],
       "$web/*": [
         "../web/*",
       ],
