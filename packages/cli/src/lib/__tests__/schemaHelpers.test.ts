@@ -52,15 +52,9 @@ test('getSchema returns a parsed schema.prisma', async () => {
 })
 
 test('getSchema throws an error if model name not found', async () => {
-  let error: Error | undefined
-
-  try {
-    await getSchema('Foo')
-  } catch (e) {
-    error = e instanceof Error ? e : new Error(String(e))
-  }
-
-  expect(error).toEqual(new Error(error?.message))
+  await expect(getSchema('Foo')).rejects.toThrow(
+    'No schema definition found for `Foo` in schema.prisma file',
+  )
 })
 
 describe('verifyModelName', () => {
