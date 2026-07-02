@@ -1,7 +1,7 @@
 globalThis.__dirname = __dirname
 vi.mock('node:fs')
 vi.mock('../../../../lib', async (importOriginal) => {
-  const originalLib = await importOriginal()
+  const originalLib = await importOriginal<typeof Lib>()
   return {
     ...originalLib,
     generateTemplate: () => '',
@@ -13,11 +13,18 @@ import fs from 'node:fs'
 import { vol } from 'memfs'
 import { vi, beforeEach, afterEach, test, expect } from 'vitest'
 
+import type * as CliHelpers from '@cedarjs/cli-helpers'
+import type * as ProjectConfig from '@cedarjs/project-config'
+
 import '../../../../lib/mockTelemetry'
+import type * as Lib from '../../../../lib/index.js'
+import { getPaths } from '../../../../lib/index.js'
+import { files } from '../../../generate/page/pageHandler.js'
+import { tasks } from '../pageHandler.js'
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const path = require('path')
-  const originalProjectConfig = await importOriginal()
+  const path = await import('node:path')
+  const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
   return {
     getPaths: () => {
       const BASE_PATH = '/path/to/project'
@@ -39,7 +46,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
 })
 
 vi.mock('@cedarjs/cli-helpers', async (importOriginal) => {
-  const originalCliHelpers = await importOriginal()
+  const originalCliHelpers = await importOriginal<typeof CliHelpers>()
 
   return {
     ...originalCliHelpers,
@@ -54,10 +61,6 @@ vi.mock('@cedarjs/internal/dist/generate/generate', () => {
     },
   }
 })
-
-import { getPaths } from '../../../../lib/index.js'
-import { files } from '../../../generate/page/pageHandler.js'
-import { tasks } from '../pageHandler.js'
 
 beforeEach(async () => {
   const f = await files({ name: 'About' })

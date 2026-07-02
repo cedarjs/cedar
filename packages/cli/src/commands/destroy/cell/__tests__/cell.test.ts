@@ -5,13 +5,14 @@ import { vi, beforeEach, afterEach, test, expect } from 'vitest'
 
 import '../../../../lib/test'
 
+import type * as Lib from '../../../../lib/index.js'
 import { files } from '../../../generate/cell/cellHandler.js'
 import { tasks } from '../cellHandler.js'
 
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
 vi.mock('../../../../lib', async (importOriginal) => {
-  const originalLib = await importOriginal()
+  const originalLib = await importOriginal<typeof Lib>()
   return {
     ...originalLib,
     generateTemplate: () => '',
@@ -33,8 +34,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vol.reset()
-  console.info.mockRestore()
-  console.log.mockRestore()
+  vi.restoreAllMocks()
 })
 
 test('destroys cell files', async () => {

@@ -1,7 +1,8 @@
 globalThis.__dirname = __dirname
+
 vi.mock('node:fs')
 vi.mock('../../../../lib', async (importOriginal) => {
-  const originalLib = await importOriginal()
+  const originalLib = await importOriginal<typeof Lib>()
   return {
     ...originalLib,
     generateTemplate: () => '',
@@ -15,11 +16,12 @@ import { vi, beforeEach, afterEach, test, expect } from 'vitest'
 
 import '../../../../lib/test'
 
-import { files } from '../../../generate/function/functionHandler.js'
-import { tasks } from '../functionHandler.js'
+import type * as Lib from '../../../../lib/index.js'
+import { files } from '../../../generate/directive/directiveHandler.js'
+import { tasks } from '../directiveHandler.js'
 
-beforeEach(async () => {
-  vol.fromJSON(files({ name: 'sendMail' }))
+beforeEach(() => {
+  vol.fromJSON(files({ name: 'require-admin', type: 'validator', tests: true }))
   vi.spyOn(console, 'info').mockImplementation(() => {})
   vi.spyOn(console, 'log').mockImplementation(() => {})
 })
@@ -27,21 +29,23 @@ beforeEach(async () => {
 afterEach(() => {
   vol.reset()
   vi.spyOn(fs, 'unlinkSync').mockClear()
-  console.info.mockRestore()
-  console.log.mockRestore()
+  vi.restoreAllMocks()
 })
 
-test('destroys service files', async () => {
+test('destroys directive files', async () => {
   const unlinkSpy = vi.spyOn(fs, 'unlinkSync')
   const t = tasks({
-    componentName: 'service',
-    filesFn: files,
-    name: 'sendMail',
+    componentName: 'directive',
+    filesFn: (args: Parameters<typeof files>[0]) =>
+      files({ ...args, type: 'validator' }),
+    name: 'require-admin',
   })
   t.options.renderer = 'silent'
 
-  return t.run().then(async () => {
-    const generatedFiles = Object.keys(files({ name: 'sendMail' }))
+  return t.run().then(() => {
+    const generatedFiles = Object.keys(
+      files({ name: 'require-admin', type: 'validator', tests: true }),
+    )
     expect(generatedFiles.length).toEqual(unlinkSpy.mock.calls.length)
     generatedFiles.forEach((f) => expect(unlinkSpy).toHaveBeenCalledWith(f))
   })

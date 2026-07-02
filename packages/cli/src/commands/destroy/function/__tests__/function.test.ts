@@ -1,8 +1,7 @@
 globalThis.__dirname = __dirname
-
 vi.mock('node:fs')
 vi.mock('../../../../lib', async (importOriginal) => {
-  const originalLib = await importOriginal()
+  const originalLib = await importOriginal<typeof Lib>()
   return {
     ...originalLib,
     generateTemplate: () => '',
@@ -16,11 +15,12 @@ import { vi, beforeEach, afterEach, test, expect } from 'vitest'
 
 import '../../../../lib/test'
 
-import { files } from '../../../generate/directive/directiveHandler.js'
-import { tasks } from '../directiveHandler.js'
+import type * as Lib from '../../../../lib/index.js'
+import { files } from '../../../generate/function/functionHandler.js'
+import { tasks } from '../functionHandler.js'
 
-beforeEach(() => {
-  vol.fromJSON(files({ name: 'require-admin', type: 'validator', tests: true }))
+beforeEach(async () => {
+  vol.fromJSON(files({ name: 'sendMail' }))
   vi.spyOn(console, 'info').mockImplementation(() => {})
   vi.spyOn(console, 'log').mockImplementation(() => {})
 })
@@ -28,23 +28,20 @@ beforeEach(() => {
 afterEach(() => {
   vol.reset()
   vi.spyOn(fs, 'unlinkSync').mockClear()
-  console.info.mockRestore()
-  console.log.mockRestore()
+  vi.restoreAllMocks()
 })
 
-test('destroys directive files', async () => {
+test('destroys service files', async () => {
   const unlinkSpy = vi.spyOn(fs, 'unlinkSync')
   const t = tasks({
-    componentName: 'directive',
-    filesFn: (args) => files({ ...args, type: 'validator' }),
-    name: 'require-admin',
+    componentName: 'service',
+    filesFn: files,
+    name: 'sendMail',
   })
   t.options.renderer = 'silent'
 
-  return t.run().then(() => {
-    const generatedFiles = Object.keys(
-      files({ name: 'require-admin', type: 'validator', tests: true }),
-    )
+  return t.run().then(async () => {
+    const generatedFiles = Object.keys(files({ name: 'sendMail' }))
     expect(generatedFiles.length).toEqual(unlinkSpy.mock.calls.length)
     generatedFiles.forEach((f) => expect(unlinkSpy).toHaveBeenCalledWith(f))
   })
