@@ -22,7 +22,7 @@ afterEach(() => {
   vol.reset()
 })
 
-describe('resolveExtension', () => {
+describe('resolveId', () => {
   it('returns the path unchanged when it points to an existing file', () => {
     const id = path.join('api', 'src', 'lib', 'auth.ts')
     expect(resolveId(id)).toBe(id)
