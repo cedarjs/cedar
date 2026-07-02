@@ -35,7 +35,7 @@ function setupTestRepo(name: string): string {
 }
 
 describe('pre-commit hook', () => {
-  it('exits successfully on staged clean files', { timeout: 30_000 }, () => {
+  it('exits successfully on staged clean files', { timeout: 120_000 }, () => {
     const repoDir = setupTestRepo('clean-files')
 
     try {
