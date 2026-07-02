@@ -11,8 +11,8 @@ describe('sanitizeArg', () => {
     expect(sanitizeArg('hello"world.ts')).toBe('"hello""world.ts"')
   })
 
-  it('escapes percent signs for cmd.exe', () => {
-    expect(sanitizeArg('%USERNAME%.ts')).toBe('"%%USERNAME%%.ts"')
+  it('passes percent signs through (no reliable escape in cmd.exe inline mode)', () => {
+    expect(sanitizeArg('%USERNAME%.ts')).toBe('"%USERNAME%.ts"')
   })
 
   it('handles a path with spaces', () => {
@@ -20,7 +20,7 @@ describe('sanitizeArg', () => {
   })
 
   it('handles mixed escaping', () => {
-    expect(sanitizeArg('"hello" %world%.ts')).toBe('"""hello"" %%world%%.ts"')
+    expect(sanitizeArg('"hello" %world%.ts')).toBe('"""hello"" %world%.ts"')
   })
 })
 
@@ -37,9 +37,9 @@ describe('buildWindowsCommand', () => {
     )
   })
 
-  it('handles percent-sign args', () => {
+  it('passes percent signs through', () => {
     expect(buildWindowsCommand('yarn', ['prettier', '%TEMP%.ts'])).toBe(
-      'yarn "prettier" "%%TEMP%%.ts"',
+      'yarn "prettier" "%TEMP%.ts"',
     )
   })
 })

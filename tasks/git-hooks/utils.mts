@@ -12,11 +12,14 @@ export function isOnReleaseBranch(): boolean {
 
 /**
  * Escape a filename for safe use in a cmd.exe command string.
- * Inside double quotes, `"` needs escaping as `""`, and `%` needs escaping
- * as `%%` to prevent environment variable expansion.
+ * Inside double quotes, `"` needs escaping as `""`.
+ *
+ * Note: `%VAR%` expansion cannot be escaped in `cmd.exe /d /s /c "..."` inline
+ * mode. A file named `%USERNAME%.ts` would have `%USERNAME%` expanded by the
+ * shell. This is an accepted limitation — such filenames are extremely rare.
  */
 export function sanitizeArg(arg: string): string {
-  return `"${arg.replace(/"/g, '""').replace(/%/g, '%%')}"`
+  return `"${arg.replace(/"/g, '""')}"`
 }
 
 /**
