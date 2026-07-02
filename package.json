@@ -10,6 +10,7 @@
     "packages/mailer/handlers/*",
     "packages/mailer/renderers/*",
     "!packages/create-cedar-rsc-app",
+    "tasks/git-hooks",
     "upgrade-scripts"
   ],
   "scripts": {

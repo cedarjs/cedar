@@ -1,3 +1,12 @@
+# Code-Style
+
+- Prefer `async/await` with `try/catch` over `.then()` promise chains. When refactoring a function that uses `.then()`, convert to `async function` + `try/catch` rather than keeping `.then()` style. Confidence: 0.70
+- Remove code that doesn't actually work instead of keeping it with comments explaining the limitation. Non-functional code with "documented limitations" is misleading — if it can't do what it claims (e.g., `%%` escaping in `cmd.exe` inline mode), remove it entirely. Confidence: 0.65
+
+# Testing
+
+- Testing Windows-specific code paths on Linux is reasonable when the branch logic is simple enough to exercise via platform mocking (e.g., `process.platform = 'win32'`). This catches regressions before they reach the Windows runner. The blanket rule of "never test Windows paths on Linux" oversimplifies — apply judgment: simple mocking is worth doing, complex Windows-only integration tests belong on Windows CI runners. Confidence: 0.65
+
 # TypeScript
 
 See [typescript/taste.md](typescript/taste.md)
@@ -75,6 +84,11 @@ See [debugging/taste.md](debugging/taste.md)
 # Process Management
 
 - Never use `pkill` or `killall` to mass-kill processes by name (e.g., `pkill -9 node`). Only kill specific PIDs that you know are safe to terminate. Mass-killing can destroy the user's browser sessions, chat apps, and other work. Confidence: 0.85
+
+# Code Design
+
+- Do not add complexity to production code just to accommodate test scenarios. If a test requires extra production logic (e.g., absolute path handling in `isNewFile()`), prefer adapting the test instead — or removing the test — rather than adding branching logic to production code. Production code should reflect real usage, not test environment workarounds. Confidence: 0.70
+- Don't export a utility function whose name implies more safety than it actually delivers, even with JSDoc warnings. Inline such logic within the single caller instead, so other developers aren't misled into importing a function with hidden limitations. Confidence: 0.70
 
 # CI / GitHub Actions
 

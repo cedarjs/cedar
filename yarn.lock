@@ -3200,6 +3200,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@cedarjs/git-hooks-tests@workspace:tasks/git-hooks":
+  version: 0.0.0-use.local
+  resolution: "@cedarjs/git-hooks-tests@workspace:tasks/git-hooks"
+  dependencies:
+    vitest: "npm:3.2.6"
+  languageName: unknown
+  linkType: soft
+
 "@cedarjs/gqlorm@workspace:packages/gqlorm":
   version: 0.0.0-use.local
   resolution: "@cedarjs/gqlorm@workspace:packages/gqlorm"
