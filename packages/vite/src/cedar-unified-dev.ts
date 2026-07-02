@@ -55,6 +55,43 @@ export function parseCliArgs(argv = process.argv) {
   return { forceOptimize, debug, portArg, debugPort, debugBrk, serverArgs }
 }
 
+/**
+ * Create a throwaway inspector session and trigger a pause/resume cycle to
+ * consume any lingering Debugger.pause flag on the V8 isolate.  If the flag
+ * was already cleared this is a no-op.  Best-effort — never throws.
+ */
+async function clearPendingPause() {
+  const inspector = await import('node:inspector')
+  const s = new inspector.Session()
+  try {
+    s.connect()
+    await new Promise<void>((resolve, reject) => {
+      s.post('Debugger.enable', (err) => (err ? reject(err) : resolve()))
+    })
+
+    await new Promise<void>((resolve) => {
+      let done = false
+      s.once('Debugger.paused', () => {
+        s.post('Debugger.resume', () => {
+          done = true
+          resolve()
+        })
+      })
+      s.post('Runtime.evaluate', { expression: '1' }, () => {
+        // If evaluate didn't trigger a pause (flag already consumed) or
+        // errored, nothing more to do.
+        if (!done) {
+          resolve()
+        }
+      })
+    })
+  } catch {
+    // Best-effort
+  } finally {
+    s.disconnect()
+  }
+}
+
 export async function openDebugger(port: number, waitForDebugger = false) {
   const inspector = await import('node:inspector')
   inspector.open(port, '127.0.0.1')
@@ -89,20 +126,20 @@ export async function openDebugger(port: number, waitForDebugger = false) {
     // If the session itself errors or detaches, no more events will arrive —
     // unblock immediately rather than waiting for a pause that can never come.
     // If V8 already paused, still try to resume via fallback sessions.
-    session.once('error', () => {
+    // If not yet paused, clear the pending pause flag from Debugger.pause by
+    // triggering a pause/resume cycle on a throwaway session.
+    const onSessionDead = () => {
       if (paused) {
         tryResume()
       } else {
-        resumedResolve?.()
+        clearPendingPause().then(
+          () => resumedResolve?.(),
+          () => resumedResolve?.(),
+        )
       }
-    })
-    session.once('Inspector.detached', () => {
-      if (paused) {
-        tryResume()
-      } else {
-        resumedResolve?.()
-      }
-    })
+    }
+    session.once('error', onSessionDead)
+    session.once('Inspector.detached', onSessionDead)
 
     let paused = false
     session.once('Debugger.paused', () => {
@@ -207,10 +244,11 @@ export async function openDebugger(port: number, waitForDebugger = false) {
       })
     }).catch(() => {
       // Evaluate failure -> the pause flag from Debugger.pause may persist.
-      // Best-effort: try to resume to clear it before unblocking.
-      session.post('Debugger.resume', () => {
-        resumedResolve?.()
-      })
+      // Try to consume the flag via a throwaway session before unblocking.
+      clearPendingPause().then(
+        () => resumedResolve?.(),
+        () => resumedResolve?.(),
+      )
     })
 
     await resumedPromise
