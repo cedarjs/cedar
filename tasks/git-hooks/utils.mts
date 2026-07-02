@@ -12,10 +12,11 @@ export function isOnReleaseBranch(): boolean {
 
 /**
  * Escape a filename for safe use in a cmd.exe command string.
- * Inside double quotes, only `"` needs escaping (as `""`).
+ * Inside double quotes, `"` needs escaping as `""`, and `%` needs escaping
+ * as `%%` to prevent environment variable expansion.
  */
 export function sanitizeArg(arg: string): string {
-  return `"${arg.replace(/"/g, '""')}"`
+  return `"${arg.replace(/"/g, '""').replace(/%/g, '%%')}"`
 }
 
 /**
