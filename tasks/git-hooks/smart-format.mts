@@ -9,6 +9,7 @@
  */
 
 import { spawnSync } from 'node:child_process'
+import path from 'node:path'
 
 import { dim } from 'ansis'
 
@@ -17,7 +18,18 @@ import { execAsync } from './utils.mts'
 const mdGlobs = /\.(md|mdx)$/i
 
 function isNewFile(file: string): boolean {
-  const result = spawnSync('git', ['cat-file', '-e', `HEAD:${file}`], {
+  // git cat-file -e expects a repo-relative path after HEAD:
+  // If an absolute path was passed, try to make it relative to cwd
+  let relativePath = file
+  if (path.isAbsolute(file)) {
+    const cwd = process.cwd()
+    const relative = path.relative(cwd, file)
+    if (!relative.startsWith('..')) {
+      relativePath = relative
+    }
+  }
+
+  const result = spawnSync('git', ['cat-file', '-e', `HEAD:${relativePath}`], {
     stdio: 'ignore',
   })
 

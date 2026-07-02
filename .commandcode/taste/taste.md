@@ -79,6 +79,10 @@ See [debugging/taste.md](debugging/taste.md)
 
 - Never use `pkill` or `killall` to mass-kill processes by name (e.g., `pkill -9 node`). Only kill specific PIDs that you know are safe to terminate. Mass-killing can destroy the user's browser sessions, chat apps, and other work. Confidence: 0.85
 
+# Code Design
+
+- Do not add complexity to production code just to accommodate test scenarios. If a test requires extra production logic (e.g., absolute path handling in `isNewFile()`), prefer adapting the test instead — or removing the test — rather than adding branching logic to production code. Production code should reflect real usage, not test environment workarounds. Confidence: 0.70
+
 # CI / GitHub Actions
 
 - When a workflow step uses `working-directory` and passes a path to the test project via an env var (e.g., `CEDAR_TEST_PROJECT_PATH`), use `${{ github.workspace }}/../path` rather than a relative path. The relative path resolves against the `working-directory`, not the workspace root. Confidence: 0.80
