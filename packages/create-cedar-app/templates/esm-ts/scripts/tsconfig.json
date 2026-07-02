@@ -6,6 +6,12 @@
     "target": "es2023",
     "module": "node20",
     "moduleResolution": "node16",
+    "rootDirs": [
+      "../api/src",
+      "../.cedar/types/mirror/api/src",
+      "../web/src",
+      "../.cedar/types/mirror/web/src"
+    ],
     "paths": {
       "$api/*": ["../api/*"],
       "api/*": ["../api/*"],
