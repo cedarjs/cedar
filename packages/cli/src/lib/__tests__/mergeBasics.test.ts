@@ -5,13 +5,22 @@ import { concatUnique } from '../merge/strategy.js'
 
 import { unindented } from './fixtures/unindented.js'
 
-const expectMerged = async (base, ext, merged, strategy = {}) => {
+const expectMerged = async (
+  base: string,
+  ext: string,
+  merged: string,
+  strategy: Record<string, unknown> = {},
+) => {
   expect(await merge(unindented(base), unindented(ext), strategy)).toBe(
     unindented(merged),
   )
 }
 
-const expectTrivialConcat = async (base, ext, strategy = {}) => {
+const expectTrivialConcat = async (
+  base: string,
+  ext: string,
+  strategy: Record<string, unknown> = {},
+) => {
   const ubase = unindented(base)
   const uext = unindented(ext)
   expect(await merge(ubase, uext, strategy)).toBe(`${ubase}\n${uext}\n`)

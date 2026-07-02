@@ -383,25 +383,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@auth0/auth0-auth-js@npm:1.7.0":
-  version: 1.7.0
-  resolution: "@auth0/auth0-auth-js@npm:1.7.0"
+"@auth0/auth0-auth-js@npm:1.10.0":
+  version: 1.10.0
+  resolution: "@auth0/auth0-auth-js@npm:1.10.0"
   dependencies:
     jose: "npm:^6.0.8"
     openid-client: "npm:^6.8.0"
-  checksum: 10c0/9704860b099cc288ff88ea482cd077d834b2fa9e742906c520f4d8c7e841a4e9cdeb541c17ae077771f329171ccc2153f4b8e0e81fdb7f8930d69306007a113b
+  checksum: 10c0/9c926d0c379cc2ba97aac1cbd2d7e983805d7bdc35cd5669d75476eb02264766c34ce05c426333870ec2b7cc9108b3805b643774d8fbbaf3b2f7e97ffa4ebd67
   languageName: node
   linkType: hard
 
-"@auth0/auth0-spa-js@npm:2.21.1":
-  version: 2.21.1
-  resolution: "@auth0/auth0-spa-js@npm:2.21.1"
+"@auth0/auth0-spa-js@npm:2.22.0":
+  version: 2.22.0
+  resolution: "@auth0/auth0-spa-js@npm:2.22.0"
   dependencies:
-    "@auth0/auth0-auth-js": "npm:1.7.0"
+    "@auth0/auth0-auth-js": "npm:1.10.0"
     browser-tabs-lock: "npm:1.3.0"
     dpop: "npm:2.1.1"
     es-cookie: "npm:1.3.2"
-  checksum: 10c0/01840146adc55cf2994adde4e3b414a08c81518424a1b50d63d53c60c5318a301076a478958bb724ab316e03b968b382d01f36b7a528ad7ffd011abaca564da7
+  checksum: 10c0/7aab9c19e91202c19cb7fea5f03c2f3e3e16b42508ca01a09f31e5521d066adcece0ee9579262652b7cbd2581b1688b5177087a1055df77be4478602917bd8dd
   languageName: node
   linkType: hard
 
@@ -2304,7 +2304,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-auth0-web@workspace:packages/auth-providers/auth0/web"
   dependencies:
-    "@auth0/auth0-spa-js": "npm:2.21.1"
+    "@auth0/auth0-spa-js": "npm:2.22.0"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/react": "npm:^18.2.55"
@@ -2315,7 +2315,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.6"
   peerDependencies:
-    "@auth0/auth0-spa-js": 2.21.1
+    "@auth0/auth0-spa-js": 2.22.0
   languageName: unknown
   linkType: soft
 
@@ -3198,6 +3198,14 @@ __metadata:
     typescript: "npm:5.9.3"
   bin:
     cedar-fwtools-attw: ./dist/bins/cedar-fwtools-attw.js
+  languageName: unknown
+  linkType: soft
+
+"@cedarjs/git-hooks-tests@workspace:tasks/git-hooks":
+  version: 0.0.0-use.local
+  resolution: "@cedarjs/git-hooks-tests@workspace:tasks/git-hooks"
+  dependencies:
+    vitest: "npm:3.2.6"
   languageName: unknown
   linkType: soft
 

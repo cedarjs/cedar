@@ -3,7 +3,7 @@ global.__dirname = __dirname
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const path = await import('node:path')
   const fs = await import('node:fs')
-  const originalProjectConfig = await importOriginal()
+  const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
 
   return {
     ...originalProjectConfig,
@@ -16,7 +16,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
         },
       }
     },
-    getSchemaPath: async (prismaConfigPath) => {
+    getSchemaPath: async (prismaConfigPath: string) => {
       return prismaConfigPath.replace(/prisma\.config\.\w+$/, 'schema.prisma')
     },
     getPrismaSchemas: async () => {
@@ -35,6 +35,8 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
 import prompts from 'prompts'
 import { vi, test, expect, describe, it } from 'vitest'
 
+import type * as ProjectConfig from '@cedarjs/project-config'
+
 import { getSchema, verifyModelName } from '../schemaHelpers.js'
 
 test('getSchema returns a parsed schema.prisma', async () => {
@@ -51,15 +53,9 @@ test('getSchema returns a parsed schema.prisma', async () => {
 })
 
 test('getSchema throws an error if model name not found', async () => {
-  let error
-
-  try {
-    await getSchema('Foo')
-  } catch (e) {
-    error = e
-  }
-
-  expect(error).toEqual(new Error(error.message))
+  await expect(getSchema('Foo')).rejects.toThrow(
+    'No schema definition found for `Foo` in schema.prisma file',
+  )
 })
 
 describe('verifyModelName', () => {

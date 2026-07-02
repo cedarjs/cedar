@@ -1,0 +1,19 @@
+{
+  "name": "@cedarjs/git-hooks-tests",
+  "version": "0.0.0",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cedarjs/cedar.git",
+    "directory": "tasks/git-hooks"
+  },
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vitest": "3.2.6"
+  }
+}
