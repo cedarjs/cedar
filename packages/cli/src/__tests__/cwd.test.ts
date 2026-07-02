@@ -1,4 +1,5 @@
-import { spawnSync, type SpawnSyncOptions } from 'child_process'
+import { spawnSync } from 'child_process'
+import type { SpawnSyncOptions } from 'child_process'
 import path from 'path'
 
 import { describe, it, expect } from 'vitest'

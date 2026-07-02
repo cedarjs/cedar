@@ -13,7 +13,7 @@ import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 
 import type * as ProjectConfig from '@cedarjs/project-config'
-import { getConfig, getPaths } from '@cedarjs/project-config'
+import { DEFAULT_CONFIG, getConfig, getPaths } from '@cedarjs/project-config'
 
 import * as pluginLib from '../lib/plugin.js'
 import { loadPlugins } from '../plugin.js'
@@ -34,6 +34,71 @@ vi.mock('../lib/packages', () => {
   }
 })
 
+const MOCK_PATHS: ProjectConfig.Paths = {
+  base: '',
+  generated: {
+    base: '',
+    schema: '',
+    types: { includes: '', mirror: '' },
+    prebuild: '',
+  },
+  web: {
+    base: '',
+    src: '',
+    storybook: '',
+    app: '',
+    document: '',
+    html: '',
+    routes: '',
+    pages: '',
+    components: '',
+    layouts: '',
+    config: '',
+    viteConfig: '',
+    entryClient: null,
+    entryServer: null,
+    postcss: '',
+    storybookConfig: '',
+    storybookPreviewConfig: null,
+    storybookManagerConfig: '',
+    dist: '',
+    distBrowser: '',
+    distRsc: '',
+    distSsr: '',
+    distSsrDocument: '',
+    distSsrEntryServer: '',
+    distRouteHooks: '',
+    distRscEntries: '',
+    routeManifest: '',
+    types: '',
+    graphql: '',
+  },
+  api: {
+    base: '',
+    directives: '',
+    prismaConfig: '',
+    src: '',
+    functions: '',
+    graphql: '',
+    lib: '',
+    services: '',
+    subscriptions: '',
+    config: '',
+    dist: '',
+    types: '',
+    models: '',
+    mail: '',
+    jobs: '',
+    distJobs: '',
+    jobsConfig: null,
+    distJobsConfig: null,
+    logger: null,
+  },
+  scripts: '',
+  packages: '',
+  generatorTemplates: '',
+}
+
 function getMockYargsInstance() {
   return yargs(hideBin(process.argv))
     .scriptName('cedar')
@@ -47,11 +112,7 @@ function getMockYargsInstance() {
 
 describe('command information caching', () => {
   beforeEach(() => {
-    vi.mocked(getPaths).mockReturnValue({
-      generated: {
-        base: '',
-      },
-    } as ReturnType<typeof getPaths>)
+    vi.mocked(getPaths).mockReturnValue(MOCK_PATHS)
   })
 
   test('returns the correct cache when no local cache exists', () => {
@@ -103,11 +164,7 @@ describe('plugin loading', () => {
   })
 
   beforeEach(() => {
-    vi.mocked(getPaths).mockReturnValue({
-      generated: {
-        base: '',
-      },
-    } as ReturnType<typeof getPaths>)
+    vi.mocked(getPaths).mockReturnValue(MOCK_PATHS)
 
     vi.spyOn(pluginLib, 'loadCommandCache')
     vi.spyOn(pluginLib, 'loadPluginPackage')
@@ -148,13 +205,15 @@ describe('plugin loading', () => {
     process.argv = ['node', 'cedar', pluginLib.PLUGIN_CACHE_BUILTIN[0]]
 
     vi.mocked(getConfig).mockReturnValue({
+      ...DEFAULT_CONFIG,
       experimental: {
+        ...DEFAULT_CONFIG.experimental,
         cli: {
           plugins: [],
           autoInstall: true,
         },
       },
-    } as ReturnType<typeof getConfig>)
+    })
 
     const yargsInstance = getMockYargsInstance()
     await loadPlugins(yargsInstance)
@@ -175,7 +234,9 @@ describe('plugin loading', () => {
       process.argv = ['node', 'cedar', command]
 
       vi.mocked(getConfig).mockReturnValue({
+        ...DEFAULT_CONFIG,
         experimental: {
+          ...DEFAULT_CONFIG.experimental,
           cli: {
             plugins: [
               {
@@ -191,7 +252,7 @@ describe('plugin loading', () => {
             autoInstall: true,
           },
         },
-      } as ReturnType<typeof getConfig>)
+      })
       vi.mock(
         '@cedarjs/cli-some-package-not-in-cache',
         () => {
@@ -276,7 +337,9 @@ describe('plugin loading', () => {
       process.argv = ['node', 'cedar', '@cedarjs', command]
 
       vi.mocked(getConfig).mockReturnValue({
+        ...DEFAULT_CONFIG,
         experimental: {
+          ...DEFAULT_CONFIG.experimental,
           cli: {
             plugins: [
               {
@@ -292,7 +355,7 @@ describe('plugin loading', () => {
             autoInstall: true,
           },
         },
-      } as ReturnType<typeof getConfig>)
+      })
       vi.mock(
         '@cedarjs/cli-some-package-not-in-cache',
         () => {
@@ -377,7 +440,9 @@ describe('plugin loading', () => {
       process.argv = ['node', 'cedar', '@bluewoodjs', command]
 
       vi.mocked(getConfig).mockReturnValue({
+        ...DEFAULT_CONFIG,
         experimental: {
+          ...DEFAULT_CONFIG.experimental,
           cli: {
             plugins: [
               {
@@ -393,7 +458,7 @@ describe('plugin loading', () => {
             autoInstall: true,
           },
         },
-      } as ReturnType<typeof getConfig>)
+      })
       vi.mock(
         '@cedarjs/cli-some-package-not-in-cache',
         () => {
@@ -466,7 +531,9 @@ describe('plugin loading', () => {
     process.argv = ['node', 'cedar', '@greenwoodjs']
 
     vi.mocked(getConfig).mockReturnValue({
+      ...DEFAULT_CONFIG,
       experimental: {
+        ...DEFAULT_CONFIG.experimental,
         cli: {
           plugins: [
             {
@@ -482,7 +549,7 @@ describe('plugin loading', () => {
           autoInstall: true,
         },
       },
-    } as ReturnType<typeof getConfig>)
+    })
     vi.mock(
       '@cedarjs/cli-some-package-not-in-cache',
       () => {
@@ -563,7 +630,9 @@ describe('plugin loading', () => {
     process.argv = ['node', 'cedar', '@greenwoodjs', 'anything']
 
     vi.mocked(getConfig).mockReturnValue({
+      ...DEFAULT_CONFIG,
       experimental: {
+        ...DEFAULT_CONFIG.experimental,
         cli: {
           plugins: [
             {
@@ -579,7 +648,7 @@ describe('plugin loading', () => {
           autoInstall: true,
         },
       },
-    } as ReturnType<typeof getConfig>)
+    })
     vi.mock(
       '@cedarjs/cli-some-package-not-in-cache',
       () => {
@@ -661,7 +730,9 @@ describe('plugin loading', () => {
     process.argv = ['node', 'cedar', 'someCommand']
 
     vi.mocked(getConfig).mockReturnValue({
+      ...DEFAULT_CONFIG,
       experimental: {
+        ...DEFAULT_CONFIG.experimental,
         cli: {
           plugins: [
             {
@@ -677,7 +748,7 @@ describe('plugin loading', () => {
           autoInstall: true,
         },
       },
-    } as ReturnType<typeof getConfig>)
+    })
     vi.mock(
       '@cedarjs/cli-some-package-not-in-cache',
       () => {
@@ -767,7 +838,9 @@ describe('plugin loading', () => {
     process.argv = ['node', 'cedar', 'someCommand']
 
     vi.mocked(getConfig).mockReturnValue({
+      ...DEFAULT_CONFIG,
       experimental: {
+        ...DEFAULT_CONFIG.experimental,
         cli: {
           plugins: [
             {
@@ -783,7 +856,7 @@ describe('plugin loading', () => {
           autoInstall: true,
         },
       },
-    } as ReturnType<typeof getConfig>)
+    })
     vi.mock(
       '@cedarjs/cli-some-package-not-in-cache',
       () => {
@@ -896,7 +969,9 @@ describe('plugin loading', () => {
     process.argv = ['node', 'cedar', 'unknownCommand']
 
     vi.mocked(getConfig).mockReturnValue({
+      ...DEFAULT_CONFIG,
       experimental: {
+        ...DEFAULT_CONFIG.experimental,
         cli: {
           plugins: [
             {
@@ -912,7 +987,7 @@ describe('plugin loading', () => {
           autoInstall: true,
         },
       },
-    } as ReturnType<typeof getConfig>)
+    })
     vi.mock(
       '@cedarjs/cli-some-package-not-in-cache',
       () => {
@@ -1033,7 +1108,9 @@ describe('plugin loading', () => {
     process.argv = ['node', 'cedar', '@bluewoodjs', 'tp']
 
     vi.mocked(getConfig).mockReturnValue({
+      ...DEFAULT_CONFIG,
       experimental: {
+        ...DEFAULT_CONFIG.experimental,
         cli: {
           plugins: [
             {
@@ -1049,7 +1126,7 @@ describe('plugin loading', () => {
           autoInstall: true,
         },
       },
-    } as ReturnType<typeof getConfig>)
+    })
     vi.mock(
       '@cedarjs/cli-some-package-not-in-cache',
       () => {
@@ -1139,7 +1216,9 @@ describe('plugin loading', () => {
     process.argv = ['node', 'cedar', '@bluewoodjs', 'tpo']
 
     vi.mocked(getConfig).mockReturnValue({
+      ...DEFAULT_CONFIG,
       experimental: {
+        ...DEFAULT_CONFIG.experimental,
         cli: {
           plugins: [
             {
@@ -1158,7 +1237,7 @@ describe('plugin loading', () => {
           autoInstall: true,
         },
       },
-    } as ReturnType<typeof getConfig>)
+    })
     vol.fromJSON({
       ['commandCache.json']: JSON.stringify({}),
     })
@@ -1241,7 +1320,9 @@ describe('plugin loading', () => {
     process.argv = ['node', 'cedar', '@bluewoodjs', 'unknownCommand']
 
     vi.mocked(getConfig).mockReturnValue({
+      ...DEFAULT_CONFIG,
       experimental: {
+        ...DEFAULT_CONFIG.experimental,
         cli: {
           plugins: [
             {
@@ -1257,7 +1338,7 @@ describe('plugin loading', () => {
           autoInstall: true,
         },
       },
-    } as ReturnType<typeof getConfig>)
+    })
     vol.fromJSON({
       ['commandCache.json']: JSON.stringify({
         '@cedarjs/cli-some-package': {

@@ -8,19 +8,9 @@ import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 import * as generator from '../dataMigration.js'
 
-const RealDate = Date
-
 afterEach(() => {
-  globalThis.Date = RealDate
+  vi.useRealTimers()
 })
-
-const mockDate = (isoDate: string) => {
-  globalThis.Date = class extends RealDate {
-    constructor() {
-      return new RealDate(isoDate)
-    }
-  } as typeof Date
-}
 
 test('returns exactly 1 file', async () => {
   const files = await generator.files({ name: 'MoveUser' })
@@ -29,7 +19,8 @@ test('returns exactly 1 file', async () => {
 })
 
 test('generates a file with a timestame in its name', async () => {
-  mockDate('2020-07-16T22:31:11.076Z')
+  vi.useFakeTimers()
+  vi.setSystemTime(new Date('2020-07-16T22:31:11.076Z'))
 
   const files = await generator.files({ name: 'MoveUser' })
   const filename = path.basename(Object.keys(files)[0])
