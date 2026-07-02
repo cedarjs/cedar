@@ -12,14 +12,15 @@ import {
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 
-import { getConfig, getPaths } from '@cedarjs/project-config'
+import type * as ProjectConfig from '@cedarjs/project-config'
+import { DEFAULT_CONFIG, getConfig, getPaths } from '@cedarjs/project-config'
 
 import * as pluginLib from '../lib/plugin.js'
 import { loadPlugins } from '../plugin.js'
 
 vi.mock('node:fs')
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const originalProjectConfig = await importOriginal()
+  const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
   return {
     ...originalProjectConfig,
     getPaths: vi.fn(),
@@ -33,24 +34,27 @@ vi.mock('../lib/packages', () => {
   }
 })
 
+const MOCK_PATHS = {
+  generated: { base: '' },
+  // Type casting here isn't great, but it's the pragmatic choice to avoid
+  // having to write a full mock for the paths object (~50 lines of `blah: ''`)
+} as unknown as ProjectConfig.Paths
+
 function getMockYargsInstance() {
   return yargs(hideBin(process.argv))
     .scriptName('cedar')
     .command({
       command: 'built-in',
-      description: 'Some builtin command',
+      describe: 'Some builtin command',
       aliases: ['bi', 'builtIn'],
+      handler: () => {},
     })
     .exitProcess(false)
 }
 
 describe('command information caching', () => {
   beforeEach(() => {
-    getPaths.mockReturnValue({
-      generated: {
-        base: '',
-      },
-    })
+    vi.mocked(getPaths).mockReturnValue(MOCK_PATHS)
   })
 
   test('returns the correct cache when no local cache exists', () => {
@@ -102,11 +106,7 @@ describe('plugin loading', () => {
   })
 
   beforeEach(() => {
-    getPaths.mockReturnValue({
-      generated: {
-        base: '',
-      },
-    })
+    vi.mocked(getPaths).mockReturnValue(MOCK_PATHS)
 
     vi.spyOn(pluginLib, 'loadCommandCache')
     vi.spyOn(pluginLib, 'loadPluginPackage')
@@ -115,16 +115,16 @@ describe('plugin loading', () => {
   })
 
   afterEach(() => {
-    pluginLib.loadCommandCache.mockRestore()
-    pluginLib.checkPluginListAndWarn.mockRestore()
-    pluginLib.loadPluginPackage.mockRestore()
-    pluginLib.saveCommandCache.mockRestore()
+    vi.mocked(pluginLib.loadCommandCache).mockRestore()
+    vi.mocked(pluginLib.checkPluginListAndWarn).mockRestore()
+    vi.mocked(pluginLib.loadPluginPackage).mockRestore()
+    vi.mocked(pluginLib.saveCommandCache).mockRestore()
 
-    console.log.mockClear()
+    vi.mocked(console.log).mockClear()
   })
 
   afterAll(() => {
-    console.log.mockRestore()
+    vi.mocked(console.log).mockRestore()
   })
 
   test('no plugins are loaded for --version at the root level', async () => {
@@ -146,8 +146,10 @@ describe('plugin loading', () => {
     const originalArgv = process.argv
     process.argv = ['node', 'cedar', pluginLib.PLUGIN_CACHE_BUILTIN[0]]
 
-    getConfig.mockReturnValue({
+    vi.mocked(getConfig).mockReturnValue({
+      ...DEFAULT_CONFIG,
       experimental: {
+        ...DEFAULT_CONFIG.experimental,
         cli: {
           plugins: [],
           autoInstall: true,
@@ -163,7 +165,7 @@ describe('plugin loading', () => {
     expect(pluginLib.loadPluginPackage).toHaveBeenCalledTimes(0)
     expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(0)
 
-    getConfig.mockRestore()
+    vi.mocked(getConfig).mockRestore()
     process.argv = originalArgv
   })
 
@@ -173,8 +175,10 @@ describe('plugin loading', () => {
       const originalArgv = process.argv
       process.argv = ['node', 'cedar', command]
 
-      getConfig.mockReturnValue({
+      vi.mocked(getConfig).mockReturnValue({
+        ...DEFAULT_CONFIG,
         experimental: {
+          ...DEFAULT_CONFIG.experimental,
           cli: {
             plugins: [
               {
@@ -191,21 +195,17 @@ describe('plugin loading', () => {
           },
         },
       })
-      vi.mock(
-        '@cedarjs/cli-some-package-not-in-cache',
-        () => {
-          return {
-            commands: [
-              {
-                command: 'some-other-command',
-                description: 'Some example other command',
-                aliases: ['soc', 'someOtherCommand'],
-              },
-            ],
-          }
-        },
-        { virtual: true },
-      )
+      vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
+        return {
+          commands: [
+            {
+              command: 'some-other-command',
+              description: 'Some example other command',
+              aliases: ['soc', 'someOtherCommand'],
+            },
+          ],
+        }
+      })
       vol.fromJSON({
         ['commandCache.json']: JSON.stringify({
           '@cedarjs/cli-some-package': {
@@ -239,12 +239,13 @@ describe('plugin loading', () => {
 
       // Should have saved the cache with the new package
       expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(1)
-      const knownPlugins =
-        getConfig.mock.results[0].value.experimental.cli.plugins.map(
-          (plugin) => plugin.package,
+      const knownPlugins = vi
+        .mocked(getConfig)
+        .mock.results[0].value.experimental.cli.plugins.map(
+          (plugin: { package: string }) => plugin.package,
         )
       const saveCommandCacheArg = Object.entries(
-        pluginLib.saveCommandCache.mock.calls[0][0],
+        vi.mocked(pluginLib.saveCommandCache).mock.calls[0][0],
       ).filter(([key]) => knownPlugins.includes(key))
       expect(saveCommandCacheArg).toMatchSnapshot()
 
@@ -262,7 +263,7 @@ describe('plugin loading', () => {
       expect(helpOutput).toContain('cedar @bluewoodjs <command>')
       expect(helpOutput).toContain('Commands from @bluewoodjs')
 
-      getConfig.mockRestore()
+      vi.mocked(getConfig).mockRestore()
       process.argv = originalArgv
     },
   )
@@ -273,8 +274,10 @@ describe('plugin loading', () => {
       const originalArgv = process.argv
       process.argv = ['node', 'cedar', '@cedarjs', command]
 
-      getConfig.mockReturnValue({
+      vi.mocked(getConfig).mockReturnValue({
+        ...DEFAULT_CONFIG,
         experimental: {
+          ...DEFAULT_CONFIG.experimental,
           cli: {
             plugins: [
               {
@@ -291,21 +294,17 @@ describe('plugin loading', () => {
           },
         },
       })
-      vi.mock(
-        '@cedarjs/cli-some-package-not-in-cache',
-        () => {
-          return {
-            commands: [
-              {
-                command: 'some-other-command',
-                description: 'Some example other command',
-                aliases: ['soc', 'someOtherCommand'],
-              },
-            ],
-          }
-        },
-        { virtual: true },
-      )
+      vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
+        return {
+          commands: [
+            {
+              command: 'some-other-command',
+              description: 'Some example other command',
+              aliases: ['soc', 'someOtherCommand'],
+            },
+          ],
+        }
+      })
       vol.fromJSON({
         ['commandCache.json']: JSON.stringify({
           '@cedarjs/cli-some-package': {
@@ -339,12 +338,13 @@ describe('plugin loading', () => {
 
       // Should have saved the cache with the new package
       expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(1)
-      const knownPlugins =
-        getConfig.mock.results[0].value.experimental.cli.plugins.map(
-          (plugin) => plugin.package,
+      const knownPlugins = vi
+        .mocked(getConfig)
+        .mock.results[0].value.experimental.cli.plugins.map(
+          (plugin: { package: string }) => plugin.package,
         )
       const saveCommandCacheArg = Object.entries(
-        pluginLib.saveCommandCache.mock.calls[0][0],
+        vi.mocked(pluginLib.saveCommandCache).mock.calls[0][0],
       ).filter(([key]) => knownPlugins.includes(key))
       expect(saveCommandCacheArg).toMatchSnapshot()
 
@@ -362,7 +362,7 @@ describe('plugin loading', () => {
       expect(helpOutput).not.toContain('cedar @bluewoodjs <command>')
       expect(helpOutput).not.toContain('Commands from @bluewoodjs')
 
-      getConfig.mockRestore()
+      vi.mocked(getConfig).mockRestore()
       process.argv = originalArgv
     },
   )
@@ -373,8 +373,10 @@ describe('plugin loading', () => {
       const originalArgv = process.argv
       process.argv = ['node', 'cedar', '@bluewoodjs', command]
 
-      getConfig.mockReturnValue({
+      vi.mocked(getConfig).mockReturnValue({
+        ...DEFAULT_CONFIG,
         experimental: {
+          ...DEFAULT_CONFIG.experimental,
           cli: {
             plugins: [
               {
@@ -391,21 +393,17 @@ describe('plugin loading', () => {
           },
         },
       })
-      vi.mock(
-        '@cedarjs/cli-some-package-not-in-cache',
-        () => {
-          return {
-            commands: [
-              {
-                command: 'some-other-command',
-                description: 'Some example other command',
-                aliases: ['soc', 'someOtherCommand'],
-              },
-            ],
-          }
-        },
-        { virtual: true },
-      )
+      vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
+        return {
+          commands: [
+            {
+              command: 'some-other-command',
+              description: 'Some example other command',
+              aliases: ['soc', 'someOtherCommand'],
+            },
+          ],
+        }
+      })
       vol.fromJSON({
         ['commandCache.json']: JSON.stringify({
           '@cedarjs/cli-some-package': {
@@ -435,12 +433,13 @@ describe('plugin loading', () => {
 
       // Should have saved the cache with the new package
       expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(1)
-      const knownPlugins =
-        getConfig.mock.results[0].value.experimental.cli.plugins.map(
-          (plugin) => plugin.package,
+      const knownPlugins = vi
+        .mocked(getConfig)
+        .mock.results[0].value.experimental.cli.plugins.map(
+          (plugin: { package: string }) => plugin.package,
         )
       const saveCommandCacheArg = Object.entries(
-        pluginLib.saveCommandCache.mock.calls[0][0],
+        vi.mocked(pluginLib.saveCommandCache).mock.calls[0][0],
       ).filter(([key]) => knownPlugins.includes(key))
       expect(saveCommandCacheArg).toMatchSnapshot()
 
@@ -452,7 +451,7 @@ describe('plugin loading', () => {
       expect(helpOutput).toContain('Some third party command')
       expect(helpOutput).toContain('[aliases: tp, thirdParty]')
 
-      getConfig.mockRestore()
+      vi.mocked(getConfig).mockRestore()
       process.argv = originalArgv
     },
   )
@@ -461,8 +460,10 @@ describe('plugin loading', () => {
     const originalArgv = process.argv
     process.argv = ['node', 'cedar', '@greenwoodjs']
 
-    getConfig.mockReturnValue({
+    vi.mocked(getConfig).mockReturnValue({
+      ...DEFAULT_CONFIG,
       experimental: {
+        ...DEFAULT_CONFIG.experimental,
         cli: {
           plugins: [
             {
@@ -479,21 +480,17 @@ describe('plugin loading', () => {
         },
       },
     })
-    vi.mock(
-      '@cedarjs/cli-some-package-not-in-cache',
-      () => {
-        return {
-          commands: [
-            {
-              command: 'some-other-command',
-              description: 'Some example other command',
-              aliases: ['soc', 'someOtherCommand'],
-            },
-          ],
-        }
-      },
-      { virtual: true },
-    )
+    vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
+      return {
+        commands: [
+          {
+            command: 'some-other-command',
+            description: 'Some example other command',
+            aliases: ['soc', 'someOtherCommand'],
+          },
+        ],
+      }
+    })
     vol.fromJSON({
       ['commandCache.json']: JSON.stringify({
         '@cedarjs/cli-some-package': {
@@ -527,12 +524,13 @@ describe('plugin loading', () => {
 
     // Should have saved the cache with the new package
     expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(1)
-    const knownPlugins =
-      getConfig.mock.results[0].value.experimental.cli.plugins.map(
-        (plugin) => plugin.package,
+    const knownPlugins = vi
+      .mocked(getConfig)
+      .mock.results[0].value.experimental.cli.plugins.map(
+        (plugin: { package: string }) => plugin.package,
       )
     const saveCommandCacheArg = Object.entries(
-      pluginLib.saveCommandCache.mock.calls[0][0],
+      vi.mocked(pluginLib.saveCommandCache).mock.calls[0][0],
     ).filter(([key]) => knownPlugins.includes(key))
     expect(saveCommandCacheArg).toMatchSnapshot()
 
@@ -550,15 +548,17 @@ describe('plugin loading', () => {
     expect(helpOutput).toContain('cedar @bluewoodjs <command>')
     expect(helpOutput).toContain('Commands from @bluewoodjs')
 
-    getConfig.mockRestore()
+    vi.mocked(getConfig).mockRestore()
     process.argv = originalArgv
   })
   test('correct loading for unknown namespace (with command)', async () => {
     const originalArgv = process.argv
     process.argv = ['node', 'cedar', '@greenwoodjs', 'anything']
 
-    getConfig.mockReturnValue({
+    vi.mocked(getConfig).mockReturnValue({
+      ...DEFAULT_CONFIG,
       experimental: {
+        ...DEFAULT_CONFIG.experimental,
         cli: {
           plugins: [
             {
@@ -575,21 +575,17 @@ describe('plugin loading', () => {
         },
       },
     })
-    vi.mock(
-      '@cedarjs/cli-some-package-not-in-cache',
-      () => {
-        return {
-          commands: [
-            {
-              command: 'some-other-command',
-              description: 'Some example other command',
-              aliases: ['soc', 'someOtherCommand'],
-            },
-          ],
-        }
-      },
-      { virtual: true },
-    )
+    vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
+      return {
+        commands: [
+          {
+            command: 'some-other-command',
+            description: 'Some example other command',
+            aliases: ['soc', 'someOtherCommand'],
+          },
+        ],
+      }
+    })
     vol.fromJSON({
       ['commandCache.json']: JSON.stringify({
         '@cedarjs/cli-some-package': {
@@ -623,12 +619,13 @@ describe('plugin loading', () => {
 
     // Should have saved the cache with the new package
     expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(1)
-    const knownPlugins =
-      getConfig.mock.results[0].value.experimental.cli.plugins.map(
-        (plugin) => plugin.package,
+    const knownPlugins = vi
+      .mocked(getConfig)
+      .mock.results[0].value.experimental.cli.plugins.map(
+        (plugin: { package: string }) => plugin.package,
       )
     const saveCommandCacheArg = Object.entries(
-      pluginLib.saveCommandCache.mock.calls[0][0],
+      vi.mocked(pluginLib.saveCommandCache).mock.calls[0][0],
     ).filter(([key]) => knownPlugins.includes(key))
     expect(saveCommandCacheArg).toMatchSnapshot()
 
@@ -646,7 +643,7 @@ describe('plugin loading', () => {
     expect(helpOutput).toContain('cedar @bluewoodjs <command>')
     expect(helpOutput).toContain('Commands from @bluewoodjs')
 
-    getConfig.mockRestore()
+    vi.mocked(getConfig).mockRestore()
     process.argv = originalArgv
   })
 
@@ -654,8 +651,10 @@ describe('plugin loading', () => {
     const originalArgv = process.argv
     process.argv = ['node', 'cedar', 'someCommand']
 
-    getConfig.mockReturnValue({
+    vi.mocked(getConfig).mockReturnValue({
+      ...DEFAULT_CONFIG,
       experimental: {
+        ...DEFAULT_CONFIG.experimental,
         cli: {
           plugins: [
             {
@@ -672,21 +671,17 @@ describe('plugin loading', () => {
         },
       },
     })
-    vi.mock(
-      '@cedarjs/cli-some-package-not-in-cache',
-      () => {
-        return {
-          commands: [
-            {
-              command: 'some-other-command',
-              description: 'Some example other command',
-              aliases: ['soc', 'someOtherCommand'],
-            },
-          ],
-        }
-      },
-      { virtual: true },
-    )
+    vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
+      return {
+        commands: [
+          {
+            command: 'some-other-command',
+            description: 'Some example other command',
+            aliases: ['soc', 'someOtherCommand'],
+          },
+        ],
+      }
+    })
     vol.fromJSON({
       ['commandCache.json']: JSON.stringify({
         '@cedarjs/cli-some-package': {
@@ -704,24 +699,26 @@ describe('plugin loading', () => {
       }),
     })
 
-    pluginLib.loadPluginPackage.mockImplementation((packageName) => {
-      if (packageName === '@cedarjs/cli-some-package') {
-        return {
-          commands: [
-            {
-              command: 'some-command',
-              description: 'Some example command',
-              aliases: ['sc', 'someCommand'],
-              builder: () => {},
-              handler: () => {
-                console.log('MARKER')
+    vi.mocked(pluginLib.loadPluginPackage).mockImplementation(
+      async (packageName, _packageVersion, _autoInstall) => {
+        if (packageName === '@cedarjs/cli-some-package') {
+          return {
+            commands: [
+              {
+                command: 'some-command',
+                description: 'Some example command',
+                aliases: ['sc', 'someCommand'],
+                builder: () => {},
+                handler: () => {
+                  console.log('MARKER')
+                },
               },
-            },
-          ],
+            ],
+          }
         }
-      }
-      throw new Error(`Unexpected behaviour: loading ${packageName}`)
-    })
+        throw new Error(`Unexpected behaviour: loading ${packageName}`)
+      },
+    )
 
     const yargsInstance = getMockYargsInstance()
     await loadPlugins(yargsInstance)
@@ -739,12 +736,13 @@ describe('plugin loading', () => {
 
     // Should have saved the cache with the new package
     expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(1)
-    const knownPlugins =
-      getConfig.mock.results[0].value.experimental.cli.plugins.map(
-        (plugin) => plugin.package,
+    const knownPlugins = vi
+      .mocked(getConfig)
+      .mock.results[0].value.experimental.cli.plugins.map(
+        (plugin: { package: string }) => plugin.package,
       )
     const saveCommandCacheArg = Object.entries(
-      pluginLib.saveCommandCache.mock.calls[0][0],
+      vi.mocked(pluginLib.saveCommandCache).mock.calls[0][0],
     ).filter(([key]) => knownPlugins.includes(key))
     expect(saveCommandCacheArg).toMatchSnapshot()
 
@@ -752,15 +750,17 @@ describe('plugin loading', () => {
     await yargsInstance.parse()
     expect(console.log).toHaveBeenCalledWith('MARKER')
 
-    getConfig.mockRestore()
+    vi.mocked(getConfig).mockRestore()
     process.argv = originalArgv
   })
   test('correct loading for known redwood command (without cache)', async () => {
     const originalArgv = process.argv
     process.argv = ['node', 'cedar', 'someCommand']
 
-    getConfig.mockReturnValue({
+    vi.mocked(getConfig).mockReturnValue({
+      ...DEFAULT_CONFIG,
       experimental: {
+        ...DEFAULT_CONFIG.experimental,
         cli: {
           plugins: [
             {
@@ -777,73 +777,67 @@ describe('plugin loading', () => {
         },
       },
     })
-    vi.mock(
-      '@cedarjs/cli-some-package-not-in-cache',
-      () => {
-        return {
-          commands: [
-            {
-              command: 'some-other-command',
-              description: 'Some example other command',
-              aliases: ['soc', 'someOtherCommand'],
-            },
-          ],
-        }
-      },
-      { virtual: true },
-    )
-    vi.mock(
-      '@cedarjs/cli-some-package',
-      () => {
-        return {
-          commands: [
-            {
-              command: 'some-command',
-              description: 'Some example command',
-              aliases: ['sc', 'someCommand'],
-            },
-          ],
-        }
-      },
-      { virtual: true },
-    )
+    vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
+      return {
+        commands: [
+          {
+            command: 'some-other-command',
+            description: 'Some example other command',
+            aliases: ['soc', 'someOtherCommand'],
+          },
+        ],
+      }
+    })
+    vi.mock('@cedarjs/cli-some-package', () => {
+      return {
+        commands: [
+          {
+            command: 'some-command',
+            description: 'Some example command',
+            aliases: ['sc', 'someCommand'],
+          },
+        ],
+      }
+    })
     vol.fromJSON({
       ['commandCache.json']: JSON.stringify({}),
     })
 
-    pluginLib.loadPluginPackage.mockImplementation((packageName) => {
-      if (packageName === '@cedarjs/cli-some-package') {
-        return {
-          commands: [
-            {
-              command: 'some-command',
-              description: 'Some example command',
-              aliases: ['sc', 'someCommand'],
-              builder: () => {},
-              handler: () => {
-                console.log('MARKER SOME')
+    vi.mocked(pluginLib.loadPluginPackage).mockImplementation(
+      async (packageName, _packageVersion, _autoInstall) => {
+        if (packageName === '@cedarjs/cli-some-package') {
+          return {
+            commands: [
+              {
+                command: 'some-command',
+                description: 'Some example command',
+                aliases: ['sc', 'someCommand'],
+                builder: () => {},
+                handler: () => {
+                  console.log('MARKER SOME')
+                },
               },
-            },
-          ],
+            ],
+          }
         }
-      }
-      if (packageName === '@cedarjs/cli-some-package-not-in-cache') {
-        return {
-          commands: [
-            {
-              command: 'some-other-command',
-              description: 'Some example other command',
-              aliases: ['soc', 'someOtherCommand'],
-              builder: () => {},
-              handler: () => {
-                console.log('MARKER SOME OTHER')
+        if (packageName === '@cedarjs/cli-some-package-not-in-cache') {
+          return {
+            commands: [
+              {
+                command: 'some-other-command',
+                description: 'Some example other command',
+                aliases: ['soc', 'someOtherCommand'],
+                builder: () => {},
+                handler: () => {
+                  console.log('MARKER SOME OTHER')
+                },
               },
-            },
-          ],
+            ],
+          }
         }
-      }
-      throw new Error(`Unexpected behaviour: loading ${packageName}`)
-    })
+        throw new Error(`Unexpected behaviour: loading ${packageName}`)
+      },
+    )
 
     const yargsInstance = getMockYargsInstance()
     await loadPlugins(yargsInstance)
@@ -866,12 +860,13 @@ describe('plugin loading', () => {
 
     // Should have saved the cache with the new package
     expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(1)
-    const knownPlugins =
-      getConfig.mock.results[0].value.experimental.cli.plugins.map(
-        (plugin) => plugin.package,
+    const knownPlugins = vi
+      .mocked(getConfig)
+      .mock.results[0].value.experimental.cli.plugins.map(
+        (plugin: { package: string }) => plugin.package,
       )
     const saveCommandCacheArg = Object.entries(
-      pluginLib.saveCommandCache.mock.calls[0][0],
+      vi.mocked(pluginLib.saveCommandCache).mock.calls[0][0],
     ).filter(([key]) => knownPlugins.includes(key))
     expect(saveCommandCacheArg).toMatchSnapshot()
 
@@ -880,15 +875,17 @@ describe('plugin loading', () => {
     expect(console.log).toHaveBeenCalledWith('MARKER SOME')
     expect(console.log).not.toHaveBeenCalledWith('MARKER SOME OTHER')
 
-    getConfig.mockRestore()
+    vi.mocked(getConfig).mockRestore()
     process.argv = originalArgv
   })
   test('correct loading for unknown redwood command', async () => {
     const originalArgv = process.argv
     process.argv = ['node', 'cedar', 'unknownCommand']
 
-    getConfig.mockReturnValue({
+    vi.mocked(getConfig).mockReturnValue({
+      ...DEFAULT_CONFIG,
       experimental: {
+        ...DEFAULT_CONFIG.experimental,
         cli: {
           plugins: [
             {
@@ -905,21 +902,17 @@ describe('plugin loading', () => {
         },
       },
     })
-    vi.mock(
-      '@cedarjs/cli-some-package-not-in-cache',
-      () => {
-        return {
-          commands: [
-            {
-              command: 'some-other-command',
-              description: 'Some example other command',
-              aliases: ['soc', 'someOtherCommand'],
-            },
-          ],
-        }
-      },
-      { virtual: true },
-    )
+    vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
+      return {
+        commands: [
+          {
+            command: 'some-other-command',
+            description: 'Some example other command',
+            aliases: ['soc', 'someOtherCommand'],
+          },
+        ],
+      }
+    })
     vol.fromJSON({
       ['commandCache.json']: JSON.stringify({
         '@cedarjs/cli-some-package': {
@@ -937,39 +930,41 @@ describe('plugin loading', () => {
       }),
     })
 
-    pluginLib.loadPluginPackage.mockImplementation((packageName) => {
-      if (packageName === '@cedarjs/cli-some-package') {
-        return {
-          commands: [
-            {
-              command: 'some-command',
-              description: 'Some example command',
-              aliases: ['sc', 'someCommand'],
-              builder: () => {},
-              handler: () => {
-                console.log('MARKER SOME')
+    vi.mocked(pluginLib.loadPluginPackage).mockImplementation(
+      async (packageName, _packageVersion, _autoInstall) => {
+        if (packageName === '@cedarjs/cli-some-package') {
+          return {
+            commands: [
+              {
+                command: 'some-command',
+                description: 'Some example command',
+                aliases: ['sc', 'someCommand'],
+                builder: () => {},
+                handler: () => {
+                  console.log('MARKER SOME')
+                },
               },
-            },
-          ],
+            ],
+          }
         }
-      }
-      if (packageName === '@cedarjs/cli-some-package-not-in-cache') {
-        return {
-          commands: [
-            {
-              command: 'some-other-command',
-              description: 'Some example other command',
-              aliases: ['soc', 'someOtherCommand'],
-              builder: () => {},
-              handler: () => {
-                console.log('MARKER SOME OTHER')
+        if (packageName === '@cedarjs/cli-some-package-not-in-cache') {
+          return {
+            commands: [
+              {
+                command: 'some-other-command',
+                description: 'Some example other command',
+                aliases: ['soc', 'someOtherCommand'],
+                builder: () => {},
+                handler: () => {
+                  console.log('MARKER SOME OTHER')
+                },
               },
-            },
-          ],
+            ],
+          }
         }
-      }
-      throw new Error(`Unexpected behaviour: loading ${packageName}`)
-    })
+        throw new Error(`Unexpected behaviour: loading ${packageName}`)
+      },
+    )
 
     const yargsInstance = getMockYargsInstance()
     await loadPlugins(yargsInstance)
@@ -987,12 +982,13 @@ describe('plugin loading', () => {
 
     // Should have saved the cache with the new package
     expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(1)
-    const knownPlugins =
-      getConfig.mock.results[0].value.experimental.cli.plugins.map(
-        (plugin) => plugin.package,
+    const knownPlugins = vi
+      .mocked(getConfig)
+      .mock.results[0].value.experimental.cli.plugins.map(
+        (plugin: { package: string }) => plugin.package,
       )
     const saveCommandCacheArg = Object.entries(
-      pluginLib.saveCommandCache.mock.calls[0][0],
+      vi.mocked(pluginLib.saveCommandCache).mock.calls[0][0],
     ).filter(([key]) => knownPlugins.includes(key))
     expect(saveCommandCacheArg).toMatchSnapshot()
 
@@ -1015,7 +1011,7 @@ describe('plugin loading', () => {
     expect(console.log).not.toHaveBeenCalledWith('MARKER SOME')
     expect(console.log).not.toHaveBeenCalledWith('MARKER SOME OTHER')
 
-    getConfig.mockRestore()
+    vi.mocked(getConfig).mockRestore()
     process.argv = originalArgv
   })
 
@@ -1023,8 +1019,10 @@ describe('plugin loading', () => {
     const originalArgv = process.argv
     process.argv = ['node', 'cedar', '@bluewoodjs', 'tp']
 
-    getConfig.mockReturnValue({
+    vi.mocked(getConfig).mockReturnValue({
+      ...DEFAULT_CONFIG,
       experimental: {
+        ...DEFAULT_CONFIG.experimental,
         cli: {
           plugins: [
             {
@@ -1041,21 +1039,17 @@ describe('plugin loading', () => {
         },
       },
     })
-    vi.mock(
-      '@cedarjs/cli-some-package-not-in-cache',
-      () => {
-        return {
-          commands: [
-            {
-              command: 'some-other-command',
-              description: 'Some example other command',
-              aliases: ['soc', 'someOtherCommand'],
-            },
-          ],
-        }
-      },
-      { virtual: true },
-    )
+    vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
+      return {
+        commands: [
+          {
+            command: 'some-other-command',
+            description: 'Some example other command',
+            aliases: ['soc', 'someOtherCommand'],
+          },
+        ],
+      }
+    })
     vol.fromJSON({
       ['commandCache.json']: JSON.stringify({
         '@cedarjs/cli-some-package': {
@@ -1073,24 +1067,26 @@ describe('plugin loading', () => {
       }),
     })
 
-    pluginLib.loadPluginPackage.mockImplementation((packageName) => {
-      if (packageName === '@bluewoodjs/cli-some-package') {
-        return {
-          commands: [
-            {
-              command: 'third-party',
-              description: 'Some third party command',
-              aliases: ['tp', 'thirdParty'],
-              builder: () => {},
-              handler: () => {
-                console.log('MARKER')
+    vi.mocked(pluginLib.loadPluginPackage).mockImplementation(
+      async (packageName, _packageVersion, _autoInstall) => {
+        if (packageName === '@bluewoodjs/cli-some-package') {
+          return {
+            commands: [
+              {
+                command: 'third-party',
+                description: 'Some third party command',
+                aliases: ['tp', 'thirdParty'],
+                builder: () => {},
+                handler: () => {
+                  console.log('MARKER')
+                },
               },
-            },
-          ],
+            ],
+          }
         }
-      }
-      throw new Error(`Unexpected behaviour: loading ${packageName}`)
-    })
+        throw new Error(`Unexpected behaviour: loading ${packageName}`)
+      },
+    )
 
     const yargsInstance = getMockYargsInstance()
     await loadPlugins(yargsInstance)
@@ -1108,12 +1104,13 @@ describe('plugin loading', () => {
 
     // Should have saved the cache with the new package
     expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(1)
-    const knownPlugins =
-      getConfig.mock.results[0].value.experimental.cli.plugins.map(
-        (plugin) => plugin.package,
+    const knownPlugins = vi
+      .mocked(getConfig)
+      .mock.results[0].value.experimental.cli.plugins.map(
+        (plugin: { package: string }) => plugin.package,
       )
     const saveCommandCacheArg = Object.entries(
-      pluginLib.saveCommandCache.mock.calls[0][0],
+      vi.mocked(pluginLib.saveCommandCache).mock.calls[0][0],
     ).filter(([key]) => knownPlugins.includes(key))
     expect(saveCommandCacheArg).toMatchSnapshot()
 
@@ -1121,15 +1118,17 @@ describe('plugin loading', () => {
     await yargsInstance.parse()
     expect(console.log).toHaveBeenCalledWith('MARKER')
 
-    getConfig.mockRestore()
+    vi.mocked(getConfig).mockRestore()
     process.argv = originalArgv
   })
   test('correct loading for known third party command (without cache)', async () => {
     const originalArgv = process.argv
     process.argv = ['node', 'cedar', '@bluewoodjs', 'tpo']
 
-    getConfig.mockReturnValue({
+    vi.mocked(getConfig).mockReturnValue({
+      ...DEFAULT_CONFIG,
       experimental: {
+        ...DEFAULT_CONFIG.experimental,
         cli: {
           plugins: [
             {
@@ -1153,39 +1152,41 @@ describe('plugin loading', () => {
       ['commandCache.json']: JSON.stringify({}),
     })
 
-    pluginLib.loadPluginPackage.mockImplementation((packageName) => {
-      if (packageName === '@bluewoodjs/cli-some-package') {
-        return {
-          commands: [
-            {
-              command: 'third-party',
-              description: 'Some third party command',
-              aliases: ['tp', 'thirdParty'],
-              builder: () => {},
-              handler: () => {
-                console.log('MARKER TP')
+    vi.mocked(pluginLib.loadPluginPackage).mockImplementation(
+      async (packageName, _packageVersion, _autoInstall) => {
+        if (packageName === '@bluewoodjs/cli-some-package') {
+          return {
+            commands: [
+              {
+                command: 'third-party',
+                description: 'Some third party command',
+                aliases: ['tp', 'thirdParty'],
+                builder: () => {},
+                handler: () => {
+                  console.log('MARKER TP')
+                },
               },
-            },
-          ],
+            ],
+          }
         }
-      }
-      if (packageName === '@bluewoodjs/cli-some-package-second-example') {
-        return {
-          commands: [
-            {
-              command: 'third-party-other',
-              description: 'Some other third party command',
-              aliases: ['tpo', 'thirdPartyOther'],
-              builder: () => {},
-              handler: () => {
-                console.log('MARKER TPO')
+        if (packageName === '@bluewoodjs/cli-some-package-second-example') {
+          return {
+            commands: [
+              {
+                command: 'third-party-other',
+                description: 'Some other third party command',
+                aliases: ['tpo', 'thirdPartyOther'],
+                builder: () => {},
+                handler: () => {
+                  console.log('MARKER TPO')
+                },
               },
-            },
-          ],
+            ],
+          }
         }
-      }
-      throw new Error(`Unexpected behaviour: loading ${packageName}`)
-    })
+        throw new Error(`Unexpected behaviour: loading ${packageName}`)
+      },
+    )
 
     const yargsInstance = getMockYargsInstance()
     await loadPlugins(yargsInstance)
@@ -1208,12 +1209,13 @@ describe('plugin loading', () => {
 
     // Should have saved the cache with the new package
     expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(1)
-    const knownPlugins =
-      getConfig.mock.results[0].value.experimental.cli.plugins.map(
-        (plugin) => plugin.package,
+    const knownPlugins = vi
+      .mocked(getConfig)
+      .mock.results[0].value.experimental.cli.plugins.map(
+        (plugin: { package: string }) => plugin.package,
       )
     const saveCommandCacheArg = Object.entries(
-      pluginLib.saveCommandCache.mock.calls[0][0],
+      vi.mocked(pluginLib.saveCommandCache).mock.calls[0][0],
     ).filter(([key]) => knownPlugins.includes(key))
     expect(saveCommandCacheArg).toMatchSnapshot()
 
@@ -1222,15 +1224,17 @@ describe('plugin loading', () => {
     expect(console.log).not.toHaveBeenCalledWith('MARKER TP')
     expect(console.log).toHaveBeenCalledWith('MARKER TPO')
 
-    getConfig.mockRestore()
+    vi.mocked(getConfig).mockRestore()
     process.argv = originalArgv
   })
   test('correct loading for unknown third party command', async () => {
     const originalArgv = process.argv
     process.argv = ['node', 'cedar', '@bluewoodjs', 'unknownCommand']
 
-    getConfig.mockReturnValue({
+    vi.mocked(getConfig).mockReturnValue({
+      ...DEFAULT_CONFIG,
       experimental: {
+        ...DEFAULT_CONFIG.experimental,
         cli: {
           plugins: [
             {
@@ -1264,24 +1268,26 @@ describe('plugin loading', () => {
       }),
     })
 
-    pluginLib.loadPluginPackage.mockImplementation((packageName) => {
-      if (packageName === '@bluewoodjs/cli-some-package') {
-        return {
-          commands: [
-            {
-              command: 'third-party',
-              description: 'Some third party command',
-              aliases: ['tp', 'thirdParty'],
-              builder: () => {},
-              handler: () => {
-                console.log('MARKER SOME')
+    vi.mocked(pluginLib.loadPluginPackage).mockImplementation(
+      async (packageName, _packageVersion, _autoInstall) => {
+        if (packageName === '@bluewoodjs/cli-some-package') {
+          return {
+            commands: [
+              {
+                command: 'third-party',
+                description: 'Some third party command',
+                aliases: ['tp', 'thirdParty'],
+                builder: () => {},
+                handler: () => {
+                  console.log('MARKER SOME')
+                },
               },
-            },
-          ],
+            ],
+          }
         }
-      }
-      throw new Error(`Unexpected behaviour: loading ${packageName}`)
-    })
+        throw new Error(`Unexpected behaviour: loading ${packageName}`)
+      },
+    )
 
     const yargsInstance = getMockYargsInstance()
     await loadPlugins(yargsInstance)
@@ -1294,12 +1300,13 @@ describe('plugin loading', () => {
 
     // Should have saved the cache with the new package
     expect(pluginLib.saveCommandCache).toHaveBeenCalledTimes(1)
-    const knownPlugins =
-      getConfig.mock.results[0].value.experimental.cli.plugins.map(
-        (plugin) => plugin.package,
+    const knownPlugins = vi
+      .mocked(getConfig)
+      .mock.results[0].value.experimental.cli.plugins.map(
+        (plugin: { package: string }) => plugin.package,
       )
     const saveCommandCacheArg = Object.entries(
-      pluginLib.saveCommandCache.mock.calls[0][0],
+      vi.mocked(pluginLib.saveCommandCache).mock.calls[0][0],
     ).filter(([key]) => knownPlugins.includes(key))
     expect(saveCommandCacheArg).toMatchSnapshot()
 
@@ -1321,7 +1328,7 @@ describe('plugin loading', () => {
     await yargsInstance.parse()
     expect(console.log).not.toHaveBeenCalledWith('MARKER')
 
-    getConfig.mockRestore()
+    vi.mocked(getConfig).mockRestore()
     process.argv = originalArgv
   })
 })

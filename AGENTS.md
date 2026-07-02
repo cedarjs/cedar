@@ -49,6 +49,7 @@ Use `yarn dedupe` to manage duplicate packages. Keep `package.json` files sorted
 - Keep file and symbol names aligned with existing package conventions.
 - Place comments on a separate line immediately above the affected code using `//`. For documenting function/variable usage, use JSDoc. Avoid inline or end-of-line comments.
 - Avoid introducing new dependencies unless necessary.
+- Always put type imports on a separate `import type { ... }` line. Never combine type and value imports in a single `import` statement (e.g., avoid `import { foo, type Bar } from '...'`; instead write `import { foo } from '...'` and `import type { Bar } from '...'` on separate lines).
 
 ## Type Safety & Casting
 
