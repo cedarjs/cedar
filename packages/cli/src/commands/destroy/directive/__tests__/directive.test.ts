@@ -2,7 +2,7 @@ globalThis.__dirname = __dirname
 
 vi.mock('node:fs')
 vi.mock('../../../../lib', async (importOriginal) => {
-  const originalLib = await importOriginal()
+  const originalLib = await importOriginal<typeof import('../../../../lib/index.js')>()
   return {
     ...originalLib,
     generateTemplate: () => '',
@@ -28,15 +28,14 @@ beforeEach(() => {
 afterEach(() => {
   vol.reset()
   vi.spyOn(fs, 'unlinkSync').mockClear()
-  console.info.mockRestore()
-  console.log.mockRestore()
+  vi.restoreAllMocks()
 })
 
 test('destroys directive files', async () => {
   const unlinkSpy = vi.spyOn(fs, 'unlinkSync')
   const t = tasks({
     componentName: 'directive',
-    filesFn: (args) => files({ ...args, type: 'validator' }),
+    filesFn: (args: Parameters<typeof files>[0]) => files({ ...args, type: 'validator' }),
     name: 'require-admin',
   })
   t.options.renderer = 'silent'

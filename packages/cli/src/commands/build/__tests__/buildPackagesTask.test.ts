@@ -5,7 +5,7 @@ vi.mock('@cedarjs/project-config/packageManager', () => ({
 vi.mock('node:fs', () => {
   return {
     default: {
-      existsSync: (path) => {
+      existsSync: (path: string) => {
         return !path.includes('non-existing-package')
       },
       readFileSync: () => {
@@ -59,7 +59,7 @@ vi.mock('../../../lib/index.js', () => {
 vi.mock('@cedarjs/telemetry', () => {
   return {
     errorTelemetry: vi.fn(),
-    timedTelemetry: (_argv, _options, callback) => {
+    timedTelemetry: (_argv: unknown, _options: unknown, callback: () => unknown) => {
       return callback()
     },
   }
@@ -82,13 +82,13 @@ import { buildPackagesTask } from '../buildPackagesTask.js'
 function createMockTask() {
   const mockTask = {
     skip: vi.fn(),
-    newListr: vi.fn((subtasks, options) => {
+    newListr: vi.fn((subtasks: unknown[], options: unknown) => {
       // Store for inspection in tests
       mockTask._subtasks = subtasks
       mockTask._subtaskOptions = options
     }),
-    _subtasks: [],
-    _subtaskOptions: {},
+    _subtasks: [] as unknown[],
+    _subtaskOptions: {} as unknown,
   }
 
   return mockTask
@@ -118,7 +118,7 @@ describe('buildPackagesTask', () => {
     await buildPackagesTask(mockTask, ['packages/*'])
 
     // Execute each subtask and verify execa is called correctly
-    for (const subtask of mockTask._subtasks) {
+    for (const subtask of mockTask._subtasks as Array<{ task: () => Promise<void> }>) {
       await subtask.task()
     }
 
@@ -198,10 +198,12 @@ describe('buildPackagesTask', () => {
     const mockTask = createMockTask()
     await buildPackagesTask(mockTask, ['packages/*'])
 
-    const execaError = new Error('Command failed with exit code 1')
-    execaError.stderr = 'error TS2345: Type string is not assignable to number'
+    const execaError = Object.assign(
+      new Error('Command failed with exit code 1'),
+      { stderr: 'error TS2345: Type string is not assignable to number' },
+    )
 
-    const fooSubtask = mockTask._subtasks[0]
+    const fooSubtask = (mockTask._subtasks as Array<{ task: () => Promise<void> }>)[0]
 
     vi.mocked(execa).mockRejectedValueOnce(execaError)
     await expect(fooSubtask.task()).rejects.toThrow('Building "foo" failed')
@@ -216,11 +218,13 @@ describe('buildPackagesTask', () => {
     const mockTask = createMockTask()
     await buildPackagesTask(mockTask, ['packages/*'])
 
-    const execaError = new Error('Command failed with exit code 1')
-    execaError.stderr = ''
+    const execaError = Object.assign(
+      new Error('Command failed with exit code 1'),
+      { stderr: '' },
+    )
     vi.mocked(execa).mockRejectedValueOnce(execaError)
 
-    const fooSubtask = mockTask._subtasks[0]
+    const fooSubtask = (mockTask._subtasks as Array<{ task: () => Promise<void> }>)[0]
     await expect(fooSubtask.task()).rejects.toThrow(
       'Command failed with exit code 1',
     )
@@ -230,11 +234,13 @@ describe('buildPackagesTask', () => {
     const mockTask = createMockTask()
     await buildPackagesTask(mockTask, ['packages/*'])
 
-    const execaError = new Error('Command failed with exit code 1')
-    execaError.stderr = 'some compilation error'
+    const execaError = Object.assign(
+      new Error('Command failed with exit code 1'),
+      { stderr: 'some compilation error' },
+    )
     vi.mocked(execa).mockRejectedValueOnce(execaError)
 
-    const fooSubtask = mockTask._subtasks[0]
+    const fooSubtask = (mockTask._subtasks as Array<{ task: () => Promise<void> }>)[0]
 
     try {
       await fooSubtask.task()
@@ -254,7 +260,7 @@ describe('buildPackagesTask', () => {
     await buildPackagesTask(mockTask, ['packages/*'])
 
     // execa resolves by default in our mock
-    for (const subtask of mockTask._subtasks) {
+    for (const subtask of mockTask._subtasks as Array<{ task: () => Promise<void> }>) {
       await expect(subtask.task()).resolves.toBeUndefined()
     }
   })

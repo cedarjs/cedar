@@ -18,7 +18,7 @@ vi.mock('node:fs', async () => ({ default: (await import('memfs')).fs }))
 vi.mock('execa')
 
 vi.mock('../../../../lib', async (importOriginal) => {
-  const originalLib = await importOriginal()
+  const originalLib = await importOriginal<typeof import('../../../../lib/index.js')>()
   return {
     ...originalLib,
     generateTemplate: () => '',
@@ -26,12 +26,19 @@ vi.mock('../../../../lib', async (importOriginal) => {
 })
 
 vi.mock('../../../../lib/schemaHelpers', async (importOriginal) => {
-  const originalSchemaHelpers = await importOriginal()
-  const path = require('path')
+  const originalSchemaHelpers =
+    await importOriginal<typeof import('../../../../lib/schemaHelpers.js')>()
+  const nodePath = await import('node:path')
+  const nodeFs = await import('node:fs')
   return {
     ...originalSchemaHelpers,
     getSchema: () => {
-      return require(path.join(globalThis.__dirname, 'fixtures', 'post.json'))
+      return JSON.parse(
+        nodeFs.default.readFileSync(
+          nodePath.join(globalThis.__dirname, 'fixtures', 'post.json'),
+          'utf-8',
+        ),
+      )
     },
   }
 })
@@ -50,13 +57,13 @@ const templateDirectories = templateDirectoryNames.map((name) => {
     templatePath: name,
   })
 })
-const scaffoldTemplates = {}
-const actualFs = await vi.importActual('node:fs')
+const scaffoldTemplates: Record<string, string> = {}
+const actualFs = await vi.importActual<typeof import('node:fs')>('node:fs')
 templateDirectories.forEach((directory) => {
-  const files = actualFs.readdirSync(directory)
-  files.forEach((file) => {
+  const dirFiles = actualFs.readdirSync(directory) as string[]
+  dirFiles.forEach((file) => {
     const filePath = path.join(directory, file)
-    scaffoldTemplates[filePath] = actualFs.readFileSync(filePath, 'utf-8')
+    scaffoldTemplates[filePath] = actualFs.readFileSync(filePath, 'utf-8') as string
   })
 })
 

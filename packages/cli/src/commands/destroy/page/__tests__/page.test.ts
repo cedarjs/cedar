@@ -1,7 +1,7 @@
 globalThis.__dirname = __dirname
 vi.mock('node:fs')
 vi.mock('../../../../lib', async (importOriginal) => {
-  const originalLib = await importOriginal()
+  const originalLib = await importOriginal<typeof import('../../../../lib/index.js')>()
   return {
     ...originalLib,
     generateTemplate: () => '',
@@ -16,8 +16,9 @@ import { vi, beforeEach, afterEach, test, expect } from 'vitest'
 import '../../../../lib/mockTelemetry'
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const path = require('path')
-  const originalProjectConfig = await importOriginal()
+  const path = await import('node:path')
+  const originalProjectConfig =
+    await importOriginal<typeof import('@cedarjs/project-config')>()
   return {
     getPaths: () => {
       const BASE_PATH = '/path/to/project'
@@ -39,7 +40,8 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
 })
 
 vi.mock('@cedarjs/cli-helpers', async (importOriginal) => {
-  const originalCliHelpers = await importOriginal()
+  const originalCliHelpers =
+    await importOriginal<typeof import('@cedarjs/cli-helpers')>()
 
   return {
     ...originalCliHelpers,

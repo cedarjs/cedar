@@ -1,7 +1,7 @@
 globalThis.__dirname = __dirname
 vi.mock('node:fs')
 vi.mock('../../../../lib', async (importOriginal) => {
-  const originalLib = await importOriginal()
+  const originalLib = await importOriginal<typeof import('../../../../lib/index.js')>()
   return {
     ...originalLib,
     generateTemplate: () => '',
@@ -27,8 +27,7 @@ beforeEach(async () => {
 afterEach(() => {
   vol.reset()
   vi.spyOn(fs, 'unlinkSync').mockClear()
-  console.info.mockRestore()
-  console.log.mockRestore()
+  vi.restoreAllMocks()
 })
 
 test('destroys service files', async () => {
