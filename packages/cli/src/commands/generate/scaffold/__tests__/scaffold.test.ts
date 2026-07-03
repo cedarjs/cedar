@@ -15,10 +15,10 @@ import { getYargsDefaults } from '../../yargsCommandHelpers.js'
 import * as scaffoldHandler from '../scaffoldHandler.js'
 
 vi.mock('node:fs', async (importOriginal) => {
-  const { wrapFsForUnionfs } =
+  const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
     await import('../../../../__tests__/ufsFsProxy.js')
   const originalFs = await importOriginal<typeof NodeFs>()
-  ufs.use(wrapFsForUnionfs(originalFs)).use(memfs)
+  ufs.use(wrapFsForUnionfs(originalFs)).use(wrapMemfsForUnionfs(memfs))
   return { ...ufs, default: { ...ufs } }
 })
 

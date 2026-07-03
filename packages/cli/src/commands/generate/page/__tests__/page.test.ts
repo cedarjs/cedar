@@ -22,11 +22,11 @@ const { memfs, ufs, vol } = await vi.hoisted(async () => {
 })
 
 vi.mock('node:fs', async (importOriginal) => {
-  const { wrapFsForUnionfs } =
+  const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
     // @ts-expect-error - No types for JS files
     await import('../../../../__tests__/ufsFsProxy.js')
   const originalFs = await importOriginal<typeof NodeFS>()
-  ufs.use(wrapFsForUnionfs(originalFs)).use(memfs)
+  ufs.use(wrapFsForUnionfs(originalFs)).use(wrapMemfsForUnionfs(memfs))
   return {
     ...ufs,
     default: ufs,

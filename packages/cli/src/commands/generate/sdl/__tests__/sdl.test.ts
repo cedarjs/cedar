@@ -12,10 +12,10 @@ import { vi, describe, test, expect, beforeAll, afterEach } from 'vitest'
 import '../../../../lib/test'
 
 vi.mock('node:fs', async (importOriginal) => {
-  const { wrapFsForUnionfs } =
+  const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
     await import('../../../../__tests__/ufsFsProxy.js')
   const fs = await importOriginal<typeof NodeFs>()
-  ufs.use(wrapFsForUnionfs(fs)).use(memfs)
+  ufs.use(wrapFsForUnionfs(fs)).use(wrapMemfsForUnionfs(memfs))
 
   return { ...ufs, default: ufs }
 })
@@ -40,7 +40,7 @@ beforeAll(() => {
 })
 
 const extensionForBaseArgs = (baseArgs: Record<string, unknown>) =>
-  (baseArgs?.typescript ? 'ts' : 'js')
+  baseArgs?.typescript ? 'ts' : 'js'
 
 const itReturnsExactlyFourFiles = (baseArgs = {}) => {
   test('returns exactly 4 files', async () => {
@@ -361,7 +361,7 @@ describe('handler', () => {
         const testOutput = {
           // Because windows paths are different, we need to normalize before
           // snapshotting
-          filePath: ensurePosixPath(calls[0]),
+          filePath: ensurePosixPath(String(calls[0])),
           fileContent: calls[1],
         }
 

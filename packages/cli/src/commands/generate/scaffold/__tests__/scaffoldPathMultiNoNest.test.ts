@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 globalThis.__dirname = import.meta.dirname
 
-=======
->>>>>>> 04c75cfb14 (TS fixes mostly)
 import type * as NodeFs from 'node:fs'
 import path from 'node:path'
 
@@ -15,9 +12,11 @@ import '../../../../lib/test'
 import * as scaffoldHandler from '../scaffoldHandler.js'
 
 vi.mock('node:fs', async (importOriginal) => {
-  const { wrapFsForUnionfs } =
+  const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
     await import('../../../../__tests__/ufsFsProxy.js')
-  ufs.use(wrapFsForUnionfs(await importOriginal<typeof NodeFs>())).use(memfs)
+  ufs
+    .use(wrapFsForUnionfs(await importOriginal<typeof NodeFs>()))
+    .use(wrapMemfsForUnionfs(memfs))
   return { ...ufs, default: { ...ufs } }
 })
 vi.mock('execa')

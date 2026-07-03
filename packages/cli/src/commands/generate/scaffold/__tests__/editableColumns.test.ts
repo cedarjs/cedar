@@ -15,10 +15,11 @@ import { getYargsDefaults } from '../../yargsCommandHelpers.js'
 import * as scaffoldHandler from '../scaffoldHandler.js'
 
 vi.mock('node:fs', async (importOriginal) => {
-  const { wrapFsForUnionfs } =
-    // @ts-expect-error - No types for JS files
+  const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
     await import('../../../../__tests__/ufsFsProxy.js')
-  ufs.use(wrapFsForUnionfs(await importOriginal<typeof NodeFS>())).use(memfs)
+  ufs
+    .use(wrapFsForUnionfs(await importOriginal<typeof NodeFS>()))
+    .use(wrapMemfsForUnionfs(memfs))
   return { ...ufs, default: { ...ufs } }
 })
 vi.mock('execa')
