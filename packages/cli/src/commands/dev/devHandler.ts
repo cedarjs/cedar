@@ -14,7 +14,6 @@ import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { exitWithError } from '../../lib/exit.js'
 import { generatePrismaClient } from '../../lib/generatePrismaClient.js'
-// @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../lib/index.js'
 import { getFreePort } from '../../lib/ports.js'
 import { serverFileExists } from '../../lib/project.js'
