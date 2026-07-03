@@ -252,11 +252,11 @@ test('pathName uses passed path if present', () => {
   })
 })
 
-test('pathName creates path based on name if path is null', () => {
+test('pathName creates path based on name if path is undefined', () => {
   const names = ['FooBar', 'fooBar', 'foo-bar', 'foo_bar', 'FOO_BAR']
 
   names.forEach((name) => {
-    expect(helpers.pathName(null, name)).toEqual('/foo-bar')
+    expect(helpers.pathName(undefined, name)).toEqual('/foo-bar')
   })
 })
 
