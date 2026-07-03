@@ -55,11 +55,204 @@ export function parseCliArgs(argv = process.argv) {
   return { forceOptimize, debug, portArg, debugPort, debugBrk, serverArgs }
 }
 
+/**
+ * Create a throwaway inspector session and trigger a pause/resume cycle to
+ * consume any lingering Debugger.pause flag on the V8 isolate.  If the flag
+ * was already cleared this is a no-op.  Best-effort — never throws.
+ */
+async function clearPendingPause() {
+  const inspector = await import('node:inspector')
+  const s = new inspector.Session()
+  try {
+    s.connect()
+    await new Promise<void>((resolve, reject) => {
+      s.post('Debugger.enable', (err) => (err ? reject(err) : resolve()))
+    })
+
+    await new Promise<void>((resolve) => {
+      let done = false
+      s.once('Debugger.paused', () => {
+        s.post('Debugger.resume', () => {
+          done = true
+          resolve()
+        })
+      })
+      s.post('Runtime.evaluate', { expression: '1' }, () => {
+        // If evaluate didn't trigger a pause (flag already consumed) or
+        // errored, nothing more to do.
+        if (!done) {
+          resolve()
+        }
+      })
+    })
+  } catch {
+    // Best-effort
+  } finally {
+    s.disconnect()
+  }
+}
+
 export async function openDebugger(port: number, waitForDebugger = false) {
   const inspector = await import('node:inspector')
   inspector.open(port, '127.0.0.1')
   if (waitForDebugger) {
+    // Wait for the debugger to connect and send
+    // Runtime.runIfWaitingForDebugger.  Editors send Debugger.enable before
+    // Runtime.runIfWaitingForDebugger, so the Debugger domain is already
+    // active when waitForDebugger() unblocks.
     inspector.waitForDebugger()
+
+    // Use inspector.Session to arm a pause and wait for the debugger's
+    // Debugger.resume.  This gives the user time to set breakpoints on
+    // API functions before loadApiFunctions() runs.
+    const session = new inspector.Session()
+    session.connect()
+
+    // Node.js inspector.Session.post() returns a Promise at runtime despite
+    // being typed as void.  We await it because the Debugger must be enabled
+    // before we fire Debugger.pause.
+    // eslint-disable-next-line @typescript-eslint/await-thenable
+    await session.post('Debugger.enable')
+
+    // Register the resumed listener BEFORE firing pause/evaluate so it
+    // doesn't miss the event.  session.post() dispatches the command
+    // synchronously — V8 may process it and emit Debugger.resumed on
+    // the Session before session.post() returns.
+    let resumedResolve: () => void
+    const resumedPromise = new Promise<void>((resolve) => {
+      resumedResolve = resolve
+    })
+
+    // If the session itself errors or detaches, no more events will arrive —
+    // unblock immediately rather than waiting for a pause that can never come.
+    // If V8 already paused, still try to resume via fallback sessions.
+    // If not yet paused, clear the pending pause flag from Debugger.pause by
+    // triggering a pause/resume cycle on a throwaway session.
+    const onSessionDead = () => {
+      if (paused) {
+        tryResume()
+      } else {
+        clearPendingPause().then(
+          () => resumedResolve?.(),
+          () => resumedResolve?.(),
+        )
+      }
+    }
+    session.once('error', onSessionDead)
+    session.once('Inspector.detached', onSessionDead)
+
+    let paused = false
+    session.once('Debugger.paused', () => {
+      paused = true
+      tryResume()
+    })
+
+    session.once('Debugger.resumed', () => {
+      resumedResolve?.()
+    })
+
+    // Safety net: if neither paused, resumed, nor error fires within 5
+    // minutes, force a resume attempt so the dev server doesn't hang.
+    // If V8 never paused, the session may be stuck — resolve to unblock.
+    const FIVE_MINUTES_MS = 5 * 60 * 1000
+    const timeout = setTimeout(() => {
+      if (paused) {
+        tryResume()
+      } else {
+        resumedResolve?.()
+      }
+    }, FIVE_MINUTES_MS)
+
+    let hasTriedResume = false
+    const tryResume = () => {
+      if (hasTriedResume) {
+        return
+      }
+      // Only proceed when V8 has actually paused.  If the external debugger
+      // disconnected before the pause took effect, wait for Debugger.paused
+      // to fire — the Runtime.evaluate we queued will trigger it on the next
+      // tick.
+      if (!paused) {
+        return
+      }
+      hasTriedResume = true
+
+      // Attempt to resume.  Retry with throwaway sessions if the original
+      // session was detached or its resume command was rejected.
+      ;(async () => {
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const s = attempt === 0 ? session : new inspector.Session()
+          if (attempt > 0) {
+            try {
+              s.connect()
+              await new Promise<void>((resolve, reject) => {
+                s.post('Debugger.enable', (err) =>
+                  err ? reject(err) : resolve(),
+                )
+              })
+            } catch {
+              continue
+            }
+          }
+
+          const ok = await new Promise<boolean>((resolve) => {
+            s.post('Debugger.resume', (err) => resolve(!err))
+          })
+
+          if (attempt > 0) {
+            s.disconnect()
+          }
+
+          if (ok) {
+            resumedResolve?.()
+            return
+          }
+        }
+
+        console.warn(
+          '[cedar-unified-dev] Failed to clear debugger pause after ' +
+            'external debugger disconnect.  API functions may pause on ' +
+            'next execution.',
+        )
+        resumedResolve?.()
+      })()
+    }
+
+    // Fire Debugger.pause and Runtime.evaluate. Fire-and-forget (void the
+    // returned promise) — the post callback handles the response.
+    void new Promise<void>((resolve, reject) => {
+      session.post('Debugger.pause', (err) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve()
+        }
+      })
+    }).catch(() => {
+      // If the pause command itself failed, nothing will pause V8.  Unblock
+      // so startup can continue.
+      resumedResolve?.()
+    })
+
+    void new Promise<void>((resolve, reject) => {
+      session.post('Runtime.evaluate', { expression: '1' }, (err) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve()
+        }
+      })
+    }).catch(() => {
+      // Evaluate failure -> the pause flag from Debugger.pause may persist.
+      // Try to consume the flag via a throwaway session before unblocking.
+      clearPendingPause().then(
+        () => resumedResolve?.(),
+        () => resumedResolve?.(),
+      )
+    })
+
+    await resumedPromise
+    clearTimeout(timeout)
   }
 }
 

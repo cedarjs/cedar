@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import path from 'path'
 
 import { getConfig } from '@cedarjs/project-config'
@@ -44,7 +45,8 @@ export const prebuildApiFileWrapper = async (srcFile: string) => {
     openTelemetry: getConfig().experimental.opentelemetry.enabled,
   })
 
-  const result = await transformWithBabel(srcFile, plugins)
+  const fileContents = fs.readFileSync(srcFile, 'utf-8')
+  const result = await transformWithBabel(fileContents, srcFile, plugins)
 
   if (!result?.code) {
     throw new Error(`Couldn't prebuild ${srcFile}`)

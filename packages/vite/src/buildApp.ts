@@ -329,7 +329,8 @@ export async function buildCedarApp({
     if (babelPlugins) {
       plugins.push({
         name: 'cedar-vite-api-babel-transform',
-        async transform(_code: string, id: string) {
+        enforce: 'pre',
+        async transform(code: string, id: string) {
           if (!/\.(js|ts|tsx|jsx)$/.test(id)) {
             return null
           }
@@ -344,7 +345,12 @@ export async function buildCedarApp({
             return null
           }
 
-          const transformedCode = await transformWithBabel(id, babelPlugins)
+          const transformedCode = await transformWithBabel(
+            code,
+            id,
+            babelPlugins,
+            true,
+          )
 
           if (transformedCode?.code) {
             return {

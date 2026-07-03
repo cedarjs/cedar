@@ -1,6 +1,8 @@
 # Node.js Debugger Integration in `--ud` Mode
 
 **Date:** 2026-06-29
+**Updated:** 2026-07-01 (see investigation at
+`docs/implementation-plans/debugger-breakpoints-investigation.md`)
 
 ## Problem
 
@@ -8,10 +10,6 @@ Attaching a Node.js debugger to a Cedar app running in Universal Deploy (`--ud`)
 mode does not work. The `--debug-port` flag passed to `cedar dev --ud` is
 silently ignored by `cedar-unified-dev`, and `NODE_OPTIONS="--inspect=<port>"`
 opens the inspector on the wrong process (the CLI parent, not the Vite server).
-
-A secondary issue surfaced while testing: even once the inspector is open on the
-correct process, **static breakpoints set on Vite SSR-loaded API functions never
-fire**. This doc covers both the fix and the breakpoint limitation.
 
 ## Root Cause
 
@@ -47,7 +45,21 @@ execute.
 
 ## Vite SSR Module Loading and the V8 Inspector
 
-### The issue
+### Summary
+
+A subsequent investigation (see
+`docs/implementation-plans/debugger-breakpoints-investigation.md`) tested
+breakpoints with a real editor (Zed) via a CDP proxy. **Breakpoints work
+correctly on Vite SSR-loaded API functions.** The earlier theory that source
+files don't appear as V8 scripts or that scripts are garbage-collected was
+disproven. The debug adapter's `urlRegex` approach (matching both `file://` and
+bare paths) successfully matches Vite SSR scripts, and breakpoints bind, fire,
+and resolve to correct source locations.
+
+The sections below are preserved for historical context but the conclusions
+should be considered superseded by the investigation document.
+
+### Historical analysis (pre-investigation)
 
 When writing an integration test for this feature, we discovered that
 `viteServer.ssrLoadModule()` (used by `apiDevMiddleware.ts` to load API
@@ -65,7 +77,7 @@ The result: individual source files like `hello.ts` never appear in
 `Debugger.scriptParsed` events. They are compiled and evaluated as part of
 Vite's internal module graph, not as standalone V8 scripts.
 
-### Why `Debugger.setBreakpointByUrl` doesn't work
+### Why `Debugger.setBreakpointByUrl` appeared not to work
 
 `Debugger.setBreakpointByUrl` matches against V8 script URLs. Since the API
 function source files never appear as scripts, the URL regex can never match
@@ -76,72 +88,21 @@ We confirmed this by collecting all `Debugger.scriptParsed` URLs — they are
 exclusively `file://` URLs from `node_modules/` and Cedar's own `dist/`
 directories. No function source files appear.
 
-### Source map line number mismatch
+**This analysis was incorrect.** The CDP proxy test later confirmed that:
 
-There is a second, independent reason breakpoints miss. Vite's SSR transform
-pipeline wraps user module code (e.g. `hello.ts`, 6 lines) into a generated
-JavaScript module (~18 lines) with a Vite SSR runtime wrapper. The wrapper
-occupies the first 3 generated lines (0, 1, 2), which have **no** source-map
-mappings back to the original TypeScript source.
+- The debug adapter sends `urlRegex` (matching both `file://` and bare paths)
+- V8 successfully matches (`locs=1`) against Vite SSR scripts
+- Breakpoints fire and stepping works at correct source locations
 
-Using `Debugger.setBreakpoint` with `lineNumber: 1` (targeting
-`return new Response(...)` in the original TS) resolves to **generated line 2**
-— inside the Vite SSR wrapper, not inside `handleRequest`. V8 adjusts the
-breakpoint from line 1 → 2 because line 1 has no executable bytecode.
-
-The source map for `hello.ts` decodes (VLQ segments) as:
-
-```
-;;; => generated lines 0, 1, 2: NO MAPPINGS (Vite SSR wrapper)
-AAAA,... => generated line 3: maps to original line 0 (function signature)
-AACrD,... => generated line 4: maps to original line 1 (return statement)
-...       => generated lines 5-8: map to rest of original source
-```
-
-Key findings from the source map:
-
-- `lineNumber: 3` (generated) → function declaration line
-- `lineNumber: 4` (generated) → first statement inside function body
-  (`return new Response(...)`)
-- The breakpoint must be on **generated** line 4+ to land inside
-  `handleRequest`, not on **original** source line 1
-
-### V8 script lifecycle for SSR modules
-
-The deeper issue: even if set at the correct generated line, the breakpoint may
-never fire because the V8 `Script` object for the SSR module is
-garbage-collected before the CDP session connects.
-
-Timeline:
-
-1. Dev server starts → `loadApiFunctions()` calls
-   `viteServer.ssrLoadModule(pathToFileURL(fnPath).href)` → V8 parses the
-   SSR-transformed code → `Debugger.scriptParsed` fires (but no CDP client is
-   connected yet)
-2. Script is fully executed, `handleRequest` is extracted into
-   `LAMBDA_FUNCTIONS`, and the `Script` object becomes eligible for V8 GC
-3. CDP client connects and calls `Debugger.enable` → V8 re-emits `scriptParsed`
-   for all known, uncollected scripts
-4. If the `Script` was GC'd (very likely between steps 2 and 3 on a busy
-   startup), `hello.ts` is NOT re-emitted
-5. `Debugger.setBreakpointByUrl` with `urlRegex: "hello\\.ts"` or
-   `Debugger.setBreakpoint` with its old `scriptId` cannot resolve against the
-   now-invalid `Script`
-6. The breakpoint is stored but never maps to any function; it never fires
-
-This matches the observed test output: only one script (empty URL) collected
-after `Debugger.enable` — `hello.ts` is absent. Force-loading via
-`Runtime.evaluate` with `import('file://...hello.ts')` creates a **new** V8
-`Script` from Node.js's ESM loader (separate from Vite's SSR module runner),
-which is a different script object — breakpoints on it wouldn't fire when Vite's
-handler calls the original function.
+The key difference is that the debug adapter connects before modules load (via
+`--debug-brk` or attach-by-port), whereas the test connected after module
+loading had already completed.
 
 ### Vite SSR module runner internals
 
 Vite 7 uses a custom SSR module runner (not `import()` or `require()`) that
-evaluates transformed code via `new Function()` or similar. This creates a V8
-`Script`, but the script's lifecycle is tied to the module runner's internal
-cache, not Node.js's module system.
+evaluates transformed code via `new AsyncFunction()`. This creates a V8
+`Script` with a URL set via `//# sourceURL=...`.
 
 Key characteristics:
 
@@ -149,71 +110,67 @@ Key characteristics:
   `//# sourceURL` comments added by Vite's transform pipeline
 - The script is fully synchronous — the module is parsed, executed, and its
   exports cached in one shot
-- After execution, the function reference is held in `LAMBDA_FUNCTIONS`, but the
-  V8 `Script` can be GC'd because no active closure references the script's
-  source
+- After execution, the V8 `Script` is retained in the module runner's cache
 
-### Why this differs from VS Code / Chrome DevTools
+### The `--debug-brk` / Session-based pause approach
 
-Real debuggers (VS Code, Chrome DevTools) connect to the inspector **before**
-user code runs. Two common setups:
+For `--debug-brk`, the debugger must be connected and given time to set
+breakpoints **before** modules load. The mechanism uses `inspector.Session`
+internally:
 
-1. **`--inspect-brk`:** Node.js pauses on the first line of execution, giving
-   the debugger time to set breakpoints on all scripts before any module loading
-2. **`--inspect` at spawn time:** The debugger is connected by the time the
-   first `import()` or `require()` runs, so `scriptParsed` events are captured
-   before scripts are GC'd
+1. `inspector.open()` opens the WebSocket port
+2. `inspector.waitForDebugger()` blocks until the debugger sends
+   `Runtime.runIfWaitingForDebugger`
+3. Since editors (VS Code, Chrome DevTools) send `Debugger.enable` before
+   `Runtime.runIfWaitingForDebugger`, the `Debugger` domain is already active
+   when `waitForDebugger()` unblocks
+4. An internal `inspector.Session` is created and connected
+5. `Debugger.enable` and `Debugger.pause` are posted via the Session
+6. A trivial `Runtime.evaluate({ expression: '1' })` is fired to force V8 to
+   execute JavaScript — this causes V8 to check the debugger pause flag and
+   actually pause, broadcasting `Debugger.paused` to all sessions
+7. The internal Session waits for `Debugger.resumed`
+8. The external debugger (VS Code, Chrome DevTools) receives `Debugger.paused`
+   — the user sets breakpoints and clicks Resume
+9. `Debugger.resume` is sent → V8 resumes → `Debugger.resumed` is broadcast to
+   all sessions
+10. The internal Session's `Debugger.resumed` event fires → the internal
+    Session is disconnected → `loadApiFunctions()` runs → SSR modules load
+    with breakpoints attached
 
-In Cedar's case, `inspector.open(debugPort, '127.0.0.1')` is called **during**
-server startup, after Vite is initialized but before `loadApiFunctions()`
-completes. However, by the time a test or external tool connects via WebSocket,
-the SSR module scripts have already been loaded and potentially GC'd.
+The key insight is that `Debugger.pause` alone is insufficient. It arms a flag
+saying "pause at the next JavaScript statement," but after `waitForDebugger()`
+unblocks, V8 is idle in the event loop with no JavaScript to execute — the
+pause flag is never checked. The `Runtime.evaluate` trigger forces V8 to
+execute something, which causes the pause check to run immediately.
 
-### The solution: `Debugger.pause()`
-
-`Debugger.pause()` tells V8 to pause at the **next JavaScript statement
-execution**, regardless of how the code was loaded. This works with Vite's SSR
-pipeline because:
-
-1. `Debugger.pause()` is sent (armed)
-2. An HTTP request triggers the API function handler (or any JS executes)
-3. V8 pauses when the next statement begins executing
-4. The test asserts the pause event, then calls `Debugger.resume()`
-5. The HTTP response completes
-
-This approach is robust against Vite's module caching, TypeScript transforms,
-the source-map line mismatch, and any future changes to how `ssrLoadModule`
-works.
+This approach avoids showing framework code to the user — the pause is
+initiated via the internal CDP Session, not via a `debugger;` statement in
+source code.
 
 ### Comparison of CDP approaches
 
-| Approach                               | Works with Vite SSR? | Notes                                        |
-| -------------------------------------- | -------------------- | -------------------------------------------- |
-| `Debugger.setBreakpointByUrl`          | No                   | Source files don't appear as V8 scripts      |
-| `Debugger.setBreakpoint` (by scriptId) | No                   | Same reason — no scriptId for function files |
-| `Debugger.pause()`                     | Yes                  | Pauses at next statement execution           |
-| `Debugger.breakOnExceptions`           | Partially            | Only pauses on thrown exceptions             |
+| Approach                             | Works with Vite SSR? | Notes                                                                   |
+| ------------------------------------ | -------------------- | ----------------------------------------------------------------------- |
+| `Debugger.setBreakpointByUrl`        | Yes                  | Debug adapter sends `urlRegex` which matches Vite SSR scripts           |
+| `Debugger.setBreakpoint` (scriptId)  | Yes (fallback)       | Used when `hasSourceURL = true`; works but lost on HMR                  |
+| `Debugger.pause()`                   | Yes                  | Pauses at next statement execution                                      |
+| Session + `Runtime.evaluate` trigger | Yes                  | Forces pause when idle event loop prevents `Debugger.pause` from firing |
 
 ### Practical debugging approaches that work
 
-For actual debugging of SSR-transformed API functions, connect the inspector
-**before** the dev server loads SSR modules:
+For actual debugging of SSR-transformed API functions, two approaches work:
 
-```
-yarn node --inspect=127.0.0.1:38911 packages/vite/dist/cedar-unified-dev.js ...
-```
+1. **Attach by port** (simplest): Run `cedar dev --ud`, then attach the editor
+   debugger to the inspector port (default 18911 or the `--debug-port` value).
+   Breakpoints bind immediately.
 
-Or use a deferred-loading mechanism where the CDP client must be connected
-before `loadApiFunctions()` proceeds. This is how VS Code's `launch.json` works.
+2. **`--debug-brk`**: Run `cedar dev --ud --debugBrk`. The dev server pauses
+   at startup and waits for the debugger. After attaching, click Resume to
+   load API functions with breakpoints attached.
 
-For ad-hoc inspection without breakpoints, the current `--debug-port`
-implementation is sufficient for:
-
-- Profiling (CPU/memory via Chrome DevTools' Profiler tab)
-- `Runtime.evaluate` for live inspection
-- `Debugger.pause()` / `Debugger.resume` for halting execution on demand
-- Console.log debugging (which appears in the stderr output, not through the
-  inspector)
+Both approaches work with both legacy `handler` and modern `handleRequest`
+function signatures.
 
 ## Why `NODE_OPTIONS` doesn't work for targeted inspection
 
@@ -296,6 +253,11 @@ existing test block, though tests run serially (`singleThread: true`).
 | `package.json` (root)                                   | Add `ws` as devDependency                                          |
 | `yarn.lock` (root)                                      | Reference `ws` from the root workspace                             |
 | `tasks/ud-tests/udDev.test.mts`                         | Add `createCdpSession` helper and `--debug-port` integration test  |
+| `packages/cli/src/commands/dev.ts`                      | Add `--debug-brk` yargs option                                     |
+| `packages/cli/src/commands/dev/devHandler.ts`           | Thread `debugBrk` through to cedar-unified-dev command string      |
+| `packages/vite/src/cedar-unified-dev.ts`                | Parse `'debug-brk'`, pass to `openDebugger(waitForDebugger=true)`  |
+| `packages/vite/src/__tests__/cedar-unified-dev.test.ts` | Tests for `debugBrk` flag parsing and `waitForDebugger` behavior   |
+| `tasks/ud-tests/udDev.test.mts`                         | `--debug-brk` integration test                                     |
 
 ## Related
 

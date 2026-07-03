@@ -1,0 +1,9 @@
+[
+  {
+    "label": "Attach Debugger",
+    "adapter": "JavaScript",
+    "type": "node",
+    "request": "attach",
+    "port": 18911
+  }
+]
