@@ -21,14 +21,18 @@ Error: You must register a useMutation hook via the `GraphQLHooksProvider`
 
 ## Root Cause
 
-`@cedarjs/testing` lists `@cedarjs/web` (and `@cedarjs/router`, `@cedarjs/auth`)
-as regular `dependencies` — not `peerDependencies`. With pnpm's strict module
-isolation, this means there are two separate instances of `@cedarjs/web` at
-runtime:
+Several CedarJS packages list singleton framework packages (`@cedarjs/web`,
+`@cedarjs/router`, `@cedarjs/auth`) as regular `dependencies` instead of
+`peerDependencies`. With pnpm's strict module isolation, this means the
+consuming package gets its own private copy of these dependencies, creating
+multiple module instances at runtime.
+
+The smoke test failure surfaced through `@cedarjs/testing`:
 
 1. **Inside `@cedarjs/testing`'s private scope** — where `MockProviders` sets up
    `GraphQLHooksProvider`
-2. **In the web package** — where `BlogPostsCell` reads `GraphQLHooksContext`
+2. **In the host project's web package** — where `BlogPostsCell` reads
+   `GraphQLHooksContext`
 
 Since `React.createContext()` produces a unique object per module instance, the
 provider from instance 1 is invisible to instance 2. The context read by
@@ -49,12 +53,19 @@ resolve to the same object. pnpm's isolation breaks that assumption.
 
 ## Fix
 
-In `packages/testing/package.json`, move these three from `dependencies` →
-`peerDependencies`:
+For each affected package, move the singleton framework packages from
+`dependencies` → `peerDependencies`, and add them to `devDependencies` so they
+remain available for local development/testing in the monorepo:
 
-- `@cedarjs/web`
-- `@cedarjs/router`
-- `@cedarjs/auth`
+| Package                | Moved from `dependencies` to `peerDependencies`                       | Added to `devDependencies`                         |
+| ---------------------- | --------------------------------------------------------------------- | -------------------------------------------------- |
+| `@cedarjs/testing`     | `@cedarjs/web`, `@cedarjs/router`, `@cedarjs/auth`                    | `@cedarjs/web`, `@cedarjs/router`, `@cedarjs/auth` |
+| `@cedarjs/gqlorm`      | `@cedarjs/web`                                                        | `@cedarjs/web`                                     |
+| `@cedarjs/ogimage-gen` | `@cedarjs/router`                                                     | `@cedarjs/router`                                  |
+| `@cedarjs/prerender`   | `@cedarjs/web`, `@cedarjs/router`                                     | `@cedarjs/web`, `@cedarjs/router`                  |
+| `@cedarjs/router`      | `@cedarjs/auth`                                                       | `@cedarjs/auth`                                    |
+| `@cedarjs/web`         | `@cedarjs/auth`                                                       | `@cedarjs/auth`                                    |
+| `@cedarjs/vite`        | `@cedarjs/web`, `@cedarjs/auth` (and added missing `@cedarjs/router`) | `@cedarjs/web`, `@cedarjs/router`, `@cedarjs/auth` |
 
 This tells pnpm to use the host project's single installed copy rather than a
 private one, ensuring `React.createContext()` returns the same object
@@ -64,9 +75,7 @@ These should be listed as `peerDependencies` only — not both `peerDependencies
 and `dependencies`. The dual-listing pattern was a pre-npm-v7 workaround so
 consumers who forgot to install the peer dep would still get something, but it
 never guaranteed a singleton and pnpm's strict isolation explicitly breaks it.
-npm v7+ made this pattern obsolete by auto-installing peer deps. If the package
-needs these for its own test suite within the monorepo, add them to
-`devDependencies` instead.
+npm v7+ made this pattern obsolete by auto-installing peer deps.
 
 This is also relevant when choosing a **Yarn linker**. We currently use the
 `node-modules` linker, which hoists everything into a flat `node_modules` (just
@@ -97,6 +106,28 @@ The 🔄 Package Manager Smoke Tests workflow has been failing consistently on
 | #6  | Jun 20 | https://github.com/cedarjs/cedar/actions/runs/27864529039 |
 
 Every run from #6 onward has been failing — broken on `main` for ~2 weeks.
+
+## Potential follow-up
+
+The framework package fixes above make `@cedarjs/testing` (and others) declare
+`@cedarjs/web`, `@cedarjs/router`, and `@cedarjs/auth` as `peerDependencies`. In
+a Cedar app, those packages are normally installed in the `web` workspace, while
+`@cedarjs/testing` is installed at the project root.
+
+For pnpm, this means the root workspace now has **unmet peer dependencies**
+unless the package manager auto-installs them (`auto-install-peers=true` is the
+default in pnpm v7+, but not guaranteed). To make the dependency graph explicit
+and avoid relying on auto-install behavior, consider adding these three packages
+to the root `devDependencies` of:
+
+- `__fixtures__/test-project/package.json`
+- `__fixtures__/test-project-esm/package.json`
+- `__fixtures__/test-project-pnpm/package.json`
+- `packages/create-cedar-app/templates/ts/package.json`
+- `packages/create-cedar-app/templates/esm-ts/package.json`
+
+This ensures pnpm resolves the peer deps from the same copies the `web`
+workspace uses, keeping the singleton intact.
 
 ## References
 
