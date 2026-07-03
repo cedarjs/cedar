@@ -1,4 +1,7 @@
+globalThis.__dirname = __dirname
+
 import fs from 'node:fs'
+import type * as NodeFS from 'node:fs'
 
 import { vol } from 'memfs'
 import { vi, beforeEach, afterEach, test, expect, describe } from 'vitest'
@@ -6,6 +9,8 @@ import { vi, beforeEach, afterEach, test, expect, describe } from 'vitest'
 import '../../../../lib/test'
 
 import { getDefaultArgs } from '../../../../lib/index.js'
+import type * as LibIndex from '../../../../lib/index.js'
+import type * as SchemaHelpers from '../../../../lib/schemaHelpers.js'
 import { builder } from '../../../generate/sdl/sdl.js'
 import { files } from '../../../generate/sdl/sdlHandler.js'
 import { tasks } from '../sdlHandler.js'
@@ -13,8 +18,7 @@ import { tasks } from '../sdlHandler.js'
 vi.mock('node:fs')
 
 vi.mock('../../../../lib', async (importOriginal) => {
-  const originalLib =
-    await importOriginal<typeof import('../../../../lib/index.js')>()
+  const originalLib = await importOriginal<typeof LibIndex>()
   return {
     ...originalLib,
     generateTemplate: () => '',
@@ -22,11 +26,9 @@ vi.mock('../../../../lib', async (importOriginal) => {
 })
 
 vi.mock('../../../../lib/schemaHelpers', async (importOriginal) => {
-  const originalSchemaHelpers =
-    await importOriginal<typeof import('../../../../lib/schemaHelpers.js')>()
+  const originalSchemaHelpers = await importOriginal<typeof SchemaHelpers>()
   const { join } = await import('node:path')
-  const { readFileSync } =
-    await vi.importActual<typeof import('node:fs')>('node:fs')
+  const { readFileSync } = await vi.importActual<typeof NodeFS>('node:fs')
   return {
     ...originalSchemaHelpers,
     getSchema: () =>

@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import type * as NodeFS from 'node:fs'
 import path from 'node:path'
 
 import {
@@ -22,8 +23,9 @@ const { memfs, ufs, vol } = await vi.hoisted(async () => {
 
 vi.mock('node:fs', async (importOriginal) => {
   const { wrapFsForUnionfs } =
+    // @ts-expect-error - No types for JS files
     await import('../../../../__tests__/ufsFsProxy.js')
-  const originalFs = await importOriginal<typeof import('node:fs')>()
+  const originalFs = await importOriginal<typeof NodeFS>()
   ufs.use(wrapFsForUnionfs(originalFs)).use(memfs)
   return {
     ...ufs,
@@ -31,12 +33,13 @@ vi.mock('node:fs', async (importOriginal) => {
   }
 })
 
+import type * as CliHelpers from '@cedarjs/cli-helpers'
 import { ensurePosixPath } from '@cedarjs/project-config'
+import type * as ProjectConfig from '@cedarjs/project-config'
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const path = await import('node:path')
-  const originalProjectConfig =
-    await importOriginal<typeof import('@cedarjs/project-config')>()
+  const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
   return {
     getPaths: () => {
       const BASE_PATH = '/path/to/project'
@@ -57,8 +60,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
 })
 
 vi.mock('@cedarjs/cli-helpers', async (importOriginal) => {
-  const originalCliHelpers =
-    await importOriginal<typeof import('@cedarjs/cli-helpers')>()
+  const originalCliHelpers = await importOriginal<typeof CliHelpers>()
 
   return {
     ...originalCliHelpers,
