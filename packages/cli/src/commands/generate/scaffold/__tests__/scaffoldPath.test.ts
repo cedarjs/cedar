@@ -1,5 +1,7 @@
-import path from 'node:path'
+globalThis.__dirname = import.meta.dirname
+
 import type * as NodeFs from 'node:fs'
+import path from 'node:path'
 
 import { vol, fs as memfs } from 'memfs'
 import { ufs } from 'unionfs'
