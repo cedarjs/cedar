@@ -3,11 +3,8 @@ import type { Argv } from 'yargs'
 
 import { colors as c } from '@cedarjs/cli-helpers'
 
-// @ts-expect-error - Types not available for JS files
 import { exitWithError } from '../lib/exit.js'
-// @ts-expect-error - Types not available for JS files
 import { workspaces } from '../lib/project.js'
-// @ts-expect-error - Types not available for JS files
 import { checkNodeVersion } from '../middleware/checkNodeVersion.js'
 
 export const command = 'build [workspace..]'

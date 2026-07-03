@@ -18,7 +18,7 @@ interface ModelField {
 }
 
 interface Model {
-  fields: ModelField[]
+  fields: readonly ModelField[]
 }
 
 /**

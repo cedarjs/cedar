@@ -16,7 +16,7 @@ vi.mock('@cedarjs/structure', () => {
 })
 
 describe('Single word files', () => {
-  let singleWordFiles
+  let singleWordFiles: Record<string, string>
 
   beforeAll(async () => {
     singleWordFiles = await cellHandler.files({
@@ -95,7 +95,7 @@ test('trims Cell from end of name', async () => {
 })
 
 describe('Multiword files', () => {
-  let multiWordFiles
+  let multiWordFiles: Record<string, string>
 
   beforeAll(async () => {
     multiWordFiles = await cellHandler.files({
@@ -149,7 +149,7 @@ describe('Multiword files', () => {
 })
 
 describe('Snake case words', () => {
-  let snakeCaseWordFiles
+  let snakeCaseWordFiles: Record<string, string>
 
   beforeAll(async () => {
     snakeCaseWordFiles = await cellHandler.files({
@@ -203,7 +203,8 @@ describe('Snake case words', () => {
 })
 
 describe('Kebab case words', () => {
-  let kebabCaseWordFiles
+  let kebabCaseWordFiles: Record<string, string>
+
   beforeAll(async () => {
     kebabCaseWordFiles = await cellHandler.files({
       name: 'user-profile',
@@ -256,7 +257,7 @@ describe('Kebab case words', () => {
 })
 
 describe('camelCase words', () => {
-  let camelCaseWordFiles
+  let camelCaseWordFiles: Record<string, string>
 
   beforeAll(async () => {
     camelCaseWordFiles = await cellHandler.files({
@@ -690,8 +691,8 @@ describe('Custom query names', () => {
 })
 
 describe('Custom Id Field files', () => {
-  let customIdFieldFiles
-  let customIdFieldListFiles
+  let customIdFieldFiles: Record<string, string>
+  let customIdFieldListFiles: Record<string, string>
 
   describe('Single cell', () => {
     beforeAll(async () => {

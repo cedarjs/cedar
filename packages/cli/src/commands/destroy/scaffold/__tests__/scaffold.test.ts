@@ -78,6 +78,7 @@ describe('rw destroy scaffold', () => {
 
       const postFiles = await files({
         ...getDefaultArgs(getDefaults()),
+        docs: false,
         model: 'Post',
         tests: false,
         nestScaffoldByModel: true,
@@ -119,6 +120,7 @@ describe('rw destroy scaffold', () => {
         const generatedFiles = Object.keys(
           await files({
             ...getDefaultArgs(getDefaults()),
+            docs: false,
             model: 'Post',
             tests: false,
             nestScaffoldByModel: true,
@@ -138,6 +140,7 @@ describe('rw destroy scaffold', () => {
           ...scaffoldTemplates,
           ...(await files({
             ...getDefaultArgs(getDefaults()),
+            docs: false,
             typescript: true,
             model: 'Post',
             tests: false,
@@ -169,6 +172,7 @@ describe('rw destroy scaffold', () => {
           const generatedFiles = Object.keys(
             await files({
               ...getDefaultArgs(getDefaults()),
+              docs: false,
               typescript: true,
               model: 'Post',
               tests: false,
@@ -213,6 +217,7 @@ describe('rw destroy scaffold', () => {
         ...scaffoldTemplates,
         ...(await files({
           ...getDefaultArgs(getDefaults()),
+          docs: false,
           model: 'Post',
           path: 'admin',
           tests: false,
@@ -249,6 +254,7 @@ describe('rw destroy scaffold', () => {
         const generatedFiles = Object.keys(
           await files({
             ...getDefaultArgs(getDefaults()),
+            docs: false,
             model: 'Post',
             path: 'admin',
             tests: false,
@@ -269,6 +275,7 @@ describe('rw destroy scaffold', () => {
           ...scaffoldTemplates,
           ...(await files({
             ...getDefaultArgs(getDefaults()),
+            docs: false,
             model: 'Post',
             path: 'admin',
             tests: false,
@@ -299,6 +306,7 @@ describe('rw destroy scaffold', () => {
           const generatedFiles = Object.keys(
             await files({
               ...getDefaultArgs(getDefaults()),
+              docs: false,
               model: 'Post',
               path: 'admin',
               tests: false,

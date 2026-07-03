@@ -4,14 +4,23 @@
     "isolatedModules": true,
     "emitDeclarationOnly": false,
     "noEmit": true,
+    "resolveJsonModule": true,
     "module": "node20",
-    "moduleResolution": "node16"
+    "moduleResolution": "node16",
+    "rootDir": "."
   },
-  "include": ["."],
-  "exclude": ["**/__testfixtures__"],
+  "include": [".", "package.json"],
+  "exclude": [
+    "**/__testfixtures__",
+    "**/__fixtures__",
+    "dist",
+    "node_modules",
+    "**/__mocks__"
+  ],
   "references": [
     { "path": "../api-server/tsconfig.build.json" },
     { "path": "../cli-helpers" },
+    { "path": "../framework-tools" },
     { "path": "../internal/tsconfig.build.json" },
     { "path": "../prerender/tsconfig.build.json" },
     { "path": "../project-config" },
