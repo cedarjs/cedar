@@ -142,8 +142,10 @@ describe('openDebugger', () => {
       }
       return Promise.resolve({})
     })
-    mockSessionOnce.mockImplementation((_event, callback) => {
-      setImmediate(() => callback())
+    mockSessionOnce.mockImplementation((event, callback) => {
+      if (event === 'Debugger.paused' || event === 'Debugger.resumed') {
+        setImmediate(() => callback())
+      }
     })
 
     await openDebugger(18911, true)
