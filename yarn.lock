@@ -3216,7 +3216,6 @@ __metadata:
     "@arethetypeswrong/cli": "npm:0.18.3"
     "@babel/cli": "npm:7.29.7"
     "@babel/core": "npm:^7.26.10"
-    "@cedarjs/auth": "npm:4.2.0"
     "@cedarjs/framework-tools": "npm:4.2.0"
     "@cedarjs/server-store": "npm:4.2.0"
     "@cedarjs/web": "npm:4.2.0"
@@ -3231,6 +3230,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.6"
   peerDependencies:
+    "@cedarjs/web": 4.2.0
     react: 18.3.1
     react-dom: 18.3.1
   languageName: unknown
@@ -3463,7 +3463,6 @@ __metadata:
     "@cedarjs/internal": "npm:4.2.0"
     "@cedarjs/project-config": "npm:4.2.0"
     "@cedarjs/router": "npm:4.2.0"
-    "@cedarjs/web": "npm:4.2.0"
     "@playwright/test": "npm:1.61.0"
     fast-glob: "npm:3.3.3"
     lodash: "npm:4.18.1"
@@ -3474,6 +3473,8 @@ __metadata:
     typescript: "npm:5.9.3"
     vite: "npm:7.3.5"
     vitest: "npm:3.2.6"
+  peerDependencies:
+    "@cedarjs/router": 4.2.0
   languageName: unknown
   linkType: soft
 
@@ -3516,6 +3517,8 @@ __metadata:
     vite: "npm:7.3.5"
     vitest: "npm:3.2.6"
   peerDependencies:
+    "@cedarjs/router": 4.2.0
+    "@cedarjs/web": 4.2.0
     react: 18.3.1
     react-dom: 18.3.1
   languageName: unknown
@@ -3613,6 +3616,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.6"
   peerDependencies:
+    "@cedarjs/auth": 4.2.0
     react: 18.3.1
     react-dom: 18.3.1
   languageName: unknown
@@ -3737,6 +3741,9 @@ __metadata:
     vitest: "npm:3.2.6"
     whatwg-fetch: "npm:3.6.20"
   peerDependencies:
+    "@cedarjs/auth": 4.2.0
+    "@cedarjs/router": 4.2.0
+    "@cedarjs/web": 4.2.0
     vitest: 3.2.6
   peerDependenciesMeta:
     vitest:
@@ -3795,6 +3802,7 @@ __metadata:
     "@cedarjs/graphql-server": "npm:4.2.0"
     "@cedarjs/internal": "npm:4.2.0"
     "@cedarjs/project-config": "npm:4.2.0"
+    "@cedarjs/router": "npm:4.2.0"
     "@cedarjs/server-store": "npm:4.2.0"
     "@cedarjs/testing": "npm:4.2.0"
     "@cedarjs/web": "npm:4.2.0"
@@ -3844,6 +3852,10 @@ __metadata:
     vitest: "npm:3.2.6"
     ws: "npm:8.20.0"
     yargs-parser: "npm:21.1.1"
+  peerDependencies:
+    "@cedarjs/auth": 4.2.0
+    "@cedarjs/router": 4.2.0
+    "@cedarjs/web": 4.2.0
   bin:
     cedar-dev-fe: ./dist/devFeServer.js
     cedar-serve-fe: ./dist/runFeServer.js
@@ -3914,6 +3926,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.6"
   peerDependencies:
+    "@cedarjs/auth": 4.2.0
     react: 18.3.1
     react-dom: 18.3.1
   bin:

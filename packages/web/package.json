@@ -140,7 +140,6 @@
   },
   "dependencies": {
     "@apollo/client": "3.14.1",
-    "@cedarjs/auth": "4.2.0",
     "@cedarjs/server-store": "4.2.0",
     "@dr.pogodin/react-helmet": "2.0.4",
     "@whatwg-node/fetch": "0.10.13",
@@ -160,6 +159,7 @@
     "@babel/core": "^7.26.10",
     "@babel/plugin-transform-runtime": "7.29.7",
     "@babel/runtime": "7.29.7",
+    "@cedarjs/auth": "4.2.0",
     "@cedarjs/framework-tools": "4.2.0",
     "@cedarjs/internal": "4.2.0",
     "@rollup/plugin-babel": "6.1.0",
@@ -179,6 +179,7 @@
     "vitest": "3.2.6"
   },
   "peerDependencies": {
+    "@cedarjs/auth": "4.2.0",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },

@@ -119,13 +119,10 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/auth": "4.2.0",
     "@cedarjs/babel-config": "4.2.0",
     "@cedarjs/context": "4.2.0",
     "@cedarjs/graphql-server": "4.2.0",
     "@cedarjs/project-config": "4.2.0",
-    "@cedarjs/router": "4.2.0",
-    "@cedarjs/web": "4.2.0",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "14.3.1",
     "@testing-library/user-event": "14.6.1",
@@ -145,7 +142,10 @@
     "whatwg-fetch": "3.6.20"
   },
   "devDependencies": {
+    "@cedarjs/auth": "4.2.0",
     "@cedarjs/framework-tools": "4.2.0",
+    "@cedarjs/router": "4.2.0",
+    "@cedarjs/web": "4.2.0",
     "concurrently": "9.2.1",
     "jsdom": "27.4.0",
     "publint": "0.3.21",
@@ -154,6 +154,9 @@
     "vitest": "3.2.6"
   },
   "peerDependencies": {
+    "@cedarjs/auth": "4.2.0",
+    "@cedarjs/router": "4.2.0",
+    "@cedarjs/web": "4.2.0",
     "vitest": "3.2.6"
   },
   "peerDependenciesMeta": {

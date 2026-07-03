@@ -68,7 +68,6 @@
     "@babel/traverse": "7.29.7",
     "@babel/types": "7.29.7",
     "@cedarjs/api": "4.2.0",
-    "@cedarjs/auth": "4.2.0",
     "@cedarjs/babel-config": "4.2.0",
     "@cedarjs/context": "4.2.0",
     "@cedarjs/cookie-jar": "4.2.0",
@@ -77,7 +76,6 @@
     "@cedarjs/project-config": "4.2.0",
     "@cedarjs/server-store": "4.2.0",
     "@cedarjs/testing": "4.2.0",
-    "@cedarjs/web": "4.2.0",
     "@fastify/url-data": "6.0.3",
     "@swc/core": "1.15.41",
     "@universal-deploy/store": "^0.2.1",
@@ -111,6 +109,9 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.3",
+    "@cedarjs/auth": "4.2.0",
+    "@cedarjs/router": "4.2.0",
+    "@cedarjs/web": "4.2.0",
     "@hyrious/esbuild-plugin-commonjs": "0.2.6",
     "@jridgewell/trace-mapping": "0.3.31",
     "@types/aws-lambda": "8.10.162",
@@ -127,6 +128,11 @@
     "tsx": "4.22.4",
     "typescript": "5.9.3",
     "vitest": "3.2.6"
+  },
+  "peerDependencies": {
+    "@cedarjs/auth": "4.2.0",
+    "@cedarjs/router": "4.2.0",
+    "@cedarjs/web": "4.2.0"
   },
   "engines": {
     "node": ">=24"
