@@ -23,7 +23,6 @@ const { memfs, ufs, vol } = await vi.hoisted(async () => {
 
 vi.mock('node:fs', async (importOriginal) => {
   const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
-    // @ts-expect-error - No types for JS files
     await import('../../../../__tests__/ufsFsProxy.js')
   const originalFs = await importOriginal<typeof NodeFS>()
   ufs.use(wrapFsForUnionfs(originalFs)).use(wrapMemfsForUnionfs(memfs))
@@ -339,7 +338,7 @@ test('paramVariants returns empty strings for no params', () => {
     paramValue: '',
     paramType: '',
   }
-  expect(pageHandler.paramVariants()).toEqual(emptyParams)
+  expect(pageHandler.paramVariants(undefined)).toEqual(emptyParams)
   expect(pageHandler.paramVariants('')).toEqual(emptyParams)
   expect(pageHandler.paramVariants('/')).toEqual(emptyParams)
   expect(pageHandler.paramVariants('/post/edit')).toEqual(emptyParams)
@@ -428,8 +427,9 @@ describe('handler', () => {
 
     spy.mock.calls.forEach((calls) => {
       const testOutput = {
-        // Because windows paths are different, we need to normalise before snapshotting
-        filePath: ensurePosixPath(calls[0]),
+        // Because windows paths are different, we need to normalise before
+        // snapshotting
+        filePath: ensurePosixPath(String(calls[0])),
         fileContent: calls[1],
       }
       expect(testOutput).toMatchSnapshot()
@@ -477,7 +477,7 @@ describe('handler', () => {
 
     spy.mock.calls.forEach((calls) => {
       const testOutput = {
-        filePath: ensurePosixPath(calls[0]),
+        filePath: ensurePosixPath(String(calls[0])),
         fileContent: calls[1],
       }
       expect(testOutput).toMatchSnapshot()
