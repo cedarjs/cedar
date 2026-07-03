@@ -12,7 +12,7 @@ vi.mock('@vercel/nft', () => {
 
 vi.mock('@cedarjs/internal/dist/files', () => {
   return {
-    findApiDistFunctions: () => {
+    findApiDistFunctions: (_opts?: { cwd?: string }) => {
       return [
         '/Users/carmack/dev/cedar/__fixtures__/example-todo-main/api/dist/functions/graphql.js',
         '/Users/carmack/dev/cedar/__fixtures__/example-todo-main/api/dist/functions/healthz/healthz.js',
@@ -34,7 +34,7 @@ vi.mock('@cedarjs/project-config', () => {
         },
       }
     },
-    ensurePosixPath: (path) => {
+    ensurePosixPath: (path: string) => {
       return path.replace(/\\/g, '/')
     },
   }
@@ -43,7 +43,7 @@ vi.mock('@cedarjs/project-config', () => {
 test('Check packager detects all functions', () => {
   const packageFileMock = vi
     .spyOn(nftPacker, 'packageSingleFunction')
-    .mockResolvedValue(true)
+    .mockResolvedValue(undefined)
 
   nftPacker.nftPack()
 
@@ -51,12 +51,12 @@ test('Check packager detects all functions', () => {
 })
 
 test('Creates entry file for nested functions correctly', () => {
-  const nestedFunction = findApiDistFunctions().find((fPath) =>
-    fPath.includes('nested'),
+  const nestedFunction = findApiDistFunctions({ cwd: '/api' }).find(
+    (fPath: string) => fPath.includes('nested'),
   )
 
   const [outputPath, content] = nftPacker.generateEntryFile(
-    nestedFunction,
+    nestedFunction!,
     'nested',
   )
 
@@ -67,12 +67,12 @@ test('Creates entry file for nested functions correctly', () => {
 })
 
 test('Creates entry file for top level functions correctly', () => {
-  const graphqlFunction = findApiDistFunctions().find((fPath) =>
-    fPath.includes('graphql'),
+  const graphqlFunction = findApiDistFunctions({ cwd: '/api' }).find(
+    (fPath: string) => fPath.includes('graphql'),
   )
 
   const [outputPath, content] = nftPacker.generateEntryFile(
-    graphqlFunction,
+    graphqlFunction!,
     'graphql',
   )
 

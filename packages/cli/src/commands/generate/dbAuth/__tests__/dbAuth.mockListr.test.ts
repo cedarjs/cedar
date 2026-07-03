@@ -1,13 +1,14 @@
-global.__dirname = __dirname
+globalThis.__dirname = __dirname
 
 vi.mock('node:fs')
 
-import path from 'path'
+import type * as NodeFs from 'node:fs'
+import path from 'node:path'
 
 // Load mocks
 import '../../../../lib/test'
 
-const actualFs = await vi.importActual('node:fs')
+const actualFs = await vi.importActual<typeof NodeFs>('node:fs')
 import Enquirer from 'enquirer'
 import { vol } from 'memfs'
 import {
@@ -23,7 +24,7 @@ import {
 // Can't use .js when importing TS files from JS files in Vitest
 // TODO: Add .js when we've upgraded to Vite 6.1.0
 // https://github.com/vitest-dev/vitest/issues/5999
-import { Listr2Mock } from '../../../../__tests__/Listr2Mock'
+import { Listr2Mock } from '../../../../__tests__/Listr2Mock.js'
 import { getPaths } from '../../../../lib/index.js'
 import * as dbAuth from '../dbAuthHandler.js'
 
@@ -32,7 +33,7 @@ vi.mock('listr2', () => ({
 }))
 
 // Mock files needed for each test
-const mockFiles = {}
+const mockFiles: Record<string, string> = {}
 
 const dbAuthTemplateFiles = [
   'forgotPassword.tsx.template',
@@ -92,15 +93,23 @@ beforeEach(() => {
 describe('dbAuth handler WebAuthn task title', () => {
   it('is correct after prompt answer "Yes"', async () => {
     const customEnquirer = new Enquirer({ show: false })
-    customEnquirer.on('prompt', (prompt) => {
-      if (prompt.state.message.includes('Enable WebAuthn')) {
-        prompt.on('run', () => {
-          return prompt.keypress('y')
-        })
-      } else {
-        prompt.submit()
-      }
-    })
+    customEnquirer.on(
+      'prompt',
+      (prompt: {
+        state: { message: string }
+        on: (event: string, fn: () => void) => void
+        keypress: (key: string) => void
+        submit: () => void
+      }) => {
+        if (prompt.state.message.includes('Enable WebAuthn')) {
+          prompt.on('run', () => {
+            return prompt.keypress('y')
+          })
+        } else {
+          prompt.submit()
+        }
+      },
+    )
 
     await dbAuth.handler({
       usernameLabel: 'email',
@@ -108,9 +117,6 @@ describe('dbAuth handler WebAuthn task title', () => {
       enquirer: customEnquirer,
       listr2: { silentRendererCondition: true },
     })
-
-    const taskTitles = Listr2Mock.executedTaskTitles
-    console.log('taskTitles', taskTitles)
 
     expect(Listr2Mock.executedTaskTitles[0]).toEqual(
       'Querying WebAuthn addition: WebAuthn addition included',
@@ -188,15 +194,23 @@ export const { AuthProvider, useAuth } = createAuth(dbAuthClient)
 
   it('is correct after prompt answer "No"', async () => {
     const customEnquirer = new Enquirer({ show: false })
-    customEnquirer.on('prompt', (prompt) => {
-      if (prompt.state.message.includes('Enable WebAuthn')) {
-        prompt.on('run', () => {
-          return prompt.keypress('N')
-        })
-      } else {
-        prompt.submit()
-      }
-    })
+    customEnquirer.on(
+      'prompt',
+      (prompt: {
+        state: { message: string }
+        on: (event: string, fn: () => void) => void
+        keypress: (key: string) => void
+        submit: () => void
+      }) => {
+        if (prompt.state.message.includes('Enable WebAuthn')) {
+          prompt.on('run', () => {
+            return prompt.keypress('N')
+          })
+        } else {
+          prompt.submit()
+        }
+      },
+    )
 
     await dbAuth.handler({
       enquirer: customEnquirer,
@@ -212,7 +226,7 @@ export const { AuthProvider, useAuth } = createAuth(dbAuthClient)
 
   it('is correct after providing cli flag value `true`', async () => {
     const customEnquirer = new Enquirer({ show: false })
-    customEnquirer.on('prompt', (prompt) => {
+    customEnquirer.on('prompt', (prompt: { submit: () => void }) => {
       prompt.submit()
     })
 
@@ -231,7 +245,7 @@ export const { AuthProvider, useAuth } = createAuth(dbAuthClient)
 
   it('is correct after providing cli flag value `false`', async () => {
     const customEnquirer = new Enquirer({ show: false })
-    customEnquirer.on('prompt', (prompt) => {
+    customEnquirer.on('prompt', (prompt: { submit: () => void }) => {
       prompt.submit()
     })
 

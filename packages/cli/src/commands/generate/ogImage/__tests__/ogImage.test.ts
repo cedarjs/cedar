@@ -1,5 +1,6 @@
-/* eslint-disable camelcase */
-globalThis.__dirname = __dirname
+globalThis.__dirname = import.meta.dirname
+
+import type * as NodeFs from 'node:fs'
 
 import { vol, fs as memfs } from 'memfs'
 import { ufs } from 'unionfs'
@@ -12,16 +13,16 @@ import * as ogImageHandler from '../ogImageHandler.js'
 vi.mock('node:fs', async (importOriginal) => {
   const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
     await import('../../../../__tests__/ufsFsProxy.js')
-  ufs
-    .use(wrapFsForUnionfs(await importOriginal()))
-    .use(wrapMemfsForUnionfs(memfs))
-  return { ...ufs, default: { ...ufs } }
+  const fs = await importOriginal<typeof NodeFs>()
+  ufs.use(wrapFsForUnionfs(fs)).use(wrapMemfsForUnionfs(memfs))
+  return ufs
 })
+
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const actual = await importOriginal()
 
   return {
-    ...actual,
+    ...(actual as object),
     getPaths: () => ({
       api: {
         base: '/path/to/project/api',
@@ -35,7 +36,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     }),
   }
 })
-let original_CEDAR_CWD
+let original_CEDAR_CWD: string | undefined
 
 describe('ogImage generator', () => {
   beforeEach(() => {
@@ -138,7 +139,7 @@ describe('ogImage generator', () => {
     test('does nothing if path to jsx page exists', async () => {
       await expect(
         ogImageHandler.validatePath('AboutPage/AboutPage', 'jsx', {
-          fs: memfs,
+          fs: memfs as unknown as undefined,
         }),
       ).resolves.toEqual(true)
     })
@@ -148,7 +149,7 @@ describe('ogImage generator', () => {
         ogImageHandler.validatePath(
           'Products/Display/ProductPage/ProductPage',
           'tsx',
-          { fs: memfs },
+          { fs: memfs as unknown as undefined },
         ),
       ).resolves.toEqual(true)
     })
@@ -158,7 +159,7 @@ describe('ogImage generator', () => {
       const ext = 'tsx'
       await expect(
         ogImageHandler.validatePath(pagePath, ext, {
-          fs: memfs,
+          fs: memfs as unknown as undefined,
         }),
       ).rejects.toThrow()
     })
@@ -167,7 +168,9 @@ describe('ogImage generator', () => {
       const pagePath = 'HomePage/HomePage'
       const ext = 'jsx'
       await expect(
-        ogImageHandler.validatePath(pagePath, ext, { fs: memfs }),
+        ogImageHandler.validatePath(pagePath, ext, {
+          fs: memfs as unknown as undefined,
+        }),
       ).rejects.toThrow()
     })
   })

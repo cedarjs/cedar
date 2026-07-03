@@ -1,13 +1,14 @@
-global.__dirname = __dirname
+globalThis.__dirname = __dirname
 
 vi.mock('node:fs')
 
-import path from 'path'
+import type * as NodeFs from 'node:fs'
+import path from 'node:path'
 
 // Load mocks
 import '../../../../lib/test'
 
-const actualFs = await vi.importActual('node:fs')
+const actualFs = await vi.importActual<typeof NodeFs>('node:fs')
 import { vol } from 'memfs'
 import { afterEach, beforeEach, vi, describe, it, expect } from 'vitest'
 
@@ -50,10 +51,10 @@ export const { AuthProvider, useAuth } = createAuth(dbAuthClient)
         webauthn: false,
       })
 
-      expect(vi.mocked(console).log.mock.calls.at(-1)[0]).toMatch(
+      expect(vi.mocked(console).log.mock.calls.at(-1)?.[0]).toMatch(
         /Look in LoginPage, Sign/,
       )
-      expect(vi.mocked(console).log.mock.calls.at(-1)[0]).not.toMatch(
+      expect(vi.mocked(console).log.mock.calls.at(-1)?.[0]).not.toMatch(
         /yarn cedar setup auth dbAuth/,
       )
     })
@@ -74,10 +75,10 @@ export const { AuthProvider, useAuth } = createAuth(dbAuthClient)
         webauthn: false,
       })
 
-      expect(vi.mocked(console).log.mock.calls.at(-1)[0]).toMatch(
+      expect(vi.mocked(console).log.mock.calls.at(-1)?.[0]).toMatch(
         /Look in LoginPage, Sign/,
       )
-      expect(vi.mocked(console).log.mock.calls.at(-1)[0]).not.toMatch(
+      expect(vi.mocked(console).log.mock.calls.at(-1)?.[0]).not.toMatch(
         /yarn cedar setup auth dbAuth/,
       )
     })
@@ -109,10 +110,10 @@ export { useAuth }
         webauthn: false,
       })
 
-      expect(vi.mocked(console).log.mock.calls.at(-1)[0]).toMatch(
+      expect(vi.mocked(console).log.mock.calls.at(-1)?.[0]).toMatch(
         /Look in LoginPage, Sign/,
       )
-      expect(vi.mocked(console).log.mock.calls.at(-1)[0]).not.toMatch(
+      expect(vi.mocked(console).log.mock.calls.at(-1)?.[0]).not.toMatch(
         /yarn cedar setup auth dbAuth/,
       )
     })
@@ -161,10 +162,10 @@ export const AuthProvider = ({ children }: Props) => {
         webauthn: false,
       })
 
-      expect(vi.mocked(console).log.mock.calls.at(-1)[0]).toMatch(
+      expect(vi.mocked(console).log.mock.calls.at(-1)?.[0]).toMatch(
         /Look in LoginPage, Sign/,
       )
-      expect(vi.mocked(console).log.mock.calls.at(-1)[0]).toMatch(
+      expect(vi.mocked(console).log.mock.calls.at(-1)?.[0]).toMatch(
         /yarn cedar setup auth dbAuth/,
       )
     })
@@ -185,10 +186,10 @@ export const AuthProvider = ({ children }: Props) => {
         webauthn: false,
       })
 
-      expect(vi.mocked(console).log.mock.calls.at(-1)[0]).toMatch(
+      expect(vi.mocked(console).log.mock.calls.at(-1)?.[0]).toMatch(
         /Look in LoginPage, Sign/,
       )
-      expect(vi.mocked(console).log.mock.calls.at(-1)[0]).not.toMatch(
+      expect(vi.mocked(console).log.mock.calls.at(-1)?.[0]).not.toMatch(
         /yarn cedar setup auth dbAuth/,
       )
     })
@@ -209,10 +210,10 @@ export const { AuthProvider, useAuth } = createAuth(dbAuthClient)
         webauthn: true,
       })
 
-      expect(vi.mocked(console).log.mock.calls.at(-1)[0]).toMatch(
+      expect(vi.mocked(console).log.mock.calls.at(-1)?.[0]).toMatch(
         /look for the `REDIRECT`/,
       )
-      expect(vi.mocked(console).log.mock.calls.at(-1)[0]).not.toMatch(
+      expect(vi.mocked(console).log.mock.calls.at(-1)?.[0]).not.toMatch(
         /yarn cedar setup auth dbAuth/,
       )
     })

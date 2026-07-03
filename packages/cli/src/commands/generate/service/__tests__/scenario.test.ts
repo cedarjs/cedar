@@ -4,7 +4,10 @@ import '../../../../lib/test'
 
 import { describe, test, expect } from 'vitest'
 
+import type { PrismaField } from '../serviceHandler.js'
 import * as serviceHandler from '../serviceHandler.js'
+
+const asField = (f: Record<string, unknown>) => f as unknown as PrismaField
 
 describe('the scenario generator', () => {
   test('parseSchema returns an object with required scalar fields', async () => {
@@ -98,7 +101,7 @@ describe('the scenario generator', () => {
   })
 
   test('scenarioFieldValue returns a plain string for non-unique String types', () => {
-    const field = { type: 'String', isUnique: false }
+    const field = asField({ type: 'String', isUnique: false })
     const value = serviceHandler.scenarioFieldValue(field)
 
     expect(value).toEqual(expect.any(String))
@@ -106,7 +109,7 @@ describe('the scenario generator', () => {
   })
 
   test('scenarioFieldValue returns a valid email for non-unique String types with a field name that includes "email"', () => {
-    const field = { type: 'String', isUnique: false, name: 'email' }
+    const field = asField({ type: 'String', isUnique: false, name: 'email' })
     const value = serviceHandler.scenarioFieldValue(field)
 
     expect(typeof value).toBe('string')
@@ -114,7 +117,7 @@ describe('the scenario generator', () => {
   })
 
   test('scenarioFieldValue returns a unique string for unique String types', () => {
-    const field = { type: 'String', isUnique: true }
+    const field = asField({ type: 'String', isUnique: true })
     const value = serviceHandler.scenarioFieldValue(field)
 
     expect(value).toEqual(expect.any(String))
@@ -124,7 +127,11 @@ describe('the scenario generator', () => {
   })
 
   test('scenarioFieldValue returns a valid unique email for unique String types with a field name that includes "email"', () => {
-    const field = { type: 'String', isUnique: true, name: 'authorEmail' }
+    const field = asField({
+      type: 'String',
+      isUnique: true,
+      name: 'authorEmail',
+    })
     const value = serviceHandler.scenarioFieldValue(field)
 
     expect(value).toMatch(/foo\d+@bar\.com/)
@@ -132,7 +139,7 @@ describe('the scenario generator', () => {
   })
 
   test('scenarioFieldValue returns a true for BigInt types', () => {
-    const field = { type: 'BigInt' }
+    const field = asField({ type: 'BigInt' })
     const value = serviceHandler.scenarioFieldValue(field)
 
     expect(value).toMatch(/^\d+n$/)
@@ -140,7 +147,7 @@ describe('the scenario generator', () => {
   })
 
   test('scenarioFieldValue returns a true for Boolean types', () => {
-    const field = { type: 'Boolean' }
+    const field = asField({ type: 'Boolean' })
     const value = serviceHandler.scenarioFieldValue(field)
 
     expect(value).toEqual(true)
@@ -148,7 +155,7 @@ describe('the scenario generator', () => {
   })
 
   test('scenarioFieldValue returns a float for Decimal types', () => {
-    const field = { type: 'Decimal' }
+    const field = asField({ type: 'Decimal' })
     const value = serviceHandler.scenarioFieldValue(field)
 
     expect(value).toEqual(parseFloat(value))
@@ -156,7 +163,7 @@ describe('the scenario generator', () => {
   })
 
   test('scenarioFieldValue returns a float for Float types', () => {
-    const field = { type: 'Float' }
+    const field = asField({ type: 'Float' })
     const value = serviceHandler.scenarioFieldValue(field)
 
     expect(value).toEqual(parseFloat(value))
@@ -164,67 +171,75 @@ describe('the scenario generator', () => {
   })
 
   test('scenarioFieldValue returns a number for Int types', () => {
-    const field = { type: 'Int' }
+    const field = asField({ type: 'Int' })
     const value = serviceHandler.scenarioFieldValue(field)
 
-    expect(value).toEqual(parseInt(value))
+    expect(value).toEqual(parseInt(value as unknown as string))
     expect(typeof value).toBe('number')
   })
 
   test('scenarioFieldValue returns a valid Date for DateTime types', () => {
-    const field = { type: 'DateTime' }
+    const field = asField({ type: 'DateTime' })
     const value = serviceHandler.scenarioFieldValue(field)
 
     expect(value instanceof Date).toBe(true)
-    expect(!isNaN(value)).toBe(true)
+    expect(!isNaN(value as unknown as number)).toBe(true)
   })
 
   test('scenarioFieldValue returns JSON for Json types', () => {
-    const field = { type: 'Json' }
+    const field = asField({ type: 'Json' })
 
     expect(serviceHandler.scenarioFieldValue(field)).toEqual({ foo: 'bar' })
   })
 
   test('scenarioFieldValue returns the first enum option for enum kinds', () => {
-    const field = {
+    const field = asField({
       type: 'Color',
       kind: 'enum',
       enumValues: [
         { name: 'Red', dbValue: null },
         { name: 'Blue', dbValue: null },
       ],
-    }
+    })
 
     expect(serviceHandler.scenarioFieldValue(field)).toEqual('Red')
   })
 
   test('scenarioFieldValue returns the dbName for enum types if present', () => {
-    const field = {
+    const field = asField({
       type: 'Color',
       kind: 'enum',
       enumValues: [
         { name: 'Red', dbName: 'color-red' },
         { name: 'Blue', dbName: 'color-blue' },
       ],
-    }
+    })
 
     expect(serviceHandler.scenarioFieldValue(field)).toEqual('color-red')
   })
 
   test('fieldsToScenario returns scenario data for scalarFields', async () => {
-    const scalarFields = [
+    const scalarFields: PrismaField[] = [
       {
         name: 'firstName',
         type: 'String',
         isUnique: false,
+        kind: 'scalar',
+        isList: false,
+        isRequired: false,
+        isId: false,
       },
       {
         name: 'lastName',
         type: 'String',
         isUnique: true,
+        kind: 'scalar',
+        isList: false,
+        isRequired: false,
+        isId: false,
       },
     ]
-    const scenario = await serviceHandler.fieldsToScenario(scalarFields, [], [])
+    const scenario = await serviceHandler.fieldsToScenario(scalarFields, {}, [])
 
     expect(Object.keys(scenario).length).toEqual(2)
     expect(scenario.firstName).toEqual(expect.any(String))
