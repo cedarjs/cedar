@@ -1,4 +1,3 @@
-
 import path from 'node:path'
 import type * as NodeFs from 'node:fs'
 
@@ -13,9 +12,7 @@ import '../../../../lib/test'
 vi.mock('node:fs', async (importOriginal) => {
   const { wrapFsForUnionfs } =
     await import('../../../../__tests__/ufsFsProxy.js')
-  ufs
-    .use(wrapFsForUnionfs(await importOriginal<typeof NodeFs>()))
-    .use(memfs)
+  ufs.use(wrapFsForUnionfs(await importOriginal<typeof NodeFs>())).use(memfs)
 
   return { ...ufs, default: ufs }
 })
@@ -39,8 +36,7 @@ beforeAll(() => {
   vol.fromJSON({ 'redwood.toml': '' }, '/')
 })
 
-const extensionForBaseArgs = (baseArgs) =>
-  baseArgs?.typescript ? 'ts' : 'js'
+const extensionForBaseArgs = (baseArgs) => (baseArgs?.typescript ? 'ts' : 'js')
 
 const itReturnsExactlyFourFiles = (baseArgs = {}) => {
   test('returns exactly 4 files', async () => {
