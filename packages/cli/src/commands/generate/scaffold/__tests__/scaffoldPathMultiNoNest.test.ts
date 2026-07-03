@@ -26,7 +26,7 @@ beforeAll(() => {
 })
 
 describe('admin/pages/post', () => {
-  let filesNestedLower
+  let filesNestedLower: Record<string, string>
 
   beforeAll(async () => {
     filesNestedLower = await scaffoldHandler.files({
@@ -281,7 +281,7 @@ describe('admin/pages/post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfiles.*?\})/s)[1]
+      const query = cell.match(/(userProfiles.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -302,7 +302,7 @@ describe('admin/pages/post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -323,7 +323,7 @@ describe('admin/pages/post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -365,7 +365,7 @@ describe('admin/pages/post', () => {
 })
 
 describe('Admin/Pages/Post/Post', () => {
-  let filesNestedUpper
+  let filesNestedUpper: Record<string, string>
 
   beforeAll(async () => {
     filesNestedUpper = await scaffoldHandler.files({
@@ -619,7 +619,7 @@ describe('Admin/Pages/Post/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfiles.*?\})/s)[1]
+      const query = cell.match(/(userProfiles.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -640,7 +640,7 @@ describe('Admin/Pages/Post/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -661,7 +661,7 @@ describe('Admin/Pages/Post/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })

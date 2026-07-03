@@ -349,7 +349,7 @@ describe('in javascript (default) mode', () => {
           '/path/to/project/web/src/components/UserProfile/UserProfilesCell/UserProfilesCell.jsx',
         )
       ]
-    const query = cell.match(/(userProfiles.*?\})/s)[1]
+    const query = cell.match(/(userProfiles.*?\})/s)?.[1]
 
     expect(query).not.toMatch(/^\s+user$/m)
   })
@@ -367,7 +367,7 @@ describe('in javascript (default) mode', () => {
           '/path/to/project/web/src/components/UserProfile/UserProfileCell/UserProfileCell.jsx',
         )
       ]
-    const query = cell.match(/(userProfile.*?\})/s)[1]
+    const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
     expect(query).not.toMatch(/^\s+user$/m)
   })
@@ -385,7 +385,7 @@ describe('in javascript (default) mode', () => {
           '/path/to/project/web/src/components/UserProfile/EditUserProfileCell/EditUserProfileCell.jsx',
         )
       ]
-    const query = cell.match(/(userProfile.*?\})/s)[1]
+    const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
     expect(query).not.toMatch(/^\s+user$/m)
   })
@@ -460,7 +460,7 @@ describe('in javascript (default) mode', () => {
 })
 
 describe('in typescript mode', () => {
-  let tsFiles
+  let tsFiles: Record<string, string>
 
   beforeAll(async () => {
     tsFiles = await scaffoldHandler.files({
@@ -678,7 +678,7 @@ describe('in typescript mode', () => {
           '/path/to/project/web/src/components/UserProfile/UserProfilesCell/UserProfilesCell.jsx',
         )
       ]
-    const query = cell.match(/(userProfiles.*?\})/s)[1]
+    const query = cell.match(/(userProfiles.*?\})/s)?.[1]
 
     expect(query).not.toMatch(/^\s+user$/m)
   })
@@ -696,7 +696,7 @@ describe('in typescript mode', () => {
           '/path/to/project/web/src/components/UserProfile/UserProfileCell/UserProfileCell.jsx',
         )
       ]
-    const query = cell.match(/(userProfile.*?\})/s)[1]
+    const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
     expect(query).not.toMatch(/^\s+user$/m)
   })
@@ -715,7 +715,7 @@ describe('in typescript mode', () => {
           '/path/to/project/web/src/components/UserProfile/EditUserProfileCell/EditUserProfileCell.tsx',
         )
       ]
-    const query = cell.match(/(userProfile.*?\})/s)[1]
+    const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
     expect(query).not.toMatch(/^\s+user$/m)
   })
@@ -825,7 +825,7 @@ describe('tailwind flag', () => {
 })
 
 describe("'use client' directive", () => {
-  let files
+  let files: Record<string, string>
 
   beforeAll(async () => {
     vol.fromJSON(
@@ -883,8 +883,8 @@ describe("'use client' directive", () => {
 })
 
 describe('custom templates', () => {
-  let tsFiles
-  let originalCedarCwd
+  let tsFiles: Record<string, string>
+  let originalCedarCwd: string | undefined
 
   beforeAll(async () => {
     originalCedarCwd = process.env.CEDAR_CWD

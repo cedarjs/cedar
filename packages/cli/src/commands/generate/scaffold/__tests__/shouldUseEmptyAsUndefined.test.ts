@@ -25,7 +25,7 @@ vi.mock('node:fs', async (importOriginal) => {
 vi.mock('execa')
 
 describe('relational form field', () => {
-  let form
+  let form: string
 
   beforeAll(async () => {
     vol.fromJSON({ 'redwood.toml': '' }, '/')

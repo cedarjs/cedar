@@ -25,7 +25,7 @@ beforeAll(() => {
 })
 
 describe('admin/Post', () => {
-  let filesLower
+  let filesLower: Record<string, string>
 
   beforeAll(async () => {
     filesLower = await scaffoldHandler.files({
@@ -276,7 +276,7 @@ describe('admin/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfiles.*?\})/s)[1]
+      const query = cell.match(/(userProfiles.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -297,7 +297,7 @@ describe('admin/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -318,7 +318,7 @@ describe('admin/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -360,7 +360,7 @@ describe('admin/Post', () => {
 })
 
 describe('Admin/Post', () => {
-  let filesUpper
+  let filesUpper: Record<string, string>
 
   beforeAll(async () => {
     filesUpper = await scaffoldHandler.files({
@@ -613,7 +613,7 @@ describe('Admin/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfiles.*?\})/s)[1]
+      const query = cell.match(/(userProfiles.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -634,7 +634,7 @@ describe('Admin/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -655,7 +655,7 @@ describe('Admin/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })

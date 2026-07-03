@@ -279,7 +279,7 @@ describe('admin/post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfiles.*?\})/s)[1]
+      const query = cell.match(/(userProfiles.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -300,7 +300,7 @@ describe('admin/post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -321,7 +321,7 @@ describe('admin/post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -638,7 +638,7 @@ describe('Admin/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfiles.*?\})/s)[1]
+      const query = cell.match(/(userProfiles.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -659,7 +659,7 @@ describe('Admin/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -680,7 +680,7 @@ describe('Admin/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })

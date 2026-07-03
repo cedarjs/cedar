@@ -25,7 +25,7 @@ vi.mock('node:fs', async (importOriginal) => {
 vi.mock('execa')
 
 describe('support custom @id name', () => {
-  let files
+  let files: Record<string, string>
 
   beforeAll(async () => {
     vol.fromJSON({ 'redwood.toml': '' }, '/')
@@ -57,7 +57,7 @@ describe('support custom @id name', () => {
     const customIdFieldCellPath =
       '/path/to/project/web/src/components/CustomIdField/CustomIdFieldCell/CustomIdFieldCell.tsx'
 
-    const cell = await files[path.normalize(customIdFieldCellPath)]
+    const cell = files[path.normalize(customIdFieldCellPath)]
     expect(cell).toContain('FindCustomIdFieldByUuid($uuid: String!)')
     expect(cell).toContain('customIdField: customIdField(uuid: $uuid)')
   })
@@ -66,7 +66,7 @@ describe('support custom @id name', () => {
     const customIdFieldEditCellPath =
       '/path/to/project/web/src/components/CustomIdField/EditCustomIdFieldCell/EditCustomIdFieldCell.tsx'
 
-    const cell = await files[path.normalize(customIdFieldEditCellPath)]
+    const cell = files[path.normalize(customIdFieldEditCellPath)]
     expect(cell).toContain('query EditCustomIdFieldByUuid($uuid: String!)')
   })
 
@@ -74,7 +74,7 @@ describe('support custom @id name', () => {
     const customIdFieldComponentPath =
       '/path/to/project/web/src/components/CustomIdField/CustomIdField/CustomIdField.tsx'
 
-    const cell = await files[path.normalize(customIdFieldComponentPath)]
+    const cell = files[path.normalize(customIdFieldComponentPath)]
     expect(cell).toContain('DeleteCustomIdFieldMutation($uuid: String!)')
     expect(cell).toContain('deleteCustomIdField(uuid: $uuid)')
     expect(cell).toContain('deleteCustomIdField({ variables: { uuid } })')
@@ -84,7 +84,7 @@ describe('support custom @id name', () => {
     const customIdFieldFormPath =
       '/path/to/project/web/src/components/CustomIdField/CustomIdFieldForm/CustomIdFieldForm.tsx'
 
-    const cell = await files[path.normalize(customIdFieldFormPath)]
+    const cell = files[path.normalize(customIdFieldFormPath)]
     expect(cell).toContain('props.onSave(data, props?.customIdField?.uuid)')
   })
 
@@ -92,7 +92,7 @@ describe('support custom @id name', () => {
     const customIdFieldSdlPath =
       '/path/to/project/api/src/graphql/customIdFields.sdl.ts'
 
-    const sdl = await files[path.normalize(customIdFieldSdlPath)]
+    const sdl = files[path.normalize(customIdFieldSdlPath)]
     const match = sdl.match(/uuid: String!/g)
     expect(match).toHaveLength(4)
   })
@@ -101,7 +101,7 @@ describe('support custom @id name', () => {
     const customIdFieldServicePath =
       '/path/to/project/api/src/graphql/customIdFields.sdl.ts'
 
-    const sdl = await files[path.normalize(customIdFieldServicePath)]
+    const sdl = files[path.normalize(customIdFieldServicePath)]
     const match = sdl.match(/uuid: String!/g)
     expect(match).toHaveLength(4)
   })

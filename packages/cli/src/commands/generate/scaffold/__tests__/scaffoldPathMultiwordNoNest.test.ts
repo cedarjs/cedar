@@ -26,7 +26,7 @@ beforeAll(() => {
 })
 
 describe('AdminPages/Post', () => {
-  let filesMultiwordUpper
+  let filesMultiwordUpper: Record<string, string>
 
   beforeAll(async () => {
     filesMultiwordUpper = await scaffoldHandler.files({
@@ -281,7 +281,7 @@ describe('AdminPages/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfiles.*?\})/s)[1]
+      const query = cell.match(/(userProfiles.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -302,7 +302,7 @@ describe('AdminPages/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -323,7 +323,7 @@ describe('AdminPages/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -365,7 +365,7 @@ describe('AdminPages/Post', () => {
 })
 
 describe('admin-pages/Post', () => {
-  let filesMultiwordDash
+  let filesMultiwordDash: Record<string, string>
 
   beforeAll(async () => {
     filesMultiwordDash = await scaffoldHandler.files({
@@ -620,7 +620,7 @@ describe('admin-pages/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfiles.*?\})/s)[1]
+      const query = cell.match(/(userProfiles.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -641,7 +641,7 @@ describe('admin-pages/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -662,7 +662,7 @@ describe('admin-pages/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -704,7 +704,7 @@ describe('admin-pages/Post', () => {
 })
 
 describe('admin_pages/Post', () => {
-  let filesMultiwordUnderscore
+  let filesMultiwordUnderscore: Record<string, string>
 
   beforeAll(async () => {
     filesMultiwordUnderscore = await scaffoldHandler.files({
@@ -959,7 +959,7 @@ describe('admin_pages/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfiles.*?\})/s)[1]
+      const query = cell.match(/(userProfiles.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -980,7 +980,7 @@ describe('admin_pages/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -1001,7 +1001,7 @@ describe('admin_pages/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
