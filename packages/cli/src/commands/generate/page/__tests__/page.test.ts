@@ -35,7 +35,8 @@ import { ensurePosixPath } from '@cedarjs/project-config'
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const path = await import('node:path')
-  const originalProjectConfig = await importOriginal<typeof import('@cedarjs/project-config')>()
+  const originalProjectConfig =
+    await importOriginal<typeof import('@cedarjs/project-config')>()
   return {
     getPaths: () => {
       const BASE_PATH = '/path/to/project'
@@ -56,7 +57,8 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
 })
 
 vi.mock('@cedarjs/cli-helpers', async (importOriginal) => {
-  const originalCliHelpers = await importOriginal<typeof import('@cedarjs/cli-helpers')>()
+  const originalCliHelpers =
+    await importOriginal<typeof import('@cedarjs/cli-helpers')>()
 
   return {
     ...originalCliHelpers,

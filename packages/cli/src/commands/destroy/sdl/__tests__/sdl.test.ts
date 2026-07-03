@@ -15,7 +15,8 @@ import { tasks } from '../sdlHandler.js'
 vi.mock('node:fs')
 
 vi.mock('../../../../lib', async (importOriginal) => {
-  const originalLib = await importOriginal<typeof import('../../../../lib/index.js')>()
+  const originalLib =
+    await importOriginal<typeof import('../../../../lib/index.js')>()
   return {
     ...originalLib,
     generateTemplate: () => '',
@@ -23,14 +24,19 @@ vi.mock('../../../../lib', async (importOriginal) => {
 })
 
 vi.mock('../../../../lib/schemaHelpers', async (importOriginal) => {
-  const originalSchemaHelpers = await importOriginal<typeof import('../../../../lib/schemaHelpers.js')>()
+  const originalSchemaHelpers =
+    await importOriginal<typeof import('../../../../lib/schemaHelpers.js')>()
   const { join } = await import('node:path')
-  const { readFileSync } = await vi.importActual<typeof import('node:fs')>('node:fs')
+  const { readFileSync } =
+    await vi.importActual<typeof import('node:fs')>('node:fs')
   return {
     ...originalSchemaHelpers,
     getSchema: () =>
       JSON.parse(
-        readFileSync(join(globalThis.__dirname, 'fixtures', 'post.json'), 'utf-8'),
+        readFileSync(
+          join(globalThis.__dirname, 'fixtures', 'post.json'),
+          'utf-8',
+        ),
       ),
   }
 })

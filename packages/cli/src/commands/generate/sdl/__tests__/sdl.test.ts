@@ -13,7 +13,9 @@ import '../../../../lib/test'
 vi.mock('node:fs', async (importOriginal) => {
   const { wrapFsForUnionfs } =
     await import('../../../../__tests__/ufsFsProxy.js')
-  ufs.use(wrapFsForUnionfs(await importOriginal<typeof import('node:fs')>())).use(memfs)
+  ufs
+    .use(wrapFsForUnionfs(await importOriginal<typeof import('node:fs')>()))
+    .use(memfs)
 
   return { ...ufs, default: ufs }
 })
