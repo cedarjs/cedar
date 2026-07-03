@@ -1,3 +1,5 @@
+globalThis.__dirname = import.meta.dirname
+
 import fs from 'node:fs'
 
 import { vi, describe, expect, test, afterEach } from 'vitest'
