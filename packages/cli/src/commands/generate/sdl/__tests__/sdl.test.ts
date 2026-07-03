@@ -1,6 +1,6 @@
-globalThis.__dirname = __dirname
 
 import path from 'node:path'
+import type * as NodeFs from 'node:fs'
 
 import { vol, fs as memfs } from 'memfs'
 import prompts from 'prompts'
@@ -14,7 +14,7 @@ vi.mock('node:fs', async (importOriginal) => {
   const { wrapFsForUnionfs } =
     await import('../../../../__tests__/ufsFsProxy.js')
   ufs
-    .use(wrapFsForUnionfs(await importOriginal<typeof import('node:fs')>()))
+    .use(wrapFsForUnionfs(await importOriginal<typeof NodeFs>()))
     .use(memfs)
 
   return { ...ufs, default: ufs }
@@ -40,7 +40,7 @@ beforeAll(() => {
 })
 
 const extensionForBaseArgs = (baseArgs) =>
-  baseArgs && baseArgs.typescript ? 'ts' : 'js'
+  baseArgs?.typescript ? 'ts' : 'js'
 
 const itReturnsExactlyFourFiles = (baseArgs = {}) => {
   test('returns exactly 4 files', async () => {

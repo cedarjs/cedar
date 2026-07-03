@@ -1,4 +1,3 @@
-globalThis.__dirname = __dirname
 
 import fs from 'node:fs'
 
@@ -34,7 +33,7 @@ vi.mock('../../../../lib/schemaHelpers', async (importOriginal) => {
     getSchema: () =>
       JSON.parse(
         readFileSync(
-          join(globalThis.__dirname, 'fixtures', 'post.json'),
+          join(import.meta.dirname, 'fixtures', 'post.json'),
           'utf-8',
         ),
       ),
