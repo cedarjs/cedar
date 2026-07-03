@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 globalThis.__dirname = import.meta.dirname
 
+=======
+>>>>>>> 04c75cfb14 (TS fixes mostly)
 import type * as NodeFs from 'node:fs'
 import path from 'node:path'
 

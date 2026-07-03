@@ -14,7 +14,8 @@ import '../../../../lib/test'
 vi.mock('node:fs', async (importOriginal) => {
   const { wrapFsForUnionfs } =
     await import('../../../../__tests__/ufsFsProxy.js')
-  ufs.use(wrapFsForUnionfs(await importOriginal<typeof NodeFs>())).use(memfs)
+  const fs = await importOriginal<typeof NodeFs>()
+  ufs.use(wrapFsForUnionfs(fs)).use(memfs)
 
   return { ...ufs, default: ufs }
 })
@@ -38,7 +39,8 @@ beforeAll(() => {
   vol.fromJSON({ 'redwood.toml': '' }, '/')
 })
 
-const extensionForBaseArgs = (baseArgs) => (baseArgs?.typescript ? 'ts' : 'js')
+const extensionForBaseArgs = (baseArgs: Record<string, unknown>) =>
+  (baseArgs?.typescript ? 'ts' : 'js')
 
 const itReturnsExactlyFourFiles = (baseArgs = {}) => {
   test('returns exactly 4 files', async () => {
@@ -341,7 +343,7 @@ describe('with graphql documentations', () => {
 })
 
 describe('handler', () => {
-  const canBeCalledWithGivenModelName = (letterCase, model) => {
+  const canBeCalledWithGivenModelName = (letterCase: string, model: string) => {
     test(`can be called with ${letterCase} model name`, async () => {
       const spy = vi.spyOn(fs, 'writeFileSync')
 
@@ -373,8 +375,8 @@ describe('handler', () => {
   canBeCalledWithGivenModelName('camelCase', 'user')
   canBeCalledWithGivenModelName('PascalCase', 'User')
 
-  prompts.inject('CustomDatums')
+  prompts.inject(['CustomDatums'])
   canBeCalledWithGivenModelName('camelCase', 'customData')
-  prompts.inject('CustomDatums')
+  prompts.inject(['CustomDatums'])
   canBeCalledWithGivenModelName('PascalCase', 'CustomData')
 })
