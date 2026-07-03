@@ -1,5 +1,5 @@
 globalThis.__dirname = __dirname
-import path from 'path'
+import path from 'node:path'
 
 import { vol, fs as memfs } from 'memfs'
 import { ufs } from 'unionfs'
@@ -12,7 +12,7 @@ import * as scaffoldHandler from '../scaffoldHandler.js'
 vi.mock('node:fs', async (importOriginal) => {
   const { wrapFsForUnionfs } =
     await import('../../../../__tests__/ufsFsProxy.js')
-  ufs.use(wrapFsForUnionfs(await importOriginal())).use(memfs)
+  ufs.use(wrapFsForUnionfs(await importOriginal<typeof import('node:fs')>())).use(memfs)
   return { ...ufs, default: { ...ufs } }
 })
 vi.mock('execa')
@@ -21,13 +21,13 @@ beforeAll(() => {
   vol.fromJSON({ 'redwood.toml': '' }, '/')
 })
 
-describe('admin/Post', () => {
-  let filesLower
+describe('admin/pages/post', () => {
+  let filesNestedLower
 
   beforeAll(async () => {
-    filesLower = await scaffoldHandler.files({
+    filesNestedLower = await scaffoldHandler.files({
       model: 'Post',
-      path: 'admin',
+      path: 'admin/pages',
       tests: true,
       nestScaffoldByModel: false,
     })
@@ -35,12 +35,13 @@ describe('admin/Post', () => {
 
   describe('creates the correct files with the correct imports', () => {
     test('returns exactly 19 files', () => {
-      expect(Object.keys(filesLower).length).toEqual(19)
+      expect(Object.keys(filesNestedLower).length).toEqual(19)
     })
 
     // Layout
+
     test('creates a layout', async () => {
-      expect(filesLower).toHaveProperty([
+      expect(filesNestedLower).toHaveProperty([
         path.normalize(
           '/path/to/project/web/src/layouts/ScaffoldLayout/ScaffoldLayout.jsx',
         ),
@@ -50,177 +51,180 @@ describe('admin/Post', () => {
     // Pages
 
     test('creates a edit page', async () => {
-      expect(filesLower).toHaveProperty([
+      expect(filesNestedLower).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/pages/Admin/EditPostPage/EditPostPage.jsx',
+          '/path/to/project/web/src/pages/Admin/Pages/EditPostPage/EditPostPage.jsx',
         ),
       ])
     })
 
     test('the edit page correctly imports the edit cell', async () => {
       expect(
-        filesLower[
+        filesNestedLower[
           path.normalize(
-            '/path/to/project/web/src/pages/Admin/EditPostPage/EditPostPage.jsx',
+            '/path/to/project/web/src/pages/Admin/Pages/EditPostPage/EditPostPage.jsx',
           )
         ],
-      ).toMatch(`import EditPostCell from 'src/components/Admin/EditPostCell'`)
+      ).toMatch(
+        `import EditPostCell from 'src/components/Admin/Pages/EditPostCell'`,
+      )
     })
 
     test('creates a index page', async () => {
-      expect(filesLower).toHaveProperty([
+      expect(filesNestedLower).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/pages/Admin/PostsPage/PostsPage.jsx',
+          '/path/to/project/web/src/pages/Admin/Pages/PostsPage/PostsPage.jsx',
         ),
       ])
     })
 
     test('the index page correctly imports the index cell', async () => {
       expect(
-        filesLower[
+        filesNestedLower[
           path.normalize(
-            '/path/to/project/web/src/pages/Admin/PostsPage/PostsPage.jsx',
+            '/path/to/project/web/src/pages/Admin/Pages/PostsPage/PostsPage.jsx',
           )
         ],
-      ).toMatch(`import PostsCell from 'src/components/Admin/PostsCell'`)
+      ).toMatch(`import PostsCell from 'src/components/Admin/Pages/PostsCell'`)
     })
 
     test('creates a new page', async () => {
-      expect(filesLower).toHaveProperty([
+      expect(filesNestedLower).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/pages/Admin/NewPostPage/NewPostPage.jsx',
+          '/path/to/project/web/src/pages/Admin/Pages/NewPostPage/NewPostPage.jsx',
         ),
       ])
     })
 
     test('the new page correctly imports the new component', async () => {
       expect(
-        filesLower[
+        filesNestedLower[
           path.normalize(
-            '/path/to/project/web/src/pages/Admin/NewPostPage/NewPostPage.jsx',
+            '/path/to/project/web/src/pages/Admin/Pages/NewPostPage/NewPostPage.jsx',
           )
         ],
-      ).toMatch(`import NewPost from 'src/components/Admin/NewPost'`)
+      ).toMatch(`import NewPost from 'src/components/Admin/Pages/NewPost'`)
     })
 
     test('creates a show page', async () => {
-      expect(filesLower).toHaveProperty([
+      expect(filesNestedLower).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/pages/Admin/PostPage/PostPage.jsx',
+          '/path/to/project/web/src/pages/Admin/Pages/PostPage/PostPage.jsx',
         ),
       ])
     })
 
     test('the show page correctly imports the show cell', async () => {
       expect(
-        filesLower[
+        filesNestedLower[
           path.normalize(
-            '/path/to/project/web/src/pages/Admin/PostPage/PostPage.jsx',
+            '/path/to/project/web/src/pages/Admin/Pages/PostPage/PostPage.jsx',
           )
         ],
-      ).toMatch(`import PostCell from 'src/components/Admin/PostCell'`)
+      ).toMatch(`import PostCell from 'src/components/Admin/Pages/PostCell'`)
     })
 
     // Cells
 
     test('creates an edit cell', async () => {
-      expect(filesLower).toHaveProperty([
+      expect(filesNestedLower).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/components/Admin/EditPostCell/EditPostCell.jsx',
+          '/path/to/project/web/src/components/Admin/Pages/EditPostCell/EditPostCell.jsx',
         ),
       ])
     })
 
     test('the edit cell correctly imports the form', async () => {
       expect(
-        filesLower[
+        filesNestedLower[
           path.normalize(
-            '/path/to/project/web/src/components/Admin/EditPostCell/EditPostCell.jsx',
+            '/path/to/project/web/src/components/Admin/Pages/EditPostCell/EditPostCell.jsx',
           )
         ],
-      ).toMatch(`import PostForm from 'src/components/Admin/PostForm'`)
+      ).toMatch(`import PostForm from 'src/components/Admin/Pages/PostForm'`)
     })
 
     test('creates an index cell', async () => {
-      expect(filesLower).toHaveProperty([
+      expect(filesNestedLower).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/components/Admin/PostsCell/PostsCell.jsx',
+          '/path/to/project/web/src/components/Admin/Pages/PostsCell/PostsCell.jsx',
         ),
       ])
     })
 
     test('the index cell correctly imports the index component', async () => {
       expect(
-        filesLower[
+        filesNestedLower[
           path.normalize(
-            '/path/to/project/web/src/components/Admin/PostsCell/PostsCell.jsx',
+            '/path/to/project/web/src/components/Admin/Pages/PostsCell/PostsCell.jsx',
           )
         ],
-      ).toMatch(`import Posts from 'src/components/Admin/Posts'`)
+      ).toMatch(`import Posts from 'src/components/Admin/Pages/Posts'`)
     })
 
     test('creates a show cell', async () => {
-      expect(filesLower).toHaveProperty([
+      expect(filesNestedLower).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/components/Admin/PostCell/PostCell.jsx',
+          '/path/to/project/web/src/components/Admin/Pages/PostCell/PostCell.jsx',
         ),
       ])
     })
 
     test('the show cell correctly imports the show component', async () => {
       expect(
-        filesLower[
+        filesNestedLower[
           path.normalize(
-            '/path/to/project/web/src/components/Admin/PostCell/PostCell.jsx',
+            '/path/to/project/web/src/components/Admin/Pages/PostCell/PostCell.jsx',
           )
         ],
-      ).toMatch(`import Post from 'src/components/Admin/Post'`)
+      ).toMatch(`import Post from 'src/components/Admin/Pages/Post'`)
     })
 
     // Components
 
     test('creates a form component', async () => {
-      expect(filesLower).toHaveProperty([
+      expect(filesNestedLower).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/components/Admin/PostForm/PostForm.jsx',
+          '/path/to/project/web/src/components/Admin/Pages/PostForm/PostForm.jsx',
         ),
       ])
     })
 
     test('creates an index component', async () => {
-      expect(filesLower).toHaveProperty([
+      expect(filesNestedLower).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/components/Admin/Posts/Posts.jsx',
+          '/path/to/project/web/src/components/Admin/Pages/Posts/Posts.jsx',
         ),
       ])
     })
 
     test('creates a new component', async () => {
-      expect(filesLower).toHaveProperty([
+      expect(filesNestedLower).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/components/Admin/NewPost/NewPost.jsx',
+          '/path/to/project/web/src/components/Admin/Pages/NewPost/NewPost.jsx',
         ),
       ])
     })
 
     test('the new component correctly imports the form', async () => {
       expect(
-        filesLower[
+        filesNestedLower[
           path.normalize(
-            '/path/to/project/web/src/components/Admin/NewPost/NewPost.jsx',
+            '/path/to/project/web/src/components/Admin/Pages/NewPost/NewPost.jsx',
           )
         ],
-      ).toMatch(`import PostForm from 'src/components/Admin/PostForm'`)
+      ).toMatch(`import PostForm from 'src/components/Admin/Pages/PostForm'`)
     })
 
     test('creates a show component', async () => {
-      expect(filesLower).toHaveProperty([
+      expect(filesNestedLower).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/components/Admin/Post/Post.jsx',
+          '/path/to/project/web/src/components/Admin/Pages/Post/Post.jsx',
         ),
       ])
     })
   })
+
   describe('creates the correct routes', () => {
     // Routes
 
@@ -228,14 +232,14 @@ describe('admin/Post', () => {
       expect(
         await scaffoldHandler.routes({
           model: 'Post',
-          path: 'admin',
+          path: 'admin/pages',
           nestScaffoldByModel: false,
         }),
       ).toEqual([
-        '<Route path="/admin/posts/new" page={AdminNewPostPage} name="adminNewPost" />',
-        '<Route path="/admin/posts/{id:Int}/edit" page={AdminEditPostPage} name="adminEditPost" />',
-        '<Route path="/admin/posts/{id:Int}" page={AdminPostPage} name="adminPost" />',
-        '<Route path="/admin/posts" page={AdminPostsPage} name="adminPosts" />',
+        '<Route path="/admin/pages/posts/new" page={AdminPagesNewPostPage} name="adminPagesNewPost" />',
+        '<Route path="/admin/pages/posts/{id:Int}/edit" page={AdminPagesEditPostPage} name="adminPagesEditPost" />',
+        '<Route path="/admin/pages/posts/{id:Int}" page={AdminPagesPostPage} name="adminPagesPost" />',
+        '<Route path="/admin/pages/posts" page={AdminPagesPostsPage} name="adminPagesPosts" />',
       ])
     })
 
@@ -243,14 +247,14 @@ describe('admin/Post', () => {
       expect(
         await scaffoldHandler.routes({
           model: 'UserProfile',
-          path: 'admin',
+          path: 'admin/pages',
           nestScaffoldByModel: false,
         }),
       ).toEqual([
-        '<Route path="/admin/user-profiles/new" page={AdminNewUserProfilePage} name="adminNewUserProfile" />',
-        '<Route path="/admin/user-profiles/{id:Int}/edit" page={AdminEditUserProfilePage} name="adminEditUserProfile" />',
-        '<Route path="/admin/user-profiles/{id:Int}" page={AdminUserProfilePage} name="adminUserProfile" />',
-        '<Route path="/admin/user-profiles" page={AdminUserProfilesPage} name="adminUserProfiles" />',
+        '<Route path="/admin/pages/user-profiles/new" page={AdminPagesNewUserProfilePage} name="adminPagesNewUserProfile" />',
+        '<Route path="/admin/pages/user-profiles/{id:Int}/edit" page={AdminPagesEditUserProfilePage} name="adminPagesEditUserProfile" />',
+        '<Route path="/admin/pages/user-profiles/{id:Int}" page={AdminPagesUserProfilePage} name="adminPagesUserProfile" />',
+        '<Route path="/admin/pages/user-profiles" page={AdminPagesUserProfilesPage} name="adminPagesUserProfiles" />',
       ])
     })
   })
@@ -259,7 +263,7 @@ describe('admin/Post', () => {
     test('the GraphQL in the index query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
         model: 'UserProfile',
-        path: 'admin',
+        path: 'admin/pages',
         tests: false,
         nestScaffoldByModel: false,
       })
@@ -267,7 +271,7 @@ describe('admin/Post', () => {
       const cell =
         userProfileFiles[
           path.normalize(
-            '/path/to/project/web/src/components/Admin/UserProfilesCell/UserProfilesCell.jsx',
+            '/path/to/project/web/src/components/Admin/Pages/UserProfilesCell/UserProfilesCell.jsx',
           )
         ]
 
@@ -279,7 +283,7 @@ describe('admin/Post', () => {
     test('the GraphQL in the show query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
         model: 'UserProfile',
-        path: 'admin',
+        path: 'admin/pages',
         tests: false,
         nestScaffoldByModel: false,
       })
@@ -287,7 +291,7 @@ describe('admin/Post', () => {
       const cell =
         userProfileFiles[
           path.normalize(
-            '/path/to/project/web/src/components/Admin/UserProfileCell/UserProfileCell.jsx',
+            '/path/to/project/web/src/components/Admin/Pages/UserProfileCell/UserProfileCell.jsx',
           )
         ]
 
@@ -299,7 +303,7 @@ describe('admin/Post', () => {
     test('the GraphQL in the edit query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
         model: 'UserProfile',
-        path: 'admin',
+        path: 'admin/pages',
         tests: false,
         nestScaffoldByModel: false,
       })
@@ -307,7 +311,7 @@ describe('admin/Post', () => {
       const cell =
         userProfileFiles[
           path.normalize(
-            '/path/to/project/web/src/components/Admin/EditUserProfileCell/EditUserProfileCell.jsx',
+            '/path/to/project/web/src/components/Admin/Pages/EditUserProfileCell/EditUserProfileCell.jsx',
           )
         ]
 
@@ -321,14 +325,14 @@ describe('admin/Post', () => {
     test('creates a new component with int foreign keys converted in onSave', async () => {
       const foreignKeyFiles = await scaffoldHandler.files({
         model: 'UserProfile',
-        path: 'admin',
+        path: 'admin/pages',
         tests: false,
         nestScaffoldByModel: false,
       })
 
       expect(foreignKeyFiles).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/components/Admin/NewUserProfile/NewUserProfile.jsx',
+          '/path/to/project/web/src/components/Admin/Pages/NewUserProfile/NewUserProfile.jsx',
         ),
       ])
     })
@@ -336,27 +340,27 @@ describe('admin/Post', () => {
     test('creates an edit component with int foreign keys converted in onSave', async () => {
       const foreignKeyFiles = await scaffoldHandler.files({
         model: 'UserProfile',
-        path: 'admin',
+        path: 'admin/pages',
         tests: false,
         nestScaffoldByModel: false,
       })
 
       expect(foreignKeyFiles).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/components/Admin/EditUserProfileCell/EditUserProfileCell.jsx',
+          '/path/to/project/web/src/components/Admin/Pages/EditUserProfileCell/EditUserProfileCell.jsx',
         ),
       ])
     })
   })
 })
 
-describe('Admin/Post', () => {
-  let filesUpper
+describe('Admin/Pages/Post/Post', () => {
+  let filesNestedUpper
 
   beforeAll(async () => {
-    filesUpper = await scaffoldHandler.files({
+    filesNestedUpper = await scaffoldHandler.files({
       model: 'Post',
-      path: 'Admin',
+      path: 'Admin/Pages',
       tests: true,
       nestScaffoldByModel: false,
     })
@@ -364,13 +368,12 @@ describe('Admin/Post', () => {
 
   describe('creates the correct files with the correct imports', () => {
     test('returns exactly 19 files', () => {
-      expect(Object.keys(filesUpper).length).toEqual(19)
+      expect(Object.keys(filesNestedUpper).length).toEqual(19)
     })
 
     // Layout
-
     test('creates a layout', async () => {
-      expect(filesUpper).toHaveProperty([
+      expect(filesNestedUpper).toHaveProperty([
         path.normalize(
           '/path/to/project/web/src/layouts/ScaffoldLayout/ScaffoldLayout.jsx',
         ),
@@ -380,173 +383,175 @@ describe('Admin/Post', () => {
     // Pages
 
     test('creates a edit page', async () => {
-      expect(filesUpper).toHaveProperty([
+      expect(filesNestedUpper).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/pages/Admin/EditPostPage/EditPostPage.jsx',
+          '/path/to/project/web/src/pages/Admin/Pages/EditPostPage/EditPostPage.jsx',
         ),
       ])
     })
 
     test('the edit page correctly imports the edit cell', async () => {
       expect(
-        filesUpper[
+        filesNestedUpper[
           path.normalize(
-            '/path/to/project/web/src/pages/Admin/EditPostPage/EditPostPage.jsx',
+            '/path/to/project/web/src/pages/Admin/Pages/EditPostPage/EditPostPage.jsx',
           )
         ],
-      ).toMatch(`import EditPostCell from 'src/components/Admin/EditPostCell'`)
+      ).toMatch(
+        `import EditPostCell from 'src/components/Admin/Pages/EditPostCell'`,
+      )
     })
 
     test('creates a index page', async () => {
-      expect(filesUpper).toHaveProperty([
+      expect(filesNestedUpper).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/pages/Admin/PostsPage/PostsPage.jsx',
+          '/path/to/project/web/src/pages/Admin/Pages/PostsPage/PostsPage.jsx',
         ),
       ])
     })
 
     test('the index page correctly imports the index cell', async () => {
       expect(
-        filesUpper[
+        filesNestedUpper[
           path.normalize(
-            '/path/to/project/web/src/pages/Admin/PostsPage/PostsPage.jsx',
+            '/path/to/project/web/src/pages/Admin/Pages/PostsPage/PostsPage.jsx',
           )
         ],
-      ).toMatch(`import PostsCell from 'src/components/Admin/PostsCell'`)
+      ).toMatch(`import PostsCell from 'src/components/Admin/Pages/PostsCell'`)
     })
 
     test('creates a new page', async () => {
-      expect(filesUpper).toHaveProperty([
+      expect(filesNestedUpper).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/pages/Admin/NewPostPage/NewPostPage.jsx',
+          '/path/to/project/web/src/pages/Admin/Pages/NewPostPage/NewPostPage.jsx',
         ),
       ])
     })
 
     test('the new page correctly imports the new component', async () => {
       expect(
-        filesUpper[
+        filesNestedUpper[
           path.normalize(
-            '/path/to/project/web/src/pages/Admin/NewPostPage/NewPostPage.jsx',
+            '/path/to/project/web/src/pages/Admin/Pages/NewPostPage/NewPostPage.jsx',
           )
         ],
-      ).toMatch(`import NewPost from 'src/components/Admin/NewPost'`)
+      ).toMatch(`import NewPost from 'src/components/Admin/Pages/NewPost'`)
     })
 
     test('creates a show page', async () => {
-      expect(filesUpper).toHaveProperty([
+      expect(filesNestedUpper).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/pages/Admin/PostPage/PostPage.jsx',
+          '/path/to/project/web/src/pages/Admin/Pages/PostPage/PostPage.jsx',
         ),
       ])
     })
 
     test('the show page correctly imports the show cell', async () => {
       expect(
-        filesUpper[
+        filesNestedUpper[
           path.normalize(
-            '/path/to/project/web/src/pages/Admin/PostPage/PostPage.jsx',
+            '/path/to/project/web/src/pages/Admin/Pages/PostPage/PostPage.jsx',
           )
         ],
-      ).toMatch(`import PostCell from 'src/components/Admin/PostCell'`)
+      ).toMatch(`import PostCell from 'src/components/Admin/Pages/PostCell'`)
     })
 
     // Cells
 
     test('creates an edit cell', async () => {
-      expect(filesUpper).toHaveProperty([
+      expect(filesNestedUpper).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/components/Admin/EditPostCell/EditPostCell.jsx',
+          '/path/to/project/web/src/components/Admin/Pages/EditPostCell/EditPostCell.jsx',
         ),
       ])
     })
 
     test('the edit cell correctly imports the form', async () => {
       expect(
-        filesUpper[
+        filesNestedUpper[
           path.normalize(
-            '/path/to/project/web/src/components/Admin/EditPostCell/EditPostCell.jsx',
+            '/path/to/project/web/src/components/Admin/Pages/EditPostCell/EditPostCell.jsx',
           )
         ],
-      ).toMatch(`import PostForm from 'src/components/Admin/PostForm'`)
+      ).toMatch(`import PostForm from 'src/components/Admin/Pages/PostForm'`)
     })
 
     test('creates an index cell', async () => {
-      expect(filesUpper).toHaveProperty([
+      expect(filesNestedUpper).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/components/Admin/PostsCell/PostsCell.jsx',
+          '/path/to/project/web/src/components/Admin/Pages/PostsCell/PostsCell.jsx',
         ),
       ])
     })
 
     test('the index cell correctly imports the index component', async () => {
       expect(
-        filesUpper[
+        filesNestedUpper[
           path.normalize(
-            '/path/to/project/web/src/components/Admin/PostsCell/PostsCell.jsx',
+            '/path/to/project/web/src/components/Admin/Pages/PostsCell/PostsCell.jsx',
           )
         ],
-      ).toMatch(`import Posts from 'src/components/Admin/Posts'`)
+      ).toMatch(`import Posts from 'src/components/Admin/Pages/Posts'`)
     })
 
     test('creates a show cell', async () => {
-      expect(filesUpper).toHaveProperty([
+      expect(filesNestedUpper).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/components/Admin/PostCell/PostCell.jsx',
+          '/path/to/project/web/src/components/Admin/Pages/PostCell/PostCell.jsx',
         ),
       ])
     })
 
     test('the show cell correctly imports the show component', async () => {
       expect(
-        filesUpper[
+        filesNestedUpper[
           path.normalize(
-            '/path/to/project/web/src/components/Admin/PostCell/PostCell.jsx',
+            '/path/to/project/web/src/components/Admin/Pages/PostCell/PostCell.jsx',
           )
         ],
-      ).toMatch(`import Post from 'src/components/Admin/Post'`)
+      ).toMatch(`import Post from 'src/components/Admin/Pages/Post'`)
     })
 
     // Components
 
     test('creates a form component', async () => {
-      expect(filesUpper).toHaveProperty([
+      expect(filesNestedUpper).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/components/Admin/PostForm/PostForm.jsx',
+          '/path/to/project/web/src/components/Admin/Pages/PostForm/PostForm.jsx',
         ),
       ])
     })
 
     test('creates an index component', async () => {
-      expect(filesUpper).toHaveProperty([
+      expect(filesNestedUpper).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/components/Admin/Posts/Posts.jsx',
+          '/path/to/project/web/src/components/Admin/Pages/Posts/Posts.jsx',
         ),
       ])
     })
 
     test('creates a new component', async () => {
-      expect(filesUpper).toHaveProperty([
+      expect(filesNestedUpper).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/components/Admin/NewPost/NewPost.jsx',
+          '/path/to/project/web/src/components/Admin/Pages/NewPost/NewPost.jsx',
         ),
       ])
     })
 
     test('the new component correctly imports the form', async () => {
       expect(
-        filesUpper[
+        filesNestedUpper[
           path.normalize(
-            '/path/to/project/web/src/components/Admin/NewPost/NewPost.jsx',
+            '/path/to/project/web/src/components/Admin/Pages/NewPost/NewPost.jsx',
           )
         ],
-      ).toMatch(`import PostForm from 'src/components/Admin/PostForm'`)
+      ).toMatch(`import PostForm from 'src/components/Admin/Pages/PostForm'`)
     })
 
     test('creates a show component', async () => {
-      expect(filesUpper).toHaveProperty([
+      expect(filesNestedUpper).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/components/Admin/Post/Post.jsx',
+          '/path/to/project/web/src/components/Admin/Pages/Post/Post.jsx',
         ),
       ])
     })
@@ -559,14 +564,14 @@ describe('Admin/Post', () => {
       expect(
         await scaffoldHandler.routes({
           model: 'Post',
-          path: 'Admin',
+          path: 'Admin/Pages',
           nestScaffoldByModel: false,
         }),
       ).toEqual([
-        '<Route path="/admin/posts/new" page={AdminNewPostPage} name="adminNewPost" />',
-        '<Route path="/admin/posts/{id:Int}/edit" page={AdminEditPostPage} name="adminEditPost" />',
-        '<Route path="/admin/posts/{id:Int}" page={AdminPostPage} name="adminPost" />',
-        '<Route path="/admin/posts" page={AdminPostsPage} name="adminPosts" />',
+        '<Route path="/admin/pages/posts/new" page={AdminPagesNewPostPage} name="adminPagesNewPost" />',
+        '<Route path="/admin/pages/posts/{id:Int}/edit" page={AdminPagesEditPostPage} name="adminPagesEditPost" />',
+        '<Route path="/admin/pages/posts/{id:Int}" page={AdminPagesPostPage} name="adminPagesPost" />',
+        '<Route path="/admin/pages/posts" page={AdminPagesPostsPage} name="adminPagesPosts" />',
       ])
     })
 
@@ -574,14 +579,14 @@ describe('Admin/Post', () => {
       expect(
         await scaffoldHandler.routes({
           model: 'UserProfile',
-          path: 'Admin',
+          path: 'Admin/Pages',
           nestScaffoldByModel: false,
         }),
       ).toEqual([
-        '<Route path="/admin/user-profiles/new" page={AdminNewUserProfilePage} name="adminNewUserProfile" />',
-        '<Route path="/admin/user-profiles/{id:Int}/edit" page={AdminEditUserProfilePage} name="adminEditUserProfile" />',
-        '<Route path="/admin/user-profiles/{id:Int}" page={AdminUserProfilePage} name="adminUserProfile" />',
-        '<Route path="/admin/user-profiles" page={AdminUserProfilesPage} name="adminUserProfiles" />',
+        '<Route path="/admin/pages/user-profiles/new" page={AdminPagesNewUserProfilePage} name="adminPagesNewUserProfile" />',
+        '<Route path="/admin/pages/user-profiles/{id:Int}/edit" page={AdminPagesEditUserProfilePage} name="adminPagesEditUserProfile" />',
+        '<Route path="/admin/pages/user-profiles/{id:Int}" page={AdminPagesUserProfilePage} name="adminPagesUserProfile" />',
+        '<Route path="/admin/pages/user-profiles" page={AdminPagesUserProfilesPage} name="adminPagesUserProfiles" />',
       ])
     })
   })
@@ -590,7 +595,7 @@ describe('Admin/Post', () => {
     test('the GraphQL in the index query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
         model: 'UserProfile',
-        path: 'Admin',
+        path: 'Admin/Pages',
         tests: false,
         nestScaffoldByModel: false,
       })
@@ -598,7 +603,7 @@ describe('Admin/Post', () => {
       const cell =
         userProfileFiles[
           path.normalize(
-            '/path/to/project/web/src/components/Admin/UserProfilesCell/UserProfilesCell.jsx',
+            '/path/to/project/web/src/components/Admin/Pages/UserProfilesCell/UserProfilesCell.jsx',
           )
         ]
 
@@ -610,7 +615,7 @@ describe('Admin/Post', () => {
     test('the GraphQL in the show query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
         model: 'UserProfile',
-        path: 'Admin',
+        path: 'Admin/Pages',
         tests: false,
         nestScaffoldByModel: false,
       })
@@ -618,7 +623,7 @@ describe('Admin/Post', () => {
       const cell =
         userProfileFiles[
           path.normalize(
-            '/path/to/project/web/src/components/Admin/UserProfileCell/UserProfileCell.jsx',
+            '/path/to/project/web/src/components/Admin/Pages/UserProfileCell/UserProfileCell.jsx',
           )
         ]
 
@@ -630,7 +635,7 @@ describe('Admin/Post', () => {
     test('the GraphQL in the edit query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
         model: 'UserProfile',
-        path: 'Admin',
+        path: 'Admin/Pages',
         tests: false,
         nestScaffoldByModel: false,
       })
@@ -638,7 +643,7 @@ describe('Admin/Post', () => {
       const cell =
         userProfileFiles[
           path.normalize(
-            '/path/to/project/web/src/components/Admin/EditUserProfileCell/EditUserProfileCell.jsx',
+            '/path/to/project/web/src/components/Admin/Pages/EditUserProfileCell/EditUserProfileCell.jsx',
           )
         ]
 
@@ -652,14 +657,14 @@ describe('Admin/Post', () => {
     test('creates a new component with int foreign keys converted in onSave', async () => {
       const foreignKeyFiles = await scaffoldHandler.files({
         model: 'UserProfile',
-        path: 'Admin',
+        path: 'Admin/Pages',
         tests: false,
         nestScaffoldByModel: false,
       })
 
       expect(foreignKeyFiles).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/components/Admin/NewUserProfile/NewUserProfile.jsx',
+          '/path/to/project/web/src/components/Admin/Pages/NewUserProfile/NewUserProfile.jsx',
         ),
       ])
     })
@@ -667,14 +672,14 @@ describe('Admin/Post', () => {
     test('creates an edit component with int foreign keys converted in onSave', async () => {
       const foreignKeyFiles = await scaffoldHandler.files({
         model: 'UserProfile',
-        path: 'Admin',
+        path: 'Admin/Pages',
         tests: false,
         nestScaffoldByModel: false,
       })
 
       expect(foreignKeyFiles).toHaveProperty([
         path.normalize(
-          '/path/to/project/web/src/components/Admin/EditUserProfileCell/EditUserProfileCell.jsx',
+          '/path/to/project/web/src/components/Admin/Pages/EditUserProfileCell/EditUserProfileCell.jsx',
         ),
       ])
     })

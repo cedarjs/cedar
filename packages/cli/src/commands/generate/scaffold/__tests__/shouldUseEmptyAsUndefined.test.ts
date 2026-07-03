@@ -1,5 +1,5 @@
 globalThis.__dirname = __dirname
-import path from 'path'
+import path from 'node:path'
 
 import { vol, fs as memfs } from 'memfs'
 import { ufs } from 'unionfs'
@@ -15,7 +15,7 @@ import * as scaffoldHandler from '../scaffoldHandler.js'
 vi.mock('node:fs', async (importOriginal) => {
   const { wrapFsForUnionfs } =
     await import('../../../../__tests__/ufsFsProxy.js')
-  ufs.use(wrapFsForUnionfs(await importOriginal())).use(memfs)
+  ufs.use(wrapFsForUnionfs(await importOriginal<typeof import('node:fs')>())).use(memfs)
   return { ...ufs, default: { ...ufs } }
 })
 vi.mock('execa')

@@ -1,21 +1,20 @@
 globalThis.__dirname = __dirname
-
 import fs from 'node:fs'
 
 import { vol } from 'memfs'
-import { vi, beforeEach, afterEach, test, expect, describe } from 'vitest'
+import { vi, describe, beforeEach, afterEach, test, expect } from 'vitest'
 
 import '../../../../lib/test'
 
 import { getDefaultArgs } from '../../../../lib/index.js'
-import { builder } from '../../../generate/sdl/sdl.js'
-import { files } from '../../../generate/sdl/sdlHandler.js'
-import { tasks } from '../sdlHandler.js'
+import { builder } from '../../../generate/service/service.js'
+import { files } from '../../../generate/service/serviceHandler.js'
+import { tasks } from '../serviceHandler.js'
 
 vi.mock('node:fs')
 
 vi.mock('../../../../lib', async (importOriginal) => {
-  const originalLib = await importOriginal()
+  const originalLib = await importOriginal<typeof import('../../../../lib/index.js')>()
   return {
     ...originalLib,
     generateTemplate: () => '',
@@ -23,34 +22,47 @@ vi.mock('../../../../lib', async (importOriginal) => {
 })
 
 vi.mock('../../../../lib/schemaHelpers', async (importOriginal) => {
-  const originalSchemaHelpers = await importOriginal()
-  const path = require('path')
+  const originalSchemaHelpers = await importOriginal<typeof import('../../../../lib/schemaHelpers.js')>()
+  const { join } = await import('node:path')
+  const { readFileSync } = await vi.importActual<typeof import('node:fs')>('node:fs')
   return {
     ...originalSchemaHelpers,
     getSchema: () =>
-      require(path.join(globalThis.__dirname, 'fixtures', 'post.json')),
+      JSON.parse(
+        readFileSync(join(globalThis.__dirname, 'fixtures', 'post.json'), 'utf-8'),
+      ),
   }
 })
 
-describe('rw destroy sdl', () => {
+describe('rw destroy service', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'info').mockImplementation(() => {})
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+  })
+
   afterEach(() => {
     vol.reset()
     vi.spyOn(fs, 'unlinkSync').mockClear()
+    vi.mocked(console.info).mockRestore()
+    vi.mocked(console.log).mockRestore()
   })
 
   describe('for javascript files', () => {
     beforeEach(async () => {
-      vol.fromJSON(await files({ ...getDefaultArgs(builder), name: 'Post' }))
+      vol.fromJSON(await files({ ...getDefaultArgs(builder), name: 'User' }))
     })
-
-    test('destroys sdl files', async () => {
+    test('destroys service files', async () => {
       const unlinkSpy = vi.spyOn(fs, 'unlinkSync')
-      const t = tasks({ model: 'Post' })
+      const t = tasks({
+        componentName: 'service',
+        filesFn: files,
+        name: 'User',
+      })
       t.options.renderer = 'silent'
 
-      return t.tasks[0].run().then(async () => {
+      return t.run().then(async () => {
         const generatedFiles = Object.keys(
-          await files({ ...getDefaultArgs(builder), name: 'Post' }),
+          await files({ ...getDefaultArgs(builder), name: 'User' }),
         )
         expect(generatedFiles.length).toEqual(unlinkSpy.mock.calls.length)
         generatedFiles.forEach((f) => expect(unlinkSpy).toHaveBeenCalledWith(f))
@@ -64,22 +76,26 @@ describe('rw destroy sdl', () => {
         await files({
           ...getDefaultArgs(builder),
           typescript: true,
-          name: 'Post',
+          name: 'User',
         }),
       )
     })
 
-    test('destroys sdl files', async () => {
+    test('destroys service files', async () => {
       const unlinkSpy = vi.spyOn(fs, 'unlinkSync')
-      const t = tasks({ model: 'Post' })
+      const t = tasks({
+        componentName: 'service',
+        filesFn: files,
+        name: 'User',
+      })
       t.options.renderer = 'silent'
 
-      return t.tasks[0].run().then(async () => {
+      return t.run().then(async () => {
         const generatedFiles = Object.keys(
           await files({
             ...getDefaultArgs(builder),
             typescript: true,
-            name: 'Post',
+            name: 'User',
           }),
         )
         expect(generatedFiles.length).toEqual(unlinkSpy.mock.calls.length)

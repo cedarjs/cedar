@@ -23,7 +23,7 @@ const { memfs, ufs, vol } = await vi.hoisted(async () => {
 vi.mock('node:fs', async (importOriginal) => {
   const { wrapFsForUnionfs } =
     await import('../../../../__tests__/ufsFsProxy.js')
-  const originalFs = await importOriginal()
+  const originalFs = await importOriginal<typeof import('node:fs')>()
   ufs.use(wrapFsForUnionfs(originalFs)).use(memfs)
   return {
     ...ufs,
@@ -35,7 +35,7 @@ import { ensurePosixPath } from '@cedarjs/project-config'
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const path = await import('node:path')
-  const originalProjectConfig = await importOriginal()
+  const originalProjectConfig = await importOriginal<typeof import('@cedarjs/project-config')>()
   return {
     getPaths: () => {
       const BASE_PATH = '/path/to/project'
@@ -56,7 +56,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
 })
 
 vi.mock('@cedarjs/cli-helpers', async (importOriginal) => {
-  const originalCliHelpers = await importOriginal()
+  const originalCliHelpers = await importOriginal<typeof import('@cedarjs/cli-helpers')>()
 
   return {
     ...originalCliHelpers,
@@ -381,8 +381,8 @@ describe('handler', () => {
   })
 
   afterEach(() => {
-    console.info.mockRestore()
-    console.log.mockRestore()
+    vi.mocked(console.info).mockRestore()
+    vi.mocked(console.log).mockRestore()
   })
 
   test('file generation', async () => {
