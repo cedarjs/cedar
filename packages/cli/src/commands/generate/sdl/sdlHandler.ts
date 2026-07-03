@@ -1,3 +1,4 @@
+import type * as DMMF from '@prisma/dmmf'
 import ansis from 'ansis'
 import boxen from 'boxen'
 import camelcase from 'camelcase'
@@ -69,8 +70,8 @@ interface ModelSchemaField {
 
 interface ModelSchema {
   name: string
-  fields: ModelSchemaField[]
-  primaryKey?: { fields: string[] }
+  fields: readonly ModelSchemaField[]
+  primaryKey?: { fields: readonly string[] } | null
   documentation?: string
 }
 
@@ -150,10 +151,11 @@ const inputSDL = (
     .map((field) => modelFieldToSDL({ field, required, types, docs }))
 }
 
-const idInputSDL = (idType: ReturnType<typeof idType>, docs: boolean) => {
+function idInputSDL(idType: IdType, docs: boolean) {
   if (!Array.isArray(idType)) {
     return []
   }
+
   return idType.map((field) =>
     modelFieldToSDL({ field, required: true, types: {}, docs }),
   )
@@ -177,10 +179,9 @@ const updateInputSDL = (
   return inputSDL(model, false, types, docs)
 }
 
-const idType = (
-  model: ModelSchema | undefined,
-  crud?: boolean,
-): string | ModelSchemaField[] | undefined => {
+type IdType = string | readonly ModelSchemaField[] | undefined
+
+function idType(model: ModelSchema | undefined, crud?: boolean): IdType {
   if (!crud || !model) {
     return undefined
   }
@@ -199,6 +200,7 @@ const idType = (
     missingIdConsoleMessage()
     throw new Error('Failed: Could not generate SDL')
   }
+
   return idField.type
 }
 
@@ -220,20 +222,33 @@ const sdlFromSchemaModel = async (
   crud: boolean,
   docs = false,
 ) => {
-  const model = await getSchema(name)
+  const schemaResult = await getSchema(name)
 
-  // get models for referenced user-defined types
-  const types = (
-    await Promise.all(
-      model.fields
-        .filter((field) => field.kind === 'object')
-        .map(async (field) => {
-          const model = await getSchema(field.type)
-          return model
-        }),
+  if (!schemaResult || !('fields' in schemaResult)) {
+    throw new Error(
+      `No schema definition found for \`${name}\` in schema.prisma file`,
     )
-  ).reduce<Record<string, ModelSchema>>(
-    (acc, cur) => ({ ...acc, [cur.name]: cur }),
+  }
+
+  const model = schemaResult
+
+  // Resolve models for referenced user-defined types (object relation fields)
+  const resolvedTypes = await Promise.all(
+    model.fields
+      .filter((field: ModelSchemaField) => field.kind === 'object')
+      .map(async (field: ModelSchemaField) => {
+        const fieldModel = await getSchema(field.type)
+        return fieldModel && 'fields' in fieldModel ? fieldModel : undefined
+      }),
+  )
+
+  const types = resolvedTypes.reduce<Record<string, ModelSchema>>(
+    (acc, cur) => {
+      if (!cur) {
+        return acc
+      }
+      return { ...acc, [cur.name]: cur }
+    },
     {},
   )
 
@@ -241,13 +256,13 @@ const sdlFromSchemaModel = async (
   const enums = (
     await Promise.all(
       model.fields
-        .filter((field) => field.kind === 'enum')
-        .map(async (field) => {
+        .filter((field: ModelSchemaField) => field.kind === 'enum')
+        .map(async (field: ModelSchemaField) => {
           const enumDef = await getEnum(field.type)
           return enumDef
         }),
     )
-  ).reduce((acc: unknown[], curr) => acc.concat(curr), [])
+  ).reduce((acc: DMMF.DatamodelEnum[], curr) => acc.concat(curr), [])
 
   const modelName = model.name
   const modelDescription =
