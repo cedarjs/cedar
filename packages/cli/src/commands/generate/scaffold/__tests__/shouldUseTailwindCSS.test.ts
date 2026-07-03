@@ -1,4 +1,4 @@
-globalThis.__dirname = __dirname
+globalThis.__dirname = import.meta.dirname
 
 import fs from 'node:fs'
 
@@ -9,7 +9,7 @@ import { shouldUseTailwindCSS } from '../scaffoldHandler.js'
 
 vi.mock('node:fs')
 
-let existsSyncSpy = vi.spyOn(fs, 'existsSync')
+const existsSyncSpy = vi.spyOn(fs, 'existsSync')
 afterEach(() => {
   existsSyncSpy.mockClear()
 })

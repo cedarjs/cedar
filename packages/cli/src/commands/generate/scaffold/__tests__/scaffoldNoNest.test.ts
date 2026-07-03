@@ -1,5 +1,7 @@
-globalThis.__dirname = __dirname
-import path from 'path'
+globalThis.__dirname = import.meta.dirname
+
+import type * as NodeFs from 'node:fs'
+import path from 'node:path'
 
 import { vol, fs as memfs } from 'memfs'
 import { ufs } from 'unionfs'
@@ -13,21 +15,24 @@ import { getYargsDefaults } from '../../yargsCommandHelpers.js'
 import * as scaffoldHandler from '../scaffoldHandler.js'
 
 vi.mock('node:fs', async (importOriginal) => {
-  const { wrapFsForUnionfs } =
+  const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
     await import('../../../../__tests__/ufsFsProxy.js')
-  ufs.use(wrapFsForUnionfs(await importOriginal())).use(memfs)
+  ufs
+    .use(wrapFsForUnionfs(await importOriginal<typeof NodeFs>()))
+    .use(wrapMemfsForUnionfs(memfs))
   return { ...ufs, default: { ...ufs } }
 })
 vi.mock('execa')
 
 describe('in javascript (default) mode', () => {
-  let files
+  let files: Record<string, string>
 
   beforeAll(async () => {
     vol.fromJSON({ 'redwood.toml': '' }, '/')
 
     files = await scaffoldHandler.files({
       ...getDefaultArgs(getYargsDefaults()),
+      docs: false,
       model: 'Post',
       tests: true,
       nestScaffoldByModel: false,
@@ -221,6 +226,7 @@ describe('in javascript (default) mode', () => {
 
   test('the GraphQL in the index query does not contain object types', async () => {
     const userProfileFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       tests: false,
       nestScaffoldByModel: false,
@@ -231,13 +237,14 @@ describe('in javascript (default) mode', () => {
           '/path/to/project/web/src/components/UserProfilesCell/UserProfilesCell.jsx',
         )
       ]
-    const query = cell.match(/(userProfiles.*?\})/s)[1]
+    const query = cell.match(/(userProfiles.*?\})/s)?.[1]
 
     expect(query).not.toMatch(/^\s+user$/m)
   })
 
   test('the GraphQL in the show query does not contain object types', async () => {
     const userProfileFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       tests: false,
       nestScaffoldByModel: false,
@@ -248,13 +255,14 @@ describe('in javascript (default) mode', () => {
           '/path/to/project/web/src/components/UserProfileCell/UserProfileCell.jsx',
         )
       ]
-    const query = cell.match(/(userProfile.*?\})/s)[1]
+    const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
     expect(query).not.toMatch(/^\s+user$/m)
   })
 
   test('the GraphQL in the edit query does not contain object types', async () => {
     const userProfileFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       tests: false,
       nestScaffoldByModel: false,
@@ -265,7 +273,7 @@ describe('in javascript (default) mode', () => {
           '/path/to/project/web/src/components/EditUserProfileCell/EditUserProfileCell.jsx',
         )
       ]
-    const query = cell.match(/(userProfile.*?\})/s)[1]
+    const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
     expect(query).not.toMatch(/^\s+user$/m)
   })
@@ -274,6 +282,7 @@ describe('in javascript (default) mode', () => {
 
   test('creates a new component with int foreign keys converted in onSave', async () => {
     const foreignKeyFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       tests: false,
       nestScaffoldByModel: false,
@@ -290,6 +299,7 @@ describe('in javascript (default) mode', () => {
 
   test('creates an edit component with int foreign keys converted in onSave', async () => {
     const foreignKeyFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       tests: false,
       nestScaffoldByModel: false,
@@ -306,11 +316,12 @@ describe('in javascript (default) mode', () => {
 })
 
 describe('in typescript mode', () => {
-  let tsFiles
+  let tsFiles: Record<string, string>
 
   beforeAll(async () => {
     tsFiles = await scaffoldHandler.files({
       ...getDefaultArgs(getYargsDefaults()),
+      docs: false,
       model: 'Post',
       typescript: true,
       tests: true,
@@ -506,6 +517,7 @@ describe('in typescript mode', () => {
 
   test('the GraphQL in the index query does not contain object types', async () => {
     const userProfileFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       tests: false,
       nestScaffoldByModel: false,
@@ -516,13 +528,14 @@ describe('in typescript mode', () => {
           '/path/to/project/web/src/components/UserProfilesCell/UserProfilesCell.jsx',
         )
       ]
-    const query = cell.match(/(userProfiles.*?\})/s)[1]
+    const query = cell.match(/(userProfiles.*?\})/s)?.[1]
 
     expect(query).not.toMatch(/^\s+user$/m)
   })
 
   test('the GraphQL in the show query does not contain object types', async () => {
     const userProfileFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       tests: false,
       nestScaffoldByModel: false,
@@ -533,13 +546,14 @@ describe('in typescript mode', () => {
           '/path/to/project/web/src/components/UserProfileCell/UserProfileCell.jsx',
         )
       ]
-    const query = cell.match(/(userProfile.*?\})/s)[1]
+    const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
     expect(query).not.toMatch(/^\s+user$/m)
   })
 
   test('the GraphQL in the edit query does not contain object types', async () => {
     const userProfileFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       typescript: true,
       tests: false,
@@ -551,7 +565,7 @@ describe('in typescript mode', () => {
           '/path/to/project/web/src/components/EditUserProfileCell/EditUserProfileCell.tsx',
         )
       ]
-    const query = cell.match(/(userProfile.*?\})/s)[1]
+    const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
     expect(query).not.toMatch(/^\s+user$/m)
   })
@@ -560,6 +574,7 @@ describe('in typescript mode', () => {
 
   test('creates a new component with int foreign keys converted in onSave', async () => {
     const foreignKeyFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       typescript: true,
       tests: false,
@@ -577,6 +592,7 @@ describe('in typescript mode', () => {
 
   test('creates an edit component with int foreign keys converted in onSave', async () => {
     const foreignKeyFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       typescript: true,
       tests: false,

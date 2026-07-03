@@ -56,26 +56,22 @@ vi.mock('../../../../lib/index.js', async (importOriginal) => {
 })
 
 import fs from 'node:fs'
+import type * as NodeFs from 'node:fs'
 import path from 'node:path'
 
 import { dedent } from 'ts-dedent'
 import { vi, describe, it, expect, afterEach } from 'vitest'
 
-// @ts-expect-error - No types for JS files
 import type * as LibIndex from '../../../../lib/index.js'
 // TODO: Separate test file for filesTask.js
-// @ts-expect-error - No types for JS files
 import * as filesTask from '../filesTask.js'
-// @ts-expect-error - No types for JS files
 import * as packageHandler from '../packageHandler.js'
 
 vi.mock('node:fs', async (importOriginal) => {
-  const { wrapFsForUnionfs } = await import(
-    // @ts-expect-error - No types for JS files
-    '../../../../__tests__/ufsFsProxy.js'
-  )
-  const originalFs = await importOriginal()
-  ufs.use(wrapFsForUnionfs(originalFs)).use(memfs as any)
+  const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
+    await import('../../../../__tests__/ufsFsProxy.js')
+  const originalFs = await importOriginal<typeof NodeFs>()
+  ufs.use(wrapFsForUnionfs(originalFs)).use(wrapMemfsForUnionfs(memfs))
 
   return {
     ...ufs,
@@ -95,13 +91,16 @@ describe('packageHandler', () => {
   describe('handler', () => {
     it('throws on package name with two slashes', async () => {
       await expect(() =>
-        packageHandler.handler({ name: 'package//name' }),
+        packageHandler.handler({ name: 'package//name', force: false }),
       ).rejects.toThrowError(
         'Invalid package name "package//name". Package names can have at most one slash.',
       )
 
       await expect(() =>
-        packageHandler.handler({ name: '@test-org/package/name' }),
+        packageHandler.handler({
+          name: '@test-org/package/name',
+          force: false,
+        }),
       ).rejects.toThrowError(
         'Invalid package name "@test-org/package/name". Package names can have at most one slash.',
       )
@@ -694,7 +693,7 @@ describe('packageHandler', () => {
 
       await packageHandler
         .updateWorkspaceTsconfigReferences({ skip: () => {} }, 'newpkg', 'api')
-        .run()
+        ?.run()
 
       const updated = JSON.parse(fs.readFileSync(tsconfigPath, 'utf8'))
 
@@ -727,7 +726,7 @@ describe('packageHandler', () => {
 
       await packageHandler
         .updateWorkspaceTsconfigReferences({ skip: () => {} }, 'newpkg', 'api')
-        .run()
+        ?.run()
 
       const updatedText = await fs.promises.readFile(tsconfigPath, 'utf8')
       const expectedPath = path
@@ -768,7 +767,7 @@ describe('packageHandler', () => {
 
       await packageHandler
         .updateWorkspaceTsconfigReferences({ skip: () => {} }, 'newpkg', 'api')
-        .run()
+        ?.run()
 
       const after = fs.readFileSync(tsconfigPath, 'utf8')
       expect(after).toEqual(before)
@@ -794,7 +793,7 @@ describe('packageHandler', () => {
 
       await packageHandler
         .updateWorkspaceTsconfigReferences({ skip: () => {} }, 'newpkg', 'api')
-        .run()
+        ?.run()
 
       const updatedText = fs.readFileSync(tsconfigPath, 'utf8')
       const expectedPath = path
@@ -831,7 +830,7 @@ describe('packageHandler', () => {
 
       await packageHandler
         .updateWorkspaceTsconfigReferences({ skip: () => {} }, 'newpkg', 'api')
-        .run()
+        ?.run()
 
       const updatedText = fs.readFileSync(scriptsTsconfigPath, 'utf8')
       const expectedPath = path
@@ -865,7 +864,7 @@ describe('packageHandler', () => {
 
       await packageHandler
         .updateWorkspaceTsconfigReferences({ skip: () => {} }, 'newpkg', 'api')
-        .run()
+        ?.run()
 
       const updated = JSON.parse(fs.readFileSync(scriptsTsconfigPath, 'utf8'))
       const expectedPath = path
@@ -910,7 +909,7 @@ describe('packageHandler', () => {
 
       await packageHandler
         .updateWorkspaceTsconfigReferences({ skip: () => {} }, 'newpkg', 'api')
-        .run()
+        ?.run()
 
       const after = fs.readFileSync(scriptsTsconfigPath, 'utf8')
       expect(after).toEqual(before)

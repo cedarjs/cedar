@@ -1,5 +1,7 @@
 globalThis.__dirname = __dirname
-import path from 'path'
+
+import type * as NodeFS from 'node:fs'
+import path from 'node:path'
 
 import { vol, fs as memfs } from 'memfs'
 import { ufs } from 'unionfs'
@@ -13,16 +15,18 @@ import { getYargsDefaults } from '../../yargsCommandHelpers.js'
 import * as scaffoldHandler from '../scaffoldHandler.js'
 
 vi.mock('node:fs', async (importOriginal) => {
-  const { wrapFsForUnionfs } =
+  const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
     await import('../../../../__tests__/ufsFsProxy.js')
-  ufs.use(wrapFsForUnionfs(await importOriginal())).use(memfs)
+  ufs
+    .use(wrapFsForUnionfs(await importOriginal<typeof NodeFS>()))
+    .use(wrapMemfsForUnionfs(memfs))
   return { ...ufs, default: { ...ufs } }
 })
 vi.mock('execa')
 
 describe('editable columns', () => {
-  let files
-  let form
+  let files: Record<string, string>
+  let form: string
 
   beforeAll(async () => {
     vol.fromJSON({ 'redwood.toml': '' }, '/')
@@ -32,6 +36,7 @@ describe('editable columns', () => {
 
     files = await scaffoldHandler.files({
       ...defaultCliArgs,
+      docs: false,
       model: 'ExcludeDefault',
       tests: true,
       nestScaffoldByModel: true,

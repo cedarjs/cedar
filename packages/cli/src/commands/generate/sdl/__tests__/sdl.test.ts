@@ -1,5 +1,6 @@
-globalThis.__dirname = __dirname
+globalThis.__dirname = import.meta.dirname
 
+import type * as NodeFs from 'node:fs'
 import path from 'node:path'
 
 import { vol, fs as memfs } from 'memfs'
@@ -11,9 +12,10 @@ import { vi, describe, test, expect, beforeAll, afterEach } from 'vitest'
 import '../../../../lib/test'
 
 vi.mock('node:fs', async (importOriginal) => {
-  const { wrapFsForUnionfs } =
+  const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
     await import('../../../../__tests__/ufsFsProxy.js')
-  ufs.use(wrapFsForUnionfs(await importOriginal())).use(memfs)
+  const fs = await importOriginal<typeof NodeFs>()
+  ufs.use(wrapFsForUnionfs(fs)).use(wrapMemfsForUnionfs(memfs))
 
   return { ...ufs, default: ufs }
 })
@@ -37,8 +39,8 @@ beforeAll(() => {
   vol.fromJSON({ 'redwood.toml': '' }, '/')
 })
 
-const extensionForBaseArgs = (baseArgs) =>
-  baseArgs && baseArgs.typescript ? 'ts' : 'js'
+const extensionForBaseArgs = (baseArgs: Record<string, unknown>) =>
+  baseArgs?.typescript ? 'ts' : 'js'
 
 const itReturnsExactlyFourFiles = (baseArgs = {}) => {
   test('returns exactly 4 files', async () => {
@@ -267,7 +269,7 @@ const itCreatesAnSslFileForModelWithOnlyIdAndRelation = (baseArgs = {}) => {
 
 describe('without graphql documentations', () => {
   describe('in javascript mode', () => {
-    const baseArgs = { ...getDefaultArgs(sdl.getDefaults()), tests: true }
+    const baseArgs = { ...getDefaultArgs(sdl.getDefaultOptions()), tests: true }
 
     itReturnsExactlyFourFiles(baseArgs)
     itCreatesAService(baseArgs)
@@ -283,7 +285,7 @@ describe('without graphql documentations', () => {
 
   describe('in typescript mode', () => {
     const baseArgs = {
-      ...getDefaultArgs(sdl.getDefaults()),
+      ...getDefaultArgs(sdl.getDefaultOptions()),
       typescript: true,
       tests: true,
     }
@@ -304,7 +306,7 @@ describe('without graphql documentations', () => {
 describe('with graphql documentations', () => {
   describe('in javascript mode', () => {
     const baseArgs = {
-      ...getDefaultArgs(sdl.getDefaults()),
+      ...getDefaultArgs(sdl.getDefaultOptions()),
       tests: true,
       docs: true,
     }
@@ -322,7 +324,7 @@ describe('with graphql documentations', () => {
 
   describe('in typescript mode', () => {
     const baseArgs = {
-      ...getDefaultArgs(sdl.getDefaults()),
+      ...getDefaultArgs(sdl.getDefaultOptions()),
       typescript: true,
       tests: true,
       docs: true,
@@ -341,7 +343,7 @@ describe('with graphql documentations', () => {
 })
 
 describe('handler', () => {
-  const canBeCalledWithGivenModelName = (letterCase, model) => {
+  const canBeCalledWithGivenModelName = (letterCase: string, model: string) => {
     test(`can be called with ${letterCase} model name`, async () => {
       const spy = vi.spyOn(fs, 'writeFileSync')
 
@@ -359,7 +361,7 @@ describe('handler', () => {
         const testOutput = {
           // Because windows paths are different, we need to normalize before
           // snapshotting
-          filePath: ensurePosixPath(calls[0]),
+          filePath: ensurePosixPath(String(calls[0])),
           fileContent: calls[1],
         }
 
@@ -373,8 +375,8 @@ describe('handler', () => {
   canBeCalledWithGivenModelName('camelCase', 'user')
   canBeCalledWithGivenModelName('PascalCase', 'User')
 
-  prompts.inject('CustomDatums')
+  prompts.inject(['CustomDatums'])
   canBeCalledWithGivenModelName('camelCase', 'customData')
-  prompts.inject('CustomDatums')
+  prompts.inject(['CustomDatums'])
   canBeCalledWithGivenModelName('PascalCase', 'CustomData')
 })

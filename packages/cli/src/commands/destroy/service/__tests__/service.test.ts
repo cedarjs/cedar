@@ -1,5 +1,7 @@
 globalThis.__dirname = __dirname
+
 import fs from 'node:fs'
+import type * as NodeFS from 'node:fs'
 
 import { vol } from 'memfs'
 import { vi, describe, beforeEach, afterEach, test, expect } from 'vitest'
@@ -7,14 +9,16 @@ import { vi, describe, beforeEach, afterEach, test, expect } from 'vitest'
 import '../../../../lib/test'
 
 import { getDefaultArgs } from '../../../../lib/index.js'
-import { builder } from '../../../generate/service/service.js'
+import type * as LibIndex from '../../../../lib/index.js'
+import type * as SchemaHelpers from '../../../../lib/schemaHelpers.js'
+import { getDefaultOptions } from '../../../generate/service/service.js'
 import { files } from '../../../generate/service/serviceHandler.js'
 import { tasks } from '../serviceHandler.js'
 
 vi.mock('node:fs')
 
 vi.mock('../../../../lib', async (importOriginal) => {
-  const originalLib = await importOriginal()
+  const originalLib = await importOriginal<typeof LibIndex>()
   return {
     ...originalLib,
     generateTemplate: () => '',
@@ -22,12 +26,18 @@ vi.mock('../../../../lib', async (importOriginal) => {
 })
 
 vi.mock('../../../../lib/schemaHelpers', async (importOriginal) => {
-  const originalSchemaHelpers = await importOriginal()
-  const path = require('path')
+  const originalSchemaHelpers = await importOriginal<typeof SchemaHelpers>()
+  const { join } = await import('node:path')
+  const { readFileSync } = await vi.importActual<typeof NodeFS>('node:fs')
   return {
     ...originalSchemaHelpers,
     getSchema: () =>
-      require(path.join(globalThis.__dirname, 'fixtures', 'post.json')),
+      JSON.parse(
+        readFileSync(
+          join(import.meta.dirname, 'fixtures', 'post.json'),
+          'utf-8',
+        ),
+      ),
   }
 })
 
@@ -40,13 +50,15 @@ describe('rw destroy service', () => {
   afterEach(() => {
     vol.reset()
     vi.spyOn(fs, 'unlinkSync').mockClear()
-    console.info.mockRestore()
-    console.log.mockRestore()
+    vi.mocked(console.info).mockRestore()
+    vi.mocked(console.log).mockRestore()
   })
 
   describe('for javascript files', () => {
     beforeEach(async () => {
-      vol.fromJSON(await files({ ...getDefaultArgs(builder), name: 'User' }))
+      vol.fromJSON(
+        await files({ ...getDefaultArgs(getDefaultOptions()), name: 'User' }),
+      )
     })
     test('destroys service files', async () => {
       const unlinkSpy = vi.spyOn(fs, 'unlinkSync')
@@ -59,7 +71,7 @@ describe('rw destroy service', () => {
 
       return t.run().then(async () => {
         const generatedFiles = Object.keys(
-          await files({ ...getDefaultArgs(builder), name: 'User' }),
+          await files({ ...getDefaultArgs(getDefaultOptions()), name: 'User' }),
         )
         expect(generatedFiles.length).toEqual(unlinkSpy.mock.calls.length)
         generatedFiles.forEach((f) => expect(unlinkSpy).toHaveBeenCalledWith(f))
@@ -71,7 +83,7 @@ describe('rw destroy service', () => {
     beforeEach(async () => {
       vol.fromJSON(
         await files({
-          ...getDefaultArgs(builder),
+          ...getDefaultArgs(getDefaultOptions()),
           typescript: true,
           name: 'User',
         }),
@@ -90,7 +102,7 @@ describe('rw destroy service', () => {
       return t.run().then(async () => {
         const generatedFiles = Object.keys(
           await files({
-            ...getDefaultArgs(builder),
+            ...getDefaultArgs(getDefaultOptions()),
             typescript: true,
             name: 'User',
           }),
