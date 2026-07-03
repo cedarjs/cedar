@@ -43,7 +43,9 @@ const runCedarBabelTransformsPlugin = {
   setup(build: PluginBuild) {
     const cedarConfig = getConfig()
     build.onLoad({ filter: /\.(js|ts|tsx|jsx)$/ }, async (args) => {
+      const fileContents = await fs.promises.readFile(args.path, 'utf-8')
       const transformedCode = await transformWithBabel(
+        fileContents,
         args.path,
         getApiSideBabelPlugins({
           openTelemetry:
@@ -69,7 +71,8 @@ function createCedarViteApiPlugin(): Plugin {
 
   return {
     name: 'cedar-vite-api-babel-transform',
-    async transform(_code, id) {
+    enforce: 'pre',
+    async transform(code, id) {
       if (!/\.(js|ts|tsx|jsx)$/.test(id)) {
         return null
       }
@@ -84,6 +87,7 @@ function createCedarViteApiPlugin(): Plugin {
       }
 
       const transformedCode = await transformWithBabel(
+        code,
         id,
         getApiSideBabelPlugins({
           openTelemetry:
@@ -91,6 +95,7 @@ function createCedarViteApiPlugin(): Plugin {
             cedarConfig.experimental.opentelemetry.wrapApi,
           projectIsEsm: isEsm,
         }),
+        true,
       )
 
       if (transformedCode?.code) {

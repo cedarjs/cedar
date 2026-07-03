@@ -33,7 +33,8 @@ export const prebuildApiFiles = async (srcFiles: string[]) => {
         .join(rwjsPaths.generated.prebuild, relativePathFromSrc)
         .replace(/\.(ts)$/, '.js')
 
-      const result = await transformWithBabel(srcPath, plugins)
+      const fileContents = fs.readFileSync(srcPath, 'utf-8')
+      const result = await transformWithBabel(fileContents, srcPath, plugins)
       if (!result?.code) {
         throw new Error(`Could not prebuild ${srcPath}`)
       }

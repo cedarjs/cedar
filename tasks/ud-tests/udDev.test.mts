@@ -428,23 +428,48 @@ describe('cedar dev --ud --debug-brk', () => {
     const cdp = await createCdpSession(inspectorUrl, { timeout: 10_000 })
 
     try {
-      // 5. Enable the debugger and unblock waitForDebugger().
-      //    Runtime.runIfWaitingForDebugger is what the inspector waits for —
-      //    it tells V8 to continue execution.  This must be sent after
-      //    Debugger.enable so the client can receive events immediately.
+      // 5. Enable the debugger so we can receive pause/resume events.
       await cdp.send('Debugger.enable')
+
+      // 6. Set up a one-shot listener for the Debugger.paused event.
+      //    After waitForDebugger() unblocks, the process creates an
+      //    inspector.Session, posts Debugger.pause, and then fires
+      //    Runtime.evaluate with a trivial expression to force V8 to
+      //    check the pause flag.  This emits Debugger.paused to all
+      //    connected sessions.
+      let pausedResolve!: () => void
+      const pausedPromise = new Promise<void>((resolve) => {
+        pausedResolve = resolve
+      })
+      const unsubPause = cdp.on('Debugger.paused', () => {
+        unsubPause()
+        pausedResolve()
+      })
+
+      // 7. Unblock waitForDebugger().  The process will then:
+      //     a) Create a Session, post Debugger.enable + Debugger.pause
+      //     b) Post Runtime.evaluate to trigger the pause check
+      //     c) Emit Debugger.paused to all sessions
       await cdp.send('Runtime.runIfWaitingForDebugger')
 
-      // 6. The server should now become available.
+      // 8. Wait for the pause to take effect.
+      await pausedPromise
+
+      // 9. Resume execution — the internal Session receives
+      //    Debugger.resumed and the process continues to
+      //    startApiDevMiddleware().
+      await cdp.send('Debugger.resume')
+
+      // 10. The server should now become available.
       await pollForReady(`${BASE_URL}/`)
 
-      // 7. Verify basic CDP messaging works.
+      // 11. Verify basic CDP messaging works.
       const evalResult = (await cdp.send('Runtime.evaluate', {
         expression: '1 + 1',
       })) as { result?: { value?: unknown } }
       expect(evalResult.result?.value).toBe(2)
 
-      // 8. Verify the API function works.
+      // 12. Verify the API function works.
       const helloRes = await fetchJson(`${BASE_URL}/.api/functions/hello`)
       expect(helloRes.status).toEqual(200)
       expect(helloRes.body).toEqual({ data: 'hello from cedar' })

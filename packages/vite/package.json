@@ -112,6 +112,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.3",
     "@hyrious/esbuild-plugin-commonjs": "0.2.6",
+    "@jridgewell/trace-mapping": "0.3.31",
     "@types/aws-lambda": "8.10.162",
     "@types/busboy": "^1",
     "@types/express": "4",

@@ -85,6 +85,10 @@ See [debugging/taste.md](debugging/taste.md)
 
 - Never use `pkill` or `killall` to mass-kill processes by name (e.g., `pkill -9 node`). Only kill specific PIDs that you know are safe to terminate. Mass-killing can destroy the user's browser sessions, chat apps, and other work. Confidence: 0.85
 
+# Testing
+
+- When testing source map correctness, decode the VLQ mappings to verify output lines map to the correct original source lines. Structural checks (existence of `mappings`, counting semicolons) are insufficient on their own — the key validation is that a position in the generated output actually maps back to the expected source line, not just that some mapping exists. Confidence: 0.65
+
 # Code Design
 
 - Do not add complexity to production code just to accommodate test scenarios. If a test requires extra production logic (e.g., absolute path handling in `isNewFile()`), prefer adapting the test instead — or removing the test — rather than adding branching logic to production code. Production code should reflect real usage, not test environment workarounds. Confidence: 0.70
