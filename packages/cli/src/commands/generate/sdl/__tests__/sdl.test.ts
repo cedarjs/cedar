@@ -267,7 +267,7 @@ const itCreatesAnSslFileForModelWithOnlyIdAndRelation = (baseArgs = {}) => {
 
 describe('without graphql documentations', () => {
   describe('in javascript mode', () => {
-    const baseArgs = { ...getDefaultArgs(sdl.getDefaults()), tests: true }
+    const baseArgs = { ...getDefaultArgs(sdl.getDefaultOptions()), tests: true }
 
     itReturnsExactlyFourFiles(baseArgs)
     itCreatesAService(baseArgs)
@@ -283,7 +283,7 @@ describe('without graphql documentations', () => {
 
   describe('in typescript mode', () => {
     const baseArgs = {
-      ...getDefaultArgs(sdl.getDefaults()),
+      ...getDefaultArgs(sdl.getDefaultOptions()),
       typescript: true,
       tests: true,
     }
@@ -304,7 +304,7 @@ describe('without graphql documentations', () => {
 describe('with graphql documentations', () => {
   describe('in javascript mode', () => {
     const baseArgs = {
-      ...getDefaultArgs(sdl.getDefaults()),
+      ...getDefaultArgs(sdl.getDefaultOptions()),
       tests: true,
       docs: true,
     }
@@ -322,7 +322,7 @@ describe('with graphql documentations', () => {
 
   describe('in typescript mode', () => {
     const baseArgs = {
-      ...getDefaultArgs(sdl.getDefaults()),
+      ...getDefaultArgs(sdl.getDefaultOptions()),
       typescript: true,
       tests: true,
       docs: true,

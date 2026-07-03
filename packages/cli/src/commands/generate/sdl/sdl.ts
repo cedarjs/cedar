@@ -3,7 +3,7 @@ import type { Argv, Options } from 'yargs'
 
 import { createHandler, getYargsDefaults } from '../yargsCommandHelpers.js'
 
-export const getDefaults = (): Record<string, Options> => {
+export const getDefaultOptions = (): Record<string, Options> => {
   return {
     ...getYargsDefaults(),
     crud: {
@@ -46,7 +46,7 @@ export const builder = (yargs: Argv) => {
     )
 
   // Merge default options in
-  Object.entries(getDefaults()).forEach(([option, config]) => {
+  Object.entries(getDefaultOptions()).forEach(([option, config]) => {
     yargs.option(option, config)
   })
 

@@ -8,8 +8,8 @@ import {
   getYargsDefaults,
 } from '../yargsCommandHelpers.js'
 
-export const defaults = () => {
-  const defaults = {
+export const getDefaultOptions = () => {
+  return {
     ...getYargsDefaults(),
     tests: {
       description: 'Generate test files',
@@ -21,7 +21,6 @@ export const defaults = () => {
       type: 'boolean',
     },
   }
-  return defaults
 }
 
 export const command = createCommand('service')
@@ -43,7 +42,7 @@ export const builder = (yargs: Argv) => {
         'https://cedarjs.com/docs/cli-commands#generate-service',
       )}`,
     )
-  Object.entries(defaults()).forEach(([option, config]) => {
+  Object.entries(getDefaultOptions()).forEach(([option, config]) => {
     yargs.option(option, config)
   })
 

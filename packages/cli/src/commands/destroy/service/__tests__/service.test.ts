@@ -11,7 +11,7 @@ import '../../../../lib/test'
 import { getDefaultArgs } from '../../../../lib/index.js'
 import type * as LibIndex from '../../../../lib/index.js'
 import type * as SchemaHelpers from '../../../../lib/schemaHelpers.js'
-import { builder } from '../../../generate/service/service.js'
+import { getDefaultOptions } from '../../../generate/service/service.js'
 import { files } from '../../../generate/service/serviceHandler.js'
 import { tasks } from '../serviceHandler.js'
 
@@ -56,7 +56,9 @@ describe('rw destroy service', () => {
 
   describe('for javascript files', () => {
     beforeEach(async () => {
-      vol.fromJSON(await files({ ...getDefaultArgs(builder), name: 'User' }))
+      vol.fromJSON(
+        await files({ ...getDefaultArgs(getDefaultOptions()), name: 'User' }),
+      )
     })
     test('destroys service files', async () => {
       const unlinkSpy = vi.spyOn(fs, 'unlinkSync')
@@ -69,7 +71,7 @@ describe('rw destroy service', () => {
 
       return t.run().then(async () => {
         const generatedFiles = Object.keys(
-          await files({ ...getDefaultArgs(builder), name: 'User' }),
+          await files({ ...getDefaultArgs(getDefaultOptions()), name: 'User' }),
         )
         expect(generatedFiles.length).toEqual(unlinkSpy.mock.calls.length)
         generatedFiles.forEach((f) => expect(unlinkSpy).toHaveBeenCalledWith(f))
@@ -81,7 +83,7 @@ describe('rw destroy service', () => {
     beforeEach(async () => {
       vol.fromJSON(
         await files({
-          ...getDefaultArgs(builder),
+          ...getDefaultArgs(getDefaultOptions()),
           typescript: true,
           name: 'User',
         }),
@@ -100,7 +102,7 @@ describe('rw destroy service', () => {
       return t.run().then(async () => {
         const generatedFiles = Object.keys(
           await files({
-            ...getDefaultArgs(builder),
+            ...getDefaultArgs(getDefaultOptions()),
             typescript: true,
             name: 'User',
           }),

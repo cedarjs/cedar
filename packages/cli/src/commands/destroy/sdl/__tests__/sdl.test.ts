@@ -11,7 +11,7 @@ import '../../../../lib/test'
 import { getDefaultArgs } from '../../../../lib/index.js'
 import type * as LibIndex from '../../../../lib/index.js'
 import type * as SchemaHelpers from '../../../../lib/schemaHelpers.js'
-import { builder } from '../../../generate/sdl/sdl.js'
+import { getDefaultOptions } from '../../../generate/sdl/sdl.js'
 import { files } from '../../../generate/sdl/sdlHandler.js'
 import { tasks } from '../sdlHandler.js'
 
@@ -49,7 +49,9 @@ describe('rw destroy sdl', () => {
 
   describe('for javascript files', () => {
     beforeEach(async () => {
-      vol.fromJSON(await files({ ...getDefaultArgs(builder), name: 'Post' }))
+      vol.fromJSON(
+        await files({ ...getDefaultArgs(getDefaultOptions()), name: 'Post' }),
+      )
     })
 
     test('destroys sdl files', async () => {
@@ -59,7 +61,7 @@ describe('rw destroy sdl', () => {
 
       return t.tasks[0].run().then(async () => {
         const generatedFiles = Object.keys(
-          await files({ ...getDefaultArgs(builder), name: 'Post' }),
+          await files({ ...getDefaultArgs(getDefaultOptions()), name: 'Post' }),
         )
         expect(generatedFiles.length).toEqual(unlinkSpy.mock.calls.length)
         generatedFiles.forEach((f) => expect(unlinkSpy).toHaveBeenCalledWith(f))
@@ -71,7 +73,7 @@ describe('rw destroy sdl', () => {
     beforeEach(async () => {
       vol.fromJSON(
         await files({
-          ...getDefaultArgs(builder),
+          ...getDefaultArgs(getDefaultOptions()),
           typescript: true,
           name: 'Post',
         }),
@@ -86,7 +88,7 @@ describe('rw destroy sdl', () => {
       return t.tasks[0].run().then(async () => {
         const generatedFiles = Object.keys(
           await files({
-            ...getDefaultArgs(builder),
+            ...getDefaultArgs(getDefaultOptions()),
             typescript: true,
             name: 'Post',
           }),
