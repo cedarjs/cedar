@@ -30,6 +30,7 @@ describe('admin/pages/post', () => {
 
   beforeAll(async () => {
     filesNestedLower = await scaffoldHandler.files({
+      docs: false,
       model: 'Post',
       path: 'admin/pages',
       tests: true,
@@ -274,6 +275,7 @@ describe('admin/pages/post', () => {
   describe('GraphQL queries', () => {
     test('the GraphQL in the index query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'admin/pages',
         tests: false,
@@ -294,6 +296,7 @@ describe('admin/pages/post', () => {
 
     test('the GraphQL in the show query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'admin/pages',
         tests: false,
@@ -314,6 +317,7 @@ describe('admin/pages/post', () => {
 
     test('the GraphQL in the edit query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'admin/pages',
         tests: false,
@@ -336,6 +340,7 @@ describe('admin/pages/post', () => {
   describe('Foreign key casting', () => {
     test('creates a new component with int foreign keys converted in onSave', async () => {
       const foreignKeyFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'admin/pages',
         tests: false,
@@ -351,6 +356,7 @@ describe('admin/pages/post', () => {
 
     test('creates an edit component with int foreign keys converted in onSave', async () => {
       const foreignKeyFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'admin/pages',
         tests: false,
@@ -371,6 +377,7 @@ describe('Admin/Pages/Post/Post', () => {
 
   beforeAll(async () => {
     filesNestedUpper = await scaffoldHandler.files({
+      docs: false,
       model: 'Post',
       path: 'Admin/Pages',
       tests: true,
@@ -615,6 +622,7 @@ describe('Admin/Pages/Post/Post', () => {
   describe('GraphQL queries', () => {
     test('the GraphQL in the index query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'Admin/Pages',
         tests: false,
@@ -635,6 +643,7 @@ describe('Admin/Pages/Post/Post', () => {
 
     test('the GraphQL in the show query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'Admin/Pages',
         tests: false,
@@ -655,6 +664,7 @@ describe('Admin/Pages/Post/Post', () => {
 
     test('the GraphQL in the edit query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'Admin/Pages',
         tests: false,
@@ -677,6 +687,7 @@ describe('Admin/Pages/Post/Post', () => {
   describe('Foreign key casting', () => {
     test('creates a new component with int foreign keys converted in onSave', async () => {
       const foreignKeyFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'Admin/Pages',
         tests: false,
@@ -692,6 +703,7 @@ describe('Admin/Pages/Post/Post', () => {
 
     test('creates an edit component with int foreign keys converted in onSave', async () => {
       const foreignKeyFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'Admin/Pages',
         tests: false,

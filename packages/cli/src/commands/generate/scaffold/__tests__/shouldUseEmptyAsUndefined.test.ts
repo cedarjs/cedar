@@ -32,6 +32,7 @@ describe('relational form field', () => {
 
     const files = await scaffoldHandler.files({
       ...getDefaultArgs(getYargsDefaults()),
+      docs: false,
       model: 'Tag',
       tests: true,
       nestScaffoldByModel: true,

@@ -25,8 +25,8 @@ vi.mock('node:fs', async (importOriginal) => {
 vi.mock('execa')
 
 describe('editable columns', () => {
-  let files
-  let form
+  let files: Record<string, string>
+  let form: string
 
   beforeAll(async () => {
     vol.fromJSON({ 'redwood.toml': '' }, '/')
@@ -36,6 +36,7 @@ describe('editable columns', () => {
 
     files = await scaffoldHandler.files({
       ...defaultCliArgs,
+      docs: false,
       model: 'ExcludeDefault',
       tests: true,
       nestScaffoldByModel: true,

@@ -32,6 +32,7 @@ describe('in javascript (default) mode', () => {
 
     files = await scaffoldHandler.files({
       ...getDefaultArgs(getYargsDefaults()),
+      docs: false,
       model: 'Post',
       tests: true,
       nestScaffoldByModel: false,
@@ -225,6 +226,7 @@ describe('in javascript (default) mode', () => {
 
   test('the GraphQL in the index query does not contain object types', async () => {
     const userProfileFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       tests: false,
       nestScaffoldByModel: false,
@@ -242,6 +244,7 @@ describe('in javascript (default) mode', () => {
 
   test('the GraphQL in the show query does not contain object types', async () => {
     const userProfileFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       tests: false,
       nestScaffoldByModel: false,
@@ -259,6 +262,7 @@ describe('in javascript (default) mode', () => {
 
   test('the GraphQL in the edit query does not contain object types', async () => {
     const userProfileFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       tests: false,
       nestScaffoldByModel: false,
@@ -278,6 +282,7 @@ describe('in javascript (default) mode', () => {
 
   test('creates a new component with int foreign keys converted in onSave', async () => {
     const foreignKeyFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       tests: false,
       nestScaffoldByModel: false,
@@ -294,6 +299,7 @@ describe('in javascript (default) mode', () => {
 
   test('creates an edit component with int foreign keys converted in onSave', async () => {
     const foreignKeyFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       tests: false,
       nestScaffoldByModel: false,
@@ -315,6 +321,7 @@ describe('in typescript mode', () => {
   beforeAll(async () => {
     tsFiles = await scaffoldHandler.files({
       ...getDefaultArgs(getYargsDefaults()),
+      docs: false,
       model: 'Post',
       typescript: true,
       tests: true,
@@ -510,6 +517,7 @@ describe('in typescript mode', () => {
 
   test('the GraphQL in the index query does not contain object types', async () => {
     const userProfileFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       tests: false,
       nestScaffoldByModel: false,
@@ -527,6 +535,7 @@ describe('in typescript mode', () => {
 
   test('the GraphQL in the show query does not contain object types', async () => {
     const userProfileFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       tests: false,
       nestScaffoldByModel: false,
@@ -544,6 +553,7 @@ describe('in typescript mode', () => {
 
   test('the GraphQL in the edit query does not contain object types', async () => {
     const userProfileFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       typescript: true,
       tests: false,
@@ -564,6 +574,7 @@ describe('in typescript mode', () => {
 
   test('creates a new component with int foreign keys converted in onSave', async () => {
     const foreignKeyFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       typescript: true,
       tests: false,
@@ -581,6 +592,7 @@ describe('in typescript mode', () => {
 
   test('creates an edit component with int foreign keys converted in onSave', async () => {
     const foreignKeyFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       typescript: true,
       tests: false,

@@ -32,6 +32,7 @@ describe('support custom @id name', () => {
 
     files = await scaffoldHandler.files({
       ...getDefaultArgs(getYargsDefaults()),
+      docs: false,
       typescript: true,
       model: 'CustomIdField',
       tests: true,

@@ -29,11 +29,12 @@ beforeAll(() => {
 })
 
 describe('in javascript (default) mode', () => {
-  let files
+  let files: Record<string, string>
 
   beforeAll(async () => {
     files = await scaffoldHandler.files({
       ...getDefaultArgs(getYargsDefaults()),
+      docs: false,
       model: 'Post',
       tests: true,
       nestScaffoldByModel: true,
@@ -293,6 +294,7 @@ describe('in javascript (default) mode', () => {
     await expect(
       scaffoldHandler.files({
         ...getDefaultArgs(getYargsDefaults()),
+        docs: false,
         model: 'NoEditableField',
         tests: true,
         nestScaffoldByModel: true,
@@ -336,6 +338,7 @@ describe('in javascript (default) mode', () => {
 
   test('the GraphQL in the index query does not contain object types', async () => {
     const userProfileFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       tests: false,
       nestScaffoldByModel: true,
@@ -353,6 +356,7 @@ describe('in javascript (default) mode', () => {
 
   test('the GraphQL in the show query does not contain object types', async () => {
     const userProfileFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       tests: false,
       nestScaffoldByModel: true,
@@ -370,6 +374,7 @@ describe('in javascript (default) mode', () => {
 
   test('the GraphQL in the edit query does not contain object types', async () => {
     const userProfileFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       tests: false,
       nestScaffoldByModel: true,
@@ -389,6 +394,7 @@ describe('in javascript (default) mode', () => {
 
   test('creates a new component with int foreign keys converted in onSave', async () => {
     const foreignKeyFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       tests: false,
       nestScaffoldByModel: true,
@@ -405,6 +411,7 @@ describe('in javascript (default) mode', () => {
 
   test('creates an edit component with int foreign keys converted in onSave', async () => {
     const foreignKeyFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       tests: false,
       nestScaffoldByModel: true,
@@ -438,6 +445,7 @@ describe('in javascript (default) mode', () => {
   test('generated form matches expectations', async () => {
     const files = await scaffoldHandler.files({
       ...getDefaultArgs(getYargsDefaults()),
+      docs: false,
       model: 'Pixel',
       nestScaffoldByModel: true,
     })
@@ -457,6 +465,7 @@ describe('in typescript mode', () => {
   beforeAll(async () => {
     tsFiles = await scaffoldHandler.files({
       ...getDefaultArgs(getYargsDefaults()),
+      docs: false,
       model: 'Post',
       typescript: true,
       tests: true,
@@ -658,6 +667,7 @@ describe('in typescript mode', () => {
 
   test('the GraphQL in the index query does not contain object types', async () => {
     const userProfileFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       tests: false,
       nestScaffoldByModel: true,
@@ -675,6 +685,7 @@ describe('in typescript mode', () => {
 
   test('the GraphQL in the show query does not contain object types', async () => {
     const userProfileFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       tests: false,
       nestScaffoldByModel: true,
@@ -692,6 +703,7 @@ describe('in typescript mode', () => {
 
   test('the GraphQL in the edit query does not contain object types', async () => {
     const userProfileFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       typescript: true,
       tests: false,
@@ -712,6 +724,7 @@ describe('in typescript mode', () => {
 
   test('creates a new component with int foreign keys converted in onSave', async () => {
     const foreignKeyFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       typescript: true,
       tests: false,
@@ -729,6 +742,7 @@ describe('in typescript mode', () => {
 
   test('creates an edit component with int foreign keys converted in onSave', async () => {
     const foreignKeyFiles = await scaffoldHandler.files({
+      docs: false,
       model: 'UserProfile',
       typescript: true,
       tests: false,
@@ -765,6 +779,7 @@ describe('in typescript mode', () => {
   test('generated form matches expectations', async () => {
     const files = await scaffoldHandler.files({
       ...getDefaultArgs(getYargsDefaults()),
+      docs: false,
       model: 'Pixel',
       nestScaffoldByModel: true,
       typescript: true,
@@ -783,6 +798,7 @@ describe('tailwind flag', () => {
   test('set to `false` generates a scaffold.css with raw CSS', async () => {
     const files = await scaffoldHandler.files({
       ...getDefaultArgs(getYargsDefaults()),
+      docs: false,
       model: 'Post',
       tailwind: false,
       nestScaffoldByModel: true,
@@ -796,6 +812,7 @@ describe('tailwind flag', () => {
   test('set to `true` generates a scaffold.css with Tailwind components', async () => {
     const files = await scaffoldHandler.files({
       ...getDefaultArgs(getYargsDefaults()),
+      docs: false,
       model: 'Post',
       tailwind: true,
       nestScaffoldByModel: true,
@@ -818,6 +835,7 @@ describe("'use client' directive", () => {
 
     files = await scaffoldHandler.files({
       ...getDefaultArgs(getYargsDefaults()),
+      docs: false,
       model: 'Post',
       nestScaffoldByModel: true,
     })
@@ -889,6 +907,7 @@ describe('custom templates', () => {
 
     tsFiles = await scaffoldHandler.files({
       force: false,
+      docs: false,
       model: 'Post',
       typescript: true,
       tests: true,
