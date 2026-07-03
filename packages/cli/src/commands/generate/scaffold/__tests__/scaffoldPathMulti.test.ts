@@ -1,5 +1,7 @@
-globalThis.__dirname = __dirname
-import path from 'path'
+globalThis.__dirname = import.meta.dirname
+
+import type * as NodeFs from 'node:fs'
+import path from 'node:path'
 
 import { vol, fs as memfs } from 'memfs'
 import { ufs } from 'unionfs'
@@ -10,9 +12,11 @@ import '../../../../lib/test'
 import * as scaffoldHandler from '../scaffoldHandler.js'
 
 vi.mock('node:fs', async (importOriginal) => {
-  const { wrapFsForUnionfs } =
+  const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
     await import('../../../../__tests__/ufsFsProxy.js')
-  ufs.use(wrapFsForUnionfs(await importOriginal())).use(memfs)
+  ufs
+    .use(wrapFsForUnionfs(await importOriginal<typeof NodeFs>()))
+    .use(wrapMemfsForUnionfs(memfs))
   return { ...ufs, default: { ...ufs } }
 })
 vi.mock('execa')
@@ -22,10 +26,11 @@ beforeAll(() => {
 })
 
 describe('admin/pages/post', () => {
-  let filesNestedLower
+  let filesNestedLower: Record<string, string>
 
   beforeAll(async () => {
     filesNestedLower = await scaffoldHandler.files({
+      docs: false,
       model: 'Post',
       path: 'admin/pages',
       tests: true,
@@ -270,6 +275,7 @@ describe('admin/pages/post', () => {
   describe('GraphQL queries', () => {
     test('the GraphQL in the index query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'admin/pages',
         tests: false,
@@ -283,13 +289,14 @@ describe('admin/pages/post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfiles.*?\})/s)[1]
+      const query = cell.match(/(userProfiles.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
 
     test('the GraphQL in the show query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'admin/pages',
         tests: false,
@@ -303,13 +310,14 @@ describe('admin/pages/post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
 
     test('the GraphQL in the edit query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'admin/pages',
         tests: false,
@@ -323,7 +331,7 @@ describe('admin/pages/post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -332,6 +340,7 @@ describe('admin/pages/post', () => {
   describe('Foreign key casting', () => {
     test('creates a new component with int foreign keys converted in onSave', async () => {
       const foreignKeyFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'admin/pages',
         tests: false,
@@ -347,6 +356,7 @@ describe('admin/pages/post', () => {
 
     test('creates an edit component with int foreign keys converted in onSave', async () => {
       const foreignKeyFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'admin/pages',
         tests: false,
@@ -363,10 +373,11 @@ describe('admin/pages/post', () => {
 })
 
 describe('Admin/Pages/Post/Post', () => {
-  let filesNestedUpper
+  let filesNestedUpper: Record<string, string>
 
   beforeAll(async () => {
     filesNestedUpper = await scaffoldHandler.files({
+      docs: false,
       model: 'Post',
       path: 'Admin/Pages',
       tests: true,
@@ -611,6 +622,7 @@ describe('Admin/Pages/Post/Post', () => {
   describe('GraphQL queries', () => {
     test('the GraphQL in the index query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'Admin/Pages',
         tests: false,
@@ -624,13 +636,14 @@ describe('Admin/Pages/Post/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfiles.*?\})/s)[1]
+      const query = cell.match(/(userProfiles.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
 
     test('the GraphQL in the show query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'Admin/Pages',
         tests: false,
@@ -644,13 +657,14 @@ describe('Admin/Pages/Post/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
 
     test('the GraphQL in the edit query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'Admin/Pages',
         tests: false,
@@ -664,7 +678,7 @@ describe('Admin/Pages/Post/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -673,6 +687,7 @@ describe('Admin/Pages/Post/Post', () => {
   describe('Foreign key casting', () => {
     test('creates a new component with int foreign keys converted in onSave', async () => {
       const foreignKeyFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'Admin/Pages',
         tests: false,
@@ -688,6 +703,7 @@ describe('Admin/Pages/Post/Post', () => {
 
     test('creates an edit component with int foreign keys converted in onSave', async () => {
       const foreignKeyFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'Admin/Pages',
         tests: false,

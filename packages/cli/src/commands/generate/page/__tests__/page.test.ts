@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import type * as NodeFS from 'node:fs'
 import path from 'node:path'
 
 import {
@@ -21,21 +22,23 @@ const { memfs, ufs, vol } = await vi.hoisted(async () => {
 })
 
 vi.mock('node:fs', async (importOriginal) => {
-  const { wrapFsForUnionfs } =
+  const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
     await import('../../../../__tests__/ufsFsProxy.js')
-  const originalFs = await importOriginal()
-  ufs.use(wrapFsForUnionfs(originalFs)).use(memfs)
+  const originalFs = await importOriginal<typeof NodeFS>()
+  ufs.use(wrapFsForUnionfs(originalFs)).use(wrapMemfsForUnionfs(memfs))
   return {
     ...ufs,
     default: ufs,
   }
 })
 
+import type * as CliHelpers from '@cedarjs/cli-helpers'
 import { ensurePosixPath } from '@cedarjs/project-config'
+import type * as ProjectConfig from '@cedarjs/project-config'
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const path = await import('node:path')
-  const originalProjectConfig = await importOriginal()
+  const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
   return {
     getPaths: () => {
       const BASE_PATH = '/path/to/project'
@@ -56,7 +59,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
 })
 
 vi.mock('@cedarjs/cli-helpers', async (importOriginal) => {
-  const originalCliHelpers = await importOriginal()
+  const originalCliHelpers = await importOriginal<typeof CliHelpers>()
 
   return {
     ...originalCliHelpers,
@@ -335,7 +338,7 @@ test('paramVariants returns empty strings for no params', () => {
     paramValue: '',
     paramType: '',
   }
-  expect(pageHandler.paramVariants()).toEqual(emptyParams)
+  expect(pageHandler.paramVariants(undefined)).toEqual(emptyParams)
   expect(pageHandler.paramVariants('')).toEqual(emptyParams)
   expect(pageHandler.paramVariants('/')).toEqual(emptyParams)
   expect(pageHandler.paramVariants('/post/edit')).toEqual(emptyParams)
@@ -381,8 +384,8 @@ describe('handler', () => {
   })
 
   afterEach(() => {
-    console.info.mockRestore()
-    console.log.mockRestore()
+    vi.mocked(console.info).mockRestore()
+    vi.mocked(console.log).mockRestore()
   })
 
   test('file generation', async () => {
@@ -424,8 +427,9 @@ describe('handler', () => {
 
     spy.mock.calls.forEach((calls) => {
       const testOutput = {
-        // Because windows paths are different, we need to normalise before snapshotting
-        filePath: ensurePosixPath(calls[0]),
+        // Because windows paths are different, we need to normalise before
+        // snapshotting
+        filePath: ensurePosixPath(String(calls[0])),
         fileContent: calls[1],
       }
       expect(testOutput).toMatchSnapshot()
@@ -473,7 +477,7 @@ describe('handler', () => {
 
     spy.mock.calls.forEach((calls) => {
       const testOutput = {
-        filePath: ensurePosixPath(calls[0]),
+        filePath: ensurePosixPath(String(calls[0])),
         fileContent: calls[1],
       }
       expect(testOutput).toMatchSnapshot()

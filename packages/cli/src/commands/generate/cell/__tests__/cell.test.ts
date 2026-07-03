@@ -1,5 +1,5 @@
 globalThis.__dirname = __dirname
-import path from 'path'
+import path from 'node:path'
 
 import { vi, describe, it, expect, test, beforeAll } from 'vitest'
 

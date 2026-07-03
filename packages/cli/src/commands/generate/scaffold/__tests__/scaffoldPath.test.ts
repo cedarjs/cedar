@@ -1,5 +1,7 @@
-globalThis.__dirname = __dirname
-import path from 'path'
+globalThis.__dirname = import.meta.dirname
+
+import type * as NodeFs from 'node:fs'
+import path from 'node:path'
 
 import { vol, fs as memfs } from 'memfs'
 import { ufs } from 'unionfs'
@@ -10,9 +12,10 @@ import '../../../../lib/test'
 import * as scaffoldHandler from '../scaffoldHandler.js'
 
 vi.mock('node:fs', async (importOriginal) => {
-  const { wrapFsForUnionfs } =
+  const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
     await import('../../../../__tests__/ufsFsProxy.js')
-  ufs.use(wrapFsForUnionfs(await importOriginal())).use(memfs)
+  const fs = await importOriginal<typeof NodeFs>()
+  ufs.use(wrapFsForUnionfs(fs)).use(wrapMemfsForUnionfs(memfs))
   return { ...ufs, default: { ...ufs } }
 })
 vi.mock('execa')
@@ -22,10 +25,11 @@ beforeAll(() => {
 })
 
 describe('admin/post', () => {
-  let filesLower
+  let filesLower: Record<string, string>
 
   beforeAll(async () => {
     filesLower = await scaffoldHandler.files({
+      docs: false,
       model: 'Post',
       path: 'admin',
       tests: true,
@@ -261,6 +265,7 @@ describe('admin/post', () => {
   describe('GraphQL queries', () => {
     test('the GraphQL in the index query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'admin',
         tests: false,
@@ -274,13 +279,14 @@ describe('admin/post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfiles.*?\})/s)[1]
+      const query = cell.match(/(userProfiles.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
 
     test('the GraphQL in the show query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'admin',
         tests: false,
@@ -294,13 +300,14 @@ describe('admin/post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
 
     test('the GraphQL in the edit query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'admin',
         tests: false,
@@ -314,7 +321,7 @@ describe('admin/post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -323,6 +330,7 @@ describe('admin/post', () => {
   describe('Foreign key casting', () => {
     test('creates a new component with int foreign keys converted in onSave', async () => {
       const foreignKeyFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'admin',
         tests: false,
@@ -338,6 +346,7 @@ describe('admin/post', () => {
 
     test('creates an edit component with int foreign keys converted in onSave', async () => {
       const foreignKeyFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'admin',
         tests: false,
@@ -354,9 +363,11 @@ describe('admin/post', () => {
 })
 
 describe('Admin/Post', () => {
-  let filesUpper
+  let filesUpper: Record<string, string>
+
   beforeAll(async () => {
     filesUpper = await scaffoldHandler.files({
+      docs: false,
       model: 'Post',
       path: 'Admin',
       tests: true,
@@ -613,6 +624,7 @@ describe('Admin/Post', () => {
   describe('GraphQL queries', () => {
     test('the GraphQL in the index query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'Admin',
         tests: false,
@@ -626,13 +638,14 @@ describe('Admin/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfiles.*?\})/s)[1]
+      const query = cell.match(/(userProfiles.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
 
     test('the GraphQL in the show query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'Admin',
         tests: false,
@@ -646,13 +659,14 @@ describe('Admin/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
 
     test('the GraphQL in the edit query does not contain object types', async () => {
       const userProfileFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'Admin',
         tests: false,
@@ -666,7 +680,7 @@ describe('Admin/Post', () => {
           )
         ]
 
-      const query = cell.match(/(userProfile.*?\})/s)[1]
+      const query = cell.match(/(userProfile.*?\})/s)?.[1]
 
       expect(query).not.toMatch(/^\s+user$/m)
     })
@@ -675,6 +689,7 @@ describe('Admin/Post', () => {
   describe('Foreign key casting', () => {
     test('creates a new component with int foreign keys converted in onSave', async () => {
       const foreignKeyFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'Admin',
         tests: false,
@@ -690,6 +705,7 @@ describe('Admin/Post', () => {
 
     test('creates an edit component with int foreign keys converted in onSave', async () => {
       const foreignKeyFiles = await scaffoldHandler.files({
+        docs: false,
         model: 'UserProfile',
         path: 'Admin',
         tests: false,

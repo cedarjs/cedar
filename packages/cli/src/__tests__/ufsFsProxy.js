@@ -28,3 +28,11 @@ export function wrapFsForUnionfs(originalFs) {
     },
   })
 }
+
+/**
+ * Wraps a memfs instance for use with unionfs, bridging the type
+ * incompatibility between memfs's IFs and unionfs's IFS.
+ */
+export function wrapMemfsForUnionfs(memfs) {
+  return memfs
+}
