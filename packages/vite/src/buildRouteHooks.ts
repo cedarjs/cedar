@@ -1,3 +1,5 @@
+import fs from 'node:fs'
+
 import type { PluginBuild } from 'esbuild'
 import { build as esbuildBuild } from 'esbuild'
 
@@ -19,9 +21,12 @@ export async function buildRouteHooks(
     name: 'rw-esbuild-babel-transform',
     setup(build: PluginBuild) {
       build.onLoad({ filter: /\.(js|ts|tsx|jsx)$/ }, async (args) => {
-        const transformedCode = await transformWithBabel(args.path, [
-          ...getRouteHookBabelPlugins(),
-        ])
+        const fileContents = await fs.promises.readFile(args.path, 'utf-8')
+        const transformedCode = await transformWithBabel(
+          fileContents,
+          args.path,
+          [...getRouteHookBabelPlugins()],
+        )
 
         if (transformedCode?.code) {
           return {
