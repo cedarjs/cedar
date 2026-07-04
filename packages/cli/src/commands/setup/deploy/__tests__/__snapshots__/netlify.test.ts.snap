@@ -1,1 +1,63 @@
-Ly8gVml0ZXN0IFNuYXBzaG90IHYxLCBodHRwczovL3ZpdGVzdC5kZXYvZ3VpZGUvc25hcHNob3QuaHRtbAoKZXhwb3J0c1tgbmV0bGlmeSA+IHNob3VsZCBhZGQgbmV0bGlmeS50b21sIDFgXSA9IGAKIltidWlsZF0KICBjb21tYW5kID0gInlhcm4gY2VkYXIgZGVwbG95IG5ldGxpZnkiCiAgcHVibGlzaCA9ICJ3ZWIvZGlzdCIKICBmdW5jdGlvbnMgPSAiYXBpL2Rpc3QvZnVuY3Rpb25zIgoKICBbYnVpbGQuZW52aXJvbm1lbnRdCiAgICBOT0RFX1ZFUlNJT04gPSAiMjQiCgpbW3JlZGlyZWN0c11dCiAgZnJvbSA9ICIvKiIKICB0byA9ICIvMjAwLmh0bWwiCiAgc3RhdHVzID0gMjAwCgojIFRvIHVzZSBOZXRsaWZ5IERldiwgaW5zdGFsbCBOZXRsaWZ5J3MgQ0xJIChcYG5ldGxpZnktY2xpXGApIGZyb20gTlBNIGFuZCB1c2UKIyBcYG5ldGxpZnkgbGlua1xgIHRvIGNvbm5lY3QgeW91ciBsb2NhbCBwcm9qZWN0IHRvIGEgc2l0ZSBvbiBOZXRsaWZ5LiBUaGVuIHJ1bgojIFxgbmV0bGlmeSBkZXZcYC4KIwojIFF1aWNrIGxpbmtzIHRvIHRoZSBkb2NzOgojIC0gTmV0bGlmeSBEZXYgaHR0cHM6Ly9kb2NzLm5ldGxpZnkuY29tL2FwaS1hbmQtY2xpLWd1aWRlcy9jbGktZ3VpZGVzL2xvY2FsLWRldmVsb3BtZW50CiMgLSBOZXRsaWZ5J3MgQ0xJIGh0dHBzOi8vZG9jcy5uZXRsaWZ5LmNvbS9hcGktYW5kLWNsaS1ndWlkZXMvY2xpLWd1aWRlcy9nZXQtc3RhcnRlZC13aXRoLWNsaS8KIyAtIFxgbmV0bGlmeSBsaW5rXGAgaHR0cHM6Ly9jbGkubmV0bGlmeS5jb20vY29tbWFuZHMvbGluay8KW2Rldl0KICBmcmFtZXdvcmsgPSAicmVkd29vZGpzIgogICMgTWFrZSBzdXJlIFxgdGFyZ2V0UG9ydFxgIG1hdGNoZXMgXGB3ZWIucG9ydFxgIGluIHlvdXIgY2VkYXIudG9tbCBmaWxlCiAgdGFyZ2V0UG9ydCA9IDg5MTAKICAjIFBvaW50IHlvdXIgYnJvd3NlciB0byB0aGlzIHBvcnQgdG8gYWNjZXNzIHlvdXIgYXBwCiAgcG9ydCA9IDg4ODgKIgpgOwoKZXhwb3J0c1tgbmV0bGlmeSA+IHNob3VsZCBjYWxsIHRoZSBoYW5kbGVyIHdpdGhvdXQgZXJyb3IgMWBdID0gYAoiW2J1aWxkXQogIGNvbW1hbmQgPSAieWFybiBjZWRhciBkZXBsb3kgbmV0bGlmeSIKICBwdWJsaXNoID0gIndlYi9kaXN0IgogIGZ1bmN0aW9ucyA9ICJhcGkvZGlzdC9mdW5jdGlvbnMiCgogIFtidWlsZC5lbnZpcm9ubWVudF0KICAgIE5PREVfVkVSU0lPTiA9ICIyNCIKCltbcmVkaXJlY3RzXV0KICBmcm9tID0gIi8qIgogIHRvID0gIi8yMDAuaHRtbCIKICBzdGF0dXMgPSAyMDAKCiMgVG8gdXNlIE5ldGxpZnkgRGV2LCBpbnN0YWxsIE5ldGxpZnkncyBDTEkgKFxgbmV0bGlmeS1jbGlcYCkgZnJvbSBOUE0gYW5kIHVzZQojIFxgbmV0bGlmeSBsaW5rXGAgdG8gY29ubmVjdCB5b3VyIGxvY2FsIHByb2plY3QgdG8gYSBzaXRlIG9uIE5ldGxpZnkuIFRoZW4gcnVuCiMgXGBuZXRsaWZ5IGRldlxgLgojCiMgUXVpY2sgbGlua3MgdG8gdGhlIGRvY3M6CiMgLSBOZXRsaWZ5IERldiBodHRwczovL2RvY3MubmV0bGlmeS5jb20vYXBpLWFuZC1jbGktZ3VpZGVzL2NsaS1ndWlkZXMvbG9jYWwtZGV2ZWxvcG1lbnQKIyAtIE5ldGxpZnkncyBDTEkgaHR0cHM6Ly9kb2NzLm5ldGxpZnkuY29tL2FwaS1hbmQtY2xpLWd1aWRlcy9jbGktZ3VpZGVzL2dldC1zdGFydGVkLXdpdGgtY2xpLwojIC0gXGBuZXRsaWZ5IGxpbmtcYCBodHRwczovL2NsaS5uZXRsaWZ5LmNvbS9jb21tYW5kcy9saW5rLwpbZGV2XQogIGZyYW1ld29yayA9ICJyZWR3b29kanMiCiAgIyBNYWtlIHN1cmUgXGB0YXJnZXRQb3J0XGAgbWF0Y2hlcyBcYHdlYi5wb3J0XGAgaW4geW91ciBjZWRhci50b21sIGZpbGUKICB0YXJnZXRQb3J0ID0gODkxMAogICMgUG9pbnQgeW91ciBicm93c2VyIHRvIHRoaXMgcG9ydCB0byBhY2Nlc3MgeW91ciBhcHAKICBwb3J0ID0gODg4OAoiCmA7Cg==
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`netlify > should add netlify.toml 1`] = `
+"[build]
+  command = "yarn cedar deploy netlify"
+  publish = "web/dist"
+  functions = "api/dist/functions"
+
+  [build.environment]
+    NODE_VERSION = "24"
+
+[[redirects]]
+  from = "/*"
+  to = "/200.html"
+  status = 200
+
+# To use Netlify Dev, install Netlify's CLI (\`netlify-cli\`) from NPM and use
+# \`netlify link\` to connect your local project to a site on Netlify. Then run
+# \`netlify dev\`.
+#
+# Quick links to the docs:
+# - Netlify Dev https://docs.netlify.com/api-and-cli-guides/cli-guides/local-development
+# - Netlify's CLI https://docs.netlify.com/api-and-cli-guides/cli-guides/get-started-with-cli/
+# - \`netlify link\` https://cli.netlify.com/commands/link/
+[dev]
+  framework = "redwoodjs"
+  # Make sure \`targetPort\` matches \`web.port\` in your cedar.toml file
+  targetPort = 8910
+  # Point your browser to this port to access your app
+  port = 8888
+"
+`;
+
+exports[`netlify > should call the handler without error 1`] = `
+"[build]
+  command = "yarn cedar deploy netlify"
+  publish = "web/dist"
+  functions = "api/dist/functions"
+
+  [build.environment]
+    NODE_VERSION = "24"
+
+[[redirects]]
+  from = "/*"
+  to = "/200.html"
+  status = 200
+
+# To use Netlify Dev, install Netlify's CLI (\`netlify-cli\`) from NPM and use
+# \`netlify link\` to connect your local project to a site on Netlify. Then run
+# \`netlify dev\`.
+#
+# Quick links to the docs:
+# - Netlify Dev https://docs.netlify.com/api-and-cli-guides/cli-guides/local-development
+# - Netlify's CLI https://docs.netlify.com/api-and-cli-guides/cli-guides/get-started-with-cli/
+# - \`netlify link\` https://cli.netlify.com/commands/link/
+[dev]
+  framework = "redwoodjs"
+  # Make sure \`targetPort\` matches \`web.port\` in your cedar.toml file
+  targetPort = 8910
+  # Point your browser to this port to access your app
+  port = 8888
+"
+`;

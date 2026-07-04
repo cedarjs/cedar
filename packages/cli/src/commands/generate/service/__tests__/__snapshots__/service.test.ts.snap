@@ -1,1 +1,806 @@
-Ly8gVml0ZXN0IFNuYXBzaG90IHYxLCBodHRwczovL3ZpdGVzdC5kZXYvZ3VpZGUvc25hcHNob3QuaHRtbAoKZXhwb3J0c1tgaW4gamF2YXNjcmlwdCBtb2RlID4gY3JlYXRlcyBhIG11bHRpIHdvcmQgc2VydmljZSBmaWxlIDFgXSA9IGAKImltcG9ydCB7IGRiIH0gZnJvbSAnc3JjL2xpYi9kYicKCmV4cG9ydCBjb25zdCB1c2VyUHJvZmlsZXMgPSAoKSA9PiB7CiAgcmV0dXJuIGRiLnVzZXJQcm9maWxlLmZpbmRNYW55KCkKfQoKZXhwb3J0IGNvbnN0IHVzZXJQcm9maWxlID0gKHsgaWQgfSkgPT4gewogIHJldHVybiBkYi51c2VyUHJvZmlsZS5maW5kVW5pcXVlKHsKICAgIHdoZXJlOiB7IGlkIH0sCiAgfSkKfQoKZXhwb3J0IGNvbnN0IFVzZXJQcm9maWxlID0gewogIHVzZXI6IChfb2JqLCB7IHJvb3QgfSkgPT4gewogICAgcmV0dXJuIGRiLnVzZXJQcm9maWxlLmZpbmRVbmlxdWUoeyB3aGVyZTogeyBpZDogcm9vdD8uaWQgfSB9KS51c2VyKCkKICB9LAp9CiIKYDsKCmV4cG9ydHNbYGluIGphdmFzY3JpcHQgbW9kZSA+IGNyZWF0ZXMgYSBtdWx0aSB3b3JkIHNlcnZpY2UgdGVzdCBmaWxlIDFgXSA9IGAKImltcG9ydCB7IHVzZXJQcm9maWxlcyB9IGZyb20gJy4vdXNlclByb2ZpbGVzLmpzJwoKLy8gR2VuZXJhdGVkIGJvaWxlcnBsYXRlIHRlc3RzIGRvIG5vdCBhY2NvdW50IGZvciBhbGwgY2lyY3Vtc3RhbmNlcwovLyBhbmQgY2FuIGZhaWwgd2l0aG91dCBhZGp1c3RtZW50cywgZS5nLiBGbG9hdC4KLy8gICAgICAgICAgIFBsZWFzZSByZWZlciB0byB0aGUgUmVkd29vZEpTIFRlc3RpbmcgRG9jczoKLy8gICAgICAgaHR0cHM6Ly9jZWRhcmpzLmNvbS9kb2NzL3Rlc3RpbmcjdGVzdGluZy1zZXJ2aWNlcwovLyBodHRwczovL2NlZGFyanMuY29tL2RvY3MvdGVzdGluZyNqZXN0LWV4cGVjdC10eXBlLWNvbnNpZGVyYXRpb25zCgpkZXNjcmliZSgndXNlclByb2ZpbGVzJywgKCkgPT4gewogIHNjZW5hcmlvKCdyZXR1cm5zIGFsbCB1c2VyUHJvZmlsZXMnLCBhc3luYyAoc2NlbmFyaW8pID0+IHsKICAgIGNvbnN0IHJlc3VsdCA9IGF3YWl0IHVzZXJQcm9maWxlcygpCgogICAgZXhwZWN0KHJlc3VsdC5sZW5ndGgpLnRvRXF1YWwoT2JqZWN0LmtleXMoc2NlbmFyaW8udXNlclByb2ZpbGUpLmxlbmd0aCkKICB9KQp9KQoiCmA7CgpleHBvcnRzW2BpbiBqYXZhc2NyaXB0IG1vZGUgPiBjcmVhdGVzIGEgbXVsdGkgd29yZCBzZXJ2aWNlIHRlc3QgZmlsZSB3aXRoIGNydWQgYWN0aW9ucyBhbmQgb25seSBmb3JlaWduIGFzIG1hbmRhdG9yeSBmaWVsZCAxYF0gPSBgCiJpbXBvcnQgewogIHRyYW5zYWN0aW9ucywKICB0cmFuc2FjdGlvbiwKICBjcmVhdGVUcmFuc2FjdGlvbiwKICB1cGRhdGVUcmFuc2FjdGlvbiwKICBkZWxldGVUcmFuc2FjdGlvbiwKfSBmcm9tICcuL3RyYW5zYWN0aW9ucy5qcycKCi8vIEdlbmVyYXRlZCBib2lsZXJwbGF0ZSB0ZXN0cyBkbyBub3QgYWNjb3VudCBmb3IgYWxsIGNpcmN1bXN0YW5jZXMKLy8gYW5kIGNhbiBmYWlsIHdpdGhvdXQgYWRqdXN0bWVudHMsIGUuZy4gRmxvYXQuCi8vICAgICAgICAgICBQbGVhc2UgcmVmZXIgdG8gdGhlIFJlZHdvb2RKUyBUZXN0aW5nIERvY3M6Ci8vICAgICAgIGh0dHBzOi8vY2VkYXJqcy5jb20vZG9jcy90ZXN0aW5nI3Rlc3Rpbmctc2VydmljZXMKLy8gaHR0cHM6Ly9jZWRhcmpzLmNvbS9kb2NzL3Rlc3RpbmcjamVzdC1leHBlY3QtdHlwZS1jb25zaWRlcmF0aW9ucwoKZGVzY3JpYmUoJ3RyYW5zYWN0aW9ucycsICgpID0+IHsKICBzY2VuYXJpbygncmV0dXJucyBhbGwgdHJhbnNhY3Rpb25zJywgYXN5bmMgKHNjZW5hcmlvKSA9PiB7CiAgICBjb25zdCByZXN1bHQgPSBhd2FpdCB0cmFuc2FjdGlvbnMoKQoKICAgIGV4cGVjdChyZXN1bHQubGVuZ3RoKS50b0VxdWFsKE9iamVjdC5rZXlzKHNjZW5hcmlvLnRyYW5zYWN0aW9uKS5sZW5ndGgpCiAgfSkKCiAgc2NlbmFyaW8oJ3JldHVybnMgYSBzaW5nbGUgdHJhbnNhY3Rpb24nLCBhc3luYyAoc2NlbmFyaW8pID0+IHsKICAgIGNvbnN0IHJlc3VsdCA9IGF3YWl0IHRyYW5zYWN0aW9uKHsgaWQ6IHNjZW5hcmlvLnRyYW5zYWN0aW9uLm9uZS5pZCB9KQoKICAgIGV4cGVjdChyZXN1bHQpLnRvRXF1YWwoc2NlbmFyaW8udHJhbnNhY3Rpb24ub25lKQogIH0pCgogIHNjZW5hcmlvKCdjcmVhdGVzIGEgdHJhbnNhY3Rpb24nLCBhc3luYyAoc2NlbmFyaW8pID0+IHsKICAgIGNvbnN0IHJlc3VsdCA9IGF3YWl0IGNyZWF0ZVRyYW5zYWN0aW9uKHsKICAgICAgaW5wdXQ6IHsgdXNlcklkOiBzY2VuYXJpby50cmFuc2FjdGlvbi50d28udXNlcklkIH0sCiAgICB9KQoKICAgIGV4cGVjdChyZXN1bHQudXNlcklkKS50b0VxdWFsKHNjZW5hcmlvLnRyYW5zYWN0aW9uLnR3by51c2VySWQpCiAgfSkKCiAgc2NlbmFyaW8oJ3VwZGF0ZXMgYSB0cmFuc2FjdGlvbicsIGFzeW5jIChzY2VuYXJpbykgPT4gewogICAgY29uc3Qgb3JpZ2luYWwgPSBhd2FpdCB0cmFuc2FjdGlvbih7CiAgICAgIGlkOiBzY2VuYXJpby50cmFuc2FjdGlvbi5vbmUuaWQsCiAgICB9KQogICAgY29uc3QgcmVzdWx0ID0gYXdhaXQgdXBkYXRlVHJhbnNhY3Rpb24oewogICAgICBpZDogb3JpZ2luYWwuaWQsCiAgICAgIGlucHV0OiB7IHVzZXJJZDogc2NlbmFyaW8udHJhbnNhY3Rpb24udHdvLnVzZXJJZCB9LAogICAgfSkKCiAgICBleHBlY3QocmVzdWx0LnVzZXJJZCkudG9FcXVhbChzY2VuYXJpby50cmFuc2FjdGlvbi50d28udXNlcklkKQogIH0pCgogIHNjZW5hcmlvKCdkZWxldGVzIGEgdHJhbnNhY3Rpb24nLCBhc3luYyAoc2NlbmFyaW8pID0+IHsKICAgIGNvbnN0IG9yaWdpbmFsID0gYXdhaXQgZGVsZXRlVHJhbnNhY3Rpb24oewogICAgICBpZDogc2NlbmFyaW8udHJhbnNhY3Rpb24ub25lLmlkLAogICAgfSkKICAgIGNvbnN0IHJlc3VsdCA9IGF3YWl0IHRyYW5zYWN0aW9uKHsgaWQ6IG9yaWdpbmFsLmlkIH0pCgogICAgZXhwZWN0KHJlc3VsdCkudG9FcXVhbChudWxsKQogIH0pCn0pCiIKYDsKCmV4cG9ydHNbYGluIGphdmFzY3JpcHQgbW9kZSA+IGNyZWF0ZXMgYSBtdWx0aSB3b3JkIHNlcnZpY2UgdGVzdCBmaWxlIHdpdGggbXVsdGlwbGUgc2NhbGFyIHR5cGVzIDFgXSA9IGAKImltcG9ydCB7CiAgc2NhbGFyVHlwZXMsCiAgc2NhbGFyVHlwZSwKICBjcmVhdGVTY2FsYXJUeXBlLAogIHVwZGF0ZVNjYWxhclR5cGUsCiAgZGVsZXRlU2NhbGFyVHlwZSwKfSBmcm9tICcuL3NjYWxhclR5cGVzLmpzJwoKLy8gR2VuZXJhdGVkIGJvaWxlcnBsYXRlIHRlc3RzIGRvIG5vdCBhY2NvdW50IGZvciBhbGwgY2lyY3Vtc3RhbmNlcwovLyBhbmQgY2FuIGZhaWwgd2l0aG91dCBhZGp1c3RtZW50cywgZS5nLiBGbG9hdC4KLy8gICAgICAgICAgIFBsZWFzZSByZWZlciB0byB0aGUgUmVkd29vZEpTIFRlc3RpbmcgRG9jczoKLy8gICAgICAgaHR0cHM6Ly9jZWRhcmpzLmNvbS9kb2NzL3Rlc3RpbmcjdGVzdGluZy1zZXJ2aWNlcwovLyBodHRwczovL2NlZGFyanMuY29tL2RvY3MvdGVzdGluZyNqZXN0LWV4cGVjdC10eXBlLWNvbnNpZGVyYXRpb25zCgpkZXNjcmliZSgnc2NhbGFyVHlwZXMnLCAoKSA9PiB7CiAgc2NlbmFyaW8oJ3JldHVybnMgYWxsIHNjYWxhclR5cGVzJywgYXN5bmMgKHNjZW5hcmlvKSA9PiB7CiAgICBjb25zdCByZXN1bHQgPSBhd2FpdCBzY2FsYXJUeXBlcygpCgogICAgZXhwZWN0KHJlc3VsdC5sZW5ndGgpLnRvRXF1YWwoT2JqZWN0LmtleXMoc2NlbmFyaW8uc2NhbGFyVHlwZSkubGVuZ3RoKQogIH0pCgogIHNjZW5hcmlvKCdyZXR1cm5zIGEgc2luZ2xlIHNjYWxhclR5cGUnLCBhc3luYyAoc2NlbmFyaW8pID0+IHsKICAgIGNvbnN0IHJlc3VsdCA9IGF3YWl0IHNjYWxhclR5cGUoeyBpZDogc2NlbmFyaW8uc2NhbGFyVHlwZS5vbmUuaWQgfSkKCiAgICBleHBlY3QocmVzdWx0KS50b0VxdWFsKHNjZW5hcmlvLnNjYWxhclR5cGUub25lKQogIH0pCgogIHNjZW5hcmlvKCdjcmVhdGVzIGEgc2NhbGFyVHlwZScsIGFzeW5jICgpID0+IHsKICAgIGNvbnN0IHJlc3VsdCA9IGF3YWl0IGNyZWF0ZVNjYWxhclR5cGUoewogICAgICBpbnB1dDogewogICAgICAgIGVtYWlsOiAnZm9vQGJhci5jb20nLAogICAgICAgIGRhdGU6ICcyMDIyLTA5LTMwVDA5OjUwOjAwLjAwMFonLAogICAgICAgIGJpZ0ludDogMTIzNDU2N24sCiAgICAgICAgaW50ZWdlcjogMTIzNDU2NywKICAgICAgICBib29sZWFuOiB0cnVlLAogICAgICB9LAogICAgfSkKCiAgICBleHBlY3QocmVzdWx0LmVtYWlsKS50b0VxdWFsKCdmb29AYmFyLmNvbScpCiAgICBleHBlY3QocmVzdWx0LmRhdGUpLnRvRXF1YWwobmV3IERhdGUoJzIwMjItMDktMzBUMDk6NTA6MDAuMDAwWicpKQogICAgZXhwZWN0KHJlc3VsdC5iaWdJbnQpLnRvRXF1YWwoMTIzNDU2N24pCiAgICBleHBlY3QocmVzdWx0LmludGVnZXIpLnRvRXF1YWwoMTIzNDU2NykKICAgIGV4cGVjdChyZXN1bHQuYm9vbGVhbikudG9FcXVhbCh0cnVlKQogIH0pCgogIHNjZW5hcmlvKCd1cGRhdGVzIGEgc2NhbGFyVHlwZScsIGFzeW5jIChzY2VuYXJpbykgPT4gewogICAgY29uc3Qgb3JpZ2luYWwgPSBhd2FpdCBzY2FsYXJUeXBlKHsKICAgICAgaWQ6IHNjZW5hcmlvLnNjYWxhclR5cGUub25lLmlkLAogICAgfSkKICAgIGNvbnN0IHJlc3VsdCA9IGF3YWl0IHVwZGF0ZVNjYWxhclR5cGUoewogICAgICBpZDogb3JpZ2luYWwuaWQsCiAgICAgIGlucHV0OiB7IGVtYWlsOiAnZm9vQGJhci5jb20yJyB9LAogICAgfSkKCiAgICBleHBlY3QocmVzdWx0LmVtYWlsKS50b0VxdWFsKCdmb29AYmFyLmNvbTInKQogIH0pCgogIHNjZW5hcmlvKCdkZWxldGVzIGEgc2NhbGFyVHlwZScsIGFzeW5jIChzY2VuYXJpbykgPT4gewogICAgY29uc3Qgb3JpZ2luYWwgPSBhd2FpdCBkZWxldGVTY2FsYXJUeXBlKHsKICAgICAgaWQ6IHNjZW5hcmlvLnNjYWxhclR5cGUub25lLmlkLAogICAgfSkKICAgIGNvbnN0IHJlc3VsdCA9IGF3YWl0IHNjYWxhclR5cGUoeyBpZDogb3JpZ2luYWwuaWQgfSkKCiAgICBleHBlY3QocmVzdWx0KS50b0VxdWFsKG51bGwpCiAgfSkKfSkKIgpgOwoKZXhwb3J0c1tgaW4gamF2YXNjcmlwdCBtb2RlID4gY3JlYXRlcyBhIHNpbmdsZSB3b3JkIHNlcnZpY2UgZmlsZSAxYF0gPSBgCiJpbXBvcnQgeyBkYiB9IGZyb20gJ3NyYy9saWIvZGInCgpleHBvcnQgY29uc3QgdXNlcnMgPSAoKSA9PiB7CiAgcmV0dXJuIGRiLnVzZXIuZmluZE1hbnkoKQp9CgpleHBvcnQgY29uc3QgdXNlciA9ICh7IGlkIH0pID0+IHsKICByZXR1cm4gZGIudXNlci5maW5kVW5pcXVlKHsKICAgIHdoZXJlOiB7IGlkIH0sCiAgfSkKfQoKZXhwb3J0IGNvbnN0IGNyZWF0ZVVzZXIgPSAoeyBpbnB1dCB9KSA9PiB7CiAgcmV0dXJuIGRiLnVzZXIuY3JlYXRlKHsKICAgIGRhdGE6IGlucHV0LAogIH0pCn0KCmV4cG9ydCBjb25zdCB1cGRhdGVVc2VyID0gKHsgaWQsIGlucHV0IH0pID0+IHsKICByZXR1cm4gZGIudXNlci51cGRhdGUoewogICAgZGF0YTogaW5wdXQsCiAgICB3aGVyZTogeyBpZCB9LAogIH0pCn0KCmV4cG9ydCBjb25zdCBkZWxldGVVc2VyID0gKHsgaWQgfSkgPT4gewogIHJldHVybiBkYi51c2VyLmRlbGV0ZSh7CiAgICB3aGVyZTogeyBpZCB9LAogIH0pCn0KCmV4cG9ydCBjb25zdCBVc2VyID0gewogIHByb2ZpbGVzOiAoX29iaiwgeyByb290IH0pID0+IHsKICAgIHJldHVybiBkYi51c2VyLmZpbmRVbmlxdWUoeyB3aGVyZTogeyBpZDogcm9vdD8uaWQgfSB9KS5wcm9maWxlcygpCiAgfSwKICB0cmFuc2FjdGlvbnM6IChfb2JqLCB7IHJvb3QgfSkgPT4gewogICAgcmV0dXJuIGRiLnVzZXIuZmluZFVuaXF1ZSh7IHdoZXJlOiB7IGlkOiByb290Py5pZCB9IH0pLnRyYW5zYWN0aW9ucygpCiAgfSwKfQoiCmA7CgpleHBvcnRzW2BpbiBqYXZhc2NyaXB0IG1vZGUgPiBjcmVhdGVzIGEgc2luZ2xlIHdvcmQgc2VydmljZSBmaWxlIHdpdGggQ1JVRCBhY3Rpb25zIDFgXSA9IGAKImltcG9ydCB7IGRiIH0gZnJvbSAnc3JjL2xpYi9kYicKCmV4cG9ydCBjb25zdCBwb3N0cyA9ICgpID0+IHsKICByZXR1cm4gZGIucG9zdC5maW5kTWFueSgpCn0KCmV4cG9ydCBjb25zdCBwb3N0ID0gKHsgaWQgfSkgPT4gewogIHJldHVybiBkYi5wb3N0LmZpbmRVbmlxdWUoewogICAgd2hlcmU6IHsgaWQgfSwKICB9KQp9CgpleHBvcnQgY29uc3QgY3JlYXRlUG9zdCA9ICh7IGlucHV0IH0pID0+IHsKICByZXR1cm4gZGIucG9zdC5jcmVhdGUoewogICAgZGF0YTogaW5wdXQsCiAgfSkKfQoKZXhwb3J0IGNvbnN0IHVwZGF0ZVBvc3QgPSAoeyBpZCwgaW5wdXQgfSkgPT4gewogIHJldHVybiBkYi5wb3N0LnVwZGF0ZSh7CiAgICBkYXRhOiBpbnB1dCwKICAgIHdoZXJlOiB7IGlkIH0sCiAgfSkKfQoKZXhwb3J0IGNvbnN0IGRlbGV0ZVBvc3QgPSAoeyBpZCB9KSA9PiB7CiAgcmV0dXJuIGRiLnBvc3QuZGVsZXRlKHsKICAgIHdoZXJlOiB7IGlkIH0sCiAgfSkKfQoKZXhwb3J0IGNvbnN0IFBvc3QgPSB7CiAgZmF2b3JpdGVzOiAoX29iaiwgeyByb290IH0pID0+IHsKICAgIHJldHVybiBkYi5wb3N0LmZpbmRVbmlxdWUoeyB3aGVyZTogeyBpZDogcm9vdD8uaWQgfSB9KS5mYXZvcml0ZXMoKQogIH0sCn0KIgpgOwoKZXhwb3J0c1tgaW4gamF2YXNjcmlwdCBtb2RlID4gY3JlYXRlcyBhIHNpbmdsZSB3b3JkIHNlcnZpY2UgZmlsZSB3aXRoIGEgYmVsb25nc1RvIHJlbGF0aW9uIDFgXSA9IGAKImltcG9ydCB7IGRiIH0gZnJvbSAnc3JjL2xpYi9kYicKCmV4cG9ydCBjb25zdCB1c2VycyA9ICgpID0+IHsKICByZXR1cm4gZGIudXNlci5maW5kTWFueSgpCn0KCmV4cG9ydCBjb25zdCB1c2VyID0gKHsgaWQgfSkgPT4gewogIHJldHVybiBkYi51c2VyLmZpbmRVbmlxdWUoewogICAgd2hlcmU6IHsgaWQgfSwKICB9KQp9CgpleHBvcnQgY29uc3QgVXNlciA9IHsKICBpZGVudGl0eTogKF9vYmosIHsgcm9vdCB9KSA9PiB7CiAgICByZXR1cm4gZGIudXNlci5maW5kVW5pcXVlKHsgd2hlcmU6IHsgaWQ6IHJvb3Q/LmlkIH0gfSkuaWRlbnRpdHkoKQogIH0sCn0KIgpgOwoKZXhwb3J0c1tgaW4gamF2YXNjcmlwdCBtb2RlID4gY3JlYXRlcyBhIHNpbmdsZSB3b3JkIHNlcnZpY2UgZmlsZSB3aXRoIGEgaGFzTWFueSByZWxhdGlvbiAxYF0gPSBgCiJpbXBvcnQgeyBkYiB9IGZyb20gJ3NyYy9saWIvZGInCgpleHBvcnQgY29uc3QgdXNlcnMgPSAoKSA9PiB7CiAgcmV0dXJuIGRiLnVzZXIuZmluZE1hbnkoKQp9CgpleHBvcnQgY29uc3QgdXNlciA9ICh7IGlkIH0pID0+IHsKICByZXR1cm4gZGIudXNlci5maW5kVW5pcXVlKHsKICAgIHdoZXJlOiB7IGlkIH0sCiAgfSkKfQoKZXhwb3J0IGNvbnN0IFVzZXIgPSB7CiAgdXNlclByb2ZpbGVzOiAoX29iaiwgeyByb290IH0pID0+IHsKICAgIHJldHVybiBkYi51c2VyLmZpbmRVbmlxdWUoeyB3aGVyZTogeyBpZDogcm9vdD8uaWQgfSB9KS51c2VyUHJvZmlsZXMoKQogIH0sCn0KIgpgOwoKZXhwb3J0c1tgaW4gamF2YXNjcmlwdCBtb2RlID4gY3JlYXRlcyBhIHNpbmdsZSB3b3JkIHNlcnZpY2UgZmlsZSB3aXRoIG11bHRpcGxlIHJlbGF0aW9ucyAxYF0gPSBgCiJpbXBvcnQgeyBkYiB9IGZyb20gJ3NyYy9saWIvZGInCgpleHBvcnQgY29uc3QgdXNlcnMgPSAoKSA9PiB7CiAgcmV0dXJuIGRiLnVzZXIuZmluZE1hbnkoKQp9CgpleHBvcnQgY29uc3QgdXNlciA9ICh7IGlkIH0pID0+IHsKICByZXR1cm4gZGIudXNlci5maW5kVW5pcXVlKHsKICAgIHdoZXJlOiB7IGlkIH0sCiAgfSkKfQoKZXhwb3J0IGNvbnN0IFVzZXIgPSB7CiAgdXNlclByb2ZpbGVzOiAoX29iaiwgeyByb290IH0pID0+IHsKICAgIHJldHVybiBkYi51c2VyLmZpbmRVbmlxdWUoeyB3aGVyZTogeyBpZDogcm9vdD8uaWQgfSB9KS51c2VyUHJvZmlsZXMoKQogIH0sCiAgaWRlbnRpdHk6IChfb2JqLCB7IHJvb3QgfSkgPT4gewogICAgcmV0dXJuIGRiLnVzZXIuZmluZFVuaXF1ZSh7IHdoZXJlOiB7IGlkOiByb290Py5pZCB9IH0pLmlkZW50aXR5KCkKICB9LAp9CiIKYDsKCmV4cG9ydHNbYGluIGphdmFzY3JpcHQgbW9kZSA+IGNyZWF0ZXMgYSBzaW5nbGUgd29yZCBzZXJ2aWNlIHNjZW5hcmlvIGZpbGUgMWBdID0gYAoiZXhwb3J0IGNvbnN0IHN0YW5kYXJkID0gZGVmaW5lU2NlbmFyaW8oewogIHVzZXI6IHsKICAgIG9uZTogeyBkYXRhOiB7IGVtYWlsOiAnZm9vMTIzNDU2N0BiYXIuY29tJyB9IH0sCiAgICB0d286IHsgZGF0YTogeyBlbWFpbDogJ2ZvbzEyMzQ1NjdAYmFyLmNvbScgfSB9LAogIH0sCn0pCiIKYDsKCmV4cG9ydHNbYGluIGphdmFzY3JpcHQgbW9kZSA+IGNyZWF0ZXMgYSBzaW5nbGUgd29yZCBzZXJ2aWNlIHRlc3QgZmlsZSAxYF0gPSBgCiJpbXBvcnQgeyB1c2VycywgdXNlciwgY3JlYXRlVXNlciwgdXBkYXRlVXNlciwgZGVsZXRlVXNlciB9IGZyb20gJy4vdXNlcnMuanMnCgovLyBHZW5lcmF0ZWQgYm9pbGVycGxhdGUgdGVzdHMgZG8gbm90IGFjY291bnQgZm9yIGFsbCBjaXJjdW1zdGFuY2VzCi8vIGFuZCBjYW4gZmFpbCB3aXRob3V0IGFkanVzdG1lbnRzLCBlLmcuIEZsb2F0LgovLyAgICAgICAgICAgUGxlYXNlIHJlZmVyIHRvIHRoZSBSZWR3b29kSlMgVGVzdGluZyBEb2NzOgovLyAgICAgICBodHRwczovL2NlZGFyanMuY29tL2RvY3MvdGVzdGluZyN0ZXN0aW5nLXNlcnZpY2VzCi8vIGh0dHBzOi8vY2VkYXJqcy5jb20vZG9jcy90ZXN0aW5nI2plc3QtZXhwZWN0LXR5cGUtY29uc2lkZXJhdGlvbnMKCmRlc2NyaWJlKCd1c2VycycsICgpID0+IHsKICBzY2VuYXJpbygncmV0dXJucyBhbGwgdXNlcnMnLCBhc3luYyAoc2NlbmFyaW8pID0+IHsKICAgIGNvbnN0IHJlc3VsdCA9IGF3YWl0IHVzZXJzKCkKCiAgICBleHBlY3QocmVzdWx0Lmxlbmd0aCkudG9FcXVhbChPYmplY3Qua2V5cyhzY2VuYXJpby51c2VyKS5sZW5ndGgpCiAgfSkKCiAgc2NlbmFyaW8oJ3JldHVybnMgYSBzaW5nbGUgdXNlcicsIGFzeW5jIChzY2VuYXJpbykgPT4gewogICAgY29uc3QgcmVzdWx0ID0gYXdhaXQgdXNlcih7IGlkOiBzY2VuYXJpby51c2VyLm9uZS5pZCB9KQoKICAgIGV4cGVjdChyZXN1bHQpLnRvRXF1YWwoc2NlbmFyaW8udXNlci5vbmUpCiAgfSkKCiAgc2NlbmFyaW8oJ2NyZWF0ZXMgYSB1c2VyJywgYXN5bmMgKCkgPT4gewogICAgY29uc3QgcmVzdWx0ID0gYXdhaXQgY3JlYXRlVXNlcih7CiAgICAgIGlucHV0OiB7IGVtYWlsOiAnZm9vMTIzNDU2N0BiYXIuY29tJyB9LAogICAgfSkKCiAgICBleHBlY3QocmVzdWx0LmVtYWlsKS50b0VxdWFsKCdmb28xMjM0NTY3QGJhci5jb20nKQogIH0pCgogIHNjZW5hcmlvKCd1cGRhdGVzIGEgdXNlcicsIGFzeW5jIChzY2VuYXJpbykgPT4gewogICAgY29uc3Qgb3JpZ2luYWwgPSBhd2FpdCB1c2VyKHsgaWQ6IHNjZW5hcmlvLnVzZXIub25lLmlkIH0pCiAgICBjb25zdCByZXN1bHQgPSBhd2FpdCB1cGRhdGVVc2VyKHsKICAgICAgaWQ6IG9yaWdpbmFsLmlkLAogICAgICBpbnB1dDogeyBlbWFpbDogJ2ZvbzEyMzQ1NjdAYmFyLmNvbTInIH0sCiAgICB9KQoKICAgIGV4cGVjdChyZXN1bHQuZW1haWwpLnRvRXF1YWwoJ2ZvbzEyMzQ1NjdAYmFyLmNvbTInKQogIH0pCgogIHNjZW5hcmlvKCdkZWxldGVzIGEgdXNlcicsIGFzeW5jIChzY2VuYXJpbykgPT4gewogICAgY29uc3Qgb3JpZ2luYWwgPSBhd2FpdCBkZWxldGVVc2VyKHsgaWQ6IHNjZW5hcmlvLnVzZXIub25lLmlkIH0pCiAgICBjb25zdCByZXN1bHQgPSBhd2FpdCB1c2VyKHsgaWQ6IG9yaWdpbmFsLmlkIH0pCgogICAgZXhwZWN0KHJlc3VsdCkudG9FcXVhbChudWxsKQogIH0pCn0pCiIKYDsKCmV4cG9ydHNbYGluIHR5cGVzY3JpcHQgbW9kZSA+IGNyZWF0ZXMgYSBtdWx0aSB3b3JkIHNlcnZpY2UgZmlsZSAxYF0gPSBgCiJpbXBvcnQgdHlwZSB7CiAgUXVlcnlSZXNvbHZlcnMsCiAgVXNlclByb2ZpbGVSZWxhdGlvblJlc29sdmVycywKfSBmcm9tICd0eXBlcy9ncmFwaHFsJwoKaW1wb3J0IHsgZGIgfSBmcm9tICdzcmMvbGliL2RiJwoKZXhwb3J0IGNvbnN0IHVzZXJQcm9maWxlczogUXVlcnlSZXNvbHZlcnNbJ3VzZXJQcm9maWxlcyddID0gKCkgPT4gewogIHJldHVybiBkYi51c2VyUHJvZmlsZS5maW5kTWFueSgpCn0KCmV4cG9ydCBjb25zdCB1c2VyUHJvZmlsZTogUXVlcnlSZXNvbHZlcnNbJ3VzZXJQcm9maWxlJ10gPSAoeyBpZCB9KSA9PiB7CiAgcmV0dXJuIGRiLnVzZXJQcm9maWxlLmZpbmRVbmlxdWUoewogICAgd2hlcmU6IHsgaWQgfSwKICB9KQp9CgpleHBvcnQgY29uc3QgVXNlclByb2ZpbGU6IFVzZXJQcm9maWxlUmVsYXRpb25SZXNvbHZlcnMgPSB7CiAgdXNlcjogKF9vYmosIHsgcm9vdCB9KSA9PiB7CiAgICByZXR1cm4gZGIudXNlclByb2ZpbGUuZmluZFVuaXF1ZSh7IHdoZXJlOiB7IGlkOiByb290Py5pZCB9IH0pLnVzZXIoKQogIH0sCn0KIgpgOwoKZXhwb3J0c1tgaW4gdHlwZXNjcmlwdCBtb2RlID4gY3JlYXRlcyBhIG11bHRpIHdvcmQgc2VydmljZSB0ZXN0IGZpbGUgMWBdID0gYAoiaW1wb3J0IHR5cGUgeyBVc2VyUHJvZmlsZSB9IGZyb20gJ3NyYy9saWIvZGInCgppbXBvcnQgeyB1c2VyUHJvZmlsZXMgfSBmcm9tICcuL3VzZXJQcm9maWxlcy5qcycKaW1wb3J0IHR5cGUgeyBTdGFuZGFyZFNjZW5hcmlvIH0gZnJvbSAnLi91c2VyUHJvZmlsZXMuc2NlbmFyaW9zLmpzJwoKLy8gR2VuZXJhdGVkIGJvaWxlcnBsYXRlIHRlc3RzIGRvIG5vdCBhY2NvdW50IGZvciBhbGwgY2lyY3Vtc3RhbmNlcwovLyBhbmQgY2FuIGZhaWwgd2l0aG91dCBhZGp1c3RtZW50cywgZS5nLiBGbG9hdC4KLy8gICAgICAgICAgIFBsZWFzZSByZWZlciB0byB0aGUgUmVkd29vZEpTIFRlc3RpbmcgRG9jczoKLy8gICAgICAgaHR0cHM6Ly9jZWRhcmpzLmNvbS9kb2NzL3Rlc3RpbmcjdGVzdGluZy1zZXJ2aWNlcwovLyBodHRwczovL2NlZGFyanMuY29tL2RvY3MvdGVzdGluZyNqZXN0LWV4cGVjdC10eXBlLWNvbnNpZGVyYXRpb25zCgpkZXNjcmliZSgndXNlclByb2ZpbGVzJywgKCkgPT4gewogIHNjZW5hcmlvKCdyZXR1cm5zIGFsbCB1c2VyUHJvZmlsZXMnLCBhc3luYyAoc2NlbmFyaW86IFN0YW5kYXJkU2NlbmFyaW8pID0+IHsKICAgIGNvbnN0IHJlc3VsdCA9IGF3YWl0IHVzZXJQcm9maWxlcygpCgogICAgZXhwZWN0KHJlc3VsdC5sZW5ndGgpLnRvRXF1YWwoT2JqZWN0LmtleXMoc2NlbmFyaW8udXNlclByb2ZpbGUpLmxlbmd0aCkKICB9KQp9KQoiCmA7CgpleHBvcnRzW2BpbiB0eXBlc2NyaXB0IG1vZGUgPiBjcmVhdGVzIGEgbXVsdGkgd29yZCBzZXJ2aWNlIHRlc3QgZmlsZSB3aXRoIGNydWQgYWN0aW9ucyBhbmQgb25seSBmb3JlaWduIGFzIG1hbmRhdG9yeSBmaWVsZCAxYF0gPSBgCiJpbXBvcnQgdHlwZSB7IFRyYW5zYWN0aW9uIH0gZnJvbSAnc3JjL2xpYi9kYicKCmltcG9ydCB7CiAgdHJhbnNhY3Rpb25zLAogIHRyYW5zYWN0aW9uLAogIGNyZWF0ZVRyYW5zYWN0aW9uLAogIHVwZGF0ZVRyYW5zYWN0aW9uLAogIGRlbGV0ZVRyYW5zYWN0aW9uLAp9IGZyb20gJy4vdHJhbnNhY3Rpb25zLmpzJwppbXBvcnQgdHlwZSB7IFN0YW5kYXJkU2NlbmFyaW8gfSBmcm9tICcuL3RyYW5zYWN0aW9ucy5zY2VuYXJpb3MuanMnCgovLyBHZW5lcmF0ZWQgYm9pbGVycGxhdGUgdGVzdHMgZG8gbm90IGFjY291bnQgZm9yIGFsbCBjaXJjdW1zdGFuY2VzCi8vIGFuZCBjYW4gZmFpbCB3aXRob3V0IGFkanVzdG1lbnRzLCBlLmcuIEZsb2F0LgovLyAgICAgICAgICAgUGxlYXNlIHJlZmVyIHRvIHRoZSBSZWR3b29kSlMgVGVzdGluZyBEb2NzOgovLyAgICAgICBodHRwczovL2NlZGFyanMuY29tL2RvY3MvdGVzdGluZyN0ZXN0aW5nLXNlcnZpY2VzCi8vIGh0dHBzOi8vY2VkYXJqcy5jb20vZG9jcy90ZXN0aW5nI2plc3QtZXhwZWN0LXR5cGUtY29uc2lkZXJhdGlvbnMKCmRlc2NyaWJlKCd0cmFuc2FjdGlvbnMnLCAoKSA9PiB7CiAgc2NlbmFyaW8oJ3JldHVybnMgYWxsIHRyYW5zYWN0aW9ucycsIGFzeW5jIChzY2VuYXJpbzogU3RhbmRhcmRTY2VuYXJpbykgPT4gewogICAgY29uc3QgcmVzdWx0ID0gYXdhaXQgdHJhbnNhY3Rpb25zKCkKCiAgICBleHBlY3QocmVzdWx0Lmxlbmd0aCkudG9FcXVhbChPYmplY3Qua2V5cyhzY2VuYXJpby50cmFuc2FjdGlvbikubGVuZ3RoKQogIH0pCgogIHNjZW5hcmlvKAogICAgJ3JldHVybnMgYSBzaW5nbGUgdHJhbnNhY3Rpb24nLAogICAgYXN5bmMgKHNjZW5hcmlvOiBTdGFuZGFyZFNjZW5hcmlvKSA9PiB7CiAgICAgIGNvbnN0IHJlc3VsdCA9IGF3YWl0IHRyYW5zYWN0aW9uKHsgaWQ6IHNjZW5hcmlvLnRyYW5zYWN0aW9uLm9uZS5pZCB9KQoKICAgICAgZXhwZWN0KHJlc3VsdCkudG9FcXVhbChzY2VuYXJpby50cmFuc2FjdGlvbi5vbmUpCiAgICB9CiAgKQoKICBzY2VuYXJpbygnY3JlYXRlcyBhIHRyYW5zYWN0aW9uJywgYXN5bmMgKHNjZW5hcmlvOiBTdGFuZGFyZFNjZW5hcmlvKSA9PiB7CiAgICBjb25zdCByZXN1bHQgPSBhd2FpdCBjcmVhdGVUcmFuc2FjdGlvbih7CiAgICAgIGlucHV0OiB7IHVzZXJJZDogc2NlbmFyaW8udHJhbnNhY3Rpb24udHdvLnVzZXJJZCB9LAogICAgfSkKCiAgICBleHBlY3QocmVzdWx0LnVzZXJJZCkudG9FcXVhbChzY2VuYXJpby50cmFuc2FjdGlvbi50d28udXNlcklkKQogIH0pCgogIHNjZW5hcmlvKCd1cGRhdGVzIGEgdHJhbnNhY3Rpb24nLCBhc3luYyAoc2NlbmFyaW86IFN0YW5kYXJkU2NlbmFyaW8pID0+IHsKICAgIGNvbnN0IG9yaWdpbmFsID0gKGF3YWl0IHRyYW5zYWN0aW9uKHsKICAgICAgaWQ6IHNjZW5hcmlvLnRyYW5zYWN0aW9uLm9uZS5pZCwKICAgIH0pKSBhcyBUcmFuc2FjdGlvbgogICAgY29uc3QgcmVzdWx0ID0gYXdhaXQgdXBkYXRlVHJhbnNhY3Rpb24oewogICAgICBpZDogb3JpZ2luYWwuaWQsCiAgICAgIGlucHV0OiB7IHVzZXJJZDogc2NlbmFyaW8udHJhbnNhY3Rpb24udHdvLnVzZXJJZCB9LAogICAgfSkKCiAgICBleHBlY3QocmVzdWx0LnVzZXJJZCkudG9FcXVhbChzY2VuYXJpby50cmFuc2FjdGlvbi50d28udXNlcklkKQogIH0pCgogIHNjZW5hcmlvKCdkZWxldGVzIGEgdHJhbnNhY3Rpb24nLCBhc3luYyAoc2NlbmFyaW86IFN0YW5kYXJkU2NlbmFyaW8pID0+IHsKICAgIGNvbnN0IG9yaWdpbmFsID0gKGF3YWl0IGRlbGV0ZVRyYW5zYWN0aW9uKHsKICAgICAgaWQ6IHNjZW5hcmlvLnRyYW5zYWN0aW9uLm9uZS5pZCwKICAgIH0pKSBhcyBUcmFuc2FjdGlvbgogICAgY29uc3QgcmVzdWx0ID0gYXdhaXQgdHJhbnNhY3Rpb24oeyBpZDogb3JpZ2luYWwuaWQgfSkKCiAgICBleHBlY3QocmVzdWx0KS50b0VxdWFsKG51bGwpCiAgfSkKfSkKIgpgOwoKZXhwb3J0c1tgaW4gdHlwZXNjcmlwdCBtb2RlID4gY3JlYXRlcyBhIG11bHRpIHdvcmQgc2VydmljZSB0ZXN0IGZpbGUgd2l0aCBtdWx0aXBsZSBzY2FsYXIgdHlwZXMgMWBdID0gYAoiaW1wb3J0IHR5cGUgeyBTY2FsYXJUeXBlIH0gZnJvbSAnc3JjL2xpYi9kYicKCmltcG9ydCB7CiAgc2NhbGFyVHlwZXMsCiAgc2NhbGFyVHlwZSwKICBjcmVhdGVTY2FsYXJUeXBlLAogIHVwZGF0ZVNjYWxhclR5cGUsCiAgZGVsZXRlU2NhbGFyVHlwZSwKfSBmcm9tICcuL3NjYWxhclR5cGVzLmpzJwppbXBvcnQgdHlwZSB7IFN0YW5kYXJkU2NlbmFyaW8gfSBmcm9tICcuL3NjYWxhclR5cGVzLnNjZW5hcmlvcy5qcycKCi8vIEdlbmVyYXRlZCBib2lsZXJwbGF0ZSB0ZXN0cyBkbyBub3QgYWNjb3VudCBmb3IgYWxsIGNpcmN1bXN0YW5jZXMKLy8gYW5kIGNhbiBmYWlsIHdpdGhvdXQgYWRqdXN0bWVudHMsIGUuZy4gRmxvYXQuCi8vICAgICAgICAgICBQbGVhc2UgcmVmZXIgdG8gdGhlIFJlZHdvb2RKUyBUZXN0aW5nIERvY3M6Ci8vICAgICAgIGh0dHBzOi8vY2VkYXJqcy5jb20vZG9jcy90ZXN0aW5nI3Rlc3Rpbmctc2VydmljZXMKLy8gaHR0cHM6Ly9jZWRhcmpzLmNvbS9kb2NzL3Rlc3RpbmcjamVzdC1leHBlY3QtdHlwZS1jb25zaWRlcmF0aW9ucwoKZGVzY3JpYmUoJ3NjYWxhclR5cGVzJywgKCkgPT4gewogIHNjZW5hcmlvKCdyZXR1cm5zIGFsbCBzY2FsYXJUeXBlcycsIGFzeW5jIChzY2VuYXJpbzogU3RhbmRhcmRTY2VuYXJpbykgPT4gewogICAgY29uc3QgcmVzdWx0ID0gYXdhaXQgc2NhbGFyVHlwZXMoKQoKICAgIGV4cGVjdChyZXN1bHQubGVuZ3RoKS50b0VxdWFsKE9iamVjdC5rZXlzKHNjZW5hcmlvLnNjYWxhclR5cGUpLmxlbmd0aCkKICB9KQoKICBzY2VuYXJpbygKICAgICdyZXR1cm5zIGEgc2luZ2xlIHNjYWxhclR5cGUnLAogICAgYXN5bmMgKHNjZW5hcmlvOiBTdGFuZGFyZFNjZW5hcmlvKSA9PiB7CiAgICAgIGNvbnN0IHJlc3VsdCA9IGF3YWl0IHNjYWxhclR5cGUoeyBpZDogc2NlbmFyaW8uc2NhbGFyVHlwZS5vbmUuaWQgfSkKCiAgICAgIGV4cGVjdChyZXN1bHQpLnRvRXF1YWwoc2NlbmFyaW8uc2NhbGFyVHlwZS5vbmUpCiAgICB9CiAgKQoKICBzY2VuYXJpbygnY3JlYXRlcyBhIHNjYWxhclR5cGUnLCBhc3luYyAoKSA9PiB7CiAgICBjb25zdCByZXN1bHQgPSBhd2FpdCBjcmVhdGVTY2FsYXJUeXBlKHsKICAgICAgaW5wdXQ6IHsKICAgICAgICBlbWFpbDogJ2Zvb0BiYXIuY29tJywKICAgICAgICBkYXRlOiAnMjAyMi0wOS0zMFQwOTo1MDowMC4wMDBaJywKICAgICAgICBiaWdJbnQ6IDEyMzQ1NjduLAogICAgICAgIGludGVnZXI6IDEyMzQ1NjcsCiAgICAgICAgYm9vbGVhbjogdHJ1ZSwKICAgICAgfSwKICAgIH0pCgogICAgZXhwZWN0KHJlc3VsdC5lbWFpbCkudG9FcXVhbCgnZm9vQGJhci5jb20nKQogICAgZXhwZWN0KHJlc3VsdC5kYXRlKS50b0VxdWFsKG5ldyBEYXRlKCcyMDIyLTA5LTMwVDA5OjUwOjAwLjAwMFonKSkKICAgIGV4cGVjdChyZXN1bHQuYmlnSW50KS50b0VxdWFsKDEyMzQ1NjduKQogICAgZXhwZWN0KHJlc3VsdC5pbnRlZ2VyKS50b0VxdWFsKDEyMzQ1NjcpCiAgICBleHBlY3QocmVzdWx0LmJvb2xlYW4pLnRvRXF1YWwodHJ1ZSkKICB9KQoKICBzY2VuYXJpbygndXBkYXRlcyBhIHNjYWxhclR5cGUnLCBhc3luYyAoc2NlbmFyaW86IFN0YW5kYXJkU2NlbmFyaW8pID0+IHsKICAgIGNvbnN0IG9yaWdpbmFsID0gKGF3YWl0IHNjYWxhclR5cGUoewogICAgICBpZDogc2NlbmFyaW8uc2NhbGFyVHlwZS5vbmUuaWQsCiAgICB9KSkgYXMgU2NhbGFyVHlwZQogICAgY29uc3QgcmVzdWx0ID0gYXdhaXQgdXBkYXRlU2NhbGFyVHlwZSh7CiAgICAgIGlkOiBvcmlnaW5hbC5pZCwKICAgICAgaW5wdXQ6IHsgZW1haWw6ICdmb29AYmFyLmNvbTInIH0sCiAgICB9KQoKICAgIGV4cGVjdChyZXN1bHQuZW1haWwpLnRvRXF1YWwoJ2Zvb0BiYXIuY29tMicpCiAgfSkKCiAgc2NlbmFyaW8oJ2RlbGV0ZXMgYSBzY2FsYXJUeXBlJywgYXN5bmMgKHNjZW5hcmlvOiBTdGFuZGFyZFNjZW5hcmlvKSA9PiB7CiAgICBjb25zdCBvcmlnaW5hbCA9IChhd2FpdCBkZWxldGVTY2FsYXJUeXBlKHsKICAgICAgaWQ6IHNjZW5hcmlvLnNjYWxhclR5cGUub25lLmlkLAogICAgfSkpIGFzIFNjYWxhclR5cGUKICAgIGNvbnN0IHJlc3VsdCA9IGF3YWl0IHNjYWxhclR5cGUoeyBpZDogb3JpZ2luYWwuaWQgfSkKCiAgICBleHBlY3QocmVzdWx0KS50b0VxdWFsKG51bGwpCiAgfSkKfSkKIgpgOwoKZXhwb3J0c1tgaW4gdHlwZXNjcmlwdCBtb2RlID4gY3JlYXRlcyBhIHNpbmdsZSB3b3JkIHNlcnZpY2UgZmlsZSAxYF0gPSBgCiJpbXBvcnQgdHlwZSB7CiAgUXVlcnlSZXNvbHZlcnMsCiAgTXV0YXRpb25SZXNvbHZlcnMsCiAgVXNlclJlbGF0aW9uUmVzb2x2ZXJzLAp9IGZyb20gJ3R5cGVzL2dyYXBocWwnCgppbXBvcnQgeyBkYiB9IGZyb20gJ3NyYy9saWIvZGInCgpleHBvcnQgY29uc3QgdXNlcnM6IFF1ZXJ5UmVzb2x2ZXJzWyd1c2VycyddID0gKCkgPT4gewogIHJldHVybiBkYi51c2VyLmZpbmRNYW55KCkKfQoKZXhwb3J0IGNvbnN0IHVzZXI6IFF1ZXJ5UmVzb2x2ZXJzWyd1c2VyJ10gPSAoeyBpZCB9KSA9PiB7CiAgcmV0dXJuIGRiLnVzZXIuZmluZFVuaXF1ZSh7CiAgICB3aGVyZTogeyBpZCB9LAogIH0pCn0KCmV4cG9ydCBjb25zdCBjcmVhdGVVc2VyOiBNdXRhdGlvblJlc29sdmVyc1snY3JlYXRlVXNlciddID0gKHsgaW5wdXQgfSkgPT4gewogIHJldHVybiBkYi51c2VyLmNyZWF0ZSh7CiAgICBkYXRhOiBpbnB1dCwKICB9KQp9CgpleHBvcnQgY29uc3QgdXBkYXRlVXNlcjogTXV0YXRpb25SZXNvbHZlcnNbJ3VwZGF0ZVVzZXInXSA9ICh7IGlkLCBpbnB1dCB9KSA9PiB7CiAgcmV0dXJuIGRiLnVzZXIudXBkYXRlKHsKICAgIGRhdGE6IGlucHV0LAogICAgd2hlcmU6IHsgaWQgfSwKICB9KQp9CgpleHBvcnQgY29uc3QgZGVsZXRlVXNlcjogTXV0YXRpb25SZXNvbHZlcnNbJ2RlbGV0ZVVzZXInXSA9ICh7IGlkIH0pID0+IHsKICByZXR1cm4gZGIudXNlci5kZWxldGUoewogICAgd2hlcmU6IHsgaWQgfSwKICB9KQp9CgpleHBvcnQgY29uc3QgVXNlcjogVXNlclJlbGF0aW9uUmVzb2x2ZXJzID0gewogIHByb2ZpbGVzOiAoX29iaiwgeyByb290IH0pID0+IHsKICAgIHJldHVybiBkYi51c2VyLmZpbmRVbmlxdWUoeyB3aGVyZTogeyBpZDogcm9vdD8uaWQgfSB9KS5wcm9maWxlcygpCiAgfSwKICB0cmFuc2FjdGlvbnM6IChfb2JqLCB7IHJvb3QgfSkgPT4gewogICAgcmV0dXJuIGRiLnVzZXIuZmluZFVuaXF1ZSh7IHdoZXJlOiB7IGlkOiByb290Py5pZCB9IH0pLnRyYW5zYWN0aW9ucygpCiAgfSwKfQoiCmA7CgpleHBvcnRzW2BpbiB0eXBlc2NyaXB0IG1vZGUgPiBjcmVhdGVzIGEgc2luZ2xlIHdvcmQgc2VydmljZSBmaWxlIHdpdGggQ1JVRCBhY3Rpb25zIDFgXSA9IGAKImltcG9ydCB0eXBlIHsKICBRdWVyeVJlc29sdmVycywKICBNdXRhdGlvblJlc29sdmVycywKICBQb3N0UmVsYXRpb25SZXNvbHZlcnMsCn0gZnJvbSAndHlwZXMvZ3JhcGhxbCcKCmltcG9ydCB7IGRiIH0gZnJvbSAnc3JjL2xpYi9kYicKCmV4cG9ydCBjb25zdCBwb3N0czogUXVlcnlSZXNvbHZlcnNbJ3Bvc3RzJ10gPSAoKSA9PiB7CiAgcmV0dXJuIGRiLnBvc3QuZmluZE1hbnkoKQp9CgpleHBvcnQgY29uc3QgcG9zdDogUXVlcnlSZXNvbHZlcnNbJ3Bvc3QnXSA9ICh7IGlkIH0pID0+IHsKICByZXR1cm4gZGIucG9zdC5maW5kVW5pcXVlKHsKICAgIHdoZXJlOiB7IGlkIH0sCiAgfSkKfQoKZXhwb3J0IGNvbnN0IGNyZWF0ZVBvc3Q6IE11dGF0aW9uUmVzb2x2ZXJzWydjcmVhdGVQb3N0J10gPSAoeyBpbnB1dCB9KSA9PiB7CiAgcmV0dXJuIGRiLnBvc3QuY3JlYXRlKHsKICAgIGRhdGE6IGlucHV0LAogIH0pCn0KCmV4cG9ydCBjb25zdCB1cGRhdGVQb3N0OiBNdXRhdGlvblJlc29sdmVyc1sndXBkYXRlUG9zdCddID0gKHsgaWQsIGlucHV0IH0pID0+IHsKICByZXR1cm4gZGIucG9zdC51cGRhdGUoewogICAgZGF0YTogaW5wdXQsCiAgICB3aGVyZTogeyBpZCB9LAogIH0pCn0KCmV4cG9ydCBjb25zdCBkZWxldGVQb3N0OiBNdXRhdGlvblJlc29sdmVyc1snZGVsZXRlUG9zdCddID0gKHsgaWQgfSkgPT4gewogIHJldHVybiBkYi5wb3N0LmRlbGV0ZSh7CiAgICB3aGVyZTogeyBpZCB9LAogIH0pCn0KCmV4cG9ydCBjb25zdCBQb3N0OiBQb3N0UmVsYXRpb25SZXNvbHZlcnMgPSB7CiAgZmF2b3JpdGVzOiAoX29iaiwgeyByb290IH0pID0+IHsKICAgIHJldHVybiBkYi5wb3N0LmZpbmRVbmlxdWUoeyB3aGVyZTogeyBpZDogcm9vdD8uaWQgfSB9KS5mYXZvcml0ZXMoKQogIH0sCn0KIgpgOwoKZXhwb3J0c1tgaW4gdHlwZXNjcmlwdCBtb2RlID4gY3JlYXRlcyBhIHNpbmdsZSB3b3JkIHNlcnZpY2UgZmlsZSB3aXRoIGEgYmVsb25nc1RvIHJlbGF0aW9uIDFgXSA9IGAKImltcG9ydCB0eXBlIHsgUXVlcnlSZXNvbHZlcnMsIFVzZXJSZWxhdGlvblJlc29sdmVycyB9IGZyb20gJ3R5cGVzL2dyYXBocWwnCgppbXBvcnQgeyBkYiB9IGZyb20gJ3NyYy9saWIvZGInCgpleHBvcnQgY29uc3QgdXNlcnM6IFF1ZXJ5UmVzb2x2ZXJzWyd1c2VycyddID0gKCkgPT4gewogIHJldHVybiBkYi51c2VyLmZpbmRNYW55KCkKfQoKZXhwb3J0IGNvbnN0IHVzZXI6IFF1ZXJ5UmVzb2x2ZXJzWyd1c2VyJ10gPSAoeyBpZCB9KSA9PiB7CiAgcmV0dXJuIGRiLnVzZXIuZmluZFVuaXF1ZSh7CiAgICB3aGVyZTogeyBpZCB9LAogIH0pCn0KCmV4cG9ydCBjb25zdCBVc2VyOiBVc2VyUmVsYXRpb25SZXNvbHZlcnMgPSB7CiAgaWRlbnRpdHk6IChfb2JqLCB7IHJvb3QgfSkgPT4gewogICAgcmV0dXJuIGRiLnVzZXIuZmluZFVuaXF1ZSh7IHdoZXJlOiB7IGlkOiByb290Py5pZCB9IH0pLmlkZW50aXR5KCkKICB9LAp9CiIKYDsKCmV4cG9ydHNbYGluIHR5cGVzY3JpcHQgbW9kZSA+IGNyZWF0ZXMgYSBzaW5nbGUgd29yZCBzZXJ2aWNlIGZpbGUgd2l0aCBhIGhhc01hbnkgcmVsYXRpb24gMWBdID0gYAoiaW1wb3J0IHR5cGUgeyBRdWVyeVJlc29sdmVycywgVXNlclJlbGF0aW9uUmVzb2x2ZXJzIH0gZnJvbSAndHlwZXMvZ3JhcGhxbCcKCmltcG9ydCB7IGRiIH0gZnJvbSAnc3JjL2xpYi9kYicKCmV4cG9ydCBjb25zdCB1c2VyczogUXVlcnlSZXNvbHZlcnNbJ3VzZXJzJ10gPSAoKSA9PiB7CiAgcmV0dXJuIGRiLnVzZXIuZmluZE1hbnkoKQp9CgpleHBvcnQgY29uc3QgdXNlcjogUXVlcnlSZXNvbHZlcnNbJ3VzZXInXSA9ICh7IGlkIH0pID0+IHsKICByZXR1cm4gZGIudXNlci5maW5kVW5pcXVlKHsKICAgIHdoZXJlOiB7IGlkIH0sCiAgfSkKfQoKZXhwb3J0IGNvbnN0IFVzZXI6IFVzZXJSZWxhdGlvblJlc29sdmVycyA9IHsKICB1c2VyUHJvZmlsZXM6IChfb2JqLCB7IHJvb3QgfSkgPT4gewogICAgcmV0dXJuIGRiLnVzZXIuZmluZFVuaXF1ZSh7IHdoZXJlOiB7IGlkOiByb290Py5pZCB9IH0pLnVzZXJQcm9maWxlcygpCiAgfSwKfQoiCmA7CgpleHBvcnRzW2BpbiB0eXBlc2NyaXB0IG1vZGUgPiBjcmVhdGVzIGEgc2luZ2xlIHdvcmQgc2VydmljZSBmaWxlIHdpdGggbXVsdGlwbGUgcmVsYXRpb25zIDFgXSA9IGAKImltcG9ydCB0eXBlIHsgUXVlcnlSZXNvbHZlcnMsIFVzZXJSZWxhdGlvblJlc29sdmVycyB9IGZyb20gJ3R5cGVzL2dyYXBocWwnCgppbXBvcnQgeyBkYiB9IGZyb20gJ3NyYy9saWIvZGInCgpleHBvcnQgY29uc3QgdXNlcnM6IFF1ZXJ5UmVzb2x2ZXJzWyd1c2VycyddID0gKCkgPT4gewogIHJldHVybiBkYi51c2VyLmZpbmRNYW55KCkKfQoKZXhwb3J0IGNvbnN0IHVzZXI6IFF1ZXJ5UmVzb2x2ZXJzWyd1c2VyJ10gPSAoeyBpZCB9KSA9PiB7CiAgcmV0dXJuIGRiLnVzZXIuZmluZFVuaXF1ZSh7CiAgICB3aGVyZTogeyBpZCB9LAogIH0pCn0KCmV4cG9ydCBjb25zdCBVc2VyOiBVc2VyUmVsYXRpb25SZXNvbHZlcnMgPSB7CiAgdXNlclByb2ZpbGVzOiAoX29iaiwgeyByb290IH0pID0+IHsKICAgIHJldHVybiBkYi51c2VyLmZpbmRVbmlxdWUoeyB3aGVyZTogeyBpZDogcm9vdD8uaWQgfSB9KS51c2VyUHJvZmlsZXMoKQogIH0sCiAgaWRlbnRpdHk6IChfb2JqLCB7IHJvb3QgfSkgPT4gewogICAgcmV0dXJuIGRiLnVzZXIuZmluZFVuaXF1ZSh7IHdoZXJlOiB7IGlkOiByb290Py5pZCB9IH0pLmlkZW50aXR5KCkKICB9LAp9CiIKYDsKCmV4cG9ydHNbYGluIHR5cGVzY3JpcHQgbW9kZSA+IGNyZWF0ZXMgYSBzaW5nbGUgd29yZCBzZXJ2aWNlIHNjZW5hcmlvIGZpbGUgMWBdID0gYAoiaW1wb3J0IHR5cGUgeyBTY2VuYXJpb0RhdGEgfSBmcm9tICdAY2VkYXJqcy90ZXN0aW5nL2FwaScKCmltcG9ydCB0eXBlIHsgUHJpc21hLCBVc2VyIH0gZnJvbSAnc3JjL2xpYi9kYicKCmV4cG9ydCBjb25zdCBzdGFuZGFyZCA9IGRlZmluZVNjZW5hcmlvPFByaXNtYS5Vc2VyQ3JlYXRlQXJncz4oewogIHVzZXI6IHsKICAgIG9uZTogeyBkYXRhOiB7IGVtYWlsOiAnZm9vMTIzNDU2N0BiYXIuY29tJyB9IH0sCiAgICB0d286IHsgZGF0YTogeyBlbWFpbDogJ2ZvbzEyMzQ1NjdAYmFyLmNvbScgfSB9LAogIH0sCn0pCgpleHBvcnQgdHlwZSBTdGFuZGFyZFNjZW5hcmlvID0gU2NlbmFyaW9EYXRhPFVzZXIsICd1c2VyJz4KIgpgOwoKZXhwb3J0c1tgaW4gdHlwZXNjcmlwdCBtb2RlID4gY3JlYXRlcyBhIHNpbmdsZSB3b3JkIHNlcnZpY2UgdGVzdCBmaWxlIDFgXSA9IGAKImltcG9ydCB0eXBlIHsgVXNlciB9IGZyb20gJ3NyYy9saWIvZGInCgppbXBvcnQgeyB1c2VycywgdXNlciwgY3JlYXRlVXNlciwgdXBkYXRlVXNlciwgZGVsZXRlVXNlciB9IGZyb20gJy4vdXNlcnMuanMnCmltcG9ydCB0eXBlIHsgU3RhbmRhcmRTY2VuYXJpbyB9IGZyb20gJy4vdXNlcnMuc2NlbmFyaW9zLmpzJwoKLy8gR2VuZXJhdGVkIGJvaWxlcnBsYXRlIHRlc3RzIGRvIG5vdCBhY2NvdW50IGZvciBhbGwgY2lyY3Vtc3RhbmNlcwovLyBhbmQgY2FuIGZhaWwgd2l0aG91dCBhZGp1c3RtZW50cywgZS5nLiBGbG9hdC4KLy8gICAgICAgICAgIFBsZWFzZSByZWZlciB0byB0aGUgUmVkd29vZEpTIFRlc3RpbmcgRG9jczoKLy8gICAgICAgaHR0cHM6Ly9jZWRhcmpzLmNvbS9kb2NzL3Rlc3RpbmcjdGVzdGluZy1zZXJ2aWNlcwovLyBodHRwczovL2NlZGFyanMuY29tL2RvY3MvdGVzdGluZyNqZXN0LWV4cGVjdC10eXBlLWNvbnNpZGVyYXRpb25zCgpkZXNjcmliZSgndXNlcnMnLCAoKSA9PiB7CiAgc2NlbmFyaW8oJ3JldHVybnMgYWxsIHVzZXJzJywgYXN5bmMgKHNjZW5hcmlvOiBTdGFuZGFyZFNjZW5hcmlvKSA9PiB7CiAgICBjb25zdCByZXN1bHQgPSBhd2FpdCB1c2VycygpCgogICAgZXhwZWN0KHJlc3VsdC5sZW5ndGgpLnRvRXF1YWwoT2JqZWN0LmtleXMoc2NlbmFyaW8udXNlcikubGVuZ3RoKQogIH0pCgogIHNjZW5hcmlvKCdyZXR1cm5zIGEgc2luZ2xlIHVzZXInLCBhc3luYyAoc2NlbmFyaW86IFN0YW5kYXJkU2NlbmFyaW8pID0+IHsKICAgIGNvbnN0IHJlc3VsdCA9IGF3YWl0IHVzZXIoeyBpZDogc2NlbmFyaW8udXNlci5vbmUuaWQgfSkKCiAgICBleHBlY3QocmVzdWx0KS50b0VxdWFsKHNjZW5hcmlvLnVzZXIub25lKQogIH0pCgogIHNjZW5hcmlvKCdjcmVhdGVzIGEgdXNlcicsIGFzeW5jICgpID0+IHsKICAgIGNvbnN0IHJlc3VsdCA9IGF3YWl0IGNyZWF0ZVVzZXIoewogICAgICBpbnB1dDogeyBlbWFpbDogJ2ZvbzEyMzQ1NjdAYmFyLmNvbScgfSwKICAgIH0pCgogICAgZXhwZWN0KHJlc3VsdC5lbWFpbCkudG9FcXVhbCgnZm9vMTIzNDU2N0BiYXIuY29tJykKICB9KQoKICBzY2VuYXJpbygndXBkYXRlcyBhIHVzZXInLCBhc3luYyAoc2NlbmFyaW86IFN0YW5kYXJkU2NlbmFyaW8pID0+IHsKICAgIGNvbnN0IG9yaWdpbmFsID0gKGF3YWl0IHVzZXIoeyBpZDogc2NlbmFyaW8udXNlci5vbmUuaWQgfSkpIGFzIFVzZXIKICAgIGNvbnN0IHJlc3VsdCA9IGF3YWl0IHVwZGF0ZVVzZXIoewogICAgICBpZDogb3JpZ2luYWwuaWQsCiAgICAgIGlucHV0OiB7IGVtYWlsOiAnZm9vMTIzNDU2N0BiYXIuY29tMicgfSwKICAgIH0pCgogICAgZXhwZWN0KHJlc3VsdC5lbWFpbCkudG9FcXVhbCgnZm9vMTIzNDU2N0BiYXIuY29tMicpCiAgfSkKCiAgc2NlbmFyaW8oJ2RlbGV0ZXMgYSB1c2VyJywgYXN5bmMgKHNjZW5hcmlvOiBTdGFuZGFyZFNjZW5hcmlvKSA9PiB7CiAgICBjb25zdCBvcmlnaW5hbCA9IChhd2FpdCBkZWxldGVVc2VyKHsgaWQ6IHNjZW5hcmlvLnVzZXIub25lLmlkIH0pKSBhcyBVc2VyCiAgICBjb25zdCByZXN1bHQgPSBhd2FpdCB1c2VyKHsgaWQ6IG9yaWdpbmFsLmlkIH0pCgogICAgZXhwZWN0KHJlc3VsdCkudG9FcXVhbChudWxsKQogIH0pCn0pCiIKYDsK
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`in javascript mode > creates a multi word service file 1`] = `
+"import { db } from 'src/lib/db'
+
+export const userProfiles = () => {
+  return db.userProfile.findMany()
+}
+
+export const userProfile = ({ id }) => {
+  return db.userProfile.findUnique({
+    where: { id },
+  })
+}
+
+export const UserProfile = {
+  user: (_obj, { root }) => {
+    return db.userProfile.findUnique({ where: { id: root?.id } }).user()
+  },
+}
+"
+`;
+
+exports[`in javascript mode > creates a multi word service test file 1`] = `
+"import { userProfiles } from './userProfiles.js'
+
+// Generated boilerplate tests do not account for all circumstances
+// and can fail without adjustments, e.g. Float.
+//           Please refer to the RedwoodJS Testing Docs:
+//       https://cedarjs.com/docs/testing#testing-services
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+
+describe('userProfiles', () => {
+  scenario('returns all userProfiles', async (scenario) => {
+    const result = await userProfiles()
+
+    expect(result.length).toEqual(Object.keys(scenario.userProfile).length)
+  })
+})
+"
+`;
+
+exports[`in javascript mode > creates a multi word service test file with crud actions and only foreign as mandatory field 1`] = `
+"import {
+  transactions,
+  transaction,
+  createTransaction,
+  updateTransaction,
+  deleteTransaction,
+} from './transactions.js'
+
+// Generated boilerplate tests do not account for all circumstances
+// and can fail without adjustments, e.g. Float.
+//           Please refer to the RedwoodJS Testing Docs:
+//       https://cedarjs.com/docs/testing#testing-services
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+
+describe('transactions', () => {
+  scenario('returns all transactions', async (scenario) => {
+    const result = await transactions()
+
+    expect(result.length).toEqual(Object.keys(scenario.transaction).length)
+  })
+
+  scenario('returns a single transaction', async (scenario) => {
+    const result = await transaction({ id: scenario.transaction.one.id })
+
+    expect(result).toEqual(scenario.transaction.one)
+  })
+
+  scenario('creates a transaction', async (scenario) => {
+    const result = await createTransaction({
+      input: { userId: scenario.transaction.two.userId },
+    })
+
+    expect(result.userId).toEqual(scenario.transaction.two.userId)
+  })
+
+  scenario('updates a transaction', async (scenario) => {
+    const original = await transaction({
+      id: scenario.transaction.one.id,
+    })
+    const result = await updateTransaction({
+      id: original.id,
+      input: { userId: scenario.transaction.two.userId },
+    })
+
+    expect(result.userId).toEqual(scenario.transaction.two.userId)
+  })
+
+  scenario('deletes a transaction', async (scenario) => {
+    const original = await deleteTransaction({
+      id: scenario.transaction.one.id,
+    })
+    const result = await transaction({ id: original.id })
+
+    expect(result).toEqual(null)
+  })
+})
+"
+`;
+
+exports[`in javascript mode > creates a multi word service test file with multiple scalar types 1`] = `
+"import {
+  scalarTypes,
+  scalarType,
+  createScalarType,
+  updateScalarType,
+  deleteScalarType,
+} from './scalarTypes.js'
+
+// Generated boilerplate tests do not account for all circumstances
+// and can fail without adjustments, e.g. Float.
+//           Please refer to the RedwoodJS Testing Docs:
+//       https://cedarjs.com/docs/testing#testing-services
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+
+describe('scalarTypes', () => {
+  scenario('returns all scalarTypes', async (scenario) => {
+    const result = await scalarTypes()
+
+    expect(result.length).toEqual(Object.keys(scenario.scalarType).length)
+  })
+
+  scenario('returns a single scalarType', async (scenario) => {
+    const result = await scalarType({ id: scenario.scalarType.one.id })
+
+    expect(result).toEqual(scenario.scalarType.one)
+  })
+
+  scenario('creates a scalarType', async () => {
+    const result = await createScalarType({
+      input: {
+        email: 'foo@bar.com',
+        date: '2022-09-30T09:50:00.000Z',
+        bigInt: 1234567n,
+        integer: 1234567,
+        boolean: true,
+      },
+    })
+
+    expect(result.email).toEqual('foo@bar.com')
+    expect(result.date).toEqual(new Date('2022-09-30T09:50:00.000Z'))
+    expect(result.bigInt).toEqual(1234567n)
+    expect(result.integer).toEqual(1234567)
+    expect(result.boolean).toEqual(true)
+  })
+
+  scenario('updates a scalarType', async (scenario) => {
+    const original = await scalarType({
+      id: scenario.scalarType.one.id,
+    })
+    const result = await updateScalarType({
+      id: original.id,
+      input: { email: 'foo@bar.com2' },
+    })
+
+    expect(result.email).toEqual('foo@bar.com2')
+  })
+
+  scenario('deletes a scalarType', async (scenario) => {
+    const original = await deleteScalarType({
+      id: scenario.scalarType.one.id,
+    })
+    const result = await scalarType({ id: original.id })
+
+    expect(result).toEqual(null)
+  })
+})
+"
+`;
+
+exports[`in javascript mode > creates a single word service file 1`] = `
+"import { db } from 'src/lib/db'
+
+export const users = () => {
+  return db.user.findMany()
+}
+
+export const user = ({ id }) => {
+  return db.user.findUnique({
+    where: { id },
+  })
+}
+
+export const createUser = ({ input }) => {
+  return db.user.create({
+    data: input,
+  })
+}
+
+export const updateUser = ({ id, input }) => {
+  return db.user.update({
+    data: input,
+    where: { id },
+  })
+}
+
+export const deleteUser = ({ id }) => {
+  return db.user.delete({
+    where: { id },
+  })
+}
+
+export const User = {
+  profiles: (_obj, { root }) => {
+    return db.user.findUnique({ where: { id: root?.id } }).profiles()
+  },
+  transactions: (_obj, { root }) => {
+    return db.user.findUnique({ where: { id: root?.id } }).transactions()
+  },
+}
+"
+`;
+
+exports[`in javascript mode > creates a single word service file with CRUD actions 1`] = `
+"import { db } from 'src/lib/db'
+
+export const posts = () => {
+  return db.post.findMany()
+}
+
+export const post = ({ id }) => {
+  return db.post.findUnique({
+    where: { id },
+  })
+}
+
+export const createPost = ({ input }) => {
+  return db.post.create({
+    data: input,
+  })
+}
+
+export const updatePost = ({ id, input }) => {
+  return db.post.update({
+    data: input,
+    where: { id },
+  })
+}
+
+export const deletePost = ({ id }) => {
+  return db.post.delete({
+    where: { id },
+  })
+}
+
+export const Post = {
+  favorites: (_obj, { root }) => {
+    return db.post.findUnique({ where: { id: root?.id } }).favorites()
+  },
+}
+"
+`;
+
+exports[`in javascript mode > creates a single word service file with a belongsTo relation 1`] = `
+"import { db } from 'src/lib/db'
+
+export const users = () => {
+  return db.user.findMany()
+}
+
+export const user = ({ id }) => {
+  return db.user.findUnique({
+    where: { id },
+  })
+}
+
+export const User = {
+  identity: (_obj, { root }) => {
+    return db.user.findUnique({ where: { id: root?.id } }).identity()
+  },
+}
+"
+`;
+
+exports[`in javascript mode > creates a single word service file with a hasMany relation 1`] = `
+"import { db } from 'src/lib/db'
+
+export const users = () => {
+  return db.user.findMany()
+}
+
+export const user = ({ id }) => {
+  return db.user.findUnique({
+    where: { id },
+  })
+}
+
+export const User = {
+  userProfiles: (_obj, { root }) => {
+    return db.user.findUnique({ where: { id: root?.id } }).userProfiles()
+  },
+}
+"
+`;
+
+exports[`in javascript mode > creates a single word service file with multiple relations 1`] = `
+"import { db } from 'src/lib/db'
+
+export const users = () => {
+  return db.user.findMany()
+}
+
+export const user = ({ id }) => {
+  return db.user.findUnique({
+    where: { id },
+  })
+}
+
+export const User = {
+  userProfiles: (_obj, { root }) => {
+    return db.user.findUnique({ where: { id: root?.id } }).userProfiles()
+  },
+  identity: (_obj, { root }) => {
+    return db.user.findUnique({ where: { id: root?.id } }).identity()
+  },
+}
+"
+`;
+
+exports[`in javascript mode > creates a single word service scenario file 1`] = `
+"export const standard = defineScenario({
+  user: {
+    one: { data: { email: 'foo1234567@bar.com' } },
+    two: { data: { email: 'foo1234567@bar.com' } },
+  },
+})
+"
+`;
+
+exports[`in javascript mode > creates a single word service test file 1`] = `
+"import { users, user, createUser, updateUser, deleteUser } from './users.js'
+
+// Generated boilerplate tests do not account for all circumstances
+// and can fail without adjustments, e.g. Float.
+//           Please refer to the RedwoodJS Testing Docs:
+//       https://cedarjs.com/docs/testing#testing-services
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+
+describe('users', () => {
+  scenario('returns all users', async (scenario) => {
+    const result = await users()
+
+    expect(result.length).toEqual(Object.keys(scenario.user).length)
+  })
+
+  scenario('returns a single user', async (scenario) => {
+    const result = await user({ id: scenario.user.one.id })
+
+    expect(result).toEqual(scenario.user.one)
+  })
+
+  scenario('creates a user', async () => {
+    const result = await createUser({
+      input: { email: 'foo1234567@bar.com' },
+    })
+
+    expect(result.email).toEqual('foo1234567@bar.com')
+  })
+
+  scenario('updates a user', async (scenario) => {
+    const original = await user({ id: scenario.user.one.id })
+    const result = await updateUser({
+      id: original.id,
+      input: { email: 'foo1234567@bar.com2' },
+    })
+
+    expect(result.email).toEqual('foo1234567@bar.com2')
+  })
+
+  scenario('deletes a user', async (scenario) => {
+    const original = await deleteUser({ id: scenario.user.one.id })
+    const result = await user({ id: original.id })
+
+    expect(result).toEqual(null)
+  })
+})
+"
+`;
+
+exports[`in typescript mode > creates a multi word service file 1`] = `
+"import type {
+  QueryResolvers,
+  UserProfileRelationResolvers,
+} from 'types/graphql'
+
+import { db } from 'src/lib/db'
+
+export const userProfiles: QueryResolvers['userProfiles'] = () => {
+  return db.userProfile.findMany()
+}
+
+export const userProfile: QueryResolvers['userProfile'] = ({ id }) => {
+  return db.userProfile.findUnique({
+    where: { id },
+  })
+}
+
+export const UserProfile: UserProfileRelationResolvers = {
+  user: (_obj, { root }) => {
+    return db.userProfile.findUnique({ where: { id: root?.id } }).user()
+  },
+}
+"
+`;
+
+exports[`in typescript mode > creates a multi word service test file 1`] = `
+"import type { UserProfile } from 'src/lib/db'
+
+import { userProfiles } from './userProfiles.js'
+import type { StandardScenario } from './userProfiles.scenarios.js'
+
+// Generated boilerplate tests do not account for all circumstances
+// and can fail without adjustments, e.g. Float.
+//           Please refer to the RedwoodJS Testing Docs:
+//       https://cedarjs.com/docs/testing#testing-services
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+
+describe('userProfiles', () => {
+  scenario('returns all userProfiles', async (scenario: StandardScenario) => {
+    const result = await userProfiles()
+
+    expect(result.length).toEqual(Object.keys(scenario.userProfile).length)
+  })
+})
+"
+`;
+
+exports[`in typescript mode > creates a multi word service test file with crud actions and only foreign as mandatory field 1`] = `
+"import type { Transaction } from 'src/lib/db'
+
+import {
+  transactions,
+  transaction,
+  createTransaction,
+  updateTransaction,
+  deleteTransaction,
+} from './transactions.js'
+import type { StandardScenario } from './transactions.scenarios.js'
+
+// Generated boilerplate tests do not account for all circumstances
+// and can fail without adjustments, e.g. Float.
+//           Please refer to the RedwoodJS Testing Docs:
+//       https://cedarjs.com/docs/testing#testing-services
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+
+describe('transactions', () => {
+  scenario('returns all transactions', async (scenario: StandardScenario) => {
+    const result = await transactions()
+
+    expect(result.length).toEqual(Object.keys(scenario.transaction).length)
+  })
+
+  scenario(
+    'returns a single transaction',
+    async (scenario: StandardScenario) => {
+      const result = await transaction({ id: scenario.transaction.one.id })
+
+      expect(result).toEqual(scenario.transaction.one)
+    }
+  )
+
+  scenario('creates a transaction', async (scenario: StandardScenario) => {
+    const result = await createTransaction({
+      input: { userId: scenario.transaction.two.userId },
+    })
+
+    expect(result.userId).toEqual(scenario.transaction.two.userId)
+  })
+
+  scenario('updates a transaction', async (scenario: StandardScenario) => {
+    const original = (await transaction({
+      id: scenario.transaction.one.id,
+    })) as Transaction
+    const result = await updateTransaction({
+      id: original.id,
+      input: { userId: scenario.transaction.two.userId },
+    })
+
+    expect(result.userId).toEqual(scenario.transaction.two.userId)
+  })
+
+  scenario('deletes a transaction', async (scenario: StandardScenario) => {
+    const original = (await deleteTransaction({
+      id: scenario.transaction.one.id,
+    })) as Transaction
+    const result = await transaction({ id: original.id })
+
+    expect(result).toEqual(null)
+  })
+})
+"
+`;
+
+exports[`in typescript mode > creates a multi word service test file with multiple scalar types 1`] = `
+"import type { ScalarType } from 'src/lib/db'
+
+import {
+  scalarTypes,
+  scalarType,
+  createScalarType,
+  updateScalarType,
+  deleteScalarType,
+} from './scalarTypes.js'
+import type { StandardScenario } from './scalarTypes.scenarios.js'
+
+// Generated boilerplate tests do not account for all circumstances
+// and can fail without adjustments, e.g. Float.
+//           Please refer to the RedwoodJS Testing Docs:
+//       https://cedarjs.com/docs/testing#testing-services
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+
+describe('scalarTypes', () => {
+  scenario('returns all scalarTypes', async (scenario: StandardScenario) => {
+    const result = await scalarTypes()
+
+    expect(result.length).toEqual(Object.keys(scenario.scalarType).length)
+  })
+
+  scenario(
+    'returns a single scalarType',
+    async (scenario: StandardScenario) => {
+      const result = await scalarType({ id: scenario.scalarType.one.id })
+
+      expect(result).toEqual(scenario.scalarType.one)
+    }
+  )
+
+  scenario('creates a scalarType', async () => {
+    const result = await createScalarType({
+      input: {
+        email: 'foo@bar.com',
+        date: '2022-09-30T09:50:00.000Z',
+        bigInt: 1234567n,
+        integer: 1234567,
+        boolean: true,
+      },
+    })
+
+    expect(result.email).toEqual('foo@bar.com')
+    expect(result.date).toEqual(new Date('2022-09-30T09:50:00.000Z'))
+    expect(result.bigInt).toEqual(1234567n)
+    expect(result.integer).toEqual(1234567)
+    expect(result.boolean).toEqual(true)
+  })
+
+  scenario('updates a scalarType', async (scenario: StandardScenario) => {
+    const original = (await scalarType({
+      id: scenario.scalarType.one.id,
+    })) as ScalarType
+    const result = await updateScalarType({
+      id: original.id,
+      input: { email: 'foo@bar.com2' },
+    })
+
+    expect(result.email).toEqual('foo@bar.com2')
+  })
+
+  scenario('deletes a scalarType', async (scenario: StandardScenario) => {
+    const original = (await deleteScalarType({
+      id: scenario.scalarType.one.id,
+    })) as ScalarType
+    const result = await scalarType({ id: original.id })
+
+    expect(result).toEqual(null)
+  })
+})
+"
+`;
+
+exports[`in typescript mode > creates a single word service file 1`] = `
+"import type {
+  QueryResolvers,
+  MutationResolvers,
+  UserRelationResolvers,
+} from 'types/graphql'
+
+import { db } from 'src/lib/db'
+
+export const users: QueryResolvers['users'] = () => {
+  return db.user.findMany()
+}
+
+export const user: QueryResolvers['user'] = ({ id }) => {
+  return db.user.findUnique({
+    where: { id },
+  })
+}
+
+export const createUser: MutationResolvers['createUser'] = ({ input }) => {
+  return db.user.create({
+    data: input,
+  })
+}
+
+export const updateUser: MutationResolvers['updateUser'] = ({ id, input }) => {
+  return db.user.update({
+    data: input,
+    where: { id },
+  })
+}
+
+export const deleteUser: MutationResolvers['deleteUser'] = ({ id }) => {
+  return db.user.delete({
+    where: { id },
+  })
+}
+
+export const User: UserRelationResolvers = {
+  profiles: (_obj, { root }) => {
+    return db.user.findUnique({ where: { id: root?.id } }).profiles()
+  },
+  transactions: (_obj, { root }) => {
+    return db.user.findUnique({ where: { id: root?.id } }).transactions()
+  },
+}
+"
+`;
+
+exports[`in typescript mode > creates a single word service file with CRUD actions 1`] = `
+"import type {
+  QueryResolvers,
+  MutationResolvers,
+  PostRelationResolvers,
+} from 'types/graphql'
+
+import { db } from 'src/lib/db'
+
+export const posts: QueryResolvers['posts'] = () => {
+  return db.post.findMany()
+}
+
+export const post: QueryResolvers['post'] = ({ id }) => {
+  return db.post.findUnique({
+    where: { id },
+  })
+}
+
+export const createPost: MutationResolvers['createPost'] = ({ input }) => {
+  return db.post.create({
+    data: input,
+  })
+}
+
+export const updatePost: MutationResolvers['updatePost'] = ({ id, input }) => {
+  return db.post.update({
+    data: input,
+    where: { id },
+  })
+}
+
+export const deletePost: MutationResolvers['deletePost'] = ({ id }) => {
+  return db.post.delete({
+    where: { id },
+  })
+}
+
+export const Post: PostRelationResolvers = {
+  favorites: (_obj, { root }) => {
+    return db.post.findUnique({ where: { id: root?.id } }).favorites()
+  },
+}
+"
+`;
+
+exports[`in typescript mode > creates a single word service file with a belongsTo relation 1`] = `
+"import type { QueryResolvers, UserRelationResolvers } from 'types/graphql'
+
+import { db } from 'src/lib/db'
+
+export const users: QueryResolvers['users'] = () => {
+  return db.user.findMany()
+}
+
+export const user: QueryResolvers['user'] = ({ id }) => {
+  return db.user.findUnique({
+    where: { id },
+  })
+}
+
+export const User: UserRelationResolvers = {
+  identity: (_obj, { root }) => {
+    return db.user.findUnique({ where: { id: root?.id } }).identity()
+  },
+}
+"
+`;
+
+exports[`in typescript mode > creates a single word service file with a hasMany relation 1`] = `
+"import type { QueryResolvers, UserRelationResolvers } from 'types/graphql'
+
+import { db } from 'src/lib/db'
+
+export const users: QueryResolvers['users'] = () => {
+  return db.user.findMany()
+}
+
+export const user: QueryResolvers['user'] = ({ id }) => {
+  return db.user.findUnique({
+    where: { id },
+  })
+}
+
+export const User: UserRelationResolvers = {
+  userProfiles: (_obj, { root }) => {
+    return db.user.findUnique({ where: { id: root?.id } }).userProfiles()
+  },
+}
+"
+`;
+
+exports[`in typescript mode > creates a single word service file with multiple relations 1`] = `
+"import type { QueryResolvers, UserRelationResolvers } from 'types/graphql'
+
+import { db } from 'src/lib/db'
+
+export const users: QueryResolvers['users'] = () => {
+  return db.user.findMany()
+}
+
+export const user: QueryResolvers['user'] = ({ id }) => {
+  return db.user.findUnique({
+    where: { id },
+  })
+}
+
+export const User: UserRelationResolvers = {
+  userProfiles: (_obj, { root }) => {
+    return db.user.findUnique({ where: { id: root?.id } }).userProfiles()
+  },
+  identity: (_obj, { root }) => {
+    return db.user.findUnique({ where: { id: root?.id } }).identity()
+  },
+}
+"
+`;
+
+exports[`in typescript mode > creates a single word service scenario file 1`] = `
+"import type { ScenarioData } from '@cedarjs/testing/api'
+
+import type { Prisma, User } from 'src/lib/db'
+
+export const standard = defineScenario<Prisma.UserCreateArgs>({
+  user: {
+    one: { data: { email: 'foo1234567@bar.com' } },
+    two: { data: { email: 'foo1234567@bar.com' } },
+  },
+})
+
+export type StandardScenario = ScenarioData<User, 'user'>
+"
+`;
+
+exports[`in typescript mode > creates a single word service test file 1`] = `
+"import type { User } from 'src/lib/db'
+
+import { users, user, createUser, updateUser, deleteUser } from './users.js'
+import type { StandardScenario } from './users.scenarios.js'
+
+// Generated boilerplate tests do not account for all circumstances
+// and can fail without adjustments, e.g. Float.
+//           Please refer to the RedwoodJS Testing Docs:
+//       https://cedarjs.com/docs/testing#testing-services
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+
+describe('users', () => {
+  scenario('returns all users', async (scenario: StandardScenario) => {
+    const result = await users()
+
+    expect(result.length).toEqual(Object.keys(scenario.user).length)
+  })
+
+  scenario('returns a single user', async (scenario: StandardScenario) => {
+    const result = await user({ id: scenario.user.one.id })
+
+    expect(result).toEqual(scenario.user.one)
+  })
+
+  scenario('creates a user', async () => {
+    const result = await createUser({
+      input: { email: 'foo1234567@bar.com' },
+    })
+
+    expect(result.email).toEqual('foo1234567@bar.com')
+  })
+
+  scenario('updates a user', async (scenario: StandardScenario) => {
+    const original = (await user({ id: scenario.user.one.id })) as User
+    const result = await updateUser({
+      id: original.id,
+      input: { email: 'foo1234567@bar.com2' },
+    })
+
+    expect(result.email).toEqual('foo1234567@bar.com2')
+  })
+
+  scenario('deletes a user', async (scenario: StandardScenario) => {
+    const original = (await deleteUser({ id: scenario.user.one.id })) as User
+    const result = await user({ id: original.id })
+
+    expect(result).toEqual(null)
+  })
+})
+"
+`;
