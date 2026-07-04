@@ -1,4 +1,4 @@
-global.__dirname = __dirname
+globalThis.__dirname = import.meta.dirname
 
 vi.mock('node:fs')
 vi.mock('execa')
@@ -9,7 +9,9 @@ import path from 'node:path'
 // Load mocks
 import '../../../../lib/test'
 
-const actualFs = await vi.importActual('node:fs')
+import type * as NodeFs from 'node:fs'
+
+const actualFs = await vi.importActual<typeof NodeFs>('node:fs')
 
 import Enquirer from 'enquirer'
 import { vol } from 'memfs'
@@ -19,7 +21,7 @@ import { getPaths } from '../../../../lib/index.js'
 import * as dbAuth from '../dbAuthHandler.js'
 
 // Mock files needed for each test
-const mockFiles = {}
+const mockFiles: Record<string, string> = {}
 
 const dbAuthTemplateFiles = [
   'forgotPassword.tsx.template',

@@ -1,12 +1,15 @@
 import { Listr } from 'listr2'
 import { vi, afterEach, beforeEach, describe, it, expect } from 'vitest'
 
+import type * as ProjectConfigModule from '@cedarjs/project-config'
+
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const originalProjectConfig = await importOriginal()
+  const originalProjectConfig =
+    await importOriginal<typeof ProjectConfigModule>()
   return {
     ...originalProjectConfig,
     getPaths: () => ({
-      base: `${__dirname}/fixtures`,
+      base: `${globalThis.__dirname}/fixtures`,
     }),
   }
 })
