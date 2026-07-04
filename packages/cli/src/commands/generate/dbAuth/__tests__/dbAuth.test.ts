@@ -1,16 +1,16 @@
 globalThis.__dirname = import.meta.dirname
 
+import Enquirer from 'enquirer'
+import { vol } from 'memfs'
 import { vi, describe, it, expect, afterEach, beforeEach } from 'vitest'
 
+// Mocks must be registered before importing mocked modules
 vi.mock('node:fs')
 vi.mock('execa')
 
 import type * as NodeFs from 'node:fs'
 import fs from 'node:fs'
 import path from 'node:path'
-
-import Enquirer from 'enquirer'
-import { vol } from 'memfs'
 
 import { getPaths } from '../../../../lib/index.js'
 import * as dbAuth from '../dbAuthHandler.js'
