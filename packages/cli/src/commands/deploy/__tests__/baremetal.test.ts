@@ -1,6 +1,9 @@
+import { Listr } from 'listr2'
 import { vi, afterEach, beforeEach, describe, it, expect } from 'vitest'
 
 import type * as ProjectConfigModule from '@cedarjs/project-config'
+
+import * as baremetal from '../baremetal/baremetalHandler.js'
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const originalProjectConfig =
@@ -17,9 +20,6 @@ vi.mock('@cedarjs/project-config/packageManager', () => ({
   getPackageManager: vi.fn(() => 'yarn'),
   resetPackageManagerCache: vi.fn(),
 }))
-
-import { Listr } from 'listr2'
-import * as baremetal from '../baremetal/baremetalHandler.js'
 
 describe('verifyConfig', () => {
   it('throws an error if no environment specified', () => {

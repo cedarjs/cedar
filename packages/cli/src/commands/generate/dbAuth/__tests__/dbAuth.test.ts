@@ -1,24 +1,24 @@
 globalThis.__dirname = import.meta.dirname
 
-import { vi, describe, it, expect, afterEach, beforeEach } from 'vitest'
+import fs from 'node:fs'
+import path from 'node:path'
 
-vi.mock('node:fs')
-vi.mock('execa')
+import Enquirer from 'enquirer'
+import { vol } from 'memfs'
+import { vi, describe, it, expect, afterEach, beforeEach } from 'vitest'
 
 import type * as NodeFs from 'node:fs'
 
-import fs from 'node:fs'
-import path from 'node:path'
-import Enquirer from 'enquirer'
-import { vol } from 'memfs'
+import { getPaths } from '../../../../lib/index.js'
+import * as dbAuth from '../dbAuthHandler.js'
 
 // Load mocks
 import '../../../../lib/test'
 
-const actualFs = await vi.importActual<typeof NodeFs>('node:fs')
+vi.mock('node:fs')
+vi.mock('execa')
 
-import { getPaths } from '../../../../lib/index.js'
-import * as dbAuth from '../dbAuthHandler.js'
+const actualFs = await vi.importActual<typeof NodeFs>('node:fs')
 
 // Mock files needed for each test
 const mockFiles: Record<string, string> = {}
