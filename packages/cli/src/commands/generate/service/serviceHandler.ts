@@ -390,10 +390,12 @@ export const files = async ({
   const prismaImportSource = 'src/lib/db'
 
   let modelRelations: string[] | undefined
+
   if (relations) {
     modelRelations = relations
   } else {
     const schemaResult = await getSchema(model)
+
     if (isServiceModel(schemaResult)) {
       modelRelations = relationsForModel(schemaResult)
     }
