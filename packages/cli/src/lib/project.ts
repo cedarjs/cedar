@@ -1,7 +1,6 @@
 import fs from 'node:fs'
 import path from 'path'
 
-// @ts-expect-error - No types for JS files
 import { getPaths } from './index.js'
 
 export const isTypeScriptProject = () => {
