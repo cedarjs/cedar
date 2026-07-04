@@ -1,0 +1,21 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignore": [
+    ".github/actions/**",
+    ".github/scripts/**",
+    "__fixtures__/**",
+    "docs/**",
+    "local-testing-project/**",
+    "local-testing-project-live/**",
+    "packages/**/__fixtures__/**",
+    "packages/**/__testfixtures__/**",
+    "packages/**/dist/**",
+    "packages/**/fixtures/**",
+    "packages/create-cedar-app/templates/**"
+  ],
+  "exclude": ["files", "exports", "types", "enumMembers", "duplicates"],
+  "ignoreExportsUsedInFile": {
+    "interface": true,
+    "type": true
+  }
+}
