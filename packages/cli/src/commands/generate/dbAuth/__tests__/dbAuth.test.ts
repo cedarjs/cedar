@@ -1,14 +1,18 @@
-globalThis.__dirname = import.meta.dirname
+import type * as NodeFs from 'node:fs'
 
 import Enquirer from 'enquirer'
 import { vol } from 'memfs'
 import { vi, describe, it, expect, afterEach, beforeEach } from 'vitest'
 
-// Mocks must be registered before importing mocked modules
+// Capture __dirname during hoisted mock setup phase
+const testDir = vi.hoisted(() => import.meta.dirname)
+
+globalThis.__dirname = testDir
+
+// Mocks must be registered before importing modules that depend on mocked modules
 vi.mock('node:fs')
 vi.mock('execa')
 
-import type * as NodeFs from 'node:fs'
 import fs from 'node:fs'
 import path from 'node:path'
 
