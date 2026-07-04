@@ -1,7 +1,8 @@
-global.__dirname = __dirname
+globalThis.__dirname = import.meta.dirname
+
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const originalProjectConfig = await importOriginal()
-  const path = require('path')
+  const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
+  const path = await import('node:path')
   return {
     ...originalProjectConfig,
     getPaths: () => {
@@ -17,9 +18,11 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
 })
 
 import fs from 'node:fs'
-import path from 'path'
+import path from 'node:path'
 
 import { vi, test, expect, describe } from 'vitest'
+
+import type * as ProjectConfig from '@cedarjs/project-config'
 
 import * as index from '../index.js'
 

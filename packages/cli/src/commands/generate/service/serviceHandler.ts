@@ -79,7 +79,7 @@ export const parseSchema = async (model: string) => {
   return { scalarFields, relations, foreignKeys }
 }
 
-export function scenarioFieldValue(field: PrismaField): unknown {
+export function scenarioFieldValue(field: PrismaField) {
   const randFloat = Math.random() * 10000000
   const randInt = parseInt(String(Math.random() * 10000000))
   const randIntArray = [
@@ -360,9 +360,11 @@ export const fieldsToUpdate = async (model: string) => {
 
 const getIdName = async (model: string): Promise<string | undefined> => {
   const schemaResult = await getSchema(model)
+
   if (!isServiceModel(schemaResult)) {
     return undefined
   }
+
   return schemaResult.fields.find((field: PrismaField) => field.isId)?.name
 }
 
@@ -387,10 +389,17 @@ export const files = async ({
 
   const prismaImportSource = 'src/lib/db'
 
-  const schemaResult = await getSchema(model)
-  const modelRelations =
-    relations ||
-    (isServiceModel(schemaResult) ? relationsForModel(schemaResult) : [])
+  let modelRelations: string[] | undefined
+
+  if (relations) {
+    modelRelations = relations
+  } else {
+    const schemaResult = await getSchema(model)
+
+    if (isServiceModel(schemaResult)) {
+      modelRelations = relationsForModel(schemaResult)
+    }
+  }
 
   const serviceFile = await templateForFile({
     name,

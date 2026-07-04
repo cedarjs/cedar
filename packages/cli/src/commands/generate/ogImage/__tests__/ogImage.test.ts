@@ -1,24 +1,37 @@
-/* eslint-disable camelcase */
-globalThis.__dirname = __dirname
+globalThis.__dirname = import.meta.dirname
 
+import type * as NodeFs from 'node:fs'
+
+import type * as FastGlob from 'fast-glob'
 import { vol, fs as memfs } from 'memfs'
 import { ufs } from 'unionfs'
 import { afterEach, beforeEach, describe, test, expect, vi } from 'vitest'
 
 import { ensurePosixPath } from '@cedarjs/project-config'
+import type * as ProjectConfig from '@cedarjs/project-config'
 
 import * as ogImageHandler from '../ogImageHandler.js'
+
+// memfs v4 (IFs) extends @jsonjoy.com/fs-node which overloads readdir with a
+// `recursive` option instead of `withFileTypes`. fast-glob's FileSystemAdapter
+// expects the node:fs-style `withFileTypes` overloads. At runtime fast-glob
+// only calls the methods it needs (lstat, stat, lstatSync, statSync, readdir,
+// readdirSync), all of which memfs provides. They just have different overload
+// signatures that TypeScript sees as incompatible. The cast is safe.
+const fsAdapter = memfs as Partial<FastGlob.FileSystemAdapter>
 
 vi.mock('node:fs', async (importOriginal) => {
   const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
     await import('../../../../__tests__/ufsFsProxy.js')
-  ufs
-    .use(wrapFsForUnionfs(await importOriginal()))
-    .use(wrapMemfsForUnionfs(memfs))
-  return { ...ufs, default: { ...ufs } }
+  const fs = await importOriginal<typeof NodeFs>()
+  ufs.use(wrapFsForUnionfs(fs))
+  ufs.use(wrapMemfsForUnionfs(memfs))
+
+  return { ...ufs, default: ufs }
 })
+
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const actual = await importOriginal()
+  const actual = await importOriginal<typeof ProjectConfig>()
 
   return {
     ...actual,
@@ -35,7 +48,8 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     }),
   }
 })
-let original_CEDAR_CWD
+
+let original_CEDAR_CWD: string | undefined
 
 describe('ogImage generator', () => {
   beforeEach(() => {
@@ -138,7 +152,7 @@ describe('ogImage generator', () => {
     test('does nothing if path to jsx page exists', async () => {
       await expect(
         ogImageHandler.validatePath('AboutPage/AboutPage', 'jsx', {
-          fs: memfs,
+          fs: fsAdapter,
         }),
       ).resolves.toEqual(true)
     })
@@ -148,7 +162,7 @@ describe('ogImage generator', () => {
         ogImageHandler.validatePath(
           'Products/Display/ProductPage/ProductPage',
           'tsx',
-          { fs: memfs },
+          { fs: fsAdapter },
         ),
       ).resolves.toEqual(true)
     })
@@ -158,7 +172,7 @@ describe('ogImage generator', () => {
       const ext = 'tsx'
       await expect(
         ogImageHandler.validatePath(pagePath, ext, {
-          fs: memfs,
+          fs: fsAdapter,
         }),
       ).rejects.toThrow()
     })
@@ -167,7 +181,9 @@ describe('ogImage generator', () => {
       const pagePath = 'HomePage/HomePage'
       const ext = 'jsx'
       await expect(
-        ogImageHandler.validatePath(pagePath, ext, { fs: memfs }),
+        ogImageHandler.validatePath(pagePath, ext, {
+          fs: fsAdapter,
+        }),
       ).rejects.toThrow()
     })
   })
