@@ -23,7 +23,7 @@ afterAll(() => {
 type BaseArgs = Record<string, unknown>
 
 const extensionForBaseArgs = (baseArgs: BaseArgs) =>
-  baseArgs?.typescript ? 'ts' : 'js'
+  baseArgs && baseArgs.typescript ? 'ts' : 'js'
 
 const itReturnsExactly3Files = (baseArgs: BaseArgs) => {
   test('returns exactly 3 files', async () => {
