@@ -15,11 +15,11 @@ globalThis.__dirname = testDir
 vi.mock('node:fs')
 vi.mock('execa')
 
+// Load mocks BEFORE importing getPaths, which depends on the mocked setup
+import '../../../../lib/test'
+
 import { getPaths } from '../../../../lib/index.js'
 import * as dbAuth from '../dbAuthHandler.js'
-
-// Load mocks
-import '../../../../lib/test'
 
 const actualFs = await vi.importActual<typeof NodeFs>('node:fs')
 
