@@ -76,7 +76,7 @@ export const normalizedPath = (pagePath: string): string => {
 }
 
 interface ValidatePathOptions {
-  fs?: typeof fs
+  fs?: Partial<fg.FileSystemAdapter>
 }
 
 export const validatePath = async (
