@@ -50,8 +50,8 @@ it('removes new files', async () => {
 
 it('removes empty folders after removing files', async () => {
   vol.fromJSON({
-    [path.join('fake_dir', 'mock_dir', 'test_dir')]: undefined,
-  } as unknown as Record<string, string | null>)
+    [path.join('fake_dir', 'mock_dir', 'test_dir')]: null,
+  })
   rollback.addFileToRollback(
     path.join('fake_dir', 'mock_dir', 'test_dir', 'fake-file'),
   )
