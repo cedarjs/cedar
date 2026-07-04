@@ -2,13 +2,23 @@ globalThis.__dirname = import.meta.dirname
 
 import type * as NodeFs from 'node:fs'
 
+import type * as FastGlob from 'fast-glob'
 import { vol, fs as memfs } from 'memfs'
 import { ufs } from 'unionfs'
 import { afterEach, beforeEach, describe, test, expect, vi } from 'vitest'
 
 import { ensurePosixPath } from '@cedarjs/project-config'
+import type * as ProjectConfig from '@cedarjs/project-config'
 
 import * as ogImageHandler from '../ogImageHandler.js'
+
+// memfs v4 (IFs) extends @jsonjoy.com/fs-node which overloads readdir with a
+// `recursive` option instead of `withFileTypes`. fast-glob's FileSystemAdapter
+// expects the node:fs-style `withFileTypes` overloads. At runtime fast-glob
+// only calls the methods it needs (lstat, stat, lstatSync, statSync, readdir,
+// readdirSync), all of which memfs provides. They just have different overload
+// signatures that TypeScript sees as incompatible. The cast is safe.
+const fsAdapter = memfs as Partial<FastGlob.FileSystemAdapter>
 
 vi.mock('node:fs', async (importOriginal) => {
   const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
@@ -19,10 +29,10 @@ vi.mock('node:fs', async (importOriginal) => {
 })
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const actual = await importOriginal()
+  const actual = await importOriginal<typeof ProjectConfig>()
 
   return {
-    ...(actual as object),
+    ...actual,
     getPaths: () => ({
       api: {
         base: '/path/to/project/api',
@@ -36,6 +46,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     }),
   }
 })
+
 let original_CEDAR_CWD: string | undefined
 
 describe('ogImage generator', () => {
@@ -139,7 +150,7 @@ describe('ogImage generator', () => {
     test('does nothing if path to jsx page exists', async () => {
       await expect(
         ogImageHandler.validatePath('AboutPage/AboutPage', 'jsx', {
-          fs: memfs as unknown as undefined,
+          fs: fsAdapter,
         }),
       ).resolves.toEqual(true)
     })
@@ -149,7 +160,7 @@ describe('ogImage generator', () => {
         ogImageHandler.validatePath(
           'Products/Display/ProductPage/ProductPage',
           'tsx',
-          { fs: memfs as unknown as undefined },
+          { fs: fsAdapter },
         ),
       ).resolves.toEqual(true)
     })
@@ -159,7 +170,7 @@ describe('ogImage generator', () => {
       const ext = 'tsx'
       await expect(
         ogImageHandler.validatePath(pagePath, ext, {
-          fs: memfs as unknown as undefined,
+          fs: fsAdapter,
         }),
       ).rejects.toThrow()
     })
@@ -169,7 +180,7 @@ describe('ogImage generator', () => {
       const ext = 'jsx'
       await expect(
         ogImageHandler.validatePath(pagePath, ext, {
-          fs: memfs as unknown as undefined,
+          fs: fsAdapter,
         }),
       ).rejects.toThrow()
     })
