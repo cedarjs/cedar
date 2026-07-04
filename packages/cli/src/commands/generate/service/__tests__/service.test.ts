@@ -1,5 +1,5 @@
-globalThis.__dirname = __dirname
-import path from 'path'
+globalThis.__dirname = import.meta.dirname
+import path from 'node:path'
 
 import { vi, beforeAll, afterAll, test, expect, describe, it } from 'vitest'
 import yargs from 'yargs/yargs'
@@ -10,6 +10,19 @@ import '../../../../lib/test'
 import { getDefaultArgs } from '../../../../lib/index.js'
 import * as service from '../service.js'
 import * as serviceHandler from '../serviceHandler.js'
+import type { PrismaField } from '../serviceHandler.js'
+
+function field(overrides: Partial<PrismaField>): PrismaField {
+  return {
+    name: '',
+    type: '',
+    kind: 'scalar',
+    isList: false,
+    isRequired: false,
+    isId: false,
+    ...overrides,
+  }
+}
 
 beforeAll(() => {
   vi.useFakeTimers()
@@ -20,10 +33,9 @@ afterAll(() => {
   vi.useRealTimers()
 })
 
-const extensionForBaseArgs = (baseArgs) =>
-  baseArgs && baseArgs.typescript ? 'ts' : 'js'
+type BaseArgs = Record<string, unknown>
 
-const itReturnsExactly3Files = (baseArgs) => {
+const itReturnsExactly3Files = (baseArgs: BaseArgs) => {
   test('returns exactly 3 files', async () => {
     const files = await serviceHandler.files({
       ...baseArgs,
@@ -33,13 +45,13 @@ const itReturnsExactly3Files = (baseArgs) => {
     expect(Object.keys(files).length).toEqual(3)
   })
 }
-const itCreatesASingleWordServiceFile = (baseArgs) => {
+const itCreatesASingleWordServiceFile = (baseArgs: BaseArgs) => {
   test('creates a single word service file', async () => {
     const files = await serviceHandler.files({
       ...baseArgs,
       name: 'User',
     })
-    const extension = extensionForBaseArgs(baseArgs)
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
 
     expect(
       files[
@@ -50,13 +62,13 @@ const itCreatesASingleWordServiceFile = (baseArgs) => {
     ).toMatchSnapshot()
   })
 }
-const itCreatesASingleWordServiceTestFile = (baseArgs) => {
+const itCreatesASingleWordServiceTestFile = (baseArgs: BaseArgs) => {
   test('creates a single word service test file', async () => {
     const files = await serviceHandler.files({
       ...baseArgs,
       name: 'User',
     })
-    const extension = extensionForBaseArgs(baseArgs)
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
 
     expect(
       files[
@@ -68,13 +80,13 @@ const itCreatesASingleWordServiceTestFile = (baseArgs) => {
   })
 }
 
-const itCreatesASingleWordServiceScenarioFile = (baseArgs) => {
+const itCreatesASingleWordServiceScenarioFile = (baseArgs: BaseArgs) => {
   test('creates a single word service scenario file', async () => {
     const files = await serviceHandler.files({
       ...baseArgs,
       name: 'User',
     })
-    const extension = extensionForBaseArgs(baseArgs)
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
     const filePath = path.normalize(
       `/path/to/project/api/src/services/users/users.scenarios.${extension}`,
     )
@@ -84,14 +96,14 @@ const itCreatesASingleWordServiceScenarioFile = (baseArgs) => {
   })
 }
 
-const itCreatesAMultiWordServiceFile = (baseArgs) => {
+const itCreatesAMultiWordServiceFile = (baseArgs: BaseArgs) => {
   test('creates a multi word service file', async () => {
     const files = await serviceHandler.files({
       ...baseArgs,
       name: 'UserProfile',
       crud: false,
     })
-    const extension = extensionForBaseArgs(baseArgs)
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
 
     expect(
       files[
@@ -103,14 +115,14 @@ const itCreatesAMultiWordServiceFile = (baseArgs) => {
   })
 }
 
-const itCreatesAMultiWordServiceTestFile = (baseArgs) => {
+const itCreatesAMultiWordServiceTestFile = (baseArgs: BaseArgs) => {
   test('creates a multi word service test file', async () => {
     const files = await serviceHandler.files({
       ...baseArgs,
       name: 'UserProfile',
       crud: false,
     })
-    const extension = extensionForBaseArgs(baseArgs)
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
 
     expect(
       files[
@@ -122,14 +134,14 @@ const itCreatesAMultiWordServiceTestFile = (baseArgs) => {
   })
 }
 
-const itCreatesASingleWordServiceFileWithCRUDActions = (baseArgs) => {
+const itCreatesASingleWordServiceFileWithCRUDActions = (baseArgs: BaseArgs) => {
   test('creates a single word service file with CRUD actions', async () => {
     const files = await serviceHandler.files({
       ...baseArgs,
       name: 'Post',
       crud: true,
     })
-    const extension = extensionForBaseArgs(baseArgs)
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
 
     expect(
       files[
@@ -144,14 +156,16 @@ const itCreatesASingleWordServiceFileWithCRUDActions = (baseArgs) => {
   })
 }
 
-const itCreatesASingleWordServiceTestFileWithCRUDActions = (baseArgs) => {
+const itCreatesASingleWordServiceTestFileWithCRUDActions = (
+  baseArgs: BaseArgs,
+) => {
   test('creates a service test file with CRUD actions', async () => {
     const files = await serviceHandler.files({
       ...baseArgs,
       name: 'Post',
       crud: true,
     })
-    const extension = extensionForBaseArgs(baseArgs)
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
     const filePath = path.normalize(
       `/path/to/project/api/src/services/posts/posts.test.${extension}`,
     )
@@ -160,14 +174,14 @@ const itCreatesASingleWordServiceTestFileWithCRUDActions = (baseArgs) => {
   })
 }
 
-const itCreatesAMultiWordServiceFileWithCRUDActions = (baseArgs) => {
+const itCreatesAMultiWordServiceFileWithCRUDActions = (baseArgs: BaseArgs) => {
   test('creates a multi word service file with CRUD actions', async () => {
     const files = await serviceHandler.files({
       ...baseArgs,
       name: 'UserProfile',
       crud: true,
     })
-    const extension = extensionForBaseArgs(baseArgs)
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
     const filePath = path.normalize(
       `/path/to/project/api/src/services/userProfiles/userProfiles.${extension}`,
     )
@@ -176,14 +190,16 @@ const itCreatesAMultiWordServiceFileWithCRUDActions = (baseArgs) => {
   })
 }
 
-const itCreatesAMultiWordServiceTestFileWithCRUDActions = (baseArgs) => {
+const itCreatesAMultiWordServiceTestFileWithCRUDActions = (
+  baseArgs: BaseArgs,
+) => {
   test('creates a multi word service test file with CRUD actions', async () => {
     const files = await serviceHandler.files({
       ...baseArgs,
       name: 'UserProfile',
       crud: true,
     })
-    const extension = extensionForBaseArgs(baseArgs)
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
     const filePath = path.normalize(
       `/path/to/project/api/src/services/userProfiles/userProfiles.test.${extension}`,
     )
@@ -193,7 +209,7 @@ const itCreatesAMultiWordServiceTestFileWithCRUDActions = (baseArgs) => {
 }
 
 const itCreatesAMultiWordServiceTestFileWithMultipleScalarTypes = (
-  baseArgs,
+  baseArgs: BaseArgs,
 ) => {
   test('creates a multi word service test file with multiple scalar types', async () => {
     const files = await serviceHandler.files({
@@ -201,7 +217,7 @@ const itCreatesAMultiWordServiceTestFileWithMultipleScalarTypes = (
       name: 'ScalarType',
       crud: true,
     })
-    const extension = extensionForBaseArgs(baseArgs)
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
 
     expect(
       files[
@@ -213,7 +229,9 @@ const itCreatesAMultiWordServiceTestFileWithMultipleScalarTypes = (
   })
 }
 
-const itCreatesASingleWordServiceFileWithAHasManyRelation = (baseArgs) => {
+const itCreatesASingleWordServiceFileWithAHasManyRelation = (
+  baseArgs: BaseArgs,
+) => {
   test('creates a single word service file with a hasMany relation', async () => {
     const files = await serviceHandler.files({
       ...baseArgs,
@@ -221,7 +239,7 @@ const itCreatesASingleWordServiceFileWithAHasManyRelation = (baseArgs) => {
       relations: ['userProfiles'],
       crud: false,
     })
-    const extension = extensionForBaseArgs(baseArgs)
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
 
     expect(
       files[
@@ -233,7 +251,9 @@ const itCreatesASingleWordServiceFileWithAHasManyRelation = (baseArgs) => {
   })
 }
 
-const itCreatesASingleWordServiceFileWithABelongsToRelation = (baseArgs) => {
+const itCreatesASingleWordServiceFileWithABelongsToRelation = (
+  baseArgs: BaseArgs,
+) => {
   test('creates a single word service file with a belongsTo relation', async () => {
     const files = await serviceHandler.files({
       ...baseArgs,
@@ -241,7 +261,7 @@ const itCreatesASingleWordServiceFileWithABelongsToRelation = (baseArgs) => {
       relations: ['identity'],
       crud: false,
     })
-    const extension = extensionForBaseArgs(baseArgs)
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
 
     expect(
       files[
@@ -253,7 +273,9 @@ const itCreatesASingleWordServiceFileWithABelongsToRelation = (baseArgs) => {
   })
 }
 
-const itCreatesASingleWordServiceFileWithMultipleRelations = (baseArgs) => {
+const itCreatesASingleWordServiceFileWithMultipleRelations = (
+  baseArgs: BaseArgs,
+) => {
   test('creates a single word service file with multiple relations', async () => {
     const files = await serviceHandler.files({
       ...baseArgs,
@@ -261,7 +283,7 @@ const itCreatesASingleWordServiceFileWithMultipleRelations = (baseArgs) => {
       relations: ['userProfiles', 'identity'],
       crud: false,
     })
-    const extension = extensionForBaseArgs(baseArgs)
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
 
     expect(
       files[
@@ -274,7 +296,7 @@ const itCreatesASingleWordServiceFileWithMultipleRelations = (baseArgs) => {
 }
 
 const itCreatesAMultiWordServiceTestFileWithCRUDAndOnlyForeignKeyRequired = (
-  baseArgs,
+  baseArgs: BaseArgs,
 ) => {
   test('creates a multi word service test file with crud actions and only foreign as mandatory field', async () => {
     const files = await serviceHandler.files({
@@ -282,7 +304,7 @@ const itCreatesAMultiWordServiceTestFileWithCRUDAndOnlyForeignKeyRequired = (
       name: 'Transaction',
       crud: true,
     })
-    const extension = extensionForBaseArgs(baseArgs)
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
 
     expect(
       files[
@@ -295,15 +317,17 @@ const itCreatesAMultiWordServiceTestFileWithCRUDAndOnlyForeignKeyRequired = (
 }
 
 test('keeps Service in name', () => {
-  const { name } = yargs()
+  const args = yargs()
     .command('service <name>', false, service.builder)
     .parse('service BazingaService')
+
+  const name = 'name' in args ? args.name : undefined
 
   expect(name).toEqual('BazingaService')
 })
 
 describe('in javascript mode', () => {
-  const baseArgs = {
+  const baseArgs: BaseArgs = {
     ...getDefaultArgs(service.getDefaultOptions()),
     tests: true,
   }
@@ -326,7 +350,7 @@ describe('in javascript mode', () => {
 })
 
 describe('in typescript mode', () => {
-  const baseArgs = {
+  const baseArgs: BaseArgs = {
     ...getDefaultArgs(service.getDefaultOptions()),
     typescript: true,
     tests: true,
@@ -440,11 +464,11 @@ describe('fieldsToScenario', () => {
   it('includes scalar fields', async () => {
     const output = await serviceHandler.fieldsToScenario(
       [
-        { name: 'email', type: 'String' },
-        { name: 'date', type: 'DateTime' },
-        { name: 'bigInt', type: 'BigInt' },
-        { name: 'integer', type: 'Int' },
-        { name: 'boolean', type: 'Boolean' },
+        field({ name: 'email', type: 'String' }),
+        field({ name: 'date', type: 'DateTime' }),
+        field({ name: 'bigInt', type: 'BigInt' }),
+        field({ name: 'integer', type: 'Int' }),
+        field({ name: 'boolean', type: 'Boolean' }),
       ],
       {},
       [],
@@ -453,15 +477,17 @@ describe('fieldsToScenario', () => {
     expect(output.email).toEqual('foo@bar.com')
 
     expect(output.date instanceof Date).toBe(true)
-    expect(!isNaN(output.date)).toBe(true)
+    expect(output.date instanceof Date && !isNaN(output.date.getTime())).toBe(
+      true,
+    )
 
-    expect(output.integer).toEqual(parseInt(output.integer))
+    expect(output.integer).toEqual(parseInt(String(output.integer)))
     expect(typeof output.integer).toBe('number')
 
     expect(output.boolean).toEqual(true)
     expect(typeof output.boolean).toBe('boolean')
 
-    expect(output.bigInt).toMatch(/^\d+n$/)
+    expect(String(output.bigInt)).toMatch(/^\d+n$/)
     expect(typeof output.bigInt).toBe('string') // pseudo-bigint
   })
 
@@ -469,33 +495,35 @@ describe('fieldsToScenario', () => {
     // fields for a Post model
     const output = await serviceHandler.fieldsToScenario(
       [
-        { name: 'title', type: 'String' },
-        { name: 'userId', type: 'Integer' },
+        field({ name: 'title', type: 'String' }),
+        field({ name: 'userId', type: 'Integer' }),
       ],
-      { user: { foreignKey: 'userId', type: 'User' } },
+      { user: { foreignKey: ['userId'], type: 'User' } },
       ['userId'],
     )
 
-    expect(Object.keys(output)).toEqual(['title', 'user'])
-    expect(Object.keys(output.user)).toEqual(['create'])
-    expect(Object.keys(output.user.create)).toEqual(['email'])
+    expect(Object.keys(output)).toStrictEqual(['title', 'user'])
+    expect(output['user']).toStrictEqual({
+      create: { email: expect.any(String) },
+    })
   })
 
   it('properly looks up related models by type', async () => {
     // fields for a Post model
     const output = await serviceHandler.fieldsToScenario(
       [
-        { name: 'title', type: 'String' },
-        { name: 'userId', type: 'Integer' },
+        field({ name: 'title', type: 'String' }),
+        field({ name: 'userId', type: 'Integer' }),
       ],
       // note that relationship name is "author" but datatype is "User"
-      { author: { foreignKey: 'authorId', type: 'User' } },
+      { author: { foreignKey: ['authorId'], type: 'User' } },
       ['userId'],
     )
 
-    expect(Object.keys(output)).toEqual(['title', 'author'])
-    expect(Object.keys(output.author)).toEqual(['create'])
-    expect(Object.keys(output.author.create)).toEqual(['email'])
+    expect(Object.keys(output)).toStrictEqual(['title', 'author'])
+    expect(output['author']).toStrictEqual({
+      create: { email: expect.any(String) },
+    })
   })
 })
 

@@ -17,7 +17,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
 })
 
 vi.mock('listr2', async (importOriginal) => {
-  const mod = await importOriginal()
+  const mod = await importOriginal<typeof Listr2Module>()
 
   const Listr = vi.fn((tasks, options) => {
     return new mod.Listr(tasks, { ...options, renderer: 'silent' })
@@ -27,8 +27,9 @@ vi.mock('listr2', async (importOriginal) => {
 })
 
 import fs from 'node:fs'
-import path from 'path'
+import path from 'node:path'
 
+import type * as Listr2Module from 'listr2'
 import { vol } from 'memfs'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 
@@ -36,11 +37,12 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 import '../../../../lib/test'
 
 import { getPaths } from '../../../../lib/index.js'
+import type * as CedarLib from '../../../../lib/index.js'
 import { updateApiURLTask } from '../helpers/index.js'
-import { handler } from '../providers/netlifyHandler'
+import { handler } from '../providers/netlifyHandler.js'
 
 vi.mock('../../../../lib', async (importOriginal) => {
-  const { printSetupNotes } = await importOriginal()
+  const { printSetupNotes } = await importOriginal<typeof CedarLib>()
 
   return {
     printSetupNotes,
@@ -54,7 +56,7 @@ vi.mock('../../../../lib', async (importOriginal) => {
         port: 8910,
       },
     }),
-    writeFilesTask: (fileNameToContentMap) => {
+    writeFilesTask: (fileNameToContentMap: Record<string, string>) => {
       const keys = Object.keys(fileNameToContentMap)
       expect(keys.length).toBe(1)
       // Need to escape path.sep on Windows, otherwise the backslash (that
@@ -102,7 +104,7 @@ beforeEach(() => {
 
 describe('netlify', () => {
   it('should call the handler without error', async () => {
-    let error = undefined
+    let error: unknown = undefined
     try {
       await handler({ force: true })
     } catch (err) {
@@ -110,11 +112,11 @@ describe('netlify', () => {
     }
     expect(error).toBeUndefined()
     const filesystem = vol.toJSON()
-    const netlifyTomlPath = Object.keys(filesystem).find((path) =>
-      path.endsWith('netlify.toml'),
+    const netlifyTomlPath = Object.keys(filesystem).find((p) =>
+      p.endsWith('netlify.toml'),
     )
     expect(netlifyTomlPath).toBeDefined()
-    expect(filesystem[netlifyTomlPath]).toMatchSnapshot()
+    expect(filesystem[netlifyTomlPath ?? '']).toMatchSnapshot()
   })
 
   it('Should update cedar.toml apiUrl', () => {
@@ -126,15 +128,15 @@ describe('netlify', () => {
   })
 
   it('should add netlify.toml', async () => {
-    const netlify = await import('../providers/netlify')
+    const netlify = await import('../providers/netlify.js')
     await netlify.handler({ force: true })
 
     const filesystem = vol.toJSON()
-    const netlifyTomlPath = Object.keys(filesystem).find((path) =>
-      path.endsWith('netlify.toml'),
+    const netlifyTomlPath = Object.keys(filesystem).find((p) =>
+      p.endsWith('netlify.toml'),
     )
     expect(netlifyTomlPath).toBeDefined()
-    expect(filesystem[netlifyTomlPath]).toMatchSnapshot()
+    expect(filesystem[netlifyTomlPath ?? '']).toMatchSnapshot()
   })
 })
 
@@ -183,8 +185,8 @@ describe('netlify with --ud', () => {
       p.endsWith('netlify.toml'),
     )
     expect(netlifyToml).toBeDefined()
-    expect(filesystem[netlifyToml]).toContain('api/dist/ud')
-    expect(filesystem[netlifyToml]).toContain('build --ud')
+    expect(filesystem[netlifyToml ?? '']).toContain('api/dist/ud')
+    expect(filesystem[netlifyToml ?? '']).toContain('build --ud')
 
     // Verify vite config has the Netlify plugin imports
     expect(filesystem['/cedar-app/web/vite.config.ts']).toMatchInlineSnapshot(`
