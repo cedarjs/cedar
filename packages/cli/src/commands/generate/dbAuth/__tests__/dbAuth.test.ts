@@ -1,7 +1,6 @@
 globalThis.__dirname = import.meta.dirname
 
 import type * as NodeFs from 'node:fs'
-
 import fs from 'node:fs'
 import path from 'node:path'
 
