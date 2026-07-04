@@ -1,4 +1,6 @@
 import type * as NodeFs from 'node:fs'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import Enquirer from 'enquirer'
 import { vol } from 'memfs'
@@ -12,9 +14,6 @@ globalThis.__dirname = testDir
 // Mocks must be registered before importing modules that depend on mocked modules
 vi.mock('node:fs')
 vi.mock('execa')
-
-import fs from 'node:fs'
-import path from 'node:path'
 
 import { getPaths } from '../../../../lib/index.js'
 import * as dbAuth from '../dbAuthHandler.js'
