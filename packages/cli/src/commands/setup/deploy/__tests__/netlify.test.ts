@@ -29,8 +29,8 @@ vi.mock('listr2', async (importOriginal) => {
 import fs from 'node:fs'
 import path from 'node:path'
 
-import type * as Listr2Module from 'listr2'
 import { vol } from 'memfs'
+import type * as Listr2Module from 'listr2'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 
 import type * as CedarLib from '../../../../lib/index.js'
