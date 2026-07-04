@@ -9,8 +9,12 @@ import { vi, it, expect, beforeEach } from 'vitest'
 
 import * as rollback from '../rollback.js'
 
-const executeRollback =
-  rollback.executeRollback as unknown as () => Promise<void>
+// executeRollback is typed as a ListrTaskFn that requires (ctx, task) arguments,
+// but in these unit tests we exercise the rollback logic directly without a
+// Listr2 context. Wrapping with a no-arg helper avoids repeating the suppression
+// on every call.
+// @ts-expect-error - executeRollback is a ListrTaskFn; calling without ctx/task is safe here
+const executeRollback: () => Promise<void> = rollback.executeRollback
 
 beforeEach(() => {
   vol.reset()
@@ -160,9 +164,9 @@ it('prepare clears the stack', async () => {
   rollback.addFunctionToRollback(() => {
     fs.writeFileSync('fake-file', 'fake-content')
   })
-  rollback.prepareForRollback(
-    {} as Parameters<typeof rollback.prepareForRollback>[0],
-  )
+  // @ts-expect-error - empty object tests the resetRollback() path;
+  // tasks.tasks is optional-chained so no Listr instance is needed
+  rollback.prepareForRollback({})
   await executeRollback()
   expect(fs.existsSync('fake-file')).toBe(false)
 })
