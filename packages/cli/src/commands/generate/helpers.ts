@@ -62,8 +62,8 @@ export const validateName = (name: string) => {
 }
 
 // Returns all relations to other models
-export const relationsForModel = (model: Model) => {
-  return model.fields
+export const relationsForModel = (model: Model | undefined) => {
+  return model?.fields
     .filter((f: ModelField) => f.relationName)
     .map((field: ModelField) => {
       return field.name

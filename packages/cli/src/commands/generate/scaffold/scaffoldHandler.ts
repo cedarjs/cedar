@@ -405,7 +405,7 @@ const modelRelatedVariables = (model: ScaffoldModel) => {
     },
   }
 
-  const relations = relationsForModel(model).map((relation) => relation)
+  const relations = relationsForModel(model)?.map((relation) => relation)
 
   const columns = model.fields
     .filter((field) => field.kind !== 'object')
@@ -426,7 +426,7 @@ const modelRelatedVariables = (model: ScaffoldModel) => {
 
       const isRelationalField =
         column.name.endsWith('Id') &&
-        relations.some((relation) => column.name.includes(relation))
+        relations?.some((relation) => column.name.includes(relation))
       const isRequired = column.isRequired
       const isEnum = column.kind === 'enum'
       const isList = column.isList

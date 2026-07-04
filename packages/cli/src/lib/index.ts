@@ -699,7 +699,7 @@ export const runCommandTask = async (
 
 /** Extract default CLI args from an exported builder */
 export const getDefaultArgs = (
-  builder: Record<string, { default?: unknown }>,
+  builder: Record<string, Record<string, unknown>>,
 ) => {
   return Object.entries(builder).reduce<Record<string, unknown>>(
     (options, [optionName, optionConfig]) => {

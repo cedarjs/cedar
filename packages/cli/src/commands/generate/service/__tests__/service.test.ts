@@ -1,1 +1,545 @@
-Z2xvYmFsVGhpcy5fX2Rpcm5hbWUgPSBpbXBvcnQubWV0YS5kaXJuYW1lCmltcG9ydCBwYXRoIGZyb20gJ25vZGU6cGF0aCcKCmltcG9ydCB7IHZpLCBiZWZvcmVBbGwsIGFmdGVyQWxsLCB0ZXN0LCBleHBlY3QsIGRlc2NyaWJlLCBpdCB9IGZyb20gJ3ZpdGVzdCcKaW1wb3J0IHlhcmdzIGZyb20gJ3lhcmdzL3lhcmdzJwoKLy8gTG9hZCBtb2NrcwppbXBvcnQgJy4uLy4uLy4uLy4uL2xpYi90ZXN0JwoKaW1wb3J0IHsgZ2V0RGVmYXVsdEFyZ3MgfSBmcm9tICcuLi8uLi8uLi8uLi9saWIvaW5kZXguanMnCmltcG9ydCAqIGFzIHNlcnZpY2UgZnJvbSAnLi4vc2VydmljZS5qcycKaW1wb3J0ICogYXMgc2VydmljZUhhbmRsZXIgZnJvbSAnLi4vc2VydmljZUhhbmRsZXIuanMnCgpiZWZvcmVBbGwoKCkgPT4gewogIHZpLnVzZUZha2VUaW1lcnMoKQogIHZpLnNldFN5c3RlbVRpbWUobmV3IERhdGUoJzIwMjItMDktMzBUMDk6NTA6MDAuMDAwWicpKQp9KQoKYWZ0ZXJBbGwoKCkgPT4gewogIHZpLnVzZVJlYWxUaW1lcnMoKQp9KQoKdHlwZSBCYXNlQXJncyA9IFJlY29yZDxzdHJpbmcsIHVua25vd24+Cgpjb25zdCBleHRlbnNpb25Gb3JCYXNlQXJncyA9IChiYXNlQXJnczogQmFzZUFyZ3MpID0+CiAgYmFzZUFyZ3MgJiYgYmFzZUFyZ3MudHlwZXNjcmlwdCA/ICd0cycgOiAnanMnCgpjb25zdCBpdFJldHVybnNFeGFjdGx5M0ZpbGVzID0gKGJhc2VBcmdzOiBCYXNlQXJncykgPT4gewogIHRlc3QoJ3JldHVybnMgZXhhY3RseSAzIGZpbGVzJywgYXN5bmMgKCkgPT4gewogICAgY29uc3QgZmlsZXMgPSBhd2FpdCBzZXJ2aWNlSGFuZGxlci5maWxlcyh7CiAgICAgIC4uLmJhc2VBcmdzLAogICAgICBuYW1lOiAnVXNlcicsCiAgICB9KQoKICAgIGV4cGVjdChPYmplY3Qua2V5cyhmaWxlcykubGVuZ3RoKS50b0VxdWFsKDMpCiAgfSkKfQpjb25zdCBpdENyZWF0ZXNBU2luZ2xlV29yZFNlcnZpY2VGaWxlID0gKGJhc2VBcmdzOiBCYXNlQXJncykgPT4gewogIHRlc3QoJ2NyZWF0ZXMgYSBzaW5nbGUgd29yZCBzZXJ2aWNlIGZpbGUnLCBhc3luYyAoKSA9PiB7CiAgICBjb25zdCBmaWxlcyA9IGF3YWl0IHNlcnZpY2VIYW5kbGVyLmZpbGVzKHsKICAgICAgLi4uYmFzZUFyZ3MsCiAgICAgIG5hbWU6ICdVc2VyJywKICAgIH0pCiAgICBjb25zdCBleHRlbnNpb24gPSBleHRlbnNpb25Gb3JCYXNlQXJncyhiYXNlQXJncykKCiAgICBleHBlY3QoCiAgICAgIGZpbGVzWwogICAgICAgIHBhdGgubm9ybWFsaXplKAogICAgICAgICAgYC9wYXRoL3RvL3Byb2plY3QvYXBpL3NyYy9zZXJ2aWNlcy91c2Vycy91c2Vycy4ke2V4dGVuc2lvbn1gLAogICAgICAgICkKICAgICAgXSwKICAgICkudG9NYXRjaFNuYXBzaG90KCkKICB9KQp9CmNvbnN0IGl0Q3JlYXRlc0FTaW5nbGVXb3JkU2VydmljZVRlc3RGaWxlID0gKGJhc2VBcmdzOiBCYXNlQXJncykgPT4gewogIHRlc3QoJ2NyZWF0ZXMgYSBzaW5nbGUgd29yZCBzZXJ2aWNlIHRlc3QgZmlsZScsIGFzeW5jICgpID0+IHsKICAgIGNvbnN0IGZpbGVzID0gYXdhaXQgc2VydmljZUhhbmRsZXIuZmlsZXMoewogICAgICAuLi5iYXNlQXJncywKICAgICAgbmFtZTogJ1VzZXInLAogICAgfSkKICAgIGNvbnN0IGV4dGVuc2lvbiA9IGV4dGVuc2lvbkZvckJhc2VBcmdzKGJhc2VBcmdzKQoKICAgIGV4cGVjdCgKICAgICAgZmlsZXNbCiAgICAgICAgcGF0aC5ub3JtYWxpemUoCiAgICAgICAgICBgL3BhdGgvdG8vcHJvamVjdC9hcGkvc3JjL3NlcnZpY2VzL3VzZXJzL3VzZXJzLnRlc3QuJHtleHRlbnNpb259YCwKICAgICAgICApCiAgICAgIF0sCiAgICApLnRvTWF0Y2hTbmFwc2hvdCgpCiAgfSkKfQoKY29uc3QgaXRDcmVhdGVzQVNpbmdsZVdvcmRTZXJ2aWNlU2NlbmFyaW9GaWxlID0gKGJhc2VBcmdzOiBCYXNlQXJncykgPT4gewogIHRlc3QoJ2NyZWF0ZXMgYSBzaW5nbGUgd29yZCBzZXJ2aWNlIHNjZW5hcmlvIGZpbGUnLCBhc3luYyAoKSA9PiB7CiAgICBjb25zdCBmaWxlcyA9IGF3YWl0IHNlcnZpY2VIYW5kbGVyLmZpbGVzKHsKICAgICAgLi4uYmFzZUFyZ3MsCiAgICAgIG5hbWU6ICdVc2VyJywKICAgIH0pCiAgICBjb25zdCBleHRlbnNpb24gPSBleHRlbnNpb25Gb3JCYXNlQXJncyhiYXNlQXJncykKICAgIGNvbnN0IGZpbGVQYXRoID0gcGF0aC5ub3JtYWxpemUoCiAgICAgIGAvcGF0aC90by9wcm9qZWN0L2FwaS9zcmMvc2VydmljZXMvdXNlcnMvdXNlcnMuc2NlbmFyaW9zLiR7ZXh0ZW5zaW9ufWAsCiAgICApCgogICAgZXhwZWN0KE9iamVjdC5rZXlzKGZpbGVzKSkudG9Db250YWluKGZpbGVQYXRoKQogICAgZXhwZWN0KGZpbGVzW2ZpbGVQYXRoXSkudG9NYXRjaFNuYXBzaG90KCkKICB9KQp9Cgpjb25zdCBpdENyZWF0ZXNBTXVsdGlXb3JkU2VydmljZUZpbGUgPSAoYmFzZUFyZ3M6IEJhc2VBcmdzKSA9PiB7CiAgdGVzdCgnY3JlYXRlcyBhIG11bHRpIHdvcmQgc2VydmljZSBmaWxlJywgYXN5bmMgKCkgPT4gewogICAgY29uc3QgZmlsZXMgPSBhd2FpdCBzZXJ2aWNlSGFuZGxlci5maWxlcyh7CiAgICAgIC4uLmJhc2VBcmdzLAogICAgICBuYW1lOiAnVXNlclByb2ZpbGUnLAogICAgICBjcnVkOiBmYWxzZSwKICAgIH0pCiAgICBjb25zdCBleHRlbnNpb24gPSBleHRlbnNpb25Gb3JCYXNlQXJncyhiYXNlQXJncykKCiAgICBleHBlY3QoCiAgICAgIGZpbGVzWwogICAgICAgIHBhdGgubm9ybWFsaXplKAogICAgICAgICAgYC9wYXRoL3RvL3Byb2plY3QvYXBpL3NyYy9zZXJ2aWNlcy91c2VyUHJvZmlsZXMvdXNlclByb2ZpbGVzLiR7ZXh0ZW5zaW9ufWAsCiAgICAgICAgKQogICAgICBdLAogICAgKS50b01hdGNoU25hcHNob3QoKQogIH0pCn0KCmNvbnN0IGl0Q3JlYXRlc0FNdWx0aVdvcmRTZXJ2aWNlVGVzdEZpbGUgPSAoYmFzZUFyZ3M6IEJhc2VBcmdzKSA9PiB7CiAgdGVzdCgnY3JlYXRlcyBhIG11bHRpIHdvcmQgc2VydmljZSB0ZXN0IGZpbGUnLCBhc3luYyAoKSA9PiB7CiAgICBjb25zdCBmaWxlcyA9IGF3YWl0IHNlcnZpY2VIYW5kbGVyLmZpbGVzKHsKICAgICAgLi4uYmFzZUFyZ3MsCiAgICAgIG5hbWU6ICdVc2VyUHJvZmlsZScsCiAgICAgIGNydWQ6IGZhbHNlLAogICAgfSkKICAgIGNvbnN0IGV4dGVuc2lvbiA9IGV4dGVuc2lvbkZvckJhc2VBcmdzKGJhc2VBcmdzKQoKICAgIGV4cGVjdCgKICAgICAgZmlsZXNbCiAgICAgICAgcGF0aC5ub3JtYWxpemUoCiAgICAgICAgICBgL3BhdGgvdG8vcHJvamVjdC9hcGkvc3JjL3NlcnZpY2VzL3VzZXJQcm9maWxlcy91c2VyUHJvZmlsZXMudGVzdC4ke2V4dGVuc2lvbn1gLAogICAgICAgICkKICAgICAgXSwKICAgICkudG9NYXRjaFNuYXBzaG90KCkKICB9KQp9Cgpjb25zdCBpdENyZWF0ZXNBU2luZ2xlV29yZFNlcnZpY2VGaWxlV2l0aENSVURBY3Rpb25zID0gKGJhc2VBcmdzOiBCYXNlQXJncykgPT4gewogIHRlc3QoJ2NyZWF0ZXMgYSBzaW5nbGUgd29yZCBzZXJ2aWNlIGZpbGUgd2l0aCBDUlVEIGFjdGlvbnMnLCBhc3luYyAoKSA9PiB7CiAgICBjb25zdCBmaWxlcyA9IGF3YWl0IHNlcnZpY2VIYW5kbGVyLmZpbGVzKHsKICAgICAgLi4uYmFzZUFyZ3MsCiAgICAgIG5hbWU6ICdQb3N0JywKICAgICAgY3J1ZDogdHJ1ZSwKICAgIH0pCiAgICBjb25zdCBleHRlbnNpb24gPSBleHRlbnNpb25Gb3JCYXNlQXJncyhiYXNlQXJncykKCiAgICBleHBlY3QoCiAgICAgIGZpbGVzWwogICAgICAgIHBhdGgubm9ybWFsaXplKAogICAgICAgICAgYC9wYXRoL3RvL3Byb2plY3QvYXBpL3NyYy9zZXJ2aWNlcy9wb3N0cy9wb3N0cy4ke2V4dGVuc2lvbn1gLAogICAgICAgICkKICAgICAgXSwKICAgICkudG9NYXRjaFNuYXBzaG90KCkKCiAgICAvLyBUT0RPCiAgICAvLyBNb2NrIERhdGUsIHNvIHdlIGNhbiB0YWtlIHNuYXBzaG90cyBvZiB0ZXN0cyBhbmQgc2NlbmFyaW9zCiAgfSkKfQoKY29uc3QgaXRDcmVhdGVzQVNpbmdsZVdvcmRTZXJ2aWNlVGVzdEZpbGVXaXRoQ1JVREFjdGlvbnMgPSAoYmFzZUFyZ3M6IEJhc2VBcmdzKSA9PiB7CiAgdGVzdCgnY3JlYXRlcyBhIHNlcnZpY2UgdGVzdCBmaWxlIHdpdGggQ1JVRCBhY3Rpb25zJywgYXN5bmMgKCkgPT4gewogICAgY29uc3QgZmlsZXMgPSBhd2FpdCBzZXJ2aWNlSGFuZGxlci5maWxlcyh7CiAgICAgIC4uLmJhc2VBcmdzLAogICAgICBuYW1lOiAnUG9zdCcsCiAgICAgIGNydWQ6IHRydWUsCiAgICB9KQogICAgY29uc3QgZXh0ZW5zaW9uID0gZXh0ZW5zaW9uRm9yQmFzZUFyZ3MoYmFzZUFyZ3MpCiAgICBjb25zdCBmaWxlUGF0aCA9IHBhdGgubm9ybWFsaXplKAogICAgICBgL3BhdGgvdG8vcHJvamVjdC9hcGkvc3JjL3NlcnZpY2VzL3Bvc3RzL3Bvc3RzLnRlc3QuJHtleHRlbnNpb259YCwKICAgICkKCiAgICBleHBlY3QoT2JqZWN0LmtleXMoZmlsZXMpKS50b0NvbnRhaW4oZmlsZVBhdGgpCiAgfSkKfQoKY29uc3QgaXRDcmVhdGVzQU11bHRpV29yZFNlcnZpY2VGaWxlV2l0aENSVURBY3Rpb25zID0gKGJhc2VBcmdzOiBCYXNlQXJncykgPT4gewogIHRlc3QoJ2NyZWF0ZXMgYSBtdWx0aSB3b3JkIHNlcnZpY2UgZmlsZSB3aXRoIENSVUQgYWN0aW9ucycsIGFzeW5jICgpID0+IHsKICAgIGNvbnN0IGZpbGVzID0gYXdhaXQgc2VydmljZUhhbmRsZXIuZmlsZXMoewogICAgICAuLi5iYXNlQXJncywKICAgICAgbmFtZTogJ1VzZXJQcm9maWxlJywKICAgICAgY3J1ZDogdHJ1ZSwKICAgIH0pCiAgICBjb25zdCBleHRlbnNpb24gPSBleHRlbnNpb25Gb3JCYXNlQXJncyhiYXNlQXJncykKICAgIGNvbnN0IGZpbGVQYXRoID0gcGF0aC5ub3JtYWxpemUoCiAgICAgIGAvcGF0aC90by9wcm9qZWN0L2FwaS9zcmMvc2VydmljZXMvdXNlclByb2ZpbGVzL3VzZXJQcm9maWxlcy4ke2V4dGVuc2lvbn1gLAogICAgKQoKICAgIGV4cGVjdChPYmplY3Qua2V5cyhmaWxlcykpLnRvQ29udGFpbihmaWxlUGF0aCkKICB9KQp9Cgpjb25zdCBpdENyZWF0ZXNBTXVsdGlXb3JkU2VydmljZVRlc3RGaWxlV2l0aENSVURBY3Rpb25zID0gKGJhc2VBcmdzOiBCYXNlQXJncykgPT4gewogIHRlc3QoJ2NyZWF0ZXMgYSBtdWx0aSB3b3JkIHNlcnZpY2UgdGVzdCBmaWxlIHdpdGggQ1JVRCBhY3Rpb25zJywgYXN5bmMgKCkgPT4gewogICAgY29uc3QgZmlsZXMgPSBhd2FpdCBzZXJ2aWNlSGFuZGxlci5maWxlcyh7CiAgICAgIC4uLmJhc2VBcmdzLAogICAgICBuYW1lOiAnVXNlclByb2ZpbGUnLAogICAgICBjcnVkOiB0cnVlLAogICAgfSkKICAgIGNvbnN0IGV4dGVuc2lvbiA9IGV4dGVuc2lvbkZvckJhc2VBcmdzKGJhc2VBcmdzKQogICAgY29uc3QgZmlsZVBhdGggPSBwYXRoLm5vcm1hbGl6ZSgKICAgICAgYC9wYXRoL3RvL3Byb2plY3QvYXBpL3NyYy9zZXJ2aWNlcy91c2VyUHJvZmlsZXMvdXNlclByb2ZpbGVzLnRlc3QuJHtleHRlbnNpb259YCwKICAgICkKCiAgICBleHBlY3QoT2JqZWN0LmtleXMoZmlsZXMpKS50b0NvbnRhaW4oZmlsZVBhdGgpCiAgfSkKfQoKY29uc3QgaXRDcmVhdGVzQU11bHRpV29yZFNlcnZpY2VUZXN0RmlsZVdpdGhNdWx0aXBsZVNjYWxhclR5cGVzID0gKAogIGJhc2VBcmdzOiBCYXNlQXJncywKKSA9PiB7CiAgdGVzdCgnY3JlYXRlcyBhIG11bHRpIHdvcmQgc2VydmljZSB0ZXN0IGZpbGUgd2l0aCBtdWx0aXBsZSBzY2FsYXIgdHlwZXMnLCBhc3luYyAoKSA9PiB7CiAgICBjb25zdCBmaWxlcyA9IGF3YWl0IHNlcnZpY2VIYW5kbGVyLmZpbGVzKHsKICAgICAgLi4uYmFzZUFyZ3MsCiAgICAgIG5hbWU6ICdTY2FsYXJUeXBlJywKICAgICAgY3J1ZDogdHJ1ZSwKICAgIH0pCiAgICBjb25zdCBleHRlbnNpb24gPSBleHRlbnNpb25Gb3JCYXNlQXJncyhiYXNlQXJncykKCiAgICBleHBlY3QoCiAgICAgIGZpbGVzWwogICAgICAgIHBhdGgubm9ybWFsaXplKAogICAgICAgICAgYC9wYXRoL3RvL3Byb2plY3QvYXBpL3NyYy9zZXJ2aWNlcy9zY2FsYXJUeXBlcy9zY2FsYXJUeXBlcy50ZXN0LiR7ZXh0ZW5zaW9ufWAsCiAgICAgICAgKQogICAgICBdLAogICAgKS50b01hdGNoU25hcHNob3QoKQogIH0pCn0KCmNvbnN0IGl0Q3JlYXRlc0FTaW5nbGVXb3JkU2VydmljZUZpbGVXaXRoQUhhc01hbnlSZWxhdGlvbiA9IChiYXNlQXJnczogQmFzZUFyZ3MpID0+IHsKICB0ZXN0KCdjcmVhdGVzIGEgc2luZ2xlIHdvcmQgc2VydmljZSBmaWxlIHdpdGggYSBoYXNNYW55IHJlbGF0aW9uJywgYXN5bmMgKCkgPT4gewogICAgY29uc3QgZmlsZXMgPSBhd2FpdCBzZXJ2aWNlSGFuZGxlci5maWxlcyh7CiAgICAgIC4uLmJhc2VBcmdzLAogICAgICBuYW1lOiAnVXNlcicsCiAgICAgIHJlbGF0aW9uczogWyd1c2VyUHJvZmlsZXMnXSwKICAgICAgY3J1ZDogZmFsc2UsCiAgICB9KQogICAgY29uc3QgZXh0ZW5zaW9uID0gZXh0ZW5zaW9uRm9yQmFzZUFyZ3MoYmFzZUFyZ3MpCgogICAgZXhwZWN0KAogICAgICBmaWxlc1sKICAgICAgICBwYXRoLm5vcm1hbGl6ZSgKICAgICAgICAgIGAvcGF0aC90by9wcm9qZWN0L2FwaS9zcmMvc2VydmljZXMvdXNlcnMvdXNlcnMuJHtleHRlbnNpb259YCwKICAgICAgICApCiAgICAgIF0sCiAgICApLnRvTWF0Y2hTbmFwc2hvdCgpCiAgfSkKfQoKY29uc3QgaXRDcmVhdGVzQVNpbmdsZVdvcmRTZXJ2aWNlRmlsZVdpdGhBQmVsb25nc1RvUmVsYXRpb24gPSAoYmFzZUFyZ3M6IEJhc2VBcmdzKSA9PiB7CiAgdGVzdCgnY3JlYXRlcyBhIHNpbmdsZSB3b3JkIHNlcnZpY2UgZmlsZSB3aXRoIGEgYmVsb25nc1RvIHJlbGF0aW9uJywgYXN5bmMgKCkgPT4gewogICAgY29uc3QgZmlsZXMgPSBhd2FpdCBzZXJ2aWNlSGFuZGxlci5maWxlcyh7CiAgICAgIC4uLmJhc2VBcmdzLAogICAgICBuYW1lOiAnVXNlcicsCiAgICAgIHJlbGF0aW9uczogWydpZGVudGl0eSddLAogICAgICBjcnVkOiBmYWxzZSwKICAgIH0pCiAgICBjb25zdCBleHRlbnNpb24gPSBleHRlbnNpb25Gb3JCYXNlQXJncyhiYXNlQXJncykKCiAgICBleHBlY3QoCiAgICAgIGZpbGVzWwogICAgICAgIHBhdGgubm9ybWFsaXplKAogICAgICAgICAgYC9wYXRoL3RvL3Byb2plY3QvYXBpL3NyYy9zZXJ2aWNlcy91c2Vycy91c2Vycy4ke2V4dGVuc2lvbn1gLAogICAgICAgICkKICAgICAgXSwKICAgICkudG9NYXRjaFNuYXBzaG90KCkKICB9KQp9Cgpjb25zdCBpdENyZWF0ZXNBU2luZ2xlV29yZFNlcnZpY2VGaWxlV2l0aE11bHRpcGxlUmVsYXRpb25zID0gKGJhc2VBcmdzOiBCYXNlQXJncykgPT4gewogIHRlc3QoJ2NyZWF0ZXMgYSBzaW5nbGUgd29yZCBzZXJ2aWNlIGZpbGUgd2l0aCBtdWx0aXBsZSByZWxhdGlvbnMnLCBhc3luYyAoKSA9PiB7CiAgICBjb25zdCBmaWxlcyA9IGF3YWl0IHNlcnZpY2VIYW5kbGVyLmZpbGVzKHsKICAgICAgLi4uYmFzZUFyZ3MsCiAgICAgIG5hbWU6ICdVc2VyJywKICAgICAgcmVsYXRpb25zOiBbJ3VzZXJQcm9maWxlcycsICdpZGVudGl0eSddLAogICAgICBjcnVkOiBmYWxzZSwKICAgIH0pCiAgICBjb25zdCBleHRlbnNpb24gPSBleHRlbnNpb25Gb3JCYXNlQXJncyhiYXNlQXJncykKCiAgICBleHBlY3QoCiAgICAgIGZpbGVzWwogICAgICAgIHBhdGgubm9ybWFsaXplKAogICAgICAgICAgYC9wYXRoL3RvL3Byb2plY3QvYXBpL3NyYy9zZXJ2aWNlcy91c2Vycy91c2Vycy4ke2V4dGVuc2lvbn1gLAogICAgICAgICkKICAgICAgXSwKICAgICkudG9NYXRjaFNuYXBzaG90KCkKICB9KQp9Cgpjb25zdCBpdENyZWF0ZXNBTXVsdGlXb3JkU2VydmljZVRlc3RGaWxlV2l0aENSVURBbmRPbmx5Rm9yZWlnbktleVJlcXVpcmVkID0gKAogIGJhc2VBcmdzOiBCYXNlQXJncywKKSA9PiB7CiAgdGVzdCgnY3JlYXRlcyBhIG11bHRpIHdvcmQgc2VydmljZSB0ZXN0IGZpbGUgd2l0aCBjcnVkIGFjdGlvbnMgYW5kIG9ubHkgZm9yZWlnbiBhcyBtYW5kYXRvcnkgZmllbGQnLCBhc3luYyAoKSA9PiB7CiAgICBjb25zdCBmaWxlcyA9IGF3YWl0IHNlcnZpY2VIYW5kbGVyLmZpbGVzKHsKICAgICAgLi4uYmFzZUFyZ3MsCiAgICAgIG5hbWU6ICdUcmFuc2FjdGlvbicsCiAgICAgIGNydWQ6IHRydWUsCiAgICB9KQogICAgY29uc3QgZXh0ZW5zaW9uID0gZXh0ZW5zaW9uRm9yQmFzZUFyZ3MoYmFzZUFyZ3MpCgogICAgZXhwZWN0KAogICAgICBmaWxlc1sKICAgICAgICBwYXRoLm5vcm1hbGl6ZSgKICAgICAgICAgIGAvcGF0aC90by9wcm9qZWN0L2FwaS9zcmMvc2VydmljZXMvdHJhbnNhY3Rpb25zL3RyYW5zYWN0aW9ucy50ZXN0LiR7ZXh0ZW5zaW9ufWAsCiAgICAgICAgKQogICAgICBdLAogICAgKS50b01hdGNoU25hcHNob3QoKQogIH0pCn0KCnRlc3QoJ2tlZXBzIFNlcnZpY2UgaW4gbmFtZScsICgpID0+IHsKICBjb25zdCB7IG5hbWUgfSA9IHlhcmdzKCkKICAgIC5jb21tYW5kKCdzZXJ2aWNlIDxuYW1lPicsIGZhbHNlLCBzZXJ2aWNlLmJ1aWxkZXIpCiAgICAucGFyc2UoJ3NlcnZpY2UgQmF6aW5nYVNlcnZpY2UnKQoKICBleHBlY3QobmFtZSkudG9FcXVhbCgnQmF6aW5nYVNlcnZpY2UnKQp9KQoKZGVzY3JpYmUoJ2luIGphdmFzY3JpcHQgbW9kZScsICgpID0+IHsKICBjb25zdCBiYXNlQXJnczogQmFzZUFyZ3MgPSB7CiAgICAuLi5nZXREZWZhdWx0QXJncyhzZXJ2aWNlLmdldERlZmF1bHRPcHRpb25zKCkpLAogICAgdGVzdHM6IHRydWUsCiAgfQoKICBpdFJldHVybnNFeGFjdGx5M0ZpbGVzKGJhc2VBcmdzKQogIGl0Q3JlYXRlc0FTaW5nbGVXb3JkU2VydmljZUZpbGUoYmFzZUFyZ3MpCiAgaXRDcmVhdGVzQVNpbmdsZVdvcmRTZXJ2aWNlVGVzdEZpbGUoYmFzZUFyZ3MpCiAgaXRDcmVhdGVzQVNpbmdsZVdvcmRTZXJ2aWNlU2NlbmFyaW9GaWxlKGJhc2VBcmdzKQogIGl0Q3JlYXRlc0FNdWx0aVdvcmRTZXJ2aWNlRmlsZShiYXNlQXJncykKICBpdENyZWF0ZXNBTXVsdGlXb3JkU2VydmljZVRlc3RGaWxlKGJhc2VBcmdzKQogIGl0Q3JlYXRlc0FTaW5nbGVXb3JkU2VydmljZUZpbGVXaXRoQ1JVREFjdGlvbnMoYmFzZUFyZ3MpCiAgaXRDcmVhdGVzQVNpbmdsZVdvcmRTZXJ2aWNlVGVzdEZpbGVXaXRoQ1JVREFjdGlvbnMoYmFzZUFyZ3MpCiAgaXRDcmVhdGVzQU11bHRpV29yZFNlcnZpY2VUZXN0RmlsZVdpdGhNdWx0aXBsZVNjYWxhclR5cGVzKGJhc2VBcmdzKQogIGl0Q3JlYXRlc0FNdWx0aVdvcmRTZXJ2aWNlRmlsZVdpdGhDUlVEQWN0aW9ucyhiYXNlQXJncykKICBpdENyZWF0ZXNBTXVsdGlXb3JkU2VydmljZVRlc3RGaWxlV2l0aENSVURBY3Rpb25zKGJhc2VBcmdzKQogIGl0Q3JlYXRlc0FTaW5nbGVXb3JkU2VydmljZUZpbGVXaXRoQUhhc01hbnlSZWxhdGlvbihiYXNlQXJncykKICBpdENyZWF0ZXNBU2luZ2xlV29yZFNlcnZpY2VGaWxlV2l0aEFCZWxvbmdzVG9SZWxhdGlvbihiYXNlQXJncykKICBpdENyZWF0ZXNBU2luZ2xlV29yZFNlcnZpY2VGaWxlV2l0aE11bHRpcGxlUmVsYXRpb25zKGJhc2VBcmdzKQogIGl0Q3JlYXRlc0FNdWx0aVdvcmRTZXJ2aWNlVGVzdEZpbGVXaXRoQ1JVREFuZE9ubHlGb3JlaWduS2V5UmVxdWlyZWQoYmFzZUFyZ3MpCn0pCgpkZXNjcmliZSgnaW4gdHlwZXNjcmlwdCBtb2RlJywgKCkgPT4gewogIGNvbnN0IGJhc2VBcmdzOiBCYXNlQXJncyA9IHsKICAgIC4uLmdldERlZmF1bHRBcmdzKHNlcnZpY2UuZ2V0RGVmYXVsdE9wdGlvbnMoKSksCiAgICB0eXBlc2NyaXB0OiB0cnVlLAogICAgdGVzdHM6IHRydWUsCiAgfQoKICBpdFJldHVybnNFeGFjdGx5M0ZpbGVzKGJhc2VBcmdzKQogIGl0Q3JlYXRlc0FTaW5nbGVXb3JkU2VydmljZUZpbGUoYmFzZUFyZ3MpCiAgaXRDcmVhdGVzQVNpbmdsZVdvcmRTZXJ2aWNlVGVzdEZpbGUoYmFzZUFyZ3MpCiAgaXRDcmVhdGVzQVNpbmdsZVdvcmRTZXJ2aWNlU2NlbmFyaW9GaWxlKGJhc2VBcmdzKQogIGl0Q3JlYXRlc0FNdWx0aVdvcmRTZXJ2aWNlRmlsZShiYXNlQXJncykKICBpdENyZWF0ZXNBTXVsdGlXb3JkU2VydmljZVRlc3RGaWxlKGJhc2VBcmdzKQogIGl0Q3JlYXRlc0FTaW5nbGVXb3JkU2VydmljZUZpbGVXaXRoQ1JVREFjdGlvbnMoYmFzZUFyZ3MpCiAgaXRDcmVhdGVzQU11bHRpV29yZFNlcnZpY2VUZXN0RmlsZVdpdGhNdWx0aXBsZVNjYWxhclR5cGVzKGJhc2VBcmdzKQogIGl0Q3JlYXRlc0FNdWx0aVdvcmRTZXJ2aWNlVGVzdEZpbGVXaXRoQ1JVREFjdGlvbnMoYmFzZUFyZ3MpCiAgaXRDcmVhdGVzQU11bHRpV29yZFNlcnZpY2VGaWxlV2l0aENSVURBY3Rpb25zKGJhc2VBcmdzKQogIGl0Q3JlYXRlc0FNdWx0aVdvcmRTZXJ2aWNlVGVzdEZpbGVXaXRoQ1JVREFjdGlvbnMoYmFzZUFyZ3MpCiAgaXRDcmVhdGVzQVNpbmdsZVdvcmRTZXJ2aWNlRmlsZVdpdGhBSGFzTWFueVJlbGF0aW9uKGJhc2VBcmdzKQogIGl0Q3JlYXRlc0FTaW5nbGVXb3JkU2VydmljZUZpbGVXaXRoQUJlbG9uZ3NUb1JlbGF0aW9uKGJhc2VBcmdzKQogIGl0Q3JlYXRlc0FTaW5nbGVXb3JkU2VydmljZUZpbGVXaXRoTXVsdGlwbGVSZWxhdGlvbnMoYmFzZUFyZ3MpCiAgaXRDcmVhdGVzQU11bHRpV29yZFNlcnZpY2VUZXN0RmlsZVdpdGhDUlVEQW5kT25seUZvcmVpZ25LZXlSZXF1aXJlZChiYXNlQXJncykKfSkKCmRlc2NyaWJlKCdwYXJzZVNjaGVtYScsICgpID0+IHsKICBpdCgncmV0dXJucyBhbiBlbXB0eSBhcnJheSBmb3IgbW9kZWxzIHdpdGggbm8gcmVxdWlyZWQgc2NhbGFycycsIGFzeW5jICgpID0+IHsKICAgIGNvbnN0IHsgc2NhbGFyRmllbGRzIH0gPSBhd2FpdCBzZXJ2aWNlSGFuZGxlci5wYXJzZVNjaGVtYSgnUHJvZHVjdCcpCgogICAgZXhwZWN0KHNjYWxhckZpZWxkcykudG9FcXVhbChbXSkKICB9KQoKICBpdCgnaW5jbHVkZXMgcmVxdWlyZWQgc2NhbGFyIGZpZWxkcycsIGFzeW5jICgpID0+IHsKICAgIGNvbnN0IHsgc2NhbGFyRmllbGRzIH0gPSBhd2FpdCBzZXJ2aWNlSGFuZGxlci5wYXJzZVNjaGVtYSgnVXNlcicpCgogICAgZXhwZWN0KAogICAgICBzY2FsYXJGaWVsZHMuZmluZCgoZmllbGQpID0+IGZpZWxkLm5hbWUgPT09ICdlbWFpbCcpLAogICAgKS5ub3QudG9CZVVuZGVmaW5lZCgpCiAgfSkKCiAgaXQoJ2RvZXMgbm90IGluY2x1ZGUgbm9uLXJlcXVpcmVkIHNjYWxhciBmaWVsZHMnLCBhc3luYyAoKSA9PiB7CiAgICBjb25zdCB7IHNjYWxhckZpZWxkcyB9ID0gYXdhaXQgc2VydmljZUhhbmRsZXIucGFyc2VTY2hlbWEoJ1VzZXInKQoKICAgIGV4cGVjdChzY2FsYXJGaWVsZHMuZmluZCgoZmllbGQpID0+IGZpZWxkLm5hbWUgPT09ICduYW1lJykpLnRvQmVVbmRlZmluZWQoKQogIH0pCgogIGl0KCdkb2VzIG5vdCBpbmNsdWRlIHJlcXVpcmVkIHNjYWxhciBmaWVsZHMgd2l0aCBkZWZhdWx0IHZhbHVlcycsIGFzeW5jICgpID0+IHsKICAgIGNvbnN0IHsgc2NhbGFyRmllbGRzIH0gPSBhd2FpdCBzZXJ2aWNlSGFuZGxlci5wYXJzZVNjaGVtYSgnVXNlcicpCgogICAgZXhwZWN0KAogICAgICBzY2FsYXJGaWVsZHMuZmluZCgoZmllbGQpID0+IGZpZWxkLm5hbWUgPT09ICdpc0FkbWluJyksCiAgICApLnRvQmVVbmRlZmluZWQoKQogIH0pCgogIGl0KCdpbmNsdWRlcyBmb3JlaWduIGtleSBzY2FsYXJzJywgYXN5bmMgKCkgPT4gewogICAgY29uc3QgeyBzY2FsYXJGaWVsZHMgfSA9IGF3YWl0IHNlcnZpY2VIYW5kbGVyLnBhcnNlU2NoZW1hKCdVc2VyUHJvZmlsZScpCgogICAgZXhwZWN0KAogICAgICBzY2FsYXJGaWVsZHMuZmluZCgoZmllbGQpID0+IGZpZWxkLm5hbWUgPT09ICd1c2VySWQnKSwKICAgICkubm90LnRvQmVVbmRlZmluZWQoKQogIH0pCgogIGl0KCdkb2VzIG5vdCBpbmNsdWRlIHByaXNtYS1nZW5lcmF0ZWQgaGVscGVyIGZpZWxkcycsIGFzeW5jICgpID0+IHsKICAgIGNvbnN0IHsgc2NhbGFyRmllbGRzIH0gPSBhd2FpdCBzZXJ2aWNlSGFuZGxlci5wYXJzZVNjaGVtYSgnVXNlclByb2ZpbGUnKQoKICAgIGV4cGVjdChzY2FsYXJGaWVsZHMuZmluZCgoZmllbGQpID0+IGZpZWxkLm5hbWUgPT09ICd1c2VyJykpLnRvQmVVbmRlZmluZWQoKQogIH0pCgogIGl0KCdyZXR1cm5zIGFuIGVtcHR5IG9iamVjdCBmb3IgbW9kZWxzIHdpdGggbm8gcmVsYXRpb25zJywgYXN5bmMgKCkgPT4gewogICAgY29uc3QgeyByZWxhdGlvbnMgfSA9IGF3YWl0IHNlcnZpY2VIYW5kbGVyLnBhcnNlU2NoZW1hKCdVc2VyJykKCiAgICBleHBlY3QocmVsYXRpb25zKS50b0VxdWFsKHt9KQogIH0pCgogIGl0KCdyZXR1cm5zIHJlbGF0aW9ucycsIGFzeW5jICgpID0+IHsKICAgIGNvbnN0IHsgcmVsYXRpb25zIH0gPSBhd2FpdCBzZXJ2aWNlSGFuZGxlci5wYXJzZVNjaGVtYSgnVXNlclByb2ZpbGUnKQoKICAgIGV4cGVjdChyZWxhdGlvbnMpLnRvRXF1YWwoewogICAgICB1c2VyOiB7IGZvcmVpZ25LZXk6IFsndXNlcklkJ10sIHR5cGU6ICdVc2VyJyB9LAogICAgfSkKICB9KQoKICBpdCgncmV0dXJucyByZWxhdGlvbnMgZm9yIGpvaW4gdGFibGVzJywgYXN5bmMgKCkgPT4gewogICAgY29uc3QgeyByZWxhdGlvbnMgfSA9IGF3YWl0IHNlcnZpY2VIYW5kbGVyLnBhcnNlU2NoZW1hKCdUYWdzT25Qcm9kdWN0cycpCgogICAgZXhwZWN0KHJlbGF0aW9ucykudG9FcXVhbCh7CiAgICAgIHRhZzogeyBmb3JlaWduS2V5OiBbJ3RhZ0lkJ10sIHR5cGU6ICdUYWcnIH0sCiAgICAgIHByb2R1Y3Q6IHsgZm9yZWlnbktleTogWydwcm9kdWN0SWQnXSwgdHlwZTogJ1Byb2R1Y3QnIH0sCiAgICB9KQogIH0pCgogIGl0KCdwcm9wZXJseSBjYXB0dXJlcyByZWxhdGlvbnNoaXBzIHdpdGggZGlmZmVyZW50IGZpZWxkIG5hbWUgdGhhbiByZWxhdGVkIG1vZGVsJywgYXN5bmMgKCkgPT4gewogICAgY29uc3QgeyByZWxhdGlvbnMgfSA9IGF3YWl0IHNlcnZpY2VIYW5kbGVyLnBhcnNlU2NoZW1hKCdGZWF0dXJlJykKCiAgICBleHBlY3QocmVsYXRpb25zKS50b0VxdWFsKHsKICAgICAgaW52ZW50b3J5OiB7IGZvcmVpZ25LZXk6IFsnaW52ZW50b3J5SWQnXSwgdHlwZTogJ1Byb2R1Y3QnIH0sCiAgICB9KQogIH0pCgogIGl0KCdyZXR1cm5zIGFuIGVtcHR5IGFycmF5IGZvciBtb2RlbHMgd2l0aCBubyBmb3JlaWduIGtleXMnLCBhc3luYyAoKSA9PiB7CiAgICBjb25zdCB7IGZvcmVpZ25LZXlzIH0gPSBhd2FpdCBzZXJ2aWNlSGFuZGxlci5wYXJzZVNjaGVtYSgnVXNlcicpCgogICAgZXhwZWN0KGZvcmVpZ25LZXlzKS50b0VxdWFsKFtdKQogIH0pCgogIGl0KCdyZXR1cm5zIGZvcmVpZ24ga2V5cycsIGFzeW5jICgpID0+IHsKICAgIGNvbnN0IHsgZm9yZWlnbktleXMgfSA9IGF3YWl0IHNlcnZpY2VIYW5kbGVyLnBhcnNlU2NoZW1hKCdVc2VyUHJvZmlsZScpCgogICAgZXhwZWN0KGZvcmVpZ25LZXlzKS50b0VxdWFsKFsndXNlcklkJ10pCiAgfSkKfSkKCmRlc2NyaWJlKCdmaWVsZHNUb1NjZW5hcmlvJywgKCkgPT4gewogIGl0KCdpbmNsdWRlcyBzY2FsYXIgZmllbGRzJywgYXN5bmMgKCkgPT4gewogICAgY29uc3Qgb3V0cHV0ID0gYXdhaXQgc2VydmljZUhhbmRsZXIuZmllbGRzVG9TY2VuYXJpbygKICAgICAgWwogICAgICAgIHsgbmFtZTogJ2VtYWlsJywgdHlwZTogJ1N0cmluZycgfSwKICAgICAgICB7IG5hbWU6ICdkYXRlJywgdHlwZTogJ0RhdGVUaW1lJyB9LAogICAgICAgIHsgbmFtZTogJ2JpZ0ludCcsIHR5cGU6ICdCaWdJbnQnIH0sCiAgICAgICAgeyBuYW1lOiAnaW50ZWdlcicsIHR5cGU6ICdJbnQnIH0sCiAgICAgICAgeyBuYW1lOiAnYm9vbGVhbicsIHR5cGU6ICdCb29sZWFuJyB9LAogICAgICBdLAogICAgICB7fSwKICAgICAgW10sCiAgICApCgogICAgZXhwZWN0KG91dHB1dC5lbWFpbCkudG9FcXVhbCgnZm9vQGJhci5jb20nKQoKICAgIGV4cGVjdChvdXRwdXQuZGF0ZSBpbnN0YW5jZW9mIERhdGUpLnRvQmUodHJ1ZSkKICAgIGV4cGVjdCghaXNOYU4ob3V0cHV0LmRhdGUpKS50b0JlKHRydWUpCgogICAgZXhwZWN0KG91dHB1dC5pbnRlZ2VyKS50b0VxdWFsKHBhcnNlSW50KG91dHB1dC5pbnRlZ2VyIGFzIHN0cmluZykpCiAgICBleHBlY3QodHlwZW9mIG91dHB1dC5pbnRlZ2VyKS50b0JlKCdudW1iZXInKQoKICAgIGV4cGVjdChvdXRwdXQuYm9vbGVhbikudG9FcXVhbCh0cnVlKQogICAgZXhwZWN0KHR5cGVvZiBvdXRwdXQuYm9vbGVhbikudG9CZSgnYm9vbGVhbicpCgogICAgZXhwZWN0KChvdXRwdXQuYmlnSW50IGFzIHN0cmluZykubWF0Y2goL15cZCtuJC8pKS50b0JlVHJ1dGh5KCkKICAgIGV4cGVjdCh0eXBlb2Ygb3V0cHV0LmJpZ0ludCkudG9CZSgnc3RyaW5nJykgLy8gcHNldWRvLWJpZ2ludAogIH0pCgogIGl0KCdpbmNsdWRlcyBkZXBlbmRlbnQgcmVsYXRpb25zaGlwcycsIGFzeW5jICgpID0+IHsKICAgIC8vIGZpZWxkcyBmb3IgYSBQb3N0IG1vZGVsCiAgICBjb25zdCBvdXRwdXQgPSBhd2FpdCBzZXJ2aWNlSGFuZGxlci5maWVsZHNUb1NjZW5hcmlvKAogICAgICBbCiAgICAgICAgeyBuYW1lOiAndGl0bGUnLCB0eXBlOiAnU3RyaW5nJyB9LAogICAgICAgIHsgbmFtZTogJ3VzZXJJZCcsIHR5cGU6ICdJbnRlZ2VyJyB9LAogICAgICBdLAogICAgICB7IHVzZXI6IHsgZm9yZWlnbktleTogJ3VzZXJJZCcsIHR5cGU6ICdVc2VyJyB9IH0sCiAgICAgIFsndXNlcklkJ10sCiAgICApCgogICAgZXhwZWN0KE9iamVjdC5rZXlzKG91dHB1dCkpLnRvRXF1YWwoWyd0aXRsZScsICd1c2VyJ10pCiAgICBleHBlY3QoT2JqZWN0LmtleXMob3V0cHV0LnVzZXIgYXMgUmVjb3JkPHN0cmluZywgdW5rbm93bj4pKS50b0VxdWFsKFsnY3JlYXRlJ10pCiAgICBleHBlY3QoT2JqZWN0LmtleXMoKG91dHB1dC51c2VyIGFzIFJlY29yZDxzdHJpbmcsIFJlY29yZDxzdHJpbmcsIHVua25vd24+PikuY3JlYXRlKSkudG9FcXVhbChbJ2VtYWlsJ10pCiAgfSkKCiAgaXQoJ3Byb3Blcmx5IGxvb2tzIHVwIHJlbGF0ZWQgbW9kZWxzIGJ5IHR5cGUnLCBhc3luYyAoKSA9PiB7CiAgICAvLyBmaWVsZHMgZm9yIGEgUG9zdCBtb2RlbAogICAgY29uc3Qgb3V0cHV0ID0gYXdhaXQgc2VydmljZUhhbmRsZXIuZmllbGRzVG9TY2VuYXJpbygKICAgICAgWwogICAgICAgIHsgbmFtZTogJ3RpdGxlJywgdHlwZTogJ1N0cmluZycgfSwKICAgICAgICB7IG5hbWU6ICd1c2VySWQnLCB0eXBlOiAnSW50ZWdlcicgfSwKICAgICAgXSwKICAgICAgLy8gbm90ZSB0aGF0IHJlbGF0aW9uc2hpcCBuYW1lIGlzICJhdXRob3IiIGJ1dCBkYXRhdHlwZSBpcyAiVXNlciIKICAgICAgeyBhdXRob3I6IHsgZm9yZWlnbktleTogJ2F1dGhvcklkJywgdHlwZTogJ1VzZXInIH0gfSwKICAgICAgWyd1c2VySWQnXSwKICAgICkKCiAgICBleHBlY3QoT2JqZWN0LmtleXMob3V0cHV0KSkudG9FcXVhbChbJ3RpdGxlJywgJ2F1dGhvciddKQogICAgZXhwZWN0KE9iamVjdC5rZXlzKG91dHB1dC5hdXRob3IgYXMgUmVjb3JkPHN0cmluZywgdW5rbm93bj4pKS50b0VxdWFsKFsnY3JlYXRlJ10pCiAgICBleHBlY3QoT2JqZWN0LmtleXMoKG91dHB1dC5hdXRob3IgYXMgUmVjb3JkPHN0cmluZywgUmVjb3JkPHN0cmluZywgdW5rbm93bj4+KS5jcmVhdGUpKS50b0VxdWFsKFsnZW1haWwnXSkKICB9KQp9KQoKdGVzdCgiZG9lc24ndCBpbmNsdWRlIHRlc3QgZmlsZSB3aGVuIC0tdGVzdHMgaXMgc2V0IHRvIGZhbHNlIiwgYXN5bmMgKCkgPT4gewogIGNvbnN0IGJhc2VBcmdzID0gewogICAgLi4uZ2V0RGVmYXVsdEFyZ3Moc2VydmljZS5nZXREZWZhdWx0T3B0aW9ucygpKSwKICAgIGphdmFzY3JpcHQ6IHRydWUsCiAgfQoKICBjb25zdCBmaWxlcyA9IGF3YWl0IHNlcnZpY2VIYW5kbGVyLmZpbGVzKHsKICAgIC4uLmJhc2VBcmdzLAogICAgbmFtZTogJ1VzZXInLAogICAgdGVzdHM6IGZhbHNlLAogIH0pCgogIGV4cGVjdChPYmplY3Qua2V5cyhmaWxlcykpLnRvRXF1YWwoWwogICAgcGF0aC5ub3JtYWxpemUoJy9wYXRoL3RvL3Byb2plY3QvYXBpL3NyYy9zZXJ2aWNlcy91c2Vycy91c2Vycy5qcycpLAogIF0pCn0pCg==
+globalThis.__dirname = import.meta.dirname
+import path from 'node:path'
+
+import { vi, beforeAll, afterAll, test, expect, describe, it } from 'vitest'
+import yargs from 'yargs/yargs'
+
+// Load mocks
+import '../../../../lib/test'
+
+import { getDefaultArgs } from '../../../../lib/index.js'
+import * as service from '../service.js'
+import * as serviceHandler from '../serviceHandler.js'
+import type { PrismaField } from '../serviceHandler.js'
+
+function field(overrides: Partial<PrismaField>): PrismaField {
+  return {
+    name: '',
+    type: '',
+    kind: 'scalar',
+    isList: false,
+    isRequired: false,
+    isId: false,
+    ...overrides,
+  }
+}
+
+beforeAll(() => {
+  vi.useFakeTimers()
+  vi.setSystemTime(new Date('2022-09-30T09:50:00.000Z'))
+})
+
+afterAll(() => {
+  vi.useRealTimers()
+})
+
+type BaseArgs = Record<string, unknown>
+
+const itReturnsExactly3Files = (baseArgs: BaseArgs) => {
+  test('returns exactly 3 files', async () => {
+    const files = await serviceHandler.files({
+      ...baseArgs,
+      name: 'User',
+    })
+
+    expect(Object.keys(files).length).toEqual(3)
+  })
+}
+const itCreatesASingleWordServiceFile = (baseArgs: BaseArgs) => {
+  test('creates a single word service file', async () => {
+    const files = await serviceHandler.files({
+      ...baseArgs,
+      name: 'User',
+    })
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
+
+    expect(
+      files[
+        path.normalize(
+          `/path/to/project/api/src/services/users/users.${extension}`,
+        )
+      ],
+    ).toMatchSnapshot()
+  })
+}
+const itCreatesASingleWordServiceTestFile = (baseArgs: BaseArgs) => {
+  test('creates a single word service test file', async () => {
+    const files = await serviceHandler.files({
+      ...baseArgs,
+      name: 'User',
+    })
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
+
+    expect(
+      files[
+        path.normalize(
+          `/path/to/project/api/src/services/users/users.test.${extension}`,
+        )
+      ],
+    ).toMatchSnapshot()
+  })
+}
+
+const itCreatesASingleWordServiceScenarioFile = (baseArgs: BaseArgs) => {
+  test('creates a single word service scenario file', async () => {
+    const files = await serviceHandler.files({
+      ...baseArgs,
+      name: 'User',
+    })
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
+    const filePath = path.normalize(
+      `/path/to/project/api/src/services/users/users.scenarios.${extension}`,
+    )
+
+    expect(Object.keys(files)).toContain(filePath)
+    expect(files[filePath]).toMatchSnapshot()
+  })
+}
+
+const itCreatesAMultiWordServiceFile = (baseArgs: BaseArgs) => {
+  test('creates a multi word service file', async () => {
+    const files = await serviceHandler.files({
+      ...baseArgs,
+      name: 'UserProfile',
+      crud: false,
+    })
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
+
+    expect(
+      files[
+        path.normalize(
+          `/path/to/project/api/src/services/userProfiles/userProfiles.${extension}`,
+        )
+      ],
+    ).toMatchSnapshot()
+  })
+}
+
+const itCreatesAMultiWordServiceTestFile = (baseArgs: BaseArgs) => {
+  test('creates a multi word service test file', async () => {
+    const files = await serviceHandler.files({
+      ...baseArgs,
+      name: 'UserProfile',
+      crud: false,
+    })
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
+
+    expect(
+      files[
+        path.normalize(
+          `/path/to/project/api/src/services/userProfiles/userProfiles.test.${extension}`,
+        )
+      ],
+    ).toMatchSnapshot()
+  })
+}
+
+const itCreatesASingleWordServiceFileWithCRUDActions = (baseArgs: BaseArgs) => {
+  test('creates a single word service file with CRUD actions', async () => {
+    const files = await serviceHandler.files({
+      ...baseArgs,
+      name: 'Post',
+      crud: true,
+    })
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
+
+    expect(
+      files[
+        path.normalize(
+          `/path/to/project/api/src/services/posts/posts.${extension}`,
+        )
+      ],
+    ).toMatchSnapshot()
+
+    // TODO
+    // Mock Date, so we can take snapshots of tests and scenarios
+  })
+}
+
+const itCreatesASingleWordServiceTestFileWithCRUDActions = (
+  baseArgs: BaseArgs,
+) => {
+  test('creates a service test file with CRUD actions', async () => {
+    const files = await serviceHandler.files({
+      ...baseArgs,
+      name: 'Post',
+      crud: true,
+    })
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
+    const filePath = path.normalize(
+      `/path/to/project/api/src/services/posts/posts.test.${extension}`,
+    )
+
+    expect(Object.keys(files)).toContain(filePath)
+  })
+}
+
+const itCreatesAMultiWordServiceFileWithCRUDActions = (baseArgs: BaseArgs) => {
+  test('creates a multi word service file with CRUD actions', async () => {
+    const files = await serviceHandler.files({
+      ...baseArgs,
+      name: 'UserProfile',
+      crud: true,
+    })
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
+    const filePath = path.normalize(
+      `/path/to/project/api/src/services/userProfiles/userProfiles.${extension}`,
+    )
+
+    expect(Object.keys(files)).toContain(filePath)
+  })
+}
+
+const itCreatesAMultiWordServiceTestFileWithCRUDActions = (
+  baseArgs: BaseArgs,
+) => {
+  test('creates a multi word service test file with CRUD actions', async () => {
+    const files = await serviceHandler.files({
+      ...baseArgs,
+      name: 'UserProfile',
+      crud: true,
+    })
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
+    const filePath = path.normalize(
+      `/path/to/project/api/src/services/userProfiles/userProfiles.test.${extension}`,
+    )
+
+    expect(Object.keys(files)).toContain(filePath)
+  })
+}
+
+const itCreatesAMultiWordServiceTestFileWithMultipleScalarTypes = (
+  baseArgs: BaseArgs,
+) => {
+  test('creates a multi word service test file with multiple scalar types', async () => {
+    const files = await serviceHandler.files({
+      ...baseArgs,
+      name: 'ScalarType',
+      crud: true,
+    })
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
+
+    expect(
+      files[
+        path.normalize(
+          `/path/to/project/api/src/services/scalarTypes/scalarTypes.test.${extension}`,
+        )
+      ],
+    ).toMatchSnapshot()
+  })
+}
+
+const itCreatesASingleWordServiceFileWithAHasManyRelation = (
+  baseArgs: BaseArgs,
+) => {
+  test('creates a single word service file with a hasMany relation', async () => {
+    const files = await serviceHandler.files({
+      ...baseArgs,
+      name: 'User',
+      relations: ['userProfiles'],
+      crud: false,
+    })
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
+
+    expect(
+      files[
+        path.normalize(
+          `/path/to/project/api/src/services/users/users.${extension}`,
+        )
+      ],
+    ).toMatchSnapshot()
+  })
+}
+
+const itCreatesASingleWordServiceFileWithABelongsToRelation = (
+  baseArgs: BaseArgs,
+) => {
+  test('creates a single word service file with a belongsTo relation', async () => {
+    const files = await serviceHandler.files({
+      ...baseArgs,
+      name: 'User',
+      relations: ['identity'],
+      crud: false,
+    })
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
+
+    expect(
+      files[
+        path.normalize(
+          `/path/to/project/api/src/services/users/users.${extension}`,
+        )
+      ],
+    ).toMatchSnapshot()
+  })
+}
+
+const itCreatesASingleWordServiceFileWithMultipleRelations = (
+  baseArgs: BaseArgs,
+) => {
+  test('creates a single word service file with multiple relations', async () => {
+    const files = await serviceHandler.files({
+      ...baseArgs,
+      name: 'User',
+      relations: ['userProfiles', 'identity'],
+      crud: false,
+    })
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
+
+    expect(
+      files[
+        path.normalize(
+          `/path/to/project/api/src/services/users/users.${extension}`,
+        )
+      ],
+    ).toMatchSnapshot()
+  })
+}
+
+const itCreatesAMultiWordServiceTestFileWithCRUDAndOnlyForeignKeyRequired = (
+  baseArgs: BaseArgs,
+) => {
+  test('creates a multi word service test file with crud actions and only foreign as mandatory field', async () => {
+    const files = await serviceHandler.files({
+      ...baseArgs,
+      name: 'Transaction',
+      crud: true,
+    })
+    const extension = baseArgs?.typescript ? 'ts' : 'js'
+
+    expect(
+      files[
+        path.normalize(
+          `/path/to/project/api/src/services/transactions/transactions.test.${extension}`,
+        )
+      ],
+    ).toMatchSnapshot()
+  })
+}
+
+test('keeps Service in name', () => {
+  const args = yargs()
+    .command('service <name>', false, service.builder)
+    .parse('service BazingaService')
+
+  const name = 'name' in args ? args.name : undefined
+
+  expect(name).toEqual('BazingaService')
+})
+
+describe('in javascript mode', () => {
+  const baseArgs: BaseArgs = {
+    ...getDefaultArgs(service.getDefaultOptions()),
+    tests: true,
+  }
+
+  itReturnsExactly3Files(baseArgs)
+  itCreatesASingleWordServiceFile(baseArgs)
+  itCreatesASingleWordServiceTestFile(baseArgs)
+  itCreatesASingleWordServiceScenarioFile(baseArgs)
+  itCreatesAMultiWordServiceFile(baseArgs)
+  itCreatesAMultiWordServiceTestFile(baseArgs)
+  itCreatesASingleWordServiceFileWithCRUDActions(baseArgs)
+  itCreatesASingleWordServiceTestFileWithCRUDActions(baseArgs)
+  itCreatesAMultiWordServiceTestFileWithMultipleScalarTypes(baseArgs)
+  itCreatesAMultiWordServiceFileWithCRUDActions(baseArgs)
+  itCreatesAMultiWordServiceTestFileWithCRUDActions(baseArgs)
+  itCreatesASingleWordServiceFileWithAHasManyRelation(baseArgs)
+  itCreatesASingleWordServiceFileWithABelongsToRelation(baseArgs)
+  itCreatesASingleWordServiceFileWithMultipleRelations(baseArgs)
+  itCreatesAMultiWordServiceTestFileWithCRUDAndOnlyForeignKeyRequired(baseArgs)
+})
+
+describe('in typescript mode', () => {
+  const baseArgs: BaseArgs = {
+    ...getDefaultArgs(service.getDefaultOptions()),
+    typescript: true,
+    tests: true,
+  }
+
+  itReturnsExactly3Files(baseArgs)
+  itCreatesASingleWordServiceFile(baseArgs)
+  itCreatesASingleWordServiceTestFile(baseArgs)
+  itCreatesASingleWordServiceScenarioFile(baseArgs)
+  itCreatesAMultiWordServiceFile(baseArgs)
+  itCreatesAMultiWordServiceTestFile(baseArgs)
+  itCreatesASingleWordServiceFileWithCRUDActions(baseArgs)
+  itCreatesAMultiWordServiceTestFileWithMultipleScalarTypes(baseArgs)
+  itCreatesASingleWordServiceTestFileWithCRUDActions(baseArgs)
+  itCreatesAMultiWordServiceFileWithCRUDActions(baseArgs)
+  itCreatesAMultiWordServiceTestFileWithCRUDActions(baseArgs)
+  itCreatesASingleWordServiceFileWithAHasManyRelation(baseArgs)
+  itCreatesASingleWordServiceFileWithABelongsToRelation(baseArgs)
+  itCreatesASingleWordServiceFileWithMultipleRelations(baseArgs)
+  itCreatesAMultiWordServiceTestFileWithCRUDAndOnlyForeignKeyRequired(baseArgs)
+})
+
+describe('parseSchema', () => {
+  it('returns an empty array for models with no required scalars', async () => {
+    const { scalarFields } = await serviceHandler.parseSchema('Product')
+
+    expect(scalarFields).toEqual([])
+  })
+
+  it('includes required scalar fields', async () => {
+    const { scalarFields } = await serviceHandler.parseSchema('User')
+
+    expect(
+      scalarFields.find((field) => field.name === 'email'),
+    ).not.toBeUndefined()
+  })
+
+  it('does not include non-required scalar fields', async () => {
+    const { scalarFields } = await serviceHandler.parseSchema('User')
+
+    expect(scalarFields.find((field) => field.name === 'name')).toBeUndefined()
+  })
+
+  it('does not include required scalar fields with default values', async () => {
+    const { scalarFields } = await serviceHandler.parseSchema('User')
+
+    expect(
+      scalarFields.find((field) => field.name === 'isAdmin'),
+    ).toBeUndefined()
+  })
+
+  it('includes foreign key scalars', async () => {
+    const { scalarFields } = await serviceHandler.parseSchema('UserProfile')
+
+    expect(
+      scalarFields.find((field) => field.name === 'userId'),
+    ).not.toBeUndefined()
+  })
+
+  it('does not include prisma-generated helper fields', async () => {
+    const { scalarFields } = await serviceHandler.parseSchema('UserProfile')
+
+    expect(scalarFields.find((field) => field.name === 'user')).toBeUndefined()
+  })
+
+  it('returns an empty object for models with no relations', async () => {
+    const { relations } = await serviceHandler.parseSchema('User')
+
+    expect(relations).toEqual({})
+  })
+
+  it('returns relations', async () => {
+    const { relations } = await serviceHandler.parseSchema('UserProfile')
+
+    expect(relations).toEqual({
+      user: { foreignKey: ['userId'], type: 'User' },
+    })
+  })
+
+  it('returns relations for join tables', async () => {
+    const { relations } = await serviceHandler.parseSchema('TagsOnProducts')
+
+    expect(relations).toEqual({
+      tag: { foreignKey: ['tagId'], type: 'Tag' },
+      product: { foreignKey: ['productId'], type: 'Product' },
+    })
+  })
+
+  it('properly captures relationships with different field name than related model', async () => {
+    const { relations } = await serviceHandler.parseSchema('Feature')
+
+    expect(relations).toEqual({
+      inventory: { foreignKey: ['inventoryId'], type: 'Product' },
+    })
+  })
+
+  it('returns an empty array for models with no foreign keys', async () => {
+    const { foreignKeys } = await serviceHandler.parseSchema('User')
+
+    expect(foreignKeys).toEqual([])
+  })
+
+  it('returns foreign keys', async () => {
+    const { foreignKeys } = await serviceHandler.parseSchema('UserProfile')
+
+    expect(foreignKeys).toEqual(['userId'])
+  })
+})
+
+describe('fieldsToScenario', () => {
+  it('includes scalar fields', async () => {
+    const output = await serviceHandler.fieldsToScenario(
+      [
+        field({ name: 'email', type: 'String' }),
+        field({ name: 'date', type: 'DateTime' }),
+        field({ name: 'bigInt', type: 'BigInt' }),
+        field({ name: 'integer', type: 'Int' }),
+        field({ name: 'boolean', type: 'Boolean' }),
+      ],
+      {},
+      [],
+    )
+
+    expect(output.email).toEqual('foo@bar.com')
+
+    expect(output.date instanceof Date).toBe(true)
+    expect(output.date instanceof Date && !isNaN(output.date.getTime())).toBe(
+      true,
+    )
+
+    expect(output.integer).toEqual(parseInt(String(output.integer)))
+    expect(typeof output.integer).toBe('number')
+
+    expect(output.boolean).toEqual(true)
+    expect(typeof output.boolean).toBe('boolean')
+
+    expect(String(output.bigInt)).toMatch(/^\d+n$/)
+    expect(typeof output.bigInt).toBe('string') // pseudo-bigint
+  })
+
+  it('includes dependent relationships', async () => {
+    // fields for a Post model
+    const output = await serviceHandler.fieldsToScenario(
+      [
+        field({ name: 'title', type: 'String' }),
+        field({ name: 'userId', type: 'Integer' }),
+      ],
+      { user: { foreignKey: ['userId'], type: 'User' } },
+      ['userId'],
+    )
+
+    expect(Object.keys(output)).toStrictEqual(['title', 'user'])
+    expect(output['user']).toStrictEqual({
+      create: { email: expect.any(String) },
+    })
+  })
+
+  it('properly looks up related models by type', async () => {
+    // fields for a Post model
+    const output = await serviceHandler.fieldsToScenario(
+      [
+        field({ name: 'title', type: 'String' }),
+        field({ name: 'userId', type: 'Integer' }),
+      ],
+      // note that relationship name is "author" but datatype is "User"
+      { author: { foreignKey: ['authorId'], type: 'User' } },
+      ['userId'],
+    )
+
+    expect(Object.keys(output)).toStrictEqual(['title', 'author'])
+    expect(output['author']).toStrictEqual({
+      create: { email: expect.any(String) },
+    })
+  })
+})
+
+test("doesn't include test file when --tests is set to false", async () => {
+  const baseArgs = {
+    ...getDefaultArgs(service.getDefaultOptions()),
+    javascript: true,
+  }
+
+  const files = await serviceHandler.files({
+    ...baseArgs,
+    name: 'User',
+    tests: false,
+  })
+
+  expect(Object.keys(files)).toEqual([
+    path.normalize('/path/to/project/api/src/services/users/users.js'),
+  ])
+})
