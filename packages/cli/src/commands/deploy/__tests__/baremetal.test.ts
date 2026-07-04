@@ -1,7 +1,7 @@
+import type * as ProjectConfigModule from '@cedarjs/project-config'
+
 import { Listr } from 'listr2'
 import { vi, afterEach, beforeEach, describe, it, expect } from 'vitest'
-
-import type * as ProjectConfigModule from '@cedarjs/project-config'
 
 import * as baremetal from '../baremetal/baremetalHandler.js'
 
