@@ -102,9 +102,11 @@ describe('addRealtimeToGraphqlHandler (filesystem)', () => {
 
     addRealtimeToGraphqlHandler(ctx, task, false)
 
-    fs.readFileSync(graphqlPath, 'utf8')
+    const modified = fs.readFileSync(graphqlPath, 'utf8')
 
     expect(fs.writeFileSync).toHaveBeenCalled()
+    expect(modified).toContain("import { realtime } from 'src/lib/realtime'")
+    expect(modified).toContain('realtime,')
     expect(ctx.realtimeHandlerSkipped).not.toBe(true)
     expect(task.skip).not.toHaveBeenCalled()
 
