@@ -5,13 +5,15 @@ import type * as ProjectConfigModule from '@cedarjs/project-config'
 
 import * as baremetal from '../baremetal/baremetalHandler.js'
 
+globalThis.__dirname = import.meta.dirname
+
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const originalProjectConfig =
     await importOriginal<typeof ProjectConfigModule>()
   return {
     ...originalProjectConfig,
     getPaths: () => ({
-      base: `${import.meta.dirname}/fixtures`,
+      base: `${globalThis.__dirname}/fixtures`,
     }),
   }
 })
