@@ -3,9 +3,10 @@ import { vi, afterEach, beforeEach, describe, it, expect } from 'vitest'
 
 import type * as ProjectConfigModule from '@cedarjs/project-config'
 
-import * as baremetal from '../baremetal/baremetalHandler.js'
+// Capture __dirname during hoisted mock setup phase
+const testDir = vi.hoisted(() => import.meta.dirname)
 
-globalThis.__dirname = import.meta.dirname
+globalThis.__dirname = testDir
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const originalProjectConfig =
@@ -13,7 +14,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
   return {
     ...originalProjectConfig,
     getPaths: () => ({
-      base: `${globalThis.__dirname}/fixtures`,
+      base: `${testDir}/fixtures`,
     }),
   }
 })
@@ -22,6 +23,8 @@ vi.mock('@cedarjs/project-config/packageManager', () => ({
   getPackageManager: vi.fn(() => 'yarn'),
   resetPackageManagerCache: vi.fn(),
 }))
+
+import * as baremetal from '../baremetal/baremetalHandler.js'
 
 describe('verifyConfig', () => {
   it('throws an error if no environment specified', () => {
