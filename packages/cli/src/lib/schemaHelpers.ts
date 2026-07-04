@@ -106,13 +106,19 @@ export const getSchema = async (
  * Returns the enum defined with the given `name` parsed from the
  * `schema.prisma` of the target application. If no `name` is given
  * then all enum definitions are returned
+ *
+ * TODO: No tests cover this function. No test fixture includes enums. Until
+ * then, the `metadata.datamodel.enums` path is untested – we should add a
+ * schema fixture with an enum, write a test, and verify the actual path matches
+ * what `@prisma/dmmf` declares. If we could use `[...schema.datamodel.enums]`
+ * directly, we could remove the type cast in `getSchemaDefinitions`
  */
 export const getEnum = async (
   name?: string,
 ): Promise<DMMF.DatamodelEnum[] | DMMF.DatamodelEnum> => {
   const schema = await getSchemaDefinitions()
   if (!name) {
-    return schema.metadata.datamodel.enums
+    return [...schema.metadata.datamodel.enums]
   }
 
   const model = schema.datamodel.enums.find((e) => e.name === name)
@@ -136,8 +142,26 @@ export const getDataModel = async () => {
 /**
  * Returns the DMMF defined by `prisma` resolving the relevant `schema.prisma` path.
  */
-export const getSchemaDefinitions = async (): Promise<DMMF.Document> => {
-  return getDMMF({ datamodel: await getDataModel() })
+interface SchemaDocument extends DMMF.Document {
+  metadata: { datamodel: DMMF.Datamodel }
+}
+
+/**
+ * Returns the DMMF defined by `prisma` resolving the relevant `schema.prisma` path.
+ *
+ * TODO: The `metadata` path on the return type comes from an undocumented
+ * property that `@prisma/internals` includes at runtime but `@prisma/dmmf`
+ * doesn't declare. Add a test with enums to find out which path actually
+ * exists at runtime, then either remove the `metadata` extension or keep it
+ * and confirm the cast.
+ */
+export const getSchemaDefinitions = async (): Promise<SchemaDocument> => {
+  const document = await getDMMF({ datamodel: await getDataModel() })
+  // getDMMF returns DMMF.Document | GetDMMFError, but @prisma/internals
+  // always returns a resolved document. The runtime object also includes a
+  // `metadata` property not declared in @prisma/dmmf's Document type, so
+  // we widen the return type here.
+  return document as SchemaDocument
 }
 
 /**

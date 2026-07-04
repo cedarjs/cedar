@@ -24,8 +24,10 @@ vi.mock('node:fs', async (importOriginal) => {
   const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
     await import('../../../../__tests__/ufsFsProxy.js')
   const fs = await importOriginal<typeof NodeFs>()
-  ufs.use(wrapFsForUnionfs(fs)).use(wrapMemfsForUnionfs(memfs))
-  return ufs
+  ufs.use(wrapFsForUnionfs(fs))
+  ufs.use(wrapMemfsForUnionfs(memfs))
+
+  return { ...ufs, default: ufs }
 })
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {

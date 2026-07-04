@@ -490,9 +490,7 @@ describe('packageHandler', () => {
     )
     expect(mockEnq.Select).toHaveBeenCalledTimes(1)
     // Verify the prompt message contains the experimental warning
-    expect(mockEnq.Select.mock.calls[0][0]?.message).toContain(
-      'experimental',
-    )
+    expect(mockEnq.Select.mock.calls[0][0]?.message).toContain('experimental')
     expect(dlx).toHaveBeenNthCalledWith(1, 'some-package@0.0.1', [], {
       stdio: 'inherit',
       cwd: path.join('mocked', 'project'),
