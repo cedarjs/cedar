@@ -9,7 +9,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
   return {
     ...originalProjectConfig,
     getPaths: () => ({
-      base: `${globalThis.__dirname}/fixtures`,
+      base: `${import.meta.dirname}/fixtures`,
     }),
   }
 })
