@@ -1,5 +1,7 @@
 globalThis.__dirname = import.meta.dirname
 
+import { vi, describe, it, expect, afterEach, beforeEach } from 'vitest'
+
 vi.mock('node:fs')
 vi.mock('execa')
 
@@ -15,7 +17,6 @@ const actualFs = await vi.importActual<typeof NodeFs>('node:fs')
 
 import Enquirer from 'enquirer'
 import { vol } from 'memfs'
-import { vi, describe, it, expect, afterEach, beforeEach } from 'vitest'
 
 import { getPaths } from '../../../../lib/index.js'
 import * as dbAuth from '../dbAuthHandler.js'
