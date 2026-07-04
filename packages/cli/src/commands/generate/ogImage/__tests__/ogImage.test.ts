@@ -1,4 +1,6 @@
 /* eslint-disable camelcase */
+import type * as NodeFS from 'node:fs'
+
 globalThis.__dirname = __dirname
 
 import { vol, fs as memfs } from 'memfs'
@@ -13,12 +15,12 @@ vi.mock('node:fs', async (importOriginal) => {
   const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
     await import('../../../../__tests__/ufsFsProxy.js')
   ufs
-    .use(wrapFsForUnionfs(await importOriginal()))
+    .use(wrapFsForUnionfs(await importOriginal<typeof NodeFS>()))
     .use(wrapMemfsForUnionfs(memfs))
   return { ...ufs, default: { ...ufs } }
 })
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const actual = await importOriginal()
+  const actual = await importOriginal<typeof import('@cedarjs/project-config')>()
 
   return {
     ...actual,
@@ -35,7 +37,8 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     }),
   }
 })
-let original_CEDAR_CWD
+
+let original_CEDAR_CWD: string | undefined
 
 describe('ogImage generator', () => {
   beforeEach(() => {

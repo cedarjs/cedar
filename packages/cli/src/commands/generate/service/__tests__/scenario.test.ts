@@ -6,6 +6,24 @@ import { describe, test, expect } from 'vitest'
 
 import * as serviceHandler from '../serviceHandler.js'
 
+// Helper to build a minimal field object compatible with PrismaField.
+// The required structural fields (name, kind, isList, isRequired, isId) are
+// set to safe defaults so each test can focus on the property under test.
+const makeField = (overrides: {
+  type: string
+  kind?: string
+  isUnique?: boolean
+  name?: string
+  enumValues?: Array<{ name: string; dbName?: string }>
+}) => ({
+  name: 'testField',
+  kind: 'scalar',
+  isList: false,
+  isRequired: true,
+  isId: false,
+  ...overrides,
+})
+
 describe('the scenario generator', () => {
   test('parseSchema returns an object with required scalar fields', async () => {
     const { scalarFields } = await serviceHandler.parseSchema('UserProfile')
@@ -98,7 +116,7 @@ describe('the scenario generator', () => {
   })
 
   test('scenarioFieldValue returns a plain string for non-unique String types', () => {
-    const field = { type: 'String', isUnique: false }
+    const field = makeField({ type: 'String', isUnique: false })
     const value = serviceHandler.scenarioFieldValue(field)
 
     expect(value).toEqual(expect.any(String))
@@ -106,7 +124,7 @@ describe('the scenario generator', () => {
   })
 
   test('scenarioFieldValue returns a valid email for non-unique String types with a field name that includes "email"', () => {
-    const field = { type: 'String', isUnique: false, name: 'email' }
+    const field = makeField({ type: 'String', isUnique: false, name: 'email' })
     const value = serviceHandler.scenarioFieldValue(field)
 
     expect(typeof value).toBe('string')
@@ -114,7 +132,7 @@ describe('the scenario generator', () => {
   })
 
   test('scenarioFieldValue returns a unique string for unique String types', () => {
-    const field = { type: 'String', isUnique: true }
+    const field = makeField({ type: 'String', isUnique: true })
     const value = serviceHandler.scenarioFieldValue(field)
 
     expect(value).toEqual(expect.any(String))
@@ -124,7 +142,11 @@ describe('the scenario generator', () => {
   })
 
   test('scenarioFieldValue returns a valid unique email for unique String types with a field name that includes "email"', () => {
-    const field = { type: 'String', isUnique: true, name: 'authorEmail' }
+    const field = makeField({
+      type: 'String',
+      isUnique: true,
+      name: 'authorEmail',
+    })
     const value = serviceHandler.scenarioFieldValue(field)
 
     expect(value).toMatch(/foo\d+@bar\.com/)
@@ -132,7 +154,7 @@ describe('the scenario generator', () => {
   })
 
   test('scenarioFieldValue returns a true for BigInt types', () => {
-    const field = { type: 'BigInt' }
+    const field = makeField({ type: 'BigInt' })
     const value = serviceHandler.scenarioFieldValue(field)
 
     expect(value).toMatch(/^\d+n$/)
@@ -140,7 +162,7 @@ describe('the scenario generator', () => {
   })
 
   test('scenarioFieldValue returns a true for Boolean types', () => {
-    const field = { type: 'Boolean' }
+    const field = makeField({ type: 'Boolean' })
     const value = serviceHandler.scenarioFieldValue(field)
 
     expect(value).toEqual(true)
@@ -148,65 +170,63 @@ describe('the scenario generator', () => {
   })
 
   test('scenarioFieldValue returns a float for Decimal types', () => {
-    const field = { type: 'Decimal' }
+    const field = makeField({ type: 'Decimal' })
     const value = serviceHandler.scenarioFieldValue(field)
 
-    expect(value).toEqual(parseFloat(value))
+    expect(value).toEqual(parseFloat(String(value)))
     expect(typeof value).toBe('number')
   })
 
   test('scenarioFieldValue returns a float for Float types', () => {
-    const field = { type: 'Float' }
+    const field = makeField({ type: 'Float' })
     const value = serviceHandler.scenarioFieldValue(field)
 
-    expect(value).toEqual(parseFloat(value))
+    expect(value).toEqual(parseFloat(String(value)))
     expect(typeof value).toBe('number')
   })
 
   test('scenarioFieldValue returns a number for Int types', () => {
-    const field = { type: 'Int' }
+    const field = makeField({ type: 'Int' })
     const value = serviceHandler.scenarioFieldValue(field)
 
-    expect(value).toEqual(parseInt(value))
+    expect(value).toEqual(parseInt(String(value)))
     expect(typeof value).toBe('number')
   })
 
   test('scenarioFieldValue returns a valid Date for DateTime types', () => {
-    const field = { type: 'DateTime' }
+    const field = makeField({ type: 'DateTime' })
     const value = serviceHandler.scenarioFieldValue(field)
 
     expect(value instanceof Date).toBe(true)
-    expect(!isNaN(value)).toBe(true)
+    expect(!isNaN(Number(value))).toBe(true)
   })
 
   test('scenarioFieldValue returns JSON for Json types', () => {
-    const field = { type: 'Json' }
+    const field = makeField({ type: 'Json' })
 
     expect(serviceHandler.scenarioFieldValue(field)).toEqual({ foo: 'bar' })
   })
 
   test('scenarioFieldValue returns the first enum option for enum kinds', () => {
-    const field = {
+    const field = makeField({
       type: 'Color',
       kind: 'enum',
-      enumValues: [
-        { name: 'Red', dbValue: null },
-        { name: 'Blue', dbValue: null },
-      ],
-    }
+      // No dbName — function falls back to .name
+      enumValues: [{ name: 'Red' }, { name: 'Blue' }],
+    })
 
     expect(serviceHandler.scenarioFieldValue(field)).toEqual('Red')
   })
 
   test('scenarioFieldValue returns the dbName for enum types if present', () => {
-    const field = {
+    const field = makeField({
       type: 'Color',
       kind: 'enum',
       enumValues: [
         { name: 'Red', dbName: 'color-red' },
         { name: 'Blue', dbName: 'color-blue' },
       ],
-    }
+    })
 
     expect(serviceHandler.scenarioFieldValue(field)).toEqual('color-red')
   })
@@ -216,11 +236,19 @@ describe('the scenario generator', () => {
       {
         name: 'firstName',
         type: 'String',
+        kind: 'scalar',
+        isList: false,
+        isRequired: true,
+        isId: false,
         isUnique: false,
       },
       {
         name: 'lastName',
         type: 'String',
+        kind: 'scalar',
+        isList: false,
+        isRequired: true,
+        isId: false,
         isUnique: true,
       },
     ]

@@ -1,9 +1,9 @@
-vi.mock('@cedarjs/project-config', () => {
+vi.mock('@cedarjs/project-config', async () => {
+  const { join } = await import('path')
   return {
     getPaths: () => {
-      const path = require('path')
       return {
-        base: path.join('mocked', 'project'),
+        base: join('mocked', 'project'),
       }
     },
   }
@@ -24,7 +24,7 @@ vi.mock('@cedarjs/cli-helpers', () => {
         'important',
         'caution',
         'link',
-      ].map((k) => [k, (s) => s]),
+      ].map((k) => [k, (s: string) => s]),
     ),
     getCompatibilityData: vi.fn(() => {
       throw new Error('Mock Not Implemented')
@@ -33,9 +33,9 @@ vi.mock('@cedarjs/cli-helpers', () => {
 })
 vi.mock('node:fs')
 vi.mock('@cedarjs/cli-helpers/packageManager/exec', async () => {
-  const actual = await vi.importActual(
-    '@cedarjs/cli-helpers/packageManager/exec',
-  )
+  const actual = await vi.importActual<
+    typeof import('@cedarjs/cli-helpers/packageManager/exec')
+  >('@cedarjs/cli-helpers/packageManager/exec')
   return {
     ...actual,
     dlx: vi.fn(),
@@ -66,6 +66,11 @@ import { getCompatibilityData } from '@cedarjs/cli-helpers'
 import { dlx } from '@cedarjs/cli-helpers/packageManager/exec'
 
 import { handler } from '../packageHandler.js'
+
+// Helper: configure what enq.Select.run() returns for the next call.
+// @ts-expect-error - returning a minimal { run } mock instead of a full Enquirer Select instance
+const mockSelectRun = (value: string) =>
+  vi.mocked(enq.Select).mockImplementation(() => ({ run: vi.fn(() => value) }))
 
 describe('packageHandler', () => {
   beforeEach(() => {
@@ -125,15 +130,11 @@ describe('packageHandler', () => {
   })
 
   test('compatiblity check error prompts to continue', async () => {
-    getCompatibilityData.mockImplementation(() => {
+    vi.mocked(getCompatibilityData).mockImplementation(() => {
       throw new Error('No compatible version found')
     })
 
-    enq.Select.mockImplementation(() => {
-      return {
-        run: vi.fn(() => 'cancel'),
-      }
-    })
+    mockSelectRun('cancel')
     await handler({
       npmPackage: 'some-package',
       force: false,
@@ -142,11 +143,7 @@ describe('packageHandler', () => {
     expect(enq.Select).toHaveBeenCalledTimes(1)
     expect(dlx).not.toHaveBeenCalled()
 
-    enq.Select.mockImplementation(() => {
-      return {
-        run: vi.fn(() => 'continue'),
-      }
-    })
+    mockSelectRun('continue')
     await handler({
       npmPackage: 'some-package',
       force: false,
@@ -160,16 +157,10 @@ describe('packageHandler', () => {
   })
 
   test('default of latest is compatible', async () => {
-    getCompatibilityData.mockImplementation(() => {
+    vi.mocked(getCompatibilityData).mockImplementation(() => {
       return {
-        preferred: {
-          version: '1.0.0',
-          tag: 'latest',
-        },
-        compatible: {
-          version: '1.0.0',
-          tag: 'latest',
-        },
+        preferred: { version: '1.0.0', tag: 'latest' },
+        compatible: { version: '1.0.0', tag: 'latest' },
       }
     })
 
@@ -186,24 +177,14 @@ describe('packageHandler', () => {
   })
 
   test('default of latest is not compatible', async () => {
-    getCompatibilityData.mockImplementation(() => {
+    vi.mocked(getCompatibilityData).mockImplementation(() => {
       return {
-        preferred: {
-          version: '2.0.0',
-          tag: 'latest',
-        },
-        compatible: {
-          version: '1.0.0',
-          tag: undefined,
-        },
+        preferred: { version: '2.0.0', tag: 'latest' },
+        compatible: { version: '1.0.0', tag: undefined },
       }
     })
 
-    enq.Select.mockImplementation(() => {
-      return {
-        run: vi.fn(() => 'useLatestCompatibleVersion'),
-      }
-    })
+    mockSelectRun('useLatestCompatibleVersion')
     await handler({
       npmPackage: 'some-package',
       force: false,
@@ -220,11 +201,7 @@ describe('packageHandler', () => {
       cwd: path.join('mocked', 'project'),
     })
 
-    enq.Select.mockImplementation(() => {
-      return {
-        run: vi.fn(() => 'usePreferredVersion'),
-      }
-    })
+    mockSelectRun('usePreferredVersion')
     await handler({
       npmPackage: 'some-package',
       force: false,
@@ -241,11 +218,7 @@ describe('packageHandler', () => {
       cwd: path.join('mocked', 'project'),
     })
 
-    enq.Select.mockImplementation(() => {
-      return {
-        run: vi.fn(() => 'cancel'),
-      }
-    })
+    mockSelectRun('cancel')
     await handler({
       npmPackage: 'some-package',
       force: false,
@@ -261,16 +234,10 @@ describe('packageHandler', () => {
   })
 
   test('tag is compatible', async () => {
-    getCompatibilityData.mockImplementation(() => {
+    vi.mocked(getCompatibilityData).mockImplementation(() => {
       return {
-        preferred: {
-          version: '1.0.0',
-          tag: 'stable',
-        },
-        compatible: {
-          version: '1.0.0',
-          tag: 'stable',
-        },
+        preferred: { version: '1.0.0', tag: 'stable' },
+        compatible: { version: '1.0.0', tag: 'stable' },
       }
     })
 
@@ -288,24 +255,14 @@ describe('packageHandler', () => {
   })
 
   test('tag is not compatible', async () => {
-    getCompatibilityData.mockImplementation(() => {
+    vi.mocked(getCompatibilityData).mockImplementation(() => {
       return {
-        preferred: {
-          version: '2.0.0',
-          tag: 'stable',
-        },
-        compatible: {
-          version: '1.0.0',
-          tag: undefined,
-        },
+        preferred: { version: '2.0.0', tag: 'stable' },
+        compatible: { version: '1.0.0', tag: undefined },
       }
     })
 
-    enq.Select.mockImplementation(() => {
-      return {
-        run: vi.fn(() => 'useLatestCompatibleVersion'),
-      }
-    })
+    mockSelectRun('useLatestCompatibleVersion')
     await handler({
       npmPackage: 'some-package@stable',
       force: false,
@@ -322,11 +279,7 @@ describe('packageHandler', () => {
       cwd: path.join('mocked', 'project'),
     })
 
-    enq.Select.mockImplementation(() => {
-      return {
-        run: vi.fn(() => 'usePreferredVersion'),
-      }
-    })
+    mockSelectRun('usePreferredVersion')
     await handler({
       npmPackage: 'some-package@stable',
       force: false,
@@ -343,11 +296,7 @@ describe('packageHandler', () => {
       cwd: path.join('mocked', 'project'),
     })
 
-    enq.Select.mockImplementation(() => {
-      return {
-        run: vi.fn(() => 'cancel'),
-      }
-    })
+    mockSelectRun('cancel')
     await handler({
       npmPackage: 'some-package@stable',
       force: false,
@@ -363,16 +312,10 @@ describe('packageHandler', () => {
   })
 
   test('specific version is compatible', async () => {
-    getCompatibilityData.mockImplementation(() => {
+    vi.mocked(getCompatibilityData).mockImplementation(() => {
       return {
-        preferred: {
-          version: '1.0.0',
-          tag: 'latest',
-        },
-        compatible: {
-          version: '1.0.0',
-          tag: 'latest',
-        },
+        preferred: { version: '1.0.0', tag: 'latest' },
+        compatible: { version: '1.0.0', tag: 'latest' },
       }
     })
 
@@ -389,24 +332,14 @@ describe('packageHandler', () => {
   })
 
   test('specific version is not compatible', async () => {
-    getCompatibilityData.mockImplementation(() => {
+    vi.mocked(getCompatibilityData).mockImplementation(() => {
       return {
-        preferred: {
-          version: '2.0.0',
-          tag: 'latest',
-        },
-        compatible: {
-          version: '1.0.0',
-          tag: undefined,
-        },
+        preferred: { version: '2.0.0', tag: 'latest' },
+        compatible: { version: '1.0.0', tag: undefined },
       }
     })
 
-    enq.Select.mockImplementation(() => {
-      return {
-        run: vi.fn(() => 'useLatestCompatibleVersion'),
-      }
-    })
+    mockSelectRun('useLatestCompatibleVersion')
     await handler({
       npmPackage: 'some-package@1.0.0',
       force: false,
@@ -423,11 +356,7 @@ describe('packageHandler', () => {
       cwd: path.join('mocked', 'project'),
     })
 
-    enq.Select.mockImplementation(() => {
-      return {
-        run: vi.fn(() => 'usePreferredVersion'),
-      }
-    })
+    mockSelectRun('usePreferredVersion')
     await handler({
       npmPackage: 'some-package@1.0.0',
       force: false,
@@ -444,11 +373,7 @@ describe('packageHandler', () => {
       cwd: path.join('mocked', 'project'),
     })
 
-    enq.Select.mockImplementation(() => {
-      return {
-        run: vi.fn(() => 'cancel'),
-      }
-    })
+    mockSelectRun('cancel')
     await handler({
       npmPackage: 'some-package@1.0.0',
       force: false,
@@ -464,16 +389,10 @@ describe('packageHandler', () => {
   })
 
   test('specific version is experimental', async () => {
-    getCompatibilityData.mockImplementation(() => {
+    vi.mocked(getCompatibilityData).mockImplementation(() => {
       return {
-        preferred: {
-          version: '0.0.1',
-          tag: 'latest',
-        },
-        compatible: {
-          version: '0.0.1',
-          tag: 'latest',
-        },
+        preferred: { version: '0.0.1', tag: 'latest' },
+        compatible: { version: '0.0.1', tag: 'latest' },
       }
     })
 
@@ -488,11 +407,7 @@ describe('packageHandler', () => {
     )
 
     // No force should prompt
-    enq.Select.mockImplementation(() => {
-      return {
-        run: vi.fn(() => 'useLatestCompatibleVersion'),
-      }
-    })
+    mockSelectRun('useLatestCompatibleVersion')
     await handler({
       npmPackage: 'some-package@0.0.1',
       force: false,

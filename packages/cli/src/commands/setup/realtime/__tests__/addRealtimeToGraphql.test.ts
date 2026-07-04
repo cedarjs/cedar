@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
-let functionsDir = null
+let functionsDir: string | null = null
 
 const fixtures = vi.hoisted(() => [
   'aliased-import',
@@ -16,29 +16,29 @@ const fixtures = vi.hoisted(() => [
 ])
 
 vi.mock('node:fs', async (importOriginal) => {
-  const originalFs = await importOriginal()
-  const path = await import('node:path')
+  const originalFs = await importOriginal<typeof import('node:fs')>()
+  const pathModule = await import('node:path')
 
-  const inMemoryFiles = {}
+  const inMemoryFiles: Record<string, string> = {}
 
   for (const fixture of fixtures) {
-    const fixturePath = path.join(import.meta.dirname, fixture, 'graphql.js')
+    const fixturePath = pathModule.join(
+      import.meta.dirname,
+      fixture,
+      'graphql.js',
+    )
     const source = originalFs.readFileSync(fixturePath, 'utf8')
     inMemoryFiles[fixturePath] = source
   }
 
   const mockFs = {
-    existsSync: vi.fn((path) => {
-      return !!inMemoryFiles[path]
+    existsSync: vi.fn((p: string) => {
+      return !!inMemoryFiles[p]
     }),
-    readFileSync: (p) => {
-      const inMemoryFile = inMemoryFiles[p]
-
-      if (inMemoryFile) {
-        return inMemoryFile
-      }
+    readFileSync: (p: string) => {
+      return inMemoryFiles[p]
     },
-    writeFileSync: vi.fn((p, content) => {
+    writeFileSync: vi.fn((p: string, content: string) => {
       inMemoryFiles[p] = content
     }),
   }
@@ -70,7 +70,7 @@ vi.mock('@cedarjs/cli-helpers', () => {
         'important',
         'caution',
         'link',
-      ].map((k) => [k, (s) => s]),
+      ].map((k) => [k, (s: string) => s]),
     ),
     isTypeScriptProject: () => {
       return false
@@ -94,10 +94,10 @@ describe('addRealtimeToGraphqlHandler (filesystem)', () => {
     functionsDir = path.join(import.meta.dirname, 'default-graphql-function')
     const graphqlPath = path.join(functionsDir, 'graphql.js')
 
-    const ctx = {}
+    const ctx: { realtimeHandlerSkipped?: boolean } = {}
     const task = { skip: vi.fn() }
 
-    addRealtimeToGraphqlHandler(ctx, task)
+    addRealtimeToGraphqlHandler(ctx, task, false)
 
     const modified = fs.readFileSync(graphqlPath, 'utf8')
 
@@ -108,7 +108,7 @@ describe('addRealtimeToGraphqlHandler (filesystem)', () => {
     expect(task.skip).not.toHaveBeenCalled()
 
     // Running again should be idempotent and cause a skip
-    addRealtimeToGraphqlHandler(ctx, task)
+    addRealtimeToGraphqlHandler(ctx, task, false)
     expect(ctx.realtimeHandlerSkipped).toBe(true)
     expect(task.skip).toHaveBeenCalledWith('Realtime import already exists')
   })
@@ -121,10 +121,10 @@ describe('addRealtimeToGraphqlHandler (filesystem)', () => {
     it(`skips for fixture "${fixture}" (handler not found)`, () => {
       functionsDir = path.join(import.meta.dirname, fixture)
 
-      const ctx = {}
+      const ctx: { realtimeHandlerSkipped?: boolean } = {}
       const task = { skip: vi.fn() }
 
-      addRealtimeToGraphqlHandler(ctx, task)
+      addRealtimeToGraphqlHandler(ctx, task, false)
 
       expect(ctx.realtimeHandlerSkipped).toBe(true)
       expect(task.skip).toHaveBeenCalledWith(
@@ -137,10 +137,10 @@ describe('addRealtimeToGraphqlHandler (filesystem)', () => {
   it('skips when GraphQL handler file is missing', () => {
     functionsDir = path.join(import.meta.dirname, 'does-not-exist')
 
-    const ctx = {}
+    const ctx: { realtimeHandlerSkipped?: boolean } = {}
     const task = { skip: vi.fn() }
 
-    addRealtimeToGraphqlHandler(ctx, task)
+    addRealtimeToGraphqlHandler(ctx, task, false)
 
     expect(ctx.realtimeHandlerSkipped).toBe(true)
     expect(task.skip).toHaveBeenCalledWith('GraphQL handler not found')

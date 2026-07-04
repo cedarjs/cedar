@@ -34,7 +34,7 @@ vi.mock('@cedarjs/project-config', () => {
         },
       }
     },
-    ensurePosixPath: (path) => {
+    ensurePosixPath: (path: string): string => {
       return path.replace(/\\/g, '/')
     },
   }
@@ -43,7 +43,7 @@ vi.mock('@cedarjs/project-config', () => {
 test('Check packager detects all functions', () => {
   const packageFileMock = vi
     .spyOn(nftPacker, 'packageSingleFunction')
-    .mockResolvedValue(true)
+    .mockResolvedValue(undefined)
 
   nftPacker.nftPack()
 
@@ -54,6 +54,9 @@ test('Creates entry file for nested functions correctly', () => {
   const nestedFunction = findApiDistFunctions().find((fPath) =>
     fPath.includes('nested'),
   )
+  if (!nestedFunction) {
+    throw new Error('Expected to find nested function in test fixtures')
+  }
 
   const [outputPath, content] = nftPacker.generateEntryFile(
     nestedFunction,
@@ -70,6 +73,9 @@ test('Creates entry file for top level functions correctly', () => {
   const graphqlFunction = findApiDistFunctions().find((fPath) =>
     fPath.includes('graphql'),
   )
+  if (!graphqlFunction) {
+    throw new Error('Expected to find graphql function in test fixtures')
+  }
 
   const [outputPath, content] = nftPacker.generateEntryFile(
     graphqlFunction,

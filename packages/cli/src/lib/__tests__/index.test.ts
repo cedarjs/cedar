@@ -1,11 +1,15 @@
-global.__dirname = __dirname
+globalThis.__dirname = __dirname
+
+import type * as ProjectConfig from '@cedarjs/project-config'
+
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const originalProjectConfig = await importOriginal()
-  const path = require('path')
+  const originalProjectConfig =
+    await importOriginal<typeof ProjectConfig>()
+  const { join } = await import('node:path')
   return {
     ...originalProjectConfig,
     getPaths: () => {
-      const BASE_PATH = path.join(globalThis.__dirname, 'fixtures')
+      const BASE_PATH = join(globalThis.__dirname, 'fixtures')
       return {
         base: BASE_PATH,
         api: {

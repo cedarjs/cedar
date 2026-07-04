@@ -9,7 +9,8 @@ vi.mock('node:fs', async () => {
 })
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const actual = await importOriginal()
+  const actual =
+    await importOriginal<typeof import('@cedarjs/project-config')>()
   return {
     ...actual,
     getConfigPath: vi.fn(() => '/cedar-app/cedar.toml'),
@@ -17,9 +18,9 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
 })
 
 vi.mock('listr2', async (importOriginal) => {
-  const mod = await importOriginal()
+  const mod = await importOriginal<typeof import('listr2')>()
 
-  const Listr = vi.fn((tasks, options) => {
+  const Listr = vi.fn((tasks: unknown[], options: Record<string, unknown>) => {
     return new mod.Listr(tasks, { ...options, renderer: 'silent' })
   })
 
@@ -37,10 +38,11 @@ import '../../../../lib/test'
 
 import { getPaths } from '../../../../lib/index.js'
 import { updateApiURLTask } from '../helpers/index.js'
-import { handler } from '../providers/netlifyHandler'
+import { handler } from '../providers/netlifyHandler.js'
 
 vi.mock('../../../../lib', async (importOriginal) => {
-  const { printSetupNotes } = await importOriginal()
+  const { printSetupNotes } =
+    await importOriginal<typeof import('../../../../lib/index.js')>()
 
   return {
     printSetupNotes,
@@ -54,7 +56,7 @@ vi.mock('../../../../lib', async (importOriginal) => {
         port: 8910,
       },
     }),
-    writeFilesTask: (fileNameToContentMap) => {
+    writeFilesTask: (fileNameToContentMap: Record<string, string>) => {
       const keys = Object.keys(fileNameToContentMap)
       expect(keys.length).toBe(1)
       // Need to escape path.sep on Windows, otherwise the backslash (that
@@ -78,10 +80,8 @@ const mockConfigPath = '/cedar-app/cedar.toml'
 beforeEach(() => {
   process.env.CEDAR_CWD = '/cedar-app'
 
-  vi.mocked(getPaths).mockReturnValue({
-    base: '/cedar-app',
-    web: { base: '/cedar-app/web' },
-  })
+  // @ts-expect-error - providing a minimal stub; only base and web.base are used in these tests
+  vi.mocked(getPaths).mockReturnValue({ base: '/cedar-app', web: { base: '/cedar-app/web' } })
 
   vol.fromJSON({
     [mockConfigPath]: `[web]
@@ -102,19 +102,19 @@ beforeEach(() => {
 
 describe('netlify', () => {
   it('should call the handler without error', async () => {
-    let error = undefined
+    let error: unknown = undefined
     try {
-      await handler({ force: true })
+      await handler({ force: true, ud: false })
     } catch (err) {
       error = err
     }
     expect(error).toBeUndefined()
     const filesystem = vol.toJSON()
-    const netlifyTomlPath = Object.keys(filesystem).find((path) =>
-      path.endsWith('netlify.toml'),
+    const netlifyTomlPath = Object.keys(filesystem).find((p) =>
+      p.endsWith('netlify.toml'),
     )
     expect(netlifyTomlPath).toBeDefined()
-    expect(filesystem[netlifyTomlPath]).toMatchSnapshot()
+    expect(filesystem[netlifyTomlPath!]).toMatchSnapshot()
   })
 
   it('Should update cedar.toml apiUrl', () => {
@@ -126,15 +126,15 @@ describe('netlify', () => {
   })
 
   it('should add netlify.toml', async () => {
-    const netlify = await import('../providers/netlify')
-    await netlify.handler({ force: true })
+    const netlify = await import('../providers/netlify.js')
+    await netlify.handler({ force: true, ud: false })
 
     const filesystem = vol.toJSON()
-    const netlifyTomlPath = Object.keys(filesystem).find((path) =>
-      path.endsWith('netlify.toml'),
+    const netlifyTomlPath = Object.keys(filesystem).find((p) =>
+      p.endsWith('netlify.toml'),
     )
     expect(netlifyTomlPath).toBeDefined()
-    expect(filesystem[netlifyTomlPath]).toMatchSnapshot()
+    expect(filesystem[netlifyTomlPath!]).toMatchSnapshot()
   })
 })
 
@@ -183,8 +183,8 @@ describe('netlify with --ud', () => {
       p.endsWith('netlify.toml'),
     )
     expect(netlifyToml).toBeDefined()
-    expect(filesystem[netlifyToml]).toContain('api/dist/ud')
-    expect(filesystem[netlifyToml]).toContain('build --ud')
+    expect(filesystem[netlifyToml!]).toContain('api/dist/ud')
+    expect(filesystem[netlifyToml!]).toContain('build --ud')
 
     // Verify vite config has the Netlify plugin imports
     expect(filesystem['/cedar-app/web/vite.config.ts']).toMatchInlineSnapshot(`
