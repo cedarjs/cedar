@@ -8,7 +8,22 @@ import { transformTSToJS } from '../../../lib/index.js'
 import { getSchema, verifyModelName } from '../../../lib/schemaHelpers.js'
 import { relationsForModel } from '../helpers.js'
 import { createHandler, templateForFile } from '../yargsHandlerHelpers.js'
-import type { HandlerArgv } from '../yargsHandlerHelpers.js'
+
+interface ServiceModel {
+  name: string
+  documentation?: string
+  fields: PrismaField[]
+  primaryKey?: { fields: string[] }
+}
+
+function isServiceModel(schema: unknown): schema is ServiceModel {
+  return (
+    typeof schema === 'object' &&
+    schema !== null &&
+    'fields' in schema &&
+    'name' in schema
+  )
+}
 
 const DEFAULT_SCENARIO_NAMES = ['one', 'two']
 
@@ -30,18 +45,13 @@ export interface PrismaField {
 export const parseSchema = async (model: string) => {
   const schemaResult = await getSchema(model)
 
-  if (!schemaResult || !('fields' in schemaResult)) {
+  if (!isServiceModel(schemaResult)) {
     throw new Error(
       `No schema definition found for \`${model}\` in schema.prisma file`,
     )
   }
 
-  const schema = schemaResult as unknown as {
-    fields: PrismaField[]
-    name: string
-    documentation?: string
-    primaryKey?: { fields: string[] }
-  }
+  const schema = schemaResult
 
   const relations: Record<string, { foreignKey: string[]; type: string }> = {}
   let foreignKeys: string[] = []
@@ -351,12 +361,19 @@ export const fieldsToUpdate = async (model: string) => {
 const getIdName = async (model: string): Promise<string | undefined> => {
   const schemaResult = await getSchema(model)
 
-  if (!schemaResult || !('fields' in schemaResult)) {
+  if (!isServiceModel(schemaResult)) {
     return undefined
   }
 
-  const schema = schemaResult as unknown as { fields: PrismaField[] }
-  return schema.fields.find((field: PrismaField) => field.isId)?.name
+  return schemaResult.fields.find((field: PrismaField) => field.isId)?.name
+}
+
+interface FilesArgs {
+  name: string
+  tests?: boolean
+  relations?: string[]
+  typescript?: boolean
+  crud?: boolean
 }
 
 export const files = async ({
@@ -365,26 +382,22 @@ export const files = async ({
   relations,
   typescript,
   ...rest
-}: {
-  name: string
-  tests?: boolean
-  relations?: unknown[]
-  typescript?: boolean
-  [key: string]: unknown
-}) => {
+}: FilesArgs) => {
   const componentName = camelcase(pluralize(name))
   const model = name
   const idName = await getIdName(model)
 
   const prismaImportSource = 'src/lib/db'
 
-  const modelRelations =
-    relations ||
-    relationsForModel(
-      (await getSchema(model)) as unknown as {
-        fields: { name: string; relationName?: string; type: string }[]
-      },
-    )
+  let modelRelations: string[] | undefined
+  if (relations) {
+    modelRelations = relations
+  } else {
+    const schemaResult = await getSchema(model)
+    if (isServiceModel(schemaResult)) {
+      modelRelations = relationsForModel(schemaResult)
+    }
+  }
 
   const serviceFile = await templateForFile({
     name,
@@ -470,5 +483,5 @@ export const files = async ({
 export const handler = createHandler({
   componentName: 'service',
   preTasksFn: verifyModelName,
-  filesFn: files as (argv: HandlerArgv) => Promise<Record<string, string>>,
+  filesFn: files,
 })
