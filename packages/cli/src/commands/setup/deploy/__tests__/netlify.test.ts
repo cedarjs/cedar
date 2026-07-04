@@ -29,18 +29,17 @@ vi.mock('listr2', async (importOriginal) => {
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { vol } from 'memfs'
 import type * as Listr2Module from 'listr2'
+import { vol } from 'memfs'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-
-import type * as CedarLib from '../../../../lib/index.js'
 
 // Mock telemetry and other things
 import '../../../../lib/test'
 
 import { getPaths } from '../../../../lib/index.js'
+import type * as CedarLib from '../../../../lib/index.js'
 import { updateApiURLTask } from '../helpers/index.js'
-import { handler } from '../providers/netlifyHandler'
+import { handler } from '../providers/netlifyHandler.js'
 
 vi.mock('../../../../lib', async (importOriginal) => {
   const { printSetupNotes } = await importOriginal<typeof CedarLib>()
@@ -129,7 +128,7 @@ describe('netlify', () => {
   })
 
   it('should add netlify.toml', async () => {
-    const netlify = await import('../providers/netlify')
+    const netlify = await import('../providers/netlify.js')
     await netlify.handler({ force: true })
 
     const filesystem = vol.toJSON()
