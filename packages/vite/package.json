@@ -49,7 +49,7 @@
     "inject"
   ],
   "scripts": {
-    "build": "tsx build.ts && yarn build:types",
+    "build": "node ./build.ts && yarn build:types",
     "build:pack": "yarn pack -o cedarjs-vite.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "check:attw": "tsx ./attw.ts",

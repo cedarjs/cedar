@@ -165,7 +165,6 @@
     "memfs": "4.57.7",
     "pino-abstract-transport": "1.2.0",
     "publint": "0.3.21",
-    "tsx": "4.22.4",
     "typescript": "5.9.3",
     "vitest": "3.2.6"
   },
