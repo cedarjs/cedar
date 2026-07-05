@@ -109,6 +109,8 @@ export function cedarRoutesAutoLoaderPlugin(): Plugin {
 
       let pages = processPagesDir().map(withRelativeImports)
 
+      const importRe = /^import\s+\w+\s+from\s+['"]([^'"]+)['"]/gm
+
       // De-register pages that are already statically imported in App.tsx.
       // Leaving them in would cause Vite to warn:
       // "dynamically imported by Routes.tsx but also statically imported by App.tsx
@@ -116,15 +118,8 @@ export function cedarRoutesAutoLoaderPlugin(): Plugin {
       const appPath = resolveFile(path.join(getPaths().web.src, 'App'))
       if (appPath) {
         const appSource = fs.readFileSync(appPath, 'utf8')
-        // Match all import patterns:
-        // - default: import Foo from
-        // - named: import { Foo } from
-        // - namespace: import * as Foo from
-        // - composite: import Foo, { ... } from
-        const appImportRe =
-          /^import\s+(?:\{[^}]*\}|\*\s+as\s+\w+|\w+(?:\s*,\s*\{[^}]*\})?)\s+from\s+['"]([^'"]+)['"]/gm
         let appMatch: RegExpExecArray | null
-        while ((appMatch = appImportRe.exec(appSource)) !== null) {
+        while ((appMatch = importRe.exec(appSource)) !== null) {
           const rel = ensurePosixPath(
             getPathRelativeToSrc(importStatementPath(appMatch[1])),
           )
@@ -134,21 +129,13 @@ export function cedarRoutesAutoLoaderPlugin(): Plugin {
 
       // De-register pages that are already explicitly imported in Routes.tsx.
       // The user has opted in to a static (non-lazy) import for these.
-      // Match all import patterns:
-      // - default: import Foo from
-      // - named: import { Foo } from
-      // - namespace: import * as Foo from
-      // - composite: import Foo, { ... } from
-      const routesImportRe =
-        /^import\s+(?:\{[^}]*\}|\*\s+as\s+\w+|\w+(?:\s*,\s*\{[^}]*\})?)\s+from\s+['"]([^'"]+)['"]/gm
+      importRe.lastIndex = 0
       let routesMatch: RegExpExecArray | null
-      while ((routesMatch = routesImportRe.exec(code)) !== null) {
-        const userImportRelativePath = ensurePosixPath(
+      while ((routesMatch = importRe.exec(code)) !== null) {
+        const rel = ensurePosixPath(
           getPathRelativeToSrc(importStatementPath(routesMatch[1])),
         )
-        pages = pages.filter(
-          (page) => page.relativeImport !== userImportRelativePath,
-        )
+        pages = pages.filter((page) => page.relativeImport !== rel)
       }
 
       if (pages.length === 0) {

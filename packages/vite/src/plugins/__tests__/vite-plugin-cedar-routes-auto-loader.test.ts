@@ -66,14 +66,16 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     // file pattern). Bare directory paths like /…/pages/HomePage should return
     // null so that the plugin tries the next candidate (PageName/PageName).
     resolveFile: vi.fn((filePath: string) => {
-      if (filePath.endsWith('/App')) {
+      // Normalize to forward slashes so the mock works on both Linux and Windows
+      const normalized = originalProjectConfig.ensurePosixPath(filePath)
+      if (normalized.endsWith('/App')) {
         return null
       }
-      const parts = filePath.split('/')
+      const parts = normalized.split('/')
       const last = parts[parts.length - 1]
       const secondToLast = parts[parts.length - 2]
       // Match the PageName/PageName pattern (e.g. HomePage/HomePage)
-      if (last === secondToLast && filePath.includes('/pages/')) {
+      if (last === secondToLast && normalized.includes('/pages/')) {
         return filePath + '.tsx'
       }
       return null
@@ -260,87 +262,6 @@ describe('cedarRoutesAutoLoaderPlugin', () => {
 
     expect(result).not.toBeNull()
     // HomePage should not get a lazy declaration despite the .tsx extension
-    expect(result?.code).not.toContain('const HomePage =')
-    // AboutPage should still get a declaration
-    expect(result?.code).toContain('const AboutPage =')
-  })
-
-  it('filters out composite imports (import Foo, { ... } from)', () => {
-    const routesCode = dedent`
-      import { Router, Route } from '@cedarjs/router'
-      import HomePage, { useHomePage } from 'src/pages/HomePage'
-
-      const Routes = () => {
-        return (
-          <Router>
-            <Route path="/" page={HomePage} name="home" />
-            <Route path="/about" page={AboutPage} name="about" />
-          </Router>
-        )
-      }
-
-      export default Routes
-    `
-
-    const transform = getPluginTransform()
-    const result = transform(routesCode, ROUTES_FILE)
-
-    expect(result).not.toBeNull()
-    // HomePage should not get a lazy declaration despite composite import
-    expect(result?.code).not.toContain('const HomePage =')
-    // AboutPage should still get a declaration
-    expect(result?.code).toContain('const AboutPage =')
-  })
-
-  it('filters out named imports (import { Foo } from)', () => {
-    const routesCode = dedent`
-      import { Router, Route } from '@cedarjs/router'
-      import { HomePage } from 'src/pages/HomePage'
-
-      const Routes = () => {
-        return (
-          <Router>
-            <Route path="/" page={HomePage} name="home" />
-            <Route path="/about" page={AboutPage} name="about" />
-          </Router>
-        )
-      }
-
-      export default Routes
-    `
-
-    const transform = getPluginTransform()
-    const result = transform(routesCode, ROUTES_FILE)
-
-    expect(result).not.toBeNull()
-    // HomePage should not get a lazy declaration despite named import
-    expect(result?.code).not.toContain('const HomePage =')
-    // AboutPage should still get a declaration
-    expect(result?.code).toContain('const AboutPage =')
-  })
-
-  it('filters out namespace imports (import * as Foo from)', () => {
-    const routesCode = dedent`
-      import { Router, Route } from '@cedarjs/router'
-      import * as HomePage from 'src/pages/HomePage'
-
-      const Routes = () => {
-        return (
-          <Router>
-            <Route path="/" page={HomePage} name="home" />
-            <Route path="/about" page={AboutPage} name="about" />
-          </Router>
-        )
-      }
-
-      export default Routes
-    `
-
-    const transform = getPluginTransform()
-    const result = transform(routesCode, ROUTES_FILE)
-
-    expect(result).not.toBeNull()
-    // HomePage should not get a lazy declaration despite namespace import
     expect(result?.code).not.toContain('const HomePage =')
     // AboutPage should still get a declaration
     expect(result?.code).toContain('const AboutPage =')
