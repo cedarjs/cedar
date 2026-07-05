@@ -15,6 +15,7 @@ import { cedarHtmlEnvPlugin } from './plugins/vite-plugin-cedar-html-env.js'
 import { cedarNodePolyfills } from './plugins/vite-plugin-cedar-node-polyfills.js'
 import { cedarRemoveDevFatalErrorPage } from './plugins/vite-plugin-cedar-remove-dev-fatal-error-page.js'
 import { cedarRemoveFromBundle } from './plugins/vite-plugin-cedar-remove-from-bundle.js'
+import { cedarRoutesAutoLoaderPlugin } from './plugins/vite-plugin-cedar-routes-auto-loader.js'
 import { cedarWaitForApiServer } from './plugins/vite-plugin-cedar-wait-for-api-server.js'
 import { cedarjsResolveCedarStyleImportsPlugin } from './plugins/vite-plugin-cedarjs-resolve-cedar-style-imports.js'
 import { cedarTransformJsAsJsx } from './plugins/vite-plugin-jsx-loader.js'
@@ -29,6 +30,7 @@ export { cedarHtmlEnvPlugin } from './plugins/vite-plugin-cedar-html-env.js'
 export { cedarImportDirPlugin } from './plugins/vite-plugin-cedar-import-dir.js'
 export { cedarNodePolyfills } from './plugins/vite-plugin-cedar-node-polyfills.js'
 export { cedarRemoveDevFatalErrorPage } from './plugins/vite-plugin-cedar-remove-dev-fatal-error-page.js'
+export { cedarRoutesAutoLoaderPlugin } from './plugins/vite-plugin-cedar-routes-auto-loader.js'
 export { cedarRemoveFromBundle } from './plugins/vite-plugin-cedar-remove-from-bundle.js'
 export { cedarjsResolveCedarStyleImportsPlugin } from './plugins/vite-plugin-cedarjs-resolve-cedar-style-imports.js'
 export { cedarjsJobPathInjectorPlugin } from './plugins/vite-plugin-cedarjs-job-path-injector.js'
@@ -56,18 +58,6 @@ export function cedar({ mode }: PluginOptions = {}): PluginOption[] {
 
   const babelConfig = {
     ...webSideDefaultBabelConfig,
-    // For RSC we don't want to include the routes auto-loader plugin as we
-    // handle that differently in each specific RSC build stage
-    overrides: rscEnabled
-      ? webSideDefaultBabelConfig.overrides.filter((override) => {
-          return !override.plugins?.some((plugin) => {
-            return (
-              Array.isArray(plugin) &&
-              plugin[2] === 'babel-plugin-redwood-routes-auto-loader'
-            )
-          })
-        })
-      : webSideDefaultBabelConfig.overrides,
   }
 
   return [
@@ -85,6 +75,8 @@ export function cedar({ mode }: PluginOptions = {}): PluginOption[] {
     cedarTransformJsAsJsx(),
     cedarRemoveFromBundle(),
     cedarRemoveDevFatalErrorPage(),
+    // RSC handles route auto-loading differently in each build stage
+    !rscEnabled && cedarRoutesAutoLoaderPlugin(),
     react({ babel: babelConfig }),
   ]
 }
