@@ -144,7 +144,7 @@ cedar build:
 
 Vite plugins: cell transform | entry injection | html env | node polyfills |
   auto-imports | import-dir | js-as-jsx | merged config | api-babel-transform |
-  cedar-universal-deploy | cedar-wait-for-api-server
+  cedar-routes-auto-loader | cedar-universal-deploy | cedar-wait-for-api-server
   *SSR/RSC: adds RSC transforms
 ```
 
@@ -262,7 +262,7 @@ Routes.tsx ← 4 routes added inside <Set wrap={ScaffoldLayout} title="Posts" ..
 - Config: `cedar.toml` (fallback `redwood.toml`)
 - User project is a monorepo workspace: `["api", "web"]` (+ optional `packages/*`); framework monorepo: `["packages/*"]`
 - Auto-imports (Vite plugin): `gql` from graphql-tag, `context` from @cedarjs/context, `React` from react
-- Page auto-loading: Babel plugin scans `src/pages/` and auto-imports page components in `Routes.tsx`
+- Page auto-loading: `cedar-routes-auto-loader` (Vite plugin for dev/build; Babel plugin for Jest/prerender) scans `src/pages/` and auto-imports page components in `Routes.tsx`
 - Components/services: manual imports
 - `*Cell.tsx` → Vite plugin wraps in createCell() (exports QUERY+Loading+Success+Failure+Empty)
 - `*.sdl.ts` → GraphQL schema ONLY (types, queries, mutations, inputs). Resolvers live in services/.
@@ -270,7 +270,7 @@ Routes.tsx ← 4 routes added inside <Set wrap={ScaffoldLayout} title="Posts" ..
 - `*.routeHooks.ts` → exports `routeParameters()` (prerendering: expands params for dynamic routes)
   and `meta()` (SSR/RSC only: per-request meta tag injection)
 - Entry: `entry.client.tsx` (always). \*SSR/RSC: also `entry.server.tsx`
-- Routes in `Routes.tsx` as JSX (virtual, never rendered — Babel auto-loads pages)
+- Routes in `Routes.tsx` as JSX (virtual, never rendered — auto-loaded by `cedar-routes-auto-loader` Vite/Babel plugin)
 - Build: default = esbuild (api) + Vite (web); `--ud` = unified Vite (`client` + `api` + `ssr` environments, `preserveModules: true`, Babel plugin)
 - Server: API (Fastify by default; opt-in srvx via `cedar serve api --ud` or `cedar serve --ud`, which host the UD Fetchable from `api/dist/ud/index.js`). Web: Fastify (SPA). \*SSR/RSC: Web uses Express
 - Package mgr: Yarn 4 (+ experimental support for npm and pnpm); Framework: Yarn 4 + Nx (build orchestration).
