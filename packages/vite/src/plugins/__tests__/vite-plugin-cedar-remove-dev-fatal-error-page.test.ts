@@ -1,9 +1,22 @@
 import { describe, it, expect, beforeEach } from 'vitest'
+import type { ResolvedConfig } from 'vite'
 
 import { cedarRemoveDevFatalErrorPage } from '../vite-plugin-cedar-remove-dev-fatal-error-page.js'
 
-function transform(code: string) {
+function transform(code: string, mode: string = 'production') {
   const plugin = cedarRemoveDevFatalErrorPage()
+
+  if (typeof plugin.configResolved !== 'function') {
+    throw new Error('Expected plugin to have configResolved hook')
+  }
+
+  // Mock ResolvedConfig with minimal required fields
+  const config = {
+    command: 'build',
+    mode,
+  } as ResolvedConfig
+
+  plugin.configResolved(config)
 
   if (typeof plugin.transform !== 'function') {
     throw new Error('Expected plugin to have a transform function')
@@ -62,14 +75,12 @@ export default () => <div>Hello</div>`
     expect(result.code).toBe('const DevFatalErrorPage = undefined')
   })
 
-  it('returns null when NODE_ENV is development', () => {
-    process.env.NODE_ENV = 'development'
-
+  it('returns null when mode is development', () => {
     const code = `import { DevFatalErrorPage } from '@cedarjs/web/dist/components/DevFatalErrorPage'
 
 export default DevFatalErrorPage || (() => <div>Error</div>)`
 
-    const result = transform(code)
+    const result = transform(code, 'development')
 
     expect(result).toBeNull()
   })
