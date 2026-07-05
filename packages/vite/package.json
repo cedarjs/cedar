@@ -108,7 +108,7 @@
     "yargs-parser": "21.1.1"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.3",
+    "@arethetypeswrong/cli": "0.18.4",
     "@cedarjs/auth": "4.2.0",
     "@cedarjs/router": "4.2.0",
     "@cedarjs/web": "4.2.0",
