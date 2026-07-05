@@ -3,8 +3,13 @@ import type { Plugin } from 'vite'
 const DEV_FATAL_ERROR_PAGE_MODULE =
   '@cedarjs/web/dist/components/DevFatalErrorPage'
 
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+const ESCAPED_MODULE = escapeRegExp(DEV_FATAL_ERROR_PAGE_MODULE)
 const IMPORT_PATTERN = new RegExp(
-  `import\\s*\\{[^}]*\\bDevFatalErrorPage\\b[^}]*\\}\\s*from\\s*['"]${DEV_FATAL_ERROR_PAGE_MODULE.replace(/\//g, '\\/')}['"]`,
+  `import\\s*\\{[^}]*\\bDevFatalErrorPage\\b[^}]*\\}\\s*from\\s*['"]${ESCAPED_MODULE}['"]`,
 )
 
 /**
@@ -24,6 +29,11 @@ export function cedarRemoveDevFatalErrorPage(): Plugin {
     name: 'cedar-remove-dev-fatal-error-page',
     apply: 'build',
     transform(code) {
+      // Skip transformation if not in production
+      if (process.env.NODE_ENV === 'development') {
+        return null
+      }
+
       if (!code.includes(DEV_FATAL_ERROR_PAGE_MODULE)) {
         return null
       }
@@ -32,6 +42,11 @@ export function cedarRemoveDevFatalErrorPage(): Plugin {
         IMPORT_PATTERN,
         'const DevFatalErrorPage = undefined',
       )
+
+      // Only return a result if the code actually changed
+      if (newCode === code) {
+        return null
+      }
 
       return { code: newCode }
     },
