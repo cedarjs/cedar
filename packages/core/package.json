@@ -42,7 +42,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts",
+    "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-core.tgz",
     "check:package": "yarn publint",
     "prepublishOnly": "NODE_ENV=production yarn build"
@@ -62,8 +62,7 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "4.2.0",
-    "publint": "0.3.21",
-    "tsx": "4.22.4"
+    "publint": "0.3.21"
   },
   "engines": {
     "node": ">=24"

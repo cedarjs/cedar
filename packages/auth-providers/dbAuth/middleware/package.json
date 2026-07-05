@@ -26,7 +26,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts",
+    "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-auth-dbauth-middleware.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:types-cjs": "tsc --build --verbose tsconfig.cjs.json",
@@ -49,7 +49,6 @@
     "concurrently": "9.2.1",
     "publint": "0.3.21",
     "ts-toolbelt": "9.6.0",
-    "tsx": "4.22.4",
     "typescript": "5.9.3",
     "vitest": "3.2.6"
   },

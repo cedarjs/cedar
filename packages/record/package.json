@@ -20,7 +20,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts",
+    "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-record.tgz",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
     "check:package": "yarn publint",
@@ -39,7 +39,6 @@
     "@prisma/internals": "7.8.0",
     "esbuild": "0.27.7",
     "publint": "0.3.21",
-    "tsx": "4.22.4",
     "vitest": "3.2.6"
   },
   "engines": {

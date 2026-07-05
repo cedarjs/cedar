@@ -28,7 +28,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts && yarn build:types",
+    "build": "node ./build.mts && yarn build:types",
     "build:pack": "yarn pack -o cedarjs-jobs.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
@@ -49,7 +49,6 @@
     "@prisma/client": "7.8.0",
     "concurrently": "9.2.1",
     "publint": "0.3.21",
-    "tsx": "4.22.4",
     "typescript": "5.9.3",
     "vitest": "3.2.6"
   },

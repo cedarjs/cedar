@@ -95,7 +95,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.ts && yarn build:types",
+    "build": "node ./build.ts && yarn build:types",
     "build:pack": "yarn pack -o cedarjs-cli-helpers.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json ./tsconfig.cjs.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
@@ -133,7 +133,6 @@
     "@types/yargs": "17.0.35",
     "@types/yargs-parser": "21.0.3",
     "prettier-plugin-tailwindcss": "0.8.0",
-    "tsx": "4.22.4",
     "typescript": "5.9.3",
     "vitest": "3.2.6"
   },
