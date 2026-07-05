@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach } from 'vitest'
 import type { ResolvedConfig } from 'vite'
+import { describe, it, expect, beforeEach } from 'vitest'
 
 import { cedarRemoveDevFatalErrorPage } from '../vite-plugin-cedar-remove-dev-fatal-error-page.js'
 
-function transform(code: string, mode: string = 'production') {
+function transform(code: string, mode = 'production') {
   const plugin = cedarRemoveDevFatalErrorPage()
 
   if (typeof plugin.configResolved !== 'function') {
