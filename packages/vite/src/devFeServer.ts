@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import http from 'node:http'
 
 import { createServerAdapter } from '@whatwg-node/server'
