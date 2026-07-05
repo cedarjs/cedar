@@ -1,4 +1,4 @@
-import type { Plugin } from 'vite'
+import type { Plugin, ResolvedConfig } from 'vite'
 
 const DEV_FATAL_ERROR_PAGE_MODULE =
   '@cedarjs/web/dist/components/DevFatalErrorPage'
@@ -25,12 +25,17 @@ const IMPORT_PATTERN = new RegExp(
  * renders when an unhandled error bubbles to the top of the app.
  */
 export function cedarRemoveDevFatalErrorPage(): Plugin {
+  let config: ResolvedConfig
+
   return {
     name: 'cedar-remove-dev-fatal-error-page',
     apply: 'build',
+    configResolved(resolvedConfig) {
+      config = resolvedConfig
+    },
     transform(code) {
       // Skip transformation if not in production
-      if (process.env.NODE_ENV === 'development') {
+      if (config.command === 'build' && config.mode === 'development') {
         return null
       }
 
@@ -48,7 +53,7 @@ export function cedarRemoveDevFatalErrorPage(): Plugin {
         return null
       }
 
-      return { code: newCode }
+      return { code: newCode, map: null }
     },
   }
 }
