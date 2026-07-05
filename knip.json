@@ -14,6 +14,17 @@
     "packages/create-cedar-app/templates/**"
   ],
   "exclude": ["files", "exports", "types", "enumMembers", "duplicates"],
+  "ignoreBinaries": [
+    "cedar",
+    "code",
+    "create-cedar-app",
+    "cygpath",
+    "k6",
+    "powershell",
+    "redwood",
+    "rw"
+  ],
+  "ignoreUnresolved": ["/@react-refresh", "~__CEDAR__USER_ROUTES_FOR_MOCK"],
   "ignoreExportsUsedInFile": {
     "interface": true,
     "type": true
