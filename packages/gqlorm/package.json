@@ -142,7 +142,7 @@
     "graphql": "16.13.2"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.3",
+    "@arethetypeswrong/cli": "0.18.4",
     "@babel/cli": "7.29.7",
     "@babel/core": "^7.26.10",
     "@cedarjs/framework-tools": "workspace:*",

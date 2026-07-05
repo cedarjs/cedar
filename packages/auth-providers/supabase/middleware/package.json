@@ -43,7 +43,7 @@
     "@supabase/ssr": "0.12.0"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.3",
+    "@arethetypeswrong/cli": "0.18.4",
     "@cedarjs/api": "workspace:*",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/framework-tools": "workspace:*",

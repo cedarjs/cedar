@@ -63,7 +63,7 @@
     "string-env-interpolation": "1.0.1"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.3",
+    "@arethetypeswrong/cli": "0.18.4",
     "@cedarjs/framework-tools": "workspace:*",
     "concurrently": "9.2.1",
     "prisma": "7.8.0",
