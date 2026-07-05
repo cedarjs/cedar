@@ -1,3 +1,4 @@
+import dedent from 'ts-dedent'
 import type { ResolvedConfig } from 'vite'
 import { describe, it, expect, beforeEach } from 'vitest'
 
@@ -35,25 +36,32 @@ describe('cedarRemoveDevFatalErrorPage', () => {
   beforeEach(() => {
     process.env.NODE_ENV = 'production'
   })
-  it('replaces the DevFatalErrorPage import with undefined', () => {
-    const code = `import { DevFatalErrorPage } from '@cedarjs/web/dist/components/DevFatalErrorPage'
 
-export default DevFatalErrorPage || (() => <div>Error</div>)`
+  it('replaces the DevFatalErrorPage import with undefined', () => {
+    const code = dedent`
+      import { DevFatalErrorPage } from '@cedarjs/web/dist/components/DevFatalErrorPage'
+
+      export default DevFatalErrorPage || (() => <div>Error</div>)
+    `
 
     const result = transform(code)
 
     expect(result).toEqual({
-      code: `const DevFatalErrorPage = undefined
+      code: dedent`
+        const DevFatalErrorPage = undefined
 
-export default DevFatalErrorPage || (() => <div>Error</div>)`,
+        export default DevFatalErrorPage || (() => <div>Error</div>)
+      `,
       map: null,
     })
   })
 
   it('returns null when the import is not present', () => {
-    const code = `import React from 'react'
+    const code = dedent`
+      import React from 'react'
 
-export default () => <div>Hello</div>`
+      export default () => <div>Hello</div>
+    `
 
     const result = transform(code)
 
@@ -61,7 +69,9 @@ export default () => <div>Hello</div>`
   })
 
   it('handles extra whitespace in the import braces', () => {
-    const code = `import {  DevFatalErrorPage  } from '@cedarjs/web/dist/components/DevFatalErrorPage'`
+    const code = dedent`
+      import {  DevFatalErrorPage  } from '@cedarjs/web/dist/components/DevFatalErrorPage'
+    `
 
     const result = transform(code) as { code: string; map: null }
 
@@ -72,7 +82,9 @@ export default () => <div>Hello</div>`
   })
 
   it('handles double quotes in the import', () => {
-    const code = `import { DevFatalErrorPage } from "@cedarjs/web/dist/components/DevFatalErrorPage"`
+    const code = dedent`
+      import { DevFatalErrorPage } from "@cedarjs/web/dist/components/DevFatalErrorPage"
+    `
 
     const result = transform(code) as { code: string; map: null }
 
@@ -83,9 +95,11 @@ export default () => <div>Hello</div>`
   })
 
   it('returns null when mode is development', () => {
-    const code = `import { DevFatalErrorPage } from '@cedarjs/web/dist/components/DevFatalErrorPage'
+    const code = dedent`
+      import { DevFatalErrorPage } from '@cedarjs/web/dist/components/DevFatalErrorPage'
 
-export default DevFatalErrorPage || (() => <div>Error</div>)`
+      export default DevFatalErrorPage || (() => <div>Error</div>)
+    `
 
     const result = transform(code, 'development')
 
