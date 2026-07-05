@@ -11,6 +11,9 @@ import type { Logger, LoggerOptions } from '@cedarjs/api/logger'
 import { createLogger } from '@cedarjs/api/logger'
 
 import type { CedarGraphQLContext } from '../../types.js'
+import type { LoggerConfig } from '../useRedwoodLogger.js'
+import { useRedwoodLogger } from '../useRedwoodLogger.js'
+
 import {
   testSchema,
   testQuery,
@@ -18,10 +21,8 @@ import {
   testParseErrorQuery,
   testFilteredQuery,
   testValidationErrorQuery,
-} from '../__fixtures__/common.js'
-import { createTestkit } from '../__fixtures__/envelop-testing.js'
-import type { LoggerConfig } from '../useRedwoodLogger.js'
-import { useRedwoodLogger } from '../useRedwoodLogger.js'
+} from './__fixtures__/common.js'
+import { createTestkit } from './__fixtures__/envelop-testing.js'
 
 const watchFileCreated = (filename: string) => {
   return new Promise((resolve, reject) => {

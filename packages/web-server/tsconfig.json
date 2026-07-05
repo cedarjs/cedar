@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.cjs-base.json",
+  "extends": "../../tsconfig.cjs-build-base.json",
   "compilerOptions": {
     "resolveJsonModule": true
   },

@@ -5,8 +5,9 @@ import {
 } from '@envelop/testing'
 import { describe, it, expect } from 'vitest'
 
-import { testQuery, testLiveQuery, testSchema } from '../__fixtures__/common'
 import { useCedarRealtime, InMemoryLiveQueryStore } from '../useCedarRealtime'
+
+import { testQuery, testLiveQuery, testSchema } from './__fixtures__/common'
 
 describe('useCedarRealtime', () => {
   it('should support a @live query directive', async () => {
