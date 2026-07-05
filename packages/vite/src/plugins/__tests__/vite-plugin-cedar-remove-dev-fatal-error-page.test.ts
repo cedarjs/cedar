@@ -46,6 +46,7 @@ export default DevFatalErrorPage || (() => <div>Error</div>)`
       code: `const DevFatalErrorPage = undefined
 
 export default DevFatalErrorPage || (() => <div>Error</div>)`,
+      map: null,
     })
   })
 
@@ -62,17 +63,23 @@ export default () => <div>Hello</div>`
   it('handles extra whitespace in the import braces', () => {
     const code = `import {  DevFatalErrorPage  } from '@cedarjs/web/dist/components/DevFatalErrorPage'`
 
-    const result = transform(code) as { code: string }
+    const result = transform(code) as { code: string; map: null }
 
-    expect(result.code).toBe('const DevFatalErrorPage = undefined')
+    expect(result).toEqual({
+      code: 'const DevFatalErrorPage = undefined',
+      map: null,
+    })
   })
 
   it('handles double quotes in the import', () => {
     const code = `import { DevFatalErrorPage } from "@cedarjs/web/dist/components/DevFatalErrorPage"`
 
-    const result = transform(code) as { code: string }
+    const result = transform(code) as { code: string; map: null }
 
-    expect(result.code).toBe('const DevFatalErrorPage = undefined')
+    expect(result).toEqual({
+      code: 'const DevFatalErrorPage = undefined',
+      map: null,
+    })
   })
 
   it('returns null when mode is development', () => {
