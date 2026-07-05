@@ -1,4 +1,4 @@
-import dedent from 'ts-dedent'
+import { dedent } from 'ts-dedent'
 import type { ResolvedConfig } from 'vite'
 import { describe, it, expect, beforeEach } from 'vitest'
 
