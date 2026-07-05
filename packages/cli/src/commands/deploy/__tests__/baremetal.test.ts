@@ -2,12 +2,14 @@ import { Listr } from 'listr2'
 import { vi, afterEach, beforeEach, describe, it, expect } from 'vitest'
 
 import type * as ProjectConfigModule from '@cedarjs/project-config'
-import { getPaths } from '@cedarjs/project-config'
 
 // Capture __dirname during hoisted mock setup phase
 const testDir = vi.hoisted(() => import.meta.dirname)
 
 globalThis.__dirname = testDir
+
+// Track whether handler test should return empty directory
+let returnEmptyBasePath = false
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const originalProjectConfig =
@@ -15,7 +17,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
   return {
     ...originalProjectConfig,
     getPaths: () => ({
-      base: `${testDir}/fixtures`,
+      base: returnEmptyBasePath ? testDir : `${testDir}/fixtures`,
     }),
   }
 })
@@ -1072,13 +1074,19 @@ describe('handler', () => {
   afterEach(() => {
     vi.mocked(console).error.mockRestore?.()
     vi.mocked(process).exit.mockRestore?.()
+    returnEmptyBasePath = false
   })
 
   it("should fail if there's no deploy.toml", async () => {
-    // Use testDir (the __tests__ dir) as base — it doesn't contain deploy.toml
-    vi.mocked(getPaths).mockReturnValueOnce({
-      base: testDir,
-    } as ReturnType<typeof getPaths>)
+    // Set flag to make getPaths return testDir (without fixtures and deploy.toml)
+    returnEmptyBasePath = true
+
+    // Clear the memoization cache for getPaths since it's cached from previous tests
+    const libModule = await import('../../../lib/index.js')
+    if ((libModule.getPaths as any).cache) {
+      ;(libModule.getPaths as any).cache.clear()
+    }
+
     await expect(baremetal.handler({})).rejects.toThrowError('process.exit: 1')
     expect(vi.mocked(console).error).toHaveBeenCalledWith(
       expect.stringContaining('Baremetal deploy has not been properly setup'),
