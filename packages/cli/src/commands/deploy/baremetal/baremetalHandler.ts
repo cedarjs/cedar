@@ -47,7 +47,7 @@ export const DEFAULT_SERVER_CONFIG = {
 const pathJoin = path.posix.join
 
 // Shape of a server configuration entry from deploy.toml
-interface ServerConfig {
+export interface ServerConfig {
   host: string
   port: number
   branch: string
@@ -69,7 +69,7 @@ interface ServerConfig {
 }
 
 // Shape of the yargs argv for baremetal deploy commands
-interface BaremetalYargs {
+export interface BaremetalYargs {
   environment: string
   releaseDir: string
   branch?: string
@@ -88,7 +88,7 @@ interface BaremetalYargs {
 }
 
 // Lifecycle hooks structure: { before: { [task]: string[] }, after: { [task]: string[] } }
-type LifecycleHooks = {
+export type LifecycleHooks = {
   before: Record<string, string[]>
   after: Record<string, string[]>
 }
@@ -102,7 +102,7 @@ interface CommandConfig {
   cmdPath: string
 }
 
-interface ListrTaskObject {
+export interface ListrTaskObject {
   title: string
   task: (...args: unknown[]) => unknown
   skip?: () => boolean

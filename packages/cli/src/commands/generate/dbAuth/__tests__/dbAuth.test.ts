@@ -1,25 +1,30 @@
-global.__dirname = __dirname
-
-vi.mock('node:fs')
-vi.mock('execa')
-
+import type * as NodeFs from 'node:fs'
 import fs from 'node:fs'
 import path from 'node:path'
-
-// Load mocks
-import '../../../../lib/test'
-
-const actualFs = await vi.importActual('node:fs')
 
 import Enquirer from 'enquirer'
 import { vol } from 'memfs'
 import { vi, describe, it, expect, afterEach, beforeEach } from 'vitest'
 
+// Capture __dirname during hoisted mock setup phase
+const testDir = vi.hoisted(() => import.meta.dirname)
+
+globalThis.__dirname = testDir
+
+// Mocks must be registered before importing modules that depend on mocked modules
+vi.mock('node:fs')
+vi.mock('execa')
+
+// Load mocks BEFORE importing getPaths, which depends on the mocked setup
+import '../../../../lib/test'
+
 import { getPaths } from '../../../../lib/index.js'
 import * as dbAuth from '../dbAuthHandler.js'
 
+const actualFs = await vi.importActual<typeof NodeFs>('node:fs')
+
 // Mock files needed for each test
-const mockFiles = {}
+const mockFiles: Record<string, string> = {}
 
 const dbAuthTemplateFiles = [
   'forgotPassword.tsx.template',
