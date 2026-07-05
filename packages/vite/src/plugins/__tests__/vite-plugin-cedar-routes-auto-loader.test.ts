@@ -291,6 +291,60 @@ describe('cedarRoutesAutoLoaderPlugin', () => {
     // AboutPage should still get a declaration
     expect(result?.code).toContain('const AboutPage =')
   })
+
+  it('filters out named imports (import { Foo } from)', () => {
+    const routesCode = dedent`
+      import { Router, Route } from '@cedarjs/router'
+      import { HomePage } from 'src/pages/HomePage'
+
+      const Routes = () => {
+        return (
+          <Router>
+            <Route path="/" page={HomePage} name="home" />
+            <Route path="/about" page={AboutPage} name="about" />
+          </Router>
+        )
+      }
+
+      export default Routes
+    `
+
+    const transform = getPluginTransform()
+    const result = transform(routesCode, ROUTES_FILE)
+
+    expect(result).not.toBeNull()
+    // HomePage should not get a lazy declaration despite named import
+    expect(result?.code).not.toContain('const HomePage =')
+    // AboutPage should still get a declaration
+    expect(result?.code).toContain('const AboutPage =')
+  })
+
+  it('filters out namespace imports (import * as Foo from)', () => {
+    const routesCode = dedent`
+      import { Router, Route } from '@cedarjs/router'
+      import * as HomePage from 'src/pages/HomePage'
+
+      const Routes = () => {
+        return (
+          <Router>
+            <Route path="/" page={HomePage} name="home" />
+            <Route path="/about" page={AboutPage} name="about" />
+          </Router>
+        )
+      }
+
+      export default Routes
+    `
+
+    const transform = getPluginTransform()
+    const result = transform(routesCode, ROUTES_FILE)
+
+    expect(result).not.toBeNull()
+    // HomePage should not get a lazy declaration despite namespace import
+    expect(result?.code).not.toContain('const HomePage =')
+    // AboutPage should still get a declaration
+    expect(result?.code).toContain('const AboutPage =')
+  })
 })
 
 describe('cedarRoutesAutoLoaderPlugin — duplicate pages', () => {

@@ -116,9 +116,13 @@ export function cedarRoutesAutoLoaderPlugin(): Plugin {
       const appPath = resolveFile(path.join(getPaths().web.src, 'App'))
       if (appPath) {
         const appSource = fs.readFileSync(appPath, 'utf8')
-        // Match both default imports (import Foo from) and composite imports (import Foo, { ... } from)
+        // Match all import patterns:
+        // - default: import Foo from
+        // - named: import { Foo } from
+        // - namespace: import * as Foo from
+        // - composite: import Foo, { ... } from
         const appImportRe =
-          /^import\s+\w+(?:\s*,\s*\{[^}]*\})?\s+from\s+['"]([^'"]+)['"]/gm
+          /^import\s+(?:\{[^}]*\}|\*\s+as\s+\w+|\w+(?:\s*,\s*\{[^}]*\})?)\s+from\s+['"]([^'"]+)['"]/gm
         let appMatch: RegExpExecArray | null
         while ((appMatch = appImportRe.exec(appSource)) !== null) {
           const rel = ensurePosixPath(
@@ -130,9 +134,13 @@ export function cedarRoutesAutoLoaderPlugin(): Plugin {
 
       // De-register pages that are already explicitly imported in Routes.tsx.
       // The user has opted in to a static (non-lazy) import for these.
-      // Match both default imports (import Foo from) and composite imports (import Foo, { ... } from)
+      // Match all import patterns:
+      // - default: import Foo from
+      // - named: import { Foo } from
+      // - namespace: import * as Foo from
+      // - composite: import Foo, { ... } from
       const routesImportRe =
-        /^import\s+\w+(?:\s*,\s*\{[^}]*\})?\s+from\s+['"]([^'"]+)['"]/gm
+        /^import\s+(?:\{[^}]*\}|\*\s+as\s+\w+|\w+(?:\s*,\s*\{[^}]*\})?)\s+from\s+['"]([^'"]+)['"]/gm
       let routesMatch: RegExpExecArray | null
       while ((routesMatch = routesImportRe.exec(code)) !== null) {
         const userImportRelativePath = ensurePosixPath(
