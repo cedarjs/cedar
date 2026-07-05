@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 
 import { cedarRemoveDevFatalErrorPage } from '../vite-plugin-cedar-remove-dev-fatal-error-page.js'
 
@@ -19,6 +19,9 @@ function transform(code: string) {
 }
 
 describe('cedarRemoveDevFatalErrorPage', () => {
+  beforeEach(() => {
+    process.env.NODE_ENV = 'production'
+  })
   it('replaces the DevFatalErrorPage import with undefined', () => {
     const code = `import { DevFatalErrorPage } from '@cedarjs/web/dist/components/DevFatalErrorPage'
 
@@ -57,5 +60,17 @@ export default () => <div>Hello</div>`
     const result = transform(code) as { code: string }
 
     expect(result.code).toBe('const DevFatalErrorPage = undefined')
+  })
+
+  it('returns null when NODE_ENV is development', () => {
+    process.env.NODE_ENV = 'development'
+
+    const code = `import { DevFatalErrorPage } from '@cedarjs/web/dist/components/DevFatalErrorPage'
+
+export default DevFatalErrorPage || (() => <div>Error</div>)`
+
+    const result = transform(code)
+
+    expect(result).toBeNull()
   })
 })
