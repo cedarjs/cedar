@@ -14,13 +14,17 @@ import {
 } from '@cedarjs/project-config'
 
 function getPathRelativeToSrc(maybeAbsolutePath: string): string {
+  // Strip file extension upfront so explicit imports like
+  // './pages/HomePage/HomePage.tsx' match discovered pages like './pages/HomePage/HomePage'
+  const withoutExt = maybeAbsolutePath.replace(/\.[^/.]+$/, '')
+
   // Handle src/ bare specifiers (e.g. 'src/pages/FooPage').
   // When `forVite` is true, babel-plugin-module-resolver's src alias does not
   // run, so these specifiers arrive here unresolved. We resolve them via the
   // filesystem so that this auto-loader can correctly match and deregister
   // pages that have been explicitly imported by the user.
-  if (maybeAbsolutePath.startsWith('src/')) {
-    const basePath = path.join(getPaths().web.base, maybeAbsolutePath)
+  if (withoutExt.startsWith('src/')) {
+    const basePath = path.join(getPaths().web.base, withoutExt)
 
     const resolved =
       resolveFile(basePath) ||
@@ -28,19 +32,19 @@ function getPathRelativeToSrc(maybeAbsolutePath: string): string {
       resolveFile(path.join(basePath, path.basename(basePath)))
 
     if (resolved) {
-      const withoutExt = resolved.replace(/\.[^/.]+$/, '')
-      return './' + path.relative(getPaths().web.src, withoutExt)
+      const resolvedWithoutExt = resolved.replace(/\.[^/.]+$/, '')
+      return './' + path.relative(getPaths().web.src, resolvedWithoutExt)
     }
 
     // Fallback: should not happen in a well-formed project
-    return './' + maybeAbsolutePath.slice('src/'.length)
+    return './' + withoutExt.slice('src/'.length)
   }
 
-  if (!path.isAbsolute(maybeAbsolutePath)) {
-    return maybeAbsolutePath
+  if (!path.isAbsolute(withoutExt)) {
+    return withoutExt
   }
 
-  return `./${path.relative(getPaths().web.src, maybeAbsolutePath)}`
+  return `./${path.relative(getPaths().web.src, withoutExt)}`
 }
 
 function withRelativeImports(page: PagesDependency) {
@@ -112,7 +116,9 @@ export function cedarRoutesAutoLoaderPlugin(): Plugin {
       const appPath = resolveFile(path.join(getPaths().web.src, 'App'))
       if (appPath) {
         const appSource = fs.readFileSync(appPath, 'utf8')
-        const appImportRe = /^import\s+\w+\s+from\s+['"]([^'"]+)['"]/gm
+        // Match both default imports (import Foo from) and composite imports (import Foo, { ... } from)
+        const appImportRe =
+          /^import\s+\w+(?:\s*,\s*\{[^}]*\})?\s+from\s+['"]([^'"]+)['"]/gm
         let appMatch: RegExpExecArray | null
         while ((appMatch = appImportRe.exec(appSource)) !== null) {
           const rel = ensurePosixPath(
@@ -124,7 +130,9 @@ export function cedarRoutesAutoLoaderPlugin(): Plugin {
 
       // De-register pages that are already explicitly imported in Routes.tsx.
       // The user has opted in to a static (non-lazy) import for these.
-      const routesImportRe = /^import\s+(?:\w+)\s+from\s+['"]([^'"]+)['"]/gm
+      // Match both default imports (import Foo from) and composite imports (import Foo, { ... } from)
+      const routesImportRe =
+        /^import\s+\w+(?:\s*,\s*\{[^}]*\})?\s+from\s+['"]([^'"]+)['"]/gm
       let routesMatch: RegExpExecArray | null
       while ((routesMatch = routesImportRe.exec(code)) !== null) {
         const userImportRelativePath = ensurePosixPath(

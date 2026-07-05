@@ -237,6 +237,60 @@ describe('cedarRoutesAutoLoaderPlugin', () => {
 
     expect(result?.map).toBeNull()
   })
+
+  it('filters out explicitly imported pages with file extensions', () => {
+    const routesCode = dedent`
+      import { Router, Route } from '@cedarjs/router'
+      import HomePage from './pages/HomePage/HomePage.tsx'
+
+      const Routes = () => {
+        return (
+          <Router>
+            <Route path="/" page={HomePage} name="home" />
+            <Route path="/about" page={AboutPage} name="about" />
+          </Router>
+        )
+      }
+
+      export default Routes
+    `
+
+    const transform = getPluginTransform()
+    const result = transform(routesCode, ROUTES_FILE)
+
+    expect(result).not.toBeNull()
+    // HomePage should not get a lazy declaration despite the .tsx extension
+    expect(result?.code).not.toContain('const HomePage =')
+    // AboutPage should still get a declaration
+    expect(result?.code).toContain('const AboutPage =')
+  })
+
+  it('filters out composite imports (import Foo, { ... } from)', () => {
+    const routesCode = dedent`
+      import { Router, Route } from '@cedarjs/router'
+      import HomePage, { useHomePage } from 'src/pages/HomePage'
+
+      const Routes = () => {
+        return (
+          <Router>
+            <Route path="/" page={HomePage} name="home" />
+            <Route path="/about" page={AboutPage} name="about" />
+          </Router>
+        )
+      }
+
+      export default Routes
+    `
+
+    const transform = getPluginTransform()
+    const result = transform(routesCode, ROUTES_FILE)
+
+    expect(result).not.toBeNull()
+    // HomePage should not get a lazy declaration despite composite import
+    expect(result?.code).not.toContain('const HomePage =')
+    // AboutPage should still get a declaration
+    expect(result?.code).toContain('const AboutPage =')
+  })
 })
 
 describe('cedarRoutesAutoLoaderPlugin — duplicate pages', () => {
