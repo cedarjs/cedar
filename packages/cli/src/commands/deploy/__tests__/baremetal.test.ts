@@ -28,13 +28,57 @@ vi.mock('@cedarjs/project-config/packageManager', () => ({
 }))
 
 import * as baremetal from '../baremetal/baremetalHandler.js'
+import type {
+  BaremetalYargs,
+  ServerConfig,
+} from '../baremetal/baremetalHandler.js'
+import { SshExecutor } from '../baremetal/SshExecutor.js'
+
+const sshExecutor = new SshExecutor(false)
+
+function createServerConfig(
+  overrides: Partial<ServerConfig> = {},
+): ServerConfig {
+  return {
+    host: 'host.test',
+    port: 22,
+    branch: 'main',
+    username: 'deploy',
+    path: '/var/www/app',
+    repo: 'git://github.com',
+    packageManagerCommand: 'yarn',
+    monitorCommand: 'pm2',
+    sides: ['api'],
+    keepReleases: 5,
+    freeSpaceRequired: 2048,
+    ...overrides,
+  }
+}
+
+function createBaremetalYargs(
+  overrides?: Partial<BaremetalYargs>,
+): BaremetalYargs {
+  return {
+    environment: 'production',
+    releaseDir: '20220409120000',
+    df: true,
+    update: true,
+    install: true,
+    migrate: true,
+    build: true,
+    restart: true,
+    cleanup: true,
+    ...overrides,
+  }
+}
 
 describe('verifyConfig', () => {
   it('throws an error if no environment specified', () => {
     expect(() =>
       baremetal.verifyConfig(
         { production: { servers: [{ host: 'prod.server.com' }] } },
-        {},
+        // @ts-expect-error - testing JS code path
+        { releaseDir: '' },
       ),
     ).toThrow('Must specify an environment to deploy to')
   })
@@ -43,7 +87,7 @@ describe('verifyConfig', () => {
     expect(() =>
       baremetal.verifyConfig(
         { production: { servers: [{ host: 'prod.server.com' }] } },
-        { environment: 'staging' },
+        { environment: 'staging', releaseDir: '' },
       ),
     ).toThrow('No servers found for environment "staging"')
   })
@@ -52,10 +96,10 @@ describe('verifyConfig', () => {
 describe('verifyServerConfig', () => {
   it('throws an error if host is missing', () => {
     expect(() =>
-      baremetal.verifyServerConfig({
-        path: '/var/www/app',
-        repo: 'git://github.com',
-      }),
+      baremetal.verifyServerConfig(
+        // @ts-expect-error - testing JS consumer path (missing required field)
+        { path: '/var/www/app', repo: 'git://github.com' },
+      ),
     ).toThrow(
       '"host" config option not set. See https://cedarjs.com/docs/deployment/baremetal#deploytoml',
     )
@@ -63,10 +107,10 @@ describe('verifyServerConfig', () => {
 
   it('throws an error if path is missing', () => {
     expect(() =>
-      baremetal.verifyServerConfig({
-        host: 'host.test',
-        repo: 'git://github.com',
-      }),
+      baremetal.verifyServerConfig(
+        // @ts-expect-error - testing JS consumer path (missing required field)
+        { host: 'host.test', repo: 'git://github.com' },
+      ),
     ).toThrow(
       '"path" config option not set. See https://cedarjs.com/docs/deployment/baremetal#deploytoml',
     )
@@ -74,10 +118,10 @@ describe('verifyServerConfig', () => {
 
   it('throws an error if repo is missing', () => {
     expect(() =>
-      baremetal.verifyServerConfig({
-        host: 'host.test',
-        path: '/var/www/app',
-      }),
+      baremetal.verifyServerConfig(
+        // @ts-expect-error - testing JS consumer path (missing required field)
+        { host: 'host.test', path: '/var/www/app' },
+      ),
     ).toThrow(
       '"repo" config option not set. See https://cedarjs.com/docs/deployment/baremetal#deploytoml',
     )
@@ -85,109 +129,79 @@ describe('verifyServerConfig', () => {
 
   it('throws an error if freeSpaceRequired is a string of letters', () => {
     expect(() =>
-      baremetal.verifyServerConfig({
-        host: 'host.test',
-        path: '/var/www/app',
-        repo: 'git://github.com',
-        freeSpaceRequired: 'not a number',
-      }),
+      baremetal.verifyServerConfig(
+        createServerConfig({ freeSpaceRequired: 'not a number' }),
+      ),
     ).toThrow('"freeSpaceRequired" must be an integer >= 0')
   })
 
   it('throws an error if freeSpaceRequired is a float (as a string)', () => {
     expect(() =>
-      baremetal.verifyServerConfig({
-        host: 'host.test',
-        path: '/var/www/app',
-        repo: 'git://github.com',
-        freeSpaceRequired: '100.5',
-      }),
+      baremetal.verifyServerConfig(
+        createServerConfig({ freeSpaceRequired: '100.5' }),
+      ),
     ).toThrow('"freeSpaceRequired" must be an integer >= 0')
   })
 
   it('throws an error if freeSpaceRequired is a float', () => {
     expect(() =>
-      baremetal.verifyServerConfig({
-        host: 'host.test',
-        path: '/var/www/app',
-        repo: 'git://github.com',
-        freeSpaceRequired: 100.5,
-      }),
+      baremetal.verifyServerConfig(
+        createServerConfig({ freeSpaceRequired: 100.5 }),
+      ),
     ).toThrow('"freeSpaceRequired" must be an integer >= 0')
   })
 
   it('throws an error if freeSpaceRequired includes a unit', () => {
     expect(() =>
-      baremetal.verifyServerConfig({
-        host: 'host.test',
-        path: '/var/www/app',
-        repo: 'git://github.com',
-        freeSpaceRequired: '3GB',
-      }),
+      baremetal.verifyServerConfig(
+        createServerConfig({ freeSpaceRequired: '3GB' }),
+      ),
     ).toThrow('"freeSpaceRequired" must be an integer >= 0')
 
     expect(() =>
-      baremetal.verifyServerConfig({
-        host: 'host.test',
-        path: '/var/www/app',
-        repo: 'git://github.com',
-        freeSpaceRequired: '2048 MB',
-      }),
+      baremetal.verifyServerConfig(
+        createServerConfig({ freeSpaceRequired: '2048 MB' }),
+      ),
     ).toThrow('"freeSpaceRequired" must be an integer >= 0')
   })
 
   it('throws an error if freeSpaceRequired is negative (as a string)', () => {
     expect(() =>
-      baremetal.verifyServerConfig({
-        host: 'host.test',
-        path: '/var/www/app',
-        repo: 'git://github.com',
-        freeSpaceRequired: '-1',
-      }),
+      baremetal.verifyServerConfig(
+        createServerConfig({ freeSpaceRequired: '-1' }),
+      ),
     ).toThrow('"freeSpaceRequired" must be an integer >= 0')
   })
 
   it('throws an error if freeSpaceRequired is negative', () => {
     expect(() =>
-      baremetal.verifyServerConfig({
-        host: 'host.test',
-        path: '/var/www/app',
-        repo: 'git://github.com',
-        freeSpaceRequired: -1,
-      }),
+      baremetal.verifyServerConfig(
+        createServerConfig({ freeSpaceRequired: -1 }),
+      ),
     ).toThrow('"freeSpaceRequired" must be an integer >= 0')
   })
 
   it('allows freeSpaceRequired to be 0 (as a string)', () => {
     expect(
-      baremetal.verifyServerConfig({
-        host: 'host.test',
-        path: '/var/www/app',
-        repo: 'git://github.com',
-        freeSpaceRequired: '0',
-      }),
+      baremetal.verifyServerConfig(
+        createServerConfig({ freeSpaceRequired: '0' }),
+      ),
     ).toEqual(true)
   })
 
   it('allows freeSpaceRequired to be 0', () => {
     expect(
-      baremetal.verifyServerConfig({
-        host: 'host.test',
-        path: '/var/www/app',
-        repo: 'git://github.com',
-        freeSpaceRequired: 0,
-      }),
+      baremetal.verifyServerConfig(
+        createServerConfig({ freeSpaceRequired: 0 }),
+      ),
     ).toEqual(true)
   })
 
   it('returns true if no problems', () => {
     expect(
-      baremetal.verifyServerConfig({
-        host: 'host.test',
-        path: '/var/www/app',
-        repo: 'git://github.com',
-        freeSpaceRequired: 2024,
-      }),
+      baremetal.verifyServerConfig(
+        createServerConfig({ freeSpaceRequired: 2024 }),
+      ),
     ).toEqual(true)
   })
 })
@@ -196,8 +210,8 @@ describe('maintenanceTasks', () => {
   it('returns tasks to put maintenance page up', () => {
     const tasks = baremetal.maintenanceTasks(
       'up',
-      {},
-      { path: '/var/www/app', processNames: ['api'] },
+      sshExecutor,
+      createServerConfig({ processNames: ['api'] }),
     )
 
     expect(tasks.length).toEqual(2)
@@ -208,8 +222,8 @@ describe('maintenanceTasks', () => {
   it('returns tasks to take maintenance page down', () => {
     const tasks = baremetal.maintenanceTasks(
       'down',
-      {},
-      { path: '/var/www/app', processNames: ['api'] },
+      sshExecutor,
+      createServerConfig({ processNames: ['api'] }),
     )
 
     expect(tasks.length).toEqual(2)
@@ -222,8 +236,8 @@ describe('rollbackTasks', () => {
   it('returns rollback tasks', () => {
     const tasks1 = baremetal.rollbackTasks(
       1,
-      {},
-      { path: '/var/www/app', processNames: ['api'] },
+      sshExecutor,
+      createServerConfig({ processNames: ['api'] }),
     )
 
     expect(tasks1.length).toEqual(2)
@@ -232,8 +246,8 @@ describe('rollbackTasks', () => {
 
     const tasks2 = baremetal.rollbackTasks(
       5,
-      {},
-      { path: '/var/www/app', processNames: ['api'] },
+      sshExecutor,
+      createServerConfig({ processNames: ['api'] }),
     )
 
     expect(tasks2[0].title).toMatch('Rolling back 5')
@@ -242,7 +256,10 @@ describe('rollbackTasks', () => {
 
 describe('serverConfigWithDefaults', () => {
   it('provides some default settings', () => {
-    const config = baremetal.serverConfigWithDefaults({}, {})
+    const config = baremetal.serverConfigWithDefaults(
+      {},
+      createBaremetalYargs(),
+    )
     expect(config).toEqual(baremetal.DEFAULT_SERVER_CONFIG)
   })
 
@@ -256,35 +273,50 @@ describe('serverConfigWithDefaults', () => {
       keepReleases: 2,
       freeSpaceRequired: 1000,
     }
-    const config = baremetal.serverConfigWithDefaults(serverConfig, {})
+    const config = baremetal.serverConfigWithDefaults(
+      serverConfig,
+      createBaremetalYargs(),
+    )
     expect(config).toEqual(serverConfig)
   })
 
   it('provides default port as 22', () => {
-    const config = baremetal.serverConfigWithDefaults({}, {})
+    const config = baremetal.serverConfigWithDefaults(
+      {},
+      createBaremetalYargs(),
+    )
     expect(config.port).toEqual(22)
   })
 
   it('provides default branch name', () => {
-    const config = baremetal.serverConfigWithDefaults({}, {})
+    const config = baremetal.serverConfigWithDefaults(
+      {},
+      createBaremetalYargs(),
+    )
     expect(config.branch).toEqual('main')
   })
 
   it('overrides branch name from config', () => {
-    const config = baremetal.serverConfigWithDefaults({ branch: 'earth' }, {})
+    const config = baremetal.serverConfigWithDefaults(
+      { branch: 'earth' },
+      createBaremetalYargs(),
+    )
     expect(config.branch).toEqual('earth')
   })
 
   it('overrides branch name from yargs no matter what', () => {
     const config = baremetal.serverConfigWithDefaults(
       { branch: 'earth' },
-      { branch: 'moon' },
+      createBaremetalYargs({ branch: 'moon' }),
     )
     expect(config.branch).toEqual('moon')
   })
 
   it('provides default freeSpaceRequired', () => {
-    const config = baremetal.serverConfigWithDefaults({}, {})
+    const config = baremetal.serverConfigWithDefaults(
+      {},
+      createBaremetalYargs(),
+    )
     expect(config.freeSpaceRequired).toEqual(2048)
   })
 })
@@ -292,7 +324,7 @@ describe('serverConfigWithDefaults', () => {
 describe('parseConfig', () => {
   it('returns the config for an environment', () => {
     const { envConfig } = baremetal.parseConfig(
-      { environment: 'production' },
+      createBaremetalYargs(),
       `
         [[production.servers]]
         host = 'server.com'
@@ -304,7 +336,7 @@ describe('parseConfig', () => {
 
   it('returns the proper config from multiple environments', () => {
     const { envConfig } = baremetal.parseConfig(
-      { environment: 'staging' },
+      createBaremetalYargs({ environment: 'staging' }),
       `
         [[production.servers]]
         host = 'prod.server.com'
@@ -318,8 +350,8 @@ describe('parseConfig', () => {
   })
 
   it('returns empty objects if no lifecycle defined', () => {
-    const { _envConfig, envLifecycle } = baremetal.parseConfig(
-      { environment: 'production' },
+    const { envLifecycle } = baremetal.parseConfig(
+      createBaremetalYargs(),
       `
         [[production.servers]]
         host = 'server.com'
@@ -331,8 +363,8 @@ describe('parseConfig', () => {
   })
 
   it('parses a single global lifecycle event', () => {
-    const { _envConfig, envLifecycle } = baremetal.parseConfig(
-      { environment: 'production' },
+    const { envLifecycle } = baremetal.parseConfig(
+      createBaremetalYargs(),
       `
         [before]
         install = 'yarn global'
@@ -347,8 +379,8 @@ describe('parseConfig', () => {
   })
 
   it('parses multiple global lifecycle events', () => {
-    const { _envConfig, envLifecycle } = baremetal.parseConfig(
-      { environment: 'production' },
+    const { envLifecycle } = baremetal.parseConfig(
+      createBaremetalYargs(),
       `
         [before]
         install = 'yarn global one'
@@ -367,8 +399,8 @@ describe('parseConfig', () => {
   })
 
   it('parses an array of global lifecycle events', () => {
-    const { _envConfig, envLifecycle } = baremetal.parseConfig(
-      { environment: 'production' },
+    const { envLifecycle } = baremetal.parseConfig(
+      createBaremetalYargs(),
       `
         [before]
         install = ['yarn global one', 'yarn global two']
@@ -385,8 +417,8 @@ describe('parseConfig', () => {
   })
 
   it('parses an env lifecycle event', () => {
-    const { _envConfig, envLifecycle } = baremetal.parseConfig(
-      { environment: 'production' },
+    const { envLifecycle } = baremetal.parseConfig(
+      createBaremetalYargs(),
       `
         [[production.servers]]
         host = 'server.com'
@@ -401,8 +433,8 @@ describe('parseConfig', () => {
   })
 
   it('parses combined global and env lifecycle events', () => {
-    const { _envConfig, envLifecycle } = baremetal.parseConfig(
-      { environment: 'production' },
+    const { envLifecycle } = baremetal.parseConfig(
+      createBaremetalYargs(),
       `
         [before]
         install = 'yarn global one'
@@ -429,7 +461,7 @@ describe('parseConfig', () => {
     const {
       envConfig: { servers },
     } = baremetal.parseConfig(
-      { environment: 'production' },
+      createBaremetalYargs(),
       `
         [[production.servers]]
         host = '\${TEST_VAR_HOST:server.com}'
@@ -438,7 +470,7 @@ describe('parseConfig', () => {
         privateKeyPath = '/Users/me/.ssh/id_rsa'
       `,
     )
-    const server = servers[0]
+    const server = (servers as any[])[0]
     expect(server.host).toEqual('staging.server.com')
     expect(server.repo).toEqual('git://staging.github.com')
     // Default value should work
@@ -455,7 +487,7 @@ describe('commandWithLifecycleEvents', () => {
   it('returns just the command if no lifecycle defined', () => {
     const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
-      config: { serverLifecycle: {} },
+      config: { serverLifecycle: { before: {}, after: {} } } as any,
       skip: false,
       command: {
         title: 'Some command',
@@ -465,29 +497,29 @@ describe('commandWithLifecycleEvents', () => {
 
     expect(tasks.length).toEqual(1)
     expect(tasks[0].title).toEqual('Some command')
-    expect(tasks[0].skip()).toEqual(false)
+    expect(tasks[0].skip?.()).toEqual(false)
   })
 
   it('copies `skip` output into task function', () => {
     const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
-      config: { serverLifecycle: {} },
-      skip: 'foobar',
+      config: { serverLifecycle: { before: {}, after: {} } } as any,
+      skip: 'foobar' as any,
       command: {
         title: 'Some command',
         task: () => {},
       },
     })
 
-    expect(tasks[0].skip()).toEqual('foobar')
+    expect(tasks[0].skip?.()).toEqual('foobar')
   })
 
   it('includes a `before` lifecycle event', () => {
     const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
       config: {
-        serverLifecycle: { before: { update: ['touch'] } },
-      },
+        serverLifecycle: { before: { update: ['touch'] }, after: {} },
+      } as any,
       skip: false,
       command: {
         title: 'Some command',
@@ -497,17 +529,20 @@ describe('commandWithLifecycleEvents', () => {
 
     expect(tasks.length).toEqual(2)
     expect(tasks[0].title).toEqual('Before update: `touch`')
-    expect(tasks[0].skip()).toEqual(false)
+    expect(tasks[0].skip?.()).toEqual(false)
     expect(tasks[1].title).toEqual('Some command')
-    expect(tasks[1].skip()).toEqual(false)
+    expect(tasks[1].skip?.()).toEqual(false)
   })
 
   it('includes multiple `before` lifecycle events', () => {
     const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
       config: {
-        serverLifecycle: { before: { update: ['touch1', 'touch2'] } },
-      },
+        serverLifecycle: {
+          before: { update: ['touch1', 'touch2'] },
+          after: {},
+        },
+      } as any,
       skip: false,
       command: {
         title: 'Some command',
@@ -517,36 +552,36 @@ describe('commandWithLifecycleEvents', () => {
 
     expect(tasks.length).toEqual(3)
     expect(tasks[0].title).toEqual('Before update: `touch1`')
-    expect(tasks[0].skip()).toEqual(false)
+    expect(tasks[0].skip?.()).toEqual(false)
     expect(tasks[1].title).toEqual('Before update: `touch2`')
-    expect(tasks[1].skip()).toEqual(false)
+    expect(tasks[1].skip?.()).toEqual(false)
     expect(tasks[2].title).toEqual('Some command')
-    expect(tasks[2].skip()).toEqual(false)
+    expect(tasks[2].skip?.()).toEqual(false)
   })
 
   it('copies `skip` output into `before` lifecycle event task function', () => {
     const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
       config: {
-        serverLifecycle: { before: { update: ['touch'] } },
-      },
-      skip: 'foobar',
+        serverLifecycle: { before: { update: ['touch'] }, after: {} },
+      } as any,
+      skip: 'foobar' as any,
       command: {
         title: 'Some command',
         task: () => {},
       },
     })
 
-    expect(tasks[0].skip()).toEqual('foobar')
-    expect(tasks[1].skip()).toEqual('foobar')
+    expect(tasks[0].skip?.()).toEqual('foobar')
+    expect(tasks[1].skip?.()).toEqual('foobar')
   })
 
   it('includes an `after` lifecycle event', () => {
     const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
       config: {
-        serverLifecycle: { after: { update: ['touch'] } },
-      },
+        serverLifecycle: { before: {}, after: { update: ['touch'] } },
+      } as any,
       skip: false,
       command: {
         title: 'Some command',
@@ -556,17 +591,20 @@ describe('commandWithLifecycleEvents', () => {
 
     expect(tasks.length).toEqual(2)
     expect(tasks[0].title).toEqual('Some command')
-    expect(tasks[0].skip()).toEqual(false)
+    expect(tasks[0].skip?.()).toEqual(false)
     expect(tasks[1].title).toEqual('After update: `touch`')
-    expect(tasks[1].skip()).toEqual(false)
+    expect(tasks[1].skip?.()).toEqual(false)
   })
 
   it('includes multiple `after` lifecycle events', () => {
     const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
       config: {
-        serverLifecycle: { after: { update: ['touch1', 'touch2'] } },
-      },
+        serverLifecycle: {
+          before: {},
+          after: { update: ['touch1', 'touch2'] },
+        },
+      } as any,
       skip: false,
       command: {
         title: 'Some command',
@@ -576,28 +614,28 @@ describe('commandWithLifecycleEvents', () => {
 
     expect(tasks.length).toEqual(3)
     expect(tasks[0].title).toEqual('Some command')
-    expect(tasks[0].skip()).toEqual(false)
+    expect(tasks[0].skip?.()).toEqual(false)
     expect(tasks[1].title).toEqual('After update: `touch1`')
-    expect(tasks[1].skip()).toEqual(false)
+    expect(tasks[1].skip?.()).toEqual(false)
     expect(tasks[2].title).toEqual('After update: `touch2`')
-    expect(tasks[2].skip()).toEqual(false)
+    expect(tasks[2].skip?.()).toEqual(false)
   })
 
   it('copies `skip` output into `after` lifecycle event task function', () => {
     const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
       config: {
-        serverLifecycle: { after: { update: ['touch'] } },
-      },
-      skip: 'foobar',
+        serverLifecycle: { before: {}, after: { update: ['touch'] } },
+      } as any,
+      skip: 'foobar' as any,
       command: {
         title: 'Some command',
         task: () => {},
       },
     })
 
-    expect(tasks[0].skip()).toEqual('foobar')
-    expect(tasks[1].skip()).toEqual('foobar')
+    expect(tasks[0].skip?.()).toEqual('foobar')
+    expect(tasks[1].skip?.()).toEqual('foobar')
   })
 
   it('includes both `before` and `after` lifecycle events', () => {
@@ -608,7 +646,7 @@ describe('commandWithLifecycleEvents', () => {
           before: { update: ['touch1'] },
           after: { update: ['touch2'] },
         },
-      },
+      } as any,
       skip: false,
       command: {
         title: 'Some command',
@@ -618,32 +656,17 @@ describe('commandWithLifecycleEvents', () => {
 
     expect(tasks.length).toEqual(3)
     expect(tasks[0].title).toEqual('Before update: `touch1`')
-    expect(tasks[0].skip()).toEqual(false)
+    expect(tasks[0].skip?.()).toEqual(false)
     expect(tasks[1].title).toEqual('Some command')
-    expect(tasks[1].skip()).toEqual(false)
+    expect(tasks[1].skip?.()).toEqual(false)
     expect(tasks[2].title).toEqual('After update: `touch2`')
-    expect(tasks[2].skip()).toEqual(false)
+    expect(tasks[2].skip?.()).toEqual(false)
   })
 })
 
 describe('deployTasks', () => {
-  const defaultYargs = {
-    df: true,
-    update: true,
-    install: true,
-    migrate: true,
-    build: true,
-    restart: true,
-    cleanup: true,
-    releaseDir: '20220409120000',
-  }
-  const defaultServerConfig = {
-    branch: 'main',
-    path: '/var/www/app',
-    processNames: ['serve'],
-    sides: ['api'],
-    freeSpaceRequired: 2048,
-  }
+  const defaultYargs = createBaremetalYargs()
+  const defaultServerConfig = createServerConfig({ processNames: ['serve'] })
 
   const mockTask = {
     skip: vi.fn(),
@@ -656,66 +679,67 @@ describe('deployTasks', () => {
   it('provides a default list of tasks', () => {
     const tasks = baremetal.deployTasks(
       defaultYargs,
-      {}, // ssh
+      sshExecutor,
       defaultServerConfig,
-      {}, // lifecycle
+      { before: {}, after: {} },
     )
 
     expect(Object.keys(tasks).length).toEqual(9)
     expect(tasks[0].title).toEqual('Checking available disk space...')
-    expect(tasks[0].skip()).toEqual(false)
+    expect(tasks[0].skip?.()).toEqual(false)
     expect(tasks[1].title).toMatch('Cloning')
-    expect(tasks[1].skip()).toEqual(false)
+    expect(tasks[1].skip?.()).toEqual(false)
     expect(tasks[2].title).toMatch('Symlink .env')
-    expect(tasks[2].skip()).toEqual(false)
+    expect(tasks[2].skip?.()).toEqual(false)
     expect(tasks[3].title).toMatch('Installing')
-    expect(tasks[3].skip()).toEqual(false)
+    expect(tasks[3].skip?.()).toEqual(false)
     expect(tasks[4].title).toMatch('DB Migrations')
-    expect(tasks[4].skip()).toEqual(false)
+    expect(tasks[4].skip?.()).toEqual(false)
     expect(tasks[5].title).toMatch('Building api')
-    expect(tasks[5].skip()).toEqual(false)
+    expect(tasks[5].skip?.()).toEqual(false)
     expect(tasks[6].title).toMatch('Symlinking current')
-    expect(tasks[6].skip()).toEqual(false)
+    expect(tasks[6].skip?.()).toEqual(false)
     expect(tasks[7].title).toMatch('Restarting serve')
-    expect(tasks[7].skip()).toEqual(false)
+    expect(tasks[7].skip?.()).toEqual(false)
     expect(tasks[8].title).toMatch('Cleaning up')
-    expect(tasks[8].skip()).toEqual(false)
+    expect(tasks[8].skip?.()).toEqual(false)
   })
 
   it('skips the available space check if --no-df is passed', () => {
     const tasks = baremetal.deployTasks(
       { ...defaultYargs, df: false },
-      {}, // ssh
+      sshExecutor,
       defaultServerConfig,
-      {}, // lifecycle
+      { before: {}, after: {} },
     )
 
-    expect(tasks[0].skip()).toBeTruthy()
+    expect(tasks[0].skip?.()).toBeTruthy()
   })
 
   it('skips the available space check if freeSpaceRequired is set to 0', () => {
     const tasks = baremetal.deployTasks(
       { ...defaultYargs },
-      {}, // ssh
+      sshExecutor,
       { ...defaultServerConfig, freeSpaceRequired: 0 },
-      {}, // lifecycle
+      { before: {}, after: {} },
     )
 
-    expect(tasks[0].skip()).toBeTruthy()
+    expect(tasks[0].skip?.()).toBeTruthy()
   })
 
   it('throws an error if there is not enough available space on the server and freeSpaceRequired is not configured', async () => {
-    const ssh = {
-      exec: () => ({ stdout: 'df:1875893' }),
-    }
-
-    const { freeSpaceRequired: _, ...serverConfig } = defaultServerConfig
+    vi.spyOn(sshExecutor, 'exec').mockResolvedValue({
+      stdout: 'df:1875893',
+      stderr: '',
+      code: 0,
+      signal: null,
+    })
 
     const tasks = baremetal.deployTasks(
       defaultYargs,
-      ssh,
-      { ...serverConfig, sides: ['api', 'web'] },
-      {}, // lifecycle
+      sshExecutor,
+      createServerConfig({ sides: ['api', 'web'] }),
+      { before: {}, after: {} },
     )
 
     await expect(() => tasks[0].task({}, {})).rejects.toThrowError(
@@ -724,19 +748,22 @@ describe('deployTasks', () => {
   })
 
   it('throws an error if there is less available space on the server than freeSpaceRequired', async () => {
-    const ssh = {
-      exec: () => ({ stdout: 'df:3875893' }),
-    }
+    vi.spyOn(sshExecutor, 'exec').mockResolvedValue({
+      stdout: 'df:3875893',
+      stderr: '',
+      code: 0,
+      signal: null,
+    })
 
     const tasks = baremetal.deployTasks(
       defaultYargs,
-      ssh,
+      sshExecutor,
       {
         ...defaultServerConfig,
         sides: ['api', 'web'],
         freeSpaceRequired: 4096,
       },
-      {}, // lifecycle
+      { before: {}, after: {} },
     )
 
     await expect(() => tasks[0].task({}, {})).rejects.toThrowError(
@@ -745,15 +772,18 @@ describe('deployTasks', () => {
   })
 
   it("warns if it can't get the available space", async () => {
-    const ssh = {
-      exec: () => ({ stdout: '', stderr: 'df: command not found' }),
-    }
+    vi.spyOn(sshExecutor, 'exec').mockResolvedValue({
+      stdout: '',
+      stderr: 'df: command not found',
+      code: 0,
+      signal: null,
+    })
 
     const tasks = baremetal.deployTasks(
       defaultYargs,
-      ssh,
+      sshExecutor,
       { ...defaultServerConfig, sides: ['api', 'web'] },
-      {}, // lifecycle
+      { before: {}, after: {} },
     )
 
     await tasks[0].task({}, mockTask)
@@ -764,15 +794,18 @@ describe('deployTasks', () => {
   })
 
   it("warns if it can't parse the output of the ssh command", async () => {
-    const ssh = {
-      exec: () => ({ stdout: 'df:/dev/sda1' }),
-    }
+    vi.spyOn(sshExecutor, 'exec').mockResolvedValue({
+      stdout: 'df:/dev/sda1',
+      stderr: '',
+      code: 0,
+      signal: null,
+    })
 
     const tasks = baremetal.deployTasks(
       defaultYargs,
-      ssh,
+      sshExecutor,
       { ...defaultServerConfig, sides: ['api', 'web'] },
-      {}, // lifecycle
+      { before: {}, after: {} },
     )
 
     await tasks[0].task({}, mockTask)
@@ -787,9 +820,9 @@ describe('deployTasks', () => {
   it('builds each side separately', () => {
     const tasks = baremetal.deployTasks(
       defaultYargs,
-      {}, // ssh
+      sshExecutor,
       { ...defaultServerConfig, sides: ['api', 'web'] },
-      {}, // lifecycle
+      { before: {}, after: {} },
     )
 
     expect(Object.keys(tasks).length).toEqual(10)
@@ -800,21 +833,21 @@ describe('deployTasks', () => {
   it('skips migrations if migrate = false in config', () => {
     const tasks = baremetal.deployTasks(
       defaultYargs,
-      {}, // ssh
+      sshExecutor,
       { ...defaultServerConfig, migrate: false },
-      {}, // lifecycle
+      { before: {}, after: {} },
     )
 
     expect(Object.keys(tasks).length).toEqual(9)
-    expect(tasks[4].skip()).toEqual(true)
+    expect(tasks[4].skip?.()).toEqual(true)
   })
 
   it('starts pm2 if --first-run flag set', () => {
     const tasks = baremetal.deployTasks(
       { ...defaultYargs, firstRun: true },
-      {}, // ssh
+      sshExecutor,
       defaultServerConfig,
-      {}, // lifecycle
+      { before: {}, after: {} },
     )
 
     expect(Object.keys(tasks).length).toEqual(10)
@@ -825,77 +858,77 @@ describe('deployTasks', () => {
   it('skips clone and symlinks if --no-update flag passed', () => {
     const tasks = baremetal.deployTasks(
       { ...defaultYargs, update: false },
-      {}, // ssh
+      sshExecutor,
       defaultServerConfig,
-      {}, // lifecycle
+      { before: {}, after: {} },
     )
 
-    expect(tasks[1].skip()).toEqual(true)
-    expect(tasks[2].skip()).toEqual(true)
-    expect(tasks[6].skip()).toEqual(true)
+    expect(tasks[1].skip?.()).toEqual(true)
+    expect(tasks[2].skip?.()).toEqual(true)
+    expect(tasks[6].skip?.()).toEqual(true)
   })
 
   it('skips install if --no-install flag passed', () => {
     const tasks = baremetal.deployTasks(
       { ...defaultYargs, install: false },
-      {}, // ssh
+      sshExecutor,
       defaultServerConfig,
-      {}, // lifecycle
+      { before: {}, after: {} },
     )
 
-    expect(tasks[3].skip()).toEqual(true)
+    expect(tasks[3].skip?.()).toEqual(true)
   })
 
   it('skips migrations if --no-migrate flag passed', () => {
     const tasks = baremetal.deployTasks(
       { ...defaultYargs, migrate: false },
-      {}, // ssh
+      sshExecutor,
       defaultServerConfig,
-      {}, // lifecycle
+      { before: {}, after: {} },
     )
 
-    expect(tasks[4].skip()).toEqual(true)
+    expect(tasks[4].skip?.()).toEqual(true)
   })
 
   it('skips build if --no-build flag passed', () => {
     const tasks = baremetal.deployTasks(
       { ...defaultYargs, build: false },
-      {}, // ssh
+      sshExecutor,
       defaultServerConfig,
-      {}, // lifecycle
+      { before: {}, after: {} },
     )
 
-    expect(tasks[5].skip()).toEqual(true)
+    expect(tasks[5].skip?.()).toEqual(true)
   })
 
   it('skips restart if --no-restart flag passed', () => {
     const tasks = baremetal.deployTasks(
       { ...defaultYargs, restart: false },
-      {}, // ssh
+      sshExecutor,
       defaultServerConfig,
-      {}, // lifecycle
+      { before: {}, after: {} },
     )
 
-    expect(tasks[7].skip()).toEqual(true)
+    expect(tasks[7].skip?.()).toEqual(true)
   })
 
   it('skips cleanup if --no-cleanup flag passed', () => {
     const tasks = baremetal.deployTasks(
       { ...defaultYargs, cleanup: false },
-      {}, // ssh
+      sshExecutor,
       defaultServerConfig,
-      {}, // lifecycle
+      { before: {}, after: {} },
     )
 
-    expect(tasks[8].skip()).toEqual(true)
+    expect(tasks[8].skip?.()).toEqual(true)
   })
 
   it('injects lifecycle events for update', () => {
     const tasks = baremetal.deployTasks(
       defaultYargs,
-      {}, // ssh
+      sshExecutor,
       defaultServerConfig,
-      { before: { update: ['touch before-update.txt'] } },
+      { before: { update: ['touch before-update.txt'] }, after: {} },
     )
 
     expect(Object.keys(tasks).length).toEqual(10)
@@ -906,9 +939,9 @@ describe('deployTasks', () => {
   it('injects lifecycle events for install', () => {
     const tasks = baremetal.deployTasks(
       defaultYargs,
-      {}, // ssh
+      sshExecutor,
       defaultServerConfig,
-      { before: { install: ['touch before-install.txt'] } },
+      { before: { install: ['touch before-install.txt'] }, after: {} },
     )
 
     expect(Object.keys(tasks).length).toEqual(10)
@@ -919,9 +952,9 @@ describe('deployTasks', () => {
   it('injects lifecycle events for migrate', () => {
     const tasks = baremetal.deployTasks(
       defaultYargs,
-      {}, // ssh
+      sshExecutor,
       defaultServerConfig,
-      { before: { migrate: ['touch before-migrate.txt'] } },
+      { before: { migrate: ['touch before-migrate.txt'] }, after: {} },
     )
 
     expect(Object.keys(tasks).length).toEqual(10)
@@ -932,9 +965,9 @@ describe('deployTasks', () => {
   it('injects lifecycle events for build', () => {
     const tasks = baremetal.deployTasks(
       defaultYargs,
-      {}, // ssh
+      sshExecutor,
       defaultServerConfig,
-      { before: { build: ['touch before-build.txt'] } },
+      { before: { build: ['touch before-build.txt'] }, after: {} },
     )
 
     expect(Object.keys(tasks).length).toEqual(10)
@@ -945,9 +978,9 @@ describe('deployTasks', () => {
   it('injects lifecycle events for restart', () => {
     const tasks = baremetal.deployTasks(
       defaultYargs,
-      {}, // ssh
+      sshExecutor,
       defaultServerConfig,
-      { before: { restart: ['touch before-restart.txt'] } },
+      { before: { restart: ['touch before-restart.txt'] }, after: {} },
     )
 
     expect(Object.keys(tasks).length).toEqual(10)
@@ -958,9 +991,9 @@ describe('deployTasks', () => {
   it('injects lifecycle events for cleanup', () => {
     const tasks = baremetal.deployTasks(
       defaultYargs,
-      {}, // ssh
+      sshExecutor,
       defaultServerConfig,
-      { before: { cleanup: ['touch before-cleanup.txt'] } },
+      { before: { cleanup: ['touch before-cleanup.txt'] }, after: {} },
     )
 
     expect(Object.keys(tasks).length).toEqual(10)
@@ -973,11 +1006,11 @@ describe('commands', () => {
   it('contains a top-level task for each server in an environment', () => {
     const prodServers = baremetal.commands(
       { environment: 'production', releaseDir: '2022051120000' },
-      {},
+      sshExecutor,
     )
     const stagingServers = baremetal.commands(
       { environment: 'staging', releaseDir: '2022051120000' },
-      {},
+      sshExecutor,
     )
 
     expect(prodServers.length).toEqual(2)
@@ -991,7 +1024,7 @@ describe('commands', () => {
   it('a single server contains nested deploy tasks', () => {
     const servers = baremetal.commands(
       { environment: 'staging', releaseDir: '2022051120000' },
-      {},
+      sshExecutor,
     )
 
     expect(servers[0].task()).toBeInstanceOf(Listr)
@@ -1000,7 +1033,7 @@ describe('commands', () => {
   it('contains connection and disconnection tasks', () => {
     const servers = baremetal.commands(
       { environment: 'staging', releaseDir: '2022051120000' },
-      {},
+      sshExecutor,
     )
     const tasks = servers[0].task().tasks
 
@@ -1011,7 +1044,7 @@ describe('commands', () => {
   it('contains deploy tasks by default', () => {
     const servers = baremetal.commands(
       { environment: 'staging', releaseDir: '2022051120000' },
-      {},
+      sshExecutor,
     )
     const tasks = servers[0].task().tasks
 
@@ -1025,7 +1058,7 @@ describe('commands', () => {
         releaseDir: '2022051120000',
         maintenance: 'up',
       },
-      {},
+      sshExecutor,
     )
     const tasks = servers[0].task().tasks
 
@@ -1040,7 +1073,7 @@ describe('commands', () => {
         releaseDir: '2022051120000',
         rollback: 2,
       },
-      {},
+      sshExecutor,
     )
     const tasks = servers[0].task().tasks
 
@@ -1054,7 +1087,7 @@ describe('commands', () => {
         environment: 'test',
         releaseDir: '2022051120000',
       },
-      {},
+      sshExecutor,
     )
     const tasks = servers[0].task().tasks
 
@@ -1083,11 +1116,19 @@ describe('handler', () => {
 
     // Clear the memoization cache for getPaths since it's cached from previous tests
     const libModule = await import('../../../lib/index.js')
-    if ((libModule.getPaths as any).cache) {
-      ;(libModule.getPaths as any).cache.clear()
+    if (
+      'cache' in libModule.getPaths &&
+      typeof libModule.getPaths.cache === 'object' &&
+      libModule.getPaths.cache &&
+      'clear' in libModule.getPaths.cache &&
+      typeof libModule.getPaths.cache.clear === 'function'
+    ) {
+      libModule.getPaths.cache.clear()
     }
 
-    await expect(baremetal.handler({})).rejects.toThrowError('process.exit: 1')
+    await expect(
+      baremetal.handler(createBaremetalYargs()),
+    ).rejects.toThrowError('process.exit: 1')
     expect(vi.mocked(console).error).toHaveBeenCalledWith(
       expect.stringContaining('Baremetal deploy has not been properly setup'),
     )
