@@ -20,6 +20,7 @@ import { cellTransformPlugin } from './rollupPlugins/rollup-plugin-cedarjs-cell.
 import { cedarjsDirectoryNamedImportPlugin } from './rollupPlugins/rollup-plugin-cedarjs-directory-named-imports.js'
 import { externalPlugin } from './rollupPlugins/rollup-plugin-cedarjs-external.js'
 import { ignoreHtmlAndCssImportsPlugin } from './rollupPlugins/rollup-plugin-cedarjs-ignore-html-and-css-imports.js'
+import { cedarRemoveDevFatalErrorPagePlugin } from './rollupPlugins/rollup-plugin-cedar-remove-dev-fatal-error-page.js'
 import { injectFileGlobalsPlugin } from './rollupPlugins/rollup-plugin-cedarjs-inject-file-globals.js'
 import { cedarjsPrerenderMediaImportsPlugin } from './rollupPlugins/rollup-plugin-cedarjs-prerender-media-imports.js'
 import { cedarjsRoutesAutoLoaderPlugin } from './rollupPlugins/rollup-plugin-cedarjs-routes-auto-loader.js'
@@ -128,6 +129,7 @@ export async function buildAndImport(
           }
         },
       },
+      cedarRemoveDevFatalErrorPagePlugin(),
       ignoreHtmlAndCssImportsPlugin(),
       cellTransformPlugin(),
       cedarjsRoutesAutoLoaderPlugin(),
