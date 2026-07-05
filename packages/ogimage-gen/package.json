@@ -32,7 +32,7 @@
     "empty.js"
   ],
   "scripts": {
-    "build": "tsx ./build.mts && yarn build:types",
+    "build": "node ./build.mts && yarn build:types",
     "build:pack": "yarn pack -o cedarjs-ogimage-gen.tgz",
     "build:types": "tsc --build --verbose",
     "prepublishOnly": "NODE_ENV=production yarn build",
@@ -52,7 +52,6 @@
     "@cedarjs/router": "workspace:*",
     "@playwright/test": "1.61.1",
     "ts-toolbelt": "9.6.0",
-    "tsx": "4.22.4",
     "typescript": "5.9.3",
     "vite": "7.3.5",
     "vitest": "3.2.6"

@@ -81,7 +81,7 @@
     "skip-nav.css"
   ],
   "scripts": {
-    "build": "tsx ./build.ts",
+    "build": "node ./build.ts",
     "build:pack": "yarn pack -o cedarjs-router.tgz",
     "build:types": "tsc --build --verbose tsconfig.build.json",
     "build:types-cjs": "tsc --build --verbose tsconfig.cjs.json",

@@ -19,7 +19,7 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsx build.ts",
+    "build": "node ./build.ts",
     "check": "concurrently yarn:knip yarn:publint",
     "check:knip": "knip",
     "check:package": "publint",

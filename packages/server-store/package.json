@@ -17,7 +17,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts && run build:types",
+    "build": "node ./build.mts && run build:types",
     "build:pack": "yarn pack -o cedarjs-server-store.tgz",
     "build:types": "tsc --build --verbose"
   },
@@ -29,7 +29,6 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "tsx": "4.22.4",
     "typescript": "5.9.3"
   },
   "engines": {
