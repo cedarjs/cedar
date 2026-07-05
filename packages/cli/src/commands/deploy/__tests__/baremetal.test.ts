@@ -2,6 +2,7 @@ import { Listr } from 'listr2'
 import { vi, afterEach, beforeEach, describe, it, expect } from 'vitest'
 
 import type * as ProjectConfigModule from '@cedarjs/project-config'
+import { getPaths } from '@cedarjs/project-config'
 
 // Capture __dirname during hoisted mock setup phase
 const testDir = vi.hoisted(() => import.meta.dirname)
@@ -1074,6 +1075,10 @@ describe('handler', () => {
   })
 
   it("should fail if there's no deploy.toml", async () => {
+    // Use testDir (the __tests__ dir) as base — it doesn't contain deploy.toml
+    vi.mocked(getPaths).mockReturnValueOnce({
+      base: testDir,
+    } as ReturnType<typeof getPaths>)
     await expect(baremetal.handler({})).rejects.toThrowError('process.exit: 1')
     expect(vi.mocked(console).error).toHaveBeenCalledWith(
       expect.stringContaining('Baremetal deploy has not been properly setup'),
