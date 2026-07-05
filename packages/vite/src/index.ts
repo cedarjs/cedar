@@ -13,6 +13,7 @@ import { cedarCellTransform } from './plugins/vite-plugin-cedar-cell.js'
 import { cedarEntryInjectionPlugin } from './plugins/vite-plugin-cedar-entry-injection.js'
 import { cedarHtmlEnvPlugin } from './plugins/vite-plugin-cedar-html-env.js'
 import { cedarNodePolyfills } from './plugins/vite-plugin-cedar-node-polyfills.js'
+import { cedarRemoveDevFatalErrorPage } from './plugins/vite-plugin-cedar-remove-dev-fatal-error-page.js'
 import { cedarRemoveFromBundle } from './plugins/vite-plugin-cedar-remove-from-bundle.js'
 import { cedarWaitForApiServer } from './plugins/vite-plugin-cedar-wait-for-api-server.js'
 import { cedarjsResolveCedarStyleImportsPlugin } from './plugins/vite-plugin-cedarjs-resolve-cedar-style-imports.js'
@@ -27,6 +28,7 @@ export { cedarEntryInjectionPlugin } from './plugins/vite-plugin-cedar-entry-inj
 export { cedarHtmlEnvPlugin } from './plugins/vite-plugin-cedar-html-env.js'
 export { cedarImportDirPlugin } from './plugins/vite-plugin-cedar-import-dir.js'
 export { cedarNodePolyfills } from './plugins/vite-plugin-cedar-node-polyfills.js'
+export { cedarRemoveDevFatalErrorPage } from './plugins/vite-plugin-cedar-remove-dev-fatal-error-page.js'
 export { cedarRemoveFromBundle } from './plugins/vite-plugin-cedar-remove-from-bundle.js'
 export { cedarjsResolveCedarStyleImportsPlugin } from './plugins/vite-plugin-cedarjs-resolve-cedar-style-imports.js'
 export { cedarjsJobPathInjectorPlugin } from './plugins/vite-plugin-cedarjs-job-path-injector.js'
@@ -82,6 +84,7 @@ export function cedar({ mode }: PluginOptions = {}): PluginOption[] {
     cedarCellTransform(),
     cedarTransformJsAsJsx(),
     cedarRemoveFromBundle(),
+    cedarRemoveDevFatalErrorPage(),
     react({ babel: babelConfig }),
   ]
 }
