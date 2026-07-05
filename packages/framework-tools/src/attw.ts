@@ -21,7 +21,7 @@ export async function attw(): Promise<Problem[]> {
     path.resolve(path.dirname(pathToAttw), relativeBinPath),
   )
 
-  // Run attw via it's CLI and save the output to a file
+  // Run attw via its CLI and save the output to a file
   const outputFileName = '.attw.json'
   const outputFile = fs.openSync(outputFileName, 'w')
   try {
@@ -35,9 +35,7 @@ export async function attw(): Promise<Problem[]> {
   fs.closeSync(outputFile)
 
   // Read the resulting JSON file
-  const content = fs.readFileSync(outputFileName, {
-    encoding: 'utf8',
-  })
+  const content = fs.readFileSync(outputFileName, 'utf-8')
   fs.unlinkSync(outputFileName)
   const json = JSON.parse(content)
 
@@ -46,9 +44,13 @@ export async function attw(): Promise<Problem[]> {
     return []
   }
 
-  // We don't care about node10 errors
+  // We don't care about node10 errors, and since we require at least Node.js
+  // 22.19.0, we also ignore require(esm) warnings
+  // https://github.com/arethetypeswrong/arethetypeswrong.github.io/issues/252
   const problems: Problem[] = json.analysis.problems.filter(
-    (problem: Problem) => problem.resolutionKind !== 'node10',
+    (problem: Problem) =>
+      problem.resolutionKind !== 'node10' &&
+      problem.kind !== 'CJSResolvesToESM',
   )
 
   return problems

@@ -18,20 +18,26 @@ await $`rm .attw.json`
 
 const json = JSON.parse(output.stdout)
 
+// If no errors were found then return early
 if (!json.analysis.problems || json.analysis.problems.length === 0) {
   console.log('No errors found')
   process.exit(0)
 }
 
-if (
-  json.analysis.problems.every(
-    (problem: Problem) => problem.resolutionKind === 'node10',
-  )
-) {
-  console.log("Only found node10 problems, which we don't care about")
+// We don't care about node10 errors, and since we require at least Node.js
+// 22.19.0, we also ignore require(esm) warnings
+// https://github.com/arethetypeswrong/arethetypeswrong.github.io/issues/252
+const problems: Problem[] = json.analysis.problems.filter(
+  (problem: Problem) =>
+    problem.resolutionKind !== 'node10' && problem.kind !== 'CJSResolvesToESM',
+)
+
+// If no errors were found after filtering, return 0
+if (problems.length === 0) {
+  console.log('No errors found')
   process.exit(0)
 }
 
 console.log('Errors found')
-console.log(json.analysis.problems)
+console.log(problems)
 process.exit(1)

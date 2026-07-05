@@ -25,9 +25,6 @@
     "./dist/cjs/api/scenario.js": {
       "default": "./dist/cjs/api/scenario.js"
     },
-    "./dist/cjs/api/directUrlHelpers.js": {
-      "default": "./dist/cjs/api/directUrlHelpers.js"
-    },
     "./dist/cjs/web/findCellMocks": {
       "default": "./dist/cjs/web/findCellMocks.js"
     },
@@ -142,6 +139,7 @@
     "whatwg-fetch": "3.6.20"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "0.18.4",
     "@cedarjs/auth": "4.2.0",
     "@cedarjs/framework-tools": "4.2.0",
     "@cedarjs/router": "4.2.0",
