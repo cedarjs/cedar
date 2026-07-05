@@ -30,6 +30,7 @@ vi.mock('@cedarjs/project-config/packageManager', () => ({
 import * as baremetal from '../baremetal/baremetalHandler.js'
 import type {
   BaremetalYargs,
+  LifecycleHooks,
   ServerConfig,
 } from '../baremetal/baremetalHandler.js'
 import { SshExecutor } from '../baremetal/SshExecutor.js'
@@ -68,6 +69,25 @@ function createBaremetalYargs(
     build: true,
     restart: true,
     cleanup: true,
+    ...overrides,
+  }
+}
+
+function createCommandConfig(
+  overrides?: Partial<{
+    yargs: BaremetalYargs
+    ssh: SshExecutor
+    serverConfig: ServerConfig
+    serverLifecycle: LifecycleHooks
+    cmdPath: string
+  }>,
+) {
+  return {
+    yargs: createBaremetalYargs(),
+    ssh: sshExecutor,
+    serverConfig: createServerConfig(),
+    serverLifecycle: { before: {}, after: {} },
+    cmdPath: '/var/www/app',
     ...overrides,
   }
 }
@@ -470,7 +490,7 @@ describe('parseConfig', () => {
         privateKeyPath = '/Users/me/.ssh/id_rsa'
       `,
     )
-    const server = (servers as any[])[0]
+    const server = (servers as Record<string, string>[])[0]
     expect(server.host).toEqual('staging.server.com')
     expect(server.repo).toEqual('git://staging.github.com')
     // Default value should work
@@ -487,7 +507,7 @@ describe('commandWithLifecycleEvents', () => {
   it('returns just the command if no lifecycle defined', () => {
     const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
-      config: { serverLifecycle: { before: {}, after: {} } } as any,
+      config: createCommandConfig(),
       skip: false,
       command: {
         title: 'Some command',
@@ -503,8 +523,10 @@ describe('commandWithLifecycleEvents', () => {
   it('copies `skip` output into task function', () => {
     const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
-      config: { serverLifecycle: { before: {}, after: {} } } as any,
-      skip: 'foobar' as any,
+      config: createCommandConfig(),
+      // @ts-expect-error - using a string to make it easier to test an actual
+      // copy
+      skip: 'foobar',
       command: {
         title: 'Some command',
         task: () => {},
@@ -517,9 +539,9 @@ describe('commandWithLifecycleEvents', () => {
   it('includes a `before` lifecycle event', () => {
     const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
-      config: {
+      config: createCommandConfig({
         serverLifecycle: { before: { update: ['touch'] }, after: {} },
-      } as any,
+      }),
       skip: false,
       command: {
         title: 'Some command',
@@ -537,12 +559,12 @@ describe('commandWithLifecycleEvents', () => {
   it('includes multiple `before` lifecycle events', () => {
     const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
-      config: {
+      config: createCommandConfig({
         serverLifecycle: {
           before: { update: ['touch1', 'touch2'] },
           after: {},
         },
-      } as any,
+      }),
       skip: false,
       command: {
         title: 'Some command',
@@ -562,10 +584,12 @@ describe('commandWithLifecycleEvents', () => {
   it('copies `skip` output into `before` lifecycle event task function', () => {
     const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
-      config: {
+      config: createCommandConfig({
         serverLifecycle: { before: { update: ['touch'] }, after: {} },
-      } as any,
-      skip: 'foobar' as any,
+      }),
+      // @ts-expect-error - using a string to make it easier to test an actual
+      // copy
+      skip: 'foobar',
       command: {
         title: 'Some command',
         task: () => {},
@@ -579,9 +603,9 @@ describe('commandWithLifecycleEvents', () => {
   it('includes an `after` lifecycle event', () => {
     const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
-      config: {
+      config: createCommandConfig({
         serverLifecycle: { before: {}, after: { update: ['touch'] } },
-      } as any,
+      }),
       skip: false,
       command: {
         title: 'Some command',
@@ -599,12 +623,12 @@ describe('commandWithLifecycleEvents', () => {
   it('includes multiple `after` lifecycle events', () => {
     const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
-      config: {
+      config: createCommandConfig({
         serverLifecycle: {
           before: {},
           after: { update: ['touch1', 'touch2'] },
         },
-      } as any,
+      }),
       skip: false,
       command: {
         title: 'Some command',
@@ -624,10 +648,12 @@ describe('commandWithLifecycleEvents', () => {
   it('copies `skip` output into `after` lifecycle event task function', () => {
     const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
-      config: {
+      config: createCommandConfig({
         serverLifecycle: { before: {}, after: { update: ['touch'] } },
-      } as any,
-      skip: 'foobar' as any,
+      }),
+      // @ts-expect-error - using a string to make it easier to test an actual
+      // copy
+      skip: 'foobar',
       command: {
         title: 'Some command',
         task: () => {},
@@ -641,12 +667,12 @@ describe('commandWithLifecycleEvents', () => {
   it('includes both `before` and `after` lifecycle events', () => {
     const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
-      config: {
+      config: createCommandConfig({
         serverLifecycle: {
           before: { update: ['touch1'] },
           after: { update: ['touch2'] },
         },
-      } as any,
+      }),
       skip: false,
       command: {
         title: 'Some command',
