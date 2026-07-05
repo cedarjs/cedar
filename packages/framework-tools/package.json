@@ -27,7 +27,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.ts && run build:types",
+    "build": "node ./build.ts && run build:types",
     "build:types": "tsc --build --verbose"
   },
   "dependencies": {

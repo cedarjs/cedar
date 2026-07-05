@@ -140,7 +140,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts",
+    "build": "node ./build.mts",
     "build:clean-dist": "rimraf 'dist/**/*/__tests__' --glob",
     "build:pack": "yarn pack -o cedarjs-internal.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",

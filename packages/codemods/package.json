@@ -14,7 +14,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts",
+    "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-codemods.tgz",
     "build:watch": "nodemon --watch src --ignore dist --exec \"yarn build\"",
     "check:package": "yarn publint",

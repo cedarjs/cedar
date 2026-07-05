@@ -28,7 +28,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts && yarn build:types",
+    "build": "node ./build.mts && yarn build:types",
     "build:pack": "yarn pack -o cedarjs-auth-clerk-api.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx,template\" --ignore dist --exec \"yarn build\"",

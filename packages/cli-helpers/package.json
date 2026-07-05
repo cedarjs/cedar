@@ -95,7 +95,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.ts && yarn build:types",
+    "build": "node ./build.ts && yarn build:types",
     "build:pack": "yarn pack -o cedarjs-cli-helpers.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json ./tsconfig.cjs.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",

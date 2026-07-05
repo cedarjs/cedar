@@ -120,7 +120,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts",
+    "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-api-server.tgz",
     "build:types": "tsc --build --verbose tsconfig.build.json",
     "build:types-cjs": "tsc --build --verbose tsconfig.cjs.json",

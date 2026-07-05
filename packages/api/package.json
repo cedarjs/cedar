@@ -86,7 +86,7 @@
     "package.json"
   ],
   "scripts": {
-    "build": "tsx ./build.mts && yarn build:types",
+    "build": "node ./build.mts && yarn build:types",
     "build:pack": "yarn pack -o cedarjs-api.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json ./tsconfig.cjs.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",

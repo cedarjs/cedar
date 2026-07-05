@@ -20,7 +20,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts",
+    "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-cli.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx,template\" --ignore dist --exec \"yarn build && yarn fix:permissions\"",

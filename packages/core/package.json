@@ -42,7 +42,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts",
+    "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-core.tgz",
     "check:package": "yarn publint",
     "prepublishOnly": "NODE_ENV=production yarn build"

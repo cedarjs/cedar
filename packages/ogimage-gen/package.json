@@ -32,7 +32,7 @@
     "empty.js"
   ],
   "scripts": {
-    "build": "tsx ./build.mts && yarn build:types",
+    "build": "node ./build.mts && yarn build:types",
     "build:pack": "yarn pack -o cedarjs-ogimage-gen.tgz",
     "build:types": "tsc --build --verbose",
     "prepublishOnly": "NODE_ENV=production yarn build",

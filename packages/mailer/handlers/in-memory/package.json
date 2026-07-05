@@ -14,7 +14,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts && yarn build:types",
+    "build": "node ./build.mts && yarn build:types",
     "build:pack": "yarn pack -o cedarjs-mailer-handler-in-memory.tgz",
     "build:types": "tsc --build --verbose",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
