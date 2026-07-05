@@ -242,9 +242,16 @@ test('Check that about is prerendered', async () => {
   await pageWithoutJs.goto('/about')
 
   const aboutPageContent = await pageWithoutJs.locator('main').innerText()
-  expect(aboutPageContent).toBe(
+  expect(aboutPageContent).toContain(
     'This site was created to demonstrate my mastery of Cedar: Look on my works, ye mighty, and despair!',
   )
+  // Make sure npm packages whose names end in `.js` (like `fraction.js`) are
+  // not broken by the babel module resolver stripping the extension.
+  // See https://github.com/cedarjs/cedar/issues/399
+  await expect(
+    pageWithoutJs.getByTestId('fraction-test'),
+  ).toBeVisible()
+  expect(aboutPageContent).toContain('Half is 1/2')
   pageWithoutJs.close()
 })
 

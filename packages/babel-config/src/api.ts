@@ -90,8 +90,15 @@ export const getApiSideBabelPlugins = ({
           // source file is logger.ts) we have to rewrite the extension
           const isDataMigrate = process.argv[2] === 'data-migrate'
           const isPrerender = process.argv[2] === 'prerender'
+          // Only strip the `.js` extension for relative imports, so that we
+          // support `import { logger } from './logger.js'` in data-migrate and
+          // prerender without breaking npm packages whose names end in `.js`
+          // (e.g. `fraction.js`, `chart.js`, `pixi.js`).
+          const isRelativeImport = sourcePath.startsWith('.')
           const importPath =
-            /.*\/.*\.js$/.test(sourcePath) && (isDataMigrate || isPrerender)
+            isRelativeImport &&
+            sourcePath.endsWith('.js') &&
+            (isDataMigrate || isPrerender)
               ? sourcePath.replace(/\.js$/, '')
               : sourcePath
 

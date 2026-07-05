@@ -43,6 +43,10 @@ export async function smokeTest({ page }: PlaywrightTestArgs) {
       'This site was created to demonstrate my mastery of Cedar: Look on my works, ye',
     ),
   ).toBeVisible()
+  // Make sure npm packages whose names end in `.js` (like `fraction.js`) work
+  // in dev/serve. See https://github.com/cedarjs/cedar/issues/399
+  const aboutPageContent = await page.locator('main').innerText()
+  expect(aboutPageContent).toContain('Half is 1/2')
 
   // Check the contact us page.
   await page.getByRole('link', { name: 'Contact Us' }).click()

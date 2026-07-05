@@ -17,6 +17,7 @@
     "@cedarjs/router": "4.2.0",
     "@cedarjs/web": "4.2.0",
     "@my-org/validators": "workspace:*",
+    "fraction.js": "5.3.4",
     "humanize-string": "2.1.0",
     "react": "19.2.3",
     "react-dom": "19.2.3"

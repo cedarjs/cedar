@@ -607,6 +607,11 @@ async function rebuildTestProject() {
       apiPackageJson.dependencies['@my-org/validators'] = 'workspace:*'
       webPackageJson.dependencies['@my-org/validators'] = 'workspace:*'
 
+      // Add a dependency whose package name ends with `.js` to make sure the
+      // babel module resolver does not strip the extension and break the
+      // import. See https://github.com/cedarjs/cedar/issues/399
+      webPackageJson.dependencies['fraction.js'] = '5.3.4'
+
       if (live) {
         webPackageJson.dependencies['@cedarjs/gqlorm'] =
           webPackageJson.dependencies['@cedarjs/web']

@@ -81,8 +81,14 @@ export const getWebSideBabelPlugins = (
           const resolvedPath = resolvePath(sourcePath, currentFile, opts)
 
           // This is needed to support .js imports of .jsx files in JavaScript
-          // Cedar apps
-          return resolvedPath?.replace(/\.js$/, '')
+          // Cedar apps. Only strip the .js extension for relative imports to
+          // avoid breaking npm packages whose names end in .js (e.g.
+          // `fraction.js`, `chart.js`, `pixi.js`).
+          // See https://github.com/cedarjs/cedar/issues/399
+          const isRelativeImport = sourcePath.startsWith('.')
+          return isRelativeImport
+            ? resolvedPath?.replace(/\.js$/, '')
+            : resolvedPath
         },
       },
       'rwjs-module-resolver',
