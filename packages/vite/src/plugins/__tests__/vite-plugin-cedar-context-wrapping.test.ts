@@ -176,7 +176,9 @@ describe('cedarContextWrappingPlugin', () => {
     // Type annotation is stripped on renamed handler (matches Babel plugin behavior)
     expect(output).toContain('const __rw_handler = async (event, _context) =>')
     expect(output).not.toContain('const __rw_handler: APIGatewayProxyHandler')
-    expect(output).toContain('export const handler = async (__rw_event, __rw__context) =>')
+    expect(output).toContain(
+      'export const handler = async (__rw_event, __rw__context) =>',
+    )
   })
 
   it('handles function type annotations containing =>', () => {
@@ -194,7 +196,9 @@ describe('cedarContextWrappingPlugin', () => {
 
     // Type annotation stripped, handler value correctly extracted despite => in type
     expect(output).toContain('const __rw_handler = async (event, context) =>')
-    expect(output).toContain('export const handler = async (__rw_event, __rw__context) =>')
+    expect(output).toContain(
+      'export const handler = async (__rw_event, __rw__context) =>',
+    )
   })
 
   it('detects async keyword with no space before parenthesis', () => {
@@ -207,7 +211,9 @@ describe('cedarContextWrappingPlugin', () => {
     const output = (result as { code: string }).code
 
     // Should be marked as async despite missing space
-    expect(output).toContain('export const handler = async (__rw_event, __rw__context) =>')
+    expect(output).toContain(
+      'export const handler = async (__rw_event, __rw__context) =>',
+    )
   })
 
   it('detects async function expressions', () => {
@@ -223,6 +229,8 @@ describe('cedarContextWrappingPlugin', () => {
     expect(result).not.toBeNull()
     const output = (result as { code: string }).code
 
-    expect(output).toContain('export const handler = async (__rw_event, __rw__context) =>')
+    expect(output).toContain(
+      'export const handler = async (__rw_event, __rw__context) =>',
+    )
   })
 })
