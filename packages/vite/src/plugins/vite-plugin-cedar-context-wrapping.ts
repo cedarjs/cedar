@@ -39,7 +39,8 @@ export function cedarContextWrappingPlugin({
   // Matches the full export declaration up to (and including) the assignment =.
   // (?:[^=]|=>)* handles => inside TypeScript function type annotations without backtracking issues.
   // The final = is matched only when not part of => or == (lookahead (?![>=])).
-  const handlerRe = /^export\s+(?:const|let|var)\s+handler(?:[^=]|=>)*?=(?![>=])/m
+  const handlerRe =
+    /^export\s+(?:const|let|var)\s+handler(?:[^=]|=>)*?=(?![>=])/m
 
   return {
     name: 'cedar-context-wrapping',
