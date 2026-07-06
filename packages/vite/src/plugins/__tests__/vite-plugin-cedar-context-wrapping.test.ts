@@ -49,13 +49,13 @@ describe('cedarContextWrappingPlugin', () => {
     )
     expect(output).toContain('const __rw_handler = async (event, _context) =>')
     expect(output).toContain(
-      'export const handler = async (...__rw_args) =>',
+      'export const handler = async (__rw_event, __rw__context) =>',
     )
     expect(output).toContain('__rw_getAsyncStoreInstance().getStore()')
     expect(output).toContain(
-      '__rw_getAsyncStoreInstance().run(\n      new Map(),\n      __rw_handler,\n      ...__rw_args',
+      '__rw_getAsyncStoreInstance().run(\n      new Map(),\n      __rw_handler,\n      __rw_event,\n      __rw__context',
     )
-    expect(output).toContain('return __rw_handler(...__rw_args)')
+    expect(output).toContain('return __rw_handler(__rw_event, __rw__context)')
   })
 
   it('wraps a non-async handler (e.g. createGraphQLHandler call) without async keyword', () => {
@@ -77,10 +77,10 @@ describe('cedarContextWrappingPlugin', () => {
     expect(output).toContain('const __rw_handler = createGraphQLHandler({')
     // Wrapper must NOT be async (original was not an async function)
     expect(output).toContain(
-      'export const handler = (...__rw_args) =>',
+      'export const handler = (__rw_event, __rw__context) =>',
     )
     expect(output).not.toContain(
-      'export const handler = async (...__rw_args)',
+      'export const handler = async (__rw_event, __rw__context)',
     )
   })
 
@@ -173,13 +173,13 @@ describe('cedarContextWrappingPlugin', () => {
     expect(result).not.toBeNull()
     const output = (result as { code: string }).code
 
-    // Type annotation should be preserved on the renamed handler
-    expect(output).toContain('const __rw_handler: APIGatewayProxyHandler = async')
-    // Export wrapper doesn't keep the type annotation (different signature with ...args)
-    expect(output).toContain('export const handler = async (...__rw_args) =>')
+    // Type annotation is stripped on renamed handler (matches Babel plugin behavior)
+    expect(output).toContain('const __rw_handler = async (event, _context) =>')
+    expect(output).not.toContain('const __rw_handler: APIGatewayProxyHandler')
+    expect(output).toContain('export const handler = async (__rw_event, __rw__context) =>')
   })
 
-  it('handles complex type annotations', () => {
+  it('handles function type annotations containing =>', () => {
     const transform = getPluginTransform()
     const code = dedent`
       export const handler: (event: Event, context: Context) => Promise<Response> = async (event, context) => {
@@ -192,10 +192,9 @@ describe('cedarContextWrappingPlugin', () => {
     expect(result).not.toBeNull()
     const output = (result as { code: string }).code
 
-    // Type annotation should be preserved on the renamed handler
-    expect(output).toContain('const __rw_handler: (event: Event, context: Context) => Promise<Response>')
-    // Export wrapper doesn't keep the type annotation (different signature with ...args)
-    expect(output).toContain('export const handler = (...__rw_args) =>')
+    // Type annotation stripped, handler value correctly extracted despite => in type
+    expect(output).toContain('const __rw_handler = async (event, context) =>')
+    expect(output).toContain('export const handler = async (__rw_event, __rw__context) =>')
   })
 
   it('detects async keyword with no space before parenthesis', () => {
@@ -208,14 +207,14 @@ describe('cedarContextWrappingPlugin', () => {
     const output = (result as { code: string }).code
 
     // Should be marked as async despite missing space
-    expect(output).toContain('export const handler = async (...__rw_args) =>')
+    expect(output).toContain('export const handler = async (__rw_event, __rw__context) =>')
   })
 
-  it('detects async keyword with comment before it', () => {
+  it('detects async function expressions', () => {
     const transform = getPluginTransform()
     const code = dedent`
-      export const handler = /* TODO: make this async */ async (event, context) => {
-        return {}
+      export const handler = async function (event, context) {
+        return { statusCode: 200 }
       }
     `
 
@@ -224,26 +223,6 @@ describe('cedarContextWrappingPlugin', () => {
     expect(result).not.toBeNull()
     const output = (result as { code: string }).code
 
-    // Should be marked as async even with comment
-    expect(output).toContain('export const handler = async (...__rw_args) =>')
-  })
-
-  it('forwards all arguments including callback to wrapped handler', () => {
-    const transform = getPluginTransform()
-    const code = dedent`
-      export const handler = (event, context, callback) => {
-        callback(null, { statusCode: 200 })
-      }
-    `
-
-    const result = transform(code, path.join(FUNCTIONS_DIR, 'custom.ts'))
-
-    expect(result).not.toBeNull()
-    const output = (result as { code: string }).code
-
-    // Should use rest parameters to forward all args
-    expect(output).toContain('export const handler = (...__rw_args) =>')
-    expect(output).toContain('__rw_getAsyncStoreInstance().run(\n      new Map(),\n      __rw_handler,\n      ...__rw_args')
-    expect(output).toContain('return __rw_handler(...__rw_args)')
+    expect(output).toContain('export const handler = async (__rw_event, __rw__context) =>')
   })
 })
