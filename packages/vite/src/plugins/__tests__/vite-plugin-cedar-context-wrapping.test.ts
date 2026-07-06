@@ -49,13 +49,13 @@ describe('cedarContextWrappingPlugin', () => {
     )
     expect(output).toContain('const __rw_handler = async (event, _context) =>')
     expect(output).toContain(
-      'export const handler = async (__rw_event, __rw__context) =>',
+      'export const handler = async (...__rw_args) =>',
     )
     expect(output).toContain('__rw_getAsyncStoreInstance().getStore()')
     expect(output).toContain(
-      '__rw_getAsyncStoreInstance().run(\n      new Map(),\n      __rw_handler,',
+      '__rw_getAsyncStoreInstance().run(\n      new Map(),\n      __rw_handler,\n      ...__rw_args',
     )
-    expect(output).toContain('return __rw_handler(__rw_event, __rw__context)')
+    expect(output).toContain('return __rw_handler(...__rw_args)')
   })
 
   it('wraps a non-async handler (e.g. createGraphQLHandler call) without async keyword', () => {
@@ -77,10 +77,10 @@ describe('cedarContextWrappingPlugin', () => {
     expect(output).toContain('const __rw_handler = createGraphQLHandler({')
     // Wrapper must NOT be async (original was not an async function)
     expect(output).toContain(
-      'export const handler = (__rw_event, __rw__context) =>',
+      'export const handler = (...__rw_args) =>',
     )
     expect(output).not.toContain(
-      'export const handler = async (__rw_event, __rw__context)',
+      'export const handler = async (...__rw_args)',
     )
   })
 
@@ -156,5 +156,94 @@ describe('cedarContextWrappingPlugin', () => {
     expect(output).toContain("import { db } from 'src/lib/db'")
     expect(output).toContain('const helperFn = () => 42')
     expect(output).toContain('const __rw_handler = async (event, context) =>')
+  })
+
+  it('handles typed handler exports (TypeScript type annotations)', () => {
+    const transform = getPluginTransform()
+    const code = dedent`
+      import type { APIGatewayProxyHandler } from 'aws-lambda'
+
+      export const handler: APIGatewayProxyHandler = async (event, _context) => {
+        return { statusCode: 200 }
+      }
+    `
+
+    const result = transform(code, path.join(FUNCTIONS_DIR, 'custom.ts'))
+
+    expect(result).not.toBeNull()
+    const output = (result as { code: string }).code
+
+    // Type annotation should be preserved on the renamed handler
+    expect(output).toContain('const __rw_handler: APIGatewayProxyHandler = async')
+    // Export wrapper doesn't keep the type annotation (different signature with ...args)
+    expect(output).toContain('export const handler = async (...__rw_args) =>')
+  })
+
+  it('handles complex type annotations', () => {
+    const transform = getPluginTransform()
+    const code = dedent`
+      export const handler: (event: Event, context: Context) => Promise<Response> = async (event, context) => {
+        return { statusCode: 200 }
+      }
+    `
+
+    const result = transform(code, path.join(FUNCTIONS_DIR, 'custom.ts'))
+
+    expect(result).not.toBeNull()
+    const output = (result as { code: string }).code
+
+    // Type annotation should be preserved on the renamed handler
+    expect(output).toContain('const __rw_handler: (event: Event, context: Context) => Promise<Response>')
+    // Export wrapper doesn't keep the type annotation (different signature with ...args)
+    expect(output).toContain('export const handler = (...__rw_args) =>')
+  })
+
+  it('detects async keyword with no space before parenthesis', () => {
+    const transform = getPluginTransform()
+    const code = `export const handler = async(event, context) => { return {} }`
+
+    const result = transform(code, path.join(FUNCTIONS_DIR, 'custom.ts'))
+
+    expect(result).not.toBeNull()
+    const output = (result as { code: string }).code
+
+    // Should be marked as async despite missing space
+    expect(output).toContain('export const handler = async (...__rw_args) =>')
+  })
+
+  it('detects async keyword with comment before it', () => {
+    const transform = getPluginTransform()
+    const code = dedent`
+      export const handler = /* TODO: make this async */ async (event, context) => {
+        return {}
+      }
+    `
+
+    const result = transform(code, path.join(FUNCTIONS_DIR, 'custom.ts'))
+
+    expect(result).not.toBeNull()
+    const output = (result as { code: string }).code
+
+    // Should be marked as async even with comment
+    expect(output).toContain('export const handler = async (...__rw_args) =>')
+  })
+
+  it('forwards all arguments including callback to wrapped handler', () => {
+    const transform = getPluginTransform()
+    const code = dedent`
+      export const handler = (event, context, callback) => {
+        callback(null, { statusCode: 200 })
+      }
+    `
+
+    const result = transform(code, path.join(FUNCTIONS_DIR, 'custom.ts'))
+
+    expect(result).not.toBeNull()
+    const output = (result as { code: string }).code
+
+    // Should use rest parameters to forward all args
+    expect(output).toContain('export const handler = (...__rw_args) =>')
+    expect(output).toContain('__rw_getAsyncStoreInstance().run(\n      new Map(),\n      __rw_handler,\n      ...__rw_args')
+    expect(output).toContain('return __rw_handler(...__rw_args)')
   })
 })
