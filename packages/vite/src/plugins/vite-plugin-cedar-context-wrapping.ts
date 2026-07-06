@@ -36,9 +36,10 @@ export function cedarContextWrappingPlugin({
 }: {
   projectIsEsm?: boolean
 } = {}): Plugin {
-  // Captures: (1) const|let|var, (2) optional type annotation, (3) = with surrounding space
-  // Examples: "export const handler =", "export const handler: SomeType =", "export const handler: Type[] ="
-  const handlerRe = /^export\s+(const|let|var)\s+handler((?:\s*:[^=]*?)?)(\s*=)/m
+  // Matches the full export declaration up to (and including) the assignment =.
+  // (?:[^=]|=>)* handles => inside TypeScript function type annotations without backtracking issues.
+  // The final = is matched only when not part of => or == (lookahead (?![>=])).
+  const handlerRe = /^export\s+(?:const|let|var)\s+handler(?:[^=]|=>)*?=(?![>=])/m
 
   return {
     name: 'cedar-context-wrapping',
@@ -65,12 +66,11 @@ export function cedarContextWrappingPlugin({
 
       // Determine if the original handler init is an async function.
       // Matches the Babel plugin's check: t.isFunction(originalInit) && originalInit.async
-      // Handles forms like: async (...), async(...), async function, /* comment */ async, etc.
+      // Handles: async (...) => {}, async(...) => {}, async function() {}, async *gen() {}
       const afterEquals = code
         .slice(handlerMatch.index + handlerMatch[0].length)
         .trimStart()
-      // Allow zero spaces between async and parenthesis to match async(...)
-      const isAsync = /^\s*(?:\/\*[\s\S]*?\*\/\s*)*async\s*[\(\*]/.test(afterEquals)
+      const isAsync = /^async(?:\s*[\(\*]|\s+function)/.test(afterEquals)
 
       const storePath = projectIsEsm
         ? '@cedarjs/context/dist/store.js'
@@ -84,23 +84,25 @@ export function cedarContextWrappingPlugin({
       const before = code.slice(0, handlerStart)
       const after = code.slice(handlerStart)
 
-      // Preserve type annotation (group 2) when renaming
-      // Replace "export const handler [: Type] =" with "const __rw_handler [: Type] ="
-      const renamed = after.replace(handlerRe, 'const __rw_handler$2$3')
+      // Replace "export const handler [: Type] =" with "const __rw_handler ="
+      // Type annotation is dropped here, matching the Babel plugin which creates a fresh
+      // variableDeclarator with just the identifier and init (no type annotation).
+      const renamed = after.replace(handlerRe, 'const __rw_handler =')
 
-      // Use rest parameters to forward all arguments including optional callback
+      // Wrapper matches Babel's generateWrappedHandler exactly: explicit (__rw_event, __rw__context)
       const wrappedHandler =
-        `\nexport const handler = ${isAsync ? 'async ' : ''}(...__rw_args) => {\n` +
+        `\nexport const handler = ${isAsync ? 'async ' : ''}(__rw_event, __rw__context) => {\n` +
         `  // The store will be undefined if no context isolation has been performed yet\n` +
         `  const __rw_contextStore = __rw_getAsyncStoreInstance().getStore()\n` +
         `  if (__rw_contextStore === undefined) {\n` +
         `    return __rw_getAsyncStoreInstance().run(\n` +
         `      new Map(),\n` +
         `      __rw_handler,\n` +
-        `      ...__rw_args\n` +
+        `      __rw_event,\n` +
+        `      __rw__context\n` +
         `    )\n` +
         `  }\n` +
-        `  return __rw_handler(...__rw_args)\n` +
+        `  return __rw_handler(__rw_event, __rw__context)\n` +
         `}\n`
 
       return {
