@@ -2,7 +2,8 @@ import { vi, describe, it, expect, afterAll, beforeEach } from 'vitest'
 import type { Mock } from 'vitest'
 import yargs from 'yargs'
 
-import { handler, builder } from '../flightcontrol'
+import { builder } from '../flightcontrol.js'
+import { handler } from '../flightcontrolHandler.js'
 
 vi.mock('path')
 vi.mock('execa', () => {
@@ -104,11 +105,7 @@ describe('handler', () => {
           prisma: false,
           dm: false,
         }),
-<<<<<<< HEAD
-      ).rejects.toThrow('Command (yarn rw build web --verbose) failed')
-=======
       ).rejects.toThrow('Command (cedar build web --verbose) failed')
->>>>>>> 7982d76ba7 (feat(pm): Package manager agnostic deploy commands (#1925))
     })
   })
 })

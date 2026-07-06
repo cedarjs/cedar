@@ -87,13 +87,8 @@ type SidePathSection = keyof WebPaths | keyof NodeTargetPaths
 
 interface TemplateForFileArgs {
   name: string
-<<<<<<< HEAD
-  side: 'web' | 'api'
-  sidePathSection?: string
-=======
   side: 'web' | 'api' | 'scripts' | 'packages'
   sidePathSection?: SidePathSection
->>>>>>> 9b1c2d88bb (chore(cli): migrate JS files to TypeScript (#1927))
   generator: string
   outputPath: string
   templatePath: string

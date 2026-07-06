@@ -8,24 +8,13 @@ import * as toml from 'smol-toml'
 import { env as envInterpolation } from 'string-env-interpolation'
 import { titleCase } from 'title-case'
 
-<<<<<<< HEAD
-import { colors as c, recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-=======
 import { colors as c } from '@cedarjs/cli-helpers'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
-<<<<<<< HEAD
->>>>>>> 7982d76ba7 (feat(pm): Package manager agnostic deploy commands (#1925))
-=======
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
->>>>>>> b315ca9db9 (feat(pm): experimental and setup commands (#1936))
 
 import { getPaths } from '../../../lib/index.js'
 
-<<<<<<< HEAD:packages/cli/src/commands/deploy/baremetal/baremetalHandler.js
-import { SshExecutor } from './SshExecutor.js'
-=======
 import type { SshExecutor } from './SshExecutor.js'
->>>>>>> 495830166f (chore(cli): migrate index, scaffoldHandler, baremetalHandler, and deploy templates from JS to TS (#2018)):packages/cli/src/commands/deploy/baremetal/baremetalHandler.ts
 
 const CONFIG_FILENAME = 'deploy.toml'
 const SYMLINK_FLAGS = '-nsf'
@@ -794,26 +783,8 @@ export const warnIfUnpushedCommits = async () => {
   }
 }
 
-<<<<<<< HEAD:packages/cli/src/commands/deploy/baremetal/baremetalHandler.js
-export const handler = async (yargs) => {
-  recordTelemetryAttributes({
-    command: 'deploy baremetal',
-    firstRun: yargs.firstRun,
-    df: yargs.df,
-    update: yargs.update,
-    install: yargs.install,
-    migrate: yargs.migrate,
-    build: yargs.build,
-    restart: yargs.restart,
-    cleanup: yargs.cleanup,
-    maintenance: yargs.maintenance,
-    rollback: yargs.rollback,
-    verbose: yargs.verbose,
-  })
-=======
 export const handler = async (yargs: BaremetalYargs) => {
   const { SshExecutor } = await import('./SshExecutor.js')
->>>>>>> 495830166f (chore(cli): migrate index, scaffoldHandler, baremetalHandler, and deploy templates from JS to TS (#2018)):packages/cli/src/commands/deploy/baremetal/baremetalHandler.ts
 
   // Check if baremetal has been setup
   const tomlPath = path.join(getPaths().base, 'deploy.toml')

@@ -3,10 +3,6 @@ import path from 'node:path'
 import { fs as memfs, vol } from 'memfs'
 import { vi, afterEach, beforeEach, describe, it, expect } from 'vitest'
 
-<<<<<<< HEAD
-// @ts-expect-error - No types for JS files
-=======
->>>>>>> 486a7ed42c (chore(cli): Fix errors in tsconfig (#2035))
 import { runScriptFunction } from '../../lib/exec.js'
 import '../../lib/mockTelemetry.js'
 import { handler } from '../execHandler.js'

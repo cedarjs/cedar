@@ -22,18 +22,12 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
   }
 })
 
-<<<<<<< HEAD
-import * as baremetalHandler from '../baremetal/baremetalHandler.js'
-=======
 vi.mock('@cedarjs/project-config/packageManager', () => ({
   getPackageManager: vi.fn(() => 'yarn'),
   resetPackageManagerCache: vi.fn(),
 }))
 
 import * as baremetal from '../baremetal/baremetalHandler.js'
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
->>>>>>> 7982d76ba7 (feat(pm): Package manager agnostic deploy commands (#1925))
-=======
 import type {
   BaremetalYargs,
   LifecycleHooks,
@@ -97,12 +91,11 @@ function createCommandConfig(
     ...overrides,
   }
 }
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
 
 describe('verifyConfig', () => {
   it('throws an error if no environment specified', () => {
     expect(() =>
-      baremetalHandler.verifyConfig(
+      baremetal.verifyConfig(
         { production: { servers: [{ host: 'prod.server.com' }] } },
         // @ts-expect-error - testing JS code path
         { releaseDir: '' },
@@ -112,7 +105,7 @@ describe('verifyConfig', () => {
 
   it('throws an error if environment is not found', () => {
     expect(() =>
-      baremetalHandler.verifyConfig(
+      baremetal.verifyConfig(
         { production: { servers: [{ host: 'prod.server.com' }] } },
         { environment: 'staging', releaseDir: '' },
       ),
@@ -123,17 +116,10 @@ describe('verifyConfig', () => {
 describe('verifyServerConfig', () => {
   it('throws an error if host is missing', () => {
     expect(() =>
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-      baremetalHandler.verifyServerConfig({
-        path: '/var/www/app',
-        repo: 'git://github.com',
-      }),
-=======
       baremetal.verifyServerConfig(
         // @ts-expect-error - testing JS consumer path (missing required field)
         { path: '/var/www/app', repo: 'git://github.com' },
       ),
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
     ).toThrow(
       '"host" config option not set. See https://cedarjs.com/docs/deployment/baremetal#deploytoml',
     )
@@ -141,17 +127,10 @@ describe('verifyServerConfig', () => {
 
   it('throws an error if path is missing', () => {
     expect(() =>
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-      baremetalHandler.verifyServerConfig({
-        host: 'host.test',
-        repo: 'git://github.com',
-      }),
-=======
       baremetal.verifyServerConfig(
         // @ts-expect-error - testing JS consumer path (missing required field)
         { host: 'host.test', repo: 'git://github.com' },
       ),
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
     ).toThrow(
       '"path" config option not set. See https://cedarjs.com/docs/deployment/baremetal#deploytoml',
     )
@@ -159,17 +138,10 @@ describe('verifyServerConfig', () => {
 
   it('throws an error if repo is missing', () => {
     expect(() =>
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-      baremetalHandler.verifyServerConfig({
-        host: 'host.test',
-        path: '/var/www/app',
-      }),
-=======
       baremetal.verifyServerConfig(
         // @ts-expect-error - testing JS consumer path (missing required field)
         { host: 'host.test', path: '/var/www/app' },
       ),
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
     ).toThrow(
       '"repo" config option not set. See https://cedarjs.com/docs/deployment/baremetal#deploytoml',
     )
@@ -177,74 +149,30 @@ describe('verifyServerConfig', () => {
 
   it('throws an error if freeSpaceRequired is a string of letters', () => {
     expect(() =>
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-      baremetalHandler.verifyServerConfig({
-        host: 'host.test',
-        path: '/var/www/app',
-        repo: 'git://github.com',
-        freeSpaceRequired: 'not a number',
-      }),
-=======
       baremetal.verifyServerConfig(
         createServerConfig({ freeSpaceRequired: 'not a number' }),
       ),
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
     ).toThrow('"freeSpaceRequired" must be an integer >= 0')
   })
 
   it('throws an error if freeSpaceRequired is a float (as a string)', () => {
     expect(() =>
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-      baremetalHandler.verifyServerConfig({
-        host: 'host.test',
-        path: '/var/www/app',
-        repo: 'git://github.com',
-        freeSpaceRequired: '100.5',
-      }),
-=======
       baremetal.verifyServerConfig(
         createServerConfig({ freeSpaceRequired: '100.5' }),
       ),
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
     ).toThrow('"freeSpaceRequired" must be an integer >= 0')
   })
 
   it('throws an error if freeSpaceRequired is a float', () => {
     expect(() =>
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-      baremetalHandler.verifyServerConfig({
-        host: 'host.test',
-        path: '/var/www/app',
-        repo: 'git://github.com',
-        freeSpaceRequired: 100.5,
-      }),
-=======
       baremetal.verifyServerConfig(
         createServerConfig({ freeSpaceRequired: 100.5 }),
       ),
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
     ).toThrow('"freeSpaceRequired" must be an integer >= 0')
   })
 
   it('throws an error if freeSpaceRequired includes a unit', () => {
     expect(() =>
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-      baremetalHandler.verifyServerConfig({
-        host: 'host.test',
-        path: '/var/www/app',
-        repo: 'git://github.com',
-        freeSpaceRequired: '3GB',
-      }),
-    ).toThrow('"freeSpaceRequired" must be an integer >= 0')
-
-    expect(() =>
-      baremetalHandler.verifyServerConfig({
-        host: 'host.test',
-        path: '/var/www/app',
-        repo: 'git://github.com',
-        freeSpaceRequired: '2048 MB',
-      }),
-=======
       baremetal.verifyServerConfig(
         createServerConfig({ freeSpaceRequired: '3GB' }),
       ),
@@ -254,99 +182,53 @@ describe('verifyServerConfig', () => {
       baremetal.verifyServerConfig(
         createServerConfig({ freeSpaceRequired: '2048 MB' }),
       ),
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
     ).toThrow('"freeSpaceRequired" must be an integer >= 0')
   })
 
   it('throws an error if freeSpaceRequired is negative (as a string)', () => {
     expect(() =>
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-      baremetalHandler.verifyServerConfig({
-        host: 'host.test',
-        path: '/var/www/app',
-        repo: 'git://github.com',
-        freeSpaceRequired: '-1',
-      }),
-=======
       baremetal.verifyServerConfig(
         createServerConfig({ freeSpaceRequired: '-1' }),
       ),
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
     ).toThrow('"freeSpaceRequired" must be an integer >= 0')
   })
 
   it('throws an error if freeSpaceRequired is negative', () => {
     expect(() =>
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-      baremetalHandler.verifyServerConfig({
-        host: 'host.test',
-        path: '/var/www/app',
-        repo: 'git://github.com',
-        freeSpaceRequired: -1,
-      }),
-=======
       baremetal.verifyServerConfig(
         createServerConfig({ freeSpaceRequired: -1 }),
       ),
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
     ).toThrow('"freeSpaceRequired" must be an integer >= 0')
   })
 
   it('allows freeSpaceRequired to be 0 (as a string)', () => {
     expect(
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-      baremetalHandler.verifyServerConfig({
-        host: 'host.test',
-        path: '/var/www/app',
-        repo: 'git://github.com',
-        freeSpaceRequired: '0',
-      }),
-=======
       baremetal.verifyServerConfig(
         createServerConfig({ freeSpaceRequired: '0' }),
       ),
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
     ).toEqual(true)
   })
 
   it('allows freeSpaceRequired to be 0', () => {
     expect(
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-      baremetalHandler.verifyServerConfig({
-        host: 'host.test',
-        path: '/var/www/app',
-        repo: 'git://github.com',
-        freeSpaceRequired: 0,
-      }),
-=======
       baremetal.verifyServerConfig(
         createServerConfig({ freeSpaceRequired: 0 }),
       ),
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
     ).toEqual(true)
   })
 
   it('returns true if no problems', () => {
     expect(
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-      baremetalHandler.verifyServerConfig({
-        host: 'host.test',
-        path: '/var/www/app',
-        repo: 'git://github.com',
-        freeSpaceRequired: 2024,
-      }),
-=======
       baremetal.verifyServerConfig(
         createServerConfig({ freeSpaceRequired: 2024 }),
       ),
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
     ).toEqual(true)
   })
 })
 
 describe('maintenanceTasks', () => {
   it('returns tasks to put maintenance page up', () => {
-    const tasks = baremetalHandler.maintenanceTasks(
+    const tasks = baremetal.maintenanceTasks(
       'up',
       sshExecutor,
       createServerConfig({ processNames: ['api'] }),
@@ -358,7 +240,7 @@ describe('maintenanceTasks', () => {
   })
 
   it('returns tasks to take maintenance page down', () => {
-    const tasks = baremetalHandler.maintenanceTasks(
+    const tasks = baremetal.maintenanceTasks(
       'down',
       sshExecutor,
       createServerConfig({ processNames: ['api'] }),
@@ -372,7 +254,7 @@ describe('maintenanceTasks', () => {
 
 describe('rollbackTasks', () => {
   it('returns rollback tasks', () => {
-    const tasks1 = baremetalHandler.rollbackTasks(
+    const tasks1 = baremetal.rollbackTasks(
       1,
       sshExecutor,
       createServerConfig({ processNames: ['api'] }),
@@ -382,7 +264,7 @@ describe('rollbackTasks', () => {
     expect(tasks1[0].title).toMatch('Rolling back 1')
     expect(tasks1[1].title).toMatch('Restarting')
 
-    const tasks2 = baremetalHandler.rollbackTasks(
+    const tasks2 = baremetal.rollbackTasks(
       5,
       sshExecutor,
       createServerConfig({ processNames: ['api'] }),
@@ -394,16 +276,11 @@ describe('rollbackTasks', () => {
 
 describe('serverConfigWithDefaults', () => {
   it('provides some default settings', () => {
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-    const config = baremetalHandler.serverConfigWithDefaults({}, {})
-    expect(config).toEqual(baremetalHandler.DEFAULT_SERVER_CONFIG)
-=======
     const config = baremetal.serverConfigWithDefaults(
       {},
       createBaremetalYargs(),
     )
     expect(config).toEqual(baremetal.DEFAULT_SERVER_CONFIG)
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
   })
 
   it('allows overriding defaults with custom settings', () => {
@@ -416,57 +293,39 @@ describe('serverConfigWithDefaults', () => {
       keepReleases: 2,
       freeSpaceRequired: 1000,
     }
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-    const config = baremetalHandler.serverConfigWithDefaults(serverConfig, {})
-=======
     const config = baremetal.serverConfigWithDefaults(
       serverConfig,
       createBaremetalYargs(),
     )
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
     expect(config).toEqual(serverConfig)
   })
 
   it('provides default port as 22', () => {
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-    const config = baremetalHandler.serverConfigWithDefaults({}, {})
-=======
     const config = baremetal.serverConfigWithDefaults(
       {},
       createBaremetalYargs(),
     )
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
     expect(config.port).toEqual(22)
   })
 
   it('provides default branch name', () => {
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-    const config = baremetalHandler.serverConfigWithDefaults({}, {})
-=======
     const config = baremetal.serverConfigWithDefaults(
       {},
       createBaremetalYargs(),
     )
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
     expect(config.branch).toEqual('main')
   })
 
   it('overrides branch name from config', () => {
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-    const config = baremetalHandler.serverConfigWithDefaults(
-      { branch: 'earth' },
-      {},
-=======
     const config = baremetal.serverConfigWithDefaults(
       { branch: 'earth' },
       createBaremetalYargs(),
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
     )
     expect(config.branch).toEqual('earth')
   })
 
   it('overrides branch name from yargs no matter what', () => {
-    const config = baremetalHandler.serverConfigWithDefaults(
+    const config = baremetal.serverConfigWithDefaults(
       { branch: 'earth' },
       createBaremetalYargs({ branch: 'moon' }),
     )
@@ -474,27 +333,18 @@ describe('serverConfigWithDefaults', () => {
   })
 
   it('provides default freeSpaceRequired', () => {
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-    const config = baremetalHandler.serverConfigWithDefaults({}, {})
-=======
     const config = baremetal.serverConfigWithDefaults(
       {},
       createBaremetalYargs(),
     )
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
     expect(config.freeSpaceRequired).toEqual(2048)
   })
 })
 
 describe('parseConfig', () => {
   it('returns the config for an environment', () => {
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-    const { envConfig } = baremetalHandler.parseConfig(
-      { environment: 'production' },
-=======
     const { envConfig } = baremetal.parseConfig(
       createBaremetalYargs(),
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
       `
         [[production.servers]]
         host = 'server.com'
@@ -505,13 +355,8 @@ describe('parseConfig', () => {
   })
 
   it('returns the proper config from multiple environments', () => {
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-    const { envConfig } = baremetalHandler.parseConfig(
-      { environment: 'staging' },
-=======
     const { envConfig } = baremetal.parseConfig(
       createBaremetalYargs({ environment: 'staging' }),
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
       `
         [[production.servers]]
         host = 'prod.server.com'
@@ -525,13 +370,8 @@ describe('parseConfig', () => {
   })
 
   it('returns empty objects if no lifecycle defined', () => {
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-    const { _envConfig, envLifecycle } = baremetalHandler.parseConfig(
-      { environment: 'production' },
-=======
     const { envLifecycle } = baremetal.parseConfig(
       createBaremetalYargs(),
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
       `
         [[production.servers]]
         host = 'server.com'
@@ -543,13 +383,8 @@ describe('parseConfig', () => {
   })
 
   it('parses a single global lifecycle event', () => {
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-    const { _envConfig, envLifecycle } = baremetalHandler.parseConfig(
-      { environment: 'production' },
-=======
     const { envLifecycle } = baremetal.parseConfig(
       createBaremetalYargs(),
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
       `
         [before]
         install = 'yarn global'
@@ -564,13 +399,8 @@ describe('parseConfig', () => {
   })
 
   it('parses multiple global lifecycle events', () => {
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-    const { _envConfig, envLifecycle } = baremetalHandler.parseConfig(
-      { environment: 'production' },
-=======
     const { envLifecycle } = baremetal.parseConfig(
       createBaremetalYargs(),
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
       `
         [before]
         install = 'yarn global one'
@@ -589,13 +419,8 @@ describe('parseConfig', () => {
   })
 
   it('parses an array of global lifecycle events', () => {
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-    const { _envConfig, envLifecycle } = baremetalHandler.parseConfig(
-      { environment: 'production' },
-=======
     const { envLifecycle } = baremetal.parseConfig(
       createBaremetalYargs(),
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
       `
         [before]
         install = ['yarn global one', 'yarn global two']
@@ -612,13 +437,8 @@ describe('parseConfig', () => {
   })
 
   it('parses an env lifecycle event', () => {
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-    const { _envConfig, envLifecycle } = baremetalHandler.parseConfig(
-      { environment: 'production' },
-=======
     const { envLifecycle } = baremetal.parseConfig(
       createBaremetalYargs(),
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
       `
         [[production.servers]]
         host = 'server.com'
@@ -633,13 +453,8 @@ describe('parseConfig', () => {
   })
 
   it('parses combined global and env lifecycle events', () => {
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-    const { _envConfig, envLifecycle } = baremetalHandler.parseConfig(
-      { environment: 'production' },
-=======
     const { envLifecycle } = baremetal.parseConfig(
       createBaremetalYargs(),
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
       `
         [before]
         install = 'yarn global one'
@@ -665,13 +480,8 @@ describe('parseConfig', () => {
     process.env.TEST_VAR_REPO = 'git://staging.github.com'
     const {
       envConfig: { servers },
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-    } = baremetalHandler.parseConfig(
-      { environment: 'production' },
-=======
     } = baremetal.parseConfig(
       createBaremetalYargs(),
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
       `
         [[production.servers]]
         host = '\${TEST_VAR_HOST:server.com}'
@@ -695,7 +505,7 @@ describe('parseConfig', () => {
 
 describe('commandWithLifecycleEvents', () => {
   it('returns just the command if no lifecycle defined', () => {
-    const tasks = baremetalHandler.commandWithLifecycleEvents({
+    const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
       config: createCommandConfig(),
       skip: false,
@@ -711,7 +521,7 @@ describe('commandWithLifecycleEvents', () => {
   })
 
   it('copies `skip` output into task function', () => {
-    const tasks = baremetalHandler.commandWithLifecycleEvents({
+    const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
       config: createCommandConfig(),
       // @ts-expect-error - using a string to make it easier to test an actual
@@ -727,7 +537,7 @@ describe('commandWithLifecycleEvents', () => {
   })
 
   it('includes a `before` lifecycle event', () => {
-    const tasks = baremetalHandler.commandWithLifecycleEvents({
+    const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
       config: createCommandConfig({
         serverLifecycle: { before: { update: ['touch'] }, after: {} },
@@ -747,7 +557,7 @@ describe('commandWithLifecycleEvents', () => {
   })
 
   it('includes multiple `before` lifecycle events', () => {
-    const tasks = baremetalHandler.commandWithLifecycleEvents({
+    const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
       config: createCommandConfig({
         serverLifecycle: {
@@ -772,7 +582,7 @@ describe('commandWithLifecycleEvents', () => {
   })
 
   it('copies `skip` output into `before` lifecycle event task function', () => {
-    const tasks = baremetalHandler.commandWithLifecycleEvents({
+    const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
       config: createCommandConfig({
         serverLifecycle: { before: { update: ['touch'] }, after: {} },
@@ -791,7 +601,7 @@ describe('commandWithLifecycleEvents', () => {
   })
 
   it('includes an `after` lifecycle event', () => {
-    const tasks = baremetalHandler.commandWithLifecycleEvents({
+    const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
       config: createCommandConfig({
         serverLifecycle: { before: {}, after: { update: ['touch'] } },
@@ -811,7 +621,7 @@ describe('commandWithLifecycleEvents', () => {
   })
 
   it('includes multiple `after` lifecycle events', () => {
-    const tasks = baremetalHandler.commandWithLifecycleEvents({
+    const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
       config: createCommandConfig({
         serverLifecycle: {
@@ -836,7 +646,7 @@ describe('commandWithLifecycleEvents', () => {
   })
 
   it('copies `skip` output into `after` lifecycle event task function', () => {
-    const tasks = baremetalHandler.commandWithLifecycleEvents({
+    const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
       config: createCommandConfig({
         serverLifecycle: { before: {}, after: { update: ['touch'] } },
@@ -855,7 +665,7 @@ describe('commandWithLifecycleEvents', () => {
   })
 
   it('includes both `before` and `after` lifecycle events', () => {
-    const tasks = baremetalHandler.commandWithLifecycleEvents({
+    const tasks = baremetal.commandWithLifecycleEvents({
       name: 'update',
       config: createCommandConfig({
         serverLifecycle: {
@@ -893,7 +703,7 @@ describe('deployTasks', () => {
   })
 
   it('provides a default list of tasks', () => {
-    const tasks = baremetalHandler.deployTasks(
+    const tasks = baremetal.deployTasks(
       defaultYargs,
       sshExecutor,
       defaultServerConfig,
@@ -922,7 +732,7 @@ describe('deployTasks', () => {
   })
 
   it('skips the available space check if --no-df is passed', () => {
-    const tasks = baremetalHandler.deployTasks(
+    const tasks = baremetal.deployTasks(
       { ...defaultYargs, df: false },
       sshExecutor,
       defaultServerConfig,
@@ -933,7 +743,7 @@ describe('deployTasks', () => {
   })
 
   it('skips the available space check if freeSpaceRequired is set to 0', () => {
-    const tasks = baremetalHandler.deployTasks(
+    const tasks = baremetal.deployTasks(
       { ...defaultYargs },
       sshExecutor,
       { ...defaultServerConfig, freeSpaceRequired: 0 },
@@ -943,14 +753,6 @@ describe('deployTasks', () => {
     expect(tasks[0].skip?.()).toBeTruthy()
   })
 
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-  it('throws an error if there is not enough available space on the server and freeSpaceRequired is not configured', () => {
-    const ssh = {
-      exec: () => ({ stdout: 'df:1875893' }),
-    }
-
-    const { freeSpaceRequired: _, ...serverConfig } = defaultServerConfig
-=======
   it('throws an error if there is not enough available space on the server and freeSpaceRequired is not configured', async () => {
     vi.spyOn(sshExecutor, 'exec').mockResolvedValue({
       stdout: 'df:1875893',
@@ -958,16 +760,15 @@ describe('deployTasks', () => {
       code: 0,
       signal: null,
     })
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
 
-    const tasks = baremetalHandler.deployTasks(
+    const tasks = baremetal.deployTasks(
       defaultYargs,
       sshExecutor,
       createServerConfig({ sides: ['api', 'web'] }),
       { before: {}, after: {} },
     )
 
-    expect(() => tasks[0].task({}, {})).rejects.toThrowError(
+    await expect(() => tasks[0].task({}, {})).rejects.toThrowError(
       /Not enough disk space\. You need at least 2048MB free space to continue\. \(Currently 1832MB available\)/,
     )
   })
@@ -980,7 +781,7 @@ describe('deployTasks', () => {
       signal: null,
     })
 
-    const tasks = baremetalHandler.deployTasks(
+    const tasks = baremetal.deployTasks(
       defaultYargs,
       sshExecutor,
       {
@@ -991,7 +792,7 @@ describe('deployTasks', () => {
       { before: {}, after: {} },
     )
 
-    expect(() => tasks[0].task({}, {})).rejects.toThrowError(
+    await expect(() => tasks[0].task({}, {})).rejects.toThrowError(
       /Not enough disk space\. You need at least 4096MB free space to continue/,
     )
   })
@@ -1004,7 +805,7 @@ describe('deployTasks', () => {
       signal: null,
     })
 
-    const tasks = baremetalHandler.deployTasks(
+    const tasks = baremetal.deployTasks(
       defaultYargs,
       sshExecutor,
       { ...defaultServerConfig, sides: ['api', 'web'] },
@@ -1026,7 +827,7 @@ describe('deployTasks', () => {
       signal: null,
     })
 
-    const tasks = baremetalHandler.deployTasks(
+    const tasks = baremetal.deployTasks(
       defaultYargs,
       sshExecutor,
       { ...defaultServerConfig, sides: ['api', 'web'] },
@@ -1043,7 +844,7 @@ describe('deployTasks', () => {
   })
 
   it('builds each side separately', () => {
-    const tasks = baremetalHandler.deployTasks(
+    const tasks = baremetal.deployTasks(
       defaultYargs,
       sshExecutor,
       { ...defaultServerConfig, sides: ['api', 'web'] },
@@ -1056,7 +857,7 @@ describe('deployTasks', () => {
   })
 
   it('skips migrations if migrate = false in config', () => {
-    const tasks = baremetalHandler.deployTasks(
+    const tasks = baremetal.deployTasks(
       defaultYargs,
       sshExecutor,
       { ...defaultServerConfig, migrate: false },
@@ -1068,7 +869,7 @@ describe('deployTasks', () => {
   })
 
   it('starts pm2 if --first-run flag set', () => {
-    const tasks = baremetalHandler.deployTasks(
+    const tasks = baremetal.deployTasks(
       { ...defaultYargs, firstRun: true },
       sshExecutor,
       defaultServerConfig,
@@ -1081,7 +882,7 @@ describe('deployTasks', () => {
   })
 
   it('skips clone and symlinks if --no-update flag passed', () => {
-    const tasks = baremetalHandler.deployTasks(
+    const tasks = baremetal.deployTasks(
       { ...defaultYargs, update: false },
       sshExecutor,
       defaultServerConfig,
@@ -1094,7 +895,7 @@ describe('deployTasks', () => {
   })
 
   it('skips install if --no-install flag passed', () => {
-    const tasks = baremetalHandler.deployTasks(
+    const tasks = baremetal.deployTasks(
       { ...defaultYargs, install: false },
       sshExecutor,
       defaultServerConfig,
@@ -1105,7 +906,7 @@ describe('deployTasks', () => {
   })
 
   it('skips migrations if --no-migrate flag passed', () => {
-    const tasks = baremetalHandler.deployTasks(
+    const tasks = baremetal.deployTasks(
       { ...defaultYargs, migrate: false },
       sshExecutor,
       defaultServerConfig,
@@ -1116,7 +917,7 @@ describe('deployTasks', () => {
   })
 
   it('skips build if --no-build flag passed', () => {
-    const tasks = baremetalHandler.deployTasks(
+    const tasks = baremetal.deployTasks(
       { ...defaultYargs, build: false },
       sshExecutor,
       defaultServerConfig,
@@ -1127,7 +928,7 @@ describe('deployTasks', () => {
   })
 
   it('skips restart if --no-restart flag passed', () => {
-    const tasks = baremetalHandler.deployTasks(
+    const tasks = baremetal.deployTasks(
       { ...defaultYargs, restart: false },
       sshExecutor,
       defaultServerConfig,
@@ -1138,7 +939,7 @@ describe('deployTasks', () => {
   })
 
   it('skips cleanup if --no-cleanup flag passed', () => {
-    const tasks = baremetalHandler.deployTasks(
+    const tasks = baremetal.deployTasks(
       { ...defaultYargs, cleanup: false },
       sshExecutor,
       defaultServerConfig,
@@ -1149,7 +950,7 @@ describe('deployTasks', () => {
   })
 
   it('injects lifecycle events for update', () => {
-    const tasks = baremetalHandler.deployTasks(
+    const tasks = baremetal.deployTasks(
       defaultYargs,
       sshExecutor,
       defaultServerConfig,
@@ -1162,7 +963,7 @@ describe('deployTasks', () => {
   })
 
   it('injects lifecycle events for install', () => {
-    const tasks = baremetalHandler.deployTasks(
+    const tasks = baremetal.deployTasks(
       defaultYargs,
       sshExecutor,
       defaultServerConfig,
@@ -1175,7 +976,7 @@ describe('deployTasks', () => {
   })
 
   it('injects lifecycle events for migrate', () => {
-    const tasks = baremetalHandler.deployTasks(
+    const tasks = baremetal.deployTasks(
       defaultYargs,
       sshExecutor,
       defaultServerConfig,
@@ -1188,7 +989,7 @@ describe('deployTasks', () => {
   })
 
   it('injects lifecycle events for build', () => {
-    const tasks = baremetalHandler.deployTasks(
+    const tasks = baremetal.deployTasks(
       defaultYargs,
       sshExecutor,
       defaultServerConfig,
@@ -1201,7 +1002,7 @@ describe('deployTasks', () => {
   })
 
   it('injects lifecycle events for restart', () => {
-    const tasks = baremetalHandler.deployTasks(
+    const tasks = baremetal.deployTasks(
       defaultYargs,
       sshExecutor,
       defaultServerConfig,
@@ -1214,7 +1015,7 @@ describe('deployTasks', () => {
   })
 
   it('injects lifecycle events for cleanup', () => {
-    const tasks = baremetalHandler.deployTasks(
+    const tasks = baremetal.deployTasks(
       defaultYargs,
       sshExecutor,
       defaultServerConfig,
@@ -1229,11 +1030,11 @@ describe('deployTasks', () => {
 
 describe('commands', () => {
   it('contains a top-level task for each server in an environment', () => {
-    const prodServers = baremetalHandler.commands(
+    const prodServers = baremetal.commands(
       { environment: 'production', releaseDir: '2022051120000' },
       sshExecutor,
     )
-    const stagingServers = baremetalHandler.commands(
+    const stagingServers = baremetal.commands(
       { environment: 'staging', releaseDir: '2022051120000' },
       sshExecutor,
     )
@@ -1247,7 +1048,7 @@ describe('commands', () => {
   })
 
   it('a single server contains nested deploy tasks', () => {
-    const servers = baremetalHandler.commands(
+    const servers = baremetal.commands(
       { environment: 'staging', releaseDir: '2022051120000' },
       sshExecutor,
     )
@@ -1256,7 +1057,7 @@ describe('commands', () => {
   })
 
   it('contains connection and disconnection tasks', () => {
-    const servers = baremetalHandler.commands(
+    const servers = baremetal.commands(
       { environment: 'staging', releaseDir: '2022051120000' },
       sshExecutor,
     )
@@ -1267,7 +1068,7 @@ describe('commands', () => {
   })
 
   it('contains deploy tasks by default', () => {
-    const servers = baremetalHandler.commands(
+    const servers = baremetal.commands(
       { environment: 'staging', releaseDir: '2022051120000' },
       sshExecutor,
     )
@@ -1277,7 +1078,7 @@ describe('commands', () => {
   })
 
   it('contains maintenance tasks if yargs are set', () => {
-    const servers = baremetalHandler.commands(
+    const servers = baremetal.commands(
       {
         environment: 'staging',
         releaseDir: '2022051120000',
@@ -1292,7 +1093,7 @@ describe('commands', () => {
   })
 
   it('contains rollback tasks if yargs are set', () => {
-    const servers = baremetalHandler.commands(
+    const servers = baremetal.commands(
       {
         environment: 'staging',
         releaseDir: '2022051120000',
@@ -1307,7 +1108,7 @@ describe('commands', () => {
   })
 
   it('includes server-specific lifecycle events', () => {
-    const servers = baremetalHandler.commands(
+    const servers = baremetal.commands(
       {
         environment: 'test',
         releaseDir: '2022051120000',
@@ -1336,11 +1137,6 @@ describe('handler', () => {
   })
 
   it("should fail if there's no deploy.toml", async () => {
-<<<<<<< HEAD:packages/cli/src/commands/deploy/__tests__/baremetal.test.js
-    await expect(baremetalHandler.handler({})).rejects.toThrowError(
-      'process.exit: 1',
-    )
-=======
     // Set flag to make getPaths return testDir (without fixtures and deploy.toml)
     returnEmptyBasePath = true
 
@@ -1359,7 +1155,6 @@ describe('handler', () => {
     await expect(
       baremetal.handler(createBaremetalYargs()),
     ).rejects.toThrowError('process.exit: 1')
->>>>>>> 33ed75844c (chore(cli): migrate test files from JS to TypeScript (batch 3) (#2040)):packages/cli/src/commands/deploy/__tests__/baremetal.test.ts
     expect(vi.mocked(console).error).toHaveBeenCalledWith(
       expect.stringContaining('Baremetal deploy has not been properly setup'),
     )

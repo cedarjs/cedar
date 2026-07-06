@@ -1,6 +1,7 @@
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 export const command = 'baremetal [environment]'
@@ -113,12 +114,6 @@ export const builder = (yargs: Argv) => {
   )
 }
 
-<<<<<<< HEAD:packages/cli/src/commands/deploy/baremetal.js
-export async function handler(yargs) {
-<<<<<<< HEAD
-  const { handler: importedHandler } =
-=======
-=======
 interface BaremetalArgs {
   firstRun: boolean
   df: boolean
@@ -137,7 +132,6 @@ interface BaremetalArgs {
 }
 
 export async function handler(yargs: BaremetalArgs) {
->>>>>>> 28c0c97f08 (chore(cli): migrate serverless, baremetal, nft, chakra-ui, mantine, jobs, merge/index from JS to TS (#2011)):packages/cli/src/commands/deploy/baremetal.ts
   recordTelemetryAttributes({
     command: 'deploy baremetal',
     firstRun: yargs.firstRun,
@@ -155,15 +149,7 @@ export async function handler(yargs: BaremetalArgs) {
   })
 
   const { handler: baremetalHandler } =
-<<<<<<< HEAD
-<<<<<<< HEAD:packages/cli/src/commands/deploy/baremetal.js
->>>>>>> 727aa28c93 (feat(baremetal)!: warn on unpushed commits before deploying (#1904))
-=======
-    // @ts-expect-error - baremetalHandler.js has no type declarations yet
->>>>>>> 28c0c97f08 (chore(cli): migrate serverless, baremetal, nft, chakra-ui, mantine, jobs, merge/index from JS to TS (#2011)):packages/cli/src/commands/deploy/baremetal.ts
-=======
->>>>>>> 495830166f (chore(cli): migrate index, scaffoldHandler, baremetalHandler, and deploy templates from JS to TS (#2018))
     await import('./baremetal/baremetalHandler.js')
 
-  return importedHandler(yargs)
+  return baremetalHandler(yargs)
 }

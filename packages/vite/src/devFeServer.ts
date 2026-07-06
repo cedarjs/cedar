@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-import http from 'node:http'
-
 import { createServerAdapter } from '@whatwg-node/server'
 import express from 'express'
 import type { HTTPMethod } from 'find-my-way'
