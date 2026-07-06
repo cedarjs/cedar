@@ -36,7 +36,9 @@ export function cedarContextWrappingPlugin({
 }: {
   projectIsEsm?: boolean
 } = {}): Plugin {
-  const handlerRe = /^export\s+(const|let|var)\s+handler\s*=/m
+  // Captures: (1) const|let|var, (2) optional type annotation, (3) = with surrounding space
+  // Examples: "export const handler =", "export const handler: SomeType =", "export const handler: Type[] ="
+  const handlerRe = /^export\s+(const|let|var)\s+handler((?:\s*:[^=]*?)?)(\s*=)/m
 
   return {
     name: 'cedar-context-wrapping',
@@ -63,10 +65,12 @@ export function cedarContextWrappingPlugin({
 
       // Determine if the original handler init is an async function.
       // Matches the Babel plugin's check: t.isFunction(originalInit) && originalInit.async
+      // Handles forms like: async (...), async(...), async function, /* comment */ async, etc.
       const afterEquals = code
         .slice(handlerMatch.index + handlerMatch[0].length)
         .trimStart()
-      const isAsync = afterEquals.startsWith('async ')
+      // Allow zero spaces between async and parenthesis to match async(...)
+      const isAsync = /^\s*(?:\/\*[\s\S]*?\*\/\s*)*async\s*[\(\*]/.test(afterEquals)
 
       const storePath = projectIsEsm
         ? '@cedarjs/context/dist/store.js'
@@ -80,22 +84,23 @@ export function cedarContextWrappingPlugin({
       const before = code.slice(0, handlerStart)
       const after = code.slice(handlerStart)
 
-      // Replace "export const handler =" with "const __rw_handler ="
-      const renamed = after.replace(handlerRe, 'const __rw_handler =')
+      // Preserve type annotation (group 2) when renaming
+      // Replace "export const handler [: Type] =" with "const __rw_handler [: Type] ="
+      const renamed = after.replace(handlerRe, 'const __rw_handler$2$3')
 
+      // Use rest parameters to forward all arguments including optional callback
       const wrappedHandler =
-        `\nexport const handler = ${isAsync ? 'async ' : ''}(__rw_event, __rw__context) => {\n` +
+        `\nexport const handler = ${isAsync ? 'async ' : ''}(...__rw_args) => {\n` +
         `  // The store will be undefined if no context isolation has been performed yet\n` +
         `  const __rw_contextStore = __rw_getAsyncStoreInstance().getStore()\n` +
         `  if (__rw_contextStore === undefined) {\n` +
         `    return __rw_getAsyncStoreInstance().run(\n` +
         `      new Map(),\n` +
         `      __rw_handler,\n` +
-        `      __rw_event,\n` +
-        `      __rw__context\n` +
+        `      ...__rw_args\n` +
         `    )\n` +
         `  }\n` +
-        `  return __rw_handler(__rw_event, __rw__context)\n` +
+        `  return __rw_handler(...__rw_args)\n` +
         `}\n`
 
       return {
