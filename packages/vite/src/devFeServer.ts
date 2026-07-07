@@ -278,6 +278,11 @@ async function createServer() {
           'busboy',
           'cookie',
         ],
+        // Ensure `util` resolves to Node's built-in module and not to
+        // Browserify's `node-util` polyfill (which lacks TextEncoder).
+        // The polyfill may be hoisted into node_modules by optional
+        // dependencies like `@cedarjs/storybook`.
+        exclude: ['util'],
       },
     },
     resolve: {
