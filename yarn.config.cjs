@@ -289,7 +289,7 @@ function enforceSingleGraphqlVersion() {
     // Match top-level lockfile keys, e.g.:
     //   "graphql@npm:16.13.2":
     //   "graphql@npm:14 - 16, graphql@npm:16.14.2, graphql@npm:^16.0.0":
-    if (/^"[^"]*graphql@npm:.*":\s*$/.test(line)) {
+    if (/^"(?:graphql@npm:[^"]*)(?:,\s*graphql@npm:[^"]*)*":\s*$/.test(line)) {
       entries.push({ key: line, line: i + 1 })
     }
   }
