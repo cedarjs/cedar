@@ -261,15 +261,15 @@ function enforceNotProdAndDevDependencies({ Yarn }) {
 }
 
 /**
- * This rule will enforce that `graphql` resolves to exactly one version
- * across the entire dependency graph (both workspace and transitive deps).
+ * This rule will enforce that `graphql` resolves to exactly one version across
+ * the entire dependency graph (both workspace and transitive deps).
  *
  * It reads `yarn.lock` and counts the number of lockfile entries whose key
- * contains `graphql@npm:`.  If there is more than one, different parts of
- * the module graph resolve to different copies, which causes duplicate
- * installs under pnpm.
- *
- * @param {Context} context
+ * contains `graphql@npm:`.  If there is more than one, different parts of the
+ * module graph resolve to different copies, which causes duplicate installs
+ * under pnpm. graphql is a singleton package. If more than one version is in
+ * use, the instanceof checks within graphql itself fail at runtime because the
+ * two copies are separate module instances, breaking GraphQL execution.
  */
 function enforceSingleGraphqlVersion() {
   const lockfilePath = path.join(__dirname, 'yarn.lock')
@@ -301,7 +301,7 @@ function enforceSingleGraphqlVersion() {
   const details = entries.map((e) => `  line ${e.line}: ${e.key}`).join('\n')
 
   throw new Error(
-    `graphql resolves to multiple versions in the lockfile — this will cause ` +
+    `graphql resolves to multiple versions in the lockfile. This will cause ` +
       `duplicate installs under pnpm.\n\n${details}\n\n` +
       `Ensure all workspace and transitive dependencies resolve to the same ` +
       `graphql version.`,
