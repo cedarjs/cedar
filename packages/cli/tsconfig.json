@@ -10,13 +10,6 @@
     "rootDir": "."
   },
   "include": [".", "package.json"],
-  "exclude": [
-    "**/__testfixtures__",
-    "**/__fixtures__",
-    "dist",
-    "node_modules",
-    "**/__mocks__"
-  ],
   "references": [
     { "path": "../api-server/tsconfig.build.json" },
     { "path": "../cli-helpers" },

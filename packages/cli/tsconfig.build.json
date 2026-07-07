@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.build.base.json",
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
@@ -7,7 +7,6 @@
     "moduleResolution": "node16"
   },
   "include": ["src", "./testUtils.d.ts"],
-  "exclude": ["**/__testfixtures__"],
   "references": [
     { "path": "../api-server/tsconfig.build.json" },
     { "path": "../cli-helpers/tsconfig.build.json" },

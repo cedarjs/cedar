@@ -5,7 +5,6 @@
     "rootDir": "."
   },
   "include": ["."],
-  "exclude": ["dist", "node_modules", "**/__tests__/fixtures"],
   "references": [
     { "path": "../context/tsconfig.build.json" },
     { "path": "../internal/tsconfig.build.json" },

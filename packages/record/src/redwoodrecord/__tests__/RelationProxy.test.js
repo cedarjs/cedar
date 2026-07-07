@@ -1,8 +1,9 @@
 import { vi, beforeEach, afterEach, describe, it, expect } from 'vitest'
 
-import datamodel from '../__fixtures__/datamodel.js'
 import RedwoodRecord from '../RedwoodRecord'
 import RelationProxy from '../RelationProxy'
+
+import datamodel from './__fixtures__/datamodel.js'
 
 const db = { user: vi.fn() }
 

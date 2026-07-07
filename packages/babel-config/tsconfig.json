@@ -1,10 +1,9 @@
 {
-  "extends": "../../tsconfig.cjs-base.json",
+  "extends": "../../tsconfig.cjs-build-base.json",
   "compilerOptions": {
     "types": ["node", "jest"]
   },
   "include": ["ambient.d.ts", "src"],
   // Excluding cypress types, because it interferes with expect in tests
-  "exclude": ["node_modules/cypress/types/*", "**/__tests__/__fixtures__/*"],
   "references": [{ "path": "../project-config" }]
 }

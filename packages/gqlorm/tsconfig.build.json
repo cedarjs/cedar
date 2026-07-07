@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["src", "./ambient.d.ts", "./rsdw.modules.d.ts"],
   "exclude": ["**/__tests__"],
+  "include": ["src", "./ambient.d.ts", "./rsdw.modules.d.ts"],
   "references": [
     { "path": "../auth/tsconfig.build.json" },
     { "path": "../framework-tools" },
