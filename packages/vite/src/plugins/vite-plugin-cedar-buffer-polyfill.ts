@@ -4,8 +4,17 @@ import type { Plugin } from 'vite'
 
 import { getConfig } from '@cedarjs/project-config'
 
-const require = createRequire(import.meta.url)
-const bufferPath = require.resolve('buffer/')
+let bufferPath: string
+
+function getBufferPath(): string {
+  if (!bufferPath) {
+    // `__filename` exists in CJS (e.g. when loaded by Vite's config require-hook)
+    // but not in ESM, where we use import.meta.url instead.
+    const url = typeof __filename !== 'undefined' ? __filename : import.meta.url
+    bufferPath = createRequire(url).resolve('buffer/')
+  }
+  return bufferPath
+}
 
 export function cedarBufferPolyfill(): Plugin | undefined {
   // Only include the Buffer polyfill for non-rsc dev, for DevFatalErrorPage
@@ -27,22 +36,25 @@ export function cedarBufferPolyfill(): Plugin | undefined {
       return {
         resolve: {
           alias: {
-            buffer: bufferPath,
+            buffer: getBufferPath(),
           },
         },
       }
     },
-    transformIndexHtml() {
-      return [
-        {
-          tag: 'script',
-          attrs: { type: 'module' },
-          children: [
-            "import { Buffer as __buffer_polyfill } from 'buffer'",
-            'globalThis.Buffer = globalThis.Buffer || __buffer_polyfill',
-          ].join('\n'),
-        },
-      ]
+    transformIndexHtml: {
+      order: 'pre',
+      handler() {
+        return [
+          {
+            tag: 'script',
+            attrs: { type: 'module' },
+            children: [
+              "import { Buffer as __buffer_polyfill } from 'buffer'",
+              'globalThis.Buffer = globalThis.Buffer || __buffer_polyfill',
+            ].join('\n'),
+          },
+        ]
+      },
     },
   }
 }
