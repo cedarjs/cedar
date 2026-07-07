@@ -192,7 +192,7 @@
     "esbuild": "0.27.7",
     "execa": "5.1.1",
     "fast-glob": "3.3.3",
-    "graphql": "16.13.2",
+    "graphql": "16.14.2",
     "kill-port": "1.6.1",
     "prettier": "3.8.4",
     "rimraf": "6.1.3",
