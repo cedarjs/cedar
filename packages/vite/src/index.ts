@@ -10,9 +10,9 @@ import {
 } from '@cedarjs/testing/web/vitest'
 
 import { cedarCellTransform } from './plugins/vite-plugin-cedar-cell.js'
+import { cedarDataUriShim } from './plugins/vite-plugin-cedar-data-uri-shim.js'
 import { cedarEntryInjectionPlugin } from './plugins/vite-plugin-cedar-entry-injection.js'
 import { cedarHtmlEnvPlugin } from './plugins/vite-plugin-cedar-html-env.js'
-import { cedarNodePolyfills } from './plugins/vite-plugin-cedar-node-polyfills.js'
 import { cedarRemoveDevFatalErrorPage } from './plugins/vite-plugin-cedar-remove-dev-fatal-error-page.js'
 import { cedarRemoveFromBundle } from './plugins/vite-plugin-cedar-remove-from-bundle.js'
 import { cedarRoutesAutoLoaderPlugin } from './plugins/vite-plugin-cedar-routes-auto-loader.js'
@@ -28,7 +28,7 @@ export { cedarCellTransform } from './plugins/vite-plugin-cedar-cell.js'
 export { cedarEntryInjectionPlugin } from './plugins/vite-plugin-cedar-entry-injection.js'
 export { cedarHtmlEnvPlugin } from './plugins/vite-plugin-cedar-html-env.js'
 export { cedarImportDirPlugin } from './plugins/vite-plugin-cedar-import-dir.js'
-export { cedarNodePolyfills } from './plugins/vite-plugin-cedar-node-polyfills.js'
+export { cedarDataUriShim } from './plugins/vite-plugin-cedar-data-uri-shim.js'
 export { cedarRemoveDevFatalErrorPage } from './plugins/vite-plugin-cedar-remove-dev-fatal-error-page.js'
 export { cedarRoutesAutoLoaderPlugin } from './plugins/vite-plugin-cedar-routes-auto-loader.js'
 export { cedarRemoveFromBundle } from './plugins/vite-plugin-cedar-remove-from-bundle.js'
@@ -65,7 +65,7 @@ export function cedar({ mode }: PluginOptions = {}): PluginOption[] {
     mode === 'test' && createAuthImportTransformPlugin(),
     mode === 'test' && autoImportsPlugin(),
     cedarWaitForApiServer(),
-    cedarNodePolyfills(),
+    cedarDataUriShim(),
     cedarHtmlEnvPlugin(),
     cedarEntryInjectionPlugin(),
     cedarMergedConfig(),
