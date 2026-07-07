@@ -278,23 +278,6 @@ async function createServer() {
           'busboy',
           'cookie',
         ],
-        // Without excluding `util` we get "TypeError: util.TextEncoder is not
-        // a constructor" in react-server-dom-webpack.server because it'll try
-        // to use Browserify's `util` instead of Node's. And Browserify's
-        // polyfill is missing TextEncoder+TextDecoder. The reason it's using
-        // the Browserify polyfill is because the old
-        // `vite-plugin-node-polyfills` dependency added Browserify's
-        // `node-util` to `node_modules`, so when Vite goes to resolve
-        // `import { TextEncoder } from 'util` it'll find the one in
-        // `node_modules` instead of Node's internal version.
-        // We only see this in dev, and not in prod. I'm not entirely sure why
-        // but I have two guesses: 1. When RSC is enabled we don't actually use
-        // the node polyfill, so some kind of tree shaking is
-        // happening, which prevents the issue from occurring. 2. In prod we
-        // only use Node's dependency resolution. Vite is not involved. And
-        // that difference in resolution is what prevents the issue from
-        // occurring.
-        exclude: ['util'],
       },
     },
     resolve: {
