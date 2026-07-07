@@ -1,6 +1,11 @@
+import { createRequire } from 'node:module'
+
 import type { Plugin } from 'vite'
 
 import { getConfig } from '@cedarjs/project-config'
+
+const require = createRequire(import.meta.url)
+const bufferPath = require.resolve('buffer/')
 
 export function cedarBufferPolyfill(): Plugin | undefined {
   // Only include the Buffer polyfill for non-rsc dev, for DevFatalErrorPage
@@ -15,30 +20,29 @@ export function cedarBufferPolyfill(): Plugin | undefined {
     return undefined
   }
 
-  const bufferBanner = [
-    "import { Buffer as __buffer_polyfill } from 'buffer'",
-    'globalThis.Buffer = globalThis.Buffer || __buffer_polyfill',
-  ].join('\n')
-
   return {
     name: 'cedar-buffer-polyfill',
     apply: 'serve',
     config() {
       return {
-        esbuild: {
-          banner: bufferBanner,
-        },
-        optimizeDeps: {
-          esbuildOptions: {
-            define: {
-              Buffer: 'Buffer',
-            },
-            banner: {
-              js: bufferBanner,
-            },
+        resolve: {
+          alias: {
+            buffer: bufferPath,
           },
         },
       }
+    },
+    transformIndexHtml() {
+      return [
+        {
+          tag: 'script',
+          attrs: { type: 'module' },
+          children: [
+            "import { Buffer as __buffer_polyfill } from 'buffer'",
+            'globalThis.Buffer = globalThis.Buffer || __buffer_polyfill',
+          ].join('\n'),
+        },
+      ]
     },
   }
 }
