@@ -261,6 +261,54 @@ function enforceNotProdAndDevDependencies({ Yarn }) {
 }
 
 /**
+ * This rule will enforce that `graphql` resolves to exactly one version
+ * across the entire dependency graph (both workspace and transitive deps).
+ *
+ * It reads `yarn.lock` and counts the number of lockfile entries whose key
+ * contains `graphql@npm:`.  If there is more than one, different parts of
+ * the module graph resolve to different copies, which causes duplicate
+ * installs under pnpm.
+ *
+ * @param {Context} context
+ */
+function enforceSingleGraphqlVersion() {
+  const lockfilePath = path.join(__dirname, 'yarn.lock')
+
+  if (!fs.existsSync(lockfilePath)) {
+    return
+  }
+
+  const content = fs.readFileSync(lockfilePath, 'utf-8')
+  const lines = content.split('\n')
+
+  /** @type {{ key: string, line: number }[]} */
+  const entries = []
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    // Match top-level lockfile keys, e.g.:
+    //   "graphql@npm:16.13.2":
+    //   "graphql@npm:14 - 16, graphql@npm:16.14.2, graphql@npm:^16.0.0":
+    if (/^"[^"]*graphql@npm:.*":\s*$/.test(line)) {
+      entries.push({ key: line, line: i + 1 })
+    }
+  }
+
+  if (entries.length <= 1) {
+    return
+  }
+
+  const details = entries.map((e) => `  line ${e.line}: ${e.key}`).join('\n')
+
+  throw new Error(
+    `graphql resolves to multiple versions in the lockfile — this will cause ` +
+      `duplicate installs under pnpm.\n\n${details}\n\n` +
+      `Ensure all workspace and transitive dependencies resolve to the same ` +
+      `graphql version.`,
+  )
+}
+
+/**
  * This rule will enforce that any package built with babel (identified by the
  * presence of a 'build:js' script in its `package.json`) must depend on the
  * '@babel/runtime-corejs3' and 'core-js' packages.
@@ -345,6 +393,7 @@ module.exports = defineConfig({
       enforceWorkspaceDependenciesWhenPossible(ctx)
     }
     enforceNotProdAndDevDependencies(ctx)
+    enforceSingleGraphqlVersion()
     enforceBabelDependencies(ctx)
     enforceFieldsOnAllWorkspaces(ctx, [
       'name',

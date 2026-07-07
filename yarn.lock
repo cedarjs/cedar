@@ -2969,7 +2969,7 @@ __metadata:
     deepmerge: "npm:4.3.1"
     execa: "npm:5.1.1"
     fast-glob: "npm:3.3.3"
-    graphql: "npm:16.13.2"
+    graphql: "npm:16.14.2"
     jscodeshift: "npm:17.3.0"
     memfs: "npm:4.57.7"
     pascalcase: "npm:1.0.0"
@@ -3135,7 +3135,7 @@ __metadata:
     "@types/react": "npm:^18.2.55"
     "@types/react-dom": "npm:^18.2.19"
     concurrently: "npm:9.2.1"
-    graphql: "npm:16.13.2"
+    graphql: "npm:16.14.2"
     nodemon: "npm:3.1.14"
     pascalcase: "npm:1.0.0"
     publint: "npm:0.3.21"
@@ -3457,7 +3457,7 @@ __metadata:
     babel-plugin-tester: "npm:11.0.4"
     cheerio: "npm:1.2.0"
     concurrently: "npm:9.2.1"
-    graphql: "npm:16.13.2"
+    graphql: "npm:16.14.2"
     mime-types: "npm:2.1.35"
     publint: "npm:0.3.21"
     rollup: "npm:4.60.4"
@@ -3622,7 +3622,7 @@ __metadata:
     camelcase: "npm:6.3.0"
     deepmerge: "npm:4.3.1"
     dotenv-defaults: "npm:5.0.2"
-    graphql: "npm:16.13.2"
+    graphql: "npm:16.14.2"
     line-column: "npm:1.0.2"
     lodash: "npm:4.18.1"
     lru-cache: "npm:11.3.6"
@@ -18626,13 +18626,6 @@ __metadata:
   version: 16.14.2
   resolution: "graphql@npm:16.14.2"
   checksum: 10c0/a95a96961eaff55cc9fe9d31fae6f33499ac988b972d07ea5085024cb1333f515b902f376e7393a5489aa82200a8aff3eb96580e4d1b69d702ed19b6eb1ce97a
-  languageName: node
-  linkType: hard
-
-"graphql@npm:16.13.2":
-  version: 16.13.2
-  resolution: "graphql@npm:16.13.2"
-  checksum: 10c0/64e822a0a0e4398781e4bc9765b88d370c08261498b517add4b878038ef7be2005b6b394a79a5102b9379d57052f60bc7f23fec8f39808d101984a74772ebd9d
   languageName: node
   linkType: hard
 
