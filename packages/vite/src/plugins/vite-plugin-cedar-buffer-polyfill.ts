@@ -16,7 +16,7 @@ export function cedarBufferPolyfill(): Plugin | undefined {
   }
 
   const bufferBanner = [
-    "import __buffer_polyfill from 'buffer'",
+    "import { Buffer as __buffer_polyfill } from 'buffer'",
     'globalThis.Buffer = globalThis.Buffer || __buffer_polyfill',
   ].join('\n')
 
