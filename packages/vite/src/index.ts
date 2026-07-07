@@ -9,7 +9,7 @@ import {
   createAuthImportTransformPlugin,
 } from '@cedarjs/testing/web/vitest'
 
-import { cedarBufferPolyfill } from './plugins/vite-plugin-cedar-buffer-polyfill.ts'
+import { cedarBufferPolyfill } from './plugins/vite-plugin-cedar-buffer-polyfill.js'
 import { cedarCellTransform } from './plugins/vite-plugin-cedar-cell.js'
 import { cedarEntryInjectionPlugin } from './plugins/vite-plugin-cedar-entry-injection.js'
 import { cedarHtmlEnvPlugin } from './plugins/vite-plugin-cedar-html-env.js'
@@ -28,7 +28,7 @@ export { cedarCellTransform } from './plugins/vite-plugin-cedar-cell.js'
 export { cedarEntryInjectionPlugin } from './plugins/vite-plugin-cedar-entry-injection.js'
 export { cedarHtmlEnvPlugin } from './plugins/vite-plugin-cedar-html-env.js'
 export { cedarImportDirPlugin } from './plugins/vite-plugin-cedar-import-dir.js'
-export { cedarBufferPolyfill as cedarNodePolyfills } from './plugins/vite-plugin-cedar-buffer-polyfill.ts'
+export { cedarBufferPolyfill } from './plugins/vite-plugin-cedar-buffer-polyfill.js'
 export { cedarRemoveDevFatalErrorPage } from './plugins/vite-plugin-cedar-remove-dev-fatal-error-page.js'
 export { cedarRoutesAutoLoaderPlugin } from './plugins/vite-plugin-cedar-routes-auto-loader.js'
 export { cedarRemoveFromBundle } from './plugins/vite-plugin-cedar-remove-from-bundle.js'
