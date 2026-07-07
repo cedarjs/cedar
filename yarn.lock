@@ -3758,7 +3758,6 @@ __metadata:
     acorn: "npm:8.16.0"
     acorn-loose: "npm:8.5.2"
     ansis: "npm:4.2.0"
-    buffer: "npm:6.0.3"
     busboy: "npm:^1.6.0"
     concurrently: "npm:9.2.1"
     cookie: "npm:1.1.1"
@@ -3782,7 +3781,6 @@ __metadata:
     typescript: "npm:5.9.3"
     vite: "npm:7.3.5"
     vite-plugin-cjs-interop: "npm:2.4.4"
-    vite-plugin-node-polyfills: "npm:0.26.0"
     vitest: "npm:3.2.6"
     ws: "npm:8.20.0"
     yargs-parser: "npm:21.1.1"
@@ -13512,7 +13510,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"buffer@npm:6.0.3, buffer@npm:^6.0.3":
+"buffer@npm:^6.0.3":
   version: 6.0.3
   resolution: "buffer@npm:6.0.3"
   dependencies:

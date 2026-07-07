@@ -102,6 +102,205 @@ async function createServer() {
     appType: 'custom',
   })
 
+<<<<<<< HEAD
+=======
+  globalThis.__cedarjs__vite_ssr_runtime = createServerModuleRunner(
+    viteSsrDevServer.environments.ssr,
+  )
+  globalThis.__cedarjs__client_references = new Set<string>()
+  globalThis.__cedarjs__server_references = new Set<string>()
+
+  // const clientEntryFileSet = new Set<string>()
+  // const serverEntryFileSet = new Set<string>()
+
+  // TODO (RSC): No redwood-vite plugin, add it in here
+  const viteRscServer = await createViteServer({
+    envFile: false,
+    define: {
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+    },
+    ssr: {
+      // Inline every file apart from node built-ins. We want vite/rollup to
+      // inline dependencies in the server build. This gets round runtime
+      // importing of "server-only" and other packages with poisoned imports.
+      //
+      // Files included in `noExternal` are files we want Vite to analyze
+      // As of vite 5.2 `true` here means "all except node built-ins"
+      noExternal: true,
+      // TODO (RSC): Other frameworks build for RSC without `noExternal: true`.
+      // What are we missing here? When/why is that a better choice? I know
+      // we would have to explicitly add a bunch of packages to noExternal, if
+      // we wanted to go that route.
+      // noExternal: ['@tobbe.dev/rsc-test'],
+      // Can't inline prisma client (db calls fail at runtime) or react-dom
+      // (css pre-init failure)
+      // Server store has to be externalized, because it's a singleton (shared between FW and App)
+      external: [
+        '@prisma/client',
+        '@prisma/adapter-better-sqlite3',
+        '@prisma/fetch-engine',
+        '@prisma/internals',
+        'better-sqlite3',
+        '@cedarjs/auth-dbauth-api',
+        '@cedarjs/cookie-jar',
+        '@cedarjs/server-store',
+        '@cedarjs/structure',
+        '@simplewebauthn/server',
+        'graphql-scalars',
+        'minimatch',
+        'playwright',
+        'react-dom',
+      ],
+      resolve: {
+        // These conditions are used in the plugin pipeline, and only affect non-externalized
+        // dependencies during the SSR build. Which because of `noExternal: true` means all
+        // dependencies apart from node built-ins.
+        // TODO (RSC): What's the difference between `conditions` and
+        // `externalConditions`? When is one used over the other?
+        // In Vite 6, we must include `defaultServerConditions` alongside
+        // `react-server` so that nested condition maps (e.g. the `node`
+        // sub-condition inside `react-server-dom-webpack/server`'s exports)
+        // can still be resolved. Without `node` (or another environment
+        // condition), the resolver throws "No known conditions for
+        // './server' specifier in 'react-server-dom-webpack' package".
+        conditions: ['react-server', ...defaultServerConditions],
+        externalConditions: ['react-server', ...defaultServerConditions],
+      },
+      optimizeDeps: {
+        // We need Vite to optimize these dependencies so that they are resolved
+        // with the correct conditions. And so that CJS modules work correctly.
+        include: [
+          'react/**/*',
+          'react-dom/server',
+          'react-dom/server.edge',
+          'rehackt',
+          'react-server-dom-webpack/server',
+          'react-server-dom-webpack/server.edge',
+          'react-server-dom-webpack/client',
+          'react-server-dom-webpack/client.edge',
+          '@apollo/client/cache/*',
+          '@apollo/client/utilities/*',
+          '@apollo/client/react/hooks/*',
+          'react-fast-compare',
+          'invariant',
+          'shallowequal',
+          'graphql/language/*',
+          'stacktracey',
+          'deepmerge',
+          'fast-glob',
+          '@whatwg-node/fetch',
+          'busboy',
+          'cookie',
+        ],
+        // Ensure `util` resolves to Node's built-in module and not to
+        // Browserify's `node-util` polyfill (which lacks TextEncoder).
+        // The polyfill may be hoisted into node_modules by optional
+        // dependencies like `@cedarjs/storybook`.
+        exclude: ['util'],
+      },
+    },
+    resolve: {
+      // See comment above in ssr.resolve for why we include defaultServerConditions.
+      conditions: ['react-server', ...defaultServerConditions],
+    },
+    plugins: [
+      {
+        name: 'rsc-record-and-tranform-use-client-plugin',
+        transform(code, id, _options) {
+          // This is called from `getRoutesComponent()` in `clientSsr.ts`
+          // during SSR. So options.ssr will be true in that case.
+          // TODO (RSC): When is this called outside of SSR?
+
+          // TODO (RSC): We need to make sure this `id` always matches what
+          // vite uses
+          globalThis.__cedarjs__client_references?.delete(id)
+
+          // If `code` doesn't start with "use client" or 'use client' we can
+          // skip this file
+          if (!/^(["'])use client\1/.test(code)) {
+            return undefined
+          }
+
+          console.log(
+            'rsc-record-and-transform-use-client-plugin: ' +
+              'adding client reference',
+            id,
+          )
+          globalThis.__cedarjs__client_references?.add(id)
+
+          // TODO (RSC): Proper AST parsing would be more robust than simple
+          // regex matching. But this is a quick and dirty way to get started
+          const fns = code.matchAll(/export function (\w+)\(/g)
+          const consts = code.matchAll(/export const (\w+) = \(/g)
+          const names = [...fns, ...consts].map(([, name]) => name)
+
+          const result = [
+            `import { registerClientReference } from "react-server-dom-webpack/server.edge";`,
+            '',
+            ...names.map((name) => {
+              return name === 'default'
+                ? `export default registerClientReference({}, "${id}", "${name}");`
+                : `export const ${name} = registerClientReference({}, "${id}", "${name}");`
+            }),
+          ].join('\n')
+
+          console.log('rsc-record-and-transform-use-client-plugin result')
+          console.log(
+            result
+              .split('\n')
+              .map((line, i) => `  ${i + 1}: ${line}`)
+              .join('\n'),
+          )
+
+          return { code: result, map: null }
+        },
+      },
+      rscTransformUseServerPlugin('', {}),
+
+      // The rscTransformUseClientPlugin maps paths like
+      // /Users/tobbe/.../rw-app/node_modules/@tobbe.dev/rsc-test/dist/rsc-test.es.js
+      // to
+      // /Users/tobbe/.../rw-app/web/dist/ssr/assets/rsc0.js
+      // That's why it needs the `clientEntryFiles` data
+      // (It does other things as well, but that's why it needs clientEntryFiles)
+      // rscTransformUseClientPlugin(clientEntryFiles),
+      // rscTransformUseServerPlugin(outDir, serverEntryFiles),
+      rscRoutesImports(),
+      {
+        name: 'rsc-hot-update',
+        handleHotUpdate(ctx) {
+          console.log('rsc-hot-update ctx.modules', ctx.modules)
+          return []
+        },
+      },
+    ],
+    build: {
+      ssr: true,
+    },
+    server: {
+      // We never call `viteRscServer.listen()`, so we should run this in
+      // middleware mode
+      middlewareMode: true,
+      // The hmr/fast-refresh websocket in this server collides with the one in
+      // the other Vite server. So we can either disable it or run it on a
+      // different port.
+      // TODO (RSC): Figure out if we should disable or just pick a different
+      // port
+      ws: false,
+      // hmr: {
+      //   port: 24679,
+      // },
+    },
+    appType: 'custom',
+    // Using a unique cache dir here to not clash with our other vite server
+    cacheDir: '../node_modules/.vite-rsc',
+  })
+
+  globalThis.__cedarjs__vite_rsc_runtime = createServerModuleRunner(
+    viteRscServer.environments.ssr,
+  )
+
+>>>>>>> 870fb5f458 (fix(vite)!: replace buffer polyfill with data-uri-to-buffer shim (#2054))
   // create a handler that will invoke middleware with or without a route
   // The DEV one will create a new middleware router on each request
   const handleWithMiddleware = (route?: RouteSpec) => {
