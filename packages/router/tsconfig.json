@@ -11,7 +11,6 @@
     ]
   },
   "include": ["."],
-  "exclude": ["dist", "node_modules", "**/__mocks__", "**/__fixtures__"],
   "references": [
     { "path": "../auth/tsconfig.build.json" },
     { "path": "../framework-tools" },

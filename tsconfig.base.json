@@ -40,8 +40,13 @@
   "exclude": [
     "dist",
     "node_modules",
-    "**/__tests__",
     "**/__mocks__",
-    "**/*.test.*"
+    "**/*.test.*",
+    "**/__fixtures__",
+    // Only used by codemod test fixtures (input/output pairs). Don't use this
+    // folder name for regular test fixtures — use __fixtures__ instead.
+    "**/__testfixtures__",
+    "**/__tests__/fixtures",
+    "**/__typetests__"
   ]
 }
