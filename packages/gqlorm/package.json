@@ -139,7 +139,7 @@
   },
   "dependencies": {
     "@cedarjs/server-store": "4.2.0",
-    "graphql": "16.13.2"
+    "graphql": "16.14.2"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.4",
