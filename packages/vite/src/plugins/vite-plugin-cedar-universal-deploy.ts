@@ -476,7 +476,15 @@ async function generateFunctionModule(distPath: string): Promise<string> {
     export default {
       async fetch(request) {
         const ctx = await buildCedarContext(request);
-        return _handler(request, ctx);
+        // Wrap the handler in an AsyncLocalStorage run so the global
+        // @cedarjs/context is available inside it (and isolated per request).
+        // Mirrors the GraphQL module above and the cedarContextWrappingPlugin
+        // used for non-UD builds.
+        const { getAsyncStoreInstance } = await import(
+          '@cedarjs/context/dist/store'
+        );
+        const store = getAsyncStoreInstance();
+        return store.run(new Map(), () => _handler(request, ctx));
       }
     };
   `
