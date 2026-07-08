@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 
-import type { Config } from './config.js'
+import type { Config } from './config.ts'
 
 export function install(config: Config) {
   console.log('🐈 Running `yarn install`')

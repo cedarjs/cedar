@@ -52,7 +52,7 @@
     "build": "node ./build.ts && yarn build:types",
     "build:pack": "yarn pack -o cedarjs-vite.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
-    "check:attw": "tsx ./attw.ts",
+    "check:attw": "node ./attw.ts",
     "check:package": "concurrently npm:check:attw yarn:publint",
     "test": "vitest run",
     "test:watch": "vitest watch"
@@ -122,7 +122,6 @@
     "publint": "0.3.21",
     "rollup": "4.60.4",
     "ts-dedent": "2.3.0",
-    "tsx": "4.22.4",
     "typescript": "5.9.3",
     "vitest": "3.2.6"
   },

@@ -4,7 +4,7 @@ import path from 'node:path'
 
 import fetch from 'node-fetch'
 
-import type { Config } from './config.js'
+import type { Config } from './config.ts'
 
 export async function downloadTemplate(config: Config) {
   console.log('📥 Downloading CedarJS RSC template')

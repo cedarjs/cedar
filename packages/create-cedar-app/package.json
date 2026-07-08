@@ -15,7 +15,7 @@
     "database-overlays"
   ],
   "scripts": {
-    "build": "tsx ./scripts/build.ts",
+    "build": "node ./scripts/build.ts",
     "build:pack": "node ./scripts/buildPack.js",
     "build:watch": "nodemon --watch src --ignore dist,template --exec \"yarn build\"",
     "prepublishOnly": "NODE_ENV=production yarn build",
@@ -45,7 +45,6 @@
     "semver": "7.7.4",
     "systeminformation": "5.31.7",
     "termi-link": "1.1.0",
-    "tsx": "4.22.4",
     "untildify": "4.0.0",
     "uuid": "11.1.0",
     "vitest": "3.2.6",
