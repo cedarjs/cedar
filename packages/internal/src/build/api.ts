@@ -14,7 +14,7 @@ import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { findApiFiles } from '../files.js'
 
-import { applyContextWrapping } from './esbuild-plugin-cedar-context-wrapping.js'
+import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
 
 let BUILD_CTX: BuildContext | null = null
 
@@ -57,15 +57,15 @@ const runCedarBabelTransformsPlugin = {
         }),
       )
       if (transformedCode?.code) {
-        // Apply the context-wrapping safeguard to API function handlers. This
-        // is the standalone-esbuild equivalent of the Vite
-        // cedarContextWrappingPlugin and the (Jest-only) babel plugin it
+        // Apply the handler ALS wrapping safeguard to API function handlers.
+        // This is the standalone-esbuild equivalent of the Vite
+        // handlerAlsWrappingPlugin and the (Jest-only) babel plugin it
         // replaced.
         const functionsDir = normalizePath(
           path.join(getPaths().api.src, 'functions'),
         )
         const code = normalizePath(args.path).startsWith(functionsDir + '/')
-          ? (applyContextWrapping(transformedCode.code, {
+          ? (applyHandlerAlsWrapping(transformedCode.code, {
               projectIsEsm: projectSideIsEsm('api'),
             }) ?? transformedCode.code)
           : transformedCode.code
@@ -117,7 +117,7 @@ function createCedarViteApiPlugin(): Plugin {
           path.join(cedarPaths.api.src, 'functions'),
         )
         const code = normalizePath(id).startsWith(functionsDir + '/')
-          ? (applyContextWrapping(transformedCode.code, {
+          ? (applyHandlerAlsWrapping(transformedCode.code, {
               projectIsEsm: isEsm,
             }) ?? transformedCode.code)
           : transformedCode.code

@@ -174,14 +174,14 @@ export const getApiSideBabelOverrides = ({
 } = {}) => {
   const overrides = [
     // Extract graphql options from the graphql function
-    // NOTE: this must come before the context wrapping
+    // NOTE: this must come before the handler-als-wrapping
     {
       // match */api/src/functions/graphql.js|ts
       test: /.+api(?:[\\|/])src(?:[\\|/])functions(?:[\\|/])graphql\.(?:js|ts)$/,
       plugins: [pluginCedarGraphqlOptionsExtract, pluginCedarGqlormInject],
     },
-    // Apply context wrapping to all functions (Jest only; Vite uses
-    // cedarContextWrappingPlugin instead)
+    // Apply handler ALS wrapping to all functions (Jest only; Vite uses
+    // handlerAlsWrappingPlugin instead)
     forJest && {
       // match */api/src/functions/*.js|ts
       test: /.+api(?:[\\|/])src(?:[\\|/])functions(?:[\\|/]).+.(?:js|ts)$/,

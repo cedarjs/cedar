@@ -54,7 +54,7 @@ export function handlerAlsWrappingPlugin({
         return null
       }
 
-      const wrapped = applyContextWrapping(code, { projectIsEsm })
+      const wrapped = applyHandlerAlsWrapping(code, { projectIsEsm })
       return wrapped ? { code: wrapped, map: null } : null
     },
   }
@@ -66,11 +66,11 @@ export function handlerAlsWrappingPlugin({
  * export a `handler`.
  *
  * This is the context-isolation safeguard that used to be performed by
- * `babel-plugin-redwood-context-wrapping`. It is exported as a standalone
+ * `babel-plugin-handler-als-wrapping`. It is exported as a standalone
  * function so it can be applied from build pipelines that don't go through
  * Vite's plugin pipeline (e.g. the legacy esbuild API build).
  */
-export function applyContextWrapping(
+export function applyHandlerAlsWrapping(
   code: string,
   { projectIsEsm = false }: { projectIsEsm?: boolean } = {},
 ): string | null {
