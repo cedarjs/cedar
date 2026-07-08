@@ -1,19 +1,19 @@
 #!/usr/bin/env node
 
-import { initConfig } from './config.js'
-import { downloadTemplate } from './download.js'
-import { handleError } from './error.js'
-import { initialCommit } from './git.js'
-import { install } from './install.js'
-import { setInstallationDir } from './installationDir.js'
-import { relaunchOnLatest, shouldRelaunch } from './latest.js'
-import { printDone, printWelcome } from './messages.js'
-import { checkNodeVersion, checkYarnInstallation } from './prerequisites.js'
-import type { TelemetryInfo } from './telemetry.js'
-import { sendTelemetry } from './telemetry.js'
-import { upgradeToLatestCanary } from './upgradeToLatestCanary.js'
-import { printVersion } from './version.js'
-import { unzip } from './zip.js'
+import { initConfig } from './config.ts'
+import { downloadTemplate } from './download.ts'
+import { handleError } from './error.ts'
+import { initialCommit } from './git.ts'
+import { install } from './install.ts'
+import { setInstallationDir } from './installationDir.ts'
+import { relaunchOnLatest, shouldRelaunch } from './latest.ts'
+import { printDone, printWelcome } from './messages.ts'
+import { checkNodeVersion, checkYarnInstallation } from './prerequisites.ts'
+import type { TelemetryInfo } from './telemetry.ts'
+import { sendTelemetry } from './telemetry.ts'
+import { upgradeToLatestCanary } from './upgradeToLatestCanary.ts'
+import { printVersion } from './version.ts'
+import { unzip } from './zip.ts'
 
 const startTime = Date.now()
 const telemetryInfo: TelemetryInfo = {}

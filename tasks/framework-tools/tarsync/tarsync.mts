@@ -1,6 +1,6 @@
 import { $, cd } from 'zx'
 
-import type { Options } from './lib.mjs'
+import type { Options } from './lib.mts'
 import {
   buildTarballs,
   detectPackageManager,
@@ -8,8 +8,8 @@ import {
   copyTarballs,
   updateResolutions,
   pmInstall,
-} from './lib.mjs'
-import { OutputManager, Stage } from './output.mjs'
+} from './lib.mts'
+import { OutputManager, Stage } from './output.mts'
 
 function stageLog(verboseOutput: boolean, message: string) {
   // In verbose/CI mode the OutputManager spinner is disabled, so we emit
