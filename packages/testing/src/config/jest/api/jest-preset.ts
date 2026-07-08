@@ -7,7 +7,7 @@ import { getPaths } from '@cedarjs/project-config'
 
 const rwjsPaths = getPaths()
 const NODE_MODULES_PATH = path.join(rwjsPaths.base, 'node_modules')
-const { babelrc } = getApiSideDefaultBabelConfig()
+const { babelrc } = getApiSideDefaultBabelConfig({ forJest: true })
 
 const config: Config = {
   // To make sure other config option which depends on rootDir use

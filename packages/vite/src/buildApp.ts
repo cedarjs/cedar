@@ -14,6 +14,7 @@ import { findApiFiles } from '@cedarjs/internal/dist/files.js'
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
+import { cedarContextWrappingPlugin } from './plugins/vite-plugin-cedar-context-wrapping.js'
 
 function resolveWithExtensions(id: string): string {
   if (fs.existsSync(id)) {
@@ -325,44 +326,48 @@ export async function buildCedarApp({
         return null
       },
     })
+  }
 
-    if (babelPlugins) {
-      plugins.push({
-        name: 'cedar-vite-api-babel-transform',
-        enforce: 'pre',
-        async transform(code: string, id: string) {
-          if (!/\.(js|ts|tsx|jsx)$/.test(id)) {
-            return null
-          }
+  if (workspace.includes('api')) {
+    plugins.push(
+      cedarContextWrappingPlugin({ projectIsEsm: projectSideIsEsm('api') }),
+    )
+  }
 
-          if (id.includes('node_modules')) {
-            return null
-          }
-
-          if (
-            !normalizePath(id).startsWith(normalizePath(cedarPaths.api.base))
-          ) {
-            return null
-          }
-
-          const transformedCode = await transformWithBabel(
-            code,
-            id,
-            babelPlugins,
-            true,
-          )
-
-          if (transformedCode?.code) {
-            return {
-              code: transformedCode.code,
-              map: transformedCode.map ?? null,
-            }
-          }
-
+  if (babelPlugins) {
+    plugins.push({
+      name: 'cedar-vite-api-babel-transform',
+      enforce: 'pre',
+      async transform(code: string, id: string) {
+        if (!/\.(js|ts|tsx|jsx)$/.test(id)) {
           return null
-        },
-      })
-    }
+        }
+
+        if (id.includes('node_modules')) {
+          return null
+        }
+
+        if (!normalizePath(id).startsWith(normalizePath(cedarPaths.api.base))) {
+          return null
+        }
+
+        const transformedCode = await transformWithBabel(
+          code,
+          id,
+          babelPlugins,
+          true,
+        )
+
+        if (transformedCode?.code) {
+          return {
+            code: transformedCode.code,
+            map: transformedCode.map ?? null,
+          }
+        }
+
+        return null
+      },
+    })
   }
 
   const builder = await createBuilder({
