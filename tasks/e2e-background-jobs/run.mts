@@ -30,11 +30,7 @@ import {
   SAMPLE_CRON_JOB,
   SCHEDULE_CRON_JOB_SCRIPT,
 } from './fixtures.mts'
-import {
-  makeFilePath,
-  projectDirectoryExists,
-  projectFileExists,
-} from './util.mts'
+import { projectDirectoryExists, projectFileExists } from './util.mts'
 
 // job {
 //   id: 1,
@@ -194,8 +190,8 @@ async function runJobsSetup(projectPath: string) {
   console.log('Confirmed: jobs directory')
 
   // Confirm jobs dependency in api package.json
-  const apiPackageJson = await import(
-    makeFilePath(path.join(projectPath, 'api/package.json'))
+  const apiPackageJson = JSON.parse(
+    fs.readFileSync(path.join(projectPath, 'api/package.json'), 'utf-8'),
   )
   if (!apiPackageJson.dependencies['@cedarjs/jobs']) {
     console.error(
