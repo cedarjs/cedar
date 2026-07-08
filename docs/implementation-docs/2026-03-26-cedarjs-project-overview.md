@@ -257,6 +257,36 @@ Routes.tsx ← 4 routes added inside <Set wrap={ScaffoldLayout} title="Posts" ..
 | cookie-jar           | Typed cookie map. get/set/has/unset/serialize.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | utils                | Pluralization wrapper.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
+## ALS WRAPPING & GLOBAL CONTEXT
+
+Cedar provides two related but distinct mechanisms:
+
+- **`context`** (auto-imported from `@cedarjs/context`) — a Proxy that
+  reads/writes from an `AsyncLocalStorage` store. Populated with `currentUser`
+  etc. only when `setContext()` is called.
+- **ALS wrapping** (`store.run(new Map(), ...)`) — ensures the AsyncLocalStorage
+  store exists for the duration of a request. Without this, `getStore()` returns
+  `undefined` and the context proxy falls back to an empty `{}`.
+
+`setContext()` is only ever called by the `useRedwoodGlobalContextSetter`
+GraphQL plugin
+(`packages/graphql-server/src/plugins/useRedwoodGlobalContextSetter.ts:16`).
+Regular functions (webhooks, auth, etc.) never populate the store — they read
+auth data directly from the request/event.
+
+| Path                                                      | Mechanism                  | ALS wrapping | `setContext()`  | `context.currentUser` |
+| --------------------------------------------------------- | -------------------------- | ------------ | --------------- | --------------------- |
+| **Non-UD dev** — GraphQL                                  | Fastify `onRequest` hook   | ✅           | ✅ plugin chain | ✅                    |
+| **Non-UD dev** — Functions                                | Fastify `onRequest` hook   | ✅           | ❌              | ❌ `undefined`        |
+| **Non-UD serve/deploy** (baremetal/docker) — GraphQL      | Fastify `onRequest` hook   | ✅           | ✅ plugin chain | ✅                    |
+| **Non-UD serve/deploy** (baremetal/docker) — Functions    | Fastify `onRequest` hook   | ✅           | ❌              | ❌ `undefined`        |
+| **Non-UD deploy** (Netlify/Vercel serverless) — GraphQL   | Babel safety net in output | ✅           | ✅ plugin chain | ✅                    |
+| **Non-UD deploy** (Netlify/Vercel serverless) — Functions | Babel safety net in output | ✅           | ❌              | ❌ `undefined`        |
+| **UD dev** — GraphQL                                      | Vite Babel transform       | ✅           | ✅ plugin chain | ✅                    |
+| **UD dev** — Functions                                    | Vite Babel transform       | ✅           | ❌              | ❌ `undefined`        |
+| **UD built/deploy** — GraphQL                             | Generated `store.run()`    | ✅           | ✅ plugin chain | ✅                    |
+| **UD built/deploy** — Functions                           | Generated `store.run()`    | ✅           | ❌              | ❌ `undefined`        |
+
 ## CONVENTIONS
 
 - Config: `cedar.toml` (fallback `redwood.toml`)
