@@ -8,7 +8,7 @@ import { describe, it, expect } from 'vitest'
 
 import gqlormInjectPlugin from '../babel-plugin-cedar-gqlorm-inject'
 import graphqlOptionsExtractPlugin from '../babel-plugin-cedar-graphql-options-extract'
-import plugin from '../babel-plugin-redwood-context-wrapping'
+import plugin from '../babel-plugin-handler-als-wrapping'
 
 const simpleHandlerInput = [
   '',
@@ -172,7 +172,7 @@ function assertMapsToSource(
   expect(original.line).toBe(expectedLine)
 }
 
-describe('babel-plugin-redwood-context-wrapping source maps', () => {
+describe('babel-plugin-handler-als-wrapping source maps', () => {
   it('produces a source map with the expected structure', () => {
     const { code, map } = getCodeAndMap(
       runBabelTransform(simpleHandlerInput, 'graphql.ts'),

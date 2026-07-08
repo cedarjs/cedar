@@ -478,7 +478,7 @@ async function generateFunctionModule(distPath: string): Promise<string> {
         const ctx = await buildCedarContext(request);
         // Wrap the handler in an AsyncLocalStorage run so the global
         // @cedarjs/context is available inside it (and isolated per request).
-        // Mirrors the GraphQL module above and the cedarContextWrappingPlugin
+        // Mirrors the GraphQL module above and the handlerAlsWrappingPlugin
         // used for non-UD builds.
         const { getAsyncStoreInstance } = await import(
           '@cedarjs/context/dist/store'

@@ -28,10 +28,10 @@ import { getPaths } from '@cedarjs/project-config'
  *        return __rw_handler(__rw_event, __rw__context)
  *      }
  *
- * This replaces `babel-plugin-redwood-context-wrapping` for Vite builds.
+ * This replaces `babel-plugin-handler-als-wrapping` for Vite builds.
  * The babel plugin is still used for Jest and prerender.
  */
-export function cedarContextWrappingPlugin({
+export function handlerAlsWrappingPlugin({
   projectIsEsm = false,
 }: {
   projectIsEsm?: boolean
@@ -43,7 +43,7 @@ export function cedarContextWrappingPlugin({
     /^export\s+(?:const|let|var)\s+handler(?:[^=]|=>)*?=(?![>=])/m
 
   return {
-    name: 'cedar-context-wrapping',
+    name: 'handler-als-wrapping',
 
     transform(code, id) {
       // Only transform API function files
