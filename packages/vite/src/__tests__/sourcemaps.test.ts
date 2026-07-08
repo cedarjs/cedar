@@ -3,7 +3,7 @@ import { TraceMap, originalPositionFor } from '@jridgewell/trace-mapping'
 import { moduleRunnerTransform as ssrTransform } from 'vite'
 import { describe, it, expect } from 'vitest'
 
-import pluginRedwoodContextWrapping from '@cedarjs/babel-config/dist/plugins/babel-plugin-redwood-context-wrapping.js'
+import handlerAlsWrappingPlugin from '@cedarjs/babel-config/dist/plugins/babel-plugin-handler-als-wrapping.js'
 
 const simpleHandlerInput = [
   '',
@@ -56,7 +56,7 @@ describe('Vite SSR source map chain', () => {
   it('maps SSR output to correct source lines after SSR transform', async () => {
     const babelResult = transformSync(simpleHandlerInput, {
       filename: 'graphql.ts',
-      plugins: [[pluginRedwoodContextWrapping, {}]],
+      plugins: [[handlerAlsWrappingPlugin, {}]],
       sourceMaps: true,
       sourceFileName: 'graphql.ts',
       configFile: false,
@@ -90,7 +90,7 @@ describe('Vite SSR source map chain', () => {
   it('maps async handler body to correct source lines after SSR', async () => {
     const babelResult = transformSync(asyncHandlerInput, {
       filename: 'auth.ts',
-      plugins: [[pluginRedwoodContextWrapping, {}]],
+      plugins: [[handlerAlsWrappingPlugin, {}]],
       sourceMaps: true,
       sourceFileName: 'auth.ts',
       configFile: false,

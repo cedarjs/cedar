@@ -16,7 +16,7 @@ import {
 } from './common.js'
 import pluginCedarGqlormInject from './plugins/babel-plugin-cedar-gqlorm-inject.js'
 import pluginCedarGraphqlOptionsExtract from './plugins/babel-plugin-cedar-graphql-options-extract.js'
-import pluginRedwoodContextWrapping from './plugins/babel-plugin-redwood-context-wrapping.js'
+import handlerAlsWrappingPlugin from './plugins/babel-plugin-handler-als-wrapping.js'
 import pluginRedwoodDirectoryNamedImport from './plugins/babel-plugin-redwood-directory-named-import.js'
 import pluginRedwoodImportDir from './plugins/babel-plugin-redwood-import-dir.js'
 import pluginRedwoodJobPathInjector from './plugins/babel-plugin-redwood-job-path-injector.js'
@@ -174,20 +174,20 @@ export const getApiSideBabelOverrides = ({
 } = {}) => {
   const overrides = [
     // Extract graphql options from the graphql function
-    // NOTE: this must come before the context wrapping
+    // NOTE: this must come before the handler-als-wrapping
     {
       // match */api/src/functions/graphql.js|ts
       test: /.+api(?:[\\|/])src(?:[\\|/])functions(?:[\\|/])graphql\.(?:js|ts)$/,
       plugins: [pluginCedarGraphqlOptionsExtract, pluginCedarGqlormInject],
     },
-    // Apply context wrapping to all functions (Jest only; Vite uses
-    // cedarContextWrappingPlugin instead)
+    // Apply handler ALS wrapping to all functions (Jest only; Vite uses
+    // handlerAlsWrappingPlugin instead)
     forJest && {
       // match */api/src/functions/*.js|ts
       test: /.+api(?:[\\|/])src(?:[\\|/])functions(?:[\\|/]).+.(?:js|ts)$/,
       plugins: [
         [
-          pluginRedwoodContextWrapping,
+          handlerAlsWrappingPlugin,
           {
             projectIsEsm,
           },

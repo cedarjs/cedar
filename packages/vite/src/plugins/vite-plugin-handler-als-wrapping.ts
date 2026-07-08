@@ -28,16 +28,16 @@ import { getPaths } from '@cedarjs/project-config'
  *        return __rw_handler(__rw_event, __rw__context)
  *      }
  *
- * This replaces `babel-plugin-redwood-context-wrapping` for Vite builds.
+ * This replaces `babel-plugin-handler-als-wrapping` for Vite builds.
  * The babel plugin is still used for Jest and prerender.
  */
-export function cedarContextWrappingPlugin({
+export function handlerAlsWrappingPlugin({
   projectIsEsm = false,
 }: {
   projectIsEsm?: boolean
 } = {}): Plugin {
   return {
-    name: 'cedar-context-wrapping',
+    name: 'handler-als-wrapping',
 
     transform(code, id) {
       // Only transform API function files
@@ -54,7 +54,7 @@ export function cedarContextWrappingPlugin({
         return null
       }
 
-      const wrapped = applyContextWrapping(code, { projectIsEsm })
+      const wrapped = applyHandlerAlsWrapping(code, { projectIsEsm })
       return wrapped ? { code: wrapped, map: null } : null
     },
   }
@@ -66,11 +66,11 @@ export function cedarContextWrappingPlugin({
  * export a `handler`.
  *
  * This is the context-isolation safeguard that used to be performed by
- * `babel-plugin-redwood-context-wrapping`. It is exported as a standalone
+ * `babel-plugin-handler-als-wrapping`. It is exported as a standalone
  * function so it can be applied from build pipelines that don't go through
  * Vite's plugin pipeline (e.g. the legacy esbuild API build).
  */
-export function applyContextWrapping(
+export function applyHandlerAlsWrapping(
   code: string,
   { projectIsEsm = false }: { projectIsEsm?: boolean } = {},
 ): string | null {
