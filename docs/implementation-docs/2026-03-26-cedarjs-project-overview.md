@@ -261,18 +261,40 @@ Routes.tsx ← 4 routes added inside <Set wrap={ScaffoldLayout} title="Posts" ..
 
 Cedar provides two related but distinct mechanisms:
 
-- **`context`** (auto-imported from `@cedarjs/context`) — a Proxy that
-  reads/writes from an `AsyncLocalStorage` store. Populated with `currentUser`
-  etc. only when `setContext()` is called.
 - **ALS wrapping** (`store.run(new Map(), ...)`) — ensures the AsyncLocalStorage
-  store exists for the duration of a request. Without this, `getStore()` returns
-  `undefined` and the context proxy falls back to an empty `{}`.
+  store exists for the duration of a request. Needed because serverless
+  environments (Netlify, Vercel) may reuse the same process across requests —
+  without a fresh store per request, state from one request could leak into
+  another. Also prevents the `context` proxy from crashing (without an active
+  store, `getStore()` returns `undefined`).
+- **`context`** (auto-imported from `@cedarjs/context`) — a Proxy that
+  reads/writes from the ALS store. Exists so services deep in the GraphQL
+  resolver chain can access `currentUser` without threading it through every
+  function parameter.
 
-`setContext()` is only ever called by the `useRedwoodGlobalContextSetter`
-GraphQL plugin
+`setContext()` populates the store with the resolved GraphQL context
+(including `currentUser`) and is only called by the
+`useRedwoodGlobalContextSetter` plugin
 (`packages/graphql-server/src/plugins/useRedwoodGlobalContextSetter.ts:16`).
-Regular functions (webhooks, auth, etc.) never populate the store — they read
-auth data directly from the request/event.
+It's GraphQL-only because:
+
+1. GraphQL has a plugin chain where `currentUser` is resolved once by
+   `useRedwoodAuthContext` (from `ctx.serverAuthState`) and then made available
+   to all downstream resolvers and directive validators via the store.
+2. Regular functions are single-entry-point: they get the request, do one thing,
+   return a response. Different function types handle auth differently, but none
+   need `setContext()` for `currentUser`:
+
+   - **Auth functions** (login/signup/logout): integral to the auth flow, but
+     they create/destroy sessions by reading the request body and cookies
+     directly. On login the user isn't authenticated yet; on logout the session
+     is already in the cookie. `currentUser` is resolved _after_ these functions
+     succeed, by the auth decoder on subsequent GraphQL requests.
+   - **Webhooks** (Stripe, SendGrid): external POSTs with no Cedar auth context
+     at all. No way to construct a `currentUser` from the request.
+   - **Custom API endpoints**: if they need auth they decode the token or read
+     the cookie themselves. Preferrably with the help of the `useRequireAuth()`
+     hook.
 
 | Path                                                      | Mechanism                  | ALS wrapping | `setContext()`  | `context.currentUser` |
 | --------------------------------------------------------- | -------------------------- | ------------ | --------------- | --------------------- |
