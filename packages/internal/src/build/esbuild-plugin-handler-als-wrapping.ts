@@ -1,11 +1,11 @@
-// Context-wrapping safeguard for API function handlers. This mirrors the Vite
-// cedarContextWrappingPlugin (used by buildCedarApp) and the Jest-only babel
-// plugin it replaced. The legacy esbuild build and the standalone-Vite build
-// (buildApiWithVite) don't go through the Vite plugin pipeline, so they apply
-// it directly here. Keep this in sync with
-// packages/vite/src/plugins/vite-plugin-cedar-context-wrapping.ts.
+// Handler ALS wrapping safeguard for API function handlers. This mirrors the
+// Vite handlerAlsWrappingPlugin (used by buildCedarApp) and the Jest-only
+// babel plugin it replaced. The legacy esbuild build and the standalone-Vite
+// build (buildApiWithVite) don't go through the Vite plugin pipeline, so they
+// apply it directly here. Keep this in sync with
+// packages/vite/src/plugins/vite-plugin-handler-als-wrapping.ts.
 
-export function applyContextWrapping(
+export function applyHandlerAlsWrapping(
   code: string,
   { projectIsEsm = false }: { projectIsEsm?: boolean } = {},
 ): string | null {
