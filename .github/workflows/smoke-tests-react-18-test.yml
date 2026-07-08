@@ -26,7 +26,7 @@ jobs:
 
       - name: Downgrade to React 18
         run: |
-          yarn tsx ./tasks/downgradeToReact18.mts
+          node ./tasks/downgradeToReact18.mts
 
       # One of our dependencies is on GitHub instead of NPM and without authentication
       # we'll get rate limited and this step becomes flaky.
