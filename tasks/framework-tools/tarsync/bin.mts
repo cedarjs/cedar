@@ -2,8 +2,8 @@ import path from 'node:path'
 
 import chokidar from 'chokidar'
 
-import { FRAMEWORK_PATH, getOptions, IGNORED } from './lib.mjs'
-import { tarsync } from './tarsync.mjs'
+import { FRAMEWORK_PATH, getOptions, IGNORED } from './lib.mts'
+import { tarsync } from './tarsync.mts'
 
 async function main() {
   const { projectPath, watch, verbose } = await getOptions()

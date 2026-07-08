@@ -4,8 +4,8 @@ import fs from 'node:fs'
 import semver from 'semver'
 import which from 'which'
 
-import type { Config } from './config.js'
-import { ExitCodeError } from './error.js'
+import type { Config } from './config.ts'
+import { ExitCodeError } from './error.ts'
 
 export function checkNodeVersion(config: Config) {
   if (config.verbose) {

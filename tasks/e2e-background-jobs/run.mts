@@ -29,12 +29,12 @@ import {
   SAMPLE_JOB_PERFORM_BODY,
   SAMPLE_CRON_JOB,
   SCHEDULE_CRON_JOB_SCRIPT,
-} from './fixtures.mjs'
+} from './fixtures.mts'
 import {
   makeFilePath,
   projectDirectoryExists,
   projectFileExists,
-} from './util.mjs'
+} from './util.mts'
 
 // job {
 //   id: 1,

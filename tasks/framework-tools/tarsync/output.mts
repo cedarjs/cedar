@@ -1,17 +1,19 @@
 import ansis from 'ansis'
 import { ProcessOutput } from 'zx'
 
-import { FRAMEWORK_PATH } from './lib.mjs'
-import type { PackageManager } from './lib.mjs'
+import { FRAMEWORK_PATH } from './lib.mts'
+import type { PackageManager } from './lib.mts'
 
-export enum Stage {
-  NONE = 0,
-  BUILD_PACK = 1,
-  MOVE = 2,
-  RESOLUTIONS = 3,
-  INSTALL = 4,
-  DONE = 5,
-}
+export const Stage = {
+  NONE: 0,
+  BUILD_PACK: 1,
+  MOVE: 2,
+  RESOLUTIONS: 3,
+  INSTALL: 4,
+  DONE: 5,
+} as const
+
+export type Stage = (typeof Stage)[keyof typeof Stage]
 
 interface ConstructorArgs {
   disabled: boolean
