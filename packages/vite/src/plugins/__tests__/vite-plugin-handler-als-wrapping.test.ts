@@ -3,7 +3,7 @@ import path from 'node:path'
 import { dedent } from 'ts-dedent'
 import { describe, it, expect, vi } from 'vitest'
 
-import { cedarContextWrappingPlugin } from '../vite-plugin-cedar-context-wrapping.js'
+import { handlerAlsWrappingPlugin } from '../vite-plugin-handler-als-wrapping.js'
 
 const TEST_CEDAR_CWD = '/Users/test/cedar-app'
 
@@ -16,7 +16,7 @@ vi.mock('@cedarjs/project-config', () => ({
 }))
 
 function getPluginTransform(options?: { projectIsEsm?: boolean }) {
-  const plugin = cedarContextWrappingPlugin(options)
+  const plugin = handlerAlsWrappingPlugin(options)
 
   if (typeof plugin.transform !== 'function') {
     expect.fail('Expected plugin to have a transform function')
@@ -27,7 +27,7 @@ function getPluginTransform(options?: { projectIsEsm?: boolean }) {
 
 const FUNCTIONS_DIR = path.join(TEST_CEDAR_CWD, 'api/src/functions')
 
-describe('cedarContextWrappingPlugin', () => {
+describe('handlerAlsWrappingPlugin', () => {
   it('wraps an async arrow function handler', () => {
     const transform = getPluginTransform()
     const code = dedent`

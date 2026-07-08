@@ -90,7 +90,7 @@ The seven Cedar-specific transforms:
 
 | Plugin                    | What It Does                                           |
 | ------------------------- | ------------------------------------------------------ |
-| `context-wrapping`        | Wraps exported handlers with async context isolation   |
+| `handler-als-wrapping`    | Wraps exported handlers with async context isolation   |
 | `directory-named-import`  | Rewrites import paths for directory-named modules      |
 | `import-dir`              | Expands glob imports into individual namespace imports |
 | `job-path-injector`       | Injects path/name into `.createJob()` calls            |

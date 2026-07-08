@@ -3,7 +3,7 @@ import { TraceMap, originalPositionFor } from '@jridgewell/trace-mapping'
 import { moduleRunnerTransform as ssrTransform } from 'vite'
 import { describe, it, expect } from 'vitest'
 
-import pluginRedwoodContextWrapping from '@cedarjs/babel-config/dist/plugins/babel-plugin-redwood-context-wrapping.js'
+import pluginRedwoodContextWrapping from '@cedarjs/babel-config/dist/plugins/babel-plugin-handler-als-wrapping.js'
 
 const simpleHandlerInput = [
   '',

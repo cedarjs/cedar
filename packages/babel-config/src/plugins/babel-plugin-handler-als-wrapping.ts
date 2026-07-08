@@ -69,7 +69,7 @@ export default function (
   { projectIsEsm = false }: { projectIsEsm?: boolean } = {},
 ): PluginObj {
   return {
-    name: 'babel-plugin-redwood-context-wrapping',
+    name: 'babel-plugin-handler-als-wrapping',
     visitor: {
       ExportNamedDeclaration(path, _state) {
         // Confirm we're at the "handler" export
