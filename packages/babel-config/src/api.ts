@@ -168,7 +168,10 @@ export const getApiSideBabelConfigPath = () => {
   }
 }
 
-export const getApiSideBabelOverrides = ({ projectIsEsm = false } = {}) => {
+export const getApiSideBabelOverrides = ({
+  projectIsEsm = false,
+  forJest = false,
+} = {}) => {
   const overrides = [
     // Extract graphql options from the graphql function
     // NOTE: this must come before the context wrapping
@@ -177,8 +180,9 @@ export const getApiSideBabelOverrides = ({ projectIsEsm = false } = {}) => {
       test: /.+api(?:[\\|/])src(?:[\\|/])functions(?:[\\|/])graphql\.(?:js|ts)$/,
       plugins: [pluginCedarGraphqlOptionsExtract, pluginCedarGqlormInject],
     },
-    // Apply context wrapping to all functions
-    {
+    // Apply context wrapping to all functions (Jest only; Vite uses
+    // cedarContextWrappingPlugin instead)
+    forJest && {
       // match */api/src/functions/*.js|ts
       test: /.+api(?:[\\|/])src(?:[\\|/])functions(?:[\\|/]).+.(?:js|ts)$/,
       plugins: [
@@ -200,11 +204,14 @@ export const getApiSideBabelOverrides = ({ projectIsEsm = false } = {}) => {
   return overrides as TransformOptions[]
 }
 
-export const getApiSideDefaultBabelConfig = ({ projectIsEsm = false } = {}) => {
+export const getApiSideDefaultBabelConfig = ({
+  projectIsEsm = false,
+  forJest = false,
+} = {}) => {
   return {
     presets: getApiSideBabelPresets(),
     plugins: getApiSideBabelPlugins({ projectIsEsm }),
-    overrides: getApiSideBabelOverrides({ projectIsEsm }),
+    overrides: getApiSideBabelOverrides({ projectIsEsm, forJest }),
     extends: getApiSideBabelConfigPath(),
     babelrc: false,
     ignore: ['node_modules'],

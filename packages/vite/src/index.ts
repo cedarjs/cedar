@@ -25,6 +25,7 @@ import { cedarSwapApolloProvider } from './plugins/vite-plugin-swap-apollo-provi
 export { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
 export { cedarCjsCompatPlugin } from './plugins/vite-plugin-cedar-cjs-compat.js'
 export { cedarCellTransform } from './plugins/vite-plugin-cedar-cell.js'
+export { cedarContextWrappingPlugin } from './plugins/vite-plugin-cedar-context-wrapping.js'
 export { cedarEntryInjectionPlugin } from './plugins/vite-plugin-cedar-entry-injection.js'
 export { cedarHtmlEnvPlugin } from './plugins/vite-plugin-cedar-html-env.js'
 export { cedarImportDirPlugin } from './plugins/vite-plugin-cedar-import-dir.js'
