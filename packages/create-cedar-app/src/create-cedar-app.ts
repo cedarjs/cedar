@@ -70,9 +70,24 @@ async function installNodeModules(
   process.chdir(newAppDir)
 
   const installCommand = getInstallCommand(packageManager)
+
+  // When CCA is run via `yarn dlx`, Yarn injects its PnP ESM loader into
+  // NODE_OPTIONS. If this leaks to the spawned install process, it can
+  // interfere with other package managers' module resolution (e.g. pnpm trying
+  // to import() .pnpmfile.mjs). Strip just that loader flag. This uses the same
+  // regex pattern that Yarn itself uses in its setupScriptEnvironment hook
+  // https://github.com/yarnpkg/berry/blob/0a230c14e71247576f6b51fa811ae08edb6608aa/packages/plugin-pnp/sources/index.ts#L42
+  const PNP_ESM_LOADER = /\s*--experimental-loader\s+\S*\.pnp\.loader\.mjs\s*/g
+  const env = { ...process.env }
+  if (env.NODE_OPTIONS) {
+    env.NODE_OPTIONS = env.NODE_OPTIONS.replace(PNP_ESM_LOADER, ' ').trim()
+  }
+
   const installSubprocess = execa(installCommand, {
     shell: true,
     cwd: newAppDir,
+    env,
+    extendEnv: false,
   })
 
   try {
