@@ -89,17 +89,26 @@ export function cedarGqlormInjectPlugin(): Plugin {
 
       const handlerLineStart = code.lastIndexOf('\n', handlerMatch.index) + 1
 
-      // Find where all imports end
+      // Find where all imports end by looking for the first non-empty line that
+      // starts with 'import ' followed by a line that doesn't start with 'import'
       let importsEndPos = 0
-      const lines = code.split('\n')
-      for (const line of lines) {
+      let currentPos = 0
+      let lastImportLineEnd = 0
+
+      for (const line of code.split('\n')) {
         const trimmedLine = line.trim()
-        // Stop at the first non-empty, non-import line
-        if (trimmedLine && !trimmedLine.startsWith('import ')) {
-          // Position is after the newline of the previous line
-          importsEndPos = code.indexOf(line)
+        const lineEnd = currentPos + line.length
+
+        // Track position of last line that starts with 'import'
+        if (trimmedLine.startsWith('import ')) {
+          lastImportLineEnd = lineEnd
+        } else if (trimmedLine && lastImportLineEnd > 0) {
+          // First non-import, non-empty line after imports
+          importsEndPos = lastImportLineEnd
           break
         }
+
+        currentPos = lineEnd + 1 // +1 for the newline character
       }
 
       // Compute the relative path from graphql.ts to the backend file

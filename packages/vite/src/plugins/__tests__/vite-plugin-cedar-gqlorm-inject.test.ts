@@ -210,4 +210,40 @@ export const handler = createGraphQLHandler({})`
     const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
     expect(result).toBeNull()
   })
+
+  it('correctly handles multi-line imports', () => {
+    const code = `import {
+  createGraphQLHandler,
+  type GraphQLHandlerOptions,
+} from '@cedarjs/graphql-server'
+import { db } from 'src/lib/db'
+
+export const handler = createGraphQLHandler({
+  db,
+})`
+
+    ;(getConfig as any).mockReturnValue({
+      experimental: { gqlorm: { enabled: true } },
+    })
+    ;(getPaths as any).mockReturnValue({
+      generated: { base: '.cedar' },
+    })
+
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true)
+
+    const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
+
+    if (result && typeof result === 'object') {
+      const transformed = result.code
+
+      // Verify the gqlorm injections are present
+      expect(transformed).toContain('__gqlorm_sdl__')
+      expect(transformed).toContain('Object.assign(sdls')
+      expect(transformed).toContain('import { db as __gqlorm_db__ }')
+
+      // Verify the multi-line import is still valid (not broken by injection)
+      expect(transformed).toContain("} from '@cedarjs/graphql-server'")
+      expect(transformed).toContain("import { db } from 'src/lib/db'")
+    }
+  })
 })
