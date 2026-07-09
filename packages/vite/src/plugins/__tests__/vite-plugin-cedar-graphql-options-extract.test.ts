@@ -175,4 +175,27 @@ export const handler = createGraphQLHandler({
       expect(transformed).toContain('nested: { deeply: true }')
     }
   })
+
+  it('handles escaped backslashes in string values', () => {
+    const code = `import { createGraphQLHandler } from '@cedarjs/graphql-server'
+
+export const handler = createGraphQLHandler({
+  pattern: "foo\\\\\\\\bar",
+  directives,
+})`
+
+    const result = plugin.transform!(code, 'graphql.ts')
+
+    if (result && typeof result === 'object') {
+      const transformed = result.code
+
+      // Should correctly extract the entire options object despite escaped backslashes
+      expect(transformed).toContain('export const __cedar_graphqlOptions = {')
+      expect(transformed).toContain('pattern:')
+      expect(transformed).toContain('directives,')
+      expect(transformed).toContain(
+        'createGraphQLHandler(__cedar_graphqlOptions)',
+      )
+    }
+  })
 })

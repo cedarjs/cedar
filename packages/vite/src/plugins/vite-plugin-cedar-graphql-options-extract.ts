@@ -111,16 +111,23 @@ function extractFunctionArgument(code: string, startPos: number): string {
   for (let i = startPos; i < code.length; i++) {
     const char = code[i]
 
-    // Handle strings
-    if (
-      (char === '"' || char === "'" || char === '`') &&
-      code[i - 1] !== '\\'
-    ) {
-      if (!inString) {
-        inString = true
-        stringChar = char
-      } else if (char === stringChar) {
-        inString = false
+    // Handle strings: check if the quote is escaped by counting preceding backslashes
+    if (char === '"' || char === "'" || char === '`') {
+      // Count consecutive backslashes before this quote
+      let backslashCount = 0
+      for (let j = i - 1; j >= 0 && code[j] === '\\'; j--) {
+        backslashCount++
+      }
+      // If even number of backslashes (including 0), the quote is not escaped
+      const isEscaped = backslashCount % 2 === 1
+
+      if (!isEscaped) {
+        if (!inString) {
+          inString = true
+          stringChar = char
+        } else if (char === stringChar) {
+          inString = false
+        }
       }
       continue
     }
