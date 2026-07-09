@@ -37,7 +37,8 @@ export function cedarDirectoryNamedImportPlugin(): Plugin {
       }
 
       // We only operate in "userland", skip node_modules
-      if (importer.includes('/node_modules/')) {
+      const normalizedImporter = normalizePath(importer)
+      if (normalizedImporter.includes('/node_modules/')) {
         return null
       }
 
