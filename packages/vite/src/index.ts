@@ -11,7 +11,6 @@ import {
 
 import { cedarCellTransform } from './plugins/vite-plugin-cedar-cell.js'
 import { cedarDataUriShim } from './plugins/vite-plugin-cedar-data-uri-shim.js'
-import { cedarDirectoryNamedImportPlugin } from './plugins/vite-plugin-cedar-directory-named-import.js'
 import { cedarEntryInjectionPlugin } from './plugins/vite-plugin-cedar-entry-injection.js'
 import { cedarHtmlEnvPlugin } from './plugins/vite-plugin-cedar-html-env.js'
 import { cedarRemoveDevFatalErrorPage } from './plugins/vite-plugin-cedar-remove-dev-fatal-error-page.js'
@@ -71,7 +70,6 @@ export function cedar({ mode }: PluginOptions = {}): PluginOption[] {
     cedarWaitForApiServer(),
     cedarDataUriShim(),
     cedarHtmlEnvPlugin(),
-    cedarDirectoryNamedImportPlugin(),
     cedarEntryInjectionPlugin(),
     cedarMergedConfig(),
     cedarjsResolveCedarStyleImportsPlugin(),
