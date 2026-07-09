@@ -87,17 +87,17 @@ export function cedarGqlormInjectPlugin(): Plugin {
         return null
       }
 
-      const handlerLineStart = code.lastIndexOf('\n', handlerMatch.index!) + 1
+      const handlerLineStart = code.lastIndexOf('\n', handlerMatch.index) + 1
 
       // Find where all imports end
       let importsEndPos = 0
       const lines = code.split('\n')
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim()
+      for (const line of lines) {
+        const trimmedLine = line.trim()
         // Stop at the first non-empty, non-import line
-        if (line && !line.startsWith('import ')) {
+        if (trimmedLine && !trimmedLine.startsWith('import ')) {
           // Position is after the newline of the previous line
-          importsEndPos = code.indexOf(lines[i])
+          importsEndPos = code.indexOf(line)
           break
         }
       }

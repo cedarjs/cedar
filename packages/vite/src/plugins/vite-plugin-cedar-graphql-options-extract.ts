@@ -59,7 +59,7 @@ function extractGraphqlOptions(code: string): string | null {
     return null
   }
 
-  const exportIndex = exportMatch.index!
+  const exportIndex = exportMatch.index
   const exportName = exportMatch[1]
   // Position right after "createGraphQLHandler("
   const paramsStartPos = exportIndex + exportMatch[0].length

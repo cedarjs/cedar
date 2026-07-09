@@ -1,4 +1,8 @@
+import fs from 'node:fs'
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
+import { getConfig, getPaths } from '@cedarjs/project-config'
 
 import { cedarGqlormInjectPlugin } from '../vite-plugin-cedar-gqlorm-inject'
 
@@ -7,9 +11,6 @@ vi.mock('@cedarjs/project-config', () => ({
   getConfig: vi.fn(),
   getPaths: vi.fn(),
 }))
-
-import fs from 'node:fs'
-import { getConfig, getPaths } from '@cedarjs/project-config'
 
 const plugin = cedarGqlormInjectPlugin()
 
