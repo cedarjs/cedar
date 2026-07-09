@@ -94,14 +94,14 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
+    "@cedarjs/project-config": "4.2.0",
     "@cedarjs/server-store": "4.2.0",
     "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react-dom": "18.3.1",
+    "ts-toolbelt": "9.6.0"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.4",
-    "@babel/cli": "7.29.7",
-    "@babel/core": "^7.26.10",
     "@cedarjs/auth": "4.2.0",
     "@cedarjs/framework-tools": "4.2.0",
     "@testing-library/jest-dom": "6.9.1",
@@ -111,6 +111,7 @@
     "publint": "0.3.21",
     "tstyche": "5.0.2",
     "typescript": "5.9.3",
+    "vite": "7.3.5",
     "vitest": "3.2.6"
   },
   "peerDependencies": {
