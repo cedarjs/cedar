@@ -198,4 +198,30 @@ export const handler = createGraphQLHandler({
       )
     }
   })
+
+  it('preserves newlines between handler and following code', () => {
+    const code = `import { createGraphQLHandler } from '@cedarjs/graphql-server'
+
+export const handler = createGraphQLHandler({
+  directives,
+})
+export const config = { wrapped: true }`
+
+    const result = plugin.transform!(code, 'graphql.ts')
+
+    if (result && typeof result === 'object') {
+      const transformed = result.code
+
+      // Verify the transformation
+      expect(transformed).toContain('export const __cedar_graphqlOptions = {')
+      expect(transformed).toContain(
+        'createGraphQLHandler(__cedar_graphqlOptions)',
+      )
+      // Verify newline is preserved (not joined without separator)
+      // If the newline wasn't preserved, we'd see ')export' without a newline
+      expect(transformed).toContain(')\nexport const config')
+      // Verify there's no syntax error pattern of joining without separator
+      expect(transformed).not.toMatch(/\)\w/)
+    }
+  })
 })

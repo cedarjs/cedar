@@ -76,8 +76,12 @@ function extractGraphqlOptions(code: string): string | null {
   // Skip past the closing paren
   let statementEndPos = fullCallEndPos + 1 // +1 for the )
 
-  // Skip whitespace
-  while (statementEndPos < code.length && /\s/.test(code[statementEndPos])) {
+  // Skip optional whitespace on the same line (do not consume newlines)
+  while (
+    statementEndPos < code.length &&
+    code[statementEndPos] !== '\n' &&
+    /\s/.test(code[statementEndPos])
+  ) {
     statementEndPos++
   }
 
