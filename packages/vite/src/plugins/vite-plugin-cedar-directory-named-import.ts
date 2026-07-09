@@ -36,13 +36,16 @@ export function cedarDirectoryNamedImportPlugin(): Plugin {
         return null
       }
 
-      // We only operate in "userland", skip node_modules
+      // Normalize path for consistent string operations (forward slashes)
       const normalizedImporter = normalizePath(importer)
+
+      // We only operate in "userland", skip node_modules
       if (normalizedImporter.includes('/node_modules/')) {
         return null
       }
 
-      const importerDir = path.dirname(importer)
+      // Use normalized path for all operations to avoid platform inconsistencies
+      const importerDir = path.dirname(normalizedImporter)
       const absoluteBase = path.resolve(importerDir, id)
 
       // If the import resolves directly with a known extension, skip
