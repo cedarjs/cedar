@@ -35,7 +35,9 @@ export const handler = createGraphQLHandler({
       // Should have the object content
       expect(transformed).toContain('loggerConfig:')
       // Should reference the extracted options
-      expect(transformed).toContain('createGraphQLHandler(__cedar_graphqlOptions)')
+      expect(transformed).toContain(
+        'createGraphQLHandler(__cedar_graphqlOptions)',
+      )
     }
   })
 
@@ -54,7 +56,9 @@ export const handler = createGraphQLHandler({
       const transformed = result.code
 
       expect(transformed).toContain('export const __cedar_graphqlOptions = {')
-      expect(transformed).toContain('createGraphQLHandler(__cedar_graphqlOptions)')
+      expect(transformed).toContain(
+        'createGraphQLHandler(__cedar_graphqlOptions)',
+      )
     }
   })
 
@@ -70,8 +74,12 @@ export const handler = createGraphQLHandler(options)`
     if (result && typeof result === 'object') {
       const transformed = result.code
 
-      expect(transformed).toContain('export const __cedar_graphqlOptions = options')
-      expect(transformed).toContain('createGraphQLHandler(__cedar_graphqlOptions)')
+      expect(transformed).toContain(
+        'export const __cedar_graphqlOptions = options',
+      )
+      expect(transformed).toContain(
+        'createGraphQLHandler(__cedar_graphqlOptions)',
+      )
     }
   })
 
@@ -85,8 +93,12 @@ export const handler = createGraphQLHandler(buildOptions())`
     if (result && typeof result === 'object') {
       const transformed = result.code
 
-      expect(transformed).toContain('export const __cedar_graphqlOptions = buildOptions()')
-      expect(transformed).toContain('createGraphQLHandler(__cedar_graphqlOptions)')
+      expect(transformed).toContain(
+        'export const __cedar_graphqlOptions = buildOptions()',
+      )
+      expect(transformed).toContain(
+        'createGraphQLHandler(__cedar_graphqlOptions)',
+      )
     }
   })
 
@@ -137,8 +149,8 @@ export const somethingElse = 123`
       const transformed = result.code
 
       // Should preserve imports
-      expect(transformed).toContain("import { createGraphQLHandler }")
-      expect(transformed).toContain("import directives from")
+      expect(transformed).toContain('import { createGraphQLHandler }')
+      expect(transformed).toContain('import directives from')
       // Should preserve additional code
       expect(transformed).toContain('export const somethingElse = 123')
       // Should have extracted options

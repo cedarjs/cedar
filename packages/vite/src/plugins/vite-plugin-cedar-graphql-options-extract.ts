@@ -77,10 +77,7 @@ function extractGraphqlOptions(code: string): string | null {
   let statementEndPos = fullCallEndPos + 1 // +1 for the )
 
   // Skip whitespace
-  while (
-    statementEndPos < code.length &&
-    /\s/.test(code[statementEndPos])
-  ) {
+  while (statementEndPos < code.length && /\s/.test(code[statementEndPos])) {
     statementEndPos++
   }
 
@@ -115,7 +112,10 @@ function extractFunctionArgument(code: string, startPos: number): string {
     const char = code[i]
 
     // Handle strings
-    if ((char === '"' || char === "'" || char === '`') && code[i - 1] !== '\\') {
+    if (
+      (char === '"' || char === "'" || char === '`') &&
+      code[i - 1] !== '\\'
+    ) {
       if (!inString) {
         inString = true
         stringChar = char
@@ -125,7 +125,9 @@ function extractFunctionArgument(code: string, startPos: number): string {
       continue
     }
 
-    if (inString) continue
+    if (inString) {
+      continue
+    }
 
     if (char === '(') {
       parenDepth++
