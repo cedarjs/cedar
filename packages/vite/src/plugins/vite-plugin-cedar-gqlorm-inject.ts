@@ -70,11 +70,8 @@ export function cedarGqlormInjectPlugin(): Plugin {
         'gqlorm',
         'backend',
       )
-      const backendTsExists = fs.existsSync(backendPathWithoutExt + '.ts')
-      const backendJsExists = fs.existsSync(backendPathWithoutExt + '.js')
-      const backendExists = backendTsExists || backendJsExists
 
-      if (!backendExists) {
+      if (!fs.existsSync(backendPathWithoutExt + '.ts')) {
         return null
       }
 
@@ -89,36 +86,19 @@ export function cedarGqlormInjectPlugin(): Plugin {
 
       const handlerLineStart = code.lastIndexOf('\n', handlerMatch.index) + 1
 
-      // Find where all imports end by looking for the first non-empty line that
-      // starts with 'import ' followed by a line that doesn't start with 'import'
-      let importsEndPos = 0
-      let currentPos = 0
-      let lastImportLineEnd = 0
-
-      for (const line of code.split('\n')) {
-        const trimmedLine = line.trim()
-        const lineEnd = currentPos + line.length
-
-        // Track position of last line that starts with 'import'
-        if (trimmedLine.startsWith('import ')) {
-          lastImportLineEnd = lineEnd
-        } else if (trimmedLine && lastImportLineEnd > 0) {
-          // First non-import, non-empty line after imports
-          importsEndPos = lastImportLineEnd
-          break
-        }
-
-        currentPos = lineEnd + 1 // +1 for the newline character
-      }
-
       // Compute the relative path from graphql.ts to the backend file
-      const backendExt = backendTsExists ? '.ts' : '.js'
+      // Use explicit .ts extension: Cedar targets Node.js 24, which strips
+      // TypeScript types natively (unflagged since v24.0). The API build uses
+      // esbuild with bundle:false so this import stays as a runtime reference
+      // resolved directly by Node.js against the file system. All TypeScript
+      // constructs in backend.ts (interface declarations, type annotations)
+      // are erasable and fully supported by Node.js type stripping.
       const relPath =
         path
           .relative(path.dirname(id), backendPathWithoutExt)
-          .replace(/\\/g, '/') + backendExt
+          .replace(/\\/g, '/') + '.ts'
 
-      // Build the imports to inject
+      // Build the imports to inject at the top of the file
       const importDb = `import { db as __gqlorm_db__ } from 'src/lib/db'`
       const importSdl = `import * as __gqlorm_sdl__ from '${relPath}'`
       const importsToAdd = `${importDb}\n${importSdl}\n`
@@ -131,17 +111,12 @@ export function cedarGqlormInjectPlugin(): Plugin {
     },
   })\n  `
 
-      // Build the transformed code
-      const beforeImportEnd = code.slice(0, importsEndPos)
-      const afterImportEnd = code.slice(importsEndPos, handlerLineStart)
-      const fromHandlerLine = code.slice(handlerLineStart)
-
+      // Build the transformed code: prepend imports, then insert mutation before handler
       const transformed =
-        beforeImportEnd +
         importsToAdd +
-        afterImportEnd +
+        code.slice(0, handlerLineStart) +
         sdlsMutation +
-        fromHandlerLine
+        code.slice(handlerLineStart)
 
       return {
         code: transformed,
