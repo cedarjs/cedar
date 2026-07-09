@@ -1,11 +1,16 @@
+import path from 'node:path'
+
 import { vol } from 'memfs'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { normalizePath } from 'vite'
 
 import { cedarDirectoryNamedImportPlugin } from '../vite-plugin-cedar-directory-named-import.js'
 
 vi.mock('node:fs', async () => ({ default: (await import('memfs')).fs }))
 
-const APP_DIR = '/Users/test/app'
+// Use a cross-platform absolute path: on Windows path.resolve adds the current
+// drive letter (e.g. 'C:/Users/test/app'), matching what Vite passes to resolveId.
+const APP_DIR = normalizePath(path.resolve('/', 'Users', 'test', 'app'))
 const SRC_DIR = `${APP_DIR}/web/src`
 
 function getResolveId() {
