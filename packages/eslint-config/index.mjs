@@ -3,7 +3,6 @@
 // Framework main config is in monorepo root ./eslint.config.js
 
 import jsxA11yPlugin from 'eslint-plugin-jsx-a11y'
-import reactCompilerPlugin from 'eslint-plugin-react-compiler'
 import globals from 'globals'
 
 import {
@@ -55,6 +54,8 @@ export default async function createConfig() {
   const reactCompilerEnabled =
     config.experimental?.reactCompiler?.enabled ?? false
   if (reactCompilerEnabled) {
+    const { default: reactCompilerPlugin } =
+      await import('eslint-plugin-react-compiler')
     plugins['react-compiler'] = reactCompilerPlugin
     rules['react-compiler/react-compiler'] = 2
   }
