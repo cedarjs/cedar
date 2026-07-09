@@ -70,6 +70,14 @@
     "@babel/cli": "7.29.7",
     "typescript": "5.9.3"
   },
+  "peerDependencies": {
+    "eslint-plugin-react-compiler": "19.1.0-rc.2"
+  },
+  "peerDependenciesMeta": {
+    "eslint-plugin-react-compiler": {
+      "optional": true
+    }
+  },
   "engines": {
     "node": ">=24"
   },
