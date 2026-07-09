@@ -16,7 +16,12 @@ import type { Plugin } from 'vite'
 export function cedarGraphqlOptionsExtractPlugin(): Plugin {
   return {
     name: 'cedar-graphql-options-extract',
-    transform(code) {
+    transform(code, id) {
+      // Only transform the graphql handler file
+      if (!id.endsWith('graphql.ts') && !id.endsWith('graphql.tsx')) {
+        return null
+      }
+
       // Quick check for createGraphQLHandler
       if (!code.includes('createGraphQLHandler')) {
         return null
@@ -34,7 +39,6 @@ export function cedarGraphqlOptionsExtractPlugin(): Plugin {
 
       return {
         code: transformed,
-        map: null,
       }
     },
   }
@@ -84,8 +88,6 @@ function extractGraphqlOptions(code: string): string | null {
   if (code[statementEndPos] === ';') {
     statementEndPos++
   }
-
-  const fullExportStatement = code.slice(exportIndex, statementEndPos)
 
   // Build the new code:
   // 1. Create the options constant before the handler export
