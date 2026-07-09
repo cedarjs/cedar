@@ -70,9 +70,9 @@ export function cedarGqlormInjectPlugin(): Plugin {
         'gqlorm',
         'backend',
       )
-      const backendExists =
-        fs.existsSync(backendPathWithoutExt + '.ts') ||
-        fs.existsSync(backendPathWithoutExt + '.js')
+      const backendTsExists = fs.existsSync(backendPathWithoutExt + '.ts')
+      const backendJsExists = fs.existsSync(backendPathWithoutExt + '.js')
+      const backendExists = backendTsExists || backendJsExists
 
       if (!backendExists) {
         return null
@@ -103,10 +103,11 @@ export function cedarGqlormInjectPlugin(): Plugin {
       }
 
       // Compute the relative path from graphql.ts to the backend file
+      const backendExt = backendTsExists ? '.ts' : '.js'
       const relPath =
         path
           .relative(path.dirname(id), backendPathWithoutExt)
-          .replace(/\\/g, '/') + '.ts'
+          .replace(/\\/g, '/') + backendExt
 
       // Build the imports to inject
       const importDb = `import { db as __gqlorm_db__ } from 'src/lib/db'`
