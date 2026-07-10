@@ -50,6 +50,10 @@ export function cedarMockCellDataPlugin(): Plugin {
       let pathsToRemove: any[] = []
       const nodesToInsert: t.Statement[] = []
 
+      // Capture Vite plugin context before traverse, since `this` inside visitors
+      // refers to Babel's traverse state, not the Vite plugin context
+      const pluginCtx = this
+
       traverse(ast, {
         ExportNamedDeclaration(p: any) {
           const d = p.node.declaration
@@ -117,7 +121,7 @@ export function cedarMockCellDataPlugin(): Plugin {
           }
 
           // Register the Cell file as a dependency so HMR works when the Cell changes
-          this.addWatchFile(cellPath)
+          pluginCtx.addWatchFile?.(cellPath)
 
           const cellMetadata = getCellMetadata(cellPath)
 
