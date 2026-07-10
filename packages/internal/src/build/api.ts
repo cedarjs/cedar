@@ -60,6 +60,7 @@ const runCedarBabelTransformsPlugin = {
           projectIsEsm: projectSideIsEsm('api'),
         }),
       )
+
       if (transformedCode?.code) {
         let code = transformedCode.code
         const normalizedPath = normalizePath(args.path)
@@ -92,6 +93,7 @@ const runCedarBabelTransformsPlugin = {
           loader: 'js',
         }
       }
+
       throw new Error(`Could not transform file: ${args.path}`)
     })
   },

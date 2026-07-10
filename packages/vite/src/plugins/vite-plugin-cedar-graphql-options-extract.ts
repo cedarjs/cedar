@@ -123,6 +123,7 @@ function extractFunctionArgument(code: string, startPos: number): string {
       for (let j = i - 1; j >= 0 && code[j] === '\\'; j--) {
         backslashCount++
       }
+
       // If even number of backslashes (including 0), the quote is not escaped
       const isEscaped = backslashCount % 2 === 1
 
@@ -134,6 +135,7 @@ function extractFunctionArgument(code: string, startPos: number): string {
           inString = false
         }
       }
+
       continue
     }
 
@@ -148,6 +150,7 @@ function extractFunctionArgument(code: string, startPos: number): string {
         // This is the closing paren of the createGraphQLHandler call
         return code.slice(startPos, i)
       }
+
       parenDepth--
     } else if (char === '{') {
       braceDepth++
