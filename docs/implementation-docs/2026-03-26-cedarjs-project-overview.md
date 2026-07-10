@@ -144,7 +144,8 @@ cedar build:
 
 Vite plugins: cell transform | entry injection | html env | node polyfills |
   auto-imports | import-dir | js-as-jsx | merged config | api-babel-transform |
-  cedar-routes-auto-loader | cedar-universal-deploy | cedar-wait-for-api-server
+  cedar-routes-auto-loader | cedar-universal-deploy | cedar-wait-for-api-server |
+  resolve-cedar-style-imports
   *SSR/RSC: adds RSC transforms
 ```
 

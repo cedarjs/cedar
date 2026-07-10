@@ -31,7 +31,7 @@ export interface Flags {
   forJavaScriptLinting?: boolean
   /**
    * skip src/ alias and directory-named-import handling. The Vite
-   * `cedarjs-directory-named-import` plugin covers these
+   * `cedarjs-resolve-cedar-style-imports` plugin covers these
    */
   forVite?: boolean
 }
@@ -88,7 +88,7 @@ export const getWebSideBabelPlugins = (
       'rwjs-module-resolver',
     ],
     // Vite uses
-    // packages/vite/src/plugins/vite-plugin-cedarjs-directory-named-import.ts
+    // packages/vite/src/plugins/vite-plugin-cedarjs-resolve-cedar-style-imports.ts
     // instead of this babel plugin
     !forVite && [
       require('./plugins/babel-plugin-redwood-directory-named-import').default,
