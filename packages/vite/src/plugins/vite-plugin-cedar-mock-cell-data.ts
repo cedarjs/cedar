@@ -122,7 +122,10 @@ export function cedarMockCellDataPlugin(): Plugin {
           // mockGraphQLQuery(<operationName>, <mockFunction>)
           const mockGraphQLCall = t.callExpression(
             t.identifier('mockGraphQLQuery'),
-            [t.stringLiteral(cellMetadata.operationName), mockFunction],
+            [
+              t.stringLiteral(cellMetadata.operationName),
+              mockFunction as t.ArrowFunctionExpression | t.FunctionExpression,
+            ],
           )
 
           pathsToRemove = [...pathsToRemove, p]
