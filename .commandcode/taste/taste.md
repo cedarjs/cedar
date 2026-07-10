@@ -81,6 +81,10 @@ See [debugging/taste.md](debugging/taste.md)
 
 - For SPA fallback in `cedar serve` (both Fastify and `--ud` srvx paths), use `web/dist/200.html` (unprerendered shell) when it exists, otherwise fall back to `web/dist/index.html`. Returning the prerendered `index.html` for non-prerendered routes makes the client think the page was prerendered and crashes on `prerenderLoader(name).default` when the page module isn't in `__REDWOOD__PRERENDER_PAGES`. Mirror the Fastify web adapter's logic at `packages/adapters/fastify/web/src/web.ts`. Confidence: 0.85
 
+# esbuild
+
+- When creating esbuild `onLoad` plugins with a `filter` regex, make the filter precise enough (include path separator) that a redundant inner path check (e.g., `args.path.endsWith(...)`) is unnecessary. A filter like `/\/graphql\.ts$/` avoids both false matches (e.g., `notgraphql.ts`) and redundant guards inside the callback. Confidence: 0.60
+
 # Process Management
 
 - Never use `pkill` or `killall` to mass-kill processes by name (e.g., `pkill -9 node`). Only kill specific PIDs that you know are safe to terminate. Mass-killing can destroy the user's browser sessions, chat apps, and other work. Confidence: 0.85
