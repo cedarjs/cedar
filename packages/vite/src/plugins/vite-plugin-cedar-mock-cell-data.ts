@@ -33,7 +33,7 @@ export function cedarMockCellDataPlugin(): Plugin {
     name: 'cedar-mock-cell-data',
     transform(code: string, id: string) {
       // Only process *.Cell.mock.{js,ts} files (not .jsx/.tsx — matches original pattern)
-      if (!id.match(/.+Cell\.mock\.(js|ts)$/)) {
+      if (!id.endsWith('Cell.mock.js') && !id.endsWith('Cell.mock.ts')) {
         return null
       }
 
