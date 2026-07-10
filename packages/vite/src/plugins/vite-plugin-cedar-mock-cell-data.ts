@@ -58,8 +58,8 @@ export function cedarMockCellDataPlugin(): Plugin {
           switch (d?.type) {
             case 'VariableDeclaration': {
               const standardMockExport = d.declarations[0]
-              const id = standardMockExport.id as t.Identifier
-              const exportName = id?.name
+              const exportId = standardMockExport.id as t.Identifier
+              const exportName = exportId?.name
 
               if (exportName !== 'standard') {
                 return
@@ -113,9 +113,22 @@ export function cedarMockCellDataPlugin(): Plugin {
             return
           }
 
+          // Register the Cell file as a dependency so HMR works when the Cell changes
+          this.addWatchFile(cellPath)
+
           const cellMetadata = getCellMetadata(cellPath)
 
           if (cellMetadata.hasDefaultExport || !cellMetadata.hasQueryExport) {
+            return
+          }
+
+          // Warn if the QUERY operation is anonymous (no operation name)
+          if (!cellMetadata.operationName) {
+            console.warn(
+              `[cedar-mock-cell-data] Cell ${cellPath} has an unnamed GraphQL operation. ` +
+                `The mock for ${id} will not work. ` +
+              `Ensure the QUERY is named, e.g., "query GetUser { ... }"`,
+            )
             return
           }
 
