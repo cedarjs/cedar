@@ -96,6 +96,11 @@ export function applyGqlormInject(
   code: string,
   id: string,
 ): string | null {
+  // Check if already transformed to prevent double-application
+  if (code.includes('__gqlorm_sdl__')) {
+    return null
+  }
+
   // Quick check for createGraphQLHandler
   if (!code.includes('createGraphQLHandler')) {
     return null
