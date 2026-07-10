@@ -51,7 +51,9 @@ export function cedarMockCellDataPlugin(): Plugin {
       const nodesToInsert: t.Statement[] = []
 
       // Create visitor with plugin context passed as closure variable
-      const createVisitors = (addWatchFile: ((path: string) => void) | undefined) => ({
+      const createVisitors = (
+        addWatchFile: ((path: string) => void) | undefined,
+      ) => ({
         ExportNamedDeclaration(p: any) {
           const d = p.node.declaration
           let mockFunction:
