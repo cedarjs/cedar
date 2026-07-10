@@ -11,6 +11,7 @@
     "@cedarjs/eslint-config": "4.2.0",
     "@cedarjs/project-config": "4.2.0",
     "@cedarjs/testing": "4.2.0",
+    "prisma": "7.8.0",
     "prettier-plugin-tailwindcss": "^0.8.0"
   },
   "engines": {
