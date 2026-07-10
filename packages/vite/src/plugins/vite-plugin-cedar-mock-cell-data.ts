@@ -1,11 +1,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import type { types } from '@babel/core'
 import babelGenerator from '@babel/generator'
 import { parse as babelParse } from '@babel/parser'
 import type { ParserPlugin } from '@babel/parser'
 import babelTraverse from '@babel/traverse'
-import type { types } from '@babel/core'
 import * as t from '@babel/types'
 import fg from 'fast-glob'
 import { parse as graphqlParse, Kind } from 'graphql'
@@ -50,11 +50,8 @@ export function cedarMockCellDataPlugin(): Plugin {
       let pathsToRemove: any[] = []
       const nodesToInsert: t.Statement[] = []
 
-      // Capture Vite plugin context before traverse, since `this` inside visitors
-      // refers to Babel's traverse state, not the Vite plugin context
-      const pluginCtx = this
-
-      traverse(ast, {
+      // Create visitor with plugin context passed as closure variable
+      const createVisitors = (addWatchFile: ((path: string) => void) | undefined) => ({
         ExportNamedDeclaration(p: any) {
           const d = p.node.declaration
           let mockFunction:
@@ -121,7 +118,7 @@ export function cedarMockCellDataPlugin(): Plugin {
           }
 
           // Register the Cell file as a dependency so HMR works when the Cell changes
-          pluginCtx.addWatchFile?.(cellPath)
+          addWatchFile?.(cellPath)
 
           const cellMetadata = getCellMetadata(cellPath)
 
@@ -179,6 +176,8 @@ export function cedarMockCellDataPlugin(): Plugin {
         },
       })
 
+      traverse(ast, createVisitors(this.addWatchFile?.bind(this)))
+
       if (nodesToInsert.length === 0) {
         return null
       }
@@ -202,12 +201,12 @@ export function cedarMockCellDataPlugin(): Plugin {
 
 // export const standard = ${ex}
 function createExportStandard(
-  t: typeof import('@babel/types'),
+  babelTypes: typeof t,
   ex: t.CallExpression | t.ArrowFunctionExpression,
 ): t.ExportNamedDeclaration {
-  return t.exportNamedDeclaration(
-    t.variableDeclaration('const', [
-      t.variableDeclarator(t.identifier('standard'), ex),
+  return babelTypes.exportNamedDeclaration(
+    babelTypes.variableDeclaration('const', [
+      babelTypes.variableDeclarator(babelTypes.identifier('standard'), ex),
     ]),
   )
 }
