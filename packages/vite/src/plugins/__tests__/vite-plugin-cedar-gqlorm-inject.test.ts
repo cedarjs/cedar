@@ -3,15 +3,21 @@ import fs from 'node:fs'
 import { dedent } from 'ts-dedent'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-import { getConfig, getPaths } from '@cedarjs/project-config'
+import type { Paths } from '@cedarjs/project-config'
+import type * as ProjectConfig from '@cedarjs/project-config'
+import { DEFAULT_CONFIG, getConfig, getPaths } from '@cedarjs/project-config'
 
 import { cedarGqlormInjectPlugin } from '../vite-plugin-cedar-gqlorm-inject'
 
-// Mock the getConfig and getPaths functions
-vi.mock('@cedarjs/project-config', () => ({
-  getConfig: vi.fn(),
-  getPaths: vi.fn(),
-}))
+// Mock the getConfig and getPaths functions while preserving real exports like DEFAULT_CONFIG
+vi.mock('@cedarjs/project-config', async (importOriginal) => {
+  const original = await importOriginal<typeof ProjectConfig>()
+  return {
+    ...original,
+    getConfig: vi.fn(),
+    getPaths: vi.fn(),
+  }
+})
 
 const plugin = cedarGqlormInjectPlugin()
 
@@ -41,12 +47,16 @@ describe('cedarGqlormInjectPlugin', () => {
 
     // Mock config and paths
     vi.mocked(getConfig).mockReturnValue({
-      experimental: { gqlorm: { enabled: true } },
-    } as any)
+      ...DEFAULT_CONFIG,
+      experimental: {
+        ...DEFAULT_CONFIG.experimental,
+        gqlorm: { ...DEFAULT_CONFIG.experimental.gqlorm, enabled: true },
+      },
+    })
     vi.mocked(getPaths).mockReturnValue({
       generated: { base: '.cedar' },
       api: { jobs: 'api/src/jobs' },
-    } as any)
+    } as unknown as Paths)
 
     // Mock backend file existence
     vi.spyOn(fs, 'existsSync').mockReturnValue(true)
@@ -84,8 +94,12 @@ describe('cedarGqlormInjectPlugin', () => {
 
     // Mock config with gqlorm disabled
     vi.mocked(getConfig).mockReturnValue({
-      experimental: { gqlorm: { enabled: false } },
-    } as any)
+      ...DEFAULT_CONFIG,
+      experimental: {
+        ...DEFAULT_CONFIG.experimental,
+        gqlorm: { ...DEFAULT_CONFIG.experimental.gqlorm, enabled: false },
+      },
+    })
 
     const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
     expect(result).toBeNull()
@@ -100,11 +114,15 @@ describe('cedarGqlormInjectPlugin', () => {
 
     // Mock config with gqlorm enabled
     vi.mocked(getConfig).mockReturnValue({
-      experimental: { gqlorm: { enabled: true } },
-    } as any)
+      ...DEFAULT_CONFIG,
+      experimental: {
+        ...DEFAULT_CONFIG.experimental,
+        gqlorm: { ...DEFAULT_CONFIG.experimental.gqlorm, enabled: true },
+      },
+    })
     vi.mocked(getPaths).mockReturnValue({
       generated: { base: '.cedar' },
-    } as any)
+    } as unknown as Paths)
 
     // Mock backend file does not exist
     vi.spyOn(fs, 'existsSync').mockReturnValue(false)
@@ -152,11 +170,15 @@ describe('cedarGqlormInjectPlugin', () => {
     `
 
     vi.mocked(getConfig).mockReturnValue({
-      experimental: { gqlorm: { enabled: true } },
-    } as any)
+      ...DEFAULT_CONFIG,
+      experimental: {
+        ...DEFAULT_CONFIG.experimental,
+        gqlorm: { ...DEFAULT_CONFIG.experimental.gqlorm, enabled: true },
+      },
+    })
     vi.mocked(getPaths).mockReturnValue({
       generated: { base: '.cedar' },
-    } as any)
+    } as unknown as Paths)
 
     vi.spyOn(fs, 'existsSync').mockReturnValue(true)
 
@@ -197,8 +219,12 @@ describe('cedarGqlormInjectPlugin', () => {
     `
 
     vi.mocked(getConfig).mockReturnValue({
-      experimental: { gqlorm: { enabled: true } },
-    } as any)
+      ...DEFAULT_CONFIG,
+      experimental: {
+        ...DEFAULT_CONFIG.experimental,
+        gqlorm: { ...DEFAULT_CONFIG.experimental.gqlorm, enabled: true },
+      },
+    })
     vi.mocked(getPaths).mockImplementation(() => {
       throw new Error('Paths not found')
     })
@@ -221,11 +247,15 @@ describe('cedarGqlormInjectPlugin', () => {
     `
 
     vi.mocked(getConfig).mockReturnValue({
-      experimental: { gqlorm: { enabled: true } },
-    } as any)
+      ...DEFAULT_CONFIG,
+      experimental: {
+        ...DEFAULT_CONFIG.experimental,
+        gqlorm: { ...DEFAULT_CONFIG.experimental.gqlorm, enabled: true },
+      },
+    })
     vi.mocked(getPaths).mockReturnValue({
       generated: { base: '.cedar' },
-    } as any)
+    } as unknown as Paths)
 
     vi.spyOn(fs, 'existsSync').mockReturnValue(true)
 
