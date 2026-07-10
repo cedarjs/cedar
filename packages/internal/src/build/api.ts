@@ -14,6 +14,7 @@ import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { findApiFiles } from '../files.js'
 
+import { applyGqlormInject, applyGraphqlOptionsExtract } from './api-graphql-transforms.js'
 import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
 
 let BUILD_CTX: BuildContext | null = null
@@ -57,18 +58,34 @@ const runCedarBabelTransformsPlugin = {
         }),
       )
       if (transformedCode?.code) {
+        let code = transformedCode.code
+        const normalizedPath = normalizePath(args.path)
+        const cedarPaths = getPaths()
+        const isEsm = projectSideIsEsm('api')
+
+        // Apply graphql-specific transforms for graphql.ts files
+        if (
+          normalizedPath.endsWith('graphql.ts') ||
+          normalizedPath.endsWith('graphql.tsx')
+        ) {
+          code = applyGraphqlOptionsExtract(code) ?? code
+          code = applyGqlormInject(code, args.path) ?? code
+        }
+
         // Apply the handler ALS wrapping safeguard to API function handlers.
         // This is the standalone-esbuild equivalent of the Vite
         // handlerAlsWrappingPlugin and the (Jest-only) babel plugin it
         // replaced.
         const functionsDir = normalizePath(
-          path.join(getPaths().api.src, 'functions'),
+          path.join(cedarPaths.api.src, 'functions'),
         )
-        const code = normalizePath(args.path).startsWith(functionsDir + '/')
-          ? (applyHandlerAlsWrapping(transformedCode.code, {
-              projectIsEsm: projectSideIsEsm('api'),
-            }) ?? transformedCode.code)
-          : transformedCode.code
+        if (normalizedPath.startsWith(functionsDir + '/')) {
+          code =
+            applyHandlerAlsWrapping(code, {
+              projectIsEsm: isEsm,
+            }) ?? code
+        }
+
         return {
           contents: code,
           loader: 'js',
@@ -113,14 +130,29 @@ function createCedarViteApiPlugin(): Plugin {
       )
 
       if (transformedCode?.code) {
+        let code = transformedCode.code
+        const normalizedId = normalizePath(id)
+
+        // Apply graphql-specific transforms for graphql.ts files
+        if (normalizedId.endsWith('graphql.ts') || normalizedId.endsWith('graphql.tsx')) {
+          code = applyGraphqlOptionsExtract(code) ?? code
+          code = applyGqlormInject(code, id) ?? code
+        }
+
+        // Apply the handler ALS wrapping safeguard to API function handlers.
+        // This is the standalone-esbuild equivalent of the Vite
+        // handlerAlsWrappingPlugin and the (Jest-only) babel plugin it
+        // replaced.
         const functionsDir = normalizePath(
           path.join(cedarPaths.api.src, 'functions'),
         )
-        const code = normalizePath(id).startsWith(functionsDir + '/')
-          ? (applyHandlerAlsWrapping(transformedCode.code, {
+        if (normalizedId.startsWith(functionsDir + '/')) {
+          code =
+            applyHandlerAlsWrapping(code, {
               projectIsEsm: isEsm,
-            }) ?? transformedCode.code)
-          : transformedCode.code
+            }) ?? code
+        }
+
         return {
           code,
           map: transformedCode.map ?? null,
