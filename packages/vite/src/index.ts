@@ -36,6 +36,7 @@ export { cedarRoutesAutoLoaderPlugin } from './plugins/vite-plugin-cedar-routes-
 export { cedarRemoveFromBundle } from './plugins/vite-plugin-cedar-remove-from-bundle.js'
 export { cedarjsResolveCedarStyleImportsPlugin } from './plugins/vite-plugin-cedarjs-resolve-cedar-style-imports.js'
 export { cedarjsJobPathInjectorPlugin } from './plugins/vite-plugin-cedarjs-job-path-injector.js'
+export { cedarMockCellDataPlugin } from './plugins/vite-plugin-cedar-mock-cell-data.js'
 export { cedarTransformJsAsJsx } from './plugins/vite-plugin-jsx-loader.js'
 export { cedarMergedConfig } from './plugins/vite-plugin-merged-config.js'
 export { cedarSwapApolloProvider } from './plugins/vite-plugin-swap-apollo-provider.js'
