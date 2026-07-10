@@ -1,3 +1,4 @@
+import { dedent } from 'ts-dedent'
 import { describe, it, expect } from 'vitest'
 
 import { cedarGraphqlOptionsExtractPlugin } from '../vite-plugin-cedar-graphql-options-extract'
@@ -6,26 +7,28 @@ const plugin = cedarGraphqlOptionsExtractPlugin()
 
 describe('cedarGraphqlOptionsExtractPlugin', () => {
   it('extracts options from createGraphQLHandler call', () => {
-    const code = `import { createGraphQLHandler } from '@cedarjs/graphql-server'
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
 
-import directives from 'src/directives/**/*.{js,ts}'
-import sdls from 'src/graphql/**/*.sdl.{js,ts}'
-import services from 'src/services/**/*.{js,ts}'
+      import directives from 'src/directives/**/*.{js,ts}'
+      import sdls from 'src/graphql/**/*.sdl.{js,ts}'
+      import services from 'src/services/**/*.{js,ts}'
 
-import { db } from 'src/lib/db'
-import { logger } from 'src/lib/logger'
+      import { db } from 'src/lib/db'
+      import { logger } from 'src/lib/logger'
 
-export const handler = createGraphQLHandler({
-  loggerConfig: { logger, options: {} },
-  directives,
-  sdls,
-  services,
-  onException: () => {
-    db.$disconnect()
-  },
-})`
+      export const handler = createGraphQLHandler({
+        loggerConfig: { logger, options: {} },
+        directives,
+        sdls,
+        services,
+        onException: () => {
+          db.$disconnect()
+        },
+      })
+    `
 
-    const result = plugin.transform!(code, 'graphql.ts')
+    const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
 
     if (result && typeof result === 'object') {
       const transformed = result.code
@@ -42,15 +45,17 @@ export const handler = createGraphQLHandler({
   })
 
   it('extracts simple object literal options', () => {
-    const code = `import { createGraphQLHandler } from '@cedarjs/graphql-server'
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
 
-export const handler = createGraphQLHandler({
-  directives,
-  sdls,
-  services,
-})`
+      export const handler = createGraphQLHandler({
+        directives,
+        sdls,
+        services,
+      })
+    `
 
-    const result = plugin.transform!(code, 'graphql.ts')
+    const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
 
     if (result && typeof result === 'object') {
       const transformed = result.code
@@ -63,13 +68,15 @@ export const handler = createGraphQLHandler({
   })
 
   it('extracts variable reference options', () => {
-    const code = `import { createGraphQLHandler } from '@cedarjs/graphql-server'
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
 
-const options = { directives, sdls }
+      const options = { directives, sdls }
 
-export const handler = createGraphQLHandler(options)`
+      export const handler = createGraphQLHandler(options)
+    `
 
-    const result = plugin.transform!(code, 'graphql.ts')
+    const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
 
     if (result && typeof result === 'object') {
       const transformed = result.code
@@ -84,11 +91,13 @@ export const handler = createGraphQLHandler(options)`
   })
 
   it('handles function call options', () => {
-    const code = `import { createGraphQLHandler } from '@cedarjs/graphql-server'
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
 
-export const handler = createGraphQLHandler(buildOptions())`
+      export const handler = createGraphQLHandler(buildOptions())
+    `
 
-    const result = plugin.transform!(code, 'graphql.ts')
+    const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
 
     if (result && typeof result === 'object') {
       const transformed = result.code
@@ -103,47 +112,53 @@ export const handler = createGraphQLHandler(buildOptions())`
   })
 
   it('skips files without createGraphQLHandler', () => {
-    const code = `import { something } from 'some-module'
+    const code = dedent`
+      import { something } from 'some-module'
 
-export const handler = something()`
+      export const handler = something()
+    `
 
     const result = plugin.transform!(code, 'other.ts')
     expect(result).toBeNull()
   })
 
   it('skips files already transformed', () => {
-    const code = `export const __cedar_graphqlOptions = { /* ... */ }
-export const handler = createGraphQLHandler(__cedar_graphqlOptions)`
+    const code = dedent`
+      export const __cedar_graphqlOptions = { /* ... */ }
+      export const handler = createGraphQLHandler(__cedar_graphqlOptions)
+    `
 
-    const result = plugin.transform!(code, 'graphql.ts')
+    const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
     expect(result).toBeNull()
   })
 
   it('preserves formatting and other code', () => {
-    const code = `import { createGraphQLHandler } from '@cedarjs/graphql-server'
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
 
-import directives from 'src/directives/**/*.{js,ts}'
-import sdls from 'src/graphql/**/*.sdl.{js,ts}'
-import services from 'src/services/**/*.{js,ts}'
+      import directives from 'src/directives/**/*.{js,ts}'
+      import sdls from 'src/graphql/**/*.sdl.{js,ts}'
+      import services from 'src/services/**/*.{js,ts}'
 
-import { db } from 'src/lib/db'
-import { logger } from 'src/lib/logger'
+      import { db } from 'src/lib/db'
+      import { logger } from 'src/lib/logger'
 
-export const handler = createGraphQLHandler({
-  loggerConfig: { logger, options: {} },
-  directives,
-  sdls,
-  services,
-  onException: () => {
-    // Disconnect from your database with an unhandled exception.
-    db.$disconnect()
-  },
-})
+      export const handler = createGraphQLHandler({
+        loggerConfig: { logger, options: {} },
+        directives,
+        sdls,
+        services,
+        onException: () => {
+          // Disconnect from your database with an unhandled exception.
+          db.$disconnect()
+        },
+      })
 
-// Additional code after handler
-export const somethingElse = 123`
+      // Additional code after handler
+      export const somethingElse = 123
+    `
 
-    const result = plugin.transform!(code, 'graphql.ts')
+    const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
 
     if (result && typeof result === 'object') {
       const transformed = result.code
@@ -159,14 +174,16 @@ export const somethingElse = 123`
   })
 
   it('handles nested object literals in options', () => {
-    const code = `import { createGraphQLHandler } from '@cedarjs/graphql-server'
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
 
-export const handler = createGraphQLHandler({
-  loggerConfig: { logger, options: { nested: { deeply: true } } },
-  directives,
-})`
+      export const handler = createGraphQLHandler({
+        loggerConfig: { logger, options: { nested: { deeply: true } } },
+        directives,
+      })
+    `
 
-    const result = plugin.transform!(code, 'graphql.ts')
+    const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
 
     if (result && typeof result === 'object') {
       const transformed = result.code
@@ -177,14 +194,16 @@ export const handler = createGraphQLHandler({
   })
 
   it('handles escaped backslashes in string values', () => {
-    const code = `import { createGraphQLHandler } from '@cedarjs/graphql-server'
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
 
-export const handler = createGraphQLHandler({
-  pattern: "foo\\\\\\\\bar",
-  directives,
-})`
+      export const handler = createGraphQLHandler({
+        pattern: "foo\\\\\\\\bar",
+        directives,
+      })
+    `
 
-    const result = plugin.transform!(code, 'graphql.ts')
+    const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
 
     if (result && typeof result === 'object') {
       const transformed = result.code
@@ -200,14 +219,16 @@ export const handler = createGraphQLHandler({
   })
 
   it('preserves newlines between handler and following code', () => {
-    const code = `import { createGraphQLHandler } from '@cedarjs/graphql-server'
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
 
-export const handler = createGraphQLHandler({
-  directives,
-})
-export const config = { wrapped: true }`
+      export const handler = createGraphQLHandler({
+        directives,
+      })
+      export const config = { wrapped: true }
+    `
 
-    const result = plugin.transform!(code, 'graphql.ts')
+    const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
 
     if (result && typeof result === 'object') {
       const transformed = result.code

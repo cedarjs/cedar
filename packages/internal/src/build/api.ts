@@ -14,7 +14,10 @@ import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { findApiFiles } from '../files.js'
 
-import { applyGqlormInject, applyGraphqlOptionsExtract } from './api-graphql-transforms.js'
+import {
+  applyGqlormInject,
+  applyGraphqlOptionsExtract,
+} from './api-graphql-transforms.js'
 import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
 
 let BUILD_CTX: BuildContext | null = null
@@ -63,10 +66,13 @@ const runCedarBabelTransformsPlugin = {
         const cedarPaths = getPaths()
         const isEsm = projectSideIsEsm('api')
 
-        // Apply graphql-specific transforms for graphql.ts files
+        // Apply graphql-specific transforms for graphql.ts files.
+        // We check for the path separator to avoid matching e.g. notgraphql.ts.
+        // graphql.tsx is included for completeness (handlers are .ts by default,
+        // but a .tsx file is technically valid if the user adds JSX to their handler).
         if (
-          normalizedPath.endsWith('graphql.ts') ||
-          normalizedPath.endsWith('graphql.tsx')
+          normalizedPath.endsWith('/graphql.ts') ||
+          normalizedPath.endsWith('/graphql.tsx')
         ) {
           code = applyGraphqlOptionsExtract(code) ?? code
           code = applyGqlormInject(code, args.path) ?? code
@@ -133,8 +139,14 @@ function createCedarViteApiPlugin(): Plugin {
         let code = transformedCode.code
         const normalizedId = normalizePath(id)
 
-        // Apply graphql-specific transforms for graphql.ts files
-        if (normalizedId.endsWith('graphql.ts') || normalizedId.endsWith('graphql.tsx')) {
+        // Apply graphql-specific transforms for graphql.ts files.
+        // We check for the path separator to avoid matching e.g. notgraphql.ts.
+        // graphql.tsx is included for completeness (handlers are .ts by default,
+        // but a .tsx file is technically valid if the user adds JSX to their handler).
+        if (
+          normalizedId.endsWith('/graphql.ts') ||
+          normalizedId.endsWith('/graphql.tsx')
+        ) {
           code = applyGraphqlOptionsExtract(code) ?? code
           code = applyGqlormInject(code, id) ?? code
         }

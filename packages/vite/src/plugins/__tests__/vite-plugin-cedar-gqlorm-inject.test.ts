@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 
+import { dedent } from 'ts-dedent'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import { getConfig, getPaths } from '@cedarjs/project-config'
@@ -24,26 +25,28 @@ describe('cedarGqlormInjectPlugin', () => {
   })
 
   it('injects gqlorm backend when enabled and backend file exists', () => {
-    const code = `import { createGraphQLHandler } from '@cedarjs/graphql-server'
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
 
-import directives from 'src/directives/**/*.{js,ts}'
-import sdls from 'src/graphql/**/*.sdl.{js,ts}'
-import services from 'src/services/**/*.{js,ts}'
+      import directives from 'src/directives/**/*.{js,ts}'
+      import sdls from 'src/graphql/**/*.sdl.{js,ts}'
+      import services from 'src/services/**/*.{js,ts}'
 
-export const handler = createGraphQLHandler({
-  directives,
-  sdls,
-  services,
-})`
+      export const handler = createGraphQLHandler({
+        directives,
+        sdls,
+        services,
+      })
+    `
 
     // Mock config and paths
-    ;(getConfig as any).mockReturnValue({
+    vi.mocked(getConfig).mockReturnValue({
       experimental: { gqlorm: { enabled: true } },
-    })
-    ;(getPaths as any).mockReturnValue({
+    } as any)
+    vi.mocked(getPaths).mockReturnValue({
       generated: { base: '.cedar' },
       api: { jobs: 'api/src/jobs' },
-    })
+    } as any)
 
     // Mock backend file existence
     vi.spyOn(fs, 'existsSync').mockReturnValue(true)
@@ -73,31 +76,35 @@ export const handler = createGraphQLHandler({
   })
 
   it('skips transformation when gqlorm is disabled', () => {
-    const code = `import { createGraphQLHandler } from '@cedarjs/graphql-server'
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
 
-export const handler = createGraphQLHandler({})`
+      export const handler = createGraphQLHandler({})
+    `
 
     // Mock config with gqlorm disabled
-    ;(getConfig as any).mockReturnValue({
+    vi.mocked(getConfig).mockReturnValue({
       experimental: { gqlorm: { enabled: false } },
-    })
+    } as any)
 
     const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
     expect(result).toBeNull()
   })
 
   it('skips transformation when backend file does not exist', () => {
-    const code = `import { createGraphQLHandler } from '@cedarjs/graphql-server'
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
 
-export const handler = createGraphQLHandler({})`
+      export const handler = createGraphQLHandler({})
+    `
 
     // Mock config with gqlorm enabled
-    ;(getConfig as any).mockReturnValue({
+    vi.mocked(getConfig).mockReturnValue({
       experimental: { gqlorm: { enabled: true } },
-    })
-    ;(getPaths as any).mockReturnValue({
+    } as any)
+    vi.mocked(getPaths).mockReturnValue({
       generated: { base: '.cedar' },
-    })
+    } as any)
 
     // Mock backend file does not exist
     vi.spyOn(fs, 'existsSync').mockReturnValue(false)
@@ -107,34 +114,40 @@ export const handler = createGraphQLHandler({})`
   })
 
   it('skips non-graphql files', () => {
-    const code = `import { createGraphQLHandler } from '@cedarjs/graphql-server'
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
 
-export const handler = createGraphQLHandler({})`
+      export const handler = createGraphQLHandler({})
+    `
 
     const result = plugin.transform!(code, 'api/src/functions/other.ts')
     expect(result).toBeNull()
   })
 
   it('skips files without createGraphQLHandler', () => {
-    const code = `import { something } from 'some-module'
+    const code = dedent`
+      import { something } from 'some-module'
 
-export const handler = something({})`
+      export const handler = something({})
+    `
 
     const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
     expect(result).toBeNull()
   })
 
   it('handles TypeScript graphql.tsx files', () => {
-    const code = `import { createGraphQLHandler } from '@cedarjs/graphql-server'
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
 
-export const handler = createGraphQLHandler({})`
+      export const handler = createGraphQLHandler({})
+    `
 
-    ;(getConfig as any).mockReturnValue({
+    vi.mocked(getConfig).mockReturnValue({
       experimental: { gqlorm: { enabled: true } },
-    })
-    ;(getPaths as any).mockReturnValue({
+    } as any)
+    vi.mocked(getPaths).mockReturnValue({
       generated: { base: '.cedar' },
-    })
+    } as any)
 
     vi.spyOn(fs, 'existsSync').mockReturnValue(true)
 
@@ -146,25 +159,27 @@ export const handler = createGraphQLHandler({})`
   })
 
   it('preserves other imports and code', () => {
-    const code = `import { createGraphQLHandler } from '@cedarjs/graphql-server'
-import directives from 'src/directives/**/*.{js,ts}'
-import sdls from 'src/graphql/**/*.sdl.{js,ts}'
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
+      import directives from 'src/directives/**/*.{js,ts}'
+      import sdls from 'src/graphql/**/*.sdl.{js,ts}'
 
-export const handler = createGraphQLHandler({
-  directives,
-  sdls,
-})
+      export const handler = createGraphQLHandler({
+        directives,
+        sdls,
+      })
 
-export function someOtherExport() {
-  return 'something'
-}`
+      export function someOtherExport() {
+        return 'something'
+      }
+    `
 
-    ;(getConfig as any).mockReturnValue({
+    vi.mocked(getConfig).mockReturnValue({
       experimental: { gqlorm: { enabled: true } },
-    })
-    ;(getPaths as any).mockReturnValue({
+    } as any)
+    vi.mocked(getPaths).mockReturnValue({
       generated: { base: '.cedar' },
-    })
+    } as any)
 
     vi.spyOn(fs, 'existsSync').mockReturnValue(true)
 
@@ -183,11 +198,13 @@ export function someOtherExport() {
   })
 
   it('handles missing getConfig', () => {
-    const code = `import { createGraphQLHandler } from '@cedarjs/graphql-server'
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
 
-export const handler = createGraphQLHandler({})`
+      export const handler = createGraphQLHandler({})
+    `
 
-    ;(getConfig as any).mockImplementation(() => {
+    vi.mocked(getConfig).mockImplementation(() => {
       throw new Error('Config not found')
     })
 
@@ -196,14 +213,16 @@ export const handler = createGraphQLHandler({})`
   })
 
   it('handles missing getPaths', () => {
-    const code = `import { createGraphQLHandler } from '@cedarjs/graphql-server'
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
 
-export const handler = createGraphQLHandler({})`
+      export const handler = createGraphQLHandler({})
+    `
 
-    ;(getConfig as any).mockReturnValue({
+    vi.mocked(getConfig).mockReturnValue({
       experimental: { gqlorm: { enabled: true } },
-    })
-    ;(getPaths as any).mockImplementation(() => {
+    } as any)
+    vi.mocked(getPaths).mockImplementation(() => {
       throw new Error('Paths not found')
     })
 
@@ -212,22 +231,24 @@ export const handler = createGraphQLHandler({})`
   })
 
   it('correctly handles multi-line imports', () => {
-    const code = `import {
-  createGraphQLHandler,
-  type GraphQLHandlerOptions,
-} from '@cedarjs/graphql-server'
-import { db } from 'src/lib/db'
+    const code = dedent`
+      import {
+        createGraphQLHandler,
+        type GraphQLHandlerOptions,
+      } from '@cedarjs/graphql-server'
+      import { db } from 'src/lib/db'
 
-export const handler = createGraphQLHandler({
-  db,
-})`
+      export const handler = createGraphQLHandler({
+        db,
+      })
+    `
 
-    ;(getConfig as any).mockReturnValue({
+    vi.mocked(getConfig).mockReturnValue({
       experimental: { gqlorm: { enabled: true } },
-    })
-    ;(getPaths as any).mockReturnValue({
+    } as any)
+    vi.mocked(getPaths).mockReturnValue({
       generated: { base: '.cedar' },
-    })
+    } as any)
 
     vi.spyOn(fs, 'existsSync').mockReturnValue(true)
 
