@@ -3,7 +3,11 @@ import path from 'node:path'
 
 import type { Plugin } from 'vite'
 
-import { getConfig, getPaths } from '@cedarjs/project-config'
+import {
+  getConfig,
+  getPaths,
+  importStatementPath,
+} from '@cedarjs/project-config'
 
 /**
  * Vite plugin that injects the auto-generated gqlorm backend into
@@ -100,9 +104,9 @@ export function cedarGqlormInjectPlugin(): Plugin {
       // constructs in backend.ts (interface declarations, type annotations)
       // are erasable and fully supported by Node.js type stripping.
       const relPath =
-        path
-          .relative(path.dirname(id), backendPathWithoutExt)
-          .replace(/\\/g, '/') + '.ts'
+        importStatementPath(
+          path.relative(path.dirname(id), backendPathWithoutExt),
+        ) + '.ts'
 
       // Build the imports to inject at the top of the file
       const importDb = `import { db as __gqlorm_db__ } from 'src/lib/db'`

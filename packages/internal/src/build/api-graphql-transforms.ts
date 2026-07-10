@@ -1,7 +1,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { getConfig, getPaths } from '@cedarjs/project-config'
+import {
+  getConfig,
+  getPaths,
+  importStatementPath,
+} from '@cedarjs/project-config'
 
 /**
  * Extracts the options argument from createGraphQLHandler calls and stores
@@ -41,10 +45,11 @@ export function applyGraphqlOptionsExtract(code: string): string | null {
     return null
   }
 
-  // Find the end of the entire export statement (the closing paren and possible semicolon)
+  // Find the end of the entire export statement (the closing paren and possible
+  // semicolon)
   const fullCallEndPos = paramsStartPos + optionsValue.length
   // Skip past the closing paren
-  let statementEndPos = fullCallEndPos + 1 // +1 for the )
+  let statementEndPos = fullCallEndPos + 1
 
   // Skip optional whitespace on the same line (do not consume newlines)
   while (
@@ -92,10 +97,7 @@ export function applyGraphqlOptionsExtract(code: string): string | null {
  *
  * Returns the transformed code, or null if no transformation was needed.
  */
-export function applyGqlormInject(
-  code: string,
-  id: string,
-): string | null {
+export function applyGqlormInject(code: string, id: string): string | null {
   // Check if already transformed to prevent double-application
   if (code.includes('__gqlorm_sdl__')) {
     return null
@@ -107,27 +109,12 @@ export function applyGqlormInject(
   }
 
   // Check if gqlorm is enabled
-  let config: ReturnType<typeof getConfig>
-  try {
-    config = getConfig()
-  } catch {
-    return null
-  }
-
-  if (!config.experimental?.gqlorm?.enabled) {
-    return null
-  }
-
-  // Check if the backend file exists
-  let paths: ReturnType<typeof getPaths>
-  try {
-    paths = getPaths()
-  } catch {
+  if (!getConfig().experimental?.gqlorm?.enabled) {
     return null
   }
 
   const backendPathWithoutExt = path.join(
-    paths.generated.base,
+    getPaths().generated.base,
     'gqlorm',
     'backend',
   )
@@ -149,15 +136,15 @@ export function applyGqlormInject(
 
   // Compute the relative path from graphql.ts to the backend file
   // Use explicit .ts extension: Cedar targets Node.js 24, which strips
-  // TypeScript types natively (unflagged since v24.0). The API build uses
-  // esbuild with bundle:false so this import stays as a runtime reference
-  // resolved directly by Node.js against the file system. All TypeScript
-  // constructs in backend.ts (interface declarations, type annotations)
-  // are erasable and fully supported by Node.js type stripping.
+  // TypeScript types natively. The API build uses esbuild with bundle:false so
+  // this import stays as a runtime reference resolved directly by Node.js
+  // against the file system. All TypeScript constructs in backend.ts (interface
+  // declarations, type annotations) are erasable and fully supported by Node.js
+  // type stripping.
   const relPath =
-    path
-      .relative(path.dirname(id), backendPathWithoutExt)
-      .replace(/\\/g, '/') + '.ts'
+    importStatementPath(
+      path.relative(path.dirname(id), backendPathWithoutExt),
+    ) + '.ts'
 
   // Build the imports to inject at the top of the file
   const importDb = `import { db as __gqlorm_db__ } from 'src/lib/db'`
@@ -202,6 +189,7 @@ function extractFunctionArgument(code: string, startPos: number): string {
       for (let j = i - 1; j >= 0 && code[j] === '\\'; j--) {
         backslashCount++
       }
+
       // If even number of backslashes (including 0), the quote is not escaped
       const isEscaped = backslashCount % 2 === 1
 
@@ -213,6 +201,7 @@ function extractFunctionArgument(code: string, startPos: number): string {
           inString = false
         }
       }
+
       continue
     }
 
@@ -227,6 +216,7 @@ function extractFunctionArgument(code: string, startPos: number): string {
         // This is the closing paren of the createGraphQLHandler call
         return code.slice(startPos, i)
       }
+
       parenDepth--
     } else if (char === '{') {
       braceDepth++
