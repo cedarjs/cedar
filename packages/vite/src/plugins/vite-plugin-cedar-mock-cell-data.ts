@@ -53,7 +53,10 @@ export function cedarMockCellDataPlugin(): Plugin {
       traverse(ast, {
         ExportNamedDeclaration(p: any) {
           const d = p.node.declaration
-          let mockFunction: t.ArrowFunctionExpression | t.FunctionExpression | null = null
+          let mockFunction:
+            | t.ArrowFunctionExpression
+            | t.FunctionExpression
+            | null = null
 
           switch (d?.type) {
             case 'VariableDeclaration': {
@@ -127,7 +130,7 @@ export function cedarMockCellDataPlugin(): Plugin {
             console.warn(
               `[cedar-mock-cell-data] Cell ${cellPath} has an unnamed GraphQL operation. ` +
                 `The mock for ${id} will not work. ` +
-              `Ensure the QUERY is named, e.g., "query GetUser { ... }"`,
+                `Ensure the QUERY is named, e.g., "query GetUser { ... }"`,
             )
             return
           }

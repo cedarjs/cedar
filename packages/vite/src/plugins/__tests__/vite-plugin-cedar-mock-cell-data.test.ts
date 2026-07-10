@@ -98,13 +98,19 @@ describe('cedarMockCellDataPlugin', () => {
 
   it('returns null for non-mock files', async () => {
     // @ts-expect-error Plugin type
-    const result = await plugin.transform(MOCK_ARROW, '/app/components/UserCell/UserCell.ts')
+    const result = await plugin.transform(
+      MOCK_ARROW,
+      '/app/components/UserCell/UserCell.ts',
+    )
     expect(result).toBeNull()
   })
 
   it('returns null for .mock.jsx files (not in original pattern)', async () => {
     // @ts-expect-error Plugin type
-    const result = await plugin.transform(MOCK_ARROW, `${CELL_DIR}/UserCell.mock.jsx`)
+    const result = await plugin.transform(
+      MOCK_ARROW,
+      `${CELL_DIR}/UserCell.mock.jsx`,
+    )
     expect(result).toBeNull()
   })
 
