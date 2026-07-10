@@ -11,7 +11,6 @@ import {
 
 import { cedarCellTransform } from './plugins/vite-plugin-cedar-cell.js'
 import { cedarDataUriShim } from './plugins/vite-plugin-cedar-data-uri-shim.js'
-import { cedarDirectoryNamedImportPlugin } from './plugins/vite-plugin-cedar-directory-named-import.js'
 import { cedarEntryInjectionPlugin } from './plugins/vite-plugin-cedar-entry-injection.js'
 import { cedarHtmlEnvPlugin } from './plugins/vite-plugin-cedar-html-env.js'
 import { cedarRemoveDevFatalErrorPage } from './plugins/vite-plugin-cedar-remove-dev-fatal-error-page.js'
@@ -26,7 +25,6 @@ import { cedarSwapApolloProvider } from './plugins/vite-plugin-swap-apollo-provi
 export { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
 export { cedarCjsCompatPlugin } from './plugins/vite-plugin-cedar-cjs-compat.js'
 export { cedarCellTransform } from './plugins/vite-plugin-cedar-cell.js'
-export { cedarDirectoryNamedImportPlugin } from './plugins/vite-plugin-cedar-directory-named-import.js'
 export { handlerAlsWrappingPlugin } from './plugins/vite-plugin-handler-als-wrapping.js'
 export { applyHandlerAlsWrapping } from './plugins/vite-plugin-handler-als-wrapping.js'
 export { cedarEntryInjectionPlugin } from './plugins/vite-plugin-cedar-entry-injection.js'
@@ -75,7 +73,6 @@ export function cedar({ mode }: PluginOptions = {}): PluginOption[] {
     cedarMergedConfig(),
     cedarjsResolveCedarStyleImportsPlugin(),
     cedarSwapApolloProvider(),
-    cedarDirectoryNamedImportPlugin(),
     cedarCellTransform(),
     cedarTransformJsAsJsx(),
     cedarRemoveFromBundle(),
