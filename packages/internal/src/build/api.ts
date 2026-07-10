@@ -68,12 +68,7 @@ const runCedarBabelTransformsPlugin = {
 
         // Apply graphql-specific transforms for graphql.ts files.
         // We check for the path separator to avoid matching e.g. notgraphql.ts.
-        // graphql.tsx is included for completeness (handlers are .ts by default,
-        // but a .tsx file is technically valid if the user adds JSX to their handler).
-        if (
-          normalizedPath.endsWith('/graphql.ts') ||
-          normalizedPath.endsWith('/graphql.tsx')
-        ) {
+        if (normalizedPath.endsWith('/graphql.ts')) {
           code = applyGraphqlOptionsExtract(code) ?? code
           code = applyGqlormInject(code, args.path) ?? code
         }
@@ -141,12 +136,7 @@ function createCedarViteApiPlugin(): Plugin {
 
         // Apply graphql-specific transforms for graphql.ts files.
         // We check for the path separator to avoid matching e.g. notgraphql.ts.
-        // graphql.tsx is included for completeness (handlers are .ts by default,
-        // but a .tsx file is technically valid if the user adds JSX to their handler).
-        if (
-          normalizedId.endsWith('/graphql.ts') ||
-          normalizedId.endsWith('/graphql.tsx')
-        ) {
+        if (normalizedId.endsWith('/graphql.ts')) {
           code = applyGraphqlOptionsExtract(code) ?? code
           code = applyGqlormInject(code, id) ?? code
         }

@@ -135,29 +135,6 @@ describe('cedarGqlormInjectPlugin', () => {
     expect(result).toBeNull()
   })
 
-  it('handles TypeScript graphql.tsx files', () => {
-    const code = dedent`
-      import { createGraphQLHandler } from '@cedarjs/graphql-server'
-
-      export const handler = createGraphQLHandler({})
-    `
-
-    vi.mocked(getConfig).mockReturnValue({
-      experimental: { gqlorm: { enabled: true } },
-    } as any)
-    vi.mocked(getPaths).mockReturnValue({
-      generated: { base: '.cedar' },
-    } as any)
-
-    vi.spyOn(fs, 'existsSync').mockReturnValue(true)
-
-    const result = plugin.transform!(code, 'api/src/functions/graphql.tsx')
-
-    if (result && typeof result === 'object') {
-      expect(result.code).toContain('Object.assign(sdls, {')
-    }
-  })
-
   it('preserves other imports and code', () => {
     const code = dedent`
       import { createGraphQLHandler } from '@cedarjs/graphql-server'

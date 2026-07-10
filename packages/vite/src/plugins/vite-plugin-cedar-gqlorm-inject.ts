@@ -37,9 +37,7 @@ export function cedarGqlormInjectPlugin(): Plugin {
     transform(code, id) {
       // Only transform the graphql handler file.
       // Check for path separator to avoid matching e.g. notgraphql.ts.
-      // graphql.tsx is included for completeness (handlers are .ts by default,
-      // but a .tsx file is technically valid if the user adds JSX to their handler).
-      if (!id.endsWith('/graphql.ts') && !id.endsWith('/graphql.tsx')) {
+      if (!id.endsWith('/graphql.ts')) {
         return null
       }
 
