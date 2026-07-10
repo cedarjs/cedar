@@ -84,6 +84,7 @@ See [debugging/taste.md](debugging/taste.md)
 # esbuild
 
 - When creating esbuild `onLoad` plugins with a `filter` regex, make the filter precise enough (include path separator) that a redundant inner path check (e.g., `args.path.endsWith(...)`) is unnecessary. A filter like `/\/graphql\.ts$/` avoids both false matches (e.g., `notgraphql.ts`) and redundant guards inside the callback. Confidence: 0.60
+- Keep each esbuild plugin in its own separate file, following the pattern of `esbuild-plugin-handler-als-wrapping.ts`. Do not define multiple plugins inline in the same file where the build options live — extract each into a dedicated file with a descriptive name. Confidence: 0.70
 
 # Process Management
 
