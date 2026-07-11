@@ -40,6 +40,7 @@ export function cedarGraphqlOptionsExtractPlugin(): Plugin {
 
       return {
         code: transformed,
+        map: null,
       }
     },
   }

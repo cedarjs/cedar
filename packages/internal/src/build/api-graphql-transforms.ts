@@ -146,8 +146,17 @@ export function applyGqlormInject(code: string, id: string): string | null {
       path.relative(path.dirname(id), backendPathWithoutExt),
     ) + '.ts'
 
+  // Compute the relative path from graphql.ts to src/lib/db.
+  // We cannot use the bare specifier 'src/lib/db' here because this function
+  // runs after the Babel module-resolver has already rewritten all `src/` paths
+  // to relative paths. A bare `src/lib/db` in the output would not be
+  // resolvable by Node.js at runtime.
+  const dbSrcPath = path.join(getPaths().api.src, 'lib', 'db')
+  const relDbPath =
+    importStatementPath(path.relative(path.dirname(id), dbSrcPath)) + '.ts'
+
   // Build the imports to inject at the top of the file
-  const importDb = `import { db as __gqlorm_db__ } from 'src/lib/db'`
+  const importDb = `import { db as __gqlorm_db__ } from '${relDbPath}'`
   const importSdl = `import * as __gqlorm_sdl__ from '${relPath}'`
   const importsToAdd = `${importDb}\n${importSdl}\n`
 

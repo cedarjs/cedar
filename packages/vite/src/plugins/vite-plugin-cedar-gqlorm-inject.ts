@@ -108,8 +108,17 @@ export function cedarGqlormInjectPlugin(): Plugin {
           path.relative(path.dirname(id), backendPathWithoutExt),
         ) + '.ts'
 
+      // Compute the relative path from graphql.ts to src/lib/db so the import
+      // is a valid relative specifier in all build contexts (esbuild, Vite SSR
+      // dev server, Vite production build). Using the bare specifier 'src/lib/db'
+      // only works when a cedar-api-src-redirect resolver is present; relative
+      // paths work everywhere.
+      const dbSrcPath = path.join(paths.api.src, 'lib', 'db')
+      const relDbPath =
+        importStatementPath(path.relative(path.dirname(id), dbSrcPath)) + '.ts'
+
       // Build the imports to inject at the top of the file
-      const importDb = `import { db as __gqlorm_db__ } from 'src/lib/db'`
+      const importDb = `import { db as __gqlorm_db__ } from '${relDbPath}'`
       const importSdl = `import * as __gqlorm_sdl__ from '${relPath}'`
       const importsToAdd = `${importDb}\n${importSdl}\n`
 
@@ -130,6 +139,7 @@ export function cedarGqlormInjectPlugin(): Plugin {
 
       return {
         code: transformed,
+        map: null,
       }
     },
   }

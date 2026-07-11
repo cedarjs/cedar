@@ -18,6 +18,11 @@ import { createGraphQLYoga } from '@cedarjs/graphql-server'
 import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
+import {
+  applyGraphqlOptionsExtract,
+  applyGqlormInject,
+} from '@cedarjs/internal/dist/build/api-graphql-transforms.js'
+
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
 
 const LAMBDA_FUNCTIONS: Record<string, CedarHandler> = {}
@@ -223,8 +228,23 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
               return null
             }
 
+            let transformedCode = result.code
+
+            // Apply graphql-specific transforms for the graphql handler file.
+            // These were previously handled by Babel plugins that have been
+            // removed from getApiSideBabelPlugins. The esbuild path applies
+            // them via cedarApiGraphqlPlugin; here we apply them inline so
+            // the unified dev server (ssrLoadModule) also produces
+            // __cedar_graphqlOptions and the gqlorm injection.
+            if (normalizePath(id).endsWith('/graphql.ts')) {
+              transformedCode =
+                applyGraphqlOptionsExtract(transformedCode) ?? transformedCode
+              transformedCode =
+                applyGqlormInject(transformedCode, id) ?? transformedCode
+            }
+
             return {
-              code: result.code,
+              code: transformedCode,
               map: result.map ?? null,
             }
           } catch (err) {
