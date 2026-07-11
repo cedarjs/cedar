@@ -211,10 +211,7 @@ function areAllParamsSupported(params: ParamPattern[]): boolean {
 
     if (param.type === 'AssignmentPattern') {
       const ap = param
-      if (
-        ap.left.type !== 'Identifier' &&
-        ap.left.type !== 'ObjectPattern'
-      ) {
+      if (ap.left.type !== 'Identifier' && ap.left.type !== 'ObjectPattern') {
         return false
       }
       // If left is ObjectPattern, check its properties recursively
