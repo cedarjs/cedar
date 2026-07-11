@@ -10,10 +10,10 @@ import { getPaths } from '@cedarjs/project-config'
 
 // CJS/ESM interop — both packages ship a default export in CJS but may be
 // imported as a namespace in ESM bundler contexts.
-const traverse = ((_traverse as unknown as { default: typeof _traverse })
-  .default ?? _traverse)
-const generate = ((_generate as unknown as { default: typeof _generate })
-  .default ?? _generate)
+const traverse =
+  (_traverse as unknown as { default: typeof _traverse }).default ?? _traverse
+const generate =
+  (_generate as unknown as { default: typeof _generate }).default ?? _generate
 
 /**
  * Vite plugin that wraps exported API functions with OpenTelemetry spans to
