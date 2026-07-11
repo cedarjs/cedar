@@ -14,6 +14,7 @@ import { findApiFiles } from '@cedarjs/internal/dist/files.js'
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
+import { cedarOtelWrappingPlugin } from './plugins/vite-plugin-cedar-otel-wrapping.js'
 import { handlerAlsWrappingPlugin } from './plugins/vite-plugin-handler-als-wrapping.js'
 
 function resolveWithExtensions(id: string): string {
@@ -329,6 +330,7 @@ export async function buildCedarApp({
   }
 
   if (workspace.includes('api')) {
+    plugins.push(cedarOtelWrappingPlugin())
     plugins.push(
       handlerAlsWrappingPlugin({ projectIsEsm: projectSideIsEsm('api') }),
     )

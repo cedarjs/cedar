@@ -32,6 +32,10 @@ import { getPaths } from '@cedarjs/project-config'
  *
  * This replaces `babel-plugin-redwood-otel-wrapping` for Vite builds.
  * The Babel plugin is still used for Jest transforms.
+ *
+ * NOTE: Known limitation — spans will close before a Promise settles if a
+ * synchronous function returns a Promise. To trace async work correctly,
+ * mark the function as `async` if it returns or awaits Promises.
  */
 export function cedarOtelWrappingPlugin(): Plugin {
   return {
@@ -98,6 +102,13 @@ export function applyOtelWrapping(
     }
     const fnName = declarator.id.name
 
+    // Check if all parameters are supported before attempting to wrap.
+    // Bail out early if parameters contain unsupported patterns (RestElement,
+    // ArrayPattern, nested ObjectPatterns with non-Identifier keys, etc.)
+    if (!areAllParamsSupported(fn.params)) {
+      continue
+    }
+
     // Build the inner call argument list (without parameter defaults).
     // Returns null if any parameter type is unsupported — in that case we
     // skip this export rather than producing incorrect code.
@@ -152,6 +163,73 @@ export function applyOtelWrapping(
 }
 
 /**
+ * Checks if all function parameters are supported for wrapping. Returns false
+ * if any parameter contains unsupported patterns (RestElement, ArrayPattern,
+ * TSParameterProperty, or nested ObjectPatterns with non-Identifier keys).
+ */
+function areAllParamsSupported(params: ParamPattern[]): boolean {
+  for (const param of params) {
+    if (
+      param.type === 'RestElement' ||
+      param.type === 'ArrayPattern' ||
+      param.type === 'TSParameterProperty'
+    ) {
+      return false
+    }
+
+    if (param.type === 'ObjectPattern') {
+      // Check all properties in the ObjectPattern
+      for (const prop of param.properties) {
+        if (prop.type === 'RestElement') {
+          return false
+        }
+        // Key must be an Identifier (no computed properties)
+        if (prop.key.type !== 'Identifier') {
+          return false
+        }
+        // Value must be Identifier, AssignmentPattern, or ObjectPattern
+        // For simplicity, we don't support nested ObjectPatterns in this version
+        const value = prop.value
+        if (
+          value.type !== 'Identifier' &&
+          value.type !== 'AssignmentPattern' &&
+          value.type !== 'ObjectPattern'
+        ) {
+          return false
+        }
+        // If it's an AssignmentPattern, check the left side
+        if (value.type === 'AssignmentPattern') {
+          if (
+            value.left.type !== 'Identifier' &&
+            value.left.type !== 'ObjectPattern'
+          ) {
+            return false
+          }
+        }
+      }
+    }
+
+    if (param.type === 'AssignmentPattern') {
+      const ap = param
+      if (
+        ap.left.type !== 'Identifier' &&
+        ap.left.type !== 'ObjectPattern'
+      ) {
+        return false
+      }
+      // If left is ObjectPattern, check its properties recursively
+      if (ap.left.type === 'ObjectPattern') {
+        if (!areAllParamsSupported([ap.left])) {
+          return false
+        }
+      }
+    }
+  }
+
+  return true
+}
+
+/**
  * Constructs the argument list for the inner (private) function call,
  * stripping parameter defaults. Returns `null` if any param type is
  * unsupported (RestElement, ArrayPattern, TSParameterProperty).
@@ -159,8 +237,9 @@ export function applyOtelWrapping(
  * Examples:
  *   (id)              → "id"
  *   ({ id, name })    → "{ id, name }"
- *   ({ id = 1 })      → "{ id }"     (default stripped)
- *   (arg = 'default') → "arg"         (default stripped)
+ *   ({ id: postId })  → "{ id: postId }" (aliasing preserved)
+ *   ({ id = 1 })      → "{ id }"         (default stripped)
+ *   (arg = 'default') → "arg"             (default stripped)
  */
 function buildInnerArgs(params: ParamPattern[]): string | null {
   const args: string[] = []
@@ -215,7 +294,10 @@ function buildInnerArgs(params: ParamPattern[]): string | null {
  * RestElement entries (matching the Babel plugin's behaviour). Returns `null`
  * if any property key is non-identifier (computed, etc.).
  *
+ * Preserves aliasing (e.g. `{ id: postId }`), and strips defaults (e.g. `{ id = 'default' }` → `{ id }`).
+ *
  * E.g. `{ id, name = 'Alice' }` → `"{ id, name }"`
+ * E.g. `{ id: postId, count = 0 }` → `"{ id: postId, count }"`
  */
 function buildObjectCallArg(pattern: ObjectPattern): string | null {
   const keys: string[] = []
@@ -230,7 +312,31 @@ function buildObjectCallArg(pattern: ObjectPattern): string | null {
     if (bp.key.type !== 'Identifier') {
       return null
     }
-    keys.push(bp.key.name)
+
+    const keyName = bp.key.name
+
+    // Extract the binding name from the value (which could be an Identifier or AssignmentPattern)
+    let valueName: string | null = null
+    if (bp.value.type === 'Identifier') {
+      valueName = bp.value.name
+    } else if (bp.value.type === 'AssignmentPattern') {
+      // For { id = default }, extract the binding from the left side
+      if (bp.value.left.type === 'Identifier') {
+        valueName = bp.value.left.name
+      } else {
+        return null // Nested patterns not supported
+      }
+    } else {
+      return null // Other value types not supported
+    }
+
+    // If key and value differ, preserve the aliasing: `{ id: postId }`
+    // If they're the same, use shorthand: `{ id }`
+    if (valueName !== keyName) {
+      keys.push(`${keyName}: ${valueName}`)
+    } else {
+      keys.push(keyName)
+    }
   }
 
   return `{ ${keys.join(', ')} }`

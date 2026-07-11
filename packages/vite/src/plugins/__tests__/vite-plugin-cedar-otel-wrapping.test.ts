@@ -269,4 +269,37 @@ export const getPost = (id) => db.post.findUnique({ where: { id } })`
     expect(output).toContain('code: 2')
     expect(output).toContain('throw error')
   })
+
+  it('preserves aliased destructuring params in inner call', () => {
+    const code = `export const getPost = ({ id: postId }) => {
+  return db.post.findUnique({ where: { id: postId } })
+}`
+
+    const output = applyOtelWrapping(code, testFilename, 'services')!
+
+    // Inner function call should preserve the aliasing: { id: postId }
+    expect(output).toContain('__getPost({ id: postId })')
+  })
+
+  it('bails out for RestElement in ObjectPattern', () => {
+    const code = `export const withRest = ({ id, ...rest }) => {
+  return { id, ...rest }
+}`
+
+    // RestElement in ObjectPattern params — unsupported, bail out
+    const output = applyOtelWrapping(code, testFilename, 'services')
+
+    expect(output).toBeNull()
+  })
+
+  it('bails out for RestElement at top level', () => {
+    const code = `export const varArgs = (...args) => {
+  return args
+}`
+
+    // RestElement at top level — unsupported, bail out
+    const output = applyOtelWrapping(code, testFilename, 'services')
+
+    expect(output).toBeNull()
+  })
 })
