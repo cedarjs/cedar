@@ -300,9 +300,9 @@ function buildObjectCallArg(pattern: ObjectPattern): string | null {
   const keys: string[] = []
 
   for (const prop of pattern.properties) {
-    // Drop rest elements — matches the existing Babel plugin behaviour
+    // Object rest cannot be reconstructed without dropping caller data
     if (prop.type === 'RestElement') {
-      continue
+      return null
     }
 
     const bp = prop
