@@ -68,11 +68,11 @@ describe('cedarOtelWrappingPlugin', () => {
     const output = (result as { code: string }).code
 
     expect(output).toContain(
-      'import { trace as RW_OTEL_WRAPPER_TRACE } from "@opentelemetry/api"',
+      "import { trace as RW_OTEL_WRAPPER_TRACE } from '@opentelemetry/api'",
     )
     expect(output).toContain('const __contacts = () =>')
-    expect(output).toContain('RW_OTEL_WRAPPER_TRACE.getTracer("redwoodjs")')
-    expect(output).toContain('"redwoodjs:api:services:contacts"')
+    expect(output).toContain("RW_OTEL_WRAPPER_TRACE.getTracer('redwoodjs')")
+    expect(output).toContain("'redwoodjs:api:services:contacts'")
   })
 
   it('transforms files in api/src/functions/', () => {
@@ -87,9 +87,9 @@ describe('cedarOtelWrappingPlugin', () => {
     const output = (result as { code: string }).code
 
     expect(output).toContain(
-      'import { trace as RW_OTEL_WRAPPER_TRACE } from "@opentelemetry/api"',
+      "import { trace as RW_OTEL_WRAPPER_TRACE } from '@opentelemetry/api'",
     )
-    expect(output).toContain('"redwoodjs:api:functions:handler"')
+    expect(output).toContain("'redwoodjs:api:functions:handler'")
   })
 })
 
@@ -105,7 +105,7 @@ describe('applyOtelWrapping', () => {
 
     expect(output).not.toBeNull()
     expect(output).toContain(
-      'import { trace as RW_OTEL_WRAPPER_TRACE } from "@opentelemetry/api"',
+      "import { trace as RW_OTEL_WRAPPER_TRACE } from '@opentelemetry/api'",
     )
   })
 
@@ -119,13 +119,13 @@ describe('applyOtelWrapping', () => {
     // Renamed inner function
     expect(output).toContain('const __contacts = () =>')
     // Tracer creation
-    expect(output).toContain('RW_OTEL_WRAPPER_TRACE.getTracer("redwoodjs")')
+    expect(output).toContain("RW_OTEL_WRAPPER_TRACE.getTracer('redwoodjs')")
     // Span name
-    expect(output).toContain('"redwoodjs:api:services:contacts"')
+    expect(output).toContain("'redwoodjs:api:services:contacts'")
     // Span attributes
-    expect(output).toContain('span.setAttribute("code.function", "contacts")')
+    expect(output).toContain("span.setAttribute('code.function', 'contacts')")
     expect(output).toContain(
-      `span.setAttribute("code.filepath", "${testFilename}")`,
+      `span.setAttribute('code.filepath', ${JSON.stringify(testFilename)})`,
     )
     // Call the inner function (non-async, no await)
     expect(output).toContain(
@@ -149,10 +149,8 @@ describe('applyOtelWrapping', () => {
 
     const output = applyOtelWrapping(code, testFilename, 'services')!
 
-    // Renamed inner function is async
-    expect(output).toContain('const __getPost = async id =>')
-    // Outer wrapper is async
-    expect(output).toContain('const __getPost')
+    // Renamed inner function is async, preserves original source (with parens)
+    expect(output).toContain('const __getPost = async (id) =>')
     // Span call is awaited
     expect(output).toContain(
       'const RW_OTEL_WRAPPER_RESULT = await RW_OTEL_WRAPPER_TRACER',
@@ -207,15 +205,10 @@ export const listItems = ([first, ...rest]) => {
   return [first, ...rest]
 }`
 
-    const output = applyOtelWrapping(code, testFilename, 'services')!
+    // ArrayPattern params are unsupported — nothing to wrap, returns null
+    const output = applyOtelWrapping(code, testFilename, 'services')
 
-    // Should still add the import (Program visitor always runs)
-    expect(output).toContain(
-      'import { trace as RW_OTEL_WRAPPER_TRACE } from "@opentelemetry/api"',
-    )
-    // Should NOT wrap the function (bail-out path for ArrayPattern)
-    expect(output).not.toContain('__listItems')
-    expect(output).not.toContain('RW_OTEL_WRAPPER_TRACER')
+    expect(output).toBeNull()
   })
 
   it('does not wrap non-arrow-function exports', () => {
@@ -226,15 +219,10 @@ export const handler = createGraphQLHandler({
   services,
 })`
 
-    const output = applyOtelWrapping(code, testFilename, 'functions')!
+    // No arrow function exports — nothing to wrap, returns null
+    const output = applyOtelWrapping(code, testFilename, 'functions')
 
-    // Import is still added
-    expect(output).toContain(
-      'import { trace as RW_OTEL_WRAPPER_TRACE } from "@opentelemetry/api"',
-    )
-    // But no wrapping occurs (handler is not an arrow function)
-    expect(output).not.toContain('__handler')
-    expect(output).not.toContain('RW_OTEL_WRAPPER_TRACER')
+    expect(output).toBeNull()
   })
 
   it('wraps multiple exported functions in the same file', () => {
@@ -243,8 +231,8 @@ export const getPost = (id) => db.post.findUnique({ where: { id } })`
 
     const output = applyOtelWrapping(code, testFilename, 'services')!
 
-    expect(output).toContain('"redwoodjs:api:services:getPosts"')
-    expect(output).toContain('"redwoodjs:api:services:getPost"')
+    expect(output).toContain("'redwoodjs:api:services:getPosts'")
+    expect(output).toContain("'redwoodjs:api:services:getPost'")
     expect(output).toContain('const __getPosts')
     expect(output).toContain('const __getPost')
   })
@@ -255,7 +243,7 @@ export const getPost = (id) => db.post.findUnique({ where: { id } })`
 
     const output = applyOtelWrapping(code, fnFilename, 'functions')!
 
-    expect(output).toContain('"redwoodjs:api:functions:handler"')
+    expect(output).toContain("'redwoodjs:api:functions:handler'")
   })
 
   it('sets span attributes with the correct function name and filepath', () => {
@@ -264,9 +252,9 @@ export const getPost = (id) => db.post.findUnique({ where: { id } })`
 
     const output = applyOtelWrapping(code, filename, 'services')!
 
-    expect(output).toContain('span.setAttribute("code.function", "posts")')
+    expect(output).toContain("span.setAttribute('code.function', 'posts')")
     expect(output).toContain(
-      `span.setAttribute("code.filepath", "${filename}")`,
+      `span.setAttribute('code.filepath', ${JSON.stringify(filename)})`,
     )
   })
 

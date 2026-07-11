@@ -1,16 +1,13 @@
-import babelGenerator from '@babel/generator'
-import { parse } from '@babel/parser'
-import babelTraverse from '@babel/traverse'
-import type { NodePath } from '@babel/traverse'
-import * as t from '@babel/types'
+import type {
+  ArrowFunctionExpression,
+  ObjectPattern,
+  ParamPattern,
+} from '@oxc-project/types'
+import { parseSync } from 'oxc-parser'
 import type { Plugin } from 'vite'
 import { normalizePath } from 'vite'
 
 import { getPaths } from '@cedarjs/project-config'
-
-// Handle both ESM and CJS module systems
-const traverse = babelTraverse.default || babelTraverse
-const generate = babelGenerator.default || babelGenerator
 
 /**
  * Vite plugin that wraps exported API functions with OpenTelemetry spans to
@@ -22,11 +19,9 @@ const generate = babelGenerator.default || babelGenerator
  * 1. Adds an import at the top of the file:
  *      import { trace as RW_OTEL_WRAPPER_TRACE } from '@opentelemetry/api'
  *
- * 2. Renames the original function:
- *      const __fn = <original function>
- *
- * 3. Replaces the export with a wrapper that starts an OTel span:
+ * 2. Wraps the original export with an OTel span:
  *      export const fn = (async?) (...params) => {
+ *        const __fn = (async?) (...params) => { ...original body... }
  *        const RW_OTEL_WRAPPER_TRACER = RW_OTEL_WRAPPER_TRACE.getTracer('redwoodjs')
  *        const RW_OTEL_WRAPPER_RESULT = (await?) RW_OTEL_WRAPPER_TRACER.startActiveSpan(
  *          'redwoodjs:api:<folder>:<fnName>',
@@ -75,327 +70,213 @@ export function applyOtelWrapping(
   filename: string,
   apiFolder: string,
 ): string | null {
-  let ast: ReturnType<typeof parse>
-  try {
-    ast = parse(code, {
-      sourceType: 'module',
-      plugins: ['typescript', 'jsx'],
+  const parseResult = parseSync(filename, code, { sourceType: 'module' })
+
+  // Collect replacements; we apply them in reverse order to preserve positions
+  const replacements: { start: number; end: number; src: string }[] = []
+
+  for (const node of parseResult.program.body) {
+    if (node.type !== 'ExportNamedDeclaration') {
+      continue
+    }
+    const decl = node.declaration
+    if (decl?.type !== 'VariableDeclaration') {
+      continue
+    }
+    const declarator = decl.declarations[0]
+    if (!declarator) {
+      continue
+    }
+
+    const fn = declarator.init as ArrowFunctionExpression | undefined
+    if (fn?.type !== 'ArrowFunctionExpression') {
+      continue
+    }
+
+    if (declarator.id.type !== 'Identifier') {
+      continue
+    }
+    const fnName = declarator.id.name
+
+    // Build the inner call argument list (without parameter defaults).
+    // Returns null if any parameter type is unsupported — in that case we
+    // skip this export rather than producing incorrect code.
+    const innerArgs = buildInnerArgs(fn.params)
+    if (innerArgs === null) {
+      continue
+    }
+
+    // Everything from the start of the arrow function up to (but not including)
+    // its body opening brace — e.g. "async ({ id }) => " or "({ id }) => ".
+    // Used as the signature for both the outer wrapper and the inner function.
+    const fnHeader = code.slice(fn.start, fn.body.start)
+
+    // The complete original arrow function source (params + body).
+    const originalFnSrc = code.slice(fn.start, fn.end)
+
+    const isAsync = fn.async
+    const awaitKw = isAsync ? 'await ' : ''
+    const asyncKw = isAsync ? 'async ' : ''
+
+    replacements.push({
+      start: node.start,
+      end: node.end,
+      src: buildWrappedExport(
+        fnName,
+        fnHeader,
+        originalFnSrc,
+        innerArgs,
+        awaitKw,
+        asyncKw,
+        apiFolder,
+        filename,
+      ),
     })
-  } catch {
+  }
+
+  if (replacements.length === 0) {
     return null
   }
 
-  let didTransform = false
+  // Apply in reverse so earlier replacements don't shift later positions
+  let output = code
+  for (let i = replacements.length - 1; i >= 0; i--) {
+    const r = replacements[i]
+    output = output.slice(0, r.start) + r.src + output.slice(r.end)
+  }
 
-  // Add: import { trace as RW_OTEL_WRAPPER_TRACE } from '@opentelemetry/api'
-  ast.program.body.unshift(
-    t.importDeclaration(
-      [
-        t.importSpecifier(
-          t.identifier('RW_OTEL_WRAPPER_TRACE'),
-          t.identifier('trace'),
-        ),
-      ],
-      t.stringLiteral('@opentelemetry/api'),
-    ),
+  return (
+    `import { trace as RW_OTEL_WRAPPER_TRACE } from '@opentelemetry/api'\n` +
+    output
   )
-  didTransform = true
-
-  traverse(ast, {
-    ExportNamedDeclaration(path: NodePath<t.ExportNamedDeclaration>) {
-      wrapExportNamedDeclaration(path, filename, apiFolder)
-    },
-  })
-
-  if (!didTransform) {
-    return null
-  }
-
-  const { code: output } = generate(ast, {}, code)
-  return output
 }
 
-function wrapExportNamedDeclaration(
-  path: NodePath<t.ExportNamedDeclaration>,
-  filename: string,
-  apiFolder: string,
-) {
-  const declaration = path.node.declaration
-  const declarationIsSupported =
-    declaration?.type === 'VariableDeclaration' &&
-    declaration.declarations[0].init?.type === 'ArrowFunctionExpression'
+/**
+ * Constructs the argument list for the inner (private) function call,
+ * stripping parameter defaults. Returns `null` if any param type is
+ * unsupported (RestElement, ArrayPattern, TSParameterProperty).
+ *
+ * Examples:
+ *   (id)              → "id"
+ *   ({ id, name })    → "{ id, name }"
+ *   ({ id = 1 })      → "{ id }"     (default stripped)
+ *   (arg = 'default') → "arg"         (default stripped)
+ */
+function buildInnerArgs(params: ParamPattern[]): string | null {
+  const args: string[] = []
 
-  if (!declarationIsSupported) {
-    return
-  }
+  for (const param of params) {
+    if (
+      param.type === 'RestElement' ||
+      param.type === 'ArrayPattern' ||
+      param.type === 'TSParameterProperty'
+    ) {
+      return null
+    }
 
-  const originalFunction = declaration.declarations[0]
-    .init as t.ArrowFunctionExpression
-  if (!originalFunction) {
-    return
-  }
-
-  const originalFunctionName =
-    declaration.declarations[0].id.type === 'Identifier'
-      ? declaration.declarations[0].id.name
-      : '?'
-  const wrappedFunctionName = `__${
-    originalFunctionName === '?'
-      ? 'RW_OTEL_WRAPPER_UNKNOWN_FUNCTION'
-      : originalFunctionName
-  }`
-
-  const originalFunctionArgumentsWithoutDefaults: (
-    | t.ArgumentPlaceholder
-    | t.SpreadElement
-    | t.Expression
-  )[] = []
-
-  for (const param of originalFunction.params) {
     if (param.type === 'Identifier') {
-      originalFunctionArgumentsWithoutDefaults.push(param)
+      args.push(param.name)
       continue
     }
 
     if (param.type === 'ObjectPattern') {
-      const objectProperties = param.properties.filter(
-        (p): p is t.ObjectProperty => p.type === 'ObjectProperty',
-      )
-      originalFunctionArgumentsWithoutDefaults.push(
-        t.objectExpression(
-          objectProperties.map((p) => {
-            if (p.value.type === 'AssignmentPattern') {
-              return t.objectProperty(p.key, p.value.left)
-            }
-            return p
-          }),
-        ),
-      )
+      const obj = buildObjectCallArg(param)
+      if (obj === null) {
+        return null
+      }
+      args.push(obj)
       continue
     }
 
     if (param.type === 'AssignmentPattern') {
-      if (param.left.type === 'Identifier') {
-        originalFunctionArgumentsWithoutDefaults.push(param.left)
-      } else if (param.left.type === 'ObjectPattern') {
-        const objectProperties = param.left.properties.filter(
-          (p): p is t.ObjectProperty => p.type === 'ObjectProperty',
-        )
-        originalFunctionArgumentsWithoutDefaults.push(
-          t.objectExpression(
-            objectProperties.map((p) => {
-              if (p.value.type === 'AssignmentPattern') {
-                return t.objectProperty(p.key, p.value.left)
-              }
-              return p
-            }),
-          ),
-        )
+      const ap = param
+      if (ap.left.type === 'Identifier') {
+        args.push(ap.left.name)
+      } else if (ap.left.type === 'ObjectPattern') {
+        const obj = buildObjectCallArg(ap.left)
+        if (obj === null) {
+          return null
+        }
+        args.push(obj)
       } else {
-        // TODO: Implement others, bail out for now
-        return
+        return null
       }
+      continue
     }
 
-    if (param.type === 'ArrayPattern' || param.type === 'RestElement') {
-      // TODO: Implement, bail out for now
-      return
-    }
+    return null
   }
 
-  const activeSpanBlock = t.callExpression(
-    t.memberExpression(
-      t.identifier('RW_OTEL_WRAPPER_TRACER'),
-      t.identifier('startActiveSpan'),
-    ),
-    [
-      t.stringLiteral(`redwoodjs:api:${apiFolder}:${originalFunctionName}`),
-      t.arrowFunctionExpression(
-        [t.identifier('span')],
-        t.blockStatement([
-          t.expressionStatement(
-            t.callExpression(
-              t.memberExpression(
-                t.identifier('span'),
-                t.identifier('setAttribute'),
-              ),
-              [
-                t.stringLiteral('code.function'),
-                t.stringLiteral(originalFunctionName),
-              ],
-            ),
-          ),
-          t.expressionStatement(
-            t.callExpression(
-              t.memberExpression(
-                t.identifier('span'),
-                t.identifier('setAttribute'),
-              ),
-              [t.stringLiteral('code.filepath'), t.stringLiteral(filename)],
-            ),
-          ),
-          t.tryStatement(
-            t.blockStatement([
-              t.variableDeclaration('const', [
-                t.variableDeclarator(
-                  t.identifier('RW_OTEL_WRAPPER_INNER_RESULT'),
-                  originalFunction.async
-                    ? t.awaitExpression(
-                        t.callExpression(
-                          t.identifier(wrappedFunctionName),
-                          originalFunctionArgumentsWithoutDefaults,
-                        ),
-                      )
-                    : t.callExpression(
-                        t.identifier(wrappedFunctionName),
-                        originalFunctionArgumentsWithoutDefaults,
-                      ),
-                ),
-              ]),
-              t.expressionStatement(
-                t.callExpression(
-                  t.memberExpression(t.identifier('span'), t.identifier('end')),
-                  [],
-                ),
-              ),
-              t.returnStatement(t.identifier('RW_OTEL_WRAPPER_INNER_RESULT')),
-            ]),
-            t.catchClause(
-              t.identifier('error'),
-              t.blockStatement([
-                t.expressionStatement(
-                  t.callExpression(
-                    t.memberExpression(
-                      t.identifier('span'),
-                      t.identifier('recordException'),
-                    ),
-                    [t.identifier('error')],
-                  ),
-                ),
-                t.expressionStatement(
-                  t.callExpression(
-                    t.memberExpression(
-                      t.identifier('span'),
-                      t.identifier('setStatus'),
-                    ),
-                    [
-                      t.objectExpression([
-                        t.objectProperty(
-                          t.identifier('code'),
-                          t.numericLiteral(2),
-                        ),
-                        t.objectProperty(
-                          t.identifier('message'),
-                          t.logicalExpression(
-                            '??',
-                            t.optionalMemberExpression(
-                              t.optionalCallExpression(
-                                t.optionalMemberExpression(
-                                  t.optionalMemberExpression(
-                                    t.identifier('error'),
-                                    t.identifier('message'),
-                                    false,
-                                    true,
-                                  ),
-                                  t.identifier('split'),
-                                  false,
-                                  true,
-                                ),
-                                [t.stringLiteral('\n')],
-                                false,
-                              ),
-                              t.numericLiteral(0),
-                              true,
-                              false,
-                            ),
-                            t.optionalMemberExpression(
-                              t.optionalCallExpression(
-                                t.optionalMemberExpression(
-                                  t.optionalCallExpression(
-                                    t.optionalMemberExpression(
-                                      t.identifier('error'),
-                                      t.identifier('toString'),
-                                      false,
-                                      true,
-                                    ),
-                                    [],
-                                    false,
-                                  ),
-                                  t.identifier('split'),
-                                  false,
-                                  true,
-                                ),
-                                [t.stringLiteral('\n')],
-                                false,
-                              ),
-                              t.numericLiteral(0),
-                              true,
-                              false,
-                            ),
-                          ),
-                        ),
-                      ]),
-                    ],
-                  ),
-                ),
-                t.expressionStatement(
-                  t.callExpression(
-                    t.memberExpression(
-                      t.identifier('span'),
-                      t.identifier('end'),
-                    ),
-                    [],
-                  ),
-                ),
-                t.throwStatement(t.identifier('error')),
-              ]),
-            ),
-          ),
-        ]),
-        originalFunction.async,
-      ),
-    ],
-  )
+  return args.join(', ')
+}
 
-  const wrapper = t.arrowFunctionExpression(
-    originalFunction.params,
-    t.blockStatement(
-      [
-        t.variableDeclaration('const', [
-          t.variableDeclarator(
-            t.identifier(wrappedFunctionName),
-            originalFunction,
-          ),
-        ]),
-        t.variableDeclaration('const', [
-          t.variableDeclarator(
-            t.identifier('RW_OTEL_WRAPPER_TRACER'),
-            t.callExpression(
-              t.memberExpression(
-                t.identifier('RW_OTEL_WRAPPER_TRACE'),
-                t.identifier('getTracer'),
-              ),
-              [t.stringLiteral('redwoodjs')],
-            ),
-          ),
-        ]),
-        t.variableDeclaration('const', [
-          t.variableDeclarator(
-            t.identifier('RW_OTEL_WRAPPER_RESULT'),
-            originalFunction.async
-              ? t.awaitExpression(activeSpanBlock)
-              : activeSpanBlock,
-          ),
-        ]),
-        t.returnStatement(t.identifier('RW_OTEL_WRAPPER_RESULT')),
-      ],
-      originalFunction.body.type === 'BlockStatement'
-        ? originalFunction.body.directives
-        : undefined,
-    ),
-    originalFunction.async,
-  )
+/**
+ * Constructs an object-literal argument from an ObjectPattern, dropping any
+ * RestElement entries (matching the Babel plugin's behaviour). Returns `null`
+ * if any property key is non-identifier (computed, etc.).
+ *
+ * E.g. `{ id, name = 'Alice' }` → `"{ id, name }"`
+ */
+function buildObjectCallArg(pattern: ObjectPattern): string | null {
+  const keys: string[] = []
 
-  // Replace the original function with the wrapped version
-  declaration.declarations[0].init = wrapper
+  for (const prop of pattern.properties) {
+    // Drop rest elements — matches the existing Babel plugin behaviour
+    if (prop.type === 'RestElement') {
+      continue
+    }
+
+    const bp = prop
+    if (bp.key.type !== 'Identifier') {
+      return null
+    }
+    keys.push(bp.key.name)
+  }
+
+  return `{ ${keys.join(', ')} }`
+}
+
+function buildWrappedExport(
+  fnName: string,
+  fnHeader: string,
+  originalFnSrc: string,
+  innerArgs: string,
+  awaitKw: string,
+  asyncKw: string,
+  apiFolder: string,
+  filename: string,
+): string {
+  const privateName = `__${fnName}`
+  const spanName = `redwoodjs:api:${apiFolder}:${fnName}`
+
+  // fnHeader already ends with "=> " so appending "{" opens the outer body
+  return (
+    `export const ${fnName} = ${fnHeader}{\n` +
+    `  const ${privateName} = ${originalFnSrc}\n` +
+    `  const RW_OTEL_WRAPPER_TRACER = RW_OTEL_WRAPPER_TRACE.getTracer('redwoodjs')\n` +
+    `  const RW_OTEL_WRAPPER_RESULT = ${awaitKw}RW_OTEL_WRAPPER_TRACER.startActiveSpan(\n` +
+    `    '${spanName}',\n` +
+    `    ${asyncKw}(span) => {\n` +
+    `      span.setAttribute('code.function', '${fnName}')\n` +
+    `      span.setAttribute('code.filepath', ${JSON.stringify(filename)})\n` +
+    `      try {\n` +
+    `        const RW_OTEL_WRAPPER_INNER_RESULT = ${awaitKw}${privateName}(${innerArgs})\n` +
+    `        span.end()\n` +
+    `        return RW_OTEL_WRAPPER_INNER_RESULT\n` +
+    `      } catch (error) {\n` +
+    `        span.recordException(error)\n` +
+    `        span.setStatus({\n` +
+    `          code: 2,\n` +
+    `          message:\n` +
+    `            error?.message?.split('\\n')[0] ??\n` +
+    `            error?.toString()?.split('\\n')[0],\n` +
+    `        })\n` +
+    `        span.end()\n` +
+    `        throw error\n` +
+    `      }\n` +
+    `    }\n` +
+    `  )\n` +
+    `  return RW_OTEL_WRAPPER_RESULT\n` +
+    `}`
+  )
 }
