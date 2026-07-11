@@ -1,12 +1,16 @@
-import generate from '@babel/generator'
+import babelGenerator from '@babel/generator'
 import { parse } from '@babel/parser'
-import traverse from '@babel/traverse'
+import babelTraverse from '@babel/traverse'
 import type { NodePath } from '@babel/traverse'
 import * as t from '@babel/types'
 import type { Plugin } from 'vite'
 import { normalizePath } from 'vite'
 
 import { getPaths } from '@cedarjs/project-config'
+
+// Handle both ESM and CJS module systems
+const traverse = babelTraverse.default || babelTraverse
+const generate = babelGenerator.default || babelGenerator
 
 /**
  * Vite plugin that wraps exported API functions with OpenTelemetry spans to
