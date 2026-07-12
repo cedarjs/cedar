@@ -110,6 +110,16 @@
         "default": "./dist/cjs/build/api.js"
       }
     },
+    "./dist/build/api-graphql-transforms.js": {
+      "import": {
+        "types": "./dist/build/api-graphql-transforms.d.ts",
+        "default": "./dist/build/api-graphql-transforms.js"
+      },
+      "require": {
+        "types": "./dist/cjs/build/api-graphql-transforms.d.ts",
+        "default": "./dist/cjs/build/api-graphql-transforms.js"
+      }
+    },
     "./dist/generate/generate": {
       "import": {
         "types": "./dist/generate/generate.d.ts",

@@ -55,7 +55,7 @@ describe('cedarGqlormInjectPlugin', () => {
     })
     vi.mocked(getPaths).mockReturnValue({
       generated: { base: '.cedar' },
-      api: { jobs: 'api/src/jobs' },
+      api: { src: 'api/src', jobs: 'api/src/jobs' },
     } as unknown as Paths)
 
     // Mock backend file existence
@@ -178,6 +178,7 @@ describe('cedarGqlormInjectPlugin', () => {
     })
     vi.mocked(getPaths).mockReturnValue({
       generated: { base: '.cedar' },
+      api: { src: 'api/src' },
     } as unknown as Paths)
 
     vi.spyOn(fs, 'existsSync').mockReturnValue(true)
@@ -255,6 +256,7 @@ describe('cedarGqlormInjectPlugin', () => {
     })
     vi.mocked(getPaths).mockReturnValue({
       generated: { base: '.cedar' },
+      api: { src: 'api/src' },
     } as unknown as Paths)
 
     vi.spyOn(fs, 'existsSync').mockReturnValue(true)
