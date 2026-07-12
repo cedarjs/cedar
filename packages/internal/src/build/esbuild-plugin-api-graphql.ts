@@ -29,8 +29,9 @@ export const cedarApiGraphqlPlugin = {
   name: 'cedar-api-graphql',
   setup(build: PluginBuild) {
     // Require a path separator before graphql.ts so files like notgraphql.ts
-    // are excluded. esbuild normalizes args.path to forward slashes.
-    build.onLoad({ filter: /\/graphql\.ts$/ }, async (args) => {
+    // are excluded. Use [/\\] to handle both forward slashes (Unix) and
+    // backslashes (Windows), since esbuild uses platform-native separators.
+    build.onLoad({ filter: /[/\\]graphql\.ts$/ }, async (args) => {
       const cedarConfig = getConfig()
       const fileContents = await fs.promises.readFile(args.path, 'utf-8')
       const transformedCode = await transformWithBabel(
