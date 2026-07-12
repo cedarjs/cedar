@@ -113,9 +113,45 @@ function extractFunctionArgument(code: string, startPos: number): string {
   let braceDepth = 0
   let inString = false
   let stringChar = ''
+  let inLineComment = false
+  let inBlockComment = false
 
   for (let i = startPos; i < code.length; i++) {
     const char = code[i]
+    const nextChar = code[i + 1]
+
+    // Handle line comments
+    if (!inString && !inBlockComment && char === '/' && nextChar === '/') {
+      inLineComment = true
+      i++ // Skip the second /
+      continue
+    }
+
+    if (inLineComment && char === '\n') {
+      inLineComment = false
+      continue
+    }
+
+    if (inLineComment) {
+      continue
+    }
+
+    // Handle block comments
+    if (!inString && !inLineComment && char === '/' && nextChar === '*') {
+      inBlockComment = true
+      i++ // Skip the *
+      continue
+    }
+
+    if (inBlockComment && char === '*' && nextChar === '/') {
+      inBlockComment = false
+      i++ // Skip the /
+      continue
+    }
+
+    if (inBlockComment) {
+      continue
+    }
 
     // Handle strings: check if the quote is escaped by counting preceding backslashes
     if (char === '"' || char === "'" || char === '`') {

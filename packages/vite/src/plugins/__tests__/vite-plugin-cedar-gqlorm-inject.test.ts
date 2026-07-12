@@ -63,6 +63,7 @@ describe('cedarGqlormInjectPlugin', () => {
 
     const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
 
+    expect(result).not.toBeNull()
     if (result && typeof result === 'object') {
       const transformed = result.code
 
@@ -185,6 +186,7 @@ describe('cedarGqlormInjectPlugin', () => {
 
     const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
 
+    expect(result).not.toBeNull()
     if (result && typeof result === 'object') {
       const transformed = result.code
 
@@ -263,6 +265,7 @@ describe('cedarGqlormInjectPlugin', () => {
 
     const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
 
+    expect(result).not.toBeNull()
     if (result && typeof result === 'object') {
       const transformed = result.code
 
