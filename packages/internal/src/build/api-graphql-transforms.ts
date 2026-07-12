@@ -97,7 +97,11 @@ export function applyGraphqlOptionsExtract(code: string): string | null {
  *
  * Returns the transformed code, or null if no transformation was needed.
  */
-export function applyGqlormInject(code: string, id: string): string | null {
+export function applyGqlormInject(
+  code: string,
+  id: string,
+  ext: '.ts' | '.js' = '.ts',
+): string | null {
   // Check if already transformed to prevent double-application
   if (code.includes('__gqlorm_sdl__')) {
     return null
@@ -135,16 +139,14 @@ export function applyGqlormInject(code: string, id: string): string | null {
   const handlerLineStart = code.lastIndexOf('\n', handlerMatch.index) + 1
 
   // Compute the relative path from graphql.ts to the backend file
-  // Use explicit .ts extension: Cedar targets Node.js 24, which strips
-  // TypeScript types natively. The API build uses esbuild with bundle:false so
-  // this import stays as a runtime reference resolved directly by Node.js
-  // against the file system. All TypeScript constructs in backend.ts (interface
-  // declarations, type annotations) are erasable and fully supported by Node.js
-  // type stripping.
+  // Use explicit extension for the generated imports. In dev mode (Vite SSR)
+  // `.ts` is appropriate because Vite resolves TypeScript files natively. In
+  // build mode (esbuild with bundle:false) the import ends up verbatim in the
+  // output JS, so `.js` is needed to match the compiled dist files.
   const relPath =
     importStatementPath(
       path.relative(path.dirname(id), backendPathWithoutExt),
-    ) + '.ts'
+    ) + ext
 
   // Compute the relative path from graphql.ts to src/lib/db.
   // We cannot use the bare specifier 'src/lib/db' here because this function
@@ -153,7 +155,7 @@ export function applyGqlormInject(code: string, id: string): string | null {
   // resolvable by Node.js at runtime.
   const dbSrcPath = path.join(getPaths().api.src, 'lib', 'db')
   const relDbPath =
-    importStatementPath(path.relative(path.dirname(id), dbSrcPath)) + '.ts'
+    importStatementPath(path.relative(path.dirname(id), dbSrcPath)) + ext
 
   // Build the imports to inject at the top of the file
   const importDb = `import { db as __gqlorm_db__ } from '${relDbPath}'`

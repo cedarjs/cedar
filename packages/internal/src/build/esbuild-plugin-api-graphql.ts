@@ -50,7 +50,7 @@ export const cedarApiGraphqlPlugin = {
 
       let code = transformedCode.code
       code = applyGraphqlOptionsExtract(code) ?? code
-      code = applyGqlormInject(code, args.path) ?? code
+      code = applyGqlormInject(code, args.path, '.js') ?? code
       code =
         applyHandlerAlsWrapping(code, {
           projectIsEsm: projectSideIsEsm('api'),
