@@ -114,8 +114,22 @@ function createCedarViteApiPlugin(): Plugin {
         return null
       }
 
+      let sourceCode = code
+      const normalizedId = normalizePath(id)
+
+      // Apply graphql-specific transforms on the raw TypeScript BEFORE
+      // Babel CJS compilation. The ESM-pattern regexes in these
+      // transforms require `export const handler = createGraphQLHandler(`
+      // syntax, which Babel rewrites to CJS form when the project uses
+      // "type": "commonjs". Running them first ensures the patterns
+      // always match regardless of the project's module format.
+      if (normalizedId.endsWith('/graphql.ts')) {
+        sourceCode = applyGraphqlOptionsExtract(sourceCode) ?? sourceCode
+        sourceCode = applyGqlormInject(sourceCode, id) ?? sourceCode
+      }
+
       const transformedCode = await transformWithBabel(
-        code,
+        sourceCode,
         id,
         getApiSideBabelPlugins({
           openTelemetry:
@@ -128,14 +142,6 @@ function createCedarViteApiPlugin(): Plugin {
 
       if (transformedCode?.code) {
         let code = transformedCode.code
-        const normalizedId = normalizePath(id)
-
-        // Apply graphql-specific transforms for graphql.ts files.
-        // We check for the path separator to avoid matching e.g. notgraphql.ts.
-        if (normalizedId.endsWith('/graphql.ts')) {
-          code = applyGraphqlOptionsExtract(code) ?? code
-          code = applyGqlormInject(code, id) ?? code
-        }
 
         // Apply the handler ALS wrapping safeguard to API function handlers.
         // This is the standalone-esbuild equivalent of the Vite
