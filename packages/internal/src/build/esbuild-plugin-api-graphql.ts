@@ -33,7 +33,18 @@ export const cedarApiGraphqlPlugin = {
     // backslashes (Windows), since esbuild uses platform-native separators.
     build.onLoad({ filter: /[/\\]graphql\.ts$/ }, async (args) => {
       const cedarConfig = getConfig()
-      const fileContents = await fs.promises.readFile(args.path, 'utf-8')
+      let fileContents = await fs.promises.readFile(args.path, 'utf-8')
+
+      // Apply graphql-specific string transforms on the raw TypeScript BEFORE
+      // Babel CJS compilation. TypeScript always uses ESM syntax, so the ESM
+      // patterns in applyGraphqlOptionsExtract and applyGqlormInject match here.
+      // After Babel compiles to CJS, `export const handler = createGraphQLHandler(`
+      // becomes `exports.handler = (0, _graphqlServer.createGraphQLHandler)(` and
+      // the patterns no longer match.
+      fileContents = applyGraphqlOptionsExtract(fileContents) ?? fileContents
+      fileContents =
+        applyGqlormInject(fileContents, args.path, '.ts') ?? fileContents
+
       const transformedCode = await transformWithBabel(
         fileContents,
         args.path,
@@ -50,8 +61,6 @@ export const cedarApiGraphqlPlugin = {
       }
 
       let code = transformedCode.code
-      code = applyGraphqlOptionsExtract(code) ?? code
-      code = applyGqlormInject(code, args.path, '.js') ?? code
       code =
         applyHandlerAlsWrapping(code, {
           projectIsEsm: projectSideIsEsm('api'),
