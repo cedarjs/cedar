@@ -42,8 +42,12 @@ export const cedarApiGraphqlPlugin = {
       // becomes `exports.handler = (0, _graphqlServer.createGraphQLHandler)(` and
       // the patterns no longer match.
       fileContents = applyGraphqlOptionsExtract(fileContents) ?? fileContents
+      // Use '.js' extension for the db import: esbuild with bundle:false
+      // compiles db.ts to db.js in dist/ but does not rewrite import paths.
+      // The compiled graphql.js at runtime resolves the import relative to
+      // api/dist/functions/, so it must point to api/dist/lib/db.js, not .ts.
       fileContents =
-        applyGqlormInject(fileContents, args.path, '.ts') ?? fileContents
+        applyGqlormInject(fileContents, args.path, '.js') ?? fileContents
 
       const transformedCode = await transformWithBabel(
         fileContents,

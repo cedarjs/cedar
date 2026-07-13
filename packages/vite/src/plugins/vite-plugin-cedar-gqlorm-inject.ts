@@ -139,7 +139,6 @@ export function cedarGqlormInjectPlugin(): Plugin {
 
       return {
         code: transformed,
-        map: null,
       }
     },
   }
