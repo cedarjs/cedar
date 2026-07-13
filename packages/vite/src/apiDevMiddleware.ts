@@ -221,8 +221,7 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
             // always match regardless of the project's module format.
             let sourceCode = code
             if (normalizePath(id).endsWith('/graphql.ts')) {
-              sourceCode =
-                applyGraphqlOptionsExtract(sourceCode) ?? sourceCode
+              sourceCode = applyGraphqlOptionsExtract(sourceCode) ?? sourceCode
               sourceCode = applyGqlormInject(sourceCode, id) ?? sourceCode
             }
 
