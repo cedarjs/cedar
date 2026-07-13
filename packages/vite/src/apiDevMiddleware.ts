@@ -213,11 +213,21 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
           }
 
           try {
-            // Use the code Vite already loaded instead of reading from disk, so
-            // Vite's originalCode matches the Babel input. This ensures the SSR
-            // transform's sourcesContent is consistent with the map.
+            // Apply graphql-specific transforms on the raw TypeScript BEFORE
+            // Babel CJS compilation. The ESM-pattern regexes in these
+            // transforms require `export const handler = createGraphQLHandler(`
+            // syntax, which Babel rewrites to CJS form when the project uses
+            // "type": "commonjs". Running them first ensures the patterns
+            // always match regardless of the project's module format.
+            let sourceCode = code
+            if (normalizePath(id).endsWith('/graphql.ts')) {
+              sourceCode =
+                applyGraphqlOptionsExtract(sourceCode) ?? sourceCode
+              sourceCode = applyGqlormInject(sourceCode, id) ?? sourceCode
+            }
+
             const result = await transformWithBabel(
-              code,
+              sourceCode,
               id,
               babelPlugins,
               true,
@@ -227,23 +237,8 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
               return null
             }
 
-            let transformedCode = result.code
-
-            // Apply graphql-specific transforms for the graphql handler file.
-            // These were previously handled by Babel plugins that have been
-            // removed from getApiSideBabelPlugins. The esbuild path applies
-            // them via cedarApiGraphqlPlugin; here we apply them inline so
-            // the unified dev server (ssrLoadModule) also produces
-            // __cedar_graphqlOptions and the gqlorm injection.
-            if (normalizePath(id).endsWith('/graphql.ts')) {
-              transformedCode =
-                applyGraphqlOptionsExtract(transformedCode) ?? transformedCode
-              transformedCode =
-                applyGqlormInject(transformedCode, id) ?? transformedCode
-            }
-
             return {
-              code: transformedCode,
+              code: result.code,
               map: result.map ?? null,
             }
           } catch (err) {
