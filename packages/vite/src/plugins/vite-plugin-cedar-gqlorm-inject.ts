@@ -40,8 +40,9 @@ export function cedarGqlormInjectPlugin(): Plugin {
     name: 'cedar-gqlorm-inject',
     transform(code, id) {
       // Only transform the graphql handler file.
-      // Check for path separator to avoid matching e.g. notgraphql.ts.
-      if (!id.endsWith('/graphql.ts')) {
+      // Check for path separator to avoid matching e.g. notgraphql.ts, and
+      // accept both .ts and .js since JS projects scaffold graphql.js.
+      if (!id.endsWith('/graphql.ts') && !id.endsWith('/graphql.js')) {
         return null
       }
 

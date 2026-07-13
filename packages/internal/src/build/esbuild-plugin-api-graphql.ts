@@ -28,10 +28,12 @@ import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.j
 export const cedarApiGraphqlPlugin = {
   name: 'cedar-api-graphql',
   setup(build: PluginBuild) {
-    // Require a path separator before graphql.ts so files like notgraphql.ts
-    // are excluded. Use [/\\] to handle both forward slashes (Unix) and
-    // backslashes (Windows), since esbuild uses platform-native separators.
-    build.onLoad({ filter: /[/\\]graphql\.ts$/ }, async (args) => {
+    // Require a path separator before graphql.ts/.js so files like
+    // notgraphql.ts are excluded. Use [/\\] to handle both forward slashes
+    // (Unix) and backslashes (Windows), since esbuild uses platform-native
+    // separators. Accept both .ts and .js since JS projects scaffold
+    // graphql.js.
+    build.onLoad({ filter: /[/\\]graphql\.(ts|js)$/ }, async (args) => {
       const cedarConfig = getConfig()
       let fileContents = await fs.promises.readFile(args.path, 'utf-8')
 

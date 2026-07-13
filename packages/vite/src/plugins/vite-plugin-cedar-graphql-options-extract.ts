@@ -26,8 +26,9 @@ export function cedarGraphqlOptionsExtractPlugin(): Plugin {
     name: 'cedar-graphql-options-extract',
     transform(code, id) {
       // Only transform the graphql handler file.
-      // Check for path separator to avoid matching e.g. notgraphql.ts.
-      if (!id.endsWith('/graphql.ts')) {
+      // Check for path separator to avoid matching e.g. notgraphql.ts, and
+      // accept both .ts and .js since JS projects scaffold graphql.js.
+      if (!id.endsWith('/graphql.ts') && !id.endsWith('/graphql.js')) {
         return null
       }
 
@@ -70,6 +71,8 @@ export function applyGraphqlOptionsExtract(code: string): string | null {
   }
 
   const { program } = parseSync('graphql.ts', code, {
+    // lang is only a parse hint; 'ts' also parses JS (the graphql handler can
+    // be graphql.js in JS projects), so this is safe for both file types.
     lang: 'ts',
     sourceType: 'module',
   })

@@ -269,9 +269,7 @@ describe('cedarGraphqlOptionsExtractPlugin', () => {
     if (result && typeof result === 'object') {
       const transformed = result.code
 
-      expect(transformed).toContain(
-        'export const __cedar_graphqlOptions = {',
-      )
+      expect(transformed).toContain('export const __cedar_graphqlOptions = {')
       expect(transformed).toContain('someOther(__cedar_graphqlOptions)')
     }
   })
@@ -294,9 +292,7 @@ describe('cedarGraphqlOptionsExtractPlugin', () => {
     if (result && typeof result === 'object') {
       const transformed = result.code
 
-      expect(transformed).toContain(
-        'export const __cedar_graphqlOptions = {',
-      )
+      expect(transformed).toContain('export const __cedar_graphqlOptions = {')
       expect(transformed).toContain(
         'createGraphQLHandler(__cedar_graphqlOptions)',
       )
@@ -349,6 +345,30 @@ describe('cedarGraphqlOptionsExtractPlugin', () => {
       expect(transformed).toContain(
         'export const __cedar_graphqlOptions = process.env.EVIL ? config : { sadness: true }',
       )
+      expect(transformed).toContain(
+        'createGraphQLHandler(__cedar_graphqlOptions)',
+      )
+    }
+  })
+
+  it('transforms a graphql.js handler (JS projects)', () => {
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
+
+      export const handler = createGraphQLHandler({
+        directives,
+        sdls,
+        services,
+      })
+    `
+
+    const result = plugin.transform!(code, 'api/src/functions/graphql.js')
+
+    expect(result).not.toBeNull()
+    if (result && typeof result === 'object') {
+      const transformed = result.code
+
+      expect(transformed).toContain('export const __cedar_graphqlOptions = {')
       expect(transformed).toContain(
         'createGraphQLHandler(__cedar_graphqlOptions)',
       )

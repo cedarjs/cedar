@@ -218,7 +218,10 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
             // "type": "commonjs". Running them first ensures the patterns
             // always match regardless of the project's module format.
             let sourceCode = code
-            if (normalizePath(id).endsWith('/graphql.ts')) {
+            if (
+              normalizePath(id).endsWith('/graphql.ts') ||
+              normalizePath(id).endsWith('/graphql.js')
+            ) {
               sourceCode = applyGraphqlOptionsExtract(sourceCode) ?? sourceCode
               sourceCode = applyGqlormInject(sourceCode, id) ?? sourceCode
             }

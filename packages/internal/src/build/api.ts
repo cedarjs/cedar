@@ -123,7 +123,10 @@ function createCedarViteApiPlugin(): Plugin {
       // syntax, which Babel rewrites to CJS form when the project uses
       // "type": "commonjs". Running them first ensures the patterns
       // always match regardless of the project's module format.
-      if (normalizedId.endsWith('/graphql.ts')) {
+      if (
+        normalizedId.endsWith('/graphql.ts') ||
+        normalizedId.endsWith('/graphql.js')
+      ) {
         sourceCode = applyGraphqlOptionsExtract(sourceCode) ?? sourceCode
         sourceCode = applyGqlormInject(sourceCode, id) ?? sourceCode
       }

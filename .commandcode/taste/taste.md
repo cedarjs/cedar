@@ -96,6 +96,7 @@ See [debugging/taste.md](debugging/taste.md)
 - When a mock/test double doesn't structurally match the expected production type (e.g., `memfs.IFs` vs `fast-glob.FileSystemAdapter`), keep the production interface strictly typed and bridge the mismatch once at the top of the test file with a single `const memfsFs = memfs as Partial<import('fast-glob').FileSystemAdapter>`. Do not widen the production interface, do not cast at every call site. Add a comment explaining why the cast is safe. Confidence: 0.80
 
 - When testing source map correctness, decode the VLQ mappings to verify output lines map to the correct original source lines. Structural checks (existence of `mappings`, counting semicolons) are insufficient on their own — the key validation is that a position in the generated output actually maps back to the expected source line, not just that some mapping exists. Confidence: 0.65
+- Use `ts-dedent` in test files to indent template literals instead of leaving them unindented or using manual indentation tricks. Confidence: 0.85
 
 # Code Design
 

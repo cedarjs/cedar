@@ -28,6 +28,8 @@ export function applyGraphqlOptionsExtract(code: string): string | null {
   }
 
   const { program } = parseSync('graphql.ts', code, {
+    // lang is only a parse hint; 'ts' also parses JS (the graphql handler can
+    // be graphql.js in JS projects), so this is safe for both file types.
     lang: 'ts',
     sourceType: 'module',
   })
@@ -111,9 +113,7 @@ export function applyGraphqlOptionsExtract(code: string): string | null {
   const between = code.slice(lineStart, optionsStart)
   const after = code.slice(optionsEnd)
 
-  return (
-    before + optionsConst + between + '__cedar_graphqlOptions' + after
-  )
+  return before + optionsConst + between + '__cedar_graphqlOptions' + after
 }
 
 /**

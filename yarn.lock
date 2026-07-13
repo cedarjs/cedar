@@ -3288,6 +3288,7 @@ __metadata:
     string-env-interpolation: "npm:1.0.1"
     systeminformation: "npm:5.31.7"
     termi-link: "npm:1.1.0"
+    ts-dedent: "npm:2.3.0"
     ts-node: "npm:10.9.2"
     typescript: "npm:5.9.3"
     vite: "npm:7.3.5"
