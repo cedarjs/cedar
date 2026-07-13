@@ -1,8 +1,10 @@
+import type { CallExpression } from 'oxc-parser'
+import { parseSync, Visitor } from 'oxc-parser'
 import type { Plugin } from 'vite'
 
 /**
  * Vite plugin that extracts options passed to createGraphQLHandler into an
- * exported variable. This replaces `babel-plugin-cedar-graphql-options-extract`.
+ * exported variable.
  *
  * Transforms:
  *   export const handler = createGraphQLHandler({ options })
@@ -12,6 +14,12 @@ import type { Plugin } from 'vite'
  *
  * This allows options to be imported elsewhere and enables the gqlorm-inject
  * plugin to mutate the sdls object in-place before the call.
+ *
+ * The extraction uses an oxc-parser AST walk (see `applyGraphqlOptionsExtract`
+ * below) so the transform is robust against aliased imports, nested calls, and
+ * string escapes. The same logic is duplicated in
+ * `@cedarjs/internal` (`applyGraphqlOptionsExtract`) for the standalone esbuild
+ * API build
  */
 export function cedarGraphqlOptionsExtractPlugin(): Plugin {
   return {
@@ -28,12 +36,7 @@ export function cedarGraphqlOptionsExtractPlugin(): Plugin {
         return null
       }
 
-      // Check if already transformed
-      if (code.includes('__cedar_graphqlOptions')) {
-        return null
-      }
-
-      const transformed = extractGraphqlOptions(code)
+      const transformed = applyGraphqlOptionsExtract(code)
       if (!transformed || transformed === code) {
         return null
       }
@@ -47,153 +50,108 @@ export function cedarGraphqlOptionsExtractPlugin(): Plugin {
 
 /**
  * Extracts the options argument from createGraphQLHandler calls and stores
- * them in an exported variable. Returns the transformed code, or the original
- * code if no transformation was needed.
+ * them in an exported variable. Returns the transformed code, or null if no
+ * transformation was needed.
+ *
+ * Transforms:
+ *   export const handler = createGraphQLHandler({ options })
+ * into:
+ *   export const __cedar_graphqlOptions = { options }
+ *   export const handler = createGraphQLHandler(__cedar_graphqlOptions)
+ *
+ * Duplicate of `@cedarjs/internal`'s `applyGraphqlOptionsExtract` so this
+ * logic can run inside the Vite plugin pipeline without depending on internal's
+ * build output.
  */
-function extractGraphqlOptions(code: string): string | null {
-  // Find export const handler = createGraphQLHandler(...)
-  const exportHandlerPattern =
-    /^export\s+const\s+(\w+)\s*=\s*createGraphQLHandler\s*\(/m
-
-  const exportMatch = exportHandlerPattern.exec(code)
-  if (!exportMatch) {
+export function applyGraphqlOptionsExtract(code: string): string | null {
+  // Check if already transformed
+  if (code.includes('__cedar_graphqlOptions')) {
     return null
   }
 
-  const exportIndex = exportMatch.index
-  const exportName = exportMatch[1]
-  // Position right after "createGraphQLHandler("
-  const paramsStartPos = exportIndex + exportMatch[0].length
+  const { program } = parseSync('graphql.ts', code, {
+    lang: 'ts',
+    sourceType: 'module',
+  })
 
-  // Extract the first argument by finding matching closing paren
-  const optionsValue = extractFunctionArgument(code, paramsStartPos)
-
-  if (!optionsValue) {
-    return null
-  }
-
-  // Find the end of the entire export statement (the closing paren and possible semicolon)
-  const fullCallEndPos = paramsStartPos + optionsValue.length
-  // Skip past the closing paren
-  let statementEndPos = fullCallEndPos + 1 // +1 for the )
-
-  // Skip optional whitespace on the same line (do not consume newlines)
-  while (
-    statementEndPos < code.length &&
-    code[statementEndPos] !== '\n' &&
-    /\s/.test(code[statementEndPos])
-  ) {
-    statementEndPos++
-  }
-
-  // Skip optional semicolon
-  if (code[statementEndPos] === ';') {
-    statementEndPos++
-  }
-
-  // Build the new code:
-  // 1. Create the options constant before the handler export
-  // 2. Replace the handler with the extracted options reference
-  const optionsConst = `export const __cedar_graphqlOptions = ${optionsValue}\n`
-  const newExport = `export const ${exportName} = createGraphQLHandler(__cedar_graphqlOptions)`
-
-  const before = code.slice(0, exportIndex)
-  const after = code.slice(statementEndPos)
-
-  return before + optionsConst + newExport + after
-}
-
-/**
- * Extracts a function argument starting at the given position.
- * Handles nested parens and braces independently.
- */
-function extractFunctionArgument(code: string, startPos: number): string {
-  let parenDepth = 0
-  let braceDepth = 0
-  let inString = false
-  let stringChar = ''
-  let inLineComment = false
-  let inBlockComment = false
-
-  for (let i = startPos; i < code.length; i++) {
-    const char = code[i]
-    const nextChar = code[i + 1]
-
-    // Handle line comments
-    if (!inString && !inBlockComment && char === '/' && nextChar === '/') {
-      inLineComment = true
-      i++ // Skip the second /
-      continue
-    }
-
-    if (inLineComment && char === '\n') {
-      inLineComment = false
-      continue
-    }
-
-    if (inLineComment) {
-      continue
-    }
-
-    // Handle block comments
-    if (!inString && !inLineComment && char === '/' && nextChar === '*') {
-      inBlockComment = true
-      i++ // Skip the *
-      continue
-    }
-
-    if (inBlockComment && char === '*' && nextChar === '/') {
-      inBlockComment = false
-      i++ // Skip the /
-      continue
-    }
-
-    if (inBlockComment) {
-      continue
-    }
-
-    // Handle strings: check if the quote is escaped by counting preceding backslashes
-    if (char === '"' || char === "'" || char === '`') {
-      // Count consecutive backslashes before this quote
-      let backslashCount = 0
-      for (let j = i - 1; j >= 0 && code[j] === '\\'; j--) {
-        backslashCount++
+  // Find all imported local names for createGraphQLHandler
+  const importNames = new Set<string>()
+  for (const node of program.body) {
+    if (node.type === 'ImportDeclaration') {
+      if (node.source.value !== '@cedarjs/graphql-server') {
+        continue
       }
-
-      // If even number of backslashes (including 0), the quote is not escaped
-      const isEscaped = backslashCount % 2 === 1
-
-      if (!isEscaped) {
-        if (!inString) {
-          inString = true
-          stringChar = char
-        } else if (char === stringChar) {
-          inString = false
+      for (const specifier of node.specifiers) {
+        if (
+          specifier.type === 'ImportSpecifier' &&
+          specifier.imported.type === 'Identifier' &&
+          specifier.imported.name === 'createGraphQLHandler'
+        ) {
+          importNames.add(specifier.local.name)
         }
       }
-
-      continue
-    }
-
-    if (inString) {
-      continue
-    }
-
-    if (char === '(') {
-      parenDepth++
-    } else if (char === ')') {
-      if (parenDepth === 0 && braceDepth === 0) {
-        // This is the closing paren of the createGraphQLHandler call
-        return code.slice(startPos, i)
-      }
-
-      parenDepth--
-    } else if (char === '{') {
-      braceDepth++
-    } else if (char === '}') {
-      braceDepth--
     }
   }
 
-  return ''
+  if (importNames.size === 0) {
+    return null
+  }
+
+  // Find all calls to createGraphQLHandler
+  const callExpressionPaths: CallExpression[] = []
+  new Visitor({
+    CallExpression(node) {
+      if (
+        node.callee.type === 'Identifier' &&
+        importNames.has(node.callee.name)
+      ) {
+        callExpressionPaths.push(node)
+      }
+    },
+  }).visit(program)
+
+  if (callExpressionPaths.length > 1) {
+    return null
+  }
+
+  const callExpression = callExpressionPaths[0]
+  if (!callExpression) {
+    return null
+  }
+
+  const options = callExpression.arguments[0]
+  if (!options) {
+    return null
+  }
+
+  if (
+    options.type !== 'Identifier' &&
+    options.type !== 'ObjectExpression' &&
+    options.type !== 'CallExpression' &&
+    options.type !== 'ConditionalExpression'
+  ) {
+    return null
+  }
+
+  // Extract the options into a new exported variable. We place it immediately
+  // before the call's own line, and replace the first argument with the new
+  // identifier reference.
+  const optionsStart = options.start
+  const optionsEnd = options.end
+
+  // Insert the options constant on its own line immediately before the line
+  // that contains the call, preserving the surrounding code and whitespace.
+  const lineStart = code.lastIndexOf('\n', callExpression.start) + 1
+  const indentMatch = /^[ \t]*/.exec(code.slice(lineStart))
+  const indent = indentMatch ? indentMatch[0] : ''
+  const optionsConst = `${indent}export const __cedar_graphqlOptions = ${code.slice(
+    optionsStart,
+    optionsEnd,
+  )}\n`
+
+  const before = code.slice(0, lineStart)
+  const between = code.slice(lineStart, optionsStart)
+  const after = code.slice(optionsEnd)
+
+  return before + optionsConst + between + '__cedar_graphqlOptions' + after
 }

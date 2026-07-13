@@ -1,6 +1,9 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { parseSync, Visitor } from 'oxc-parser'
+import type { CallExpression } from 'oxc-parser'
+
 import {
   getConfig,
   getPaths,
@@ -24,57 +27,93 @@ export function applyGraphqlOptionsExtract(code: string): string | null {
     return null
   }
 
-  // Find export const handler = createGraphQLHandler(...)
-  const exportHandlerPattern =
-    /^export\s+const\s+(\w+)\s*=\s*createGraphQLHandler\s*\(/m
+  const { program } = parseSync('graphql.ts', code, {
+    lang: 'ts',
+    sourceType: 'module',
+  })
 
-  const exportMatch = exportHandlerPattern.exec(code)
-  if (!exportMatch) {
+  // Find all imported local names for createGraphQLHandler
+  const importNames = new Set<string>()
+  for (const node of program.body) {
+    if (node.type === 'ImportDeclaration') {
+      if (node.source.value !== '@cedarjs/graphql-server') {
+        continue
+      }
+      for (const specifier of node.specifiers) {
+        if (
+          specifier.type === 'ImportSpecifier' &&
+          specifier.imported.type === 'Identifier' &&
+          specifier.imported.name === 'createGraphQLHandler'
+        ) {
+          importNames.add(specifier.local.name)
+        }
+      }
+    }
+  }
+
+  if (importNames.size === 0) {
     return null
   }
 
-  const exportIndex = exportMatch.index
-  const exportName = exportMatch[1]
-  // Position right after "createGraphQLHandler("
-  const paramsStartPos = exportIndex + exportMatch[0].length
+  // Find all calls to createGraphQLHandler
+  const callExpressionPaths: CallExpression[] = []
+  new Visitor({
+    CallExpression(node) {
+      if (
+        node.callee.type === 'Identifier' &&
+        importNames.has(node.callee.name)
+      ) {
+        callExpressionPaths.push(node)
+      }
+    },
+  }).visit(program)
 
-  // Extract the first argument by finding matching closing paren
-  const optionsValue = extractFunctionArgument(code, paramsStartPos)
-
-  if (!optionsValue) {
+  if (callExpressionPaths.length > 1) {
     return null
   }
 
-  // Find the end of the entire export statement (the closing paren and possible
-  // semicolon)
-  const fullCallEndPos = paramsStartPos + optionsValue.length
-  // Skip past the closing paren
-  let statementEndPos = fullCallEndPos + 1
+  const callExpression = callExpressionPaths[0]
+  if (!callExpression) {
+    return null
+  }
 
-  // Skip optional whitespace on the same line (do not consume newlines)
-  while (
-    statementEndPos < code.length &&
-    code[statementEndPos] !== '\n' &&
-    /\s/.test(code[statementEndPos])
+  const options = callExpression.arguments[0]
+  if (!options) {
+    return null
+  }
+
+  if (
+    options.type !== 'Identifier' &&
+    options.type !== 'ObjectExpression' &&
+    options.type !== 'CallExpression' &&
+    options.type !== 'ConditionalExpression'
   ) {
-    statementEndPos++
+    return null
   }
 
-  // Skip optional semicolon
-  if (code[statementEndPos] === ';') {
-    statementEndPos++
-  }
+  // Extract the options into a new exported variable. We place it immediately
+  // before the call's own statement (the line it appears on, or the statement
+  // that contains it), and replace the first argument with the new identifier.
+  const optionsStart = options.start
+  const optionsEnd = options.end
 
-  // Build the new code:
-  // 1. Create the options constant before the handler export
-  // 2. Replace the handler with the extracted options reference
-  const optionsConst = `export const __cedar_graphqlOptions = ${optionsValue}\n`
-  const newExport = `export const ${exportName} = createGraphQLHandler(__cedar_graphqlOptions)`
+  // Insert the options constant on its own line immediately before the line
+  // that contains the call, preserving the surrounding code and whitespace.
+  const lineStart = code.lastIndexOf('\n', callExpression.start) + 1
+  const indentMatch = /^[ \t]*/.exec(code.slice(lineStart))
+  const indent = indentMatch ? indentMatch[0] : ''
+  const optionsConst = `${indent}export const __cedar_graphqlOptions = ${code.slice(
+    optionsStart,
+    optionsEnd,
+  )}\n`
 
-  const before = code.slice(0, exportIndex)
-  const after = code.slice(statementEndPos)
+  const before = code.slice(0, lineStart)
+  const between = code.slice(lineStart, optionsStart)
+  const after = code.slice(optionsEnd)
 
-  return before + optionsConst + newExport + after
+  return (
+    before + optionsConst + between + '__cedar_graphqlOptions' + after
+  )
 }
 
 /**
@@ -180,99 +219,4 @@ export function applyGqlormInject(
     code.slice(handlerLineStart)
 
   return transformed
-}
-
-/**
- * Extracts a function argument starting at the given position.
- * Handles nested parens and braces independently, and skips comments.
- */
-function extractFunctionArgument(code: string, startPos: number): string {
-  let parenDepth = 0
-  let braceDepth = 0
-  let inString = false
-  let stringChar = ''
-  let inLineComment = false
-  let inBlockComment = false
-
-  for (let i = startPos; i < code.length; i++) {
-    const char = code[i]
-    const nextChar = code[i + 1]
-
-    // Handle line comments
-    if (!inString && !inBlockComment && char === '/' && nextChar === '/') {
-      inLineComment = true
-      i++ // Skip the second /
-      continue
-    }
-
-    if (inLineComment && char === '\n') {
-      inLineComment = false
-      continue
-    }
-
-    if (inLineComment) {
-      continue
-    }
-
-    // Handle block comments
-    if (!inString && !inLineComment && char === '/' && nextChar === '*') {
-      inBlockComment = true
-      i++ // Skip the *
-      continue
-    }
-
-    if (inBlockComment && char === '*' && nextChar === '/') {
-      inBlockComment = false
-      i++ // Skip the /
-      continue
-    }
-
-    if (inBlockComment) {
-      continue
-    }
-
-    // Handle strings: check if the quote is escaped by counting preceding backslashes
-    if (char === '"' || char === "'" || char === '`') {
-      // Count consecutive backslashes before this quote
-      let backslashCount = 0
-      for (let j = i - 1; j >= 0 && code[j] === '\\'; j--) {
-        backslashCount++
-      }
-
-      // If even number of backslashes (including 0), the quote is not escaped
-      const isEscaped = backslashCount % 2 === 1
-
-      if (!isEscaped) {
-        if (!inString) {
-          inString = true
-          stringChar = char
-        } else if (char === stringChar) {
-          inString = false
-        }
-      }
-
-      continue
-    }
-
-    if (inString) {
-      continue
-    }
-
-    if (char === '(') {
-      parenDepth++
-    } else if (char === ')') {
-      if (parenDepth === 0 && braceDepth === 0) {
-        // This is the closing paren of the createGraphQLHandler call
-        return code.slice(startPos, i)
-      }
-
-      parenDepth--
-    } else if (char === '{') {
-      braceDepth++
-    } else if (char === '}') {
-      braceDepth--
-    }
-  }
-
-  return ''
 }

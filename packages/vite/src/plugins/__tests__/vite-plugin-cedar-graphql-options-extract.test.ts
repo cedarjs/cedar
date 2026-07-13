@@ -253,4 +253,105 @@ describe('cedarGraphqlOptionsExtractPlugin', () => {
       expect(transformed).not.toMatch(/\)\w/)
     }
   })
+
+  it('handles aliased imports of createGraphQLHandler', () => {
+    const code = dedent`
+      import { createGraphQLHandler as someOther } from '@cedarjs/graphql-server'
+
+      const graphQLHandler = someOther({
+        directives,
+      })
+    `
+
+    const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
+
+    expect(result).not.toBeNull()
+    if (result && typeof result === 'object') {
+      const transformed = result.code
+
+      expect(transformed).toContain(
+        'export const __cedar_graphqlOptions = {',
+      )
+      expect(transformed).toContain('someOther(__cedar_graphqlOptions)')
+    }
+  })
+
+  it('handles nested createGraphQLHandler calls', () => {
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
+
+      function wrap() {
+        const h = createGraphQLHandler({
+          directives,
+        })
+        return h
+      }
+    `
+
+    const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
+
+    expect(result).not.toBeNull()
+    if (result && typeof result === 'object') {
+      const transformed = result.code
+
+      expect(transformed).toContain(
+        'export const __cedar_graphqlOptions = {',
+      )
+      expect(transformed).toContain(
+        'createGraphQLHandler(__cedar_graphqlOptions)',
+      )
+    }
+  })
+
+  it('returns null for multiple createGraphQLHandler calls', () => {
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
+
+      export const a = createGraphQLHandler({ x: 1 })
+      export const b = createGraphQLHandler({ y: 2 })
+    `
+
+    const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
+    expect(result).toBeNull()
+  })
+
+  it('extracts a conditional (ternary) options argument with a member-expression condition', () => {
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
+
+      const config = {
+        directives,
+        services,
+        onException() {
+          db.$disconnect()
+        },
+        extraPlugins: [
+          {
+            name: 'test',
+            function: () => { console.log('test') },
+          },
+        ],
+      }
+
+      export const handler = createGraphQLHandler(process.env.EVIL ? config : { sadness: true })
+    `
+
+    const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
+
+    expect(result).not.toBeNull()
+    if (result && typeof result === 'object') {
+      const transformed = result.code
+
+      // The whole ternary (member-expression condition + object alternate)
+      // should be extracted verbatim as the options value. The plugin preserves
+      // the original source formatting (single-line here), unlike the babel
+      // plugin which pretty-printed the result.
+      expect(transformed).toContain(
+        'export const __cedar_graphqlOptions = process.env.EVIL ? config : { sadness: true }',
+      )
+      expect(transformed).toContain(
+        'createGraphQLHandler(__cedar_graphqlOptions)',
+      )
+    }
+  })
 })

@@ -16,13 +16,11 @@ import {
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { createGraphQLYoga } from '@cedarjs/graphql-server'
 import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
-import {
-  applyGraphqlOptionsExtract,
-  applyGqlormInject,
-} from '@cedarjs/internal/dist/build/api-graphql-transforms.js'
+import { applyGqlormInject } from '@cedarjs/internal/dist/build/api-graphql-transforms.js'
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
+import { applyGraphqlOptionsExtract } from './plugins/vite-plugin-cedar-graphql-options-extract.js'
 
 const LAMBDA_FUNCTIONS: Record<string, CedarHandler> = {}
 
