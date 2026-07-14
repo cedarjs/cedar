@@ -14,6 +14,8 @@ import { findApiFiles } from '@cedarjs/internal/dist/files.js'
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
+import { cedarGqlormInjectPlugin } from './plugins/vite-plugin-cedar-gqlorm-inject.js'
+import { cedarGraphqlOptionsExtractPlugin } from './plugins/vite-plugin-cedar-graphql-options-extract.js'
 import { cedarOtelWrappingPlugin } from './plugins/vite-plugin-cedar-otel-wrapping.js'
 import { handlerAlsWrappingPlugin } from './plugins/vite-plugin-handler-als-wrapping.js'
 
@@ -330,6 +332,8 @@ export async function buildCedarApp({
   }
 
   if (workspace.includes('api')) {
+    plugins.push(cedarGraphqlOptionsExtractPlugin())
+    plugins.push(cedarGqlormInjectPlugin())
     plugins.push(cedarOtelWrappingPlugin())
     plugins.push(
       handlerAlsWrappingPlugin({ projectIsEsm: projectSideIsEsm('api') }),
