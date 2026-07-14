@@ -45,17 +45,21 @@ describe('handlerAlsWrappingPlugin', () => {
     const output = (result as { code: string }).code
 
     expect(output).toContain(
-      "import { getAsyncStoreInstance as __rw_getAsyncStoreInstance } from '@cedarjs/context/dist/store'",
+      "import { getAsyncStoreInstance as __cedar_getAsyncStoreInstance } from '@cedarjs/context/dist/store'",
     )
-    expect(output).toContain('const __rw_handler = async (event, _context) =>')
     expect(output).toContain(
-      'export const handler = async (__rw_event, __rw__context) =>',
+      'const __cedar_handler = async (event, _context) =>',
     )
-    expect(output).toContain('__rw_getAsyncStoreInstance().getStore()')
     expect(output).toContain(
-      '__rw_getAsyncStoreInstance().run(\n      new Map(),\n      __rw_handler,\n      __rw_event,\n      __rw__context',
+      'export const handler = async (__cedar_event, __cedar_context) =>',
     )
-    expect(output).toContain('return __rw_handler(__rw_event, __rw__context)')
+    expect(output).toContain('__cedar_getAsyncStoreInstance().getStore()')
+    expect(output).toContain(
+      '__cedar_getAsyncStoreInstance().run(\n      new Map(),\n      __cedar_handler,\n      __cedar_event,\n      __cedar_context',
+    )
+    expect(output).toContain(
+      'return __cedar_handler(__cedar_event, __cedar_context)',
+    )
   })
 
   it('wraps a non-async handler (e.g. createGraphQLHandler call) without async keyword', () => {
@@ -74,13 +78,13 @@ describe('handlerAlsWrappingPlugin', () => {
     expect(result).not.toBeNull()
     const output = (result as { code: string }).code
 
-    expect(output).toContain('const __rw_handler = createGraphQLHandler({')
+    expect(output).toContain('const __cedar_handler = createGraphQLHandler({')
     // Wrapper must NOT be async (original was not an async function)
     expect(output).toContain(
-      'export const handler = (__rw_event, __rw__context) =>',
+      'export const handler = (__cedar_event, __cedar_context) =>',
     )
     expect(output).not.toContain(
-      'export const handler = async (__rw_event, __rw__context)',
+      'export const handler = async (__cedar_event, __cedar_context)',
     )
   })
 
@@ -94,7 +98,7 @@ describe('handlerAlsWrappingPlugin', () => {
     const output = (result as { code: string }).code
 
     expect(output).toContain(
-      "import { getAsyncStoreInstance as __rw_getAsyncStoreInstance } from '@cedarjs/context/dist/store.js'",
+      "import { getAsyncStoreInstance as __cedar_getAsyncStoreInstance } from '@cedarjs/context/dist/store.js'",
     )
   })
 
@@ -155,7 +159,9 @@ describe('handlerAlsWrappingPlugin', () => {
 
     expect(output).toContain("import { db } from 'src/lib/db'")
     expect(output).toContain('const helperFn = () => 42')
-    expect(output).toContain('const __rw_handler = async (event, context) =>')
+    expect(output).toContain(
+      'const __cedar_handler = async (event, context) =>',
+    )
   })
 
   it('handles typed handler exports (TypeScript type annotations)', () => {
@@ -174,10 +180,14 @@ describe('handlerAlsWrappingPlugin', () => {
     const output = (result as { code: string }).code
 
     // Type annotation is stripped on renamed handler (matches Babel plugin behavior)
-    expect(output).toContain('const __rw_handler = async (event, _context) =>')
-    expect(output).not.toContain('const __rw_handler: APIGatewayProxyHandler')
     expect(output).toContain(
-      'export const handler = async (__rw_event, __rw__context) =>',
+      'const __cedar_handler = async (event, _context) =>',
+    )
+    expect(output).not.toContain(
+      'const __cedar_handler: APIGatewayProxyHandler',
+    )
+    expect(output).toContain(
+      'export const handler = async (__cedar_event, __cedar_context) =>',
     )
   })
 
@@ -195,9 +205,11 @@ describe('handlerAlsWrappingPlugin', () => {
     const output = (result as { code: string }).code
 
     // Type annotation stripped, handler value correctly extracted despite => in type
-    expect(output).toContain('const __rw_handler = async (event, context) =>')
     expect(output).toContain(
-      'export const handler = async (__rw_event, __rw__context) =>',
+      'const __cedar_handler = async (event, context) =>',
+    )
+    expect(output).toContain(
+      'export const handler = async (__cedar_event, __cedar_context) =>',
     )
   })
 
@@ -212,7 +224,7 @@ describe('handlerAlsWrappingPlugin', () => {
 
     // Should be marked as async despite missing space
     expect(output).toContain(
-      'export const handler = async (__rw_event, __rw__context) =>',
+      'export const handler = async (__cedar_event, __cedar_context) =>',
     )
   })
 
@@ -230,7 +242,7 @@ describe('handlerAlsWrappingPlugin', () => {
     const output = (result as { code: string }).code
 
     expect(output).toContain(
-      'export const handler = async (__rw_event, __rw__context) =>',
+      'export const handler = async (__cedar_event, __cedar_context) =>',
     )
   })
 })
