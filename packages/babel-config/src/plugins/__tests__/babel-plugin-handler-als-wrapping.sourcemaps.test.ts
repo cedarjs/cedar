@@ -256,10 +256,9 @@ describe('babel-plugin-handler-als-wrapping source maps', () => {
   })
 
   describe('multi-plugin interaction', () => {
-    it('maps correctly when graphql-options-extract + context-wrapping both apply', () => {
-      // This is the exact plugin list that runs on the graphql function:
-      // 1. graphqlOptionsExtract - extracts options into __cedar_graphqlOptions
-      // 2. gqlormInject - injects gqlorm backend (no-op without config)
+    it('maps correctly when context-wrapping applies', () => {
+      // This is the exact plugin list that runs on the graphql function in
+      // Babel:
       // context-wrapping - wraps handler with async store isolation
       // (graphql-options-extract and gqlorm-inject are now Vite-only plugins,
       // not available in Babel)
