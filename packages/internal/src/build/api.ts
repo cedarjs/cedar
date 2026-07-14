@@ -19,6 +19,7 @@ import {
   applyGraphqlOptionsExtract,
 } from './api-graphql-transforms.js'
 import { cedarApiGraphqlPlugin } from './esbuild-plugin-api-graphql.js'
+import { applyOtelWrapping } from './esbuild-plugin-cedar-otel-wrapping.js'
 import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
 
 let BUILD_CTX: BuildContext | null = null
@@ -48,16 +49,12 @@ export const cleanApiBuild = async () => {
 const runCedarBabelTransformsPlugin = {
   name: 'cedar-esbuild-babel-transform',
   setup(build: PluginBuild) {
-    const cedarConfig = getConfig()
     build.onLoad({ filter: /\.(js|ts|tsx|jsx)$/ }, async (args) => {
       const fileContents = await fs.promises.readFile(args.path, 'utf-8')
       const transformedCode = await transformWithBabel(
         fileContents,
         args.path,
         getApiSideBabelPlugins({
-          openTelemetry:
-            cedarConfig.experimental.opentelemetry.enabled &&
-            cedarConfig.experimental.opentelemetry.wrapApi,
           projectIsEsm: projectSideIsEsm('api'),
         }),
       )
@@ -68,18 +65,26 @@ const runCedarBabelTransformsPlugin = {
         const cedarPaths = getPaths()
         const isEsm = projectSideIsEsm('api')
 
-        // Apply the handler ALS wrapping safeguard to API function handlers.
-        // This is the standalone-esbuild equivalent of the Vite
-        // handlerAlsWrappingPlugin and the (Jest-only) babel plugin it
-        // replaced. graphql.ts also lives in functions/ but is claimed by the
-        // dedicated cedarApiGraphqlPlugin, which is registered before this
-        // plugin, so it never reaches this branch.
+        // Apply OTel wrapping and the handler ALS wrapping safeguard to API
+        // function handlers. These are the standalone-esbuild equivalents of
+        // the Vite cedarOtelWrappingPlugin and handlerAlsWrappingPlugin,
+        // replacing the Babel plugins for these builds. The ALS wrapping
+        // plugin replaces the (Jest-only) Babel plugin it succeeded.
+        // graphql.ts also lives in functions/ but is claimed by the dedicated
+        // cedarApiGraphqlPlugin, which is registered before this plugin, so it
+        // never reaches this branch.
         const functionsDir = normalizePath(cedarPaths.api.functions)
         if (normalizedPath.startsWith(functionsDir + '/')) {
           code =
             applyHandlerAlsWrapping(code, {
               projectIsEsm: isEsm,
             }) ?? code
+        }
+
+        if (
+          normalizedPath.startsWith(normalizePath(cedarPaths.api.src) + '/')
+        ) {
+          code = applyOtelWrapping(code, args.path, cedarPaths.api.src) ?? code
         }
 
         return {
@@ -135,9 +140,6 @@ function createCedarViteApiPlugin(): Plugin {
         sourceCode,
         id,
         getApiSideBabelPlugins({
-          openTelemetry:
-            cedarConfig.experimental.opentelemetry.enabled &&
-            cedarConfig.experimental.opentelemetry.wrapApi,
           projectIsEsm: isEsm,
         }),
         true,
@@ -145,6 +147,14 @@ function createCedarViteApiPlugin(): Plugin {
 
       if (transformedCode?.code) {
         let code = transformedCode.code
+
+        // Apply OTel wrapping to all API files.
+        if (
+          cedarConfig.experimental?.opentelemetry?.enabled &&
+          cedarConfig.experimental?.opentelemetry?.wrapApi
+        ) {
+          code = applyOtelWrapping(code, id, cedarPaths.api.src) ?? code
+        }
 
         // Apply the handler ALS wrapping safeguard to API function handlers.
         // This is the standalone-esbuild equivalent of the Vite

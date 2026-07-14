@@ -1,5 +1,6 @@
 import path from 'node:path'
 
+import { dedent } from 'ts-dedent'
 import { describe, it, expect, vi } from 'vitest'
 
 import {
@@ -58,9 +59,11 @@ describe('cedarOtelWrappingPlugin', () => {
 
   it('transforms files in api/src/services/', () => {
     const transform = getPluginTransform()
-    const code = `export const contacts = () => {
-  return db.contact.findMany()
-}`
+    const code = dedent`
+      export const contacts = () => {
+        return db.contact.findMany()
+      }
+    `
 
     const result = transform(code, path.join(SERVICES_DIR, 'contacts.ts'))
 
@@ -68,18 +71,20 @@ describe('cedarOtelWrappingPlugin', () => {
     const output = (result as { code: string }).code
 
     expect(output).toContain(
-      "import { trace as RW_OTEL_WRAPPER_TRACE } from '@opentelemetry/api'",
+      "import { trace as OTEL_TRACE } from '@opentelemetry/api'",
     )
     expect(output).toContain('const __contacts = () =>')
-    expect(output).toContain("RW_OTEL_WRAPPER_TRACE.getTracer('redwoodjs')")
+    expect(output).toContain("OTEL_TRACE.getTracer('redwoodjs')")
     expect(output).toContain("'redwoodjs:api:services:contacts'")
   })
 
   it('transforms files in api/src/functions/', () => {
     const transform = getPluginTransform()
-    const code = `export const handler = async (event, context) => {
-  return { statusCode: 200 }
-}`
+    const code = dedent`
+      export const handler = async (event, context) => {
+        return { statusCode: 200 }
+      }
+    `
 
     const result = transform(code, path.join(FUNCTIONS_DIR, 'custom.ts'))
 
@@ -87,7 +92,7 @@ describe('cedarOtelWrappingPlugin', () => {
     const output = (result as { code: string }).code
 
     expect(output).toContain(
-      "import { trace as RW_OTEL_WRAPPER_TRACE } from '@opentelemetry/api'",
+      "import { trace as OTEL_TRACE } from '@opentelemetry/api'",
     )
     expect(output).toContain("'redwoodjs:api:functions:handler'")
   })
@@ -97,29 +102,33 @@ describe('applyOtelWrapping', () => {
   const testFilename = path.join(SERVICES_DIR, 'contacts/contacts.ts')
 
   it('adds the OpenTelemetry import', () => {
-    const code = `export const contacts = () => {
-  return db.contact.findMany()
-}`
+    const code = dedent`
+      export const contacts = () => {
+        return db.contact.findMany()
+      }
+    `
 
     const output = applyOtelWrapping(code, testFilename, 'services')
 
     expect(output).not.toBeNull()
     expect(output).toContain(
-      "import { trace as RW_OTEL_WRAPPER_TRACE } from '@opentelemetry/api'",
+      "import { trace as OTEL_TRACE } from '@opentelemetry/api'",
     )
   })
 
   it('wraps a simple synchronous exported arrow function', () => {
-    const code = `export const contacts = () => {
-  return db.contact.findMany()
-}`
+    const code = dedent`
+      export const contacts = () => {
+        return db.contact.findMany()
+      }
+    `
 
     const output = applyOtelWrapping(code, testFilename, 'services')!
 
     // Renamed inner function
     expect(output).toContain('const __contacts = () =>')
     // Tracer creation
-    expect(output).toContain("RW_OTEL_WRAPPER_TRACE.getTracer('redwoodjs')")
+    expect(output).toContain("OTEL_TRACE.getTracer('redwoodjs')")
     // Span name
     expect(output).toContain("'redwoodjs:api:services:contacts'")
     // Span attributes
@@ -128,43 +137,39 @@ describe('applyOtelWrapping', () => {
       `span.setAttribute('code.filepath', ${JSON.stringify(testFilename)})`,
     )
     // Call the inner function (non-async, no await)
-    expect(output).toContain(
-      'const RW_OTEL_WRAPPER_INNER_RESULT = __contacts()',
-    )
+    expect(output).toContain('const OTEL_INNER_RESULT = __contacts()')
     // Error handling
     expect(output).toContain('span.recordException(error)')
     expect(output).toContain('span.setStatus(')
     // Return
-    expect(output).toContain('return RW_OTEL_WRAPPER_RESULT')
+    expect(output).toContain('return OTEL_RESULT')
     // NOT async (original was sync)
-    expect(output).not.toContain(
-      'const RW_OTEL_WRAPPER_RESULT = await RW_OTEL_WRAPPER_TRACER',
-    )
+    expect(output).not.toContain('const OTEL_RESULT = await OTEL_TRACER')
   })
 
   it('wraps an async exported arrow function with await', () => {
-    const code = `export const getPost = async (id) => {
-  return db.post.findUnique({ where: { id } })
-}`
+    const code = dedent`
+      export const getPost = async (id) => {
+        return db.post.findUnique({ where: { id } })
+      }
+    `
 
     const output = applyOtelWrapping(code, testFilename, 'services')!
 
     // Renamed inner function is async, preserves original source (with parens)
     expect(output).toContain('const __getPost = async (id) =>')
     // Span call is awaited
-    expect(output).toContain(
-      'const RW_OTEL_WRAPPER_RESULT = await RW_OTEL_WRAPPER_TRACER',
-    )
+    expect(output).toContain('const OTEL_RESULT = await OTEL_TRACER')
     // Inner call is awaited
-    expect(output).toContain(
-      'const RW_OTEL_WRAPPER_INNER_RESULT = await __getPost',
-    )
+    expect(output).toContain('const OTEL_INNER_RESULT = await __getPost')
   })
 
   it('strips default values from ObjectPattern params when calling inner function', () => {
-    const code = `export const contact = ({ id, input = {} }) => {
-  return db.contact.findUnique({ where: { id } })
-}`
+    const code = dedent`
+      export const contact = ({ id, input = {} }) => {
+        return db.contact.findUnique({ where: { id } })
+      }
+    `
 
     const output = applyOtelWrapping(code, testFilename, 'services')!
 
@@ -177,9 +182,11 @@ describe('applyOtelWrapping', () => {
   })
 
   it('wraps a function with plain Identifier params', () => {
-    const code = `export const deleteContact = (id, force) => {
-  return db.contact.delete({ where: { id } })
-}`
+    const code = dedent`
+      export const deleteContact = (id, force) => {
+        return db.contact.delete({ where: { id } })
+      }
+    `
 
     const output = applyOtelWrapping(code, testFilename, 'services')!
 
@@ -188,9 +195,11 @@ describe('applyOtelWrapping', () => {
   })
 
   it('handles AssignmentPattern (param = default) by passing the identifier only', () => {
-    const code = `export const withDefault = async (args = {}) => {
-  return args
-}`
+    const code = dedent`
+      export const withDefault = async (args = {}) => {
+        return args
+      }
+    `
 
     const output = applyOtelWrapping(code, testFilename, 'services')!
 
@@ -199,11 +208,13 @@ describe('applyOtelWrapping', () => {
   })
 
   it('bails out and does not wrap if param is an ArrayPattern', () => {
-    const code = `import { db } from 'src/lib/db'
+    const code = dedent`
+      import { db } from 'src/lib/db'
 
-export const listItems = ([first, ...rest]) => {
-  return [first, ...rest]
-}`
+      export const listItems = ([first, ...rest]) => {
+        return [first, ...rest]
+      }
+    `
 
     // ArrayPattern params are unsupported — nothing to wrap, returns null
     const output = applyOtelWrapping(code, testFilename, 'services')
@@ -212,12 +223,14 @@ export const listItems = ([first, ...rest]) => {
   })
 
   it('does not wrap non-arrow-function exports', () => {
-    const code = `import { createGraphQLHandler } from '@cedarjs/graphql-server'
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
 
-export const handler = createGraphQLHandler({
-  sdls,
-  services,
-})`
+      export const handler = createGraphQLHandler({
+        sdls,
+        services,
+      })
+    `
 
     // No arrow function exports — nothing to wrap, returns null
     const output = applyOtelWrapping(code, testFilename, 'functions')
@@ -271,9 +284,11 @@ export const getPost = (id) => db.post.findUnique({ where: { id } })`
   })
 
   it('preserves aliased destructuring params in inner call', () => {
-    const code = `export const getPost = ({ id: postId }) => {
-  return db.post.findUnique({ where: { id: postId } })
-}`
+    const code = dedent`
+      export const getPost = ({ id: postId }) => {
+        return db.post.findUnique({ where: { id: postId } })
+      }
+    `
 
     const output = applyOtelWrapping(code, testFilename, 'services')!
 
@@ -282,9 +297,11 @@ export const getPost = (id) => db.post.findUnique({ where: { id } })`
   })
 
   it('bails out for RestElement in ObjectPattern', () => {
-    const code = `export const withRest = ({ id, ...rest }) => {
-  return { id, ...rest }
-}`
+    const code = dedent`
+      export const withRest = ({ id, ...rest }) => {
+        return { id, ...rest }
+      }
+    `
 
     // RestElement in ObjectPattern params — unsupported, bail out
     const output = applyOtelWrapping(code, testFilename, 'services')
@@ -293,9 +310,11 @@ export const getPost = (id) => db.post.findUnique({ where: { id } })`
   })
 
   it('bails out for RestElement at top level', () => {
-    const code = `export const varArgs = (...args) => {
-  return args
-}`
+    const code = dedent`
+      export const varArgs = (...args) => {
+        return args
+      }
+    `
 
     // RestElement at top level — unsupported, bail out
     const output = applyOtelWrapping(code, testFilename, 'services')

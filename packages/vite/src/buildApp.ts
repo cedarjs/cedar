@@ -136,9 +136,6 @@ export async function buildCedarApp({
 
   const babelPlugins = workspace.includes('api')
     ? getApiSideBabelPlugins({
-        openTelemetry:
-          (cedarConfig.experimental?.opentelemetry?.enabled ?? false) &&
-          (cedarConfig.experimental?.opentelemetry?.wrapApi ?? false),
         projectIsEsm: projectSideIsEsm('api'),
       })
     : null

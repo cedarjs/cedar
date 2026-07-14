@@ -21,6 +21,7 @@ import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
 import { applyGraphqlOptionsExtract } from './plugins/vite-plugin-cedar-graphql-options-extract.js'
+import { applyOtelWrapping } from './plugins/vite-plugin-cedar-otel-wrapping.js'
 
 const LAMBDA_FUNCTIONS: Record<string, CedarHandler> = {}
 
@@ -167,9 +168,6 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
   const normalizedBase = normalizePath(cedarPaths.base)
 
   const babelPlugins = getApiSideBabelPlugins({
-    openTelemetry:
-      (cedarConfig.experimental?.opentelemetry?.enabled ?? false) &&
-      (cedarConfig.experimental?.opentelemetry?.wrapApi ?? false),
     projectIsEsm: isEsm,
   })
 
@@ -211,12 +209,10 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
           }
 
           try {
-            // Apply graphql-specific transforms on the raw TypeScript BEFORE
-            // Babel CJS compilation. The ESM-pattern regexes in these
-            // transforms require `export const handler = createGraphQLHandler(`
-            // syntax, which Babel rewrites to CJS form when the project uses
-            // "type": "commonjs". Running them first ensures the patterns
-            // always match regardless of the project's module format.
+            // Apply graphql-specific and OTel transforms BEFORE Babel CJS
+            // compilation. These transforms use AST patterns that match ESM
+            // syntax; running them first ensures they always work regardless
+            // of the project's module format.
             let sourceCode = code
             if (
               normalizePath(id).endsWith('/graphql.ts') ||
@@ -224,6 +220,18 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
             ) {
               sourceCode = applyGraphqlOptionsExtract(sourceCode) ?? sourceCode
               sourceCode = applyGqlormInject(sourceCode, id) ?? sourceCode
+            }
+
+            if (
+              cedarConfig.experimental?.opentelemetry?.enabled &&
+              cedarConfig.experimental?.opentelemetry?.wrapApi
+            ) {
+              const relativePath = normalizePath(id).slice(
+                normalizedBase.length + '/api/src/'.length,
+              )
+              const apiFolder = relativePath.split('/')[0] ?? '?'
+              sourceCode =
+                applyOtelWrapping(sourceCode, id, apiFolder) ?? sourceCode
             }
 
             // Use the code Vite already loaded instead of reading from disk, so

@@ -1,80 +1,33 @@
+import path from 'node:path'
+
 import type {
   ArrowFunctionExpression,
   ObjectPattern,
   ParamPattern,
 } from '@oxc-project/types'
 import { parseSync } from 'oxc-parser'
-import type { Plugin } from 'vite'
-import { normalizePath } from 'vite'
-
-import { getPaths } from '@cedarjs/project-config'
 
 /**
- * Vite plugin that wraps exported API functions with OpenTelemetry spans to
- * provide automatic tracing in your Cedar API.
+ * Standalone esbuild equivalent of the Vite cedarOtelWrappingPlugin. Applied
+ * inline in the esbuild API build and the standalone-Vite API build so neither
+ * path depends on a Babel OTel plugin.
  *
- * For each `export const fn = (async?) (...) => {...}` declaration in an API
- * file this plugin:
+ * For each `export const fn = (async?) (...) => {...}` in an API file, this
+ * wraps it with an OpenTelemetry span.
  *
- * 1. Adds an import at the top of the file:
- *      import { trace as OTEL_TRACE } from '@opentelemetry/api'
- *
- * 2. Wraps the original export with an OTel span:
- *      export const fn = (async?) (...params) => {
- *        const __fn = (async?) (...params) => { ...original body... }
- *        const OTEL_TRACER = OTEL_TRACE.getTracer('redwoodjs')
- *        const OTEL_RESULT = (await?) OTEL_TRACER.startActiveSpan(
- *          'redwoodjs:api:<folder>:<fnName>',
- *          (async?) (span) => { ... }
- *        )
- *        return OTEL_RESULT
- *      }
- *
- * This replaces `babel-plugin-redwood-otel-wrapping` for all Vite and esbuild
- * builds. The previous Babel plugin has been removed entirely; Jest
- * transforms through the Vite SSR pipeline.
- *
- * NOTE: Known limitation — spans will close before a Promise settles if a
- * synchronous function returns a Promise. To trace async work correctly,
- * mark the function as `async` if it returns or awaits Promises.
+ * Keep this in sync with
+ * packages/vite/src/plugins/vite-plugin-cedar-otel-wrapping.ts.
  */
-export function cedarOtelWrappingPlugin(): Plugin {
-  return {
-    name: 'cedar-otel-wrapping',
 
-    transform(code, id) {
-      let apiSrc: string
-      try {
-        apiSrc = normalizePath(getPaths().api.src)
-      } catch {
-        return null
-      }
-
-      if (!normalizePath(id).startsWith(apiSrc + '/')) {
-        return null
-      }
-
-      // Compute the top-level folder under api/src (e.g. 'functions', 'services')
-      const relativePath = normalizePath(id).slice(apiSrc.length + 1)
-      const apiFolder = relativePath.split('/')[0] ?? '?'
-
-      const result = applyOtelWrapping(code, id, apiFolder)
-      return result ? { code: result, map: null } : null
-    },
-  }
-}
-
-/**
- * Applies OpenTelemetry span wrapping to API source files.
- *
- * Exported as a standalone function so it can be tested without a Vite context.
- * Returns the transformed code string, or `null` if nothing was changed.
- */
 export function applyOtelWrapping(
   code: string,
   filename: string,
-  apiFolder: string,
+  apiSrc: string,
 ): string | null {
+  // Compute the top-level folder under api/src (e.g. 'functions', 'services')
+  const relative = path.relative(apiSrc, filename)
+  const apiFolder = relative.split(path.sep)[0] ?? '?'
+
   const parseResult = parseSync(filename, code, { sourceType: 'module' })
 
   // Collect replacements; we apply them in reverse order to preserve positions

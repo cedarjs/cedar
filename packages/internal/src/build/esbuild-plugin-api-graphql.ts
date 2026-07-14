@@ -1,7 +1,7 @@
 // esbuild plugin that runs the graphql.ts-specific transforms (options
-// extraction + gqlorm injection + handler ALS wrapping) during the legacy
-// esbuild API build. It's a separate onLoad so graphql concerns aren't buried
-// inside cedar-esbuild-babel-transform.
+// extraction + gqlorm injection + handler ALS wrapping + OTel wrapping)
+// during the legacy esbuild API build. It's a separate onLoad so graphql
+// concerns aren't buried inside cedar-esbuild-babel-transform.
 //
 // NOTE: esbuild 0.27 onLoad handlers are exclusive (first match wins), so this
 // plugin is registered BEFORE runCedarBabelTransformsPlugin in getEsbuildOptions.
@@ -17,12 +17,13 @@ import {
   getApiSideBabelPlugins,
   transformWithBabel,
 } from '@cedarjs/babel-config'
-import { getConfig, projectSideIsEsm } from '@cedarjs/project-config'
+import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import {
   applyGqlormInject,
   applyGraphqlOptionsExtract,
 } from './api-graphql-transforms.js'
+import { applyOtelWrapping } from './esbuild-plugin-cedar-otel-wrapping.js'
 import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
 
 export const cedarApiGraphqlPlugin = {
@@ -55,9 +56,6 @@ export const cedarApiGraphqlPlugin = {
         fileContents,
         args.path,
         getApiSideBabelPlugins({
-          openTelemetry:
-            cedarConfig.experimental.opentelemetry.enabled &&
-            cedarConfig.experimental.opentelemetry.wrapApi,
           projectIsEsm: projectSideIsEsm('api'),
         }),
       )
@@ -67,6 +65,16 @@ export const cedarApiGraphqlPlugin = {
       }
 
       let code = transformedCode.code
+
+      // Apply OTel wrapping and the handler ALS wrapping safeguard, replacing
+      // the Babel plugins for these builds.
+      if (
+        cedarConfig.experimental?.opentelemetry?.enabled &&
+        cedarConfig.experimental?.opentelemetry?.wrapApi
+      ) {
+        code = applyOtelWrapping(code, args.path, getPaths().api.src) ?? code
+      }
+
       code =
         applyHandlerAlsWrapping(code, {
           projectIsEsm: projectSideIsEsm('api'),
