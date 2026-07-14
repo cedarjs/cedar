@@ -1,3 +1,5 @@
+import { TraceMap, originalPositionFor } from '@jridgewell/trace-mapping'
+import { transform } from 'esbuild'
 import { dedent } from 'ts-dedent'
 import { describe, expect, it } from 'vitest'
 
@@ -191,5 +193,55 @@ export const handler = createGraphQLHandler(__cedar_graphqlOptions)`
     expect(result).toContain(
       'export const handler = createGraphQLHandler(__cedar_graphqlOptions)',
     )
+  })
+
+  it('preserves original source-map line info through a downstream build', async () => {
+    // The transform inserts `export const __cedar_graphqlOptions = ...` on a new
+    // line above the handler, which shifts everything below it by one. Because
+    // the transform is a verbatim superset of the user's file and esbuild keys
+    // the emitted map on the source *filename* (graphql.ts), the final map must
+    // still resolve to the user's original line numbers, not the shifted
+    // (transformed) ones. This guards against debugger stepping and stack
+    // traces pointing at the wrong line after the move to oxc/Vite.
+    const code = [
+      "import { createGraphQLHandler } from '@cedarjs/graphql-server'",
+      "import { db } from 'src/lib/db'",
+      '',
+      'export const OTHER = 1',
+      '',
+      'export const handler = createGraphQLHandler({', // user line 6
+      '  loggerConfig: { logger, options: {} },', // user line 7
+      '  db,',
+      '})',
+      '',
+    ].join('\n')
+
+    const transformed = applyGraphqlOptionsExtract(code)
+    expect(transformed).not.toBeNull()
+
+    // Simulate the esbuild onLoad path returning the transformed code with no
+    // source map of its own (map: null), exactly as cedarApiGraphqlPlugin does.
+    const { code: dist, map } = await transform(transformed!, {
+      loader: 'js',
+      sourcefile: 'graphql.ts',
+      sourcemap: 'external',
+    })
+
+    const tracer = new TraceMap(map)
+    const distLines = dist.split('\n')
+    const distLineIndex = distLines.findIndex((line) =>
+      line.includes('loggerConfig'),
+    )
+    expect(distLineIndex).toBeGreaterThan(0)
+
+    const column = distLines[distLineIndex].indexOf('loggerConfig')
+    const original = originalPositionFor(tracer, {
+      line: distLineIndex + 1,
+      column,
+    })
+
+    // loggerConfig lives on user line 7, not the transformed line 8.
+    expect(original.source).toBe('graphql.ts')
+    expect(original.line).toBe(7)
   })
 })
