@@ -17,6 +17,9 @@ See [typescript/taste.md](typescript/taste.md)
 - Use `prisma-client` provider (not `prisma-client-js`) — `prisma-client-js` is legacy Prisma v6 config and should not be used anywhere. Confidence: 0.85
 
 # Architecture
+- The gqlorm feature is intentionally TypeScript-only. It checks for `backend.ts` existence only (not `backend.js`). This is by design — unlike the graphql handler transforms (`graphql.ts`/`graphql.js`) which must support both TS and JS projects, gqlorm does not support JavaScript projects. Confidence: 0.80
+
+# Architecture
 
 - Keep package-manager-specific logic out of handler files. Extract PM logic into helpers from `cli-helpers` rather than inlining it in individual command handlers. Confidence: 0.80
 - CedarJS only supports Apollo Client for GraphQL. Remove abstractions/wrappers that suggest alternative GraphQL clients are supported. Confidence: 0.75

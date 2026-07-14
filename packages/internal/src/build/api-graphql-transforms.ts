@@ -162,6 +162,10 @@ export function applyGqlormInject(
     'backend',
   )
 
+  // The generated gqlorm backend is always backend.ts (never compiled to
+  // .js), so we only check for the .ts file. gqlorm is intentionally a
+  // TypeScript-only feature; JS projects are out of scope and the injected
+  // import below hardcodes the .ts extension on purpose.
   if (!fs.existsSync(backendPathWithoutExt + '.ts')) {
     return null
   }
