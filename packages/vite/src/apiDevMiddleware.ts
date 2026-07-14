@@ -226,6 +226,9 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
               sourceCode = applyGqlormInject(sourceCode, id) ?? sourceCode
             }
 
+            // Use the code Vite already loaded instead of reading from disk, so
+            // Vite's originalCode matches the Babel input. This ensures the SSR
+            // transform's sourcesContent is consistent with the map.
             const result = await transformWithBabel(
               sourceCode,
               id,
