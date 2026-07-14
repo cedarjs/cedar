@@ -16,9 +16,11 @@ import {
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { createGraphQLYoga } from '@cedarjs/graphql-server'
 import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
+import { applyGqlormInject } from '@cedarjs/internal/dist/build/api-graphql-transforms.js'
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
+import { applyGraphqlOptionsExtract } from './plugins/vite-plugin-cedar-graphql-options-extract.js'
 
 const LAMBDA_FUNCTIONS: Record<string, CedarHandler> = {}
 
@@ -209,11 +211,26 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
           }
 
           try {
+            // Apply graphql-specific transforms on the raw TypeScript BEFORE
+            // Babel CJS compilation. The ESM-pattern regexes in these
+            // transforms require `export const handler = createGraphQLHandler(`
+            // syntax, which Babel rewrites to CJS form when the project uses
+            // "type": "commonjs". Running them first ensures the patterns
+            // always match regardless of the project's module format.
+            let sourceCode = code
+            if (
+              normalizePath(id).endsWith('/graphql.ts') ||
+              normalizePath(id).endsWith('/graphql.js')
+            ) {
+              sourceCode = applyGraphqlOptionsExtract(sourceCode) ?? sourceCode
+              sourceCode = applyGqlormInject(sourceCode, id) ?? sourceCode
+            }
+
             // Use the code Vite already loaded instead of reading from disk, so
             // Vite's originalCode matches the Babel input. This ensures the SSR
             // transform's sourcesContent is consistent with the map.
             const result = await transformWithBabel(
-              code,
+              sourceCode,
               id,
               babelPlugins,
               true,
