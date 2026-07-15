@@ -31,12 +31,12 @@ import { getPaths } from '@cedarjs/project-config'
  *      }
  *
  * This replaces `babel-plugin-redwood-otel-wrapping` for all Vite and esbuild
- * builds. The previous Babel plugin has been removed entirely; Jest
- * transforms through the Vite SSR pipeline.
+ * builds. The previous Babel plugin has been removed entirely; Jest transforms
+ * through the Vite SSR pipeline.
  *
- * NOTE: Known limitation — spans will close before a Promise settles if a
- * synchronous function returns a Promise. To trace async work correctly,
- * mark the function as `async` if it returns or awaits Promises.
+ * NOTE: Known limitation. Spans will close before a Promise settles if a
+ * synchronous function returns a Promise. To trace async work correctly, mark
+ * the function as `async` if it returns or awaits Promises.
  */
 export function cedarOtelWrappingPlugin(): Plugin {
   return {
