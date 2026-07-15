@@ -137,6 +137,7 @@ export async function buildCedarApp({
 
   const babelPlugins = workspace.includes('api')
     ? getApiSideBabelPlugins({
+        forVite: true,
         projectIsEsm: projectSideIsEsm('api'),
       })
     : null

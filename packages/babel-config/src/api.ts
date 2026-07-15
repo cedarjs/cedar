@@ -54,7 +54,10 @@ type PluginShape =
   | [PluginTarget, PluginOptions, undefined | string]
   | [PluginTarget, PluginOptions]
 
-export const getApiSideBabelPlugins = ({ projectIsEsm = false } = {}) => {
+export const getApiSideBabelPlugins = ({
+  forVite = false,
+  projectIsEsm = false,
+} = {}) => {
   const tsConfig = parseTypeScriptConfigFiles()
 
   const plugins: (PluginShape | boolean)[] = [
@@ -67,7 +70,10 @@ export const getApiSideBabelPlugins = ({ projectIsEsm = false } = {}) => {
       'babel-plugin-module-resolver',
       {
         alias: {
-          src: './src',
+          // Vite handles `src/` resolution natively via
+          // cedarjsResolveCedarStyleImportsPlugin; only include the src
+          // alias for non-Vite consumers (Jest, prerender, data-migrate).
+          ...(!forVite && { src: './src' }),
           // adds the paths from [ts|js]config.json to the module resolver
           ...getPathsFromTypeScriptConfig(tsConfig.api, getPaths().api.base),
         },

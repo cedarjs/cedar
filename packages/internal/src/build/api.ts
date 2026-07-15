@@ -55,6 +55,7 @@ const runCedarBabelTransformsPlugin = {
         fileContents,
         args.path,
         getApiSideBabelPlugins({
+          forVite: true,
           projectIsEsm: projectSideIsEsm('api'),
         }),
       )
@@ -140,6 +141,7 @@ function createCedarViteApiPlugin(): Plugin {
         sourceCode,
         id,
         getApiSideBabelPlugins({
+          forVite: true,
           projectIsEsm: isEsm,
         }),
         true,
