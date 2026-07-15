@@ -16,6 +16,7 @@ import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
 import { cedarGqlormInjectPlugin } from './plugins/vite-plugin-cedar-gqlorm-inject.js'
 import { cedarGraphqlOptionsExtractPlugin } from './plugins/vite-plugin-cedar-graphql-options-extract.js'
+import { cedarOtelWrappingPlugin } from './plugins/vite-plugin-cedar-otel-wrapping.js'
 import { handlerAlsWrappingPlugin } from './plugins/vite-plugin-handler-als-wrapping.js'
 
 function resolveWithExtensions(id: string): string {
@@ -135,9 +136,6 @@ export async function buildCedarApp({
 
   const babelPlugins = workspace.includes('api')
     ? getApiSideBabelPlugins({
-        openTelemetry:
-          (cedarConfig.experimental?.opentelemetry?.enabled ?? false) &&
-          (cedarConfig.experimental?.opentelemetry?.wrapApi ?? false),
         projectIsEsm: projectSideIsEsm('api'),
       })
     : null
@@ -333,6 +331,7 @@ export async function buildCedarApp({
   if (workspace.includes('api')) {
     plugins.push(cedarGraphqlOptionsExtractPlugin())
     plugins.push(cedarGqlormInjectPlugin())
+    plugins.push(cedarOtelWrappingPlugin())
     plugins.push(
       handlerAlsWrappingPlugin({ projectIsEsm: projectSideIsEsm('api') }),
     )

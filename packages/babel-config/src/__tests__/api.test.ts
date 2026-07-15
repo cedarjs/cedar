@@ -208,22 +208,6 @@ describe('api', () => {
         'rwjs-babel-auto-import',
       ])
     })
-
-    it('can include openTelemetry', () => {
-      vol.fromNestedJSON(
-        {
-          'cedar.toml': '',
-          api: {},
-        },
-        cedarProjectPath,
-      )
-
-      const apiSideBabelPlugins = getApiSideBabelPlugins({
-        openTelemetry: true,
-      })
-      const pluginAliases = getPluginAliases(apiSideBabelPlugins)
-      expect(pluginAliases).toContain('rwjs-babel-otel-wrapping')
-    })
   })
 })
 
