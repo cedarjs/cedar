@@ -168,9 +168,7 @@ export const getWebSideOverrides = (
     // Only required for storybook and jest
     process.env.NODE_ENV !== 'production' && {
       test: /.+Cell.mock.(js|ts)$/,
-      plugins: [
-        require('./plugins/babel-plugin-redwood-mock-cell-data').default,
-      ],
+      plugins: [],
     },
   ]
 

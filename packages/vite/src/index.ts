@@ -13,6 +13,7 @@ import { cedarCellTransform } from './plugins/vite-plugin-cedar-cell.js'
 import { cedarDataUriShim } from './plugins/vite-plugin-cedar-data-uri-shim.js'
 import { cedarEntryInjectionPlugin } from './plugins/vite-plugin-cedar-entry-injection.js'
 import { cedarHtmlEnvPlugin } from './plugins/vite-plugin-cedar-html-env.js'
+import { cedarMockCellDataPlugin } from './plugins/vite-plugin-cedar-mock-cell-data.js'
 import { cedarRemoveDevFatalErrorPage } from './plugins/vite-plugin-cedar-remove-dev-fatal-error-page.js'
 import { cedarRemoveFromBundle } from './plugins/vite-plugin-cedar-remove-from-bundle.js'
 import { cedarRoutesAutoLoaderPlugin } from './plugins/vite-plugin-cedar-routes-auto-loader.js'
@@ -85,6 +86,7 @@ export function cedar({ mode }: PluginOptions = {}): PluginOption[] {
     cedarRemoveDevFatalErrorPage(),
     // RSC handles route auto-loading differently in each build stage
     !rscEnabled && cedarRoutesAutoLoaderPlugin(),
+    cedarMockCellDataPlugin(),
     react({ babel: babelConfig }),
   ]
 }
