@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import path from 'node:path'
 
 import type { PluginBuild } from 'esbuild'
 import { build as esbuildBuild } from 'esbuild'
@@ -54,5 +55,11 @@ export async function buildRouteHooks(
     packages: 'external',
     logLevel: verbose ? 'info' : 'error',
     outdir: rwPaths.web.distRouteHooks,
+    alias: {
+      // Lift the `api/src` → real api src resolution that was previously
+      // handled by `babel-plugin-module-resolver`. The Babel plugin has been
+      // removed from `getRouteHookBabelPlugins`; esbuild handles this now.
+      'api/src': path.join(getPaths().api.base, 'src'),
+    },
   })
 }
