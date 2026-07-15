@@ -32,7 +32,7 @@
     "ansis": "4.2.0",
     "dotenv-defaults": "5.0.2",
     "fastify": "5.8.5",
-    "yargs": "17.7.2"
+    "yargs": "17.7.3"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
