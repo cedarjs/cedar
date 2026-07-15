@@ -166,10 +166,17 @@ export const getWebSideOverrides = (
     // ** Files ending in `Cell.mock.[js,ts]` **
     // Automatically determine keys for saving and retrieving mock data.
     // Only required for storybook and jest
-    process.env.NODE_ENV !== 'production' && {
-      test: /.+Cell.mock.(js|ts)$/,
-      plugins: [],
-    },
+    // Vite/Vitest runs the mock-cell-data transform via its own plugin
+    // (vite-plugin-cedar-mock-cell-data). Jest (CJS projects) still needs the
+    // Babel plugin because it doesn't go through Vite's pipeline, so we keep
+    // the override active for non-Vite contexts.
+    !forVite &&
+      process.env.NODE_ENV !== 'production' && {
+        test: /.+Cell.mock.(js|ts)$/,
+        plugins: [
+          require('./plugins/babel-plugin-redwood-mock-cell-data').default,
+        ],
+      },
   ]
 
   return overrides.filter(
