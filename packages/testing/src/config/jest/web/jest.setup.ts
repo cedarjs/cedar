@@ -31,7 +31,7 @@ const cellMocks = findCellMocks(global.__RWJS_TESTROOT_DIR)
 beforeAll(async () => {
   for (const m of cellMocks) {
     // Keep in mind, its actually loading MSW mockGraphQLCall functions
-    // see packages/internal/src/build/babelPlugins/babel-plugin-redwood-mock-cell-data.ts
+    // see packages/vite/src/plugins/vite-plugin-cedar-mock-cell-data.ts
     await import(m)
   }
 
