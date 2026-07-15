@@ -152,7 +152,7 @@
     "pretty-ms": "7.0.1",
     "split2": "4.2.0",
     "termi-link": "1.1.0",
-    "yargs": "17.7.2"
+    "yargs": "17.7.3"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "5.0.0",
