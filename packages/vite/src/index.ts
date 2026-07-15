@@ -27,8 +27,11 @@ export { cedarCjsCompatPlugin } from './plugins/vite-plugin-cedar-cjs-compat.js'
 export { cedarCellTransform } from './plugins/vite-plugin-cedar-cell.js'
 export { cedarGqlormInjectPlugin } from './plugins/vite-plugin-cedar-gqlorm-inject.js'
 export { cedarGraphqlOptionsExtractPlugin } from './plugins/vite-plugin-cedar-graphql-options-extract.js'
-export { handlerAlsWrappingPlugin } from './plugins/vite-plugin-handler-als-wrapping.js'
-export { applyHandlerAlsWrapping } from './plugins/vite-plugin-handler-als-wrapping.js'
+export { cedarOtelWrappingPlugin } from './plugins/vite-plugin-cedar-otel-wrapping.js'
+export {
+  applyHandlerAlsWrapping,
+  handlerAlsWrappingPlugin,
+} from './plugins/vite-plugin-handler-als-wrapping.js'
 export { cedarEntryInjectionPlugin } from './plugins/vite-plugin-cedar-entry-injection.js'
 export { cedarHtmlEnvPlugin } from './plugins/vite-plugin-cedar-html-env.js'
 export { cedarImportDirPlugin } from './plugins/vite-plugin-cedar-import-dir.js'

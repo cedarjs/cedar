@@ -18,7 +18,6 @@ import handlerAlsWrappingPlugin from './plugins/babel-plugin-handler-als-wrappin
 import pluginRedwoodDirectoryNamedImport from './plugins/babel-plugin-redwood-directory-named-import.js'
 import pluginRedwoodImportDir from './plugins/babel-plugin-redwood-import-dir.js'
 import pluginRedwoodJobPathInjector from './plugins/babel-plugin-redwood-job-path-injector.js'
-import pluginRedwoodOTelWrapping from './plugins/babel-plugin-redwood-otel-wrapping.js'
 
 export const TARGETS_NODE = '24'
 
@@ -55,10 +54,7 @@ type PluginShape =
   | [PluginTarget, PluginOptions, undefined | string]
   | [PluginTarget, PluginOptions]
 
-export const getApiSideBabelPlugins = ({
-  openTelemetry = false,
-  projectIsEsm = false,
-} = {}) => {
+export const getApiSideBabelPlugins = ({ projectIsEsm = false } = {}) => {
   const tsConfig = parseTypeScriptConfigFiles()
 
   const plugins: (PluginShape | boolean)[] = [
@@ -147,11 +143,6 @@ export const getApiSideBabelPlugins = ({
     // FIXME: `graphql-tag` is not working: https://github.com/redwoodjs/redwood/pull/3193
     ['babel-plugin-graphql-tag', undefined, 'rwjs-babel-graphql-tag'],
     [pluginRedwoodImportDir, {}, 'rwjs-babel-glob-import-dir'],
-    openTelemetry && [
-      pluginRedwoodOTelWrapping,
-      undefined,
-      'rwjs-babel-otel-wrapping',
-    ],
   ]
 
   return plugins.filter(<T>(n: T | boolean): n is T => Boolean(n))
