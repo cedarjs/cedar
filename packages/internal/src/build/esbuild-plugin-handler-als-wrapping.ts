@@ -26,27 +26,27 @@ export function applyHandlerAlsWrapping(
     ? '@cedarjs/context/dist/store.js'
     : '@cedarjs/context/dist/store'
 
-  const importStatement = `import { getAsyncStoreInstance as __rw_getAsyncStoreInstance } from '${storePath}'\n`
+  const importStatement = `import { getAsyncStoreInstance as __cedar_getAsyncStoreInstance } from '${storePath}'\n`
 
   const handlerStart = handlerMatch.index
   const before = code.slice(0, handlerStart)
   const after = code.slice(handlerStart)
 
-  const renamed = after.replace(handlerRe, 'const __rw_handler =')
+  const renamed = after.replace(handlerRe, 'const __cedar_handler =')
 
   const wrappedHandler =
-    `\nexport const handler = ${isAsync ? 'async ' : ''}(__rw_event, __rw__context) => {\n` +
+    `\nexport const handler = ${isAsync ? 'async ' : ''}(__cedar_event, __cedar_context) => {\n` +
     `  // The store will be undefined if no context isolation has been performed yet\n` +
-    `  const __rw_contextStore = __rw_getAsyncStoreInstance().getStore()\n` +
-    `  if (__rw_contextStore === undefined) {\n` +
-    `    return __rw_getAsyncStoreInstance().run(\n` +
+    `  const __cedar_contextStore = __cedar_getAsyncStoreInstance().getStore()\n` +
+    `  if (__cedar_contextStore === undefined) {\n` +
+    `    return __cedar_getAsyncStoreInstance().run(\n` +
     `      new Map(),\n` +
-    `      __rw_handler,\n` +
-    `      __rw_event,\n` +
-    `      __rw__context\n` +
+    `      __cedar_handler,\n` +
+    `      __cedar_event,\n` +
+    `      __cedar_context\n` +
     `    )\n` +
     `  }\n` +
-    `  return __rw_handler(__rw_event, __rw__context)\n` +
+    `  return __cedar_handler(__cedar_event, __cedar_context)\n` +
     `}\n`
 
   return before + importStatement + renamed + wrappedHandler

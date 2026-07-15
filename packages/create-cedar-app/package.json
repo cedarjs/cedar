@@ -1,6 +1,6 @@
 {
   "name": "create-cedar-app",
-  "version": "4.2.0",
+  "version": "5.0.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -48,7 +48,7 @@
     "untildify": "4.0.0",
     "uuid": "11.1.0",
     "vitest": "3.2.6",
-    "yargs": "17.7.2"
+    "yargs": "17.7.3"
   },
   "engines": {
     "node": ">=24"

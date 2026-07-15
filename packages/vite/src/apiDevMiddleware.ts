@@ -16,9 +16,12 @@ import {
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { createGraphQLYoga } from '@cedarjs/graphql-server'
 import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
+import { applyGqlormInject } from '@cedarjs/internal/dist/build/api-graphql-transforms.js'
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
+import { applyGraphqlOptionsExtract } from './plugins/vite-plugin-cedar-graphql-options-extract.js'
+import { applyOtelWrapping } from './plugins/vite-plugin-cedar-otel-wrapping.js'
 
 const LAMBDA_FUNCTIONS: Record<string, CedarHandler> = {}
 
@@ -165,9 +168,6 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
   const normalizedBase = normalizePath(cedarPaths.base)
 
   const babelPlugins = getApiSideBabelPlugins({
-    openTelemetry:
-      (cedarConfig.experimental?.opentelemetry?.enabled ?? false) &&
-      (cedarConfig.experimental?.opentelemetry?.wrapApi ?? false),
     projectIsEsm: isEsm,
   })
 
@@ -209,11 +209,36 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
           }
 
           try {
+            // Apply graphql-specific and OTel transforms BEFORE Babel CJS
+            // compilation. These transforms use AST patterns that match ESM
+            // syntax; running them first ensures they always work regardless
+            // of the project's module format.
+            let sourceCode = code
+            if (
+              normalizePath(id).endsWith('/graphql.ts') ||
+              normalizePath(id).endsWith('/graphql.js')
+            ) {
+              sourceCode = applyGraphqlOptionsExtract(sourceCode) ?? sourceCode
+              sourceCode = applyGqlormInject(sourceCode, id) ?? sourceCode
+            }
+
+            if (
+              cedarConfig.experimental?.opentelemetry?.enabled &&
+              cedarConfig.experimental?.opentelemetry?.wrapApi
+            ) {
+              const relativePath = normalizePath(id).slice(
+                normalizedBase.length + '/api/src/'.length,
+              )
+              const apiFolder = relativePath.split('/')[0] ?? '?'
+              sourceCode =
+                applyOtelWrapping(sourceCode, id, apiFolder) ?? sourceCode
+            }
+
             // Use the code Vite already loaded instead of reading from disk, so
             // Vite's originalCode matches the Babel input. This ensures the SSR
             // transform's sourcesContent is consistent with the map.
             const result = await transformWithBabel(
-              code,
+              sourceCode,
               id,
               babelPlugins,
               true,

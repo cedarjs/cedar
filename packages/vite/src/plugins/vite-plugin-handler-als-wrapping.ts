@@ -14,18 +14,18 @@ import { getPaths } from '@cedarjs/project-config'
  * For each file in `api/src/functions/` that exports a `handler`, this plugin:
  *
  * 1. Adds an import at the top of the file:
- *      import { getAsyncStoreInstance as __rw_getAsyncStoreInstance } from '@cedarjs/context/dist/store'
+ *      import { getAsyncStoreInstance as __cedar_getAsyncStoreInstance } from '@cedarjs/context/dist/store'
  *
  * 2. Renames the original handler:
- *      const __rw_handler = <original handler value>
+ *      const __cedar_handler = <original handler value>
  *
  * 3. Replaces the handler export with a wrapper that checks context isolation:
- *      export const handler = (__rw_event, __rw__context) => {
- *        const __rw_contextStore = __rw_getAsyncStoreInstance().getStore()
- *        if (__rw_contextStore === undefined) {
- *          return __rw_getAsyncStoreInstance().run(new Map(), __rw_handler, __rw_event, __rw__context)
+ *      export const handler = (__cedar_event, __cedar_context) => {
+ *        const __cedar_contextStore = __cedar_getAsyncStoreInstance().getStore()
+ *        if (__cedar_contextStore === undefined) {
+ *          return __cedar_getAsyncStoreInstance().run(new Map(), __cedar_handler, __cedar_event, __cedar_context)
  *        }
- *        return __rw_handler(__rw_event, __rw__context)
+ *        return __cedar_handler(__cedar_event, __cedar_context)
  *      }
  *
  * This replaces `babel-plugin-handler-als-wrapping` for Vite builds.
@@ -97,7 +97,7 @@ export function applyHandlerAlsWrapping(
     ? '@cedarjs/context/dist/store.js'
     : '@cedarjs/context/dist/store'
 
-  const importStatement = `import { getAsyncStoreInstance as __rw_getAsyncStoreInstance } from '${storePath}'\n`
+  const importStatement = `import { getAsyncStoreInstance as __cedar_getAsyncStoreInstance } from '${storePath}'\n`
 
   // Insert the import just before the handler declaration, rename the
   // handler export to a private const, then append the wrapped export.
@@ -105,25 +105,25 @@ export function applyHandlerAlsWrapping(
   const before = code.slice(0, handlerStart)
   const after = code.slice(handlerStart)
 
-  // Replace "export const handler [: Type] =" with "const __rw_handler ="
+  // Replace "export const handler [: Type] =" with "const __cedar_handler ="
   // Type annotation is dropped here, matching the Babel plugin which creates a fresh
   // variableDeclarator with just the identifier and init (no type annotation).
-  const renamed = after.replace(handlerRe, 'const __rw_handler =')
+  const renamed = after.replace(handlerRe, 'const __cedar_handler =')
 
-  // Wrapper matches Babel's generateWrappedHandler exactly: explicit (__rw_event, __rw__context)
+  // Wrapper matches Babel's generateWrappedHandler exactly: explicit (__cedar_event, __cedar_context)
   const wrappedHandler =
-    `\nexport const handler = ${isAsync ? 'async ' : ''}(__rw_event, __rw__context) => {\n` +
+    `\nexport const handler = ${isAsync ? 'async ' : ''}(__cedar_event, __cedar_context) => {\n` +
     `  // The store will be undefined if no context isolation has been performed yet\n` +
-    `  const __rw_contextStore = __rw_getAsyncStoreInstance().getStore()\n` +
-    `  if (__rw_contextStore === undefined) {\n` +
-    `    return __rw_getAsyncStoreInstance().run(\n` +
+    `  const __cedar_contextStore = __cedar_getAsyncStoreInstance().getStore()\n` +
+    `  if (__cedar_contextStore === undefined) {\n` +
+    `    return __cedar_getAsyncStoreInstance().run(\n` +
     `      new Map(),\n` +
-    `      __rw_handler,\n` +
-    `      __rw_event,\n` +
-    `      __rw__context\n` +
+    `      __cedar_handler,\n` +
+    `      __cedar_event,\n` +
+    `      __cedar_context\n` +
     `    )\n` +
     `  }\n` +
-    `  return __rw_handler(__rw_event, __rw__context)\n` +
+    `  return __cedar_handler(__cedar_event, __cedar_context)\n` +
     `}\n`
 
   return before + importStatement + renamed + wrappedHandler

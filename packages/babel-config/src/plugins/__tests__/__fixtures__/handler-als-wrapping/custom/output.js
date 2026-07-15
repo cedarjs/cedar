@@ -16,8 +16,8 @@ import { logger } from 'src/lib/logger'
  * @param { Context } context - contains information about the invocation,
  * function, and execution environment.
  */
-import { getAsyncStoreInstance as __rw_getAsyncStoreInstance } from '@cedarjs/context/dist/store'
-const __rw_handler = async (event, _context) => {
+import { getAsyncStoreInstance as __cedar_getAsyncStoreInstance } from '@cedarjs/context/dist/store'
+const __cedar_handler = async (event, _context) => {
   logger.info(`${event.httpMethod} ${event.path}: custom function`)
   return {
     statusCode: 200,
@@ -29,16 +29,16 @@ const __rw_handler = async (event, _context) => {
     }),
   }
 }
-export const handler = async (__rw_event, __rw__context) => {
+export const handler = async (__cedar_event, __cedar_context) => {
   // The store will be undefined if no context isolation has been performed yet
-  const __rw_contextStore = __rw_getAsyncStoreInstance().getStore()
-  if (__rw_contextStore === undefined) {
-    return __rw_getAsyncStoreInstance().run(
+  const __cedar_contextStore = __cedar_getAsyncStoreInstance().getStore()
+  if (__cedar_contextStore === undefined) {
+    return __cedar_getAsyncStoreInstance().run(
       new Map(),
-      __rw_handler,
-      __rw_event,
-      __rw__context
+      __cedar_handler,
+      __cedar_event,
+      __cedar_context
     )
   }
-  return __rw_handler(__rw_event, __rw__context)
+  return __cedar_handler(__cedar_event, __cedar_context)
 }

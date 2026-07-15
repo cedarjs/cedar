@@ -6,8 +6,8 @@ import services from 'src/services/**/*.{js,ts}'
 import { getCurrentUser } from 'src/lib/auth'
 import { db } from 'src/lib/db'
 import { logger } from 'src/lib/logger'
-import { getAsyncStoreInstance as __rw_getAsyncStoreInstance } from '@cedarjs/context/dist/store'
-const __rw_handler = createGraphQLHandler({
+import { getAsyncStoreInstance as __cedar_getAsyncStoreInstance } from '@cedarjs/context/dist/store'
+const __cedar_handler = createGraphQLHandler({
   authDecoder,
   getCurrentUser,
   loggerConfig: {
@@ -22,16 +22,16 @@ const __rw_handler = createGraphQLHandler({
     db.$disconnect()
   },
 })
-export const handler = (__rw_event, __rw__context) => {
+export const handler = (__cedar_event, __cedar_context) => {
   // The store will be undefined if no context isolation has been performed yet
-  const __rw_contextStore = __rw_getAsyncStoreInstance().getStore()
-  if (__rw_contextStore === undefined) {
-    return __rw_getAsyncStoreInstance().run(
+  const __cedar_contextStore = __cedar_getAsyncStoreInstance().getStore()
+  if (__cedar_contextStore === undefined) {
+    return __cedar_getAsyncStoreInstance().run(
       new Map(),
-      __rw_handler,
-      __rw_event,
-      __rw__context
+      __cedar_handler,
+      __cedar_event,
+      __cedar_context
     )
   }
-  return __rw_handler(__rw_event, __rw__context)
+  return __cedar_handler(__cedar_event, __cedar_context)
 }

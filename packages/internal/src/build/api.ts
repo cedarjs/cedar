@@ -14,6 +14,12 @@ import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { findApiFiles } from '../files.js'
 
+import {
+  applyGqlormInject,
+  applyGraphqlOptionsExtract,
+} from './api-graphql-transforms.js'
+import { cedarApiGraphqlPlugin } from './esbuild-plugin-api-graphql.js'
+import { applyOtelWrapping } from './esbuild-plugin-cedar-otel-wrapping.js'
 import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
 
 let BUILD_CTX: BuildContext | null = null
@@ -43,37 +49,50 @@ export const cleanApiBuild = async () => {
 const runCedarBabelTransformsPlugin = {
   name: 'cedar-esbuild-babel-transform',
   setup(build: PluginBuild) {
-    const cedarConfig = getConfig()
     build.onLoad({ filter: /\.(js|ts|tsx|jsx)$/ }, async (args) => {
       const fileContents = await fs.promises.readFile(args.path, 'utf-8')
       const transformedCode = await transformWithBabel(
         fileContents,
         args.path,
         getApiSideBabelPlugins({
-          openTelemetry:
-            cedarConfig.experimental.opentelemetry.enabled &&
-            cedarConfig.experimental.opentelemetry.wrapApi,
           projectIsEsm: projectSideIsEsm('api'),
         }),
       )
+
       if (transformedCode?.code) {
-        // Apply the handler ALS wrapping safeguard to API function handlers.
-        // This is the standalone-esbuild equivalent of the Vite
-        // handlerAlsWrappingPlugin and the (Jest-only) babel plugin it
-        // replaced.
-        const functionsDir = normalizePath(
-          path.join(getPaths().api.src, 'functions'),
-        )
-        const code = normalizePath(args.path).startsWith(functionsDir + '/')
-          ? (applyHandlerAlsWrapping(transformedCode.code, {
-              projectIsEsm: projectSideIsEsm('api'),
-            }) ?? transformedCode.code)
-          : transformedCode.code
+        let code = transformedCode.code
+        const normalizedPath = normalizePath(args.path)
+        const cedarPaths = getPaths()
+        const isEsm = projectSideIsEsm('api')
+
+        // Apply OTel wrapping and the handler ALS wrapping safeguard to API
+        // function handlers. These are the standalone-esbuild equivalents of
+        // the Vite cedarOtelWrappingPlugin and handlerAlsWrappingPlugin,
+        // replacing the Babel plugins for these builds. The ALS wrapping
+        // plugin replaces the (Jest-only) Babel plugin it succeeded.
+        // graphql.ts also lives in functions/ but is claimed by the dedicated
+        // cedarApiGraphqlPlugin, which is registered before this plugin, so it
+        // never reaches this branch.
+        const functionsDir = normalizePath(cedarPaths.api.functions)
+        if (normalizedPath.startsWith(functionsDir + '/')) {
+          code =
+            applyHandlerAlsWrapping(code, {
+              projectIsEsm: isEsm,
+            }) ?? code
+        }
+
+        if (
+          normalizedPath.startsWith(normalizePath(cedarPaths.api.src) + '/')
+        ) {
+          code = applyOtelWrapping(code, args.path, cedarPaths.api.src) ?? code
+        }
+
         return {
           contents: code,
           loader: 'js',
         }
       }
+
       throw new Error(`Could not transform file: ${args.path}`)
     })
   },
@@ -100,27 +119,55 @@ function createCedarViteApiPlugin(): Plugin {
         return null
       }
 
+      let sourceCode = code
+      const normalizedId = normalizePath(id)
+
+      // Apply graphql-specific transforms on the raw TypeScript BEFORE
+      // Babel CJS compilation. The ESM-pattern regexes in these
+      // transforms require `export const handler = createGraphQLHandler(`
+      // syntax, which Babel rewrites to CJS form when the project uses
+      // "type": "commonjs". Running them first ensures the patterns
+      // always match regardless of the project's module format.
+      if (
+        normalizedId.endsWith('/graphql.ts') ||
+        normalizedId.endsWith('/graphql.js')
+      ) {
+        sourceCode = applyGraphqlOptionsExtract(sourceCode) ?? sourceCode
+        sourceCode = applyGqlormInject(sourceCode, id) ?? sourceCode
+      }
+
       const transformedCode = await transformWithBabel(
-        code,
+        sourceCode,
         id,
         getApiSideBabelPlugins({
-          openTelemetry:
-            cedarConfig.experimental.opentelemetry.enabled &&
-            cedarConfig.experimental.opentelemetry.wrapApi,
           projectIsEsm: isEsm,
         }),
         true,
       )
 
       if (transformedCode?.code) {
-        const functionsDir = normalizePath(
-          path.join(cedarPaths.api.src, 'functions'),
-        )
-        const code = normalizePath(id).startsWith(functionsDir + '/')
-          ? (applyHandlerAlsWrapping(transformedCode.code, {
+        let code = transformedCode.code
+
+        // Apply OTel wrapping to all API files.
+        if (
+          cedarConfig.experimental?.opentelemetry?.enabled &&
+          cedarConfig.experimental?.opentelemetry?.wrapApi
+        ) {
+          code = applyOtelWrapping(code, id, cedarPaths.api.src) ?? code
+        }
+
+        // Apply the handler ALS wrapping safeguard to API function handlers.
+        // This is the standalone-esbuild equivalent of the Vite
+        // handlerAlsWrappingPlugin and the (Jest-only) babel plugin it
+        // replaced.
+        const functionsDir = normalizePath(cedarPaths.api.functions)
+        if (normalizedId.startsWith(functionsDir + '/')) {
+          code =
+            applyHandlerAlsWrapping(code, {
               projectIsEsm: isEsm,
-            }) ?? transformedCode.code)
-          : transformedCode.code
+            }) ?? code
+        }
+
         return {
           code,
           map: transformedCode.map ?? null,
@@ -268,7 +315,10 @@ function getEsbuildOptions(files: string[]): BuildOptions {
     format,
     allowOverwrite: true,
     bundle: false,
-    plugins: [runCedarBabelTransformsPlugin],
+    // Registration order matters: cedarApiGraphqlPlugin (narrow filter) must
+    // come first so it claims graphql.ts before runCedarBabelTransformsPlugin
+    // (broad filter) can. See the NOTE on cedarApiGraphqlPlugin.
+    plugins: [cedarApiGraphqlPlugin, runCedarBabelTransformsPlugin],
     outdir: cedarPaths.api.dist,
     // setting this to 'true' will generate an external sourcemap x.js.map
     // AND set the sourceMappingURL comment

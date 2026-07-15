@@ -1,6 +1,7 @@
 # Code-Style
 
 - Prefer `async/await` with `try/catch` over `.then()` promise chains. When refactoring a function that uses `.then()`, convert to `async function` + `try/catch` rather than keeping `.then()` style. Confidence: 0.70
+- Use `oxc-parser` for AST-based code transformations instead of string manipulation. Confidence: 0.50
 - Remove code that doesn't actually work instead of keeping it with comments explaining the limitation. Non-functional code with "documented limitations" is misleading — if it can't do what it claims (e.g., `%%` escaping in `cmd.exe` inline mode), remove it entirely. Confidence: 0.65
 
 # Testing
@@ -14,6 +15,10 @@ See [typescript/taste.md](typescript/taste.md)
 # Prisma
 
 - Use `prisma-client` provider (not `prisma-client-js`) — `prisma-client-js` is legacy Prisma v6 config and should not be used anywhere. Confidence: 0.85
+
+# Architecture
+
+- The gqlorm feature is intentionally TypeScript-only. It checks for `backend.ts` existence only (not `backend.js`). This is by design — unlike the graphql handler transforms (`graphql.ts`/`graphql.js`) which must support both TS and JS projects, gqlorm does not support JavaScript projects. Confidence: 0.80
 
 # Architecture
 
@@ -81,6 +86,11 @@ See [debugging/taste.md](debugging/taste.md)
 
 - For SPA fallback in `cedar serve` (both Fastify and `--ud` srvx paths), use `web/dist/200.html` (unprerendered shell) when it exists, otherwise fall back to `web/dist/index.html`. Returning the prerendered `index.html` for non-prerendered routes makes the client think the page was prerendered and crashes on `prerenderLoader(name).default` when the page module isn't in `__REDWOOD__PRERENDER_PAGES`. Mirror the Fastify web adapter's logic at `packages/adapters/fastify/web/src/web.ts`. Confidence: 0.85
 
+# esbuild
+
+- When creating esbuild `onLoad` plugins with a `filter` regex, make the filter precise enough (include path separator) that a redundant inner path check (e.g., `args.path.endsWith(...)`) is unnecessary. A filter like `/\/graphql\.ts$/` avoids both false matches (e.g., `notgraphql.ts`) and redundant guards inside the callback. Confidence: 0.60
+- Keep each esbuild plugin in its own separate file, following the pattern of `esbuild-plugin-handler-als-wrapping.ts`. Do not define multiple plugins inline in the same file where the build options live — extract each into a dedicated file with a descriptive name. Confidence: 0.70
+
 # Process Management
 
 - Never use `pkill` or `killall` to mass-kill processes by name (e.g., `pkill -9 node`). Only kill specific PIDs that you know are safe to terminate. Mass-killing can destroy the user's browser sessions, chat apps, and other work. Confidence: 0.85
@@ -90,6 +100,7 @@ See [debugging/taste.md](debugging/taste.md)
 - When a mock/test double doesn't structurally match the expected production type (e.g., `memfs.IFs` vs `fast-glob.FileSystemAdapter`), keep the production interface strictly typed and bridge the mismatch once at the top of the test file with a single `const memfsFs = memfs as Partial<import('fast-glob').FileSystemAdapter>`. Do not widen the production interface, do not cast at every call site. Add a comment explaining why the cast is safe. Confidence: 0.80
 
 - When testing source map correctness, decode the VLQ mappings to verify output lines map to the correct original source lines. Structural checks (existence of `mappings`, counting semicolons) are insufficient on their own — the key validation is that a position in the generated output actually maps back to the expected source line, not just that some mapping exists. Confidence: 0.65
+- Use `ts-dedent` in test files to indent template literals instead of leaving them unindented or using manual indentation tricks. Confidence: 0.85
 
 # Code Design
 

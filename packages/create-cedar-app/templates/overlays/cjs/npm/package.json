@@ -6,10 +6,11 @@
     "web"
   ],
   "devDependencies": {
-    "@cedarjs/core": "3.1.0",
-    "@cedarjs/eslint-config": "3.1.0",
-    "@cedarjs/project-config": "3.1.0",
-    "@cedarjs/testing": "3.1.0"
+    "@cedarjs/core": "5.0.0",
+    "@cedarjs/eslint-config": "5.0.0",
+    "@cedarjs/project-config": "5.0.0",
+    "@cedarjs/testing": "5.0.0",
+    "prisma": "7.8.0"
   },
   "engines": {
     "node": "=24.x"

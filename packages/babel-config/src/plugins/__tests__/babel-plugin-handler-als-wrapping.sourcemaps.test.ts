@@ -6,8 +6,6 @@ import type { SourceMap } from 'rollup'
 import { moduleRunnerTransform as ssrTransform } from 'vite'
 import { describe, it, expect } from 'vitest'
 
-import gqlormInjectPlugin from '../babel-plugin-cedar-gqlorm-inject'
-import graphqlOptionsExtractPlugin from '../babel-plugin-cedar-graphql-options-extract'
 import plugin from '../babel-plugin-handler-als-wrapping'
 
 const simpleHandlerInput = [
@@ -185,10 +183,10 @@ describe('babel-plugin-handler-als-wrapping source maps', () => {
     expect(map.version).toBe(3)
 
     // code should contain the wrapped handler
-    expect(code).toContain('__rw_handler')
+    expect(code).toContain('__cedar_handler')
   })
 
-  it('maps __rw_handler back to the original handler declaration line', () => {
+  it('maps __cedar_handler back to the original handler declaration line', () => {
     const { code, map } = getCodeAndMap(
       runBabelTransform(simpleHandlerInput, 'graphql.ts'),
     )
@@ -196,10 +194,10 @@ describe('babel-plugin-handler-als-wrapping source maps', () => {
     const tracer = new TraceMap(map)
     const codeLines = code.split('\n')
 
-    // __rw_handler = is unique to the handler copy - search for that prefix
+    // __cedar_handler = is unique to the handler copy - search for that prefix
     // then find createGraphQLHandler within that same line.
     const rwLineIndex = codeLines.findIndex((line) =>
-      line.includes('__rw_handler ='),
+      line.includes('__cedar_handler ='),
     )
     expect(rwLineIndex).toBeGreaterThan(0)
 
@@ -224,7 +222,7 @@ describe('babel-plugin-handler-als-wrapping source maps', () => {
     const tracer = new TraceMap(map)
     const codeLines = code.split('\n')
 
-    // new DbAuthHandler in __rw_handler should map back to line 8
+    // new DbAuthHandler in __cedar_handler should map back to line 8
     assertMapsToSource(codeLines, tracer, 'new DbAuthHandler', 'auth.ts', 8)
 
     // return await authHandler.invoke() should map back to line 11
@@ -258,19 +256,14 @@ describe('babel-plugin-handler-als-wrapping source maps', () => {
   })
 
   describe('multi-plugin interaction', () => {
-    it('maps correctly when graphql-options-extract + context-wrapping both apply', () => {
-      // This is the exact plugin list that runs on the graphql function:
-      // 1. graphqlOptionsExtract - extracts options into __cedar_graphqlOptions
-      // 2. gqlormInject - injects gqlorm backend (no-op without config)
-      // 3. context-wrapping - wraps handler with async store isolation
-      //
-      // graphql-options-extract creates a new export node, and context-wrapping
-      // copies the handler init. If either mishandles source locations, the
-      // combined source map will be wrong.
+    it('maps correctly when context-wrapping applies', () => {
+      // This is the exact plugin list that runs on the graphql function in
+      // Babel:
+      // context-wrapping - wraps handler with async store isolation
+      // (graphql-options-extract and gqlorm-inject are now Vite-only plugins,
+      // not available in Babel)
       const { code, map } = getCodeAndMap(
         runBabelTransform(graphqlHandlerInput, 'api/src/functions/graphql.ts', [
-          graphqlOptionsExtractPlugin,
-          gqlormInjectPlugin,
           [plugin, {}],
         ]),
       )
@@ -278,31 +271,12 @@ describe('babel-plugin-handler-als-wrapping source maps', () => {
       const tracer = new TraceMap(map)
       const codeLines = code.split('\n')
 
-      // The output should have __cedar_graphqlOptions (from options-extract)
-      expect(code).toContain('__cedar_graphqlOptions')
+      // The output should have __cedar_handler (from context-wrapping)
+      expect(code).toContain('__cedar_handler')
 
-      // And __rw_handler (from context-wrapping)
-      expect(code).toContain('__rw_handler')
-
-      // The __cedar_graphqlOptions variable `{` should map to the original
-      // createGraphQLHandler options object on line 9.
-      const optsLineIndex = codeLines.findIndex((line) =>
-        line.includes('__cedar_graphqlOptions'),
-      )
-      expect(optsLineIndex).toBeGreaterThan(0)
-
-      const optsCol = codeLines[optsLineIndex].indexOf('{')
-      expect(optsCol).toBeGreaterThan(0)
-      const optsOriginal = originalPositionFor(tracer, {
-        line: optsLineIndex + 1,
-        column: optsCol,
-      })
-      expect(optsOriginal.source).toBe('api/src/functions/graphql.ts')
-      expect(optsOriginal.line).toBe(9)
-
-      // createGraphQLHandler in __rw_handler should map back to line 9.
+      // createGraphQLHandler in __cedar_handler should map back to line 9.
       const rwLineIndex = codeLines.findIndex((line) =>
-        line.includes('__rw_handler ='),
+        line.includes('__cedar_handler ='),
       )
       expect(rwLineIndex).toBeGreaterThan(0)
       const rwCol = codeLines[rwLineIndex].indexOf('createGraphQLHandler')
@@ -332,7 +306,7 @@ describe('babel-plugin-handler-als-wrapping source maps', () => {
     // 2. Vite normalizes the map (injectSourcesContent, normalize sources paths)
     // 3. ssrTransform rewrites ESM to SSR format (MagicString + combineSourcemaps)
 
-    it('maps __rw_handler to the original source after full SSR transform', async () => {
+    it('maps __cedar_handler to the original source after full SSR transform', async () => {
       const { code, map } = getCodeAndMap(
         runBabelTransform(simpleHandlerInput, 'graphql.ts'),
       )
@@ -348,9 +322,9 @@ describe('babel-plugin-handler-als-wrapping source maps', () => {
       const tracer = new TraceMap(ssrMap)
       const codeLines = ssrCode.split('\n')
 
-      // __rw_handler = should be present in SSR output
+      // __cedar_handler = should be present in SSR output
       const rwLineIndex = codeLines.findIndex((line) =>
-        line.includes('__rw_handler ='),
+        line.includes('__cedar_handler ='),
       )
       expect(rwLineIndex).toBeGreaterThan(0)
 
@@ -400,11 +374,9 @@ describe('babel-plugin-handler-als-wrapping source maps', () => {
       expect(original.line).toBe(8)
     })
 
-    it('maps multi-plugin output correctly after SSR transform', async () => {
+    it('maps plugin output correctly after SSR transform', async () => {
       const { code, map } = getCodeAndMap(
         runBabelTransform(graphqlHandlerInput, 'api/src/functions/graphql.ts', [
-          graphqlOptionsExtractPlugin,
-          gqlormInjectPlugin,
           [plugin, {}],
         ]),
       )
@@ -420,29 +392,15 @@ describe('babel-plugin-handler-als-wrapping source maps', () => {
       const tracer = new TraceMap(ssrMap)
       const codeLines = ssrCode.split('\n')
 
-      // After SSR transform, __cedar_graphqlOptions and __rw_handler should
-      // still map back to their original source lines.
+      // After SSR transform, __cedar_handler should still map back to the
+      // original source line (graphqlHandlerInput line 9).
       // SSR prepends __vite_ssr_exportName__ declarations, so the actual
-      // definition (const __cedar_graphqlOptions = {) is on a later line.
-      const optsLineIndex = codeLines.findIndex((line) =>
-        line.includes('const __cedar_graphqlOptions'),
-      )
-      expect(optsLineIndex).toBeGreaterThan(0)
+      // definition is on a later line.
 
-      const optsCol = codeLines[optsLineIndex].indexOf('{')
-      expect(optsCol).toBeGreaterThan(0)
-      const optsOriginal = originalPositionFor(tracer, {
-        line: optsLineIndex + 1,
-        column: optsCol,
-      })
-      expect(optsOriginal.source).toBeTruthy()
-      // Should map to line 9, the original createGraphQLHandler({ line
-      expect(optsOriginal.line).toBe(9)
-
-      // __rw_handler = createGraphQLHandler should map to line 9.
+      // __cedar_handler = createGraphQLHandler should map to line 9.
       // SSR rewrites createGraphQLHandler to (0,__vite_ssr_import_1__.createGraphQLHandler).
       const rwLineIndex = codeLines.findIndex((line) =>
-        line.includes('__rw_handler ='),
+        line.includes('__cedar_handler ='),
       )
       expect(rwLineIndex).toBeGreaterThan(0)
       const rwCol = codeLines[rwLineIndex].indexOf('createGraphQLHandler')

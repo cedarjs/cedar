@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/api-server",
-  "version": "4.2.0",
+  "version": "5.0.0",
   "description": "CedarJS's HTTP server for Serverless Functions",
   "repository": {
     "type": "git",
@@ -152,7 +152,7 @@
     "pretty-ms": "7.0.1",
     "split2": "4.2.0",
     "termi-link": "1.1.0",
-    "yargs": "17.7.2"
+    "yargs": "17.7.3"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",

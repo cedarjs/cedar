@@ -7,10 +7,10 @@ import type { PluginObj, types } from '@babel/core'
 function generateWrappedHandler(t: typeof types, isAsync: boolean) {
   const contextStoreVariableDeclaration = t.variableDeclaration('const', [
     t.variableDeclarator(
-      t.identifier('__rw_contextStore'),
+      t.identifier('__cedar_contextStore'),
       t.callExpression(
         t.memberExpression(
-          t.callExpression(t.identifier('__rw_getAsyncStoreInstance'), []),
+          t.callExpression(t.identifier('__cedar_getAsyncStoreInstance'), []),
           t.identifier('getStore'),
         ),
         [],
@@ -24,13 +24,13 @@ function generateWrappedHandler(t: typeof types, isAsync: boolean) {
     true,
   )
   return t.arrowFunctionExpression(
-    [t.identifier('__rw_event'), t.identifier('__rw__context')],
+    [t.identifier('__cedar_event'), t.identifier('__cedar_context')],
     t.blockStatement([
       contextStoreVariableDeclaration,
       t.ifStatement(
         t.binaryExpression(
           '===',
-          t.identifier('__rw_contextStore'),
+          t.identifier('__cedar_contextStore'),
           t.identifier('undefined'),
         ),
         t.blockStatement([
@@ -38,25 +38,25 @@ function generateWrappedHandler(t: typeof types, isAsync: boolean) {
             t.callExpression(
               t.memberExpression(
                 t.callExpression(
-                  t.identifier('__rw_getAsyncStoreInstance'),
+                  t.identifier('__cedar_getAsyncStoreInstance'),
                   [],
                 ),
                 t.identifier('run'),
               ),
               [
                 t.newExpression(t.identifier('Map'), []),
-                t.identifier('__rw_handler'),
-                t.identifier('__rw_event'),
-                t.identifier('__rw__context'),
+                t.identifier('__cedar_handler'),
+                t.identifier('__cedar_event'),
+                t.identifier('__cedar_context'),
               ],
             ),
           ),
         ]),
       ),
       t.returnStatement(
-        t.callExpression(t.identifier('__rw_handler'), [
-          t.identifier('__rw_event'),
-          t.identifier('__rw__context'),
+        t.callExpression(t.identifier('__cedar_handler'), [
+          t.identifier('__cedar_event'),
+          t.identifier('__cedar_context'),
         ]),
       ),
     ]),
@@ -92,11 +92,11 @@ export default function (
           return
         }
         path.insertBefore(
-          // import { getAsyncStoreInstance as __rw_getAsyncStoreInstance } from '@cedarjs/context/dist/store'
+          // import { getAsyncStoreInstance as __cedar_getAsyncStoreInstance } from '@cedarjs/context/dist/store'
           t.importDeclaration(
             [
               t.importSpecifier(
-                t.identifier('__rw_getAsyncStoreInstance'),
+                t.identifier('__cedar_getAsyncStoreInstance'),
                 t.identifier('getAsyncStoreInstance'),
               ),
             ],
@@ -112,7 +112,7 @@ export default function (
         path.insertBefore(
           t.variableDeclaration('const', [
             t.variableDeclarator(
-              t.identifier('__rw_handler'),
+              t.identifier('__cedar_handler'),
               declaration.declarations[0].init,
             ),
           ]),

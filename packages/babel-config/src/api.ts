@@ -14,13 +14,10 @@ import {
   parseTypeScriptConfigFiles,
   registerBabel,
 } from './common.js'
-import pluginCedarGqlormInject from './plugins/babel-plugin-cedar-gqlorm-inject.js'
-import pluginCedarGraphqlOptionsExtract from './plugins/babel-plugin-cedar-graphql-options-extract.js'
 import handlerAlsWrappingPlugin from './plugins/babel-plugin-handler-als-wrapping.js'
 import pluginRedwoodDirectoryNamedImport from './plugins/babel-plugin-redwood-directory-named-import.js'
 import pluginRedwoodImportDir from './plugins/babel-plugin-redwood-import-dir.js'
 import pluginRedwoodJobPathInjector from './plugins/babel-plugin-redwood-job-path-injector.js'
-import pluginRedwoodOTelWrapping from './plugins/babel-plugin-redwood-otel-wrapping.js'
 
 export const TARGETS_NODE = '24'
 
@@ -57,10 +54,7 @@ type PluginShape =
   | [PluginTarget, PluginOptions, undefined | string]
   | [PluginTarget, PluginOptions]
 
-export const getApiSideBabelPlugins = ({
-  openTelemetry = false,
-  projectIsEsm = false,
-} = {}) => {
+export const getApiSideBabelPlugins = ({ projectIsEsm = false } = {}) => {
   const tsConfig = parseTypeScriptConfigFiles()
 
   const plugins: (PluginShape | boolean)[] = [
@@ -149,11 +143,6 @@ export const getApiSideBabelPlugins = ({
     // FIXME: `graphql-tag` is not working: https://github.com/redwoodjs/redwood/pull/3193
     ['babel-plugin-graphql-tag', undefined, 'rwjs-babel-graphql-tag'],
     [pluginRedwoodImportDir, {}, 'rwjs-babel-glob-import-dir'],
-    openTelemetry && [
-      pluginRedwoodOTelWrapping,
-      undefined,
-      'rwjs-babel-otel-wrapping',
-    ],
   ]
 
   return plugins.filter(<T>(n: T | boolean): n is T => Boolean(n))
@@ -173,13 +162,6 @@ export const getApiSideBabelOverrides = ({
   forJest = false,
 } = {}) => {
   const overrides = [
-    // Extract graphql options from the graphql function
-    // NOTE: this must come before the handler-als-wrapping
-    {
-      // match */api/src/functions/graphql.js|ts
-      test: /.+api(?:[\\|/])src(?:[\\|/])functions(?:[\\|/])graphql\.(?:js|ts)$/,
-      plugins: [pluginCedarGraphqlOptionsExtract, pluginCedarGqlormInject],
-    },
     // Apply handler ALS wrapping to all functions (Jest only; Vite uses
     // handlerAlsWrappingPlugin instead)
     forJest && {
