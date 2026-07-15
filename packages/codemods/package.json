@@ -45,7 +45,7 @@
     "prettier": "3.8.4",
     "tasuku": "2.3.0",
     "typescript": "5.9.3",
-    "yargs": "17.7.2"
+    "yargs": "17.7.3"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",

@@ -2191,7 +2191,7 @@ __metadata:
     termi-link: "npm:1.1.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.6"
-    yargs: "npm:17.7.2"
+    yargs: "npm:17.7.3"
   peerDependencies:
     "@cedarjs/graphql-server": "workspace:*"
   peerDependenciesMeta:
@@ -2787,7 +2787,7 @@ __metadata:
     termi-link: "npm:1.1.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.6"
-    yargs: "npm:17.7.2"
+    yargs: "npm:17.7.3"
   bin:
     up: ./dist/bin.js
   languageName: unknown
@@ -2846,7 +2846,7 @@ __metadata:
     termi-link: "npm:1.1.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.6"
-    yargs: "npm:17.7.2"
+    yargs: "npm:17.7.3"
   languageName: unknown
   linkType: soft
 
@@ -2923,7 +2923,7 @@ __metadata:
     unionfs: "npm:4.6.0"
     uuid: "npm:11.1.0"
     vitest: "npm:3.2.6"
-    yargs: "npm:17.7.2"
+    yargs: "npm:17.7.3"
   bin:
     cedar: ./dist/index.js
     cedarjs: ./dist/index.js
@@ -2966,7 +2966,7 @@ __metadata:
     ts-dedent: "npm:2.3.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.6"
-    yargs: "npm:17.7.2"
+    yargs: "npm:17.7.3"
   bin:
     codemods: ./dist/codemods.js
   languageName: unknown
@@ -3639,7 +3639,7 @@ __metadata:
     typescript: "npm:5.9.3"
     uuid: "npm:11.1.0"
     vitest: "npm:3.2.6"
-    yargs: "npm:17.7.2"
+    yargs: "npm:17.7.3"
   languageName: unknown
   linkType: soft
 
@@ -3814,7 +3814,7 @@ __metadata:
     dotenv-defaults: "npm:5.0.2"
     fastify: "npm:5.8.5"
     typescript: "npm:5.9.3"
-    yargs: "npm:17.7.2"
+    yargs: "npm:17.7.3"
   bin:
     cedar-web-server: ./dist/bin.js
     rw-web-server: ./dist/bin.js
@@ -14637,7 +14637,7 @@ __metadata:
     untildify: "npm:4.0.0"
     uuid: "npm:11.1.0"
     vitest: "npm:3.2.6"
-    yargs: "npm:17.7.2"
+    yargs: "npm:17.7.3"
   bin:
     create-cedar-app: ./dist/create-cedar-app.js
   languageName: unknown
@@ -25970,7 +25970,7 @@ __metadata:
     typescript-eslint: "npm:8.60.1"
     vitest: "npm:3.2.6"
     ws: "npm:8.20.0"
-    yargs: "npm:17.7.2"
+    yargs: "npm:17.7.3"
     zx: "npm:8.8.5"
   dependenciesMeta:
     "@prisma/engines":
@@ -29682,7 +29682,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yargs@npm:17.7.2, yargs@npm:^17.0.0, yargs@npm:^17.3.1, yargs@npm:^17.7.2":
+"yargs@npm:17.7.2":
   version: 17.7.2
   resolution: "yargs@npm:17.7.2"
   dependencies:
@@ -29694,6 +29694,21 @@ __metadata:
     y18n: "npm:^5.0.5"
     yargs-parser: "npm:^21.1.1"
   checksum: 10c0/ccd7e723e61ad5965fffbb791366db689572b80cca80e0f96aad968dfff4156cd7cd1ad18607afe1046d8241e6fb2d6c08bf7fa7bfb5eaec818735d8feac8f05
+  languageName: node
+  linkType: hard
+
+"yargs@npm:17.7.3, yargs@npm:^17.0.0, yargs@npm:^17.3.1, yargs@npm:^17.7.2":
+  version: 17.7.3
+  resolution: "yargs@npm:17.7.3"
+  dependencies:
+    cliui: "npm:^8.0.1"
+    escalade: "npm:^3.1.1"
+    get-caller-file: "npm:^2.0.5"
+    require-directory: "npm:^2.1.1"
+    string-width: "npm:^4.2.3"
+    y18n: "npm:^5.0.5"
+    yargs-parser: "npm:^21.1.1"
+  checksum: 10c0/7a28572f7e785a57886e34fdbddb9b28756dec552e1453d5f6e7cdd00ad8721a4e8c4321d33683f5e61cacb36ad43258adbb48396b71ec4ed14abee0fc0d0c1f
   languageName: node
   linkType: hard
 

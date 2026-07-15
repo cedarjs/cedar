@@ -91,7 +91,7 @@
     "title-case": "3.0.3",
     "unionfs": "4.6.0",
     "uuid": "11.1.0",
-    "yargs": "17.7.2"
+    "yargs": "17.7.3"
   },
   "devDependencies": {
     "@babel/cli": "7.29.7",
