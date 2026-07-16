@@ -168,7 +168,6 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
   const normalizedBase = normalizePath(cedarPaths.base)
 
   const babelPlugins = getApiSideBabelPlugins({
-    forVite: true,
     projectIsEsm: isEsm,
   })
 

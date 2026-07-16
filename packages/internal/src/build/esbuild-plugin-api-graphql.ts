@@ -56,7 +56,6 @@ export const cedarApiGraphqlPlugin = {
         fileContents,
         args.path,
         getApiSideBabelPlugins({
-          forVite: true,
           projectIsEsm: projectSideIsEsm('api'),
         }),
       )

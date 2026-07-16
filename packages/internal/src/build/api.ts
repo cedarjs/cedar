@@ -20,6 +20,7 @@ import {
 } from './api-graphql-transforms.js'
 import { cedarApiGraphqlPlugin } from './esbuild-plugin-api-graphql.js'
 import { applyOtelWrapping } from './esbuild-plugin-cedar-otel-wrapping.js'
+import { cedarEsbuildSrcAliasPlugin } from './esbuild-plugin-cedar-src-alias.js'
 import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
 
 let BUILD_CTX: BuildContext | null = null
@@ -55,7 +56,6 @@ const runCedarBabelTransformsPlugin = {
         fileContents,
         args.path,
         getApiSideBabelPlugins({
-          forVite: true,
           projectIsEsm: projectSideIsEsm('api'),
         }),
       )
@@ -141,7 +141,6 @@ function createCedarViteApiPlugin(): Plugin {
         sourceCode,
         id,
         getApiSideBabelPlugins({
-          forVite: true,
           projectIsEsm: isEsm,
         }),
         true,
@@ -320,7 +319,11 @@ function getEsbuildOptions(files: string[]): BuildOptions {
     // Registration order matters: cedarApiGraphqlPlugin (narrow filter) must
     // come first so it claims graphql.ts before runCedarBabelTransformsPlugin
     // (broad filter) can. See the NOTE on cedarApiGraphqlPlugin.
-    plugins: [cedarApiGraphqlPlugin, runCedarBabelTransformsPlugin],
+    plugins: [
+      cedarApiGraphqlPlugin,
+      cedarEsbuildSrcAliasPlugin,
+      runCedarBabelTransformsPlugin,
+    ],
     outdir: cedarPaths.api.dist,
     // setting this to 'true' will generate an external sourcemap x.js.map
     // AND set the sourceMappingURL comment
