@@ -1,7 +1,7 @@
 # Code-Style
 
 - Prefer `async/await` with `try/catch` over `.then()` promise chains. When refactoring a function that uses `.then()`, convert to `async function` + `try/catch` rather than keeping `.then()` style. Confidence: 0.70
-- Use `oxc-parser` for AST-based code transformations instead of string manipulation. Confidence: 0.50
+- Use `oxc-parser` for AST-based code transformations instead of string manipulation. Confidence: 0.70
 - Remove code that doesn't actually work instead of keeping it with comments explaining the limitation. Non-functional code with "documented limitations" is misleading — if it can't do what it claims (e.g., `%%` escaping in `cmd.exe` inline mode), remove it entirely. Confidence: 0.65
 
 # Testing
