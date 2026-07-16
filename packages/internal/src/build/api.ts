@@ -65,8 +65,14 @@ const runCedarBabelTransformsPlugin = {
       )
       fileContents = applyAutoImports(fileContents)
       // Expand glob imports (e.g. `import x from 'src/services/**/*.ts'`)
-      // before Babel runs.  The Babel import-dir plugin is skipped for Vite
+      // before Babel runs.  The Babel import-dir plugin is disabled for these
       // builds (forVite: true); applyImportDir is the esbuild equivalent.
+      //
+      // This is intentionally applied inline rather than as a separate esbuild
+      // plugin because esbuild 0.27 lacks onTransform chaining — onLoad
+      // handlers are exclusive (first match wins), so a standalone pre-plugin
+      // would claim the file and prevent this plugin's Babel transform from
+      // running on the same file.
       fileContents = applyImportDir(fileContents, args.path) ?? fileContents
       const transformedCode = await transformWithBabel(
         fileContents,
