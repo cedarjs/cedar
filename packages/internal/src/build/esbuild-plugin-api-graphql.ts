@@ -24,6 +24,7 @@ import {
   applyGqlormInject,
   applyGraphqlOptionsExtract,
 } from './api-graphql-transforms.js'
+import { applyAutoImports } from './auto-import.js'
 import { applyOtelWrapping } from './esbuild-plugin-cedar-otel-wrapping.js'
 import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
 import { applySrcAlias } from './src-alias.js'
