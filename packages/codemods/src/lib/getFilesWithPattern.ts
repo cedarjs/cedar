@@ -15,9 +15,14 @@ const getFilesWithPattern = ({
   const found: string[] = []
 
   for (const root of filesToSearch) {
+    if (!fs.existsSync(root)) {
+      continue
+    }
+
     const entries = fs.globSync('**/*', {
       cwd: root,
       withFileTypes: true,
+      exclude: ['**/node_modules/**'],
     })
 
     for (const entry of entries) {
