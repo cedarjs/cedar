@@ -71,7 +71,13 @@ export function cedar({ mode }: PluginOptions = {}): PluginOption[] {
   }
 
   return [
-    tsconfigPaths(),
+    // vite-tsconfig-paths is ESM-only. CJS builds double-wrap its default
+    // export: tsconfigPaths.default is the module object, and
+    // tsconfigPaths.default.default is the actual function. ESM gets the
+    // function directly. The `||` chain resolves correctly for both.
+    // @ts-expect-error – .default only exists at runtime in CJS double-wrap
+    // interop
+    (tsconfigPaths.default.default || tsconfigPaths.default || tsconfigPaths)(),
     mode === 'test' && cedarJsRouterImportTransformPlugin(),
     mode === 'test' && createAuthImportTransformPlugin(),
     mode === 'test' && autoImportsPlugin(),

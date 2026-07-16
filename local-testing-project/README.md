@@ -4,6 +4,12 @@ This is a test project to use for testing changes to the framework.
 
 ## Syncing Framework Changes
 
+I'm currently using `file:`, which works alright. I do have to first build the
+framework and then pack all the packages up into tarballs. But at least I don't
+have to do the copy step that `project:tarsync` uses.
+
+### Previous Approaches
+
 Run `yarn cfw project:tarsync` in the root to copy in the latest framework
 changes.
 
@@ -32,15 +38,9 @@ installs published versions of other Cedar packages that testing depends on,
 like `@cedarjs/auth`, `@cedarjs/context` etc, but I want it to use the latest
 (unpublished) code in the workspace.
 
-I'm currently using `file:`, which works alright. I do have to first build the
-framework and then pack all the packages up into tarballs. But at least I don't
-have to do the copy step that `project:tarsync` uses.
-
 ## Preparing the Database
 
 - Delete the .env file
-- Run `yarn dlx neon-new --yes` to generate a new .env file with neon
-  credentials added. Then rename DATABASE_URL_DIRECT to DIRECT_DATABASE_URL
 - Run `echo "SESSION_SECRET=$(yarn cedar g secret --raw)" >> .env` to generate
   a new session secret for use with dbAuth
 - Run migrations: `yarn cedar prisma migrate deploy`
