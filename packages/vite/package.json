@@ -99,6 +99,7 @@
     "rou3": "^0.8.1",
     "vite": "7.3.5",
     "vite-plugin-cjs-interop": "2.4.4",
+    "vite-tsconfig-paths": "^6.1.1",
     "ws": "8.20.0",
     "yargs-parser": "21.1.1"
   },

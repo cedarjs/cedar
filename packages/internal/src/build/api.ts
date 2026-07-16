@@ -21,6 +21,7 @@ import {
 import { cedarApiGraphqlPlugin } from './esbuild-plugin-api-graphql.js'
 import { applyOtelWrapping } from './esbuild-plugin-cedar-otel-wrapping.js'
 import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
+import { applySrcAlias } from './src-alias.js'
 
 let BUILD_CTX: BuildContext | null = null
 
@@ -50,7 +51,15 @@ const runCedarBabelTransformsPlugin = {
   name: 'cedar-esbuild-babel-transform',
   setup(build: PluginBuild) {
     build.onLoad({ filter: /\.(js|ts|tsx|jsx)$/ }, async (args) => {
-      const fileContents = await fs.promises.readFile(args.path, 'utf-8')
+      let fileContents = await fs.promises.readFile(args.path, 'utf-8')
+
+      // Rewrite `src/` bare specifiers to relative paths
+      fileContents = applySrcAlias(
+        fileContents,
+        path.dirname(
+          path.relative(build.initialOptions.absWorkingDir + '/src', args.path),
+        ),
+      )
       const transformedCode = await transformWithBabel(
         fileContents,
         args.path,
@@ -121,6 +130,12 @@ function createCedarViteApiPlugin(): Plugin {
 
       let sourceCode = code
       const normalizedId = normalizePath(id)
+
+      // Rewrite `src/` bare specifiers to relative paths
+      sourceCode = applySrcAlias(
+        sourceCode,
+        path.dirname(path.relative(cedarPaths.api.src, id)),
+      )
 
       // Apply graphql-specific transforms on the raw TypeScript BEFORE
       // Babel CJS compilation. The ESM-pattern regexes in these

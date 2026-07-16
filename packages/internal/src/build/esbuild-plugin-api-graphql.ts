@@ -10,6 +10,7 @@
 // 0.27 lacks that hook.
 
 import fs from 'node:fs'
+import path from 'node:path'
 
 import type { PluginBuild } from 'esbuild'
 
@@ -25,6 +26,7 @@ import {
 } from './api-graphql-transforms.js'
 import { applyOtelWrapping } from './esbuild-plugin-cedar-otel-wrapping.js'
 import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
+import { applySrcAlias } from './src-alias.js'
 
 export const cedarApiGraphqlPlugin = {
   name: 'cedar-api-graphql',
@@ -37,6 +39,14 @@ export const cedarApiGraphqlPlugin = {
     build.onLoad({ filter: /[/\\]graphql\.(ts|js)$/ }, async (args) => {
       const cedarConfig = getConfig()
       let fileContents = await fs.promises.readFile(args.path, 'utf-8')
+
+      // Rewrite `src/` bare specifiers to relative paths before Babel runs.
+      fileContents = applySrcAlias(
+        fileContents,
+        path.dirname(
+          path.relative(build.initialOptions.absWorkingDir + '/src', args.path),
+        ),
+      )
 
       // Apply graphql-specific string transforms on the raw TypeScript BEFORE
       // Babel CJS compilation. TypeScript always uses ESM syntax, so the ESM
