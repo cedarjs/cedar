@@ -92,6 +92,7 @@
     "find-my-way": "8.2.2",
     "http-proxy-middleware": "3.0.7",
     "isbot": "5.1.43",
+    "magic-string": "0.30.21",
     "oxc-parser": "0.137.0",
     "react": "19.2.3",
     "react-server-dom-webpack": "19.2.4",

@@ -218,7 +218,8 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
               normalizePath(id).endsWith('/graphql.ts') ||
               normalizePath(id).endsWith('/graphql.js')
             ) {
-              sourceCode = applyGraphqlOptionsExtract(sourceCode) ?? sourceCode
+              const extracted = applyGraphqlOptionsExtract(sourceCode)
+              sourceCode = extracted?.code ?? sourceCode
               sourceCode = applyGqlormInject(sourceCode, id) ?? sourceCode
             }
 
