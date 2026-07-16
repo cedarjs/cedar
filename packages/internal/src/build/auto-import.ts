@@ -1,5 +1,5 @@
 import { parseSync, Visitor } from 'oxc-parser'
-import type { Program } from 'oxc-parser'
+import type { BindingPattern, Program, VariableDeclarator } from 'oxc-parser'
 
 /**
  * Injects imports for `gql` and `context` into API source files that reference
@@ -30,6 +30,65 @@ export function applyAutoImports(code: string): string {
   }
 
   return resultCode
+}
+
+function bindingInDeclarators(
+  name: string,
+  declarations: VariableDeclarator[],
+): boolean {
+  for (const decl of declarations) {
+    if (bindingPatternContains(decl.id, name)) {
+      return true
+    }
+  }
+  return false
+}
+
+function bindingPatternContains(
+  pattern: BindingPattern,
+  name: string,
+): boolean {
+  if (pattern.type === 'Identifier') {
+    return pattern.name === name
+  }
+
+  if (pattern.type === 'ObjectPattern') {
+    for (const prop of pattern.properties) {
+      if (prop.type === 'RestElement') {
+        if (bindingPatternContains(prop.argument, name)) {
+          return true
+        }
+      } else {
+        if (bindingPatternContains(prop.value, name)) {
+          return true
+        }
+      }
+    }
+
+    return false
+  }
+
+  if (pattern.type === 'ArrayPattern') {
+    for (const el of pattern.elements) {
+      if (el) {
+        if (el.type === 'RestElement') {
+          if (bindingPatternContains(el.argument, name)) {
+            return true
+          }
+        } else if (bindingPatternContains(el, name)) {
+          return true
+        }
+      }
+    }
+
+    return false
+  }
+
+  if (pattern.type === 'AssignmentPattern') {
+    return bindingPatternContains(pattern.left, name)
+  }
+
+  return false
 }
 
 function checkNeeds(name: string, program: Program, code: string) {
@@ -71,12 +130,10 @@ function checkNeeds(name: string, program: Program, code: string) {
       }
     }
 
-    if (
-      node.type === 'VariableDeclaration' &&
-      node.declarations[0]?.id.type === 'Identifier' &&
-      node.declarations[0].id.name === name
-    ) {
-      isBound = true
+    if (node.type === 'VariableDeclaration') {
+      if (bindingInDeclarators(name, node.declarations)) {
+        isBound = true
+      }
     }
 
     if (node.type === 'FunctionDeclaration' && node.id?.name === name) {
@@ -85,10 +142,7 @@ function checkNeeds(name: string, program: Program, code: string) {
 
     if (node.type === 'ExportNamedDeclaration' && node.declaration) {
       if (node.declaration.type === 'VariableDeclaration') {
-        if (
-          node.declaration.declarations[0]?.id.type === 'Identifier' &&
-          node.declaration.declarations[0].id.name === name
-        ) {
+        if (bindingInDeclarators(name, node.declaration.declarations)) {
           isBound = true
         }
       }
