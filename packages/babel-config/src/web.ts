@@ -97,7 +97,9 @@ export const getWebSideBabelPlugins = (
     ],
 
     // === Auto imports, and transforms
-    [
+    // Vite handles auto-imports via cedarAutoImportsPlugin; only keep for
+    // non-Vite consumers (Jest web tests).
+    !forVite && [
       'babel-plugin-auto-import',
       {
         declarations: [

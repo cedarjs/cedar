@@ -1,12 +1,13 @@
 # Code-Style
 
 - Prefer `async/await` with `try/catch` over `.then()` promise chains. When refactoring a function that uses `.then()`, convert to `async function` + `try/catch` rather than keeping `.then()` style. Confidence: 0.70
-- Use `oxc-parser` for AST-based code transformations instead of string manipulation. Confidence: 0.50
+- Use `oxc-parser` for AST-based code transformations instead of string manipulation. Confidence: 0.70
 - Remove code that doesn't actually work instead of keeping it with comments explaining the limitation. Non-functional code with "documented limitations" is misleading — if it can't do what it claims (e.g., `%%` escaping in `cmd.exe` inline mode), remove it entirely. Confidence: 0.65
 
 # Testing
 
 - Testing Windows-specific code paths on Linux is reasonable when the branch logic is simple enough to exercise via platform mocking (e.g., `process.platform = 'win32'`). This catches regressions before they reach the Windows runner. The blanket rule of "never test Windows paths on Linux" oversimplifies — apply judgment: simple mocking is worth doing, complex Windows-only integration tests belong on Windows CI runners. Confidence: 0.65
+- Keep tests and adapt them with proper test bodies — do not mark tests as `it.todo()` or remove them entirely when behavior changes. Write proper test bodies that validate the new behavior instead. Confidence: 0.85
 
 # TypeScript
 
