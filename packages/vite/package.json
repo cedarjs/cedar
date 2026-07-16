@@ -117,7 +117,7 @@
     "@types/yargs-parser": "21.0.3",
     "concurrently": "9.2.1",
     "glob": "11.1.0",
-    "memfs": "4.57.7",
+    "memfs": "4.64.0",
     "publint": "0.3.21",
     "rollup": "4.60.4",
     "ts-dedent": "2.3.0",
