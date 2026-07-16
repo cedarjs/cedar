@@ -2801,7 +2801,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@cedarjs/telemetry": "workspace:*"
-    "@listr2/prompt-adapter-enquirer": "npm:4.2.1"
+    "@listr2/prompt-adapter-enquirer": "npm:4.2.2"
     "@opentelemetry/api": "npm:1.9.1"
     "@types/dotenv-defaults": "npm:^5.0.0"
     "@types/lodash": "npm:4.17.24"
@@ -2869,7 +2869,7 @@ __metadata:
     "@cedarjs/utils": "workspace:*"
     "@cedarjs/vite": "workspace:*"
     "@cedarjs/web-server": "workspace:*"
-    "@listr2/prompt-adapter-enquirer": "npm:4.2.1"
+    "@listr2/prompt-adapter-enquirer": "npm:4.2.2"
     "@opentelemetry/api": "npm:1.9.1"
     "@opentelemetry/core": "npm:1.30.1"
     "@opentelemetry/exporter-trace-otlp-http": "npm:0.57.2"
@@ -7495,13 +7495,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@listr2/prompt-adapter-enquirer@npm:4.2.1":
-  version: 4.2.1
-  resolution: "@listr2/prompt-adapter-enquirer@npm:4.2.1"
+"@listr2/prompt-adapter-enquirer@npm:4.2.2":
+  version: 4.2.2
+  resolution: "@listr2/prompt-adapter-enquirer@npm:4.2.2"
   peerDependencies:
     enquirer: ">= 2.3.0 < 3"
-    listr2: 10.2.1
-  checksum: 10c0/6fe6c55a074215df8179c037ad1ef3c7ec218cacde4f553bd322ae213ed3226e00e9e8ee5b376139d950c07ebce1c00a1b715d9604b7350b391befe84a0fa275
+    listr2: 10.2.2
+  checksum: 10c0/b5afe2bb59b4a7a369b19efc92239b6fdbdf8406d651ba55f948725553d69439279f658ae5019e3dd097010898dd0d6e158158d4839345d113fea8e60adf6371
   languageName: node
   linkType: hard
 
