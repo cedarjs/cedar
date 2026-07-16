@@ -102,7 +102,7 @@
     "ts-toolbelt": "9.6.0"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.4",
+    "@arethetypeswrong/cli": "0.18.5",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/framework-tools": "workspace:*",
     "@testing-library/jest-dom": "6.9.1",
