@@ -129,7 +129,7 @@ describe('api', () => {
       )
 
       const apiSideBabelPlugins = getApiSideBabelPlugins()
-      expect(apiSideBabelPlugins).toHaveLength(6)
+      expect(apiSideBabelPlugins).toHaveLength(7)
 
       const pluginNames = apiSideBabelPlugins.map(([name]) => name)
       expect(pluginNames).toMatchInlineSnapshot(`
@@ -138,6 +138,7 @@ describe('api', () => {
           "@babel/plugin-transform-runtime",
           "babel-plugin-module-resolver",
           [Function],
+          "babel-plugin-auto-import",
           "babel-plugin-graphql-tag",
           [Function],
         ]
@@ -148,6 +149,7 @@ describe('api', () => {
         [
           "rwjs-api-module-resolver",
           "rwjs-babel-directory-named-modules",
+          "rwjs-babel-auto-import",
           "rwjs-babel-graphql-tag",
           "rwjs-babel-glob-import-dir",
         ]

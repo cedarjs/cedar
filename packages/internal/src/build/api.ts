@@ -18,6 +18,7 @@ import {
   applyGqlormInject,
   applyGraphqlOptionsExtract,
 } from './api-graphql-transforms.js'
+import { applyAutoImports } from './auto-import.js'
 import { cedarApiGraphqlPlugin } from './esbuild-plugin-api-graphql.js'
 import { applyOtelWrapping } from './esbuild-plugin-cedar-otel-wrapping.js'
 import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
@@ -53,17 +54,20 @@ const runCedarBabelTransformsPlugin = {
     build.onLoad({ filter: /\.(js|ts|tsx|jsx)$/ }, async (args) => {
       let fileContents = await fs.promises.readFile(args.path, 'utf-8')
 
-      // Rewrite `src/` bare specifiers to relative paths
+      // Rewrite `src/` bare specifiers to relative paths and inject
+      // auto-imports
       fileContents = applySrcAlias(
         fileContents,
         path.dirname(
           path.relative(build.initialOptions.absWorkingDir + '/src', args.path),
         ),
       )
+      fileContents = applyAutoImports(fileContents)
       const transformedCode = await transformWithBabel(
         fileContents,
         args.path,
         getApiSideBabelPlugins({
+          forVite: true,
           projectIsEsm: projectSideIsEsm('api'),
         }),
       )
@@ -131,11 +135,12 @@ function createCedarViteApiPlugin(): Plugin {
       let sourceCode = code
       const normalizedId = normalizePath(id)
 
-      // Rewrite `src/` bare specifiers to relative paths
+      // Rewrite `src/` bare specifiers and inject auto-imports
       sourceCode = applySrcAlias(
         sourceCode,
         path.dirname(path.relative(cedarPaths.api.src, id)),
       )
+      sourceCode = applyAutoImports(sourceCode)
 
       // Apply graphql-specific transforms on the raw TypeScript BEFORE
       // Babel CJS compilation. The ESM-pattern regexes in these
@@ -155,6 +160,7 @@ function createCedarViteApiPlugin(): Plugin {
         sourceCode,
         id,
         getApiSideBabelPlugins({
+          forVite: true,
           projectIsEsm: isEsm,
         }),
         true,

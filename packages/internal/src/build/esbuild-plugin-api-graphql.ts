@@ -62,10 +62,14 @@ export const cedarApiGraphqlPlugin = {
       fileContents =
         applyGqlormInject(fileContents, args.path, '.js') ?? fileContents
 
+      // Inject auto-imports for gql and context
+      fileContents = applyAutoImports(fileContents)
+
       const transformedCode = await transformWithBabel(
         fileContents,
         args.path,
         getApiSideBabelPlugins({
+          forVite: true,
           projectIsEsm: projectSideIsEsm('api'),
         }),
       )

@@ -54,7 +54,10 @@ type PluginShape =
   | [PluginTarget, PluginOptions, undefined | string]
   | [PluginTarget, PluginOptions]
 
-export const getApiSideBabelPlugins = ({ projectIsEsm = false } = {}) => {
+export const getApiSideBabelPlugins = ({
+  forVite = false,
+  projectIsEsm = false,
+} = {}) => {
   const tsConfig = parseTypeScriptConfigFiles()
 
   const plugins: (PluginShape | boolean)[] = [
@@ -121,6 +124,26 @@ export const getApiSideBabelPlugins = ({ projectIsEsm = false } = {}) => {
       pluginRedwoodDirectoryNamedImport,
       undefined,
       'rwjs-babel-directory-named-modules',
+    ],
+    // Auto-import is handled by cedarAutoImportsPlugin for Vite; skip it in
+    // Vite contexts and keep it for non-Vite consumers (Jest, esbuild builds).
+    !forVite && [
+      'babel-plugin-auto-import',
+      {
+        declarations: [
+          {
+            // import gql from 'graphql-tag'
+            default: 'gql',
+            path: 'graphql-tag',
+          },
+          {
+            // import { context } from '@cedarjs/context'
+            members: ['context'],
+            path: '@cedarjs/context',
+          },
+        ],
+      },
+      'rwjs-babel-auto-import',
     ],
     // FIXME: `graphql-tag` is not working: https://github.com/redwoodjs/redwood/pull/3193
     ['babel-plugin-graphql-tag', undefined, 'rwjs-babel-graphql-tag'],
