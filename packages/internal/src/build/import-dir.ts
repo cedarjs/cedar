@@ -1,6 +1,5 @@
+import fs from 'node:fs'
 import path from 'node:path'
-
-import fg from 'fast-glob'
 
 import { getPaths, importStatementPath } from '@cedarjs/project-config'
 
@@ -46,8 +45,8 @@ export function applyImportDir(code: string, filePath: string): string | null {
 
       let dirFiles: string[]
       try {
-        dirFiles = fg
-          .sync(importGlob, { cwd })
+        dirFiles = fs
+          .globSync(importGlob, { cwd })
           .filter((n) => !n.includes('.test.'))
           .filter((n) => !n.includes('.scenarios.'))
           .filter((n) => !n.includes('.d.ts'))

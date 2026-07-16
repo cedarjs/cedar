@@ -84,13 +84,16 @@ export function cedarImportDirPlugin(): Plugin {
           : path.dirname(id)
 
         try {
-          const dirFiles = fs.globSync(importGlob, {
-            cwd,
-            exclude: (n) =>
-              n.includes('.test.') ||
-              n.includes('.scenarios.') ||
-              n.includes('.d.ts'),
-          })
+          const dirFiles = (
+            await Array.fromAsync(fs.promises.glob(importGlob, { cwd }))
+          )
+            // Ignore *.test.*, *.scenarios.* and *.d.ts files
+            .filter(
+              (n) =>
+                !n.includes('.test.') &&
+                !n.includes('.scenarios.') &&
+                !n.includes('.d.ts'),
+            )
 
           const staticGlob = importGlob.split('*')[0]
           const filePathToVarName = (filePath: string) => {
