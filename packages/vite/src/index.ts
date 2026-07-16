@@ -1,5 +1,6 @@
 import react from '@vitejs/plugin-react'
 import type { PluginOption } from 'vite'
+import tsconfigPaths from 'vite-tsconfig-paths'
 
 import { getWebSideDefaultBabelConfig } from '@cedarjs/babel-config'
 import { getConfig } from '@cedarjs/project-config'
@@ -70,6 +71,7 @@ export function cedar({ mode }: PluginOptions = {}): PluginOption[] {
   }
 
   return [
+    tsconfigPaths(),
     mode === 'test' && cedarJsRouterImportTransformPlugin(),
     mode === 'test' && createAuthImportTransformPlugin(),
     mode === 'test' && autoImportsPlugin(),

@@ -79,6 +79,17 @@ export function cedarjsResolveCedarStyleImportsPlugin(): Plugin {
         }
       }
 
+      // Handle $api/ bare specifiers (web side only; used in routeHooks etc.)
+      if (cedarPaths && id.startsWith('$api/')) {
+        const resolved = resolveFromAbsolutePath(
+          path.join(cedarPaths.api.base, id.slice('$api/'.length)),
+        )
+
+        if (resolved) {
+          return normalizePath(resolved)
+        }
+      }
+
       // We only need this plugin when the module could not be found
       const resolvedPath = path.resolve(path.dirname(importer), id)
 

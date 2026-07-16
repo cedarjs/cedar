@@ -51,6 +51,11 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
       resolve: {
         alias: {
           ...workspaceAliases,
+          // Resolve $api/ bare specifiers to the API base directory.
+          // When the user's web tsconfig has "$api/*": ["../api/*"], Vite needs
+          // this alias to resolve imports like "from '$api/src/lib/db'" at
+          // build time. Previously handled by babel-plugin-module-resolver.
+          $api: cedarPaths.api.base,
           // In test mode, register the virtual module alias so that
           // MockProviders can resolve the user's Routes file
           ...(env.mode === 'test'

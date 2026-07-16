@@ -5,6 +5,7 @@ import { catchAllEntry, getAllEntries } from '@universal-deploy/store'
 import { catchAll } from '@universal-deploy/vite'
 import type { EnvironmentOptions, PluginOption } from 'vite'
 import { createBuilder, normalizePath } from 'vite'
+import tsconfigPaths from 'vite-tsconfig-paths'
 
 import {
   getApiSideBabelPlugins,
@@ -150,6 +151,7 @@ export async function buildCedarApp({
     : {}
 
   const plugins: PluginOption[] = [
+    tsconfigPaths(),
     // Suppress noisy warnings from third-party dependencies across all
     // environments by injecting onwarn into every environment's rollupOptions.
     {
