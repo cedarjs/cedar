@@ -139,7 +139,7 @@
     "whatwg-fetch": "3.6.20"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.4",
+    "@arethetypeswrong/cli": "0.18.5",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/framework-tools": "workspace:*",
     "@cedarjs/router": "workspace:*",
