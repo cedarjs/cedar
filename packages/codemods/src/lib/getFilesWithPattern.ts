@@ -1,33 +1,49 @@
 /**
- * Uses ripgrep to search files for a pattern,
- * returning the name of the files that contain the pattern.
- *
- * @see {@link https://github.com/burntsushi/ripgrep}
+ * Searches the given directories for files containing `substring`, returning
+ * the paths of the files that contain it.
  */
-import { rgPath } from '@vscode/ripgrep'
-import execa from 'execa'
+import fs from 'node:fs'
+import path from 'node:path'
 
 const getFilesWithPattern = ({
-  pattern,
+  substring,
   filesToSearch,
 }: {
-  pattern: string
+  substring: string
   filesToSearch: string[]
 }) => {
-  try {
-    const { stdout } = execa.sync(rgPath, [
-      '--files-with-matches',
-      pattern,
-      ...filesToSearch,
-    ])
+  const found: string[] = []
 
-    /**
-     * Return an array of files that contain the pattern
-     */
-    return stdout.toString().split('\n')
-  } catch {
-    return []
+  for (const root of filesToSearch) {
+    if (!fs.existsSync(root)) {
+      continue
+    }
+
+    const entries = fs.globSync('**/*', {
+      cwd: root,
+      withFileTypes: true,
+      exclude: ['**/node_modules/**'],
+    })
+
+    for (const entry of entries) {
+      if (!entry.isFile()) {
+        continue
+      }
+
+      const filePath = path.join(entry.parentPath, entry.name)
+
+      try {
+        const contents = fs.readFileSync(filePath, 'utf8')
+        if (contents.includes(substring)) {
+          found.push(filePath)
+        }
+      } catch {
+        // Skip files that can't be read.
+      }
+    }
   }
+
+  return found
 }
 
 export default getFilesWithPattern
