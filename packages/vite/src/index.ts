@@ -19,6 +19,7 @@ import {
   createAuthImportTransformPlugin,
 } from '@cedarjs/testing/web/vitest'
 
+import { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
 import { cedarCellTransform } from './plugins/vite-plugin-cedar-cell.js'
 import { cedarDataUriShim } from './plugins/vite-plugin-cedar-data-uri-shim.js'
 import { cedarEntryInjectionPlugin } from './plugins/vite-plugin-cedar-entry-injection.js'
@@ -98,6 +99,7 @@ export function cedar({ mode }: PluginOptions = {}): PluginOption[] {
     // RSC handles route auto-loading differently in each build stage
     !rscEnabled && cedarRoutesAutoLoaderPlugin(),
     cedarMockCellDataPlugin(),
+    cedarAutoImportsPlugin(),
     react({ babel: babelConfig }),
   ]
 }

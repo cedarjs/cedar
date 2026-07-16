@@ -24,6 +24,7 @@ import {
   applyGqlormInject,
   applyGraphqlOptionsExtract,
 } from './api-graphql-transforms.js'
+import { applyAutoImports } from './auto-import.js'
 import { applyOtelWrapping } from './esbuild-plugin-cedar-otel-wrapping.js'
 import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
 import { applySrcAlias } from './src-alias.js'
@@ -62,10 +63,14 @@ export const cedarApiGraphqlPlugin = {
       fileContents =
         applyGqlormInject(fileContents, args.path, '.js') ?? fileContents
 
+      // Inject auto-imports for gql and context
+      fileContents = applyAutoImports(fileContents)
+
       const transformedCode = await transformWithBabel(
         fileContents,
         args.path,
         getApiSideBabelPlugins({
+          forVite: true,
           projectIsEsm: projectSideIsEsm('api'),
         }),
       )

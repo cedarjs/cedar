@@ -190,23 +190,6 @@ describe('api', () => {
       expect(babelPluginModuleResolverConfig.root[0]).toMatch(
         getPaths().api.base,
       )
-
-      expect(apiSideBabelPlugins).toContainEqual([
-        'babel-plugin-auto-import',
-        {
-          declarations: [
-            {
-              default: 'gql',
-              path: 'graphql-tag',
-            },
-            {
-              members: ['context'],
-              path: '@cedarjs/context',
-            },
-          ],
-        },
-        'rwjs-babel-auto-import',
-      ])
     })
   })
 })

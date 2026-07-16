@@ -54,7 +54,10 @@ type PluginShape =
   | [PluginTarget, PluginOptions, undefined | string]
   | [PluginTarget, PluginOptions]
 
-export const getApiSideBabelPlugins = ({ projectIsEsm = false } = {}) => {
+export const getApiSideBabelPlugins = ({
+  forVite = false,
+  projectIsEsm = false,
+} = {}) => {
   const tsConfig = parseTypeScriptConfigFiles()
 
   const plugins: (PluginShape | boolean)[] = [
@@ -122,7 +125,9 @@ export const getApiSideBabelPlugins = ({ projectIsEsm = false } = {}) => {
       undefined,
       'rwjs-babel-directory-named-modules',
     ],
-    [
+    // Auto-import is handled by cedarAutoImportsPlugin for Vite; skip it in
+    // Vite contexts and keep it for non-Vite consumers (Jest, esbuild builds).
+    !forVite && [
       'babel-plugin-auto-import',
       {
         declarations: [
