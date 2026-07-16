@@ -6,6 +6,7 @@ import ansis from 'ansis'
 import type { Handler } from 'aws-lambda'
 import { normalizePath } from 'vite'
 import type { ModuleNode, ViteDevServer } from 'vite'
+import { gqlPlugin as gqlTagPlugin } from 'vite-plugin-graphql-tag'
 
 import { buildCedarContext, wrapLegacyHandler } from '@cedarjs/api/runtime'
 import type { CedarHandler, LegacyHandler } from '@cedarjs/api/runtime'
@@ -168,6 +169,7 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
   const normalizedBase = normalizePath(cedarPaths.base)
 
   const babelPlugins = getApiSideBabelPlugins({
+    forVite: true,
     projectIsEsm: isEsm,
   })
 
@@ -192,6 +194,7 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
       alias: workspacePkgSourceMap,
     },
     plugins: [
+      gqlTagPlugin(),
       {
         name: 'cedar-api-babel-transform',
         enforce: 'pre',
