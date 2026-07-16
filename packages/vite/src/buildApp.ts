@@ -5,6 +5,16 @@ import { catchAllEntry, getAllEntries } from '@universal-deploy/store'
 import { catchAll } from '@universal-deploy/vite'
 import type { EnvironmentOptions, PluginOption } from 'vite'
 import { createBuilder, normalizePath } from 'vite'
+import tsPathsMod from 'vite-tsconfig-paths'
+
+// vite-tsconfig-paths is ESM-only. CJS builds double-wrap its default
+// export: tsconfigPaths.default is the module object, and
+// tsconfigPaths.default.default is the actual function. ESM gets the
+// function directly. The `||` chain resolves correctly for both.
+const tsconfigPaths =
+  // @ts-expect-error – .default only exists at runtime in CJS double-wrap
+  // interop
+  tsPathsMod.default?.default || tsPathsMod.default || tsPathsMod
 
 import {
   getApiSideBabelPlugins,
@@ -150,6 +160,7 @@ export async function buildCedarApp({
     : {}
 
   const plugins: PluginOption[] = [
+    tsconfigPaths(),
     // Suppress noisy warnings from third-party dependencies across all
     // environments by injecting onwarn into every environment's rollupOptions.
     {

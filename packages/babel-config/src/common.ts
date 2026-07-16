@@ -58,21 +58,7 @@ export const getCommonPlugins = (): [string, PluginOptions][] => {
 // TODO (STREAMING) double check this, think about it more carefully please!
 // It's related to yarn workspaces to be or not to be
 export const getRouteHookBabelPlugins = () => {
-  return [
-    ...getWebSideBabelPlugins(),
-    [
-      'babel-plugin-module-resolver',
-      {
-        alias: {
-          'api/src': './src',
-        },
-        root: [getPaths().api.base],
-        cwd: 'packagejson',
-        loglevel: 'silent', // to silence the unnecessary warnings
-      },
-      'rwjs-api-module-resolver',
-    ],
-  ]
+  return [...getWebSideBabelPlugins()]
 }
 
 /**
