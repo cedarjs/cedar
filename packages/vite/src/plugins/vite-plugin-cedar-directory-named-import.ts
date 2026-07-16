@@ -43,14 +43,14 @@ export function cedarDirectoryNamedImportPlugin(): Plugin {
       const indexPath = absolutePath + '/index'
       const resolvedIndex = resolveFile(indexPath)
       if (resolvedIndex) {
-        return resolvedIndex
+        return normalizePath(resolvedIndex)
       }
 
       // No index file found, so try to import the directory-named-module instead
       const dirnamedPath = absolutePath + '/' + basename
       const resolvedDirnamed = resolveFile(dirnamedPath)
       if (resolvedDirnamed) {
-        return resolvedDirnamed
+        return normalizePath(resolvedDirnamed)
       }
 
       return null
