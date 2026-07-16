@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import { parse, Lang } from '@ast-grep/napi'
 import type { Plugin } from 'vite'
+import { normalizePath } from 'vite'
 
 import { importStatementPath, getPaths } from '@cedarjs/project-config'
 
@@ -73,12 +74,13 @@ export function cedarImportDirPlugin(): Plugin {
         const importName = defaultImportNode.text()
 
         const importGlob = importStatementPath(sourceValue)
+        const cedarPaths = getPaths()
+        const normalizedWebBase = normalizePath(cedarPaths.web.base)
+        const normalizedApiBase = normalizePath(cedarPaths.api.base)
         const cwd = importGlob.startsWith('src/')
-          ? id.startsWith(getPaths().api.base)
-            ? getPaths().api.base
-            : id.startsWith(getPaths().web.base)
-              ? getPaths().web.base
-              : getPaths().api.base
+          ? id.startsWith(normalizedWebBase)
+            ? cedarPaths.web.base
+            : cedarPaths.api.base
           : path.dirname(id)
 
         try {
