@@ -2950,7 +2950,6 @@ __metadata:
     "@types/babel__core": "npm:7.20.5"
     "@types/jscodeshift": "npm:17.3.0"
     "@types/yargs": "npm:17.0.35"
-    "@vscode/ripgrep": "npm:1.17.1"
     "@whatwg-node/fetch": "npm:0.10.13"
     cheerio: "npm:1.2.0"
     deepmerge: "npm:4.3.1"
@@ -11963,17 +11962,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vscode/ripgrep@npm:1.17.1":
-  version: 1.17.1
-  resolution: "@vscode/ripgrep@npm:1.17.1"
-  dependencies:
-    https-proxy-agent: "npm:^7.0.2"
-    proxy-from-env: "npm:^1.1.0"
-    yauzl: "npm:^2.9.2"
-  checksum: 10c0/bedb5d039e8b12f711d4fd9de36125c0d81a6aa9c96c78d6d9f629acbfc0da9a5c6ccf0264c88f91565cf0e7429e7e07b72f15a7f83b543cdb47b6b14c3e014a
-  languageName: node
-  linkType: hard
-
 "@whatwg-node/disposablestack@npm:^0.0.6":
   version: 0.0.6
   resolution: "@whatwg-node/disposablestack@npm:0.0.6"
@@ -18752,7 +18740,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"https-proxy-agent@npm:^7.0.0, https-proxy-agent@npm:^7.0.1, https-proxy-agent@npm:^7.0.2, https-proxy-agent@npm:^7.0.6":
+"https-proxy-agent@npm:^7.0.0, https-proxy-agent@npm:^7.0.1, https-proxy-agent@npm:^7.0.6":
   version: 7.0.6
   resolution: "https-proxy-agent@npm:7.0.6"
   dependencies:
@@ -24817,13 +24805,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"proxy-from-env@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "proxy-from-env@npm:1.1.0"
-  checksum: 10c0/fe7dd8b1bdbbbea18d1459107729c3e4a2243ca870d26d34c2c1bcd3e4425b7bcc5112362df2d93cc7fb9746f6142b5e272fd1cc5c86ddf8580175186f6ad42b
-  languageName: node
-  linkType: hard
-
 "pseudomap@npm:^1.0.1":
   version: 1.0.2
   resolution: "pseudomap@npm:1.0.2"
@@ -29741,7 +29722,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yauzl@npm:^2.10.0, yauzl@npm:^2.9.2":
+"yauzl@npm:^2.10.0":
   version: 2.10.0
   resolution: "yauzl@npm:2.10.0"
   dependencies:
