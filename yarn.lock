@@ -917,7 +917,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/parser@npm:7.29.7, @babel/parser@npm:^7.1.0, @babel/parser@npm:^7.1.6, @babel/parser@npm:^7.14.7, @babel/parser@npm:^7.20.7, @babel/parser@npm:^7.24.7, @babel/parser@npm:^7.25.8, @babel/parser@npm:^7.26.10, @babel/parser@npm:^7.29.7, @babel/parser@npm:^7.3.2":
+"@babel/parser@npm:7.29.7, @babel/parser@npm:^7.1.0, @babel/parser@npm:^7.14.7, @babel/parser@npm:^7.20.7, @babel/parser@npm:^7.24.7, @babel/parser@npm:^7.25.8, @babel/parser@npm:^7.26.10, @babel/parser@npm:^7.29.7":
   version: 7.29.7
   resolution: "@babel/parser@npm:7.29.7"
   dependencies:
@@ -2117,7 +2117,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/traverse@npm:7.29.7, @babel/traverse@npm:^7.1.6, @babel/traverse@npm:^7.18.9, @babel/traverse@npm:^7.25.7, @babel/traverse@npm:^7.26.10, @babel/traverse@npm:^7.29.7":
+"@babel/traverse@npm:7.29.7, @babel/traverse@npm:^7.18.9, @babel/traverse@npm:^7.25.7, @babel/traverse@npm:^7.26.10, @babel/traverse@npm:^7.29.7":
   version: 7.29.7
   resolution: "@babel/traverse@npm:7.29.7"
   dependencies:
@@ -2132,7 +2132,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/types@npm:7.29.7, @babel/types@npm:^7.0.0, @babel/types@npm:^7.1.6, @babel/types@npm:^7.18.13, @babel/types@npm:^7.18.9, @babel/types@npm:^7.20.7, @babel/types@npm:^7.21.3, @babel/types@npm:^7.26.10, @babel/types@npm:^7.29.7, @babel/types@npm:^7.3.3, @babel/types@npm:^7.4.4":
+"@babel/types@npm:7.29.7, @babel/types@npm:^7.0.0, @babel/types@npm:^7.18.13, @babel/types@npm:^7.18.9, @babel/types@npm:^7.20.7, @babel/types@npm:^7.21.3, @babel/types@npm:^7.26.10, @babel/types@npm:^7.29.7, @babel/types@npm:^7.3.3, @babel/types@npm:^7.4.4":
   version: 7.29.7
   resolution: "@babel/types@npm:7.29.7"
   dependencies:
@@ -2759,7 +2759,6 @@ __metadata:
     "@types/babel__register": "npm:7.17.3"
     "@types/node": "npm:24.10.4"
     babel-plugin-auto-import: "npm:1.1.0"
-    babel-plugin-graphql-tag: "npm:3.3.0"
     babel-plugin-module-resolver: "npm:5.0.3"
     babel-plugin-tester: "npm:11.0.4"
     fast-glob: "npm:3.3.3"
@@ -12913,19 +12912,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"babel-literal-to-ast@npm:^2.1.0":
-  version: 2.1.0
-  resolution: "babel-literal-to-ast@npm:2.1.0"
-  dependencies:
-    "@babel/parser": "npm:^7.1.6"
-    "@babel/traverse": "npm:^7.1.6"
-    "@babel/types": "npm:^7.1.6"
-  peerDependencies:
-    "@babel/core": ^7.1.2
-  checksum: 10c0/58e41540f9727b981d5adb684f3927a423054f77740045e9c5e136de7cc8909afa56110445070bde7b00b8cb75e2c81e7925710f59aacb6549aee9ff89c7afe1
-  languageName: node
-  linkType: hard
-
 "babel-plugin-auto-import@npm:1.1.0":
   version: 1.1.0
   resolution: "babel-plugin-auto-import@npm:1.1.0"
@@ -12933,21 +12919,6 @@ __metadata:
     "@babel/core": "npm:^7.11.1"
     logical-not: "npm:^1.0.1"
   checksum: 10c0/e738db0589551544c38619777334039ec9e2b245eb8e5930878e1ba5bef64b0eb33551bcbc52213d9ae8979155d07d16d22926def353d483eac12ab63d8d1983
-  languageName: node
-  linkType: hard
-
-"babel-plugin-graphql-tag@npm:3.3.0":
-  version: 3.3.0
-  resolution: "babel-plugin-graphql-tag@npm:3.3.0"
-  dependencies:
-    "@babel/helper-plugin-utils": "npm:^7.0.0"
-    "@babel/parser": "npm:^7.3.2"
-    babel-literal-to-ast: "npm:^2.1.0"
-    debug: "npm:^4.1.1"
-  peerDependencies:
-    "@babel/core": ^7.0.0
-    graphql-tag: ^2.10.1
-  checksum: 10c0/6616bf9d03f5e905413ea024e0609bf70a2b18b875c19da1e00fe787a16e71ce36244bd097f65c7faa269d4e97e683ab53ca532d15827298c0381a05b8341add
   languageName: node
   linkType: hard
 

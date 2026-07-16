@@ -7,7 +7,7 @@
     "directory": "packages/gqlorm"
   },
   "license": "MIT",
-  "type": "module",
+  "type": "commonjs",
   "exports": {
     ".": {
       "import": {

@@ -97,7 +97,9 @@ export const getWebSideBabelPlugins = (
     ],
 
     // === Auto imports, and transforms
-    [
+    // Vite handles auto-imports via cedarAutoImportsPlugin; only keep for
+    // non-Vite consumers (Jest web tests).
+    !forVite && [
       'babel-plugin-auto-import',
       {
         declarations: [
@@ -125,7 +127,8 @@ export const getWebSideBabelPlugins = (
       },
       'rwjs-web-auto-import',
     ],
-    ['babel-plugin-graphql-tag', undefined, 'rwjs-babel-graphql-tag'],
+    // FIXME: `graphql-tag` is not working: https://github.com/redwoodjs/redwood/pull/3193
+    !forVite && ['babel-plugin-graphql-tag', undefined, 'rwjs-babel-graphql-tag'],
     // Prerender uses rollup-plugin-cedar-remove-dev-fatal-error-page
     // Vite uses        vite-plugin-cedar-remove-dev-fatal-error-page
     forJest &&
