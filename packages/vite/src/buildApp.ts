@@ -16,6 +16,7 @@ import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
 import { cedarGqlormInjectPlugin } from './plugins/vite-plugin-cedar-gqlorm-inject.js'
 import { cedarGraphqlOptionsExtractPlugin } from './plugins/vite-plugin-cedar-graphql-options-extract.js'
+import { cedarjsJobPathInjectorPlugin } from './plugins/vite-plugin-cedarjs-job-path-injector.js'
 import { handlerAlsWrappingPlugin } from './plugins/vite-plugin-handler-als-wrapping.js'
 
 function resolveWithExtensions(id: string): string {
@@ -333,6 +334,7 @@ export async function buildCedarApp({
   if (workspace.includes('api')) {
     plugins.push(cedarGraphqlOptionsExtractPlugin())
     plugins.push(cedarGqlormInjectPlugin())
+    plugins.push(cedarjsJobPathInjectorPlugin())
     plugins.push(
       handlerAlsWrappingPlugin({ projectIsEsm: projectSideIsEsm('api') }),
     )
