@@ -25,6 +25,7 @@ import { findApiFiles } from '@cedarjs/internal/dist/files.js'
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
+import { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
 import { cedarGqlormInjectPlugin } from './plugins/vite-plugin-cedar-gqlorm-inject.js'
 import { cedarGraphqlOptionsExtractPlugin } from './plugins/vite-plugin-cedar-graphql-options-extract.js'
 import { cedarMockCellDataPlugin } from './plugins/vite-plugin-cedar-mock-cell-data.js'
@@ -163,6 +164,7 @@ export async function buildCedarApp({
 
   const plugins: PluginOption[] = [
     tsconfigPaths(),
+    cedarAutoImportsPlugin(),
     gqlTagPlugin(),
     // Suppress noisy warnings from third-party dependencies across all
     // environments by injecting onwarn into every environment's rollupOptions.

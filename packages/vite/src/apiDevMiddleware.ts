@@ -21,6 +21,7 @@ import { applyGqlormInject } from '@cedarjs/internal/dist/build/api-graphql-tran
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
+import { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
 import { applyGraphqlOptionsExtract } from './plugins/vite-plugin-cedar-graphql-options-extract.js'
 import { applyOtelWrapping } from './plugins/vite-plugin-cedar-otel-wrapping.js'
 
@@ -194,6 +195,7 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
       alias: workspacePkgSourceMap,
     },
     plugins: [
+      cedarAutoImportsPlugin(),
       gqlTagPlugin(),
       {
         name: 'cedar-api-babel-transform',
