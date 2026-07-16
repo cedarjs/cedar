@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url'
 import ansis from 'ansis'
 import type { Handler } from 'aws-lambda'
 import { normalizePath } from 'vite'
-import type { ModuleNode, ViteDevServer } from 'vite'
+import type { ModuleNode, Plugin, ViteDevServer } from 'vite'
 import { gqlPlugin as gqlTagPlugin } from 'vite-plugin-graphql-tag'
 
 import { buildCedarContext, wrapLegacyHandler } from '@cedarjs/api/runtime'
@@ -196,7 +196,11 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
     },
     plugins: [
       cedarAutoImportsPlugin(),
-      gqlTagPlugin(),
+      (() => {
+        const p = gqlTagPlugin() as Plugin
+        p.enforce = 'post'
+        return p
+      })(),
       {
         name: 'cedar-api-babel-transform',
         enforce: 'pre',

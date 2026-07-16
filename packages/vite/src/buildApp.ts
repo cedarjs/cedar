@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import { catchAllEntry, getAllEntries } from '@universal-deploy/store'
 import { catchAll } from '@universal-deploy/vite'
-import type { EnvironmentOptions, PluginOption } from 'vite'
+import type { EnvironmentOptions, Plugin, PluginOption } from 'vite'
 import { createBuilder, normalizePath } from 'vite'
 import { gqlPlugin as gqlTagPlugin } from 'vite-plugin-graphql-tag'
 import tsPathsMod from 'vite-tsconfig-paths'
@@ -165,7 +165,11 @@ export async function buildCedarApp({
   const plugins: PluginOption[] = [
     tsconfigPaths(),
     cedarAutoImportsPlugin(),
-    gqlTagPlugin(),
+    (() => {
+      const p = gqlTagPlugin() as Plugin
+      p.enforce = 'post'
+      return p
+    })(),
     // Suppress noisy warnings from third-party dependencies across all
     // environments by injecting onwarn into every environment's rollupOptions.
     {
