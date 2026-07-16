@@ -129,7 +129,7 @@ describe('api', () => {
       )
 
       const apiSideBabelPlugins = getApiSideBabelPlugins()
-      expect(apiSideBabelPlugins).toHaveLength(7)
+      expect(apiSideBabelPlugins).toHaveLength(6)
 
       const pluginNames = apiSideBabelPlugins.map(([name]) => name)
       expect(pluginNames).toMatchInlineSnapshot(`
@@ -138,7 +138,6 @@ describe('api', () => {
           "@babel/plugin-transform-runtime",
           "babel-plugin-module-resolver",
           [Function],
-          "babel-plugin-auto-import",
           "babel-plugin-graphql-tag",
           [Function],
         ]
@@ -149,7 +148,6 @@ describe('api', () => {
         [
           "rwjs-api-module-resolver",
           "rwjs-babel-directory-named-modules",
-          "rwjs-babel-auto-import",
           "rwjs-babel-graphql-tag",
           "rwjs-babel-glob-import-dir",
         ]
@@ -190,23 +188,6 @@ describe('api', () => {
       expect(babelPluginModuleResolverConfig.root[0]).toMatch(
         getPaths().api.base,
       )
-
-      expect(apiSideBabelPlugins).toContainEqual([
-        'babel-plugin-auto-import',
-        {
-          declarations: [
-            {
-              default: 'gql',
-              path: 'graphql-tag',
-            },
-            {
-              members: ['context'],
-              path: '@cedarjs/context',
-            },
-          ],
-        },
-        'rwjs-babel-auto-import',
-      ])
     })
   })
 })

@@ -122,24 +122,6 @@ export const getApiSideBabelPlugins = ({ projectIsEsm = false } = {}) => {
       undefined,
       'rwjs-babel-directory-named-modules',
     ],
-    [
-      'babel-plugin-auto-import',
-      {
-        declarations: [
-          {
-            // import gql from 'graphql-tag'
-            default: 'gql',
-            path: 'graphql-tag',
-          },
-          {
-            // import { context } from '@cedarjs/context'
-            members: ['context'],
-            path: '@cedarjs/context',
-          },
-        ],
-      },
-      'rwjs-babel-auto-import',
-    ],
     // FIXME: `graphql-tag` is not working: https://github.com/redwoodjs/redwood/pull/3193
     ['babel-plugin-graphql-tag', undefined, 'rwjs-babel-graphql-tag'],
     [pluginRedwoodImportDir, {}, 'rwjs-babel-glob-import-dir'],
