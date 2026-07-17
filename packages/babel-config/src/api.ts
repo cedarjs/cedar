@@ -64,8 +64,10 @@ export const getApiSideBabelPlugins = ({
     ...getCommonPlugins(),
     // Needed to support `/** @jsxImportSource custom-jsx-library */`
     // comments in JSX files
-    ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }],
-    ['@babel/plugin-transform-runtime', {}],
+    !forVite && ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }],
+    // Vite/esbuild handles module transforms natively; only keep for non-Vite
+    // consumers.
+    !forVite && ['@babel/plugin-transform-runtime', {}],
     [
       'babel-plugin-module-resolver',
       {
