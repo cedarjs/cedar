@@ -1,6 +1,7 @@
 # Moving Prerender to Vite
 
-**Date:** 2026-07-17 **Author:** Lisa (lisa-assistant) **Status:** Proposal
+**Date:** 2026-07-17 **Updated:** 2026-07-18 **Author:** Lisa (lisa-assistant)
+**Status:** Proposal
 
 ---
 
@@ -21,8 +22,8 @@ bundle the web app on-the-fly, write it to a temp dir under
 `web/dist/__prerender`, and immediately `import()` it.
 
 Meanwhile, `NodeRunner` already uses Vite's `RunnableDevEnvironment` and
-`env.runner.import()` for the API/GraphQL side — which is essentially the same
-job, done the right way.
+`env.runner.import()` for the API/GraphQL side — the same job, done the right
+way.
 
 The goal of this migration is to replace `buildAndImport` with a Vite-based
 approach, giving us a single unified toolchain for prerender.
@@ -39,147 +40,186 @@ approach, giving us a single unified toolchain for prerender.
   Vite plugins. After this migration, the Rollup plugin directory can be
   deleted.
 - **Reuse Vite's transform pipeline.** Vite already handles TS/JSX transpilation
-  (via esbuild), path aliases, and module resolution. We get this for free
-  instead of manually wiring it up in Rollup.
-- **Unblock removing the SWC dependency** from the monorepo more broadly (also
-  used in RSC plugins — separate effort).
+  (via esbuild), path aliases, and module resolution — and crucially, Cedar's
+  existing web Vite config already has all the necessary Cedar plugins
+  configured. We get this for free instead of manually wiring it up in Rollup.
+- **Auditability.** A proper SSR build produces an inspectable output artifact
+  rather than an opaque in-memory bundle.
+- **Alignment with the ecosystem.** This is how SvelteKit and Nuxt implement
+  SSG. No major framework invented a separate bundler for prerender.
+- **Paves the way for real SSR.** The same `vite build --ssr` artifact used for
+  prerender at build time is the same artifact that would be deployed for
+  request-time SSR. The migration gets Cedar's prerender and future SSR onto the
+  same foundation.
+
+---
+
+## Prerender Is SSG, Not SSR
+
+Cedar's prerender is **SSG** (Static Site Generation): the app is rendered at
+**build time** to produce static HTML files. This is distinct from **SSR**
+(Server-Side Rendering), where a running server renders HTML at request time for
+each user.
+
+The `--ssr` flag in `vite build --ssr` means "build a Node.js-compatible bundle"
+(no browser shims), not "set up request-time rendering". What makes the output
+SSG vs SSR is how and when you execute it:
+
+- **SSG (Cedar prerender):** execute the bundle once at build time → render all
+  routes to `.html` files → discard the bundle
+- **SSR (future):** deploy the bundle → execute it on every incoming request →
+  return HTML to the client
 
 ---
 
 ## Current Architecture
 
 ```
-runPrerenderEsm.tsx
-├── buildAndImport(entryPath)          ← Rollup + SWC
-│   ├── rollup-plugin-cedarjs-external
-│   ├── rollup-plugin-cedarjs-cell
-│   ├── rollup-plugin-cedarjs-directory-named-imports
-│   ├── rollup-plugin-cedarjs-ignore-html-and-css-imports
-│   ├── rollup-plugin-cedarjs-inject-file-globals
-│   ├── rollup-plugin-cedarjs-prerender-media-imports
-│   └── rollup-plugin-cedarjs-routes-auto-loader
-│   → imports: { App, Routes, CellCacheContextProvider, LocationProvider }
+cedar build
+├── vite build                         ← client bundle (existing)
 │
-└── NodeRunner.importFile(gqlHandlerPath)  ← Vite RunnableDevEnvironment
-    ├── cedarCellTransform
-    ├── cedarjsResolveCedarStyleImportsPlugin
-    ├── cedarjsJobPathInjectorPlugin
-    ├── cedarSwapApolloProvider
-    ├── cedarCjsCompatPlugin
-    ├── cedarImportDirPlugin
-    └── cedarAutoImportsPlugin
-    → imports: { handler }
+└── runPrerenderEsm.tsx
+    ├── buildAndImport(entryPath)      ← Rollup + SWC (7 custom plugins)
+    │   → imports: { App, Routes, CellCacheContextProvider, LocationProvider }
+    │
+    └── NodeRunner.importFile(gqlHandlerPath)  ← Vite RunnableDevEnvironment
+        → imports: { handler }
 ```
 
 ---
 
 ## Target Architecture
 
-Replace `buildAndImport` with a second `NodeRunner` instance (or a more general
-`ViteImporter`) configured for the web side:
+Replace `buildAndImport` with a `vite build --ssr` step that reuses Cedar's
+existing web Vite config:
 
 ```
-runPrerenderEsm.tsx
-├── WebNodeRunner.importFile(entryPath)    ← Vite RunnableDevEnvironment (NEW)
-│   ├── cedarCellTransform                ← already exists in @cedarjs/vite
-│   ├── cedarDirectoryNamedImportPlugin   ← merged in PR #2089
-│   ├── cedarSwapApolloProvider           ← already exists
-│   ├── cedarCjsCompatPlugin              ← already exists
-│   ├── cedarjsRoutesAutoLoaderPlugin     ← already exists in @cedarjs/vite
-│   ├── cedarIgnoreHtmlCssPlugin          ← needs creating (or handle via Vite config)
-│   └── cedarPrerenderMediaImportsPlugin  ← needs porting
-│   → imports: { App, Routes, CellCacheContextProvider, LocationProvider }
+cedar build
+├── vite build                         ← client bundle (unchanged)
 │
-└── ApiNodeRunner.importFile(gqlHandlerPath)  ← existing NodeRunner, unchanged
-    → imports: { handler }
+└── runPrerenderEsm.tsx
+    ├── viteSsrBuildAndImport(entryPath)   ← vite build --ssr (NEW)
+    │   uses Cedar's existing web vite config (all plugins already present)
+    │   → imports: { App, Routes, CellCacheContextProvider, LocationProvider }
+    │
+    └── NodeRunner.importFile(gqlHandlerPath)  ← existing NodeRunner, unchanged
+        → imports: { handler }
 ```
 
-Key insight: `NodeRunner` already does exactly what `buildAndImport` does — it
-creates a Vite server with a `RunnableDevEnvironment` and calls
-`env.runner.import(filePath)`. We just need a web-side variant with the right
-plugin set and alias config.
+The key insight: `vite build --ssr` with Cedar's existing web Vite config
+automatically applies all Cedar transforms — `cedarCellTransform`,
+`cedarAutoImportsPlugin`, `cedarjsRoutesAutoLoaderPlugin`,
+`cedarDirectoryNamedImportPlugin`, etc. — without any manual plugin wiring.
 
 ---
 
 ## Rollup Plugin → Vite Equivalent Mapping
 
-| Rollup plugin                                       | Vite equivalent                                                                               | Status                     |
-| --------------------------------------------------- | --------------------------------------------------------------------------------------------- | -------------------------- |
-| `rollup-plugin-cedarjs-cell`                        | `cedarCellTransform()` in `@cedarjs/vite`                                                     | ✅ Exists                  |
-| `rollup-plugin-cedarjs-directory-named-imports`     | `cedarDirectoryNamedImportPlugin()`                                                           | ✅ Merged (PR #2089)       |
-| `rollup-plugin-cedarjs-routes-auto-loader`          | `cedarjsRoutesAutoLoaderPlugin()` in `@cedarjs/vite`                                          | ✅ Exists (verify API)     |
-| `rollup-plugin-cedarjs-external`                    | Vite's `ssr.external` / `resolve.external` config                                             | ✅ Built-in                |
-| `rollup-plugin-cedarjs-inject-file-globals`         | Not needed — Vite's SSR runner handles `__dirname`/`__filename` natively in Node environments | ✅ Built-in                |
-| `rollup-plugin-cedarjs-ignore-html-and-css-imports` | `css.modules` + Vite's built-in CSS handling, or a small Vite plugin                          | 🔨 Needs creating          |
-| `rollup-plugin-cedarjs-prerender-media-imports`     | Port to Vite plugin                                                                           | 🔨 Needs porting           |
-| `rollup-plugin-cedar-remove-dev-fatal-error-page`   | Simple Vite transform plugin                                                                  | 🔨 Needs porting (trivial) |
+With `vite build --ssr` + Cedar's existing web config, most of the 7 Rollup
+plugins become implicit:
+
+| Rollup plugin                                       | Vite equivalent                                                              | Status                                 |
+| --------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------- |
+| `rollup-plugin-cedarjs-cell`                        | `cedarCellTransform()` — already in web Vite config                          | ✅ Implicit via existing config        |
+| `rollup-plugin-cedarjs-directory-named-imports`     | `cedarDirectoryNamedImportPlugin()` — already in web Vite config             | ✅ Implicit via existing config        |
+| `rollup-plugin-cedarjs-routes-auto-loader`          | `cedarjsRoutesAutoLoaderPlugin()` — already in web Vite config               | ✅ Implicit (verify prerender variant) |
+| `rollup-plugin-cedarjs-inject-file-globals`         | Not needed — Vite's SSR build handles `__dirname`/`__filename` natively      | ✅ Built-in                            |
+| `rollup-plugin-cedarjs-external`                    | `build.ssr` mode automatically externalises node_modules                     | ✅ Built-in                            |
+| `rollup-plugin-cedarjs-ignore-html-and-css-imports` | Vite handles CSS natively; small SSR-specific plugin for any edge cases      | 🔨 May need a thin plugin (see below)  |
+| `rollup-plugin-cedarjs-prerender-media-imports`     | Vite asset handling converts imports to URLs automatically in SSR build mode | ✅ Likely built-in (verify)            |
+| `rollup-plugin-cedar-remove-dev-fatal-error-page`   | Simple Vite transform plugin — trivial port                                  | 🔨 Needs porting (trivial)             |
 
 ---
 
 ## Implementation Steps
 
-### Phase 1 — Create a `WebNodeRunner`
+### Phase 1 — Replace `buildAndImport` with `viteSsrBuildAndImport`
 
-Create `packages/prerender/src/build-and-import/webNodeRunner.ts` (or generalise
-`NodeRunner` to accept a side parameter):
+Create `packages/prerender/src/build-and-import/viteSsrBuildAndImport.ts`:
 
 ```ts
-import { createServer, isRunnableDevEnvironment, mergeConfig } from 'vite'
-import type { ViteDevServer, RunnableDevEnvironment, UserConfig } from 'vite'
+import fs from 'node:fs/promises'
+import path from 'node:path'
+import { pathToFileURL } from 'node:url'
+
+import { build, mergeConfig } from 'vite'
+import type { InlineConfig } from 'vite'
 
 import { getPaths } from '@cedarjs/project-config'
-import {
-  cedarCellTransform,
-  cedarDirectoryNamedImportPlugin,
-  cedarSwapApolloProvider,
-  cedarCjsCompatPlugin,
-  cedarjsRoutesAutoLoaderPlugin,
-} from '@cedarjs/vite'
+import { getWebSideViteConfig } from '@cedarjs/vite'
 
-import { cedarIgnoreHtmlCssPlugin } from './vitePlugins/vite-plugin-prerender-ignore-html-css.js'
-import { cedarPrerenderMediaImportsPlugin } from './vitePlugins/vite-plugin-prerender-media-imports.js'
+/**
+ * Replaces buildAndImport (Rollup + SWC).
+ *
+ * Builds the given entry file as an SSR bundle using Cedar's existing web Vite
+ * config (all Cedar plugins already configured there), imports the result, then
+ * cleans up.
+ */
+export async function viteSsrBuildAndImport(
+  entryPath: string
+): Promise<unknown> {
+  const outDir = path.join(getPaths().web.dist, '__prerender_ssr')
 
-export class WebNodeRunner {
-  // same shape as NodeRunner, but configured for web side
+  const webConfig = await getWebSideViteConfig()
 
-  async createServer(): Promise<ViteDevServer> {
-    return createServer({
-      mode: 'production',
-      root: getPaths().web.base,
-      optimizeDeps: { noDiscovery: true, include: undefined },
-      server: { hmr: false, watch: null },
-      environments: { nodeRunnerEnv: {} },
-      resolve: {
-        alias: [{ find: 'src', replacement: getPaths().web.src }],
+  const ssrConfig: InlineConfig = {
+    logLevel: 'warn',
+    build: {
+      ssr: entryPath,
+      outDir,
+      emptyOutDir: true,
+      rollupOptions: {
+        output: { format: 'esm' },
       },
-      plugins: [
-        cedarCjsCompatPlugin(),
-        cedarCellTransform(),
-        cedarDirectoryNamedImportPlugin(),
-        cedarjsRoutesAutoLoaderPlugin(),
-        cedarSwapApolloProvider(),
-        cedarIgnoreHtmlCssPlugin(),
-        cedarPrerenderMediaImportsPlugin(),
-      ],
-    })
+    },
   }
+
+  await build(mergeConfig(webConfig, ssrConfig))
+
+  const outFile = path.join(
+    outDir,
+    path.basename(entryPath).replace(/\.tsx?$/, '.js')
+  )
+
+  const module = await import(pathToFileURL(outFile).href)
+  await fs.rm(outDir, { recursive: true, force: true })
+
+  return module
 }
 ```
 
-### Phase 2 — Port remaining Rollup plugins to Vite
+### Phase 2 — Update `runPrerenderEsm.tsx`
 
-Two plugins need porting, one is trivial:
-
-**`vite-plugin-prerender-ignore-html-css.ts`:**
+Replace the `buildAndImport` call:
 
 ```ts
-// Replaces rollup-plugin-cedarjs-ignore-html-and-css-imports
-// Returns empty modules for .css, .scss, .svg etc. during prerender
-export function cedarIgnoreHtmlCssPlugin(): Plugin {
+// Before:
+const required = await buildAndImport({ filepath: entryPath })
+
+// After:
+const required = await viteSsrBuildAndImport(entryPath)
+```
+
+The combined entry file (the temp `.tsx` that re-exports `App`, `Routes`, etc.)
+can be kept as-is — Vite builds it the same way Rollup did.
+
+### Phase 3 — Handle SSR-specific asset edge cases
+
+Vite's SSR build handles most asset types natively, but two cases need
+verification:
+
+**CSS/HTML imports:** In SSR mode Vite already stubs CSS imports. If any edge
+cases remain, add a thin plugin scoped strictly to stylesheet extensions — do
+**not** include image extensions in this plugin, as those should be converted to
+public URL strings by Vite's asset pipeline:
+
+```ts
+// Only stub actual stylesheet imports — NOT images
+export function cedarPrerenderIgnoreStylesPlugin(): Plugin {
   return {
-    name: 'cedar-prerender-ignore-html-css',
+    name: 'cedar-prerender-ignore-styles',
     load(id) {
-      if (/\.(css|scss|sass|less|svg|png|jpg|gif|ico|webp)(\?.*)?$/.test(id)) {
+      if (/\.(css|scss|sass|less)(\?.*)?$/.test(id)) {
         return 'export default {}'
       }
     },
@@ -187,45 +227,8 @@ export function cedarIgnoreHtmlCssPlugin(): Plugin {
 }
 ```
 
-**`vite-plugin-prerender-media-imports.ts`:** Port
-`rollup-plugin-cedarjs-prerender-media-imports.ts` — replaces media file imports
-with their public URL paths. The Rollup and Vite plugin APIs are compatible
-enough that this is mostly a rename.
-
-**`vite-plugin-prerender-remove-dev-fatal-error-page.ts`:** Port
-`rollup-plugin-cedar-remove-dev-fatal-error-page.ts` — trivial transform, strips
-the dev error page component.
-
-### Phase 3 — Update `runPrerenderEsm.tsx`
-
-Replace the `buildAndImport` call with `WebNodeRunner.importFile()`:
-
-```ts
-// Before:
-const entryPath = await createCombinedEntry({ appPath, routesPath, outDir })
-const required = await buildAndImport({
-  filepath: entryPath,
-  preserveTemporaryFile: true,
-})
-
-// After:
-const webRunner = new WebNodeRunner()
-await webRunner.init()
-const required = await webRunner.importFile(entryPath)
-```
-
-The combined entry file trick (creating a temp `.tsx` that re-exports `App`,
-`Routes`, etc.) can be kept as-is — it still works fine with Vite's runner.
-
-Alternatively, import each file separately:
-
-```ts
-const { default: App } = await webRunner.importFile(getPaths().web.app)
-const { default: Routes } = await webRunner.importFile(getPaths().web.routes)
-// etc.
-```
-
-This avoids the temp file entirely.
+**Dev fatal error page:** Port `rollup-plugin-cedar-remove-dev-fatal-error-page`
+to a simple Vite transform plugin. This is a trivial rename.
 
 ### Phase 4 — Clean up
 
@@ -244,47 +247,78 @@ Once `runPrerenderEsm.tsx` no longer uses `buildAndImport`:
   - `@rollup/plugin-replace`
 - Regenerate `yarn.lock`
 
-### Phase 5 — Consider consolidating `NodeRunner`
+---
 
-At the end of Phase 1, there are two Vite runner classes with nearly identical
-structure (`NodeRunner` for API, `WebNodeRunner` for web). Consider merging them
-into a single `ViteNodeRunner` that accepts a side config:
+## Why `vite build --ssr` Over `RunnableDevEnvironment`
 
-```ts
-const apiRunner = new ViteNodeRunner({ side: 'api' })
-const webRunner = new ViteNodeRunner({ side: 'web' })
-```
+An earlier version of this plan proposed a `WebNodeRunner` using Vite's
+`RunnableDevEnvironment` (the same API `NodeRunner` uses for the API side).
+`vite build --ssr` is preferred because:
 
-This is a nice-to-have, not a blocker.
+|                                  | `vite build --ssr`        | `RunnableDevEnvironment` |
+| -------------------------------- | ------------------------- | ------------------------ |
+| Uses existing web config         | ✅ automatic              | ❌ manual plugin wiring  |
+| Disk artifact                    | ✅ inspectable, auditable | ❌ in-memory only        |
+| What other frameworks do         | ✅ SvelteKit, Nuxt        | ❌ mostly dev-mode usage |
+| Dev server running at build time | ✅ no                     | ❌ yes (feels wrong)     |
+| Future SSR alignment             | ✅ same artifact reused   | ❌ different path        |
+
+The `RunnableDevEnvironment` approach required manually listing all Cedar plugins
+and keeping that list in sync with Cedar's web Vite config. `vite build --ssr`
+just passes the existing config — if a new plugin is added to Cedar's web build,
+prerender picks it up automatically.
 
 ---
 
 ## Open Questions
 
-1. **`renderCache` invalidation:** `runPrerenderEsm.tsx` caches `App` and
-   `Routes` between pages. With Vite's runner, we can keep the server alive
-   across renders (like `NodeRunner` already does). Need to verify the module
-   cache behaviour is equivalent.
+1. **Routes auto-loader prerender variant.** `cedarjsRoutesAutoLoaderPlugin` has
+   two modes: the normal client build mode (lazy `import()` per route, populates
+   `globalThis.__REDWOOD__PRERENDER_PAGES`) and a prerender mode (direct
+   `import` per route). The SSR build must use the prerender variant to avoid
+   depending on a global that may not be populated at build time. Verify how the
+   plugin decides which mode to use and ensure the SSR build path triggers the
+   correct one.
 
-2. **`ssr.external` vs Rollup's `externalPlugin`:** The `externalPlugin` has
-   nuanced logic for marking node_modules external while keeping certain
-   workspace packages internal. Need to verify Vite's SSR externals config
-   handles all the same cases. Vite's `ssr.noExternal` pattern matching should
-   be sufficient but needs testing.
+2. **`cedarAutoImportsPlugin` and `gql` bindings.** Cells use Cedar's implicit
+   `gql` binding injected by `cedarAutoImportsPlugin`. This plugin is already in
+   Cedar's web Vite config, so it runs automatically with `vite build --ssr`.
+   Verify that the SSR build path doesn't skip it (some plugins guard on
+   `build.ssr` being falsy).
 
-3. **CJS compat:** `cedarCjsCompatPlugin` is already in `NodeRunner`'s plugin
-   list. The web side will need it too (it's included in the proposed
-   `WebNodeRunner` above).
+3. **`renderCache` invalidation.** `runPrerenderEsm.tsx` caches `App` and
+   `Routes` between page renders. With `viteSsrBuildAndImport`, the build runs
+   once and produces a single bundle — the same caching strategy applies, but
+   verify the import is stable across render cycles.
 
-4. **`unimport` auto-imports:** `buildAndImport` uses `unimport/unplugin` to
-   inject `React` and `gql` globals. The existing `cedarAutoImportsPlugin` in
-   the prerender GraphQL directory does something similar — worth checking if it
-   can be reused for the web runner, or if the web side actually needs explicit
-   auto-imports at all (since `App.tsx`/`Routes.tsx` should already import React
-   explicitly with React 19).
+4. **`ssr.noExternal` / workspace packages.** Rollup's `externalPlugin` has
+   nuanced logic for keeping certain `@cedarjs/*` workspace packages internal to
+   the bundle. Vite's `ssr.noExternal` should handle this, but needs testing
+   against packages that ship only CJS.
 
-5. **Windows paths:** Vite normalizes paths internally, but the web runner's
-   `resolve.alias` entries should use `normalizePath()` to be safe.
+5. **`getWebSideViteConfig` API.** The implementation above assumes a function
+   that returns Cedar's resolved web Vite config programmatically. Verify what
+   the correct internal API is (may be `loadViteConfigFromFile` or similar).
+
+---
+
+## Relationship to Future SSR
+
+When Cedar eventually adds request-time SSR, it will use the same
+`vite build --ssr` mechanism — but instead of executing the bundle once and
+discarding it, the bundle gets deployed and executes on every request:
+
+```
+SSG (today, after migration):
+  vite build --ssr → bundle → execute at build time → .html files → done
+
+SSR (future):
+  vite build --ssr → bundle → deploy → execute per request → stream HTML to client
+```
+
+Migrating prerender to `vite build --ssr` now means SSR support can be added
+without revisiting the prerender build pipeline. The same artifact serves both
+purposes.
 
 ---
 
@@ -292,17 +326,16 @@ This is a nice-to-have, not a blocker.
 
 **New files:**
 
-- `packages/prerender/src/build-and-import/webNodeRunner.ts`
-- `packages/prerender/src/build-and-import/vitePlugins/vite-plugin-prerender-ignore-html-css.ts`
-- `packages/prerender/src/build-and-import/vitePlugins/vite-plugin-prerender-media-imports.ts`
+- `packages/prerender/src/build-and-import/viteSsrBuildAndImport.ts`
+- `packages/prerender/src/build-and-import/vitePlugins/vite-plugin-prerender-ignore-styles.ts`
+  (if needed)
 - `packages/prerender/src/build-and-import/vitePlugins/vite-plugin-prerender-remove-dev-fatal-error-page.ts`
 
 **Modified:**
 
 - `packages/prerender/src/runPrerenderEsm.tsx` — swap `buildAndImport` for
-  `WebNodeRunner`
-- `packages/prerender/package.json` — remove Rollup/SWC deps, add any missing
-  Vite plugin deps
+  `viteSsrBuildAndImport`
+- `packages/prerender/package.json` — remove Rollup/SWC deps
 
 **Deleted:**
 
@@ -312,7 +345,7 @@ This is a nice-to-have, not a blocker.
 **Eventually:**
 
 - `packages/prerender/src/runPrerender.tsx` — the legacy Babel/CJS path; can be
-  deleted once the ESM path is confirmed stable and the CJS build is dropped
+  deleted once the ESM path is confirmed stable
 
 ---
 
@@ -322,3 +355,5 @@ This is a nice-to-have, not a blocker.
   `vite-plugin-rsc-analyze.ts`) — separate effort.
 - The legacy `runPrerender.tsx` (Babel path) — out of scope here, but this
   migration makes it easier to reason about deleting it.
+- Request-time SSR — documented above as future work that this migration
+  directly enables.
