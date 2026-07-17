@@ -136,6 +136,22 @@ runs:
         path: ${{ steps.prebuild-cache-path.outputs.cache-path }}
         key: prebuild-cache-${{ runner.os }}-${{ steps.bs3-version.outputs.version }}
 
+    - name: 💾 Save yarn's cache
+      if: inputs.set-up-yarn-cache == 'true'
+      uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      continue-on-error: true
+      with:
+        path: ${{ steps.set-up-yarn-cache.outputs.yarn-cache-directory }}
+        key: yarn-cache-${{ runner.os }}-${{ github.run_id }}
+
+    - name: 💾 Save yarn's install state
+      if: inputs.set-up-yarn-cache == 'true'
+      uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      continue-on-error: true
+      with:
+        path: .yarn/install-state.gz
+        key: yarn-install-state-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}-${{ github.run_id }}
+
     - name: 🏗️ Build
       if: inputs.build == 'true'
       shell: bash
