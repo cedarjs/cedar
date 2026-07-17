@@ -992,3 +992,207 @@ harness, not a code bug. For long-term hardening:
    ```
 2. **Increase the hook timeout** from the default 10s to 30s to account for
    slow Vite server shutdown on resource-constrained CI runners.
+
+---
+
+## Update 2026-07-17 — Open-PR + run-history survey: flakiest job identified
+
+### Method
+
+Surveyed all 10 open PRs targeting `main` plus the last ~40 `ci.yml` runs
+(which cover recently merged branches). Each failing job was classified as
+FLAKY (matching a documented signature) or REAL (genuine breakage) by reading
+the failed-step logs, so that real regressions did not skew the flakiness tally.
+
+### Flakiest job: `Smoke tests ESM / windows-latest`
+
+The Windows ESM smoke-test job is the single job that fails most often purely
+because it is flaky — 3 flaky failures in the sample, and **every one of its
+failures was flaky, not a real regression**:
+
+| Branch                                | Signature                                          |
+| ------------------------------------- | -------------------------------------------------- |
+| `tobbe-fix-gql-opts`                  | V8 Maglev crash / `ERR_CONNECTION_REFUSED` pattern |
+| `renovate/eslint-monorepo`            | Builds fine, then bare `exit code 1` mid-setup     |
+| `renovate/eslint-monorepo` (PR #2086) | Exit-127 in tarsync `buildTarballs`                |
+
+None of those diffs (a GraphQL sourcemap fix, an eslint bump) can plausibly
+affect a Windows smoke test — the hallmark of environmental flake.
+
+### Windows is the flaky surface
+
+Every genuinely flaky failure in the sample was on Windows:
+
+| Normalized job                | Flaky failures | Signature                    |
+| ----------------------------- | -------------- | ---------------------------- |
+| Smoke tests ESM (windows)     | 3              | V8 Maglev / exit-127         |
+| Build, lint, test (windows)   | 2              | All suites pass, then exit 1 |
+| RSC Smoke tests (windows)     | 1–2            | prisma-generate setup crash  |
+| Smoke tests (windows)         | 1              | V8 Maglev / dbAuth-secret    |
+| Background jobs E2E (windows) | 1              | EPERM rename race            |
+
+Ubuntu smoke/E2E jobs appear in raw counts only because they ride along on the
+two `renovate/react-monorepo` real-failure runs (see below).
+
+### Ruled out as REAL (not flaky)
+
+The bulk of failing jobs across open PRs are genuine breakage, excluded from the
+flakiness tally: #246 (React major bump — one `TS2322` in `@cedarjs/forms`
+cascades to ~20 jobs), #2090 (`vite import-dir` plugin fails to transform the
+`../directives/**/*.{js,ts}` glob, so the API server imports a literal glob path
+and never boots — all 8 smoke/SSR/E2E failures share this one cause), #1855
+(apollo ESM subpath breakage), #1942 (uncommitted `yarn.lock` → immutable-install
+rejection), #1737 (Node 26 `better-sqlite3` node-gyp `distutils` removal), #1830
+(prettier), #1780 (real `dbAuth.mockListr` unit-test failure).
+
+### New candidate signatures (see below)
+
+Two Windows environmental flakes surfaced that do not match existing signatures
+A–E and are documented as new entries: an EPERM rename race and a
+`prisma/config` module-resolution failure.
+
+---
+
+## Update 2026-07-17 — New signature: Windows EPERM rename of `package.json.bak`
+
+### Evidence
+
+From PR #2093 (`fix(deps): update @listr2/prompt-adapter-enquirer`, Background
+jobs E2E on Windows):
+
+```
+Error: EPERM: operation not permitted, rename
+'packages\api-server\package.json.bak' -> 'package.json'
+```
+
+The error fires during `generateTypesCjs`, failing the
+`@cedarjs/api-server:build` task (`✖ ... Cache Miss`, `1 Failed Tasks`).
+
+### Assessment
+
+The build uses a package.json-swap trick (rename `package.json` to
+`package.json.bak`, write a modified `package.json`, then rename back). On
+Windows, `rename()` fails with `EPERM` when another handle holds the target
+file open — an antivirus scan, a lingering `node` process, or a filesystem
+indexer. This is a Windows file-lock race, not a code bug: the listr2 dependency
+bump cannot affect the api-server build. Classified flaky (environmental).
+
+**Possible mitigation:** retry the rename with a short backoff, or use a
+copy-then-replace strategy that tolerates a transiently locked target.
+
+---
+
+## Update 2026-07-17 — New signature: `Cannot find module 'prisma/config'` in RSC Windows setup
+
+### Evidence
+
+From PR #2086 (`chore(deps): update eslint monorepo`, RSC Smoke tests on
+Windows):
+
+```
+Cannot find module 'prisma/config'
+```
+
+Thrown while loading `prisma.config.ts`, causing
+`prisma generate --config=...` to exit with code 1 during test-project setup.
+
+### Assessment
+
+The failure is in Prisma config module resolution during RSC project
+scaffolding, unrelated to the eslint bump. Likely a resolution race or a
+partially-installed `prisma` package on the Windows runner (the `prisma/config`
+subpath export not yet linked when `prisma generate` runs). A re-run typically
+clears it. Classified flaky (environmental); needs more data points to confirm
+whether it is timing-dependent or a genuine `prisma` version/export mismatch on
+Windows.
+
+---
+
+## Update 2026-07-17 — Aggregate flakiness stats: last 100 merged PRs
+
+### Method
+
+Sampled the **last 100 PRs merged into `main`** (95 unique head branches). For
+each branch, collected every failed `ci.yml` run (182 failed runs total), then
+extracted and log-classified **every failed job** (621 jobs, after excluding the
+`✅ CI Status Check`, `🔍 Detect changes`, and `nx run-many` aggregate rollups).
+Each job was labelled FLAKY (matched a known signature A–G below) or REAL
+(genuine breakage — a real test/type/build error, a lint failure, or the
+branch's own feature breaking). Because these branches all eventually merged
+green, FLAKY here means a failure the branch's diff cannot plausibly have
+caused; REAL captures the early-commit failures that were later fixed.
+
+### Headline numbers
+
+| Metric                                | Value             |
+| ------------------------------------- | ----------------- |
+| Merged PRs sampled                    | 100 (95 branches) |
+| Failed CI runs on those branches      | 182               |
+| Failed jobs classified                | 621               |
+| **Flaky failures**                    | **172 (28%)**     |
+| Real failures                         | 449 (72%)         |
+| Merged branches with ≥1 flaky failure | **40 / 95 (42%)** |
+
+Flaky failures by OS: **Windows 115 (67%)**, Ubuntu 31 (18%), OS-agnostic
+(Universal Deploy / E2E-node) 26 (15%).
+
+### Flakiest jobs (ranked by flaky-failure count)
+
+| Job                             | Flaky | Total fails | Flaky rate |
+| ------------------------------- | ----- | ----------- | ---------- |
+| Smoke tests React 18 (windows)  | 29    | 33          | 88%        |
+| Universal Deploy tests (ubuntu) | 27    | 43          | 63%        |
+| Smoke tests (windows)           | 25    | 26          | **96%**    |
+| Smoke tests ESM (windows)       | 18    | 22          | 82%        |
+| Fragments Smoke tests (windows) | 14    | 19          | 74%        |
+| RSC Smoke tests (windows)       | 14    | 17          | 82%        |
+| E2E Node self-host (ubuntu)     | 10    | 22          | 45%        |
+| Background jobs E2E (windows)   | 9     | 9           | **100%**   |
+| CLI smoke tests (windows)       | 3     | 5           | 60%        |
+| Smoke tests (ubuntu)            | 5     | 22          | 23%        |
+
+Jobs that were **0% flaky** (every failure was real): Build/lint/test (ubuntu)
+0/67, Check formatting (prettier) 0/39, Tutorial E2E 0/33, RSC Smoke (ubuntu)
+0/20, E2E Vercel deploy 0/14, E2E Netlify deploy 0/14, CLI smoke (ubuntu) 0/14,
+Server tests, Create Cedar App, constraints check.
+
+### Flaky failures by signature
+
+| Sig   | Description                                                                                | Count | % of flaky |
+| ----- | ------------------------------------------------------------------------------------------ | ----- | ---------- |
+| **A** | V8 Maglev crash `3221226505` / `ERR_CONNECTION_REFUSED` / webServer timeout (Windows)      | 90    | **52%**    |
+| **D** | UD & E2E-node esbuild `"service is no longer running"` / `afterEach` hook timeout (Ubuntu) | 32    | 19%        |
+| **B** | test-project setup: "Generating dbAuth secret" + `yarn.cmd` exit 1 / lockfile              | 18    | 10%        |
+| **C** | Windows yarn/tarsync `exit 127` (Resolution step / `buildTarballs`)                        | 15    | 9%         |
+| **E** | Storybook `exit 1` (Vite 7 incompat)                                                       | 9     | 5%         |
+| **G** | `Cannot find module 'prisma/config'` (RSC Windows)                                         | 6     | 3%         |
+| **F** | Windows `EPERM rename package.json.bak`                                                    | 2     | 1%         |
+
+### Takeaways
+
+1. **Windows smoke tests are the dominant flaky surface.** The top flaky jobs
+   (except Universal Deploy) are all Windows `cedar dev`/`serve` smoke suites,
+   and signature A (the V8 Maglev JIT bug, nodejs/node#62260) alone accounts for
+   **52% of all flakiness**. `Smoke tests (windows)` failed flaky 96% of the
+   time; `Background jobs E2E (windows)` 100%.
+2. **`Smoke tests React 18 (windows)` is the single flakiest job by volume** (29
+   flaky failures). The larger sample promotes it above `Smoke tests ESM
+(windows)` from the 2026-07-17 single-snapshot survey — but all four Windows
+   smoke variants (React 18, plain, ESM, Fragments) are effectively one problem.
+3. **The second cluster is Ubuntu esbuild deaths (signature D, 19%)** — Universal
+   Deploy tests (27 flaky, the biggest non-Windows source) and E2E-node
+   self-host. Same root family as the `afterEach`/esbuild-service issue in the
+   2026-06-26 UD entry.
+4. **Highest-ROI mitigation:** pass `--no-maglev` to the Windows smoke-test
+   `webServer` commands — it would remove ~52% of all observed flakiness in one
+   change.
+
+### Caveats
+
+- Classification is signature-based. A handful of environmental infra failures
+  (Neon `P1001` unreachable, canary-registry `ETARGET` / no-candidates, Netlify
+  "configure site") do not match signatures A–G and were counted **REAL**, so
+  the true flaky share is marginally under-counted.
+- Refactor branches carrying genuine TS-error build cascades (a single build
+  break failing all ~18–64 downstream jobs) correctly land in REAL — this is why
+  `Build, lint, test (ubuntu)` shows 0% flaky despite 67 failures.
