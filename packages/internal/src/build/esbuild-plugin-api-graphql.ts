@@ -27,6 +27,7 @@ import {
 import { applyAutoImports } from './auto-import.js'
 import { applyOtelWrapping } from './esbuild-plugin-cedar-otel-wrapping.js'
 import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
+import { applyImportDir } from './import-dir.js'
 import { applySrcAlias } from './src-alias.js'
 
 export const cedarApiGraphqlPlugin = {
@@ -65,6 +66,12 @@ export const cedarApiGraphqlPlugin = {
 
       // Inject auto-imports for gql and context
       fileContents = applyAutoImports(fileContents)
+
+      // Expand glob imports (e.g. `import x from 'src/services/**/*.ts'`)
+      // before Babel runs.  The Babel import-dir plugin is disabled for these
+      // builds (forVite: true); applyImportDir is the esbuild equivalent.
+      fileContents =
+        applyImportDir(fileContents, args.path)?.code ?? fileContents
 
       const transformedCode = await transformWithBabel(
         fileContents,
