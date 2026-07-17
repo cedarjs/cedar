@@ -168,6 +168,7 @@ export const getApiSideBabelConfigPath = () => {
 }
 
 export const getApiSideBabelOverrides = ({
+  forVite = false,
   projectIsEsm = false,
   forJest = false,
 } = {}) => {
@@ -186,8 +187,9 @@ export const getApiSideBabelOverrides = ({
         ],
       ],
     },
-    // Add import names and paths to job definitions
-    {
+    // Add import names and paths to job definitions. Vite uses
+    // cedarjsJobPathInjectorPlugin instead.
+    !forVite && {
       // match */api/src/jobs/*.js|ts
       test: /.+api(?:[\\|/])src(?:[\\|/])jobs(?:[\\|/]).+.(?:js|ts)$/,
       plugins: [[pluginRedwoodJobPathInjector]],
@@ -197,13 +199,14 @@ export const getApiSideBabelOverrides = ({
 }
 
 export const getApiSideDefaultBabelConfig = ({
+  forVite = false,
   projectIsEsm = false,
   forJest = false,
 } = {}) => {
   return {
     presets: getApiSideBabelPresets(),
-    plugins: getApiSideBabelPlugins({ projectIsEsm }),
-    overrides: getApiSideBabelOverrides({ projectIsEsm, forJest }),
+    plugins: getApiSideBabelPlugins({ forVite, projectIsEsm }),
+    overrides: getApiSideBabelOverrides({ forVite, projectIsEsm, forJest }),
     extends: getApiSideBabelConfigPath(),
     babelrc: false,
     ignore: ['node_modules'],
@@ -236,8 +239,10 @@ export const transformWithBabel = async (
   filename: string,
   plugins: TransformOptions['plugins'],
   sourceMaps: TransformOptions['sourceMaps'] = 'inline',
+  forVite = false,
 ) => {
   const defaultOptions = getApiSideDefaultBabelConfig({
+    forVite,
     projectIsEsm: projectSideIsEsm('api'),
   })
 

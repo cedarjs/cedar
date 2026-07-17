@@ -25,6 +25,7 @@ import { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.
 import { applyGraphqlOptionsExtract } from './plugins/vite-plugin-cedar-graphql-options-extract.js'
 import { cedarImportDirPlugin } from './plugins/vite-plugin-cedar-import-dir.js'
 import { applyOtelWrapping } from './plugins/vite-plugin-cedar-otel-wrapping.js'
+import { cedarjsJobPathInjectorPlugin } from './plugins/vite-plugin-cedarjs-job-path-injector.js'
 
 const LAMBDA_FUNCTIONS: Record<string, CedarHandler> = {}
 
@@ -198,6 +199,7 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
     plugins: [
       cedarImportDirPlugin(),
       cedarAutoImportsPlugin(),
+      cedarjsJobPathInjectorPlugin(),
       (() => {
         const p = gqlTagPlugin() as Plugin
         p.enforce = 'post'
@@ -253,6 +255,7 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
               sourceCode,
               id,
               babelPlugins,
+              true,
               true,
             )
 
