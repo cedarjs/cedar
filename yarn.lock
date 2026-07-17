@@ -2786,7 +2786,7 @@ __metadata:
     memfs: "npm:4.64.0"
     termi-link: "npm:1.1.0"
     typescript: "npm:5.9.3"
-    vite: "npm:^6.3.5"
+    vite: "npm:7.3.5"
     vitest: "npm:3.2.6"
     yargs: "npm:17.7.3"
   bin:
