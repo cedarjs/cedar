@@ -30,10 +30,11 @@ export function applyImportDir(
     return null
   }
 
-  // Matches:  import <name> from '<source-with-**>'
+  // Matches:  import <name> from '<source>'
   // Handles both single and double quotes; optional trailing semicolon.
-  const GLOB_IMPORT_RE =
-    /^import\s+(\w+)\s+from\s+['"]([^'"]*\*\*[^'"]*)['"]\s*;?/gm
+  // NOTE: ** is NOT required in the regex to avoid CodeQL polynomial
+  // backtracking.  The captured source value is checked for ** afterwards.
+  const GLOB_IMPORT_RE = /^import\s+(\w+)\s+from\s+['"]([^'"]+)['"]\s*;?/gm
 
   const s = new MagicString(code)
   let hasTransformations = false
@@ -41,6 +42,9 @@ export function applyImportDir(
   for (const match of code.matchAll(GLOB_IMPORT_RE)) {
     const importName = match[1]
     const sourceValue = match[2]
+    if (!sourceValue.includes('**')) {
+      continue
+    }
     const importGlob = importStatementPath(sourceValue)
 
     // If the glob starts with 'src/', resolve it relative to the api base
