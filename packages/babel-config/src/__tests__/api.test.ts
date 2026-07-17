@@ -129,13 +129,12 @@ describe('api', () => {
       )
 
       const apiSideBabelPlugins = getApiSideBabelPlugins()
-      expect(apiSideBabelPlugins).toHaveLength(7)
+      expect(apiSideBabelPlugins).toHaveLength(6)
 
       const pluginNames = apiSideBabelPlugins.map(([name]) => name)
       expect(pluginNames).toMatchInlineSnapshot(`
         [
           "@babel/plugin-transform-react-jsx",
-          "@babel/plugin-transform-runtime",
           "babel-plugin-module-resolver",
           [Function],
           "babel-plugin-auto-import",
@@ -154,11 +153,6 @@ describe('api', () => {
           "rwjs-babel-glob-import-dir",
         ]
       `)
-
-      expect(apiSideBabelPlugins).toContainEqual([
-        '@babel/plugin-transform-runtime',
-        {},
-      ])
 
       expect(apiSideBabelPlugins).toContainEqual([
         '@babel/plugin-transform-react-jsx',
