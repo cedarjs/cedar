@@ -1,5 +1,6 @@
 import react from '@vitejs/plugin-react'
 import type { PluginOption } from 'vite'
+import { gqlPlugin as gqlTagPlugin } from 'vite-plugin-graphql-tag'
 import tsPathsMod from 'vite-tsconfig-paths'
 
 // vite-tsconfig-paths is ESM-only. CJS builds double-wrap its default
@@ -82,6 +83,7 @@ export function cedar({ mode }: PluginOptions = {}): PluginOption[] {
 
   return [
     tsconfigPaths(),
+    gqlTagPlugin(),
     mode === 'test' && cedarJsRouterImportTransformPlugin(),
     mode === 'test' && createAuthImportTransformPlugin(),
     mode === 'test' && autoImportsPlugin(),

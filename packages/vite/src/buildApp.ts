@@ -3,8 +3,9 @@ import path from 'node:path'
 
 import { catchAllEntry, getAllEntries } from '@universal-deploy/store'
 import { catchAll } from '@universal-deploy/vite'
-import type { EnvironmentOptions, PluginOption } from 'vite'
+import type { EnvironmentOptions, Plugin, PluginOption } from 'vite'
 import { createBuilder, normalizePath } from 'vite'
+import { gqlPlugin as gqlTagPlugin } from 'vite-plugin-graphql-tag'
 import tsPathsMod from 'vite-tsconfig-paths'
 
 // vite-tsconfig-paths is ESM-only. CJS builds double-wrap its default
@@ -24,6 +25,7 @@ import { findApiFiles } from '@cedarjs/internal/dist/files.js'
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
+import { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
 import { cedarGqlormInjectPlugin } from './plugins/vite-plugin-cedar-gqlorm-inject.js'
 import { cedarGraphqlOptionsExtractPlugin } from './plugins/vite-plugin-cedar-graphql-options-extract.js'
 import { cedarMockCellDataPlugin } from './plugins/vite-plugin-cedar-mock-cell-data.js'
@@ -147,6 +149,7 @@ export async function buildCedarApp({
 
   const babelPlugins = workspace.includes('api')
     ? getApiSideBabelPlugins({
+        forVite: true,
         projectIsEsm: projectSideIsEsm('api'),
       })
     : null
@@ -161,6 +164,12 @@ export async function buildCedarApp({
 
   const plugins: PluginOption[] = [
     tsconfigPaths(),
+    cedarAutoImportsPlugin(),
+    (() => {
+      const p = gqlTagPlugin() as Plugin
+      p.enforce = 'post'
+      return p
+    })(),
     // Suppress noisy warnings from third-party dependencies across all
     // environments by injecting onwarn into every environment's rollupOptions.
     {

@@ -75,7 +75,6 @@ export async function handler({
     // - babel-plugin-module-resolver: 'src' -> './src' etc
     // - rwjs-babel-directory-named-modules: 'src/services/userExamples' -> './src/services/userExamples/userExamples.ts'
     // - babel-plugin-auto-import: `import gql from 'graphql-tag`, `import { context } from '@cedarjs/context`
-    // - babel-plugin-graphql-tag: ???
     // - rwjs-babel-glob-import-dir: Handle imports like src/services/**/*.{js,ts}
     // - rwjs-babel-otel-wrapping: Wrap code in OpenTelemetry spans
     const { mod } = await bundleRequire({
