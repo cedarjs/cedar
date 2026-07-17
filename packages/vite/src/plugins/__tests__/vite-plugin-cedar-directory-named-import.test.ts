@@ -1,6 +1,7 @@
 import path from 'node:path'
 
 import { vol } from 'memfs'
+import { normalizePath } from 'vite'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import { cedarDirectoryNamedImportPlugin } from '../vite-plugin-cedar-directory-named-import.js'
@@ -13,6 +14,17 @@ const PROJECT_ROOT = '/test/project'
 // The file doing the importing (importer context)
 const IMPORTER = path.join(PROJECT_ROOT, 'src/SomeComponent.tsx')
 
+const opts = {
+  attributes: {},
+  isEntry: false,
+}
+
+// Mirror the plugin's own path resolution (path.resolve + normalizePath)
+// to handle cross-platform differences (e.g. drive letters on Windows).
+function expectedFile(...segments: string[]) {
+  return normalizePath(path.resolve(PROJECT_ROOT, ...segments))
+}
+
 function getPluginResolveId() {
   const plugin = cedarDirectoryNamedImportPlugin()
 
@@ -20,9 +32,7 @@ function getPluginResolveId() {
     throw new Error('Expected plugin to have a resolveId function')
   }
 
-  return plugin.resolveId.bind(
-    {} as ThisParameterType<typeof plugin.resolveId>,
-  )
+  return plugin.resolveId.bind({} as ThisParameterType<typeof plugin.resolveId>)
 }
 
 describe('cedarDirectoryNamedImportPlugin', () => {
@@ -58,74 +68,68 @@ describe('cedarDirectoryNamedImportPlugin', () => {
 
   it('resolves directory-named .tsx module', () => {
     const resolveId = getPluginResolveId()
-    const result = resolveId('./components/Button', IMPORTER)
+    const result = resolveId('./components/Button', IMPORTER, opts)
     expect(result).toBe(
-      path.join(PROJECT_ROOT, 'src/components/Button/Button.tsx'),
+      expectedFile('src/components/Button/Button.tsx'),
     )
   })
 
   it('resolves directory-named .ts module', () => {
     const resolveId = getPluginResolveId()
-    const result = resolveId('./components/Icon', IMPORTER)
-    expect(result).toBe(
-      path.join(PROJECT_ROOT, 'src/components/Icon/Icon.ts'),
-    )
+    const result = resolveId('./components/Icon', IMPORTER, opts)
+    expect(result).toBe(expectedFile('src/components/Icon/Icon.ts'))
   })
 
   it('resolves directory-named .jsx module', () => {
     const resolveId = getPluginResolveId()
-    const result = resolveId('./components/Logo', IMPORTER)
-    expect(result).toBe(
-      path.join(PROJECT_ROOT, 'src/components/Logo/Logo.jsx'),
-    )
+    const result = resolveId('./components/Logo', IMPORTER, opts)
+    expect(result).toBe(expectedFile('src/components/Logo/Logo.jsx'))
   })
 
   it('resolves directory-named .js module', () => {
     const resolveId = getPluginResolveId()
-    const result = resolveId('./components/Widget', IMPORTER)
+    const result = resolveId('./components/Widget', IMPORTER, opts)
     expect(result).toBe(
-      path.join(PROJECT_ROOT, 'src/components/Widget/Widget.js'),
+      expectedFile('src/components/Widget/Widget.js'),
     )
   })
 
   it('prefers index file over directory-named module', () => {
     const resolveId = getPluginResolveId()
-    const result = resolveId('./components/Card', IMPORTER)
-    expect(result).toBe(
-      path.join(PROJECT_ROOT, 'src/components/Card/index.ts'),
-    )
+    const result = resolveId('./components/Card', IMPORTER, opts)
+    expect(result).toBe(expectedFile('src/components/Card/index.ts'))
   })
 
   it('prefers index file when both index and directory-named exist', () => {
     const resolveId = getPluginResolveId()
-    const result = resolveId('./components/Alert', IMPORTER)
+    const result = resolveId('./components/Alert', IMPORTER, opts)
     expect(result).toBe(
-      path.join(PROJECT_ROOT, 'src/components/Alert/index.ts'),
+      expectedFile('src/components/Alert/index.ts'),
     )
   })
 
   it('returns null for imports that resolve directly as files', () => {
     const resolveId = getPluginResolveId()
     // Home.tsx exists directly — let Vite handle it
-    const result = resolveId('./pages/Home', IMPORTER)
+    const result = resolveId('./pages/Home', IMPORTER, opts)
     expect(result).toBeNull()
   })
 
   it('returns null for imports that cannot be resolved at all', () => {
     const resolveId = getPluginResolveId()
-    const result = resolveId('./components/NonExistent', IMPORTER)
+    const result = resolveId('./components/NonExistent', IMPORTER, opts)
     expect(result).toBeNull()
   })
 
   it('returns null for non-relative imports (npm packages)', () => {
     const resolveId = getPluginResolveId()
-    const result = resolveId('react', IMPORTER)
+    const result = resolveId('react', IMPORTER, opts)
     expect(result).toBeNull()
   })
 
   it('returns null when there is no importer', () => {
     const resolveId = getPluginResolveId()
-    const result = resolveId('./components/Button', undefined)
+    const result = resolveId('./components/Button', undefined, opts)
     expect(result).toBeNull()
   })
 
@@ -135,7 +139,7 @@ describe('cedarDirectoryNamedImportPlugin', () => {
       PROJECT_ROOT,
       'node_modules/some-lib/index.js',
     )
-    const result = resolveId('./Button', nodeModulesImporter)
+    const result = resolveId('./Button', nodeModulesImporter, opts)
     expect(result).toBeNull()
   })
 })
