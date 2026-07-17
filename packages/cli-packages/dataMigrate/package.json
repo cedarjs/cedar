@@ -29,11 +29,12 @@
     "@cedarjs/babel-config": "5.0.1",
     "@cedarjs/cli-helpers": "5.0.1",
     "@cedarjs/project-config": "5.0.1",
-    "bundle-require": "^5.1.0",
+    "@cedarjs/vite": "5.0.1",
     "dotenv-defaults": "5.0.2",
     "execa": "5.1.1",
     "listr2": "10.2.1",
     "termi-link": "1.1.0",
+    "vite": "7.3.5",
     "yargs": "17.7.3"
   },
   "devDependencies": {
