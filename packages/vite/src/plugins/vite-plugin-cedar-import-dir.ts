@@ -73,13 +73,21 @@ export function cedarImportDirPlugin(): Plugin {
         const importName = defaultImportNode.text()
 
         const importGlob = importStatementPath(sourceValue)
-        const cwd = importGlob.startsWith('src/')
-          ? id.startsWith(getPaths().api.base)
-            ? getPaths().api.base
-            : id.startsWith(getPaths().web.base)
-              ? getPaths().web.base
-              : getPaths().api.base
-          : path.dirname(id)
+        let cwd = path.dirname(id)
+
+        // If the file location is inside the api workspace, resolve `src/`
+        // paths against the api base path
+        // If the file location is inside the web workspace, resolve `src/`
+        // paths against the web base path
+        if (importGlob.startsWith('src/')) {
+          if (id.startsWith(getPaths().api.base)) {
+            cwd = getPaths().api.base
+          } else if (id.startsWith(getPaths().web.base)) {
+            cwd = getPaths().web.base
+          } else {
+            throw new Error(`Unexpected file location: ${id}`)
+          }
+        }
 
         try {
           const dirFiles = fs.globSync(importGlob, {
