@@ -151,9 +151,14 @@ export async function handler({
       return
     }
 
-    const runner = await getRunner()
-    const dbModule = await runner.import(dbPath)
-    db = dbModule.db
+    try {
+      const runner = await getRunner()
+      const dbModule = await runner.import(dbPath)
+      db = dbModule.db
+    } catch (e) {
+      await server?.close()
+      throw e
+    }
   }
 
   const pendingDataMigrations = await getPendingDataMigrations(db)
