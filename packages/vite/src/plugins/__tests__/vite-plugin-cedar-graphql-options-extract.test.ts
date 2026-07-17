@@ -1,3 +1,4 @@
+import { TraceMap, originalPositionFor } from '@jridgewell/trace-mapping'
 import { dedent } from 'ts-dedent'
 import { describe, it, expect } from 'vitest'
 
@@ -373,5 +374,187 @@ describe('cedarGraphqlOptionsExtractPlugin', () => {
         'createGraphQLHandler(__cedar_graphqlOptions)',
       )
     }
+  })
+})
+
+describe('sourcemaps', () => {
+  function assertMapping(
+    outputLines: string[],
+    tracer: TraceMap,
+    searchString: string,
+    expectedLine: number,
+  ) {
+    const lineIdx = outputLines.findIndex((l) => l.includes(searchString))
+    expect(lineIdx).toBeGreaterThanOrEqual(0)
+
+    const col = outputLines[lineIdx].indexOf(searchString)
+    expect(col).toBeGreaterThanOrEqual(0)
+
+    const original = originalPositionFor(tracer, {
+      line: lineIdx + 1,
+      column: col,
+    })
+    expect(original.line).toBe(expectedLine)
+  }
+
+  it('returns a valid sourcemap with mappings', () => {
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
+
+      export const handler = createGraphQLHandler({
+        directives,
+        sdls,
+        services,
+      })
+    `
+
+    const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
+
+    expect(result).not.toBeNull()
+    const transformed = result!.code
+    const map = (result as { code: string; map: any }).map
+    expect(map).toBeDefined()
+    expect(map.mappings).toBeTruthy()
+
+    const tracer = new TraceMap(map)
+    const outputLines = transformed.split('\n')
+
+    // Import statement should map back to its original line
+    assertMapping(outputLines, tracer, "'@cedarjs/graphql-server'", 1)
+
+    // The handler call should map back to the original handler line
+    assertMapping(
+      outputLines,
+      tracer,
+      'createGraphQLHandler(__cedar_graphqlOptions)',
+      3,
+    )
+  })
+
+  it('maps code before and after the handler correctly', () => {
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
+
+      import directives from 'src/directives/**/*.{js,ts}'
+      import sdls from 'src/graphql/**/*.sdl.{js,ts}'
+      import services from 'src/services/**/*.{js,ts}'
+
+      export const handler = createGraphQLHandler({
+        directives,
+        sdls,
+        services,
+      })
+
+      export const somethingElse = 123
+    `
+
+    const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
+
+    expect(result).not.toBeNull()
+    const transformed = result!.code
+    const map = (result as { code: string; map: any }).map
+
+    const tracer = new TraceMap(map)
+    const outputLines = transformed.split('\n')
+
+    // First import maps to line 1
+    assertMapping(outputLines, tracer, "'@cedarjs/graphql-server'", 1)
+
+    // Second import maps to line 3
+    assertMapping(
+      outputLines,
+      tracer,
+      "import directives from 'src/directives",
+      3,
+    )
+
+    // Code after the handler maps to its original line
+    assertMapping(outputLines, tracer, 'export const somethingElse = 123', 13)
+  })
+
+  it('maps variable reference options correctly', () => {
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
+
+      const opts = { directives, sdls }
+
+      export const handler = createGraphQLHandler(opts)
+    `
+
+    const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
+
+    expect(result).not.toBeNull()
+    const transformed = result!.code
+    const map = (result as { code: string; map: any }).map
+
+    const tracer = new TraceMap(map)
+    const outputLines = transformed.split('\n')
+
+    // Import maps to line 1
+    assertMapping(outputLines, tracer, "'@cedarjs/graphql-server'", 1)
+
+    // Variable declaration still maps to line 3
+    assertMapping(outputLines, tracer, 'const opts = { directives, sdls }', 3)
+
+    // Handler call maps to line 5
+    assertMapping(
+      outputLines,
+      tracer,
+      'createGraphQLHandler(__cedar_graphqlOptions)',
+      5,
+    )
+  })
+
+  it('maps ternary conditional options correctly', () => {
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
+
+      const config = { directives, sdls }
+
+      export const handler = createGraphQLHandler(
+        true ? config : { sadness: true },
+      )
+    `
+
+    const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
+
+    expect(result).not.toBeNull()
+    const transformed = result!.code
+    const map = (result as { code: string; map: any }).map
+
+    const tracer = new TraceMap(map)
+    const outputLines = transformed.split('\n')
+
+    // Import maps to line 1
+    assertMapping(outputLines, tracer, "'@cedarjs/graphql-server'", 1)
+
+    // Handler call maps to line 5 (the handler call may span multiple lines
+    // in the output, but `handler = createGraphQLHandler(` is on one line)
+    assertMapping(outputLines, tracer, 'handler = createGraphQLHandler(', 5)
+  })
+
+  it('maps aliased imports correctly', () => {
+    const code = dedent`
+      import { createGraphQLHandler as other } from '@cedarjs/graphql-server'
+
+      export const handler = other({
+        directives,
+      })
+    `
+
+    const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
+
+    expect(result).not.toBeNull()
+    const transformed = result!.code
+    const map = (result as { code: string; map: any }).map
+
+    const tracer = new TraceMap(map)
+    const outputLines = transformed.split('\n')
+
+    // Import maps to line 1
+    assertMapping(outputLines, tracer, "'@cedarjs/graphql-server'", 1)
+
+    // Handler call (using aliased name) maps to line 3
+    assertMapping(outputLines, tracer, 'other(__cedar_graphqlOptions)', 3)
   })
 })
