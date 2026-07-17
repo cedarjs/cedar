@@ -30,6 +30,7 @@ import { cedarGqlormInjectPlugin } from './plugins/vite-plugin-cedar-gqlorm-inje
 import { cedarGraphqlOptionsExtractPlugin } from './plugins/vite-plugin-cedar-graphql-options-extract.js'
 import { cedarMockCellDataPlugin } from './plugins/vite-plugin-cedar-mock-cell-data.js'
 import { cedarOtelWrappingPlugin } from './plugins/vite-plugin-cedar-otel-wrapping.js'
+import { cedarjsJobPathInjectorPlugin } from './plugins/vite-plugin-cedarjs-job-path-injector.js'
 import { handlerAlsWrappingPlugin } from './plugins/vite-plugin-handler-als-wrapping.js'
 
 function resolveWithExtensions(id: string): string {
@@ -353,6 +354,7 @@ export async function buildCedarApp({
     plugins.push(cedarGraphqlOptionsExtractPlugin())
     plugins.push(cedarGqlormInjectPlugin())
     plugins.push(cedarOtelWrappingPlugin())
+    plugins.push(cedarjsJobPathInjectorPlugin())
     plugins.push(
       handlerAlsWrappingPlugin({ projectIsEsm: projectSideIsEsm('api') }),
     )
@@ -381,6 +383,7 @@ export async function buildCedarApp({
           code,
           id,
           babelPlugins,
+          true,
           true,
         )
 
