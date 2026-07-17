@@ -70,21 +70,35 @@ afterEach(() => {
 
 const mockDataMigrations: { current: any[] } = { current: [] }
 
-vi.mock('bundle-require', () => {
-  return {
-    bundleRequire: ({ filepath }: { filepath: string }) => {
-      return {
-        mod: {
-          default: () => {
+vi.mock('vite', () => ({
+  createServer: vi.fn(async () => ({
+    environments: {
+      nodeRunnerEnv: {
+        runner: {
+          import: vi.fn(async (filepath: string) => {
             if (filepath.endsWith('20230822075443-wip.ts')) {
-              throw new Error('oops')
+              return {
+                default: () => {
+                  throw new Error('oops')
+                },
+              }
             }
-          },
+            return { default: () => {} }
+          }),
         },
-      }
+      },
     },
-  }
-})
+    close: vi.fn(async () => {}),
+  })),
+  isRunnableDevEnvironment: vi.fn(() => true),
+}))
+
+vi.mock('@cedarjs/vite', () => ({
+  cedarCjsCompatPlugin: () => ({}) as any,
+  cedarImportDirPlugin: () => ({}) as any,
+  cedarAutoImportsPlugin: () => ({}) as any,
+  cedarjsResolveCedarStyleImportsPlugin: () => ({}) as any,
+}))
 
 vi.mock('/redwood-app/api/dist/lib/db.js', () => {
   return {
