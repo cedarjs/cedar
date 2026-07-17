@@ -40,8 +40,8 @@ export const handler = async ({
     if (prisma) {
       console.log('Running database migrations...')
       runBinSync(
-        'prisma',
-        ['migrate', 'deploy', '--config', cedarPaths.api.prismaConfig],
+        'cedar',
+        ['prisma', 'migrate', 'deploy', '--config', cedarPaths.api.prismaConfig],
         execaConfig,
       )
     }
