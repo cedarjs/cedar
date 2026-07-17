@@ -3772,6 +3772,7 @@ __metadata:
     glob: "npm:11.1.0"
     http-proxy-middleware: "npm:3.0.7"
     isbot: "npm:5.1.43"
+    magic-string: "npm:0.30.21"
     memfs: "npm:4.64.0"
     oxc-parser: "npm:0.137.0"
     publint: "npm:0.3.21"
