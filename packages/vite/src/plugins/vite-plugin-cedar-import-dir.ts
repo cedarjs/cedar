@@ -1,7 +1,7 @@
+import fs from 'node:fs'
 import path from 'node:path'
 
 import { parse, Lang } from '@ast-grep/napi'
-import fg from 'fast-glob'
 import type { Plugin } from 'vite'
 
 import { importStatementPath, getPaths } from '@cedarjs/project-config'
@@ -74,19 +74,21 @@ export function cedarImportDirPlugin(): Plugin {
 
         const importGlob = importStatementPath(sourceValue)
         const cwd = importGlob.startsWith('src/')
-          ? getPaths().api.base
+          ? id.startsWith(getPaths().api.base)
+            ? getPaths().api.base
+            : id.startsWith(getPaths().web.base)
+              ? getPaths().web.base
+              : getPaths().api.base
           : path.dirname(id)
 
         try {
-          const dirFiles = fg
-            .sync(importGlob, { cwd })
-            // Ignore *.test.*, *.scenarios.* and *.d.ts files
-            .filter(
-              (n) =>
-                !n.includes('.test.') &&
-                !n.includes('.scenarios.') &&
-                !n.includes('.d.ts'),
-            )
+          const dirFiles = fs.globSync(importGlob, {
+            cwd,
+            exclude: (n) =>
+              n.includes('.test.') ||
+              n.includes('.scenarios.') ||
+              n.includes('.d.ts'),
+          })
 
           const staticGlob = importGlob.split('*')[0]
           const filePathToVarName = (filePath: string) => {
