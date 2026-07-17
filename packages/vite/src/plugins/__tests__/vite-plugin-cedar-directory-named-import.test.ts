@@ -69,9 +69,7 @@ describe('cedarDirectoryNamedImportPlugin', () => {
   it('resolves directory-named .tsx module', () => {
     const resolveId = getPluginResolveId()
     const result = resolveId('./components/Button', IMPORTER, opts)
-    expect(result).toBe(
-      expectedFile('src/components/Button/Button.tsx'),
-    )
+    expect(result).toBe(expectedFile('src/components/Button/Button.tsx'))
   })
 
   it('resolves directory-named .ts module', () => {
@@ -89,9 +87,7 @@ describe('cedarDirectoryNamedImportPlugin', () => {
   it('resolves directory-named .js module', () => {
     const resolveId = getPluginResolveId()
     const result = resolveId('./components/Widget', IMPORTER, opts)
-    expect(result).toBe(
-      expectedFile('src/components/Widget/Widget.js'),
-    )
+    expect(result).toBe(expectedFile('src/components/Widget/Widget.js'))
   })
 
   it('prefers index file over directory-named module', () => {
@@ -103,9 +99,7 @@ describe('cedarDirectoryNamedImportPlugin', () => {
   it('prefers index file when both index and directory-named exist', () => {
     const resolveId = getPluginResolveId()
     const result = resolveId('./components/Alert', IMPORTER, opts)
-    expect(result).toBe(
-      expectedFile('src/components/Alert/index.ts'),
-    )
+    expect(result).toBe(expectedFile('src/components/Alert/index.ts'))
   })
 
   it('returns null for imports that resolve directly as files', () => {
