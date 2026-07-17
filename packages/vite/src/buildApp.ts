@@ -384,6 +384,7 @@ export async function buildCedarApp({
           id,
           babelPlugins,
           true,
+          true,
         )
 
         if (transformedCode?.code) {
