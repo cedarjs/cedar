@@ -52,7 +52,7 @@
     "@cedarjs/auth": "workspace:*"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.4",
+    "@arethetypeswrong/cli": "0.18.5",
     "@azure/msal-browser": "2.39.0",
     "@cedarjs/framework-tools": "workspace:*",
     "@types/netlify-identity-widget": "1.9.7",

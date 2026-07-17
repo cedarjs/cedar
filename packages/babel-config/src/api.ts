@@ -64,8 +64,7 @@ export const getApiSideBabelPlugins = ({
     ...getCommonPlugins(),
     // Needed to support `/** @jsxImportSource custom-jsx-library */`
     // comments in JSX files
-    ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }],
-    ['@babel/plugin-transform-runtime', {}],
+    !forVite && ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }],
     [
       'babel-plugin-module-resolver',
       {
@@ -145,8 +144,11 @@ export const getApiSideBabelPlugins = ({
       },
       'rwjs-babel-auto-import',
     ],
-    // FIXME: `graphql-tag` is not working: https://github.com/redwoodjs/redwood/pull/3193
-    ['babel-plugin-graphql-tag', undefined, 'rwjs-babel-graphql-tag'],
+    !forVite && [
+      'babel-plugin-graphql-tag',
+      undefined,
+      'rwjs-babel-graphql-tag',
+    ],
     // For Vite builds, glob imports are handled by cedarImportDirPlugin (Vite)
     // or applyImportDir (esbuild).  Keep the Babel plugin only for
     // non-Vite consumers: Jest, console, and data-migrate.

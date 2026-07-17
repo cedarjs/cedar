@@ -5,7 +5,8 @@ import { pathToFileURL } from 'node:url'
 import ansis from 'ansis'
 import type { Handler } from 'aws-lambda'
 import { normalizePath } from 'vite'
-import type { ModuleNode, ViteDevServer } from 'vite'
+import type { ModuleNode, Plugin, ViteDevServer } from 'vite'
+import { gqlPlugin as gqlTagPlugin } from 'vite-plugin-graphql-tag'
 
 import { buildCedarContext, wrapLegacyHandler } from '@cedarjs/api/runtime'
 import type { CedarHandler, LegacyHandler } from '@cedarjs/api/runtime'
@@ -20,6 +21,7 @@ import { applyGqlormInject } from '@cedarjs/internal/dist/build/api-graphql-tran
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
+import { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
 import { applyGraphqlOptionsExtract } from './plugins/vite-plugin-cedar-graphql-options-extract.js'
 import { applyOtelWrapping } from './plugins/vite-plugin-cedar-otel-wrapping.js'
 
@@ -168,6 +170,7 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
   const normalizedBase = normalizePath(cedarPaths.base)
 
   const babelPlugins = getApiSideBabelPlugins({
+    forVite: true,
     projectIsEsm: isEsm,
   })
 
@@ -192,6 +195,12 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
       alias: workspacePkgSourceMap,
     },
     plugins: [
+      cedarAutoImportsPlugin(),
+      (() => {
+        const p = gqlTagPlugin() as Plugin
+        p.enforce = 'post'
+        return p
+      })(),
       {
         name: 'cedar-api-babel-transform',
         enforce: 'pre',
@@ -218,7 +227,8 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
               normalizePath(id).endsWith('/graphql.ts') ||
               normalizePath(id).endsWith('/graphql.js')
             ) {
-              sourceCode = applyGraphqlOptionsExtract(sourceCode) ?? sourceCode
+              const extracted = applyGraphqlOptionsExtract(sourceCode)
+              sourceCode = extracted?.code ?? sourceCode
               sourceCode = applyGqlormInject(sourceCode, id) ?? sourceCode
             }
 

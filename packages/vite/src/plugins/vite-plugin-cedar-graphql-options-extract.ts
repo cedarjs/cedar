@@ -1,3 +1,5 @@
+import MagicString from 'magic-string'
+import type { SourceMap } from 'magic-string'
 import type { CallExpression } from 'oxc-parser'
 import { parseSync, Visitor } from 'oxc-parser'
 import type { Plugin } from 'vite'
@@ -37,13 +39,14 @@ export function cedarGraphqlOptionsExtractPlugin(): Plugin {
         return null
       }
 
-      const transformed = applyGraphqlOptionsExtract(code)
-      if (!transformed || transformed === code) {
+      const result = applyGraphqlOptionsExtract(code)
+      if (!result) {
         return null
       }
 
       return {
-        code: transformed,
+        code: result.code,
+        map: result.map,
       }
     },
   }
@@ -51,8 +54,8 @@ export function cedarGraphqlOptionsExtractPlugin(): Plugin {
 
 /**
  * Extracts the options argument from createGraphQLHandler calls and stores
- * them in an exported variable. Returns the transformed code, or null if no
- * transformation was needed.
+ * them in an exported variable. Returns the transformed code with a sourcemap,
+ * or null if no transformation was needed.
  *
  * Transforms:
  *   export const handler = createGraphQLHandler({ options })
@@ -64,7 +67,9 @@ export function cedarGraphqlOptionsExtractPlugin(): Plugin {
  * logic can run inside the Vite plugin pipeline without depending on internal's
  * build output.
  */
-export function applyGraphqlOptionsExtract(code: string): string | null {
+export function applyGraphqlOptionsExtract(
+  code: string,
+): { code: string; map: SourceMap } | null {
   // Check if already transformed
   if (code.includes('__cedar_graphqlOptions')) {
     return null
@@ -152,9 +157,12 @@ export function applyGraphqlOptionsExtract(code: string): string | null {
     optionsEnd,
   )}\n`
 
-  const before = code.slice(0, lineStart)
-  const between = code.slice(lineStart, optionsStart)
-  const after = code.slice(optionsEnd)
+  const s = new MagicString(code)
+  s.prependLeft(lineStart, optionsConst)
+  s.overwrite(optionsStart, optionsEnd, '__cedar_graphqlOptions')
 
-  return before + optionsConst + between + '__cedar_graphqlOptions' + after
+  return {
+    code: s.toString(),
+    map: s.generateMap({ hires: true }),
+  }
 }
