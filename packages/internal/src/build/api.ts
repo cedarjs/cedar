@@ -73,7 +73,8 @@ const runCedarBabelTransformsPlugin = {
       // handlers are exclusive (first match wins), so a standalone pre-plugin
       // would claim the file and prevent this plugin's Babel transform from
       // running on the same file.
-      fileContents = applyImportDir(fileContents, args.path) ?? fileContents
+      fileContents =
+        applyImportDir(fileContents, args.path)?.code ?? fileContents
       const transformedCode = await transformWithBabel(
         fileContents,
         args.path,
@@ -142,11 +143,11 @@ function createImportDirVitePlugin(): Plugin {
       if (id.includes('node_modules')) {
         return null
       }
-      const transformed = applyImportDir(code, id)
-      if (!transformed) {
+      const result = applyImportDir(code, id)
+      if (!result) {
         return null
       }
-      return { code: transformed }
+      return { code: result.code, map: result.map }
     },
   }
 }

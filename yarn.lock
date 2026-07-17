@@ -3279,6 +3279,7 @@ __metadata:
     graphql: "npm:16.14.2"
     graphql-tag: "npm:2.12.6"
     kill-port: "npm:1.6.1"
+    magic-string: "npm:0.30.21"
     oxc-parser: "npm:0.137.0"
     prettier: "npm:3.8.4"
     publint: "npm:0.3.21"

@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { parse, Lang } from '@ast-grep/napi'
+import MagicString from 'magic-string'
 import { normalizePath } from 'vite'
 import type { Plugin } from 'vite'
 
@@ -48,7 +49,7 @@ export function cedarImportDirPlugin(): Plugin {
 
       const root = ast.root()
       let hasTransformations = false
-      const edits = []
+      const s = new MagicString(code)
 
       // Find all import statements with glob patterns
       const globImports = root.findAll({
@@ -120,8 +121,11 @@ export function cedarImportDirPlugin(): Plugin {
           for (const filePath of dirFiles) {
             const normalizedPath = normalizePath(filePath)
             const lastSlash = normalizedPath.lastIndexOf('/')
-            const fileDir = lastSlash >= 0 ? normalizedPath.slice(0, lastSlash) : ''
-            const fileName = normalizedPath.slice(lastSlash + 1).replace(/\.\w+$/, '')
+            const fileDir =
+              lastSlash >= 0 ? normalizedPath.slice(0, lastSlash) : ''
+            const fileName = normalizedPath
+              .slice(lastSlash + 1)
+              .replace(/\.\w+$/, '')
             const fileImportPath = fileDir ? fileDir + '/' + fileName : fileName
             const filePathVarName = filePathToVarName(filePath)
             const namespaceImportName = `${importName}_${filePathVarName}`
@@ -133,8 +137,9 @@ export function cedarImportDirPlugin(): Plugin {
             replacement += `${importName}.${filePathVarName} = ${namespaceImportName};\n`
           }
 
-          // Create edit to replace the entire import statement
-          edits.push(importNode.replace(replacement.trim()))
+          // Overwrite the entire import statement with the replacement
+          const range = importNode.range()
+          s.overwrite(range.start.index, range.end.index, replacement.trim())
         } catch (error) {
           // If there's an error with glob matching, keep the original import
           console.warn(`Failed to process glob import: ${sourceValue}`, error)
@@ -142,12 +147,10 @@ export function cedarImportDirPlugin(): Plugin {
       }
 
       // Only return transformed code if we actually made changes
-      if (hasTransformations && edits.length > 0) {
-        const transformedCode = root.commitEdits(edits)
-
+      if (hasTransformations) {
         return {
-          code: transformedCode,
-          map: null,
+          code: s.toString(),
+          map: s.generateMap({ hires: true }),
         }
       }
 
