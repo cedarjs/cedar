@@ -11,8 +11,6 @@ outputs:
     value: ${{ steps.node-modules-cache.outputs.cache-hit }}
   create-cedar-rsc-app-cache-hit:
     value: ${{ steps.node-modules-cache-create-cedar-rsc-app.outputs.cache-hit }}
-  yarn-cache-directory:
-    value: ${{ steps.get-yarn-cache-directory.outputs.CACHE_DIRECTORY }}
 
 runs:
   using: composite
@@ -23,21 +21,19 @@ runs:
       run: echo "CACHE_DIRECTORY=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
       shell: bash
 
-    - name: ♻️ Restore yarn's cache
-      id: cache-yarn-cache
-      uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+    - name: ♻️ Cache yarn's cache
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: ${{ steps.get-yarn-cache-directory.outputs.CACHE_DIRECTORY }}
-        key: yarn-cache-${{ runner.os }}-${{ github.run_id }}
+        key: yarn-cache-${{ runner.os }}-${{ github.job }}-${{ github.run_id }}
         restore-keys: |
           yarn-cache-${{ runner.os }}-
 
-    - name: ♻️ Restore yarn's install state
-      id: cache-install-state
-      uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+    - name: ♻️ Cache yarn's install state
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: .yarn/install-state.gz
-        key: yarn-install-state-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}-${{ github.run_id }}
+        key: yarn-install-state-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}-${{ github.job }}-${{ github.run_id }}
         restore-keys: |
           yarn-install-state-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}-
 
