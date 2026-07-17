@@ -557,4 +557,55 @@ describe('sourcemaps', () => {
     // Handler call (using aliased name) maps to line 3
     assertMapping(outputLines, tracer, 'other(__cedar_graphqlOptions)', 3)
   })
+
+  it('maps correctly with multibyte characters before the handler', () => {
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
+
+      // 好 🎉 — multibyte chars that shift byte offsets vs JS indices
+      const greeting = '你好世界'
+
+      export const handler = createGraphQLHandler({
+        greeting,
+      })
+    `
+
+    const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
+
+    expect(result).not.toBeNull()
+    const transformed = result!.code
+    const map = (result as { code: string; map: any }).map
+
+    const tracer = new TraceMap(map)
+    const outputLines = transformed.split('\n')
+
+    // Import maps to line 1
+    assertMapping(outputLines, tracer, "'@cedarjs/graphql-server'", 1)
+
+    // Comment with multibyte chars maps to line 3
+    assertMapping(outputLines, tracer, 'multibyte chars', 3)
+
+    // Greeting variable maps to line 4
+    assertMapping(outputLines, tracer, "const greeting = '你好世界'", 4)
+
+    // Handler call maps to line 6
+    assertMapping(outputLines, tracer, 'handler = createGraphQLHandler(', 6)
+
+    // The overwritten `__cedar_graphqlOptions` argument in the handler call
+    // maps to the original options position (line 6)
+    const firstIdx = outputLines.findIndex((l) =>
+      l.includes('__cedar_graphqlOptions'),
+    )
+    const secondIdx = outputLines.findIndex(
+      (l, i) => i > firstIdx && l.includes('__cedar_graphqlOptions'),
+    )
+    if (secondIdx >= 0) {
+      const col = outputLines[secondIdx].indexOf('__cedar_graphqlOptions')
+      const original = originalPositionFor(tracer, {
+        line: secondIdx + 1,
+        column: col,
+      })
+      expect(original.line).toBe(6)
+    }
+  })
 })
