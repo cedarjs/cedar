@@ -81,9 +81,10 @@ export function applyImportDir(
 
     for (const fp of dirFiles) {
       const { dir: fileDir, name: fileName } = path.parse(fp)
+      const normalizedDir = importStatementPath(fileDir)
       const varName = filePathToVarName(fp)
       const nsImport = `${importName}_${varName}`
-      replacement += `import * as ${nsImport} from '${fileDir}/${fileName}';\n`
+      replacement += `import * as ${nsImport} from '${normalizedDir}/${fileName}';\n`
       replacement += `${importName}.${varName} = ${nsImport};\n`
     }
 
