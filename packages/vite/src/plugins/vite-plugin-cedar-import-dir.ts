@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { parse, Lang } from '@ast-grep/napi'
+import { normalizePath } from 'vite'
 import type { Plugin } from 'vite'
 
 import { importStatementPath, getPaths } from '@cedarjs/project-config'
@@ -64,7 +65,8 @@ export function cedarImportDirPlugin(): Plugin {
           continue
         }
 
-        const sourceValue = sourceNode.text().slice(1, -1) // Remove quotes
+        // Remove quotes
+        const sourceValue = sourceNode.text().slice(1, -1)
         if (!sourceValue.includes('/**/')) {
           continue
         }
@@ -80,9 +82,13 @@ export function cedarImportDirPlugin(): Plugin {
         // If the file location is inside the web workspace, resolve `src/`
         // paths against the web base path
         if (importGlob.startsWith('src/')) {
-          if (id.startsWith(getPaths().api.base)) {
+          const normalizedId = normalizePath(id)
+          const apiBase = normalizePath(getPaths().api.base)
+          const webBase = normalizePath(getPaths().web.base)
+
+          if (normalizedId.startsWith(apiBase)) {
             cwd = getPaths().api.base
-          } else if (id.startsWith(getPaths().web.base)) {
+          } else if (normalizedId.startsWith(webBase)) {
             cwd = getPaths().web.base
           } else {
             throw new Error(`Unexpected file location: ${id}`)
@@ -100,7 +106,8 @@ export function cedarImportDirPlugin(): Plugin {
 
           const staticGlob = importGlob.split('*')[0]
           const filePathToVarName = (filePath: string) => {
-            return filePath
+            const normalizedPath = normalizePath(filePath)
+            return normalizedPath
               .replace(staticGlob, '')
               .replace(/\.(js|ts)$/, '')
               .replace(/[^a-zA-Z0-9]/g, '_')
@@ -111,8 +118,11 @@ export function cedarImportDirPlugin(): Plugin {
 
           // Generate namespace imports and assignments for each file
           for (const filePath of dirFiles) {
-            const { dir: fileDir, name: fileName } = path.parse(filePath)
-            const fileImportPath = fileDir + '/' + fileName
+            const normalizedPath = normalizePath(filePath)
+            const lastSlash = normalizedPath.lastIndexOf('/')
+            const fileDir = lastSlash >= 0 ? normalizedPath.slice(0, lastSlash) : ''
+            const fileName = normalizedPath.slice(lastSlash + 1).replace(/\.\w+$/, '')
+            const fileImportPath = fileDir ? fileDir + '/' + fileName : fileName
             const filePathVarName = filePathToVarName(filePath)
             const namespaceImportName = `${importName}_${filePathVarName}`
 
@@ -137,7 +147,7 @@ export function cedarImportDirPlugin(): Plugin {
 
         return {
           code: transformedCode,
-          map: null, // For simplicity, not generating source maps
+          map: null,
         }
       }
 
