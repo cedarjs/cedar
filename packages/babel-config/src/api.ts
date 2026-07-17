@@ -149,7 +149,10 @@ export const getApiSideBabelPlugins = ({
       undefined,
       'rwjs-babel-graphql-tag',
     ],
-    [pluginRedwoodImportDir, {}, 'rwjs-babel-glob-import-dir'],
+    // For Vite builds, glob imports are handled by cedarImportDirPlugin (Vite)
+    // or applyImportDir (esbuild).  Keep the Babel plugin only for
+    // non-Vite consumers: Jest, console, and data-migrate.
+    !forVite && [pluginRedwoodImportDir, {}, 'rwjs-babel-glob-import-dir'],
   ]
 
   return plugins.filter(<T>(n: T | boolean): n is T => Boolean(n))

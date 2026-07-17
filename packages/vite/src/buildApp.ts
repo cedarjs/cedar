@@ -28,6 +28,7 @@ import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
 import { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
 import { cedarGqlormInjectPlugin } from './plugins/vite-plugin-cedar-gqlorm-inject.js'
 import { cedarGraphqlOptionsExtractPlugin } from './plugins/vite-plugin-cedar-graphql-options-extract.js'
+import { cedarImportDirPlugin } from './plugins/vite-plugin-cedar-import-dir.js'
 import { cedarMockCellDataPlugin } from './plugins/vite-plugin-cedar-mock-cell-data.js'
 import { cedarOtelWrappingPlugin } from './plugins/vite-plugin-cedar-otel-wrapping.js'
 import { cedarjsJobPathInjectorPlugin } from './plugins/vite-plugin-cedarjs-job-path-injector.js'
@@ -353,6 +354,7 @@ export async function buildCedarApp({
   if (workspace.includes('api')) {
     plugins.push(cedarGraphqlOptionsExtractPlugin())
     plugins.push(cedarGqlormInjectPlugin())
+    plugins.push(cedarImportDirPlugin())
     plugins.push(cedarOtelWrappingPlugin())
     plugins.push(cedarjsJobPathInjectorPlugin())
     plugins.push(
