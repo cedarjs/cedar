@@ -22,6 +22,7 @@ import { applyAutoImports } from './auto-import.js'
 import { cedarApiGraphqlPlugin } from './esbuild-plugin-api-graphql.js'
 import { applyOtelWrapping } from './esbuild-plugin-cedar-otel-wrapping.js'
 import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
+import { applyImportDir } from './import-dir.js'
 import { applySrcAlias } from './src-alias.js'
 
 let BUILD_CTX: BuildContext | null = null
@@ -63,6 +64,17 @@ const runCedarBabelTransformsPlugin = {
         ),
       )
       fileContents = applyAutoImports(fileContents)
+      // Expand glob imports (e.g. `import x from 'src/services/**/*.ts'`)
+      // before Babel runs.  The Babel import-dir plugin is disabled for these
+      // builds (forVite: true); applyImportDir is the esbuild equivalent.
+      //
+      // This is intentionally applied inline rather than as a separate esbuild
+      // plugin because esbuild 0.27 lacks onTransform chaining — onLoad
+      // handlers are exclusive (first match wins), so a standalone pre-plugin
+      // would claim the file and prevent this plugin's Babel transform from
+      // running on the same file.
+      fileContents =
+        applyImportDir(fileContents, args.path)?.code ?? fileContents
       const transformedCode = await transformWithBabel(
         fileContents,
         args.path,
@@ -109,6 +121,35 @@ const runCedarBabelTransformsPlugin = {
       throw new Error(`Could not transform file: ${args.path}`)
     })
   },
+}
+
+/**
+ * Vite plugin that expands glob directory imports before the Babel transform
+ * runs.  This is the buildApiWithVite equivalent of:
+ *   - cedarImportDirPlugin  in @cedarjs/vite  (used by buildApp and exec)
+ *   - applyImportDir        applied inline      (used by runCedarBabelTransformsPlugin)
+ *
+ * Inlined here to avoid a circular dependency (@cedarjs/internal ↔
+ * @cedarjs/vite).  Code duplication is intentional.
+ */
+function createImportDirVitePlugin(): Plugin {
+  return {
+    name: 'cedar-internal-import-dir',
+    enforce: 'pre',
+    transform(code, id) {
+      if (!/\.(js|ts|tsx|jsx)$/.test(id)) {
+        return null
+      }
+      if (id.includes('node_modules')) {
+        return null
+      }
+      const result = applyImportDir(code, id)
+      if (!result) {
+        return null
+      }
+      return { code: result.code, map: result.map }
+    },
+  }
 }
 
 function createCedarViteApiPlugin(): Plugin {
@@ -251,7 +292,11 @@ export const buildApiWithVite = async () => {
         },
       },
     },
-    plugins: [createCedarViteApiPlugin()],
+    // cedarImportDirPlugin must run before the Babel transform so glob imports
+    // are expanded before Babel sees the code.  The Babel import-dir plugin is
+    // disabled for forVite:true builds; this inline Vite plugin is its
+    // replacement for this code path (both CJS and ESM output via Rollup).
+    plugins: [createImportDirVitePlugin(), createCedarViteApiPlugin()],
   })
 }
 
