@@ -47,6 +47,7 @@ export {
 } from './plugins/vite-plugin-handler-als-wrapping.js'
 export { cedarEntryInjectionPlugin } from './plugins/vite-plugin-cedar-entry-injection.js'
 export { cedarHtmlEnvPlugin } from './plugins/vite-plugin-cedar-html-env.js'
+export { cedarDirectoryNamedImportPlugin } from './plugins/vite-plugin-cedar-directory-named-import.js'
 export { cedarImportDirPlugin } from './plugins/vite-plugin-cedar-import-dir.js'
 export { cedarDataUriShim } from './plugins/vite-plugin-cedar-data-uri-shim.js'
 export { cedarRemoveDevFatalErrorPage } from './plugins/vite-plugin-cedar-remove-dev-fatal-error-page.js'
