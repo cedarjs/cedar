@@ -240,18 +240,6 @@ For example, if you have a query named `search` that supports [Apollo's offset p
 }}>
 ```
 
-### Swapping out the RedwoodApolloProvider
-
-As long as you're willing to do a bit of configuring yourself, you can swap out `RedwoodApolloProvider` with your GraphQL Client of choice. You'll just have to get to know a bit of the make up of the [RedwoodApolloProvider](https://github.com/cedarjs/cedar/blob/main/packages/web/src/apollo/index.tsx#L71-L84); it's actually composed of a few more Providers and hooks:
-
-- `FetchConfigProvider`
-- `useFetchConfig`
-- `GraphQLHooksProvider`
-
-For an example of configuring your own GraphQL Client, see the [redwoodjs-react-query-provider](https://www.npmjs.com/package/redwoodjs-react-query-provider). If you were thinking about using [react-query](https://react-query.tanstack.com/), you can also just go ahead and install it!
-
-Note that if you don't import `RedwoodApolloProvider`, it won't be included in your bundle, dropping your bundle size quite a lot!
-
 ## Server-side
 
 ### Understanding Default Resolvers

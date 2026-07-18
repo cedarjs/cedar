@@ -7,7 +7,7 @@ import type {
   FindUserExamples,
 } from 'types/graphql'
 
-import { useMutation } from '@cedarjs/web/dist/components/GraphQLHooksProvider'
+import { useMutation } from '@cedarjs/web'
 import { toast } from '@cedarjs/web/toast'
 
 import { truncate } from '../../../lib/formatters'

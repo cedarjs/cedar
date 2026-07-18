@@ -1,17 +1,30 @@
 import React from 'react'
 
+import { useQuery } from '@apollo/client/react/hooks/hooks.cjs'
 import { render, screen } from '@testing-library/react'
-import { vi, describe, beforeAll, test, expect } from 'vitest'
-
-import { GraphQLHooksProvider } from '../GraphQLHooksProvider.js'
+import type { Mock } from 'vitest'
+import { vi, describe, beforeAll, beforeEach, test, expect } from 'vitest'
 
 import { createCell } from './createCell.js'
+
+vi.mock('@apollo/client/react/hooks/hooks.cjs', () => ({
+  useQuery: vi.fn(),
+}))
+
+// The tests fake `useQuery` with minimal objects rather than full Apollo
+// `QueryResult`s, so the mock is typed loosely instead of with Apollo's
+// `useQuery` signature
+const mockUseQuery = useQuery as unknown as Mock
 
 describe('createCell', () => {
   beforeAll(() => {
     globalThis.RWJS_ENV = {
       RWJS_EXP_STREAMING_SSR: false,
     }
+  })
+
+  beforeEach(() => {
+    mockUseQuery.mockReset()
   })
 
   test('Renders a static Success component', () => {
@@ -21,13 +34,9 @@ describe('createCell', () => {
       Success: () => <>Great success!</>,
     })
 
-    const myUseQueryHook = () => ({ data: {} })
+    mockUseQuery.mockImplementation(() => ({ data: {} }))
 
-    render(
-      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
-        <TestCell />
-      </GraphQLHooksProvider>,
-    )
+    render(<TestCell />)
     screen.getByText(/^Great success!$/)
   })
 
@@ -45,15 +54,11 @@ describe('createCell', () => {
       ),
     })
 
-    const myUseQueryHook = () => {
+    mockUseQuery.mockImplementation(() => {
       return { data: { answer: 42 } }
-    }
+    })
 
-    render(
-      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
-        <TestCell />
-      </GraphQLHooksProvider>,
-    )
+    render(<TestCell />)
 
     screen.getByText(/^What's the meaning of life\?$/)
     screen.getByText(/^42$/)
@@ -92,20 +97,16 @@ describe('createCell', () => {
       ),
     })
 
-    const myUseQueryHook = () => {
+    mockUseQuery.mockImplementation(() => {
       return {
         data: {
           users: [],
           posts: [{ title: 'bazinga' }, { title: 'kittens' }],
         },
       }
-    }
+    })
 
-    render(
-      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
-        <TestCell />
-      </GraphQLHooksProvider>,
-    )
+    render(<TestCell />)
 
     screen.getByText(/bazinga/)
     screen.getByText(/kittens/)
@@ -118,13 +119,9 @@ describe('createCell', () => {
       Success: () => <>Great success!</>,
     })
 
-    const myUseQueryHook = () => ({ loading: true })
+    mockUseQuery.mockImplementation(() => ({ loading: true }))
 
-    render(
-      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
-        <TestCell />
-      </GraphQLHooksProvider>,
-    )
+    render(<TestCell />)
     screen.getByText(/^Loading...$/)
   })
 
@@ -136,13 +133,9 @@ describe('createCell', () => {
       Loading: () => <>Fetching answer...</>,
     })
 
-    const myUseQueryHook = () => ({ loading: true })
+    mockUseQuery.mockImplementation(() => ({ loading: true }))
 
-    render(
-      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
-        <TestCell />
-      </GraphQLHooksProvider>,
-    )
+    render(<TestCell />)
     screen.getByText(/^Fetching answer...$/)
   })
 
@@ -154,13 +147,9 @@ describe('createCell', () => {
       Loading: () => <>Fetching answer...</>,
     })
 
-    const myUseQueryHook = () => ({ loading: true, data: {} })
+    mockUseQuery.mockImplementation(() => ({ loading: true, data: {} }))
 
-    render(
-      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
-        <TestCell />
-      </GraphQLHooksProvider>,
-    )
+    render(<TestCell />)
     screen.getByText(/^Great success!$/)
   })
 
@@ -172,13 +161,12 @@ describe('createCell', () => {
       Empty: () => <>No one knows</>,
     })
 
-    const myUseQueryHook = () => ({ loading: true, data: { answer: null } })
+    mockUseQuery.mockImplementation(() => ({
+      loading: true,
+      data: { answer: null },
+    }))
 
-    render(
-      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
-        <TestCell />
-      </GraphQLHooksProvider>,
-    )
+    render(<TestCell />)
     screen.getByText(/^No one knows$/)
   })
 
@@ -190,13 +178,12 @@ describe('createCell', () => {
       Empty: () => <>No one knows</>,
     })
 
-    const myUseQueryHook = () => ({ loading: true, data: { answers: [] } })
+    mockUseQuery.mockImplementation(() => ({
+      loading: true,
+      data: { answers: [] },
+    }))
 
-    render(
-      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
-        <TestCell />
-      </GraphQLHooksProvider>,
-    )
+    render(<TestCell />)
     screen.getByText(/^No one knows$/)
   })
 
@@ -207,13 +194,12 @@ describe('createCell', () => {
       Success: () => <>Empty success</>,
     })
 
-    const myUseQueryHook = () => ({ loading: true, data: { answer: null } })
+    mockUseQuery.mockImplementation(() => ({
+      loading: true,
+      data: { answer: null },
+    }))
 
-    render(
-      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
-        <TestCell />
-      </GraphQLHooksProvider>,
-    )
+    render(<TestCell />)
     screen.getByText(/^Empty success$/)
   })
 
@@ -224,14 +210,12 @@ describe('createCell', () => {
       Success: ({ children }) => <>Look at my beautiful {children}</>,
     })
 
-    const myUseQueryHook = () => ({ data: {} })
+    mockUseQuery.mockImplementation(() => ({ data: {} }))
 
     render(
-      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
-        <TestCell>
-          <div>🦆</div>
-        </TestCell>
-      </GraphQLHooksProvider>,
+      <TestCell>
+        <div>🦆</div>
+      </TestCell>,
     )
     screen.getByText(/^Look at my beautiful$/)
     screen.getByText(/^🦆$/)
@@ -248,15 +232,11 @@ describe('createCell', () => {
       Success: ({ greeting }) => <p>{greeting}</p>,
     })
 
-    const myUseQueryHook = (_query: any, options: any) => {
+    mockUseQuery.mockImplementation((_query: any, options: any) => {
       return { data: { greeting: `Hello ${options.variables.name}!` } }
-    }
+    })
 
-    render(
-      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
-        <TestCell name="Bob" />
-      </GraphQLHooksProvider>,
-    )
+    render(<TestCell name="Bob" />)
 
     screen.getByText(/^Hello Bob!$/)
   })
@@ -274,7 +254,7 @@ describe('createCell', () => {
       Success: ({ name }) => <p>Call me {name}</p>,
     })
 
-    const myUseQueryHook = (query: any) => {
+    mockUseQuery.mockImplementation((query: any) => {
       if (query.includes('BeastQuery')) {
         return { data: { name: 'Boogeyman' } }
       } else if (query.includes('HeroQuery')) {
@@ -282,13 +262,13 @@ describe('createCell', () => {
       }
 
       return { data: { name: 'John Doe' } }
-    }
+    })
 
     render(
-      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
+      <>
         <TestCell character="BEAST" />
         <TestCell character="HERO" />
-      </GraphQLHooksProvider>,
+      </>,
     )
 
     screen.getByText(/^Call me Boogeyman$/)
@@ -304,13 +284,9 @@ describe('createCell', () => {
       Loading: () => <>Fetching answer...</>,
     })
 
-    const myUseQueryHook = () => ({ error: true })
+    mockUseQuery.mockImplementation(() => ({ error: true }))
 
-    render(
-      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
-        <TestCell />
-      </GraphQLHooksProvider>,
-    )
+    render(<TestCell />)
     screen.getByText(/^Sad face :\($/)
   })
 
@@ -323,13 +299,11 @@ describe('createCell', () => {
       Loading: () => <>Fetching answer...</>,
     })
 
-    const myUseQueryHook = () => ({ error: { msg: 'System malfunction' } })
+    mockUseQuery.mockImplementation(() => ({
+      error: { msg: 'System malfunction' },
+    }))
 
-    render(
-      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
-        <TestCell />
-      </GraphQLHooksProvider>,
-    )
+    render(<TestCell />)
     screen.getByText(/^{"msg":"System malfunction"}$/)
   })
 
@@ -346,16 +320,12 @@ describe('createCell', () => {
       Loading: () => <>Fetching answer...</>,
     })
 
-    const myUseQueryHook = () => ({
+    mockUseQuery.mockImplementation(() => ({
       error: { msg: 'System malfunction' },
       errorCode: 'SIMON_SAYS_NO',
-    })
+    }))
 
-    render(
-      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
-        <TestCell />
-      </GraphQLHooksProvider>,
-    )
+    render(<TestCell />)
     screen.getByText(/^{"msg":"System malfunction"},code:SIMON_SAYS_NO$/)
   })
 
@@ -366,14 +336,12 @@ describe('createCell', () => {
       Failure: ({ children }) => <>I&apos;m a failure {children}</>,
     })
 
-    const myUseQueryHook = () => ({ error: {} })
+    mockUseQuery.mockImplementation(() => ({ error: {} }))
 
     render(
-      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
-        <TestCell>
-          <div>Child</div>
-        </TestCell>
-      </GraphQLHooksProvider>,
+      <TestCell>
+        <div>Child</div>
+      </TestCell>,
     )
     screen.getByText(/^I'm a failure$/)
     screen.getByText(/^Child$/)
@@ -387,7 +355,9 @@ describe('createCell', () => {
       Loading: () => <>Fetching answer...</>,
     })
 
-    const myUseQueryHook = () => ({ error: { message: '200 GraphQL' } })
+    mockUseQuery.mockImplementation(() => ({
+      error: { message: '200 GraphQL' },
+    }))
 
     // Prevent writing to stderr during this render.
     const err = console.error
@@ -395,11 +365,7 @@ describe('createCell', () => {
 
     let error
     try {
-      render(
-        <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
-          <TestCell />
-        </GraphQLHooksProvider>,
-      )
+      render(<TestCell />)
     } catch (e) {
       error = e
     }
@@ -419,16 +385,12 @@ describe('createCell', () => {
       isEmpty: () => true,
     })
 
-    const myUseQueryHook = () => ({
+    mockUseQuery.mockImplementation(() => ({
       data: {},
       loading: false,
-    })
+    }))
 
-    render(
-      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
-        <TestCell />
-      </GraphQLHooksProvider>,
-    )
+    render(<TestCell />)
 
     screen.getByText(/^Got nothing$/)
   })
@@ -443,16 +405,12 @@ describe('createCell', () => {
         isDataEmpty(data) || data.answer === '0',
     })
 
-    const myUseQueryHook = () => ({
+    mockUseQuery.mockImplementation(() => ({
       data: { answer: '0' },
       loading: false,
-    })
+    }))
 
-    render(
-      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
-        <TestCell />
-      </GraphQLHooksProvider>,
-    )
+    render(<TestCell />)
 
     screen.getByText(/^Got nothing$/)
   })
@@ -473,15 +431,11 @@ describe('createCell', () => {
       }),
     })
 
-    const myUseQueryHook = (_query: any, options: any) => {
+    mockUseQuery.mockImplementation((_query: any, options: any) => {
       return { data: { greeting: `Hello ${options.variables.name}!` } }
-    }
+    })
 
-    render(
-      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
-        <TestCell />
-      </GraphQLHooksProvider>,
-    )
+    render(<TestCell />)
 
     screen.getByText(/^Hello Bob!$/)
   })
