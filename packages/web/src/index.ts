@@ -12,11 +12,17 @@ export {
   useQuery,
   useMutation,
   useSubscription,
+  useFragment,
+} from './components/GraphQLHooksProvider.js'
+export type {
+  FragmentHookOptions,
+  FragmentHookResult,
 } from './components/GraphQLHooksProvider.js'
 
 export * from './components/cell/CellCacheContext.js'
 
 export { createCell } from './components/cell/createCell.js'
+export { createFragmentCell } from './components/cell/createFragmentCell.js'
 
 export type {
   CellProps,

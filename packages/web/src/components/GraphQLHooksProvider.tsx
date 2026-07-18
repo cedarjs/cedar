@@ -52,6 +52,39 @@ type DefaultUseSuspenseType = <
   options?: GraphQLSuspenseQueryHookOptions<TData, TVariables>,
 ) => SuspenseQueryOperationResult<TData, TVariables>
 
+export interface FragmentHookOptions {
+  fragment: DocumentNode
+  fragmentName?: string
+  /**
+   * The object to read the fragment data for. Usually a cache reference like
+   * `{ __typename: 'User', id: 1 }`, but any object that the GraphQL client
+   * can identify works.
+   */
+  from: Record<string, unknown>
+}
+
+export interface FragmentHookResult<TData = any> {
+  /**
+   * The fragment data read from the client's cache, or `undefined` if the
+   * cache doesn't (yet) contain complete data for the fragment.
+   */
+  data: TData | undefined
+  complete: boolean
+}
+
+type DefaultUseFragmentType = <TData = any>(
+  options: FragmentHookOptions,
+) => FragmentHookResult<TData>
+
+/**
+ * Fallback used when the current GraphQL client doesn't provide a
+ * `useFragment` implementation. Always reports an incomplete read, which
+ * makes fragment Cells fall back to the data snapshot they were passed.
+ */
+const incompleteFragmentRead = () => {
+  return { data: undefined, complete: false }
+}
+
 export interface GraphQLHooks<
   TuseQuery = DefaultUseQueryType,
   TuseMutation = DefaultUseMutationType,
@@ -66,6 +99,13 @@ export interface GraphQLHooks<
   // This is because useBackgroundQuery and useReadQuery are apollo specific hooks.
   useBackgroundQuery: typeof apolloUseBackgroundQuery
   useReadQuery: typeof apolloUseReadQuery
+  /**
+   * Synchronously read fragment data from the GraphQL client's cache.
+   * Optional so that custom GraphQL clients don't have to provide an
+   * implementation. Fragment Cells fall back to reading data from their
+   * data prop when this reports an incomplete result.
+   */
+  useFragment?: DefaultUseFragmentType
 }
 
 export const GraphQLHooksContext = React.createContext<GraphQLHooks>({
@@ -102,6 +142,8 @@ export const GraphQLHooksContext = React.createContext<GraphQLHooks>({
       'You must register a useReadQuery hook via the `GraphQLHooksProvider`.',
     )
   },
+
+  useFragment: incompleteFragmentRead,
 })
 
 interface GraphQlHooksProviderProps<
@@ -135,6 +177,7 @@ export const GraphQLHooksProvider = <
   useSuspenseQuery,
   useBackgroundQuery,
   useReadQuery,
+  useFragment,
   children,
 }: GraphQlHooksProviderProps<TuseQuery, TuseMutation>) => {
   return (
@@ -146,6 +189,7 @@ export const GraphQLHooksProvider = <
         useSuspenseQuery,
         useBackgroundQuery,
         useReadQuery,
+        useFragment: useFragment ?? incompleteFragmentRead,
       }}
     >
       {children}
@@ -216,4 +260,18 @@ export const useBackgroundQuery: typeof apolloUseBackgroundQuery<any> = (
 
 export const useReadQuery: typeof apolloUseReadQuery = (...args) => {
   return React.useContext(GraphQLHooksContext).useReadQuery(...args)
+}
+
+/**
+ * Read fragment data from the GraphQL client's cache without firing a
+ * network request. Used by fragment Cells (Cells that export `FRAGMENT`
+ * instead of `QUERY`).
+ */
+export function useFragment<TData = any>(
+  options: FragmentHookOptions,
+): FragmentHookResult<TData> {
+  const useFragmentHook =
+    React.useContext(GraphQLHooksContext).useFragment ?? incompleteFragmentRead
+
+  return useFragmentHook<TData>(options)
 }
