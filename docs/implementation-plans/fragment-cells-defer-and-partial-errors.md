@@ -95,10 +95,11 @@ this needs:
 
 Caveat: as of mid-2026 the spec is experimental and primarily implemented in
 Apollo Kotlin; Apollo Client (JS) support is still emerging, as is the GraphQL
-working group's upstream semantic-nullability effort. Until the JS client
-processes `@catch`, an interim Cedar implementation could approximate it with
-`errorPolicy: 'all'` + error-path matching via context from the parent Cell —
-and swap to the standardized directives when they land.
+working group's upstream semantic-nullability effort
+(https://github.com/graphql/graphql-wg/blob/main/rfcs/SemanticNullability.md).
+Until the JS client processes `@catch`, an interim Cedar implementation could
+approximate it with `errorPolicy: 'all'` + error-path matching via context from
+the parent Cell — and swap to the standardized directives when they land.
 
 ## Suggested order of attack
 
