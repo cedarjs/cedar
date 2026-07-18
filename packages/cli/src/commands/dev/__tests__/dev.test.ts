@@ -274,10 +274,10 @@ describe('yarn cedar dev', () => {
 
     const { webCommand, apiCommand, generateCommand } = findSeparateCommands()
 
-    // In streaming SSR mode the web side uses the cedar-dev-fe server
-    expect(webCommand?.command).toContain(
-      'yarn cross-env NODE_ENV=development cedar-dev-fe',
-    )
+    // In streaming SSR mode the web side uses the cedar-dev-fe server.
+    // NODE_ENV comes from the job env, not a cross-env wrapper.
+    expect(webCommand?.command).toContain('yarn cedar-dev-fe')
+    expect(webCommand?.env?.NODE_ENV).toEqual('development')
 
     // API side uses nodemon with cedar-api-server-watch in streaming SSR fallback mode
     expect(
@@ -326,9 +326,12 @@ describe('yarn cedar dev', () => {
 
     const { webCommand } = findSeparateCommands()
 
-    expect(webCommand?.command).toContain(
-      'yarn cross-env NODE_ENV=development cedar-vite-dev',
-    )
+    // The bin is launched via an explicit `node <flags> <path>` (under yarn:
+    // `yarn node`) so node flags can be applied. NODE_ENV comes from the job
+    // env, not a cross-env wrapper. See `formatViteDevBinCommand`.
+    expect(webCommand?.command).toContain('yarn node ')
+    expect(webCommand?.command).toContain('cedar-vite-dev.mjs')
+    expect(webCommand?.env?.NODE_ENV).toEqual('development')
 
     // No unified dev command and no api command
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
@@ -336,6 +339,31 @@ describe('yarn cedar dev', () => {
     const apiCommand = find(concurrentlyArgs, { name: 'api' })
     expect(devCommand).toBeUndefined()
     expect(apiCommand).toBeUndefined()
+  })
+
+  it('Should forward --node-args to the web dev server node process', async () => {
+    await handler({ workspace: ['web'], nodeArgs: '--inspect' })
+
+    const { webCommand } = findSeparateCommands()
+
+    // Node flags must appear before the bin path (node-flag position), not after.
+    expect(webCommand?.command).toMatch(
+      /yarn node .*--inspect.*cedar-vite-dev\.mjs/,
+    )
+  })
+
+  it('Should forward --node-args to the unified dev server node process', async () => {
+    await handler({
+      workspace: ['api', 'web'],
+      ud: true,
+      nodeArgs: '--inspect',
+    })
+
+    const devCommand = findUnifiedDevCommand()
+
+    expect(devCommand.command).toMatch(
+      /yarn node .*--inspect.*cedar-unified-dev\.mjs/,
+    )
   })
 
   it('Should use esm api-server-watch bin in fallback mode for esm projects', async () => {
@@ -451,9 +479,13 @@ describe('npm and pnpm', () => {
 
     const { webCommand, apiCommand, generateCommand } = findSeparateCommands()
 
-    // npm uses npx for local binaries
-    expect(webCommand?.command).toContain('npx cross-env')
-    expect(webCommand?.command).toContain('cedar-vite-dev')
+    // npm uses npx for local binaries, except the web dev server, which is
+    // launched with bare `node` (npm/pnpm always have a real node_modules tree,
+    // so no PnP-aware `yarn node` launcher is needed).
+    expect(webCommand?.command).toContain('node "')
+    expect(webCommand?.command).toContain('cedar-vite-dev.mjs')
+    expect(webCommand?.command).not.toContain('npx')
+    expect(webCommand?.env?.NODE_ENV).toEqual('development')
     expect(apiCommand?.command).toContain('npx nodemon')
     expect(apiCommand?.command).toContain('cedar-api-server-watch')
     expect(generateCommand?.command).toEqual('npx cedar-gen-watch')
@@ -466,9 +498,13 @@ describe('npm and pnpm', () => {
 
     const { webCommand, apiCommand, generateCommand } = findSeparateCommands()
 
-    // pnpm uses pnpm exec for local binaries
-    expect(webCommand?.command).toContain('pnpm exec cross-env')
-    expect(webCommand?.command).toContain('cedar-vite-dev')
+    // pnpm uses pnpm exec for local binaries, except the web dev server, which
+    // is launched with bare `node` (npm/pnpm always have a real node_modules
+    // tree, so no PnP-aware `yarn node` launcher is needed).
+    expect(webCommand?.command).toContain('node "')
+    expect(webCommand?.command).toContain('cedar-vite-dev.mjs')
+    expect(webCommand?.command).not.toContain('pnpm exec')
+    expect(webCommand?.env?.NODE_ENV).toEqual('development')
     expect(apiCommand?.command).toContain('pnpm exec nodemon')
     expect(apiCommand?.command).toContain('cedar-api-server-watch')
     expect(generateCommand?.command).toEqual('pnpm exec cedar-gen-watch')

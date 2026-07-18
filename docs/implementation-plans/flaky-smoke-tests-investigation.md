@@ -1196,3 +1196,133 @@ Server tests, Create Cedar App, constraints check.
 - Refactor branches carrying genuine TS-error build cascades (a single build
   break failing all ~18–64 downstream jobs) correctly land in REAL — this is why
   `Build, lint, test (ubuntu)` shows 0% flaky despite 67 failures.
+
+---
+
+## Update 2026-07-18 — Applied mitigation: `--node-args` flag + `--no-maglev` from Windows CI
+
+### What
+
+Signature A (the V8 Maglev JIT crash, nodejs/node#62260) is 52% of all observed
+flakiness. The fix is to run the affected node processes with `--no-maglev`,
+which disables only the Maglev tier and eliminates the crash. `--no-maglev` is a
+V8 flag, so it **cannot** be set via `NODE_OPTIONS` (node rejects V8 flags
+there) — it must be passed directly to `node` on the command line.
+
+The crashing processes are the web dev server that `yarn cedar dev` spawns via
+`concurrently` — `cedar-vite-dev` (fallback mode) or `cedar-unified-dev` (unified
+mode). Those bins are normally launched as package-manager shims, and a node flag
+can't be forwarded through the shim, so the flag has to be on the command line of
+the node process that actually runs the bin.
+
+### How (chosen approach)
+
+Two parts:
+
+1. **A generic `cedar dev --node-args="..."` flag** that forwards arbitrary CLI
+   args to the node process running the web/unified dev server (e.g. `--inspect`,
+   `--max-old-space-size=8192`, or `--no-maglev`).
+2. **CI passes `--node-args="--no-maglev"` on Windows** — the way an end user
+   would — from the dev-type smoke-test Playwright configs.
+
+`--no-maglev` is deliberately **not** hardcoded in the framework. Routing it
+through the public flag means CI dogfoods the real mechanism end-to-end, and the
+code path stays exercised even after Node fixes the Maglev bug and we drop the
+flag from CI.
+
+**Single launch path, no fallback.** `formatViteDevBinCommand(binName,
+extraNodeArgs)` always builds an explicit `<launcher> <flags> "<binPath>"`
+command (never the bin shim) and resolves the bin path via
+`require.resolve('@cedarjs/vite/package.json')` (the `./bins/*.mjs` subpaths
+aren't in the package's `exports` map, but `./package.json` is) joined with
+`bins/<binName>.mjs`. `@cedarjs/vite` is a direct dependency of the CLI, so if
+resolution fails the install is broken and dev can't run — it **throws** with a
+clear message rather than silently degrading to a shim (which, on Windows, would
+silently drop the Maglev mitigation and reintroduce the flakiness). One path,
+continuously exercised on every `cedar dev`, so bugs surface immediately.
+
+**No `cross-env`.** `NODE_ENV=development` is set via the `concurrently` job's
+`env` (as the api and unified jobs already did), so the command is just
+`<launcher> ... "<binPath>"`. Dropping `cross-env` removes a whole node process
+from the chain — the explicit launch is now **leaner than the old bin-shim
+command** (`yarn node "<path>"` = one yarn, vs the shim's `yarn cross-env … bin`
+= yarn + a cross-env node process).
+
+**Package-manager / Yarn PnP support.** The launcher is `yarn node` under Yarn
+and bare `node` under npm/pnpm. This matters for **Yarn PnP**: there is no
+`node_modules`, so the resolved bin path is a virtual path inside a Yarn cache
+zip, and only `yarn node` loads the PnP runtime needed to resolve the bin's
+imports and read that path. The path is resolved inside the CLI process, which
+`yarn cedar dev` already launched with PnP active, so resolver and launcher
+agree. Under the node-modules linker `yarn node` is just node-in-project; npm and
+pnpm always have a real `node_modules` tree (pnpm's store is native
+`node_modules`), so bare `node` is correct there.
+
+**Why one branch, no fallback** (debated at length): a two-branch "shim when no
+flags, explicit when flags" keeps the common path on the PM's shim, but the
+explicit path then only runs when someone passes `--node-args` — so it rots and
+its bugs surface late. One always-explicit path is continuously exercised (unit
+tests + Windows smoke CI), never rots, and — once `cross-env` is dropped — is
+also cheaper. A resolution fallback was rejected because a fallback that silently
+drops `--no-maglev` is worse than a loud failure.
+
+**Why not a bin-level re-exec guard** (the first thing tried): re-executing from
+inside the bin adds a second supervisor node process per dev/serve, hides the
+behaviour in a published bin, and creates a debugging footgun — with
+`NODE_OPTIONS=--inspect` (inherited), both the supervisor and the re-exec'd child
+try to bind the inspector port.
+
+### Changed files
+
+- `packages/cli/src/commands/dev.ts` — new `--node-args` option.
+- `packages/cli/src/commands/dev/devHandler.ts` — `formatViteDevBinCommand()`
+  (single explicit `node`/`yarn node` launch, `--node-args` passthrough, hard
+  error on resolution failure, no `cross-env`); `NODE_ENV` moved to the web job's
+  `env`; `cedar-dev-fe` (streaming) shim also shed its `cross-env`.
+- `packages/cli/src/commands/dev/__tests__/dev.test.ts` — updated web/unified/
+  streaming/npm/pnpm assertions to the explicit-launch, no-`cross-env` shape;
+  added tests for `--node-args` forwarding (web + unified).
+- `tasks/smoke-tests/basePlaywright.config.mts` — `windowsNoMaglevDevArgs`
+  export (` --node-args="--no-maglev"` on Windows, else empty).
+- `tasks/smoke-tests/{dev,fragments-dev,rsc-dev}/playwright.config.ts` — append
+  `windowsNoMaglevDevArgs` to the `cedar dev` webServer command.
+
+### Verified
+
+- `require.resolve('@cedarjs/vite/package.json')` resolves from the CLI
+  (`@cedarjs/vite` is a runtime `dependency`); the bin subpath does _not_ resolve
+  (`ERR_PACKAGE_PATH_NOT_EXPORTED`), confirming the package.json-based derivation
+  is necessary. Node follows the symlink to the real path, so it works under the
+  hoisted (npm/yarn) and symlinked (pnpm) layouts alike.
+- `yarn node` exists in Yarn 4 (Cedar pins `yarn@4.14.1`) and forwards args to
+  node (`yarn node --help` prints node's help).
+- `eslint` + `prettier --check` clean; `tsc` reports no new errors in the changed
+  files (the two `dev.ts` `TS2578` "unused @ts-expect-error" diagnostics
+  pre-date this change); all 15 `dev.test.ts` unit tests pass (covering yarn, npm
+  and pnpm launch shapes). The unit-test job also runs on `windows-latest`.
+
+### Not yet validated
+
+Verified structurally (command shape, resolution, PM handling, tests) but **not**
+yet run against a real Windows CI runner or a Yarn-PnP project — those need a
+branch + CI run.
+
+### Still to wire (follow-ups)
+
+Covers the two `cedar dev` web crashers. The remaining signature-A surfaces use
+different (compiled) entry points and a more tangled launch path:
+
+- `cedar serve` web server — `cedar-serve-fe` (`packages/vite/dist/runFeServer.js`)
+  and the `@cedarjs/web-server` bins (`cedar-web-server` / `rw-web-server`,
+  `packages/web-server/dist/bin.js`); the `serve` command itself
+  (`packages/cli/src/commands/serve.ts`) also serves in-process via `srvx` /
+  `serveWebHandler`. Covers the `serve`, `fragments-serve`, `prerender`, `rsa`,
+  `rsc`, `streaming-ssr-prod` suites.
+- `cedar-dev-fe` (`packages/vite/dist/devFeServer.js`) — streaming SSR dev.
+- The api-server watch bins (`cedar-api-server-watch` / `cedarjs-api-server-watch`).
+- `cedar storybook` (signature is less clear there — Storybook also has the
+  Vite 7 incompat, signature E).
+
+Note: signature D (Ubuntu esbuild `"service is no longer running"` in UD /
+E2E-node tests) is **not** a Maglev crash and is unaffected by `--no-maglev` — it
+needs the separate `afterEach`/esbuild hardening from the 2026-06-26 UD entry.
