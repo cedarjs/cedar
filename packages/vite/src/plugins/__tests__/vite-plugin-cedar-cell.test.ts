@@ -75,6 +75,31 @@ describe('redwoodCellTransform', () => {
     expect(result.code).toContain('displayName: "ServerUserCell"')
   })
 
+  it('should transform a fragment cell with FRAGMENT export', async () => {
+    const input = `
+      export const FRAGMENT = gql\`
+        fragment AuthorCell_author on User {
+          email
+          fullName
+        }
+      \`
+
+      export const Success = ({ author }) => {
+        return <div>By {author.fullName}</div>
+      }
+    `
+
+    // @ts-expect-error The PluginOption type doesn't guarantee transform method exists
+    const result = await plugin.transform(input, '/path/to/AuthorCell.tsx')
+
+    expect(result).toBeTruthy()
+    expect(result.code).toContain('import { createCell } from "@cedarjs/web"')
+    expect(result.code).toContain('export default createCell({')
+    expect(result.code).toContain('FRAGMENT,')
+    expect(result.code).toContain('Success,')
+    expect(result.code).toContain('displayName: "AuthorCell"')
+  })
+
   it('should not transform files that do not end with Cell', async () => {
     const input = `
       export const QUERY = gql\`query { users { id } }\`

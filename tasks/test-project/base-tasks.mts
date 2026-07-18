@@ -11,7 +11,6 @@ import { contactTask } from './contact-task.mts'
 import { fullPath, getOutputPath } from './paths.mts'
 import { getPrerenderTasks } from './prerender-tasks.mts'
 import type { PackageManager } from './typing.mts'
-
 import {
   getExecaOptions,
   applyCodemod,
@@ -149,6 +148,26 @@ function getPagesTasks(live = false, packageManager: PackageManager = 'yarn') {
           'updateWaterfallPageStories.js',
           fullPath('web/src/pages/WaterfallPage/WaterfallPage.stories'),
         )
+      },
+    },
+    {
+      title: 'Creating aggregated cells test page',
+      task: async () => {
+        await createPage('aggregatedBlogPost /aggregated-blog-post/{id:Int}')
+
+        const templatesPath = path.join(import.meta.dirname, 'templates', 'web')
+        const pageDir = 'web/src/pages/AggregatedBlogPostPage'
+
+        for (const file of [
+          'AggregatedBlogPostPage.tsx',
+          'AggregatedBlogPostPage.stories.tsx',
+          'AggregatedBlogPostPage.test.tsx',
+        ]) {
+          fs.copyFileSync(
+            path.join(templatesPath, file),
+            fullPath(`${pageDir}/${file}`, { addExtension: false }),
+          )
+        }
       },
     },
     ...(live
@@ -689,10 +708,26 @@ export async function createCells(
 
   await createCell('waterfallBlogPost')
 
-  return applyCodemod(
+  await applyCodemod(
     'waterfallBlogPostCell.js',
     fullPath('web/src/components/WaterfallBlogPostCell/WaterfallBlogPostCell'),
   )
+
+  // Fragment cells aren't supported by the cell generator (yet), so we create
+  // them (and the cell that spreads their fragment) from templates instead
+  const templatesPath = path.join(import.meta.dirname, 'templates', 'web')
+
+  for (const cellName of ['AuthorFragmentCell', 'AggregatedBlogPostCell']) {
+    const cellDir = fullPath(`web/src/components/${cellName}`, {
+      addExtension: false,
+    })
+
+    fs.mkdirSync(cellDir, { recursive: true })
+    fs.copyFileSync(
+      path.join(templatesPath, `${cellName}.tsx`),
+      path.join(cellDir, `${cellName}.tsx`),
+    )
+  }
 }
 
 export async function updateCellMocks() {

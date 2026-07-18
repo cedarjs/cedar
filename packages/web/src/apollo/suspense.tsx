@@ -47,6 +47,7 @@ import {
 import { GraphQLHooksProvider } from '../components/GraphQLHooksProvider.js'
 import { ServerHtmlContext } from '../components/ServerInject.js'
 
+import { fragmentRegistry, useCellFragment } from './fragmentRegistry.js'
 import type {
   RedwoodApolloLink,
   RedwoodApolloLinkFactory,
@@ -215,9 +216,10 @@ export const RedwoodApolloProvider: React.FunctionComponent<{
   const { cacheConfig, ...config } = graphQLClientConfig ?? {}
 
   // @MARK we need this special cache
-  const cache = new InMemoryCache(cacheConfig).restore(
-    globalThis?.__REDWOOD__APOLLO_STATE ?? {},
-  )
+  const cache = new InMemoryCache({
+    fragments: fragmentRegistry,
+    ...cacheConfig,
+  }).restore(globalThis?.__REDWOOD__APOLLO_STATE ?? {})
 
   return (
     <FetchConfigProvider useAuth={useAuth}>
@@ -234,6 +236,7 @@ export const RedwoodApolloProvider: React.FunctionComponent<{
           useSuspenseQuery={useSuspenseQuery}
           useBackgroundQuery={useBackgroundQuery}
           useReadQuery={useReadQuery}
+          useFragment={useCellFragment}
         >
           {children}
         </GraphQLHooksProvider>
