@@ -18,6 +18,7 @@ type Documents = {
   "\n  query NumTodosCell_GetCount {\n    todosCount\n  }\n": typeof types.NumTodosCell_GetCountDocument;
   "\n  query TodoListCell_GetTodos {\n    todos {\n      id\n      body\n      status\n    }\n  }\n": typeof types.TodoListCell_GetTodosDocument;
   "\n  mutation TodoListCell_CheckTodo($id: Int!, $status: String!) {\n    updateTodoStatus(id: $id, status: $status) {\n      id\n      __typename\n      status\n    }\n  }\n": typeof types.TodoListCell_CheckTodoDocument;
+  "\n  fragment TodoStatusCell_todo on Todo {\n    id\n    status\n  }\n": typeof types.TodoStatusCell_TodoFragmentDoc;
 };
 const documents: Documents = {
   "\n  mutation AddTodo_CreateTodo($body: String!) {\n    createTodo(body: $body) {\n      id\n      __typename\n      body\n      status\n    }\n  }\n":
@@ -28,6 +29,8 @@ const documents: Documents = {
     types.TodoListCell_GetTodosDocument,
   "\n  mutation TodoListCell_CheckTodo($id: Int!, $status: String!) {\n    updateTodoStatus(id: $id, status: $status) {\n      id\n      __typename\n      status\n    }\n  }\n":
     types.TodoListCell_CheckTodoDocument,
+  "\n  fragment TodoStatusCell_todo on Todo {\n    id\n    status\n  }\n":
+    types.TodoStatusCell_TodoFragmentDoc,
 };
 
 /**
@@ -68,6 +71,12 @@ export function graphql(
 export function graphql(
   source: "\n  mutation TodoListCell_CheckTodo($id: Int!, $status: String!) {\n    updateTodoStatus(id: $id, status: $status) {\n      id\n      __typename\n      status\n    }\n  }\n"
 ): (typeof documents)["\n  mutation TodoListCell_CheckTodo($id: Int!, $status: String!) {\n    updateTodoStatus(id: $id, status: $status) {\n      id\n      __typename\n      status\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: "\n  fragment TodoStatusCell_todo on Todo {\n    id\n    status\n  }\n"
+): (typeof documents)["\n  fragment TodoStatusCell_todo on Todo {\n    id\n    status\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

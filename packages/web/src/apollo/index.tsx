@@ -46,6 +46,7 @@ import {
   fragmentRegistry,
   registerFragment,
   registerFragments,
+  useCellFragment,
 } from './fragmentRegistry.js'
 import * as SSELinkExports from './sseLink.js'
 import { useCache } from './useCache.js'
@@ -391,6 +392,7 @@ export const RedwoodApolloProvider: React.FunctionComponent<{
           useBackgroundQuery={useBackgroundQuery}
           useReadQuery={useReadQuery}
           useSuspenseQuery={useSuspenseQuery}
+          useFragment={useCellFragment}
         >
           {children}
         </GraphQLHooksProvider>

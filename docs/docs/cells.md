@@ -295,11 +295,67 @@ We also don't think it's an anti-pattern to do so. Far from it—your cells migh
 
 It's also important to remember that, besides exporting certain things with certain names, there aren't many rules around Cells&mdash;everything you can do in a regular component still goes.
 
+## Fragment Cells: Aggregating Queries
+
+Nesting a Cell inside another Cell's `Success` component works, but it creates a request waterfall: the parent Cell has to finish its query before the child Cell can even start its own. For a Cell that only ever renders a slice of its parent's data, you can avoid the second request entirely by exporting a `FRAGMENT` instead of a `QUERY`:
+
+```jsx title="web/src/components/AuthorCell/AuthorCell.jsx"
+export const FRAGMENT = gql`
+  fragment AuthorCell_author on User {
+    id
+    email
+    fullName
+  }
+`
+
+export const Success = ({ author }) => (
+  <span>
+    {author.fullName} ({author.email})
+  </span>
+)
+```
+
+The parent Cell spreads the fragment in its `QUERY` and passes the matching data object down via the `_ref` prop:
+
+```jsx title="web/src/components/BlogPostCell/BlogPostCell.jsx"
+import AuthorCell from 'src/components/AuthorCell'
+
+export const QUERY = gql`
+  query FindBlogPostQuery($id: Int!) {
+    post(id: $id) {
+      id
+      title
+      body
+      author {
+        ...AuthorCell_author
+      }
+    }
+  }
+`
+
+export const Success = ({ post }) => (
+  <article>
+    <h2>{post.title}</h2>
+    <AuthorCell _ref={post.author} />
+    <div>{post.body}</div>
+  </article>
+)
+```
+
+One network request fetches everything. You don't have to import or interpolate the fragment into the parent's `QUERY`&mdash;fragment Cells automatically register their fragment with the GraphQL client, so spreading it by name is enough (importing the child Cell to render it is what pulls the fragment in).
+
+A few things to know about fragment Cells:
+
+- The name of the prop passed to `Success` is derived from the fragment name: for a name with an underscore, like `AuthorCell_author`, it's the part after the last underscore (`author`). Otherwise it's the camelCased name of the type the fragment is defined on (`on User` becomes `user`).
+- There's no `Loading` or `Failure` state&mdash;the data is read synchronously from the parent's query result, so by the time a fragment Cell renders, the data is already there. `Empty`, `isEmpty`, and `afterQuery` work like they do in regular Cells.
+- Include the type's `id` in the fragment. With it, the Cell reads its data live from the GraphQL client's cache, so it automatically re-renders when a mutation or another query updates that entity. Without it, the Cell still renders (it falls back to the data object passed via `_ref`), but it only updates when the parent re-renders.
+- This works for lists too: a parent Cell that fetches `posts { author { ...AuthorCell_author } }` can render one `<AuthorCell _ref={post.author} />` per post, still with a single request.
+
 ## How Does Cedar Know a Cell is a Cell?
 
 You just have to end a filename in "Cell" right? Well, while that's basically correct, there is one other thing you should know.
 
-Cedar looks for all files ending in "Cell" (so if you want your component to be a Cell, its filename does have to end in "Cell"), but if the file 1) doesn't export a const named `QUERY` and 2) has a default export, then it'll be skipped.
+Cedar looks for all files ending in "Cell" (so if you want your component to be a Cell, its filename does have to end in "Cell"), but if the file 1) doesn't export a const named `QUERY` (or `FRAGMENT`) and 2) has a default export, then it'll be skipped.
 
 When would you want to do this? If you just want a file to end in "Cell" for some reason. Otherwise, don't worry about it!
 

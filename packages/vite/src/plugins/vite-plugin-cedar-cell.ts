@@ -15,6 +15,7 @@ const generate = babelGenerator.default || babelGenerator
 const EXPECTED_EXPORTS_FROM_CELL = [
   'beforeQuery',
   'QUERY',
+  'FRAGMENT',
   'data',
   'isEmpty',
   'afterQuery',
@@ -104,14 +105,17 @@ export function cedarCellTransform(): Plugin {
         })
 
         const hasQueryOrDataExport =
-          exportNames.includes('QUERY') || exportNames.includes('data')
+          exportNames.includes('QUERY') ||
+          exportNames.includes('FRAGMENT') ||
+          exportNames.includes('data')
 
         // If the file already has a default export then
         //   1. It's likely not a cell, or it's a cell that's already been
         //      wrapped in `createCell`
         //   2. If we added another default export we'd be breaking JS module
         //      rules. There can only be one default export.
-        // If there's no `QUERY` or `data` export it's not a valid cell
+        // If there's no `QUERY`, `FRAGMENT` or `data` export it's not a valid
+        // cell
         if (hasDefaultExport || !hasQueryOrDataExport) {
           return null
         }

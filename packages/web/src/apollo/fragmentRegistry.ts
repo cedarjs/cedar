@@ -5,6 +5,11 @@ import type { FragmentRegistryAPI } from '@apollo/client/cache/index.js'
 import { getFragmentDefinitions } from '@apollo/client/utilities/utilities.cjs'
 import type { DocumentNode } from 'graphql'
 
+import type {
+  FragmentHookOptions,
+  FragmentHookResult,
+} from '../components/GraphQLHooksProvider.js'
+
 export type FragmentIdentifier = string | number
 
 export type CacheKey = {
@@ -54,6 +59,47 @@ const useRegisteredFragmentHook = <TData = any>(
     fragment,
     from,
   })
+}
+
+/**
+ * Passed to Apollo's `useFragment` when the object a fragment Cell received
+ * via `_ref` can't be identified in the cache (for example because the
+ * fragment doesn't select the type's key fields). It identifies nothing, so
+ * the read comes back incomplete and the Cell falls back to the `_ref` data
+ * snapshot.
+ */
+const UNIDENTIFIABLE_FRAGMENT_REF = 'CedarUnidentifiableFragmentRef:_'
+
+/**
+ * Adapts Apollo's `useFragment` to the client-agnostic fragment hook shape
+ * used by fragment Cells (see `GraphQLHooksProvider`). Incomplete reads
+ * surface `data: undefined` so that fragment Cells fall back to the data
+ * snapshot passed via their `_ref` prop.
+ */
+export function useCellFragment<TData = any>(
+  options: FragmentHookOptions,
+): FragmentHookResult<TData> {
+  const client = apolloClient.useApolloClient()
+  const { from, ...restOptions } = options
+
+  // The client-agnostic fragment hook options type `from` as a plain object,
+  // which is what Apollo's `StoreObject` is – but `StoreObject` types
+  // `__typename` as `string | undefined`, which `unknown` isn't assignable to
+  const cacheId = client.cache.identify(from as apolloClient.StoreObject)
+
+  const result = apolloClient.useFragment<TData>({
+    ...restOptions,
+    // We identify the object ourselves (above) because passing an
+    // unidentifiable object to `useFragment` logs a warning and returns a
+    // useless `{ data: {}, complete: true }` result
+    from: cacheId ?? UNIDENTIFIABLE_FRAGMENT_REF,
+  })
+
+  if (cacheId !== undefined && result.complete) {
+    return { data: result.data, complete: true }
+  }
+
+  return { data: undefined, complete: false }
 }
 
 /**

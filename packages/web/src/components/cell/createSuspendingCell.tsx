@@ -52,6 +52,17 @@ export function createSuspendingCell<
     Success,
     displayName = 'Cell',
   } = createCellProps
+
+  if (!QUERY) {
+    throw new Error(
+      `Can't create a Cell (${displayName}) without a QUERY or FRAGMENT export`,
+    )
+  }
+
+  // Assigning to a `const` here (as opposed to using the destructured
+  // variable directly) makes the `!QUERY` narrowing above hold inside the
+  // component below
+  const cellQuery = QUERY
   function SuspendingSuccess(props: SuspendingSuccessProps) {
     const { queryRef, suspenseQueryResult, userProps } = props
     const { data, networkStatus } = useReadQuery<DataObject>(queryRef)
@@ -90,7 +101,8 @@ export function createSuspendingCell<
      */
     const { children: _, ...variables } = props
     const options = beforeQuery(variables)
-    const query = typeof QUERY === 'function' ? QUERY(options) : QUERY
+    const query =
+      typeof cellQuery === 'function' ? cellQuery(options) : cellQuery
     const [queryRef, other] = useBackgroundQuery(query, options)
 
     const client = useApolloClient()

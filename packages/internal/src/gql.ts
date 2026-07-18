@@ -3,6 +3,7 @@ import { loadSchema } from '@graphql-tools/load'
 import type {
   DocumentNode,
   FieldNode,
+  FragmentDefinitionNode,
   InlineFragmentNode,
   OperationDefinitionNode,
   OperationTypeNode,
@@ -77,6 +78,22 @@ const getFields = (field: FieldNode): any => {
 
     return obj
   }
+}
+
+/**
+ * Returns the name of the first fragment definition in the given GraphQL
+ * source, e.g. `AuthorCell_author` for
+ * `fragment AuthorCell_author on User { fullName }`
+ */
+export const parseGqlFragmentName = (gqlFragment: string) => {
+  const ast = parse(gqlFragment)
+
+  const fragmentDefinition = ast.definitions.find(
+    (definition): definition is FragmentDefinitionNode =>
+      definition.kind === Kind.FRAGMENT_DEFINITION,
+  )
+
+  return fragmentDefinition?.name.value
 }
 
 export const listQueryTypeFieldsInProject = async () => {
