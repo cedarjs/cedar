@@ -274,8 +274,11 @@ describe('yarn cedar dev', () => {
 
     const { webCommand, apiCommand, generateCommand } = findSeparateCommands()
 
-    // In streaming SSR mode the web side uses the cedar-dev-fe server.
-    expect(webCommand?.command).toContain('yarn cedar-dev-fe')
+    // In streaming SSR mode the web side uses the cedar-dev-fe server, launched
+    // explicitly (like the other dev servers) so node flags apply. NODE_ENV
+    // comes from the job env, not a cross-env wrapper.
+    expect(webCommand?.command).toContain('yarn node ')
+    expect(webCommand?.command).toContain('devFeServer.js')
     expect(webCommand?.env?.NODE_ENV).toEqual('development')
 
     // API side uses nodemon with cedar-api-server-watch in streaming SSR

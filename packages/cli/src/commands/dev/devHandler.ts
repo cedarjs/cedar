@@ -35,9 +35,13 @@ interface DevHandlerOptions {
   nodeArgs?: string
 }
 
+interface VitePackageJson {
+  bin?: Record<string, string>
+}
+
 /**
  * Builds the command that launches one of `@cedarjs/vite`'s dev-server bins
- * (`cedar-vite-dev`, `cedar-unified-dev`).
+ * (`cedar-vite-dev`, `cedar-unified-dev`, or `cedar-dev-fe` for streaming SSR).
  *
  * We launch the bin via an explicit `node <flags> <binPath>` rather than the
  * package-manager bin shim so node-level CLI flags can be applied.
@@ -48,6 +52,10 @@ interface DevHandlerOptions {
  * the dev web server mid-run. See https://github.com/nodejs/node/issues/62260
  * and docs/implementation-plans/flaky-smoke-tests-investigation.md. `--no-maglev`
  * is a V8 flag, so it can't go through `NODE_OPTIONS` or the bin shim.
+ *
+ * The bin's entry point is read from `@cedarjs/vite`'s own `bin` field rather
+ * than assuming a location: `cedar-vite-dev` / `cedar-unified-dev` live in
+ * `bins/*.mjs`, but `cedar-dev-fe` is a compiled `dist/` entry.
  *
  * Under Yarn we launch with `yarn node` rather than bare `node`: with the PnP
  * linker there is no `node_modules` — the resolved bin path is a virtual path
@@ -64,12 +72,15 @@ interface DevHandlerOptions {
 function formatViteDevBinCommand(binName: string, extraNodeArgs = '') {
   // `@cedarjs/vite` is a direct dependency of the CLI. If it can't be resolved
   // the install is broken and dev can't run, so fail loudly rather than
-  // silently degrade. The `bins/*.mjs` subpaths aren't in `@cedarjs/vite`'s
-  // `exports` map, but `./package.json` is, so resolve that and derive the bin
-  // path from it.
+  // silently degrade. `./package.json` is in the package's `exports` map (the
+  // bin subpaths are not). We `require` the JSON (rather than `fs`-read it) so
+  // it goes through Node's real module system — which also keeps this working
+  // when `node:fs` is mocked in unit tests.
   let vitePackageJsonPath: string
+  let vitePackageJson: VitePackageJson
   try {
     vitePackageJsonPath = createdRequire.resolve('@cedarjs/vite/package.json')
+    vitePackageJson = createdRequire('@cedarjs/vite/package.json')
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
     throw new Error(
@@ -78,11 +89,14 @@ function formatViteDevBinCommand(binName: string, extraNodeArgs = '') {
     )
   }
 
-  const binPath = path.join(
-    path.dirname(vitePackageJsonPath),
-    'bins',
-    `${binName}.mjs`,
-  )
+  const binRelativePath = vitePackageJson.bin?.[binName]
+  if (!binRelativePath) {
+    throw new Error(
+      `@cedarjs/vite does not declare a "${binName}" bin. This is a bug in CedarJS.`,
+    )
+  }
+
+  const binPath = path.join(path.dirname(vitePackageJsonPath), binRelativePath)
 
   const nodeLauncher = getPackageManager() === 'yarn' ? 'yarn node' : 'node'
   const flags = extraNodeArgs ? `${extraNodeArgs} ` : ''
@@ -402,10 +416,7 @@ export const handler = async ({
       let webCommand = `${formatViteDevBinCommand('cedar-vite-dev', nodeArgs)} ${forward}`
 
       if (streamingSsrEnabled) {
-        // TODO: `cedar-dev-fe` (streaming SSR) is a compiled `dist/` entry, not
-        // a `bins/*.mjs`, so it isn't covered by the explicit-launch /
-        // `--node-args` handling yet. See the investigation doc's follow-ups.
-        webCommand = `${formatRunBinCommand('cedar-dev-fe')} ${forward}`
+        webCommand = `${formatViteDevBinCommand('cedar-dev-fe', nodeArgs)} ${forward}`
       }
 
       jobs.push({

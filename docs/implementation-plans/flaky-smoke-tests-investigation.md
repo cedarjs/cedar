@@ -1277,15 +1277,17 @@ try to bind the inspector port.
 - `packages/cli/src/commands/dev.ts` — new `--node-args` option.
 - `packages/cli/src/commands/dev/devHandler.ts` — `formatViteDevBinCommand()`
   (single explicit `node`/`yarn node` launch, `--node-args` passthrough, hard
-  error on resolution failure, no `cross-env`); `NODE_ENV` moved to the web job's
-  `env`; `cedar-dev-fe` (streaming) shim also shed its `cross-env`.
+  error on resolution failure, no `cross-env`). The bin entry point is read from
+  `@cedarjs/vite`'s own `bin` field, so it covers `cedar-vite-dev`,
+  `cedar-unified-dev`, **and** `cedar-dev-fe` (streaming SSR, a compiled `dist/`
+  entry — previously a TODO). `NODE_ENV` moved to the web job's `env`.
 - `packages/cli/src/commands/dev/__tests__/dev.test.ts` — updated web/unified/
   streaming/npm/pnpm assertions to the explicit-launch, no-`cross-env` shape;
   added tests for `--node-args` forwarding (web + unified).
 - `tasks/smoke-tests/basePlaywright.config.mts` — `windowsNoMaglevDevArgs`
   export (` --node-args="--no-maglev"` on Windows, else empty).
-- `tasks/smoke-tests/{dev,fragments-dev,rsc-dev}/playwright.config.ts` — append
-  `windowsNoMaglevDevArgs` to the `cedar dev` webServer command.
+- `tasks/smoke-tests/{dev,fragments-dev,rsc-dev,streaming-ssr-dev}/playwright.config.ts`
+  — append `windowsNoMaglevDevArgs` to the `cedar dev` webServer command.
 
 ### Verified
 
@@ -1309,8 +1311,9 @@ branch + CI run.
 
 ### Still to wire (follow-ups)
 
-Covers the two `cedar dev` web crashers. The remaining signature-A surfaces use
-different (compiled) entry points and a more tangled launch path:
+Covers all three `cedar dev` web crashers (`cedar-vite-dev`,
+`cedar-unified-dev`, and `cedar-dev-fe` streaming SSR). The remaining
+signature-A surfaces use different entry points and a more tangled launch path:
 
 - `cedar serve` web server — `cedar-serve-fe` (`packages/vite/dist/runFeServer.js`)
   and the `@cedarjs/web-server` bins (`cedar-web-server` / `rw-web-server`,
@@ -1318,7 +1321,6 @@ different (compiled) entry points and a more tangled launch path:
   (`packages/cli/src/commands/serve.ts`) also serves in-process via `srvx` /
   `serveWebHandler`. Covers the `serve`, `fragments-serve`, `prerender`, `rsa`,
   `rsc`, `streaming-ssr-prod` suites.
-- `cedar-dev-fe` (`packages/vite/dist/devFeServer.js`) — streaming SSR dev.
 - The api-server watch bins (`cedar-api-server-watch` / `cedarjs-api-server-watch`).
 - `cedar storybook` (signature is less clear there — Storybook also has the
   Vite 7 incompat, signature E).
