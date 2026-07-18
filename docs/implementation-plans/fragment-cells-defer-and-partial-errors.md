@@ -1,9 +1,9 @@
 # Fragment Cells: Future Work — `@defer`, Partial Errors, and Nullability
 
-Follow-up ideas for the fragment Cells / query aggregation feature introduced
-in #2107. Fragment Cells currently only support `Success`, `Empty`, `isEmpty`
-and `afterQuery`. `Loading` and `Failure` were deliberately left out — this
-document records why, and how they would earn their place later.
+Follow-up ideas for the fragment Cells / query aggregation feature introduced in
+#2107. Fragment Cells currently only support `Success`, `Empty`, `isEmpty` and
+`afterQuery`. `Loading` and `Failure` were deliberately left out — this document
+records why, and how they would earn their place later.
 
 ## Why fragment Cells have no `Loading` today
 
@@ -45,15 +45,15 @@ The runtime is already shaped for this: the fragment Cell reads through the
 client-agnostic `useFragment` hook and distinguishes complete from incomplete
 reads. The main work is: allowing/detecting `@defer` spreads, rendering
 `Loading` (instead of falling back to the `_ref` snapshot) when the slice is
-knowingly deferred, and e2e coverage. Deferred patches can also carry errors
-for their fragment, which dovetails with the `Failure` story below.
+knowingly deferred, and e2e coverage. Deferred patches can also carry errors for
+their fragment, which dovetails with the `Failure` story below.
 
 ## Why fragment Cells have no `Failure` today
 
 GraphQL errors are request-scoped, and the request belongs to the parent. With
-Apollo's default `errorPolicy: 'none'`, any field error poisons the whole
-result and the parent's `Failure` renders — no child ever mounts. That's
-coarse: an error in just the author resolver takes down the entire post view.
+Apollo's default `errorPolicy: 'none'`, any field error poisons the whole result
+and the parent's `Failure` renders — no child ever mounts. That's coarse: an
+error in just the author resolver takes down the entire post view.
 
 The ingredients for finer-grained handling exist but aren't wired up:
 
@@ -67,14 +67,14 @@ The ingredients for finer-grained handling exist but aren't wired up:
   `Success`) and the child to match errors whose `path` points at its slice.
 - Smaller gap, worth fixing sooner: a `null`/missing slice currently makes the
   fragment Cell throw. Routing it to `Empty` (or `Failure` if exported) would
-  let a parent using `errorPolicy: 'all'` at least delegate the _rendering_ of
-  a failed slice.
+  let a parent using `errorPolicy: 'all'` at least delegate the _rendering_ of a
+  failed slice.
 
 ## How the Apollo nullability spec changes this picture
 
 The client-controlled nullability spec
-(https://specs.apollo.dev/nullability/v0.4/) standardizes exactly the
-semantics this needs:
+(https://specs.apollo.dev/nullability/v0.4/) standardizes exactly the semantics
+this needs:
 
 - **`@semanticNonNull`** (schema): declares a field "null only if there is a
   matching error". This removes the ambiguity at the heart of the
@@ -90,8 +90,8 @@ semantics this needs:
   `Success` with the value or `Failure` with the error — no bespoke
   error-path/context plumbing needed.
 - **`@catchByDefault`** lets an app choose a global policy, which maps nicely
-  onto a Cedar convention (e.g. fragment Cell spreads catch to RESULT by
-  default once supported).
+  onto a Cedar convention (e.g. fragment Cell spreads catch to RESULT by default
+  once supported).
 
 Caveat: as of mid-2026 the spec is experimental and primarily implemented in
 Apollo Kotlin; Apollo Client (JS) support is still emerging, as is the GraphQL
@@ -102,11 +102,11 @@ and swap to the standardized directives when they land.
 
 ## Suggested order of attack
 
-1. Route `null`/missing slices to `Empty` (or `Failure` if exported) instead
-   of throwing.
-2. Parent-provided error context + path matching → fragment Cell `Failure`
-   for partial errors (`errorPolicy: 'all'`).
+1. Route `null`/missing slices to `Empty` (or `Failure` if exported) instead of
+   throwing.
+2. Parent-provided error context + path matching → fragment Cell `Failure` for
+   partial errors (`errorPolicy: 'all'`).
 3. `@defer` spreads → fragment Cell `Loading` (and deferred-patch errors →
    `Failure`).
-4. Adopt `@semanticNonNull`/`@catch` semantics when Apollo Client (JS)
-   supports them, replacing the interim correlation logic.
+4. Adopt `@semanticNonNull`/`@catch` semantics when Apollo Client (JS) supports
+   them, replacing the interim correlation logic.
