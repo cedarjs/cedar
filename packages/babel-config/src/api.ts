@@ -65,7 +65,10 @@ export const getApiSideBabelPlugins = ({
     // Needed to support `/** @jsxImportSource custom-jsx-library */`
     // comments in JSX files
     !forVite && ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }],
-    [
+    // Vite/esbuild use applySrcAlias + applyTsconfigPaths (or, for Vite
+    // proper, cedar-api-src-redirect + vite-tsconfig-paths) instead of this
+    // babel plugin
+    !forVite && [
       'babel-plugin-module-resolver',
       {
         alias: {

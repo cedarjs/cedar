@@ -29,6 +29,7 @@ import { applyOtelWrapping } from './esbuild-plugin-cedar-otel-wrapping.js'
 import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
 import { applyImportDir } from './import-dir.js'
 import { applySrcAlias } from './src-alias.js'
+import { applyTsconfigPaths } from './tsconfig-paths.js'
 
 export const cedarApiGraphqlPlugin = {
   name: 'cedar-api-graphql',
@@ -48,6 +49,14 @@ export const cedarApiGraphqlPlugin = {
         path.dirname(
           path.relative(build.initialOptions.absWorkingDir + '/src', args.path),
         ),
+      )
+
+      // Rewrite bare specifiers that match a user-defined tsconfig.json
+      // `paths` alias to relative paths.
+      fileContents = applyTsconfigPaths(
+        fileContents,
+        args.path,
+        getPaths().api.base,
       )
 
       // Apply graphql-specific string transforms on the raw TypeScript BEFORE

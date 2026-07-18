@@ -3292,6 +3292,7 @@ __metadata:
     termi-link: "npm:1.1.0"
     ts-dedent: "npm:2.3.0"
     ts-node: "npm:10.9.2"
+    tsconfig-paths: "npm:^3.15.0"
     typescript: "npm:5.9.3"
     vite: "npm:7.3.5"
     vite-tsconfig-paths: "npm:^6.1.1"

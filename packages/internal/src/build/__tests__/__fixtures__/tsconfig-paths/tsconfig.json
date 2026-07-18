@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "src/*": ["./src/*"],
+      "types/*": ["./types/*"],
+      "$api/*": ["../api/*"],
+      "@cedarjs/*": ["../../node_modules/@cedarjs/*"],
+      "$widgets/*": ["./src/lib/Widget/*"]
+    }
+  }
+}
