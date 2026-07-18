@@ -73,4 +73,42 @@ describe('applyDirectoryNamedImport', () => {
       `import { ImpModule } from "./Module/Module"`,
     )
   })
+
+  it('rewrites a side-effect-only import (no `from` clause)', () => {
+    const code = `import './Module'`
+    expect(applyDirectoryNamedImport(code, FIXTURE_FILE)).toBe(
+      `import './Module/Module'`,
+    )
+  })
+
+  it('rewrites a namespace import', () => {
+    const code = `import * as mod from './Module'`
+    expect(applyDirectoryNamedImport(code, FIXTURE_FILE)).toBe(
+      `import * as mod from './Module/Module'`,
+    )
+  })
+
+  it('rewrites a bare `export *` re-export', () => {
+    const code = `export * from './Module'`
+    expect(applyDirectoryNamedImport(code, FIXTURE_FILE)).toBe(
+      `export * from './Module/Module'`,
+    )
+  })
+
+  it('does not rewrite dynamic import() calls', () => {
+    const code = `const mod = await import('./Module')`
+    expect(applyDirectoryNamedImport(code, FIXTURE_FILE)).toBe(code)
+  })
+
+  it('does not rewrite import-like text inside a string that is not at the start of a line', () => {
+    const code = `const doc = "See: import { ImpModule } from './Module'"`
+    expect(applyDirectoryNamedImport(code, FIXTURE_FILE)).toBe(code)
+  })
+
+  it('does not rewrite import-like text in a comment before the real import', () => {
+    const code = `// import { ImpModule } from './Module'\nimport { ImpModule } from './Module'`
+    expect(applyDirectoryNamedImport(code, FIXTURE_FILE)).toBe(
+      `// import { ImpModule } from './Module'\nimport { ImpModule } from './Module/Module'`,
+    )
+  })
 })

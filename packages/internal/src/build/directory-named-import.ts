@@ -16,9 +16,18 @@ import { importStatementPath, resolveFile } from '@cedarjs/project-config'
  * `./Button.*` does not), this rewrites the import to `./Button/Button`.
  * Mirrors the precedence used by `cedarDirectoryNamedImportPlugin` (Vite):
  * an index file wins over a directory-named module.
+ *
+ * Matches static `import`/`export` statements, including side-effect-only
+ * imports (`import './Button'`) — the babel plugin this replaces visits every
+ * `ImportDeclaration`/`ExportDeclaration`, which covers those too. Anchored to
+ * the start of a line (like `applyImportDir`'s glob-import regex) so that
+ * text resembling an import inside a string, template literal, or comment
+ * isn't rewritten, and excludes dynamic `import(...)` calls (the babel plugin
+ * doesn't rewrite those either).
  */
 
-const RELATIVE_IMPORT_RE = /\bfrom\s+(['"])(\.\.?\/[^'"]+)\1/g
+const RELATIVE_IMPORT_RE =
+  /^(\s*(?:import|export)\s[^'"\n]*?)(['"])(\.\.?\/[^'"]+)\2/gm
 
 export function applyDirectoryNamedImport(
   code: string,
@@ -28,7 +37,7 @@ export function applyDirectoryNamedImport(
 
   return code.replace(
     RELATIVE_IMPORT_RE,
-    (match: string, quote: string, importPath: string) => {
+    (match: string, prefix: string, quote: string, importPath: string) => {
       const absolutePath = path.join(fileDir, importPath)
 
       // Already resolves directly to a file — leave it alone.
@@ -37,12 +46,12 @@ export function applyDirectoryNamedImport(
       }
 
       if (resolveFile(path.join(absolutePath, 'index'))) {
-        return `from ${quote}${importStatementPath(importPath + '/index')}${quote}`
+        return `${prefix}${quote}${importStatementPath(importPath + '/index')}${quote}`
       }
 
       const basename = path.basename(absolutePath)
       if (resolveFile(path.join(absolutePath, basename))) {
-        return `from ${quote}${importStatementPath(importPath + '/' + basename)}${quote}`
+        return `${prefix}${quote}${importStatementPath(importPath + '/' + basename)}${quote}`
       }
 
       return match
