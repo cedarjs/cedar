@@ -74,7 +74,7 @@ We mentioned above that Cells receive "most" of what's returned from the `useQue
 It's more-than ok to have more than one root query. Here's an example:
 
 ```jsx {7-10}
-export const QUERY = gql`{
+export const QUERY = gql`
   query {
     posts {
       id
@@ -85,7 +85,7 @@ export const QUERY = gql`{
       name
     }
   }
-}
+`
 ```
 
 So in this case, both `posts` and `authors` would be available to `Success`:
@@ -162,14 +162,32 @@ export const beforeQuery = () => {
 }
 ```
 
+<Tabs groupId="js-ts">
+<TabItem value="js" label="JavaScript">
+
 ```jsx
+// The cell will take 1 prop named "word": <Cell word="abc">
+export const beforeQuery = ({ word }) => {
+  return {
+    variables: { magicWord: word },
+  }
+}
+```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+```tsx
 // The cell will take 1 prop named "word" that is a string: <Cell word="abc">
 export const beforeQuery = ({ word }: { word: string }) => {
   return {
-    variables: { magicWord: word }
-   }
+    variables: { magicWord: word },
+  }
 }
 ```
+
+</TabItem>
+</Tabs>
 
 ### isEmpty
 
@@ -226,7 +244,27 @@ But, like `Loading`, Storybook is probably a better place to develop this.
 
 In this example, we use the `errorCode` to conditionally render the error heading title, and we also use it for our translation string.
 
+<Tabs groupId="js-ts">
+<TabItem value="js" label="JavaScript">
+
 ```jsx
+export const Failure = ({ error, errorCode }) => {
+  const { t } = useTranslation()
+  return (
+    <div style={{ color: 'red' }}>
+      {errorCode === 'NO_CONFIG' ? <h1>NO_CONFIG</h1> : <h1>ERROR</h1>}
+      Error: {error.message} - Code: {errorCode} - {t(`error.${errorCode}`)}
+    </div>
+  )
+}
+```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+```tsx
+import type { CellFailureProps } from '@cedarjs/web'
+
 export const Failure = ({ error, errorCode }: CellFailureProps) => {
   const { t } = useTranslation()
   return (
@@ -237,6 +275,9 @@ export const Failure = ({ error, errorCode }: CellFailureProps) => {
   )
 }
 ```
+
+</TabItem>
+</Tabs>
 
 ### Success
 
@@ -303,6 +344,9 @@ can even start its own. For a Cell that only ever renders a slice of its
 parent's data, you can avoid the second request entirely by exporting a
 `FRAGMENT` instead of a `QUERY`:
 
+<Tabs groupId="js-ts">
+<TabItem value="js" label="JavaScript">
+
 ```jsx title="web/src/components/AuthorCell/AuthorCell.jsx"
 export const FRAGMENT = gql`
   fragment AuthorCell_author on User {
@@ -319,9 +363,40 @@ export const Success = ({ author }) => (
 )
 ```
 
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+```tsx title="web/src/components/AuthorCell/AuthorCell.tsx"
+import type { AuthorCell_author } from 'types/graphql'
+
+export const FRAGMENT = gql`
+  fragment AuthorCell_author on User {
+    id
+    email
+    fullName
+  }
+`
+
+interface SuccessProps {
+  author: AuthorCell_author
+}
+
+export const Success = ({ author }: SuccessProps) => (
+  <span>
+    {author.fullName} ({author.email})
+  </span>
+)
+```
+
+</TabItem>
+</Tabs>
+
 The parent Cell spreads the fragment in its `QUERY` and passes the matching data
 object down as a prop named after the fragment &mdash; `AuthorCell_author`
 means the Cell takes (and `Success` receives) an `author` prop:
+
+<Tabs groupId="js-ts">
+<TabItem value="js" label="JavaScript">
 
 ```jsx title="web/src/components/BlogPostCell/BlogPostCell.jsx"
 import AuthorCell from 'src/components/AuthorCell'
@@ -348,6 +423,49 @@ export const Success = ({ post }) => (
 )
 ```
 
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+```tsx title="web/src/components/BlogPostCell/BlogPostCell.tsx"
+import type {
+  FindBlogPostQuery,
+  FindBlogPostQueryVariables,
+} from 'types/graphql'
+
+import type { CellSuccessProps, TypedDocumentNode } from '@cedarjs/web'
+
+import AuthorCell from 'src/components/AuthorCell'
+
+export const QUERY: TypedDocumentNode<
+  FindBlogPostQuery,
+  FindBlogPostQueryVariables
+> = gql`
+  query FindBlogPostQuery($id: Int!) {
+    post(id: $id) {
+      id
+      title
+      body
+      author {
+        ...AuthorCell_author
+      }
+    }
+  }
+`
+
+export const Success = ({
+  post,
+}: CellSuccessProps<FindBlogPostQuery, FindBlogPostQueryVariables>) => (
+  <article>
+    <h2>{post.title}</h2>
+    <AuthorCell author={post.author} />
+    <div>{post.body}</div>
+  </article>
+)
+```
+
+</TabItem>
+</Tabs>
+
 One network request fetches everything. You don't have to import or interpolate
 the fragment into the parent's `QUERY` &mdash; fragment Cells automatically
 register their fragment with the GraphQL client, so spreading it by name is
@@ -360,6 +478,11 @@ A few things to know about fragment Cells:
   (`author`). Otherwise it's the camelCased name of the type the fragment is
   defined on (`on User` becomes `user`). The parent passes the data in with
   that prop, and `Success` (and `Empty`) receive the data as that same prop.
+- In TypeScript projects, a type named exactly like the fragment
+  (`AuthorCell_author` in the example above) is generated in `types/graphql`,
+  and the Cell's data prop is typed with it. So if the parent's `QUERY` is
+  missing the fragment spread (or the spread doesn't cover all the fields),
+  you'll get a TypeScript error right where the fragment Cell is rendered.
 - There's no `Loading` or `Failure` state. The data is read synchronously from
   the parent's query result, so by the time a fragment Cell renders, the data is
   already there. `Empty`, `isEmpty`, and `afterQuery` work like they do in
@@ -393,9 +516,12 @@ If we didn't do all that build-time stuff for you, how might you go about implem
 
 Consider the [example from the Tutorial](tutorial/chapter2/cells.md#our-first-cell) where we're fetching posts:
 
+<Tabs groupId="js-ts">
+<TabItem value="js" label="JavaScript">
+
 ```jsx
 export const QUERY = gql`
-  query {
+  query FindPosts {
     posts {
       id
       title
@@ -415,13 +541,59 @@ export const Failure = ({ error }) => (
 
 export const Success = ({ posts }) => {
   return posts.map((post) => (
-    <article>
+    <article key={post.id}>
       <h2>{post.title}</h2>
       <div>{post.body}</div>
     </article>
   ))
 }
 ```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+```tsx
+import type { FindPosts, FindPostsVariables } from 'types/graphql'
+
+import type {
+  CellFailureProps,
+  CellSuccessProps,
+  TypedDocumentNode,
+} from '@cedarjs/web'
+
+export const QUERY: TypedDocumentNode<FindPosts, FindPostsVariables> = gql`
+  query FindPosts {
+    posts {
+      id
+      title
+      body
+      createdAt
+    }
+  }
+`
+
+export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>No posts yet!</div>
+
+export const Failure = ({ error }: CellFailureProps<FindPostsVariables>) => (
+  <div>Error loading posts: {error.message}</div>
+)
+
+export const Success = ({
+  posts,
+}: CellSuccessProps<FindPosts, FindPostsVariables>) => {
+  return posts.map((post) => (
+    <article key={post.id}>
+      <h2>{post.title}</h2>
+      <div>{post.body}</div>
+    </article>
+  ))
+}
+```
+
+</TabItem>
+</Tabs>
 
 And now let's say that Babel isn't going to come along and assemble our exports. What might we do?
 
