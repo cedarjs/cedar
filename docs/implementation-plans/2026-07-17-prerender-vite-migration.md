@@ -263,10 +263,10 @@ An earlier version of this plan proposed a `WebNodeRunner` using Vite's
 | Dev server running at build time | ✅ no                     | ❌ yes (feels wrong)     |
 | Future SSR alignment             | ✅ same artifact reused   | ❌ different path        |
 
-The `RunnableDevEnvironment` approach required manually listing all Cedar plugins
-and keeping that list in sync with Cedar's web Vite config. `vite build --ssr`
-just passes the existing config — if a new plugin is added to Cedar's web build,
-prerender picks it up automatically.
+The `RunnableDevEnvironment` approach required manually listing all Cedar
+plugins and keeping that list in sync with Cedar's web Vite config.
+`vite build --ssr` just passes the existing config — if a new plugin is added to
+Cedar's web build, prerender picks it up automatically.
 
 ---
 
