@@ -21,9 +21,9 @@ export function createCell<
 ): React.FC<CellProps> {
   // Cells that declare their data requirements with a FRAGMENT don't fire
   // queries of their own – they read their slice of a parent Cell's query
-  // result via the `_ref` prop. If a Cell exports both QUERY and FRAGMENT
-  // it stays a query Cell (the FRAGMENT export might just be a helper for
-  // other Cells to spread)
+  // result via a prop named after the fragment. If a Cell exports both QUERY
+  // and FRAGMENT it stays a query Cell (the FRAGMENT export might just be a
+  // helper for other Cells to spread)
   if (createCellProps.FRAGMENT && !createCellProps.QUERY) {
     return createFragmentCell(createCellProps)
   }

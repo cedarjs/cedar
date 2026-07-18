@@ -44,7 +44,8 @@ the fragment Cell's `Loading` is exactly the right place to express it:
 The runtime is already shaped for this: the fragment Cell reads through the
 client-agnostic `useFragment` hook and distinguishes complete from incomplete
 reads. The main work is: allowing/detecting `@defer` spreads, rendering
-`Loading` (instead of falling back to the `_ref` snapshot) when the slice is
+`Loading` (instead of falling back to the passed-in data snapshot) when the
+slice is
 knowingly deferred, and e2e coverage. Deferred patches can also carry errors for
 their fragment, which dovetails with the `Failure` story below.
 
@@ -101,13 +102,36 @@ Until the JS client processes `@catch`, an interim Cedar implementation could
 approximate it with `errorPolicy: 'all'` + error-path matching via context from
 the parent Cell — and swap to the standardized directives when they land.
 
+## Developer experience follow-ups
+
+The fragment spread in the parent's QUERY is the part developers have to
+remember. Safety nets that exist today: the GraphQL VSCode extension (via the
+app's graphql.config) autocompletes and validates fragment spreads, a typo'd
+spread fails type generation with file/line, and a forgotten spread surfaces
+as a TypeScript error at the component usage site (the fragment Cell's data
+prop is typed with the full fragment type). Planned improvements:
+
+1. A rule in `@cedarjs/eslint-plugin`: if a Cell file imports a fragment Cell
+   and renders it, its QUERY must spread that Cell's fragment. Autofix inserts
+   the spread. Works in every editor and in CI without GraphQL tooling.
+2. `yarn cedar g cell <name> --fragment` to scaffold a fragment Cell and
+   print (or insert) the spread snippet for a chosen parent.
+3. Consider adopting `@graphql-eslint` for general in-editor GraphQL
+   validation through ESLint.
+4. Long term: the build-time query assembler from the original plan document
+   (the vite plugin walks the Cell tree and injects fragment spreads
+   automatically), which removes the hand-written spread entirely.
+
 ## Suggested order of attack
 
-1. Route `null`/missing slices to `Empty` (or `Failure` if exported) instead of
-   throwing.
-2. Parent-provided error context + path matching → fragment Cell `Failure` for
+1. ~~Route `null`/missing slices to `Empty` instead of throwing.~~ Done in
+   #2107 together with the fragment-named data prop: a `null` data prop
+   renders `Empty` (or `Success` with `null` data when there's no `Empty`);
+   an entirely missing prop still throws a developer-error naming the prop.
+2. The `@cedarjs/eslint-plugin` rule for fragment spreads (DX item 1 above).
+3. Parent-provided error context + path matching → fragment Cell `Failure` for
    partial errors (`errorPolicy: 'all'`).
-3. `@defer` spreads → fragment Cell `Loading` (and deferred-patch errors →
+4. `@defer` spreads → fragment Cell `Loading` (and deferred-patch errors →
    `Failure`).
-4. Adopt `@semanticNonNull`/`@catch` semantics when Apollo Client (JS) supports
+5. Adopt `@semanticNonNull`/`@catch` semantics when Apollo Client (JS) supports
    them, replacing the interim correlation logic.

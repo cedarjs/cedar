@@ -147,9 +147,10 @@ export interface CreateCellProps<CellProps, CellVariables> {
   /**
    * A GraphQL fragment that declares this Cell's data requirements. Fragment
    * Cells don't fire their own query. Instead a parent Cell spreads the
-   * fragment in its `QUERY` and passes the fetched data object down via the
-   * `_ref` prop. The fragment is automatically registered with the GraphQL
-   * client's fragment registry, so parent queries can spread it by name.
+   * fragment in its `QUERY` and passes the fetched data object down via a
+   * prop named after the fragment (`AuthorCell_author` -> `author`). The
+   * fragment is automatically registered with the GraphQL client's fragment
+   * registry, so parent queries can spread it by name.
    *
    * Either `QUERY` or `FRAGMENT` must be provided.
    */

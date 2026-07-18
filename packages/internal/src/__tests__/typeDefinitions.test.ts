@@ -93,11 +93,12 @@ test('generate the correct mirror types for cells', () => {
     export * from './TodoStatusCell.js'
 
     /**
-     * _ref is the slice of a parent Cell's query result that matches this Cell's
-     * FRAGMENT. The parent spreads the fragment in its QUERY and passes the
-     * fetched data object down, e.g. <Cell _ref={post.author} />
+     * todo is the slice of a parent Cell's query result that
+     * matches this Cell's FRAGMENT. The parent spreads the fragment in its QUERY
+     * and passes the fetched data object down, e.g.
+     * <Cell todo={data.someField} />
      */
-    type FragmentCellInputs = { _ref: TodoStatusCell_todo } & Record<string, unknown>
+    type FragmentCellInputs = { todo: TodoStatusCell_todo } & Record<string, unknown>
 
     export default function (props: FragmentCellInputs): ReturnType<SuccessType>
 

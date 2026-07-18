@@ -13,7 +13,11 @@ import {
   getNamedExports,
 } from '../ast.js'
 import { findCells, findDirectoryNamedModules } from '../files.js'
-import { parseGqlFragmentName, parseGqlQueryToAst } from '../gql.js'
+import {
+  parseGqlFragmentName,
+  parseGqlFragmentPropName,
+  parseGqlQueryToAst,
+} from '../gql.js'
 import { getJsxElements } from '../jsx.js'
 
 import {
@@ -176,6 +180,9 @@ export const generateMirrorCell = (p: string, rwjsPaths = getPaths()) => {
   const cellFragmentName = cellFragment
     ? parseGqlFragmentName(cellFragment)
     : undefined
+  const cellFragmentPropName = cellFragment
+    ? parseGqlFragmentPropName(cellFragment)
+    : undefined
 
   if (cellQuery) {
     const gqlDoc = parseGqlQueryToAst(cellQuery)[0]
@@ -185,15 +192,17 @@ export const generateMirrorCell = (p: string, rwjsPaths = getPaths()) => {
       queryResultType: `${gqlDoc?.name}`,
       queryVariablesType: `${gqlDoc?.name}Variables`,
     })
-  } else if (cellFragmentName) {
+  } else if (cellFragmentName && cellFragmentPropName) {
     // Fragment Cells don't have a QUERY. They receive their data through the
-    // `_ref` prop instead, typed by the fragment they export.
+    // prop named after their fragment instead, typed by the fragment they
+    // export.
     // graphql-codegen is configured with `namingConvention: 'keep'` and
     // `omitOperationSuffix: true`, so the generated type is named exactly
     // like the fragment
     writeTemplate('templates/mirror-cell-fragment.d.ts.template', typeDefPath, {
       name,
       fragmentType: cellFragmentName,
+      fragmentPropName: cellFragmentPropName,
     })
   } else {
     // If for some reason we can't parse the query, generated the mirror cell anyway

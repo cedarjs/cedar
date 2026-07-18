@@ -79,7 +79,7 @@ type DefaultUseFragmentType = <TData = any>(
 /**
  * Fallback used when the current GraphQL client doesn't provide a
  * `useFragment` implementation. Always reports an incomplete read, which
- * makes fragment Cells fall back to the data snapshot passed via `_ref`.
+ * makes fragment Cells fall back to the data snapshot they were passed.
  */
 const incompleteFragmentRead = () => {
   return { data: undefined, complete: false }
@@ -103,7 +103,7 @@ export interface GraphQLHooks<
    * Synchronously read fragment data from the GraphQL client's cache.
    * Optional so that custom GraphQL clients don't have to provide an
    * implementation. Fragment Cells fall back to reading data from their
-   * `_ref` prop when this reports an incomplete result.
+   * data prop when this reports an incomplete result.
    */
   useFragment?: DefaultUseFragmentType
 }

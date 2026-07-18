@@ -59,7 +59,7 @@ export const Success = ({
               month: 'long',
               day: 'numeric',
             }).format(new Date(aggregatedBlogPost.createdAt))}{' '}
-            - By: <AuthorFragmentCell _ref={aggregatedBlogPost.author} />
+            - By: <AuthorFragmentCell author={aggregatedBlogPost.author} />
           </p>
           <h2 className="mt-2 text-xl font-semibold">
             {aggregatedBlogPost.title}

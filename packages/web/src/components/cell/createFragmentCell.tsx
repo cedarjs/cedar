@@ -30,12 +30,17 @@ function getFragmentDefinition(
 }
 
 /**
- * Derives the name of the prop that the fragment data is passed to `Success`
- * (and `Empty`) as.
+ * Derives the Cell's data prop name: the prop the parent Cell passes the
+ * fragment data in with, and the prop `Success` (and `Empty`) receive the
+ * data as.
  *
  * For a fragment named with an underscore, like `AuthorCell_author`, the part
  * after the last underscore is used (`author`). Otherwise the type the
  * fragment is defined on is used, camelCased (`on User` -> `user`).
+ *
+ * Keep this in sync with parseGqlFragmentPropName in
+ * packages/internal/src/gql.ts, which is used when generating the mirror
+ * types for fragment Cells.
  */
 function getFragmentPropName(fragmentDefinition: FragmentDefinitionNode) {
   const fragmentName = fragmentDefinition.name.value
@@ -60,13 +65,14 @@ function isDataRef(value: unknown): value is Record<string, unknown> {
  *
  * Fragment Cells don't fire queries of their own. A parent Cell spreads the
  * fragment in its QUERY and passes the matching slice of the query result
- * down via the `_ref` prop. The data is read synchronously, so fragment Cells
- * never render `Loading`.
+ * down via a prop named after the fragment (`AuthorCell_author` -> `author`).
+ * `Success` receives the data as that same prop. The data is read
+ * synchronously, so fragment Cells never render `Loading`.
  *
  * When the GraphQL client supports it (Apollo does), the fragment data is
  * read from the client's cache, so the Cell re-renders when other queries or
  * mutations update the underlying entity. If the cache read is incomplete,
- * the `_ref` object itself is used as the data snapshot.
+ * the passed-in object itself is used as the data snapshot.
  */
 export function createFragmentCell<
   CellProps extends Record<string, unknown>,
@@ -102,9 +108,9 @@ export function createFragmentCell<
   fragmentRegistry.register(fragment)
 
   function NamedCell(props: React.PropsWithChildren<CellProps>) {
-    const { children: _, _ref, ...rest } = props
+    const { children: _, [propName]: rawSlice, ...rest } = props
 
-    const dataRef = isDataRef(_ref) ? _ref : undefined
+    const dataRef = isDataRef(rawSlice) ? rawSlice : undefined
 
     const fragmentResult = useFragment({
       fragment,
@@ -112,19 +118,23 @@ export function createFragmentCell<
       from: dataRef ?? {},
     })
 
-    if (!dataRef) {
+    if (!(propName in props)) {
       throw new Error(
-        `Fragment Cells must be passed a \`_ref\` prop. Render ` +
-          `${displayName} from a parent Cell that spreads ` +
-          `\`...${fragmentName}\` in its QUERY, and pass the matching data ` +
-          `object: \`<${displayName} _ref={data.someField} />\``,
+        `${displayName} must be passed a \`${propName}\` prop. Render it ` +
+          `from a parent Cell that spreads \`...${fragmentName}\` in its ` +
+          `QUERY, and pass the matching data object: ` +
+          `\`<${displayName} ${propName}={data.someField} />\``,
       )
     }
 
-    // Prefer the live cache read. Fall back to the `_ref` data snapshot when
-    // the cache can't provide a complete result (e.g. when prerendering, in
-    // tests, or with GraphQL clients without `useFragment` support)
-    const data = fragmentResult.complete ? fragmentResult.data : dataRef
+    // Prefer the live cache read. Fall back to the data snapshot passed in
+    // via the prop when the cache can't provide a complete result (e.g. when
+    // prerendering, in tests, or with GraphQL clients without `useFragment`
+    // support). A slice that is null (a nullable field, or a partial error
+    // with `errorPolicy: 'all'`) stays null and renders `Empty` below.
+    const data = fragmentResult.complete
+      ? fragmentResult.data
+      : (dataRef ?? null)
 
     const afterQueryData = afterQuery({ [propName]: data })
 

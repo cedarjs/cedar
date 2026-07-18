@@ -21,7 +21,7 @@ export async function aggregatedCellsTest({ page }: PlaywrightTestArgs) {
   await expect(page.locator('.aggregated-blog-post h2')).not.toBeEmpty()
 
   // The author details are rendered by AuthorFragmentCell, which reads its
-  // slice of the aggregated query result through the `_ref` prop
+  // slice of the aggregated query result through its `author` prop
   await expect(page.locator('.author-fragment-cell')).toContainText(
     '@example.com',
   )

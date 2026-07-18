@@ -23,7 +23,7 @@ describe('createFragmentCell', () => {
     }
   })
 
-  test('renders Success with data from the _ref prop', () => {
+  test('renders Success with data from its data prop', () => {
     const TestCell = createCell({
       FRAGMENT: AUTHOR_FRAGMENT,
       Success: ({ author }) => <>By {author.fullName}</>,
@@ -31,10 +31,10 @@ describe('createFragmentCell', () => {
 
     render(
       // No useFragment hook registered, so the Cell falls back to reading
-      // data straight off the `_ref` prop
+      // data straight off the `author` prop
       <GraphQLHooksProvider useQuery={null} useMutation={null}>
         <TestCell
-          _ref={{ __typename: 'User', id: 1, fullName: 'Story Teller' }}
+          author={{ __typename: 'User', id: 1, fullName: 'Story Teller' }}
         />
       </GraphQLHooksProvider>,
     )
@@ -64,14 +64,14 @@ describe('createFragmentCell', () => {
         useMutation={null}
         useFragment={myUseFragmentHook}
       >
-        <TestCell _ref={{ __typename: 'User', id: 1 }} />
+        <TestCell author={{ __typename: 'User', id: 1 }} />
       </GraphQLHooksProvider>,
     )
 
     screen.getByText(/^By Cache Dweller$/)
   })
 
-  test('falls back to the _ref prop for incomplete useFragment reads', () => {
+  test('falls back to the data prop for incomplete useFragment reads', () => {
     const TestCell = createCell({
       FRAGMENT: AUTHOR_FRAGMENT,
       Success: ({ author }) => <>By {author.fullName}</>,
@@ -88,7 +88,7 @@ describe('createFragmentCell', () => {
         useFragment={myUseFragmentHook}
       >
         <TestCell
-          _ref={{ __typename: 'User', id: 1, fullName: 'Ref Reader' }}
+          author={{ __typename: 'User', id: 1, fullName: 'Ref Reader' }}
         />
       </GraphQLHooksProvider>,
     )
@@ -108,7 +108,7 @@ describe('createFragmentCell', () => {
 
     render(
       <GraphQLHooksProvider useQuery={null} useMutation={null}>
-        <TestCell _ref={{ __typename: 'User', id: 1, bio: 'Writes things' }} />
+        <TestCell user={{ __typename: 'User', id: 1, bio: 'Writes things' }} />
       </GraphQLHooksProvider>,
     )
 
@@ -125,7 +125,7 @@ describe('createFragmentCell', () => {
 
     render(
       <GraphQLHooksProvider useQuery={null} useMutation={null}>
-        <TestCell _ref={{ __typename: 'User', id: 1, fullName: 'Nobody' }} />
+        <TestCell author={{ __typename: 'User', id: 1, fullName: 'Nobody' }} />
       </GraphQLHooksProvider>,
     )
 
@@ -144,7 +144,7 @@ describe('createFragmentCell', () => {
     render(
       <GraphQLHooksProvider useQuery={null} useMutation={null}>
         <TestCell
-          _ref={{ __typename: 'User', id: 1, fullName: 'Original Name' }}
+          author={{ __typename: 'User', id: 1, fullName: 'Original Name' }}
         />
       </GraphQLHooksProvider>,
     )
@@ -152,7 +152,40 @@ describe('createFragmentCell', () => {
     screen.getByText(/^By Changed Name$/)
   })
 
-  test('throws a helpful error when no _ref prop is passed', () => {
+  test('renders Empty when the data prop is null', () => {
+    const TestCell = createCell({
+      FRAGMENT: AUTHOR_FRAGMENT,
+      Empty: () => <>No author</>,
+      Success: ({ author }) => <>By {author.fullName}</>,
+    })
+
+    render(
+      // A nullable field, or a partial error with `errorPolicy: 'all'`, can
+      // make the parent pass null here
+      <GraphQLHooksProvider useQuery={null} useMutation={null}>
+        <TestCell author={null} />
+      </GraphQLHooksProvider>,
+    )
+
+    screen.getByText(/^No author$/)
+  })
+
+  test('renders Success with null data when the data prop is null and there is no Empty', () => {
+    const TestCell = createCell({
+      FRAGMENT: AUTHOR_FRAGMENT,
+      Success: ({ author }) => <>By {author?.fullName ?? 'unknown'}</>,
+    })
+
+    render(
+      <GraphQLHooksProvider useQuery={null} useMutation={null}>
+        <TestCell author={null} />
+      </GraphQLHooksProvider>,
+    )
+
+    screen.getByText(/^By unknown$/)
+  })
+
+  test('throws a helpful error naming the prop when it is not passed', () => {
     const TestCell = createCell({
       FRAGMENT: AUTHOR_FRAGMENT,
       Success: ({ author }) => <>By {author.fullName}</>,
@@ -172,7 +205,7 @@ describe('createFragmentCell', () => {
             <TestCell />
           </GraphQLHooksProvider>,
         )
-      }).toThrow(/_ref/)
+      }).toThrow(/`author` prop/)
     } finally {
       consoleErrorSpy.mockRestore()
     }

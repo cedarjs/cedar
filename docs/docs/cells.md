@@ -320,7 +320,8 @@ export const Success = ({ author }) => (
 ```
 
 The parent Cell spreads the fragment in its `QUERY` and passes the matching data
-object down via the `_ref` prop:
+object down as a prop named after the fragment &mdash; `AuthorCell_author`
+means the Cell takes (and `Success` receives) an `author` prop:
 
 ```jsx title="web/src/components/BlogPostCell/BlogPostCell.jsx"
 import AuthorCell from 'src/components/AuthorCell'
@@ -341,7 +342,7 @@ export const QUERY = gql`
 export const Success = ({ post }) => (
   <article>
     <h2>{post.title}</h2>
-    <AuthorCell _ref={post.author} />
+    <AuthorCell author={post.author} />
     <div>{post.body}</div>
   </article>
 )
@@ -354,22 +355,24 @@ enough (importing the child Cell to render it is what pulls the fragment in).
 
 A few things to know about fragment Cells:
 
-- The name of the prop passed to `Success` is derived from the fragment name:
-  for a name with an underscore, like `AuthorCell_author`, it's the part after
-  the last underscore (`author`). Otherwise it's the camelCased name of the type
-  the fragment is defined on (`on User` becomes `user`).
+- The data prop's name is derived from the fragment name: for a name with an
+  underscore, like `AuthorCell_author`, it's the part after the last underscore
+  (`author`). Otherwise it's the camelCased name of the type the fragment is
+  defined on (`on User` becomes `user`). The parent passes the data in with
+  that prop, and `Success` (and `Empty`) receive the data as that same prop.
 - There's no `Loading` or `Failure` state. The data is read synchronously from
   the parent's query result, so by the time a fragment Cell renders, the data is
   already there. `Empty`, `isEmpty`, and `afterQuery` work like they do in
-  regular Cells.
+  regular Cells, and a `null` data prop (a nullable field, or a partial error
+  when the parent uses `errorPolicy: 'all'`) renders `Empty`.
 - Include the type's `id` in the fragment. With it, the Cell reads its data live
   from the GraphQL client's cache, so it automatically re-renders when a
   mutation or another query updates that entity. Without it, the Cell still
-  renders (it falls back to the data object passed via `_ref`), but it only
-  updates when the parent re-renders.
+  renders (it falls back to the data object it was passed), but it only updates
+  when the parent re-renders.
 - This works for lists too: a parent Cell that fetches
   `posts { author { ...AuthorCell_author } }` can render one
-  `<AuthorCell _ref={post.author} />` per post, still with a single request.
+  `<AuthorCell author={post.author} />` per post, still with a single request.
 
 ## How Does Cedar Know a Cell is a Cell?
 

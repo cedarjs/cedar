@@ -63,10 +63,10 @@ const useRegisteredFragmentHook = <TData = any>(
 
 /**
  * Passed to Apollo's `useFragment` when the object a fragment Cell received
- * via `_ref` can't be identified in the cache (for example because the
+ * in its data prop can't be identified in the cache (for example because the
  * fragment doesn't select the type's key fields). It identifies nothing, so
- * the read comes back incomplete and the Cell falls back to the `_ref` data
- * snapshot.
+ * the read comes back incomplete and the Cell falls back to the data
+ * snapshot it was passed.
  */
 const UNIDENTIFIABLE_FRAGMENT_REF = 'CedarUnidentifiableFragmentRef:_'
 
@@ -74,7 +74,7 @@ const UNIDENTIFIABLE_FRAGMENT_REF = 'CedarUnidentifiableFragmentRef:_'
  * Adapts Apollo's `useFragment` to the client-agnostic fragment hook shape
  * used by fragment Cells (see `GraphQLHooksProvider`). Incomplete reads
  * surface `data: undefined` so that fragment Cells fall back to the data
- * snapshot passed via their `_ref` prop.
+ * snapshot passed via their data prop.
  */
 export function useCellFragment<TData = any>(
   options: FragmentHookOptions,
