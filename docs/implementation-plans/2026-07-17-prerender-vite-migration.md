@@ -1,7 +1,13 @@
 # Moving Prerender to Vite
 
 **Date:** 2026-07-17 **Updated:** 2026-07-18 **Author:** Lisa (lisa-assistant)
-**Status:** Proposal
+**Status:** Superseded by
+[2026-07-18-prerender-rewrite.md](./2026-07-18-prerender-rewrite.md)
+
+> **Note:** The bundler-swap work described here carries over (in revised form,
+> using Vite's Environment API instead of a nested programmatic build) as
+> Track 1 of the superseding plan, which also adds a rewrite of the prerender
+> data/render layer on Apollo Client's `prerenderStatic`.
 
 ---
 
