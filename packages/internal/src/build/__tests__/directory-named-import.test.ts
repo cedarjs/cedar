@@ -111,4 +111,18 @@ describe('applyDirectoryNamedImport', () => {
       `// import { ImpModule } from './Module'\nimport { ImpModule } from './Module/Module'`,
     )
   })
+
+  it('rewrites a Prettier-wrapped multiline import', () => {
+    const code = `import {\n  ImpModule,\n  AnotherThing,\n} from './Module'`
+    expect(applyDirectoryNamedImport(code, FIXTURE_FILE)).toBe(
+      `import {\n  ImpModule,\n  AnotherThing,\n} from './Module/Module'`,
+    )
+  })
+
+  it('rewrites a multiline export', () => {
+    const code = `export {\n  ExpModule,\n  AnotherThing,\n} from './Module'`
+    expect(applyDirectoryNamedImport(code, FIXTURE_FILE)).toBe(
+      `export {\n  ExpModule,\n  AnotherThing,\n} from './Module/Module'`,
+    )
+  })
 })

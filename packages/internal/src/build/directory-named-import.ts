@@ -18,16 +18,18 @@ import { importStatementPath, resolveFile } from '@cedarjs/project-config'
  * an index file wins over a directory-named module.
  *
  * Matches static `import`/`export` statements, including side-effect-only
- * imports (`import './Button'`) — the babel plugin this replaces visits every
- * `ImportDeclaration`/`ExportDeclaration`, which covers those too. Anchored to
- * the start of a line (like `applyImportDir`'s glob-import regex) so that
- * text resembling an import inside a string, template literal, or comment
- * isn't rewritten, and excludes dynamic `import(...)` calls (the babel plugin
- * doesn't rewrite those either).
+ * imports (`import './Button'`) and specifier lists wrapped across multiple
+ * lines (as Prettier does for long import statements) — the babel plugin
+ * this replaces visits every `ImportDeclaration`/`ExportDeclaration`
+ * regardless of formatting. Anchored to the start of a line (like
+ * `applyImportDir`'s glob-import regex) so that text resembling an import
+ * elsewhere on a line — inside a string or comment sharing that line, say —
+ * isn't rewritten, and excludes dynamic `import(...)` calls (the babel
+ * plugin doesn't rewrite those either).
  */
 
 const RELATIVE_IMPORT_RE =
-  /^(\s*(?:import|export)\s[^'"\n]*?)(['"])(\.\.?\/[^'"]+)\2/gm
+  /^(\s*(?:import|export)\s[^'"]*?)(['"])(\.\.?\/[^'"]+)\2/gm
 
 export function applyDirectoryNamedImport(
   code: string,
