@@ -30,11 +30,16 @@ export async function aggregatedCellsTest({ page }: PlaywrightTestArgs) {
     body.includes('FindAggregatedBlogPostQuery'),
   )
 
-  // A single request must fetch both the post and its author...
-  expect(aggregatedQueries).toHaveLength(1)
+  // The aggregated query must fetch both the post and its author. We don't
+  // assert an exact request count because React 18 fires the same query
+  // twice on mount – the important thing is that the post and the author are
+  // fetched together...
+  expect(aggregatedQueries.length).toBeGreaterThanOrEqual(1)
 
-  // ...with the fragment cell's data requirements inlined into the query
-  expect(aggregatedQueries[0]).toContain('fragment AuthorFragmentCell_author')
+  // ...with the fragment cell's data requirements inlined into every request
+  for (const aggregatedQuery of aggregatedQueries) {
+    expect(aggregatedQuery).toContain('fragment AuthorFragmentCell_author')
+  }
 
   // ...and the author must not be fetched with a separate query (that's what
   // the waterfall page does)
