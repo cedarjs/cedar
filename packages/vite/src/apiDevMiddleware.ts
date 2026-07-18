@@ -39,7 +39,12 @@ import { applyOtelWrapping } from './plugins/vite-plugin-cedar-otel-wrapping.js'
 import { cedarjsJobPathInjectorPlugin } from './plugins/vite-plugin-cedarjs-job-path-injector.js'
 
 function resolveWithExtensions(id: string): string {
-  if (fs.existsSync(id)) {
+  // A bare `fs.existsSync(id)` also returns true for directories (e.g. a
+  // directory-named-import target). Since this plugin's resolveId return
+  // short-circuits Vite's resolveId chain, that would incorrectly claim the
+  // bare directory path as fully resolved instead of letting a later plugin
+  // (e.g. one resolving directory-named imports) handle it.
+  if (fs.existsSync(id) && fs.statSync(id).isFile()) {
     return id
   }
   for (const ext of ['.js', '.ts', '.jsx', '.tsx', '.mjs', '.mts']) {
@@ -228,7 +233,14 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
         name: 'cedar-api-src-redirect',
         enforce: 'pre',
         resolveId(id: string, importer: string | undefined) {
-          if (!importer?.startsWith(cedarPaths.api.src)) {
+          // Normalize both sides: on Windows, cedarPaths.api.src can contain
+          // backslashes while Vite supplies forward-slash importer ids, so a
+          // raw startsWith would never match. The trailing separator guards
+          // against matching an adjacent directory (e.g. `api/src-extra`).
+          const normalizedImporter = importer && normalizePath(importer)
+          const normalizedApiSrc = normalizePath(cedarPaths.api.src)
+
+          if (!normalizedImporter?.startsWith(`${normalizedApiSrc}/`)) {
             return null
           }
 
