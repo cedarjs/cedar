@@ -5,6 +5,16 @@ import type { BuildContext, BuildOptions, PluginBuild } from 'esbuild'
 import { build, context } from 'esbuild'
 import type { Plugin } from 'vite'
 import { build as viteBuild, normalizePath } from 'vite'
+import tsPathsMod from 'vite-tsconfig-paths'
+
+// vite-tsconfig-paths is ESM-only. CJS builds double-wrap its default
+// export: tsconfigPaths.default is the module object, and
+// tsconfigPaths.default.default is the actual function. ESM gets the
+// function directly. The `||` chain resolves correctly for both.
+const tsconfigPaths =
+  // @ts-expect-error – .default only exists at runtime in CJS double-wrap
+  // interop
+  tsPathsMod.default?.default || tsPathsMod.default || tsPathsMod
 
 import {
   getApiSideBabelPlugins,
@@ -296,7 +306,14 @@ export const buildApiWithVite = async () => {
     // are expanded before Babel sees the code.  The Babel import-dir plugin is
     // disabled for forVite:true builds; this inline Vite plugin is its
     // replacement for this code path (both CJS and ESM output via Rollup).
-    plugins: [createImportDirVitePlugin(), createCedarViteApiPlugin()],
+    // tsconfigPaths resolves user-defined tsconfig.json `paths` aliases; it
+    // replaces the Babel module-resolver's tsconfig-paths handling for this
+    // code path.
+    plugins: [
+      tsconfigPaths(),
+      createImportDirVitePlugin(),
+      createCedarViteApiPlugin(),
+    ],
   })
 }
 
