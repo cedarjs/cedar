@@ -15,13 +15,16 @@ import type { FrameworkDbClient, QueryFunction } from '../types/orm.js'
 type QueryVariables = Record<string, unknown>
 type QueryPayload<T> = Record<string, T>
 
+// The type arguments are given explicitly (instantiation expressions) because
+// deriving from the uninstantiated generic hook would fix `TData` to
+// `unknown`, which isn't assignable to the hook's nested option/result types
 export type UseLiveQueryOptions = Omit<
-  NonNullable<Parameters<typeof cedarUseQuery>[1]>,
+  NonNullable<Parameters<typeof cedarUseQuery<any, QueryVariables>>[1]>,
   'variables'
 >
 
 export type UseLiveQueryResult<T> = Omit<
-  ReturnType<typeof cedarUseQuery>,
+  ReturnType<typeof cedarUseQuery<QueryPayload<T>, QueryVariables>>,
   'data'
 > & {
   data: T | undefined
