@@ -4,6 +4,7 @@ import { render, screen } from '@testing-library/react'
 import { parse } from 'graphql'
 import { vi, describe, beforeAll, test, expect } from 'vitest'
 
+import { fragmentRegistry } from '../../apollo/fragmentRegistry.js'
 import type { FragmentHookOptions } from '../GraphQLHooksProvider.js'
 import { GraphQLHooksProvider } from '../GraphQLHooksProvider.js'
 
@@ -230,6 +231,25 @@ describe('createFragmentCell', () => {
     )
 
     screen.getByText(/^By Query Result$/)
+  })
+
+  test('registers the FRAGMENT even when the Cell stays a query Cell', () => {
+    createCell({
+      // @ts-expect-error - Purposefully using a plain string here.
+      QUERY: 'query MixedExportQuery { author { fullName } }',
+      // Using a unique fragment name since the registry is shared between
+      // tests
+      FRAGMENT: parse(`
+        fragment MixedExportCell_author on User {
+          fullName
+        }
+      `),
+      Success: ({ author }) => <>By {author.fullName}</>,
+    })
+
+    // Other Cells can spread the helper fragment by name, so it must be
+    // resolvable through the registry
+    expect(fragmentRegistry.lookup('MixedExportCell_author')).toBeTruthy()
   })
 
   test('throws when the FRAGMENT export is not a fragment', () => {

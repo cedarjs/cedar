@@ -24,8 +24,15 @@ export function createCell<
   // result via a prop named after the fragment. If a Cell exports both QUERY
   // and FRAGMENT it stays a query Cell (the FRAGMENT export might just be a
   // helper for other Cells to spread)
-  if (createCellProps.FRAGMENT && !createCellProps.QUERY) {
-    return createFragmentCell(createCellProps)
+  if (createCellProps.FRAGMENT) {
+    if (!createCellProps.QUERY) {
+      return createFragmentCell(createCellProps)
+    }
+
+    // The Cell stays a query Cell, but other Cells might still spread its
+    // FRAGMENT export by name, so it has to be registered (createFragmentCell
+    // handles registration for fragment Cells)
+    fragmentRegistry.register(createCellProps.FRAGMENT)
   }
 
   // 👇 Note how we switch which cell factory to use!
