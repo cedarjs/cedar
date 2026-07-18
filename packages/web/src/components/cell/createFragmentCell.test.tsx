@@ -178,6 +178,27 @@ describe('createFragmentCell', () => {
     }
   })
 
+  test('stays a query Cell when both QUERY and FRAGMENT are exported', () => {
+    const TestCell = createCell({
+      // @ts-expect-error - Purposefully using a plain string here.
+      QUERY: 'query AuthorQuery { author { fullName } }',
+      FRAGMENT: AUTHOR_FRAGMENT,
+      Success: ({ author }) => <>By {author.fullName}</>,
+    })
+
+    const myUseQueryHook = () => {
+      return { data: { author: { fullName: 'Query Result' } } }
+    }
+
+    render(
+      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
+        <TestCell />
+      </GraphQLHooksProvider>,
+    )
+
+    screen.getByText(/^By Query Result$/)
+  })
+
   test('throws when the FRAGMENT export is not a fragment', () => {
     expect(() =>
       createCell({
