@@ -275,11 +275,11 @@ describe('yarn cedar dev', () => {
     const { webCommand, apiCommand, generateCommand } = findSeparateCommands()
 
     // In streaming SSR mode the web side uses the cedar-dev-fe server.
-    // NODE_ENV comes from the job env, not a cross-env wrapper.
     expect(webCommand?.command).toContain('yarn cedar-dev-fe')
     expect(webCommand?.env?.NODE_ENV).toEqual('development')
 
-    // API side uses nodemon with cedar-api-server-watch in streaming SSR fallback mode
+    // API side uses nodemon with cedar-api-server-watch in streaming SSR
+    // fallback mode
     expect(
       apiCommand?.command
         .replace(/\s+/g, ' ')
@@ -328,7 +328,9 @@ describe('yarn cedar dev', () => {
 
     // The bin is launched via an explicit `node <flags> <path>` (under yarn:
     // `yarn node`) so node flags can be applied. NODE_ENV comes from the job
-    // env, not a cross-env wrapper. See `formatViteDevBinCommand`.
+    // env. See `formatViteDevBinCommand`.
+    // The full command will be something like:
+    // yarn node "/Users/tobbe/dev/cedarjs/cedar/packages/vite/bins/cedar-vite-dev.mjs"
     expect(webCommand?.command).toContain('yarn node ')
     expect(webCommand?.command).toContain('cedar-vite-dev.mjs')
     expect(webCommand?.env?.NODE_ENV).toEqual('development')
@@ -346,7 +348,8 @@ describe('yarn cedar dev', () => {
 
     const { webCommand } = findSeparateCommands()
 
-    // Node flags must appear before the bin path (node-flag position), not after.
+    // Node flags must appear before the bin path (node-flag position), not
+    // after.
     expect(webCommand?.command).toMatch(
       /yarn node .*--inspect.*cedar-vite-dev\.mjs/,
     )

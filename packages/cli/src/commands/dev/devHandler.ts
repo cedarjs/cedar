@@ -23,7 +23,7 @@ import { serverFileExists } from '../../lib/project.js'
 import { getApiDebugFlag } from './apiDebugFlag.js'
 import { getPackageWatchCommands } from './packageWatchCommands.js'
 
-const require = createRequire(import.meta.url)
+const createdRequire = createRequire(import.meta.url)
 
 interface DevHandlerOptions {
   workspace?: string[]
@@ -69,7 +69,7 @@ function formatViteDevBinCommand(binName: string, extraNodeArgs = '') {
   // path from it.
   let vitePackageJsonPath: string
   try {
-    vitePackageJsonPath = require.resolve('@cedarjs/vite/package.json')
+    vitePackageJsonPath = createdRequire.resolve('@cedarjs/vite/package.json')
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
     throw new Error(
