@@ -10,6 +10,11 @@ outputs:
     description: If RSC-related changes have been made
   ssr:
     description: If SSR-related changes have been made
+  windows:
+    description: >
+      If the changes could plausibly affect Windows behavior (path-sensitive
+      code changes, or changes to packages/cli or packages/vite), or the PR
+      has the `windows` label. Controls whether the Windows CI legs run.
 
 runs:
   using: node24
