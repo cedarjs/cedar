@@ -21,7 +21,10 @@ import {
   getApiSideBabelPlugins,
   transformWithBabel,
 } from '@cedarjs/babel-config'
-import { applySrcAlias } from '@cedarjs/internal/dist/build/api.js'
+import {
+  applyEsmExtensions,
+  applySrcAlias,
+} from '@cedarjs/internal/dist/build/api.js'
 import { findApiFiles } from '@cedarjs/internal/dist/files.js'
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
@@ -416,12 +419,23 @@ export async function buildCedarApp({
             cedarPaths.api.src,
             path.dirname(id),
           )
-          const codeWithSrcAlias = applySrcAlias(
+          let outputCode = applySrcAlias(
             transformedCode.code,
             fromDirRelativeToApiSrc,
           )
+
+          // For ESM projects, append .js/.jsx extensions to extensionless
+          // relative imports so Node's ESM resolver can find them at runtime.
+          // This is needed because cedarImportDirPlugin expands glob imports
+          // (e.g. `src/directives/**/*.{js,ts}`) into individual extensionless
+          // import statements, and Rollup with preserveModules:true preserves
+          // those specifiers as-is in the output.
+          if (projectSideIsEsm('api')) {
+            outputCode = applyEsmExtensions(outputCode, id)
+          }
+
           return {
-            code: codeWithSrcAlias,
+            code: outputCode,
             map: transformedCode.map ?? null,
           }
         }

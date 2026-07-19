@@ -44,6 +44,7 @@ import { applySrcAlias } from './src-alias.js'
 import { applyTsconfigPaths } from './tsconfig-paths.js'
 
 export { applySrcAlias } from './src-alias.js'
+export { applyEsmExtensions } from './esm-extensions.js'
 
 let BUILD_CTX: BuildContext | null = null
 
