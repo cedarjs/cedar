@@ -86,9 +86,16 @@ export const handler = async ({
     }
   }
 
+  // The real invocation passes `args` as an array without a shell, but this
+  // informational line may get copy-pasted into a shell — so args containing
+  // spaces need quotes here (and only here) to represent the same command.
+  const displayCommand = args
+    .map((arg) => (arg.includes(' ') ? `"${arg}"` : arg))
+    .join(' ')
+
   console.log()
   console.log(c.note('Running Prisma CLI...'))
-  console.log(c.underline(`$ <pm exec> prisma ${args.join(' ')}`))
+  console.log(c.underline(`$ <pm exec> prisma ${displayCommand}`))
   console.log()
 
   try {

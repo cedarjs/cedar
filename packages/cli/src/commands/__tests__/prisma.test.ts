@@ -69,4 +69,16 @@ test('the prisma command handles spaces', async () => {
     '--config',
     '/Users/bazinga/My Projects/rwprj/rwprj/api/prisma.config.js',
   ])
+
+  // The informational output, on the other hand, must quote values with
+  // spaces so that copy-pasting the printed command into a shell runs the
+  // same invocation.
+  const loggedCommand = vi
+    .mocked(console.log)
+    .mock.calls.flat()
+    .find((line) => String(line).includes('prisma migrate dev'))
+  expect(loggedCommand).toContain('-n "add bazingas"')
+  expect(loggedCommand).toContain(
+    '--config "/Users/bazinga/My Projects/rwprj/rwprj/api/prisma.config.js"',
+  )
 })
