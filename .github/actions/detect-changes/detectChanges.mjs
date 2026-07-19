@@ -8,6 +8,7 @@ import { cliChanged } from './cases/cli.mjs'
 import { codeChanges } from './cases/code_changes.mjs'
 import { rscChanged } from './cases/rsc.mjs'
 import { ssrChanged } from './cases/ssr.mjs'
+import { windowsChanged } from './cases/windows.mjs'
 
 const BASE_URL = 'https://api.github.com/repos/cedarjs/cedar'
 
@@ -38,14 +39,23 @@ const getPrNumber = () => {
 }
 
 /**
- * @returns {Promise<string | undefined>} the branch name for the current PR
+ * @returns {Promise<{ branchName?: string, hasWindowsLabel: boolean }>} the
+ *   branch name for the current PR, and whether the PR has the `windows`
+ *   label (which forces the Windows CI legs to run). The label is read from
+ *   the API rather than the event payload so that re-running CI after adding
+ *   the label picks it up.
  */
-async function getPrBranchName() {
+async function getPrInfo() {
   const prNumber = getPrNumber()
 
   const { json } = await fetchJson(`${BASE_URL}/pulls/${prNumber}`)
 
-  return json?.head?.ref
+  return {
+    branchName: json?.head?.ref,
+    hasWindowsLabel: (json?.labels || []).some(
+      (label) => label.name === 'windows',
+    ),
+  }
 }
 
 /**
@@ -171,6 +181,11 @@ async function getFilesInCommits(commits) {
   return changedFiles
 }
 
+/**
+ * @returns {Promise<Array<{ filename: string, patch?: string }>>} all files
+ *   changed in the PR, with their unified diffs (absent for binary files and
+ *   very large diffs)
+ */
 async function getChangedFilesInPr(page = 1) {
   const prNumber = getPrNumber()
 
@@ -179,7 +194,8 @@ async function getChangedFilesInPr(page = 1) {
   // Query the GitHub API to get the changed files in the PR
   const url = `${BASE_URL}/pulls/${prNumber}/files?per_page=100&page=${page}`
   const { json, res } = await fetchJson(url)
-  let changedFiles = json?.map((file) => file.filename) || []
+  let changedFiles =
+    json?.map((file) => ({ filename: file.filename, patch: file.patch })) || []
 
   // Look at the headers to see if the result is paginated
   const linkHeader = res?.headers?.get('link')
@@ -277,10 +293,12 @@ async function main() {
     core.setOutput('cli', true)
     core.setOutput('rsc', false)
     core.setOutput('ssr', false)
+    // Pushes (to `next` and release branches) always run the Windows legs.
+    core.setOutput('windows', true)
     return
   }
 
-  const branchName = await getPrBranchName()
+  const { branchName, hasWindowsLabel } = await getPrInfo()
   const workflowRun = await getLatestCompletedWorkflowRun(branchName)
   const workflowRunSucceeded = workflowRun?.conclusion === 'success'
   const workflowJobs = workflowRun?.id
@@ -289,24 +307,22 @@ async function main() {
   const rscJobs = summarizeJobResults(workflowJobs, '🔄🐘 RSC Smoke tests')
   const ssrJobs = summarizeJobResults(workflowJobs, '🔁 SSR Smoke tests')
   const prCommits = await getCommitsNewerThan(workflowRun?.updated_at)
+  const prFiles = await getChangedFilesInPr()
+  const prFileNames = prFiles.map((file) => file.filename)
   let changedFiles = await getFilesInCommits(prCommits)
 
   if (changedFiles.length === 0) {
     // Probably the first commit/push to this PR - get all files
     // (Or something went wrong, in which case we also want to just get all
     // files)
-    changedFiles = await getChangedFilesInPr()
+    changedFiles = prFileNames
   } else {
-    const changedFilesInPr = await getChangedFilesInPr()
-
     // `changedFiles` includes any files changed by merge commits. But if those
     // files are not part of the files this PR changes as a whole we can ignore
     // them. (This isn't 100% safe, but it's the same as we do when we allow
     // merging PRs even if main has updated as long as there are no merge
     // conflicts)
-    changedFiles = changedFiles.filter((file) =>
-      changedFilesInPr.includes(file),
-    )
+    changedFiles = changedFiles.filter((file) => prFileNames.includes(file))
 
     if (changedFiles.length === 0) {
       // If all changed files were filtered out above this was most likely
@@ -314,7 +330,7 @@ async function main() {
       // button on GitHub). We could just skip running CI (see comment above
       // about not being 100% safe), but let's instead consider all files
       // changed by this PR when deciding what tests to run.
-      changedFiles = changedFilesInPr
+      changedFiles = prFileNames
     }
   }
 
@@ -329,6 +345,7 @@ async function main() {
     core.setOutput('cli', true)
     core.setOutput('rsc', true)
     core.setOutput('ssr', true)
+    core.setOutput('windows', true)
     return
   }
 
@@ -347,11 +364,13 @@ async function main() {
       core.setOutput('cli', true)
       core.setOutput('rsc', true)
       core.setOutput('ssr', true)
+      core.setOutput('windows', true)
     } else {
       core.setOutput('code', false)
       core.setOutput('cli', false)
       core.setOutput('rsc', false)
       core.setOutput('ssr', false)
+      core.setOutput('windows', false)
     }
 
     return
@@ -360,9 +379,15 @@ async function main() {
   const rscChangesDetected = rscChanged(changedFiles)
   const ssrChangesDetected = ssrChanged(changedFiles)
   const cliChangesDetected = cliChanged(changedFiles)
+  // Evaluates the full PR diff (not just `changedFiles`) so a Windows-
+  // sensitive change in an early commit keeps the Windows legs running on
+  // later pushes too. The `windows` label forces the Windows legs to run
+  // (rerun-ci-on-windows-label.yml re-runs CI when the label is added).
+  const windowsChangesDetected = hasWindowsLabel || windowsChanged(prFiles)
 
   core.setOutput('code', true)
   core.setOutput('cli', cliChangesDetected)
+  core.setOutput('windows', windowsChangesDetected)
   core.setOutput(
     'rsc',
     rscChangesDetected || (rscJobs.hadJobs && !rscJobs.succeeded),
