@@ -46,12 +46,24 @@ export const MockProviders: React.FunctionComponent<{
 }
 
 function isModuleNotFoundError(error: unknown, module: string) {
+  if (
+    !error ||
+    typeof error !== 'object' ||
+    !('code' in error) ||
+    error.code !== 'MODULE_NOT_FOUND'
+  ) {
+    return false
+  }
+
+  // Jest sets moduleName; plain Node does not
+  if ('moduleName' in error) {
+    return error.moduleName === module
+  }
+
+  // Node-style error: module name appears in the message string
   return (
-    !!error &&
-    typeof error === 'object' &&
-    'code' in error &&
-    error.code === 'MODULE_NOT_FOUND' &&
-    'moduleName' in error &&
-    error.moduleName === module
+    'message' in error &&
+    typeof error.message === 'string' &&
+    error.message.includes(module)
   )
 }
