@@ -46,9 +46,14 @@ const config: Config = {
      */
     '^react$': path.join(NODE_MODULES_PATH, 'react'),
     '^react-dom$': path.join(NODE_MODULES_PATH, 'react-dom'),
+    // Point straight at Apollo Client's CJS build. Mapping to the package
+    // directory would bypass its `exports` map and land on the ESM build,
+    // and `require.resolve` can't be used either because Node 22+ resolves
+    // it through the `module-sync` condition (also ESM) – both of which Jest
+    // can't parse
     '^@apollo/client/react$': path.join(
       NODE_MODULES_PATH,
-      '@apollo/client/react',
+      '@apollo/client/__cjs/react/index.cjs',
     ),
     // We replace imports to "@cedarjs/router" with our own "mock" implementation.
     '^@cedarjs/router$': path.join(
