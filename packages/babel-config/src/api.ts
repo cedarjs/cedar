@@ -66,9 +66,13 @@ export const getApiSideBabelPlugins = ({
     // comments in JSX files
     !forVite && ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }],
     // Vite/esbuild use applySrcAlias + applyTsconfigPaths (or, for Vite
-    // proper, cedar-api-src-redirect + vite-tsconfig-paths) instead of this
-    // babel plugin
-    !forVite && [
+    // proper, cedar-api-src-redirect + vite-tsconfig-paths) for alias
+    // resolution, making this plugin's alias config a no-op there — but it
+    // must stay active regardless of forVite, because its resolvePath below
+    // also appends `.js`/`.jsx` extensions for every relative import in ESM
+    // projects (required for Node's ESM resolver), which nothing else in the
+    // Vite/esbuild pipeline replaces.
+    [
       'babel-plugin-module-resolver',
       {
         alias: {
