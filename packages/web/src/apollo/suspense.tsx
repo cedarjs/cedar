@@ -209,7 +209,7 @@ export const CedarApolloProvider: React.FunctionComponent<{
   const cache = new InMemoryCache({
     fragments: fragmentRegistry,
     ...cacheConfig,
-  }).restore(globalThis?.__REDWOOD__APOLLO_STATE ?? {})
+  }).restore(globalThis?.__CEDAR__APOLLO_STATE ?? {})
 
   return (
     <FetchConfigProvider useAuth={useAuth}>

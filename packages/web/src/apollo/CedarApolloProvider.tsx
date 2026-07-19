@@ -49,7 +49,7 @@ export function CedarApolloProvider({
     fragments: fragmentRegistry,
     possibleTypes: cacheConfig?.possibleTypes,
     ...cacheConfig,
-  }).restore(globalThis?.__REDWOOD__APOLLO_STATE ?? {})
+  }).restore(globalThis?.__CEDAR__APOLLO_STATE ?? {})
 
   return (
     <FetchConfigProvider useAuth={useAuth}>
