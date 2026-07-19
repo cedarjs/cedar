@@ -17,10 +17,12 @@ describe('applyEsmExtensions', () => {
     )
   })
 
-  it('appends .jsx when a .jsx source file exists', () => {
+  it('appends .js when a .jsx source file exists (esbuild outputs .js)', () => {
+    // Although server.jsx exists in source, esbuild with loader:'js' compiles
+    // it to server.js, so imports must use the .js extension at runtime.
     const code = `import { Server } from '../lib/server'`
     expect(applyEsmExtensions(code, IMPORTER)).toBe(
-      `import { Server } from '../lib/server.jsx'`,
+      `import { Server } from '../lib/server.js'`,
     )
   })
 
