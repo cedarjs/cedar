@@ -41,8 +41,9 @@ import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.j
 import { applyEsmExtensions } from './esm-extensions.js'
 import { applyImportDir } from './import-dir.js'
 import { applySrcAlias } from './src-alias.js'
-export { applySrcAlias } from './src-alias.js'
 import { applyTsconfigPaths } from './tsconfig-paths.js'
+
+export { applySrcAlias } from './src-alias.js'
 
 let BUILD_CTX: BuildContext | null = null
 
