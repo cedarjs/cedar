@@ -30,6 +30,7 @@ jobs:
       cli: ${{ steps.detect-changes.outputs.cli }}
       rsc: ${{ steps.detect-changes.outputs.rsc }}
       ssr: ${{ steps.detect-changes.outputs.ssr }}
+      windows: ${{ steps.detect-changes.outputs.windows }}
 
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
