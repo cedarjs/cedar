@@ -1,32 +1,30 @@
 import React from 'react'
 
-// @apollo/client ESM support is discussed here
-// https://github.com/apollographql/apollo-feature-requests/issues/287
 import type {
-  ApolloClientOptions,
-  setLogVerbosity,
   ApolloCache,
-  InMemoryCacheConfig,
-  HttpOptions,
   DocumentNode,
   HttpLink,
+  InMemoryCacheConfig,
+  setLogVerbosity,
 } from '@apollo/client'
-import { InMemoryCache } from '@apollo/client/cache/cache.cjs'
 import {
   ApolloClient,
+  ApolloLink,
+  InMemoryCache,
   setLogVerbosity as apolloSetLogVerbosity,
-} from '@apollo/client/core/core.cjs'
-import { setContext } from '@apollo/client/link/context/context.cjs'
-import { ApolloLink, split } from '@apollo/client/link/core/core.cjs'
-import { createPersistedQueryLink } from '@apollo/client/link/persisted-queries/persisted-queries.cjs'
-import { ApolloProvider } from '@apollo/client/react/react.cjs'
-import { getMainDefinition } from '@apollo/client/utilities/utilities.cjs'
+  split,
+} from '@apollo/client'
+import { SetContextLink } from '@apollo/client/link/context'
+import { PersistedQueryLink } from '@apollo/client/link/persisted-queries'
+import { ApolloProvider } from '@apollo/client/react'
+import { getMainDefinition } from '@apollo/client/utilities'
 import { print } from 'graphql/language/printer.js'
+import { map } from 'rxjs'
 
 import type { UseAuth } from '@cedarjs/auth'
 import { useNoAuth } from '@cedarjs/auth'
 
-import { createUploadLink } from '../bundled/apollo-upload-client.js'
+import { UploadHttpLink } from '../bundled/apollo-upload-client.js'
 import {
   FetchConfigProvider,
   useFetchConfig,
@@ -79,10 +77,10 @@ export type RedwoodApolloLinks = [
 export type RedwoodApolloLinkFactory = (links: RedwoodApolloLinks) => ApolloLink
 
 export type GraphQLClientConfigProp = Omit<
-  ApolloClientOptions<unknown>,
+  ApolloClient.Options,
   'cache' | 'link'
 > & {
-  cache?: ApolloCache<unknown>
+  cache?: ApolloCache
   /**
    * Configuration for Apollo Client's `InMemoryCache`.
    * See https://www.apollographql.com/docs/react/caching/cache-configuration/.
@@ -100,7 +98,7 @@ export type GraphQLClientConfigProp = Omit<
    * }}>
    * ```
    */
-  httpLinkConfig?: HttpOptions
+  httpLinkConfig?: HttpLink.Options
   /**
    * Extend or overwrite `RedwoodApolloProvider`'s Apollo Link.
    *
@@ -129,7 +127,7 @@ export type GraphQLClientConfigProp = Omit<
 
 const ApolloProviderWithFetchConfig: React.FunctionComponent<{
   config: Omit<GraphQLClientConfigProp, 'cacheConfig' | 'cache'> & {
-    cache: ApolloCache<unknown>
+    cache: ApolloCache
   }
   useAuth?: UseAuth
   logLevel: ReturnType<typeof setLogVerbosity>
@@ -172,14 +170,16 @@ const ApolloProviderWithFetchConfig: React.FunctionComponent<{
     data.mostRecentRequest.variables = variables
     data.mostRecentRequest.query = query && print(operation.query)
 
-    return forward(operation).map((result) => {
-      data.mostRecentResponse = result
+    return forward(operation).pipe(
+      map((result) => {
+        data.mostRecentResponse = result
 
-      return result
-    })
+        return result
+      }),
+    )
   })
 
-  const withToken = setContext(async () => {
+  const withToken = new SetContextLink(async () => {
     const token = await getToken()
 
     return { token }
@@ -215,11 +215,9 @@ const ApolloProviderWithFetchConfig: React.FunctionComponent<{
   // A terminating link. Apollo Client uses this to send GraphQL operations to a server over HTTP.
   // See https://www.apollographql.com/docs/react/api/link/introduction/#the-terminating-link.
   // Internally uploadLink determines whether to use form-data vs http link
-  const uploadLink: ApolloLink = createUploadLink({
+  const uploadLink: ApolloLink = new UploadHttpLink({
     uri,
     ...httpLinkConfig,
-    // The upload link types don't match the ApolloLink types, even though it comes from Apollo
-    // because they use ESM imports and we're using the default ones.
   })
 
   // Our terminating link needs to be smart enough to handle subscriptions, and if the GraphQL query
@@ -263,8 +261,13 @@ const ApolloProviderWithFetchConfig: React.FunctionComponent<{
       const documentQuery = query as DocumentNodeWithMeta
       return documentQuery?.['__meta__']?.['hash'] !== undefined
     },
-    createPersistedQueryLink({
-      generateHash: (document: any) => document['__meta__']['hash'],
+    new PersistedQueryLink({
+      generateHash: (document: DocumentNode) => {
+        // The split above guarantees that only documents with a `__meta__`
+        // hash are sent through this link
+        const documentWithMeta: DocumentNodeWithMeta = document
+        return documentWithMeta.__meta__?.hash ?? ''
+      },
     }).concat(uploadOrSSELink),
     uploadOrSSELink,
   )

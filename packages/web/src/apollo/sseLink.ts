@@ -1,15 +1,14 @@
-import type { HttpOptions } from '@apollo/client'
-import type { Operation, FetchResult } from '@apollo/client/core'
-import { ApolloLink } from '@apollo/client/link/core/core.cjs'
-import { Observable } from '@apollo/client/utilities/utilities.cjs'
+import type { HttpLink } from '@apollo/client'
+import { ApolloLink } from '@apollo/client'
 import type { DefinitionNode } from 'graphql'
 import { Kind, OperationTypeNode, print } from 'graphql'
 import type { ClientOptions, Client, RequestParams, Sink } from 'graphql-sse'
 import { createClient } from 'graphql-sse'
+import { Observable } from 'rxjs'
 interface SSELinkOptions extends Partial<ClientOptions> {
   url: string
   auth: { authProviderType: string; tokenFn: () => Promise<null | string> }
-  httpLinkConfig?: HttpOptions
+  httpLinkConfig?: HttpLink.Options
   headers?: Record<string, string>
 }
 
@@ -61,7 +60,7 @@ const mapReferrerPolicyHeader = (
 
 // Check if the operation has a persisted query (aka trusted document)
 // by checking if the operation has an `extensions` property and if it has a `persistedQuery` property.
-const hasTrustedDocument = (operation: Operation) => {
+const hasTrustedDocument = (operation: ApolloLink.Operation) => {
   return operation.extensions?.persistedQuery?.sha256Hash
 }
 
@@ -119,9 +118,9 @@ class SSELink extends ApolloLink {
   }
 
   public request(
-    operation: Operation & { query?: any },
-  ): Observable<FetchResult> {
-    return new Observable<FetchResult>((sink: Sink) => {
+    operation: ApolloLink.Operation & { query?: any },
+  ): Observable<ApolloLink.Result> {
+    return new Observable<ApolloLink.Result>((sink: Sink) => {
       let request: RequestParams
 
       // If the operation has a persisted query (aka trusted document),
@@ -136,7 +135,7 @@ class SSELink extends ApolloLink {
         }
       }
 
-      return this.client.subscribe<FetchResult>(request, {
+      return this.client.subscribe<ApolloLink.Result>(request, {
         next: sink.next.bind(sink),
         complete: sink.complete.bind(sink),
         error: sink.error.bind(sink),

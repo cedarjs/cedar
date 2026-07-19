@@ -1,9 +1,12 @@
-import * as apolloClient from '@apollo/client'
-import type { UseFragmentResult } from '@apollo/client'
-import { createFragmentRegistry } from '@apollo/client/cache/cache.cjs'
-import type { FragmentRegistryAPI } from '@apollo/client/cache/index.js'
-import { getFragmentDefinitions } from '@apollo/client/utilities/utilities.cjs'
-import type { DocumentNode } from 'graphql'
+import type { StoreObject } from '@apollo/client'
+import type { FragmentRegistryAPI } from '@apollo/client/cache'
+import { createFragmentRegistry } from '@apollo/client/cache'
+import {
+  useApolloClient,
+  useFragment as useApolloFragment,
+} from '@apollo/client/react'
+import type { DocumentNode, FragmentDefinitionNode } from 'graphql'
+import { Kind } from 'graphql'
 
 export interface FragmentHookOptions {
   fragment: DocumentNode
@@ -38,14 +41,22 @@ export type RegisterFragmentResult = {
   getCacheKey: (id: FragmentIdentifier) => CacheKey
   useRegisteredFragment: <TData = any>(
     id: FragmentIdentifier,
-  ) => UseFragmentResult<TData>
+  ) => useApolloFragment.Result<TData>
 }
 
 /*
  * Get the typename from a fragment.
  */
 const getTypenameFromFragment = (fragment: DocumentNode): string => {
-  const [definition] = getFragmentDefinitions(fragment)
+  const definition = fragment.definitions.find(
+    (def): def is FragmentDefinitionNode =>
+      def.kind === Kind.FRAGMENT_DEFINITION,
+  )
+
+  if (!definition) {
+    throw new Error('The passed document contains no fragment definition')
+  }
+
   return definition.typeCondition.name.value
 }
 
@@ -67,10 +78,10 @@ const getTypenameFromFragment = (fragment: DocumentNode): string => {
 const useRegisteredFragmentHook = <TData = any>(
   fragment: DocumentNode,
   id: string | number,
-): UseFragmentResult<TData> => {
+): useApolloFragment.Result<TData> => {
   const from = { __typename: getTypenameFromFragment(fragment), id }
 
-  return apolloClient.useFragment({
+  return useApolloFragment({
     fragment,
     from,
   })
@@ -94,15 +105,15 @@ const UNIDENTIFIABLE_FRAGMENT_REF = 'CedarUnidentifiableFragmentRef:_'
 export function useFragment<TData = any>(
   options: FragmentHookOptions,
 ): FragmentHookResult<TData> {
-  const client = apolloClient.useApolloClient()
+  const client = useApolloClient()
   const { from, ...restOptions } = options
 
   // `FragmentHookOptions` types `from` as a plain object, which is what
   // Apollo's `StoreObject` is – but `StoreObject` types
   // `__typename` as `string | undefined`, which `unknown` isn't assignable to
-  const cacheId = client.cache.identify(from as apolloClient.StoreObject)
+  const cacheId = client.cache.identify(from as StoreObject)
 
-  const result = apolloClient.useFragment<TData>({
+  const result = useApolloFragment<TData>({
     ...restOptions,
     // We identify the object ourselves (above) because passing an
     // unidentifiable object to `useFragment` logs a warning and returns a
@@ -161,7 +172,7 @@ export const registerFragment = (
 
   const useRegisteredFragment = <TData = any>(
     id: FragmentIdentifier,
-  ): UseFragmentResult<TData> => {
+  ): useApolloFragment.Result<TData> => {
     return useRegisteredFragmentHook<TData>(fragment, id)
   }
 

@@ -1,0 +1,32 @@
+- feat(web)!: Upgrade to Apollo Client 4 by @Tobbe
+
+`@cedarjs/web` now uses Apollo Client 4.2.7 (up from 3.14.1), together with
+`apollo-upload-client` 19 and `@apollo/client-react-streaming` 0.14.5.
+
+What this means for existing apps:
+
+- Unaffected: Cells (including fragment Cells and `useFragment`),
+  `import { useQuery, useMutation, useSubscription } from '@cedarjs/web'`, the
+  `graphQLClientConfig` prop on `RedwoodApolloProvider`,
+  `mockGraphQLQuery`/`mockGraphQLMutation`, `<FormError>` and GraphQL
+  subscriptions/live queries over SSE.
+- Breaking: code that imports from `@apollo/client` directly must be updated for
+  Apollo Client 4. Most notably:
+  - React hooks and components (`useQuery`, `ApolloProvider`, ...) now live in
+    `@apollo/client/react`. Types like `QueryResult` moved to namespaced types,
+    e.g. `useQuery.Result`.
+  - `ApolloError` is gone. Errors are now `CombinedGraphQLErrors`,
+    `CombinedProtocolErrors`, `ServerError` or `ServerParseError` from
+    `@apollo/client/errors`. `error.graphQLErrors` is now `error.errors` on
+    `CombinedGraphQLErrors`, and network errors are no longer wrapped — the
+    error itself is the server error. This also applies to the `error` prop
+    Cells pass to `Failure` components (the `errorCode` prop keeps working).
+  - Links are rxjs-based. Custom links that used `zen-observable` APIs (like
+    `.map()`) need to use rxjs operators instead. `setContext` is replaced by
+    `new SetContextLink()`, and `createPersistedQueryLink` by
+    `new PersistedQueryLink()`.
+  - `new ApolloClient()` now requires a `link` option (`uri` shorthand and
+    implicit defaults are gone).
+
+  See Apollo's migration guide for the full list:
+  https://www.apollographql.com/docs/react/migration/3.x-to-4.x
