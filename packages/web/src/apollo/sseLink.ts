@@ -118,22 +118,28 @@ class SSELink extends ApolloLink {
   }
 
   public request(
-    operation: ApolloLink.Operation & { query?: any },
+    operation: ApolloLink.Operation,
   ): Observable<ApolloLink.Result> {
     return new Observable<ApolloLink.Result>((sink: Sink) => {
-      let request: RequestParams
+      // Build the request from the spec'ed fields only. Spreading the whole
+      // `operation` would leak Apollo-internal fields (like `operationType`)
+      // into the request body, which spec-compliant GraphQL servers reject
+      const { operationName, variables, extensions } = operation
 
-      // If the operation has a persisted query (aka trusted document),
-      // we don't need to send the query as a string.
-      if (hasTrustedDocument(operation)) {
-        delete operation.query
-        request = { ...operation }
-      } else {
-        request = {
-          ...operation,
-          query: print(operation.query),
-        }
-      }
+      // If the operation has a persisted query (aka trusted document) we
+      // don't send the query itself – the server looks it up from the hash
+      // in `extensions`. `RequestParams` types `query` as required, hence
+      // the cast
+      const request = (
+        hasTrustedDocument(operation)
+          ? { operationName, variables, extensions }
+          : {
+              operationName,
+              variables,
+              extensions,
+              query: print(operation.query),
+            }
+      ) as RequestParams
 
       return this.client.subscribe<ApolloLink.Result>(request, {
         next: sink.next.bind(sink),
