@@ -12,10 +12,10 @@
     ]
   },
   "dependencies": {
-    "@cedarjs/auth-dbauth-web": "4.2.0",
-    "@cedarjs/forms": "4.2.0",
-    "@cedarjs/router": "4.2.0",
-    "@cedarjs/web": "4.2.0",
+    "@cedarjs/auth-dbauth-web": "5.0.0",
+    "@cedarjs/forms": "5.0.0",
+    "@cedarjs/router": "5.0.0",
+    "@cedarjs/web": "5.0.0",
     "graphql-tag": "2.12.6",
     "humanize-string": "2.1.0",
     "react": "19.2.3",
@@ -24,11 +24,11 @@
     "@my-org/validators": "workspace:*"
   },
   "devDependencies": {
-    "@cedarjs/vite": "4.2.0",
+    "@cedarjs/vite": "5.0.0",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
-    "autoprefixer": "^10.5.2",
-    "postcss": "^8.5.15",
+    "autoprefixer": "^10.5.4",
+    "postcss": "^8.5.20",
     "postcss-loader": "^8.2.1",
     "tailwindcss": "^3.4.19"
   }
