@@ -4,10 +4,12 @@ import type {
   ApolloClient,
   NetworkStatus,
   OperationVariables,
-  QueryRef,
-  QueryResult,
-  UseBackgroundQueryResult,
 } from '@apollo/client'
+import type {
+  QueryRef,
+  useBackgroundQuery,
+  useQuery,
+} from '@apollo/client/react'
 import type { DocumentNode } from 'graphql'
 import type { A, L, O, U } from 'ts-toolbelt'
 
@@ -62,7 +64,7 @@ export type CellFailureProps<TVariables extends OperationVariables = any> = {
   queryResult?:
     | NonSuspenseCellQueryResult<TVariables, any>
     | SuspenseCellQueryResult
-  error?: QueryResult['error'] | Error // for tests and storybook
+  error?: useQuery.Result['error'] | Error // for tests and storybook
 
   /**
    * @see {@link https://www.apollographql.com/docs/apollo-server/data/errors/#error-codes}
@@ -224,16 +226,19 @@ export type SuspendingSuccessProps = React.PropsWithChildren<
 export type NonSuspenseCellQueryResult<
   TVariables extends OperationVariables = any,
   TData = any,
-> = Partial<Omit<QueryResult<TData, TVariables>, 'loading' | 'error' | 'data'>>
+> = Partial<
+  Omit<useQuery.Result<TData, TVariables>, 'loading' | 'error' | 'data'>
+>
 
 // We call this queryResult in createCell, sadly a very overloaded term
 // This is just the extra things returned from useXQuery hooks
 export interface SuspenseCellQueryResult<
   _TData = any,
   _TVariables extends OperationVariables = any,
-> extends UseBackgroundQueryResult {
-  client: ApolloClient<any>
-  // fetchMore & refetch  come from UseBackgroundQueryResult
+>
+  extends useBackgroundQuery.Result {
+  client: ApolloClient
+  // fetchMore & refetch come from useBackgroundQuery.Result
   networkStatus?: NetworkStatus
   called: boolean // set if queryRef present
 }

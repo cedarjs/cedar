@@ -103,6 +103,16 @@
         "default": "./dist/cjs/apollo/index.js"
       }
     },
+    "./apollo/CedarApolloProvider": {
+      "import": {
+        "types": "./dist/apollo/CedarApolloProvider.d.ts",
+        "default": "./dist/apollo/CedarApolloProvider.js"
+      },
+      "require": {
+        "types": "./dist/cjs/apollo/CedarApolloProvider.d.ts",
+        "default": "./dist/cjs/apollo/CedarApolloProvider.js"
+      }
+    },
     "./forceEsmApollo": {
       "require": "./dist/apollo/index.js",
       "import": "./dist/apollo/index.js"
@@ -139,21 +149,22 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@apollo/client": "3.14.1",
+    "@apollo/client": "4.2.7",
     "@cedarjs/server-store": "workspace:*",
     "@dr.pogodin/react-helmet": "2.0.4",
     "@whatwg-node/fetch": "0.10.13",
-    "apollo-upload-client": "18.0.1",
+    "apollo-upload-client": "19.0.0",
     "cookie": "1.1.1",
     "graphql": "16.14.2",
     "graphql-sse": "2.6.0",
     "graphql-tag": "2.12.6",
     "react-hot-toast": "2.6.0",
+    "rxjs": "7.8.2",
     "stacktracey": "2.2.0",
     "ts-toolbelt": "9.6.0"
   },
   "devDependencies": {
-    "@apollo/client-react-streaming": "0.12.3",
+    "@apollo/client-react-streaming": "0.14.5",
     "@arethetypeswrong/cli": "0.18.5",
     "@babel/cli": "7.29.7",
     "@babel/core": "^7.26.10",
@@ -166,7 +177,7 @@
     "@testing-library/dom": "10.4.1",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.2",
-    "@types/apollo-upload-client": "^18",
+    "@types/apollo-upload-client": "^19",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
     "concurrently": "9.2.1",

@@ -1,0 +1,82 @@
+name: 🏷️ Re-run CI on windows label
+
+# Adding the `windows` label to a PR forces the Windows CI legs to run (see
+# .github/actions/detect-changes/cases/windows.mjs). detect-changes reads
+# labels at run time, so a re-run is needed for a label added after CI
+# started — this workflow automates that re-run.
+#
+# Deliberately NOT implemented as `labeled` trigger types on ci.yml: those
+# fire for every label (including the automated release labels added to
+# every PR), and with ci.yml's cancel-in-progress concurrency each label
+# add would cancel and restart the whole CI run.
+#
+# pull_request_target is used so the rerun also works for fork PRs (the
+# plain pull_request token is read-only there). It runs base-branch code
+# only and never checks out or executes PR content, so the elevated token
+# is safe.
+
+on:
+  pull_request_target:
+    types: [labeled]
+
+permissions: {}
+
+jobs:
+  rerun-ci:
+    if: >-
+      github.repository == 'cedarjs/cedar' &&
+      github.event.label.name == 'windows'
+
+    name: 🔁 Re-run CI with Windows legs
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: write
+
+    steps:
+      - name: Re-run the latest CI run for this PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          run=$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$HEAD_SHA&per_page=1" \
+            --jq '.workflow_runs[0] | {id, status}')
+
+          if [ -z "$run" ] || [ "$run" = "null" ]; then
+            echo "No CI run found for $HEAD_SHA - nothing to re-run." \
+              "CI will pick the label up when it runs."
+            exit 0
+          fi
+
+          run_id=$(echo "$run" | jq -r '.id')
+          status=$(echo "$run" | jq -r '.status')
+          echo "Latest CI run: $run_id (status: $status)"
+
+          # A run can only be re-run once it has finished, so cancel an
+          # in-progress run first and wait for the cancellation to land.
+          if [ "$status" != "completed" ]; then
+            echo "Cancelling in-progress run $run_id..."
+            gh api --method POST \
+              "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/cancel" || true
+
+            for i in $(seq 1 24); do
+              sleep 5
+              status=$(gh api \
+                "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" \
+                --jq '.status')
+              if [ "$status" = "completed" ]; then
+                break
+              fi
+              echo "Waiting for run $run_id to finish cancelling ($status)..."
+            done
+
+            if [ "$status" != "completed" ]; then
+              echo "Run $run_id did not reach completed state in time" >&2
+              exit 1
+            fi
+          fi
+
+          echo "Re-running run $run_id (all jobs, so detect-changes re-reads labels)..."
+          gh api --method POST \
+            "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/rerun"

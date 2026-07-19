@@ -71,26 +71,31 @@ export const handler = async ({
     options.config = `${cedarPaths.api.prismaConfig}`
   }
 
-  // Convert command and options into a string that's run via execa
+  // Convert command and options into the args array that's run via execa
   for (const [name, value] of Object.entries(options)) {
     // Allow both long and short form commands, e.g. --name and -n
     args.push(name.length > 1 ? `--${name}` : `-${name}`)
     if (typeof value === 'string') {
-      // Make sure options that take multiple quoted words, like
-      // `-n "create user"` are passed to prisma with quotes.
-      if (value.split(' ').length > 1) {
-        args.push(`"${value}"`)
-      } else {
-        args.push(value)
-      }
+      // The args are passed to execa as an array without a shell, so each
+      // value is already a single argv entry. Wrapping values in quotes here
+      // would make the quotes part of the value itself, breaking e.g.
+      // `--config` paths that contain spaces.
+      args.push(value)
     } else if (typeof value === 'number') {
       args.push(String(value))
     }
   }
 
+  // The real invocation passes `args` as an array without a shell, but this
+  // informational line may get copy-pasted into a shell — so args containing
+  // spaces need quotes here (and only here) to represent the same command.
+  const displayCommand = args
+    .map((arg) => (arg.includes(' ') ? `"${arg}"` : arg))
+    .join(' ')
+
   console.log()
   console.log(c.note('Running Prisma CLI...'))
-  console.log(c.underline(`$ <pm exec> prisma ${args.join(' ')}`))
+  console.log(c.underline(`$ <pm exec> prisma ${displayCommand}`))
   console.log()
 
   try {

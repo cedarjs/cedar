@@ -38,9 +38,13 @@ import { applyDirectoryNamedImport } from './directory-named-import.js'
 import { cedarApiGraphqlPlugin } from './esbuild-plugin-api-graphql.js'
 import { applyOtelWrapping } from './esbuild-plugin-cedar-otel-wrapping.js'
 import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
+import { applyEsmExtensions } from './esm-extensions.js'
 import { applyImportDir } from './import-dir.js'
 import { applySrcAlias } from './src-alias.js'
 import { applyTsconfigPaths } from './tsconfig-paths.js'
+
+export { applySrcAlias } from './src-alias.js'
+export { applyEsmExtensions } from './esm-extensions.js'
 
 let BUILD_CTX: BuildContext | null = null
 
@@ -118,6 +122,15 @@ const runCedarBabelTransformsPlugin = {
         const normalizedPath = normalizePath(args.path)
         const cedarPaths = getPaths()
         const isEsm = projectSideIsEsm('api')
+
+        // For ESM projects, append .js/.jsx to extensionless relative imports
+        // so Node's ESM resolver can locate the compiled output files at
+        // runtime.  This replaces the resolvePath hook that
+        // babel-plugin-module-resolver previously provided; that plugin is now
+        // skipped for forVite:true builds.
+        if (isEsm) {
+          code = applyEsmExtensions(code, args.path)
+        }
 
         // Apply OTel wrapping and the handler ALS wrapping safeguard to API
         // function handlers. These are the standalone-esbuild equivalents of
@@ -296,6 +309,16 @@ function createCedarViteApiPlugin(): Plugin {
           cedarConfig.experimental?.opentelemetry?.wrapApi
         ) {
           code = applyOtelWrapping(code, id, cedarPaths.api.src) ?? code
+        }
+
+        // Append .js/.jsx extensions to extensionless relative imports so that
+        // Node's ESM resolver can find them at runtime. This replaces the
+        // resolvePath hook in babel-plugin-module-resolver, which is disabled
+        // for forVite:true builds (babel-config/src/api.ts). With
+        // preserveModules:true Rollup preserves the import specifiers as-is
+        // in the output, so extensions must be present before bundling.
+        if (isEsm) {
+          code = applyEsmExtensions(code, id)
         }
 
         // Apply the handler ALS wrapping safeguard to API function handlers.

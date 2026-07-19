@@ -57,13 +57,28 @@ test('the prisma command handles spaces', async () => {
     n: 'add bazingas',
   })
 
+  // Values must arrive unquoted: the args are passed to execa as an array
+  // without a shell, so each value is a single argv entry as-is. Quotes
+  // would become part of the value prisma receives.
   expect(vi.mocked(execa.sync).mock.calls[0][1]).toEqual([
     'prisma',
     'migrate',
     'dev',
     '-n',
-    '"add bazingas"',
+    'add bazingas',
     '--config',
-    '"/Users/bazinga/My Projects/rwprj/rwprj/api/prisma.config.js"',
+    '/Users/bazinga/My Projects/rwprj/rwprj/api/prisma.config.js',
   ])
+
+  // The informational output, on the other hand, must quote values with
+  // spaces so that copy-pasting the printed command into a shell runs the
+  // same invocation.
+  const loggedCommand = vi
+    .mocked(console.log)
+    .mock.calls.flat()
+    .find((line) => String(line).includes('prisma migrate dev'))
+  expect(loggedCommand).toContain('-n "add bazingas"')
+  expect(loggedCommand).toContain(
+    '--config "/Users/bazinga/My Projects/rwprj/rwprj/api/prisma.config.js"',
+  )
 })

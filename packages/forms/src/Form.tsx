@@ -84,7 +84,12 @@ function FormInner<
     >
       <ServerErrorsContext.Provider
         value={
-          errorProps?.graphQLErrors?.[0]?.extensions?.properties?.messages || {}
+          // Apollo Client 4 stores GraphQL errors in `errors`
+          // (`CombinedGraphQLErrors`); `graphQLErrors` is the Apollo Client 3
+          // shape, kept for tests, Storybook mocks and other GraphQL clients
+          errorProps?.graphQLErrors?.[0]?.extensions?.properties?.messages ||
+          errorProps?.errors?.[0]?.extensions?.properties?.messages ||
+          {}
         }
       >
         <FormProvider {...formMethods}>{children}</FormProvider>

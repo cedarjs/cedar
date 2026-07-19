@@ -13,13 +13,13 @@
 import React, { useContext } from 'react'
 
 import type {
-  ApolloClientOptions,
+  ApolloClient as ApolloClientBase,
   ApolloLink,
-  HttpOptions,
+  HttpLink,
   InMemoryCacheConfig,
   setLogVerbosity,
 } from '@apollo/client'
-import { setLogVerbosity as apolloSetLogVerbosity } from '@apollo/client/core/index.js'
+import { setLogVerbosity as apolloSetLogVerbosity } from '@apollo/client'
 import {
   ApolloClient,
   InMemoryCache,
@@ -62,7 +62,7 @@ export type {
 }
 
 export type GraphQLClientConfigProp = Omit<
-  ApolloClientOptions<unknown>,
+  ApolloClientBase.Options,
   'cache' | 'link'
 > & {
   cache?: InMemoryCache
@@ -78,28 +78,28 @@ export type GraphQLClientConfigProp = Omit<
    * For example, you can use this prop to set the credentials policy so that cookies can be sent to other domains:
    *
    * ```js
-   * <RedwoodApolloProvider graphQLClientConfig={{
+   * <CedarApolloProvider graphQLClientConfig={{
    *   httpLinkConfig: { credentials: 'include' }
    * }}>
    * ```
    */
-  httpLinkConfig?: HttpOptions
+  httpLinkConfig?: HttpLink.Options
   /**
-   * Extend or overwrite `RedwoodApolloProvider`'s Apollo Link.
+   * Extend or overwrite `CedarApolloProvider`'s Apollo Link.
    *
-   * To overwrite Redwood's Apollo Link, just provide your own `ApolloLink`.
+   * To overwrite Cedar's Apollo Link, just provide your own `ApolloLink`.
    *
-   * To extend Redwood's Apollo Link, provide a function—it'll get passed an array of Redwood's Apollo Links
+   * To extend Cedar's Apollo Link, provide a function—it'll get passed an array of Cedar's Apollo Links
    * which are objects with a name and link property:
    *
    * ```js
-   * const link = (redwoodApolloLinks) => {
+   * const link = (cedarApolloLinks) => {
    *   const consoleLink = new ApolloLink((operation, forward) => {
    *     console.log(operation.operationName)
    *     return forward(operation)
    *   })
    *
-   *   return ApolloLink.from([consoleLink, ...redwoodApolloLinks.map(({ link }) => link)])
+   *   return ApolloLink.from([consoleLink, ...cedarApolloLinks.map(({ link }) => link)])
    * }
    * ```
    *
@@ -190,7 +190,7 @@ const ApolloProviderWithFetchConfig: React.FunctionComponent<{
   )
 }
 
-export const RedwoodApolloProvider: React.FunctionComponent<{
+export const CedarApolloProvider: React.FunctionComponent<{
   graphQLClientConfig?: GraphQLClientConfigProp
   useAuth?: UseAuth
   logLevel?: ReturnType<typeof setLogVerbosity>
@@ -209,7 +209,7 @@ export const RedwoodApolloProvider: React.FunctionComponent<{
   const cache = new InMemoryCache({
     fragments: fragmentRegistry,
     ...cacheConfig,
-  }).restore(globalThis?.__REDWOOD__APOLLO_STATE ?? {})
+  }).restore(globalThis?.__CEDAR__APOLLO_STATE ?? {})
 
   return (
     <FetchConfigProvider useAuth={useAuth}>
@@ -224,3 +224,9 @@ export const RedwoodApolloProvider: React.FunctionComponent<{
     </FetchConfigProvider>
   )
 }
+
+/**
+ * @deprecated Use `CedarApolloProvider` instead. `RedwoodApolloProvider` will
+ * be removed in a future release.
+ */
+export const RedwoodApolloProvider = CedarApolloProvider

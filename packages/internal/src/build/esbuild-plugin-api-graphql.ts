@@ -28,6 +28,7 @@ import { applyAutoImports } from './auto-import.js'
 import { applyDirectoryNamedImport } from './directory-named-import.js'
 import { applyOtelWrapping } from './esbuild-plugin-cedar-otel-wrapping.js'
 import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
+import { applyEsmExtensions } from './esm-extensions.js'
 import { applyImportDir } from './import-dir.js'
 import { applySrcAlias } from './src-alias.js'
 import { applyTsconfigPaths } from './tsconfig-paths.js'
@@ -103,6 +104,15 @@ export const cedarApiGraphqlPlugin = {
       }
 
       let code = transformedCode.code
+
+      // For ESM projects, append .js to extensionless relative imports so
+      // Node's ESM resolver can find them at runtime. applyImportDir expands
+      // glob imports (e.g. `src/directives/**/*.ts`) into individual bare
+      // specifiers without extensions; without this step those imports fail
+      // at startup with ERR_MODULE_NOT_FOUND.
+      if (projectSideIsEsm('api')) {
+        code = applyEsmExtensions(code, args.path)
+      }
 
       // Apply OTel wrapping and the handler ALS wrapping safeguard, replacing
       // the Babel plugins for these builds.

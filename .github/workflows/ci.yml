@@ -30,6 +30,7 @@ jobs:
       cli: ${{ steps.detect-changes.outputs.cli }}
       rsc: ${{ steps.detect-changes.outputs.rsc }}
       ssr: ${{ steps.detect-changes.outputs.ssr }}
+      windows: ${{ steps.detect-changes.outputs.windows }}
 
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
@@ -44,27 +45,13 @@ jobs:
         id: detect-changes
         uses: ./.github/actions/detect-changes
 
+  # The job is not gated on the `code` output because the formatting check
+  # also covers docs-only changes. The constraints step, however, is — so a
+  # broken constraint can't block a docs-only PR.
   check:
     needs: detect-changes
-    if: needs.detect-changes.outputs.code == 'true'
 
-    name: ✅ Check constraints, dependencies, and package.json's
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
-      - name: Set up job
-        uses: ./.github/actions/set-up-job
-        with:
-          set-up-yarn-cache: false
-          yarn-install-directory: .
-          build: false
-
-      - name: ✅ Check constraints, dependencies, and package.json's
-        run: yarn check
-
-  formatting-check:
-    name: 📝 Check formatting (prettier)
+    name: ✅ Check constraints, dependencies, formatting, and package.json's
     runs-on: ubuntu-latest
 
     steps:
@@ -79,29 +66,45 @@ jobs:
       - name: 📝 Check formatting (prettier)
         run: yarn format:check
 
+      - name: ✅ Check constraints, dependencies, and package.json's
+        if: needs.detect-changes.outputs.code == 'true'
+        run: yarn check
+
   build-lint-test:
-    needs: check
+    needs: detect-changes
+    if: needs.detect-changes.outputs.code == 'true'
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # windows-latest is only included when detect-changes deems the diff
+        # Windows-relevant (see cases/windows.mjs) or the PR has the `windows`
+        # label. The nightly-windows workflow covers anything that slips by.
+        os: ${{ needs.detect-changes.outputs.windows == 'true' && fromJSON('["ubuntu-latest", "windows-latest"]') || fromJSON('["ubuntu-latest"]') }}
 
     name: 🏗 Build, lint, test / ${{ matrix.os }} / node 24 latest
     uses: ./.github/workflows/build-lint-test.yml
     with:
       os: ${{ matrix.os }}
 
-  tutorial-e2e:
-    needs: check
-    name: 🌲 Tutorial E2E / node 24 latest
-    uses: ./.github/workflows/tutorial-e2e.yml
+  # Runs the server tests, the Ubuntu telemetry check, and the tutorial E2E
+  # in a single job to save setup time and runner queue slots. The Windows
+  # telemetry check still runs in the telemetry-check job below.
+  consolidated-tests:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.code == 'true'
+    name: 🧪 Consolidated tests (server, telemetry, tutorial E2E) / node 24 latest
+    uses: ./.github/workflows/consolidated-tests.yml
 
   smoke-tests:
-    needs: check
+    needs: detect-changes
+    if: needs.detect-changes.outputs.code == 'true'
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # windows-latest is only included when detect-changes deems the diff
+        # Windows-relevant (see cases/windows.mjs) or the PR has the `windows`
+        # label. The nightly-windows workflow covers anything that slips by.
+        os: ${{ needs.detect-changes.outputs.windows == 'true' && fromJSON('["ubuntu-latest", "windows-latest"]') || fromJSON('["ubuntu-latest"]') }}
 
     name: 🔄 Smoke tests / ${{ matrix.os }} / node 24 latest
     uses: ./.github/workflows/smoke-tests-test.yml
@@ -109,11 +112,15 @@ jobs:
       os: ${{ matrix.os }}
 
   smoke-tests-react-18:
-    needs: check
+    needs: detect-changes
+    if: needs.detect-changes.outputs.code == 'true'
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # windows-latest is only included when detect-changes deems the diff
+        # Windows-relevant (see cases/windows.mjs) or the PR has the `windows`
+        # label. The nightly-windows workflow covers anything that slips by.
+        os: ${{ needs.detect-changes.outputs.windows == 'true' && fromJSON('["ubuntu-latest", "windows-latest"]') || fromJSON('["ubuntu-latest"]') }}
 
     name: 🔄 Smoke tests React 18 / ${{ matrix.os }} / node 24 latest
     uses: ./.github/workflows/smoke-tests-react-18-test.yml
@@ -121,11 +128,15 @@ jobs:
       os: ${{ matrix.os }}
 
   smoke-tests-esm:
-    needs: check
+    needs: detect-changes
+    if: needs.detect-changes.outputs.code == 'true'
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # windows-latest is only included when detect-changes deems the diff
+        # Windows-relevant (see cases/windows.mjs) or the PR has the `windows`
+        # label. The nightly-windows workflow covers anything that slips by.
+        os: ${{ needs.detect-changes.outputs.windows == 'true' && fromJSON('["ubuntu-latest", "windows-latest"]') || fromJSON('["ubuntu-latest"]') }}
 
     name: 🔄 Smoke tests ESM / ${{ matrix.os }} / node 24 latest
     uses: ./.github/workflows/smoke-tests-test-esm.yml
@@ -133,11 +144,15 @@ jobs:
       os: ${{ matrix.os }}
 
   cli-smoke-tests:
-    needs: check
+    needs: detect-changes
+    if: needs.detect-changes.outputs.code == 'true'
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # windows-latest is only included when detect-changes deems the diff
+        # Windows-relevant (see cases/windows.mjs) or the PR has the `windows`
+        # label. The nightly-windows workflow covers anything that slips by.
+        os: ${{ needs.detect-changes.outputs.windows == 'true' && fromJSON('["ubuntu-latest", "windows-latest"]') || fromJSON('["ubuntu-latest"]') }}
 
     name: 🔄 CLI smoke tests / ${{ matrix.os }} / node 24 latest
     uses: ./.github/workflows/cli-smoke-tests.yml
@@ -145,16 +160,21 @@ jobs:
       os: ${{ matrix.os }}
 
   telemetry-check:
-    needs: check
+    needs: detect-changes
 
     # When releasing a new version of Cedar this check would try to install
     # @cedar/* package versions that aren't published yet, so it would always
     # fail. That's why we skip it on release branches.
-    if: github.event_name == 'pull_request' || !startsWith(github.ref, 'refs/heads/release/')
+    if: >-
+      needs.detect-changes.outputs.code == 'true' &&
+      needs.detect-changes.outputs.windows == 'true' &&
+      (github.event_name == 'pull_request' || !startsWith(github.ref, 'refs/heads/release/'))
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # The Ubuntu telemetry check runs as part of the consolidated-tests
+        # job.
+        os: [windows-latest]
 
     name: 🔭 Telemetry check / ${{ matrix.os }} / node 24 latest
     uses: ./.github/workflows/telemetry-check.yml
@@ -162,12 +182,15 @@ jobs:
       os: ${{ matrix.os }}
 
   rsc-smoke-tests:
-    needs: [check, detect-changes]
+    needs: detect-changes
     if: needs.detect-changes.outputs.rsc == 'true'
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # windows-latest is only included when detect-changes deems the diff
+        # Windows-relevant (see cases/windows.mjs) or the PR has the `windows`
+        # label. The nightly-windows workflow covers anything that slips by.
+        os: ${{ needs.detect-changes.outputs.windows == 'true' && fromJSON('["ubuntu-latest", "windows-latest"]') || fromJSON('["ubuntu-latest"]') }}
 
     name: 🔄🐘 RSC Smoke tests / ${{ matrix.os }}
     uses: ./.github/workflows/rsc-smoke-tests.yml
@@ -175,7 +198,7 @@ jobs:
       os: ${{ matrix.os }}
 
   ssr-smoke-tests:
-    needs: [check, detect-changes]
+    needs: detect-changes
     if: needs.detect-changes.outputs.ssr == 'true'
 
     strategy:
@@ -189,11 +212,15 @@ jobs:
       os: ${{ matrix.os }}
 
   fragments-smoke-tests:
-    needs: check
+    needs: detect-changes
+    if: needs.detect-changes.outputs.code == 'true'
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # windows-latest is only included when detect-changes deems the diff
+        # Windows-relevant (see cases/windows.mjs) or the PR has the `windows`
+        # label. The nightly-windows workflow covers anything that slips by.
+        os: ${{ needs.detect-changes.outputs.windows == 'true' && fromJSON('["ubuntu-latest", "windows-latest"]') || fromJSON('["ubuntu-latest"]') }}
 
     name: 📄 Fragments Smoke tests / ${{ matrix.os }}
     uses: ./.github/workflows/fragments-smoke-tests.yml
@@ -201,7 +228,8 @@ jobs:
       os: ${{ matrix.os }}
 
   live-smoke-tests:
-    needs: check
+    needs: detect-changes
+    if: needs.detect-changes.outputs.code == 'true'
 
     strategy:
       matrix:
@@ -213,17 +241,19 @@ jobs:
       os: ${{ matrix.os }}
 
   create-cedar-app:
-    needs: check
+    needs: detect-changes
 
     # When releasing a new version of Cedar this check would try to install
     # @cedar/* package versions that aren't published yet, so it would always
     # fail. That's why we skip it on release branches.
-    if: github.event_name == 'pull_request' || !startsWith(github.ref, 'refs/heads/release/')
+    if: >-
+      needs.detect-changes.outputs.code == 'true' &&
+      (github.event_name == 'pull_request' || !startsWith(github.ref, 'refs/heads/release/'))
     name: 🌲 Create Cedar App
     uses: ./.github/workflows/create-cedar-app-test.yml
 
   cli-pm-smoke-tests:
-    needs: [check, detect-changes]
+    needs: detect-changes
     # This job is skipped for now because it's constantly failing and blocking
     # PRs not related to pm agnostic work.
     # TODO: Re-enable this job once the issue is resolved
@@ -239,22 +269,22 @@ jobs:
     name: 🔄 CLI PM smoke tests / ${{ matrix.os }}
     uses: ./.github/workflows/package-manager-smoke-tests.yml
 
-  server-tests:
-    needs: check
-    name: Server tests
-    uses: ./.github/workflows/server-tests.yml
-
   ud-tests:
-    needs: check
+    needs: detect-changes
+    if: needs.detect-changes.outputs.code == 'true'
     name: Universal Deploy tests
     uses: ./.github/workflows/ud-tests.yml
 
   background-jobs-e2e:
-    needs: check
+    needs: detect-changes
+    if: needs.detect-changes.outputs.code == 'true'
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # windows-latest is only included when detect-changes deems the diff
+        # Windows-relevant (see cases/windows.mjs) or the PR has the `windows`
+        # label. The nightly-windows workflow covers anything that slips by.
+        os: ${{ needs.detect-changes.outputs.windows == 'true' && fromJSON('["ubuntu-latest", "windows-latest"]') || fromJSON('["ubuntu-latest"]') }}
 
     name: Background jobs E2E test / ${{ matrix.os }}
     uses: ./.github/workflows/background-jobs-e2e.yml
@@ -262,29 +292,37 @@ jobs:
       os: ${{ matrix.os }}
 
   e2e-netlify:
-    needs: check
-    if: github.repository == 'cedarjs/cedar' && (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork)
+    needs: detect-changes
+    if: >-
+      needs.detect-changes.outputs.code == 'true' &&
+      github.repository == 'cedarjs/cedar' &&
+      (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork)
     name: 🔷 E2E Netlify deploy
     uses: ./.github/workflows/e2e-netlify.yml
     secrets: inherit
 
   e2e-vercel:
-    needs: check
-    if: github.repository == 'cedarjs/cedar' && (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork)
+    needs: detect-changes
+    if: >-
+      needs.detect-changes.outputs.code == 'true' &&
+      github.repository == 'cedarjs/cedar' &&
+      (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork)
     name: ▲ E2E Vercel deploy
     uses: ./.github/workflows/e2e-vercel.yml
     secrets: inherit
 
   e2e-node:
-    needs: check
+    needs: detect-changes
+    if: needs.detect-changes.outputs.code == 'true'
     name: 🖥️ E2E Node self-host
     uses: ./.github/workflows/e2e-node.yml
 
   ci-status-check:
     needs:
+      - detect-changes
       - check
       - build-lint-test
-      - tutorial-e2e
+      - consolidated-tests
       - smoke-tests
       - smoke-tests-react-18
       - cli-smoke-tests
@@ -295,7 +333,6 @@ jobs:
       - live-smoke-tests
       - create-cedar-app
       - cli-pm-smoke-tests
-      - server-tests
       - ud-tests
       - background-jobs-e2e
       - e2e-netlify

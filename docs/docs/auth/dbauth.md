@@ -724,7 +724,7 @@ import { AuthProvider } from '@cedarjs/auth'
 import WebAuthnClient from '@cedarjs/auth-dbauth-web/webAuthn'
 // highlight-end
 import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'
-import { RedwoodApolloProvider } from '@cedarjs/web/apollo'
+import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 import FatalErrorPage from 'src/pages/FatalErrorPage'
 import Routes from 'src/Routes'
@@ -738,9 +738,9 @@ const App = () => (
       // highlight-start
       <AuthProvider type="dbAuth" client={WebAuthnClient}>
         // highlight-end
-        <RedwoodApolloProvider>
+        <CedarApolloProvider>
           <Routes />
-        </RedwoodApolloProvider>
+        </CedarApolloProvider>
       </AuthProvider>
     </RedwoodProvider>
   </FatalErrorBoundary>

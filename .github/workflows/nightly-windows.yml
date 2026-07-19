@@ -1,0 +1,131 @@
+name: 🌙 Nightly Windows
+
+# PRs only run the Windows CI legs when detect-changes deems the diff
+# Windows-relevant (see .github/actions/detect-changes/cases/windows.mjs).
+# This nightly run is the safety net: every Windows leg that exists in
+# ci.yml, run against main daily, so anything the filter misses surfaces
+# within a day instead of at release time.
+#
+# Note: ssr-smoke-tests is absent because it has no Windows leg anywhere —
+# not here, not in ci.yml (see the `TODO: add windows-latest` comment
+# there). If that TODO is resolved, add it here too.
+
+on:
+  schedule:
+    # Daily at 03:17 UTC (off the top of the hour to avoid the scheduled-run
+    # thundering herd)
+    - cron: '17 3 * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: nightly-windows
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  build-lint-test:
+    if: github.repository == 'cedarjs/cedar'
+    name: 🏗 Build, lint, test / windows-latest
+    uses: ./.github/workflows/build-lint-test.yml
+    with:
+      os: windows-latest
+
+  smoke-tests:
+    if: github.repository == 'cedarjs/cedar'
+    name: 🔄 Smoke tests / windows-latest
+    uses: ./.github/workflows/smoke-tests-test.yml
+    with:
+      os: windows-latest
+
+  smoke-tests-react-18:
+    if: github.repository == 'cedarjs/cedar'
+    name: 🔄 Smoke tests React 18 / windows-latest
+    uses: ./.github/workflows/smoke-tests-react-18-test.yml
+    with:
+      os: windows-latest
+
+  smoke-tests-esm:
+    if: github.repository == 'cedarjs/cedar'
+    name: 🔄 Smoke tests ESM / windows-latest
+    uses: ./.github/workflows/smoke-tests-test-esm.yml
+    with:
+      os: windows-latest
+
+  cli-smoke-tests:
+    if: github.repository == 'cedarjs/cedar'
+    name: 🔄 CLI smoke tests / windows-latest
+    uses: ./.github/workflows/cli-smoke-tests.yml
+    with:
+      os: windows-latest
+
+  telemetry-check:
+    if: github.repository == 'cedarjs/cedar'
+    name: 🔭 Telemetry check / windows-latest
+    uses: ./.github/workflows/telemetry-check.yml
+    with:
+      os: windows-latest
+
+  fragments-smoke-tests:
+    if: github.repository == 'cedarjs/cedar'
+    name: 📄 Fragments Smoke tests / windows-latest
+    uses: ./.github/workflows/fragments-smoke-tests.yml
+    with:
+      os: windows-latest
+
+  rsc-smoke-tests:
+    if: github.repository == 'cedarjs/cedar'
+    name: 🔄🐘 RSC Smoke tests / windows-latest
+    uses: ./.github/workflows/rsc-smoke-tests.yml
+    with:
+      os: windows-latest
+
+  background-jobs-e2e:
+    if: github.repository == 'cedarjs/cedar'
+    name: Background jobs E2E test / windows-latest
+    uses: ./.github/workflows/background-jobs-e2e.yml
+    with:
+      os: windows-latest
+
+  report-failure:
+    needs:
+      - build-lint-test
+      - smoke-tests
+      - smoke-tests-react-18
+      - smoke-tests-esm
+      - cli-smoke-tests
+      - telemetry-check
+      - fragments-smoke-tests
+      - rsc-smoke-tests
+      - background-jobs-e2e
+    if: github.repository == 'cedarjs/cedar' && failure()
+
+    name: 📣 Report failure
+    runs-on: ubuntu-latest
+
+    permissions:
+      issues: write
+
+    steps:
+      - name: Open or update the tracking issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Nightly Windows CI failure"
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          body="The nightly Windows run failed: $run_url
+
+          A change that the Windows PR filter didn't flag may have broken Windows support. See the run for which suites failed."
+
+          existing=$(gh issue list \
+            --repo "$GITHUB_REPOSITORY" \
+            --state open \
+            --search "in:title \"$title\"" \
+            --json number \
+            --jq '.[0].number')
+
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body "$body"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body"
+          fi
