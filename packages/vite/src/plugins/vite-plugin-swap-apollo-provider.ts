@@ -21,7 +21,7 @@ export function cedarSwapApolloProvider(): Plugin | undefined {
   }
 
   return {
-    name: 'redwood-swap-apollo-provider',
+    name: 'cedar-swap-apollo-provider',
     async transform(code: string, id: string) {
       if (/web\/src\/App\.(ts|tsx|js|jsx)$/.test(id)) {
         // Only swap the exact `@cedarjs/web/apollo` barrel specifier or the
