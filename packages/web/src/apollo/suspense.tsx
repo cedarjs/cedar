@@ -13,13 +13,13 @@
 import React, { useContext } from 'react'
 
 import type {
-  ApolloClientOptions,
+  ApolloClient as ApolloClientBase,
   ApolloLink,
-  HttpOptions,
+  HttpLink,
   InMemoryCacheConfig,
   setLogVerbosity,
 } from '@apollo/client'
-import { setLogVerbosity as apolloSetLogVerbosity } from '@apollo/client/core/index.js'
+import { setLogVerbosity as apolloSetLogVerbosity } from '@apollo/client'
 import {
   ApolloClient,
   InMemoryCache,
@@ -62,7 +62,7 @@ export type {
 }
 
 export type GraphQLClientConfigProp = Omit<
-  ApolloClientOptions<unknown>,
+  ApolloClientBase.Options,
   'cache' | 'link'
 > & {
   cache?: InMemoryCache
@@ -83,7 +83,7 @@ export type GraphQLClientConfigProp = Omit<
    * }}>
    * ```
    */
-  httpLinkConfig?: HttpOptions
+  httpLinkConfig?: HttpLink.Options
   /**
    * Extend or overwrite `CedarApolloProvider`'s Apollo Link.
    *

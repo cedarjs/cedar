@@ -1,9 +1,8 @@
 import type {
   ApolloCache,
-  ApolloClientOptions,
+  ApolloClient,
   ApolloLink,
   HttpLink,
-  HttpOptions,
   InMemoryCacheConfig,
 } from '@apollo/client'
 
@@ -33,10 +32,10 @@ export type CedarApolloLinks = [
 export type CedarApolloLinkFactory = (links: CedarApolloLinks) => ApolloLink
 
 export type GraphQLClientConfigProp = Omit<
-  ApolloClientOptions<unknown>,
+  ApolloClient.Options,
   'cache' | 'link'
 > & {
-  cache?: ApolloCache<unknown>
+  cache?: ApolloCache
   /**
    * Configuration for Apollo Client's `InMemoryCache`.
    * See https://www.apollographql.com/docs/react/caching/cache-configuration/.
@@ -54,7 +53,7 @@ export type GraphQLClientConfigProp = Omit<
    * }}>
    * ```
    */
-  httpLinkConfig?: HttpOptions
+  httpLinkConfig?: HttpLink.Options
   /**
    * Extend or overwrite `CedarApolloProvider`'s Apollo Link.
    *

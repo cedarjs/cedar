@@ -1,12 +1,13 @@
 import React from 'react'
 
-import { useQuery } from '@apollo/client/react/hooks/hooks.cjs'
+import { CombinedGraphQLErrors } from '@apollo/client'
+import { useQuery } from '@apollo/client/react'
 
 import { fragmentRegistry } from '../../apollo/fragmentRegistry.js'
 import { getOperationName } from '../../graphql.js'
 
 import { useCellCacheContext } from './CellCacheContext.js'
-import type { CreateCellProps } from './cellTypes.js'
+import type { CreateCellProps, DataObject } from './cellTypes.js'
 import { createFragmentCell } from './createFragmentCell.js'
 import { createSuspendingCell } from './createSuspendingCell.js'
 import { isDataEmpty } from './isCellEmpty.js'
@@ -107,7 +108,7 @@ function createNonSuspendingCell<
       loading,
       data,
       ...queryResult
-    } = useQuery(query, options)
+    } = useQuery<DataObject>(query, options)
 
     if (globalThis.__REDWOOD__PRERENDERING) {
       // __REDWOOD__PRERENDERING will always either be set, or not set. So
@@ -141,7 +142,9 @@ function createNonSuspendingCell<
       } else {
         if (queryInfo?.hasProcessed) {
           loading = false
-          data = queryInfo.data
+          // The prerender query cache stores the untyped result of executing
+          // this Cell's query, so it has the `DataObject` shape
+          data = queryInfo.data as DataObject
 
           // All of the gql client's props aren't available when pre-rendering,
           // so using `any` here
@@ -170,7 +173,9 @@ function createNonSuspendingCell<
             errorCode={
               // Use the ad-hoc QueryResultWithErrorCode type to access the errorCode
               (queryResult as QueryResultWithErrorCode).errorCode ??
-              (error.graphQLErrors?.[0]?.extensions?.['code'] as string)
+              (CombinedGraphQLErrors.is(error)
+                ? (error.errors[0]?.extensions?.['code'] as string)
+                : undefined)
             }
             {...props}
             updating={loading}
@@ -178,7 +183,9 @@ function createNonSuspendingCell<
           />
         )
       } else {
-        throw error
+        // Apollo Client types errors as `ErrorLike`, but at runtime they're
+        // `Error` instances
+        throw error instanceof Error ? error : new Error(error.message)
       }
     } else if (data) {
       const afterQueryData = afterQuery(data)
