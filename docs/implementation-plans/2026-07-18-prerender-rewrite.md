@@ -51,18 +51,22 @@ Prerendering through a Vite dev server / module runner (as suggested in
 community discussions) was considered and rejected **for the production
 artifact**. Prerendered HTML must hydrate against the production client bundle:
 
-- Asset imports must resolve to the hashed URLs from
-  `web/dist/client-build-manifest.json` — dev-mode transforms produce `/src/...`
-  URLs that 404 in production.
+- Asset imports must resolve to the same hashed URLs the deployed client bundle
+  uses — dev-mode transforms produce `/src/...` URLs that 404 in production.
 - `import.meta.env.PROD` / `NODE_ENV` branches in user code must take the
   production path.
 - Plugins that guard on `apply: 'build'` or `command === 'serve'` must behave as
   they do in the client build.
 
-The dev-runner approach is fine for the **GraphQL handler** (server-only code;
-dev transforms never leak into shipped HTML) — which is why `NodeRunner` is
-acceptable today. A dev-server-based _prerender preview_ inside `cedar dev`
-remains a good future feature; it is out of scope here.
+The dev-runner approach is merely _tolerable_ for the **GraphQL handler**
+(server-only code; dev transforms never leak into shipped HTML) — which is why
+`NodeRunner` isn't a correctness problem in the current architecture. That is
+an observation about the status quo, not a decision to keep it: the Track 2
+target is **no Vite dev environment anywhere at build time**, with `NodeRunner`
+surviving only as a fallback if importing the built API handler proves
+infeasible (see 2.1 and open question 4). A dev-server-based _prerender
+preview_ inside `cedar dev` remains a good future feature; it is out of scope
+here.
 
 ### Vite Environment API, not a nested programmatic build
 
@@ -160,12 +164,34 @@ small plugin, applied only in the `prerender` environment. Same exports as today
 
 ### 1.3 Asset URL correctness
 
-Port `rollup-plugin-cedarjs-prerender-media-imports` to a Vite plugin scoped to
-the `prerender` environment: map media imports to `client-build-manifest.json`
-entries, falling back to data URLs. Vite's own SSR asset handling _may_ emit
-content-hash-matched URLs, but manifest mapping makes correctness guaranteed
-rather than coincidental (`assetsInlineLimit` and base-path differences can
-break hash matching). This is the one Rollup plugin that survives as real code.
+The requirement: asset URLs in prerendered HTML must be the same URLs the
+deployed client build serves. How they get there is an implementation choice
+with two candidates, in order of preference:
+
+**(a) Vite-native (preferred — verify first).** In the `prerender` environment,
+Vite's own asset pipeline resolves media imports to content-hashed URLs using
+the same naming logic as the client build. Hashes are derived from file content
+and both environments share one config, so the URLs should match the client
+build's exactly, with zero Cedar code (`build.ssrEmitAssets` defaults to
+`false`, so the prerender build references the URLs without writing duplicate
+files). Write a test that builds a fixture with media imports in both
+environments and asserts the prerender bundle's asset URLs appear in the client
+manifest. Known risks to check: `assetsInlineLimit` behaving differently across
+environments, and non-default `assetFileNames` / `base` settings.
+
+**(b) Manifest mapping (fallback).** Only if (a) has holes: port
+`rollup-plugin-cedarjs-prerender-media-imports` to a Vite plugin scoped to the
+`prerender` environment — map media imports to the client manifest, falling
+back to data URLs. The manifest name/location is Cedar's own choice, set in
+`packages/vite/src/lib/getMergedConfig.ts`
+(`build.manifest: 'client-build-manifest.json'`) and already consumed by
+`buildRouteManifest.ts`, `serve.ts`, and `runFeServer.ts` — it is stable under
+this rewrite, but any new code should read the name from shared config rather
+than hardcode the string.
+
+The old Rollup plugin existed because the standalone Rollup pipeline had no
+asset handling at all. The Vite environment has one — so (b) is a fallback,
+not the default carried forward from the old architecture.
 
 ### 1.4 Plugin disposition (from the old plan's mapping table)
 
@@ -177,7 +203,7 @@ break hash matching). This is the one Rollup plugin that survives as real code.
 | `rollup-plugin-cedarjs-inject-file-globals`         | Not needed — Vite SSR build handles natively                                                      |
 | `rollup-plugin-cedarjs-external`                    | Not needed — SSR build externalizes node_modules                                                  |
 | `rollup-plugin-cedarjs-ignore-html-and-css-imports` | Vite handles CSS natively; thin styles-only stub plugin if edge cases remain                      |
-| `rollup-plugin-cedarjs-prerender-media-imports`     | **Ported** (1.3)                                                                                  |
+| `rollup-plugin-cedarjs-prerender-media-imports`     | Likely not needed — Vite-native asset resolution preferred; port only as fallback (1.3)           |
 | `rollup-plugin-cedar-remove-dev-fatal-error-page`   | Already exists as `cedarRemoveDevFatalErrorPage` in `packages/vite/src/plugins/` — no port needed |
 
 ### 1.5 Wire up and clean up
@@ -274,8 +300,13 @@ const apolloState = client.extract()
 1. **Routes auto-loader prerender mode.** `cedarRoutesAutoLoaderPlugin` has a
    client mode (lazy `import()`, populates
    `globalThis.__REDWOOD__PRERENDER_PAGES`) and a prerender mode (direct
-   imports). Verify the `prerender` environment triggers the prerender mode —
-   with the Environment API this can key off `this.environment.name`.
+   imports). For Track 1, verify the `prerender` environment triggers the
+   prerender mode — with the Environment API this can key off
+   `this.environment.name`. For Track 2, question whether the prerender mode is
+   needed at all: Suspense-aware `prerenderToNodeStream` resolves `React.lazy`
+   route imports during rendering, so the client-mode output may just work —
+   which would let the prerender mode and the
+   `globalThis.__REDWOOD__PRERENDER_PAGES` global be deleted entirely.
 2. **Cell query observability.** Cedar cells call Apollo's hooks directly (the
    old `GraphQLHooksProvider` indirection has been removed). `prerenderStatic`
    should observe queries transparently — verify with a test early in Track 2,
@@ -352,7 +383,8 @@ revisiting when SSR lands.
 
 - The Apollo Client 4 upgrade itself (prerequisite, separate effort)
 - React 18 support removal (prerequisite, separate effort)
-- Replacing SWC in the RSC Vite plugins — separate effort
+- The RSC build — it is being completely rewritten, so nothing in this plan
+  should follow or preserve current patterns from it
 - Request-time SSR and client-side streaming/Suspense — future work this enables
 - A dev-server-based prerender preview in `cedar dev` — worthwhile future
   feature, distinct from the production pipeline
