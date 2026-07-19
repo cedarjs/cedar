@@ -1,13 +1,12 @@
 import React, { Suspense } from 'react'
 
 import type { OperationVariables, QueryReference } from '@apollo/client'
-import { useApolloClient } from '@apollo/client/react/hooks/hooks.cjs'
+import {
+  useApolloClient,
+  useBackgroundQuery,
+  useReadQuery,
+} from '@apollo/client/react/hooks/hooks.cjs'
 
-import { useBackgroundQuery, useReadQuery } from '../GraphQLHooksProvider.js'
-
-/**
- * This is part of how we let users swap out their GraphQL client while staying compatible with Cells.
- */
 import type { FallbackProps } from './CellErrorBoundary.js'
 import { CellErrorBoundary } from './CellErrorBoundary.js'
 import type {

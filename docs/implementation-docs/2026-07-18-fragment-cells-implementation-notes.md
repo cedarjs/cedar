@@ -12,24 +12,22 @@ they're shaped the way they are.
 
 ---
 
-## Architecture: three layers
+## Architecture: two layers
 
-1. **Client-agnostic hook slot.** `GraphQLHooksProvider` gained an _optional_
-   `useFragment` slot (`FragmentHookOptions` → `FragmentHookResult`). It's
-   optional on purpose: `GraphQLHooksProvider` is public API used by
-   bring-your-own-GraphQL-client setups, and a new required prop would have been
-   a breaking change for them. When absent, a fallback implementation always
-   reports `{ data: undefined, complete: false }`.
-2. **Apollo adapter.** `useCellFragment` in
+(Originally three: the hook was routed through a client-agnostic `useFragment`
+slot on `GraphQLHooksProvider`. That indirection has since been removed along
+with the rest of Cedar's bring-your-own-GraphQL-client support, so Cells now
+call the Apollo-backed hook directly.)
+
+1. **Apollo `useFragment` adapter.** `useFragment` in
    `packages/web/src/apollo/fragmentRegistry.ts` adapts Apollo's `useFragment`
-   to that shape. All Apollo-specific imports stay in the `apollo/` directory;
-   `createFragmentCell` only talks to the hook slot.
-3. **The Cell runtime.** `createFragmentCell` always calls the hook
+   to a small Cedar-owned shape (`FragmentHookOptions` → `FragmentHookResult`).
+2. **The Cell runtime.** `createFragmentCell` always calls the hook
    (rules-of-hooks), then picks: complete cache read → live data; incomplete →
    the data snapshot passed in via the Cell's data prop. This fallback is what
    makes fragment Cells work when there is no usable Apollo cache: prerendering,
-   jest/Storybook mocks, custom GraphQL clients, and fragments that don't select
-   the type's key fields all take the snapshot path.
+   jest/Storybook mocks, and fragments that don't select the type's key fields
+   all take the snapshot path.
 
 The snapshot fallback is only possible because Apollo's `dataMasking` is off
 (Cedar default): the parent's query result contains the fragment's fields
@@ -61,8 +59,8 @@ PR):
 
 Note: the streaming-SSR provider (`apollo/suspense.tsx`) previously did not wire
 its `InMemoryCache` to the fragment registry at all — that was a latent gap
-fixed in this PR. If a third provider is ever added, it needs both
-`fragments: fragmentRegistry` on the cache and the `useFragment` hook prop.
+fixed in this PR. If a third provider is ever added, it needs
+`fragments: fragmentRegistry` on the cache.
 
 ## The Apollo `useFragment` trap (the one real bug found in verification)
 
@@ -71,7 +69,7 @@ fragment doesn't select `id`) logs a dev warning **and returns
 `{ data: {}, complete: true }`** — a _complete_ empty result. That defeated the
 "fall back on incomplete reads" logic and rendered empty components; unit tests
 didn't catch it (they mock the hook), only real-browser verification did. The
-fix in `useCellFragment`: call `client.cache.identify()` ourselves, and when it
+fix in `useFragment`: call `client.cache.identify()` ourselves, and when it
 returns `undefined`, pass a sentinel string ref
 (`CedarUnidentifiableFragmentRef:_`) — which identifies nothing, avoids the
 warning — and force the incomplete path. Rule of thumb: never trust
@@ -154,9 +152,10 @@ add a fixture.
 
 ## Testing and verification map
 
-- **Runtime unit tests**: `createFragmentCell.test.tsx` mocks the hook slot via
-  `GraphQLHooksProvider` — it intentionally never touches Apollo, so the Apollo
-  adapter is _only_ covered by browser/e2e tests.
+- **Runtime unit tests**: `createFragmentCell.test.tsx` mocks Apollo's
+  `useFragment`/`useApolloClient`, exercising Cedar's `useFragment` adapter
+  (including the identify-it-yourself logic) but never a real Apollo cache —
+  real cache reads are only covered by browser/e2e tests.
 - **Typegen**: `example-todo-main` gained `TodoStatusCell` (a fragment cell) to
   drive mirror-generation and codegen snapshot tests in `@cedarjs/internal`. Run
   those tests from `packages/internal` as cwd — one snapshot ("mirror path for
