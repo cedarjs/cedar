@@ -61,23 +61,6 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
         alias: {
           '~__CEDAR__USER_ROUTES_FOR_MOCK': cedarProjectPaths.web.routes,
           '~__CEDAR__USER_WEB_SRC': cedarProjectPaths.web.src,
-          // @cedarjs/web imports @apollo/client via explicit .cjs sub-paths
-          // (e.g. `@apollo/client/cache/cache.cjs`). In a Node.js / tsc build
-          // context these resolve fine, but Vite (ESM-first, browser target)
-          // falls back to a ?import CJS interop that can't statically detect
-          // named exports, causing runtime SyntaxErrors. Alias the .cjs paths
-          // to their package-root equivalents so Vite resolves them through
-          // Apollo's package.json `exports` field and picks up the ESM build.
-          '@apollo/client/cache/cache.cjs': '@apollo/client/cache',
-          '@apollo/client/core/core.cjs': '@apollo/client/core',
-          '@apollo/client/link/context/context.cjs':
-            '@apollo/client/link/context',
-          '@apollo/client/link/core/core.cjs': '@apollo/client/link/core',
-          '@apollo/client/link/persisted-queries/persisted-queries.cjs':
-            '@apollo/client/link/persisted-queries',
-          '@apollo/client/react/hooks/hooks.cjs': '@apollo/client/react/hooks',
-          '@apollo/client/react/react.cjs': '@apollo/client/react',
-          '@apollo/client/utilities/utilities.cjs': '@apollo/client/utilities',
           // graphql ships CJS-only; alias the explicit sub-path to the package
           // root so Vite resolves it through the exports field (ESM build).
           'graphql/language/printer.js': 'graphql',
@@ -105,24 +88,20 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
         // storybook-framework-cedarjs (excluded above). Without this, Vite serves
         // them via ?import interop, which can't detect named exports in CJS files.
         //
-        // Also pre-bundle the Apollo .cjs sub-paths that @cedarjs/web imports.
-        // resolve.alias redirects them in the transform pipeline, but esbuild
-        // (dep optimizer) ignores resolve.alias. Without this, Vite discovers
-        // them on the first page load and triggers a mid-session reload, which
-        // tears down the StorybookProvider's Apollo context and breaks
-        // nested-Cell stories. These are structural deps of @cedarjs/web
-        // itself, so this list is valid for all Cedar apps, not just the test
-        // project.
+        // Also pre-bundle the Apollo entry points that @cedarjs/web imports.
+        // Without this, Vite discovers them on the first page load and
+        // triggers a mid-session reload, which tears down the
+        // StorybookProvider's Apollo context and breaks nested-Cell stories.
+        // These are structural deps of @cedarjs/web itself, so this list is
+        // valid for all Cedar apps, not just the test project.
         include: [
-          'rehackt',
-          '@apollo/client/cache/cache.cjs',
-          '@apollo/client/core/core.cjs',
-          '@apollo/client/link/context/context.cjs',
-          '@apollo/client/link/core/core.cjs',
-          '@apollo/client/link/persisted-queries/persisted-queries.cjs',
-          '@apollo/client/react/hooks/hooks.cjs',
-          '@apollo/client/react/react.cjs',
-          '@apollo/client/utilities/utilities.cjs',
+          '@apollo/client',
+          '@apollo/client/cache',
+          '@apollo/client/link/context',
+          '@apollo/client/link/persisted-queries',
+          '@apollo/client/react',
+          '@apollo/client/utilities',
+          'rxjs',
           'graphql/language/printer.js',
           // Pre-bundle node-polyfill shims so Vite doesn't discover them
           // mid-session when storybook-framework-cedarjs (which uses

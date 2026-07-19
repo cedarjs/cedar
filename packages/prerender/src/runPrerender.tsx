@@ -4,10 +4,7 @@ import path from 'node:path'
 import React from 'react'
 import type { ElementType } from 'react'
 
-// Building CJS types complains about this being turned into a require call
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import * as apolloClient from '@apollo/client'
+import { ApolloClient, ApolloLink, InMemoryCache } from '@apollo/client'
 import type { CheerioAPI } from 'cheerio'
 import { load as loadHtml } from 'cheerio'
 import ReactDOMServer from 'react-dom/server'
@@ -33,11 +30,13 @@ import { executeQuery, getGqlHandler } from './graphql/graphql.js'
 import type { FileImporter } from './graphql/graphql.js'
 import { getRootHtmlPath, registerShims, writeToDist } from './internal.js'
 
-// @ts-expect-error - ESM/CJS issue
-const { ApolloClient, InMemoryCache } = apolloClient.default || apolloClient
-
 // Create an apollo client that we can use to prepopulate the cache and restore it client-side
-const prerenderApolloClient = new ApolloClient({ cache: new InMemoryCache() })
+// The client never sends requests during prerendering, so it terminates in an
+// empty link
+const prerenderApolloClient = new ApolloClient({
+  cache: new InMemoryCache(),
+  link: ApolloLink.empty(),
+})
 
 async function recursivelyRender(
   App: ElementType,

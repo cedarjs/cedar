@@ -5,7 +5,7 @@
 // Stacktracey requires buffer, which Vite does not polyfill by default
 import React, { useState, useEffect, useRef } from 'react'
 
-import type { GraphQLError } from 'graphql'
+import type { GraphQLFormattedError } from 'graphql'
 import StackTracey from 'stacktracey'
 
 // RWJS_SRC_ROOT is defined and defaulted in vite to the base path
@@ -31,14 +31,15 @@ type RequestDetails = {
   variables: any
 }
 
-interface EnhancedGqlError extends GraphQLError {
+interface EnhancedGqlError extends GraphQLFormattedError {
   __RedwoodEnhancedError: RequestDetails
 }
 
-// Allow APIs client to attach response/request
+// Allow APIs client to attach response/request. GraphQL errors live in
+// `errors` on Apollo Client's `CombinedGraphQLErrors`
 type ErrorWithRequestMeta = Error & {
   mostRecentRequest?: RequestDetails
-  graphQLErrors?: EnhancedGqlError[]
+  errors?: EnhancedGqlError[]
   mostRecentResponse?: any
 }
 
@@ -64,7 +65,7 @@ function formatErrorForClipboard(
   // Request details if available
   const mostRecentRequest =
     errorWithMeta.mostRecentRequest ||
-    errorWithMeta.graphQLErrors?.find((gqlErr) => gqlErr.__RedwoodEnhancedError)
+    errorWithMeta.errors?.find((gqlErr) => gqlErr.__RedwoodEnhancedError)
       ?.__RedwoodEnhancedError
 
   if (mostRecentRequest) {
@@ -368,7 +369,7 @@ function ResponseRequest(props: { error: ErrorWithRequestMeta }) {
 
   const mostRecentRequest =
     props.error.mostRecentRequest ||
-    props.error.graphQLErrors?.find((gqlErr) => gqlErr.__RedwoodEnhancedError)
+    props.error.errors?.find((gqlErr) => gqlErr.__RedwoodEnhancedError)
       ?.__RedwoodEnhancedError
 
   // Does not exist with Suspense Cells

@@ -1,7 +1,7 @@
 import React from 'react'
 
 import type { DocumentNode, setLogVerbosity } from '@apollo/client'
-import { InMemoryCache } from '@apollo/client/cache/cache.cjs'
+import { InMemoryCache } from '@apollo/client'
 
 import type { UseAuth } from '@cedarjs/auth'
 import { useNoAuth } from '@cedarjs/auth'
