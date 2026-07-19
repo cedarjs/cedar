@@ -62,8 +62,9 @@ test('Loads Cell mocks when Cell is nested in another story', async ({
 }: PlaywrightTestArgs) => {
   await page.goto('/')
 
-  // Click text=BlogPostCell
-  await page.locator('text=BlogPostPage').click()
+  // Click text=BlogPostPage. Using a word boundary so we don't also match
+  // AggregatedBlogPostPage
+  await page.locator('text=/\\bBlogPostPage\\b/').click()
 
   // Click text=Empty
   await expect(page).toHaveURL(

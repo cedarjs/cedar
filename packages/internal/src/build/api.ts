@@ -5,12 +5,27 @@ import type { BuildContext, BuildOptions, PluginBuild } from 'esbuild'
 import { build, context } from 'esbuild'
 import type { Plugin } from 'vite'
 import { build as viteBuild, normalizePath } from 'vite'
+import tsPathsMod from 'vite-tsconfig-paths'
+
+// vite-tsconfig-paths is ESM-only. CJS builds double-wrap its default
+// export: tsconfigPaths.default is the module object, and
+// tsconfigPaths.default.default is the actual function. ESM gets the
+// function directly. The `||` chain resolves correctly for both.
+const tsconfigPaths =
+  // @ts-expect-error – .default only exists at runtime in CJS double-wrap
+  // interop
+  tsPathsMod.default?.default || tsPathsMod.default || tsPathsMod
 
 import {
   getApiSideBabelPlugins,
   transformWithBabel,
 } from '@cedarjs/babel-config'
-import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
+import {
+  getConfig,
+  getPaths,
+  projectSideIsEsm,
+  resolveFile,
+} from '@cedarjs/project-config'
 
 import { findApiFiles } from '../files.js'
 
@@ -19,11 +34,13 @@ import {
   applyGraphqlOptionsExtract,
 } from './api-graphql-transforms.js'
 import { applyAutoImports } from './auto-import.js'
+import { applyDirectoryNamedImport } from './directory-named-import.js'
 import { cedarApiGraphqlPlugin } from './esbuild-plugin-api-graphql.js'
 import { applyOtelWrapping } from './esbuild-plugin-cedar-otel-wrapping.js'
 import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
 import { applyImportDir } from './import-dir.js'
 import { applySrcAlias } from './src-alias.js'
+import { applyTsconfigPaths } from './tsconfig-paths.js'
 
 let BUILD_CTX: BuildContext | null = null
 
@@ -63,6 +80,18 @@ const runCedarBabelTransformsPlugin = {
           path.relative(build.initialOptions.absWorkingDir + '/src', args.path),
         ),
       )
+      // Rewrite bare specifiers that match a user-defined tsconfig.json
+      // `paths` alias to relative paths. Runs before applyDirectoryNamedImport
+      // since a resolved alias can itself point at a directory that needs
+      // directory-named-import resolution.
+      fileContents = applyTsconfigPaths(
+        fileContents,
+        args.path,
+        getPaths().api.base,
+      )
+      // Rewrite relative directory imports (e.g. `./Button`) to their index
+      // or directory-named module file.
+      fileContents = applyDirectoryNamedImport(fileContents, args.path)
       fileContents = applyAutoImports(fileContents)
       // Expand glob imports (e.g. `import x from 'src/services/**/*.ts'`)
       // before Babel runs.  The Babel import-dir plugin is disabled for these
@@ -148,6 +177,57 @@ function createImportDirVitePlugin(): Plugin {
         return null
       }
       return { code: result.code, map: result.map }
+    },
+  }
+}
+
+/**
+ * Vite plugin that resolves relative directory imports (e.g. `./Button`) to
+ * their index or directory-named module file. This is the buildApiWithVite
+ * equivalent of:
+ *   - cedarDirectoryNamedImportPlugin  in @cedarjs/vite  (used by buildApp
+ *     and apiDevMiddleware)
+ *   - applyDirectoryNamedImport        applied inline      (used by
+ *     runCedarBabelTransformsPlugin and cedarApiGraphqlPlugin)
+ *
+ * Inlined here to avoid a circular dependency (@cedarjs/internal ↔
+ * @cedarjs/vite). Code duplication is intentional.
+ */
+function createDirectoryNamedImportVitePlugin(): Plugin {
+  return {
+    name: 'cedar-internal-directory-named-import',
+    enforce: 'pre',
+    resolveId(id, importer) {
+      // Only handle relative imports
+      if (!id.startsWith('.') || !importer) {
+        return null
+      }
+
+      if (importer.includes('node_modules')) {
+        return null
+      }
+
+      const absolutePath = path.resolve(path.dirname(importer), id)
+
+      // If the import already points to a real file, leave it alone.
+      if (resolveFile(absolutePath)) {
+        return null
+      }
+
+      const indexPath = path.join(absolutePath, 'index')
+      const resolvedIndex = resolveFile(indexPath)
+      if (resolvedIndex) {
+        return normalizePath(resolvedIndex)
+      }
+
+      const basename = path.basename(absolutePath)
+      const dirNamedPath = path.join(absolutePath, basename)
+      const resolvedDirNamed = resolveFile(dirNamedPath)
+      if (resolvedDirNamed) {
+        return normalizePath(resolvedDirNamed)
+      }
+
+      return null
     },
   }
 }
@@ -296,7 +376,15 @@ export const buildApiWithVite = async () => {
     // are expanded before Babel sees the code.  The Babel import-dir plugin is
     // disabled for forVite:true builds; this inline Vite plugin is its
     // replacement for this code path (both CJS and ESM output via Rollup).
-    plugins: [createImportDirVitePlugin(), createCedarViteApiPlugin()],
+    // tsconfigPaths resolves user-defined tsconfig.json `paths` aliases; it
+    // replaces the Babel module-resolver's tsconfig-paths handling for this
+    // code path.
+    plugins: [
+      tsconfigPaths(),
+      createImportDirVitePlugin(),
+      createDirectoryNamedImportVitePlugin(),
+      createCedarViteApiPlugin(),
+    ],
   })
 }
 

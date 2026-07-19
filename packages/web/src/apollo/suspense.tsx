@@ -21,14 +21,6 @@ import type {
 } from '@apollo/client'
 import { setLogVerbosity as apolloSetLogVerbosity } from '@apollo/client/core/index.js'
 import {
-  useMutation,
-  useSubscription,
-  useBackgroundQuery,
-  useQuery,
-  useReadQuery,
-  useSuspenseQuery,
-} from '@apollo/client/react/hooks/index.js'
-import {
   ApolloClient,
   InMemoryCache,
   WrapApolloProvider,
@@ -38,15 +30,14 @@ import { buildManualDataTransport } from '@apollo/client-react-streaming/manual-
 import type { UseAuth } from '@cedarjs/auth'
 import { useNoAuth } from '@cedarjs/auth'
 import { ServerAuthContext } from '@cedarjs/auth/dist/AuthProvider/ServerAuthProvider.js'
-import './typeOverride.js'
 
 import {
   FetchConfigProvider,
   useFetchConfig,
 } from '../components/FetchConfigProvider.js'
-import { GraphQLHooksProvider } from '../components/GraphQLHooksProvider.js'
 import { ServerHtmlContext } from '../components/ServerInject.js'
 
+import { fragmentRegistry } from './fragmentRegistry.js'
 import type {
   RedwoodApolloLink,
   RedwoodApolloLinkFactory,
@@ -215,9 +206,10 @@ export const RedwoodApolloProvider: React.FunctionComponent<{
   const { cacheConfig, ...config } = graphQLClientConfig ?? {}
 
   // @MARK we need this special cache
-  const cache = new InMemoryCache(cacheConfig).restore(
-    globalThis?.__REDWOOD__APOLLO_STATE ?? {},
-  )
+  const cache = new InMemoryCache({
+    fragments: fragmentRegistry,
+    ...cacheConfig,
+  }).restore(globalThis?.__REDWOOD__APOLLO_STATE ?? {})
 
   return (
     <FetchConfigProvider useAuth={useAuth}>
@@ -227,16 +219,7 @@ export const RedwoodApolloProvider: React.FunctionComponent<{
         useAuth={useAuth}
         logLevel={logLevel}
       >
-        <GraphQLHooksProvider
-          useQuery={useQuery}
-          useMutation={useMutation}
-          useSubscription={useSubscription}
-          useSuspenseQuery={useSuspenseQuery}
-          useBackgroundQuery={useBackgroundQuery}
-          useReadQuery={useReadQuery}
-        >
-          {children}
-        </GraphQLHooksProvider>
+        {children}
       </ApolloProviderWithFetchConfig>
     </FetchConfigProvider>
   )

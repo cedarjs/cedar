@@ -5,6 +5,26 @@ import type { FragmentRegistryAPI } from '@apollo/client/cache/index.js'
 import { getFragmentDefinitions } from '@apollo/client/utilities/utilities.cjs'
 import type { DocumentNode } from 'graphql'
 
+export interface FragmentHookOptions {
+  fragment: DocumentNode
+  fragmentName?: string
+  /**
+   * The object to read the fragment data for. Usually a cache reference like
+   * `{ __typename: 'User', id: 1 }`, but any object that Apollo Client can
+   * identify works.
+   */
+  from: Record<string, unknown>
+}
+
+export interface FragmentHookResult<TData = any> {
+  /**
+   * The fragment data read from Apollo Client's cache, or `undefined` if the
+   * cache doesn't (yet) contain complete data for the fragment.
+   */
+  data: TData | undefined
+  complete: boolean
+}
+
 export type FragmentIdentifier = string | number
 
 export type CacheKey = {
@@ -54,6 +74,47 @@ const useRegisteredFragmentHook = <TData = any>(
     fragment,
     from,
   })
+}
+
+/**
+ * Passed to Apollo's `useFragment` when the object a fragment Cell received
+ * in its data prop can't be identified in the cache (for example because the
+ * fragment doesn't select the type's key fields). It identifies nothing, so
+ * the read comes back incomplete and the Cell falls back to the data
+ * snapshot it was passed.
+ */
+const UNIDENTIFIABLE_FRAGMENT_REF = 'CedarUnidentifiableFragmentRef:_'
+
+/**
+ * Read fragment data from Apollo Client's cache without firing a network
+ * request. Used by fragment Cells (Cells that export `FRAGMENT` instead of
+ * `QUERY`). Incomplete reads surface `data: undefined` so that fragment Cells
+ * fall back to the data snapshot passed via their data prop.
+ */
+export function useFragment<TData = any>(
+  options: FragmentHookOptions,
+): FragmentHookResult<TData> {
+  const client = apolloClient.useApolloClient()
+  const { from, ...restOptions } = options
+
+  // `FragmentHookOptions` types `from` as a plain object, which is what
+  // Apollo's `StoreObject` is – but `StoreObject` types
+  // `__typename` as `string | undefined`, which `unknown` isn't assignable to
+  const cacheId = client.cache.identify(from as apolloClient.StoreObject)
+
+  const result = apolloClient.useFragment<TData>({
+    ...restOptions,
+    // We identify the object ourselves (above) because passing an
+    // unidentifiable object to `useFragment` logs a warning and returns a
+    // useless `{ data: {}, complete: true }` result
+    from: cacheId ?? UNIDENTIFIABLE_FRAGMENT_REF,
+  })
+
+  if (cacheId !== undefined && result.complete) {
+    return { data: result.data, complete: true }
+  }
+
+  return { data: undefined, complete: false }
 }
 
 /**

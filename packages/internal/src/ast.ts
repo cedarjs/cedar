@@ -169,6 +169,38 @@ export const getCellGqlQuery = (ast: types.Node) => {
   return cellQuery
 }
 
+export const getCellGqlFragment = (ast: types.Node) => {
+  let cellFragment: string | undefined = undefined
+  traverse(ast, {
+    ExportNamedDeclaration({ node }: any) {
+      if (
+        node.exportKind === 'value' &&
+        types.isVariableDeclaration(node.declaration)
+      ) {
+        const exportedFragmentNode = node.declaration.declarations.find(
+          (d: any) => {
+            return (
+              types.isIdentifier(d.id) &&
+              d.id.name === 'FRAGMENT' &&
+              types.isTaggedTemplateExpression(d.init)
+            )
+          },
+        )
+
+        if (exportedFragmentNode) {
+          const templateExpression =
+            exportedFragmentNode.init as types.TaggedTemplateExpression
+
+          cellFragment = templateExpression.quasi.quasis[0].value.raw
+        }
+      }
+      return
+    },
+  })
+
+  return cellFragment
+}
+
 export const hasDefaultExport = (ast: types.Node): boolean => {
   let exported = false
   traverse(ast, {

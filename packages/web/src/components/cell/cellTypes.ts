@@ -5,6 +5,7 @@ import type {
   NetworkStatus,
   OperationVariables,
   QueryRef,
+  QueryResult,
   UseBackgroundQueryResult,
 } from '@apollo/client'
 import type { DocumentNode } from 'graphql'
@@ -61,7 +62,7 @@ export type CellFailureProps<TVariables extends OperationVariables = any> = {
   queryResult?:
     | NonSuspenseCellQueryResult<TVariables, any>
     | SuspenseCellQueryResult
-  error?: QueryOperationResult['error'] | Error // for tests and storybook
+  error?: QueryResult['error'] | Error // for tests and storybook
 
   /**
    * @see {@link https://www.apollographql.com/docs/apollo-server/data/errors/#error-codes}
@@ -140,8 +141,21 @@ export interface CreateCellProps<CellProps, CellVariables> {
   /**
    * The GraphQL syntax tree to execute or function to call that returns it.
    * If `QUERY` is a function, it's called with the result of `beforeQuery`.
+   *
+   * Either `QUERY` or `FRAGMENT` must be provided.
    */
-  QUERY: DocumentNode | ((variables: Record<string, unknown>) => DocumentNode)
+  QUERY?: DocumentNode | ((variables: Record<string, unknown>) => DocumentNode)
+  /**
+   * A GraphQL fragment that declares this Cell's data requirements. Fragment
+   * Cells don't fire their own query. Instead a parent Cell spreads the
+   * fragment in its `QUERY` and passes the fetched data object down via a
+   * prop named after the fragment (`AuthorCell_author` -> `author`). The
+   * fragment is automatically registered with the GraphQL client's fragment
+   * registry, so parent queries can spread it by name.
+   *
+   * Either `QUERY` or `FRAGMENT` must be provided.
+   */
+  FRAGMENT?: DocumentNode
   /**
    * Parse `props` into query variables. Most of the time `props` are appropriate variables as is.
    */
@@ -210,9 +224,7 @@ export type SuspendingSuccessProps = React.PropsWithChildren<
 export type NonSuspenseCellQueryResult<
   TVariables extends OperationVariables = any,
   TData = any,
-> = Partial<
-  Omit<QueryOperationResult<TData, TVariables>, 'loading' | 'error' | 'data'>
->
+> = Partial<Omit<QueryResult<TData, TVariables>, 'loading' | 'error' | 'data'>>
 
 // We call this queryResult in createCell, sadly a very overloaded term
 // This is just the extra things returned from useXQuery hooks

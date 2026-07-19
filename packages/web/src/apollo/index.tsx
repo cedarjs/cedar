@@ -19,14 +19,6 @@ import {
 import { setContext } from '@apollo/client/link/context/context.cjs'
 import { ApolloLink, split } from '@apollo/client/link/core/core.cjs'
 import { createPersistedQueryLink } from '@apollo/client/link/persisted-queries/persisted-queries.cjs'
-import {
-  useQuery,
-  useMutation,
-  useSubscription,
-  useBackgroundQuery,
-  useReadQuery,
-  useSuspenseQuery,
-} from '@apollo/client/react/hooks/hooks.cjs'
 import { ApolloProvider } from '@apollo/client/react/react.cjs'
 import { getMainDefinition } from '@apollo/client/utilities/utilities.cjs'
 import { print } from 'graphql/language/printer.js'
@@ -34,13 +26,11 @@ import { print } from 'graphql/language/printer.js'
 import type { UseAuth } from '@cedarjs/auth'
 import { useNoAuth } from '@cedarjs/auth'
 
-import './typeOverride.js'
 import { createUploadLink } from '../bundled/apollo-upload-client.js'
 import {
   FetchConfigProvider,
   useFetchConfig,
 } from '../components/FetchConfigProvider.js'
-import { GraphQLHooksProvider } from '../components/GraphQLHooksProvider.js'
 
 import {
   fragmentRegistry,
@@ -384,16 +374,7 @@ export const RedwoodApolloProvider: React.FunctionComponent<{
         useAuth={useAuth}
         logLevel={logLevel}
       >
-        <GraphQLHooksProvider
-          useQuery={useQuery}
-          useMutation={useMutation}
-          useSubscription={useSubscription}
-          useBackgroundQuery={useBackgroundQuery}
-          useReadQuery={useReadQuery}
-          useSuspenseQuery={useSuspenseQuery}
-        >
-          {children}
-        </GraphQLHooksProvider>
+        {children}
       </ApolloProviderWithFetchConfig>
     </FetchConfigProvider>
   )
