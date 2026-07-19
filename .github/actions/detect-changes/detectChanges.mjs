@@ -382,7 +382,7 @@ async function main() {
   // Evaluates the full PR diff (not just `changedFiles`) so a Windows-
   // sensitive change in an early commit keeps the Windows legs running on
   // later pushes too. The `windows` label forces the Windows legs to run
-  // (add the label, then re-run CI).
+  // (rerun-ci-on-windows-label.yml re-runs CI when the label is added).
   const windowsChangesDetected = hasWindowsLabel || windowsChanged(prFiles)
 
   core.setOutput('code', true)

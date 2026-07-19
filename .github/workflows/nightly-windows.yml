@@ -2,9 +2,13 @@ name: 🌙 Nightly Windows
 
 # PRs only run the Windows CI legs when detect-changes deems the diff
 # Windows-relevant (see .github/actions/detect-changes/cases/windows.mjs).
-# This nightly run is the safety net: the full Windows matrix against main,
-# every day, so anything the filter misses surfaces within a day instead of
-# at release time.
+# This nightly run is the safety net: every Windows leg that exists in
+# ci.yml, run against main daily, so anything the filter misses surfaces
+# within a day instead of at release time.
+#
+# Note: ssr-smoke-tests is absent because it has no Windows leg anywhere —
+# not here, not in ci.yml (see the `TODO: add windows-latest` comment
+# there). If that TODO is resolved, add it here too.
 
 on:
   schedule:

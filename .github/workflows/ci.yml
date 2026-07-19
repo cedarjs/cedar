@@ -44,8 +44,9 @@ jobs:
         id: detect-changes
         uses: ./.github/actions/detect-changes
 
-  # Not gated on the `code` output because the formatting check also covers
-  # docs-only changes.
+  # The job is not gated on the `code` output because the formatting check
+  # also covers docs-only changes. The constraints step, however, is — so a
+  # broken constraint can't block a docs-only PR.
   check:
     needs: detect-changes
 
@@ -65,6 +66,7 @@ jobs:
         run: yarn format:check
 
       - name: ✅ Check constraints, dependencies, and package.json's
+        if: needs.detect-changes.outputs.code == 'true'
         run: yarn check
 
   build-lint-test:

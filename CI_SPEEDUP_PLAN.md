@@ -60,9 +60,12 @@ removal:
   each, and Windows is also the dominant flake surface).
 - The eight Windows-matrix jobs in `ci.yml` use a dynamic matrix keyed on that
   output; the Windows-only `telemetry-check` job is gated on it.
-- Escape hatch: add the `windows` label to a PR and re-run CI (the label is read
-  from the API, not the event payload, so a re-run picks it up without needing
-  `labeled` trigger types that would restart CI on every label).
+- Escape hatch: add the `windows` label to a PR —
+  `rerun-ci-on-windows-label.yml` automatically re-runs the latest CI run so
+  detect-changes (which reads labels from the API at run time) picks it up.
+  This is a separate workflow rather than `labeled` trigger types on ci.yml
+  because those fire for every label (including the automated release
+  labels) and would cancel-and-restart CI on each one.
 - Pushes to `next` and `release/**` always run Windows.
 - Safety net: `.github/workflows/nightly-windows.yml` runs the full Windows
   matrix against `main` daily (03:17 UTC) and opens/updates a tracking issue on
