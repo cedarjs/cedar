@@ -5,6 +5,7 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { formatAddRootPackagesCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import {
   runBinSync,
+  runTransitiveBinSync,
   runWithNode,
 } from '@cedarjs/cli-helpers/packageManager/exec'
 import { installPackages } from '@cedarjs/cli-helpers/packageManager/packages'
@@ -39,7 +40,9 @@ export const handler = async ({
   async function runApiCommands() {
     if (prisma) {
       console.log('Running database migrations...')
-      runBinSync(
+      // Executing prisma directly to avoid spinning up the entire Cedar CLI
+      // See https://github.com/redwoodjs/graphql/pull/4278
+      runTransitiveBinSync(
         'prisma',
         ['migrate', 'deploy', '--config', cedarPaths.api.prismaConfig],
         execaConfig,
