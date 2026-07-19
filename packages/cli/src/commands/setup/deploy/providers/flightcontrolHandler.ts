@@ -24,6 +24,14 @@ const { getConfig } = prismaInternals
 
 type Database = 'postgresql' | 'mysql' | 'none'
 
+// `CedarApolloProvider` is checked first since it's what current templates
+// use. `RedwoodApolloProvider` is still checked as a fallback so this keeps
+// working for apps that haven't migrated off the deprecated name.
+const APOLLO_PROVIDER_COMPONENT_NAMES = [
+  'CedarApolloProvider',
+  'RedwoodApolloProvider',
+]
+
 const getFlightcontrolJson = async (database: Database) => {
   const flightcontrolConfig = getFlightcontrolConfig()
 
@@ -238,19 +246,28 @@ const updateApp = () => {
 `
       }
 
-      const gqlLineIndex = appContent.findIndex((line) =>
-        line.includes('<RedwoodApolloProvider'),
-      )
+      let gqlLineIndex = -1
+      let apolloProviderComponentName = ''
+      for (const componentName of APOLLO_PROVIDER_COMPONENT_NAMES) {
+        gqlLineIndex = appContent.findIndex((line) =>
+          line.includes(`<${componentName}`),
+        )
+        if (gqlLineIndex !== -1) {
+          apolloProviderComponentName = componentName
+          break
+        }
+      }
+
       if (gqlLineIndex === -1) {
         console.log(`
-    Couldn't find <RedwoodApolloProvider in web/src/App.js
+    Couldn't find <CedarApolloProvider in web/src/App.js
     If (and when) you use *dbAuth*, you'll have to add the following fetch config manually:
 
     graphQLClientConfig={{ httpLinkConfig: { credentials: 'include' }}}
     `)
       } else if (appContent.toString().match(/dbAuth/)) {
         appContent[gqlLineIndex] =
-          `        <RedwoodApolloProvider graphQLClientConfig={{ httpLinkConfig: { credentials: 'include' }}} >
+          `        <${apolloProviderComponentName} graphQLClientConfig={{ httpLinkConfig: { credentials: 'include' }}} >
 `
       }
 

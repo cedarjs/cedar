@@ -20,7 +20,10 @@ import { useNoAuth } from '@cedarjs/auth'
 import { createUploadLink } from '../bundled/apollo-upload-client.js'
 import { useFetchConfig } from '../components/FetchConfigProvider.js'
 
-import type { CedarApolloLinks, GraphQLClientConfigProp } from './apolloLinkTypes.js'
+import type {
+  CedarApolloLinks,
+  GraphQLClientConfigProp,
+} from './apolloLinkTypes.js'
 import { ErrorBoundary } from './ErrorBoundary.js'
 import * as SSELinkExports from './sseLink.js'
 
