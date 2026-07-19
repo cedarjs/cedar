@@ -46,12 +46,28 @@ export const MockProviders: React.FunctionComponent<{
 }
 
 function isModuleNotFoundError(error: unknown, module: string) {
+  if (
+    !error ||
+    typeof error !== 'object' ||
+    !('code' in error) ||
+    error.code !== 'MODULE_NOT_FOUND'
+  ) {
+    return false
+  }
+
+  // Jest sets moduleName; plain Node does not.
+  // TODO: once Cedar is ESM-only and Jest is no longer used, remove this branch
+  // and rely solely on the message check below.
+  if ('moduleName' in error) {
+    return error.moduleName === module
+  }
+
+  // Node-style error: module name appears in the message string.
+  // Check for the quoted form to avoid substring collisions with similar module names.
   return (
-    !!error &&
-    typeof error === 'object' &&
-    'code' in error &&
-    error.code === 'MODULE_NOT_FOUND' &&
-    'moduleName' in error &&
-    error.moduleName === module
+    'message' in error &&
+    typeof error.message === 'string' &&
+    (error.message.includes(`'${module}'`) ||
+      error.message.includes(`"${module}"`))
   )
 }
