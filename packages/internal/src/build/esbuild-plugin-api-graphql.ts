@@ -25,6 +25,7 @@ import {
   applyGraphqlOptionsExtract,
 } from './api-graphql-transforms.js'
 import { applyAutoImports } from './auto-import.js'
+import { applyDirectoryNamedImport } from './directory-named-import.js'
 import { applyOtelWrapping } from './esbuild-plugin-cedar-otel-wrapping.js'
 import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
 import { applyImportDir } from './import-dir.js'
@@ -52,12 +53,18 @@ export const cedarApiGraphqlPlugin = {
       )
 
       // Rewrite bare specifiers that match a user-defined tsconfig.json
-      // `paths` alias to relative paths.
+      // `paths` alias to relative paths. Runs before applyDirectoryNamedImport
+      // since a resolved alias can itself point at a directory that needs
+      // directory-named-import resolution.
       fileContents = applyTsconfigPaths(
         fileContents,
         args.path,
         getPaths().api.base,
       )
+
+      // Rewrite relative directory imports (e.g. `./Button`) to their index
+      // or directory-named module file.
+      fileContents = applyDirectoryNamedImport(fileContents, args.path)
 
       // Apply graphql-specific string transforms on the raw TypeScript BEFORE
       // Babel CJS compilation. TypeScript always uses ESM syntax, so the ESM

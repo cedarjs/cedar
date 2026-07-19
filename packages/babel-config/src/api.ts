@@ -126,7 +126,9 @@ export const getApiSideBabelPlugins = ({
       },
       'rwjs-api-module-resolver',
     ],
-    [
+    // Vite/esbuild use cedarDirectoryNamedImportPlugin / applyDirectoryNamedImport
+    // instead of this babel plugin
+    !forVite && [
       pluginRedwoodDirectoryNamedImport,
       undefined,
       'rwjs-babel-directory-named-modules',

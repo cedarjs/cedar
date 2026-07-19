@@ -33,6 +33,7 @@ import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
 import { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
+import { cedarDirectoryNamedImportPlugin } from './plugins/vite-plugin-cedar-directory-named-import.js'
 import { applyGraphqlOptionsExtract } from './plugins/vite-plugin-cedar-graphql-options-extract.js'
 import { cedarImportDirPlugin } from './plugins/vite-plugin-cedar-import-dir.js'
 import { applyOtelWrapping } from './plugins/vite-plugin-cedar-otel-wrapping.js'
@@ -254,6 +255,7 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
         },
       },
       cedarImportDirPlugin(),
+      cedarDirectoryNamedImportPlugin(),
       cedarAutoImportsPlugin(),
       cedarjsJobPathInjectorPlugin(),
       (() => {

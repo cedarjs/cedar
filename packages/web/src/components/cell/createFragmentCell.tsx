@@ -3,8 +3,7 @@ import React from 'react'
 import type { DocumentNode, FragmentDefinitionNode } from 'graphql'
 import { Kind } from 'graphql'
 
-import { fragmentRegistry } from '../../apollo/fragmentRegistry.js'
-import { useFragment } from '../GraphQLHooksProvider.js'
+import { fragmentRegistry, useFragment } from '../../apollo/fragmentRegistry.js'
 
 import type { CreateCellProps } from './cellTypes.js'
 import { isDataEmpty } from './isCellEmpty.js'

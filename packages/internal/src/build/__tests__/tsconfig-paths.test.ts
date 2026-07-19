@@ -67,4 +67,16 @@ describe('applyTsconfigPaths', () => {
       code,
     )
   })
+
+  it('resolves an alias pointing at a directory-named module (e.g. $services/todos)', () => {
+    const code = `import { widget } from '$lib/Widget'`
+    const result = applyTsconfigPaths(code, IMPORTER_FILE, FIXTURE_DIR)
+    expect(result).toBe(`import { widget } from '../../lib/Widget/Widget'`)
+  })
+
+  it('prefers an index file over a directory-named module when resolving via an alias', () => {
+    const code = `import { indexed } from '$lib/IndexedDir'`
+    const result = applyTsconfigPaths(code, IMPORTER_FILE, FIXTURE_DIR)
+    expect(result).toBe(`import { indexed } from '../../lib/IndexedDir/index'`)
+  })
 })

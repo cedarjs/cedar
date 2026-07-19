@@ -1,14 +1,36 @@
 import React from 'react'
 
+import { useApolloClient, useFragment } from '@apollo/client'
+import { useQuery } from '@apollo/client/react/hooks/hooks.cjs'
 import { render, screen } from '@testing-library/react'
 import { parse } from 'graphql'
-import { vi, describe, beforeAll, test, expect } from 'vitest'
+import type { Mock } from 'vitest'
+import { vi, describe, beforeAll, beforeEach, test, expect } from 'vitest'
 
 import { fragmentRegistry } from '../../apollo/fragmentRegistry.js'
-import type { FragmentHookOptions } from '../GraphQLHooksProvider.js'
-import { GraphQLHooksProvider } from '../GraphQLHooksProvider.js'
 
 import { createCell } from './createCell.js'
+
+vi.mock('@apollo/client', async (importOriginal) => {
+  const actual = await importOriginal<object>()
+
+  return {
+    ...actual,
+    useApolloClient: vi.fn(),
+    useFragment: vi.fn(),
+  }
+})
+
+vi.mock('@apollo/client/react/hooks/hooks.cjs', () => ({
+  useQuery: vi.fn(),
+}))
+
+// The tests fake the hooks with minimal objects rather than full Apollo
+// results, so the mocks are typed loosely instead of with Apollo's hook
+// signatures
+const mockUseApolloClient = useApolloClient as unknown as Mock
+const mockApolloUseFragment = useFragment as unknown as Mock
+const mockUseQuery = useQuery as unknown as Mock
 
 const AUTHOR_FRAGMENT = parse(`
   fragment AuthorCell_author on User {
@@ -24,6 +46,23 @@ describe('createFragmentCell', () => {
     }
   })
 
+  beforeEach(() => {
+    mockApolloUseFragment.mockReset()
+    mockUseApolloClient.mockReset()
+
+    mockUseApolloClient.mockReturnValue({
+      cache: {
+        identify: (obj: Record<string, unknown>) =>
+          obj.__typename && obj.id !== undefined
+            ? `${obj.__typename}:${obj.id}`
+            : undefined,
+      },
+    })
+    // An incomplete cache read by default, so Cells fall back to reading data
+    // straight off their data prop
+    mockApolloUseFragment.mockReturnValue({ data: undefined, complete: false })
+  })
+
   test('renders Success with data from its data prop', () => {
     const TestCell = createCell({
       FRAGMENT: AUTHOR_FRAGMENT,
@@ -31,67 +70,49 @@ describe('createFragmentCell', () => {
     })
 
     render(
-      // No useFragment hook registered, so the Cell falls back to reading
-      // data straight off the `author` prop
-      <GraphQLHooksProvider useQuery={null} useMutation={null}>
-        <TestCell
-          author={{ __typename: 'User', id: 1, fullName: 'Story Teller' }}
-        />
-      </GraphQLHooksProvider>,
+      <TestCell
+        author={{ __typename: 'User', id: 1, fullName: 'Story Teller' }}
+      />,
     )
 
     screen.getByText(/^By Story Teller$/)
   })
 
-  test('prefers complete data from the useFragment hook', () => {
+  test('prefers complete data from the cache', () => {
     const TestCell = createCell({
       FRAGMENT: AUTHOR_FRAGMENT,
       Success: ({ author }) => <>By {author.fullName}</>,
     })
 
-    const myUseFragmentHook = (options: FragmentHookOptions) => {
+    mockApolloUseFragment.mockImplementation((options) => {
       expect(options.fragmentName).toEqual('AuthorCell_author')
-      expect(options.from).toEqual({ __typename: 'User', id: 1 })
+      // `useFragment` identifies the object itself before passing it on to
+      // Apollo's `useFragment`
+      expect(options.from).toEqual('User:1')
 
       return {
         data: { fullName: 'Cache Dweller' },
         complete: true,
       }
-    }
+    })
 
-    render(
-      <GraphQLHooksProvider
-        useQuery={null}
-        useMutation={null}
-        useFragment={myUseFragmentHook}
-      >
-        <TestCell author={{ __typename: 'User', id: 1 }} />
-      </GraphQLHooksProvider>,
-    )
+    render(<TestCell author={{ __typename: 'User', id: 1 }} />)
 
     screen.getByText(/^By Cache Dweller$/)
   })
 
-  test('falls back to the data prop for incomplete useFragment reads', () => {
+  test('falls back to the data prop for incomplete cache reads', () => {
     const TestCell = createCell({
       FRAGMENT: AUTHOR_FRAGMENT,
       Success: ({ author }) => <>By {author.fullName}</>,
     })
 
-    const myUseFragmentHook = () => {
-      return { data: undefined, complete: false }
-    }
+    mockApolloUseFragment.mockReturnValue({ data: undefined, complete: false })
 
     render(
-      <GraphQLHooksProvider
-        useQuery={null}
-        useMutation={null}
-        useFragment={myUseFragmentHook}
-      >
-        <TestCell
-          author={{ __typename: 'User', id: 1, fullName: 'Ref Reader' }}
-        />
-      </GraphQLHooksProvider>,
+      <TestCell
+        author={{ __typename: 'User', id: 1, fullName: 'Ref Reader' }}
+      />,
     )
 
     screen.getByText(/^By Ref Reader$/)
@@ -108,9 +129,7 @@ describe('createFragmentCell', () => {
     })
 
     render(
-      <GraphQLHooksProvider useQuery={null} useMutation={null}>
-        <TestCell user={{ __typename: 'User', id: 1, bio: 'Writes things' }} />
-      </GraphQLHooksProvider>,
+      <TestCell user={{ __typename: 'User', id: 1, bio: 'Writes things' }} />,
     )
 
     screen.getByText(/^Writes things$/)
@@ -125,9 +144,7 @@ describe('createFragmentCell', () => {
     })
 
     render(
-      <GraphQLHooksProvider useQuery={null} useMutation={null}>
-        <TestCell author={{ __typename: 'User', id: 1, fullName: 'Nobody' }} />
-      </GraphQLHooksProvider>,
+      <TestCell author={{ __typename: 'User', id: 1, fullName: 'Nobody' }} />,
     )
 
     screen.getByText(/^Nothing to see$/)
@@ -143,11 +160,9 @@ describe('createFragmentCell', () => {
     })
 
     render(
-      <GraphQLHooksProvider useQuery={null} useMutation={null}>
-        <TestCell
-          author={{ __typename: 'User', id: 1, fullName: 'Original Name' }}
-        />
-      </GraphQLHooksProvider>,
+      <TestCell
+        author={{ __typename: 'User', id: 1, fullName: 'Original Name' }}
+      />,
     )
 
     screen.getByText(/^By Changed Name$/)
@@ -160,13 +175,9 @@ describe('createFragmentCell', () => {
       Success: ({ author }) => <>By {author.fullName}</>,
     })
 
-    render(
-      // A nullable field, or a partial error with `errorPolicy: 'all'`, can
-      // make the parent pass null here
-      <GraphQLHooksProvider useQuery={null} useMutation={null}>
-        <TestCell author={null} />
-      </GraphQLHooksProvider>,
-    )
+    // A nullable field, or a partial error with `errorPolicy: 'all'`, can
+    // make the parent pass null here
+    render(<TestCell author={null} />)
 
     screen.getByText(/^No author$/)
   })
@@ -177,11 +188,7 @@ describe('createFragmentCell', () => {
       Success: ({ author }) => <>By {author?.fullName ?? 'unknown'}</>,
     })
 
-    render(
-      <GraphQLHooksProvider useQuery={null} useMutation={null}>
-        <TestCell author={null} />
-      </GraphQLHooksProvider>,
-    )
+    render(<TestCell author={null} />)
 
     screen.getByText(/^By unknown$/)
   })
@@ -201,11 +208,7 @@ describe('createFragmentCell', () => {
 
     try {
       expect(() => {
-        render(
-          <GraphQLHooksProvider useQuery={null} useMutation={null}>
-            <TestCell />
-          </GraphQLHooksProvider>,
-        )
+        render(<TestCell />)
       }).toThrow(/`author` prop/)
     } finally {
       consoleErrorSpy.mockRestore()
@@ -220,15 +223,11 @@ describe('createFragmentCell', () => {
       Success: ({ author }) => <>By {author.fullName}</>,
     })
 
-    const myUseQueryHook = () => {
+    mockUseQuery.mockImplementation(() => {
       return { data: { author: { fullName: 'Query Result' } } }
-    }
+    })
 
-    render(
-      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
-        <TestCell />
-      </GraphQLHooksProvider>,
-    )
+    render(<TestCell />)
 
     screen.getByText(/^By Query Result$/)
   })

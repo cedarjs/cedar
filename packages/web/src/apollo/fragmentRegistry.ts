@@ -5,10 +5,25 @@ import type { FragmentRegistryAPI } from '@apollo/client/cache/index.js'
 import { getFragmentDefinitions } from '@apollo/client/utilities/utilities.cjs'
 import type { DocumentNode } from 'graphql'
 
-import type {
-  FragmentHookOptions,
-  FragmentHookResult,
-} from '../components/GraphQLHooksProvider.js'
+export interface FragmentHookOptions {
+  fragment: DocumentNode
+  fragmentName?: string
+  /**
+   * The object to read the fragment data for. Usually a cache reference like
+   * `{ __typename: 'User', id: 1 }`, but any object that Apollo Client can
+   * identify works.
+   */
+  from: Record<string, unknown>
+}
+
+export interface FragmentHookResult<TData = any> {
+  /**
+   * The fragment data read from Apollo Client's cache, or `undefined` if the
+   * cache doesn't (yet) contain complete data for the fragment.
+   */
+  data: TData | undefined
+  complete: boolean
+}
 
 export type FragmentIdentifier = string | number
 
@@ -71,19 +86,19 @@ const useRegisteredFragmentHook = <TData = any>(
 const UNIDENTIFIABLE_FRAGMENT_REF = 'CedarUnidentifiableFragmentRef:_'
 
 /**
- * Adapts Apollo's `useFragment` to the client-agnostic fragment hook shape
- * used by fragment Cells (see `GraphQLHooksProvider`). Incomplete reads
- * surface `data: undefined` so that fragment Cells fall back to the data
- * snapshot passed via their data prop.
+ * Read fragment data from Apollo Client's cache without firing a network
+ * request. Used by fragment Cells (Cells that export `FRAGMENT` instead of
+ * `QUERY`). Incomplete reads surface `data: undefined` so that fragment Cells
+ * fall back to the data snapshot passed via their data prop.
  */
-export function useCellFragment<TData = any>(
+export function useFragment<TData = any>(
   options: FragmentHookOptions,
 ): FragmentHookResult<TData> {
   const client = apolloClient.useApolloClient()
   const { from, ...restOptions } = options
 
-  // The client-agnostic fragment hook options type `from` as a plain object,
-  // which is what Apollo's `StoreObject` is – but `StoreObject` types
+  // `FragmentHookOptions` types `from` as a plain object, which is what
+  // Apollo's `StoreObject` is – but `StoreObject` types
   // `__typename` as `string | undefined`, which `unknown` isn't assignable to
   const cacheId = client.cache.identify(from as apolloClient.StoreObject)
 
