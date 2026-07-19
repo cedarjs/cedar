@@ -23,9 +23,7 @@ const App = ({ children }: AppProps) => (
   <FatalErrorBoundary page={FatalErrorPage}>
     <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
       <AuthProvider>
-        <CedarApolloProvider useAuth={useAuth}>
-          {children}
-        </CedarApolloProvider>
+        <CedarApolloProvider useAuth={useAuth}>{children}</CedarApolloProvider>
       </AuthProvider>
     </RedwoodProvider>
   </FatalErrorBoundary>
