@@ -25,9 +25,13 @@ import {
   applyGraphqlOptionsExtract,
 } from './api-graphql-transforms.js'
 import { applyAutoImports } from './auto-import.js'
+import { applyDirectoryNamedImport } from './directory-named-import.js'
 import { applyOtelWrapping } from './esbuild-plugin-cedar-otel-wrapping.js'
 import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
+import { applyEsmExtensions } from './esm-extensions.js'
+import { applyImportDir } from './import-dir.js'
 import { applySrcAlias } from './src-alias.js'
+import { applyTsconfigPaths } from './tsconfig-paths.js'
 
 export const cedarApiGraphqlPlugin = {
   name: 'cedar-api-graphql',
@@ -49,6 +53,20 @@ export const cedarApiGraphqlPlugin = {
         ),
       )
 
+      // Rewrite bare specifiers that match a user-defined tsconfig.json
+      // `paths` alias to relative paths. Runs before applyDirectoryNamedImport
+      // since a resolved alias can itself point at a directory that needs
+      // directory-named-import resolution.
+      fileContents = applyTsconfigPaths(
+        fileContents,
+        args.path,
+        getPaths().api.base,
+      )
+
+      // Rewrite relative directory imports (e.g. `./Button`) to their index
+      // or directory-named module file.
+      fileContents = applyDirectoryNamedImport(fileContents, args.path)
+
       // Apply graphql-specific string transforms on the raw TypeScript BEFORE
       // Babel CJS compilation. TypeScript always uses ESM syntax, so the ESM
       // patterns in applyGraphqlOptionsExtract and applyGqlormInject match here.
@@ -66,6 +84,12 @@ export const cedarApiGraphqlPlugin = {
       // Inject auto-imports for gql and context
       fileContents = applyAutoImports(fileContents)
 
+      // Expand glob imports (e.g. `import x from 'src/services/**/*.ts'`)
+      // before Babel runs.  The Babel import-dir plugin is disabled for these
+      // builds (forVite: true); applyImportDir is the esbuild equivalent.
+      fileContents =
+        applyImportDir(fileContents, args.path)?.code ?? fileContents
+
       const transformedCode = await transformWithBabel(
         fileContents,
         args.path,
@@ -80,6 +104,15 @@ export const cedarApiGraphqlPlugin = {
       }
 
       let code = transformedCode.code
+
+      // For ESM projects, append .js to extensionless relative imports so
+      // Node's ESM resolver can find them at runtime. applyImportDir expands
+      // glob imports (e.g. `src/directives/**/*.ts`) into individual bare
+      // specifiers without extensions; without this step those imports fail
+      // at startup with ERR_MODULE_NOT_FOUND.
+      if (projectSideIsEsm('api')) {
+        code = applyEsmExtensions(code, args.path)
+      }
 
       // Apply OTel wrapping and the handler ALS wrapping safeguard, replacing
       // the Babel plugins for these builds.

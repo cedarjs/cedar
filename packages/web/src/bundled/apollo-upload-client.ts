@@ -1,3 +1,3 @@
-import createUploadLink from 'apollo-upload-client/createUploadLink.mjs'
+import UploadHttpLink from 'apollo-upload-client/UploadHttpLink.mjs'
 
-export { createUploadLink }
+export { UploadHttpLink }

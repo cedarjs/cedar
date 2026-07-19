@@ -40,11 +40,11 @@
   },
   "dependencies": {
     "@cedarjs/api": "workspace:*",
-    "@supabase/ssr": "0.12.0",
+    "@supabase/ssr": "0.12.3",
     "jsonwebtoken": "9.0.3"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.4",
+    "@arethetypeswrong/cli": "0.18.5",
     "@cedarjs/framework-tools": "workspace:*",
     "@types/aws-lambda": "8.10.162",
     "@types/jsonwebtoken": "9.0.10",

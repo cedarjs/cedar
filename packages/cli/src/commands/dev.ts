@@ -57,6 +57,12 @@ export const builder = (yargs: Argv) => {
         'Use the unified Vite dev server that handles both web and API in a ' +
         'single process (experimental).',
     })
+    .option('nodeArgs', {
+      type: 'string',
+      description:
+        'CLI args to pass to the node process running the web dev server, for ' +
+        'example: `--node-args="--inspect --max-old-space-size=8192"`.',
+    })
     .middleware(() => {
       const check = checkNodeVersion()
 

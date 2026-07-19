@@ -1,13 +1,14 @@
 import React, { Suspense } from 'react'
 
-import type { OperationVariables, QueryReference } from '@apollo/client'
-import { useApolloClient } from '@apollo/client/react/hooks/hooks.cjs'
+import type { OperationVariables } from '@apollo/client'
+import { CombinedGraphQLErrors } from '@apollo/client'
+import type { QueryRef } from '@apollo/client/react'
+import {
+  useApolloClient,
+  useBackgroundQuery,
+  useReadQuery,
+} from '@apollo/client/react'
 
-import { useBackgroundQuery, useReadQuery } from '../GraphQLHooksProvider.js'
-
-/**
- * This is part of how we let users swap out their GraphQL client while staying compatible with Cells.
- */
 import type { FallbackProps } from './CellErrorBoundary.js'
 import { CellErrorBoundary } from './CellErrorBoundary.js'
 import type {
@@ -52,9 +53,26 @@ export function createSuspendingCell<
     Success,
     displayName = 'Cell',
   } = createCellProps
+
+  if (!QUERY) {
+    throw new Error(
+      `Can't create a Cell (${displayName}) without a QUERY or FRAGMENT export`,
+    )
+  }
+
+  // Assigning to a `const` here (as opposed to using the destructured
+  // variable directly) makes the `!QUERY` narrowing above hold inside the
+  // component below
+  const cellQuery = QUERY
   function SuspendingSuccess(props: SuspendingSuccessProps) {
     const { queryRef, suspenseQueryResult, userProps } = props
-    const { data, networkStatus } = useReadQuery<DataObject>(queryRef)
+    // The 'complete' | 'streaming' states both type `data` as `DataObject`;
+    // the Cell suspends until data is available, so we never render with
+    // partial or missing data
+    const { data, networkStatus } = useReadQuery<
+      DataObject,
+      'complete' | 'streaming'
+    >(queryRef)
     const afterQueryData = afterQuery(data)
 
     const queryResultWithNetworkStatus: SuspenseCellQueryResult = {
@@ -90,7 +108,8 @@ export function createSuspendingCell<
      */
     const { children: _, ...variables } = props
     const options = beforeQuery(variables)
-    const query = typeof QUERY === 'function' ? QUERY(options) : QUERY
+    const query =
+      typeof cellQuery === 'function' ? cellQuery(options) : cellQuery
     const [queryRef, other] = useBackgroundQuery(query, options)
 
     const client = useApolloClient()
@@ -108,7 +127,9 @@ export function createSuspendingCell<
       if (!Failure) {
         // So that it bubbles up to the nearest error boundary
         if (error) {
-          throw error
+          // Apollo Client types errors as `ErrorLike`, but at runtime they're
+          // `Error` instances
+          throw error instanceof Error ? error : new Error(error.message)
         }
         throw new Error('Unreachable code: FailureComponent without a Failure')
       }
@@ -124,7 +145,11 @@ export function createSuspendingCell<
       return (
         <Failure
           error={error}
-          errorCode={error?.graphQLErrors?.[0]?.extensions?.['code'] as string}
+          errorCode={
+            CombinedGraphQLErrors.is(error)
+              ? (error.errors[0]?.extensions?.['code'] as string)
+              : undefined
+          }
           queryResult={queryResultWithErrorReset}
         />
       )
@@ -154,7 +179,7 @@ export function createSuspendingCell<
         {wrapInSuspenseIfLoadingPresent(
           <SuspendingSuccess
             userProps={props}
-            queryRef={queryRef as QueryReference<DataObject>}
+            queryRef={queryRef as QueryRef<DataObject>}
             suspenseQueryResult={suspenseQueryResult}
           />,
           Loading,

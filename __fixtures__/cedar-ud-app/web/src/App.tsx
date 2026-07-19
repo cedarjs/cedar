@@ -1,5 +1,5 @@
 import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'
-import { RedwoodApolloProvider } from '@cedarjs/web/apollo'
+import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 import FatalErrorPage from 'src/pages/FatalErrorPage'
 import Routes from 'src/Routes'
@@ -7,9 +7,9 @@ import Routes from 'src/Routes'
 const App = ({ children }: { children?: React.ReactNode }) => (
   <FatalErrorBoundary page={FatalErrorPage}>
     <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
-      <RedwoodApolloProvider>
+      <CedarApolloProvider>
         {children ? children : <Routes />}
-      </RedwoodApolloProvider>
+      </CedarApolloProvider>
     </RedwoodProvider>
   </FatalErrorBoundary>
 )

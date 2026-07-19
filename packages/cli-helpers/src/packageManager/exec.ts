@@ -137,15 +137,32 @@ export function runBinSync(
   return execa.sync(pm, [bin, ...args], options)
 }
 
-// `runBinSync` doesn't work for transitive dependencies because it uses
-// `yarn <bin>` for yarn, and yarn requires the bin to be a direct dependency of
-// the project. Cedar apps get some dependencies, like Prisma, as a transitive
-// dependency via the framework, so `yarn prisma` wouldn't work.
+// `runBin`/`runBinSync` don't work for transitive dependencies because they
+// use `yarn <bin>` for yarn, and yarn requires the bin to be a direct
+// dependency of the project. Cedar apps get some dependencies, like Prisma,
+// as a transitive dependency via the framework, so `yarn prisma` wouldn't
+// work.
 // `npx` works also for transitive dependencies (or it'll download the
 // dependency if it can't find it, which is the case for Yarn PnP). `npx`
 // however verifies the `devEngines.packageManager` field, which we add for
 // pnpm. So we can't use `npx` for all package managers we support. pnpm does
 // however support `pnpm exec` also for transitive dependencies, so we use that
+export function runTransitiveBin(
+  bin: string,
+  args: string[] = [],
+  options?: ExecaOptions,
+) {
+  const pm = getPackageManager()
+
+  if (pm === 'pnpm') {
+    return execa(pm, ['exec', bin, ...args], options)
+  }
+
+  // npm and yarn
+  return execa('npx', [bin, ...args], options)
+}
+
+/** Synchronous variant of {@link runTransitiveBin} */
 export function runTransitiveBinSync(
   bin: string,
   args: string[] = [],

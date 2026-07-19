@@ -1,0 +1,18 @@
+import * as Cell from './${name}.js'
+import type { ${fragmentType} } from 'types/graphql'
+
+type SuccessType = typeof Cell.Success
+
+export * from './${name}.js'
+
+/**
+ * ${fragmentPropName} is the slice of a parent Cell's query result that
+ * matches this Cell's FRAGMENT. The parent spreads the fragment in its QUERY
+ * and passes the fetched data object down, e.g.
+ * <Cell ${fragmentPropName}={data.someField} />
+ */
+type FragmentCellInputs = { ${fragmentPropName}: ${fragmentType} } & Record<string, unknown>
+
+export default function (props: FragmentCellInputs): ReturnType<SuccessType>
+
+//# sourceMappingURL=index.d.ts.map

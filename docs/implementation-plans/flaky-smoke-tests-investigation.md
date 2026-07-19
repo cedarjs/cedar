@@ -992,3 +992,339 @@ harness, not a code bug. For long-term hardening:
    ```
 2. **Increase the hook timeout** from the default 10s to 30s to account for
    slow Vite server shutdown on resource-constrained CI runners.
+
+---
+
+## Update 2026-07-17 — Open-PR + run-history survey: flakiest job identified
+
+### Method
+
+Surveyed all 10 open PRs targeting `main` plus the last ~40 `ci.yml` runs
+(which cover recently merged branches). Each failing job was classified as
+FLAKY (matching a documented signature) or REAL (genuine breakage) by reading
+the failed-step logs, so that real regressions did not skew the flakiness tally.
+
+### Flakiest job: `Smoke tests ESM / windows-latest`
+
+The Windows ESM smoke-test job is the single job that fails most often purely
+because it is flaky — 3 flaky failures in the sample, and **every one of its
+failures was flaky, not a real regression**:
+
+| Branch                                | Signature                                          |
+| ------------------------------------- | -------------------------------------------------- |
+| `tobbe-fix-gql-opts`                  | V8 Maglev crash / `ERR_CONNECTION_REFUSED` pattern |
+| `renovate/eslint-monorepo`            | Builds fine, then bare `exit code 1` mid-setup     |
+| `renovate/eslint-monorepo` (PR #2086) | Exit-127 in tarsync `buildTarballs`                |
+
+None of those diffs (a GraphQL sourcemap fix, an eslint bump) can plausibly
+affect a Windows smoke test — the hallmark of environmental flake.
+
+### Windows is the flaky surface
+
+Every genuinely flaky failure in the sample was on Windows:
+
+| Normalized job                | Flaky failures | Signature                    |
+| ----------------------------- | -------------- | ---------------------------- |
+| Smoke tests ESM (windows)     | 3              | V8 Maglev / exit-127         |
+| Build, lint, test (windows)   | 2              | All suites pass, then exit 1 |
+| RSC Smoke tests (windows)     | 1–2            | prisma-generate setup crash  |
+| Smoke tests (windows)         | 1              | V8 Maglev / dbAuth-secret    |
+| Background jobs E2E (windows) | 1              | EPERM rename race            |
+
+Ubuntu smoke/E2E jobs appear in raw counts only because they ride along on the
+two `renovate/react-monorepo` real-failure runs (see below).
+
+### Ruled out as REAL (not flaky)
+
+The bulk of failing jobs across open PRs are genuine breakage, excluded from the
+flakiness tally: #246 (React major bump — one `TS2322` in `@cedarjs/forms`
+cascades to ~20 jobs), #2090 (`vite import-dir` plugin fails to transform the
+`../directives/**/*.{js,ts}` glob, so the API server imports a literal glob path
+and never boots — all 8 smoke/SSR/E2E failures share this one cause), #1855
+(apollo ESM subpath breakage), #1942 (uncommitted `yarn.lock` → immutable-install
+rejection), #1737 (Node 26 `better-sqlite3` node-gyp `distutils` removal), #1830
+(prettier), #1780 (real `dbAuth.mockListr` unit-test failure).
+
+### New candidate signatures (see below)
+
+Two Windows environmental flakes surfaced that do not match existing signatures
+A–E and are documented as new entries: an EPERM rename race and a
+`prisma/config` module-resolution failure.
+
+---
+
+## Update 2026-07-17 — New signature: Windows EPERM rename of `package.json.bak`
+
+### Evidence
+
+From PR #2093 (`fix(deps): update @listr2/prompt-adapter-enquirer`, Background
+jobs E2E on Windows):
+
+```
+Error: EPERM: operation not permitted, rename
+'packages\api-server\package.json.bak' -> 'package.json'
+```
+
+The error fires during `generateTypesCjs`, failing the
+`@cedarjs/api-server:build` task (`✖ ... Cache Miss`, `1 Failed Tasks`).
+
+### Assessment
+
+The build uses a package.json-swap trick (rename `package.json` to
+`package.json.bak`, write a modified `package.json`, then rename back). On
+Windows, `rename()` fails with `EPERM` when another handle holds the target
+file open — an antivirus scan, a lingering `node` process, or a filesystem
+indexer. This is a Windows file-lock race, not a code bug: the listr2 dependency
+bump cannot affect the api-server build. Classified flaky (environmental).
+
+**Possible mitigation:** retry the rename with a short backoff, or use a
+copy-then-replace strategy that tolerates a transiently locked target.
+
+---
+
+## Update 2026-07-17 — New signature: `Cannot find module 'prisma/config'` in RSC Windows setup
+
+### Evidence
+
+From PR #2086 (`chore(deps): update eslint monorepo`, RSC Smoke tests on
+Windows):
+
+```
+Cannot find module 'prisma/config'
+```
+
+Thrown while loading `prisma.config.ts`, causing
+`prisma generate --config=...` to exit with code 1 during test-project setup.
+
+### Assessment
+
+The failure is in Prisma config module resolution during RSC project
+scaffolding, unrelated to the eslint bump. Likely a resolution race or a
+partially-installed `prisma` package on the Windows runner (the `prisma/config`
+subpath export not yet linked when `prisma generate` runs). A re-run typically
+clears it. Classified flaky (environmental); needs more data points to confirm
+whether it is timing-dependent or a genuine `prisma` version/export mismatch on
+Windows.
+
+---
+
+## Update 2026-07-17 — Aggregate flakiness stats: last 100 merged PRs
+
+### Method
+
+Sampled the **last 100 PRs merged into `main`** (95 unique head branches). For
+each branch, collected every failed `ci.yml` run (182 failed runs total), then
+extracted and log-classified **every failed job** (621 jobs, after excluding the
+`✅ CI Status Check`, `🔍 Detect changes`, and `nx run-many` aggregate rollups).
+Each job was labelled FLAKY (matched a known signature A–G below) or REAL
+(genuine breakage — a real test/type/build error, a lint failure, or the
+branch's own feature breaking). Because these branches all eventually merged
+green, FLAKY here means a failure the branch's diff cannot plausibly have
+caused; REAL captures the early-commit failures that were later fixed.
+
+### Headline numbers
+
+| Metric                                | Value             |
+| ------------------------------------- | ----------------- |
+| Merged PRs sampled                    | 100 (95 branches) |
+| Failed CI runs on those branches      | 182               |
+| Failed jobs classified                | 621               |
+| **Flaky failures**                    | **172 (28%)**     |
+| Real failures                         | 449 (72%)         |
+| Merged branches with ≥1 flaky failure | **40 / 95 (42%)** |
+
+Flaky failures by OS: **Windows 115 (67%)**, Ubuntu 31 (18%), OS-agnostic
+(Universal Deploy / E2E-node) 26 (15%).
+
+### Flakiest jobs (ranked by flaky-failure count)
+
+| Job                             | Flaky | Total fails | Flaky rate |
+| ------------------------------- | ----- | ----------- | ---------- |
+| Smoke tests React 18 (windows)  | 29    | 33          | 88%        |
+| Universal Deploy tests (ubuntu) | 27    | 43          | 63%        |
+| Smoke tests (windows)           | 25    | 26          | **96%**    |
+| Smoke tests ESM (windows)       | 18    | 22          | 82%        |
+| Fragments Smoke tests (windows) | 14    | 19          | 74%        |
+| RSC Smoke tests (windows)       | 14    | 17          | 82%        |
+| E2E Node self-host (ubuntu)     | 10    | 22          | 45%        |
+| Background jobs E2E (windows)   | 9     | 9           | **100%**   |
+| CLI smoke tests (windows)       | 3     | 5           | 60%        |
+| Smoke tests (ubuntu)            | 5     | 22          | 23%        |
+
+Jobs that were **0% flaky** (every failure was real): Build/lint/test (ubuntu)
+0/67, Check formatting (prettier) 0/39, Tutorial E2E 0/33, RSC Smoke (ubuntu)
+0/20, E2E Vercel deploy 0/14, E2E Netlify deploy 0/14, CLI smoke (ubuntu) 0/14,
+Server tests, Create Cedar App, constraints check.
+
+### Flaky failures by signature
+
+| Sig   | Description                                                                                | Count | % of flaky |
+| ----- | ------------------------------------------------------------------------------------------ | ----- | ---------- |
+| **A** | V8 Maglev crash `3221226505` / `ERR_CONNECTION_REFUSED` / webServer timeout (Windows)      | 90    | **52%**    |
+| **D** | UD & E2E-node esbuild `"service is no longer running"` / `afterEach` hook timeout (Ubuntu) | 32    | 19%        |
+| **B** | test-project setup: "Generating dbAuth secret" + `yarn.cmd` exit 1 / lockfile              | 18    | 10%        |
+| **C** | Windows yarn/tarsync `exit 127` (Resolution step / `buildTarballs`)                        | 15    | 9%         |
+| **E** | Storybook `exit 1` (Vite 7 incompat)                                                       | 9     | 5%         |
+| **G** | `Cannot find module 'prisma/config'` (RSC Windows)                                         | 6     | 3%         |
+| **F** | Windows `EPERM rename package.json.bak`                                                    | 2     | 1%         |
+
+### Takeaways
+
+1. **Windows smoke tests are the dominant flaky surface.** The top flaky jobs
+   (except Universal Deploy) are all Windows `cedar dev`/`serve` smoke suites,
+   and signature A (the V8 Maglev JIT bug, nodejs/node#62260) alone accounts for
+   **52% of all flakiness**. `Smoke tests (windows)` failed flaky 96% of the
+   time; `Background jobs E2E (windows)` 100%.
+2. **`Smoke tests React 18 (windows)` is the single flakiest job by volume** (29
+   flaky failures). The larger sample promotes it above `Smoke tests ESM
+(windows)` from the 2026-07-17 single-snapshot survey — but all four Windows
+   smoke variants (React 18, plain, ESM, Fragments) are effectively one problem.
+3. **The second cluster is Ubuntu esbuild deaths (signature D, 19%)** — Universal
+   Deploy tests (27 flaky, the biggest non-Windows source) and E2E-node
+   self-host. Same root family as the `afterEach`/esbuild-service issue in the
+   2026-06-26 UD entry.
+4. **Highest-ROI mitigation:** pass `--no-maglev` to the Windows smoke-test
+   `webServer` commands — it would remove ~52% of all observed flakiness in one
+   change.
+
+### Caveats
+
+- Classification is signature-based. A handful of environmental infra failures
+  (Neon `P1001` unreachable, canary-registry `ETARGET` / no-candidates, Netlify
+  "configure site") do not match signatures A–G and were counted **REAL**, so
+  the true flaky share is marginally under-counted.
+- Refactor branches carrying genuine TS-error build cascades (a single build
+  break failing all ~18–64 downstream jobs) correctly land in REAL — this is why
+  `Build, lint, test (ubuntu)` shows 0% flaky despite 67 failures.
+
+---
+
+## Update 2026-07-18 — Applied mitigation: `--node-args` flag + `--no-maglev` from Windows CI
+
+### What
+
+Signature A (the V8 Maglev JIT crash, nodejs/node#62260) is 52% of all observed
+flakiness. The fix is to run the affected node processes with `--no-maglev`,
+which disables only the Maglev tier and eliminates the crash. `--no-maglev` is a
+V8 flag, so it **cannot** be set via `NODE_OPTIONS` (node rejects V8 flags
+there) — it must be passed directly to `node` on the command line.
+
+The crashing processes are the web dev server that `yarn cedar dev` spawns via
+`concurrently` — `cedar-vite-dev` (fallback mode) or `cedar-unified-dev` (unified
+mode). Those bins are normally launched as package-manager shims, and a node flag
+can't be forwarded through the shim, so the flag has to be on the command line of
+the node process that actually runs the bin.
+
+### How (chosen approach)
+
+Two parts:
+
+1. **A generic `cedar dev --node-args="..."` flag** that forwards arbitrary CLI
+   args to the node process running the web/unified dev server (e.g. `--inspect`,
+   `--max-old-space-size=8192`, or `--no-maglev`).
+2. **CI passes `--node-args="--no-maglev"` on Windows** — the way an end user
+   would — from the dev-type smoke-test Playwright configs.
+
+`--no-maglev` is deliberately **not** hardcoded in the framework. Routing it
+through the public flag means CI dogfoods the real mechanism end-to-end, and the
+code path stays exercised even after Node fixes the Maglev bug and we drop the
+flag from CI.
+
+**Single launch path, no fallback.** `formatViteDevBinCommand(binName,
+extraNodeArgs)` always builds an explicit `<launcher> <flags> "<binPath>"`
+command (never the bin shim) and resolves the bin path via
+`require.resolve('@cedarjs/vite/package.json')` (the `./bins/*.mjs` subpaths
+aren't in the package's `exports` map, but `./package.json` is) joined with
+`bins/<binName>.mjs`. `@cedarjs/vite` is a direct dependency of the CLI, so if
+resolution fails the install is broken and dev can't run — it **throws** with a
+clear message rather than silently degrading to a shim (which, on Windows, would
+silently drop the Maglev mitigation and reintroduce the flakiness). One path,
+continuously exercised on every `cedar dev`, so bugs surface immediately.
+
+**No `cross-env`.** `NODE_ENV=development` is set via the `concurrently` job's
+`env` (as the api and unified jobs already did), so the command is just
+`<launcher> ... "<binPath>"`. Dropping `cross-env` removes a whole node process
+from the chain — the explicit launch is now **leaner than the old bin-shim
+command** (`yarn node "<path>"` = one yarn, vs the shim's `yarn cross-env … bin`
+= yarn + a cross-env node process).
+
+**Package-manager / Yarn PnP support.** The launcher is `yarn node` under Yarn
+and bare `node` under npm/pnpm. This matters for **Yarn PnP**: there is no
+`node_modules`, so the resolved bin path is a virtual path inside a Yarn cache
+zip, and only `yarn node` loads the PnP runtime needed to resolve the bin's
+imports and read that path. The path is resolved inside the CLI process, which
+`yarn cedar dev` already launched with PnP active, so resolver and launcher
+agree. Under the node-modules linker `yarn node` is just node-in-project; npm and
+pnpm always have a real `node_modules` tree (pnpm's store is native
+`node_modules`), so bare `node` is correct there.
+
+**Why one branch, no fallback** (debated at length): a two-branch "shim when no
+flags, explicit when flags" keeps the common path on the PM's shim, but the
+explicit path then only runs when someone passes `--node-args` — so it rots and
+its bugs surface late. One always-explicit path is continuously exercised (unit
+tests + Windows smoke CI), never rots, and — once `cross-env` is dropped — is
+also cheaper. A resolution fallback was rejected because a fallback that silently
+drops `--no-maglev` is worse than a loud failure.
+
+**Why not a bin-level re-exec guard** (the first thing tried): re-executing from
+inside the bin adds a second supervisor node process per dev/serve, hides the
+behaviour in a published bin, and creates a debugging footgun — with
+`NODE_OPTIONS=--inspect` (inherited), both the supervisor and the re-exec'd child
+try to bind the inspector port.
+
+### Changed files
+
+- `packages/cli/src/commands/dev.ts` — new `--node-args` option.
+- `packages/cli/src/commands/dev/devHandler.ts` — `formatViteDevBinCommand()`
+  (single explicit `node`/`yarn node` launch, `--node-args` passthrough, hard
+  error on resolution failure, no `cross-env`). The bin entry point is read from
+  `@cedarjs/vite`'s own `bin` field, so it covers `cedar-vite-dev`,
+  `cedar-unified-dev`, **and** `cedar-dev-fe` (streaming SSR, a compiled `dist/`
+  entry — previously a TODO). `NODE_ENV` moved to the web job's `env`.
+- `packages/cli/src/commands/dev/__tests__/dev.test.ts` — updated web/unified/
+  streaming/npm/pnpm assertions to the explicit-launch, no-`cross-env` shape;
+  added tests for `--node-args` forwarding (web + unified).
+- `tasks/smoke-tests/basePlaywright.config.mts` — `windowsNoMaglevDevArgs`
+  export (` --node-args="--no-maglev"` on Windows, else empty).
+- `tasks/smoke-tests/{dev,fragments-dev,rsc-dev,streaming-ssr-dev}/playwright.config.ts`
+  — append `windowsNoMaglevDevArgs` to the `cedar dev` webServer command.
+
+### Verified
+
+- `require.resolve('@cedarjs/vite/package.json')` resolves from the CLI
+  (`@cedarjs/vite` is a runtime `dependency`); the bin subpath does _not_ resolve
+  (`ERR_PACKAGE_PATH_NOT_EXPORTED`), confirming the package.json-based derivation
+  is necessary. Node follows the symlink to the real path, so it works under the
+  hoisted (npm/yarn) and symlinked (pnpm) layouts alike.
+- `yarn node` exists in Yarn 4 (Cedar pins `yarn@4.14.1`) and forwards args to
+  node (`yarn node --help` prints node's help).
+- `eslint` + `prettier --check` clean; `tsc` reports no new errors in the changed
+  files (the two `dev.ts` `TS2578` "unused @ts-expect-error" diagnostics
+  pre-date this change); all 15 `dev.test.ts` unit tests pass (covering yarn, npm
+  and pnpm launch shapes). The unit-test job also runs on `windows-latest`.
+
+### Not yet validated
+
+Verified structurally (command shape, resolution, PM handling, tests) but **not**
+yet run against a real Windows CI runner or a Yarn-PnP project — those need a
+branch + CI run.
+
+### Still to wire (follow-ups)
+
+Covers all three `cedar dev` web crashers (`cedar-vite-dev`,
+`cedar-unified-dev`, and `cedar-dev-fe` streaming SSR). The remaining
+signature-A surfaces use different entry points and a more tangled launch path:
+
+- `cedar serve` web server — `cedar-serve-fe` (`packages/vite/dist/runFeServer.js`)
+  and the `@cedarjs/web-server` bins (`cedar-web-server` / `rw-web-server`,
+  `packages/web-server/dist/bin.js`); the `serve` command itself
+  (`packages/cli/src/commands/serve.ts`) also serves in-process via `srvx` /
+  `serveWebHandler`. Covers the `serve`, `fragments-serve`, `prerender`, `rsa`,
+  `rsc`, `streaming-ssr-prod` suites.
+- The api-server watch bins (`cedar-api-server-watch` / `cedarjs-api-server-watch`).
+- `cedar storybook` (signature is less clear there — Storybook also has the
+  Vite 7 incompat, signature E).
+
+Note: signature D (Ubuntu esbuild `"service is no longer running"` in UD /
+E2E-node tests) is **not** a Maglev crash and is unaffected by `--no-maglev` — it
+needs the separate `afterEach`/esbuild hardening from the 2026-06-26 UD entry.

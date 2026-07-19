@@ -64,9 +64,22 @@ export const getApiSideBabelPlugins = ({
     ...getCommonPlugins(),
     // Needed to support `/** @jsxImportSource custom-jsx-library */`
     // comments in JSX files
-    ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }],
-    ['@babel/plugin-transform-runtime', {}],
-    [
+    !forVite && ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }],
+    // For non-Vite consumers (Jest, registerApiSideBabelHook / Babel
+    // registerRequire paths such as data-migrate CJS and prerender CJS):
+    //   • alias config: rewrites `src/` and tsconfig paths to relative paths
+    //   • resolvePath: appends `.js`/`.jsx` to extensionless imports in ESM
+    //     projects so Node's module resolver can find them, and strips `.js`
+    //     suffixes in data-migrate / prerender contexts where the TypeScript
+    //     source is `.ts` but callers write `.js` import specifiers.
+    //
+    // For Vite / esbuild (forVite: true):
+    //   • alias handling: covered by cedar-api-src-redirect + vite-tsconfig-paths
+    //     (Vite) or applySrcAlias + applyTsconfigPaths (esbuild)
+    //   • extension rewriting: covered by applyEsmExtensions in
+    //     runCedarBabelTransformsPlugin (esbuild); Vite / Rollup resolve
+    //     extensions themselves during bundling
+    !forVite && [
       'babel-plugin-module-resolver',
       {
         alias: {
@@ -120,7 +133,9 @@ export const getApiSideBabelPlugins = ({
       },
       'rwjs-api-module-resolver',
     ],
-    [
+    // Vite/esbuild use cedarDirectoryNamedImportPlugin / applyDirectoryNamedImport
+    // instead of this babel plugin
+    !forVite && [
       pluginRedwoodDirectoryNamedImport,
       undefined,
       'rwjs-babel-directory-named-modules',
@@ -145,9 +160,15 @@ export const getApiSideBabelPlugins = ({
       },
       'rwjs-babel-auto-import',
     ],
-    // FIXME: `graphql-tag` is not working: https://github.com/redwoodjs/redwood/pull/3193
-    ['babel-plugin-graphql-tag', undefined, 'rwjs-babel-graphql-tag'],
-    [pluginRedwoodImportDir, {}, 'rwjs-babel-glob-import-dir'],
+    !forVite && [
+      'babel-plugin-graphql-tag',
+      undefined,
+      'rwjs-babel-graphql-tag',
+    ],
+    // For Vite builds, glob imports are handled by cedarImportDirPlugin (Vite)
+    // or applyImportDir (esbuild).  Keep the Babel plugin only for
+    // non-Vite consumers: Jest, console, and data-migrate.
+    !forVite && [pluginRedwoodImportDir, {}, 'rwjs-babel-glob-import-dir'],
   ]
 
   return plugins.filter(<T>(n: T | boolean): n is T => Boolean(n))
@@ -163,6 +184,7 @@ export const getApiSideBabelConfigPath = () => {
 }
 
 export const getApiSideBabelOverrides = ({
+  forVite = false,
   projectIsEsm = false,
   forJest = false,
 } = {}) => {
@@ -181,8 +203,9 @@ export const getApiSideBabelOverrides = ({
         ],
       ],
     },
-    // Add import names and paths to job definitions
-    {
+    // Add import names and paths to job definitions. Vite uses
+    // cedarjsJobPathInjectorPlugin instead.
+    !forVite && {
       // match */api/src/jobs/*.js|ts
       test: /.+api(?:[\\|/])src(?:[\\|/])jobs(?:[\\|/]).+.(?:js|ts)$/,
       plugins: [[pluginRedwoodJobPathInjector]],
@@ -192,13 +215,14 @@ export const getApiSideBabelOverrides = ({
 }
 
 export const getApiSideDefaultBabelConfig = ({
+  forVite = false,
   projectIsEsm = false,
   forJest = false,
 } = {}) => {
   return {
     presets: getApiSideBabelPresets(),
-    plugins: getApiSideBabelPlugins({ projectIsEsm }),
-    overrides: getApiSideBabelOverrides({ projectIsEsm, forJest }),
+    plugins: getApiSideBabelPlugins({ forVite, projectIsEsm }),
+    overrides: getApiSideBabelOverrides({ forVite, projectIsEsm, forJest }),
     extends: getApiSideBabelConfigPath(),
     babelrc: false,
     ignore: ['node_modules'],
@@ -231,8 +255,10 @@ export const transformWithBabel = async (
   filename: string,
   plugins: TransformOptions['plugins'],
   sourceMaps: TransformOptions['sourceMaps'] = 'inline',
+  forVite = false,
 ) => {
   const defaultOptions = getApiSideDefaultBabelConfig({
+    forVite,
     projectIsEsm: projectSideIsEsm('api'),
   })
 

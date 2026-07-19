@@ -1,16 +1,44 @@
-name: 🌲 Tutorial E2E
+name: 🧪 Consolidated Tests
+
+# Consolidates three small, historically stable Ubuntu suites (server tests,
+# the Ubuntu telemetry check, and the tutorial E2E) into a single job so the
+# ~3-4 minute setup cost (checkout, yarn install, framework build) is paid
+# once instead of three times, and so they occupy one runner queue slot
+# instead of three. The Windows telemetry check still runs in its own job via
+# telemetry-check.yml.
 
 on:
   workflow_call:
 
 jobs:
-  tutorial-e2e:
+  consolidated-tests:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
       - name: Set up job
         uses: ./.github/actions/set-up-job
+
+      - name: 🖥️ Server tests
+        run: yarn vitest run
+        working-directory: ./tasks/server-tests
+
+      # When releasing a new version of Cedar the telemetry checks would try
+      # to install @cedar/* package versions that aren't published yet, so
+      # they would always fail. That's why they're skipped on release
+      # branches.
+      - name: 📢 Listen for telemetry (CCA)
+        if: github.event_name == 'pull_request' || !startsWith(github.ref, 'refs/heads/release/')
+        run: node ./.github/actions/telemetry_check/check.mjs --mode cca
+        env:
+          REDWOOD_REDIRECT_TELEMETRY: 'http://127.0.0.1:48619' # Random port
+
+      - name: 📢 Listen for telemetry (CLI)
+        if: github.event_name == 'pull_request' || !startsWith(github.ref, 'refs/heads/release/')
+        run: node ./.github/actions/telemetry_check/check.mjs --mode cli
+        env:
+          REDWOOD_REDIRECT_TELEMETRY: 'http://127.0.0.1:48619' # Random port
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
 
       - name: 🌲 Install Cypress
         run: yarn cypress install

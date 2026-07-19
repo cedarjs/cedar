@@ -127,9 +127,13 @@ export const getWebSideBabelPlugins = (
       },
       'rwjs-web-auto-import',
     ],
-    ['babel-plugin-graphql-tag', undefined, 'rwjs-babel-graphql-tag'],
     // Prerender uses rollup-plugin-cedar-remove-dev-fatal-error-page
     // Vite uses        vite-plugin-cedar-remove-dev-fatal-error-page
+    !forVite && [
+      'babel-plugin-graphql-tag',
+      undefined,
+      'rwjs-babel-graphql-tag',
+    ],
     forJest &&
       process.env.NODE_ENV !== 'development' && [
         require('./plugins/babel-plugin-redwood-remove-dev-fatal-error-page')

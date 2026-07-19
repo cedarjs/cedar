@@ -110,6 +110,16 @@
         "default": "./dist/cjs/build/api.js"
       }
     },
+    "./dist/build/api.js": {
+      "import": {
+        "types": "./dist/build/api.d.ts",
+        "default": "./dist/build/api.js"
+      },
+      "require": {
+        "types": "./dist/cjs/build/api.d.ts",
+        "default": "./dist/cjs/build/api.js"
+      }
+    },
     "./dist/build/api-graphql-transforms.js": {
       "import": {
         "types": "./dist/build/api-graphql-transforms.d.ts",
@@ -204,6 +214,7 @@
     "fast-glob": "3.3.3",
     "graphql": "16.14.2",
     "kill-port": "1.6.1",
+    "magic-string": "0.30.21",
     "oxc-parser": "0.137.0",
     "prettier": "3.8.4",
     "rimraf": "6.1.3",
@@ -212,11 +223,13 @@
     "systeminformation": "5.31.7",
     "termi-link": "1.1.0",
     "ts-node": "10.9.2",
+    "tsconfig-paths": "4.2.0",
     "typescript": "5.9.3",
-    "vite": "7.3.5"
+    "vite": "7.3.5",
+    "vite-tsconfig-paths": "^6.1.1"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.4",
+    "@arethetypeswrong/cli": "0.18.5",
     "@cedarjs/framework-tools": "workspace:*",
     "concurrently": "9.2.1",
     "graphql-tag": "2.12.6",

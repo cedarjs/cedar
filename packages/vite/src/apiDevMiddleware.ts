@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import { glob } from 'node:fs/promises'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -5,7 +6,18 @@ import { pathToFileURL } from 'node:url'
 import ansis from 'ansis'
 import type { Handler } from 'aws-lambda'
 import { normalizePath } from 'vite'
-import type { ModuleNode, ViteDevServer } from 'vite'
+import type { ModuleNode, Plugin, ViteDevServer } from 'vite'
+import { gqlPlugin as gqlTagPlugin } from 'vite-plugin-graphql-tag'
+import tsPathsMod from 'vite-tsconfig-paths'
+
+// vite-tsconfig-paths is ESM-only. CJS builds double-wrap its default
+// export: tsconfigPaths.default is the module object, and
+// tsconfigPaths.default.default is the actual function. ESM gets the
+// function directly. The `||` chain resolves correctly for both.
+const tsconfigPaths =
+  // @ts-expect-error – .default only exists at runtime in CJS double-wrap
+  // interop
+  tsPathsMod.default?.default || tsPathsMod.default || tsPathsMod
 
 import { buildCedarContext, wrapLegacyHandler } from '@cedarjs/api/runtime'
 import type { CedarHandler, LegacyHandler } from '@cedarjs/api/runtime'
@@ -20,8 +32,30 @@ import { applyGqlormInject } from '@cedarjs/internal/dist/build/api-graphql-tran
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
+import { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
+import { cedarDirectoryNamedImportPlugin } from './plugins/vite-plugin-cedar-directory-named-import.js'
 import { applyGraphqlOptionsExtract } from './plugins/vite-plugin-cedar-graphql-options-extract.js'
+import { cedarImportDirPlugin } from './plugins/vite-plugin-cedar-import-dir.js'
 import { applyOtelWrapping } from './plugins/vite-plugin-cedar-otel-wrapping.js'
+import { cedarjsJobPathInjectorPlugin } from './plugins/vite-plugin-cedarjs-job-path-injector.js'
+
+function resolveWithExtensions(id: string): string {
+  // A bare `fs.existsSync(id)` also returns true for directories (e.g. a
+  // directory-named-import target). Since this plugin's resolveId return
+  // short-circuits Vite's resolveId chain, that would incorrectly claim the
+  // bare directory path as fully resolved instead of letting a later plugin
+  // (e.g. one resolving directory-named imports) handle it.
+  if (fs.existsSync(id) && fs.statSync(id).isFile()) {
+    return id
+  }
+  for (const ext of ['.js', '.ts', '.jsx', '.tsx', '.mjs', '.mts']) {
+    const withExt = id + ext
+    if (fs.existsSync(withExt)) {
+      return withExt
+    }
+  }
+  return id
+}
 
 const LAMBDA_FUNCTIONS: Record<string, CedarHandler> = {}
 
@@ -168,6 +202,7 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
   const normalizedBase = normalizePath(cedarPaths.base)
 
   const babelPlugins = getApiSideBabelPlugins({
+    forVite: true,
     projectIsEsm: isEsm,
   })
 
@@ -192,6 +227,42 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
       alias: workspacePkgSourceMap,
     },
     plugins: [
+      // tsconfigPaths resolves user-defined tsconfig.json `paths` aliases; it
+      // replaces the Babel module-resolver's tsconfig-paths handling for dev.
+      tsconfigPaths(),
+      {
+        name: 'cedar-api-src-redirect',
+        enforce: 'pre',
+        resolveId(id: string, importer: string | undefined) {
+          // Normalize both sides: on Windows, cedarPaths.api.src can contain
+          // backslashes while Vite supplies forward-slash importer ids, so a
+          // raw startsWith would never match. The trailing separator guards
+          // against matching an adjacent directory (e.g. `api/src-extra`).
+          const normalizedImporter = importer && normalizePath(importer)
+          const normalizedApiSrc = normalizePath(cedarPaths.api.src)
+
+          if (!normalizedImporter?.startsWith(`${normalizedApiSrc}/`)) {
+            return null
+          }
+
+          if (id.startsWith('src/')) {
+            return resolveWithExtensions(
+              path.join(cedarPaths.api.src, id.slice(4)),
+            )
+          }
+
+          return null
+        },
+      },
+      cedarImportDirPlugin(),
+      cedarDirectoryNamedImportPlugin(),
+      cedarAutoImportsPlugin(),
+      cedarjsJobPathInjectorPlugin(),
+      (() => {
+        const p = gqlTagPlugin() as Plugin
+        p.enforce = 'post'
+        return p
+      })(),
       {
         name: 'cedar-api-babel-transform',
         enforce: 'pre',
@@ -218,7 +289,8 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
               normalizePath(id).endsWith('/graphql.ts') ||
               normalizePath(id).endsWith('/graphql.js')
             ) {
-              sourceCode = applyGraphqlOptionsExtract(sourceCode) ?? sourceCode
+              const extracted = applyGraphqlOptionsExtract(sourceCode)
+              sourceCode = extracted?.code ?? sourceCode
               sourceCode = applyGqlormInject(sourceCode, id) ?? sourceCode
             }
 
@@ -241,6 +313,7 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
               sourceCode,
               id,
               babelPlugins,
+              true,
               true,
             )
 

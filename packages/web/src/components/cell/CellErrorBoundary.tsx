@@ -2,10 +2,12 @@
 
 import React from 'react'
 
+import type { useQuery } from '@apollo/client/react'
+
 import type { CellFailureProps } from './cellTypes.js'
 
 export type FallbackProps = {
-  error: QueryOperationResult['error']
+  error: useQuery.Result['error']
   resetErrorBoundary: () => void
 }
 
@@ -20,7 +22,7 @@ export type CellErrorBoundaryProps = {
 
 interface ErrState {
   hasError: boolean
-  error?: QueryOperationResult['error']
+  error?: useQuery.Result['error']
 }
 
 export class CellErrorBoundary extends React.Component<

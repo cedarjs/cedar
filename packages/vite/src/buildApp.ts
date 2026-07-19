@@ -3,8 +3,9 @@ import path from 'node:path'
 
 import { catchAllEntry, getAllEntries } from '@universal-deploy/store'
 import { catchAll } from '@universal-deploy/vite'
-import type { EnvironmentOptions, PluginOption } from 'vite'
+import type { EnvironmentOptions, Plugin, PluginOption } from 'vite'
 import { createBuilder, normalizePath } from 'vite'
+import { gqlPlugin as gqlTagPlugin } from 'vite-plugin-graphql-tag'
 import tsPathsMod from 'vite-tsconfig-paths'
 
 // vite-tsconfig-paths is ESM-only. CJS builds double-wrap its default
@@ -20,18 +21,31 @@ import {
   getApiSideBabelPlugins,
   transformWithBabel,
 } from '@cedarjs/babel-config'
+import {
+  applyEsmExtensions,
+  applySrcAlias,
+} from '@cedarjs/internal/dist/build/api.js'
 import { findApiFiles } from '@cedarjs/internal/dist/files.js'
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
+import { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
+import { cedarDirectoryNamedImportPlugin } from './plugins/vite-plugin-cedar-directory-named-import.js'
 import { cedarGqlormInjectPlugin } from './plugins/vite-plugin-cedar-gqlorm-inject.js'
 import { cedarGraphqlOptionsExtractPlugin } from './plugins/vite-plugin-cedar-graphql-options-extract.js'
+import { cedarImportDirPlugin } from './plugins/vite-plugin-cedar-import-dir.js'
 import { cedarMockCellDataPlugin } from './plugins/vite-plugin-cedar-mock-cell-data.js'
 import { cedarOtelWrappingPlugin } from './plugins/vite-plugin-cedar-otel-wrapping.js'
+import { cedarjsJobPathInjectorPlugin } from './plugins/vite-plugin-cedarjs-job-path-injector.js'
 import { handlerAlsWrappingPlugin } from './plugins/vite-plugin-handler-als-wrapping.js'
 
 function resolveWithExtensions(id: string): string {
-  if (fs.existsSync(id)) {
+  // A bare `fs.existsSync(id)` also returns true for directories (e.g. a
+  // directory-named-import target). Since this plugin's resolveId return
+  // short-circuits Vite's resolveId chain, that would incorrectly claim the
+  // bare directory path as fully resolved instead of letting a later plugin
+  // (e.g. one resolving directory-named imports) handle it.
+  if (fs.existsSync(id) && fs.statSync(id).isFile()) {
     return id
   }
   for (const ext of ['.js', '.ts', '.jsx', '.tsx', '.mjs', '.mts']) {
@@ -147,6 +161,7 @@ export async function buildCedarApp({
 
   const babelPlugins = workspace.includes('api')
     ? getApiSideBabelPlugins({
+        forVite: true,
         projectIsEsm: projectSideIsEsm('api'),
       })
     : null
@@ -161,6 +176,12 @@ export async function buildCedarApp({
 
   const plugins: PluginOption[] = [
     tsconfigPaths(),
+    cedarAutoImportsPlugin(),
+    (() => {
+      const p = gqlTagPlugin() as Plugin
+      p.enforce = 'post'
+      return p
+    })(),
     // Suppress noisy warnings from third-party dependencies across all
     // environments by injecting onwarn into every environment's rollupOptions.
     {
@@ -325,7 +346,14 @@ export async function buildCedarApp({
       name: 'cedar-api-src-redirect',
       enforce: 'pre',
       resolveId(id: string, importer: string | undefined) {
-        if (!importer?.startsWith(cedarPaths.api.src)) {
+        // Normalize both sides: on Windows, cedarPaths.api.src can contain
+        // backslashes while Vite supplies forward-slash importer ids, so a
+        // raw startsWith would never match. The trailing separator guards
+        // against matching an adjacent directory (e.g. `api/src-extra`).
+        const normalizedImporter = importer && normalizePath(importer)
+        const normalizedApiSrc = normalizePath(cedarPaths.api.src)
+
+        if (!normalizedImporter?.startsWith(`${normalizedApiSrc}/`)) {
           return null
         }
 
@@ -343,7 +371,10 @@ export async function buildCedarApp({
   if (workspace.includes('api')) {
     plugins.push(cedarGraphqlOptionsExtractPlugin())
     plugins.push(cedarGqlormInjectPlugin())
+    plugins.push(cedarImportDirPlugin())
+    plugins.push(cedarDirectoryNamedImportPlugin())
     plugins.push(cedarOtelWrappingPlugin())
+    plugins.push(cedarjsJobPathInjectorPlugin())
     plugins.push(
       handlerAlsWrappingPlugin({ projectIsEsm: projectSideIsEsm('api') }),
     )
@@ -373,11 +404,38 @@ export async function buildCedarApp({
           id,
           babelPlugins,
           true,
+          true,
         )
 
         if (transformedCode?.code) {
+          // babel-plugin-module-resolver is excluded for forVite:true builds
+          // (it is gated on !forVite in getApiSideBabelPlugins).  That plugin
+          // previously rewrote `src/` bare specifiers to relative paths so
+          // that Rollup's `external` function (which marks anything that is
+          // not relative or absolute as external) would not capture them.
+          // Apply the same rewrite here so that `src/lib/logger` → `../../lib/logger`
+          // and the external function sees a relative path (starting with `.`).
+          const fromDirRelativeToApiSrc = path.relative(
+            cedarPaths.api.src,
+            path.dirname(id),
+          )
+          let outputCode = applySrcAlias(
+            transformedCode.code,
+            fromDirRelativeToApiSrc,
+          )
+
+          // For ESM projects, append .js/.jsx extensions to extensionless
+          // relative imports so Node's ESM resolver can find them at runtime.
+          // This is needed because cedarImportDirPlugin expands glob imports
+          // (e.g. `src/directives/**/*.{js,ts}`) into individual extensionless
+          // import statements, and Rollup with preserveModules:true preserves
+          // those specifiers as-is in the output.
+          if (projectSideIsEsm('api')) {
+            outputCode = applyEsmExtensions(outputCode, id)
+          }
+
           return {
-            code: transformedCode.code,
+            code: outputCode,
             map: transformedCode.map ?? null,
           }
         }
