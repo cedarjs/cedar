@@ -168,19 +168,19 @@ All this gets us closer to Cedar's goal of being able to deploy to a "generic co
 
 ## Client-side
 
-### RedwoodApolloProvider
+### CedarApolloProvider
 
-By default, Cedar Apps come ready-to-query with the `RedwoodApolloProvider`. As you can tell from the name, this Provider wraps [ApolloProvider](https://www.apollographql.com/docs/react/api/react/hooks/#the-apolloprovider-component). Omitting a few things, this is what you'll normally see in Cedar Apps:
+By default, Cedar Apps come ready-to-query with the `CedarApolloProvider`. As you can tell from the name, this Provider wraps [ApolloProvider](https://www.apollographql.com/docs/react/api/react/hooks/#the-apolloprovider-component). Omitting a few things, this is what you'll normally see in Cedar Apps:
 
 ```jsx title="web/src/App.js"
-import { RedwoodApolloProvider } from '@cedarjs/web/apollo'
+import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 // ...
 
 const App = () => (
-  <RedwoodApolloProvider>
+  <CedarApolloProvider>
     <Routes />
-  </RedwoodApolloProvider>
+  </CedarApolloProvider>
 )
 
 // ...
@@ -215,7 +215,7 @@ Note that you're free to use any of Apollo's other hooks, you'll just have to im
 
 ### Customizing the Apollo Client and Cache
 
-By default, `RedwoodApolloProvider` configures an `ApolloClient` instance with 1) a default instance of `InMemoryCache` to cache responses from the GraphQL API and 2) an `authMiddleware` to sign API requests for use with [Cedar's built-in auth](authentication.md). Beyond the `cache` and `link` params, which are used to set up that functionality, you can specify additional params to be passed to `ApolloClient` using the `graphQLClientConfig` prop. The full list of available configuration options for the client are [documented here on Apollo's site](https://www.apollographql.com/docs/react/api/core/ApolloClient/#options).
+By default, `CedarApolloProvider` configures an `ApolloClient` instance with 1) a default instance of `InMemoryCache` to cache responses from the GraphQL API and 2) an `authMiddleware` to sign API requests for use with [Cedar's built-in auth](authentication.md). Beyond the `cache` and `link` params, which are used to set up that functionality, you can specify additional params to be passed to `ApolloClient` using the `graphQLClientConfig` prop. The full list of available configuration options for the client are [documented here on Apollo's site](https://www.apollographql.com/docs/react/api/core/ApolloClient/#options).
 
 Depending on your use case, you may want to configure `InMemoryCache`. For example, you may need to specify a type policy to change the key by which a model is cached or to enable pagination on a query. [This article from Apollo](https://www.apollographql.com/docs/react/caching/cache-configuration/) explains in further detail why and how you might want to do this.
 
@@ -224,7 +224,7 @@ To configure the cache when it's created, use the `cacheConfig` property on `gra
 For example, if you have a query named `search` that supports [Apollo's offset pagination](https://www.apollographql.com/docs/react/pagination/core-api/), you could enable it by specifying:
 
 ```jsx
-<RedwoodApolloProvider graphQLClientConfig={{
+<CedarApolloProvider graphQLClientConfig={{
   cacheConfig: {
     typePolicies: {
       Query: {

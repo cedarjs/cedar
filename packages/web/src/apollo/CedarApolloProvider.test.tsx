@@ -5,11 +5,11 @@ import { useQuery } from '@apollo/client/react'
 import { render, screen, waitFor } from '@testing-library/react'
 import { vi, describe, test, expect } from 'vitest'
 
-import { RedwoodApolloProvider } from './index.js'
+import { CedarApolloProvider } from './CedarApolloProvider.js'
 
 globalThis.RWJS_API_GRAPHQL_URL = 'https://example.com/graphql'
 
-describe('RedwoodApolloProvider smoke test', () => {
+describe('CedarApolloProvider smoke test', () => {
   test('renders children and runs a query through the full link chain', async () => {
     const fetchMock = vi.fn(async () => {
       return new Response(JSON.stringify({ data: { answer: 42 } }), {
@@ -39,9 +39,9 @@ describe('RedwoodApolloProvider smoke test', () => {
     }
 
     render(
-      <RedwoodApolloProvider>
+      <CedarApolloProvider>
         <Consumer />
-      </RedwoodApolloProvider>,
+      </CedarApolloProvider>,
     )
 
     await waitFor(() => screen.getByText('answer: 42'))

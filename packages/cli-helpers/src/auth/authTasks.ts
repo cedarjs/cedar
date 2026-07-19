@@ -21,6 +21,14 @@ import { apiSideFiles, generateUniqueFileNames } from './authFiles.js'
 const AUTH_PROVIDER_HOOK_IMPORT = `import { AuthProvider, useAuth } from './auth.js'`
 const AUTH_HOOK_IMPORT = `import { useAuth } from './auth.js'`
 
+// `CedarApolloProvider` is checked first since it's what current templates
+// use. `RedwoodApolloProvider` is still checked as a fallback so this keeps
+// working for apps that haven't migrated off the deprecated name.
+const APOLLO_PROVIDER_COMPONENT_NAMES = [
+  'CedarApolloProvider',
+  'RedwoodApolloProvider',
+]
+
 export const getWebAppPath = () => getPaths().web.app
 
 /**
@@ -322,13 +330,17 @@ export const addConfigToWebApp = <
 
       content = addAuthProviderToApp(content, ctx.setupMode)
 
-      if (/\s*<RedwoodApolloProvider/.test(content)) {
-        if (!hasUseAuthHook('RedwoodApolloProvider', content)) {
-          content = addUseAuthHook('RedwoodApolloProvider', content)
+      const apolloProviderComponentName = APOLLO_PROVIDER_COMPONENT_NAMES.find(
+        (componentName) => new RegExp(`\\s*<${componentName}`).test(content),
+      )
+
+      if (apolloProviderComponentName) {
+        if (!hasUseAuthHook(apolloProviderComponentName, content)) {
+          content = addUseAuthHook(apolloProviderComponentName, content)
         }
       } else {
         task.output = colors.warning(
-          'Could not find <RedwoodApolloProvider>.\nIf you are using a custom ' +
+          'Could not find <CedarApolloProvider>.\nIf you are using a custom ' +
             'GraphQL Client you will have to make sure it gets access to your ' +
             '`useAuth`, if it needs it.',
         )

@@ -103,6 +103,16 @@
         "default": "./dist/cjs/apollo/index.js"
       }
     },
+    "./apollo/CedarApolloProvider": {
+      "import": {
+        "types": "./dist/apollo/CedarApolloProvider.d.ts",
+        "default": "./dist/apollo/CedarApolloProvider.js"
+      },
+      "require": {
+        "types": "./dist/cjs/apollo/CedarApolloProvider.d.ts",
+        "default": "./dist/cjs/apollo/CedarApolloProvider.js"
+      }
+    },
     "./forceEsmApollo": {
       "require": "./dist/apollo/index.js",
       "import": "./dist/apollo/index.js"

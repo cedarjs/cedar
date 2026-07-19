@@ -23,7 +23,13 @@ export async function generateTypesCjs() {
     readFileSync('./package.json', 'utf-8'),
   )
   packageJson.type = 'commonjs'
-  writeFileSync('./package.json', JSON.stringify(packageJson, null, 2))
+  // Write to a temp file and rename it into place. Rename is atomic, whereas
+  // writing directly to package.json would truncate it first, letting any
+  // concurrently starting `yarn` process (which parses every workspace
+  // manifest during setup) read a partially written file and crash with a
+  // JSON syntax error.
+  writeFileSync('./package.json.tmp', JSON.stringify(packageJson, null, 2))
+  renameSync('./package.json.tmp', './package.json')
 
   try {
     await execa('yarn', ['build:types-cjs'], { stdio: 'inherit' })

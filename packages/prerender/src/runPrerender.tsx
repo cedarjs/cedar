@@ -369,7 +369,7 @@ export const runPrerender = async ({
   }
 
   indexHtmlTree('head').append(
-    `<script> globalThis.__REDWOOD__APOLLO_STATE = ${JSON.stringify(
+    `<script> globalThis.__CEDAR__APOLLO_STATE = ${JSON.stringify(
       prerenderApolloClient.extract(),
     )}</script>`,
   )

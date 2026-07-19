@@ -121,11 +121,12 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
           // Pre-bundle @cedarjs/web so there is only one instance of the
           // modules that hold Apollo's React context. Without this, the
           // pre-bundled dep graph and the Vite transform pipeline can each
-          // produce their own copy of a module, so RedwoodApolloProvider sets
+          // produce their own copy of a module, so CedarApolloProvider sets
           // Apollo's context in one copy while a Cell's useQuery reads from
           // the other, breaking Cells nested inside another story.
           '@cedarjs/web',
           '@cedarjs/web/apollo',
+          '@cedarjs/web/apollo/CedarApolloProvider',
         ],
         esbuildOptions: {
           plugins: [
@@ -141,7 +142,7 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
               // it pulls the modules holding Apollo's React context into their
               // own pre-bundled chunk separately from the @cedarjs/web chunk.
               // That produces two distinct context instances, so the context
-              // set by RedwoodApolloProvider is invisible to the Cell's
+              // set by CedarApolloProvider is invisible to the Cell's
               // useQuery, breaking every Cell story.
               //
               // Instead we synthesize a stub module: we scan the source for
