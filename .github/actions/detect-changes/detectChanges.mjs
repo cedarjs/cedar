@@ -39,11 +39,16 @@ const getPrNumber = () => {
 }
 
 /**
- * @returns {Promise<{ branchName?: string, hasWindowsLabel: boolean }>} the
- *   branch name for the current PR, and whether the PR has the `windows`
- *   label (which forces the Windows CI legs to run). The label is read from
- *   the API rather than the event payload so that re-running CI after adding
- *   the label picks it up.
+ * @typedef {Object} PrInfo
+ * @property {string | undefined} branchName
+ * @property {string | undefined} headSha
+ * @property {boolean} hasWindowsLabel Whether the PR has the `windows` label
+ *   (which forces the Windows CI legs to run). The label is read from the API
+ *   rather than the event payload so that re-running CI after adding the
+ *   label picks it up.
+ *
+ * @returns {Promise<PrInfo>} the branch name, head sha, and `windows` label
+ *   state for the current PR
  */
 async function getPrInfo() {
   const prNumber = getPrNumber()
@@ -52,6 +57,7 @@ async function getPrInfo() {
 
   return {
     branchName: json?.head?.ref,
+    headSha: json?.head?.sha,
     hasWindowsLabel: (json?.labels || []).some(
       (label) => label.name === 'windows',
     ),
@@ -63,20 +69,25 @@ async function getPrInfo() {
  * @property {string} updated_at
  * @property {string} id
  * @property {string} conclusion
- *
- * @typedef {Object} Commit
- * @property {string} sha
- * @property {Object} commit
- * @property {Object} commit.author
- * @property {string} commit.author.date
- * @property {string} commit.message
+ * @property {string} head_sha
  */
 
 /**
+ * Conclusions that represent an actual CI verdict for the branch. Cancelled,
+ * skipped, stale etc runs prove nothing about the state of the code (they're
+ * usually the result of a force-push or a newer push aborting an in-flight
+ * run), so they can't serve as a baseline for "what has CI already checked?"
+ */
+const VERDICT_CONCLUSIONS = ['success', 'failure', 'timed_out']
+
+/**
+ * The newest completed workflow run for the branch that produced an actual
+ * verdict (see VERDICT_CONCLUSIONS)
+ *
  * @param {string | undefined} branchName
  * @returns {Promise<Workflow | undefined>}
  */
-async function getLatestCompletedWorkflowRun(branchName) {
+async function getBaselineWorkflowRun(branchName) {
   if (!branchName) {
     return
   }
@@ -89,7 +100,11 @@ async function getLatestCompletedWorkflowRun(branchName) {
   const url = `${BASE_URL}/actions/workflows/${workflowId}/runs?branch=${branchName}`
   const { json } = await fetchJson(url)
 
-  return json?.workflow_runs?.find((run) => run.status === 'completed')
+  return json?.workflow_runs?.find(
+    (run) =>
+      run.status === 'completed' &&
+      VERDICT_CONCLUSIONS.includes(run.conclusion),
+  )
 }
 
 /**
@@ -130,53 +145,44 @@ function summarizeJobResults(jobs, prefix) {
 }
 
 /**
- * @param {string | undefined} timestamp
- * @return {Promise<Commit[] | undefined>}
+ * The files that changed between the baseline run's head commit and the
+ * current PR head, using GitHub's compare API (three-dot semantics: the diff
+ * between the merge-base of the two commits and `headSha`)
+ *
+ * This works across force-pushes and amended commits: as long as GitHub still
+ * knows about the baseline commit object it doesn't have to be reachable from
+ * the branch anymore, and because the diff is taken from the merge-base, an
+ * amended commit compares against its parent rather than producing a bogus
+ * empty (or full-history) diff
+ *
+ * @param {string} baseSha
+ * @param {string} headSha
+ * @return {Promise<string[] | undefined>} `undefined` when the comparison
+ *   can't be trusted (API error or truncated file list) and the caller should
+ *   fall back to the full PR file list
  */
-async function getCommitsNewerThan(timestamp) {
-  if (!timestamp) {
-    return
-  }
-
-  const prNumber = getPrNumber()
-
-  const { json } = await fetchJson(`${BASE_URL}/pulls/${prNumber}/commits`)
-
-  const comparisonDate = new Date(timestamp)
-
-  const newCommits = json?.filter((/** @type Commit */ commit) => {
-    return new Date(commit.commit.author.date) > comparisonDate
-  })
-
-  console.log(
-    'New commits since last CI run',
-    newCommits.map((/** @type Commit */ commit) => commit.commit.message),
+async function getChangedFilesSince(baseSha, headSha) {
+  const { json } = await fetchJson(
+    `${BASE_URL}/compare/${baseSha}...${headSha}`,
   )
 
-  return newCommits
-}
-
-/**
- * @param {string} commitSha
- * @return {Promise<string[]>}
- */
-async function getChangedFilesInCommit(commitSha) {
-  const { json } = await fetchJson(`${BASE_URL}/commits/${commitSha}`)
-  const changedFiles = json?.files?.map((file) => file.filename) || []
-
-  return changedFiles
-}
-
-/**
- * @param {Commit[] | undefined} commits
- * @return {Promise<string[]>}
- */
-async function getFilesInCommits(commits) {
-  let changedFiles = []
-  for (let commit of commits || []) {
-    const files = await getChangedFilesInCommit(commit.sha)
-    changedFiles = changedFiles.concat(files)
+  if (!json?.files) {
+    return undefined
   }
+
+  // The compare API caps the file list at 300 entries. If we hit the cap the
+  // list might be incomplete, so we can't trust it
+  if (json.files.length >= 300) {
+    console.log('Compare API returned 300+ files. Treating as incomplete.')
+    return undefined
+  }
+
+  const changedFiles = json.files.map((file) => file.filename)
+
+  console.log(
+    `Files changed since last CI verdict (${baseSha.slice(0, 10)}):`,
+    changedFiles,
+  )
 
   return changedFiles
 }
@@ -264,25 +270,21 @@ async function fetchJson(url, retries = 0) {
   }
 }
 
-// We want to get the list of changed files since the last "git push" to this
-// PR. But there is no good way to know when that last "push" happened. GitHub
-// only gives you the full list of commits, there's no way of knowing what
-// "push" they belong to.
-// But every time a "push" happens to a PR branch a new CI run starts. So by
-// looking at when the last completed CI run ended, and comparing that to the
-// timestamps of all commits, we can figure out what commits are new, and what
-// commits we've already run CI for
+// We want to get the list of files changed since the last CI verdict for
+// this PR, so that a push that only touches docs/changesets can skip the
+// heavy test jobs.
 //
-// 1. Get the PR branch name
-//    https://api.github.com/repos/cedarjs/redmx/pulls/10374  .head.ref
+// 1. Get the PR branch name and head sha
+//    https://api.github.com/repos/cedarjs/redmx/pulls/10374  .head.ref, .head.sha
 // 2. Get CI workflow runs for that branch
 //    https://api.github.com/repos/cedarjs/redmx/actions/workflows/24294187/runs?branch=tobbe-redirect-docs
-// 3. Get the `updated_at` timestamp for the newest completed run (`status` === 'completed')
-// 4. Get all commits for the PR
-//      https://api.github.com/repos/cedarjs/redmx/pulls/10374/commits
-// 5. Filter out all commits that are newer than the timestamp from step 3
-// 6. Gather up all files changed in the commits from step 5
-// 7. Use those files in the checks we do in this action
+// 3. Pick the newest completed run with an actual verdict (success/failure) —
+//    the "baseline run". Cancelled runs (e.g. aborted by a force-push) are
+//    skipped: they prove nothing about the code
+// 4. Compare the baseline run's `head_sha` to the current PR head to get the
+//    files changed since CI last gave a verdict
+//      https://api.github.com/repos/cedarjs/redmx/compare/{base}...{head}
+// 5. Use those files in the checks we do in this action
 
 async function main() {
   const branch = process.env.GITHUB_BASE_REF
@@ -298,23 +300,24 @@ async function main() {
     return
   }
 
-  const { branchName, hasWindowsLabel } = await getPrInfo()
-  const workflowRun = await getLatestCompletedWorkflowRun(branchName)
-  const workflowRunSucceeded = workflowRun?.conclusion === 'success'
-  const workflowJobs = workflowRun?.id
-    ? await getWorkflowJobs(workflowRun.id)
+  const { branchName, headSha, hasWindowsLabel } = await getPrInfo()
+  const baselineRun = await getBaselineWorkflowRun(branchName)
+  const baselineRunSucceeded = baselineRun?.conclusion === 'success'
+  const workflowJobs = baselineRun?.id
+    ? await getWorkflowJobs(baselineRun.id)
     : []
   const rscJobs = summarizeJobResults(workflowJobs, '🔄🐘 RSC Smoke tests')
   const ssrJobs = summarizeJobResults(workflowJobs, '🔁 SSR Smoke tests')
-  const prCommits = await getCommitsNewerThan(workflowRun?.updated_at)
   const prFiles = await getChangedFilesInPr()
   const prFileNames = prFiles.map((file) => file.filename)
-  let changedFiles = await getFilesInCommits(prCommits)
+  let changedFiles =
+    baselineRun?.head_sha && headSha
+      ? ((await getChangedFilesSince(baselineRun.head_sha, headSha)) ?? [])
+      : []
 
   if (changedFiles.length === 0) {
-    // Probably the first commit/push to this PR - get all files
-    // (Or something went wrong, in which case we also want to just get all
-    // files)
+    // Probably the first push to this PR, or the comparison couldn't be
+    // trusted - get all files
     changedFiles = prFileNames
   } else {
     // `changedFiles` includes any files changed by merge commits. But if those
@@ -354,11 +357,14 @@ async function main() {
 
     // We need to guard against first having a code change that fails in CI,
     // and then pushing just a docs/changesets change – detecting the docs-only
-    // change and then skipping CI. If there is a previous failed run, we need
-    // to run all tests again, even if the latest commit is only touching docs
-    if (workflowRun && !workflowRunSucceeded) {
+    // change and then skipping CI. If the baseline verdict is a failure, we
+    // need to run all tests again, even if the latest commit is only touching
+    // docs. (Cancelled runs never become the baseline, so a run aborted by a
+    // force-push doesn't count as a failure here)
+    if (baselineRun && !baselineRunSucceeded) {
       console.log(
-        'Previous run did not succeed. Falling back to running all tests.',
+        `Baseline run concluded '${baselineRun.conclusion}'. Falling back ` +
+          'to running all tests.',
       )
       core.setOutput('code', true)
       core.setOutput('cli', true)
