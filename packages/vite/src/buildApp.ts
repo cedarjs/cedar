@@ -21,6 +21,7 @@ import {
   getApiSideBabelPlugins,
   transformWithBabel,
 } from '@cedarjs/babel-config'
+import { applySrcAlias } from '@cedarjs/internal/dist/build/api.js'
 import { findApiFiles } from '@cedarjs/internal/dist/files.js'
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
@@ -404,8 +405,23 @@ export async function buildCedarApp({
         )
 
         if (transformedCode?.code) {
+          // babel-plugin-module-resolver is excluded for forVite:true builds
+          // (it is gated on !forVite in getApiSideBabelPlugins).  That plugin
+          // previously rewrote `src/` bare specifiers to relative paths so
+          // that Rollup's `external` function (which marks anything that is
+          // not relative or absolute as external) would not capture them.
+          // Apply the same rewrite here so that `src/lib/logger` → `../../lib/logger`
+          // and the external function sees a relative path (starting with `.`).
+          const fromDirRelativeToApiSrc = path.relative(
+            cedarPaths.api.src,
+            path.dirname(id),
+          )
+          const codeWithSrcAlias = applySrcAlias(
+            transformedCode.code,
+            fromDirRelativeToApiSrc,
+          )
           return {
-            code: transformedCode.code,
+            code: codeWithSrcAlias,
             map: transformedCode.map ?? null,
           }
         }

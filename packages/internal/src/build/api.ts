@@ -37,10 +37,11 @@ import { applyAutoImports } from './auto-import.js'
 import { applyDirectoryNamedImport } from './directory-named-import.js'
 import { cedarApiGraphqlPlugin } from './esbuild-plugin-api-graphql.js'
 import { applyOtelWrapping } from './esbuild-plugin-cedar-otel-wrapping.js'
-import { applyEsmExtensions } from './esm-extensions.js'
 import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
+import { applyEsmExtensions } from './esm-extensions.js'
 import { applyImportDir } from './import-dir.js'
 import { applySrcAlias } from './src-alias.js'
+export { applySrcAlias } from './src-alias.js'
 import { applyTsconfigPaths } from './tsconfig-paths.js'
 
 let BUILD_CTX: BuildContext | null = null
