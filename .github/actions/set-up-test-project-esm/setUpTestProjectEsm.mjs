@@ -12,7 +12,10 @@ import {
 } from '../actionsLib.mjs'
 
 const parentDir = path.dirname(process.cwd())
-const TEST_PROJECT_PATH = path.join(parentDir, 'test-project-esm')
+// The space in the directory name is deliberate: it makes every CI run
+// exercise paths with spaces, which catches missing shell quoting on all
+// platforms (historically a Windows-breakage class we otherwise never test).
+const TEST_PROJECT_PATH = path.join(parentDir, 'test project esm')
 const execInProject = createExecWithEnvInCwd(TEST_PROJECT_PATH)
 
 core.setOutput('test-project-path', TEST_PROJECT_PATH)
