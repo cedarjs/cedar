@@ -4,7 +4,11 @@ import path from 'node:path'
 import type { Options as ExecaOptions } from 'execa'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-import { runBin, runWithNode } from '@cedarjs/cli-helpers/packageManager/exec'
+import {
+  runBin,
+  runTransitiveBin,
+  runWithNode,
+} from '@cedarjs/cli-helpers/packageManager/exec'
 import { getPaths } from '@cedarjs/project-config'
 
 export interface HandlerArgs {
@@ -20,6 +24,20 @@ async function runBinWithThrow(
   options?: ExecaOptions,
 ) {
   const result = await runBin(bin, args, options)
+
+  if (result.failed) {
+    throw new Error(`Command (${bin} ${args.join(' ')}) failed`)
+  }
+
+  return result
+}
+
+async function runTransitiveBinWithThrow(
+  bin: string,
+  args: string[],
+  options?: ExecaOptions,
+) {
+  const result = await runTransitiveBin(bin, args, options)
 
   if (result.failed) {
     throw new Error(`Command (${bin} ${args.join(' ')}) failed`)
@@ -56,9 +74,11 @@ export const handler = async ({
 
       if (prisma) {
         console.log('Running database migrations...')
-        await runBinWithThrow(
-          'cedar',
-          ['prisma', 'migrate', 'deploy'],
+        // Executing prisma directly to avoid spinning up the entire Cedar CLI
+        // See https://github.com/redwoodjs/graphql/pull/4278
+        await runTransitiveBinWithThrow(
+          'prisma',
+          ['migrate', 'deploy', '--config', cedarPaths.api.prismaConfig],
           execaConfig,
         )
       }
