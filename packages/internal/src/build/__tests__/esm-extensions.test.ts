@@ -54,7 +54,7 @@ describe('applyEsmExtensions', () => {
     )
   })
 
-  it('leaves imports where the base .js file exists (not .ts) alone', () => {
+  it('appends .js when only a .js source file exists (no .ts)', () => {
     const code = `import { x } from '../lib/already'`
     // already.js exists, so it should get .js appended
     expect(applyEsmExtensions(code, IMPORTER)).toBe(
