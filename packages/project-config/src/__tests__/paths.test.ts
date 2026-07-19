@@ -660,10 +660,11 @@ describe('paths', () => {
 
         const pages = processPagesDir(pagesDir)
 
-        expect(pages.length).toEqual(21)
+        expect(pages.length).toEqual(22)
 
         const pageNames = [
           'AboutPage',
+          'AggregatedBlogPostPage',
           'BlogPostPage',
           'ContactUsPage',
           'FatalErrorPage',
