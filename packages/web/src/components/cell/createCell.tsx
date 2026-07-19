@@ -1,11 +1,9 @@
 import React from 'react'
 
+import { useQuery } from '@apollo/client/react/hooks/hooks.cjs'
+
 import { fragmentRegistry } from '../../apollo/fragmentRegistry.js'
 import { getOperationName } from '../../graphql.js'
-/**
- * This is part of how we let users swap out their GraphQL client while staying compatible with Cells.
- */
-import { useQuery } from '../GraphQLHooksProvider.js'
 
 import { useCellCacheContext } from './CellCacheContext.js'
 import type { CreateCellProps } from './cellTypes.js'

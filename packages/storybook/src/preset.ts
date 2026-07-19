@@ -109,8 +109,8 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
         // resolve.alias redirects them in the transform pipeline, but esbuild
         // (dep optimizer) ignores resolve.alias. Without this, Vite discovers
         // them on the first page load and triggers a mid-session reload, which
-        // tears down the StorybookProvider's GraphQLHooksProvider context and
-        // breaks nested-Cell stories. These are structural deps of @cedarjs/web
+        // tears down the StorybookProvider's Apollo context and breaks
+        // nested-Cell stories. These are structural deps of @cedarjs/web
         // itself, so this list is valid for all Cedar apps, not just the test
         // project.
         include: [
@@ -127,8 +127,8 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
           // Pre-bundle node-polyfill shims so Vite doesn't discover them
           // mid-session when storybook-framework-cedarjs (which uses
           // nodePolyfills()) is first rendered. Without this, each shim
-          // triggers a separate optimized-deps reload that tears down
-          // GraphQLHooksProvider and breaks nested-Cell stories.
+          // triggers a separate optimized-deps reload that tears down the
+          // Apollo provider and breaks nested-Cell stories.
           'vite-plugin-node-polyfills/shims/buffer',
           'vite-plugin-node-polyfills/shims/global',
           'vite-plugin-node-polyfills/shims/process',
@@ -139,13 +139,12 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
           '@cedarjs/testing/web/MockRouter.js',
           '@cedarjs/testing/auth',
           'graphql-tag',
-          // Pre-bundle @cedarjs/web so there is only one instance of
-          // GraphQLHooksProvider. Without this, the pre-bundled dep graph and
-          // the Vite transform pipeline can each produce their own copy of
-          // the module, so RedwoodApolloProvider sets context in one copy
-          // while NamedCell reads from the other, causing the
-          // "You must register a useQuery hook via the GraphQLHooksProvider"
-          // error when a Cell is nested inside another story.
+          // Pre-bundle @cedarjs/web so there is only one instance of the
+          // modules that hold Apollo's React context. Without this, the
+          // pre-bundled dep graph and the Vite transform pipeline can each
+          // produce their own copy of a module, so RedwoodApolloProvider sets
+          // Apollo's context in one copy while a Cell's useQuery reads from
+          // the other, breaking Cells nested inside another story.
           '@cedarjs/web',
           '@cedarjs/web/apollo',
         ],
@@ -160,12 +159,11 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
               //
               // We must NOT return the real Cell file contents here. If esbuild
               // follows the Cell's imports (e.g. createCell from @cedarjs/web),
-              // it pulls GraphQLHooksProvider into its own pre-bundled chunk
-              // separately from the @cedarjs/web chunk. That produces two
-              // distinct GraphQLHooksContext instances, so the context set by
-              // RedwoodApolloProvider is invisible to the Cell's useQuery,
-              // causing "You must register a useQuery hook via the
-              // GraphQLHooksProvider".
+              // it pulls the modules holding Apollo's React context into their
+              // own pre-bundled chunk separately from the @cedarjs/web chunk.
+              // That produces two distinct context instances, so the context
+              // set by RedwoodApolloProvider is invisible to the Cell's
+              // useQuery, breaking every Cell story.
               //
               // Instead we synthesize a stub module: we scan the source for
               // exported names and re-export them as empty stubs, plus add a

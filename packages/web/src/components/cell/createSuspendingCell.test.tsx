@@ -1,22 +1,29 @@
 import React from 'react'
 
-import type { useReadQuery, useBackgroundQuery } from '@apollo/client'
 import { loadErrorMessages, loadDevMessages } from '@apollo/client/dev'
+import {
+  useBackgroundQuery,
+  useReadQuery,
+} from '@apollo/client/react/hooks/hooks.cjs'
 import { render, screen } from '@testing-library/react'
-import { vi, describe, beforeAll, test } from 'vitest'
-
-import { GraphQLHooksProvider } from '../GraphQLHooksProvider.js'
+import type { Mock } from 'vitest'
+import { vi, describe, beforeAll, beforeEach, test } from 'vitest'
 
 import { createSuspendingCell } from './createSuspendingCell.js'
-
-type ReadQueryHook = typeof useReadQuery
-type BgQueryHook = typeof useBackgroundQuery
 
 vi.mock('@apollo/client/react/hooks/hooks.cjs', () => {
   return {
     useApolloClient: vi.fn(),
+    useBackgroundQuery: vi.fn(),
+    useReadQuery: vi.fn(),
   }
 })
+
+// The tests fake the hooks with minimal objects rather than full Apollo
+// results, so the mocks are typed loosely instead of with Apollo's overloaded
+// hook signatures
+const mockUseBackgroundQuery = useBackgroundQuery as unknown as Mock
+const mockUseReadQuery = useReadQuery as unknown as Mock
 
 // @TODO: once we have finalised implementation, we need to add tests for
 // all the other states. We would also need to figure out how to test the Suspense state.
@@ -31,11 +38,13 @@ describe('createSuspendingCell', () => {
     loadErrorMessages()
   })
 
-  const mockedUseBgQuery = (() => {
-    return ['mocked-query-ref', { refetch: vi.fn(), fetchMore: vi.fn() }]
-  }) as unknown as BgQueryHook
-
-  const mockedQueryHook = () => ({ data: {} })
+  beforeEach(() => {
+    mockUseReadQuery.mockReset()
+    mockUseBackgroundQuery.mockReset()
+    mockUseBackgroundQuery.mockImplementation(() => {
+      return ['mocked-query-ref', { refetch: vi.fn(), fetchMore: vi.fn() }]
+    })
+  })
 
   test('Renders a static Success component', () => {
     const TestCell = createSuspendingCell({
@@ -44,14 +53,9 @@ describe('createSuspendingCell', () => {
       Success: () => <>Great success!</>,
     })
 
-    render(
-      <GraphQLHooksProvider
-        useBackgroundQuery={mockedUseBgQuery as any}
-        useReadQuery={mockedQueryHook as any}
-      >
-        <TestCell />
-      </GraphQLHooksProvider>,
-    )
+    mockUseReadQuery.mockImplementation(() => ({ data: {} }))
+
+    render(<TestCell />)
     screen.getByText(/^Great success!$/)
   })
 
@@ -69,18 +73,11 @@ describe('createSuspendingCell', () => {
       ),
     })
 
-    const myUseQueryHook = (() => {
+    mockUseReadQuery.mockImplementation(() => {
       return { data: { answer: 42 } }
-    }) as unknown as ReadQueryHook
+    })
 
-    render(
-      <GraphQLHooksProvider
-        useReadQuery={myUseQueryHook}
-        useBackgroundQuery={mockedUseBgQuery}
-      >
-        <TestCell />
-      </GraphQLHooksProvider>,
-    )
+    render(<TestCell />)
 
     screen.getByText(/^What's the meaning of life\?$/)
     screen.getByText(/^42$/)
@@ -119,23 +116,16 @@ describe('createSuspendingCell', () => {
       ),
     })
 
-    const myReadQueryHook = (() => {
+    mockUseReadQuery.mockImplementation(() => {
       return {
         data: {
           users: [],
           posts: [{ title: 'bazinga' }, { title: 'kittens' }],
         },
       }
-    }) as unknown as ReadQueryHook
+    })
 
-    render(
-      <GraphQLHooksProvider
-        useReadQuery={myReadQueryHook}
-        useBackgroundQuery={mockedUseBgQuery}
-      >
-        <TestCell />
-      </GraphQLHooksProvider>,
-    )
+    render(<TestCell />)
 
     screen.getByText(/bazinga/)
     screen.getByText(/kittens/)

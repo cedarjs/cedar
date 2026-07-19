@@ -276,10 +276,10 @@ const apolloState = client.extract()
    `globalThis.__REDWOOD__PRERENDER_PAGES`) and a prerender mode (direct
    imports). Verify the `prerender` environment triggers the prerender mode —
    with the Environment API this can key off `this.environment.name`.
-2. **`GraphQLHooksProvider` transparency.** Cedar cells call Apollo hooks
-   through `GraphQLHooksProvider` indirection. `prerenderStatic` should observe
-   queries transparently since the provider ultimately calls Apollo's real hooks
-   — verify with a test early in Track 2, before building on it.
+2. **Cell query observability.** Cedar cells call Apollo's hooks directly (the
+   old `GraphQLHooksProvider` indirection has been removed). `prerenderStatic`
+   should observe queries transparently — verify with a test early in Track 2,
+   before building on it.
 3. **`ssr.external` / CJS-only packages.** Rollup's `externalPlugin` had nuanced
    logic for keeping some `@cedarjs/*` workspace packages bundled. Vite's SSR
    externalization should handle this; test against packages that ship only CJS.
