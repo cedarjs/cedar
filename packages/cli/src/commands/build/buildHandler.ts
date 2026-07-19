@@ -256,11 +256,18 @@ export const handler = async ({
             '@cedarjs/vite/bins/cedar-vite-build.mjs',
           )
 
+          // Args are passed as an array without a shell so that paths
+          // containing spaces (bin path and webDir) survive as single argv
+          // entries.
           await execa(
-            `node ${buildBinPath} --webDir="${cedarPaths.web.base}" --verbose=${verbose}`,
+            'node',
+            [
+              buildBinPath,
+              `--webDir=${cedarPaths.web.base}`,
+              `--verbose=${verbose}`,
+            ],
             {
               stdio: verbose ? 'inherit' : 'pipe',
-              shell: true,
               cwd: cedarPaths.web.base,
             },
           )
@@ -320,13 +327,20 @@ export const handler = async ({
           // it could affect other things that run in parallel while building.
           // We don't have any parallel tasks right now, but someone might add
           // one in the future as a performance optimization.
+          // Args are passed as an array without a shell so that paths
+          // containing spaces (bin path and webDir) survive as single argv
+          // entries.
           await execa(
-            `node ${buildBinPath} --webDir="${cedarPaths.web.base}" --verbose=${verbose}`,
+            'node',
+            [
+              buildBinPath,
+              `--webDir=${cedarPaths.web.base}`,
+              `--verbose=${verbose}`,
+            ],
             {
               stdio: verbose ? 'inherit' : 'pipe',
-              shell: true,
-              // `cwd` is needed for the package manager (e.g. yarn) to find the
-              // cedar-vite-build binary
+              // `cwd` makes postcss/tailwind config resolution work (see the
+              // @NOTE above)
               // It won't change process.cwd for anything else here, in this
               // process
               cwd: cedarPaths.web.base,
