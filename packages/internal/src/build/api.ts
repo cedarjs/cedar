@@ -308,6 +308,16 @@ function createCedarViteApiPlugin(): Plugin {
           code = applyOtelWrapping(code, id, cedarPaths.api.src) ?? code
         }
 
+        // Append .js/.jsx extensions to extensionless relative imports so that
+        // Node's ESM resolver can find them at runtime. This replaces the
+        // resolvePath hook in babel-plugin-module-resolver, which is disabled
+        // for forVite:true builds (babel-config/src/api.ts). With
+        // preserveModules:true Rollup preserves the import specifiers as-is
+        // in the output, so extensions must be present before bundling.
+        if (isEsm) {
+          code = applyEsmExtensions(code, id)
+        }
+
         // Apply the handler ALS wrapping safeguard to API function handlers.
         // This is the standalone-esbuild equivalent of the Vite
         // handlerAlsWrappingPlugin and the (Jest-only) babel plugin it
