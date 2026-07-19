@@ -26,6 +26,7 @@ import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
 import { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
+import { cedarDirectoryNamedImportPlugin } from './plugins/vite-plugin-cedar-directory-named-import.js'
 import { cedarGqlormInjectPlugin } from './plugins/vite-plugin-cedar-gqlorm-inject.js'
 import { cedarGraphqlOptionsExtractPlugin } from './plugins/vite-plugin-cedar-graphql-options-extract.js'
 import { cedarImportDirPlugin } from './plugins/vite-plugin-cedar-import-dir.js'
@@ -367,6 +368,7 @@ export async function buildCedarApp({
     plugins.push(cedarGraphqlOptionsExtractPlugin())
     plugins.push(cedarGqlormInjectPlugin())
     plugins.push(cedarImportDirPlugin())
+    plugins.push(cedarDirectoryNamedImportPlugin())
     plugins.push(cedarOtelWrappingPlugin())
     plugins.push(cedarjsJobPathInjectorPlugin())
     plugins.push(
