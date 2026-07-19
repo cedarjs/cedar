@@ -62,10 +62,12 @@ function isModuleNotFoundError(error: unknown, module: string) {
     return error.moduleName === module
   }
 
-  // Node-style error: module name appears in the message string
+  // Node-style error: module name appears in the message string.
+  // Check for the quoted form to avoid substring collisions with similar module names.
   return (
     'message' in error &&
     typeof error.message === 'string' &&
-    error.message.includes(module)
+    (error.message.includes(`'${module}'`) ||
+      error.message.includes(`"${module}"`))
   )
 }
