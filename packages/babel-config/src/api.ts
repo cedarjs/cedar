@@ -65,14 +65,21 @@ export const getApiSideBabelPlugins = ({
     // Needed to support `/** @jsxImportSource custom-jsx-library */`
     // comments in JSX files
     !forVite && ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }],
-    // Vite/esbuild use applySrcAlias + applyTsconfigPaths (or, for Vite
-    // proper, cedar-api-src-redirect + vite-tsconfig-paths) for alias
-    // resolution, making this plugin's alias config a no-op there — but it
-    // must stay active regardless of forVite, because its resolvePath below
-    // also appends `.js`/`.jsx` extensions for every relative import in ESM
-    // projects (required for Node's ESM resolver), which nothing else in the
-    // Vite/esbuild pipeline replaces.
-    [
+    // For non-Vite consumers (Jest, registerApiSideBabelHook / Babel
+    // registerRequire paths such as data-migrate CJS and prerender CJS):
+    //   • alias config: rewrites `src/` and tsconfig paths to relative paths
+    //   • resolvePath: appends `.js`/`.jsx` to extensionless imports in ESM
+    //     projects so Node's module resolver can find them, and strips `.js`
+    //     suffixes in data-migrate / prerender contexts where the TypeScript
+    //     source is `.ts` but callers write `.js` import specifiers.
+    //
+    // For Vite / esbuild (forVite: true):
+    //   • alias handling: covered by cedar-api-src-redirect + vite-tsconfig-paths
+    //     (Vite) or applySrcAlias + applyTsconfigPaths (esbuild)
+    //   • extension rewriting: covered by applyEsmExtensions in
+    //     runCedarBabelTransformsPlugin (esbuild); Vite / Rollup resolve
+    //     extensions themselves during bundling
+    !forVite && [
       'babel-plugin-module-resolver',
       {
         alias: {
