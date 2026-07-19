@@ -7,9 +7,11 @@
 // against the last 100 merged PRs (~35% of them skip Windows entirely):
 //
 // 1. The added lines of the PR diff use a path- or process-sensitive API.
-// 2. The PR touches packages/cli or packages/vite (the packages with the
-//    most Windows history; also covers Windows bugs that no grep can see,
-//    like a bad path inside an HTML template string).
+// 2. The PR touches packages/cli, packages/cli-helpers, or packages/vite
+//    (the packages with the most Windows history — cli-helpers holds the
+//    process-spawning/package-manager-shim machinery; also covers Windows
+//    bugs that no grep can see, like a bad path inside an HTML template
+//    string).
 //
 // A daily full Windows run on main (nightly-windows.yml) catches anything
 // that slips through, and the `windows` label on a PR forces the full matrix.
@@ -39,7 +41,7 @@ const WINDOWS_SENSITIVE_PATTERN = new RegExp(
   ].join('|'),
 )
 
-const ALWAYS_RUN_PACKAGES = /^packages\/(cli|vite)\//
+const ALWAYS_RUN_PACKAGES = /^packages\/(cli|cli-helpers|vite)\//
 
 const CODE_FILE = /\.[mc]?[jt]sx?$/
 
