@@ -7,11 +7,6 @@
     "moduleResolution": "NodeNext",
     "module": "NodeNext"
   },
-  "include": [
-    "./src/**/*",
-    "ambient.d.ts",
-    "modules.d.ts",
-    "testing-library.d.ts"
-  ],
+  "include": ["./src/**/*", "ambient.d.ts", "testing-library.d.ts"],
   "references": [{ "path": "../internal/tsconfig.build.json" }]
 }

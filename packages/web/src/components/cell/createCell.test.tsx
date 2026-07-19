@@ -1,13 +1,13 @@
 import React from 'react'
 
-import { useQuery } from '@apollo/client/react/hooks/hooks.cjs'
+import { useQuery } from '@apollo/client/react'
 import { render, screen } from '@testing-library/react'
 import type { Mock } from 'vitest'
 import { vi, describe, beforeAll, beforeEach, test, expect } from 'vitest'
 
 import { createCell } from './createCell.js'
 
-vi.mock('@apollo/client/react/hooks/hooks.cjs', () => ({
+vi.mock('@apollo/client/react', () => ({
   useQuery: vi.fn(),
 }))
 

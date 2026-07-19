@@ -1,7 +1,6 @@
 import React from 'react'
 
-import { useApolloClient, useFragment } from '@apollo/client'
-import { useQuery } from '@apollo/client/react/hooks/hooks.cjs'
+import { useApolloClient, useFragment, useQuery } from '@apollo/client/react'
 import { render, screen } from '@testing-library/react'
 import { parse } from 'graphql'
 import type { Mock } from 'vitest'
@@ -11,19 +10,16 @@ import { fragmentRegistry } from '../../apollo/fragmentRegistry.js'
 
 import { createCell } from './createCell.js'
 
-vi.mock('@apollo/client', async (importOriginal) => {
+vi.mock('@apollo/client/react', async (importOriginal) => {
   const actual = await importOriginal<object>()
 
   return {
     ...actual,
     useApolloClient: vi.fn(),
     useFragment: vi.fn(),
+    useQuery: vi.fn(),
   }
 })
-
-vi.mock('@apollo/client/react/hooks/hooks.cjs', () => ({
-  useQuery: vi.fn(),
-}))
 
 // The tests fake the hooks with minimal objects rather than full Apollo
 // results, so the mocks are typed loosely instead of with Apollo's hook

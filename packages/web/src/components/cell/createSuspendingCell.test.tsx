@@ -1,17 +1,14 @@
 import React from 'react'
 
 import { loadErrorMessages, loadDevMessages } from '@apollo/client/dev'
-import {
-  useBackgroundQuery,
-  useReadQuery,
-} from '@apollo/client/react/hooks/hooks.cjs'
+import { useBackgroundQuery, useReadQuery } from '@apollo/client/react'
 import { render, screen } from '@testing-library/react'
 import type { Mock } from 'vitest'
 import { vi, describe, beforeAll, beforeEach, test } from 'vitest'
 
 import { createSuspendingCell } from './createSuspendingCell.js'
 
-vi.mock('@apollo/client/react/hooks/hooks.cjs', () => {
+vi.mock('@apollo/client/react', () => {
   return {
     useApolloClient: vi.fn(),
     useBackgroundQuery: vi.fn(),

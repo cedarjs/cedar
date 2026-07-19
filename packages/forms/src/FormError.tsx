@@ -16,8 +16,16 @@ export interface ServerError extends Error {
 
 export interface RWGqlError {
   message: string
-  graphQLErrors: readonly GraphQLFormattedError[]
-  networkError: Error | ServerParseError | ServerError | null
+  /**
+   * GraphQL errors as exposed by Apollo Client 4's `CombinedGraphQLErrors`
+   */
+  errors?: readonly GraphQLFormattedError[]
+  /**
+   * GraphQL errors in the Apollo Client 3 shape. Kept so tests, Storybook
+   * mocks and other GraphQL clients that use this shape keep working
+   */
+  graphQLErrors?: readonly GraphQLFormattedError[]
+  networkError?: Error | ServerParseError | ServerError | null
 }
 
 export type RwGqlErrorProperties = Record<string, Record<string, string[]>>
@@ -55,19 +63,31 @@ const FormError = ({
 
   let rootMessage = error.message
   const messages: string[] = []
-  const hasGraphQLError = !!error.graphQLErrors?.[0]
-  const hasNetworkError =
-    !!error.networkError && Object.keys(error.networkError).length > 0
+  const graphQLErrors = error.graphQLErrors?.length
+    ? error.graphQLErrors
+    : (error.errors ?? [])
+  const hasGraphQLError = !!graphQLErrors[0]
+  // Apollo Client 4 no longer wraps network errors in a `networkError`
+  // property – the error itself is the server error
+  const networkError =
+    error.networkError ??
+    ('bodyText' in error || 'result' in error
+      ? // `RWGqlError` is a loose interface over what GraphQL clients throw;
+        // when the object has server-error fields the error itself is the
+        // network error
+        (error as unknown as ServerParseError | ServerError)
+      : null)
+  const hasNetworkError = !!networkError && Object.keys(networkError).length > 0
 
   if (hasGraphQLError) {
-    rootMessage = error.graphQLErrors[0].message ?? 'Something went wrong'
+    rootMessage = graphQLErrors[0].message ?? 'Something went wrong'
 
     // override top-level message for ServiceValidation errorrs
-    if (error.graphQLErrors[0]?.extensions?.code === 'BAD_USER_INPUT') {
+    if (graphQLErrors[0]?.extensions?.code === 'BAD_USER_INPUT') {
       rootMessage = 'Errors prevented this form from being saved'
     }
 
-    const properties = error.graphQLErrors[0].extensions?.[
+    const properties = graphQLErrors[0].extensions?.[
       'properties'
     ] as RwGqlErrorProperties
 
@@ -82,13 +102,11 @@ const FormError = ({
     }
   } else if (hasNetworkError) {
     rootMessage = rootMessage ?? 'An error has occurred'
-    if (Object.prototype.hasOwnProperty.call(error.networkError, 'bodyText')) {
-      const netErr = error.networkError as ServerParseError
+    if ('bodyText' in networkError) {
+      const netErr = networkError as ServerParseError
       messages.push(`${netErr.name}: ${netErr.bodyText}`)
-    } else if (
-      Object.prototype.hasOwnProperty.call(error.networkError, 'result')
-    ) {
-      const netErr = error.networkError as ServerError
+    } else if ('result' in networkError) {
+      const netErr = networkError as ServerError
       netErr.result.errors?.forEach((error: any) => {
         if (typeof error.message === 'string') {
           if (error.message.indexOf(';') >= 0) {

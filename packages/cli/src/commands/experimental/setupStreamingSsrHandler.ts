@@ -219,7 +219,7 @@ export const handler = async (options: Opts) => {
           fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2))
         },
       },
-      addWebPackages(['@apollo/client-react-streaming@0.10.0']),
+      addWebPackages(['@apollo/client-react-streaming@0.14.5']),
       {
         task: () => {
           printTaskEpilogue(command, description, EXPERIMENTAL_TOPIC_ID)

@@ -1,11 +1,13 @@
 import React, { Suspense } from 'react'
 
-import type { OperationVariables, QueryReference } from '@apollo/client'
+import type { OperationVariables } from '@apollo/client'
+import { CombinedGraphQLErrors } from '@apollo/client'
+import type { QueryRef } from '@apollo/client/react'
 import {
   useApolloClient,
   useBackgroundQuery,
   useReadQuery,
-} from '@apollo/client/react/hooks/hooks.cjs'
+} from '@apollo/client/react'
 
 import type { FallbackProps } from './CellErrorBoundary.js'
 import { CellErrorBoundary } from './CellErrorBoundary.js'
@@ -64,7 +66,13 @@ export function createSuspendingCell<
   const cellQuery = QUERY
   function SuspendingSuccess(props: SuspendingSuccessProps) {
     const { queryRef, suspenseQueryResult, userProps } = props
-    const { data, networkStatus } = useReadQuery<DataObject>(queryRef)
+    // The 'complete' | 'streaming' states both type `data` as `DataObject`;
+    // the Cell suspends until data is available, so we never render with
+    // partial or missing data
+    const { data, networkStatus } = useReadQuery<
+      DataObject,
+      'complete' | 'streaming'
+    >(queryRef)
     const afterQueryData = afterQuery(data)
 
     const queryResultWithNetworkStatus: SuspenseCellQueryResult = {
@@ -119,7 +127,9 @@ export function createSuspendingCell<
       if (!Failure) {
         // So that it bubbles up to the nearest error boundary
         if (error) {
-          throw error
+          // Apollo Client types errors as `ErrorLike`, but at runtime they're
+          // `Error` instances
+          throw error instanceof Error ? error : new Error(error.message)
         }
         throw new Error('Unreachable code: FailureComponent without a Failure')
       }
@@ -135,7 +145,11 @@ export function createSuspendingCell<
       return (
         <Failure
           error={error}
-          errorCode={error?.graphQLErrors?.[0]?.extensions?.['code'] as string}
+          errorCode={
+            CombinedGraphQLErrors.is(error)
+              ? (error.errors[0]?.extensions?.['code'] as string)
+              : undefined
+          }
           queryResult={queryResultWithErrorReset}
         />
       )
@@ -165,7 +179,7 @@ export function createSuspendingCell<
         {wrapInSuspenseIfLoadingPresent(
           <SuspendingSuccess
             userProps={props}
-            queryRef={queryRef as QueryReference<DataObject>}
+            queryRef={queryRef as QueryRef<DataObject>}
             suspenseQueryResult={suspenseQueryResult}
           />,
           Loading,

@@ -288,6 +288,7 @@ keep them, but you can delete the `dns` import, the comment, and the call.
 - **[`getCommonPlugins()` removed](#getcommonplugins-removed)** — delete any `...getCommonPlugins()` usage; it's returned an empty array for a long time.
 - **[Web dev server `Buffer` polyfill removed](#web-dev-server-buffer-polyfill-removed)** — web code relying on the global `Buffer` in dev now fails immediately instead of only in production.
 - **[Context-wrapping plugin renamed](#context-wrapping-plugin-renamed)** — only affects advanced setups that reference the AsyncLocalStorage-wrapping plugin by name.
+- **[Apollo Client 4](#apollo-client-4)** — app code that imports from `@apollo/client` directly needs updating; Cells and `@cedarjs/web`'s re-exported hooks keep working unchanged.
 
 ### No more CJS-only packages
 
@@ -535,3 +536,20 @@ that referenced it by name:
 - Vite plugin name `'cedar-context-wrapping'` → `'handler-als-wrapping'`
 - `babel-plugin-redwood-context-wrapping` →
   `babel-plugin-handler-als-wrapping` (`@cedarjs/babel-config` deep imports)
+
+### Apollo Client 4
+
+`@cedarjs/web` now uses Apollo Client 4. Cells, the hooks re-exported from
+`@cedarjs/web`, and `<FormError>` keep working unchanged, but app code that
+imports from `@apollo/client` directly needs to be updated for Apollo
+Client 4:
+
+- React hooks and components now live in `@apollo/client/react`
+- `ApolloError` is replaced by `CombinedGraphQLErrors` (GraphQL errors are in
+  `error.errors`, not `error.graphQLErrors`) and network errors are no longer
+  wrapped. This also applies to the `error` prop Cells pass to `Failure`
+  components
+- Custom Apollo links are rxjs-based now
+
+See Apollo's migration guide for the full list:
+https://www.apollographql.com/docs/react/migration/3.x-to-4.x

@@ -1,23 +1,23 @@
 import React from 'react'
 
-// @apollo/client ESM support is discussed here
-// https://github.com/apollographql/apollo-feature-requests/issues/287
 import type { ApolloCache, DocumentNode, setLogVerbosity } from '@apollo/client'
 import {
   ApolloClient,
+  ApolloLink,
   setLogVerbosity as apolloSetLogVerbosity,
-} from '@apollo/client/core/core.cjs'
-import { setContext } from '@apollo/client/link/context/context.cjs'
-import { ApolloLink, split } from '@apollo/client/link/core/core.cjs'
-import { createPersistedQueryLink } from '@apollo/client/link/persisted-queries/persisted-queries.cjs'
-import { ApolloProvider } from '@apollo/client/react/react.cjs'
-import { getMainDefinition } from '@apollo/client/utilities/utilities.cjs'
+  split,
+} from '@apollo/client'
+import { SetContextLink } from '@apollo/client/link/context'
+import { PersistedQueryLink } from '@apollo/client/link/persisted-queries'
+import { ApolloProvider } from '@apollo/client/react'
+import { getMainDefinition } from '@apollo/client/utilities'
 import { print } from 'graphql/language/printer.js'
+import { map } from 'rxjs'
 
 import type { UseAuth } from '@cedarjs/auth'
 import { useNoAuth } from '@cedarjs/auth'
 
-import { createUploadLink } from '../bundled/apollo-upload-client.js'
+import { UploadHttpLink } from '../bundled/apollo-upload-client.js'
 import { useFetchConfig } from '../components/FetchConfigProvider.js'
 
 import type {
@@ -61,7 +61,7 @@ interface DocumentNodeWithMeta extends DocumentNode {
 
 interface Props {
   config: Omit<GraphQLClientConfigProp, 'cacheConfig' | 'cache'> & {
-    cache: ApolloCache<unknown>
+    cache: ApolloCache
   }
   useAuth?: UseAuth
   logLevel: ReturnType<typeof setLogVerbosity>
@@ -99,14 +99,16 @@ export function ApolloProviderWithFetchConfig({
     data.mostRecentRequest.variables = variables
     data.mostRecentRequest.query = query && print(operation.query)
 
-    return forward(operation).map((result) => {
-      data.mostRecentResponse = result
+    return forward(operation).pipe(
+      map((result) => {
+        data.mostRecentResponse = result
 
-      return result
-    })
+        return result
+      }),
+    )
   })
 
-  const withToken = setContext(async () => {
+  const withToken = new SetContextLink(async () => {
     const token = await getToken()
 
     return { token }
@@ -142,7 +144,7 @@ export function ApolloProviderWithFetchConfig({
   // A terminating link. Apollo Client uses this to send GraphQL operations to a server over HTTP.
   // See https://www.apollographql.com/docs/react/api/link/introduction/#the-terminating-link.
   // Internally uploadLink determines whether to use form-data vs http link
-  const uploadLink = createUploadLink({
+  const uploadLink: ApolloLink = new UploadHttpLink({
     uri,
     ...httpLinkConfig,
   })
@@ -175,8 +177,13 @@ export function ApolloProviderWithFetchConfig({
       const documentQuery = query as DocumentNodeWithMeta
       return documentQuery?.['__meta__']?.['hash'] !== undefined
     },
-    createPersistedQueryLink({
-      generateHash: (document: any) => document['__meta__']['hash'],
+    new PersistedQueryLink({
+      generateHash: (document: DocumentNode) => {
+        // The split above guarantees that only documents with a `__meta__`
+        // hash are sent through this link
+        const documentWithMeta: DocumentNodeWithMeta = document
+        return documentWithMeta.__meta__?.hash ?? ''
+      },
     }).concat(uploadOrSSELink),
     uploadOrSSELink,
   )
