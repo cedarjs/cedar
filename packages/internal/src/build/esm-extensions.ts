@@ -6,6 +6,9 @@ import path from 'node:path'
  * relative imports to include the correct `.js` or `.jsx` extension so that
  * Node's ESM resolver can locate the compiled output files at runtime.
  *
+ * Handles both static imports (`from '../lib/db'`) and dynamic imports
+ * (`import('../lib/db')`).
+ *
  * This replaces the `resolvePath` hook in `babel-plugin-module-resolver` for
  * the standalone esbuild build path (`runCedarBabelTransformsPlugin`), which
  * was previously responsible for this extension-appending behaviour.  Vite
@@ -22,33 +25,53 @@ import path from 'node:path'
 export function applyEsmExtensions(code: string, fromFile: string): string {
   const fromDir = path.dirname(fromFile)
 
-  return code.replace(
+  const rewriteImportPath = (
+    importPath: string,
+    preservePrefix: string,
+    preserveSuffix: string,
+  ): string => {
+    const existingExt = path.extname(importPath)
+
+    // Already has a concrete non-JS extension (.json, .css, .svg, …) — leave
+    // it alone.
+    if (existingExt && existingExt !== '.js' && existingExt !== '.jsx') {
+      return preservePrefix + importPath + preserveSuffix
+    }
+
+    // Strip any existing .js/.jsx suffix so we can probe with all variants.
+    const base = existingExt
+      ? importPath.slice(0, -existingExt.length)
+      : importPath
+    const absBase = path.join(fromDir, base)
+
+    // Probe for .ts / .js first (prefer .js extension in output).
+    if (fs.existsSync(absBase + '.ts') || fs.existsSync(absBase + '.js')) {
+      return preservePrefix + base + '.js' + preserveSuffix
+    }
+
+    // Probe for .tsx / .jsx (use .jsx extension in output).
+    if (fs.existsSync(absBase + '.tsx') || fs.existsSync(absBase + '.jsx')) {
+      return preservePrefix + base + '.jsx' + preserveSuffix
+    }
+
+    return preservePrefix + importPath + preserveSuffix
+  }
+
+  // Handle static imports/exports: `from '../lib/db'` or `from "../lib/db"`
+  let result = code.replace(
     /\bfrom\s+(['"])(\.\.?\/[^'"]+)\1/g,
     (match, quote, importPath) => {
-      const existingExt = path.extname(importPath)
-
-      // Already has a concrete non-JS extension (.json, .css, .svg, …) — leave
-      // it alone.
-      if (existingExt && existingExt !== '.js' && existingExt !== '.jsx') {
-        return match
-      }
-
-      // Strip any existing .js/.jsx suffix so we can probe with all variants.
-      const base =
-        existingExt ? importPath.slice(0, -existingExt.length) : importPath
-      const absBase = path.join(fromDir, base)
-
-      // Probe for .ts / .js first (prefer .js extension in output).
-      if (fs.existsSync(absBase + '.ts') || fs.existsSync(absBase + '.js')) {
-        return `from ${quote}${base}.js${quote}`
-      }
-
-      // Probe for .tsx / .jsx (use .jsx extension in output).
-      if (fs.existsSync(absBase + '.tsx') || fs.existsSync(absBase + '.jsx')) {
-        return `from ${quote}${base}.jsx${quote}`
-      }
-
-      return match
+      return `from ${rewriteImportPath(importPath, quote, quote)}`
     },
   )
+
+  // Handle dynamic imports: `import('../lib/db')` or `import("../lib/db")`
+  result = result.replace(
+    /\bimport\s*\(\s*(['"])(\.\.?\/[^'"]+)\1\s*\)/g,
+    (match, quote, importPath) => {
+      return `import(${rewriteImportPath(importPath, quote, quote)})`
+    },
+  )
+
+  return result
 }
