@@ -30,6 +30,7 @@ import { applyOtelWrapping } from './esbuild-plugin-cedar-otel-wrapping.js'
 import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
 import { applyImportDir } from './import-dir.js'
 import { applySrcAlias } from './src-alias.js'
+import { applyTsconfigPaths } from './tsconfig-paths.js'
 
 export const cedarApiGraphqlPlugin = {
   name: 'cedar-api-graphql',
@@ -49,6 +50,16 @@ export const cedarApiGraphqlPlugin = {
         path.dirname(
           path.relative(build.initialOptions.absWorkingDir + '/src', args.path),
         ),
+      )
+
+      // Rewrite bare specifiers that match a user-defined tsconfig.json
+      // `paths` alias to relative paths. Runs before applyDirectoryNamedImport
+      // since a resolved alias can itself point at a directory that needs
+      // directory-named-import resolution.
+      fileContents = applyTsconfigPaths(
+        fileContents,
+        args.path,
+        getPaths().api.base,
       )
 
       // Rewrite relative directory imports (e.g. `./Button`) to their index
