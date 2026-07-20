@@ -12,6 +12,9 @@ const config: Config = {
   // use correct path, for example, coverageDirectory
   rootDir: cedarPaths.base,
   roots: [path.join(cedarPaths.web.src)],
+  // Opting out of jsdom's browser-style export condition resolution (needed to
+  // resolve `msw/node`) is handled by the environment itself, via
+  // jest-fixed-jsdom
   testEnvironment: path.join(__dirname, './RedwoodWebJestEnv.js'),
   displayName: {
     color: 'blueBright',
@@ -78,6 +81,23 @@ const config: Config = {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   transform: {
+    // MSW's CommonJS build `require`s ESM-only packages (`rettime`,
+    // `@open-draft/deferred-promise` and `until-async`, which ships ESM in
+    // plain `.js` files). Node supports require(esm), but Jest's runtime
+    // doesn't, so compile any `.mjs` file that gets pulled in from
+    // node_modules (plus until-async) to CommonJS. This needs its own
+    // transform entry (with the config inlined) because the web babel config
+    // ignores node_modules
+    '[/\\\\]node_modules[/\\\\](?:.+\\.mjs|until-async[/\\\\].+\\.js)$': [
+      'babel-jest',
+      {
+        babelrc: false,
+        configFile: false,
+        presets: [
+          [require.resolve('@babel/preset-env'), { targets: { node: '20' } }],
+        ],
+      },
+    ],
     '\\.[jt]sx?$': [
       'babel-jest',
       // When jest runs tests in parallel, it serializes the config before passing down options to babel
@@ -87,6 +107,13 @@ const config: Config = {
       },
     ],
   },
+  // Jest's default is to not transform anything in node_modules, but `.mjs`
+  // files (and until-async) have to be compiled to CommonJS (see the
+  // transform above)
+  transformIgnorePatterns: [
+    '[/\\\\]node_modules[/\\\\](?!.*\\.mjs$)(?!until-async[/\\\\])',
+    '\\.pnp\\.[^\\\\/]+$',
+  ],
   resolver: path.resolve(__dirname, './resolver.js'),
   testPathIgnorePatterns: ['.(stories|mock).[jt]sx?$'],
 }

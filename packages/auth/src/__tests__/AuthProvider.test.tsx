@@ -9,7 +9,7 @@ import {
   waitFor,
   configure,
 } from '@testing-library/react'
-import { graphql } from 'msw'
+import { graphql, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
 import {
   afterAll,
@@ -20,17 +20,6 @@ import {
   test,
   vi,
 } from 'vitest'
-import {
-  fetch as fetchPolyfill,
-  Headers as HeadersPolyfill,
-  Request as RequestPolyfill,
-  Response as ResponsePolyfill,
-} from 'whatwg-fetch'
-
-globalThis.fetch = fetchPolyfill
-globalThis.Headers = HeadersPolyfill
-globalThis.Request = RequestPolyfill
-globalThis.Response = ResponsePolyfill
 
 import type { CustomTestAuthClient } from './fixtures/customTestAuth.js'
 import { createCustomTestAuth } from './fixtures/customTestAuth.js'
@@ -52,18 +41,18 @@ globalThis.RWJS_API_GRAPHQL_URL = '/.netlify/functions/graphql'
 
 let mockedIsAuthenticatedStatus = false
 const server = setupServer(
-  graphql.query('__CEDAR__AUTH_GET_CURRENT_USER', (_req, res, ctx) => {
+  graphql.query('__CEDAR__AUTH_GET_CURRENT_USER', () => {
     if (!mockedIsAuthenticatedStatus) {
-      return res(ctx.status(500))
+      return new HttpResponse(null, { status: 500 })
     }
 
-    return res(
-      ctx.data({
+    return HttpResponse.json({
+      data: {
         cedar: {
           currentUser: CURRENT_USER_DATA,
         },
-      }),
-    )
+      },
+    })
   }),
 )
 
