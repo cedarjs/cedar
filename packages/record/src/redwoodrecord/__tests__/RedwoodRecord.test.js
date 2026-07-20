@@ -52,7 +52,7 @@ describe('save()', () => {
     }
     const user = new User()
 
-    expect(user.save({ throw: true })).rejects.toThrow(
+    await expect(user.save({ throw: true })).rejects.toThrow(
       ValidationErrors.PresenceValidationError,
     )
   })
