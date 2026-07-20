@@ -226,9 +226,21 @@ describe('yarn cedar dev', () => {
     // pino logs) is piped through the same formatter the fallback api job
     // uses, so api logs are pretty-printed under --ud too
     expect(devCommand.command).toContain('| yarn cedar-log-formatter')
-    expect(devCommand.command.trim().endsWith('yarn cedar-log-formatter')).toBe(
-      true,
-    )
+
+    if (process.platform === 'win32') {
+      // No shell available to force `pipefail` on Windows, so the pipe is
+      // used as-is
+      expect(
+        devCommand.command.trim().endsWith('yarn cedar-log-formatter'),
+      ).toBe(true)
+    } else {
+      // `pipefail` ensures a crash in cedar-unified-dev isn't masked by
+      // cedar-log-formatter exiting 0 on EOF
+      expect(devCommand.command).toMatch(/^bash -c 'set -o pipefail; .*'$/)
+      expect(
+        devCommand.command.trim().endsWith("| yarn cedar-log-formatter'"),
+      ).toBe(true)
+    }
 
     // No separate api/web commands should be present
     const { webCommand, apiCommand } = findSeparateCommands()

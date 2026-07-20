@@ -328,24 +328,41 @@ export const handler = async ({
       return null
     }
 
-    return [
+    const unifiedCommand = [
       formatViteDevBinCommand('cedar-unified-dev', nodeArgs),
       `  --port ${webAvailablePort}`,
       `  --apiPort ${apiAvailablePort}`,
       getApiDebugFlag(apiDebugPort, apiAvailablePort),
       debugBrk ? '--debug-brk' : '',
       forward,
-      // The unified dev server still runs as a single spawned process (see
-      // `formatViteDevBinCommand` above), so its combined stdout — Vite's own
-      // output plus the in-process API's raw pino NDJSON logs — can be piped
-      // through the same formatter the fallback api job uses below. Lines
-      // that aren't pino NDJSON (i.e. Vite's own output) pass through
-      // `cedar-log-formatter` unchanged.
-      `| ${formatRunBinCommand('cedar-log-formatter')}`,
     ]
       .join(' ')
       .replace(/\s+/g, ' ')
       .trim()
+
+    // The unified dev server still runs as a single spawned process (see
+    // `formatViteDevBinCommand` above), so its combined stdout — Vite's own
+    // output plus the in-process API's raw pino NDJSON logs — can be piped
+    // through the same formatter the fallback api job uses below. Lines that
+    // aren't pino NDJSON (i.e. Vite's own output) pass through
+    // `cedar-log-formatter` unchanged.
+    const pipedCommand = `${unifiedCommand} | ${formatRunBinCommand('cedar-log-formatter')}`
+
+    if (process.platform === 'win32') {
+      return pipedCommand
+    }
+
+    // Without `pipefail`, a shell pipeline's exit code is whatever the last
+    // command in it (`cedar-log-formatter`) exits with — not
+    // `cedar-unified-dev`'s. If the dev server crashes, the formatter just
+    // sees its stdin close (EOF) and exits 0, which would make `concurrently`
+    // (and thus `cedar dev --ud`, see the `result.then`/`.catch` below) report
+    // success on a real server failure. `concurrently` spawns this command via
+    // `/bin/sh`, which on many Linux distros is `dash` — `dash` doesn't
+    // support `pipefail` and aborts outright if asked for it, so force `bash`
+    // (present on essentially every POSIX dev/CI machine) rather than relying
+    // on whatever `/bin/sh` happens to be.
+    return `bash -c 'set -o pipefail; ${pipedCommand}'`
   }
 
   const unifiedDevCommand = buildUnifiedDevCommand()
