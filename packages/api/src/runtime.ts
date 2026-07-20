@@ -244,17 +244,27 @@ export function legacyResultToResponse(result: LegacyHandlerResult): Response {
     }
   }
 
-  const body = result.body ?? ''
+  const status = result.statusCode ?? 200
 
-  if (result.isBase64Encoded) {
-    return new Response(Buffer.from(body, 'base64'), {
-      status: result.statusCode ?? 200,
+  // The `Response` constructor throws a TypeError if a "null body status" is
+  // given a non-null body. Per the WHATWG Fetch spec those statuses are 101,
+  // 103, 204, 205 and 304. The 1xx ones are unreachable here because the same
+  // constructor throws a RangeError for any status outside 200-599.
+  // See: https://fetch.spec.whatwg.org/#null-body-status and
+  // https://fetch.spec.whatwg.org/#response-class ('If init["status"] is not in
+  // the range 200 to 599, inclusive, then throw a RangeError.')
+  const isNoBodyStatus = status === 204 || status === 205 || status === 304
+  const body = isNoBodyStatus ? null : (result.body ?? '')
+
+  if (result.isBase64Encoded && !isNoBodyStatus) {
+    return new Response(Buffer.from(body || '', 'base64'), {
+      status,
       headers,
     })
   }
 
   return new Response(body, {
-    status: result.statusCode ?? 200,
+    status,
     headers,
   })
 }
