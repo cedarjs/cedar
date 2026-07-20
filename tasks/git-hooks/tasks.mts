@@ -131,9 +131,23 @@ export async function runPrePushTasks(): Promise<number> {
     return 0
   }
 
-  const results = await Promise.allSettled([
-    execAsync('yarn', ['build'], 'git-hooks', { env: { NX_TUI: 'false' } }),
+  const buildPromise = execAsync('yarn', ['build'], 'git-hooks', {
+    env: { NX_TUI: 'false' },
+  })
+
+  // `lint` (via `lint:templates`) needs several packages' compiled `dist/`
+  // output to already exist — the templates' eslint config `require()`s
+  // things like `@cedarjs/babel-config`'s dist. Running it at the same time
+  // as `build` races build's writes and intermittently fails with "Cannot
+  // find module" for a dist file build hasn't produced yet. Everything else
+  // below only reads source files, so it can still run alongside `build`.
+  const lintPromise = buildPromise.then(() =>
     execAsync('yarn', ['lint'], 'git-hooks'),
+  )
+
+  const results = await Promise.allSettled([
+    buildPromise,
+    lintPromise,
     execAsync('yarn', ['prettier', '--check', '.'], 'git-hooks'),
     execAsync('yarn', ['check'], 'git-hooks'),
     execAsync(
