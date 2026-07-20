@@ -335,6 +335,13 @@ export const handler = async ({
       getApiDebugFlag(apiDebugPort, apiAvailablePort),
       debugBrk ? '--debug-brk' : '',
       forward,
+      // The unified dev server still runs as a single spawned process (see
+      // `formatViteDevBinCommand` above), so its combined stdout — Vite's own
+      // output plus the in-process API's raw pino NDJSON logs — can be piped
+      // through the same formatter the fallback api job uses below. Lines
+      // that aren't pino NDJSON (i.e. Vite's own output) pass through
+      // `cedar-log-formatter` unchanged.
+      `| ${formatRunBinCommand('cedar-log-formatter')}`,
     ]
       .join(' ')
       .replace(/\s+/g, ' ')

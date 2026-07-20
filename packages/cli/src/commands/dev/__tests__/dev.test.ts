@@ -222,6 +222,14 @@ describe('yarn cedar dev', () => {
     expect(devCommand.env?.NODE_ENV).toEqual('development')
     expect(devCommand.env?.NODE_OPTIONS).toContain('--enable-source-maps')
 
+    // Its combined stdout (Vite's own output plus the in-process API's raw
+    // pino logs) is piped through the same formatter the fallback api job
+    // uses, so api logs are pretty-printed under --ud too
+    expect(devCommand.command).toContain('| yarn cedar-log-formatter')
+    expect(devCommand.command.trim().endsWith('yarn cedar-log-formatter')).toBe(
+      true,
+    )
+
     // No separate api/web commands should be present
     const { webCommand, apiCommand } = findSeparateCommands()
     expect(webCommand).toBeUndefined()
