@@ -258,6 +258,60 @@ Routes.tsx ← 4 routes added inside <Set wrap={ScaffoldLayout} title="Posts" ..
 | cookie-jar           | Typed cookie map. get/set/has/unset/serialize.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | utils                | Pluralization wrapper.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
+## THE FIVE CONTEXTS (`ctx` / `context` disambiguation)
+
+`ctx` and `context` name five unrelated things in this codebase. Only #2 and #3
+are the same data; the rest are entirely separate systems.
+
+| #   | Name                      | Side | Where                                                          | What it is                                                                    |
+| --- | ------------------------- | ---- | -------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| 1   | MSW response transformers | web  | `packages/testing/src/web/mockRequests.ts`                     | Response **builder** in test/Storybook GraphQL mocks. Not request state.      |
+| 2   | GraphQL resolver context  | api  | `packages/graphql-server/src/types.ts` (`CedarGraphQLContext`) | Yoga per-request context: `currentUser`, request, auth state.                 |
+| 3   | Global `context`          | api  | `packages/context`                                             | AsyncLocalStorage-backed Proxy, auto-imported in services. Populated from #2. |
+| 4   | Mocked global `context`   | api  | `packages/testing/src/api/mockContext.ts`                      | Test double for #3, so service tests run with no GraphQL server.              |
+| 5   | Listr2 task `ctx`         | CLI  | `packages/cli/src/commands/**` (setup/generate/upgrade)        | Passes state between tasks in a listr2 task list.                             |
+
+**1. MSW response transformers.** The `ctx` in `mockGraphQLQuery('Op', (variables, { ctx, req }) => ...)`
+and in generated `*.mock.ts` cell mocks. In MSW v1 each `ctx.*` call returned a
+`ResponseTransformer` composed into `res(...)`, so `ctx.data()` _constructs_ a
+response body — it never reads request state. MSW v2 removed the pattern in
+favour of returning an `HttpResponse`; Cedar reimplements the v1 shape on top of
+v2 to keep existing mocks working. Web-side test scaffolding only — unrelated to
+every other row despite the name.
+
+**2. GraphQL resolver context.** graphql-js hands resolvers
+`(root, args, context, info)`. Cedar remaps this so services read naturally,
+in `makeMergedSchema.ts`:
+
+```ts
+// Map the arguments from GraphQL to an ordinary function a service would expect.
+return services[name](args, { root, context, info })
+```
+
+Args move to first position (so a service destructures `{ id }` directly) and
+the rest move into a bag in second position. The codegen mirrors this, which is
+why generated `types/graphql.d.ts` has a custom `ResolverFn`:
+
+```ts
+export type ResolverFn<TResult, TParent, TContext, TArgs> = (
+  args?: TArgs,
+  obj?: { root: TParent; context: TContext; info: GraphQLResolveInfo }
+) => TResult | Promise<TResult>
+```
+
+**3. Global `context`.** Same data as #2, reached differently. The
+`useRedwoodGlobalContextSetter` plugin copies the resolved GraphQL context into
+the ALS store as it is built, so services can read `context.currentUser` without
+threading it through every call. Services rarely destructure #2 — the second
+parameter is the escape hatch for `root` and `info`, which the global doesn't
+expose. See the next section for lifecycle details.
+
+**Naming caution:** `mockCurrentUser()` exists on both sides with the same name —
+web-side (in `mockRequests.ts`, registering an MSW handler for
+`__CEDAR__AUTH_GET_CURRENT_USER`) and api-side (setting #4). User-facing docs
+should say "MSW response transformers" rather than "ctx" when discussing #1, or
+readers reasonably assume Cedar's `context` is changing.
+
 ## ALS WRAPPING & GLOBAL CONTEXT
 
 Cedar provides two related but distinct mechanisms:
