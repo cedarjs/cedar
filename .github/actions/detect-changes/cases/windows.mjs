@@ -18,7 +18,7 @@
 
 const WINDOWS_SENSITIVE_PATTERN = new RegExp(
   [
-    'path\\.(join|resolve|relative|normalize|sep|isAbsolute|posix|win32|delimiter)',
+    'path\\.(join|resolve|relative|normalize|sep|isAbsolute|posix|win32|delimiter|basename)',
     'normalizePath',
     '__dirname',
     '__filename',
