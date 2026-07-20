@@ -268,6 +268,23 @@ describe('legacyResultToResponse', () => {
     expect(await response.text()).toBe('')
   })
 
+  it('sends no body for status 205', async () => {
+    const result: APIGatewayProxyResult = {
+      statusCode: 205,
+      headers: {
+        'x-test': 'true',
+      },
+      body: 'this body should be dropped',
+    }
+
+    const response = legacyResultToResponse(result)
+
+    expect(response.status).toBe(205)
+    expect(response.headers.get('x-test')).toBe('true')
+    expect(response.body).toBeNull()
+    expect(await response.text()).toBe('')
+  })
+
   it('sends no body for status 304', async () => {
     const result: APIGatewayProxyResult = {
       statusCode: 304,
@@ -295,6 +312,20 @@ describe('legacyResultToResponse', () => {
     const response = legacyResultToResponse(result)
 
     expect(response.status).toBe(204)
+    expect(response.body).toBeNull()
+    expect(await response.text()).toBe('')
+  })
+
+  it('sends no body for status 205 even when base64 encoded', async () => {
+    const result: APIGatewayProxyResult = {
+      statusCode: 205,
+      isBase64Encoded: true,
+      body: Buffer.from('this body should be dropped').toString('base64'),
+    }
+
+    const response = legacyResultToResponse(result)
+
+    expect(response.status).toBe(205)
     expect(response.body).toBeNull()
     expect(await response.text()).toBe('')
   })

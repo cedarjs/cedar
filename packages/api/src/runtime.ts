@@ -246,9 +246,12 @@ export function legacyResultToResponse(result: LegacyHandlerResult): Response {
 
   const status = result.statusCode ?? 200
 
-  // All 1xx (Informational), 204 (No Content), and 304 (Not Modified) responses do not include content.
-  // See: https://www.rfc-editor.org/rfc/rfc9110.html#section-6.4.1-8
-  const isNoBodyStatus = status < 200 || status === 204 || status === 304
+  // The `Response` constructor throws a TypeError if a "null body status" is
+  // given a non-null body. Per the WHATWG Fetch spec those statuses are 101,
+  // 103, 204, 205 and 304. The 1xx ones are unreachable here because the same
+  // constructor throws a RangeError for any status outside 200-599.
+  // See: https://fetch.spec.whatwg.org/#null-body-status
+  const isNoBodyStatus = status === 204 || status === 205 || status === 304
   const body = isNoBodyStatus ? null : (result.body ?? '')
 
   if (result.isBase64Encoded && !isNoBodyStatus) {
