@@ -40,10 +40,10 @@ export default defineConfig({
       },
     ],
     env: {
-      // If NO_COLOR is set in the parent shell, Node prints a warning, which
-      // breaks assertions in a few tests (i.e. cwd.test.js). Clearing NO_COLOR
-      // here fixes that issue
-      NO_COLOR: undefined,
+      // NO_COLOR is cleared in vitest.setup.mts. (In Vitest 4 setting
+      // `NO_COLOR: undefined` here would set it to the string "undefined"
+      // instead of removing it, which makes Node print a warning that breaks
+      // assertions in a few tests (i.e. cwd.test.ts))
       FORCE_COLOR: 'true',
     },
   },

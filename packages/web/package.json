@@ -187,7 +187,7 @@
     "react-dom": "19.2.3",
     "tstyche": "5.0.2",
     "typescript": "5.9.3",
-    "vitest": "3.2.6"
+    "vitest": "4.1.10"
   },
   "peerDependencies": {
     "@cedarjs/auth": "workspace:*",

@@ -52,16 +52,37 @@ const userConfig = {
   requestTimeout: 25_000,
 }
 
-const configPath = await vi.hoisted(async () => {
+const mockedConfigSpecifiers = await vi.hoisted(async () => {
   const path = await import('node:path')
+  const url = await import('node:url')
+
+  // Vitest 4's module runner no longer provides the CJS `__dirname` shim in
+  // ES module scope, so derive the directory from `import.meta`
+  const testDir = path.dirname(url.fileURLToPath(import.meta.url))
 
   // This will be `D:\` on Windows (or some other drive letter) and `/` on Unix
-  const osRoot = path.parse(__dirname).root.replace('\\', '/')
+  const osRoot = path.parse(testDir).root.replace('\\', '/')
 
-  return osRoot + 'graphql/cedar-app/api/server.config.js'
+  const configPath = osRoot + 'graphql/cedar-app/api/server.config.js'
+
+  return {
+    configPath,
+    // Vitest 4's module runner resolves the dynamic import in fastify.ts to
+    // the file:// URL produced by pathToFileURL(), so the mock has to be
+    // registered under that exact specifier as well
+    configUrl: url.pathToFileURL(configPath).href,
+  }
 })
 
-vi.mock(configPath, () => {
+vi.mock(mockedConfigSpecifiers.configPath, () => {
+  return {
+    default: {
+      config: userConfig,
+    },
+  }
+})
+
+vi.mock(mockedConfigSpecifiers.configUrl, () => {
   return {
     default: {
       config: userConfig,

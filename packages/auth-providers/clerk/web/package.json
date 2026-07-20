@@ -60,7 +60,7 @@
     "publint": "0.3.21",
     "react": "19.2.3",
     "typescript": "5.9.3",
-    "vitest": "3.2.6"
+    "vitest": "4.1.10"
   },
   "peerDependencies": {
     "@clerk/clerk-react": "5.61.3"

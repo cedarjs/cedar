@@ -48,6 +48,19 @@ vi.mock('C:/proj/web/dist/ssr/entry-server.mjs', () => {
     registerMiddleware: distRegisterMwMock,
   }
 })
+// Vitest 4's module runner resolves the dynamic import in register.ts to the
+// full file:// URL produced by makeFilePath(), so the mock has to be
+// registered under that exact specifier as well
+vi.mock('file:///proj/web/dist/ssr/entry-server.mjs', () => {
+  return {
+    registerMiddleware: distRegisterMwMock,
+  }
+})
+vi.mock('file:///C:/proj/web/dist/ssr/entry-server.mjs', () => {
+  return {
+    registerMiddleware: distRegisterMwMock,
+  }
+})
 
 describe('createMiddlewareRouter', () => {
   beforeEach(() => {

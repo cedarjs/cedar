@@ -20,13 +20,13 @@ export function cedarVitestApiConfigPlugin(): Plugin {
         },
         test: {
           environment: path.join(import.meta.dirname, 'CedarApiVitestEnv.js'),
-          // fileParallelism: false,
-          // fileParallelism doesn't work with vitest projects (which is what
-          // we're using in the root vitest.config.ts). As a workaround we set
-          // poolOptions instead, which also shouldn't work, but was suggested
-          // by Vitest team member AriPerkkio (Hiroshi's answer didn't work).
-          // https://github.com/vitest-dev/vitest/discussions/7416
-          poolOptions: { forks: { singleFork: true } },
+          // All api test files share a single test database, so they can't
+          // run in parallel. In Vitest 3 project-level fileParallelism didn't
+          // work (https://github.com/vitest-dev/vitest/discussions/7416) and
+          // we used the now-removed `poolOptions: { forks: { singleFork:
+          // true } }` as a workaround. Vitest 4 removed `poolOptions` and
+          // supports `fileParallelism` in project configs.
+          fileParallelism: false,
           setupFiles: [path.join(import.meta.dirname, 'vitest-api.setup.js')],
         },
       }

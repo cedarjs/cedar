@@ -99,7 +99,10 @@ function createMockTask() {
 }
 
 afterEach(() => {
-  vi.restoreAllMocks()
+  // In Vitest 4 `restoreAllMocks` only affects `vi.spyOn` spies, so use
+  // `resetAllMocks` to clear call history on the module-factory `vi.fn()`
+  // mocks and reset them to their original factory implementations
+  vi.resetAllMocks()
 })
 
 describe('buildPackagesTask', () => {

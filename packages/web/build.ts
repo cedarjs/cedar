@@ -17,6 +17,9 @@ await build({
   entryPointOptions: {
     ignore: [
       ...defaultIgnorePatterns,
+      // defaultIgnorePatterns only covers .test.{ts,js}, so also ignore the
+      // .tsx test files to keep them out of the build output
+      '**/*.test.tsx',
       'src/__typetests__/**',
       'src/bundled/**', // <-- ⭐
     ],
@@ -34,7 +37,14 @@ await build({
   entryPointOptions: {
     // @NOTE: building the cjs bins only...
     // I haven't tried esm bins yet...
-    ignore: [...defaultIgnorePatterns, 'src/bins/**', 'src/__typetests__/**'],
+    ignore: [
+      ...defaultIgnorePatterns,
+      // defaultIgnorePatterns only covers .test.{ts,js}, so also ignore the
+      // .tsx test files to keep them out of the build output
+      '**/*.test.tsx',
+      'src/bins/**',
+      'src/__typetests__/**',
+    ],
   },
   buildOptions: {
     ...defaultBuildOptions,

@@ -29,7 +29,14 @@ const xhrMock: Partial<XMLHttpRequest> = {
 }
 
 vi.spyOn(global, 'XMLHttpRequest').mockImplementation(
-  () => xhrMock as XMLHttpRequest,
+  // Vitest 4 calls mock implementations with `new` when the source code does
+  // `new XMLHttpRequest()`, so the implementation must be constructible.
+  // A regular function (not an arrow function) that returns the partial mock
+  // satisfies that: `new fn()` yields the returned object.
+  function () {
+    // The partial mock covers everything WebAuthnClient uses
+    return xhrMock as XMLHttpRequest
+  },
 )
 
 function clearCookies() {
