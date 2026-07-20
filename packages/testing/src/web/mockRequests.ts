@@ -15,7 +15,10 @@ interface MockServerCommonApi {
   resetHandlers(): void
 }
 type MockWorkerInstance = MockServerCommonApi & { stop(): void }
-type MockServerInstance = MockServerCommonApi & { close(): void }
+type MockServerInstance = MockServerCommonApi & {
+  listen(options?: Partial<SharedOptions>): void
+  close(): void
+}
 
 // Allow users to call "mockGraphQLQuery" and "mockGraphQLMutation"
 // before the server has started. We store the request handlers in
@@ -29,6 +32,10 @@ let SERVER_INSTANCE: MockWorkerInstance | MockServerInstance | undefined
  * Request handlers can be registered lazily (via `mockGraphQL<Query|Mutation>`),
  * the queue will be drained and used.
  */
+
+// Assigned to a variable so bundlers can't statically resolve the dynamic
+// import below. See the comment at its call site.
+const MSW_NODE_SPECIFIER = 'msw/node'
 
 type StartOptions<Target> = Target extends 'browsers'
   ? StartMSWWorkerOptions
@@ -47,7 +54,16 @@ export const startMSW = async <Target extends 'node' | 'browsers'>(
     SERVER_INSTANCE = worker
     await worker.start(options)
   } else {
-    const { setupServer } = await import('msw/node')
+    // Keep this specifier opaque to static analysis. Bundling this module for
+    // the browser (Storybook, Vitest browser mode) would otherwise make
+    // Vite/Rollup resolve `msw/node`, and MSW's Node-only dependencies mark
+    // their browser entries as `"browser": null`, so resolution hard-fails
+    // with `No known conditions for "./ClientRequest"` — even though the
+    // browser never reaches this branch.
+    const { setupServer } = (await import(
+      /* @vite-ignore */ MSW_NODE_SPECIFIER
+    )) as { setupServer: () => MockServerInstance }
+
     const server = setupServer()
     SERVER_INSTANCE = server
     server.listen(options)
@@ -141,7 +157,7 @@ export type DataFunction<
     req: MockGraphQLRequest
     ctx: MockGraphQLContext
   },
-) => Query | void
+) => Query | void | Promise<Query | void>
 
 type ResponseEnhancer = 'once' | 'networkError'
 
@@ -222,7 +238,10 @@ const mockGraphQL = (
         method: request.method,
       }
 
-      d = data(variables, { req, ctx })
+      // Awaited so `async` mock-data callbacks resolve before serialization.
+      // Without this an unresolved promise reaches `HttpResponse.json()` and
+      // serializes to `{}`, silently handing the caller empty `data`
+      d = await data(variables, { req, ctx })
     } else {
       d = data
     }
