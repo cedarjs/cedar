@@ -112,13 +112,13 @@ config, `vite build --app`; Cedar is on Vite 7.3.5). Benefits:
 Apollo Client 4 ships `prerenderStatic` from `@apollo/client/react/ssr` — a
 supported API that does exactly what Cedar's custom machinery does, better:
 
-| Cedar today (`runPrerenderEsm.tsx`)                       | Apollo `prerenderStatic`                                             |
-| --------------------------------------------------------- | -------------------------------------------------------------------- |
-| `CellCacheContextProvider` + `queryCache` intercept cells | Cells run their real `useQuery` against a real client                |
-| `recursivelyRender` multi-pass loop                       | Built-in re-render-until-settled with `maxRerenders` guard           |
-| `executeQuery` plumbing to the GraphQL handler            | A terminating Apollo link that calls the handler in-process          |
-| Module-scope client prepopulation hack                    | Standard `client.extract()` → `__APOLLO_STATE__` → `cache.restore()` |
-| Nothing                                                   | `diagnostics: true` waterfall detection, `AbortSignal` timeouts      |
+| Cedar today (`runPrerenderEsm.tsx`)                       | Apollo `prerenderStatic`                                                  |
+| --------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `CellCacheContextProvider` + `queryCache` intercept cells | Cells run their real `useQuery` against a real client                     |
+| `recursivelyRender` multi-pass loop                       | Built-in re-render-until-settled with `maxRerenders` guard                |
+| `executeQuery` plumbing to the GraphQL handler            | A terminating Apollo link that calls the handler in-process               |
+| Module-scope client prepopulation hack                    | Standard `client.extract()` → `__CEDAR__APOLLO_STATE` → `cache.restore()` |
+| Nothing                                                   | `diagnostics: true` waterfall detection, `AbortSignal` timeouts           |
 
 Crucially, `prerenderStatic` supports both cell styles:
 
@@ -296,15 +296,19 @@ const apolloState = client.extract()
   Fallback if env-loading/side-effect issues surface: keep `NodeRunner`
   (`packages/prerender/src/graphql/node-runner.ts`) as the loader behind the
   same link.
-- Inject `apolloState` into the HTML as `window.__APOLLO_STATE__`; the web side
-  restores it with `cache.restore()` on boot. The natural place is the new
-  `CedarApolloProvider` (added during the AC4 upgrade, deprecating
-  `RedwoodApolloProvider`), which already instantiates the `InMemoryCache`
-  itself in `packages/web/src/apollo/CedarApolloProvider.tsx`. This replaces
-  Cedar's cell-cache serialization. Classic `useQuery` cells hit the restored
-  cache and render data immediately on hydration — no client
-  streaming/Suspense support required, so this does not depend on Cedar's
-  experimental streaming work.
+- Inject `apolloState` into the HTML under Cedar's **existing** global,
+  `globalThis.__CEDAR__APOLLO_STATE` (typed in `packages/web/ambient.d.ts`) —
+  today's prerender already writes it (`runPrerenderEsm.tsx`), and
+  `CedarApolloProvider` already restores it on boot
+  (`packages/web/src/apollo/CedarApolloProvider.tsx:52`, as does the
+  streaming suspense provider). Do **not** introduce a new
+  `window.__APOLLO_STATE__` name — that would silently break restore. The
+  web side therefore needs **no changes** in this track; only the server
+  side switches from the shared module-scope client + cell-cache
+  serialization to per-route `client.extract()`. Classic `useQuery` cells
+  hit the restored cache and render data immediately on hydration — no
+  client streaming/Suspense support required, so this does not depend on
+  Cedar's experimental streaming work.
 
 ### 2.2 Orchestration: concurrency and memory
 
@@ -370,7 +374,7 @@ const apolloState = client.extract()
 ## Relationship to SSR and RSC
 
 - **SSG for classic routes (this plan):** `prerender` environment bundle +
-  `prerenderStatic` at build time → static HTML + `__APOLLO_STATE__`.
+  `prerenderStatic` at build time → static HTML + `__CEDAR__APOLLO_STATE`.
 - **Request-time SSR
   ([2026-07-20-streaming-ssr-rewrite.md](./2026-07-20-streaming-ssr-rewrite.md)):**
   same environment/bundle foundation, rendered per request — with
@@ -411,8 +415,9 @@ per-route dispatcher decides which engine renders each route.
   orchestration
 - `packages/web/src/components/cell/CellCacheContext.tsx` — remove prerender
   interception
-- `packages/web/src/apollo/CedarApolloProvider.tsx` — `__APOLLO_STATE__`
-  restore into its `InMemoryCache`
+- `packages/web` — **no changes needed**: `CedarApolloProvider` (and the
+  suspense provider) already restore `globalThis.__CEDAR__APOLLO_STATE` on
+  boot; the server side keeps writing that same global
 
 **Track 2 — deleted:**
 
