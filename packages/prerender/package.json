@@ -101,7 +101,7 @@
     "concurrently": "9.2.1",
     "publint": "0.3.21",
     "typescript": "5.9.3",
-    "vitest": "3.2.6"
+    "vitest": "4.1.10"
   },
   "peerDependencies": {
     "@cedarjs/router": "4.2.0",

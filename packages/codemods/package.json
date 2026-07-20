@@ -54,7 +54,7 @@
     "memfs": "4.64.0",
     "publint": "0.3.21",
     "ts-dedent": "2.3.0",
-    "vitest": "3.2.6"
+    "vitest": "4.1.10"
   },
   "engines": {
     "node": ">=24"

@@ -235,7 +235,7 @@
     "graphql-tag": "2.12.6",
     "publint": "0.3.21",
     "ts-dedent": "2.3.0",
-    "vitest": "3.2.6"
+    "vitest": "4.1.10"
   },
   "engines": {
     "node": ">=24"

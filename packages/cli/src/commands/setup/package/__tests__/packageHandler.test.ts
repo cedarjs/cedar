@@ -44,7 +44,9 @@ vi.mock('@cedarjs/cli-helpers/packageManager/exec', async () => {
 vi.mock('enquirer', () => {
   return {
     default: {
-      Select: vi.fn(() => {
+      // Needs to be a `function` (not an arrow function), since Vitest 4
+      // forwards `new Select(...)` calls to the mock implementation
+      Select: vi.fn(function () {
         return {
           run: vi.fn(() => {
             throw new Error('Mock Not Implemented')
@@ -127,7 +129,7 @@ describe('packageHandler', () => {
       throw new Error('No compatible version found')
     })
 
-    vi.mocked(mockEnq.Select).mockImplementation(() => {
+    vi.mocked(mockEnq.Select).mockImplementation(function () {
       return {
         run: vi.fn(() => 'cancel'),
       }
@@ -140,7 +142,7 @@ describe('packageHandler', () => {
     expect(mockEnq.Select).toHaveBeenCalledTimes(1)
     expect(dlx).not.toHaveBeenCalled()
 
-    vi.mocked(mockEnq.Select).mockImplementation(() => {
+    vi.mocked(mockEnq.Select).mockImplementation(function () {
       return {
         run: vi.fn(() => 'continue'),
       }
@@ -193,7 +195,7 @@ describe('packageHandler', () => {
       },
     })
 
-    vi.mocked(mockEnq.Select).mockImplementation(() => {
+    vi.mocked(mockEnq.Select).mockImplementation(function () {
       return {
         run: vi.fn(() => 'useLatestCompatibleVersion'),
       }
@@ -214,7 +216,7 @@ describe('packageHandler', () => {
       cwd: path.join('mocked', 'project'),
     })
 
-    vi.mocked(mockEnq.Select).mockImplementation(() => {
+    vi.mocked(mockEnq.Select).mockImplementation(function () {
       return {
         run: vi.fn(() => 'usePreferredVersion'),
       }
@@ -235,7 +237,7 @@ describe('packageHandler', () => {
       cwd: path.join('mocked', 'project'),
     })
 
-    vi.mocked(mockEnq.Select).mockImplementation(() => {
+    vi.mocked(mockEnq.Select).mockImplementation(function () {
       return {
         run: vi.fn(() => 'cancel'),
       }
@@ -292,7 +294,7 @@ describe('packageHandler', () => {
       },
     })
 
-    vi.mocked(mockEnq.Select).mockImplementation(() => {
+    vi.mocked(mockEnq.Select).mockImplementation(function () {
       return {
         run: vi.fn(() => 'useLatestCompatibleVersion'),
       }
@@ -313,7 +315,7 @@ describe('packageHandler', () => {
       cwd: path.join('mocked', 'project'),
     })
 
-    vi.mocked(mockEnq.Select).mockImplementation(() => {
+    vi.mocked(mockEnq.Select).mockImplementation(function () {
       return {
         run: vi.fn(() => 'usePreferredVersion'),
       }
@@ -334,7 +336,7 @@ describe('packageHandler', () => {
       cwd: path.join('mocked', 'project'),
     })
 
-    vi.mocked(mockEnq.Select).mockImplementation(() => {
+    vi.mocked(mockEnq.Select).mockImplementation(function () {
       return {
         run: vi.fn(() => 'cancel'),
       }
@@ -389,7 +391,7 @@ describe('packageHandler', () => {
       },
     })
 
-    vi.mocked(mockEnq.Select).mockImplementation(() => {
+    vi.mocked(mockEnq.Select).mockImplementation(function () {
       return {
         run: vi.fn(() => 'useLatestCompatibleVersion'),
       }
@@ -410,7 +412,7 @@ describe('packageHandler', () => {
       cwd: path.join('mocked', 'project'),
     })
 
-    vi.mocked(mockEnq.Select).mockImplementation(() => {
+    vi.mocked(mockEnq.Select).mockImplementation(function () {
       return {
         run: vi.fn(() => 'usePreferredVersion'),
       }
@@ -431,7 +433,7 @@ describe('packageHandler', () => {
       cwd: path.join('mocked', 'project'),
     })
 
-    vi.mocked(mockEnq.Select).mockImplementation(() => {
+    vi.mocked(mockEnq.Select).mockImplementation(function () {
       return {
         run: vi.fn(() => 'cancel'),
       }
@@ -473,7 +475,7 @@ describe('packageHandler', () => {
     )
 
     // No force should prompt
-    vi.mocked(mockEnq.Select).mockImplementation(() => {
+    vi.mocked(mockEnq.Select).mockImplementation(function () {
       return {
         run: vi.fn(() => 'useLatestCompatibleVersion'),
       }

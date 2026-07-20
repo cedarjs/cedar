@@ -141,7 +141,7 @@
     "tstyche": "5.0.2",
     "typescript": "5.9.3",
     "typescript-eslint": "8.60.1",
-    "vitest": "3.2.6",
+    "vitest": "4.1.10",
     "ws": "8.20.0",
     "yargs": "17.7.3",
     "zx": "8.8.5"

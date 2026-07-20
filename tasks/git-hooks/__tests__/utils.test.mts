@@ -1,10 +1,17 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import { buildWindowsCommand } from '../utils.mts'
 
 describe('buildWindowsCommand', () => {
   beforeEach(() => {
     vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    // In Vitest 4, vi.spyOn returns the existing spy (with its call history)
+    // when the method is already spied on, so restore between tests to avoid
+    // call counts leaking from one test into the next.
+    vi.restoreAllMocks()
   })
 
   it('builds a command string with all args sanitized', () => {

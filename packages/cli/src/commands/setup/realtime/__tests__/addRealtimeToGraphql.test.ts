@@ -90,6 +90,10 @@ describe('addRealtimeToGraphqlHandler (filesystem)', () => {
 
   afterEach(() => {
     functionsDir = null
+    // In Vitest 4 `restoreAllMocks` only affects `vi.spyOn` spies, so also
+    // clear call history on the module-factory `vi.fn()` mocks (like
+    // fs.writeFileSync) to keep tests isolated
+    vi.clearAllMocks()
     vi.restoreAllMocks()
   })
 

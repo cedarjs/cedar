@@ -102,7 +102,7 @@
     "node-ssh": "13.2.1",
     "ts-dedent": "2.3.0",
     "typescript": "5.9.3",
-    "vitest": "3.2.6"
+    "vitest": "4.1.10"
   },
   "engines": {
     "node": ">=24"

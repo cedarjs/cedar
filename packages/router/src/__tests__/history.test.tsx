@@ -160,6 +160,12 @@ describe('blocking', () => {
 
     it('removes beforeUnload listener when unblocking the last blocker', () => {
       const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener')
+      // Vitest 4 reuses the existing spy when `vi.spyOn` is called on a
+      // method that is already spied on, so the spy still holds the call
+      // recorded by the previous test's `afterEach` (unblocking the last
+      // blocker there removes the beforeunload listener). Clear that stale
+      // history so we only count calls made by this test.
+      removeEventListenerSpy.mockClear()
 
       block(blocker1.id, blocker1.callback)
       block(blocker2.id, blocker2.callback)
