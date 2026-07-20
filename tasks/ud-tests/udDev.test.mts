@@ -110,6 +110,52 @@ describe('cedar dev --ud', () => {
       fs.writeFileSync(helloSrcPath, originalSrc)
     }
   }, 60_000)
+
+  it('pretty-prints the api logger output instead of printing raw pino NDJSON', async () => {
+    const unifiedDevBin = resolveUnifiedDevBin()
+    // The api logger defaults to `silent` when NODE_ENV=test (see
+    // packages/api/src/logger/index.ts), which vitest sets and this
+    // process inherits — force a level that actually emits the
+    // graphql-server plugin's debug-level request logs this test checks for.
+    const devProcess = $({
+      env: { ...process.env, LOG_LEVEL: 'debug' },
+    })`yarn node ${unifiedDevBin} --port ${WEB_PORT} --apiPort 18911 --no-open`
+    testContext.processes.push(devProcess)
+
+    let stdoutBuffer = ''
+    devProcess.stdout.on('data', (data: Buffer) => {
+      stdoutBuffer += data.toString()
+    })
+
+    await pollForReady(`${BASE_URL}/`)
+
+    const gqlRes = await fetchJson(`${BASE_URL}/.api/functions/graphql`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: '{ hello }' }),
+    })
+    expect(gqlRes.status).toEqual(200)
+
+    // Wait for the request's log lines to appear rather than a flat sleep,
+    // since flushing to stdout isn't synchronous with the response
+    for (let i = 0; i < 20; i++) {
+      if (stdoutBuffer.includes('🐛')) {
+        break
+      }
+      await sleep(250)
+    }
+
+    // The graphql-server request-logging plugin (useRedwoodLogger) logs
+    // through the api's pino logger on every request. Under `--ud`, that
+    // logger's destination is swapped for a formatting one (see
+    // packages/vite/src/plugins/vite-plugin-cedar-log-formatter-dev.ts) —
+    // so its output should look like cedar-log-formatter's pretty-printed
+    // format (emoji log-level markers, HH:mm:ss timestamps), not raw pino
+    // NDJSON.
+    expect(stdoutBuffer).toContain('🐛')
+    expect(stdoutBuffer).not.toContain('"level":20')
+    expect(stdoutBuffer).not.toMatch(/\{"level":\d+,"time":\d+/)
+  }, 60_000)
 })
 
 // ---------------------------------------------------------------------------

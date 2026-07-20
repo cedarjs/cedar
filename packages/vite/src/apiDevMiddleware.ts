@@ -36,6 +36,7 @@ import { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.
 import { cedarDirectoryNamedImportPlugin } from './plugins/vite-plugin-cedar-directory-named-import.js'
 import { applyGraphqlOptionsExtract } from './plugins/vite-plugin-cedar-graphql-options-extract.js'
 import { cedarImportDirPlugin } from './plugins/vite-plugin-cedar-import-dir.js'
+import { cedarApiLogFormatterDevPlugin } from './plugins/vite-plugin-cedar-log-formatter-dev.js'
 import { applyOtelWrapping } from './plugins/vite-plugin-cedar-otel-wrapping.js'
 import { cedarjsJobPathInjectorPlugin } from './plugins/vite-plugin-cedarjs-job-path-injector.js'
 
@@ -230,6 +231,7 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
       // tsconfigPaths resolves user-defined tsconfig.json `paths` aliases; it
       // replaces the Babel module-resolver's tsconfig-paths handling for dev.
       tsconfigPaths(),
+      cedarApiLogFormatterDevPlugin(),
       {
         name: 'cedar-api-src-redirect',
         enforce: 'pre',
