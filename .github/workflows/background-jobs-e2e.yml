@@ -30,6 +30,6 @@ jobs:
           YARN_ENABLE_IMMUTABLE_INSTALLS: false
 
       - name: Run E2E test script
-        run: yarn e2e:background-jobs ${{ steps.set-up-test-project.outputs.test-project-path }}
+        run: yarn e2e:background-jobs "${{ steps.set-up-test-project.outputs.test-project-path }}"
         env:
           CEDAR_VERBOSE_TELEMETRY: ''

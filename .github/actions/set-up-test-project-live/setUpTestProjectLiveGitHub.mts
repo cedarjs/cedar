@@ -11,7 +11,10 @@ import {
 import { setUpTestProjectLive } from './setUpTestProjectLive.mts'
 
 const parentDir = path.dirname(process.cwd())
-const testProjectPath = path.join(parentDir, 'test-project-live')
+// The space in the directory name is deliberate: it makes every CI run
+// exercise paths with spaces, which catches missing shell quoting on all
+// platforms (historically a Windows-breakage class we otherwise never test).
+const testProjectPath = path.join(parentDir, 'test project live')
 
 setUpTestProjectLive({
   setOutput: core.setOutput,
