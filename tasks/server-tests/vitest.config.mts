@@ -8,10 +8,6 @@ export default defineConfig({
     // which is necessary because we are starting and stopping servers
     // at the same host and port between test cases.
     pool: 'threads',
-    poolOptions: {
-      threads: {
-        singleThread: true,
-      },
-    },
+    fileParallelism: false,
   },
 })

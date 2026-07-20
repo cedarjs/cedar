@@ -19,7 +19,12 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
 vi.mock('listr2', async (importOriginal) => {
   const mod = await importOriginal<typeof Listr2Module>()
 
-  const Listr = vi.fn((tasks, options) => {
+  // Needs to be a `function` (not an arrow function), since Vitest 4 forwards
+  // `new Listr(...)` calls to the mock implementation
+  const Listr = vi.fn(function (
+    tasks: Listr2Module.ListrTask[],
+    options?: Listr2Module.ListrOptions,
+  ) {
     return new mod.Listr(tasks, { ...options, renderer: 'silent' })
   })
 

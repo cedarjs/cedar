@@ -7,10 +7,6 @@ export default defineConfig({
     // Run test suites in series because we start and stop servers
     // on the same host and port between test cases.
     pool: 'threads',
-    poolOptions: {
-      threads: {
-        singleThread: true,
-      },
-    },
+    fileParallelism: false,
   },
 })

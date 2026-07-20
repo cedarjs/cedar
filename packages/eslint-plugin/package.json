@@ -33,7 +33,7 @@
     "@typescript-eslint/parser": "8.60.1",
     "@typescript-eslint/rule-tester": "8.60.1",
     "typescript": "5.9.3",
-    "vitest": "3.2.6"
+    "vitest": "4.1.10"
   },
   "engines": {
     "node": ">=24"

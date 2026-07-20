@@ -17,11 +17,15 @@ import * as dbAuth from '../dbAuthHandler.js'
 
 vi.mock('listr2', async () => {
   return {
-    // Return a constructor function, since we're calling `new` on Listr
-    Listr: vi.fn().mockImplementation(() => ({
-      run: () => {},
-      ctx: {},
-    })),
+    // Return a constructor function (not an arrow function), since we're
+    // calling `new` on Listr and Vitest 4 forwards `new` calls to the mock
+    // implementation
+    Listr: vi.fn().mockImplementation(function () {
+      return {
+        run: () => {},
+        ctx: {},
+      }
+    }),
   }
 })
 

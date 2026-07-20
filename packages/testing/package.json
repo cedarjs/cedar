@@ -149,13 +149,13 @@
     "jsdom": "27.4.0",
     "publint": "0.3.21",
     "typescript": "5.9.3",
-    "vitest": "3.2.6"
+    "vitest": "4.1.10"
   },
   "peerDependencies": {
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/router": "workspace:*",
     "@cedarjs/web": "workspace:*",
-    "vitest": "3.2.6"
+    "vitest": "4.1.10"
   },
   "peerDependenciesMeta": {
     "vitest": {

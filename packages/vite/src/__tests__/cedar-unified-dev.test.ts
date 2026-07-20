@@ -11,7 +11,9 @@ const mockSessionPost = vi.fn((method, _params) => {
 })
 const mockSessionOnce = vi.fn()
 const mockSessionDisconnect = vi.fn()
-const mockSession = vi.fn(() => {
+// Vitest 4 requires mocks called with `new` to use a constructible
+// implementation (arrow functions throw "is not a constructor")
+const mockSession = vi.fn(function () {
   const sessionObj = {
     connect: mockSessionConnect,
     post: mockSessionPost,

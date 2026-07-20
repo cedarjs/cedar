@@ -9,7 +9,7 @@ import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 const CedarApiVitestEnvironment: Environment = {
   name: 'cedar-api',
-  transformMode: 'ssr',
+  viteEnvironment: 'ssr',
 
   async setup() {
     if (process.env.SKIP_DB_PUSH === '1') {
