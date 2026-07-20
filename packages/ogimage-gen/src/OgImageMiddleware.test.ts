@@ -14,6 +14,35 @@ import OgImageMiddleware from './OgImageMiddleware'
 // Memfs mocks the redwood project-config stuff
 vi.mock('node:fs', () => ({ ...memfs, default: { ...memfs } }))
 
+// The source builds og component paths with path.join(), which produces
+// backslash paths on Windows, and Vitest 4's module runner keys mocked
+// modules by the exact specifier the dynamic import uses. So in addition to
+// the posix-literal mocks registered inside the tests below, the same
+// factories have to be registered under the OS-native (joined) path form.
+// On Unix these are identical to the posix literals
+const osNativeOgPaths = await vi.hoisted(async () => {
+  const nodePath = await import('node:path')
+
+  return {
+    contactPage: nodePath.join(
+      '/redwood-app/web/dist/ssr/ogImage/pages/Contact/ContactPage/ContactPage.og.mjs',
+    ),
+    homePage: nodePath.join(
+      '/redwood-app/web/dist/ssr/ogImage/pages/HomePage/HomePage.og.mjs',
+    ),
+  }
+})
+
+vi.mock(osNativeOgPaths.contactPage, () => ({
+  data: () => 'mocked data function',
+  output: () => 'Mocked component render',
+}))
+
+vi.mock(osNativeOgPaths.homePage, () => ({
+  data: () => 'mocked data function',
+  output: () => 'Mocked component render',
+}))
+
 // Mock getRoutesList function
 vi.mock('./getRoutesList', () => ({
   getRoutesList: vi.fn().mockResolvedValue([

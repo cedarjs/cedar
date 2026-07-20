@@ -64,13 +64,18 @@ const mockedConfigSpecifiers = await vi.hoisted(async () => {
   const osRoot = path.parse(testDir).root.replace('\\', '/')
 
   const configPath = osRoot + 'graphql/cedar-app/api/server.config.js'
+  const configFileUrl = url.pathToFileURL(configPath)
 
   return {
     configPath,
     // Vitest 4's module runner resolves the dynamic import in fastify.ts to
     // the file:// URL produced by pathToFileURL(), so the mock has to be
     // registered under that exact specifier as well
-    configUrl: url.pathToFileURL(configPath).href,
+    configUrl: configFileUrl.href,
+    // On Windows the module runner's internal module ids use the URL pathname
+    // form (`/D:/graphql/...`), so the mock has to be registered under that
+    // specifier too. On Unix this is identical to configPath
+    configUrlPathname: configFileUrl.pathname,
   }
 })
 
@@ -83,6 +88,14 @@ vi.mock(mockedConfigSpecifiers.configPath, () => {
 })
 
 vi.mock(mockedConfigSpecifiers.configUrl, () => {
+  return {
+    default: {
+      config: userConfig,
+    },
+  }
+})
+
+vi.mock(mockedConfigSpecifiers.configUrlPathname, () => {
   return {
     default: {
       config: userConfig,
