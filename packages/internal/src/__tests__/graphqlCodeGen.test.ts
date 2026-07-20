@@ -9,7 +9,7 @@ const { mockPrismaClientPath } = await vi.hoisted(async () => {
   // `importGeneratedPrismaClient` imports the client), so we point it at an
   // actual fixture module instead
   const mockPrismaClientPath = path.resolve(
-    __dirname,
+    import.meta.dirname,
     '__fixtures__/graphqlCodeGen/mockPrismaClient.mjs',
   )
   return { mockPrismaClientPath }
