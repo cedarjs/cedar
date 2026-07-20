@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/eslint-plugin",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -27,7 +27,7 @@
     "eslint": "8.57.1"
   },
   "devDependencies": {
-    "@cedarjs/framework-tools": "5.0.0",
+    "@cedarjs/framework-tools": "5.0.1",
     "@types/eslint": "8.56.12",
     "@types/estree": "1.0.9",
     "@typescript-eslint/parser": "8.60.1",

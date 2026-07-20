@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-auth0-web",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -49,11 +49,11 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/auth": "5.0.0"
+    "@cedarjs/auth": "5.0.1"
   },
   "devDependencies": {
     "@auth0/auth0-spa-js": "2.22.0",
-    "@cedarjs/framework-tools": "5.0.0",
+    "@cedarjs/framework-tools": "5.0.1",
     "@types/react": "^18.2.55",
     "concurrently": "9.2.1",
     "publint": "0.3.21",
