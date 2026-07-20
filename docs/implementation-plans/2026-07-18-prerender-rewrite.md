@@ -8,6 +8,28 @@ which covered only the bundler swap. This plan keeps that work (in revised form,
 as Track 1) and adds a rewrite of the prerender data/render layer on top of
 Apollo Client's modern SSR API (Track 2).
 
+**Strategic positioning (added 2026-07-20):** this plan is **stage B of
+Cedar's rendering migration gradient** (see
+[2026-07-20-rsc-rewrite.md](./2026-07-20-rsc-rewrite.md) for the full frame):
+first-class modernization of prerendering for today's client-rendered
+Apollo apps — driven by real paying-customer demand (e-commerce, needs
+prerender faster and better integrated) — not legacy maintenance. Two
+consequences for this plan:
+
+- **Prerender becomes per-route dual-engine.** When the RSC rewrite lands,
+  RSC-marked routes prerender via build-time flight→HTML (RSC SSG) while
+  classic routes prerender via `prerenderStatic` (Track 2 here). Both
+  engines write one shared output layout so "prerender" stays a single
+  user-facing feature; the route manifest's renderer discriminant decides
+  the engine per route.
+- **The HTML shell must converge on `Document.tsx`.** Streaming SSR and RSC
+  SSR both render through the user's `Document.tsx`; prerender currently
+  renders into the `index.html` shell. Shell convergence is promoted from
+  nice-to-have to a **requirement** of the gradient (crossing a stage
+  boundary must not change an app's shell). Sequencing: adopt
+  `Document.tsx` as prerender's shell once the streaming-SSR rewrite
+  establishes it in the serving path — at latest alongside RSC SSG.
+
 ---
 
 ## Background
@@ -107,12 +129,16 @@ Crucially, `prerenderStatic` supports both cell styles:
   `react-dom/static`). Migrating cells to suspense automatically speeds up
   prerender with no further changes here.
 
-**Verified constraint:** `prerenderStatic` does **not** exist in Apollo Client
-3.14.1 (Cedar's current version — its `react/ssr` entry only exports the
-deprecated `getDataFromTree` / `getMarkupFromTree` / `renderToStringWithData`).
-Track 2 therefore depends on the Apollo Client 4 upgrade. Building on
-`getDataFromTree` in the meantime was considered and rejected: it is deprecated,
-and we would do the migration twice.
+**Status update (2026-07-20):** the Apollo Client 4 upgrade is done — Cedar is
+on `@apollo/client` 4.2.7 (landed via the `upgrade-apollo-client-4` work,
+including the new `CedarApolloProvider` that deprecates
+`RedwoodApolloProvider`). `prerenderStatic` is verified present in the installed
+`@apollo/client/react/ssr`, with the exact options the sketch in 2.1 uses
+(`tree`, `context.client`, `renderFunction`, `signal`, `diagnostics`,
+`maxRerenders`, plus `ignoreResults` — see 2.2). `ssrMode` also still exists on
+`ApolloClient` in AC4. (Historical note: `prerenderStatic` did not exist in
+3.14.1; building on the deprecated `getDataFromTree` in the meantime was
+considered and rejected because we would have done the migration twice.)
 
 ---
 
@@ -121,12 +147,12 @@ and we would do the migration twice.
 | Prerequisite             | Needed by | Status                            |
 | ------------------------ | --------- | --------------------------------- |
 | Vite 7 (Environment API) | Track 1   | ✅ Done (7.3.5)                   |
-| Apollo Client 4 upgrade  | Track 2   | ❌ Not started (on 3.14.1)        |
+| Apollo Client 4 upgrade  | Track 2   | ✅ Done (4.2.7)                   |
 | React 18 support removal | Track 2   | 🔜 Planned (React 19.2.3 in tree) |
 
-Track 1 has no unmet prerequisites and can start now. Track 2 lands after the
-AC4 + React 19-only release; it targets `prerenderToNodeStream` directly and
-skips the legacy `renderToString` render function entirely.
+Track 1 has no unmet prerequisites and can start now. Track 2's only remaining
+prerequisite is React 18 support removal; it targets `prerenderToNodeStream`
+directly and skips the legacy `renderToString` render function entirely.
 
 ---
 
@@ -224,8 +250,9 @@ not the default carried forward from the old architecture.
 
 ## Track 2 — Replace the custom data/render layer with `prerenderStatic`
 
-Lands after the Apollo Client 4 upgrade and React 18 removal. Deletes Cedar's
-prerender-specific data machinery in favor of Apollo's supported API.
+The Apollo Client 4 upgrade is done; this track now only waits on React 18
+removal. Deletes Cedar's prerender-specific data machinery in favor of Apollo's
+supported API.
 
 ### 2.1 Per-route rendering
 
@@ -240,6 +267,11 @@ const client = new ApolloClient({
   cache: new InMemoryCache(),
 })
 
+// `signal` on prerenderStatic only stops Apollo's re-render loop; per the
+// prerenderStatic docs it must also be forwarded to the render function to
+// abort React's rendering itself.
+const signal = AbortSignal.timeout(PER_ROUTE_TIMEOUT_MS)
+
 const { result } = await prerenderStatic({
   tree: (
     <LocationProvider location={new URL(prerenderUrl)}>
@@ -249,9 +281,9 @@ const { result } = await prerenderStatic({
     </LocationProvider>
   ),
   context: { client },
-  renderFunction: prerenderToNodeStream,
+  renderFunction: (tree) => prerenderToNodeStream(tree, { signal }),
   diagnostics: process.env.CEDAR_PRERENDER_DIAGNOSTICS === '1',
-  signal: AbortSignal.timeout(PER_ROUTE_TIMEOUT_MS),
+  signal,
 })
 
 const apolloState = client.extract()
@@ -265,10 +297,14 @@ const apolloState = client.extract()
   (`packages/prerender/src/graphql/node-runner.ts`) as the loader behind the
   same link.
 - Inject `apolloState` into the HTML as `window.__APOLLO_STATE__`; the web side
-  restores it with `cache.restore()` on boot. This replaces Cedar's cell-cache
-  serialization. Classic `useQuery` cells hit the restored cache and render data
-  immediately on hydration — no client streaming/Suspense support required, so
-  this does not depend on Cedar's experimental streaming work.
+  restores it with `cache.restore()` on boot. The natural place is the new
+  `CedarApolloProvider` (added during the AC4 upgrade, deprecating
+  `RedwoodApolloProvider`), which already instantiates the `InMemoryCache`
+  itself in `packages/web/src/apollo/CedarApolloProvider.tsx`. This replaces
+  Cedar's cell-cache serialization. Classic `useQuery` cells hit the restored
+  cache and render data immediately on hydration — no client
+  streaming/Suspense support required, so this does not depend on Cedar's
+  experimental streaming work.
 
 ### 2.2 Orchestration: concurrency and memory
 
@@ -280,8 +316,10 @@ const apolloState = client.extract()
   client — memory becomes O(largest page), not O(site).
 - Optional, profile first: a shared response-level LRU keyed on (query,
   variables) to dedupe layout/nav queries repeated on every page.
-- Stream HTML to disk (`prerenderToNodeStream` output → file write stream)
-  instead of accumulating strings.
+- Stream HTML to disk instead of accumulating strings: pass
+  `ignoreResults: true` (skips `prerenderStatic`'s buffer→string conversion)
+  and pipe `renderFnResult.prelude` (the Node stream from
+  `prerenderToNodeStream`) to a file write stream.
 
 ### 2.3 Deletions
 
@@ -329,16 +367,21 @@ const apolloState = client.extract()
 
 ---
 
-## Relationship to Future SSR
+## Relationship to SSR and RSC
 
-- **SSG (this plan):** `prerender` environment bundle + `prerenderStatic` at
-  build time → static HTML + `__APOLLO_STATE__`.
-- **Request-time SSR (future):** same environment/bundle foundation, but
-  rendered per request — with `@apollo/client-react-streaming` (already used by
-  Cedar's experimental streaming support) instead of `prerenderStatic`.
+- **SSG for classic routes (this plan):** `prerender` environment bundle +
+  `prerenderStatic` at build time → static HTML + `__APOLLO_STATE__`.
+- **Request-time SSR
+  ([2026-07-20-streaming-ssr-rewrite.md](./2026-07-20-streaming-ssr-rewrite.md)):**
+  same environment/bundle foundation, rendered per request — with
+  `@apollo/client-react-streaming` instead of `prerenderStatic`.
+- **RSC routes ([2026-07-20-rsc-rewrite.md](./2026-07-20-rsc-rewrite.md)):**
+  prerendered via build-time flight→HTML (RSC SSG), sharing this plan's
+  output layout under the per-route dispatcher.
 
-Both share the client setup and the build artifact, so neither track here needs
-revisiting when SSR lands.
+All of these share the client setup and the environment-based build
+foundation, so neither track here needs revisiting as SSR and RSC land — the
+per-route dispatcher decides which engine renders each route.
 
 ---
 
@@ -368,7 +411,8 @@ revisiting when SSR lands.
   orchestration
 - `packages/web/src/components/cell/CellCacheContext.tsx` — remove prerender
   interception
-- `packages/web` bootstrap — `__APOLLO_STATE__` restore
+- `packages/web/src/apollo/CedarApolloProvider.tsx` — `__APOLLO_STATE__`
+  restore into its `InMemoryCache`
 
 **Track 2 — deleted:**
 
@@ -381,10 +425,12 @@ revisiting when SSR lands.
 
 ## What This Does NOT Cover
 
-- The Apollo Client 4 upgrade itself (prerequisite, separate effort)
+- The Apollo Client 4 upgrade itself (✅ complete — Cedar is on 4.2.7)
 - React 18 support removal (prerequisite, separate effort)
-- The RSC build — it is being completely rewritten, so nothing in this plan
-  should follow or preserve current patterns from it
-- Request-time SSR and client-side streaming/Suspense — future work this enables
+- The RSC build — the old implementation is being removed and rewritten per
+  [2026-07-20-rsc-rewrite.md](./2026-07-20-rsc-rewrite.md); nothing in this
+  plan should follow or preserve current patterns from it
+- Request-time SSR and client-side streaming/Suspense — covered by
+  [2026-07-20-streaming-ssr-rewrite.md](./2026-07-20-streaming-ssr-rewrite.md)
 - A dev-server-based prerender preview in `cedar dev` — worthwhile future
   feature, distinct from the production pipeline
