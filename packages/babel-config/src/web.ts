@@ -60,16 +60,17 @@ export const getWebSideBabelPlugins = (
     useReactCompiler && ['babel-plugin-react-compiler', { target: '19' }],
     ...(forJest ? getCommonPlugins() : []),
     // === Import path handling
-    [
+    // Vite resolves the src/ and $api/ aliases via
+    // cedarjsResolveCedarStyleImportsPlugin, and tsconfig `paths` aliases via
+    // vite-tsconfig-paths, instead of this babel plugin
+    !forVite && [
       'babel-plugin-module-resolver',
       {
         alias: {
-          ...(!forVite && {
-            // Jest monorepo and multi project runner is not correctly
-            // determining the `cwd`:
-            // https://github.com/facebook/jest/issues/7359
-            src: forJest ? rwjsPaths.web.src : './src',
-          }),
+          // Jest monorepo and multi project runner is not correctly
+          // determining the `cwd`:
+          // https://github.com/facebook/jest/issues/7359
+          src: forJest ? rwjsPaths.web.src : './src',
           // adds the paths from [ts|js]config.json to the module resolver
           ...getPathsFromTypeScriptConfig(tsConfigs.web, rwjsPaths.web.base),
           $api: rwjsPaths.api.base,
