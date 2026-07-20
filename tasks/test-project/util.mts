@@ -15,21 +15,33 @@ export async function applyCodemod(codemod: string, target: string) {
   const args = [
     '--fail-on-error',
     '-t',
-    `${path.resolve(__dirname, 'codemods', codemod)} ${target}`,
+    // These commands run with `shell: true`, so the paths have to be quoted
+    // to survive shell parsing when they contain spaces (the CI test projects
+    // deliberately live in paths with spaces)
+    `"${path.resolve(__dirname, 'codemods', codemod)}"`,
+    `"${target}"`,
     '--parser',
     'tsx',
     '--verbose=2',
   ]
 
-  args.push()
-
-  const subprocess = exec(
+  const result = await exec(
     'yarn jscodeshift',
     args,
     getExecaOptions(path.resolve(import.meta.dirname)),
   )
 
-  return subprocess
+  // jscodeshift exits with code 0 even when the target path doesn't exist or
+  // no files were modified, which would leave the project silently
+  // unconverted. All codemods here are expected to modify their target file.
+  if (/\b0 ok\b/.test(result.stdout)) {
+    throw new Error(
+      `Codemod ${codemod} did not modify ${target}:\n` +
+        `${result.stdout}\n${result.stderr}`,
+    )
+  }
+
+  return result
 }
 
 export const getExecaOptions = (

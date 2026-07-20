@@ -50,19 +50,21 @@ describe('Generate client preset', () => {
     expect(errors).toHaveLength(0)
 
     expect(clientPresetFiles).toHaveLength(5)
-    const expectedEndings = [
-      '/fragment-masking.ts',
-      '/index.ts',
-      '/gql.ts',
-      '/graphql.ts',
-      '/persisted-documents.json',
+    const expectedBasenames = [
+      'fragment-masking.ts',
+      'index.ts',
+      'gql.ts',
+      'graphql.ts',
+      'persisted-documents.json',
     ]
 
-    const foundEndings = expectedEndings.filter((expectedEnding) =>
-      clientPresetFiles.some((filename) => filename.endsWith(expectedEnding)),
+    // The filenames are absolute paths with platform-native separators, so
+    // only compare the basenames
+    const foundBasenames = clientPresetFiles.map((filename) =>
+      path.basename(filename),
     )
 
-    expect(foundEndings).toHaveLength(expectedEndings.length)
+    expect(foundBasenames.toSorted()).toEqual(expectedBasenames.toSorted())
   })
 
   test('for api side', async () => {
