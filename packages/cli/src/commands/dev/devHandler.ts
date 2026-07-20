@@ -328,7 +328,7 @@ export const handler = async ({
       return null
     }
 
-    const unifiedCommand = [
+    return [
       formatViteDevBinCommand('cedar-unified-dev', nodeArgs),
       `  --port ${webAvailablePort}`,
       `  --apiPort ${apiAvailablePort}`,
@@ -339,30 +339,6 @@ export const handler = async ({
       .join(' ')
       .replace(/\s+/g, ' ')
       .trim()
-
-    // The unified dev server still runs as a single spawned process (see
-    // `formatViteDevBinCommand` above), so its combined stdout — Vite's own
-    // output plus the in-process API's raw pino NDJSON logs — can be piped
-    // through the same formatter the fallback api job uses below. Lines that
-    // aren't pino NDJSON (i.e. Vite's own output) pass through
-    // `cedar-log-formatter` unchanged.
-    const pipedCommand = `${unifiedCommand} | ${formatRunBinCommand('cedar-log-formatter')}`
-
-    if (process.platform === 'win32') {
-      return pipedCommand
-    }
-
-    // Without `pipefail`, a shell pipeline's exit code is whatever the last
-    // command in it (`cedar-log-formatter`) exits with — not
-    // `cedar-unified-dev`'s. If the dev server crashes, the formatter just
-    // sees its stdin close (EOF) and exits 0, which would make `concurrently`
-    // (and thus `cedar dev --ud`, see the `result.then`/`.catch` below) report
-    // success on a real server failure. `concurrently` spawns this command via
-    // `/bin/sh`, which on many Linux distros is `dash` — `dash` doesn't
-    // support `pipefail` and aborts outright if asked for it, so force `bash`
-    // (present on essentially every POSIX dev/CI machine) rather than relying
-    // on whatever `/bin/sh` happens to be.
-    return `bash -c 'set -o pipefail; ${pipedCommand}'`
   }
 
   const unifiedDevCommand = buildUnifiedDevCommand()
@@ -396,13 +372,26 @@ export const handler = async ({
   if (unifiedDevCommand) {
     // Unified dev mode: one node process handles both web (Vite client) and API
     // (Vite SSR + Fastify in-process) with true HMR – no nodemon, no separate watcher.
+    //
+    // The unified dev server still runs as a single spawned process, so its
+    // combined stdout — Vite's own output plus the in-process API's raw pino
+    // NDJSON logs — can be run through the same formatter the fallback api
+    // job uses below. `cedar-log-formatter` is given the command to run via
+    // `CEDAR_LOG_FORMATTER_COMMAND` (rather than a shell pipe, or a CLI arg)
+    // so it can spawn it directly and exit with its real exit code: a shell
+    // pipe's own exit code is whatever the *last* command in it exits with,
+    // which would mask a crash in the dev server as success, and passing the
+    // command as a CLI arg would require re-deriving shell quoting after the
+    // outer shell has already tokenized it away. See
+    // `packages/api-server/src/logFormatter/bin.ts`.
     jobs.push({
       name: 'dev',
-      command: unifiedDevCommand,
+      command: formatRunBinCommand('cedar-log-formatter'),
 
       env: {
         NODE_ENV: 'development',
         NODE_OPTIONS: getDevNodeOptions(),
+        CEDAR_LOG_FORMATTER_COMMAND: unifiedDevCommand,
       },
       prefixColor: 'cyan',
       cwd: cedarPaths.web.base,

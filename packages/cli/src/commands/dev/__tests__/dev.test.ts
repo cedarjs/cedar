@@ -215,32 +215,19 @@ describe('yarn cedar dev', () => {
 
     const devCommand = findUnifiedDevCommand()
 
-    // The unified command runs cedar-unified-dev with both ports
-    expect(devCommand.command).toContain('cedar-unified-dev')
-    expect(devCommand.command).toContain('--port 8910')
-    expect(devCommand.command).toContain('--apiPort 8911')
+    // The job runs cedar-log-formatter directly, which in turn spawns the
+    // actual unified dev command (passed via env var, not a CLI arg or a
+    // shell pipe — see devHandler.ts for why) and exits with its real exit
+    // code, instead of masking a crash the way a shell pipe's own exit code
+    // would
+    expect(devCommand.command).toEqual('yarn cedar-log-formatter')
+
+    const supervisedCommand = devCommand.env?.CEDAR_LOG_FORMATTER_COMMAND
+    expect(supervisedCommand).toContain('cedar-unified-dev')
+    expect(supervisedCommand).toContain('--port 8910')
+    expect(supervisedCommand).toContain('--apiPort 8911')
     expect(devCommand.env?.NODE_ENV).toEqual('development')
     expect(devCommand.env?.NODE_OPTIONS).toContain('--enable-source-maps')
-
-    // Its combined stdout (Vite's own output plus the in-process API's raw
-    // pino logs) is piped through the same formatter the fallback api job
-    // uses, so api logs are pretty-printed under --ud too
-    expect(devCommand.command).toContain('| yarn cedar-log-formatter')
-
-    if (process.platform === 'win32') {
-      // No shell available to force `pipefail` on Windows, so the pipe is
-      // used as-is
-      expect(
-        devCommand.command.trim().endsWith('yarn cedar-log-formatter'),
-      ).toBe(true)
-    } else {
-      // `pipefail` ensures a crash in cedar-unified-dev isn't masked by
-      // cedar-log-formatter exiting 0 on EOF
-      expect(devCommand.command).toMatch(/^bash -c 'set -o pipefail; .*'$/)
-      expect(
-        devCommand.command.trim().endsWith("| yarn cedar-log-formatter'"),
-      ).toBe(true)
-    }
 
     // No separate api/web commands should be present
     const { webCommand, apiCommand } = findSeparateCommands()
@@ -387,7 +374,7 @@ describe('yarn cedar dev', () => {
 
     const devCommand = findUnifiedDevCommand()
 
-    expect(devCommand.command).toMatch(
+    expect(devCommand.env?.CEDAR_LOG_FORMATTER_COMMAND).toMatch(
       /yarn node .*--inspect.*cedar-unified-dev\.mjs/,
     )
   })
