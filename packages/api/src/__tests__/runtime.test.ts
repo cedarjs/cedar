@@ -231,6 +231,88 @@ describe('legacyResultToResponse', () => {
     expect(await response.text()).toBe(JSON.stringify({ ok: true }))
   })
 
+  it('decodes base64 encoded bodies', async () => {
+    const result: APIGatewayProxyResult = {
+      statusCode: 200,
+      isBase64Encoded: true,
+      body: Buffer.from('hello cedar').toString('base64'),
+    }
+
+    const response = legacyResultToResponse(result)
+
+    expect(response.status).toBe(200)
+    expect(await response.text()).toBe('hello cedar')
+  })
+
+  it('defaults to status 200 and an empty body', async () => {
+    const response = legacyResultToResponse({} as APIGatewayProxyResult)
+
+    expect(response.status).toBe(200)
+    expect(await response.text()).toBe('')
+  })
+
+  it('sends no body for status 204', async () => {
+    const result: APIGatewayProxyResult = {
+      statusCode: 204,
+      headers: {
+        'x-test': 'true',
+      },
+      body: 'this body should be dropped',
+    }
+
+    const response = legacyResultToResponse(result)
+
+    expect(response.status).toBe(204)
+    expect(response.headers.get('x-test')).toBe('true')
+    expect(response.body).toBeNull()
+    expect(await response.text()).toBe('')
+  })
+
+  it('sends no body for status 304', async () => {
+    const result: APIGatewayProxyResult = {
+      statusCode: 304,
+      headers: {
+        'x-test': 'true',
+      },
+      body: 'this body should be dropped',
+    }
+
+    const response = legacyResultToResponse(result)
+
+    expect(response.status).toBe(304)
+    expect(response.headers.get('x-test')).toBe('true')
+    expect(response.body).toBeNull()
+    expect(await response.text()).toBe('')
+  })
+
+  it('sends no body for status 204 even when base64 encoded', async () => {
+    const result: APIGatewayProxyResult = {
+      statusCode: 204,
+      isBase64Encoded: true,
+      body: Buffer.from('this body should be dropped').toString('base64'),
+    }
+
+    const response = legacyResultToResponse(result)
+
+    expect(response.status).toBe(204)
+    expect(response.body).toBeNull()
+    expect(await response.text()).toBe('')
+  })
+
+  it('sends no body for status 304 even when base64 encoded', async () => {
+    const result: APIGatewayProxyResult = {
+      statusCode: 304,
+      isBase64Encoded: true,
+      body: Buffer.from('this body should be dropped').toString('base64'),
+    }
+
+    const response = legacyResultToResponse(result)
+
+    expect(response.status).toBe(304)
+    expect(response.body).toBeNull()
+    expect(await response.text()).toBe('')
+  })
+
   it('returns a Response unchanged when given one', async () => {
     const response = new Response('hello', {
       status: 200,
