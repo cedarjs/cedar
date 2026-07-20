@@ -215,17 +215,10 @@ describe('yarn cedar dev', () => {
 
     const devCommand = findUnifiedDevCommand()
 
-    // The job runs cedar-log-formatter directly, which in turn spawns the
-    // actual unified dev command (passed via env var, not a CLI arg or a
-    // shell pipe — see devHandler.ts for why) and exits with its real exit
-    // code, instead of masking a crash the way a shell pipe's own exit code
-    // would
-    expect(devCommand.command).toEqual('yarn cedar-log-formatter')
-
-    const supervisedCommand = devCommand.env?.CEDAR_LOG_FORMATTER_COMMAND
-    expect(supervisedCommand).toContain('cedar-unified-dev')
-    expect(supervisedCommand).toContain('--port 8910')
-    expect(supervisedCommand).toContain('--apiPort 8911')
+    // The unified command runs cedar-unified-dev with both ports
+    expect(devCommand.command).toContain('cedar-unified-dev')
+    expect(devCommand.command).toContain('--port 8910')
+    expect(devCommand.command).toContain('--apiPort 8911')
     expect(devCommand.env?.NODE_ENV).toEqual('development')
     expect(devCommand.env?.NODE_OPTIONS).toContain('--enable-source-maps')
 
@@ -374,7 +367,7 @@ describe('yarn cedar dev', () => {
 
     const devCommand = findUnifiedDevCommand()
 
-    expect(devCommand.env?.CEDAR_LOG_FORMATTER_COMMAND).toMatch(
+    expect(devCommand.command).toMatch(
       /yarn node .*--inspect.*cedar-unified-dev\.mjs/,
     )
   })

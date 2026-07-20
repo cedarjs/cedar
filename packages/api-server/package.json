@@ -93,6 +93,16 @@
         "default": "./dist/cjs/watch.js"
       }
     },
+    "./logFormatter": {
+      "import": {
+        "types": "./dist/logFormatter/index.d.ts",
+        "default": "./dist/logFormatter/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/logFormatter/index.d.ts",
+        "default": "./dist/cjs/logFormatter/index.js"
+      }
+    },
     "./requestHandlers": {
       "import": {
         "types": "./dist/requestHandlers/awsLambdaFastify.d.ts",
