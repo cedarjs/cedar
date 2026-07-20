@@ -249,7 +249,7 @@ export function legacyResultToResponse(result: LegacyHandlerResult): Response {
   // All 1xx (Informational), 204 (No Content), and 304 (Not Modified) responses do not include content.
   // See: https://www.rfc-editor.org/rfc/rfc9110.html#section-6.4.1-8
   const isNoBodyStatus = status < 200 || status === 204 || status === 304
-  const body = result.body ?? isNoBodyStatus ? null : ''
+  const body = isNoBodyStatus ? null : (result.body ?? '')
 
   if (result.isBase64Encoded && !isNoBodyStatus) {
     return new Response(Buffer.from(body || '', 'base64'), {
