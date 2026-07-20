@@ -64,6 +64,7 @@
     "@babel/traverse": "7.29.7",
     "@babel/types": "7.29.7",
     "@cedarjs/api": "5.0.1",
+    "@cedarjs/api-server": "5.0.1",
     "@cedarjs/babel-config": "5.0.1",
     "@cedarjs/context": "5.0.1",
     "@cedarjs/cookie-jar": "5.0.1",
