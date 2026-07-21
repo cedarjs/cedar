@@ -221,7 +221,7 @@ enabled, declare a render environment:
 - `buildRouteManifest` runs as part of this environment's build (or a
   `closeBundle` step), not as a separate CLI-orchestrated step.
 - **`buildRouteHooks` must move here too, not just get deleted with its
-  caller.** Today `packages/vite/src/buildFeServer.ts` is the *only* call
+  caller.** Today `packages/vite/src/buildFeServer.ts` is the _only_ call
   site for `buildRouteHooks()` (esbuild-based, writes to
   `web.distRouteHooks`), and production `createReactStreamingHandler.ts`
   hard-depends on that output — it builds
@@ -461,7 +461,7 @@ path stops being opt-out for streaming projects.
 - `packages/vite/src/streaming/streamHelpers.ts` (rewrite in place; no RSC, no
   `importModule`)
 - `packages/vite/src/buildApp.ts` — render environment + manifest step
-  (`buildRouteManifest` *and* `buildRouteHooks`, both relocated from the
+  (`buildRouteManifest` _and_ `buildRouteHooks`, both relocated from the
   deleted `buildFeServer.ts` — see §1.2/1.3); UD-env rename per open
   question 1
 - `packages/vite/src/plugins/vite-plugin-cedar-universal-deploy.ts` — SSR
