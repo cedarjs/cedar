@@ -6,8 +6,33 @@ import { getApiSideDefaultBabelConfig } from '@cedarjs/babel-config'
 import { getPaths } from '@cedarjs/project-config'
 
 const rwjsPaths = getPaths()
-const NODE_MODULES_PATH = path.join(rwjsPaths.base, 'node_modules')
 const { babelrc } = getApiSideDefaultBabelConfig({ forJest: true })
+
+/**
+ * Resolve a specifier through the package's `exports` map.
+ *
+ * This mapping used to be built by joining onto `<project>/node_modules`, which
+ * assumes every package is hoisted to one directory at the project root. yarn
+ * and npm hoist, but pnpm nests, so that path often doesn't exist and the
+ * mapping pointed at nothing. Resolving works under all three, and doesn't
+ * require a `node_modules` directory to exist at all — which is what Yarn PnP
+ * needs.
+ *
+ * Returns undefined when the package isn't installed or doesn't export the
+ * subpath, in which case we drop the mapping and let Jest resolve the import
+ * normally. That beats pointing it at a path that isn't there.
+ */
+function resolveSubpath(specifier: string): string | undefined {
+  try {
+    return require.resolve(specifier, {
+      paths: [rwjsPaths.api.base, rwjsPaths.base],
+    })
+  } catch {
+    return undefined
+  }
+}
+
+const testingApiPath = resolveSubpath('@cedarjs/testing/api')
 
 const config: Config = {
   // To make sure other config option which depends on rootDir use
@@ -49,7 +74,7 @@ const config: Config = {
     '^src/(.*)$': path.join(rwjsPaths.api.src, '$1'),
     // @NOTE: Import @cedarjs/testing in api tests, and it automatically remaps to the api side only
     // This is to prevent web stuff leaking into api, and vice versa
-    '^@cedarjs/testing$': path.join(NODE_MODULES_PATH, '@cedarjs/testing/api'),
+    ...(testingApiPath ? { '^@cedarjs/testing$': testingApiPath } : {}),
     // Support for importing files with extensions (like you'd do in ESM projects)
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
