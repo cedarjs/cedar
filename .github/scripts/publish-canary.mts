@@ -1,15 +1,23 @@
 /**
  * Publishes canary (or "next") versions of all public Cedar packages to npm.
  *
+ * Packages are first published in parallel under a unique, run-scoped
+ * staging dist-tag. Only once every package has been published under that
+ * staging tag do we flip each package's dist-tag over to the real "canary"
+ * or "next" tag (also in parallel). This avoids a race where a consumer
+ * (e.g. `yarn cedar upgrade -t canary`) resolves the "canary" tag to a
+ * version that isn't fully published across all packages yet.
+ *
  * Used in the publish-canary.yml GitHub Action workflow.
  *
  * Usage: node .github/scripts/publish-canary.mts
  * Environment variables required: NPM_AUTH_TOKEN, GITHUB_REF_NAME
  */
 
-import { execSync } from 'node:child_process'
+import { exec as execCb, execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
+import util from 'node:util'
 
 interface PackageJson {
   name?: string
@@ -38,6 +46,15 @@ interface NpmTokenEntry {
 
 const REPO_ROOT = process.cwd()
 
+const exec = util.promisify(execCb)
+
+// How many `npm publish` / `npm dist-tag` calls to run concurrently. Publishes
+// upload a tarball so they're heavier; dist-tag flips are cheap metadata
+// calls. Kept modest to avoid tripping npm's registry rate limits.
+const PUBLISH_CONCURRENCY = Number(process.env.CANARY_PUBLISH_CONCURRENCY) || 4
+const DIST_TAG_CONCURRENCY =
+  Number(process.env.CANARY_DIST_TAG_CONCURRENCY) || 8
+
 function log(message: string) {
   console.log(`• ${message}`)
 }
@@ -57,15 +74,95 @@ function execCommand(command: string, cwd: string = REPO_ROOT): string {
   }
 }
 
-function isPackagePublished(packageName: string, version: string): boolean {
-  try {
-    execSync(`npm view ${packageName}@${version} version`, {
-      stdio: 'ignore',
-    })
-    return true
-  } catch {
-    return false
+function getExecErrorDetails(error: unknown): {
+  message: string
+  stderr: string
+} {
+  if (error instanceof Error) {
+    // Node's promisified child_process.exec attaches stdout/stderr to the
+    // rejected error object; they aren't part of the Error type, so we read
+    // them defensively through a narrow local shape.
+    const { stderr } = error as Error & { stderr?: string }
+    return { message: error.message, stderr: stderr ?? '' }
   }
+
+  return { message: String(error), stderr: '' }
+}
+
+async function execCommandAsync(command: string, cwd: string = REPO_ROOT) {
+  try {
+    const { stdout } = await exec(command, { cwd, encoding: 'utf-8' })
+    return stdout.trim()
+  } catch (error) {
+    const { message, stderr } = getExecErrorDetails(error)
+    console.error(`❌ Command failed: ${command}`)
+    if (stderr) {
+      console.error(stderr)
+    } else {
+      console.error(message)
+    }
+    throw error
+  }
+}
+
+const RATE_LIMIT_PATTERN =
+  /\b429\b|too many requests|ETIMEDOUT|ECONNRESET|ENOTFOUND|EAI_AGAIN/i
+
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  {
+    retries = 5,
+    baseDelayMs = 1500,
+  }: { retries?: number; baseDelayMs?: number } = {},
+): Promise<T> {
+  let attempt = 0
+
+  for (;;) {
+    try {
+      return await fn()
+    } catch (error) {
+      attempt++
+      const { message, stderr } = getExecErrorDetails(error)
+      const isRateLimited = RATE_LIMIT_PATTERN.test(`${message}\n${stderr}`)
+
+      if (!isRateLimited || attempt > retries) {
+        throw error
+      }
+
+      const delay =
+        baseDelayMs * 2 ** (attempt - 1) + Math.floor(Math.random() * 500)
+      log(
+        `  Rate limited, retrying in ${delay}ms (attempt ${attempt}/${retries})...`,
+      )
+      await new Promise((resolve) => setTimeout(resolve, delay))
+    }
+  }
+}
+
+// Runs `worker` over `items` with at most `concurrency` in flight at once.
+async function runWithConcurrency<T>(
+  items: T[],
+  concurrency: number,
+  worker: (item: T, index: number) => Promise<void>,
+) {
+  let nextIndex = 0
+
+  async function runNext(): Promise<void> {
+    let currentIndex = nextIndex
+    nextIndex++
+
+    while (currentIndex < items.length) {
+      await worker(items[currentIndex], currentIndex)
+      currentIndex = nextIndex
+      nextIndex++
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, items.length) }, () =>
+      runNext(),
+    ),
+  )
 }
 
 function getWorkspaces(): WorkspaceInfo[] {
@@ -208,8 +305,16 @@ function updateCreateCedarAppTemplates(version: string) {
   }
 }
 
-function publishPackages(workspaces: WorkspaceInfo[], tag: string) {
-  log(`Publishing all packages with tag ${tag}`)
+interface PublishablePackage {
+  workspace: WorkspaceInfo
+  name: string
+  version: string
+}
+
+function getPublishablePackages(
+  workspaces: WorkspaceInfo[],
+): PublishablePackage[] {
+  const publishable: PublishablePackage[] = []
 
   for (const workspace of workspaces) {
     const pkgJsonPath = path.join(REPO_ROOT, workspace.location, 'package.json')
@@ -220,29 +325,98 @@ function publishPackages(workspaces: WorkspaceInfo[], tag: string) {
       continue
     }
 
-    const packageName = pkgJson.name
-    const packageVersion = pkgJson.version
+    const { name, version } = pkgJson
 
-    if (!packageName || !packageVersion) {
+    if (!name || !version) {
       throw new Error(`Missing name or version in ${pkgJsonPath}`)
     }
 
-    log(`Publishing ${packageName}@${packageVersion}...`)
+    publishable.push({ workspace, name, version })
+  }
 
-    if (isPackagePublished(packageName, packageVersion)) {
-      log('  Already published, skipping')
-      continue
-    }
+  return publishable
+}
 
-    execCommand(
-      `npm publish --tag ${tag} --access public`,
-      path.join(REPO_ROOT, workspace.location),
-    )
-    log(`  ✅ Published ${packageName}@${packageVersion}`)
+async function isPackagePublished(
+  packageName: string,
+  version: string,
+): Promise<boolean> {
+  try {
+    await exec(`npm view ${packageName}@${version} version`)
+    return true
+  } catch {
+    return false
   }
 }
 
-function main() {
+// Publishes every public package under a unique, run-scoped staging tag, in
+// parallel (bounded by PUBLISH_CONCURRENCY). Nothing else in the registry
+// references this tag, so partially-completed runs are invisible to
+// consumers watching the real "canary"/"next" tag.
+async function publishPackagesToStagingTag(
+  packages: PublishablePackage[],
+  stagingTag: string,
+): Promise<void> {
+  log(`Publishing ${packages.length} packages under staging tag ${stagingTag}`)
+
+  await runWithConcurrency(packages, PUBLISH_CONCURRENCY, async (pkg) => {
+    const { name, version, workspace } = pkg
+
+    if (await isPackagePublished(name, version)) {
+      log(`  ${name}@${version} already published, skipping`)
+      return
+    }
+
+    await withRetry(() =>
+      execCommandAsync(
+        `npm publish --tag ${stagingTag} --access public`,
+        path.join(REPO_ROOT, workspace.location),
+      ),
+    )
+    log(`  ✅ Published ${name}@${version} (staging tag: ${stagingTag})`)
+  })
+}
+
+// Flips every package's dist-tag from the staging tag over to the real tag,
+// in parallel (bounded by DIST_TAG_CONCURRENCY). This is the point at which
+// the new version becomes visible to anything resolving the "canary"/"next"
+// tag, and it only happens once every package above has published
+// successfully.
+async function flipToFinalTag(
+  packages: PublishablePackage[],
+  finalTag: string,
+): Promise<void> {
+  log(`Flipping ${packages.length} packages to tag ${finalTag}`)
+
+  await runWithConcurrency(packages, DIST_TAG_CONCURRENCY, async (pkg) => {
+    const { name, version } = pkg
+
+    await withRetry(() =>
+      execCommandAsync(`npm dist-tag add ${name}@${version} ${finalTag}`),
+    )
+    log(`  🏷 ${name}@${version} -> ${finalTag}`)
+  })
+}
+
+// Best-effort cleanup of the staging tag now that the final tag points at
+// the same version. Failures here don't affect the published packages, so
+// they're not fatal.
+async function removeStagingTag(
+  packages: PublishablePackage[],
+  stagingTag: string,
+): Promise<void> {
+  log(`Cleaning up staging tag ${stagingTag}`)
+
+  await runWithConcurrency(packages, DIST_TAG_CONCURRENCY, async (pkg) => {
+    try {
+      await execCommandAsync(`npm dist-tag rm ${pkg.name} ${stagingTag}`)
+    } catch {
+      log(`  Could not remove staging tag for ${pkg.name}, ignoring`)
+    }
+  })
+}
+
+async function main() {
   const npmAuthToken = process.env.NPM_AUTH_TOKEN
 
   if (!npmAuthToken) {
@@ -319,17 +493,20 @@ function main() {
     `git commit -am "Update packages and templates to canary version ${canaryVersion}"`,
   )
 
-  // ── Publish all packages ─────────────────────────────────────────────────
+  // ── Publish all packages under a staging tag, then flip to the real tag ──
 
-  publishPackages(workspaces, tag)
+  const packages = getPublishablePackages(workspaces)
+  const stagingTag = `staging-${process.env.GITHUB_RUN_ID ?? Date.now()}`
+
+  await publishPackagesToStagingTag(packages, stagingTag)
+  await flipToFinalTag(packages, tag)
+  await removeStagingTag(packages, stagingTag)
 
   log('✅ Canary publishing completed successfully!')
 }
 
-try {
-  main()
-} catch (error) {
+main().catch((error) => {
   console.error('❌ Canary publishing failed:')
   console.error(error)
   process.exit(1)
-}
+})
