@@ -15,31 +15,6 @@ function cedarPrefix(pm: PackageManager): string {
   return 'yarn cedar'
 }
 
-function lockfileName(pm: PackageManager): string {
-  if (pm === 'npm') {
-    return 'package-lock.json'
-  }
-
-  if (pm === 'pnpm') {
-    return 'pnpm-lock.yaml'
-  }
-
-  return 'yarn.lock'
-}
-
-function isString(value: unknown): value is string {
-  return typeof value === 'string'
-}
-
-/**
- * In YAML single-quoted scalars, a literal single quote is escaped by doubling
- * it. Package names like @cedarjs/foo never contain quotes, but the tarball
- * path could on unusual runner configs.
- */
-function quotes(value: string) {
-  return value.replace(/'/g, "''")
-}
-
 interface Args {
   setOutput: (key: string, value: string) => void
   getInput: (key: string) => string
@@ -92,31 +67,36 @@ export async function setUpTestProject({
     recursive: true,
   })
 
-  // tarsync is yarn-based (the framework monorepo uses yarn). It copies
-  // framework packages into the project and runs `yarn install`, producing
-  // yarn.lock + node_modules. This works for all PMs because node_modules
-  // makes the `cedar` binary available regardless of which PM is configured.
-  await execInFramework('yarn project:tarsync --verbose', {
-    env: { CEDAR_CWD: testProjectPath },
-  })
-
-  // For npm/pnpm: run the project's own install to create the correct
-  // lockfile and node_modules layout. Before doing so, prepare the project
-  // so the install doesn't fail:
+  // Convert the project to the target package manager *before* tarsync runs.
   //
-  // 1. Update the packageManager field — pnpm reads it and refuses if it
-  //    says yarn.
-  // 2. Replace workspace:* protocols with file: references — npm doesn't
+  // tarsync detects the project's package manager and installs with it, so
+  // converting first means it does the one install we actually want. It used
+  // to run against a project that still looked like yarn's, which meant a
+  // wasted `yarn install` followed by a second install with the real package
+  // manager — and, worse, yarn's hoisted node_modules survived underneath the
+  // second one, hiding bugs that only appear in a nested layout.
+  //
+  // What needs preparing:
+  //
+  // 1. Set the packageManager field — this is what tarsync detects, and pnpm
+  //    refuses to run if it says yarn.
+  // 2. Remove yarn.lock, so nothing later mistakes the project for a yarn one.
+  // 3. Replace workspace:* protocols with file: references — npm doesn't
   //    understand workspace:*.
-  // 3. Pin dependency versions to what yarn resolved in yarn.lock so that
-  //    npm/pnpm don't pick up newer versions (which can change test output
-  //    like snapshot serialization).
+  // 4. Pin dependency versions to what the fixture resolved, so that npm/pnpm
+  //    don't pick up newer versions (which can change test output like
+  //    snapshot serialization).
+  //
+  // The tarball overrides themselves are tarsync's job — it writes
+  // `resolutions`, pnpm `overrides` or npm `overrides` as appropriate.
   if (packageManager !== 'yarn') {
     const pkgPath = path.join(testProjectPath, 'package.json')
     const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
 
-    // delete packageManager to let the `<pm> install` command set it
-    delete pkg.packageManager
+    // This is what tarsync detects, so it has to say the target package
+    // manager rather than the fixture's yarn
+    pkg.packageManager =
+      packageManager === 'pnpm' ? 'pnpm@11.8.0' : 'npm@11.8.0'
 
     // The fixture pins react-is via yarn's `resolutions`, but npm uses
     // `overrides` instead. Without this override, react-is resolves to 17.x
@@ -144,17 +124,22 @@ export async function setUpTestProject({
         },
       }
 
-      // Translate tarsync's yarn-style resolutions into pnpm overrides so
-      // pnpm install uses the local framework tarballs instead of fetching
-      // the published canary from the registry.
-      const tarsyncOverrideLines = Object.entries(
-        (pkg.resolutions as Record<string, string>) || {},
-      )
-        .filter(([, value]) => isString(value) && value.endsWith('.tgz'))
-        .map(([name, value]) => `  '${quotes(name)}': 'file:${quotes(value)}'`)
-        .join('\n')
-
+      // Note there are no tarball overrides here — tarsync appends those to
+      // this file's `overrides` block once it has built them
       const yaml = [
+        // The `overrides` below only redirect dependencies that are *declared*
+        // in a package.json. Peers that pnpm auto-installs are resolved
+        // straight from the registry, bypassing them — so `@cedarjs/auth`,
+        // `@cedarjs/graphql-server`, `@cedarjs/router` and `@cedarjs/web` were
+        // getting installed twice: once from the local tarball and once as the
+        // last published release. Framework packages that take those as peers
+        // (`@cedarjs/testing`, most importantly) then linked against the
+        // *published* copy, so the smoke test silently ran published code
+        // instead of the code being tested. Turning the auto-install off
+        // leaves the tarballs as the only copy. yarn/npm don't do this, which
+        // is why only pnpm was affected
+        'autoInstallPeers: false',
+        '',
         'packages:',
         '  - api',
         '  - web',
@@ -177,7 +162,6 @@ export async function setUpTestProject({
         '',
         'overrides:',
         "  'react-is': '19.2.3'",
-        tarsyncOverrideLines,
         '',
       ].join('\n')
 
@@ -229,15 +213,25 @@ export async function setUpTestProject({
       `Updated packageManager field to "${packageManager}"` +
         (packageManager === 'npm' ? ', replaced workspace:* → file:' : ''),
     )
-    console.log()
-    console.log(
-      `Running ${packageManager} install to create ${lockfileName(packageManager)}`,
-    )
 
-    await execInProject(`${packageManager} install`)
+    // The fixture ships a yarn.lock. Leaving it in place would both confuse
+    // tarsync's detection and let a yarn-shaped tree leak into the install
+    await fs.promises.rm(path.join(testProjectPath, 'yarn.lock'), {
+      force: true,
+    })
 
     console.log()
-  } else {
+  }
+
+  // tarsync builds the framework tarballs, copies them into the project,
+  // points the project's overrides at them (`resolutions` for yarn, `overrides`
+  // for npm and pnpm) and then installs with the project's own package
+  // manager — which the conversion above has already set
+  await execInFramework('yarn project:tarsync --verbose', {
+    env: { CEDAR_CWD: testProjectPath },
+  })
+
+  if (packageManager === 'yarn') {
     // Verify tarsync produced a yarn.lock. A missing lockfile means the
     // `yarn install` inside tarsync failed (possibly due to the V8 Maglev JIT
     // crash on Windows). Fail here with a clear message rather than letting

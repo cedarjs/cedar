@@ -144,6 +144,70 @@ cache-missing, that's a large chunk of its 12-minute runtime.
 `ci.yml` has it, but if `check-test-project-fixture(-esm)`, `codeql-analysis`,
 etc. don't, superseded runs keep eating queue slots after a new push.
 
+### 6. Cut the package-manager smoke tests' install cost (~75s per npm job)
+
+**Status: implemented 2026-07-21, not yet landed** (held for a follow-up PR to
+the jest preset resolution fix, #2155).
+
+Two independent wins, neither of which needs a cache:
+
+- **Stop installing twice.** `setUpTestProject` used to run tarsync against a
+  project that still looked like yarn's, so tarsync did a `yarn install`, and
+  then npm/pnpm installed again on top. Converting the project to the target
+  package manager _before_ tarsync means tarsync detects it and does the one
+  install we want. Saves a whole yarn install (~14s) per npm/pnpm job. It also
+  fixes a correctness problem: yarn's hoisted `node_modules` survived underneath
+  the second install and masked bugs that only appear in a nested layout.
+- **`npm install --no-audit --no-fund`.** npm runs a security audit and a
+  funding lookup after every install — network round trips over the whole
+  ~1800-package tree that tell us nothing about the framework build under test.
+
+Measured on the same project, warm `~/.npm`, lockfile deleted between runs:
+
+| install                                             | time    |
+| --------------------------------------------------- | ------- |
+| `npm install`                                       | **78s** |
+| `npm install --no-audit --no-fund --prefer-offline` | **17s** |
+| `npm install --no-audit --no-fund`                  | **18s** |
+
+`--prefer-offline` contributes nothing; the entire 60s is the audit. Install
+times through the new path, one install per job: yarn 13.6s, pnpm 18.2s, npm
+26.8s.
+
+#### On caching the npm cache directory
+
+Considered and **not** adopted, on the grounds that it's now attacking the
+_remaining_ ~18–27s rather than the 60s the audit flag already removed.
+
+You can pass a path to npm for it to use for storing its cache: `--cache <dir>`.
+By pointing at a **stable** path (like `<os.tmpdir()>/cedar-e2e/npm-cache`) you
+isolate it from the global `~/.npm` across concurrent installs, and so it can
+keep a cache warm across _many_ projects within a single run. Our smoke test
+does exactly one install per job, so there's no second install in the same run
+right now to benefit.
+
+The only version that would help us is persisting a cache across runs with
+`actions/cache`, since GitHub-hosted runners start with an empty `~/.npm`. The
+value of the `--cache` flag for us would be giving that cache a stable,
+predictable path to key on. Worth benchmarking before adopting: saving and
+restoring a cacache for ~1800 packages is itself tens of seconds of
+upload/download, plausibly a wash against an 18s install.
+
+Two things to know before anyone tries it:
+
+- **Stale tarballs are not a risk** (checked 2026-07-21). npm's cache key for a
+  local tarball is the relative path — `pacote:tarball:file:tarballs/cedarjs-web.tgz`
+  — with integrity only as metadata, and every run rebuilds tarballs under
+  identical names at the same version. But npm re-reads the file rather than
+  trusting the cache entry: repacking a tarball with a sentinel file, same name
+  and version, then reinstalling, installs the new contents.
+- **Caching `node_modules` or the lockfile would break**, because tarsync writes
+  **absolute** tarball paths into the project's overrides. A tree or lockfile
+  cached from one runner path carries paths that don't exist on the next. (This
+  is why projects deliberately uses relative `file:` specifiers.) Fix that
+  first if lockfile/tree caching is ever wanted — the npm cache directory itself
+  is unaffected.
+
 ## On flakiness specifically
 
 The definitive source here is

@@ -1,3 +1,5 @@
+autoInstallPeers: false
+
 packages:
   - api
   - web
