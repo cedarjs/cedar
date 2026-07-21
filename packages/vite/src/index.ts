@@ -74,13 +74,16 @@ export function cedar({ mode }: PluginOptions = {}): PluginOption[] {
 
   const rscEnabled = cedarConfig.experimental?.rsc?.enabled
 
-  const webSideDefaultBabelConfig = getWebSideDefaultBabelConfig({
-    forVite: true,
-  })
+  // React compiler is only enabled if explicitly set AND lintOnly is false.
+  // Only provide the Babel config when the compiler is active; otherwise use
+  // an empty config so users must wire up Babel themselves in their Vite config.
+  const reactCompilerEnabled =
+    cedarConfig.experimental?.reactCompiler?.enabled &&
+    cedarConfig.experimental?.reactCompiler?.lintOnly === false
 
-  const babelConfig = {
-    ...webSideDefaultBabelConfig,
-  }
+  const babelConfig = reactCompilerEnabled
+    ? getWebSideDefaultBabelConfig({ forVite: true })
+    : {}
 
   return [
     tsconfigPaths(),
