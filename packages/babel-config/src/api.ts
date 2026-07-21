@@ -21,9 +21,15 @@ import pluginRedwoodJobPathInjector from './plugins/babel-plugin-redwood-job-pat
 
 export const TARGETS_NODE = '24'
 
-export const getApiSideBabelPresets = (
-  { presetEnv } = { presetEnv: false },
-) => {
+export const getApiSideBabelPresets = ({
+  presetEnv = false,
+  forVite = false,
+}: { presetEnv?: boolean; forVite?: boolean } = {}) => {
+  // Vite and esbuild handle TypeScript natively — no preset needed
+  if (forVite) {
+    return [] as TransformOptions['presets']
+  }
+
   return [
     [
       '@babel/preset-typescript',
@@ -220,10 +226,13 @@ export const getApiSideDefaultBabelConfig = ({
   forJest = false,
 } = {}) => {
   return {
-    presets: getApiSideBabelPresets(),
+    presets: getApiSideBabelPresets({ forVite }),
     plugins: getApiSideBabelPlugins({ forVite, projectIsEsm }),
     overrides: getApiSideBabelOverrides({ forVite, projectIsEsm, forJest }),
-    extends: getApiSideBabelConfigPath(),
+    // Don't pick up the user's babel.config.js for Vite builds — Vite handles
+    // transformation itself; user config is only meaningful for non-Vite paths
+    // (Jest, data-migrate, prerender).
+    extends: forVite ? undefined : getApiSideBabelConfigPath(),
     babelrc: false,
     ignore: ['node_modules'],
   }
