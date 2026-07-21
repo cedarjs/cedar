@@ -45,7 +45,7 @@ jobs:
         run: yarn test
 
       - name: 🚢 Publish
-        run: ./.github/scripts/publish_canary.sh
+        run: node .github/scripts/publish-canary.mts
         env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 

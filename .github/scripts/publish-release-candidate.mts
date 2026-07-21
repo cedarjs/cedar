@@ -552,7 +552,7 @@ function isErrorWithMessage(err: unknown): err is { message: string } {
     typeof err === 'object' &&
     err !== null &&
     'message' in err &&
-    typeof (err as { message: unknown }).message === 'string'
+    typeof err.message === 'string'
   )
 }
 
@@ -669,8 +669,8 @@ async function publishPackages(distTag: string, dryRun: boolean) {
         continue
       }
       await publishPackage(
-        pkgJson.name!,
-        pkgJson.version!,
+        pkgJson.name,
+        pkgJson.version,
         distTag,
         path.join(REPO_ROOT, workspace.location),
         dryRun,

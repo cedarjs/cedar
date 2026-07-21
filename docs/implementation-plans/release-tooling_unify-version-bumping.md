@@ -2,14 +2,14 @@
 
 ## Goal
 
-Extract `tasks/update-package-versions.cjs` into **the single source of truth**
+Extract `tasks/update-package-versions.mts` into **the single source of truth**
 for bumping package versions across the entire monorepo. CI publish scripts and
 the release-tooling should all call this script instead of duplicating the logic
 inline.
 
 ## Current state — three different ways to bump versions
 
-### 1. `tasks/update-package-versions.cjs`
+### 1. `tasks/update-package-versions.mts`
 
 What it covers:
 
@@ -25,12 +25,12 @@ What it misses:
 - Database overlays (2 directories under `database-overlays/`)
 - Peer deps in `api-server`, `storybook`, `storybook-vite`
 
-### 2. `.github/scripts/publish_canary.sh`
+### 2. `.github/scripts/publish-canary.mts`
 
-Does everything inline with `jq`. Covers:
+Does everything inline with Node.js. Covers:
 
 - All workspace packages: version + `workspace:*` deps
-- All templates/overlays via `find` (covers what `update-package-versions.cjs`
+- Templates/overlays via `fs.globSync` (covers what `update-package-versions.mts`
   misses)
 - Templates/overlays: only `@cedarjs/*` deps (not version field, not
   `workspace:*`)
@@ -69,7 +69,7 @@ Does everything inline with `fs.readJson`/`fs.writeJson`. Covers:
 
 ## What the unified script must cover
 
-The script (`tasks/update-package-versions.cjs`) should handle:
+The script (`tasks/update-package-versions.mts`) should handle:
 
 1. **All workspace packages** — set version, replace `workspace:*` and
    `@cedarjs/*` in dependencies + devDependencies
@@ -95,7 +95,7 @@ The script should **only mutate files** — it should not run `yarn install`,
 
 ## Steps
 
-### Step 1 — Expand `tasks/update-package-versions.cjs`
+### Step 1 — Expand `tasks/update-package-versions.mts`
 
 Add the missing paths (esm-ts, esm-js templates; `test-project-esm` and
 `test-project-live` fixtures; all template overlays; all database overlays; peer
@@ -104,13 +104,13 @@ deps) so it covers everything listed above.
 Accept a version argument (already does). Strip optional `v` prefix (already
 does).
 
-### Step 2 — Update `publish_canary.sh`
+### Step 2 — Update `publish-canary.mts`
 
 Replace the three inline update blocks (version, workspace deps, template deps)
 with a single call:
 
 ```bash
-node tasks/update-package-versions.cjs "$CANARY_VERSION"
+node tasks/update-package-versions.mts "$CANARY_VERSION"
 ```
 
 Keep the version calculation, NPM auth check, and publish loop as-is.
@@ -121,7 +121,7 @@ Replace the inline version update + `updateWorkspaceDependencies()` call +
 selective template updates with:
 
 ```ts
-execCommand(`node tasks/update-package-versions.cjs ${versionToPublish}`)
+execCommand(`node tasks/update-package-versions.mts ${versionToPublish}`)
 ```
 
 Remove `updateWorkspaceDependencies()` and the dead
@@ -133,7 +133,7 @@ In `release/lib/release_functions.ts`:`updatePackageVersions()`, replace the
 inline loop + all `updateCedarDependencyVersions()` calls with:
 
 ```ts
-await $`node tasks/update-package-versions.cjs ${version}`
+await $`node tasks/update-package-versions.mts ${version}`
 ```
 
 Then keep only: `yarn install`, `yarn dedupe`, `git add .`, and `git commit`.
@@ -143,7 +143,7 @@ else calls it.
 
 ### Step 5 — Verify
 
-- Run `tasks/update-package-versions.cjs 5.0.0` and confirm all package.json
+- Run `tasks/update-package-versions.mts 5.0.0` and confirm all package.json
   files are updated correctly (workspace packages, templates, fixtures,
   overlays, peer deps).
 - Trigger a canary publish on next to verify the CI script works.

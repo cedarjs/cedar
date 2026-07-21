@@ -1,7 +1,7 @@
 name: 🌙 Nightly Windows
 
 # PRs only run the Windows CI legs when detect-changes deems the diff
-# Windows-relevant (see .github/actions/detect-changes/cases/windows.mjs).
+# Windows-relevant (see .github/actions/detect-changes/cases/windows.mts).
 # This nightly run is the safety net: every Windows leg that exists in
 # ci.yml, run against main daily, so anything the filter misses surfaces
 # within a day instead of at release time.
