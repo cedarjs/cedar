@@ -15,13 +15,17 @@ await build({
     ignore: [
       ...defaultIgnorePatterns,
       '**/bundled',
-      // These use `import.meta.url` and are only ever reached through our
-      // ESM-only bins (`cedar-dev-fe`, `cedar-serve-fe`) - never `require()`d.
-      // Skip them here instead of emitting a CJS build with a broken
-      // `import.meta`.
+      // This whole chain is only ever reached through our ESM-only bins
+      // (`cedar-dev-fe`, `cedar-serve-fe`) - never `require()`d. Skip it here
+      // instead of emitting a CJS build with a broken `import.meta` (in
+      // devFeServer.ts, registerFwGlobalsAndShims.ts, streamHelpers.ts) or
+      // dangling requires of those files (in runFeServer.ts,
+      // createReactStreamingHandler.ts).
       'src/devFeServer.ts',
+      'src/runFeServer.ts',
       'src/lib/registerFwGlobalsAndShims.ts',
       'src/streaming/streamHelpers.ts',
+      'src/streaming/createReactStreamingHandler.ts',
     ],
   },
   buildOptions: {
