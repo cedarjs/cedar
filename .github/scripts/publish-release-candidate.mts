@@ -19,9 +19,18 @@ const TEMPLATES_DIR = path.join(CREATE_CEDAR_APP_DIR, 'templates')
 // Template directories
 const TEMPLATE_DIRS = ['ts', 'js', 'esm-ts', 'esm-js']
 
+// Dependency fields whose in-monorepo entries get rewritten to the version
+// being published
+const DEPENDENCY_FIELDS = [
+  'dependencies',
+  'devDependencies',
+  'peerDependencies',
+] as const
+
 interface PackageJson {
   dependencies?: Record<string, string>
   devDependencies?: Record<string, string>
+  peerDependencies?: Record<string, string>
   workspaces?: string[] | { packages: string[] }
   [key: string]: any
 }
@@ -64,82 +73,168 @@ function execCommand(
   }
 }
 
+/**
+ * Rewrites the deps of a package.json that lives outside the workspace graph
+ * (create-cedar-app itself and its templates) to `version`.
+ *
+ * `workspaceNames` covers packages published from this monorepo that aren't
+ * `@cedarjs/`-scoped, such as `storybook-framework-cedarjs`.
+ */
+function readPackageJson(pkgJsonPath: string): PackageJson {
+  return JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8'))
+}
+
+function writePackageJson(pkgJsonPath: string, pkgJson: PackageJson) {
+  fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n')
+}
+
+/**
+ * Resolves a workspace's package.json path, failing loudly if it's missing.
+ *
+ * Yarn only reports a workspace because it found a package.json there, so a
+ * missing one means the checkout is corrupt — never something to skip past on
+ * the way to publishing.
+ */
+function workspacePackageJsonPath(workspace: WorkspaceInfo) {
+  const pkgJsonPath = path.join(REPO_ROOT, workspace.location, 'package.json')
+
+  if (!fs.existsSync(pkgJsonPath)) {
+    throw new Error(`No package.json at ${workspace.location}/package.json`)
+  }
+
+  return pkgJsonPath
+}
+
 function updatePackageJsonWithVersion(
   filePath: string,
   version: string,
+  workspaceNames: Set<string>,
   updateOwnVersion = false,
 ) {
   log(`Updating ${filePath}`)
 
-  const content = fs.readFileSync(filePath, 'utf-8')
-  const packageJson: PackageJson = JSON.parse(content)
+  const packageJson = readPackageJson(filePath)
 
   // Update the package's own version if requested
   if (updateOwnVersion) {
     packageJson.version = version
   }
 
-  // Update dependencies
-  if (packageJson.dependencies) {
-    for (const [pkg] of Object.entries(packageJson.dependencies)) {
-      if (pkg.startsWith('@cedarjs/')) {
-        packageJson.dependencies[pkg] = version
-      }
-    }
-  }
+  for (const depField of DEPENDENCY_FIELDS) {
+    const deps = packageJson[depField]
 
-  // Update devDependencies
-  if (packageJson.devDependencies) {
-    for (const [pkg] of Object.entries(packageJson.devDependencies)) {
-      if (pkg.startsWith('@cedarjs/')) {
-        packageJson.devDependencies[pkg] = version
-      }
-    }
-  }
-
-  fs.writeFileSync(filePath, JSON.stringify(packageJson, null, 2) + '\n')
-}
-
-function updateWorkspaceDependencies(version: string) {
-  log('Updating workspace dependencies across all packages')
-
-  // Get all workspace packages
-  const workspacesOutput = execCommand('yarn workspaces list --json')
-  const workspaces: WorkspaceInfo[] = workspacesOutput
-    .split('\n')
-    .filter((line) => line.trim())
-    .map((line) => JSON.parse(line))
-    .filter((ws) => ws.location !== '.')
-
-  for (const workspace of workspaces) {
-    const packageJsonPath = path.join(
-      REPO_ROOT,
-      workspace.location,
-      'package.json',
-    )
-
-    try {
-      const content = fs.readFileSync(packageJsonPath, 'utf-8')
-      let updatedContent = content.replace(/workspace:\*/g, version)
-
-      // Also update any @cedarjs dependencies to use the new version
-      updatedContent = updatedContent.replace(
-        /"@cedarjs\/([^"]+)":\s*"[^"]*"/g,
-        `"@cedarjs/$1": "${version}"`,
-      )
-
-      if (updatedContent !== content) {
-        fs.writeFileSync(packageJsonPath, updatedContent)
-        log(
-          'Updated workspace dependencies in ' +
-            `${workspace.location}/package.json`,
-        )
-      }
-    } catch {
-      // Skip if package.json doesn't exist or can't be read
+    if (!deps) {
       continue
     }
+
+    for (const depName of Object.keys(deps)) {
+      if (depName.startsWith('@cedarjs/') || workspaceNames.has(depName)) {
+        deps[depName] = version
+      }
+    }
   }
+
+  writePackageJson(filePath, packageJson)
+}
+
+/**
+ * Rewrites every dependency that points at another package in this monorepo to
+ * `version`.
+ *
+ * Membership is decided by package *name* (from `yarn workspaces list`), not by
+ * the `@cedarjs/` prefix or the `workspace:*` spec. Release branches carry a
+ * "update package versions to vX.Y.Z" commit that has already replaced
+ * `workspace:*` with a plain release version, and not every workspace package
+ * is `@cedarjs/`-scoped (e.g. `storybook-framework-cedarjs`), so both of those
+ * narrower checks miss deps that still need bumping.
+ */
+function updateWorkspaceDependencies(
+  workspaces: WorkspaceInfo[],
+  version: string,
+) {
+  log('Updating workspace dependencies across all packages')
+
+  const workspaceNames = new Set(workspaces.map((ws) => ws.name))
+
+  for (const workspace of workspaces) {
+    const packageJsonPath = workspacePackageJsonPath(workspace)
+    const packageJson = readPackageJson(packageJsonPath)
+    let changed = false
+
+    for (const depField of DEPENDENCY_FIELDS) {
+      const deps = packageJson[depField]
+
+      if (!deps) {
+        continue
+      }
+
+      for (const depName of Object.keys(deps)) {
+        if (workspaceNames.has(depName) && deps[depName] !== version) {
+          deps[depName] = version
+          changed = true
+        }
+      }
+    }
+
+    if (changed) {
+      writePackageJson(packageJsonPath, packageJson)
+      log(
+        'Updated workspace dependencies in ' +
+          `${workspace.location}/package.json`,
+      )
+    }
+  }
+}
+
+/**
+ * Fails the release before anything reaches npm if a package still points at a
+ * version of a sibling package that isn't the one being published.
+ *
+ * RC 5.0.2-rc.3 shipped `storybook-framework-cedarjs@5.0.2`, a version that
+ * never existed on npm, and nothing caught it until users hit
+ * "No candidates found" during install.
+ */
+function verifyWorkspaceDependencies(
+  workspaces: WorkspaceInfo[],
+  version: string,
+) {
+  log('Verifying in-monorepo dependencies all point at the version to publish')
+
+  const workspaceNames = new Set(workspaces.map((ws) => ws.name))
+  const problems: string[] = []
+
+  for (const workspace of workspaces) {
+    const packageJson = readPackageJson(workspacePackageJsonPath(workspace))
+
+    if (packageJson.version !== version) {
+      problems.push(`${workspace.name} has version ${packageJson.version}`)
+    }
+
+    for (const depField of DEPENDENCY_FIELDS) {
+      const deps = packageJson[depField]
+
+      if (!deps) {
+        continue
+      }
+
+      for (const [depName, depVersion] of Object.entries(deps)) {
+        if (workspaceNames.has(depName) && depVersion !== version) {
+          problems.push(
+            `${workspace.name} ${depField}.${depName} is ${depVersion}`,
+          )
+        }
+      }
+    }
+  }
+
+  if (problems.length > 0) {
+    throw new Error(
+      `Expected every in-monorepo dependency to be ${version}, but found:\n` +
+        problems.map((problem) => `  - ${problem}`).join('\n'),
+    )
+  }
+
+  log('✅ All in-monorepo dependencies point at ' + version)
 }
 
 async function removeCreateCedarAppFromWorkspaces(): Promise<() => void> {
@@ -335,31 +430,22 @@ async function main() {
       .filter((ws) => ws.location !== '.')
 
     for (const workspace of workspaces) {
-      const packageJsonPath = path.join(
-        REPO_ROOT,
-        workspace.location,
-        'package.json',
-      )
-      try {
-        const content = fs.readFileSync(packageJsonPath, 'utf-8')
-        const packageJson = JSON.parse(content)
+      const packageJsonPath = workspacePackageJsonPath(workspace)
+      const packageJson = readPackageJson(packageJsonPath)
 
-        // Update the version
-        packageJson.version = versionToPublish
+      // Update the version
+      packageJson.version = versionToPublish
 
-        fs.writeFileSync(
-          packageJsonPath,
-          JSON.stringify(packageJson, null, 2) + '\n',
-        )
-        log(`Updated version in ${workspace.location}/package.json`)
-      } catch {
-        // Skip if package.json doesn't exist or can't be read
-        continue
-      }
+      writePackageJson(packageJsonPath, packageJson)
+      log(`Updated version in ${workspace.location}/package.json`)
     }
 
     log('Step 5: Updating workspace dependencies')
-    updateWorkspaceDependencies(versionToPublish)
+    updateWorkspaceDependencies(workspaces, versionToPublish)
+
+    const workspaceNames = new Set(workspaces.map((ws) => ws.name))
+
+    verifyWorkspaceDependencies(workspaces, versionToPublish)
 
     log('Step 6: Committing version and dependency updates')
     execCommand('git add .')
@@ -426,6 +512,7 @@ async function main() {
       updatePackageJsonWithVersion(
         path.join(CREATE_CEDAR_APP_DIR, pkgJsonFile),
         versionToPublish,
+        workspaceNames,
       )
     }
 
@@ -503,6 +590,7 @@ async function main() {
     updatePackageJsonWithVersion(
       createCedarAppPackageJsonPath,
       versionToPublish,
+      workspaceNames,
       true,
     )
     log(`✅ Updated create-cedar-app version to ${versionToPublish}`)

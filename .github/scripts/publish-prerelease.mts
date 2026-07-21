@@ -19,12 +19,21 @@ import fs from 'node:fs'
 import path from 'node:path'
 import util from 'node:util'
 
+// Dependency fields whose in-monorepo entries get rewritten to the version
+// being published
+const DEPENDENCY_FIELDS = [
+  'dependencies',
+  'devDependencies',
+  'peerDependencies',
+] as const
+
 interface PackageJson {
   name?: string
   version?: string
   private?: boolean
   dependencies?: Record<string, string>
   devDependencies?: Record<string, string>
+  peerDependencies?: Record<string, string>
   [key: string]: unknown
 }
 
@@ -244,25 +253,35 @@ function updatePackageVersions(workspaces: WorkspaceInfo[], version: string) {
   }
 }
 
+/**
+ * Rewrites every dependency that points at another package in this monorepo to
+ * `version`.
+ *
+ * Membership is decided by package *name*, not by the `workspace:*` spec or the
+ * `@cedarjs/` prefix, so already-pinned deps and unscoped packages (e.g.
+ * `storybook-framework-cedarjs`) get bumped too.
+ */
 function updateWorkspaceDependencies(
   workspaces: WorkspaceInfo[],
   version: string,
 ) {
-  log(`Updating workspace:* dependencies to ${version}`)
+  log(`Updating in-monorepo dependencies to ${version}`)
+
+  const workspaceNames = new Set(workspaces.map((ws) => ws.name))
 
   for (const workspace of workspaces) {
     const pkgJsonPath = path.join(REPO_ROOT, workspace.location, 'package.json')
     const pkgJson = readPackageJson(pkgJsonPath)
 
-    for (const depField of ['dependencies', 'devDependencies'] as const) {
+    for (const depField of DEPENDENCY_FIELDS) {
       const deps = pkgJson[depField]
 
       if (!deps) {
         continue
       }
 
-      for (const [depName, depVersion] of Object.entries(deps)) {
-        if (depVersion === 'workspace:*') {
+      for (const depName of Object.keys(deps)) {
+        if (workspaceNames.has(depName)) {
           deps[depName] = version
         }
       }
