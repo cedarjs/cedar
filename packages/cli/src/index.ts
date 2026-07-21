@@ -17,7 +17,6 @@ import { telemetryMiddleware } from '@cedarjs/telemetry'
 
 import * as buildCommand from './commands/build.js'
 import * as checkCommand from './commands/check.js'
-import * as consoleCommand from './commands/console.js'
 import * as deployCommand from './commands/deploy.js'
 import * as destroyCommand from './commands/destroy.js'
 import * as devCommand from './commands/dev.js'
@@ -214,7 +213,6 @@ async function runYargs() {
     // Commands (Built in or pre-plugin support)
     .command(buildCommand)
     .command(checkCommand)
-    .command(consoleCommand)
     .command(deployCommand)
     .command(destroyCommand)
     .command(devCommand)
