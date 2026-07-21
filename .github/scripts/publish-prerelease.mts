@@ -51,9 +51,8 @@ const exec = util.promisify(execCb)
 // How many `npm publish` / `npm dist-tag` calls to run concurrently. Publishes
 // upload a tarball so they're heavier; dist-tag flips are cheap metadata
 // calls. Kept modest to avoid tripping npm's registry rate limits.
-const PUBLISH_CONCURRENCY = Number(process.env.CANARY_PUBLISH_CONCURRENCY) || 4
-const DIST_TAG_CONCURRENCY =
-  Number(process.env.CANARY_DIST_TAG_CONCURRENCY) || 8
+const PUBLISH_CONCURRENCY = 4
+const DIST_TAG_CONCURRENCY = 8
 
 function log(message: string) {
   console.log(`• ${message}`)
@@ -105,8 +104,11 @@ async function execCommandAsync(command: string, cwd: string = REPO_ROOT) {
   }
 }
 
-const RATE_LIMIT_PATTERN =
-  /\b429\b|too many requests|ETIMEDOUT|ECONNRESET|ENOTFOUND|EAI_AGAIN/i
+// Matches rate-limiting and other transient/network errors from npm — as
+// opposed to a definitive rejection like "404 not found" or "cannot publish
+// over previously published version", which retrying won't fix.
+const TRANSIENT_NPM_ERROR_PATTERN =
+  /\b(429|5\d\d)\b|too many requests|ETIMEDOUT|ECONNRESET|ENOTFOUND|EAI_AGAIN/i
 
 async function withRetry<T>(
   fn: () => Promise<T>,
@@ -123,16 +125,18 @@ async function withRetry<T>(
     } catch (error) {
       attempt++
       const { message, stderr } = getExecErrorDetails(error)
-      const isRateLimited = RATE_LIMIT_PATTERN.test(`${message}\n${stderr}`)
+      const isTransient = TRANSIENT_NPM_ERROR_PATTERN.test(
+        `${message}\n${stderr}`,
+      )
 
-      if (!isRateLimited || attempt > retries) {
+      if (!isTransient || attempt > retries) {
         throw error
       }
 
       const delay =
         baseDelayMs * 2 ** (attempt - 1) + Math.floor(Math.random() * 500)
       log(
-        `  Rate limited, retrying in ${delay}ms (attempt ${attempt}/${retries})...`,
+        `  Transient npm error, retrying in ${delay}ms (attempt ${attempt}/${retries})...`,
       )
       await new Promise((resolve) => setTimeout(resolve, delay))
     }
@@ -342,9 +346,19 @@ async function isPackagePublished(
   version: string,
 ): Promise<boolean> {
   try {
-    await exec(`npm view ${packageName}@${version} version`)
+    await withRetry(() => exec(`npm view ${packageName}@${version} version`))
     return true
-  } catch {
+  } catch (error) {
+    const { message, stderr } = getExecErrorDetails(error)
+
+    // A transient error (rate limit, timeout, 5xx) here doesn't mean the
+    // version is unpublished — treating it as "not published" would trigger
+    // a duplicate `npm publish` that fails with a confusing error instead of
+    // the real, transient one.
+    if (TRANSIENT_NPM_ERROR_PATTERN.test(`${message}\n${stderr}`)) {
+      throw error
+    }
+
     return false
   }
 }
@@ -377,24 +391,96 @@ async function publishPackagesToStagingTag(
   })
 }
 
+// Best-effort lookup of what a tag currently points to for a package, used to
+// roll back a partially-completed flip. Returns null if the package/tag has
+// no prior version (e.g. a brand new package), or if the lookup itself fails.
+async function getCurrentTagVersion(
+  packageName: string,
+  tagName: string,
+): Promise<string | null> {
+  try {
+    const { stdout } = await exec(
+      `npm view ${packageName} dist-tags.${tagName}`,
+    )
+    return stdout.trim() || null
+  } catch {
+    return null
+  }
+}
+
 // Flips every package's dist-tag from the staging tag over to the real tag,
 // in parallel (bounded by DIST_TAG_CONCURRENCY). This is the point at which
 // the new version becomes visible to anything resolving the "canary"/"next"
 // tag, and it only happens once every package above has published
 // successfully.
+//
+// npm has no cross-package transaction, so this can't be made fully atomic:
+// if one package's flip fails after retries (or the job is cancelled
+// mid-flight), some packages will already point at the new version. To avoid
+// leaving that new/old mix in place, a failure here rolls the
+// already-flipped packages back to whatever version the tag pointed to
+// before this run — converging back to a single consistent (if outdated)
+// state rather than a partial one.
 async function flipToFinalTag(
   packages: PublishablePackage[],
   finalTag: string,
 ): Promise<void> {
   log(`Flipping ${packages.length} packages to tag ${finalTag}`)
 
-  await runWithConcurrency(packages, DIST_TAG_CONCURRENCY, async (pkg) => {
-    const { name, version } = pkg
+  const previousVersions = new Map<string, string | null>()
+  const flipped: PublishablePackage[] = []
 
-    await withRetry(() =>
-      execCommandAsync(`npm dist-tag add ${name}@${version} ${finalTag}`),
+  try {
+    await runWithConcurrency(packages, DIST_TAG_CONCURRENCY, async (pkg) => {
+      const { name, version } = pkg
+
+      previousVersions.set(name, await getCurrentTagVersion(name, finalTag))
+
+      await withRetry(() =>
+        execCommandAsync(`npm dist-tag add ${name}@${version} ${finalTag}`),
+      )
+      flipped.push(pkg)
+      log(`  🏷 ${name}@${version} -> ${finalTag}`)
+    })
+  } catch (error) {
+    console.error(
+      `❌ Flipping to ${finalTag} failed after ${flipped.length}/` +
+        `${packages.length} packages succeeded. Rolling back the ones that ` +
+        `already flipped so the registry doesn't end up in a mixed-version ` +
+        `state.`,
     )
-    log(`  🏷 ${name}@${version} -> ${finalTag}`)
+    await rollBackFlips(flipped, finalTag, previousVersions)
+    throw error
+  }
+}
+
+async function rollBackFlips(
+  flipped: PublishablePackage[],
+  finalTag: string,
+  previousVersions: Map<string, string | null>,
+): Promise<void> {
+  await runWithConcurrency(flipped, DIST_TAG_CONCURRENCY, async (pkg) => {
+    const previousVersion = previousVersions.get(pkg.name)
+
+    if (!previousVersion) {
+      console.error(
+        `  ⚠️ No previous version recorded for ${pkg.name} — leaving it on ` +
+          `${finalTag} = ${pkg.version}. Manual check required.`,
+      )
+      return
+    }
+
+    try {
+      await execCommandAsync(
+        `npm dist-tag add ${pkg.name}@${previousVersion} ${finalTag}`,
+      )
+      log(`  ↩️ Rolled back ${pkg.name} to ${previousVersion}`)
+    } catch {
+      console.error(
+        `  ⚠️ Failed to roll back ${pkg.name} — it is still pointing at ` +
+          `${finalTag} = ${pkg.version}. Manual intervention required.`,
+      )
+    }
   })
 }
 
