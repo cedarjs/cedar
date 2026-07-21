@@ -1,29 +1,34 @@
-// @ts-check
-
 import fs from 'node:fs'
 
 import core from '@actions/core'
 
-import { cliChanged } from './cases/cli.mjs'
-import { codeChanges } from './cases/code_changes.mjs'
-import { rscChanged } from './cases/rsc.mjs'
-import { ssrChanged } from './cases/ssr.mjs'
-import { windowsChanged } from './cases/windows.mjs'
+import { cliChanged } from './cases/cli.mts'
+import { codeChanges } from './cases/code_changes.mts'
+import { rscChanged } from './cases/rsc.mts'
+import { ssrChanged } from './cases/ssr.mts'
+import type { PrFile } from './cases/windows.mts'
+import { windowsChanged } from './cases/windows.mts'
 
 const BASE_URL = 'https://api.github.com/repos/cedarjs/cedar'
 
-const getPrNumber = () => {
-  // Example GITHUB_REF refs/pull/9544/merge
-  const result = /refs\/pull\/(\d+)\/merge/g.exec(process.env.GITHUB_REF)
+interface GhEventPayload {
+  pull_request?: {
+    number: number
+  }
+}
 
-  let prNumber = result?.[1]
+const getPrNumber = (): number | string => {
+  // Example GITHUB_REF refs/pull/9544/merge
+  const result = /refs\/pull\/(\d+)\/merge/g.exec(process.env.GITHUB_REF ?? '')
+
+  let prNumber: number | string | undefined = result?.[1]
 
   if (!prNumber) {
     try {
       // Example GITHUB_EVENT_PATH
       // /home/runner/work/_temp/_github_workflow/event.json
-      const ev = JSON.parse(
-        fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'),
+      const ev: GhEventPayload = JSON.parse(
+        fs.readFileSync(process.env.GITHUB_EVENT_PATH ?? '', 'utf8'),
       )
       prNumber = ev.pull_request?.number
     } catch {
@@ -38,22 +43,31 @@ const getPrNumber = () => {
   return prNumber
 }
 
-/**
- * @typedef {Object} PrInfo
- * @property {string | undefined} branchName
- * @property {string | undefined} headSha
- * @property {boolean} hasWindowsLabel Whether the PR has the `windows` label
- *   (which forces the Windows CI legs to run). The label is read from the API
- *   rather than the event payload so that re-running CI after adding the
- *   label picks it up.
- *
- * @returns {Promise<PrInfo>} the branch name, head sha, and `windows` label
- *   state for the current PR
- */
-async function getPrInfo() {
+interface GhPullResponse {
+  head?: {
+    ref?: string
+    sha?: string
+  }
+  labels?: { name: string }[]
+}
+
+interface PrInfo {
+  branchName: string | undefined
+  headSha: string | undefined
+  /**
+   * Whether the PR has the `windows` label (which forces the Windows CI legs
+   * to run). The label is read from the API rather than the event payload so
+   * that re-running CI after adding the label picks it up.
+   */
+  hasWindowsLabel: boolean
+}
+
+async function getPrInfo(): Promise<PrInfo> {
   const prNumber = getPrNumber()
 
-  const { json } = await fetchJson(`${BASE_URL}/pulls/${prNumber}`)
+  const { json } = await fetchJson<GhPullResponse>(
+    `${BASE_URL}/pulls/${prNumber}`,
+  )
 
   return {
     branchName: json?.head?.ref,
@@ -64,13 +78,17 @@ async function getPrInfo() {
   }
 }
 
-/**
- * @typedef {Object} Workflow
- * @property {string} updated_at
- * @property {string} id
- * @property {string} conclusion
- * @property {string} head_sha
- */
+interface Workflow {
+  updated_at: string
+  id: number
+  status: string
+  conclusion: string
+  head_sha: string
+}
+
+interface GhWorkflowRunsResponse {
+  workflow_runs?: Workflow[]
+}
 
 /**
  * Conclusions that represent an actual CI verdict for the branch. Cancelled,
@@ -83,11 +101,10 @@ const VERDICT_CONCLUSIONS = ['success', 'failure', 'timed_out']
 /**
  * The newest completed workflow run for the branch that produced an actual
  * verdict (see VERDICT_CONCLUSIONS)
- *
- * @param {string | undefined} branchName
- * @returns {Promise<Workflow | undefined>}
  */
-async function getBaselineWorkflowRun(branchName) {
+async function getBaselineWorkflowRun(
+  branchName: string | undefined,
+): Promise<Workflow | undefined> {
   if (!branchName) {
     return
   }
@@ -98,7 +115,7 @@ async function getBaselineWorkflowRun(branchName) {
   // list of all workflows and their IDs
   const workflowId = '154971623'
   const url = `${BASE_URL}/actions/workflows/${workflowId}/runs?branch=${branchName}`
-  const { json } = await fetchJson(url)
+  const { json } = await fetchJson<GhWorkflowRunsResponse>(url)
 
   return json?.workflow_runs?.find(
     (run) =>
@@ -107,21 +124,25 @@ async function getBaselineWorkflowRun(branchName) {
   )
 }
 
-/**
- * @typedef {Object} WorkflowJob
- * @property {string} name
- * @property {string} conclusion
- *
- * @param {string} runId
- * @returns {Promise<WorkflowJob[]>}
- */
-async function getWorkflowJobs(runId, page = 1) {
+interface WorkflowJob {
+  name: string
+  conclusion: string
+}
+
+interface GhWorkflowJobsResponse {
+  jobs?: WorkflowJob[]
+}
+
+async function getWorkflowJobs(
+  runId: number,
+  page = 1,
+): Promise<WorkflowJob[]> {
   const url = `${BASE_URL}/actions/runs/${runId}/jobs?per_page=100&page=${page}`
-  const { json, res } = await fetchJson(url)
+  const { json, res } = await fetchJson<GhWorkflowJobsResponse>(url)
   let jobs = json?.jobs || []
 
   const linkHeader = res?.headers?.get('link')
-  if (linkHeader && linkHeader.includes('rel="next"')) {
+  if (linkHeader?.includes('rel="next"')) {
     const nextJobs = await getWorkflowJobs(runId, page + 1)
     jobs = jobs.concat(nextJobs)
   }
@@ -129,12 +150,10 @@ async function getWorkflowJobs(runId, page = 1) {
   return jobs
 }
 
-/**
- * @param {WorkflowJob[]} jobs
- * @param {string} prefix
- * @returns {{ hadJobs: boolean, succeeded: boolean }}
- */
-function summarizeJobResults(jobs, prefix) {
+function summarizeJobResults(
+  jobs: WorkflowJob[],
+  prefix: string,
+): { hadJobs: boolean; succeeded: boolean } {
   const matchingJobs = jobs.filter((job) => job.name.startsWith(prefix))
   const hadJobs = matchingJobs.length > 0
   const succeeded = hadJobs
@@ -142,6 +161,10 @@ function summarizeJobResults(jobs, prefix) {
     : false
 
   return { hadJobs, succeeded }
+}
+
+interface GhCompareResponse {
+  files?: { filename: string }[]
 }
 
 /**
@@ -155,14 +178,15 @@ function summarizeJobResults(jobs, prefix) {
  * amended commit compares against its parent rather than producing a bogus
  * empty (or full-history) diff
  *
- * @param {string} baseSha
- * @param {string} headSha
- * @return {Promise<string[] | undefined>} `undefined` when the comparison
- *   can't be trusted (API error or truncated file list) and the caller should
- *   fall back to the full PR file list
+ * @returns `undefined` when the comparison can't be trusted (API error or
+ *   truncated file list) and the caller should fall back to the full PR file
+ *   list
  */
-async function getChangedFilesSince(baseSha, headSha) {
-  const { json } = await fetchJson(
+async function getChangedFilesSince(
+  baseSha: string,
+  headSha: string,
+): Promise<string[] | undefined> {
+  const { json } = await fetchJson<GhCompareResponse>(
     `${BASE_URL}/compare/${baseSha}...${headSha}`,
   )
 
@@ -187,25 +211,29 @@ async function getChangedFilesSince(baseSha, headSha) {
   return changedFiles
 }
 
+interface GhPrFilesResponseEntry {
+  filename: string
+  patch?: string
+}
+
 /**
- * @returns {Promise<Array<{ filename: string, patch?: string }>>} all files
- *   changed in the PR, with their unified diffs (absent for binary files and
- *   very large diffs)
+ * @returns all files changed in the PR, with their unified diffs (absent for
+ *   binary files and very large diffs)
  */
-async function getChangedFilesInPr(page = 1) {
+async function getChangedFilesInPr(page = 1): Promise<PrFile[]> {
   const prNumber = getPrNumber()
 
   console.log(`Getting changed files for PR ${prNumber} (page ${page})`)
 
   // Query the GitHub API to get the changed files in the PR
   const url = `${BASE_URL}/pulls/${prNumber}/files?per_page=100&page=${page}`
-  const { json, res } = await fetchJson(url)
-  let changedFiles =
+  const { json, res } = await fetchJson<GhPrFilesResponseEntry[]>(url)
+  let changedFiles: PrFile[] =
     json?.map((file) => ({ filename: file.filename, patch: file.patch })) || []
 
   // Look at the headers to see if the result is paginated
   const linkHeader = res?.headers?.get('link')
-  if (linkHeader && linkHeader.includes('rel="next"')) {
+  if (linkHeader?.includes('rel="next"')) {
     const files = await getChangedFilesInPr(page + 1)
     changedFiles = changedFiles.concat(files)
   }
@@ -213,15 +241,11 @@ async function getChangedFilesInPr(page = 1) {
   return changedFiles
 }
 
-/**
- * Fetch JSON data from a URL with retries.
- *
- * @param {string} url - The URL to fetch.
- * @param {number} [retries=0] - The number of retries.
- *
- * @return {Promise<{ json?: any, res?: Response }>}
- */
-async function fetchJson(url, retries = 0) {
+/** Fetch JSON data from a URL with retries. */
+async function fetchJson<T>(
+  url: string,
+  retries = 0,
+): Promise<{ json?: T; res?: Response }> {
   if (retries) {
     console.log(`Retry ${retries}: ${url}`)
   } else {
@@ -250,7 +274,7 @@ async function fetchJson(url, retries = 0) {
       throw new Error('status: ' + res.status)
     }
 
-    const json = await res.json()
+    const json: T = await res.json()
 
     return { json, res }
   } catch (e) {
@@ -264,7 +288,7 @@ async function fetchJson(url, retries = 0) {
     } else {
       await new Promise((resolve) => setTimeout(resolve, 3000 * retries))
 
-      const fetchJsonRes = await fetchJson(url, ++retries)
+      const fetchJsonRes = await fetchJson<T>(url, ++retries)
       return fetchJsonRes
     }
   }

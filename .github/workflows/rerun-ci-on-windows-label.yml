@@ -1,7 +1,7 @@
 name: 🏷️ Re-run CI on windows label
 
 # Adding the `windows` label to a PR forces the Windows CI legs to run (see
-# .github/actions/detect-changes/cases/windows.mjs). detect-changes reads
+# .github/actions/detect-changes/cases/windows.mts). detect-changes reads
 # labels at run time, so a re-run is needed for a label added after CI
 # started — this workflow automates that re-run.
 #

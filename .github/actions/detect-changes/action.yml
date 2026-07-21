@@ -18,4 +18,4 @@ outputs:
 
 runs:
   using: node24
-  main: detectChanges.mjs
+  main: detectChanges.mts

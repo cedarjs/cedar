@@ -2,10 +2,10 @@
  * Detects if there are changes to CLI-related packages that affect
  * package-manager-agnostic behavior.
  *
- * @param {string[]} changedFiles The list of files which git has listed as changed
- * @returns {boolean} True if there are changes, false if not
+ * @param changedFiles The list of files which git has listed as changed
+ * @returns True if there are changes, false if not
  */
-export function cliChanged(changedFiles) {
+export function cliChanged(changedFiles: string[]): boolean {
   for (const changedFile of changedFiles) {
     if (
       changedFile.startsWith('packages/cli/') ||

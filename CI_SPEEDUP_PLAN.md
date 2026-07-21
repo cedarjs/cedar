@@ -51,7 +51,7 @@ matrix and let Ubuntu jobs start immediately.
 removal:
 
 - `detect-changes` gained a `windows` output
-  (`.github/actions/detect-changes/cases/windows.mjs`): the Windows legs run
+  (`.github/actions/detect-changes/cases/windows.mts`): the Windows legs run
   when the PR's added lines use a path- or process-sensitive API (separators,
   drive letters/file URLs, spawn quoting, file locking — the historical
   Windows-breakage classes), or the PR touches `packages/cli` or
