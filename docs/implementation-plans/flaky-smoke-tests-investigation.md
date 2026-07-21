@@ -1328,3 +1328,54 @@ signature-A surfaces use different entry points and a more tangled launch path:
 Note: signature D (Ubuntu esbuild `"service is no longer running"` in UD /
 E2E-node tests) is **not** a Maglev crash and is unaffected by `--no-maglev` — it
 needs the separate `afterEach`/esbuild hardening from the 2026-06-26 UD entry.
+
+## Update 2026-07-21 — Root cause identified and fixed: canary-registry `ETARGET` / no-candidates
+
+### What
+
+The "Caveats" section above (2026-07-17 survey) flagged `canary-registry
+ETARGET` / no-candidates as an unclassified environmental infra failure,
+counted as REAL rather than attributed to a known flaky signature. Root cause:
+`.github/scripts/publish-canary.mts` published packages to the `canary`/`next`
+npm dist-tag **one package at a time**. Any CI job that upgraded to canary
+(`yarn cedar upgrade -t canary`, `create-cedar-app@canary`, etc.) while a
+publish run was mid-loop could resolve the dist-tag to a version for which
+some sibling packages hadn't been published yet — an install-time `ETARGET`
+("no candidates found") failure that had nothing to do with the code under
+test.
+
+### How (fix)
+
+`publish-canary.mts` now publishes in two phases instead of moving the real
+tag as it goes:
+
+1. **Stage**: every public package is published in parallel (bounded
+   concurrency, default 4) under a unique, run-scoped staging tag
+   (`staging-<GITHUB_RUN_ID>`). Nothing resolves this tag, so a
+   partially-complete run is invisible to consumers watching `canary`/`next`.
+2. **Flip**: only once every package has published successfully does the
+   script move the real `canary`/`next` dist-tag onto that version for every
+   package, in parallel (bounded concurrency, default 8). This is the single
+   point where the new version becomes visible — and it's atomic-ish across
+   packages instead of trickling in one at a time.
+3. **Cleanup**: the staging tag is removed afterward (best-effort, non-fatal).
+
+Both the publish and dist-tag-flip steps retry with exponential backoff +
+jitter on rate-limit-shaped errors (429, timeouts, connection resets), to stay
+within npm registry rate limits despite the added parallelism.
+
+### Changed files
+
+- `.github/scripts/publish-canary.mts` — staged publish + dist-tag flip,
+  bounded concurrency, retry with backoff.
+
+### Not yet validated
+
+Verified via `tsc`, `eslint`, and `prettier` locally. Needs a real canary
+publish run on `next` (or `main`) to confirm the staged publish + flip behaves
+correctly against the live npm registry, and a following CI run that upgrades
+to canary to confirm the race is gone.
+
+### Reference
+
+PR: https://github.com/cedarjs/cedar/pull/2147
