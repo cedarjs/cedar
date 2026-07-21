@@ -25,7 +25,7 @@ What it misses:
 - Database overlays (2 directories under `database-overlays/`)
 - Peer deps in `api-server`, `storybook`, `storybook-vite`
 
-### 2. `.github/scripts/publish-canary.mts`
+### 2. `.github/scripts/publish-prerelease.mts`
 
 Does everything inline with Node.js. Covers:
 
@@ -104,7 +104,7 @@ deps) so it covers everything listed above.
 Accept a version argument (already does). Strip optional `v` prefix (already
 does).
 
-### Step 2 — Update `publish-canary.mts`
+### Step 2 — Update `publish-prerelease.mts`
 
 Replace the three inline update blocks (version, workspace deps, template deps)
 with a single call:

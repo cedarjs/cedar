@@ -37,8 +37,8 @@ function isNonCodeWorkflowOrAction(filePath: string): boolean {
     '.github/actions/check_changesets/package.json',
     '.github/actions/check_changesets/yarn.lock',
 
-    '.github/workflows/publish-canary.yml',
-    '.github/scripts/publish-canary.mts',
+    '.github/workflows/publish-prerelease.yml',
+    '.github/scripts/publish-prerelease.mts',
 
     '.github/workflows/publish-release-candidate.yml',
     '.github/scripts/publish-release-candidate.mts',
