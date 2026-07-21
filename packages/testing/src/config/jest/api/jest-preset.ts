@@ -6,7 +6,7 @@ import { getApiSideDefaultBabelConfig } from '@cedarjs/babel-config'
 import { getPaths } from '@cedarjs/project-config'
 
 const rwjsPaths = getPaths()
-const { babelrc } = getApiSideDefaultBabelConfig({ forJest: true })
+const { babelrc } = getApiSideDefaultBabelConfig()
 
 /**
  * Resolve a specifier through the package's `exports` map.

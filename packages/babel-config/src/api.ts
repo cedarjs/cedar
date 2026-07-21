@@ -239,15 +239,18 @@ export const getApiSideBabelOverrides = ({
   return overrides as TransformOptions[]
 }
 
-export const getApiSideDefaultBabelConfig = ({
-  forVite = false,
-  projectIsEsm = false,
-  forJest = false,
-} = {}) => {
+/**
+ * The default api-side Babel config for Jest (@cedarjs/testing) and the
+ * Babel ESLint parser (@cedarjs/eslint-config). The Jest-only handler ALS
+ * wrapping override is always included: it only matches api/src/functions
+ * files, and for the parse-only ESLint consumer transform plugins have no
+ * effect.
+ */
+export const getApiSideDefaultBabelConfig = () => {
   return {
     presets: getApiSideBabelPresets(),
-    plugins: getApiSideBabelPlugins({ forVite, projectIsEsm }),
-    overrides: getApiSideBabelOverrides({ forVite, projectIsEsm, forJest }),
+    plugins: getApiSideBabelPlugins(),
+    overrides: getApiSideBabelOverrides({ forJest: true }),
     extends: getApiSideBabelConfigPath(),
     babelrc: false,
     ignore: ['node_modules'],
@@ -259,17 +262,18 @@ export const registerApiSideBabelHook = ({
   plugins = [],
   ...rest
 }: RegisterHookOptions = {}) => {
-  const defaultOptions = getApiSideDefaultBabelConfig({
-    projectIsEsm: projectSideIsEsm('api'),
-  })
+  const projectIsEsm = projectSideIsEsm('api')
 
   registerBabel({
-    ...defaultOptions,
     presets: getApiSideBabelPresets({
       presetEnv: true,
     }),
+    overrides: getApiSideBabelOverrides({ projectIsEsm }),
+    extends: getApiSideBabelConfigPath(),
+    babelrc: false,
+    ignore: ['node_modules'],
     extensions: ['.js', '.ts', '.jsx', '.tsx'],
-    plugins: [...defaultOptions.plugins, ...plugins],
+    plugins: [...getApiSideBabelPlugins({ projectIsEsm }), ...plugins],
     cache: false,
     ...rest,
   })
@@ -282,13 +286,15 @@ export const transformWithBabel = async (
   sourceMaps: TransformOptions['sourceMaps'] = 'inline',
   forVite = false,
 ) => {
-  const defaultOptions = getApiSideDefaultBabelConfig({
-    forVite,
-    projectIsEsm: projectSideIsEsm('api'),
-  })
-
   const result = transformAsync(sourceCode, {
-    ...defaultOptions,
+    presets: getApiSideBabelPresets(),
+    overrides: getApiSideBabelOverrides({
+      forVite,
+      projectIsEsm: projectSideIsEsm('api'),
+    }),
+    extends: getApiSideBabelConfigPath(),
+    babelrc: false,
+    ignore: ['node_modules'],
     cwd: getPaths().api.base,
     filename,
     // The default 'inline' embeds the map as a data URL in result.code,
