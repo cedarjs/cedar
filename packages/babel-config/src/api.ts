@@ -58,28 +58,26 @@ export const getApiSideBabelPlugins = ({
   forVite = false,
   projectIsEsm = false,
 } = {}) => {
+  if (forVite) {
+    return getApiSideBabelPluginsForVite()
+  }
+
   const tsConfig = parseTypeScriptConfigFiles()
 
-  const plugins: (PluginShape | boolean)[] = [
+  const plugins: PluginList = [
     ...getCommonPlugins(),
     // Needed to support `/** @jsxImportSource custom-jsx-library */`
     // comments in JSX files
-    !forVite && ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }],
-    // For non-Vite consumers (Jest, registerApiSideBabelHook / Babel
-    // registerRequire paths such as data-migrate CJS and prerender CJS):
+    ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }],
+    // For the non-Vite consumers this function serves (Jest,
+    // registerApiSideBabelHook / Babel registerRequire paths such as
+    // data-migrate CJS and prerender CJS):
     //   • alias config: rewrites `src/` and tsconfig paths to relative paths
     //   • resolvePath: appends `.js`/`.jsx` to extensionless imports in ESM
     //     projects so Node's module resolver can find them, and strips `.js`
     //     suffixes in data-migrate / prerender contexts where the TypeScript
     //     source is `.ts` but callers write `.js` import specifiers.
-    //
-    // For Vite / esbuild (forVite: true):
-    //   • alias handling: covered by cedar-api-src-redirect + vite-tsconfig-paths
-    //     (Vite) or applySrcAlias + applyTsconfigPaths (esbuild)
-    //   • extension rewriting: covered by applyEsmExtensions in
-    //     runCedarBabelTransformsPlugin (esbuild); Vite / Rollup resolve
-    //     extensions themselves during bundling
-    !forVite && [
+    [
       'babel-plugin-module-resolver',
       {
         alias: {
@@ -135,14 +133,15 @@ export const getApiSideBabelPlugins = ({
     ],
     // Vite/esbuild use cedarDirectoryNamedImportPlugin / applyDirectoryNamedImport
     // instead of this babel plugin
-    !forVite && [
+    [
       pluginRedwoodDirectoryNamedImport,
       undefined,
       'rwjs-babel-directory-named-modules',
     ],
-    // Auto-import is handled by cedarAutoImportsPlugin for Vite; skip it in
-    // Vite contexts and keep it for non-Vite consumers (Jest, esbuild builds).
-    !forVite && [
+    // Auto-import is handled by cedarAutoImportsPlugin / applyAutoImports for
+    // Vite/esbuild; this Babel plugin serves the remaining non-Vite consumers
+    // (Jest, registerApiSideBabelHook).
+    [
       'babel-plugin-auto-import',
       {
         declarations: [
@@ -160,18 +159,44 @@ export const getApiSideBabelPlugins = ({
       },
       'rwjs-babel-auto-import',
     ],
-    !forVite && [
-      'babel-plugin-graphql-tag',
-      undefined,
-      'rwjs-babel-graphql-tag',
-    ],
+    ['babel-plugin-graphql-tag', undefined, 'rwjs-babel-graphql-tag'],
     // For Vite builds, glob imports are handled by cedarImportDirPlugin (Vite)
     // or applyImportDir (esbuild).  Keep the Babel plugin only for
     // non-Vite consumers: Jest, console, and data-migrate.
-    !forVite && [pluginRedwoodImportDir, {}, 'rwjs-babel-glob-import-dir'],
+    [pluginRedwoodImportDir, {}, 'rwjs-babel-glob-import-dir'],
   ]
 
-  return plugins.filter(<T>(n: T | boolean): n is T => Boolean(n))
+  return plugins
+}
+
+/**
+ * Purpose-built equivalent of `getApiSideBabelPlugins({ forVite: true })` for
+ * the Vite-driven api pipelines (buildCedarApp, the api dev middleware, and
+ * the esbuild/standalone-Vite api builds in @cedarjs/internal).
+ *
+ * Every Cedar-specific Babel plugin is gated behind `!forVite` in
+ * `getApiSideBabelPlugins` because these pipelines replace them with
+ * dedicated Vite/esbuild transforms:
+ *  - JSX/TypeScript compilation: handled natively by Vite/esbuild
+ *  - babel-plugin-module-resolver (`src/` and tsconfig `paths` aliases):
+ *    cedar-api-src-redirect + vite-tsconfig-paths (Vite) or applySrcAlias +
+ *    applyTsconfigPaths (esbuild); ESM extension rewriting is covered by
+ *    applyEsmExtensions
+ *  - directory-named imports: cedarDirectoryNamedImportPlugin /
+ *    applyDirectoryNamedImport
+ *  - auto-imports (gql, context): cedarAutoImportsPlugin / applyAutoImports
+ *  - graphql-tag: vite-plugin-graphql-tag
+ *  - glob imports: cedarImportDirPlugin / applyImportDir
+ *
+ * Only the common plugins remain — and that list is currently empty, which
+ * is why the Vite pipelines skip Babel entirely unless the project has a
+ * custom api/babel.config.js.
+ *
+ * The `projectIsEsm` option needs no equivalent here: it only affects the
+ * module-resolver `resolvePath` hook, which is a `!forVite` plugin.
+ */
+export const getApiSideBabelPluginsForVite = (): PluginList => {
+  return [...getCommonPlugins()]
 }
 
 export const getApiSideBabelConfigPath = () => {

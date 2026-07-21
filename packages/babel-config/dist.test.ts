@@ -11,6 +11,7 @@ describe('dist', () => {
         "TARGETS_NODE": "24",
         "getApiSideBabelConfigPath": [Function],
         "getApiSideBabelPlugins": [Function],
+        "getApiSideBabelPluginsForVite": [Function],
         "getApiSideBabelPresets": [Function],
         "getApiSideDefaultBabelConfig": [Function],
         "getCommonPlugins": [Function],

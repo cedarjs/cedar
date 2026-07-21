@@ -16,7 +16,7 @@ import type { PluginBuild } from 'esbuild'
 
 import {
   getApiSideBabelConfigPath,
-  getApiSideBabelPlugins,
+  getApiSideBabelPluginsForVite,
   transformWithBabel,
 } from '@cedarjs/babel-config'
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
@@ -86,15 +86,16 @@ export const cedarApiGraphqlPlugin = {
       fileContents = applyAutoImports(fileContents)
 
       // Expand glob imports (e.g. `import x from 'src/services/**/*.ts'`)
-      // before Babel runs.  The Babel import-dir plugin is disabled for these
-      // builds (forVite: true); applyImportDir is the esbuild equivalent.
+      // before Babel runs.  The Babel import-dir plugin is not part of
+      // getApiSideBabelPluginsForVite(); applyImportDir is the esbuild
+      // equivalent.
       fileContents =
         applyImportDir(fileContents, args.path)?.code ?? fileContents
 
       // The Babel pass is only needed to apply a user's custom
-      // api/babel.config.js: getApiSideBabelPlugins({ forVite: true }) is
-      // empty (the transforms above replace Cedar's api-side Babel plugins)
-      // and esbuild strips TypeScript itself when given the 'ts' loader.
+      // api/babel.config.js: getApiSideBabelPluginsForVite() is empty (the
+      // transforms above replace Cedar's api-side Babel plugins) and esbuild
+      // strips TypeScript itself when given the 'ts' loader.
       const apiBabelConfigPath = getApiSideBabelConfigPath()
 
       let code = fileContents
@@ -103,10 +104,7 @@ export const cedarApiGraphqlPlugin = {
         const transformedCode = await transformWithBabel(
           fileContents,
           args.path,
-          getApiSideBabelPlugins({
-            forVite: true,
-            projectIsEsm: projectSideIsEsm('api'),
-          }),
+          getApiSideBabelPluginsForVite(),
         )
 
         if (!transformedCode?.code) {

@@ -18,7 +18,7 @@ const tsconfigPaths =
 
 import {
   getApiSideBabelConfigPath,
-  getApiSideBabelPlugins,
+  getApiSideBabelPluginsForVite,
   transformWithBabel,
 } from '@cedarjs/babel-config'
 import {
@@ -99,8 +99,9 @@ const runCedarBabelTransformsPlugin = {
       fileContents = applyDirectoryNamedImport(fileContents, args.path)
       fileContents = applyAutoImports(fileContents)
       // Expand glob imports (e.g. `import x from 'src/services/**/*.ts'`)
-      // before Babel runs.  The Babel import-dir plugin is disabled for these
-      // builds (forVite: true); applyImportDir is the esbuild equivalent.
+      // before Babel runs.  The Babel import-dir plugin is not part of
+      // getApiSideBabelPluginsForVite(); applyImportDir is the esbuild
+      // equivalent.
       //
       // This is intentionally applied inline rather than as a separate esbuild
       // plugin because esbuild 0.27 lacks onTransform chaining — onLoad
@@ -111,9 +112,9 @@ const runCedarBabelTransformsPlugin = {
         applyImportDir(fileContents, args.path)?.code ?? fileContents
 
       // The Babel pass is only needed to apply a user's custom
-      // api/babel.config.js: getApiSideBabelPlugins({ forVite: true }) is
-      // empty (the transforms above replace Cedar's api-side Babel plugins)
-      // and esbuild strips TypeScript itself when given the matching loader.
+      // api/babel.config.js: getApiSideBabelPluginsForVite() is empty (the
+      // transforms above replace Cedar's api-side Babel plugins) and esbuild
+      // strips TypeScript itself when given the matching loader.
       const apiBabelConfigPath = getApiSideBabelConfigPath()
 
       let code = fileContents
@@ -122,10 +123,7 @@ const runCedarBabelTransformsPlugin = {
         const transformedCode = await transformWithBabel(
           fileContents,
           args.path,
-          getApiSideBabelPlugins({
-            forVite: true,
-            projectIsEsm: projectSideIsEsm('api'),
-          }),
+          getApiSideBabelPluginsForVite(),
         )
 
         if (!transformedCode?.code) {
@@ -142,8 +140,8 @@ const runCedarBabelTransformsPlugin = {
       // For ESM projects, append .js/.jsx to extensionless relative imports
       // so Node's ESM resolver can locate the compiled output files at
       // runtime.  This replaces the resolvePath hook that
-      // babel-plugin-module-resolver previously provided; that plugin is now
-      // skipped for forVite:true builds.
+      // babel-plugin-module-resolver previously provided; that plugin is not
+      // part of getApiSideBabelPluginsForVite().
       if (isEsm) {
         code = applyEsmExtensions(code, args.path)
       }
@@ -323,19 +321,16 @@ function createCedarViteApiPlugin(): Plugin {
       }
 
       // The Babel pass is only needed to apply a user's custom
-      // api/babel.config.js: getApiSideBabelPlugins({ forVite: true }) is
-      // empty (the transforms in this pipeline replace Cedar's api-side Babel
-      // plugins) and Vite strips TypeScript itself.
+      // api/babel.config.js: getApiSideBabelPluginsForVite() is empty (the
+      // transforms in this pipeline replace Cedar's api-side Babel plugins)
+      // and Vite strips TypeScript itself.
       const apiBabelConfigPath = getApiSideBabelConfigPath()
 
       const transformedCode = apiBabelConfigPath
         ? await transformWithBabel(
             sourceCode,
             id,
-            getApiSideBabelPlugins({
-              forVite: true,
-              projectIsEsm: isEsm,
-            }),
+            getApiSideBabelPluginsForVite(),
             true,
           )
         : null
@@ -357,8 +352,8 @@ function createCedarViteApiPlugin(): Plugin {
 
       // Append .js/.jsx extensions to extensionless relative imports so that
       // Node's ESM resolver can find them at runtime. This replaces the
-      // resolvePath hook in babel-plugin-module-resolver, which is disabled
-      // for forVite:true builds (babel-config/src/api.ts). With
+      // resolvePath hook in babel-plugin-module-resolver, which is not part
+      // of getApiSideBabelPluginsForVite() (babel-config/src/api.ts). With
       // preserveModules:true Rollup preserves the import specifiers as-is
       // in the output, so extensions must be present before bundling.
       if (isEsm) {
@@ -438,8 +433,8 @@ export const buildApiWithVite = async () => {
     },
     // cedarImportDirPlugin must run before the Babel transform so glob imports
     // are expanded before Babel sees the code.  The Babel import-dir plugin is
-    // disabled for forVite:true builds; this inline Vite plugin is its
-    // replacement for this code path (both CJS and ESM output via Rollup).
+    // not part of getApiSideBabelPluginsForVite(); this inline Vite plugin is
+    // its replacement for this code path (both CJS and ESM output via Rollup).
     // tsconfigPaths resolves user-defined tsconfig.json `paths` aliases; it
     // replaces the Babel module-resolver's tsconfig-paths handling for this
     // code path.

@@ -19,7 +19,7 @@ const tsconfigPaths =
 
 import {
   getApiSideBabelConfigPath,
-  getApiSideBabelPlugins,
+  getApiSideBabelPluginsForVite,
   transformWithBabel,
 } from '@cedarjs/babel-config'
 import {
@@ -161,16 +161,13 @@ export async function buildCedarApp({
   }
 
   // The Babel pass is only needed to apply a user's custom
-  // api/babel.config.js: getApiSideBabelPlugins({ forVite: true }) is empty
-  // (all of Cedar's api-side Babel transforms are handled by dedicated Vite
-  // plugins in this pipeline) and Vite strips TypeScript itself. Skip Babel
-  // entirely when the project has no such config file.
+  // api/babel.config.js: getApiSideBabelPluginsForVite() is empty (all of
+  // Cedar's api-side Babel transforms are handled by dedicated Vite plugins
+  // in this pipeline) and Vite strips TypeScript itself. Skip Babel entirely
+  // when the project has no such config file.
   const babelPlugins =
     workspace.includes('api') && getApiSideBabelConfigPath()
-      ? getApiSideBabelPlugins({
-          forVite: true,
-          projectIsEsm: projectSideIsEsm('api'),
-        })
+      ? getApiSideBabelPluginsForVite()
       : null
 
   const workspacePkgSourceMap = workspace.includes('api')
@@ -414,8 +411,8 @@ export async function buildCedarApp({
           return null
         }
 
-        // babel-plugin-module-resolver is excluded for forVite:true builds
-        // (it is gated on !forVite in getApiSideBabelPlugins).  That plugin
+        // babel-plugin-module-resolver is not part of
+        // getApiSideBabelPluginsForVite().  That plugin
         // previously rewrote `src/` bare specifiers to relative paths so
         // that Rollup's `external` function (which marks anything that is
         // not relative or absolute as external) would not capture them.

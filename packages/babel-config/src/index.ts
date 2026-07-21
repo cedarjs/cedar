@@ -15,6 +15,8 @@ export {
   getApiSideBabelConfigPath,
   /** Used by @cedarjs/internal and @cedarjs/testing */
   getApiSideBabelPlugins,
+  /** Used by @cedarjs/internal and @cedarjs/vite */
+  getApiSideBabelPluginsForVite,
   /** Used by @cedarjs/testing */
   getApiSideBabelPresets,
   /** Used by @cedarjs/testing and @cedarjs/eslint-config */

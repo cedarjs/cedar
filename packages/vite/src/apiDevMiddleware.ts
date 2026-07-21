@@ -23,14 +23,14 @@ import { buildCedarContext, wrapLegacyHandler } from '@cedarjs/api/runtime'
 import type { CedarHandler, LegacyHandler } from '@cedarjs/api/runtime'
 import {
   getApiSideBabelConfigPath,
-  getApiSideBabelPlugins,
+  getApiSideBabelPluginsForVite,
   transformWithBabel,
 } from '@cedarjs/babel-config'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { createGraphQLYoga } from '@cedarjs/graphql-server'
 import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
 import { applyGqlormInject } from '@cedarjs/internal/dist/build/api-graphql-transforms.js'
-import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
+import { getConfig, getPaths } from '@cedarjs/project-config'
 
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
 import { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
@@ -200,19 +200,15 @@ async function internalLoadApiFunctions(viteServer: ViteDevServer) {
 export async function createApiViteServer(): Promise<ViteDevServer> {
   const cedarPaths = getPaths()
   const cedarConfig = getConfig()
-  const isEsm = projectSideIsEsm('api')
   const normalizedBase = normalizePath(cedarPaths.base)
 
   // The Babel pass is only needed to apply a user's custom
-  // api/babel.config.js: getApiSideBabelPlugins({ forVite: true }) is empty
-  // (all of Cedar's api-side Babel transforms are handled by dedicated Vite
-  // plugins in this pipeline) and Vite strips TypeScript itself. Skip Babel
-  // entirely when the project has no such config file.
+  // api/babel.config.js: getApiSideBabelPluginsForVite() is empty (all of
+  // Cedar's api-side Babel transforms are handled by dedicated Vite plugins
+  // in this pipeline) and Vite strips TypeScript itself. Skip Babel entirely
+  // when the project has no such config file.
   const babelPlugins = getApiSideBabelConfigPath()
-    ? getApiSideBabelPlugins({
-        forVite: true,
-        projectIsEsm: isEsm,
-      })
+    ? getApiSideBabelPluginsForVite()
     : null
 
   const workspacePkgSourceMap = Object.fromEntries(
