@@ -1,4 +1,5 @@
 import react from '@vitejs/plugin-react'
+import type { BabelOptions } from '@vitejs/plugin-react'
 import type { PluginOption } from 'vite'
 import { gqlPlugin as gqlTagPlugin } from 'vite-plugin-graphql-tag'
 import tsPathsMod from 'vite-tsconfig-paths'
@@ -12,7 +13,6 @@ const tsconfigPaths =
   // interop
   tsPathsMod.default?.default || tsPathsMod.default || tsPathsMod
 
-import { getWebSideDefaultBabelConfig } from '@cedarjs/babel-config'
 import { getConfig } from '@cedarjs/project-config'
 import {
   autoImportsPlugin,
@@ -64,26 +64,30 @@ export { cedarWaitForApiServer } from './plugins/vite-plugin-cedar-wait-for-api-
 
 type PluginOptions = {
   mode?: string | undefined
+  babel?: BabelOptions | undefined
 }
 
 /**
  * Pre-configured vite plugin, with required config for CedarJS apps.
  */
-export function cedar({ mode }: PluginOptions = {}): PluginOption[] {
+export function cedar({ mode, babel }: PluginOptions = {}): PluginOption[] {
   const cedarConfig = getConfig()
 
   const rscEnabled = cedarConfig.experimental?.rsc?.enabled
 
-  // React compiler is only enabled if explicitly set AND lintOnly is false.
-  // Only provide the Babel config when the compiler is active; otherwise use
-  // an empty config so users must wire up Babel themselves in their Vite config.
   const reactCompilerEnabled =
     cedarConfig.experimental?.reactCompiler?.enabled &&
     cedarConfig.experimental?.reactCompiler?.lintOnly === false
 
-  const babelConfig = reactCompilerEnabled
-    ? getWebSideDefaultBabelConfig({ forVite: true })
-    : {}
+  const babelConfig: BabelOptions | undefined =
+    reactCompilerEnabled || babel
+      ? {
+          ...(reactCompilerEnabled && {
+            plugins: [['babel-plugin-react-compiler', { target: '19' }]],
+          }),
+          ...babel,
+        }
+      : undefined
 
   return [
     tsconfigPaths(),
