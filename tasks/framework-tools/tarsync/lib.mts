@@ -183,6 +183,50 @@ export async function detectPackageManager(
   return 'yarn'
 }
 
+/**
+ * Paths to every workspace's package.json, taken from the root manifest's
+ * `workspaces` field.
+ *
+ * Only the trailing `*` / `**` form is expanded — that covers what Cedar
+ * projects use (`["api", "web", "packages/*"]`) without pulling in a glob
+ * dependency. Anything fancier is left as a literal directory, which simply
+ * won't exist and gets filtered out.
+ */
+async function findWorkspaceManifests(
+  projectPath: string,
+  rootPackageJson: Record<string, any>,
+): Promise<string[]> {
+  const workspaces = rootPackageJson.workspaces
+  const patterns: string[] = Array.isArray(workspaces)
+    ? workspaces
+    : (workspaces?.packages ?? [])
+
+  const directories: string[] = []
+
+  for (const pattern of patterns) {
+    const wildcard = pattern.match(/^(.*)\/\*{1,2}$/)
+
+    if (wildcard) {
+      const parent = path.join(projectPath, wildcard[1])
+      const entries = await fs.promises
+        .readdir(parent, { withFileTypes: true })
+        .catch(() => [])
+
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          directories.push(path.join(parent, entry.name))
+        }
+      }
+    } else {
+      directories.push(path.join(projectPath, pattern))
+    }
+  }
+
+  return directories
+    .map((directory) => path.join(directory, 'package.json'))
+    .filter((manifestPath) => fs.existsSync(manifestPath))
+}
+
 export async function updateResolutions(projectPath: string) {
   const packageManager = await detectPackageManager(projectPath)
 
@@ -318,8 +362,16 @@ export async function updateResolutions(projectPath: string) {
     // direct dependencies at the tarballs as well. The overrides are still
     // needed: they're what redirects the framework packages that are pulled
     // in transitively rather than declared
+    // Every section npm treats as a direct dependency. `peerDependencies` is
+    // deliberately left alone: a peer is a range the project requires of its
+    // consumer, not something npm installs on its behalf, so rewriting one to
+    // a `file:` path would be wrong
     const pointDirectDepsAtTarballs = (packageJson: Record<string, any>) => {
-      for (const depsKey of ['dependencies', 'devDependencies']) {
+      for (const depsKey of [
+        'dependencies',
+        'devDependencies',
+        'optionalDependencies',
+      ]) {
         const deps = packageJson[depsKey]
 
         if (!deps) {
@@ -335,14 +387,13 @@ export async function updateResolutions(projectPath: string) {
     }
 
     // Every workspace, not just the root — `@cedarjs/web` is a dependency of
-    // web, `@cedarjs/api` of api, and so on
-    for (const relativePath of ['api/package.json', 'web/package.json']) {
-      const workspacePkgPath = path.join(projectPath, relativePath)
-
-      if (!fs.existsSync(workspacePkgPath)) {
-        continue
-      }
-
+    // web, `@cedarjs/api` of api, and so on. Derived from the root manifest
+    // rather than hard-coded, so a Cedar dependency added to any other
+    // workspace doesn't quietly keep a spec that conflicts with the overrides
+    for (const workspacePkgPath of await findWorkspaceManifests(
+      projectPath,
+      projectPackageJson,
+    )) {
       const workspacePkg = JSON.parse(
         await fs.promises.readFile(workspacePkgPath, 'utf-8'),
       )
