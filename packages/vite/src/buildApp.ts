@@ -17,10 +17,7 @@ const tsconfigPaths =
   // interop
   tsPathsMod.default?.default || tsPathsMod.default || tsPathsMod
 
-import {
-  getApiSideBabelPlugins,
-  transformWithBabel,
-} from '@cedarjs/babel-config'
+import { transformWithBabel } from '@cedarjs/babel-config'
 import {
   applyEsmExtensions,
   applySrcAlias,
@@ -158,13 +155,6 @@ export async function buildCedarApp({
       }
     }
   }
-
-  const babelPlugins = workspace.includes('api')
-    ? getApiSideBabelPlugins({
-        forVite: true,
-        projectIsEsm: projectSideIsEsm('api'),
-      })
-    : null
 
   const workspacePkgSourceMap = workspace.includes('api')
     ? Object.fromEntries(
@@ -382,7 +372,7 @@ export async function buildCedarApp({
 
   plugins.push(cedarMockCellDataPlugin())
 
-  if (babelPlugins) {
+  if (workspace.includes('api')) {
     plugins.push({
       name: 'cedar-vite-api-babel-transform',
       enforce: 'pre',
@@ -402,14 +392,13 @@ export async function buildCedarApp({
         const transformedCode = await transformWithBabel(
           code,
           id,
-          babelPlugins,
+          [],
           true,
           true,
         )
 
         if (transformedCode?.code) {
-          // babel-plugin-module-resolver is excluded for forVite:true builds
-          // (it is gated on !forVite in getApiSideBabelPlugins).  That plugin
+          // babel-plugin-module-resolver is not used in Vite builds. That plugin
           // previously rewrote `src/` bare specifiers to relative paths so
           // that Rollup's `external` function (which marks anything that is
           // not relative or absolute as external) would not capture them.

@@ -21,10 +21,7 @@ const tsconfigPaths =
 
 import { buildCedarContext, wrapLegacyHandler } from '@cedarjs/api/runtime'
 import type { CedarHandler, LegacyHandler } from '@cedarjs/api/runtime'
-import {
-  getApiSideBabelPlugins,
-  transformWithBabel,
-} from '@cedarjs/babel-config'
+import { transformWithBabel } from '@cedarjs/babel-config'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { createGraphQLYoga } from '@cedarjs/graphql-server'
 import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
@@ -202,11 +199,6 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
   const isEsm = projectSideIsEsm('api')
   const normalizedBase = normalizePath(cedarPaths.base)
 
-  const babelPlugins = getApiSideBabelPlugins({
-    forVite: true,
-    projectIsEsm: isEsm,
-  })
-
   const workspacePkgSourceMap = Object.fromEntries(
     Object.entries(getWorkspacePackageAliases(cedarPaths, cedarConfig)).map(
       ([name, sourceFile]) => [name, normalizePath(sourceFile)],
@@ -314,7 +306,7 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
             const result = await transformWithBabel(
               sourceCode,
               id,
-              babelPlugins,
+              [],
               true,
               true,
             )
