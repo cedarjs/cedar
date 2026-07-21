@@ -43,11 +43,12 @@ No blocking dependencies between these; all can proceed concurrently.
 ## Phase 2 — once the unified plan has landed and Stage B is far enough along
 
 - **`/db/` move Wave 1** — workspace identity, singleton move, migration
-  codemod, `[db]` TOML, retiring the route-hook `$api/` resolvers
+  codemod, `[db]` TOML, and retiring the route-hook resolvers' db-specific
+  `$api/` use while retaining `$api/` resolution for other API-side imports
   (`buildRouteHooks.ts`, `vite-plugin-cedarjs-resolve-cedar-style-imports.ts`).
   Gated on the unified plan's resolver existing and on route hooks
   (`routeParameters()`, the `meta` hook) being prominent enough that removing
-  the `$api/` workaround is worth doing.
+  the `$api/`-for-db workaround is worth doing.
 - **Flip `create-cedar-app` templates to `/db/` by default** (all four:
   `js`/`ts`/`esm-js`/`esm-ts`, together — no ESM/CJS or JS/TS split), tied
   directly to Wave 1 completing, not to anything RSC-specific.
