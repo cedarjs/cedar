@@ -114,9 +114,14 @@ const config: Config = {
   },
   // Jest's default is to not transform anything in node_modules, but `.mjs`
   // files (and until-async) have to be compiled to CommonJS (see the
-  // transform above)
+  // transform above). With pnpm, msw is resolved to TypeScript source files
+  // in the virtual store, so we need to allow transformation for msw.
   transformIgnorePatterns: [
+    // Standard node_modules, but allow .mjs and until-async
     '[/\\\\]node_modules[/\\\\](?!.*\\.mjs$)(?!until-async[/\\\\])',
+    // pnpm virtual store, but allow msw (resolved to TS source)
+    '[/\\\\]node_modules[/\\\\]\\.pnpm[/\\\\](?!msw@)',
+    // yarn PnP
     '\\.pnp\\.[^\\\\/]+$',
   ],
   resolver: path.resolve(__dirname, './resolver.js'),
