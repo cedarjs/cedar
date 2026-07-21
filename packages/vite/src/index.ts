@@ -79,13 +79,15 @@ export function cedar({ mode, babel }: PluginOptions = {}): PluginOption[] {
     cedarConfig.experimental?.reactCompiler?.enabled &&
     cedarConfig.experimental?.reactCompiler?.lintOnly === false
 
+  const compilerPlugins: BabelOptions['plugins'] = reactCompilerEnabled
+    ? [['babel-plugin-react-compiler', { target: '19' }]]
+    : []
+
   const babelConfig: BabelOptions | undefined =
     reactCompilerEnabled || babel
       ? {
-          ...(reactCompilerEnabled && {
-            plugins: [['babel-plugin-react-compiler', { target: '19' }]],
-          }),
           ...babel,
+          plugins: [...compilerPlugins, ...(babel?.plugins ?? [])],
         }
       : undefined
 
