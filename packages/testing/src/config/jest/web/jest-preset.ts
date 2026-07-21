@@ -109,9 +109,16 @@ const config: Config = {
   },
   // Jest's default is to not transform anything in node_modules, but `.mjs`
   // files (and until-async) have to be compiled to CommonJS (see the
-  // transform above)
+  // transform above).
+  // The `.pnpm` lookahead is what makes this work with pnpm: its virtual store
+  // puts packages at `node_modules/.pnpm/<pkg>@<version>/node_modules/<pkg>`,
+  // so without it the pattern matches (and thereby ignores) at the *first*
+  // `node_modules` segment, where the following path starts with `.pnpm/`
+  // instead of `until-async/` and the exception never gets a chance to apply.
+  // Skipping that segment forces the match onto the inner `node_modules`,
+  // which looks the same as a hoisted npm/yarn layout
   transformIgnorePatterns: [
-    '[/\\\\]node_modules[/\\\\](?!.*\\.mjs$)(?!until-async[/\\\\])',
+    '[/\\\\]node_modules[/\\\\](?!\\.pnpm[/\\\\])(?!.*\\.mjs$)(?!until-async[/\\\\])',
     '\\.pnp\\.[^\\\\/]+$',
   ],
   resolver: path.resolve(__dirname, './resolver.js'),
