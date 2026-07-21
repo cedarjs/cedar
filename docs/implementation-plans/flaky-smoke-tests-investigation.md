@@ -1336,7 +1336,8 @@ needs the separate `afterEach`/esbuild hardening from the 2026-06-26 UD entry.
 The "Caveats" section above (2026-07-17 survey) flagged `canary-registry
 ETARGET` / no-candidates as an unclassified environmental infra failure,
 counted as REAL rather than attributed to a known flaky signature. Root cause:
-`.github/scripts/publish-canary.mts` published packages to the `canary`/`next`
+`.github/scripts/publish-prerelease.mts` (then named `publish-canary.sh`)
+published packages to the `canary`/`next`
 npm dist-tag **one package at a time**. Any CI job that upgraded to canary
 (`yarn cedar upgrade -t canary`, `create-cedar-app@canary`, etc.) while a
 publish run was mid-loop could resolve the dist-tag to a version for which
@@ -1346,12 +1347,12 @@ test.
 
 ### How (fix)
 
-`publish-canary.mts` now publishes in two phases instead of moving the real
-tag as it goes:
+`publish-prerelease.mts` now publishes in two phases instead of moving the
+real tag as it goes:
 
 1. **Stage**: every public package is published in parallel (bounded
-   concurrency, default 4) under a unique, run-scoped staging tag
-   (`staging-<GITHUB_RUN_ID>`). Nothing resolves this tag, so a
+   concurrency, default 4) under a staging tag unique to the version being
+   published (`staging-<version>`). Nothing resolves this tag, so a
    partially-complete run is invisible to consumers watching `canary`/`next`.
 2. **Flip**: only once every package has published successfully does the
    script move the real `canary`/`next` dist-tag onto that version for every
@@ -1366,8 +1367,12 @@ within npm registry rate limits despite the added parallelism.
 
 ### Changed files
 
-- `.github/scripts/publish-canary.mts` — staged publish + dist-tag flip,
-  bounded concurrency, retry with backoff.
+- `.github/scripts/publish-prerelease.mts` (renamed from `publish-canary.mts`
+  — it publishes both the `canary` and `next` tags) — staged publish +
+  dist-tag flip, bounded concurrency, retry with backoff.
+- `.github/workflows/publish-prerelease.yml` (renamed from
+  `publish-canary.yml`) — same rename rationale, job id renamed
+  `publish-canary` -> `publish-prerelease`.
 
 ### Not yet validated
 

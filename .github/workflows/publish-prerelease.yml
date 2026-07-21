@@ -1,4 +1,4 @@
-name: 🦜 Publish Canary
+name: 🦜 Publish Prerelease
 
 on:
   push:
@@ -19,8 +19,8 @@ permissions:
   pull-requests: write
 
 jobs:
-  publish-canary:
-    name: 🦜 Publish Canary
+  publish-prerelease:
+    name: 🦜 Publish Prerelease
     if: github.repository == 'cedarjs/cedar'
     runs-on: ubuntu-latest
     outputs:
@@ -45,7 +45,7 @@ jobs:
         run: yarn test
 
       - name: 🚢 Publish
-        run: node .github/scripts/publish-canary.mts
+        run: node .github/scripts/publish-prerelease.mts
         env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 

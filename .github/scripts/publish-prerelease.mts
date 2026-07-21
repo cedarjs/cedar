@@ -1,16 +1,16 @@
 /**
  * Publishes canary (or "next") versions of all public Cedar packages to npm.
  *
- * Packages are first published in parallel under a unique, run-scoped
- * staging dist-tag. Only once every package has been published under that
- * staging tag do we flip each package's dist-tag over to the real "canary"
- * or "next" tag (also in parallel). This avoids a race where a consumer
- * (e.g. `yarn cedar upgrade -t canary`) resolves the "canary" tag to a
- * version that isn't fully published across all packages yet.
+ * Packages are first published in parallel under a staging dist-tag unique
+ * to the version being published. Only once every package has been published
+ * under that staging tag do we flip each package's dist-tag over to the real
+ * "canary" or "next" tag (also in parallel). This avoids a race where a
+ * consumer (e.g. `yarn cedar upgrade -t canary`) resolves the "canary" tag to
+ * a version that isn't fully published across all packages yet.
  *
- * Used in the publish-canary.yml GitHub Action workflow.
+ * Used in the publish-prerelease.yml GitHub Action workflow.
  *
- * Usage: node .github/scripts/publish-canary.mts
+ * Usage: node .github/scripts/publish-prerelease.mts
  * Environment variables required: NPM_AUTH_TOKEN, GITHUB_REF_NAME
  */
 
@@ -349,10 +349,10 @@ async function isPackagePublished(
   }
 }
 
-// Publishes every public package under a unique, run-scoped staging tag, in
-// parallel (bounded by PUBLISH_CONCURRENCY). Nothing else in the registry
-// references this tag, so partially-completed runs are invisible to
-// consumers watching the real "canary"/"next" tag.
+// Publishes every public package under a staging tag unique to the version
+// being published, in parallel (bounded by PUBLISH_CONCURRENCY). Nothing else
+// in the registry references this tag, so partially-completed runs are
+// invisible to consumers watching the real "canary"/"next" tag.
 async function publishPackagesToStagingTag(
   packages: PublishablePackage[],
   stagingTag: string,
@@ -496,7 +496,7 @@ async function main() {
   // ── Publish all packages under a staging tag, then flip to the real tag ──
 
   const packages = getPublishablePackages(workspaces)
-  const stagingTag = `staging-${process.env.GITHUB_RUN_ID ?? Date.now()}`
+  const stagingTag = `staging-${canaryVersion}`
 
   await publishPackagesToStagingTag(packages, stagingTag)
   await flipToFinalTag(packages, tag)
