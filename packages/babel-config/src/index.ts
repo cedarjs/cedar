@@ -19,7 +19,7 @@ export {
   getApiSideBabelPresets,
   /** Used by @cedarjs/testing and @cedarjs/eslint-config */
   getApiSideDefaultBabelConfig,
-  /** Used by @cedarjs/cli, @remix/cli-helpers and @cedarjs/prerender */
+  /** Used by @cedarjs/cli, @cedarjs/cli-helpers and @cedarjs/prerender */
   registerApiSideBabelHook,
   /** Used by @cedarjs/internal and @cedarjs/vite */
   transformWithBabel,

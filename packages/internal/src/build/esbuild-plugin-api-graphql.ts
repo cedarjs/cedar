@@ -15,6 +15,7 @@ import path from 'node:path'
 import type { PluginBuild } from 'esbuild'
 
 import {
+  getApiSideBabelConfigPath,
   getApiSideBabelPlugins,
   transformWithBabel,
 } from '@cedarjs/babel-config'
@@ -90,20 +91,30 @@ export const cedarApiGraphqlPlugin = {
       fileContents =
         applyImportDir(fileContents, args.path)?.code ?? fileContents
 
-      const transformedCode = await transformWithBabel(
-        fileContents,
-        args.path,
-        getApiSideBabelPlugins({
-          forVite: true,
-          projectIsEsm: projectSideIsEsm('api'),
-        }),
-      )
+      // The Babel pass is only needed to apply a user's custom
+      // api/babel.config.js: getApiSideBabelPlugins({ forVite: true }) is
+      // empty (the transforms above replace Cedar's api-side Babel plugins)
+      // and esbuild strips TypeScript itself when given the 'ts' loader.
+      const apiBabelConfigPath = getApiSideBabelConfigPath()
 
-      if (!transformedCode?.code) {
-        throw new Error(`Could not transform file: ${args.path}`)
+      let code = fileContents
+
+      if (apiBabelConfigPath) {
+        const transformedCode = await transformWithBabel(
+          fileContents,
+          args.path,
+          getApiSideBabelPlugins({
+            forVite: true,
+            projectIsEsm: projectSideIsEsm('api'),
+          }),
+        )
+
+        if (!transformedCode?.code) {
+          throw new Error(`Could not transform file: ${args.path}`)
+        }
+
+        code = transformedCode.code
       }
-
-      let code = transformedCode.code
 
       // For ESM projects, append .js to extensionless relative imports so
       // Node's ESM resolver can find them at runtime. applyImportDir expands
@@ -130,7 +141,11 @@ export const cedarApiGraphqlPlugin = {
 
       return {
         contents: code,
-        loader: 'js',
+        // Babel output is always plain JS. Without Babel the contents are
+        // still TypeScript when the source file is graphql.ts, so pick the
+        // matching loader and let esbuild do the stripping. (The onLoad
+        // filter only matches .ts and .js files.)
+        loader: !apiBabelConfigPath && args.path.endsWith('.ts') ? 'ts' : 'js',
       }
     })
   },

@@ -22,6 +22,7 @@ const tsconfigPaths =
 import { buildCedarContext, wrapLegacyHandler } from '@cedarjs/api/runtime'
 import type { CedarHandler, LegacyHandler } from '@cedarjs/api/runtime'
 import {
+  getApiSideBabelConfigPath,
   getApiSideBabelPlugins,
   transformWithBabel,
 } from '@cedarjs/babel-config'
@@ -202,10 +203,17 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
   const isEsm = projectSideIsEsm('api')
   const normalizedBase = normalizePath(cedarPaths.base)
 
-  const babelPlugins = getApiSideBabelPlugins({
-    forVite: true,
-    projectIsEsm: isEsm,
-  })
+  // The Babel pass is only needed to apply a user's custom
+  // api/babel.config.js: getApiSideBabelPlugins({ forVite: true }) is empty
+  // (all of Cedar's api-side Babel transforms are handled by dedicated Vite
+  // plugins in this pipeline) and Vite strips TypeScript itself. Skip Babel
+  // entirely when the project has no such config file.
+  const babelPlugins = getApiSideBabelConfigPath()
+    ? getApiSideBabelPlugins({
+        forVite: true,
+        projectIsEsm: isEsm,
+      })
+    : null
 
   const workspacePkgSourceMap = Object.fromEntries(
     Object.entries(getWorkspacePackageAliases(cedarPaths, cedarConfig)).map(
@@ -306,6 +314,17 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
               const apiFolder = relativePath.split('/')[0] ?? '?'
               sourceCode =
                 applyOtelWrapping(sourceCode, id, apiFolder) ?? sourceCode
+            }
+
+            // Without a user Babel config there is nothing left for Babel to
+            // do — Vite's own pipeline strips TypeScript — so only return the
+            // string-transformed code (if it changed at all).
+            if (!babelPlugins) {
+              if (sourceCode === code) {
+                return null
+              }
+
+              return { code: sourceCode, map: null }
             }
 
             // Use the code Vite already loaded instead of reading from disk, so

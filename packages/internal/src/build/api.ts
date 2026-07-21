@@ -17,6 +17,7 @@ const tsconfigPaths =
   tsPathsMod.default?.default || tsPathsMod.default || tsPathsMod
 
 import {
+  getApiSideBabelConfigPath,
   getApiSideBabelPlugins,
   transformWithBabel,
 } from '@cedarjs/babel-config'
@@ -108,61 +109,92 @@ const runCedarBabelTransformsPlugin = {
       // running on the same file.
       fileContents =
         applyImportDir(fileContents, args.path)?.code ?? fileContents
-      const transformedCode = await transformWithBabel(
-        fileContents,
-        args.path,
-        getApiSideBabelPlugins({
-          forVite: true,
-          projectIsEsm: projectSideIsEsm('api'),
-        }),
-      )
 
-      if (transformedCode?.code) {
-        let code = transformedCode.code
-        const normalizedPath = normalizePath(args.path)
-        const cedarPaths = getPaths()
-        const isEsm = projectSideIsEsm('api')
+      // The Babel pass is only needed to apply a user's custom
+      // api/babel.config.js: getApiSideBabelPlugins({ forVite: true }) is
+      // empty (the transforms above replace Cedar's api-side Babel plugins)
+      // and esbuild strips TypeScript itself when given the matching loader.
+      const apiBabelConfigPath = getApiSideBabelConfigPath()
 
-        // For ESM projects, append .js/.jsx to extensionless relative imports
-        // so Node's ESM resolver can locate the compiled output files at
-        // runtime.  This replaces the resolvePath hook that
-        // babel-plugin-module-resolver previously provided; that plugin is now
-        // skipped for forVite:true builds.
-        if (isEsm) {
-          code = applyEsmExtensions(code, args.path)
+      let code = fileContents
+
+      if (apiBabelConfigPath) {
+        const transformedCode = await transformWithBabel(
+          fileContents,
+          args.path,
+          getApiSideBabelPlugins({
+            forVite: true,
+            projectIsEsm: projectSideIsEsm('api'),
+          }),
+        )
+
+        if (!transformedCode?.code) {
+          throw new Error(`Could not transform file: ${args.path}`)
         }
 
-        // Apply OTel wrapping and the handler ALS wrapping safeguard to API
-        // function handlers. These are the standalone-esbuild equivalents of
-        // the Vite cedarOtelWrappingPlugin and handlerAlsWrappingPlugin,
-        // replacing the Babel plugins for these builds. The ALS wrapping
-        // plugin replaces the (Jest-only) Babel plugin it succeeded.
-        // graphql.ts also lives in functions/ but is claimed by the dedicated
-        // cedarApiGraphqlPlugin, which is registered before this plugin, so it
-        // never reaches this branch.
-        const functionsDir = normalizePath(cedarPaths.api.functions)
-        if (normalizedPath.startsWith(functionsDir + '/')) {
-          code =
-            applyHandlerAlsWrapping(code, {
-              projectIsEsm: isEsm,
-            }) ?? code
-        }
-
-        if (
-          normalizedPath.startsWith(normalizePath(cedarPaths.api.src) + '/')
-        ) {
-          code = applyOtelWrapping(code, args.path, cedarPaths.api.src) ?? code
-        }
-
-        return {
-          contents: code,
-          loader: 'js',
-        }
+        code = transformedCode.code
       }
 
-      throw new Error(`Could not transform file: ${args.path}`)
+      const normalizedPath = normalizePath(args.path)
+      const cedarPaths = getPaths()
+      const isEsm = projectSideIsEsm('api')
+
+      // For ESM projects, append .js/.jsx to extensionless relative imports
+      // so Node's ESM resolver can locate the compiled output files at
+      // runtime.  This replaces the resolvePath hook that
+      // babel-plugin-module-resolver previously provided; that plugin is now
+      // skipped for forVite:true builds.
+      if (isEsm) {
+        code = applyEsmExtensions(code, args.path)
+      }
+
+      // Apply OTel wrapping and the handler ALS wrapping safeguard to API
+      // function handlers. These are the standalone-esbuild equivalents of
+      // the Vite cedarOtelWrappingPlugin and handlerAlsWrappingPlugin,
+      // replacing the Babel plugins for these builds. The ALS wrapping
+      // plugin replaces the (Jest-only) Babel plugin it succeeded.
+      // graphql.ts also lives in functions/ but is claimed by the dedicated
+      // cedarApiGraphqlPlugin, which is registered before this plugin, so it
+      // never reaches this branch.
+      const functionsDir = normalizePath(cedarPaths.api.functions)
+      if (normalizedPath.startsWith(functionsDir + '/')) {
+        code =
+          applyHandlerAlsWrapping(code, {
+            projectIsEsm: isEsm,
+          }) ?? code
+      }
+
+      if (normalizedPath.startsWith(normalizePath(cedarPaths.api.src) + '/')) {
+        code = applyOtelWrapping(code, args.path, cedarPaths.api.src) ?? code
+      }
+
+      return {
+        contents: code,
+        // Babel output is always plain JS. Without Babel the contents are
+        // still TypeScript/JSX, so pick the loader matching the file's
+        // extension and let esbuild do the stripping.
+        loader: apiBabelConfigPath ? 'js' : getEsbuildLoader(args.path),
+      }
     })
   },
+}
+
+/**
+ * Maps a source file's extension to the esbuild loader that can parse it.
+ * Used when the Babel pass is skipped and esbuild receives untranspiled
+ * TypeScript/JSX contents from an onLoad hook.
+ */
+function getEsbuildLoader(filePath: string): 'js' | 'jsx' | 'ts' | 'tsx' {
+  switch (path.extname(filePath)) {
+    case '.ts':
+      return 'ts'
+    case '.tsx':
+      return 'tsx'
+    case '.jsx':
+      return 'jsx'
+    default:
+      return 'js'
+  }
 }
 
 /**
@@ -290,56 +322,65 @@ function createCedarViteApiPlugin(): Plugin {
         sourceCode = applyGqlormInject(sourceCode, id) ?? sourceCode
       }
 
-      const transformedCode = await transformWithBabel(
-        sourceCode,
-        id,
-        getApiSideBabelPlugins({
-          forVite: true,
-          projectIsEsm: isEsm,
-        }),
-        true,
-      )
+      // The Babel pass is only needed to apply a user's custom
+      // api/babel.config.js: getApiSideBabelPlugins({ forVite: true }) is
+      // empty (the transforms in this pipeline replace Cedar's api-side Babel
+      // plugins) and Vite strips TypeScript itself.
+      const apiBabelConfigPath = getApiSideBabelConfigPath()
 
-      if (transformedCode?.code) {
-        let code = transformedCode.code
-
-        // Apply OTel wrapping to all API files.
-        if (
-          cedarConfig.experimental?.opentelemetry?.enabled &&
-          cedarConfig.experimental?.opentelemetry?.wrapApi
-        ) {
-          code = applyOtelWrapping(code, id, cedarPaths.api.src) ?? code
-        }
-
-        // Append .js/.jsx extensions to extensionless relative imports so that
-        // Node's ESM resolver can find them at runtime. This replaces the
-        // resolvePath hook in babel-plugin-module-resolver, which is disabled
-        // for forVite:true builds (babel-config/src/api.ts). With
-        // preserveModules:true Rollup preserves the import specifiers as-is
-        // in the output, so extensions must be present before bundling.
-        if (isEsm) {
-          code = applyEsmExtensions(code, id)
-        }
-
-        // Apply the handler ALS wrapping safeguard to API function handlers.
-        // This is the standalone-esbuild equivalent of the Vite
-        // handlerAlsWrappingPlugin and the (Jest-only) babel plugin it
-        // replaced.
-        const functionsDir = normalizePath(cedarPaths.api.functions)
-        if (normalizedId.startsWith(functionsDir + '/')) {
-          code =
-            applyHandlerAlsWrapping(code, {
+      const transformedCode = apiBabelConfigPath
+        ? await transformWithBabel(
+            sourceCode,
+            id,
+            getApiSideBabelPlugins({
+              forVite: true,
               projectIsEsm: isEsm,
-            }) ?? code
-        }
+            }),
+            true,
+          )
+        : null
 
-        return {
-          code,
-          map: transformedCode.map ?? null,
-        }
+      if (apiBabelConfigPath && !transformedCode?.code) {
+        throw new Error(`Could not transform file: ${id}`)
       }
 
-      throw new Error(`Could not transform file: ${id}`)
+      let outputCode = transformedCode?.code ?? sourceCode
+
+      // Apply OTel wrapping to all API files.
+      if (
+        cedarConfig.experimental?.opentelemetry?.enabled &&
+        cedarConfig.experimental?.opentelemetry?.wrapApi
+      ) {
+        outputCode =
+          applyOtelWrapping(outputCode, id, cedarPaths.api.src) ?? outputCode
+      }
+
+      // Append .js/.jsx extensions to extensionless relative imports so that
+      // Node's ESM resolver can find them at runtime. This replaces the
+      // resolvePath hook in babel-plugin-module-resolver, which is disabled
+      // for forVite:true builds (babel-config/src/api.ts). With
+      // preserveModules:true Rollup preserves the import specifiers as-is
+      // in the output, so extensions must be present before bundling.
+      if (isEsm) {
+        outputCode = applyEsmExtensions(outputCode, id)
+      }
+
+      // Apply the handler ALS wrapping safeguard to API function handlers.
+      // This is the standalone-esbuild equivalent of the Vite
+      // handlerAlsWrappingPlugin and the (Jest-only) babel plugin it
+      // replaced.
+      const functionsDir = normalizePath(cedarPaths.api.functions)
+      if (normalizedId.startsWith(functionsDir + '/')) {
+        outputCode =
+          applyHandlerAlsWrapping(outputCode, {
+            projectIsEsm: isEsm,
+          }) ?? outputCode
+      }
+
+      return {
+        code: outputCode,
+        map: transformedCode?.map ?? null,
+      }
     },
   }
 }

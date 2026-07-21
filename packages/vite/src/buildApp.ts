@@ -18,6 +18,7 @@ const tsconfigPaths =
   tsPathsMod.default?.default || tsPathsMod.default || tsPathsMod
 
 import {
+  getApiSideBabelConfigPath,
   getApiSideBabelPlugins,
   transformWithBabel,
 } from '@cedarjs/babel-config'
@@ -159,12 +160,18 @@ export async function buildCedarApp({
     }
   }
 
-  const babelPlugins = workspace.includes('api')
-    ? getApiSideBabelPlugins({
-        forVite: true,
-        projectIsEsm: projectSideIsEsm('api'),
-      })
-    : null
+  // The Babel pass is only needed to apply a user's custom
+  // api/babel.config.js: getApiSideBabelPlugins({ forVite: true }) is empty
+  // (all of Cedar's api-side Babel transforms are handled by dedicated Vite
+  // plugins in this pipeline) and Vite strips TypeScript itself. Skip Babel
+  // entirely when the project has no such config file.
+  const babelPlugins =
+    workspace.includes('api') && getApiSideBabelConfigPath()
+      ? getApiSideBabelPlugins({
+          forVite: true,
+          projectIsEsm: projectSideIsEsm('api'),
+        })
+      : null
 
   const workspacePkgSourceMap = workspace.includes('api')
     ? Object.fromEntries(
@@ -382,7 +389,7 @@ export async function buildCedarApp({
 
   plugins.push(cedarMockCellDataPlugin())
 
-  if (babelPlugins) {
+  if (workspace.includes('api')) {
     plugins.push({
       name: 'cedar-vite-api-babel-transform',
       enforce: 'pre',
@@ -399,48 +406,44 @@ export async function buildCedarApp({
           return null
         }
 
-        const transformedCode = await transformWithBabel(
-          code,
-          id,
-          babelPlugins,
-          true,
-          true,
-        )
+        const transformedCode = babelPlugins
+          ? await transformWithBabel(code, id, babelPlugins, true, true)
+          : null
 
-        if (transformedCode?.code) {
-          // babel-plugin-module-resolver is excluded for forVite:true builds
-          // (it is gated on !forVite in getApiSideBabelPlugins).  That plugin
-          // previously rewrote `src/` bare specifiers to relative paths so
-          // that Rollup's `external` function (which marks anything that is
-          // not relative or absolute as external) would not capture them.
-          // Apply the same rewrite here so that `src/lib/logger` → `../../lib/logger`
-          // and the external function sees a relative path (starting with `.`).
-          const fromDirRelativeToApiSrc = path.relative(
-            cedarPaths.api.src,
-            path.dirname(id),
-          )
-          let outputCode = applySrcAlias(
-            transformedCode.code,
-            fromDirRelativeToApiSrc,
-          )
-
-          // For ESM projects, append .js/.jsx extensions to extensionless
-          // relative imports so Node's ESM resolver can find them at runtime.
-          // This is needed because cedarImportDirPlugin expands glob imports
-          // (e.g. `src/directives/**/*.{js,ts}`) into individual extensionless
-          // import statements, and Rollup with preserveModules:true preserves
-          // those specifiers as-is in the output.
-          if (projectSideIsEsm('api')) {
-            outputCode = applyEsmExtensions(outputCode, id)
-          }
-
-          return {
-            code: outputCode,
-            map: transformedCode.map ?? null,
-          }
+        if (babelPlugins && !transformedCode?.code) {
+          return null
         }
 
-        return null
+        // babel-plugin-module-resolver is excluded for forVite:true builds
+        // (it is gated on !forVite in getApiSideBabelPlugins).  That plugin
+        // previously rewrote `src/` bare specifiers to relative paths so
+        // that Rollup's `external` function (which marks anything that is
+        // not relative or absolute as external) would not capture them.
+        // Apply the same rewrite here so that `src/lib/logger` → `../../lib/logger`
+        // and the external function sees a relative path (starting with `.`).
+        const fromDirRelativeToApiSrc = path.relative(
+          cedarPaths.api.src,
+          path.dirname(id),
+        )
+        let outputCode = applySrcAlias(
+          transformedCode?.code ?? code,
+          fromDirRelativeToApiSrc,
+        )
+
+        // For ESM projects, append .js/.jsx extensions to extensionless
+        // relative imports so Node's ESM resolver can find them at runtime.
+        // This is needed because cedarImportDirPlugin expands glob imports
+        // (e.g. `src/directives/**/*.{js,ts}`) into individual extensionless
+        // import statements, and Rollup with preserveModules:true preserves
+        // those specifiers as-is in the output.
+        if (projectSideIsEsm('api')) {
+          outputCode = applyEsmExtensions(outputCode, id)
+        }
+
+        return {
+          code: outputCode,
+          map: transformedCode?.map ?? null,
+        }
       },
     })
   }
