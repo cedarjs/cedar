@@ -12,7 +12,17 @@ import {
 // CJS Build
 await build({
   entryPointOptions: {
-    ignore: [...defaultIgnorePatterns, '**/bundled'],
+    ignore: [
+      ...defaultIgnorePatterns,
+      '**/bundled',
+      // These use `import.meta.url` and are only ever reached through our
+      // ESM-only bins (`cedar-dev-fe`, `cedar-serve-fe`) - never `require()`d.
+      // Skip them here instead of emitting a CJS build with a broken
+      // `import.meta`.
+      'src/devFeServer.ts',
+      'src/lib/registerFwGlobalsAndShims.ts',
+      'src/streaming/streamHelpers.ts',
+    ],
   },
   buildOptions: {
     ...defaultBuildOptions,
