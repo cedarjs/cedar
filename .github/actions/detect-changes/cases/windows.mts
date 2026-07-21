@@ -45,12 +45,11 @@ const ALWAYS_RUN_PACKAGES = /^packages\/(cli|cli-helpers|vite)\//
 
 const CODE_FILE = /\.[mc]?[jt]sx?$/
 
-/**
- * @typedef {Object} PrFile
- * @property {string} filename
- * @property {string} [patch] Unified diff for the file. Absent for binary
- *   files and for very large diffs.
- */
+export interface PrFile {
+  filename: string
+  /** Unified diff for the file. Absent for binary files and for very large diffs. */
+  patch?: string
+}
 
 /**
  * Decides whether the Windows CI legs should run for this PR.
@@ -59,10 +58,10 @@ const CODE_FILE = /\.[mc]?[jt]sx?$/
  * last CI run) so that a path-sensitive change in an early commit keeps the
  * Windows legs running on later pushes too.
  *
- * @param {PrFile[]} prFiles All files changed in the PR, with patches
- * @returns {boolean} True if the Windows legs should run
+ * @param prFiles All files changed in the PR, with patches
+ * @returns True if the Windows legs should run
  */
-export function windowsChanged(prFiles) {
+export function windowsChanged(prFiles: PrFile[]): boolean {
   for (const file of prFiles) {
     if (ALWAYS_RUN_PACKAGES.test(file.filename)) {
       console.log('Windows-relevant package change detected:', file.filename)

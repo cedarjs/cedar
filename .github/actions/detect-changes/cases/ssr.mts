@@ -1,12 +1,10 @@
-// @ts-check
-
 /**
  * Detects if there are SSR changes
  *
- * @param {string[]} changedFiles The list of files which git has listed as changed
- * @returns {boolean} True if there are changes, false if not
+ * @param changedFiles The list of files which git has listed as changed
+ * @returns True if there are changes, false if not
  */
-export function ssrChanged(changedFiles) {
+export function ssrChanged(changedFiles: string[]): boolean {
   for (const changedFile of changedFiles) {
     if (
       changedFile.startsWith('tasks/smoke-tests/streaming-ssr') ||
