@@ -427,6 +427,14 @@ path stops being opt-out for streaming projects.
   not change an app's shell, so prerender adopts `Document.tsx` once this plan
   establishes it in the serving path (see the prerender plan's
   strategic-positioning note).
+- **Route hooks and the `/db/` move:** the `meta` hook introduced by this plan
+  runs server-side per request and, like `routeParameters()` in the prerender
+  plan, needs db access — today only via the `$api/src/lib/db` alias
+  (`packages/vite/src/plugins/vite-plugin-cedarjs-resolve-cedar-style-imports.ts`).
+  See the prerender plan's "Relationship to SSR and RSC" section for why this
+  is the concrete, near-term motivation for landing the first wave of the
+  [RSC plan's `/db/` move](./2026-07-20-rsc-rewrite.md#the-db-move) ahead of
+  RSC v1 itself, rather than waiting for it.
 
 ---
 
