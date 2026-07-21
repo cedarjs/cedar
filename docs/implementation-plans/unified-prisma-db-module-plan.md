@@ -59,21 +59,77 @@ depend on — including non-Cedar apps.
   retroactive support.
 - Dictating the internal structure of the extracted DB package. The user can
   name files and directories however they want inside their package, as long
-  as the `prisma.config.cjs` and `dbModule` paths are correct.
+  as the `db.prismaConfig` and `db.module` paths are correct.
 - Updating user-owned template files (e.g. `api/src/lib/db.ts`). If a user
   extracts their DB, they are expected to update their own import paths. The
   framework only touches framework-level code.
 
 ---
 
+## Relationship to the RSC `/db/` Move
+
+The [RSC rewrite plan](./2026-07-20-rsc-rewrite.md) proposes moving the Prisma
+layer to a top-level `/db/` workspace by default, so `web`'s Server Cells can
+call the database directly instead of hopping through the `api` workspace's
+GraphQL layer. That's a different motivation than this plan's (arbitrary
+shared-package location for multi-workspace/non-Cedar sharing within the same
+app monorepo), but the two compose directly: `/db/` becomes the new default
+_value_ of `db.module`/`db.prismaConfig`, not a separate hardcoded convention.
+Sequencing: this plan lands first, since the RSC `/db/` move reuses — rather
+than reimplements — the ~16 call sites this plan makes config-driven. See that
+plan's "The `/db/` Move" section for how it depends on `getDbPaths()`,
+`resolveDbModule()`, and `getPrismaClientModule()`.
+
+**Config key placement is settled: a new top-level `[db]` table**, not
+`[api].dbModule`. The deciding factor is the RSC plan's own goal of making
+`api` optional for web-only apps — db location config can't live under a
+table that might not exist. See Decision 1 below and the Config Changes
+section for the schema.
+
+`db.module` is a brand-new key — it has never shipped, so it's a clean
+addition with no migration concern at all.
+
+`db.prismaConfig` is different: it's the new recommended home for the
+_existing_ `api.prismaConfig` key, which has been documented in the public
+`cedar.toml` reference since `version-2.x` of the docs and is read directly
+by roughly 30 call sites across the framework (`prismaHandler`,
+`buildHandler`, `generatePrismaClient`, `dataMigrate`'s handlers, `dbAuth`
+setup, `packages/api-server`'s `watchPaths`, `packages/structure`'s
+`RWEnvHelper` — which backs IDE tooling — an existing upgrade-script, and
+test fixtures). That's a much bigger surface than "is the value ever
+customized," and not something to rename out from under every project.
+
+So this plan does **not** rename or deprecate `api.prismaConfig` — it adds
+`db.prismaConfig` as an optional override that takes precedence when set,
+with `api.prismaConfig` (default `./api/prisma.config.cjs`, unchanged) as
+the fallback. Both keep working; nothing currently reading
+`getPaths().api.prismaConfig` needs to change. Actually retiring
+`api.prismaConfig` is scoped to the RSC plan's `/db/` move, and only for the
+specific app that runs that migration — see that plan's "The `/db/` Move"
+section. Apps that never adopt `/db/` keep using `api.prismaConfig`
+indefinitely, consistent with the RSC plan's own "per-route opt-in, never an
+app-wide mode switch" stance.
+
+---
+
 ## Architecture Decisions
 
-**Decision 1: Single config key in `cedar.toml` (`[api].dbModule`)**
+**Decision 1: A new top-level `[db]` table in `cedar.toml`, not `[api]`**
 
-A single key controls the import source for the Prisma client singleton.
+`db.module` controls the import source for the Prisma client singleton.
 Default: `"src/lib/db"`. Users set it to a bare package specifier like
 `"@scope/db"` to point at a shared workspace package. All generators, Babel
 plugins, testing infrastructure, and templates read from this one value.
+This key is brand new, so it lands directly under `[db]` with no migration
+concern.
+
+`db.prismaConfig` (schema/migrations location) is the new recommended home
+for the existing `api.prismaConfig`, but it's additive, not a rename:
+resolution is `db.prismaConfig ?? api.prismaConfig ?? './api/prisma.config.cjs'`.
+Both config keys, and both resolved `Paths` fields (`paths.db.prismaConfig`
+and the existing `paths.api.prismaConfig`), keep working side by side — see
+[Relationship to the RSC `/db/` Move](#relationship-to-the-rsc-db-move) for
+why an outright rename isn't safe here.
 
 **Decision 2: Support bare specifiers, `src/` paths, and relative paths**
 
@@ -118,9 +174,16 @@ is provided.
 
 The `v2.7.x` and `v3.x` Prisma codemods that rewrite imports through
 `src/lib/db` are migration tools for existing projects. Users who change
-`dbModule` are self-selecting for a non-default setup and are responsible for
+`db.module` are self-selecting for a non-default setup and are responsible for
 their own import paths. Updating codemods for this edge case adds complexity
 without meaningful value.
+
+This plan doesn't retire `api.prismaConfig` at all — see
+[Relationship to the RSC `/db/` Move](#relationship-to-the-rsc-db-move). That
+key is documented, long-standing, and read by ~30 framework call sites, so it
+stays supported as a fallback indefinitely for apps that don't adopt `/db/`.
+Only the RSC plan's own `/db/` move codemod retires it, and only for the
+specific app that runs that migration.
 
 ---
 
@@ -128,37 +191,64 @@ without meaningful value.
 
 ### `packages/project-config/src/config.ts`
 
-Add `dbModule` to `NodeTargetConfig`:
+`NodeTargetConfig.prismaConfig` is **not removed** — it stays exactly as-is.
+Add a new, separate `DbConfig`, with `prismaConfig` optional (no default —
+its absence is what signals "fall back to `api.prismaConfig`"):
 
 ```typescript
 export interface NodeTargetConfig {
-  // ...existing fields...
+  // ...existing fields, unchanged...
   prismaConfig: string
-  dbModule: string // <-- new
   serverConfig: string
+}
+
+export interface DbConfig {
+  module: string
+  prismaConfig?: string // <-- new; falls back to api.prismaConfig when unset
 }
 ```
 
-Add the default to `DEFAULT_CONFIG`:
+Add `db` to `Config` and its default to `DEFAULT_CONFIG`:
+
+```typescript
+export interface Config {
+  web: BrowserTargetConfig
+  api: NodeTargetConfig
+  db: DbConfig // <-- new
+  // ...existing fields...
+}
+```
 
 ```typescript
 api: {
-  // ...existing...
+  // ...existing, unchanged...
   prismaConfig: './api/prisma.config.cjs',
-  dbModule: 'src/lib/db', // <-- new
   serverConfig: './api/server.config.js',
-}
+},
+db: {
+  module: 'src/lib/db',
+  // prismaConfig intentionally has no default here — resolution falls
+  // back to api.prismaConfig below
+},
 ```
 
-This default means **existing apps require zero changes**.
+These defaults mean **existing apps require zero changes** — nothing is
+removed from `NodeTargetConfig`, and the resolved absolute paths are
+identical to today's.
 
 For an extracted DB package, a user would write:
 
 ```toml
-[api]
+[db]
 prismaConfig = './packages/db/prisma.config.cjs'
-dbModule = '@myorg/db'
+module = '@myorg/db'
 ```
+
+An app that already has a customized `[api]  prismaConfig = ...` doesn't
+need to change anything — it keeps working via the fallback described in
+Path Resolution Infrastructure below. `[db].prismaConfig` is simply the
+recommended location going forward, particularly once an app has no `[api]`
+workspace at all.
 
 ---
 
@@ -195,6 +285,29 @@ remain unchanged and continue to work.
 
 ### `packages/project-config/src/paths.ts`
 
+**Existing code stays working, only extends.** `getPaths()` already reads
+`getConfig(...).api.prismaConfig` to compute the resolved
+`paths.api.prismaConfig` (see current `paths.ts` around the `prismaConfig`
+local in `getPaths()`). That computation is unchanged. What's added: the
+same resolution now prefers `config.db.prismaConfig` when set, falling back
+to `config.api.prismaConfig`, and the result is additionally exposed at
+`paths.db.prismaConfig` (a new field on a `Paths.db` entry) alongside the
+existing `paths.api.prismaConfig` (unchanged, still populated, still
+correct — it's derived from the same fallback-resolved value). None of the
+~30 existing callers of `getPaths().api.prismaConfig` across the framework
+need to change; new code should prefer `getPaths().db.prismaConfig`.
+
+```typescript
+// Inside getPaths(), replacing the current prismaConfig-only resolution:
+const dbConfig = getConfig(getConfigPath(BASE_DIR)).db
+const apiConfig = getConfig(getConfigPath(BASE_DIR)).api
+const prismaConfigFromConfig = dbConfig.prismaConfig ?? apiConfig.prismaConfig
+// ...existing resolveFile()/path.join() logic, unchanged...
+// then expose the same resolved absolute path at both:
+//   paths.api.prismaConfig  (existing field, back-compat)
+//   paths.db.prismaConfig   (new field, preferred going forward)
+```
+
 Add a helper to resolve the db module identifier:
 
 ```typescript
@@ -203,7 +316,7 @@ Add a helper to resolve the db module identifier:
 // For relative paths (e.g. "src/lib/db"), returns the path relative to
 // the api src directory (so the existing "src/" Vite/Babel alias works).
 export function getPrismaClientModule(): string {
-  const module = getConfig(getConfigPath(BASE_DIR)).api.dbModule
+  const module = getConfig(getConfigPath(BASE_DIR)).db.module
   return module
 }
 
@@ -234,7 +347,7 @@ export function resolveDbModule(
 ## Runtime Infrastructure Changes
 
 These are blocking — the app will not work without them when
-`dbModule` is changed.
+`db.module` is changed.
 
 ### 1. `packages/babel-config/src/plugins/babel-plugin-cedar-gqlorm-inject.ts`
 
@@ -263,7 +376,7 @@ const importDeclaration = t.importDeclaration(
 ```
 
 The Cedar Vite plugin that configures Babel needs to read
-`getConfig().api.dbModule` and pass it to the Babel config so the plugin
+`getConfig().db.module` and pass it to the Babel config so the plugin
 receives it in `state.opts`.
 
 This is the most architecturally significant change. The Babel plugin injects
@@ -288,7 +401,7 @@ const watcher = chokidar.watch(
 import { getDbPaths } from '@cedarjs/project-config'
 
 // ...inside the async setup or watch initialization...
-const dbPaths = await getDbPaths(getPaths().api.prismaConfig)
+const dbPaths = await getDbPaths(getPaths().db.prismaConfig)
 const prismaGlob = path.join(dbPaths.base, '**/*.prisma')
 
 const watcher = chokidar.watch(
@@ -392,7 +505,7 @@ export function trackDbImportsPlugin(
 ```
 
 The Cedar Vite plugin that creates `trackDbImportsPlugin()` reads
-`getConfig().api.dbModule` and `getPaths().base`, then passes both to the plugin.
+`getConfig().db.module` and `getPaths().base`, then passes both to the plugin.
 
 ### 4. `packages/testing/src/api/vitest/vitest-api.setup.ts`
 
@@ -679,11 +792,11 @@ These are the actual `db.ts`/`db.js` files that instantiate and export the
 Prisma client.
 
 **Change:** No template changes needed. These files define the `db` export.
-When a user changes `dbModule` to a shared package, they would:
+When a user changes `db.module` to a shared package, they would:
 
 1. Move this file to `packages/db/src/index.ts` in the shared package.
 2. Delete it from `api/src/lib/db.ts`.
-3. Set `dbModule = "@scope/db"` in `cedar.toml`.
+3. Set `module = "@scope/db"` under `[db]` in `cedar.toml`.
 
 The framework doesn't need to generate different templates — the user
 controls this manually.
@@ -774,7 +887,7 @@ needed.
 
 ### Default (no change to `cedar.toml`)
 
-`dbModule` defaults to `"src/lib/db"`. All existing behavior is
+`db.module` defaults to `"src/lib/db"`. All existing behavior is
 preserved. The framework resolves `src/` imports via the Vite/Babel `src`
 alias pointing to `api/src/`. Zero behavioral change for existing projects.
 
@@ -782,8 +895,8 @@ alias pointing to `api/src/`. Zero behavioral change for existing projects.
 
 ```toml
 # cedar.toml
-[api]
-  dbModule = "@my-scope/db"
+[db]
+  module = "@my-scope/db"
   prismaConfig = "./packages/db/prisma.config.cjs"
 ```
 
@@ -842,13 +955,14 @@ If the user only extracts the `db` module but keeps the Prisma schema and
 migrations in `api/db/`, they can set:
 
 ```toml
-dbModule = "@my-scope/db"
+[db]
+  module = "@my-scope/db"
 ```
 
 And point `prismaConfig` to the existing location:
 
 ```toml
-[api]
+[db]
   prismaConfig = "./api/prisma.config.cjs"
 ```
 
@@ -867,8 +981,8 @@ mkdir packages/db
 # ... create package.json, schema.prisma, prisma.config.cjs, src/index.ts
 
 # Update cedar.toml
-#   [api]
-#     dbModule = "@my-scope/db"
+#   [db]
+#     module = "@my-scope/db"
 #     prismaConfig = "./packages/db/prisma.config.cjs"
 
 # Remove the old db file
@@ -892,18 +1006,24 @@ yarn cedar generate scaffold Post
 
 ## Acceptance Criteria
 
-- [ ] `api.dbModule` exists in `cedar.toml` config with default `'src/lib/db'`.
+- [ ] `[db]` exists as a top-level `cedar.toml` table with `module` (default
+      `'src/lib/db'`) and an optional `prismaConfig` (no default — falls back
+      to `api.prismaConfig` when unset).
+- [ ] `[api].prismaConfig` continues to exist in the config schema, unchanged,
+      and continues to resolve correctly when `[db].prismaConfig` isn't set.
+- [ ] `paths.db.prismaConfig` and `paths.api.prismaConfig` both resolve to the
+      same absolute path; setting `[db].prismaConfig` overrides both.
 - [ ] `getDbPaths()` is exported from `@cedarjs/project-config` and correctly
       resolves all Prisma-related directories from an arbitrary `prismaConfig` path.
 - [ ] Codegen watcher (`watch.ts`) watches `.prisma` files at the resolved DB base
       directory, not hardcoded `api/db/`.
-- [ ] gqlorm Babel plugin injects imports from `dbModule`, not hardcoded `src/lib/db`.
-- [ ] Testing setup (Vitest and Jest) imports `db` from `dbModule`, not hardcoded
+- [ ] gqlorm Babel plugin injects imports from `db.module`, not hardcoded `src/lib/db`.
+- [ ] Testing setup (Vitest and Jest) imports `db` from `db.module`, not hardcoded
       `api/src/lib/db`.
 - [ ] All existing tests pass without modification (zero breaking changes).
 - [ ] New tests cover the extracted-DB scenario (`prisma.config.cjs` outside `api/`).
 - [ ] A manual test confirms: a Cedar app with `prisma.config.cjs` at
-      `packages/db/prisma.config.cjs` and `dbModule = '@myorg/db'` can run
+      `packages/db/prisma.config.cjs` and `db.module = '@myorg/db'` can run
       `cedar dev`, `cedar build`, `cedar test`, and `cedar generate scaffold`
       successfully.
 
@@ -964,12 +1084,33 @@ it('resolves paths when prisma.config.cjs is in a separate package', async () =>
 
 ### `packages/project-config/src/__tests__/config.test.ts`
 
-Add a test that the default `dbModule` is `'src/lib/db'`:
+Add a test that the default `db.module` is `'src/lib/db'`:
 
 ```ts
-it('defaults dbModule to src/lib/db', () => {
+it('defaults db.module to src/lib/db', () => {
   const config = getConfig()
-  expect(config.api.dbModule).toBe('src/lib/db')
+  expect(config.db.module).toBe('src/lib/db')
+})
+```
+
+### `packages/project-config/src/__tests__/paths.test.ts`
+
+Add tests for the fallback resolution:
+
+```ts
+it('falls back to api.prismaConfig when db.prismaConfig is unset', () => {
+  // config: { api: { prismaConfig: './api/prisma.config.cjs' }, db: { module: 'src/lib/db' } }
+  const paths = getPaths()
+  expect(paths.db.prismaConfig).toBe(paths.api.prismaConfig)
+})
+
+it('prefers db.prismaConfig over api.prismaConfig when both are set', () => {
+  // config: { api: { prismaConfig: './api/prisma.config.cjs' }, db: { prismaConfig: './packages/db/prisma.config.cjs', module: '@myorg/db' } }
+  const paths = getPaths()
+  expect(paths.db.prismaConfig).toContain('packages/db')
+  expect(paths.db.prismaConfig).not.toBe(
+    path.join(paths.base, 'api/prisma.config.cjs')
+  )
 })
 ```
 
@@ -988,20 +1129,27 @@ Add a test for the gqlorm Babel plugin that verifies:
    (e.g., one for auth, one for app data), this config key could become a map:
 
    ```toml
-   [api.prismaClients]
+   [db.prismaClients]
      default = "@scope/db"
      auth = "@scope/auth-db"
    ```
 
 2. **Prisma config path extraction** — if a user also wants to move
    `prisma.config.cjs` and `schema.prisma` into the shared package,
-   `[api].prismaConfig` in `cedar.toml` already supports this. The two config
+   `[db].prismaConfig` in `cedar.toml` already supports this. The two config
    keys work independently.
 
-3. **Vite caching** — changing `dbModule` changes import sources
+3. **Vite caching** — changing `db.module` changes import sources
    across many files. A `yarn cedar dev` restart or Vite cache clear may be
    needed after the change (this is already the case for other config changes).
 
 4. **Build-time config availability** — the Babel plugin and codegen tools all
    run at build/dev time with access to the full Cedar project config. No
    runtime config resolution is needed.
+
+5. **RSC `/db/` move** — see
+   [2026-07-20-rsc-rewrite.md](./2026-07-20-rsc-rewrite.md#the-db-move). That
+   plan changes the _default_ `dbModule`/`prismaConfig` values to a top-level
+   `/db/` workspace and layers `server-only` enforcement, a migration codemod,
+   and workspace/package setup on top of the resolver this plan builds — it
+   does not need its own path-resolution logic.

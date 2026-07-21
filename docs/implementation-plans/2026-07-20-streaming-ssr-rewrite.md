@@ -220,6 +220,18 @@ enabled, declare a render environment:
   explicitly.
 - `buildRouteManifest` runs as part of this environment's build (or a
   `closeBundle` step), not as a separate CLI-orchestrated step.
+- **`buildRouteHooks` must move here too, not just get deleted with its
+  caller.** Today `packages/vite/src/buildFeServer.ts` is the _only_ call
+  site for `buildRouteHooks()` (esbuild-based, writes to
+  `web.distRouteHooks`), and production `createReactStreamingHandler.ts`
+  hard-depends on that output — it builds
+  `path.join(rwPaths.web.distRouteHooks, currentRoute.routeHooks)` and
+  dynamically `import()`s it per request via `triggerRouteHooks.ts`. Track
+  1.3 deletes `buildFeServer.ts` as part of this rewrite; if the
+  `buildRouteHooks()` call isn't carried into this environment's build (or
+  its own `closeBundle` step) alongside `buildRouteManifest`, any route with
+  a `meta` hook fails at request time with a missing-file import error. This
+  is a required step here, not an incidental cleanup detail.
 
 **Naming collision:** `buildCedarApp`'s existing UD environment is named `ssr`
 but holds the _API_ Fetchable. Rename it (`server`? `api-entry`?) and let the
@@ -229,7 +241,9 @@ provider plugins key on (open question 1).
 ### 1.3 Deletions (with Track 2)
 
 - `packages/vite/src/runFeServer.ts`, `devFeServer.ts` (Track 3),
-  `buildFeServer.ts`, `streaming/buildForStreamingServer.ts`
+  `buildFeServer.ts`, `streaming/buildForStreamingServer.ts` — **`buildFeServer.ts`
+  is the sole caller of `buildRouteHooks()` today; deleting it is only safe
+  once that call has been relocated per §1.2 above, not a plain removal.**
 - `express`, `http-proxy-middleware`, `@whatwg-node/server` (from the streaming
   path), `convertExpressHeaders`
 - The streaming branch of `packages/cli/src/commands/build/buildHandler.ts`
@@ -427,6 +441,14 @@ path stops being opt-out for streaming projects.
   not change an app's shell, so prerender adopts `Document.tsx` once this plan
   establishes it in the serving path (see the prerender plan's
   strategic-positioning note).
+- **Route hooks and the `/db/` move:** the `meta` hook introduced by this plan
+  runs server-side per request and, like `routeParameters()` in the prerender
+  plan, needs db access — today only via the `$api/src/lib/db` alias
+  (`packages/vite/src/plugins/vite-plugin-cedarjs-resolve-cedar-style-imports.ts`).
+  See the prerender plan's "Relationship to SSR and RSC" section for why this
+  is the concrete, near-term motivation for landing the first wave of the
+  [RSC plan's `/db/` move](./2026-07-20-rsc-rewrite.md#the-db-move) ahead of
+  RSC v1 itself, rather than waiting for it.
 
 ---
 
@@ -438,8 +460,10 @@ path stops being opt-out for streaming projects.
   handler, no RSC)
 - `packages/vite/src/streaming/streamHelpers.ts` (rewrite in place; no RSC, no
   `importModule`)
-- `packages/vite/src/buildApp.ts` — render environment + manifest step; UD-env
-  rename per open question 1
+- `packages/vite/src/buildApp.ts` — render environment + manifest step
+  (`buildRouteManifest` _and_ `buildRouteHooks`, both relocated from the
+  deleted `buildFeServer.ts` — see §1.2/1.3); UD-env rename per open
+  question 1
 - `packages/vite/src/plugins/vite-plugin-cedar-universal-deploy.ts` — SSR
   catch-all entry registration
 - `packages/cli/src/commands/serve.ts` — SSR fallback branch in the srvx chain
@@ -464,7 +488,8 @@ path stops being opt-out for streaming projects.
 **Unchanged on purpose:**
 
 - Stream transforms (`transforms/`), `collectCss.ts`, `buildRouteManifest.ts`
-  (relocated invocation only), `isbot` handling, `ServerInject.tsx`, middleware
+  and `buildRouteHooks.ts` (relocated invocation only, not rewritten), `isbot`
+  handling, `ServerInject.tsx`, middleware
   router
 
 ---

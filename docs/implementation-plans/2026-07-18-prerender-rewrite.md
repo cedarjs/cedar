@@ -387,6 +387,29 @@ All of these share the client setup and the environment-based build
 foundation, so neither track here needs revisiting as SSR and RSC land — the
 per-route dispatcher decides which engine renders each route.
 
+**Route hooks and the `/db/` move.** `routeParameters()` (this plan) and the
+`meta` hook (streaming-SSR plan) already run server-side in Node today, and
+already need db access — which today only works via a bespoke `$api/`
+bare-specifier alias (`import { db } from '$api/src/lib/db'`, documented in
+`docs/docs/prerender.md`), resolved separately for the esbuild-based
+prerender build (`packages/vite/src/buildRouteHooks.ts`) and for streaming
+SSR (`packages/vite/src/plugins/vite-plugin-cedarjs-resolve-cedar-style-imports.ts`).
+That alias exists only because `db` currently lives inside `api/src/lib/`, a
+location with no real package identity for `web` to import normally.
+
+This is the concrete, near-term motivation for landing the first wave of the
+[RSC plan's `/db/` move](./2026-07-20-rsc-rewrite.md#the-db-move) — moving
+`db` to a real top-level workspace with its own `package.json`/`exports` —
+well before RSC v1 itself: once `/db/` exists, route hooks can do
+`import { db } from '@cedarjs/db'` like any normal dependency, and neither
+bespoke resolver is needed for db access anymore. This doesn't require
+RSC's `server-only` enforcement (that's the move's second wave) — route
+hooks already only run server-side, so there's no client-component boundary
+to protect yet. As prerendering and streaming SSR become a more prominent,
+promoted capability (rather than serving one production customer), this
+workaround becomes a broader pain point, which is why the `/db/` move's
+first wave is scoped to land around here rather than waiting for RSC v1.
+
 ---
 
 ## Files Affected
