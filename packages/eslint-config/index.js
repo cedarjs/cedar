@@ -11,6 +11,7 @@ const { getConfig, isTypeScriptProject } = require('@cedarjs/project-config')
 
 const config = getConfig()
 
+/** @returns {import('@babel/core').TransformOptions} */
 const getProjectBabelOptions = () => {
   // We can't nest the web overrides inside the overrides block
   // So we just take it out and put it as a separate item

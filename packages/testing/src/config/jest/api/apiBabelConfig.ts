@@ -7,9 +7,7 @@ import {
 // Since configFile and babelrc is already passed a level up, cleaning up these keys here.
 // babelrc can not reside inside "extend"ed
 // Ref: packages/testing/config/jest/api/index.js
-const { babelrc: _b, ...defaultBabelConfig } = getApiSideDefaultBabelConfig({
-  forJest: true,
-})
+const { babelrc: _b, ...defaultBabelConfig } = getApiSideDefaultBabelConfig()
 
 type ConfigType = Omit<
   ReturnType<typeof getApiSideDefaultBabelConfig>,
