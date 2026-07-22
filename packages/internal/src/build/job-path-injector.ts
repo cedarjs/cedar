@@ -51,50 +51,55 @@ export function applyJobPathInjector(
     if (decl?.type !== 'VariableDeclaration') {
       continue
     }
-    const declarator = decl.declarations[0]
-    if (declarator?.id.type !== 'Identifier') {
-      continue
-    }
 
-    const init = declarator.init
-    if (init?.type !== 'CallExpression') {
-      continue
-    }
+    // Check every declarator: in
+    // `export const a = 1, myJob = jobs.createJob({})` the job is declared
+    // on the second one
+    for (const declarator of decl.declarations) {
+      if (declarator.id.type !== 'Identifier') {
+        continue
+      }
 
-    // Only match `<something>.createJob(...)`, mirroring the
-    // `$OBJ.createJob({ $$$PROPS })` pattern in the Vite plugin
-    const callee = init.callee
-    if (
-      callee.type !== 'MemberExpression' ||
-      callee.computed ||
-      callee.property.type !== 'Identifier' ||
-      callee.property.name !== 'createJob'
-    ) {
-      continue
-    }
+      const init = declarator.init
+      if (init?.type !== 'CallExpression') {
+        continue
+      }
 
-    const configArg = init.arguments[0]
-    if (configArg?.type !== 'ObjectExpression') {
-      continue
-    }
+      // Only match `<something>.createJob(...)`, mirroring the
+      // `$OBJ.createJob({ $$$PROPS })` pattern in the Vite plugin
+      const callee = init.callee
+      if (
+        callee.type !== 'MemberExpression' ||
+        callee.computed ||
+        callee.property.type !== 'Identifier' ||
+        callee.property.name !== 'createJob'
+      ) {
+        continue
+      }
 
-    const pathProperty = `path: ${JSON.stringify(importPathWithoutExtension)}`
-    const nameProperty = `name: ${JSON.stringify(declarator.id.name)}`
+      const configArg = init.arguments[0]
+      if (configArg?.type !== 'ObjectExpression') {
+        continue
+      }
 
-    const lastProperty = configArg.properties.at(-1)
-    if (lastProperty) {
-      // Insert right after the last property. This stays valid whether or
-      // not the object literal has a trailing comma.
-      insertions.push({
-        pos: lastProperty.end,
-        text: `, ${pathProperty}, ${nameProperty}`,
-      })
-    } else {
-      // Empty object: insert right after the opening brace
-      insertions.push({
-        pos: configArg.start + 1,
-        text: `${pathProperty}, ${nameProperty}`,
-      })
+      const pathProperty = `path: ${JSON.stringify(importPathWithoutExtension)}`
+      const nameProperty = `name: ${JSON.stringify(declarator.id.name)}`
+
+      const lastProperty = configArg.properties.at(-1)
+      if (lastProperty) {
+        // Insert right after the last property. This stays valid whether or
+        // not the object literal has a trailing comma.
+        insertions.push({
+          pos: lastProperty.end,
+          text: `, ${pathProperty}, ${nameProperty}`,
+        })
+      } else {
+        // Empty object: insert right after the opening brace
+        insertions.push({
+          pos: configArg.start + 1,
+          text: `${pathProperty}, ${nameProperty}`,
+        })
+      }
     }
   }
 

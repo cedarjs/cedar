@@ -130,6 +130,19 @@ describe('applyJobPathInjector', () => {
     expect(result).toContain('name: "aliasedJob"')
   })
 
+  it('handles createJob on a later declarator in a multi-variable export', () => {
+    const code = `
+      export const notAJob = 1,
+        comboJob = jobs.createJob({ queue: 'combo' })
+    `
+
+    const result = applyJobPathInjector(code, jobFile('comboJob.js'), JOBS_DIR)
+
+    expect(result).toContain('path: "comboJob"')
+    expect(result).toContain('name: "comboJob"')
+    expect(result).not.toContain('name: "notAJob"')
+  })
+
   it('returns null for files without createJob calls', () => {
     const code = `
       export const someFunction = () => {
