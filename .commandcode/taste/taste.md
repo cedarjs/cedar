@@ -115,3 +115,7 @@ See [debugging/taste.md](debugging/taste.md)
 - When a workflow step uses `working-directory` and passes a path to the test project via an env var (e.g., `CEDAR_TEST_PROJECT_PATH`), use `${{ github.workspace }}/../path` rather than a relative path. The relative path resolves against the `working-directory`, not the workspace root. Confidence: 0.80
 - When a conditional job (`if:`) has no `strategy.matrix`, GitHub creates no job entry at all if the condition is false. Jobs referencing it in `needs` then fail. Always add a dummy matrix (e.g., `strategy.matrix: { os: [ubuntu-latest] }`) so skipped jobs appear as "skipped" entries that `ci-status-check` handles correctly. Confidence: 0.90
 - Do not use `inputs` expressions (e.g., `inputs.packageManager`) in job-level `if:` or `concurrency.group` of a `workflow_call` workflow that also has a `schedule` trigger. GitHub cannot resolve `inputs` at parse time for `schedule` triggers, causing the workflow to silently fail with 0 jobs. Remove `inputs` entirely or use a separate matrix approach. Confidence: 0.85
+
+# Vite Plugins
+
+- For Vite virtual modules (plugins with `load()` hooks that return template strings), prefer extracting logic into real exported functions at module scope that are serialized via `.toString()` rather than using side-effect imports solely for static analyzer visibility. Real functions are testable, give Knip a traceable dependency chain, and avoid dead-code `import` statements. Confidence: 0.65
