@@ -42,6 +42,7 @@ import { applyOtelWrapping } from './esbuild-plugin-cedar-otel-wrapping.js'
 import { applyHandlerAlsWrapping } from './esbuild-plugin-handler-als-wrapping.js'
 import { applyEsmExtensions } from './esm-extensions.js'
 import { applyImportDir } from './import-dir.js'
+import { applyJobPathInjector } from './job-path-injector.js'
 import { applySrcAlias } from './src-alias.js'
 import { applyTsconfigPaths } from './tsconfig-paths.js'
 
@@ -111,32 +112,34 @@ const runCedarBabelTransformsPlugin = {
       // running on the same file.
       fileContents =
         applyImportDir(fileContents, args.path)?.code ?? fileContents
+      // Inject `path` and `name` into createJob() definitions. This replaces
+      // the Babel job path injector override, which is disabled now that this
+      // pipeline calls transformWithBabel with forVite: true. It is the
+      // esbuild equivalent of the cedarjsJobPathInjectorPlugin used by the
+      // @cedarjs/vite pipelines.
+      fileContents =
+        applyJobPathInjector(fileContents, args.path, getPaths().api.jobs) ??
+        fileContents
 
       const normalizedPath = normalizePath(args.path)
       const cedarPaths = getPaths()
       const isEsm = projectSideIsEsm('api')
 
-      // The Babel pass is needed to apply a user's custom api/babel.config.js
-      // — getApiSideBabelPluginsForVite() is empty (the transforms above
-      // replace Cedar's api-side Babel plugins) and esbuild strips TypeScript
-      // itself when given the matching loader. Job files are the exception:
-      // they rely on the Babel job path injector override (see
-      // getApiSideBabelOverrides) to add `path` and `name` to createJob()
-      // definitions, because this pipeline has no equivalent of the
-      // cedarjsJobPathInjectorPlugin that the @cedarjs/vite pipelines use.
+      // The Babel pass is only needed to apply a user's custom
+      // api/babel.config.js: getApiSideBabelPluginsForVite() is empty (the
+      // transforms above replace Cedar's api-side Babel plugins) and esbuild
+      // strips TypeScript itself when given the matching loader.
       const apiBabelConfigPath = getApiSideBabelConfigPath()
-      const isJobsFile = normalizedPath.startsWith(
-        normalizePath(cedarPaths.api.jobs) + '/',
-      )
-      const useBabel = Boolean(apiBabelConfigPath) || isJobsFile
 
       let code = fileContents
 
-      if (useBabel) {
+      if (apiBabelConfigPath) {
         const transformedCode = await transformWithBabel(
           fileContents,
           args.path,
           getApiSideBabelPluginsForVite(),
+          'inline',
+          true,
         )
 
         if (!transformedCode?.code) {
@@ -180,7 +183,7 @@ const runCedarBabelTransformsPlugin = {
         // Babel output is always plain JS. Without Babel the contents are
         // still TypeScript/JSX, so pick the loader matching the file's
         // extension and let esbuild do the stripping.
-        loader: useBabel ? 'js' : getEsbuildLoader(args.path),
+        loader: apiBabelConfigPath ? 'js' : getEsbuildLoader(args.path),
       }
     })
   },
@@ -314,6 +317,13 @@ function createCedarViteApiPlugin(): Plugin {
         path.dirname(path.relative(cedarPaths.api.src, id)),
       )
       sourceCode = applyAutoImports(sourceCode)
+      // Inject `path` and `name` into createJob() definitions. This replaces
+      // the Babel job path injector override, which is disabled now that this
+      // pipeline calls transformWithBabel with forVite: true. It is the
+      // standalone-Vite equivalent of the cedarjsJobPathInjectorPlugin used
+      // by the @cedarjs/vite pipelines.
+      sourceCode =
+        applyJobPathInjector(sourceCode, id, cedarPaths.api.jobs) ?? sourceCode
 
       // Apply graphql-specific transforms on the raw TypeScript BEFORE
       // Babel CJS compilation. The ESM-pattern regexes in these
@@ -329,30 +339,23 @@ function createCedarViteApiPlugin(): Plugin {
         sourceCode = applyGqlormInject(sourceCode, id) ?? sourceCode
       }
 
-      // The Babel pass is needed to apply a user's custom api/babel.config.js
-      // — getApiSideBabelPluginsForVite() is empty (the transforms in this
-      // pipeline replace Cedar's api-side Babel plugins) and Vite strips
-      // TypeScript itself. Job files are the exception: they rely on the
-      // Babel job path injector override (see getApiSideBabelOverrides) to
-      // add `path` and `name` to createJob() definitions, because this
-      // pipeline has no equivalent of the cedarjsJobPathInjectorPlugin that
-      // the @cedarjs/vite pipelines use.
+      // The Babel pass is only needed to apply a user's custom
+      // api/babel.config.js: getApiSideBabelPluginsForVite() is empty (the
+      // transforms in this pipeline replace Cedar's api-side Babel plugins)
+      // and Vite strips TypeScript itself.
       const apiBabelConfigPath = getApiSideBabelConfigPath()
-      const isJobsFile = normalizedId.startsWith(
-        normalizePath(cedarPaths.api.jobs) + '/',
-      )
-      const useBabel = Boolean(apiBabelConfigPath) || isJobsFile
 
-      const transformedCode = useBabel
+      const transformedCode = apiBabelConfigPath
         ? await transformWithBabel(
             sourceCode,
             id,
             getApiSideBabelPluginsForVite(),
             true,
+            true,
           )
         : null
 
-      if (useBabel && !transformedCode?.code) {
+      if (apiBabelConfigPath && !transformedCode?.code) {
         throw new Error(`Could not transform file: ${id}`)
       }
 

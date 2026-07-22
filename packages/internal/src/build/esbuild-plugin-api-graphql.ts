@@ -105,6 +105,8 @@ export const cedarApiGraphqlPlugin = {
           fileContents,
           args.path,
           getApiSideBabelPluginsForVite(),
+          'inline',
+          true,
         )
 
         if (!transformedCode?.code) {
