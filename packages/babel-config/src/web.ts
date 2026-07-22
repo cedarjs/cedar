@@ -8,7 +8,6 @@ import { getConfig, getPaths } from '@cedarjs/project-config'
 
 import type { RegisterHookOptions } from './common.js'
 import {
-  getCommonPlugins,
   registerBabel,
   parseTypeScriptConfigFiles,
   getPathsFromTypeScriptConfig,
@@ -58,7 +57,6 @@ export const getWebSideBabelPlugins = (
   const plugins = [
     // It is important that this plugin run first, as noted here: https://react.dev/learn/react-compiler
     useReactCompiler && ['babel-plugin-react-compiler', { target: '19' }],
-    ...(forJest ? getCommonPlugins() : []),
     // === Import path handling
     // Vite resolves the src/ and $api/ aliases via
     // cedarjsResolveCedarStyleImportsPlugin, and tsconfig `paths` aliases via

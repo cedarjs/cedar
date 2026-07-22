@@ -14,7 +14,6 @@ describe('dist', () => {
         "getApiSideBabelPluginsForVite": [Function],
         "getApiSideBabelPresets": [Function],
         "getApiSideDefaultBabelConfig": [Function],
-        "getCommonPlugins": [Function],
         "getPathsFromConfig": [Function],
         "getRouteHookBabelPlugins": [Function],
         "getWebSideBabelConfigPath": [Function],

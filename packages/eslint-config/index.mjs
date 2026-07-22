@@ -6,7 +6,6 @@ import jsxA11yPlugin from 'eslint-plugin-jsx-a11y'
 import globals from 'globals'
 
 import {
-  getCommonPlugins,
   getApiSideDefaultBabelConfig,
   getWebSideDefaultBabelConfig,
 } from '@cedarjs/babel-config'
@@ -35,7 +34,7 @@ export default async function createConfig() {
       getApiSideDefaultBabelConfig()
 
     return {
-      plugins: getCommonPlugins(),
+      plugins: [],
       overrides: [
         {
           test: ['./api/', './scripts/'],
