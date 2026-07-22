@@ -178,7 +178,7 @@ export const getAuthenticationContext = async ({
   let decoded = null
 
   const normalizedEvent = isFetchApiRequest(event)
-    ? requestToBaseEvent(event)
+    ? await requestToBaseEvent(event)
     : event
   const underlyingRequest = isFetchApiRequest(event) ? event : undefined
 

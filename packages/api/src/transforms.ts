@@ -1,5 +1,9 @@
 import { Headers, Request as PonyfillRequest } from '@whatwg-node/fetch'
-import type { APIGatewayProxyEvent } from 'aws-lambda'
+import type {
+  APIGatewayProxyEvent,
+  APIGatewayProxyEventQueryStringParameters,
+} from 'aws-lambda'
+import { parse } from 'picoquery'
 
 // This is part of the request, dreived either from a LambdaEvent or FetchAPI Request
 // We do this to keep the API consistent between the two
@@ -43,16 +47,25 @@ export const parseFetchEventBody = async (event: Request) => {
   return body ? JSON.parse(body) : {}
 }
 
-export const requestToBaseEvent = (request: Request): APIGatewayProxyEvent => {
+export const requestToBaseEvent = async (
+  request: Request,
+): Promise<APIGatewayProxyEvent> => {
   const url = new URL(request.url)
-  const queryStringParameters: Record<string, string> = {}
-  url.searchParams.forEach((value, key) => {
-    queryStringParameters[key] = value
-  })
+  const bodyText = await request.clone().text()
+  // @ts-expect-error - picoquery returns nested objects and arrays for
+  // bracket-notation params (e.g. ids[]=1&ids[]=2, user[name]=alice).
+  // APIGatewayProxyEventQueryStringParameters is too narrow for this richer
+  // structure, but legacy handlers depend on it.
+  const queryStringParameters: APIGatewayProxyEventQueryStringParameters =
+    parse(url.search ? url.search.slice(1) : '', {
+      nestingSyntax: 'index',
+      arrayRepeat: true,
+      arrayRepeatSyntax: 'bracket',
+    })
 
   const event = {
     headers: Object.fromEntries(request.headers.entries()),
-    body: null,
+    body: bodyText || null,
     httpMethod: request.method,
     path: url.pathname,
     queryStringParameters:
@@ -61,7 +74,7 @@ export const requestToBaseEvent = (request: Request): APIGatewayProxyEvent => {
         : null,
     isBase64Encoded: false,
     multiValueHeaders: toMultiValueHeaders(request.headers),
-    multiValueQueryStringParameters: null,
+    multiValueQueryStringParameters: toMultiValueQueryStringParameters(url),
     pathParameters: null,
     stageVariables: null,
     resource: url.pathname,
@@ -111,6 +124,24 @@ function toMultiValueHeaders(headers: Headers): Record<string, string[]> {
 
   if (values.size === 0) {
     return {}
+  }
+
+  return Object.fromEntries(values.entries())
+}
+
+function toMultiValueQueryStringParameters(
+  url: URL,
+): Record<string, string[]> | null {
+  const values = new Map<string, string[]>()
+
+  for (const [name, value] of url.searchParams.entries()) {
+    const existing = values.get(name) ?? []
+    existing.push(value)
+    values.set(name, existing)
+  }
+
+  if (values.size === 0) {
+    return null
   }
 
   return Object.fromEntries(values.entries())

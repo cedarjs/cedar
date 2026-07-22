@@ -1,11 +1,9 @@
 import type {
   APIGatewayProxyEvent,
-  APIGatewayProxyEventQueryStringParameters,
   APIGatewayProxyResult,
   Context as LambdaContext,
 } from 'aws-lambda'
 import * as cookie from 'cookie'
-import { parse } from 'picoquery'
 
 import { getAuthenticationContext } from './auth/index.js'
 import { requestToBaseEvent } from './transforms.js'
@@ -155,25 +153,10 @@ export async function requestToLegacyEvent(
   request: Request,
   ctx: CedarRequestContext,
 ): Promise<APIGatewayProxyEvent> {
-  const url = new URL(request.url)
-  const base = requestToBaseEvent(request)
-  const bodyText = await request.clone().text()
-  // @ts-expect-error - picoquery returns nested objects and arrays for
-  // bracket-notation params (e.g. ids[]=1&ids[]=2, user[name]=alice).
-  // APIGatewayProxyEventQueryStringParameters is too narrow for this richer
-  // structure, but legacy handlers depend on it.
-  const queryStringParameters: APIGatewayProxyEventQueryStringParameters =
-    parse(url.search ? url.search.slice(1) : '', {
-      nestingSyntax: 'index',
-      arrayRepeat: true,
-      arrayRepeatSyntax: 'bracket',
-    })
+  const base = await requestToBaseEvent(request)
 
   return {
     ...base,
-    body: bodyText || null,
-    queryStringParameters,
-    multiValueQueryStringParameters: toMultiValueQueryStringParameters(url),
     pathParameters: Object.keys(ctx.params).length > 0 ? ctx.params : null,
   }
 }
@@ -232,22 +215,4 @@ export function legacyResultToResponse(result: LegacyHandlerResult): Response {
     status,
     headers,
   })
-}
-
-function toMultiValueQueryStringParameters(
-  url: URL,
-): Record<string, string[]> | null {
-  const values = new Map<string, string[]>()
-
-  for (const [name, value] of url.searchParams.entries()) {
-    const existing = values.get(name) ?? []
-    existing.push(value)
-    values.set(name, existing)
-  }
-
-  if (values.size === 0) {
-    return null
-  }
-
-  return Object.fromEntries(values.entries())
 }
