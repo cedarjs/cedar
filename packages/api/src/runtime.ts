@@ -8,6 +8,7 @@ import * as cookie from 'cookie'
 import { parse } from 'picoquery'
 
 import { getAuthenticationContext } from './auth/index.js'
+import { requestToBaseEvent } from './transforms.js'
 
 export interface CedarRequestContext {
   params: Record<string, string>
@@ -155,8 +156,8 @@ export async function requestToLegacyEvent(
   ctx: CedarRequestContext,
 ): Promise<APIGatewayProxyEvent> {
   const url = new URL(request.url)
+  const base = requestToBaseEvent(request)
   const bodyText = await request.clone().text()
-  const headers = Object.fromEntries(request.headers.entries())
   // @ts-expect-error - picoquery returns nested objects and arrays for
   // bracket-notation params (e.g. ids[]=1&ids[]=2, user[name]=alice).
   // APIGatewayProxyEventQueryStringParameters is too narrow for this richer
@@ -169,47 +170,11 @@ export async function requestToLegacyEvent(
     })
 
   return {
+    ...base,
     body: bodyText || null,
-    headers,
-    multiValueHeaders: toMultiValueHeaders(request.headers) ?? {},
-    httpMethod: request.method,
-    isBase64Encoded: false,
-    path: url.pathname,
-    pathParameters: Object.keys(ctx.params).length > 0 ? ctx.params : null,
     queryStringParameters,
     multiValueQueryStringParameters: toMultiValueQueryStringParameters(url),
-    stageVariables: null,
-    requestContext: {
-      accountId: 'cedar',
-      apiId: 'cedar',
-      authorizer: undefined,
-      protocol: 'HTTP/1.1',
-      identity: {
-        accessKey: null,
-        accountId: null,
-        apiKey: null,
-        apiKeyId: null,
-        caller: null,
-        clientCert: null,
-        cognitoAuthenticationProvider: null,
-        cognitoAuthenticationType: null,
-        cognitoIdentityId: null,
-        cognitoIdentityPoolId: null,
-        principalOrgId: null,
-        sourceIp: '',
-        user: null,
-        userAgent: request.headers.get('user-agent'),
-        userArn: null,
-      },
-      path: url.pathname,
-      stage: '',
-      requestId: 'cedar-request',
-      requestTimeEpoch: Date.now(),
-      resourceId: 'cedar',
-      resourcePath: url.pathname,
-      httpMethod: request.method,
-    },
-    resource: url.pathname,
+    pathParameters: Object.keys(ctx.params).length > 0 ? ctx.params : null,
   }
 }
 
@@ -267,24 +232,6 @@ export function legacyResultToResponse(result: LegacyHandlerResult): Response {
     status,
     headers,
   })
-}
-
-function toMultiValueHeaders(
-  headers: Headers,
-): Record<string, string[]> | null {
-  const values = new Map<string, string[]>()
-
-  for (const [name, value] of headers.entries()) {
-    const existing = values.get(name) ?? []
-    existing.push(value)
-    values.set(name, existing)
-  }
-
-  if (values.size === 0) {
-    return null
-  }
-
-  return Object.fromEntries(values.entries())
 }
 
 function toMultiValueQueryStringParameters(
