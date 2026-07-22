@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import { catchAllEntry, getAllEntries } from '@universal-deploy/store'
 import { catchAll } from '@universal-deploy/vite'
+import MagicString from 'magic-string'
 import type { EnvironmentOptions, Plugin, PluginOption } from 'vite'
 import { createBuilder, normalizePath } from 'vite'
 import { gqlPlugin as gqlTagPlugin } from 'vite-plugin-graphql-tag'
@@ -159,16 +160,6 @@ export async function buildCedarApp({
       }
     }
   }
-
-  // The Babel pass is only needed to apply a user's custom
-  // api/babel.config.js: getApiSideBabelPluginsForVite() is empty (all of
-  // Cedar's api-side Babel transforms are handled by dedicated Vite plugins
-  // in this pipeline) and Vite strips TypeScript itself. Skip Babel entirely
-  // when the project has no such config file.
-  const babelPlugins =
-    workspace.includes('api') && getApiSideBabelConfigPath()
-      ? getApiSideBabelPluginsForVite()
-      : null
 
   const workspacePkgSourceMap = workspace.includes('api')
     ? Object.fromEntries(
@@ -403,6 +394,15 @@ export async function buildCedarApp({
           return null
         }
 
+        // The Babel pass is only needed to apply a user's custom
+        // api/babel.config.js: getApiSideBabelPluginsForVite() is empty (all of
+        // Cedar's api-side Babel transforms are handled by dedicated Vite
+        // plugins in this pipeline) and Vite strips TypeScript itself. Skip
+        // Babel entirely when the project has no such config file.
+        const babelPlugins = getApiSideBabelConfigPath()
+          ? getApiSideBabelPluginsForVite()
+          : null
+
         const transformedCode = babelPlugins
           ? await transformWithBabel(code, id, babelPlugins, true, true)
           : null
@@ -422,6 +422,7 @@ export async function buildCedarApp({
           cedarPaths.api.src,
           path.dirname(id),
         )
+
         let outputCode = applySrcAlias(
           transformedCode?.code ?? code,
           fromDirRelativeToApiSrc,
@@ -437,9 +438,26 @@ export async function buildCedarApp({
           outputCode = applyEsmExtensions(outputCode, id)
         }
 
+        if (!transformedCode) {
+          // Without Babel there's no transform to report when the string
+          // rewrites didn't change anything.
+          if (outputCode === code) {
+            return null
+          }
+
+          // The rewrites only replace import specifiers in place and never
+          // add or remove lines, so a high-resolution identity map over the
+          // input keeps the sourcemap chain intact (columns can drift only
+          // within a rewritten import line).
+          return {
+            code: outputCode,
+            map: new MagicString(code).generateMap({ hires: true }),
+          }
+        }
+
         return {
           code: outputCode,
-          map: transformedCode?.map ?? null,
+          map: transformedCode.map ?? null,
         }
       },
     })

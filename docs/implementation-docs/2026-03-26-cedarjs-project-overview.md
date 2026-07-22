@@ -131,11 +131,13 @@ cedar dev:
 cedar build:
   prisma gen → GraphQL types → validate SDLs →
   default: legacy separate builds
-    API (`buildApi()` esbuild → api/dist/, Babel plugin) →
+    API (`buildApi()` esbuild → api/dist/, string transforms; Babel pass only
+      when api/babel.config.js exists) →
     Web (`cedar-vite-build` → web/dist/) →
   --ud:
     unified Vite `buildApp({ ud: true })` with declared `client`, `api`, and `ssr`
-      environments (web/dist/ + api/dist/ + api/dist/ud/, preserveModules, Babel plugin,
+      environments (web/dist/ + api/dist/ + api/dist/ud/, preserveModules, dedicated
+      Vite plugins; Babel pass only when api/babel.config.js exists,
       adapter-free Fetchable at api/dist/ud/index.js) →
   prerender marked routes
 
@@ -351,18 +353,18 @@ It's GraphQL-only because:
      the cookie themselves. Preferrably with the help of the `useRequireAuth()`
      hook.
 
-| Path                                                      | Mechanism                  | ALS wrapping | `setContext()`  | `context.currentUser` |
-| --------------------------------------------------------- | -------------------------- | ------------ | --------------- | --------------------- |
-| **Non-UD dev** — GraphQL                                  | Fastify `onRequest` hook   | ✅           | ✅ plugin chain | ✅                    |
-| **Non-UD dev** — Functions                                | Fastify `onRequest` hook   | ✅           | ❌              | ❌ `undefined`        |
-| **Non-UD serve/deploy** (baremetal/docker) — GraphQL      | Fastify `onRequest` hook   | ✅           | ✅ plugin chain | ✅                    |
-| **Non-UD serve/deploy** (baremetal/docker) — Functions    | Fastify `onRequest` hook   | ✅           | ❌              | ❌ `undefined`        |
-| **Non-UD deploy** (Netlify/Vercel serverless) — GraphQL   | Babel safety net in output | ✅           | ✅ plugin chain | ✅                    |
-| **Non-UD deploy** (Netlify/Vercel serverless) — Functions | Babel safety net in output | ✅           | ❌              | ❌ `undefined`        |
-| **UD dev** — GraphQL                                      | Vite Babel transform       | ✅           | ✅ plugin chain | ✅                    |
-| **UD dev** — Functions                                    | Vite Babel transform       | ✅           | ❌              | ❌ `undefined`        |
-| **UD built/deploy** — GraphQL                             | Generated `store.run()`    | ✅           | ✅ plugin chain | ✅                    |
-| **UD built/deploy** — Functions                           | Generated `store.run()`    | ✅           | ❌              | ❌ `undefined`        |
+| Path                                                      | Mechanism                | ALS wrapping | `setContext()`  | `context.currentUser` |
+| --------------------------------------------------------- | ------------------------ | ------------ | --------------- | --------------------- |
+| **Non-UD dev** — GraphQL                                  | Fastify `onRequest` hook | ✅           | ✅ plugin chain | ✅                    |
+| **Non-UD dev** — Functions                                | Fastify `onRequest` hook | ✅           | ❌              | ❌ `undefined`        |
+| **Non-UD serve/deploy** (baremetal/docker) — GraphQL      | Fastify `onRequest` hook | ✅           | ✅ plugin chain | ✅                    |
+| **Non-UD serve/deploy** (baremetal/docker) — Functions    | Fastify `onRequest` hook | ✅           | ❌              | ❌ `undefined`        |
+| **Non-UD deploy** (Netlify/Vercel serverless) — GraphQL   | ALS wrapping in output   | ✅           | ✅ plugin chain | ✅                    |
+| **Non-UD deploy** (Netlify/Vercel serverless) — Functions | ALS wrapping in output   | ✅           | ❌              | ❌ `undefined`        |
+| **UD dev** — GraphQL                                      | Middleware `store.run()` | ✅           | ✅ plugin chain | ✅                    |
+| **UD dev** — Functions                                    | Middleware `store.run()` | ✅           | ❌              | ❌ `undefined`        |
+| **UD built/deploy** — GraphQL                             | Generated `store.run()`  | ✅           | ✅ plugin chain | ✅                    |
+| **UD built/deploy** — Functions                           | Generated `store.run()`  | ✅           | ❌              | ❌ `undefined`        |
 
 ## CONVENTIONS
 
@@ -378,7 +380,7 @@ It's GraphQL-only because:
   and `meta()` (SSR/RSC only: per-request meta tag injection)
 - Entry: `entry.client.tsx` (always). \*SSR/RSC: also `entry.server.tsx`
 - Routes in `Routes.tsx` as JSX (virtual, never rendered — auto-loaded by `cedar-routes-auto-loader` Vite/Babel plugin)
-- Build: default = esbuild (api) + Vite (web); `--ud` = unified Vite (`client` + `api` + `ssr` environments, `preserveModules: true`, Babel plugin)
+- Build: default = esbuild (api) + Vite (web); `--ud` = unified Vite (`client` + `api` + `ssr` environments, `preserveModules: true`; api Babel pass only when api/babel.config.js exists)
 - Server: API (Fastify by default; opt-in srvx via `cedar serve api --ud` or `cedar serve --ud`, which host the UD Fetchable from `api/dist/ud/index.js`). Web: Fastify (SPA). \*SSR/RSC: Web uses Express
 - Package mgr: Yarn 4 (+ experimental support for npm and pnpm); Framework: Yarn 4 + Nx (build orchestration).
 - Codegen: compile-time (Vite plugins) + on-demand (cedar-gen)

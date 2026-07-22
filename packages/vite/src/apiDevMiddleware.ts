@@ -5,6 +5,8 @@ import { pathToFileURL } from 'node:url'
 
 import ansis from 'ansis'
 import type { Handler } from 'aws-lambda'
+import MagicString from 'magic-string'
+import type { SourceMap } from 'magic-string'
 import { normalizePath } from 'vite'
 import type { ModuleNode, Plugin, ViteDevServer } from 'vite'
 import { gqlPlugin as gqlTagPlugin } from 'vite-plugin-graphql-tag'
@@ -291,13 +293,26 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
             // syntax; running them first ensures they always work regardless
             // of the project's module format.
             let sourceCode = code
+            // Exact sourcemap for the string transforms applied so far. Only
+            // the graphql options extract produces one; if a later transform
+            // changes the code again the map no longer matches and is
+            // cleared.
+            let sourceMap: SourceMap | null = null
             if (
               normalizePath(id).endsWith('/graphql.ts') ||
               normalizePath(id).endsWith('/graphql.js')
             ) {
               const extracted = applyGraphqlOptionsExtract(sourceCode)
-              sourceCode = extracted?.code ?? sourceCode
-              sourceCode = applyGqlormInject(sourceCode, id) ?? sourceCode
+              if (extracted) {
+                sourceCode = extracted.code
+                sourceMap = extracted.map
+              }
+
+              const injected = applyGqlormInject(sourceCode, id)
+              if (injected) {
+                sourceCode = injected
+                sourceMap = null
+              }
             }
 
             if (
@@ -308,19 +323,29 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
                 normalizedBase.length + '/api/src/'.length,
               )
               const apiFolder = relativePath.split('/')[0] ?? '?'
-              sourceCode =
-                applyOtelWrapping(sourceCode, id, apiFolder) ?? sourceCode
+              const wrapped = applyOtelWrapping(sourceCode, id, apiFolder)
+              if (wrapped) {
+                sourceCode = wrapped
+                sourceMap = null
+              }
             }
 
             // Without a user Babel config there is nothing left for Babel to
             // do — Vite's own pipeline strips TypeScript — so only return the
-            // string-transformed code (if it changed at all).
+            // string-transformed code (if it changed at all). When no exact
+            // map is available, fall back to a high-resolution identity map
+            // over the input so the sourcemap chain stays intact.
             if (!babelPlugins) {
               if (sourceCode === code) {
                 return null
               }
 
-              return { code: sourceCode, map: null }
+              return {
+                code: sourceCode,
+                map:
+                  sourceMap ??
+                  new MagicString(code).generateMap({ hires: true }),
+              }
             }
 
             // Use the code Vite already loaded instead of reading from disk, so

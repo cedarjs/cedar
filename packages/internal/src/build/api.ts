@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import type { BuildContext, BuildOptions, PluginBuild } from 'esbuild'
 import { build, context } from 'esbuild'
+import MagicString from 'magic-string'
 import type { Plugin } from 'vite'
 import { build as viteBuild, normalizePath } from 'vite'
 import tsPathsMod from 'vite-tsconfig-paths'
@@ -372,9 +373,26 @@ function createCedarViteApiPlugin(): Plugin {
           }) ?? outputCode
       }
 
+      if (!transformedCode) {
+        // Without Babel there's no transform to report when the string
+        // rewrites didn't change anything.
+        if (outputCode === code) {
+          return null
+        }
+
+        // No Babel map to chain; a high-resolution identity map over the
+        // input keeps the sourcemap chain intact. This matches the fidelity
+        // of the Babel path, whose map also predates the post-Babel string
+        // transforms.
+        return {
+          code: outputCode,
+          map: new MagicString(code).generateMap({ hires: true }),
+        }
+      }
+
       return {
         code: outputCode,
-        map: transformedCode?.map ?? null,
+        map: transformedCode.map ?? null,
       }
     },
   }
