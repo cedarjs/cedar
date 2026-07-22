@@ -3,7 +3,6 @@
 // Framework main config is in monorepo root ./eslint.config.js
 
 const {
-  getCommonPlugins,
   getApiSideDefaultBabelConfig,
   getWebSideDefaultBabelConfig,
 } = require('@cedarjs/babel-config')
@@ -26,7 +25,7 @@ const getProjectBabelOptions = () => {
     getApiSideDefaultBabelConfig()
 
   return {
-    plugins: getCommonPlugins(),
+    plugins: [],
     overrides: [
       {
         test: ['./api/', './scripts/'],

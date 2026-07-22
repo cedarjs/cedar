@@ -57,8 +57,6 @@ export {
 export type { Flags } from './web.js'
 
 export {
-  /** Used by our eslint-config  */
-  getCommonPlugins,
   /**
    * @deprecated This export isn't used by the framework, so it'll be removed
    * in a future version.

@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'path'
 
-import type { PluginItem, PluginOptions, TransformOptions } from '@babel/core'
+import type { PluginItem, TransformOptions } from '@babel/core'
 import type { RegisterOptions } from '@babel/register'
 import { parseConfigFileTextToJson } from 'typescript'
 
@@ -49,10 +49,6 @@ export const registerBabel = (options: RegisterOptions) => {
   // the extensions .es6, .es, .jsx, .mjs, and .js will be transformed by Babel
   // (unless options.extensions override the default exensions).
   require('@babel/register')(options)
-}
-
-export const getCommonPlugins = (): [string, PluginOptions][] => {
-  return []
 }
 
 // TODO (STREAMING) double check this, think about it more carefully please!

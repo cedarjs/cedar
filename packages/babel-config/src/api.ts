@@ -9,7 +9,6 @@ import { getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import type { RegisterHookOptions } from './common.js'
 import {
-  getCommonPlugins,
   getPathsFromTypeScriptConfig,
   parseTypeScriptConfigFiles,
   registerBabel,
@@ -65,7 +64,6 @@ export const getApiSideBabelPlugins = ({
   const tsConfig = parseTypeScriptConfigFiles()
 
   const plugins: PluginList = [
-    ...getCommonPlugins(),
     // Needed to support `/** @jsxImportSource custom-jsx-library */`
     // comments in JSX files
     ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }],
@@ -196,7 +194,7 @@ export const getApiSideBabelPlugins = ({
  * module-resolver `resolvePath` hook, which is a `!forVite` plugin.
  */
 export const getApiSideBabelPluginsForVite = (): PluginList => {
-  return [...getCommonPlugins()]
+  return []
 }
 
 export const getApiSideBabelConfigPath = () => {
