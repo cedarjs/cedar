@@ -178,8 +178,8 @@ async function validateSession({
       token: req.headers.get('Cookie') as string,
     },
     {
-      // MWRequest is a superset of Request
       event: req,
+      request: req,
     },
   )
 

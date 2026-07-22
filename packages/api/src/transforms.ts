@@ -43,6 +43,98 @@ export const parseFetchEventBody = async (event: Request) => {
   return body ? JSON.parse(body) : {}
 }
 
+export const requestToBaseEvent = async (
+  request: Request,
+): Promise<APIGatewayProxyEvent> => {
+  const url = new URL(request.url)
+  const bodyText = await request.clone().text()
+  const queryStringParameters: Record<string, string> = {}
+
+  url.searchParams.forEach((value, key) => {
+    queryStringParameters[key] = value
+  })
+
+  const event = {
+    headers: Object.fromEntries(request.headers.entries()),
+    body: bodyText || null,
+    httpMethod: request.method,
+    path: url.pathname,
+    queryStringParameters,
+    isBase64Encoded: false,
+    multiValueHeaders: toMultiValueHeaders(request.headers),
+    multiValueQueryStringParameters: toMultiValueQueryStringParameters(url),
+    pathParameters: null,
+    stageVariables: null,
+    resource: url.pathname,
+    requestContext: {
+      accountId: 'cedar',
+      apiId: 'cedar',
+      authorizer: undefined,
+      protocol: 'HTTP/1.1',
+      identity: {
+        accessKey: null,
+        accountId: null,
+        apiKey: null,
+        apiKeyId: null,
+        caller: null,
+        clientCert: null,
+        cognitoAuthenticationProvider: null,
+        cognitoAuthenticationType: null,
+        cognitoIdentityId: null,
+        cognitoIdentityPoolId: null,
+        principalOrgId: null,
+        sourceIp: '',
+        user: null,
+        userAgent: request.headers.get('user-agent'),
+        userArn: null,
+      },
+      path: url.pathname,
+      stage: '',
+      requestId: 'cedar-request',
+      requestTimeEpoch: Date.now(),
+      resourceId: 'cedar',
+      resourcePath: url.pathname,
+      httpMethod: request.method,
+    },
+  }
+
+  return event
+}
+
+function toMultiValueHeaders(headers: Headers): Record<string, string[]> {
+  const values = new Map<string, string[]>()
+
+  for (const [name, value] of headers.entries()) {
+    const existing = values.get(name) ?? []
+    existing.push(value)
+    values.set(name, existing)
+  }
+
+  if (values.size === 0) {
+    return {}
+  }
+
+  return Object.fromEntries(values.entries())
+}
+
+function toMultiValueQueryStringParameters(
+  url: URL,
+): Record<string, string[]> | null {
+  const values = new Map<string, string[]>()
+
+  for (const [name, value] of url.searchParams.entries()) {
+    const existing = values.get(name) ?? []
+    existing.push(value)
+    values.set(name, existing)
+  }
+
+  if (values.size === 0) {
+    return null
+  }
+
+  return Object.fromEntries(values.entries())
+}
+
 export const isFetchApiRequest = (
   event: Request | APIGatewayProxyEvent,
 ): event is Request => {

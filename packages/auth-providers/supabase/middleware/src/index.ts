@@ -51,7 +51,7 @@ const initSupabaseAuthMiddleware = ({
       const currentUser = await getCurrentUser(
         decoded,
         { type: type, token: cookieHeader, schema: 'cookie' },
-        { event: req as Request },
+        { event: req, request: req },
       )
 
       if (req.url.includes(`/middleware/supabase/currentUser`)) {
