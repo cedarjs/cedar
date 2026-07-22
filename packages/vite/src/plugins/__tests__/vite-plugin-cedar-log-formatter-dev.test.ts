@@ -1,6 +1,14 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-import { cedarApiLogFormatterDevPlugin } from '../vite-plugin-cedar-log-formatter-dev'
+import {
+  cedarApiLogFormatterDevPlugin,
+  createFormattingDestination,
+} from '../vite-plugin-cedar-log-formatter-dev'
+
+vi.mock('@cedarjs/api-server/logFormatter', () => {
+  const LogFormatter = () => (line: string) => `[FORMATTED] ${line}`
+  return { LogFormatter }
+})
 
 const RESOLVED_VIRTUAL_MODULE_ID = '\0virtual:cedar-api-logger-dev'
 
@@ -61,10 +69,61 @@ describe('cedarApiLogFormatterDevPlugin', () => {
       expect(code).toContain("from '@cedarjs/api-server/logFormatter'")
       // Passes through every other export from the real module unchanged
       expect(code).toContain('export * from "@cedarjs/api/logger"')
-      // Only this one export is overridden
-      expect(code).toContain('export function createLogger(')
+      // Overrides createLogger (serialized from the exported function)
+      expect(code).toContain('function createLogger(')
       // Doesn't clobber a destination the caller already supplied
       expect(code).toContain('if (params.destination)')
     })
+  })
+})
+
+describe('createFormattingDestination', () => {
+  beforeEach(() => {
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('formats and writes a single complete log line', () => {
+    const dest = createFormattingDestination()
+    const writeSpy = vi.mocked(process.stdout.write)
+
+    dest.write('{"level":30,"msg":"hello"}\n')
+
+    expect(writeSpy).toHaveBeenCalledOnce()
+    expect(writeSpy.mock.calls[0][0]).toContain('{"level":30,"msg":"hello"}')
+  })
+
+  it('handles partial chunks buffered across multiple writes', () => {
+    const dest = createFormattingDestination()
+    const writeSpy = vi.mocked(process.stdout.write)
+
+    dest.write('{"level":30,"msg":"hello"}\n{"level":')
+    dest.write('40,"msg":"world"}\n')
+
+    expect(writeSpy).toHaveBeenCalledTimes(2)
+    expect(writeSpy.mock.calls[0][0]).toContain('{"level":30,"msg":"hello"}')
+    expect(writeSpy.mock.calls[1][0]).toContain('{"level":40,"msg":"world"}')
+  })
+
+  it('skips empty lines in the buffer', () => {
+    const dest = createFormattingDestination()
+    const writeSpy = vi.mocked(process.stdout.write)
+
+    dest.write('\n{"level":30,"msg":"hello"}\n\n\n')
+
+    expect(writeSpy).toHaveBeenCalledOnce()
+    expect(writeSpy.mock.calls[0][0]).toContain('{"level":30,"msg":"hello"}')
+  })
+
+  it('buffers a chunk with no newline', () => {
+    const dest = createFormattingDestination()
+    const writeSpy = vi.mocked(process.stdout.write)
+
+    dest.write('{"level":30,"msg":"partial"}')
+
+    expect(writeSpy).not.toHaveBeenCalled()
   })
 })

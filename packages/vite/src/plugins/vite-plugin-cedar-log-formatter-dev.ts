@@ -1,5 +1,12 @@
 import type { Plugin } from 'vite'
 
+// // Referenced at runtime by the virtual module in load() below, not from
+// // this file directly. Kept as a visible import so static analyzers (Knip) can
+// // see the dependency on @cedarjs/api-server.
+// import '@cedarjs/api-server'
+import type * as apiLogger from '@cedarjs/api/logger'
+import { LogFormatter } from '@cedarjs/api-server/logFormatter'
+
 const INTERCEPTED_SPECIFIER = '@cedarjs/api/logger'
 const VIRTUAL_MODULE_ID = 'virtual:cedar-api-logger-dev'
 const RESOLVED_VIRTUAL_MODULE_ID = '\0' + VIRTUAL_MODULE_ID
@@ -46,19 +53,28 @@ export function cedarApiLogFormatterDevPlugin(): Plugin {
       }
 
       return `
-import * as realLogger from ${JSON.stringify(INTERCEPTED_SPECIFIER)}
-import { LogFormatter } from '@cedarjs/api-server/logFormatter'
+        import * as realLogger from ${JSON.stringify(INTERCEPTED_SPECIFIER)}
+        import { LogFormatter } from '@cedarjs/api-server/logFormatter'
 
-export * from ${JSON.stringify(INTERCEPTED_SPECIFIER)}
+        export * from ${JSON.stringify(INTERCEPTED_SPECIFIER)}
 
-function createFormattingDestination() {
+        ${createFormattingDestination.toString()}
+
+        // toString() doesn't include the 'export' keyword
+        export ${createLogger.toString()}
+        `
+    },
+  }
+}
+
+export function createFormattingDestination() {
   const format = LogFormatter()
   let buffered = ''
 
   return {
-    write(chunk) {
+    write(chunk: string) {
       buffered += chunk
-      const lines = buffered.split('\\n')
+      const lines = buffered.split('\n')
       buffered = lines.pop() ?? ''
 
       for (const line of lines) {
@@ -70,7 +86,17 @@ function createFormattingDestination() {
   }
 }
 
-export function createLogger(params = {}) {
+type CreateLoggerParams = Parameters<typeof apiLogger.createLogger>[0]
+
+// This is only to make TS happy. The real `realLogger` that will be used when
+// the code actually runs is the one that `load()` above generates an import for
+const realLogger = {
+  createLogger: (_params: CreateLoggerParams) => {
+    return {} as apiLogger.Logger
+  },
+}
+
+export function createLogger(params: CreateLoggerParams = {}) {
   if (params.destination) {
     return realLogger.createLogger(params)
   }
@@ -79,8 +105,4 @@ export function createLogger(params = {}) {
     ...params,
     destination: createFormattingDestination(),
   })
-}
-`
-    },
-  }
 }
