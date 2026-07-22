@@ -16,9 +16,11 @@ import { getConfig, isTypeScriptProject } from '@cedarjs/project-config'
 import sharedConfigs from './shared.mjs'
 
 // Note: This config is async to support getConfig()
+/** @returns {Promise<import('eslint').Linter.FlatConfig[]>} */
 export default async function createConfig() {
   const config = await getConfig()
 
+  /** @returns {import('@babel/core').TransformOptions} */
   const getProjectBabelOptions = () => {
     // We can't nest the web overrides inside the overrides block
     // So we just take it out and put it as a separate item
