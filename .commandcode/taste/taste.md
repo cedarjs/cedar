@@ -92,6 +92,23 @@ See [debugging/taste.md](debugging/taste.md)
 - When creating esbuild `onLoad` plugins with a `filter` regex, make the filter precise enough (include path separator) that a redundant inner path check (e.g., `args.path.endsWith(...)`) is unnecessary. A filter like `/\/graphql\.ts$/` avoids both false matches (e.g., `notgraphql.ts`) and redundant guards inside the callback. Confidence: 0.60
 - Keep each esbuild plugin in its own separate file, following the pattern of `esbuild-plugin-handler-als-wrapping.ts`. Do not define multiple plugins inline in the same file where the build options live — extract each into a dedicated file with a descriptive name. Confidence: 0.70
 
+# Migration / Porting
+
+- When porting Babel plugins to Vite/esbuild, the goal is to preserve existing behavior exactly — including existing bugs and shortcomings. Don't "fix" or improve behavior during migration; keep it identical to what Babel produced. Fixes and improvements belong in separate follow-up PRs. Confidence: 0.90
+
+# Package Management
+
+- Use exact version pinning (no caret `^` or tilde `~`) when specifying dependency versions. Confidence: 0.85
+
+# Code-Style
+
+- Avoid `for(;;)` infinite loops. Use a regular `while` loop with a clear exit condition in the `while` statement instead. Confidence: 0.80
+- Do not increment and assign on the same line (e.g., `const currentIndex = nextIndex++`). Separate the increment from the assignment for clarity. Confidence: 0.80
+
+# Configuration
+
+- Hard-code concurrency/parallelism values (e.g., `4`, `8`) rather than using environment variables for them. Explicit hard-coded values are easier to reason about and don't require documentation of env vars. Confidence: 0.75
+
 # Process Management
 
 - Never use `pkill` or `killall` to mass-kill processes by name (e.g., `pkill -9 node`). Only kill specific PIDs that you know are safe to terminate. Mass-killing can destroy the user's browser sessions, chat apps, and other work. Confidence: 0.85
@@ -115,3 +132,7 @@ See [debugging/taste.md](debugging/taste.md)
 - When a workflow step uses `working-directory` and passes a path to the test project via an env var (e.g., `CEDAR_TEST_PROJECT_PATH`), use `${{ github.workspace }}/../path` rather than a relative path. The relative path resolves against the `working-directory`, not the workspace root. Confidence: 0.80
 - When a conditional job (`if:`) has no `strategy.matrix`, GitHub creates no job entry at all if the condition is false. Jobs referencing it in `needs` then fail. Always add a dummy matrix (e.g., `strategy.matrix: { os: [ubuntu-latest] }`) so skipped jobs appear as "skipped" entries that `ci-status-check` handles correctly. Confidence: 0.90
 - Do not use `inputs` expressions (e.g., `inputs.packageManager`) in job-level `if:` or `concurrency.group` of a `workflow_call` workflow that also has a `schedule` trigger. GitHub cannot resolve `inputs` at parse time for `schedule` triggers, causing the workflow to silently fail with 0 jobs. Remove `inputs` entirely or use a separate matrix approach. Confidence: 0.85
+
+# Vite Plugins
+
+- For Vite virtual modules (plugins with `load()` hooks that return template strings), prefer extracting logic into real exported functions at module scope that are serialized via `.toString()` rather than using side-effect imports solely for static analyzer visibility. Real functions are testable, give Knip a traceable dependency chain, and avoid dead-code `import` statements. Confidence: 0.65
