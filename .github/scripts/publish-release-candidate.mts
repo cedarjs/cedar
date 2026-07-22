@@ -127,6 +127,10 @@ function updateWorkspaceDependencies(version: string) {
         /"@cedarjs\/([^"]+)":\s*"[^"]*"/g,
         `"@cedarjs/$1": "${version}"`,
       )
+      updatedContent = updatedContent.replace(
+        /"storybook-framework-cedarjs":\s*"[^"]*"/g,
+        `"storybook-framework-cedarjs": "${version}"`,
+      )
 
       if (updatedContent !== content) {
         fs.writeFileSync(packageJsonPath, updatedContent)
@@ -552,7 +556,7 @@ function isErrorWithMessage(err: unknown): err is { message: string } {
     typeof err === 'object' &&
     err !== null &&
     'message' in err &&
-    typeof (err as { message: unknown }).message === 'string'
+    typeof err.message === 'string'
   )
 }
 
@@ -669,8 +673,8 @@ async function publishPackages(distTag: string, dryRun: boolean) {
         continue
       }
       await publishPackage(
-        pkgJson.name!,
-        pkgJson.version!,
+        pkgJson.name,
+        pkgJson.version,
         distTag,
         path.join(REPO_ROOT, workspace.location),
         dryRun,
