@@ -1,9 +1,5 @@
 import { Headers, Request as PonyfillRequest } from '@whatwg-node/fetch'
-import type {
-  APIGatewayProxyEvent,
-  APIGatewayProxyEventQueryStringParameters,
-} from 'aws-lambda'
-import { parse } from 'picoquery'
+import type { APIGatewayProxyEvent } from 'aws-lambda'
 
 // This is part of the request, dreived either from a LambdaEvent or FetchAPI Request
 // We do this to keep the API consistent between the two
@@ -52,26 +48,18 @@ export const requestToBaseEvent = async (
 ): Promise<APIGatewayProxyEvent> => {
   const url = new URL(request.url)
   const bodyText = await request.clone().text()
-  // @ts-expect-error - picoquery returns nested objects and arrays for
-  // bracket-notation params (e.g. ids[]=1&ids[]=2, user[name]=alice).
-  // APIGatewayProxyEventQueryStringParameters is too narrow for this richer
-  // structure, but legacy handlers depend on it.
-  const queryStringParameters: APIGatewayProxyEventQueryStringParameters =
-    parse(url.search ? url.search.slice(1) : '', {
-      nestingSyntax: 'index',
-      arrayRepeat: true,
-      arrayRepeatSyntax: 'bracket',
-    })
+  const queryStringParameters: Record<string, string> = {}
+
+  url.searchParams.forEach((value, key) => {
+    queryStringParameters[key] = value
+  })
 
   const event = {
     headers: Object.fromEntries(request.headers.entries()),
     body: bodyText || null,
     httpMethod: request.method,
     path: url.pathname,
-    queryStringParameters:
-      Object.keys(queryStringParameters).length > 0
-        ? queryStringParameters
-        : {},
+    queryStringParameters,
     isBase64Encoded: false,
     multiValueHeaders: toMultiValueHeaders(request.headers),
     multiValueQueryStringParameters: toMultiValueQueryStringParameters(url),
