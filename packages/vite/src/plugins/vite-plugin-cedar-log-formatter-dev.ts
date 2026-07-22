@@ -60,7 +60,8 @@ export function cedarApiLogFormatterDevPlugin(): Plugin {
 
         ${createFormattingDestination.toString()}
 
-        ${createLogger.toString()}
+        // toString() doesn't include the 'export' keyword
+        export ${createLogger.toString()}
         `
     },
   }
