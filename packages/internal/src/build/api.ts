@@ -112,15 +112,27 @@ const runCedarBabelTransformsPlugin = {
       fileContents =
         applyImportDir(fileContents, args.path)?.code ?? fileContents
 
-      // The Babel pass is only needed to apply a user's custom
-      // api/babel.config.js: getApiSideBabelPluginsForVite() is empty (the
-      // transforms above replace Cedar's api-side Babel plugins) and esbuild
-      // strips TypeScript itself when given the matching loader.
+      const normalizedPath = normalizePath(args.path)
+      const cedarPaths = getPaths()
+      const isEsm = projectSideIsEsm('api')
+
+      // The Babel pass is needed to apply a user's custom api/babel.config.js
+      // — getApiSideBabelPluginsForVite() is empty (the transforms above
+      // replace Cedar's api-side Babel plugins) and esbuild strips TypeScript
+      // itself when given the matching loader. Job files are the exception:
+      // they rely on the Babel job path injector override (see
+      // getApiSideBabelOverrides) to add `path` and `name` to createJob()
+      // definitions, because this pipeline has no equivalent of the
+      // cedarjsJobPathInjectorPlugin that the @cedarjs/vite pipelines use.
       const apiBabelConfigPath = getApiSideBabelConfigPath()
+      const isJobsFile = normalizedPath.startsWith(
+        normalizePath(cedarPaths.api.jobs) + '/',
+      )
+      const useBabel = Boolean(apiBabelConfigPath) || isJobsFile
 
       let code = fileContents
 
-      if (apiBabelConfigPath) {
+      if (useBabel) {
         const transformedCode = await transformWithBabel(
           fileContents,
           args.path,
@@ -133,10 +145,6 @@ const runCedarBabelTransformsPlugin = {
 
         code = transformedCode.code
       }
-
-      const normalizedPath = normalizePath(args.path)
-      const cedarPaths = getPaths()
-      const isEsm = projectSideIsEsm('api')
 
       // For ESM projects, append .js/.jsx to extensionless relative imports
       // so Node's ESM resolver can locate the compiled output files at
@@ -172,7 +180,7 @@ const runCedarBabelTransformsPlugin = {
         // Babel output is always plain JS. Without Babel the contents are
         // still TypeScript/JSX, so pick the loader matching the file's
         // extension and let esbuild do the stripping.
-        loader: apiBabelConfigPath ? 'js' : getEsbuildLoader(args.path),
+        loader: useBabel ? 'js' : getEsbuildLoader(args.path),
       }
     })
   },
@@ -321,13 +329,21 @@ function createCedarViteApiPlugin(): Plugin {
         sourceCode = applyGqlormInject(sourceCode, id) ?? sourceCode
       }
 
-      // The Babel pass is only needed to apply a user's custom
-      // api/babel.config.js: getApiSideBabelPluginsForVite() is empty (the
-      // transforms in this pipeline replace Cedar's api-side Babel plugins)
-      // and Vite strips TypeScript itself.
+      // The Babel pass is needed to apply a user's custom api/babel.config.js
+      // — getApiSideBabelPluginsForVite() is empty (the transforms in this
+      // pipeline replace Cedar's api-side Babel plugins) and Vite strips
+      // TypeScript itself. Job files are the exception: they rely on the
+      // Babel job path injector override (see getApiSideBabelOverrides) to
+      // add `path` and `name` to createJob() definitions, because this
+      // pipeline has no equivalent of the cedarjsJobPathInjectorPlugin that
+      // the @cedarjs/vite pipelines use.
       const apiBabelConfigPath = getApiSideBabelConfigPath()
+      const isJobsFile = normalizedId.startsWith(
+        normalizePath(cedarPaths.api.jobs) + '/',
+      )
+      const useBabel = Boolean(apiBabelConfigPath) || isJobsFile
 
-      const transformedCode = apiBabelConfigPath
+      const transformedCode = useBabel
         ? await transformWithBabel(
             sourceCode,
             id,
@@ -336,7 +352,7 @@ function createCedarViteApiPlugin(): Plugin {
           )
         : null
 
-      if (apiBabelConfigPath && !transformedCode?.code) {
+      if (useBabel && !transformedCode?.code) {
         throw new Error(`Could not transform file: ${id}`)
       }
 
