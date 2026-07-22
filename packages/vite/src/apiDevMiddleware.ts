@@ -5,7 +5,6 @@ import { pathToFileURL } from 'node:url'
 
 import ansis from 'ansis'
 import type { Handler } from 'aws-lambda'
-import MagicString from 'magic-string'
 import type { SourceMap } from 'magic-string'
 import { normalizePath } from 'vite'
 import type { ModuleNode, Plugin, ViteDevServer } from 'vite'
@@ -34,6 +33,7 @@ import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
 import { applyGqlormInject } from '@cedarjs/internal/dist/build/api-graphql-transforms.js'
 import { getConfig, getPaths } from '@cedarjs/project-config'
 
+import { generateDiffSourceMap } from './lib/generateDiffSourceMap.js'
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
 import { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
 import { cedarDirectoryNamedImportPlugin } from './plugins/vite-plugin-cedar-directory-named-import.js'
@@ -333,8 +333,10 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
             // Without a user Babel config there is nothing left for Babel to
             // do — Vite's own pipeline strips TypeScript — so only return the
             // string-transformed code (if it changed at all). When no exact
-            // map is available, fall back to a high-resolution identity map
-            // over the input so the sourcemap chain stays intact.
+            // map is available (gqlorm injection or OTel wrapping changed the
+            // code), derive one by diffing input and output so that line
+            // insertions still map every unchanged line — and therefore
+            // ssrFixStacktrace positions — correctly.
             if (!babelPlugins) {
               if (sourceCode === code) {
                 return null
@@ -342,9 +344,7 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
 
               return {
                 code: sourceCode,
-                map:
-                  sourceMap ??
-                  new MagicString(code).generateMap({ hires: true }),
+                map: sourceMap ?? generateDiffSourceMap(code, sourceCode),
               }
             }
 

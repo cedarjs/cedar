@@ -3,7 +3,6 @@ import path from 'node:path'
 
 import { catchAllEntry, getAllEntries } from '@universal-deploy/store'
 import { catchAll } from '@universal-deploy/vite'
-import MagicString from 'magic-string'
 import type { EnvironmentOptions, Plugin, PluginOption } from 'vite'
 import { createBuilder, normalizePath } from 'vite'
 import { gqlPlugin as gqlTagPlugin } from 'vite-plugin-graphql-tag'
@@ -30,6 +29,7 @@ import {
 import { findApiFiles } from '@cedarjs/internal/dist/files.js'
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
+import { generateDiffSourceMap } from './lib/generateDiffSourceMap.js'
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
 import { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
 import { cedarDirectoryNamedImportPlugin } from './plugins/vite-plugin-cedar-directory-named-import.js'
@@ -445,13 +445,12 @@ export async function buildCedarApp({
             return null
           }
 
-          // The rewrites only replace import specifiers in place and never
-          // add or remove lines, so a high-resolution identity map over the
-          // input keeps the sourcemap chain intact (columns can drift only
-          // within a rewritten import line).
+          // The rewrites only replace import specifiers in place, so the
+          // diff-derived map gives exact line and column mappings — including
+          // the columns after a rewritten specifier on the same line.
           return {
             code: outputCode,
-            map: new MagicString(code).generateMap({ hires: true }),
+            map: generateDiffSourceMap(code, outputCode),
           }
         }
 
