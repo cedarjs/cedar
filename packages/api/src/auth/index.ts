@@ -98,11 +98,16 @@ export type AuthContextPayload = [
   // @MARK: Context is not passed when using middleware auth
   {
     /**
-     * @deprecated Use `request` instead — `event` is a legacy Lambda-style
-     *   object and will be removed in a future version.
+     * The Lambda-style event. On serverless deploys this is the canonical
+     * request object; on fetch-native paths a synthetic one is provided for
+     * backwards compatibility with existing `event.headers['key']` access.
      */
     event: APIGatewayProxyEvent | Request
-    /** The native fetch `Request`, when available. */
+    /**
+     * The native fetch `Request`, available on fetch-native paths. Prefer
+     * this when available.
+     * Do `request.headers.get('key')` to access headers
+     */
     request?: Request
     context?: LambdaContext
   },
@@ -112,7 +117,7 @@ export type Decoder = (
   token: string,
   type: string,
   req: {
-    /** @deprecated Use `request` instead. */
+    /** The Lambda-style request event */
     event: APIGatewayProxyEvent | Request
     request?: Request
     context?: LambdaContext
