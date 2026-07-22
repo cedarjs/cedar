@@ -74,7 +74,7 @@
     "@cedarjs/server-store": "5.0.1",
     "@cedarjs/testing": "5.0.1",
     "@fastify/url-data": "6.0.3",
-    "@swc/core": "1.15.41",
+    "@swc/core": "1.15.46",
     "@universal-deploy/store": "^0.2.1",
     "@universal-deploy/vite": "^0.1.9",
     "@vitejs/plugin-react": "4.7.0",
