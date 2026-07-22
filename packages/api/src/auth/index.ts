@@ -4,7 +4,7 @@ import type { APIGatewayProxyEvent, Context as LambdaContext } from 'aws-lambda'
 import * as cookie from 'cookie'
 
 import { getEventHeader } from '../event.js'
-import { isFetchApiRequest } from '../transforms.js'
+import { isFetchApiRequest, requestToBaseEvent } from '../transforms.js'
 
 import type { Decoded } from './parseJWT.js'
 export type { Decoded }
@@ -98,6 +98,11 @@ export type AuthContextPayload = [
   // @MARK: Context is not passed when using middleware auth
   {
     event: APIGatewayProxyEvent | Request
+    /**
+     * The native fetch `Request`, when available. This lets user code choose
+     * between `event.headers['key']` and `request.headers.get('key')`.
+     */
+    request?: Request
     context?: LambdaContext
   },
 ]
@@ -107,6 +112,7 @@ export type Decoder = (
   type: string,
   req: {
     event: APIGatewayProxyEvent | Request
+    request?: Request
     context?: LambdaContext
   },
 ) => Promise<Decoded>
@@ -171,11 +177,16 @@ export const getAuthenticationContext = async ({
 
   let decoded = null
 
+  const normalizedEvent = isFetchApiRequest(event)
+    ? await requestToBaseEvent(event)
+    : event
+  const underlyingRequest = isFetchApiRequest(event) ? event : undefined
+
   let i = 0
   while (!decoded && i < authDecoders.length) {
     decoded = await authDecoders[i](token, type, {
-      // @MARK: When called from middleware, the decoder will pass Request, not Lambda event
-      event,
+      event: normalizedEvent,
+      request: underlyingRequest,
       context,
     })
     i++
@@ -183,5 +194,13 @@ export const getAuthenticationContext = async ({
 
   // @TODO should we rename token? It's not actually the token - its the cookie header -because
   // some auth providers will have a cookie where we don't know the key
-  return [decoded, { type, schema, token }, { event, context }]
+  return [
+    decoded,
+    { type, schema, token },
+    {
+      event: normalizedEvent,
+      request: underlyingRequest,
+      context,
+    },
+  ]
 }
