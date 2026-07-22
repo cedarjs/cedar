@@ -92,6 +92,23 @@ See [debugging/taste.md](debugging/taste.md)
 - When creating esbuild `onLoad` plugins with a `filter` regex, make the filter precise enough (include path separator) that a redundant inner path check (e.g., `args.path.endsWith(...)`) is unnecessary. A filter like `/\/graphql\.ts$/` avoids both false matches (e.g., `notgraphql.ts`) and redundant guards inside the callback. Confidence: 0.60
 - Keep each esbuild plugin in its own separate file, following the pattern of `esbuild-plugin-handler-als-wrapping.ts`. Do not define multiple plugins inline in the same file where the build options live — extract each into a dedicated file with a descriptive name. Confidence: 0.70
 
+# Migration / Porting
+
+- When porting Babel plugins to Vite/esbuild, the goal is to preserve existing behavior exactly — including existing bugs and shortcomings. Don't "fix" or improve behavior during migration; keep it identical to what Babel produced. Fixes and improvements belong in separate follow-up PRs. Confidence: 0.90
+
+# Package Management
+
+- Use exact version pinning (no caret `^` or tilde `~`) when specifying dependency versions. Confidence: 0.85
+
+# Code-Style
+
+- Avoid `for(;;)` infinite loops. Use a regular `while` loop with a clear exit condition in the `while` statement instead. Confidence: 0.80
+- Do not increment and assign on the same line (e.g., `const currentIndex = nextIndex++`). Separate the increment from the assignment for clarity. Confidence: 0.80
+
+# Configuration
+
+- Hard-code concurrency/parallelism values (e.g., `4`, `8`) rather than using environment variables for them. Explicit hard-coded values are easier to reason about and don't require documentation of env vars. Confidence: 0.75
+
 # Process Management
 
 - Never use `pkill` or `killall` to mass-kill processes by name (e.g., `pkill -9 node`). Only kill specific PIDs that you know are safe to terminate. Mass-killing can destroy the user's browser sessions, chat apps, and other work. Confidence: 0.85
