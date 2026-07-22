@@ -157,7 +157,8 @@ export async function requestToLegacyEvent(
 
   return {
     ...base,
-    pathParameters: Object.keys(ctx.params).length > 0 ? ctx.params : null,
+    pathParameters:
+      Object.keys(ctx.params).length > 0 ? ctx.params : base.pathParameters,
   }
 }
 

@@ -71,7 +71,7 @@ export const requestToBaseEvent = async (
     queryStringParameters:
       Object.keys(queryStringParameters).length > 0
         ? queryStringParameters
-        : null,
+        : {},
     isBase64Encoded: false,
     multiValueHeaders: toMultiValueHeaders(request.headers),
     multiValueQueryStringParameters: toMultiValueQueryStringParameters(url),

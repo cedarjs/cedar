@@ -104,7 +104,7 @@ describe('buildCedarContext', () => {
           multiValueQueryStringParameters: null,
           path: '/graphql',
           pathParameters: null,
-          queryStringParameters: null,
+          queryStringParameters: {},
           requestContext: {
             accountId: 'cedar',
             apiId: 'cedar',
