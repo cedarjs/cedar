@@ -348,6 +348,22 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
               }
             }
 
+            // Babel maps its output back to `sourceCode`, but Vite needs a
+            // map back to `code` (this transform hook's input). Feed the
+            // string transforms' map (exact when available, diff-derived
+            // otherwise) as inputSourceMap so Babel emits the composed map.
+            const inputSourceMap =
+              sourceCode === code
+                ? null
+                : (sourceMap ?? generateDiffSourceMap(code, sourceCode))
+
+            // Babel can only compose the input map when its `sources` names
+            // the module — magic-string maps default to an empty source name,
+            // which makes the merged map's positions resolve to nothing.
+            if (inputSourceMap) {
+              inputSourceMap.sources = [id]
+            }
+
             // Use the code Vite already loaded instead of reading from disk, so
             // Vite's originalCode matches the Babel input. This ensures the SSR
             // transform's sourcesContent is consistent with the map.
@@ -357,6 +373,7 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
               babelPlugins,
               true,
               true,
+              inputSourceMap ?? undefined,
             )
 
             if (!result?.code) {

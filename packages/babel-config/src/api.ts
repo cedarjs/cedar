@@ -285,6 +285,10 @@ export const transformWithBabel = async (
   plugins: TransformOptions['plugins'],
   sourceMaps: TransformOptions['sourceMaps'] = 'inline',
   forVite = false,
+  // When sourceCode is itself the output of an earlier transform, pass that
+  // transform's map here and Babel will compose it into the map it emits, so
+  // the result maps all the way back to the original source.
+  inputSourceMap: TransformOptions['inputSourceMap'] = undefined,
 ) => {
   const result = transformAsync(sourceCode, {
     presets: getApiSideBabelPresets(),
@@ -303,6 +307,7 @@ export const transformWithBabel = async (
     // SSR source map chaining.
     sourceMaps,
     plugins,
+    inputSourceMap,
   })
 
   return result
