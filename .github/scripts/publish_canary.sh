@@ -222,7 +222,7 @@ find "$framework_dir/packages/create-cedar-app/templates" \
     jq --arg ver "$CANARY_VERSION" '
       if .dependencies then
         .dependencies |= with_entries(
-          if .key | startswith("@cedarjs/") then .value = $ver else . end
+          if .key | startswith("@cedarjs/") or . == "storybook-framework-cedarjs" then .value = $ver else . end
         )
       else . end
       | if .devDependencies then
