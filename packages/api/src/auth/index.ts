@@ -97,11 +97,12 @@ export type AuthContextPayload = [
   { type: string } & AuthorizationHeader,
   // @MARK: Context is not passed when using middleware auth
   {
-    event: APIGatewayProxyEvent | Request
     /**
-     * The native fetch `Request`, when available. This lets user code choose
-     * between `event.headers['key']` and `request.headers.get('key')`.
+     * @deprecated Use `request` instead — `event` is a legacy Lambda-style
+     *   object and will be removed in a future version.
      */
+    event: APIGatewayProxyEvent | Request
+    /** The native fetch `Request`, when available. */
     request?: Request
     context?: LambdaContext
   },
@@ -111,6 +112,7 @@ export type Decoder = (
   token: string,
   type: string,
   req: {
+    /** @deprecated Use `request` instead. */
     event: APIGatewayProxyEvent | Request
     request?: Request
     context?: LambdaContext
