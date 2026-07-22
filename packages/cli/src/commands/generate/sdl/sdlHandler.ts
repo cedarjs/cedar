@@ -78,7 +78,6 @@ interface ModelSchema {
 const modelFieldToSDL = ({
   field,
   required = true,
-  types = {},
   docs = false,
 }: {
   field: {
@@ -91,20 +90,8 @@ const modelFieldToSDL = ({
     documentation?: string
   }
   required?: boolean
-  types?: Record<string, ModelSchema>
   docs?: boolean
 }): string => {
-  if (Object.entries(types).length && field.kind === 'object') {
-    // TODO: `idType()` called without `crud` always returns `undefined`, so
-    // this branch is a no-op in practice. Fix in a separate PR by threading
-    // `crud` through the call-site. The string guard below prevents silently
-    // corrupting `field.type` to `undefined` (which the original JS did).
-    const resolvedType = idType(types[field.type])
-    if (typeof resolvedType === 'string') {
-      field.type = resolvedType
-    }
-  }
-
   const prismaTypeToGraphqlType: Record<string, string> = {
     Json: 'JSON',
     Decimal: 'Float',
@@ -129,12 +116,7 @@ const querySDL = (model: ModelSchema, docs = false) => {
   return model.fields.map((field) => modelFieldToSDL({ field, docs }))
 }
 
-const inputSDL = (
-  model: ModelSchema,
-  required: boolean,
-  types: Record<string, ModelSchema> = {},
-  docs = false,
-) => {
+const inputSDL = (model: ModelSchema, required: boolean, docs = false) => {
   const ignoredFields = DEFAULT_IGNORE_FIELDS_FOR_INPUT
 
   return model.fields
@@ -148,7 +130,7 @@ const inputSDL = (
 
       return !ignoredFields.includes(field.name) && field.kind !== 'object'
     })
-    .map((field) => modelFieldToSDL({ field, required, types, docs }))
+    .map((field) => modelFieldToSDL({ field, required, docs }))
 }
 
 function idInputSDL(idType: IdType, docs: boolean) {
@@ -156,27 +138,17 @@ function idInputSDL(idType: IdType, docs: boolean) {
     return []
   }
 
-  return idType.map((field) =>
-    modelFieldToSDL({ field, required: true, types: {}, docs }),
-  )
+  return idType.map((field) => modelFieldToSDL({ field, required: true, docs }))
 }
 
 // creates the CreateInput type (all fields are required)
-const createInputSDL = (
-  model: ModelSchema,
-  types: Record<string, ModelSchema> = {},
-  docs = false,
-) => {
-  return inputSDL(model, true, types, docs)
+const createInputSDL = (model: ModelSchema, docs = false) => {
+  return inputSDL(model, true, docs)
 }
 
 // creates the UpdateInput type (not all fields are required)
-const updateInputSDL = (
-  model: ModelSchema,
-  types: Record<string, ModelSchema> = {},
-  docs = false,
-) => {
-  return inputSDL(model, false, types, docs)
+const updateInputSDL = (model: ModelSchema, docs = false) => {
+  return inputSDL(model, false, docs)
 }
 
 type IdType = string | readonly ModelSchemaField[] | undefined
@@ -232,26 +204,6 @@ const sdlFromSchemaModel = async (
 
   const model = schemaResult
 
-  // Resolve models for referenced user-defined types (object relation fields)
-  const resolvedTypes = await Promise.all(
-    model.fields
-      .filter((field: ModelSchemaField) => field.kind === 'object')
-      .map(async (field: ModelSchemaField) => {
-        const fieldModel = await getSchema(field.type)
-        return fieldModel && 'fields' in fieldModel ? fieldModel : undefined
-      }),
-  )
-
-  const types = resolvedTypes.reduce<Record<string, ModelSchema>>(
-    (acc, cur) => {
-      if (!cur) {
-        return acc
-      }
-      return { ...acc, [cur.name]: cur }
-    },
-    {},
-  )
-
   // Get enum definition and fields from user-defined types
   const enums = (
     await Promise.all(
@@ -274,8 +226,8 @@ const sdlFromSchemaModel = async (
     modelName,
     modelDescription,
     query: querySDL(model, docs).join('\n    '),
-    createInput: createInputSDL(model, types, docs).join('\n    '),
-    updateInput: updateInputSDL(model, types, docs).join('\n    '),
+    createInput: createInputSDL(model, docs).join('\n    '),
+    updateInput: updateInputSDL(model, docs).join('\n    '),
     idInput: idInputSDL(idTypeRes, docs).join('\n    '),
     idType: idType(model, crud),
     idName: idName(model, crud),
