@@ -403,14 +403,6 @@ export async function buildCedarApp({
           ? getApiSideBabelPluginsForVite()
           : null
 
-        const transformedCode = babelPlugins
-          ? await transformWithBabel(code, id, babelPlugins, true, true)
-          : null
-
-        if (babelPlugins && !transformedCode?.code) {
-          return null
-        }
-
         // babel-plugin-module-resolver is not part of
         // getApiSideBabelPluginsForVite().  That plugin
         // previously rewrote `src/` bare specifiers to relative paths so
@@ -423,25 +415,28 @@ export async function buildCedarApp({
           path.dirname(id),
         )
 
-        let outputCode = applySrcAlias(
-          transformedCode?.code ?? code,
-          fromDirRelativeToApiSrc,
-        )
+        const applyImportRewrites = (source: string) => {
+          let rewritten = applySrcAlias(source, fromDirRelativeToApiSrc)
 
-        // For ESM projects, append .js/.jsx extensions to extensionless
-        // relative imports so Node's ESM resolver can find them at runtime.
-        // This is needed because cedarImportDirPlugin expands glob imports
-        // (e.g. `src/directives/**/*.{js,ts}`) into individual extensionless
-        // import statements, and Rollup with preserveModules:true preserves
-        // those specifiers as-is in the output.
-        if (projectSideIsEsm('api')) {
-          outputCode = applyEsmExtensions(outputCode, id)
+          // For ESM projects, append .js/.jsx extensions to extensionless
+          // relative imports so Node's ESM resolver can find them at runtime.
+          // This is needed because cedarImportDirPlugin expands glob imports
+          // (e.g. `src/directives/**/*.{js,ts}`) into individual extensionless
+          // import statements, and Rollup with preserveModules:true preserves
+          // those specifiers as-is in the output.
+          if (projectSideIsEsm('api')) {
+            rewritten = applyEsmExtensions(rewritten, id)
+          }
+
+          return rewritten
         }
 
-        if (!transformedCode) {
+        const rewrittenCode = applyImportRewrites(code)
+
+        if (!babelPlugins) {
           // Without Babel there's no transform to report when the string
           // rewrites didn't change anything.
-          if (outputCode === code) {
+          if (rewrittenCode === code) {
             return null
           }
 
@@ -449,13 +444,47 @@ export async function buildCedarApp({
           // diff-derived map gives exact line and column mappings — including
           // the columns after a rewritten specifier on the same line.
           return {
-            code: outputCode,
-            map: generateDiffSourceMap(code, outputCode),
+            code: rewrittenCode,
+            map: generateDiffSourceMap(code, rewrittenCode),
           }
         }
 
+        // The rewrites run BEFORE Babel so their map can be handed to Babel
+        // as inputSourceMap — Babel then emits a map composed all the way
+        // back to this hook's input instead of one that stops at the
+        // rewritten intermediate.
+        const inputSourceMap =
+          rewrittenCode === code
+            ? null
+            : generateDiffSourceMap(code, rewrittenCode)
+
+        // Babel can only compose the input map when its `sources` names the
+        // module — magic-string maps default to an empty source name, which
+        // makes the merged map's positions resolve to nothing.
+        if (inputSourceMap) {
+          inputSourceMap.sources = [id]
+        }
+
+        const transformedCode = await transformWithBabel(
+          rewrittenCode,
+          id,
+          babelPlugins,
+          true,
+          true,
+          inputSourceMap ?? undefined,
+        )
+
+        if (!transformedCode?.code) {
+          return null
+        }
+
+        // Safety net: a user Babel plugin can itself emit `src/` imports or
+        // extensionless relative imports, which Rollup's `external` function
+        // would otherwise misclassify. In that rare case the returned map
+        // doesn't cover this final edit — matching the previous behavior,
+        // where every rewrite ran after Babel.
         return {
-          code: outputCode,
+          code: applyImportRewrites(transformedCode.code),
           map: transformedCode.map ?? null,
         }
       },

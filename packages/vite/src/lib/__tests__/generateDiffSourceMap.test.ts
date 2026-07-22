@@ -109,6 +109,54 @@ describe('generateDiffSourceMap', () => {
     expect(pos(2, 6)).toMatchObject({ line: 3, column: 6 })
   })
 
+  it('maps unchanged lines inside a wrapped block (OTel-style)', () => {
+    const original = [
+      'const a = 1',
+      'export const getUser = async ({ id }) => {',
+      '  const user = await db.user.findUnique({ where: { id } })',
+      '  return user',
+      '}',
+      'const b = 2',
+    ].join('\n')
+    // OTel wrapping keeps the original statements verbatim inside the
+    // wrapper, shifted down by the inserted lines
+    const transformed = [
+      'const a = 1',
+      'export const getUser = async ({ id }) => {',
+      '  return tracer.startActiveSpan("getUser", async () => {',
+      '  const user = await db.user.findUnique({ where: { id } })',
+      '  return user',
+      '  })',
+      '}',
+      'const b = 2',
+    ].join('\n')
+
+    const pos = trace(original, transformed)
+
+    // The unchanged statements inside the wrapper map to their true original
+    // lines, not to the start of the wrapped block
+    expect(pos(4, 8)).toMatchObject({ line: 3, column: 8 })
+    expect(pos(5, 2)).toMatchObject({ line: 4, column: 2 })
+    expect(pos(8, 6)).toMatchObject({ line: 6, column: 6 })
+  })
+
+  it('maps anchored lines between two separate insertions', () => {
+    const original = ['const a = 1', 'const b = 2', 'const c = 3'].join('\n')
+    const transformed = [
+      'const inserted1 = 0',
+      'const a = 1',
+      'const b = 2',
+      'const inserted2 = 0',
+      'const c = 3',
+    ].join('\n')
+
+    const pos = trace(original, transformed)
+
+    expect(pos(2, 6)).toMatchObject({ line: 1, column: 6 })
+    expect(pos(3, 6)).toMatchObject({ line: 2, column: 6 })
+    expect(pos(5, 6)).toMatchObject({ line: 3, column: 6 })
+  })
+
   it('handles multiple rewritten import lines', () => {
     const original = [
       "import { db } from 'src/lib/db'",
