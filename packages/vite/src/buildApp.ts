@@ -18,7 +18,8 @@ const tsconfigPaths =
   tsPathsMod.default?.default || tsPathsMod.default || tsPathsMod
 
 import {
-  getApiSideBabelPlugins,
+  getApiSideBabelConfigPath,
+  getApiSideBabelPluginsForVite,
   transformWithBabel,
 } from '@cedarjs/babel-config'
 import {
@@ -28,6 +29,7 @@ import {
 import { findApiFiles } from '@cedarjs/internal/dist/files.js'
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
+import { generateDiffSourceMap } from './lib/generateDiffSourceMap.js'
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
 import { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
 import { cedarDirectoryNamedImportPlugin } from './plugins/vite-plugin-cedar-directory-named-import.js'
@@ -158,13 +160,6 @@ export async function buildCedarApp({
       }
     }
   }
-
-  const babelPlugins = workspace.includes('api')
-    ? getApiSideBabelPlugins({
-        forVite: true,
-        projectIsEsm: projectSideIsEsm('api'),
-      })
-    : null
 
   const workspacePkgSourceMap = workspace.includes('api')
     ? Object.fromEntries(
@@ -382,7 +377,7 @@ export async function buildCedarApp({
 
   plugins.push(cedarMockCellDataPlugin())
 
-  if (babelPlugins) {
+  if (workspace.includes('api')) {
     plugins.push({
       name: 'cedar-vite-api-babel-transform',
       enforce: 'pre',
@@ -399,30 +394,29 @@ export async function buildCedarApp({
           return null
         }
 
-        const transformedCode = await transformWithBabel(
-          code,
-          id,
-          babelPlugins,
-          true,
-          true,
+        // The Babel pass is only needed to apply a user's custom
+        // api/babel.config.js: getApiSideBabelPluginsForVite() is empty (all of
+        // Cedar's api-side Babel transforms are handled by dedicated Vite
+        // plugins in this pipeline) and Vite strips TypeScript itself. Skip
+        // Babel entirely when the project has no such config file.
+        const babelPlugins = getApiSideBabelConfigPath()
+          ? getApiSideBabelPluginsForVite()
+          : null
+
+        // babel-plugin-module-resolver is not part of
+        // getApiSideBabelPluginsForVite().  That plugin
+        // previously rewrote `src/` bare specifiers to relative paths so
+        // that Rollup's `external` function (which marks anything that is
+        // not relative or absolute as external) would not capture them.
+        // Apply the same rewrite here so that `src/lib/logger` → `../../lib/logger`
+        // and the external function sees a relative path (starting with `.`).
+        const fromDirRelativeToApiSrc = path.relative(
+          cedarPaths.api.src,
+          path.dirname(id),
         )
 
-        if (transformedCode?.code) {
-          // babel-plugin-module-resolver is excluded for forVite:true builds
-          // (it is gated on !forVite in getApiSideBabelPlugins).  That plugin
-          // previously rewrote `src/` bare specifiers to relative paths so
-          // that Rollup's `external` function (which marks anything that is
-          // not relative or absolute as external) would not capture them.
-          // Apply the same rewrite here so that `src/lib/logger` → `../../lib/logger`
-          // and the external function sees a relative path (starting with `.`).
-          const fromDirRelativeToApiSrc = path.relative(
-            cedarPaths.api.src,
-            path.dirname(id),
-          )
-          let outputCode = applySrcAlias(
-            transformedCode.code,
-            fromDirRelativeToApiSrc,
-          )
+        const applyImportRewrites = (source: string) => {
+          let rewritten = applySrcAlias(source, fromDirRelativeToApiSrc)
 
           // For ESM projects, append .js/.jsx extensions to extensionless
           // relative imports so Node's ESM resolver can find them at runtime.
@@ -431,16 +425,68 @@ export async function buildCedarApp({
           // import statements, and Rollup with preserveModules:true preserves
           // those specifiers as-is in the output.
           if (projectSideIsEsm('api')) {
-            outputCode = applyEsmExtensions(outputCode, id)
+            rewritten = applyEsmExtensions(rewritten, id)
           }
 
+          return rewritten
+        }
+
+        const rewrittenCode = applyImportRewrites(code)
+
+        if (!babelPlugins) {
+          // Without Babel there's no transform to report when the string
+          // rewrites didn't change anything.
+          if (rewrittenCode === code) {
+            return null
+          }
+
+          // The rewrites only replace import specifiers in place, so the
+          // diff-derived map gives exact line and column mappings — including
+          // the columns after a rewritten specifier on the same line.
           return {
-            code: outputCode,
-            map: transformedCode.map ?? null,
+            code: rewrittenCode,
+            map: generateDiffSourceMap(code, rewrittenCode),
           }
         }
 
-        return null
+        // The rewrites run BEFORE Babel so their map can be handed to Babel
+        // as inputSourceMap — Babel then emits a map composed all the way
+        // back to this hook's input instead of one that stops at the
+        // rewritten intermediate.
+        const inputSourceMap =
+          rewrittenCode === code
+            ? null
+            : generateDiffSourceMap(code, rewrittenCode)
+
+        // Babel can only compose the input map when its `sources` names the
+        // module — magic-string maps default to an empty source name, which
+        // makes the merged map's positions resolve to nothing.
+        if (inputSourceMap) {
+          inputSourceMap.sources = [id]
+        }
+
+        const transformedCode = await transformWithBabel(
+          rewrittenCode,
+          id,
+          babelPlugins,
+          true,
+          true,
+          inputSourceMap ?? undefined,
+        )
+
+        if (!transformedCode?.code) {
+          return null
+        }
+
+        // Safety net: a user Babel plugin can itself emit `src/` imports or
+        // extensionless relative imports, which Rollup's `external` function
+        // would otherwise misclassify. In that rare case the returned map
+        // doesn't cover this final edit — matching the previous behavior,
+        // where every rewrite ran after Babel.
+        return {
+          code: applyImportRewrites(transformedCode.code),
+          map: transformedCode.map ?? null,
+        }
       },
     })
   }

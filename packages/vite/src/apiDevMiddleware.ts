@@ -5,6 +5,7 @@ import { pathToFileURL } from 'node:url'
 
 import ansis from 'ansis'
 import type { Handler } from 'aws-lambda'
+import type { SourceMap } from 'magic-string'
 import { normalizePath } from 'vite'
 import type { ModuleNode, Plugin, ViteDevServer } from 'vite'
 import { gqlPlugin as gqlTagPlugin } from 'vite-plugin-graphql-tag'
@@ -22,15 +23,17 @@ const tsconfigPaths =
 import { buildCedarContext, wrapLegacyHandler } from '@cedarjs/api/runtime'
 import type { CedarHandler, LegacyHandler } from '@cedarjs/api/runtime'
 import {
-  getApiSideBabelPlugins,
+  getApiSideBabelConfigPath,
+  getApiSideBabelPluginsForVite,
   transformWithBabel,
 } from '@cedarjs/babel-config'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { createGraphQLYoga } from '@cedarjs/graphql-server'
 import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
 import { applyGqlormInject } from '@cedarjs/internal/dist/build/api-graphql-transforms.js'
-import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
+import { getConfig, getPaths } from '@cedarjs/project-config'
 
+import { generateDiffSourceMap } from './lib/generateDiffSourceMap.js'
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
 import { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
 import { cedarDirectoryNamedImportPlugin } from './plugins/vite-plugin-cedar-directory-named-import.js'
@@ -199,13 +202,16 @@ async function internalLoadApiFunctions(viteServer: ViteDevServer) {
 export async function createApiViteServer(): Promise<ViteDevServer> {
   const cedarPaths = getPaths()
   const cedarConfig = getConfig()
-  const isEsm = projectSideIsEsm('api')
   const normalizedBase = normalizePath(cedarPaths.base)
 
-  const babelPlugins = getApiSideBabelPlugins({
-    forVite: true,
-    projectIsEsm: isEsm,
-  })
+  // The Babel pass is only needed to apply a user's custom
+  // api/babel.config.js: getApiSideBabelPluginsForVite() is empty (all of
+  // Cedar's api-side Babel transforms are handled by dedicated Vite plugins
+  // in this pipeline) and Vite strips TypeScript itself. Skip Babel entirely
+  // when the project has no such config file.
+  const babelPlugins = getApiSideBabelConfigPath()
+    ? getApiSideBabelPluginsForVite()
+    : null
 
   const workspacePkgSourceMap = Object.fromEntries(
     Object.entries(getWorkspacePackageAliases(cedarPaths, cedarConfig)).map(
@@ -287,13 +293,26 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
             // syntax; running them first ensures they always work regardless
             // of the project's module format.
             let sourceCode = code
+            // Exact sourcemap for the string transforms applied so far. Only
+            // the graphql options extract produces one; if a later transform
+            // changes the code again the map no longer matches and is
+            // cleared.
+            let sourceMap: SourceMap | null = null
             if (
               normalizePath(id).endsWith('/graphql.ts') ||
               normalizePath(id).endsWith('/graphql.js')
             ) {
               const extracted = applyGraphqlOptionsExtract(sourceCode)
-              sourceCode = extracted?.code ?? sourceCode
-              sourceCode = applyGqlormInject(sourceCode, id) ?? sourceCode
+              if (extracted) {
+                sourceCode = extracted.code
+                sourceMap = extracted.map
+              }
+
+              const injected = applyGqlormInject(sourceCode, id)
+              if (injected) {
+                sourceCode = injected
+                sourceMap = null
+              }
             }
 
             if (
@@ -304,8 +323,45 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
                 normalizedBase.length + '/api/src/'.length,
               )
               const apiFolder = relativePath.split('/')[0] ?? '?'
-              sourceCode =
-                applyOtelWrapping(sourceCode, id, apiFolder) ?? sourceCode
+              const wrapped = applyOtelWrapping(sourceCode, id, apiFolder)
+              if (wrapped) {
+                sourceCode = wrapped
+                sourceMap = null
+              }
+            }
+
+            // Without a user Babel config there is nothing left for Babel to
+            // do — Vite's own pipeline strips TypeScript — so only return the
+            // string-transformed code (if it changed at all). When no exact
+            // map is available (gqlorm injection or OTel wrapping changed the
+            // code), derive one by diffing input and output so that line
+            // insertions still map every unchanged line — and therefore
+            // ssrFixStacktrace positions — correctly.
+            if (!babelPlugins) {
+              if (sourceCode === code) {
+                return null
+              }
+
+              return {
+                code: sourceCode,
+                map: sourceMap ?? generateDiffSourceMap(code, sourceCode),
+              }
+            }
+
+            // Babel maps its output back to `sourceCode`, but Vite needs a
+            // map back to `code` (this transform hook's input). Feed the
+            // string transforms' map (exact when available, diff-derived
+            // otherwise) as inputSourceMap so Babel emits the composed map.
+            const inputSourceMap =
+              sourceCode === code
+                ? null
+                : (sourceMap ?? generateDiffSourceMap(code, sourceCode))
+
+            // Babel can only compose the input map when its `sources` names
+            // the module — magic-string maps default to an empty source name,
+            // which makes the merged map's positions resolve to nothing.
+            if (inputSourceMap) {
+              inputSourceMap.sources = [id]
             }
 
             // Use the code Vite already loaded instead of reading from disk, so
@@ -317,6 +373,7 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
               babelPlugins,
               true,
               true,
+              inputSourceMap ?? undefined,
             )
 
             if (!result?.code) {
