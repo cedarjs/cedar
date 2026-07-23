@@ -39,6 +39,10 @@ application, here's what you get with Cedar:
 - Architectural decisions made for you, so you don't get stuck in analysis
   paralysis or get decision fatigue. But it doesn't lock you in. You have full
   control over your code, your auth, your database, and your deployment.
+- A single convenient `cedar()` Vite plugin that covers the 99% use case. And
+  for the times you need more, every Cedar-specific building block it's made of
+  is exported too, so you can compose your own plugin pipeline with full
+  control.
 - Ready made integrations for hosting on Vercel, Netlify, AWS, Render, or your
   own servers. Switch providers easily without major rewrites.
 - A production ready framework. Used by companies in production with a mature
