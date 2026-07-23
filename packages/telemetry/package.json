@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/telemetry",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -22,8 +22,8 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/project-config": "5.0.1",
-    "@cedarjs/structure": "5.0.1",
+    "@cedarjs/project-config": "5.0.2",
+    "@cedarjs/structure": "5.0.2",
     "@whatwg-node/fetch": "0.10.13",
     "ci-info": "4.4.0",
     "envinfo": "7.21.0",

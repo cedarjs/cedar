@@ -2,10 +2,10 @@
   "private": true,
   "type": "module",
   "devDependencies": {
-    "@cedarjs/core": "5.0.1",
-    "@cedarjs/eslint-config": "5.0.1",
-    "@cedarjs/project-config": "5.0.1",
-    "@cedarjs/testing": "5.0.1",
+    "@cedarjs/core": "5.0.2",
+    "@cedarjs/eslint-config": "5.0.2",
+    "@cedarjs/project-config": "5.0.2",
+    "@cedarjs/testing": "5.0.2",
     "prisma": "7.8.0"
   },
   "engines": {

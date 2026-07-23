@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-azure-active-directory-web",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -49,12 +49,12 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/auth": "5.0.1"
+    "@cedarjs/auth": "5.0.2"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.4",
     "@azure/msal-browser": "2.39.0",
-    "@cedarjs/framework-tools": "5.0.1",
+    "@cedarjs/framework-tools": "5.0.2",
     "@types/netlify-identity-widget": "1.9.7",
     "@types/react": "^18.2.55",
     "concurrently": "9.2.1",
