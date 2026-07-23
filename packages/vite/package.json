@@ -97,7 +97,7 @@
     "magic-string": "0.30.21",
     "oxc-parser": "0.137.0",
     "react": "19.2.3",
-    "react-server-dom-webpack": "19.2.4",
+    "react-server-dom-webpack": "19.2.7",
     "rimraf": "6.1.3",
     "rou3": "^0.8.1",
     "vite": "7.3.5",
