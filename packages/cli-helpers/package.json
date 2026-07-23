@@ -114,7 +114,7 @@
     "dotenv-defaults": "5.0.2",
     "enquirer": "2.4.1",
     "execa": "5.1.1",
-    "listr2": "10.2.1",
+    "listr2": "10.2.2",
     "lodash": "4.18.1",
     "pascalcase": "1.0.0",
     "prettier": "3.8.4",
