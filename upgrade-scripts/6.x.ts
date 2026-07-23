@@ -2,6 +2,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import util from 'node:util'
 
+import { parse as parseYaml } from 'yaml'
+
 import { getPaths } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
@@ -31,6 +33,35 @@ interface PackageJson {
   pnpm?: {
     overrides?: Record<string, string>
   }
+}
+
+/**
+ * Returns the value of the top-level `overrides.vite` entry in a
+ * pnpm-workspace.yaml, or undefined if there isn't one (or the yaml doesn't
+ * parse)
+ */
+function getPnpmWorkspaceViteOverride(yamlContent: string) {
+  let parsed: unknown
+
+  try {
+    parsed = parseYaml(yamlContent)
+  } catch {
+    return undefined
+  }
+
+  if (!parsed || typeof parsed !== 'object' || !('overrides' in parsed)) {
+    return undefined
+  }
+
+  const overrides: unknown = parsed.overrides
+
+  if (!overrides || typeof overrides !== 'object' || !('vite' in overrides)) {
+    return undefined
+  }
+
+  const vite: unknown = overrides.vite
+
+  return typeof vite === 'string' ? vite : undefined
 }
 
 function warn(title: string, lines: string[]) {
@@ -250,21 +281,20 @@ async function main() {
 
     const packageManager = getPackageManager()
 
-    let hasVitePin = false
+    let vitePinValue: string | undefined
     let vitePinInstructions = ''
 
     if (packageManager === 'pnpm') {
-      hasVitePin = !!packageJson.pnpm?.overrides?.vite
+      vitePinValue = packageJson.pnpm?.overrides?.vite
 
       const workspaceYamlPath = path.join(projectRoot, 'pnpm-workspace.yaml')
 
-      if (!hasVitePin && fs.existsSync(workspaceYamlPath)) {
+      if (!vitePinValue && fs.existsSync(workspaceYamlPath)) {
         const workspaceYaml = await fs.promises.readFile(
           workspaceYamlPath,
           'utf8',
         )
-        // Loose check: any `vite:` mapping key in the yaml counts as a pin
-        hasVitePin = /^\s*['"]?vite['"]?\s*:/m.test(workspaceYaml)
+        vitePinValue = getPnpmWorkspaceViteOverride(workspaceYaml)
       }
 
       vitePinInstructions =
@@ -272,7 +302,7 @@ async function main() {
         '  overrides:\n' +
         "    vite: '7.3.5'"
     } else if (packageManager === 'npm') {
-      hasVitePin = !!packageJson.overrides?.vite
+      vitePinValue = packageJson.overrides?.vite
 
       vitePinInstructions =
         'Add this to your root package.json:\n' +
@@ -280,7 +310,7 @@ async function main() {
         '    "vite": "7.3.5"\n' +
         '  }'
     } else {
-      hasVitePin = !!packageJson.resolutions?.vite
+      vitePinValue = packageJson.resolutions?.vite
 
       vitePinInstructions =
         'Add this to your root package.json:\n' +
@@ -289,12 +319,30 @@ async function main() {
         '  }'
     }
 
-    if (vitestVersion && !hasVitePin) {
-      warn('Missing vite version pin', [
+    const hasCompatibleVitePin =
+      !!vitePinValue && /^[\^~]?7\./.test(vitePinValue)
+
+    if (vitestVersion && !hasCompatibleVitePin) {
+      const lines = [
         'Vitest 4 pulls in its own copy of Vite 8 unless you pin vite to\n' +
           'the version Cedar uses, which makes web tests fail to parse JSX.',
         vitePinInstructions,
-      ])
+      ]
+
+      if (vitePinValue) {
+        lines.unshift(
+          'Your project pins vite to ' +
+            vitePinValue +
+            ', but Cedar v6 needs Vite 7.',
+        )
+      }
+
+      warn(
+        vitePinValue
+          ? 'Incompatible vite version pin'
+          : 'Missing vite version pin',
+        lines,
+      )
     }
   }
 
