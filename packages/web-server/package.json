@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/web-server",
-  "version": "5.0.2",
+  "version": "5.0.3",
   "description": "CedarJS's server for the Web side",
   "repository": {
     "type": "git",
