@@ -55,7 +55,7 @@
     "@auth0/auth0-spa-js": "2.22.0",
     "@cedarjs/framework-tools": "5.0.1",
     "@types/react": "^18.2.55",
-    "concurrently": "9.2.1",
+    "concurrently": "9.2.4",
     "publint": "0.3.21",
     "react": "18.3.1",
     "typescript": "5.9.3",

@@ -46,7 +46,7 @@
     "@cedarjs/api": "5.0.1",
     "@cedarjs/framework-tools": "5.0.1",
     "@types/aws-lambda": "8.10.162",
-    "concurrently": "9.2.1",
+    "concurrently": "9.2.4",
     "publint": "0.3.21",
     "typescript": "5.9.3",
     "vitest": "4.1.10"
