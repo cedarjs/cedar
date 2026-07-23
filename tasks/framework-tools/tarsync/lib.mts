@@ -333,11 +333,45 @@ export async function updateResolutions(projectPath: string) {
     const webPkg = JSON.parse(await fs.promises.readFile(webPkgPath, 'utf-8'))
     webPkg.dependencies['graphql-tag'] = '2.12.6'
     webPkg.dependencies['react-hook-form'] = '7.74.0'
-    await fs.promises.writeFile(webPkgPath, JSON.stringify(webPkg, null, 2))
 
     const apiPkgPath = path.join(projectPath, 'api/package.json')
     const apiPkg = JSON.parse(await fs.promises.readFile(apiPkgPath, 'utf-8'))
     apiPkg.dependencies['@prisma/client'] = '7.8.0'
+
+    // ESM projects have config, setup, and test files with imports that yarn
+    // hoists to the project root but pnpm's strict isolation doesn't resolve:
+    // web/vite.config.ts imports `vite`, web/vitest.setup.ts imports the
+    // testing-library packages, test files import `@cedarjs/testing/web`, and
+    // api/vitest.config.mts imports `vitest/config` and `@cedarjs/vite/api`.
+    // Declare them all explicitly. (The `@cedarjs/*` specs are redirected to
+    // the tarballs by the overrides written above, so the specs here are only
+    // about being resolvable.)
+    if (projectPackageJson.type === 'module') {
+      const cedarSpec =
+        webPkg.devDependencies?.['@cedarjs/vite'] ??
+        webPkg.dependencies['@cedarjs/vite'] ??
+        'latest'
+
+      webPkg.devDependencies ??= {}
+      webPkg.devDependencies.vite =
+        projectPackageJson.resolutions?.vite ?? '7.3.5'
+      webPkg.devDependencies['@cedarjs/testing'] =
+        projectPackageJson.devDependencies?.['@cedarjs/testing'] ?? cedarSpec
+      webPkg.devDependencies['@testing-library/jest-dom'] = '6.9.1'
+      webPkg.devDependencies['@testing-library/react'] = '16.3.2'
+
+      apiPkg.devDependencies ??= {}
+      apiPkg.devDependencies.vitest =
+        projectPackageJson.devDependencies?.vitest ?? '4.1.10'
+      apiPkg.devDependencies['@cedarjs/vite'] = cedarSpec
+      // The auto-imports transform injects `import { context } from
+      // '@cedarjs/context'`, and the api templates import `gql` from
+      // graphql-tag
+      apiPkg.devDependencies['@cedarjs/context'] = cedarSpec
+      apiPkg.dependencies['graphql-tag'] = '2.12.6'
+    }
+
+    await fs.promises.writeFile(webPkgPath, JSON.stringify(webPkg, null, 2))
     await fs.promises.writeFile(apiPkgPath, JSON.stringify(apiPkg, null, 2))
 
     updatedPackageJson = { ...projectPackageJson }
