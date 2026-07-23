@@ -90,6 +90,22 @@ export function cedarjsResolveCedarStyleImportsPlugin(): Plugin {
         }
       }
 
+      // Handle api/ bare specifiers, like the ESM template's
+      // `import { PrismaClient } from 'api/db/generated/prisma/client.mts'`.
+      // Under yarn and npm these happen to resolve through the root
+      // node_modules workspace symlink, but pnpm's strict isolation creates
+      // no such link. Only resolves ids that match a file under the api side,
+      // so an actual `api` npm package would still resolve normally.
+      if (cedarPaths && id.startsWith('api/')) {
+        const resolved = resolveFromAbsolutePath(
+          path.join(cedarPaths.base, id),
+        )
+
+        if (resolved) {
+          return normalizePath(resolved)
+        }
+      }
+
       // We only need this plugin when the module could not be found
       const resolvedPath = path.resolve(path.dirname(importer), id)
 
