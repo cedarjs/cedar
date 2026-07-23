@@ -92,8 +92,16 @@ export async function check() {
       console.log(
         `Skipping update check: '${packageJson.devDependencies['@cedarjs/core']}' is not a comparable version`,
       )
-      // Still record the check so we don't re-run it on every command
-      updateUpdateDataFile({ checkedAt: new Date().getTime() })
+      // Record the check so we don't re-run it on every command, and replace
+      // any previously stored version data. Keeping stale data around would
+      // let shouldShow() display an upgrade notification that no longer
+      // reflects the project. Storing the raw spec as localVersion both
+      // documents what we saw and fails shouldShow()'s semver guard.
+      updateUpdateDataFile({
+        localVersion: packageJson.devDependencies['@cedarjs/core'],
+        remoteVersions: new Map(),
+        checkedAt: new Date().getTime(),
+      })
       return
     }
 

@@ -470,12 +470,37 @@ describe('Local version is not comparable (file: tarball or workspace spec)', ()
     await updateCheck.check()
 
     const data = updateCheck.readUpdateDataFile()
-    // No version information recorded, but checkedAt is updated so the check
-    // isn't re-run on every command
-    expect(data.localVersion).toBe('0.0.0')
+    // The raw spec is recorded as localVersion (failing shouldShow()'s
+    // semver guard), remote versions are cleared, and checkedAt is updated
+    // so the check isn't re-run on every command
+    expect(data.localVersion).toBe('file:/some/path/tarballs/cedarjs-core.tgz')
     expect(data.remoteVersions.size).toBe(0)
     expect(data.checkedAt).toBe(TESTING_CURRENT_DATETIME)
     expect(updateCheck.shouldCheck()).toBe(false)
+  })
+
+  it('Clears stale version data when the spec becomes non-semver', async () => {
+    // A previously valid project state wanted to show an upgrade
+    // notification...
+    vol.fromJSON({
+      'package.json': JSON.stringify({
+        devDependencies: {
+          '@cedarjs/core': 'file:/some/path/tarballs/cedarjs-core.tgz',
+        },
+      }),
+      '.cedar/updateCheck/data.json': JSON.stringify({
+        localVersion: '1.0.0',
+        remoteVersions: { latest: '2.0.0' },
+        checkedAt: updateCheck.DEFAULT_DATETIME_MS,
+        shownAt: updateCheck.DEFAULT_DATETIME_MS,
+      }),
+    })
+
+    // ...but the project has since switched to a tarball spec, so after the
+    // next (skipped) check the stale 1.0.0 -> 2.0.0 data must not survive
+    await updateCheck.check()
+
+    expect(updateCheck.shouldShow()).toBe(false)
   })
 
   it('Skips the check for a workspace:* spec without hanging', async () => {
@@ -490,7 +515,7 @@ describe('Local version is not comparable (file: tarball or workspace spec)', ()
     await updateCheck.check()
 
     const data = updateCheck.readUpdateDataFile()
-    expect(data.localVersion).toBe('0.0.0')
+    expect(data.localVersion).toBe('workspace:*')
     expect(data.remoteVersions.size).toBe(0)
   })
 
