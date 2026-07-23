@@ -57,10 +57,13 @@ export default defineConfig(({ mode }) => ({
 
 For almost every project, the single `cedar()` plugin is all you'll ever
 need: one line that pulls in all of Cedar's Vite configuration. But `cedar()`
-is itself composed of many small plugins, and `@cedarjs/vite` exports every
-one of them. So when you really do need full control — dropping one of
-Cedar's plugins, reordering them, or wedging your own plugin in between two
-of them — you can skip `cedar()` and compose the pipeline yourself:
+is itself composed of many small plugins, and each of Cedar's own building
+blocks is individually exported. So when you really do need full control —
+dropping one of Cedar's plugins, reordering them, or wedging your own plugin
+in between two of them — you can skip `cedar()` and compose the pipeline
+yourself.
+
+Most of the pipeline comes straight from `@cedarjs/vite`:
 
 ```ts
 import {
@@ -74,9 +77,23 @@ import {
 } from '@cedarjs/vite'
 ```
 
+But `cedar()` isn't built from `@cedarjs/vite` exports alone. It also
+includes:
+
+- `tsconfigPaths()` from `vite-tsconfig-paths` and `gqlPlugin` from
+  `vite-plugin-graphql-tag`
+- test-mode transforms from `@cedarjs/testing/web/vitest`
+  (`cedarJsRouterImportTransformPlugin`, `createAuthImportTransformPlugin`,
+  and `autoImportsPlugin`)
+- a configured `react()` from `@vitejs/plugin-react`, wired up with Cedar's
+  Babel handling (including the React Compiler plugin when that's enabled)
+
+A custom pipeline needs to include those too — or make a deliberate decision
+to leave them out.
+
 The [`cedar()` implementation](https://github.com/cedarjs/cedar/blob/main/packages/vite/src/index.ts)
-is the authoritative list of the plugins it's made of and the order they run
-in — use it as your starting point.
+is the authoritative list of everything it's made of and the order it all
+runs in — use it as your starting point.
 
 A word of warning: if you compose your own pipeline, you own it. Cedar
 releases can add, rename, remove, or reorder plugins (especially across major
