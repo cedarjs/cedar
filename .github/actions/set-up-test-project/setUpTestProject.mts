@@ -33,6 +33,15 @@ interface Args {
   cedarFrameworkPath: string
   testProjectPath: string
   packageManager?: PackageManager
+  fixture?: 'test-project' | 'test-project-esm'
+}
+
+export function optionalPackageManager(pm: string): PackageManager | undefined {
+  if (pm !== 'yarn' && pm !== 'npm' && pm !== 'pnpm') {
+    return undefined
+  }
+
+  return pm
 }
 
 export async function setUpTestProject({
@@ -43,6 +52,7 @@ export async function setUpTestProject({
   cedarFrameworkPath,
   testProjectPath,
   packageManager = 'yarn',
+  fixture = 'test-project',
 }: Args) {
   const execInProject = createExecWithEnvInCwd(testProjectPath)
 
@@ -57,7 +67,7 @@ export async function setUpTestProject({
   const TEST_PROJECT_FIXTURE_PATH = path.join(
     cedarFrameworkPath,
     '__fixtures__',
-    'test-project',
+    fixture,
   )
 
   console.log(`Creating project at ${testProjectPath}`)
@@ -98,18 +108,21 @@ export async function setUpTestProject({
     pkg.packageManager =
       packageManager === 'pnpm' ? 'pnpm@11.8.0' : 'npm@11.8.0'
 
-    // The fixture pins react-is via yarn's `resolutions`, but npm uses
-    // `overrides` instead. Without this override, react-is resolves to 17.x
-    // (from pretty-format's dep range), which doesn't properly recognize React
-    // 19 elements. This breaks snapshot serialization.
+    // The fixtures pin packages via yarn's `resolutions` (react-is in both
+    // fixtures, plus vite in the ESM fixture so that Vitest 4 doesn't nest
+    // its own Vite 8), but npm uses `overrides` instead. Without the react-is
+    // override, react-is resolves to 17.x (from pretty-format's dep range),
+    // which doesn't properly recognize React 19 elements. This breaks
+    // snapshot serialization.
     if (packageManager === 'npm') {
-      pkg.overrides = { 'react-is': '19.2.3' }
+      pkg.overrides = { ...pkg.resolutions }
     }
 
     if (packageManager === 'pnpm') {
       // Tell pnpm what workspaces we have, what 3rd-party packages are allowed
-      // to run build scripts, and what versions of react-is to use (see also
-      // npm comment above)
+      // to run build scripts, and what versions to pin via overrides —
+      // translated from the fixture's yarn `resolutions` (see the npm comment
+      // above)
 
       pkg.engines = {
         ...pkg.engines,
@@ -161,7 +174,9 @@ export async function setUpTestProject({
         '  unrs-resolver: false',
         '',
         'overrides:',
-        "  'react-is': '19.2.3'",
+        ...Object.entries(pkg.resolutions ?? {}).map(
+          ([name, version]) => `  '${name}': '${version}'`,
+        ),
         '',
       ].join('\n')
 
@@ -278,7 +293,11 @@ export async function setUpTestProject({
   if (canary) {
     console.log('Upgrading project to canary')
 
-    await execInProject(`${cedar} upgrade -t canary`)
+    // The ESM fixture's upgrade prompts for confirmation, so feed it a 'Y'
+    // (matching what the standalone ESM setup action always did)
+    await execInProject(`${cedar} upgrade -t canary`, {
+      input: fixture === 'test-project-esm' ? Buffer.from('Y') : undefined,
+    })
 
     console.log()
   }
@@ -309,8 +328,10 @@ export async function setUpTestProject({
 
   console.log()
 
-  if (packageManager === 'pnpm') {
-    // Update the seed command in prisma.config.cjs
+  if (packageManager !== 'yarn') {
+    // Update the seed command in prisma.config.cjs. The template hardcodes
+    // `yarn cedar exec seed`, and corepack-managed yarn refuses to run in a
+    // project whose packageManager field names a different package manager
     const prismaConfigPath = path.join(
       testProjectPath,
       'api',
@@ -319,7 +340,7 @@ export async function setUpTestProject({
     const prismaConfigContent = fs.readFileSync(prismaConfigPath, 'utf-8')
     const updatedContent = prismaConfigContent.replace(
       /seed:\s*'yarn cedar exec seed'/,
-      "seed: 'pnpm cedar exec seed'",
+      `seed: '${cedar} exec seed'`,
     )
     fs.writeFileSync(prismaConfigPath, updatedContent)
   }
