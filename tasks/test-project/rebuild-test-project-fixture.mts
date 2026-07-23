@@ -20,7 +20,6 @@ import {
   getExecaOptions as utilGetExecaOptions,
   ExecaError,
   exec,
-  getCfwBin,
 } from './util.mts'
 
 function recommendedNodeVersion({ esm } = { esm: false }) {
@@ -441,19 +440,31 @@ async function rebuildTestProject() {
     content: `${packageManager} install`,
     task: async () => {
       // TODO: See if this is needed now with tarsync
-      await exec(
-        `${packageManager} install`,
-        [],
-        getExecaOptions(OUTPUT_PROJECT_PATH),
-      )
+      // This first install runs against the *published* @cedarjs packages
+      // (tarsync hasn't redirected anything to tarballs yet), whose peer
+      // ranges can lag behind the templates — e.g. a published
+      // @cedarjs/forms pinning an older react than the template ships. npm
+      // errors on such peer conflicts where yarn and pnpm only warn, and
+      // this install is thrown away once tarsync runs, so relax it
+      const installCommand =
+        packageManager === 'npm'
+          ? 'npm install --legacy-peer-deps'
+          : `${packageManager} install`
 
-      // TODO: Now that I've added this, I wonder what other steps I can remove
-      const cfwBin = packageManager === 'npm' ? 'npx' : packageManager
-      return exec(
-        `${cfwBin} ${getCfwBin(OUTPUT_PROJECT_PATH)} project:tarsync`,
-        [],
-        getExecaOptions(OUTPUT_PROJECT_PATH),
-      )
+      await exec(installCommand, [], getExecaOptions(OUTPUT_PROJECT_PATH))
+
+      // Run the framework's own tarsync directly (the same way CI's
+      // set-up-test-project action does) instead of going through the
+      // project-installed `cfw` bin. The installed cfw is the *published*
+      // CLI: it dispatches the framework script with whatever package
+      // manager invoked it (wrong for npm/pnpm projects syncing a yarn
+      // framework repo), and released versions swallowed failures, silently
+      // leaving the project on published packages.
+      const tarsyncOptions = getExecaOptions(CEDAR_FRAMEWORK_PATH)
+      tarsyncOptions.env ??= {}
+      tarsyncOptions.env['CEDAR_CWD'] = OUTPUT_PROJECT_PATH
+
+      return exec('yarn project:tarsync', [], tarsyncOptions)
     },
   })
 
