@@ -25,10 +25,16 @@ export function getInput(key: string) {
 function getExecOutput(
   command: string,
   args?: string[],
-  options: ExecOptions = {},
-): Promise<{ stdout: string; stderr: string }> {
+  options: ExecOptions & { ignoreReturnCode?: boolean } = {},
+): Promise<{ stdout: string; stderr: string; exitCode: number }> {
   return new Promise((resolve, reject) => {
-    const { cwd, env, silent = false, input } = options
+    const {
+      cwd,
+      env,
+      silent = false,
+      input,
+      ignoreReturnCode = false,
+    } = options
 
     const child = spawn(command, args ?? [], {
       cwd,
@@ -63,8 +69,8 @@ function getExecOutput(
     })
 
     child.on('close', (code) => {
-      if (code === 0) {
-        resolve({ stdout, stderr })
+      if (code === 0 || ignoreReturnCode) {
+        resolve({ stdout, stderr, exitCode: code ?? 1 })
         return
       }
 
