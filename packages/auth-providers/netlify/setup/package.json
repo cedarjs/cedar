@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-netlify-setup",
-  "version": "5.0.2",
+  "version": "5.0.3",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -39,11 +39,11 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/cli-helpers": "5.0.2"
+    "@cedarjs/cli-helpers": "5.0.3"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.4",
-    "@cedarjs/framework-tools": "5.0.2",
+    "@cedarjs/framework-tools": "5.0.3",
     "@types/yargs": "17.0.35",
     "concurrently": "9.2.4",
     "publint": "0.3.21",

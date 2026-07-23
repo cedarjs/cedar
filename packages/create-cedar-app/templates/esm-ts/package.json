@@ -6,10 +6,10 @@
     "web"
   ],
   "devDependencies": {
-    "@cedarjs/core": "5.0.2",
-    "@cedarjs/eslint-config": "5.0.2",
-    "@cedarjs/project-config": "5.0.2",
-    "@cedarjs/testing": "5.0.2",
+    "@cedarjs/core": "5.0.3",
+    "@cedarjs/eslint-config": "5.0.3",
+    "@cedarjs/project-config": "5.0.3",
+    "@cedarjs/testing": "5.0.3",
     "vitest": "3.2.6"
   },
   "engines": {

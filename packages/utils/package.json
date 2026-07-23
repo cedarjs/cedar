@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/utils",
-  "version": "5.0.2",
+  "version": "5.0.3",
   "description": "Shared utilities for CedarJS packages and apps",
   "repository": {
     "type": "git",
@@ -33,7 +33,7 @@
     "pluralize": "8.0.0"
   },
   "devDependencies": {
-    "@cedarjs/framework-tools": "5.0.2",
+    "@cedarjs/framework-tools": "5.0.3",
     "@types/pluralize": "0.0.33",
     "concurrently": "9.2.4",
     "nodemon": "3.1.14",

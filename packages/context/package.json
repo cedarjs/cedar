@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/context",
-  "version": "5.0.2",
+  "version": "5.0.3",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -58,7 +58,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.4",
-    "@cedarjs/framework-tools": "5.0.2",
+    "@cedarjs/framework-tools": "5.0.3",
     "concurrently": "9.2.4",
     "publint": "0.3.21",
     "typescript": "5.9.3"

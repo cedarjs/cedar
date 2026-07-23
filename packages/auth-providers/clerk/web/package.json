@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-clerk-web",
-  "version": "5.0.2",
+  "version": "5.0.3",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -49,10 +49,10 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/auth": "5.0.2"
+    "@cedarjs/auth": "5.0.3"
   },
   "devDependencies": {
-    "@cedarjs/framework-tools": "5.0.2",
+    "@cedarjs/framework-tools": "5.0.3",
     "@clerk/clerk-react": "5.61.3",
     "@clerk/types": "4.101.20",
     "@types/react": "^18.2.55",

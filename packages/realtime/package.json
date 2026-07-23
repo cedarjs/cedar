@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/realtime",
-  "version": "5.0.2",
+  "version": "5.0.3",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -40,7 +40,7 @@
     "graphql": "16.14.2"
   },
   "devDependencies": {
-    "@cedarjs/framework-tools": "5.0.2",
+    "@cedarjs/framework-tools": "5.0.3",
     "@envelop/core": "5.5.1",
     "@envelop/testing": "7.0.0",
     "@envelop/types": "5.2.1",
