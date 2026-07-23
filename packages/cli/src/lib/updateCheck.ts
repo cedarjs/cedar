@@ -79,9 +79,24 @@ export async function check() {
     let localVersion = packageJson.devDependencies['@cedarjs/core']
 
     // Remove any leading non-digits, i.e. ^ or ~
-    while (!/\d/.test(localVersion.charAt(0))) {
+    // (The length guard matters: specs with no digit at all, like
+    // `workspace:*`, would otherwise loop forever)
+    while (localVersion.length > 0 && !/\d/.test(localVersion.charAt(0))) {
       localVersion = localVersion.substring(1)
     }
+
+    if (!semver.valid(localVersion)) {
+      // Specs like `file:../tarballs/cedarjs-core.tgz` (written by tarsync
+      // for npm projects) or `workspace:*` aren't versions — there's nothing
+      // meaningful to compare against, so skip the check
+      console.log(
+        `Skipping update check: '${packageJson.devDependencies['@cedarjs/core']}' is not a comparable version`,
+      )
+      // Still record the check so we don't re-run it on every command
+      updateUpdateDataFile({ checkedAt: new Date().getTime() })
+      return
+    }
+
     console.log(`Detected the current version of Cedar: '${localVersion}'`)
 
     const remoteVersions = new Map()
@@ -151,6 +166,14 @@ export function shouldShow() {
 
   // Check there is a new version and we haven't shown the user recently
   const data = readUpdateDataFile()
+
+  // A data file written before we validated versions may contain a
+  // non-semver localVersion (e.g. a `file:` tarball spec) — nothing to
+  // compare against then
+  if (!semver.valid(data.localVersion)) {
+    return false
+  }
+
   let newerVersion = false
   data.remoteVersions.forEach((version) => {
     newerVersion ||= semver.gt(version, data.localVersion)

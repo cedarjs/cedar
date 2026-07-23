@@ -405,3 +405,105 @@ describe('Update middleware', () => {
     expect(processOnSpy).not.toHaveBeenCalledWith('exit', expect.any(Function))
   })
 })
+
+describe('Local version is not comparable (file: tarball or workspace spec)', () => {
+  beforeAll(async () => {
+    const actualProjectConfig = await vi.importActual<typeof ProjectConfig>(
+      '@cedarjs/project-config',
+    )
+
+    const config = actualProjectConfig.DEFAULT_CONFIG
+
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(TESTING_CURRENT_DATETIME))
+    vi.mocked(getConfig).mockReturnValue({
+      ...config,
+      notifications: {
+        ...config.notifications,
+        versionUpdates: ['latest'],
+      },
+    })
+
+    // @ts-expect-error - This is assignable in tests
+    fs.statSync = vi.fn((lockfilePath) => {
+      if (!vol.existsSync(lockfilePath as string)) {
+        const error = new Error(
+          `ENOENT: no such file or directory, stat '${lockfilePath}'`,
+        ) as NodeJS.ErrnoException
+        error.code = 'ENOENT'
+        throw error
+      }
+      return {
+        birthtimeMs: Date.now(),
+      }
+    })
+
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+    vi.spyOn(console, 'time').mockImplementation(() => {})
+    vi.spyOn(console, 'timeEnd').mockImplementation(() => {})
+  })
+
+  afterAll(() => {
+    vi.useRealTimers()
+  })
+
+  beforeEach(() => {
+    vi.mocked(latestVersion).mockImplementation(async () => {
+      return '2.0.0'
+    })
+  })
+
+  afterEach(() => {
+    vol.reset()
+    vi.clearAllMocks()
+  })
+
+  it('Skips the check for a file: tarball spec without throwing', async () => {
+    vol.fromJSON({
+      'package.json': JSON.stringify({
+        devDependencies: {
+          '@cedarjs/core': 'file:/some/path/tarballs/cedarjs-core.tgz',
+        },
+      }),
+    })
+
+    await updateCheck.check()
+
+    const data = updateCheck.readUpdateDataFile()
+    // No version information recorded, but checkedAt is updated so the check
+    // isn't re-run on every command
+    expect(data.localVersion).toBe('0.0.0')
+    expect(data.remoteVersions.size).toBe(0)
+    expect(data.checkedAt).toBe(TESTING_CURRENT_DATETIME)
+    expect(updateCheck.shouldCheck()).toBe(false)
+  })
+
+  it('Skips the check for a workspace:* spec without hanging', async () => {
+    vol.fromJSON({
+      'package.json': JSON.stringify({
+        devDependencies: {
+          '@cedarjs/core': 'workspace:*',
+        },
+      }),
+    })
+
+    await updateCheck.check()
+
+    const data = updateCheck.readUpdateDataFile()
+    expect(data.localVersion).toBe('0.0.0')
+    expect(data.remoteVersions.size).toBe(0)
+  })
+
+  it('Does not want to show for a persisted non-semver localVersion', () => {
+    vol.fromJSON({
+      '.cedar/updateCheck/data.json': JSON.stringify({
+        localVersion: 'file:/some/path/tarballs/cedarjs-core.tgz',
+        remoteVersions: { latest: '2.0.0' },
+        checkedAt: TESTING_CURRENT_DATETIME,
+        shownAt: updateCheck.DEFAULT_DATETIME_MS,
+      }),
+    })
+
+    expect(updateCheck.shouldShow()).toBe(false)
+  })
+})
