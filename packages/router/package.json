@@ -98,7 +98,7 @@
     "@cedarjs/server-store": "workspace:*",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-server-dom-webpack": "19.2.4",
+    "react-server-dom-webpack": "19.2.7",
     "ts-toolbelt": "9.6.0"
   },
   "devDependencies": {
