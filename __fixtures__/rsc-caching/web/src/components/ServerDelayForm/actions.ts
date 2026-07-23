@@ -3,10 +3,11 @@
 import fs from 'node:fs'
 
 export async function formAction(formData: FormData) {
-  console.log(formData.get('delay'))
+  const delay = Number(formData.get('delay'))
+  console.log(delay)
   console.log('cwd', process.cwd())
   await fs.promises.writeFile(
     'settings.json',
-    `{ "delay": ${formData.get('delay')} }\n`
+    `${JSON.stringify({ delay })}\n`
   )
 }
