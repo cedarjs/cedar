@@ -2174,7 +2174,7 @@ __metadata:
     "@types/yargs": "npm:17.0.35"
     ansis: "npm:4.2.0"
     chokidar: "npm:3.6.0"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     dotenv-defaults: "npm:5.0.2"
     fast-glob: "npm:3.3.3"
     fast-json-parse: "npm:1.0.3"
@@ -2221,7 +2221,7 @@ __metadata:
     "@types/pascalcase": "npm:1.0.3"
     "@types/split2": "npm:4.2.3"
     "@whatwg-node/fetch": "npm:0.10.13"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     cookie: "npm:1.1.1"
     humanize-string: "npm:2.1.0"
     jsonwebtoken: "npm:9.0.3"
@@ -2262,7 +2262,7 @@ __metadata:
     "@cedarjs/api": "npm:5.0.2"
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@types/jsonwebtoken": "npm:9.0.10"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     jsonwebtoken: "npm:9.0.3"
     jwks-rsa: "npm:3.2.2"
     publint: "npm:0.3.21"
@@ -2279,7 +2279,7 @@ __metadata:
     "@cedarjs/cli-helpers": "npm:5.0.2"
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@types/yargs": "npm:17.0.35"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     publint: "npm:0.3.21"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.6"
@@ -2294,7 +2294,7 @@ __metadata:
     "@cedarjs/auth": "npm:5.0.2"
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@types/react": "npm:^18.2.55"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     publint: "npm:0.3.21"
     react: "npm:18.3.1"
     typescript: "npm:5.9.3"
@@ -2313,7 +2313,7 @@ __metadata:
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@types/aws-lambda": "npm:8.10.162"
     "@types/jsonwebtoken": "npm:9.0.10"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     jsonwebtoken: "npm:9.0.3"
     jwks-rsa: "npm:3.2.2"
     publint: "npm:0.3.21"
@@ -2330,7 +2330,7 @@ __metadata:
     "@cedarjs/cli-helpers": "npm:5.0.2"
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@types/yargs": "npm:17.0.35"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     publint: "npm:0.3.21"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.6"
@@ -2347,7 +2347,7 @@ __metadata:
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@types/netlify-identity-widget": "npm:1.9.7"
     "@types/react": "npm:^18.2.55"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     publint: "npm:0.3.21"
     react: "npm:18.3.1"
     typescript: "npm:5.9.3"
@@ -2366,7 +2366,7 @@ __metadata:
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@clerk/backend": "npm:1.34.0"
     "@types/aws-lambda": "npm:8.10.162"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     publint: "npm:0.3.21"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.6"
@@ -2381,7 +2381,7 @@ __metadata:
     "@cedarjs/cli-helpers": "npm:5.0.2"
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@types/yargs": "npm:17.0.35"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     publint: "npm:0.3.21"
     typescript: "npm:5.9.3"
   languageName: unknown
@@ -2396,7 +2396,7 @@ __metadata:
     "@clerk/clerk-react": "npm:5.61.3"
     "@clerk/types": "npm:4.101.20"
     "@types/react": "npm:^18.2.55"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     publint: "npm:0.3.21"
     react: "npm:18.3.1"
     typescript: "npm:5.9.3"
@@ -2414,7 +2414,7 @@ __metadata:
     "@cedarjs/cli-helpers": "npm:5.0.2"
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@types/yargs": "npm:17.0.35"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     publint: "npm:0.3.21"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.6"
@@ -2431,7 +2431,7 @@ __metadata:
     "@cedarjs/project-config": "npm:5.0.2"
     "@simplewebauthn/server": "npm:10.0.1"
     "@types/md5": "npm:2.3.6"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     md5: "npm:2.3.0"
     publint: "npm:0.3.21"
     typescript: "npm:5.9.3"
@@ -2451,7 +2451,7 @@ __metadata:
     "@cedarjs/graphql-server": "npm:5.0.2"
     "@cedarjs/web": "npm:5.0.2"
     "@types/aws-lambda": "npm:8.10.162"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     publint: "npm:0.3.21"
     ts-toolbelt: "npm:9.6.0"
     typescript: "npm:5.9.3"
@@ -2488,7 +2488,7 @@ __metadata:
     "@simplewebauthn/browser": "npm:10.0.0"
     "@simplewebauthn/types": "npm:10.0.0"
     "@types/react": "npm:^18.2.55"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     publint: "npm:0.3.21"
     react: "npm:18.3.1"
     typescript: "npm:5.9.3"
@@ -2504,7 +2504,7 @@ __metadata:
     "@cedarjs/api": "npm:5.0.2"
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@types/aws-lambda": "npm:8.10.162"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     firebase-admin: "npm:13.8.0"
     publint: "npm:0.3.21"
     typescript: "npm:5.9.3"
@@ -2520,7 +2520,7 @@ __metadata:
     "@cedarjs/cli-helpers": "npm:5.0.2"
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@types/yargs": "npm:17.0.35"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     publint: "npm:0.3.21"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.6"
@@ -2534,7 +2534,7 @@ __metadata:
     "@cedarjs/auth": "npm:5.0.2"
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@types/react": "npm:^18.2.55"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     firebase: "npm:10.14.1"
     publint: "npm:0.3.21"
     react: "npm:18.3.1"
@@ -2554,7 +2554,7 @@ __metadata:
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@types/aws-lambda": "npm:8.10.162"
     "@types/jsonwebtoken": "npm:9.0.10"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     jsonwebtoken: "npm:9.0.3"
     publint: "npm:0.3.21"
     typescript: "npm:5.9.3"
@@ -2570,7 +2570,7 @@ __metadata:
     "@cedarjs/cli-helpers": "npm:5.0.2"
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@types/yargs": "npm:17.0.35"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     publint: "npm:0.3.21"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.6"
@@ -2585,7 +2585,7 @@ __metadata:
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@types/netlify-identity-widget": "npm:1.9.7"
     "@types/react": "npm:^18.2.55"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     publint: "npm:0.3.21"
     react: "npm:18.3.1"
     typescript: "npm:5.9.3"
@@ -2605,7 +2605,7 @@ __metadata:
     "@supabase/ssr": "npm:0.12.0"
     "@types/aws-lambda": "npm:8.10.162"
     "@types/jsonwebtoken": "npm:9.0.10"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     jsonwebtoken: "npm:9.0.3"
     publint: "npm:0.3.21"
     typescript: "npm:5.9.3"
@@ -2626,7 +2626,7 @@ __metadata:
     "@cedarjs/web": "npm:5.0.2"
     "@supabase/ssr": "npm:0.12.0"
     "@types/aws-lambda": "npm:8.10.162"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     publint: "npm:0.3.21"
     ts-toolbelt: "npm:9.6.0"
     typescript: "npm:5.9.3"
@@ -2642,7 +2642,7 @@ __metadata:
     "@cedarjs/cli-helpers": "npm:5.0.2"
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@types/yargs": "npm:17.0.35"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     publint: "npm:0.3.21"
     typescript: "npm:5.9.3"
   languageName: unknown
@@ -2657,7 +2657,7 @@ __metadata:
     "@supabase/ssr": "npm:0.12.0"
     "@supabase/supabase-js": "npm:2.110.3"
     "@types/react": "npm:^18.2.55"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     publint: "npm:0.3.21"
     react: "npm:18.3.1"
     typescript: "npm:5.9.3"
@@ -2675,7 +2675,7 @@ __metadata:
     "@cedarjs/api": "npm:5.0.2"
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@types/jsonwebtoken": "npm:9.0.10"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     jsonwebtoken: "npm:9.0.3"
     jwks-rsa: "npm:3.2.2"
     publint: "npm:0.3.21"
@@ -2694,7 +2694,7 @@ __metadata:
     "@cedarjs/cli-helpers": "npm:5.0.2"
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@types/yargs": "npm:17.0.35"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     memfs: "npm:4.64.0"
     publint: "npm:0.3.21"
     typescript: "npm:5.9.3"
@@ -2709,7 +2709,7 @@ __metadata:
     "@cedarjs/auth": "npm:5.0.2"
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@types/react": "npm:^18.2.55"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     publint: "npm:0.3.21"
     react: "npm:18.3.1"
     supertokens-auth-react: "npm:0.51.2"
@@ -2728,7 +2728,7 @@ __metadata:
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@testing-library/jest-dom": "npm:6.9.1"
     "@testing-library/react": "npm:14.3.1"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     msw: "npm:1.3.5"
     publint: "npm:0.3.21"
     react: "npm:18.3.1"
@@ -2886,7 +2886,7 @@ __metadata:
     camelcase: "npm:6.3.0"
     change-case: "npm:4.1.2"
     ci-info: "npm:4.4.0"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     configstore: "npm:7.1.0"
     cross-env: "npm:7.0.3"
     decamelize: "npm:6.0.1"
@@ -2977,7 +2977,7 @@ __metadata:
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.4"
     "@cedarjs/framework-tools": "npm:5.0.2"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     publint: "npm:0.3.21"
     typescript: "npm:5.9.3"
   languageName: unknown
@@ -3124,7 +3124,7 @@ __metadata:
     "@types/pascalcase": "npm:1.0.3"
     "@types/react": "npm:^18.2.55"
     "@types/react-dom": "npm:^18.2.19"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     graphql: "npm:16.14.2"
     nodemon: "npm:3.1.14"
     pascalcase: "npm:1.0.0"
@@ -3175,7 +3175,7 @@ __metadata:
     "@testing-library/jest-dom": "npm:6.9.1"
     "@types/react": "npm:^18.2.55"
     "@types/react-dom": "npm:^18.2.19"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     graphql: "npm:16.14.2"
     publint: "npm:0.3.21"
     tstyche: "npm:5.0.2"
@@ -3216,7 +3216,7 @@ __metadata:
     "@types/lodash": "npm:4.17.24"
     "@whatwg-node/fetch": "npm:0.10.13"
     "@whatwg-node/promise-helpers": "npm:^1.3.0"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     cookie: "npm:1.1.1"
     graphql: "npm:16.14.2"
     graphql-scalars: "npm:1.25.0"
@@ -3271,7 +3271,7 @@ __metadata:
     "@prisma/internals": "npm:7.8.0"
     "@sdl-codegen/node": "npm:2.0.1"
     ansis: "npm:4.2.0"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     deepmerge: "npm:4.3.1"
     esbuild: "npm:0.27.7"
     execa: "npm:5.1.1"
@@ -3304,7 +3304,7 @@ __metadata:
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@cedarjs/project-config": "npm:5.0.2"
     "@prisma/client": "npm:7.8.0"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     cron-parser: "npm:5.5.0"
     publint: "npm:0.3.21"
     type-fest: "npm:5.6.0"
@@ -3445,7 +3445,7 @@ __metadata:
     babel-plugin-ignore-html-and-css-imports: "npm:0.1.0"
     babel-plugin-tester: "npm:11.0.4"
     cheerio: "npm:1.2.0"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     graphql: "npm:16.14.2"
     mime-types: "npm:2.1.35"
     publint: "npm:0.3.21"
@@ -3471,7 +3471,7 @@ __metadata:
     "@arethetypeswrong/cli": "npm:0.18.4"
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@prisma/internals": "npm:7.8.0"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     deepmerge: "npm:4.3.1"
     fast-glob: "npm:3.3.3"
     prisma: "npm:7.8.0"
@@ -3543,7 +3543,7 @@ __metadata:
     "@testing-library/jest-dom": "npm:6.9.1"
     "@types/react": "npm:^18.2.55"
     "@types/react-dom": "npm:^18.2.19"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     publint: "npm:0.3.21"
     react: "npm:18.3.1"
     react-dom: "npm:18.3.1"
@@ -3584,7 +3584,7 @@ __metadata:
     "@types/better-sqlite3": "npm:7.6.13"
     "@types/mime-types": "npm:2.1.4"
     better-sqlite3: "npm:12.9.0"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     esbuild: "npm:0.27.7"
     mime-types: "npm:2.1.35"
     prisma: "npm:7.8.0"
@@ -3661,7 +3661,7 @@ __metadata:
     "@types/node": "npm:24.10.4"
     ansis: "npm:4.2.0"
     babel-jest: "npm:^29.7.0"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     fast-glob: "npm:3.3.3"
     jest: "npm:29.7.0"
     jest-environment-jsdom: "npm:29.7.0"
@@ -3709,7 +3709,7 @@ __metadata:
   dependencies:
     "@cedarjs/framework-tools": "npm:5.0.2"
     "@types/pluralize": "npm:0.0.33"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     nodemon: "npm:3.1.14"
     pluralize: "npm:8.0.0"
     publint: "npm:0.3.21"
@@ -3760,7 +3760,7 @@ __metadata:
     ansis: "npm:4.2.0"
     buffer: "npm:6.0.3"
     busboy: "npm:^1.6.0"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     cookie: "npm:1.1.1"
     dotenv-defaults: "npm:5.0.2"
     execa: "npm:5.1.1"
@@ -3842,7 +3842,7 @@ __metadata:
     "@types/react-dom": "npm:^18.2.19"
     "@whatwg-node/fetch": "npm:0.10.13"
     apollo-upload-client: "npm:18.0.1"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     cookie: "npm:1.1.1"
     graphql: "npm:16.14.2"
     graphql-sse: "npm:2.6.0"
@@ -9782,9 +9782,9 @@ __metadata:
   linkType: hard
 
 "@standard-schema/spec@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "@standard-schema/spec@npm:1.0.0"
-  checksum: 10c0/a1ab9a8bdc09b5b47aa8365d0e0ec40cc2df6437be02853696a0e377321653b0d3ac6f079a8c67d5ddbe9821025584b1fb71d9cc041a6666a96f1fadf2ece15f
+  version: 1.1.0
+  resolution: "@standard-schema/spec@npm:1.1.0"
+  checksum: 10c0/d90f55acde4b2deb983529c87e8025fa693de1a5e8b49ecc6eb84d1fd96328add0e03d7d551442156c7432fd78165b2c26ff561b970a9a881f046abb78d6a526
   languageName: node
   linkType: hard
 
@@ -14352,20 +14352,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"concurrently@npm:9.2.1":
-  version: 9.2.1
-  resolution: "concurrently@npm:9.2.1"
+"concurrently@npm:9.2.4":
+  version: 9.2.4
+  resolution: "concurrently@npm:9.2.4"
   dependencies:
     chalk: "npm:4.1.2"
     rxjs: "npm:7.8.2"
-    shell-quote: "npm:1.8.3"
+    shell-quote: "npm:1.9.0"
     supports-color: "npm:8.1.1"
     tree-kill: "npm:1.2.2"
     yargs: "npm:17.7.2"
   bin:
     conc: dist/bin/concurrently.js
     concurrently: dist/bin/concurrently.js
-  checksum: 10c0/da37f239f82eb7ac24f5ddb56259861e5f1d6da2ade7602b6ea7ad3101b13b5ccec02a77b7001402d1028ff2fdc38eed55644b32853ad5abf30e057002a963aa
+  checksum: 10c0/97816b61985a746727bed2a7c360461f15438d7e09933d4f5bfbeb42351541609aded93aca64d58dcacfd9a4650f11238490fabf0d58bb93b6d2eaa2071ba8ac
   languageName: node
   linkType: hard
 
@@ -23319,9 +23319,9 @@ __metadata:
   linkType: hard
 
 "outvariant@npm:^1.2.1, outvariant@npm:^1.4.0":
-  version: 1.4.0
-  resolution: "outvariant@npm:1.4.0"
-  checksum: 10c0/502d075509fe9709a376cdf9a3eccbd9599fe0c42ed8c723e8c95d4856fa80154e1e957ea0d0d6bb9e0c33352086a6a623803fb5f16775322ede4b9354635bb5
+  version: 1.4.3
+  resolution: "outvariant@npm:1.4.3"
+  checksum: 10c0/5976ca7740349cb8c71bd3382e2a762b1aeca6f33dc984d9d896acdf3c61f78c3afcf1bfe9cc633a7b3c4b295ec94d292048f83ea2b2594fae4496656eba992c
   languageName: node
   linkType: hard
 
@@ -25913,7 +25913,7 @@ __metadata:
     babel-plugin-auto-import: "npm:1.1.0"
     babel-plugin-remove-code: "npm:0.0.6"
     boxen: "npm:5.1.2"
-    concurrently: "npm:9.2.1"
+    concurrently: "npm:9.2.4"
     cross-env: "npm:7.0.3"
     cypress: "npm:13.17.0"
     cypress-fail-fast: "npm:7.1.1"
@@ -26402,10 +26402,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"shell-quote@npm:1.8.3, shell-quote@npm:^1.7.3":
-  version: 1.8.3
-  resolution: "shell-quote@npm:1.8.3"
-  checksum: 10c0/bee87c34e1e986cfb4c30846b8e6327d18874f10b535699866f368ade11ea4ee45433d97bf5eada22c4320c27df79c3a6a7eb1bf3ecfc47f2c997d9e5e2672fd
+"shell-quote@npm:1.9.0, shell-quote@npm:^1.7.3":
+  version: 1.9.0
+  resolution: "shell-quote@npm:1.9.0"
+  checksum: 10c0/a39960107eb086b02394cfceb3c732bd3bf567b568719ff47101448fc3f1bf4a59ecfdd8960ff7ea564d749ef8bda70f2c82a768f22d8c7aeeabf2b64f53b7e8
   languageName: node
   linkType: hard
 
@@ -27914,11 +27914,11 @@ __metadata:
   linkType: hard
 
 "tough-cookie@npm:^6.0.0":
-  version: 6.0.0
-  resolution: "tough-cookie@npm:6.0.0"
+  version: 6.0.2
+  resolution: "tough-cookie@npm:6.0.2"
   dependencies:
     tldts: "npm:^7.0.5"
-  checksum: 10c0/7b17a461e9c2ac0d0bea13ab57b93b4346d0b8c00db174c963af1e46e4ea8d04148d2a55f2358fc857db0c0c65208a98e319d0c60693e32e0c559a9d9cf20cb5
+  checksum: 10c0/5ff521a476a3c540821352125a5d481c8d2fe16035de7e0efda4df120f290c95500a0e9b51ea0aa56343955be482e014c30f5ba73e04b93ba138e4e855cb9e89
   languageName: node
   linkType: hard
 

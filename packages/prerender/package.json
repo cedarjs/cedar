@@ -98,7 +98,7 @@
     "@types/mime-types": "2.1.4",
     "@types/react": "^18.2.55",
     "babel-plugin-tester": "11.0.4",
-    "concurrently": "9.2.1",
+    "concurrently": "9.2.4",
     "publint": "0.3.21",
     "typescript": "5.9.3",
     "vitest": "3.2.6"

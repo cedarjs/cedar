@@ -35,7 +35,7 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "5.0.2",
     "@types/pluralize": "0.0.33",
-    "concurrently": "9.2.1",
+    "concurrently": "9.2.4",
     "nodemon": "3.1.14",
     "publint": "0.3.21",
     "typescript": "5.9.3",

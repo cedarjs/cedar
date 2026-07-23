@@ -144,7 +144,7 @@
     "@cedarjs/framework-tools": "5.0.2",
     "@cedarjs/router": "5.0.2",
     "@cedarjs/web": "5.0.2",
-    "concurrently": "9.2.1",
+    "concurrently": "9.2.4",
     "jsdom": "27.4.0",
     "publint": "0.3.21",
     "typescript": "5.9.3",

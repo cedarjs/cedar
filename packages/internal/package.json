@@ -207,7 +207,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.4",
     "@cedarjs/framework-tools": "5.0.2",
-    "concurrently": "9.2.1",
+    "concurrently": "9.2.4",
     "graphql-tag": "2.12.6",
     "publint": "0.3.21",
     "vitest": "3.2.6"
