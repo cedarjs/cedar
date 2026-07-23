@@ -97,9 +97,7 @@ export function cedarjsResolveCedarStyleImportsPlugin(): Plugin {
       // no such link. Only resolves ids that match a file under the api side,
       // so an actual `api` npm package would still resolve normally.
       if (cedarPaths && id.startsWith('api/')) {
-        const resolved = resolveFromAbsolutePath(
-          path.join(cedarPaths.base, id),
-        )
+        const resolved = resolveFromAbsolutePath(path.join(cedarPaths.base, id))
 
         if (resolved) {
           return normalizePath(resolved)
