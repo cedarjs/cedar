@@ -96,9 +96,9 @@
   "dependencies": {
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/server-store": "workspace:*",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "react-server-dom-webpack": "19.2.7",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-server-dom-webpack": "19.2.8",
     "ts-toolbelt": "9.6.0"
   },
   "devDependencies": {
@@ -117,8 +117,8 @@
   },
   "peerDependencies": {
     "@cedarjs/auth": "workspace:*",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "engines": {
     "node": ">=24"
