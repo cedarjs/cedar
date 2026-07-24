@@ -65,6 +65,39 @@ function getPersistenceDirectory() {
 }
 
 /**
+ * Reads the @cedarjs/core spec from the project's package.json and strips
+ * leading range characters (^ or ~). The result is only a comparable version
+ * if it also passes semver.valid(). Returns undefined if the spec can't be
+ * read at all.
+ */
+function getLocalVersionSpec():
+  | { raw: string; normalized: string }
+  | undefined {
+  try {
+    const packageJson = JSON.parse(
+      fs.readFileSync(path.join(getPaths().base, 'package.json'), 'utf-8'),
+    )
+    const raw = packageJson.devDependencies['@cedarjs/core']
+
+    if (typeof raw !== 'string') {
+      return undefined
+    }
+
+    // Remove any leading non-digits, i.e. ^ or ~
+    // (The length guard matters: specs with no digit at all, like
+    // `workspace:*`, would otherwise loop forever)
+    let normalized = raw
+    while (normalized.length > 0 && !/\d/.test(normalized.charAt(0))) {
+      normalized = normalized.substring(1)
+    }
+
+    return { raw, normalized }
+  } catch {
+    return undefined
+  }
+}
+
+/**
  * Performs an update check to detect if a newer version of Cedar is available
  * and records the result to a file within .cedar for persistence
  */
@@ -72,25 +105,15 @@ export async function check() {
   try {
     console.time('Update Check')
 
-    // Read package.json and extract the @cedarjs/core version
-    const packageJson = JSON.parse(
-      fs.readFileSync(path.join(getPaths().base, 'package.json'), 'utf-8'),
-    )
-    let localVersion = packageJson.devDependencies['@cedarjs/core']
+    const spec = getLocalVersionSpec()
+    const localVersion = spec?.normalized ?? ''
 
-    // Remove any leading non-digits, i.e. ^ or ~
-    // (The length guard matters: specs with no digit at all, like
-    // `workspace:*`, would otherwise loop forever)
-    while (localVersion.length > 0 && !/\d/.test(localVersion.charAt(0))) {
-      localVersion = localVersion.substring(1)
-    }
-
-    if (!semver.valid(localVersion)) {
+    if (!spec || !semver.valid(localVersion)) {
       // Specs like `file:../tarballs/cedarjs-core.tgz` (written by tarsync
       // for npm projects) or `workspace:*` aren't versions — there's nothing
       // meaningful to compare against, so skip the check
       console.log(
-        `Skipping update check: '${packageJson.devDependencies['@cedarjs/core']}' is not a comparable version`,
+        `Skipping update check: '${spec?.raw}' is not a comparable version`,
       )
       // Record the check so we don't re-run it on every command, and replace
       // any previously stored version data. Keeping stale data around would
@@ -98,7 +121,7 @@ export async function check() {
       // reflects the project. Storing the raw spec as localVersion both
       // documents what we saw and fails shouldShow()'s semver guard.
       updateUpdateDataFile({
-        localVersion: packageJson.devDependencies['@cedarjs/core'],
+        localVersion: spec?.raw ?? 'unknown',
         remoteVersions: new Map(),
         checkedAt: new Date().getTime(),
       })
@@ -173,6 +196,16 @@ export function shouldShow() {
   }
 
   // Check there is a new version and we haven't shown the user recently
+  // The cached data may predate a switch to a non-comparable spec (e.g.
+  // tarsync converting the project to file: tarballs) and stay "fresh" for
+  // up to CHECK_PERIOD, so the *current* spec has to be validated too — not
+  // just the stored one
+  const spec = getLocalVersionSpec()
+
+  if (!spec || !semver.valid(spec.normalized)) {
+    return false
+  }
+
   const data = readUpdateDataFile()
 
   // A data file written before we validated versions may contain a

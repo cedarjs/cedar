@@ -521,6 +521,13 @@ describe('Local version is not comparable (file: tarball or workspace spec)', ()
 
   it('Does not want to show for a persisted non-semver localVersion', () => {
     vol.fromJSON({
+      // The current spec is comparable, so this specifically exercises the
+      // guard against previously persisted non-semver data
+      'package.json': JSON.stringify({
+        devDependencies: {
+          '@cedarjs/core': '^1.0.0',
+        },
+      }),
       '.cedar/updateCheck/data.json': JSON.stringify({
         localVersion: 'file:/some/path/tarballs/cedarjs-core.tgz',
         remoteVersions: { latest: '2.0.0' },
@@ -529,6 +536,29 @@ describe('Local version is not comparable (file: tarball or workspace spec)', ()
       }),
     })
 
+    expect(updateCheck.shouldShow()).toBe(false)
+  })
+
+  it('Does not show stale data while the cache is still fresh', () => {
+    // The project was on a comparable version, a check ran recently (fresh
+    // checkedAt means shouldCheck() is false, so check() won't run and clear
+    // the data), and the project has since switched to a tarball spec. The
+    // stale 1.0.0 -> 2.0.0 notification must not show.
+    vol.fromJSON({
+      'package.json': JSON.stringify({
+        devDependencies: {
+          '@cedarjs/core': 'file:/some/path/tarballs/cedarjs-core.tgz',
+        },
+      }),
+      '.cedar/updateCheck/data.json': JSON.stringify({
+        localVersion: '1.0.0',
+        remoteVersions: { latest: '2.0.0' },
+        checkedAt: TESTING_CURRENT_DATETIME,
+        shownAt: updateCheck.DEFAULT_DATETIME_MS,
+      }),
+    })
+
+    expect(updateCheck.shouldCheck()).toBe(false)
     expect(updateCheck.shouldShow()).toBe(false)
   })
 })
