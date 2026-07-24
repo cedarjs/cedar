@@ -20,5 +20,5 @@ allowBuilds:
   unrs-resolver: false
 
 overrides:
-  'react-is': '19.2.3'
+  'react-is': '19.2.8'
   'vite': '7.3.5'

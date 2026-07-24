@@ -50,7 +50,7 @@
     "@types/react": "^18.2.55",
     "concurrently": "9.2.4",
     "publint": "0.3.21",
-    "react": "19.2.3",
+    "react": "19.2.8",
     "typescript": "5.9.3",
     "vitest": "4.1.10"
   },

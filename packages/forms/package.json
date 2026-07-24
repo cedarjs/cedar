@@ -49,13 +49,13 @@
     "concurrently": "9.2.4",
     "nodemon": "3.1.14",
     "publint": "0.3.21",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "typescript": "5.9.3",
     "vitest": "4.1.10"
   },
   "peerDependencies": {
-    "react": "19.2.3"
+    "react": "19.2.8"
   },
   "engines": {
     "node": ">=24"

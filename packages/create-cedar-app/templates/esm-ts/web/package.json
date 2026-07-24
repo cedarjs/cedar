@@ -15,8 +15,8 @@
     "@cedarjs/forms": "5.0.3",
     "@cedarjs/router": "5.0.3",
     "@cedarjs/web": "5.0.3",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@cedarjs/vite": "5.0.3",
