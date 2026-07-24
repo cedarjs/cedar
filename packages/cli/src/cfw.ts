@@ -58,6 +58,20 @@ try {
     // CEDAR_DISABLE_TELEMETRY
     env: { CEDAR_CWD: projectPath },
   })
-} catch {
+} catch (e) {
   console.log()
+
+  // With `stdio: 'inherit'` the failing command's output has already been
+  // shown, but the failure itself must still propagate — silently exiting 0
+  // here makes callers (like the test-project rebuild script) treat a failed
+  // framework sync as a success and continue against published packages
+  const exitCode =
+    e &&
+    typeof e === 'object' &&
+    'exitCode' in e &&
+    typeof e.exitCode === 'number'
+      ? e.exitCode
+      : 1
+
+  process.exit(exitCode)
 }
