@@ -88,8 +88,12 @@ export async function setUpTestProject({
   //
   // What needs preparing:
   //
-  // 1. Set the packageManager field — this is what tarsync detects, and pnpm
-  //    refuses to run if it says yarn.
+  // 1. Clear the fixture's yarn packageManager pin — tarsync's detection
+  //    reads it first, and pnpm refuses to run while it says yarn. pnpm gets
+  //    a real pin in its place (corepack reads it); npm isn't
+  //    corepack-managed, so instead of a made-up npm version pin the project
+  //    gets an empty package-lock.json as its package manager marker (npm
+  //    rewrites it on the first install).
   // 2. Remove yarn.lock, so nothing later mistakes the project for a yarn one.
   // 3. Replace workspace:* protocols with file: references — npm doesn't
   //    understand workspace:*.
@@ -103,10 +107,16 @@ export async function setUpTestProject({
     const pkgPath = path.join(testProjectPath, 'package.json')
     const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
 
-    // This is what tarsync detects, so it has to say the target package
-    // manager rather than the fixture's yarn
-    pkg.packageManager =
-      packageManager === 'pnpm' ? 'pnpm@11.8.0' : 'npm@11.8.0'
+    // See point 1 above — replace the fixture's yarn pin for pnpm, drop it
+    // entirely for npm and mark the project with an empty lockfile instead
+    if (packageManager === 'pnpm') {
+      pkg.packageManager = 'pnpm@11.8.0'
+    } else {
+      delete pkg.packageManager
+      // TODO: Drop this once https://github.com/cedarjs/cedar/issues/2182 is
+      // resolved
+      fs.writeFileSync(path.join(testProjectPath, 'package-lock.json'), '')
+    }
 
     // The fixtures pin packages via yarn's `resolutions` (react-is in both
     // fixtures, plus vite in the ESM fixture so that Vitest 4 doesn't nest
@@ -225,8 +235,9 @@ export async function setUpTestProject({
     }
 
     console.log(
-      `Updated packageManager field to "${packageManager}"` +
-        (packageManager === 'npm' ? ', replaced workspace:* → file:' : ''),
+      packageManager === 'npm'
+        ? 'Converted project to npm, replaced workspace:* → file:'
+        : `Updated packageManager field to "${packageManager}"`,
     )
 
     // The fixture ships a yarn.lock. Leaving it in place would both confuse
@@ -329,9 +340,10 @@ export async function setUpTestProject({
   console.log()
 
   if (packageManager !== 'yarn') {
-    // Update the seed command in prisma.config.cjs. The template hardcodes
-    // `yarn cedar exec seed`, and corepack-managed yarn refuses to run in a
-    // project whose packageManager field names a different package manager
+    // Update the seed command in prisma.config.cjs. The fixture was generated
+    // with yarn, so its `{{CEDAR_CLI}}` template placeholder was rendered to
+    // `yarn cedar`, and corepack-managed yarn refuses to run in a project
+    // whose packageManager field names a different package manager
     const prismaConfigPath = path.join(
       testProjectPath,
       'api',
