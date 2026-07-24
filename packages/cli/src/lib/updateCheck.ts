@@ -179,8 +179,22 @@ export function shouldCheck() {
     return false
   }
 
-  // Check if we haven't checked recently
   const data = readUpdateDataFile()
+
+  // The project's spec can change (e.g. a version bump) while the cache is
+  // still within CHECK_PERIOD. Comparing remote versions against a
+  // localVersion that no longer matches the current spec would misstate the
+  // current version, so force a fresh check whenever they disagree.
+  const spec = getLocalVersionSpec()
+  if (
+    spec &&
+    semver.valid(spec.normalized) &&
+    spec.normalized !== data.localVersion
+  ) {
+    return true
+  }
+
+  // Check if we haven't checked recently
   return data.checkedAt < new Date().getTime() - CHECK_PERIOD
 }
 
@@ -212,6 +226,15 @@ export function shouldShow() {
   // non-semver localVersion (e.g. a `file:` tarball spec) — nothing to
   // compare against then
   if (!semver.valid(data.localVersion)) {
+    return false
+  }
+
+  // The stored localVersion may be stale relative to the current spec (e.g.
+  // the project was bumped to a new version but the cache is still within
+  // CHECK_PERIOD). Comparing remote versions against a mismatched
+  // localVersion would misstate the current version, so bail until
+  // shouldCheck() has refreshed the cache to match the current spec.
+  if (spec.normalized !== data.localVersion) {
     return false
   }
 

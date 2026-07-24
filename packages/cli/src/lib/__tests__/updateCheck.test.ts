@@ -562,3 +562,76 @@ describe('Local version is not comparable (file: tarball or workspace spec)', ()
     expect(updateCheck.shouldShow()).toBe(false)
   })
 })
+
+describe('Project version changed while the cache is still fresh', () => {
+  beforeAll(async () => {
+    const actualProjectConfig = await vi.importActual<typeof ProjectConfig>(
+      '@cedarjs/project-config',
+    )
+
+    const config = actualProjectConfig.DEFAULT_CONFIG
+
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(TESTING_CURRENT_DATETIME))
+    vi.mocked(getConfig).mockReturnValue({
+      ...config,
+      notifications: {
+        ...config.notifications,
+        versionUpdates: ['latest'],
+      },
+    })
+
+    // @ts-expect-error - This is assignable in tests
+    fs.statSync = vi.fn((lockfilePath) => {
+      if (!vol.existsSync(lockfilePath as string)) {
+        const error = new Error(
+          `ENOENT: no such file or directory, stat '${lockfilePath}'`,
+        ) as NodeJS.ErrnoException
+        error.code = 'ENOENT'
+        throw error
+      }
+      return {
+        birthtimeMs: Date.now(),
+      }
+    })
+
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+    vi.spyOn(console, 'time').mockImplementation(() => {})
+    vi.spyOn(console, 'timeEnd').mockImplementation(() => {})
+  })
+
+  afterAll(() => {
+    vi.useRealTimers()
+  })
+
+  afterEach(() => {
+    vol.reset()
+    vi.clearAllMocks()
+  })
+
+  it('Forces a fresh check and does not show a stale notification when the cached localVersion no longer matches the current spec', () => {
+    // The cache says the project is on 1.0.0 with a 2.0.0 update available,
+    // and checkedAt is fresh (well within CHECK_PERIOD). But the project has
+    // since been bumped to 2.0.0 itself. Without validating the spec against
+    // the cached localVersion, shouldShow() would tell a project already on
+    // 2.0.0 that it's on 1.0.0 and should upgrade to 2.0.0.
+    vol.fromJSON({
+      'package.json': JSON.stringify({
+        devDependencies: {
+          '@cedarjs/core': '^2.0.0',
+        },
+      }),
+      '.cedar/updateCheck/data.json': JSON.stringify({
+        localVersion: '1.0.0',
+        remoteVersions: { latest: '2.0.0' },
+        checkedAt: TESTING_CURRENT_DATETIME,
+        shownAt: updateCheck.DEFAULT_DATETIME_MS,
+      }),
+    })
+
+    // The mismatch should force a fresh check even though checkedAt is fresh
+    expect(updateCheck.shouldCheck()).toBe(true)
+    // And must not show the misleading 1.0.0 -> 2.0.0 notification
+    expect(updateCheck.shouldShow()).toBe(false)
+  })
+})
