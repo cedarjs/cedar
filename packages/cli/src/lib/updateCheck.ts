@@ -65,36 +65,28 @@ function getPersistenceDirectory() {
 }
 
 /**
- * Reads the @cedarjs/core spec from the project's package.json and strips
- * leading range characters (^ or ~). The result is only a comparable version
- * if it also passes semver.valid(). Returns undefined if the spec can't be
- * read at all.
+ * Reads the @cedarjs/core version from the project's package.json. Cedar
+ * projects pin an exact version, so anything that isn't a plain
+ * "1.2.3"-style semver version (ranges, `file:` tarballs, `workspace:*`,
+ * etc.) returns undefined — there's nothing meaningful to compare against.
  */
-function getLocalVersionSpec():
-  | { raw: string; normalized: string }
-  | undefined {
+function getLocalVersion(): string | undefined {
+  let version: unknown
+
   try {
     const packageJson = JSON.parse(
       fs.readFileSync(path.join(getPaths().base, 'package.json'), 'utf-8'),
     )
-    const raw = packageJson.devDependencies['@cedarjs/core']
-
-    if (typeof raw !== 'string') {
-      return undefined
-    }
-
-    // Remove any leading non-digits, i.e. ^ or ~
-    // (The length guard matters: specs with no digit at all, like
-    // `workspace:*`, would otherwise loop forever)
-    let normalized = raw
-    while (normalized.length > 0 && !/\d/.test(normalized.charAt(0))) {
-      normalized = normalized.substring(1)
-    }
-
-    return { raw, normalized }
+    version = packageJson.devDependencies?.['@cedarjs/core']
   } catch {
     return undefined
   }
+
+  if (typeof version === 'string' && semver.valid(version)) {
+    return version
+  }
+
+  return undefined
 }
 
 /**
@@ -105,23 +97,16 @@ export async function check() {
   try {
     console.time('Update Check')
 
-    const spec = getLocalVersionSpec()
-    const localVersion = spec?.normalized ?? ''
+    const localVersion = getLocalVersion()
 
-    if (!spec || !semver.valid(localVersion)) {
-      // Specs like `file:../tarballs/cedarjs-core.tgz` (written by tarsync
-      // for npm projects) or `workspace:*` aren't versions — there's nothing
-      // meaningful to compare against, so skip the check
+    if (!localVersion) {
       console.log(
-        `Skipping update check: '${spec?.raw}' is not a comparable version`,
+        'Skipping update check: no pinned @cedarjs/core version found',
       )
-      // Record the check so we don't re-run it on every command, and replace
-      // any previously stored version data. Keeping stale data around would
-      // let shouldShow() display an upgrade notification that no longer
-      // reflects the project. Storing the raw spec as localVersion both
-      // documents what we saw and fails shouldShow()'s semver guard.
+      // Record the check so it isn't re-run on every command, and clear any
+      // previously stored versions so a stale notification can't show
       updateUpdateDataFile({
-        localVersion: spec?.raw ?? 'unknown',
+        localVersion: '0.0.0',
         remoteVersions: new Map(),
         checkedAt: new Date().getTime(),
       })
@@ -181,16 +166,10 @@ export function shouldCheck() {
 
   const data = readUpdateDataFile()
 
-  // The project's spec can change (e.g. a version bump) while the cache is
-  // still within CHECK_PERIOD. Comparing remote versions against a
-  // localVersion that no longer matches the current spec would misstate the
-  // current version, so force a fresh check whenever they disagree.
-  const spec = getLocalVersionSpec()
-  if (
-    spec &&
-    semver.valid(spec.normalized) &&
-    spec.normalized !== data.localVersion
-  ) {
+  // The project's version can change (e.g. an upgrade) while the cached data
+  // is still fresh, so force a new check whenever they disagree
+  const localVersion = getLocalVersion()
+  if (localVersion && localVersion !== data.localVersion) {
     return true
   }
 
@@ -209,38 +188,22 @@ export function shouldShow() {
     return false
   }
 
+  // Only projects with a pinned version get update notifications. Comparing
+  // against the current version (rather than the stored one) also means
+  // cached data that predates a version change can't produce a notification
+  // the project has already acted on.
+  const localVersion = getLocalVersion()
+
+  if (!localVersion) {
+    return false
+  }
+
   // Check there is a new version and we haven't shown the user recently
-  // The cached data may predate a switch to a non-comparable spec (e.g.
-  // tarsync converting the project to file: tarballs) and stay "fresh" for
-  // up to CHECK_PERIOD, so the *current* spec has to be validated too — not
-  // just the stored one
-  const spec = getLocalVersionSpec()
-
-  if (!spec || !semver.valid(spec.normalized)) {
-    return false
-  }
-
   const data = readUpdateDataFile()
-
-  // A data file written before we validated versions may contain a
-  // non-semver localVersion (e.g. a `file:` tarball spec) — nothing to
-  // compare against then
-  if (!semver.valid(data.localVersion)) {
-    return false
-  }
-
-  // The stored localVersion may be stale relative to the current spec (e.g.
-  // the project was bumped to a new version but the cache is still within
-  // CHECK_PERIOD). Comparing remote versions against a mismatched
-  // localVersion would misstate the current version, so bail until
-  // shouldCheck() has refreshed the cache to match the current spec.
-  if (spec.normalized !== data.localVersion) {
-    return false
-  }
 
   let newerVersion = false
   data.remoteVersions.forEach((version) => {
-    newerVersion ||= semver.gt(version, data.localVersion)
+    newerVersion ||= semver.gt(version, localVersion)
   })
   return data.shownAt < new Date().getTime() - SHOW_PERIOD && newerVersion
 }

@@ -59,50 +59,55 @@ import * as updateCheck from '../updateCheck.js'
 
 const TESTING_CURRENT_DATETIME = 1640995200000
 
-describe('Update is not available (1.0.0 -> 1.0.0)', () => {
-  beforeAll(async () => {
-    const actualProjectConfig = await vi.importActual<typeof ProjectConfig>(
-      '@cedarjs/project-config',
-    )
+function setVersionUpdates(tags: string[]) {
+  // @ts-expect-error - A partial config is enough for these tests
+  vi.mocked(getConfig).mockReturnValue({
+    notifications: {
+      versionUpdates: tags,
+    },
+  })
+}
 
-    const config = actualProjectConfig.DEFAULT_CONFIG
+beforeAll(() => {
+  // Use fake datetime
+  vi.useFakeTimers()
+  vi.setSystemTime(new Date(TESTING_CURRENT_DATETIME))
 
-    // Use fake datetime
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date(TESTING_CURRENT_DATETIME))
-    vi.mocked(getConfig).mockReturnValue({
-      ...config,
-      notifications: {
-        ...config.notifications,
-        versionUpdates: ['latest'],
-      },
-    })
-
-    // Prevent the appearance of stale locks. Throw ENOENT when the underlying
-    // memfs filesystem doesn't have the path so `isLockSet` can distinguish
-    // a missing lock from a fresh one.
-    // @ts-expect-error - This is assignable in tests
-    fs.statSync = vi.fn((lockfilePath) => {
-      if (!vol.existsSync(lockfilePath as string)) {
-        const error = new Error(
-          `ENOENT: no such file or directory, stat '${lockfilePath}'`,
-        ) as NodeJS.ErrnoException
-        error.code = 'ENOENT'
-        throw error
-      }
-      return {
-        birthtimeMs: Date.now(),
-      }
-    })
-
-    // Prevent console output during tests
-    vi.spyOn(console, 'log').mockImplementation(() => {})
-    vi.spyOn(console, 'time').mockImplementation(() => {})
-    vi.spyOn(console, 'timeEnd').mockImplementation(() => {})
+  // Prevent the appearance of stale locks. Throw ENOENT when the underlying
+  // memfs filesystem doesn't have the path so `isLockSet` can distinguish
+  // a missing lock from a fresh one.
+  // @ts-expect-error - This is assignable in tests
+  fs.statSync = vi.fn((lockfilePath) => {
+    if (!vol.existsSync(lockfilePath as string)) {
+      const error = new Error(
+        `ENOENT: no such file or directory, stat '${lockfilePath}'`,
+      ) as NodeJS.ErrnoException
+      error.code = 'ENOENT'
+      throw error
+    }
+    return {
+      birthtimeMs: Date.now(),
+    }
   })
 
-  afterAll(() => {
-    vi.useRealTimers()
+  // Prevent console output during tests
+  vi.spyOn(console, 'log').mockImplementation(() => {})
+  vi.spyOn(console, 'time').mockImplementation(() => {})
+  vi.spyOn(console, 'timeEnd').mockImplementation(() => {})
+})
+
+afterAll(() => {
+  vi.useRealTimers()
+})
+
+afterEach(() => {
+  vol.reset()
+  vi.clearAllMocks()
+})
+
+describe('Update is not available (1.0.0 -> 1.0.0)', () => {
+  beforeAll(() => {
+    setVersionUpdates(['latest'])
   })
 
   beforeEach(() => {
@@ -112,18 +117,13 @@ describe('Update is not available (1.0.0 -> 1.0.0)', () => {
     })
 
     vol.fromJSON({
-      // Users package.json containing the redwood version
+      // The user's package.json containing the pinned Cedar version
       'package.json': JSON.stringify({
         devDependencies: {
-          '@cedarjs/core': '^1.0.0',
+          '@cedarjs/core': '1.0.0',
         },
       }),
     })
-  })
-
-  afterEach(() => {
-    vol.reset()
-    vi.clearAllMocks()
   })
 
   it('Produces the correct updateData.json file', async () => {
@@ -164,36 +164,7 @@ describe('Update is not available (1.0.0 -> 1.0.0)', () => {
 
 describe('Update is available (1.0.0 -> 2.0.0)', () => {
   beforeAll(() => {
-    // Use fake datetime
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date(TESTING_CURRENT_DATETIME))
-    // @ts-expect-error - Partial mock return
-    vi.mocked(getConfig).mockReturnValue({
-      notifications: {
-        versionUpdates: ['latest'],
-      },
-    })
-
-    // Prevent the appearance of stale locks. Throw ENOENT when the underlying
-    // memfs filesystem doesn't have the path so `isLockSet` can distinguish
-    // a missing lock from a fresh one.
-    // @ts-expect-error - This is assignable in tests
-    fs.statSync = vi.fn((lockfilePath) => {
-      if (!vol.existsSync(lockfilePath as string)) {
-        const error = new Error(
-          `ENOENT: no such file or directory, stat '${lockfilePath}'`,
-        ) as NodeJS.ErrnoException
-        error.code = 'ENOENT'
-        throw error
-      }
-      return {
-        birthtimeMs: Date.now(),
-      }
-    })
-  })
-
-  afterAll(() => {
-    vi.useRealTimers()
+    setVersionUpdates(['latest'])
   })
 
   beforeEach(() => {
@@ -203,18 +174,13 @@ describe('Update is available (1.0.0 -> 2.0.0)', () => {
     })
 
     vol.fromJSON({
-      // Users package.json containing the redwood version
+      // The user's package.json containing the pinned Cedar version
       'package.json': JSON.stringify({
         devDependencies: {
-          '@cedarjs/core': '^1.0.0',
+          '@cedarjs/core': '1.0.0',
         },
       }),
     })
-  })
-
-  afterEach(() => {
-    vol.reset()
-    vi.clearAllMocks()
   })
 
   it('Produces the correct updateData.json file', async () => {
@@ -229,10 +195,6 @@ describe('Update is available (1.0.0 -> 2.0.0)', () => {
     })
   })
 
-  it('Should want to check before any check has run', () => {
-    expect(updateCheck.shouldCheck()).toBe(true)
-  })
-
   it('Should not want to check after a check has run', async () => {
     await updateCheck.check()
     expect(updateCheck.shouldCheck()).toBe(false)
@@ -246,52 +208,11 @@ describe('Update is available (1.0.0 -> 2.0.0)', () => {
     await updateCheck.check()
     expect(updateCheck.shouldShow()).toBe(true)
   })
-
-  it('Respects the lock', async () => {
-    setLock(updateCheck.CHECK_LOCK_IDENTIFIER)
-    expect(updateCheck.shouldCheck()).toBe(false)
-  })
 })
 
 describe('Update is available with rc tag (1.0.0-rc.1 -> 1.0.1-rc.58)', () => {
-  beforeAll(async () => {
-    const actualProjectConfig = await vi.importActual<typeof ProjectConfig>(
-      '@cedarjs/project-config',
-    )
-
-    const config = actualProjectConfig.DEFAULT_CONFIG
-
-    // Use fake datetime
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date(TESTING_CURRENT_DATETIME))
-    vi.mocked(getConfig).mockReturnValue({
-      ...config,
-      notifications: {
-        ...config.notifications,
-        versionUpdates: ['latest', 'rc'],
-      },
-    })
-
-    // Prevent the appearance of stale locks. Throw ENOENT when the underlying
-    // memfs filesystem doesn't have the path so `isLockSet` can distinguish
-    // a missing lock from a fresh one.
-    // @ts-expect-error - This is assignable in tests
-    fs.statSync = vi.fn((lockfilePath) => {
-      if (!vol.existsSync(lockfilePath as string)) {
-        const error = new Error(
-          `ENOENT: no such file or directory, stat '${lockfilePath}'`,
-        ) as NodeJS.ErrnoException
-        error.code = 'ENOENT'
-        throw error
-      }
-      return {
-        birthtimeMs: Date.now(),
-      }
-    })
-  })
-
-  afterAll(() => {
-    vi.useRealTimers()
+  beforeAll(() => {
+    setVersionUpdates(['latest', 'rc'])
   })
 
   beforeEach(() => {
@@ -301,18 +222,13 @@ describe('Update is available with rc tag (1.0.0-rc.1 -> 1.0.1-rc.58)', () => {
     })
 
     vol.fromJSON({
-      // Users package.json containing the redwood version
+      // The user's package.json containing the pinned Cedar version
       'package.json': JSON.stringify({
         devDependencies: {
-          '@cedarjs/core': '^1.0.0-rc.1',
+          '@cedarjs/core': '1.0.0-rc.1',
         },
       }),
     })
-  })
-
-  afterEach(() => {
-    vol.reset()
-    vi.clearAllMocks()
   })
 
   it('Produces the correct updateData.json file', async () => {
@@ -327,59 +243,24 @@ describe('Update is available with rc tag (1.0.0-rc.1 -> 1.0.1-rc.58)', () => {
     })
   })
 
-  it('Should want to check before any check has run', () => {
-    expect(updateCheck.shouldCheck()).toBe(true)
-  })
-
-  it('Should not want to check after a check has run', async () => {
-    await updateCheck.check()
-    expect(updateCheck.shouldCheck()).toBe(false)
-  })
-
-  it('Should not want to show before any check has run', () => {
-    expect(updateCheck.shouldShow()).toBe(false)
-  })
-
   it('Should want to show after a check has run', async () => {
     await updateCheck.check()
     expect(updateCheck.shouldShow()).toBe(true)
-  })
-
-  it('Respects the lock', async () => {
-    setLock(updateCheck.CHECK_LOCK_IDENTIFIER)
-    expect(updateCheck.shouldCheck()).toBe(false)
   })
 })
 
 describe('Update middleware', () => {
   beforeAll(() => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date(TESTING_CURRENT_DATETIME))
-  })
-
-  afterAll(() => {
-    vi.useRealTimers()
+    setVersionUpdates(['latest'])
   })
 
   beforeEach(() => {
-    // Prevent the appearance of stale locks. Throw ENOENT when the underlying
-    // memfs filesystem doesn't have the path so `isLockSet` can distinguish
-    // a missing lock from a fresh one.
-    // @ts-expect-error - This is assignable in tests
-    fs.statSync = vi.fn((lockfilePath) => {
-      if (!vol.existsSync(lockfilePath as string)) {
-        const error = new Error(
-          `ENOENT: no such file or directory, stat '${lockfilePath}'`,
-        ) as NodeJS.ErrnoException
-        error.code = 'ENOENT'
-        throw error
-      }
-      return {
-        birthtimeMs: Date.now(),
-      }
-    })
-
     vol.fromJSON({
+      'package.json': JSON.stringify({
+        devDependencies: {
+          '@cedarjs/core': '2.4.1',
+        },
+      }),
       '.cedar/updateCheck/data.json': JSON.stringify({
         localVersion: '2.4.1',
         remoteVersions: {
@@ -389,11 +270,6 @@ describe('Update middleware', () => {
         shownAt: updateCheck.DEFAULT_DATETIME_MS,
       }),
     })
-  })
-
-  afterEach(() => {
-    vol.reset()
-    vi.clearAllMocks()
   })
 
   it('does not show stale update info when a fresh check is due', () => {
@@ -406,45 +282,9 @@ describe('Update middleware', () => {
   })
 })
 
-describe('Local version is not comparable (file: tarball or workspace spec)', () => {
-  beforeAll(async () => {
-    const actualProjectConfig = await vi.importActual<typeof ProjectConfig>(
-      '@cedarjs/project-config',
-    )
-
-    const config = actualProjectConfig.DEFAULT_CONFIG
-
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date(TESTING_CURRENT_DATETIME))
-    vi.mocked(getConfig).mockReturnValue({
-      ...config,
-      notifications: {
-        ...config.notifications,
-        versionUpdates: ['latest'],
-      },
-    })
-
-    // @ts-expect-error - This is assignable in tests
-    fs.statSync = vi.fn((lockfilePath) => {
-      if (!vol.existsSync(lockfilePath as string)) {
-        const error = new Error(
-          `ENOENT: no such file or directory, stat '${lockfilePath}'`,
-        ) as NodeJS.ErrnoException
-        error.code = 'ENOENT'
-        throw error
-      }
-      return {
-        birthtimeMs: Date.now(),
-      }
-    })
-
-    vi.spyOn(console, 'log').mockImplementation(() => {})
-    vi.spyOn(console, 'time').mockImplementation(() => {})
-    vi.spyOn(console, 'timeEnd').mockImplementation(() => {})
-  })
-
-  afterAll(() => {
-    vi.useRealTimers()
+describe('@cedarjs/core version is not pinned', () => {
+  beforeAll(() => {
+    setVersionUpdates(['latest'])
   })
 
   beforeEach(() => {
@@ -453,41 +293,18 @@ describe('Local version is not comparable (file: tarball or workspace spec)', ()
     })
   })
 
-  afterEach(() => {
-    vol.reset()
-    vi.clearAllMocks()
-  })
-
-  it('Skips the check for a file: tarball spec without throwing', async () => {
+  it.each([
+    'file:/some/path/tarballs/cedarjs-core.tgz',
+    'workspace:*',
+    '^1.0.0',
+  ])('Skips the check and clears stored versions for %s', async (spec) => {
     vol.fromJSON({
       'package.json': JSON.stringify({
         devDependencies: {
-          '@cedarjs/core': 'file:/some/path/tarballs/cedarjs-core.tgz',
+          '@cedarjs/core': spec,
         },
       }),
-    })
-
-    await updateCheck.check()
-
-    const data = updateCheck.readUpdateDataFile()
-    // The raw spec is recorded as localVersion (failing shouldShow()'s
-    // semver guard), remote versions are cleared, and checkedAt is updated
-    // so the check isn't re-run on every command
-    expect(data.localVersion).toBe('file:/some/path/tarballs/cedarjs-core.tgz')
-    expect(data.remoteVersions.size).toBe(0)
-    expect(data.checkedAt).toBe(TESTING_CURRENT_DATETIME)
-    expect(updateCheck.shouldCheck()).toBe(false)
-  })
-
-  it('Clears stale version data when the spec becomes non-semver', async () => {
-    // A previously valid project state wanted to show an upgrade
-    // notification...
-    vol.fromJSON({
-      'package.json': JSON.stringify({
-        devDependencies: {
-          '@cedarjs/core': 'file:/some/path/tarballs/cedarjs-core.tgz',
-        },
-      }),
+      // Stale data from before the project switched to a non-pinned spec
       '.cedar/updateCheck/data.json': JSON.stringify({
         localVersion: '1.0.0',
         remoteVersions: { latest: '2.0.0' },
@@ -496,129 +313,34 @@ describe('Local version is not comparable (file: tarball or workspace spec)', ()
       }),
     })
 
-    // ...but the project has since switched to a tarball spec, so after the
-    // next (skipped) check the stale 1.0.0 -> 2.0.0 data must not survive
     await updateCheck.check()
 
-    expect(updateCheck.shouldShow()).toBe(false)
-  })
-
-  it('Skips the check for a workspace:* spec without hanging', async () => {
-    vol.fromJSON({
-      'package.json': JSON.stringify({
-        devDependencies: {
-          '@cedarjs/core': 'workspace:*',
-        },
-      }),
-    })
-
-    await updateCheck.check()
+    expect(latestVersion).not.toHaveBeenCalled()
 
     const data = updateCheck.readUpdateDataFile()
-    expect(data.localVersion).toBe('workspace:*')
+    expect(data.localVersion).toBe('0.0.0')
     expect(data.remoteVersions.size).toBe(0)
-  })
+    expect(data.checkedAt).toBe(TESTING_CURRENT_DATETIME)
 
-  it('Does not want to show for a persisted non-semver localVersion', () => {
-    vol.fromJSON({
-      // The current spec is comparable, so this specifically exercises the
-      // guard against previously persisted non-semver data
-      'package.json': JSON.stringify({
-        devDependencies: {
-          '@cedarjs/core': '^1.0.0',
-        },
-      }),
-      '.cedar/updateCheck/data.json': JSON.stringify({
-        localVersion: 'file:/some/path/tarballs/cedarjs-core.tgz',
-        remoteVersions: { latest: '2.0.0' },
-        checkedAt: TESTING_CURRENT_DATETIME,
-        shownAt: updateCheck.DEFAULT_DATETIME_MS,
-      }),
-    })
-
-    expect(updateCheck.shouldShow()).toBe(false)
-  })
-
-  it('Does not show stale data while the cache is still fresh', () => {
-    // The project was on a comparable version, a check ran recently (fresh
-    // checkedAt means shouldCheck() is false, so check() won't run and clear
-    // the data), and the project has since switched to a tarball spec. The
-    // stale 1.0.0 -> 2.0.0 notification must not show.
-    vol.fromJSON({
-      'package.json': JSON.stringify({
-        devDependencies: {
-          '@cedarjs/core': 'file:/some/path/tarballs/cedarjs-core.tgz',
-        },
-      }),
-      '.cedar/updateCheck/data.json': JSON.stringify({
-        localVersion: '1.0.0',
-        remoteVersions: { latest: '2.0.0' },
-        checkedAt: TESTING_CURRENT_DATETIME,
-        shownAt: updateCheck.DEFAULT_DATETIME_MS,
-      }),
-    })
-
+    // The recorded check prevents re-running on every command, and the
+    // cleared versions prevent showing the stale notification
     expect(updateCheck.shouldCheck()).toBe(false)
     expect(updateCheck.shouldShow()).toBe(false)
   })
 })
 
-describe('Project version changed while the cache is still fresh', () => {
-  beforeAll(async () => {
-    const actualProjectConfig = await vi.importActual<typeof ProjectConfig>(
-      '@cedarjs/project-config',
-    )
-
-    const config = actualProjectConfig.DEFAULT_CONFIG
-
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date(TESTING_CURRENT_DATETIME))
-    vi.mocked(getConfig).mockReturnValue({
-      ...config,
-      notifications: {
-        ...config.notifications,
-        versionUpdates: ['latest'],
-      },
-    })
-
-    // @ts-expect-error - This is assignable in tests
-    fs.statSync = vi.fn((lockfilePath) => {
-      if (!vol.existsSync(lockfilePath as string)) {
-        const error = new Error(
-          `ENOENT: no such file or directory, stat '${lockfilePath}'`,
-        ) as NodeJS.ErrnoException
-        error.code = 'ENOENT'
-        throw error
-      }
-      return {
-        birthtimeMs: Date.now(),
-      }
-    })
-
-    vi.spyOn(console, 'log').mockImplementation(() => {})
-    vi.spyOn(console, 'time').mockImplementation(() => {})
-    vi.spyOn(console, 'timeEnd').mockImplementation(() => {})
+describe('Project version changed while the cached data is still fresh', () => {
+  beforeAll(() => {
+    setVersionUpdates(['latest'])
   })
 
-  afterAll(() => {
-    vi.useRealTimers()
-  })
-
-  afterEach(() => {
-    vol.reset()
-    vi.clearAllMocks()
-  })
-
-  it('Forces a fresh check and does not show a stale notification when the cached localVersion no longer matches the current spec', () => {
+  it('Forces a fresh check and does not show a stale notification', () => {
     // The cache says the project is on 1.0.0 with a 2.0.0 update available,
-    // and checkedAt is fresh (well within CHECK_PERIOD). But the project has
-    // since been bumped to 2.0.0 itself. Without validating the spec against
-    // the cached localVersion, shouldShow() would tell a project already on
-    // 2.0.0 that it's on 1.0.0 and should upgrade to 2.0.0.
+    // but the project has since been upgraded to 2.0.0 itself
     vol.fromJSON({
       'package.json': JSON.stringify({
         devDependencies: {
-          '@cedarjs/core': '^2.0.0',
+          '@cedarjs/core': '2.0.0',
         },
       }),
       '.cedar/updateCheck/data.json': JSON.stringify({
@@ -629,9 +351,7 @@ describe('Project version changed while the cache is still fresh', () => {
       }),
     })
 
-    // The mismatch should force a fresh check even though checkedAt is fresh
     expect(updateCheck.shouldCheck()).toBe(true)
-    // And must not show the misleading 1.0.0 -> 2.0.0 notification
     expect(updateCheck.shouldShow()).toBe(false)
   })
 })
