@@ -51,8 +51,19 @@ export const getExecaOptions = (
   // Yarn sets PROJECT_CWD which causes @cedarjs/web/dist/cjs/bins/cedar.js to
   // chdir to the Yarn project root, overriding our explicit cwd. Unset it so
   // that the child process inherits our intended working directory.
+  //
+  // Yarn also sets npm_config_user_agent, which getPackageManager() trusts
+  // over the target directory's own lockfiles. When this script is invoked
+  // via `yarn rebuild-test-project-fixture --pm npm/pnpm`, that leaked agent
+  // makes nested tools (cfw's script dispatch, the CLI's internal
+  // `<pm> cedar prisma generate` spawn, ...) pick yarn inside npm/pnpm
+  // projects. Unset it so detection falls back to lockfiles, which are
+  // correct both in the framework repo (yarn) and in the test project.
+  const droppedEnvVars = ['PROJECT_CWD', 'npm_config_user_agent']
   const env = Object.fromEntries(
-    Object.entries(process.env).filter(([key]) => key !== 'PROJECT_CWD'),
+    Object.entries(process.env).filter(
+      ([key]) => !droppedEnvVars.includes(key),
+    ),
   )
   env.RW_PATH = path.join(__dirname, '../../')
   env.CFW_PATH = path.join(__dirname, '../../')

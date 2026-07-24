@@ -20,7 +20,6 @@ import {
   getExecaOptions as utilGetExecaOptions,
   ExecaError,
   exec,
-  getCfwBin,
 } from './util.mts'
 
 function recommendedNodeVersion({ esm } = { esm: false }) {
@@ -437,23 +436,37 @@ async function rebuildTestProject() {
 
   await tuiTask({
     step: 2,
-    title: 'Installing node_modules',
-    content: `${packageManager} install`,
+    title: 'Syncing framework packages',
+    content: 'yarn project:tarsync',
     task: async () => {
-      // TODO: See if this is needed now with tarsync
-      await exec(
-        `${packageManager} install`,
-        [],
-        getExecaOptions(OUTPUT_PROJECT_PATH),
-      )
+      // The step above ran create-cedar-app with `--no-install`. Instead we
+      // rely on tarsync running install after it has copied the tarballs over.
+      // Before that first install an npm project carries no package-manager
+      // marker at all (no lockfile yet, and npm projects have no
+      // `packageManager` field), so tarsync's detection would fall back to
+      // yarn. To work around that we drop an empty package-lock.json as the
+      // marker. This can go away once create-cedar-app ships real npm lockfiles
+      // (see https://github.com/cedarjs/cedar/issues/2182).
+      if (packageManager === 'npm') {
+        fs.writeFileSync(
+          path.join(OUTPUT_PROJECT_PATH, 'package-lock.json'),
+          '',
+        )
+      }
 
-      // TODO: Now that I've added this, I wonder what other steps I can remove
-      const cfwBin = packageManager === 'npm' ? 'npx' : packageManager
-      return exec(
-        `${cfwBin} ${getCfwBin(OUTPUT_PROJECT_PATH)} project:tarsync`,
-        [],
-        getExecaOptions(OUTPUT_PROJECT_PATH),
-      )
+      // Run the framework's own `project:tarsync` script directly (the same way
+      // CI's set-up-test-project action does) instead of going through the
+      // project-installed `cfw` bin. cfw runs the framework package.json script
+      // it's given (`cfw project:tarsync` -> `<pm> project:tarsync`) with the
+      // package manager that invoked cfw, but with cwd set to the framework
+      // repo. This won't work for npm/pnpm because the framework repo pins yarn
+      // via its `packageManager` field, and corepack refuses to run any other
+      // package manager than the pinned one.
+      const tarsyncOptions = getExecaOptions(CEDAR_FRAMEWORK_PATH)
+      tarsyncOptions.env ??= {}
+      tarsyncOptions.env['CEDAR_CWD'] = OUTPUT_PROJECT_PATH
+
+      return exec('yarn project:tarsync', [], tarsyncOptions)
     },
   })
 
