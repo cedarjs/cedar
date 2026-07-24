@@ -65,6 +65,31 @@ function getPersistenceDirectory() {
 }
 
 /**
+ * Reads the @cedarjs/core version from the project's package.json. Cedar
+ * projects pin an exact version, so anything that isn't a plain
+ * "1.2.3"-style semver version (ranges, `file:` tarballs, `workspace:*`,
+ * etc.) returns undefined — there's nothing meaningful to compare against.
+ */
+function getLocalVersion(): string | undefined {
+  let version: unknown
+
+  try {
+    const packageJson = JSON.parse(
+      fs.readFileSync(path.join(getPaths().base, 'package.json'), 'utf-8'),
+    )
+    version = packageJson.devDependencies?.['@cedarjs/core']
+  } catch {
+    return undefined
+  }
+
+  if (typeof version === 'string' && semver.valid(version)) {
+    return version
+  }
+
+  return undefined
+}
+
+/**
  * Performs an update check to detect if a newer version of Cedar is available
  * and records the result to a file within .cedar for persistence
  */
@@ -72,16 +97,22 @@ export async function check() {
   try {
     console.time('Update Check')
 
-    // Read package.json and extract the @cedarjs/core version
-    const packageJson = JSON.parse(
-      fs.readFileSync(path.join(getPaths().base, 'package.json'), 'utf-8'),
-    )
-    let localVersion = packageJson.devDependencies['@cedarjs/core']
+    const localVersion = getLocalVersion()
 
-    // Remove any leading non-digits, i.e. ^ or ~
-    while (!/\d/.test(localVersion.charAt(0))) {
-      localVersion = localVersion.substring(1)
+    if (!localVersion) {
+      console.log(
+        'Skipping update check: no pinned @cedarjs/core version found',
+      )
+      // Record the check so it isn't re-run on every command, and clear any
+      // previously stored versions so a stale notification can't show
+      updateUpdateDataFile({
+        localVersion: '0.0.0',
+        remoteVersions: new Map(),
+        checkedAt: new Date().getTime(),
+      })
+      return
     }
+
     console.log(`Detected the current version of Cedar: '${localVersion}'`)
 
     const remoteVersions = new Map()
@@ -133,8 +164,16 @@ export function shouldCheck() {
     return false
   }
 
-  // Check if we haven't checked recently
   const data = readUpdateDataFile()
+
+  // The project's version can change (e.g. an upgrade) while the cached data
+  // is still fresh, so force a new check whenever they disagree
+  const localVersion = getLocalVersion()
+  if (localVersion && localVersion !== data.localVersion) {
+    return true
+  }
+
+  // Check if we haven't checked recently
   return data.checkedAt < new Date().getTime() - CHECK_PERIOD
 }
 
@@ -149,11 +188,22 @@ export function shouldShow() {
     return false
   }
 
+  // Only projects with a pinned version get update notifications. Comparing
+  // against the current version (rather than the stored one) also means
+  // cached data that predates a version change can't produce a notification
+  // the project has already acted on.
+  const localVersion = getLocalVersion()
+
+  if (!localVersion) {
+    return false
+  }
+
   // Check there is a new version and we haven't shown the user recently
   const data = readUpdateDataFile()
+
   let newerVersion = false
   data.remoteVersions.forEach((version) => {
-    newerVersion ||= semver.gt(version, data.localVersion)
+    newerVersion ||= semver.gt(version, localVersion)
   })
   return data.shownAt < new Date().getTime() - SHOW_PERIOD && newerVersion
 }
