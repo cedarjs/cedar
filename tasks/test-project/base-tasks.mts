@@ -39,6 +39,29 @@ function getPagesTasks(live = false, packageManager: PackageManager = 'yarn') {
           'homePage.js',
           fullPath('web/src/pages/HomePage/HomePage'),
         )
+
+        // The home page renders BlogPostsCell, so this test verifies that
+        // cell mock data is registered as MSW request handlers and that the
+        // cell's GraphQL request is intercepted
+        const testFileContent = `import { render, screen } from '@cedarjs/testing/web'
+
+      import HomePage from './HomePage'
+
+      describe('HomePage', () => {
+        it('renders the blog posts from the cell mock', async () => {
+          render(<HomePage />)
+
+          const titles = await screen.findAllByText('Mocked title')
+
+          expect(titles).toHaveLength(3)
+        })
+      })
+      `
+
+        fs.writeFileSync(
+          fullPath('web/src/pages/HomePage/HomePage.test'),
+          testFileContent,
+        )
       },
     },
     {

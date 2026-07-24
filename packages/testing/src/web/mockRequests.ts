@@ -90,6 +90,18 @@ export const closeServer = () => {
   } else {
     SERVER_INSTANCE.stop()
   }
+
+  // Clear the instance so that a later `startMSW()` call starts a fresh
+  // server instead of returning the closed one. This matters when the same
+  // module instance is reused across test files, like when running Vitest
+  // with `isolate: false`.
+  // `REQUEST_HANDLER_QUEUE` is deliberately NOT cleared here: it holds the
+  // "global" handlers (cell mocks and `mockGraphQL*` calls made before the
+  // server started) that `setupRequestHandlers()` re-registers after every
+  // test. When the module instance is reused across test files, the module
+  // cache also prevents cell mock files from re-registering on re-import, so
+  // clearing the queue would permanently lose those global mocks
+  SERVER_INSTANCE = undefined
 }
 
 export const registerHandler = (handler: RequestHandler) => {
