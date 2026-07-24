@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/utils",
-  "version": "5.0.2",
+  "version": "5.0.3",
   "description": "Shared utilities for CedarJS packages and apps",
   "repository": {
     "type": "git",

@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/core",
-  "version": "5.0.2",
+  "version": "5.0.3",
   "description": "Foundational packages and config required to build CedarJS",
   "repository": {
     "type": "git",
