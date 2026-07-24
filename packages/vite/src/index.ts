@@ -17,6 +17,7 @@ import { getConfig } from '@cedarjs/project-config'
 import {
   autoImportsPlugin,
   cedarJsRouterImportTransformPlugin,
+  cedarVitestWebConfigPlugin,
   createAuthImportTransformPlugin,
 } from '@cedarjs/testing/web/vitest'
 
@@ -97,6 +98,7 @@ export function cedar({ mode, babel }: PluginOptions = {}): PluginOption[] {
     mode === 'test' && cedarJsRouterImportTransformPlugin(),
     mode === 'test' && createAuthImportTransformPlugin(),
     mode === 'test' && autoImportsPlugin(),
+    mode === 'test' && cedarVitestWebConfigPlugin(),
     cedarWaitForApiServer(),
     cedarDataUriShim(),
     cedarHtmlEnvPlugin(),

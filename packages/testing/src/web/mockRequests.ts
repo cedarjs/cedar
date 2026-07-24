@@ -90,6 +90,12 @@ export const closeServer = () => {
   } else {
     SERVER_INSTANCE.stop()
   }
+
+  // Clear the instance so that a later `startMSW()` call starts a fresh
+  // server instead of returning the closed one. This matters when the same
+  // module instance is reused across test files, like when running Vitest
+  // with `isolate: false`
+  SERVER_INSTANCE = undefined
 }
 
 export const registerHandler = (handler: RequestHandler) => {
