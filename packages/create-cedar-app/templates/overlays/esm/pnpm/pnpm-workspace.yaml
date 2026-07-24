@@ -1,3 +1,5 @@
+autoInstallPeers: false
+
 packages:
   - api
   - web
@@ -19,3 +21,4 @@ allowBuilds:
 
 overrides:
   'react-is': '19.2.3'
+  'vite': '7.3.5'
