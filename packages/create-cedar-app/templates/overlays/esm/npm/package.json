@@ -10,12 +10,14 @@
     "@cedarjs/eslint-config": "5.0.2",
     "@cedarjs/project-config": "5.0.2",
     "@cedarjs/testing": "5.0.2",
-    "prisma": "7.8.0"
+    "prisma": "7.8.0",
+    "vitest": "4.1.10"
   },
   "engines": {
     "node": "=24.x"
   },
   "overrides": {
-    "react-is": "19.2.3"
+    "react-is": "19.2.3",
+    "vite": "7.3.5"
   }
 }
