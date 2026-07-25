@@ -36,7 +36,10 @@ const spawnProcess = (...args: string[]) => {
         windowsHide: true,
       }
 
-  const scriptArgs = [path.join(__dirname, 'scripts', 'invoke.js'), ...args]
+  const scriptArgs = [
+    path.join(import.meta.dirname, 'scripts', 'invoke.js'),
+    ...args,
+  ]
 
   if (isWindows) {
     // Use command string with empty args array to avoid DEP0190 warning when
