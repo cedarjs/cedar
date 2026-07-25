@@ -1,6 +1,6 @@
-Here's the breakdown of the 76 packages in the CedarJS monorepo:
+Here's the breakdown of the 74 packages in the CedarJS monorepo:
 
-CJS Only (29)
+CJS Only (27)
 
 - fastify-web (adapters/fastify/web)
 - cli-data-migrate
@@ -29,21 +29,16 @@ CJS Only (29)
 - auth-supabase-setup
 - auth-supertokens-api
 - auth-supertokens-setup
-- cedarjs-jest-api-preset (testing/config/jest/api)
-- cedarjs-jest-web-preset (testing/config/jest/web)
 
-ESM Only (17)
+ESM Only (14)
 
 - cli
-- cli-helpers
 - codemods
-- context
 - core
 - create-cedar-app
 - create-cedar-rsc-app
 - framework-tools
 - realtime
-- record
 - storybook
 - structure
 - utils
@@ -52,12 +47,14 @@ ESM Only (17)
 - tui (https://github.com/cedarjs/cedar/pull/2205)
 - web-server (https://github.com/cedarjs/cedar/pull/2207)
 
-Dual Mode – CJS + ESM (30)
+Dual Mode – CJS + ESM (33)
 
 - api
 - api-server
 - auth
 - babel-config
+- cli-helpers
+- context
 - cookie-jar
 - eslint-config
 - forms
@@ -68,6 +65,7 @@ Dual Mode – CJS + ESM (30)
 - ogimage-gen
 - prerender
 - project-config
+- record
 - router
 - server-store
 - storage
@@ -85,8 +83,8 @@ Dual Mode – CJS + ESM (30)
 - auth-supabase-middleware
 - auth-supertokens-web
 
-Summary: Of the 76 packages, 30 are dual mode (CJS + ESM), 29 are CJS-only, and
-17 are ESM-only. The CJS-only group is dominated by the `auth-providers/*`
+Summary: Of the 74 packages, 33 are dual mode (CJS + ESM), 27 are CJS-only, and
+14 are ESM-only. The CJS-only group is dominated by the `auth-providers/*`
 `api`/`setup` sub-packages and the `mailer/*` sub-packages, which all build with
 esbuild's default `cjs` format and never emit an ESM output. The `*-web` and
 `*-middleware` auth-provider packages, by contrast, build both ESM and CJS (via
@@ -96,17 +94,37 @@ packages that have been explicitly converted to drop their CJS build entirely,
 with `eslint-plugin`, `telemetry`, `tui`, and `web-server` being the most recent
 conversions.
 
+**Correction (2026-07-25 review):** an earlier revision of this doc listed
+`cli-helpers`, `context`, and `record` under ESM Only, and listed
+`testing/config/jest/api` and `testing/config/jest/web` as standalone CJS-only
+packages. Neither holds up:
+
+- `cli-helpers`, `context`, and `record` all still build both an ESM and a CJS
+  output (`build.ts`/`build.mts` call `build()`/`buildEsm()` followed by a
+  second pass with `format: 'cjs'` or `buildCjs()`, and their `package.json`
+  `exports` maps point `import` at `dist/*.js` and `require`/`default` at
+  `dist/cjs/*.js`). They belong in Dual Mode, not ESM Only.
+- `testing/config/jest/api/package.json` and `testing/config/jest/web/package.json`
+  are not independent packages — they're not listed in the root `workspaces`
+  globs, and `@cedarjs/testing`'s own `package.json` ships them via its
+  `"files": ["config", "dist"]` entry. They're nested marker `package.json`
+  files (same purpose as `web/toast/package.json` and `web/apollo/package.json`,
+  which were correctly excluded), used only so
+  `require('@cedarjs/testing/config/jest/api')` resolves a subpath — not
+  packages that could themselves be "converted" to ESM. They've been removed
+  from the inventory.
+
 ## CJS Only -> ESM Only: candidates given the Node 24 requirement
 
 CedarJS has a hard requirement on Node 24 (`node: "=24.x"` in the generated
 project templates, `node: ">=24"` in `create-cedar-app`), which has unflagged
 support for `require(esm)` — a CJS `require()` call can now synchronously load a
 real ESM module, as long as that module (and its transitive graph) has no
-top-level `await`. This removes the original reason most of the 29 CJS-only
+top-level `await`. This removes the original reason most of the 27 CJS-only
 packages were left CJS-only: they didn't need a parallel CJS build because
 nothing was actually blocked from `require()`-ing an ESM build anymore.
 
-Checking actual consumers of the 29 CJS-only packages across the monorepo and
+Checking actual consumers of the 27 CJS-only packages across the monorepo and
 generated templates:
 
 - **`mailer-core`, `mailer-handler-*`, `mailer-renderer-*`**: the only
@@ -126,15 +144,8 @@ generated templates:
   that now resolves via `require(esm)` instead of throwing `ERR_REQUIRE_ESM`.
   Safe given the Node 24 floor, but end-user-facing — worth a smoke test against
   a generated commonjs-template project before converting.
-- **`cedarjs-jest-api-preset`, `cedarjs-jest-web-preset`**: read by Jest's own
-  `preset` resolution in generated projects' `jest.config.js`. Jest's
-  config/preset loader (`requireOrImportModule`) already tries `require()` first
-  and only falls back to `import()` on `ERR_REQUIRE_ESM`, so this should also
-  just work — but it's the most indirect path (goes through Jest's own module
-  loader, version-dependent), so verify concretely against the actual pinned
-  Jest version before shipping.
 
-**Conclusion**: all 29 CJS-only packages are viable candidates for conversion to
+**Conclusion**: all 27 CJS-only packages are viable candidates for conversion to
 ESM-only. Suggested sequencing, low-risk first:
 
 1. `mailer-core`, `mailer-handler-in-memory`, `mailer-handler-nodemailer`,
@@ -145,5 +156,3 @@ ESM-only. Suggested sequencing, low-risk first:
 2. The 17 `auth-*-api` / `auth-*-setup` packages — mechanically identical
    conversion, batch together, smoke-test against a generated commonjs template
    project.
-3. `cedarjs-jest-api-preset`, `cedarjs-jest-web-preset` — convert last, verify
-   with an actual `jest` run in a generated project.
