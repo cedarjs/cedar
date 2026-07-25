@@ -37,7 +37,7 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "5.0.1",
     "@prisma/internals": "7.8.0",
-    "esbuild": "0.27.7",
+    "esbuild": "0.28.1",
     "publint": "0.3.21",
     "vitest": "4.1.10"
   },
