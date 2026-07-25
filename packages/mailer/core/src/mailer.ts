@@ -1,3 +1,5 @@
+import { createRequire } from 'node:module'
+
 import type { Logger } from '@cedarjs/api/logger'
 
 import type { AbstractMailHandler } from './handler.js'
@@ -12,6 +14,13 @@ import type {
   MailResult,
 } from './types.js'
 import { constructCompleteSendOptions, extractDefaults } from './utils.js'
+
+// The optional fallback handlers below are loaded with `require()` rather
+// than `import()` so that the constructor can stay synchronous. `require()`
+// isn't a global in ESM, so we need our own via `createRequire`. Node 24's
+// `require(esm)` support lets this keep working even though the handler
+// packages it loads are ESM.
+const require = createRequire(import.meta.url)
 
 export class Mailer<
   THandlers extends MailHandlers,
