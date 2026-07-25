@@ -139,11 +139,10 @@ runs:
     - name: 🏗️ Build
       if: inputs.build == 'true'
       shell: bash
-      run: |
-        set -o pipefail
-        yarn build || {
-          echo "::group::package.json diagnostics"
-          node $GITHUB_WORKSPACE/.github/scripts/diagnose-package-json.mjs || true
-          echo "::endgroup::"
-          exit 1
-        }
+      # `--output-style=stream` is important. Nx's default CI output style
+      # buffers each task's output and only flushes it when that task finishes.
+      # When the Nx process itself dies mid-run (which has happened on Windows)
+      # everything the in-flight tasks printed is lost, and the step fails with
+      # no error output at all. Streaming keeps the output even if we never get
+      # a task summary.
+      run: bash "$GITHUB_WORKSPACE/.github/scripts/run-nx.sh" yarn build --output-style=stream
