@@ -1608,3 +1608,134 @@ Ctrl-C-responsiveness issue, not only a test-harness one.
   handler covered: a hanging or rejecting `close()` could leave the server
   running; it now force-exits after a bounded 5s grace and a second Ctrl+C
   exits immediately.
+
+---
+
+## Update 2026-07-25 — New signature: V8 debug-scopes fatal during CDP inspector tests (Ubuntu UD tests)
+
+### Evidence
+
+From run
+[30150844400](https://github.com/cedarjs/cedar/actions/runs/30150844400/job/89663336890?pr=2190)
+(PR #2190, Universal Deploy tests on Ubuntu). 2 of 5 tests in `udDev.test.mts`
+failed — and they are exactly the two debugger tests:
+
+- `cedar dev --ud --debug-port > opens the inspector on the given port, allows
+CDP interaction, and can pause/resume execution` — timed out after 60s
+- `cedar dev --ud --debug-brk > blocks the server until a debugger connects,
+then serves requests normally` — failed in 5.7s
+
+### Chronology
+
+| Time (UTC) | Event                                                                                                                                |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 08:55:30   | Vitest run starts; the 3 non-debugger tests pass                                                                                     |
+| 08:55:33   | `[vite] (client) error while updating dependencies: The service was stopped: write EPIPE`                                            |
+| 08:55:35   | Two more Vite pre-transform errors: `The service is no longer running: write EPIPE`                                                  |
+| 08:55:38   | **V8 fatal error** (see below) — the UD dev server node process aborts                                                               |
+| 08:56:41   | Inspector test hits the 60s test timeout                                                                                             |
+| 08:56:51   | Unhandled `CDP WebSocket closed unexpectedly` (udDev.test.mts:281); `Too late to kill the process` in `vitest.setup.mts:48` teardown |
+
+The V8 fatal error:
+
+```
+# Fatal error in , line 0
+# Check failed: needs_context && current_scope_ == closure_scope_ &&
+  current_scope_->is_function_scope() && !function_.is_null() implies
+  function_->context() != *context_.
+```
+
+### Root cause: known upstream V8 debugger bug
+
+This `Check failed` is an assertion in V8's debug scope iterator
+(`src/debug/debug-scopes.cc`). It fires **in the inspected process** when an
+attached debugger pauses and V8 enumerates scopes over certain constructs
+(closures, `for...of` loops). It is a known, still-open class of upstream bug
+affecting every V8-based runtime when a debugger is attached:
+
+- [nodejs/node#58460](https://github.com/nodejs/node/issues/58460) — crash when
+  debugging code with `for...of` loops
+- [nodejs/node#57606](https://github.com/nodejs/node/issues/57606) — fatal error
+  in V8 debugging context (breakpoints, scope evaluation, closures)
+- [denoland/deno#26674](https://github.com/denoland/deno/issues/26674),
+  [cloudflare/workerd#3248](https://github.com/cloudflare/workerd/issues/3248) —
+  same assertion in other V8 embedders
+
+The failure sequence: the CDP test attaches to the UD dev server
+(`--debug-port`), drives `Debugger.pause`/`resume` → V8 hits the debug-scopes
+assertion and aborts the dev-server process → the CDP WebSocket closes → the
+test never gets its awaited response and idles to the 60s timeout. The
+follow-on `--debug-brk` test fails during setup/teardown against the dead
+process tree (`Too late to kill the process` — zx's kill() after the process
+already exited).
+
+This is a **new signature (H)** — same family as signature A in spirit (a V8
+bug crashing a server process mid-test) but a different V8 subsystem
+(debug-scopes assertion vs Maglev JIT), a different trigger (debugger attach +
+pause, not JIT tier-up), and a different platform (Ubuntu). `--no-maglev` is
+not expected to help here.
+
+Note: the esbuild `write EPIPE` lines just before the crash look like
+signature D, but here they are most likely collateral/noise around the dying
+process tree — the decisive event is the V8 fatal, and only the two debugger
+tests failed (signature D's typical casualty is the API-function test via 404s).
+
+### Why the test burns 60s instead of failing fast
+
+The CDP helper's `ws.on('close')` handler (udDev.test.mts:281) only rejects
+**pending** CDP requests. If the WebSocket closes while the test is between
+CDP calls, the rejection lands as an unhandled error and nothing fails the
+running test — it just waits out the full 60s `testTimeout`.
+
+### Possible mitigations
+
+1. **Fail fast on CDP close** — track a `closed` flag in the CDP helper and
+   reject any _subsequent_ send immediately; or surface the close as a
+   rejection of a test-owned promise raced against the test body.
+2. **Vitest `retry` on the two debugger tests** — the crash is
+   non-deterministic; a retry with a fresh server process should pass.
+3. **Teardown guard** — check `p.exitCode === null` before `p.kill()` in
+   `vitest.setup.mts` to avoid the `Too late to kill the process` noise.
+4. **Track upstream** — the assertion failure needs a V8 fix; check whether
+   newer Node 24.x releases picked up a fix before investing more in
+   workarounds.
+
+### Reproduction attempt (2026-07-25)
+
+A stand-alone CDP repro harness was built against the shapes from the
+upstream reports (closure in a `for...of` body capturing outer + loop
+variables; the same inside a Vite-ssrLoadModule-style `new AsyncFunction`
+wrapper; and a late-attach `Debugger.pause` fuzzer over hot JIT-optimized
+code with generators, private class fields, and catch bindings). It did
+**not** reproduce on Node v24.18.0 on macOS arm64, Linux arm64, or Linux x64
+(300 pause/inspect/resume cycles each). The minimal 23.x-era cases appear
+fixed; the CI crash evidently needs richer state (a real dev server, possibly
+already degraded — it happened seconds after esbuild died with EPIPE). Not
+economically reproducible; going with mitigations instead.
+
+### Mitigations applied (2026-07-25)
+
+Mitigations 1 and 2, in `tasks/ud-tests/udDev.test.mts`:
+
+- The CDP helper now tracks `closed` state: `send()` rejects immediately on a
+  closed socket, and a new `once(event)` helper returns a promise that
+  rejects when the WebSocket closes (with an "unexpectedly — did the
+  inspected process crash?" message when the close wasn't test-initiated).
+  The tests' manual `Debugger.paused` promise wiring was replaced with
+  `once()`, so a dev-server crash now fails the test immediately instead of
+  idling until the 60s test timeout, and the previously-unhandled
+  "CDP WebSocket closed unexpectedly" rejection is now observed by the test.
+- Both debugger tests use `{ retry: 2 }`; each attempt starts a fresh dev
+  server process, so a retry sidesteps the non-deterministic crash.
+
+Mitigation 3 (teardown guard) was superseded by the harness redesign in
+[#2200](https://github.com/cedarjs/cedar/pull/2200) (`stopProcess()` with
+SIGTERM → SIGKILL escalation over pre-snapshotted pids and bounded waits, see
+the EADDRINUSE entry above); mitigation 4 (upstream fix) remains open.
+
+Also added in review ([#2201](https://github.com/cedarjs/cedar/pull/2201)):
+the CDP socket-close handler rejects every in-flight request and event waiter
+at once, but a test only awaits one of them — sibling promises are passed
+through a `markRejectionHandled()` helper at creation so their rejections are
+observed (no unhandled-rejection noise contaminating the vitest run) while a
+later `await` on them still throws.
