@@ -1,12 +1,14 @@
 import type { ESLintUtils } from '@typescript-eslint/utils'
 
+import pkgJson from '../package.json' with { type: 'json' }
+
 import { processEnvComputedRule } from './process-env-computed.js'
 import { serviceTypeAnnotations } from './service-type-annotations.js'
 import { unsupportedRouteComponents } from './unsupported-route-components.js'
 
 export const meta = {
   name: '@cedarjs/eslint-plugin',
-  version: require('../package.json').version,
+  version: pkgJson.version,
 }
 
 export const rules = {

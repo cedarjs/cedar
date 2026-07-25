@@ -34,7 +34,7 @@
     "execa": "5.1.1",
     "listr2": "10.2.2",
     "termi-link": "1.1.0",
-    "vite": "7.3.5",
+    "vite": "7.3.6",
     "yargs": "17.7.3"
   },
   "devDependencies": {

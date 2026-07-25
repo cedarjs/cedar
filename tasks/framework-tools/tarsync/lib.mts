@@ -127,14 +127,21 @@ function isPackageManager(value: unknown): value is PackageManager {
  * Work out which package manager the *target project* uses.
  *
  * Deliberately reads the project rather than the ambient environment.
- * `npm_config_user_agent` is no help here: tarsync is normally reached through
- * `cfw`, which runs it as a script of the framework repo — a yarn workspace —
- * so that variable always says "yarn" no matter what the target project uses.
+ * `npm_config_user_agent` is no help here: it names whatever package manager
+ * ran the framework script. That can happen to match the target project
+ * (`pnpm exec cfw` run inside a pnpm project), but in the primary flow with
+ * `yarn project:tarsync` in the framework repo it says "yarn" no matter what
+ * the target project uses, so it carries no reliable signal.
  *
- * Lockfiles alone aren't enough either, because a lockfile is an *output* of
- * the first install. A project being set up for pnpm or npm won't have one yet,
- * so we also accept the markers that exist before install: pnpm's workspace
- * file, and the `packageManager` field.
+ * A project that hasn't had its first install yet won't have a *real* lockfile,
+ * so detection leans on the markers that exist from project creation: the
+ * `packageManager` field (yarn and pnpm) and pnpm's workspace file. For npm
+ * projects there are no good marker. And just relying on the exclusion of other
+ * markers feels fragile. So instead the flows that set up npm projects before
+ * their first install (the CI test-project conversion and the fixture rebuild
+ * script) drop an empty package-lock.json into the project so it's
+ * recognizable as an npm one. Once create-cedar-app ships real npm lockfiles
+ * (see #2182) new npm projects will carry the marker on their own.
  */
 export async function detectPackageManager(
   projectPath: string,

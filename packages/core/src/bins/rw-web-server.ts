@@ -5,11 +5,13 @@
 // major release.
 
 import { createRequire } from 'node:module'
+import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 const require = createRequire(import.meta.url)
-const requireFromWebServer = createRequire(
-  require.resolve('@cedarjs/web-server/package.json'),
-)
+const webServerPackageJsonPath =
+  require.resolve('@cedarjs/web-server/package.json')
+const webServerPackageJson = require(webServerPackageJsonPath)
 
 console.warn()
 console.warn(
@@ -17,6 +19,10 @@ console.warn(
 )
 console.warn()
 
-const bins = requireFromWebServer('./package.json')['bin']
+const bins = webServerPackageJson['bin']
+const binPath = path.join(
+  path.dirname(webServerPackageJsonPath),
+  bins['cedar-web-server'],
+)
 
-requireFromWebServer(bins['cedar-web-server'])
+await import(pathToFileURL(binPath).href)

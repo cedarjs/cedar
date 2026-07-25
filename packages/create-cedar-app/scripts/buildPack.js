@@ -1,9 +1,14 @@
 import fs from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { cd, within, $ } from 'zx'
+import { $ } from 'zx'
+
+import {
+  generateNpmLockfile,
+  generatePnpmLockfile,
+  generateYarnLockfile,
+} from './generateLockfile.js'
 
 const tsTemplatePath = fileURLToPath(
   new URL('../templates/ts', import.meta.url),
@@ -16,39 +21,6 @@ const esmTsTemplatePath = fileURLToPath(
 const overlaysPath = fileURLToPath(
   new URL('../templates/overlays', import.meta.url),
 )
-
-async function generateLockfile(
-  templatePath,
-  overlayDir,
-  lockfileName,
-  packageManager,
-  packageManagerArgs = [],
-) {
-  console.log(`Generating ${lockfileName}...`)
-  const tmpDir = fs.mkdtempSync(
-    path.join(os.tmpdir(), `cedar-${packageManager}-`),
-  )
-
-  try {
-    fs.cpSync(templatePath, tmpDir, { recursive: true })
-    fs.cpSync(overlayDir, tmpDir, { recursive: true, force: true })
-
-    await within(async () => {
-      cd(tmpDir)
-
-      await $`touch ${lockfileName}`
-      console.log(`Installing dependencies using ${packageManager}...`)
-      await $`${packageManager} ${packageManagerArgs}`
-    })
-
-    const lockDest = path.join(overlayDir, lockfileName)
-    fs.copyFileSync(path.join(tmpDir, lockfileName), lockDest)
-
-    return lockDest
-  } finally {
-    fs.rmSync(tmpDir, { recursive: true, force: true })
-  }
-}
 
 // For each (baseTemplate, overlayBase) pair we generate lockfiles for all
 // three package managers and store them in the PM-specific overlay dir.
@@ -66,29 +38,19 @@ const generatedFiles = []
 for (const { templatePath, overlayBase } of configs) {
   const overlaysBaseDir = path.join(overlaysPath, overlayBase)
 
-  const yarnLock = await generateLockfile(
+  const yarnLock = await generateYarnLockfile(
     templatePath,
     path.join(overlaysBaseDir, 'yarn'),
-    'yarn.lock',
-    'yarn',
   )
 
-  const npmLock = await generateLockfile(
+  const npmLock = await generateNpmLockfile(
     templatePath,
     path.join(overlaysBaseDir, 'npm'),
-    'package-lock.json',
-    'npm',
-    // TODO(PM): remove the `--force` and `--loglevel` flags when we're shipping
-    // React 19
-    ['install', '--force', '--loglevel', 'error'],
   )
 
-  const pnpmLock = await generateLockfile(
+  const pnpmLock = await generatePnpmLockfile(
     templatePath,
     path.join(overlaysBaseDir, 'pnpm'),
-    'pnpm-lock.yaml',
-    'pnpm',
-    ['install'],
   )
 
   generatedFiles.push(yarnLock, npmLock, pnpmLock)

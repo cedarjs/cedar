@@ -21,8 +21,9 @@ jobs:
       fail-fast: false
       matrix:
         packageManager: [npm, pnpm]
+        project: [cjs, esm]
 
-    name: 🔄 ${{ matrix.packageManager }} smoke tests
+    name: 🔄 ${{ matrix.packageManager }} ${{ matrix.project }} smoke tests
     runs-on: ubuntu-latest
 
     env:
@@ -36,7 +37,11 @@ jobs:
       - name: Set up job
         uses: ./.github/actions/set-up-job
 
-      - name: 🌲 Set up test project
+      # `uses:` must be a literal, so the cjs and esm setup actions get one
+      # conditional step each, and the "Resolve test project path" step below
+      # exposes whichever ran under a single output
+      - name: 🌲 Set up test project (cjs)
+        if: matrix.project == 'cjs'
         id: set-up-test-project
         uses: ./.github/actions/set-up-test-project
         with:
@@ -44,6 +49,29 @@ jobs:
         env:
           REDWOOD_DISABLE_TELEMETRY: 1
           YARN_ENABLE_IMMUTABLE_INSTALLS: false
+
+      - name: 🌲 Set up test project (esm)
+        if: matrix.project == 'esm'
+        id: set-up-test-project-esm
+        uses: ./.github/actions/set-up-test-project-esm
+        with:
+          packageManager: ${{ matrix.packageManager }}
+        env:
+          REDWOOD_DISABLE_TELEMETRY: 1
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
+
+      - name: Resolve test project path
+        id: project
+        shell: bash
+        env:
+          CJS_PATH: ${{ steps.set-up-test-project.outputs.test-project-path }}
+          ESM_PATH: ${{ steps.set-up-test-project-esm.outputs.test-project-path }}
+        run: |
+          if [ "${{ matrix.project }}" = "esm" ]; then
+            echo "path=$ESM_PATH" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=$CJS_PATH" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Run `cedar build --no-prerender`
         shell: bash
@@ -56,7 +84,7 @@ jobs:
           else
             yarn cedar build --no-prerender
           fi
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.project.outputs.path }}
 
       - name: Run `cedar test web`
         shell: bash
@@ -68,7 +96,7 @@ jobs:
           else
             yarn cedar test web --no-watch
           fi
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.project.outputs.path }}
 
       - name: Run `cedar test api`
         shell: bash
@@ -80,4 +108,4 @@ jobs:
           else
             yarn cedar test api --no-watch
           fi
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.project.outputs.path }}

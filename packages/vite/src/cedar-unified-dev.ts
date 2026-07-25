@@ -8,6 +8,72 @@ import { getPaths, getConfig } from '@cedarjs/project-config'
 
 import { startApiDevMiddleware } from './apiDevMiddleware.js'
 
+/**
+ * How long to wait for the dev servers to close gracefully after a SIGINT or
+ * SIGTERM before forcing the process to exit.
+ */
+const SHUTDOWN_TIMEOUT_MS = 5_000
+
+interface ShutdownHandlerOptions {
+  /** Closes the running servers. Called once, on the first signal. */
+  close: () => Promise<void>
+  timeoutMs?: number
+  exit?: (code: number) => void
+  logger?: Pick<typeof console, 'warn' | 'error'>
+}
+
+/**
+ * Build the SIGINT/SIGTERM handler for the unified dev server.
+ *
+ * The handler always terminates the process, and does so promptly. Vite's
+ * `close()` waits for in-flight requests and open HMR websocket connections to
+ * drain, which is not guaranteed to finish, so the graceful path is bounded by
+ * a timeout. A second signal skips the wait entirely, which is what a user
+ * pressing Ctrl+C twice is asking for.
+ */
+export function createShutdownHandler({
+  close,
+  timeoutMs = SHUTDOWN_TIMEOUT_MS,
+  exit = (code) => process.exit(code),
+  logger = console,
+}: ShutdownHandlerOptions) {
+  let shuttingDown = false
+
+  return async function shutdown() {
+    // A second Ctrl+C means "stop waiting". Leave immediately.
+    if (shuttingDown) {
+      exit(0)
+      return
+    }
+
+    shuttingDown = true
+
+    const forceExitTimer = setTimeout(() => {
+      logger.warn(
+        `Dev server did not shut down within ${timeoutMs}ms. Forcing exit.`,
+      )
+      exit(0)
+    }, timeoutMs)
+
+    // Don't let the timer itself keep the process alive
+    forceExitTimer.unref()
+
+    try {
+      await close()
+    } catch (e) {
+      // Report, but still exit. A `close()` that rejects used to reject inside
+      // the signal handler, which skipped `process.exit()` entirely and left
+      // the server running and holding its ports.
+      const message = e instanceof Error ? e.message : String(e)
+      logger.error(`Error while shutting down the dev server: ${message}`)
+    } finally {
+      clearTimeout(forceExitTimer)
+    }
+
+    exit(0)
+  }
+}
+
 function isViteInternalRequest(url: string): boolean {
   const pathname = url.split('?')[0]
 
@@ -377,11 +443,12 @@ export async function startUnifiedDevServer() {
   }
 
   // Clean shutdown on signals – Ctrl+C sends SIGINT, process managers use SIGTERM
-  const shutdown = async () => {
-    await devServer.close()
-    await closeApi()
-    process.exit(0)
-  }
+  const shutdown = createShutdownHandler({
+    close: async () => {
+      await devServer.close()
+      await closeApi()
+    },
+  })
 
   process.on('SIGINT', shutdown)
   process.on('SIGTERM', shutdown)
