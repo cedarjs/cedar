@@ -3,14 +3,12 @@ import WebSocket from 'ws'
 import { fs, path, $ } from 'zx'
 
 import {
+  autoStop,
   FIXTURE_PATH,
   pollForReady,
+  reservePort,
   sleep,
-  testContext,
 } from './vitest.setup.mjs'
-
-const WEB_PORT = 18910
-const BASE_URL = `http://localhost:${WEB_PORT}`
 
 async function fetchJson(url: string, init?: RequestInit) {
   const res = await fetch(url, init)
@@ -44,10 +42,17 @@ function resolveUnifiedDevBin() {
 
 describe('cedar dev --ud', () => {
   it('serves the web SPA shell and API routes with HMR', async () => {
+    // Ports are reserved per test rather than hardcoded, so a server that
+    // outlives another test can't stop this one from binding.
+    const WEB_PORT = await reservePort()
+    const API_PORT = await reservePort()
+    const BASE_URL = `http://localhost:${WEB_PORT}`
+
     // 1. Start the unified dev server directly
     const unifiedDevBin = resolveUnifiedDevBin()
-    const devProcess = $`yarn node ${unifiedDevBin} --port ${WEB_PORT} --apiPort 18911 --no-open`
-    testContext.processes.push(devProcess)
+    autoStop(
+      $`yarn node ${unifiedDevBin} --port ${WEB_PORT} --apiPort ${API_PORT} --no-open`,
+    )
 
     // 2. Wait for the web server to be ready
     await pollForReady(`${BASE_URL}/`)
@@ -112,15 +117,20 @@ describe('cedar dev --ud', () => {
   }, 60_000)
 
   it('pretty-prints the api logger output instead of printing raw pino NDJSON', async () => {
+    const WEB_PORT = await reservePort()
+    const API_PORT = await reservePort()
+    const BASE_URL = `http://localhost:${WEB_PORT}`
+
     const unifiedDevBin = resolveUnifiedDevBin()
     // The api logger defaults to `silent` when NODE_ENV=test (see
     // packages/api/src/logger/index.ts), which vitest sets and this
     // process inherits — force a level that actually emits the
     // graphql-server plugin's debug-level request logs this test checks for.
-    const devProcess = $({
-      env: { ...process.env, LOG_LEVEL: 'debug' },
-    })`yarn node ${unifiedDevBin} --port ${WEB_PORT} --apiPort 18911 --no-open`
-    testContext.processes.push(devProcess)
+    const devProcess = autoStop(
+      $({
+        env: { ...process.env, LOG_LEVEL: 'debug' },
+      })`yarn node ${unifiedDevBin} --port ${WEB_PORT} --apiPort ${API_PORT} --no-open`,
+    )
 
     let stdoutBuffer = ''
     devProcess.stdout.on('data', (data: Buffer) => {
@@ -364,10 +374,9 @@ describe('cedar dev --ud --debug-port', () => {
     'opens the inspector on the given port, allows CDP interaction, and can pause/resume execution',
     { timeout: 60_000, retry: 2 },
     async () => {
-      // Use distinct ports to avoid accidental overlap if tests ever parallelise
-      const WEB_PORT = 18920
-      const API_PORT = 18921
-      const DEBUG_PORT = 38911
+      const WEB_PORT = await reservePort()
+      const API_PORT = await reservePort()
+      const DEBUG_PORT = await reservePort()
       const BASE_URL = `http://localhost:${WEB_PORT}`
 
       // 1. Start the unified dev server with --debug-port. We pass the flag
@@ -382,7 +391,7 @@ describe('cedar dev --ud --debug-port', () => {
       devProcess.stderr.on('data', (data: Buffer) => {
         stderrBuffer += data.toString()
       })
-      testContext.processes.push(devProcess)
+      autoStop(devProcess)
 
       // 2. Wait for the inspector message on stderr and verify the port.
       //    inspector.open() logs:  Debugger listening on ws://127.0.0.1:<port>/<uuid>
@@ -494,10 +503,9 @@ describe('cedar dev --ud --debug-brk', () => {
     'blocks the server until a debugger connects, then serves requests normally',
     { timeout: 60_000, retry: 2 },
     async () => {
-      // Use distinct ports — no overlap with the other two test blocks
-      const WEB_PORT = 18930
-      const API_PORT = 18931
-      const DEBUG_PORT = 38912
+      const WEB_PORT = await reservePort()
+      const API_PORT = await reservePort()
+      const DEBUG_PORT = await reservePort()
       const BASE_URL = `http://localhost:${WEB_PORT}`
 
       // 1. Start the unified dev server with --debug-brk.
@@ -510,7 +518,7 @@ describe('cedar dev --ud --debug-brk', () => {
       devProcess.stderr.on('data', (data: Buffer) => {
         stderrBuffer += data.toString()
       })
-      testContext.processes.push(devProcess)
+      autoStop(devProcess)
 
       // 2. Wait for the inspector message on stderr.
       const inspectorUrl = await new Promise<string>((resolve, reject) => {

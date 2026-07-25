@@ -39,14 +39,9 @@ jobs:
 
       - name: 🏗️ Build
         shell: bash
-        run: |
-          set -o pipefail
-          yarn build || {
-            echo "::group::package.json diagnostics"
-            node $GITHUB_WORKSPACE/.github/scripts/diagnose-package-json.mjs || true
-            echo "::endgroup::"
-            exit 1
-          }
+        # See the comment on the same step in .github/actions/set-up-job for why
+        # we pass `--output-style=stream`
+        run: bash "$GITHUB_WORKSPACE/.github/scripts/run-nx.sh" yarn build --output-style=stream
 
       - name: 🌲 Set up test project for React 18
         id: set-up-test-project-react-18

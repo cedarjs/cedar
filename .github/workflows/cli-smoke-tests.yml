@@ -14,6 +14,8 @@ jobs:
     env:
       CEDAR_CI: 1
       CEDAR_VERBOSE_TELEMETRY: 1
+      # See the comment on the same variable in build-lint-test.yml
+      NX_VERBOSE_LOGGING: ${{ inputs.os == 'windows-latest' && 'true' || '' }}
 
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6

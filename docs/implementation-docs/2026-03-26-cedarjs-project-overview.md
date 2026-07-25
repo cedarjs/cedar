@@ -148,6 +148,10 @@ Vite plugins: cell transform | entry injection | html env | data-uri-to-buffer s
   auto-imports | import-dir | directory-named-import | js-as-jsx | merged config |
   api-babel-transform | cedar-routes-auto-loader | cedar-universal-deploy |
   cedar-wait-for-api-server | resolve-cedar-style-imports
+  *test mode (Vitest, mode === 'test'): adds router-import-transform |
+    create-auth-import-transform | test auto-imports (mockGraphQLQuery etc.) |
+    vitest-web-config (contributes a `test.setupFiles` entry that starts MSW,
+    imports cell mocks and resets handlers between tests)
   *SSR/RSC: adds RSC transforms
 ```
 
