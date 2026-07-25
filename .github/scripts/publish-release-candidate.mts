@@ -12,6 +12,11 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { setTimeout } from 'node:timers/promises'
 
+import {
+  generateNpmLockfile,
+  generatePnpmLockfile,
+} from '../../packages/create-cedar-app/scripts/generateLockfile.js'
+
 const REPO_ROOT = process.cwd()
 const CREATE_CEDAR_APP_DIR = path.join(REPO_ROOT, 'packages/create-cedar-app')
 const TEMPLATES_DIR = path.join(CREATE_CEDAR_APP_DIR, 'templates')
@@ -520,7 +525,37 @@ async function main() {
 
     updateJavaScriptTemplates()
 
-    log('Step 11: Generating yarn.lock files for templates')
+    log('Step 11: Generating lockfiles for overlays and templates')
+
+    // The npm and pnpm overlays replace the base template's root package.json
+    // wholesale, so their lockfiles are generated against the base template +
+    // overlay composition. The cjs overlays are used by both the ts and js
+    // templates, and the esm overlays by both esm-ts and esm-js, so ts and
+    // esm-ts act as representative bases.
+    // This runs before the base-template yarn.lock generation below so the
+    // base templates are still free of yarn install artifacts.
+    const overlayLockfileConfigs = [
+      { baseTemplateDir: 'ts', overlayBase: 'cjs' },
+      { baseTemplateDir: 'esm-ts', overlayBase: 'esm' },
+    ]
+
+    for (const { baseTemplateDir, overlayBase } of overlayLockfileConfigs) {
+      if (isDryRun) {
+        log(`Dry-run - skip overlay lockfile generation for ${overlayBase}`)
+        continue
+      }
+
+      const templatePath = path.join(TEMPLATES_DIR, baseTemplateDir)
+      const overlaysBaseDir = path.join(TEMPLATES_DIR, 'overlays', overlayBase)
+
+      await generateNpmLockfile(templatePath, path.join(overlaysBaseDir, 'npm'))
+      await generatePnpmLockfile(
+        templatePath,
+        path.join(overlaysBaseDir, 'pnpm'),
+      )
+    }
+
+    log('✅ Generated npm and pnpm lockfiles for overlays')
 
     for (const templateDir of TEMPLATE_DIRS) {
       if (isDryRun) {
