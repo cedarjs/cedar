@@ -1547,6 +1547,21 @@ be snapshotted **before** anything is signalled. It also confirms the settle
 behaviour ("zx settles on stdio close, not on exit") and bounds every wait on
 the process promise.
 
+A follow-up commit on #2200 (`ddd3cea51b`) adds two refinements:
+
+1. **The grandchild shape is platform-dependent.** macOS's `bash` forks, so
+   the server is a grandchild of zx's pid; Ubuntu's `dash` execs a simple
+   command, replacing the shell, so the top-level pid _is_ the server. Kill
+   logic must target "top-level pid plus descendants" without assuming either
+   shape — and the macOS reparenting story above should not be projected
+   directly onto the Ubuntu CI runs.
+2. **Signal order matters: top-level process before its descendants.**
+   Signalling the server's esbuild child first makes the server crash
+   mid-transform on `The service was stopped: write EPIPE` instead of
+   shutting down. Corollary for classifying future runs: EPIPE lines emitted
+   _during teardown_ are a kill-ordering artifact, not the 06-26 startup
+   esbuild crash (signature D).
+
 Two additions specific to this signature:
 
 1. **Raise `hookTimeout`** above the default 10s (the 06-26 entry suggested
