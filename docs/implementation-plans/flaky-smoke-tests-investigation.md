@@ -1496,6 +1496,14 @@ Note that the port-24678 leak appears in **all five**, including the esbuild
 one. The leak is therefore continuous; what varies is whether the leaked server
 happens to still be holding `18910` when `udServe` starts.
 
+One classification subtlety: run 30150844400 had 4 attempts, and different
+attempts failed differently. Attempt 1 is this signature (4× `EADDRINUSE`, 5×
+`Hook timed out`, 0 fatal errors); attempt 4 (job 89663336890) is the V8
+debug-scopes fatal documented in the entry added by
+[#2201](https://github.com/cedarjs/cedar/pull/2201) — 0 `EADDRINUSE`, 3×
+`Fatal error`. When classifying by run id, check which attempt you're looking
+at.
+
 ### Recommendation
 
 Recommendation 1 from the 2026-06-26 entry — harden the `afterEach` hook with a
