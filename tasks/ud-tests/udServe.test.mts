@@ -2,14 +2,12 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import { $ } from 'zx'
 
 import {
+  autoStop,
   cedar,
   buildFixture,
   pollForReady,
-  testContext,
+  reservePort,
 } from './vitest.setup.mjs'
-
-const WEB_PORT = 18910
-const API_PORT = 18911
 
 async function fetchJson(url: string, init?: RequestInit) {
   const res = await fetch(url, init)
@@ -30,16 +28,19 @@ describe('cedar serve api --ud', () => {
   }, 180_000)
 
   it('serves API functions, legacy handlers, and GraphQL', async () => {
+    // Ports are reserved per test rather than hardcoded, so a server that
+    // outlives another test can't stop this one from binding.
+    const API_PORT = await reservePort()
+    const WEB_PORT = await reservePort()
+
     // NOTE: `cedar serve --ud` does not exist yet, so we start the API and
     // web servers separately. When both-side UD serving lands, simplify this
     // to a single command.
     // 1. Start the UD API server
-    const apiProcess = $`yarn node ${cedar} serve api --ud --port ${API_PORT}`
-    testContext.processes.push(apiProcess)
+    autoStop($`yarn node ${cedar} serve api --ud --port ${API_PORT}`)
 
     // 2. Start the web server
-    const webProcess = $`yarn node ${cedar} serve web --port ${WEB_PORT}`
-    testContext.processes.push(webProcess)
+    autoStop($`yarn node ${cedar} serve web --port ${WEB_PORT}`)
 
     // 3. Wait for both servers to be ready
     await pollForReady(`http://localhost:${API_PORT}/hello`)
