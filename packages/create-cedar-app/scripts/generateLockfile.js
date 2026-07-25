@@ -79,7 +79,7 @@ export function generateNpmLockfile(templatePath, overlayDir) {
     overlayDir,
     'package-lock.json',
     'npm',
-    ['install', '--force', '--loglevel', 'error'],
+    ['install', '--no-audit', '--no-fund', '--force', '--loglevel', 'error'],
   )
 }
 
