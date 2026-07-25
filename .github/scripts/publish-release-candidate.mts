@@ -15,14 +15,12 @@ import { setTimeout } from 'node:timers/promises'
 import {
   generateNpmLockfile,
   generatePnpmLockfile,
+  generateYarnLockfile,
 } from '../../packages/create-cedar-app/scripts/generateLockfile.js'
 
 const REPO_ROOT = process.cwd()
 const CREATE_CEDAR_APP_DIR = path.join(REPO_ROOT, 'packages/create-cedar-app')
 const TEMPLATES_DIR = path.join(CREATE_CEDAR_APP_DIR, 'templates')
-
-// Template directories
-const TEMPLATE_DIRS = ['ts', 'js', 'esm-ts', 'esm-js']
 
 // Dependency fields whose in-monorepo entries get rewritten to the version
 // being published
@@ -298,51 +296,6 @@ async function removeCreateCedarAppFromWorkspaces(): Promise<() => void> {
   }
 }
 
-function generateYarnLockFile(templateDir: string) {
-  const templatePath = path.join(TEMPLATES_DIR, templateDir)
-  log(`Generating yarn.lock in ${templatePath}`)
-
-  // Remove any existing node_modules and lock files to ensure clean generation
-  fs.rmSync(path.join(templatePath, 'node_modules'), {
-    recursive: true,
-    force: true,
-  })
-  fs.rmSync(path.join(templatePath, 'yarn.lock'), { force: true })
-  fs.rmSync(path.join(templatePath, '.yarn'), { recursive: true, force: true })
-
-  // Create empty yarn.lock file (required for yarn to treat as separate
-  // project)
-  fs.writeFileSync(path.join(templatePath, 'yarn.lock'), '')
-  log(`Created empty yarn.lock for ${templateDir}`)
-
-  try {
-    // Set CI=false to disable immutable mode for yarn install
-    const originalCI = process.env.CI
-    process.env.CI = 'false'
-
-    execCommand('yarn install', templatePath)
-
-    // Restore original CI value
-    if (originalCI) {
-      process.env.CI = originalCI
-    } else {
-      delete process.env.CI
-    }
-
-    log(`✅ Generated yarn.lock for ${templateDir}`)
-  } catch (error) {
-    console.error(`❌ Failed to generate yarn.lock for ${templateDir}`)
-    throw error
-  }
-
-  // Clean up generated files except yarn.lock
-  fs.rmSync(path.join(templatePath, 'node_modules'), {
-    recursive: true,
-    force: true,
-  })
-  fs.rmSync(path.join(templatePath, '.yarn'), { recursive: true, force: true })
-}
-
 function updateJavaScriptTemplates() {
   log('Updating JavaScript templates using ts-to-js')
 
@@ -525,15 +478,14 @@ async function main() {
 
     updateJavaScriptTemplates()
 
-    log('Step 11: Generating lockfiles for overlays and templates')
+    log('Step 11: Generating lockfiles for the package-manager overlays')
 
-    // The npm and pnpm overlays replace the base template's root package.json
-    // wholesale, so their lockfiles are generated against the base template +
-    // overlay composition. The cjs overlays are used by both the ts and js
-    // templates, and the esm overlays by both esm-ts and esm-js, so ts and
-    // esm-ts act as representative bases.
-    // This runs before the base-template yarn.lock generation below so the
-    // base templates are still free of yarn install artifacts.
+    // The pm-specific overlays replace the base template's root package.json
+    // wholesale, so lockfiles are generated against the base template +
+    // overlay composition and shipped in the overlay dirs — the base
+    // templates themselves carry no lockfile. The cjs overlays are used by
+    // both the ts and js templates, and the esm overlays by both esm-ts and
+    // esm-js, so ts and esm-ts act as representative bases.
     const overlayLockfileConfigs = [
       { baseTemplateDir: 'ts', overlayBase: 'cjs' },
       { baseTemplateDir: 'esm-ts', overlayBase: 'esm' },
@@ -548,6 +500,10 @@ async function main() {
       const templatePath = path.join(TEMPLATES_DIR, baseTemplateDir)
       const overlaysBaseDir = path.join(TEMPLATES_DIR, 'overlays', overlayBase)
 
+      await generateYarnLockfile(
+        templatePath,
+        path.join(overlaysBaseDir, 'yarn'),
+      )
       await generateNpmLockfile(templatePath, path.join(overlaysBaseDir, 'npm'))
       await generatePnpmLockfile(
         templatePath,
@@ -555,18 +511,7 @@ async function main() {
       )
     }
 
-    log('✅ Generated npm and pnpm lockfiles for overlays')
-
-    for (const templateDir of TEMPLATE_DIRS) {
-      if (isDryRun) {
-        log(`Dry-run - skip generateYarnLockFile for ${templateDir}`)
-        continue
-      }
-
-      generateYarnLockFile(templateDir)
-    }
-
-    log('✅ Generated all yarn.lock files')
+    log('✅ Generated lockfiles for all package-manager overlays')
 
     if (isDryRun) {
       log('📝 Dry-run - skipping git commit and create-cedar-app publish')

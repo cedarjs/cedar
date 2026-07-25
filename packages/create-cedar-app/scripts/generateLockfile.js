@@ -31,6 +31,7 @@ export async function generateLockfile(
   lockfileName,
   packageManager,
   packageManagerArgs = [],
+  env = {},
 ) {
   console.log(`Generating ${lockfileName}...`)
   const tmpDir = fs.mkdtempSync(
@@ -46,6 +47,7 @@ export async function generateLockfile(
 
     await within(async () => {
       cd(tmpDir)
+      $.env = { ...process.env, ...env }
 
       await $`touch ${lockfileName}`
       console.log(`Installing dependencies using ${packageManager}...`)
@@ -62,7 +64,11 @@ export async function generateLockfile(
 }
 
 export function generateYarnLockfile(templatePath, overlayDir) {
-  return generateLockfile(templatePath, overlayDir, 'yarn.lock', 'yarn')
+  // Yarn defaults to immutable installs on CI, which would refuse to write
+  // the lockfile we're generating here
+  return generateLockfile(templatePath, overlayDir, 'yarn.lock', 'yarn', [], {
+    YARN_ENABLE_IMMUTABLE_INSTALLS: 'false',
+  })
 }
 
 export function generateNpmLockfile(templatePath, overlayDir) {

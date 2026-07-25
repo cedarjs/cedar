@@ -63,22 +63,6 @@ export async function createProjectFiles(
   })
   await fs.promises.cp(overlayDir, newAppDir, { recursive: true, force: true })
 
-  // Published base templates ship a yarn.lock, and the pm-specific overlays
-  // can ship their own lockfile. Remove the lockfiles that don't belong to
-  // the selected package manager so the project ends up with exactly one,
-  // matching lockfile
-  const lockfilesByPackageManager: Record<PackageManager, string> = {
-    yarn: 'yarn.lock',
-    npm: 'package-lock.json',
-    pnpm: 'pnpm-lock.yaml',
-  }
-
-  for (const [pm, lockfile] of Object.entries(lockfilesByPackageManager)) {
-    if (pm !== packageManager) {
-      fs.rmSync(path.join(newAppDir, lockfile), { force: true })
-    }
-  }
-
   let databaseUrl = ''
   let directDatabaseUrl = ''
   let neonClaimExpiry = ''
