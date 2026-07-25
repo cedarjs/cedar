@@ -1384,3 +1384,145 @@ to canary to confirm the race is gone.
 ### Reference
 
 PR: https://github.com/cedarjs/cedar/pull/2147
+
+---
+
+## Update 2026-07-25 — New signature: UD tests leak servers, then `EADDRINUSE :::18910`
+
+### Not the same as the 2026-06-26 UD entry
+
+This shares one surface symptom with
+[Update 2026-06-26 — UD test harness startup race: esbuild service crash](#update-2026-06-26--ud-test-harness-startup-race-esbuild-service-crash-ubuntu)
+— `Hook timed out in 10000ms` at `vitest.setup.mts:46` — but it is a different
+failure. The 2026-06-26 entry is an esbuild service crash during startup
+(`"The service is no longer running"`), which does **not** appear in any of the
+runs below. Here the servers start fine and the problem is that they are never
+shut down.
+
+### Evidence
+
+From run
+[30153140172](https://github.com/cedarjs/cedar/actions/runs/30153140172/job/89666781152?pr=2195)
+(PR #2195, Ubuntu):
+
+```
+Error: listen EADDRINUSE: address already in use :::18910
+```
+
+```
+ ❯ udDev.test.mts (4 tests | 4 failed) 52790ms
+ ❯ udServe.test.mts (1 test | 1 failed) 8591ms
+Error: Hook timed out in 10000ms.
+ ❯ vitest.setup.mts:46:1
+Error: Too late to kill the process.
+ ❯ _ProcessPromise.kill ../../node_modules/zx/build/core.cjs:635:33
+ ❯ vitest.setup.mts:48:7
+```
+
+### Chronology
+
+| Time (UTC) | Event                                                        |
+| ---------- | ------------------------------------------------------------ |
+| 09:41:34   | Vitest run starts                                            |
+| 09:41:37   | First `udDev` test spawns `cedar dev --ud`                   |
+| 09:41:48   | `WebSocket server error: Port 24678 is already in use` (1st) |
+| 09:42:00   | Same HMR port error (2nd)                                    |
+| 09:42:16   | Same HMR port error (3rd)                                    |
+| 09:42:27   | All 4 `udDev` tests reported failed                          |
+| 09:42:35   | `udServe` starts, dies with `EADDRINUSE :::18910`            |
+
+### Root cause analysis
+
+The primary failure is the `afterEach` hook in `tasks/ud-tests/vitest.setup.mts`,
+not the port collision. The port collision is the knock-on effect.
+
+1. **`afterEach` has no escalation path.** It does `p.kill()` (SIGTERM via zx)
+   then `await p`, with no grace period and no SIGKILL fallback:
+
+   ```
+   for (const p of testContext.processes) {
+     p.kill()
+     try { await p } catch { /* ignore */ }
+   }
+   ```
+
+   zx's `kill` does walk the process tree (`ps.tree({ recursive: true })`) and
+   signals each pid, so this is not a "SIGTERM went to the wrong process"
+   problem — the signal is delivered, but the unified dev server does not
+   _exit_ within the hook's 10s budget. Vitest's default `hookTimeout` is
+   10000ms, the hook is aborted, and the child is left running.
+
+2. **The leaked server keeps its ports.** Each subsequent test's Vite instance
+   finds the HMR port still held, which is the
+   `Port 24678 is already in use` line repeating once per test boundary — three
+   times, matching the three test transitions within `udDev.test.mts`. This is
+   the visible fingerprint of the leak, and it shows up _before_ anything fails
+   outright.
+
+3. **`udServe.test.mts` is the one that dies.** `vitest.config.mts` sets
+   `fileParallelism: false` specifically because these suites "start and stop
+   servers on the same host and port", so `udServe` runs after `udDev` and tries
+   to bind `18910` while a leaked `udDev` server still holds it → `EADDRINUSE`,
+   exit code 1, surfaced as an unhandled rejection.
+
+4. **`Too late to kill the process`** is the tail of the same problem: by the
+   time `afterEach` runs for the `udServe` test, that process has already died
+   of `EADDRINUSE`, and zx throws when asked to kill a settled process.
+
+5. **All 4 `udDev` "test failures" are hook timeouts, not assertion failures.**
+   There are 5 `Hook timed out` errors for 5 failed tests, and the per-test
+   durations (~12.4s) are consistent with a ~2s test body plus the 10s hook
+   timeout. No assertion output appears in the log.
+
+### Prevalence
+
+Last five `ud-tests` failures, by signature:
+
+| Date       | Run         | Branch                               | Signature         |
+| ---------- | ----------- | ------------------------------------ | ----------------- |
+| 2026-07-25 | 30153140172 | `tobbe-fix-ci-rsc-app-install-retry` | EADDRINUSE (this) |
+| 2026-07-25 | 30150844400 | `tobbe-feat-pm-specific-lock-files`  | EADDRINUSE (this) |
+| 2026-07-24 | 30132207753 | `renovate/supabase-supabase-js-2.x`  | esbuild (06-26)   |
+| 2026-07-23 | 30024867800 | `tobbe-fix-cli-update-check`         | EADDRINUSE (this) |
+| 2026-07-23 | 30001410593 | `tobbe-chore-release-cedar-v6-prep`  | EADDRINUSE (this) |
+
+Four of the last five are this signature, with identical counts each time
+(3× `EADDRINUSE`, 5× `Hook timed out`, 3× port 24678, 2× `Too late to kill`),
+which is why it reads as one deterministic-once-triggered failure rather than
+five unrelated flakes. It spans unrelated branches, so it is not caused by any
+one PR.
+
+Note that the port-24678 leak appears in **all five**, including the esbuild
+one. The leak is therefore continuous; what varies is whether the leaked server
+happens to still be holding `18910` when `udServe` starts.
+
+### Recommendation
+
+Recommendation 1 from the 2026-06-26 entry — harden the `afterEach` hook with a
+grace-period race and a SIGKILL fallback — was never applied;
+`tasks/ud-tests/vitest.setup.mts` still has the naive `p.kill()` + `await p`.
+That fix is now the direct fix for this signature too, and should be applied:
+
+```
+p.kill('SIGTERM')
+await Promise.race([p.catch(() => {}), sleep(5000)])
+if (p.exitCode === null) {
+  p.kill('SIGKILL')
+  await p.catch(() => {})
+}
+```
+
+Two additions specific to this signature:
+
+1. **Raise `hookTimeout`** above the default 10s (the 06-26 entry suggested
+   30s). With the escalation above, the hook needs to fit SIGTERM grace +
+   SIGKILL + reaping.
+2. **Wait for the port to be free**, not just for the process to be reaped — a
+   killed process can leave the listening socket in `TIME_WAIT`. Polling
+   `18910`/`18911`/`24678` for closure at the end of `afterEach` would make the
+   handoff between suites explicit instead of implicit.
+
+Worth investigating separately: _why_ the dev server takes more than 10s to
+respond to SIGTERM. The escalation above makes the tests pass regardless, but a
+`cedar dev --ud` that ignores SIGTERM for 10+ seconds is a real-world
+Ctrl-C-responsiveness issue, not only a test-harness one.
