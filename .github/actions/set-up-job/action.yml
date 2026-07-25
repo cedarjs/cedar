@@ -145,11 +145,4 @@ runs:
       # everything the in-flight tasks printed is lost, and the step fails with
       # no error output at all. Streaming keeps the output even if we never get
       # a task summary.
-      run: |
-        set -o pipefail
-        yarn build --output-style=stream || {
-          echo "::group::package.json diagnostics"
-          node $GITHUB_WORKSPACE/.github/scripts/diagnose-package-json.mjs || true
-          echo "::endgroup::"
-          exit 1
-        }
+      run: bash "$GITHUB_WORKSPACE/.github/scripts/run-nx.sh" yarn build --output-style=stream
