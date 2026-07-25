@@ -94,15 +94,18 @@ export async function reservePort() {
 async function collectPids(p: ProcessPromise) {
   const pids: number[] = []
 
+  // Top-level pid first, so the server is signalled before the children it
+  // owns. Signalling its esbuild child first makes the server crash on a
+  // "service was stopped: write EPIPE" mid-transform instead of shutting down.
+  if (p.pid) {
+    pids.push(p.pid)
+  }
+
   try {
     const tree = await ps.tree({ pid: p.pid, recursive: true })
     pids.push(...tree.map((entry) => Number(entry.pid)))
   } catch {
-    // Best effort. Without `ps` we can still signal the shell itself.
-  }
-
-  if (p.pid) {
-    pids.push(p.pid)
+    // Best effort. Without `ps` we can still signal the top-level process.
   }
 
   return pids.filter((pid) => Number.isInteger(pid) && pid > 0)
