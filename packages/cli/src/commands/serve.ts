@@ -358,8 +358,10 @@ export const builder = async (yargs: Argv) => {
         if (streamingEnabled) {
           await webSsrServerHandler(rscEnabled)
         } else {
-          // @cedarjs/web-server is still built as CJS only, so we don't need
-          // the same solution here as we do for the api side
+          // Unlike the api side, @cedarjs/web-server doesn't need to load a
+          // CJS build of the user's project (it only serves the already-built
+          // web dist), so it doesn't need the projectIsEsm() branching we do
+          // for the api side below
           await webServerCLIConfig.handler(argv)
         }
       },

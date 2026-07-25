@@ -8,7 +8,7 @@
     "directory": "packages/web-server"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "main": "./dist/cliConfig.js",
   "types": "./dist/cliConfig.d.ts",
   "bin": {
@@ -19,9 +19,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "node ./build.mts && yarn build:types",
+    "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-web-server.tgz",
-    "build:types": "tsc --build --verbose",
+    "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build && yarn fix:permissions\"",
     "fix:permissions": "chmod +x dist/index.js; chmod +x dist/watch.js",
     "prepublishOnly": "NODE_ENV=production yarn build"
