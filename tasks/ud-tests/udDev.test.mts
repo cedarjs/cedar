@@ -337,6 +337,19 @@ function createCdpSession(
   })
 }
 
+/**
+ * Marks a promise's rejection as observed without consuming it. When the CDP
+ * socket dies, the close handler rejects every in-flight request and event
+ * waiter at once — but a test can only be awaiting one of them, and the
+ * others' rejections would surface as unhandled errors that contaminate the
+ * vitest run. Passing a promise through this the moment it is created keeps
+ * a later `await` on it working exactly as before (it still throws).
+ */
+function markRejectionHandled<T>(promise: Promise<T>): Promise<T> {
+  promise.catch(() => {})
+  return promise
+}
+
 // ---------------------------------------------------------------------------
 // debug-port integration test
 // ---------------------------------------------------------------------------
@@ -421,9 +434,11 @@ describe('cedar dev --ud --debug-port', () => {
         //    the test immediately instead of idling until the test timeout.
         const pausedOnce = cdp.once('Debugger.paused')
 
-        const evalPromise = cdp.send('Runtime.evaluate', {
-          expression: '(() => { debugger; return 42; })()',
-        })
+        const evalPromise = markRejectionHandled(
+          cdp.send('Runtime.evaluate', {
+            expression: '(() => { debugger; return 42; })()',
+          }),
+        )
 
         const paused = await pausedOnce
         expect(paused.reason).toBe('other')
@@ -441,10 +456,14 @@ describe('cedar dev --ud --debug-port', () => {
         //    avoids the race where a trivial handler (hello.ts returns a static
         //    response) completes before the pause is armed, which would leave
         //    the pause pending forever and time out the test.
-        const requestPausedOnce = cdp.once('Debugger.paused')
+        const requestPausedOnce = markRejectionHandled(
+          cdp.once('Debugger.paused'),
+        )
 
         await cdp.send('Debugger.pause')
-        const fetchPromise = fetchJson(`${BASE_URL}/.api/functions/hello`)
+        const fetchPromise = markRejectionHandled(
+          fetchJson(`${BASE_URL}/.api/functions/hello`),
+        )
 
         const requestPaused = await requestPausedOnce
         expect(requestPaused.reason).toBeDefined()
@@ -539,7 +558,7 @@ describe('cedar dev --ud --debug-brk', () => {
         //    connected sessions.
         //    once() rejects if the WebSocket dies, so a dev-server crash fails
         //    the test immediately instead of idling until the test timeout.
-        const pausedPromise = cdp.once('Debugger.paused')
+        const pausedPromise = markRejectionHandled(cdp.once('Debugger.paused'))
 
         // 7. Unblock waitForDebugger().  The process will then:
         //     a) Create a Session, post Debugger.enable + Debugger.pause
