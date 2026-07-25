@@ -7,16 +7,16 @@
     "directory": "packages/telemetry"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "node build.mts && yarn build:types",
+    "build": "node build.mts",
     "build:pack": "yarn pack -o cedarjs-telemetry.tgz",
-    "build:types": "tsc --build --verbose",
+    "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
     "test:watch": "vitest watch"
