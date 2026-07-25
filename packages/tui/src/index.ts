@@ -2,8 +2,14 @@ import stream from 'stream'
 
 import ansis from 'ansis'
 import type { AnsiColors } from 'ansis'
-import { prompt as enquirerPrompt } from 'enquirer'
+// `enquirer` is a CJS-only package whose `module.exports` is a class, not a
+// plain object, so `cjs-module-lexer` can't statically detect a `prompt`
+// named export for Node's CJS/ESM interop. We have to go through the default
+// export instead.
+import Enquirer from 'enquirer'
 import { UpdateManager } from 'stdout-update'
+
+const enquirerPrompt = Enquirer.prompt
 
 /**
  * A default set of styling for the TUI, designed for a cohesive look and feel around the Redwood CLI, CRWA and vairous plugins
