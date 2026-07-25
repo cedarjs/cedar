@@ -1505,12 +1505,47 @@ That fix is now the direct fix for this signature too, and should be applied:
 
 ```
 p.kill('SIGTERM')
-await Promise.race([p.catch(() => {}), sleep(5000)])
-if (p.exitCode === null) {
-  p.kill('SIGKILL')
+const outcome = await Promise.race([
+  p.then(
+    () => 'exited',
+    () => 'exited',
+  ),
+  sleep(5_000).then(() => 'timeout'),
+])
+if (outcome === 'timeout') {
+  // Still running after the grace period — escalate. kill() throws if the
+  // process settled in the meantime, so guard it.
+  await p.kill('SIGKILL').catch(() => {})
   await p.catch(() => {})
 }
 ```
+
+(The 06-26 entry's version of this snippet gated the escalation on
+`p.exitCode === null`, but zx's `ProcessPromise.exitCode` is a
+`Promise<number | null>` — never `null` itself — so that condition is always
+false and the SIGKILL fallback would never run. Corrected here to race the
+process promise against the grace period instead.)
+
+**Caveat from local testing (macOS, zx 8.8.5):** even the corrected escalation
+can fail to reap the real server. `p.pid` is the `bash -c` wrapper's pid, and
+in testing `ps.tree({ pid, recursive: true })` returned **zero** descendants
+for a wrapper whose grandchild was demonstrably alive — so zx's kill signalled
+only the shell, the orphaned grandchild survived (even the SIGKILL round), and
+`await p` never settled because the grandchild kept the inherited stdio pipes
+open. This weakens the "the signal is delivered" assumption above (it held in
+zx's source, not in observed behaviour) and makes addition 2 below — polling
+the ports for closure — the load-bearing check: only a freed port proves the
+server is gone. Whoever implements this should verify tree-kill behaviour on
+Linux CI, and consider killing by listening port (or spawning the server
+detached and signalling its process group) instead of trusting zx's tree walk.
+
+[#2200](https://github.com/cedarjs/cedar/pull/2200) independently hit both
+findings and pins the mechanism: the first SIGTERM kills the shell wrapper,
+the grandchild server is reparented to init (`ppid` becomes 1), and from then
+on zx's tree walk from the shell's pid finds nothing — so the tree pids must
+be snapshotted **before** anything is signalled. It also confirms the settle
+behaviour ("zx settles on stdio close, not on exit") and bounds every wait on
+the process promise.
 
 Two additions specific to this signature:
 
@@ -1526,3 +1561,27 @@ Worth investigating separately: _why_ the dev server takes more than 10s to
 respond to SIGTERM. The escalation above makes the tests pass regardless, but a
 `cedar dev --ud` that ignores SIGTERM for 10+ seconds is a real-world
 Ctrl-C-responsiveness issue, not only a test-harness one.
+
+### Resolution (follow-up PRs)
+
+- **The harness fix landed as a redesign, not the patch above:**
+  [#2200](https://github.com/cedarjs/cedar/pull/2200) reserves ports per test
+  from the OS (a leaked server can no longer collide with the next test),
+  moves process ownership to `autoStop()` / `onTestFinished` at the spawn
+  site instead of a shared array drained by a global hook, and adds
+  `stopProcess()` with SIGTERM → SIGKILL escalation over **pre-snapshotted**
+  pids and bounded waits. Its `harness.test.mts` asserts pids are actually
+  gone via `process.kill(pid, 0)` rather than trusting zx's promise. The
+  snippet above is kept for history.
+- **The "why 10+ seconds to respond to SIGTERM" question is answered by
+  [#2197](https://github.com/cedarjs/cedar/pull/2197) (merged): a healthy
+  server doesn't ignore SIGTERM at all.** Vite registers its own SIGTERM
+  handler (`setupSIGTERMListener` → `closeServerAndExit`) and exits with 143
+  regardless of Cedar's handler. The hook's 10s hang was zx's
+  settle-on-stdio-close behaviour plus servers that cannot run a JS signal
+  handler at all (the `--debug-brk` test leaves the process blocked in
+  `inspector.waitForDebugger()`, where no JS handler can run — only SIGKILL
+  works). What #2197 does fix is **SIGINT** (Ctrl+C), which only Cedar's
+  handler covered: a hanging or rejecting `close()` could leave the server
+  running; it now force-exits after a bounded 5s grace and a second Ctrl+C
+  exits immediately.
