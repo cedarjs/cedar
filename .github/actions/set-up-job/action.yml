@@ -95,8 +95,12 @@ runs:
       run: |
         cd "$GITHUB_WORKSPACE/packages/create-cedar-rsc-app"
         for i in 1 2 3; do
-          yarn install --inline-builds
-          EXIT_CODE=$?
+          # `|| EXIT_CODE=$?` is load-bearing. GitHub runs `shell: bash` steps
+          # with `-e`, which aborts the step as soon as an untested command
+          # fails. Without it we never even reach the line below, and the loop
+          # gives up after the first attempt instead of retrying.
+          EXIT_CODE=0
+          yarn install --inline-builds || EXIT_CODE=$?
           if [ $EXIT_CODE -eq 0 ]; then
             break
           fi
