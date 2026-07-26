@@ -29,23 +29,23 @@ ESM Only (38)
 - mailer-handler-studio (https://github.com/cedarjs/cedar/pull/2217)
 - mailer-renderer-mjml-react (https://github.com/cedarjs/cedar/pull/2218)
 - mailer-renderer-react-email (https://github.com/cedarjs/cedar/pull/2219)
-- auth-auth0-api
-- auth-auth0-setup
-- auth-azure-active-directory-api
-- auth-azure-active-directory-setup
-- auth-clerk-api
-- auth-clerk-setup
-- auth-custom-setup
-- auth-dbauth-api
-- auth-dbauth-setup
-- auth-firebase-api
-- auth-firebase-setup
-- auth-netlify-api
-- auth-netlify-setup
-- auth-supabase-api
-- auth-supabase-setup
-- auth-supertokens-api
-- auth-supertokens-setup
+- auth-auth0-api (https://github.com/cedarjs/cedar/pull/2223)
+- auth-auth0-setup (https://github.com/cedarjs/cedar/pull/2223)
+- auth-azure-active-directory-api (https://github.com/cedarjs/cedar/pull/2223)
+- auth-azure-active-directory-setup (https://github.com/cedarjs/cedar/pull/2223)
+- auth-clerk-api (https://github.com/cedarjs/cedar/pull/2223)
+- auth-clerk-setup (https://github.com/cedarjs/cedar/pull/2223)
+- auth-custom-setup (https://github.com/cedarjs/cedar/pull/2223)
+- auth-dbauth-api (https://github.com/cedarjs/cedar/pull/2223)
+- auth-dbauth-setup (https://github.com/cedarjs/cedar/pull/2223)
+- auth-firebase-api (https://github.com/cedarjs/cedar/pull/2223)
+- auth-firebase-setup (https://github.com/cedarjs/cedar/pull/2223)
+- auth-netlify-api (https://github.com/cedarjs/cedar/pull/2223)
+- auth-netlify-setup (https://github.com/cedarjs/cedar/pull/2223)
+- auth-supabase-api (https://github.com/cedarjs/cedar/pull/2223)
+- auth-supabase-setup (https://github.com/cedarjs/cedar/pull/2223)
+- auth-supertokens-api (https://github.com/cedarjs/cedar/pull/2223)
+- auth-supertokens-setup (https://github.com/cedarjs/cedar/pull/2223)
 
 Dual Mode – CJS + ESM (33)
 
@@ -156,6 +156,6 @@ conversion to ESM-only. Suggested sequencing, low-risk first:
    #2215–#2219).
 2. The 17 `auth-*-api` / `auth-*-setup` packages — mechanically identical
    conversion, batch together, smoke-test against a generated commonjs template
-   project. **Done**, batched into a single PR.
+   project. **Done**, batched into a single PR (#2223).
 3. `fastify-web`, `cli-data-migrate`, `cli-storybook-vite` — no real external
    `require()` callers found at all. Still outstanding.
