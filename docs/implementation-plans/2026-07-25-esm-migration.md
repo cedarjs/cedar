@@ -1,12 +1,11 @@
 Here's the breakdown of the 74 packages in the CedarJS monorepo:
 
-CJS Only (3)
+CJS Only (0)
 
-- fastify-web (adapters/fastify/web)
-- cli-data-migrate
-- cli-storybook-vite
+- None — all 27 originally-CJS-only packages have now been converted to
+  ESM-only (see below).
 
-ESM Only (38)
+ESM Only (41)
 
 - cli
 - codemods
@@ -46,6 +45,9 @@ ESM Only (38)
 - auth-supabase-setup (https://github.com/cedarjs/cedar/pull/2223)
 - auth-supertokens-api (https://github.com/cedarjs/cedar/pull/2223)
 - auth-supertokens-setup (https://github.com/cedarjs/cedar/pull/2223)
+- fastify-web (adapters/fastify/web) (https://github.com/cedarjs/cedar/pull/2227)
+- cli-data-migrate (https://github.com/cedarjs/cedar/pull/2227)
+- cli-storybook-vite (https://github.com/cedarjs/cedar/pull/2227)
 
 Dual Mode – CJS + ESM (33)
 
@@ -83,17 +85,17 @@ Dual Mode – CJS + ESM (33)
 - auth-supabase-middleware
 - auth-supertokens-web
 
-Summary: Of the 74 packages, 33 are dual mode (CJS + ESM), 3 are CJS-only, and
-38 are ESM-only. The remaining CJS-only packages (`fastify-web`,
-`cli-data-migrate`, `cli-storybook-vite`) build with esbuild's default `cjs`
-format and never emit an ESM output. The `*-web` and `*-middleware`
+Summary: Of the 74 packages, 33 are dual mode (CJS + ESM), 0 are CJS-only, and
+41 are ESM-only. Every package that was CJS-only as of the original inventory
+below has now been converted to ESM-only. The `*-web` and `*-middleware`
 auth-provider packages, by contrast, build both ESM and CJS (via
 `buildEsm`/`buildCjs` or `buildExternalEsm`/`buildExternalCjs`) and so land in
-Dual Mode alongside the already-tracked framework packages. ESM-only remains the
-packages that have been explicitly converted to drop their CJS build entirely;
-`eslint-plugin`, `telemetry`, `tui`, `web-server`, the 7 `mailer/*` packages,
-and the 17 `auth-*-api`/`auth-*-setup` packages are the conversions done so far
-(see the sequencing plan below).
+Dual Mode alongside the already-tracked framework packages. ESM-only remains
+the packages that have been explicitly converted to drop their CJS build
+entirely; `eslint-plugin`, `telemetry`, `tui`, `web-server`, the 7 `mailer/*`
+packages, the 17 `auth-*-api`/`auth-*-setup` packages, and
+`fastify-web`/`cli-data-migrate`/`cli-storybook-vite` are the conversions done
+so far (see the sequencing plan below).
 
 **Correction (2026-07-25 review):** an earlier revision of this doc listed
 `cli-helpers`, `context`, and `record` under ESM Only, and listed
@@ -121,12 +123,13 @@ CedarJS has a hard requirement on Node 24 (`node: "=24.x"` in the generated
 project templates, `node: ">=24"` in `create-cedar-app`), which has unflagged
 support for `require(esm)` — a CJS `require()` call can now synchronously load a
 real ESM module, as long as that module (and its transitive graph) has no
-top-level `await`. This removes the original reason most of the 27 CJS-only
-packages were left CJS-only: they didn't need a parallel CJS build because
-nothing was actually blocked from `require()`-ing an ESM build anymore.
+top-level `await`. This removes the original reason most of the 27
+originally-CJS-only packages were left CJS-only: they didn't need a parallel
+CJS build because nothing was actually blocked from `require()`-ing an ESM
+build anymore.
 
-Checking actual consumers of the 27 CJS-only packages across the monorepo and
-generated templates:
+Checking actual consumers of the (originally) 27 CJS-only packages across the
+monorepo and generated templates:
 
 - **`mailer-core`, `mailer-handler-*`, `mailer-renderer-*`**: the only
   `require()` calls found anywhere are two lazy, try/catch-wrapped lookups in
@@ -134,17 +137,18 @@ generated templates:
   `mailer-handler-in-memory` and `mailer-handler-studio` packages). Neither
   handler module has top-level `await`. Safe to convert.
 - **`fastify-web`**: every consumer (`api-server`, `web-server`) already uses
-  `import`, never `require()`. Safe, essentially risk-free.
+  `import`, never `require()`. Safe, essentially risk-free. **Done** (#2227).
 - **`cli-data-migrate`, `cli-storybook-vite`**: loaded by the CLI via
   `await import(packageName)` (dynamic ESM import) in
   `packages/cli/src/lib/plugin.ts`, not `require()`. Safe, risk-free.
+  **Done** (#2227).
 - **`auth-*-api` / `auth-*-setup`** (17 packages): pulled into generated user
   apps. The non-ESM ("commonjs") templates transpile the user's `import`
   statements to `require()` via Babel at build time, so this is the one place a
   real cross-boundary `require()` of these packages happens today. Under Node 24
   that now resolves via `require(esm)` instead of throwing `ERR_REQUIRE_ESM`.
   Safe given the Node 24 floor, but end-user-facing — worth a smoke test against
-  a generated commonjs-template project before converting.
+  a generated commonjs-template project before converting. **Done** (#2223).
 
 **Conclusion**: all 27 originally-CJS-only packages are viable candidates for
 conversion to ESM-only. Suggested sequencing, low-risk first:
@@ -158,4 +162,4 @@ conversion to ESM-only. Suggested sequencing, low-risk first:
    conversion, batch together, smoke-test against a generated commonjs template
    project. **Done**, batched into a single PR (#2223).
 3. `fastify-web`, `cli-data-migrate`, `cli-storybook-vite` — no real external
-   `require()` callers found at all. Still outstanding.
+   `require()` callers found at all. **Done** (#2227).

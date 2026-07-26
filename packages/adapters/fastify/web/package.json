@@ -7,16 +7,16 @@
     "directory": "packages/adapters/fastify/web"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "main": "./dist/web.js",
   "types": "./dist/web.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "node ./build.mts && yarn build:types",
+    "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-fastify-web.tgz",
-    "build:types": "tsc --build --verbose",
+    "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
     "test:watch": "vitest watch"

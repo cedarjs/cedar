@@ -12,7 +12,7 @@ import {
   importStatementPath,
 } from '@cedarjs/project-config'
 
-import type { DataMigrateUpOptions, DataMigration } from '../types'
+import type { DataMigrateUpOptions, DataMigration } from '../types.js'
 
 interface DataMigrateDb {
   rW_DataMigration: {
