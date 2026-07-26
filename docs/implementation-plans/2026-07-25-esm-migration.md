@@ -9,7 +9,7 @@ CJS Only (6)
 - ogimage-gen
 - server-store
 
-ESM Only (51)
+ESM Only (56)
 
 - cli
 - codemods
@@ -62,41 +62,44 @@ ESM Only (51)
 - auth-supabase-web (https://github.com/cedarjs/cedar/pull/2234)
 - auth-supabase-middleware (https://github.com/cedarjs/cedar/pull/2234)
 - auth-supertokens-web (https://github.com/cedarjs/cedar/pull/2234)
+- cli-helpers
+- context
+- gqlorm
+- internal
+- vite
 
-Dual Mode – CJS + ESM (17)
+Dual Mode – CJS + ESM (12)
 
 - api
 - api-server
 - auth
-- cli-helpers
-- context
 - eslint-config
-- gqlorm
 - graphql-server
-- internal
 - prerender
 - project-config
 - record
 - router
 - storage
 - testing
-- vite
 - web
 
-Summary: Of the 74 packages, 17 are dual mode (CJS + ESM), 6 are CJS-only, and
-51 are ESM-only. The 6 CJS-only packages (`babel-config`, `cookie-jar`,
+Summary: Of the 74 packages, 12 are dual mode (CJS + ESM), 6 are CJS-only, and
+56 are ESM-only. The 6 CJS-only packages (`babel-config`, `cookie-jar`,
 `forms`, `jobs`, `ogimage-gen`, `server-store`) were previously miscategorized
 as Dual Mode — see the correction below. Of the packages that were genuinely
 CJS-only in the original inventory, all 27 have now been converted to
-ESM-only, and the 10 `auth-*-web`/`auth-*-middleware` packages that used to be
-genuinely Dual Mode have also been converted to ESM-only (see "Dual Mode ->
-ESM Only" below) — they were dual mode from a mechanical Babel-to-esbuild
-tooling migration, not because anything actually needed a CJS build of them.
-ESM-only remains the packages that have been explicitly converted to drop
-their CJS build entirely; `eslint-plugin`, `telemetry`, `tui`, `web-server`,
-the 7 `mailer/*` packages, the 17 `auth-*-api`/`auth-*-setup` packages,
-`fastify-web`/`cli-data-migrate`/`cli-storybook-vite`, and the 10
-`auth-*-web`/`auth-*-middleware` packages are the conversions done so far.
+ESM-only, and 15 of the 17 packages that used to be genuinely Dual Mode have
+also been converted to ESM-only (see "Dual Mode -> ESM Only" below) — most
+were dual mode from a mechanical Babel-to-esbuild tooling migration, not
+because anything actually needed a CJS build of them. `prerender` is a
+deliberate exception, held back pending a decision (see below). ESM-only
+remains the packages that have been explicitly converted to drop their CJS
+build entirely; `eslint-plugin`, `telemetry`, `tui`, `web-server`, the 7
+`mailer/*` packages, the 17 `auth-*-api`/`auth-*-setup` packages,
+`fastify-web`/`cli-data-migrate`/`cli-storybook-vite`, the 10
+`auth-*-web`/`auth-*-middleware` packages, and
+`cli-helpers`/`context`/`gqlorm`/`internal`/`vite` are the conversions done so
+far.
 
 **Correction (2026-07-25 review):** an earlier revision of this doc listed
 `cli-helpers`, `context`, and `record` under ESM Only, and listed
@@ -232,3 +235,57 @@ from `{import: ..., default/require: <cjs>}` to a single `default` condition,
 `generateTypesCjs()` + `insertCommonJsPackageJson()` calls, `tsconfig.cjs.json`
 files removed, and the stale `cjsInterop` glob entries removed from
 `packages/vite/src/{devFeServer,streaming/buildForStreamingServer,rsc/rscBuildForSsr}.ts`.
+
+## Dual Mode -> ESM Only: the remaining framework packages
+
+With the auth-provider packages done, research into the rest of the Dual Mode
+list (`docs` research, not yet a PR at the time) sorted the remaining 17 into
+tiers by risk. Tier 1 — packages with no coupling to other Dual Mode packages
+and no real `require()` consumer found anywhere — converted cleanly:
+
+- **`context`, `gqlorm`, `internal`**: standard `buildEsm()`/`buildExternalEsm()`
+  conversions, no real consumers doing a synchronous `require()`.
+- **`cli-helpers`**: same pattern; also had one real `require('../../package.json')`
+  call (`src/lib/project.ts`) reading its own version — replaced with
+  `fs.readFileSync` + `JSON.parse`, since plain `require()` isn't a global in
+  real ESM.
+- **`vite`**: its `build.ts` already excluded several entry files
+  (`devFeServer.ts`, `runFeServer.ts`, etc.) from the CJS build with a comment
+  explaining they're only ever reached through ESM-only bins — direct evidence
+  the CJS build was already vestigial for part of the package. Also never
+  generated real CJS type declarations of its own; it manually wrote
+  `export type * from "../x.d.ts"` re-export stubs pointing at the ESM
+  declarations, meaning the "CJS" types were always just the ESM ones,
+  re-exported. Dropping the CJS build removes a documented workaround rather
+  than creating a new risk.
+
+**Real gotcha found and fixed**: `@cedarjs/context` going ESM-only broke
+generated projects' **api-side** Jest tests the same way the `-web` packages
+broke web-side tests in #2234 — `@cedarjs/testing`'s own api entry point does
+a top-level `require("@cedarjs/context")` in its CJS build (used by
+`packages/testing/src/api/directive.ts`, pulled in by virtually every
+api-side test via `@cedarjs/testing/api`), and Jest's CJS runtime can't parse
+the real ESM this now emits. Unlike the web preset, the **api-side** Jest
+preset (`packages/testing/src/config/jest/api/jest-preset.ts`) had **no**
+`transformIgnorePatterns` override at all before this — built one from
+scratch, mirroring the web-side pattern, carving out `@cedarjs/context`
+specifically (confirmed via `require("@cedarjs/...")` greps through
+`@cedarjs/testing`'s compiled CJS output that none of the other 4 packages in
+this batch are transitively required by it).
+
+**Held back: `prerender`.** Initial research called this "the cleanest of the
+batch," based on its consumer (`prerenderHandler.ts`) already branching
+between `import('@cedarjs/prerender/...')` and
+`import('@cedarjs/prerender/cjs/...')` at runtime. Closer inspection found
+that's true of the _consumer_, but not of the package itself:
+`src/runPrerender.tsx` (the CJS/`require` entry) and `src/runPrerenderEsm.tsx`
+(the ESM/`import` entry) are **not** the same source built twice — they're
+genuinely different implementations. The CJS version uses
+`registerApiSideBabelHook()`/`registerWebSideBabelHook()` (Babel-register
+hooks + `require()`) to transform and load the user's app; the ESM version
+uses a `NodeRunner` class and a `buildAndImport()` helper that writes a
+temporary combined entry file and loads it via Vite/Rollup instead. Dropping
+the CJS build here wouldn't just remove a redundant build target — it would
+retire an entire alternate prerendering implementation that classic CJS-mode
+projects may still depend on. That's a real product decision, not a
+mechanical cleanup, so it's out of scope for this round.

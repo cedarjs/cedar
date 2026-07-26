@@ -12,27 +12,17 @@
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "import": {
+      "default": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.js"
       }
     },
     "./api": {
       "types": "./dist/api/vite-plugin-cedar-vitest-api-preset.d.ts",
       "default": "./dist/api/vite-plugin-cedar-vitest-api-preset.js"
     },
-    "./buildFeServer": {
-      "require": "./dist/cjs/buildFeServer.js",
-      "import": "./dist/buildFeServer.js"
-    },
-    "./build": {
-      "import": "./dist/build/build.js",
-      "default": "./dist/cjs/build/build.js"
-    },
+    "./buildFeServer": "./dist/buildFeServer.js",
+    "./build": "./dist/build/build.js",
     "./bins/cedar-vite-build.mjs": "./bins/cedar-vite-build.mjs"
   },
   "bin": {
@@ -49,7 +39,7 @@
     "inject"
   ],
   "scripts": {
-    "build": "node ./build.ts && yarn build:types",
+    "build": "node ./build.ts",
     "build:pack": "yarn pack -o cedarjs-vite.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "check:attw": "node ./attw.ts",
