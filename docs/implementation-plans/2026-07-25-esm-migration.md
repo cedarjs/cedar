@@ -398,11 +398,12 @@ package.json` marker files noted in the 2026-07-25 correction above). Also
 
 The 4 converted (`babel-config`, `forms`, `jobs`, `ogimage-gen`) all follow
 the same shape: `package.json` `type` flipped to `module`, `exports` maps
-collapsed to `default`-only conditions, `build.mts` switched to `buildEsm()`
-+ `generateTypesEsm()`, `tsconfig.json` `extends` switched from the
-`cjs-base`/`cjs-build-base` variants to the plain `base`/`build.base` ones,
-and (for the packages that never had one) a `tsconfig.build.json` added
-following the same shape used by the other ESM-only packages in this doc.
+collapsed to `default`-only conditions, `build.mts` switched to calling
+`buildEsm()` and `generateTypesEsm()`, `tsconfig.json` `extends` switched
+from the `cjs-base`/`cjs-build-base` variants to the plain `base`/
+`build.base` ones, and (for the packages that never had one) a
+`tsconfig.build.json` added following the same shape used by the other
+ESM-only packages in this doc.
 
 **Held back: `cookie-jar` and `server-store`.** The initial consumer check
 for these two only looked for `require()` calls in other packages' **JS**
