@@ -4,9 +4,20 @@ import { fileURLToPath } from 'node:url'
 
 import fg from 'fast-glob'
 
-import { build, defaultIgnorePatterns } from '@cedarjs/framework-tools'
+import {
+  build,
+  defaultBuildOptions,
+  defaultIgnorePatterns,
+} from '@cedarjs/framework-tools'
+import { generateTypesEsm } from '@cedarjs/framework-tools/generateTypes'
 
-await build()
+await build({
+  buildOptions: {
+    ...defaultBuildOptions,
+    tsconfig: 'tsconfig.build.json',
+    format: 'esm',
+  },
+})
 
 /**
  * We need template files, which esbuild won't copy over,
@@ -42,3 +53,5 @@ async function copyAssets() {
 }
 
 await copyAssets()
+
+await generateTypesEsm()
