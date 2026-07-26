@@ -34,7 +34,8 @@ export const isTypeScriptProject = () => {
 
 export const getInstalledRedwoodVersion = () => {
   try {
-    const packageJson = require('../../package.json')
+    const packageJsonPath = path.join(import.meta.dirname, '../../package.json')
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'))
     return packageJson.version
   } catch {
     console.error(colors.error('Could not find installed Cedar version'))

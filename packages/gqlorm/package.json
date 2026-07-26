@@ -10,117 +10,73 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": {
+      "default": {
         "types": "./dist/queryBuilder.d.ts",
         "default": "./dist/queryBuilder.js"
-      },
-      "require": {
-        "types": "./dist/cjs/queryBuilder.d.ts",
-        "default": "./dist/cjs/queryBuilder.js"
       }
     },
     "./setup": {
-      "import": {
+      "default": {
         "types": "./dist/setup.d.ts",
         "default": "./dist/setup.js"
-      },
-      "require": {
-        "types": "./dist/cjs/setup.d.ts",
-        "default": "./dist/cjs/setup.js"
       }
     },
     "./queryBuilder": {
-      "import": {
+      "default": {
         "types": "./dist/queryBuilder.d.ts",
         "default": "./dist/queryBuilder.js"
-      },
-      "require": {
-        "types": "./dist/cjs/queryBuilder.d.ts",
-        "default": "./dist/cjs/queryBuilder.js"
       }
     },
     "./react/useLiveQuery": {
-      "import": {
+      "default": {
         "types": "./dist/react/useLiveQuery.d.ts",
         "default": "./dist/react/useLiveQuery.js"
-      },
-      "require": {
-        "types": "./dist/cjs/react/useLiveQuery.d.ts",
-        "default": "./dist/cjs/react/useLiveQuery.js"
       }
     },
     "./parser/queryParser": {
-      "import": {
+      "default": {
         "types": "./dist/parser/queryParser.d.ts",
         "default": "./dist/parser/queryParser.js"
-      },
-      "require": {
-        "types": "./dist/cjs/parser/queryParser.d.ts",
-        "default": "./dist/cjs/parser/queryParser.js"
       }
     },
     "./generator/graphqlGenerator": {
-      "import": {
+      "default": {
         "types": "./dist/generator/graphqlGenerator.d.ts",
         "default": "./dist/generator/graphqlGenerator.js"
-      },
-      "require": {
-        "types": "./dist/cjs/generator/graphqlGenerator.d.ts",
-        "default": "./dist/cjs/generator/graphqlGenerator.js"
       }
     },
     "./live/types": {
-      "import": {
+      "default": {
         "types": "./dist/live/types.d.ts",
         "default": "./dist/live/types.js"
-      },
-      "require": {
-        "types": "./dist/cjs/live/types.d.ts",
-        "default": "./dist/cjs/live/types.js"
       }
     },
     "./types/ast": {
-      "import": {
+      "default": {
         "types": "./dist/types/ast.d.ts",
         "default": "./dist/types/ast.js"
-      },
-      "require": {
-        "types": "./dist/cjs/types/ast.d.ts",
-        "default": "./dist/cjs/types/ast.js"
       }
     },
     "./types/orm": {
-      "import": {
+      "default": {
         "types": "./dist/types/orm.d.ts",
         "default": "./dist/types/orm.js"
-      },
-      "require": {
-        "types": "./dist/cjs/types/orm.d.ts",
-        "default": "./dist/cjs/types/orm.js"
       }
     },
     "./types/schema": {
-      "import": {
+      "default": {
         "types": "./dist/types/schema.d.ts",
         "default": "./dist/types/schema.js"
-      },
-      "require": {
-        "types": "./dist/cjs/types/schema.d.ts",
-        "default": "./dist/cjs/types/schema.js"
       }
     },
     "./types/typeUtils": {
-      "import": {
+      "default": {
         "types": "./dist/types/typeUtils.d.ts",
         "default": "./dist/types/typeUtils.js"
-      },
-      "require": {
-        "types": "./dist/cjs/types/typeUtils.d.ts",
-        "default": "./dist/cjs/types/typeUtils.js"
       }
     }
   },
-  "main": "dist/queryBuilder.js",
+  "main": "./dist/queryBuilder.js",
   "types": "dist/queryBuilder.d.ts",
   "files": [
     "dist"
@@ -128,8 +84,7 @@
   "scripts": {
     "build": "node ./build.ts",
     "build:pack": "yarn pack -o cedarjs-gqlorm.tgz",
-    "build:types": "tsc --build --verbose tsconfig.build.json",
-    "build:types-cjs": "tsc --build --verbose tsconfig.cjs.json",
+    "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
     "check:attw": "node ./attw.ts",
     "check:package": "concurrently npm:check:attw yarn publint",

@@ -10,83 +10,51 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": {
+      "default": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
-      },
-      "default": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.js"
       }
     },
     "./loadEnvFiles": {
-      "import": {
+      "default": {
         "types": "./dist/lib/loadEnvFiles.d.ts",
         "default": "./dist/lib/loadEnvFiles.js"
-      },
-      "default": {
-        "types": "./dist/cjs/lib/loadEnvFiles.d.ts",
-        "default": "./dist/cjs/lib/loadEnvFiles.js"
       }
     },
     "./dist/lib/loadEnvFiles.js": {
-      "import": {
+      "default": {
         "types": "./dist/lib/loadEnvFiles.d.ts",
         "default": "./dist/lib/loadEnvFiles.js"
-      },
-      "default": {
-        "types": "./dist/cjs/lib/loadEnvFiles.d.ts",
-        "default": "./dist/cjs/lib/loadEnvFiles.js"
       }
     },
     "./packageManager": {
-      "import": {
+      "default": {
         "types": "./dist/packageManager/index.d.ts",
         "default": "./dist/packageManager/index.js"
-      },
-      "default": {
-        "types": "./dist/cjs/packageManager/index.d.ts",
-        "default": "./dist/cjs/packageManager/index.js"
       }
     },
     "./packageManager/exec": {
-      "import": {
+      "default": {
         "types": "./dist/packageManager/exec.d.ts",
         "default": "./dist/packageManager/exec.js"
-      },
-      "default": {
-        "types": "./dist/cjs/packageManager/exec.d.ts",
-        "default": "./dist/cjs/packageManager/exec.js"
       }
     },
     "./packageManager/packages": {
-      "import": {
+      "default": {
         "types": "./dist/packageManager/packages.d.ts",
         "default": "./dist/packageManager/packages.js"
-      },
-      "default": {
-        "types": "./dist/cjs/packageManager/packages.d.ts",
-        "default": "./dist/cjs/packageManager/packages.js"
       }
     },
     "./packageManager/display": {
-      "import": {
+      "default": {
         "types": "./dist/packageManager/display.d.ts",
         "default": "./dist/packageManager/display.js"
-      },
-      "default": {
-        "types": "./dist/cjs/packageManager/display.d.ts",
-        "default": "./dist/cjs/packageManager/display.js"
       }
     },
     "./packageManager/workspaces": {
-      "import": {
+      "default": {
         "types": "./dist/packageManager/workspaces.d.ts",
         "default": "./dist/packageManager/workspaces.js"
-      },
-      "default": {
-        "types": "./dist/cjs/packageManager/workspaces.d.ts",
-        "default": "./dist/cjs/packageManager/workspaces.js"
       }
     }
   },
@@ -95,9 +63,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "node ./build.ts && yarn build:types",
+    "build": "node ./build.ts",
     "build:pack": "yarn pack -o cedarjs-cli-helpers.tgz",
-    "build:types": "tsc --build --verbose ./tsconfig.build.json ./tsconfig.cjs.json",
+    "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",

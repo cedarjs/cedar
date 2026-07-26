@@ -79,6 +79,23 @@ const config: Config = {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   transform: {
+    // `@cedarjs/context` is ESM-only, and @cedarjs/testing's own api entry
+    // point (which virtually every generated project's api-side test
+    // imports, for scenario/mock helpers) requires it at the top level. Jest's
+    // CJS runtime can't parse the real ESM this now emits, so it needs the
+    // same babel-jest carve-out the web preset already uses for ESM-only
+    // node_modules packages (see jest-preset.ts on the web side for the
+    // fuller explanation of why this is necessary).
+    '[/\\\\]node_modules[/\\\\]@cedarjs[/\\\\]context[/\\\\].+\\.js$': [
+      'babel-jest',
+      {
+        babelrc: false,
+        configFile: false,
+        presets: [
+          [require.resolve('@babel/preset-env'), { targets: { node: '20' } }],
+        ],
+      },
+    ],
     '\\.[cm]?[jt]sx?$': [
       'babel-jest',
       // When jest runs tests in parallel, it serializes the config before passing down options to babel
@@ -91,6 +108,9 @@ const config: Config = {
       },
     ],
   },
+  transformIgnorePatterns: [
+    '[/\\\\]node_modules[/\\\\](?!@cedarjs[/\\\\]context[/\\\\])',
+  ],
   testPathIgnorePatterns: ['.scenarios.[jt]s$'],
 }
 
