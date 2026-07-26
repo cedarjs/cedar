@@ -35,7 +35,10 @@ export async function handler({
   force: forceArg,
 }: Args) {
   const { version } = JSON.parse(
-    fs.readFileSync(path.resolve(__dirname, '../package.json'), 'utf-8'),
+    fs.readFileSync(
+      path.resolve(import.meta.dirname, '../package.json'),
+      'utf-8',
+    ),
   )
 
   const webAuthn = await shouldIncludeWebAuthn(webauthn)
@@ -77,7 +80,7 @@ export async function handler({
   }
 
   await standardAuthHandler({
-    basedir: __dirname,
+    basedir: import.meta.dirname,
     forceArg,
     provider: 'dbAuth',
     authDecoderImport:

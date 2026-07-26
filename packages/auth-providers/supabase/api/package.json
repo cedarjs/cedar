@@ -7,7 +7,7 @@
     "directory": "packages/auth-providers/supabase/api"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "exports": {
     ".": {
       "default": {
@@ -28,9 +28,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "node ./build.mts && yarn build:types",
+    "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-auth-supabase-api.tgz",
-    "build:types": "tsc --build --verbose ./tsconfig.json",
+    "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx,template\" --ignore dist --exec \"yarn build\"",
     "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",
