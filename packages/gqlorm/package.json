@@ -76,7 +76,7 @@
       }
     }
   },
-  "main": "./dist/index.js",
+  "main": "./dist/queryBuilder.js",
   "types": "dist/queryBuilder.d.ts",
   "files": [
     "dist"
