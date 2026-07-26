@@ -60,12 +60,12 @@ ESM Only (62)
 - gqlorm (https://github.com/cedarjs/cedar/pull/2237)
 - internal (https://github.com/cedarjs/cedar/pull/2237)
 - vite (https://github.com/cedarjs/cedar/pull/2237)
-- babel-config
-- cookie-jar
-- forms
-- jobs
-- ogimage-gen
-- server-store
+- babel-config (https://github.com/cedarjs/cedar/pull/2239)
+- cookie-jar (https://github.com/cedarjs/cedar/pull/2239)
+- forms (https://github.com/cedarjs/cedar/pull/2239)
+- jobs (https://github.com/cedarjs/cedar/pull/2239)
+- ogimage-gen (https://github.com/cedarjs/cedar/pull/2239)
+- server-store (https://github.com/cedarjs/cedar/pull/2239)
 
 Dual Mode – CJS + ESM (12)
 
