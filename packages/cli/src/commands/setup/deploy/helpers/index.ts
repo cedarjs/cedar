@@ -5,7 +5,6 @@ import * as parser from '@babel/parser'
 import * as t from '@babel/types'
 import execa from 'execa'
 import { Listr } from 'listr2'
-import * as recast from 'recast'
 
 import { getConfigPath, getConfig } from '@cedarjs/project-config'
 
@@ -210,7 +209,7 @@ function resolveConfigObject(arg: t.Node): t.ObjectExpression | null {
  * Inserts plugin call expressions before `cedar()` in the `plugins` array
  * of `defineConfig({...})` inside a vite config file.
  *
- * Uses recast only for position-finding, then does text-level insertion to
+ * Uses the AST only for position-finding, then does text-level insertion to
  * preserve all original formatting, comments, and blank lines.
  *
  * @param content     - The full file content.
@@ -225,15 +224,9 @@ export function insertPluginsBeforeCedar({
   content: string
   pluginCodes: string[]
 }): string | null {
-  const ast = recast.parse(content, {
-    parser: {
-      parse(source: string) {
-        return parser.parse(source, {
-          sourceType: 'module',
-          plugins: ['typescript', 'jsx'],
-        })
-      },
-    },
+  const ast = parser.parse(content, {
+    sourceType: 'module',
+    plugins: ['typescript', 'jsx'],
   })
 
   const defaultExport = ast.program.body.find(t.isExportDefaultDeclaration)
