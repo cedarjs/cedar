@@ -1,4 +1,4 @@
-import { renderToMjml } from '@faire/mjml-react/utils/renderToMjml'
+import { renderToMjml } from '@faire/mjml-react/utils/renderToMjml.js'
 import mjml2html from 'mjml'
 
 import type {
