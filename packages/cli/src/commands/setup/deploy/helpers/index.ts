@@ -5,7 +5,6 @@ import * as parser from '@babel/parser'
 import * as t from '@babel/types'
 import execa from 'execa'
 import { Listr } from 'listr2'
-import * as recast from 'recast'
 
 import { getConfigPath, getConfig } from '@cedarjs/project-config'
 
@@ -146,18 +145,6 @@ export const verifyUDSetupTask = () => {
 }
 
 /**
- * Converts a 1-based line/column position to a character index.
- */
-function posToIndex(str: string, line: number, column: number): number {
-  const lines = str.split('\n')
-  let index = 0
-  for (let i = 0; i < line - 1; i++) {
-    index += lines[i].length + 1
-  }
-  return index + column
-}
-
-/**
  * Unwraps the config object from a `defineConfig(...)` call argument.
  *
  * Handles both direct object and arrow/function wrappers:
@@ -210,7 +197,7 @@ function resolveConfigObject(arg: t.Node): t.ObjectExpression | null {
  * Inserts plugin call expressions before `cedar()` in the `plugins` array
  * of `defineConfig({...})` inside a vite config file.
  *
- * Uses recast only for position-finding, then does text-level insertion to
+ * Uses the AST only for position-finding, then does text-level insertion to
  * preserve all original formatting, comments, and blank lines.
  *
  * @param content     - The full file content.
@@ -225,15 +212,9 @@ export function insertPluginsBeforeCedar({
   content: string
   pluginCodes: string[]
 }): string | null {
-  const ast = recast.parse(content, {
-    parser: {
-      parse(source: string) {
-        return parser.parse(source, {
-          sourceType: 'module',
-          plugins: ['typescript', 'jsx'],
-        })
-      },
-    },
+  const ast = parser.parse(content, {
+    sourceType: 'module',
+    plugins: ['typescript', 'jsx'],
   })
 
   const defaultExport = ast.program.body.find(t.isExportDefaultDeclaration)
@@ -273,7 +254,14 @@ export function insertPluginsBeforeCedar({
   }
   const cedarNode = cedarElement
 
-  if (!cedarNode.loc || !arrayExpr.loc || !pluginsProp.loc) {
+  if (
+    !cedarNode.loc ||
+    !arrayExpr.loc ||
+    !pluginsProp.loc ||
+    cedarNode.start == null ||
+    arrayExpr.start == null ||
+    arrayExpr.end == null
+  ) {
     return null
   }
 
@@ -281,30 +269,14 @@ export function insertPluginsBeforeCedar({
   const isInline = cedarNode.loc.start.line === arrayExpr.loc.start.line
 
   if (isInline) {
-    const startPos = posToIndex(
-      content,
-      arrayExpr.loc.start.line,
-      arrayExpr.loc.start.column,
-    )
-    const endPos = posToIndex(
-      content,
-      arrayExpr.loc.end.line,
-      arrayExpr.loc.end.column,
-    )
-
-    const precedingText = content.slice(0, startPos)
-    const followingText = content.slice(endPos)
+    const precedingText = content.slice(0, arrayExpr.start)
+    const followingText = content.slice(arrayExpr.end)
 
     const existingCodes = elements.flatMap((el) => {
-      if (!el?.loc) {
+      if (el?.start == null || el.end == null) {
         return []
       }
-      return [
-        content.slice(
-          posToIndex(content, el.loc.start.line, el.loc.start.column),
-          posToIndex(content, el.loc.end.line, el.loc.end.column),
-        ),
-      ]
+      return [content.slice(el.start, el.end)]
     })
 
     const lines = content.split('\n')
@@ -326,7 +298,7 @@ export function insertPluginsBeforeCedar({
 
   // Multiline: insert at start of cedar()'s line (after the preceding \n)
   const cedarLine = cedarNode.loc.start.line
-  const insertPos = posToIndex(content, cedarLine, 0)
+  const insertPos = cedarNode.start - cedarNode.loc.start.column
   const lines = content.split('\n')
   const indent = (lines[cedarLine - 1].match(/^\s*/) ?? [''])[0]
   const insertion = pluginCodes.map((code) => `${indent}${code},\n`).join('')
