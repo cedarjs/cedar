@@ -6,14 +6,17 @@ import { isTypeScriptProject, standardAuthHandler } from '@cedarjs/cli-helpers'
 import type { Args } from './setup.js'
 
 const { version } = JSON.parse(
-  fs.readFileSync(path.resolve(__dirname, '../package.json'), 'utf-8'),
+  fs.readFileSync(
+    path.resolve(import.meta.dirname, '../package.json'),
+    'utf-8',
+  ),
 )
 
 export async function handler({ force: forceArg }: Args) {
   const authFilename = isTypeScriptProject() ? 'auth.ts' : 'auth.js'
 
   standardAuthHandler({
-    basedir: __dirname,
+    basedir: import.meta.dirname,
     forceArg,
     provider: 'custom',
     webPackages: [`@cedarjs/auth@${version}`],

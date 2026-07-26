@@ -171,10 +171,10 @@ async function createServer() {
     plugins: [
       cjsInterop({
         dependencies: [
-          // Skip ESM modules: rwjs/auth, rwjs/web, rwjs/auth-*-middleware, rwjs/router
+          // Skip ESM modules: rwjs/auth, rwjs/web, rwjs/auth-*-middleware,
+          // rwjs/router, rwjs/auth-*-api
           '@cedarjs/forms',
           '@cedarjs/prerender/*',
-          '@cedarjs/auth-*-api',
           // Add more to the pattern below as they're converted to dual ESM/CJS
           // modules
           // '@cedarjs/auth-!(dbauth|auth0|clerk)-web',
