@@ -48,16 +48,16 @@ ESM Only (51)
 - fastify-web (adapters/fastify/web) (https://github.com/cedarjs/cedar/pull/2227)
 - cli-data-migrate (https://github.com/cedarjs/cedar/pull/2227)
 - cli-storybook-vite (https://github.com/cedarjs/cedar/pull/2227)
-- auth-auth0-web
-- auth-azure-active-directory-web
-- auth-clerk-web
-- auth-dbauth-web
-- auth-dbauth-middleware
-- auth-firebase-web
-- auth-netlify-web
-- auth-supabase-web
-- auth-supabase-middleware
-- auth-supertokens-web
+- auth-auth0-web (https://github.com/cedarjs/cedar/pull/2234)
+- auth-azure-active-directory-web (https://github.com/cedarjs/cedar/pull/2234)
+- auth-clerk-web (https://github.com/cedarjs/cedar/pull/2234)
+- auth-dbauth-web (https://github.com/cedarjs/cedar/pull/2234)
+- auth-dbauth-middleware (https://github.com/cedarjs/cedar/pull/2234)
+- auth-firebase-web (https://github.com/cedarjs/cedar/pull/2234)
+- auth-netlify-web (https://github.com/cedarjs/cedar/pull/2234)
+- auth-supabase-web (https://github.com/cedarjs/cedar/pull/2234)
+- auth-supabase-middleware (https://github.com/cedarjs/cedar/pull/2234)
+- auth-supertokens-web (https://github.com/cedarjs/cedar/pull/2234)
 
 Dual Mode – CJS + ESM (23)
 
