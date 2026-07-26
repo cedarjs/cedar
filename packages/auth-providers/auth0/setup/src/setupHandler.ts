@@ -6,12 +6,15 @@ import { standardAuthHandler } from '@cedarjs/cli-helpers'
 import type { Args } from './setup.js'
 
 const { version } = JSON.parse(
-  fs.readFileSync(path.resolve(__dirname, '../package.json'), 'utf-8'),
+  fs.readFileSync(
+    path.resolve(import.meta.dirname, '../package.json'),
+    'utf-8',
+  ),
 )
 
 export async function handler({ force: forceArg }: Args) {
   standardAuthHandler({
-    basedir: __dirname,
+    basedir: import.meta.dirname,
     forceArg,
     provider: 'auth0',
     authDecoderImport: "import { authDecoder } from '@cedarjs/auth-auth0-api'",

@@ -1,36 +1,12 @@
 Here's the breakdown of the 74 packages in the CedarJS monorepo:
 
-CJS Only (27)
+CJS Only (3)
 
 - fastify-web (adapters/fastify/web)
 - cli-data-migrate
 - cli-storybook-vite
-- mailer-core
-- mailer-handler-in-memory
-- mailer-handler-nodemailer
-- mailer-handler-resend
-- mailer-handler-studio
-- mailer-renderer-mjml-react
-- mailer-renderer-react-email
-- auth-auth0-api
-- auth-auth0-setup
-- auth-azure-active-directory-api
-- auth-azure-active-directory-setup
-- auth-clerk-api
-- auth-clerk-setup
-- auth-custom-setup
-- auth-dbauth-api
-- auth-dbauth-setup
-- auth-firebase-api
-- auth-firebase-setup
-- auth-netlify-api
-- auth-netlify-setup
-- auth-supabase-api
-- auth-supabase-setup
-- auth-supertokens-api
-- auth-supertokens-setup
 
-ESM Only (14)
+ESM Only (38)
 
 - cli
 - codemods
@@ -46,6 +22,30 @@ ESM Only (14)
 - telemetry (https://github.com/cedarjs/cedar/pull/2204)
 - tui (https://github.com/cedarjs/cedar/pull/2205)
 - web-server (https://github.com/cedarjs/cedar/pull/2207)
+- mailer-core (https://github.com/cedarjs/cedar/pull/2211)
+- mailer-handler-in-memory (https://github.com/cedarjs/cedar/pull/2212)
+- mailer-handler-nodemailer (https://github.com/cedarjs/cedar/pull/2215)
+- mailer-handler-resend (https://github.com/cedarjs/cedar/pull/2216)
+- mailer-handler-studio (https://github.com/cedarjs/cedar/pull/2217)
+- mailer-renderer-mjml-react (https://github.com/cedarjs/cedar/pull/2218)
+- mailer-renderer-react-email (https://github.com/cedarjs/cedar/pull/2219)
+- auth-auth0-api (https://github.com/cedarjs/cedar/pull/2223)
+- auth-auth0-setup (https://github.com/cedarjs/cedar/pull/2223)
+- auth-azure-active-directory-api (https://github.com/cedarjs/cedar/pull/2223)
+- auth-azure-active-directory-setup (https://github.com/cedarjs/cedar/pull/2223)
+- auth-clerk-api (https://github.com/cedarjs/cedar/pull/2223)
+- auth-clerk-setup (https://github.com/cedarjs/cedar/pull/2223)
+- auth-custom-setup (https://github.com/cedarjs/cedar/pull/2223)
+- auth-dbauth-api (https://github.com/cedarjs/cedar/pull/2223)
+- auth-dbauth-setup (https://github.com/cedarjs/cedar/pull/2223)
+- auth-firebase-api (https://github.com/cedarjs/cedar/pull/2223)
+- auth-firebase-setup (https://github.com/cedarjs/cedar/pull/2223)
+- auth-netlify-api (https://github.com/cedarjs/cedar/pull/2223)
+- auth-netlify-setup (https://github.com/cedarjs/cedar/pull/2223)
+- auth-supabase-api (https://github.com/cedarjs/cedar/pull/2223)
+- auth-supabase-setup (https://github.com/cedarjs/cedar/pull/2223)
+- auth-supertokens-api (https://github.com/cedarjs/cedar/pull/2223)
+- auth-supertokens-setup (https://github.com/cedarjs/cedar/pull/2223)
 
 Dual Mode – CJS + ESM (33)
 
@@ -83,16 +83,17 @@ Dual Mode – CJS + ESM (33)
 - auth-supabase-middleware
 - auth-supertokens-web
 
-Summary: Of the 74 packages, 33 are dual mode (CJS + ESM), 27 are CJS-only, and
-14 are ESM-only. The CJS-only group is dominated by the `auth-providers/*`
-`api`/`setup` sub-packages and the `mailer/*` sub-packages, which all build with
-esbuild's default `cjs` format and never emit an ESM output. The `*-web` and
-`*-middleware` auth-provider packages, by contrast, build both ESM and CJS (via
+Summary: Of the 74 packages, 33 are dual mode (CJS + ESM), 3 are CJS-only, and
+38 are ESM-only. The remaining CJS-only packages (`fastify-web`,
+`cli-data-migrate`, `cli-storybook-vite`) build with esbuild's default `cjs`
+format and never emit an ESM output. The `*-web` and `*-middleware`
+auth-provider packages, by contrast, build both ESM and CJS (via
 `buildEsm`/`buildCjs` or `buildExternalEsm`/`buildExternalCjs`) and so land in
 Dual Mode alongside the already-tracked framework packages. ESM-only remains the
-packages that have been explicitly converted to drop their CJS build entirely,
-with `eslint-plugin`, `telemetry`, `tui`, and `web-server` being the most recent
-conversions.
+packages that have been explicitly converted to drop their CJS build entirely;
+`eslint-plugin`, `telemetry`, `tui`, `web-server`, the 7 `mailer/*` packages,
+and the 17 `auth-*-api`/`auth-*-setup` packages are the conversions done so far
+(see the sequencing plan below).
 
 **Correction (2026-07-25 review):** an earlier revision of this doc listed
 `cli-helpers`, `context`, and `record` under ESM Only, and listed
@@ -145,14 +146,16 @@ generated templates:
   Safe given the Node 24 floor, but end-user-facing — worth a smoke test against
   a generated commonjs-template project before converting.
 
-**Conclusion**: all 27 CJS-only packages are viable candidates for conversion to
-ESM-only. Suggested sequencing, low-risk first:
+**Conclusion**: all 27 originally-CJS-only packages are viable candidates for
+conversion to ESM-only. Suggested sequencing, low-risk first:
 
 1. `mailer-core`, `mailer-handler-in-memory`, `mailer-handler-nodemailer`,
    `mailer-handler-resend`, `mailer-handler-studio`,
-   `mailer-renderer-mjml-react`, `mailer-renderer-react-email`, `fastify-web`,
-   `cli-data-migrate`, `cli-storybook-vite` — no real external `require()`
-   callers found at all.
+   `mailer-renderer-mjml-react`, `mailer-renderer-react-email` — no real
+   external `require()` callers found at all. **Done** (PRs #2211, #2212,
+   #2215–#2219).
 2. The 17 `auth-*-api` / `auth-*-setup` packages — mechanically identical
    conversion, batch together, smoke-test against a generated commonjs template
-   project.
+   project. **Done**, batched into a single PR (#2223).
+3. `fastify-web`, `cli-data-migrate`, `cli-storybook-vite` — no real external
+   `require()` callers found at all. Still outstanding.
