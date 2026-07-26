@@ -52,7 +52,7 @@
     "@types/jscodeshift": "17.3.0",
     "@types/yargs": "17.0.35",
     "memfs": "4.64.0",
-    "publint": "0.3.21",
+    "publint": "0.3.22",
     "ts-dedent": "2.3.0",
     "vitest": "4.1.10"
   },
