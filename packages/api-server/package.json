@@ -143,6 +143,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
+    "@cedarjs/api": "workspace:*",
     "@cedarjs/context": "workspace:*",
     "@cedarjs/fastify-web": "workspace:*",
     "@cedarjs/internal": "workspace:*",
@@ -171,8 +172,9 @@
     "@types/split2": "4.2.3",
     "@types/yargs": "17.0.35",
     "concurrently": "9.2.4",
-    "graphql-yoga": "5.21.2",
+    "esbuild": "0.28.1",
     "memfs": "4.64.0",
+    "pino": "9.7.0",
     "pino-abstract-transport": "1.2.0",
     "publint": "0.3.22",
     "typescript": "5.9.3",

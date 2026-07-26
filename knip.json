@@ -28,5 +28,10 @@
   "ignoreExportsUsedInFile": {
     "interface": true,
     "type": true
+  },
+  "workspaces": {
+    "packages/api-server": {
+      "entry": ["src/bin.ts", "src/watch.ts", "src/logFormatter/bin.ts"]
+    }
   }
 }
