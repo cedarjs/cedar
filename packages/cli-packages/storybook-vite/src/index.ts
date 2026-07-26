@@ -4,7 +4,7 @@ import {
   description,
   builder,
   handler,
-} from './commands/storybook'
+} from './commands/storybook.js'
 
 export const commands = [
   {
