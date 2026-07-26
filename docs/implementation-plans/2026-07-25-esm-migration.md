@@ -1,9 +1,13 @@
 Here's the breakdown of the 74 packages in the CedarJS monorepo:
 
-CJS Only (0)
+CJS Only (6)
 
-- None — all 27 originally-CJS-only packages have now been converted to
-  ESM-only (see below).
+- babel-config
+- cookie-jar
+- forms
+- jobs
+- ogimage-gen
+- server-store
 
 ESM Only (51)
 
@@ -59,42 +63,38 @@ ESM Only (51)
 - auth-supabase-middleware (https://github.com/cedarjs/cedar/pull/2234)
 - auth-supertokens-web (https://github.com/cedarjs/cedar/pull/2234)
 
-Dual Mode – CJS + ESM (23)
+Dual Mode – CJS + ESM (17)
 
 - api
 - api-server
 - auth
-- babel-config
 - cli-helpers
 - context
-- cookie-jar
 - eslint-config
-- forms
 - gqlorm
 - graphql-server
 - internal
-- jobs
-- ogimage-gen
 - prerender
 - project-config
 - record
 - router
-- server-store
 - storage
 - testing
 - vite
 - web
 
-Summary: Of the 74 packages, 23 are dual mode (CJS + ESM), 0 are CJS-only, and
-51 are ESM-only. Every package that was CJS-only as of the original inventory
-below has now been converted to ESM-only, and the 10 `auth-*-web` /
-`auth-*-middleware` packages that used to be Dual Mode have also been
-converted to ESM-only (see "Dual Mode -> ESM Only" below) — they were dual
-mode from a mechanical Babel-to-esbuild tooling migration, not because
-anything actually needed a CJS build of them. ESM-only remains the packages
-that have been explicitly converted to drop their CJS build entirely;
-`eslint-plugin`, `telemetry`, `tui`, `web-server`, the 7 `mailer/*` packages,
-the 17 `auth-*-api`/`auth-*-setup` packages,
+Summary: Of the 74 packages, 17 are dual mode (CJS + ESM), 6 are CJS-only, and
+51 are ESM-only. The 6 CJS-only packages (`babel-config`, `cookie-jar`,
+`forms`, `jobs`, `ogimage-gen`, `server-store`) were previously miscategorized
+as Dual Mode — see the correction below. Of the packages that were genuinely
+CJS-only in the original inventory, all 27 have now been converted to
+ESM-only, and the 10 `auth-*-web`/`auth-*-middleware` packages that used to be
+genuinely Dual Mode have also been converted to ESM-only (see "Dual Mode ->
+ESM Only" below) — they were dual mode from a mechanical Babel-to-esbuild
+tooling migration, not because anything actually needed a CJS build of them.
+ESM-only remains the packages that have been explicitly converted to drop
+their CJS build entirely; `eslint-plugin`, `telemetry`, `tui`, `web-server`,
+the 7 `mailer/*` packages, the 17 `auth-*-api`/`auth-*-setup` packages,
 `fastify-web`/`cli-data-migrate`/`cli-storybook-vite`, and the 10
 `auth-*-web`/`auth-*-middleware` packages are the conversions done so far.
 
@@ -117,6 +117,33 @@ packages. Neither holds up:
   `require('@cedarjs/testing/config/jest/api')` resolves a subpath — not
   packages that could themselves be "converted" to ESM. They've been removed
   from the inventory.
+
+**Correction (2026-07-26 review):** research into which Dual Mode packages
+were good candidates to drop their CJS build turned up 6 packages that were
+never actually dual mode at all — they were CJS-only the whole time, just
+miscategorized:
+
+- `babel-config`: `package.json` `"type": "commonjs"`, `exports` only declares
+  `"." : "./dist/index.js"`, and `build.mts` calls the bare `build()` helper,
+  whose `defaultBuildOptions` default to `format: 'cjs'` — no ESM build is
+  ever produced.
+- `cookie-jar`: `build.mts` always builds `format: 'cjs'` only, and has done
+  so since the file was first added.
+- `forms`: same pattern — bare `build()` call, `exports["."]` has only a
+  `default` condition, no `import` condition.
+- `jobs`: bare `await build()` with no format override, root `"type":
+"commonjs"`, single flat `exports` condition.
+- `ogimage-gen`: same — `build.mts` is a bare `build()` call, `"type":
+"commonjs"`. It does have vestigial dual-mode-looking scaffolding (an
+  `exports["./middleware"].import` condition and a `cjsWrappers/` directory),
+  but both point at the same CJS output — leftover/unfinished work, not a
+  real ESM build.
+- `server-store`: `build.mts` explicitly sets `format: 'cjs'`, single output,
+  root `"type": "commonjs"`.
+
+Moved all 6 to CJS Only. This also means they're candidates for the
+CJS-only-to-ESM-only conversion described below, following the same Node
+24-`require(esm)` reasoning as the original 27 — not yet evaluated in detail.
 
 ## CJS Only -> ESM Only: candidates given the Node 24 requirement
 
