@@ -62,11 +62,11 @@ ESM Only (56)
 - auth-supabase-web (https://github.com/cedarjs/cedar/pull/2234)
 - auth-supabase-middleware (https://github.com/cedarjs/cedar/pull/2234)
 - auth-supertokens-web (https://github.com/cedarjs/cedar/pull/2234)
-- cli-helpers
-- context
-- gqlorm
-- internal
-- vite
+- cli-helpers (https://github.com/cedarjs/cedar/pull/2237)
+- context (https://github.com/cedarjs/cedar/pull/2237)
+- gqlorm (https://github.com/cedarjs/cedar/pull/2237)
+- internal (https://github.com/cedarjs/cedar/pull/2237)
+- vite (https://github.com/cedarjs/cedar/pull/2237)
 
 Dual Mode – CJS + ESM (12)
 
