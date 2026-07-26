@@ -1,7 +1,4 @@
 import nodemailer from 'nodemailer'
-// Under CJS the extensionless directory import resolved fine, but Node16/
-// NodeNext module resolution (which kicks in now that this package is
-// "type": "module") requires an explicit file extension for subpath imports.
 import type SMTPTransport from 'nodemailer/lib/smtp-transport/index.js'
 
 import { AbstractMailHandler } from '@cedarjs/mailer-core'
