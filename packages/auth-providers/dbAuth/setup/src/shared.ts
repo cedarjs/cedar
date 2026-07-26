@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { getDMMF } from '@prisma/internals'
+import prismaInternals from '@prisma/internals'
 
 import { getPaths } from '@cedarjs/cli-helpers'
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
@@ -18,6 +18,7 @@ export const functionsPath = getPaths().api.functions.replace(
 )
 
 export const getModelNames = async () => {
+  const { getDMMF } = prismaInternals
   const result = await getPrismaSchemas()
   const datamodel = result.schemas
   const schema = await getDMMF({ datamodel })
