@@ -64,7 +64,7 @@
     "@prisma/client": "7.8.0",
     "@types/better-sqlite3": "7.6.13",
     "@types/mime-types": "2.1.4",
-    "better-sqlite3": "12.9.0",
+    "better-sqlite3": "12.11.1",
     "concurrently": "9.2.4",
     "esbuild": "0.28.1",
     "prisma": "7.8.0",

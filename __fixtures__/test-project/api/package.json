@@ -10,6 +10,6 @@
     "@my-org/validators": "workspace:*",
     "@prisma/adapter-better-sqlite3": "7.8.0",
     "@prisma/client": "7.8.0",
-    "better-sqlite3": "12.9.0"
+    "better-sqlite3": "12.11.1"
   }
 }
