@@ -7,7 +7,7 @@
     "directory": "packages/cookie-jar"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "exports": {
     "types": "./dist/CookieJar.d.ts",
     "default": "./dist/CookieJar.js"
@@ -17,9 +17,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "node ./build.mts && run build:types",
+    "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-cookie-jar.tgz",
-    "build:types": "tsc --build --verbose",
+    "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "test": "vitest run"
   },
   "dependencies": {

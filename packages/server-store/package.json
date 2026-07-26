@@ -7,7 +7,7 @@
     "directory": "packages/server-store"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "exports": {
     "types": "./dist/serverStore.d.ts",
     "default": "./dist/serverStore.js"
@@ -17,9 +17,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "node ./build.mts && run build:types",
+    "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-server-store.tgz",
-    "build:types": "tsc --build --verbose"
+    "build:types": "tsc --build --verbose ./tsconfig.build.json"
   },
   "dependencies": {
     "@cedarjs/auth": "workspace:*",

@@ -1,8 +1,5 @@
-import { build, defaultBuildOptions } from '@cedarjs/framework-tools'
+import { buildEsm } from '@cedarjs/framework-tools'
+import { generateTypesEsm } from '@cedarjs/framework-tools/generateTypes'
 
-await build({
-  buildOptions: {
-    ...defaultBuildOptions,
-    format: 'cjs',
-  },
-})
+await buildEsm()
+await generateTypesEsm()

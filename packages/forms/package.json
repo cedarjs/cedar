@@ -7,13 +7,11 @@
     "directory": "packages/forms"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "exports": {
     ".": {
-      "default": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      }
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
   "main": "./dist/index.js",
@@ -22,7 +20,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "node ./build.mts && yarn build:types",
+    "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-forms.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",

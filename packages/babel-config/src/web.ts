@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import type { TransformOptions } from '@babel/core'
@@ -13,6 +14,12 @@ import {
   getPathsFromTypeScriptConfig,
 } from './common.js'
 import type { PluginOptions as RoutesAutoLoaderOptions } from './plugins/babel-plugin-redwood-routes-auto-loader.js'
+
+// This package is ESM-only, so `require` isn't a global here — use
+// `createRequire` to synchronously load sibling plugin files and the user's
+// babel.config.js. These all have to stay synchronous: Babel's config API
+// takes a plain object, not a promise.
+const require = createRequire(import.meta.url)
 
 // These flags toggle on/off certain features
 export interface Flags {

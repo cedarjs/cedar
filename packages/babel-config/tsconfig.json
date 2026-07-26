@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.cjs-build-base.json",
+  "extends": "../../tsconfig.build.base.json",
   "compilerOptions": {
     "types": ["node", "jest"]
   },
