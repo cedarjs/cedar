@@ -150,7 +150,7 @@
     "@cedarjs/web-server": "5.0.1",
     "@fastify/multipart": "9.4.0",
     "@fastify/url-data": "6.0.3",
-    "ansis": "4.2.0",
+    "ansis": "4.3.1",
     "chokidar": "3.6.0",
     "dotenv-defaults": "5.0.2",
     "fast-glob": "3.3.3",
