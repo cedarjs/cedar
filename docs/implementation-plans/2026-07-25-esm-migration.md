@@ -347,13 +347,13 @@ across the monorepo and generated templates:
   called synchronously and return plain objects, because that's the shape
   Babel's own config API requires. Threading `async`/`await` through them
   would ripple out through every caller (Jest preset config building, `@babel/
-  register`'s hook installation) — a real invasive change, not a mechanical
+register`'s hook installation) — a real invasive change, not a mechanical
   one.
 
   The fix: `const require = createRequire(import.meta.url)` at the top of
   both files, shadowing the (nonexistent) global with a real synchronous
   `require` function. This is the same technique `@cedarjs/core`'s `src/bins/
-  *.ts` proxy scripts already use, and it works for all 5 call sites
+*.ts` proxy scripts already use, and it works for all 5 call sites
   unchanged, including the dynamic user-config path — `createRequire`'s
   `require()` supports `require(esm)` the same as the CJS global does, so it
   transparently handles a user's `babel.config.js` regardless of whether
@@ -367,7 +367,7 @@ across the monorepo and generated templates:
     tsconfig base, not set by the old CJS-only config) this became a type
     error — `@types/babel__traverse`'s default export type isn't callable
     through that combination of module settings. `packages/internal/src/
-    ast.ts` (already ESM-only) hits the exact same `@babel/traverse` default-
+ast.ts` (already ESM-only) hits the exact same `@babel/traverse` default-
     export ambiguity and already has the fix: unwrap with
     `const traverse = babelTraverse.default || babelTraverse`. Applied the
     same pattern here.
@@ -392,7 +392,7 @@ across the monorepo and generated templates:
   `@cedarjs/eslint-config/index.js` — all three load cleanly via `require(esm)`
   through their own genuine CJS output (these are real CJS files regardless of
   the root package's `type` field, per the `testing/config/jest/{api,web}/
-  package.json` marker files noted in the 2026-07-25 correction above). Also
+package.json` marker files noted in the 2026-07-25 correction above). Also
   called `getApiSideDefaultBabelConfig()`/`getWebSideDefaultBabelConfig()`
   directly and confirmed the returned plugin arrays are fully populated (the 5
   `require()`'d plugins all resolve), and called `registerBabel()` directly to
