@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer'
-import type SMTPTransport from 'nodemailer/lib/smtp-transport'
+import type SMTPTransport from 'nodemailer/lib/smtp-transport/index.js'
 
 import { AbstractMailHandler } from '@cedarjs/mailer-core'
 import type {
