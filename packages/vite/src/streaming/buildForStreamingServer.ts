@@ -20,10 +20,10 @@ export async function buildForStreamingServer({
     plugins: [
       cjsInterop({
         dependencies: [
-          // Skip ESM modules: rwjs/auth, rwjs/web, rwjs/auth-*-middleware, rwjs/router
+          // Skip ESM modules: rwjs/auth, rwjs/web, rwjs/auth-*-middleware,
+          // rwjs/router, rwjs/auth-*-api
           '@cedarjs/forms',
           '@cedarjs/prerender/*',
-          '@cedarjs/auth-*-api',
           '@cedarjs/auth-!(dbauth)-web',
         ],
       }),

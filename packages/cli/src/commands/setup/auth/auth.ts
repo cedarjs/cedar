@@ -309,7 +309,7 @@ async function getAuthSetupHandler(module: string) {
 
   const setupModule = await import(module)
 
-  return setupModule.default.handler
+  return setupModule.handler
 }
 
 /**

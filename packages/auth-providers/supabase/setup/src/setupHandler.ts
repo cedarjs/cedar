@@ -6,12 +6,15 @@ import { standardAuthHandler } from '@cedarjs/cli-helpers'
 import type { Args } from './setup.js'
 
 const { version } = JSON.parse(
-  fs.readFileSync(path.resolve(__dirname, '../package.json'), 'utf-8'),
+  fs.readFileSync(
+    path.resolve(import.meta.dirname, '../package.json'),
+    'utf-8',
+  ),
 )
 
 export const handler = async ({ force: forceArg }: Args) => {
   standardAuthHandler({
-    basedir: __dirname,
+    basedir: import.meta.dirname,
     forceArg,
     provider: 'supabase',
     authDecoderImport: `import { authDecoder } from '@cedarjs/auth-supabase-api'`,
