@@ -1,6 +1,3 @@
-// Under CJS the extensionless subpath import resolved fine, but Node16/
-// NodeNext module resolution (which kicks in now that this package is
-// "type": "module") requires an explicit file extension for subpath imports.
 import { renderToMjml } from '@faire/mjml-react/utils/renderToMjml.js'
 import mjml2html from 'mjml'
 
