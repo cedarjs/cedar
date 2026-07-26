@@ -207,7 +207,7 @@
     "@prisma/dmmf": "7.8.0",
     "@prisma/internals": "7.8.0",
     "@sdl-codegen/node": "2.0.1",
-    "ansis": "4.2.0",
+    "ansis": "4.3.1",
     "deepmerge": "4.3.1",
     "esbuild": "0.28.1",
     "execa": "5.1.1",
