@@ -60,7 +60,7 @@
     "@arethetypeswrong/cli": "0.18.5",
     "@cedarjs/framework-tools": "workspace:*",
     "concurrently": "9.2.4",
-    "publint": "0.3.21",
+    "publint": "0.3.22",
     "typescript": "5.9.3"
   },
   "engines": {
