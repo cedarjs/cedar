@@ -23,7 +23,7 @@ const config = {
   ],
   overrides: [
     {
-      files: ['tsconfig.cjs.json'],
+      files: ['tsconfig.cjs.json', 'knip.jsonc'],
       options: {
         parser: 'jsonc',
         trailingComma: 'none',
