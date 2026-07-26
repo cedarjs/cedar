@@ -14,13 +14,18 @@
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
       }
+    },
+    "./webAuthn": {
+      "default": {
+        "types": "./dist/webAuthn.d.ts",
+        "default": "./dist/webAuthn.js"
+      }
     }
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist",
-    "webAuthn"
+    "dist"
   ],
   "scripts": {
     "build": "node ./build.ts",
