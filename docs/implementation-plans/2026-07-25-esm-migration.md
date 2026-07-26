@@ -5,7 +5,7 @@ CJS Only (0)
 - None — all 27 originally-CJS-only packages have now been converted to
   ESM-only (see below).
 
-ESM Only (41)
+ESM Only (51)
 
 - cli
 - codemods
@@ -48,8 +48,18 @@ ESM Only (41)
 - fastify-web (adapters/fastify/web) (https://github.com/cedarjs/cedar/pull/2227)
 - cli-data-migrate (https://github.com/cedarjs/cedar/pull/2227)
 - cli-storybook-vite (https://github.com/cedarjs/cedar/pull/2227)
+- auth-auth0-web (https://github.com/cedarjs/cedar/pull/2234)
+- auth-azure-active-directory-web (https://github.com/cedarjs/cedar/pull/2234)
+- auth-clerk-web (https://github.com/cedarjs/cedar/pull/2234)
+- auth-dbauth-web (https://github.com/cedarjs/cedar/pull/2234)
+- auth-dbauth-middleware (https://github.com/cedarjs/cedar/pull/2234)
+- auth-firebase-web (https://github.com/cedarjs/cedar/pull/2234)
+- auth-netlify-web (https://github.com/cedarjs/cedar/pull/2234)
+- auth-supabase-web (https://github.com/cedarjs/cedar/pull/2234)
+- auth-supabase-middleware (https://github.com/cedarjs/cedar/pull/2234)
+- auth-supertokens-web (https://github.com/cedarjs/cedar/pull/2234)
 
-Dual Mode – CJS + ESM (33)
+Dual Mode – CJS + ESM (23)
 
 - api
 - api-server
@@ -74,28 +84,19 @@ Dual Mode – CJS + ESM (33)
 - testing
 - vite
 - web
-- auth-auth0-web
-- auth-azure-active-directory-web
-- auth-clerk-web
-- auth-dbauth-web
-- auth-dbauth-middleware
-- auth-firebase-web
-- auth-netlify-web
-- auth-supabase-web
-- auth-supabase-middleware
-- auth-supertokens-web
 
-Summary: Of the 74 packages, 33 are dual mode (CJS + ESM), 0 are CJS-only, and
-41 are ESM-only. Every package that was CJS-only as of the original inventory
-below has now been converted to ESM-only. The `*-web` and `*-middleware`
-auth-provider packages, by contrast, build both ESM and CJS (via
-`buildEsm`/`buildCjs` or `buildExternalEsm`/`buildExternalCjs`) and so land in
-Dual Mode alongside the already-tracked framework packages. ESM-only remains
-the packages that have been explicitly converted to drop their CJS build
-entirely; `eslint-plugin`, `telemetry`, `tui`, `web-server`, the 7 `mailer/*`
-packages, the 17 `auth-*-api`/`auth-*-setup` packages, and
-`fastify-web`/`cli-data-migrate`/`cli-storybook-vite` are the conversions done
-so far (see the sequencing plan below).
+Summary: Of the 74 packages, 23 are dual mode (CJS + ESM), 0 are CJS-only, and
+51 are ESM-only. Every package that was CJS-only as of the original inventory
+below has now been converted to ESM-only, and the 10 `auth-*-web` /
+`auth-*-middleware` packages that used to be Dual Mode have also been
+converted to ESM-only (see "Dual Mode -> ESM Only" below) — they were dual
+mode from a mechanical Babel-to-esbuild tooling migration, not because
+anything actually needed a CJS build of them. ESM-only remains the packages
+that have been explicitly converted to drop their CJS build entirely;
+`eslint-plugin`, `telemetry`, `tui`, `web-server`, the 7 `mailer/*` packages,
+the 17 `auth-*-api`/`auth-*-setup` packages,
+`fastify-web`/`cli-data-migrate`/`cli-storybook-vite`, and the 10
+`auth-*-web`/`auth-*-middleware` packages are the conversions done so far.
 
 **Correction (2026-07-25 review):** an earlier revision of this doc listed
 `cli-helpers`, `context`, and `record` under ESM Only, and listed
@@ -163,3 +164,44 @@ conversion to ESM-only. Suggested sequencing, low-risk first:
    project. **Done**, batched into a single PR (#2223).
 3. `fastify-web`, `cli-data-migrate`, `cli-storybook-vite` — no real external
    `require()` callers found at all. **Done** (#2227).
+
+## Dual Mode -> ESM Only: the auth-provider `-web`/`-middleware` packages
+
+With the CJS-only inventory fully converted, the next question was whether
+the remaining Dual Mode packages could also drop their CJS build. Framework
+packages like `cli-helpers`, `context`, `record`, `api`, `api-server`, etc.
+have real reasons to stay dual mode (they're consumed in contexts that
+genuinely need both formats). The 10 `auth-*-web` / `auth-*-middleware`
+packages turned out not to:
+
+- **`auth-*-web`** (8 packages): only ever consumed by generated project
+  templates (`web/src/auth.ts.template`) via a plain `import`, which Vite/
+  Rollup statically bundles into the client and SSR/streaming bundles.
+  Nothing `require()`s them — the `auth-*-setup` packages only ever reference
+  them by name in a `webPackages` string array passed to the installer, never
+  actually import them. Their `package.json` `exports` maps only ever exposed
+  an `import` condition plus a CJS `default` fallback — no external consumer
+  was ever expected to hit the CJS build.
+- **`auth-dbauth-middleware`, `auth-supabase-middleware`**: loaded server-side
+  via `viteDevServer.ssrLoadModule` in dev and dynamic `import()` of the built
+  `.mjs` entry in prod (`packages/vite/src/middleware/register.ts`), and
+  statically bundled by Rollup for the SSR/streaming builds same as the `-web`
+  packages. The CJS build's only real trigger was a _build-time_ TypeScript
+  constraint (`tsc`'s node16 CJS emit refusing to statically compile a
+  `require()` of an already-ESM-only dependency, the same `TS1479` class of
+  issue hit when `auth-dbauth-api` went ESM-only in #2223) — not a runtime
+  consumer.
+- Git history confirms the CJS build was mechanical, not driven by a
+  discovered caller: these packages picked up a dual ESM+CJS build as part of
+  a repo-wide Babel-to-esbuild tooling migration, and the
+  `vite-plugin-cjs-interop` config's `'@cedarjs/auth-!(dbauth)-web'` glob is
+  itself evidence of the pattern — narrowed once already (dropping `dbauth-web`
+  when it got a real ESM build with proper named exports), and now dropped
+  entirely as all of them have gone ESM-only.
+
+All 10 packages converted cleanly: `package.json` `exports` maps collapsed
+from `{import: ..., default/require: <cjs>}` to a single `default` condition,
+`build.ts`/`build.mts` dropped their `buildCjs()`/`buildExternalCjs()` +
+`generateTypesCjs()` + `insertCommonJsPackageJson()` calls, `tsconfig.cjs.json`
+files removed, and the stale `cjsInterop` glob entries removed from
+`packages/vite/src/{devFeServer,streaming/buildForStreamingServer,rsc/rscBuildForSsr}.ts`.
