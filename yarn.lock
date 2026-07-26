@@ -3406,6 +3406,7 @@ __metadata:
     "@cedarjs/internal": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@cedarjs/router": "workspace:*"
+    "@cedarjs/web": "workspace:*"
     "@playwright/test": "npm:1.61.1"
     fast-glob: "npm:3.3.3"
     lodash: "npm:4.18.1"

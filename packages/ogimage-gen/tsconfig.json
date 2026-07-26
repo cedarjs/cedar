@@ -5,6 +5,7 @@
     { "path": "../project-config" },
     { "path": "../vite/tsconfig.build.json" },
     { "path": "../router/tsconfig.build.json" },
-    { "path": "../internal/tsconfig.build.json" }
+    { "path": "../internal/tsconfig.build.json" },
+    { "path": "../web/tsconfig.build.json" }
   ]
 }

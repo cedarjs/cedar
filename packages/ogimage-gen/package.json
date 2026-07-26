@@ -46,6 +46,7 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@cedarjs/router": "workspace:*",
+    "@cedarjs/web": "workspace:*",
     "@playwright/test": "1.61.1",
     "ts-toolbelt": "9.6.0",
     "typescript": "5.9.3",
