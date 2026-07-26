@@ -31,7 +31,7 @@
     "@cedarjs/project-config": "workspace:*",
     "ansis": "4.3.1",
     "dotenv-defaults": "5.0.2",
-    "fastify": "5.8.5",
+    "fastify": "5.10.0",
     "yargs": "17.7.3"
   },
   "devDependencies": {
