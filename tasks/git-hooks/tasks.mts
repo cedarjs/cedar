@@ -38,48 +38,28 @@ function getStagedFiles() {
 }
 
 function getBranchChangedFiles() {
-  // Try to diff against main. If main doesn't exist locally, fetch it.
-  let result = spawnSync(
+  const mainExists = spawnSync(
+    'git',
+    ['rev-parse', '--verify', '--quiet', 'main'],
+    { encoding: 'utf-8' },
+  )
+  if (mainExists.status !== 0) {
+    throw new Error(
+      "No local 'main' branch found, so we can't tell which files changed " +
+        'in this branch. Fetch it first, e.g. `git fetch origin main:main` ' +
+        '(or from `upstream` if you work off a fork), then push again.',
+    )
+  }
+
+  const result = spawnSync(
     'git',
     ['diff', 'main...HEAD', '--name-only', '--diff-filter=ACMR'],
     { encoding: 'utf-8' },
   )
-
-  // If diff failed (e.g., no local main ref), try fetching from a remote
   if (result.status !== 0) {
-    // Try upstream first, then origin, then any available remote
-    const remotes = ['upstream', 'origin']
-    let fetchSucceeded = false
-
-    for (const remote of remotes) {
-      const fetchResult = spawnSync('git', ['fetch', remote, 'main:main'], {
-        encoding: 'utf-8',
-        stdio: 'pipe',
-      })
-      if (fetchResult.status === 0) {
-        fetchSucceeded = true
-        break
-      }
-    }
-
-    if (!fetchSucceeded) {
-      throw new Error(
-        'Could not fetch main from any remote (tried upstream, origin). ' +
-          'Ensure the main branch is available from at least one remote.',
-      )
-    }
-
-    // Retry the diff
-    result = spawnSync(
-      'git',
-      ['diff', 'main...HEAD', '--name-only', '--diff-filter=ACMR'],
-      { encoding: 'utf-8' },
+    throw new Error(
+      `Failed to diff against main: ${result.stderr || result.stdout}`,
     )
-    if (result.status !== 0) {
-      throw new Error(
-        `Failed to diff against main after fetching: ${result.stderr || result.stdout}`,
-      )
-    }
   }
 
   return result.stdout.trim().split('\n').filter(Boolean)
