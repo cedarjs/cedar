@@ -48,13 +48,11 @@
     "prepublishOnly": "NODE_ENV=production yarn build"
   },
   "dependencies": {
-    "@babel/cli": "7.29.7",
     "@cedarjs/api-server": "workspace:*",
     "@cedarjs/cli": "workspace:*",
-    "@cedarjs/eslint-config": "workspace:*",
     "@cedarjs/internal": "workspace:*",
-    "@cedarjs/project-config": "workspace:*",
-    "@cedarjs/testing": "workspace:*",
+    "@cedarjs/jobs": "workspace:*",
+    "@cedarjs/vite": "workspace:*",
     "@cedarjs/web-server": "workspace:*",
     "graphql-tag": "2.12.6",
     "nodemon": "3.1.14",
