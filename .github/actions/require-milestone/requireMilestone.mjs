@@ -15,6 +15,15 @@
  * GITHUB_TOKEN don't trigger new workflow runs, so that assignment will NOT
  * re-run this check. A maintainer manually (de)assigning a milestone does
  * re-run it.
+ *
+ * This does mean the check can be green while the assignment hasn't happened
+ * (yet). That gap is deliberately small and visible: the most likely
+ * assignment failure - the mapped milestone not existing - fails THIS check
+ * too (see below), a transient API failure shows up as a red (non-required)
+ * "🎯 Assign milestone" check and is retried on the next push or edit, and a
+ * concurrency cancellation only happens when a newer run supersedes it and
+ * assigns instead. Same accepted pattern as the require-release-label check,
+ * which passes on a conventional-commit title without any label being set.
  */
 
 import {

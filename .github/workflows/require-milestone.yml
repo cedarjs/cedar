@@ -29,6 +29,14 @@ name: 🚩 Require milestone
 # skip could block a genuinely passing PR, and any no-op success could mask
 # a genuine failure. With exactly one run per check name, rerunning a check
 # always re-validates for real.
+#
+# Trust model: because pull_request runs PR-branch code, a fork PR could
+# edit this workflow or the require-milestone action to make this check
+# pass trivially. That's accepted: it's the same trust model as every other
+# required check in this repo that runs under pull_request (build, tests,
+# require-release-label), this check is release hygiene rather than a
+# security control, and .github/ changes are visible in review. The
+# write-capable half in assign-milestone.yml remains fork-tamper-proof.
 on:
   pull_request:
     types: [opened, synchronize, reopened, milestoned, demilestoned, edited]
