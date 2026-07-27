@@ -25,7 +25,7 @@ module.exports = {
   plugins: [
     'prettier',
     '@babel',
-    'import',
+    'import-x',
     'jsx-a11y',
     'react',
     'react-hooks',
@@ -46,7 +46,7 @@ module.exports = {
     // See...
     // - https://github.com/import-js/eslint-plugin-import/blob/main/docs/rules/order.md#groups-array
     // - https://github.com/import-js/eslint-plugin-import/blob/main/README.md#importinternal-regex
-    'import/internal-regex': '^src/',
+    'import-x/internal-regex': '^src/',
   },
   rules: {
     '@cedarjs/process-env-computed': 'error',
@@ -70,7 +70,7 @@ module.exports = {
     'react/prop-types': 'off',
     'react/display-name': 'off',
     'react-hooks/exhaustive-deps': 'warn',
-    'import/order': [
+    'import-x/order': [
       'error',
       {
         'newlines-between': 'always',
