@@ -3046,21 +3046,15 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/eslint-config@workspace:packages/eslint-config"
   dependencies:
-    "@babel/cli": "npm:7.29.7"
     "@babel/core": "npm:^7.26.10"
     "@babel/eslint-parser": "npm:7.29.7"
     "@babel/eslint-plugin": "npm:7.29.7"
     "@cedarjs/babel-config": "workspace:*"
     "@cedarjs/eslint-plugin": "workspace:*"
-    "@cedarjs/internal": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@eslint/js": "npm:8.57.1"
-    "@typescript-eslint/eslint-plugin": "npm:8.60.1"
-    "@typescript-eslint/parser": "npm:8.60.1"
     eslint: "npm:8.57.1"
     eslint-config-prettier: "npm:10.1.8"
-    eslint-import-resolver-babel-module: "npm:5.3.2"
-    eslint-plugin-babel: "npm:5.3.1"
     eslint-plugin-import-x: "npm:4.17.1"
     eslint-plugin-jest-dom: "npm:5.5.0"
     eslint-plugin-jsx-a11y: "npm:6.10.2"
@@ -16521,30 +16515,6 @@ __metadata:
     unrs-resolver:
       optional: true
   checksum: 10c0/07851103443b70af681c5988e2702e681ff9b956e055e11d4bd9b2322847fa0d9e8da50c18fc7cb1165106b043f34fbd0384d7011c239465c4645c52132e56f3
-  languageName: node
-  linkType: hard
-
-"eslint-import-resolver-babel-module@npm:5.3.2":
-  version: 5.3.2
-  resolution: "eslint-import-resolver-babel-module@npm:5.3.2"
-  dependencies:
-    pkg-up: "npm:^3.1.0"
-    resolve: "npm:^1.20.0"
-  peerDependencies:
-    "@babel/core": ^7.0.0-0
-    babel-plugin-module-resolver: ^3.0.0 || ^4.0.0 || ^5.0.0
-  checksum: 10c0/168fc793cc565cb8c27eb69c67872420980a6fcaac4a5b6951bdaa2700c0745c997d282b3c8cce313c423a12933a0f6fcc347a799398f3cf7f91e9e8a35d2d69
-  languageName: node
-  linkType: hard
-
-"eslint-plugin-babel@npm:5.3.1":
-  version: 5.3.1
-  resolution: "eslint-plugin-babel@npm:5.3.1"
-  dependencies:
-    eslint-rule-composer: "npm:^0.3.0"
-  peerDependencies:
-    eslint: ">=4.0.0"
-  checksum: 10c0/c73e054c3cf3c5392e8ea7e56f41db3859b9d7c0dd347c28a5f08ae87889cc4879fcddfe227ee1ec075a9ab62e34e245d7e6e723180dfa36d07397c2cbb2c1a1
   languageName: node
   linkType: hard
 

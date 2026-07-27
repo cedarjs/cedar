@@ -37,6 +37,11 @@
       // @cedarjs/graphql-server: optional peer dep, dynamically imported in
       // src/plugins/graphql.ts only when a project has a GraphQL function.
       "ignoreDependencies": ["publint", "@cedarjs/graphql-server"]
+    },
+    "packages/eslint-config": {
+      // eslint-plugin-react-compiler: optional peer dep, dynamically imported
+      // in index.mjs only when experimental.reactCompiler is enabled.
+      "ignoreDependencies": ["eslint-plugin-react-compiler"]
     }
   }
 }
