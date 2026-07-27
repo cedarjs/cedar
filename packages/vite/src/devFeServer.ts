@@ -172,13 +172,8 @@ async function createServer() {
       cjsInterop({
         dependencies: [
           // Skip ESM modules: rwjs/auth, rwjs/web, rwjs/auth-*-middleware,
-          // rwjs/router, rwjs/auth-*-api
-          '@cedarjs/forms',
+          // rwjs/router, rwjs/auth-*-api, rwjs/auth-*-web, rwjs/forms
           '@cedarjs/prerender/*',
-          // Add more to the pattern below as they're converted to dual ESM/CJS
-          // modules
-          // '@cedarjs/auth-!(dbauth|auth0|clerk)-web',
-          '@cedarjs/auth-!(dbauth)-web',
         ],
       }),
       rscEnabled && rscRoutesAutoLoader(),

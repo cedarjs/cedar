@@ -29,7 +29,7 @@ setupEnv()
 
 process.title = 'cedar-jobs'
 
-const WORKER_PATH = path.join(__dirname, 'cedar-jobs-worker.js')
+const WORKER_PATH = path.join(import.meta.dirname, 'cedar-jobs-worker.js')
 
 const parseArgs = (argv: string[]) => {
   const commandString = hideBin(argv)

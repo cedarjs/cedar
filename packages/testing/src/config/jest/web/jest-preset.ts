@@ -215,16 +215,25 @@ const config: Config = {
     // node_modules (plus until-async) to CommonJS. This needs its own
     // transform entry (with the config inlined) because the web babel config
     // ignores node_modules
-    '[/\\\\]node_modules[/\\\\](?:.+\\.mjs|until-async[/\\\\].+\\.js)$': [
-      'babel-jest',
-      {
-        babelrc: false,
-        configFile: false,
-        presets: [
-          [require.resolve('@babel/preset-env'), { targets: { node: '20' } }],
-        ],
-      },
-    ],
+    //
+    // The `@cedarjs/auth-*-web` packages are ESM-only too, and (like
+    // until-async) ship plain `.js` files rather than `.mjs` since their
+    // package.json already declares `"type": "module"`. A generated
+    // project's `web/src/auth.ts` imports one of these, so they need the
+    // same carve-out. `@cedarjs/forms` is ESM-only for the same reason, and
+    // gets pulled into virtually every generated project's web-side tests
+    // via `web/src/pages/**` scaffolds and dbAuth login/signup forms.
+    '[/\\\\]node_modules[/\\\\](?:.+\\.mjs|(?:until-async|@cedarjs[/\\\\](?:auth-[a-z-]+-web|forms))[/\\\\].+\\.js)$':
+      [
+        'babel-jest',
+        {
+          babelrc: false,
+          configFile: false,
+          presets: [
+            [require.resolve('@babel/preset-env'), { targets: { node: '20' } }],
+          ],
+        },
+      ],
     '\\.[jt]sx?$': [
       'babel-jest',
       // When jest runs tests in parallel, it serializes the config before passing down options to babel
@@ -235,8 +244,8 @@ const config: Config = {
     ],
   },
   // Jest's default is to not transform anything in node_modules, but `.mjs`
-  // files (and until-async) have to be compiled to CommonJS (see the
-  // transform above).
+  // files (and until-async, @cedarjs/auth-*-web, and @cedarjs/forms) have to
+  // be compiled to CommonJS (see the transform above).
   // The `.pnpm` lookahead is what makes this work with pnpm: its virtual store
   // puts packages at `node_modules/.pnpm/<pkg>@<version>/node_modules/<pkg>`,
   // so without it the pattern matches (and thereby ignores) at the *first*
@@ -245,7 +254,7 @@ const config: Config = {
   // Skipping that segment forces the match onto the inner `node_modules`,
   // which looks the same as a hoisted npm/yarn layout
   transformIgnorePatterns: [
-    '[/\\\\]node_modules[/\\\\](?!\\.pnpm[/\\\\])(?!.*\\.mjs$)(?!until-async[/\\\\])',
+    '[/\\\\]node_modules[/\\\\](?!\\.pnpm[/\\\\])(?!.*\\.mjs$)(?!until-async[/\\\\])(?!@cedarjs[/\\\\]auth-[a-z-]+-web[/\\\\])(?!@cedarjs[/\\\\]forms[/\\\\])',
     '\\.pnp\\.[^\\\\/]+$',
   ],
   resolver: path.resolve(__dirname, './resolver.js'),

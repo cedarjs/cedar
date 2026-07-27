@@ -28,5 +28,15 @@
   "ignoreExportsUsedInFile": {
     "interface": true,
     "type": true
+  },
+  "workspaces": {
+    "packages/api-server": {
+      "entry": ["src/bin.ts", "src/watch.ts", "src/logFormatter/bin.ts"],
+      // publint: only invoked via `concurrently`'s `yarn:publint` job syntax
+      // in the "check:package" script, which knip doesn't parse.
+      // @cedarjs/graphql-server: optional peer dep, dynamically imported in
+      // src/plugins/graphql.ts only when a project has a GraphQL function.
+      "ignoreDependencies": ["publint", "@cedarjs/graphql-server"]
+    }
   }
 }

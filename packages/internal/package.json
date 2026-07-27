@@ -10,144 +10,88 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": {
+      "default": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.js"
       }
     },
     "./package.json": "./package.json",
     "./dist/dev": {
-      "import": {
+      "default": {
         "types": "./dist/dev.d.ts",
         "default": "./dist/dev.js"
-      },
-      "require": {
-        "types": "./dist/cjs/dev.d.ts",
-        "default": "./dist/cjs/dev.js"
       }
     },
     "./dist/files": {
-      "import": {
+      "default": {
         "types": "./dist/files.d.ts",
         "default": "./dist/files.js"
-      },
-      "require": {
-        "types": "./dist/cjs/files.d.ts",
-        "default": "./dist/cjs/files.js"
       }
     },
     "./dist/files.js": {
-      "import": {
+      "default": {
         "types": "./dist/files.d.ts",
         "default": "./dist/files.js"
-      },
-      "require": {
-        "types": "./dist/cjs/files.d.ts",
-        "default": "./dist/cjs/files.js"
       }
     },
     "./dist/gql": {
-      "import": {
+      "default": {
         "types": "./dist/gql.d.ts",
         "default": "./dist/gql.js"
-      },
-      "require": {
-        "types": "./dist/cjs/gql.d.ts",
-        "default": "./dist/cjs/gql.js"
       }
     },
     "./dist/project": {
-      "import": {
+      "default": {
         "types": "./dist/project.d.ts",
         "default": "./dist/project.js"
-      },
-      "require": {
-        "types": "./dist/cjs/project.d.ts",
-        "default": "./dist/cjs/project.js"
       }
     },
     "./dist/routes.js": {
-      "import": {
+      "default": {
         "types": "./dist/routes.d.ts",
         "default": "./dist/routes.js"
-      },
-      "require": {
-        "types": "./dist/cjs/routes.d.ts",
-        "default": "./dist/cjs/routes.js"
       }
     },
     "./dist/ts2js": {
-      "import": {
+      "default": {
         "types": "./dist/ts2js.d.ts",
         "default": "./dist/ts2js.js"
-      },
-      "require": {
-        "types": "./dist/cjs/ts2js.d.ts",
-        "default": "./dist/cjs/ts2js.js"
       }
     },
     "./dist/validateSchema": {
-      "import": {
+      "default": {
         "types": "./dist/validateSchema.d.ts",
         "default": "./dist/validateSchema.js"
-      },
-      "require": {
-        "types": "./dist/cjs/validateSchema.d.ts",
-        "default": "./dist/cjs/validateSchema.js"
       }
     },
     "./dist/build/api": {
-      "import": {
+      "default": {
         "types": "./dist/build/api.d.ts",
         "default": "./dist/build/api.js"
-      },
-      "require": {
-        "types": "./dist/cjs/build/api.d.ts",
-        "default": "./dist/cjs/build/api.js"
       }
     },
     "./dist/build/api.js": {
-      "import": {
+      "default": {
         "types": "./dist/build/api.d.ts",
         "default": "./dist/build/api.js"
-      },
-      "require": {
-        "types": "./dist/cjs/build/api.d.ts",
-        "default": "./dist/cjs/build/api.js"
       }
     },
     "./dist/build/api-graphql-transforms.js": {
-      "import": {
+      "default": {
         "types": "./dist/build/api-graphql-transforms.d.ts",
         "default": "./dist/build/api-graphql-transforms.js"
-      },
-      "require": {
-        "types": "./dist/cjs/build/api-graphql-transforms.d.ts",
-        "default": "./dist/cjs/build/api-graphql-transforms.js"
       }
     },
     "./dist/generate/generate": {
-      "import": {
+      "default": {
         "types": "./dist/generate/generate.d.ts",
         "default": "./dist/generate/generate.js"
-      },
-      "require": {
-        "types": "./dist/cjs/generate/generate.d.ts",
-        "default": "./dist/cjs/generate/generate.js"
       }
     },
     "./dist/generate/gqlormSchema": {
-      "import": {
+      "default": {
         "types": "./dist/generate/gqlormSchema.d.ts",
         "default": "./dist/generate/gqlormSchema.js"
-      },
-      "require": {
-        "types": "./dist/cjs/generate/gqlormSchema.d.ts",
-        "default": "./dist/cjs/generate/gqlormSchema.js"
       }
     }
   },
@@ -164,7 +108,6 @@
     "build:clean-dist": "rimraf 'dist/**/*/__tests__' --glob",
     "build:pack": "yarn pack -o cedarjs-internal.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
-    "build:types-cjs": "tsc --build --verbose ./tsconfig.cjs.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
     "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",

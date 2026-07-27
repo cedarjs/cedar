@@ -10,4 +10,4 @@ console.warn(
 )
 console.warn()
 
-require('./cedar-jobs-worker.js')
+await import('./cedar-jobs-worker.js')

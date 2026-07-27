@@ -5,9 +5,14 @@ import type { types } from '@babel/core'
 import type { PluginObj } from '@babel/core'
 import { parse as babelParse } from '@babel/parser'
 import type { ParserPlugin } from '@babel/parser'
-import traverse from '@babel/traverse'
+import babelTraverse from '@babel/traverse'
 import fg from 'fast-glob'
 import { parse as graphqlParse, Kind } from 'graphql'
+
+// @babel/traverse's default export is double-wrapped under some module
+// resolutions (see https://github.com/babel/babel/discussions/13093) — unwrap
+// it the same way packages/internal/src/ast.ts does.
+const traverse = babelTraverse.default || babelTraverse
 
 export default function ({ types: t }: { types: typeof types }): PluginObj {
   let nodesToRemove: any[] = []
