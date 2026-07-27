@@ -37,6 +37,34 @@ function getStagedFiles() {
   return stdout.trim().split('\n').filter(Boolean)
 }
 
+function getBranchChangedFiles() {
+  const mainExists = spawnSync(
+    'git',
+    ['rev-parse', '--verify', '--quiet', 'main'],
+    { encoding: 'utf-8' },
+  )
+  if (mainExists.status !== 0) {
+    throw new Error(
+      "No local 'main' branch found, so we can't tell which files changed " +
+        'in this branch. Fetch it first, e.g. `git fetch origin main:main` ' +
+        '(or from `upstream` if you work off a fork), then push again.',
+    )
+  }
+
+  const result = spawnSync(
+    'git',
+    ['diff', 'main...HEAD', '--name-only', '--diff-filter=ACMR'],
+    { encoding: 'utf-8' },
+  )
+  if (result.status !== 0) {
+    throw new Error(
+      `Failed to diff against main: ${result.stderr || result.stdout}`,
+    )
+  }
+
+  return result.stdout.trim().split('\n').filter(Boolean)
+}
+
 function getFilesToLint(files: string[]): string[] {
   const lintExts = new Set(['.js', '.ts', '.jsx', '.tsx', '.cjs', '.mjs'])
 
@@ -80,6 +108,53 @@ function runEslint(lintFiles: string[]) {
   return execAsync('yarn', ['eslint', ...lintFiles], 'git-hooks', {
     env: { CEDAR_CWD: 'packages/create-cedar-app/templates/ts' },
   })
+}
+
+function hasTemplateChanges(files: string[]): boolean {
+  return files.some((f) => f.includes('packages/create-cedar-app/templates/'))
+}
+
+function hasCrwrsaChanges(files: string[]): boolean {
+  return files.some((f) => f.includes('packages/create-cedar-rsc-app/'))
+}
+
+async function runAllLint(changedFiles: string[]): Promise<void> {
+  // Check for template/crwrsca changes on the original file list before filtering,
+  // since getFilesToLint() excludes template .tsx files
+  const hasTemplates = hasTemplateChanges(changedFiles)
+  const hasCrwrsa = hasCrwrsaChanges(changedFiles)
+
+  const filesToLint = getFilesToLint(changedFiles)
+
+  // Template and crwrsca packages have package-specific ESLint configs
+  // that the root config ignores, so run their dedicated lint commands
+
+  const otherFiles = filesToLint.filter(
+    (f) =>
+      !f.includes('packages/create-cedar-app/templates/') &&
+      !f.includes('packages/create-cedar-rsc-app/'),
+  )
+
+  const lintTasks = []
+
+  if (otherFiles.length > 0) {
+    lintTasks.push(runEslint(otherFiles))
+  }
+
+  if (hasTemplates) {
+    lintTasks.push(execAsync('yarn', ['lint:templates'], 'git-hooks'))
+  }
+
+  if (hasCrwrsa) {
+    lintTasks.push(execAsync('yarn', ['lint:crwrsca'], 'git-hooks'))
+  }
+
+  const results = await Promise.allSettled(lintTasks)
+  for (const r of results) {
+    if (r.status === 'rejected') {
+      throw (r.reason as Error & { exitCode?: number }).exitCode ?? 1
+    }
+  }
 }
 
 function runSmartFormat(formatFiles: string[]) {
@@ -135,14 +210,19 @@ export async function runPrePushTasks(): Promise<number> {
     env: { NX_TUI: 'false' },
   })
 
-  // `lint` (via `lint:templates`) needs several packages' compiled `dist/`
-  // output to already exist — the templates' eslint config `require()`s
-  // things like `@cedarjs/babel-config`'s dist. Running it at the same time
-  // as `build` races build's writes and intermittently fails with "Cannot
-  // find module" for a dist file build hasn't produced yet. Everything else
-  // below only reads source files, so it can still run alongside `build`.
+  // Lint only files changed in this branch vs main — avoids running ESLint
+  // on all packages (which is memory-intensive and slow). This only looks at
+  // committed changes (git diff main...HEAD), not the working tree, since
+  // uncommitted files can't be pushed anyway. We still lint the whole branch
+  // diff here (not just the current commit) as a final sweep: the pre-commit
+  // hook only lints what's staged for each individual commit, and can be
+  // skipped per-commit with --no-verify, so some committed changes may never
+  // have been linted before reaching this point.
+  // Still runs after build because the ESLint config for templates requires
+  // dist output from packages like @cedarjs/babel-config.
+  const branchFiles = getBranchChangedFiles()
   const lintPromise = buildPromise.then(() =>
-    execAsync('yarn', ['lint'], 'git-hooks'),
+    branchFiles.length > 0 ? runAllLint(branchFiles) : Promise.resolve(),
   )
 
   const results = await Promise.allSettled([
