@@ -34,15 +34,10 @@
     "@babel/eslint-plugin": "7.29.7",
     "@cedarjs/babel-config": "workspace:*",
     "@cedarjs/eslint-plugin": "workspace:*",
-    "@cedarjs/internal": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
     "@eslint/js": "8.57.1",
-    "@typescript-eslint/eslint-plugin": "8.60.1",
-    "@typescript-eslint/parser": "8.60.1",
     "eslint": "8.57.1",
     "eslint-config-prettier": "10.1.8",
-    "eslint-import-resolver-babel-module": "5.3.2",
-    "eslint-plugin-babel": "5.3.1",
     "eslint-plugin-import-x": "4.17.1",
     "eslint-plugin-jest-dom": "5.5.0",
     "eslint-plugin-jsx-a11y": "6.10.2",
@@ -53,7 +48,6 @@
     "typescript-eslint": "8.60.1"
   },
   "devDependencies": {
-    "@babel/cli": "7.29.7",
     "typescript": "5.9.3"
   },
   "peerDependencies": {
