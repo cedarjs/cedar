@@ -14,8 +14,6 @@ import {
   registerWebSideBabelHook,
 } from '@cedarjs/babel-config'
 import { getPaths, ensurePosixPath } from '@cedarjs/project-config'
-import { LocationProvider } from '@cedarjs/router'
-import { matchPath } from '@cedarjs/router/dist/util'
 import type { QueryInfo } from '@cedarjs/web'
 
 import { babelPluginRedwoodCell } from './babelPlugins/babel-plugin-redwood-cell.js'
@@ -48,6 +46,7 @@ async function recursivelyRender(
 ): Promise<string> {
   // Load this async, to prevent rwjs/web being loaded before shims
   const { CellCacheContextProvider, getOperationName } = require('@cedarjs/web')
+  const { LocationProvider } = require('@cedarjs/router')
 
   let shouldShowGraphqlHandlerNotFoundWarn = false
   // Execute all gql queries we haven't already fetched
@@ -168,6 +167,9 @@ function insertChunkLoadingScript(
   indexHtmlTree: CheerioAPI,
   renderPath: string,
 ) {
+  // Load this async, to prevent rwjs/router being loaded before shims
+  const { matchPath } = require('@cedarjs/router/dist/util')
+
   const prerenderRoutes = detectPrerenderRoutes()
 
   const route = prerenderRoutes.find((route) => {

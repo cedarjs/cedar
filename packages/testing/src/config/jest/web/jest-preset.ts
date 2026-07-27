@@ -223,7 +223,15 @@ const config: Config = {
     // same carve-out. `@cedarjs/forms` is ESM-only for the same reason, and
     // gets pulled into virtually every generated project's web-side tests
     // via `web/src/pages/**` scaffolds and dbAuth login/signup forms.
-    '[/\\\\]node_modules[/\\\\](?:.+\\.mjs|(?:until-async|@cedarjs[/\\\\](?:auth-[a-z-]+-web|forms))[/\\\\].+\\.js)$':
+    // `@cedarjs/web`, `@cedarjs/auth`, and `@cedarjs/router` are ESM-only
+    // too. `web` and `router` are imported directly by virtually every
+    // generated project's web-side test (`Routes.tsx`, page/component
+    // scaffolds), and `auth` gets pulled in transitively through `web`.
+    // Jest's own module loader re-applies this carve-out to every file it
+    // loads, including ones reached transitively through an
+    // already-transformed require() call, so all of them need to be listed
+    // even though only `web`/`router` are usually imported directly.
+    '[/\\\\]node_modules[/\\\\](?:.+\\.mjs|(?:until-async|@cedarjs[/\\\\](?:auth-[a-z-]+-web|forms|web|auth|router))[/\\\\].+\\.js)$':
       [
         'babel-jest',
         {
@@ -244,8 +252,9 @@ const config: Config = {
     ],
   },
   // Jest's default is to not transform anything in node_modules, but `.mjs`
-  // files (and until-async, @cedarjs/auth-*-web, and @cedarjs/forms) have to
-  // be compiled to CommonJS (see the transform above).
+  // files (and until-async, @cedarjs/auth-*-web, @cedarjs/forms,
+  // @cedarjs/web, @cedarjs/auth, and @cedarjs/router) have to be compiled to
+  // CommonJS (see the transform above).
   // The `.pnpm` lookahead is what makes this work with pnpm: its virtual store
   // puts packages at `node_modules/.pnpm/<pkg>@<version>/node_modules/<pkg>`,
   // so without it the pattern matches (and thereby ignores) at the *first*
@@ -254,7 +263,7 @@ const config: Config = {
   // Skipping that segment forces the match onto the inner `node_modules`,
   // which looks the same as a hoisted npm/yarn layout
   transformIgnorePatterns: [
-    '[/\\\\]node_modules[/\\\\](?!\\.pnpm[/\\\\])(?!.*\\.mjs$)(?!until-async[/\\\\])(?!@cedarjs[/\\\\]auth-[a-z-]+-web[/\\\\])(?!@cedarjs[/\\\\]forms[/\\\\])',
+    '[/\\\\]node_modules[/\\\\](?!\\.pnpm[/\\\\])(?!.*\\.mjs$)(?!until-async[/\\\\])(?!@cedarjs[/\\\\]auth-[a-z-]+-web[/\\\\])(?!@cedarjs[/\\\\]forms[/\\\\])(?!@cedarjs[/\\\\]web[/\\\\])(?!@cedarjs[/\\\\]auth[/\\\\])(?!@cedarjs[/\\\\]router[/\\\\])',
     '\\.pnp\\.[^\\\\/]+$',
   ],
   resolver: path.resolve(__dirname, './resolver.js'),

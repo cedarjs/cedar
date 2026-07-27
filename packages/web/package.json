@@ -10,126 +10,57 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.js"
-      }
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./serverInject": {
-      "import": {
-        "types": "./dist/components/ServerInject.d.ts",
-        "default": "./dist/components/ServerInject.js"
-      },
-      "require": {
-        "types": "./dist/cjs/components/ServerInject.d.ts",
-        "default": "./dist/cjs/components/ServerInject.js"
-      }
+      "types": "./dist/components/ServerInject.d.ts",
+      "default": "./dist/components/ServerInject.js"
     },
     "./request": {
-      "import": {
-        "types": "./dist/server/request.d.ts",
-        "default": "./dist/server/request.js"
-      },
-      "require": {
-        "types": "./dist/cjs/server/request.d.ts",
-        "default": "./dist/cjs/server/request.js"
-      }
+      "types": "./dist/server/request.d.ts",
+      "default": "./dist/server/request.js"
     },
     "./middleware": {
-      "import": {
-        "types": "./dist/server/middleware.d.ts",
-        "default": "./dist/server/middleware.js"
-      },
-      "require": {
-        "types": "./dist/cjs/server/middleware.d.ts",
-        "default": "./dist/cjs/server/middleware.js"
-      }
+      "types": "./dist/server/middleware.d.ts",
+      "default": "./dist/server/middleware.js"
     },
     "./dist/server/middleware": {
-      "import": {
-        "types": "./dist/server/middleware.d.ts",
-        "default": "./dist/server/middleware.js"
-      },
-      "require": {
-        "types": "./dist/cjs/server/middleware.d.ts",
-        "default": "./dist/cjs/server/middleware.js"
-      }
+      "types": "./dist/server/middleware.d.ts",
+      "default": "./dist/server/middleware.js"
     },
-    "./dist/components/*": {
-      "require": "./dist/cjs/components/*.js",
-      "import": "./dist/components/*.js"
-    },
-    "./htmlTags": {
-      "require": "./dist/cjs/components/htmlTags.js",
-      "import": "./dist/components/htmlTags.js"
-    },
-    "./Metadata": {
-      "require": "./dist/cjs/components/Metadata.js",
-      "import": "./dist/components/Metadata.js"
-    },
-    "./dist/apollo/suspense": {
-      "require": "./dist/cjs/apollo/suspense.js",
-      "import": "./dist/apollo/suspense.js"
-    },
-    "./dist/apollo/sseLink": {
-      "require": "./dist/cjs/apollo/sseLink.js",
-      "import": "./dist/apollo/sseLink.js"
-    },
-    "./dist/graphql.js": {
-      "require": "./dist/cjs/graphql.js",
-      "import": "./dist/graphql.js"
-    },
+    "./dist/components/*": "./dist/components/*.js",
+    "./htmlTags": "./dist/components/htmlTags.js",
+    "./Metadata": "./dist/components/Metadata.js",
+    "./dist/apollo/suspense": "./dist/apollo/suspense.js",
+    "./dist/apollo/sseLink": "./dist/apollo/sseLink.js",
+    "./dist/graphql.js": "./dist/graphql.js",
     "./toast": {
-      "import": {
-        "types": "./dist/toast/index.d.ts",
-        "default": "./dist/toast/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/toast/index.d.ts",
-        "default": "./dist/cjs/toast/index.js"
-      }
+      "types": "./dist/toast/index.d.ts",
+      "default": "./dist/toast/index.js"
     },
     "./apollo": {
-      "import": {
-        "types": "./dist/apollo/index.d.ts",
-        "default": "./dist/apollo/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/apollo/index.d.ts",
-        "default": "./dist/cjs/apollo/index.js"
-      }
+      "types": "./dist/apollo/index.d.ts",
+      "default": "./dist/apollo/index.js"
     },
     "./apollo/CedarApolloProvider": {
-      "import": {
-        "types": "./dist/apollo/CedarApolloProvider.d.ts",
-        "default": "./dist/apollo/CedarApolloProvider.js"
-      },
-      "require": {
-        "types": "./dist/cjs/apollo/CedarApolloProvider.d.ts",
-        "default": "./dist/cjs/apollo/CedarApolloProvider.js"
-      }
+      "types": "./dist/apollo/CedarApolloProvider.d.ts",
+      "default": "./dist/apollo/CedarApolloProvider.js"
     },
-    "./forceEsmApollo": {
-      "require": "./dist/apollo/index.js",
-      "import": "./dist/apollo/index.js"
-    }
+    "./forceEsmApollo": "./dist/apollo/index.js"
   },
   "main": "./dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "cedar": "./dist/cjs/bins/cedar.js",
-    "cedarjs": "./dist/cjs/bins/cedar.js",
-    "cfw": "./dist/cjs/bins/cfw.js",
-    "cross-env": "./dist/cjs/bins/cross-env.js",
-    "msw": "./dist/cjs/bins/msw.js",
-    "redwood": "./dist/cjs/bins/redwood.js",
-    "rw": "./dist/cjs/bins/redwood.js",
-    "storybook": "./dist/cjs/bins/storybook.js",
-    "tsc": "./dist/cjs/bins/tsc.js"
+    "cedar": "./dist/bins/cedar.js",
+    "cedarjs": "./dist/bins/cedar.js",
+    "cfw": "./dist/bins/cfw.js",
+    "cross-env": "./dist/bins/cross-env.js",
+    "msw": "./dist/bins/msw.js",
+    "redwood": "./dist/bins/redwood.js",
+    "rw": "./dist/bins/redwood.js",
+    "storybook": "./dist/bins/storybook.js",
+    "tsc": "./dist/bins/tsc.js"
   },
   "files": [
     "dist",
@@ -137,9 +68,9 @@
     "toast"
   ],
   "scripts": {
-    "build": "node ./build.ts && yarn build:types",
+    "build": "node ./build.ts",
     "build:pack": "yarn pack -o cedarjs-web.tgz",
-    "build:types": "tsc --build --verbose ./tsconfig.build.json ./tsconfig.cjs.json",
+    "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
     "check:attw": "node ./attw.ts",
     "check:package": "concurrently npm:check:attw yarn:publint",

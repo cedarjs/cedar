@@ -5,7 +5,7 @@ CJS Only (2)
 - cookie-jar
 - server-store
 
-ESM Only (60)
+ESM Only (63)
 
 - cli
 - codemods
@@ -67,24 +67,24 @@ ESM Only (60)
 - forms (https://github.com/cedarjs/cedar/pull/2239)
 - jobs (https://github.com/cedarjs/cedar/pull/2239)
 - ogimage-gen (https://github.com/cedarjs/cedar/pull/2239)
+- auth
+- router
+- web
 
-Dual Mode – CJS + ESM (12)
+Dual Mode – CJS + ESM (9)
 
 - api
 - api-server
-- auth
 - eslint-config
 - graphql-server
 - prerender
 - project-config
 - record
-- router
 - storage
 - testing
-- web
 
-Summary: Of the 74 packages, 12 are dual mode (CJS + ESM), 2 are CJS-only, and
-60 are ESM-only. Of the 6 packages that were previously miscategorized as
+Summary: Of the 74 packages, 9 are dual mode (CJS + ESM), 2 are CJS-only, and
+63 are ESM-only. Of the 6 packages that were previously miscategorized as
 Dual Mode but were actually CJS-only the whole time (`babel-config`,
 `cookie-jar`, `forms`, `jobs`, `ogimage-gen`, `server-store` — see the
 correction below), 4 have now been converted to ESM-only (see "CJS Only ->
@@ -93,18 +93,21 @@ ESM Only: the 6 miscategorized packages" below); `cookie-jar` and
 below) — same shape as the `prerender` exception, but discovered later, on
 its own PR, after CI (not local verification) caught it. Of the packages
 that were genuinely CJS-only in the original inventory, all 27 have now been
-converted to ESM-only, and 15 of the 17 packages that used to be genuinely
-Dual Mode have also been converted to ESM-only (see "Dual Mode -> ESM Only"
-below) — most were dual mode from a mechanical Babel-to-esbuild tooling
-migration, not because anything actually needed a CJS build of them.
-`prerender` is a deliberate exception, held back pending a decision (see
-below). ESM-only remains the packages that have been explicitly converted to
-drop their CJS build entirely; `eslint-plugin`, `telemetry`, `tui`,
-`web-server`, the 7 `mailer/*` packages, the 17 `auth-*-api`/`auth-*-setup`
-packages, `fastify-web`/`cli-data-migrate`/`cli-storybook-vite`, the 10
+converted to ESM-only, and the Dual Mode pool has gone from 23 packages down
+to 9 (see "Dual Mode -> ESM Only" below) — most were dual mode from a
+mechanical Babel-to-esbuild tooling migration, not because anything actually
+needed a CJS build of them. `prerender` is a deliberate exception, held back
+pending a decision (see below); `auth`/`router`/`web` — the original Tier 2
+(see "the original tiered roadmap" below) — have now also been converted, on
+top of the auth-provider batch and Tier 1. ESM-only remains the packages
+that have been explicitly converted to drop their CJS build entirely;
+`eslint-plugin`, `telemetry`, `tui`, `web-server`, the 7 `mailer/*` packages,
+the 17 `auth-*-api`/`auth-*-setup` packages,
+`fastify-web`/`cli-data-migrate`/`cli-storybook-vite`, the 10
 `auth-*-web`/`auth-*-middleware` packages,
-`cli-helpers`/`context`/`gqlorm`/`internal`/`vite`, and
-`babel-config`/`forms`/`jobs`/`ogimage-gen` are the conversions done so far.
+`cli-helpers`/`context`/`gqlorm`/`internal`/`vite`,
+`babel-config`/`forms`/`jobs`/`ogimage-gen`, and `auth`/`router`/`web` are
+the conversions done so far.
 
 **Correction (2026-07-25 review):** an earlier revision of this doc listed
 `cli-helpers`, `context`, and `record` under ESM Only, and listed
@@ -295,11 +298,11 @@ retire an entire alternate prerendering implementation that classic CJS-mode
 projects may still depend on. That's a real product decision, not a
 mechanical cleanup, so it's out of scope for this round.
 
-## Dual Mode -> ESM Only: the original tiered roadmap (Tiers 2-3 not yet done)
+## Dual Mode -> ESM Only: the original tiered roadmap (Tier 2 now done)
 
 The research that produced the Tier 1 list above actually ranked the whole
 remaining Dual Mode pool by readiness, not just Tier 1. Recorded here since
-only Tier 1 has been acted on so far — Tiers 2 and 3 are still open:
+Tier 3 is still open:
 
 **Tier 1 — no known prerequisites** (see above for what actually happened —
 5 of these 6 converted cleanly; `prerender`, despite looking like the
@@ -307,7 +310,8 @@ easiest of the batch here, turned out to have a genuinely different CJS
 implementation and was held back):
 `context`, `cli-helpers`, `gqlorm`, `internal`, `vite`, `prerender`.
 
-**Tier 2 — one small fix needed first:**
+**Tier 2 — one small fix needed first: done, see below for what actually
+happened.** Original scoping:
 
 - `web` — needs the web-side Jest preset carve-out (the same
   `transformIgnorePatterns` mechanism used for `until-async`/`auth-*-web`,
@@ -349,6 +353,105 @@ real function instead of the nonexistent CJS global — the caution here was
 reasonable given the blast radius, but the actual fix turned out to be more
 tractable than expected. `testing` and `eslint-config` remain unconverted
 and the reasoning above still applies to both.
+
+## Dual Mode -> ESM Only: Tier 2 (`auth`, `router`, `web`)
+
+Converted `auth`, `router`, and `web` together, following the scoping above,
+plus fixes for a few things the original research didn't (couldn't) see
+until the code was actually touched:
+
+- **`auth`**: fully mechanical — no internal `require()`/`__dirname` usage,
+  no consumer issues. `package.json` `exports` collapsed to `default`-only
+  conditions, `build.ts` switched to `buildExternalEsm()` +
+  `generateTypesEsm()`, `tsconfig.cjs.json` removed.
+- **`router`**: same mechanical shape. Its own `router-context.tsx` does a
+  real value import of `@cedarjs/auth` (`useNoAuth`) — as scoped, this
+  needed no fix at all once `router` itself has no separate CJS
+  declaration build to break: with `auth` converting in the same batch,
+  there's no more `tsc --build tsconfig.cjs.json` step for either package to
+  hit `TS1479` on. Confirmed by grepping for `require()`/`__dirname` in
+  `router/src` (none) and by the build coming back clean.
+- **`web`**: the real substance of this batch.
+  - All 7 bin proxy scripts (`cedar`, `cedarjs`, `cfw`, `cross-env`, `msw`,
+    `redwood`/`rw`, `storybook`, `tsc`) did a bare `require.resolve(...)` —
+    fine today because they only ever shipped as CJS
+    (`dist/cjs/bins/*.js`), but a `ReferenceError` waiting to happen once
+    `web` has no CJS build. Fixed the same way as `babel-config`:
+    `const require = createRequire(import.meta.url)` at the top of each
+    file. Verified by running the built bins directly (`cedar --version`,
+    `tsc --version`, `cross-env FOO=bar node ...`) from within a real
+    generated project — all resolve correctly.
+  - `build.ts` dropped its entire CJS build block, including a workaround
+    that bundled `apollo-upload-client` (itself ESM-only) into a
+    self-contained CJS chunk via `@hyrious/esbuild-plugin-commonjs`-style
+    tooling, solely because the CJS build couldn't otherwise `require()` an
+    ESM-only npm dependency. With no more CJS build, `src/bundled/
+apollo-upload-client.ts` is now just a normal file in the single ESM
+    build — the workaround wasn't fixed, it stopped being necessary.
+  - Added `@cedarjs/web`, `@cedarjs/auth`, and `@cedarjs/router` to the
+    web-side Jest preset's `transformIgnorePatterns` carve-out (the same
+    mechanism `forms` got in #2239) — `web` and `router` are imported
+    directly by virtually every generated project's web-side test
+    (`Routes.tsx`, page/component scaffolds), and `auth` gets pulled in
+    transitively through `web`. Jest's own module loader re-applies the
+    carve-out to every file it loads, including ones reached transitively
+    through an already-transformed `require()` call, so all three needed to
+    be listed even though only `web`/`router` are usually imported directly.
+- **`prerender`** (stays dual mode): `src/runPrerender.tsx` had two real
+  static value imports of `@cedarjs/router` (`LocationProvider`,
+  `matchPath`) that would have hit `TS1479` in prerender's own CJS
+  declaration build once `router` went ESM-only. Unlike `cookie-jar`/
+  `server-store`, this one **was** fixable without a bigger refactor: the
+  file already had a `require('@cedarjs/web')` call with a
+  `// Load this async, to prevent rwjs/web being loaded before shims`
+  comment — a deliberate pattern for deferring a require past
+  `registerShims()`. Added `LocationProvider` to that same lazy
+  `require('@cedarjs/router')` call inside the (already async)
+  `recursivelyRender` function, and added a second lazy
+  `require('@cedarjs/router/dist/util')` for `matchPath` inside
+  `insertChunkLoadingScript` (a synchronous function — `require()`, not
+  dynamic `import()`, was the right tool here specifically because it
+  doesn't need the caller to become `async`).
+- **`testing`** (stays dual mode): the original research flagged this as
+  the same shape of blocker as `cookie-jar`/`server-store` —
+  `MockProviders.tsx`/`MockParamsProvider.tsx`/`mockAuth.tsx` use
+  `LocationProvider`/`RedwoodProvider` as JSX components, synchronously, so
+  dynamic `import()` wouldn't work without breaking every test that renders
+  `<MockProviders>`. The plan going in was to switch `testing`'s CJS side to
+  hand-written `.d.ts` re-export stubs pointing at the ESM declarations (the
+  same trick `vite` used before it went ESM-only), sidestepping `tsc`'s CJS
+  declaration build entirely for these files.
+  **That plan turned out to be unnecessary.** Empirically, `testing`'s real
+  `tsc --build tsconfig.cjs.json` pass — run through the actual
+  `generateTypesCjs()` build step, package.json `type` flip included — does
+  **not** error on these files, even with `auth`/`router`/`web` fully
+  ESM-only. Verified this wasn't a stale-cache false negative (this
+  migration's most consistent failure mode) by deliberately introducing a
+  typo into `MockProviders.tsx`'s import and confirming `tsc` still caught
+  it — real type-checking is active, it just doesn't hit `TS1479` here. The
+  likely reason: `TS1479` fires specifically when a package's conditional
+  `exports` has an `import` condition but explicitly no `require` condition,
+  forcing Node's own `require()` algorithm to fail before Node 24's
+  `require(esm)` gets a chance to help. `auth`/`router`/`web` (like every
+  other ESM-only package in this migration) collapse to a single `default`
+  condition instead, which — unlike an explicit `import`-only condition —
+  Node's `require()` algorithm can still match. Whatever the precise
+  mechanism, the result was reproduced twice (an isolated `tsc` invocation
+  and the full `yarn workspace @cedarjs/testing build`) and held up under
+  the full test suite, so `testing` needed no changes at all beyond what
+  its own `yarn build` already does.
+
+Verified all of it well beyond the unit test suites: a full local build of
+the `test-project-rsc-kitchen-sink` fixture (via
+`.github/actions/set-up-rsc-kitchen-sink-project`, the same harness CI
+uses) — covering the Vite/RSC build pipeline, prerendering, and the `web`
+bin proxies — completed cleanly twice (once before, once after the fix
+round); direct regex tests against the built Jest preset confirming
+`auth`/`router`/`web`/`forms` get transformed while other `@cedarjs/*`
+packages stay ignored; running `@babel/preset-env` directly against the
+real built `dist/index.js` of all three packages; and a full
+`yarn build:clean` (`git clean -fdx` + reinstall + build from scratch) plus
+`yarn lint`/`yarn nx run-many -t test`/`yarn test:types` at 0% Nx cache hit.
 
 ## CJS Only -> ESM Only: the 6 miscategorized packages
 
