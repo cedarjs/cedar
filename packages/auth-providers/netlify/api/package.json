@@ -42,7 +42,6 @@
     "jsonwebtoken": "9.0.3"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.5",
     "@cedarjs/api": "workspace:*",
     "@cedarjs/framework-tools": "workspace:*",
     "@types/aws-lambda": "8.10.162",

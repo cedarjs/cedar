@@ -50,6 +50,52 @@
       // directly in generated code (api/src/directives/*) without declaring
       // it themselves, relying on it hoisting in via @cedarjs/core.
       "ignoreDependencies": ["graphql-tag"]
+    },
+    "packages/auth-providers/*/{api,setup,middleware}": {
+      // publint: only invoked via `concurrently`'s `yarn:publint` job syntax
+      // in the "check:package" script, which knip doesn't parse.
+      "ignoreDependencies": ["publint"]
+    },
+    "packages/auth-providers/dbAuth/setup": {
+      // No publint here -- this package has no check:package/publint script
+      // at all, unlike its sibling auth-provider packages.
+    },
+    "packages/auth-providers/dbAuth/middleware": {
+      // publint: see the general */{api,setup,middleware} entry above.
+      // ts-toolbelt: not imported directly, but needed for `tsc --build` --
+      // index.ts imports a type from @cedarjs/graphql-server that re-exports
+      // @cedarjs/api's types.d.ts wholesale, which itself imports from
+      // ts-toolbelt. TS must resolve it to load that .d.ts at all.
+      "ignoreDependencies": ["publint", "ts-toolbelt"]
+    },
+    "packages/auth-providers/supertokens/web": {
+      // publint: see the general */web entry below -- react/@types/react
+      // aren't listed here because, unlike the other auth providers, knip
+      // doesn't flag them as unused for this package.
+      "ignoreDependencies": ["publint"]
+    },
+    "packages/auth-providers/*/web": {
+      // publint: see above.
+      // react, @types/react: not imported by shipped source (these provider
+      // packages have no UI of their own), but satisfy @testing-library/react's
+      // peerDependencies so the test suite runs.
+      "ignoreDependencies": ["publint", "react", "@types/react"]
+    },
+    "packages/auth-providers/clerk/web": {
+      // publint, react, @types/react: see the general */web entry above --
+      // this key overrides rather than extends it, so it's repeated here.
+      // @clerk/clerk-react: never imported by this package's own source --
+      // it talks to Clerk purely via the `window.Clerk` global so it works
+      // regardless of where the consuming app renders `ClerkProvider`. It's
+      // a real peerDependency (and devDependency for type-checking against
+      // @clerk/types) that the consuming app installs and imports itself
+      // (see `cedar setup auth clerk`'s generated web/auth.tsx.template).
+      "ignoreDependencies": [
+        "publint",
+        "react",
+        "@types/react",
+        "@clerk/clerk-react"
+      ]
     }
   }
 }
