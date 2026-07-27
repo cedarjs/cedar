@@ -1525,7 +1525,7 @@ Lint your files.
 yarn redwood lint
 ```
 
-[Our ESLint configuration](https://github.com/cedarjs/cedar/blob/master/packages/eslint-config/index.js) is a mix of [ESLint's recommended rules](https://eslint.org/docs/rules/), [React's recommended rules](https://www.npmjs.com/package/eslint-plugin-react#list-of-supported-rules), and a bit of our own stylistic flair:
+[Our ESLint configuration](https://github.com/cedarjs/cedar/blob/master/packages/eslint-config/shared.mjs) is a mix of [ESLint's recommended rules](https://eslint.org/docs/rules/), [React's recommended rules](https://www.npmjs.com/package/eslint-plugin-react#list-of-supported-rules), and a bit of our own stylistic flair:
 
 - no semicolons
 - comma dangle when multiline

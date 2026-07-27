@@ -1,83 +1,11 @@
 import fs from 'node:fs'
-import path from 'node:path'
 
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
-import { getPaths, getConfig } from '@cedarjs/project-config'
-
-/**
- * Checks for legacy ESLint configuration files in the project root
- * @returns Array of legacy config file names found
- */
-function detectLegacyEslintConfig(): string[] {
-  const projectRoot = getPaths().base
-  const legacyConfigFiles = [
-    '.eslintrc.js',
-    '.eslintrc.cjs',
-    '.eslintrc.json',
-    '.eslintrc.yaml',
-    '.eslintrc.yml',
-  ]
-
-  const foundLegacyFiles: string[] = []
-
-  // Check for .eslintrc.* files
-  for (const configFile of legacyConfigFiles) {
-    if (fs.existsSync(path.join(projectRoot, configFile))) {
-      foundLegacyFiles.push(configFile)
-    }
-  }
-
-  // Check for eslint or eslintConfig fields in package.json
-  const packageJsonPath = path.join(projectRoot, 'package.json')
-  if (fs.existsSync(packageJsonPath)) {
-    try {
-      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
-      if (packageJson.eslintConfig) {
-        foundLegacyFiles.push('package.json (eslintConfig field)')
-      }
-      if (packageJson.eslint) {
-        foundLegacyFiles.push('package.json (eslint field)')
-      }
-    } catch {
-      // Ignore JSON parse errors
-    }
-  }
-
-  return foundLegacyFiles
-}
-
-/**
- * Shows a deprecation warning for legacy ESLint configuration
- * @param legacyFiles Array of legacy config file names
- */
-function showLegacyEslintDeprecationWarning(legacyFiles: string[]) {
-  console.warn('')
-  console.warn('⚠️  DEPRECATION WARNING: Legacy ESLint Configuration Detected')
-  console.warn('')
-  console.warn('   The following legacy ESLint configuration files were found:')
-  legacyFiles.forEach((file) => {
-    console.warn(`   - ${file}`)
-  })
-  console.warn('')
-  console.warn(
-    '   Cedar has migrated to ESLint flat config format. Legacy configurations',
-  )
-  console.warn(
-    '   still work but are deprecated and will be removed in a future version.',
-  )
-  console.warn('')
-  console.warn('   To migrate to the new format:')
-  console.warn('   1. Remove the legacy config file(s) listed above')
-  console.warn('   2. Create an eslint.config.mjs')
-  console.warn('   3. Use the flat config format with @cedarjs/eslint-config')
-  console.warn('')
-  console.warn('   See more here: https://github.com/cedarjs/cedar/pull/629')
-  console.warn('')
-}
+import { getPaths } from '@cedarjs/project-config'
 
 export const command = 'lint [paths..]'
 export const description = 'Lint your files'
@@ -119,17 +47,6 @@ export const handler = async ({
   format = 'stylish',
 }: LintOptions) => {
   recordTelemetryAttributes({ command: 'lint', fix, format })
-
-  const config = getConfig()
-  const legacyConfigFiles = detectLegacyEslintConfig()
-  if (
-    legacyConfigFiles.length > 0 &&
-    config instanceof Object &&
-    'eslintLegacyConfigWarning' in config &&
-    config.eslintLegacyConfigWarning
-  ) {
-    showLegacyEslintDeprecationWarning(legacyConfigFiles)
-  }
 
   try {
     const sbPath = getPaths().web.storybook

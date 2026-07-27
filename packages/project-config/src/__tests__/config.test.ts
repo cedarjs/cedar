@@ -60,7 +60,6 @@ describe('getConfig', () => {
         "browser": {
           "open": false,
         },
-        "eslintLegacyConfigWarning": true,
         "experimental": {
           "cli": {
             "autoInstall": true,
