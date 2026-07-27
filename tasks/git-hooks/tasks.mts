@@ -231,8 +231,13 @@ export async function runPrePushTasks(): Promise<number> {
   })
 
   // Lint only files changed in this branch vs main — avoids running ESLint
-  // on all packages (which is memory-intensive and slow). The pre-commit hook
-  // already lints staged files; this catches anything not yet committed.
+  // on all packages (which is memory-intensive and slow). This only looks at
+  // committed changes (git diff main...HEAD), not the working tree, since
+  // uncommitted files can't be pushed anyway. We still lint the whole branch
+  // diff here (not just the current commit) as a final sweep: the pre-commit
+  // hook only lints what's staged for each individual commit, and can be
+  // skipped per-commit with --no-verify, so some committed changes may never
+  // have been linted before reaching this point.
   // Still runs after build because the ESLint config for templates requires
   // dist output from packages like @cedarjs/babel-config.
   const branchFiles = getBranchChangedFiles()
