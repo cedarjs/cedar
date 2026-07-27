@@ -295,6 +295,61 @@ retire an entire alternate prerendering implementation that classic CJS-mode
 projects may still depend on. That's a real product decision, not a
 mechanical cleanup, so it's out of scope for this round.
 
+## Dual Mode -> ESM Only: the original tiered roadmap (Tiers 2-3 not yet done)
+
+The research that produced the Tier 1 list above actually ranked the whole
+remaining Dual Mode pool by readiness, not just Tier 1. Recorded here since
+only Tier 1 has been acted on so far — Tiers 2 and 3 are still open:
+
+**Tier 1 — no known prerequisites** (see above for what actually happened —
+5 of these 6 converted cleanly; `prerender`, despite looking like the
+easiest of the batch here, turned out to have a genuinely different CJS
+implementation and was held back):
+`context`, `cli-helpers`, `gqlorm`, `internal`, `vite`, `prerender`.
+
+**Tier 2 — one small fix needed first:**
+
+- `web` — needs the web-side Jest preset carve-out (the same
+  `transformIgnorePatterns` mechanism used for `until-async`/`auth-*-web`,
+  and later for `forms` in #2239) extended to cover it, since generated
+  projects' web tests import it directly and unmocked.
+- `auth` + `router` (move together — `router` has a real value-import of
+  `auth`) — need the static imports in `router`/`web`'s own source
+  converted away from plain `import` first, to avoid the `TS1479` class of
+  break in their own CJS type-declaration builds. This is the same
+  structural problem that blocked `cookie-jar`/`server-store` in #2239 (see
+  "Held back" above) — except here it's `router`/`web`'s **own** conversion
+  that needs the fix, not a dependency's. Converting `router`/`web` this way
+  would, as a side effect, remove the thing currently blocking
+  `cookie-jar`/`server-store` too (see the note at the end of the "Held
+  back" section above).
+
+**Tier 3 — bigger prerequisite, worth starting but flagging:**
+
+- `project-config` + `api` — both are dependency-graph leaves, good places
+  to start an API-side batch, **but** the api-side Jest preset had **no**
+  `transformIgnorePatterns` override at all at the time of this research —
+  the carve-out mechanism that made the web-side conversions safe didn't
+  exist yet on the API side. (It's since been built — see `@cedarjs/context`
+  in #2237 — so this specific prerequisite is now satisfied; `project-config`
+  and `api` themselves are still unconverted.) `graphql-server`, `storage`,
+  and `api-server` are tightly coupled to these two and should follow in the
+  same batch once `project-config`/`api` are done.
+
+**Flagged to leave alone at the time:** `babel-config` (reasoned to sit
+underneath Jest's own CJS preset loading, ESLint's config loader, and a
+Babel-register bootstrap hook simultaneously — too much blast radius to
+tackle casually), `testing` (self-referential — its own `jest.setup.js`
+requires its own `dist/cjs/*` paths), and `eslint-config` (not really "dual
+mode" in the risky sense — it's intentionally separate CJS/ESM entry files
+for `.eslintrc` vs flat-config consumers, not a leftover CJS build).
+**`babel-config` was in fact converted in #2239**, using `createRequire()`
+to route its (necessarily synchronous) internal `require()` calls through a
+real function instead of the nonexistent CJS global — the caution here was
+reasonable given the blast radius, but the actual fix turned out to be more
+tractable than expected. `testing` and `eslint-config` remain unconverted
+and the reasoning above still applies to both.
+
 ## CJS Only -> ESM Only: the 6 miscategorized packages
 
 Of the 6 packages moved from Dual Mode to CJS Only in the 2026-07-26
@@ -454,3 +509,26 @@ reinstall + build from scratch, not just a cache-busted local build) plus
 `yarn lint` and `yarn nx run-many -t test` with a 0% Nx cache hit rate, so
 this doesn't repeat the stale-cache blind spot that let the break through
 locally the first time.
+
+The `createRequire()` trick that fixed `babel-config`'s equivalent problem
+(see above) doesn't transfer here either, for a different reason than the
+async one: `createRequire()` needs `import.meta.url`, which only exists in
+real ESM. `babel-config` is ESM-only — one build, so `import.meta.url` is
+always there. `router` and `web` are still dual-mode — the same source file
+is compiled twice, once to real ESM and once to real CJS via esbuild. A
+`createRequire(import.meta.url)` written into `ServerRouter.tsx` or
+`MiddlewareRequest.ts` would ship in both outputs; in the CJS one, esbuild
+substitutes `undefined` for `import.meta.url`, so `createRequire(undefined)`
+would throw the moment a CJS-mode project actually hit that code path.
+
+**This points at the actual unblock: `router` and `web` themselves going
+ESM-only.** If they did, there'd be no more separate CJS `.d.ts` build for
+either package to break in the first place — the `TS1479` failure mode
+disappears entirely, and `cookie-jar`/`server-store` could then convert with
+zero code changes, the same as `forms`/`jobs`/`ogimage-gen` did. That's a
+much bigger call than this one, though: `router` and `web` are two of the
+most foundational packages in the framework, consumed by every generated
+project including ones still on the CJS template, so it needs the same kind
+of "does anything actually `require()` this synchronously in a way Node 24
+can't handle" investigation the other conversions got — just at
+higher stakes, and out of scope here. Worth its own round when it comes up.
