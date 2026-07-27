@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { createRequire } from 'node:module'
 import path from 'path'
 
 import type { PluginItem, TransformOptions } from '@babel/core'
@@ -9,6 +10,11 @@ import { getPaths } from '@cedarjs/project-config'
 
 import { getWebSideBabelPlugins } from './web.js'
 import type { Flags as WebFlags } from './web.js'
+
+// `@babel/register` patches Node's CJS `require()` to compile files on the
+// fly. This package is ESM-only, so `require` isn't a global here — use
+// `createRequire` to get a real one for loading the (CJS) npm package.
+const require = createRequire(import.meta.url)
 
 export interface RegisterHookOptions {
   /**
