@@ -26,6 +26,17 @@ vi.mock('../utils.mts', () => ({
   }),
 }))
 
+// getBranchChangedFiles() shells out to `git diff main...HEAD`. Mock
+// spawnSync so the test doesn't depend on the CI runner's checkout having a
+// local `main` ref or an `upstream`/`origin` remote available.
+vi.mock('node:child_process', () => ({
+  spawnSync: vi.fn(() => ({
+    status: 0,
+    stdout: 'api/src/foo.ts\n',
+    stderr: '',
+  })),
+}))
+
 describe('runPrePushTasks', () => {
   beforeEach(() => {
     callOrder.length = 0
@@ -50,17 +61,16 @@ describe('runPrePushTasks', () => {
     // The bug this test guards against: lint racing build for packages'
     // compiled dist/ output (e.g. lint:templates requiring
     // @cedarjs/babel-config's dist before build has written it)
-    expect(callOrder).not.toContain('yarn lint')
+    expect(callOrder.some((c) => c.startsWith('yarn eslint'))).toBe(false)
 
     resolveBuild()
     await runPromise
 
-    expect(callOrder).toContain('yarn lint')
+    const eslintIndex = callOrder.findIndex((c) => c.startsWith('yarn eslint'))
+    expect(eslintIndex).toBeGreaterThanOrEqual(0)
     // lint must be recorded after build, since it's only invoked once
     // build's promise resolves
-    expect(callOrder.indexOf('yarn lint')).toBeGreaterThan(
-      callOrder.indexOf('yarn build'),
-    )
+    expect(eslintIndex).toBeGreaterThan(callOrder.indexOf('yarn build'))
   })
 
   it('propagates a build failure as the result, without running lint', async () => {
@@ -72,6 +82,6 @@ describe('runPrePushTasks', () => {
     const exitCode = await runPromise
 
     expect(exitCode).toEqual(1)
-    expect(callOrder).not.toContain('yarn lint')
+    expect(callOrder.some((c) => c.startsWith('yarn eslint'))).toBe(false)
   })
 })
