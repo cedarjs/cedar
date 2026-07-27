@@ -3002,6 +3002,8 @@ __metadata:
     "@cedarjs/cli": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/internal": "workspace:*"
+    "@cedarjs/jobs": "workspace:*"
+    "@cedarjs/vite": "workspace:*"
     "@cedarjs/web-server": "workspace:*"
     graphql-tag: "npm:2.12.6"
     nodemon: "npm:3.1.14"
@@ -3289,7 +3291,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/jobs@workspace:packages/jobs":
+"@cedarjs/jobs@workspace:*, @cedarjs/jobs@workspace:packages/jobs":
   version: 0.0.0-use.local
   resolution: "@cedarjs/jobs@workspace:packages/jobs"
   dependencies:

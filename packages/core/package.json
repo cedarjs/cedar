@@ -51,6 +51,8 @@
     "@cedarjs/api-server": "workspace:*",
     "@cedarjs/cli": "workspace:*",
     "@cedarjs/internal": "workspace:*",
+    "@cedarjs/jobs": "workspace:*",
+    "@cedarjs/vite": "workspace:*",
     "@cedarjs/web-server": "workspace:*",
     "graphql-tag": "2.12.6",
     "nodemon": "3.1.14",
