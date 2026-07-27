@@ -67,9 +67,9 @@ ESM Only (63)
 - forms (https://github.com/cedarjs/cedar/pull/2239)
 - jobs (https://github.com/cedarjs/cedar/pull/2239)
 - ogimage-gen (https://github.com/cedarjs/cedar/pull/2239)
-- auth
-- router
-- web
+- auth (https://github.com/cedarjs/cedar/pull/2241)
+- router (https://github.com/cedarjs/cedar/pull/2241)
+- web (https://github.com/cedarjs/cedar/pull/2241)
 
 Dual Mode – CJS + ESM (9)
 
