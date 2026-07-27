@@ -1,11 +1,10 @@
 name: Require milestone
-description: Ensures that a PR has a valid milestone or automatically sets one based on conventional commit format
+description: Ensures that a PR has a milestone, or a conventional-commit title that the assign-milestone action can derive one from
 
 inputs:
   github-token:
-    description: 'GitHub token for setting milestones'
-    required: false
-    default: ''
+    description: 'GitHub token for reading PR details (read access is enough)'
+    required: true
 
 runs:
   using: composite

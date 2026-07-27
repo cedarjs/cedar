@@ -1,145 +1,41 @@
 // @ts-check
 
 /**
- * @typedef {Object} PullRequest
- * @property {string} title - The title of the pull request.
- * @property {number} number - The pull request number.
- * @property {{ login: string }} user - The user who created the pull request.
- * @property {Object|null} milestone - The milestone associated with the pull request.
+ * Required check: verifies that a PR either has a milestone, or has a
+ * conventional-commit title that maps to an existing open milestone (which
+ * the "🎯 Assign milestone" workflow will then set automatically).
+ *
+ * This script only READS PR metadata, so it works with the read-only
+ * GITHUB_TOKEN that fork PRs get. The actual milestone assignment, which
+ * needs a write-capable token, lives in the assign-milestone action.
+ *
+ * Note that the check must pass on a mapping conventional-commit title alone
+ * (rather than waiting for the milestone to actually be set): the assign
+ * workflow sets the milestone using GITHUB_TOKEN, and events caused by
+ * GITHUB_TOKEN don't trigger new workflow runs, so that assignment will NOT
+ * re-run this check. A maintainer manually (de)assigning a milestone does
+ * re-run it.
+ *
+ * This does mean the check can be green while the assignment hasn't happened
+ * (yet). That gap is deliberately small and visible: the most likely
+ * assignment failure - the mapped milestone not existing - fails THIS check
+ * too (see below), a transient API failure shows up as a red (non-required)
+ * "🎯 Assign milestone" check and is retried on the next push or edit, and a
+ * concurrency cancellation only happens when a newer run supersedes it and
+ * assigns instead. Same accepted pattern as the require-release-label check,
+ * which passes on a conventional-commit title without any label being set.
  */
 
-/**
- * @typedef {Object} GitHubEvent
- * @property {PullRequest} pull_request - The pull request object from the
- *   GitHub event payload.
- * @property {{ login: string }} sender - The user who triggered the event.
- */
-
-/** Environment variables needed for the script. */
-const env = {
-  /**
-   * `GITHUB_EVENT_PATH` - This is set by the GitHub Actions runner.
-   * It's the path to the file on the runner that contains the full event
-   * webhook payload.
-   * @see https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables.
-   */
-  GITHUB_EVENT_PATH: process.env.GITHUB_EVENT_PATH || '',
-  /** `GITHUB_TOKEN` - GitHub token for API requests */
-  GITHUB_TOKEN: process.env.GITHUB_TOKEN || '',
-  /** `GITHUB_REPOSITORY` - The owner and repository name */
-  GITHUB_REPOSITORY: process.env.GITHUB_REPOSITORY || '',
-}
-
-import fs from 'node:fs'
-
-/**
- * Determines the appropriate milestone based on conventional commit format
- * @param {string} title - The PR title
- * @returns {string|null} - The milestone name or null if no match
- */
-function getMilestoneFromConventionalCommit(title) {
-  // Breaking changes (indicated by !)
-  if (/^(feat|fix|docs|chore)(\([^)]+\))!:/.test(title)) {
-    return 'next-release-major'
-  }
-
-  // Feature (goes in next minor release)
-  if (/^feat\([^)]+\):/.test(title)) {
-    return 'next-release'
-  }
-
-  // Fix (goes in next patch release)
-  if (/^(fix|docs)\([^)]+\):/.test(title)) {
-    return 'next-release-patch'
-  }
-
-  // Chore (framework-side maintenance)
-  if (/^chore\([^)]+\):/.test(title)) {
-    return 'chore'
-  }
-
-  return null
-}
-
-/**
- * Sets the milestone on a pull request using the GitHub API
- * @param {number} prNumber - The pull request number
- * @param {string} milestoneName - The name of the milestone to set
- * @returns {Promise<boolean>} - True if the milestone was set successfully, false otherwise
- */
-async function setMilestone(prNumber, milestoneName) {
-  if (!env.GITHUB_TOKEN) {
-    console.error(
-      'GITHUB_TOKEN is not set. Cannot automatically set milestone.',
-    )
-    return false
-  }
-
-  const [owner, repo] = env.GITHUB_REPOSITORY.split('/')
-
-  // First, get the list of milestones to find the milestone number
-  const milestonesResponse = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/milestones?state=open&per_page=100`,
-    {
-      headers: {
-        Authorization: `token ${env.GITHUB_TOKEN}`,
-        Accept: 'application/vnd.github.v3+json',
-      },
-    },
-  )
-
-  if (!milestonesResponse.ok) {
-    console.error(
-      `Failed to fetch milestones: ${milestonesResponse.status} ${milestonesResponse.statusText}`,
-    )
-    return false
-  }
-
-  const milestones = await milestonesResponse.json()
-  const milestone = milestones.find((m) => m.title === milestoneName)
-
-  if (!milestone) {
-    console.error(`Milestone "${milestoneName}" not found in repository`)
-    return false
-  }
-
-  // Set the milestone on the PR
-  const response = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/issues/${prNumber}`,
-    {
-      method: 'PATCH',
-      headers: {
-        Authorization: `token ${env.GITHUB_TOKEN}`,
-        Accept: 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        milestone: milestone.number,
-      }),
-    },
-  )
-
-  if (!response.ok) {
-    const errorText = await response.text()
-    console.error(
-      `Failed to set milestone: ${response.status} ${response.statusText}\n${errorText}`,
-    )
-    return false
-  }
-
-  console.log(
-    `Successfully set milestone "${milestoneName}" on PR #${prNumber}`,
-  )
-  return true
-}
+import {
+  fetchOpenMilestones,
+  fetchPullRequestDetails,
+  getMilestoneEnv,
+  getMilestoneFromConventionalCommit,
+  getPullRequestNumberFromEvent,
+} from '../milestoneLib.mjs'
 
 async function main() {
-  const event = fs.readFileSync(env.GITHUB_EVENT_PATH, 'utf-8')
-
-  /** @type {GitHubEvent} */
-  const { pull_request: pullRequest } = JSON.parse(event)
-
-  const [owner, repo] = env.GITHUB_REPOSITORY.split('/')
+  const env = getMilestoneEnv()
 
   if (!env.GITHUB_TOKEN) {
     console.error('GITHUB_TOKEN is not set. Cannot fetch PR details.')
@@ -147,29 +43,15 @@ async function main() {
     return
   }
 
-  // Fetch the current PR state from the API to get the latest title and
-  // milestone. Reading the PR details from the event payload will give stale
-  // data if for example the PR title has been updated. The event payload
-  // contains data from when the workflow was originally triggered
-  const prResponse = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/pulls/${pullRequest.number}`,
-    {
-      headers: {
-        Authorization: `token ${env.GITHUB_TOKEN}`,
-        Accept: 'application/vnd.github.v3+json',
-      },
-    },
-  )
+  const prNumber = getPullRequestNumberFromEvent(env)
+  const pullRequest = await fetchPullRequestDetails(env, prNumber)
 
-  if (!prResponse.ok) {
-    console.error(
-      `Failed to fetch PR details: ${prResponse.status} ${prResponse.statusText}`,
-    )
+  if (!pullRequest) {
     process.exitCode = 1
     return
   }
 
-  const { title, milestone } = await prResponse.json()
+  const { title, milestone } = pullRequest
 
   // If milestone already exists, we're good
   if (milestone) {
@@ -181,20 +63,29 @@ async function main() {
   const suggestedMilestone = getMilestoneFromConventionalCommit(title)
 
   if (suggestedMilestone) {
-    console.log(
-      `PR title "${title}" matches conventional commit format. ` +
-        `Automatically setting milestone to "${suggestedMilestone}"...`,
-    )
+    const milestones = await fetchOpenMilestones(env)
 
-    const milestoneSet = await setMilestone(
-      pullRequest.number,
-      suggestedMilestone,
-    )
-
-    if (!milestoneSet) {
+    if (!milestones) {
       process.exitCode = 1
+      return
     }
 
+    if (milestones.some((m) => m.title === suggestedMilestone)) {
+      console.log(
+        `PR title "${title}" matches conventional commit format. ` +
+          `The "🎯 Assign milestone" workflow will set the milestone to ` +
+          `"${suggestedMilestone}".`,
+      )
+      return
+    }
+
+    console.error(
+      `Milestone "${suggestedMilestone}" (derived from the PR title ` +
+        `"${title}") does not exist as an open milestone in this repository, ` +
+        'so it cannot be auto-assigned. Please set a milestone manually, or ' +
+        'create the milestone.',
+    )
+    process.exitCode = 1
     return
   }
 
