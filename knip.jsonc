@@ -54,13 +54,7 @@
     "packages/vite": {
       // publint: only invoked via `concurrently`'s `yarn:publint` job syntax
       // in the "check:package" script, which knip doesn't parse.
-      // @cedarjs/cookie-jar, cookie: not imported directly, but genuinely
-      // loaded at runtime transitively via @cedarjs/server-store (which
-      // imports @cedarjs/cookie-jar, which imports cookie). They're also
-      // listed as bare strings in Vite's `external`/`optimizeDeps.include`
-      // build-config arrays so the SSR/RSC bundle doesn't get a second,
-      // differently-identitied copy of them -- knip can't parse either form.
-      "ignoreDependencies": ["publint", "@cedarjs/cookie-jar", "cookie"]
+      "ignoreDependencies": ["publint"]
     }
   }
 }
