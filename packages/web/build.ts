@@ -1,5 +1,3 @@
-import { writeFileSync } from 'node:fs'
-
 import * as esbuild from 'esbuild'
 
 import {
@@ -7,12 +5,8 @@ import {
   defaultBuildOptions,
   defaultIgnorePatterns,
 } from '@cedarjs/framework-tools'
+import { generateTypesEsm } from '@cedarjs/framework-tools/generateTypes'
 
-// CJS build
-/**
- * Note: We build bins in CJS, until projects fully switch to ESM or we produce
- * .mts files, which is probably the better option
- */
 await build({
   entryPointOptions: {
     ignore: [
@@ -27,50 +21,28 @@ await build({
   buildOptions: {
     ...defaultBuildOptions,
     tsconfig: 'tsconfig.build.json',
-    outdir: 'dist/cjs',
-    packages: 'external',
-  },
-})
-
-// ESM build
-await build({
-  entryPointOptions: {
-    // @NOTE: building the cjs bins only...
-    // I haven't tried esm bins yet...
-    ignore: [
-      ...defaultIgnorePatterns,
-      // defaultIgnorePatterns only covers .test.{ts,js}, so also ignore the
-      // .tsx test files to keep them out of the build output
-      '**/*.test.tsx',
-      'src/bins/**',
-      'src/__typetests__/**',
-    ],
-  },
-  buildOptions: {
-    ...defaultBuildOptions,
-    tsconfig: 'tsconfig.build.json',
     format: 'esm',
     packages: 'external',
   },
 })
 
-// Workaround for apollo-client-upload being ESM-only
-// In ESM version of rwjs/web, we don't actually bundle it, we just reexport.
-// In the CJS version (see ⭐ above), we bundle it below.
-// This only ever gets used during prerender, so bundle size is not a concern.
+// apollo-upload-client (and its own transitive deps, e.g. extract-files ->
+// is-plain-obj) ship real ESM. That's fine for this package's own build, but
+// once a generated project's Jest run pulls in @cedarjs/web (see ⭐ above --
+// web is in the web-side Jest preset's transformIgnorePatterns carve-out),
+// Jest's CJS runtime would need every one of those transitive node_modules
+// files individually carved out too, and that list isn't ours to maintain --
+// it's whatever apollo-upload-client's own dependency tree happens to be at
+// any given version. Bundling this one file inlines the whole chain into a
+// single self-contained module, so nothing outside of it needs its own
+// carve-out entry.
 await esbuild.build({
   entryPoints: ['src/bundled/*'],
-  outdir: 'dist/cjs/bundled',
-  format: 'cjs',
+  outdir: 'dist/bundled',
+  format: 'esm',
   bundle: true,
   logLevel: 'info',
   tsconfig: 'tsconfig.build.json',
 })
 
-// Place a package.json file with `type: commonjs` in the dist/cjs folder so
-// that all .js files are treated as CommonJS files.
-writeFileSync('dist/cjs/package.json', JSON.stringify({ type: 'commonjs' }))
-
-// Place a package.json file with `type: module` in the dist folder so that
-// all .js files are treated as ES Module files.
-writeFileSync('dist/package.json', JSON.stringify({ type: 'module' }))
+await generateTypesEsm()

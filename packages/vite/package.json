@@ -42,7 +42,7 @@
     "build": "node ./build.ts",
     "build:pack": "yarn pack -o cedarjs-vite.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
-    "check:attw": "node ./attw.ts",
+    "check:attw": "yarn cedar-fwtools-attw --exclude-entrypoints ./bins/cedar-vite-build.mjs",
     "check:package": "concurrently npm:check:attw yarn:publint",
     "test": "vitest run",
     "test:watch": "vitest watch"
@@ -100,6 +100,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
     "@cedarjs/auth": "5.0.1",
+    "@cedarjs/framework-tools": "5.0.1",
     "@cedarjs/router": "5.0.1",
     "@cedarjs/web": "5.0.1",
     "@hyrious/esbuild-plugin-commonjs": "0.2.6",

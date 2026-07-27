@@ -45,7 +45,7 @@
     "build:pack": "yarn pack -o cedarjs-storage.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:types-cjs": "tsc --build --verbose tsconfig.types-cjs.json",
-    "check:attw": "node attw.ts",
+    "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn publint",
     "setup:test": "npx prisma db push --accept-data-loss --config ./src/__tests__/prisma.config.ts && npx prisma generate --config ./src/__tests__/prisma.config.ts",
     "test": "vitest run",

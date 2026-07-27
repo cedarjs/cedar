@@ -3739,6 +3739,7 @@ __metadata:
     "@cedarjs/babel-config": "npm:5.0.1"
     "@cedarjs/context": "npm:5.0.1"
     "@cedarjs/cookie-jar": "npm:5.0.1"
+    "@cedarjs/framework-tools": "npm:5.0.1"
     "@cedarjs/graphql-server": "npm:5.0.1"
     "@cedarjs/internal": "npm:5.0.1"
     "@cedarjs/project-config": "npm:5.0.1"
@@ -3872,15 +3873,15 @@ __metadata:
     react: 18.3.1
     react-dom: 18.3.1
   bin:
-    cedar: ./dist/cjs/bins/cedar.js
-    cedarjs: ./dist/cjs/bins/cedar.js
-    cfw: ./dist/cjs/bins/cfw.js
-    cross-env: ./dist/cjs/bins/cross-env.js
-    msw: ./dist/cjs/bins/msw.js
-    redwood: ./dist/cjs/bins/redwood.js
-    rw: ./dist/cjs/bins/redwood.js
-    storybook: ./dist/cjs/bins/storybook.js
-    tsc: ./dist/cjs/bins/tsc.js
+    cedar: ./dist/bins/cedar.js
+    cedarjs: ./dist/bins/cedar.js
+    cfw: ./dist/bins/cfw.js
+    cross-env: ./dist/bins/cross-env.js
+    msw: ./dist/bins/msw.js
+    redwood: ./dist/bins/redwood.js
+    rw: ./dist/bins/redwood.js
+    storybook: ./dist/bins/storybook.js
+    tsc: ./dist/bins/tsc.js
   languageName: unknown
   linkType: soft
 
