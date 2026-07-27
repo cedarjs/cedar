@@ -1,15 +1,11 @@
 Here's the breakdown of the 74 packages in the CedarJS monorepo:
 
-CJS Only (6)
+CJS Only (2)
 
-- babel-config
 - cookie-jar
-- forms
-- jobs
-- ogimage-gen
 - server-store
 
-ESM Only (56)
+ESM Only (60)
 
 - cli
 - codemods
@@ -67,6 +63,10 @@ ESM Only (56)
 - gqlorm (https://github.com/cedarjs/cedar/pull/2237)
 - internal (https://github.com/cedarjs/cedar/pull/2237)
 - vite (https://github.com/cedarjs/cedar/pull/2237)
+- babel-config (https://github.com/cedarjs/cedar/pull/2239)
+- forms (https://github.com/cedarjs/cedar/pull/2239)
+- jobs (https://github.com/cedarjs/cedar/pull/2239)
+- ogimage-gen (https://github.com/cedarjs/cedar/pull/2239)
 
 Dual Mode – CJS + ESM (12)
 
@@ -83,23 +83,28 @@ Dual Mode – CJS + ESM (12)
 - testing
 - web
 
-Summary: Of the 74 packages, 12 are dual mode (CJS + ESM), 6 are CJS-only, and
-56 are ESM-only. The 6 CJS-only packages (`babel-config`, `cookie-jar`,
-`forms`, `jobs`, `ogimage-gen`, `server-store`) were previously miscategorized
-as Dual Mode — see the correction below. Of the packages that were genuinely
-CJS-only in the original inventory, all 27 have now been converted to
-ESM-only, and 15 of the 17 packages that used to be genuinely Dual Mode have
-also been converted to ESM-only (see "Dual Mode -> ESM Only" below) — most
-were dual mode from a mechanical Babel-to-esbuild tooling migration, not
-because anything actually needed a CJS build of them. `prerender` is a
-deliberate exception, held back pending a decision (see below). ESM-only
-remains the packages that have been explicitly converted to drop their CJS
-build entirely; `eslint-plugin`, `telemetry`, `tui`, `web-server`, the 7
-`mailer/*` packages, the 17 `auth-*-api`/`auth-*-setup` packages,
-`fastify-web`/`cli-data-migrate`/`cli-storybook-vite`, the 10
-`auth-*-web`/`auth-*-middleware` packages, and
-`cli-helpers`/`context`/`gqlorm`/`internal`/`vite` are the conversions done so
-far.
+Summary: Of the 74 packages, 12 are dual mode (CJS + ESM), 2 are CJS-only, and
+60 are ESM-only. Of the 6 packages that were previously miscategorized as
+Dual Mode but were actually CJS-only the whole time (`babel-config`,
+`cookie-jar`, `forms`, `jobs`, `ogimage-gen`, `server-store` — see the
+correction below), 4 have now been converted to ESM-only (see "CJS Only ->
+ESM Only: the 6 miscategorized packages" below); `cookie-jar` and
+`server-store` are a deliberate exception, held back pending a decision (see
+below) — same shape as the `prerender` exception, but discovered later, on
+its own PR, after CI (not local verification) caught it. Of the packages
+that were genuinely CJS-only in the original inventory, all 27 have now been
+converted to ESM-only, and 15 of the 17 packages that used to be genuinely
+Dual Mode have also been converted to ESM-only (see "Dual Mode -> ESM Only"
+below) — most were dual mode from a mechanical Babel-to-esbuild tooling
+migration, not because anything actually needed a CJS build of them.
+`prerender` is a deliberate exception, held back pending a decision (see
+below). ESM-only remains the packages that have been explicitly converted to
+drop their CJS build entirely; `eslint-plugin`, `telemetry`, `tui`,
+`web-server`, the 7 `mailer/*` packages, the 17 `auth-*-api`/`auth-*-setup`
+packages, `fastify-web`/`cli-data-migrate`/`cli-storybook-vite`, the 10
+`auth-*-web`/`auth-*-middleware` packages,
+`cli-helpers`/`context`/`gqlorm`/`internal`/`vite`, and
+`babel-config`/`forms`/`jobs`/`ogimage-gen` are the conversions done so far.
 
 **Correction (2026-07-25 review):** an earlier revision of this doc listed
 `cli-helpers`, `context`, and `record` under ESM Only, and listed
@@ -289,3 +294,163 @@ the CJS build here wouldn't just remove a redundant build target — it would
 retire an entire alternate prerendering implementation that classic CJS-mode
 projects may still depend on. That's a real product decision, not a
 mechanical cleanup, so it's out of scope for this round.
+
+## CJS Only -> ESM Only: the 6 miscategorized packages
+
+Of the 6 packages moved from Dual Mode to CJS Only in the 2026-07-26
+correction above (`babel-config`, `cookie-jar`, `forms`, `jobs`,
+`ogimage-gen`, `server-store`), 4 converted cleanly to ESM-only following the
+same Node 24 `require(esm)` reasoning as the original 27. `cookie-jar` and
+`server-store` were held back — see below.
+
+- **`forms`**: no real `require()` callers found anywhere. Converted with no
+  code changes beyond build config.
+- **`ogimage-gen`**: real consumers only ever `import` its subpaths (codemods
+  insert plain `import` statements into the user's `vite.config.ts`/
+  middleware file). The package's own `exports` map had vestigial dual-mode
+  scaffolding flagged in the correction above — an `import` condition next to
+  a `default` condition pointing at hand-written `cjsWrappers/*.js` files that
+  just did `require('../dist/x.js').default`, unwrapping a CJS dist file that
+  was already the only real build output. Both conditions pointed at the same
+  CJS content; removed the `cjsWrappers/` directory entirely and collapsed
+  `exports` to a single `default` condition per subpath.
+- **`jobs`**: no external `require()` callers, but two real CJS-isms inside
+  the package's own bin scripts (executed directly by `node`, not detected by
+  a grep for cross-package `require()`):
+  - `src/bins/cedar-jobs.ts` used `__dirname` to locate the worker script —
+    not a global in real ESM. Replaced with `import.meta.dirname`.
+  - `src/bins/rw-jobs-worker.ts` (the deprecated `rw-jobs-worker` bin) did
+    `require('./cedar-jobs-worker.js')` to delegate to the renamed bin.
+    Replaced with `await import('./cedar-jobs-worker.js')` — safe because
+    this file is only ever executed directly as an entry script (via the
+    `rw-jobs-worker` bin symlink), never `require()`'d by another module, so
+    top-level `await` doesn't create a `require(esm)` hazard for it.
+  - Verified both fixes with real runtime smoke tests (not just unit tests):
+    ran the built `cedar-jobs.js` and `rw-jobs-worker.js` directly with
+    `node`, and separately exercised the exact `createRequire()`-based
+    `require(esm)` path `@cedarjs/core`'s `cedar-jobs`/`cedar-jobs-worker`/
+    `rw-jobs-worker` bin proxies use to load into the jobs package's bins.
+    Both come back clean — no `ReferenceError`, and no top-level `await` on
+    the modules those proxies `require()` (only `rw-jobs-worker.ts`, which
+    is never `require()`'d, has one).
+- **`babel-config`**: the one real blocker candidate, and worth spelling out
+  because it's a materially bigger change than the previous conversions.
+  `src/common.ts` and `src/web.ts` make **5 real `require()` calls** —
+  loading sibling Babel plugin files and, in one case, a **user's**
+  `babel.config.js` at a dynamically-computed path. These aren't consumer-side
+  `require()`s hitting a build-time or Jest-runtime wall like every previous
+  conversion in this doc — they're calls the package makes internally, and
+  they can't simply become `import()`: the functions that contain them
+  (`getWebSideBabelPlugins`, `getWebSideBabelPresets`, `registerBabel`) are
+  called synchronously and return plain objects, because that's the shape
+  Babel's own config API requires. Threading `async`/`await` through them
+  would ripple out through every caller (Jest preset config building, `@babel/
+register`'s hook installation) — a real invasive change, not a mechanical
+  one.
+
+  The fix: `const require = createRequire(import.meta.url)` at the top of
+  both files, shadowing the (nonexistent) global with a real synchronous
+  `require` function. This is the same technique `@cedarjs/core`'s `src/bins/
+*.ts` proxy scripts already use, and it works for all 5 call sites
+  unchanged, including the dynamic user-config path — `createRequire`'s
+  `require()` supports `require(esm)` the same as the CJS global does, so it
+  transparently handles a user's `babel.config.js` regardless of whether
+  that's CJS or ESM (as long as it has no top-level `await`, which config
+  files never do in practice).
+
+  Two more things fell out of converting `babel-config`:
+  - `src/plugins/babel-plugin-redwood-mock-cell-data.ts` did
+    `import traverse from '@babel/traverse'` and called `traverse(...)`
+    directly. Under `verbatimModuleSyntax: true` (part of the ESM-only
+    tsconfig base, not set by the old CJS-only config) this became a type
+    error — `@types/babel__traverse`'s default export type isn't callable
+    through that combination of module settings. `packages/internal/src/
+ast.ts` (already ESM-only) hits the exact same `@babel/traverse` default-
+    export ambiguity and already has the fix: unwrap with
+    `const traverse = babelTraverse.default || babelTraverse`. Applied the
+    same pattern here.
+  - `src/plugins/prettier.config.js` did `module.exports = config` — a
+    genuine CommonJS file sitting directly in `src/`, picked up by
+    `babel-plugin-tester`'s Prettier formatting via Prettier's own
+    `cosmiconfig`-based config discovery, not by anything in `babel-config`'s
+    own module graph. Once the package is `"type": "module"`, a plain `.js`
+    file using `module.exports` needs the `.cjs` extension to still be
+    treated as CommonJS — the same fix already applied to the equivalent
+    fixture files in `prerender`/`testing`
+    (`src/babelPlugins/prettier.config.cjs`,
+    `src/config/jest/babelPlugins/prettier.config.cjs`). Renamed to
+    `prettier.config.cjs`.
+
+  Verified end-to-end at runtime, not just via the unit test suite: with
+  `babel-config` rebuilt as ESM-only, ran the real compiled consumer chains
+  from a project directory with a `cedar.toml`, requiring exactly what Jest
+  and ESLint require in a generated project —
+  `@cedarjs/testing/config/jest/api/jest-preset.js`,
+  `@cedarjs/testing/config/jest/web/jest-preset.js`, and
+  `@cedarjs/eslint-config/index.js` — all three load cleanly via `require(esm)`
+  through their own genuine CJS output (these are real CJS files regardless of
+  the root package's `type` field, per the `testing/config/jest/{api,web}/
+package.json` marker files noted in the 2026-07-25 correction above). Also
+  called `getApiSideDefaultBabelConfig()`/`getWebSideDefaultBabelConfig()`
+  directly and confirmed the returned plugin arrays are fully populated (the 5
+  `require()`'d plugins all resolve), and called `registerBabel()` directly to
+  confirm the `@babel/register` hook installs without error.
+
+The 4 converted (`babel-config`, `forms`, `jobs`, `ogimage-gen`) all follow
+the same shape: `package.json` `type` flipped to `module`, `exports` maps
+collapsed to `default`-only conditions, `build.mts` switched to calling
+`buildEsm()` and `generateTypesEsm()`, `tsconfig.json` `extends` switched
+from the `cjs-base`/`cjs-build-base` variants to the plain `base`/
+`build.base` ones, and (for the packages that never had one) a
+`tsconfig.build.json` added following the same shape used by the other
+ESM-only packages in this doc.
+
+**Held back: `cookie-jar` and `server-store`.** The initial consumer check
+for these two only looked for `require()` calls in other packages' **JS**
+output, the same check that correctly cleared the other 4. That missed a
+different failure mode: two dual-mode packages — `router` and `web` — also
+run a **separate `tsc --build` pass just to generate their CJS `.d.ts`
+files** (`build:types-cjs`, using `tsconfig.cjs.json`), independent of their
+esbuild-emitted CJS **JS**. `router/src/rsc/ServerRouter.tsx` does
+`import { getAuthState, getLocation } from '@cedarjs/server-store'`, and
+`web/src/server/{MiddlewareRequest,MiddlewareResponse}.ts` do
+`import { CookieJar } from '@cedarjs/cookie-jar'` — real, static value
+imports, in files that go through that CJS declaration build. Once
+`cookie-jar`/`server-store` went ESM-only, both hit the same `TS1479` class
+of break as `auth-dbauth-middleware` in #2223 — `tsc`'s CJS emit mode refuses
+to statically type a `require()` of an already-ESM-only dependency, even
+though Node 24's `require(esm)` would handle it fine at runtime. This one
+slipped past local verification too: `yarn build` locally came back clean
+because Nx's incremental `tsc` build info for `router`/`web` was stale from
+before the `cookie-jar`/`server-store` changes and didn't get invalidated —
+CI, running from a clean checkout, caught it immediately. Reproduced locally
+after clearing the stale `.tsbuildinfo` files and `dist/` output.
+
+Unlike `auth-dbauth-middleware` (#2223) or `router`'s own type-only imports
+of `@cedarjs/server-store` elsewhere (which already use the established
+`import type ... with { 'resolution-mode': 'import' }` escape hatch), this
+isn't fixable by converting the value imports to dynamic `import()`:
+
+- `getAuthState()`/`getLocation()` are called synchronously in three separate
+  places in `ServerRouter.tsx` — inside the `Router` component's render body,
+  and inside `hasRole()` and `AuthenticatedRoute`, which gate route-level
+  authorization. `AuthenticatedRoute` in particular is a plain synchronous
+  `React.FC`, not natively async-friendly, and no async Server Component
+  pattern exists anywhere else in this codebase yet to model the change on.
+  Making these async would mean redesigning how authorization checks happen
+  during RSC route matching — a real product/architecture decision, not a
+  mechanical fix.
+- `CookieJar` is constructed with `new CookieJar(...)` directly inside
+  `MiddlewareRequest`'s constructor and as a class field initializer on
+  `MiddlewareResponse` — both foundational, extremely hot-path primitives
+  constructed on every single request/response through Cedar's middleware
+  pipeline. Class constructors can't be `async`, so the dynamic-`import()`
+  pattern doesn't apply without a much larger refactor (async factory
+  functions rippling out through the whole middleware call chain).
+
+Reverted both to CJS-only (their pre-2026-07-26-correction build config) and
+verified with a full clean rebuild (`yarn build:clean` — `git clean -fdx` +
+reinstall + build from scratch, not just a cache-busted local build) plus
+`yarn lint` and `yarn nx run-many -t test` with a 0% Nx cache hit rate, so
+this doesn't repeat the stale-cache blind spot that let the break through
+locally the first time.

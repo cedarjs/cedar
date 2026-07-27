@@ -3413,6 +3413,7 @@ __metadata:
     "@cedarjs/internal": "npm:5.0.1"
     "@cedarjs/project-config": "npm:5.0.1"
     "@cedarjs/router": "npm:5.0.1"
+    "@cedarjs/web": "npm:5.0.1"
     "@playwright/test": "npm:1.61.1"
     fast-glob: "npm:3.3.3"
     lodash: "npm:4.18.1"
