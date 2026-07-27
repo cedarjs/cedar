@@ -78,7 +78,6 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
       },
       notifications: { versionUpdates: [] },
       studio: { basePort: 4318 },
-      eslintLegacyConfigWarning: true,
       experimental: {},
     }),
   }

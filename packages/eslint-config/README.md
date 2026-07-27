@@ -6,10 +6,9 @@
   - [Purpose and Vision](#purpose-and-vision)
   - [Roadmap](#roadmap)
   - [Contributing](#contributing)
-  - [Usage (Flat Config - Recommended)](#usage-flat-config---recommended)
-  - [Overriding Default Configuration (Flat Config)](#overriding-default-configuration-flat-config)
-  - [Migration Guide (Optional)](#migration-guide-optional)
-  - [Legacy Configuration (Still Supported)](#legacy-configuration-still-supported)
+  - [Usage](#usage)
+  - [Overriding Default Configuration](#overriding-default-configuration)
+  - [Migrating from Legacy (`.eslintrc.js`) Config](#migrating-from-legacy-eslintrcjs-config)
 
 ## Purpose and Vision
 
@@ -32,7 +31,7 @@ Our configuration uses recommended rule presets, including those from [ESLint](h
 
 This package doesn't depend on other CedarJS Framework packages. To contribute, you should be familiar with the ESLint package. Keep in mind that any rules added should not conflict with code formatting tools (e.g. [Prettier](https://prettier.io/docs/en/integrating-with-linters.html)).
 
-## Usage (Flat Config - Recommended)
+## Usage
 
 CedarJS uses ESLint's flat config format by default. Create an `eslint.config.js` file in your project root:
 
@@ -45,7 +44,7 @@ export default await cedarConfig()
 
 Note: The config is async because it needs to load your Cedar project configuration.
 
-## Overriding Default Configuration (Flat Config)
+## Overriding Default Configuration
 
 To override rules in your CedarJS app, add additional config objects after the Cedar config:
 
@@ -95,9 +94,9 @@ export default [
 ]
 ```
 
-## Migration Guide (Optional)
+## Migrating from Legacy (`.eslintrc.js`) Config
 
-**The legacy `.eslintrc.js` format still works** - you don't have to migrate. However, if you want to use the new flat config format, follow these steps:
+**The legacy `.eslintrc.js`/`package.json#eslintConfig` format is no longer supported.** Follow these steps to migrate to flat config:
 
 1. **Create a new flat config file** in your project root:
 
@@ -137,31 +136,3 @@ export default [
    ```
 
 That's it! Your linting should work the same as before.
-
-## Legacy Configuration (Still Supported)
-
-The legacy `.eslintrc.js` format is still fully supported. You can continue using it:
-
-```javascript
-// cedar-app/.eslintrc.js
-module.exports = {
-  extends: ['@cedarjs/eslint-config'],
-  root: true,
-  rules: {
-    'jsx-a11y/no-onchange': 'off',
-  },
-}
-```
-
-Or in `package.json`:
-
-```json
-{
-  "eslintConfig": {
-    "extends": "@cedarjs/eslint-config",
-    "root": true
-  }
-}
-```
-
-**Note:** While both formats are supported, we recommend migrating to flat config when convenient. See the [Migration Guide](#migration-guide-optional) above.
