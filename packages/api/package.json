@@ -10,76 +10,52 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": {
+      "default": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.js"
       }
     },
     "./package.json": "./package.json",
     "./runtime": {
-      "import": {
+      "default": {
         "types": "./dist/runtime.d.ts",
         "default": "./dist/runtime.js"
-      },
-      "require": {
-        "types": "./dist/cjs/runtime.d.ts",
-        "default": "./dist/cjs/runtime.js"
       }
     },
     "./auth": {
-      "import": {
+      "default": {
         "types": "./dist/auth/index.d.ts",
         "default": "./dist/auth/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/auth/index.d.ts",
-        "default": "./dist/cjs/auth/index.js"
       }
     },
     "./cache": {
-      "import": {
+      "default": {
         "types": "./dist/cache/index.d.ts",
         "default": "./dist/cache/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/cache/index.d.ts",
-        "default": "./dist/cjs/cache/index.js"
       }
     },
     "./logger": {
-      "import": {
+      "default": {
         "types": "./dist/logger/index.d.ts",
         "default": "./dist/logger/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/logger/index.d.ts",
-        "default": "./dist/cjs/logger/index.js"
       }
     },
     "./webhooks": {
-      "import": {
+      "default": {
         "types": "./dist/webhooks/index.d.ts",
         "default": "./dist/webhooks/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/webhooks/index.d.ts",
-        "default": "./dist/cjs/webhooks/index.js"
       }
     }
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "cedar": "./dist/cjs/bins/cedar.js",
-    "cedarjs": "./dist/cjs/bins/cedar.js",
-    "cfw": "./dist/cjs/bins/cfw.js",
-    "redwood": "./dist/cjs/bins/redwood.js",
-    "rw": "./dist/cjs/bins/redwood.js",
-    "tsc": "./dist/cjs/bins/tsc.js"
+    "cedar": "./dist/bins/cedar.js",
+    "cedarjs": "./dist/bins/cedar.js",
+    "cfw": "./dist/bins/cfw.js",
+    "redwood": "./dist/bins/redwood.js",
+    "rw": "./dist/bins/redwood.js",
+    "tsc": "./dist/bins/tsc.js"
   },
   "files": [
     "dist/",
@@ -88,7 +64,7 @@
   "scripts": {
     "build": "node ./build.mts && yarn build:types",
     "build:pack": "yarn pack -o cedarjs-api.tgz",
-    "build:types": "tsc --build --verbose ./tsconfig.build.json ./tsconfig.cjs.json",
+    "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
     "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",

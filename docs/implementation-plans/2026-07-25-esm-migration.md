@@ -5,7 +5,7 @@ CJS Only (2)
 - cookie-jar
 - server-store
 
-ESM Only (63)
+ESM Only (67)
 
 - cli
 - codemods
@@ -70,21 +70,25 @@ ESM Only (63)
 - auth (https://github.com/cedarjs/cedar/pull/2241)
 - router (https://github.com/cedarjs/cedar/pull/2241)
 - web (https://github.com/cedarjs/cedar/pull/2241)
+- api (Tier 3, see "Dual Mode -> ESM Only: Tier 3" below)
+- graphql-server (Tier 3, see "Dual Mode -> ESM Only: Tier 3" below)
+- storage (Tier 3, see "Dual Mode -> ESM Only: Tier 3" below)
+- api-server (Tier 3, see "Dual Mode -> ESM Only: Tier 3" below)
 
-Dual Mode – CJS + ESM (9)
+Dual Mode – CJS + ESM (5)
 
-- api
-- api-server
 - eslint-config
-- graphql-server
 - prerender
 - project-config
 - record
-- storage
 - testing
 
-Summary: Of the 74 packages, 9 are dual mode (CJS + ESM), 2 are CJS-only, and
-63 are ESM-only. Of the 6 packages that were previously miscategorized as
+Summary: Of the 74 packages, 5 are dual mode (CJS + ESM), 2 are CJS-only, and
+67 are ESM-only. The Dual Mode pool most recently dropped from 9 to 5 with the
+Tier 3 batch (`api`, `graphql-server`, `storage`, `api-server` — see "Dual
+Mode -> ESM Only: Tier 3" below); `project-config` was researched and
+prototyped as part of the same batch but reverted and stays dual mode (see
+that section for why). Of the 6 packages that were previously miscategorized as
 Dual Mode but were actually CJS-only the whole time (`babel-config`,
 `cookie-jar`, `forms`, `jobs`, `ogimage-gen`, `server-store` — see the
 correction below), 4 have now been converted to ESM-only (see "CJS Only ->
@@ -338,7 +342,11 @@ happened.** Original scoping:
   in #2237 — so this specific prerequisite is now satisfied; `project-config`
   and `api` themselves are still unconverted.) `graphql-server`, `storage`,
   and `api-server` are tightly coupled to these two and should follow in the
-  same batch once `project-config`/`api` are done.
+  same batch once `project-config`/`api` are done. **`api` (plus
+  `graphql-server`, `storage`, and `api-server`) were in fact converted this
+  way — see "Dual Mode -> ESM Only: Tier 3" below. `project-config` was
+  prototyped in the same batch and worked, but was reverted and stays dual
+  mode by choice, not because of a technical blocker** — see that section.
 
 **Flagged to leave alone at the time:** `babel-config` (reasoned to sit
 underneath Jest's own CJS preset loading, ESLint's config loader, and a
@@ -385,9 +393,9 @@ until the code was actually touched:
     that bundled `apollo-upload-client` (itself ESM-only) into a
     self-contained CJS chunk via `@hyrious/esbuild-plugin-commonjs`-style
     tooling, solely because the CJS build couldn't otherwise `require()` an
-    ESM-only npm dependency. With no more CJS build, `src/bundled/
-apollo-upload-client.ts` is now just a normal file in the single ESM
-    build — the workaround wasn't fixed, it stopped being necessary.
+    ESM-only npm dependency. With no more CJS build,
+    `src/bundled/apollo-upload-client.ts` is now just a normal file in the
+    single ESM build — the workaround wasn't fixed, it stopped being necessary.
   - Added `@cedarjs/web`, `@cedarjs/auth`, and `@cedarjs/router` to the
     web-side Jest preset's `transformIgnorePatterns` carve-out (the same
     mechanism `forms` got in #2239) — `web` and `router` are imported
@@ -502,9 +510,9 @@ same Node 24 `require(esm)` reasoning as the original 27. `cookie-jar` and
   (`getWebSideBabelPlugins`, `getWebSideBabelPresets`, `registerBabel`) are
   called synchronously and return plain objects, because that's the shape
   Babel's own config API requires. Threading `async`/`await` through them
-  would ripple out through every caller (Jest preset config building, `@babel/
-register`'s hook installation) — a real invasive change, not a mechanical
-  one.
+  would ripple out through every caller (Jest preset config building,
+  `@babel/register`'s hook installation) — a real invasive change, not a
+  mechanical one.
 
   The fix: `const require = createRequire(import.meta.url)` at the top of
   both files, shadowing the (nonexistent) global with a real synchronous
@@ -522,11 +530,11 @@ register`'s hook installation) — a real invasive change, not a mechanical
     directly. Under `verbatimModuleSyntax: true` (part of the ESM-only
     tsconfig base, not set by the old CJS-only config) this became a type
     error — `@types/babel__traverse`'s default export type isn't callable
-    through that combination of module settings. `packages/internal/src/
-ast.ts` (already ESM-only) hits the exact same `@babel/traverse` default-
+    through that combination of module settings. `packages/internal/src/ast.ts`
+    (already ESM-only) hits the exact same `@babel/traverse` default-
     export ambiguity and already has the fix: unwrap with
-    `const traverse = babelTraverse.default || babelTraverse`. Applied the
-    same pattern here.
+    `const traverse = babelTraverse.default || babelTraverse`. Applied the same
+    pattern here.
   - `src/plugins/prettier.config.js` did `module.exports = config` — a
     genuine CommonJS file sitting directly in `src/`, picked up by
     `babel-plugin-tester`'s Prettier formatting via Prettier's own
@@ -635,3 +643,289 @@ project including ones still on the CJS template, so it needs the same kind
 of "does anything actually `require()` this synchronously in a way Node 24
 can't handle" investigation the other conversions got — just at
 higher stakes, and out of scope here. Worth its own round when it comes up.
+
+## Dual Mode -> ESM Only: Tier 3 (`api`, `graphql-server`, `storage`, `api-server`)
+
+Converted the api-side Tier 3 batch scoped above, plus `api-server` (added to
+the batch after the initial scoping — it turned out to have its own
+`tsconfig.cjs.json` and heavy static value-imports of `project-config`/`api`,
+the same TS1479-risk shape as `graphql-server`/`storage`, so it needed to
+convert in lockstep with them anyway). `project-config` was also prototyped
+in this batch and initially converted successfully, but was reverted at the
+end — see the dedicated section below for why.
+
+- **`api`**: mechanical `package.json`/`build.mts`/`tsconfig.cjs.json`
+  conversion, plus a real fix: `src/bins/{cedar,cfw,redwood,tsc}.ts` (4
+  files) each did a bare global `require.resolve(...)` — the exact same
+  CJS-ism `web`'s 7 bin proxies had in the Tier 2 conversion, fixed the same
+  way (`const require = createRequire(import.meta.url)` at the top of each
+  file). `build.mts` also dropped the `src/bins/**` exclusion its ESM build
+  pass used to carry (previously bins were CJS-only _specifically_ so they
+  could use `require.resolve()`; once ESM has its own real `require`, the
+  exclusion was no longer needed). `package.json`'s `bin` field moved from
+  `dist/cjs/bins/*.js` to `dist/bins/*.js`. Verified by running the built
+  `tsc.js`/`cedar.js`/`cfw.js`/`redwood.js` proxies directly with `node` —
+  all resolve past the `createRequire` call cleanly (they only fail later,
+  expectedly, when not run inside an actual Cedar project).
+- **`graphql-server`**: the cleanest of the batch — already called
+  `buildEsm()`/`buildCjs()` via the standard helpers, so the conversion was
+  just dropping the CJS calls. Also cleaned up a dead legacy artifact found
+  along the way: `__mocks__/@redwoodjs/paths.js`, a manual Jest-style mock
+  keyed to the pre-rename `@redwoodjs/paths` package name. Confirmed dead
+  (`@redwoodjs/paths` isn't a real dependency anywhere, nothing imports it,
+  and the package's real `project-config` mocking happens via an inline
+  `vi.mock('@cedarjs/project-config', ...)` in `makeMergedSchema.test.ts`)
+  before deleting — and confirmed the _other_ file in that same
+  `__mocks__/` directory, `@prisma/client.js`, is very much alive: Vitest
+  (like Jest) auto-applies a `__mocks__/<package>.js` file adjacent to
+  `node_modules` for real npm packages without needing an explicit
+  `vi.mock()` call, unlike user-space modules. Almost deleted it by mistake
+  along with the dead one — caught by checking for explicit `vi.mock()`
+  call sites for each file individually rather than assuming a whole
+  directory was dead.
+- **`storage`**: mechanical conversion, same shape as `graphql-server`. Its
+  `exports` map subpaths (`./FileSystemStorage`, `./MemoryStorage`, etc.)
+  used bare `require`/`import` string-shorthand conditions rather than the
+  nested `{types, default}` object shape the other packages in this doc
+  use — collapsed to plain string paths (no more condition object needed at
+  all once there's only one build).
+- **`api-server`**: the biggest of the four. Already ESM-first in its build
+  (unlike the others, its `build.mts` builds ESM before CJS), with its own
+  `dirnameInjectorPlugin` esbuild plugin that rewrote `import.meta.dirname`
+  to `__dirname` specifically for the CJS build — deleted entirely along
+  with the CJS build passes, since the ESM output uses `import.meta.dirname`
+  natively (the one real usage, in `serverManager.ts`, needed no change).
+  No `require()`/`__dirname` anywhere in `api-server`'s own bin scripts
+  (`bin.ts`, `watch.ts`, `logFormatter/bin.ts` — confirmed clean, so unlike
+  `api`/`web` this package needed no `createRequire()` fixes there). The
+  `package.json` `bin` field's 8 entries collapsed from a mix of
+  `dist/cjs/*`/`dist/*` onto plain `dist/*` uniformly. An inline Vitest
+  snapshot in `dist.test.ts` (`ships the expected bins`) had the old
+  `dist/cjs/*` paths hardcoded — a real, expected test failure caught by
+  the verification pass, fixed with `vitest run dist.test.ts -u`.
+
+### The `api-server` CJS-forcing shim in `packages/cli`
+
+The real substance of this batch, and not something the original Tier 3
+scoping anticipated (it was found once `api-server` was added to the batch
+and its consumers were checked): `packages/cli/src/commands/serve.ts` and
+`serveBothHandler.ts` had a deliberate `projectIsEsm()`-gated branch that
+force-loaded `api-server`'s CJS build via three CJS-only `exports` subpaths
+(`./cjs/apiCliConfigHandler`, `./cjs/cliHelpers`, `./cjs/bothCliConfigHandler`
+— these existed _only_ to be forced through, with no plain equivalent for
+`bothCliConfigHandler`). `git log`/`gh pr view` on the introducing commit
+showed the reason: `@cedarjs/cli` is ESM-only, so it always loads
+`api-server`'s ESM build by default; but for a classic CommonJS-template
+project, the user's own compiled api functions are loaded via `require()`.
+At the time this shipped, `@cedarjs/context` (and, as of this batch,
+`@cedarjs/api`/`@cedarjs/project-config`/`@cedarjs/graphql-server`) still had
+_separate_ ESM and CJS builds — two distinct files, hence two distinct
+in-memory module instances. For `@cedarjs/context` specifically, that meant
+two different `AsyncLocalStorage` instances: one used by `api-server`'s own
+(ESM) GraphQL/auth pipeline, and a different one used by the user's own
+(CJS, `require()`'d) service code — silently breaking `context.currentUser`
+propagation, since a value set via one `AsyncLocalStorage` instance is
+invisible to code reading a different instance. Forcing `api-server`'s own
+CJS build (which itself transitively `require()`'d the CJS builds of
+`context`/`api`/`project-config`/`graphql-server` at the time) kept both
+sides on the same instance.
+
+With `api`, `graphql-server`, and `api-server` all converting to ESM-only in
+this same batch (on top of `context` already being ESM-only since #2237),
+this rationale mostly evaporates: a single-file package resolves to the
+exact same module instance regardless of whether the loader used `require()`
+(via Node 24's `require(esm)`) or `import()` — there's no second copy left
+to diverge from. The three `.../cjs/*` exports subpaths (which only ever
+existed to force this) were dropped from `api-server`'s `package.json`, a
+new plain `./bothCliConfigHandler` subpath was added (mirroring
+`./apiCliConfigHandler`/`./cliHelpers`, since `bothCliConfigHandler` had
+previously only ever been exposed under its `/cjs/` path), and
+`serve.ts`/`serveBothHandler.ts` were simplified to always call the plain
+(now ESM-only) handlers, matching the pattern the `web` side already used
+(`web-server` never needed this branching, since it only serves an
+already-built `web/dist`, not the user's own live api code).
+
+**One remaining, deliberately accepted gap**: `@cedarjs/project-config`
+stayed dual-mode (see below), so a CJS-template project's api code that
+`require()`s it directly (e.g. `api/src/lib/db.ts`, present in virtually
+every generated project) resolves to a _different_ module instance of
+`project-config` than `api-server`'s own ESM-loaded copy. This was checked
+deliberately rather than assumed away: `project-config`'s only module-scope
+state is memoization caches (`getPathsCache` in `paths.ts`,
+`getConfigPathCache` in `configPath.ts`, `packageManagerCache` in
+`packageManager.ts`, `configCache` in `prisma.ts`) keyed by deterministic
+filesystem inputs — unlike `context`'s `AsyncLocalStorage`, having two
+independent copies costs a little redundant computation, never produces a
+wrong answer. Confirmed this is not a regression from before this batch by
+running the CJS-template project's full api-side Jest suite end to end (see
+"Empirical verification" below) — `requireAuth.test.ts` (which chains
+through `auth.ts` -> `db.ts` -> `project-config`) and `context.test.ts` both
+pass.
+
+### The api-side Jest preset carve-out: `api`, `graphql-server`, `storage`
+
+`@cedarjs/testing`'s own api entry point (imported by virtually every
+generated project's api-side test, for scenario/mock helpers) does real
+value-imports of the newly-ESM-only `@cedarjs/context` (already carved out
+since #2237), `@cedarjs/graphql-server` (via `directive.ts`), and
+`@cedarjs/api/webhooks` (via `apiFunction.ts`) — added both to the api-side
+`transform`/`transformIgnorePatterns` carve-out in
+`packages/testing/src/config/jest/api/jest-preset.ts`, mirroring the
+`@cedarjs/context` entry added in #2237 and the equivalent web-side
+mechanism.
+
+`@cedarjs/storage` was added too, defensively: nothing in
+`@cedarjs/testing/src` imports it (confirmed by grep), but the `cedar setup
+uploads` codemod's `srcLibUploads.ts.template` does a real
+`import { createUploadsConfig, setupStorage } from '@cedarjs/storage'` into
+generated project code, which would hit the identical
+"Cannot use import statement outside a module" failure the moment an
+uploads-enabled project's api-side tests ran. Not exercised by
+`local-testing-project` (it doesn't have uploads set up), so this one is
+verified by code-reading the failure mode, not by a live repro — flagged
+here in case a future uploads-focused smoke test turns up something this
+reasoning missed.
+
+**`@cedarjs/project-config` was _not_ added to this carve-out** — see below.
+
+### Reverted: `project-config` stays dual mode
+
+`project-config` was initially converted in this same batch (it's a
+dependency-graph leaf, same shape as the others) and appeared to work: full
+monorepo build, lint, and test suite all passed clean. It only broke once
+verified against a _real_ generated CJS-template project's Jest suite (see
+"Empirical verification" below for the `local-testing-project` tarball
+workflow this used) — something the monorepo's own unit/integration tests
+don't exercise, since nothing in this repo's own test suite runs the
+api-side Jest preset against real generated project code.
+
+Two distinct failures surfaced, in sequence:
+
+1. **`project-config` needed the same Jest carve-out `api`/`graphql-server`
+   got** — but for a different reason than those two. It's not imported by
+   `@cedarjs/testing`'s own module graph at all (the static-analysis check
+   that scoped the carve-out for the other three packages came back clean
+   for `project-config`, correctly). What the analysis missed: the _user's
+   own_ generated code imports it directly and unconditionally —
+   `api/src/lib/db.ts`, present in virtually every generated project,
+   does `import { getPaths } from '@cedarjs/project-config'`, and that file
+   also goes through the same api-side Jest transform pipeline as
+   `@cedarjs/testing`'s own code. This is a generalizable blind spot worth
+   remembering for any future api-side ESM conversion: the carve-out
+   analysis has to check not just `@cedarjs/testing`'s own source, but
+   realistic generated-project code (default template _and_ common opt-in
+   setup templates, which is also why `@cedarjs/storage` got added
+   defensively above).
+2. **After adding the carve-out, a second, unrelated failure appeared**:
+   `project-config/src/prisma.ts`'s `loadPrismaConfig()` does
+   `await import(pathToFileURL(prismaConfigPath).href)` to dynamically load
+   the user's `prisma.config.cjs`/`.ts` file at a computed path. Real Node
+   and Vitest handle this fine; Jest's module runtime does not — it
+   intercepts dynamic `import()` calls, and (unlike its handling of a plain
+   node*modules package specifier, which works, as proven by
+   `getPrismaSchemas()`'s `await import('@prisma/internals')` succeeding
+   right next to the failing call) can't resolve a `file://` URL pointing
+   at an arbitrary on-disk file. This is, in fact, exactly the problem
+   `project-config`'s \_old* CJS build worked around at the build level: a
+   string-replacement step in `build.ts` rewrote `await import(configUrl)`
+   to `require(prismaConfigPath)` in the built `dist/cjs/index.js`,
+   specifically because "this file will be consumed by Jest, and jest
+   doesn't support that syntax" (verbatim comment, tagged
+   `TODO: Remove this once we go ESM-only`) — the workaround assumed that
+   going ESM-only would make the problem disappear, but it resurfaces in a
+   new form once the _only_ build is the one Jest has to consume directly.
+
+   The fix that was tried: `createRequire()`-based synchronous `require()`
+   inside `loadPrismaConfig()` itself (bypassing Jest's `import()`
+   interception the same way `createRequire()` bypasses Jest's `require()`
+   interception elsewhere in this doc). The first attempt used
+   `createRequire(import.meta.url)` at module scope — which then hit a
+   _third_, narrower failure: the api-side carve-out's babel-jest transform
+   (`@babel/preset-env` only, no additional plugins) rewrites `import`/
+   `export` to CommonJS but doesn't touch `import.meta` syntax at all,
+   producing `Cannot use 'import.meta' outside a module` once Jest tried to
+   execute the transformed CommonJS output. Fixed by using
+   `createRequire(prismaConfigPath)` instead (the target path is already
+   absolute, so it works fine as `createRequire`'s base) rather than
+   `createRequire(import.meta.url)`, sidestepping `import.meta` entirely.
+
+   This second fix worked — verified via the same real CJS-template project
+   Jest suite, all real tests passing (`requireAuth.test.ts`,
+   `context.test.ts`, `users.test.ts`, `posts.test.ts`, etc.) — but was
+   **reverted anyway**, per explicit user feedback: putting Jest-runtime-
+   specific reasoning and workarounds into `project-config`'s own shared
+   source (a comment explaining Jest's `import()` limitations, sitting in a
+   function every consumer — CLI, api-server, generated projects — calls)
+   was judged not worth it just to drop one package's CJS build, when the
+   framework already has a designated, correct place for Jest-specific
+   workarounds: the Jest preset itself. `project-config` was fully reverted
+   (`package.json`, `build.ts`, `tsconfig.cjs.json`, `src/prisma.ts` all
+   back to their pre-batch state via `git checkout HEAD --`), and the
+   `project-config` carve-out entry was removed from the Jest preset since
+   it's no longer needed — Jest can `require()` project-config's real CJS
+   build directly again, same as before this batch.
+
+   This is a case where the same technique used successfully elsewhere in
+   this doc (`createRequire()` to route around a runtime's inability to
+   handle real ESM synchronously — see `babel-config`, the `web`/`api` bin
+   proxies, `cedar-jobs`) was technically sound but stylistically
+   undesirable for _this_ call site specifically, because the workaround
+   would have lived in core framework source rather than in test
+   infrastructure. Worth keeping in mind for future conversions: a working
+   `createRequire()` fix is not automatically the right call if a
+   Jest-preset-level carve-out (or accepting a package stays dual mode) is
+   available instead and the source-level change would otherwise be purely
+   about accommodating Jest.
+
+`packages/testing`'s api-side Jest preset carve-out (`api`, `graphql-server`,
+`storage`) and the `api-server`/`cli` shim removal were both kept — neither
+required any Jest-specific reasoning inside non-test-infrastructure source,
+and both were independently verified against the real CJS-template project's
+Jest suite after the `project-config` revert, still passing.
+
+### Empirical verification
+
+Beyond the monorepo's own `yarn build:clean` (0% Nx cache) / `yarn lint` /
+`yarn nx run-many -t test --skip-nx-cache` / `yarn test:types`, this batch
+was verified against real generated projects using the `yarn build:pack` +
+tarball-`yarn install` workflow against `local-testing-project`/
+`local-testing-project-live` described in "Development Workflow" in
+`CLAUDE.md`:
+
+- A synthetic identity check (`require()` a package's built `dist/index.js`
+  via `createRequire` alongside a real `import()` of the same file, from a
+  throwaway `.cjs`/`.mjs` pair) confirmed `@cedarjs/context`'s
+  `getAsyncStoreInstance()` returns the exact same `AsyncLocalStorage`
+  across both loading styles once a package is single-file — the concrete
+  mechanism behind why the `api-server` CJS-forcing shim removal is safe,
+  demonstrated directly rather than just argued from module-resolution
+  theory.
+- `api`'s bin proxies (`tsc.js`, `cedar.js`, `cfw.js`, `redwood.js`) were run
+  directly with `node` from the built `dist/bins/`, confirming the
+  `createRequire(import.meta.url)` fix resolves cleanly before failing
+  later (expectedly) for not being run inside a real project.
+- `local-testing-project` (the classic CommonJS-template fixture) had its
+  tarballs refreshed and its full api-side Jest suite run for real,
+  including `requireAuth.test.ts` and `context.test.ts` — this is what
+  caught both `project-config` failures above; the monorepo's own test
+  suite has no equivalent coverage since it never runs the api-side Jest
+  preset against real generated-project code. Running this suite triggers
+  the api-side Jest preset's `globalSetup`, which runs
+  `prisma db push --force-reset` against the fixture's local SQLite test
+  database — Prisma's own safety tooling flags this as a destructive
+  action needing explicit user confirmation before an AI agent proceeds;
+  got that confirmation before running it (the database is a throwaway
+  local dev/test file used only by this repo's manual smoke-testing setup,
+  not anything resembling production).
+- `local-testing-project-live` (the ESM-template fixture) was checked
+  structurally (its `prisma.config.cjs` requires a real PostgreSQL
+  `DIRECT_DATABASE_URL`, not available locally, so its test suite wasn't
+  run end-to-end) — but this fixture's code path through `api-server`/`cli`
+  was already provably identical before and after this batch: the removed
+  `projectIsEsm()` branch's `else` arm (the one ESM-template projects
+  always took) called the exact same plain handlers that are now called
+  unconditionally, so there was no new behavior to verify there.
+- All tarball-testing lockfile/config churn in `local-testing-project`,
+  `local-testing-project-live`, and the repo-root `yarn.lock` (beyond the
+  legitimate `bin` field path changes) was reverted before finishing, per
+  the established workflow note that this churn shouldn't be committed.

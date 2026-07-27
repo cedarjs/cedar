@@ -10,31 +10,15 @@
   "type": "module",
   "exports": {
     ".": {
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.js"
-      },
-      "import": {
+      "default": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
       }
     },
-    "./FileSystemStorage": {
-      "require": "./dist/cjs/adapters/FileSystemStorage/FileSystemStorage.js",
-      "import": "./dist/adapters/FileSystemStorage/FileSystemStorage.js"
-    },
-    "./MemoryStorage": {
-      "require": "./dist/cjs/adapters/MemoryStorage/MemoryStorage.js",
-      "import": "./dist/adapters/MemoryStorage/MemoryStorage.js"
-    },
-    "./BaseStorageAdapter": {
-      "require": "./dist/cjs/adapters/BaseStorageAdapter.js",
-      "import": "./dist/adapters/BaseStorageAdapter.js"
-    },
-    "./UrlSigner": {
-      "require": "./dist/cjs/UrlSigner.js",
-      "import": "./dist/UrlSigner.js"
-    }
+    "./FileSystemStorage": "./dist/adapters/FileSystemStorage/FileSystemStorage.js",
+    "./MemoryStorage": "./dist/adapters/MemoryStorage/MemoryStorage.js",
+    "./BaseStorageAdapter": "./dist/adapters/BaseStorageAdapter.js",
+    "./UrlSigner": "./dist/UrlSigner.js"
   },
   "files": [
     "dist",
@@ -44,7 +28,6 @@
     "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-storage.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
-    "build:types-cjs": "tsc --build --verbose tsconfig.types-cjs.json",
     "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn publint",
     "setup:test": "npx prisma db push --accept-data-loss --config ./src/__tests__/prisma.config.ts && npx prisma generate --config ./src/__tests__/prisma.config.ts",

@@ -16,14 +16,14 @@ describe('dist', () => {
   it('ships the expected bins', () => {
     expect(packageConfig.bin).toMatchInlineSnapshot(`
       {
-        "cedar-api-server-watch": "./dist/cjs/watch.js",
-        "cedar-log-formatter": "./dist/cjs/logFormatter/bin.js",
-        "cedar-server": "./dist/cjs/bin.js",
+        "cedar-api-server-watch": "./dist/watch.js",
+        "cedar-log-formatter": "./dist/logFormatter/bin.js",
+        "cedar-server": "./dist/bin.js",
         "cedarjs-api-server-watch": "./dist/watch.js",
         "cedarjs-log-formatter": "./dist/logFormatter/bin.js",
         "cedarjs-server": "./dist/bin.js",
-        "rw-log-formatter": "./dist/cjs/logFormatter/bin.js",
-        "rw-server": "./dist/cjs/bin.js",
+        "rw-log-formatter": "./dist/logFormatter/bin.js",
+        "rw-server": "./dist/bin.js",
       }
     `)
   })
