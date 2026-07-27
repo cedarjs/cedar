@@ -39,7 +39,7 @@
     "execa": "5.1.1",
     "fast-glob": "3.3.3",
     "graphql": "16.14.2",
-    "jscodeshift": "17.3.0",
+    "jscodeshift": "17.4.0",
     "pascalcase": "1.0.0",
     "prettier": "3.8.4",
     "tasuku": "2.3.0",
