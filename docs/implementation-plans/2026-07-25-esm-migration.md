@@ -454,3 +454,26 @@ reinstall + build from scratch, not just a cache-busted local build) plus
 `yarn lint` and `yarn nx run-many -t test` with a 0% Nx cache hit rate, so
 this doesn't repeat the stale-cache blind spot that let the break through
 locally the first time.
+
+The `createRequire()` trick that fixed `babel-config`'s equivalent problem
+(see above) doesn't transfer here either, for a different reason than the
+async one: `createRequire()` needs `import.meta.url`, which only exists in
+real ESM. `babel-config` is ESM-only — one build, so `import.meta.url` is
+always there. `router` and `web` are still dual-mode — the same source file
+is compiled twice, once to real ESM and once to real CJS via esbuild. A
+`createRequire(import.meta.url)` written into `ServerRouter.tsx` or
+`MiddlewareRequest.ts` would ship in both outputs; in the CJS one, esbuild
+substitutes `undefined` for `import.meta.url`, so `createRequire(undefined)`
+would throw the moment a CJS-mode project actually hit that code path.
+
+**This points at the actual unblock: `router` and `web` themselves going
+ESM-only.** If they did, there'd be no more separate CJS `.d.ts` build for
+either package to break in the first place — the `TS1479` failure mode
+disappears entirely, and `cookie-jar`/`server-store` could then convert with
+zero code changes, the same as `forms`/`jobs`/`ogimage-gen` did. That's a
+much bigger call than this one, though: `router` and `web` are two of the
+most foundational packages in the framework, consumed by every generated
+project including ones still on the CJS template, so it needs the same kind
+of "does anything actually `require()` this synchronously in a way Node 24
+can't handle" investigation the other conversions got — just at
+higher stakes, and out of scope here. Worth its own round when it comes up.
