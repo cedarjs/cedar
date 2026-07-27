@@ -2998,14 +2998,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/core@workspace:packages/core"
   dependencies:
-    "@babel/cli": "npm:7.29.7"
     "@cedarjs/api-server": "workspace:*"
     "@cedarjs/cli": "workspace:*"
-    "@cedarjs/eslint-config": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/internal": "workspace:*"
-    "@cedarjs/project-config": "workspace:*"
-    "@cedarjs/testing": "workspace:*"
     "@cedarjs/web-server": "workspace:*"
     graphql-tag: "npm:2.12.6"
     nodemon: "npm:3.1.14"
@@ -3042,7 +3038,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/eslint-config@workspace:*, @cedarjs/eslint-config@workspace:packages/eslint-config":
+"@cedarjs/eslint-config@workspace:packages/eslint-config":
   version: 0.0.0-use.local
   resolution: "@cedarjs/eslint-config@workspace:packages/eslint-config"
   dependencies:

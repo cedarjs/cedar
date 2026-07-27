@@ -42,6 +42,14 @@
       // eslint-plugin-react-compiler: optional peer dep, dynamically imported
       // in index.mjs only when experimental.reactCompiler is enabled.
       "ignoreDependencies": ["eslint-plugin-react-compiler"]
+    },
+    "packages/core": {
+      "entry": ["src/bins/*.ts"],
+      // graphql-tag: not imported by core's own source. It's a deliberate
+      // phantom dependency -- the js/ts create-cedar-app templates import it
+      // directly in generated code (api/src/directives/*) without declaring
+      // it themselves, relying on it hoisting in via @cedarjs/core.
+      "ignoreDependencies": ["graphql-tag"]
     }
   }
 }
