@@ -133,13 +133,11 @@ export const handler = async ({
       {
         title: 'Cleaning up...',
         task: () => {
-          runBinSync('eslint', [
-            '--fix',
-            '--config',
-            `${getPaths().base}/node_modules/@cedarjs/eslint-config/shared.js`,
-            `${getPaths().api.jobsConfig}`,
-            ...Object.keys(jobFiles),
-          ])
+          runBinSync(
+            'eslint',
+            ['--fix', `${getPaths().api.jobsConfig}`, ...Object.keys(jobFiles)],
+            { cwd: getPaths().base },
+          )
         },
       },
     ],
