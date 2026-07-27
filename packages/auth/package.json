@@ -10,64 +10,28 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.js"
-      }
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./AuthProviderState": {
-      "import": {
-        "types": "./dist/AuthProvider/AuthProviderState.d.ts",
-        "default": "./dist/AuthProvider/AuthProviderState.js"
-      },
-      "require": {
-        "types": "./dist/cjs/AuthProvider/AuthProviderState.d.ts",
-        "default": "./dist/cjs/AuthProvider/AuthProviderState.js"
-      }
+      "types": "./dist/AuthProvider/AuthProviderState.d.ts",
+      "default": "./dist/AuthProvider/AuthProviderState.js"
     },
     "./dist/AuthProvider/AuthProviderState.js": {
-      "import": {
-        "types": "./dist/AuthProvider/AuthProviderState.d.ts",
-        "default": "./dist/AuthProvider/AuthProviderState.js"
-      },
-      "require": {
-        "types": "./dist/cjs/AuthProvider/AuthProviderState.d.ts",
-        "default": "./dist/cjs/AuthProvider/AuthProviderState.js"
-      }
+      "types": "./dist/AuthProvider/AuthProviderState.d.ts",
+      "default": "./dist/AuthProvider/AuthProviderState.js"
     },
     "./ServerAuthProvider": {
-      "import": {
-        "types": "./dist/AuthProvider/ServerAuthProvider.d.ts",
-        "default": "./dist/AuthProvider/ServerAuthProvider.js"
-      },
-      "require": {
-        "types": "./dist/cjs/AuthProvider/ServerAuthProvider.d.ts",
-        "default": "./dist/cjs/AuthProvider/ServerAuthProvider.js"
-      }
+      "types": "./dist/AuthProvider/ServerAuthProvider.d.ts",
+      "default": "./dist/AuthProvider/ServerAuthProvider.js"
     },
     "./dist/AuthProvider/ServerAuthProvider": {
-      "import": {
-        "types": "./dist/AuthProvider/ServerAuthProvider.d.ts",
-        "default": "./dist/AuthProvider/ServerAuthProvider.js"
-      },
-      "require": {
-        "types": "./dist/cjs/AuthProvider/ServerAuthProvider.d.ts",
-        "default": "./dist/cjs/AuthProvider/ServerAuthProvider.js"
-      }
+      "types": "./dist/AuthProvider/ServerAuthProvider.d.ts",
+      "default": "./dist/AuthProvider/ServerAuthProvider.js"
     },
     "./dist/AuthProvider/ServerAuthProvider.js": {
-      "import": {
-        "types": "./dist/AuthProvider/ServerAuthProvider.d.ts",
-        "default": "./dist/AuthProvider/ServerAuthProvider.js"
-      },
-      "require": {
-        "types": "./dist/cjs/AuthProvider/ServerAuthProvider.d.ts",
-        "default": "./dist/cjs/AuthProvider/ServerAuthProvider.js"
-      }
+      "types": "./dist/AuthProvider/ServerAuthProvider.d.ts",
+      "default": "./dist/AuthProvider/ServerAuthProvider.js"
     }
   },
   "types": "./dist/index.d.ts",
@@ -75,12 +39,11 @@
     "dist"
   ],
   "scripts": {
-    "build": "node ./build.ts && yarn build:types",
+    "build": "node ./build.ts",
     "build:pack": "yarn pack -o cedarjs-auth.tgz",
     "build:types": "tsc --build --verbose tsconfig.build.json",
-    "build:types-cjs": "tsc --build --verbose tsconfig.cjs.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
-    "check:attw": "node ./attw.ts",
+    "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",

@@ -3,6 +3,8 @@
 import { createRequire } from 'node:module'
 import { pathToFileURL } from 'node:url'
 
+const require = createRequire(import.meta.url)
+
 function isErrorWithCode(error: unknown): error is { code: string } {
   return (
     !!error &&
