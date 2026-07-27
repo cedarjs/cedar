@@ -3741,6 +3741,7 @@ __metadata:
     "@cedarjs/babel-config": "workspace:*"
     "@cedarjs/context": "workspace:*"
     "@cedarjs/cookie-jar": "workspace:*"
+    "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/graphql-server": "workspace:*"
     "@cedarjs/internal": "workspace:*"
     "@cedarjs/project-config": "workspace:*"

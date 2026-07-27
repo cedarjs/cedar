@@ -9,7 +9,17 @@ interface Problem {
   resolutionKind?: string
 }
 
-export async function attw(): Promise<Problem[]> {
+export async function attw({
+  excludeEntrypoints = [],
+}: {
+  /**
+   * Entrypoints to exclude from the check, e.g. escape-hatch subpaths that
+   * deliberately don't follow the package's normal resolution shape (see
+   * `@cedarjs/web`'s `./forceEsmApollo`) or bin scripts attw can't usefully
+   * analyze (see `@cedarjs/vite`'s `./bins/cedar-vite-build.mjs`).
+   */
+  excludeEntrypoints?: string[]
+} = {}): Promise<Problem[]> {
   // We can't rely on directly running the attw binary because it's not
   // a direct dependency of the package that will ultimately use this.
   // Instead, we have to do a little work to find the attw binary and run it.
@@ -21,14 +31,22 @@ export async function attw(): Promise<Problem[]> {
     path.resolve(path.dirname(pathToAttw), relativeBinPath),
   )
 
+  const excludeEntrypointsArgs = excludeEntrypoints.length
+    ? ['--exclude-entrypoints', ...excludeEntrypoints]
+    : []
+
   // Run attw via its CLI and save the output to a file
   const outputFileName = '.attw.json'
   const outputFile = fs.openSync(outputFileName, 'w')
   try {
-    spawnSync('node', [attwBinPath, '-P', '-f', 'json'], {
-      encoding: 'utf8',
-      stdio: ['ignore', outputFile, outputFile],
-    })
+    spawnSync(
+      'node',
+      [attwBinPath, '-P', ...excludeEntrypointsArgs, '-f', 'json'],
+      {
+        encoding: 'utf8',
+        stdio: ['ignore', outputFile, outputFile],
+      },
+    )
   } catch {
     // We don't care about non-zero exit codes
   }
