@@ -45,7 +45,13 @@ function isNonCodeWorkflowOrAction(filePath: string): boolean {
 
     '.github/workflows/require-milestone.yml',
     '.github/actions/require-milestone/action.yml',
-    '.github/actions/requireMilestone.mjs',
+    '.github/actions/require-milestone/requireMilestone.mjs',
+
+    '.github/workflows/assign-milestone.yml',
+    '.github/actions/assign-milestone/action.yml',
+    '.github/actions/assign-milestone/assignMilestone.mjs',
+
+    '.github/actions/milestoneLib.mjs',
 
     '.github/workflows/require-release-label.yml',
     '.github/actions/require-release-label-or-cc-message/action.yml',

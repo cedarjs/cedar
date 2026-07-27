@@ -1,0 +1,18 @@
+name: Assign milestone
+description: Automatically assigns a milestone to a PR based on its conventional-commit title
+
+inputs:
+  github-token:
+    description: 'GitHub token for setting milestones'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Run milestone assignment
+      shell: bash
+      run: node ${{ github.action_path }}/assignMilestone.mjs
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GITHUB_EVENT_PATH: ${{ github.event_path }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
