@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { build, createServer, normalizePath } from 'vite'
+import { build, createServer, normalizePath, resolveConfig } from 'vite'
 import type { PluginOption, ViteDevServer } from 'vite'
 import tsPathsMod from 'vite-tsconfig-paths'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -164,6 +164,37 @@ describe('$api imports in the client environment', () => {
       const resolved = await resolveInEnvironment('client', 'resolve')
 
       expect(resolved).toBe(null)
+    },
+    TIMEOUT,
+  )
+})
+
+describe('plugin ordering', () => {
+  it(
+    'runs before the plugins buildApp() adds on top of the project config',
+    async () => {
+      // buildApp() (`cedar build`, and `cedar build --ud`) starts its own
+      // plugin list with tsconfigPaths(), and passes it as inline config on
+      // top of the project's web/vite.config.ts – the one calling cedar().
+      // Vite puts config file plugins before inline ones, so the guard still
+      // gets to see $api imports first
+      const resolved = await resolveConfig(
+        {
+          root: webDir,
+          configFile: path.join(webDir, 'vite.config.ts'),
+          logLevel: 'silent',
+          plugins: [tsconfigPaths()],
+        },
+        'build',
+      )
+
+      const names = resolved.plugins.map((plugin) => plugin.name)
+      const guardIndex = names.indexOf('cedar-api-import-guard')
+      const tsconfigPathsIndex = names.indexOf('vite-tsconfig-paths')
+
+      expect(guardIndex).toBeGreaterThan(-1)
+      expect(tsconfigPathsIndex).toBeGreaterThan(-1)
+      expect(guardIndex).toBeLessThan(tsconfigPathsIndex)
     },
     TIMEOUT,
   )
