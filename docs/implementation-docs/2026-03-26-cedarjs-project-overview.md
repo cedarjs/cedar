@@ -148,7 +148,9 @@ cedar build:
 Vite plugins: cell transform | entry injection | html env | data-uri-to-buffer shim |
   auto-imports | import-dir | directory-named-import | js-as-jsx | merged config |
   api-babel-transform | cedar-routes-auto-loader | cedar-universal-deploy |
-  cedar-wait-for-api-server | resolve-cedar-style-imports
+  cedar-wait-for-api-server | resolve-cedar-style-imports |
+  cedar-api-import-guard (pre; errors on `$api/` imports in the client
+    environment, so api-side code can't be bundled into the browser)
   *test mode (Vitest, mode === 'test'): adds router-import-transform |
     create-auth-import-transform | test auto-imports (mockGraphQLQuery etc.) |
     vitest-web-config (contributes a `test.setupFiles` entry that starts MSW,
