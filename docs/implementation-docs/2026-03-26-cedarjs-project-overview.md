@@ -112,8 +112,9 @@ CLIENT CELL (GraphQL via Apollo):
 ```
 cedar dev:
   Default (no flags):
-    concurrently ─┬─ api: cedar-api-server-watch (CJS) or cedarjs-api-server-watch (ESM)
-                  │      (chokidar + esbuild, kept for SSR/RSC)
+    concurrently ─┬─ api: cedar-api-server-watch / cedarjs-api-server-watch
+                  │      (aliases of the same ESM watch.js; chokidar + esbuild,
+                  │      kept for SSR/RSC)
                   ├─ web: cedar-vite-dev (SPA) or cedar-dev-fe (Streaming SSR)
                   └─ cedar-gen-watch (regenerate types on SDL or Prisma schema
                      change)

@@ -2200,14 +2200,14 @@ __metadata:
     "@cedarjs/graphql-server":
       optional: true
   bin:
-    cedar-api-server-watch: ./dist/cjs/watch.js
-    cedar-log-formatter: ./dist/cjs/logFormatter/bin.js
-    cedar-server: ./dist/cjs/bin.js
+    cedar-api-server-watch: ./dist/watch.js
+    cedar-log-formatter: ./dist/logFormatter/bin.js
+    cedar-server: ./dist/bin.js
     cedarjs-api-server-watch: ./dist/watch.js
     cedarjs-log-formatter: ./dist/logFormatter/bin.js
     cedarjs-server: ./dist/bin.js
-    rw-log-formatter: ./dist/cjs/logFormatter/bin.js
-    rw-server: ./dist/cjs/bin.js
+    rw-log-formatter: ./dist/logFormatter/bin.js
+    rw-server: ./dist/bin.js
   languageName: unknown
   linkType: soft
 
@@ -2247,12 +2247,12 @@ __metadata:
     redis:
       optional: true
   bin:
-    cedar: ./dist/cjs/bins/cedar.js
-    cedarjs: ./dist/cjs/bins/cedar.js
-    cfw: ./dist/cjs/bins/cfw.js
-    redwood: ./dist/cjs/bins/redwood.js
-    rw: ./dist/cjs/bins/redwood.js
-    tsc: ./dist/cjs/bins/tsc.js
+    cedar: ./dist/bins/cedar.js
+    cedarjs: ./dist/bins/cedar.js
+    cfw: ./dist/bins/cfw.js
+    redwood: ./dist/bins/redwood.js
+    rw: ./dist/bins/redwood.js
+    tsc: ./dist/bins/tsc.js
   languageName: unknown
   linkType: soft
 

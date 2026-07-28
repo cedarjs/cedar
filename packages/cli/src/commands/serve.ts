@@ -9,7 +9,6 @@ import type { Argv } from 'yargs'
 import * as apiServerCLIConfig from '@cedarjs/api-server/apiCliConfig'
 import * as bothServerCLIConfig from '@cedarjs/api-server/bothCliConfig'
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
-import { projectIsEsm } from '@cedarjs/project-config'
 import * as webServerCLIConfig from '@cedarjs/web-server'
 
 // @ts-expect-error - Types not available for JS files
@@ -258,13 +257,7 @@ export const builder = async (yargs: Argv) => {
           const serveBothHandlers = await import('./serveBothHandler.js')
           await serveBothHandlers.bothSsrRscServerHandler(argv, rscEnabled)
         } else {
-          if (!projectIsEsm()) {
-            const { handler } =
-              await import('@cedarjs/api-server/cjs/bothCliConfigHandler')
-            await handler(argv)
-          } else {
-            await bothServerCLIConfig.handler(argv)
-          }
+          await bothServerCLIConfig.handler(argv)
         }
       },
     })
@@ -331,13 +324,7 @@ export const builder = async (yargs: Argv) => {
           const { apiServerFileHandler } = await import('./serveApiHandler.js')
           await apiServerFileHandler(argv)
         } else {
-          if (!projectIsEsm()) {
-            const { handler } =
-              await import('@cedarjs/api-server/cjs/apiCliConfigHandler')
-            await handler(argv)
-          } else {
-            await apiServerCLIConfig.handler(argv)
-          }
+          await apiServerCLIConfig.handler(argv)
         }
       },
     })
@@ -358,10 +345,6 @@ export const builder = async (yargs: Argv) => {
         if (streamingEnabled) {
           await webSsrServerHandler(rscEnabled)
         } else {
-          // Unlike the api side, @cedarjs/web-server doesn't need to load a
-          // CJS build of the user's project (it only serves the already-built
-          // web dist), so it doesn't need the projectIsEsm() branching we do
-          // for the api side below
           await webServerCLIConfig.handler(argv)
         }
       },

@@ -1,9 +1,5 @@
 import { build, defaultBuildOptions } from '@cedarjs/framework-tools'
-import {
-  generateTypesCjs,
-  generateTypesEsm,
-  insertCommonJsPackageJson,
-} from '@cedarjs/framework-tools/generateTypes'
+import { generateTypesEsm } from '@cedarjs/framework-tools/generateTypes'
 
 // ESM build
 await build({
@@ -15,19 +11,3 @@ await build({
 })
 
 await generateTypesEsm()
-
-// CJS build
-await build({
-  buildOptions: {
-    ...defaultBuildOptions,
-    outdir: 'dist/cjs',
-    packages: 'external',
-  },
-})
-
-await generateTypesCjs()
-
-await insertCommonJsPackageJson({
-  buildFileUrl: import.meta.url,
-  cjsDir: 'dist/cjs',
-})
