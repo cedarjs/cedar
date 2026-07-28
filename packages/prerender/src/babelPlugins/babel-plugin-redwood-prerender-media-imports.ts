@@ -12,8 +12,7 @@ import { convertToDataUrl } from './utils.js'
 
 const defaultOptions = {
   // Media file extensions that Vite emits as assets, and that we therefore
-  // have to resolve to their built asset path (or a data URL) when
-  // prerendering
+  // have to resolve to their built asset path (or a data URL) when prerendering
   extensions: [
     '.ico',
     '.jpg',

@@ -103,6 +103,19 @@ prefer `request.headers.get('...')` over `event.headers['...']` where
 - API functions returning status 204, 205, or 304 no longer crash under the
   fetch-native runtime.
 
+### `postcss-loader` is no longer installed
+
+`yarn cedar setup ui tailwindcss` used to install `postcss-loader` alongside
+`postcss`, `tailwindcss` and `autoprefixer`. It's a webpack loader left over
+from before the move to Vite, and does nothing in a Vite build.
+
+If you set up Tailwind with an older version of Cedar (or with Redwood), it's
+still in your `web/package.json` and you can safely remove it:
+
+```shell
+yarn workspace web remove postcss-loader
+```
+
 ## Breaking changes
 
 ### Vitest 4 (ESM projects)

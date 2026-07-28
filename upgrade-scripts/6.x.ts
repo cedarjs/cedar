@@ -346,6 +346,41 @@ async function main() {
     }
   }
 
+  const webPackageJsonPath = path.join(projectPaths.web.base, 'package.json')
+
+  if (fs.existsSync(webPackageJsonPath)) {
+    // Cast is safe enough here: we only do optional-chained lookups on the
+    // parsed structure
+    const webPackageJson = JSON.parse(
+      await fs.promises.readFile(webPackageJsonPath, 'utf8'),
+    ) as PackageJson
+
+    const hasPostcssLoader =
+      !!webPackageJson.devDependencies?.['postcss-loader'] ||
+      !!webPackageJson.dependencies?.['postcss-loader']
+
+    if (hasPostcssLoader) {
+      const packageManager = getPackageManager()
+
+      const removeCommand =
+        packageManager === 'pnpm'
+          ? 'pnpm --filter web remove postcss-loader'
+          : packageManager === 'npm'
+            ? 'npm uninstall -w web postcss-loader'
+            : 'yarn workspace web remove postcss-loader'
+
+      warn('Unused dependency detected: postcss-loader', [
+        'Found postcss-loader in ' +
+          path.relative(projectRoot, webPackageJsonPath),
+        'postcss-loader is a webpack loader left over from before the move\n' +
+          'to Vite, and does nothing in a Vite build. `yarn cedar setup ui\n' +
+          'tailwindcss` no longer installs it, and you can safely remove it:\n' +
+          '  ' +
+          removeCommand,
+      ])
+    }
+  }
+
   let shouldAbort = false
 
   const apiGeneratorTemplatesPath = path.join(
