@@ -21,6 +21,9 @@ const importer = path.join(webDir, 'src', 'pages', 'dollarApiImport.ts')
 // The plugin normalizes what it returns, so that Vite gets forward-slash paths
 // on Windows too
 const dbPath = normalizePath(path.join(rootDir, 'api', 'src', 'lib', 'db.ts'))
+const servicePath = normalizePath(
+  path.join(rootDir, 'api', 'src', 'services', 'posts', 'posts.ts'),
+)
 
 // Spinning up Vite dev servers is slow on Windows CI runners
 const TIMEOUT = 30_000
@@ -93,13 +96,11 @@ function getServer(setup: PluginSetup) {
 async function resolveInEnvironment(
   environmentName: 'client' | 'ssr',
   setup: PluginSetup,
+  id = '$api/src/lib/db',
 ) {
   const server = await getServer(setup)
   const environment = server.environments[environmentName]
-  const resolved = await environment.pluginContainer.resolveId(
-    '$api/src/lib/db',
-    importer,
-  )
+  const resolved = await environment.pluginContainer.resolveId(id, importer)
 
   return resolved?.id ?? null
 }
@@ -213,6 +214,26 @@ describe('$api imports in the ssr environment', () => {
       const resolved = await resolveInEnvironment('ssr', 'cedar')
 
       expect(resolved).toBe(dbPath)
+    },
+    TIMEOUT,
+  )
+
+  it(
+    'resolves $api imports of directory named modules',
+    async () => {
+      // vite-tsconfig-paths resolves most $api imports on its own, through the
+      // web side's `$api/*` -> `../api/*` mapping, which is why it looks like
+      // cedarjsResolveCedarStyleImportsPlugin's $api handling is redundant.
+      // It isn't: plain path mapping doesn't know about Cedar's directory
+      // named modules, so `$api/src/services/posts` (posts/posts.ts) only
+      // resolves because of the Cedar plugin
+      const resolved = await resolveInEnvironment(
+        'ssr',
+        'cedar',
+        '$api/src/services/posts',
+      )
+
+      expect(resolved).toBe(servicePath)
     },
     TIMEOUT,
   )
