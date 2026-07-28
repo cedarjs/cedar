@@ -1,5 +1,13 @@
 Here's the breakdown of the 74 packages in the CedarJS monorepo:
 
+Dual Mode – CJS + ESM (5)
+
+- eslint-config
+- prerender
+- project-config
+- record
+- testing
+
 CJS Only (2)
 
 - cookie-jar
@@ -74,14 +82,6 @@ ESM Only (67)
 - graphql-server (Tier 3, see "Dual Mode -> ESM Only: Tier 3" below)
 - storage (Tier 3, see "Dual Mode -> ESM Only: Tier 3" below)
 - api-server (Tier 3, see "Dual Mode -> ESM Only: Tier 3" below)
-
-Dual Mode – CJS + ESM (5)
-
-- eslint-config
-- prerender
-- project-config
-- record
-- testing
 
 Summary: Of the 74 packages, 5 are dual mode (CJS + ESM), 2 are CJS-only, and
 67 are ESM-only. The Dual Mode pool most recently dropped from 9 to 5 with the
