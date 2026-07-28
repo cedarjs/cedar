@@ -75,13 +75,8 @@ type SidePathSection = keyof WebPaths | keyof NodeTargetPaths
 
 interface TemplateForFileArgs {
   name: string
-<<<<<<< HEAD
   side: 'web' | 'api' | 'scripts' | 'packages'
   sidePathSection?: SidePathSection
-=======
-  side: 'web' | 'api' | 'scripts'
-  sidePathSection?: string
->>>>>>> cd056d2607 (chore(project-config)!: remove deprecated generators path (#1905))
   generator: string
   outputPath: string
   templatePath: string

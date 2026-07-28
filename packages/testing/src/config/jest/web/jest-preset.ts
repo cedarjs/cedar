@@ -166,24 +166,6 @@ const config: Config = {
   ],
   setupFilesAfterEnv: [path.resolve(__dirname, './jest.setup.js')],
   moduleNameMapper: {
-<<<<<<< HEAD
-    /**
-     * Make sure modules that require different versions of these
-     * dependencies end up using the same one.
-     */
-    '^react$': path.join(NODE_MODULES_PATH, 'react'),
-    '^react-dom$': path.join(NODE_MODULES_PATH, 'react-dom'),
-    '^@apollo/client/react$': path.join(
-      NODE_MODULES_PATH,
-      '@apollo/client/react',
-    ),
-    // We replace imports to "@cedarjs/router" with our own "mock" implementation.
-    '^@cedarjs/router$': path.join(
-      NODE_MODULES_PATH,
-      '@cedarjs/testing/dist/cjs/web/MockRouter.js',
-    ),
-    '^@cedarjs/web$': path.join(NODE_MODULES_PATH, '@cedarjs/web/dist/cjs'),
-=======
     ...definedEntries({
       /**
        * Make sure modules that require different versions of these
@@ -206,7 +188,6 @@ const config: Config = {
       // We replace imports to "@cedarjs/router" with our own "mock" implementation.
       '^@cedarjs/router$': resolveSubpath('@cedarjs/testing/web/MockRouter.js'),
       '^@cedarjs/web$': resolveSubpath('@cedarjs/web'),
->>>>>>> 995f0c7fd6 (fix(testing): resolve jest moduleNameMapper paths instead of assuming hoisting (#2155))
 
       // This allows us to mock `createAuthentication` which is used by auth
       // clients, which in turn lets us mock `useAuth` in tests
