@@ -2455,11 +2455,11 @@ __metadata:
     "@cedarjs/project-config": "workspace:*"
     "@prisma/internals": "npm:7.8.0"
     "@types/yargs": "npm:17.0.35"
-    dedent: "npm:1.7.2"
     memfs: "npm:4.64.0"
     nodemon: "npm:3.1.14"
     prompts: "npm:2.4.2"
     termi-link: "npm:1.1.0"
+    ts-dedent: "npm:2.3.0"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.10"
   languageName: unknown
@@ -15418,7 +15418,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dedent@npm:1.7.2, dedent@npm:^1.0.0":
+"dedent@npm:^1.0.0":
   version: 1.7.2
   resolution: "dedent@npm:1.7.2"
   peerDependencies:

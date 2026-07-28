@@ -1,9 +1,9 @@
 import type fs from 'node:fs'
 import path from 'node:path'
 
-import dedent from 'dedent'
 import { fs as memfs, vol } from 'memfs'
 import prompts from 'prompts'
+import dedent from 'ts-dedent'
 import {
   vi,
   beforeAll,
