@@ -80,22 +80,6 @@
       // packages have no UI of their own), but satisfy @testing-library/react's
       // peerDependencies so the test suite runs.
       "ignoreDependencies": ["publint", "react", "@types/react"]
-    },
-    "packages/auth-providers/clerk/web": {
-      // publint, react, @types/react: see the general */web entry above --
-      // this key overrides rather than extends it, so it's repeated here.
-      // @clerk/clerk-react: never imported by this package's own source --
-      // it talks to Clerk purely via the `window.Clerk` global so it works
-      // regardless of where the consuming app renders `ClerkProvider`. It's
-      // a real peerDependency (and devDependency for type-checking against
-      // @clerk/types) that the consuming app installs and imports itself
-      // (see `cedar setup auth clerk`'s generated web/auth.tsx.template).
-      "ignoreDependencies": [
-        "publint",
-        "react",
-        "@types/react",
-        "@clerk/clerk-react"
-      ]
     }
   }
 }

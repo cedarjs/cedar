@@ -2382,7 +2382,6 @@ __metadata:
   dependencies:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@clerk/clerk-react": "npm:5.61.3"
     "@clerk/types": "npm:4.101.20"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:9.2.4"
@@ -3950,19 +3949,6 @@ __metadata:
     svix:
       optional: true
   checksum: 10c0/ac0d1da4990ae1880d266753e45ac97a55a824f5fd93810cc271d7a6a9f5c8a239e6160635841d20b8c365f804a955ab763f2ab7a7ee75e598fad2c7e6d2fd1f
-  languageName: node
-  linkType: hard
-
-"@clerk/clerk-react@npm:5.61.3":
-  version: 5.61.3
-  resolution: "@clerk/clerk-react@npm:5.61.3"
-  dependencies:
-    "@clerk/shared": "npm:^3.47.2"
-    tslib: "npm:2.8.1"
-  peerDependencies:
-    react: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
-    react-dom: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
-  checksum: 10c0/b8a4e14edfa98e6882e104cdede0f729e923b9e98e0d20b951fa8a07cc2d5efe1b53a5abf9cbfd8d4221c8366d34ad11fd97045b29dc66ca1ac20134bc663ef7
   languageName: node
   linkType: hard
 
