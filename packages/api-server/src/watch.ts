@@ -1,8 +1,5 @@
 import path from 'node:path'
 
-// See https://github.com/webdiscus/ansis#troubleshooting
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 import ansis from 'ansis'
 import chokidar from 'chokidar'
 import { config } from 'dotenv-defaults'
