@@ -3,12 +3,12 @@
 This action creates a CidarJS project with Streaming SSR and RSC support set up.
 It's used for RSC smoke tests.
 
-It runs `yarn create cedar-app -y ...` to set up the project, and then upgrades
-it to the latest canary release of Cedar. After that it runs
-`experimental setup-streaming-ssr` and `experimental setup-rsc` followed by
-a build of the CidarJS app. Finally it runs `project:copy` to get the latest
-changes to the framework (i.e. the changes introduced by the PR triggering this
-action) into the project.
+It scaffolds the project with the `create-cedar-app` built from the current
+commit (`packages/create-cedar-app/dist/create-cedar-app.js`), then runs
+`experimental setup-streaming-ssr` and `experimental setup-rsc` using the
+locally built CLI. Finally it runs `project:tarsync` to get the changes
+introduced by the PR triggering this action into the project, and builds the
+CedarJS app.
 
 ## Testing/running locally
 
