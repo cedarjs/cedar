@@ -2,14 +2,14 @@ import path from 'path'
 
 import concurrently from 'concurrently'
 
-import { handler as apiServerHandler } from '@cedarjs/api-server/cjs/apiCliConfigHandler'
+import { handler as apiServerHandler } from '@cedarjs/api-server/apiCliConfigHandler'
 import {
   getAPIHost,
   getAPIPort,
   getAPIRootPath,
   getWebHost,
   getWebPort,
-} from '@cedarjs/api-server/cjs/cliHelpers'
+} from '@cedarjs/api-server/cliHelpers'
 import { formatRunBinCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 import { getConfig, getPaths } from '@cedarjs/project-config'

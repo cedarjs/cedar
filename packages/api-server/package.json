@@ -11,120 +11,78 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": {
+      "default": {
         "types": "./dist/createServer.d.ts",
         "default": "./dist/createServer.js"
-      },
-      "require": {
-        "types": "./dist/cjs/createServer.d.ts",
-        "default": "./dist/cjs/createServer.js"
       }
     },
     "./package.json": "./package.json",
     "./apiCliConfig": {
-      "import": {
+      "default": {
         "types": "./dist/apiCLIConfig.d.ts",
         "default": "./dist/apiCLIConfig.js"
-      },
-      "require": {
-        "types": "./dist/cjs/apiCLIConfig.d.ts",
-        "default": "./dist/cjs/apiCLIConfig.js"
       }
     },
     "./bothCliConfig": {
-      "import": {
+      "default": {
         "types": "./dist/bothCLIConfig.d.ts",
         "default": "./dist/bothCLIConfig.js"
-      },
-      "require": {
-        "types": "./dist/cjs/bothCLIConfig.d.ts",
-        "default": "./dist/cjs/bothCLIConfig.js"
       }
     },
     "./apiCliConfigHandler": {
-      "import": {
+      "default": {
         "types": "./dist/apiCLIConfigHandler.d.ts",
         "default": "./dist/apiCLIConfigHandler.js"
-      },
-      "require": {
-        "types": "./dist/cjs/apiCLIConfigHandler.d.ts",
-        "default": "./dist/cjs/apiCLIConfigHandler.js"
+      }
+    },
+    "./bothCliConfigHandler": {
+      "default": {
+        "types": "./dist/bothCLIConfigHandler.d.ts",
+        "default": "./dist/bothCLIConfigHandler.js"
       }
     },
     "./cliHelpers": {
-      "import": {
+      "default": {
         "types": "./dist/cliHelpers.d.ts",
         "default": "./dist/cliHelpers.js"
-      },
-      "require": {
-        "types": "./dist/cjs/cliHelpers.d.ts",
-        "default": "./dist/cjs/cliHelpers.js"
       }
     },
-    "./cjs/apiCliConfigHandler": {
-      "types": "./dist/cjs/apiCLIConfigHandler.d.ts",
-      "default": "./dist/cjs/apiCLIConfigHandler.js"
-    },
-    "./cjs/cliHelpers": {
-      "types": "./dist/cjs/cliHelpers.d.ts",
-      "default": "./dist/cjs/cliHelpers.js"
-    },
-    "./cjs/bothCliConfigHandler": {
-      "types": "./dist/cjs/bothCLIConfigHandler.d.ts",
-      "default": "./dist/cjs/bothCLIConfigHandler.js"
-    },
     "./fastify": {
-      "import": {
+      "default": {
         "types": "./dist/fastify.d.ts",
         "default": "./dist/fastify.js"
-      },
-      "require": {
-        "types": "./dist/cjs/fastify.d.ts",
-        "default": "./dist/cjs/fastify.js"
       }
     },
     "./watch": {
-      "import": {
+      "default": {
         "types": "./dist/watch.d.ts",
         "default": "./dist/watch.js"
-      },
-      "require": {
-        "types": "./dist/cjs/watch.d.ts",
-        "default": "./dist/cjs/watch.js"
       }
     },
     "./logFormatter": {
-      "import": {
+      "default": {
         "types": "./dist/logFormatter/index.d.ts",
         "default": "./dist/logFormatter/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/logFormatter/index.d.ts",
-        "default": "./dist/cjs/logFormatter/index.js"
       }
     },
     "./requestHandlers": {
-      "import": {
+      "default": {
         "types": "./dist/requestHandlers/awsLambdaFastify.d.ts",
         "default": "./dist/requestHandlers/awsLambdaFastify.js"
-      },
-      "require": {
-        "types": "./dist/cjs/requestHandlers/awsLambdaFastify.d.ts",
-        "default": "./dist/cjs/requestHandlers/awsLambdaFastify.js"
       }
     }
   },
   "main": "./dist/createServer.js",
   "types": "./dist/createServer.d.ts",
   "bin": {
-    "cedar-api-server-watch": "./dist/cjs/watch.js",
-    "cedar-log-formatter": "./dist/cjs/logFormatter/bin.js",
-    "cedar-server": "./dist/cjs/bin.js",
+    "cedar-api-server-watch": "./dist/watch.js",
+    "cedar-log-formatter": "./dist/logFormatter/bin.js",
+    "cedar-server": "./dist/bin.js",
     "cedarjs-api-server-watch": "./dist/watch.js",
     "cedarjs-log-formatter": "./dist/logFormatter/bin.js",
     "cedarjs-server": "./dist/bin.js",
-    "rw-log-formatter": "./dist/cjs/logFormatter/bin.js",
-    "rw-server": "./dist/cjs/bin.js"
+    "rw-log-formatter": "./dist/logFormatter/bin.js",
+    "rw-server": "./dist/bin.js"
   },
   "files": [
     "dist"
@@ -133,7 +91,6 @@
     "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-api-server.tgz",
     "build:types": "tsc --build --verbose tsconfig.build.json",
-    "build:types-cjs": "tsc --build --verbose tsconfig.cjs.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build && yarn fix:permissions\"",
     "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",
