@@ -8,7 +8,8 @@ import { ensurePosixPath, getPaths } from '@cedarjs/project-config'
 import { convertToDataUrl } from './utils.js'
 
 const defaultOptions = {
-  // This list of extensions matches config for file-loader in
+  // Media file extensions that Vite emits as assets, and that we therefore
+  // have to resolve to their built asset path (or a data URL) when prerendering
   extensions: [
     '.ico',
     '.jpg',

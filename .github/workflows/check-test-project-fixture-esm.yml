@@ -18,6 +18,11 @@ jobs:
       )
     name: Check test-project-esm fixture
     runs-on: ubuntu-latest
+    # The steps below run only when the PR touches code and hasn't been marked
+    # as having an already up-to-date fixture. The job itself always runs, so
+    # that it still reports a result when those steps are skipped.
+    env:
+      FIXTURE_OK: ${{ contains(github.event.pull_request.labels.*.name, 'fixture-ok') }}
     # Cancel in-progress runs of this workflow.
     # See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-only-cancel-in-progress-jobs-or-runs-for-the-current-workflow.
     concurrency:
@@ -38,11 +43,11 @@ jobs:
         uses: ./.github/actions/detect-changes
 
       - name: Set up job (fixture)
-        if: steps.detect-changes.outputs.code == 'true' && !contains(github.event.pull_request.labels.*.name, 'fixture-ok')
+        if: steps.detect-changes.outputs.code == 'true' && env.FIXTURE_OK != 'true'
         uses: ./.github/actions/set-up-job
 
       - name: Rebuild test-project-esm fixture
-        if: steps.detect-changes.outputs.code == 'true' && !contains(github.event.pull_request.labels.*.name, 'fixture-ok')
+        if: steps.detect-changes.outputs.code == 'true' && env.FIXTURE_OK != 'true'
         run: |
           # Temporarily disable errexit so we can capture the pipeline exit code
           # produced by `yarn ... | tee ...` without the shell aborting the step
@@ -88,7 +93,7 @@ jobs:
           YARN_ENABLE_IMMUTABLE_INSTALLS: false
 
       - name: Check for changed files
-        if: steps.detect-changes.outputs.code == 'true' && !contains(github.event.pull_request.labels.*.name, 'fixture-ok')
+        if: steps.detect-changes.outputs.code == 'true' && env.FIXTURE_OK != 'true'
         run: |
           if [ $(git status --porcelain | wc -l) -eq 0 ]; then
             exit 0
@@ -101,10 +106,10 @@ jobs:
             # Check if only package.json files are modified
             non_package_json=$(git status --porcelain | grep '^ M ' | awk '{print $2}' | grep -v 'package\.json$' || true)
             if [ -z "$non_package_json" ]; then
-              # Check if the only changes are to postcss, postcss-loader, or autoprefixer versions
-              remaining=$(git diff -- '*package.json' | grep -E '^[+-][^+-]' | grep -vE '^[+-]\s*"(postcss"|postcss-loader"|autoprefixer"):' || true)
+              # Check if the only changes are to postcss or autoprefixer versions
+              remaining=$(git diff -- '*package.json' | grep -E '^[+-][^+-]' | grep -vE '^[+-]\s*"(postcss"|autoprefixer"):' || true)
               if [ -z "$remaining" ]; then
-                echo 'Only allowed package version changes (postcss, postcss-loader, autoprefixer) detected. Ignoring.'
+                echo 'Only allowed package version changes (postcss, autoprefixer) detected. Ignoring.'
                 exit 0
               fi
             fi

@@ -304,7 +304,8 @@ export const runPrerender = async ({
     overrides: [
       {
         plugins: [
-          ['ignore-html-and-css-imports'], // webpack/postcss handles CSS imports
+          // Vite handles CSS imports for the browser build
+          ['ignore-html-and-css-imports'],
           [babelPluginRedwoodPrerenderMediaImports],
         ],
       },

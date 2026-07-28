@@ -129,8 +129,8 @@ test('Check that rehydration works for page with code split chunks', async ({
     }
   })
 
-  // This page uses Redwood Forms, and so does /posts/new. Webpack splits rw
-  // forms out into a separate chunk. We need to make sure our prerender
+  // This page uses Cedar Forms, and so does /posts/new. Vite splits Cedar
+  // Forms out into a separate chunk. We need to make sure our prerender
   // code can handle that
   await page.goto('/contacts/new')
 

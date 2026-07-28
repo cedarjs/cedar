@@ -50,7 +50,7 @@ export async function webTasks(
                 ? 'pnpm --filter web add -D'
                 : 'npm install -w web --save-dev'
           return execa(
-            `${workspaceCmd} postcss postcss-loader tailwindcss autoprefixer prettier-plugin-tailwindcss@^0.8.0`,
+            `${workspaceCmd} postcss tailwindcss autoprefixer prettier-plugin-tailwindcss@^0.8.0`,
             [],
             getExecaOptions(outputPath),
           )

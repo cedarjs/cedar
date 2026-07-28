@@ -116,7 +116,6 @@ const getInfo = async (presets: Args = {}) => {
     cedarVersion:
       presets.cedarVersion || info.npmPackages?.['@cedarjs/core']?.installed,
     system: `${cpu.physicalCores}.${Math.round(mem.total / 1073741824)}`,
-    webBundler: 'vite', // Hardcoded as this is now the only supported bundler
     experiments,
   }
 }

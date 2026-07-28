@@ -206,11 +206,11 @@ export default function (
             //   }
 
             //
-            // Real example
+            // Real example (when prerendering)
             // const LoginPage = {
             //   name: "LoginPage",
-            //   prerenderLoader: () => __webpack_require__(require.resolveWeak("./pages/LoginPage/LoginPage")),
-            //   LazyComponent: lazy(() => import("/pages/LoginPage/LoginPage.tsx"))
+            //   prerenderLoader: (name) => require("./pages/LoginPage/LoginPage"),
+            //   LazyComponent: lazy(() => import("./pages/LoginPage/LoginPage"))
             // }
             //
 
