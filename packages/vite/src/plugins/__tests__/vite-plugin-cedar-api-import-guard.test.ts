@@ -27,8 +27,6 @@ const TIMEOUT = 30_000
 
 /** The plugin setups the tests resolve `$api/src/lib/db` through */
 const PLUGIN_SETUPS = {
-  /** Just the guard, to check what it does on its own */
-  guard: () => [cedarApiImportGuardPlugin()],
   /** Just the resolve plugin, to check what it does on its own */
   resolve: () => [cedarjsResolveCedarStyleImportsPlugin()],
   /** What a Cedar project gets, in the order cedar() sets them up in */
@@ -38,6 +36,10 @@ const PLUGIN_SETUPS = {
     cedarjsResolveCedarStyleImportsPlugin(),
   ],
 } satisfies Record<string, () => PluginOption[]>
+
+// Dependency scanning is pure overhead here – the tests only ever resolve a
+// single id – and it's the slowest part of starting a server on CI
+const NO_DEP_SCAN = { noDiscovery: true, include: [] }
 
 type PluginSetup = keyof typeof PLUGIN_SETUPS
 
@@ -73,6 +75,7 @@ function getServer(setup: PluginSetup) {
       root: webDir,
       configFile: false,
       logLevel: 'silent',
+      optimizeDeps: NO_DEP_SCAN,
       server: { middlewareMode: true, hmr: false, watch: null },
       plugins: PLUGIN_SETUPS[setup](),
     })
@@ -105,7 +108,10 @@ describe('$api imports in the client environment', () => {
   it(
     'throws when a client module imports $api',
     async () => {
-      await expect(resolveInEnvironment('client', 'guard')).rejects.toThrow(
+      // The web side's tsconfig.json maps `$api/*` to `../api/*`, so
+      // vite-tsconfig-paths resolves $api imports all on its own. The guard
+      // plugin has to run before it to be of any use
+      await expect(resolveInEnvironment('client', 'cedar')).rejects.toThrow(
         /Cannot import "\$api\/src\/lib\/db" from client-side/,
       )
     },
@@ -115,21 +121,8 @@ describe('$api imports in the client environment', () => {
   it(
     'mentions the importer in the error message',
     async () => {
-      await expect(resolveInEnvironment('client', 'guard')).rejects.toThrow(
-        /dollarApiImport\.ts/,
-      )
-    },
-    TIMEOUT,
-  )
-
-  it(
-    'throws even though tsconfig paths would resolve $api',
-    async () => {
-      // The web side's tsconfig.json maps `$api/*` to `../api/*`, so
-      // vite-tsconfig-paths resolves $api imports all on its own. The guard
-      // plugin has to run before it to be of any use
       await expect(resolveInEnvironment('client', 'cedar')).rejects.toThrow(
-        /Cannot import "\$api\/src\/lib\/db" from client-side/,
+        /dollarApiImport\.ts/,
       )
     },
     TIMEOUT,
@@ -143,6 +136,7 @@ describe('$api imports in the client environment', () => {
           root: webDir,
           configFile: false,
           logLevel: 'silent',
+          optimizeDeps: NO_DEP_SCAN,
           plugins: PLUGIN_SETUPS.cedar(),
           build: {
             lib: { entry: importer, formats: ['es'] },
