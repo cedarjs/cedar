@@ -67,7 +67,6 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@ast-grep/napi": "0.45.0",
     "@babel/generator": "7.29.7",
     "@babel/parser": "7.29.7",
     "@babel/traverse": "7.29.7",
@@ -84,7 +83,9 @@
     "babel-plugin-ignore-html-and-css-imports": "0.1.0",
     "cheerio": "1.2.0",
     "graphql": "16.14.2",
+    "magic-string": "0.30.21",
     "mime-types": "2.1.35",
+    "oxc-parser": "0.141.0",
     "rollup": "4.60.4",
     "rollup-plugin-swc3": "0.12.1",
     "unimport": "5.7.0",
