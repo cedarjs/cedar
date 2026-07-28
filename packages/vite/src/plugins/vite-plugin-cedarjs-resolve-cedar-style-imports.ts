@@ -80,7 +80,14 @@ export function cedarjsResolveCedarStyleImportsPlugin(): Plugin {
       }
 
       // Handle $api/ bare specifiers (web side only; used in routeHooks etc.)
-      if (cedarPaths && id.startsWith('$api/')) {
+      // Never resolve them for the client environment – that would bundle
+      // server-only code into the browser. See cedarApiImportGuardPlugin, which
+      // is what turns such an import into a helpful error message
+      if (
+        cedarPaths &&
+        id.startsWith('$api/') &&
+        this.environment?.name !== 'client'
+      ) {
         const resolved = resolveFromAbsolutePath(
           path.join(cedarPaths.api.base, id.slice('$api/'.length)),
         )

@@ -21,6 +21,7 @@ import {
   createAuthImportTransformPlugin,
 } from '@cedarjs/testing/web/vitest'
 
+import { cedarApiImportGuardPlugin } from './plugins/vite-plugin-cedar-api-import-guard.js'
 import { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
 import { cedarCellTransform } from './plugins/vite-plugin-cedar-cell.js'
 import { cedarDataUriShim } from './plugins/vite-plugin-cedar-data-uri-shim.js'
@@ -36,6 +37,7 @@ import { cedarTransformJsAsJsx } from './plugins/vite-plugin-jsx-loader.js'
 import { cedarMergedConfig } from './plugins/vite-plugin-merged-config.js'
 import { cedarSwapApolloProvider } from './plugins/vite-plugin-swap-apollo-provider.js'
 
+export { cedarApiImportGuardPlugin } from './plugins/vite-plugin-cedar-api-import-guard.js'
 export { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
 export { cedarCjsCompatPlugin } from './plugins/vite-plugin-cedar-cjs-compat.js'
 export { cedarCellTransform } from './plugins/vite-plugin-cedar-cell.js'
@@ -93,6 +95,9 @@ export function cedar({ mode, babel }: PluginOptions = {}): PluginOption[] {
       : undefined
 
   return [
+    // Has to come before tsconfigPaths(), which would otherwise resolve
+    // `$api/*` imports using the project's web/tsconfig.json `paths` mapping
+    cedarApiImportGuardPlugin(),
     tsconfigPaths(),
     gqlTagPlugin(),
     mode === 'test' && cedarJsRouterImportTransformPlugin(),
