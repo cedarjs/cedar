@@ -47,7 +47,7 @@
     "@cedarjs/framework-tools": "5.0.1",
     "@cedarjs/router": "5.0.1",
     "@cedarjs/web": "5.0.1",
-    "@playwright/test": "1.61.1",
+    "@playwright/test": "1.62.0",
     "ts-toolbelt": "9.6.0",
     "typescript": "5.9.3",
     "vite": "7.3.6",
