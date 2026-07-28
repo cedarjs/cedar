@@ -72,6 +72,19 @@ function warn(title: string, lines: string[]) {
   }
 }
 
+/**
+ * Like `warn`, but for things that don't break anything and that the user can
+ * safely ignore. Deliberately not colored, so it doesn't compete with the
+ * warnings about actual breaking changes.
+ */
+function info(title: string, lines: string[]) {
+  console.log(title + '\n')
+
+  for (const line of lines) {
+    console.log(line + '\n')
+  }
+}
+
 async function main() {
   const filesWithGetCommonPlugins: string[] = []
   const filesWithNodePolyfills: string[] = []
@@ -369,12 +382,13 @@ async function main() {
             ? 'npm uninstall -w web postcss-loader'
             : 'yarn workspace web remove postcss-loader'
 
-      warn('Unused dependency detected: postcss-loader', [
+      info('You can remove postcss-loader', [
         'Found postcss-loader in ' +
           path.relative(projectRoot, webPackageJsonPath),
-        'postcss-loader is a webpack loader left over from before the move\n' +
-          'to Vite, and does nothing in a Vite build. `yarn cedar setup ui\n' +
-          'tailwindcss` no longer installs it, and you can safely remove it:\n' +
+        'It is a webpack loader left over from before the move to Vite, and\n' +
+          'does nothing in a Vite build. `yarn cedar setup ui tailwindcss` no\n' +
+          'longer installs it. Nothing breaks if you keep it, but you can\n' +
+          'remove it with:\n' +
           '  ' +
           removeCommand,
       ])
