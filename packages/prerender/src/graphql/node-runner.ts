@@ -8,10 +8,10 @@ import {
   cedarjsJobPathInjectorPlugin,
   cedarSwapApolloProvider,
   cedarCjsCompatPlugin,
+  cedarImportDirPlugin,
 } from '@cedarjs/vite'
 
 import { cedarAutoImportsPlugin } from './vite-plugin-cedar-auto-import.js'
-import { cedarImportDirPlugin } from './vite-plugin-cedar-import-dir.js'
 
 async function createViteServer(customConfig: UserConfig = {}) {
   const defaultConfig: UserConfig = {
