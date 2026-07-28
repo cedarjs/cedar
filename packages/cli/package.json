@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/cli",
-  "version": "5.0.3",
+  "version": "5.0.4",
   "description": "The CedarJS Command Line",
   "repository": {
     "type": "git",
