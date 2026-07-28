@@ -20,7 +20,10 @@ describe('UD build against fixture', () => {
     process.env.CEDAR_CWD = fixtureDir
     const { buildCedarApp } = await import('../buildApp.js')
     await buildCedarApp({ ud: true, verbose: false })
-  }, 30_000)
+    // A full UD build takes a couple of seconds locally, but Windows CI
+    // runners are slow enough, especially with other test files building in
+    // parallel, that 30s wasn't enough headroom
+  }, 90_000)
 
   it('produces api/dist/ud/index.js', () => {
     const outFile = join(fixtureDir, 'api', 'dist', 'ud', 'index.js')

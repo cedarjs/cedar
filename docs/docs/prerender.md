@@ -145,6 +145,12 @@ export async function routeParameters() {
 
 Take note of the special syntax for the import, with a dollar-sign in front of api. This lets our tooling (typescript and babel) know that you want to break out of the web side the page is in to access code on the api side. This only works in the routeHook scripts (and scripts in the root /scripts directory).
 
+:::warning `$api` imports are server-side only
+
+Importing `$api/...` from a page, component, or any other file that ends up in the browser bundle is an error. Those imports pull api-side code – like your Prisma client – into the web bundle, so Cedar fails the build with an explanatory message instead. If you need the data in the browser, fetch it through GraphQL.
+
+:::
+
 ---
 
 ## Prerender Utils
