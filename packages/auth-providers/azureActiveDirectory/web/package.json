@@ -42,10 +42,8 @@
     "@cedarjs/auth": "workspace:*"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.5",
     "@azure/msal-browser": "2.39.0",
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/netlify-identity-widget": "1.9.7",
     "@types/react": "^18.2.55",
     "concurrently": "9.2.4",
     "publint": "0.3.22",

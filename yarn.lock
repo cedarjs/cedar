@@ -2255,7 +2255,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-auth0-api@workspace:packages/auth-providers/auth0/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/jsonwebtoken": "npm:9.0.10"
@@ -2272,7 +2271,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-auth0-setup@workspace:packages/auth-providers/auth0/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
@@ -2305,7 +2303,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-azure-active-directory-api@workspace:packages/auth-providers/azureActiveDirectory/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/aws-lambda": "npm:8.10.162"
@@ -2323,7 +2320,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-azure-active-directory-setup@workspace:packages/auth-providers/azureActiveDirectory/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
@@ -2338,11 +2334,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-azure-active-directory-web@workspace:packages/auth-providers/azureActiveDirectory/web"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.5"
     "@azure/msal-browser": "npm:2.39.0"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@types/netlify-identity-widget": "npm:1.9.7"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:9.2.4"
     publint: "npm:0.3.22"
@@ -2358,7 +2352,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-clerk-api@workspace:packages/auth-providers/clerk/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@clerk/backend": "npm:1.34.0"
@@ -2374,7 +2367,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-clerk-setup@workspace:packages/auth-providers/clerk/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
@@ -2390,7 +2382,6 @@ __metadata:
   dependencies:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@clerk/clerk-react": "npm:5.61.3"
     "@clerk/types": "npm:4.101.20"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:9.2.4"
@@ -2407,7 +2398,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-custom-setup@workspace:packages/auth-providers/custom/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
@@ -2422,11 +2412,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-dbauth-api@workspace:packages/auth-providers/dbAuth/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@simplewebauthn/server": "npm:10.0.1"
+    "@simplewebauthn/types": "npm:10.0.0"
+    "@types/aws-lambda": "npm:8.10.162"
     "@types/md5": "npm:2.3.6"
     concurrently: "npm:9.2.4"
     md5: "npm:2.3.0"
@@ -2441,7 +2432,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-dbauth-middleware@workspace:packages/auth-providers/dbAuth/middleware"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/auth-dbauth-api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
@@ -2462,14 +2452,14 @@ __metadata:
   dependencies:
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
+    "@cedarjs/project-config": "workspace:*"
     "@prisma/internals": "npm:7.8.0"
-    "@simplewebauthn/browser": "npm:10.0.0"
-    "@simplewebauthn/types": "npm:10.0.0"
     "@types/yargs": "npm:17.0.35"
+    dedent: "npm:1.5.3"
+    memfs: "npm:4.64.0"
     nodemon: "npm:3.1.14"
     prompts: "npm:2.4.2"
     termi-link: "npm:1.1.0"
-    ts-dedent: "npm:2.3.0"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.10"
   languageName: unknown
@@ -2479,11 +2469,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-dbauth-web@workspace:packages/auth-providers/dbAuth/web"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@simplewebauthn/browser": "npm:10.0.0"
-    "@simplewebauthn/types": "npm:10.0.0"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:9.2.4"
     publint: "npm:0.3.22"
@@ -2497,7 +2485,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-firebase-api@workspace:packages/auth-providers/firebase/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/aws-lambda": "npm:8.10.162"
@@ -2513,7 +2500,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-firebase-setup@workspace:packages/auth-providers/firebase/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
@@ -2546,7 +2532,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-netlify-api@workspace:packages/auth-providers/netlify/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/aws-lambda": "npm:8.10.162"
@@ -2563,7 +2548,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-netlify-setup@workspace:packages/auth-providers/netlify/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
@@ -2596,7 +2580,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-supabase-api@workspace:packages/auth-providers/supabase/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@supabase/ssr": "npm:0.12.3"
@@ -2614,18 +2597,14 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-supabase-middleware@workspace:packages/auth-providers/supabase/middleware"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/auth-supabase-api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/graphql-server": "workspace:*"
     "@cedarjs/web": "workspace:*"
-    "@supabase/ssr": "npm:0.12.3"
-    "@types/aws-lambda": "npm:8.10.162"
     concurrently: "npm:9.2.4"
     publint: "npm:0.3.22"
-    ts-toolbelt: "npm:9.6.0"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.10"
   languageName: unknown
@@ -2635,7 +2614,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-supabase-setup@workspace:packages/auth-providers/supabase/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
@@ -2668,9 +2646,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-supertokens-api@workspace:packages/auth-providers/supertokens/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
+    "@types/aws-lambda": "npm:8.10.162"
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:9.2.4"
     jsonwebtoken: "npm:9.0.3"
@@ -2687,7 +2665,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-supertokens-setup@workspace:packages/auth-providers/supertokens/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
@@ -3967,19 +3944,6 @@ __metadata:
     svix:
       optional: true
   checksum: 10c0/ac0d1da4990ae1880d266753e45ac97a55a824f5fd93810cc271d7a6a9f5c8a239e6160635841d20b8c365f804a955ab763f2ab7a7ee75e598fad2c7e6d2fd1f
-  languageName: node
-  linkType: hard
-
-"@clerk/clerk-react@npm:5.61.3":
-  version: 5.61.3
-  resolution: "@clerk/clerk-react@npm:5.61.3"
-  dependencies:
-    "@clerk/shared": "npm:^3.47.2"
-    tslib: "npm:2.8.1"
-  peerDependencies:
-    react: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
-    react-dom: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
-  checksum: 10c0/b8a4e14edfa98e6882e104cdede0f729e923b9e98e0d20b951fa8a07cc2d5efe1b53a5abf9cbfd8d4221c8366d34ad11fd97045b29dc66ca1ac20134bc663ef7
   languageName: node
   linkType: hard
 
@@ -15284,7 +15248,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dedent@npm:^1.0.0":
+"dedent@npm:1.5.3, dedent@npm:^1.0.0":
   version: 1.5.3
   resolution: "dedent@npm:1.5.3"
   peerDependencies:
