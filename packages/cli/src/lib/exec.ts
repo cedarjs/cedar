@@ -80,18 +80,15 @@ export async function runScriptFunction({
       nodeRunnerEnv: {},
     },
     resolve: {
+      // `$api/` and `api/` imports are handled by
+      // cedarjsResolveCedarStyleImportsPlugin below, which also resolves
+      // Cedar's directory named modules (`$api/src/services/posts` ->
+      // posts/posts.ts) and leaves an actual `api` npm package alone. The web
+      // side equivalents have no plugin support, so they stay aliases
       alias: [
-        {
-          find: /^\$api\//,
-          replacement: getPaths().api.base + '/',
-        },
         {
           find: /^\$web\//,
           replacement: getPaths().web.base + '/',
-        },
-        {
-          find: /^api\//,
-          replacement: getPaths().api.base + '/',
         },
         {
           find: /^web\//,
