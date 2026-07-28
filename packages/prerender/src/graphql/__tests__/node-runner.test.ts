@@ -241,9 +241,13 @@ describe('NodeRunner', () => {
 
   describe('plugin functionality verification', () => {
     it('uses cedarImportDirPlugin to handle directory glob imports', async () => {
+      // The module has to live inside the api workspace for the import-dir
+      // plugin to resolve its `src/` glob against the api base path
       const modulePath = path.join(
         fixturesDir,
-        'test-modules',
+        'cedar-app',
+        'api',
+        'src',
         'import-dir-module.js',
       )
 
