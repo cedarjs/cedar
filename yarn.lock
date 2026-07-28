@@ -3612,7 +3612,7 @@ __metadata:
     graphql: "npm:16.14.2"
     line-column: "npm:1.0.2"
     lodash: "npm:4.18.1"
-    lru-cache: "npm:11.3.6"
+    lru-cache: "npm:11.5.2"
     smol-toml: "npm:1.6.1"
     ts-morph: "npm:23.0.0"
     typescript: "npm:5.9.3"
@@ -21331,10 +21331,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lru-cache@npm:11.3.6, lru-cache@npm:^11.0.0, lru-cache@npm:^11.0.1, lru-cache@npm:^11.1.0, lru-cache@npm:^11.2.1, lru-cache@npm:^11.2.4":
-  version: 11.3.6
-  resolution: "lru-cache@npm:11.3.6"
-  checksum: 10c0/3afe3e3000e424c18b640dcea5776b5c1de8684b7dac9718d58792dff1a4692b38cc14e263cbb41bdab98ffcf5408f003b33133b179ce5d271284be72a3ff2a9
+"lru-cache@npm:11.5.2, lru-cache@npm:^11.0.0, lru-cache@npm:^11.0.1, lru-cache@npm:^11.1.0, lru-cache@npm:^11.2.1, lru-cache@npm:^11.2.4":
+  version: 11.5.2
+  resolution: "lru-cache@npm:11.5.2"
+  checksum: 10c0/ece1ad731f5b655e85d67047d04bfc13823dc77aa61c5454924a9869ba600a0104e39cc33d726021feef812bc347ca34a5608a5eb1972a5dd0870b7ecd42c3f2
   languageName: node
   linkType: hard
 
