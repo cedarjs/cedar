@@ -80,7 +80,7 @@
     "http-proxy-middleware": "3.0.7",
     "isbot": "5.2.1",
     "magic-string": "0.30.21",
-    "oxc-parser": "0.137.0",
+    "oxc-parser": "0.141.0",
     "react": "19.2.3",
     "react-server-dom-webpack": "19.2.7",
     "unimport": "5.7.0",
