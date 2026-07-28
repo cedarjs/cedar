@@ -277,8 +277,8 @@ While `build`'s `handler` is too long to reproduce here in full, to get the poin
 
 export const handler = async ({
   side = ['api', 'web'],
+  prerender = true,
   verbose = false,
-  stats = false,
 }) => {
 
   ...
