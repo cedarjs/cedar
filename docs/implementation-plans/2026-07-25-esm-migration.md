@@ -1,19 +1,14 @@
 Here's the breakdown of the 74 packages in the CedarJS monorepo:
 
-Dual Mode – CJS + ESM (5)
+Dual Mode – CJS + ESM (3)
 
-- eslint-config
 - prerender
 - project-config
-- record
 - testing
 
-CJS Only (2)
+CJS Only (0)
 
-- cookie-jar
-- server-store
-
-ESM Only (67)
+ESM Only (71)
 
 - cli
 - codemods
@@ -82,20 +77,34 @@ ESM Only (67)
 - graphql-server (Tier 3, see "Dual Mode -> ESM Only: Tier 3" below)
 - storage (Tier 3, see "Dual Mode -> ESM Only: Tier 3" below)
 - api-server (Tier 3, see "Dual Mode -> ESM Only: Tier 3" below)
+- eslint-config (via #2244, unrelated to this migration — see "Dual Mode ->
+  ESM Only: the unblocked stragglers" below)
+- cookie-jar (see "Dual Mode -> ESM Only: the unblocked stragglers" below)
+- server-store (see "Dual Mode -> ESM Only: the unblocked stragglers" below)
+- record (see "Dual Mode -> ESM Only: the unblocked stragglers" below)
 
-Summary: Of the 74 packages, 5 are dual mode (CJS + ESM), 2 are CJS-only, and
-67 are ESM-only. The Dual Mode pool most recently dropped from 9 to 5 with the
-Tier 3 batch (`api`, `graphql-server`, `storage`, `api-server` — see "Dual
-Mode -> ESM Only: Tier 3" below); `project-config` was researched and
-prototyped as part of the same batch but reverted and stays dual mode (see
-that section for why). Of the 6 packages that were previously miscategorized as
+Summary: Of the 74 packages, 3 are dual mode (CJS + ESM), 0 are CJS-only, and
+71 are ESM-only. The Dual Mode pool dropped from 9 to 5 with the Tier 3 batch
+(`api`, `graphql-server`, `storage`, `api-server` — see "Dual Mode -> ESM
+Only: Tier 3" below; `project-config` was researched and prototyped as part
+of the same batch but reverted and stays dual mode, see that section for
+why), then from 5 to 3 with `record` (see "Dual Mode -> ESM Only: the
+unblocked stragglers" below); the last 2 CJS-only packages, `cookie-jar` and
+`server-store`, converted to ESM-only in the same round, following through on
+the prediction made when `router`/`web` went ESM-only in Tier 2 that doing so
+would remove their blocker. `eslint-config` also left the Dual Mode pool, but
+not via this migration — a separate PR (#2244) dropped legacy `.eslintrc`
+support entirely, which removed the reason for its CJS entry point as a side
+effect; see "the unblocked stragglers" below. Of the 6 packages that were
+previously miscategorized as
 Dual Mode but were actually CJS-only the whole time (`babel-config`,
 `cookie-jar`, `forms`, `jobs`, `ogimage-gen`, `server-store` — see the
-correction below), 4 have now been converted to ESM-only (see "CJS Only ->
-ESM Only: the 6 miscategorized packages" below); `cookie-jar` and
-`server-store` are a deliberate exception, held back pending a decision (see
-below) — same shape as the `prerender` exception, but discovered later, on
-its own PR, after CI (not local verification) caught it. Of the packages
+correction below), all 6 have now been converted to ESM-only (see "CJS Only ->
+ESM Only: the 6 miscategorized packages" below, and "the unblocked
+stragglers" below for `cookie-jar`/`server-store` specifically — they were
+held back at first, same shape as the `prerender` exception, but discovered
+later, on their own PR, after CI (not local verification) caught it; that
+block cleared once `router`/`web` went ESM-only). Of the packages
 that were genuinely CJS-only in the original inventory, all 27 have now been
 converted to ESM-only, and the Dual Mode pool has gone from 23 packages down
 to 9 (see "Dual Mode -> ESM Only" below) — most were dual mode from a
@@ -644,6 +653,11 @@ of "does anything actually `require()` this synchronously in a way Node 24
 can't handle" investigation the other conversions got — just at
 higher stakes, and out of scope here. Worth its own round when it comes up.
 
+**Update: this prediction came true.** `router` and `web` went ESM-only in
+Tier 2 (below), and `cookie-jar`/`server-store` converted with zero code
+changes as predicted — see "Dual Mode -> ESM Only: the unblocked stragglers"
+near the end of this doc.
+
 ## Dual Mode -> ESM Only: Tier 3 (`api`, `graphql-server`, `storage`, `api-server`)
 
 Converted the api-side Tier 3 batch scoped above, plus `api-server` (added to
@@ -929,3 +943,105 @@ tarball-`yarn install` workflow against `local-testing-project`/
   `local-testing-project-live`, and the repo-root `yarn.lock` (beyond the
   legitimate `bin` field path changes) was reverted before finishing, per
   the established workflow note that this churn shouldn't be committed.
+
+## Dual Mode -> ESM Only: the unblocked stragglers (`cookie-jar`, `server-store`, `record`)
+
+After Tier 3 (#2254), a fresh pass over the remaining 7 non-ESM-only packages
+(`eslint-config`, `prerender`, `project-config`, `record`, `testing`,
+`cookie-jar`, `server-store`) re-verified each against the current repo state
+rather than trusting this doc's older reasoning. Three turned out to be
+real, low-risk conversions; the other four are addressed below.
+
+- **`cookie-jar` and `server-store`**: the doc's own prediction (just above)
+  held up exactly. Confirmed fresh: neither `packages/router` nor
+  `packages/web` has a `tsconfig.cjs.json` anymore, the two files originally
+  cited as the blocker (`packages/web/src/server/{MiddlewareRequest,
+  MiddlewareResponse}.ts`'s `CookieJar` import, `packages/router/src/rsc/
+ServerRouter.tsx`'s `server-store` import) still exist and still do the same
+  synchronous, hot-path value-imports, and no other package with a
+  surviving separate CJS `.d.ts` build (`prerender`, `testing`,
+  `project-config`) imports either package. Converted with zero code
+  changes, exactly as predicted: `package.json` `"type"` flipped to
+  `module`, `build.mts` switched from `format: 'cjs'` to `format: 'esm'`
+  (both packages use a single flat `exports` object with `types`/`default`
+  keys — no `import`/`require` split existed to collapse), and
+  `tsconfig.json`'s `extends` moved from `../../tsconfig.cjs-build-base.json`
+  to `../../tsconfig.build.base.json`. Neither package's `src/` has any
+  `require()`/`__dirname`, and neither is referenced anywhere in
+  `@cedarjs/testing/src`, so — unlike `project-config` in Tier 3 — there was
+  no Jest-preset carve-out question to consider at all.
+- **`record`**: no real blocker found — it was dual mode purely as a leftover
+  of the same mechanical Babel-to-esbuild tooling migration that produced
+  the original 23-package Dual Mode pool, not a deliberate hold-back. It has
+  no `tsconfig.json` at all (ships no type declarations, unusually, and
+  isn't in the root `tsconfig.json`'s project references), no
+  `require()`/`__dirname` in `src/`, and nothing in the monorepo lists
+  `@cedarjs/record` as a real dependency — its only consumers are in
+  `packages/cli`: a generated-user-code template
+  (`generate/model/templates/model.js.template`, same safe category as the
+  `auth-*-api` conversions) and two call sites that already use dynamic
+  `await import('@cedarjs/record')`. Converted by dropping the CJS `build()`
+  pass and `insertCommonJsPackageJson()` call from `build.mts`, and
+  collapsing `package.json`'s `exports["."]` (previously an `import`/
+  `default`-to-CJS split, plus a separate `main`/`module` split) down to a
+  single string path, mirroring `main`.
+
+**Not converted, confirmed still blocked or intentionally left:**
+
+- **`prerender`**: unchanged since Tier 2 — `src/runPrerender.tsx` (Babel-
+  register hooks + `require()`) and `src/runPrerenderEsm.tsx`
+  (`NodeRunner`/`buildAndImport()`) are still genuinely different
+  implementations, not a mechanical dual build. Still a real product
+  decision, still out of scope for a routine pass.
+- **`testing`**: re-investigated more carefully than the doc's earlier
+  "no changes needed" note implied, and turns out to be more blocked than
+  that note suggested. That earlier finding (from the `router`/`web`/`auth`
+  Tier 2 round) only established that `testing`'s **type-declaration**
+  build (`tsc --build tsconfig.cjs.json`) doesn't hit `TS1479` — it said
+  nothing about the **JS runtime** build, which has its own, harder problem:
+  `testing`'s `build.mts` rewrites relative imports in its compiled CJS
+  output into absolute `@cedarjs/testing/dist/cjs/...` self-references
+  (`build.mts`'s `replaceImportsInFile` step), specifically so the preset
+  files copied out to `config/jest/{api,web}/*` — the actual files a
+  generated project's Jest config points at — can still resolve their own
+  sibling modules after being moved out of `dist/cjs/config`. Concretely,
+  the compiled `config/jest/api/jest.setup.js` does
+  `require("@cedarjs/testing/dist/cjs/api/scenario.js")`, and
+  `config/jest/web/jest.setup.js` does the equivalent for
+  `dist/cjs/web/{findCellMocks,mockRequests}.js` — both are real `exports`
+  subpaths in `testing`'s own `package.json`, that exist purely to support
+  this. If `testing` went ESM-only there would be no `dist/cjs` to copy from
+  or require, and even repointing these requires at the (sole) ESM `dist/`
+  output wouldn't help: Jest 29 implements its **own** CJS-only module
+  loader (`jest-runtime`, not Node's native `Module.prototype.require`), so
+  Node 24's `require(esm)` — which lives specifically in Node's own loader —
+  doesn't apply inside a Jest-loaded file at all. A `require()` of real ESM
+  from inside `jest.setup.js` hits a hard syntax error, independent of Node
+  version, in the literal entry point Jest loads before any test runs — not
+  something the `transformIgnorePatterns` carve-out trick can fix, since
+  that trick only reaches test-imported library code, not Jest's own preset
+  infrastructure files. Genuinely blocked, not just deprioritized.
+- **`project-config`**: unchanged, confirmed still dual-mode per the Tier 3
+  revert (maintainer preference against baking Jest-runtime-specific
+  `createRequire()` reasoning into shared framework source).
+- **`eslint-config`**: no longer dual mode, but not through this migration.
+  A separate, unrelated PR (#2244, "Remove support for legacy ESLint config
+  format") deleted `packages/eslint-config/index.js`/`shared.js` (the
+  legacy `.eslintrc`-format CJS entry points) outright and collapsed
+  `exports` to a single ESM-only condition — as a product decision to stop
+  supporting the legacy config format, not as an ESM-migration mechanical
+  conversion. This doc's package inventory just hadn't caught up; no work
+  was needed here beyond updating the lists above.
+
+Verified with the same rigor as prior batches: `yarn build:clean` (0% Nx
+cache — `git clean -fdx` + reinstall + build from scratch), `yarn lint`,
+`yarn nx run-many -t test --skip-nx-cache` (60/60 projects), and
+`yarn test:types`, all clean. No `local-testing-project` real-project smoke
+test was needed this round (unlike Tier 3): `cookie-jar`/`server-store` are
+SSR/RSC-only server primitives never reached through either Jest preset
+(confirmed by grep against `@cedarjs/testing/src`), and `router`/`web`'s
+consumption of them was already via plain `import` statements before this
+change (both packages were already ESM-only themselves) — so the actual
+runtime resolution path for their real consumers is unchanged, and the only
+thing this batch could have broken was the `TS1479` type-checking path,
+which the clean build already exercises directly.

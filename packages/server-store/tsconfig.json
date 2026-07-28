@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.cjs-build-base.json",
+  "extends": "../../tsconfig.build.base.json",
   "include": ["src"],
   "references": [
     { "path": "../auth/tsconfig.build.json" },

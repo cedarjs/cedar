@@ -9,13 +9,9 @@
   "license": "MIT",
   "type": "module",
   "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "default": "./dist/cjs/index.js"
-    }
+    ".": "./dist/index.js"
   },
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/index.js",
+  "main": "./dist/index.js",
   "files": [
     "dist"
   ],
