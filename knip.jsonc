@@ -50,6 +50,11 @@
       // directly in generated code (api/src/directives/*) without declaring
       // it themselves, relying on it hoisting in via @cedarjs/core.
       "ignoreDependencies": ["graphql-tag"]
+    },
+    "packages/vite": {
+      // publint: only invoked via `concurrently`'s `yarn:publint` job syntax
+      // in the "check:package" script, which knip doesn't parse.
+      "ignoreDependencies": ["publint"]
     }
   }
 }
