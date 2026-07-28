@@ -72,6 +72,19 @@ function warn(title: string, lines: string[]) {
   }
 }
 
+/**
+ * Like `warn`, but for things that don't break anything and that the user can
+ * safely ignore. Deliberately not colored, so it doesn't compete with the
+ * warnings about actual breaking changes.
+ */
+function info(title: string, lines: string[]) {
+  console.log(title + '\n')
+
+  for (const line of lines) {
+    console.log(line + '\n')
+  }
+}
+
 async function main() {
   const filesWithGetCommonPlugins: string[] = []
   const filesWithNodePolyfills: string[] = []
@@ -343,6 +356,42 @@ async function main() {
           : 'Missing vite version pin',
         lines,
       )
+    }
+  }
+
+  const webPackageJsonPath = path.join(projectPaths.web.base, 'package.json')
+
+  if (fs.existsSync(webPackageJsonPath)) {
+    // Cast is safe enough here: we only do optional-chained lookups on the
+    // parsed structure
+    const webPackageJson = JSON.parse(
+      await fs.promises.readFile(webPackageJsonPath, 'utf8'),
+    ) as PackageJson
+
+    const hasPostcssLoader =
+      !!webPackageJson.devDependencies?.['postcss-loader'] ||
+      !!webPackageJson.dependencies?.['postcss-loader']
+
+    if (hasPostcssLoader) {
+      const packageManager = getPackageManager()
+
+      const removeCommand =
+        packageManager === 'pnpm'
+          ? 'pnpm --filter web remove postcss-loader'
+          : packageManager === 'npm'
+            ? 'npm uninstall -w web postcss-loader'
+            : 'yarn workspace web remove postcss-loader'
+
+      info('You can remove postcss-loader', [
+        'Found postcss-loader in ' +
+          path.relative(projectRoot, webPackageJsonPath),
+        'It is a webpack loader left over from before the move to Vite, and\n' +
+          'does nothing in a Vite build. `yarn cedar setup ui tailwindcss` no\n' +
+          'longer installs it. Nothing breaks if you keep it, but you can\n' +
+          'remove it with:\n' +
+          '  ' +
+          removeCommand,
+      ])
     }
   }
 

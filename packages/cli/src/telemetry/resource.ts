@@ -112,7 +112,6 @@ export async function getResources() {
     complexity,
     sides,
     experiments: JSON.stringify(experiments),
-    webBundler: 'vite', // Hardcoded because this is now the only supported bundler
     uid: UID,
   }
 }
