@@ -1,8 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { parse, Lang } from '@ast-grep/napi'
 import MagicString from 'magic-string'
+import { parseSync } from 'oxc-parser'
 import { normalizePath } from 'vite'
 import type { Plugin } from 'vite'
 
@@ -34,46 +34,38 @@ export function cedarImportDirPlugin(): Plugin {
         return null
       }
 
-      const ext = path.extname(id)
-      const language =
-        ext === '.ts' || ext === '.tsx' ? Lang.TypeScript : Lang.JavaScript
-
-      let ast
+      let program
       try {
-        ast = parse(language, code)
+        program = parseSync(id, code).program
       } catch (error) {
         console.warn('Failed to parse file:', id)
         console.warn(error)
         return null
       }
 
-      const root = ast.root()
       let hasTransformations = false
       const s = new MagicString(code)
 
-      // Find all import statements with glob patterns
-      const globImports = root.findAll({
-        rule: {
-          pattern: 'import $DEFAULT_IMPORT from $SOURCE',
-        },
-      })
-
-      for (const importNode of globImports) {
-        const sourceNode = importNode.getMatch('SOURCE')
-        const defaultImportNode = importNode.getMatch('DEFAULT_IMPORT')
-
-        if (!sourceNode || !defaultImportNode) {
+      // Find all default-import statements with glob patterns
+      for (const node of program.body) {
+        if (node.type !== 'ImportDeclaration') {
           continue
         }
 
-        // Remove quotes
-        const sourceValue = sourceNode.text().slice(1, -1)
+        const defaultSpecifier = node.specifiers.find(
+          (specifier) => specifier.type === 'ImportDefaultSpecifier',
+        )
+        if (!defaultSpecifier) {
+          continue
+        }
+
+        const sourceValue = node.source.value
         if (!sourceValue.includes('/**/')) {
           continue
         }
 
         hasTransformations = true
-        const importName = defaultImportNode.text()
+        const importName = defaultSpecifier.local.name
 
         const importGlob = importStatementPath(sourceValue)
         let cwd = path.dirname(id)
@@ -138,8 +130,7 @@ export function cedarImportDirPlugin(): Plugin {
           }
 
           // Overwrite the entire import statement with the replacement
-          const range = importNode.range()
-          s.overwrite(range.start.index, range.end.index, replacement.trim())
+          s.overwrite(node.start, node.end, replacement.trim())
         } catch (error) {
           // If there's an error with glob matching, keep the original import
           console.warn(`Failed to process glob import: ${sourceValue}`, error)
