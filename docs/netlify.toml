@@ -227,31 +227,21 @@ from = "/dbauth"
 to = "/docs/authentication#self-hosted-auth-installation-and-setup"
 status = 301
 
-# v5 redirects
+# v4 redirects
 
 [[redirects]]
-from = "/docs/5.0/*"
-to = "/docs/5.x/:splat"
+from = "/docs/4.0/*"
+to = "/docs/4.x/:splat"
 status = 301
 
 [[redirects]]
-from = "/docs/5.1/*"
-to = "/docs/5.x/:splat"
+from = "/docs/4.1/*"
+to = "/docs/4.x/:splat"
 status = 301
 
 [[redirects]]
-from = "/docs/5.2/*"
-to = "/docs/5.x/:splat"
-status = 301
-
-[[redirects]]
-from = "/docs/5.3/*"
-to = "/docs/5.x/:splat"
-status = 301
-
-[[redirects]]
-from = "/docs/5.4/*"
-to = "/docs/5.x/:splat"
+from = "/docs/4.2/*"
+to = "/docs/4.x/:splat"
 status = 301
 
 # Redirects for "Configuring Fastify" after the server file was released in v7
