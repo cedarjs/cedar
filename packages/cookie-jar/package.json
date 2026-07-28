@@ -7,7 +7,7 @@
     "directory": "packages/cookie-jar"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "exports": {
     "types": "./dist/CookieJar.d.ts",
     "default": "./dist/CookieJar.js"
