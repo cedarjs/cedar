@@ -2,8 +2,9 @@ import type { Plugin as RollupPlugin } from 'rollup'
 
 /**
  * A Rollup plugin that ignores imports of HTML and CSS files by replacing them with empty modules.
- * This is useful when bundling code that imports these files for webpack or other bundlers,
- * but you want Rollup to ignore them during the build process.
+ * This is useful when bundling code that imports these files for the browser
+ * build (where Vite handles them), but you want Rollup to ignore them during
+ * the build process.
  *
  * @param options Configuration options
  * @returns Rollup plugin

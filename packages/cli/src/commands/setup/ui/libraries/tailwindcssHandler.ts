@@ -110,7 +110,6 @@ export const handler = async ({
 
   const webWorkspacePackages = [
     'postcss',
-    'postcss-loader',
     'tailwindcss@^3.4.17',
     'autoprefixer',
   ]

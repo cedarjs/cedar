@@ -16,15 +16,12 @@ You can set up every component as a story and tweak it within Storybook. And for
 CedarJS offers a Storybook integration leveraging Storybook's [Framework Packages](https://storybook.js.org/docs/7/configure/integration/frameworks),
 using Vite as its bundler to align with your production project.
 
-An older version of our Storybook integration used Webpack as its bundler — For more information on the differences, see [this forum post](https://community.redwoodjs.com/t/storybook-in-redwood-is-moving-to-vite/7212).
-If you were previously using this older version, see [this section](#migrating-from-storybook-webpack-to-storybook-vite).
-
 ## Getting Started with Storybook
 
-You can start Storybook with `yarn rw storybook`:
+You can start Storybook with `yarn cedar storybook`:
 
 ```
-yarn rw storybook
+yarn cedar storybook
 ```
 
 If this is your first time running Storybook:
@@ -41,13 +38,3 @@ Once Storybook is all set up, it'll spin up on localhost port `7910` and open yo
 ## Configuring Storybook
 
 To configure Storybook, please follow [the official Storybook docs](https://storybook.js.org/docs/7/configure).
-
-## Migrating from Storybook Webpack to Storybook Vite
-
-An older version of our Storybook integration relied on Webpack. If you're just getting started with Storybook, this does not apply to you! 😊
-
-If you've been using Storybook for a while, you might need to take some manual steps in upgrading to the new version.
-
-If you don't have any custom [Storybook configuration](https://cedarjs.com/docs/storybook/#configuring-storybook), you should be good to go - no changes needed. The Out of Box experience should be the same, and please [let us know](https://github.com/cedarjs/cedar/issues/new?assignees=&labels=bug%2Fneeds-info&projects=&template=bug-report.yml&title=%5BBug%5D%3A+) if you run into any issues.
-
-If you do have custom Storybook configuration, then you'll need to manually migrate it over to the new files. For example, if you've got any global decorators, you can now just follow the official Storybook docs on that: https://storybook.js.org/docs/7/writing-stories/decorators#global-decorators
