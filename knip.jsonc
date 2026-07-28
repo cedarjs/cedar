@@ -55,6 +55,36 @@
       // publint: only invoked via `concurrently`'s `yarn:publint` job syntax
       // in the "check:package" script, which knip doesn't parse.
       "ignoreDependencies": ["publint"]
+    },
+    "packages/auth-providers/*/{api,setup,middleware}": {
+      // publint: only invoked via `concurrently`'s `yarn:publint` job syntax
+      // in the "check:package" script, which knip doesn't parse.
+      "ignoreDependencies": ["publint"]
+    },
+    "packages/auth-providers/dbAuth/setup": {
+      // No publint here -- this package has no check:package/publint script
+      // at all, unlike its sibling auth-provider packages.
+    },
+    "packages/auth-providers/dbAuth/middleware": {
+      // publint: see the general */{api,setup,middleware} entry above.
+      // ts-toolbelt: not imported directly, but needed for `tsc --build` --
+      // index.ts imports a type from @cedarjs/graphql-server that re-exports
+      // @cedarjs/api's types.d.ts wholesale, which itself imports from
+      // ts-toolbelt. TS must resolve it to load that .d.ts at all.
+      "ignoreDependencies": ["publint", "ts-toolbelt"]
+    },
+    "packages/auth-providers/supertokens/web": {
+      // publint: see the general */web entry below -- react/@types/react
+      // aren't listed here because, unlike the other auth providers, knip
+      // doesn't flag them as unused for this package.
+      "ignoreDependencies": ["publint"]
+    },
+    "packages/auth-providers/*/web": {
+      // publint: see above.
+      // react, @types/react: not imported by shipped source (these provider
+      // packages have no UI of their own), but satisfy @testing-library/react's
+      // peerDependencies so the test suite runs.
+      "ignoreDependencies": ["publint", "react", "@types/react"]
     }
   }
 }
