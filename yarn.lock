@@ -3373,7 +3373,7 @@ __metadata:
     "@graphql-yoga/redis-event-target": "npm:3.0.3"
     "@graphql-yoga/subscription": "npm:5.0.5"
     "@n1ru4l/graphql-live-query": "npm:0.10.0"
-    "@n1ru4l/in-memory-live-query-store": "npm:0.10.0"
+    "@n1ru4l/in-memory-live-query-store": "npm:0.11.0"
     graphql: "npm:16.14.2"
     graphql-yoga: "npm:5.21.2"
     ioredis: "npm:5.11.1"
@@ -7535,7 +7535,29 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@n1ru4l/in-memory-live-query-store@npm:0.10.0, @n1ru4l/in-memory-live-query-store@npm:^0.10.0":
+"@n1ru4l/graphql-live-query@npm:0.11.0":
+  version: 0.11.0
+  resolution: "@n1ru4l/graphql-live-query@npm:0.11.0"
+  peerDependencies:
+    graphql: ^15.4.0 || ^16.0.0
+  checksum: 10c0/e0198bab4f83bd6a83c32abff926fb0c37f34f8e481b15d92239604dadac25f20b0f2a0fe6d3da5cc9913b951b1ac85756bf5d6a36695805b268b02a4c726d30
+  languageName: node
+  linkType: hard
+
+"@n1ru4l/in-memory-live-query-store@npm:0.11.0":
+  version: 0.11.0
+  resolution: "@n1ru4l/in-memory-live-query-store@npm:0.11.0"
+  dependencies:
+    "@graphql-tools/utils": "npm:^8.5.2"
+    "@n1ru4l/graphql-live-query": "npm:0.11.0"
+    "@repeaterjs/repeater": "npm:^3.0.4"
+  peerDependencies:
+    graphql: ^15.4.0 || ^16.0.0
+  checksum: 10c0/0ddc46507278810cf286acaf68b0a0f84400d8f8bfc9addb8eabbd9f04282b7bfd470980fff43120588cf95e4d2697690ec2be37d24439f43e1a7ec079bbaea9
+  languageName: node
+  linkType: hard
+
+"@n1ru4l/in-memory-live-query-store@npm:^0.10.0":
   version: 0.10.0
   resolution: "@n1ru4l/in-memory-live-query-store@npm:0.10.0"
   dependencies:
