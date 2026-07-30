@@ -62,6 +62,35 @@ describe('buildCedarContext', () => {
     expect(ctx.query.getAll('tag')).toEqual(['cedar', 'framework'])
   })
 
+  // Function routes never pass an auth decoder, so there's nothing to decode
+  // and no reason to parse the `Authorization` header. Consumers that always
+  // send `auth-provider` used to get a 500 out of routes that don't use auth.
+  it('skips auth state for routes without an auth decoder', async () => {
+    const request = new Request('http://localhost:8911/tokenFromApiKey', {
+      headers: {
+        'auth-provider': 'custom',
+      },
+    })
+
+    const ctx = await buildCedarContext(request, {
+      params: { routeName: 'tokenFromApiKey' },
+    })
+
+    expect(ctx.serverAuthState).toBeUndefined()
+  })
+
+  it('skips auth state when the auth decoder array is empty', async () => {
+    const request = new Request('http://localhost:8911/tokenFromApiKey', {
+      headers: {
+        'auth-provider': 'custom',
+      },
+    })
+
+    const ctx = await buildCedarContext(request, { authDecoder: [] })
+
+    expect(ctx.serverAuthState).toBeUndefined()
+  })
+
   it('hydrates auth state when an auth decoder is provided', async () => {
     const authDecoder = vi.fn(async (token: string, type: string) => {
       expect(token).toBe('auth-provider=test; session=token-123')
