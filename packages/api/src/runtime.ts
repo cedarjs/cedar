@@ -83,6 +83,16 @@ const DEFAULT_LAMBDA_CONTEXT: LambdaContext = {
   },
 }
 
+function hasAuthDecoder(
+  authDecoder: BuildCedarContextOptions['authDecoder'],
+): authDecoder is NonNullable<BuildCedarContextOptions['authDecoder']> {
+  if (Array.isArray(authDecoder)) {
+    return authDecoder.length > 0
+  }
+
+  return !!authDecoder
+}
+
 export async function buildCedarContext(
   request: Request,
   options: BuildCedarContextOptions = {},
@@ -98,11 +108,19 @@ export async function buildCedarContext(
   )
   const params = options.params ?? {}
 
-  const serverAuthState = await getAuthenticationContext({
-    authDecoder: options.authDecoder,
-    event: request,
-    context: options.lambdaContext,
-  })
+  // Only GraphQL consumes `serverAuthState`, and it's the only caller that
+  // supplies an auth decoder. Computing it for plain function routes is wasted
+  // work — without a decoder nothing can be decoded, so the payload could only
+  // ever come back with `decoded` set to `null` — and it lets `Authorization`
+  // header parse errors escape and turn requests to functions that don't use
+  // auth at all into 500s.
+  const serverAuthState = hasAuthDecoder(options.authDecoder)
+    ? await getAuthenticationContext({
+        authDecoder: options.authDecoder,
+        event: request,
+        context: options.lambdaContext,
+      })
+    : undefined
 
   return {
     params,
