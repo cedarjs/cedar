@@ -7,7 +7,7 @@ import type {
 import * as cookie from 'cookie'
 import { parse } from 'picoquery'
 
-import { getAuthenticationContext } from './auth/index.js'
+import { getAuthenticationContext, hasAuthDecoder } from './auth/index.js'
 import { requestToBaseEvent } from './transforms.js'
 
 export interface CedarRequestContext {
@@ -81,24 +81,6 @@ const DEFAULT_LAMBDA_CONTEXT: LambdaContext = {
   succeed() {
     return undefined
   },
-}
-
-/**
- * Whether a project has auth configured.
- *
- * An empty decoder array counts as no auth: there's nothing to decode with, so
- * auth state can never be resolved. Anything deciding whether auth is set up
- * has to agree with `buildCedarContext` on this, or they'll disagree about
- * whether a request should have had auth state resolved.
- */
-export function hasAuthDecoder(
-  authDecoder: BuildCedarContextOptions['authDecoder'],
-): authDecoder is NonNullable<BuildCedarContextOptions['authDecoder']> {
-  if (Array.isArray(authDecoder)) {
-    return authDecoder.length > 0
-  }
-
-  return !!authDecoder
 }
 
 export async function buildCedarContext(

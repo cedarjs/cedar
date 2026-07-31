@@ -1,7 +1,7 @@
 import type { Plugin } from 'graphql-yoga'
 
 import type { AuthContextPayload, Decoder } from '@cedarjs/api'
-import { hasAuthDecoder } from '@cedarjs/api/runtime'
+import { hasAuthDecoder } from '@cedarjs/api'
 
 import type { CedarGraphQLContext, GraphQLHandlerOptions } from '../types.js'
 
