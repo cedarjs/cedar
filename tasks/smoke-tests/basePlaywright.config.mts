@@ -34,7 +34,14 @@ export const basePlaywrightConfig: PlaywrightTestConfig = {
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      // `retain-on-failure` keeps a trace.zip (inspectable via
+      // `npx playwright show-trace`) for any failing test and discards it on
+      // pass, which is invaluable for diagnosing flaky Windows CI failures
+      // after the fact. Lives here (rather than in each suite's own
+      // `playwright.config.ts`) because every downstream config does
+      // `{ ...basePlaywrightConfig, use: { baseURL: ... } }`, which would
+      // silently discard a top-level `use.trace` setting via shallow spread.
+      use: { ...devices['Desktop Chrome'], trace: 'retain-on-failure' },
       dependencies: fs.existsSync('./tests/setup.ts') ? ['setup'] : undefined,
     },
 
