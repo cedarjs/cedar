@@ -89,9 +89,6 @@ export async function redwoodFastifyGraphQLServer(
         handler: async (req, reply) => {
           const request = createFetchRequest(req, reply)
           const cedarContext = await buildCedarContext(request, {
-            // Projects without auth set up have no decoder. We still have to
-            // resolve auth state here, before Yoga reads the request body, so
-            // fall back to a decoder that decodes nothing
             authDecoder: graphqlOptions.authDecoder ?? noopAuthDecoder,
           })
 

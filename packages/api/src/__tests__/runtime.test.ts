@@ -94,7 +94,7 @@ describe('buildCedarContext', () => {
 
   // GraphQL routes have to resolve auth state up front even when the project
   // has no auth set up, because `useRedwoodAuthContext`'s fallback runs after
-  // Yoga has consumed the request body — cloning it there throws `unusable`.
+  // Yoga has consumed the request body – cloning it there throws `unusable`.
   // `noopAuthDecoder` is what keeps the resolve eager for those projects.
   it('resolves auth state with `noopAuthDecoder`', async () => {
     const request = new Request('http://localhost:8911/graphql', {
