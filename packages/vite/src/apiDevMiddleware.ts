@@ -69,8 +69,8 @@ interface YogaInstance {
 }
 
 let graphqlYoga: YogaInstance | null = null
-// Kept so the request handler can resolve auth state up front, the same way
-// every other Cedar entry point does
+// Needed per request, not just at init: the request handler builds a Cedar
+// context from the auth decoder these carry
 let graphqlOptions: GraphQLYogaOptions | null = null
 
 let loadApiFunctionsInFlight: Promise<void> | null = null
@@ -535,6 +535,9 @@ export function createApiFetchHandler() {
 
       return getAsyncStoreInstance().run(new Map(), async () => {
         try {
+          // Resolve auth state before Yoga reads the request body. Doing it
+          // afterwards would mean building a Lambda-style event from a
+          // `Request` that's already been consumed, which throws.
           const cedarContext = await buildCedarContext(request, {
             authDecoder: graphqlOptions?.authDecoder,
           })
