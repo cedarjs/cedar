@@ -371,7 +371,7 @@ async function generateGraphQLModule(distPath: string): Promise<string> {
   })
 
   return `
-    import { buildCedarContext, noopAuthDecoder, requestToLegacyEvent } from '@cedarjs/api/runtime';
+    import { buildCedarContext, requestToLegacyEvent } from '@cedarjs/api/runtime';
     import { createGraphQLYoga } from '@cedarjs/graphql-server';
 
     // Inlined bundle of ${path.basename(distPath)} (node_modules kept external)
@@ -427,7 +427,6 @@ async function generateFunctionModule(distPath: string): Promise<string> {
 // checked without pulling the api and graphql-server runtimes into the Vite
 // config process.
 declare const buildCedarContext: typeof apiRuntime.buildCedarContext
-declare const noopAuthDecoder: typeof apiRuntime.noopAuthDecoder
 declare const requestToLegacyEvent: typeof apiRuntime.requestToLegacyEvent
 declare const wrapLegacyHandler: typeof apiRuntime.wrapLegacyHandler
 declare const createGraphQLYoga: typeof graphqlServer.createGraphQLYoga
@@ -549,7 +548,7 @@ function createGraphQLFetch(graphqlOptions: GraphQLYogaOptions) {
   return async function fetch(request: Request) {
     const { yoga } = await getYoga()
     const cedarContext = await buildCedarContext(request, {
-      authDecoder: graphqlOptions?.authDecoder ?? noopAuthDecoder,
+      authDecoder: graphqlOptions?.authDecoder,
     })
     const event = await requestToLegacyEvent(request, cedarContext)
 

@@ -1,8 +1,6 @@
-import type { APIGatewayProxyEvent } from 'aws-lambda'
 import type { Plugin } from 'graphql-yoga'
 
 import type { AuthContextPayload, Decoder } from '@cedarjs/api'
-import { getAuthenticationContext } from '@cedarjs/api'
 
 import type { CedarGraphQLContext, GraphQLHandlerOptions } from '../types.js'
 
@@ -16,24 +14,25 @@ export const useRedwoodAuthContext = (
 ): Plugin<CedarGraphQLContext> => {
   return {
     async onContextBuilding({ context, extendContext }) {
-      let authContext: AuthContextPayload | undefined =
-        context.cedarContext?.serverAuthState
-
-      try {
-        if (!authContext) {
-          const authEvent = getAuthEvent(context)
-
-          authContext = await getAuthenticationContext({
-            authDecoder,
-            event: authEvent,
-            context: context.requestContext,
-          })
-        }
-      } catch (error: any) {
+      // Auth state is resolved when the request enters Cedar, while the
+      // request body is still readable. Resolving it here instead would mean
+      // building a Lambda-style event from a `Request` the GraphQL server has
+      // already consumed, which throws.
+      //
+      // Every Cedar entry point builds a context. A missing one means a custom
+      // GraphQL server that hasn't been updated — better to say so than to
+      // silently serve every request as unauthenticated.
+      if (!context.cedarContext && authDecoder) {
         throw new Error(
-          `Exception in getAuthenticationContext: ${error.message}`,
+          'The GraphQL context has no `cedarContext`, so auth state was ' +
+            'never resolved. A custom GraphQL server has to build one with ' +
+            '`buildCedarContext` from `@cedarjs/api/runtime` and pass it to ' +
+            '`yoga.handle(request, { request, cedarContext })`.',
         )
       }
+
+      const authContext: AuthContextPayload | undefined =
+        context.cedarContext?.serverAuthState
 
       try {
         if (authContext) {
@@ -54,23 +53,4 @@ export const useRedwoodAuthContext = (
       }
     },
   }
-}
-
-function getAuthEvent(
-  context: CedarGraphQLContext,
-): APIGatewayProxyEvent | Request {
-  if (context.request) {
-    return context.request
-  }
-
-  if (context.event) {
-    return context.event
-  }
-
-  // This should never happen in practice. Either a fetch-native Request
-  // or a Lambda event is always present in the GraphQL context.
-  throw new Error(
-    'GraphQL context contains neither a fetch-native Request nor a Lambda ' +
-      'event. Please report this as a Cedar bug.',
-  )
 }

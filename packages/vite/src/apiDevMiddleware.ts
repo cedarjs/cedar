@@ -69,6 +69,9 @@ interface YogaInstance {
 }
 
 let graphqlYoga: YogaInstance | null = null
+// Kept so the request handler can resolve auth state up front, the same way
+// every other Cedar entry point does
+let graphqlOptions: GraphQLYogaOptions | null = null
 
 let loadApiFunctionsInFlight: Promise<void> | null = null
 let needsReloadAfterInFlight = false
@@ -188,10 +191,12 @@ async function internalLoadApiFunctions(viteServer: ViteDevServer) {
   if (extractedGraphqlOptions) {
     const { yoga } = await createGraphQLYoga(extractedGraphqlOptions)
     graphqlYoga = yoga
+    graphqlOptions = extractedGraphqlOptions
   } else {
     // Reset so deleted/missing graphql.ts is reflected immediately (i.e. during
     // a dev session)
     graphqlYoga = null
+    graphqlOptions = null
   }
 
   console.log(
@@ -530,7 +535,11 @@ export function createApiFetchHandler() {
 
       return getAsyncStoreInstance().run(new Map(), async () => {
         try {
-          return await yoga.handle(request, { request })
+          const cedarContext = await buildCedarContext(request, {
+            authDecoder: graphqlOptions?.authDecoder,
+          })
+
+          return await yoga.handle(request, { request, cedarContext })
         } catch (e) {
           if (
             !!e &&
