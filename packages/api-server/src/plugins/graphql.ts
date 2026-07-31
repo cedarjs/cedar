@@ -10,7 +10,7 @@ import type {
   HTTPMethods,
 } from 'fastify'
 
-import { buildCedarContext } from '@cedarjs/api/runtime'
+import { buildCedarContext, noopAuthDecoder } from '@cedarjs/api/runtime'
 import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers.js'
@@ -89,7 +89,7 @@ export async function redwoodFastifyGraphQLServer(
         handler: async (req, reply) => {
           const request = createFetchRequest(req, reply)
           const cedarContext = await buildCedarContext(request, {
-            authDecoder: graphqlOptions.authDecoder,
+            authDecoder: graphqlOptions.authDecoder ?? noopAuthDecoder,
           })
 
           // Phase 1 of transitional context bridge: pass both the Fetch-native
