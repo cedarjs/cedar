@@ -49,6 +49,43 @@ test('useAuth hook, auth redirects checks', async ({ page }) => {
   await expect(page.getByText('Log In')).toBeVisible()
 })
 
+const unauthenticatedFunctions = [
+  { name: 'hello', route: '/.api/functions/hello', data: 'hello from cedar' },
+  {
+    name: 'legacyHello',
+    route: '/.api/functions/legacyHello',
+    data: 'hello from legacy handler',
+  },
+]
+
+for (const fn of unauthenticatedFunctions) {
+  test(`${fn.name} ignores an auth-provider header with no token`, async ({
+    request,
+  }) => {
+    const response = await request.get(fn.route, {
+      headers: { 'auth-provider': 'dbAuth' },
+    })
+
+    expect(response.status()).toBe(200)
+    expect((await response.json()).data).toBe(fn.data)
+  })
+
+  test(`${fn.name} ignores an API key sent with no auth scheme`, async ({
+    request,
+  }) => {
+    const response = await request.get(fn.route, {
+      headers: {
+        'auth-provider': 'dbAuth',
+        // Not `<scheme> <token>`, so it can't be parsed as an auth header
+        authorization: 'some-raw-api-key',
+      },
+    })
+
+    expect(response.status()).toBe(200)
+    expect((await response.json()).data).toBe(fn.data)
+  })
+}
+
 const post = {
   title: 'Hello world! Soft kittens are the best.',
   body: 'Bazinga, bazinga, bazinga',
