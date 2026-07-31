@@ -80,6 +80,30 @@ describe('cedar dev --ud', () => {
       data: { hello: 'Hello from Cedar GraphQL' },
     })
 
+    // 6b. GraphQL with an auth-provider cookie, on a fixture that has no auth
+    // set up. A stale cookie left on localhost by another project is enough to
+    // send this.
+    //
+    // The dev server resolves auth state in `useRedwoodAuthContext` rather than
+    // up front, and unlike `cedar serve api --ud` that happens while the
+    // request body is still readable — so this passes today. It's here to keep
+    // it that way, not because it ever failed.
+    const gqlAuthProviderRes = await fetchJson(
+      `${BASE_URL}/.api/functions/graphql`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          cookie: 'auth-provider=dbAuth',
+        },
+        body: JSON.stringify({ query: '{ hello }' }),
+      },
+    )
+    expect(gqlAuthProviderRes.status).toEqual(200)
+    expect(gqlAuthProviderRes.body).toMatchObject({
+      data: { hello: 'Hello from Cedar GraphQL' },
+    })
+
     // 7. HMR: modify the API function source and expect the change to be reflected
     const helloSrcPath = `${FIXTURE_PATH}/api/src/functions/hello.ts`
     const originalSrc = fs.readFileSync(helloSrcPath, 'utf-8')
