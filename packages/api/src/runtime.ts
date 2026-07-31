@@ -217,7 +217,6 @@ export async function requestToLegacyEvent(
   return {
     ...base,
     queryStringParameters,
-    multiValueQueryStringParameters: toMultiValueQueryStringParameters(url),
     pathParameters:
       Object.keys(ctx.params).length > 0 ? ctx.params : base.pathParameters,
   }
@@ -277,22 +276,4 @@ export function legacyResultToResponse(result: LegacyHandlerResult): Response {
     status,
     headers,
   })
-}
-
-function toMultiValueQueryStringParameters(
-  url: URL,
-): Record<string, string[]> | null {
-  const values = new Map<string, string[]>()
-
-  for (const [name, value] of url.searchParams.entries()) {
-    const existing = values.get(name) ?? []
-    existing.push(value)
-    values.set(name, existing)
-  }
-
-  if (values.size === 0) {
-    return null
-  }
-
-  return Object.fromEntries(values.entries())
 }
