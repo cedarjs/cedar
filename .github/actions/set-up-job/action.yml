@@ -25,6 +25,17 @@ runs:
   using: composite
 
   steps:
+    - name: 🛡️ Disable Windows Defender real-time scanning
+      # Windows Defender's real-time scanning competes for file handles during
+      # yarn installs and builds, and is a recurring cause of transient
+      # EPERM/EBUSY errors on windows-latest runners (see
+      # docs/implementation-plans/flaky-smoke-tests-investigation.md). These
+      # runners are ephemeral and torn down after the job, so disabling
+      # scanning here is safe.
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: Set-MpPreference -DisableRealtimeMonitoring $true
+
     - name: ⬢ Enable Corepack
       shell: bash
       # Using --force to make this work on Windows
