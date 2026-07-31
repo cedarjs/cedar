@@ -17,7 +17,11 @@ import type {
   CedarRouteRecord,
   LegacyHandler,
 } from '@cedarjs/api/runtime'
-import { buildCedarContext, wrapLegacyHandler } from '@cedarjs/api/runtime'
+import {
+  buildCedarContext,
+  captureRequestBody,
+  wrapLegacyHandler,
+} from '@cedarjs/api/runtime'
 import { getPaths } from '@cedarjs/project-config'
 
 import { requestHandler } from '../requestHandlers/awsLambdaFastify.js'
@@ -230,6 +234,10 @@ export const lambdaRequestHandler = async (
       headers: req.headers as HeadersInit,
       body: requestBody,
     })
+
+    // Handlers consume the body, so anything building a Lambda-style event
+    // from this request afterwards needs it captured here
+    captureRequestBody(request, requestBody ?? '')
 
     const ctx = await buildCedarContext(request, {
       params: {

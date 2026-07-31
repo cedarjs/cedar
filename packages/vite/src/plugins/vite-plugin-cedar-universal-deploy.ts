@@ -363,7 +363,7 @@ async function generateGraphQLModule(distPath: string): Promise<string> {
   })
 
   return `
-    import { buildCedarContext, noopAuthDecoder, requestToLegacyEvent } from '@cedarjs/api/runtime';
+    import { buildCedarContext, captureRequestBodyByCloning, requestToLegacyEvent } from '@cedarjs/api/runtime';
     import { createGraphQLYoga } from '@cedarjs/graphql-server';
 
     // Inlined bundle of ${path.basename(distPath)} (node_modules kept external)
@@ -382,9 +382,13 @@ async function generateGraphQLModule(distPath: string): Promise<string> {
 
     export default {
       async fetch(request) {
+        // Capture the body before Yoga consumes it, so that building a
+        // Lambda-style event from this request later still works
+        await captureRequestBodyByCloning(request);
+
         const { yoga, graphqlOptions } = await getYoga();
         const cedarContext = await buildCedarContext(request, {
-          authDecoder: graphqlOptions?.authDecoder ?? noopAuthDecoder,
+          authDecoder: graphqlOptions?.authDecoder,
         });
         const event = await requestToLegacyEvent(request, cedarContext);
         // Wrap yoga.handle in an AsyncLocalStorage run so directive
@@ -440,7 +444,7 @@ async function generateFunctionModule(distPath: string): Promise<string> {
   )
 
   return `
-    import { wrapLegacyHandler, buildCedarContext } from '@cedarjs/api/runtime';
+    import { wrapLegacyHandler, buildCedarContext, captureRequestBodyByCloning } from '@cedarjs/api/runtime';
 
     // Inlined bundle of ${path.basename(distPath)} (node_modules kept external)
     ${bundledCode}
@@ -475,6 +479,10 @@ async function generateFunctionModule(distPath: string): Promise<string> {
 
     export default {
       async fetch(request) {
+        // Capture the body before the handler consumes it, so that building a
+        // Lambda-style event from this request later still works
+        await captureRequestBodyByCloning(request);
+
         const ctx = await buildCedarContext(request);
         // Wrap the handler in an AsyncLocalStorage run so the global
         // @cedarjs/context is available inside it (and isolated per request).

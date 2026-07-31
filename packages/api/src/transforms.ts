@@ -43,11 +43,83 @@ export const parseFetchEventBody = async (event: Request) => {
   return body ? JSON.parse(body) : {}
 }
 
+const capturedBodies = new WeakMap<Request, string>()
+
+/**
+ * Remember a request's body text, so that Lambda-style events can still be
+ * built from it after the body stream has been consumed.
+ *
+ * A `Request` body is a single-use stream: `clone()` throws
+ * `TypeError: unusable` once anything has read it. Anything that converts a
+ * `Request` into a Lambda-style event later in the request lifecycle — auth
+ * state resolution, legacy handler invocation — therefore depends on the body
+ * having been captured up front.
+ *
+ * Call this at the point a request enters Cedar, before anything reads the
+ * body. Use this overload when the caller already holds the body text — as
+ * both Fastify entry points do — so that the stream is never read at all. Use
+ * {@link captureRequestBodyByCloning} when it doesn't.
+ */
+export const captureRequestBody = (request: Request, body: string): void => {
+  capturedBodies.set(request, body)
+}
+
+/**
+ * {@link captureRequestBody} for entry points that are handed a `Request` they
+ * didn't build, and so have to read the body from a clone to capture it.
+ *
+ * Must be called before anything else reads the body. A request whose body has
+ * already been consumed can't be captured, and is left for `readRequestBody`
+ * to report.
+ */
+export const captureRequestBodyByCloning = async (
+  request: Request,
+): Promise<void> => {
+  if (capturedBodies.has(request)) {
+    return
+  }
+
+  try {
+    capturedBodies.set(request, await request.clone().text())
+  } catch {
+    // Already consumed
+  }
+}
+
+/**
+ * The captured body if there is one, otherwise a best-effort read from a
+ * clone. Returns null rather than throwing when the body has been consumed and
+ * was never captured, so that a late conversion degrades to an event with no
+ * body instead of taking the whole request down.
+ */
+const readRequestBody = async (request: Request): Promise<string | null> => {
+  const captured = capturedBodies.get(request)
+
+  if (captured !== undefined) {
+    return captured
+  }
+
+  try {
+    return await request.clone().text()
+  } catch {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(
+        'Building a Lambda-style event for a request whose body has already ' +
+          'been read, and which was not captured when it entered Cedar. ' +
+          '`event.body` will be null. Call `captureRequestBody` at the entry ' +
+          'point to fix this.',
+      )
+    }
+
+    return null
+  }
+}
+
 export const requestToBaseEvent = async (
   request: Request,
 ): Promise<APIGatewayProxyEvent> => {
   const url = new URL(request.url)
-  const bodyText = await request.clone().text()
+  const bodyText = await readRequestBody(request)
   const queryStringParameters: Record<string, string> = {}
 
   url.searchParams.forEach((value, key) => {

@@ -20,7 +20,11 @@ const tsconfigPaths =
   // interop
   tsPathsMod.default?.default || tsPathsMod.default || tsPathsMod
 
-import { buildCedarContext, wrapLegacyHandler } from '@cedarjs/api/runtime'
+import {
+  buildCedarContext,
+  captureRequestBodyByCloning,
+  wrapLegacyHandler,
+} from '@cedarjs/api/runtime'
 import type { CedarHandler, LegacyHandler } from '@cedarjs/api/runtime'
 import {
   getApiSideBabelConfigPath,
@@ -506,6 +510,10 @@ export function createApiFetchHandler() {
   const apiUrlPrefix = cedarConfig.web.apiUrl.replace(/\/$/, '')
 
   return async (request: Request): Promise<Response> => {
+    // This request is handed to us already built, so capture the body by
+    // cloning before Yoga or a function handler consumes it
+    await captureRequestBodyByCloning(request)
+
     const url = new URL(request.url)
     let pathname = url.pathname
 

@@ -10,7 +10,7 @@ import type {
   HTTPMethods,
 } from 'fastify'
 
-import { buildCedarContext, noopAuthDecoder } from '@cedarjs/api/runtime'
+import { buildCedarContext, captureRequestBody } from '@cedarjs/api/runtime'
 import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers.js'
@@ -89,7 +89,7 @@ export async function redwoodFastifyGraphQLServer(
         handler: async (req, reply) => {
           const request = createFetchRequest(req, reply)
           const cedarContext = await buildCedarContext(request, {
-            authDecoder: graphqlOptions.authDecoder ?? noopAuthDecoder,
+            authDecoder: graphqlOptions.authDecoder,
           })
 
           // Phase 1 of transitional context bridge: pass both the Fetch-native
@@ -183,10 +183,16 @@ function createFetchRequest(req: FastifyRequest, reply: FastifyReply) {
           : undefined
 
   const href = `${req.protocol}://${req.hostname}${req.raw.url ?? '/'}`
-  return new Request(href, {
+  const request = new Request(href, {
     method: req.method,
     headers: req.headers as HeadersInit,
     body: requestBody,
     signal: controller.signal,
   })
+
+  // Yoga consumes the body, so anything building a Lambda-style event from
+  // this request afterwards (auth state resolution) needs it captured here
+  captureRequestBody(request, requestBody ?? '')
+
+  return request
 }
