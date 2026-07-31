@@ -384,12 +384,7 @@ async function generateGraphQLModule(distPath: string): Promise<string> {
       async fetch(request) {
         const { yoga, graphqlOptions } = await getYoga();
         const cedarContext = await buildCedarContext(request, {
-          // Projects without auth set up have no decoder. We still have to
-          // resolve auth state here, before Yoga reads the request body, so
-          // fall back to a decoder that decodes nothing
-          authDecoder:
-            (graphqlOptions ? graphqlOptions.authDecoder : undefined) ??
-            noopAuthDecoder,
+          authDecoder: graphqlOptions?.authDecoder ?? noopAuthDecoder,
         });
         const event = await requestToLegacyEvent(request, cedarContext);
         // Wrap yoga.handle in an AsyncLocalStorage run so directive
