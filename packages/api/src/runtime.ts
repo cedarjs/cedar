@@ -8,7 +8,34 @@ import * as cookie from 'cookie'
 import { parse } from 'picoquery'
 
 import { getAuthenticationContext } from './auth/index.js'
+import type { Decoder } from './auth/index.js'
 import { requestToBaseEvent } from './transforms.js'
+
+/**
+ * A decoder that decodes nothing.
+ *
+ * Resolving `serverAuthState` has to happen before the GraphQL server reads
+ * the request body:
+ *
+ * 1. Resolving it materialises the request body — `getAuthenticationContext`
+ *    builds a Lambda-style event via `requestToBaseEvent`, which does
+ *    `request.clone().text()`
+ * 2. `clone()` only works while the body is untouched
+ * 3. So once the GraphQL server has read the body, resolving throws
+ *    `TypeError: unusable`
+ *
+ * `buildCedarContext` only resolves auth state when it's given a decoder, so
+ * GraphQL call sites pass this one for projects that have no auth set up, to
+ * keep the resolve eager. Resolving with it produces the same payload as
+ * resolving with no decoders at all.
+ *
+ * (When it isn't resolved eagerly, `useRedwoodAuthContext` resolves it during
+ * context building instead — too late. That's how this surfaces.)
+ *
+ * TODO: Remove this once the request body is captured at the entry point rather
+ * than read lazily from the auth path, which drops the ordering constraint.
+ */
+export const noopAuthDecoder: Decoder = async () => null
 
 export interface CedarRequestContext {
   params: Record<string, string>
@@ -109,9 +136,10 @@ export async function buildCedarContext(
   const params = options.params ?? {}
 
   // Only GraphQL consumes `serverAuthState`, and it's the only caller that
-  // supplies an auth decoder. Computing it for plain function routes is wasted
-  // work — without a decoder nothing can be decoded, so the payload could only
-  // ever come back with `decoded` set to `null` — and it lets `Authorization`
+  // supplies an auth decoder — passing `noopAuthDecoder` when the project has
+  // no auth set up. Computing it for plain function routes is wasted work —
+  // without a decoder nothing can be decoded, so the payload could only ever
+  // come back with `decoded` set to `null` — and it lets `Authorization`
   // header parse errors escape and turn requests to functions that don't use
   // auth at all into 500s.
   const serverAuthState = hasAuthDecoder(options.authDecoder)
