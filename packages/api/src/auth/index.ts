@@ -120,10 +120,6 @@ export type AuthContextPayload = [
  * auth state can never be resolved. Anything deciding whether auth is set up
  * has to agree with `buildCedarContext` on this, or they'll disagree about
  * whether a request should have had auth state resolved.
- *
- * Lives here rather than next to `buildCedarContext` so that reaching for it
- * doesn't pull `@cedarjs/api/runtime` — and its ESM-only dependencies — into
- * consumers that only need the auth types.
  */
 export function hasAuthDecoder(
   authDecoder: Decoder | Decoder[] | undefined,

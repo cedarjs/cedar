@@ -6,7 +6,7 @@ import { useRedwoodAuthContext } from '../useRedwoodAuthContext.js'
 
 const authDecoder: Decoder = async (token: string) => ({ token })
 
-const MOCK_AUTH_CONTEXT: AuthContextPayload = [
+const MOCK_AUTH_CONTEXT_PAYLOAD: AuthContextPayload = [
   { sub: '1', email: 'ba@zin.ga' },
   {
     type: 'mocked-auth-type',
@@ -18,9 +18,12 @@ const MOCK_AUTH_CONTEXT: AuthContextPayload = [
 
 /**
  * Auth state is resolved when the request enters Cedar, so what this plugin
- * gets handed is an already-built context.
+ * gets handed is an already-built GraphQL context, with Cedar's own request
+ * context on it as `cedarContext`.
  */
-const mockContext = (serverAuthState: AuthContextPayload | undefined) => {
+function createMockGraphQLContext(
+  authContextPayload: AuthContextPayload | undefined,
+) {
   return {
     params: {},
     request: new Request('http://localhost/graphql'),
@@ -30,7 +33,7 @@ const mockContext = (serverAuthState: AuthContextPayload | undefined) => {
       params: {},
       query: new URLSearchParams(),
       cookies: new Map<string, string>(),
-      serverAuthState,
+      serverAuthState: authContextPayload,
     },
   }
 }
@@ -60,7 +63,7 @@ describe('useRedwoodAuthContext', () => {
     const extendContext = vi.fn()
 
     await onContextBuilding({
-      context: mockContext(MOCK_AUTH_CONTEXT),
+      context: createMockGraphQLContext(MOCK_AUTH_CONTEXT_PAYLOAD),
       extendContext,
       breakContextBuilding() {
         return undefined
@@ -74,7 +77,7 @@ describe('useRedwoodAuthContext', () => {
         token: 'mocked-undecoded-token',
         type: 'mocked-auth-type',
       },
-      MOCK_AUTH_CONTEXT[2],
+      MOCK_AUTH_CONTEXT_PAYLOAD[2],
     )
 
     expect(extendContext).toHaveBeenCalledWith({
@@ -98,7 +101,7 @@ describe('useRedwoodAuthContext', () => {
 
     await expect(
       onContextBuilding({
-        context: mockContext(MOCK_AUTH_CONTEXT),
+        context: createMockGraphQLContext(MOCK_AUTH_CONTEXT_PAYLOAD),
         extendContext,
         breakContextBuilding() {
           return undefined
@@ -124,7 +127,7 @@ describe('useRedwoodAuthContext', () => {
     const extendContext = vi.fn()
 
     await onContextBuilding({
-      context: mockContext(undefined),
+      context: createMockGraphQLContext(undefined),
       extendContext,
       breakContextBuilding() {
         return undefined
