@@ -16,10 +16,6 @@ const MOCK_AUTH_CONTEXT: AuthContextPayload = [
   { event: new Request('http://localhost/mock'), context: undefined },
 ]
 
-type MockContextBuildingArgs = Parameters<
-  NonNullable<ReturnType<typeof useRedwoodAuthContext>['onContextBuilding']>
->[0]
-
 /**
  * Auth state is resolved when the request enters Cedar, so what this plugin
  * gets handed is an already-built context.
@@ -27,20 +23,24 @@ type MockContextBuildingArgs = Parameters<
 const mockContext = (serverAuthState: AuthContextPayload | undefined) => {
   return {
     params: {},
+    request: new Request('http://localhost/graphql'),
+    waitUntil: () => undefined,
     requestContext: undefined,
     cedarContext: {
       params: {},
       query: new URLSearchParams(),
-      cookies: new Map(),
+      cookies: new Map<string, string>(),
       serverAuthState,
     },
-  } as MockContextBuildingArgs['context']
+  }
 }
 
 const contextWithoutCedarContext = {
   params: {},
+  request: new Request('http://localhost/graphql'),
+  waitUntil: () => undefined,
   requestContext: undefined,
-} as MockContextBuildingArgs['context']
+}
 
 describe('useRedwoodAuthContext', () => {
   it('updates context with output of current user', async () => {
