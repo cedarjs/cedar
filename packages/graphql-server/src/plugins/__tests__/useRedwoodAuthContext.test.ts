@@ -156,6 +156,30 @@ describe('useRedwoodAuthContext', () => {
     ).rejects.toThrow(/no `cedarContext`/)
   })
 
+  // `buildCedarContext` treats an empty decoder array as no auth configured,
+  // so this guard has to agree — otherwise it throws on a setup that never had
+  // auth state to resolve in the first place
+  it('does not throw without a cedarContext for an empty decoder array', async () => {
+    const plugin = useRedwoodAuthContext(vi.fn(), [])
+    const onContextBuilding = plugin.onContextBuilding
+
+    if (!onContextBuilding) {
+      throw new Error('Expected onContextBuilding hook to be defined')
+    }
+
+    const extendContext = vi.fn()
+
+    await onContextBuilding({
+      context: contextWithoutCedarContext,
+      extendContext,
+      breakContextBuilding() {
+        return undefined
+      },
+    })
+
+    expect(extendContext).not.toHaveBeenCalled()
+  })
+
   it('does not throw without a cedarContext when auth is not configured', async () => {
     const plugin = useRedwoodAuthContext(undefined)
     const onContextBuilding = plugin.onContextBuilding

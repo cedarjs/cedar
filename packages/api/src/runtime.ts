@@ -83,7 +83,15 @@ const DEFAULT_LAMBDA_CONTEXT: LambdaContext = {
   },
 }
 
-function hasAuthDecoder(
+/**
+ * Whether a project has auth configured.
+ *
+ * An empty decoder array counts as no auth: there's nothing to decode with, so
+ * auth state can never be resolved. Anything deciding whether auth is set up
+ * has to agree with `buildCedarContext` on this, or they'll disagree about
+ * whether a request should have had auth state resolved.
+ */
+export function hasAuthDecoder(
   authDecoder: BuildCedarContextOptions['authDecoder'],
 ): authDecoder is NonNullable<BuildCedarContextOptions['authDecoder']> {
   if (Array.isArray(authDecoder)) {
