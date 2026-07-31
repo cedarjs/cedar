@@ -20,15 +20,16 @@ export const useRedwoodAuthContext = (
       // building a Lambda-style event from a `Request` the GraphQL server has
       // already consumed, which throws.
       //
-      // Every Cedar entry point builds a context. A missing one means a custom
-      // GraphQL server that hasn't been updated — better to say so than to
-      // silently serve every request as unauthenticated.
+      // Every Cedar entry point builds a context. One that doesn't would serve
+      // every request as unauthenticated, with nothing to show for it, so say
+      // so instead.
       if (!context.cedarContext && hasAuthDecoder(authDecoder)) {
         throw new Error(
-          'The GraphQL context has no `cedarContext`, so auth state was ' +
-            'never resolved. A custom GraphQL server has to build one with ' +
-            '`buildCedarContext` from `@cedarjs/api/runtime` and pass it to ' +
-            '`yoga.handle(request, { request, cedarContext })`.',
+          'Auth state is resolved when a request enters Cedar and passed on ' +
+            'the GraphQL context, but this context has no `cedarContext`. ' +
+            'Whatever is invoking `yoga.handle` needs to build one with ' +
+            '`buildCedarContext` from `@cedarjs/api/runtime` and pass it as ' +
+            '`cedarContext`.',
         )
       }
 

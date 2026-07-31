@@ -135,8 +135,8 @@ describe('useRedwoodAuthContext', () => {
     expect(extendContext).not.toHaveBeenCalled()
   })
 
-  // Rather than silently serving every request as unauthenticated, which is
-  // what a custom GraphQL server that never built a context would get
+  // An entry point that doesn't build a context would otherwise serve every
+  // request as unauthenticated, with nothing to show for it
   it('throws when no cedarContext was built and auth is configured', async () => {
     const plugin = useRedwoodAuthContext(vi.fn(), authDecoder)
     const onContextBuilding = plugin.onContextBuilding
