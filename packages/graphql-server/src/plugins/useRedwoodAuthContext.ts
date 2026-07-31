@@ -27,6 +27,9 @@ export const useRedwoodAuthContext = (
             authDecoder,
             event: authEvent,
             context: context.requestContext,
+            // Yoga has read the body by now, so building the Lambda-style
+            // event depends on the body captured when the request came in
+            body: context.cedarContext?.body,
           })
         }
       } catch (error: any) {

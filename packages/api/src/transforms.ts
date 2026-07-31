@@ -43,11 +43,47 @@ export const parseFetchEventBody = async (event: Request) => {
   return body ? JSON.parse(body) : {}
 }
 
+/**
+ * Read a request's body text without throwing if it's already been consumed.
+ *
+ * A `Request` body is a single-use stream: `clone()` throws
+ * `TypeError: unusable` once anything has read it. Call this at the point a
+ * request enters Cedar, while the body is still readable, and thread the result
+ * through to whatever needs to build a Lambda-style event from the request
+ * later on.
+ *
+ * Returns undefined when the body has already been consumed, which is only
+ * reachable if nothing captured it at the entry point.
+ */
+export const readRequestBody = async (
+  request: Request,
+): Promise<string | undefined> => {
+  try {
+    return await request.clone().text()
+  } catch {
+    return undefined
+  }
+}
+
 export const requestToBaseEvent = async (
   request: Request,
+  /**
+   * The body text, read at the entry point. Pass it whenever it's available —
+   * without it this has to read from the request itself, which fails once the
+   * body has been consumed.
+   */
+  capturedBody?: string,
 ): Promise<APIGatewayProxyEvent> => {
   const url = new URL(request.url)
-  const bodyText = await request.clone().text()
+  const bodyText = capturedBody ?? (await readRequestBody(request))
+
+  if (bodyText === undefined && process.env.NODE_ENV === 'development') {
+    console.warn(
+      'Building a Lambda-style event for a request whose body has already ' +
+        'been read, and which was not captured when it entered Cedar. ' +
+        '`event.body` will be null.',
+    )
+  }
   const queryStringParameters: Record<string, string> = {}
 
   url.searchParams.forEach((value, key) => {

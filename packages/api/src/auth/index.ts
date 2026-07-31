@@ -132,10 +132,18 @@ export const getAuthenticationContext = async ({
   authDecoder,
   event,
   context,
+  body,
 }: {
   authDecoder?: Decoder | Decoder[]
   event: APIGatewayProxyEvent | Request
   context?: LambdaContext
+  /**
+   * The request body text, read at the entry point. Only relevant when `event`
+   * is a fetch `Request`: building the Lambda-style event handed to decoders
+   * and `getCurrentUser` needs the body, and by the time this runs the GraphQL
+   * server has usually consumed it.
+   */
+  body?: string
 }): Promise<undefined | AuthContextPayload> => {
   const cookieHeader = parseAuthorizationCookie(event)
   const typeFromHeader = getAuthProviderHeader(event)
@@ -185,7 +193,7 @@ export const getAuthenticationContext = async ({
   let decoded = null
 
   const normalizedEvent = isFetchApiRequest(event)
-    ? await requestToBaseEvent(event)
+    ? await requestToBaseEvent(event, body)
     : event
   const underlyingRequest = isFetchApiRequest(event) ? event : undefined
 

@@ -8,40 +8,21 @@ import * as cookie from 'cookie'
 import { parse } from 'picoquery'
 
 import { getAuthenticationContext } from './auth/index.js'
-import type { Decoder } from './auth/index.js'
-import { requestToBaseEvent } from './transforms.js'
-
-/**
- * A decoder that decodes nothing.
- *
- * Resolving `serverAuthState` has to happen before the GraphQL server reads
- * the request body:
- *
- * 1. Resolving it materialises the request body — `getAuthenticationContext`
- *    builds a Lambda-style event via `requestToBaseEvent`, which does
- *    `request.clone().text()`
- * 2. `clone()` only works while the body is untouched
- * 3. So once the GraphQL server has read the body, resolving throws
- *    `TypeError: unusable`
- *
- * `buildCedarContext` only resolves auth state when it's given a decoder, so
- * GraphQL call sites pass this one for projects that have no auth set up, to
- * keep the resolve eager. Resolving with it produces the same payload as
- * resolving with no decoders at all.
- *
- * (When it isn't resolved eagerly, `useRedwoodAuthContext` resolves it during
- * context building instead — too late. That's how this surfaces.)
- *
- * TODO: Remove this once the request body is captured at the entry point rather
- * than read lazily from the auth path, which drops the ordering constraint.
- */
-export const noopAuthDecoder: Decoder = async () => null
+import { readRequestBody, requestToBaseEvent } from './transforms.js'
 
 export interface CedarRequestContext {
   params: Record<string, string>
   query: URLSearchParams
   cookies: ReadonlyMap<string, string>
   serverAuthState?: Awaited<ReturnType<typeof getAuthenticationContext>>
+  /**
+   * The request body text, read while the body was still readable.
+   *
+   * Anything that builds a Lambda-style event from the request later in the
+   * request lifecycle needs this — by then the body has usually been consumed,
+   * and reading it again throws.
+   */
+  body?: string
 }
 
 export type CedarHandler = (
@@ -71,6 +52,15 @@ export interface BuildCedarContextOptions {
   params?: Record<string, string>
   authDecoder?: Parameters<typeof getAuthenticationContext>[0]['authDecoder']
   lambdaContext?: LambdaContext
+  /**
+   * The request body text, when the caller already has it — as both Fastify
+   * entry points do, because Fastify has already parsed it. Passing it avoids
+   * reading the request's body stream at all.
+   *
+   * When it's not passed, the body is read here, which is safe because this
+   * runs before anything else has had a chance to consume it.
+   */
+  body?: string
 }
 
 export interface LegacyHandlerContext {
@@ -135,11 +125,16 @@ export async function buildCedarContext(
   )
   const params = options.params ?? {}
 
+  // Read the body while it's still readable and carry it on the context, so
+  // that anything building a Lambda-style event later in the request — auth
+  // state resolution, legacy handler invocation — doesn't have to read from a
+  // `Request` that the GraphQL server has since consumed.
+  const body = options.body ?? (await readRequestBody(request))
+
   // Only GraphQL consumes `serverAuthState`, and it's the only caller that
-  // supplies an auth decoder — passing `noopAuthDecoder` when the project has
-  // no auth set up. Computing it for plain function routes is wasted work —
-  // without a decoder nothing can be decoded, so the payload could only ever
-  // come back with `decoded` set to `null` — and it lets `Authorization`
+  // supplies an auth decoder. Computing it for plain function routes is wasted
+  // work — without a decoder nothing can be decoded, so the payload could only
+  // ever come back with `decoded` set to `null` — and it lets `Authorization`
   // header parse errors escape and turn requests to functions that don't use
   // auth at all into 500s.
   const serverAuthState = hasAuthDecoder(options.authDecoder)
@@ -147,6 +142,7 @@ export async function buildCedarContext(
         authDecoder: options.authDecoder,
         event: request,
         context: options.lambdaContext,
+        body,
       })
     : undefined
 
@@ -154,6 +150,7 @@ export async function buildCedarContext(
     params,
     query,
     cookies,
+    body,
     serverAuthState,
   }
 }
@@ -202,7 +199,7 @@ export async function requestToLegacyEvent(
   ctx: CedarRequestContext,
 ): Promise<APIGatewayProxyEvent> {
   const url = new URL(request.url)
-  const base = await requestToBaseEvent(request)
+  const base = await requestToBaseEvent(request, ctx.body)
   // @ts-expect-error - picoquery returns nested objects and arrays for
   // bracket-notation params (e.g. ids[]=1&ids[]=2, user[name]=alice).
   // APIGatewayProxyEventQueryStringParameters is too narrow for this richer

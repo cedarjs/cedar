@@ -363,7 +363,7 @@ async function generateGraphQLModule(distPath: string): Promise<string> {
   })
 
   return `
-    import { buildCedarContext, noopAuthDecoder, requestToLegacyEvent } from '@cedarjs/api/runtime';
+    import { buildCedarContext, requestToLegacyEvent } from '@cedarjs/api/runtime';
     import { createGraphQLYoga } from '@cedarjs/graphql-server';
 
     // Inlined bundle of ${path.basename(distPath)} (node_modules kept external)
@@ -384,7 +384,7 @@ async function generateGraphQLModule(distPath: string): Promise<string> {
       async fetch(request) {
         const { yoga, graphqlOptions } = await getYoga();
         const cedarContext = await buildCedarContext(request, {
-          authDecoder: graphqlOptions?.authDecoder ?? noopAuthDecoder,
+          authDecoder: graphqlOptions?.authDecoder,
         });
         const event = await requestToLegacyEvent(request, cedarContext);
         // Wrap yoga.handle in an AsyncLocalStorage run so directive

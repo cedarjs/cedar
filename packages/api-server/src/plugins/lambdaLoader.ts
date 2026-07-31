@@ -235,6 +235,9 @@ export const lambdaRequestHandler = async (
       params: {
         routeName,
       },
+      // Fastify has already read the body, so hand it over rather than
+      // reading the request's stream
+      body: requestBody ?? '',
     })
 
     const response = await cedarHandler(request, ctx)
