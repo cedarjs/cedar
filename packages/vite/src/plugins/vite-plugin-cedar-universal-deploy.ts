@@ -1,10 +1,18 @@
 import path from 'node:path'
 
-import { addEntry, type EntryMeta } from '@universal-deploy/store'
+import { addEntry } from '@universal-deploy/store'
+import type { EntryMeta } from '@universal-deploy/store'
 import type { BuildOptions } from 'esbuild'
 import type { Plugin } from 'vite'
 
-import type { CedarRouteRecord } from '@cedarjs/api/runtime'
+import type * as apiRuntime from '@cedarjs/api/runtime'
+import type {
+  CedarHandler,
+  CedarRouteRecord,
+  LegacyHandler,
+} from '@cedarjs/api/runtime'
+import type * as graphqlServer from '@cedarjs/graphql-server'
+import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
 import { findApiServerFunctions } from '@cedarjs/internal/dist/files.js'
 import { getPaths } from '@cedarjs/project-config'
 
@@ -369,60 +377,9 @@ async function generateGraphQLModule(distPath: string): Promise<string> {
     // Inlined bundle of ${path.basename(distPath)} (node_modules kept external)
     ${bundledCode}
 
-    let yogaInitPromise = null;
+    ${createGraphQLFetch.toString()}
 
-    function getYoga() {
-      if (!yogaInitPromise) {
-        yogaInitPromise = createGraphQLYoga(__cedar_graphqlOptions).then(
-          ({ yoga }) => ({ yoga, graphqlOptions: __cedar_graphqlOptions })
-        );
-      }
-      return yogaInitPromise;
-    }
-
-    export default {
-      async fetch(request) {
-        const { yoga, graphqlOptions } = await getYoga();
-        const cedarContext = await buildCedarContext(request, {
-          authDecoder: graphqlOptions?.authDecoder ?? noopAuthDecoder,
-        });
-        const event = await requestToLegacyEvent(request, cedarContext);
-        // Wrap yoga.handle in an AsyncLocalStorage run so directive
-        // validators can read from the global @cedarjs/context. Without
-        // this, the auth plugin's setContext() call writes to a store
-        // that's only visible inside the plugin's own callback — not
-        // during directive validation.
-        const { getAsyncStoreInstance } = await import('@cedarjs/context/dist/store')
-        const store = getAsyncStoreInstance()
-
-        return store.run(new Map(), () => {
-          return yoga.handle(request, {
-            request,
-            cedarContext,
-            event,
-            requestContext: undefined,
-          })
-        }).then((response) => {
-          // GraphQL Yoga returns a PonyfillResponse from @whatwg-node/fetch
-          // which is not an instanceof the native Response class. Netlify's
-          // bootstrap checks instanceof Response, so we wrap it.
-          return new Response(response.body, {
-            status: response.status,
-            statusText: response.statusText,
-            headers: response.headers,
-          })
-        }).catch((e) => {
-          if (e?.code === 'ERR_STREAM_PREMATURE_CLOSE') {
-            // Client disconnected while the request was being processed (e.g.,
-            // page navigation, tab close). Return a 499 so the runtime doesn't
-            // treat this as a 500.
-            return new Response(null, { status: 499 })
-          }
-
-          throw e
-        })
-      }
-    };
+    export default { fetch: createGraphQLFetch(__cedar_graphqlOptions) };
   `
 }
 
@@ -445,47 +402,197 @@ async function generateFunctionModule(distPath: string): Promise<string> {
     // Inlined bundle of ${path.basename(distPath)} (node_modules kept external)
     ${bundledCode}
 
-    const nativeHandler = (() => {
-      // Prefer named handleRequest export
-      if (typeof handleRequest !== 'undefined') { return handleRequest; }
-      // Handle export default { handleRequest } pattern
-      if (typeof __cedar_default !== 'undefined' && __cedar_default && typeof __cedar_default.handleRequest === 'function') {
-        return __cedar_default.handleRequest;
-      }
-      // Handle plain default-exported async function: export default async (req) => Response
-      if (typeof __cedar_default !== 'undefined' && typeof __cedar_default === 'function') {
-        return __cedar_default;
-      }
-      return undefined;
-    })();
+    ${resolveNativeHandler.toString()}
 
-    const legacyFn = (() => {
-      if (typeof handler !== 'undefined') { return handler; }
-      if (typeof __cedar_default !== 'undefined' && __cedar_default && typeof __cedar_default.handler === 'function') {
-        return __cedar_default.handler;
-      }
-      return undefined;
-    })();
+    ${resolveLegacyHandler.toString()}
 
-    if (!nativeHandler && !legacyFn) {
-      throw new Error(${notFoundMsg});
-    }
+    ${resolveCedarHandler.toString()}
 
-    const _handler = nativeHandler ?? wrapLegacyHandler(legacyFn);
+    ${createFunctionFetch.toString()}
 
     export default {
-      async fetch(request) {
-        const ctx = await buildCedarContext(request);
-        // Wrap the handler in an AsyncLocalStorage run so the global
-        // @cedarjs/context is available inside it (and isolated per request).
-        // Mirrors the GraphQL module above and the handlerAlsWrappingPlugin
-        // used for non-UD builds.
-        const { getAsyncStoreInstance } = await import(
-          '@cedarjs/context/dist/store'
-        );
-        const store = getAsyncStoreInstance();
-        return store.run(new Map(), () => _handler(request, ctx));
-      }
+      fetch: createFunctionFetch(resolveCedarHandler(${notFoundMsg})),
     };
   `
+}
+
+// Everything below runs inside the generated virtual modules, not in this
+// process. The functions are stringified with `.toString()` and inlined by
+// generateGraphQLModule/generateFunctionModule above, so they may only
+// reference each other and the bindings declared in this section. They must
+// never reference this file's own imports or module scope.
+
+// At runtime these are provided by the `import` statements the generated
+// modules start with. Declaring them ambiently keeps the functions below type
+// checked without pulling the api and graphql-server runtimes into the Vite
+// config process.
+declare const buildCedarContext: typeof apiRuntime.buildCedarContext
+declare const noopAuthDecoder: typeof apiRuntime.noopAuthDecoder
+declare const requestToLegacyEvent: typeof apiRuntime.requestToLegacyEvent
+declare const wrapLegacyHandler: typeof apiRuntime.wrapLegacyHandler
+declare const createGraphQLYoga: typeof graphqlServer.createGraphQLYoga
+
+/**
+ * The default export of a compiled Cedar api function, as seen from the
+ * inlined bundle. `bundleDistFile` rewrites esbuild's `X as default` export
+ * into a plain local `__cedar_default` binding.
+ */
+type CedarDefaultExport =
+  | CedarHandler
+  | {
+      handleRequest?: CedarHandler
+      handler?: LegacyHandler
+    }
+
+// Provided at runtime by the inlined bundle of the compiled function file.
+// Which of these actually exist depends on how the user wrote their function,
+// hence the `typeof x !== 'undefined'` guards at every use site. An unguarded
+// reference to a missing binding would be a ReferenceError.
+declare const handleRequest: CedarHandler | undefined
+declare const handler: LegacyHandler | undefined
+declare const __cedar_default: CedarDefaultExport | undefined
+
+function resolveNativeHandler(): CedarHandler | undefined {
+  // Prefer the named handleRequest export
+  if (typeof handleRequest !== 'undefined') {
+    return handleRequest
+  }
+
+  if (typeof __cedar_default === 'undefined' || !__cedar_default) {
+    return undefined
+  }
+
+  // Handle export default { handleRequest } pattern
+  if (
+    typeof __cedar_default === 'object' &&
+    typeof __cedar_default.handleRequest === 'function'
+  ) {
+    return __cedar_default.handleRequest
+  }
+
+  // Handle plain default-exported async function:
+  // export default async (req) => Response
+  if (typeof __cedar_default === 'function') {
+    return __cedar_default
+  }
+
+  return undefined
+}
+
+function resolveLegacyHandler(): LegacyHandler | undefined {
+  if (typeof handler !== 'undefined') {
+    return handler
+  }
+
+  if (typeof __cedar_default === 'undefined' || !__cedar_default) {
+    return undefined
+  }
+
+  if (
+    typeof __cedar_default === 'object' &&
+    typeof __cedar_default.handler === 'function'
+  ) {
+    return __cedar_default.handler
+  }
+
+  return undefined
+}
+
+/**
+ * Picks the handler to serve a function route with, preferring a Fetch-native
+ * one and falling back to a legacy Lambda-shaped one. Throws `notFoundMessage`
+ * when the bundle exports neither.
+ */
+function resolveCedarHandler(notFoundMessage: string): CedarHandler {
+  const nativeHandler = resolveNativeHandler()
+
+  if (nativeHandler) {
+    return nativeHandler
+  }
+
+  const legacyFn = resolveLegacyHandler()
+
+  if (!legacyFn) {
+    throw new Error(notFoundMessage)
+  }
+
+  return wrapLegacyHandler(legacyFn)
+}
+
+function createFunctionFetch(cedarHandler: CedarHandler) {
+  return async function fetch(request: Request) {
+    const ctx = await buildCedarContext(request)
+
+    // Wrap the handler in an AsyncLocalStorage run so the global
+    // @cedarjs/context is available inside it (and isolated per request).
+    // Mirrors createGraphQLFetch below and the handlerAlsWrappingPlugin used
+    // for non-UD builds.
+    const { getAsyncStoreInstance } =
+      await import('@cedarjs/context/dist/store')
+    const store = getAsyncStoreInstance()
+
+    return store.run(new Map(), () => cedarHandler(request, ctx))
+  }
+}
+
+function createGraphQLFetch(graphqlOptions: GraphQLYogaOptions) {
+  let yogaInitPromise: ReturnType<typeof createGraphQLYoga> | null = null
+
+  function getYoga() {
+    if (!yogaInitPromise) {
+      yogaInitPromise = createGraphQLYoga(graphqlOptions)
+    }
+
+    return yogaInitPromise
+  }
+
+  return async function fetch(request: Request) {
+    const { yoga } = await getYoga()
+    const cedarContext = await buildCedarContext(request, {
+      authDecoder: graphqlOptions?.authDecoder ?? noopAuthDecoder,
+    })
+    const event = await requestToLegacyEvent(request, cedarContext)
+
+    // Wrap yoga.handle in an AsyncLocalStorage run so directive validators
+    // can read from the global @cedarjs/context. Without this, the auth
+    // plugin's setContext() call writes to a store that's only visible inside
+    // the plugin's own callback — not during directive validation.
+    const { getAsyncStoreInstance } =
+      await import('@cedarjs/context/dist/store')
+    const store = getAsyncStoreInstance()
+
+    try {
+      const response = await store.run(new Map(), () => {
+        return yoga.handle(request, {
+          request,
+          cedarContext,
+          event,
+          requestContext: undefined,
+        })
+      })
+
+      // GraphQL Yoga returns a PonyfillResponse from @whatwg-node/fetch which
+      // is not an instanceof the native Response class. Netlify's bootstrap
+      // checks instanceof Response, so we wrap it.
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+      })
+    } catch (e) {
+      if (
+        !!e &&
+        typeof e === 'object' &&
+        'code' in e &&
+        e.code === 'ERR_STREAM_PREMATURE_CLOSE'
+      ) {
+        // Client disconnected while the request was being processed (e.g.,
+        // page navigation, tab close). Return a 499 so the runtime doesn't
+        // treat this as a 500.
+        return new Response(null, { status: 499 })
+      }
+
+      throw e
+    }
+  }
 }
