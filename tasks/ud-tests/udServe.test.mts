@@ -69,6 +69,27 @@ describe('cedar serve api --ud', () => {
       data: { hello: 'Hello from Cedar GraphQL' },
     })
 
+    // 6b. GraphQL with an auth-provider cookie, on a fixture that has no auth
+    // set up. A stale cookie left on localhost by another project is enough to
+    // send this. Auth state then has to be resolved after the body has been
+    // read, which used to fail with `Exception in getAuthenticationContext:
+    // unusable`
+    const gqlAuthProviderRes = await fetchJson(
+      `http://localhost:${API_PORT}/graphql`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          cookie: 'auth-provider=dbAuth',
+        },
+        body: JSON.stringify({ query: '{ hello }' }),
+      },
+    )
+    expect(gqlAuthProviderRes.status).toEqual(200)
+    expect(gqlAuthProviderRes.body).toMatchObject({
+      data: { hello: 'Hello from Cedar GraphQL' },
+    })
+
     // 7. Web route should return the SPA shell
     const webRes = await fetch(`http://localhost:${WEB_PORT}/`)
     expect(webRes.status).toEqual(200)
