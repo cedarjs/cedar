@@ -93,6 +93,27 @@ export async function createProjectFiles(
       recursive: true,
       force: true,
     })
+  } else if (database === 'cedar-pg') {
+    const templatePrismaConfig = path.join(
+      newAppDir,
+      'api',
+      'prisma.config.cjs',
+    )
+    try {
+      await fs.promises.unlink(templatePrismaConfig)
+    } catch {
+      // Ignore if the file doesn't exist
+    }
+    const dbOverlayDir = path.join(
+      templatesDir,
+      '..',
+      'database-overlays',
+      'cedar-pg',
+    )
+    await fs.promises.cp(dbOverlayDir, newAppDir, {
+      recursive: true,
+      force: true,
+    })
   } else if (database === 'neon-postgres') {
     const dbOverlayDir = path.join(
       templatesDir,

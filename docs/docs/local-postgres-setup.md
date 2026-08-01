@@ -7,6 +7,49 @@ description: Setup a Postgres database to develop locally
 CedarJS uses a SQLite database by default. While SQLite makes local development easy, you're
 likely going to want to run the same database you use in production locally at some point. And since the odds of that database being Postgres are high, here's how to set up Postgres.
 
+## Recommended: cedar-pg (worktree-isolated, zero config)
+
+[cedar-pg](https://github.com/simoncrypta/cedar-pg) provisions a **real Postgres** database per
+git worktree on top of the [autopg](https://github.com/automagik-dev/autopg) host singleton.
+Names are readable in `\l` (`cpg_<repo>_<worktree>_<mode>_<hash>`). Dev DBs persist across
+`yarn cedar dev` restarts; test DBs are dropped when the test process exits.
+
+### New apps
+
+```bash
+# Create the app next to a local cedar-pg checkout (file:../../cedar-pg from api/)
+yarn create cedar-app --esm --db cedar-pg my-app
+```
+
+### Existing apps
+
+```bash
+# From the app root — prefers ../cedar-pg, or pass --path / set CEDAR_PG_PATH
+yarn cedar setup cedar-pg
+# yarn cedar setup cedar-pg --path /home/you/Work/cedar-pg
+```
+
+Ensure the autopg host is installed (cedar-pg's postinstall may do this):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/automagik-dev/autopg/main/install.sh | bash
+```
+
+Set `CEDAR_PG=1` in `.env` / `.env.defaults` (setup does this). Then:
+
+```bash
+yarn cedar dev  # ensure(dev) → inject DATABASE_URL
+yarn cedar test # ensure(test) → prisma push → dispose(test)
+```
+
+Override anytime with an explicit `TEST_DATABASE_URL` / `DATABASE_URL` (skip ensure unless
+`CEDAR_PG_FORCE=1`).
+
+### Vite+ / Nx (non-Cedar)
+
+See the [cedar-pg README](https://github.com/simoncrypta/cedar-pg#vite-consumer-adapter) for
+`cedarPgTasks()` / Nx target helpers.
+
 ## Install Postgres
 
 ### Mac

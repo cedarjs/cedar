@@ -67,6 +67,8 @@ const config: Config = {
   ],
   // This runs once before all tests
   globalSetup: path.join(__dirname, './globalSetup.js'),
+  // Drop cedar-pg test DB after the suite (no-op unless CEDAR_PG=1)
+  globalTeardown: path.join(__dirname, './globalTeardown.js'),
   // Note this setup runs for each test file!
   setupFilesAfterEnv: [path.join(__dirname, './jest.setup.js')],
   moduleNameMapper: {

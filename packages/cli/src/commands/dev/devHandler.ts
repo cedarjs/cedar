@@ -288,6 +288,21 @@ export const handler = async ({
   // so that users don't have to see it every time the dev server starts up.
   process.env.VITE_CJS_IGNORE_WARNING = 'true'
 
+  // Opt-in worktree Postgres via cedar-pg (CEDAR_PG=1). Keeps DB across restarts.
+  if (workspace.includes('api')) {
+    try {
+      const { ensureCedarPgDev } = await import('../../lib/cedarPg.js')
+      const url = await ensureCedarPgDev(cedarPaths.base)
+      if (url) {
+        console.log(c.info(`cedar-pg: DATABASE_URL ready for worktree`))
+      }
+    } catch (e) {
+      const message = getErrorMessage(e)
+      errorTelemetry(process.argv, `cedar-pg ensure failed: ${message}`)
+      exitWithError(e, { message })
+    }
+  }
+
   const rootPackageJsonPath = path.join(cedarPaths.base, 'package.json')
   const rootPackageJson = JSON.parse(
     fs.readFileSync(rootPackageJsonPath, 'utf8'),
@@ -379,6 +394,9 @@ export const handler = async ({
       env: {
         NODE_ENV: 'development',
         NODE_OPTIONS: getDevNodeOptions(),
+        ...(process.env.DATABASE_URL
+          ? { DATABASE_URL: process.env.DATABASE_URL }
+          : {}),
       },
       prefixColor: 'cyan',
       cwd: cedarPaths.web.base,
@@ -406,6 +424,9 @@ export const handler = async ({
         env: {
           NODE_ENV: 'development',
           NODE_OPTIONS: getDevNodeOptions(),
+          ...(process.env.DATABASE_URL
+            ? { DATABASE_URL: process.env.DATABASE_URL }
+            : {}),
         },
         prefixColor: 'cyan',
         runWhen: () => fs.existsSync(cedarPaths.api.src),

@@ -20,9 +20,38 @@ const CedarApiVitestEnvironment: Environment = {
 
     const cedarPaths = getPaths()
 
-    const defaultDb = `file:${path.join(cedarPaths.generated.base, 'test.db')}`
+    let disposeCedarPg: (() => Promise<void>) | undefined
+    const cedarPgOn =
+      process.env.CEDAR_PG === '1' || process.env.CEDAR_PG === 'true'
 
-    process.env.DATABASE_URL = process.env.TEST_DATABASE_URL || defaultDb
+    if (cedarPgOn) {
+      // Resolve from the app (same pattern as @cedarjs/cli/lib/cedarPg)
+      const { createRequire } = await import('node:module')
+      const { pathToFileURL } = await import('node:url')
+      const require = createRequire(
+        path.join(cedarPaths.api.base, 'package.json'),
+      )
+      const resolved = require.resolve('cedar-pg')
+      const cedarPg = await import(pathToFileURL(resolved).href)
+      const externalTestUrl =
+        process.env.TEST_DATABASE_URL &&
+        !process.env.TEST_DATABASE_URL.startsWith('file:') &&
+        process.env.CEDAR_PG_FORCE !== '1'
+      if (!externalTestUrl) {
+        const result = await cedarPg.ensure({
+          root: cedarPaths.base,
+          mode: 'test',
+          disposeOnExit: false,
+          setEnv: true,
+        })
+        disposeCedarPg = () => result.dispose()
+      } else {
+        process.env.DATABASE_URL = process.env.TEST_DATABASE_URL
+      }
+    } else {
+      const defaultDb = `file:${path.join(cedarPaths.generated.base, 'test.db')}`
+      process.env.DATABASE_URL = process.env.TEST_DATABASE_URL || defaultDb
+    }
 
     const command =
       process.env.TEST_DATABASE_STRATEGY === 'reset'
@@ -42,7 +71,11 @@ const CedarApiVitestEnvironment: Environment = {
     })
 
     return {
-      teardown() {},
+      async teardown() {
+        if (disposeCedarPg) {
+          await disposeCedarPg()
+        }
+      },
     }
   },
 }

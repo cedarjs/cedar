@@ -303,7 +303,7 @@ async function createCedarApp() {
       hidden: true,
       default: null,
       type: 'string',
-      describe: 'Database to use (sqlite, pglite, neon-postgres)',
+      describe: 'Database to use (sqlite, pglite, neon-postgres, cedar-pg)',
     })
 
   const parsedFlags = await cli.parse()
