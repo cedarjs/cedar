@@ -5,7 +5,6 @@ import {
   buildCedarContext,
   composeCedarMiddleware,
   legacyResultToResponse,
-  noopAuthDecoder,
   requestToLegacyEvent,
   routeManifestToJSON,
   wrapLegacyHandler,
@@ -90,36 +89,6 @@ describe('buildCedarContext', () => {
     const ctx = await buildCedarContext(request, { authDecoder: [] })
 
     expect(ctx.serverAuthState).toBeUndefined()
-  })
-
-  // GraphQL routes have to resolve auth state up front even when the project
-  // has no auth set up, because `useRedwoodAuthContext`'s fallback runs after
-  // Yoga has consumed the request body – cloning it there throws `unusable`.
-  // `noopAuthDecoder` is what keeps the resolve eager for those projects.
-  it('resolves auth state with `noopAuthDecoder`', async () => {
-    const request = new Request('http://localhost:8911/graphql', {
-      method: 'POST',
-      body: JSON.stringify({ query: '{ __typename }' }),
-      headers: {
-        cookie: 'auth-provider=dbAuth; session=abc123',
-      },
-    })
-
-    const ctx = await buildCedarContext(request, {
-      authDecoder: noopAuthDecoder,
-    })
-
-    // Reading the body afterwards is what Yoga does. The resolve above already
-    // happened, so no fallback is needed and nothing clones a used `Request`
-    await request.text()
-
-    expect(ctx.serverAuthState).toBeDefined()
-    expect(ctx.serverAuthState?.[0]).toBeNull()
-    expect(ctx.serverAuthState?.[1]).toEqual({
-      type: 'dbAuth',
-      schema: 'cookie',
-      token: 'auth-provider=dbAuth; session=abc123',
-    })
   })
 
   it('hydrates auth state when an auth decoder is provided', async () => {
