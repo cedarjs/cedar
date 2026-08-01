@@ -1,29 +1,21 @@
-// See https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/constructor
-// for options.
-
-import path from 'node:path'
-
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
+import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from 'api/db/generated/prisma/client.mts'
 
 import { emitLogLevels, handlePrismaLogging } from '@cedarjs/api/logger'
-import { getPaths } from '@cedarjs/project-config'
 
 import { logger } from './logger.js'
 
 export * from 'api/db/generated/prisma/client.mts'
 
-const resolveSqliteUrl = (url = 'file:./db/dev.db') => {
-  if (!url.startsWith('file:.')) {
-    return url
-  }
-
-  return `file:${path.resolve(getPaths().api.base, url.slice('file:'.length))}`
+if (!process.env.DATABASE_URL) {
+  throw new Error(
+    'DATABASE_URL is not set. Run `yarn cedar dev` / `yarn cedar test` with ' +
+      'CEDAR_PG=1 so cedar-pg can provision a worktree-scoped database, or set ' +
+      'DATABASE_URL manually.'
+  )
 }
 
-const adapter = new PrismaBetterSqlite3({
-  url: resolveSqliteUrl(process.env.DATABASE_URL),
-})
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
 const prismaClient = new PrismaClient({
   log: emitLogLevels(['info', 'warn', 'error']),
   adapter,

@@ -118,6 +118,31 @@ export async function handler({ force, path: cedarPgPath }: Args) {
         },
       },
       {
+        title: 'Ignoring .cedar-pg/ in .gitignore',
+        task: () => {
+          const gitignorePath = path.join(cedarPaths.base, '.gitignore')
+          const entry = '.cedar-pg/*'
+          if (!fs.existsSync(gitignorePath)) {
+            fs.writeFileSync(gitignorePath, `${entry}\n`)
+            return
+          }
+          const content = fs.readFileSync(gitignorePath, 'utf-8')
+          if (content.includes('.cedar-pg')) {
+            return
+          }
+          const needle = '.cedar/*'
+          if (content.includes(needle)) {
+            fs.writeFileSync(
+              gitignorePath,
+              content.replace(needle, `${needle}\n${entry}`),
+            )
+            return
+          }
+          const suffix = content.endsWith('\n') ? entry + '\n' : `\n${entry}\n`
+          fs.writeFileSync(gitignorePath, content + suffix)
+        },
+      },
+      {
         title: 'Adding CEDAR_PG=1 to .env.defaults',
         task: () => {
           const target = fs.existsSync(envDefaultsPath)

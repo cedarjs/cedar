@@ -8,6 +8,7 @@
 .cedar/*
 !.redwood/README.md
 !.cedar/README.md
+.cedar-pg/*
 dev.db*
 api/db/generated/prisma
 dist
