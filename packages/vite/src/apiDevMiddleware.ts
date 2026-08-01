@@ -535,9 +535,11 @@ export function createApiFetchHandler() {
 
       return getAsyncStoreInstance().run(new Map(), async () => {
         try {
-          // Resolve auth state before Yoga reads the request body. Doing it
-          // afterwards would mean building a Lambda-style event from a
-          // `Request` that's already been consumed, which throws.
+          // `buildCedarContext` resolves auth state, and the auth payload
+          // carries a Lambda-style event built by reading the request body.
+          // This has to happen before Yoga consumes it otherwise
+          // `buildCedarContext` would try to build the event from a `Request`
+          // that's already been consumed, which would throw.
           const cedarContext = await buildCedarContext(request, {
             authDecoder: graphqlOptions?.authDecoder,
           })
