@@ -211,17 +211,17 @@ importers:
   .:
     devDependencies:
       '@cedarjs/core':
-        specifier: 5.0.4
-        version: 5.0.4(ce477286443e8dd9b9ac11573a6fd053)
+        specifier: 5.0.5
+        version: 5.0.5(a7b980f5afacedf35efb13182f866cf5)
       '@cedarjs/eslint-config':
-        specifier: 5.0.4
-        version: 5.0.4(@cedarjs/auth@5.0.4)(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@testing-library/dom@9.3.4)(@types/node@26.1.1)(@typescript-eslint/utils@8.60.1(eslint@8.57.1)(typescript@5.9.3))(babel-plugin-module-resolver@5.0.3)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0)
+        specifier: 5.0.5
+        version: 5.0.5(@cedarjs/auth@5.0.5)(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@testing-library/dom@9.3.4)(@types/node@26.1.1)(@typescript-eslint/utils@8.60.1(eslint@8.57.1)(typescript@5.9.3))(babel-plugin-module-resolver@5.0.3)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0)
       '@cedarjs/project-config':
-        specifier: 5.0.4
-        version: 5.0.4(typescript@5.9.3)
+        specifier: 5.0.5
+        version: 5.0.5(typescript@5.9.3)
       '@cedarjs/testing':
-        specifier: 5.0.4
-        version: 5.0.4(@babel/core@7.29.7)(@cedarjs/auth@5.0.4)(@cedarjs/router@5.0.4(@cedarjs/auth@5.0.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.4(@cedarjs/auth@5.0.4)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)
+        specifier: 5.0.5
+        version: 5.0.5(@babel/core@7.29.7)(@cedarjs/auth@5.0.5)(@cedarjs/router@5.0.5(@cedarjs/auth@5.0.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.5(@cedarjs/auth@5.0.5)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)
       prisma:
         specifier: 7.8.0
         version: 7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)
@@ -229,11 +229,11 @@ importers:
   api:
     dependencies:
       '@cedarjs/api':
-        specifier: 5.0.4
-        version: 5.0.4(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)
+        specifier: 5.0.5
+        version: 5.0.5(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)
       '@cedarjs/graphql-server':
-        specifier: 5.0.4
-        version: 5.0.4(@escape.tech/graphql-armor-types@0.6.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)
+        specifier: 5.0.5
+        version: 5.0.5(@escape.tech/graphql-armor-types@0.6.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)
       '@prisma/adapter-better-sqlite3':
         specifier: 7.8.0
         version: 7.8.0
@@ -247,14 +247,14 @@ importers:
   web:
     dependencies:
       '@cedarjs/forms':
-        specifier: 5.0.4
-        version: 5.0.4(react@18.3.1)
+        specifier: 5.0.5
+        version: 5.0.5(react@18.3.1)
       '@cedarjs/router':
-        specifier: 5.0.4
-        version: 5.0.4(@cedarjs/auth@5.0.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)
+        specifier: 5.0.5
+        version: 5.0.5(@cedarjs/auth@5.0.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)
       '@cedarjs/web':
-        specifier: 5.0.4
-        version: 5.0.4(@cedarjs/auth@5.0.4)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 5.0.5
+        version: 5.0.5(@cedarjs/auth@5.0.5)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -263,8 +263,8 @@ importers:
         version: 18.3.1(react@18.3.1)
     devDependencies:
       '@cedarjs/vite':
-        specifier: 5.0.4
-        version: 5.0.4(@babel/core@7.29.7)(@cedarjs/auth@5.0.4)(@cedarjs/router@5.0.4(@cedarjs/auth@5.0.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.4(@cedarjs/auth@5.0.4)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/node@26.1.1)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(hono@4.12.32)(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(rollup@4.62.3)(srvx@0.11.22)(terser@5.49.0)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)(webpack@5.109.0(@swc/core@1.15.41))(yaml@2.9.0)
+        specifier: 5.0.5
+        version: 5.0.5(@babel/core@7.29.7)(@cedarjs/auth@5.0.5)(@cedarjs/router@5.0.5(@cedarjs/auth@5.0.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.5(@cedarjs/auth@5.0.5)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/node@26.1.1)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(hono@4.12.32)(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(rollup@4.62.3)(srvx@0.11.22)(terser@5.49.0)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)(webpack@5.109.0(@swc/core@1.15.41))(yaml@2.9.0)
       '@types/react':
         specifier: ^18.2.55
         version: 18.3.31
@@ -1059,17 +1059,17 @@ packages:
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
 
-  '@cedarjs/api-server@5.0.4':
-    resolution: {integrity: sha512-Xu9U6xrRFjr1YwsneQrfE+FAV7GD/yNiH2F1OccbPskWHP4UcUGqoyS5e+HLgHHSfBgcw0EYZfKH15B4ZrgJ7Q==}
+  '@cedarjs/api-server@5.0.5':
+    resolution: {integrity: sha512-i0l+ePbQaHuuXeSJx5DIPvV8OEi35WSvP8LACYNvPM1R+OAb+AmnjnqgjeaMNWcVoa49Pv1oVOui4fp+N0Xdog==}
     hasBin: true
     peerDependencies:
-      '@cedarjs/graphql-server': 5.0.4
+      '@cedarjs/graphql-server': 5.0.5
     peerDependenciesMeta:
       '@cedarjs/graphql-server':
         optional: true
 
-  '@cedarjs/api@5.0.4':
-    resolution: {integrity: sha512-wPV4lvgXEPK4m7wFXSB1e/kChNZdDoBwgVqtD4MWYR6UZOCFH7/PYaD1gGM0uPtDvm9eLYE+aCltfujDZajjTg==}
+  '@cedarjs/api@5.0.5':
+    resolution: {integrity: sha512-8sb5Yl5OcBxCD0PzCm5KzT674XkooHtFEg6Togl4ndvakNBSVIBCqY3XCQu5Yxs5q+WKCwbtjF0WzUlDKXubfA==}
     engines: {node: '>=24'}
     hasBin: true
     peerDependencies:
@@ -1081,38 +1081,38 @@ packages:
       redis:
         optional: true
 
-  '@cedarjs/auth@5.0.4':
-    resolution: {integrity: sha512-C/FYeXGdNmeXUHgXnxtNkULukADJlVLXL0I9heW5wdjSEb2i1gnvuG4hiT/KUYFH15pLJQI+9J/mIgZT0EisGQ==}
+  '@cedarjs/auth@5.0.5':
+    resolution: {integrity: sha512-fw3dvj4Q+lALz0cIzm9wMCG0YoHVx34khK3hNkm/XLLN1eakEclzaWaW/q1ea+OFMIRj1SkWJDHQJG5kJlPXpA==}
     engines: {node: '>=24'}
 
-  '@cedarjs/babel-config@5.0.4':
-    resolution: {integrity: sha512-jgWVnAW95F3tNBu3X4FmyJzeedkRwOW5mW/XoUjUU86lbnMPhPjt9UER3cRB6f5z6dFz/W+013CviYvsv7Chmg==}
+  '@cedarjs/babel-config@5.0.5':
+    resolution: {integrity: sha512-EMpP/OmDfgBgC4s6JWMtk2mAxzW5F2jcjTaJcscqd8/qMlQdwKop2bhH/vVDzApmzD/izemyw2xEssnogpcvug==}
     engines: {node: '>=24'}
 
-  '@cedarjs/cli-helpers@5.0.4':
-    resolution: {integrity: sha512-Udbr+PcoABIA7kuINN+Livh3Zti01qu4lcK5zmGQgx9a0xEISdUTFIvAjHm+MZwkzZdkwlpaR4XRK4YIlD1nLA==}
+  '@cedarjs/cli-helpers@5.0.5':
+    resolution: {integrity: sha512-IDP/vbUC+UK7q9KwCruCLP5BOO2kkAuNN1tD9K+k/65QgVTp0Ll6P+XmE5r1wJ/5zmoa8x+zQnD3pMwDQOF8Hw==}
     engines: {node: '>=24'}
 
-  '@cedarjs/cli@5.0.4':
-    resolution: {integrity: sha512-YFBbXeFadM2AfFLT4tb7Ak0MIvw4Iu12V6+uADLddODiFbxp0LnQBq7AayWVBA9AiXAylpdVftonYSWmUnnVcA==}
-    engines: {node: '>=24'}
-    hasBin: true
-
-  '@cedarjs/context@5.0.4':
-    resolution: {integrity: sha512-YOp0Tlsw8hFwCAgtP/N+YGaP5z+/92m8ixMcooD037MyvFiIcGUgTmxsF4I4DjrurYm0QeMSzIrW52LAhHsMPA==}
-    engines: {node: '>=24'}
-
-  '@cedarjs/cookie-jar@5.0.4':
-    resolution: {integrity: sha512-NtkUdhOXFf7gtP5IzeuYNMjwagjEzOm8EBmm7eqCmXuXJd90u2zCD/Q3A96M2RGHannos2BO0j2lm48xnymatA==}
-    engines: {node: '>=24'}
-
-  '@cedarjs/core@5.0.4':
-    resolution: {integrity: sha512-cMWw2VKDAnHFe5D2sNAxn9xLZkNChZXror2xTIiLfeEgWN1VjsIqcALKqIO0ML/3fcn8cWnkDAUNe0aQWUEU+A==}
+  '@cedarjs/cli@5.0.5':
+    resolution: {integrity: sha512-mx0jABY27BF7oNWmTO/m0bZn1p8OAxMEgTY39VX/xIZ8n6Eg/UL+XWs/RppPRH6sqJVbXSlq1mDX6vdWVp+iFg==}
     engines: {node: '>=24'}
     hasBin: true
 
-  '@cedarjs/eslint-config@5.0.4':
-    resolution: {integrity: sha512-kOrEDfkMO9TIS05/V52fNMiw3403WCUb9odU8NPcRbVJqtHOUND447LzmWfeMf0QfNuteAhJN1W2SWaFpYqmSA==}
+  '@cedarjs/context@5.0.5':
+    resolution: {integrity: sha512-JhDXadLdfCyx92Y3UhFNnbc6hFOXpEEAImpTauNjdH/coR1840MlMEcTSek+9a4LJsNh/yUKkR2iaebVt3yt2Q==}
+    engines: {node: '>=24'}
+
+  '@cedarjs/cookie-jar@5.0.5':
+    resolution: {integrity: sha512-JDhwalGAhbTBezgPNrJQ4mJxotszX+RhmlBHDCdHPGcB7V+iahiOZVAvtn0qN7fxNcdmmUucnmLELX8Kegw3Hg==}
+    engines: {node: '>=24'}
+
+  '@cedarjs/core@5.0.5':
+    resolution: {integrity: sha512-vQYa6wmOcSKAg/FbUvKpPIcekvu2nuFRRY9x1rOzK7elR0RiZEt20ewHIOOOmbNkWArJxbn4QexJlsNuk7R8UQ==}
+    engines: {node: '>=24'}
+    hasBin: true
+
+  '@cedarjs/eslint-config@5.0.5':
+    resolution: {integrity: sha512-3nMCu+dUUV3IRMLNGrftf+TxqtsPCqigW1lAYrFEoXfqhF13LKAGZ66rv/4HdMgvaOfZBK/GdpeXT+R5+iP9nw==}
     engines: {node: '>=24'}
     peerDependencies:
       eslint-plugin-react-compiler: 19.1.0-rc.2
@@ -1120,98 +1120,98 @@ packages:
       eslint-plugin-react-compiler:
         optional: true
 
-  '@cedarjs/eslint-plugin@5.0.4':
-    resolution: {integrity: sha512-TTGRTbNsnlDKLOGlhV8GWWnesK4MicHoy6j+PKkfL1mSMZKdcpwUYMjLG04xHdCU6D+7Tt0y6CXvXwqsPzIPug==}
+  '@cedarjs/eslint-plugin@5.0.5':
+    resolution: {integrity: sha512-gQe6xMqFR3//m0yWx6u1twgE87Uxm0BOwSXW5AJqGyYidF5UUpCnCEJOFrwr6vILGGR/Y/rJIpeUj7r7KyjgGw==}
     engines: {node: '>=24'}
 
-  '@cedarjs/fastify-web@5.0.4':
-    resolution: {integrity: sha512-H/GhWDmt+ietFb25G4c4rISxwrX6iIuaiNwD8fmBj4scQVB2twj4f/f7HFtej0IJW+NcCNP5weUzD+pF5gKn2Q==}
+  '@cedarjs/fastify-web@5.0.5':
+    resolution: {integrity: sha512-5d63JbxU2ftmi3N0WZr4B/f0dtdrWQBYFE53iXljX5FGu1KPJUHdHypf3cztrqVpb8trlnbrob9tIjD2lMOCsw==}
     engines: {node: '>=24'}
 
-  '@cedarjs/forms@5.0.4':
-    resolution: {integrity: sha512-Kg2aKdoO6UoER78CtGRpdUk1Ey07/ETAo22T7krDz5zK2FjKE1FkVVgHYlTUwImoMj7pwj7ogplgdBE61KvDAQ==}
+  '@cedarjs/forms@5.0.5':
+    resolution: {integrity: sha512-z/k5kYbkbIS2MuV+ZtCXA9/A1XhjIvoTPDh1TDToYf5fUyuqNEAzuhCWEcU+eObs9E8RIiLH3L/f3/37yc6DOw==}
     engines: {node: '>=24'}
     peerDependencies:
       react: 18.3.1
 
-  '@cedarjs/graphql-server@5.0.4':
-    resolution: {integrity: sha512-SjhDL+iLALrcXo4CjNrCu0792jgXEiTgZ892Y3Nq0/znstjmfKe1GAAIz+hXEscMIxcxu82xXBgpf2g0yV0BHg==}
+  '@cedarjs/graphql-server@5.0.5':
+    resolution: {integrity: sha512-82oK60vHS1WpgCXiCuugnIgHeG3K1AJcYk7XuElX3I5LHtvLN1j7ZoNVWHWpb2u5jHzxPHl4tXejq2U3xu4mWA==}
     engines: {node: '>=24'}
 
-  '@cedarjs/internal@5.0.4':
-    resolution: {integrity: sha512-O1XEuqXYZJYQdaeuUlbqWMiUTrR2zdyPekiJu7UIJ1c5WNPCA1Tk4ZESbg/ZQBZ8AI0oXgXVu+NOUtSNEwGjgg==}
+  '@cedarjs/internal@5.0.5':
+    resolution: {integrity: sha512-lOPEdR7qOkiQMzc2WRNHjH8eOkFehDdYA1FzIWYrILC1/uVWGgc6LZgU6ZNB0Shw9Zn2p9ACURKGkiDvM/Snag==}
     engines: {node: '>=24'}
     hasBin: true
 
-  '@cedarjs/prerender@5.0.4':
-    resolution: {integrity: sha512-Xzsb2Z8WD3+caL/2DALRi3G6Vh0xarkUcQva2ut8E4BbnVYeMLs/0giCFS/gHyB6GQZOw4caWEhf1RkFzZX86A==}
+  '@cedarjs/prerender@5.0.5':
+    resolution: {integrity: sha512-r2zZJFfYIO/5i+kpp5q3h+pMp/pnA3br+OuYPTz3laexq8tiZRplrb4iyZHxRbsbUMRzP+/lhmCpE8j3wzamzw==}
     engines: {node: '>=24'}
     peerDependencies:
-      '@cedarjs/router': 5.0.4
-      '@cedarjs/web': 5.0.4
+      '@cedarjs/router': 5.0.5
+      '@cedarjs/web': 5.0.5
       react: 18.3.1
       react-dom: 18.3.1
 
-  '@cedarjs/project-config@5.0.4':
-    resolution: {integrity: sha512-BU0HiA/8suv/1pTHCNDBiSh/15sAO7v+5Xt17kHfjJytjM+aRb1teIcmqlccgoMmD2m06GMU/9oBX64ZJAUMbQ==}
+  '@cedarjs/project-config@5.0.5':
+    resolution: {integrity: sha512-DNRS1g7W1mP/fijdv/x6j6sCEZelEp0xja9yHmpXcigqlcO9w1XHkrz2oTwbAe1Y+ptHUy9uWDuWBuE/CuvAIA==}
     engines: {node: '>=24'}
 
-  '@cedarjs/router@5.0.4':
-    resolution: {integrity: sha512-MjiGPbcNUmuAGhNXt+XmE71Z7Z/OpXCQ/R1fVBLknKYI/Z2jCLch7anL4EuRT6X2jNncP1idt26O+sZu9fU24g==}
+  '@cedarjs/router@5.0.5':
+    resolution: {integrity: sha512-H6ON+Dn4jWgSMkqWU2MsNEMI5n/yT+X8eUWArtwOxBQudxFNs6gbNap5y9y5Uu//AYysHIXqBzcUPygeAz72Zw==}
     engines: {node: '>=24'}
     peerDependencies:
-      '@cedarjs/auth': 5.0.4
+      '@cedarjs/auth': 5.0.5
       react: 18.3.1
       react-dom: 18.3.1
 
-  '@cedarjs/server-store@5.0.4':
-    resolution: {integrity: sha512-KIO11pQWCaZ1Dtugx5ta3pZHlofCg/jnUq2BMfHwP0MkCDIi5bjGNgfJPP+7+VRx9sEvfgwoxy8X09T08F2kdg==}
+  '@cedarjs/server-store@5.0.5':
+    resolution: {integrity: sha512-5nXHr9xuC/9m7St8ascIf/uHwoVP7VaQxpGvU319reoNyqA2euCeLzH7mKMq3u13DaMWSHGIEelt/KErDsmGLg==}
     engines: {node: '>=24'}
 
-  '@cedarjs/structure@5.0.4':
-    resolution: {integrity: sha512-mMpUWyGqltsBshsx8sDXdNwzTPezBLja41hDk94WJJSjEuSSSNeCnYPvFiZHIa1kvVd7hnKOhb0YC0/7fvNp5g==}
+  '@cedarjs/structure@5.0.5':
+    resolution: {integrity: sha512-yD2SmoDNxaOkUa16pF/0F+9Vo71Bqo9uR1mQzukYVxmWNcEpx1u6XFHcx5sIi7G/c+jmoYuvoNtczusejJrChw==}
     engines: {node: '>=24'}
 
-  '@cedarjs/telemetry@5.0.4':
-    resolution: {integrity: sha512-x3N3rkH7zog00CAdDOjyiqemNNU8TQarOA41YSh1OLTmGc86DwHodvhilbzS3UQGoeiANBUO6WyI5P6kGK1ing==}
+  '@cedarjs/telemetry@5.0.5':
+    resolution: {integrity: sha512-lfhPCEBenRM53rLBsenbgJ7c5E8mqgySP7gyMoeREIYZSSBPrJyLBABPAXY9k1JKYIrr56cXs/KufnSZPfpgKA==}
     engines: {node: '>=24'}
 
-  '@cedarjs/testing@5.0.4':
-    resolution: {integrity: sha512-wkw5piZugJZVWf19xcQLz/nN4lk45ownD6ULmimnnNsJBp3Vre2bmIqgPIB2I16TPqA5HmvNN7tchIm/q2tFbg==}
+  '@cedarjs/testing@5.0.5':
+    resolution: {integrity: sha512-cD4T2u9r2W0id5Gqsv2TTq5mA4EFHRNRbkrl9JAEWtGT/nS1ENk0OFo0KKUoTcmZ37inopGPULCfVAQyPFxV3A==}
     engines: {node: '>=24'}
     peerDependencies:
-      '@cedarjs/auth': 5.0.4
-      '@cedarjs/router': 5.0.4
-      '@cedarjs/web': 5.0.4
+      '@cedarjs/auth': 5.0.5
+      '@cedarjs/router': 5.0.5
+      '@cedarjs/web': 5.0.5
       vitest: 3.2.6
     peerDependenciesMeta:
       vitest:
         optional: true
 
-  '@cedarjs/utils@5.0.4':
-    resolution: {integrity: sha512-3h5TzdGXMaD9ZFrsVd5H0MeLiKff7dCm3/k7oglhXZ3fqzjebhax1qSpdOU2xMfEXod6N7eH1e5Kt/uVbHdgDQ==}
+  '@cedarjs/utils@5.0.5':
+    resolution: {integrity: sha512-58lPbpEQYkOzIvNuvlp/kLvY4aCT70JeanIsFcR5hlXAzGbaz8d7qGF0VXMlpD0n454dsX0niik9egCpaP/cbg==}
     engines: {node: '>=24'}
 
-  '@cedarjs/vite@5.0.4':
-    resolution: {integrity: sha512-9EerkfuAG+vNopu32u/fu0Ygbn6uWgUPbl0lf0q+thFXaNs8pRvfyb3RWooVlIP/2rFUZQyNSlyiVVsJ+BZuGQ==}
+  '@cedarjs/vite@5.0.5':
+    resolution: {integrity: sha512-EN6jUdEaPcZ8JeVI0wFlgDRlR+VH6JJwRwmrA4KM3G42eYts9yLqkkdlG8CdhF+3VSjldGLhuA250XAFwpgUIw==}
     engines: {node: '>=24'}
     hasBin: true
     peerDependencies:
-      '@cedarjs/auth': 5.0.4
-      '@cedarjs/router': 5.0.4
-      '@cedarjs/web': 5.0.4
+      '@cedarjs/auth': 5.0.5
+      '@cedarjs/router': 5.0.5
+      '@cedarjs/web': 5.0.5
 
-  '@cedarjs/web-server@5.0.4':
-    resolution: {integrity: sha512-Lt7l9UbHYwcyvOMPUu0X6Zvd0BLFCwTg8uHtefxGfwULkjf8Lb0zNw/0jB6AYKUf1gqByx/R+hBG3JKFFVgueA==}
+  '@cedarjs/web-server@5.0.5':
+    resolution: {integrity: sha512-tmlycnzldPiWYqg1RlD2c5M/S3IfxlI2lsQOVGJIBdmdQhjQghf9ObB8AtKmv5VntWoinJbIem+Kd1swguKViQ==}
     engines: {node: '>=24'}
     hasBin: true
 
-  '@cedarjs/web@5.0.4':
-    resolution: {integrity: sha512-J0+dQSUI5rrYVBPdsLcn+qoepso/v1w5Khad60L/5Uxx17CH2cZZxj2I2U09rNOhxZqoQY6R8UMMpGyd1abtfw==}
+  '@cedarjs/web@5.0.5':
+    resolution: {integrity: sha512-z37gDQbToJsETLfXDR5KUB9ZBZCfzXtZF0FYaZZ53PsopvBUuXfvfWxgAidkbGgfMVne/0qbOk+7hzfauWMIxw==}
     engines: {node: '>=24'}
     hasBin: true
     peerDependencies:
-      '@cedarjs/auth': 5.0.4
+      '@cedarjs/auth': 5.0.5
       react: 18.3.1
       react-dom: 18.3.1
 
@@ -9296,13 +9296,13 @@ snapshots:
 
   '@bcoe/v8-coverage@0.2.3': {}
 
-  '@cedarjs/api-server@5.0.4(@cedarjs/auth@5.0.4)(@cedarjs/graphql-server@5.0.4(@escape.tech/graphql-armor-types@0.6.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3))(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@types/node@26.1.1)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0)':
+  '@cedarjs/api-server@5.0.5(@cedarjs/auth@5.0.5)(@cedarjs/graphql-server@5.0.5(@escape.tech/graphql-armor-types@0.6.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3))(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@types/node@26.1.1)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0)':
     dependencies:
-      '@cedarjs/context': 5.0.4
-      '@cedarjs/fastify-web': 5.0.4(typescript@5.9.3)
-      '@cedarjs/internal': 5.0.4(@cedarjs/auth@5.0.4)(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@types/node@26.1.1)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(yaml@2.9.0)
-      '@cedarjs/project-config': 5.0.4(typescript@5.9.3)
-      '@cedarjs/web-server': 5.0.4(typescript@5.9.3)
+      '@cedarjs/context': 5.0.5
+      '@cedarjs/fastify-web': 5.0.5(typescript@5.9.3)
+      '@cedarjs/internal': 5.0.5(@cedarjs/auth@5.0.5)(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@types/node@26.1.1)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(yaml@2.9.0)
+      '@cedarjs/project-config': 5.0.5(typescript@5.9.3)
+      '@cedarjs/web-server': 5.0.5(typescript@5.9.3)
       '@fastify/multipart': 9.4.0
       '@fastify/url-data': 6.0.3
       ansis: 4.2.0
@@ -9319,7 +9319,7 @@ snapshots:
       termi-link: 1.1.0
       yargs: 17.7.3
     optionalDependencies:
-      '@cedarjs/graphql-server': 5.0.4(@escape.tech/graphql-armor-types@0.6.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)
+      '@cedarjs/graphql-server': 5.0.5(@escape.tech/graphql-armor-types@0.6.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)
     transitivePeerDependencies:
       - '@apollo/server'
       - '@cedarjs/auth'
@@ -9354,7 +9354,7 @@ snapshots:
       - utf-8-validate
       - yaml
 
-  '@cedarjs/api@5.0.4(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)':
+  '@cedarjs/api@5.0.5(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)':
     dependencies:
       '@prisma/client': 7.8.0(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)
       '@whatwg-node/fetch': 0.10.13
@@ -9369,11 +9369,11 @@ snapshots:
       - prisma
       - typescript
 
-  '@cedarjs/auth@5.0.4':
+  '@cedarjs/auth@5.0.5':
     dependencies:
       react: 18.3.1
 
-  '@cedarjs/babel-config@5.0.4(graphql-tag@2.12.6(graphql@16.14.2))':
+  '@cedarjs/babel-config@5.0.5(graphql-tag@2.12.6(graphql@16.14.2))':
     dependencies:
       '@babel/core': 7.29.7
       '@babel/parser': 7.29.7
@@ -9384,7 +9384,7 @@ snapshots:
       '@babel/preset-typescript': 7.29.7(@babel/core@7.29.7)
       '@babel/register': 7.29.7(@babel/core@7.29.7)
       '@babel/traverse': 7.29.7
-      '@cedarjs/project-config': 5.0.4(typescript@5.9.3)
+      '@cedarjs/project-config': 5.0.5(typescript@5.9.3)
       babel-plugin-auto-import: 1.1.0
       babel-plugin-graphql-tag: 3.3.0(@babel/core@7.29.7)(graphql-tag@2.12.6(graphql@16.14.2))
       babel-plugin-module-resolver: 5.0.3
@@ -9396,11 +9396,11 @@ snapshots:
       - magicast
       - supports-color
 
-  '@cedarjs/cli-helpers@5.0.4(typescript@5.9.3)':
+  '@cedarjs/cli-helpers@5.0.5(typescript@5.9.3)':
     dependencies:
       '@babel/core': 7.29.7
-      '@cedarjs/project-config': 5.0.4(typescript@5.9.3)
-      '@cedarjs/telemetry': 5.0.4(typescript@5.9.3)
+      '@cedarjs/project-config': 5.0.5(typescript@5.9.3)
+      '@cedarjs/telemetry': 5.0.5(typescript@5.9.3)
       '@listr2/prompt-adapter-enquirer': 4.2.1(enquirer@2.4.1)(listr2@10.2.2)
       '@opentelemetry/api': 1.9.1
       ansis: 4.2.0
@@ -9422,21 +9422,21 @@ snapshots:
       - supports-color
       - typescript
 
-  '@cedarjs/cli@5.0.4(88802bb9a9080fcae71d4a219a2c6c53)':
+  '@cedarjs/cli@5.0.5(90947400a7d91b8db5b591b5cb4899d8)':
     dependencies:
       '@babel/parser': 7.29.7
       '@babel/preset-typescript': 7.29.7(@babel/core@7.29.7)
-      '@cedarjs/api-server': 5.0.4(@cedarjs/auth@5.0.4)(@cedarjs/graphql-server@5.0.4(@escape.tech/graphql-armor-types@0.6.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3))(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@types/node@26.1.1)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0)
-      '@cedarjs/cli-helpers': 5.0.4(typescript@5.9.3)
-      '@cedarjs/fastify-web': 5.0.4(typescript@5.9.3)
-      '@cedarjs/internal': 5.0.4(@cedarjs/auth@5.0.4)(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@types/node@26.1.1)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(yaml@2.9.0)
-      '@cedarjs/prerender': 5.0.4(@babel/core@7.29.7)(@cedarjs/auth@5.0.4)(@cedarjs/router@5.0.4(@cedarjs/auth@5.0.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.4(@cedarjs/auth@5.0.4)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/node@26.1.1)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(hono@4.12.32)(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(srvx@0.11.16)(terser@5.49.0)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)(yaml@2.9.0)
-      '@cedarjs/project-config': 5.0.4(typescript@5.9.3)
-      '@cedarjs/structure': 5.0.4(typescript@5.9.3)
-      '@cedarjs/telemetry': 5.0.4(typescript@5.9.3)
-      '@cedarjs/utils': 5.0.4
-      '@cedarjs/vite': 5.0.4(@babel/core@7.29.7)(@cedarjs/auth@5.0.4)(@cedarjs/router@5.0.4(@cedarjs/auth@5.0.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.4(@cedarjs/auth@5.0.4)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/node@26.1.1)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(hono@4.12.32)(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(rollup@4.60.4)(srvx@0.11.16)(terser@5.49.0)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)(yaml@2.9.0)
-      '@cedarjs/web-server': 5.0.4(typescript@5.9.3)
+      '@cedarjs/api-server': 5.0.5(@cedarjs/auth@5.0.5)(@cedarjs/graphql-server@5.0.5(@escape.tech/graphql-armor-types@0.6.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3))(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@types/node@26.1.1)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0)
+      '@cedarjs/cli-helpers': 5.0.5(typescript@5.9.3)
+      '@cedarjs/fastify-web': 5.0.5(typescript@5.9.3)
+      '@cedarjs/internal': 5.0.5(@cedarjs/auth@5.0.5)(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@types/node@26.1.1)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(yaml@2.9.0)
+      '@cedarjs/prerender': 5.0.5(@babel/core@7.29.7)(@cedarjs/auth@5.0.5)(@cedarjs/router@5.0.5(@cedarjs/auth@5.0.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.5(@cedarjs/auth@5.0.5)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/node@26.1.1)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(hono@4.12.32)(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(srvx@0.11.16)(terser@5.49.0)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)(yaml@2.9.0)
+      '@cedarjs/project-config': 5.0.5(typescript@5.9.3)
+      '@cedarjs/structure': 5.0.5(typescript@5.9.3)
+      '@cedarjs/telemetry': 5.0.5(typescript@5.9.3)
+      '@cedarjs/utils': 5.0.5
+      '@cedarjs/vite': 5.0.5(@babel/core@7.29.7)(@cedarjs/auth@5.0.5)(@cedarjs/router@5.0.5(@cedarjs/auth@5.0.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.5(@cedarjs/auth@5.0.5)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/node@26.1.1)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(hono@4.12.32)(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(rollup@4.60.4)(srvx@0.11.16)(terser@5.49.0)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)(yaml@2.9.0)
+      '@cedarjs/web-server': 5.0.5(typescript@5.9.3)
       '@listr2/prompt-adapter-enquirer': 4.2.1(enquirer@2.4.1)(listr2@10.2.2)
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/core': 1.30.1(@opentelemetry/api@1.9.1)
@@ -9550,24 +9550,24 @@ snapshots:
       - webpack
       - yaml
 
-  '@cedarjs/context@5.0.4': {}
+  '@cedarjs/context@5.0.5': {}
 
-  '@cedarjs/cookie-jar@5.0.4':
+  '@cedarjs/cookie-jar@5.0.5':
     dependencies:
       cookie: 1.1.1
       esbuild: 0.27.7
       fast-glob: 3.3.3
 
-  '@cedarjs/core@5.0.4(ce477286443e8dd9b9ac11573a6fd053)':
+  '@cedarjs/core@5.0.5(a7b980f5afacedf35efb13182f866cf5)':
     dependencies:
       '@babel/cli': 7.29.7(@babel/core@7.29.7)
-      '@cedarjs/api-server': 5.0.4(@cedarjs/auth@5.0.4)(@cedarjs/graphql-server@5.0.4(@escape.tech/graphql-armor-types@0.6.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3))(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@types/node@26.1.1)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0)
-      '@cedarjs/cli': 5.0.4(88802bb9a9080fcae71d4a219a2c6c53)
-      '@cedarjs/eslint-config': 5.0.4(@cedarjs/auth@5.0.4)(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@testing-library/dom@9.3.4)(@types/node@26.1.1)(@typescript-eslint/utils@8.60.1(eslint@8.57.1)(typescript@5.9.3))(babel-plugin-module-resolver@5.0.3)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0)
-      '@cedarjs/internal': 5.0.4(@cedarjs/auth@5.0.4)(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@types/node@26.1.1)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(yaml@2.9.0)
-      '@cedarjs/project-config': 5.0.4(typescript@5.9.3)
-      '@cedarjs/testing': 5.0.4(@babel/core@7.29.7)(@cedarjs/auth@5.0.4)(@cedarjs/router@5.0.4(@cedarjs/auth@5.0.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.4(@cedarjs/auth@5.0.4)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)
-      '@cedarjs/web-server': 5.0.4(typescript@5.9.3)
+      '@cedarjs/api-server': 5.0.5(@cedarjs/auth@5.0.5)(@cedarjs/graphql-server@5.0.5(@escape.tech/graphql-armor-types@0.6.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3))(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@types/node@26.1.1)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0)
+      '@cedarjs/cli': 5.0.5(90947400a7d91b8db5b591b5cb4899d8)
+      '@cedarjs/eslint-config': 5.0.5(@cedarjs/auth@5.0.5)(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@testing-library/dom@9.3.4)(@types/node@26.1.1)(@typescript-eslint/utils@8.60.1(eslint@8.57.1)(typescript@5.9.3))(babel-plugin-module-resolver@5.0.3)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0)
+      '@cedarjs/internal': 5.0.5(@cedarjs/auth@5.0.5)(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@types/node@26.1.1)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(yaml@2.9.0)
+      '@cedarjs/project-config': 5.0.5(typescript@5.9.3)
+      '@cedarjs/testing': 5.0.5(@babel/core@7.29.7)(@cedarjs/auth@5.0.5)(@cedarjs/router@5.0.5(@cedarjs/auth@5.0.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.5(@cedarjs/auth@5.0.5)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)
+      '@cedarjs/web-server': 5.0.5(typescript@5.9.3)
       graphql-tag: 2.12.6(graphql@16.14.2)
       nodemon: 3.1.14
       typescript: 5.9.3
@@ -9641,15 +9641,15 @@ snapshots:
       - webpack
       - yaml
 
-  '@cedarjs/eslint-config@5.0.4(@cedarjs/auth@5.0.4)(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@testing-library/dom@9.3.4)(@types/node@26.1.1)(@typescript-eslint/utils@8.60.1(eslint@8.57.1)(typescript@5.9.3))(babel-plugin-module-resolver@5.0.3)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0)':
+  '@cedarjs/eslint-config@5.0.5(@cedarjs/auth@5.0.5)(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@testing-library/dom@9.3.4)(@types/node@26.1.1)(@typescript-eslint/utils@8.60.1(eslint@8.57.1)(typescript@5.9.3))(babel-plugin-module-resolver@5.0.3)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0)':
     dependencies:
       '@babel/core': 7.29.7
       '@babel/eslint-parser': 7.29.7(@babel/core@7.29.7)(eslint@8.57.1)
       '@babel/eslint-plugin': 7.29.7(@babel/eslint-parser@7.29.7(@babel/core@7.29.7)(eslint@8.57.1))(eslint@8.57.1)
-      '@cedarjs/babel-config': 5.0.4(graphql-tag@2.12.6(graphql@16.14.2))
-      '@cedarjs/eslint-plugin': 5.0.4(typescript@5.9.3)
-      '@cedarjs/internal': 5.0.4(@cedarjs/auth@5.0.4)(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@types/node@26.1.1)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(yaml@2.9.0)
-      '@cedarjs/project-config': 5.0.4(typescript@5.9.3)
+      '@cedarjs/babel-config': 5.0.5(graphql-tag@2.12.6(graphql@16.14.2))
+      '@cedarjs/eslint-plugin': 5.0.5(typescript@5.9.3)
+      '@cedarjs/internal': 5.0.5(@cedarjs/auth@5.0.5)(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@types/node@26.1.1)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(yaml@2.9.0)
+      '@cedarjs/project-config': 5.0.5(typescript@5.9.3)
       '@eslint/js': 8.57.1
       '@typescript-eslint/eslint-plugin': 8.60.1(@typescript-eslint/parser@8.60.1(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
       '@typescript-eslint/parser': 8.60.1(eslint@8.57.1)(typescript@5.9.3)
@@ -9704,7 +9704,7 @@ snapshots:
       - utf-8-validate
       - yaml
 
-  '@cedarjs/eslint-plugin@5.0.4(typescript@5.9.3)':
+  '@cedarjs/eslint-plugin@5.0.5(typescript@5.9.3)':
     dependencies:
       '@typescript-eslint/utils': 8.60.1(eslint@8.57.1)(typescript@5.9.3)
       eslint: 8.57.1
@@ -9712,9 +9712,9 @@ snapshots:
       - supports-color
       - typescript
 
-  '@cedarjs/fastify-web@5.0.4(typescript@5.9.3)':
+  '@cedarjs/fastify-web@5.0.5(typescript@5.9.3)':
     dependencies:
-      '@cedarjs/project-config': 5.0.4(typescript@5.9.3)
+      '@cedarjs/project-config': 5.0.5(typescript@5.9.3)
       '@fastify/http-proxy': 11.5.0
       '@fastify/static': 8.3.0
       '@fastify/url-data': 6.0.3
@@ -9725,17 +9725,17 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@cedarjs/forms@5.0.4(react@18.3.1)':
+  '@cedarjs/forms@5.0.5(react@18.3.1)':
     dependencies:
       graphql: 16.14.2
       pascalcase: 1.0.0
       react: 18.3.1
       react-hook-form: 7.74.0(react@18.3.1)
 
-  '@cedarjs/graphql-server@5.0.4(@escape.tech/graphql-armor-types@0.6.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)':
+  '@cedarjs/graphql-server@5.0.5(@escape.tech/graphql-armor-types@0.6.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)':
     dependencies:
-      '@cedarjs/api': 5.0.4(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)
-      '@cedarjs/context': 5.0.4
+      '@cedarjs/api': 5.0.5(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)
+      '@cedarjs/context': 5.0.5
       '@envelop/core': 5.5.1
       '@envelop/depth-limit': 4.0.0(@envelop/core@5.5.1)(graphql@16.14.2)
       '@envelop/disable-introspection': 6.0.0(@envelop/core@5.5.1)(graphql@16.14.2)
@@ -9762,20 +9762,20 @@ snapshots:
       - redis
       - typescript
 
-  '@cedarjs/internal@5.0.4(@cedarjs/auth@5.0.4)(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@types/node@26.1.1)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(yaml@2.9.0)':
+  '@cedarjs/internal@5.0.5(@cedarjs/auth@5.0.5)(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@types/node@26.1.1)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(yaml@2.9.0)':
     dependencies:
       '@babel/core': 7.29.7
       '@babel/parser': 7.29.7
       '@babel/plugin-transform-react-jsx': 7.29.7(@babel/core@7.29.7)
       '@babel/plugin-transform-typescript': 7.29.7(@babel/core@7.29.7)
       '@babel/traverse': 7.29.7
-      '@cedarjs/babel-config': 5.0.4(graphql-tag@2.12.6(graphql@16.14.2))
-      '@cedarjs/cli-helpers': 5.0.4(typescript@5.9.3)
-      '@cedarjs/graphql-server': 5.0.4(@escape.tech/graphql-armor-types@0.6.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)
-      '@cedarjs/project-config': 5.0.4(typescript@5.9.3)
-      '@cedarjs/router': 5.0.4(@cedarjs/auth@5.0.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)
-      '@cedarjs/structure': 5.0.4(typescript@5.9.3)
-      '@cedarjs/utils': 5.0.4
+      '@cedarjs/babel-config': 5.0.5(graphql-tag@2.12.6(graphql@16.14.2))
+      '@cedarjs/cli-helpers': 5.0.5(typescript@5.9.3)
+      '@cedarjs/graphql-server': 5.0.5(@escape.tech/graphql-armor-types@0.6.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)
+      '@cedarjs/project-config': 5.0.5(typescript@5.9.3)
+      '@cedarjs/router': 5.0.5(@cedarjs/auth@5.0.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)
+      '@cedarjs/structure': 5.0.5(typescript@5.9.3)
+      '@cedarjs/utils': 5.0.5
       '@graphql-codegen/add': 6.0.1(graphql@16.14.2)
       '@graphql-codegen/cli': 6.3.1(@types/node@26.1.1)(graphql@16.14.2)(typescript@5.9.3)
       '@graphql-codegen/client-preset': 5.3.0(graphql@16.14.2)
@@ -9846,18 +9846,18 @@ snapshots:
       - utf-8-validate
       - yaml
 
-  '@cedarjs/prerender@5.0.4(@babel/core@7.29.7)(@cedarjs/auth@5.0.4)(@cedarjs/router@5.0.4(@cedarjs/auth@5.0.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.4(@cedarjs/auth@5.0.4)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/node@26.1.1)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(hono@4.12.32)(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(srvx@0.11.16)(terser@5.49.0)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)(yaml@2.9.0)':
+  '@cedarjs/prerender@5.0.5(@babel/core@7.29.7)(@cedarjs/auth@5.0.5)(@cedarjs/router@5.0.5(@cedarjs/auth@5.0.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.5(@cedarjs/auth@5.0.5)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/node@26.1.1)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(hono@4.12.32)(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(srvx@0.11.16)(terser@5.49.0)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)(yaml@2.9.0)':
     dependencies:
       '@ast-grep/napi': 0.43.0
       '@babel/generator': 7.29.7
       '@babel/parser': 7.29.7
       '@babel/traverse': 7.29.7
-      '@cedarjs/babel-config': 5.0.4(graphql-tag@2.12.6(graphql@16.14.2))
-      '@cedarjs/project-config': 5.0.4(typescript@5.9.3)
-      '@cedarjs/router': 5.0.4(@cedarjs/auth@5.0.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)
-      '@cedarjs/structure': 5.0.4(typescript@5.9.3)
-      '@cedarjs/vite': 5.0.4(@babel/core@7.29.7)(@cedarjs/auth@5.0.4)(@cedarjs/router@5.0.4(@cedarjs/auth@5.0.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.4(@cedarjs/auth@5.0.4)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/node@26.1.1)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(hono@4.12.32)(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(rollup@4.60.4)(srvx@0.11.16)(terser@5.49.0)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)(yaml@2.9.0)
-      '@cedarjs/web': 5.0.4(@cedarjs/auth@5.0.4)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@cedarjs/babel-config': 5.0.5(graphql-tag@2.12.6(graphql@16.14.2))
+      '@cedarjs/project-config': 5.0.5(typescript@5.9.3)
+      '@cedarjs/router': 5.0.5(@cedarjs/auth@5.0.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)
+      '@cedarjs/structure': 5.0.5(typescript@5.9.3)
+      '@cedarjs/vite': 5.0.5(@babel/core@7.29.7)(@cedarjs/auth@5.0.5)(@cedarjs/router@5.0.5(@cedarjs/auth@5.0.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.5(@cedarjs/auth@5.0.5)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/node@26.1.1)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(hono@4.12.32)(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(rollup@4.60.4)(srvx@0.11.16)(terser@5.49.0)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)(yaml@2.9.0)
+      '@cedarjs/web': 5.0.5(@cedarjs/auth@5.0.5)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@rollup/plugin-alias': 5.1.1(rollup@4.60.4)
       '@rollup/plugin-commonjs': 28.0.9(rollup@4.60.4)
       '@rollup/plugin-node-resolve': 16.0.3(rollup@4.60.4)
@@ -9929,7 +9929,7 @@ snapshots:
       - webpack
       - yaml
 
-  '@cedarjs/project-config@5.0.4(typescript@5.9.3)':
+  '@cedarjs/project-config@5.0.5(typescript@5.9.3)':
     dependencies:
       '@prisma/internals': 7.8.0(typescript@5.9.3)
       deepmerge: 4.3.1
@@ -9940,11 +9940,11 @@ snapshots:
       - magicast
       - typescript
 
-  '@cedarjs/router@5.0.4(@cedarjs/auth@5.0.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)':
+  '@cedarjs/router@5.0.5(@cedarjs/auth@5.0.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)':
     dependencies:
-      '@cedarjs/auth': 5.0.4
-      '@cedarjs/project-config': 5.0.4(typescript@5.9.3)
-      '@cedarjs/server-store': 5.0.4
+      '@cedarjs/auth': 5.0.5
+      '@cedarjs/project-config': 5.0.5(typescript@5.9.3)
+      '@cedarjs/server-store': 5.0.5
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       ts-toolbelt: 9.6.0
@@ -9952,16 +9952,16 @@ snapshots:
       - magicast
       - typescript
 
-  '@cedarjs/server-store@5.0.4':
+  '@cedarjs/server-store@5.0.5':
     dependencies:
-      '@cedarjs/auth': 5.0.4
-      '@cedarjs/cookie-jar': 5.0.4
+      '@cedarjs/auth': 5.0.5
+      '@cedarjs/cookie-jar': 5.0.5
       esbuild: 0.27.7
       fast-glob: 3.3.3
 
-  '@cedarjs/structure@5.0.4(typescript@5.9.3)':
+  '@cedarjs/structure@5.0.5(typescript@5.9.3)':
     dependencies:
-      '@cedarjs/project-config': 5.0.4(typescript@5.9.3)
+      '@cedarjs/project-config': 5.0.5(typescript@5.9.3)
       '@prisma/internals': 7.8.0(typescript@5.9.3)
       '@types/line-column': 1.0.2
       camelcase: 6.3.0
@@ -9978,10 +9978,10 @@ snapshots:
       - magicast
       - typescript
 
-  '@cedarjs/telemetry@5.0.4(typescript@5.9.3)':
+  '@cedarjs/telemetry@5.0.5(typescript@5.9.3)':
     dependencies:
-      '@cedarjs/project-config': 5.0.4(typescript@5.9.3)
-      '@cedarjs/structure': 5.0.4(typescript@5.9.3)
+      '@cedarjs/project-config': 5.0.5(typescript@5.9.3)
+      '@cedarjs/structure': 5.0.5(typescript@5.9.3)
       '@whatwg-node/fetch': 0.10.13
       ci-info: 4.4.0
       envinfo: 7.21.0
@@ -9992,15 +9992,15 @@ snapshots:
       - magicast
       - typescript
 
-  '@cedarjs/testing@5.0.4(@babel/core@7.29.7)(@cedarjs/auth@5.0.4)(@cedarjs/router@5.0.4(@cedarjs/auth@5.0.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.4(@cedarjs/auth@5.0.4)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)':
+  '@cedarjs/testing@5.0.5(@babel/core@7.29.7)(@cedarjs/auth@5.0.5)(@cedarjs/router@5.0.5(@cedarjs/auth@5.0.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.5(@cedarjs/auth@5.0.5)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)':
     dependencies:
-      '@cedarjs/auth': 5.0.4
-      '@cedarjs/babel-config': 5.0.4(graphql-tag@2.12.6(graphql@16.14.2))
-      '@cedarjs/context': 5.0.4
-      '@cedarjs/graphql-server': 5.0.4(@escape.tech/graphql-armor-types@0.6.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)
-      '@cedarjs/project-config': 5.0.4(typescript@5.9.3)
-      '@cedarjs/router': 5.0.4(@cedarjs/auth@5.0.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)
-      '@cedarjs/web': 5.0.4(@cedarjs/auth@5.0.4)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@cedarjs/auth': 5.0.5
+      '@cedarjs/babel-config': 5.0.5(graphql-tag@2.12.6(graphql@16.14.2))
+      '@cedarjs/context': 5.0.5
+      '@cedarjs/graphql-server': 5.0.5(@escape.tech/graphql-armor-types@0.6.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)
+      '@cedarjs/project-config': 5.0.5(typescript@5.9.3)
+      '@cedarjs/router': 5.0.5(@cedarjs/auth@5.0.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)
+      '@cedarjs/web': 5.0.5(@cedarjs/auth@5.0.5)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@testing-library/jest-dom': 6.9.1
       '@testing-library/react': 14.3.1(@types/react@18.3.31)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@testing-library/user-event': 14.6.1(@testing-library/dom@9.3.4)
@@ -10043,29 +10043,29 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@cedarjs/utils@5.0.4':
+  '@cedarjs/utils@5.0.5':
     dependencies:
       pluralize: 8.0.0
 
-  '@cedarjs/vite@5.0.4(@babel/core@7.29.7)(@cedarjs/auth@5.0.4)(@cedarjs/router@5.0.4(@cedarjs/auth@5.0.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.4(@cedarjs/auth@5.0.4)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/node@26.1.1)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(hono@4.12.32)(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(rollup@4.60.4)(srvx@0.11.16)(terser@5.49.0)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)(yaml@2.9.0)':
+  '@cedarjs/vite@5.0.5(@babel/core@7.29.7)(@cedarjs/auth@5.0.5)(@cedarjs/router@5.0.5(@cedarjs/auth@5.0.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.5(@cedarjs/auth@5.0.5)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/node@26.1.1)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(hono@4.12.32)(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(rollup@4.60.4)(srvx@0.11.16)(terser@5.49.0)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)(yaml@2.9.0)':
     dependencies:
       '@ast-grep/napi': 0.43.0
       '@babel/generator': 7.29.7
       '@babel/parser': 7.29.7
       '@babel/traverse': 7.29.7
       '@babel/types': 7.29.7
-      '@cedarjs/api': 5.0.4(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)
-      '@cedarjs/auth': 5.0.4
-      '@cedarjs/babel-config': 5.0.4(graphql-tag@2.12.6(graphql@16.14.2))
-      '@cedarjs/context': 5.0.4
-      '@cedarjs/cookie-jar': 5.0.4
-      '@cedarjs/graphql-server': 5.0.4(@escape.tech/graphql-armor-types@0.6.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)
-      '@cedarjs/internal': 5.0.4(@cedarjs/auth@5.0.4)(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@types/node@26.1.1)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(yaml@2.9.0)
-      '@cedarjs/project-config': 5.0.4(typescript@5.9.3)
-      '@cedarjs/router': 5.0.4(@cedarjs/auth@5.0.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)
-      '@cedarjs/server-store': 5.0.4
-      '@cedarjs/testing': 5.0.4(@babel/core@7.29.7)(@cedarjs/auth@5.0.4)(@cedarjs/router@5.0.4(@cedarjs/auth@5.0.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.4(@cedarjs/auth@5.0.4)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)
-      '@cedarjs/web': 5.0.4(@cedarjs/auth@5.0.4)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@cedarjs/api': 5.0.5(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)
+      '@cedarjs/auth': 5.0.5
+      '@cedarjs/babel-config': 5.0.5(graphql-tag@2.12.6(graphql@16.14.2))
+      '@cedarjs/context': 5.0.5
+      '@cedarjs/cookie-jar': 5.0.5
+      '@cedarjs/graphql-server': 5.0.5(@escape.tech/graphql-armor-types@0.6.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)
+      '@cedarjs/internal': 5.0.5(@cedarjs/auth@5.0.5)(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@types/node@26.1.1)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(yaml@2.9.0)
+      '@cedarjs/project-config': 5.0.5(typescript@5.9.3)
+      '@cedarjs/router': 5.0.5(@cedarjs/auth@5.0.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)
+      '@cedarjs/server-store': 5.0.5
+      '@cedarjs/testing': 5.0.5(@babel/core@7.29.7)(@cedarjs/auth@5.0.5)(@cedarjs/router@5.0.5(@cedarjs/auth@5.0.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.5(@cedarjs/auth@5.0.5)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)
+      '@cedarjs/web': 5.0.5(@cedarjs/auth@5.0.5)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@fastify/url-data': 6.0.3
       '@swc/core': 1.15.41
       '@universal-deploy/store': 0.2.1(srvx@0.11.16)
@@ -10151,25 +10151,25 @@ snapshots:
       - webpack
       - yaml
 
-  '@cedarjs/vite@5.0.4(@babel/core@7.29.7)(@cedarjs/auth@5.0.4)(@cedarjs/router@5.0.4(@cedarjs/auth@5.0.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.4(@cedarjs/auth@5.0.4)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/node@26.1.1)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(hono@4.12.32)(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(rollup@4.62.3)(srvx@0.11.22)(terser@5.49.0)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)(webpack@5.109.0(@swc/core@1.15.41))(yaml@2.9.0)':
+  '@cedarjs/vite@5.0.5(@babel/core@7.29.7)(@cedarjs/auth@5.0.5)(@cedarjs/router@5.0.5(@cedarjs/auth@5.0.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.5(@cedarjs/auth@5.0.5)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/node@26.1.1)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(hono@4.12.32)(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(rollup@4.62.3)(srvx@0.11.22)(terser@5.49.0)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)(webpack@5.109.0(@swc/core@1.15.41))(yaml@2.9.0)':
     dependencies:
       '@ast-grep/napi': 0.43.0
       '@babel/generator': 7.29.7
       '@babel/parser': 7.29.7
       '@babel/traverse': 7.29.7
       '@babel/types': 7.29.7
-      '@cedarjs/api': 5.0.4(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)
-      '@cedarjs/auth': 5.0.4
-      '@cedarjs/babel-config': 5.0.4(graphql-tag@2.12.6(graphql@16.14.2))
-      '@cedarjs/context': 5.0.4
-      '@cedarjs/cookie-jar': 5.0.4
-      '@cedarjs/graphql-server': 5.0.4(@escape.tech/graphql-armor-types@0.6.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)
-      '@cedarjs/internal': 5.0.4(@cedarjs/auth@5.0.4)(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@types/node@26.1.1)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(yaml@2.9.0)
-      '@cedarjs/project-config': 5.0.4(typescript@5.9.3)
-      '@cedarjs/router': 5.0.4(@cedarjs/auth@5.0.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)
-      '@cedarjs/server-store': 5.0.4
-      '@cedarjs/testing': 5.0.4(@babel/core@7.29.7)(@cedarjs/auth@5.0.4)(@cedarjs/router@5.0.4(@cedarjs/auth@5.0.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.4(@cedarjs/auth@5.0.4)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)
-      '@cedarjs/web': 5.0.4(@cedarjs/auth@5.0.4)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@cedarjs/api': 5.0.5(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)
+      '@cedarjs/auth': 5.0.5
+      '@cedarjs/babel-config': 5.0.5(graphql-tag@2.12.6(graphql@16.14.2))
+      '@cedarjs/context': 5.0.5
+      '@cedarjs/cookie-jar': 5.0.5
+      '@cedarjs/graphql-server': 5.0.5(@escape.tech/graphql-armor-types@0.6.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3)
+      '@cedarjs/internal': 5.0.5(@cedarjs/auth@5.0.5)(@escape.tech/graphql-armor-types@0.6.0)(@swc/core@1.15.41)(@types/node@26.1.1)(graphql-tag@2.12.6(graphql@16.14.2))(jiti@2.7.0)(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(yaml@2.9.0)
+      '@cedarjs/project-config': 5.0.5(typescript@5.9.3)
+      '@cedarjs/router': 5.0.5(@cedarjs/auth@5.0.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)
+      '@cedarjs/server-store': 5.0.5
+      '@cedarjs/testing': 5.0.5(@babel/core@7.29.7)(@cedarjs/auth@5.0.5)(@cedarjs/router@5.0.5(@cedarjs/auth@5.0.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@cedarjs/web@5.0.5(@cedarjs/auth@5.0.5)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@escape.tech/graphql-armor-types@0.6.0)(@testing-library/dom@9.3.4)(@types/react@18.3.31)(graphql-tag@2.12.6(graphql@16.14.2))(prisma@7.8.0(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(better-sqlite3@12.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))(typescript@5.9.3)
+      '@cedarjs/web': 5.0.5(@cedarjs/auth@5.0.5)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@fastify/url-data': 6.0.3
       '@swc/core': 1.15.41
       '@universal-deploy/store': 0.2.1(srvx@0.11.22)
@@ -10255,10 +10255,10 @@ snapshots:
       - webpack
       - yaml
 
-  '@cedarjs/web-server@5.0.4(typescript@5.9.3)':
+  '@cedarjs/web-server@5.0.5(typescript@5.9.3)':
     dependencies:
-      '@cedarjs/fastify-web': 5.0.4(typescript@5.9.3)
-      '@cedarjs/project-config': 5.0.4(typescript@5.9.3)
+      '@cedarjs/fastify-web': 5.0.5(typescript@5.9.3)
+      '@cedarjs/project-config': 5.0.5(typescript@5.9.3)
       ansis: 4.2.0
       dotenv-defaults: 5.0.2
       fastify: 5.8.5
@@ -10269,11 +10269,11 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@cedarjs/web@5.0.4(@cedarjs/auth@5.0.4)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@cedarjs/web@5.0.5(@cedarjs/auth@5.0.5)(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@apollo/client': 3.14.1(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(graphql@16.14.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@cedarjs/auth': 5.0.4
-      '@cedarjs/server-store': 5.0.4
+      '@cedarjs/auth': 5.0.5
+      '@cedarjs/server-store': 5.0.5
       '@dr.pogodin/react-helmet': 2.0.4(react@18.3.1)
       '@whatwg-node/fetch': 0.10.13
       apollo-upload-client: 18.0.1(@apollo/client@3.14.1(@types/react@18.3.31)(graphql-ws@6.2.0(graphql@16.14.2)(ws@8.21.1))(graphql@16.14.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(graphql@16.14.2)
@@ -10648,7 +10648,7 @@ snapshots:
       '@graphql-tools/graphql-file-loader': 8.1.12(graphql@16.14.2)
       '@graphql-tools/json-file-loader': 8.0.32(graphql@16.14.2)
       '@graphql-tools/load': 8.1.8(graphql@16.14.2)
-      '@graphql-tools/merge': 9.1.9(graphql@16.14.2)
+      '@graphql-tools/merge': 9.2.2(graphql@16.14.2)
       '@graphql-tools/url-loader': 9.1.6(@types/node@26.1.1)(graphql@16.14.2)
       '@graphql-tools/utils': 11.2.2(graphql@16.14.2)
       '@inquirer/prompts': 7.10.1(@types/node@26.1.1)
@@ -11014,7 +11014,7 @@ snapshots:
 
   '@graphql-tools/schema@10.0.33(graphql@16.14.2)':
     dependencies:
-      '@graphql-tools/merge': 9.1.9(graphql@16.14.2)
+      '@graphql-tools/merge': 9.2.2(graphql@16.14.2)
       '@graphql-tools/utils': 11.2.2(graphql@16.14.2)
       graphql: 16.14.2
       tslib: 2.8.1
@@ -11271,7 +11271,7 @@ snapshots:
   '@jest/console@29.7.0':
     dependencies:
       '@jest/types': 29.6.3
-      '@types/node': 24.10.4
+      '@types/node': 26.1.1
       chalk: 4.1.2
       jest-message-util: 29.7.0
       jest-util: 29.7.0
@@ -11284,14 +11284,14 @@ snapshots:
       '@jest/test-result': 29.7.0
       '@jest/transform': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 24.10.4
+      '@types/node': 26.1.1
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       ci-info: 3.9.0
       exit: 0.1.2
       graceful-fs: 4.2.11
       jest-changed-files: 29.7.0
-      jest-config: 29.7.0(@types/node@24.10.4)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))
+      jest-config: 29.7.0(@types/node@26.1.1)(ts-node@10.9.2(@swc/core@1.15.41)(@types/node@26.1.1)(typescript@5.9.3))
       jest-haste-map: 29.7.0
       jest-message-util: 29.7.0
       jest-regex-util: 29.6.3
@@ -11316,7 +11316,7 @@ snapshots:
     dependencies:
       '@jest/fake-timers': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 24.10.4
+      '@types/node': 26.1.1
       jest-mock: 29.7.0
 
   '@jest/expect-utils@29.7.0':
@@ -11334,7 +11334,7 @@ snapshots:
     dependencies:
       '@jest/types': 29.6.3
       '@sinonjs/fake-timers': 10.3.0
-      '@types/node': 24.10.4
+      '@types/node': 26.1.1
       jest-message-util: 29.7.0
       jest-mock: 29.7.0
       jest-util: 29.7.0
@@ -11356,7 +11356,7 @@ snapshots:
       '@jest/transform': 29.7.0
       '@jest/types': 29.6.3
       '@jridgewell/trace-mapping': 0.3.31
-      '@types/node': 24.10.4
+      '@types/node': 26.1.1
       chalk: 4.1.2
       collect-v8-coverage: 1.0.3
       exit: 0.1.2
@@ -11426,7 +11426,7 @@ snapshots:
       '@jest/schemas': 29.6.3
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 24.10.4
+      '@types/node': 26.1.1
       '@types/yargs': 17.0.35
       chalk: 4.1.2
 
@@ -11604,7 +11604,7 @@ snapshots:
       '@opentelemetry/propagator-b3': 1.30.1(@opentelemetry/api@1.9.1)
       '@opentelemetry/propagator-jaeger': 1.30.1(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-trace-base': 1.30.1(@opentelemetry/api@1.9.1)
-      semver: 7.7.4
+      semver: 7.8.5
 
   '@opentelemetry/semantic-conventions@1.28.0': {}
 
@@ -12348,7 +12348,7 @@ snapshots:
 
   '@types/graceful-fs@4.1.9':
     dependencies:
-      '@types/node': 24.10.4
+      '@types/node': 26.1.1
 
   '@types/http-proxy@1.17.17':
     dependencies:
@@ -12373,7 +12373,7 @@ snapshots:
 
   '@types/jsdom@20.0.1':
     dependencies:
-      '@types/node': 24.10.4
+      '@types/node': 26.1.1
       '@types/tough-cookie': 4.0.5
       parse5: 7.3.0
 
@@ -12406,7 +12406,7 @@ snapshots:
 
   '@types/set-cookie-parser@2.4.10':
     dependencies:
-      '@types/node': 24.10.4
+      '@types/node': 26.1.1
 
   '@types/stack-utils@2.0.3': {}
 
@@ -12453,7 +12453,7 @@ snapshots:
   '@typescript-eslint/project-service@8.60.1(typescript@5.9.3)':
     dependencies:
       '@typescript-eslint/tsconfig-utils': 8.60.1(typescript@5.9.3)
-      '@typescript-eslint/types': 8.60.1
+      '@typescript-eslint/types': 8.65.0
       debug: 4.4.3(supports-color@5.5.0)
       typescript: 5.9.3
     transitivePeerDependencies:
@@ -12917,7 +12917,7 @@ snapshots:
 
   acorn-loose@8.5.2:
     dependencies:
-      acorn: 8.16.0
+      acorn: 8.17.0
 
   acorn-walk@8.3.5:
     dependencies:
@@ -15014,7 +15014,7 @@ snapshots:
       '@graphql-tools/graphql-file-loader': 8.1.12(graphql@16.14.2)
       '@graphql-tools/json-file-loader': 8.0.32(graphql@16.14.2)
       '@graphql-tools/load': 8.1.8(graphql@16.14.2)
-      '@graphql-tools/merge': 9.1.9(graphql@16.14.2)
+      '@graphql-tools/merge': 9.2.2(graphql@16.14.2)
       '@graphql-tools/url-loader': 9.1.6(@types/node@26.1.1)(graphql@16.14.2)
       '@graphql-tools/utils': 11.2.2(graphql@16.14.2)
       cosmiconfig: 8.3.6(typescript@5.9.3)
@@ -15061,7 +15061,7 @@ snapshots:
       '@envelop/core': 5.5.1
       '@envelop/instrumentation': 1.0.0
       '@graphql-tools/executor': 1.5.7(graphql@16.14.2)
-      '@graphql-tools/schema': 10.0.33(graphql@16.14.2)
+      '@graphql-tools/schema': 10.0.38(graphql@16.14.2)
       '@graphql-tools/utils': 10.11.0(graphql@16.14.2)
       '@graphql-yoga/logger': 2.0.1
       '@graphql-yoga/subscription': 5.0.5
@@ -15563,7 +15563,7 @@ snapshots:
       '@jest/expect': 29.7.0
       '@jest/test-result': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 24.10.4
+      '@types/node': 26.1.1
       chalk: 4.1.2
       co: 4.6.0
       dedent: 1.7.2
@@ -15708,7 +15708,7 @@ snapshots:
       '@jest/fake-timers': 29.7.0
       '@jest/types': 29.6.3
       '@types/jsdom': 20.0.1
-      '@types/node': 24.10.4
+      '@types/node': 26.1.1
       jest-mock: 29.7.0
       jest-util: 29.7.0
       jsdom: 20.0.3
@@ -15722,7 +15722,7 @@ snapshots:
       '@jest/environment': 29.7.0
       '@jest/fake-timers': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 24.10.4
+      '@types/node': 26.1.1
       jest-mock: 29.7.0
       jest-util: 29.7.0
 
@@ -15732,7 +15732,7 @@ snapshots:
     dependencies:
       '@jest/types': 29.6.3
       '@types/graceful-fs': 4.1.9
-      '@types/node': 24.10.4
+      '@types/node': 26.1.1
       anymatch: 3.1.3
       fb-watchman: 2.0.2
       graceful-fs: 4.2.11
@@ -15771,7 +15771,7 @@ snapshots:
   jest-mock@29.7.0:
     dependencies:
       '@jest/types': 29.6.3
-      '@types/node': 24.10.4
+      '@types/node': 26.1.1
       jest-util: 29.7.0
 
   jest-pnp-resolver@1.2.3(jest-resolve@29.7.0):
@@ -15806,7 +15806,7 @@ snapshots:
       '@jest/test-result': 29.7.0
       '@jest/transform': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 24.10.4
+      '@types/node': 26.1.1
       chalk: 4.1.2
       emittery: 0.13.1
       graceful-fs: 4.2.11
@@ -15834,7 +15834,7 @@ snapshots:
       '@jest/test-result': 29.7.0
       '@jest/transform': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 24.10.4
+      '@types/node': 26.1.1
       chalk: 4.1.2
       cjs-module-lexer: 1.4.3
       collect-v8-coverage: 1.0.3
@@ -15880,7 +15880,7 @@ snapshots:
   jest-util@29.7.0:
     dependencies:
       '@jest/types': 29.6.3
-      '@types/node': 24.10.4
+      '@types/node': 26.1.1
       chalk: 4.1.2
       ci-info: 3.9.0
       graceful-fs: 4.2.11
@@ -15910,7 +15910,7 @@ snapshots:
     dependencies:
       '@jest/test-result': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 24.10.4
+      '@types/node': 26.1.1
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       emittery: 0.13.1
@@ -15925,7 +15925,7 @@ snapshots:
 
   jest-worker@29.7.0:
     dependencies:
-      '@types/node': 24.10.4
+      '@types/node': 26.1.1
       jest-util: 29.7.0
       merge-stream: 2.0.0
       supports-color: 8.1.1
@@ -16270,7 +16270,7 @@ snapshots:
 
   md5.js@1.3.5:
     dependencies:
-      hash-base: 3.0.5
+      hash-base: 3.1.2
       inherits: 2.0.4
       safe-buffer: 5.2.1
 
@@ -16681,7 +16681,7 @@ snapshots:
       ky: 1.14.3
       registry-auth-token: 5.1.1
       registry-url: 6.0.1
-      semver: 7.7.4
+      semver: 7.8.5
 
   pako@1.0.11: {}
 
