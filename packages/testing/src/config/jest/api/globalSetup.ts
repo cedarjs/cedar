@@ -24,20 +24,17 @@ export default async function () {
     )
     const resolved = require.resolve('cedar-pg')
     const cedarPg = await import(pathToFileURL(resolved).href)
-    const skip = cedarPg.resolveEnsureSkip({
+    const result = await cedarPg.ensureIfNeeded({
+      root: cedarPaths.base,
+      mode: 'test',
+      setEnv: true,
       url: process.env.TEST_DATABASE_URL,
       force: process.env.CEDAR_PG_FORCE === '1',
       disabled: false,
     })
-    if (skip.skip && skip.reason === 'external-url') {
-      process.env.DATABASE_URL = skip.databaseUrl
-    } else {
-      await cedarPg.ensure({
-        root: cedarPaths.base,
-        mode: 'test',
-        setEnv: true,
-      })
-      // Persist URL for Jest workers (separate processes)
+    // Only apply worktree env when cedar-pg provisioned — never clobber an
+    // external URL escape hatch with a stale .cedar-pg/test.env.
+    if (result.status === 'ensured') {
       const fs = await import('node:fs')
       const envFile = path.join(cedarPaths.base, '.cedar-pg', 'test.env')
       if (fs.existsSync(envFile)) {
