@@ -2164,7 +2164,7 @@ __metadata:
 
 "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 5.0.5
-  resolution: "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz#../packages/cli/cedarjs-cli.tgz::hash=3b3821&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz#../packages/cli/cedarjs-cli.tgz::hash=9f207d&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/parser": "npm:7.29.7"
     "@babel/preset-typescript": "npm:7.29.7"
@@ -2232,7 +2232,7 @@ __metadata:
     cfw: ./dist/cfw.js
     redwood: ./dist/index.js
     rw: ./dist/index.js
-  checksum: 10c0/6a5ef4460fa345b617fac5114687ba64bb3c176da544c8780f2b7c8044119a3d11f0dc095eaac2ca96e8f589a8019ff1c8b78ba76e61374c68abd65e52d58618
+  checksum: 10c0/c0c74cd944822917c028f837aef06181b830d78a4aba5fe573d60dda95053fa4a1c3035d56ad5fada0c9c2c8394753bbd3465abac7339ca7086b82445af5879a
   languageName: node
   linkType: hard
 
@@ -2590,7 +2590,7 @@ __metadata:
 
 "@cedarjs/testing@file:../packages/testing/cedarjs-testing.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 5.0.5
-  resolution: "@cedarjs/testing@file:../packages/testing/cedarjs-testing.tgz#../packages/testing/cedarjs-testing.tgz::hash=8ed971&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/testing@file:../packages/testing/cedarjs-testing.tgz#../packages/testing/cedarjs-testing.tgz::hash=dc90cf&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/preset-env": "npm:7.29.7"
     "@cedarjs/babel-config": "npm:5.0.5"
@@ -2623,7 +2623,7 @@ __metadata:
   peerDependenciesMeta:
     vitest:
       optional: true
-  checksum: 10c0/75ccdfca0e91f1a679ae2231759f4fb7ba1ec8dd875dd25812def8d73c38612223f5af6b1561cf6ccf3abb0cbf7fed14930a794aec1571a4999092b1f45a38b9
+  checksum: 10c0/efb0d43bdb8e8fa51e4d152859dfcd72e4cad3f92506a02f8293de4910c1ef8048227b1595f02e1ed115d0e777b4ebb9b7a16e2fd441ac9adef1d077a7250445
   languageName: node
   linkType: hard
 
@@ -9157,12 +9157,12 @@ __metadata:
 
 "cedar-pg@file:../../../cedar-pg::locator=api%40workspace%3Aapi":
   version: 0.1.0
-  resolution: "cedar-pg@file:../../../cedar-pg#../../../cedar-pg::hash=d08c06&locator=api%40workspace%3Aapi"
+  resolution: "cedar-pg@file:../../../cedar-pg#../../../cedar-pg::hash=b9d120&locator=api%40workspace%3Aapi"
   dependencies:
     pg: "npm:^8.16.3"
   bin:
     cedar-pg: ./dist/cli.mjs
-  checksum: 10c0/f1fe01f804604a5212d7907aec67e1e4e4a192739571059e4d69965f7a497a3d4cb4cd40d3908da8050d602cb8384ee5e6aa3d96f2047b2b873c1fab8e169792
+  checksum: 10c0/ccfd45dbbf0e44d7bd72e001714ae0d92672d309c9a9bb4b097b08012c4115449e0254badd6e19f0c789889e19524b5e5de5399041f4956b8d1cc5c3ef3b6dfb
   languageName: node
   linkType: hard
 

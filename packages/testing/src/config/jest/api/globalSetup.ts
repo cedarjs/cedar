@@ -24,15 +24,17 @@ export default async function () {
     )
     const resolved = require.resolve('cedar-pg')
     const cedarPg = await import(pathToFileURL(resolved).href)
-    const externalTestUrl =
-      process.env.TEST_DATABASE_URL &&
-      !process.env.TEST_DATABASE_URL.startsWith('file:') &&
-      process.env.CEDAR_PG_FORCE !== '1'
-    if (!externalTestUrl) {
+    const skip = cedarPg.resolveEnsureSkip({
+      url: process.env.TEST_DATABASE_URL,
+      force: process.env.CEDAR_PG_FORCE === '1',
+      disabled: false,
+    })
+    if (skip.skip && skip.reason === 'external-url') {
+      process.env.DATABASE_URL = skip.databaseUrl
+    } else {
       await cedarPg.ensure({
         root: cedarPaths.base,
         mode: 'test',
-        disposeOnExit: false,
         setEnv: true,
       })
       // Persist URL for Jest workers (separate processes)
@@ -46,8 +48,6 @@ export default async function () {
           }
         }
       }
-    } else {
-      process.env.DATABASE_URL = process.env.TEST_DATABASE_URL
     }
   } else {
     const defaultDb = `file:${path.join(cedarPaths.generated.base, 'test.db')}`

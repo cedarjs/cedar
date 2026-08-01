@@ -1,7 +1,7 @@
 /**
  * Thin bridge to the cedar-pg package for Cedar CLI / testing.
- * Opt-in via CEDAR_PG=1 (or true). Escape hatch: explicit TEST_DATABASE_URL /
- * DATABASE_URL without CEDAR_PG_FORCE skips ensure.
+ * Opt-in via CEDAR_PG=1 (or true). Escape-hatch policy lives in cedar-pg
+ * (`resolveEnsureSkip`); stale `cpg_*` URLs always re-ensure.
  *
  * Resolves `cedar-pg` from the app's node_modules (api or root), not from
  * @cedarjs/cli's dependencies.
@@ -16,25 +16,23 @@ export function isCedarPgEnabled(): boolean {
   return flag === '1' || flag === 'true'
 }
 
-/** Sqlite file: URLs from templates should not block cedar-pg ensure. */
-function isExplicitExternalDatabaseUrl(url: string | undefined): boolean {
-  if (!url) {
-    return false
-  }
-  if (url.startsWith('file:')) {
-    return false
-  }
-  return true
-}
+type EnsureSkip =
+  | { skip: false }
+  | { skip: true; reason: 'disabled' }
+  | { skip: true; reason: 'external-url'; databaseUrl: string }
 
 type CedarPgModule = {
   ensure: (opts: {
     root?: string
     mode: 'dev' | 'test'
-    disposeOnExit?: boolean
     setEnv?: boolean
   }) => Promise<{ databaseUrl: string; dispose: () => Promise<void> }>
   dispose: (opts?: { root?: string; mode?: 'dev' | 'test' }) => Promise<void>
+  resolveEnsureSkip: (input?: {
+    url?: string
+    force?: boolean
+    disabled?: boolean
+  }) => EnsureSkip
 }
 
 async function loadCedarPg(root: string): Promise<CedarPgModule> {
@@ -58,23 +56,29 @@ async function loadCedarPg(root: string): Promise<CedarPgModule> {
   )
 }
 
+function forceFromEnv(): boolean {
+  return process.env.CEDAR_PG_FORCE === '1'
+}
+
 export async function ensureCedarPgDev(root: string): Promise<string | null> {
   if (!isCedarPgEnabled()) {
     return null
   }
-  if (
-    isExplicitExternalDatabaseUrl(process.env.DATABASE_URL) &&
-    process.env.CEDAR_PG_FORCE !== '1'
-  ) {
-    return process.env.DATABASE_URL
-  }
 
   try {
     const cedarPg = await loadCedarPg(root)
+    const skip = cedarPg.resolveEnsureSkip({
+      url: process.env.DATABASE_URL,
+      force: forceFromEnv(),
+      disabled: false,
+    })
+    if (skip.skip && skip.reason === 'external-url') {
+      return skip.databaseUrl
+    }
+
     const result = await cedarPg.ensure({
       root,
       mode: 'dev',
-      disposeOnExit: false,
       setEnv: true,
     })
     return result.databaseUrl
@@ -91,20 +95,22 @@ export async function ensureCedarPgTest(root: string): Promise<string | null> {
   if (!isCedarPgEnabled()) {
     return null
   }
-  if (
-    isExplicitExternalDatabaseUrl(process.env.TEST_DATABASE_URL) &&
-    process.env.CEDAR_PG_FORCE !== '1'
-  ) {
-    process.env.DATABASE_URL = process.env.TEST_DATABASE_URL
-    return process.env.TEST_DATABASE_URL
-  }
 
   try {
     const cedarPg = await loadCedarPg(root)
+    const skip = cedarPg.resolveEnsureSkip({
+      url: process.env.TEST_DATABASE_URL,
+      force: forceFromEnv(),
+      disabled: false,
+    })
+    if (skip.skip && skip.reason === 'external-url') {
+      process.env.DATABASE_URL = skip.databaseUrl
+      return skip.databaseUrl
+    }
+
     const result = await cedarPg.ensure({
       root,
       mode: 'test',
-      disposeOnExit: false,
       setEnv: true,
     })
     return result.databaseUrl
