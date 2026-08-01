@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/project-config",
-  "version": "5.0.5",
+  "version": "5.0.6",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -64,7 +64,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.4",
-    "@cedarjs/framework-tools": "5.0.5",
+    "@cedarjs/framework-tools": "5.0.6",
     "concurrently": "9.2.4",
     "prisma": "7.8.0",
     "publint": "0.3.21",
