@@ -1,20 +1,12 @@
-import type { APIGatewayProxyEvent } from 'aws-lambda'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import type { AuthContextPayload, Decoder } from '@cedarjs/api'
-import * as apiAuth from '@cedarjs/api/auth'
 
 import { useRedwoodAuthContext } from '../useRedwoodAuthContext.js'
 
 const authDecoder: Decoder = async (token: string) => ({ token })
 
-vi.mock('@cedarjs/api/auth', async () => {
-  return {
-    getAuthenticationContext: vi.fn(),
-  }
-})
-
-const MOCK_AUTH_CONTEXT: AuthContextPayload = [
+const MOCK_AUTH_CONTEXT_PAYLOAD: AuthContextPayload = [
   { sub: '1', email: 'ba@zin.ga' },
   {
     type: 'mocked-auth-type',
@@ -24,66 +16,36 @@ const MOCK_AUTH_CONTEXT: AuthContextPayload = [
   { event: new Request('http://localhost/mock'), context: undefined },
 ]
 
-const createMockLambdaEvent = (
-  headers: Record<string, string>,
-): APIGatewayProxyEvent => {
+/**
+ * Auth state is resolved when the request enters Cedar, so what this plugin
+ * gets handed is an already-built GraphQL context, with Cedar's own request
+ * context on it as `cedarContext`.
+ */
+function createMockGraphQLContext(
+  authContextPayload: AuthContextPayload | undefined,
+) {
   return {
-    body: null,
-    headers,
-    multiValueHeaders: {},
-    httpMethod: 'POST',
-    isBase64Encoded: false,
-    path: '/graphql',
-    pathParameters: null,
-    queryStringParameters: null,
-    multiValueQueryStringParameters: null,
-    stageVariables: null,
-    requestContext: {
-      accountId: 'MOCKED_ACCOUNT',
-      apiId: 'MOCKED_API_ID',
-      authorizer: undefined,
-      protocol: 'HTTP/1.1',
-      identity: {
-        accessKey: null,
-        accountId: null,
-        apiKey: null,
-        apiKeyId: null,
-        caller: null,
-        clientCert: null,
-        cognitoAuthenticationProvider: null,
-        cognitoAuthenticationType: null,
-        cognitoIdentityId: null,
-        cognitoIdentityPoolId: null,
-        principalOrgId: null,
-        sourceIp: '127.0.0.1',
-        user: null,
-        userAgent: headers['user-agent'] ?? null,
-        userArn: null,
-      },
-      path: '/graphql',
-      stage: 'dev',
-      requestId: 'legacy-request-id',
-      requestTimeEpoch: Date.now(),
-      resourceId: 'resource-id',
-      resourcePath: '/graphql',
-      httpMethod: 'POST',
+    params: {},
+    request: new Request('http://localhost/graphql'),
+    waitUntil: () => undefined,
+    requestContext: undefined,
+    cedarContext: {
+      params: {},
+      query: new URLSearchParams(),
+      cookies: new Map<string, string>(),
+      serverAuthState: authContextPayload,
     },
-    resource: '/graphql',
   }
 }
 
-type MockContextBuildingArgs = Parameters<
-  NonNullable<ReturnType<typeof useRedwoodAuthContext>['onContextBuilding']>
->[0]
+const contextWithoutCedarContext = {
+  params: {},
+  request: new Request('http://localhost/graphql'),
+  waitUntil: () => undefined,
+  requestContext: undefined,
+}
 
 describe('useRedwoodAuthContext', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    vi.mocked(apiAuth.getAuthenticationContext).mockResolvedValue(
-      MOCK_AUTH_CONTEXT,
-    )
-  })
-
   it('updates context with output of current user', async () => {
     const mockUser = {
       id: 'my-user-id',
@@ -99,34 +61,13 @@ describe('useRedwoodAuthContext', () => {
     }
 
     const extendContext = vi.fn()
-    const request = new Request('http://localhost/graphql', {
-      headers: {
-        authorization: 'Bearer fetch-token',
-        'auth-provider': 'test',
-      },
-    })
-    const legacyEvent = createMockLambdaEvent({
-      authorization: 'Bearer legacy-token',
-      'auth-provider': 'legacy',
-    })
 
     await onContextBuilding({
-      context: {
-        params: {},
-        request,
-        event: legacyEvent,
-        requestContext: undefined,
-      },
+      context: createMockGraphQLContext(MOCK_AUTH_CONTEXT_PAYLOAD),
       extendContext,
       breakContextBuilding() {
         return undefined
       },
-    })
-
-    expect(apiAuth.getAuthenticationContext).toHaveBeenCalledWith({
-      authDecoder,
-      event: request,
-      context: undefined,
     })
 
     expect(mockedGetCurrentUser).toHaveBeenCalledWith(
@@ -136,7 +77,7 @@ describe('useRedwoodAuthContext', () => {
         token: 'mocked-undecoded-token',
         type: 'mocked-auth-type',
       },
-      MOCK_AUTH_CONTEXT[2],
+      MOCK_AUTH_CONTEXT_PAYLOAD[2],
     )
 
     expect(extendContext).toHaveBeenCalledWith({
@@ -157,18 +98,10 @@ describe('useRedwoodAuthContext', () => {
     }
 
     const extendContext = vi.fn()
-    const legacyEvent = createMockLambdaEvent({
-      authorization: 'Bearer legacy-token',
-      'auth-provider': 'legacy',
-    })
 
     await expect(
       onContextBuilding({
-        context: {
-          params: {},
-          event: legacyEvent,
-          requestContext: undefined,
-        } as MockContextBuildingArgs['context'],
+        context: createMockGraphQLContext(MOCK_AUTH_CONTEXT_PAYLOAD),
         extendContext,
         breakContextBuilding() {
           return undefined
@@ -178,12 +111,96 @@ describe('useRedwoodAuthContext', () => {
       new Error('Exception in getCurrentUser: Could not fetch user from db.'),
     )
 
-    expect(apiAuth.getAuthenticationContext).toHaveBeenCalledWith({
-      authDecoder,
-      event: legacyEvent,
-      context: undefined,
-    })
     expect(mockedGetCurrentUser).toHaveBeenCalled()
+    expect(extendContext).not.toHaveBeenCalled()
+  })
+
+  it('leaves the request unauthenticated when there is no auth state', async () => {
+    const mockedGetCurrentUser = vi.fn()
+    const plugin = useRedwoodAuthContext(mockedGetCurrentUser, authDecoder)
+    const onContextBuilding = plugin.onContextBuilding
+
+    if (!onContextBuilding) {
+      throw new Error('Expected onContextBuilding hook to be defined')
+    }
+
+    const extendContext = vi.fn()
+
+    await onContextBuilding({
+      context: createMockGraphQLContext(undefined),
+      extendContext,
+      breakContextBuilding() {
+        return undefined
+      },
+    })
+
+    expect(mockedGetCurrentUser).not.toHaveBeenCalled()
+    expect(extendContext).not.toHaveBeenCalled()
+  })
+
+  // An entry point that doesn't build a context would otherwise serve every
+  // request as unauthenticated, with nothing to show for it
+  it('throws when no cedarContext was built and auth is configured', async () => {
+    const plugin = useRedwoodAuthContext(vi.fn(), authDecoder)
+    const onContextBuilding = plugin.onContextBuilding
+
+    if (!onContextBuilding) {
+      throw new Error('Expected onContextBuilding hook to be defined')
+    }
+
+    await expect(
+      onContextBuilding({
+        context: contextWithoutCedarContext,
+        extendContext: vi.fn(),
+        breakContextBuilding() {
+          return undefined
+        },
+      }),
+    ).rejects.toThrow(/no `cedarContext`/)
+  })
+
+  // `buildCedarContext` treats an empty decoder array as no auth configured,
+  // so this guard has to agree — otherwise it throws on a setup that never had
+  // auth state to resolve in the first place
+  it('does not throw without a cedarContext for an empty decoder array', async () => {
+    const plugin = useRedwoodAuthContext(vi.fn(), [])
+    const onContextBuilding = plugin.onContextBuilding
+
+    if (!onContextBuilding) {
+      throw new Error('Expected onContextBuilding hook to be defined')
+    }
+
+    const extendContext = vi.fn()
+
+    await onContextBuilding({
+      context: contextWithoutCedarContext,
+      extendContext,
+      breakContextBuilding() {
+        return undefined
+      },
+    })
+
+    expect(extendContext).not.toHaveBeenCalled()
+  })
+
+  it('does not throw without a cedarContext when auth is not configured', async () => {
+    const plugin = useRedwoodAuthContext(undefined)
+    const onContextBuilding = plugin.onContextBuilding
+
+    if (!onContextBuilding) {
+      throw new Error('Expected onContextBuilding hook to be defined')
+    }
+
+    const extendContext = vi.fn()
+
+    await onContextBuilding({
+      context: contextWithoutCedarContext,
+      extendContext,
+      breakContextBuilding() {
+        return undefined
+      },
+    })
+
     expect(extendContext).not.toHaveBeenCalled()
   })
 })

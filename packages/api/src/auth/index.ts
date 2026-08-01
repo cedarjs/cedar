@@ -113,6 +113,24 @@ export type AuthContextPayload = [
   },
 ]
 
+/**
+ * Whether a project has auth configured.
+ *
+ * An empty decoder array counts as no auth: there's nothing to decode with, so
+ * auth state can never be resolved. Anything deciding whether auth is set up
+ * has to agree with `buildCedarContext` on this, or they'll disagree about
+ * whether a request should have had auth state resolved.
+ */
+export function hasAuthDecoder(
+  authDecoder: Decoder | Decoder[] | undefined,
+): authDecoder is Decoder | Decoder[] {
+  if (Array.isArray(authDecoder)) {
+    return authDecoder.length > 0
+  }
+
+  return !!authDecoder
+}
+
 export type Decoder = (
   token: string,
   type: string,
