@@ -68,14 +68,17 @@ interface YogaInstance {
   graphqlEndpoint: string
 }
 
-// The Yoga instance together with the options it was built from. The request
-// handler needs the options too, to build a Cedar context from their auth
-// decoder — and it has to be the decoder that belongs to this exact instance,
-// so a reload replaces both at once and the handler reads them as one value.
-let graphql: {
+interface LoadedGraphqlServer {
   yoga: YogaInstance
   options: GraphQLYogaOptions
-} | null = null
+}
+
+// The Yoga instance together with the options it was built from. The request
+// handler needs the options too, to build a Cedar context from their auth
+// decoder – and it has to be the decoder that belongs to this exact instance,
+// so a reload (HMR) replaces both at once and the handler reads them as one
+// value
+let loadedGraphqlServer: LoadedGraphqlServer | null = null
 
 let loadApiFunctionsInFlight: Promise<void> | null = null
 let needsReloadAfterInFlight = false
@@ -194,11 +197,11 @@ async function internalLoadApiFunctions(viteServer: ViteDevServer) {
 
   if (extractedGraphqlOptions) {
     const { yoga } = await createGraphQLYoga(extractedGraphqlOptions)
-    graphql = { yoga, options: extractedGraphqlOptions }
+    loadedGraphqlServer = { yoga, options: extractedGraphqlOptions }
   } else {
     // Reset so deleted/missing graphql.ts is reflected immediately (i.e. during
     // a dev session)
-    graphql = null
+    loadedGraphqlServer = null
   }
 
   console.log(
@@ -529,9 +532,9 @@ export function createApiFetchHandler() {
       // Read once. A reload can replace this while the request is in flight,
       // and the Yoga instance and the auth decoder used to build the context
       // for it have to come from the same load.
-      const currentGraphql = graphql
+      const graphqlServer = loadedGraphqlServer
 
-      if (!currentGraphql) {
+      if (!graphqlServer) {
         return new Response(
           JSON.stringify({ error: 'GraphQL Yoga instance not initialized' }),
           { status: 503, headers: { 'Content-Type': 'application/json' } },
@@ -546,10 +549,10 @@ export function createApiFetchHandler() {
           // `buildCedarContext` would try to build the event from a `Request`
           // that's already been consumed, which would throw.
           const cedarContext = await buildCedarContext(request, {
-            authDecoder: currentGraphql.options.authDecoder,
+            authDecoder: graphqlServer.options.authDecoder,
           })
 
-          return await currentGraphql.yoga.handle(request, {
+          return await graphqlServer.yoga.handle(request, {
             request,
             cedarContext,
           })
