@@ -12,14 +12,14 @@
     ]
   },
   "dependencies": {
-    "@cedarjs/forms": "5.0.4",
-    "@cedarjs/router": "5.0.4",
-    "@cedarjs/web": "5.0.4",
+    "@cedarjs/forms": "5.0.5",
+    "@cedarjs/router": "5.0.5",
+    "@cedarjs/web": "5.0.5",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
   "devDependencies": {
-    "@cedarjs/vite": "5.0.4",
+    "@cedarjs/vite": "5.0.5",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19"
   }
