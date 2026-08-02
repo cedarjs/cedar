@@ -329,11 +329,18 @@ two things the current arrangement genuinely cannot do.
 
 ### It makes the bin usable off-box
 
-`cedar-log-formatter` is currently one of ~20 bins on `@cedarjs/core`, which
-pulls `@cedarjs/internal` transitively — typescript, esbuild, vite, the codegen
-toolchain. There is no realistic way to invoke it on a machine that isn't a
-Cedar app checkout. In practice that means reaching into `node_modules` by
-absolute path:
+`@cedarjs/api-server` owns the bin. It declares `cedar-log-formatter`,
+`cedarjs-log-formatter`, and the deprecated `rw-log-formatter`, all pointing at
+`./dist/logFormatter/bin.js`. `@cedarjs/core` also lists `cedar-log-formatter`,
+but that entry is a forwarding shim — it resolves `@cedarjs/api-server`'s
+manifest and requires the bin path out of it
+(`packages/core/src/bins/cedar-log-formatter.ts`).
+
+Either way there is no realistic way to invoke it on a machine that isn't a
+Cedar app checkout. `@cedarjs/api-server` depends on `@cedarjs/internal`, so
+`yarn dlx @cedarjs/api-server` pulls typescript, esbuild, vite, and the codegen
+toolchain — the same problem as going via Core, one package earlier. In practice
+that means reaching into `node_modules` by absolute path:
 
 ```bash
 journalctl --user -u my-api --no-pager -o cat --since "10 min ago" \
@@ -393,11 +400,16 @@ Cedar users.
 - the shell pipe in `devHandler.ts:404`
 - the shell pipe in `jobsHandler.ts:36`
 
-**Keep** the `cedar-log-formatter` bin, moved to `@cedarjs/log-formatter`.
-Formatting output from a process you didn't configure — `cedar serve |`, or a
-journalctl pipe on a production box — is a real workflow, and moving the bin is
-what makes it reachable off-box. The `@cedarjs/core` bin entry can stay as an
-alias so existing muscle memory keeps working.
+**Keep** the `cedar-log-formatter` bin, moved from `@cedarjs/api-server` to
+`@cedarjs/log-formatter`. Formatting output from a process you didn't
+configure — `cedar serve |`, or a journalctl pipe on a production box — is a
+real workflow, and moving the bin is what makes it reachable off-box.
+
+`@cedarjs/api-server` currently declares three names for it
+(`cedar-log-formatter`, `cedarjs-log-formatter`, and the deprecated
+`rw-log-formatter`), and `@cedarjs/core` forwards `cedar-log-formatter` to it.
+Both can keep pointing at the new package so existing muscle memory and scripts
+keep working.
 
 ---
 
