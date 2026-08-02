@@ -9,15 +9,16 @@ Follow-on to
 [2026-07-20-ud-dev-log-formatting.md](../implementation-docs/2026-07-20-ud-dev-log-formatting.md)
 (PR #2140), which fixed pretty-printed api logs under `cedar dev --ud` via
 dev-only Vite resolver interception. That fix is correct for what it was scoped
-to. This plan proposes replacing it — along with two shell pipes — with a single
-explicit option on `createLogger()`, as part of a major version.
+to. This plan proposes replacing it — along with two shell pipes — with explicit
+configuration at the `createLogger()` call site, as part of a major version. The
+exact API shape is still open; see **Open decision: A vs D**.
 
 ---
 
 ## Background
 
-Cedar formats api logs three different ways today, depending on how the process
-was started:
+Cedar wires up api log formatting in three separate places today, using two
+different mechanisms, depending on how the process was started:
 
 | Path             | Mechanism                                           | Where                                                              |
 | ---------------- | --------------------------------------------------- | ------------------------------------------------------------------ |
@@ -26,10 +27,12 @@ was started:
 | `cedar dev --ud` | Vite resolver interception of `@cedarjs/api/logger` | `packages/vite/src/plugins/vite-plugin-cedar-log-formatter-dev.ts` |
 
 Each is locally defensible — the `--ud` doc walks through in detail why the pipe
-could not be reused there. But collectively they mean "how do my logs get
-formatted" has three answers, a change to formatting behavior has to be made in
-three places and tested three ways, and the `--ud` answer is invisible from app
-code.
+could not be reused there. The formatter itself is shared, so this is not three
+implementations of formatting. What is triplicated is the wiring: three sites
+that decide whether formatting happens at all, three things to keep in sync when
+that decision changes, three paths to test. And in the `--ud` case the wiring is
+invisible from app code — nothing in the project explains why its logs come out
+pretty.
 
 ### Why the `--ud` mechanism in particular is a liability
 
@@ -47,10 +50,21 @@ NDJSON in dev and a confused bug report.
 
 ## Proposal
 
-Add an explicit format option to `createLogger()`
-(`packages/api/src/logger/index.ts`):
+Move the decision about whether logs are formatted out of the build/dev tooling
+and into `createLogger()` (`packages/api/src/logger/index.ts`), so it is
+configured once, in app code, and applies identically to every way the api can
+be started.
+
+**The API shape is not settled.** Two candidates are live, and a decision
+between them is a prerequisite for implementation — see **Open decision: A vs D**
+below. Everything else in this plan (the dependency-free formatter, what gets
+deleted, the migration, the conditions) holds either way.
+
+### Candidate A — a `format` option
 
 ```ts
+import { createLogger } from '@cedarjs/api/logger'
+
 export const logger = createLogger({ format: 'auto' })
 ```
 
@@ -58,29 +72,73 @@ export const logger = createLogger({ format: 'auto' })
 - `'json'` — always raw NDJSON
 - `'auto'` (default) — pretty in development, JSON otherwise
 
-An explicitly supplied `destination` continues to win over `format`, matching
-the precedence the interception plugin already uses
+### Candidate D — an exported destination factory
+
+```ts
+import {
+  createLogger,
+  isDevelopment,
+  prettyDestination,
+} from '@cedarjs/api/logger'
+
+export const logger = createLogger({
+  destination: isDevelopment ? prettyDestination() : undefined,
+})
+```
+
+`isDevelopment`, `isProduction`, and `isTest` are already exported from
+`@cedarjs/api/logger` (`index.ts:44-60`), so this introduces no new
+environment-detection surface.
+
+Under both candidates, an explicitly supplied `destination` wins over any
+framework default, matching the precedence the interception plugin already uses
 (`vite-plugin-cedar-log-formatter-dev.ts:100`).
 
-### Why this shape rather than the app importing a formatter
+### Two variants that were considered and dropped
 
-The `--ud` doc's option 5 was "have the app's `api/src/lib/logger.ts` construct
-a dev-only formatting destination itself, with the formatter as a devDependency
-of the app's own `api/package.json`." Written literally, that has a sharp edge:
-the api build runs esbuild with `bundle: false`
-(`packages/internal/src/build/api.ts`), so a static
-`import { devFormatter } from '@cedarjs/log-formatter'` in `logger.ts` survives
-into `api/dist` and throws `MODULE_NOT_FOUND` at runtime in production, where
-devDependencies aren't installed. Avoiding that means a guarded dynamic import
-in app code, which is ugly enough to undercut the point of being explicit.
+**B: A separate `@cedarjs/log-formatter` package as an app devDependency** — the
+literal reading of the `--ud` doc's option 5. The api build runs esbuild with
+`bundle: false` (`packages/internal/src/build/api.ts`), so a static
+`import { prettyDestination } from '@cedarjs/log-formatter'` in `logger.ts`
+survives into `api/dist` and throws `MODULE_NOT_FOUND` in production, where
+devDependencies are not installed. Making it a regular dependency instead would
+work, but D achieves the same thing with no new package at all.
 
-Passing a `format` string instead keeps the call site explicit and
-type-discoverable while leaving the formatter, the environment check, and the
-lazy loading inside `@cedarjs/api`, where they can be got right once.
+**C: A guarded dynamic import in app code** — avoids the above, but top-level
+await makes `logger.ts` an async module, and it is imported by `db.ts`,
+`graphql.ts`, and every service transitively. Real propagation cost for no
+benefit over D.
 
-This is still "implicit" in the sense that `'auto'` resolves to pretty-in-dev.
-That is a documented default of a function the app deliberately calls, which is
-a different category from rewriting module resolution behind the app's back.
+### Open decision: A vs D
+
+Both are explicit at the call site and type-discoverable. Both leave the
+formatter and its loading inside `@cedarjs/api`. They differ in where the
+dev/prod decision lives.
+
+|                                                       | A (`format`)                      | D (`prettyDestination`)                          |
+| ----------------------------------------------------- | --------------------------------- | ------------------------------------------------ |
+| Env check                                             | inside the framework              | in app code, one visible line                    |
+| Hidden behaviour                                      | `'auto'` expands to pretty-in-dev | none                                             |
+| Customising                                           | new enum members Cedar must add   | arguments to `prettyDestination()`               |
+| Non-standard cases (pretty in staging, tee to a file) | not expressible                   | change the condition, wrap the destination       |
+| Boilerplate per app                                   | none                              | one conditional, which apps can get subtly wrong |
+| Formatter loaded in production                        | avoidable via lazy subpath        | imported eagerly (~200 dep-free lines)           |
+
+The case for A is that the env check is the kind of thing a framework should get
+right once rather than have every app restate — `process.env.NODE_ENV === 'development'`
+is not the same as Cedar's `isDevelopment`, which also excludes test, and apps
+will write the former.
+
+The case for D is that it has no hidden behaviour at all, composes without
+requiring API additions, and reuses exports that already exist.
+
+They are not mutually exclusive: `format` is sugar over `prettyDestination()`,
+so shipping both is cheap. If both ship, the remaining question is only which
+one the template scaffolds, since that is what most apps will carry forever.
+
+**This must be decided before implementation starts.** It determines the codemod
+output, the template, and the docs, and it is the hardest part of the change to
+revise afterwards.
 
 ---
 
@@ -173,16 +231,88 @@ extra.
 
 ---
 
-## Loose end worth fixing along the way
+## Loose end: retire the "transport stream" warning
 
-`createLogger()` currently emits a one-time
+`createLogger()` emits a one-time
 `console.warn('Logs will be sent to the transport stream in the current development environment.')`
 whenever it is handed a stream `destination` in development
 (`packages/api/src/logger/index.ts:234-239`). #2140 documents this firing on
-every `--ud` session as a known cosmetic side effect, left alone because
-suppressing it would have meant teaching `@cedarjs/api` about a dev-only detail
-from another package.
+every `--ud` session as a known cosmetic side effect, left alone at the time
+because suppressing it would have meant teaching `@cedarjs/api` about a dev-only
+detail from another package.
 
-Under this design that reason disappears — `@cedarjs/api` owns the formatting
-path, so it can distinguish "the app configured a custom destination" from "we
-resolved `format: 'auto'` to pretty" and only warn for the former.
+It should be deleted as part of this work. The reasoning needs the history.
+
+### Where it came from
+
+It arrived with the original logger implementation — RedwoodJS #1937, David
+Thyresson, March 2021 — as one of **three** warnings that only make sense
+together:
+
+```js
+if (isFile) {
+  if (!isDevelopment) {
+    console.warn(
+      'Please make certain that file system access is available when logging to a file in a non-development environment.'
+    )
+  }
+} else {
+  if (isStream && isDevelopment && !isTest) {
+    console.warn(
+      'Logs will be sent to the transport stream in the current development environment.'
+    )
+  }
+  if (isStream && options.prettyPrint) {
+    console.warn(
+      'Logs sent to the transport stream are being prettified. This format may be incompatible.'
+    )
+  }
+}
+```
+
+That commit describes `destination` as being one of three things — "file,
+stdout, or remote transport stream" — with an explicit goal to "stream to
+third-party log and application monitoring services vital to production logging
+in serverless environments like logFlare and Datadog." Each warning guards a
+misuse of one of those:
+
+1. **File outside dev** — serverless has no writable filesystem.
+2. **Stream in dev** — your local logs are going to Datadog/Logflare instead of
+   your terminal.
+3. **Stream + prettyPrint** — ANSI colour would corrupt a remote ingestion
+   format.
+
+The load-bearing assumption is in the wording: "the **transport** stream." pino
+had no worker `transport` option until pino 7, later that same year, so passing
+a writable stream as `destination` was _the_ mechanism for shipping logs
+off-box. Stream destination effectively meant remote.
+
+### Why it no longer holds
+
+That assumption is now false twice over. pino has had a real `transport` option
+for years, so a stream `destination` implies nothing about where logs go. And
+under either candidate in this plan, the most common stream destination in
+development is Cedar's own pretty-printer writing to **stdout** — the exact
+opposite of what the warning describes. It would announce that logs are being
+shipped to a remote service while pointing at the thing putting them in the
+terminal. Not merely noisy; inverted.
+
+There is precedent for retiring these. Warning 3 is already gone, deleted when
+pino dropped `prettyPrint`. Warning 1 was tightened from `!isDevelopment` to
+`isProduction`. These have been eroding as the 2021 model of `destination`
+stopped holding, and warning 2 is the last one whose premise has expired.
+
+### What deletion buys
+
+The branch it lives in exists only to produce warnings — both arms return an
+identical `pino(options, stream)` call. Removing warning 2 collapses the whole
+`isFile`/`isStream` structure to a single call plus warning 1, which stays: "no
+filesystem in production" is still true and still catches a real deployment
+mistake.
+
+Note this is not resolved by candidate A's ability to distinguish
+framework-supplied from app-supplied destinations. Under D the app genuinely
+does pass a custom destination, so no such distinction exists. Deletion is the
+answer under both, and if the warning were to be kept under D it would need
+`prettyDestination()` to return a branded value for `createLogger` to recognise
+— roughly three lines, to preserve a warning whose premise has expired.
