@@ -37,7 +37,7 @@ jobs:
 
       - name: 🏷 Check git tags
         run: |
-          CURRENT_TAG=$(git describe --abbrev=0)
+          CURRENT_TAG=$(git tag -l 'v*' | grep -E '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' | sort -V | tail -n 1)
 
           # `github.ref_name` is something like `release/minor/v1.1.0`.
           # `basename` gets us `v1.1.0`
