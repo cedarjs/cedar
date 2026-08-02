@@ -245,7 +245,7 @@ function getLatestVersionTag(): string | null {
   const tags = execCommand("git tag -l 'v*'")
     .split('\n')
     .map((tag) => tag.trim())
-    .filter((tag) => /^v\d+\.\d+\.\d+$/.test(tag))
+    .filter((tag) => /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(tag))
 
   tags.sort((a, b) => {
     const partsA = a.slice(1).split('.').map(Number)
