@@ -9,6 +9,9 @@ import { getPaths } from '@cedarjs/project-config'
  * Quote an argument for `cmd.exe` / `shell: true` on Windows.
  * Without this, paths containing spaces (e.g. CI's `test project`) split into
  * multiple argv tokens and Node tries to load a truncated module path.
+ *
+ * Follows the MSVC/CommandLineToArgvW rules for backslashes preceding quotes:
+ * https://learn.microsoft.com/en-us/cpp/c-language/parsing-c-command-line-arguments
  */
 function quoteWindowsShellArg(arg: string): string {
   if (arg.length === 0) {
@@ -17,7 +20,25 @@ function quoteWindowsShellArg(arg: string): string {
   if (!/[\s"]/.test(arg)) {
     return arg
   }
-  return `"${arg.replace(/"/g, '\\"')}"`
+
+  let quoted = '"'
+  let numBackslashes = 0
+  for (const char of arg) {
+    if (char === '\\') {
+      numBackslashes += 1
+      continue
+    }
+    if (char === '"') {
+      quoted += '\\'.repeat(numBackslashes * 2 + 1) + '"'
+      numBackslashes = 0
+      continue
+    }
+    quoted += '\\'.repeat(numBackslashes) + char
+    numBackslashes = 0
+  }
+  // Trailing backslashes must be doubled so they don't escape the closer.
+  quoted += '\\'.repeat(numBackslashes * 2) + '"'
+  return quoted
 }
 
 /**
