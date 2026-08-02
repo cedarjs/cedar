@@ -6,6 +6,21 @@ import path from 'path'
 import { getPaths } from '@cedarjs/project-config'
 
 /**
+ * Quote an argument for `cmd.exe` / `shell: true` on Windows.
+ * Without this, paths containing spaces (e.g. CI's `test project`) split into
+ * multiple argv tokens and Node tries to load a truncated module path.
+ */
+function quoteWindowsShellArg(arg: string): string {
+  if (arg.length === 0) {
+    return '""'
+  }
+  if (!/[\s"]/.test(arg)) {
+    return arg
+  }
+  return `"${arg.replace(/"/g, '\\"')}"`
+}
+
+/**
  * Spawn a background process with the stdout/stderr redirected to log files
  * within the `.cedar` directory. Stdin will not be available to the process as
  * it will be set to the 'ignore' value.
@@ -69,7 +84,8 @@ export function spawnBackgroundProcess(
     // It's safe to do that here since the arguments aren't user-provided.
     //
     // https://nodejs.org/api/deprecations.html#DEP0190
-    const child = spawn(cmd + ' ' + args.join(' '), spawnOptions)
+    const cmdline = [cmd, ...args].map(quoteWindowsShellArg).join(' ')
+    const child = spawn(cmdline, spawnOptions)
     child.unref()
   } else {
     const spawnOptions = {
