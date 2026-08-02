@@ -247,20 +247,74 @@ applies.
 
 What was never evaluated is whether the formatter could stand alone with **no
 dependencies at all**. The current formatter
-(`packages/api-server/src/logFormatter/`) needs four:
+(`packages/api-server/src/logFormatter/`) needs five:
 
-| Dependency        | Replacement                                          |
-| ----------------- | ---------------------------------------------------- |
-| `ansis`           | ANSI escape strings — no library needed              |
-| `pretty-bytes`    | ~10 lines                                            |
-| `fast-json-parse` | `JSON.parse` in a try/catch                          |
-| `split2`          | unnecessary once receiving whole lines, not a stream |
+| Dependency        | Size | Own deps   | Used by                                       | Replacement                                                      |
+| ----------------- | ---- | ---------- | --------------------------------------------- | ---------------------------------------------------------------- |
+| `fast-json-parse` | 32KB | none       | `index.ts`, one call                          | The whole package is `JSON.parse` in a try/catch — ~15 lines     |
+| `split2`          | 28KB | none       | `bin.ts` only, stream line-splitting          | A small `Transform`. Watch trailing partial data and `maxLength` |
+| `ansis`           | 24KB | none       | ~20 calls in `formatters.ts`                  | `styleText` from `node:util` — see below                         |
+| `pretty-bytes`    | 20KB | none       | `formatBundleSize`, one call, default options | ~10 lines                                                        |
+| `pretty-ms`       | 20KB | `parse-ms` | `formatLoadTime`, one call, default options   | ~20 lines, or pick a simpler duration format                     |
 
-So the target is roughly 200 lines of dependency-free code. That is noise next
-to pino itself, and it dissolves the footprint constraint rather than working
-around it — a zero-dependency formatter is a categorically different proposition
-from `@cedarjs/internal`'s 193 dependency entries, which is what #2140 was
-actually rejecting.
+`ansis` is the one that looks hardest and isn't. It is not only colour strings —
+`formatMessage` uses `ansis.hex('#ffa500')` and `ansis.white.bgRed`, and ansis
+also handles colour-support detection, which hand-rolled escape codes would
+lose. But Node's built-in `util.styleText` covers all of it, and Cedar already
+requires Node ≥24. Verified on v24.18.0 and v26.5.1: chained formats
+(`styleText(['white','bgRed'], x)`), every named colour used here, and hex
+(`styleText('#ffa500', x)` → `\e[38;2;255;165;0m`) all work, and colour is
+correctly stripped for `NO_COLOR` and non-TTY output while `FORCE_COLOR`
+re-enables it.
+
+Two caveats on that:
+
+- `styleText` does not downgrade truecolour by terminal depth — `FORCE_COLOR=1`
+  still emits a 24-bit escape where ansis would approximate to the nearest
+  16-colour. Unchanged in Node 26, so this is how `styleText` works rather than
+  a version gap.
+- Hex support landed in a later Node 24 minor; named colours have always been
+  there. Using hex would mean raising the `>=24` floor across 37 manifests.
+
+Both are avoidable, because the hex is a single call site. See
+**The warn colour** below.
+
+So the target is roughly 200 lines of dependency-free code. What that actually
+buys is modest and worth stating plainly: 124KB across six packages (five plus
+`parse-ms`), all leaves. That is not the #2140 footprint argument —
+`@cedarjs/internal` is 193 dependency entries — it is six fewer entries to
+resolve on install and a faster `yarn dlx`.
+
+### The warn colour
+
+`ansis.hex('#ffa500')` in `formatMessage` is the only hex call in the formatter.
+Roughly twenty other call sites already use named colours — `gray`, `white`,
+`red`, `redBright`, `cyan`, `blue`, `green`, `yellow`, `white.bgRed` — so the
+hex is the anomaly, not the baseline.
+
+It should become a named colour, and not only to sidestep the Node floor. A
+named colour is an index into the user's palette, chosen by whoever wrote their
+theme to be legible against their background. A hex overrides that, and this
+particular hex does not survive it:
+
+| Terminal background       | Contrast vs `#ffa500` |
+| ------------------------- | --------------------- |
+| white                     | **1.97:1**            |
+| Solarized Light `#fdf6e3` | **1.83:1**            |
+| One Dark `#282c34`        | 7.09:1                |
+| black                     | 10.63:1               |
+
+WCAG asks 4.5:1 for normal text. Warn lines are close to unreadable on a
+light-background terminal today. Since we cannot know what terminal anyone is
+using, delegating to their palette is the safe option and pinning a hue is the
+risky one.
+
+`yellowBright` is the natural pick. `yellow` already belongs to debug, but the
+levels are distinguished by emoji (🚦 vs 🐛) before colour, so even a collision
+would not be ambiguous.
+
+This is worth doing on its own merits. The contrast problem exists today,
+independent of the dependency extraction or anything else in this plan.
 
 ---
 
