@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/core",
-  "version": "5.0.1",
+  "version": "6.0.0",
   "description": "Foundational packages and config required to build CedarJS",
   "repository": {
     "type": "git",
@@ -48,19 +48,19 @@
     "prepublishOnly": "NODE_ENV=production yarn build"
   },
   "dependencies": {
-    "@cedarjs/api-server": "5.0.1",
-    "@cedarjs/api-server-watch": "5.0.1",
-    "@cedarjs/cli": "5.0.1",
-    "@cedarjs/internal": "5.0.1",
-    "@cedarjs/jobs": "5.0.1",
-    "@cedarjs/vite": "5.0.1",
-    "@cedarjs/web-server": "5.0.1",
+    "@cedarjs/api-server": "6.0.0",
+    "@cedarjs/api-server-watch": "6.0.0",
+    "@cedarjs/cli": "6.0.0",
+    "@cedarjs/internal": "6.0.0",
+    "@cedarjs/jobs": "6.0.0",
+    "@cedarjs/vite": "6.0.0",
+    "@cedarjs/web-server": "6.0.0",
     "graphql-tag": "2.12.6",
     "nodemon": "3.1.14",
     "typescript": "5.9.3"
   },
   "devDependencies": {
-    "@cedarjs/framework-tools": "5.0.1",
+    "@cedarjs/framework-tools": "6.0.0",
     "publint": "0.3.23"
   },
   "engines": {

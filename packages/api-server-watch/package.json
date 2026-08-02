@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/api-server-watch",
-  "version": "5.0.1",
+  "version": "6.0.0",
   "description": "CedarJS's dev-time watcher that rebuilds and restarts the api server on change",
   "repository": {
     "type": "git",

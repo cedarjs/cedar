@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/vite",
-  "version": "5.0.1",
+  "version": "6.0.0",
   "description": "Vite configuration package for CedarJS",
   "repository": {
     "type": "git",
@@ -52,17 +52,17 @@
     "@babel/parser": "7.29.7",
     "@babel/traverse": "7.29.7",
     "@babel/types": "7.29.7",
-    "@cedarjs/api": "5.0.1",
-    "@cedarjs/api-server": "5.0.1",
-    "@cedarjs/babel-config": "5.0.1",
-    "@cedarjs/context": "5.0.1",
-    "@cedarjs/graphql-server": "5.0.1",
-    "@cedarjs/internal": "5.0.1",
-    "@cedarjs/jobs": "5.0.1",
-    "@cedarjs/project-config": "5.0.1",
-    "@cedarjs/server-store": "5.0.1",
-    "@cedarjs/structure": "5.0.1",
-    "@cedarjs/testing": "5.0.1",
+    "@cedarjs/api": "6.0.0",
+    "@cedarjs/api-server": "6.0.0",
+    "@cedarjs/babel-config": "6.0.0",
+    "@cedarjs/context": "6.0.0",
+    "@cedarjs/graphql-server": "6.0.0",
+    "@cedarjs/internal": "6.0.0",
+    "@cedarjs/jobs": "6.0.0",
+    "@cedarjs/project-config": "6.0.0",
+    "@cedarjs/server-store": "6.0.0",
+    "@cedarjs/structure": "6.0.0",
+    "@cedarjs/testing": "6.0.0",
     "@swc/core": "1.15.47",
     "@universal-deploy/store": "^0.2.1",
     "@universal-deploy/vite": "^0.1.9",
@@ -93,10 +93,10 @@
     "yargs-parser": "21.1.1"
   },
   "devDependencies": {
-    "@cedarjs/auth": "5.0.1",
-    "@cedarjs/framework-tools": "5.0.1",
-    "@cedarjs/router": "5.0.1",
-    "@cedarjs/web": "5.0.1",
+    "@cedarjs/auth": "6.0.0",
+    "@cedarjs/framework-tools": "6.0.0",
+    "@cedarjs/router": "6.0.0",
+    "@cedarjs/web": "6.0.0",
     "@dr.pogodin/react-helmet": "2.0.4",
     "@hyrious/esbuild-plugin-commonjs": "0.2.6",
     "@jridgewell/trace-mapping": "0.3.31",
@@ -116,9 +116,9 @@
     "vitest": "4.1.10"
   },
   "peerDependencies": {
-    "@cedarjs/auth": "4.2.0",
-    "@cedarjs/router": "4.2.0",
-    "@cedarjs/web": "4.2.0"
+    "@cedarjs/auth": "6.0.0",
+    "@cedarjs/router": "6.0.0",
+    "@cedarjs/web": "6.0.0"
   },
   "engines": {
     "node": ">=24"
