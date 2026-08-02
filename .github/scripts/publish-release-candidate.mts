@@ -240,6 +240,39 @@ function verifyWorkspaceDependencies(
   log('✅ All in-monorepo dependencies point at ' + version)
 }
 
+/**
+ * The newest release tag in the repo.
+ *
+ * Deliberately not `git describe`: that resolves the newest tag *reachable from
+ * HEAD*, and it matches any tag, not just release tags. This repo carries tags
+ * inherited from the Redwood history (`rw-v8.0.0`) and per-package tags
+ * (`create-redmix-rsc-app/v0.0.3`), and on a branch cut from `main` those are
+ * what `git describe` returns — which parses to `NaN.0.0` below.
+ *
+ * Mirrors `getLatestVersionTag` in `publish-prerelease.mts`.
+ */
+function getLatestVersionTag(): string | null {
+  const tags = execCommand("git tag -l 'v*'")
+    .split('\n')
+    .map((tag) => tag.trim())
+    .filter((tag) => /^v\d+\.\d+\.\d+$/.test(tag))
+
+  tags.sort((a, b) => {
+    const partsA = a.slice(1).split('.').map(Number)
+    const partsB = b.slice(1).split('.').map(Number)
+
+    for (let i = 0; i < 3; i++) {
+      if (partsA[i] !== partsB[i]) {
+        return partsA[i] - partsB[i]
+      }
+    }
+
+    return 0
+  })
+
+  return tags.at(-1) ?? null
+}
+
 async function removeCreateCedarAppFromWorkspaces(): Promise<() => void> {
   log('Temporarily removing create-cedar-app from workspaces')
 
@@ -351,7 +384,14 @@ async function main() {
 
     log('Step 2: Calculating RC version')
 
-    const latestTag = execCommand('git describe --abbrev=0 --tags').trim()
+    const latestTag = getLatestVersionTag()
+
+    if (!latestTag) {
+      throw new Error('No version tags (vX.Y.Z) found in the repository')
+    }
+
+    log(`Latest tag: ${latestTag}`)
+
     const currentVersion = latestTag.replace(/^v/, '')
     const [major, minor, patch] = currentVersion.split('.').map(Number)
 

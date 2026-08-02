@@ -37,7 +37,13 @@ jobs:
 
       - name: 🏷 Check git tags
         run: |
-          CURRENT_TAG=$(git describe --abbrev=0)
+          # Deliberately not `git describe`. `git describe` resolves the newest
+          # tag *reachable from HEAD*, and matches any tag, not just release
+          # tags. This repo carries tags inherited from the Redwood history
+          # (`rw-v8.0.0`) and per-package tags (`create-redmix-rsc-app/v0.0.3`),
+          # and on a branch cut from `main` those are what `git describe`
+          # returns. That would fail the comparison below and skip the publish.
+          CURRENT_TAG=$(git tag -l 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
 
           # `github.ref_name` is something like `release/minor/v1.1.0`.
           # `basename` gets us `v1.1.0`
