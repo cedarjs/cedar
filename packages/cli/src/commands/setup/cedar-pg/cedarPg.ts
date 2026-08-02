@@ -4,7 +4,7 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
 export const command = 'cedar-pg'
 export const description =
-  'Configure worktree-isolated local Postgres via cedar-pg + autopg'
+  'Configure worktree-isolated local Postgres via @cedarjs/pg + autopg'
 
 export function builder(yargs: Argv) {
   return yargs
@@ -16,7 +16,7 @@ export function builder(yargs: Argv) {
     })
     .option('path', {
       description:
-        'Path to a local cedar-pg checkout (default: ../cedar-pg next to the app, or CEDAR_PG_PATH)',
+        'Path to a local @cedarjs/pg checkout (default: @cedarjs/pg@alpha from npm; also CEDAR_PG_PATH)',
       type: 'string',
     })
 }

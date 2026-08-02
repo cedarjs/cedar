@@ -20,7 +20,7 @@ export default async function () {
     const require = createRequire(
       path.join(cedarPaths.api.base, 'package.json'),
     )
-    const resolved = require.resolve('cedar-pg')
+    const resolved = require.resolve('@cedarjs/pg')
     const cedarPg = await import(pathToFileURL(resolved).href)
     await cedarPg.dispose({ root: cedarPaths.base, mode: 'test' })
   } catch {

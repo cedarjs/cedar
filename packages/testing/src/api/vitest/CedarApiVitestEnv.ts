@@ -31,7 +31,7 @@ const CedarApiVitestEnvironment: Environment = {
       const require = createRequire(
         path.join(cedarPaths.api.base, 'package.json'),
       )
-      const resolved = require.resolve('cedar-pg')
+      const resolved = require.resolve('@cedarjs/pg')
       const cedarPg = await import(pathToFileURL(resolved).href)
       const result = await cedarPg.ensureIfNeeded({
         root: cedarPaths.base,

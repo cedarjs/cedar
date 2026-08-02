@@ -7,29 +7,32 @@ description: Setup a Postgres database to develop locally
 CedarJS uses a SQLite database by default. While SQLite makes local development easy, you're
 likely going to want to run the same database you use in production locally at some point. And since the odds of that database being Postgres are high, here's how to set up Postgres.
 
-## Recommended: cedar-pg (worktree-isolated, zero config)
+## Recommended: @cedarjs/pg (worktree-isolated, zero config)
 
-[cedar-pg](https://github.com/simoncrypta/cedar-pg) provisions a **real Postgres** database per
-git worktree on top of the [autopg](https://github.com/automagik-dev/autopg) host singleton.
-Names are readable in `\l` (`cpg_<repo>_<worktree>_<mode>_<hash>`). Dev DBs persist across
-`yarn cedar dev` restarts; test DBs are dropped when the test process exits.
+[`@cedarjs/pg`](https://www.npmjs.com/package/@cedarjs/pg) (alpha) provisions a **real Postgres**
+database per git worktree on top of the [autopg](https://github.com/automagik-dev/autopg) host
+singleton. Names are readable in `\l` (`cpg_<repo>_<worktree>_<mode>_<hash>`). Dev DBs persist
+across `yarn cedar dev` restarts; test DBs are dropped when the test process exits.
+
+> **Alpha** (`0.1.0-alpha.0`): APIs may change. Install with the `alpha` dist-tag.
 
 ### New apps
 
 ```bash
-# Create the app next to a local cedar-pg checkout (file:../../cedar-pg from api/)
 yarn create cedar-app --esm --db cedar-pg my-app
 ```
 
 ### Existing apps
 
 ```bash
-# From the app root — prefers ../cedar-pg, or pass --path / set CEDAR_PG_PATH
+# From the app root — installs @cedarjs/pg@alpha from npm
 yarn cedar setup cedar-pg
+
+# Optional: use a local checkout instead
 # yarn cedar setup cedar-pg --path /home/you/Work/cedar-pg
 ```
 
-Ensure the autopg host is installed (cedar-pg's postinstall may do this):
+Ensure the autopg host is installed (`@cedarjs/pg` postinstall may do this):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/automagik-dev/autopg/main/install.sh | bash
@@ -47,7 +50,7 @@ Override anytime with an explicit `TEST_DATABASE_URL` / `DATABASE_URL` (skip ens
 
 ### Vite+ / Nx (non-Cedar)
 
-See the [cedar-pg README](https://github.com/simoncrypta/cedar-pg#vite-consumer-adapter) for
+See the [`@cedarjs/pg` README](https://github.com/cedarjs/cedar-pg#readme) for
 `cedarPgTasks()` / Nx target helpers.
 
 ## Install Postgres

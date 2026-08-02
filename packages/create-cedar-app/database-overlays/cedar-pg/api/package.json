@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@cedarjs/api": "5.0.5",
-    "@cedarjs/graphql-server": "5.0.5",
+    "@cedarjs/api": "5.0.6",
+    "@cedarjs/graphql-server": "5.0.6",
+    "@cedarjs/pg": "alpha",
     "@prisma/adapter-pg": "7.8.0",
-    "cedar-pg": "file:../../cedar-pg",
     "pg": "^8.13.0"
   }
 }

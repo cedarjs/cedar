@@ -2473,6 +2473,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@cedarjs/pg@npm:alpha":
+  version: 0.1.0-alpha.1
+  resolution: "@cedarjs/pg@npm:0.1.0-alpha.1"
+  dependencies:
+    pg: "npm:^8.16.3"
+  bin:
+    cedarpg: dist/cli.mjs
+  checksum: 10c0/b0ba275605727529b317520693958dc7b660db526168630ca3745f0bdb0853cbce1f2290edf209bbb5e2331c81ad1deb6f7c08bd2532f2ea12db82d830229d71
+  languageName: node
+  linkType: hard
+
 "@cedarjs/prerender@file:../packages/prerender/cedarjs-prerender.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 5.0.5
   resolution: "@cedarjs/prerender@file:../packages/prerender/cedarjs-prerender.tgz#../packages/prerender/cedarjs-prerender.tgz::hash=9bcedb&locator=root-workspace-0b6124%40workspace%3A."
@@ -8215,10 +8226,10 @@ __metadata:
     "@cedarjs/api": "npm:4.1.0"
     "@cedarjs/auth-dbauth-api": "npm:4.1.0"
     "@cedarjs/graphql-server": "npm:4.1.0"
+    "@cedarjs/pg": "npm:alpha"
     "@my-org/validators": "workspace:*"
     "@prisma/adapter-pg": "npm:7.8.0"
     "@types/pg": "npm:^8"
-    cedar-pg: "file:../../../cedar-pg"
     pg: "npm:^8.22.0"
   languageName: unknown
   linkType: soft
@@ -9152,17 +9163,6 @@ __metadata:
     tslib: "npm:^2.0.3"
     upper-case-first: "npm:^2.0.2"
   checksum: 10c0/6a034af73401f6e55d91ea35c190bbf8bda21714d4ea8bb8f1799311d123410a80f0875db4e3236dc3f97d74231ff4bf1c8783f2be13d7733c7d990c57387281
-  languageName: node
-  linkType: hard
-
-"cedar-pg@file:../../../cedar-pg::locator=api%40workspace%3Aapi":
-  version: 0.1.0
-  resolution: "cedar-pg@file:../../../cedar-pg#../../../cedar-pg::hash=342a52&locator=api%40workspace%3Aapi"
-  dependencies:
-    pg: "npm:^8.16.3"
-  bin:
-    cedar-pg: ./dist/cli.mjs
-  checksum: 10c0/d11bdd3bbe907b8146de1acafa1aced0698eb7ca295308e9fa49c332f3ff29ca6ea81e8bee3d8b9e024e1de8a3ea68d82b9fc3d7818b591bde5f61576b1d88d8
   languageName: node
   linkType: hard
 

@@ -1,9 +1,9 @@
 /**
- * Thin bridge to the cedar-pg package for Cedar CLI / testing.
+ * Thin bridge to @cedarjs/pg for Cedar CLI / testing.
  * Opt-in via CEDAR_PG=1 (or true). Lifecycle + escape-hatch policy live in
- * cedar-pg (`ensureIfNeeded`); stale `cpg_*` URLs always re-ensure.
+ * @cedarjs/pg (`ensureIfNeeded`); stale `cpg_*` URLs always re-ensure.
  *
- * Resolves `cedar-pg` from the app's node_modules (api or root), not from
+ * Resolves `@cedarjs/pg` from the app's node_modules (api or root), not from
  * @cedarjs/cli's dependencies.
  */
 
@@ -46,14 +46,14 @@ async function loadCedarPg(root: string): Promise<CedarPgModule> {
   for (const pkgJson of candidates) {
     try {
       const require = createRequire(pkgJson)
-      const resolved = require.resolve('cedar-pg')
+      const resolved = require.resolve('@cedarjs/pg')
       return (await import(pathToFileURL(resolved).href)) as CedarPgModule
     } catch (e) {
       errors.push(`${pkgJson}: ${(e as Error).message}`)
     }
   }
   throw new Error(
-    `Could not resolve cedar-pg from the project. Install it on the api side ` +
+    `Could not resolve @cedarjs/pg from the project. Install it on the api side ` +
       `(yarn cedar setup cedar-pg).\n${errors.join('\n')}`,
   )
 }
@@ -91,8 +91,8 @@ export async function ensureCedarPgDev(root: string): Promise<string | null> {
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
     throw new Error(
-      `cedar-pg ensure(dev) failed: ${message}\n` +
-        'Install cedar-pg (`yarn cedar setup cedar-pg`) and autopg on the host.',
+      `@cedarjs/pg ensure(dev) failed: ${message}\n` +
+        'Install @cedarjs/pg (`yarn cedar setup cedar-pg`) and autopg on the host.',
     )
   }
 }
@@ -116,8 +116,8 @@ export async function ensureCedarPgTest(root: string): Promise<string | null> {
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
     throw new Error(
-      `cedar-pg ensure(test) failed: ${message}\n` +
-        'Install cedar-pg (`yarn cedar setup cedar-pg`) and autopg on the host.',
+      `@cedarjs/pg ensure(test) failed: ${message}\n` +
+        'Install @cedarjs/pg (`yarn cedar setup cedar-pg`) and autopg on the host.',
     )
   }
 }

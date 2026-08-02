@@ -16,20 +16,15 @@ import type { Args } from './cedarPg.js'
 const cedarPaths = getPaths()
 
 function resolveCedarPgSpec(explicitPath?: string): string {
-  // Yarn 4 requires package-name@range (e.g. cedar-pg@file:/abs/path)
+  // Yarn 4 requires package-name@range (e.g. @cedarjs/pg@file:/abs/path)
   if (explicitPath) {
-    return `cedar-pg@file:${path.resolve(explicitPath)}`
+    return `@cedarjs/pg@file:${path.resolve(explicitPath)}`
   }
   if (process.env.CEDAR_PG_PATH) {
-    return `cedar-pg@file:${path.resolve(process.env.CEDAR_PG_PATH)}`
+    return `@cedarjs/pg@file:${path.resolve(process.env.CEDAR_PG_PATH)}`
   }
-  // Convention: app lives next to a local cedar-pg checkout
-  const sibling = path.resolve(cedarPaths.base, '..', 'cedar-pg')
-  if (fs.existsSync(path.join(sibling, 'package.json'))) {
-    return `cedar-pg@file:${sibling}`
-  }
-  // Fall back to registry version once published
-  return 'cedar-pg@0.1.0'
+  // Published alpha on npm (`alpha` dist-tag)
+  return '@cedarjs/pg@alpha'
 }
 
 export async function handler({ force, path: cedarPgPath }: Args) {
@@ -201,7 +196,7 @@ export async function handler({ force, path: cedarPgPath }: Args) {
             colors.warning(
               'autopg not found on PATH. Install with:\n' +
                 '  curl -fsSL https://raw.githubusercontent.com/automagik-dev/autopg/main/install.sh | bash\n' +
-                'Or set AUTOPG_BIN. cedar-pg postinstall may also install it.',
+                'Or set AUTOPG_BIN. @cedarjs/pg postinstall may also install it.',
             ),
           )
         },
