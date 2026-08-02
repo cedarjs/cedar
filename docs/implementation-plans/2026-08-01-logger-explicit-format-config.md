@@ -11,7 +11,7 @@ Follow-on to
 dev-only Vite resolver interception. That fix is correct for what it was scoped
 to. This plan proposes replacing it — along with two shell pipes — with explicit
 configuration at the `createLogger()` call site, as part of a major version. The
-exact API shape is still open; see **Open decision: A vs D**.
+exact API shape is still open; see **Open decision: A vs B vs C vs D**.
 
 ---
 
@@ -55,10 +55,11 @@ and into `createLogger()` (`packages/api/src/logger/index.ts`), so it is
 configured once, in app code, and applies identically to every way the api can
 be started.
 
-**The API shape is not settled.** Two candidates are live, and a decision
-between them is a prerequisite for implementation — see **Open decision: A vs D**
-below. Everything else in this plan (the dependency-free formatter, what gets
-deleted, the migration, the conditions) holds either way.
+**The API shape is not settled.** Four candidates are live, and a decision
+between them is a prerequisite for implementation — see
+**Open decision: A vs B vs C vs D** below. Everything else in this plan (the
+dependency-free formatter, the standalone package, what gets deleted, the
+migration, the conditions) holds regardless of which is chosen.
 
 ### Candidate A — a `format` option
 
@@ -71,6 +72,61 @@ export const logger = createLogger({ format: 'auto' })
 - `'pretty'` — always pretty-print
 - `'json'` — always raw NDJSON
 - `'auto'` (default) — pretty in development, JSON otherwise
+
+`@cedarjs/api` resolves the formatter lazily, by string, only when `format`
+actually resolves to `'pretty'`. This is precisely the pino/`pino-pretty` model:
+pino declares `pino-pretty` as a **devDependency** — not a dependency, not a
+peer — and users write `transport: { target: 'pino-pretty' }`, a string pino
+resolves at runtime (that is what pino's `real-require` dependency is for). If
+it is missing you get a clear resolution error; if you never ask for pretty it is
+never touched.
+
+The cost of a string reference is that static analysis cannot see it — see
+**The devDependency trilemma** below.
+
+### Candidate B — the app depends on the formatter directly
+
+```ts
+import { createLogger, isDevelopment } from '@cedarjs/api/logger'
+import { prettyDestination } from '@cedarjs/log-formatter'
+
+export const logger = createLogger({
+  destination: isDevelopment ? prettyDestination() : undefined,
+})
+```
+
+`@cedarjs/log-formatter` appears in the app's own `api/package.json` — see
+**The formatter as a standalone package** below for why that matters.
+
+One trap to avoid: it must be a regular dependency, **not** a devDependency. The
+api build runs esbuild with `bundle: false`
+(`packages/internal/src/build/api.ts`), so the static import survives into
+`api/dist` and throws `MODULE_NOT_FOUND` at runtime in production, where
+devDependencies are not installed.
+
+### Candidate C — a dynamic import in app code
+
+```ts
+import { createLogger, isDevelopment } from '@cedarjs/api/logger'
+
+const { prettyDestination } = isDevelopment
+  ? await import('@cedarjs/log-formatter')
+  : { prettyDestination: undefined }
+
+export const logger = createLogger({ destination: prettyDestination?.() })
+```
+
+The only shape that lets the formatter stay a **devDependency** while remaining
+visible to static analysis — see **The devDependency trilemma** below.
+
+Its cost is top-level await, which makes `logger.ts` an async module and
+propagates to `db.ts`, `graphql.ts`, and every service transitively. The classic
+failure mode for that — a CJS `require()` of an async ESM module — cannot occur
+in an ESM-only Cedar, which is the world this plan targets. **Unverified:**
+whether TLA in the api module graph survives `ssrLoadModule()` in the dev
+middleware, and whether the universal-deploy build (which bundles, unlike the
+esbuild `bundle: false` path) handles it. Answerable with an experiment; must be
+settled before C can be chosen.
 
 ### Candidate D — an exported destination factory
 
@@ -86,55 +142,94 @@ export const logger = createLogger({
 })
 ```
 
+Mechanically identical to B, except `@cedarjs/api` re-exports
+`prettyDestination` so the formatter arrives transitively and the app's manifest
+stays unchanged.
+
 `isDevelopment`, `isProduction`, and `isTest` are already exported from
 `@cedarjs/api/logger` (`index.ts:44-60`), so this introduces no new
 environment-detection surface.
 
-Under both candidates, an explicitly supplied `destination` wins over any
+Under all four candidates, an explicitly supplied `destination` wins over any
 framework default, matching the precedence the interception plugin already uses
 (`vite-plugin-cedar-log-formatter-dev.ts:100`).
 
-### Two variants that were considered and dropped
+### The devDependency trilemma
 
-**B: A separate `@cedarjs/log-formatter` package as an app devDependency** — the
-literal reading of the `--ud` doc's option 5. The api build runs esbuild with
-`bundle: false` (`packages/internal/src/build/api.ts`), so a static
-`import { prettyDestination } from '@cedarjs/log-formatter'` in `logger.ts`
-survives into `api/dist` and throws `MODULE_NOT_FOUND` in production, where
-devDependencies are not installed. Making it a regular dependency instead would
-work, but D achieves the same thing with no new package at all.
+The formatter is meant to be used in development, or standalone via `dlx` in
+production — not as something an app ships and runs. Making the manifest say
+that turns out to constrain the API shape, because you can have at most two of:
 
-**C: A guarded dynamic import in app code** — avoids the above, but top-level
-await makes `logger.ts` an async module, and it is imported by `db.ts`,
-`graphql.ts`, and every service transitively. Real propagation cost for no
-benefit over D.
+1. **devDependency** — the declaration matches the intent
+2. **Statically analyzable** — no false "unused dependency" from knip and
+   friends
+3. **Production-safe** — no `MODULE_NOT_FOUND` when devDependencies are absent
 
-### Open decision: A vs D
+|                                        |  1  |  2  |  3  |
+| -------------------------------------- | :-: | :-: | :-: |
+| Static import + `dependency` (B, D)    |  ✗  |  ✓  |  ✓  |
+| String reference + devDependency (A)   |  ✓  |  ✗  |  ✓  |
+| Static import + devDependency          |  ✓  |  ✓  |  ✗  |
+| **Dynamic import + devDependency (C)** |  ✓  |  ✓  |  ✓  |
 
-Both are explicit at the call site and type-discoverable. Both leave the
-formatter and its loading inside `@cedarjs/api`. They differ in where the
-dev/prod decision lives.
+Verified empirically against knip 6.24: given a static import, an
+`await import('pkg')`, and a bare `'pkg'` string, only the bare string was
+reported as an unused dependency. Dynamic imports with literal specifiers are
+resolved; strings are not.
 
-|                                                       | A (`format`)                      | D (`prettyDestination`)                          |
-| ----------------------------------------------------- | --------------------------------- | ------------------------------------------------ |
-| Env check                                             | inside the framework              | in app code, one visible line                    |
-| Hidden behaviour                                      | `'auto'` expands to pretty-in-dev | none                                             |
-| Customising                                           | new enum members Cedar must add   | arguments to `prettyDestination()`               |
-| Non-standard cases (pretty in staging, tee to a file) | not expressible                   | change the condition, wrap the destination       |
-| Boilerplate per app                                   | none                              | one conditional, which apps can get subtly wrong |
-| Formatter loaded in production                        | avoidable via lazy subpath        | imported eagerly (~200 dep-free lines)           |
+One constraint falls out of this: the dynamic import has to be in **app code**.
+If `@cedarjs/api` performs it internally, the app's devDependency still has zero
+references within the app and knip flags it regardless — so this is C
+specifically, not A with a lazy import.
 
-The case for A is that the env check is the kind of thing a framework should get
-right once rather than have every app restate — `process.env.NODE_ENV === 'development'`
-is not the same as Cedar's `isDevelopment`, which also excludes test, and apps
-will write the former.
+**Promotion is the escape valve for staging.** If an app wants pretty logs
+outside development, it moves `@cedarjs/log-formatter` from `devDependencies` to
+`dependencies` and changes the condition. The manifest field is the declaration
+of intent, and changing intent means changing the field — rather than trying to
+find one declaration that covers both.
 
-The case for D is that it has no hidden behaviour at all, composes without
-requiring API additions, and reuses exports that already exist.
+### Open decision: A vs B vs C vs D
+
+All four are explicit at the call site and type-discoverable. They differ in
+where the dev/prod decision lives, how the formatter is declared, and what that
+costs.
+
+|                                                       | A (`format`)                      | B (app-level dep)                          | C (dynamic import)                         | D (re-exported)                            |
+| ----------------------------------------------------- | --------------------------------- | ------------------------------------------ | ------------------------------------------ | ------------------------------------------ |
+| Env check                                             | inside the framework              | in app code                                | in app code                                | in app code                                |
+| Hidden behaviour                                      | `'auto'` expands to pretty-in-dev | none                                       | none                                       | none                                       |
+| Customising                                           | new enum members Cedar must add   | arguments to `prettyDestination()`         | arguments to `prettyDestination()`         | arguments to `prettyDestination()`         |
+| Non-standard cases (pretty in staging, tee to a file) | not expressible                   | change the condition                       | promote dep, change the condition          | change the condition                       |
+| Boilerplate per app                                   | none                              | one conditional, apps can get subtly wrong | one conditional, apps can get subtly wrong | one conditional, apps can get subtly wrong |
+| Declared as                                           | devDependency                     | dependency                                 | devDependency                              | transitive via `@cedarjs/api`              |
+| Survives static analysis                              | no — knip flags it unused         | yes                                        | yes                                        | n/a (not in app manifest)                  |
+| In the app's `api/package.json`                       | yes                               | yes                                        | yes                                        | no                                         |
+| Async `logger.ts`                                     | no                                | no                                         | **yes** — TLA propagates                   | no                                         |
+
+The case for **A** is that the env check is the kind of thing a framework should
+get right once rather than have every app restate —
+`process.env.NODE_ENV === 'development'` is not the same as Cedar's
+`isDevelopment`, which also excludes test, and apps will write the former. It
+also has the strongest precedent: this is what pino does.
+
+The case for **B** is everything in **The formatter as a standalone package**
+below: if the formatter is a package people can choose, uninstall, and run
+standalone, the app manifest is where that choice should be visible. Its cost is
+declaring a runtime `dependency` for something intended for development.
+
+The case for **C** is that it is the only shape satisfying all three corners of
+the trilemma. Its cost is top-level await, and it is the only candidate with an
+open feasibility question attached.
+
+The case for **D** is that it has no hidden behaviour and adds nothing to the
+app's manifest — the formatter is there because Cedar's logger needs it, which
+is arguably what it is. It is also the only candidate that forgoes the
+standalone-package signalling entirely.
 
 They are not mutually exclusive: `format` is sugar over `prettyDestination()`,
-so shipping both is cheap. If both ship, the remaining question is only which
-one the template scaffolds, since that is what most apps will carry forever.
+and B, C, and D differ mainly in import mechanics, so shipping more than one is
+cheap. If several ship, the remaining question is which the template scaffolds,
+since that is what most apps will carry forever.
 
 **This must be decided before implementation starts.** It determines the codemod
 output, the template, and the docs, and it is the hardest part of the change to
@@ -142,7 +237,7 @@ revise afterwards.
 
 ---
 
-## The unlock: a dependency-free formatter in `@cedarjs/api`
+## The unlock: a dependency-free formatter
 
 PR #2140 rejected adding `@cedarjs/api-server` or `@cedarjs/internal` as a
 dependency of `@cedarjs/api`, on the grounds that `@cedarjs/api` ships in every
@@ -150,8 +245,8 @@ deployed api and is deliberately held to `pino`, `@prisma/client`,
 `jsonwebtoken`, and a few small utilities. That reasoning is sound and still
 applies.
 
-What was never evaluated is whether the formatter could live in `@cedarjs/api`
-with **no new dependencies at all**. The current formatter
+What was never evaluated is whether the formatter could stand alone with **no
+dependencies at all**. The current formatter
 (`packages/api-server/src/logFormatter/`) needs four:
 
 | Dependency        | Replacement                                          |
@@ -161,12 +256,76 @@ with **no new dependencies at all**. The current formatter
 | `fast-json-parse` | `JSON.parse` in a try/catch                          |
 | `split2`          | unnecessary once receiving whole lines, not a stream |
 
-So the target is roughly 200 lines of dependency-free code in `@cedarjs/api`.
-That is noise next to pino itself, and it dissolves the footprint constraint
-rather than working around it.
+So the target is roughly 200 lines of dependency-free code. That is noise next
+to pino itself, and it dissolves the footprint constraint rather than working
+around it — a zero-dependency formatter is a categorically different proposition
+from `@cedarjs/internal`'s 193 dependency entries, which is what #2140 was
+actually rejecting.
 
-Expose it on a subpath (e.g. `@cedarjs/api/logger/format`) so the module is only
-loaded when `format` actually resolves to `'pretty'`.
+---
+
+## The formatter as a standalone package
+
+Extract the formatter to `@cedarjs/log-formatter` — a scoped package in this
+monorepo, published alongside everything else.
+
+The technical case is thin on its own: every framework consumer already has
+`@cedarjs/api` in its graph, so nothing internal is unblocked. The case rests on
+two things the current arrangement genuinely cannot do.
+
+### It makes the bin usable off-box
+
+`cedar-log-formatter` is currently one of ~20 bins on `@cedarjs/core`, which
+pulls `@cedarjs/internal` transitively — typescript, esbuild, vite, the codegen
+toolchain. There is no realistic way to invoke it on a machine that isn't a
+Cedar app checkout. In practice that means reaching into `node_modules` by
+absolute path:
+
+```bash
+journalctl --user -u my-api --no-pager -o cat --since "10 min ago" \
+  | node /var/www/my-app/current/node_modules/@cedarjs/core/dist/bins/cedar-log-formatter.js
+```
+
+As its own zero-dependency package with a `bin` entry, the same thing becomes:
+
+```bash
+journalctl --user -u my-api --no-pager -o cat --since "10 min ago" \
+  | yarn dlx @cedarjs/log-formatter
+```
+
+No install, no Cedar app required. This is the "format output from a process you
+didn't configure" case that already justifies keeping the bin at all — reading
+pino logs captured by systemd is a real production workflow, and today the tool
+is effectively unreachable there.
+
+The dependency-free work above is what makes this viable: `dlx` of a ~200-line
+zero-dep package is near-instant.
+
+### It signals that the formatter is optional
+
+A package in the app's `api/package.json` is a visible, removable choice.
+Bundled inside `@cedarjs/api` it is an implementation detail nobody can decline.
+"Don't want it? Don't install it" is only a real offer if there is something to
+not install.
+
+This is also the argument for candidate B over D — B is the candidate where that
+choice appears in the app's own manifest.
+
+### It is pitchable on its own
+
+The formatter's differentiator against `pino-pretty`, the incumbent, is that it
+is **GraphQL-aware**: operation name, query, result data, response cache, and
+tracing extensions all get dedicated formatters (`formatters.ts`). The
+addressable audience is anyone running a pino-based GraphQL server, not only
+Cedar users.
+
+### Costs
+
+- A published package API is a long-term contract. An internal module inside
+  `@cedarjs/api` can be reshaped freely; `@cedarjs/log-formatter@1` cannot.
+- One more package in every release, changeset, and dedupe pass.
+- Under A or D, `@cedarjs/api` gains a dependency edge on it. Thin and
+  zero-dependency, but a real edge that did not exist before.
 
 ---
 
@@ -180,9 +339,11 @@ loaded when `format` actually resolves to `'pretty'`.
 - the shell pipe in `devHandler.ts:404`
 - the shell pipe in `jobsHandler.ts:36`
 
-**Keep** the `cedar-log-formatter` bin. `cedar serve | cedar-log-formatter` is a
-legitimate affordance for formatting output from a process you didn't configure,
-and it costs nothing to leave in place.
+**Keep** the `cedar-log-formatter` bin, moved to `@cedarjs/log-formatter`.
+Formatting output from a process you didn't configure — `cedar serve |`, or a
+journalctl pipe on a production box — is a real workflow, and moving the bin is
+what makes it reachable off-box. The `@cedarjs/core` bin entry can stay as an
+alias so existing muscle memory keeps working.
 
 ---
 
