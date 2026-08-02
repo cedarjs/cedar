@@ -12,17 +12,17 @@
     ]
   },
   "dependencies": {
-    "@cedarjs/forms": "5.0.1",
-    "@cedarjs/router": "5.0.1",
-    "@cedarjs/web": "5.0.1",
+    "@cedarjs/forms": "6.0.0",
+    "@cedarjs/router": "6.0.0",
+    "@cedarjs/web": "6.0.0",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
   "devDependencies": {
-    "@cedarjs/vite": "5.0.1",
+    "@cedarjs/vite": "6.0.0",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
-    "@cedarjs/testing": "5.0.3",
+    "@cedarjs/testing": "6.0.0",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.2",
     "vite": "7.3.6"

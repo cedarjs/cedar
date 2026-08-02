@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-supabase-middleware",
-  "version": "5.0.1",
+  "version": "6.0.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -32,14 +32,14 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/auth-supabase-api": "5.0.1",
-    "@cedarjs/web": "5.0.1"
+    "@cedarjs/auth-supabase-api": "6.0.0",
+    "@cedarjs/web": "6.0.0"
   },
   "devDependencies": {
-    "@cedarjs/api": "5.0.1",
-    "@cedarjs/auth": "5.0.1",
-    "@cedarjs/framework-tools": "5.0.1",
-    "@cedarjs/graphql-server": "5.0.1",
+    "@cedarjs/api": "6.0.0",
+    "@cedarjs/auth": "6.0.0",
+    "@cedarjs/framework-tools": "6.0.0",
+    "@cedarjs/graphql-server": "6.0.0",
     "concurrently": "9.2.4",
     "publint": "0.3.22",
     "typescript": "5.9.3",

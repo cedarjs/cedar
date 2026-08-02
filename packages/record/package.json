@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/record",
-  "version": "5.0.1",
+  "version": "6.0.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -25,13 +25,13 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/api": "5.0.1",
-    "@cedarjs/project-config": "5.0.1",
+    "@cedarjs/api": "6.0.0",
+    "@cedarjs/project-config": "6.0.0",
     "@prisma/client": "7.8.0",
     "camelcase": "6.3.0"
   },
   "devDependencies": {
-    "@cedarjs/framework-tools": "5.0.1",
+    "@cedarjs/framework-tools": "6.0.0",
     "@prisma/internals": "7.8.0",
     "esbuild": "0.28.1",
     "publint": "0.3.22",

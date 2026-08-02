@@ -16,10 +16,10 @@
     "@cedarjs/api-server": "5.0.6"
   },
   "devDependencies": {
-    "@cedarjs/core": "5.0.1",
-    "@cedarjs/eslint-config": "5.0.1",
-    "@cedarjs/project-config": "5.0.1",
-    "@cedarjs/testing": "5.0.1"
+    "@cedarjs/core": "6.0.0",
+    "@cedarjs/eslint-config": "6.0.0",
+    "@cedarjs/project-config": "6.0.0",
+    "@cedarjs/testing": "6.0.0"
   },
   "engines": {
     "node": "24.x"

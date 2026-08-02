@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/web-server",
-  "version": "5.0.1",
+  "version": "6.0.0",
   "description": "CedarJS's server for the Web side",
   "repository": {
     "type": "git",
@@ -27,15 +27,15 @@
     "prepublishOnly": "NODE_ENV=production yarn build"
   },
   "dependencies": {
-    "@cedarjs/fastify-web": "5.0.1",
-    "@cedarjs/project-config": "5.0.1",
+    "@cedarjs/fastify-web": "6.0.0",
+    "@cedarjs/project-config": "6.0.0",
     "ansis": "4.3.1",
     "dotenv-defaults": "5.0.2",
     "fastify": "5.10.0",
     "yargs": "17.7.3"
   },
   "devDependencies": {
-    "@cedarjs/framework-tools": "5.0.1",
+    "@cedarjs/framework-tools": "6.0.0",
     "typescript": "5.9.3"
   },
   "engines": {
