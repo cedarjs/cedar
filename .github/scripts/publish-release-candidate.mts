@@ -240,18 +240,7 @@ function verifyWorkspaceDependencies(
   log('✅ All in-monorepo dependencies point at ' + version)
 }
 
-/**
- * The newest release tag in the repo.
- *
- * Deliberately not `git describe`. `git describe` resolves the newest tag
- * *reachable from HEAD*, and it matches any tag, not just release tags. This
- * repo carries tags inherited from the Redwood history (`rw-v8.0.0`) and
- * per-package tags (`create-redmix-rsc-app/v0.0.3`), and on a branch cut from
- * `main` those are what `git describe` returns. Those would parse to `NaN.0.0`
- * below.
- *
- * Mirrors `getLatestVersionTag` in `publish-prerelease.mts`.
- */
+/** The newest release tag in the repo (no matter what branch it's on) */
 function getLatestVersionTag(): string | null {
   const tags = execCommand("git tag -l 'v*'")
     .split('\n')
