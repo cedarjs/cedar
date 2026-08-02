@@ -240,6 +240,29 @@ function verifyWorkspaceDependencies(
   log('✅ All in-monorepo dependencies point at ' + version)
 }
 
+/** The newest release tag in the repo (no matter what branch it's on) */
+function getLatestVersionTag(): string | null {
+  const tags = execCommand("git tag -l 'v*'")
+    .split('\n')
+    .map((tag) => tag.trim())
+    .filter((tag) => /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(tag))
+
+  tags.sort((a, b) => {
+    const partsA = a.slice(1).split('.').map(Number)
+    const partsB = b.slice(1).split('.').map(Number)
+
+    for (let i = 0; i < 3; i++) {
+      if (partsA[i] !== partsB[i]) {
+        return partsA[i] - partsB[i]
+      }
+    }
+
+    return 0
+  })
+
+  return tags.at(-1) ?? null
+}
+
 async function removeCreateCedarAppFromWorkspaces(): Promise<() => void> {
   log('Temporarily removing create-cedar-app from workspaces')
 
@@ -351,7 +374,14 @@ async function main() {
 
     log('Step 2: Calculating RC version')
 
-    const latestTag = execCommand('git describe --abbrev=0 --tags').trim()
+    const latestTag = getLatestVersionTag()
+
+    if (!latestTag) {
+      throw new Error('No version tags (vX.Y.Z) found in the repository')
+    }
+
+    log(`Latest tag: ${latestTag}`)
+
     const currentVersion = latestTag.replace(/^v/, '')
     const [major, minor, patch] = currentVersion.split('.').map(Number)
 
