@@ -61,7 +61,9 @@ incorrect assumptions — worth reading even though they weren't used. One
 approach (the shell pipe, below) was actually implemented, shipped, and
 subsequently reverted after two rounds of code review found real bugs in it —
 see **The pipe attempt: shipped, then reverted** for the full story, and
-**Decision** for what replaced it.
+**Decision** for what replaced it. An eighth approach — a pino worker-thread
+transport — was evaluated after this document was first written; see
+**Postscript** for why it isn't usable.
 
 ### 1. Patch `process.stdout.write` in-process
 
@@ -371,6 +373,10 @@ createLogger`**: per the ECMAScript module spec, a local export binding
   `packages/create-cedar-app/templates/ts/web/package.json`), so this
   subtree is already excluded from most production installs regardless of
   its own size.
+- **Survives crashes**: formatting happens in-process, on the main thread, so
+  a line written immediately before an uncaught exception still reaches
+  stdout. The idiomatic pino alternative — a worker-thread transport — does
+  not; see **Postscript** below.
 
 ### Known minor side effect
 
@@ -403,6 +409,50 @@ This "dev-only Vite specifier interception" pattern is the right tool when:
   inside another framework package's own internals, which Vite's SSR mode
   externalizes by default and won't run through your plugin's `resolveId`
   unless you also add it to `ssr.noExternal`.
+
+## Postscript: pino worker-thread transports (evaluated 2026-08-01)
+
+A pino **transport target** — `pino({ transport: { target: '<pkg>' } })`, where
+pino spawns a worker thread that receives already-parsed log objects — was not
+among the options considered above. It's the idiomatic pino answer to "format my
+logs" and it superficially fits Cedar well, so it's worth recording why it isn't
+usable here rather than leaving it as an open "why didn't you just...".
+
+Two things make it look attractive:
+
+- `LogFormatter().parse()` already accepts a parsed object as well as an NDJSON
+  string (`packages/api-server/src/logFormatter/index.ts:43`) — exactly what a
+  transport receives. Wrapping it in `pino-abstract-transport` takes about a
+  dozen lines and needs no changes to the formatter itself. This was
+  prototyped, and it produces correct output: colors, timestamps, operation
+  names, error stacks.
+- It needs no shell pipe, no supervisor process, and no module interception. It
+  is a config object on the logger, so one mechanism would cover `cedar dev`,
+  `cedar dev --ud`, and `cedar jobs` alike.
+
+**It's disqualified because worker-thread transports lose buffered output when
+the process exits.** Measured against pino 9.7:
+
+| Scenario                                              | Worker transport  | Shell pipe | In-process destination (shipped) |
+| ----------------------------------------------------- | ----------------- | ---------- | -------------------------------- |
+| Short-lived process, 3 log calls                      | 2 of 3 lines lost | all 3      | all 3                            |
+| `logger.fatal()` immediately before an uncaught throw | lost 3/3 runs     | survives   | survives 3/3                     |
+
+Neither standard mitigation helps. `sync: true` on the transport still lost the
+fatal line 3/3 runs, and calling `flushSync()` from an `uncaughtException`
+handler did too — a worker thread can't be drained synchronously at process
+exit. Worker output also arrives out of order relative to synchronous
+`console.log` writes, so under `--ud` it would interleave badly with Vite's own
+console output — the very problem this work set out to fix.
+
+Losing the log line that explains a crash is the worst available failure mode
+for a dev-mode logger, and it's a regression against both the shell pipe and the
+shipped design.
+
+This is a positive result for the interception design, not just a rejection: the
+plain `{ write() }` destination it injects formats on the main thread with no
+buffering across a thread boundary, which is precisely why it survives crashes
+where a transport doesn't.
 
 ## Files changed
 
