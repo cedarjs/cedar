@@ -6,6 +6,11 @@
     "web",
     "packages/*"
   ],
+  "scripts": {
+    "build": "cedar build",
+    "dev": "cedar dev",
+    "start": "cedar serve"
+  },
   "devDependencies": {
     "@cedarjs/core": "5.0.6",
     "@cedarjs/eslint-config": "5.0.6",

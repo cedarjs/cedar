@@ -3,6 +3,7 @@
   "type": "commonjs",
   "scripts": {
     "build": "cedar build",
+    "dev": "cedar dev",
     "start": "cedar serve"
   },
   "devDependencies": {
