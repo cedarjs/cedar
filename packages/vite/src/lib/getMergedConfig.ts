@@ -8,6 +8,7 @@ import {
   getConfig,
   getEnvVarDefinitions,
   getPaths,
+  readEnvVar,
 } from '@cedarjs/project-config'
 
 import { getWorkspacePackageAliases } from './workspacePackageAliases.js'
@@ -29,7 +30,9 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
         ? getWorkspacePackageAliases(cedarPaths, cedarConfig)
         : {}
 
-    let apiHost = process.env.REDWOOD_API_HOST
+    let apiHost = readEnvVar('CEDAR_API_HOST', {
+      deprecatedAlias: 'REDWOOD_API_HOST',
+    })
     apiHost ??= cedarConfig.api.host
     // In dev, use the IPv4 loopback so Node's http-proxy can connect to the
     // API server. Vite's proxy library does a DNS lookup on the literal string
@@ -39,9 +42,13 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
     // @MARK: note that most RSC settings sit in their individual build functions
     const rscEnabled = cedarConfig.experimental.rsc?.enabled
 
+    const apiPortEnvVar = readEnvVar('CEDAR_API_PORT', {
+      deprecatedAlias: 'REDWOOD_API_PORT',
+    })
+
     let apiPort
-    if (process.env.REDWOOD_API_PORT) {
-      apiPort = parseInt(process.env.REDWOOD_API_PORT)
+    if (apiPortEnvVar) {
+      apiPort = parseInt(apiPortEnvVar)
     } else {
       apiPort = cedarConfig.api.port
     }

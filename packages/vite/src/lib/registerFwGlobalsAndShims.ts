@@ -1,6 +1,10 @@
 import { createRequire } from 'node:module'
 
-import { getConfig, getEnvVarDefinitions } from '@cedarjs/project-config'
+import {
+  getConfig,
+  getEnvVarDefinitions,
+  readEnvVar,
+} from '@cedarjs/project-config'
 
 /**
  * Use this function on the web server
@@ -31,13 +35,19 @@ function registerFwGlobals() {
       if (/^[a-zA-Z][a-zA-Z\d+\-.]*?:/.test(apiPath)) {
         return apiPath
       } else {
-        let webHost = process.env.REDWOOD_WEB_HOST
+        let webHost = readEnvVar('CEDAR_WEB_HOST', {
+          deprecatedAlias: 'REDWOOD_WEB_HOST',
+        })
         webHost ??= rwConfig.web.host
         webHost ??= process.env.NODE_ENV === 'production' ? '0.0.0.0' : '[::]'
 
+        const webPortEnvVar = readEnvVar('CEDAR_WEB_PORT', {
+          deprecatedAlias: 'REDWOOD_WEB_PORT',
+        })
+
         let webPort
-        if (process.env.REDWOOD_WEB_PORT) {
-          webPort = parseInt(process.env.REDWOOD_WEB_PORT)
+        if (webPortEnvVar) {
+          webPort = parseInt(webPortEnvVar)
         } else {
           webPort = rwConfig.web.port
         }

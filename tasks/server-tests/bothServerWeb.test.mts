@@ -11,20 +11,20 @@ describe.each([[[cedar, 'serve']], [cedarServer]])('serve both (%s)', (cmd) => {
       await test({ webPort })
     })
 
-    it("`REDWOOD_WEB_PORT` changes the web server's port", async () => {
-      process.env.REDWOOD_WEB_PORT = '8921'
-      const webPort = +process.env.REDWOOD_WEB_PORT
+    it("`CEDAR_WEB_PORT` changes the web server's port", async () => {
+      process.env.CEDAR_WEB_PORT = '8921'
+      const webPort = +process.env.CEDAR_WEB_PORT
       testContext.p = $`yarn node ${cmd}`
       await test({ webPort })
-      delete process.env.REDWOOD_WEB_PORT
+      delete process.env.CEDAR_WEB_PORT
     })
 
-    it('`--webPort` takes precedence over `REDWOOD_WEB_PORT`', async () => {
+    it('`--webPort` takes precedence over `CEDAR_WEB_PORT`', async () => {
       const webPort = 8922
-      process.env.REDWOOD_WEB_PORT = '8923'
+      process.env.CEDAR_WEB_PORT = '8923'
       testContext.p = $`yarn node ${cmd} --webPort ${webPort}`
       await test({ webPort })
-      delete process.env.REDWOOD_WEB_PORT
+      delete process.env.CEDAR_WEB_PORT
     })
 
     it('`[web].port` changes the port', async () => {
@@ -40,20 +40,20 @@ describe.each([[[cedar, 'serve']], [cedarServer]])('serve both (%s)', (cmd) => {
       await test({ webHost })
     })
 
-    it("`REDWOOD_WEB_HOST` changes the web server's host", async () => {
-      process.env.REDWOOD_WEB_HOST = '::1'
-      const webHost = process.env.REDWOOD_WEB_HOST
+    it("`CEDAR_WEB_HOST` changes the web server's host", async () => {
+      process.env.CEDAR_WEB_HOST = '::1'
+      const webHost = process.env.CEDAR_WEB_HOST
       testContext.p = $`yarn node ${cmd}`
       await test({ webHost })
-      delete process.env.REDWOOD_WEB_HOST
+      delete process.env.CEDAR_WEB_HOST
     })
 
-    it('`--webHost` takes precedence over `REDWOOD_WEB_HOST`', async () => {
+    it('`--webHost` takes precedence over `CEDAR_WEB_HOST`', async () => {
       const webHost = '::'
-      process.env.REDWOOD_WEB_HOST = '0.0.0.0'
+      process.env.CEDAR_WEB_HOST = '0.0.0.0'
       testContext.p = $`yarn node ${cmd} --webHost ${webHost}`
       await test({ webHost })
-      delete process.env.REDWOOD_WEB_HOST
+      delete process.env.CEDAR_WEB_HOST
     })
 
     it("`[web].host` changes the web server's host", async () => {

@@ -195,5 +195,32 @@ To run a Cedar app in a container or VM, you'll want to set both the web and api
   host = '0.0.0.0'
 ```
 
-You can also configure these values via `REDWOOD_WEB_HOST` and `REDWOOD_API_HOST`.
+You can also configure these values via `CEDAR_WEB_HOST` and `CEDAR_API_HOST`.
 And if you set `NODE_ENV` to production, these will be the defaults anyway.
+
+:::note Deprecated env vars
+
+`REDWOOD_WEB_HOST`, `REDWOOD_API_HOST`, `REDWOOD_WEB_PORT` and
+`REDWOOD_API_PORT` still work, but they're deprecated in favour of their
+`CEDAR_`-prefixed equivalents, which take precedence when both are set.
+
+:::
+
+### Container hosts
+
+Most container hosts (Railway, Render, Fly.io, Cloud Run, Heroku) tell your app
+what to bind to with the `HOST` and `PORT` env vars. Cedar reads both, so you
+usually don't have to configure anything.
+
+`PORT` is only used by the side serving public traffic. When you run both sides
+together with `yarn cedar serve`, that's the web server — the api server keeps
+its own port, because the two would otherwise try to bind the same one. Serving
+a single side with `yarn cedar serve api` or `yarn cedar serve web` makes that
+side the public one.
+
+The full order of precedence is:
+
+1. CLI flags (`--port`, `--host`, `--api-port`, …)
+2. `CEDAR_API_PORT` / `CEDAR_WEB_PORT` (and the `_HOST` equivalents)
+3. `PORT` / `HOST`, for the public side only
+4. `[api].port` / `[web].port` in `cedar.toml`

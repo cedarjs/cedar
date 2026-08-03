@@ -230,11 +230,11 @@ It takes the same arguments as `listen`, except for host and port. It computes t
 yarn node api/dist/server.js --apiHost 0.0.0.0 --apiPort 8913
 ```
 
-2. `REDWOOD_API_HOST` or `REDWOOD_API_PORT` env vars:
+2. `CEDAR_API_HOST` or `CEDAR_API_PORT` env vars:
 
 ```
-export REDWOOD_API_HOST='0.0.0.0'
-export REDWOOD_API_PORT='8913'
+export CEDAR_API_HOST='0.0.0.0'
+export CEDAR_API_PORT='8913'
 yarn node api/dist/server.js
 ```
 
