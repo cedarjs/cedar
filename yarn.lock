@@ -2092,8 +2092,11 @@ __metadata:
     yargs: "npm:17.7.3"
   peerDependencies:
     "@cedarjs/graphql-server": "workspace:*"
+    "@cedarjs/internal": "workspace:*"
   peerDependenciesMeta:
     "@cedarjs/graphql-server":
+      optional: true
+    "@cedarjs/internal":
       optional: true
   bin:
     cedar-api-server-watch: ./dist/watch.js

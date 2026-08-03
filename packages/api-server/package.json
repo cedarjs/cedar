@@ -103,7 +103,6 @@
     "@cedarjs/api": "workspace:*",
     "@cedarjs/context": "workspace:*",
     "@cedarjs/fastify-web": "workspace:*",
-    "@cedarjs/internal": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/web-server": "workspace:*",
     "@fastify/multipart": "9.4.0",
@@ -124,6 +123,7 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
+    "@cedarjs/internal": "workspace:*",
     "@types/aws-lambda": "8.10.162",
     "@types/dotenv-defaults": "^5.0.0",
     "@types/split2": "4.2.3",
@@ -138,10 +138,14 @@
     "vitest": "4.1.10"
   },
   "peerDependencies": {
-    "@cedarjs/graphql-server": "workspace:*"
+    "@cedarjs/graphql-server": "workspace:*",
+    "@cedarjs/internal": "workspace:*"
   },
   "peerDependenciesMeta": {
     "@cedarjs/graphql-server": {
+      "optional": true
+    },
+    "@cedarjs/internal": {
       "optional": true
     }
   },

@@ -4,6 +4,12 @@ import ansis from 'ansis'
 import chokidar from 'chokidar'
 import { config } from 'dotenv-defaults'
 
+// `@cedarjs/internal` is an optional peer dependency, not a regular one, so
+// that it stays out of production installs — it pulls in Babel and the whole
+// graphql-codegen suite. This watcher is the only thing in this package that
+// needs it, and it only ever runs under `cedar dev`, where `@cedarjs/cli`
+// provides it. Keep it that way: nothing reachable from `bin.ts` may import
+// `@cedarjs/internal`.
 import {
   buildApi,
   cleanApiBuild,
