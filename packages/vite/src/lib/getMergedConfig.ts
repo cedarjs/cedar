@@ -8,6 +8,8 @@ import {
   getConfig,
   getEnvVarDefinitions,
   getPaths,
+  parsePort,
+  readEnvVar,
 } from '@cedarjs/project-config'
 
 import { getWorkspacePackageAliases } from './workspacePackageAliases.js'
@@ -29,21 +31,28 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
         ? getWorkspacePackageAliases(cedarPaths, cedarConfig)
         : {}
 
+    const hostEnv = readEnvVar('CEDAR_API_HOST', {
+      deprecatedAlias: 'REDWOOD_API_HOST',
+    })
+
     // It has to be an address the dev server's proxy can dial, which is why we
     // use the IPv4 loopback literal as the last fallback rather than the api
     // server's own `::` default, which is a bind address meaning "listen on
     // everything". The literal also skips a DNS lookup and Node's dual-stack
     // connection race on every proxied request.
-    const apiHost =
-      process.env.REDWOOD_API_HOST ?? cedarConfig.api.host ?? '127.0.0.1'
+    const apiHost = hostEnv ?? cedarConfig.api.host ?? '127.0.0.1'
 
     const streamingSsrEnabled = cedarConfig.experimental.streamingSsr?.enabled
     // @MARK: note that most RSC settings sit in their individual build functions
     const rscEnabled = cedarConfig.experimental.rsc?.enabled
 
+    const apiPortEnvVar = readEnvVar('CEDAR_API_PORT', {
+      deprecatedAlias: 'REDWOOD_API_PORT',
+    })
+
     let apiPort
-    if (process.env.REDWOOD_API_PORT) {
-      apiPort = parseInt(process.env.REDWOOD_API_PORT)
+    if (apiPortEnvVar) {
+      apiPort = parsePort(apiPortEnvVar, 'CEDAR_API_PORT')
     } else {
       apiPort = cedarConfig.api.port
     }

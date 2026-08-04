@@ -11,8 +11,11 @@ export async function handler(options: BothParsedOptions) {
   const timeStart = Date.now()
   console.log(ansis.dim.italic('Starting API and Web Servers...'))
 
-  options.webHost ??= getWebHost()
-  options.webPort ??= getWebPort()
+  // The web server is the one taking public traffic here — it proxies api
+  // requests through to the api server — so it's the side that gets to use the
+  // host's `HOST`/`PORT` env vars.
+  options.webHost ??= getWebHost({ isPublicSide: true })
+  options.webPort ??= getWebPort({ isPublicSide: true })
   options.apiHost ??= getAPIHost()
   options.apiPort ??= getAPIPort()
 
