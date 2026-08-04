@@ -3,6 +3,7 @@ import { createRequire } from 'node:module'
 import {
   getConfig,
   getEnvVarDefinitions,
+  parsePort,
   readEnvVar,
 } from '@cedarjs/project-config'
 
@@ -47,7 +48,7 @@ function registerFwGlobals() {
 
         let webPort
         if (webPortEnvVar) {
-          webPort = parseInt(webPortEnvVar)
+          webPort = parsePort(webPortEnvVar, 'CEDAR_WEB_PORT')
         } else {
           webPort = rwConfig.web.port
         }

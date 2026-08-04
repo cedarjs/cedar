@@ -8,6 +8,7 @@ import {
   getConfig,
   getEnvVarDefinitions,
   getPaths,
+  parsePort,
   readEnvVar,
 } from '@cedarjs/project-config'
 
@@ -48,7 +49,7 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
 
     let apiPort
     if (apiPortEnvVar) {
-      apiPort = parseInt(apiPortEnvVar)
+      apiPort = parsePort(apiPortEnvVar, 'CEDAR_API_PORT')
     } else {
       apiPort = cedarConfig.api.port
     }
