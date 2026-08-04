@@ -12,8 +12,8 @@
   "main": "./dist/watch.js",
   "types": "./dist/watch.d.ts",
   "bin": {
-    "cedar-api-server-watch": "./dist/watch.js",
-    "cedarjs-api-server-watch": "./dist/watch.js"
+    "cedar-api-server-watch": "./dist/bin.js",
+    "cedarjs-api-server-watch": "./dist/bin.js"
   },
   "files": [
     "dist"
@@ -23,7 +23,7 @@
     "build:pack": "yarn pack -o cedarjs-api-server-watch.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build && yarn fix:permissions\"",
-    "fix:permissions": "chmod +x dist/watch.js",
+    "fix:permissions": "chmod +x dist/bin.js",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
     "test:watch": "vitest watch"
