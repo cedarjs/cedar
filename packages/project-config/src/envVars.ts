@@ -35,7 +35,7 @@ export function parsePort(value: string, envVarName: string): number {
 
   if (!/^\d+$/.test(trimmed)) {
     throw new Error(
-      `Invalid ${envVarName} env var. "${value}" must be an integer.`,
+      `Invalid ${envVarName} env var value: "${value}". Must be an integer.`,
     )
   }
 
