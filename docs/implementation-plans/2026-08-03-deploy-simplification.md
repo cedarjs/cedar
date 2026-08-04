@@ -24,7 +24,9 @@ The reasoning that settled it: single-container needs no service-to-service
 wiring, because the web server proxies to the api in-process. That is precisely
 why one `start` script plus `PORT` handling yields working deploys on Railway,
 Render, Cloud Run, DigitalOcean App Platform, Heroku, Coolify, Dokku, Dokploy,
-Koyeb and Northflank with no per-platform integration to write or maintain.
+Koyeb and Northflank with no per-platform integration to write or maintain —
+though two of those ten need one extra env var set first; see "Platform
+landscape" below.
 
 Genuine zero-config with a _separate_ api service is not achievable. The two
 services must be wired to each other — a proxy target, or `apiUrl` pointing at a
@@ -224,12 +226,23 @@ single-container means one runtime serving both sides, which is exactly the case
 which includes a recipe for restoring it). Custom server files remain the open
 product question, since UD ignores them by design.
 
-**Platform landscape.** Ten hosts work purely on conventions: Railway, Render,
-Cloud Run, DigitalOcean App Platform, Heroku, Coolify, Dokku, Dokploy, Koyeb,
-Northflank. Fly.io is Dockerfile-first — its own docs call buildpacks "brittle,
-bloated, and prone to change" — and is already served by `setup docker`. Coolify
-is the standout for self-hosters: its Static build pack alongside Nixpacks means
-it can natively express Cedar's _recommended_ topology rather than forcing
+**Platform landscape.** Ten hosts work purely on conventions, but not
+uniformly — `start` resolves the `cedar` bin from a root **devDependency**
+(#2302 tracks moving it onto a runtime one), and two of the ten prune
+devDependencies by default before running `start`:
+
+- **Zero-config, no caveats:** Railway (Railpack), Render, Cloud Run, Coolify,
+  Dokku, Dokploy, Koyeb, Northflank.
+- **Supported, one env var needed:** **Heroku** and **DigitalOcean App
+  Platform (Paketo)** both strip `devDependencies` after build by default, so
+  `start` fails with "command not found" unless pruning is disabled —
+  `NPM_CONFIG_PRODUCTION=false` / `YARN_PRODUCTION=false` on Heroku,
+  `YARN2_SKIP_PRUNING=true` / `NPM_CONFIG_PRODUCTION=false` on DigitalOcean.
+
+Fly.io is Dockerfile-first — its own docs call buildpacks "brittle, bloated,
+and prone to change" — and is already served by `setup docker`. Coolify is the
+standout for self-hosters: its Static build pack alongside Nixpacks means it
+can natively express Cedar's _recommended_ topology rather than forcing
 single-container.
 
 ## Railway-specific
