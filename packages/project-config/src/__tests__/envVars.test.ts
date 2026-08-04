@@ -76,4 +76,16 @@ describe('parsePort', () => {
       'Invalid CEDAR_API_PORT env var value: "nope". Must be an integer.',
     )
   })
+
+  it('accepts the highest valid port', () => {
+    expect(parsePort('65535', 'PORT')).toBe(65535)
+  })
+
+  // Without this these reach `listen()` and fail with ERR_SOCKET_BAD_PORT,
+  // which doesn't tell you which env var was wrong
+  it.each(['65536', '99999999'])('rejects out-of-range %j', (value) => {
+    expect(() => parsePort(value, 'CEDAR_WEB_PORT')).toThrow(
+      `Invalid CEDAR_WEB_PORT env var value: "${value}". Must be between 0 and 65535.`,
+    )
+  })
 })

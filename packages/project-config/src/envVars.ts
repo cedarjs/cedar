@@ -23,12 +23,16 @@ export function readEnvVar(
 }
 
 /**
- * Parse a port from an env var, rejecting anything that isn't a whole number.
+ * Parse a port from an env var, rejecting anything that isn't a usable port.
  *
  * `parseInt` alone is not enough here: it stops at the first non-digit, so
  * `"8080abc"` would become `8080` and `"1.5"` would become `1`. Silently
  * binding a port the user didn't ask for is how a deployment ends up
  * unreachable, so the whole value has to look like an integer.
+ *
+ * Out-of-range values are rejected here too, so a bad env var is reported as
+ * a bad env var rather than surfacing later as a `ERR_SOCKET_BAD_PORT` from
+ * `listen()`. Port 0 is allowed — it means "pick a free port".
  */
 export function parsePort(value: string, envVarName: string): number {
   const trimmed = value.trim()
@@ -39,5 +43,13 @@ export function parsePort(value: string, envVarName: string): number {
     )
   }
 
-  return Number(trimmed)
+  const port = Number(trimmed)
+
+  if (port > 65535) {
+    throw new Error(
+      `Invalid ${envVarName} env var value: "${value}". Must be between 0 and 65535.`,
+    )
+  }
+
+  return port
 }
