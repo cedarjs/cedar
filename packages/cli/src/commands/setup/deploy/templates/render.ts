@@ -8,13 +8,15 @@ export const PROJECT_NAME = path.basename(getPaths().base)
 export const RENDER_YAML = (database: string) => {
   const apiUrl = getUserApiUrl().replace(/\/$/, '')
   return `# Quick links to the docs:
-# - Redwood on Render: https://render.com/docs/deploy-redwood
-# - Render's Blueprint spec: https://render.com/docs/yaml-spec
+# - Deploying Cedar: https://cedarjs.com/docs/deploy/render
+# - Render's own walkthrough (uses \`yarn rw\`, but just swap in \`yarn cedar\`):
+#   https://render.com/docs/deploy-redwood
+# - Render's Blueprint spec: https://render.com/docs/blueprint-spec
 
 services:
 - name: ${PROJECT_NAME}-web
   type: web
-  env: static
+  runtime: static
   buildCommand: npm install --global corepack && yarn install && yarn cedar deploy render web
   staticPublishPath: ./web/dist
 
@@ -25,11 +27,16 @@ services:
   routes:
   - type: rewrite
     source: ${apiUrl}/*
-    # Replace \`destination\` here after your first deploy:
+    # Replace \`destination\` after your first deploy, with the api service's
+    # URL from the Render dashboard:
     #
     # \`\`\`
-    # destination: https://my-redwood-project-api.onrender.com/*
+    # destination: https://${PROJECT_NAME}-api.onrender.com/*
     # \`\`\`
+    #
+    # This can't be filled in automatically — Render's \`fromService\` only
+    # resolves service hosts into \`envVars\`, not into a static site's route
+    # destination.
     destination: replace_with_api_url/*
   - type: rewrite
     source: /*
@@ -38,7 +45,7 @@ services:
 - name: ${PROJECT_NAME}-api
   type: web
   plan: free
-  env: node
+  runtime: node
   region: oregon
   buildCommand: npm install --global corepack && yarn install && yarn cedar build api
   startCommand: yarn cedar deploy render api
