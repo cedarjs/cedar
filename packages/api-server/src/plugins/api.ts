@@ -13,8 +13,7 @@ import { loadFastifyConfig } from '../fastify.js'
 import { lambdaRequestHandler, loadFunctionsFromDist } from './lambdaLoader.js'
 
 export interface CedarFastifyAPIOptions {
-  // Have to keep this named `redwood` to avoid breaking changes
-  redwood: {
+  cedar: {
     apiRootPath?: string
     fastGlobOptions?: FastGlobOptions
     discoverFunctionsGlob?: string | string[]
@@ -30,7 +29,7 @@ export async function cedarFastifyAPI(
   fastify: FastifyInstance,
   opts: CedarFastifyAPIOptions,
 ) {
-  const cedarOptions = opts.redwood ?? {}
+  const cedarOptions = opts.cedar ?? {}
   cedarOptions.apiRootPath ??= '/'
   cedarOptions.apiRootPath = coerceRootPath(cedarOptions.apiRootPath)
   cedarOptions.fastGlobOptions ??= {}

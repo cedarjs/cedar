@@ -130,7 +130,7 @@ export const handler = async ({
       },
       task: (_ctx: unknown, task: { output: string }) => {
         task.output = [
-          "Please add the following to your 'redwoodFastifyGraphQLServer' plugin options to enable OTel for your graphql",
+          "Please add the following to your 'cedarFastifyGraphQLServer' plugin options to enable OTel for your graphql",
           'openTelemetryOptions: {',
           '  resolvers: true,',
           '  result: true,',

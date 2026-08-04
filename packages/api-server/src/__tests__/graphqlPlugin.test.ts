@@ -12,7 +12,7 @@ import {
 } from 'vitest'
 
 import { createFastifyInstance } from '../fastify.js'
-import { redwoodFastifyGraphQLServer } from '../plugins/graphql.js'
+import { cedarFastifyGraphQLServer } from '../plugins/graphql.js'
 
 // Set up CEDAR_CWD.
 let original_CEDAR_CWD: string | undefined
@@ -26,7 +26,7 @@ afterAll(() => {
   process.env.CEDAR_CWD = original_CEDAR_CWD
 })
 
-describe('RedwoodFastifyGraphqlServer Fastify Plugin', () => {
+describe('CedarFastifyGraphqlServer Fastify Plugin', () => {
   beforeAll(async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {})
     vi.spyOn(console, 'log').mockImplementation(() => {})
@@ -48,8 +48,8 @@ describe('RedwoodFastifyGraphqlServer Fastify Plugin', () => {
 
     // Although this is not how you normally register a plugin, we're going to
     // doing it this way gives us the ability to spy on the register method
-    await redwoodFastifyGraphQLServer(fastifyInstance, {
-      redwood: {},
+    await cedarFastifyGraphQLServer(fastifyInstance, {
+      cedar: {},
     })
 
     expect(registerSpy).toHaveBeenCalledWith(fastifyMultipart)
