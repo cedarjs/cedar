@@ -42,12 +42,24 @@ await build({
 // watch.ts ends with a bare `startWatch()` call so it runs both as a script
 // and as an importable module. Guard the call so importing it (as
 // @cedarjs/core's bin wrappers do) doesn't start a second watcher.
+//
+// `import.meta.url` is always a well-formed `file://` URL, but naively
+// building one from `process.argv[1]` is not: on Windows argv paths use `\`
+// and have no scheme, so `` `file://${process.argv[1]}` `` produces something
+// like `file://C:\Users\...`, which can never equal `import.meta.url` — the
+// guard would silently never run the watcher on Windows. `pathToFileURL`
+// normalizes both platforms' paths into the same URL shape. The import is
+// spliced in alongside the guard, rather than added to watch.ts's own
+// imports, because ES module imports hoist regardless of where in the file
+// they appear, and this one is only needed by the injected guard, not by
+// anything in the source file.
 const builtEsmWatchPath = path.join(import.meta.dirname, 'dist/watch.js')
 const builtEsmWatch = fs.readFileSync(builtEsmWatchPath, 'utf8')
 fs.writeFileSync(
   builtEsmWatchPath,
   builtEsmWatch.replace(
     /^startWatch\(\);$/m,
-    'if (import.meta.url === `file://${process.argv[1]}`) {\n  startWatch();\n}',
+    "import { pathToFileURL } from 'node:url'\n" +
+      'if (import.meta.url === pathToFileURL(process.argv[1]).href) {\n  startWatch();\n}',
   ),
 )
