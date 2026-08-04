@@ -8,7 +8,6 @@ import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { writeFilesTask, printSetupNotes } from '../../../../lib/index.js'
-// @ts-expect-error - no types for JS files
 import { addFilesTask } from '../helpers/index.js'
 import {
   POSTGRES_YAML,
@@ -72,8 +71,6 @@ const notes = [
   'You are ready to deploy to Render!\n',
   'Go to https://dashboard.render.com/iacs to create your account and deploy to Render',
   'Check out the deployment docs at https://cedarjs.com/docs/deploy/render for detailed instructions',
-  "For a fuller walkthrough see Render's own guide at https://render.com/docs/deploy-redwood " +
-    '(pre-fork — swap `yarn rw` for `yarn cedar` as you go)',
   'Note: After first deployment to Render update the rewrite rule destination in `./render.yaml`',
 ]
 

@@ -5,8 +5,8 @@ description: Serverful deploys via Render's unified cloud
 # Deploy to Render
 
 Render is a unified cloud to build and run all your apps and websites with free
-SSL, a global CDN, private networks and auto-deploys from Git — **database
-included**!
+SSL, a global CDN, private networks and auto-deploys from Git, **including
+databases**!
 
 ## Render tl;dr Deploy
 
@@ -23,12 +23,10 @@ Postgres or SQLite database, you can do the following:
    repo at https://dashboard.render.com/iacs
 5. after the first deploy, replace the `destination` placeholder in
    `render.yaml`'s rewrite rule with your api service's URL, then **commit and
-   push** it — Blueprints read their config from the linked Git revision, so a
-   local-only edit has no effect (if auto-sync is off, also sync the Blueprint
-   from the Render dashboard)
+   push** it.
 
 For a more detailed walkthrough, see
 [Render's Deploying Redwood guide](https://render.com/docs/deploy-redwood). It
 predates the Cedar fork and uses `rw` naming throughout, but it's still the most
-thorough deploy walkthrough available for this setup — everywhere it says
+thorough deploy walkthrough available for this setup. Everywhere it says
 `yarn rw`, use `yarn cedar` instead, and the rest applies as written.
