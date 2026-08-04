@@ -9,7 +9,7 @@ export const RENDER_YAML = (database: string) => {
   const apiUrl = getUserApiUrl().replace(/\/$/, '')
   return `# Quick links to the docs:
 # - Deploying Cedar: https://cedarjs.com/docs/deploy/render
-# - Render's own walkthrough (pre-fork, uses \`yarn rw\` — swap in \`yarn cedar\`):
+# - Render's own walkthrough (uses \`yarn rw\`, but just swap in \`yarn cedar\`):
 #   https://render.com/docs/deploy-redwood
 # - Render's Blueprint spec: https://render.com/docs/blueprint-spec
 
