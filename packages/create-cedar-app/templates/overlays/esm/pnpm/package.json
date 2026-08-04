@@ -1,6 +1,13 @@
 {
   "private": true,
   "type": "module",
+  "scripts": {
+    "build": "cedar build",
+    "dev": "cedar dev",
+    "start": "cedar serve",
+    "start:api": "cedar serve api",
+    "start:web": "cedar serve web"
+  },
   "devDependencies": {
     "@cedarjs/core": "5.0.2",
     "@cedarjs/eslint-config": "5.0.2",
