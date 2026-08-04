@@ -50,6 +50,10 @@ services:
   buildCommand: npm install --global corepack && yarn install && yarn cedar build api
   startCommand: yarn cedar deploy render api
 
+  # Proves the GraphQL server is actually serving, not just that the process
+  # is alive. Returns 200 with an \`x-yoga-id\` response header.
+  healthCheckPath: /graphql/health
+
   envVars:
 ${database}
 `
@@ -72,12 +76,3 @@ export const SQLITE_YAML = `\
     name: sqlite-data
     mountPath: /opt/render/project/src/api/db/data
     sizeGB: 1`
-
-export const RENDER_HEALTH_CHECK = `\
-// render-health-check
-export const handler = async () => {
-  return {
-    statusCode: 200,
-  }
-}
-`
