@@ -31,17 +31,18 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
 
     let apiHost = process.env.REDWOOD_API_HOST
     apiHost ??= cedarConfig.api.host
-    // The dev value ends up as the dev server's proxy target, so it has to be
-    // an address the proxy can dial — hence the loopback literal rather than
-    // the api server's own `::` default, which is a bind address meaning
-    // "listen on everything". An IP literal also skips a DNS lookup and Node's
-    // dual-stack connection race on every proxied request.
+    // This is only ever read into `server.proxy` below, and `server` is
+    // dev-only Vite config — this fallback never applies during a build, only
+    // `vite dev`/`vite serve`, so there's no separate production case to
+    // handle here (unlike the api/web servers' own host resolution, which
+    // does need one).
     //
-    // The production branch is vestigial: `apiHost` is only read into
-    // `server.proxy` below, and `server` is dev-only Vite config, so this
-    // never configures a live proxy. It's kept as-is rather than changed in a
-    // comment-only pass.
-    apiHost ??= process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1'
+    // It has to be an address the dev server's proxy can dial — hence the
+    // loopback literal rather than the api server's own `::` default, which
+    // is a bind address meaning "listen on everything". An IP literal also
+    // skips a DNS lookup and Node's dual-stack connection race on every
+    // proxied request.
+    apiHost ??= '127.0.0.1'
 
     const streamingSsrEnabled = cedarConfig.experimental.streamingSsr?.enabled
     // @MARK: note that most RSC settings sit in their individual build functions
