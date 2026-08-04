@@ -2069,8 +2069,8 @@ __metadata:
     vitest: "npm:4.1.10"
     yargs: "npm:17.7.3"
   bin:
-    cedar-api-server-watch: ./dist/watch.js
-    cedarjs-api-server-watch: ./dist/watch.js
+    cedar-api-server-watch: ./dist/bin.js
+    cedarjs-api-server-watch: ./dist/bin.js
   languageName: unknown
   linkType: soft
 
