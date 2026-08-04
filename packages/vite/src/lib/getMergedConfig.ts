@@ -31,8 +31,12 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
 
     let apiHost = process.env.REDWOOD_API_HOST
     apiHost ??= cedarConfig.api.host
-    // In dev, use the IPv4 loopback so Node's http-proxy can connect to the
-    // API server. Vite's proxy library does a DNS lookup on the literal string
+    // This ends up as the dev server's proxy target, so it needs an address
+    // the proxy can dial. It can't fall back to the api server's own defaults
+    // (`::` in dev, `0.0.0.0` in production) — those are bind addresses
+    // meaning "listen on everything", not somewhere you can connect to.
+    // An IP literal also skips a DNS lookup and Node's dual-stack connection
+    // race on every proxied request.
     apiHost ??= process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1'
 
     const streamingSsrEnabled = cedarConfig.experimental.streamingSsr?.enabled
