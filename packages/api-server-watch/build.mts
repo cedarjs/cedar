@@ -45,7 +45,7 @@ await build({
 //
 // `import.meta.url` is always a well-formed `file://` URL, but naively
 // building one from `process.argv[1]` is not: on Windows argv paths use `\`
-// and have no scheme, so `` `file://${process.argv[1]}` `` produces something
+// and have no scheme, so `file://${process.argv[1]}` produces something
 // like `file://C:\Users\...`, which can never equal `import.meta.url` — the
 // guard would silently never run the watcher on Windows. `pathToFileURL`
 // normalizes both platforms' paths into the same URL shape. The import is
