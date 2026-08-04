@@ -53,12 +53,6 @@
         "default": "./dist/fastify.js"
       }
     },
-    "./watch": {
-      "default": {
-        "types": "./dist/watch.d.ts",
-        "default": "./dist/watch.js"
-      }
-    },
     "./logFormatter": {
       "default": {
         "types": "./dist/logFormatter/index.d.ts",
@@ -75,10 +69,8 @@
   "main": "./dist/createServer.js",
   "types": "./dist/createServer.d.ts",
   "bin": {
-    "cedar-api-server-watch": "./dist/watch.js",
     "cedar-log-formatter": "./dist/logFormatter/bin.js",
     "cedar-server": "./dist/bin.js",
-    "cedarjs-api-server-watch": "./dist/watch.js",
     "cedarjs-log-formatter": "./dist/logFormatter/bin.js",
     "cedarjs-server": "./dist/bin.js",
     "rw-log-formatter": "./dist/logFormatter/bin.js",
@@ -94,7 +86,7 @@
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build && yarn fix:permissions\"",
     "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",
-    "fix:permissions": "chmod +x dist/index.js; chmod +x dist/watch.js",
+    "fix:permissions": "chmod +x dist/index.js",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
     "test:watch": "vitest watch"
@@ -103,13 +95,11 @@
     "@cedarjs/api": "workspace:*",
     "@cedarjs/context": "workspace:*",
     "@cedarjs/fastify-web": "workspace:*",
-    "@cedarjs/internal": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/web-server": "workspace:*",
     "@fastify/multipart": "9.4.0",
     "@fastify/url-data": "6.0.3",
     "ansis": "4.3.1",
-    "chokidar": "3.6.0",
     "dotenv-defaults": "5.0.2",
     "fast-glob": "3.3.3",
     "fast-json-parse": "1.0.3",
