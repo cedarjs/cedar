@@ -171,7 +171,7 @@ CJS-only-to-ESM-only conversion described below, following the same Node
 
 ## CJS Only -> ESM Only: candidates given the Node 24 requirement
 
-CedarJS has a hard requirement on Node 24 (`node: "=24.x"` in the generated
+CedarJS has a hard requirement on Node 24 (`node: "24.x"` in the generated
 project templates, `node: ">=24"` in `create-cedar-app`), which has unflagged
 support for `require(esm)` — a CJS `require()` call can now synchronously load a
 real ESM module, as long as that module (and its transitive graph) has no
