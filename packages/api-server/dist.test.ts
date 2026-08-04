@@ -3,8 +3,6 @@ import path from 'path'
 
 import { describe, it, expect } from 'vitest'
 
-// Vitest 4's module runner no longer provides the CJS `__dirname` shim in ES
-// module scope, so use `import.meta.dirname` instead
 const distPath = path.join(import.meta.dirname, 'dist')
 const packageConfig = JSON.parse(fs.readFileSync('./package.json', 'utf-8'))
 

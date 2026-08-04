@@ -21,12 +21,6 @@ From package.json
   },
 ```
 
-> The `cedar dev` file watcher (`cedarjs-api-server-watch`) lives in
-> `@cedarjs/api-server-watch`, not this package — it's the only thing here
-> that needed `@cedarjs/internal` (the build/codegen toolchain), and it only
-> ever runs under `cedar dev`, so it was split out to keep this package free
-> of that dependency in production installs.
-
 > Note: because we use Yargs to parse in index, using these within the context
 > of a CedarJS CLI command will throw due to Yargs object "collision". Needs to
 > be re-architected in the future.
