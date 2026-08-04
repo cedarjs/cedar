@@ -300,7 +300,7 @@ describe('cedarGraphqlOptionsExtractPlugin', () => {
     }
   })
 
-  it('returns null for multiple createGraphQLHandler calls', () => {
+  it('throws for multiple createGraphQLHandler calls', () => {
     const code = dedent`
       import { createGraphQLHandler } from '@cedarjs/graphql-server'
 
@@ -308,8 +308,9 @@ describe('cedarGraphqlOptionsExtractPlugin', () => {
       export const b = createGraphQLHandler({ y: 2 })
     `
 
-    const result = plugin.transform!(code, 'api/src/functions/graphql.ts')
-    expect(result).toBeNull()
+    expect(() =>
+      plugin.transform!(code, 'api/src/functions/graphql.ts'),
+    ).toThrow('Found more than one call to createGraphQLHandler')
   })
 
   it('extracts a conditional (ternary) options argument with a member-expression condition', () => {

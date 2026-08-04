@@ -146,7 +146,15 @@ export async function redwoodFastifyGraphQLServer(
       done()
     })
   } catch (e) {
-    console.log(e)
+    // Rethrow rather than swallow. Anything thrown in here means no GraphQL
+    // routes got registered, so the server would come up healthy while 404ing
+    // /graphql and everything under it. Failing to start with the actual cause
+    // is far easier to diagnose than a silently empty route table.
+    const message = e instanceof Error ? e.message : String(e)
+
+    fastify.log.error(e, `Failed to set up the GraphQL server: ${message}`)
+
+    throw e
   }
 }
 
