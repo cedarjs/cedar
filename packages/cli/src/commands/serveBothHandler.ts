@@ -53,8 +53,10 @@ export const bothServerFileHandler = async (argv: ServeBothArgv) => {
   } else {
     argv.apiPort ??= getAPIPort()
     argv.apiHost ??= getAPIHost()
-    argv.webPort ??= getWebPort()
-    argv.webHost ??= getWebHost()
+    // The web server is the one taking public traffic here, so it's the side
+    // that gets to use the host's `HOST`/`PORT` env vars.
+    argv.webPort ??= getWebPort({ isPublicSide: true })
+    argv.webHost ??= getWebHost({ isPublicSide: true })
 
     const apiRootPath = argv.apiRootPath ?? getAPIRootPath()
 

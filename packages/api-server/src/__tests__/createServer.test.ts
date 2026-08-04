@@ -206,8 +206,27 @@ describe('createServer', () => {
       await server.close()
     })
 
-    it('the `REDWOOD_API_PORT` env var takes precedence over [api].port', async () => {
-      process.env.REDWOOD_API_PORT = '8920'
+    it('the `CEDAR_API_PORT` env var takes precedence over [api].port', async () => {
+      process.env.CEDAR_API_PORT = '8920'
+
+      const server = await createServer()
+      await server.start()
+
+      const address = server.server.address()
+
+      if (!address || typeof address === 'string') {
+        throw new Error('No address or address is a string')
+      }
+
+      expect(address.port).toBe(+process.env.CEDAR_API_PORT)
+
+      await server.close()
+
+      delete process.env.CEDAR_API_PORT
+    })
+
+    it('the deprecated `REDWOOD_API_PORT` env var still works', async () => {
+      process.env.REDWOOD_API_PORT = '8921'
 
       const server = await createServer()
       await server.start()
