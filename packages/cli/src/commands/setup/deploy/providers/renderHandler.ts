@@ -71,7 +71,7 @@ const getRenderYamlContent = async (
 const notes = [
   'You are ready to deploy to Render!\n',
   'Go to https://dashboard.render.com/iacs to create your account and deploy to Render',
-  'Check out the deployment docs at https://render.com/docs/deploy-redwood for detailed instructions',
+  'Check out the deployment docs at https://cedarjs.com/docs/deploy/render for detailed instructions',
   'Note: After first deployment to Render update the rewrite rule destination in `./render.yaml`',
 ]
 
