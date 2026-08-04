@@ -53,6 +53,14 @@ await build({
 // imports, because ES module imports hoist regardless of where in the file
 // they appear, and this one is only needed by the injected guard, not by
 // anything in the source file.
+//
+// `process.argv[1]` is checked first because it isn't always set — a
+// scriptless invocation like `node -e "await import(...)"` has no entry
+// script, so it's `undefined`, and `pathToFileURL(undefined)` throws. That
+// would crash the module just from being imported, before a consumer ever
+// gets to call `startWatch`. When there's no script path this clearly isn't
+// a direct-execution invocation, so the guard can just say so without
+// attempting the conversion.
 const builtEsmWatchPath = path.join(import.meta.dirname, 'dist/watch.js')
 const builtEsmWatch = fs.readFileSync(builtEsmWatchPath, 'utf8')
 fs.writeFileSync(
@@ -60,6 +68,6 @@ fs.writeFileSync(
   builtEsmWatch.replace(
     /^startWatch\(\);$/m,
     "import { pathToFileURL } from 'node:url'\n" +
-      'if (import.meta.url === pathToFileURL(process.argv[1]).href) {\n  startWatch();\n}',
+      'if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {\n  startWatch();\n}',
   ),
 )
