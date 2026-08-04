@@ -165,8 +165,10 @@ export const builder = async (yargs: Argv) => {
 
           const apiPort = argv.apiPort ?? getAPIPort()
           const apiHost = argv.apiHost ?? getAPIHost()
-          const webPort = argv.webPort ?? getWebPort()
-          const webHost = argv.webHost ?? getWebHost()
+          // The web server is the one taking public traffic here, so it's the
+          // side that gets to use the host's `HOST`/`PORT` env vars.
+          const webPort = argv.webPort ?? getWebPort({ isPublicSide: true })
+          const webHost = argv.webHost ?? getWebHost({ isPublicSide: true })
 
           const apiRootPath = argv.apiRootPath ?? '/'
           const apiTarget = `http://${apiHost.includes(':') ? `[${apiHost}]` : apiHost}:${apiPort}`
@@ -287,6 +289,17 @@ export const builder = async (yargs: Argv) => {
           apiRootPath: argv.apiRootPath,
         })
 
+        // Serving the api on its own makes it the side taking public traffic,
+        // so it's the side that gets to use the host's `HOST`/`PORT` env vars.
+        const { getAPIHost, getAPIPort } =
+          await import('@cedarjs/api-server/cliHelpers')
+
+        const apiPort = argv.port ?? getAPIPort({ isPublicSide: true })
+        const apiHost = argv.host ?? getAPIHost({ isPublicSide: true })
+
+        argv.port = apiPort
+        argv.host = apiHost
+
         if (argv.ud) {
           // Import the built Fetchable and host it in-process with srvx.
           // The artifact at api/dist/ud/index.js is a pure Fetchable (`export
@@ -302,9 +315,6 @@ export const builder = async (yargs: Argv) => {
             )
             process.exit(1)
           }
-
-          const apiPort = argv.port ?? parseInt(process.env.PORT ?? '8911', 10)
-          const apiHost = argv.host ?? process.env.HOST ?? 'localhost'
 
           process.stdout.write(
             `API server starting at http://${apiHost}:${apiPort}...`,
