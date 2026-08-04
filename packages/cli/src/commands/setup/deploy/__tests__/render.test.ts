@@ -42,9 +42,14 @@ describe('render.yaml', () => {
     expect(yaml).toContain('source: /.api/functions/*')
   })
 
-  it('links Cedar docs, not Redwood ones', () => {
+  it('links Cedar docs first, and labels the Redwood walkthrough as pre-fork', () => {
     expect(yaml).toContain('https://cedarjs.com/docs/deploy/render')
-    expect(yaml).not.toContain('deploy-redwood')
+    // Render's own guide is still linked deliberately — it predates the fork
+    // and uses `rw` naming, but nothing in it stopped applying to Cedar. The
+    // comment must say so, not just link it, so the `rw`/`cedar` mismatch
+    // doesn't read as broken docs.
+    expect(yaml).toContain('render.com/docs/deploy-redwood')
+    expect(yaml).toContain('yarn cedar')
   })
 
   it('names the api service in the destination placeholder example', () => {
