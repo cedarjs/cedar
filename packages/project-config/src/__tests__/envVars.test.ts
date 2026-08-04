@@ -55,7 +55,7 @@ describe('parsePort', () => {
 
   // `parseInt` stops at the first non-digit, so these used to be silently
   // truncated to 8080 and 1 respectively, binding a port nobody asked for.
-  it.each<[string, string]>([
+  it.each([
     ['8080abc', 'a numeric prefix'],
     ['1.5', 'a decimal'],
     ['-1', 'a negative number'],
@@ -66,13 +66,13 @@ describe('parsePort', () => {
     ['0x1f90', 'a hex literal'],
     ['1e3', 'exponent notation'],
   ])('rejects %j (%s)', (value) => {
-    expect(() => parsePort(value, 'PORT')).toThrowError(
+    expect(() => parsePort(value, 'PORT')).toThrow(
       `Invalid PORT env var value: "${value}". Must be an integer.`,
     )
   })
 
   it('names the env var it was given', () => {
-    expect(() => parsePort('nope', 'CEDAR_API_PORT')).toThrowError(
+    expect(() => parsePort('nope', 'CEDAR_API_PORT')).toThrow(
       'Invalid CEDAR_API_PORT env var value: "nope". Must be an integer.',
     )
   })
