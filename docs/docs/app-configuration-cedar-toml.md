@@ -198,14 +198,6 @@ To run a Cedar app in a container or VM, you'll want to set both the web and api
 You can also configure these values via `CEDAR_WEB_HOST` and `CEDAR_API_HOST`.
 And if you set `NODE_ENV` to production, these will be the defaults anyway.
 
-:::note Deprecated env vars
-
-`REDWOOD_WEB_HOST`, `REDWOOD_API_HOST`, `REDWOOD_WEB_PORT` and
-`REDWOOD_API_PORT` still work, but they're deprecated in favour of their
-`CEDAR_`-prefixed equivalents, which take precedence when both are set.
-
-:::
-
 ### Container hosts
 
 Most container hosts (Railway, Render, Fly.io, Cloud Run, Heroku) tell your app
