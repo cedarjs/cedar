@@ -1,4 +1,4 @@
-import { getConfig, readEnvVar } from '@cedarjs/project-config'
+import { getConfig, parsePort, readEnvVar } from '@cedarjs/project-config'
 
 interface SideOptions {
   /**
@@ -15,18 +15,6 @@ interface SideOptions {
    * served on its own.
    */
   isPublicSide?: boolean
-}
-
-function parsePort(value: string, envVarName: string) {
-  const port = parseInt(value, 10)
-
-  if (Number.isNaN(port)) {
-    throw new Error(
-      `Invalid ${envVarName} env var: "${value}". Must be an integer.`,
-    )
-  }
-
-  return port
 }
 
 export function getAPIHost({ isPublicSide = false }: SideOptions = {}) {

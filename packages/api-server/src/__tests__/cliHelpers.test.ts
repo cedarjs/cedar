@@ -70,7 +70,37 @@ describe('getAPIPort', () => {
     expect(() =>
       getAPIPort({ isPublicSide: true }),
     ).toThrowErrorMatchingInlineSnapshot(
-      `[Error: Invalid PORT env var: "eight-oh-eight-oh". Must be an integer.]`,
+      `[Error: Invalid PORT env var. "eight-oh-eight-oh" must be an integer.]`,
+    )
+  })
+
+  // These parse as 8080 and 1 with a bare `parseInt`, which would bind a port
+  // nobody asked for and leave the deployment unreachable
+  it('throws on a PORT with a numeric prefix', () => {
+    vi.stubEnv('PORT', '8080abc')
+
+    expect(() =>
+      getAPIPort({ isPublicSide: true }),
+    ).toThrowErrorMatchingInlineSnapshot(
+      `[Error: Invalid PORT env var. "8080abc" must be an integer.]`,
+    )
+  })
+
+  it('throws on a decimal PORT', () => {
+    vi.stubEnv('PORT', '1.5')
+
+    expect(() =>
+      getAPIPort({ isPublicSide: true }),
+    ).toThrowErrorMatchingInlineSnapshot(
+      `[Error: Invalid PORT env var. "1.5" must be an integer.]`,
+    )
+  })
+
+  it('throws on a CEDAR_API_PORT with a numeric prefix', () => {
+    vi.stubEnv('CEDAR_API_PORT', '8920nope')
+
+    expect(() => getAPIPort()).toThrowErrorMatchingInlineSnapshot(
+      `[Error: Invalid CEDAR_API_PORT env var. "8920nope" must be an integer.]`,
     )
   })
 })

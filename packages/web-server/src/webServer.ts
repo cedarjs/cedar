@@ -5,21 +5,14 @@ import ansis from 'ansis'
 import Fastify from 'fastify'
 
 import { redwoodFastifyWeb } from '@cedarjs/fastify-web'
-import { getConfig, getPaths, readEnvVar } from '@cedarjs/project-config'
+import {
+  getConfig,
+  getPaths,
+  parsePort,
+  readEnvVar,
+} from '@cedarjs/project-config'
 
 import type { ParsedOptions } from './types.js'
-
-function parsePort(value: string, envVarName: string) {
-  const port = parseInt(value, 10)
-
-  if (Number.isNaN(port)) {
-    throw new Error(
-      `Invalid ${envVarName} env var: "${value}". Must be an integer.`,
-    )
-  }
-
-  return port
-}
 
 export async function serveWeb(options: ParsedOptions = {}) {
   const start = Date.now()

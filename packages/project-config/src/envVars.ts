@@ -21,3 +21,23 @@ export function readEnvVar(
 ): string | undefined {
   return process.env[name] || process.env[deprecatedAlias] || undefined
 }
+
+/**
+ * Parse a port from an env var, rejecting anything that isn't a whole number.
+ *
+ * `parseInt` alone is not enough here: it stops at the first non-digit, so
+ * `"8080abc"` would become `8080` and `"1.5"` would become `1`. Silently
+ * binding a port the user didn't ask for is how a deployment ends up
+ * unreachable, so the whole value has to look like an integer.
+ */
+export function parsePort(value: string, envVarName: string): number {
+  const trimmed = value.trim()
+
+  if (!/^\d+$/.test(trimmed)) {
+    throw new Error(
+      `Invalid ${envVarName} env var. "${value}" must be an integer.`,
+    )
+  }
+
+  return Number(trimmed)
+}
