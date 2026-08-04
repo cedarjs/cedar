@@ -297,34 +297,39 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
             return null
           }
 
-          try {
-            // Apply graphql-specific and OTel transforms BEFORE Babel CJS
-            // compilation. These transforms use AST patterns that match ESM
-            // syntax; running them first ensures they always work regardless
-            // of the project's module format.
-            let sourceCode = code
-            // Exact sourcemap for the string transforms applied so far. Only
-            // the graphql options extract produces one; if a later transform
-            // changes the code again the map no longer matches and is
-            // cleared.
-            let sourceMap: SourceMap | null = null
-            if (
-              normalizePath(id).endsWith('/graphql.ts') ||
-              normalizePath(id).endsWith('/graphql.js')
-            ) {
-              const extracted = applyGraphqlOptionsExtract(sourceCode)
-              if (extracted) {
-                sourceCode = extracted.code
-                sourceMap = extracted.map
-              }
-
-              const injected = applyGqlormInject(sourceCode, id)
-              if (injected) {
-                sourceCode = injected
-                sourceMap = null
-              }
+          // Apply graphql-specific transforms BEFORE Babel CJS compilation
+          // (and before the tolerant try/catch below). These transforms use
+          // AST patterns that match ESM syntax; running them first ensures
+          // they always work regardless of the project's module format.
+          let sourceCode = code
+          // Exact sourcemap for the string transforms applied so far. Only
+          // the graphql options extract produces one; if a later transform
+          // changes the code again the map no longer matches and is cleared.
+          let sourceMap: SourceMap | null = null
+          if (
+            normalizePath(id).endsWith('/graphql.ts') ||
+            normalizePath(id).endsWith('/graphql.js')
+          ) {
+            // Deliberately outside the try/catch below: a graphql.ts Cedar
+            // can't statically read means the app has no working GraphQL
+            // server. That's a hard failure that should abort startup, not
+            // something to warn-and-continue past like a Babel hiccup —
+            // continuing here previously left the dev server starting
+            // successfully with GraphQL silently uninitialized.
+            const extracted = applyGraphqlOptionsExtract(sourceCode)
+            if (extracted) {
+              sourceCode = extracted.code
+              sourceMap = extracted.map
             }
 
+            const injected = applyGqlormInject(sourceCode, id)
+            if (injected) {
+              sourceCode = injected
+              sourceMap = null
+            }
+          }
+
+          try {
             if (
               cedarConfig.experimental?.opentelemetry?.enabled &&
               cedarConfig.experimental?.opentelemetry?.wrapApi
