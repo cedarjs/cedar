@@ -8,13 +8,7 @@ import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { writeFilesTask, printSetupNotes } from '../../../../lib/index.js'
-import { addFilesTask } from '../helpers/index.js'
-import {
-  POSTGRES_YAML,
-  RENDER_HEALTH_CHECK,
-  RENDER_YAML,
-  SQLITE_YAML,
-} from '../templates/render.js'
+import { POSTGRES_YAML, RENDER_YAML, SQLITE_YAML } from '../templates/render.js'
 
 const { getConfig } = prismaInternals
 
@@ -72,13 +66,7 @@ const notes = [
   'Go to https://dashboard.render.com/iacs to create your account and deploy to Render',
   'Check out the deployment docs at https://cedarjs.com/docs/deploy/render for detailed instructions',
   'Note: After first deployment to Render update the rewrite rule destination in `./render.yaml`',
-]
-
-const additionalFiles = [
-  {
-    path: path.join(getPaths().base, 'api/src/functions/healthz.js'),
-    content: RENDER_HEALTH_CHECK,
-  },
+  'Note: The api service now health checks `/graphql/health`. If a previous setup left an unused `api/src/functions/healthz.js` behind, you can delete it',
 ]
 
 export const handler = async ({
@@ -104,11 +92,6 @@ export const handler = async ({
           return writeFilesTask(files, { overwriteExisting: force })
         },
       },
-      // Add health check api function
-      addFilesTask({
-        files: additionalFiles,
-        force,
-      }),
       printSetupNotes(notes),
     ],
     { rendererOptions: { collapseSubtasks: false } },
