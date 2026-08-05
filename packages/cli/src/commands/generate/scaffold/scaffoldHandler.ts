@@ -781,6 +781,19 @@ export const isAuthSetup = () => {
   )
 }
 
+// Checks whether a route named 'login' is already defined in Routes file.
+// Used to determine if scaffolded routes can safely reference it as the
+// unauthenticated redirect target.
+export const hasLoginRoute = () => {
+  const routesPath = getPaths().web.routes
+  if (!fs.existsSync(routesPath)) {
+    return false
+  }
+  const routesContent = readFile(routesPath).toString()
+  // Match name="login" or name='login' with flexible whitespace
+  return /name\s*=\s*["']login["']/.test(routesContent)
+}
+
 const addSetImport = (task: AnyListrTask) => {
   const routesPath = getPaths().web.routes
   const routesContent = readFile(routesPath).toString()
@@ -799,7 +812,7 @@ const addSetImport = (task: AnyListrTask) => {
   const routerImports = importContent.replace(/\s/g, '').split(',')
   const namesToImport = [
     PACKAGE_SET,
-    ...(isAuthSetup() ? [PACKAGE_PRIVATE_SET] : []),
+    ...(isAuthSetup() && hasLoginRoute() ? [PACKAGE_PRIVATE_SET] : []),
   ].filter((name) => !routerImports.includes(name))
 
   if (!namesToImport.length) {
@@ -834,7 +847,7 @@ const addScaffoldSetToRouter = async (model: string, scaffoldPath: string) => {
     await routes({ model, path: scaffoldPath }),
     'ScaffoldLayout',
     { title, titleTo, buttonLabel, buttonTo },
-    isAuthSetup() ? { unauthenticated: 'login' } : undefined,
+    isAuthSetup() && hasLoginRoute() ? { unauthenticated: 'login' } : undefined,
   )
 }
 
