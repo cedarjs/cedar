@@ -402,9 +402,10 @@ async function main() {
   // Matches a `setDefaultResultOrder('verbatim')` call, with or without a
   // qualifier like `dns.` (the import could also be destructured). Only
   // 'verbatim' is a no-op on Node 24 — a call passing 'ipv4first' does change
-  // Node's behavior and must not be reported
+  // Node's behavior and must not be reported. Anchored to the start of a line
+  // so a commented-out call isn't reported either
   const verbatimResultOrderRegex =
-    /(?<![\w$])(?:[\w$]+\s*\.\s*)?setDefaultResultOrder\s*\(\s*(['"`])verbatim\1\s*\)/
+    /^[ \t]*(?:[\w$]+\s*\.\s*)?setDefaultResultOrder\s*\(\s*(['"`])verbatim\1\s*\)/m
 
   if (viteConfigPath && fs.existsSync(viteConfigPath)) {
     const viteConfig = await fs.promises.readFile(viteConfigPath, 'utf8')
