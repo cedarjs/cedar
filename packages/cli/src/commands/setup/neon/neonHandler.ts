@@ -62,7 +62,10 @@ export async function handler({ force }: Args) {
 
   const tasks = new Listr<NeonCtx>(
     [
-      ...getSqliteToPostgresTasks({ prismaConfigPath: shape.prismaConfigPath }),
+      ...getSqliteToPostgresTasks({
+        prismaConfigPath: shape.prismaConfigPath,
+        dbPath: shape.dbPath,
+      }),
       {
         title: 'Provisioning Neon database',
         skip: () => skipProvisioning,

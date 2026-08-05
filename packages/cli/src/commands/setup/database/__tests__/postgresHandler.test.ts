@@ -101,6 +101,17 @@ function seedSqliteProject() {
   )
 }
 
+function seedSqliteJsProject() {
+  // JavaScript projects use api/src/lib/db.js instead of db.ts — everything
+  // else about the default SQLite setup is the same.
+  seedSqliteProject()
+  memfsFs.unlinkSync(path.join(BASE_PATH, 'api/src/lib/db.ts'))
+  memfsFs.writeFileSync(
+    path.join(BASE_PATH, 'api/src/lib/db.js'),
+    '// sqlite adapter',
+  )
+}
+
 const originalDatabaseUrl = process.env.DATABASE_URL
 const originalDirectDatabaseUrl = process.env.DIRECT_DATABASE_URL
 
@@ -136,6 +147,17 @@ describe('checkProjectShape', () => {
       expect(shape.prismaConfigPath).toBe(
         path.join(BASE_PATH, 'api/prisma.config.cjs'),
       )
+    }
+  })
+
+  it('accepts an untouched SQLite project using db.js instead of db.ts', () => {
+    seedSqliteJsProject()
+
+    const shape = checkProjectShape(getPaths())
+
+    expect(shape.ok).toBe(true)
+    if (shape.ok) {
+      expect(shape.dbPath).toBe(path.join(BASE_PATH, 'api/src/lib/db.js'))
     }
   })
 
@@ -250,6 +272,7 @@ describe('getSqliteToPostgresTasks', () => {
 
     const tasks = getSqliteToPostgresTasks({
       prismaConfigPath: shape.prismaConfigPath,
+      dbPath: shape.dbPath,
     })
     await new Listr2Mock(tasks).run()
 
@@ -297,6 +320,28 @@ describe('getSqliteToPostgresTasks', () => {
     )
   })
 
+  it('converts a JavaScript project, writing the adapter to db.js not db.ts', async () => {
+    seedSqliteJsProject()
+
+    const shape = checkProjectShape(getPaths())
+    if (!shape.ok) {
+      throw new Error('Expected a convertible project shape')
+    }
+
+    const tasks = getSqliteToPostgresTasks({
+      prismaConfigPath: shape.prismaConfigPath,
+      dbPath: shape.dbPath,
+    })
+    await new Listr2Mock(tasks).run()
+
+    expect(
+      memfsFs.readFileSync(path.join(BASE_PATH, 'api/src/lib/db.js'), 'utf-8'),
+    ).toBe(PG_DB_TS_TEMPLATE)
+    expect(memfsFs.existsSync(path.join(BASE_PATH, 'api/src/lib/db.ts'))).toBe(
+      false,
+    )
+  })
+
   it('rewrites the datasource URL even when a comment elsewhere mentions DIRECT_DATABASE_URL', async () => {
     // The detection and rewrite are both anchored on the `url:` key
     // specifically. A naive whole-file search for the text
@@ -317,6 +362,7 @@ describe('getSqliteToPostgresTasks', () => {
 
     const tasks = getSqliteToPostgresTasks({
       prismaConfigPath: shape.prismaConfigPath,
+      dbPath: shape.dbPath,
     })
     await new Listr2Mock(tasks).run()
 
@@ -347,6 +393,7 @@ describe('getSqliteToPostgresTasks', () => {
 
     const tasks = getSqliteToPostgresTasks({
       prismaConfigPath: shape.prismaConfigPath,
+      dbPath: shape.dbPath,
     })
     await new Listr2Mock(tasks).run()
 

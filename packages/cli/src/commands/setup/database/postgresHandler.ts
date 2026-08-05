@@ -12,6 +12,7 @@ import { errorTelemetry } from '@cedarjs/telemetry'
 interface ShapeOk {
   ok: true
   prismaConfigPath: string
+  dbPath: string
 }
 
 interface ShapeBlocked {
@@ -35,6 +36,14 @@ export function checkProjectShape(
 ): ProjectShape {
   const schemaPath = path.join(cedarPaths.api.base, 'db', 'schema.prisma')
   const dbTsPath = path.join(cedarPaths.api.src, 'lib', 'db.ts')
+  const dbJsPath = path.join(cedarPaths.api.src, 'lib', 'db.js')
+  // JavaScript projects use db.js, not db.ts — falls back to the .ts path
+  // (matching the template this command writes) when neither exists yet.
+  const dbPath = fs.existsSync(dbTsPath)
+    ? dbTsPath
+    : fs.existsSync(dbJsPath)
+      ? dbJsPath
+      : dbTsPath
 
   if (!fs.existsSync(schemaPath)) {
     return blocked(`Could not find ${schemaPath}.`)
@@ -42,8 +51,8 @@ export function checkProjectShape(
 
   const schemaContent = fs.readFileSync(schemaPath, 'utf-8')
   const hasPgAdapter =
-    fs.existsSync(dbTsPath) &&
-    fs.readFileSync(dbTsPath, 'utf-8').includes('PrismaPg')
+    fs.existsSync(dbPath) &&
+    fs.readFileSync(dbPath, 'utf-8').includes('PrismaPg')
 
   if (schemaContent.includes('provider = "postgresql"') && hasPgAdapter) {
     return {
@@ -56,9 +65,10 @@ export function checkProjectShape(
   if (!schemaContent.includes('provider = "sqlite"') || hasPgAdapter) {
     return blocked(
       'This command only converts a project that is still on SQLite, with ' +
-        'the default adapter in api/src/lib/db.ts untouched. This project ' +
-        "doesn't match that shape (a different provider, or a partial " +
-        'previous conversion) — switch it over to PostgreSQL manually.',
+        'the default adapter in api/src/lib/db.ts (or db.js) untouched. ' +
+        "This project doesn't match that shape (a different provider, or a " +
+        'partial previous conversion) — switch it over to PostgreSQL ' +
+        'manually.',
     )
   }
 
@@ -92,17 +102,17 @@ export function checkProjectShape(
   }
 
   if (
-    hasSqliteUsageOutsideDb(cedarPaths.api.src, dbTsPath) ||
-    hasSqliteUsageOutsideDb(cedarPaths.scripts, dbTsPath)
+    hasSqliteUsageOutsideDb(cedarPaths.api.src, dbPath) ||
+    hasSqliteUsageOutsideDb(cedarPaths.scripts, dbPath)
   ) {
     return blocked(
-      'Found `better-sqlite3` usage outside api/src/lib/db.ts. Removing ' +
-        'the SQLite packages could break that code — switch this project ' +
-        'over to PostgreSQL manually.',
+      'Found `better-sqlite3` usage outside api/src/lib/db.ts (or db.js). ' +
+        'Removing the SQLite packages could break that code — switch this ' +
+        'project over to PostgreSQL manually.',
     )
   }
 
-  return { ok: true, prismaConfigPath }
+  return { ok: true, prismaConfigPath, dbPath }
 }
 
 function blocked(message: string): ShapeBlocked {
@@ -121,12 +131,13 @@ function blocked(message: string): ShapeBlocked {
  */
 export function getSqliteToPostgresTasks({
   prismaConfigPath,
+  dbPath,
 }: {
   prismaConfigPath: string
+  dbPath: string
 }): ListrTask[] {
   const cedarPaths = getPaths()
   const schemaPath = path.join(cedarPaths.api.base, 'db', 'schema.prisma')
-  const dbTsPath = path.join(cedarPaths.api.src, 'lib', 'db.ts')
   const rootPkgPath = path.join(cedarPaths.base, 'package.json')
   const apiPkgPath = path.join(cedarPaths.api.base, 'package.json')
   const dbTsTemplatePath = path.join(
@@ -186,7 +197,7 @@ export function getSqliteToPostgresTasks({
       title: 'Updating database adapter',
       task: () => {
         const pgDbTs = fs.readFileSync(dbTsTemplatePath, 'utf-8')
-        fs.writeFileSync(dbTsPath, pgDbTs)
+        fs.writeFileSync(dbPath, pgDbTs)
       },
     },
     {
@@ -266,7 +277,10 @@ export async function handler() {
 
   const tasks = new Listr(
     [
-      ...getSqliteToPostgresTasks({ prismaConfigPath: shape.prismaConfigPath }),
+      ...getSqliteToPostgresTasks({
+        prismaConfigPath: shape.prismaConfigPath,
+        dbPath: shape.dbPath,
+      }),
       installPackages,
       {
         title: 'Running Prisma migrations',
@@ -387,7 +401,7 @@ function findDatasourceUrlLine(
   return undefined
 }
 
-function hasSqliteUsageOutsideDb(srcPath: string, dbTsPath: string): boolean {
+function hasSqliteUsageOutsideDb(srcPath: string, dbPath: string): boolean {
   const sqlitePattern = /better-sqlite3|@prisma\/adapter-better-sqlite3/
 
   const files = fs.globSync('**/*.{ts,tsx,js,jsx}', { cwd: srcPath })
@@ -395,7 +409,7 @@ function hasSqliteUsageOutsideDb(srcPath: string, dbTsPath: string): boolean {
   for (const file of files) {
     const fullPath = path.join(srcPath, file)
 
-    if (fullPath === dbTsPath) {
+    if (fullPath === dbPath) {
       continue
     }
 
