@@ -399,10 +399,17 @@ async function main() {
   // resolution that can come up empty
   const viteConfigPath: string | null = projectPaths.web.viteConfig
 
+  // Matches a `setDefaultResultOrder('verbatim')` call, with or without a
+  // qualifier like `dns.` (the import could also be destructured). Only
+  // 'verbatim' is a no-op on Node 24 — a call passing 'ipv4first' does change
+  // Node's behavior and must not be reported
+  const verbatimResultOrderRegex =
+    /(?<![\w$])(?:[\w$]+\s*\.\s*)?setDefaultResultOrder\s*\(\s*(['"`])verbatim\1\s*\)/
+
   if (viteConfigPath && fs.existsSync(viteConfigPath)) {
     const viteConfig = await fs.promises.readFile(viteConfigPath, 'utf8')
 
-    if (viteConfig.includes('setDefaultResultOrder')) {
+    if (verbatimResultOrderRegex.test(viteConfig)) {
       info('You can remove dns.setDefaultResultOrder', [
         'Found dns.setDefaultResultOrder in ' +
           path.relative(projectRoot, viteConfigPath),
