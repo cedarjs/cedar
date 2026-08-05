@@ -16,15 +16,9 @@ the Vite configuration for your web side sits in `web/vite.config.{js,ts}`, and
 can be configured the same as any other Vite project. Let's take a peek!
 
 ```ts
-import dns from 'node:dns'
-
 import { defineConfig } from 'vite'
 
 import { cedar } from '@cedarjs/vite'
-
-// So that Vite will load on localhost instead of `127.0.0.1`.
-// See: https://vite.dev/config/server-options.html#server-host
-dns.setDefaultResultOrder('verbatim')
 
 export default defineConfig(({ mode }) => ({
   plugins: [

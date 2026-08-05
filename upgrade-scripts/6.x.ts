@@ -395,6 +395,26 @@ async function main() {
     }
   }
 
+  // Typed as `string` in project-config, but it's really the result of a file
+  // resolution that can come up empty
+  const viteConfigPath: string | null = projectPaths.web.viteConfig
+
+  if (viteConfigPath && fs.existsSync(viteConfigPath)) {
+    const viteConfig = await fs.promises.readFile(viteConfigPath, 'utf8')
+
+    if (viteConfig.includes('setDefaultResultOrder')) {
+      info('You can remove dns.setDefaultResultOrder', [
+        'Found dns.setDefaultResultOrder in ' +
+          path.relative(projectRoot, viteConfigPath),
+        'It is a leftover workaround for Node versions that reordered\n' +
+          "DNS lookup results. Node has defaulted to 'verbatim' since v17, so\n" +
+          'on Node 24, which Cedar requires, the call does nothing. Nothing\n' +
+          'breaks if you keep it, but you can delete the dns import, the\n' +
+          'comment above the call, and the call itself.',
+      ])
+    }
+  }
+
   let shouldAbort = false
 
   const apiGeneratorTemplatesPath = path.join(
