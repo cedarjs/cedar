@@ -690,4 +690,88 @@ export const Routes = () => (
 
     expect(getUnauthenticatedRedirectRoute()).toBe('home')
   })
+
+  test('does not treat layout-only <Set wrap={...}> as protected', () => {
+    vol.fromJSON(
+      {
+        'web/src/auth.ts': 'export const { AuthProvider } = createAuth()',
+        'web/src/Routes.js': `
+import { Router, Route, Set } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <Set wrap={MainLayout}>
+      <Route path="/login" page={LoginPage} name="login" />
+    </Set>
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(true)
+  })
+
+  test('treats <Set private> as protected', () => {
+    vol.fromJSON(
+      {
+        'web/src/auth.ts': 'export const { AuthProvider } = createAuth()',
+        'web/src/Routes.js': `
+import { Router, Route, Set } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <Set private>
+      <Route path="/login" page={LoginPage} name="login" />
+    </Set>
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(false)
+  })
+
+  test('does not treat layout-only namespaced <CedarRouter.Set wrap={...}> as protected', () => {
+    vol.fromJSON(
+      {
+        'web/src/auth.ts': 'export const { AuthProvider } = createAuth()',
+        'web/src/Routes.js': `
+import * as CedarRouter from '@cedarjs/router'
+export const Routes = () => (
+  <CedarRouter.Router>
+    <CedarRouter.Set wrap={MainLayout}>
+      <CedarRouter.Route path="/login" page={LoginPage} name="login" />
+    </CedarRouter.Set>
+  </CedarRouter.Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(true)
+  })
+
+  test('treats namespaced <CedarRouter.Set private> as protected', () => {
+    vol.fromJSON(
+      {
+        'web/src/auth.ts': 'export const { AuthProvider } = createAuth()',
+        'web/src/Routes.js': `
+import * as CedarRouter from '@cedarjs/router'
+export const Routes = () => (
+  <CedarRouter.Router>
+    <CedarRouter.Set private>
+      <CedarRouter.Route path="/login" page={LoginPage} name="login" />
+    </CedarRouter.Set>
+  </CedarRouter.Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(false)
+  })
 })

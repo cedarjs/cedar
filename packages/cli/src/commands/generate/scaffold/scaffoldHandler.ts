@@ -788,14 +788,16 @@ interface RouteInfo {
   isInsidePrivateSet?: boolean
 }
 
-// Extracts all identifiers that refer to protected route wrappers from the
-// Routes file imports. Handles direct imports, aliases, and namespace members.
-// Recognizes @cedarjs/router PrivateSet and legacy Protected/Set patterns.
-// Returns a Set of all names that could refer to a protected wrapper component.
-const extractProtectedWrapperAliases = (ast: any): Set<string> => {
+// Extracts all identifiers that refer to unconditionally-protected route wrappers
+// from the Routes file imports. Handles direct imports, aliases, and namespace members.
+// Recognizes @cedarjs/router PrivateSet and Private patterns. Note: Set is NOT
+// included here because Set is only protected when it has the private attribute
+// (Set wrap={...} is just a layout wrapper).
+// Returns a Set of all names that could refer to an unconditionally protected wrapper.
+const extractUnconditionallyProtectedAliases = (ast: any): Set<string> => {
   const aliases = new Set<string>()
-  // Protected wrapper component names to recognize
-  const protectedNames = ['PrivateSet', 'Private', 'Set']
+  // These are ALWAYS protected regardless of attributes
+  const unconditionallyProtectedNames = ['PrivateSet', 'Private']
 
   traverse(ast, {
     ImportDeclaration(path) {
@@ -808,12 +810,46 @@ const extractProtectedWrapperAliases = (ast: any): Set<string> => {
       path.node.specifiers.forEach((spec) => {
         if (spec.type === 'ImportSpecifier') {
           // Handle: import { PrivateSet }, import { PrivateSet as Alias }
-          if (protectedNames.includes(spec.imported.name)) {
+          if (unconditionallyProtectedNames.includes(spec.imported.name)) {
             aliases.add(spec.local.name)
           }
         } else if (spec.type === 'ImportNamespaceSpecifier') {
           // Handle: import * as CedarRouter, then <CedarRouter.PrivateSet>
           // Store the namespace prefix to detect CedarRouter.PrivateSet later
+          aliases.add(spec.local.name)
+        } else if (spec.type === 'ImportDefaultSpecifier') {
+          // Handle: import CedarRouter (if default export is the router)
+          aliases.add(spec.local.name)
+        }
+      })
+    },
+  })
+
+  return aliases
+}
+
+// Extracts all identifiers that refer to Set from @cedarjs/router imports.
+// Set is only treated as protected when it has the private attribute.
+// Returns a Set of all names that could refer to a Set component.
+const extractSetAliases = (ast: any): Set<string> => {
+  const aliases = new Set<string>()
+
+  traverse(ast, {
+    ImportDeclaration(path) {
+      const source = path.node.source.value
+      // Look for imports from @cedarjs/router
+      if (source !== '@cedarjs/router') {
+        return
+      }
+
+      path.node.specifiers.forEach((spec) => {
+        if (spec.type === 'ImportSpecifier') {
+          // Handle: import { Set }, import { Set as Alias }
+          if (spec.imported.name === 'Set') {
+            aliases.add(spec.local.name)
+          }
+        } else if (spec.type === 'ImportNamespaceSpecifier') {
+          // Handle: import * as CedarRouter, then <CedarRouter.Set>
           aliases.add(spec.local.name)
         } else if (spec.type === 'ImportDefaultSpecifier') {
           // Handle: import CedarRouter (if default export is the router)
@@ -888,11 +924,48 @@ const parseRoutesFile = (): RouteInfo[] => {
       configFile: false,
     })
 
-    const protectedWrapperAliases = extractProtectedWrapperAliases(ast)
+    const unconditionallyProtectedAliases =
+      extractUnconditionallyProtectedAliases(ast)
+    const setAliases = extractSetAliases(ast)
     const routeAliases = extractRouteAliases(ast)
     const routes: RouteInfo[] = []
-    // Protected wrapper component names to recognize in JSX
-    const protectedWrapperNames = ['PrivateSet', 'Private', 'Set']
+
+    const isProtectedSetElement = (
+      openingElement: any,
+      setAliasesSet: Set<string>,
+    ): boolean => {
+      // Check if this is a Set element with the private attribute
+      let isSetElement = false
+      let hasPrivateAttr = false
+
+      if (openingElement.name.type === 'JSXIdentifier') {
+        if (setAliasesSet.has(openingElement.name.name)) {
+          isSetElement = true
+        }
+      } else if (openingElement.name.type === 'JSXMemberExpression') {
+        const { object, property } = openingElement.name
+        if (
+          property.type === 'JSXIdentifier' &&
+          property.name === 'Set' &&
+          object.type === 'JSXIdentifier' &&
+          setAliasesSet.has(object.name)
+        ) {
+          isSetElement = true
+        }
+      }
+
+      if (isSetElement) {
+        // Check if it has the private attribute
+        hasPrivateAttr = openingElement.attributes.some(
+          (a: any) =>
+            a.type === 'JSXAttribute' &&
+            a.name.type === 'JSXIdentifier' &&
+            a.name.name === 'private',
+        )
+      }
+
+      return isSetElement && hasPrivateAttr
+    }
 
     traverse(ast, {
       JSXElement(path) {
@@ -936,9 +1009,11 @@ const parseRoutesFile = (): RouteInfo[] => {
             : undefined
         }
 
-        // Check if this Route is nested inside a protected wrapper (PrivateSet, Private, or Set)
-        // by walking up the parent chain. Handles direct names, aliases, and
-        // namespace members (e.g., <CedarRouter.PrivateSet>).
+        // Check if this Route is nested inside a protected wrapper by walking up
+        // the parent chain. Recognizes:
+        // - PrivateSet and Private (always protected)
+        // - Set private (only when it has the private attribute)
+        // Handles direct names, aliases, and namespace members.
         let isInsidePrivateSet = false
         let parentPath = path.parentPath
         while (parentPath) {
@@ -947,23 +1022,40 @@ const parseRoutesFile = (): RouteInfo[] => {
 
             // Direct JSXIdentifier: <PrivateSet>, <Private>, <Set>, or aliases
             if (parentElement.name.type === 'JSXIdentifier') {
-              if (protectedWrapperAliases.has(parentElement.name.name)) {
+              // Check unconditionally protected wrappers (PrivateSet, Private)
+              if (unconditionallyProtectedAliases.has(parentElement.name.name)) {
+                isInsidePrivateSet = true
+                break
+              }
+              // Check Set with private attribute
+              if (isProtectedSetElement(parentElement, setAliases)) {
                 isInsidePrivateSet = true
                 break
               }
             }
-            // JSXMemberExpression: <CedarRouter.PrivateSet>, <CedarRouter.Private>, <CedarRouter.Set>
+            // JSXMemberExpression: <CedarRouter.PrivateSet>, <CedarRouter.Private>, etc.
             else if (parentElement.name.type === 'JSXMemberExpression') {
               const { object, property } = parentElement.name
-              // Check if property is a protected wrapper name and object is a known namespace
               if (
                 property.type === 'JSXIdentifier' &&
-                protectedWrapperNames.includes(property.name) &&
                 object.type === 'JSXIdentifier' &&
-                protectedWrapperAliases.has(object.name)
+                unconditionallyProtectedAliases.has(object.name)
               ) {
-                isInsidePrivateSet = true
-                break
+                // Check if property is PrivateSet or Private
+                if (
+                  property.name === 'PrivateSet' ||
+                  property.name === 'Private'
+                ) {
+                  isInsidePrivateSet = true
+                  break
+                }
+                // Check Set with private attribute
+                if (property.name === 'Set') {
+                  if (isProtectedSetElement(parentElement, setAliases)) {
+                    isInsidePrivateSet = true
+                    break
+                  }
+                }
               }
             }
           }
