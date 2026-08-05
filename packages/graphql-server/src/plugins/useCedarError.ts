@@ -4,19 +4,19 @@ import {
   createGraphQLError,
 } from 'graphql-yoga'
 
-import { RedwoodError } from '@cedarjs/api'
+import { CedarError } from '@cedarjs/api'
 import type { Logger } from '@cedarjs/api/logger'
 
 import type { CedarGraphQLContext } from '../types.js'
 
 /**
- * Converts RedwoodErrors to GraphQLErrors
+ * Converts CedarErrors to GraphQLErrors
  *
  * This is a workaround for the fact that graphql-yoga doesn't support custom error types.
  *
  * Yoga automatically masks unexpected errors and prevents leaking sensitive information to clients.
  *
- * Since RedwoodErrors (such as ServiceValidation errors) are expected,
+ * Since CedarErrors (such as ServiceValidation errors) are expected,
  * we need to convert them to GraphQLErrors so that they are not masked.
  *
  * See: https://the-guild.dev/graphql/yoga-server/docs/features/error-masking
@@ -33,10 +33,10 @@ export const useCedarError = (logger: Logger): Plugin<CedarGraphQLContext> => {
             payload,
             ({ result, setResult }) => {
               const errors = result.errors?.map((error) => {
-                if (error.originalError instanceof RedwoodError) {
+                if (error.originalError instanceof CedarError) {
                   logger.debug(
                     { custom: { name: error.originalError.name } },
-                    'Converting RedwoodError to GraphQLError',
+                    'Converting CedarError to GraphQLError',
                   )
 
                   return createGraphQLError(error.message, {

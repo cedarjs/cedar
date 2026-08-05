@@ -1,6 +1,9 @@
 export { useArmor } from './useArmor.js'
 export { useCedarAuthContext } from './useCedarAuthContext.js'
-export { useRedwoodDirective } from './useRedwoodDirective.js'
+export {
+  useCedarDirective,
+  useRedwoodDirective,
+} from './useRedwoodDirective.js'
 export { useCedarError } from './useCedarError.js'
 export { useCedarGlobalContextSetter } from './useCedarGlobalContextSetter.js'
 export { useCedarLogger } from './useCedarLogger.js'

@@ -15,8 +15,12 @@ import type { CedarRealtimeOptions } from '@cedarjs/realtime'
 
 import type { DirectiveGlobImports } from './directives/makeDirectives.js'
 import type { LoggerConfig } from './plugins/useCedarLogger.js'
-import type { RedwoodTrustedDocumentOptions } from './plugins/useCedarTrustedDocuments.js'
 import type {
+  CedarTrustedDocumentOptions,
+  RedwoodTrustedDocumentOptions,
+} from './plugins/useCedarTrustedDocuments.js'
+import type {
+  UseCedarDirectiveReturn,
   useRedwoodDirectiveReturn,
   DirectivePluginOptions,
 } from './plugins/useRedwoodDirective.js'
@@ -52,7 +56,13 @@ export type MakeServices = (args: MakeServicesInterface) => ServicesGlobImports
 
 export type GraphQLTypeWithFields = GraphQLObjectType | GraphQLInterfaceType
 
-export type { useRedwoodDirectiveReturn, DirectivePluginOptions }
+export type {
+  UseCedarDirectiveReturn,
+  useRedwoodDirectiveReturn,
+  DirectivePluginOptions,
+  CedarTrustedDocumentOptions,
+  RedwoodTrustedDocumentOptions,
+}
 
 export type GetCurrentUser = (
   decoded: AuthContextPayload[0],
@@ -97,7 +107,7 @@ export interface RedwoodGraphQLContext {
   [index: string]: unknown
 }
 
-export interface RedwoodOpenTelemetryConfig {
+export interface CedarOpenTelemetryConfig {
   /**
    * @description Enables the creation of a span for each resolver execution.
    */
@@ -114,9 +124,15 @@ export interface RedwoodOpenTelemetryConfig {
   result: boolean
 }
 
-export interface RedwoodScalarConfig {
+/** @deprecated Please use CedarOpenTelemetryConfig */
+export type RedwoodOpenTelemetryConfig = CedarOpenTelemetryConfig
+
+export interface CedarScalarConfig {
   File?: boolean
 }
+
+/** @deprecated Please use CedarScalarConfig */
+export type RedwoodScalarConfig = CedarScalarConfig
 
 /**
  * GraphQLYogaOptions
@@ -264,12 +280,12 @@ export type GraphQLYogaOptions = {
    * @see https://benjie.dev/graphql/trusted-documents
    * @see https://the-guild.dev/graphql/yoga-server/docs/features/persisted-operations
    */
-  trustedDocuments?: RedwoodTrustedDocumentOptions
+  trustedDocuments?: CedarTrustedDocumentOptions
 
   /**
    * @description Configure OpenTelemetry plugin behaviour
    */
-  openTelemetryOptions?: RedwoodOpenTelemetryConfig
+  openTelemetryOptions?: CedarOpenTelemetryConfig
 
   /**
    * @description Configure which scalars to include in the schema. This should match your
@@ -277,7 +293,7 @@ export type GraphQLYogaOptions = {
    *
    * The default is to include. You must set to `false` to exclude.
    */
-  includeScalars?: RedwoodScalarConfig
+  includeScalars?: CedarScalarConfig
 }
 
 /**

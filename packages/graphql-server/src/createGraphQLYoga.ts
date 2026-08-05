@@ -18,7 +18,7 @@ import { makeMergedSchema } from './makeMergedSchema.js'
 import {
   useArmor,
   useCedarAuthContext,
-  useRedwoodDirective,
+  useCedarDirective,
   useCedarError,
   useCedarGlobalContextSetter,
   useCedarOpenTelemetry,
@@ -27,7 +27,7 @@ import {
   useCedarTrustedDocuments,
 } from './plugins/index.js'
 import type {
-  useRedwoodDirectiveReturn,
+  UseCedarDirectiveReturn,
   DirectivePluginOptions,
 } from './plugins/useRedwoodDirective.js'
 import { makeSubscriptions } from './subscriptions/makeSubscriptions.js'
@@ -60,7 +60,7 @@ export const createGraphQLYoga = async ({
   includeScalars,
 }: GraphQLYogaOptions) => {
   let schema: GraphQLSchema
-  let redwoodDirectivePlugins: Plugin[] = []
+  let cedarDirectivePlugins: Plugin[] = []
   const logger = loggerConfig.logger
 
   const isDevEnv = process.env.NODE_ENV === 'development'
@@ -70,9 +70,9 @@ export const createGraphQLYoga = async ({
     const projectDirectives = makeDirectivesForPlugin(directives)
 
     if (projectDirectives.length > 0) {
-      ;(redwoodDirectivePlugins as useRedwoodDirectiveReturn[]) =
+      ;(cedarDirectivePlugins as UseCedarDirectiveReturn[]) =
         projectDirectives.map((directive) =>
-          useRedwoodDirective(directive as DirectivePluginOptions),
+          useCedarDirective(directive as DirectivePluginOptions),
         )
     }
 
@@ -141,8 +141,8 @@ export const createGraphQLYoga = async ({
       plugins.push(useCedarPopulateContext(context))
     }
 
-    // Custom Redwood plugins
-    plugins.push(...redwoodDirectivePlugins)
+    // Custom Cedar plugins
+    plugins.push(...cedarDirectivePlugins)
 
     // Custom Cedar OpenTelemetry plugin
     if (openTelemetryOptions !== undefined) {
