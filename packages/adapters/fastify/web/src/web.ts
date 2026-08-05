@@ -19,6 +19,13 @@ export type { RedwoodFastifyWebOptions }
 
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365
 
+// Vite's default `assetFileNames`/`entryFileNames`/`chunkFileNames` all end
+// in `-<hash>.<ext>`. A project can override those in its own vite.config to
+// emit stable filenames instead — in which case a file living under
+// `assets/` is no longer a safe signal on its own that it's safe to cache
+// forever, so the filename itself has to look hashed too.
+const HASHED_ASSET_FILENAME = /-[0-9a-f]{8,}\.[^./]+$/i
+
 export async function redwoodFastifyWeb(
   fastify: FastifyInstance,
   opts: RedwoodFastifyWebOptions,
@@ -47,9 +54,13 @@ export async function redwoodFastifyWeb(
     root: getPaths().web.dist,
     cacheControl: false,
     setHeaders: (res, filePath) => {
+      const isHashedAsset =
+        filePath.startsWith(assetsDir) &&
+        HASHED_ASSET_FILENAME.test(path.basename(filePath))
+
       res.setHeader(
         'Cache-Control',
-        filePath.startsWith(assetsDir)
+        isHashedAsset
           ? `public, max-age=${ONE_YEAR_IN_SECONDS}, immutable`
           : 'no-cache',
       )

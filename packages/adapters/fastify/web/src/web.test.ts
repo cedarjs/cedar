@@ -322,6 +322,19 @@ describe('redwoodFastifyWeb', () => {
       )
     })
 
+    it('sets a no-cache cache-control header for an unhashed file under assets/', async () => {
+      // A project can configure Vite to emit stable filenames instead of
+      // content-hashed ones. Living under `assets/` isn't on its own a safe
+      // signal that a file can be cached forever.
+      const res = await fastifyInstance.inject({
+        method: 'GET',
+        url: '/assets/unhashed-app.js',
+      })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.headers['cache-control']).toBe('no-cache')
+    })
+
     it('sets a no-cache cache-control header for a prerendered page', async () => {
       const res = await fastifyInstance.inject({
         method: 'GET',
