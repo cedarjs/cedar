@@ -48,6 +48,7 @@ import { customOrDefaultTemplatePath } from '../yargsHandlerHelpers.js'
 // Any assets that should not trigger an overwrite error and require a --force
 const SKIPPABLE_ASSETS = ['scaffold.css']
 const PACKAGE_SET = 'Set'
+const PACKAGE_PRIVATE_SET = 'PrivateSet'
 
 // Minimal shape of a Prisma DMMF model field as used in this file
 interface ScaffoldField {
@@ -770,6 +771,102 @@ const addHelperPackages = async (task: AnyListrTask) => {
   })
 }
 
+// Detects whether the project already has auth set up, regardless of which
+// auth provider is used, by checking for the presence of web/src/auth.{ext}.
+// Same check used in dbAuthHandler.ts's isDbAuthSetup().
+export const isAuthSetup = () => {
+  const extensions = ['ts', 'js', 'tsx', 'jsx']
+  return extensions.some((ext) =>
+    fs.existsSync(path.join(getPaths().web.src, 'auth.' + ext)),
+  )
+}
+
+// Matches a <Route ...> opening tag (self-closing or not) and captures its
+// attributes, so `name="..."` and `path="..."` can be read off without a full
+// JSX parser. This is a best-effort heuristic, not a JS/JSX evaluator: it
+// covers routes as written by Cedar's own scaffolding and typical hand-written
+// routes, but won't catch dynamically-generated or unusually-formatted ones.
+const ROUTE_TAG_RE = /<Route\s+([^>]*?)\/?>/g
+
+const extractRouteAttr = (tagAttrs: string, attrName: string) =>
+  tagAttrs.match(new RegExp(`\\b${attrName}=["']([^"']+)["']`))?.[1]
+
+const getRoutesFileContent = (): string | undefined => {
+  const routesPath = getPaths().web.routes
+  if (!fs.existsSync(routesPath)) {
+    return undefined
+  }
+  return readFile(routesPath).toString()
+}
+
+// Checks whether a route named 'login' is already defined in the Routes
+// file. Used to determine if scaffolded routes can safely reference it as the
+// unauthenticated redirect target.
+export const hasLoginRoute = () => {
+  const content = getRoutesFileContent()
+  if (!content) {
+    return false
+  }
+
+  return Array.from(content.matchAll(ROUTE_TAG_RE)).some(
+    ([, attrs]) => extractRouteAttr(attrs, 'name') === 'login',
+  )
+}
+
+// Finds the landing page route (path === '/'), skipping over one that's
+// nested inside a <PrivateSet> block, so we don't pick a redirect target that
+// itself requires authentication (which would create a redirect loop).
+const findUnprotectedLandingPageRouteName = (): string | undefined => {
+  const content = getRoutesFileContent()
+  if (!content) {
+    return undefined
+  }
+
+  const privateSetRanges = Array.from(
+    content.matchAll(/<PrivateSet\b[^>]*>([\s\S]*?)<\/PrivateSet>/g),
+  ).map((match) => ({
+    start: match.index ?? 0,
+    end: (match.index ?? 0) + match[0].length,
+  }))
+
+  for (const match of content.matchAll(ROUTE_TAG_RE)) {
+    const [, attrs] = match
+    if (extractRouteAttr(attrs, 'path') !== '/') {
+      continue
+    }
+
+    const tagStart = match.index ?? 0
+    const isProtected = privateSetRanges.some(
+      (range) => tagStart >= range.start && tagStart < range.end,
+    )
+    if (!isProtected) {
+      return extractRouteAttr(attrs, 'name')
+    }
+  }
+
+  return undefined
+}
+
+// Returns the route name that scaffolded PrivateSets should redirect
+// unauthenticated users to, or undefined if PrivateSet shouldn't be used at
+// all. Prefers an existing 'login' route; falls back to the landing page
+// route (path === '/') when no login route is defined, so protected
+// scaffolds still get wrapped in PrivateSet even without a dedicated login
+// page -- as long as the landing page isn't itself wrapped in PrivateSet.
+// This is best-effort static generation, not a guarantee: it won't catch
+// every possible way routes could be written.
+export const getUnauthenticatedRedirectRoute = (): string | undefined => {
+  if (!isAuthSetup()) {
+    return undefined
+  }
+
+  if (hasLoginRoute()) {
+    return 'login'
+  }
+
+  return findUnprotectedLandingPageRouteName()
+}
+
 const addSetImport = (task: AnyListrTask) => {
   const routesPath = getPaths().web.routes
   const routesContent = readFile(routesPath).toString()
@@ -786,14 +883,20 @@ const addSetImport = (task: AnyListrTask) => {
   }
 
   const routerImports = importContent.replace(/\s/g, '').split(',')
-  if (routerImports.includes(PACKAGE_SET)) {
+  const namesToImport = [
+    PACKAGE_SET,
+    ...(getUnauthenticatedRedirectRoute() ? [PACKAGE_PRIVATE_SET] : []),
+  ].filter((name) => !routerImports.includes(name))
+
+  if (!namesToImport.length) {
     return 'Skipping Set import'
   }
+
   const newRoutesContent = routesContent.replace(
     cedarRouterImport,
     importStart +
       spacing +
-      PACKAGE_SET +
+      namesToImport.join(',' + spacing) +
       `,` +
       spacing +
       importContent +
@@ -802,7 +905,7 @@ const addSetImport = (task: AnyListrTask) => {
 
   writeFile(routesPath, newRoutesContent, { overwriteExisting: true })
 
-  return 'Added Set import to Routes.{jsx,tsx}'
+  return `Added ${namesToImport.join(', ')} import to Routes.{jsx,tsx}`
 }
 
 const addScaffoldSetToRouter = async (model: string, scaffoldPath: string) => {
@@ -813,10 +916,15 @@ const addScaffoldSetToRouter = async (model: string, scaffoldPath: string) => {
   const buttonLabel = `New ${nameVars.singularPascalName}`
   const buttonTo = templateNames.newRouteName
 
+  const unauthenticatedRoute = getUnauthenticatedRedirectRoute()
+
   return addRoutesToRouterTask(
     await routes({ model, path: scaffoldPath }),
     'ScaffoldLayout',
     { title, titleTo, buttonLabel, buttonTo },
+    unauthenticatedRoute
+      ? { unauthenticated: unauthenticatedRoute }
+      : undefined,
   )
 }
 
