@@ -8,8 +8,10 @@ vi.mock('@cedarjs/project-config', () => ({
   getPrismaDatasourceProvider,
 }))
 
-const { checkTestDatabaseUrlMatchesProvider, redactDatabaseUrl } =
-  await import('../checkTestDatabase.js')
+import {
+  checkTestDatabaseUrlMatchesProvider,
+  redactDatabaseUrl,
+} from '../checkTestDatabase.js'
 
 describe('redactDatabaseUrl', () => {
   it('masks the password in a connection string', () => {
@@ -20,6 +22,16 @@ describe('redactDatabaseUrl', () => {
 
   it('leaves URLs without credentials unchanged', () => {
     expect(redactDatabaseUrl('file:./test.db')).toBe('file:./test.db')
+  })
+
+  it('masks semicolon-delimited passwords in SQL Server connection strings', () => {
+    expect(
+      redactDatabaseUrl(
+        'sqlserver://host:1433;database=db;user=sa;password=secret;encrypt=true',
+      ),
+    ).toBe(
+      'sqlserver://host:1433;database=db;user=sa;password=***;encrypt=true',
+    )
   })
 })
 

@@ -18,10 +18,15 @@ function getUrlScheme(url: string): string | undefined {
 
 /**
  * Redacts credentials from a database connection string so it's safe to
- * print, e.g. `postgres://user:pass@host/db` -> `postgres://user:***@host/db`.
+ * print. Handles both URI-style authority credentials, e.g.
+ * `postgres://user:pass@host/db` -> `postgres://user:***@host/db`, and
+ * semicolon-delimited key/value credentials used by SQL Server connection
+ * strings, e.g. `Server=host;Password=secret;` -> `Server=host;Password=***;`.
  */
 export function redactDatabaseUrl(url: string): string {
-  return url.replace(/:\/\/([^:/?#]+):([^@/?#]+)@/, '://$1:***@')
+  return url
+    .replace(/:\/\/([^:/?#]+):([^@/?#]+)@/, '://$1:***@')
+    .replace(/((?:^|;)\s*password\s*=)[^;]*/gi, '$1***')
 }
 
 /**
