@@ -179,6 +179,81 @@ describe('yarn cedar serve', () => {
     errorSpy.mockRestore()
   })
 
+  it('Should refuse (not warn) when a server file is detected under --ud on both sides', async () => {
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit called')
+    })
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    vi.spyOn(fs, 'existsSync').mockImplementation((pathToCheck) => {
+      const normalizedPath = pathToCheck.toString().replaceAll('\\', '/')
+
+      // UD entry exists
+      if (normalizedPath.includes('/mocked/project/api/dist/ud/index')) {
+        return true
+      }
+
+      // web dist exists
+      if (normalizedPath.includes('/mocked/project/web/dist')) {
+        return true
+      }
+
+      // Detect the server file — this is the case under test
+      return true
+    })
+
+    const parser = yargs().command('serve [side]', false, builder)
+
+    await expect(parser.parse('serve --ud')).rejects.toThrow(
+      'process.exit called',
+    )
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('not supported with --ud'),
+    )
+    expect(warnSpy).not.toHaveBeenCalled()
+    expect(exitSpy).toHaveBeenCalledWith(1)
+
+    exitSpy.mockRestore()
+    errorSpy.mockRestore()
+    warnSpy.mockRestore()
+  })
+
+  it('Should refuse when a server file is detected under --ud on the api side', async () => {
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit called')
+    })
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    vi.spyOn(fs, 'existsSync').mockImplementation((pathToCheck) => {
+      const normalizedPath = pathToCheck.toString().replaceAll('\\', '/')
+
+      // api base and dist exist
+      if (normalizedPath.includes('/mocked/project/api')) {
+        return true
+      }
+
+      // Detect the server file — this is the case under test. Before this
+      // fix, `serve api --ud` never checked for one at all.
+      return true
+    })
+
+    const parser = yargs().command('serve [side]', false, builder)
+
+    await expect(parser.parse('serve api --ud')).rejects.toThrow(
+      'process.exit called',
+    )
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('not supported with --ud'),
+    )
+    expect(exitSpy).toHaveBeenCalledWith(1)
+
+    exitSpy.mockRestore()
+    errorSpy.mockRestore()
+  })
+
   it('Should error when web dist is missing for both sides with --ud', async () => {
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
       throw new Error('process.exit called')
