@@ -1,7 +1,6 @@
 import fs from 'node:fs'
 import path from 'path'
 
-import { parse, traverse } from '@babel/core'
 import camelcase from 'camelcase'
 import { paramCase } from 'change-case'
 import humanize from 'humanize-string'
@@ -782,340 +781,80 @@ export const isAuthSetup = () => {
   )
 }
 
-interface RouteInfo {
-  path?: string
-  name?: string
-  isInsidePrivateSet?: boolean
-}
+// Matches a <Route ...> opening tag (self-closing or not) and captures its
+// attributes, so `name="..."` and `path="..."` can be read off without a full
+// JSX parser. This is a best-effort heuristic, not a JS/JSX evaluator: it
+// covers routes as written by Cedar's own scaffolding and typical hand-written
+// routes, but won't catch dynamically-generated or unusually-formatted ones.
+const ROUTE_TAG_RE = /<Route\s+([^>]*?)\/?>/g
 
-// Extracts all identifiers that refer to unconditionally-protected route wrappers
-// from the Routes file imports. Handles direct imports, aliases, and namespace members.
-// Recognizes @cedarjs/router PrivateSet and Private patterns. Note: Set is NOT
-// included here because Set is only protected when it has the private attribute
-// (Set wrap={...} is just a layout wrapper).
-// Returns a Set of all names that could refer to an unconditionally protected wrapper.
-const extractUnconditionallyProtectedAliases = (ast: any): Set<string> => {
-  const aliases = new Set<string>()
-  // These are ALWAYS protected regardless of attributes
-  const unconditionallyProtectedNames = ['PrivateSet', 'Private']
+const extractRouteAttr = (tagAttrs: string, attrName: string) =>
+  tagAttrs.match(new RegExp(`\\b${attrName}=["']([^"']+)["']`))?.[1]
 
-  traverse(ast, {
-    ImportDeclaration(path) {
-      const source = path.node.source.value
-      // Look for imports from @cedarjs/router
-      if (source !== '@cedarjs/router') {
-        return
-      }
-
-      path.node.specifiers.forEach((spec) => {
-        if (spec.type === 'ImportSpecifier') {
-          // Handle: import { PrivateSet }, import { PrivateSet as Alias }
-          if (unconditionallyProtectedNames.includes(spec.imported.name)) {
-            aliases.add(spec.local.name)
-          }
-        } else if (spec.type === 'ImportNamespaceSpecifier') {
-          // Handle: import * as CedarRouter, then <CedarRouter.PrivateSet>
-          // Store the namespace prefix to detect CedarRouter.PrivateSet later
-          aliases.add(spec.local.name)
-        } else if (spec.type === 'ImportDefaultSpecifier') {
-          // Handle: import CedarRouter (if default export is the router)
-          aliases.add(spec.local.name)
-        }
-      })
-    },
-  })
-
-  return aliases
-}
-
-// Extracts all identifiers that refer to Set from @cedarjs/router imports.
-// Set is only treated as protected when it has the private attribute.
-// Returns a Set of all names that could refer to a Set component.
-const extractSetAliases = (ast: any): Set<string> => {
-  const aliases = new Set<string>()
-
-  traverse(ast, {
-    ImportDeclaration(path) {
-      const source = path.node.source.value
-      // Look for imports from @cedarjs/router
-      if (source !== '@cedarjs/router') {
-        return
-      }
-
-      path.node.specifiers.forEach((spec) => {
-        if (spec.type === 'ImportSpecifier') {
-          // Handle: import { Set }, import { Set as Alias }
-          if (spec.imported.name === 'Set') {
-            aliases.add(spec.local.name)
-          }
-        } else if (spec.type === 'ImportNamespaceSpecifier') {
-          // Handle: import * as CedarRouter, then <CedarRouter.Set>
-          aliases.add(spec.local.name)
-        } else if (spec.type === 'ImportDefaultSpecifier') {
-          // Handle: import CedarRouter (if default export is the router)
-          aliases.add(spec.local.name)
-        }
-      })
-    },
-  })
-
-  return aliases
-}
-
-// Extracts all identifiers that refer to Route from the Routes file imports.
-// Handles direct imports, aliases, and namespace members.
-// Returns a Set of all names that could refer to a Route component from @cedarjs/router.
-const extractRouteAliases = (ast: any): Set<string> => {
-  const aliases = new Set<string>()
-
-  traverse(ast, {
-    ImportDeclaration(path) {
-      const source = path.node.source.value
-      // Only look for imports from @cedarjs/router
-      if (source !== '@cedarjs/router') {
-        return
-      }
-
-      path.node.specifiers.forEach((spec) => {
-        if (spec.type === 'ImportSpecifier') {
-          // Handle: import { Route }, import { Route as Alias }
-          if (spec.imported.name === 'Route') {
-            aliases.add(spec.local.name)
-          }
-        } else if (spec.type === 'ImportNamespaceSpecifier') {
-          // Handle: import * as CedarRouter, then <CedarRouter.Route>
-          // Store the namespace prefix to detect CedarRouter.Route later
-          aliases.add(spec.local.name)
-        } else if (spec.type === 'ImportDefaultSpecifier') {
-          // Handle: import CedarRouter (if default export is the router)
-          aliases.add(spec.local.name)
-        }
-      })
-    },
-  })
-
-  return aliases
-}
-
-// Parses the Routes file and returns the `path` and `name` string-literal
-// attributes of every <Route> element, along with whether it's nested inside
-// a <PrivateSet>. Handles PrivateSet aliases and namespace members like
-// <CedarRouter.PrivateSet>. Uses proper JSX parsing (rather than regex) to
-// avoid false positives from comments, strings, or non-Route elements. Returns
-// an empty array if the file doesn't exist or fails to parse (e.g. malformed
-// JSX), to avoid breaking scaffold generation.
-const parseRoutesFile = (): RouteInfo[] => {
+const getRoutesFileContent = (): string | undefined => {
   const routesPath = getPaths().web.routes
   if (!fs.existsSync(routesPath)) {
-    return []
+    return undefined
   }
-  const routesContent = readFile(routesPath).toString()
-
-  try {
-    // Use babelrc: false and configFile: false to avoid loading the root
-    // babel.config.js, which requires a filename for pattern matching.
-    const ast = parse(routesContent, {
-      filename: routesPath,
-      sourceType: 'module',
-      parserOpts: {
-        plugins: ['jsx', 'typescript'],
-      },
-      babelrc: false,
-      configFile: false,
-    })
-
-    const unconditionallyProtectedAliases =
-      extractUnconditionallyProtectedAliases(ast)
-    const setAliases = extractSetAliases(ast)
-    const routeAliases = extractRouteAliases(ast)
-    const routes: RouteInfo[] = []
-
-    const isProtectedSetElement = (
-      openingElement: any,
-      setAliasesSet: Set<string>,
-    ): boolean => {
-      // Check if this is a Set element with the private attribute set to a truthy value
-      let isSetElement = false
-      let privateAttrIsTruthy = false
-
-      if (openingElement.name.type === 'JSXIdentifier') {
-        if (setAliasesSet.has(openingElement.name.name)) {
-          isSetElement = true
-        }
-      } else if (openingElement.name.type === 'JSXMemberExpression') {
-        const { object, property } = openingElement.name
-        if (
-          property.type === 'JSXIdentifier' &&
-          property.name === 'Set' &&
-          object.type === 'JSXIdentifier' &&
-          setAliasesSet.has(object.name)
-        ) {
-          isSetElement = true
-        }
-      }
-
-      if (isSetElement) {
-        // Check if it has the private attribute set to a truthy value
-        const privateAttr = openingElement.attributes.find(
-          (a: any) =>
-            a.type === 'JSXAttribute' &&
-            a.name.type === 'JSXIdentifier' &&
-            a.name.name === 'private',
-        )
-
-        if (privateAttr) {
-          // If no value specified (e.g., <Set private>), it's implicitly true
-          if (!privateAttr.value) {
-            privateAttrIsTruthy = true
-          }
-          // If value is a boolean literal
-          else if (privateAttr.value.type === 'JSXExpressionContainer') {
-            const expr = privateAttr.value.expression
-            // Check for true literal
-            if (expr.type === 'BooleanLiteral') {
-              privateAttrIsTruthy = expr.value === true
-            } else {
-              // For non-literal expressions (e.g., variables, function calls),
-              // conservatively treat as protected to match router's runtime evaluation
-              privateAttrIsTruthy = true
-            }
-          }
-        }
-      }
-
-      return isSetElement && privateAttrIsTruthy
-    }
-
-    traverse(ast, {
-      JSXElement(path) {
-        const openingElement = path.node.openingElement
-
-        // Check if this is a Route element from @cedarjs/router
-        // (either direct or namespaced like CedarRouter.Route)
-        let isRoute = false
-        if (
-          openingElement.name.type === 'JSXIdentifier' &&
-          routeAliases.has(openingElement.name.name)
-        ) {
-          isRoute = true
-        } else if (openingElement.name.type === 'JSXMemberExpression') {
-          const { object, property } = openingElement.name
-          // Check if property is 'Route' and object is a known namespace from @cedarjs/router
-          if (
-            property.type === 'JSXIdentifier' &&
-            property.name === 'Route' &&
-            object.type === 'JSXIdentifier' &&
-            routeAliases.has(object.name)
-          ) {
-            isRoute = true
-          }
-        }
-
-        if (!isRoute) {
-          return
-        }
-
-        const getAttrStringValue = (attrName: string) => {
-          const attr = openingElement.attributes.find(
-            (a) =>
-              a.type === 'JSXAttribute' &&
-              a.name.type === 'JSXIdentifier' &&
-              a.name.name === attrName,
-          )
-          return attr?.type === 'JSXAttribute' &&
-            attr.value?.type === 'StringLiteral'
-            ? attr.value.value
-            : undefined
-        }
-
-        // Check if this Route is nested inside a protected wrapper by walking up
-        // the parent chain. Recognizes:
-        // - PrivateSet and Private (always protected)
-        // - Set private (only when it has the private attribute)
-        // Handles direct names, aliases, and namespace members.
-        let isInsidePrivateSet = false
-        let parentPath = path.parentPath
-        while (parentPath) {
-          if (parentPath.node.type === 'JSXElement') {
-            const parentElement = parentPath.node.openingElement
-
-            // Direct JSXIdentifier: <PrivateSet>, <Private>, <Set>, or aliases
-            if (parentElement.name.type === 'JSXIdentifier') {
-              // Check unconditionally protected wrappers (PrivateSet, Private)
-              if (
-                unconditionallyProtectedAliases.has(parentElement.name.name)
-              ) {
-                isInsidePrivateSet = true
-                break
-              }
-              // Check Set with private attribute
-              if (isProtectedSetElement(parentElement, setAliases)) {
-                isInsidePrivateSet = true
-                break
-              }
-            }
-            // JSXMemberExpression: <CedarRouter.PrivateSet>, <CedarRouter.Private>, etc.
-            else if (parentElement.name.type === 'JSXMemberExpression') {
-              const { object, property } = parentElement.name
-              if (
-                property.type === 'JSXIdentifier' &&
-                object.type === 'JSXIdentifier' &&
-                unconditionallyProtectedAliases.has(object.name)
-              ) {
-                // Check if property is PrivateSet or Private
-                if (
-                  property.name === 'PrivateSet' ||
-                  property.name === 'Private'
-                ) {
-                  isInsidePrivateSet = true
-                  break
-                }
-                // Check Set with private attribute
-                if (property.name === 'Set') {
-                  if (isProtectedSetElement(parentElement, setAliases)) {
-                    isInsidePrivateSet = true
-                    break
-                  }
-                }
-              }
-            }
-          }
-          parentPath = parentPath.parentPath
-        }
-
-        routes.push({
-          path: getAttrStringValue('path'),
-          name: getAttrStringValue('name'),
-          isInsidePrivateSet,
-        })
-      },
-    })
-
-    return routes
-  } catch {
-    return []
-  }
+  return readFile(routesPath).toString()
 }
 
-// Checks whether an unprotected route named 'login' is already defined in
-// Routes file. Used to determine if scaffolded routes can safely reference it
-// as the unauthenticated redirect target. Skips login routes nested in
-// PrivateSet, which would create a redirect loop.
-export const hasLoginRoute = () =>
-  parseRoutesFile().some(
-    (route) => route.name === 'login' && !route.isInsidePrivateSet,
+// Checks whether a route named 'login' is already defined in the Routes
+// file. Used to determine if scaffolded routes can safely reference it as the
+// unauthenticated redirect target.
+export const hasLoginRoute = () => {
+  const content = getRoutesFileContent()
+  if (!content) {
+    return false
+  }
+
+  return Array.from(content.matchAll(ROUTE_TAG_RE)).some(
+    ([, attrs]) => extractRouteAttr(attrs, 'name') === 'login',
   )
+}
+
+// Finds the landing page route (path === '/'), skipping over one that's
+// nested inside a <PrivateSet> block, so we don't pick a redirect target that
+// itself requires authentication (which would create a redirect loop).
+const findUnprotectedLandingPageRouteName = (): string | undefined => {
+  const content = getRoutesFileContent()
+  if (!content) {
+    return undefined
+  }
+
+  const privateSetRanges = Array.from(
+    content.matchAll(/<PrivateSet\b[^>]*>([\s\S]*?)<\/PrivateSet>/g),
+  ).map((match) => ({
+    start: match.index ?? 0,
+    end: (match.index ?? 0) + match[0].length,
+  }))
+
+  for (const match of content.matchAll(ROUTE_TAG_RE)) {
+    const [, attrs] = match
+    if (extractRouteAttr(attrs, 'path') !== '/') {
+      continue
+    }
+
+    const tagStart = match.index ?? 0
+    const isProtected = privateSetRanges.some(
+      (range) => tagStart >= range.start && tagStart < range.end,
+    )
+    if (!isProtected) {
+      return extractRouteAttr(attrs, 'name')
+    }
+  }
+
+  return undefined
+}
 
 // Returns the route name that scaffolded PrivateSets should redirect
 // unauthenticated users to, or undefined if PrivateSet shouldn't be used at
 // all. Prefers an existing 'login' route; falls back to the landing page
 // route (path === '/') when no login route is defined, so protected
 // scaffolds still get wrapped in PrivateSet even without a dedicated login
-// page. Only selects a landing page route if it's not already wrapped in
-// PrivateSet (to avoid redirect loops). Returns undefined if auth isn't set
-// up, or if neither a login route nor an unprotected landing page route can
-// be found, to avoid referencing a non-existent route or creating a loop
-// (which would crash at runtime).
+// page -- as long as the landing page isn't itself wrapped in PrivateSet.
+// This is best-effort static generation, not a guarantee: it won't catch
+// every possible way routes could be written.
 export const getUnauthenticatedRedirectRoute = (): string | undefined => {
   if (!isAuthSetup()) {
     return undefined
@@ -1125,10 +864,7 @@ export const getUnauthenticatedRedirectRoute = (): string | undefined => {
     return 'login'
   }
 
-  // Prefer an unprotected landing page route (path === '/' but not inside PrivateSet)
-  return parseRoutesFile().find(
-    (route) => route.path === '/' && !route.isInsidePrivateSet,
-  )?.name
+  return findUnprotectedLandingPageRouteName()
 }
 
 const addSetImport = (task: AnyListrTask) => {
