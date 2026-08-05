@@ -165,25 +165,28 @@ export const defaultLoggerOptions = {
 } satisfies LoggerOptions
 
 /**
- * RedwoodLoggerOptions defines custom logger options that extend those available in LoggerOptions
+ * CedarLoggerOptions defines custom logger options that extend those available in LoggerOptions
  * and can define a destination like a file or other supported pin log transport stream
  *
- * @typedef {Object} RedwoodLoggerOptions
+ * @typedef {Object} CedarLoggerOptions
  * @extends LoggerOptions
  * @property {options} LoggerOptions - options define how to log
  * @property {string | DestinationStream} destination - destination defines where to log
  * @property {boolean} showConfig - Display logger configuration on initialization
  */
-export interface RedwoodLoggerOptions {
+export interface CedarLoggerOptions {
   options?: LoggerOptions
   destination?: string | DestinationStream
   showConfig?: boolean
 }
 
+/** @deprecated Use `CedarLoggerOptions` instead. */
+export type RedwoodLoggerOptions = CedarLoggerOptions
+
 /**
  * Creates the logger
  *
- * @param options {RedwoodLoggerOptions} - Override the default logger configuration
+ * @param options {CedarLoggerOptions} - Override the default logger configuration
  * @param destination {DestinationStream} - An optional destination stream
  * @param showConfig {Boolean} - Show the logger configuration. This is off by default.
  *
@@ -201,7 +204,7 @@ export const createLogger = ({
   options,
   destination,
   showConfig = false,
-}: RedwoodLoggerOptions): Logger => {
+}: CedarLoggerOptions): Logger => {
   const hasDestination = typeof destination !== 'undefined'
   const isFile = hasDestination && typeof destination === 'string'
   const isStream = hasDestination && !isFile
