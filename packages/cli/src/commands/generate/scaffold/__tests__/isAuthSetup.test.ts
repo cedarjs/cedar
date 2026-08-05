@@ -304,4 +304,47 @@ export const Routes = () => (
 
     expect(getUnauthenticatedRedirectRoute()).toBe(undefined)
   })
+
+  test('skips a protected landing page route (nested in PrivateSet)', () => {
+    vol.fromJSON(
+      {
+        'web/src/auth.ts': 'export const { AuthProvider } = createAuth()',
+        'web/src/Routes.js': `
+import { Router, Route, PrivateSet } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <PrivateSet>
+      <Route path="/" page={HomePage} name="home" />
+    </PrivateSet>
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(getUnauthenticatedRedirectRoute()).toBe(undefined)
+  })
+
+  test('uses the landing page route if it exists alongside a protected one', () => {
+    vol.fromJSON(
+      {
+        'web/src/auth.ts': 'export const { AuthProvider } = createAuth()',
+        'web/src/Routes.js': `
+import { Router, Route, PrivateSet } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <Route path="/" page={LandingPage} name="landing" />
+    <PrivateSet>
+      <Route path="/home" page={HomePage} name="home" />
+    </PrivateSet>
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(getUnauthenticatedRedirectRoute()).toBe('landing')
+  })
 })

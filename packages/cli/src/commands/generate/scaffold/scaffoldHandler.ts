@@ -785,13 +785,15 @@ export const isAuthSetup = () => {
 interface RouteInfo {
   path?: string
   name?: string
+  isInsidePrivateSet?: boolean
 }
 
 // Parses the Routes file and returns the `path` and `name` string-literal
-// attributes of every <Route> element. Uses proper JSX parsing (rather than
-// regex) to avoid false positives from comments, strings, or non-Route
-// elements. Returns an empty array if the file doesn't exist or fails to
-// parse (e.g. malformed JSX), to avoid breaking scaffold generation.
+// attributes of every <Route> element, along with whether it's nested inside
+// a <PrivateSet>. Uses proper JSX parsing (rather than regex) to avoid false
+// positives from comments, strings, or non-Route elements. Returns an empty
+// array if the file doesn't exist or fails to parse (e.g. malformed JSX), to
+// avoid breaking scaffold generation.
 const parseRoutesFile = (): RouteInfo[] => {
   const routesPath = getPaths().web.routes
   if (!fs.existsSync(routesPath)) {
@@ -837,9 +839,25 @@ const parseRoutesFile = (): RouteInfo[] => {
             : undefined
         }
 
+        // Check if this Route is nested inside a PrivateSet by walking up the parent chain
+        let isInsidePrivateSet = false
+        let parentPath = path.parentPath
+        while (parentPath) {
+          if (
+            parentPath.node.type === 'JSXElement' &&
+            parentPath.node.openingElement.name.type === 'JSXIdentifier' &&
+            parentPath.node.openingElement.name.name === 'PrivateSet'
+          ) {
+            isInsidePrivateSet = true
+            break
+          }
+          parentPath = parentPath.parentPath
+        }
+
         routes.push({
           path: getAttrStringValue('path'),
           name: getAttrStringValue('name'),
+          isInsidePrivateSet,
         })
       },
     })
@@ -861,9 +879,11 @@ export const hasLoginRoute = () =>
 // all. Prefers an existing 'login' route; falls back to the landing page
 // route (path === '/') when no login route is defined, so protected
 // scaffolds still get wrapped in PrivateSet even without a dedicated login
-// page. Returns undefined if auth isn't set up, or if neither a login route
-// nor a landing page route can be found, to avoid referencing a
-// non-existent route (which would crash at runtime).
+// page. Only selects a landing page route if it's not already wrapped in
+// PrivateSet (to avoid redirect loops). Returns undefined if auth isn't set
+// up, or if neither a login route nor an unprotected landing page route can
+// be found, to avoid referencing a non-existent route or creating a loop
+// (which would crash at runtime).
 export const getUnauthenticatedRedirectRoute = (): string | undefined => {
   if (!isAuthSetup()) {
     return undefined
@@ -873,7 +893,10 @@ export const getUnauthenticatedRedirectRoute = (): string | undefined => {
     return 'login'
   }
 
-  return parseRoutesFile().find((route) => route.path === '/')?.name
+  // Prefer an unprotected landing page route (path === '/' but not inside PrivateSet)
+  return parseRoutesFile().find(
+    (route) => route.path === '/' && !route.isInsidePrivateSet,
+  )?.name
 }
 
 const addSetImport = (task: AnyListrTask) => {
