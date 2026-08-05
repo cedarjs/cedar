@@ -16,14 +16,13 @@ import type { Args } from './cedarPg.js'
 const cedarPaths = getPaths()
 
 function resolveCedarPgSpec(explicitPath?: string): string {
-  // Yarn 4 requires package-name@range (e.g. @cedarjs/pg@file:/abs/path)
+  // Yarn 4 needs package-name@range (e.g. @cedarjs/pg@file:/abs/path)
   if (explicitPath) {
     return `@cedarjs/pg@file:${path.resolve(explicitPath)}`
   }
   if (process.env.CEDAR_PG_PATH) {
     return `@cedarjs/pg@file:${path.resolve(process.env.CEDAR_PG_PATH)}`
   }
-  // Published alpha on npm (`alpha` dist-tag)
   return '@cedarjs/pg@alpha'
 }
 
@@ -50,16 +49,21 @@ export async function handler({ force, path: cedarPgPath }: Args) {
           if (!fs.existsSync(schemaPath)) {
             throw new Error(`Missing schema at ${schemaPath}`)
           }
-          let schema = fs.readFileSync(schemaPath, 'utf-8')
+          const schema = fs.readFileSync(schemaPath, 'utf-8')
           if (schema.includes('provider = "postgresql"') && !force) {
             notes.push(colors.note('schema.prisma already uses postgresql'))
             return
           }
-          schema = schema.replace(
+          const next = schema.replace(
             /provider\s*=\s*"(sqlite|postgresql|mysql|sqlserver|mongodb)"/,
             'provider = "postgresql"',
           )
-          fs.writeFileSync(schemaPath, schema)
+          if (next === schema) {
+            throw new Error(
+              `Could not find a Prisma datasource provider to replace with postgresql in ${schemaPath}`,
+            )
+          }
+          fs.writeFileSync(schemaPath, next)
         },
       },
       {
@@ -122,7 +126,6 @@ export async function handler({ force, path: cedarPgPath }: Args) {
             return
           }
           const content = fs.readFileSync(gitignorePath, 'utf-8')
-          // Prefer current dirname; skip if either legacy or current is present.
           if (content.includes('.cedarpg') || content.includes('.cedar-pg')) {
             if (
               content.includes('.cedar-pg') &&
@@ -157,7 +160,6 @@ export async function handler({ force, path: cedarPgPath }: Args) {
             ? fs.readFileSync(target, 'utf-8')
             : ''
           let content = original
-          // Comment out sqlite DATABASE_URL so cedar-pg acquire can set Postgres
           content = content.replace(
             /^DATABASE_URL=file:.*$/m,
             '# DATABASE_URL provided by cedar-pg acquire when CEDAR_PG=1\n#$&',
@@ -176,7 +178,6 @@ export async function handler({ force, path: cedarPgPath }: Args) {
       {
         title: `Installing ${cedarPgSpec}, pg, @prisma/adapter-pg`,
         task: async () => {
-          // Drop sqlite adapters if present (ignore failures when already gone)
           try {
             await removeWorkspacePackages(
               'api',
@@ -229,8 +230,9 @@ export async function handler({ force, path: cedarPgPath }: Args) {
       console.log(note)
     }
   } catch (e) {
-    errorTelemetry(process.argv, (e as Error).message)
-    console.error(colors.error((e as Error).message))
+    const message = e instanceof Error ? e.message : String(e)
+    errorTelemetry(process.argv, message)
+    console.error(colors.error(message))
     process.exit(1)
   }
 }

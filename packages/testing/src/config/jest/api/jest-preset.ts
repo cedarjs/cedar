@@ -33,7 +33,7 @@ function resolveSubpath(specifier: string): string | undefined {
 }
 
 const testingApiPath = resolveSubpath('@cedarjs/testing/api')
-// Optional: only present when the app installed @cedarjs/pg (CEDAR_PG setup).
+const cedarPgPath = resolveSubpath('@cedarjs/pg')
 const cedarPgTestEnvPath = resolveSubpath('@cedarjs/pg/test-env')
 
 const config: Config = {
@@ -69,10 +69,11 @@ const config: Config = {
   ],
   // This runs once before all tests
   globalSetup: path.join(__dirname, './globalSetup.js'),
-  // Drop cedar-pg test DB after the suite (no-op unless CEDAR_PG=1)
-  globalTeardown: path.join(__dirname, './globalTeardown.js'),
-  // Workers are a separate process from globalSetup — load .cedarpg/test.env
-  // when @cedarjs/pg is installed (no-op if the lease file is missing).
+  // Only when the app installed @cedarjs/pg (same resolve gate as setupFiles).
+  ...(cedarPgPath
+    ? { globalTeardown: path.join(__dirname, './globalTeardown.js') }
+    : {}),
+  // Jest workers cannot see globalSetup env; @cedarjs/pg/test-env loads the lease.
   setupFiles: cedarPgTestEnvPath ? [cedarPgTestEnvPath] : [],
   // Note this setup runs for each test file!
   setupFilesAfterEnv: [path.join(__dirname, './jest.setup.js')],

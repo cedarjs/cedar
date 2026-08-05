@@ -9,12 +9,12 @@ likely going to want to run the same database you use in production locally at s
 
 ## Recommended: @cedarjs/pg (worktree-isolated, zero config)
 
-[`@cedarjs/pg`](https://www.npmjs.com/package/@cedarjs/pg) (alpha) provisions a **real Postgres**
+[`@cedarjs/pg`](https://www.npmjs.com/package/@cedarjs/pg) (alpha) provisions a Postgres
 database per git worktree on top of the [autopg](https://github.com/automagik-dev/autopg) host
 singleton. Names are readable in `\l` (`cpg_<repo>_<worktree>_<mode>_<hash>`). Dev DBs persist
 across `yarn cedar dev` restarts; test DBs are dropped when the test process exits.
 
-> **Alpha** (`0.2.0-alpha.0`): APIs may change. Install with the `alpha` dist-tag.
+> Alpha (`0.2.0-alpha.0`): APIs may change. Install with the `alpha` dist-tag.
 
 ### New apps
 
@@ -25,11 +25,8 @@ yarn create cedar-app --esm --db cedar-pg my-app
 ### Existing apps
 
 ```bash
-# From the app root — installs @cedarjs/pg@alpha from npm
 yarn cedar setup cedar-pg
-
-# Optional: use a local checkout instead
-# yarn cedar setup cedar-pg --path /home/you/Work/cedar-pg
+# Optional local checkout: yarn cedar setup cedar-pg --path /path/to/cedar-pg
 ```
 
 Ensure the autopg host is installed (`@cedarjs/pg` postinstall may do this):
@@ -41,8 +38,8 @@ curl -fsSL https://raw.githubusercontent.com/automagik-dev/autopg/main/install.s
 Set `CEDAR_PG=1` in `.env` / `.env.defaults` (setup does this). Then:
 
 ```bash
-yarn cedar dev  # acquire(dev) → inject DATABASE_URL
-yarn cedar test # acquire(test) → prisma push → dispose(test)
+yarn cedar dev
+yarn cedar test
 ```
 
 Override anytime with an explicit `TEST_DATABASE_URL` / `DATABASE_URL` (skip acquire unless

@@ -2164,7 +2164,7 @@ __metadata:
 
 "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 5.0.6
-  resolution: "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz#../packages/cli/cedarjs-cli.tgz::hash=c988d0&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz#../packages/cli/cedarjs-cli.tgz::hash=3dfaef&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/parser": "npm:7.29.7"
     "@babel/preset-typescript": "npm:7.29.7"
@@ -2232,7 +2232,7 @@ __metadata:
     cfw: ./dist/cfw.js
     redwood: ./dist/index.js
     rw: ./dist/index.js
-  checksum: 10c0/483ee0c593e46fe1a6db0ac72b494307f59b4d32d946660b45c6b43b301151009a7065a9de7d781c0fc1d2d72ee4636f110b1bb5dd04d51d21d3369fe578cd5d
+  checksum: 10c0/69d6d69a8355a968b62766bc0322aa43899c461e513d4a3a5587fe1e7bd23386af4ec28f554bae7877ed1601bc7ff386c2c00d85fe1566d586fb0397adf9a7a9
   languageName: node
   linkType: hard
 
@@ -2601,7 +2601,7 @@ __metadata:
 
 "@cedarjs/testing@file:../packages/testing/cedarjs-testing.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 5.0.6
-  resolution: "@cedarjs/testing@file:../packages/testing/cedarjs-testing.tgz#../packages/testing/cedarjs-testing.tgz::hash=86cbf0&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/testing@file:../packages/testing/cedarjs-testing.tgz#../packages/testing/cedarjs-testing.tgz::hash=4abeae&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/preset-env": "npm:7.29.7"
     "@cedarjs/babel-config": "npm:5.0.6"
@@ -2634,7 +2634,7 @@ __metadata:
   peerDependenciesMeta:
     vitest:
       optional: true
-  checksum: 10c0/2e4962e0b028f94933bd2bd12dd31e8cbf98d934934ccc5659526de6e1b86077f3d91f74a0bd5b670aa27b43bd882e6117cf71aae9e01955c9cbf921d9c99a7d
+  checksum: 10c0/2fb635a764ea38f6490e870c2b5a4d9efb2430cfb1c42fb0a1c1fc2d0a45693e3d02df33421bc69eed204d76c45db9eb1ae06e902cea993ad71cb6c73198f290
   languageName: node
   linkType: hard
 

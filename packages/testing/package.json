@@ -25,6 +25,12 @@
     "./dist/cjs/api/scenario.js": {
       "default": "./dist/cjs/api/scenario.js"
     },
+    "./dist/cjs/api/prepareApiTestDatabase.js": {
+      "default": "./dist/cjs/api/prepareApiTestDatabase.js"
+    },
+    "./dist/cjs/api/cedarPgLifecycle.js": {
+      "default": "./dist/cjs/api/cedarPgLifecycle.js"
+    },
     "./dist/cjs/web/findCellMocks": {
       "default": "./dist/cjs/web/findCellMocks.js"
     },

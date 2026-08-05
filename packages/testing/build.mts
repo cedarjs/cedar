@@ -116,6 +116,7 @@ fs.writeFileSync(
 
 // Apply import replacements to the relevant files
 replaceImportsInFile('./config/jest/api/globalSetup.js')
+replaceImportsInFile('./config/jest/api/globalTeardown.js')
 replaceImportsInFile('./config/jest/api/jest.setup.js')
 replaceImportsInFile('./config/jest/web/jest.setup.js')
 
