@@ -1,7 +1,7 @@
 import type { GraphQLResolveInfo } from 'graphql'
 import { parse, graphql, GraphQLError } from 'graphql'
 import { gql } from 'graphql-tag'
-import { vi, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import {
   makeDirectivesForPlugin,
@@ -14,20 +14,6 @@ import type {
   ServicesGlobImports,
   SdlGlobImports,
 } from '../types.js'
-
-vi.mock('@cedarjs/project-config', () => {
-  return {
-    getConfig: () => {
-      return {
-        experimental: {
-          opentelemetry: {
-            enabled: false,
-          },
-        },
-      }
-    },
-  }
-})
 
 describe('makeMergedSchema', () => {
   // Simulate `importAll`

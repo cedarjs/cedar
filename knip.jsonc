@@ -81,6 +81,11 @@
       // it themselves, relying on it hoisting in via @cedarjs/core.
       "ignoreDependencies": ["graphql-tag"]
     },
+    "packages/graphql-server": {
+      // publint: only invoked via `concurrently`'s `yarn:publint` job syntax
+      // in the "check:package" script, which knip doesn't parse.
+      "ignoreDependencies": ["publint"]
+    },
     "packages/internal": {
       // package.json bin and exports point into dist/, which is globally
       // ignored, so knip needs to be pointed at the sources explicitly.
