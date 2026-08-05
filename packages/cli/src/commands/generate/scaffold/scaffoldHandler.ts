@@ -813,20 +813,25 @@ export const hasLoginRoute = () => {
       JSXElement(path) {
         // Check if this is a Route element
         const openingElement = path.node.openingElement
-        if (openingElement.name.type === 'JSXIdentifier' &&
-            openingElement.name.name === 'Route') {
+        if (
+          openingElement.name.type === 'JSXIdentifier' &&
+          openingElement.name.name === 'Route'
+        ) {
           // Look for name="login" attribute on this Route element
           const hasLoginNameAttr = openingElement.attributes.some((attr) => {
             if (attr.type !== 'JSXAttribute') {
               return false
             }
             // Check if attribute name is 'name'
-            if (attr.name.type !== 'JSXIdentifier' || attr.name.name !== 'name') {
+            if (
+              attr.name.type !== 'JSXIdentifier' ||
+              attr.name.name !== 'name'
+            ) {
               return false
             }
             // Check if attribute value is the string 'login'
             // In Babel, JSX string attributes are StringLiteral nodes
-            if (attr.value && attr.value.type === 'StringLiteral') {
+            if (attr.value?.type === 'StringLiteral') {
               return attr.value.value === 'login'
             }
             return false
