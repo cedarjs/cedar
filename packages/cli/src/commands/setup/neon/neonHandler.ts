@@ -7,15 +7,14 @@ import { Listr } from 'listr2'
 import { colors, getPaths, installPackages } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import type { SqliteToPostgresCtx } from '../database/postgresHandler.js'
 import {
-  blockedBy,
+  checkProjectShape,
   getSqliteToPostgresTasks,
 } from '../database/postgresHandler.js'
 
 import type { Args } from './neon.js'
 
-interface NeonCtx extends SqliteToPostgresCtx {
+interface NeonCtx {
   databaseUrl?: string
   databaseUrlDirect?: string
   neonClaimUrl?: string
@@ -24,6 +23,18 @@ interface NeonCtx extends SqliteToPostgresCtx {
 
 export async function handler({ force }: Args) {
   const cedarPaths = getPaths()
+
+  const shape = checkProjectShape(cedarPaths)
+  if (!shape.ok) {
+    if (shape.alreadyConverted) {
+      console.log(colors.note(shape.message))
+      return
+    }
+
+    console.error(colors.error(shape.message))
+    process.exit(1)
+  }
+
   const envPath = path.join(cedarPaths.base, '.env')
 
   let hasDirectDatabaseUrl = false
@@ -51,10 +62,10 @@ export async function handler({ force }: Args) {
 
   const tasks = new Listr<NeonCtx>(
     [
-      ...getSqliteToPostgresTasks({ notes }),
+      ...getSqliteToPostgresTasks({ prismaConfigPath: shape.prismaConfigPath }),
       {
         title: 'Provisioning Neon database',
-        skip: (ctx) => blockedBy(ctx) || skipProvisioning,
+        skip: () => skipProvisioning,
         task: async (ctx) => {
           const res = await fetch('https://neon.new/api/v1/database', {
             method: 'POST',
@@ -95,11 +106,6 @@ export async function handler({ force }: Args) {
       {
         title: 'Writing database connection to .env',
         skip: (ctx) => {
-          const blocked = blockedBy(ctx)
-          if (blocked) {
-            return blocked
-          }
-
           if (skipProvisioning) {
             return true
           }
@@ -141,11 +147,6 @@ export async function handler({ force }: Args) {
       {
         title: 'Running Prisma migrations',
         skip: (ctx) => {
-          const blocked = blockedBy(ctx)
-          if (blocked) {
-            return blocked
-          }
-
           if (skipProvisioning) {
             return true
           }
@@ -187,12 +188,6 @@ export async function handler({ force }: Args) {
       {
         title: 'One more thing...',
         task: (ctx, task) => {
-          const blocked = blockedBy(ctx)
-          if (blocked) {
-            task.output = `Skipped — ${blocked}`
-            return
-          }
-
           if (skipProvisioning) {
             task.output = 'Skipped — DATABASE_URL already configured'
             return

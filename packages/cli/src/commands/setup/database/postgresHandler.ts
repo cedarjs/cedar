@@ -9,63 +9,59 @@ import { colors, getPaths, installPackages } from '@cedarjs/cli-helpers'
 import { addWorkspacePackages } from '@cedarjs/cli-helpers/packageManager/packages'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-export interface SqliteToPostgresCtx {
-  schemaContent?: string
-  isSqlite?: boolean
-  isPostgres?: boolean
-  hasPgAdapter?: boolean
-  hasDirectDatabaseUrlConfig?: boolean
-  hasPgAdapterPackage?: boolean
-  hasSqlitePackages?: boolean
-  hasSqliteDependenciesMeta?: boolean
-  unsupportedProvider?: boolean
-  missingPrismaConfig?: boolean
-  unrecognizedPrismaConfig?: boolean
-  hasSqliteUsageOutsideDb?: boolean
+interface ShapeOk {
+  ok: true
+  prismaConfigPath: string
 }
 
-/**
- * Every task in this file, and every Neon-specific task built on top of it,
- * needs to check the same handful of "stop entirely" conditions before doing
- * anything else — three so far, and every one of them was added after a
- * review round caught a step that skipped mutating for its own reason but
- * forgot to also check whichever of these already existed. Centralizing the
- * check here means a fourth one only has to be added in one place, not
- * copied into every `skip`.
- */
-export function blockedBy(ctx: SqliteToPostgresCtx): string | false {
-  if (ctx.unsupportedProvider) {
-    return 'Unsupported database provider'
-  }
-
-  if (ctx.missingPrismaConfig) {
-    return 'No Prisma config file found'
-  }
-
-  if (ctx.unrecognizedPrismaConfig) {
-    return 'Prisma config has no recognizable datasource URL'
-  }
-
-  return false
+interface ShapeBlocked {
+  ok: false
+  alreadyConverted: boolean
+  message: string
 }
 
+export type ProjectShape = ShapeOk | ShapeBlocked
+
 /**
- * The provider-agnostic half of the SQLite → PostgreSQL switch: schema,
- * dependencies, and the database adapter. Shared by `setup database
- * postgres` and `setup neon`, which adds provisioning and `.env` handling on
- * top of this.
- *
- * Mutates `notes` in place — same convention as the rest of this file's Listr
- * tasks — so the caller can print them after the task list finishes.
+ * Checks whether the project looks like an untouched Cedar SQLite setup —
+ * the one shape this command knows how to convert safely — before any file
+ * gets mutated. Anything else (a different provider, a partial previous
+ * conversion, SQLite used somewhere removing its packages would break)
+ * doesn't get guessed at: it's reported back so the caller can bail with a
+ * clear message instead.
  */
-export function getSqliteToPostgresTasks({
-  notes,
-}: {
-  notes: string[]
-}): ListrTask<SqliteToPostgresCtx>[] {
-  const cedarPaths = getPaths()
+export function checkProjectShape(
+  cedarPaths: ReturnType<typeof getPaths>,
+): ProjectShape {
   const schemaPath = path.join(cedarPaths.api.base, 'db', 'schema.prisma')
   const dbTsPath = path.join(cedarPaths.api.src, 'lib', 'db.ts')
+
+  if (!fs.existsSync(schemaPath)) {
+    return blocked(`Could not find ${schemaPath}.`)
+  }
+
+  const schemaContent = fs.readFileSync(schemaPath, 'utf-8')
+  const hasPgAdapter =
+    fs.existsSync(dbTsPath) &&
+    fs.readFileSync(dbTsPath, 'utf-8').includes('PrismaPg')
+
+  if (schemaContent.includes('provider = "postgresql"') && hasPgAdapter) {
+    return {
+      ok: false,
+      alreadyConverted: true,
+      message: 'This project is already configured for PostgreSQL.',
+    }
+  }
+
+  if (!schemaContent.includes('provider = "sqlite"') || hasPgAdapter) {
+    return blocked(
+      'This command only converts a project that is still on SQLite, with ' +
+        'the default adapter in api/src/lib/db.ts untouched. This project ' +
+        "doesn't match that shape (a different provider, or a partial " +
+        'previous conversion) — switch it over to PostgreSQL manually.',
+    )
+  }
+
   const prismaConfigPathCjs = path.join(
     cedarPaths.api.base,
     'prisma.config.cjs',
@@ -74,6 +70,63 @@ export function getSqliteToPostgresTasks({
     cedarPaths.api.base,
     'prisma.config.mts',
   )
+  const prismaConfigPath = fs.existsSync(prismaConfigPathCjs)
+    ? prismaConfigPathCjs
+    : fs.existsSync(prismaConfigPathMts)
+      ? prismaConfigPathMts
+      : undefined
+
+  if (!prismaConfigPath) {
+    return blocked(
+      'No Prisma config file found. Expected prisma.config.cjs or ' +
+        'prisma.config.mts in the api directory.',
+    )
+  }
+
+  const prismaConfigContent = fs.readFileSync(prismaConfigPath, 'utf-8')
+  if (!findDatasourceUrlLine(prismaConfigContent, 'DATABASE_URL')) {
+    return blocked(
+      `Could not find an active \`url: env('DATABASE_URL')\` line in ` +
+        `${prismaConfigPath}. Update it to read DIRECT_DATABASE_URL manually.`,
+    )
+  }
+
+  if (
+    hasSqliteUsageOutsideDb(cedarPaths.api.src, dbTsPath) ||
+    hasSqliteUsageOutsideDb(cedarPaths.scripts, dbTsPath)
+  ) {
+    return blocked(
+      'Found `better-sqlite3` usage outside api/src/lib/db.ts. Removing ' +
+        'the SQLite packages could break that code — switch this project ' +
+        'over to PostgreSQL manually.',
+    )
+  }
+
+  return { ok: true, prismaConfigPath }
+}
+
+function blocked(message: string): ShapeBlocked {
+  return { ok: false, alreadyConverted: false, message }
+}
+
+/**
+ * The provider-agnostic half of the SQLite → PostgreSQL switch: schema,
+ * dependencies, and the database adapter. Shared by `setup database
+ * postgres` and `setup neon`, which adds provisioning and `.env` handling on
+ * top of this.
+ *
+ * Only called once `checkProjectShape()` has confirmed the project matches
+ * the one shape this knows how to convert, so every task here can just do
+ * its job unconditionally instead of re-checking its own preconditions.
+ */
+export function getSqliteToPostgresTasks({
+  prismaConfigPath,
+}: {
+  prismaConfigPath: string
+}): ListrTask[] {
+  const cedarPaths = getPaths()
+  const schemaPath = path.join(cedarPaths.api.base, 'db', 'schema.prisma')
+  const dbTsPath = path.join(cedarPaths.api.src, 'lib', 'db.ts')
   const rootPkgPath = path.join(cedarPaths.base, 'package.json')
   const apiPkgPath = path.join(cedarPaths.api.base, 'package.json')
   const dbTsTemplatePath = path.join(
@@ -84,153 +137,7 @@ export function getSqliteToPostgresTasks({
 
   return [
     {
-      title: 'Checking current database configuration',
-      task: (ctx) => {
-        const schemaContent = fs.readFileSync(schemaPath, 'utf-8')
-        ctx.schemaContent = schemaContent
-
-        ctx.isSqlite = schemaContent.includes('provider = "sqlite"')
-        ctx.isPostgres = schemaContent.includes('provider = "postgresql"')
-
-        if (fs.existsSync(dbTsPath)) {
-          ctx.hasPgAdapter = fs
-            .readFileSync(dbTsPath, 'utf-8')
-            .includes('PrismaPg')
-        } else {
-          ctx.hasPgAdapter = false
-        }
-
-        // Independent of `hasPgAdapter` — a project can have db.ts already
-        // switched over while prisma.config or api/package.json are still
-        // pending, e.g. someone edited db.ts by hand. Each of these three
-        // has to be checked (and, below, skipped) on its own, or a partial
-        // conversion looks "already configured" and never gets finished.
-        const prismaConfigPath = fs.existsSync(prismaConfigPathCjs)
-          ? prismaConfigPathCjs
-          : fs.existsSync(prismaConfigPathMts)
-            ? prismaConfigPathMts
-            : undefined
-
-        // Anchored on the `url:` key specifically (the shape prisma.config
-        // actually uses: `datasource: { url: env('DATABASE_URL') }`), and
-        // ignoring `//` comments, rather than searching the whole file for
-        // the text `env('DIRECT_DATABASE_URL')` — a comment mentioning (or
-        // even showing as an example) that text, above the still-active
-        // `url: env('DATABASE_URL')` line, would otherwise read as "already
-        // converted" and skip the real rewrite below.
-        ctx.hasDirectDatabaseUrlConfig = prismaConfigPath
-          ? Boolean(
-              findDatasourceUrlLine(
-                fs.readFileSync(prismaConfigPath, 'utf-8'),
-                'DIRECT_DATABASE_URL',
-              ),
-            )
-          : false
-
-        const apiPkg = JSON.parse(fs.readFileSync(apiPkgPath, 'utf-8'))
-        ctx.hasPgAdapterPackage = Boolean(
-          apiPkg.dependencies?.['@prisma/adapter-pg'],
-        )
-        // Independent of `isPostgres` too — a project can have the schema
-        // already switched over from an interrupted previous run while
-        // these packages are still sitting in api/package.json.
-        ctx.hasSqlitePackages = Boolean(
-          apiPkg.dependencies?.['better-sqlite3'] ||
-          apiPkg.dependencies?.['@prisma/adapter-better-sqlite3'],
-        )
-
-        const rootPkg = fs.existsSync(rootPkgPath)
-          ? JSON.parse(fs.readFileSync(rootPkgPath, 'utf-8'))
-          : {}
-        ctx.hasSqliteDependenciesMeta = Boolean(
-          rootPkg.dependenciesMeta?.['better-sqlite3'],
-        )
-
-        if (!ctx.isSqlite && !ctx.isPostgres) {
-          ctx.unsupportedProvider = true
-          notes.push(
-            colors.note(
-              'This command only supports migrating from SQLite to PostgreSQL.' +
-                ' Your project uses a different database provider.',
-            ),
-          )
-
-          return
-        }
-
-        // Checked up front, before any of the steps below mutate anything —
-        // discovering this partway through would leave the project with
-        // SQLite dependencies removed, the schema switched to PostgreSQL,
-        // and db.ts replaced, but no working Prisma config to run migrations
-        // against either provider.
-        if (!prismaConfigPath) {
-          ctx.missingPrismaConfig = true
-          notes.push(
-            colors.note(
-              'No Prisma config file found. Expected prisma.config.cjs or ' +
-                'prisma.config.mts in the api directory.',
-            ),
-          )
-
-          return
-        }
-
-        // Also checked up front, for the same reason: "Updating Prisma
-        // config" is the only step that actually reads the datasource `url:`
-        // line, so without this a config file in some other valid Prisma
-        // shape (no matching `url: env('DATABASE_URL')` line at all) would
-        // only be discovered after every earlier step had already mutated
-        // the project, leaving it in the same kind of half-converted state
-        // the `missingPrismaConfig` check above exists to prevent.
-        if (
-          !ctx.hasDirectDatabaseUrlConfig &&
-          !findDatasourceUrlLine(
-            fs.readFileSync(prismaConfigPath, 'utf-8'),
-            'DATABASE_URL',
-          )
-        ) {
-          ctx.unrecognizedPrismaConfig = true
-          notes.push(
-            colors.note(
-              `Could not find an active \`url: env('DATABASE_URL')\` line in ` +
-                `${prismaConfigPath}. Update it to read DIRECT_DATABASE_URL ` +
-                'manually.',
-            ),
-          )
-
-          return
-        }
-
-        // Not conditional on `isPostgres` — the SQLite package cleanup below
-        // is now gated on whether those packages are actually still there,
-        // not on the schema provider, so this has to be known regardless of
-        // schema state too. Also scans the project's `scripts/` dir
-        // (`yarn cedar exec` scripts, e.g. a one-off data-migration script),
-        // not just `api/src` — code there can just as easily import
-        // `better-sqlite3` directly.
-        ctx.hasSqliteUsageOutsideDb =
-          hasSqliteUsageOutsideDb(cedarPaths.api.src, dbTsPath) ||
-          hasSqliteUsageOutsideDb(cedarPaths.scripts, dbTsPath)
-      },
-    },
-    {
       title: 'Removing SQLite dependencies from api/package.json',
-      skip: (ctx) => {
-        const blocked = blockedBy(ctx)
-        if (blocked) {
-          return blocked
-        }
-
-        if (!ctx.hasSqlitePackages) {
-          return 'SQLite packages are already removed'
-        }
-
-        if (ctx.hasSqliteUsageOutsideDb) {
-          return 'SQLite is in use outside db.ts — keeping packages'
-        }
-
-        return false
-      },
       task: () => {
         const pkg = JSON.parse(fs.readFileSync(apiPkgPath, 'utf-8'))
 
@@ -244,22 +151,6 @@ export function getSqliteToPostgresTasks({
     },
     {
       title: 'Removing better-sqlite3 dependenciesMeta',
-      skip: (ctx) => {
-        const blocked = blockedBy(ctx)
-        if (blocked) {
-          return blocked
-        }
-
-        if (!ctx.hasSqliteDependenciesMeta) {
-          return 'dependenciesMeta is already clean'
-        }
-
-        if (ctx.hasSqliteUsageOutsideDb) {
-          return "SQLite is in use outside db.ts so we're keeping it installed"
-        }
-
-        return false
-      },
       task: () => {
         if (!fs.existsSync(rootPkgPath)) {
           return
@@ -280,40 +171,19 @@ export function getSqliteToPostgresTasks({
     },
     {
       title: 'Switching Prisma schema to PostgreSQL',
-      skip: (ctx) => {
-        const blocked = blockedBy(ctx)
-        if (blocked) {
-          return blocked
-        }
-
-        if (ctx.isPostgres) {
-          return 'Schema is already configured for PostgreSQL'
-        }
-
-        return false
-      },
-      task: (ctx) => {
-        const updated = (ctx.schemaContent as string).replace(
-          'provider = "sqlite"',
-          'provider = "postgresql"',
+      task: () => {
+        const schemaContent = fs.readFileSync(schemaPath, 'utf-8')
+        fs.writeFileSync(
+          schemaPath,
+          schemaContent.replace(
+            'provider = "sqlite"',
+            'provider = "postgresql"',
+          ),
         )
-        fs.writeFileSync(schemaPath, updated)
       },
     },
     {
       title: 'Updating database adapter',
-      skip: (ctx) => {
-        const blocked = blockedBy(ctx)
-        if (blocked) {
-          return blocked
-        }
-
-        if (ctx.hasPgAdapter) {
-          return 'Database adapter is already configured for PostgreSQL (PrismaPg)'
-        }
-
-        return false
-      },
       task: () => {
         const pgDbTs = fs.readFileSync(dbTsTemplatePath, 'utf-8')
         fs.writeFileSync(dbTsPath, pgDbTs)
@@ -321,36 +191,17 @@ export function getSqliteToPostgresTasks({
     },
     {
       title: 'Updating Prisma config',
-      skip: (ctx) => {
-        const blocked = blockedBy(ctx)
-        if (blocked) {
-          return blocked
-        }
-
-        if (ctx.hasDirectDatabaseUrlConfig) {
-          return 'Prisma config is already configured for PostgreSQL'
-        }
-
-        return false
-      },
       task: () => {
-        // `missingPrismaConfig`, checked above, guarantees one of these
-        // exists by the time this task runs.
-        const configPath = fs.existsSync(prismaConfigPathCjs)
-          ? prismaConfigPathCjs
-          : prismaConfigPathMts
-
-        const configContent = fs.readFileSync(configPath, 'utf-8')
+        const configContent = fs.readFileSync(prismaConfigPath, 'utf-8')
         const active = findDatasourceUrlLine(configContent, 'DATABASE_URL')
 
         if (!active) {
-          // `unrecognizedPrismaConfig`, checked above, guarantees this is
-          // found — this is just a defensive backstop against that
-          // invariant being violated (e.g. the file changing between the
-          // check and this task running) rather than an expected path.
+          // `checkProjectShape()` already confirmed this line exists — this
+          // is just a defensive backstop against the file changing between
+          // that check and this task running, not an expected path.
           throw new Error(
             `Could not find an active \`url: env('DATABASE_URL')\` line in ` +
-              `${configPath}. Update it to read DIRECT_DATABASE_URL manually.`,
+              `${prismaConfigPath} anymore.`,
           )
         }
 
@@ -359,23 +210,11 @@ export function getSqliteToPostgresTasks({
           /(\burl\s*:\s*)env\(["']DATABASE_URL["']\)/,
           "$1env('DIRECT_DATABASE_URL')",
         )
-        fs.writeFileSync(configPath, lines.join('\n'))
+        fs.writeFileSync(prismaConfigPath, lines.join('\n'))
       },
     },
     {
       title: 'Adding required api packages...',
-      skip: (ctx) => {
-        const blocked = blockedBy(ctx)
-        if (blocked) {
-          return blocked
-        }
-
-        if (ctx.hasPgAdapterPackage) {
-          return 'PostgreSQL packages are already installed'
-        }
-
-        return false
-      },
       task: async () => {
         await addWorkspacePackages('api', ['@prisma/adapter-pg@7.8.0'], {
           cwd: cedarPaths.api.base,
@@ -395,6 +234,18 @@ function readEnvVar(envContent: string, name: string): string | undefined {
 
 export async function handler() {
   const cedarPaths = getPaths()
+
+  const shape = checkProjectShape(cedarPaths)
+  if (!shape.ok) {
+    if (shape.alreadyConverted) {
+      console.log(colors.note(shape.message))
+      return
+    }
+
+    console.error(colors.error(shape.message))
+    process.exit(1)
+  }
+
   const envPath = path.join(cedarPaths.base, '.env')
   const envContent = fs.existsSync(envPath)
     ? fs.readFileSync(envPath, 'utf-8')
@@ -413,20 +264,13 @@ export async function handler() {
     readEnvVar(envContent, 'DIRECT_DATABASE_URL') ||
     databaseUrl
 
-  const notes: string[] = []
-
   const tasks = new Listr(
     [
-      ...getSqliteToPostgresTasks({ notes }),
+      ...getSqliteToPostgresTasks({ prismaConfigPath: shape.prismaConfigPath }),
       installPackages,
       {
         title: 'Running Prisma migrations',
-        skip: (ctx: SqliteToPostgresCtx) => {
-          const blocked = blockedBy(ctx)
-          if (blocked) {
-            return blocked
-          }
-
+        skip: () => {
           if (!databaseUrl) {
             return (
               'No DATABASE_URL found in .env — set it to your PostgreSQL ' +
@@ -472,10 +316,10 @@ export async function handler() {
 
     // With `exitOnError: false`, a failed task doesn't reject `run()` — it's
     // collected here instead (that's the whole point of `exitOnError:
-    // false`: unrelated tasks, like the closing notes below, still get a
-    // chance to run). Silently returning 0 despite a real failure — a
-    // broken conversion, or a migration that never ran — would be worse
-    // than what `exitOnError: false` is protecting against.
+    // false`: unrelated tasks still get a chance to run). Silently
+    // returning 0 despite a real failure — a broken conversion, or a
+    // migration that never ran — would be worse than what `exitOnError:
+    // false` is protecting against.
     if (tasks.errors.length > 0) {
       for (const error of tasks.errors) {
         if (isErrorWithMessage(error)) {
@@ -485,11 +329,6 @@ export async function handler() {
       }
 
       process.exit(1)
-    }
-
-    if (notes.length > 0) {
-      console.log()
-      console.log(notes.join('\n'))
     }
   } catch (e) {
     if (isErrorWithMessage(e)) {
@@ -522,8 +361,8 @@ function isErrorWithExitCode(e: unknown): e is { exitCode: number } {
  * Finds the line in a prisma.config file that actually sets
  * `url: env('<envVarName>')`, ignoring `//` comments — so a comment
  * mentioning or demonstrating that same text doesn't get mistaken for the
- * real, active datasource setting, whether that's for detecting it (already
- * converted?) or for rewriting it.
+ * real, active datasource setting, whether that's for detecting it or for
+ * rewriting it.
  *
  * Doesn't handle block comments — prisma.config is a small, generated
  * object where that isn't a realistic shape to guard against, so this only

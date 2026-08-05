@@ -72,6 +72,7 @@ vi.mock('@cedarjs/cli-helpers', () => ({
 const { handler } = await import('../neonHandler.js')
 
 const SQLITE_SCHEMA = 'datasource db {\n  provider = "sqlite"\n}\n'
+const POSTGRES_SCHEMA = 'datasource db {\n  provider = "postgresql"\n}\n'
 
 function seedSqliteProject() {
   vol.fromJSON(
@@ -202,7 +203,7 @@ describe('neon handler', () => {
     expect(envContent).not.toContain('postgresql://existing/db')
   })
 
-  it('notes an unsupported provider and does nothing else', async () => {
+  it('bails on an unsupported provider and does nothing else', async () => {
     seedSqliteProject()
     memfsFs.writeFileSync(
       path.join(BASE_PATH, 'api/db/schema.prisma'),
@@ -210,21 +211,38 @@ describe('neon handler', () => {
     )
 
     global.fetch = vi.fn()
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit called')
+    })
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    await handler({ force: false })
+    await expect(handler({ force: false })).rejects.toThrow(
+      'process.exit called',
+    )
 
+    expect(exitSpy).toHaveBeenCalledWith(1)
     expect(global.fetch).not.toHaveBeenCalled()
     expect(memfsFs.existsSync(path.join(BASE_PATH, '.env'))).toBe(false)
+
+    exitSpy.mockRestore()
+    errorSpy.mockRestore()
   })
 
-  it('does not provision, write .env, or migrate when no Prisma config file exists', async () => {
+  it('bails and does not provision, write .env, or migrate when no Prisma config file exists', async () => {
     seedSqliteProject()
     memfsFs.unlinkSync(path.join(BASE_PATH, 'api/prisma.config.cjs'))
 
     global.fetch = vi.fn()
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit called')
+    })
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    await handler({ force: false })
+    await expect(handler({ force: false })).rejects.toThrow(
+      'process.exit called',
+    )
 
+    expect(exitSpy).toHaveBeenCalledWith(1)
     expect(global.fetch).not.toHaveBeenCalled()
     expect(memfsFs.existsSync(path.join(BASE_PATH, '.env'))).toBe(false)
 
@@ -238,27 +256,38 @@ describe('neon handler', () => {
         'utf-8',
       ),
     ).toBe(SQLITE_SCHEMA)
+
+    exitSpy.mockRestore()
+    errorSpy.mockRestore()
   })
 
-  it('does not provision, write .env, or migrate when the prisma.config shape is unrecognized', async () => {
+  it('reports a friendly message and exits cleanly when already converted', async () => {
     seedSqliteProject()
     memfsFs.writeFileSync(
-      path.join(BASE_PATH, 'api/prisma.config.cjs'),
-      'module.exports = defineConfig({ datasourceUrl: databaseUrl })',
+      path.join(BASE_PATH, 'api/db/schema.prisma'),
+      POSTGRES_SCHEMA,
+    )
+    memfsFs.writeFileSync(
+      path.join(BASE_PATH, 'api/src/lib/db.ts'),
+      'import { PrismaPg } from "@prisma/adapter-pg"',
     )
 
     global.fetch = vi.fn()
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit called')
+    })
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 
     await handler({ force: false })
 
+    expect(exitSpy).not.toHaveBeenCalled()
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringContaining('already configured for PostgreSQL'),
+    )
     expect(global.fetch).not.toHaveBeenCalled()
-    expect(memfsFs.existsSync(path.join(BASE_PATH, '.env'))).toBe(false)
-    expect(
-      memfsFs.readFileSync(
-        path.join(BASE_PATH, 'api/db/schema.prisma'),
-        'utf-8',
-      ),
-    ).toBe(SQLITE_SCHEMA)
+
+    exitSpy.mockRestore()
+    logSpy.mockRestore()
   })
 
   it('exits with a non-zero status when the migration fails, instead of reporting success', async () => {
