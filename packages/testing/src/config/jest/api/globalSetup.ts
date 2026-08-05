@@ -6,6 +6,11 @@ import execa from 'execa'
 import { getPaths } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
+import {
+  checkTestDatabaseUrlMatchesProvider,
+  redactDatabaseUrl,
+} from '../../../api/checkTestDatabase.js'
+
 export default async function () {
   if (process.env.SKIP_DB_PUSH === '1') {
     return
@@ -14,8 +19,18 @@ export default async function () {
   const cedarPaths = getPaths()
 
   const defaultDb = `file:${path.join(cedarPaths.generated.base, 'test.db')}`
+  const usedFallback = !process.env.TEST_DATABASE_URL
 
   process.env.DATABASE_URL = process.env.TEST_DATABASE_URL || defaultDb
+
+  await checkTestDatabaseUrlMatchesProvider(
+    process.env.DATABASE_URL,
+    usedFallback,
+  )
+
+  console.log(
+    `Setting up test database: ${redactDatabaseUrl(process.env.DATABASE_URL)}`,
+  )
 
   const command =
     process.env.TEST_DATABASE_STRATEGY === 'reset'
