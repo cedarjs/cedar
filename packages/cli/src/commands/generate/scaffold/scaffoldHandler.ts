@@ -48,6 +48,7 @@ import { customOrDefaultTemplatePath } from '../yargsHandlerHelpers.js'
 // Any assets that should not trigger an overwrite error and require a --force
 const SKIPPABLE_ASSETS = ['scaffold.css']
 const PACKAGE_SET = 'Set'
+const PACKAGE_PRIVATE_SET = 'PrivateSet'
 
 // Minimal shape of a Prisma DMMF model field as used in this file
 interface ScaffoldField {
@@ -770,6 +771,16 @@ const addHelperPackages = async (task: AnyListrTask) => {
   })
 }
 
+// Detects whether the project already has auth set up, regardless of which
+// auth provider is used, by checking for the presence of web/src/auth.{ext}.
+// Same check used in dbAuthHandler.ts's isDbAuthSetup().
+export const isAuthSetup = () => {
+  const extensions = ['ts', 'js', 'tsx', 'jsx']
+  return extensions.some((ext) =>
+    fs.existsSync(path.join(getPaths().web.src, 'auth.' + ext)),
+  )
+}
+
 const addSetImport = (task: AnyListrTask) => {
   const routesPath = getPaths().web.routes
   const routesContent = readFile(routesPath).toString()
@@ -786,14 +797,20 @@ const addSetImport = (task: AnyListrTask) => {
   }
 
   const routerImports = importContent.replace(/\s/g, '').split(',')
-  if (routerImports.includes(PACKAGE_SET)) {
+  const namesToImport = [
+    PACKAGE_SET,
+    ...(isAuthSetup() ? [PACKAGE_PRIVATE_SET] : []),
+  ].filter((name) => !routerImports.includes(name))
+
+  if (!namesToImport.length) {
     return 'Skipping Set import'
   }
+
   const newRoutesContent = routesContent.replace(
     cedarRouterImport,
     importStart +
       spacing +
-      PACKAGE_SET +
+      namesToImport.join(',' + spacing) +
       `,` +
       spacing +
       importContent +
@@ -802,7 +819,7 @@ const addSetImport = (task: AnyListrTask) => {
 
   writeFile(routesPath, newRoutesContent, { overwriteExisting: true })
 
-  return 'Added Set import to Routes.{jsx,tsx}'
+  return `Added ${namesToImport.join(', ')} import to Routes.{jsx,tsx}`
 }
 
 const addScaffoldSetToRouter = async (model: string, scaffoldPath: string) => {
@@ -817,6 +834,7 @@ const addScaffoldSetToRouter = async (model: string, scaffoldPath: string) => {
     await routes({ model, path: scaffoldPath }),
     'ScaffoldLayout',
     { title, titleTo, buttonLabel, buttonTo },
+    isAuthSetup() ? { unauthenticated: 'login' } : undefined,
   )
 }
 

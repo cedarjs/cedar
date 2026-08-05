@@ -481,22 +481,44 @@ function wrapWithSet(
   routes: string[],
   newLineAndIndent: string,
   props: Record<string, string> = {},
+  privateSetProps?: Record<string, string>,
 ) {
   const [_, indentOne, indentTwo] = routesContent.match(
     /([ \t]*)<Router.*?>[^<]*[\r\n]+([ \t]+)/,
   ) || ['', '', '']
   const oneLevelIndent = indentTwo.slice(0, indentTwo.length - indentOne.length)
-  const newRoutesWithExtraIndent = routes.map((route) => oneLevelIndent + route)
 
   // converts { foo: 'bar' } to `foo="bar"`
   const propsString = Object.entries(props)
     .map((values) => `${values[0]}="${values[1]}"`)
     .join(' ')
 
+  if (!privateSetProps) {
+    const newRoutesWithExtraIndent = routes.map(
+      (route) => oneLevelIndent + route,
+    )
+
+    return [
+      `<Set wrap={${layout}}${propsString && ' ' + propsString}>`,
+      ...newRoutesWithExtraIndent,
+      `</Set>`,
+    ].join(newLineAndIndent)
+  }
+
+  // converts { foo: 'bar' } to `foo="bar"`
+  const privateSetPropsString = Object.entries(privateSetProps)
+    .map((values) => `${values[0]}="${values[1]}"`)
+    .join(' ')
+  const newRoutesWithExtraIndent = routes.map(
+    (route) => oneLevelIndent + oneLevelIndent + route,
+  )
+
   return [
-    `<Set wrap={${layout}}${propsString && ' ' + propsString}>`,
+    `<PrivateSet${privateSetPropsString && ' ' + privateSetPropsString}>`,
+    `${oneLevelIndent}<Set wrap={${layout}}${propsString && ' ' + propsString}>`,
     ...newRoutesWithExtraIndent,
-    `</Set>`,
+    `${oneLevelIndent}</Set>`,
+    `</PrivateSet>`,
   ].join(newLineAndIndent)
 }
 
@@ -505,6 +527,7 @@ export function addRoutesToRouterTask(
   routes: string[],
   layout?: string,
   setProps: Record<string, string> = {},
+  privateSetProps?: Record<string, string>,
 ) {
   const cedarPaths = getPaths()
   const routesContent = readFile(cedarPaths.web.routes).toString()
@@ -538,6 +561,7 @@ export function addRoutesToRouterTask(
           newRoutes,
           newLineAndIndent,
           setProps,
+          privateSetProps,
         )
       : newRoutes.join(newLineAndIndent)
 
