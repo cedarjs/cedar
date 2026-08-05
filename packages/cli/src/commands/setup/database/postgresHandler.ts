@@ -14,6 +14,8 @@ export interface SqliteToPostgresCtx {
   isSqlite?: boolean
   isPostgres?: boolean
   hasPgAdapter?: boolean
+  hasDirectDatabaseUrlConfig?: boolean
+  hasPgAdapterPackage?: boolean
   unsupportedProvider?: boolean
   hasSqliteUsageOutsideDb?: boolean
 }
@@ -68,6 +70,28 @@ export function getSqliteToPostgresTasks({
         } else {
           ctx.hasPgAdapter = false
         }
+
+        // Independent of `hasPgAdapter` — a project can have db.ts already
+        // switched over while prisma.config or api/package.json are still
+        // pending, e.g. someone edited db.ts by hand. Each of these three
+        // has to be checked (and, below, skipped) on its own, or a partial
+        // conversion looks "already configured" and never gets finished.
+        const prismaConfigPath = fs.existsSync(prismaConfigPathCjs)
+          ? prismaConfigPathCjs
+          : fs.existsSync(prismaConfigPathMts)
+            ? prismaConfigPathMts
+            : undefined
+
+        ctx.hasDirectDatabaseUrlConfig = prismaConfigPath
+          ? /env\(["']DIRECT_DATABASE_URL["']\)/.test(
+              fs.readFileSync(prismaConfigPath, 'utf-8'),
+            )
+          : false
+
+        const apiPkg = JSON.parse(fs.readFileSync(apiPkgPath, 'utf-8'))
+        ctx.hasPgAdapterPackage = Boolean(
+          apiPkg.dependencies?.['@prisma/adapter-pg'],
+        )
 
         if (!ctx.isSqlite && !ctx.isPostgres) {
           ctx.unsupportedProvider = true
@@ -198,7 +222,7 @@ export function getSqliteToPostgresTasks({
           return 'Unsupported database provider'
         }
 
-        if (ctx.hasPgAdapter) {
+        if (ctx.hasDirectDatabaseUrlConfig) {
           return 'Prisma config is already configured for PostgreSQL'
         }
 
@@ -233,7 +257,7 @@ export function getSqliteToPostgresTasks({
           return 'Unsupported database provider'
         }
 
-        if (ctx.hasPgAdapter) {
+        if (ctx.hasPgAdapterPackage) {
           return 'PostgreSQL packages are already installed'
         }
 
@@ -248,14 +272,29 @@ export function getSqliteToPostgresTasks({
   ]
 }
 
+function readEnvVar(envContent: string, name: string): string | undefined {
+  return envContent.match(new RegExp(`^${name}=(.*)$`, 'm'))?.[1]
+}
+
 export async function handler() {
   const cedarPaths = getPaths()
   const envPath = path.join(cedarPaths.base, '.env')
+  const envContent = fs.existsSync(envPath)
+    ? fs.readFileSync(envPath, 'utf-8')
+    : ''
 
-  let hasDatabaseUrl = false
-  if (fs.existsSync(envPath)) {
-    hasDatabaseUrl = /^DATABASE_URL=/m.test(fs.readFileSync(envPath, 'utf-8'))
-  }
+  const databaseUrl =
+    process.env.DATABASE_URL ?? readEnvVar(envContent, 'DATABASE_URL')
+
+  // The "Updating Prisma config" task above rewrites prisma.config to read
+  // migrations from DIRECT_DATABASE_URL, not DATABASE_URL — Neon-style
+  // pooled/direct splits aside, most providers only hand out one connection
+  // string, so default to that rather than leaving migrations with nothing
+  // to connect with.
+  const directDatabaseUrl =
+    process.env.DIRECT_DATABASE_URL ??
+    readEnvVar(envContent, 'DIRECT_DATABASE_URL') ??
+    databaseUrl
 
   const notes: string[] = []
 
@@ -270,7 +309,7 @@ export async function handler() {
             return true
           }
 
-          if (!hasDatabaseUrl) {
+          if (!databaseUrl) {
             return (
               'No DATABASE_URL found in .env — set it to your PostgreSQL ' +
               'connection string, then run `yarn cedar prisma migrate dev`'
@@ -286,6 +325,10 @@ export async function handler() {
               cwd: cedarPaths.base,
               stdio: ['inherit', 'inherit', 'pipe'],
               reject: false,
+              env: {
+                ...process.env,
+                DIRECT_DATABASE_URL: directDatabaseUrl,
+              },
             },
           )
 

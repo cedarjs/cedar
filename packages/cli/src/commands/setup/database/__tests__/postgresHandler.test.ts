@@ -3,7 +3,7 @@ vi.mock('node:fs')
 import path from 'node:path'
 
 import { vol, fs as memfsFs } from 'memfs'
-import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 
 import '../../../../lib/mockTelemetry.js'
 
@@ -28,9 +28,10 @@ vi.mock('listr2', () => ({
   Listr: Listr2Mock,
 }))
 
+const commandSync = vi.fn(() => ({ exitCode: 0, stderr: '' }))
 vi.mock('execa', () => ({
   default: {
-    commandSync: vi.fn(() => ({ exitCode: 0, stderr: '' })),
+    commandSync: (...args: unknown[]) => commandSync(...args),
   },
 }))
 
@@ -97,9 +98,28 @@ function seedSqliteProject() {
   )
 }
 
+const originalDatabaseUrl = process.env.DATABASE_URL
+const originalDirectDatabaseUrl = process.env.DIRECT_DATABASE_URL
+
 beforeEach(() => {
   vol.reset()
   vi.clearAllMocks()
+  delete process.env.DATABASE_URL
+  delete process.env.DIRECT_DATABASE_URL
+})
+
+afterEach(() => {
+  if (originalDatabaseUrl === undefined) {
+    delete process.env.DATABASE_URL
+  } else {
+    process.env.DATABASE_URL = originalDatabaseUrl
+  }
+
+  if (originalDirectDatabaseUrl === undefined) {
+    delete process.env.DIRECT_DATABASE_URL
+  } else {
+    process.env.DIRECT_DATABASE_URL = originalDirectDatabaseUrl
+  }
 })
 
 describe('getSqliteToPostgresTasks', () => {
@@ -164,6 +184,16 @@ describe('getSqliteToPostgresTasks', () => {
       path.join(BASE_PATH, 'api/src/lib/db.ts'),
       'import { PrismaPg } from "@prisma/adapter-pg"',
     )
+    memfsFs.writeFileSync(
+      path.join(BASE_PATH, 'api/prisma.config.cjs'),
+      "module.exports = defineConfig({ datasourceUrl: env('DIRECT_DATABASE_URL') })",
+    )
+    memfsFs.writeFileSync(
+      path.join(BASE_PATH, 'api/package.json'),
+      JSON.stringify({
+        dependencies: { '@prisma/adapter-pg': '7.8.0' },
+      }),
+    )
 
     const notes: string[] = []
     const tasks = getSqliteToPostgresTasks({ notes })
@@ -175,9 +205,42 @@ describe('getSqliteToPostgresTasks', () => {
         'Schema is already configured for PostgreSQL',
         'Database adapter is already configured for PostgreSQL (PrismaPg)',
         'Prisma config is already configured for PostgreSQL',
+        'PostgreSQL packages are already installed',
       ]),
     )
     expect(addWorkspacePackages).not.toHaveBeenCalled()
+  })
+
+  it('repairs prisma.config and the adapter package independently of db.ts', async () => {
+    // A project can have db.ts already switched over (say, hand-edited)
+    // while prisma.config and api/package.json are still pending — each of
+    // the three has its own idempotency check, not one shared flag, so a
+    // partial conversion still gets finished instead of reading as "already
+    // configured".
+    seedSqliteProject()
+    memfsFs.writeFileSync(
+      path.join(BASE_PATH, 'api/src/lib/db.ts'),
+      'import { PrismaPg } from "@prisma/adapter-pg"',
+    )
+
+    const notes: string[] = []
+    const tasks = getSqliteToPostgresTasks({ notes })
+    await new Listr2Mock(tasks).run()
+
+    expect(Listr2Mock.skippedTaskTitles).toContain(
+      'Database adapter is already configured for PostgreSQL (PrismaPg)',
+    )
+    expect(
+      memfsFs.readFileSync(
+        path.join(BASE_PATH, 'api/prisma.config.cjs'),
+        'utf-8',
+      ),
+    ).toContain("env('DIRECT_DATABASE_URL')")
+    expect(addWorkspacePackages).toHaveBeenCalledWith(
+      'api',
+      ['@prisma/adapter-pg@7.8.0'],
+      { cwd: path.join(BASE_PATH, 'api') },
+    )
   })
 
   it('skips everything and notes an unsupported provider', async () => {
@@ -240,5 +303,48 @@ describe('postgres handler', () => {
     await handler()
 
     expect(Listr2Mock.executedTaskTitles).toContain('Running Prisma migrations')
+  })
+
+  it('defaults DIRECT_DATABASE_URL to DATABASE_URL when only one is set', async () => {
+    // prisma.config gets rewritten to read migrations from
+    // DIRECT_DATABASE_URL, not DATABASE_URL. Most providers only hand out
+    // one connection string, so without this, migrations would have
+    // nothing to connect with even though DATABASE_URL is set.
+    seedSqliteProject()
+    memfsFs.writeFileSync(
+      path.join(BASE_PATH, '.env'),
+      'DATABASE_URL=postgresql://localhost/app\n',
+    )
+
+    await handler()
+
+    expect(commandSync).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        env: expect.objectContaining({
+          DIRECT_DATABASE_URL: 'postgresql://localhost/app',
+        }),
+      }),
+    )
+  })
+
+  it('prefers an explicitly set DIRECT_DATABASE_URL over DATABASE_URL', async () => {
+    seedSqliteProject()
+    memfsFs.writeFileSync(
+      path.join(BASE_PATH, '.env'),
+      'DATABASE_URL=postgresql://localhost/app-pooled\n' +
+        'DIRECT_DATABASE_URL=postgresql://localhost/app-direct\n',
+    )
+
+    await handler()
+
+    expect(commandSync).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        env: expect.objectContaining({
+          DIRECT_DATABASE_URL: 'postgresql://localhost/app-direct',
+        }),
+      }),
+    )
   })
 })
