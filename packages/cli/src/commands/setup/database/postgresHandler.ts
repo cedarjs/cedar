@@ -84,13 +84,18 @@ export function getSqliteToPostgresTasks({
             : undefined
 
         // Anchored on the `url:` key specifically (the shape prisma.config
-        // actually uses: `datasource: { url: env('DATABASE_URL') }`) rather
-        // than searching the whole file for the text `env('DIRECT_DATABASE_URL')`
-        // — a comment or unrelated line containing that text would otherwise
-        // read as "already converted" and skip the real rewrite below.
+        // actually uses: `datasource: { url: env('DATABASE_URL') }`), and
+        // ignoring `//` comments, rather than searching the whole file for
+        // the text `env('DIRECT_DATABASE_URL')` — a comment mentioning (or
+        // even showing as an example) that text, above the still-active
+        // `url: env('DATABASE_URL')` line, would otherwise read as "already
+        // converted" and skip the real rewrite below.
         ctx.hasDirectDatabaseUrlConfig = prismaConfigPath
-          ? /\burl\s*:\s*env\(["']DIRECT_DATABASE_URL["']\)/.test(
-              fs.readFileSync(prismaConfigPath, 'utf-8'),
+          ? Boolean(
+              findDatasourceUrlLine(
+                fs.readFileSync(prismaConfigPath, 'utf-8'),
+                'DIRECT_DATABASE_URL',
+              ),
             )
           : false
 
@@ -282,14 +287,21 @@ export function getSqliteToPostgresTasks({
           : prismaConfigPathMts
 
         const configContent = fs.readFileSync(configPath, 'utf-8')
-        // Same `url:`-anchored shape as the check above, so this replaces
-        // the actual datasource URL and not a coincidental match elsewhere
-        // in the file (a comment, for instance).
-        const updated = configContent.replace(
+        const active = findDatasourceUrlLine(configContent, 'DATABASE_URL')
+
+        if (!active) {
+          throw new Error(
+            `Could not find an active \`url: env('DATABASE_URL')\` line in ` +
+              `${configPath}. Update it to read DIRECT_DATABASE_URL manually.`,
+          )
+        }
+
+        const lines = configContent.split('\n')
+        lines[active.lineIndex] = active.line.replace(
           /(\burl\s*:\s*)env\(["']DATABASE_URL["']\)/,
           "$1env('DIRECT_DATABASE_URL')",
         )
-        fs.writeFileSync(configPath, updated)
+        fs.writeFileSync(configPath, lines.join('\n'))
       },
     },
     {
@@ -430,6 +442,36 @@ function isErrorWithExitCode(e: unknown): e is { exitCode: number } {
     'exitCode' in e &&
     typeof e.exitCode === 'number'
   )
+}
+
+/**
+ * Finds the line in a prisma.config file that actually sets
+ * `url: env('<envVarName>')`, ignoring `//` comments — so a comment
+ * mentioning or demonstrating that same text doesn't get mistaken for the
+ * real, active datasource setting, whether that's for detecting it (already
+ * converted?) or for rewriting it.
+ *
+ * Doesn't handle block comments — prisma.config is a small, generated
+ * object where that isn't a realistic shape to guard against, so this only
+ * strips what's actually been seen to cause a false match.
+ */
+function findDatasourceUrlLine(
+  content: string,
+  envVarName: string,
+): { line: string; lineIndex: number } | undefined {
+  const pattern = new RegExp(`\\burl\\s*:\\s*env\\(["']${envVarName}["']\\)`)
+  const lines = content.split('\n')
+
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+    const line = lines[lineIndex]
+    const codePart = line.split('//')[0]
+
+    if (pattern.test(codePart)) {
+      return { line, lineIndex }
+    }
+  }
+
+  return undefined
 }
 
 function hasSqliteUsageOutsideDb(srcPath: string, dbTsPath: string): boolean {

@@ -270,6 +270,51 @@ describe('getSqliteToPostgresTasks', () => {
     ).toContain("url: env('DIRECT_DATABASE_URL')")
   })
 
+  it('rewrites the active datasource URL, even past a commented-out example of the same shape', async () => {
+    // A comment can reproduce the exact `url: env(...)` shape it's
+    // describing, not just mention the env var name in prose — the
+    // detection and rewrite both have to skip past commented-out lines
+    // entirely, not just avoid a same-file substring search.
+    seedSqliteProject()
+    memfsFs.writeFileSync(
+      path.join(BASE_PATH, 'api/prisma.config.cjs'),
+      "// e.g. datasource: { url: env('DIRECT_DATABASE_URL') }\n" +
+        "module.exports = defineConfig({ datasource: { url: env('DATABASE_URL') } })",
+    )
+
+    const notes: string[] = []
+    const tasks = getSqliteToPostgresTasks({ notes })
+    await new Listr2Mock(tasks).run()
+
+    expect(Listr2Mock.executedTaskTitles).toContain('Updating Prisma config')
+    const configContent = memfsFs.readFileSync(
+      path.join(BASE_PATH, 'api/prisma.config.cjs'),
+      'utf-8',
+    ) as string
+    expect(configContent).toContain(
+      "datasource: { url: env('DIRECT_DATABASE_URL') }",
+    )
+    // The comment itself must survive untouched.
+    expect(configContent).toContain(
+      "// e.g. datasource: { url: env('DIRECT_DATABASE_URL') }",
+    )
+  })
+
+  it('throws a clear error instead of silently no-op-ing on an unrecognized prisma.config shape', async () => {
+    seedSqliteProject()
+    memfsFs.writeFileSync(
+      path.join(BASE_PATH, 'api/prisma.config.cjs'),
+      'module.exports = defineConfig({ datasourceUrl: databaseUrl })',
+    )
+
+    const notes: string[] = []
+    const tasks = getSqliteToPostgresTasks({ notes })
+
+    await expect(new Listr2Mock(tasks).run()).rejects.toThrow(
+      "Could not find an active `url: env('DATABASE_URL')` line",
+    )
+  })
+
   it('detects SQLite usage in the project scripts/ dir, not just api/src', async () => {
     seedSqliteProject()
     memfsFs.mkdirSync(path.join(BASE_PATH, 'scripts'), { recursive: true })
