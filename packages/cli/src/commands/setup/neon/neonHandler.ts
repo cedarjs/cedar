@@ -51,7 +51,10 @@ export async function handler({ force }: Args) {
       ...getSqliteToPostgresTasks({ notes }),
       {
         title: 'Provisioning Neon database',
-        skip: (ctx) => ctx.unsupportedProvider || skipProvisioning,
+        skip: (ctx) =>
+          ctx.unsupportedProvider ||
+          ctx.missingPrismaConfig ||
+          skipProvisioning,
         task: async (ctx) => {
           const res = await fetch('https://neon.new/api/v1/database', {
             method: 'POST',
@@ -92,7 +95,11 @@ export async function handler({ force }: Args) {
       {
         title: 'Writing database connection to .env',
         skip: (ctx) => {
-          if (ctx.unsupportedProvider || skipProvisioning) {
+          if (
+            ctx.unsupportedProvider ||
+            ctx.missingPrismaConfig ||
+            skipProvisioning
+          ) {
             return true
           }
 
@@ -133,7 +140,11 @@ export async function handler({ force }: Args) {
       {
         title: 'Running Prisma migrations',
         skip: (ctx) => {
-          if (ctx.unsupportedProvider || skipProvisioning) {
+          if (
+            ctx.unsupportedProvider ||
+            ctx.missingPrismaConfig ||
+            skipProvisioning
+          ) {
             return true
           }
 
@@ -176,6 +187,11 @@ export async function handler({ force }: Args) {
         task: (ctx, task) => {
           if (ctx.unsupportedProvider) {
             task.output = 'Skipped — unsupported database provider'
+            return
+          }
+
+          if (ctx.missingPrismaConfig) {
+            task.output = 'Skipped — no Prisma config file found'
             return
           }
 

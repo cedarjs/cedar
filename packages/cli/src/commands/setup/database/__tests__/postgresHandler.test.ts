@@ -260,6 +260,41 @@ describe('getSqliteToPostgresTasks', () => {
     expect(addWorkspacePackages).not.toHaveBeenCalled()
   })
 
+  it('mutates nothing when no Prisma config file exists', async () => {
+    // Discovering a missing prisma.config partway through would leave the
+    // project with SQLite dependencies removed, the schema switched to
+    // PostgreSQL, and db.ts replaced, but no working Prisma config for
+    // either provider — checked up front instead, before anything mutates.
+    seedSqliteProject()
+    memfsFs.unlinkSync(path.join(BASE_PATH, 'api/prisma.config.cjs'))
+
+    const notes: string[] = []
+    const tasks = getSqliteToPostgresTasks({ notes })
+    await new Listr2Mock(tasks).run()
+
+    expect(notes.join('\n')).toContain('No Prisma config file found')
+    expect(addWorkspacePackages).not.toHaveBeenCalled()
+
+    const apiPkg = JSON.parse(
+      memfsFs.readFileSync(
+        path.join(BASE_PATH, 'api/package.json'),
+        'utf-8',
+      ) as string,
+    )
+    expect(apiPkg.dependencies['better-sqlite3']).toBe('1.0.0')
+
+    expect(
+      memfsFs.readFileSync(
+        path.join(BASE_PATH, 'api/db/schema.prisma'),
+        'utf-8',
+      ),
+    ).toBe(SQLITE_SCHEMA)
+
+    expect(
+      memfsFs.readFileSync(path.join(BASE_PATH, 'api/src/lib/db.ts'), 'utf-8'),
+    ).toBe('// sqlite adapter')
+  })
+
   it('keeps SQLite packages installed when they are used outside db.ts', async () => {
     seedSqliteProject()
     memfsFs.writeFileSync(
@@ -303,6 +338,20 @@ describe('postgres handler', () => {
     await handler()
 
     expect(Listr2Mock.executedTaskTitles).toContain('Running Prisma migrations')
+  })
+
+  it('skips running migrations when no Prisma config file exists', async () => {
+    seedSqliteProject()
+    memfsFs.unlinkSync(path.join(BASE_PATH, 'api/prisma.config.cjs'))
+    memfsFs.writeFileSync(
+      path.join(BASE_PATH, '.env'),
+      'DATABASE_URL=postgresql://localhost/app\n',
+    )
+
+    await handler()
+
+    expect(Listr2Mock.skippedTaskTitles).toContain('Running Prisma migrations')
+    expect(commandSync).not.toHaveBeenCalled()
   })
 
   it('defaults DIRECT_DATABASE_URL to DATABASE_URL when only one is set', async () => {

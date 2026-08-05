@@ -211,4 +211,27 @@ describe('neon handler', () => {
     expect(global.fetch).not.toHaveBeenCalled()
     expect(memfsFs.existsSync(path.join(BASE_PATH, '.env'))).toBe(false)
   })
+
+  it('does not provision, write .env, or migrate when no Prisma config file exists', async () => {
+    seedSqliteProject()
+    memfsFs.unlinkSync(path.join(BASE_PATH, 'api/prisma.config.cjs'))
+
+    global.fetch = vi.fn()
+
+    await handler({ force: false })
+
+    expect(global.fetch).not.toHaveBeenCalled()
+    expect(memfsFs.existsSync(path.join(BASE_PATH, '.env'))).toBe(false)
+
+    // Provisioning a database and writing DATABASE_URL for a project whose
+    // schema is still SQLite (schema conversion is skipped too, for the
+    // same reason) would leave it in a worse, more confusing state than
+    // just stopping here.
+    expect(
+      memfsFs.readFileSync(
+        path.join(BASE_PATH, 'api/db/schema.prisma'),
+        'utf-8',
+      ),
+    ).toBe(SQLITE_SCHEMA)
+  })
 })

@@ -17,6 +17,7 @@ export interface SqliteToPostgresCtx {
   hasDirectDatabaseUrlConfig?: boolean
   hasPgAdapterPackage?: boolean
   unsupportedProvider?: boolean
+  missingPrismaConfig?: boolean
   hasSqliteUsageOutsideDb?: boolean
 }
 
@@ -105,6 +106,23 @@ export function getSqliteToPostgresTasks({
           return
         }
 
+        // Checked up front, before any of the steps below mutate anything —
+        // discovering this partway through would leave the project with
+        // SQLite dependencies removed, the schema switched to PostgreSQL,
+        // and db.ts replaced, but no working Prisma config to run migrations
+        // against either provider.
+        if (!prismaConfigPath) {
+          ctx.missingPrismaConfig = true
+          notes.push(
+            colors.note(
+              'No Prisma config file found. Expected prisma.config.cjs or ' +
+                'prisma.config.mts in the api directory.',
+            ),
+          )
+
+          return
+        }
+
         if (!ctx.isPostgres) {
           ctx.hasSqliteUsageOutsideDb = hasSqliteUsageOutsideDb(
             cedarPaths.api.src,
@@ -118,6 +136,10 @@ export function getSqliteToPostgresTasks({
       skip: (ctx) => {
         if (ctx.unsupportedProvider) {
           return 'Unsupported database provider'
+        }
+
+        if (ctx.missingPrismaConfig) {
+          return 'No Prisma config file found'
         }
 
         if (ctx.isPostgres) {
@@ -146,6 +168,10 @@ export function getSqliteToPostgresTasks({
       skip: (ctx) => {
         if (ctx.unsupportedProvider) {
           return 'Unsupported database provider'
+        }
+
+        if (ctx.missingPrismaConfig) {
+          return 'No Prisma config file found'
         }
 
         if (ctx.isPostgres) {
@@ -183,6 +209,10 @@ export function getSqliteToPostgresTasks({
           return 'Unsupported database provider'
         }
 
+        if (ctx.missingPrismaConfig) {
+          return 'No Prisma config file found'
+        }
+
         if (ctx.isPostgres) {
           return 'Schema is already configured for PostgreSQL'
         }
@@ -204,6 +234,10 @@ export function getSqliteToPostgresTasks({
           return 'Unsupported database provider'
         }
 
+        if (ctx.missingPrismaConfig) {
+          return 'No Prisma config file found'
+        }
+
         if (ctx.hasPgAdapter) {
           return 'Database adapter is already configured for PostgreSQL (PrismaPg)'
         }
@@ -222,6 +256,10 @@ export function getSqliteToPostgresTasks({
           return 'Unsupported database provider'
         }
 
+        if (ctx.missingPrismaConfig) {
+          return 'No Prisma config file found'
+        }
+
         if (ctx.hasDirectDatabaseUrlConfig) {
           return 'Prisma config is already configured for PostgreSQL'
         }
@@ -229,15 +267,8 @@ export function getSqliteToPostgresTasks({
         return false
       },
       task: () => {
-        if (
-          !fs.existsSync(prismaConfigPathCjs) &&
-          !fs.existsSync(prismaConfigPathMts)
-        ) {
-          throw new Error(
-            'No Prisma config file found. Expected prisma.config.cjs or prisma.config.mts in the api directory.',
-          )
-        }
-
+        // `missingPrismaConfig`, checked above, guarantees one of these
+        // exists by the time this task runs.
         const configPath = fs.existsSync(prismaConfigPathCjs)
           ? prismaConfigPathCjs
           : prismaConfigPathMts
@@ -255,6 +286,10 @@ export function getSqliteToPostgresTasks({
       skip: (ctx) => {
         if (ctx.unsupportedProvider) {
           return 'Unsupported database provider'
+        }
+
+        if (ctx.missingPrismaConfig) {
+          return 'No Prisma config file found'
         }
 
         if (ctx.hasPgAdapterPackage) {
@@ -309,7 +344,7 @@ export async function handler() {
       {
         title: 'Running Prisma migrations',
         skip: (ctx: SqliteToPostgresCtx) => {
-          if (ctx.unsupportedProvider) {
+          if (ctx.unsupportedProvider || ctx.missingPrismaConfig) {
             return true
           }
 
