@@ -31,11 +31,14 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
+    "@babel/core": "^7.26.10",
     "@babel/parser": "7.29.7",
     "@babel/preset-typescript": "7.29.7",
+    "@babel/traverse": "7.29.7",
+    "@babel/types": "7.29.7",
     "@cedarjs/api-server": "5.0.1",
+    "@cedarjs/babel-config": "5.0.1",
     "@cedarjs/cli-helpers": "5.0.1",
-    "@cedarjs/fastify-web": "5.0.1",
     "@cedarjs/internal": "5.0.1",
     "@cedarjs/prerender": "5.0.1",
     "@cedarjs/project-config": "5.0.1",
@@ -61,7 +64,6 @@
     "ci-info": "4.4.0",
     "concurrently": "9.2.4",
     "configstore": "7.1.0",
-    "cross-env": "7.0.3",
     "decamelize": "6.0.1",
     "dotenv-defaults": "5.0.2",
     "enquirer": "2.4.1",
@@ -80,7 +82,6 @@
     "prettier": "3.8.4",
     "prisma": "7.8.0",
     "prompts": "2.4.2",
-    "rimraf": "6.1.3",
     "semver": "7.7.4",
     "smol-toml": "1.6.1",
     "srvx": "0.11.16",
@@ -93,8 +94,7 @@
     "yargs": "17.7.3"
   },
   "devDependencies": {
-    "@babel/cli": "7.29.7",
-    "@babel/core": "^7.26.10",
+    "@cedarjs/framework-tools": "workspace:*",
     "@prisma/dmmf": "7.8.0",
     "@types/archiver": "^7.0.0",
     "memfs": "4.64.0",
