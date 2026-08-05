@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'path'
 
+import { parse, traverse } from '@babel/core'
 import camelcase from 'camelcase'
 import { paramCase } from 'change-case'
 import humanize from 'humanize-string'
@@ -783,15 +784,68 @@ export const isAuthSetup = () => {
 
 // Checks whether a route named 'login' is already defined in Routes file.
 // Used to determine if scaffolded routes can safely reference it as the
-// unauthenticated redirect target.
+// unauthenticated redirect target. Uses proper JSX parsing to avoid false
+// positives from comments, strings, or non-Route elements.
 export const hasLoginRoute = () => {
   const routesPath = getPaths().web.routes
   if (!fs.existsSync(routesPath)) {
     return false
   }
   const routesContent = readFile(routesPath).toString()
-  // Match name="login" or name='login' with flexible whitespace
-  return /name\s*=\s*["']login["']/.test(routesContent)
+
+  try {
+    // Parse as JSX with proper error handling for invalid syntax.
+    // Use babelrc: false and configFile: false to avoid loading the root
+    // babel.config.js, which requires a filename for pattern matching.
+    const ast = parse(routesContent, {
+      filename: routesPath,
+      sourceType: 'module',
+      parserOpts: {
+        plugins: ['jsx', 'typescript'],
+      },
+      babelrc: false,
+      configFile: false,
+    })
+
+    let foundLoginRoute = false
+
+    traverse(ast, {
+      JSXElement(path) {
+        // Check if this is a Route element
+        const openingElement = path.node.openingElement
+        if (openingElement.name.type === 'JSXIdentifier' &&
+            openingElement.name.name === 'Route') {
+          // Look for name="login" attribute on this Route element
+          const hasLoginNameAttr = openingElement.attributes.some((attr) => {
+            if (attr.type !== 'JSXAttribute') {
+              return false
+            }
+            // Check if attribute name is 'name'
+            if (attr.name.type !== 'JSXIdentifier' || attr.name.name !== 'name') {
+              return false
+            }
+            // Check if attribute value is the string 'login'
+            // In Babel, JSX string attributes are StringLiteral nodes
+            if (attr.value && attr.value.type === 'StringLiteral') {
+              return attr.value.value === 'login'
+            }
+            return false
+          })
+
+          if (hasLoginNameAttr) {
+            foundLoginRoute = true
+            path.stop()
+          }
+        }
+      },
+    })
+
+    return foundLoginRoute
+  } catch {
+    // If parsing fails (malformed JSX), fall back to false
+    // to avoid breaking scaffold generation for projects with syntax errors
+    return false
+  }
 }
 
 const addSetImport = (task: AnyListrTask) => {

@@ -104,7 +104,7 @@ export const Routes = () => (
     expect(hasLoginRoute()).toBe(true)
   })
 
-  test("returns true when login is defined with single quotes", () => {
+  test('returns true when login is defined with single quotes', () => {
     vol.fromJSON(
       {
         'web/src/Routes.js': `
@@ -121,5 +121,62 @@ export const Routes = () => (
     )
 
     expect(hasLoginRoute()).toBe(true)
+  })
+
+  test('returns false when login is in a comment', () => {
+    vol.fromJSON(
+      {
+        'web/src/Routes.js': `
+import { Router, Route } from '@cedarjs/router'
+// This route name="login" in the comment should not match
+export const Routes = () => (
+  <Router>
+    <Route path="/" page={HomePage} name="home" />
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(false)
+  })
+
+  test('returns false when login is in a string literal', () => {
+    vol.fromJSON(
+      {
+        'web/src/Routes.js': `
+import { Router, Route } from '@cedarjs/router'
+const routeConfig = 'name="login"'
+export const Routes = () => (
+  <Router>
+    <Route path="/" page={HomePage} name="home" />
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(false)
+  })
+
+  test('returns false when login is in a non-Route element', () => {
+    vol.fromJSON(
+      {
+        'web/src/Routes.js': `
+import { Router, Route } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <Route path="/" page={HomePage} name="home" />
+    <CustomElement name="login" />
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(false)
   })
 })
