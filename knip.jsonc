@@ -84,12 +84,7 @@
     "packages/graphql-server": {
       // publint: only invoked via `concurrently`'s `yarn:publint` job syntax
       // in the "check:package" script, which knip doesn't parse.
-      // @cedarjs/project-config: never imported by this package's own source.
-      // It's only named in a `vi.mock()` call in
-      // src/__tests__/makeMergedSchema.test.ts, which stubs out a module that
-      // reaches the code under test transitively. knip doesn't count vi.mock
-      // as a usage, but vitest still has to resolve the specifier.
-      "ignoreDependencies": ["publint", "@cedarjs/project-config"]
+      "ignoreDependencies": ["publint"]
     },
     "packages/internal": {
       // package.json bin and exports point into dist/, which is globally

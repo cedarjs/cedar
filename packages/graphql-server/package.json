@@ -54,7 +54,6 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@cedarjs/project-config": "workspace:*",
     "@cedarjs/realtime": "workspace:*",
     "@envelop/types": "5.2.1",
     "@escape.tech/graphql-armor-types": "0.6.0",

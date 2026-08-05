@@ -3082,7 +3082,6 @@ __metadata:
     "@cedarjs/api": "workspace:*"
     "@cedarjs/context": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/project-config": "workspace:*"
     "@cedarjs/realtime": "workspace:*"
     "@envelop/core": "npm:5.5.1"
     "@envelop/disable-introspection": "npm:6.0.0"
