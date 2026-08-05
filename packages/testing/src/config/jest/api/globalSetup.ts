@@ -24,7 +24,10 @@ export default async function () {
     )
     const resolved = require.resolve('@cedarjs/pg')
     const cedarPg = await import(pathToFileURL(resolved).href)
-    const result = await cedarPg.ensureIfNeeded({
+    // setEnv updates this process for prisma push below.
+    // Jest workers load DATABASE_URL via setupFiles: @cedarjs/pg/test-env
+    // (globalSetup cannot mutate worker env).
+    await cedarPg.acquireIfNeeded({
       root: cedarPaths.base,
       mode: 'test',
       setEnv: true,
@@ -32,20 +35,6 @@ export default async function () {
       force: process.env.CEDAR_PG_FORCE === '1',
       disabled: false,
     })
-    // Only apply worktree env when cedar-pg provisioned — never clobber an
-    // external URL escape hatch with a stale .cedar-pg/test.env.
-    if (result.status === 'ensured') {
-      const fs = await import('node:fs')
-      const envFile = path.join(cedarPaths.base, '.cedar-pg', 'test.env')
-      if (fs.existsSync(envFile)) {
-        for (const line of fs.readFileSync(envFile, 'utf8').split('\n')) {
-          const m = line.match(/^(DATABASE_URL|TEST_DATABASE_URL)=(.*)$/)
-          if (m) {
-            process.env[m[1]] = m[2]
-          }
-        }
-      }
-    }
   } else {
     const defaultDb = `file:${path.join(cedarPaths.generated.base, 'test.db')}`
     process.env.DATABASE_URL = process.env.TEST_DATABASE_URL || defaultDb

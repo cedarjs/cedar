@@ -113,16 +113,26 @@ export async function handler({ force, path: cedarPgPath }: Args) {
         },
       },
       {
-        title: 'Ignoring .cedar-pg/ in .gitignore',
+        title: 'Ignoring .cedarpg/ in .gitignore',
         task: () => {
           const gitignorePath = path.join(cedarPaths.base, '.gitignore')
-          const entry = '.cedar-pg/*'
+          const entry = '.cedarpg/*'
           if (!fs.existsSync(gitignorePath)) {
             fs.writeFileSync(gitignorePath, `${entry}\n`)
             return
           }
           const content = fs.readFileSync(gitignorePath, 'utf-8')
-          if (content.includes('.cedar-pg')) {
+          // Prefer current dirname; skip if either legacy or current is present.
+          if (content.includes('.cedarpg') || content.includes('.cedar-pg')) {
+            if (
+              content.includes('.cedar-pg') &&
+              !content.includes('.cedarpg')
+            ) {
+              fs.writeFileSync(
+                gitignorePath,
+                content.replace(/\.cedar-pg\/\*/g, entry),
+              )
+            }
             return
           }
           const needle = '.cedar/*'
@@ -147,10 +157,10 @@ export async function handler({ force, path: cedarPgPath }: Args) {
             ? fs.readFileSync(target, 'utf-8')
             : ''
           let content = original
-          // Comment out sqlite DATABASE_URL so cedar-pg ensure can set Postgres
+          // Comment out sqlite DATABASE_URL so cedar-pg acquire can set Postgres
           content = content.replace(
             /^DATABASE_URL=file:.*$/m,
-            '# DATABASE_URL provided by cedar-pg ensure when CEDAR_PG=1\n#$&',
+            '# DATABASE_URL provided by cedar-pg acquire when CEDAR_PG=1\n#$&',
           )
           if (!/^CEDAR_PG=/m.test(content)) {
             content +=
@@ -211,7 +221,7 @@ export async function handler({ force, path: cedarPgPath }: Args) {
     console.log(colors.success('cedar-pg setup complete.'))
     console.log(
       colors.info(
-        'Dev/test will call cedar-pg ensure when CEDAR_PG=1. ' +
+        'Dev/test will call cedar-pg acquire when CEDAR_PG=1. ' +
           'See https://cedarjs.com/docs/local-postgres-setup',
       ),
     )

@@ -14,7 +14,7 @@ database per git worktree on top of the [autopg](https://github.com/automagik-de
 singleton. Names are readable in `\l` (`cpg_<repo>_<worktree>_<mode>_<hash>`). Dev DBs persist
 across `yarn cedar dev` restarts; test DBs are dropped when the test process exits.
 
-> **Alpha** (`0.1.0-alpha.0`): APIs may change. Install with the `alpha` dist-tag.
+> **Alpha** (`0.2.0-alpha.0`): APIs may change. Install with the `alpha` dist-tag.
 
 ### New apps
 
@@ -41,11 +41,11 @@ curl -fsSL https://raw.githubusercontent.com/automagik-dev/autopg/main/install.s
 Set `CEDAR_PG=1` in `.env` / `.env.defaults` (setup does this). Then:
 
 ```bash
-yarn cedar dev  # ensure(dev) → inject DATABASE_URL
-yarn cedar test # ensure(test) → prisma push → dispose(test)
+yarn cedar dev  # acquire(dev) → inject DATABASE_URL
+yarn cedar test # acquire(test) → prisma push → dispose(test)
 ```
 
-Override anytime with an explicit `TEST_DATABASE_URL` / `DATABASE_URL` (skip ensure unless
+Override anytime with an explicit `TEST_DATABASE_URL` / `DATABASE_URL` (skip acquire unless
 `CEDAR_PG_FORCE=1`).
 
 ### Vite+ / Nx (non-Cedar)

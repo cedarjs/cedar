@@ -1,7 +1,7 @@
 /**
  * Thin bridge to @cedarjs/pg for Cedar CLI / testing.
  * Opt-in via CEDAR_PG=1 (or true). Lifecycle + escape-hatch policy live in
- * @cedarjs/pg (`ensureIfNeeded`); stale `cpg_*` URLs always re-ensure.
+ * @cedarjs/pg (`acquireIfNeeded`); stale `cpg_*` URLs always re-acquire.
  *
  * Resolves `@cedarjs/pg` from the app's node_modules (api or root), not from
  * @cedarjs/cli's dependencies.
@@ -16,24 +16,24 @@ export function isCedarPgEnabled(): boolean {
   return flag === '1' || flag === 'true'
 }
 
-type EnsureIfNeededResult =
+type AcquireIfNeededResult =
   | { status: 'skipped'; reason: 'disabled' }
   | { status: 'skipped'; reason: 'external-url'; databaseUrl: string }
   | {
-      status: 'ensured'
+      status: 'acquired'
       databaseUrl: string
       dispose: () => Promise<void>
     }
 
 type CedarPgModule = {
-  ensureIfNeeded: (opts: {
+  acquireIfNeeded: (opts: {
     root?: string
     mode: 'dev' | 'test'
     setEnv?: boolean
     url?: string
     force?: boolean
     disabled?: boolean
-  }) => Promise<EnsureIfNeededResult>
+  }) => Promise<AcquireIfNeededResult>
   dispose: (opts?: { root?: string; mode?: 'dev' | 'test' }) => Promise<void>
 }
 
@@ -49,7 +49,8 @@ async function loadCedarPg(root: string): Promise<CedarPgModule> {
       const resolved = require.resolve('@cedarjs/pg')
       return (await import(pathToFileURL(resolved).href)) as CedarPgModule
     } catch (e) {
-      errors.push(`${pkgJson}: ${(e as Error).message}`)
+      const message = e instanceof Error ? e.message : String(e)
+      errors.push(`${pkgJson}: ${message}`)
     }
   }
   throw new Error(
@@ -62,8 +63,8 @@ function forceFromEnv(): boolean {
   return process.env.CEDAR_PG_FORCE === '1'
 }
 
-function databaseUrlFrom(result: EnsureIfNeededResult): string | null {
-  if (result.status === 'ensured') {
+function databaseUrlFrom(result: AcquireIfNeededResult): string | null {
+  if (result.status === 'acquired') {
     return result.databaseUrl
   }
   if (result.status === 'skipped' && result.reason === 'external-url') {
@@ -72,14 +73,14 @@ function databaseUrlFrom(result: EnsureIfNeededResult): string | null {
   return null
 }
 
-export async function ensureCedarPgDev(root: string): Promise<string | null> {
+export async function acquireCedarPgDev(root: string): Promise<string | null> {
   if (!isCedarPgEnabled()) {
     return null
   }
 
   try {
     const cedarPg = await loadCedarPg(root)
-    const result = await cedarPg.ensureIfNeeded({
+    const result = await cedarPg.acquireIfNeeded({
       root,
       mode: 'dev',
       setEnv: true,
@@ -91,20 +92,20 @@ export async function ensureCedarPgDev(root: string): Promise<string | null> {
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
     throw new Error(
-      `@cedarjs/pg ensure(dev) failed: ${message}\n` +
+      `@cedarjs/pg acquire(dev) failed: ${message}\n` +
         'Install @cedarjs/pg (`yarn cedar setup cedar-pg`) and autopg on the host.',
     )
   }
 }
 
-export async function ensureCedarPgTest(root: string): Promise<string | null> {
+export async function acquireCedarPgTest(root: string): Promise<string | null> {
   if (!isCedarPgEnabled()) {
     return null
   }
 
   try {
     const cedarPg = await loadCedarPg(root)
-    const result = await cedarPg.ensureIfNeeded({
+    const result = await cedarPg.acquireIfNeeded({
       root,
       mode: 'test',
       setEnv: true,
@@ -116,7 +117,7 @@ export async function ensureCedarPgTest(root: string): Promise<string | null> {
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
     throw new Error(
-      `@cedarjs/pg ensure(test) failed: ${message}\n` +
+      `@cedarjs/pg acquire(test) failed: ${message}\n` +
         'Install @cedarjs/pg (`yarn cedar setup cedar-pg`) and autopg on the host.',
     )
   }
@@ -126,7 +127,7 @@ export async function disposeCedarPgTest(root: string): Promise<void> {
   if (!isCedarPgEnabled()) {
     return
   }
-  // dispose() is lease-gated — safe when ensure was skipped via escape hatch
+  // dispose() is lease-gated — safe when acquire was skipped via escape hatch
   try {
     const cedarPg = await loadCedarPg(root)
     await cedarPg.dispose({ root, mode: 'test' })

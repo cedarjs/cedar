@@ -33,7 +33,7 @@ const CedarApiVitestEnvironment: Environment = {
       )
       const resolved = require.resolve('@cedarjs/pg')
       const cedarPg = await import(pathToFileURL(resolved).href)
-      const result = await cedarPg.ensureIfNeeded({
+      const result = await cedarPg.acquireIfNeeded({
         root: cedarPaths.base,
         mode: 'test',
         setEnv: true,
@@ -41,7 +41,7 @@ const CedarApiVitestEnvironment: Environment = {
         force: process.env.CEDAR_PG_FORCE === '1',
         disabled: false,
       })
-      if (result.status === 'ensured') {
+      if (result.status === 'acquired') {
         disposeCedarPg = () => result.dispose()
       }
     } else {

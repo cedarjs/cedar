@@ -6,7 +6,7 @@
 .netlify
 .cedar/*
 !.cedar/README.md
-.cedar-pg/*
+.cedarpg/*
 dev.db*
 api/db/pglite-data
 api/db/generated/prisma

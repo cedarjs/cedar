@@ -291,14 +291,14 @@ export const handler = async ({
   // Opt-in worktree Postgres via cedar-pg (CEDAR_PG=1). Keeps DB across restarts.
   if (workspace.includes('api')) {
     try {
-      const { ensureCedarPgDev } = await import('../../lib/cedarPg.js')
-      const url = await ensureCedarPgDev(cedarPaths.base)
+      const { acquireCedarPgDev } = await import('../../lib/cedarPg.js')
+      const url = await acquireCedarPgDev(cedarPaths.base)
       if (url) {
         console.log(c.info(`cedar-pg: DATABASE_URL ready for worktree`))
       }
     } catch (e) {
       const message = getErrorMessage(e)
-      errorTelemetry(process.argv, `cedar-pg ensure failed: ${message}`)
+      errorTelemetry(process.argv, `cedar-pg acquire failed: ${message}`)
       exitWithError(e, { message })
     }
   }

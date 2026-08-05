@@ -84,6 +84,7 @@
     "storybook-framework-cedarjs": "file:../packages/storybook/storybook-framework-cedarjs.tgz",
     "@cedarjs/structure": "file:../packages/structure/cedarjs-structure.tgz",
     "@cedarjs/telemetry": "file:../packages/telemetry/cedarjs-telemetry.tgz",
+    "@cedarjs/pg": "alpha",
     "@cedarjs/testing": "file:../packages/testing/cedarjs-testing.tgz",
     "@cedarjs/tui": "file:../packages/tui/cedarjs-tui.tgz",
     "@cedarjs/utils": "file:../packages/utils/cedarjs-utils.tgz",
