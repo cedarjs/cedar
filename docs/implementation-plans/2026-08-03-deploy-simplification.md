@@ -2,8 +2,8 @@
 
 Started as "why is deploying to Railway annoying?" and became a general audit.
 Most of what makes Railway annoying isn't Railway — it's gaps any container PaaS
-hits. The general list is where the leverage is; the Railway-specific list nearly
-empties out once the general fixes land.
+hits. The general list is where the leverage is; the Railway-specific list
+nearly empties out once the general fixes land.
 
 This document has been updated as the work progressed. Items now link to the PRs
 and issues that carry them, and several original conclusions have been revised —
@@ -13,8 +13,8 @@ those are called out rather than quietly edited, since the reasoning matters.
 
 The original version of this doc said Cedar was incoherent about `cedar serve`:
 the command binds `0.0.0.0` in production and warns about "containerized
-deployments" (`webServer.ts:34`), yet no deploy path used it and Cedar's own docs
-say the web server "isn't really configured for a high traffic, production
+deployments" (`webServer.ts:34`), yet no deploy path used it and Cedar's own
+docs say the web server "isn't really configured for a high traffic, production
 website" (`baremetal.md:654`). It asked for a decision.
 
 **Decision:** bless single-container as the **convenient** topology, keep
@@ -90,8 +90,7 @@ service that works immediately.
 `#2302` was the blocker (`cedarjs-server` skipped server files) — fixed by
 #2318. The scripts now run through `@cedarjs/api-server`'s `cedarjs-server` bin
 directly, with `@cedarjs/api-server` added as a root **dependency**, in #2323.
-See item 3 below for why that dependency has to be a runtime one, not a dev
-one.
+See item 3 below for why that dependency has to be a runtime one, not a dev one.
 
 ## 3. Runtime deps out of `devDependencies` — reframed
 
@@ -101,15 +100,16 @@ and belongs in `devDependencies`.
 
 The correct framing is that the scripts split by phase: `build` and `dev` are
 build-time and should use the CLI from `devDependencies`; only `start` is a
-runtime concern. The fix is to stop routing `start` through the CLI at all —
-add `@cedarjs/api-server` as a root **dependency** and use the `cedarjs-server`
-bin. Cedar already does exactly this in `setup docker`, which adds
+runtime concern. The fix is to stop routing `start` through the CLI at all — add
+`@cedarjs/api-server` as a root **dependency** and use the `cedarjs-server` bin.
+Cedar already does exactly this in `setup docker`, which adds
 `@cedarjs/api-server` and `@cedarjs/web-server` to the api and web workspaces.
 The root-scripts case only needs `@cedarjs/api-server` — its `cedarjs-server`
 bin has a `web` subcommand that calls straight into `@cedarjs/web-server`'s own
-handler, so there's no need for a second explicit dependency there. (`setup
-docker` adds both separately because its `web_serve` image never installs the
-api workspace at all, so it can't reach `@cedarjs/api-server` transitively.)
+handler, so there's no need for a second explicit dependency there.
+(`setup docker` adds both separately because its `web_serve` image never
+installs the api workspace at all, so it can't reach `@cedarjs/api-server`
+transitively.)
 
 **This is not cosmetic.** Heroku's Node buildpack and DigitalOcean/Paketo both
 strip `devDependencies` after build **by default**, so `start: cedar serve`
@@ -152,8 +152,8 @@ hardcoded provider enum. Tracing it through, that doesn't survive contact with
 the platforms: once the conventions land there is almost nothing left to emit.
 Coolify is dashboard-only, Cloud Run is `gcloud` flags, Heroku is at most a
 `Procfile` containing `web: yarn start`, and Dokku/Dokploy/Koyeb/Northflank need
-nothing. Only Railway, DigitalOcean and Fly have a config file, and all three are
-different.
+nothing. Only Railway, DigitalOcean and Fly have a config file, and all three
+are different.
 
 What _is_ worth extracting: `yarn cedar setup neon` already performs the whole
 SQLite → Postgres migration, and only one of its eleven steps (provisioning) is
@@ -236,23 +236,23 @@ single-container means one runtime serving both sides, which is exactly the case
 which includes a recipe for restoring it). Custom server files remain the open
 product question, since UD ignores them by design.
 
-**Platform landscape.** Ten hosts work purely on conventions, but not
-uniformly — `start` resolves the `cedar` bin from a root **devDependency**
-(#2302 tracks moving it onto a runtime one), and two of the ten prune
-devDependencies by default before running `start`:
+**Platform landscape.** Ten hosts work purely on conventions, but not uniformly
+— `start` resolves the `cedar` bin from a root **devDependency** (#2302 tracks
+moving it onto a runtime one), and two of the ten prune devDependencies by
+default before running `start`:
 
 - **Zero-config, no caveats:** Railway (Railpack), Render, Cloud Run, Coolify,
   Dokku, Dokploy, Koyeb, Northflank.
-- **Supported, one env var needed:** **Heroku** and **DigitalOcean App
-  Platform (Paketo)** both strip `devDependencies` after build by default, so
-  `start` fails with "command not found" unless pruning is disabled —
+- **Supported, one env var needed:** **Heroku** and **DigitalOcean App Platform
+  (Paketo)** both strip `devDependencies` after build by default, so `start`
+  fails with "command not found" unless pruning is disabled —
   `NPM_CONFIG_PRODUCTION=false` / `YARN_PRODUCTION=false` on Heroku,
   `YARN2_SKIP_PRUNING=true` / `NPM_CONFIG_PRODUCTION=false` on DigitalOcean.
 
-Fly.io is Dockerfile-first — its own docs call buildpacks "brittle, bloated,
-and prone to change" — and is already served by `setup docker`. Coolify is the
-standout for self-hosters: its Static build pack alongside Nixpacks means it
-can natively express Cedar's _recommended_ topology rather than forcing
+Fly.io is Dockerfile-first — its own docs call buildpacks "brittle, bloated, and
+prone to change" — and is already served by `setup docker`. Coolify is the
+standout for self-hosters: its Static build pack alongside Nixpacks means it can
+natively express Cedar's _recommended_ topology rather than forcing
 single-container.
 
 ## Railway-specific
@@ -262,13 +262,13 @@ Once #2 and #3 land, Railway becomes: create service, add Postgres, set
 
 Verified about Railway: Railpack is the default builder (Nixpacks deprecated),
 and it handles Cedar's Yarn 4 + workspaces + `engines.node` correctly. Config as
-code is `railway.json` / `railway.toml` — **no JSONC**, so use TOML when you want
-comments. `preDeployCommand` suits migrations. Railway's CDN is per-service,
-free on all plans, and caches static assets by `Content-Type` — the thing that
-most compensates for #4. Private networking is IPv6-native, hence #5.
+code is `railway.json` / `railway.toml` — **no JSONC**, so use TOML when you
+want comments. `preDeployCommand` suits migrations. Railway's CDN is
+per-service, free on all plans, and caches static assets by `Content-Type` — the
+thing that most compensates for #4. Private networking is IPv6-native, hence #5.
 
-**`yarn cedar setup deploy railway`** — worth it only as a thin preset once #2303
-lands, not as another bespoke provider.
+**`yarn cedar setup deploy railway`** — worth it only as a thin preset once
+#2303 lands, not as another bespoke provider.
 
 **Don't** build a Railway-specific build path. The gaps are all on Cedar's side.
 
@@ -280,8 +280,8 @@ lands, not as another bespoke provider.
    dependency is lean. Independent of 1, same release. **Superseded**, by
    #2312/#2313 (split `@cedarjs/api-server-watch` out instead).
 3. **#2294** — add the root `@cedarjs/api-server` dependency, switch the scripts
-   to `cedarjs-server`. #2294 shipped the scripts as `cedar serve`; the switch to
-   `cedarjs-server` landed in #2323, once unblocked by 1 and 2.
+   to `cedarjs-server`. #2294 shipped the scripts as `cedar serve`; the switch
+   to `cedarjs-server` landed in #2323, once unblocked by 1 and 2.
 4. **#2301** and **#5** — the two things that make the blessed single-container
    path actually good.
 5. **#2303**, then docs (#2300).
