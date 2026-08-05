@@ -21,7 +21,7 @@ import omitBy from 'lodash/omitBy.js'
 
 import type { RedwoodDirective } from './plugins/useRedwoodDirective.js'
 import * as rootGqlSchema from './rootSchema.js'
-import type { RedwoodSubscription } from './subscriptions/makeSubscriptions.js'
+import type { CedarSubscription } from './subscriptions/makeSubscriptions.js'
 import type {
   Services,
   ServicesGlobImports,
@@ -331,7 +331,7 @@ const mergeResolversWithSubscriptions = ({
   inheritResolversFromInterfaces,
 }: {
   schema: GraphQLSchema
-  subscriptions: RedwoodSubscription[]
+  subscriptions: CedarSubscription[]
   resolverValidationOptions?: IResolverValidationOptions | undefined
   inheritResolversFromInterfaces?: boolean | undefined
 }) => {
@@ -366,7 +366,7 @@ export const makeMergedSchema = ({
   sdls: SdlGlobImports
   services: ServicesGlobImports
   directives: RedwoodDirective[]
-  subscriptions: RedwoodSubscription[]
+  subscriptions: CedarSubscription[]
   includeScalars?: RedwoodScalarConfig
 
   /**

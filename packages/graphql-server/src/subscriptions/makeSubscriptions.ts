@@ -5,12 +5,12 @@ import type { DocumentNode } from 'graphql'
  * But not fully supported in TS
  * {
  *   schema: DocumentNode // <-- required
- *   [string]: RedwoodSubscription
+ *   [string]: CedarSubscription
  * }
  */
 export type SubscriptionGlobImports = Record<string, any>
 
-export type RedwoodSubscription = {
+export type CedarSubscription = {
   schema: DocumentNode
   resolvers: any
   name: string
@@ -18,7 +18,7 @@ export type RedwoodSubscription = {
 
 export const makeSubscriptions = (
   SubscriptionGlobs: SubscriptionGlobImports,
-): RedwoodSubscription[] => {
+): CedarSubscription[] => {
   return Object.entries(SubscriptionGlobs).flatMap(
     ([importedGlobName, exports]) => {
       // In case the Subscriptions get nested, their name comes as nested_directory_filename_Subscription

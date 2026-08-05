@@ -31,7 +31,7 @@ import type {
   DirectivePluginOptions,
 } from './plugins/useRedwoodDirective.js'
 import { makeSubscriptions } from './subscriptions/makeSubscriptions.js'
-import type { RedwoodSubscription } from './subscriptions/makeSubscriptions.js'
+import type { CedarSubscription } from './subscriptions/makeSubscriptions.js'
 import type { GraphQLYogaOptions, CedarGraphQLContext } from './types.js'
 
 export const createGraphQLYoga = async ({
@@ -77,7 +77,7 @@ export const createGraphQLYoga = async ({
     }
 
     // @NOTE: Subscriptions are optional and only work in the context of a server
-    let projectSubscriptions: RedwoodSubscription[] = []
+    let projectSubscriptions: CedarSubscription[] = []
 
     if (realtime?.subscriptions?.subscriptions) {
       projectSubscriptions = makeSubscriptions(
