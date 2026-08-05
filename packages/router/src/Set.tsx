@@ -67,6 +67,14 @@ export function Private<WrapperProps>(props: PrivateSetProps<WrapperProps>) {
   return <>{props.children}</>
 }
 
+/**
+ * Wraps a set of routes that require the user to be authenticated before
+ * rendering. Unauthenticated users are redirected to the route named by
+ * `unauthenticated`.
+ *
+ * Coming from React Router or a similar library and looking for something
+ * like `RequireAuth` or `ProtectedRoute`? This is the Cedar equivalent.
+ */
 export function PrivateSet<WrapperProps>(props: PrivateSetProps<WrapperProps>) {
   // @MARK Virtual Component, this is actually never rendered
   // See analyzeRoutes in utils.tsx, inside the isSetNode block
