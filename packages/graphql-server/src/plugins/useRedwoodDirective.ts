@@ -85,7 +85,10 @@ export enum DirectiveType {
   TRANSFORMER = 'TRANSFORMER_DIRECTIVE',
 }
 
-export type RedwoodDirective = ValidatorDirective | TransformerDirective
+export type CedarDirective = ValidatorDirective | TransformerDirective
+
+/** @deprecated Use `CedarDirective` instead. */
+export type RedwoodDirective = CedarDirective
 
 export interface ValidatorDirective extends ValidatorDirectiveOptions {
   schema: DocumentNode
@@ -248,13 +251,16 @@ function wrapAffectedResolvers(
   })
 }
 
-export type useRedwoodDirectiveReturn = Plugin<{
+export type UseCedarDirectiveReturn = Plugin<{
   onResolvedValue: ValidatorDirectiveFunc | TransformerDirectiveFunc
 }>
 
-export const useRedwoodDirective = (
+/** @deprecated Use `UseCedarDirectiveReturn` instead. */
+export type useRedwoodDirectiveReturn = UseCedarDirectiveReturn
+
+export const useCedarDirective = (
   options: DirectivePluginOptions,
-): useRedwoodDirectiveReturn => {
+): UseCedarDirectiveReturn => {
   /**
    * This symbol is added to the schema extensions for checking whether the transform got already applied.
    */
@@ -279,6 +285,9 @@ export const useRedwoodDirective = (
     },
   }
 }
+
+/** @deprecated Use `useCedarDirective` instead. */
+export const useRedwoodDirective = useCedarDirective
 
 // For narrowing types
 const _isValidator = (

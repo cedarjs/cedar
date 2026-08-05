@@ -4,7 +4,7 @@ import type { Plugin } from 'graphql-yoga'
 
 import type { CedarGraphQLContext } from '../types.js'
 
-export type RedwoodTrustedDocumentOptions = Omit<
+export type CedarTrustedDocumentOptions = Omit<
   UsePersistedOperationsOptions,
   'getPersistedOperation'
 > & {
@@ -23,6 +23,9 @@ export type RedwoodTrustedDocumentOptions = Omit<
     | { disabled: true; store?: Readonly<Record<string, string>> }
     | { disabled?: false; store: Readonly<Record<string, string>> }
   )
+
+/** @deprecated Use `CedarTrustedDocumentOptions` instead. */
+export type RedwoodTrustedDocumentOptions = CedarTrustedDocumentOptions
 
 const CEDAR__AUTH_GET_CURRENT_USER_QUERY =
   '{"query":"query __CEDAR__AUTH_GET_CURRENT_USER { cedar { currentUser } }"}'
@@ -91,7 +94,7 @@ const allowCedarStudioResyncMailMutations = async (request: Request) => {
 }
 
 export const useRedwoodTrustedDocuments = (
-  options: RedwoodTrustedDocumentOptions,
+  options: CedarTrustedDocumentOptions,
 ): Plugin<CedarGraphQLContext> => {
   return usePersistedOperations({
     ...options,
