@@ -31,12 +31,17 @@
   },
   "workspaces": {
     "packages/api-server": {
-      "entry": ["src/bin.ts", "src/watch.ts", "src/logFormatter/bin.ts"],
+      "entry": ["src/bin.ts", "src/logFormatter/bin.ts"],
       // publint: only invoked via `concurrently`'s `yarn:publint` job syntax
       // in the "check:package" script, which knip doesn't parse.
       // @cedarjs/graphql-server: optional peer dep, dynamically imported in
       // src/plugins/graphql.ts only when a project has a GraphQL function.
       "ignoreDependencies": ["publint", "@cedarjs/graphql-server"]
+    },
+    "packages/api-server-watch": {
+      // package.json main/bin point into dist/, which is globally ignored, so
+      // knip needs to be pointed at the sources explicitly.
+      "entry": ["src/watch.ts", "src/bin.ts"]
     },
     "packages/eslint-config": {
       // eslint-plugin-react-compiler: optional peer dep, dynamically imported
