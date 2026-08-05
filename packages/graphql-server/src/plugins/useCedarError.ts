@@ -24,9 +24,7 @@ import type { CedarGraphQLContext } from '../types.js'
  * @param logger
  * @returns ExecutionResult
  */
-export const useRedwoodError = (
-  logger: Logger,
-): Plugin<CedarGraphQLContext> => {
+export const useCedarError = (logger: Logger): Plugin<CedarGraphQLContext> => {
   return {
     async onExecute() {
       return {

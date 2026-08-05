@@ -6,8 +6,8 @@ import type { GlobalContext } from '@cedarjs/context'
 import { context, setContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 
-import { useRedwoodGlobalContextSetter } from '../useRedwoodGlobalContextSetter.js'
-import { useRedwoodPopulateContext } from '../useRedwoodPopulateContext.js'
+import { useCedarGlobalContextSetter } from '../useCedarGlobalContextSetter.js'
+import { useCedarPopulateContext } from '../useCedarPopulateContext.js'
 
 import { testSchema, testQuery } from './__fixtures__/common.js'
 import { createTestkit } from './__fixtures__/envelop-testing.js'
@@ -16,9 +16,9 @@ test('Context is correctly populated', async () => {
   const testkit = createTestkit(
     [
       useEngine(GraphQLJS),
-      useRedwoodPopulateContext(() => ({ hello: 'world' })),
-      useRedwoodPopulateContext({ foo: 'bar' }),
-      useRedwoodGlobalContextSetter(),
+      useCedarPopulateContext(() => ({ hello: 'world' })),
+      useCedarPopulateContext({ foo: 'bar' }),
+      useCedarGlobalContextSetter(),
     ],
     testSchema,
   )
@@ -39,10 +39,10 @@ test('Plugin lets you populate context at any point in the lifecycle', async () 
   const testkit = createTestkit(
     [
       useEngine(GraphQLJS),
-      useRedwoodGlobalContextSetter(),
-      useRedwoodPopulateContext(() => ({ hello: 'world' })),
-      useRedwoodPopulateContext({ foo: 'bar' }),
-      useRedwoodPopulateContext({ bazinga: 'new value!' }),
+      useCedarGlobalContextSetter(),
+      useCedarPopulateContext(() => ({ hello: 'world' })),
+      useCedarPopulateContext({ foo: 'bar' }),
+      useCedarPopulateContext({ bazinga: 'new value!' }),
     ],
     testSchema,
   )
@@ -63,9 +63,9 @@ test('setContext erases the existing context', async () => {
   const testkit = createTestkit(
     [
       useEngine(GraphQLJS),
-      useRedwoodPopulateContext(() => ({ hello: 'world' })),
-      useRedwoodPopulateContext({ foo: 'bar' }),
-      useRedwoodGlobalContextSetter(),
+      useCedarPopulateContext(() => ({ hello: 'world' })),
+      useCedarPopulateContext({ foo: 'bar' }),
+      useCedarGlobalContextSetter(),
     ],
     testSchema,
   )
