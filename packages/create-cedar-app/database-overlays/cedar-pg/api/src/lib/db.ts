@@ -11,7 +11,7 @@ if (!process.env.DATABASE_URL) {
   throw new Error(
     'DATABASE_URL is not set. Run `yarn cedar dev` / `yarn cedar test` with ' +
       'CEDAR_PG=1 so cedar-pg can provision a worktree-scoped database, or set ' +
-      'DATABASE_URL manually.'
+      'DATABASE_URL manually.',
   )
 }
 

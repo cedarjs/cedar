@@ -7,6 +7,49 @@ description: Setup a Postgres database to develop locally
 CedarJS uses a SQLite database by default. While SQLite makes local development easy, you're
 likely going to want to run the same database you use in production locally at some point. And since the odds of that database being Postgres are high, here's how to set up Postgres.
 
+## Recommended: @cedarjs/pg (worktree-isolated, zero config)
+
+[`@cedarjs/pg`](https://www.npmjs.com/package/@cedarjs/pg) (alpha) provisions a Postgres
+database per git worktree on top of the [autopg](https://github.com/automagik-dev/autopg) host
+singleton. Names are readable in `\l` (`cpg_<repo>_<worktree>_<mode>_<hash>`). Dev DBs persist
+across `yarn cedar dev` restarts; test DBs are dropped when the test process exits.
+
+> Alpha (`0.2.0-alpha.0`): APIs may change. Install with the `alpha` dist-tag.
+
+### New apps
+
+```bash
+yarn create cedar-app --esm --db cedar-pg my-app
+```
+
+### Existing apps
+
+```bash
+yarn cedar setup cedar-pg
+# Optional local checkout: yarn cedar setup cedar-pg --path /path/to/cedar-pg
+```
+
+Ensure the autopg host is installed (`@cedarjs/pg` postinstall may do this):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/automagik-dev/autopg/main/install.sh | bash
+```
+
+Set `CEDAR_PG=1` in `.env` / `.env.defaults` (setup does this). Then:
+
+```bash
+yarn cedar dev
+yarn cedar test
+```
+
+Override anytime with an explicit `TEST_DATABASE_URL` / `DATABASE_URL` (skip acquire unless
+`CEDAR_PG_FORCE=1`).
+
+### Vite+ / Nx (non-Cedar)
+
+See the [`@cedarjs/pg` README](https://github.com/cedarjs/cedar-pg#readme) for
+`cedarPgTasks()` / Nx target helpers.
+
 ## Install Postgres
 
 ### Mac

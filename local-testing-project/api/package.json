@@ -6,8 +6,12 @@
     "@cedarjs/api": "4.1.0",
     "@cedarjs/auth-dbauth-api": "4.1.0",
     "@cedarjs/graphql-server": "4.1.0",
+    "@cedarjs/pg": "alpha",
     "@my-org/validators": "workspace:*",
-    "@prisma/adapter-better-sqlite3": "7.8.0",
-    "better-sqlite3": "12.11.1"
+    "@prisma/adapter-pg": "7.8.0",
+    "pg": "^8.22.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8"
   }
 }

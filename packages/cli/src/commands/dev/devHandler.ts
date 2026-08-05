@@ -288,6 +288,20 @@ export const handler = async ({
   // so that users don't have to see it every time the dev server starts up.
   process.env.VITE_CJS_IGNORE_WARNING = 'true'
 
+  // Opt-in worktree Postgres via cedar-pg (CEDAR_PG=1); setEnv injects DATABASE_URL
+  if (workspace.includes('api')) {
+    try {
+      const { acquireCedarPgDev } = await import('../../lib/cedarPg.js')
+      if (await acquireCedarPgDev(cedarPaths.base)) {
+        console.log(c.info(`cedar-pg: DATABASE_URL ready for worktree`))
+      }
+    } catch (e) {
+      const message = getErrorMessage(e)
+      errorTelemetry(process.argv, `cedar-pg acquire failed: ${message}`)
+      exitWithError(e, { message })
+    }
+  }
+
   const rootPackageJsonPath = path.join(cedarPaths.base, 'package.json')
   const rootPackageJson = JSON.parse(
     fs.readFileSync(rootPackageJsonPath, 'utf8'),

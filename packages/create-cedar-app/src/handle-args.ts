@@ -270,7 +270,7 @@ export async function handleDatabasePreference(
   databaseFlag: string | null,
   useEsm: boolean,
 ) {
-  const supportedDatabases = ['sqlite', 'pglite', 'neon-postgres']
+  const supportedDatabases = ['sqlite', 'pglite', 'neon-postgres', 'cedar-pg']
   if (databaseFlag && !supportedDatabases.includes(databaseFlag)) {
     tui.stopReactive(true)
     tui.displayError(
@@ -303,6 +303,18 @@ export async function handleDatabasePreference(
         '  create-cedar-app --esm --db neon-postgres my-app',
     )
     recordErrorViaTelemetry('neon-postgres without esm')
+    await shutdownTelemetry()
+    process.exit(1)
+  }
+
+  if (databaseFlag === 'cedar-pg' && !useEsm) {
+    tui.stopReactive(true)
+    tui.displayError(
+      'Invalid configuration',
+      'The --db cedar-pg flag requires --esm. Use:\n' +
+        '  create-cedar-app --esm --db cedar-pg my-app',
+    )
+    recordErrorViaTelemetry('cedar-pg without esm')
     await shutdownTelemetry()
     process.exit(1)
   }
