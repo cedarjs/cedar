@@ -61,7 +61,7 @@ describe('LogFormatter', () => {
     })
   })
 
-  describe('Formats GraphQL injected log data from useRedwoodLogger plugin', () => {
+  describe('Formats GraphQL injected log data from useCedarLogger plugin', () => {
     it('Handles query', () => {
       expect(
         logFormatter({

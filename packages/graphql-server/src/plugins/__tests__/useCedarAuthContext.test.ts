@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import type { AuthContextPayload, Decoder } from '@cedarjs/api'
 
-import { useCedarAuthContext } from '../useRedwoodAuthContext.js'
+import { useCedarAuthContext } from '../useCedarAuthContext.js'
 
 const authDecoder: Decoder = async (token: string) => ({ token })
 

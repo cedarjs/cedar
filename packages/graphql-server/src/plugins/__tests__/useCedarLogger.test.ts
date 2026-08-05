@@ -11,8 +11,8 @@ import type { Logger, LoggerOptions } from '@cedarjs/api/logger'
 import { createLogger } from '@cedarjs/api/logger'
 
 import type { CedarGraphQLContext } from '../../types.js'
-import type { LoggerConfig } from '../useRedwoodLogger.js'
-import { useCedarLogger } from '../useRedwoodLogger.js'
+import type { LoggerConfig } from '../useCedarLogger.js'
+import { useCedarLogger } from '../useCedarLogger.js'
 
 import {
   testSchema,

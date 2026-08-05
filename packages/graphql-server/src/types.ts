@@ -14,12 +14,12 @@ import type { CedarRequestContext } from '@cedarjs/api/runtime'
 import type { CedarRealtimeOptions } from '@cedarjs/realtime'
 
 import type { DirectiveGlobImports } from './directives/makeDirectives.js'
+import type { LoggerConfig } from './plugins/useCedarLogger.js'
+import type { RedwoodTrustedDocumentOptions } from './plugins/useCedarTrustedDocuments.js'
 import type {
   useRedwoodDirectiveReturn,
   DirectivePluginOptions,
 } from './plugins/useRedwoodDirective.js'
-import type { LoggerConfig } from './plugins/useRedwoodLogger.js'
-import type { RedwoodTrustedDocumentOptions } from './plugins/useRedwoodTrustedDocuments.js'
 
 export type Resolver = (...args: unknown[]) => unknown
 export type Services = {

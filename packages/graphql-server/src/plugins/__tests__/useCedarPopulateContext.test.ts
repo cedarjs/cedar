@@ -2,7 +2,7 @@ import { useEngine } from '@envelop/core'
 import * as GraphQLJS from 'graphql'
 import { beforeEach, vi, describe, expect, it } from 'vitest'
 
-import { useCedarPopulateContext } from '../useRedwoodPopulateContext.js'
+import { useCedarPopulateContext } from '../useCedarPopulateContext.js'
 
 import { testSchema, testQuery } from './__fixtures__/common.js'
 import {
