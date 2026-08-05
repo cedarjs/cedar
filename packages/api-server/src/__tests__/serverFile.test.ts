@@ -83,6 +83,15 @@ describe('runApiDistServerFile', () => {
     expect(args).toEqual(['--apiRootPath', '/'])
   })
 
+  it('forwards an explicit port 0, rather than treating it as not given', async () => {
+    // `0` means "ask the OS for a free port" — a real, valid value, and
+    // falsy, so a truthy check on `options.port` would drop it silently.
+    await runApiDistServerFile({ port: 0 })
+
+    const args = JSON.parse(fs.readFileSync(argsFile, 'utf-8'))
+    expect(args).toEqual(['--apiRootPath', '/', '--apiPort', '0'])
+  })
+
   it('rejects when the server file exits non-zero', async () => {
     process.env.TEST_SERVER_FILE_EXIT_CODE = '17'
 

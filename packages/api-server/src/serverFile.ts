@@ -37,7 +37,9 @@ export async function runApiDistServerFile(
 ): Promise<void> {
   const args = ['--apiRootPath', options.apiRootPath ?? '/']
 
-  if (options.port) {
+  // `0` is a legitimate port (ask the OS for a free one), so it has to be
+  // forwarded too — a truthy check would silently drop it.
+  if (options.port !== undefined) {
     args.push('--apiPort', String(options.port))
   }
 
