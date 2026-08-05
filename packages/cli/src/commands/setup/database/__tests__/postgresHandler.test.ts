@@ -11,9 +11,6 @@ import { globSyncByExtension } from '../../../../__tests__/globSyncStub.js'
 import { Listr2Mock } from '../../../../__tests__/Listr2Mock.js'
 
 vi.mock('node:fs', async () => {
-  // `postgresHandler.ts` uses the default import (`import fs from
-  // 'node:fs'`), so the override has to live on `default` too — the named
-  // export alone isn't what `fs.globSync(...)` resolves through.
   const globSync = (_pattern: string, opts: { cwd: string }) =>
     globSyncByExtension(opts.cwd, ['ts', 'tsx', 'js', 'jsx'])
 
