@@ -15,12 +15,12 @@ packages/testing/config
 /local-testing-project-live/.gitignore
 
 /local-testing-project/.cedar/
-/local-testing-project/.cedar-pg/
+/local-testing-project/.cedarpg/
 /local-testing-project/api/db/generated/
 /local-testing-project/api/types/graphql.d.ts
 /local-testing-project/web/types/graphql.d.ts
 /local-testing-project-live/.cedar/
-/local-testing-project-live/.cedar-pg/
+/local-testing-project-live/.cedarpg/
 /local-testing-project-live/api/db/generated/
 /local-testing-project-live/api/types/graphql.d.ts
 /local-testing-project-live/web/types/graphql.d.ts

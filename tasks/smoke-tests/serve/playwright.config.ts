@@ -21,6 +21,5 @@ export default defineConfig({
     url: 'http://127.0.0.1:8910',
     reuseExistingServer: !process.env.CI,
     stdout: 'pipe',
-    stderr: 'pipe',
   },
 })

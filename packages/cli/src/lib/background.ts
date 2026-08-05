@@ -6,42 +6,6 @@ import path from 'path'
 import { getPaths } from '@cedarjs/project-config'
 
 /**
- * Quote an argument for `cmd.exe` / `shell: true` on Windows.
- * Without this, paths containing spaces (e.g. CI's `test project`) split into
- * multiple argv tokens and Node tries to load a truncated module path.
- *
- * Follows the MSVC/CommandLineToArgvW rules for backslashes preceding quotes:
- * https://learn.microsoft.com/en-us/cpp/c-language/parsing-c-command-line-arguments
- */
-function quoteWindowsShellArg(arg: string): string {
-  if (arg.length === 0) {
-    return '""'
-  }
-  if (!/[\s"]/.test(arg)) {
-    return arg
-  }
-
-  let quoted = '"'
-  let numBackslashes = 0
-  for (const char of arg) {
-    if (char === '\\') {
-      numBackslashes += 1
-      continue
-    }
-    if (char === '"') {
-      quoted += '\\'.repeat(numBackslashes * 2 + 1) + '"'
-      numBackslashes = 0
-      continue
-    }
-    quoted += '\\'.repeat(numBackslashes) + char
-    numBackslashes = 0
-  }
-  // Trailing backslashes must be doubled so they don't escape the closer.
-  quoted += '\\'.repeat(numBackslashes * 2) + '"'
-  return quoted
-}
-
-/**
  * Spawn a background process with the stdout/stderr redirected to log files
  * within the `.cedar` directory. Stdin will not be available to the process as
  * it will be set to the 'ignore' value.
@@ -105,8 +69,7 @@ export function spawnBackgroundProcess(
     // It's safe to do that here since the arguments aren't user-provided.
     //
     // https://nodejs.org/api/deprecations.html#DEP0190
-    const cmdline = [cmd, ...args].map(quoteWindowsShellArg).join(' ')
-    const child = spawn(cmdline, spawnOptions)
+    const child = spawn(cmd + ' ' + args.join(' '), spawnOptions)
     child.unref()
   } else {
     const spawnOptions = {
