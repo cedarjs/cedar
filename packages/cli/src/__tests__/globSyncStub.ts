@@ -10,15 +10,18 @@ import { fs as memfsFs } from 'memfs'
  * that problem: unlike `globSync`, it hands back bare filenames with no path
  * joining of its own, so every path is built by this file, not memfs.
  *
- * memfs works in POSIX-style paths internally regardless of host OS — see
- * https://github.com/streamich/memfs/issues/316 (closed as "not planned":
- * `realpathSync` always returns `/package.json`-style paths, even on
- * Windows, where the real `resolve()` would return `D:\package.json`) and
- * https://github.com/streamich/memfs/issues/327 (memfs doesn't recognize
- * `C:\`-style absolute paths unless actually running on Windows). Handing
- * memfs a real, backslash-joined Windows path — which is what
- * `path.win32.join(...)` inside `hasSqliteUsageOutsideDb` produces — hits
- * the same mismatch.
+ * This is by design, not an oversight: per
+ * https://github.com/streamich/memfs/pull/1144 (the PR that added
+ * `globSync`/`glob`/`promises.glob` to memfs), "[t]he implementation ensures
+ * consistent behavior across all platforms by using POSIX path handling
+ * internally. This prevents issues where Windows systems would return
+ * `D:\test\file1.js` instead of `/test/file1.js` for absolute patterns,
+ * maintaining memfs's platform-agnostic behavior." A real, backslash-joined
+ * Windows path — which is what `path.win32.join(...)` inside
+ * `hasSqliteUsageOutsideDb` produces — doesn't resolve against that
+ * POSIX-only internal representation. See also
+ * https://github.com/streamich/memfs/issues/316, the same POSIX-vs-real-path
+ * mismatch in `realpathSync`, closed as "not planned".
  *
  * Only supports what's needed to stand in for `fs.globSync(pattern, { cwd })`
  * with an extension-only glob like `'**\/*.{ts,tsx,js,jsx}'` where it matches
