@@ -23,6 +23,15 @@ export function globSyncByExtension(
 
   const walk = (dir: string, relativeDir: string) => {
     for (const entry of memfsFs.readdirSync(dir, { withFileTypes: true })) {
+      // memfs's `readdirSync` type is `TDataOut[] | Dirent[]` regardless of
+      // `withFileTypes` — it doesn't narrow on the literal like Node's own
+      // overloads do — so `entry` is typed as `string | Buffer | Dirent`
+      // here even though it's always a `Dirent` at runtime, given
+      // `withFileTypes: true`.
+      if (typeof entry === 'string' || Buffer.isBuffer(entry)) {
+        continue
+      }
+
       const name = entry.name.toString()
       const relativePath = relativeDir ? `${relativeDir}/${name}` : name
 
