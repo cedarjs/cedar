@@ -11,7 +11,7 @@ import { fs as memfsFs } from 'memfs'
  * joining of its own, so every path is built by this file, not memfs.
  *
  * Only supports what's needed to stand in for `fs.globSync(pattern, { cwd })`
- * with an extension-only glob like `'**\/*.{ts,tsx,js,jsx}'` — matches by
+ * with an extension-only glob like `'*.{ts,tsx,js,jsx}'` — matches by
  * extension, ignores the rest of the pattern.
  */
 export function globSyncByExtension(
