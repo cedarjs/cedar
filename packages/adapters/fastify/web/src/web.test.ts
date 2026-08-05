@@ -1,5 +1,6 @@
 import * as fs from 'node:fs'
 import * as path from 'path'
+import * as zlib from 'zlib'
 
 import type { FastifyInstance } from 'fastify'
 import Fastify from 'fastify'
@@ -305,6 +306,84 @@ describe('redwoodFastifyWeb', () => {
       })
 
       expect(res.statusCode).toBe(200)
+    })
+  })
+
+  describe('cache headers', () => {
+    it('sets a long, immutable cache-control header for hashed assets', async () => {
+      const res = await fastifyInstance.inject({
+        method: 'GET',
+        url: '/assets/index-613d397d.css',
+      })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.headers['cache-control']).toBe(
+        'public, max-age=31536000, immutable',
+      )
+    })
+
+    it('sets a no-cache cache-control header for a prerendered page', async () => {
+      const res = await fastifyInstance.inject({
+        method: 'GET',
+        url: '/about',
+      })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.headers['cache-control']).toBe('no-cache')
+    })
+
+    it('sets a no-cache cache-control header on the SPA fallback', async () => {
+      const res = await fastifyInstance.inject({
+        method: 'GET',
+        url: '/absent.html',
+      })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.headers['cache-control']).toBe('no-cache')
+    })
+  })
+
+  describe('compression', () => {
+    it('gzip-compresses a large, compressible asset when requested', async () => {
+      const relativeFilePath = '/assets/index-613d397d.css'
+
+      const res = await fastifyInstance.inject({
+        method: 'GET',
+        url: relativeFilePath,
+        headers: { 'accept-encoding': 'gzip' },
+      })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.headers['content-encoding']).toBe('gzip')
+
+      const decompressed = zlib.gunzipSync(res.rawPayload)
+      expect(decompressed.toString('utf-8')).toBe(
+        fs.readFileSync(
+          path.join(getPaths().web.dist, relativeFilePath),
+          'utf-8',
+        ),
+      )
+    })
+
+    it('does not compress an already-compressed file type, like a png', async () => {
+      const res = await fastifyInstance.inject({
+        method: 'GET',
+        url: '/favicon.png',
+        headers: { 'accept-encoding': 'gzip' },
+      })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.headers['content-encoding']).toBeUndefined()
+    })
+
+    it('does not compress when the client sends no accept-encoding', async () => {
+      const res = await fastifyInstance.inject({
+        method: 'GET',
+        url: '/assets/index-613d397d.css',
+      })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.headers['content-encoding']).toBeUndefined()
     })
   })
 

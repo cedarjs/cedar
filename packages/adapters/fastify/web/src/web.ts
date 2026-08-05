@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'path'
 
+import fastifyCompress from '@fastify/compress'
 import httpProxy from '@fastify/http-proxy'
 import fastifyStatic from '@fastify/static'
 import fastifyUrlData from '@fastify/url-data'
@@ -16,6 +17,8 @@ import type { RedwoodFastifyWebOptions } from './types.js'
 export { coerceRootPath }
 export type { RedwoodFastifyWebOptions }
 
+const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365
+
 export async function redwoodFastifyWeb(
   fastify: FastifyInstance,
   opts: RedwoodFastifyWebOptions,
@@ -23,7 +26,35 @@ export async function redwoodFastifyWeb(
   const { redwoodOptions, flags } = resolveOptions(opts)
 
   fastify.register(fastifyUrlData)
-  fastify.register(fastifyStatic, { root: getPaths().web.dist })
+
+  // Registered before `fastifyStatic` so its `onSend` hook — added via
+  // `fastify-plugin`, so it isn't encapsulated to this registration — is in
+  // place for every route defined below.
+  fastify.register(fastifyCompress)
+
+  // Vite content-hashes everything under `assets/`, so those files can be
+  // cached forever. Nothing else is hashed — most importantly `index.html`
+  // and the other prerendered HTML entry points — so it all has to stay
+  // revalidate-on-every-request, or a deploy wouldn't be picked up.
+  //
+  // `cacheControl: false` turns off `@fastify/static`'s own Cache-Control
+  // handling. It's not just redundant with `setHeaders` below, it actively
+  // conflicts: `@fastify/static` calls `setHeaders` and *then* writes its own
+  // Cache-Control header afterwards, clobbering whatever we set here.
+  const assetsDir = path.join(getPaths().web.dist, 'assets') + path.sep
+
+  fastify.register(fastifyStatic, {
+    root: getPaths().web.dist,
+    cacheControl: false,
+    setHeaders: (res, filePath) => {
+      res.setHeader(
+        'Cache-Control',
+        filePath.startsWith(assetsDir)
+          ? `public, max-age=${ONE_YEAR_IN_SECONDS}, immutable`
+          : 'no-cache',
+      )
+    },
+  })
 
   // If `apiProxyTarget` is set, proxy requests from `apiUrl` to `apiProxyTarget`.
   // In this case, `apiUrl` has to be relative; `resolveOptions` above throws if it's not
