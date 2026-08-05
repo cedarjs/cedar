@@ -7,6 +7,11 @@ import type { Environment } from 'vitest/environments'
 import { getPaths } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
+import {
+  checkTestDatabaseUrlMatchesProvider,
+  redactDatabaseUrl,
+} from '../checkTestDatabase.js'
+
 const CedarApiVitestEnvironment: Environment = {
   name: 'cedar-api',
   viteEnvironment: 'ssr',
@@ -21,8 +26,18 @@ const CedarApiVitestEnvironment: Environment = {
     const cedarPaths = getPaths()
 
     const defaultDb = `file:${path.join(cedarPaths.generated.base, 'test.db')}`
+    const usedFallback = !process.env.TEST_DATABASE_URL
 
     process.env.DATABASE_URL = process.env.TEST_DATABASE_URL || defaultDb
+
+    await checkTestDatabaseUrlMatchesProvider(
+      process.env.DATABASE_URL,
+      usedFallback,
+    )
+
+    console.log(
+      `Setting up test database: ${redactDatabaseUrl(process.env.DATABASE_URL)}`,
+    )
 
     const command =
       process.env.TEST_DATABASE_STRATEGY === 'reset'
