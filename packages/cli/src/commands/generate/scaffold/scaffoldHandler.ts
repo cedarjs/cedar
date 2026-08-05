@@ -788,16 +788,19 @@ interface RouteInfo {
   isInsidePrivateSet?: boolean
 }
 
-// Extracts all identifiers that refer to PrivateSet from the Routes file imports.
-// Handles direct imports, aliases, and namespace members.
-// Returns a Set of all names that could refer to a PrivateSet component.
-const extractPrivateSetAliases = (ast: any): Set<string> => {
+// Extracts all identifiers that refer to protected route wrappers from the
+// Routes file imports. Handles direct imports, aliases, and namespace members.
+// Recognizes @cedarjs/router PrivateSet and legacy Protected/Set patterns.
+// Returns a Set of all names that could refer to a protected wrapper component.
+const extractProtectedWrapperAliases = (ast: any): Set<string> => {
   const aliases = new Set<string>()
+  // Protected wrapper component names to recognize
+  const protectedNames = ['PrivateSet', 'Private', 'Set']
 
   traverse(ast, {
     ImportDeclaration(path) {
       const source = path.node.source.value
-      // Only look for imports from @cedarjs/router
+      // Look for imports from @cedarjs/router
       if (source !== '@cedarjs/router') {
         return
       }
@@ -805,7 +808,7 @@ const extractPrivateSetAliases = (ast: any): Set<string> => {
       path.node.specifiers.forEach((spec) => {
         if (spec.type === 'ImportSpecifier') {
           // Handle: import { PrivateSet }, import { PrivateSet as Alias }
-          if (spec.imported.name === 'PrivateSet') {
+          if (protectedNames.includes(spec.imported.name)) {
             aliases.add(spec.local.name)
           }
         } else if (spec.type === 'ImportNamespaceSpecifier') {
@@ -885,9 +888,11 @@ const parseRoutesFile = (): RouteInfo[] => {
       configFile: false,
     })
 
-    const privateSetAliases = extractPrivateSetAliases(ast)
+    const protectedWrapperAliases = extractProtectedWrapperAliases(ast)
     const routeAliases = extractRouteAliases(ast)
     const routes: RouteInfo[] = []
+    // Protected wrapper component names to recognize in JSX
+    const protectedWrapperNames = ['PrivateSet', 'Private', 'Set']
 
     traverse(ast, {
       JSXElement(path) {
@@ -931,8 +936,8 @@ const parseRoutesFile = (): RouteInfo[] => {
             : undefined
         }
 
-        // Check if this Route is nested inside a PrivateSet (or alias) by
-        // walking up the parent chain. Handles direct names, aliases, and
+        // Check if this Route is nested inside a protected wrapper (PrivateSet, Private, or Set)
+        // by walking up the parent chain. Handles direct names, aliases, and
         // namespace members (e.g., <CedarRouter.PrivateSet>).
         let isInsidePrivateSet = false
         let parentPath = path.parentPath
@@ -940,22 +945,22 @@ const parseRoutesFile = (): RouteInfo[] => {
           if (parentPath.node.type === 'JSXElement') {
             const parentElement = parentPath.node.openingElement
 
-            // Direct JSXIdentifier: <PrivateSet> or <AuthSet> (aliased)
+            // Direct JSXIdentifier: <PrivateSet>, <Private>, <Set>, or aliases
             if (parentElement.name.type === 'JSXIdentifier') {
-              if (privateSetAliases.has(parentElement.name.name)) {
+              if (protectedWrapperAliases.has(parentElement.name.name)) {
                 isInsidePrivateSet = true
                 break
               }
             }
-            // JSXMemberExpression: <CedarRouter.PrivateSet>
+            // JSXMemberExpression: <CedarRouter.PrivateSet>, <CedarRouter.Private>, <CedarRouter.Set>
             else if (parentElement.name.type === 'JSXMemberExpression') {
               const { object, property } = parentElement.name
-              // Check if property is 'PrivateSet' and object is a known namespace
+              // Check if property is a protected wrapper name and object is a known namespace
               if (
                 property.type === 'JSXIdentifier' &&
-                property.name === 'PrivateSet' &&
+                protectedWrapperNames.includes(property.name) &&
                 object.type === 'JSXIdentifier' &&
-                privateSetAliases.has(object.name)
+                protectedWrapperAliases.has(object.name)
               ) {
                 isInsidePrivateSet = true
                 break

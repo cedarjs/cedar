@@ -357,6 +357,66 @@ export const Routes = () => (
 
     expect(hasLoginRoute()).toBe(true)
   })
+
+  test('returns false when login route is inside legacy <Private> wrapper', () => {
+    vol.fromJSON(
+      {
+        'web/src/Routes.js': `
+import { Route, Private } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <Private>
+      <Route path="/login" page={LoginPage} name="login" />
+    </Private>
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(false)
+  })
+
+  test('returns false when login route is inside legacy <Set private> wrapper', () => {
+    vol.fromJSON(
+      {
+        'web/src/Routes.js': `
+import { Route, Set } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <Set private>
+      <Route path="/login" page={LoginPage} name="login" />
+    </Set>
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(false)
+  })
+
+  test('returns false when login route is inside namespaced legacy <CedarRouter.Private>', () => {
+    vol.fromJSON(
+      {
+        'web/src/Routes.js': `
+import * as CedarRouter from '@cedarjs/router'
+export const Routes = () => (
+  <CedarRouter.Router>
+    <CedarRouter.Private>
+      <CedarRouter.Route path="/login" page={LoginPage} name="login" />
+    </CedarRouter.Private>
+  </CedarRouter.Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(false)
+  })
 })
 
 describe('getUnauthenticatedRedirectRoute', () => {
@@ -563,5 +623,71 @@ export const Routes = () => (
     )
 
     expect(getUnauthenticatedRedirectRoute()).toBe(undefined)
+  })
+
+  test('skips a protected landing page route nested in legacy <Private>', () => {
+    vol.fromJSON(
+      {
+        'web/src/auth.ts': 'export const { AuthProvider } = createAuth()',
+        'web/src/Routes.js': `
+import { Router, Route, Private } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <Route path="/login" page={LoginPage} name="login" />
+    <Private>
+      <Route path="/" page={HomePage} name="home" />
+    </Private>
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(getUnauthenticatedRedirectRoute()).toBe('login')
+  })
+
+  test('skips a protected landing page route nested in legacy <Set private>', () => {
+    vol.fromJSON(
+      {
+        'web/src/auth.ts': 'export const { AuthProvider } = createAuth()',
+        'web/src/Routes.js': `
+import { Router, Route, Set } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <Route path="/login" page={LoginPage} name="login" />
+    <Set private>
+      <Route path="/" page={HomePage} name="home" />
+    </Set>
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(getUnauthenticatedRedirectRoute()).toBe('login')
+  })
+
+  test('uses unprotected landing page when login is in legacy <Private>', () => {
+    vol.fromJSON(
+      {
+        'web/src/auth.ts': 'export const { AuthProvider } = createAuth()',
+        'web/src/Routes.js': `
+import { Router, Route, Private } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <Route path="/" page={HomePage} name="home" />
+    <Private>
+      <Route path="/login" page={LoginPage} name="login" />
+    </Private>
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(getUnauthenticatedRedirectRoute()).toBe('home')
   })
 })
