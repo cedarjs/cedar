@@ -868,11 +868,14 @@ const parseRoutesFile = (): RouteInfo[] => {
   }
 }
 
-// Checks whether a route named 'login' is already defined in Routes file.
-// Used to determine if scaffolded routes can safely reference it as the
-// unauthenticated redirect target.
+// Checks whether an unprotected route named 'login' is already defined in
+// Routes file. Used to determine if scaffolded routes can safely reference it
+// as the unauthenticated redirect target. Skips login routes nested in
+// PrivateSet, which would create a redirect loop.
 export const hasLoginRoute = () =>
-  parseRoutesFile().some((route) => route.name === 'login')
+  parseRoutesFile().some(
+    (route) => route.name === 'login' && !route.isInsidePrivateSet,
+  )
 
 // Returns the route name that scaffolded PrivateSets should redirect
 // unauthenticated users to, or undefined if PrivateSet shouldn't be used at

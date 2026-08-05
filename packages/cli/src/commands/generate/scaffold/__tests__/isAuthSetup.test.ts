@@ -183,6 +183,26 @@ export const Routes = () => (
 
     expect(hasLoginRoute()).toBe(false)
   })
+
+  test('returns false when login route is nested inside PrivateSet', () => {
+    vol.fromJSON(
+      {
+        'web/src/Routes.js': `
+import { Router, Route, PrivateSet } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <PrivateSet>
+      <Route path="/login" page={LoginPage} name="login" />
+    </PrivateSet>
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(false)
+  })
 })
 
 describe('getUnauthenticatedRedirectRoute', () => {
@@ -346,5 +366,48 @@ export const Routes = () => (
     )
 
     expect(getUnauthenticatedRedirectRoute()).toBe('landing')
+  })
+
+  test('falls back to landing page when login route is protected', () => {
+    vol.fromJSON(
+      {
+        'web/src/auth.ts': 'export const { AuthProvider } = createAuth()',
+        'web/src/Routes.js': `
+import { Router, Route, PrivateSet } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <Route path="/" page={LandingPage} name="landing" />
+    <PrivateSet>
+      <Route path="/login" page={LoginPage} name="login" />
+    </PrivateSet>
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(getUnauthenticatedRedirectRoute()).toBe('landing')
+  })
+
+  test('returns undefined when login route is protected and no landing page exists', () => {
+    vol.fromJSON(
+      {
+        'web/src/auth.ts': 'export const { AuthProvider } = createAuth()',
+        'web/src/Routes.js': `
+import { Router, Route, PrivateSet } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <PrivateSet>
+      <Route path="/login" page={LoginPage} name="login" />
+    </PrivateSet>
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(getUnauthenticatedRedirectRoute()).toBe(undefined)
   })
 })
