@@ -8,7 +8,10 @@ import { colors, getPaths, installPackages } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import type { SqliteToPostgresCtx } from '../database/postgresHandler.js'
-import { getSqliteToPostgresTasks } from '../database/postgresHandler.js'
+import {
+  blockedBy,
+  getSqliteToPostgresTasks,
+} from '../database/postgresHandler.js'
 
 import type { Args } from './neon.js'
 
@@ -51,10 +54,7 @@ export async function handler({ force }: Args) {
       ...getSqliteToPostgresTasks({ notes }),
       {
         title: 'Provisioning Neon database',
-        skip: (ctx) =>
-          ctx.unsupportedProvider ||
-          ctx.missingPrismaConfig ||
-          skipProvisioning,
+        skip: (ctx) => blockedBy(ctx) || skipProvisioning,
         task: async (ctx) => {
           const res = await fetch('https://neon.new/api/v1/database', {
             method: 'POST',
@@ -95,11 +95,12 @@ export async function handler({ force }: Args) {
       {
         title: 'Writing database connection to .env',
         skip: (ctx) => {
-          if (
-            ctx.unsupportedProvider ||
-            ctx.missingPrismaConfig ||
-            skipProvisioning
-          ) {
+          const blocked = blockedBy(ctx)
+          if (blocked) {
+            return blocked
+          }
+
+          if (skipProvisioning) {
             return true
           }
 
@@ -140,11 +141,12 @@ export async function handler({ force }: Args) {
       {
         title: 'Running Prisma migrations',
         skip: (ctx) => {
-          if (
-            ctx.unsupportedProvider ||
-            ctx.missingPrismaConfig ||
-            skipProvisioning
-          ) {
+          const blocked = blockedBy(ctx)
+          if (blocked) {
+            return blocked
+          }
+
+          if (skipProvisioning) {
             return true
           }
 
@@ -185,13 +187,9 @@ export async function handler({ force }: Args) {
       {
         title: 'One more thing...',
         task: (ctx, task) => {
-          if (ctx.unsupportedProvider) {
-            task.output = 'Skipped — unsupported database provider'
-            return
-          }
-
-          if (ctx.missingPrismaConfig) {
-            task.output = 'Skipped — no Prisma config file found'
+          const blocked = blockedBy(ctx)
+          if (blocked) {
+            task.output = `Skipped — ${blocked}`
             return
           }
 

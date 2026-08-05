@@ -346,7 +346,12 @@ describe('getSqliteToPostgresTasks', () => {
     )
   })
 
-  it('throws a clear error instead of silently no-op-ing on an unrecognized prisma.config shape', async () => {
+  it('mutates nothing when the prisma.config shape has no recognizable datasource URL', async () => {
+    // Previously, a config in this shape was only discovered when "Updating
+    // Prisma config" itself threw — after SQLite dependencies had already
+    // been removed, schema.prisma switched to postgresql, and db.ts
+    // replaced. Checked up front instead now, before anything mutates, the
+    // same way `missingPrismaConfig` is.
     seedSqliteProject()
     memfsFs.writeFileSync(
       path.join(BASE_PATH, 'api/prisma.config.cjs'),
@@ -355,10 +360,31 @@ describe('getSqliteToPostgresTasks', () => {
 
     const notes: string[] = []
     const tasks = getSqliteToPostgresTasks({ notes })
+    await new Listr2Mock(tasks).run()
 
-    await expect(new Listr2Mock(tasks).run()).rejects.toThrow(
+    expect(notes.join('\n')).toContain(
       "Could not find an active `url: env('DATABASE_URL')` line",
     )
+    expect(addWorkspacePackages).not.toHaveBeenCalled()
+
+    const apiPkg = JSON.parse(
+      memfsFs.readFileSync(
+        path.join(BASE_PATH, 'api/package.json'),
+        'utf-8',
+      ) as string,
+    )
+    expect(apiPkg.dependencies['better-sqlite3']).toBe('1.0.0')
+
+    expect(
+      memfsFs.readFileSync(
+        path.join(BASE_PATH, 'api/db/schema.prisma'),
+        'utf-8',
+      ),
+    ).toBe(SQLITE_SCHEMA)
+
+    expect(
+      memfsFs.readFileSync(path.join(BASE_PATH, 'api/src/lib/db.ts'), 'utf-8'),
+    ).toBe('// sqlite adapter')
   })
 
   it('detects SQLite usage in the project scripts/ dir, not just api/src', async () => {
@@ -489,7 +515,28 @@ describe('postgres handler', () => {
 
     await handler()
 
-    expect(Listr2Mock.skippedTaskTitles).toContain('Running Prisma migrations')
+    expect(Listr2Mock.skippedTaskTitles).toContain(
+      'No Prisma config file found',
+    )
+    expect(commandSync).not.toHaveBeenCalled()
+  })
+
+  it('skips running migrations when the prisma.config shape is unrecognized', async () => {
+    seedSqliteProject()
+    memfsFs.writeFileSync(
+      path.join(BASE_PATH, 'api/prisma.config.cjs'),
+      'module.exports = defineConfig({ datasourceUrl: databaseUrl })',
+    )
+    memfsFs.writeFileSync(
+      path.join(BASE_PATH, '.env'),
+      'DATABASE_URL=postgresql://localhost/app\n',
+    )
+
+    await handler()
+
+    expect(Listr2Mock.skippedTaskTitles).toContain(
+      'Prisma config has no recognizable datasource URL',
+    )
     expect(commandSync).not.toHaveBeenCalled()
   })
 

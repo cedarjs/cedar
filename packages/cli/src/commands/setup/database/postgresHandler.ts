@@ -20,7 +20,33 @@ export interface SqliteToPostgresCtx {
   hasSqliteDependenciesMeta?: boolean
   unsupportedProvider?: boolean
   missingPrismaConfig?: boolean
+  unrecognizedPrismaConfig?: boolean
   hasSqliteUsageOutsideDb?: boolean
+}
+
+/**
+ * Every task in this file, and every Neon-specific task built on top of it,
+ * needs to check the same handful of "stop entirely" conditions before doing
+ * anything else — three so far, and every one of them was added after a
+ * review round caught a step that skipped mutating for its own reason but
+ * forgot to also check whichever of these already existed. Centralizing the
+ * check here means a fourth one only has to be added in one place, not
+ * copied into every `skip`.
+ */
+export function blockedBy(ctx: SqliteToPostgresCtx): string | false {
+  if (ctx.unsupportedProvider) {
+    return 'Unsupported database provider'
+  }
+
+  if (ctx.missingPrismaConfig) {
+    return 'No Prisma config file found'
+  }
+
+  if (ctx.unrecognizedPrismaConfig) {
+    return 'Prisma config has no recognizable datasource URL'
+  }
+
+  return false
 }
 
 /**
@@ -149,6 +175,32 @@ export function getSqliteToPostgresTasks({
           return
         }
 
+        // Also checked up front, for the same reason: "Updating Prisma
+        // config" is the only step that actually reads the datasource `url:`
+        // line, so without this a config file in some other valid Prisma
+        // shape (no matching `url: env('DATABASE_URL')` line at all) would
+        // only be discovered after every earlier step had already mutated
+        // the project, leaving it in the same kind of half-converted state
+        // the `missingPrismaConfig` check above exists to prevent.
+        if (
+          !ctx.hasDirectDatabaseUrlConfig &&
+          !findDatasourceUrlLine(
+            fs.readFileSync(prismaConfigPath, 'utf-8'),
+            'DATABASE_URL',
+          )
+        ) {
+          ctx.unrecognizedPrismaConfig = true
+          notes.push(
+            colors.note(
+              `Could not find an active \`url: env('DATABASE_URL')\` line in ` +
+                `${prismaConfigPath}. Update it to read DIRECT_DATABASE_URL ` +
+                'manually.',
+            ),
+          )
+
+          return
+        }
+
         // Not conditional on `isPostgres` — the SQLite package cleanup below
         // is now gated on whether those packages are actually still there,
         // not on the schema provider, so this has to be known regardless of
@@ -164,12 +216,9 @@ export function getSqliteToPostgresTasks({
     {
       title: 'Removing SQLite dependencies from api/package.json',
       skip: (ctx) => {
-        if (ctx.unsupportedProvider) {
-          return 'Unsupported database provider'
-        }
-
-        if (ctx.missingPrismaConfig) {
-          return 'No Prisma config file found'
+        const blocked = blockedBy(ctx)
+        if (blocked) {
+          return blocked
         }
 
         if (!ctx.hasSqlitePackages) {
@@ -196,12 +245,9 @@ export function getSqliteToPostgresTasks({
     {
       title: 'Removing better-sqlite3 dependenciesMeta',
       skip: (ctx) => {
-        if (ctx.unsupportedProvider) {
-          return 'Unsupported database provider'
-        }
-
-        if (ctx.missingPrismaConfig) {
-          return 'No Prisma config file found'
+        const blocked = blockedBy(ctx)
+        if (blocked) {
+          return blocked
         }
 
         if (!ctx.hasSqliteDependenciesMeta) {
@@ -235,12 +281,9 @@ export function getSqliteToPostgresTasks({
     {
       title: 'Switching Prisma schema to PostgreSQL',
       skip: (ctx) => {
-        if (ctx.unsupportedProvider) {
-          return 'Unsupported database provider'
-        }
-
-        if (ctx.missingPrismaConfig) {
-          return 'No Prisma config file found'
+        const blocked = blockedBy(ctx)
+        if (blocked) {
+          return blocked
         }
 
         if (ctx.isPostgres) {
@@ -260,12 +303,9 @@ export function getSqliteToPostgresTasks({
     {
       title: 'Updating database adapter',
       skip: (ctx) => {
-        if (ctx.unsupportedProvider) {
-          return 'Unsupported database provider'
-        }
-
-        if (ctx.missingPrismaConfig) {
-          return 'No Prisma config file found'
+        const blocked = blockedBy(ctx)
+        if (blocked) {
+          return blocked
         }
 
         if (ctx.hasPgAdapter) {
@@ -282,12 +322,9 @@ export function getSqliteToPostgresTasks({
     {
       title: 'Updating Prisma config',
       skip: (ctx) => {
-        if (ctx.unsupportedProvider) {
-          return 'Unsupported database provider'
-        }
-
-        if (ctx.missingPrismaConfig) {
-          return 'No Prisma config file found'
+        const blocked = blockedBy(ctx)
+        if (blocked) {
+          return blocked
         }
 
         if (ctx.hasDirectDatabaseUrlConfig) {
@@ -307,6 +344,10 @@ export function getSqliteToPostgresTasks({
         const active = findDatasourceUrlLine(configContent, 'DATABASE_URL')
 
         if (!active) {
+          // `unrecognizedPrismaConfig`, checked above, guarantees this is
+          // found — this is just a defensive backstop against that
+          // invariant being violated (e.g. the file changing between the
+          // check and this task running) rather than an expected path.
           throw new Error(
             `Could not find an active \`url: env('DATABASE_URL')\` line in ` +
               `${configPath}. Update it to read DIRECT_DATABASE_URL manually.`,
@@ -324,12 +365,9 @@ export function getSqliteToPostgresTasks({
     {
       title: 'Adding required api packages...',
       skip: (ctx) => {
-        if (ctx.unsupportedProvider) {
-          return 'Unsupported database provider'
-        }
-
-        if (ctx.missingPrismaConfig) {
-          return 'No Prisma config file found'
+        const blocked = blockedBy(ctx)
+        if (blocked) {
+          return blocked
         }
 
         if (ctx.hasPgAdapterPackage) {
@@ -384,8 +422,9 @@ export async function handler() {
       {
         title: 'Running Prisma migrations',
         skip: (ctx: SqliteToPostgresCtx) => {
-          if (ctx.unsupportedProvider || ctx.missingPrismaConfig) {
-            return true
+          const blocked = blockedBy(ctx)
+          if (blocked) {
+            return blocked
           }
 
           if (!databaseUrl) {

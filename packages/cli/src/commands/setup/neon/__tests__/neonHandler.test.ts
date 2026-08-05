@@ -240,6 +240,27 @@ describe('neon handler', () => {
     ).toBe(SQLITE_SCHEMA)
   })
 
+  it('does not provision, write .env, or migrate when the prisma.config shape is unrecognized', async () => {
+    seedSqliteProject()
+    memfsFs.writeFileSync(
+      path.join(BASE_PATH, 'api/prisma.config.cjs'),
+      'module.exports = defineConfig({ datasourceUrl: databaseUrl })',
+    )
+
+    global.fetch = vi.fn()
+
+    await handler({ force: false })
+
+    expect(global.fetch).not.toHaveBeenCalled()
+    expect(memfsFs.existsSync(path.join(BASE_PATH, '.env'))).toBe(false)
+    expect(
+      memfsFs.readFileSync(
+        path.join(BASE_PATH, 'api/db/schema.prisma'),
+        'utf-8',
+      ),
+    ).toBe(SQLITE_SCHEMA)
+  })
+
   it('exits with a non-zero status when the migration fails, instead of reporting success', async () => {
     // With `exitOnError: false`, a failed task doesn't reject `tasks.run()`
     // — that's the mechanism this command relies on to let "One more
