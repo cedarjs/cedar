@@ -94,11 +94,9 @@ ENV NODE_ENV=production
 
 # default api serve command
 # ---------
-# If you are using a custom server file, you must use the following
-# command to launch your server instead of the default api-server below.
-# This is important if you intend to configure GraphQL to use Realtime.
-#
-# CMD [ "./api/dist/server.js" ]
+# If api/dist/server.js exists (e.g. because you've set up Realtime or a
+# custom Fastify plugin), `cedarjs-server api` runs it automatically — no
+# separate CMD needed.
 CMD ["node_modules/.bin/cedarjs-server", "api"]
 
 # web serve

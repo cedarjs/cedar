@@ -21,6 +21,8 @@ import {
   builder as bothBuilder,
 } from './bothCLIConfig.js'
 import { handler as bothHandler } from './bothCLIConfigHandler.js'
+import { apiDistServerFileExists, runApiDistServerFile } from './serverFile.js'
+import type { APIParsedOptions } from './types.js'
 
 if (!process.env.CEDAR_ENV_FILES_LOADED) {
   config({
@@ -51,7 +53,18 @@ yargs(hideBin(process.argv))
     apiDescription,
     // @ts-expect-error The yargs types seem wrong; it's ok for builder to be a function
     apiBuilder,
-    apiHandler,
+    async (argv: APIParsedOptions) => {
+      // A custom api/src/server.ts is where Realtime, custom Fastify
+      // plugins, and custom middleware get registered. Running the default
+      // server instead wouldn't fail — it would just silently produce a
+      // different app.
+      if (apiDistServerFileExists()) {
+        await runApiDistServerFile(argv)
+        return
+      }
+
+      await apiHandler(argv)
+    },
   )
   .command(
     'web',

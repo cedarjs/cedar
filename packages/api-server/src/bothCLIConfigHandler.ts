@@ -5,9 +5,30 @@ import { redwoodFastifyWeb, coerceRootPath } from '@cedarjs/fastify-web'
 import { getWebHost, getWebPort, getAPIHost, getAPIPort } from './cliHelpers.js'
 import { createServer as createApiServer } from './createServer.js'
 import { createFastifyInstance } from './fastify.js'
+import { apiDistServerFileExists } from './serverFile.js'
 import type { BothParsedOptions } from './types.js'
 
 export async function handler(options: BothParsedOptions) {
+  // A custom server file is a Fastify concept — Realtime, custom plugins,
+  // and custom middleware registered there have no equivalent in this
+  // in-process both-sides server, so there's no way to honour it here.
+  // Running without it wouldn't degrade the app, it would silently produce
+  // a different one, so refuse rather than continue.
+  if (apiDistServerFileExists()) {
+    throw new Error(
+      'api/dist/server.js was found, but a custom server file is not ' +
+        'supported when serving both sides from one process ' +
+        '(`cedarjs-server` / `cedar serve`). It is a Fastify concept — ' +
+        'anything registered there (Realtime, custom plugins, custom ' +
+        'middleware) would silently be skipped if this continued.\n\n' +
+        'Run the api and web sides as separate processes instead, so the ' +
+        'api side goes through `cedarjs-server api`, which does run your ' +
+        'server file:\n\n' +
+        '  cedarjs-server api\n' +
+        '  cedarjs-server web',
+    )
+  }
+
   const timeStart = Date.now()
   console.log(ansis.dim.italic('Starting API and Web Servers...'))
 
