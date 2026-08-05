@@ -7,9 +7,15 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 
 import '../../../../lib/mockTelemetry.js'
 
+import { globSyncByExtension } from '../../../../__tests__/globSyncStub.js'
 import { Listr2Mock } from '../../../../__tests__/Listr2Mock.js'
 
-vi.mock('node:fs', async () => ({ ...memfsFs, default: { ...memfsFs } }))
+vi.mock('node:fs', async () => ({
+  ...memfsFs,
+  default: { ...memfsFs },
+  globSync: (_pattern: string, opts: { cwd: string }) =>
+    globSyncByExtension(opts.cwd, ['ts', 'tsx', 'js', 'jsx']),
+}))
 
 vi.mock('listr2', () => ({
   Listr: Listr2Mock,
