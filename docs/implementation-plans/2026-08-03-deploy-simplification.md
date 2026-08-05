@@ -38,17 +38,17 @@ Railway-only.
 
 ## Status
 
-| #   | Item                                       | Status                                        |
-| --- | ------------------------------------------ | --------------------------------------------- |
-| 1   | Read `PORT` and `HOST`                     | **Done** — #2292                              |
-| 2   | `build` / `start` scripts in templates     | PR #2294 — blocked on #2302                   |
-| 3   | Runtime deps out of root `devDependencies` | Reframed — #2295 done, rest folded into #2294 |
-| 4   | Web server cache headers + compression     | #2301                                         |
-| 5   | Dual-stack host default                    | Open                                          |
-| 6   | Generic `setup deploy container`           | **Superseded** — #2303                        |
-| 7   | Built-in health endpoint                   | #2298                                         |
-| 8   | Rename `REDWOOD_*` → `CEDAR_*`             | **Done** — #2292                              |
-| 9   | Document the serve tiers                   | #2300                                         |
+| #   | Item                                       | Status                                         |
+| --- | ------------------------------------------ | ---------------------------------------------- |
+| 1   | Read `PORT` and `HOST`                     | **Done** — #2292                               |
+| 2   | `build` / `start` scripts in templates     | #2294 done; switch to `cedarjs-server` — #2323 |
+| 3   | Runtime deps out of root `devDependencies` | Reframed — #2295 superseded by #2312/#2313     |
+| 4   | Web server cache headers + compression     | #2301                                          |
+| 5   | Dual-stack host default                    | Open                                           |
+| 6   | Generic `setup deploy container`           | **Superseded** — #2303                         |
+| 7   | Built-in health endpoint                   | #2298                                          |
+| 8   | Rename `REDWOOD_*` → `CEDAR_*`             | **Done** — #2292                               |
+| 9   | Document the serve tiers                   | #2300                                          |
 
 Also opened along the way: #2296, #2297, #2299, #2302.
 
@@ -72,9 +72,9 @@ Shipping five scripts rather than the two originally planned:
 ```json
 "build": "cedar build",
 "dev": "cedar dev",
-"start": "cedar serve",
-"start:api": "cedar serve api",
-"start:web": "cedar serve web"
+"start": "cedarjs-server",
+"start:api": "cedarjs-server api",
+"start:web": "cedarjs-server web"
 ```
 
 `start` is the single-container path; `start:api` / `start:web` are the
@@ -87,7 +87,11 @@ it's Railway-only and still leaves the proxy target unset — a half-staged
 two-service deploy that fails until you find the right setting is worse than one
 service that works immediately.
 
-Blocked on #2302 before the scripts can switch to the `cedarjs-server` bin.
+`#2302` was the blocker (`cedarjs-server` skipped server files) — fixed by
+#2318. The scripts now run through `@cedarjs/api-server`'s `cedarjs-server` bin
+directly, with `@cedarjs/api-server` added as a root **dependency**, in #2323.
+See item 3 below for why that dependency has to be a runtime one, not a dev
+one.
 
 ## 3. Runtime deps out of `devDependencies` — reframed
 
@@ -101,14 +105,20 @@ runtime concern. The fix is to stop routing `start` through the CLI at all —
 add `@cedarjs/api-server` as a root **dependency** and use the `cedarjs-server`
 bin. Cedar already does exactly this in `setup docker`, which adds
 `@cedarjs/api-server` and `@cedarjs/web-server` to the api and web workspaces.
+The root-scripts case only needs `@cedarjs/api-server` — its `cedarjs-server`
+bin has a `web` subcommand that calls straight into `@cedarjs/web-server`'s own
+handler, so there's no need for a second explicit dependency there. (`setup
+docker` adds both separately because its `web_serve` image never installs the
+api workspace at all, so it can't reach `@cedarjs/api-server` transitively.)
 
 **This is not cosmetic.** Heroku's Node buildpack and DigitalOcean/Paketo both
 strip `devDependencies` after build **by default**, so `start: cedar serve`
 fails on those platforms: build succeeds, deploy succeeds, container starts,
 command not found. Railway only works because `RAILPACK_PRUNE_DEPS` is opt-in.
 
-Blocked on #2302, because `cedarjs-server` does not do the server-file dispatch
-that `cedar serve` does.
+`#2302` was the blocker (`cedarjs-server` didn't do the server-file dispatch
+that `cedar serve` does) — fixed by #2318. Root dependency + script switch
+landed in #2323.
 
 ## 4. Web server cache headers and compression — #2301
 
@@ -265,11 +275,13 @@ lands, not as another bespoke provider.
 ## Sequencing
 
 1. **#2302** — `cedarjs-server api` runs the server file; modes that can't, fail
-   loudly. Blocks the rest, and fixes a live bug.
+   loudly. Blocks the rest, and fixes a live bug. **Done**, via #2318.
 2. **#2295** — `@cedarjs/internal` to an optional peer, so the new root
-   dependency is lean. Independent of 1, same release.
+   dependency is lean. Independent of 1, same release. **Superseded**, by
+   #2312/#2313 (split `@cedarjs/api-server-watch` out instead).
 3. **#2294** — add the root `@cedarjs/api-server` dependency, switch the scripts
-   to `cedarjs-server`, merge.
+   to `cedarjs-server`. #2294 shipped the scripts as `cedar serve`; the switch to
+   `cedarjs-server` landed in #2323, once unblocked by 1 and 2.
 4. **#2301** and **#5** — the two things that make the blessed single-container
    path actually good.
 5. **#2303**, then docs (#2300).

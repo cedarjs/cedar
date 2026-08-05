@@ -8,9 +8,12 @@
   "scripts": {
     "build": "cedar build",
     "dev": "cedar dev",
-    "start": "cedar serve",
-    "start:api": "cedar serve api",
-    "start:web": "cedar serve web"
+    "start": "cedarjs-server",
+    "start:api": "cedarjs-server api",
+    "start:web": "cedarjs-server web"
+  },
+  "dependencies": {
+    "@cedarjs/api-server": "5.0.6"
   },
   "devDependencies": {
     "@cedarjs/core": "5.0.2",
