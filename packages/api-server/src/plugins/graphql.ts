@@ -20,20 +20,20 @@ import { getPaths } from '@cedarjs/project-config'
 
 import { lambdaEventForFastifyRequest } from '../requestHandlers/awsLambdaFastify.js'
 
-export interface RedwoodFastifyGraphQLOptions {
-  redwood: {
+export interface CedarFastifyGraphQLOptions {
+  cedar: {
     apiRootPath?: string
     graphql?: GraphQLYogaOptions
   }
 }
 
-export async function redwoodFastifyGraphQLServer(
+export async function cedarFastifyGraphQLServer(
   fastify: FastifyInstance,
-  options: RedwoodFastifyGraphQLOptions,
+  options: CedarFastifyGraphQLOptions,
 ) {
-  const redwoodOptions = options.redwood ?? {}
-  redwoodOptions.apiRootPath ??= '/'
-  redwoodOptions.apiRootPath = coerceRootPath(redwoodOptions.apiRootPath)
+  const cedarOptions = options.cedar ?? {}
+  cedarOptions.apiRootPath ??= '/'
+  cedarOptions.apiRootPath = coerceRootPath(cedarOptions.apiRootPath)
 
   fastify.register(fastifyUrlData)
   // We register the multiPart plugin, but not the raw body plugin.
@@ -49,7 +49,7 @@ export async function redwoodFastifyGraphQLServer(
   try {
     // Load the graphql options from the user's graphql function if none are
     // explicitly provided
-    if (!redwoodOptions.graphql) {
+    if (!cedarOptions.graphql) {
       const [graphqlFunctionPath] = await fg('dist/functions/graphql.{ts,js}', {
         cwd: getPaths().api.base,
         absolute: true,
@@ -67,10 +67,10 @@ export async function redwoodFastifyGraphQLServer(
         return
       }
 
-      redwoodOptions.graphql = __cedar_graphqlOptions as GraphQLYogaOptions
+      cedarOptions.graphql = __cedar_graphqlOptions as GraphQLYogaOptions
     }
 
-    const graphqlOptions = redwoodOptions.graphql
+    const graphqlOptions = cedarOptions.graphql
 
     // Used for SSE single connection mode with the `/graphql/stream` endpoint
     if (graphqlOptions?.realtime?.subscriptions) {
@@ -84,7 +84,7 @@ export async function redwoodFastifyGraphQLServer(
     const routePaths = ['', '/health', '/readiness', '/stream']
     for (const routePath of routePaths) {
       fastify.route({
-        url: `${redwoodOptions.apiRootPath}${graphqlEndpoint}${routePath}`,
+        url: `${cedarOptions.apiRootPath}${graphqlEndpoint}${routePath}`,
         method,
         handler: async (req, reply) => {
           const request = createFetchRequest(req, reply)
@@ -146,7 +146,15 @@ export async function redwoodFastifyGraphQLServer(
       done()
     })
   } catch (e) {
-    console.log(e)
+    // Rethrow rather than swallow. Anything thrown in here means no GraphQL
+    // routes got registered, so the server would come up healthy while 404ing
+    // /graphql and everything under it. Failing to start with the actual cause
+    // is far easier to diagnose than a silently empty route table.
+    const message = e instanceof Error ? e.message : String(e)
+
+    fastify.log.error(e, `Failed to set up the GraphQL server: ${message}`)
+
+    throw e
   }
 }
 

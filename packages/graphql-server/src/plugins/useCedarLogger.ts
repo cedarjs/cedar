@@ -118,7 +118,7 @@ export type LoggerConfig = {
 }
 
 /**
- * This function is used by the useRedwoodLogger to
+ * This function is used by the useCedarLogger to
  * logs every time an operation is being executed and
  * when the execution of the operation is done.
  */
@@ -192,7 +192,7 @@ const logResult =
  * @see https://www.envelop.dev/docs/plugins/lifecycle
  * @returns
  */
-export const useRedwoodLogger = (
+export const useCedarLogger = (
   loggerConfig: LoggerConfig,
 ): Plugin<CedarGraphQLContext> => {
   const logger = loggerConfig.logger

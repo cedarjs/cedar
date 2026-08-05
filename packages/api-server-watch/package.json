@@ -1,0 +1,53 @@
+{
+  "name": "@cedarjs/api-server-watch",
+  "version": "5.0.6",
+  "description": "CedarJS's dev-time watcher that rebuilds and restarts the api server on change",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cedarjs/cedar.git",
+    "directory": "packages/api-server-watch"
+  },
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/watch.js",
+  "types": "./dist/watch.d.ts",
+  "bin": {
+    "cedar-api-server-watch": "./dist/bin.js",
+    "cedarjs-api-server-watch": "./dist/bin.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "node ./build.mts",
+    "build:pack": "yarn pack -o cedarjs-api-server-watch.tgz",
+    "build:types": "tsc --build --verbose ./tsconfig.build.json",
+    "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build && yarn fix:permissions\"",
+    "fix:permissions": "chmod +x dist/bin.js",
+    "prepublishOnly": "NODE_ENV=production yarn build",
+    "test": "vitest run",
+    "test:watch": "vitest watch"
+  },
+  "dependencies": {
+    "@cedarjs/api-server": "workspace:*",
+    "@cedarjs/internal": "workspace:*",
+    "@cedarjs/project-config": "workspace:*",
+    "ansis": "4.3.1",
+    "chokidar": "3.6.0",
+    "dotenv-defaults": "5.0.2",
+    "yargs": "17.7.3"
+  },
+  "devDependencies": {
+    "@cedarjs/framework-tools": "workspace:*",
+    "@types/dotenv-defaults": "^5.0.0",
+    "@types/yargs": "17.0.35",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

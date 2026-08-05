@@ -18,6 +18,24 @@ import { serverFileExists } from '../lib/project.js'
 import { webSsrServerHandler } from './serveWebHandler.js'
 
 /**
+ * A custom api/src/server.ts is a Fastify concept — Realtime, custom
+ * plugins, and custom middleware registered there have no equivalent in the
+ * UD entry (a plain Fetchable), so there's no way to honour it. Refuse
+ * rather than silently produce a different app than what's configured.
+ */
+function refuseServerFileUnderUD(): never {
+  console.error(
+    c.error(
+      '\n api/src/server.ts was detected, but a custom server file is not ' +
+        'supported with --ud. It is a Fastify concept — anything ' +
+        'registered there (Realtime, custom plugins, custom middleware) ' +
+        'would silently be skipped if serving continued.\n',
+    ),
+  )
+  process.exit(1)
+}
+
+/**
  * Resolve the path to the UD server entry, checking for either .mjs or .js
  * extension. Vite's SSR build outputs index.mjs when the project is ESM;
  * the serve command must accept both.
@@ -151,13 +169,7 @@ export const builder = async (yargs: Argv) => {
           }
 
           if (serverFileExists()) {
-            console.warn(
-              c.warning(
-                '\n Note: api/src/server.ts was detected. ' +
-                  'This file is a Fastify concept and will be ignored when using --ud. ' +
-                  'You are testing the experimental UD support, so the behavior will not match your production Fastify setup.\n',
-              ),
-            )
+            refuseServerFileUnderUD()
           }
 
           const { getAPIHost, getAPIPort, getWebHost, getWebPort } =
@@ -165,8 +177,10 @@ export const builder = async (yargs: Argv) => {
 
           const apiPort = argv.apiPort ?? getAPIPort()
           const apiHost = argv.apiHost ?? getAPIHost()
-          const webPort = argv.webPort ?? getWebPort()
-          const webHost = argv.webHost ?? getWebHost()
+          // The web server is the one taking public traffic here, so it's the
+          // side that gets to use the host's `HOST`/`PORT` env vars.
+          const webPort = argv.webPort ?? getWebPort({ isPublicSide: true })
+          const webHost = argv.webHost ?? getWebHost({ isPublicSide: true })
 
           const apiRootPath = argv.apiRootPath ?? '/'
           const apiTarget = `http://${apiHost.includes(':') ? `[${apiHost}]` : apiHost}:${apiPort}`
@@ -287,7 +301,22 @@ export const builder = async (yargs: Argv) => {
           apiRootPath: argv.apiRootPath,
         })
 
+        // Serving the api on its own makes it the side taking public traffic,
+        // so it's the side that gets to use the host's `HOST`/`PORT` env vars.
+        const { getAPIHost, getAPIPort } =
+          await import('@cedarjs/api-server/cliHelpers')
+
+        const apiPort = argv.port ?? getAPIPort({ isPublicSide: true })
+        const apiHost = argv.host ?? getAPIHost({ isPublicSide: true })
+
+        argv.port = apiPort
+        argv.host = apiHost
+
         if (argv.ud) {
+          if (serverFileExists()) {
+            refuseServerFileUnderUD()
+          }
+
           // Import the built Fetchable and host it in-process with srvx.
           // The artifact at api/dist/ud/index.js is a pure Fetchable (`export
           // default { fetch }`) emitted by buildUDApiServer.
@@ -302,9 +331,6 @@ export const builder = async (yargs: Argv) => {
             )
             process.exit(1)
           }
-
-          const apiPort = argv.port ?? parseInt(process.env.PORT ?? '8911', 10)
-          const apiHost = argv.host ?? process.env.HOST ?? 'localhost'
 
           process.stdout.write(
             `API server starting at http://${apiHost}:${apiPort}...`,

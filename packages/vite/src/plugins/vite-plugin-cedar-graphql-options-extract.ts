@@ -52,6 +52,12 @@ export function cedarGraphqlOptionsExtractPlugin(): Plugin {
   }
 }
 
+const GRAPHQL_OPTIONS_ERROR_PREFIX =
+  'Could not read the GraphQL options in api/src/functions/graphql. Cedar needs to statically extract them so the api server can serve /graphql and its health endpoint. '
+
+const GRAPHQL_OPTIONS_ERROR_SUFFIX =
+  ' Expected a single `createGraphQLHandler({ ... })` call with the options passed directly as an object, an identifier, a call, or a ternary.'
+
 /**
  * Extracts the options argument from createGraphQLHandler calls and stores
  * them in an exported variable. Returns the transformed code with a sourcemap,
@@ -119,17 +125,29 @@ export function applyGraphqlOptionsExtract(
   }).visit(program)
 
   if (callExpressionPaths.length > 1) {
-    return null
+    throw new Error(
+      GRAPHQL_OPTIONS_ERROR_PREFIX +
+        'Found more than one call to createGraphQLHandler.' +
+        GRAPHQL_OPTIONS_ERROR_SUFFIX,
+    )
   }
 
   const callExpression = callExpressionPaths[0]
   if (!callExpression) {
-    return null
+    throw new Error(
+      GRAPHQL_OPTIONS_ERROR_PREFIX +
+        'createGraphQLHandler is imported but never called.' +
+        GRAPHQL_OPTIONS_ERROR_SUFFIX,
+    )
   }
 
   const options = callExpression.arguments[0]
   if (!options) {
-    return null
+    throw new Error(
+      GRAPHQL_OPTIONS_ERROR_PREFIX +
+        'createGraphQLHandler was called without any options.' +
+        GRAPHQL_OPTIONS_ERROR_SUFFIX,
+    )
   }
 
   if (
@@ -138,7 +156,12 @@ export function applyGraphqlOptionsExtract(
     options.type !== 'CallExpression' &&
     options.type !== 'ConditionalExpression'
   ) {
-    return null
+    throw new Error(
+      GRAPHQL_OPTIONS_ERROR_PREFIX +
+        `The options argument is a ${options.type}, which can't be read ` +
+        'statically.' +
+        GRAPHQL_OPTIONS_ERROR_SUFFIX,
+    )
   }
 
   // Extract the options into a new exported variable. We place it immediately

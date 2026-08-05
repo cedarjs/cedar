@@ -89,7 +89,7 @@ describe('cedar dev --ud', () => {
     // set up. A stale cookie left on localhost by another project is enough to
     // send this.
     //
-    // The dev server resolves auth state in `useRedwoodAuthContext` rather than
+    // The dev server resolves auth state in `useCedarAuthContext` rather than
     // up front, and unlike `cedar serve api --ud` that happens while the
     // request body is still readable — so this passes today. It's here to keep
     // it that way, not because it ever failed.
@@ -179,7 +179,7 @@ describe('cedar dev --ud', () => {
       await sleep(250)
     }
 
-    // The graphql-server request-logging plugin (useRedwoodLogger) logs
+    // The graphql-server request-logging plugin (useCedarLogger) logs
     // through the api's pino logger on every request. Under `--ud`, that
     // logger's destination is swapped for a formatting one (see
     // packages/vite/src/plugins/vite-plugin-cedar-log-formatter-dev.ts) —

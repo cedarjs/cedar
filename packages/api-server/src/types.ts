@@ -10,14 +10,14 @@ export type FastifySideConfigFnOptions = {
 export type FastifySideConfigFn = (
   fastify: FastifyInstance,
   options?: FastifySideConfigFnOptions &
-    Pick<CedarFastifyAPIOptions['redwood'], 'apiRootPath'>,
+    Pick<CedarFastifyAPIOptions['cedar'], 'apiRootPath'>,
 ) => Promise<FastifyInstance> | void
 
 export type APIParsedOptions = {
   port?: number
   host?: string
   loadEnvFiles?: boolean
-} & Omit<CedarFastifyAPIOptions['redwood'], 'fastGlobOptions'>
+} & Omit<CedarFastifyAPIOptions['cedar'], 'fastGlobOptions'>
 
 export type BothParsedOptions = {
   webPort?: number
@@ -25,4 +25,4 @@ export type BothParsedOptions = {
   apiPort?: number
   apiHost?: string
   apiRootPath?: string
-} & Omit<CedarFastifyAPIOptions['redwood'], 'fastGlobOptions'>
+} & Omit<CedarFastifyAPIOptions['cedar'], 'fastGlobOptions'>

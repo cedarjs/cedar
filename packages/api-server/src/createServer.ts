@@ -117,7 +117,7 @@ export async function createServer(options: CreateServerOptions = {}) {
   })
 
   await server.register(cedarFastifyAPI, {
-    redwood: {
+    cedar: {
       apiRootPath,
       fastGlobOptions: {
         ignore: ['**/dist/functions/graphql.js'],
@@ -134,15 +134,15 @@ export async function createServer(options: CreateServerOptions = {}) {
   })
 
   if (graphqlFunctionPath) {
-    const { redwoodFastifyGraphQLServer } = await import('./plugins/graphql.js')
+    const { cedarFastifyGraphQLServer } = await import('./plugins/graphql.js')
     // This comes from a babel plugin that's applied to
     // api/dist/functions/graphql.{ts,js} in user projects
     const { __cedar_graphqlOptions } = await import(
       pathToFileURL(graphqlFunctionPath).href
     )
 
-    await server.register(redwoodFastifyGraphQLServer, {
-      redwood: {
+    await server.register(cedarFastifyGraphQLServer, {
+      cedar: {
         apiRootPath,
         graphql: __cedar_graphqlOptions,
       },
@@ -165,11 +165,11 @@ export async function createServer(options: CreateServerOptions = {}) {
   })
 
   /**
-   * A wrapper around `fastify.listen` that handles `--apiPort`, `REDWOOD_API_PORT` and [api].port in cedar.toml (and redwood.toml) (same for host)
+   * A wrapper around `fastify.listen` that handles `--apiPort`, `CEDAR_API_PORT` and [api].port in cedar.toml (and redwood.toml) (same for host)
    *
    * The order of precedence is:
    * - `--apiPort`
-   * - `REDWOOD_API_PORT`
+   * - `CEDAR_API_PORT`
    * - [api].port in cedar.toml (and redwood.toml)
    */
   server.start = (options: StartOptions = {}) => {

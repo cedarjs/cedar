@@ -7,6 +7,10 @@ import { getPaths } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 import { acquireCedarPgTest, isCedarPgEnabled } from './cedarPgLifecycle.js'
+import {
+  checkTestDatabaseUrlMatchesProvider,
+  redactDatabaseUrl,
+} from './checkTestDatabase.js'
 
 /**
  * Provision DATABASE_URL for api tests (cedar-pg or sqlite default), then
@@ -14,14 +18,28 @@ import { acquireCedarPgTest, isCedarPgEnabled } from './cedarPgLifecycle.js'
  */
 export async function prepareApiTestDatabase(): Promise<void> {
   const cedarPaths = getPaths()
+  let usedFallback = false
 
   if (isCedarPgEnabled()) {
     // setEnv for this process (prisma); Jest workers load via @cedarjs/pg/test-env
     await acquireCedarPgTest(cedarPaths.base)
   } else {
     const defaultDb = `file:${path.join(cedarPaths.generated.base, 'test.db')}`
+    usedFallback = !process.env.TEST_DATABASE_URL
     process.env.DATABASE_URL = process.env.TEST_DATABASE_URL || defaultDb
   }
+
+  const databaseUrl = process.env.DATABASE_URL
+  if (!databaseUrl) {
+    throw new Error(
+      'DATABASE_URL is not set after test database preparation. ' +
+        'Set TEST_DATABASE_URL or enable CEDAR_PG=1.',
+    )
+  }
+
+  await checkTestDatabaseUrlMatchesProvider(databaseUrl, usedFallback)
+
+  console.log(`Setting up test database: ${redactDatabaseUrl(databaseUrl)}`)
 
   const command =
     process.env.TEST_DATABASE_STRATEGY === 'reset'

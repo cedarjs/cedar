@@ -20,7 +20,7 @@
   },
   "packageManager": "yarn@4.14.1",
   "engines": {
-    "node": "=24.x"
+    "node": "24.x"
   },
   "prisma": {
     "seed": "yarn cedar exec seed"

@@ -5,6 +5,16 @@
     "api",
     "web"
   ],
+  "scripts": {
+    "build": "cedar build",
+    "dev": "cedar dev",
+    "start": "cedarjs-server",
+    "start:api": "cedarjs-server api",
+    "start:web": "cedarjs-server web"
+  },
+  "dependencies": {
+    "@cedarjs/api-server": "5.0.6"
+  },
   "devDependencies": {
     "@cedarjs/core": "5.0.6",
     "@cedarjs/eslint-config": "5.0.6",
@@ -13,7 +23,7 @@
     "prisma": "7.8.0"
   },
   "engines": {
-    "node": "=24.x"
+    "node": "24.x"
   },
   "overrides": {
     "react-is": "19.2.3"

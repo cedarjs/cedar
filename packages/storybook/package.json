@@ -76,7 +76,7 @@
     "storybook": "8.6.18"
   },
   "engines": {
-    "node": "=24.x"
+    "node": "24.x"
   },
   "publishConfig": {
     "access": "public"

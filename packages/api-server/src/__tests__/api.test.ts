@@ -22,7 +22,7 @@ beforeAll(async () => {
   fastifyInstance = await createFastifyInstance()
 
   fastifyInstance.register(cedarFastifyAPI, {
-    redwood: {
+    cedar: {
       loadUserConfig: true,
     },
   })

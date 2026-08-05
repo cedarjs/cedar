@@ -49,6 +49,7 @@
   },
   "dependencies": {
     "@cedarjs/api-server": "workspace:*",
+    "@cedarjs/api-server-watch": "workspace:*",
     "@cedarjs/cli": "workspace:*",
     "@cedarjs/internal": "workspace:*",
     "@cedarjs/jobs": "workspace:*",

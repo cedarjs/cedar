@@ -2,7 +2,7 @@ import { useEngine } from '@envelop/core'
 import * as GraphQLJS from 'graphql'
 import { beforeEach, vi, describe, expect, it } from 'vitest'
 
-import { useRedwoodPopulateContext } from '../useRedwoodPopulateContext.js'
+import { useCedarPopulateContext } from '../useCedarPopulateContext.js'
 
 import { testSchema, testQuery } from './__fixtures__/common.js'
 import {
@@ -35,7 +35,7 @@ describe('Populates context', () => {
     const testkit = createTestkit(
       [
         useEngine(GraphQLJS),
-        useRedwoodPopulateContext(populateContextSpy),
+        useCedarPopulateContext(populateContextSpy),
         // @NOTE add spy here to check if context has been changed
         spiedPlugin.plugin,
       ],
@@ -58,7 +58,7 @@ describe('Populates context', () => {
     const testkit = createTestkit(
       [
         useEngine(GraphQLJS),
-        useRedwoodPopulateContext({
+        useCedarPopulateContext({
           dtWasHere: 'hello!',
         }),
         // @NOTE add spy here to check if context has been changed

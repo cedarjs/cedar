@@ -6,7 +6,7 @@ import { SpanKind } from '@opentelemetry/api'
 import * as opentelemetry from '@opentelemetry/api'
 import { print } from 'graphql'
 
-import type { RedwoodOpenTelemetryConfig } from '../types.js'
+import type { CedarOpenTelemetryConfig } from '../types.js'
 
 export enum AttributeName {
   EXECUTION_ERROR = 'graphql.execute.error',
@@ -28,8 +28,8 @@ type PluginContext = {
   [tracingSpanSymbol]: opentelemetry.Span
 }
 
-export const useRedwoodOpenTelemetry = (
-  options: RedwoodOpenTelemetryConfig,
+export const useCedarOpenTelemetry = (
+  options: CedarOpenTelemetryConfig,
 ): Plugin<PluginContext> => {
   const spanKind: SpanKind = SpanKind.SERVER
   const spanAdditionalAttributes: Attributes = {}
@@ -108,7 +108,7 @@ export const useRedwoodOpenTelemetry = (
                 executionSpan.end()
 
                 console.warn(
-                  `Plugin "RedwoodOpenTelemetry" encountered an AsyncIterator which is not supported yet, so tracing data is not available for the operation.`,
+                  `Plugin "CedarOpenTelemetry" encountered an AsyncIterator which is not supported yet, so tracing data is not available for the operation.`,
                 )
                 return
               }

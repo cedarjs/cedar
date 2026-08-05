@@ -2601,7 +2601,7 @@ __metadata:
 
 "@cedarjs/testing@file:../packages/testing/cedarjs-testing.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 5.0.6
-  resolution: "@cedarjs/testing@file:../packages/testing/cedarjs-testing.tgz#../packages/testing/cedarjs-testing.tgz::hash=4abeae&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/testing@file:../packages/testing/cedarjs-testing.tgz#../packages/testing/cedarjs-testing.tgz::hash=c522be&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/preset-env": "npm:7.29.7"
     "@cedarjs/babel-config": "npm:5.0.6"
@@ -2634,7 +2634,7 @@ __metadata:
   peerDependenciesMeta:
     vitest:
       optional: true
-  checksum: 10c0/2fb635a764ea38f6490e870c2b5a4d9efb2430cfb1c42fb0a1c1fc2d0a45693e3d02df33421bc69eed204d76c45db9eb1ae06e902cea993ad71cb6c73198f290
+  checksum: 10c0/2561e958fe58ace0555b72474b24ac87e06157d4668d433d038e1ea6f0e5a331c5dc68f42cf85431a8abd981c92ba6778af1bebd04997e2201f5770177895829
   languageName: node
   linkType: hard
 

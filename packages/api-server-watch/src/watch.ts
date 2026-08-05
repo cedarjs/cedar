@@ -130,8 +130,3 @@ export async function startWatch() {
     }
   })
 }
-
-// For ESM we'll wrap this in a check to only execute this function if the file
-// is run as a script using
-// `import.meta.url === `file://${process.argv[1]}``
-startWatch()

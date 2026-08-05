@@ -31,6 +31,9 @@
     "./dist/cjs/api/cedarPgLifecycle.js": {
       "default": "./dist/cjs/api/cedarPgLifecycle.js"
     },
+    "./dist/cjs/api/checkTestDatabase.js": {
+      "default": "./dist/cjs/api/checkTestDatabase.js"
+    },
     "./dist/cjs/web/findCellMocks": {
       "default": "./dist/cjs/web/findCellMocks.js"
     },

@@ -11,8 +11,8 @@ import type { Logger, LoggerOptions } from '@cedarjs/api/logger'
 import { createLogger } from '@cedarjs/api/logger'
 
 import type { CedarGraphQLContext } from '../../types.js'
-import type { LoggerConfig } from '../useRedwoodLogger.js'
-import { useRedwoodLogger } from '../useRedwoodLogger.js'
+import type { LoggerConfig } from '../useCedarLogger.js'
+import { useCedarLogger } from '../useCedarLogger.js'
 
 import {
   testSchema,
@@ -145,12 +145,12 @@ const createMockLambdaContext = (awsRequestId: string): LambdaContext => {
 }
 
 type MockOnExecuteArgs = Parameters<
-  NonNullable<ReturnType<typeof useRedwoodLogger>['onExecute']>
+  NonNullable<ReturnType<typeof useCedarLogger>['onExecute']>
 >[0]
 
 type MockOnExecuteResult = Exclude<
   Awaited<
-    ReturnType<NonNullable<ReturnType<typeof useRedwoodLogger>['onExecute']>>
+    ReturnType<NonNullable<ReturnType<typeof useCedarLogger>['onExecute']>>
   >,
   void
 >
@@ -174,7 +174,7 @@ describe('Populates context', () => {
     } as LoggerConfig
 
     const testkit = createTestkit(
-      [useEngine(GraphQLJS), useRedwoodLogger(loggerConfig)],
+      [useEngine(GraphQLJS), useCedarLogger(loggerConfig)],
       testSchema,
     )
 
@@ -218,7 +218,7 @@ describe('Populates context', () => {
     } as LoggerConfig
 
     const testkit = createTestkit(
-      [useEngine(GraphQLJS), useRedwoodLogger(loggerConfig)],
+      [useEngine(GraphQLJS), useCedarLogger(loggerConfig)],
       testSchema,
     )
 
@@ -265,7 +265,7 @@ describe('Populates context', () => {
         },
       }
 
-      const plugin = useRedwoodLogger(loggerConfig)
+      const plugin = useCedarLogger(loggerConfig)
       const onExecute = plugin.onExecute
 
       if (!onExecute) {
@@ -361,7 +361,7 @@ describe('Populates context', () => {
         },
       }
 
-      const plugin = useRedwoodLogger(loggerConfig)
+      const plugin = useCedarLogger(loggerConfig)
       const onExecute = plugin.onExecute
 
       if (!onExecute) {
@@ -436,7 +436,7 @@ describe('Populates context', () => {
     } as LoggerConfig
 
     const testkit = createTestkit(
-      [useEngine(GraphQLJS), useRedwoodLogger(loggerConfig)],
+      [useEngine(GraphQLJS), useCedarLogger(loggerConfig)],
       testSchema,
     )
 
@@ -474,7 +474,7 @@ describe('Populates context', () => {
     } as LoggerConfig
 
     const testkit = createTestkit(
-      [useEngine(GraphQLJS), useRedwoodLogger(loggerConfig)],
+      [useEngine(GraphQLJS), useCedarLogger(loggerConfig)],
       testSchema,
     )
 
@@ -503,7 +503,7 @@ describe('Populates context', () => {
     } as LoggerConfig
 
     const testkit = createTestkit(
-      [useEngine(GraphQLJS), useRedwoodLogger(loggerConfig)],
+      [useEngine(GraphQLJS), useCedarLogger(loggerConfig)],
       testSchema,
     )
 
@@ -530,7 +530,7 @@ describe('Populates context', () => {
       },
     } as LoggerConfig
     const testkit = createTestkit(
-      [useEngine(GraphQLJS), useRedwoodLogger(loggerConfig)],
+      [useEngine(GraphQLJS), useCedarLogger(loggerConfig)],
       testSchema,
     )
     await testkit.execute(testFilteredQuery, {}, {})

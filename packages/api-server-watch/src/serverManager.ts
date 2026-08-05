@@ -1,6 +1,7 @@
 import type { ChildProcess } from 'child_process'
 import { fork } from 'child_process'
 import fs from 'node:fs'
+import { createRequire } from 'node:module'
 import path from 'path'
 
 import ansis from 'ansis'
@@ -8,6 +9,8 @@ import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 
 import { getConfig, getPaths, resolveFile } from '@cedarjs/project-config'
+
+const require = createRequire(import.meta.url)
 
 const argv = yargs(hideBin(process.argv))
   .option('debugPort', {
@@ -74,8 +77,19 @@ export class ServerManager {
         forkOpts,
       )
     } else {
-      const dirname = import.meta.dirname
-      const binPath = path.join(dirname, 'bin.js')
+      // `serverManager` lives in @cedarjs/api-server-watch, not
+      // @cedarjs/api-server, so its production bin can't be found by walking
+      // up from this module's own directory. Resolve it by package name
+      // instead, the same way core's bin-forwarding wrappers do.
+      const apiServerPkgPath =
+        require.resolve('@cedarjs/api-server/package.json')
+      const apiServerDir = path.dirname(apiServerPkgPath)
+      const apiServerPkg = require(apiServerPkgPath)
+      const binPath = path.join(
+        apiServerDir,
+        apiServerPkg.bin['cedarjs-server'],
+      )
+
       const args = ['api', '--port', port.toString()]
       this.httpServerProcess = fork(binPath, args, forkOpts)
     }

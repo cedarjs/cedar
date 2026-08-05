@@ -3,8 +3,6 @@ import path from 'path'
 
 import { describe, it, expect } from 'vitest'
 
-// Vitest 4's module runner no longer provides the CJS `__dirname` shim in ES
-// module scope, so use `import.meta.dirname` instead
 const distPath = path.join(import.meta.dirname, 'dist')
 const packageConfig = JSON.parse(fs.readFileSync('./package.json', 'utf-8'))
 
@@ -16,10 +14,8 @@ describe('dist', () => {
   it('ships the expected bins', () => {
     expect(packageConfig.bin).toMatchInlineSnapshot(`
       {
-        "cedar-api-server-watch": "./dist/watch.js",
         "cedar-log-formatter": "./dist/logFormatter/bin.js",
         "cedar-server": "./dist/bin.js",
-        "cedarjs-api-server-watch": "./dist/watch.js",
         "cedarjs-log-formatter": "./dist/logFormatter/bin.js",
         "cedarjs-server": "./dist/bin.js",
         "rw-log-formatter": "./dist/logFormatter/bin.js",

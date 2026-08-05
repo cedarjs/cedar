@@ -5,6 +5,16 @@
     "api",
     "web"
   ],
+  "scripts": {
+    "build": "cedar build",
+    "dev": "cedar dev",
+    "start": "cedarjs-server",
+    "start:api": "cedarjs-server api",
+    "start:web": "cedarjs-server web"
+  },
+  "dependencies": {
+    "@cedarjs/api-server": "5.0.6"
+  },
   "devDependencies": {
     "@cedarjs/core": "5.0.6",
     "@cedarjs/eslint-config": "5.0.6",
@@ -12,7 +22,7 @@
     "@cedarjs/testing": "5.0.6"
   },
   "engines": {
-    "node": "=24.x"
+    "node": "24.x"
   },
   "packageManager": "yarn@4.14.1",
   "resolutions": {

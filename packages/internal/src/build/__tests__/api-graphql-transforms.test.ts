@@ -139,7 +139,7 @@ export const handler = createGraphQLHandler(__cedar_graphqlOptions)`
     expect(applyGraphqlOptionsExtract(code)).toBeNull()
   })
 
-  it('returns null when there are multiple createGraphQLHandler calls', () => {
+  it('throws when there are multiple createGraphQLHandler calls', () => {
     const code = dedent`
       import { createGraphQLHandler } from '@cedarjs/graphql-server'
 
@@ -147,7 +147,45 @@ export const handler = createGraphQLHandler(__cedar_graphqlOptions)`
       export const b = createGraphQLHandler({ y: 2 })
     `
 
-    expect(applyGraphqlOptionsExtract(code)).toBeNull()
+    expect(() => applyGraphqlOptionsExtract(code)).toThrow(
+      'Found more than one call to createGraphQLHandler',
+    )
+  })
+
+  it('throws when createGraphQLHandler is imported but never called', () => {
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
+
+      export const handler = somethingElse()
+    `
+
+    expect(() => applyGraphqlOptionsExtract(code)).toThrow(
+      'createGraphQLHandler is imported but never called',
+    )
+  })
+
+  it('throws when createGraphQLHandler is called without options', () => {
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
+
+      export const handler = createGraphQLHandler()
+    `
+
+    expect(() => applyGraphqlOptionsExtract(code)).toThrow(
+      'createGraphQLHandler was called without any options',
+    )
+  })
+
+  it('throws when the options argument cannot be read statically', () => {
+    const code = dedent`
+      import { createGraphQLHandler } from '@cedarjs/graphql-server'
+
+      export const handler = createGraphQLHandler(config.graphql)
+    `
+
+    expect(() => applyGraphqlOptionsExtract(code)).toThrow(
+      "which can't be read statically",
+    )
   })
 
   it('extracts a conditional (ternary) options argument with a member-expression condition', () => {

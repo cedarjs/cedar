@@ -309,7 +309,7 @@ export type ResolverFn<TResult, TParent, TContext, TArgs> = (
 ```
 
 **3. Global `context`.** Same data as #2, reached differently. The
-`useRedwoodGlobalContextSetter` plugin copies the resolved GraphQL context into
+`useCedarGlobalContextSetter` plugin copies the resolved GraphQL context into
 the ALS store as it is built, so services can read `context.currentUser` without
 threading it through every call. Services rarely destructure #2 — the second
 parameter is the escape hatch for `root` and `info`, which the global doesn't
@@ -338,12 +338,12 @@ Cedar provides two related but distinct mechanisms:
 
 `setContext()` populates the store with the resolved GraphQL context
 (including `currentUser`) and is only called by the
-`useRedwoodGlobalContextSetter` plugin
-(`packages/graphql-server/src/plugins/useRedwoodGlobalContextSetter.ts:16`).
+`useCedarGlobalContextSetter` plugin
+(`packages/graphql-server/src/plugins/useCedarGlobalContextSetter.ts:16`).
 It's GraphQL-only because:
 
 1. GraphQL has a plugin chain where `currentUser` is resolved once by
-   `useRedwoodAuthContext` (from `ctx.serverAuthState`) and then made available
+   `useCedarAuthContext` (from `ctx.serverAuthState`) and then made available
    to all downstream resolvers and directive validators via the store.
 2. Regular functions are single-entry-point: they get the request, do one thing,
    return a response. Different function types handle auth differently, but none

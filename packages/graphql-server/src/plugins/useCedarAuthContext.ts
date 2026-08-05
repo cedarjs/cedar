@@ -9,7 +9,7 @@ import type { CedarGraphQLContext, GraphQLHandlerOptions } from '../types.js'
  * Envelop plugin for injecting the current user into the GraphQL Context,
  * based on custom getCurrentUser function.
  */
-export const useRedwoodAuthContext = (
+export const useCedarAuthContext = (
   getCurrentUser: GraphQLHandlerOptions['getCurrentUser'],
   authDecoder?: Decoder | Decoder[],
 ): Plugin<CedarGraphQLContext> => {
