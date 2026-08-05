@@ -65,6 +65,7 @@ vi.mock('@cedarjs/cli-helpers', () => ({
       base: path.join(BASE_PATH, 'api'),
       src: path.join(BASE_PATH, 'api', 'src'),
     },
+    scripts: path.join(BASE_PATH, 'scripts'),
   }),
   installPackages: { title: 'Installing packages...', task: async () => {} },
 }))
@@ -90,7 +91,7 @@ function seedSqliteProject() {
       }),
       'api/db/schema.prisma': SQLITE_SCHEMA,
       'api/prisma.config.cjs':
-        "module.exports = defineConfig({ datasourceUrl: env('DATABASE_URL') })",
+        "module.exports = defineConfig({ datasource: { url: env('DATABASE_URL') } })",
       'api/src/lib/db.ts': '// sqlite adapter',
       [path.join(__dirname, '../templates/db.ts.template')]: PG_DB_TS_TEMPLATE,
     },
@@ -186,7 +187,7 @@ describe('getSqliteToPostgresTasks', () => {
     )
     memfsFs.writeFileSync(
       path.join(BASE_PATH, 'api/prisma.config.cjs'),
-      "module.exports = defineConfig({ datasourceUrl: env('DIRECT_DATABASE_URL') })",
+      "module.exports = defineConfig({ datasource: { url: env('DIRECT_DATABASE_URL') } })",
     )
     memfsFs.writeFileSync(
       path.join(BASE_PATH, 'api/package.json'),
@@ -241,6 +242,53 @@ describe('getSqliteToPostgresTasks', () => {
       ['@prisma/adapter-pg@7.8.0'],
       { cwd: path.join(BASE_PATH, 'api') },
     )
+  })
+
+  it('rewrites the datasource URL even when a comment elsewhere mentions DIRECT_DATABASE_URL', async () => {
+    // The detection and rewrite are both anchored on the `url:` key
+    // specifically. A naive whole-file search for the text
+    // `env('DIRECT_DATABASE_URL')` would read this comment as "already
+    // converted" and skip the real rewrite below it, leaving the schema
+    // switched to PostgreSQL but migrations still pointed at DATABASE_URL.
+    seedSqliteProject()
+    memfsFs.writeFileSync(
+      path.join(BASE_PATH, 'api/prisma.config.cjs'),
+      "// See env('DIRECT_DATABASE_URL') in the docs\n" +
+        "module.exports = defineConfig({ datasource: { url: env('DATABASE_URL') } })",
+    )
+
+    const notes: string[] = []
+    const tasks = getSqliteToPostgresTasks({ notes })
+    await new Listr2Mock(tasks).run()
+
+    expect(Listr2Mock.executedTaskTitles).toContain('Updating Prisma config')
+    expect(
+      memfsFs.readFileSync(
+        path.join(BASE_PATH, 'api/prisma.config.cjs'),
+        'utf-8',
+      ),
+    ).toContain("url: env('DIRECT_DATABASE_URL')")
+  })
+
+  it('detects SQLite usage in the project scripts/ dir, not just api/src', async () => {
+    seedSqliteProject()
+    memfsFs.mkdirSync(path.join(BASE_PATH, 'scripts'), { recursive: true })
+    memfsFs.writeFileSync(
+      path.join(BASE_PATH, 'scripts/import-sqlite.ts'),
+      "import 'better-sqlite3'",
+    )
+
+    const notes: string[] = []
+    const tasks = getSqliteToPostgresTasks({ notes })
+    await new Listr2Mock(tasks).run()
+
+    const apiPkg = JSON.parse(
+      memfsFs.readFileSync(
+        path.join(BASE_PATH, 'api/package.json'),
+        'utf-8',
+      ) as string,
+    )
+    expect(apiPkg.dependencies['better-sqlite3']).toBe('1.0.0')
   })
 
   it('skips everything and notes an unsupported provider', async () => {

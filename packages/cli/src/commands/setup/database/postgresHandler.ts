@@ -83,8 +83,13 @@ export function getSqliteToPostgresTasks({
             ? prismaConfigPathMts
             : undefined
 
+        // Anchored on the `url:` key specifically (the shape prisma.config
+        // actually uses: `datasource: { url: env('DATABASE_URL') }`) rather
+        // than searching the whole file for the text `env('DIRECT_DATABASE_URL')`
+        // — a comment or unrelated line containing that text would otherwise
+        // read as "already converted" and skip the real rewrite below.
         ctx.hasDirectDatabaseUrlConfig = prismaConfigPath
-          ? /env\(["']DIRECT_DATABASE_URL["']\)/.test(
+          ? /\burl\s*:\s*env\(["']DIRECT_DATABASE_URL["']\)/.test(
               fs.readFileSync(prismaConfigPath, 'utf-8'),
             )
           : false
@@ -124,10 +129,13 @@ export function getSqliteToPostgresTasks({
         }
 
         if (!ctx.isPostgres) {
-          ctx.hasSqliteUsageOutsideDb = hasSqliteUsageOutsideDb(
-            cedarPaths.api.src,
-            dbTsPath,
-          )
+          // Also scans the project's `scripts/` dir (`yarn cedar exec`
+          // scripts, e.g. a one-off data-migration script), not just
+          // `api/src` — code there can just as easily import
+          // `better-sqlite3` directly.
+          ctx.hasSqliteUsageOutsideDb =
+            hasSqliteUsageOutsideDb(cedarPaths.api.src, dbTsPath) ||
+            hasSqliteUsageOutsideDb(cedarPaths.scripts, dbTsPath)
         }
       },
     },
@@ -274,9 +282,12 @@ export function getSqliteToPostgresTasks({
           : prismaConfigPathMts
 
         const configContent = fs.readFileSync(configPath, 'utf-8')
+        // Same `url:`-anchored shape as the check above, so this replaces
+        // the actual datasource URL and not a coincidental match elsewhere
+        // in the file (a comment, for instance).
         const updated = configContent.replace(
-          /env\(["']DATABASE_URL["']\)/,
-          "env('DIRECT_DATABASE_URL')",
+          /(\burl\s*:\s*)env\(["']DATABASE_URL["']\)/,
+          "$1env('DIRECT_DATABASE_URL')",
         )
         fs.writeFileSync(configPath, updated)
       },

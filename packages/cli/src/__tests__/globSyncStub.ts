@@ -33,6 +33,13 @@ export function globSyncByExtension(
   const results: string[] = []
 
   const walk = (dir: string, relativeDir: string) => {
+    // Real `fs.globSync` returns no matches for a `cwd` that doesn't exist,
+    // rather than throwing — `readdirSync` throws ENOENT instead, so that
+    // has to be handled explicitly here to match.
+    if (!memfsFs.existsSync(dir)) {
+      return
+    }
+
     for (const entry of memfsFs.readdirSync(dir, { withFileTypes: true })) {
       // memfs's `readdirSync` type is `TDataOut[] | Dirent[]` regardless of
       // `withFileTypes`. It doesn't narrow on the literal like Node's own

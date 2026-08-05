@@ -60,6 +60,7 @@ vi.mock('@cedarjs/cli-helpers', () => ({
       base: path.join(BASE_PATH, 'api'),
       src: path.join(BASE_PATH, 'api', 'src'),
     },
+    scripts: path.join(BASE_PATH, 'scripts'),
   }),
   installPackages: { title: 'Installing packages...', task: async () => {} },
 }))
@@ -82,7 +83,7 @@ function seedSqliteProject() {
       }),
       'api/db/schema.prisma': SQLITE_SCHEMA,
       'api/prisma.config.cjs':
-        "module.exports = defineConfig({ datasourceUrl: env('DATABASE_URL') })",
+        "module.exports = defineConfig({ datasource: { url: env('DATABASE_URL') } })",
       'api/src/lib/db.ts': '// sqlite adapter',
       [path.join(__dirname, '../../database/templates/db.ts.template')]:
         '// pg adapter template\n',
