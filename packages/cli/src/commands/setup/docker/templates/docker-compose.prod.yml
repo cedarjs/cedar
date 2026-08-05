@@ -4,10 +4,8 @@ services:
       context: .
       dockerfile: ./Dockerfile
       target: api_serve
-    # Without a command specified, the Dockerfile's api_serve CMD is used
-    # (`cedarjs-server api`). If api/dist/server.js exists — e.g. because
-    # you've set up Realtime or a custom Fastify plugin — that command runs
-    # it automatically, no override needed here.
+    # See https://cedarjs.com/docs/server-file for customizing the api
+    # server (Realtime, custom Fastify plugins, etc).
     ports:
       - '8911:8911'
     depends_on:

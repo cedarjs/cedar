@@ -3,9 +3,18 @@ import ansis from 'ansis'
 import { coerceRootPath } from '@cedarjs/fastify-web'
 
 import { createServer } from './createServer.js'
+import { apiDistServerFileExists, runApiDistServerFile } from './serverFile.js'
 import type { APIParsedOptions } from './types.js'
 
 export async function handler(options: APIParsedOptions = {}) {
+  // A custom api/src/server.ts is where Realtime, custom Fastify plugins,
+  // and custom middleware get registered. Running the default server
+  // instead wouldn't fail — it would just silently produce a different app.
+  if (apiDistServerFileExists()) {
+    await runApiDistServerFile(options)
+    return
+  }
+
   const timeStart = Date.now()
   console.log(ansis.dim.italic('Starting API Server...'))
 

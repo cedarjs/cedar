@@ -94,9 +94,8 @@ ENV NODE_ENV=production
 
 # default api serve command
 # ---------
-# If api/dist/server.js exists (e.g. because you've set up Realtime or a
-# custom Fastify plugin), `cedarjs-server api` runs it automatically — no
-# separate CMD needed.
+# See https://cedarjs.com/docs/server-file for customizing the api server
+# (Realtime, custom Fastify plugins, etc).
 CMD ["node_modules/.bin/cedarjs-server", "api"]
 
 # web serve
