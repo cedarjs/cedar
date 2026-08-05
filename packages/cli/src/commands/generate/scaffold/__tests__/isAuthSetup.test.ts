@@ -774,4 +774,67 @@ export const Routes = () => (
 
     expect(hasLoginRoute()).toBe(false)
   })
+
+  test('does not treat <Set private={false}> as protected', () => {
+    vol.fromJSON(
+      {
+        'web/src/auth.ts': 'export const { AuthProvider } = createAuth()',
+        'web/src/Routes.js': `
+import { Router, Route, Set } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <Set private={false}>
+      <Route path="/login" page={LoginPage} name="login" />
+    </Set>
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(true)
+  })
+
+  test('treats <Set private={true}> as protected', () => {
+    vol.fromJSON(
+      {
+        'web/src/auth.ts': 'export const { AuthProvider } = createAuth()',
+        'web/src/Routes.js': `
+import { Router, Route, Set } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <Set private={true}>
+      <Route path="/login" page={LoginPage} name="login" />
+    </Set>
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(false)
+  })
+
+  test('does not treat namespaced <CedarRouter.Set private={false}> as protected', () => {
+    vol.fromJSON(
+      {
+        'web/src/auth.ts': 'export const { AuthProvider } = createAuth()',
+        'web/src/Routes.js': `
+import * as CedarRouter from '@cedarjs/router'
+export const Routes = () => (
+  <CedarRouter.Router>
+    <CedarRouter.Set private={false}>
+      <CedarRouter.Route path="/login" page={LoginPage} name="login" />
+    </CedarRouter.Set>
+  </CedarRouter.Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(true)
+  })
 })

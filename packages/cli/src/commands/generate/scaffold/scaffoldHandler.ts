@@ -934,9 +934,9 @@ const parseRoutesFile = (): RouteInfo[] => {
       openingElement: any,
       setAliasesSet: Set<string>,
     ): boolean => {
-      // Check if this is a Set element with the private attribute
+      // Check if this is a Set element with the private attribute set to a truthy value
       let isSetElement = false
-      let hasPrivateAttr = false
+      let privateAttrIsTruthy = false
 
       if (openingElement.name.type === 'JSXIdentifier') {
         if (setAliasesSet.has(openingElement.name.name)) {
@@ -955,16 +955,31 @@ const parseRoutesFile = (): RouteInfo[] => {
       }
 
       if (isSetElement) {
-        // Check if it has the private attribute
-        hasPrivateAttr = openingElement.attributes.some(
+        // Check if it has the private attribute set to a truthy value
+        const privateAttr = openingElement.attributes.find(
           (a: any) =>
             a.type === 'JSXAttribute' &&
             a.name.type === 'JSXIdentifier' &&
             a.name.name === 'private',
         )
+
+        if (privateAttr) {
+          // If no value specified (e.g., <Set private>), it's implicitly true
+          if (!privateAttr.value) {
+            privateAttrIsTruthy = true
+          }
+          // If value is a boolean literal
+          else if (privateAttr.value.type === 'JSXExpressionContainer') {
+            const expr = privateAttr.value.expression
+            // Check for true literal
+            if (expr.type === 'BooleanLiteral' && expr.value === true) {
+              privateAttrIsTruthy = true
+            }
+          }
+        }
       }
 
-      return isSetElement && hasPrivateAttr
+      return isSetElement && privateAttrIsTruthy
     }
 
     traverse(ast, {
@@ -1023,7 +1038,9 @@ const parseRoutesFile = (): RouteInfo[] => {
             // Direct JSXIdentifier: <PrivateSet>, <Private>, <Set>, or aliases
             if (parentElement.name.type === 'JSXIdentifier') {
               // Check unconditionally protected wrappers (PrivateSet, Private)
-              if (unconditionallyProtectedAliases.has(parentElement.name.name)) {
+              if (
+                unconditionallyProtectedAliases.has(parentElement.name.name)
+              ) {
                 isInsidePrivateSet = true
                 break
               }
