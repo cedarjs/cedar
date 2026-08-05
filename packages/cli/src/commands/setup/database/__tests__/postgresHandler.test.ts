@@ -347,4 +347,27 @@ describe('postgres handler', () => {
       }),
     )
   })
+
+  it('falls back to DATABASE_URL when DIRECT_DATABASE_URL is blank', async () => {
+    // `NAME=` (empty value) has to be treated the same as NAME being absent
+    // — `??` alone stops at `''` without falling through to DATABASE_URL,
+    // so the migration subprocess would get DIRECT_DATABASE_URL='' instead
+    // of a usable connection string.
+    seedSqliteProject()
+    memfsFs.writeFileSync(
+      path.join(BASE_PATH, '.env'),
+      'DATABASE_URL=postgresql://localhost/app\nDIRECT_DATABASE_URL=\n',
+    )
+
+    await handler()
+
+    expect(commandSync).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        env: expect.objectContaining({
+          DIRECT_DATABASE_URL: 'postgresql://localhost/app',
+        }),
+      }),
+    )
+  })
 })

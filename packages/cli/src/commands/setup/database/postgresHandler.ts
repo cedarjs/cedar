@@ -273,7 +273,11 @@ export function getSqliteToPostgresTasks({
 }
 
 function readEnvVar(envContent: string, name: string): string | undefined {
-  return envContent.match(new RegExp(`^${name}=(.*)$`, 'm'))?.[1]
+  // An empty value (`NAME=`) is treated the same as the variable being
+  // absent entirely — `??` alone would treat `''` as "set" and stop there,
+  // short-circuiting the DIRECT_DATABASE_URL fallback below before it ever
+  // reaches DATABASE_URL.
+  return envContent.match(new RegExp(`^${name}=(.*)$`, 'm'))?.[1] || undefined
 }
 
 export async function handler() {
@@ -284,7 +288,7 @@ export async function handler() {
     : ''
 
   const databaseUrl =
-    process.env.DATABASE_URL ?? readEnvVar(envContent, 'DATABASE_URL')
+    process.env.DATABASE_URL || readEnvVar(envContent, 'DATABASE_URL')
 
   // The "Updating Prisma config" task above rewrites prisma.config to read
   // migrations from DIRECT_DATABASE_URL, not DATABASE_URL — Neon-style
@@ -292,8 +296,8 @@ export async function handler() {
   // string, so default to that rather than leaving migrations with nothing
   // to connect with.
   const directDatabaseUrl =
-    process.env.DIRECT_DATABASE_URL ??
-    readEnvVar(envContent, 'DIRECT_DATABASE_URL') ??
+    process.env.DIRECT_DATABASE_URL ||
+    readEnvVar(envContent, 'DIRECT_DATABASE_URL') ||
     databaseUrl
 
   const notes: string[] = []
