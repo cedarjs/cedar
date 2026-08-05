@@ -81,6 +81,26 @@
       // it themselves, relying on it hoisting in via @cedarjs/core.
       "ignoreDependencies": ["graphql-tag"]
     },
+    "packages/internal": {
+      // package.json bin and exports point into dist/, which is globally
+      // ignored, so knip needs to be pointed at the sources explicitly.
+      // watch.ts backs the `cedar-gen-watch` bin and is the one source root
+      // nothing else reaches; every other export subpath is reachable from
+      // index.ts. Setting `entry` replaces knip's defaults, so index.ts has to
+      // be listed here even though it matches a default pattern.
+      "entry": ["src/index.ts", "src/generate/watch.ts"],
+      // publint: only invoked via `concurrently`'s `yarn:publint` job syntax
+      // in the "check:package" script, which knip doesn't parse.
+      // @babel/plugin-transform-typescript: never imported, only named as a
+      // string in the babel `plugins` option in src/ts2js.ts.
+      // @cedarjs/realtime: optional, dynamically imported in
+      // src/generate/graphqlSchema.ts and resolved from the user's project.
+      "ignoreDependencies": [
+        "publint",
+        "@babel/plugin-transform-typescript",
+        "@cedarjs/realtime"
+      ]
+    },
     "packages/vite": {
       // publint: only invoked via `concurrently`'s `yarn:publint` job syntax
       // in the "check:package" script, which knip doesn't parse.
