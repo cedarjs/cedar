@@ -49,6 +49,7 @@
   },
   "dependencies": {
     "@cedarjs/api-server": "5.0.1",
+    "@cedarjs/api-server-watch": "5.0.1",
     "@cedarjs/cli": "5.0.1",
     "@cedarjs/internal": "5.0.1",
     "@cedarjs/jobs": "5.0.1",
