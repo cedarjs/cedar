@@ -5,32 +5,23 @@ import execa from 'execa'
 import { Listr } from 'listr2'
 
 import { colors, getPaths, installPackages } from '@cedarjs/cli-helpers'
-import { addWorkspacePackages } from '@cedarjs/cli-helpers/packageManager/packages'
 import { errorTelemetry } from '@cedarjs/telemetry'
+
+import type { SqliteToPostgresCtx } from '../database/postgresHandler.js'
+import { getSqliteToPostgresTasks } from '../database/postgresHandler.js'
 
 import type { Args } from './neon.js'
 
-const cedarPaths = getPaths()
+interface NeonCtx extends SqliteToPostgresCtx {
+  databaseUrl?: string
+  databaseUrlDirect?: string
+  neonClaimUrl?: string
+  neonClaimExpiry?: string
+}
 
 export async function handler({ force }: Args) {
-  const schemaPath = path.join(cedarPaths.api.base, 'db', 'schema.prisma')
-  const dbTsPath = path.join(cedarPaths.api.src, 'lib', 'db.ts')
-  const prismaConfigPathCjs = path.join(
-    cedarPaths.api.base,
-    'prisma.config.cjs',
-  )
-  const prismaConfigPathMts = path.join(
-    cedarPaths.api.base,
-    'prisma.config.mts',
-  )
+  const cedarPaths = getPaths()
   const envPath = path.join(cedarPaths.base, '.env')
-  const rootPkgPath = path.join(cedarPaths.base, 'package.json')
-  const apiPkgPath = path.join(cedarPaths.api.base, 'package.json')
-  const dbTsTemplatePath = path.join(
-    import.meta.dirname,
-    'templates',
-    'db.ts.template',
-  )
 
   let hasDirectDatabaseUrl = false
   if (fs.existsSync(envPath)) {
@@ -39,222 +30,28 @@ export async function handler({ force }: Args) {
     )
   }
 
+  // Provisioning a new database when one is already configured would orphan
+  // the existing one, so this only proceeds past the schema/adapter switch
+  // (which is safely idempotent on its own) when there's nothing to
+  // conflict with yet, or the user explicitly asked to overwrite it.
+  const skipProvisioning = hasDirectDatabaseUrl && !force
+
   const notes: string[] = []
 
-  const tasks = new Listr(
+  if (skipProvisioning) {
+    notes.push(
+      colors.note(
+        'DATABASE_URL is already set in .env. Use --force to overwrite.',
+      ),
+    )
+  }
+
+  const tasks = new Listr<NeonCtx>(
     [
-      {
-        title: 'Checking current database configuration',
-        task: (ctx) => {
-          const schemaContent = fs.readFileSync(schemaPath, 'utf-8')
-          ctx.schemaContent = schemaContent
-
-          ctx.isSqlite = schemaContent.includes('provider = "sqlite"')
-          ctx.isPostgres = schemaContent.includes('provider = "postgresql"')
-
-          if (fs.existsSync(dbTsPath)) {
-            ctx.dbTsContent = fs.readFileSync(dbTsPath, 'utf-8')
-            ctx.isNeon = ctx.dbTsContent.includes('PrismaPg')
-          } else {
-            ctx.isNeon = false
-          }
-
-          if (!ctx.isSqlite && !ctx.isPostgres) {
-            ctx.unsupportedProvider = true
-            notes.push(
-              colors.note(
-                'setup neon only supports migrating from SQLite to PostgreSQL.' +
-                  ' Your project uses a different database provider.',
-              ),
-            )
-
-            return
-          }
-
-          if (!ctx.isPostgres) {
-            ctx.hasSqliteUsageOutsideDb = hasSqliteUsageOutsideDb(
-              cedarPaths.api.src,
-              dbTsPath,
-            )
-          }
-
-          if (hasDirectDatabaseUrl && !force) {
-            ctx.skipWithNote = true
-            notes.push(
-              colors.note(
-                'DATABASE_URL is already set in .env. Use --force to overwrite.',
-              ),
-            )
-          }
-        },
-      },
-      {
-        title: 'Removing SQLite dependencies from api/package.json',
-        skip: (ctx) => {
-          if (ctx.unsupportedProvider) {
-            return 'Unsupported database provider'
-          }
-
-          if (ctx.isPostgres) {
-            return 'Already configured for PostgreSQL'
-          }
-
-          if (ctx.hasSqliteUsageOutsideDb) {
-            return 'SQLite is in use outside db.ts — keeping packages'
-          }
-
-          return false
-        },
-        task: () => {
-          const pkg = JSON.parse(fs.readFileSync(apiPkgPath, 'utf-8'))
-
-          if (pkg.dependencies) {
-            delete pkg.dependencies['better-sqlite3']
-            delete pkg.dependencies['@prisma/adapter-better-sqlite3']
-          }
-
-          fs.writeFileSync(apiPkgPath, JSON.stringify(pkg, null, 2) + '\n')
-        },
-      },
-      {
-        title: 'Removing better-sqlite3 dependenciesMeta',
-        skip: (ctx) => {
-          if (ctx.unsupportedProvider) {
-            return 'Unsupported database provider'
-          }
-
-          if (ctx.isPostgres) {
-            return 'Already configured for PostgreSQL'
-          }
-
-          if (ctx.hasSqliteUsageOutsideDb) {
-            return "SQLite is in use outside db.ts so we're keeping it installed"
-          }
-
-          return false
-        },
-        task: () => {
-          if (!fs.existsSync(rootPkgPath)) {
-            return
-          }
-
-          const pkg = JSON.parse(fs.readFileSync(rootPkgPath, 'utf-8'))
-
-          if (pkg.dependenciesMeta?.['better-sqlite3']) {
-            delete pkg.dependenciesMeta['better-sqlite3']
-
-            if (Object.keys(pkg.dependenciesMeta).length === 0) {
-              delete pkg.dependenciesMeta
-            }
-
-            fs.writeFileSync(rootPkgPath, JSON.stringify(pkg, null, 2) + '\n')
-          }
-        },
-      },
-      {
-        title: 'Switching Prisma schema to PostgreSQL',
-        skip: (ctx) => {
-          if (ctx.unsupportedProvider) {
-            return 'Unsupported database provider'
-          }
-
-          if (ctx.isPostgres) {
-            return 'Schema is already configured for PostgreSQL'
-          }
-
-          return false
-        },
-        task: (ctx) => {
-          const updated = (ctx.schemaContent as string).replace(
-            'provider = "sqlite"',
-            'provider = "postgresql"',
-          )
-          fs.writeFileSync(schemaPath, updated)
-        },
-      },
-      {
-        title: 'Updating database adapter',
-        skip: (ctx) => {
-          if (ctx.unsupportedProvider) {
-            return 'Unsupported database provider'
-          }
-
-          if (ctx.isNeon) {
-            return 'Database adapter is already configured for Neon (PrismaPg)'
-          }
-
-          if (ctx.skipWithNote) {
-            return 'DATABASE_URL already configured — skipping adapter update'
-          }
-
-          return false
-        },
-        task: () => {
-          const neonDbTs = fs.readFileSync(dbTsTemplatePath, 'utf-8')
-          fs.writeFileSync(dbTsPath, neonDbTs)
-        },
-      },
-      {
-        title: 'Updating Prisma config',
-        skip: (ctx) => {
-          if (ctx.unsupportedProvider) {
-            return 'Unsupported database provider'
-          }
-
-          if (ctx.isNeon) {
-            return 'Prisma config is already configured for Neon'
-          }
-
-          if (ctx.skipWithNote) {
-            return 'DATABASE_URL already configured — skipping config update'
-          }
-
-          return false
-        },
-        task: () => {
-          if (
-            !fs.existsSync(prismaConfigPathCjs) &&
-            !fs.existsSync(prismaConfigPathMts)
-          ) {
-            throw new Error(
-              'No Prisma config file found. Expected prisma.config.cjs or prisma.config.mts in the api directory.',
-            )
-          }
-
-          const configPath = fs.existsSync(prismaConfigPathCjs)
-            ? prismaConfigPathCjs
-            : prismaConfigPathMts
-
-          const configContent = fs.readFileSync(configPath, 'utf-8')
-          const updated = configContent.replace(
-            /env\(["']DATABASE_URL["']\)/,
-            "env('DIRECT_DATABASE_URL')",
-          )
-          fs.writeFileSync(configPath, updated)
-        },
-      },
-      {
-        title: 'Adding required api packages...',
-        skip: (ctx) => ctx.unsupportedProvider,
-        task: async () => {
-          await addWorkspacePackages('api', ['@prisma/adapter-pg@7.8.0'], {
-            cwd: cedarPaths.api.base,
-          })
-        },
-      },
+      ...getSqliteToPostgresTasks({ notes }),
       {
         title: 'Provisioning Neon database',
-        skip: (ctx) => {
-          if (ctx.unsupportedProvider) {
-            return true
-          }
-
-          if (hasDirectDatabaseUrl && !force) {
-            return true
-          }
-
-          return false
-        },
+        skip: (ctx) => ctx.unsupportedProvider || skipProvisioning,
         task: async (ctx) => {
           const res = await fetch('https://neon.new/api/v1/database', {
             method: 'POST',
@@ -295,11 +92,7 @@ export async function handler({ force }: Args) {
       {
         title: 'Writing database connection to .env',
         skip: (ctx) => {
-          if (ctx.unsupportedProvider) {
-            return true
-          }
-
-          if (hasDirectDatabaseUrl && !force) {
+          if (ctx.unsupportedProvider || skipProvisioning) {
             return true
           }
 
@@ -340,12 +133,8 @@ export async function handler({ force }: Args) {
       {
         title: 'Running Prisma migrations',
         skip: (ctx) => {
-          if (ctx.unsupportedProvider) {
+          if (ctx.unsupportedProvider || skipProvisioning) {
             return true
-          }
-
-          if (ctx.skipWithNote) {
-            return 'DATABASE_URL already configured — skipping migration'
           }
 
           if (!ctx.databaseUrl) {
@@ -390,7 +179,7 @@ export async function handler({ force }: Args) {
             return
           }
 
-          if (ctx.skipWithNote) {
+          if (skipProvisioning) {
             task.output = 'Skipped — DATABASE_URL already configured'
             return
           }
@@ -447,30 +236,4 @@ function isErrorWithExitCode(e: unknown): e is { exitCode: number } {
     'exitCode' in e &&
     typeof e.exitCode === 'number'
   )
-}
-
-function hasSqliteUsageOutsideDb(srcPath: string, dbTsPath: string): boolean {
-  const sqlitePattern = /better-sqlite3|@prisma\/adapter-better-sqlite3/
-
-  const files = fs.globSync('**/*.{ts,tsx,js,jsx}', { cwd: srcPath })
-
-  for (const file of files) {
-    const fullPath = path.join(srcPath, file)
-
-    if (fullPath === dbTsPath) {
-      continue
-    }
-
-    try {
-      const content = fs.readFileSync(fullPath, 'utf-8')
-
-      if (sqlitePattern.test(content)) {
-        return true
-      }
-    } catch {
-      // Skip unreadable files
-    }
-  }
-
-  return false
 }

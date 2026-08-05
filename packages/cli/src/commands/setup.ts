@@ -7,6 +7,7 @@ import { detectCedarVersion } from '../middleware/detectProjectCedarVersion.js'
 import * as setupAuth from './setup/auth/auth.js'
 // @ts-expect-error - Types not available for JS files
 import * as setupCache from './setup/cache/cache.js'
+import * as setupDatabase from './setup/database/database.js'
 // @ts-expect-error - Types not available for JS files
 import * as setupDeploy from './setup/deploy/deploy.js'
 // @ts-expect-error - Types not available for JS files
@@ -41,6 +42,7 @@ export const builder = (yargs: Argv) =>
   yargs
     .command(setupAuth)
     .command(setupCache)
+    .command(setupDatabase)
     .command(setupDeploy)
     .command(setupDocker)
     .command(setupGenerator)
