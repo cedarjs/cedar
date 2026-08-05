@@ -8,7 +8,11 @@ import { vi, describe, beforeEach, test, expect } from 'vitest'
 
 import '../../../../lib/test'
 
-import { isAuthSetup, hasLoginRoute } from '../scaffoldHandler.js'
+import {
+  isAuthSetup,
+  hasLoginRoute,
+  getUnauthenticatedRedirectRoute,
+} from '../scaffoldHandler.js'
 
 vi.mock('node:fs', async (importOriginal) => {
   const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
@@ -178,5 +182,126 @@ export const Routes = () => (
     )
 
     expect(hasLoginRoute()).toBe(false)
+  })
+})
+
+describe('getUnauthenticatedRedirectRoute', () => {
+  beforeEach(() => {
+    vol.reset()
+    vol.fromJSON({ 'redwood.toml': '' }, '/')
+  })
+
+  test('returns undefined when auth is not set up, even with a login route', () => {
+    vol.fromJSON(
+      {
+        'web/src/Routes.js': `
+import { Router, Route } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <Route path="/" page={HomePage} name="home" />
+    <Route path="/login" page={LoginPage} name="login" />
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(getUnauthenticatedRedirectRoute()).toBe(undefined)
+  })
+
+  test('returns "login" when auth is set up and a login route exists', () => {
+    vol.fromJSON(
+      {
+        'web/src/auth.ts': 'export const { AuthProvider } = createAuth()',
+        'web/src/Routes.js': `
+import { Router, Route } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <Route path="/" page={HomePage} name="home" />
+    <Route path="/login" page={LoginPage} name="login" />
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(getUnauthenticatedRedirectRoute()).toBe('login')
+  })
+
+  test('falls back to the landing page route when auth is set up but there is no login route', () => {
+    vol.fromJSON(
+      {
+        'web/src/auth.ts': 'export const { AuthProvider } = createAuth()',
+        'web/src/Routes.js': `
+import { Router, Route } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <Route path="/" page={HomePage} name="home" />
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(getUnauthenticatedRedirectRoute()).toBe('home')
+  })
+
+  test('falls back to the landing page route even when it has a non-standard name', () => {
+    vol.fromJSON(
+      {
+        'web/src/auth.ts': 'export const { AuthProvider } = createAuth()',
+        'web/src/Routes.js': `
+import { Router, Route } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <Route path="/" page={LandingPage} name="landing" />
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(getUnauthenticatedRedirectRoute()).toBe('landing')
+  })
+
+  test('returns undefined when auth is set up but there is no login route or landing page route', () => {
+    vol.fromJSON(
+      {
+        'web/src/auth.ts': 'export const { AuthProvider } = createAuth()',
+        'web/src/Routes.js': `
+import { Router, Route } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <Route path="/about" page={AboutPage} name="about" />
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(getUnauthenticatedRedirectRoute()).toBe(undefined)
+  })
+
+  test('returns undefined when auth is not set up and there is no login or landing route', () => {
+    vol.fromJSON(
+      {
+        'web/src/Routes.js': `
+import { Router, Route } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <Route path="/about" page={AboutPage} name="about" />
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(getUnauthenticatedRedirectRoute()).toBe(undefined)
   })
 })

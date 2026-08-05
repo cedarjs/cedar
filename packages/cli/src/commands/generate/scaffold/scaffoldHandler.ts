@@ -782,19 +782,24 @@ export const isAuthSetup = () => {
   )
 }
 
-// Checks whether a route named 'login' is already defined in Routes file.
-// Used to determine if scaffolded routes can safely reference it as the
-// unauthenticated redirect target. Uses proper JSX parsing to avoid false
-// positives from comments, strings, or non-Route elements.
-export const hasLoginRoute = () => {
+interface RouteInfo {
+  path?: string
+  name?: string
+}
+
+// Parses the Routes file and returns the `path` and `name` string-literal
+// attributes of every <Route> element. Uses proper JSX parsing (rather than
+// regex) to avoid false positives from comments, strings, or non-Route
+// elements. Returns an empty array if the file doesn't exist or fails to
+// parse (e.g. malformed JSX), to avoid breaking scaffold generation.
+const parseRoutesFile = (): RouteInfo[] => {
   const routesPath = getPaths().web.routes
   if (!fs.existsSync(routesPath)) {
-    return false
+    return []
   }
   const routesContent = readFile(routesPath).toString()
 
   try {
-    // Parse as JSX with proper error handling for invalid syntax.
     // Use babelrc: false and configFile: false to avoid loading the root
     // babel.config.js, which requires a filename for pattern matching.
     const ast = parse(routesContent, {
@@ -807,50 +812,68 @@ export const hasLoginRoute = () => {
       configFile: false,
     })
 
-    let foundLoginRoute = false
+    const routes: RouteInfo[] = []
 
     traverse(ast, {
       JSXElement(path) {
-        // Check if this is a Route element
         const openingElement = path.node.openingElement
         if (
-          openingElement.name.type === 'JSXIdentifier' &&
-          openingElement.name.name === 'Route'
+          openingElement.name.type !== 'JSXIdentifier' ||
+          openingElement.name.name !== 'Route'
         ) {
-          // Look for name="login" attribute on this Route element
-          const hasLoginNameAttr = openingElement.attributes.some((attr) => {
-            if (attr.type !== 'JSXAttribute') {
-              return false
-            }
-            // Check if attribute name is 'name'
-            if (
-              attr.name.type !== 'JSXIdentifier' ||
-              attr.name.name !== 'name'
-            ) {
-              return false
-            }
-            // Check if attribute value is the string 'login'
-            // In Babel, JSX string attributes are StringLiteral nodes
-            if (attr.value?.type === 'StringLiteral') {
-              return attr.value.value === 'login'
-            }
-            return false
-          })
-
-          if (hasLoginNameAttr) {
-            foundLoginRoute = true
-            path.stop()
-          }
+          return
         }
+
+        const getAttrStringValue = (attrName: string) => {
+          const attr = openingElement.attributes.find(
+            (a) =>
+              a.type === 'JSXAttribute' &&
+              a.name.type === 'JSXIdentifier' &&
+              a.name.name === attrName,
+          )
+          return attr?.type === 'JSXAttribute' &&
+            attr.value?.type === 'StringLiteral'
+            ? attr.value.value
+            : undefined
+        }
+
+        routes.push({
+          path: getAttrStringValue('path'),
+          name: getAttrStringValue('name'),
+        })
       },
     })
 
-    return foundLoginRoute
+    return routes
   } catch {
-    // If parsing fails (malformed JSX), fall back to false
-    // to avoid breaking scaffold generation for projects with syntax errors
-    return false
+    return []
   }
+}
+
+// Checks whether a route named 'login' is already defined in Routes file.
+// Used to determine if scaffolded routes can safely reference it as the
+// unauthenticated redirect target.
+export const hasLoginRoute = () =>
+  parseRoutesFile().some((route) => route.name === 'login')
+
+// Returns the route name that scaffolded PrivateSets should redirect
+// unauthenticated users to, or undefined if PrivateSet shouldn't be used at
+// all. Prefers an existing 'login' route; falls back to the landing page
+// route (path === '/') when no login route is defined, so protected
+// scaffolds still get wrapped in PrivateSet even without a dedicated login
+// page. Returns undefined if auth isn't set up, or if neither a login route
+// nor a landing page route can be found, to avoid referencing a
+// non-existent route (which would crash at runtime).
+export const getUnauthenticatedRedirectRoute = (): string | undefined => {
+  if (!isAuthSetup()) {
+    return undefined
+  }
+
+  if (hasLoginRoute()) {
+    return 'login'
+  }
+
+  return parseRoutesFile().find((route) => route.path === '/')?.name
 }
 
 const addSetImport = (task: AnyListrTask) => {
@@ -871,7 +894,7 @@ const addSetImport = (task: AnyListrTask) => {
   const routerImports = importContent.replace(/\s/g, '').split(',')
   const namesToImport = [
     PACKAGE_SET,
-    ...(isAuthSetup() && hasLoginRoute() ? [PACKAGE_PRIVATE_SET] : []),
+    ...(getUnauthenticatedRedirectRoute() ? [PACKAGE_PRIVATE_SET] : []),
   ].filter((name) => !routerImports.includes(name))
 
   if (!namesToImport.length) {
@@ -902,11 +925,15 @@ const addScaffoldSetToRouter = async (model: string, scaffoldPath: string) => {
   const buttonLabel = `New ${nameVars.singularPascalName}`
   const buttonTo = templateNames.newRouteName
 
+  const unauthenticatedRoute = getUnauthenticatedRedirectRoute()
+
   return addRoutesToRouterTask(
     await routes({ model, path: scaffoldPath }),
     'ScaffoldLayout',
     { title, titleTo, buttonLabel, buttonTo },
-    isAuthSetup() && hasLoginRoute() ? { unauthenticated: 'login' } : undefined,
+    unauthenticatedRoute
+      ? { unauthenticated: unauthenticatedRoute }
+      : undefined,
   )
 }
 
