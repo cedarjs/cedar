@@ -25,9 +25,13 @@ vi.mock('listr2', () => ({
   Listr: Listr2Mock,
 }))
 
+const commandSync = vi.fn((..._args: unknown[]) => ({
+  exitCode: 0,
+  stderr: '',
+}))
 vi.mock('execa', () => ({
   default: {
-    commandSync: vi.fn(() => ({ exitCode: 0, stderr: '' })),
+    commandSync: (...args: unknown[]) => commandSync(...args),
   },
 }))
 
@@ -234,5 +238,44 @@ describe('neon handler', () => {
         'utf-8',
       ),
     ).toBe(SQLITE_SCHEMA)
+  })
+
+  it('exits with a non-zero status when the migration fails, instead of reporting success', async () => {
+    // With `exitOnError: false`, a failed task doesn't reject `tasks.run()`
+    // — that's the mechanism this command relies on to let "One more
+    // thing..." still print even when something upstream fails. Without
+    // explicitly checking `tasks.errors` afterwards, that silently
+    // swallows the failure and this command exits 0.
+    seedSqliteProject()
+
+    global.fetch = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        connection_string: 'postgresql://user:pass@ep-abc-pooler.neon.tech/db',
+        expires_at: '2027-01-01T00:00:00.000Z',
+        claim_url: 'https://neon.new/claim/abc',
+      }),
+    })) as unknown as typeof fetch
+    commandSync.mockReturnValueOnce({
+      exitCode: 1,
+      stderr: 'P1013: connection failed',
+    })
+
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit called')
+    })
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    await expect(handler({ force: false })).rejects.toThrow(
+      'process.exit called',
+    )
+
+    expect(exitSpy).toHaveBeenCalledWith(1)
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Prisma migration failed'),
+    )
+
+    exitSpy.mockRestore()
+    errorSpy.mockRestore()
   })
 })

@@ -156,12 +156,20 @@ export class Listr2Mock {
 
   ctx: Ctx
   tasks: Listr2TaskWrapper[]
+  options?: Listr.ListrOptions
+  // Mirrors real Listr2: with `exitOnError: false`, a thrown task doesn't
+  // reject `.run()` — it's collected here instead (when `collectErrors` is
+  // also not `false`) and `.run()` resolves normally regardless. Code that
+  // assumes a rejected `.run()` means "something failed" is wrong under
+  // `exitOnError: false` — it has to check `.errors` after the fact instead.
+  errors: unknown[] = []
 
   constructor(
     tasks: Listr.ListrTask<Ctx, typeof Listr.ListrRenderer>[],
     options?: Listr.ListrOptions,
   ) {
     this.ctx = options?.ctx || {}
+    this.options = options
     this.tasks = tasks.map((task) => new Listr2TaskWrapper({ task, options }))
   }
 
@@ -191,7 +199,19 @@ export class Listr2Mock {
         continue
       }
 
-      const runReturnValue = await task.run(this.ctx, task)
+      let runReturnValue: unknown
+      try {
+        runReturnValue = await task.run(this.ctx, task)
+      } catch (error) {
+        if (this.options?.exitOnError === false) {
+          if (this.options?.collectErrors !== false) {
+            this.errors.push(error)
+          }
+          continue
+        }
+
+        throw error
+      }
 
       if (runReturnValue instanceof Listr2Mock) {
         await runReturnValue.run(

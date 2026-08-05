@@ -217,11 +217,29 @@ export async function handler({ force }: Args) {
     ],
     {
       exitOnError: false,
+      collectErrors: 'minimal',
     },
   )
 
   try {
     await tasks.run()
+
+    // With `exitOnError: false`, a failed task doesn't reject `run()` — it's
+    // collected here instead (that's the whole point of `exitOnError:
+    // false`: unrelated tasks, like "One more thing..." above, still get a
+    // chance to run). Silently returning 0 despite a real failure — a
+    // provisioning call or migration that never completed — would be worse
+    // than what `exitOnError: false` is protecting against.
+    if (tasks.errors.length > 0) {
+      for (const error of tasks.errors) {
+        if (isErrorWithMessage(error)) {
+          errorTelemetry(process.argv, error.message)
+          console.error(colors.error(error.message))
+        }
+      }
+
+      process.exit(1)
+    }
 
     if (notes.length > 0) {
       console.log()

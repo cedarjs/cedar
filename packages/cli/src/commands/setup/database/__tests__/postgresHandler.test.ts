@@ -558,4 +558,36 @@ describe('postgres handler', () => {
       }),
     )
   })
+
+  it('exits with a non-zero status when the migration fails, instead of reporting success', async () => {
+    // With `exitOnError: false`, a failed task doesn't reject `tasks.run()`
+    // — that's the mechanism this command relies on to let the closing
+    // notes still print even when something upstream fails. Without
+    // explicitly checking `tasks.errors` afterwards, that silently
+    // swallows the failure and this command exits 0.
+    seedSqliteProject()
+    memfsFs.writeFileSync(
+      path.join(BASE_PATH, '.env'),
+      'DATABASE_URL=postgresql://localhost/app\n',
+    )
+    commandSync.mockReturnValueOnce({
+      exitCode: 1,
+      stderr: 'P1013: connection failed',
+    })
+
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit called')
+    })
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    await expect(handler()).rejects.toThrow('process.exit called')
+
+    expect(exitSpy).toHaveBeenCalledWith(1)
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Prisma migration failed'),
+    )
+
+    exitSpy.mockRestore()
+    errorSpy.mockRestore()
+  })
 })
