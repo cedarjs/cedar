@@ -788,12 +788,48 @@ interface RouteInfo {
   isInsidePrivateSet?: boolean
 }
 
+// Extracts all identifiers that refer to PrivateSet from the Routes file imports.
+// Handles direct imports, aliases, and namespace members.
+// Returns a Set of all names that could refer to a PrivateSet component.
+const extractPrivateSetAliases = (ast: any): Set<string> => {
+  const aliases = new Set<string>()
+
+  traverse(ast, {
+    ImportDeclaration(path) {
+      const source = path.node.source.value
+      // Only look for imports from @cedarjs/router
+      if (source !== '@cedarjs/router') {
+        return
+      }
+
+      path.node.specifiers.forEach((spec) => {
+        if (spec.type === 'ImportSpecifier') {
+          // Handle: import { PrivateSet }, import { PrivateSet as Alias }
+          if (spec.imported.name === 'PrivateSet') {
+            aliases.add(spec.local.name)
+          }
+        } else if (spec.type === 'ImportNamespaceSpecifier') {
+          // Handle: import * as CedarRouter, then <CedarRouter.PrivateSet>
+          // Store the namespace prefix to detect CedarRouter.PrivateSet later
+          aliases.add(spec.local.name)
+        } else if (spec.type === 'ImportDefaultSpecifier') {
+          // Handle: import CedarRouter (if default export is the router)
+          aliases.add(spec.local.name)
+        }
+      })
+    },
+  })
+
+  return aliases
+}
+
 // Parses the Routes file and returns the `path` and `name` string-literal
 // attributes of every <Route> element, along with whether it's nested inside
-// a <PrivateSet>. Uses proper JSX parsing (rather than regex) to avoid false
-// positives from comments, strings, or non-Route elements. Returns an empty
-// array if the file doesn't exist or fails to parse (e.g. malformed JSX), to
-// avoid breaking scaffold generation.
+// a <PrivateSet>. Handles PrivateSet aliases and namespace members like
+// <CedarRouter.PrivateSet>. Uses proper JSX parsing (rather than regex) to
+// avoid false positives from comments, strings, or non-Route elements. Returns
+// an empty array if the file doesn't exist or fails to parse (e.g. malformed
+// JSX), to avoid breaking scaffold generation.
 const parseRoutesFile = (): RouteInfo[] => {
   const routesPath = getPaths().web.routes
   if (!fs.existsSync(routesPath)) {
@@ -814,15 +850,28 @@ const parseRoutesFile = (): RouteInfo[] => {
       configFile: false,
     })
 
+    const privateSetAliases = extractPrivateSetAliases(ast)
     const routes: RouteInfo[] = []
 
     traverse(ast, {
       JSXElement(path) {
         const openingElement = path.node.openingElement
+
+        // Check if this is a Route element (either direct or namespaced like CedarRouter.Route)
+        let isRoute = false
         if (
-          openingElement.name.type !== 'JSXIdentifier' ||
-          openingElement.name.name !== 'Route'
+          openingElement.name.type === 'JSXIdentifier' &&
+          openingElement.name.name === 'Route'
         ) {
+          isRoute = true
+        } else if (openingElement.name.type === 'JSXMemberExpression') {
+          const { property } = openingElement.name
+          if (property.type === 'JSXIdentifier' && property.name === 'Route') {
+            isRoute = true
+          }
+        }
+
+        if (!isRoute) {
           return
         }
 
@@ -839,17 +888,36 @@ const parseRoutesFile = (): RouteInfo[] => {
             : undefined
         }
 
-        // Check if this Route is nested inside a PrivateSet by walking up the parent chain
+        // Check if this Route is nested inside a PrivateSet (or alias) by
+        // walking up the parent chain. Handles direct names, aliases, and
+        // namespace members (e.g., <CedarRouter.PrivateSet>).
         let isInsidePrivateSet = false
         let parentPath = path.parentPath
         while (parentPath) {
-          if (
-            parentPath.node.type === 'JSXElement' &&
-            parentPath.node.openingElement.name.type === 'JSXIdentifier' &&
-            parentPath.node.openingElement.name.name === 'PrivateSet'
-          ) {
-            isInsidePrivateSet = true
-            break
+          if (parentPath.node.type === 'JSXElement') {
+            const parentElement = parentPath.node.openingElement
+
+            // Direct JSXIdentifier: <PrivateSet> or <AuthSet> (aliased)
+            if (parentElement.name.type === 'JSXIdentifier') {
+              if (privateSetAliases.has(parentElement.name.name)) {
+                isInsidePrivateSet = true
+                break
+              }
+            }
+            // JSXMemberExpression: <CedarRouter.PrivateSet>
+            else if (parentElement.name.type === 'JSXMemberExpression') {
+              const { object, property } = parentElement.name
+              // Check if property is 'PrivateSet' and object is a known namespace
+              if (
+                property.type === 'JSXIdentifier' &&
+                property.name === 'PrivateSet' &&
+                object.type === 'JSXIdentifier' &&
+                privateSetAliases.has(object.name)
+              ) {
+                isInsidePrivateSet = true
+                break
+              }
+            }
           }
           parentPath = parentPath.parentPath
         }

@@ -203,6 +203,88 @@ export const Routes = () => (
 
     expect(hasLoginRoute()).toBe(false)
   })
+
+  test('returns true when login route is outside an aliased PrivateSet', () => {
+    vol.fromJSON(
+      {
+        'web/src/Routes.js': `
+import { Router, Route, PrivateSet as AuthSet } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <Route path="/login" page={LoginPage} name="login" />
+    <AuthSet>
+      <Route path="/home" page={HomePage} name="home" />
+    </AuthSet>
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(true)
+  })
+
+  test('returns false when login route is inside an aliased PrivateSet', () => {
+    vol.fromJSON(
+      {
+        'web/src/Routes.js': `
+import { Router, Route, PrivateSet as AuthSet } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <AuthSet>
+      <Route path="/login" page={LoginPage} name="login" />
+    </AuthSet>
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(false)
+  })
+
+  test('returns false when login route is inside a namespaced PrivateSet', () => {
+    vol.fromJSON(
+      {
+        'web/src/Routes.js': `
+import * as CedarRouter from '@cedarjs/router'
+export const Routes = () => (
+  <CedarRouter.Router>
+    <CedarRouter.PrivateSet>
+      <CedarRouter.Route path="/login" page={LoginPage} name="login" />
+    </CedarRouter.PrivateSet>
+  </CedarRouter.Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(false)
+  })
+
+  test('returns true when login route is outside a namespaced PrivateSet', () => {
+    vol.fromJSON(
+      {
+        'web/src/Routes.js': `
+import * as CedarRouter from '@cedarjs/router'
+export const Routes = () => (
+  <CedarRouter.Router>
+    <CedarRouter.Route path="/login" page={LoginPage} name="login" />
+    <CedarRouter.PrivateSet>
+      <CedarRouter.Route path="/home" page={HomePage} name="home" />
+    </CedarRouter.PrivateSet>
+  </CedarRouter.Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(true)
+  })
 })
 
 describe('getUnauthenticatedRedirectRoute', () => {
