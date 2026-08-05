@@ -25,14 +25,17 @@ vi.mock('listr2', () => ({
   Listr: Listr2Mock,
 }))
 
-const commandSync = vi.fn(() => ({ exitCode: 0, stderr: '' }))
+const commandSync = vi.fn((..._args: unknown[]) => ({
+  exitCode: 0,
+  stderr: '',
+}))
 vi.mock('execa', () => ({
   default: {
     commandSync: (...args: unknown[]) => commandSync(...args),
   },
 }))
 
-const addWorkspacePackages = vi.fn(async () => {})
+const addWorkspacePackages = vi.fn(async (..._args: unknown[]) => {})
 vi.mock('@cedarjs/cli-helpers/packageManager/packages', () => ({
   addWorkspacePackages: (...args: unknown[]) => addWorkspacePackages(...args),
 }))
