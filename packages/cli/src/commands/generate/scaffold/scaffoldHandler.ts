@@ -823,6 +823,41 @@ const extractPrivateSetAliases = (ast: any): Set<string> => {
   return aliases
 }
 
+// Extracts all identifiers that refer to Route from the Routes file imports.
+// Handles direct imports, aliases, and namespace members.
+// Returns a Set of all names that could refer to a Route component from @cedarjs/router.
+const extractRouteAliases = (ast: any): Set<string> => {
+  const aliases = new Set<string>()
+
+  traverse(ast, {
+    ImportDeclaration(path) {
+      const source = path.node.source.value
+      // Only look for imports from @cedarjs/router
+      if (source !== '@cedarjs/router') {
+        return
+      }
+
+      path.node.specifiers.forEach((spec) => {
+        if (spec.type === 'ImportSpecifier') {
+          // Handle: import { Route }, import { Route as Alias }
+          if (spec.imported.name === 'Route') {
+            aliases.add(spec.local.name)
+          }
+        } else if (spec.type === 'ImportNamespaceSpecifier') {
+          // Handle: import * as CedarRouter, then <CedarRouter.Route>
+          // Store the namespace prefix to detect CedarRouter.Route later
+          aliases.add(spec.local.name)
+        } else if (spec.type === 'ImportDefaultSpecifier') {
+          // Handle: import CedarRouter (if default export is the router)
+          aliases.add(spec.local.name)
+        }
+      })
+    },
+  })
+
+  return aliases
+}
+
 // Parses the Routes file and returns the `path` and `name` string-literal
 // attributes of every <Route> element, along with whether it's nested inside
 // a <PrivateSet>. Handles PrivateSet aliases and namespace members like
@@ -851,22 +886,30 @@ const parseRoutesFile = (): RouteInfo[] => {
     })
 
     const privateSetAliases = extractPrivateSetAliases(ast)
+    const routeAliases = extractRouteAliases(ast)
     const routes: RouteInfo[] = []
 
     traverse(ast, {
       JSXElement(path) {
         const openingElement = path.node.openingElement
 
-        // Check if this is a Route element (either direct or namespaced like CedarRouter.Route)
+        // Check if this is a Route element from @cedarjs/router
+        // (either direct or namespaced like CedarRouter.Route)
         let isRoute = false
         if (
           openingElement.name.type === 'JSXIdentifier' &&
-          openingElement.name.name === 'Route'
+          routeAliases.has(openingElement.name.name)
         ) {
           isRoute = true
         } else if (openingElement.name.type === 'JSXMemberExpression') {
-          const { property } = openingElement.name
-          if (property.type === 'JSXIdentifier' && property.name === 'Route') {
+          const { object, property } = openingElement.name
+          // Check if property is 'Route' and object is a known namespace from @cedarjs/router
+          if (
+            property.type === 'JSXIdentifier' &&
+            property.name === 'Route' &&
+            object.type === 'JSXIdentifier' &&
+            routeAliases.has(object.name)
+          ) {
             isRoute = true
           }
         }

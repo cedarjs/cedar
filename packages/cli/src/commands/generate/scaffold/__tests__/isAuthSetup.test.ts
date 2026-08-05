@@ -285,6 +285,78 @@ export const Routes = () => (
 
     expect(hasLoginRoute()).toBe(true)
   })
+
+  test('returns false when Route is locally defined (not from @cedarjs/router)', () => {
+    vol.fromJSON(
+      {
+        'web/src/Routes.js': `
+const Route = ({ name, path, page }) => null
+export const Routes = () => (
+  <Router>
+    <Route path="/login" page={LoginPage} name="login" />
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(false)
+  })
+
+  test('returns false when Route is from a different library', () => {
+    vol.fromJSON(
+      {
+        'web/src/Routes.js': `
+import { Route } from 'react-router-dom'
+export const Routes = () => (
+  <Router>
+    <Route path="/login" page={LoginPage} name="login" />
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(false)
+  })
+
+  test('returns false when namespaced Route is from a different library', () => {
+    vol.fromJSON(
+      {
+        'web/src/Routes.js': `
+import * as ReactRouter from 'react-router-dom'
+export const Routes = () => (
+  <ReactRouter.Router>
+    <ReactRouter.Route path="/login" page={LoginPage} name="login" />
+  </ReactRouter.Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(false)
+  })
+
+  test('returns true when Route is aliased from @cedarjs/router', () => {
+    vol.fromJSON(
+      {
+        'web/src/Routes.js': `
+import { Route as CedarRoute } from '@cedarjs/router'
+export const Routes = () => (
+  <Router>
+    <CedarRoute path="/login" page={LoginPage} name="login" />
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(true)
+  })
 })
 
 describe('getUnauthenticatedRedirectRoute', () => {
