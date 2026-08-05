@@ -395,6 +395,34 @@ async function main() {
     }
   }
 
+  // Typed as `string` in project-config, but it's really the result of a file
+  // resolution that can come up empty
+  const viteConfigPath: string | null = projectPaths.web.viteConfig
+
+  // Matches a `setDefaultResultOrder('verbatim')` call, with or without a
+  // qualifier like `dns.` (the import could also be destructured). Only
+  // 'verbatim' is a no-op on Node 24 — a call passing 'ipv4first' does change
+  // Node's behavior and must not be reported. Anchored to the start of a line
+  // so a commented-out call isn't reported either
+  const verbatimResultOrderRegex =
+    /^[ \t]*(?:[\w$]+\s*\.\s*)?setDefaultResultOrder\s*\(\s*(['"`])verbatim\1\s*\)/m
+
+  if (viteConfigPath && fs.existsSync(viteConfigPath)) {
+    const viteConfig = await fs.promises.readFile(viteConfigPath, 'utf8')
+
+    if (verbatimResultOrderRegex.test(viteConfig)) {
+      info('You can remove dns.setDefaultResultOrder', [
+        'Found dns.setDefaultResultOrder in ' +
+          path.relative(projectRoot, viteConfigPath),
+        'It is a leftover workaround for Node versions that reordered\n' +
+          "DNS lookup results. Node has defaulted to 'verbatim' since v17, so\n" +
+          'on Node 24, which Cedar requires, the call does nothing. Nothing\n' +
+          'breaks if you keep it, but you can delete the dns import, the\n' +
+          'comment above the call, and the call itself.',
+      ])
+    }
+  }
+
   let shouldAbort = false
 
   const apiGeneratorTemplatesPath = path.join(
