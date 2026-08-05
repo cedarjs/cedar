@@ -195,6 +195,7 @@ describe('getSqliteToPostgresTasks', () => {
         dependencies: { '@prisma/adapter-pg': '7.8.0' },
       }),
     )
+    memfsFs.writeFileSync(path.join(BASE_PATH, 'package.json'), '{}')
 
     const notes: string[] = []
     const tasks = getSqliteToPostgresTasks({ notes })
@@ -202,7 +203,8 @@ describe('getSqliteToPostgresTasks', () => {
 
     expect(Listr2Mock.skippedTaskTitles).toEqual(
       expect.arrayContaining([
-        'Already configured for PostgreSQL',
+        'SQLite packages are already removed',
+        'dependenciesMeta is already clean',
         'Schema is already configured for PostgreSQL',
         'Database adapter is already configured for PostgreSQL (PrismaPg)',
         'Prisma config is already configured for PostgreSQL',
@@ -242,6 +244,50 @@ describe('getSqliteToPostgresTasks', () => {
       ['@prisma/adapter-pg@7.8.0'],
       { cwd: path.join(BASE_PATH, 'api') },
     )
+  })
+
+  it('cleans up lingering SQLite packages even when the schema already says PostgreSQL', async () => {
+    // An interrupted previous run (or a hand-edited schema) can leave
+    // schema.prisma already switched to postgresql while api/package.json
+    // and the root dependenciesMeta still have SQLite entries. Cleanup has
+    // its own idempotency check now, not the schema provider, so it still
+    // runs instead of reading the schema as proof there's nothing left to
+    // do.
+    seedSqliteProject()
+    memfsFs.writeFileSync(
+      path.join(BASE_PATH, 'api/db/schema.prisma'),
+      POSTGRES_SCHEMA,
+    )
+
+    const notes: string[] = []
+    const tasks = getSqliteToPostgresTasks({ notes })
+    await new Listr2Mock(tasks).run()
+
+    expect(Listr2Mock.executedTaskTitles).toEqual(
+      expect.arrayContaining([
+        'Removing SQLite dependencies from api/package.json',
+        'Removing better-sqlite3 dependenciesMeta',
+      ]),
+    )
+
+    const apiPkg = JSON.parse(
+      memfsFs.readFileSync(
+        path.join(BASE_PATH, 'api/package.json'),
+        'utf-8',
+      ) as string,
+    )
+    expect(apiPkg.dependencies['better-sqlite3']).toBeUndefined()
+    expect(
+      apiPkg.dependencies['@prisma/adapter-better-sqlite3'],
+    ).toBeUndefined()
+
+    const rootPkg = JSON.parse(
+      memfsFs.readFileSync(
+        path.join(BASE_PATH, 'package.json'),
+        'utf-8',
+      ) as string,
+    )
+    expect(rootPkg.dependenciesMeta).toBeUndefined()
   })
 
   it('rewrites the datasource URL even when a comment elsewhere mentions DIRECT_DATABASE_URL', async () => {

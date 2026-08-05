@@ -16,6 +16,8 @@ export interface SqliteToPostgresCtx {
   hasPgAdapter?: boolean
   hasDirectDatabaseUrlConfig?: boolean
   hasPgAdapterPackage?: boolean
+  hasSqlitePackages?: boolean
+  hasSqliteDependenciesMeta?: boolean
   unsupportedProvider?: boolean
   missingPrismaConfig?: boolean
   hasSqliteUsageOutsideDb?: boolean
@@ -103,6 +105,20 @@ export function getSqliteToPostgresTasks({
         ctx.hasPgAdapterPackage = Boolean(
           apiPkg.dependencies?.['@prisma/adapter-pg'],
         )
+        // Independent of `isPostgres` too — a project can have the schema
+        // already switched over from an interrupted previous run while
+        // these packages are still sitting in api/package.json.
+        ctx.hasSqlitePackages = Boolean(
+          apiPkg.dependencies?.['better-sqlite3'] ||
+          apiPkg.dependencies?.['@prisma/adapter-better-sqlite3'],
+        )
+
+        const rootPkg = fs.existsSync(rootPkgPath)
+          ? JSON.parse(fs.readFileSync(rootPkgPath, 'utf-8'))
+          : {}
+        ctx.hasSqliteDependenciesMeta = Boolean(
+          rootPkg.dependenciesMeta?.['better-sqlite3'],
+        )
 
         if (!ctx.isSqlite && !ctx.isPostgres) {
           ctx.unsupportedProvider = true
@@ -133,15 +149,16 @@ export function getSqliteToPostgresTasks({
           return
         }
 
-        if (!ctx.isPostgres) {
-          // Also scans the project's `scripts/` dir (`yarn cedar exec`
-          // scripts, e.g. a one-off data-migration script), not just
-          // `api/src` — code there can just as easily import
-          // `better-sqlite3` directly.
-          ctx.hasSqliteUsageOutsideDb =
-            hasSqliteUsageOutsideDb(cedarPaths.api.src, dbTsPath) ||
-            hasSqliteUsageOutsideDb(cedarPaths.scripts, dbTsPath)
-        }
+        // Not conditional on `isPostgres` — the SQLite package cleanup below
+        // is now gated on whether those packages are actually still there,
+        // not on the schema provider, so this has to be known regardless of
+        // schema state too. Also scans the project's `scripts/` dir
+        // (`yarn cedar exec` scripts, e.g. a one-off data-migration script),
+        // not just `api/src` — code there can just as easily import
+        // `better-sqlite3` directly.
+        ctx.hasSqliteUsageOutsideDb =
+          hasSqliteUsageOutsideDb(cedarPaths.api.src, dbTsPath) ||
+          hasSqliteUsageOutsideDb(cedarPaths.scripts, dbTsPath)
       },
     },
     {
@@ -155,8 +172,8 @@ export function getSqliteToPostgresTasks({
           return 'No Prisma config file found'
         }
 
-        if (ctx.isPostgres) {
-          return 'Already configured for PostgreSQL'
+        if (!ctx.hasSqlitePackages) {
+          return 'SQLite packages are already removed'
         }
 
         if (ctx.hasSqliteUsageOutsideDb) {
@@ -187,8 +204,8 @@ export function getSqliteToPostgresTasks({
           return 'No Prisma config file found'
         }
 
-        if (ctx.isPostgres) {
-          return 'Already configured for PostgreSQL'
+        if (!ctx.hasSqliteDependenciesMeta) {
+          return 'dependenciesMeta is already clean'
         }
 
         if (ctx.hasSqliteUsageOutsideDb) {
