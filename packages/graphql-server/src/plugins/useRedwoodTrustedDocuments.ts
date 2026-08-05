@@ -90,7 +90,7 @@ const allowCedarStudioResyncMailMutations = async (request: Request) => {
   return hasContentType && isAllowedQuery
 }
 
-export const useRedwoodTrustedDocuments = (
+export const useCedarTrustedDocuments = (
   options: RedwoodTrustedDocumentOptions,
 ): Plugin<CedarGraphQLContext> => {
   return usePersistedOperations({

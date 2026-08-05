@@ -162,7 +162,7 @@ const mockLambdaEvent = ({
   }
 }
 
-describe('useRedwoodError', () => {
+describe('useCedarError', () => {
   describe('when masking errors', () => {
     it('returns data when there is no error', async () => {
       const handler = createGraphQLHandler({

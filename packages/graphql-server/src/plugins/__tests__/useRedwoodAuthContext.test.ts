@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import type { AuthContextPayload, Decoder } from '@cedarjs/api'
 
-import { useRedwoodAuthContext } from '../useRedwoodAuthContext.js'
+import { useCedarAuthContext } from '../useRedwoodAuthContext.js'
 
 const authDecoder: Decoder = async (token: string) => ({ token })
 
@@ -45,7 +45,7 @@ const contextWithoutCedarContext = {
   requestContext: undefined,
 }
 
-describe('useRedwoodAuthContext', () => {
+describe('useCedarAuthContext', () => {
   it('updates context with output of current user', async () => {
     const mockUser = {
       id: 'my-user-id',
@@ -53,7 +53,7 @@ describe('useRedwoodAuthContext', () => {
     }
 
     const mockedGetCurrentUser = vi.fn().mockResolvedValue(mockUser)
-    const plugin = useRedwoodAuthContext(mockedGetCurrentUser, authDecoder)
+    const plugin = useCedarAuthContext(mockedGetCurrentUser, authDecoder)
     const onContextBuilding = plugin.onContextBuilding
 
     if (!onContextBuilding) {
@@ -90,7 +90,7 @@ describe('useRedwoodAuthContext', () => {
       .fn()
       .mockRejectedValue(new Error('Could not fetch user from db.'))
 
-    const plugin = useRedwoodAuthContext(mockedGetCurrentUser, authDecoder)
+    const plugin = useCedarAuthContext(mockedGetCurrentUser, authDecoder)
     const onContextBuilding = plugin.onContextBuilding
 
     if (!onContextBuilding) {
@@ -117,7 +117,7 @@ describe('useRedwoodAuthContext', () => {
 
   it('leaves the request unauthenticated when there is no auth state', async () => {
     const mockedGetCurrentUser = vi.fn()
-    const plugin = useRedwoodAuthContext(mockedGetCurrentUser, authDecoder)
+    const plugin = useCedarAuthContext(mockedGetCurrentUser, authDecoder)
     const onContextBuilding = plugin.onContextBuilding
 
     if (!onContextBuilding) {
@@ -141,7 +141,7 @@ describe('useRedwoodAuthContext', () => {
   // An entry point that doesn't build a context would otherwise serve every
   // request as unauthenticated, with nothing to show for it
   it('throws when no cedarContext was built and auth is configured', async () => {
-    const plugin = useRedwoodAuthContext(vi.fn(), authDecoder)
+    const plugin = useCedarAuthContext(vi.fn(), authDecoder)
     const onContextBuilding = plugin.onContextBuilding
 
     if (!onContextBuilding) {
@@ -163,7 +163,7 @@ describe('useRedwoodAuthContext', () => {
   // so this guard has to agree — otherwise it throws on a setup that never had
   // auth state to resolve in the first place
   it('does not throw without a cedarContext for an empty decoder array', async () => {
-    const plugin = useRedwoodAuthContext(vi.fn(), [])
+    const plugin = useCedarAuthContext(vi.fn(), [])
     const onContextBuilding = plugin.onContextBuilding
 
     if (!onContextBuilding) {
@@ -184,7 +184,7 @@ describe('useRedwoodAuthContext', () => {
   })
 
   it('does not throw without a cedarContext when auth is not configured', async () => {
-    const plugin = useRedwoodAuthContext(undefined)
+    const plugin = useCedarAuthContext(undefined)
     const onContextBuilding = plugin.onContextBuilding
 
     if (!onContextBuilding) {

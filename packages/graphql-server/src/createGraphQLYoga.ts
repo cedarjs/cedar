@@ -17,14 +17,14 @@ import { configureGraphQLIntrospection } from './introspection.js'
 import { makeMergedSchema } from './makeMergedSchema.js'
 import {
   useArmor,
-  useRedwoodAuthContext,
+  useCedarAuthContext,
   useRedwoodDirective,
-  useRedwoodError,
-  useRedwoodGlobalContextSetter,
-  useRedwoodOpenTelemetry,
-  useRedwoodLogger,
-  useRedwoodPopulateContext,
-  useRedwoodTrustedDocuments,
+  useCedarError,
+  useCedarGlobalContextSetter,
+  useCedarOpenTelemetry,
+  useCedarLogger,
+  useCedarPopulateContext,
+  useCedarTrustedDocuments,
 } from './plugins/index.js'
 import type {
   useRedwoodDirectiveReturn,
@@ -133,20 +133,20 @@ export const createGraphQLYoga = async ({
       plugins.push(useDisableIntrospection())
     }
 
-    // Custom Redwood plugins
-    plugins.push(useRedwoodAuthContext(getCurrentUser, authDecoder))
-    plugins.push(useRedwoodGlobalContextSetter())
+    // Custom Cedar plugins
+    plugins.push(useCedarAuthContext(getCurrentUser, authDecoder))
+    plugins.push(useCedarGlobalContextSetter())
 
     if (context) {
-      plugins.push(useRedwoodPopulateContext(context))
+      plugins.push(useCedarPopulateContext(context))
     }
 
     // Custom Redwood plugins
     plugins.push(...redwoodDirectivePlugins)
 
-    // Custom Redwood OpenTelemetry plugin
+    // Custom Cedar OpenTelemetry plugin
     if (openTelemetryOptions !== undefined) {
-      plugins.push(useRedwoodOpenTelemetry(openTelemetryOptions))
+      plugins.push(useCedarOpenTelemetry(openTelemetryOptions))
     }
 
     // Secure the GraphQL server
@@ -168,7 +168,7 @@ export const createGraphQLYoga = async ({
     )
 
     if (trustedDocuments && !trustedDocuments.disabled) {
-      plugins.push(useRedwoodTrustedDocuments(trustedDocuments))
+      plugins.push(useCedarTrustedDocuments(trustedDocuments))
     }
 
     // App-defined plugins
@@ -176,7 +176,7 @@ export const createGraphQLYoga = async ({
       plugins.push(...extraPlugins)
     }
 
-    plugins.push(useRedwoodError(logger))
+    plugins.push(useCedarError(logger))
 
     plugins.push(
       useReadinessCheck({
@@ -205,7 +205,7 @@ export const createGraphQLYoga = async ({
 
     // Must be "last" in plugin chain, but before error masking
     // so can process any data added to results and extensions
-    plugins.push(useRedwoodLogger(loggerConfig))
+    plugins.push(useCedarLogger(loggerConfig))
 
     const yoga = createYoga<
       {
