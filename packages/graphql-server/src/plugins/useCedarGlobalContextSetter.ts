@@ -9,11 +9,10 @@ import type { CedarGraphQLContext } from '../types.js'
  * the CedarJS global context which can be imported with:
  * `import { context } from '@cedarjs/context'`
  */
-export const useRedwoodGlobalContextSetter =
-  (): Plugin<CedarGraphQLContext> => ({
-    onContextBuilding() {
-      return ({ context }) => {
-        setContext(context)
-      }
-    },
-  })
+export const useCedarGlobalContextSetter = (): Plugin<CedarGraphQLContext> => ({
+  onContextBuilding() {
+    return ({ context }) => {
+      setContext(context)
+    }
+  },
+})

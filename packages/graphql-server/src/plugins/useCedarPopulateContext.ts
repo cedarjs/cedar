@@ -7,7 +7,7 @@ import type { CedarGraphQLContext, GraphQLHandlerOptions } from '../types.js'
  * by populating it with the results of a custom function
  * @returns
  */
-export const useRedwoodPopulateContext = (
+export const useCedarPopulateContext = (
   populateContextBuilder: NonNullable<GraphQLHandlerOptions['context']>,
 ): Plugin<CedarGraphQLContext> => {
   return {

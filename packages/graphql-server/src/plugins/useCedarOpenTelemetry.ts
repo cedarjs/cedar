@@ -28,7 +28,7 @@ type PluginContext = {
   [tracingSpanSymbol]: opentelemetry.Span
 }
 
-export const useRedwoodOpenTelemetry = (
+export const useCedarOpenTelemetry = (
   options: CedarOpenTelemetryConfig,
 ): Plugin<PluginContext> => {
   const spanKind: SpanKind = SpanKind.SERVER
@@ -108,7 +108,7 @@ export const useRedwoodOpenTelemetry = (
                 executionSpan.end()
 
                 console.warn(
-                  `Plugin "RedwoodOpenTelemetry" encountered an AsyncIterator which is not supported yet, so tracing data is not available for the operation.`,
+                  `Plugin "CedarOpenTelemetry" encountered an AsyncIterator which is not supported yet, so tracing data is not available for the operation.`,
                 )
                 return
               }
