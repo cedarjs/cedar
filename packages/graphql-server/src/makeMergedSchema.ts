@@ -19,7 +19,7 @@ import type {
 import merge from 'lodash/merge.js'
 import omitBy from 'lodash/omitBy.js'
 
-import type { RedwoodDirective } from './plugins/useRedwoodDirective.js'
+import type { CedarDirective } from './plugins/useRedwoodDirective.js'
 import * as rootGqlSchema from './rootSchema.js'
 import type { CedarSubscription } from './subscriptions/makeSubscriptions.js'
 import type {
@@ -27,7 +27,7 @@ import type {
   ServicesGlobImports,
   GraphQLTypeWithFields,
   SdlGlobImports,
-  RedwoodScalarConfig,
+  CedarScalarConfig,
 } from './types.js'
 
 const wrapWithOpenTelemetry = async (
@@ -365,9 +365,9 @@ export const makeMergedSchema = ({
 }: {
   sdls: SdlGlobImports
   services: ServicesGlobImports
-  directives: RedwoodDirective[]
+  directives: CedarDirective[]
   subscriptions: CedarSubscription[]
-  includeScalars?: RedwoodScalarConfig
+  includeScalars?: CedarScalarConfig
 
   /**
    * A list of options passed to [makeExecutableSchema](https://www.graphql-tools.com/docs/generate-schema/#makeexecutableschemaoptions).

@@ -6,7 +6,7 @@ import { SpanKind } from '@opentelemetry/api'
 import * as opentelemetry from '@opentelemetry/api'
 import { print } from 'graphql'
 
-import type { RedwoodOpenTelemetryConfig } from '../types.js'
+import type { CedarOpenTelemetryConfig } from '../types.js'
 
 export enum AttributeName {
   EXECUTION_ERROR = 'graphql.execute.error',
@@ -29,7 +29,7 @@ type PluginContext = {
 }
 
 export const useRedwoodOpenTelemetry = (
-  options: RedwoodOpenTelemetryConfig,
+  options: CedarOpenTelemetryConfig,
 ): Plugin<PluginContext> => {
   const spanKind: SpanKind = SpanKind.SERVER
   const spanAdditionalAttributes: Attributes = {}
