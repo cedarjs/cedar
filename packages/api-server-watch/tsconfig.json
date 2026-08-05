@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "isolatedModules": true,
+    "rootDir": "."
+  },
+  "include": ["."],
+  "references": [
+    { "path": "../api-server" },
+    { "path": "../internal/tsconfig.build.json" },
+    { "path": "../project-config" }
+  ]
+}

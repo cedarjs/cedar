@@ -56,8 +56,6 @@ const mockedConfigSpecifiers = await vi.hoisted(async () => {
   const path = await import('node:path')
   const url = await import('node:url')
 
-  // Vitest 4's module runner no longer provides the CJS `__dirname` shim in
-  // ES module scope, so derive the directory from `import.meta`
   const testDir = path.dirname(url.fileURLToPath(import.meta.url))
 
   // This will be `D:\` on Windows (or some other drive letter) and `/` on Unix

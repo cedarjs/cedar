@@ -1,6 +1,3 @@
-import fs from 'node:fs'
-import path from 'node:path'
-
 import type { BuildOptions as ESBuildOptions } from 'esbuild'
 
 import {
@@ -15,7 +12,6 @@ const ignorePatterns = [
   './src/bin.ts',
   './src/logFormatter/bin.ts',
   './src/types.ts',
-  './src/watch.ts',
 ]
 
 // Build the main package as ESM
@@ -46,23 +42,6 @@ await buildBinEsm({
     outdir: './dist/logFormatter',
   },
 })
-
-// Build the watch bin
-await buildBinEsm({
-  buildOptions: {
-    entryPoints: ['./src/watch.ts'],
-  },
-})
-
-const builtEsmWatchPath = path.join(import.meta.dirname, 'dist/watch.js')
-const builtEsmWatch = fs.readFileSync(builtEsmWatchPath, 'utf8')
-fs.writeFileSync(
-  builtEsmWatchPath,
-  builtEsmWatch.replace(
-    /^startWatch\(\);$/m,
-    'if (import.meta.url === `file://${process.argv[1]}`) {\n  startWatch();\n}',
-  ),
-)
 
 async function buildBinEsm({ buildOptions }: { buildOptions: ESBuildOptions }) {
   await buildBin({
