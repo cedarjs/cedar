@@ -837,4 +837,70 @@ export const Routes = () => (
 
     expect(hasLoginRoute()).toBe(true)
   })
+
+  test('treats <Set private={someVariable}> as protected (conservative)', () => {
+    vol.fromJSON(
+      {
+        'web/src/auth.ts': 'export const { AuthProvider } = createAuth()',
+        'web/src/Routes.js': `
+import { Router, Route, Set } from '@cedarjs/router'
+const protectRoutes = true
+export const Routes = () => (
+  <Router>
+    <Set private={protectRoutes}>
+      <Route path="/login" page={LoginPage} name="login" />
+    </Set>
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(false)
+  })
+
+  test('treats <Set private={getPrivate()}> as protected (conservative)', () => {
+    vol.fromJSON(
+      {
+        'web/src/auth.ts': 'export const { AuthProvider } = createAuth()',
+        'web/src/Routes.js': `
+import { Router, Route, Set } from '@cedarjs/router'
+const getPrivate = () => true
+export const Routes = () => (
+  <Router>
+    <Set private={getPrivate()}>
+      <Route path="/login" page={LoginPage} name="login" />
+    </Set>
+  </Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(false)
+  })
+
+  test('treats namespaced <CedarRouter.Set private={someVariable}> as protected', () => {
+    vol.fromJSON(
+      {
+        'web/src/auth.ts': 'export const { AuthProvider } = createAuth()',
+        'web/src/Routes.js': `
+import * as CedarRouter from '@cedarjs/router'
+const protectRoutes = true
+export const Routes = () => (
+  <CedarRouter.Router>
+    <CedarRouter.Set private={protectRoutes}>
+      <CedarRouter.Route path="/login" page={LoginPage} name="login" />
+    </CedarRouter.Set>
+  </CedarRouter.Router>
+)
+`,
+      },
+      '/path/to/project',
+    )
+
+    expect(hasLoginRoute()).toBe(false)
+  })
 })

@@ -972,7 +972,11 @@ const parseRoutesFile = (): RouteInfo[] => {
           else if (privateAttr.value.type === 'JSXExpressionContainer') {
             const expr = privateAttr.value.expression
             // Check for true literal
-            if (expr.type === 'BooleanLiteral' && expr.value === true) {
+            if (expr.type === 'BooleanLiteral') {
+              privateAttrIsTruthy = expr.value === true
+            } else {
+              // For non-literal expressions (e.g., variables, function calls),
+              // conservatively treat as protected to match router's runtime evaluation
               privateAttrIsTruthy = true
             }
           }
