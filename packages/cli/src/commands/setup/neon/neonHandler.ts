@@ -154,19 +154,65 @@ export async function handler({ force }: Args) {
           ctx.neonClaimExpiry = new Date(data.expires_at).toUTCString()
         },
       },
+      installPackages,
       {
-        title: 'Writing database connection to .env',
+        title: 'Running Prisma migrations',
         skip: (ctx) => {
           if (skipProvisioning) {
             return true
           }
 
-          if (!ctx.databaseUrl) {
-            return 'No database URL to write (Neon provisioning skipped)'
+          if (ctx.directDatabaseUrlNotSet) {
+            return (
+              'Skipping migrations — could not confirm prisma.config is ' +
+              'reading DIRECT_DATABASE_URL, so migrations could target the ' +
+              'wrong database. Fix datasource.url, then run ' +
+              '`yarn cedar prisma migrate dev` manually.'
+            )
           }
 
           return false
         },
+        task: (ctx) => {
+          // The process we spawn here will inherit its parent's process.env.
+          // DIRECT_DATABASE_URL hasn't been written to .env yet (that
+          // happens below, only once migrations have succeeded), so it's
+          // passed explicitly here — the migrate command doesn't need the
+          // file to be written first.
+          const result = execa.commandSync(
+            'yarn cedar prisma migrate dev --name init-neon',
+            {
+              cwd: cedarPaths.base,
+              stdio: ['inherit', 'inherit', 'pipe'],
+              reject: false,
+              env: {
+                ...process.env,
+                DIRECT_DATABASE_URL: ctx.databaseUrlDirect,
+              },
+            },
+          )
+
+          if (result.exitCode !== 0) {
+            throw new Error(
+              'Prisma migration failed:\n\n' +
+                result.stderr +
+                '\n\nYou can try running it manually:\n' +
+                '  yarn cedar prisma migrate dev --name init-neon',
+            )
+          }
+        },
+      },
+      {
+        title: 'Writing database connection to .env',
+        // Deliberately runs after migrations, not before — with
+        // `exitOnError: true`, a migration failure stops the list here and
+        // this task never runs. That means a project whose migrations
+        // failed never has DATABASE_URL/DIRECT_DATABASE_URL written to
+        // .env, so it's never left pointing at a Neon database it doesn't
+        // know it needs to claim. Provisioning that database anyway (and
+        // letting it expire unclaimed) is fine — it's exactly as if the
+        // command were re-run from scratch, which is safe.
+        skip: () => skipProvisioning,
         task: (ctx) => {
           let envContent = ''
           if (fs.existsSync(envPath)) {
@@ -194,57 +240,6 @@ export async function handler({ force }: Args) {
           fs.writeFileSync(envPath, envContent)
         },
       },
-      installPackages,
-      {
-        title: 'Running Prisma migrations',
-        skip: (ctx) => {
-          if (skipProvisioning) {
-            return true
-          }
-
-          if (ctx.directDatabaseUrlNotSet) {
-            return (
-              'Skipping migrations — could not confirm prisma.config is ' +
-              'reading DIRECT_DATABASE_URL, so migrations could target the ' +
-              'wrong database. Fix datasource.url, then run ' +
-              '`yarn cedar prisma migrate dev` manually.'
-            )
-          }
-
-          if (!ctx.databaseUrl) {
-            return 'No database provisioned — skipping migration'
-          }
-
-          return false
-        },
-        task: (ctx) => {
-          // The process we spawn here will inherit its parent's process.env.
-          // We've added DIRECT_DATABASE_URL to the project's .env file, but we
-          // haven't refreshed our environment variables. Explicitly passing it
-          // in below ensures the migrate command works correctly.
-          const result = execa.commandSync(
-            'yarn cedar prisma migrate dev --name init-neon',
-            {
-              cwd: cedarPaths.base,
-              stdio: ['inherit', 'inherit', 'pipe'],
-              reject: false,
-              env: {
-                ...process.env,
-                DIRECT_DATABASE_URL: ctx.databaseUrlDirect,
-              },
-            },
-          )
-
-          if (result.exitCode !== 0) {
-            throw new Error(
-              'Prisma migration failed:\n\n' +
-                result.stderr +
-                '\n\nYou can try running it manually:\n' +
-                '  yarn cedar prisma migrate dev --name init-neon',
-            )
-          }
-        },
-      },
       {
         title: 'One more thing...',
         task: (ctx, task) => {
@@ -269,30 +264,16 @@ export async function handler({ force }: Args) {
       },
     ],
     {
-      exitOnError: false,
-      collectErrors: 'minimal',
+      // Migrations run before .env is written (see above) specifically so
+      // that a failure here — the one step that shouldn't be allowed to
+      // continue — stops the whole list via the default exitOnError
+      // behavior, rather than needing every later task to know to skip.
+      exitOnError: true,
     },
   )
 
   try {
     await tasks.run()
-
-    // With `exitOnError: false`, a failed task doesn't reject `run()` — it's
-    // collected here instead (that's the whole point of `exitOnError:
-    // false`: unrelated tasks, like "One more thing..." above, still get a
-    // chance to run). Silently returning 0 despite a real failure — a
-    // provisioning call or migration that never completed — would be worse
-    // than what `exitOnError: false` is protecting against.
-    if (tasks.errors.length > 0) {
-      for (const error of tasks.errors) {
-        if (isErrorWithMessage(error)) {
-          errorTelemetry(process.argv, error.message)
-          console.error(colors.error(error.message))
-        }
-      }
-
-      process.exit(1)
-    }
 
     if (notes.length > 0) {
       console.log()

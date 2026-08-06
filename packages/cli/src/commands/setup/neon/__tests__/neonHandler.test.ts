@@ -314,12 +314,12 @@ describe('neon handler', () => {
     exitSpy.mockRestore()
   })
 
-  it('exits with a non-zero status when the migration fails, instead of reporting success', async () => {
-    // With `exitOnError: false`, a failed task doesn't reject `tasks.run()` and
-    // that's the mechanism this command relies on to let "One more thing..."
-    // still print even when something upstream fails. Without explicitly
-    // checking `tasks.errors` afterwards, that silently swallows the upstream
-    // failure and this command exits 0.
+  it('exits with a non-zero status when the migration fails, and never writes .env', async () => {
+    // Migrations run before .env is written, and `exitOnError: true` stops
+    // the list on the first failure — so a migration failure must leave
+    // .env untouched. Otherwise the project would be left pointing at a
+    // real, soon-to-expire Neon database without ever telling the
+    // developer they need to claim it.
     seedSqliteProject()
 
     commandSync.mockReturnValueOnce({
@@ -340,6 +340,7 @@ describe('neon handler', () => {
     expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('Prisma migration failed'),
     )
+    expect(memfsFs.existsSync(path.join(BASE_PATH, '.env'))).toBe(false)
 
     exitSpy.mockRestore()
     errorSpy.mockRestore()
