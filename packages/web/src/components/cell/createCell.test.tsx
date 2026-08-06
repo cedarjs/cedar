@@ -439,4 +439,28 @@ describe('createCell', () => {
 
     screen.getByText(/^Hello Bob!$/)
   })
+  
+  test('Allows skip option in beforeQuery', () => {
+    const TestCell = createCell({
+      // @ts-expect-error - Purposefully using a plain string here.
+      QUERY: 'query TestQuery { answer }',
+      Success: () => <>Should not be</>,
+      Loading: () => <>Should not be</>,
+      Empty: () => <>Should not be</>,
+      beforeQuery: () => ({
+        skip: true
+      }),
+    })
+
+    const myUseQueryHook = () => ({ data: undefined, loading: false, error: undefined })
+
+    render(
+      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
+        <TestCell />
+      </GraphQLHooksProvider>,
+    )
+
+    const child = screen.queryByText('/^Should not be$/');
+    expect(child).toBeNull();
+  })
 })
