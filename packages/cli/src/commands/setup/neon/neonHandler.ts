@@ -19,6 +19,7 @@ interface NeonCtx {
   databaseUrlDirect?: string
   neonClaimUrl?: string
   neonClaimExpiry?: string
+  directDatabaseUrlNotSet?: boolean
 }
 
 export async function handler({ force }: Args) {
@@ -72,7 +73,7 @@ export async function handler({ force }: Args) {
       {
         title: 'Setting DIRECT_DATABASE_URL in Prisma config',
         skip: () => skipProvisioning,
-        task: (_ctx, task) => {
+        task: (ctx, task) => {
           const prismaConfigPathCjs = path.join(
             cedarPaths.api.base,
             'prisma.config.cjs',
@@ -89,6 +90,13 @@ export async function handler({ force }: Args) {
 
           const datasourceUrlRegex = /(\burl\s*:\s*)env\(["'][^"']*?["']\)/
           if (!datasourceUrlRegex.test(configContent)) {
+            // Whatever prisma.config actually reads for its datasource is
+            // now unknown — it might still be pointed at a database from
+            // before this conversion. Provisioning and writing the new
+            // connection strings to .env below are harmless either way,
+            // but running migrations against an unconfirmed datasource
+            // could target the wrong database, so that's blocked below.
+            ctx.directDatabaseUrlNotSet = true
             task.skip(
               'Could not set DIRECT_DATABASE_URL. Please manually set datasource.url in ' +
                 configPath,
@@ -192,6 +200,15 @@ export async function handler({ force }: Args) {
         skip: (ctx) => {
           if (skipProvisioning) {
             return true
+          }
+
+          if (ctx.directDatabaseUrlNotSet) {
+            return (
+              'Skipping migrations — could not confirm prisma.config is ' +
+              'reading DIRECT_DATABASE_URL, so migrations could target the ' +
+              'wrong database. Fix datasource.url, then run ' +
+              '`yarn cedar prisma migrate dev` manually.'
+            )
           }
 
           if (!ctx.databaseUrl) {

@@ -151,6 +151,45 @@ describe('neon handler', () => {
     expect(Listr2Mock.executedTaskTitles).toContain('Running Prisma migrations')
   })
 
+  it('provisions and writes .env, but skips migrations, when prisma.config has no recognizable datasource URL', async () => {
+    // Provisioning and writing the new connection strings to .env are
+    // harmless even if prisma.config couldn't be updated — but running
+    // migrations against a datasource we couldn't confirm is now
+    // DIRECT_DATABASE_URL could target a database from before this
+    // conversion instead, so that's the one thing that must not run.
+    seedSqliteProject()
+    memfsFs.writeFileSync(
+      path.join(BASE_PATH, 'api/prisma.config.cjs'),
+      'module.exports = defineConfig({ datasource: { url: someCustomFn() } })',
+    )
+
+    await handler({ force: false })
+
+    expect(global.fetch).toHaveBeenCalled()
+    expect(Listr2Mock.skippedTaskTitles).toContain(
+      'Skipping migrations — could not confirm prisma.config is reading ' +
+        'DIRECT_DATABASE_URL, so migrations could target the wrong ' +
+        'database. Fix datasource.url, then run ' +
+        '`yarn cedar prisma migrate dev` manually.',
+    )
+    expect(commandSync).not.toHaveBeenCalled()
+
+    const envContent = memfsFs.readFileSync(
+      path.join(BASE_PATH, '.env'),
+      'utf-8',
+    )
+    expect(envContent).toContain(
+      'DATABASE_URL=postgresql://user:pass@ep-abc-pooler.neon.tech/db',
+    )
+
+    expect(
+      memfsFs.readFileSync(
+        path.join(BASE_PATH, 'api/prisma.config.cjs'),
+        'utf-8',
+      ),
+    ).toContain('url: someCustomFn()')
+  })
+
   it('skips provisioning, env writing, and migrating when DATABASE_URL is already set', async () => {
     seedSqliteProject()
     memfsFs.writeFileSync(
