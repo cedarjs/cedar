@@ -70,11 +70,8 @@ export async function handler({ force }: Args) {
     [
       ...getSqliteToPostgresTasks({ dbPath: shape.dbPath }),
       {
-        title: 'Updating Prisma config',
-        task: () => {
-          // Neon needs the direct (non-pooler) connection for migrations,
-          // unlike a generic Postgres provider — the only place in this
-          // command that needs a DIRECT_DATABASE_URL split at all.
+        title: 'Setting DIRECT_DATABASE_URL in Prisma config',
+        task: (_ctx, task) => {
           const prismaConfigPathCjs = path.join(
             cedarPaths.api.base,
             'prisma.config.cjs',
@@ -88,10 +85,21 @@ export async function handler({ force }: Args) {
             : prismaConfigPathMts
 
           const configContent = fs.readFileSync(configPath, 'utf-8')
+
+          const datasourceUrlRegex = /(\burl\s*:\s*)env\(["'][^"']*?["']\)/
+          if (!datasourceUrlRegex.test(configContent)) {
+            task.skip(
+              'Could not set DIRECT_DATABASE_URL. Please manually set datasource.url in ' +
+                configPath,
+            )
+            return
+          }
+
+          // Neon needs the direct (non-pooler) connection for migrations
           fs.writeFileSync(
             configPath,
             configContent.replace(
-              /(\burl\s*:\s*)env\(["']DATABASE_URL["']\)/,
+              datasourceUrlRegex,
               "$1env('DIRECT_DATABASE_URL')",
             ),
           )
