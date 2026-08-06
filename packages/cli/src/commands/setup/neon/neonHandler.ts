@@ -5,256 +5,119 @@ import execa from 'execa'
 import { Listr } from 'listr2'
 
 import { colors, getPaths, installPackages } from '@cedarjs/cli-helpers'
-import { addWorkspacePackages } from '@cedarjs/cli-helpers/packageManager/packages'
+import { prettyPrintCedarCommand } from '@cedarjs/cli-helpers/packageManager'
 import { errorTelemetry } from '@cedarjs/telemetry'
+
+import {
+  checkProjectShape,
+  getSqliteToPostgresTasks,
+} from '../database/postgresHandler.js'
 
 import type { Args } from './neon.js'
 
-const cedarPaths = getPaths()
+interface NeonCtx {
+  databaseUrl?: string
+  databaseUrlDirect?: string
+  neonClaimUrl?: string
+  neonClaimExpiry?: string
+  directDatabaseUrlNotSet?: boolean
+}
 
 export async function handler({ force }: Args) {
-  const schemaPath = path.join(cedarPaths.api.base, 'db', 'schema.prisma')
-  const dbTsPath = path.join(cedarPaths.api.src, 'lib', 'db.ts')
-  const prismaConfigPathCjs = path.join(
-    cedarPaths.api.base,
-    'prisma.config.cjs',
-  )
-  const prismaConfigPathMts = path.join(
-    cedarPaths.api.base,
-    'prisma.config.mts',
-  )
-  const envPath = path.join(cedarPaths.base, '.env')
-  const rootPkgPath = path.join(cedarPaths.base, 'package.json')
-  const apiPkgPath = path.join(cedarPaths.api.base, 'package.json')
-  const dbTsTemplatePath = path.join(
-    import.meta.dirname,
-    'templates',
-    'db.ts.template',
-  )
+  const cedarPaths = getPaths()
 
-  let hasDirectDatabaseUrl = false
+  const shape = checkProjectShape(cedarPaths)
+  if (!shape.ok) {
+    if (shape.alreadyConverted) {
+      console.log(colors.note(shape.message))
+      return
+    }
+
+    console.error(colors.error(shape.message))
+    process.exit(1)
+  }
+
+  const envPath = path.join(cedarPaths.base, '.env')
+
+  // `.env` is the only reliable signal here, deliberately not
+  // `process.env.DATABASE_URL` — every project ships a `.env.defaults` with
+  // a SQLite placeholder DATABASE_URL, which `loadEnvFiles()` merges into
+  // `process.env` on every CLI invocation regardless of whether Postgres
+  // has been configured. Checking `process.env` would make this guard
+  // permanently true and skip provisioning on every fresh project.
+  let hasExistingDatabaseUrl = false
   if (fs.existsSync(envPath)) {
-    hasDirectDatabaseUrl = /^DATABASE_URL=/m.test(
+    hasExistingDatabaseUrl = /^DATABASE_URL=/m.test(
       fs.readFileSync(envPath, 'utf-8'),
     )
   }
 
+  // Provisioning a new database when one is already configured would orphan
+  // the existing one, so this only proceeds past the schema/adapter switch
+  // (which is safely idempotent on its own) when there's nothing to
+  // conflict with yet, or the user explicitly asked to overwrite it.
+  const skipProvisioning = hasExistingDatabaseUrl && !force
+
   const notes: string[] = []
 
-  const tasks = new Listr(
+  if (skipProvisioning) {
+    notes.push(
+      colors.note(
+        'DATABASE_URL is already set in .env. Use --force to overwrite.',
+      ),
+    )
+  }
+
+  const tasks = new Listr<NeonCtx>(
     [
+      ...getSqliteToPostgresTasks({ dbPath: shape.dbPath }),
       {
-        title: 'Checking current database configuration',
-        task: (ctx) => {
-          const schemaContent = fs.readFileSync(schemaPath, 'utf-8')
-          ctx.schemaContent = schemaContent
-
-          ctx.isSqlite = schemaContent.includes('provider = "sqlite"')
-          ctx.isPostgres = schemaContent.includes('provider = "postgresql"')
-
-          if (fs.existsSync(dbTsPath)) {
-            ctx.dbTsContent = fs.readFileSync(dbTsPath, 'utf-8')
-            ctx.isNeon = ctx.dbTsContent.includes('PrismaPg')
-          } else {
-            ctx.isNeon = false
-          }
-
-          if (!ctx.isSqlite && !ctx.isPostgres) {
-            ctx.unsupportedProvider = true
-            notes.push(
-              colors.note(
-                'setup neon only supports migrating from SQLite to PostgreSQL.' +
-                  ' Your project uses a different database provider.',
-              ),
-            )
-
-            return
-          }
-
-          if (!ctx.isPostgres) {
-            ctx.hasSqliteUsageOutsideDb = hasSqliteUsageOutsideDb(
-              cedarPaths.api.src,
-              dbTsPath,
-            )
-          }
-
-          if (hasDirectDatabaseUrl && !force) {
-            ctx.skipWithNote = true
-            notes.push(
-              colors.note(
-                'DATABASE_URL is already set in .env. Use --force to overwrite.',
-              ),
-            )
-          }
-        },
-      },
-      {
-        title: 'Removing SQLite dependencies from api/package.json',
-        skip: (ctx) => {
-          if (ctx.unsupportedProvider) {
-            return 'Unsupported database provider'
-          }
-
-          if (ctx.isPostgres) {
-            return 'Already configured for PostgreSQL'
-          }
-
-          if (ctx.hasSqliteUsageOutsideDb) {
-            return 'SQLite is in use outside db.ts — keeping packages'
-          }
-
-          return false
-        },
-        task: () => {
-          const pkg = JSON.parse(fs.readFileSync(apiPkgPath, 'utf-8'))
-
-          if (pkg.dependencies) {
-            delete pkg.dependencies['better-sqlite3']
-            delete pkg.dependencies['@prisma/adapter-better-sqlite3']
-          }
-
-          fs.writeFileSync(apiPkgPath, JSON.stringify(pkg, null, 2) + '\n')
-        },
-      },
-      {
-        title: 'Removing better-sqlite3 dependenciesMeta',
-        skip: (ctx) => {
-          if (ctx.unsupportedProvider) {
-            return 'Unsupported database provider'
-          }
-
-          if (ctx.isPostgres) {
-            return 'Already configured for PostgreSQL'
-          }
-
-          if (ctx.hasSqliteUsageOutsideDb) {
-            return "SQLite is in use outside db.ts so we're keeping it installed"
-          }
-
-          return false
-        },
-        task: () => {
-          if (!fs.existsSync(rootPkgPath)) {
-            return
-          }
-
-          const pkg = JSON.parse(fs.readFileSync(rootPkgPath, 'utf-8'))
-
-          if (pkg.dependenciesMeta?.['better-sqlite3']) {
-            delete pkg.dependenciesMeta['better-sqlite3']
-
-            if (Object.keys(pkg.dependenciesMeta).length === 0) {
-              delete pkg.dependenciesMeta
-            }
-
-            fs.writeFileSync(rootPkgPath, JSON.stringify(pkg, null, 2) + '\n')
-          }
-        },
-      },
-      {
-        title: 'Switching Prisma schema to PostgreSQL',
-        skip: (ctx) => {
-          if (ctx.unsupportedProvider) {
-            return 'Unsupported database provider'
-          }
-
-          if (ctx.isPostgres) {
-            return 'Schema is already configured for PostgreSQL'
-          }
-
-          return false
-        },
-        task: (ctx) => {
-          const updated = (ctx.schemaContent as string).replace(
-            'provider = "sqlite"',
-            'provider = "postgresql"',
+        title: 'Setting DIRECT_DATABASE_URL in Prisma config',
+        skip: () => skipProvisioning,
+        task: (ctx, task) => {
+          const prismaConfigPathCjs = path.join(
+            cedarPaths.api.base,
+            'prisma.config.cjs',
           )
-          fs.writeFileSync(schemaPath, updated)
-        },
-      },
-      {
-        title: 'Updating database adapter',
-        skip: (ctx) => {
-          if (ctx.unsupportedProvider) {
-            return 'Unsupported database provider'
-          }
-
-          if (ctx.isNeon) {
-            return 'Database adapter is already configured for Neon (PrismaPg)'
-          }
-
-          if (ctx.skipWithNote) {
-            return 'DATABASE_URL already configured — skipping adapter update'
-          }
-
-          return false
-        },
-        task: () => {
-          const neonDbTs = fs.readFileSync(dbTsTemplatePath, 'utf-8')
-          fs.writeFileSync(dbTsPath, neonDbTs)
-        },
-      },
-      {
-        title: 'Updating Prisma config',
-        skip: (ctx) => {
-          if (ctx.unsupportedProvider) {
-            return 'Unsupported database provider'
-          }
-
-          if (ctx.isNeon) {
-            return 'Prisma config is already configured for Neon'
-          }
-
-          if (ctx.skipWithNote) {
-            return 'DATABASE_URL already configured — skipping config update'
-          }
-
-          return false
-        },
-        task: () => {
-          if (
-            !fs.existsSync(prismaConfigPathCjs) &&
-            !fs.existsSync(prismaConfigPathMts)
-          ) {
-            throw new Error(
-              'No Prisma config file found. Expected prisma.config.cjs or prisma.config.mts in the api directory.',
-            )
-          }
-
+          const prismaConfigPathMts = path.join(
+            cedarPaths.api.base,
+            'prisma.config.mts',
+          )
           const configPath = fs.existsSync(prismaConfigPathCjs)
             ? prismaConfigPathCjs
             : prismaConfigPathMts
 
           const configContent = fs.readFileSync(configPath, 'utf-8')
-          const updated = configContent.replace(
-            /env\(["']DATABASE_URL["']\)/,
-            "env('DIRECT_DATABASE_URL')",
+
+          const datasourceUrlRegex = /(\burl\s*:\s*)env\(["'][^"']*?["']\)/
+          if (!datasourceUrlRegex.test(configContent)) {
+            // Whatever prisma.config actually reads for its datasource is
+            // now unknown — it might still be pointed at a database from
+            // before this conversion. Provisioning and writing the new
+            // connection strings to .env below are harmless either way,
+            // but running migrations against an unconfirmed datasource
+            // could target the wrong database, so that's blocked below.
+            ctx.directDatabaseUrlNotSet = true
+            task.skip(
+              'Could not set DIRECT_DATABASE_URL. Please manually set datasource.url in ' +
+                configPath,
+            )
+            return
+          }
+
+          // Neon needs the direct (non-pooler) connection for migrations
+          fs.writeFileSync(
+            configPath,
+            configContent.replace(
+              datasourceUrlRegex,
+              "$1env('DIRECT_DATABASE_URL')",
+            ),
           )
-          fs.writeFileSync(configPath, updated)
-        },
-      },
-      {
-        title: 'Adding required api packages...',
-        skip: (ctx) => ctx.unsupportedProvider,
-        task: async () => {
-          await addWorkspacePackages('api', ['@prisma/adapter-pg@7.8.0'], {
-            cwd: cedarPaths.api.base,
-          })
         },
       },
       {
         title: 'Provisioning Neon database',
-        skip: (ctx) => {
-          if (ctx.unsupportedProvider) {
-            return true
-          }
-
-          if (hasDirectDatabaseUrl && !force) {
-            return true
-          }
-
-          return false
-        },
+        skip: () => skipProvisioning,
         task: async (ctx) => {
           const res = await fetch('https://neon.new/api/v1/database', {
             method: 'POST',
@@ -292,23 +155,65 @@ export async function handler({ force }: Args) {
           ctx.neonClaimExpiry = new Date(data.expires_at).toUTCString()
         },
       },
+      installPackages,
       {
-        title: 'Writing database connection to .env',
+        title: 'Running Prisma migrations',
         skip: (ctx) => {
-          if (ctx.unsupportedProvider) {
+          if (skipProvisioning) {
             return true
           }
 
-          if (hasDirectDatabaseUrl && !force) {
-            return true
-          }
-
-          if (!ctx.databaseUrl) {
-            return 'No database URL to write (Neon provisioning skipped)'
+          if (ctx.directDatabaseUrlNotSet) {
+            return (
+              'Skipping migrations — could not confirm prisma.config is ' +
+              'reading DIRECT_DATABASE_URL, so migrations could target the ' +
+              'wrong database. Fix datasource.url, then run ' +
+              `\`${prettyPrintCedarCommand(['prisma', 'migrate', 'dev'])}\` manually.`
+            )
           }
 
           return false
         },
+        task: (ctx) => {
+          // The process we spawn here will inherit its parent's process.env.
+          // DIRECT_DATABASE_URL hasn't been written to .env yet (that
+          // happens below, only once migrations have succeeded), so it's
+          // passed explicitly here — the migrate command doesn't need the
+          // file to be written first.
+          const result = execa.commandSync(
+            'yarn cedar prisma migrate dev --name init-neon',
+            {
+              cwd: cedarPaths.base,
+              stdio: ['inherit', 'inherit', 'pipe'],
+              reject: false,
+              env: {
+                ...process.env,
+                DIRECT_DATABASE_URL: ctx.databaseUrlDirect,
+              },
+            },
+          )
+
+          if (result.exitCode !== 0) {
+            throw new Error(
+              'Prisma migration failed:\n\n' +
+                result.stderr +
+                '\n\nYou can try running it manually:\n' +
+                `  ${prettyPrintCedarCommand(['prisma', 'migrate', 'dev', '--name', 'init-neon'])}`,
+            )
+          }
+        },
+      },
+      {
+        title: 'Writing database connection to .env',
+        // Deliberately runs after migrations, not before — with
+        // `exitOnError: true`, a migration failure stops the list here and
+        // this task never runs. That means a project whose migrations
+        // failed never has DATABASE_URL/DIRECT_DATABASE_URL written to
+        // .env, so it's never left pointing at a Neon database it doesn't
+        // know it needs to claim. Provisioning that database anyway (and
+        // letting it expire unclaimed) is fine — it's exactly as if the
+        // command were re-run from scratch, which is safe.
+        skip: () => skipProvisioning,
         task: (ctx) => {
           let envContent = ''
           if (fs.existsSync(envPath)) {
@@ -336,61 +241,10 @@ export async function handler({ force }: Args) {
           fs.writeFileSync(envPath, envContent)
         },
       },
-      installPackages,
-      {
-        title: 'Running Prisma migrations',
-        skip: (ctx) => {
-          if (ctx.unsupportedProvider) {
-            return true
-          }
-
-          if (ctx.skipWithNote) {
-            return 'DATABASE_URL already configured — skipping migration'
-          }
-
-          if (!ctx.databaseUrl) {
-            return 'No database provisioned — skipping migration'
-          }
-
-          return false
-        },
-        task: (ctx) => {
-          // The process we spawn here will inherit its parent's process.env.
-          // We've added DIRECT_DATABASE_URL to the project's .env file, but we
-          // haven't refreshed our environment variables. Explicitly passing it
-          // in below ensures the migrate command works correctly.
-          const result = execa.commandSync(
-            'yarn cedar prisma migrate dev --name init-neon',
-            {
-              cwd: cedarPaths.base,
-              stdio: ['inherit', 'inherit', 'pipe'],
-              reject: false,
-              env: {
-                ...process.env,
-                DIRECT_DATABASE_URL: ctx.databaseUrlDirect,
-              },
-            },
-          )
-
-          if (result.exitCode !== 0) {
-            throw new Error(
-              'Prisma migration failed:\n\n' +
-                result.stderr +
-                '\n\nYou can try running it manually:\n' +
-                '  yarn cedar prisma migrate dev --name init-neon',
-            )
-          }
-        },
-      },
       {
         title: 'One more thing...',
         task: (ctx, task) => {
-          if (ctx.unsupportedProvider) {
-            task.output = 'Skipped — unsupported database provider'
-            return
-          }
-
-          if (ctx.skipWithNote) {
+          if (skipProvisioning) {
             task.output = 'Skipped — DATABASE_URL already configured'
             return
           }
@@ -411,7 +265,11 @@ export async function handler({ force }: Args) {
       },
     ],
     {
-      exitOnError: false,
+      // Migrations run before .env is written (see above) specifically so
+      // that a failure here — the one step that shouldn't be allowed to
+      // continue — stops the whole list via the default exitOnError
+      // behavior, rather than needing every later task to know to skip.
+      exitOnError: true,
     },
   )
 
@@ -447,30 +305,4 @@ function isErrorWithExitCode(e: unknown): e is { exitCode: number } {
     'exitCode' in e &&
     typeof e.exitCode === 'number'
   )
-}
-
-function hasSqliteUsageOutsideDb(srcPath: string, dbTsPath: string): boolean {
-  const sqlitePattern = /better-sqlite3|@prisma\/adapter-better-sqlite3/
-
-  const files = fs.globSync('**/*.{ts,tsx,js,jsx}', { cwd: srcPath })
-
-  for (const file of files) {
-    const fullPath = path.join(srcPath, file)
-
-    if (fullPath === dbTsPath) {
-      continue
-    }
-
-    try {
-      const content = fs.readFileSync(fullPath, 'utf-8')
-
-      if (sqlitePattern.test(content)) {
-        return true
-      }
-    } catch {
-      // Skip unreadable files
-    }
-  }
-
-  return false
 }
