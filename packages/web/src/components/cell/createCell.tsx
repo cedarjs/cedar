@@ -211,6 +211,8 @@ function createNonSuspendingCell<
       }
     } else if (loading) {
       return <Loading {...props} queryResult={queryResult} />
+    } else if(options?.skip)
+      return null
     } else {
       /**
        * There really shouldn't be an `else` here, but like any piece of software, GraphQL clients have bugs.
