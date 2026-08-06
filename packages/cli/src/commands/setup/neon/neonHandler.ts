@@ -68,10 +68,35 @@ export async function handler({ force }: Args) {
 
   const tasks = new Listr<NeonCtx>(
     [
-      ...getSqliteToPostgresTasks({
-        prismaConfigPath: shape.prismaConfigPath,
-        dbPath: shape.dbPath,
-      }),
+      ...getSqliteToPostgresTasks({ dbPath: shape.dbPath }),
+      {
+        title: 'Updating Prisma config',
+        task: () => {
+          // Neon needs the direct (non-pooler) connection for migrations,
+          // unlike a generic Postgres provider — the only place in this
+          // command that needs a DIRECT_DATABASE_URL split at all.
+          const prismaConfigPathCjs = path.join(
+            cedarPaths.api.base,
+            'prisma.config.cjs',
+          )
+          const prismaConfigPathMts = path.join(
+            cedarPaths.api.base,
+            'prisma.config.mts',
+          )
+          const configPath = fs.existsSync(prismaConfigPathCjs)
+            ? prismaConfigPathCjs
+            : prismaConfigPathMts
+
+          const configContent = fs.readFileSync(configPath, 'utf-8')
+          fs.writeFileSync(
+            configPath,
+            configContent.replace(
+              /(\burl\s*:\s*)env\(["']DATABASE_URL["']\)/,
+              "$1env('DIRECT_DATABASE_URL')",
+            ),
+          )
+        },
+      },
       {
         title: 'Provisioning Neon database',
         skip: () => skipProvisioning,

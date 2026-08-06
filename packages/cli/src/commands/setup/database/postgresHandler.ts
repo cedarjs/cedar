@@ -11,7 +11,6 @@ import { errorTelemetry } from '@cedarjs/telemetry'
 
 interface ShapeOk {
   ok: true
-  prismaConfigPath: string
   dbPath: string
 }
 
@@ -27,9 +26,8 @@ export type ProjectShape = ShapeOk | ShapeBlocked
  * Checks whether the project looks like an untouched Cedar SQLite setup —
  * the one shape this command knows how to convert safely — before any file
  * gets mutated. Anything else (a different provider, a partial previous
- * conversion, SQLite used somewhere removing its packages would break)
- * doesn't get guessed at: it's reported back so the caller can bail with a
- * clear message instead.
+ * conversion) doesn't get guessed at: it's reported back so the caller can
+ * bail with a clear message instead.
  */
 export function checkProjectShape(
   cedarPaths: ReturnType<typeof getPaths>,
@@ -72,47 +70,7 @@ export function checkProjectShape(
     )
   }
 
-  const prismaConfigPathCjs = path.join(
-    cedarPaths.api.base,
-    'prisma.config.cjs',
-  )
-  const prismaConfigPathMts = path.join(
-    cedarPaths.api.base,
-    'prisma.config.mts',
-  )
-  const prismaConfigPath = fs.existsSync(prismaConfigPathCjs)
-    ? prismaConfigPathCjs
-    : fs.existsSync(prismaConfigPathMts)
-      ? prismaConfigPathMts
-      : undefined
-
-  if (!prismaConfigPath) {
-    return blocked(
-      'No Prisma config file found. Expected prisma.config.cjs or ' +
-        'prisma.config.mts in the api directory.',
-    )
-  }
-
-  const prismaConfigContent = fs.readFileSync(prismaConfigPath, 'utf-8')
-  if (!findDatasourceUrlLine(prismaConfigContent, 'DATABASE_URL')) {
-    return blocked(
-      `Could not find an active \`url: env('DATABASE_URL')\` line in ` +
-        `${prismaConfigPath}. Update it to read DIRECT_DATABASE_URL manually.`,
-    )
-  }
-
-  if (
-    hasSqliteUsageOutsideDb(cedarPaths.api.src, dbPath) ||
-    hasSqliteUsageOutsideDb(cedarPaths.scripts, dbPath)
-  ) {
-    return blocked(
-      'Found `better-sqlite3` usage outside api/src/lib/db.ts (or db.js). ' +
-        'Removing the SQLite packages could break that code — switch this ' +
-        'project over to PostgreSQL manually.',
-    )
-  }
-
-  return { ok: true, prismaConfigPath, dbPath }
+  return { ok: true, dbPath }
 }
 
 function blocked(message: string): ShapeBlocked {
@@ -130,10 +88,8 @@ function blocked(message: string): ShapeBlocked {
  * its job unconditionally instead of re-checking its own preconditions.
  */
 export function getSqliteToPostgresTasks({
-  prismaConfigPath,
   dbPath,
 }: {
-  prismaConfigPath: string
   dbPath: string
 }): ListrTask[] {
   const cedarPaths = getPaths()
@@ -201,30 +157,6 @@ export function getSqliteToPostgresTasks({
       },
     },
     {
-      title: 'Updating Prisma config',
-      task: () => {
-        const configContent = fs.readFileSync(prismaConfigPath, 'utf-8')
-        const active = findDatasourceUrlLine(configContent, 'DATABASE_URL')
-
-        if (!active) {
-          // `checkProjectShape()` already confirmed this line exists — this
-          // is just a defensive backstop against the file changing between
-          // that check and this task running, not an expected path.
-          throw new Error(
-            `Could not find an active \`url: env('DATABASE_URL')\` line in ` +
-              `${prismaConfigPath} anymore.`,
-          )
-        }
-
-        const lines = configContent.split('\n')
-        lines[active.lineIndex] = active.line.replace(
-          /(\burl\s*:\s*)env\(["']DATABASE_URL["']\)/,
-          "$1env('DIRECT_DATABASE_URL')",
-        )
-        fs.writeFileSync(prismaConfigPath, lines.join('\n'))
-      },
-    },
-    {
       title: 'Adding required api packages...',
       task: async () => {
         await addWorkspacePackages('api', ['@prisma/adapter-pg@7.8.0'], {
@@ -237,9 +169,7 @@ export function getSqliteToPostgresTasks({
 
 function readEnvVar(envContent: string, name: string): string | undefined {
   // An empty value (`NAME=`) is treated the same as the variable being
-  // absent entirely — `??` alone would treat `''` as "set" and stop there,
-  // short-circuiting the DIRECT_DATABASE_URL fallback below before it ever
-  // reaches DATABASE_URL.
+  // absent entirely.
   return envContent.match(new RegExp(`^${name}=(.*)$`, 'm'))?.[1] || undefined
 }
 
@@ -262,38 +192,15 @@ export async function handler() {
     ? fs.readFileSync(envPath, 'utf-8')
     : ''
 
-  const databaseUrl =
-    process.env.DATABASE_URL || readEnvVar(envContent, 'DATABASE_URL')
-
-  // The "Updating Prisma config" task above rewrites prisma.config to read
-  // migrations from DIRECT_DATABASE_URL, not DATABASE_URL — Neon-style
-  // pooled/direct splits aside, most providers only hand out one connection
-  // string, so default to that rather than leaving migrations with nothing
-  // to connect with.
-  const directDatabaseUrl =
-    process.env.DIRECT_DATABASE_URL ||
-    readEnvVar(envContent, 'DIRECT_DATABASE_URL') ||
-    databaseUrl
-
-  // The fallback above only lives in this process — passed to the migration
-  // subprocess's env below, but never persisted. Without writing it to
-  // .env too, this run's migration succeeds, but any Prisma command run
-  // manually afterwards has nothing to resolve DIRECT_DATABASE_URL from.
-  if (!readEnvVar(envContent, 'DIRECT_DATABASE_URL') && directDatabaseUrl) {
-    const updatedEnvContent =
-      envContent && !envContent.endsWith('\n') ? envContent + '\n' : envContent
-    fs.writeFileSync(
-      envPath,
-      updatedEnvContent + `DIRECT_DATABASE_URL=${directDatabaseUrl}\n`,
-    )
-  }
+  // Setup commands are run locally, with all connection info expected in
+  // .env — unlike Neon, a generic Postgres provider only hands out one
+  // connection string, so prisma.config keeps reading DATABASE_URL as-is
+  // and no DIRECT_DATABASE_URL split is needed here.
+  const databaseUrl = readEnvVar(envContent, 'DATABASE_URL')
 
   const tasks = new Listr(
     [
-      ...getSqliteToPostgresTasks({
-        prismaConfigPath: shape.prismaConfigPath,
-        dbPath: shape.dbPath,
-      }),
+      ...getSqliteToPostgresTasks({ dbPath: shape.dbPath }),
       installPackages,
       {
         title: 'Running Prisma migrations',
@@ -314,10 +221,6 @@ export async function handler() {
               cwd: cedarPaths.base,
               stdio: ['inherit', 'inherit', 'pipe'],
               reject: false,
-              env: {
-                ...process.env,
-                DIRECT_DATABASE_URL: directDatabaseUrl,
-              },
             },
           )
 
@@ -382,60 +285,4 @@ function isErrorWithExitCode(e: unknown): e is { exitCode: number } {
     'exitCode' in e &&
     typeof e.exitCode === 'number'
   )
-}
-
-/**
- * Finds the line in a prisma.config file that actually sets
- * `url: env('<envVarName>')`, ignoring `//` comments — so a comment
- * mentioning or demonstrating that same text doesn't get mistaken for the
- * real, active datasource setting, whether that's for detecting it or for
- * rewriting it.
- *
- * Doesn't handle block comments — prisma.config is a small, generated
- * object where that isn't a realistic shape to guard against, so this only
- * strips what's actually been seen to cause a false match.
- */
-function findDatasourceUrlLine(
-  content: string,
-  envVarName: string,
-): { line: string; lineIndex: number } | undefined {
-  const pattern = new RegExp(`\\burl\\s*:\\s*env\\(["']${envVarName}["']\\)`)
-  const lines = content.split('\n')
-
-  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
-    const line = lines[lineIndex]
-    const codePart = line.split('//')[0]
-
-    if (pattern.test(codePart)) {
-      return { line, lineIndex }
-    }
-  }
-
-  return undefined
-}
-
-function hasSqliteUsageOutsideDb(srcPath: string, dbPath: string): boolean {
-  const sqlitePattern = /better-sqlite3|@prisma\/adapter-better-sqlite3/
-
-  const files = fs.globSync('**/*.{ts,tsx,js,jsx}', { cwd: srcPath })
-
-  for (const file of files) {
-    const fullPath = path.join(srcPath, file)
-
-    if (fullPath === dbPath) {
-      continue
-    }
-
-    try {
-      const content = fs.readFileSync(fullPath, 'utf-8')
-
-      if (sqlitePattern.test(content)) {
-        return true
-      }
-    } catch {
-      // Skip unreadable files
-    }
-  }
-
-  return false
 }

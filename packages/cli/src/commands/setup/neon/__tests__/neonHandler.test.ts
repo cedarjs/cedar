@@ -149,6 +149,16 @@ describe('neon handler', () => {
       'DIRECT_DATABASE_URL=postgresql://user:pass@ep-abc.neon.tech/db',
     )
 
+    // Neon needs the direct (non-pooler) connection for migrations, so
+    // prisma.config gets rewritten to read it — unlike the generic
+    // Postgres command, which leaves prisma.config on DATABASE_URL.
+    expect(
+      memfsFs.readFileSync(
+        path.join(BASE_PATH, 'api/prisma.config.cjs'),
+        'utf-8',
+      ),
+    ).toContain("env('DIRECT_DATABASE_URL')")
+
     expect(Listr2Mock.executedTaskTitles).toContain('Running Prisma migrations')
   })
 
@@ -259,39 +269,6 @@ describe('neon handler', () => {
     expect(exitSpy).toHaveBeenCalledWith(1)
     expect(global.fetch).not.toHaveBeenCalled()
     expect(memfsFs.existsSync(path.join(BASE_PATH, '.env'))).toBe(false)
-
-    exitSpy.mockRestore()
-    errorSpy.mockRestore()
-  })
-
-  it('bails and does not provision, write .env, or migrate when no Prisma config file exists', async () => {
-    seedSqliteProject()
-    memfsFs.unlinkSync(path.join(BASE_PATH, 'api/prisma.config.cjs'))
-
-    global.fetch = vi.fn()
-    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
-      throw new Error('process.exit called')
-    })
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-
-    await expect(handler({ force: false })).rejects.toThrow(
-      'process.exit called',
-    )
-
-    expect(exitSpy).toHaveBeenCalledWith(1)
-    expect(global.fetch).not.toHaveBeenCalled()
-    expect(memfsFs.existsSync(path.join(BASE_PATH, '.env'))).toBe(false)
-
-    // Provisioning a database and writing DATABASE_URL for a project whose
-    // schema is still SQLite (schema conversion is skipped too, for the
-    // same reason) would leave it in a worse, more confusing state than
-    // just stopping here.
-    expect(
-      memfsFs.readFileSync(
-        path.join(BASE_PATH, 'api/db/schema.prisma'),
-        'utf-8',
-      ),
-    ).toBe(SQLITE_SCHEMA)
 
     exitSpy.mockRestore()
     errorSpy.mockRestore()

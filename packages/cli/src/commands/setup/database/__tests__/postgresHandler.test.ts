@@ -3,7 +3,7 @@ vi.mock('node:fs')
 import path from 'node:path'
 
 import { vol, fs as memfsFs } from 'memfs'
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { vi, describe, it, expect, beforeEach } from 'vitest'
 
 import '../../../../lib/mockTelemetry.js'
 
@@ -103,7 +103,9 @@ function seedSqliteProject() {
 
 function seedSqliteJsProject() {
   // JavaScript projects use api/src/lib/db.js instead of db.ts — everything
-  // else about the default SQLite setup is the same.
+  // else about the default SQLite setup is the same. Not covered by any
+  // e2e-tested fixture (those all use the TS template), so this is the
+  // only place this path gets exercised.
   seedSqliteProject()
   memfsFs.unlinkSync(path.join(BASE_PATH, 'api/src/lib/db.ts'))
   memfsFs.writeFileSync(
@@ -112,28 +114,9 @@ function seedSqliteJsProject() {
   )
 }
 
-const originalDatabaseUrl = process.env.DATABASE_URL
-const originalDirectDatabaseUrl = process.env.DIRECT_DATABASE_URL
-
 beforeEach(() => {
   vol.reset()
   vi.clearAllMocks()
-  delete process.env.DATABASE_URL
-  delete process.env.DIRECT_DATABASE_URL
-})
-
-afterEach(() => {
-  if (originalDatabaseUrl === undefined) {
-    delete process.env.DATABASE_URL
-  } else {
-    process.env.DATABASE_URL = originalDatabaseUrl
-  }
-
-  if (originalDirectDatabaseUrl === undefined) {
-    delete process.env.DIRECT_DATABASE_URL
-  } else {
-    process.env.DIRECT_DATABASE_URL = originalDirectDatabaseUrl
-  }
 })
 
 describe('checkProjectShape', () => {
@@ -142,12 +125,7 @@ describe('checkProjectShape', () => {
 
     const shape = checkProjectShape(getPaths())
 
-    expect(shape.ok).toBe(true)
-    if (shape.ok) {
-      expect(shape.prismaConfigPath).toBe(
-        path.join(BASE_PATH, 'api/prisma.config.cjs'),
-      )
-    }
+    expect(shape).toMatchObject({ ok: true })
   })
 
   it('accepts an untouched SQLite project using db.js instead of db.ts', () => {
@@ -205,60 +183,6 @@ describe('checkProjectShape', () => {
 
     expect(shape).toMatchObject({ ok: false, alreadyConverted: false })
   })
-
-  it('blocks when no Prisma config file exists', () => {
-    seedSqliteProject()
-    memfsFs.unlinkSync(path.join(BASE_PATH, 'api/prisma.config.cjs'))
-
-    const shape = checkProjectShape(getPaths())
-
-    expect(shape).toMatchObject({ ok: false, alreadyConverted: false })
-    if (!shape.ok) {
-      expect(shape.message).toContain('No Prisma config file found')
-    }
-  })
-
-  it('blocks when the Prisma config has no recognizable datasource URL', () => {
-    seedSqliteProject()
-    memfsFs.writeFileSync(
-      path.join(BASE_PATH, 'api/prisma.config.cjs'),
-      'module.exports = defineConfig({ datasourceUrl: databaseUrl })',
-    )
-
-    const shape = checkProjectShape(getPaths())
-
-    expect(shape).toMatchObject({ ok: false, alreadyConverted: false })
-    if (!shape.ok) {
-      expect(shape.message).toContain(
-        "Could not find an active `url: env('DATABASE_URL')` line",
-      )
-    }
-  })
-
-  it('blocks when SQLite is used outside db.ts, in api/src', () => {
-    seedSqliteProject()
-    memfsFs.writeFileSync(
-      path.join(BASE_PATH, 'api/src/some-script.ts'),
-      "import 'better-sqlite3'",
-    )
-
-    const shape = checkProjectShape(getPaths())
-
-    expect(shape).toMatchObject({ ok: false, alreadyConverted: false })
-  })
-
-  it('blocks when SQLite is used outside db.ts, in the project scripts/ dir', () => {
-    seedSqliteProject()
-    memfsFs.mkdirSync(path.join(BASE_PATH, 'scripts'), { recursive: true })
-    memfsFs.writeFileSync(
-      path.join(BASE_PATH, 'scripts/import-sqlite.ts'),
-      "import 'better-sqlite3'",
-    )
-
-    const shape = checkProjectShape(getPaths())
-
-    expect(shape).toMatchObject({ ok: false, alreadyConverted: false })
-  })
 })
 
 describe('getSqliteToPostgresTasks', () => {
@@ -270,10 +194,7 @@ describe('getSqliteToPostgresTasks', () => {
       throw new Error('Expected a convertible project shape')
     }
 
-    const tasks = getSqliteToPostgresTasks({
-      prismaConfigPath: shape.prismaConfigPath,
-      dbPath: shape.dbPath,
-    })
+    const tasks = getSqliteToPostgresTasks({ dbPath: shape.dbPath })
     await new Listr2Mock(tasks).run()
 
     const apiPkg = JSON.parse(
@@ -306,12 +227,14 @@ describe('getSqliteToPostgresTasks', () => {
       memfsFs.readFileSync(path.join(BASE_PATH, 'api/src/lib/db.ts'), 'utf-8'),
     ).toBe(PG_DB_TS_TEMPLATE)
 
+    // The generic Postgres command doesn't touch prisma.config — a single
+    // connection string is enough, so it's left reading DATABASE_URL as-is.
     expect(
       memfsFs.readFileSync(
         path.join(BASE_PATH, 'api/prisma.config.cjs'),
         'utf-8',
       ),
-    ).toContain("env('DIRECT_DATABASE_URL')")
+    ).toContain("env('DATABASE_URL')")
 
     expect(addWorkspacePackages).toHaveBeenCalledWith(
       'api',
@@ -328,10 +251,7 @@ describe('getSqliteToPostgresTasks', () => {
       throw new Error('Expected a convertible project shape')
     }
 
-    const tasks = getSqliteToPostgresTasks({
-      prismaConfigPath: shape.prismaConfigPath,
-      dbPath: shape.dbPath,
-    })
+    const tasks = getSqliteToPostgresTasks({ dbPath: shape.dbPath })
     await new Listr2Mock(tasks).run()
 
     expect(
@@ -339,74 +259,6 @@ describe('getSqliteToPostgresTasks', () => {
     ).toBe(PG_DB_TS_TEMPLATE)
     expect(memfsFs.existsSync(path.join(BASE_PATH, 'api/src/lib/db.ts'))).toBe(
       false,
-    )
-  })
-
-  it('rewrites the datasource URL even when a comment elsewhere mentions DIRECT_DATABASE_URL', async () => {
-    // The detection and rewrite are both anchored on the `url:` key
-    // specifically. A naive whole-file search for the text
-    // `env('DIRECT_DATABASE_URL')` would read this comment as "already
-    // converted" and skip the real rewrite below it, leaving the schema
-    // switched to PostgreSQL but migrations still pointed at DATABASE_URL.
-    seedSqliteProject()
-    memfsFs.writeFileSync(
-      path.join(BASE_PATH, 'api/prisma.config.cjs'),
-      "// See env('DIRECT_DATABASE_URL') in the docs\n" +
-        "module.exports = defineConfig({ datasource: { url: env('DATABASE_URL') } })",
-    )
-
-    const shape = checkProjectShape(getPaths())
-    if (!shape.ok) {
-      throw new Error('Expected a convertible project shape')
-    }
-
-    const tasks = getSqliteToPostgresTasks({
-      prismaConfigPath: shape.prismaConfigPath,
-      dbPath: shape.dbPath,
-    })
-    await new Listr2Mock(tasks).run()
-
-    expect(
-      memfsFs.readFileSync(
-        path.join(BASE_PATH, 'api/prisma.config.cjs'),
-        'utf-8',
-      ),
-    ).toContain("url: env('DIRECT_DATABASE_URL')")
-  })
-
-  it('rewrites the active datasource URL, even past a commented-out example of the same shape', async () => {
-    // A comment can reproduce the exact `url: env(...)` shape it's
-    // describing, not just mention the env var name in prose — the
-    // detection and rewrite both have to skip past commented-out lines
-    // entirely, not just avoid a same-file substring search.
-    seedSqliteProject()
-    memfsFs.writeFileSync(
-      path.join(BASE_PATH, 'api/prisma.config.cjs'),
-      "// e.g. datasource: { url: env('DIRECT_DATABASE_URL') }\n" +
-        "module.exports = defineConfig({ datasource: { url: env('DATABASE_URL') } })",
-    )
-
-    const shape = checkProjectShape(getPaths())
-    if (!shape.ok) {
-      throw new Error('Expected a convertible project shape')
-    }
-
-    const tasks = getSqliteToPostgresTasks({
-      prismaConfigPath: shape.prismaConfigPath,
-      dbPath: shape.dbPath,
-    })
-    await new Listr2Mock(tasks).run()
-
-    const configContent = memfsFs.readFileSync(
-      path.join(BASE_PATH, 'api/prisma.config.cjs'),
-      'utf-8',
-    ) as string
-    expect(configContent).toContain(
-      "datasource: { url: env('DIRECT_DATABASE_URL') }",
-    )
-    // The comment itself must survive untouched.
-    expect(configContent).toContain(
-      "// e.g. datasource: { url: env('DIRECT_DATABASE_URL') }",
     )
   })
 })
@@ -494,97 +346,6 @@ describe('postgres handler', () => {
     await handler()
 
     expect(Listr2Mock.executedTaskTitles).toContain('Running Prisma migrations')
-  })
-
-  it('defaults DIRECT_DATABASE_URL to DATABASE_URL when only one is set', async () => {
-    // prisma.config gets rewritten to read migrations from
-    // DIRECT_DATABASE_URL, not DATABASE_URL. Most providers only hand out
-    // one connection string, so without this, migrations would have
-    // nothing to connect with even though DATABASE_URL is set.
-    seedSqliteProject()
-    memfsFs.writeFileSync(
-      path.join(BASE_PATH, '.env'),
-      'DATABASE_URL=postgresql://localhost/app\n',
-    )
-
-    await handler()
-
-    expect(commandSync).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({
-        env: expect.objectContaining({
-          DIRECT_DATABASE_URL: 'postgresql://localhost/app',
-        }),
-      }),
-    )
-  })
-
-  it('persists the DIRECT_DATABASE_URL fallback to .env, not just the migration subprocess', async () => {
-    // The fallback above is passed to the migration subprocess's env, but
-    // that's this process only — without also writing it to .env, any
-    // Prisma command run manually afterwards (prisma.config now reads
-    // DIRECT_DATABASE_URL) has nothing to resolve it from.
-    seedSqliteProject()
-    memfsFs.writeFileSync(
-      path.join(BASE_PATH, '.env'),
-      'DATABASE_URL=postgresql://localhost/app\n',
-    )
-
-    await handler()
-
-    expect(memfsFs.readFileSync(path.join(BASE_PATH, '.env'), 'utf-8')).toBe(
-      'DATABASE_URL=postgresql://localhost/app\n' +
-        'DIRECT_DATABASE_URL=postgresql://localhost/app\n',
-    )
-  })
-
-  it('prefers an explicitly set DIRECT_DATABASE_URL over DATABASE_URL', async () => {
-    seedSqliteProject()
-    memfsFs.writeFileSync(
-      path.join(BASE_PATH, '.env'),
-      'DATABASE_URL=postgresql://localhost/app-pooled\n' +
-        'DIRECT_DATABASE_URL=postgresql://localhost/app-direct\n',
-    )
-
-    await handler()
-
-    expect(commandSync).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({
-        env: expect.objectContaining({
-          DIRECT_DATABASE_URL: 'postgresql://localhost/app-direct',
-        }),
-      }),
-    )
-
-    // The already-explicit DIRECT_DATABASE_URL must survive untouched.
-    expect(memfsFs.readFileSync(path.join(BASE_PATH, '.env'), 'utf-8')).toBe(
-      'DATABASE_URL=postgresql://localhost/app-pooled\n' +
-        'DIRECT_DATABASE_URL=postgresql://localhost/app-direct\n',
-    )
-  })
-
-  it('falls back to DATABASE_URL when DIRECT_DATABASE_URL is blank', async () => {
-    // `NAME=` (empty value) has to be treated the same as NAME being absent
-    // — `??` alone stops at `''` without falling through to DATABASE_URL,
-    // so the migration subprocess would get DIRECT_DATABASE_URL='' instead
-    // of a usable connection string.
-    seedSqliteProject()
-    memfsFs.writeFileSync(
-      path.join(BASE_PATH, '.env'),
-      'DATABASE_URL=postgresql://localhost/app\nDIRECT_DATABASE_URL=\n',
-    )
-
-    await handler()
-
-    expect(commandSync).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({
-        env: expect.objectContaining({
-          DIRECT_DATABASE_URL: 'postgresql://localhost/app',
-        }),
-      }),
-    )
   })
 
   it('exits with a non-zero status when the migration fails, instead of reporting success', async () => {
