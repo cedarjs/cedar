@@ -71,6 +71,7 @@ export async function handler({ force }: Args) {
       ...getSqliteToPostgresTasks({ dbPath: shape.dbPath }),
       {
         title: 'Setting DIRECT_DATABASE_URL in Prisma config',
+        skip: () => skipProvisioning,
         task: (_ctx, task) => {
           const prismaConfigPathCjs = path.join(
             cedarPaths.api.base,

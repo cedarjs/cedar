@@ -165,6 +165,9 @@ describe('neon handler', () => {
     expect(global.fetch).not.toHaveBeenCalled()
     expect(Listr2Mock.skippedTaskTitles).toContain('Provisioning Neon database')
     expect(Listr2Mock.skippedTaskTitles).toContain('Running Prisma migrations')
+    expect(Listr2Mock.skippedTaskTitles).toContain(
+      'Setting DIRECT_DATABASE_URL in Prisma config',
+    )
 
     // The schema/adapter conversion is independent of whether DATABASE_URL
     // is already set — it only cares whether the project is still on
@@ -179,6 +182,16 @@ describe('neon handler', () => {
     expect(memfsFs.readFileSync(path.join(BASE_PATH, '.env'), 'utf-8')).toBe(
       'DATABASE_URL=postgresql://existing/db\n',
     )
+
+    // No DIRECT_DATABASE_URL was ever written in this path — rewriting
+    // prisma.config to read it would leave the project pointed at an
+    // undefined env var.
+    expect(
+      memfsFs.readFileSync(
+        path.join(BASE_PATH, 'api/prisma.config.cjs'),
+        'utf-8',
+      ),
+    ).toContain("env('DATABASE_URL')")
   })
 
   it('provisions again with --force even when DATABASE_URL is already set', async () => {
