@@ -54,6 +54,7 @@ vi.mock('@cedarjs/cli-helpers', () => ({
     api: {
       base: path.join(BASE_PATH, 'api'),
       src: path.join(BASE_PATH, 'api', 'src'),
+      lib: path.join(BASE_PATH, 'api', 'src', 'lib'),
     },
     scripts: path.join(BASE_PATH, 'scripts'),
   }),
