@@ -7,6 +7,7 @@ import type { ListrTask } from 'listr2'
 
 import { colors, getPaths, installPackages } from '@cedarjs/cli-helpers'
 import { addWorkspacePackages } from '@cedarjs/cli-helpers/packageManager/packages'
+import { resolveFile } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 interface ShapeOk {
@@ -33,24 +34,18 @@ export function checkProjectShape(
   cedarPaths: ReturnType<typeof getPaths>,
 ): ProjectShape {
   const schemaPath = path.join(cedarPaths.api.base, 'db', 'schema.prisma')
-  const dbTsPath = path.join(cedarPaths.api.src, 'lib', 'db.ts')
-  const dbJsPath = path.join(cedarPaths.api.src, 'lib', 'db.js')
-  // JavaScript projects use db.js, not db.ts — falls back to the .ts path
-  // (matching the template this command writes) when neither exists yet.
-  const dbPath = fs.existsSync(dbTsPath)
-    ? dbTsPath
-    : fs.existsSync(dbJsPath)
-      ? dbJsPath
-      : dbTsPath
+  const dbPath = resolveFile(path.join(cedarPaths.api.lib, 'db'))
 
   if (!fs.existsSync(schemaPath)) {
     return blocked(`Could not find ${schemaPath}.`)
   }
 
+  if (!dbPath) {
+    return blocked(`No ${path.join(cedarPaths.api.lib, 'db')} file found`)
+  }
+
   const schemaContent = fs.readFileSync(schemaPath, 'utf-8')
-  const hasPgAdapter =
-    fs.existsSync(dbPath) &&
-    fs.readFileSync(dbPath, 'utf-8').includes('PrismaPg')
+  const hasPgAdapter = fs.readFileSync(dbPath, 'utf-8').includes('PrismaPg')
 
   if (schemaContent.includes('provider = "postgresql"') && hasPgAdapter) {
     return {
