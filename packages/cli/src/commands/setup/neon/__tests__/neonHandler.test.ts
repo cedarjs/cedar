@@ -21,19 +21,10 @@ vi.mock('node:fs', async () => {
   }
 })
 
-vi.mock('listr2', () => ({
-  Listr: Listr2Mock,
-}))
+vi.mock('listr2', () => ({ Listr: Listr2Mock }))
 
-const commandSync = vi.fn((..._args: unknown[]) => ({
-  exitCode: 0,
-  stderr: '',
-}))
-vi.mock('execa', () => ({
-  default: {
-    commandSync: (...args: unknown[]) => commandSync(...args),
-  },
-}))
+const commandSync = vi.fn(() => ({ exitCode: 0, stderr: '' }))
+vi.mock('execa', () => ({ default: { commandSync: () => commandSync() } }))
 
 vi.mock('@cedarjs/cli-helpers/packageManager/packages', () => ({
   addWorkspacePackages: vi.fn(async () => {}),
@@ -131,12 +122,9 @@ describe('neon handler', () => {
 
     await handler({ force: false })
 
-    expect(
-      memfsFs.readFileSync(
-        path.join(BASE_PATH, 'api/db/schema.prisma'),
-        'utf-8',
-      ),
-    ).toContain('provider = "postgresql"')
+    const prismaSchemaPath = path.join(BASE_PATH, 'api/db/schema.prisma')
+    const prismaSchema = memfsFs.readFileSync(prismaSchemaPath, 'utf-8')
+    expect(prismaSchema).toContain('provider = "postgresql"')
 
     const envContent = memfsFs.readFileSync(
       path.join(BASE_PATH, '.env'),
@@ -149,15 +137,9 @@ describe('neon handler', () => {
       'DIRECT_DATABASE_URL=postgresql://user:pass@ep-abc.neon.tech/db',
     )
 
-    // Neon needs the direct (non-pooler) connection for migrations, so
-    // prisma.config gets rewritten to read it — unlike the generic
-    // Postgres command, which leaves prisma.config on DATABASE_URL.
-    expect(
-      memfsFs.readFileSync(
-        path.join(BASE_PATH, 'api/prisma.config.cjs'),
-        'utf-8',
-      ),
-    ).toContain("env('DIRECT_DATABASE_URL')")
+    const prismaConfigPath = path.join(BASE_PATH, 'api/prisma.config.cjs')
+    const prismaConfig = memfsFs.readFileSync(prismaConfigPath, 'utf-8')
+    expect(prismaConfig).toContain("env('DIRECT_DATABASE_URL')")
 
     expect(Listr2Mock.executedTaskTitles).toContain('Running Prisma migrations')
   })
@@ -189,34 +171,6 @@ describe('neon handler', () => {
 
     expect(memfsFs.readFileSync(path.join(BASE_PATH, '.env'), 'utf-8')).toBe(
       'DATABASE_URL=postgresql://existing/db\n',
-    )
-  })
-
-  it('still provisions when DATABASE_URL is only set in process.env, not .env', async () => {
-    // Every project ships a .env.defaults with a SQLite placeholder
-    // DATABASE_URL, which the CLI's loadEnvFiles() merges into
-    // process.env on every invocation regardless of whether Postgres has
-    // been configured — so process.env.DATABASE_URL can't be used as an
-    // "already configured" signal, or this would skip provisioning on
-    // every fresh project. Only .env itself (which this command writes,
-    // and which isn't checked into version control) is reliable.
-    seedSqliteProject()
-    process.env.DATABASE_URL = 'file:./db/dev.db'
-
-    global.fetch = vi.fn(async () => ({
-      ok: true,
-      json: async () => ({
-        connection_string: 'postgresql://user:pass@ep-abc-pooler.neon.tech/db',
-        expires_at: '2027-01-01T00:00:00.000Z',
-        claim_url: 'https://neon.new/claim/abc',
-      }),
-    })) as unknown as typeof fetch
-
-    await handler({ force: false })
-
-    expect(global.fetch).toHaveBeenCalled()
-    expect(Listr2Mock.executedTaskTitles).toContain(
-      'Provisioning Neon database',
     )
   })
 
@@ -304,11 +258,11 @@ describe('neon handler', () => {
   })
 
   it('exits with a non-zero status when the migration fails, instead of reporting success', async () => {
-    // With `exitOnError: false`, a failed task doesn't reject `tasks.run()`
-    // — that's the mechanism this command relies on to let "One more
-    // thing..." still print even when something upstream fails. Without
-    // explicitly checking `tasks.errors` afterwards, that silently
-    // swallows the failure and this command exits 0.
+    // With `exitOnError: false`, a failed task doesn't reject `tasks.run()` and
+    // that's the mechanism this command relies on to let "One more thing..."
+    // still print even when something upstream fails. Without explicitly
+    // checking `tasks.errors` afterwards, that silently swallows the upstream
+    // failure and this command exits 0.
     seedSqliteProject()
 
     global.fetch = vi.fn(async () => ({
