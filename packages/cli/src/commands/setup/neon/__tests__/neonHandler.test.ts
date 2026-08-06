@@ -98,14 +98,22 @@ function seedSqliteProject() {
 }
 
 const originalFetch = global.fetch
+const originalDatabaseUrl = process.env.DATABASE_URL
 
 beforeEach(() => {
   vol.reset()
   vi.clearAllMocks()
+  delete process.env.DATABASE_URL
 })
 
 afterEach(() => {
   global.fetch = originalFetch
+
+  if (originalDatabaseUrl === undefined) {
+    delete process.env.DATABASE_URL
+  } else {
+    process.env.DATABASE_URL = originalDatabaseUrl
+  }
 })
 
 describe('neon handler', () => {
@@ -172,6 +180,22 @@ describe('neon handler', () => {
     expect(memfsFs.readFileSync(path.join(BASE_PATH, '.env'), 'utf-8')).toBe(
       'DATABASE_URL=postgresql://existing/db\n',
     )
+  })
+
+  it('skips provisioning when DATABASE_URL is only set in process.env, not .env', async () => {
+    // CI and secret-managed deployments commonly supply DATABASE_URL via
+    // the process environment rather than a committed .env file — the
+    // "already configured" guard has to check both, or it provisions (and
+    // overwrites) a database the project already has.
+    seedSqliteProject()
+    process.env.DATABASE_URL = 'postgresql://existing/db'
+
+    global.fetch = vi.fn()
+
+    await handler({ force: false })
+
+    expect(global.fetch).not.toHaveBeenCalled()
+    expect(Listr2Mock.skippedTaskTitles).toContain('Provisioning Neon database')
   })
 
   it('provisions again with --force even when DATABASE_URL is already set', async () => {

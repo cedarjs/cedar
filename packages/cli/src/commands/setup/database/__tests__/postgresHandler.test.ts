@@ -519,6 +519,25 @@ describe('postgres handler', () => {
     )
   })
 
+  it('persists the DIRECT_DATABASE_URL fallback to .env, not just the migration subprocess', async () => {
+    // The fallback above is passed to the migration subprocess's env, but
+    // that's this process only — without also writing it to .env, any
+    // Prisma command run manually afterwards (prisma.config now reads
+    // DIRECT_DATABASE_URL) has nothing to resolve it from.
+    seedSqliteProject()
+    memfsFs.writeFileSync(
+      path.join(BASE_PATH, '.env'),
+      'DATABASE_URL=postgresql://localhost/app\n',
+    )
+
+    await handler()
+
+    expect(memfsFs.readFileSync(path.join(BASE_PATH, '.env'), 'utf-8')).toBe(
+      'DATABASE_URL=postgresql://localhost/app\n' +
+        'DIRECT_DATABASE_URL=postgresql://localhost/app\n',
+    )
+  })
+
   it('prefers an explicitly set DIRECT_DATABASE_URL over DATABASE_URL', async () => {
     seedSqliteProject()
     memfsFs.writeFileSync(
@@ -536,6 +555,12 @@ describe('postgres handler', () => {
           DIRECT_DATABASE_URL: 'postgresql://localhost/app-direct',
         }),
       }),
+    )
+
+    // The already-explicit DIRECT_DATABASE_URL must survive untouched.
+    expect(memfsFs.readFileSync(path.join(BASE_PATH, '.env'), 'utf-8')).toBe(
+      'DATABASE_URL=postgresql://localhost/app-pooled\n' +
+        'DIRECT_DATABASE_URL=postgresql://localhost/app-direct\n',
     )
   })
 

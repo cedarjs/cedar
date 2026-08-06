@@ -37,8 +37,11 @@ export async function handler({ force }: Args) {
 
   const envPath = path.join(cedarPaths.base, '.env')
 
-  let hasDirectDatabaseUrl = false
-  if (fs.existsSync(envPath)) {
+  // Checked in process.env too, not just .env — CI and secret-managed
+  // deployments commonly supply DATABASE_URL that way, and provisioning a
+  // new database on top of that would orphan it.
+  let hasDirectDatabaseUrl = Boolean(process.env.DATABASE_URL)
+  if (!hasDirectDatabaseUrl && fs.existsSync(envPath)) {
     hasDirectDatabaseUrl = /^DATABASE_URL=/m.test(
       fs.readFileSync(envPath, 'utf-8'),
     )

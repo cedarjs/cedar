@@ -275,6 +275,19 @@ export async function handler() {
     readEnvVar(envContent, 'DIRECT_DATABASE_URL') ||
     databaseUrl
 
+  // The fallback above only lives in this process — passed to the migration
+  // subprocess's env below, but never persisted. Without writing it to
+  // .env too, this run's migration succeeds, but any Prisma command run
+  // manually afterwards has nothing to resolve DIRECT_DATABASE_URL from.
+  if (!readEnvVar(envContent, 'DIRECT_DATABASE_URL') && directDatabaseUrl) {
+    const updatedEnvContent =
+      envContent && !envContent.endsWith('\n') ? envContent + '\n' : envContent
+    fs.writeFileSync(
+      envPath,
+      updatedEnvContent + `DIRECT_DATABASE_URL=${directDatabaseUrl}\n`,
+    )
+  }
+
   const tasks = new Listr(
     [
       ...getSqliteToPostgresTasks({
