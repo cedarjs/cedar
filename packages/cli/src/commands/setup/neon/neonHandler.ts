@@ -37,11 +37,14 @@ export async function handler({ force }: Args) {
 
   const envPath = path.join(cedarPaths.base, '.env')
 
-  // Checked in process.env too, not just .env — CI and secret-managed
-  // deployments commonly supply DATABASE_URL that way, and provisioning a
-  // new database on top of that would orphan it.
-  let hasDirectDatabaseUrl = Boolean(process.env.DATABASE_URL)
-  if (!hasDirectDatabaseUrl && fs.existsSync(envPath)) {
+  // `.env` is the only reliable signal here, deliberately not
+  // `process.env.DATABASE_URL` — every project ships a `.env.defaults` with
+  // a SQLite placeholder DATABASE_URL, which `loadEnvFiles()` merges into
+  // `process.env` on every CLI invocation regardless of whether Postgres
+  // has been configured. Checking `process.env` would make this guard
+  // permanently true and skip provisioning on every fresh project.
+  let hasDirectDatabaseUrl = false
+  if (fs.existsSync(envPath)) {
     hasDirectDatabaseUrl = /^DATABASE_URL=/m.test(
       fs.readFileSync(envPath, 'utf-8'),
     )

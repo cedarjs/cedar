@@ -182,20 +182,32 @@ describe('neon handler', () => {
     )
   })
 
-  it('skips provisioning when DATABASE_URL is only set in process.env, not .env', async () => {
-    // CI and secret-managed deployments commonly supply DATABASE_URL via
-    // the process environment rather than a committed .env file — the
-    // "already configured" guard has to check both, or it provisions (and
-    // overwrites) a database the project already has.
+  it('still provisions when DATABASE_URL is only set in process.env, not .env', async () => {
+    // Every project ships a .env.defaults with a SQLite placeholder
+    // DATABASE_URL, which the CLI's loadEnvFiles() merges into
+    // process.env on every invocation regardless of whether Postgres has
+    // been configured — so process.env.DATABASE_URL can't be used as an
+    // "already configured" signal, or this would skip provisioning on
+    // every fresh project. Only .env itself (which this command writes,
+    // and which isn't checked into version control) is reliable.
     seedSqliteProject()
-    process.env.DATABASE_URL = 'postgresql://existing/db'
+    process.env.DATABASE_URL = 'file:./db/dev.db'
 
-    global.fetch = vi.fn()
+    global.fetch = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        connection_string: 'postgresql://user:pass@ep-abc-pooler.neon.tech/db',
+        expires_at: '2027-01-01T00:00:00.000Z',
+        claim_url: 'https://neon.new/claim/abc',
+      }),
+    })) as unknown as typeof fetch
 
     await handler({ force: false })
 
-    expect(global.fetch).not.toHaveBeenCalled()
-    expect(Listr2Mock.skippedTaskTitles).toContain('Provisioning Neon database')
+    expect(global.fetch).toHaveBeenCalled()
+    expect(Listr2Mock.executedTaskTitles).toContain(
+      'Provisioning Neon database',
+    )
   })
 
   it('provisions again with --force even when DATABASE_URL is already set', async () => {
