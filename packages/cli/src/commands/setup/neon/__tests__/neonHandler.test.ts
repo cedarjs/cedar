@@ -30,6 +30,11 @@ vi.mock('@cedarjs/cli-helpers/packageManager/packages', () => ({
   addWorkspacePackages: vi.fn(async () => {}),
 }))
 
+vi.mock('@cedarjs/cli-helpers/packageManager', () => ({
+  prettyPrintCedarCommand: (args: string[] = []) =>
+    `yarn cedar ${args.join(' ')}`,
+}))
+
 const BASE_PATH = '/path/to/project'
 
 vi.mock('@cedarjs/cli-helpers', () => ({

@@ -5,6 +5,7 @@ import execa from 'execa'
 import { Listr } from 'listr2'
 
 import { colors, getPaths, installPackages } from '@cedarjs/cli-helpers'
+import { prettyPrintCedarCommand } from '@cedarjs/cli-helpers/packageManager'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import {
@@ -167,7 +168,7 @@ export async function handler({ force }: Args) {
               'Skipping migrations — could not confirm prisma.config is ' +
               'reading DIRECT_DATABASE_URL, so migrations could target the ' +
               'wrong database. Fix datasource.url, then run ' +
-              '`yarn cedar prisma migrate dev` manually.'
+              `\`${prettyPrintCedarCommand(['prisma', 'migrate', 'dev'])}\` manually.`
             )
           }
 
@@ -197,7 +198,7 @@ export async function handler({ force }: Args) {
               'Prisma migration failed:\n\n' +
                 result.stderr +
                 '\n\nYou can try running it manually:\n' +
-                '  yarn cedar prisma migrate dev --name init-neon',
+                `  ${prettyPrintCedarCommand(['prisma', 'migrate', 'dev', '--name', 'init-neon'])}`,
             )
           }
         },

@@ -6,6 +6,7 @@ import { Listr } from 'listr2'
 import type { ListrTask } from 'listr2'
 
 import { colors, getPaths, installPackages } from '@cedarjs/cli-helpers'
+import { prettyPrintCedarCommand } from '@cedarjs/cli-helpers/packageManager'
 import { addWorkspacePackages } from '@cedarjs/cli-helpers/packageManager/packages'
 import { resolveFile } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
@@ -203,7 +204,8 @@ export async function handler() {
           if (!databaseUrl) {
             return (
               'No DATABASE_URL found in `.env`. Set it to your PostgreSQL ' +
-              'connection string, then run `yarn cedar prisma migrate dev`'
+              'connection string, then run ' +
+              `\`${prettyPrintCedarCommand(['prisma', 'migrate', 'dev'])}\``
             )
           }
 
@@ -224,7 +226,7 @@ export async function handler() {
               'Prisma migration failed:\n\n' +
                 result.stderr +
                 '\n\nYou can try running it manually:\n' +
-                '  yarn cedar prisma migrate dev --name init-postgres',
+                `  ${prettyPrintCedarCommand(['prisma', 'migrate', 'dev', '--name', 'init-postgres'])}`,
             )
           }
         },

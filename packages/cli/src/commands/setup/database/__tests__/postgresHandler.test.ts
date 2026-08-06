@@ -33,6 +33,11 @@ vi.mock('@cedarjs/cli-helpers/packageManager/packages', () => ({
   addWorkspacePackages: (...args: unknown[]) => addWorkspacePackages(...args),
 }))
 
+vi.mock('@cedarjs/cli-helpers/packageManager', () => ({
+  prettyPrintCedarCommand: (args: string[] = []) =>
+    `yarn cedar ${args.join(' ')}`,
+}))
+
 const BASE_PATH = '/path/to/project'
 
 function mockPaths() {
@@ -285,7 +290,7 @@ describe('postgres handler', () => {
     await handler()
 
     expect(Listr2Mock.skippedTaskTitles).toContain(
-      'No DATABASE_URL found in .env — set it to your PostgreSQL ' +
+      'No DATABASE_URL found in `.env`. Set it to your PostgreSQL ' +
         'connection string, then run `yarn cedar prisma migrate dev`',
     )
   })
