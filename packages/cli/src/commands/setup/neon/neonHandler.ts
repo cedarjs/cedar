@@ -43,9 +43,9 @@ export async function handler({ force }: Args) {
   // `process.env` on every CLI invocation regardless of whether Postgres
   // has been configured. Checking `process.env` would make this guard
   // permanently true and skip provisioning on every fresh project.
-  let hasDirectDatabaseUrl = false
+  let hasExistingDatabaseUrl = false
   if (fs.existsSync(envPath)) {
-    hasDirectDatabaseUrl = /^DATABASE_URL=/m.test(
+    hasExistingDatabaseUrl = /^DATABASE_URL=/m.test(
       fs.readFileSync(envPath, 'utf-8'),
     )
   }
@@ -54,7 +54,7 @@ export async function handler({ force }: Args) {
   // the existing one, so this only proceeds past the schema/adapter switch
   // (which is safely idempotent on its own) when there's nothing to
   // conflict with yet, or the user explicitly asked to overwrite it.
-  const skipProvisioning = hasDirectDatabaseUrl && !force
+  const skipProvisioning = hasExistingDatabaseUrl && !force
 
   const notes: string[] = []
 
