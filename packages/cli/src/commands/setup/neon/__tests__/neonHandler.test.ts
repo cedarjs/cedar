@@ -97,9 +97,18 @@ beforeEach(() => {
   vol.reset()
   vi.clearAllMocks()
   delete process.env.DATABASE_URL
-  // The handler's success/note paths print via console.log — silenced here
+  // The handler's success/note paths print via console.log. It's silenced here
   // so test output isn't cluttered with the Neon claim message and similar.
   logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+
+  global.fetch = vi.fn(async () => ({
+    ok: true,
+    json: async () => ({
+      connection_string: 'postgresql://user:pass@ep-abc-pooler.neon.tech/db',
+      expires_at: '2027-01-01T00:00:00.000Z',
+      claim_url: 'https://neon.new/claim/abc',
+    }),
+  })) as unknown as typeof fetch
 })
 
 afterEach(() => {
@@ -116,15 +125,6 @@ afterEach(() => {
 describe('neon handler', () => {
   it('provisions a database, converts the project, and runs migrations', async () => {
     seedSqliteProject()
-
-    global.fetch = vi.fn(async () => ({
-      ok: true,
-      json: async () => ({
-        connection_string: 'postgresql://user:pass@ep-abc-pooler.neon.tech/db',
-        expires_at: '2027-01-01T00:00:00.000Z',
-        claim_url: 'https://neon.new/claim/abc',
-      }),
-    })) as unknown as typeof fetch
 
     await handler({ force: false })
 
@@ -269,14 +269,6 @@ describe('neon handler', () => {
     // failure and this command exits 0.
     seedSqliteProject()
 
-    global.fetch = vi.fn(async () => ({
-      ok: true,
-      json: async () => ({
-        connection_string: 'postgresql://user:pass@ep-abc-pooler.neon.tech/db',
-        expires_at: '2027-01-01T00:00:00.000Z',
-        claim_url: 'https://neon.new/claim/abc',
-      }),
-    })) as unknown as typeof fetch
     commandSync.mockReturnValueOnce({
       exitCode: 1,
       stderr: 'P1013: connection failed',
