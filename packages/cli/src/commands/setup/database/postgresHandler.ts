@@ -60,7 +60,7 @@ export function checkProjectShape(
       'This command only converts a project that is still on SQLite, with ' +
         'the default adapter in api/src/lib/db.ts (or db.js) untouched. ' +
         "This project doesn't match that shape (a different provider, or a " +
-        'partial previous conversion) — switch it over to PostgreSQL ' +
+        'partial previous conversion). Please switch it over to PostgreSQL ' +
         'manually.',
     )
   }
@@ -188,9 +188,9 @@ export async function handler() {
     : ''
 
   // Setup commands are run locally, with all connection info expected in
-  // .env — unlike Neon, a generic Postgres provider only hands out one
-  // connection string, so prisma.config keeps reading DATABASE_URL as-is
-  // and no DIRECT_DATABASE_URL split is needed here.
+  // .env. A generic Postgres provider only hands out one connection string, so
+  // prisma.config keeps reading DATABASE_URL as-is and no DIRECT_DATABASE_URL
+  // split is needed here.
   const databaseUrl = readEnvVar(envContent, 'DATABASE_URL')
 
   const tasks = new Listr(
@@ -202,7 +202,7 @@ export async function handler() {
         skip: () => {
           if (!databaseUrl) {
             return (
-              'No DATABASE_URL found in .env — set it to your PostgreSQL ' +
+              'No DATABASE_URL found in `.env`. Set it to your PostgreSQL ' +
               'connection string, then run `yarn cedar prisma migrate dev`'
             )
           }
