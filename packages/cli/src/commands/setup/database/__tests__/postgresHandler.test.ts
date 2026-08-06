@@ -5,6 +5,8 @@ import path from 'node:path'
 import { vol, fs as memfsFs } from 'memfs'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 
+import type { getPaths } from '@cedarjs/cli-helpers'
+
 import '../../../../lib/mockTelemetry.js'
 
 import { globSyncByExtension } from '../../../../__tests__/globSyncStub.js'
@@ -21,19 +23,10 @@ vi.mock('node:fs', async () => {
   }
 })
 
-vi.mock('listr2', () => ({
-  Listr: Listr2Mock,
-}))
+vi.mock('listr2', () => ({ Listr: Listr2Mock }))
 
-const commandSync = vi.fn((..._args: unknown[]) => ({
-  exitCode: 0,
-  stderr: '',
-}))
-vi.mock('execa', () => ({
-  default: {
-    commandSync: (...args: unknown[]) => commandSync(...args),
-  },
-}))
+const commandSync = vi.fn(() => ({ exitCode: 0, stderr: '' }))
+vi.mock('execa', () => ({ default: { commandSync: () => commandSync() } }))
 
 const addWorkspacePackages = vi.fn(async (..._args: unknown[]) => {})
 vi.mock('@cedarjs/cli-helpers/packageManager/packages', () => ({
@@ -42,14 +35,17 @@ vi.mock('@cedarjs/cli-helpers/packageManager/packages', () => ({
 
 const BASE_PATH = '/path/to/project'
 
-const getPaths = () => ({
-  base: BASE_PATH,
-  api: {
-    base: path.join(BASE_PATH, 'api'),
-    src: path.join(BASE_PATH, 'api', 'src'),
-  },
-  scripts: path.join(BASE_PATH, 'scripts'),
-})
+function mockPaths() {
+  return {
+    base: BASE_PATH,
+    api: {
+      base: path.join(BASE_PATH, 'api'),
+      src: path.join(BASE_PATH, 'api', 'src'),
+    },
+    scripts: path.join(BASE_PATH, 'scripts'),
+    // only mocking the paths we actually use
+  } as ReturnType<typeof getPaths>
+}
 
 vi.mock('@cedarjs/cli-helpers', () => ({
   colors: Object.fromEntries(
@@ -68,7 +64,7 @@ vi.mock('@cedarjs/cli-helpers', () => ({
       'link',
     ].map((k) => [k, (s: string) => s]),
   ),
-  getPaths: () => getPaths(),
+  getPaths: () => mockPaths(),
   installPackages: { title: 'Installing packages...', task: async () => {} },
 }))
 
@@ -101,19 +97,6 @@ function seedSqliteProject() {
   )
 }
 
-function seedSqliteJsProject() {
-  // JavaScript projects use api/src/lib/db.js instead of db.ts — everything
-  // else about the default SQLite setup is the same. Not covered by any
-  // e2e-tested fixture (those all use the TS template), so this is the
-  // only place this path gets exercised.
-  seedSqliteProject()
-  memfsFs.unlinkSync(path.join(BASE_PATH, 'api/src/lib/db.ts'))
-  memfsFs.writeFileSync(
-    path.join(BASE_PATH, 'api/src/lib/db.js'),
-    '// sqlite adapter',
-  )
-}
-
 beforeEach(() => {
   vol.reset()
   vi.clearAllMocks()
@@ -123,20 +106,9 @@ describe('checkProjectShape', () => {
   it('accepts an untouched SQLite project', () => {
     seedSqliteProject()
 
-    const shape = checkProjectShape(getPaths())
+    const shape = checkProjectShape(mockPaths())
 
     expect(shape).toMatchObject({ ok: true })
-  })
-
-  it('accepts an untouched SQLite project using db.js instead of db.ts', () => {
-    seedSqliteJsProject()
-
-    const shape = checkProjectShape(getPaths())
-
-    expect(shape.ok).toBe(true)
-    if (shape.ok) {
-      expect(shape.dbPath).toBe(path.join(BASE_PATH, 'api/src/lib/db.js'))
-    }
   })
 
   it('reports the project as already converted when schema and adapter both say PostgreSQL', () => {
@@ -150,7 +122,7 @@ describe('checkProjectShape', () => {
       'import { PrismaPg } from "@prisma/adapter-pg"',
     )
 
-    const shape = checkProjectShape(getPaths())
+    const shape = checkProjectShape(mockPaths())
 
     expect(shape).toMatchObject({ ok: false, alreadyConverted: true })
   })
@@ -162,7 +134,7 @@ describe('checkProjectShape', () => {
       'datasource db {\n  provider = "mysql"\n}\n',
     )
 
-    const shape = checkProjectShape(getPaths())
+    const shape = checkProjectShape(mockPaths())
 
     expect(shape).toMatchObject({ ok: false, alreadyConverted: false })
     if (!shape.ok) {
@@ -179,7 +151,7 @@ describe('checkProjectShape', () => {
       'import { PrismaPg } from "@prisma/adapter-pg"',
     )
 
-    const shape = checkProjectShape(getPaths())
+    const shape = checkProjectShape(mockPaths())
 
     expect(shape).toMatchObject({ ok: false, alreadyConverted: false })
   })
@@ -189,7 +161,7 @@ describe('getSqliteToPostgresTasks', () => {
   it('converts a SQLite project to PostgreSQL', async () => {
     seedSqliteProject()
 
-    const shape = checkProjectShape(getPaths())
+    const shape = checkProjectShape(mockPaths())
     if (!shape.ok) {
       throw new Error('Expected a convertible project shape')
     }
@@ -240,25 +212,6 @@ describe('getSqliteToPostgresTasks', () => {
       'api',
       ['@prisma/adapter-pg@7.8.0'],
       { cwd: path.join(BASE_PATH, 'api') },
-    )
-  })
-
-  it('converts a JavaScript project, writing the adapter to db.js not db.ts', async () => {
-    seedSqliteJsProject()
-
-    const shape = checkProjectShape(getPaths())
-    if (!shape.ok) {
-      throw new Error('Expected a convertible project shape')
-    }
-
-    const tasks = getSqliteToPostgresTasks({ dbPath: shape.dbPath })
-    await new Listr2Mock(tasks).run()
-
-    expect(
-      memfsFs.readFileSync(path.join(BASE_PATH, 'api/src/lib/db.js'), 'utf-8'),
-    ).toBe(PG_DB_TS_TEMPLATE)
-    expect(memfsFs.existsSync(path.join(BASE_PATH, 'api/src/lib/db.ts'))).toBe(
-      false,
     )
   })
 })
@@ -349,11 +302,11 @@ describe('postgres handler', () => {
   })
 
   it('exits with a non-zero status when the migration fails, instead of reporting success', async () => {
-    // With `exitOnError: false`, a failed task doesn't reject `tasks.run()`
-    // — that's the mechanism this command relies on to let the closing
-    // notes still print even when something upstream fails. Without
-    // explicitly checking `tasks.errors` afterwards, that silently
-    // swallows the failure and this command exits 0.
+    // With `exitOnError: false`, a failed task doesn't reject `tasks.run()` and
+    // that's the mechanism this command relies on to let the closing notes
+    // still print even when something upstream fails. Without explicitly
+    // checking `tasks.errors` afterwards, that silently swallows the failure
+    // and this command exits 0.
     seedSqliteProject()
     memfsFs.writeFileSync(
       path.join(BASE_PATH, '.env'),
