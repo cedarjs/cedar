@@ -263,5 +263,6 @@ await server.listen({
 })
 ```
 
-If you don't specify a host, `createServer` uses `NODE_ENV` to set it. If `NODE_ENV` is production, it defaults to `'0.0.0.0'` and `'::'` otherwise.
-Our default Dockerfile sets `NODE_ENV` to production so that things work out of the box.
+If you don't specify a host, `createServer` defaults to `'::'`, which binds
+dual-stack (IPv4 and IPv6) on hosts that support it — no `NODE_ENV`-specific
+behavior, so it works the same in development and production.

@@ -12,9 +12,7 @@ export function builder(yargs: Argv<APIParsedOptions>) {
       alias: 'p',
     },
     host: {
-      description:
-        'The host to listen at. Note that you most likely want this to be ' +
-        "'0.0.0.0' in production",
+      description: 'The host to listen at',
       type: 'string',
     },
     apiRootPath: {
