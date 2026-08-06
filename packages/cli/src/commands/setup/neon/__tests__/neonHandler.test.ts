@@ -91,14 +91,20 @@ function seedSqliteProject() {
 const originalFetch = global.fetch
 const originalDatabaseUrl = process.env.DATABASE_URL
 
+let logSpy: ReturnType<typeof vi.spyOn>
+
 beforeEach(() => {
   vol.reset()
   vi.clearAllMocks()
   delete process.env.DATABASE_URL
+  // The handler's success/note paths print via console.log — silenced here
+  // so test output isn't cluttered with the Neon claim message and similar.
+  logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 })
 
 afterEach(() => {
   global.fetch = originalFetch
+  logSpy.mockRestore()
 
   if (originalDatabaseUrl === undefined) {
     delete process.env.DATABASE_URL
@@ -243,7 +249,6 @@ describe('neon handler', () => {
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
       throw new Error('process.exit called')
     })
-    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 
     await handler({ force: false })
 
@@ -254,7 +259,6 @@ describe('neon handler', () => {
     expect(global.fetch).not.toHaveBeenCalled()
 
     exitSpy.mockRestore()
-    logSpy.mockRestore()
   })
 
   it('exits with a non-zero status when the migration fails, instead of reporting success', async () => {
