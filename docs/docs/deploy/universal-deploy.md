@@ -32,26 +32,36 @@ Serve it locally to verify everything works before deploying:
 yarn cedar serve --ud
 ```
 
+## Supported production topologies
+
+Universal Deploy supports two production topologies:
+
+1. **Serverless platforms that natively host Fetchables** — Netlify and Vercel. The platform's own adapter wraps the UD entry directly; see below.
+2. **A cloud VM or container, with a reverse proxy in front** — nginx (or your platform's equivalent) serves `web/dist/` static files directly, and proxies API routes to a Node process running the UD entry via [srvx](https://github.com/h3js/srvx):
+
+   ```shell
+   yarn cedar build --ud
+   yarn cedar serve api --ud
+   ```
+
+   `cedar serve api --ud` is the production entry point for the api side — it's what belongs behind your reverse proxy. Use `--api-port` and `--api-host` to configure the listener; `--api-host` defaults to `::` (dual-stack), which works on any container host without configuration.
+
+`yarn cedar serve --ud` (no side specified — both api and web in one process) is **local production-like testing only**, for verifying a `cedar build --ud` output before deploying. It is not one of the two production topologies above — in real production, web assets are always served by a separate process (a CDN, nginx, or the platform's static hosting), not by the UD entry itself.
+
+### Custom server files aren't supported under `--ud`
+
+A custom `api/src/server.ts` is a Fastify concept — Realtime, custom plugins, and custom middleware registered there have no equivalent in the UD entry (a plain Fetchable), so there's no way to honor it. If Cedar detects `api/src/server.ts`, `--ud` refuses to serve rather than silently producing a different app than what's configured:
+
+```
+api/src/server.ts was detected, but a custom server file is not supported
+with --ud. It is a Fastify concept — anything registered there (Realtime,
+custom plugins, custom middleware) would silently be skipped if serving
+continued.
+```
+
 ## Deploying to a provider
 
 Once Universal Deploy is set up, configure your hosting provider:
-
-### Node.js (cloud server, VPS, container)
-
-No additional setup needed. After building, serve directly with:
-
-```shell
-yarn cedar build --ud
-yarn cedar serve --ud
-```
-
-This runs the server using [srvx](https://github.com/h3js/srvx) — a portable HTTP server that wraps the Fetch-native entry. Use `--api-port`, `--api-host`, `--web-port`, and `--web-host` to configure the listeners:
-
-```shell
-yarn cedar serve --ud --api-port 8911 --api-host 0.0.0.0 --web-port 8910 --web-host 0.0.0.0
-```
-
-For production on a cloud VM or container, build once and run `cedar serve --ud` as your process entry point (behind a reverse proxy or load balancer as needed).
 
 ### Netlify
 
