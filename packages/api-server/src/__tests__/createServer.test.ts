@@ -243,6 +243,46 @@ describe('createServer', () => {
 
       delete process.env.REDWOOD_API_PORT
     })
+
+    it('falls back to `PORT` — `createServer()` always serves the api on its own', async () => {
+      process.env.PORT = '8922'
+
+      const server = await createServer()
+      await server.start()
+
+      const address = server.server.address()
+
+      if (!address || typeof address === 'string') {
+        throw new Error('No address or address is a string')
+      }
+
+      expect(address.port).toBe(+process.env.PORT)
+
+      await server.close()
+
+      delete process.env.PORT
+    })
+
+    it('the `CEDAR_API_PORT` env var takes precedence over `PORT`', async () => {
+      process.env.CEDAR_API_PORT = '8923'
+      process.env.PORT = '8924'
+
+      const server = await createServer()
+      await server.start()
+
+      const address = server.server.address()
+
+      if (!address || typeof address === 'string') {
+        throw new Error('No address or address is a string')
+      }
+
+      expect(address.port).toBe(+process.env.CEDAR_API_PORT)
+
+      await server.close()
+
+      delete process.env.CEDAR_API_PORT
+      delete process.env.PORT
+    })
   })
 })
 
