@@ -29,15 +29,11 @@ describe('cedar serve', () => {
             --webPort, --web-port                 The port for the web server to
                                                   listen on                   [number]
             --webHost, --web-host                 The host for the web server to
-                                                  listen on. Note that you most likely
-                                                  want this to be '0.0.0.0' in
-                                                  production                  [string]
+                                                  listen on                   [string]
             --apiPort, --api-port                 The port for the api server to
                                                   listen on                   [number]
             --apiHost, --api-host                 The host for the api server to
-                                                  listen on. Note that you most likely
-                                                  want this to be '0.0.0.0' in
-                                                  production                  [string]
+                                                  listen on                   [string]
             --apiRootPath, --api-root-path,       Root path where your api functions
             --rootPath, --root-path               are served   [string] [default: "/"]
             --ud                                  Use the Universal Deploy server for
@@ -83,15 +79,11 @@ describe('cedar serve', () => {
               --webPort, --web-port                 The port for the web server to
                                                     listen on                   [number]
               --webHost, --web-host                 The host for the web server to
-                                                    listen on. Note that you most likely
-                                                    want this to be '0.0.0.0' in
-                                                    production                  [string]
+                                                    listen on                   [string]
               --apiPort, --api-port                 The port for the api server to
                                                     listen on                   [number]
               --apiHost, --api-host                 The host for the api server to
-                                                    listen on. Note that you most likely
-                                                    want this to be '0.0.0.0' in
-                                                    production                  [string]
+                                                    listen on                   [string]
               --apiRootPath, --api-root-path,       Root path where your api functions
               --rootPath, --root-path               are served   [string] [default: "/"]
               --ud                                  Use the Universal Deploy server for
@@ -128,15 +120,11 @@ describe('cedarServer', () => {
             --webPort, --web-port                 The port for the web server to
                                                   listen on                   [number]
             --webHost, --web-host                 The host for the web server to
-                                                  listen on. Note that you most likely
-                                                  want this to be '0.0.0.0' in
-                                                  production                  [string]
+                                                  listen on                   [string]
             --apiPort, --api-port                 The port for the api server to
                                                   listen on                   [number]
             --apiHost, --api-host                 The host for the api server to
-                                                  listen on. Note that you most likely
-                                                  want this to be '0.0.0.0' in
-                                                  production                  [string]
+                                                  listen on                   [string]
             --apiRootPath, --api-root-path,       Root path where your api functions
             --rootPath, --root-path               are served   [string] [default: "/"]
         -h, --help                                Show help                  [boolean]
@@ -166,15 +154,11 @@ describe('cedarServer', () => {
               --webPort, --web-port                 The port for the web server to
                                                     listen on                   [number]
               --webHost, --web-host                 The host for the web server to
-                                                    listen on. Note that you most likely
-                                                    want this to be '0.0.0.0' in
-                                                    production                  [string]
+                                                    listen on                   [string]
               --apiPort, --api-port                 The port for the api server to
                                                     listen on                   [number]
               --apiHost, --api-host                 The host for the api server to
-                                                    listen on. Note that you most likely
-                                                    want this to be '0.0.0.0' in
-                                                    production                  [string]
+                                                    listen on                   [string]
               --apiRootPath, --api-root-path,       Root path where your api functions
               --rootPath, --root-path               are served   [string] [default: "/"]
           -h, --help                                Show help                  [boolean]

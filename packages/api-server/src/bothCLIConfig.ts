@@ -12,8 +12,7 @@ export function builder(yargs: Argv<BothParsedOptions>) {
       alias: ['web-port'],
     },
     webHost: {
-      description:
-        "The host for the web server to listen on. Note that you most likely want this to be '0.0.0.0' in production",
+      description: 'The host for the web server to listen on',
       type: 'string',
       alias: ['web-host'],
     },
@@ -23,8 +22,7 @@ export function builder(yargs: Argv<BothParsedOptions>) {
       alias: ['api-port'],
     },
     apiHost: {
-      description:
-        "The host for the api server to listen on. Note that you most likely want this to be '0.0.0.0' in production",
+      description: 'The host for the api server to listen on',
       type: 'string',
       alias: ['api-host'],
     },

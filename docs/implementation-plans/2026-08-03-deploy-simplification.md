@@ -43,14 +43,14 @@ Railway-only.
 | 1   | Read `PORT` and `HOST`                     | **Done** — #2292                               |
 | 2   | `build` / `start` scripts in templates     | #2294 done; switch to `cedarjs-server` — #2323 |
 | 3   | Runtime deps out of root `devDependencies` | Reframed — #2295 superseded by #2312/#2313     |
-| 4   | Web server cache headers + compression     | #2301                                          |
-| 5   | Dual-stack host default                    | Open                                           |
-| 6   | Generic `setup deploy container`           | **Superseded** — #2303                         |
+| 4   | Web server cache headers + compression     | **Done** — #2301                               |
+| 5   | Dual-stack host default                    | **Done**                                       |
+| 6   | Generic `setup deploy container`           | **Done** — #2303 (#2331), follow-up in #2336   |
 | 7   | Built-in health endpoint                   | #2298                                          |
 | 8   | Rename `REDWOOD_*` → `CEDAR_*`             | **Done** — #2292                               |
 | 9   | Document the serve tiers                   | #2300                                          |
 
-Also opened along the way: #2296, #2297, #2299, #2302.
+Also opened along the way: #2296, #2297, #2299, #2302, #2336.
 
 ## 1. Read `PORT` and `HOST` — done (#2292)
 
@@ -120,7 +120,7 @@ command not found. Railway only works because `RAILPACK_PRUNE_DEPS` is opt-in.
 that `cedar serve` does) — fixed by #2318. Root dependency + script switch
 landed in #2323.
 
-## 4. Web server cache headers and compression — #2301
+## 4. Web server cache headers and compression — done (#2301)
 
 `adapters/fastify/web/src/web.ts:26` is
 `fastify.register(fastifyStatic, { root: getPaths().web.dist })` — no `maxAge`,
@@ -135,17 +135,23 @@ people serve assets through Fastify rather than a CDN, and telling someone their
 zero-config deploy needs a CDN bolted on undercuts the point. Note `srvx/static`
 on the UD path is equally bare, so any fix should consider both.
 
-## 5. Dual-stack host default — open
+## 5. Dual-stack host default — done
 
-`cliHelpers.ts` still defaults to `0.0.0.0` in production, which is IPv4-only.
-Railway's private network is IPv6-native, so the two-service topology needs an
-explicit `--host ::` on the api service. `::` accepts both on dual-stack.
+`cliHelpers.ts` defaulted to `0.0.0.0` in production, which is IPv4-only.
+Railway's private network is IPv6-native, so the two-service topology needed
+an explicit `--host ::` on the api service. `::` accepts both on dual-stack.
 
-Either default to `::` and drop the `0.0.0.0` warning, or document the gotcha
-prominently. This is the single most likely thing to break a first Railway
-two-service deploy.
+Took the stronger of the two options laid out originally: default to `::`
+unconditionally (dropping the `NODE_ENV`-based split) and drop the `0.0.0.0`
+warning entirely, rather than just documenting the gotcha. Changed in
+`getAPIHost`/`getWebHost` (`@cedarjs/api-server`'s `cliHelpers.ts`) and the
+duplicated logic in `@cedarjs/web-server`'s `webServer.ts`. Also dropped the
+now-inaccurate "you most likely want `0.0.0.0` in production" hints from the
+`--host` flag descriptions in `apiCLIConfig.ts`, `bothCLIConfig.ts`, and
+`web-server`'s `cliConfig.ts`, and corrected the same claim in
+`app-configuration-cedar-toml.md` and `server-file.md`.
 
-## 6. Generic `setup deploy container` — superseded by #2303
+## 6. Generic `setup deploy container` — superseded by #2303, done via #2331
 
 The original argument was that one generic target plus thin presets beats a
 hardcoded provider enum. Tracing it through, that doesn't survive contact with
@@ -159,7 +165,12 @@ What _is_ worth extracting: `yarn cedar setup neon` already performs the whole
 SQLite → Postgres migration, and only one of its eleven steps (provisioning) is
 Neon-specific. Pulling the provider-agnostic part out serves every container
 deploy — it's the biggest manual step in any non-SQLite deployment. Tracked in
-#2303.
+#2303, landed via #2331 as `setup database postgres`. A precondition gate
+(`checkProjectShape`) decides up front whether the project is safe to convert
+automatically; anything else is a manual conversion, not a guessed one. One
+follow-up spun out of review, tracked separately rather than blocking: #2336
+(`setup neon`'s "already configured" guard doesn't validate that an existing
+`DATABASE_URL` is actually a usable Postgres connection string).
 
 ## 7. Built-in health endpoint — #2298
 
@@ -267,8 +278,8 @@ comments. `preDeployCommand` suits migrations. Railway's CDN is per-service,
 free on all plans, and caches static assets by `Content-Type` — the thing that
 most compensates for #4. Private networking is IPv6-native, hence #5.
 
-**`yarn cedar setup deploy railway`** — worth it only as a thin preset once #2303
-lands, not as another bespoke provider.
+**`yarn cedar setup deploy railway`** — now that #2303 has landed, worth doing
+only as a thin preset on top of it, not as another bespoke provider.
 
 **Don't** build a Railway-specific build path. The gaps are all on Cedar's side.
 
@@ -283,7 +294,7 @@ lands, not as another bespoke provider.
    to `cedarjs-server`. #2294 shipped the scripts as `cedar serve`; the switch to
    `cedarjs-server` landed in #2323, once unblocked by 1 and 2.
 4. **#2301** and **#5** — the two things that make the blessed single-container
-   path actually good.
-5. **#2303**, then docs (#2300).
+   path actually good. **Done.**
+5. **#2303** — **Done**, via #2331. **Next: docs (#2300).**
 
 #2296, #2297, #2298 and #2299 are independent and can land whenever.
