@@ -58,12 +58,16 @@ To split into the
    yarn start:web --api-proxy-target=https://${{api.RAILWAY_PUBLIC_DOMAIN}}
    ```
 
-   Swap in `${{api.RAILWAY_PRIVATE_DOMAIN}}` (with `http://`, since Railway's
-   private network doesn't terminate TLS) to keep this traffic off the public
-   internet. Either way, replace `api` with your api service's actual name —
-   Railway resolves `${{<service>.<VAR>}}` at deploy time. A missing or
-   schemeless `apiProxyTarget` leaves `apiUrl` requests unhandled and Cedar
-   returns a Bad Gateway error.
+   Swap in `http://${{api.RAILWAY_PRIVATE_DOMAIN}}:${{api.PORT}}` to keep this
+   traffic off the public internet instead (Railway's private network doesn't
+   terminate TLS, so use `http://`). The port is required here —
+   `RAILWAY_PRIVATE_DOMAIN` is a bare hostname, and unlike the public domain
+   (where Railway's edge proxy forwards to your app's actual port for you),
+   private-network traffic connects to that port directly. Either way, replace
+   `api` with your api service's actual name — Railway resolves
+   `${{<service>.<VAR>}}` at deploy time. A missing or schemeless
+   `apiProxyTarget` leaves `apiUrl` requests unhandled and Cedar returns a Bad
+   Gateway error.
 
 ## Config as code
 
