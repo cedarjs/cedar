@@ -27,7 +27,10 @@ export function getAPIHost({ isPublicSide = false }: SideOptions = {}) {
   }
 
   host ??= getConfig().api.host
-  host ??= process.env.NODE_ENV === 'production' ? '0.0.0.0' : '::'
+  // `::` binds dual-stack (IPv4 and IPv6) on hosts that support it, unlike
+  // `0.0.0.0` — needed for platforms with IPv6-native private networking
+  // (e.g. Railway).
+  host ??= '::'
   return host
 }
 
@@ -61,7 +64,10 @@ export function getWebHost({ isPublicSide = false }: SideOptions = {}) {
   }
 
   host ??= getConfig().web.host
-  host ??= process.env.NODE_ENV === 'production' ? '0.0.0.0' : '::'
+  // `::` binds dual-stack (IPv4 and IPv6) on hosts that support it, unlike
+  // `0.0.0.0` — needed for platforms with IPv6-native private networking
+  // (e.g. Railway).
+  host ??= '::'
   return host
 }
 

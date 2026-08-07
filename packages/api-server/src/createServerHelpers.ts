@@ -74,8 +74,12 @@ export const getDefaultCreateServerOptions: () => DefaultCreateServerOptions =
     discoverFunctionsGlob: 'dist/functions/**/*.{ts,js}',
     configureApiServer: () => {},
     parseArgs: true,
-    apiHost: getAPIHost(),
-    apiPort: getAPIPort(),
+    // `createServer()`'s only callers are `cedarjs-server api` and custom
+    // `api/src/server.ts` files — both only ever run with the api side
+    // serving public traffic on its own, so they get to use the host's
+    // `HOST`/`PORT` env vars.
+    apiHost: getAPIHost({ isPublicSide: true }),
+    apiPort: getAPIPort({ isPublicSide: true }),
   })
 
 type ResolvedOptions = Required<

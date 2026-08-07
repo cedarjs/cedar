@@ -161,6 +161,23 @@ describe('host helpers', () => {
 
     expect(getAPIHost({ isPublicSide: true })).toBe('10.0.0.2')
   })
+
+  it.each([
+    ['development', getAPIHost],
+    ['production', getAPIHost],
+    ['development', getWebHost],
+    ['production', getWebHost],
+  ])(
+    // `::` binds dual-stack (IPv4 and IPv6), unlike `0.0.0.0` — needed for
+    // platforms with IPv6-native private networking (e.g. Railway). Same
+    // default in both environments, unlike the old NODE_ENV-based split.
+    'falls back to `::` in %s when nothing else is configured',
+    (nodeEnv, getHost) => {
+      vi.stubEnv('NODE_ENV', nodeEnv)
+
+      expect(getHost()).toBe('::')
+    },
+  )
 })
 
 describe('deprecated REDWOOD_ aliases', () => {
