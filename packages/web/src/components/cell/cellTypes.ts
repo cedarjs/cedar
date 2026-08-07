@@ -158,6 +158,8 @@ export type CellBeforeQueryOptions<CellVariables> = {
  *
  * @example
  * ```ts
+ * import { skipToken } from '@apollo/client/react'
+ *
  * export const beforeQuery = ({ id }) => {
  *   const otherId = useStore((state) => state.getOther(id))
  *

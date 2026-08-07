@@ -1,7 +1,7 @@
 import React from 'react'
 
 import { CombinedGraphQLErrors } from '@apollo/client'
-import { skipToken, useQuery } from '@apollo/client/react'
+import { useQuery } from '@apollo/client/react'
 
 import { fragmentRegistry } from '../../apollo/fragmentRegistry.js'
 import { getOperationName } from '../../graphql.js'
@@ -101,8 +101,11 @@ function createNonSuspendingCell<
     // `beforeQuery` can keep the query from running, either by returning
     // Apollo's `skipToken` (recommended) or by setting the `skip` option.
     // `skipToken` is a symbol rather than an options object, so everything that
-    // reads individual options has to go through `queryOptions`
-    const queryOptions = options === skipToken ? undefined : options
+    // reads individual options has to go through `queryOptions`.
+    // We check for a symbol instead of comparing against `skipToken` itself
+    // because Apollo Client deliberately leaves `skipToken` out of its
+    // react-server build, where importing it is a bundling error
+    const queryOptions = typeof options === 'symbol' ? undefined : options
     const skipped = !queryOptions || queryOptions.skip === true
 
     // While skipped the document is never executed, it just has to exist to

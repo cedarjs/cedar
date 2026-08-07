@@ -1,10 +1,11 @@
 // These are normally auto-imported by babel
 import React from 'react'
 
+import { skipToken } from '@apollo/client/react'
 import { gql } from 'graphql-tag'
 import { describe, expect, test } from 'tstyche'
 
-import { createCell, skipToken } from '@cedarjs/web'
+import { createCell } from '@cedarjs/web'
 import type { CellProps, CellSuccessProps } from '@cedarjs/web'
 
 type ExampleQueryVariables = {

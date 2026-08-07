@@ -7,12 +7,7 @@ export {
   FetchConfigProvider,
   useFetchConfig,
 } from './components/FetchConfigProvider.js'
-export {
-  skipToken,
-  useQuery,
-  useMutation,
-  useSubscription,
-} from '@apollo/client/react'
+export { useQuery, useMutation, useSubscription } from '@apollo/client/react'
 export { useFragment } from './apollo/fragmentRegistry.js'
 export type {
   FragmentHookOptions,

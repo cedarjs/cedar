@@ -163,4 +163,32 @@ describe('createSuspendingCell', () => {
       skipToken,
     )
   })
+
+  test('Renders nothing when an active Cell becomes skipped', () => {
+    const TestCell = createSuspendingCell({
+      // @ts-expect-error - Purposefully using a plain string here.
+      QUERY: 'query TestQuery($name: String) { greeting(name: $name) }',
+      Success: ({ greeting }) => <>{greeting}</>,
+      beforeQuery: ({ name }: { name?: string }) =>
+        name ? { variables: { name } } : skipToken,
+    })
+
+    // Once the query has run, Apollo Client keeps handing back the same query
+    // reference even when the Cell is skipped again later
+    mockUseBackgroundQuery.mockImplementation(() => {
+      return ['mocked-query-ref', { refetch: vi.fn(), fetchMore: vi.fn() }]
+    })
+    mockUseReadQuery.mockImplementation(() => ({
+      data: { greeting: 'Hello Bob!' },
+    }))
+
+    const { container, rerender } = render(<TestCell name="Bob" />)
+
+    screen.getByText(/^Hello Bob!$/)
+
+    rerender(<TestCell />)
+
+    expect(screen.queryByText(/^Hello Bob!$/)).not.toBeInTheDocument()
+    expect(container).toBeEmptyDOMElement()
+  })
 })
