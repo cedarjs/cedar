@@ -1,13 +1,16 @@
 import React from 'react'
 
-import { useQuery } from '@apollo/client/react'
+import type * as ApolloClientReact from '@apollo/client/react'
+import { skipToken, useQuery } from '@apollo/client/react'
 import { render, screen } from '@testing-library/react'
 import type { Mock } from 'vitest'
 import { vi, describe, beforeAll, beforeEach, test, expect } from 'vitest'
 
 import { createCell } from './createCell.js'
 
-vi.mock('@apollo/client/react', () => ({
+vi.mock('@apollo/client/react', async (importOriginal) => ({
+  // Keep the real `skipToken` – it's a symbol the Cell compares against
+  ...(await importOriginal<typeof ApolloClientReact>()),
   useQuery: vi.fn(),
 }))
 
@@ -439,28 +442,78 @@ describe('createCell', () => {
 
     screen.getByText(/^Hello Bob!$/)
   })
-  
-  test('Allows skip option in beforeQuery', () => {
+
+  test('Renders nothing when beforeQuery returns skipToken', () => {
     const TestCell = createCell({
       // @ts-expect-error - Purposefully using a plain string here.
       QUERY: 'query TestQuery { answer }',
-      Success: () => <>Should not be</>,
-      Loading: () => <>Should not be</>,
-      Empty: () => <>Should not be</>,
-      beforeQuery: () => ({
-        skip: true
-      }),
+      Success: () => <>Should not render</>,
+      Loading: () => <>Should not render</>,
+      Empty: () => <>Should not render</>,
+      Failure: () => <>Should not render</>,
+      beforeQuery: () => skipToken,
     })
 
-    const myUseQueryHook = () => ({ data: undefined, loading: false, error: undefined })
+    // What Apollo Client returns for a skipped query
+    mockUseQuery.mockImplementation(() => ({
+      data: undefined,
+      loading: false,
+      error: undefined,
+    }))
 
-    render(
-      <GraphQLHooksProvider useQuery={myUseQueryHook} useMutation={null}>
-        <TestCell />
-      </GraphQLHooksProvider>,
-    )
+    const { container } = render(<TestCell />)
 
-    const child = screen.queryByText('/^Should not be$/');
-    expect(child).toBeNull();
+    expect(screen.queryByText(/^Should not render$/)).not.toBeInTheDocument()
+    expect(container).toBeEmptyDOMElement()
+    expect(mockUseQuery).toHaveBeenCalledWith(expect.anything(), skipToken)
+  })
+
+  test('Renders nothing when beforeQuery sets the skip option', () => {
+    const TestCell = createCell({
+      // @ts-expect-error - Purposefully using a plain string here.
+      QUERY: 'query TestQuery { answer }',
+      Success: () => <>Should not render</>,
+      Loading: () => <>Should not render</>,
+      Empty: () => <>Should not render</>,
+      Failure: () => <>Should not render</>,
+      beforeQuery: () => ({ variables: {}, skip: true }),
+    })
+
+    mockUseQuery.mockImplementation(() => ({
+      data: undefined,
+      loading: false,
+      error: undefined,
+    }))
+
+    const { container } = render(<TestCell />)
+
+    expect(screen.queryByText(/^Should not render$/)).not.toBeInTheDocument()
+    expect(container).toBeEmptyDOMElement()
+  })
+
+  test('Runs the query once beforeQuery stops skipping', () => {
+    const TestCell = createCell({
+      // @ts-expect-error - Purposefully using a plain string here.
+      QUERY: 'query TestQuery($name: String) { greeting(name: $name) }',
+      Success: ({ greeting }) => <>{greeting}</>,
+      beforeQuery: ({ name }: { name?: string }) =>
+        name ? { variables: { name } } : skipToken,
+    })
+
+    mockUseQuery.mockImplementation((_query: any, options: any) => {
+      if (options === skipToken) {
+        return { data: undefined, loading: false, error: undefined }
+      }
+
+      return { data: { greeting: `Hello ${options.variables.name}!` } }
+    })
+
+    const { container, rerender } = render(<TestCell />)
+
+    expect(container).toBeEmptyDOMElement()
+
+    rerender(<TestCell name="Bob" />)
+
+    screen.getByText(/^Hello Bob!$/)
   })
 })

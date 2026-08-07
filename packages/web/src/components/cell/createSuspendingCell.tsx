@@ -2,8 +2,9 @@ import React, { Suspense } from 'react'
 
 import type { OperationVariables } from '@apollo/client'
 import { CombinedGraphQLErrors } from '@apollo/client'
-import type { QueryRef } from '@apollo/client/react'
+import type { SkipToken } from '@apollo/client/react'
 import {
+  skipToken,
   useApolloClient,
   useBackgroundQuery,
   useReadQuery,
@@ -108,11 +109,38 @@ export function createSuspendingCell<
      */
     const { children: _, ...variables } = props
     const options = beforeQuery(variables)
+
+    // `skipToken` is a symbol rather than an options object, so there's nothing
+    // to hand to a `QUERY` function. While skipped the document is never
+    // executed, it just has to exist to satisfy the query hook
     const query =
-      typeof cellQuery === 'function' ? cellQuery(options) : cellQuery
-    const [queryRef, other] = useBackgroundQuery(query, options)
+      typeof cellQuery === 'function'
+        ? cellQuery(options === skipToken ? {} : options)
+        : cellQuery
+    // `beforeQuery`'s options are typed against `useQuery`, which accepts a
+    // slightly wider `fetchPolicy` than `useBackgroundQuery` does. Streaming
+    // Cells that set one of the extra policies aren't supported
+    const backgroundQueryOptions = options as
+      | SkipToken
+      | useBackgroundQuery.Options<OperationVariables>
+
+    // The query document is untyped, so Apollo Client would infer `unknown` for
+    // the data. Cells treat query results as `DataObject`s, same as `useQuery`
+    // is called in createCell
+    const [queryRef, other] = useBackgroundQuery<DataObject>(
+      query,
+      backgroundQueryOptions,
+    )
 
     const client = useApolloClient()
+
+    // `beforeQuery` can keep the query from running, either by returning
+    // `skipToken` or by setting the `skip` option. Either way there's no query
+    // reference to read from, and `useReadQuery` throws when given `undefined`.
+    // Like the non-suspending Cell, a skipped Cell renders nothing
+    if (!queryRef) {
+      return null
+    }
 
     const suspenseQueryResult: SuspenseCellQueryResult = {
       client,
@@ -179,7 +207,7 @@ export function createSuspendingCell<
         {wrapInSuspenseIfLoadingPresent(
           <SuspendingSuccess
             userProps={props}
-            queryRef={queryRef as QueryRef<DataObject>}
+            queryRef={queryRef}
             suspenseQueryResult={suspenseQueryResult}
           />,
           Loading,

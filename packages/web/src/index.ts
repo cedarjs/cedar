@@ -7,7 +7,12 @@ export {
   FetchConfigProvider,
   useFetchConfig,
 } from './components/FetchConfigProvider.js'
-export { useQuery, useMutation, useSubscription } from '@apollo/client/react'
+export {
+  skipToken,
+  useQuery,
+  useMutation,
+  useSubscription,
+} from '@apollo/client/react'
 export { useFragment } from './apollo/fragmentRegistry.js'
 export type {
   FragmentHookOptions,
@@ -25,6 +30,8 @@ export type {
   CellLoadingProps,
   CellSuccessProps,
   CellSuccessData,
+  CellBeforeQueryOptions,
+  CellBeforeQueryResult,
 } from './components/cell/cellTypes.js'
 
 export * from './graphql.js'

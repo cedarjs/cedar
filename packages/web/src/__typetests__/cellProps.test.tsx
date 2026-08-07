@@ -4,6 +4,7 @@ import React from 'react'
 import { gql } from 'graphql-tag'
 import { describe, expect, test } from 'tstyche'
 
+import { createCell, skipToken } from '@cedarjs/web'
 import type { CellProps, CellSuccessProps } from '@cedarjs/web'
 
 type ExampleQueryVariables = {
@@ -192,6 +193,42 @@ describe('CellProps mapper type', () => {
       expect<CellWithBeforeQueryInputs>().type.toBeAssignableFrom({
         customProp: 55,
       })
+    })
+  })
+
+  describe('what beforeQuery is allowed to return', () => {
+    test('Just variables', () => {
+      expect(
+        createCell({
+          ...recipeCell,
+          beforeQuery: ({ word }: { word: string }) => ({
+            variables: { category: word, saved: true },
+          }),
+        }),
+      ).type.not.toRaiseError()
+    })
+
+    test('Other query hook options alongside the variables', () => {
+      expect(
+        createCell({
+          ...recipeCell,
+          beforeQuery: ({ word }: { word: string }) => ({
+            variables: { category: word, saved: true },
+            fetchPolicy: 'cache-only' as const,
+            skip: !word,
+          }),
+        }),
+      ).type.not.toRaiseError()
+    })
+
+    test('skipToken, to not run the query at all', () => {
+      expect(
+        createCell({
+          ...recipeCell,
+          beforeQuery: ({ word }: { word: string }) =>
+            word ? { variables: { category: word, saved: true } } : skipToken,
+        }),
+      ).type.not.toRaiseError()
     })
   })
 })
