@@ -168,9 +168,8 @@ describe('host helpers', () => {
     ['development', getWebHost],
     ['production', getWebHost],
   ])(
-    // `::` binds dual-stack (IPv4 and IPv6), unlike `0.0.0.0` — needed for
-    // platforms with IPv6-native private networking (e.g. Railway). Same
-    // default in both environments, unlike the old NODE_ENV-based split.
+    // `::` binds dual-stack (IPv4 and IPv6), unlike `0.0.0.0` which only binds
+    // for IPv4. Same default in both dev and prod
     'falls back to `::` in %s when nothing else is configured',
     (nodeEnv, getHost) => {
       vi.stubEnv('NODE_ENV', nodeEnv)
