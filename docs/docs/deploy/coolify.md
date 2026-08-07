@@ -51,9 +51,17 @@ Dockerfile:
    `yarn build`. Coolify serves it directly rather than running a Node process
    for it.
 
-Wire the web service's api proxy target (`apiUrl` in `cedar.toml`, or
-`--apiProxyTarget`) at the api service's Coolify-provided domain.
+Because the web service is static, there's no Node process for it to proxy
+requests through — `--apiProxyTarget` is a Fastify feature, and Fastify only
+runs under `start:web`. Instead, before running `yarn build`, set `apiUrl` in
+`cedar.toml` to the api service's fully-qualified Coolify-provided domain (e.g.
+`https://api.yourapp.example`, not a relative path like the single-service
+setup uses). Cedar bakes `apiUrl` into the web bundle at build time, so the
+browser calls the api service directly — no proxy needed. This makes the two
+services cross-origin, so you'll also need to [configure CORS](../cors.md) on
+the api side.
 
 This is the one platform in this doc set where the recommended topology doesn't
-cost you anything extra to set up — no reverse proxy or nginx config to write,
-since Coolify's Static build pack already does that job.
+cost you anything extra to set up — no reverse proxy, nginx config, or Node
+process to run for the web side, since Coolify's Static build pack and a
+fully-qualified `apiUrl` cover it between them.

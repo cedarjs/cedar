@@ -51,10 +51,19 @@ To split into the
 
 1. Add a second service from the same repo.
 2. On the api service, set the start command to `yarn start:api`.
-3. On the web service, set the start command to `yarn start:web`.
-4. Wire the web service's api proxy target at the api service's Railway-provided
-   domain (public networking), or its private network address if you want
-   internal traffic to stay off the public internet.
+3. On the web service, set the start command to pass `--api-proxy-target`, a
+   fully-qualified URL (scheme required) pointing at the api service:
+
+   ```shell
+   yarn start:web --api-proxy-target=https://${{api.RAILWAY_PUBLIC_DOMAIN}}
+   ```
+
+   Swap in `${{api.RAILWAY_PRIVATE_DOMAIN}}` (with `http://`, since Railway's
+   private network doesn't terminate TLS) to keep this traffic off the public
+   internet. Either way, replace `api` with your api service's actual name —
+   Railway resolves `${{<service>.<VAR>}}` at deploy time. A missing or
+   schemeless `apiProxyTarget` leaves `apiUrl` requests unhandled and Cedar
+   returns a Bad Gateway error.
 
 ## Config as code
 
