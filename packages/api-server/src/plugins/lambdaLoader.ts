@@ -1,9 +1,6 @@
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-// See https://github.com/webdiscus/ansis#troubleshooting
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 import ansis from 'ansis'
 import type { Handler } from 'aws-lambda'
 import fg from 'fast-glob'
@@ -51,7 +48,7 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
   const imports = foundFunctions.map(async (fnPath) => {
     const ts = Date.now()
     const routeName = path.basename(fnPath).replace('.js', '')
-    const routePath = routeName === 'graphql' ? '/graphql' : `/${routeName}`
+    const routePath = `/${routeName}`
 
     const fnImport = await import(pathToFileURL(fnPath).href)
     const handler: Handler | undefined = (() => {

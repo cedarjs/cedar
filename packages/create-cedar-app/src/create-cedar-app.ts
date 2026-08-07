@@ -52,6 +52,27 @@ const { telemetry } = Parser(hideBin(process.argv), {
   },
 })
 
+/**
+ * When CCA is run via `yarn dlx`, Yarn injects its PnP ESM loader into
+ * NODE_OPTIONS. If this leaks to the spawned install process, it can interfere
+ * with other package managers' module resolution (e.g. pnpm trying to import()
+ * .pnpmfile.mjs). Strip just that loader flag.
+ */
+function getEnvWithoutYarnPnPLoader() {
+  const env = { ...process.env }
+
+  if (env.NODE_OPTIONS) {
+    // This uses the same regex pattern that Yarn itself uses in its
+    // setupScriptEnvironment hook
+    // https://github.com/yarnpkg/berry/blob/0a230c14e71247576f6b51fa811ae08edb6608aa/packages/plugin-pnp/sources/index.ts#L42
+    const PNP_LOADER_REGEX =
+      /\s*--experimental-loader\s+\S*\.pnp\.loader\.mjs\s*/g
+    env.NODE_OPTIONS = env.NODE_OPTIONS.replace(PNP_LOADER_REGEX, ' ').trim()
+  }
+
+  return env
+}
+
 async function installNodeModules(
   newAppDir: string,
   packageManager: PackageManager,
@@ -70,9 +91,12 @@ async function installNodeModules(
   process.chdir(newAppDir)
 
   const installCommand = getInstallCommand(packageManager)
+
   const installSubprocess = execa(installCommand, {
     shell: true,
     cwd: newAppDir,
+    env: getEnvWithoutYarnPnPLoader(),
+    extendEnv: false,
   })
 
   try {
@@ -123,7 +147,11 @@ async function generateTypes(
   const binExec = getBinExecutor(packageManager)
 
   try {
-    await execa(binExec, ['cedar-gen'], { cwd: newAppDir })
+    await execa(binExec, ['cedar-gen'], {
+      cwd: newAppDir,
+      env: getEnvWithoutYarnPnPLoader(),
+      extendEnv: false,
+    })
   } catch (error) {
     const prettyGenCommand = RedwoodStyling.info(`'${binExec} cedar-gen'`)
     tui.stopReactive(true)

@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Checkout the framework code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Set up job
         uses: ./.github/actions/set-up-job
@@ -26,7 +26,7 @@ jobs:
 
       - name: Downgrade to React 18
         run: |
-          yarn tsx ./tasks/downgradeToReact18.mts
+          node ./tasks/downgradeToReact18.mts
 
       # One of our dependencies is on GitHub instead of NPM and without authentication
       # we'll get rate limited and this step becomes flaky.
@@ -39,14 +39,9 @@ jobs:
 
       - name: 🏗️ Build
         shell: bash
-        run: |
-          set -o pipefail
-          yarn build || {
-            echo "::group::package.json diagnostics"
-            node $GITHUB_WORKSPACE/.github/scripts/diagnose-package-json.mjs || true
-            echo "::endgroup::"
-            exit 1
-          }
+        # See the comment on the same step in .github/actions/set-up-job for why
+        # we pass `--output-style=stream`
+        run: bash "$GITHUB_WORKSPACE/.github/scripts/run-nx.sh" yarn build --output-style=stream
 
       - name: 🌲 Set up test project for React 18
         id: set-up-test-project-react-18
@@ -106,3 +101,11 @@ jobs:
         env:
           CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-test-project-react-18.outputs.test-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1
+
+      - name: 🎭 Upload Playwright traces
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: playwright-traces-smoke-tests-react-18-${{ runner.os }}
+          path: tasks/smoke-tests/test-results/**
+          if-no-files-found: ignore

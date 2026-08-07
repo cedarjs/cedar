@@ -19,9 +19,7 @@ import { getConfig } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 import { generatePrismaClient } from '../../lib/generatePrismaClient.js'
-// @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../lib/index.js'
-// @ts-expect-error - Types not available for JS files
 import { PLUGIN_CACHE_FILENAME } from '../../lib/plugin.js'
 
 import { runPreUpgradeScripts } from './preUpgradeScripts.js'
@@ -242,8 +240,7 @@ export const handler = async (upgradeOptions: UpgradeOptions) => {
 
 async function packageManagerInstall({ verbose }: { verbose?: boolean }) {
   try {
-    await execa(`${getPackageManager()} ${install()}`, {
-      shell: true,
+    await execa(getPackageManager(), [install()], {
       stdio: verbose ? 'inherit' : 'pipe',
       cwd: getPaths().base,
     })
@@ -608,8 +605,7 @@ async function dedupeDeps(_task: unknown, { verbose }: { verbose?: boolean }) {
   }
 
   try {
-    await execa(`${getPackageManager()} ${dedupeCmd}`, {
-      shell: true,
+    await execa(getPackageManager(), [dedupeCmd], {
       stdio: verbose ? 'inherit' : 'pipe',
       cwd: getPaths().base,
     })

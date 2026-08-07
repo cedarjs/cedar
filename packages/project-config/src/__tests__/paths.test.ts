@@ -38,7 +38,6 @@ const DEFAULT_PATHS = {
     functions: ['api', 'src', 'functions'],
     graphql: ['api', 'src', 'graphql'],
     lib: ['api', 'src', 'lib'],
-    generators: ['api', 'generators'],
     config: ['api', 'src', 'config'],
     services: ['api', 'src', 'services'],
     directives: ['api', 'src', 'directives'],
@@ -62,7 +61,6 @@ const DEFAULT_PATHS = {
     layouts: ['web', 'src', 'layouts/'],
     src: ['web', 'src'],
     storybook: ['web', '.storybook'],
-    generators: ['web', 'generators'],
     app: ['web', 'src', 'App.tsx'],
     document: ['web', 'src', 'Document'],
     html: ['web', 'index.html'],
@@ -662,10 +660,11 @@ describe('paths', () => {
 
         const pages = processPagesDir(pagesDir)
 
-        expect(pages.length).toEqual(21)
+        expect(pages.length).toEqual(22)
 
         const pageNames = [
           'AboutPage',
+          'AggregatedBlogPostPage',
           'BlogPostPage',
           'ContactUsPage',
           'FatalErrorPage',

@@ -1,58 +1,67 @@
 name: 🚩 Require milestone
 
+# This is a required check. It verifies that a PR either has a milestone, or
+# has a conventional-commit title that maps to an existing milestone (which
+# the companion "🎯 Assign milestone" workflow in assign-milestone.yml will
+# then set automatically).
+#
+# This workflow deliberately listens ONLY to pull_request, and
+# assign-milestone.yml listens ONLY to pull_request_target. Splitting the
+# check (read-only) from the assignment (needs a write-capable token) is what
+# makes a single trigger per workflow possible:
+#
+# - The check only READS PR metadata, so the read-only GITHUB_TOKEN that
+#   fork PRs get under pull_request is sufficient - no pull_request_target
+#   needed here. And because pull_request runs the PR branch's version of
+#   this workflow and of the require-milestone action, changes to them can
+#   be tested in the PR itself before they land on the base branch.
+#
+# - The assignment needs a write-capable token, which fork PRs only get
+#   under pull_request_target. That half lives in assign-milestone.yml,
+#   under a different check name that is NOT required.
+#
+# One trigger per check name matters: this workflow used to listen to both
+# events and route between them with a job-level `if:`, which meant every PR
+# event produced two check-runs under the identical required-check name -
+# one real, one skipped. GitHub's required-status-check evaluation uses
+# whichever run under a given name is most recent, so rerunning the wrong
+# (indistinguishable-in-the-UI) one could supersede the real result: a fresh
+# skip could block a genuinely passing PR, and any no-op success could mask
+# a genuine failure. With exactly one run per check name, rerunning a check
+# always re-validates for real.
+#
+# Trust model: because pull_request runs PR-branch code, a fork PR could
+# edit this workflow or the require-milestone action to make this check
+# pass trivially. That's accepted: it's the same trust model as every other
+# required check in this repo that runs under pull_request (build, tests,
+# require-release-label), this check is release hygiene rather than a
+# security control, and .github/ changes are visible in review. The
+# write-capable half in assign-milestone.yml remains fork-tamper-proof.
 on:
   pull_request:
-    types: [opened, synchronize, reopened, milestoned, demilestoned, edited]
-  pull_request_target:
     types: [opened, synchronize, reopened, milestoned, demilestoned, edited]
 
 # Cancel in-progress runs of this workflow.
 # See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-only-cancel-in-progress-jobs-or-runs-for-the-current-workflow.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
-permissions:
-  pull-requests: write
+# No top level permissions are required for this workflow
+permissions: {}
 
 jobs:
   require-milestone:
     name: 🚩 Require milestone
     runs-on: ubuntu-latest
-    # We listen to both pull_request and pull_request_target, then route based
-    # on whether the PR comes from a fork.
-    #
-    # Using pull_request_target can be dangerous as it allows fork PRs to
-    # execute code in the context of the base repo with a write-capable
-    # GITHUB_TOKEN. The safety of this workflow depends on two things:
-    #   1. It never checks out the fork's merge ref (refs/pull/.../merge).
-    #      The checkout step runs against the base branch only.
-    #   2. It never executes fork-controlled code. The milestone action only
-    #      reads PR metadata and calls the GitHub API.
-    #
-    # Same-repo PRs -> pull_request:
-    #   The runner uses the PR branch's code. This allows contributors to test
-    #   workflow changes in their own PR before they land on the base branch.
-    #   The GITHUB_TOKEN defaults to read-only; we override that and grant
-    #   pull-requests: write (the narrowest permission needed for the
-    #   milestone API call). Again, this is safe because this only happens for
-    #   same-repo PRs, not fork PRs.
-    #
-    # Fork PRs -> pull_request_target:
-    #   The runner always uses the base branch's code. This is the critical
-    #   safety property: a fork PR can't inject code into our workflow run.
-    #   We must use pull_request_target here because fork PRs get a read-only
-    #   GITHUB_TOKEN under pull_request regardless of declared permissions – the
-    #   milestone API call (which needs write access) would fail.
-    if: |
-      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
-      (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository)
-
+    permissions:
+      issues: read
+      pull-requests: read
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: ⬢ Set up Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 24
 

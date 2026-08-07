@@ -1,9 +1,8 @@
 import type { APIGatewayProxyEvent, Context } from 'aws-lambda'
 
-import type { DbAuthResponse } from '@cedarjs/auth-dbauth-api'
-import dbAuthApi from '@cedarjs/auth-dbauth-api'
-// ^^ above package is still CJS, and named exports aren't supported in import statements
-const { dbAuthSession, generateCookieName } = dbAuthApi
+import type { DbAuthResponse } from '@cedarjs/auth-dbauth-api' with {
+  'resolution-mode': 'import',
+}
 import type { GetCurrentUser } from '@cedarjs/graphql-server'
 import { MiddlewareResponse } from '@cedarjs/web/middleware'
 import type { Middleware, MiddlewareRequest } from '@cedarjs/web/middleware'
@@ -117,6 +116,7 @@ export const initDbAuthMiddleware = ({
 
       // Note we have to use ".unset" and not ".clear"
       // because we want to remove these cookies from the browser
+      const { generateCookieName } = await import('@cedarjs/auth-dbauth-api')
       res.cookies.unset(generateCookieName(cookieName))
       res.cookies.unset('auth-provider')
     }
@@ -142,14 +142,14 @@ async function validateSession({
 }: ValidateParams) {
   let decryptedSession: any
 
+  const { dbAuthSession, generateCookieName } =
+    await import('@cedarjs/auth-dbauth-api')
+
   try {
     // If there's no session cookie the return value will be `null`.
     // If there is a session cookie, but it can't be decrypted, an error will
     // be thrown
-    decryptedSession = dbAuthSession(
-      req as Request,
-      generateCookieName(cookieName),
-    )
+    decryptedSession = dbAuthSession(req, generateCookieName(cookieName))
   } catch (e) {
     if (process.env.NODE_ENV === 'development') {
       console.debug('Could not decrypt dbAuth session', e)
@@ -181,8 +181,8 @@ async function validateSession({
       token: req.headers.get('Cookie') as string,
     },
     {
-      // MWRequest is a superset of Request
       event: req,
+      request: req,
     },
   )
 

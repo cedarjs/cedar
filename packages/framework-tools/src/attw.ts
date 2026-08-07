@@ -9,7 +9,17 @@ interface Problem {
   resolutionKind?: string
 }
 
-export async function attw(): Promise<Problem[]> {
+export async function attw({
+  excludeEntrypoints = [],
+}: {
+  /**
+   * Entrypoints to exclude from the check, e.g. escape-hatch subpaths that
+   * deliberately don't follow the package's normal resolution shape (see
+   * `@cedarjs/web`'s `./forceEsmApollo`) or bin scripts attw can't usefully
+   * analyze (see `@cedarjs/vite`'s `./bins/cedar-vite-build.mjs`).
+   */
+  excludeEntrypoints?: string[]
+} = {}): Promise<Problem[]> {
   // We can't rely on directly running the attw binary because it's not
   // a direct dependency of the package that will ultimately use this.
   // Instead, we have to do a little work to find the attw binary and run it.
@@ -21,23 +31,29 @@ export async function attw(): Promise<Problem[]> {
     path.resolve(path.dirname(pathToAttw), relativeBinPath),
   )
 
-  // Run attw via it's CLI and save the output to a file
+  const excludeEntrypointsArgs = excludeEntrypoints.length
+    ? ['--exclude-entrypoints', ...excludeEntrypoints]
+    : []
+
+  // Run attw via its CLI and save the output to a file
   const outputFileName = '.attw.json'
   const outputFile = fs.openSync(outputFileName, 'w')
   try {
-    spawnSync('node', [attwBinPath, '-P', '-f', 'json'], {
-      encoding: 'utf8',
-      stdio: ['ignore', outputFile, outputFile],
-    })
+    spawnSync(
+      'node',
+      [attwBinPath, '-P', ...excludeEntrypointsArgs, '-f', 'json'],
+      {
+        encoding: 'utf8',
+        stdio: ['ignore', outputFile, outputFile],
+      },
+    )
   } catch {
     // We don't care about non-zero exit codes
   }
   fs.closeSync(outputFile)
 
   // Read the resulting JSON file
-  const content = fs.readFileSync(outputFileName, {
-    encoding: 'utf8',
-  })
+  const content = fs.readFileSync(outputFileName, 'utf-8')
   fs.unlinkSync(outputFileName)
   const json = JSON.parse(content)
 
@@ -46,9 +62,13 @@ export async function attw(): Promise<Problem[]> {
     return []
   }
 
-  // We don't care about node10 errors
+  // We don't care about node10 errors, and since we require at least Node.js
+  // 22.19.0, we also ignore require(esm) warnings
+  // https://github.com/arethetypeswrong/arethetypeswrong.github.io/issues/252
   const problems: Problem[] = json.analysis.problems.filter(
-    (problem: Problem) => problem.resolutionKind !== 'node10',
+    (problem: Problem) =>
+      problem.resolutionKind !== 'node10' &&
+      problem.kind !== 'CJSResolvesToESM',
   )
 
   return problems

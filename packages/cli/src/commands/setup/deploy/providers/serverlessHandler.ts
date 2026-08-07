@@ -1,0 +1,159 @@
+import fs from 'node:fs'
+import path from 'node:path'
+
+import { Listr } from 'listr2'
+
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { getSchemaPath, getConfigPath } from '@cedarjs/project-config'
+import { errorTelemetry } from '@cedarjs/telemetry'
+
+import {
+  addPackagesTask,
+  getPaths,
+  printSetupNotes,
+} from '../../../../lib/index.js'
+import {
+  addToGitIgnoreTask,
+  addToDotEnvTask,
+  addFilesTask,
+  // @ts-expect-error - No types for JS file
+} from '../helpers/index.js'
+import { SERVERLESS_API_YML } from '../templates/serverless/api.js'
+import { SERVERLESS_WEB_YML } from '../templates/serverless/web.js'
+
+const notes = [
+  c.error('DEPRECATED option not officially supported'),
+  '',
+  'For more information:',
+  'https://cedarjs.com/docs/deploy/serverless',
+  '',
+  '',
+  c.success("You're almost ready to deploy using the Serverless framework!"),
+  '',
+  '• See https://cedarjs.com/docs/deploy#serverless-deploy for more info. If you ',
+  '  want to give it a shot, open your `.env` file and add your AWS credentials,',
+  '  then run: ',
+  '',
+  '    yarn cedar deploy serverless --first-run',
+  '',
+  '  For subsequent deploys you can just run `yarn cedar deploy serverless`.',
+  '',
+  '• If you want to use the Serverless Dashboard to manage your app, plug in',
+  '  the values for `org` and `app` in `web/serverless.yml` and `api/serverless.yml`',
+  '',
+  "• If you haven't already, familiarize yourself with the docs for your",
+  '  preferred provider: https://www.serverless.com/framework/docs/providers',
+]
+
+const projectDevPackages = [
+  'serverless',
+  'serverless-lift',
+  '@vercel/nft',
+  'archiver',
+]
+
+const files = [
+  {
+    path: path.join(getPaths().api.base, 'serverless.yml'),
+    content: SERVERLESS_API_YML,
+  },
+  {
+    path: path.join(getPaths().web.base, 'serverless.yml'),
+    content: SERVERLESS_WEB_YML,
+  },
+]
+
+const prismaBinaryTargetAdditions = async () => {
+  const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
+  const content = fs.readFileSync(schemaPath).toString()
+
+  if (!content.includes('rhel-openssl-1.0.x')) {
+    const result = content.replace(
+      /binaryTargets =.*\n/,
+      `binaryTargets = ["native", "rhel-openssl-1.0.x"]\n`,
+    )
+
+    fs.writeFileSync(schemaPath, result)
+  }
+}
+
+// updates the api_url to use an environment variable.
+const updateConfigTomlTask = () => {
+  const configTomlPath = getConfigPath()
+  const configFileName = path.basename(configTomlPath)
+
+  return {
+    title: `Updating ${configFileName} apiUrl...`,
+    task: () => {
+      const content = fs.readFileSync(configTomlPath).toString()
+
+      const newContent = content.replace(
+        /apiUrl.*?\n/m,
+        'apiUrl = "${API_URL:/api}"       # Set API_URL in production to the Serverless deploy endpoint of your api service, see https://cedarjs.com/docs/deploy/serverless-deploy\n',
+      )
+      fs.writeFileSync(configTomlPath, newContent)
+    },
+  }
+}
+
+export const handler = async ({ force }: { force: boolean }) => {
+  recordTelemetryAttributes({
+    command: 'setup deploy serverless',
+    force,
+  })
+  const [serverless, serverlessLift, ...rest] = projectDevPackages
+
+  const tasks = new Listr(
+    [
+      await addPackagesTask({
+        packages: [serverless, ...rest],
+        devDependency: true,
+      }),
+      await addPackagesTask({
+        packages: [serverless, serverlessLift],
+        side: 'web',
+        devDependency: true,
+      }),
+      await addPackagesTask({
+        packages: [serverless],
+        side: 'api',
+        devDependency: true,
+      }),
+      addFilesTask({
+        files,
+        force,
+      }),
+      updateConfigTomlTask(),
+      addToGitIgnoreTask({
+        paths: ['.serverless'],
+      }),
+      addToDotEnvTask({
+        lines: [
+          'AWS_ACCESS_KEY_ID=<your-key-here>',
+          'AWS_SECRET_ACCESS_KEY=<your-secret-key-here>',
+        ],
+      }),
+      {
+        title: 'Adding necessary Prisma binaries...',
+        task: async () => await prismaBinaryTargetAdditions(),
+      },
+      printSetupNotes(notes),
+    ],
+    {
+      exitOnError: true,
+      rendererOptions: { collapseSubtasks: false },
+    },
+  )
+  try {
+    await tasks.run()
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e)
+    errorTelemetry(process.argv, message)
+    console.error(c.error(message))
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    process.exit(exitCode)
+  }
+}

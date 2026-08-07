@@ -1,0 +1,141 @@
+global.__dirname = __dirname
+
+vi.mock('@cedarjs/project-config', async (importOriginal) => {
+  const path = await import('node:path')
+  const fs = await import('node:fs')
+  const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
+
+  return {
+    ...originalProjectConfig,
+    getPaths: () => {
+      const BASE_PATH = path.join(globalThis.__dirname, 'fixtures')
+      return {
+        base: BASE_PATH,
+        api: {
+          prismaConfig: path.join(BASE_PATH, 'prisma.config.cjs'),
+        },
+      }
+    },
+    getSchemaPath: async (prismaConfigPath: string) => {
+      return prismaConfigPath.replace(/prisma\.config\.\w+$/, 'schema.prisma')
+    },
+    getPrismaSchemas: async () => {
+      const schemaPath = path.join(
+        globalThis.__dirname,
+        'fixtures',
+        'schema.prisma',
+      )
+      return {
+        schemas: [[schemaPath, fs.readFileSync(schemaPath, 'utf-8')]],
+      }
+    },
+  }
+})
+
+import prompts from 'prompts'
+import { vi, test, expect, describe, it } from 'vitest'
+
+import type * as ProjectConfig from '@cedarjs/project-config'
+
+import { getSchema, verifyModelName } from '../schemaHelpers.js'
+
+test('getSchema returns a parsed schema.prisma', async () => {
+  let schema = await getSchema('Post')
+  expect(schema.fields[0].name).toEqual('id')
+  expect(schema.fields[1].name).toEqual('title')
+  expect(schema.fields[2].name).toEqual('slug')
+
+  // can get a different model
+  schema = await getSchema('User')
+  expect(schema.fields[0].name).toEqual('id')
+  expect(schema.fields[1].name).toEqual('name')
+  expect(schema.fields[2].name).toEqual('email')
+})
+
+test('getSchema throws an error if model name not found', async () => {
+  await expect(getSchema('Foo')).rejects.toThrow(
+    'No schema definition found for `Foo` in schema.prisma file',
+  )
+})
+
+describe('verifyModelName', () => {
+  it('Accepts the model name in PascalCase', async () => {
+    const modelName = await verifyModelName({ name: 'User' })
+    expect(modelName).toEqual({ name: 'User' })
+  })
+
+  it('Accepts the model name in camelCase', async () => {
+    const modelName = await verifyModelName({ name: 'user' })
+    expect(modelName).toEqual({ name: 'User' })
+  })
+
+  it('Accepts the plural form of the model (in PascalCase) even if the model name is singular', async () => {
+    const modelName = await verifyModelName({ name: 'Users' })
+    expect(modelName).toEqual({ name: 'User' })
+  })
+
+  it('Accepts the plural form of the model (in camelCase) even if the model name is singular', async () => {
+    const modelName = await verifyModelName({ name: 'users' })
+    expect(modelName).toEqual({ name: 'User' })
+  })
+
+  it('Uses the plural form of the model if that model exists (PascalCase)', async () => {
+    prompts.inject('CustomDatas')
+    const modelName = await verifyModelName({ name: 'CustomData' })
+    expect(modelName).toEqual({ name: 'CustomData' })
+  })
+
+  it('Uses the plural form of the model if that model exists (camelCase)', async () => {
+    prompts.inject('CustomDatas')
+    const modelName = await verifyModelName({ name: 'customData' })
+    expect(modelName).toEqual({ name: 'CustomData' })
+  })
+
+  it('Uses the plural form of the model if that model exists (camelCase)', async () => {
+    prompts.inject('CustomDatas')
+    const modelName = await verifyModelName({ name: 'customData' })
+    expect(modelName).toEqual({ name: 'CustomData' })
+  })
+
+  describe('case insensitivity', () => {
+    test('CustomData', async () => {
+      prompts.inject('CustomDatas')
+      const modelName = await verifyModelName({ name: 'CustomData' })
+      expect(modelName).toEqual({ name: 'CustomData' })
+    })
+    test('customData', async () => {
+      prompts.inject('CustomDatas')
+      const modelName = await verifyModelName({ name: 'customData' })
+      expect(modelName).toEqual({ name: 'CustomData' })
+    })
+    test('customdata', async () => {
+      prompts.inject('CustomDatas')
+      const modelName = await verifyModelName({ name: 'customdata' })
+      expect(modelName).toEqual({ name: 'CustomData' })
+    })
+    test('CUstOMdaTA', async () => {
+      prompts.inject('CustomDatas')
+      const modelName = await verifyModelName({ name: 'CUstOMdaTA' })
+      expect(modelName).toEqual({ name: 'CustomData' })
+    })
+
+    test('userprofiles', async () => {
+      const modelName = await verifyModelName({ name: 'userprofiles' })
+      expect(modelName).toEqual({ name: 'UserProfile' })
+    })
+  })
+
+  describe('Uses the plural form of the model even if a singular form also exists', () => {
+    test('Pascalcase', async () => {
+      prompts.inject('PostsList')
+      const modelName = await verifyModelName({ name: 'Posts' })
+      expect(modelName).toEqual({ name: 'Posts' })
+    })
+
+    test('camelCase', async () => {
+      prompts.inject('PostsList')
+      const modelName = await verifyModelName({ name: 'posts' })
+      expect(modelName).toEqual({ name: 'Posts' })
+    })
+  })
+})

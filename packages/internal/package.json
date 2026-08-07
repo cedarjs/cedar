@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/internal",
-  "version": "4.2.0",
+  "version": "5.0.6",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -10,124 +10,88 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": {
+      "default": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.js"
       }
     },
     "./package.json": "./package.json",
     "./dist/dev": {
-      "import": {
+      "default": {
         "types": "./dist/dev.d.ts",
         "default": "./dist/dev.js"
-      },
-      "require": {
-        "types": "./dist/cjs/dev.d.ts",
-        "default": "./dist/cjs/dev.js"
       }
     },
     "./dist/files": {
-      "import": {
+      "default": {
         "types": "./dist/files.d.ts",
         "default": "./dist/files.js"
-      },
-      "require": {
-        "types": "./dist/cjs/files.d.ts",
-        "default": "./dist/cjs/files.js"
       }
     },
     "./dist/files.js": {
-      "import": {
+      "default": {
         "types": "./dist/files.d.ts",
         "default": "./dist/files.js"
-      },
-      "require": {
-        "types": "./dist/cjs/files.d.ts",
-        "default": "./dist/cjs/files.js"
       }
     },
     "./dist/gql": {
-      "import": {
+      "default": {
         "types": "./dist/gql.d.ts",
         "default": "./dist/gql.js"
-      },
-      "require": {
-        "types": "./dist/cjs/gql.d.ts",
-        "default": "./dist/cjs/gql.js"
       }
     },
     "./dist/project": {
-      "import": {
+      "default": {
         "types": "./dist/project.d.ts",
         "default": "./dist/project.js"
-      },
-      "require": {
-        "types": "./dist/cjs/project.d.ts",
-        "default": "./dist/cjs/project.js"
       }
     },
     "./dist/routes.js": {
-      "import": {
+      "default": {
         "types": "./dist/routes.d.ts",
         "default": "./dist/routes.js"
-      },
-      "require": {
-        "types": "./dist/cjs/routes.d.ts",
-        "default": "./dist/cjs/routes.js"
       }
     },
     "./dist/ts2js": {
-      "import": {
+      "default": {
         "types": "./dist/ts2js.d.ts",
         "default": "./dist/ts2js.js"
-      },
-      "require": {
-        "types": "./dist/cjs/ts2js.d.ts",
-        "default": "./dist/cjs/ts2js.js"
       }
     },
     "./dist/validateSchema": {
-      "import": {
+      "default": {
         "types": "./dist/validateSchema.d.ts",
         "default": "./dist/validateSchema.js"
-      },
-      "require": {
-        "types": "./dist/cjs/validateSchema.d.ts",
-        "default": "./dist/cjs/validateSchema.js"
       }
     },
     "./dist/build/api": {
-      "import": {
+      "default": {
         "types": "./dist/build/api.d.ts",
         "default": "./dist/build/api.js"
-      },
-      "require": {
-        "types": "./dist/cjs/build/api.d.ts",
-        "default": "./dist/cjs/build/api.js"
+      }
+    },
+    "./dist/build/api.js": {
+      "default": {
+        "types": "./dist/build/api.d.ts",
+        "default": "./dist/build/api.js"
+      }
+    },
+    "./dist/build/api-graphql-transforms.js": {
+      "default": {
+        "types": "./dist/build/api-graphql-transforms.d.ts",
+        "default": "./dist/build/api-graphql-transforms.js"
       }
     },
     "./dist/generate/generate": {
-      "import": {
+      "default": {
         "types": "./dist/generate/generate.d.ts",
         "default": "./dist/generate/generate.js"
-      },
-      "require": {
-        "types": "./dist/cjs/generate/generate.d.ts",
-        "default": "./dist/cjs/generate/generate.js"
       }
     },
     "./dist/generate/gqlormSchema": {
-      "import": {
+      "default": {
         "types": "./dist/generate/gqlormSchema.d.ts",
         "default": "./dist/generate/gqlormSchema.js"
-      },
-      "require": {
-        "types": "./dist/cjs/generate/gqlormSchema.d.ts",
-        "default": "./dist/cjs/generate/gqlormSchema.js"
       }
     }
   },
@@ -140,13 +104,12 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts",
+    "build": "node ./build.mts",
     "build:clean-dist": "rimraf 'dist/**/*/__tests__' --glob",
     "build:pack": "yarn pack -o cedarjs-internal.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
-    "build:types-cjs": "tsc --build --verbose ./tsconfig.cjs.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
-    "check:attw": "yarn attw -P",
+    "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",
     "fix:permissions": "chmod +x dist/generate/generate.js dist/generate/watch.js",
     "prepublishOnly": "NODE_ENV=production yarn build",
@@ -155,10 +118,10 @@
   },
   "dependencies": {
     "@babel/core": "^7.26.10",
-    "@babel/parser": "7.29.3",
-    "@babel/plugin-transform-react-jsx": "7.28.6",
+    "@babel/parser": "7.29.7",
     "@babel/plugin-transform-typescript": "^7.26.8",
-    "@babel/traverse": "7.29.0",
+    "@babel/traverse": "7.29.7",
+    "@cedarjs/api": "workspace:*",
     "@cedarjs/babel-config": "workspace:*",
     "@cedarjs/cli-helpers": "workspace:*",
     "@cedarjs/graphql-server": "workspace:*",
@@ -171,40 +134,47 @@
     "@graphql-codegen/client-preset": "5.3.0",
     "@graphql-codegen/core": "5.0.2",
     "@graphql-codegen/fragment-matcher": "6.0.1",
+    "@graphql-codegen/plugin-helpers": "6.3.0",
     "@graphql-codegen/schema-ast": "5.0.2",
-    "@graphql-codegen/typed-document-node": "6.1.8",
     "@graphql-codegen/typescript": "5.0.10",
     "@graphql-codegen/typescript-operations": "5.1.0",
-    "@graphql-codegen/typescript-react-apollo": "4.4.2",
     "@graphql-codegen/typescript-resolvers": "5.1.8",
-    "@graphql-tools/documents": "1.0.1",
+    "@graphql-codegen/visitor-plugin-common": "6.3.0",
+    "@graphql-tools/code-file-loader": "8.1.36",
+    "@graphql-tools/graphql-file-loader": "8.1.18",
+    "@graphql-tools/load": "8.1.15",
+    "@graphql-tools/merge": "9.2.2",
     "@prisma/dmmf": "7.8.0",
     "@prisma/internals": "7.8.0",
     "@sdl-codegen/node": "2.0.1",
-    "ansis": "4.2.0",
-    "deepmerge": "4.3.1",
-    "esbuild": "0.27.7",
+    "ansis": "4.3.1",
+    "chokidar": "3.6.0",
+    "esbuild": "0.28.1",
+    "execa": "5.1.1",
     "fast-glob": "3.3.3",
-    "graphql": "16.13.2",
+    "graphql": "16.14.2",
     "kill-port": "1.6.1",
-    "prettier": "3.8.3",
+    "magic-string": "0.30.21",
+    "oxc-parser": "0.141.0",
+    "prettier": "3.8.4",
     "rimraf": "6.1.3",
     "source-map": "0.7.6",
-    "string-env-interpolation": "1.0.1",
-    "systeminformation": "5.31.5",
     "termi-link": "1.1.0",
-    "ts-node": "10.9.2",
+    "tsconfig-paths": "4.2.0",
     "typescript": "5.9.3",
-    "vite": "7.3.2"
+    "vite": "7.3.6",
+    "vite-tsconfig-paths": "^6.1.1"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.2",
     "@cedarjs/framework-tools": "workspace:*",
-    "concurrently": "9.2.1",
+    "@jridgewell/trace-mapping": "0.3.31",
+    "@oxc-project/types": "^0.141.0",
+    "concurrently": "9.2.4",
     "graphql-tag": "2.12.6",
-    "publint": "0.3.21",
-    "tsx": "4.21.0",
-    "vitest": "3.2.4"
+    "memfs": "4.64.0",
+    "publint": "0.3.22",
+    "ts-dedent": "2.3.0",
+    "vitest": "4.1.10"
   },
   "engines": {
     "node": ">=24"

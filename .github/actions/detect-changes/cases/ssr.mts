@@ -1,0 +1,29 @@
+/**
+ * Detects if there are SSR changes
+ *
+ * @param changedFiles The list of files which git has listed as changed
+ * @returns True if there are changes, false if not
+ */
+export function ssrChanged(changedFiles: string[]): boolean {
+  for (const changedFile of changedFiles) {
+    if (
+      changedFile.startsWith('tasks/smoke-tests/streaming-ssr') ||
+      changedFile === 'tasks/smoke-tests/basePlaywright.config.ts' ||
+      changedFile === 'tasks/test-project/codemods/delayedPage.js' ||
+      changedFile.startsWith('packages/internal/') ||
+      changedFile.startsWith('packages/project-config/') ||
+      changedFile.startsWith('packages/web/') ||
+      changedFile.startsWith('packages/router/') ||
+      changedFile.startsWith('packages/web-server/') ||
+      changedFile.startsWith('packages/vite/') ||
+      changedFile.startsWith('packages/cookie-jar/') ||
+      changedFile.startsWith('packages/auth-providers/dbAuth')
+    ) {
+      console.log('SSR change detected:', changedFile)
+      return true
+    }
+  }
+
+  console.log('No SSR changes')
+  return false
+}

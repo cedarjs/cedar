@@ -195,21 +195,24 @@ To run a Cedar app in a container or VM, you'll want to set both the web and api
   host = '0.0.0.0'
 ```
 
-You can also configure these values via `REDWOOD_WEB_HOST` and `REDWOOD_API_HOST`.
+You can also configure these values via `CEDAR_WEB_HOST` and `CEDAR_API_HOST`.
 And if you set `NODE_ENV` to production, these will be the defaults anyway.
 
-## ESLint Configuration
+### Container hosts
 
-| Key                         | Description                                                                   | Default |
-| :-------------------------- | :---------------------------------------------------------------------------- | :------ |
-| `eslintLegacyConfigWarning` | Show deprecation warnings when legacy ESLint configuration files are detected | `true`  |
+Most container hosts (Railway, Render, Fly.io, Cloud Run, Heroku) tell your app
+what to bind to with the `HOST` and `PORT` env vars. Cedar reads both, so you
+usually don't have to configure anything.
 
-The `eslintLegacyConfigWarning` option controls whether Cedar shows deprecation warnings when it detects legacy ESLint configuration files (like `.eslintrc.js`, `.eslintrc.json`, or `eslint` in `package.json`).
+`PORT` is only used by the side serving public traffic. When you run both sides
+together with `yarn cedar serve`, that's the web server — the api server keeps
+its own port, because the two would otherwise try to bind the same one. Serving
+a single side with `yarn cedar serve api` or `yarn cedar serve web` makes that
+side the public one.
 
-To disable these warnings, set it to `false`:
+The full order of precedence is:
 
-```toml title="cedar.toml"
-eslintLegacyConfigWarning = false
-```
-
-This can be useful if you need to temporarily maintain legacy ESLint configurations while transitioning to the new flat config format.
+1. CLI flags (`--port`, `--host`, `--api-port`, …)
+2. `CEDAR_API_PORT` / `CEDAR_WEB_PORT` (and the `_HOST` equivalents)
+3. `PORT` / `HOST`, for the public side only
+4. `[api].port` / `[web].port` in `cedar.toml`

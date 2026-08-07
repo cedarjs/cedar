@@ -1,0 +1,351 @@
+import fs from 'node:fs'
+import path from 'node:path'
+
+import * as parser from '@babel/parser'
+import * as t from '@babel/types'
+import execa from 'execa'
+import { Listr } from 'listr2'
+
+import { getConfigPath, getConfig } from '@cedarjs/project-config'
+
+import { getPaths, writeFilesTask } from '../../../../lib/index.js'
+
+export const updateApiURLTask = (apiUrl: string) => {
+  const configTomlPath = getConfigPath()
+  const configFileName = path.basename(configTomlPath)
+
+  return {
+    title: `Updating API URL in ${configFileName}...`,
+    task: () => {
+      const tomlContent = fs.readFileSync(configTomlPath, 'utf-8')
+      let newToml = tomlContent
+
+      if (tomlContent.match(/apiUrl/)) {
+        newToml = newToml.replace(/apiUrl.*/g, `apiUrl = "${apiUrl}"`)
+      } else if (tomlContent.match(/\[web\]/)) {
+        newToml = newToml.replace(/\[web\]/, `[web]\n  apiUrl = "${apiUrl}"`)
+      } else {
+        newToml += `[web]\n  apiUrl = "${apiUrl}"`
+      }
+
+      fs.writeFileSync(configTomlPath, newToml)
+    },
+  }
+}
+
+export function getUserApiUrl(): string {
+  return getConfig().web.apiUrl
+}
+
+export interface PreRequisite {
+  title: string
+  command: [file: string, arguments: readonly string[]]
+  errorMessage: string
+}
+
+/**
+ * Use this to create checks prior to running setup commands
+ * with a better error output
+ *
+ * @example preRequisiteCheckTask([
+    {
+      title: 'Checking if xxx is installed...',
+      command: ['xxx', ['--version']],
+      errorMessage: [
+        'Looks like xxx.',
+        'Please follow the steps...',
+      ],
+    },
+  ])
+ */
+export const preRequisiteCheckTask = (preRequisites: PreRequisite[]) => {
+  return {
+    title: 'Checking pre-requisites',
+    task: () =>
+      new Listr(
+        preRequisites.map((preReq) => {
+          return {
+            title: preReq.title,
+            task: async () => {
+              try {
+                await execa(...preReq.command)
+              } catch (e: unknown) {
+                const baseMsg = e instanceof Error ? e.message : String(e)
+                const err = new Error(baseMsg + '\n' + preReq.errorMessage)
+                throw err
+              }
+            },
+          }
+        }),
+      ),
+  }
+}
+
+export interface FileData {
+  path: string
+  content: string
+}
+
+export interface AddFilesTaskOptions {
+  files: FileData[]
+  force?: boolean
+  title?: string
+}
+
+/**
+ *
+ * Use this to add files to a users project
+ *
+ * @example
+ * addFilesTask(
+ *  files: [ { path: path.join(getPaths().base, 'netlify.toml'), content: NETLIFY_TOML }],
+ * )
+ */
+export const addFilesTask = ({
+  files,
+  force = false,
+  title = 'Adding config',
+}: AddFilesTaskOptions) => {
+  return {
+    title: `${title}...`,
+    task: () => {
+      const fileNameToContentMap: Record<string, string> = {}
+      files.forEach((fileData) => {
+        fileNameToContentMap[fileData.path] = fileData.content
+      })
+      return writeFilesTask(fileNameToContentMap, { overwriteExisting: force })
+    },
+  }
+}
+
+export const verifyUDSetupTask = () => {
+  return {
+    title: 'Checking if Universal Deploy is set up...',
+    task: () => {
+      const paths = getPaths()
+      const viteConfigTs = path.join(paths.web.base, 'vite.config.ts')
+      const viteConfigJs = path.join(paths.web.base, 'vite.config.js')
+      const viteConfigPath = fs.existsSync(viteConfigTs)
+        ? viteConfigTs
+        : viteConfigJs
+
+      if (!fs.existsSync(viteConfigPath)) {
+        throw new Error('Vite config file not found')
+      }
+
+      const content = fs.readFileSync(viteConfigPath, 'utf-8')
+
+      if (!content.includes('cedarUniversalDeployPlugin')) {
+        throw new Error(
+          'Universal Deploy is not set up. Please run `yarn cedar setup deploy universal-deploy` first.',
+        )
+      }
+    },
+  }
+}
+
+/**
+ * Unwraps the config object from a `defineConfig(...)` call argument.
+ *
+ * Handles both direct object and arrow/function wrappers:
+ *   defineConfig({...})                    → ObjectExpression
+ *   defineConfig(({ mode }) => ({...}))    → ObjectExpression   (arrow, implicit return)
+ *   defineConfig(() => { return {...} })   → ObjectExpression   (arrow, explicit return)
+ *   defineConfig(function() { return {} }) → ObjectExpression   (function expression)
+ *
+ * @param arg - A babel AST node.
+ * @returns The inner ObjectExpression, or `null` if not found.
+ */
+function resolveConfigObject(arg: t.Node): t.ObjectExpression | null {
+  if (t.isObjectExpression(arg)) {
+    return arg
+  }
+
+  if (t.isArrowFunctionExpression(arg)) {
+    // Implicit return: ({...})
+    if (t.isObjectExpression(arg.body)) {
+      return arg.body
+    }
+    // Block body with explicit return: { return {...} }
+    if (t.isBlockStatement(arg.body)) {
+      const returnStmt = arg.body.body.find((s) => t.isReturnStatement(s))
+
+      if (t.isObjectExpression(returnStmt?.argument)) {
+        return returnStmt.argument
+      }
+    }
+
+    return null
+  }
+
+  if (t.isFunctionExpression(arg)) {
+    if (t.isBlockStatement(arg.body)) {
+      const returnStmt = arg.body.body.find(t.isReturnStatement)
+
+      if (t.isObjectExpression(returnStmt?.argument)) {
+        return returnStmt.argument
+      }
+    }
+
+    return null
+  }
+
+  return null
+}
+
+/**
+ * Inserts plugin call expressions before `cedar()` in the `plugins` array
+ * of `defineConfig({...})` inside a vite config file.
+ *
+ * Uses the AST only for position-finding, then does text-level insertion to
+ * preserve all original formatting, comments, and blank lines.
+ *
+ * @param content     - The full file content.
+ * @param pluginCodes - Source strings for each plugin call
+ *                      (e.g. `["netlifyCompat()"]`).
+ * @returns Modified source string, or `null` if `cedar()` was not found.
+ */
+export function insertPluginsBeforeCedar({
+  content,
+  pluginCodes,
+}: {
+  content: string
+  pluginCodes: string[]
+}): string | null {
+  const ast = parser.parse(content, {
+    sourceType: 'module',
+    plugins: ['typescript', 'jsx'],
+  })
+
+  const defaultExport = ast.program.body.find(t.isExportDefaultDeclaration)
+
+  if (!defaultExport) {
+    return null
+  }
+
+  const declaration = defaultExport.declaration as t.CallExpression
+  const configArg = resolveConfigObject(declaration.arguments[0])
+  if (!configArg) {
+    return null
+  }
+
+  const pluginsProp = configArg.properties.find(t.isObjectProperty)
+
+  if (!t.isArrayExpression(pluginsProp?.value)) {
+    return null
+  }
+
+  const arrayExpr = pluginsProp.value
+  const elements = arrayExpr.elements
+  const cedarIndex = elements.findIndex(
+    (el) =>
+      t.isCallExpression(el) &&
+      t.isIdentifier(el.callee) &&
+      el.callee.name === 'cedar',
+  )
+
+  if (cedarIndex === -1) {
+    return null
+  }
+
+  const cedarElement = elements[cedarIndex]
+  if (!cedarElement || !t.isCallExpression(cedarElement)) {
+    return null
+  }
+  const cedarNode = cedarElement
+
+  if (
+    !cedarNode.loc ||
+    !arrayExpr.loc ||
+    !pluginsProp.loc ||
+    cedarNode.start == null ||
+    arrayExpr.start == null ||
+    arrayExpr.end == null
+  ) {
+    return null
+  }
+
+  // Check if the array is inline (all elements on the same line as [)
+  const isInline = cedarNode.loc.start.line === arrayExpr.loc.start.line
+
+  if (isInline) {
+    const precedingText = content.slice(0, arrayExpr.start)
+    const followingText = content.slice(arrayExpr.end)
+
+    const existingCodes = elements.flatMap((el) => {
+      if (el?.start == null || el.end == null) {
+        return []
+      }
+      return [content.slice(el.start, el.end)]
+    })
+
+    const lines = content.split('\n')
+    const pluginsLine = pluginsProp.loc.start.line
+    const pluginsIndent = (lines[pluginsLine - 1].match(/^\s*/) ?? [''])[0]
+    const elemIndent = pluginsIndent + '  '
+
+    const allCodes = [...existingCodes]
+    allCodes.splice(cedarIndex, 0, ...pluginCodes)
+
+    const multiline = [
+      '[',
+      ...allCodes.map((code) => `${elemIndent}${code},`),
+      `${pluginsIndent}]`,
+    ].join('\n')
+
+    return precedingText + multiline + followingText
+  }
+
+  // Multiline: insert at start of cedar()'s line (after the preceding \n)
+  const cedarLine = cedarNode.loc.start.line
+  const insertPos = cedarNode.start - cedarNode.loc.start.column
+  const lines = content.split('\n')
+  const indent = (lines[cedarLine - 1].match(/^\s*/) ?? [''])[0]
+  const insertion = pluginCodes.map((code) => `${indent}${code},\n`).join('')
+
+  return content.slice(0, insertPos) + insertion + content.slice(insertPos)
+}
+
+export const addToGitIgnoreTask = ({ paths }: { paths: string[] }) => {
+  return {
+    title: 'Updating .gitignore...',
+    skip: (): string | undefined => {
+      if (!fs.existsSync(path.resolve(getPaths().base, '.gitignore'))) {
+        return 'No gitignore present, skipping.'
+      }
+      return undefined
+    },
+    task: async (_ctx: unknown, task: { skip: (message: string) => void }) => {
+      const gitIgnore = path.resolve(getPaths().base, '.gitignore')
+      const content = fs.readFileSync(gitIgnore).toString()
+
+      if (paths.every((item) => content.includes(item))) {
+        task.skip('.gitignore already includes the additions.')
+      }
+
+      fs.appendFileSync(gitIgnore, ['\n', '# Deployment', ...paths].join('\n'))
+    },
+  }
+}
+
+export const addToDotEnvTask = ({ lines }: { lines: string[] }) => {
+  return {
+    title: 'Updating .env...',
+    skip: (): string | undefined => {
+      if (!fs.existsSync(path.resolve(getPaths().base, '.env'))) {
+        return 'No .env present, skipping.'
+      }
+      return undefined
+    },
+    task: async (_ctx: unknown, task: { skip: (message: string) => void }) => {
+      const env = path.resolve(getPaths().base, '.env')
+      const content = fs.readFileSync(env).toString()
+
+      if (lines.every((line) => content.includes(line.split('=')[0]))) {
+        task.skip('.env already includes the additions.')
+      }
+
+      fs.appendFileSync(env, lines.join('\n'))
+    },
+  }
+}

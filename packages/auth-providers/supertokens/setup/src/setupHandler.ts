@@ -7,11 +7,14 @@ import type { Args } from './setup.js'
 
 export async function handler({ force: forceArg }: Args) {
   const { version } = JSON.parse(
-    fs.readFileSync(path.resolve(__dirname, '../package.json'), 'utf-8'),
+    fs.readFileSync(
+      path.resolve(import.meta.dirname, '../package.json'),
+      'utf-8',
+    ),
   )
 
   standardAuthHandler({
-    basedir: __dirname,
+    basedir: import.meta.dirname,
     forceArg,
     provider: 'supertokens',
     authDecoderImport:

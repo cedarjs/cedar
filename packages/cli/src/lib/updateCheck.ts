@@ -6,13 +6,13 @@ import boxen from 'boxen'
 import latestVersion from 'latest-version'
 import semver from 'semver'
 
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
+import { getNodeRunnerArgs } from '@cedarjs/cli-helpers/packageManager/exec'
 import { getConfig } from '@cedarjs/project-config'
 
-// @ts-expect-error - Types not available for JS files
 import { spawnBackgroundProcess } from './background.js'
 import { isLockSet, setLock, unsetLock } from './locking.js'
 
-// @ts-expect-error - Types not available for JS files
 import { getPaths } from './index.js'
 
 interface UpdateData {
@@ -23,38 +23,34 @@ interface UpdateData {
 }
 
 /**
- * @const {number} The number of milliseconds between update checks (24 hours)
+ * @const The number of milliseconds between update checks (24 hours)
  */
 const CHECK_PERIOD = 24 * 60 * 60_000
 
 /**
- * @const {number} The number of milliseconds between showing a user an update notification (24 hours)
+ * The number of milliseconds between showing a user an update notification (24
+ * hours)
  */
 const SHOW_PERIOD = 24 * 60 * 60_000
 
 /**
- * @const {number} The default datetime for shownAt and checkedAt in milliseconds, corresponds to 2000-01-01T00:00:00.000Z
+ * The default datetime for shownAt and checkedAt in milliseconds, corresponds
+ * to 2000-01-01T00:00:00.000Z
  */
 export const DEFAULT_DATETIME_MS = 946684800000
 
-/**
- * @const {string} The identifier used for the lock within the check function
- */
+/** The identifier used for the lock within the check function */
 export const CHECK_LOCK_IDENTIFIER = 'UPDATE_CHECK'
 
-/**
- * @const {string} The identifier used for the lock when showing an update message
- */
+/** The identifier used for the lock when showing an update message */
 export const SHOW_LOCK_IDENTIFIER = 'UPDATE_CHECK_SHOW'
 
-/**
- * @const {string[]} The name of commands which should NOT execute the update checker
- */
+/** The name of commands which should NOT execute the update checker */
 export const EXCLUDED_COMMANDS = ['upgrade', 'ts-to-js']
 
 /**
- * @const {string} Filepath of the file which persists update check data within
- * the .cedar directory
+ * Filepath of the file which persists update check data within the .cedar
+ * directory
  */
 let persistenceDirectory: string | undefined
 
@@ -69,6 +65,31 @@ function getPersistenceDirectory() {
 }
 
 /**
+ * Reads the @cedarjs/core version from the project's package.json. Cedar
+ * projects pin an exact version, so anything that isn't a plain
+ * "1.2.3"-style semver version (ranges, `file:` tarballs, `workspace:*`,
+ * etc.) returns undefined — there's nothing meaningful to compare against.
+ */
+function getLocalVersion(): string | undefined {
+  let version: unknown
+
+  try {
+    const packageJson = JSON.parse(
+      fs.readFileSync(path.join(getPaths().base, 'package.json'), 'utf-8'),
+    )
+    version = packageJson.devDependencies?.['@cedarjs/core']
+  } catch {
+    return undefined
+  }
+
+  if (typeof version === 'string' && semver.valid(version)) {
+    return version
+  }
+
+  return undefined
+}
+
+/**
  * Performs an update check to detect if a newer version of Cedar is available
  * and records the result to a file within .cedar for persistence
  */
@@ -76,16 +97,22 @@ export async function check() {
   try {
     console.time('Update Check')
 
-    // Read package.json and extract the @cedarjs/core version
-    const packageJson = JSON.parse(
-      fs.readFileSync(path.join(getPaths().base, 'package.json'), 'utf-8'),
-    )
-    let localVersion = packageJson.devDependencies['@cedarjs/core']
+    const localVersion = getLocalVersion()
 
-    // Remove any leading non-digits, i.e. ^ or ~
-    while (!/\d/.test(localVersion.charAt(0))) {
-      localVersion = localVersion.substring(1)
+    if (!localVersion) {
+      console.log(
+        'Skipping update check: no pinned @cedarjs/core version found',
+      )
+      // Record the check so it isn't re-run on every command, and clear any
+      // previously stored versions so a stale notification can't show
+      updateUpdateDataFile({
+        localVersion: '0.0.0',
+        remoteVersions: new Map(),
+        checkedAt: new Date().getTime(),
+      })
+      return
     }
+
     console.log(`Detected the current version of Cedar: '${localVersion}'`)
 
     const remoteVersions = new Map()
@@ -137,8 +164,16 @@ export function shouldCheck() {
     return false
   }
 
-  // Check if we haven't checked recently
   const data = readUpdateDataFile()
+
+  // The project's version can change (e.g. an upgrade) while the cached data
+  // is still fresh, so force a new check whenever they disagree
+  const localVersion = getLocalVersion()
+  if (localVersion && localVersion !== data.localVersion) {
+    return true
+  }
+
+  // Check if we haven't checked recently
   return data.checkedAt < new Date().getTime() - CHECK_PERIOD
 }
 
@@ -153,11 +188,22 @@ export function shouldShow() {
     return false
   }
 
+  // Only projects with a pinned version get update notifications. Comparing
+  // against the current version (rather than the stored one) also means
+  // cached data that predates a version change can't produce a notification
+  // the project has already acted on.
+  const localVersion = getLocalVersion()
+
+  if (!localVersion) {
+    return false
+  }
+
   // Check there is a new version and we haven't shown the user recently
   const data = readUpdateDataFile()
+
   let newerVersion = false
   data.remoteVersions.forEach((version) => {
-    newerVersion ||= semver.gt(version, data.localVersion)
+    newerVersion ||= semver.gt(version, localVersion)
   })
   return data.shownAt < new Date().getTime() - SHOW_PERIOD && newerVersion
 }
@@ -182,8 +228,7 @@ function getUpdateMessage() {
   const localTag = extractTagFromVersion(data.localVersion) || 'latest'
 
   let updateCount = 0
-  let message =
-    ' New updates to Cedar are available via `yarn cedar upgrade#REPLACEME#` '
+  let message = ` New updates to Cedar are available via \`${formatCedarCommand(['upgrade#REPLACEME#'])}\` `
   data.remoteVersions.forEach((version, tag) => {
     if (semver.gt(version, data.localVersion)) {
       updateCount += 1
@@ -304,10 +349,10 @@ export function updateCheckMiddleware(argv: { _: (string | number)[] }) {
   // notification based on stale local/remote versions in the same run.
   if (shouldCheck()) {
     setLock(CHECK_LOCK_IDENTIFIER)
-    spawnBackgroundProcess('updateCheck', 'yarn', [
-      'node',
+    const [bgCmd, bgCmdArgs] = getNodeRunnerArgs(
       path.join(import.meta.dirname, 'updateCheckExecute.js'),
-    ])
+    )
+    spawnBackgroundProcess('updateCheck', bgCmd, bgCmdArgs)
   } else if (shouldShow()) {
     setLock(SHOW_LOCK_IDENTIFIER)
     process.on('exit', () => {

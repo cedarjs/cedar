@@ -1,8 +1,9 @@
 import { vi, afterEach, describe, it, expect } from 'vitest'
 
 import * as Errors from '../../errors'
-import datamodel from '../__fixtures__/datamodel.js'
 import Core from '../Core'
+
+import datamodel from './__fixtures__/datamodel.js'
 
 // Mock Prisma
 const db = { user: vi.fn() }

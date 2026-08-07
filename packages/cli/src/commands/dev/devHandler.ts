@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { createRequire } from 'node:module'
 import path from 'node:path'
 import { Writable } from 'node:stream'
 
@@ -6,29 +7,101 @@ import concurrently from 'concurrently'
 import type { Command } from 'concurrently'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { formatRunBinCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { shutdownPort } from '@cedarjs/internal/dist/dev'
 import { generateGqlormArtifacts } from '@cedarjs/internal/dist/generate/gqlormSchema'
 import { getConfig, getConfigPath } from '@cedarjs/project-config'
+import { getPackageManager } from '@cedarjs/project-config/packageManager'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-// @ts-expect-error - Types not available for JS files
 import { exitWithError } from '../../lib/exit.js'
 import { generatePrismaClient } from '../../lib/generatePrismaClient.js'
-// @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../lib/index.js'
 import { getFreePort } from '../../lib/ports.js'
-// @ts-expect-error - Types not available for JS files
 import { serverFileExists } from '../../lib/project.js'
 
 import { getApiDebugFlag } from './apiDebugFlag.js'
 import { getPackageWatchCommands } from './packageWatchCommands.js'
+
+const createdRequire = createRequire(import.meta.url)
 
 interface DevHandlerOptions {
   workspace?: string[]
   forward?: string
   generate?: boolean
   apiDebugPort?: number
+  debugBrk?: boolean
   ud?: boolean
+  nodeArgs?: string
+}
+
+interface VitePackageJson {
+  bin?: Record<string, string>
+}
+
+/**
+ * Builds the command that launches one of `@cedarjs/vite`'s dev-server bins
+ * (`cedar-vite-dev`, `cedar-unified-dev`, or `cedar-dev-fe` for streaming SSR).
+ *
+ * We launch the bin via an explicit `node <flags> <binPath>` rather than the
+ * package-manager bin shim so node-level CLI flags can be applied.
+ * `extraNodeArgs` carries whatever the user passed via `cedar dev
+ * --node-args="..."`. The main use is our smoke-test CI passing
+ * `--node-args="--no-maglev"` on Windows to dodge V8's Maglev JIT crash
+ * (STATUS_STACK_BUFFER_OVERRUN, exit code 3221226505) which otherwise takes down
+ * the dev web server mid-run. See https://github.com/nodejs/node/issues/62260
+ * and docs/implementation-plans/flaky-smoke-tests-investigation.md. `--no-maglev`
+ * is a V8 flag, so it can't go through `NODE_OPTIONS` or the bin shim.
+ *
+ * The bin's entry point is read from `@cedarjs/vite`'s own `bin` field rather
+ * than assuming a location: `cedar-vite-dev` / `cedar-unified-dev` live in
+ * `bins/*.mjs`, but `cedar-dev-fe` is a compiled `dist/` entry.
+ *
+ * Under Yarn we launch with `yarn node` rather than bare `node`: with the PnP
+ * linker there is no `node_modules` — the resolved bin path is a virtual path
+ * inside a Yarn cache zip, and only `yarn node` loads the PnP runtime needed to
+ * resolve the bin's imports and read that path. Under the node-modules linker
+ * `yarn node` is just node-in-project. npm and pnpm always have a real
+ * `node_modules` tree (pnpm's store is still native `node_modules`), so bare
+ * `node` is correct there.
+ *
+ * `NODE_ENV=development` is set by the caller via the `concurrently` job's `env`
+ * (like the api and unified jobs already do), so no `cross-env` wrapper is
+ * needed.
+ */
+function formatViteDevBinCommand(binName: string, extraNodeArgs = '') {
+  // `@cedarjs/vite` is a direct dependency of the CLI. If it can't be resolved
+  // the install is broken and dev can't run, so fail loudly rather than
+  // silently degrade. `./package.json` is in the package's `exports` map (the
+  // bin subpaths are not). We `require` the JSON (rather than `fs`-read it) so
+  // it goes through Node's real module system — which also keeps this working
+  // when `node:fs` is mocked in unit tests.
+  let vitePackageJsonPath: string
+  let vitePackageJson: VitePackageJson
+  try {
+    vitePackageJsonPath = createdRequire.resolve('@cedarjs/vite/package.json')
+    vitePackageJson = createdRequire('@cedarjs/vite/package.json')
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e)
+    throw new Error(
+      `Could not resolve @cedarjs/vite, which the dev server needs to run. ` +
+        `Is it installed? (${message})`,
+    )
+  }
+
+  const binRelativePath = vitePackageJson.bin?.[binName]
+  if (!binRelativePath) {
+    throw new Error(
+      `@cedarjs/vite does not declare a "${binName}" bin. This is a bug in CedarJS.`,
+    )
+  }
+
+  const binPath = path.join(path.dirname(vitePackageJsonPath), binRelativePath)
+
+  const nodeLauncher = getPackageManager() === 'yarn' ? 'yarn node' : 'node'
+  const flags = extraNodeArgs ? `${extraNodeArgs} ` : ''
+
+  return `${nodeLauncher} ${flags}"${binPath}"`
 }
 
 export const handler = async ({
@@ -36,7 +109,9 @@ export const handler = async ({
   forward = '',
   generate = true,
   apiDebugPort,
+  debugBrk,
   ud = false,
+  nodeArgs = '',
 }: DevHandlerOptions) => {
   recordTelemetryAttributes({
     command: 'dev',
@@ -49,26 +124,22 @@ export const handler = async ({
   const serverFile = serverFileExists()
 
   const apiPreferredPort = parseInt(String(getConfig().api.port))
-  let apiAvailablePort: number | undefined
+  // This can forward the configured port even though we don't know it's free.
+  let apiAvailablePort = apiPreferredPort
   let apiPortChangeNeeded = false
 
-  if (workspace.includes('api')) {
-    if (!serverFile) {
-      // Check api port availability. If there's a serverFile we don't know
-      // what port will end up being used — it's up to the author to decide.
-      apiAvailablePort = await getFreePort(apiPreferredPort)
+  if (workspace.includes('api') && !serverFile) {
+    // Check api port availability. If there's a serverFile we don't know what
+    // port will end up being used — it's up to the author to decide.
+    apiAvailablePort = await getFreePort(apiPreferredPort)
 
-      if (apiAvailablePort === -1) {
-        exitWithError(undefined, {
-          message: `Could not determine a free port for the api server`,
-        })
-      }
-
-      apiPortChangeNeeded = apiAvailablePort !== apiPreferredPort
-    } else {
-      // Forward the configured port even though we don't verify it's free.
-      apiAvailablePort = apiPreferredPort
+    if (apiAvailablePort === -1) {
+      exitWithError(undefined, {
+        message: `Could not determine a free port for the api server`,
+      })
     }
+
+    apiPortChangeNeeded = apiAvailablePort !== apiPreferredPort
   }
 
   let webPreferredPort: number | undefined = parseInt(
@@ -161,6 +232,12 @@ export const handler = async ({
     }
 
     if (!ud && !serverFile) {
+      if (typeof apiAvailablePort === 'undefined' || apiAvailablePort === -1) {
+        exitWithError(undefined, {
+          message: `Could not determine a free port for the api server`,
+        })
+      }
+
       try {
         await shutdownPort(apiAvailablePort)
       } catch (e) {
@@ -252,10 +329,11 @@ export const handler = async ({
     }
 
     return [
-      `yarn cross-env NODE_ENV=development cedar-unified-dev`,
+      formatViteDevBinCommand('cedar-unified-dev', nodeArgs),
       `  --port ${webAvailablePort}`,
       `  --apiPort ${apiAvailablePort}`,
       getApiDebugFlag(apiDebugPort, apiAvailablePort),
+      debugBrk ? '--debug-brk' : '',
       forward,
     ]
       .join(' ')
@@ -317,17 +395,14 @@ export const handler = async ({
 
       jobs.push({
         name: 'api',
-        command: [
-          'yarn nodemon',
-          '  --quiet',
-          `  --watch "${cedarConfigPath}"`,
-          `  --exec "yarn ${serverWatchCommand}`,
-          `    --port ${apiAvailablePort}`,
-          `    ${getApiDebugFlag(apiDebugPort, apiAvailablePort)}`,
-          `    | cedar-log-formatter"`,
-        ]
-          .join(' ')
-          .replace(/\s+/g, ' '),
+        command: formatRunBinCommand('nodemon', [
+          '--quiet',
+          `--watch "${cedarConfigPath}"`,
+          `--exec "${formatRunBinCommand(serverWatchCommand)} ` +
+            `--port ${apiAvailablePort} ` +
+            `${getApiDebugFlag(apiDebugPort, apiAvailablePort)} ` +
+            `| ${formatRunBinCommand('cedar-log-formatter')}"`,
+        ]),
         env: {
           NODE_ENV: 'development',
           NODE_OPTIONS: getDevNodeOptions(),
@@ -338,15 +413,18 @@ export const handler = async ({
     }
 
     if (workspace.includes('web')) {
-      let webCommand = `yarn cross-env NODE_ENV=development cedar-vite-dev ${forward}`
+      let webCommand = `${formatViteDevBinCommand('cedar-vite-dev', nodeArgs)} ${forward}`
 
       if (streamingSsrEnabled) {
-        webCommand = `yarn cross-env NODE_ENV=development cedar-dev-fe ${forward}`
+        webCommand = `${formatViteDevBinCommand('cedar-dev-fe', nodeArgs)} ${forward}`
       }
 
       jobs.push({
         name: 'web',
         command: webCommand,
+        env: {
+          NODE_ENV: 'development',
+        },
         prefixColor: 'blue',
         cwd: cedarPaths.web.base,
         runWhen: () => fs.existsSync(cedarPaths.web.src),
@@ -357,7 +435,7 @@ export const handler = async ({
   if (generate) {
     jobs.push({
       name: 'gen',
-      command: 'yarn cedar-gen-watch',
+      command: formatRunBinCommand('cedar-gen-watch'),
       prefixColor: 'green',
     })
   }

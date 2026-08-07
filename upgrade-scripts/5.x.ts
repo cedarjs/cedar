@@ -30,6 +30,7 @@ async function main() {
   const filesWithOldRedirectTelemetryVar: string[] = []
   const filesWithOldDisableTelemetryVar: string[] = []
   const filesWithOldVerboseTelemetryVar: string[] = []
+  const filesWithOldGraphQLErrorName: string[] = []
 
   for await (const file of glob(patterns, { cwd: projectRoot, exclude })) {
     const content = await readFile(path.join(projectRoot, file), 'utf8')
@@ -48,6 +49,10 @@ async function main() {
 
     if (content.includes('REDWOOD_VERBOSE_TELEMETRY')) {
       filesWithOldVerboseTelemetryVar.push(file)
+    }
+
+    if (content.includes('RedwoodGraphQLError')) {
+      filesWithOldGraphQLErrorName.push(file)
     }
   }
 
@@ -126,6 +131,25 @@ async function main() {
     )
     console.log(
       'REDWOOD_VERBOSE_TELEMETRY has been renamed to CEDAR_VERBOSE_TELEMETRY and will\n' +
+        'be removed in the next major release of CedarJS.\n',
+    )
+    console.log(
+      'Please rename it in the files listed above before the next major upgrade.\n',
+    )
+  }
+
+  if (filesWithOldGraphQLErrorName.length > 0) {
+    console.log(
+      styleText('yellow', 'Deprecated API detected: RedwoodGraphQLError') +
+        '\n',
+    )
+    console.log(
+      'Found RedwoodGraphQLError in: ' +
+        filesWithOldGraphQLErrorName.join(', ') +
+        '\n',
+    )
+    console.log(
+      'RedwoodGraphQLError has been renamed to CedarGraphQLError and will\n' +
         'be removed in the next major release of CedarJS.\n',
     )
     console.log(

@@ -183,15 +183,31 @@ export const createGraphQLHandler = ({
         headers: responseHeaders,
         isBase64Encoded: false,
       }
-    } catch (e: any) {
-      logger.error(e)
-      if (onException) {
-        onException()
-      }
+    } catch (e) {
+      if (
+        !!e &&
+        typeof e === 'object' &&
+        'code' in e &&
+        e.code === 'ERR_STREAM_PREMATURE_CLOSE'
+      ) {
+        // Client disconnected while the request was being processed (e.g., page
+        // navigation, tab close). Don't log as error and return 499 instead of
+        // 500.
+        lambdaResponse = {
+          body: JSON.stringify({ error: 'Client disconnected' }),
+          statusCode: 499,
+        }
+      } else {
+        logger.error(e)
 
-      lambdaResponse = {
-        body: JSON.stringify({ error: 'GraphQL execution failed' }),
-        statusCode: 200, // should be 500
+        if (onException) {
+          onException()
+        }
+
+        lambdaResponse = {
+          body: JSON.stringify({ error: 'GraphQL execution failed' }),
+          statusCode: 200, // should be 500
+        }
       }
     }
 

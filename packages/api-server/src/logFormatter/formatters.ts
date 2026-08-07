@@ -1,6 +1,3 @@
-// See https://github.com/webdiscus/ansis#troubleshooting
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 import ansis from 'ansis'
 import prettyBytes from 'pretty-bytes'
 import prettyMs from 'pretty-ms'
@@ -110,7 +107,7 @@ export const formatLevel = (level: any) => {
   return emoji + padding
 }
 
-export const formatLoadTime = (elapsedTime: any) => {
+export const formatLoadTime = (elapsedTime: string) => {
   const elapsed = parseInt(elapsedTime, 10)
   const time = prettyMs(elapsed)
   return ansis.gray(time)

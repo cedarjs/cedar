@@ -113,8 +113,8 @@ function buildScenario(itFunc: It) {
       throw new Error('scenario() requires 2 or 3 arguments')
     }
 
-    return itFunc(testName, async (ctx) => {
-      const testPath = ctx.task.file.filepath
+    return itFunc(testName, async ({ task }) => {
+      const testPath = task.file.filepath
       const { scenario } = await loadScenarios(testPath, scenarioName)
 
       const scenarioData = await seedScenario(scenario)
@@ -154,8 +154,11 @@ function buildDescribeScenario(describeFunc: Describe) {
     return describeFunc(describeBlockName, () => {
       let scenarioData: Record<string, any>
 
-      beforeAll(async (ctx) => {
-        const testPath = ctx.file.filepath
+      // In Vitest 4 hook listeners receive the fixture context first and the
+      // suite second, and the first parameter must use a destructuring pattern
+      // eslint-disable-next-line no-empty-pattern
+      beforeAll(async ({}, suite) => {
+        const testPath = suite.file.filepath
         const { scenario } = await loadScenarios(testPath, scenarioName)
         scenarioData = await seedScenario(scenario)
       })

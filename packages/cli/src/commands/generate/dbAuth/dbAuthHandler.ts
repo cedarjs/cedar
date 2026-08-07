@@ -1,0 +1,469 @@
+import fs from 'node:fs'
+import path from 'node:path'
+
+import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
+import { camelCase } from 'camel-case'
+import type Enquirer from 'enquirer'
+import { Listr } from 'listr2'
+import { titleCase } from 'title-case'
+
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
+import { runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
+
+import {
+  addRoutesToRouterTask,
+  addScaffoldImport,
+  generateTemplate,
+  getPaths,
+  transformTSToJS,
+  writeFilesTask,
+} from '../../../lib/index.js'
+import { prepareForRollback } from '../../../lib/rollback.js'
+import { templateForComponentFile } from '../yargsHandlerHelpers.js'
+
+const ROUTES = [
+  `<Route path="/login" page={LoginPage} name="login" />`,
+  `<Route path="/signup" page={SignupPage} name="signup" />`,
+  `<Route path="/forgot-password" page={ForgotPasswordPage} name="forgotPassword" />`,
+  `<Route path="/reset-password" page={ResetPasswordPage} name="resetPassword" />`,
+]
+
+export interface DbAuthFilesOptions {
+  typescript?: boolean
+  skipForgot?: boolean
+  skipLogin?: boolean
+  skipReset?: boolean
+  skipSignup?: boolean
+  webauthn?: boolean | null
+  usernameLabel?: string
+  passwordLabel?: string
+}
+
+interface DbAuthTasksOptions extends DbAuthFilesOptions {
+  enquirer?: Enquirer
+  listr2?: { silentRendererCondition?: boolean }
+  force?: boolean
+}
+
+interface DbAuthCtx {
+  enquirer?: Enquirer
+  webauthn?: boolean
+}
+
+function getPostInstallMessage(isDbAuthSetup: boolean) {
+  return [
+    `   ${c.warning("Pages created! But you're not done yet:")}\n`,
+    "   You'll need to tell your pages where to redirect after a user has logged in,",
+    '   signed up, or reset their password. Look in LoginPage, SignupPage,',
+    '   ForgotPasswordPage and ResetPasswordPage for these lines: \n',
+    '     if (isAuthenticated) {',
+    '       navigate(routes.home())',
+    '     }\n',
+    '   and change the route to where you want them to go if the user is already',
+    '   logged in. Also take a look in the onSubmit() functions in ForgotPasswordPage',
+    '   and ResetPasswordPage to change where the user redirects to after submitting',
+    '   those forms.\n',
+    !isDbAuthSetup &&
+      "   Oh, and if you haven't already, add the necessary dbAuth functions and\n" +
+        '   app setup by running:\n\n' +
+        `     ${formatCedarCommand(['setup', 'auth', 'dbAuth'])}\n`,
+    '   Happy authenticating!',
+  ]
+    .filter(Boolean)
+    .join('\n')
+}
+
+function getPostInstallWebauthnMessage(isDbAuthSetup: boolean) {
+  return [
+    `   ${c.warning("Pages created! But you're not done yet:")}\n`,
+    "   You'll need to tell your pages where to redirect after a user has logged in,",
+    '   signed up, or reset their password. In LoginPage, look for the `REDIRECT`',
+    "   constant and change the route if it's something other than home().",
+    '   In SignupPage, ForgotPasswordPage and ResetPasswordPage look for these lines:\n',
+    '     if (isAuthenticated) {',
+    '       navigate(routes.home())',
+    '     }\n',
+    '   and change the route to where you want them to go if the user is already',
+    '   logged in. Also take a look in the onSubmit() functions in ForgotPasswordPage',
+    '   and ResetPasswordPage to change where the user redirects to after submitting',
+    '   those forms.\n',
+    !isDbAuthSetup &&
+      "   Oh, and if you haven't already, add the necessary dbAuth functions and\n" +
+        '   app setup by running:\n\n' +
+        `     ${formatCedarCommand(['setup', 'auth', 'dbAuth'])}\n`,
+    '   Happy authenticating!',
+  ]
+    .filter(Boolean)
+    .join('\n')
+}
+
+export const files = async ({
+  typescript,
+  skipForgot,
+  skipLogin,
+  skipReset,
+  skipSignup,
+  webauthn,
+  usernameLabel,
+  passwordLabel,
+}: DbAuthFilesOptions): Promise<Record<string, string>> => {
+  const filesList: [string, string][] = []
+
+  usernameLabel = usernameLabel || 'username'
+  passwordLabel = passwordLabel || 'password'
+
+  const templateVars = {
+    usernameLowerCase: usernameLabel.toLowerCase(),
+    usernameCamelCase: camelCase(usernameLabel),
+    usernameTitleCase: titleCase(usernameLabel),
+    passwordLowerCase: passwordLabel.toLowerCase(),
+    passwordCamelCase: camelCase(passwordLabel),
+    passwordTitleCase: titleCase(passwordLabel),
+  }
+
+  if (!skipForgot) {
+    filesList.push(
+      await templateForComponentFile({
+        name: 'ForgotPassword',
+        suffix: 'Page',
+        extension: typescript ? '.tsx' : '.jsx',
+        webPathSection: 'pages',
+        generator: 'dbAuth',
+        templatePath: 'forgotPassword.tsx.template',
+        templateVars,
+      }),
+    )
+  }
+
+  if (!skipLogin) {
+    filesList.push(
+      await templateForComponentFile({
+        name: 'Login',
+        suffix: 'Page',
+        extension: typescript ? '.tsx' : '.jsx',
+        webPathSection: 'pages',
+        generator: 'dbAuth',
+        templatePath: webauthn
+          ? 'login.webAuthn.tsx.template'
+          : 'login.tsx.template',
+        templateVars,
+      }),
+    )
+  }
+
+  if (!skipReset) {
+    filesList.push(
+      await templateForComponentFile({
+        name: 'ResetPassword',
+        suffix: 'Page',
+        extension: typescript ? '.tsx' : '.jsx',
+        webPathSection: 'pages',
+        generator: 'dbAuth',
+        templatePath: 'resetPassword.tsx.template',
+        templateVars,
+      }),
+    )
+  }
+
+  if (!skipSignup) {
+    filesList.push(
+      await templateForComponentFile({
+        name: 'Signup',
+        suffix: 'Page',
+        extension: typescript ? '.tsx' : '.jsx',
+        webPathSection: 'pages',
+        generator: 'dbAuth',
+        templatePath: 'signup.tsx.template',
+        templateVars,
+      }),
+    )
+  }
+
+  if (filesList.length === 0) {
+    console.info(c.error('\nNo files to generate.\n'))
+    process.exit(0)
+  }
+
+  // add scaffold CSS file if it doesn't exist already
+  const scaffoldOutputPath = path.join(getPaths().web.src, 'scaffold.css')
+  if (!fs.existsSync(scaffoldOutputPath)) {
+    const scaffoldTemplate = await generateTemplate(
+      path.join(
+        import.meta.dirname,
+        '../scaffold/templates/assets/scaffold.css.template',
+      ),
+      { name: 'scaffold' },
+    )
+
+    filesList.push([scaffoldOutputPath, scaffoldTemplate])
+  }
+
+  return filesList.reduce(
+    async (
+      accP: Promise<Record<string, string>>,
+      [outputPath, content]: [string, string],
+    ) => {
+      const acc = await accP
+
+      let template = content
+
+      if (outputPath.match(/\.[jt]sx?/) && !typescript) {
+        template = await transformTSToJS(outputPath, content)
+      }
+
+      return {
+        [outputPath]: template,
+        ...acc,
+      }
+    },
+    Promise.resolve({}),
+  )
+}
+
+const tasks = ({
+  enquirer,
+  listr2,
+  force,
+  typescript,
+  skipForgot,
+  skipLogin,
+  skipReset,
+  skipSignup,
+  webauthn,
+  usernameLabel,
+  passwordLabel,
+}: DbAuthTasksOptions) => {
+  return new Listr<DbAuthCtx>(
+    [
+      {
+        title: 'Determining UI labels...',
+        skip: () => {
+          return !!(usernameLabel && passwordLabel)
+        },
+        task: async (ctx, task) => {
+          return task.newListr(
+            [
+              {
+                title: 'Username label',
+                task: async (subCtx, subtask) => {
+                  if (usernameLabel) {
+                    subtask.skip(
+                      `Argument username-label is set, using: "${usernameLabel}"`,
+                    )
+                    return
+                  }
+
+                  const prompt = subtask.prompt(ListrEnquirerPromptAdapter)
+                  usernameLabel = await prompt.run(
+                    {
+                      type: 'input',
+                      name: 'username',
+                      message: 'What would you like the username label to be:',
+                      default: 'Username',
+                    },
+                    { enquirer: subCtx.enquirer || ctx.enquirer },
+                  )
+                  subtask.title = `Username label: "${usernameLabel}"`
+                },
+              },
+              {
+                title: 'Password label',
+                task: async (subCtx, subtask) => {
+                  if (passwordLabel) {
+                    subtask.skip(
+                      `Argument password-label passed, using: "${passwordLabel}"`,
+                    )
+                    return
+                  }
+
+                  const prompt = subtask.prompt(ListrEnquirerPromptAdapter)
+                  passwordLabel = await prompt.run(
+                    {
+                      type: 'input',
+                      name: 'password',
+                      message: 'What would you like the password label to be:',
+                      default: 'Password',
+                    },
+                    { enquirer: subCtx.enquirer || ctx.enquirer },
+                  )
+                  subtask.title = `Password label: "${passwordLabel}"`
+                },
+              },
+            ],
+            { ctx: { enquirer } },
+          )
+        },
+      },
+      {
+        title: 'Querying WebAuthn addition...',
+        task: async (ctx, task) => {
+          if (webauthn != null) {
+            // We enter here if the user passed the `--webauthn` flag. The flag
+            // always takes precedence.
+
+            ctx.webauthn = webauthn
+
+            task.skip(
+              `Querying WebAuthn addition: argument webauthn passed, WebAuthn${
+                webauthn ? '' : ' not'
+              } included`,
+            )
+            return
+          }
+
+          if (isDbAuthSetup()) {
+            if (isWebAuthnEnabled()) {
+              ctx.webauthn = webauthn = true
+
+              task.skip(
+                'Querying WebAuthn addition: WebAuthn setup detected - ' +
+                  'support will be included in pages',
+              )
+            } else {
+              ctx.webauthn = webauthn = false
+
+              task.skip(
+                'Querying WebAuthn addition: No WebAuthn setup detected - ' +
+                  'support will not be included in pages',
+              )
+            }
+
+            return
+          }
+
+          const prompt = task.prompt(ListrEnquirerPromptAdapter)
+          const response = await prompt.run(
+            {
+              type: 'confirm',
+              name: 'answer',
+              message:
+                'Enable WebAuthn support (TouchID/FaceID) on LoginPage? See ' +
+                'https://cedarjs.com/docs/auth/dbAuth#webAuthn',
+              default: false,
+            },
+            { enquirer: ctx.enquirer },
+          )
+
+          ctx.webauthn = webauthn = response
+
+          task.title = `Querying WebAuthn addition: WebAuthn addition${
+            webauthn ? '' : ' not'
+          } included`
+        },
+      },
+      {
+        title: 'Creating pages...',
+        task: async () => {
+          const filesObj = await files({
+            typescript,
+            skipForgot,
+            skipLogin,
+            skipReset,
+            skipSignup,
+            webauthn,
+            usernameLabel,
+            passwordLabel,
+          })
+
+          return writeFilesTask(filesObj, {
+            overwriteExisting: force,
+          })
+        },
+      },
+      {
+        title: 'Adding routes...',
+        task: async () => {
+          addRoutesToRouterTask(ROUTES)
+        },
+      },
+      {
+        title: 'Adding scaffold import...',
+        task: () => addScaffoldImport(),
+      },
+      {
+        title: 'Generate types...',
+        task: () => {
+          runBinSync('cedar', ['g', 'types'])
+        },
+      },
+      {
+        title: 'One more thing...',
+        task: () => {
+          // This doesn't preserve formatting, so it's been moved to regular
+          // console.log()s after the tasks have all finished running
+          // task.title = webauthn ? WEBAUTHN_POST_INSTALL : POST_INSTALL
+        },
+      },
+    ],
+    {
+      silentRendererCondition: () => listr2?.silentRendererCondition ?? false,
+      rendererOptions: { collapseSubtasks: false },
+      ctx: { enquirer },
+      exitOnError: true,
+    },
+  )
+}
+
+export const handler = async (
+  yargs: DbAuthTasksOptions & { rollback?: boolean },
+) => {
+  recordTelemetryAttributes({
+    command: 'generate dbAuth',
+    skipForgot: yargs.skipForgot,
+    skipLogin: yargs.skipLogin,
+    skipReset: yargs.skipReset,
+    skipSignup: yargs.skipSignup,
+    webauthn: yargs.webauthn ?? undefined,
+    force: yargs.force,
+    rollback: yargs.rollback,
+  })
+  const t = tasks({ ...yargs })
+
+  try {
+    if (yargs.rollback && !yargs.force) {
+      prepareForRollback(t)
+    }
+    await t.run()
+
+    console.log('')
+    console.log(
+      yargs.webauthn || t.ctx?.webauthn
+        ? getPostInstallWebauthnMessage(isDbAuthSetup())
+        : getPostInstallMessage(isDbAuthSetup()),
+    )
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e)
+    console.log(c.error(msg))
+  }
+}
+
+function isDbAuthSetup() {
+  const extensions = ['ts', 'js', 'tsx', 'jsx']
+  const webAuthExtension = extensions.find((ext) =>
+    fs.existsSync(path.join(getPaths().web.src, 'auth.' + ext)),
+  )
+
+  // If no `auth.ext` file was found auth is not set up
+  if (webAuthExtension) {
+    const webAuthPath = path.join(
+      getPaths().web.src,
+      'auth.' + webAuthExtension,
+    )
+
+    return /^import (.*) from ['"]@cedarjs\/auth-dbauth-web['"]/m.test(
+      fs.readFileSync(webAuthPath, 'utf-8'),
+    )
+  }
+
+  return false
+}
+
+function isWebAuthnEnabled() {
+  const webPackageJson = fs.readFileSync(
+    path.join(getPaths().web.base, 'package.json'),
+    'utf-8',
+  )
+
+  return webPackageJson.includes('"@simplewebauthn/browser": ')
+}

@@ -1,40 +1,36 @@
 {
   "name": "@cedarjs/ogimage-gen",
-  "version": "4.2.0",
+  "version": "5.0.6",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
     "directory": "packages/ogimage-gen"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "exports": {
     "./plugin": {
       "types": "./dist/vite-plugin-ogimage-gen.d.ts",
-      "import": "./dist/vite-plugin-ogimage-gen.js",
-      "default": "./cjsWrappers/plugin.js"
+      "default": "./dist/vite-plugin-ogimage-gen.js"
     },
     "./middleware": {
       "types": "./dist/OgImageMiddleware.d.ts",
-      "import": "./dist/OgImageMiddleware.js",
       "react-server": "./empty.js",
-      "default": "./cjsWrappers/middleware.js"
+      "default": "./dist/OgImageMiddleware.js"
     },
     "./hooks": {
       "types": "./dist/hooks.d.ts",
-      "import": "./dist/hooks.js",
-      "default": "./cjsWrappers/hooks.js"
+      "default": "./dist/hooks.js"
     }
   },
   "files": [
     "dist",
-    "cjsWrappers",
     "empty.js"
   ],
   "scripts": {
-    "build": "tsx ./build.mts && yarn build:types",
+    "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-ogimage-gen.tgz",
-    "build:types": "tsc --build --verbose",
+    "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
     "test:watch": "vitest watch"
@@ -42,8 +38,6 @@
   "dependencies": {
     "@cedarjs/internal": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
-    "@cedarjs/router": "workspace:*",
-    "@cedarjs/web": "workspace:*",
     "fast-glob": "3.3.3",
     "lodash": "4.18.1",
     "react": "19.2.3",
@@ -51,12 +45,16 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@playwright/test": "1.60.0",
+    "@cedarjs/router": "workspace:*",
+    "@cedarjs/web": "workspace:*",
+    "@playwright/test": "1.62.0",
     "ts-toolbelt": "9.6.0",
-    "tsx": "4.21.0",
     "typescript": "5.9.3",
-    "vite": "7.3.2",
-    "vitest": "3.2.4"
+    "vite": "7.3.6",
+    "vitest": "4.1.10"
+  },
+  "peerDependencies": {
+    "@cedarjs/router": "workspace:*"
   },
   "engines": {
     "node": ">=24"

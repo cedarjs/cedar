@@ -12,22 +12,25 @@
     ]
   },
   "dependencies": {
-    "@cedarjs/auth-dbauth-web": "4.2.0",
-    "@cedarjs/forms": "4.2.0",
-    "@cedarjs/router": "4.2.0",
-    "@cedarjs/web": "4.2.0",
+    "@cedarjs/auth-dbauth-web": "5.0.6",
+    "@cedarjs/forms": "5.0.6",
+    "@cedarjs/router": "5.0.6",
+    "@cedarjs/web": "5.0.6",
     "@my-org/validators": "workspace:*",
     "humanize-string": "2.1.0",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
   "devDependencies": {
-    "@cedarjs/vite": "4.2.0",
+    "@cedarjs/testing": "5.0.6",
+    "@cedarjs/vite": "5.0.6",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
-    "autoprefixer": "^10.5.0",
-    "postcss": "^8.5.15",
-    "postcss-loader": "^8.2.1",
-    "tailwindcss": "^3.4.17"
+    "autoprefixer": "^10.5.4",
+    "postcss": "^8.5.25",
+    "tailwindcss": "^3.4.17",
+    "vite": "7.3.6"
   }
 }

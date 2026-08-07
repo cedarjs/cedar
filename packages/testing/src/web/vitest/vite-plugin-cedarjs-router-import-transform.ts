@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore - Silence the TS error on this line for CJS builds
 import type { PluginOption } from 'vite'
 
 /**

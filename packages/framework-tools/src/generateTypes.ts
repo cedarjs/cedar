@@ -1,9 +1,9 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+import { copyFileSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import execa from 'execa'
 import type { PackageJson } from 'type-fest'
-import { $ } from 'zx'
 
 /**
  * This function will run `yarn build:types-cjs` to generate the CJS type
@@ -17,22 +17,28 @@ import { $ } from 'zx'
  * [1]: https://github.com/arethetypeswrong/arethetypeswrong.github.io/issues/21#issuecomment-1494618930
  */
 export async function generateTypesCjs() {
-  await $`cp package.json package.json.bak`
+  copyFileSync('package.json', 'package.json.bak')
 
   const packageJson: PackageJson = JSON.parse(
     readFileSync('./package.json', 'utf-8'),
   )
   packageJson.type = 'commonjs'
-  writeFileSync('./package.json', JSON.stringify(packageJson, null, 2))
+  // Write to a temp file and rename it into place. Rename is atomic, whereas
+  // writing directly to package.json would truncate it first, letting any
+  // concurrently starting `yarn` process (which parses every workspace
+  // manifest during setup) read a partially written file and crash with a
+  // JSON syntax error.
+  writeFileSync('./package.json.tmp', JSON.stringify(packageJson, null, 2))
+  renameSync('./package.json.tmp', './package.json')
 
   try {
-    await $`yarn build:types-cjs`
-  } catch (e: any) {
+    await execa('yarn', ['build:types-cjs'], { stdio: 'inherit' })
+  } catch (e) {
     console.error('---- Error building CJS types ----')
-    process.exitCode = e.exitCode
-    throw new Error(e)
+    process.exitCode = getExitCode(e) ?? 1
+    throw e
   } finally {
-    await $`mv package.json.bak package.json`
+    renameSync('package.json.bak', 'package.json')
   }
 }
 
@@ -42,12 +48,24 @@ export async function generateTypesCjs() {
  */
 export async function generateTypesEsm() {
   try {
-    await $`yarn build:types`
-  } catch (e: any) {
+    await execa('yarn', ['build:types'], { stdio: 'inherit' })
+  } catch (e) {
     console.error('---- Error building ESM types ----')
-    process.exitCode = e.exitCode
-    throw new Error(e)
+    process.exitCode = getExitCode(e) ?? 1
+    throw e
   }
+}
+
+function getExitCode(e: unknown): number | undefined {
+  if (typeof e === 'object' && e !== null && 'exitCode' in e) {
+    const exitCode = e.exitCode
+
+    if (typeof exitCode === 'number') {
+      return exitCode
+    }
+  }
+
+  return undefined
 }
 
 /**

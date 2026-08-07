@@ -1,7 +1,7 @@
 import { Kind, type DocumentNode } from 'graphql'
 
 import type {
-  RedwoodDirective,
+  CedarDirective,
   TransformerDirective,
   TransformerDirectiveFunc,
   ValidatorDirective,
@@ -14,14 +14,14 @@ We want directivesGlobs type to be an object with this shape:
 But not fully supported in TS
 {
   schema: DocumentNode // <-- required
-  [string]: RedwoodDirective
+  [string]: CedarDirective
 }
 */
 export type DirectiveGlobImports = Record<string, any>
 
 export const makeDirectivesForPlugin = (
   directiveGlobs: DirectiveGlobImports,
-): RedwoodDirective[] => {
+): CedarDirective[] => {
   return Object.entries(directiveGlobs).flatMap(
     ([importedGlobName, exports]) => {
       // In case the directives get nested, their name comes as nested_directory_filename_directive
@@ -34,7 +34,7 @@ export const makeDirectivesForPlugin = (
       // e.g. export default createValidatorDirective(schema, validationFunc)
       // or export requireAuth = createValidatorDirective(schema, checkAuth)
       const directive = (exports[directiveNameFromFile] ||
-        exports.default) as RedwoodDirective
+        exports.default) as CedarDirective
 
       if (!directive.type) {
         throw new Error(

@@ -1,9 +1,14 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import execa from 'execa'
+import type { Options as ExecaOptions } from 'execa'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  runBin,
+  runTransitiveBin,
+  runWithNode,
+} from '@cedarjs/cli-helpers/packageManager/exec'
 import { getPaths } from '@cedarjs/project-config'
 
 export interface HandlerArgs {
@@ -11,6 +16,34 @@ export interface HandlerArgs {
   prisma: boolean
   serve: boolean
   dm: boolean
+}
+
+async function runBinWithThrow(
+  bin: string,
+  args: string[],
+  options?: ExecaOptions,
+) {
+  const result = await runBin(bin, args, options)
+
+  if (result.failed) {
+    throw new Error(`Command (${bin} ${args.join(' ')}) failed`)
+  }
+
+  return result
+}
+
+async function runTransitiveBinWithThrow(
+  bin: string,
+  args: string[],
+  options?: ExecaOptions,
+) {
+  const result = await runTransitiveBin(bin, args, options)
+
+  if (result.failed) {
+    throw new Error(`Command (${bin} ${args.join(' ')}) failed`)
+  }
+
+  return result
 }
 
 export const handler = async ({
@@ -28,37 +61,31 @@ export const handler = async ({
   })
   const cedarPaths = getPaths()
 
-  const execaConfig: execa.Options = {
+  const execaConfig: ExecaOptions = {
     cwd: cedarPaths.base,
     shell: true,
     stdio: 'inherit',
   }
 
-  async function runExecaCommand(command: string) {
-    const result = await execa.command(command, execaConfig)
-
-    if (result.failed) {
-      throw new Error(`Command (${command}) failed`)
-    }
-
-    return result
-  }
-
   async function runApiCommands() {
     if (!serve) {
       console.log('Building api...')
-      await runExecaCommand('yarn cedar build api --verbose')
+      await runBinWithThrow('cedar', ['build', 'api', '--verbose'], execaConfig)
 
       if (prisma) {
         console.log('Running database migrations...')
-        await runExecaCommand(
-          `node_modules/.bin/prisma migrate deploy --config "${cedarPaths.api.prismaConfig}"`,
+        // Executing prisma directly to avoid spinning up the entire Cedar CLI
+        // See https://github.com/redwoodjs/graphql/pull/4278
+        await runTransitiveBinWithThrow(
+          'prisma',
+          ['migrate', 'deploy', '--config', cedarPaths.api.prismaConfig],
+          execaConfig,
         )
       }
 
       if (dataMigrate) {
         console.log('Running data migrations...')
-        await runExecaCommand('yarn cedar dataMigrate up')
+        await runBinWithThrow('cedar', ['dataMigrate', 'up'], execaConfig)
       }
 
       return
@@ -68,7 +95,7 @@ export const handler = async ({
     const hasServerFile = fs.existsSync(serverFilePath)
 
     if (hasServerFile) {
-      execa(`yarn node ${serverFilePath}`, execaConfig)
+      runWithNode(serverFilePath, execaConfig)
     } else {
       const { handler } =
         await import('@cedarjs/api-server/apiCliConfigHandler')
@@ -78,7 +105,7 @@ export const handler = async ({
 
   async function runWebCommands() {
     console.log('Building web...')
-    await runExecaCommand('yarn cedar build web --verbose')
+    await runBinWithThrow('cedar', ['build', 'web', '--verbose'], execaConfig)
   }
 
   if (side === 'api') {

@@ -26,7 +26,10 @@ import tseslint from 'typescript-eslint'
 
 import cedarjsPlugin from '@cedarjs/eslint-plugin'
 
-export default [
+// Using a const here rather than directly doing `export default [...]` becuase
+// otherwise the JSDoc below wouldn't attach it's type info properly
+/** @type {import('eslint').Linter.FlatConfig[]} */
+const sharedConfigs = [
   // Base recommended config
   js.configs.recommended,
 
@@ -270,3 +273,5 @@ export default [
     },
   },
 ]
+
+export default sharedConfigs

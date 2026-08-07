@@ -117,17 +117,121 @@ export async function copyTarballs(projectPath: string) {
   )
 }
 
-export type PackageManager = 'yarn' | 'pnpm'
+export type PackageManager = 'yarn' | 'npm' | 'pnpm'
 
-export async function detectPackageManager(projectPath: string) {
-  const yarnLockExists = fs.existsSync(path.join(projectPath, 'yarn.lock'))
-  const pnpmLockExists = fs.existsSync(path.join(projectPath, 'pnpm-lock.yaml'))
+function isPackageManager(value: unknown): value is PackageManager {
+  return value === 'yarn' || value === 'npm' || value === 'pnpm'
+}
 
-  if (pnpmLockExists && !yarnLockExists) {
+/**
+ * Work out which package manager the *target project* uses.
+ *
+ * Deliberately reads the project rather than the ambient environment.
+ * `npm_config_user_agent` is no help here: it names whatever package manager
+ * ran the framework script. That can happen to match the target project
+ * (`pnpm exec cfw` run inside a pnpm project), but in the primary flow with
+ * `yarn project:tarsync` in the framework repo it says "yarn" no matter what
+ * the target project uses, so it carries no reliable signal.
+ *
+ * A project that hasn't had its first install yet won't have a *real* lockfile,
+ * so detection leans on the markers that exist from project creation: the
+ * `packageManager` field (yarn and pnpm) and pnpm's workspace file. For npm
+ * projects there are no good marker. And just relying on the exclusion of other
+ * markers feels fragile. So instead the flows that set up npm projects before
+ * their first install (the CI test-project conversion and the fixture rebuild
+ * script) drop an empty package-lock.json into the project so it's
+ * recognizable as an npm one. Once create-cedar-app ships real npm lockfiles
+ * (see #2182) new npm projects will carry the marker on their own.
+ */
+export async function detectPackageManager(
+  projectPath: string,
+): Promise<PackageManager> {
+  const exists = (file: string) => fs.existsSync(path.join(projectPath, file))
+
+  // An explicit `packageManager` field wins — it's what corepack reads, so
+  // it's the closest thing to the project stating its own intent
+  try {
+    const packageJson: unknown = JSON.parse(
+      await fs.promises.readFile(
+        path.join(projectPath, 'package.json'),
+        'utf-8',
+      ),
+    )
+
+    if (
+      packageJson &&
+      typeof packageJson === 'object' &&
+      'packageManager' in packageJson &&
+      typeof packageJson.packageManager === 'string'
+    ) {
+      const name = packageJson.packageManager.split('@')[0]
+
+      if (isPackageManager(name)) {
+        return name
+      }
+    }
+  } catch {
+    // No package.json, or it isn't readable — fall through to the file checks
+  }
+
+  const yarnLockExists = exists('yarn.lock')
+
+  if (
+    (exists('pnpm-lock.yaml') || exists('pnpm-workspace.yaml')) &&
+    !yarnLockExists
+  ) {
     return 'pnpm'
   }
 
+  if (exists('package-lock.json') && !yarnLockExists) {
+    return 'npm'
+  }
+
   return 'yarn'
+}
+
+/**
+ * Paths to every workspace's package.json, taken from the root manifest's
+ * `workspaces` field.
+ *
+ * Only the trailing `*` / `**` form is expanded — that covers what Cedar
+ * projects use (`["api", "web", "packages/*"]`) without pulling in a glob
+ * dependency. Anything fancier is left as a literal directory, which simply
+ * won't exist and gets filtered out.
+ */
+async function findWorkspaceManifests(
+  projectPath: string,
+  rootPackageJson: Record<string, any>,
+): Promise<string[]> {
+  const workspaces = rootPackageJson.workspaces
+  const patterns: string[] = Array.isArray(workspaces)
+    ? workspaces
+    : (workspaces?.packages ?? [])
+
+  const directories: string[] = []
+
+  for (const pattern of patterns) {
+    const wildcard = pattern.match(/^(.*)\/\*{1,2}$/)
+
+    if (wildcard) {
+      const parent = path.join(projectPath, wildcard[1])
+      const entries = await fs.promises
+        .readdir(parent, { withFileTypes: true })
+        .catch(() => [])
+
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          directories.push(path.join(parent, entry.name))
+        }
+      }
+    } else {
+      directories.push(path.join(projectPath, pattern))
+    }
+  }
+
+  return directories
+    .map((directory) => path.join(directory, 'package.json'))
+    .filter((manifestPath) => fs.existsSync(manifestPath))
 }
 
 export async function updateResolutions(projectPath: string) {
@@ -166,17 +270,159 @@ export async function updateResolutions(projectPath: string) {
   let updatedPackageJson: Record<string, unknown>
 
   if (packageManager === 'pnpm') {
-    const existingOverrides = projectPackageJson.pnpm?.overrides ?? {}
+    const allOverrides = {
+      ...resolutions,
+      ...reactResolutions,
+      graphql: '16.13.2',
+    }
 
+    const pnpmWorkspacePath = path.join(projectPath, 'pnpm-workspace.yaml')
+    let workspaceContent = await fs.promises.readFile(
+      pnpmWorkspacePath,
+      'utf-8',
+    )
+
+    const overrideLines = Object.entries(allOverrides)
+      .map(([key, value]) => `  '${key}': '${value}'`)
+      .join('\n')
+
+    const overridesMatch = workspaceContent.match(/^(overrides:.*)$/m)
+    if (overridesMatch) {
+      const overrideStart = overridesMatch.index! + overridesMatch[0].length
+      const afterHeader = workspaceContent.slice(overrideStart)
+      const existingLines = afterHeader.split('\n')
+      let lastOverrideLine = 0
+      const overrideEnd = (() => {
+        for (let i = 1; i < existingLines.length; i++) {
+          if (/^\S/.test(existingLines[i]) && existingLines[i].trim()) {
+            return i
+          }
+          if (/^\s+'.+':/.test(existingLines[i])) {
+            lastOverrideLine = i
+          }
+        }
+        return lastOverrideLine + 1
+      })()
+
+      const existingBlock = existingLines.slice(1, overrideEnd).join('\n')
+      const existingKeys = new Set(
+        existingBlock
+          .split('\n')
+          .map((l) => l.match(/^\s+'([^']+)':/)?.[1])
+          .filter(Boolean),
+      )
+
+      const newLines = Object.entries(allOverrides)
+        .filter(([key]) => !existingKeys.has(key))
+        .map(([key, value]) => `  '${key}': '${value}'`)
+        .join('\n')
+
+      if (newLines) {
+        const insertAt =
+          overrideStart +
+          existingLines.slice(0, lastOverrideLine + 1).join('\n').length
+
+        workspaceContent =
+          workspaceContent.slice(0, insertAt + 1) +
+          '\n' +
+          newLines +
+          workspaceContent.slice(insertAt + 1)
+      }
+    } else {
+      workspaceContent += '\noverrides:\n' + overrideLines + '\n'
+    }
+
+    await fs.promises.writeFile(pnpmWorkspacePath, workspaceContent)
+
+    // Add direct dependencies for workspace packages that are normally
+    // hoisted by yarn but need to be explicit for pnpm's strict isolation.
+    const webPkgPath = path.join(projectPath, 'web/package.json')
+    const webPkg = JSON.parse(await fs.promises.readFile(webPkgPath, 'utf-8'))
+    webPkg.dependencies['graphql-tag'] = '2.12.6'
+    webPkg.dependencies['react-hook-form'] = '7.74.0'
+    await fs.promises.writeFile(webPkgPath, JSON.stringify(webPkg, null, 2))
+
+    const apiPkgPath = path.join(projectPath, 'api/package.json')
+    const apiPkg = JSON.parse(await fs.promises.readFile(apiPkgPath, 'utf-8'))
+    apiPkg.dependencies['@prisma/client'] = '7.8.0'
+    await fs.promises.writeFile(apiPkgPath, JSON.stringify(apiPkg, null, 2))
+
+    updatedPackageJson = { ...projectPackageJson }
+    delete updatedPackageJson.pnpm
+  } else if (packageManager === 'npm') {
+    // npm has no `resolutions` — the equivalent is `overrides`, which lives in
+    // package.json like yarn's does.
+    //
+    // The tarball paths need an explicit `file:` prefix here. yarn and pnpm
+    // both accept a bare absolute path, but npm parses an override value as a
+    // version spec and won't recognise one.
+    const tarballOverrides = Object.fromEntries(
+      Object.entries(resolutions).map(([name, tarballPath]) => [
+        name,
+        `file:${tarballPath}`,
+      ]),
+    )
+
+    // npm rejects an override for a package that is also a direct dependency
+    // unless the two specs agree — `npm error code EOVERRIDE, Override for
+    // @cedarjs/core@5.0.1 conflicts with direct dependency`. So point the
+    // direct dependencies at the tarballs as well. The overrides are still
+    // needed: they're what redirects the framework packages that are pulled
+    // in transitively rather than declared
+    // Every section npm treats as a direct dependency. `peerDependencies` is
+    // deliberately left alone: a peer is a range the project requires of its
+    // consumer, not something npm installs on its behalf, so rewriting one to
+    // a `file:` path would be wrong
+    const pointDirectDepsAtTarballs = (packageJson: Record<string, any>) => {
+      for (const depsKey of [
+        'dependencies',
+        'devDependencies',
+        'optionalDependencies',
+      ]) {
+        const deps = packageJson[depsKey]
+
+        if (!deps) {
+          continue
+        }
+
+        for (const name of Object.keys(deps)) {
+          if (tarballOverrides[name]) {
+            deps[name] = tarballOverrides[name]
+          }
+        }
+      }
+    }
+
+    // Every workspace, not just the root — `@cedarjs/web` is a dependency of
+    // web, `@cedarjs/api` of api, and so on. Derived from the root manifest
+    // rather than hard-coded, so a Cedar dependency added to any other
+    // workspace doesn't quietly keep a spec that conflicts with the overrides
+    for (const workspacePkgPath of await findWorkspaceManifests(
+      projectPath,
+      projectPackageJson,
+    )) {
+      const workspacePkg = JSON.parse(
+        await fs.promises.readFile(workspacePkgPath, 'utf-8'),
+      )
+
+      pointDirectDepsAtTarballs(workspacePkg)
+
+      await fs.promises.writeFile(
+        workspacePkgPath,
+        JSON.stringify(workspacePkg, null, 2),
+      )
+    }
+
+    pointDirectDepsAtTarballs(projectPackageJson)
+
+    // Merged rather than replaced so that overrides the project already set
+    // (react-is, for example) survive
     updatedPackageJson = {
       ...projectPackageJson,
-      pnpm: {
-        ...projectPackageJson.pnpm,
-        overrides: {
-          ...existingOverrides,
-          ...resolutions,
-          ...reactResolutions,
-        },
+      overrides: {
+        ...projectPackageJson.overrides,
+        ...tarballOverrides,
+        ...reactResolutions,
       },
     }
   } else {
@@ -222,16 +468,25 @@ export async function getReactResolutions() {
 export async function pmInstall(projectPath: string, verbose = false) {
   const packageManager = await detectPackageManager(projectPath)
 
+  // npm runs a security audit and a funding lookup after every install. Both
+  // are network round trips over the whole dependency tree, and neither tells
+  // us anything about the framework build we're testing — skipping them takes
+  // the install from ~78s to ~18s. yarn and pnpm don't do this by default
+  const installArgs =
+    packageManager === 'npm'
+      ? ['install', '--no-audit', '--no-fund']
+      : ['install']
+
   if (verbose) {
     console.log(
-      `[tarsync] Running '${packageManager} install' in ${projectPath}`,
+      `[tarsync] Running '${packageManager} ${installArgs.join(' ')}' in ${projectPath}`,
     )
   }
   const start = Date.now()
 
   await within(async () => {
     cd(projectPath)
-    await $`${packageManager} install`
+    await $`${packageManager} ${installArgs}`
   })
 
   if (verbose) {
@@ -247,8 +502,14 @@ export async function pmInstall(projectPath: string, verbose = false) {
   // missing after install, fail loudly here rather than silently producing a
   // broken project that fails at a later, less obvious step.
   const lockfileName =
-    packageManager === 'pnpm' ? 'pnpm-lock.yaml' : 'yarn.lock'
+    packageManager === 'pnpm'
+      ? 'pnpm-lock.yaml'
+      : packageManager === 'npm'
+        ? 'package-lock.json'
+        : 'yarn.lock'
+
   const lockfilePath = path.join(projectPath, lockfileName)
+
   if (!fs.existsSync(lockfilePath)) {
     throw new Error(
       `[tarsync] '${packageManager} install' completed but ${lockfileName} was not created in ${projectPath}. ` +

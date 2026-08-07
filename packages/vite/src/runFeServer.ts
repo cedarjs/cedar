@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 // TODO (STREAMING) Move this to a new package called @cedarjs/fe-server (goes
 // well in naming with @cedarjs/api-server)
 // Only things used during dev can be in @cedarjs/vite. Everything else has

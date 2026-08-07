@@ -1,0 +1,111 @@
+name: 🔄 Package Manager Smoke Tests
+
+on:
+  workflow_call:
+  schedule:
+    # Run daily at 4am UTC
+    - cron: '0 4 * * *'
+  workflow_dispatch: {}
+
+permissions: {}
+
+env:
+  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+  YARN_ENABLE_HARDENED_MODE: 0
+
+jobs:
+  pm-smoke-tests:
+    if: github.repository == 'cedarjs/cedar'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        packageManager: [npm, pnpm]
+        project: [cjs, esm]
+
+    name: 🔄 ${{ matrix.packageManager }} ${{ matrix.project }} smoke tests
+    runs-on: ubuntu-latest
+
+    env:
+      CEDAR_CI: 1
+      CEDAR_VERBOSE_TELEMETRY: 1
+
+    steps:
+      - name: Checkout the framework code
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      # `uses:` must be a literal, so the cjs and esm setup actions get one
+      # conditional step each, and the "Resolve test project path" step below
+      # exposes whichever ran under a single output
+      - name: 🌲 Set up test project (cjs)
+        if: matrix.project == 'cjs'
+        id: set-up-test-project
+        uses: ./.github/actions/set-up-test-project
+        with:
+          packageManager: ${{ matrix.packageManager }}
+        env:
+          REDWOOD_DISABLE_TELEMETRY: 1
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
+
+      - name: 🌲 Set up test project (esm)
+        if: matrix.project == 'esm'
+        id: set-up-test-project-esm
+        uses: ./.github/actions/set-up-test-project-esm
+        with:
+          packageManager: ${{ matrix.packageManager }}
+        env:
+          REDWOOD_DISABLE_TELEMETRY: 1
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
+
+      - name: Resolve test project path
+        id: project
+        shell: bash
+        env:
+          CJS_PATH: ${{ steps.set-up-test-project.outputs.test-project-path }}
+          ESM_PATH: ${{ steps.set-up-test-project-esm.outputs.test-project-path }}
+        run: |
+          if [ "${{ matrix.project }}" = "esm" ]; then
+            echo "path=$ESM_PATH" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=$CJS_PATH" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run `cedar build --no-prerender`
+        shell: bash
+        run: |
+          set -o pipefail
+          if [ "${{ matrix.packageManager }}" = "npm" ]; then
+            npx cedar build --no-prerender
+          elif [ "${{ matrix.packageManager }}" = "pnpm" ]; then
+            pnpm exec cedar build --no-prerender
+          else
+            yarn cedar build --no-prerender
+          fi
+        working-directory: ${{ steps.project.outputs.path }}
+
+      - name: Run `cedar test web`
+        shell: bash
+        run: |
+          if [ "${{ matrix.packageManager }}" = "npm" ]; then
+            npx cedar test web --no-watch
+          elif [ "${{ matrix.packageManager }}" = "pnpm" ]; then
+            pnpm exec cedar test web --no-watch
+          else
+            yarn cedar test web --no-watch
+          fi
+        working-directory: ${{ steps.project.outputs.path }}
+
+      - name: Run `cedar test api`
+        shell: bash
+        run: |
+          if [ "${{ matrix.packageManager }}" = "npm" ]; then
+            npx cedar test api --no-watch
+          elif [ "${{ matrix.packageManager }}" = "pnpm" ]; then
+            pnpm exec cedar test api --no-watch
+          else
+            yarn cedar test api --no-watch
+          fi
+        working-directory: ${{ steps.project.outputs.path }}

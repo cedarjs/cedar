@@ -54,7 +54,7 @@ By specifying `supabase` as the provider, Cedar automatically added the necessar
 
 ```jsx {1-2,12,17} title="web/src/App.[js/tsx]"
 import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'
-import { RedwoodApolloProvider } from '@cedarjs/web/apollo'
+import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 import FatalErrorPage from 'src/pages/FatalErrorPage'
 import Routes from 'src/Routes'
@@ -67,9 +67,9 @@ const App = () => (
   <FatalErrorBoundary page={FatalErrorPage}>
     <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
       <AuthProvider>
-        <RedwoodApolloProvider useAuth={useAuth}>
+        <CedarApolloProvider useAuth={useAuth}>
           <Routes />
-        </RedwoodApolloProvider>
+        </CedarApolloProvider>
       </AuthProvider>
     </RedwoodProvider>
   </FatalErrorBoundary>

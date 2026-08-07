@@ -238,12 +238,9 @@ export const builder = (yargs) => {
 
     ...
 
-    .option('stats', {
-      default: false,
-      description: `Use ${terminalLink(
-        'Webpack Bundle Analyzer',
-        'https://github.com/webpack-contrib/webpack-bundle-analyzer'
-      )}`,
+    .option('prerender', {
+      default: true,
+      description: 'Prerender after building web',
       type: 'boolean',
     })
     .option('verbose', {
@@ -258,11 +255,11 @@ export const builder = (yargs) => {
 }
 ```
 
-These two calls to `options` configure this command to have options `--stats` and `--verbose`:
+These two calls to `options` configure this command to have options `--prerender` and `--verbose`:
 
 ```terminal
-yarn rw build --stats
-yarn rw build --verbose
+yarn cedar build --no-prerender
+yarn cedar build --verbose
 ```
 
 For the full list of what properties you can use to compose the options object, see [options(key, [opt])](https://yargs.js.org/docs/#api-optionskey-opt).
@@ -280,8 +277,8 @@ While `build`'s `handler` is too long to reproduce here in full, to get the poin
 
 export const handler = async ({
   side = ['api', 'web'],
+  prerender = true,
   verbose = false,
-  stats = false,
 }) => {
 
   ...

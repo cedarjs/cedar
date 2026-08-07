@@ -1,19 +1,33 @@
 {
   "private": true,
   "type": "module",
+  "scripts": {
+    "build": "cedar build",
+    "dev": "cedar dev",
+    "start": "cedarjs-server",
+    "start:api": "cedarjs-server api",
+    "start:web": "cedarjs-server web"
+  },
+  "dependencies": {
+    "@cedarjs/api-server": "5.0.6"
+  },
   "devDependencies": {
-    "@cedarjs/core": "3.1.0",
-    "@cedarjs/eslint-config": "3.1.0",
-    "@cedarjs/project-config": "3.1.0",
-    "@cedarjs/testing": "3.1.0"
+    "@cedarjs/core": "5.0.6",
+    "@cedarjs/eslint-config": "5.0.6",
+    "@cedarjs/project-config": "5.0.6",
+    "@cedarjs/testing": "5.0.6",
+    "prisma": "7.8.0",
+    "vitest": "4.1.10"
   },
   "engines": {
-    "node": "=24.x"
+    "node": "24.x",
+    "pnpm": ">=11.8.0 <12.0.0"
   },
-  "packageManager": "pnpm@10.33.4",
-  "pnpm": {
-    "overrides": {
-      "react-is": "19.2.3"
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "11.8.0",
+      "onFail": "download"
     }
   }
 }

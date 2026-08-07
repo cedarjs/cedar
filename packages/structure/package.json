@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/structure",
-  "version": "4.2.0",
+  "version": "5.0.6",
   "description": "noun: the arrangement of and relations between the parts or elements of something complex",
   "repository": {
     "type": "git",
@@ -60,10 +60,10 @@
     "camelcase": "6.3.0",
     "deepmerge": "4.3.1",
     "dotenv-defaults": "5.0.2",
-    "graphql": "16.13.2",
+    "graphql": "16.14.2",
     "line-column": "1.0.2",
     "lodash": "4.18.1",
-    "lru-cache": "11.3.6",
+    "lru-cache": "11.5.2",
     "smol-toml": "1.6.1",
     "ts-morph": "23.0.0",
     "yargs-parser": "21.1.1"
@@ -72,7 +72,7 @@
     "@types/lodash": "4.17.24",
     "@types/node": "24.10.4",
     "typescript": "5.9.3",
-    "vitest": "3.2.4"
+    "vitest": "4.1.10"
   },
   "engines": {
     "node": ">=24"

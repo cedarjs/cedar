@@ -5,7 +5,6 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { getExecOutput } from '@actions/exec'
-import { hashFiles } from '@actions/glob'
 
 /**
  * @typedef {import('@actions/exec').ExecOptions} ExecOptions
@@ -51,70 +50,6 @@ export function createExecWithEnvInCwd(cwd) {
 }
 
 export const execInFramework = createExecWithEnvInCwd(CEDAR_FRAMEWORK_PATH)
-
-/**
- * @param {string} redwoodProjectCwd
- */
-export function projectDeps(redwoodProjectCwd) {
-  return execInFramework('yarn project:deps', {
-    env: { CEDAR_CWD: redwoodProjectCwd },
-  })
-}
-
-/**
- * @param {string} redwoodProjectCwd
- */
-export function projectCopy(redwoodProjectCwd) {
-  return execInFramework('yarn project:copy', {
-    env: { CEDAR_CWD: redwoodProjectCwd },
-  })
-}
-
-/**
- * @param {{ baseKeyPrefix: string, distKeyPrefix: string, canary: boolean }} options
- */
-export async function createCacheKeys({
-  baseKeyPrefix,
-  distKeyPrefix,
-  canary,
-}) {
-  const baseKey = [
-    baseKeyPrefix,
-    process.env.RUNNER_OS,
-    process.env.GITHUB_REF?.replaceAll('/', '-'),
-    await hashFiles(path.join('__fixtures__', 'test-project')),
-  ].join('-')
-
-  const dependenciesKey =
-    [
-      baseKey,
-      'dependencies',
-      await hashFiles(['yarn.lock', '.yarnrc.yml'].join('\n')),
-    ].join('-') + (canary ? '-canary' : '')
-
-  const distKey =
-    [
-      dependenciesKey,
-      distKeyPrefix,
-      'dist',
-      await hashFiles(
-        [
-          'package.json',
-          'babel.config.js',
-          'tsconfig.json',
-          'tsconfig.base.json',
-          'nx.json',
-          'packages',
-        ].join('\n'),
-      ),
-    ].join('-') + (canary ? '-canary' : '')
-
-  return {
-    baseKey,
-    dependenciesKey,
-    distKey,
-  }
-}
 
 /**
  * @callback ExecInProject

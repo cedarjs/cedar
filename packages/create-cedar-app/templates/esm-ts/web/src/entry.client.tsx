@@ -4,29 +4,29 @@ import App from './App'
 import Routes from './Routes'
 
 /**
- * When `#redwood-app` isn't empty then it's very likely that you're using
+ * When `#cedar-app` isn't empty then it's very likely that you're using
  * prerendering. So React attaches event listeners to the existing markup
  * rather than replacing it.
  * https://react.dev/reference/react-dom/client/hydrateRoot
  */
-const redwoodAppElement = document.getElementById('redwood-app')
+const cedarAppElement = document.getElementById('cedar-app')
 
-if (!redwoodAppElement) {
+if (!cedarAppElement) {
   throw new Error(
-    "Could not find an element with ID 'redwood-app'. Please ensure it " +
-      "exists in your 'web/index.html' file."
+    'Could not find an element with ID "cedar-app". Please ensure it exists ' +
+      'in your `web/index.html` file.'
   )
 }
 
-if (redwoodAppElement.children?.length > 0) {
+if (cedarAppElement.children?.length > 0) {
   hydrateRoot(
-    redwoodAppElement,
+    cedarAppElement,
     <App>
       <Routes />
     </App>
   )
 } else {
-  const root = createRoot(redwoodAppElement)
+  const root = createRoot(cedarAppElement)
   root.render(
     <App>
       <Routes />

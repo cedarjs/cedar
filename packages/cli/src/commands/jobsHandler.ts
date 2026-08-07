@@ -1,6 +1,7 @@
 import execa from 'execa'
 
-// @ts-expect-error - Types not available for JS files
+import { formatRunBinCommand } from '@cedarjs/cli-helpers/packageManager/display'
+
 import { getPaths } from '../lib/index.js'
 
 type JobsHandlerArgs = Record<string, unknown> & {
@@ -25,14 +26,14 @@ export const handler = async ({
     args.push(String(value))
   }
 
-  let command = `yarn cedar-jobs ${args.join(' ')}`
+  let command = formatRunBinCommand('cedar-jobs', args)
   const originalLogLevel = process.env.LOG_LEVEL
   process.env.LOG_LEVEL = originalLogLevel || 'warn'
 
   // make logs look nice in development (assume any env that's not prod is dev)
   // that includes showing more verbose logs unless the user set otherwise
   if (process.env.NODE_ENV !== 'production') {
-    command += ' | yarn cedar-log-formatter'
+    command += ` | ${formatRunBinCommand('cedar-log-formatter')}`
     process.env.LOG_LEVEL = originalLogLevel || 'debug'
   }
 

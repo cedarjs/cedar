@@ -58,6 +58,19 @@ vi.mock('@cedarjs/cli-helpers', () => ({
   }),
 }))
 
+vi.mock('@cedarjs/cli-helpers/packageManager/display', () => ({
+  formatCedarCommand: (args: string[] = []) => `yarn cedar ${args.join(' ')}`,
+  formatInstallCommand: () => 'yarn install',
+  formatRunBinCommand: () => '',
+  formatRunWorkspaceBinCommand: () => '',
+  formatRunScriptCommand: () => '',
+  formatRunWorkspaceScriptCommand: () => '',
+  formatDlxCommand: () => '',
+  formatAddRootPackagesCommand: () => '',
+  formatAddWorkspacePackagesCommand: () => '',
+  formatRemoveWorkspacePackagesCommand: () => '',
+}))
+
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const path = require('path')
   const originalProjectConfig = await importOriginal<typeof ProjectConfig>()

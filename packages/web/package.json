@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/web",
-  "version": "4.2.0",
+  "version": "5.0.6",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -10,132 +10,69 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.js"
-      }
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./serverInject": {
-      "import": {
-        "types": "./dist/components/ServerInject.d.ts",
-        "default": "./dist/components/ServerInject.js"
-      },
-      "require": {
-        "types": "./dist/cjs/components/ServerInject.d.ts",
-        "default": "./dist/cjs/components/ServerInject.js"
-      }
+      "types": "./dist/components/ServerInject.d.ts",
+      "default": "./dist/components/ServerInject.js"
     },
     "./request": {
-      "import": {
-        "types": "./dist/server/request.d.ts",
-        "default": "./dist/server/request.js"
-      },
-      "require": {
-        "types": "./dist/cjs/server/request.d.ts",
-        "default": "./dist/cjs/server/request.js"
-      }
+      "types": "./dist/server/request.d.ts",
+      "default": "./dist/server/request.js"
     },
     "./middleware": {
-      "import": {
-        "types": "./dist/server/middleware.d.ts",
-        "default": "./dist/server/middleware.js"
-      },
-      "require": {
-        "types": "./dist/cjs/server/middleware.d.ts",
-        "default": "./dist/cjs/server/middleware.js"
-      }
+      "types": "./dist/server/middleware.d.ts",
+      "default": "./dist/server/middleware.js"
     },
     "./dist/server/middleware": {
-      "import": {
-        "types": "./dist/server/middleware.d.ts",
-        "default": "./dist/server/middleware.js"
-      },
-      "require": {
-        "types": "./dist/cjs/server/middleware.d.ts",
-        "default": "./dist/cjs/server/middleware.js"
-      }
+      "types": "./dist/server/middleware.d.ts",
+      "default": "./dist/server/middleware.js"
     },
-    "./dist/components/*": {
-      "require": "./dist/cjs/components/*.js",
-      "import": "./dist/components/*.js"
-    },
-    "./htmlTags": {
-      "require": "./dist/cjs/components/htmlTags.js",
-      "import": "./dist/components/htmlTags.js"
-    },
-    "./Metadata": {
-      "require": "./dist/cjs/components/Metadata.js",
-      "import": "./dist/components/Metadata.js"
-    },
-    "./dist/apollo/suspense": {
-      "require": "./dist/cjs/apollo/suspense.js",
-      "import": "./dist/apollo/suspense.js"
-    },
-    "./dist/apollo/sseLink": {
-      "require": "./dist/cjs/apollo/sseLink.js",
-      "import": "./dist/apollo/sseLink.js"
-    },
-    "./dist/graphql.js": {
-      "require": "./dist/cjs/graphql.js",
-      "import": "./dist/graphql.js"
-    },
-    "./webpackEntry": {
-      "default": "./dist/entry/index.js"
-    },
+    "./dist/components/*": "./dist/components/*.js",
+    "./htmlTags": "./dist/components/htmlTags.js",
+    "./Metadata": "./dist/components/Metadata.js",
+    "./dist/apollo/suspense": "./dist/apollo/suspense.js",
+    "./dist/apollo/sseLink": "./dist/apollo/sseLink.js",
+    "./dist/graphql.js": "./dist/graphql.js",
     "./toast": {
-      "import": {
-        "types": "./dist/toast/index.d.ts",
-        "default": "./dist/toast/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/toast/index.d.ts",
-        "default": "./dist/cjs/toast/index.js"
-      }
+      "types": "./dist/toast/index.d.ts",
+      "default": "./dist/toast/index.js"
     },
     "./apollo": {
-      "import": {
-        "types": "./dist/apollo/index.d.ts",
-        "default": "./dist/apollo/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/apollo/index.d.ts",
-        "default": "./dist/cjs/apollo/index.js"
-      }
+      "types": "./dist/apollo/index.d.ts",
+      "default": "./dist/apollo/index.js"
     },
-    "./forceEsmApollo": {
-      "require": "./dist/apollo/index.js",
-      "import": "./dist/apollo/index.js"
-    }
+    "./apollo/CedarApolloProvider": {
+      "types": "./dist/apollo/CedarApolloProvider.d.ts",
+      "default": "./dist/apollo/CedarApolloProvider.js"
+    },
+    "./forceEsmApollo": "./dist/apollo/index.js"
   },
   "main": "./dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "cedar": "./dist/cjs/bins/cedar.js",
-    "cedarjs": "./dist/cjs/bins/cedar.js",
-    "cfw": "./dist/cjs/bins/cfw.js",
-    "cross-env": "./dist/cjs/bins/cross-env.js",
-    "msw": "./dist/cjs/bins/msw.js",
-    "redwood": "./dist/cjs/bins/redwood.js",
-    "rw": "./dist/cjs/bins/redwood.js",
-    "storybook": "./dist/cjs/bins/storybook.js",
-    "tsc": "./dist/cjs/bins/tsc.js"
+    "cedar": "./dist/bins/cedar.js",
+    "cedarjs": "./dist/bins/cedar.js",
+    "cfw": "./dist/bins/cfw.js",
+    "cross-env": "./dist/bins/cross-env.js",
+    "msw": "./dist/bins/msw.js",
+    "redwood": "./dist/bins/redwood.js",
+    "rw": "./dist/bins/redwood.js",
+    "storybook": "./dist/bins/storybook.js",
+    "tsc": "./dist/bins/tsc.js"
   },
   "files": [
     "dist",
     "apollo",
-    "toast",
-    "src/entry"
+    "toast"
   ],
   "scripts": {
-    "build": "tsx ./build.ts && yarn build:types",
+    "build": "node ./build.ts",
     "build:pack": "yarn pack -o cedarjs-web.tgz",
-    "build:types": "tsc --build --verbose ./tsconfig.build.json ./tsconfig.cjs.json",
+    "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
-    "check:attw": "tsx ./attw.ts",
+    "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
@@ -143,46 +80,48 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@apollo/client": "3.14.1",
-    "@cedarjs/auth": "workspace:*",
+    "@apollo/client": "4.2.7",
     "@cedarjs/server-store": "workspace:*",
     "@dr.pogodin/react-helmet": "2.0.4",
     "@whatwg-node/fetch": "0.10.13",
-    "apollo-upload-client": "18.0.1",
+    "apollo-upload-client": "19.0.0",
     "cookie": "1.1.1",
-    "graphql": "16.13.2",
+    "graphql": "16.14.2",
     "graphql-sse": "2.6.0",
     "graphql-tag": "2.12.6",
     "react-hot-toast": "2.6.0",
+    "rxjs": "7.8.2",
     "stacktracey": "2.2.0",
     "ts-toolbelt": "9.6.0"
   },
   "devDependencies": {
-    "@apollo/client-react-streaming": "0.12.3",
-    "@arethetypeswrong/cli": "0.18.2",
-    "@babel/cli": "7.28.6",
+    "@apollo/client-react-streaming": "0.14.5",
+    "@arethetypeswrong/cli": "0.18.5",
+    "@babel/cli": "7.29.7",
     "@babel/core": "^7.26.10",
-    "@babel/plugin-transform-runtime": "7.29.0",
-    "@babel/runtime": "7.29.2",
+    "@babel/plugin-transform-runtime": "7.29.7",
+    "@babel/runtime": "7.29.7",
+    "@cedarjs/auth": "workspace:*",
     "@cedarjs/framework-tools": "workspace:*",
     "@cedarjs/internal": "workspace:*",
     "@rollup/plugin-babel": "6.1.0",
+    "@testing-library/dom": "10.4.1",
     "@testing-library/jest-dom": "6.9.1",
-    "@testing-library/react": "14.3.1",
-    "@types/apollo-upload-client": "^18",
+    "@testing-library/react": "16.3.2",
+    "@types/apollo-upload-client": "^19",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
-    "concurrently": "9.2.1",
+    "concurrently": "9.2.4",
     "nodemon": "3.1.14",
-    "publint": "0.3.21",
+    "publint": "0.3.22",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "tstyche": "5.0.2",
-    "tsx": "4.21.0",
     "typescript": "5.9.3",
-    "vitest": "3.2.4"
+    "vitest": "4.1.10"
   },
   "peerDependencies": {
+    "@cedarjs/auth": "workspace:*",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },

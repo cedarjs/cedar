@@ -3,9 +3,9 @@ import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import process from 'node:process'
 
-import type { Config } from './config.js'
-import { ExitCodeError } from './error.js'
-import { getCcrscaVersion } from './version.js'
+import type { Config } from './config.ts'
+import { ExitCodeError } from './error.ts'
+import { getCcrscaVersion } from './version.ts'
 
 export function shouldRelaunch(config: Config) {
   if (config.verbose) {

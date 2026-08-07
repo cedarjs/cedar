@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process'
 
-import type { Config } from './config.js'
+import type { Config } from './config.ts'
 
 export function initialCommit(config: Config) {
   if (config.verbose) {

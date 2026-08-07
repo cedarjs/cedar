@@ -4,7 +4,7 @@ import { pipeline } from 'stream/promises'
 
 import yauzl from 'yauzl-promise'
 
-import type { Config } from './config.js'
+import type { Config } from './config.ts'
 
 export async function unzip(config: Config, zipFilePath: string) {
   console.log('📦 Unpacking template')

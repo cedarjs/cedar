@@ -8,9 +8,9 @@
     "outDir": "dist"
   },
   "include": ["src"],
-  // Excluding tests (as in root compilerOption) causes types to be inaccurate in tests
-  // This overrides the exclude in the root compilerOption
-  "exclude": ["dist", "node_modules", "**/__mocks__"],
+  // Tests are intentionally included here (not excluded like the build base) so the
+  // IDE type-checks test files too. During actual builds, tsconfig.build.json adds
+  // **/__tests__ back to the exclude.
   "references": [
     { "path": "../project-config" },
     { "path": "../framework-tools" }

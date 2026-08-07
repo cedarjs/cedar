@@ -40,6 +40,13 @@ export function runScriptSync(
   const pm = getPackageManager()
 
   if (pm === 'npm') {
+    // `npm run` without a script name lists available scripts (same as
+    // `yarn run` / `pnpm run`). Passing `['run', 'run']` would try to run a
+    // script named "run" which doesn't exist.
+    if (script === 'run' && args.length === 0) {
+      return execa.sync(pm, ['run'], options)
+    }
+
     const npmArgs =
       args.length > 0 ? ['run', script, '--', ...args] : ['run', script]
     return execa.sync(pm, npmArgs, options)
@@ -85,6 +92,7 @@ export function runWorkspaceScript(
 
 /**
  * Run a local binary from node_modules/.bin (PnP-safe for Yarn).
+ * Does not support running transitive dependencies, like prisma
  *
  * - yarn:  `yarn <bin> [args]`
  * - npm:   `npx <bin> [args]`
@@ -109,9 +117,7 @@ export function runBin(
   return execa(pm, [bin, ...args], options)
 }
 
-/**
- * Synchronous variant of {@link runBin}.
- */
+/** Synchronous variant of {@link runBin} */
 export function runBinSync(
   bin: string,
   args: string[] = [],
@@ -129,6 +135,47 @@ export function runBinSync(
 
   // yarn
   return execa.sync(pm, [bin, ...args], options)
+}
+
+// `runBin`/`runBinSync` don't work for transitive dependencies because they
+// use `yarn <bin>` for yarn, and yarn requires the bin to be a direct
+// dependency of the project. Cedar apps get some dependencies, like Prisma,
+// as a transitive dependency via the framework, so `yarn prisma` wouldn't
+// work.
+// `npx` works also for transitive dependencies (or it'll download the
+// dependency if it can't find it, which is the case for Yarn PnP). `npx`
+// however verifies the `devEngines.packageManager` field, which we add for
+// pnpm. So we can't use `npx` for all package managers we support. pnpm does
+// however support `pnpm exec` also for transitive dependencies, so we use that
+export function runTransitiveBin(
+  bin: string,
+  args: string[] = [],
+  options?: ExecaOptions,
+) {
+  const pm = getPackageManager()
+
+  if (pm === 'pnpm') {
+    return execa(pm, ['exec', bin, ...args], options)
+  }
+
+  // npm and yarn
+  return execa('npx', [bin, ...args], options)
+}
+
+/** Synchronous variant of {@link runTransitiveBin} */
+export function runTransitiveBinSync(
+  bin: string,
+  args: string[] = [],
+  options?: ExecaSyncOptions,
+) {
+  const pm = getPackageManager()
+
+  if (pm === 'pnpm') {
+    return execa.sync(pm, ['exec', bin, ...args], options)
+  }
+
+  // npm and yarn
+  return execa.sync('npx', [bin, ...args], options)
 }
 
 /**
@@ -177,4 +224,41 @@ export function dlx(
   }
 
   return execa(pm, ['dlx', command, ...args], options)
+}
+
+/**
+ * Returns spawn-compatible `[cmd, args]` for running a node script.
+ *
+ * Yarn PnP requires wrapping node via `yarn node` so module resolution works.
+ * npm and pnpm use standard `node_modules`, so running `node <script>`
+ * directly is sufficient.
+ *
+ * - yarn:  `yarn node <script>`
+ * - npm:   `node <script>`
+ * - pnpm:  `node <script>`
+ */
+export function getNodeRunnerArgs(scriptPath: string): [string, string[]] {
+  const pm = getPackageManager()
+
+  if (pm === 'yarn') {
+    return ['yarn', ['node', scriptPath]]
+  }
+
+  return ['node', [scriptPath]]
+}
+
+/**
+ * Run a node script via execa.
+ *
+ * Yarn PnP requires wrapping node via `yarn node` so module resolution works.
+ * npm and pnpm use standard `node_modules`, so running `node <script>`
+ * directly is sufficient.
+ *
+ * - yarn:  `yarn node <script>`
+ * - npm:   `node <script>`
+ * - pnpm:  `node <script>`
+ */
+export function runWithNode(scriptPath: string, options?: ExecaOptions) {
+  const [cmd, args] = getNodeRunnerArgs(scriptPath)
+  return execa(cmd, args, options)
 }

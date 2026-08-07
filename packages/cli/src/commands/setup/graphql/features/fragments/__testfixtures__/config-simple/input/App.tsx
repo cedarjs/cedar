@@ -1,5 +1,5 @@
 import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'
-import { RedwoodApolloProvider } from '@cedarjs/web/apollo'
+import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 import possibleTypes from 'src/graphql/possibleTypes'
 
@@ -12,9 +12,9 @@ import './index.css'
 const App = () => (
   <FatalErrorBoundary page={FatalErrorPage}>
     <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
-      <RedwoodApolloProvider>
+      <CedarApolloProvider>
         <Routes />
-      </RedwoodApolloProvider>
+      </CedarApolloProvider>
     </RedwoodProvider>
   </FatalErrorBoundary>
 )

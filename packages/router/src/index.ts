@@ -16,7 +16,15 @@ export { Router } from './router.js'
 export { Route } from './Route.js'
 export { namedRoutes as routes } from './namedRoutes.js'
 
-export * from './Set.js'
+export {
+  Set,
+  Private,
+  PrivateSet,
+  isSetNode,
+  isPrivateSetNode,
+  isPrivateNode,
+} from './Set.js'
+export type { WrapperType } from './Set.js'
 
 export { default as RouteAnnouncement } from './route-announcement.js'
 export * from './route-announcement.js'

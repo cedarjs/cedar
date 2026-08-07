@@ -5,10 +5,8 @@
     "rootDir": "."
   },
   "include": ["."],
-  "exclude": ["dist", "node_modules", "**/__tests__/fixtures"],
   "references": [
     { "path": "../context/tsconfig.build.json" },
-    { "path": "../internal/tsconfig.build.json" },
     { "path": "../graphql-server/tsconfig.build.json" },
     { "path": "../project-config" },
     { "path": "../adapters/fastify/web" },

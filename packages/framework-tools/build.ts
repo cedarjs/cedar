@@ -1,4 +1,4 @@
-import { build, defaultBuildOptions } from './src/buildDefaults'
+import { build, defaultBuildOptions } from './src/buildDefaults.ts'
 
 await build({
   buildOptions: {

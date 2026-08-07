@@ -3,7 +3,12 @@ import { pathToFileURL } from 'node:url'
 import fastifyMultiPart from '@fastify/multipart'
 import fastifyUrlData from '@fastify/url-data'
 import fg from 'fast-glob'
-import type { FastifyInstance, FastifyRequest, HTTPMethods } from 'fastify'
+import type {
+  FastifyInstance,
+  FastifyReply,
+  FastifyRequest,
+  HTTPMethods,
+} from 'fastify'
 
 import { buildCedarContext } from '@cedarjs/api/runtime'
 import type { GlobalContext } from '@cedarjs/context'
@@ -15,20 +20,20 @@ import { getPaths } from '@cedarjs/project-config'
 
 import { lambdaEventForFastifyRequest } from '../requestHandlers/awsLambdaFastify.js'
 
-export interface RedwoodFastifyGraphQLOptions {
-  redwood: {
+export interface CedarFastifyGraphQLOptions {
+  cedar: {
     apiRootPath?: string
     graphql?: GraphQLYogaOptions
   }
 }
 
-export async function redwoodFastifyGraphQLServer(
+export async function cedarFastifyGraphQLServer(
   fastify: FastifyInstance,
-  options: RedwoodFastifyGraphQLOptions,
+  options: CedarFastifyGraphQLOptions,
 ) {
-  const redwoodOptions = options.redwood ?? {}
-  redwoodOptions.apiRootPath ??= '/'
-  redwoodOptions.apiRootPath = coerceRootPath(redwoodOptions.apiRootPath)
+  const cedarOptions = options.cedar ?? {}
+  cedarOptions.apiRootPath ??= '/'
+  cedarOptions.apiRootPath = coerceRootPath(cedarOptions.apiRootPath)
 
   fastify.register(fastifyUrlData)
   // We register the multiPart plugin, but not the raw body plugin.
@@ -44,7 +49,7 @@ export async function redwoodFastifyGraphQLServer(
   try {
     // Load the graphql options from the user's graphql function if none are
     // explicitly provided
-    if (!redwoodOptions.graphql) {
+    if (!cedarOptions.graphql) {
       const [graphqlFunctionPath] = await fg('dist/functions/graphql.{ts,js}', {
         cwd: getPaths().api.base,
         absolute: true,
@@ -53,19 +58,19 @@ export async function redwoodFastifyGraphQLServer(
 
       // This comes from a babel plugin that's applied to
       // api/dist/functions/graphql.{ts,js} in user projects
-      const { __rw_graphqlOptions } = await import(filePath)
+      const { __cedar_graphqlOptions } = await import(filePath)
 
-      if (!__rw_graphqlOptions) {
+      if (!__cedar_graphqlOptions) {
         // Our babel plugin couldn't find any grapqhql config options, so we
         // assume the user is doing their own thing.
         // Return here and skip creating a Cedar specific server
         return
       }
 
-      redwoodOptions.graphql = __rw_graphqlOptions as GraphQLYogaOptions
+      cedarOptions.graphql = __cedar_graphqlOptions as GraphQLYogaOptions
     }
 
-    const graphqlOptions = redwoodOptions.graphql
+    const graphqlOptions = cedarOptions.graphql
 
     // Used for SSE single connection mode with the `/graphql/stream` endpoint
     if (graphqlOptions?.realtime?.subscriptions) {
@@ -79,10 +84,10 @@ export async function redwoodFastifyGraphQLServer(
     const routePaths = ['', '/health', '/readiness', '/stream']
     for (const routePath of routePaths) {
       fastify.route({
-        url: `${redwoodOptions.apiRootPath}${graphqlEndpoint}${routePath}`,
+        url: `${cedarOptions.apiRootPath}${graphqlEndpoint}${routePath}`,
         method,
-        handler: async (req, _reply) => {
-          const request = createFetchRequest(req)
+        handler: async (req, reply) => {
+          const request = createFetchRequest(req, reply)
           const cedarContext = await buildCedarContext(request, {
             authDecoder: graphqlOptions.authDecoder,
           })
@@ -103,12 +108,28 @@ export async function redwoodFastifyGraphQLServer(
           // @live query connections open for as long as the client is
           // connected. This is the fetch-native adapter pattern described in
           // the Universal Deploy integration plan.
-          return yoga.handle(request, {
-            request,
-            cedarContext,
-            event: lambdaEventForFastifyRequest(req),
-            requestContext: undefined,
-          })
+          try {
+            return await yoga.handle(request, {
+              request,
+              cedarContext,
+              event: lambdaEventForFastifyRequest(req),
+              requestContext: undefined,
+            })
+          } catch (e) {
+            if (
+              !!e &&
+              typeof e === 'object' &&
+              'code' in e &&
+              e.code === 'ERR_STREAM_PREMATURE_CLOSE'
+            ) {
+              // Client disconnected while the request was being processed
+              // (e.g., page navigation, tab close). Return a 499 so Fastify
+              // doesn't log this as a 500.
+              return new Response(null, { status: 499 })
+            }
+
+            throw e
+          }
         },
       })
     }
@@ -125,7 +146,15 @@ export async function redwoodFastifyGraphQLServer(
       done()
     })
   } catch (e) {
-    console.log(e)
+    // Rethrow rather than swallow. Anything thrown in here means no GraphQL
+    // routes got registered, so the server would come up healthy while 404ing
+    // /graphql and everything under it. Failing to start with the actual cause
+    // is far easier to diagnose than a silently empty route table.
+    const message = e instanceof Error ? e.message : String(e)
+
+    fastify.log.error(e, `Failed to set up the GraphQL server: ${message}`)
+
+    throw e
   }
 }
 
@@ -133,7 +162,25 @@ function trimSlashes(path: string) {
   return path.replace(/^\/|\/$/g, '')
 }
 
-function createFetchRequest(req: FastifyRequest) {
+function createFetchRequest(req: FastifyRequest, reply: FastifyReply) {
+  const controller = new AbortController()
+
+  // Abort the signal when the response stream closes before the response was
+  // fully written, i.e. when the client disconnected (navigated away, tab
+  // closed, etc.). This lets Yoga's useExecutionCancellation stop resolver
+  // execution instead of continuing to waste work on a response nobody will
+  // receive.
+  //
+  // We listen on reply.raw (the Node.js ServerResponse) rather than req.raw
+  // (the IncomingMessage) because req.raw's 'close' event fires on every normal
+  // end-of-stream, causing every request to be spuriously aborted. reply.raw
+  // only closes before writableFinished when the client genuinely disconnects
+  reply.raw.on('close', () => {
+    if (!reply.raw.writableFinished) {
+      controller.abort()
+    }
+  })
+
   const requestBody =
     req.method === 'GET' || req.method === 'HEAD'
       ? undefined
@@ -148,5 +195,6 @@ function createFetchRequest(req: FastifyRequest) {
     method: req.method,
     headers: req.headers as HeadersInit,
     body: requestBody,
+    signal: controller.signal,
   })
 }

@@ -16,7 +16,7 @@ jobs:
       CEDAR_VERBOSE_TELEMETRY: 1
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - name: Set up job
         uses: ./.github/actions/set-up-job
 
@@ -84,3 +84,11 @@ jobs:
         env:
           CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-rsc-test-project.outputs.test-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1
+
+      - name: 🎭 Upload Playwright traces
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: playwright-traces-rsc-smoke-tests-${{ runner.os }}
+          path: tasks/smoke-tests/test-results/**
+          if-no-files-found: ignore

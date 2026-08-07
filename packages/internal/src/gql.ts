@@ -3,6 +3,7 @@ import { loadSchema } from '@graphql-tools/load'
 import type {
   DocumentNode,
   FieldNode,
+  FragmentDefinitionNode,
   InlineFragmentNode,
   OperationDefinitionNode,
   OperationTypeNode,
@@ -77,6 +78,56 @@ const getFields = (field: FieldNode): any => {
 
     return obj
   }
+}
+
+const parseGqlFragmentDefinition = (gqlFragment: string) => {
+  const ast = parse(gqlFragment)
+
+  return ast.definitions.find(
+    (definition): definition is FragmentDefinitionNode =>
+      definition.kind === Kind.FRAGMENT_DEFINITION,
+  )
+}
+
+/**
+ * Returns the name of the first fragment definition in the given GraphQL
+ * source, e.g. `AuthorCell_author` for
+ * `fragment AuthorCell_author on User { fullName }`
+ */
+export const parseGqlFragmentName = (gqlFragment: string) => {
+  return parseGqlFragmentDefinition(gqlFragment)?.name.value
+}
+
+/**
+ * Derives a fragment Cell's data prop name from its fragment: the prop the
+ * parent Cell passes the fragment data in with, and the prop `Success`
+ * receives the data as.
+ *
+ * For a fragment named with an underscore, like `AuthorCell_author`, the part
+ * after the last underscore is used (`author`). Otherwise the type the
+ * fragment is defined on is used, camelCased (`on User` -> `user`).
+ *
+ * Keep this in sync with getFragmentPropName in
+ * packages/web/src/components/cell/createFragmentCell.tsx, which is what the
+ * fragment Cell runtime uses.
+ */
+export const parseGqlFragmentPropName = (gqlFragment: string) => {
+  const fragmentDefinition = parseGqlFragmentDefinition(gqlFragment)
+
+  if (!fragmentDefinition) {
+    return undefined
+  }
+
+  const fragmentName = fragmentDefinition.name.value
+  const underscoreIndex = fragmentName.lastIndexOf('_')
+
+  if (underscoreIndex > 0 && underscoreIndex < fragmentName.length - 1) {
+    return fragmentName.slice(underscoreIndex + 1)
+  }
+
+  const typename = fragmentDefinition.typeCondition.name.value
+
+  return typename.charAt(0).toLowerCase() + typename.slice(1)
 }
 
 export const listQueryTypeFieldsInProject = async () => {

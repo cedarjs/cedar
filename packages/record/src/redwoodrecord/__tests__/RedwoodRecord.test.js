@@ -2,10 +2,11 @@ import { vi, describe, it, expect } from 'vitest'
 
 import * as ValidationErrors from '@cedarjs/api'
 
-import datamodel from '../__fixtures__/datamodel.js'
 import RedwoodRecord from '../RedwoodRecord'
 import Reflection from '../Reflection'
 import RelationProxy from '../RelationProxy'
+
+import datamodel from './__fixtures__/datamodel.js'
 
 const db = { user: vi.fn() }
 
@@ -51,7 +52,7 @@ describe('save()', () => {
     }
     const user = new User()
 
-    expect(user.save({ throw: true })).rejects.toThrow(
+    await expect(user.save({ throw: true })).rejects.toThrow(
       ValidationErrors.PresenceValidationError,
     )
   })

@@ -4,7 +4,10 @@ import path from 'node:path'
 
 import execa from 'execa'
 
-// @ts-expect-error - No types for JS files
+import { dedupe } from '@cedarjs/cli-helpers/packageManager'
+import { addRootPackages } from '@cedarjs/cli-helpers/packageManager/packages'
+import { getPackageManager } from '@cedarjs/project-config/packageManager'
+
 import { getPaths } from './index.js'
 
 // Note: Have to add backslash (\) before @ below for intellisense to display
@@ -29,7 +32,8 @@ export async function installModule(
   if (version === undefined) {
     return installCedarModule(name)
   } else {
-    await execa.command(`yarn add -D ${name}@${version}`, {
+    await addRootPackages([`${name}@${version}`], {
+      dev: true,
       stdio: 'inherit',
       cwd: getPaths().base,
     })
@@ -90,16 +94,24 @@ export async function installCedarModule(module: string) {
 
     // We use `version` to make sure we install the same version as the rest
     // of the RW packages
-    await execa.command(`yarn add -D ${module}@${version}`, {
+    await addRootPackages([`${module}@${version}`], {
+      dev: true,
       stdio: 'inherit',
       cwd: getPaths().base,
     })
-    await execa.command(`yarn dedupe`, {
-      stdio: 'inherit',
-      cwd: getPaths().base,
-    })
+
+    const dedupeCommand = dedupe()
+
+    if (dedupeCommand) {
+      await execa(getPackageManager(), [dedupeCommand], {
+        stdio: 'inherit',
+        cwd: getPaths().base,
+      })
+    }
+
     return true
   }
+
   return false
 }
 

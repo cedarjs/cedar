@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /* eslint-env node, es6*/
 
+import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import url from 'node:url'
@@ -9,7 +10,6 @@ import ansis from 'ansis'
 import type { ExecaChildProcess } from 'execa'
 import execa from 'execa'
 import fg from 'fast-glob'
-import fs from 'node:fs'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
@@ -21,7 +21,7 @@ import {
   createRedwoodJSApp,
   initGit,
   runYarnInstall,
-} from './util/util.mjs'
+} from './util/util.mts'
 
 // useful consts
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
@@ -216,7 +216,7 @@ async function main() {
 
   for (const setup of setups) {
     // import the setup
-    const setupFile = path.join(SETUPS_DIR, setup, 'setup.mjs')
+    const setupFile = path.join(SETUPS_DIR, setup, 'setup.mts')
     const setupModule = await import(setupFile)
     const runForTests =
       args.test.length === 0

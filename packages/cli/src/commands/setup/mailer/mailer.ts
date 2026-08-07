@@ -1,0 +1,37 @@
+import type { Argv } from 'yargs'
+
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+
+export const command = 'mailer'
+
+export const description =
+  'Setup the Cedar mailer. This will install the required packages and add ' +
+  'the required initial configuration to your Cedar app.'
+
+export const builder = (yargs: Argv) => {
+  yargs
+    .option('force', {
+      alias: 'f',
+      default: false,
+      description: 'Overwrite existing configuration',
+      type: 'boolean',
+    })
+    .option('skip-examples', {
+      default: false,
+      description: 'Only include required files and exclude any examples',
+      type: 'boolean',
+    })
+}
+
+export const handler = async (options: {
+  force: boolean
+  skipExamples: boolean
+}) => {
+  recordTelemetryAttributes({
+    command: 'setup mailer',
+    force: options.force,
+    skipExamples: options.skipExamples,
+  })
+  const { handler } = await import('./mailerHandler.js')
+  return handler(options)
+}

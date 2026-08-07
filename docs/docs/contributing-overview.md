@@ -96,7 +96,7 @@ What you want to do not on the roadmap? Well, still go for it! We love spikes an
 | [`@cedarjs/structure`](https://github.com/cedarjs/cedar/blob/main/packages/structure/README.md)               | Provides a way to build, validate and inspect an object graph that represents a complete Cedar project                                                                                                       |
 | [`@cedarjs/telemetry`](https://github.com/cedarjs/cedar/blob/main/packages/telemetry/README.md)               | Provides functionality for anonymous data collection                                                                                                                                                         |
 | [`@cedarjs/testing`](https://github.com/cedarjs/cedar/blob/main/packages/testing/README.md)                   | Provides helpful defaults when testing a Cedar project's web side                                                                                                                                            |
-| [`@cedarjs/web`](https://github.com/cedarjs/cedar/blob/main/packages/web/README.md)                           | Configures a Cedar's app web side: wraps the Apollo Client in `RedwoodApolloProvider`; defines the Cell HOC                                                                                                  |
+| [`@cedarjs/web`](https://github.com/cedarjs/cedar/blob/main/packages/web/README.md)                           | Configures a Cedar's app web side: wraps the Apollo Client in `CedarApolloProvider`; defines the Cell HOC                                                                                                    |
 
 ## Contributing Docs
 

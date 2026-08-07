@@ -485,5 +485,7 @@ export type TodoListCell_CheckTodoVariables = Exact<{
 
 
 export type TodoListCell_CheckTodo = { __typename?: 'Mutation', updateTodoStatus?: { __typename: 'Todo', id: number, status: string } | null };
+
+export type TodoStatusCell_todo = { __typename?: 'Todo', id: number, status: string };
 "
 `;

@@ -4,11 +4,18 @@ description: Determines what areas of the framework have been changed
 outputs:
   docs:
     description: If *only* docs have changed
+  cli:
+    description: If CLI-related packages have changed
   rsc:
     description: If RSC-related changes have been made
   ssr:
     description: If SSR-related changes have been made
+  windows:
+    description: >
+      If the changes could plausibly affect Windows behavior (path-sensitive
+      code changes, or changes to packages/cli or packages/vite), or the PR
+      has the `windows` label. Controls whether the Windows CI legs run.
 
 runs:
   using: node24
-  main: detectChanges.mjs
+  main: detectChanges.mts

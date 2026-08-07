@@ -131,7 +131,6 @@ export interface Config {
       membershipOrganizationField?: string
     }
   }
-  eslintLegacyConfigWarning: boolean
 }
 
 export interface CLIPlugin {
@@ -229,7 +228,6 @@ export const DEFAULT_CONFIG: Config = {
       membershipOrganizationField: 'organizationId',
     },
   },
-  eslintLegacyConfigWarning: true,
 }
 
 /**

@@ -22,7 +22,7 @@ jobs:
     if: github.repository == 'cedarjs/cedar'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         # Required because we use git tags to determine the version.
         with:
           fetch-depth: 0
@@ -31,13 +31,13 @@ jobs:
         run: npm install --global corepack
 
       - name: ⬢ Set up Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 24
 
       - name: 🏷 Check git tags
         run: |
-          CURRENT_TAG=$(git describe --abbrev=0)
+          CURRENT_TAG=$(git tag -l 'v*' | grep -E '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' | sort -V | tail -n 1)
 
           # `github.ref_name` is something like `release/minor/v1.1.0`.
           # `basename` gets us `v1.1.0`
@@ -58,7 +58,7 @@ jobs:
     needs: check-git-tags
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           # `fetch-depth`—number of commits to fetch. `0` fetches all history for all branches and tags.
           #  This is required because we use git tags to determine the version.
@@ -74,7 +74,7 @@ jobs:
         run: yarn test
 
       - name: 🚢 Publish Release Candidate
-        run: yarn tsx .github/scripts/publish-release-candidate.mts
+        run: node .github/scripts/publish-release-candidate.mts
         env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
           GITHUB_REF_NAME: ${{ github.ref_name }}

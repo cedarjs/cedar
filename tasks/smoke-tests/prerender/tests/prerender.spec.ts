@@ -43,13 +43,17 @@ test('Check that rehydration works for page not wrapped in Set', async ({
     }
   })
 
-  await page.goto('/double')
-
   // Wait for page to have been rehydrated before getting page content.
-  // We know the page has been rehydrated when it sends an auth request
-  await page.waitForResponse((response) =>
+  // We know the page has been rehydrated when it sends an auth request.
+  // We need to start waiting for the response *before* navigating, since the
+  // auth request fires as part of hydration and can complete before our
+  // `waitForResponse` listener would otherwise be attached, causing this to
+  // hang until timeout (https://playwright.dev/docs/api/class-page#page-wait-for-response).
+  const authResponse = page.waitForResponse((response) =>
     response.url().includes('/.api/functions/auth'),
   )
+  await page.goto('/double')
+  await authResponse
 
   await page.locator('h1').first().waitFor()
   const headerCount = await page
@@ -83,14 +87,16 @@ test('Check that rehydration works for page with Cell in Set', async ({
     }
   })
 
-  await page.goto('/')
-
   // Wait for page to have been rehydrated and cells have fetched their data
   // before getting page content.
-  // We know cells have started fetching data when we see graphql requests
-  await page.waitForResponse((response) =>
+  // We know cells have started fetching data when we see graphql requests.
+  // Start waiting for the response *before* navigating, so we can't miss a
+  // request that fires as part of hydration and races the `goto` promise.
+  const graphqlResponse = page.waitForResponse((response) =>
     response.url().includes('/.api/functions/graphql'),
   )
+  await page.goto('/')
+  await graphqlResponse
 
   await page.locator('h2').first().waitFor()
   const mainText = await page.locator('main').innerText()
@@ -129,16 +135,19 @@ test('Check that rehydration works for page with code split chunks', async ({
     }
   })
 
-  // This page uses Redwood Forms, and so does /posts/new. Webpack splits rw
-  // forms out into a separate chunk. We need to make sure our prerender
-  // code can handle that
-  await page.goto('/contacts/new')
-
   // Wait for page to have been rehydrated before getting page content.
-  // We know the page has been rehydrated when it sends an auth request
-  await page.waitForResponse((response) =>
+  // We know the page has been rehydrated when it sends an auth request.
+  // Start waiting for the response *before* navigating (see comment in the
+  // "not wrapped in Set" test above for why).
+  const authResponse = page.waitForResponse((response) =>
     response.url().includes('/.api/functions/auth'),
   )
+
+  // This page uses Cedar Forms, and so does /posts/new. Vite splits Cedar
+  // Forms out into a separate chunk. We need to make sure our prerender
+  // code can handle that
+  await page.goto('/contacts/new')
+  await authResponse
 
   await expect(page.getByLabel('Name')).toBeVisible()
   await expect(page.getByLabel('Email')).toBeVisible()

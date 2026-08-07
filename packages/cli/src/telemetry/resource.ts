@@ -10,16 +10,13 @@ import { v4 as uuidv4, validate as validateUUID } from 'uuid'
 import { getPaths, getRawConfig } from '@cedarjs/project-config'
 import { RWProject } from '@cedarjs/structure/dist/model/RWProject'
 
-import {
-  name as _packageName,
-  version as _packageVersion,
-  // @ts-expect-error - No types for JS files
-} from '../../package.js'
-
-const packageName: string = _packageName
-const packageVersion: string = _packageVersion
-
 export async function getResources() {
+  const packageJson = await import('../../package.json', {
+    with: { type: 'json' },
+  })
+  const packageName: string = packageJson.default['name']
+  const packageVersion: string = packageJson.default['version']
+
   // Read the UUID from the file within .cedar or generate a new one if it
   // doesn't exist or if it is too old
   let UID = uuidv4()
@@ -112,7 +109,6 @@ export async function getResources() {
     complexity,
     sides,
     experiments: JSON.stringify(experiments),
-    webBundler: 'vite', // Hardcoded because this is now the only supported bundler
     uid: UID,
   }
 }

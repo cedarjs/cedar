@@ -202,7 +202,6 @@
           }
         }
       }
-    },
-    "eslintLegacyConfigWarning": { "type": "boolean" }
+    }
   }
 }

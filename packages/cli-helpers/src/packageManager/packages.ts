@@ -10,15 +10,16 @@ type AddOptions = ExecaOptions & { dev?: boolean }
  *
  * - yarn:  `yarn add [-D] <packages>`
  * - npm:   `npm install [-D] <packages>`
- * - pnpm:  `pnpm add [-D] <packages>`
+ * - pnpm:  `pnpm add -w [-D] <packages>`
  */
 export function addRootPackages(packages: string[], options?: AddOptions) {
   const pm = getPackageManager()
   const { dev, ...execaOptions } = options ?? {}
   const addCmd = pm === 'npm' ? 'install' : 'add'
   const devFlag = dev ? ['-D'] : []
+  const rootFlag = pm === 'pnpm' ? ['-w'] : []
 
-  return execa(pm, [addCmd, ...devFlag, ...packages], execaOptions)
+  return execa(pm, [addCmd, ...rootFlag, ...devFlag, ...packages], execaOptions)
 }
 
 /**

@@ -4,9 +4,9 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import Configstore from 'configstore'
-import execa from 'execa'
 import { terminalLink } from 'termi-link'
 
+import { runScriptSync } from '@cedarjs/cli-helpers/packageManager/exec'
 import { getConfigPath } from '@cedarjs/project-config'
 
 const config = new Configstore('@cedarjs/cli')
@@ -40,20 +40,38 @@ console.log('Cedar Framework Tools Path:', terminalLink(absCfwPath, absCfwPath))
 let command = process.argv.slice(2)
 const helpCommands = ['help', '--help']
 if (!command.length || command.some((cmd) => helpCommands.includes(cmd))) {
+  // yarn run / npm run / pnpm run – all list available scripts
   command = ['run']
 }
+
+const script = command[0]
+const args = command.slice(1)
 
 try {
   // This used to look like `execa.sync('yarn', [...command], {`, but then Node
   // deprecated passing args in that way.
   // See https://nodejs.org/api/deprecations.html#DEP0190
-  execa.sync('yarn', [...command], {
+  runScriptSync(script, args, {
     stdio: 'inherit',
     cwd: absCfwPath,
     // @ts-expect-error - testUtils.d.ts augments ProcessEnv with
     // CEDAR_DISABLE_TELEMETRY
     env: { CEDAR_CWD: projectPath },
   })
-} catch {
+} catch (e) {
   console.log()
+
+  // With `stdio: 'inherit'` the failing command's output has already been
+  // shown, but the failure itself must still propagate — silently exiting 0
+  // here makes callers (like the test-project rebuild script) treat a failed
+  // framework sync as a success and continue against published packages
+  const exitCode =
+    e &&
+    typeof e === 'object' &&
+    'exitCode' in e &&
+    typeof e.exitCode === 'number'
+      ? e.exitCode
+      : 1
+
+  process.exit(exitCode)
 }

@@ -16,6 +16,7 @@ import {
   parseTypeScriptConfigFiles,
 } from '../internal.js'
 
+import { cedarRemoveDevFatalErrorPagePlugin } from './rollupPlugins/rollup-plugin-cedar-remove-dev-fatal-error-page.js'
 import { cellTransformPlugin } from './rollupPlugins/rollup-plugin-cedarjs-cell.js'
 import { cedarjsDirectoryNamedImportPlugin } from './rollupPlugins/rollup-plugin-cedarjs-directory-named-imports.js'
 import { externalPlugin } from './rollupPlugins/rollup-plugin-cedarjs-external.js'
@@ -128,6 +129,7 @@ export async function buildAndImport(
           }
         },
       },
+      cedarRemoveDevFatalErrorPagePlugin(),
       ignoreHtmlAndCssImportsPlugin(),
       cellTransformPlugin(),
       cedarjsRoutesAutoLoaderPlugin(),

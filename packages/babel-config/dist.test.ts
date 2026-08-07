@@ -4,16 +4,16 @@ const distPath = path.join(__dirname, 'dist')
 
 describe('dist', () => {
   it('exports', async () => {
-    const { default: mod } = await import(path.join(distPath, 'index.js'))
+    const mod = await import(path.join(distPath, 'index.js'))
 
     expect(mod).toMatchInlineSnapshot(`
       {
         "TARGETS_NODE": "24",
         "getApiSideBabelConfigPath": [Function],
         "getApiSideBabelPlugins": [Function],
+        "getApiSideBabelPluginsForVite": [Function],
         "getApiSideBabelPresets": [Function],
         "getApiSideDefaultBabelConfig": [Function],
-        "getCommonPlugins": [Function],
         "getPathsFromConfig": [Function],
         "getRouteHookBabelPlugins": [Function],
         "getWebSideBabelConfigPath": [Function],

@@ -21,7 +21,7 @@ export const Document: React.FC<DocumentProps> = ({ children, css, meta }) => {
         <Meta tags={meta} />
       </head>
       <body>
-        <div id="redwood-app">{children}</div>
+        <div id="cedar-app">{children}</div>
       </body>
     </html>
   )

@@ -14,7 +14,7 @@ function main() {
     process.exitCode = 1
     console.error([
       'Error: Please specify the path to your Redwood project',
-      `Usage: ${process.argv?.[1]} ./path/to/rw/project`,
+      `Usage: ${process.argv?.[1]} ./path/to/cedar/project`,
     ])
     return
   }
@@ -24,7 +24,8 @@ function main() {
     addDependenciesToPackageJson(packageJsonPath)
     console.log('Done. Now run `yarn install`.')
   } catch (e) {
-    console.log('Error:', e.message)
+    const message = e instanceof Error ? e.message : String(e)
+    console.log('Error:', message)
     process.exitCode = 1
   }
 }

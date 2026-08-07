@@ -19,11 +19,13 @@ export {
 export {
   hasDirective,
   DirectiveType,
+  useCedarDirective,
   useRedwoodDirective,
 } from './plugins/useRedwoodDirective.js'
 
 export type {
   DirectiveParams,
+  CedarDirective,
   RedwoodDirective,
   ValidatorDirective,
   ValidatorDirectiveFunc,

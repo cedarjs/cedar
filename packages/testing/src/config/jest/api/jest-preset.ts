@@ -6,8 +6,33 @@ import { getApiSideDefaultBabelConfig } from '@cedarjs/babel-config'
 import { getPaths } from '@cedarjs/project-config'
 
 const rwjsPaths = getPaths()
-const NODE_MODULES_PATH = path.join(rwjsPaths.base, 'node_modules')
 const { babelrc } = getApiSideDefaultBabelConfig()
+
+/**
+ * Resolve a specifier through the package's `exports` map.
+ *
+ * This mapping used to be built by joining onto `<project>/node_modules`, which
+ * assumes every package is hoisted to one directory at the project root. yarn
+ * and npm hoist, but pnpm nests, so that path often doesn't exist and the
+ * mapping pointed at nothing. Resolving works under all three, and doesn't
+ * require a `node_modules` directory to exist at all — which is what Yarn PnP
+ * needs.
+ *
+ * Returns undefined when the package isn't installed or doesn't export the
+ * subpath, in which case we drop the mapping and let Jest resolve the import
+ * normally. That beats pointing it at a path that isn't there.
+ */
+function resolveSubpath(specifier: string): string | undefined {
+  try {
+    return require.resolve(specifier, {
+      paths: [rwjsPaths.api.base, rwjsPaths.base],
+    })
+  } catch {
+    return undefined
+  }
+}
+
+const testingApiPath = resolveSubpath('@cedarjs/testing/api')
 
 const config: Config = {
   // To make sure other config option which depends on rootDir use
@@ -49,11 +74,35 @@ const config: Config = {
     '^src/(.*)$': path.join(rwjsPaths.api.src, '$1'),
     // @NOTE: Import @cedarjs/testing in api tests, and it automatically remaps to the api side only
     // This is to prevent web stuff leaking into api, and vice versa
-    '^@cedarjs/testing$': path.join(NODE_MODULES_PATH, '@cedarjs/testing/api'),
+    ...(testingApiPath ? { '^@cedarjs/testing$': testingApiPath } : {}),
     // Support for importing files with extensions (like you'd do in ESM projects)
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   transform: {
+    // `@cedarjs/context`, `@cedarjs/api`, `@cedarjs/graphql-server`, and
+    // `@cedarjs/storage` are ESM-only. Two things pull them in at the top
+    // level of a generated project's api-side test run: @cedarjs/testing's
+    // own api entry point (which virtually every test imports, for
+    // scenario/mock helpers — pulls in `@cedarjs/context` and
+    // `@cedarjs/graphql-server` via `directive.ts`, and
+    // `@cedarjs/api/webhooks` via `apiFunction.ts`), and the *user's own*
+    // generated code — the `cedar setup uploads` template imports
+    // `@cedarjs/storage`. Jest's CJS runtime can't parse the real ESM these
+    // now emit, so they need the same babel-jest carve-out the web preset
+    // already uses for ESM-only node_modules packages (see jest-preset.ts
+    // on the web side for the fuller explanation of why this is
+    // necessary).
+    '[/\\\\]node_modules[/\\\\]@cedarjs[/\\\\](context|api|graphql-server|storage)[/\\\\].+\\.js$':
+      [
+        'babel-jest',
+        {
+          babelrc: false,
+          configFile: false,
+          presets: [
+            [require.resolve('@babel/preset-env'), { targets: { node: '20' } }],
+          ],
+        },
+      ],
     '\\.[cm]?[jt]sx?$': [
       'babel-jest',
       // When jest runs tests in parallel, it serializes the config before passing down options to babel
@@ -66,6 +115,9 @@ const config: Config = {
       },
     ],
   },
+  transformIgnorePatterns: [
+    '[/\\\\]node_modules[/\\\\](?!@cedarjs[/\\\\]context[/\\\\])(?!@cedarjs[/\\\\]api[/\\\\])(?!@cedarjs[/\\\\]graphql-server[/\\\\])(?!@cedarjs[/\\\\]storage[/\\\\])',
+  ],
   testPathIgnorePatterns: ['.scenarios.[jt]s$'],
 }
 

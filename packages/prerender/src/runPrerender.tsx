@@ -4,10 +4,7 @@ import path from 'node:path'
 import React from 'react'
 import type { ElementType } from 'react'
 
-// Building CJS types complains about this being turned into a require call
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import * as apolloClient from '@apollo/client'
+import { ApolloClient, ApolloLink, InMemoryCache } from '@apollo/client'
 import type { CheerioAPI } from 'cheerio'
 import { load as loadHtml } from 'cheerio'
 import ReactDOMServer from 'react-dom/server'
@@ -17,8 +14,6 @@ import {
   registerWebSideBabelHook,
 } from '@cedarjs/babel-config'
 import { getPaths, ensurePosixPath } from '@cedarjs/project-config'
-import { LocationProvider } from '@cedarjs/router'
-import { matchPath } from '@cedarjs/router/dist/util'
 import type { QueryInfo } from '@cedarjs/web'
 
 import { babelPluginRedwoodCell } from './babelPlugins/babel-plugin-redwood-cell.js'
@@ -33,11 +28,13 @@ import { executeQuery, getGqlHandler } from './graphql/graphql.js'
 import type { FileImporter } from './graphql/graphql.js'
 import { getRootHtmlPath, registerShims, writeToDist } from './internal.js'
 
-// @ts-expect-error - ESM/CJS issue
-const { ApolloClient, InMemoryCache } = apolloClient.default || apolloClient
-
 // Create an apollo client that we can use to prepopulate the cache and restore it client-side
-const prerenderApolloClient = new ApolloClient({ cache: new InMemoryCache() })
+// The client never sends requests during prerendering, so it terminates in an
+// empty link
+const prerenderApolloClient = new ApolloClient({
+  cache: new InMemoryCache(),
+  link: ApolloLink.empty(),
+})
 
 async function recursivelyRender(
   App: ElementType,
@@ -49,6 +46,7 @@ async function recursivelyRender(
 ): Promise<string> {
   // Load this async, to prevent rwjs/web being loaded before shims
   const { CellCacheContextProvider, getOperationName } = require('@cedarjs/web')
+  const { LocationProvider } = require('@cedarjs/router')
 
   let shouldShowGraphqlHandlerNotFoundWarn = false
   // Execute all gql queries we haven't already fetched
@@ -169,6 +167,9 @@ function insertChunkLoadingScript(
   indexHtmlTree: CheerioAPI,
   renderPath: string,
 ) {
+  // Load this async, to prevent rwjs/router being loaded before shims
+  const { matchPath } = require('@cedarjs/router/dist/util')
+
   const prerenderRoutes = detectPrerenderRoutes()
 
   const route = prerenderRoutes.find((route) => {
@@ -302,7 +303,8 @@ export const runPrerender = async ({
     overrides: [
       {
         plugins: [
-          ['ignore-html-and-css-imports'], // webpack/postcss handles CSS imports
+          // Vite handles CSS imports for the browser build
+          ['ignore-html-and-css-imports'],
           [babelPluginRedwoodPrerenderMediaImports],
         ],
       },
@@ -370,7 +372,7 @@ export const runPrerender = async ({
   }
 
   indexHtmlTree('head').append(
-    `<script> globalThis.__REDWOOD__APOLLO_STATE = ${JSON.stringify(
+    `<script> globalThis.__CEDAR__APOLLO_STATE = ${JSON.stringify(
       prerenderApolloClient.extract(),
     )}</script>`,
   )
@@ -382,7 +384,7 @@ export const runPrerender = async ({
 
   insertChunkLoadingScript(indexHtmlTree, renderPath)
 
-  indexHtmlTree('#redwood-app').append(componentAsHtml)
+  indexHtmlTree('#cedar-app, #redwood-app').append(componentAsHtml)
 
   const renderOutput = indexHtmlTree.html()
 

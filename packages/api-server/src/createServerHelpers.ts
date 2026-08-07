@@ -8,7 +8,7 @@ import type {
 
 import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers.js'
 
-import { getAPIHost, getAPIPort } from './cliHelpers.js'
+import { getAPIHost, getAPIPort, getAPIRootPath } from './cliHelpers.js'
 
 export type StartOptions = Omit<FastifyListenOptions, 'port' | 'host'>
 
@@ -61,7 +61,7 @@ type DefaultCreateServerOptions = Required<
 // getAPIHost and getAPIPort just by importing this file.
 export const getDefaultCreateServerOptions: () => DefaultCreateServerOptions =
   () => ({
-    apiRootPath: '/',
+    apiRootPath: getAPIRootPath(),
     logger: {
       level:
         process.env.LOG_LEVEL ??

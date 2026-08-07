@@ -7,6 +7,7 @@ import ci from 'ci-info'
 import envinfo from 'envinfo'
 import system from 'systeminformation'
 import { v4 as uuidv4 } from 'uuid'
+import yargsParser from 'yargs/yargs'
 
 import { getRawConfig, getPaths } from '@cedarjs/project-config'
 import { RWProject } from '@cedarjs/structure/dist/model/RWProject'
@@ -115,7 +116,6 @@ const getInfo = async (presets: Args = {}) => {
     cedarVersion:
       presets.cedarVersion || info.npmPackages?.['@cedarjs/core']?.installed,
     system: `${cpu.physicalCores}.${Math.round(mem.total / 1073741824)}`,
-    webBundler: 'vite', // Hardcoded as this is now the only supported bundler
     experiments,
   }
 }
@@ -191,22 +191,32 @@ const buildPayload = async () => {
     }
   }
 
-  const argv = require('yargs/yargs')(processArgv.slice(2)).parse()
-  const command = argv.argv ? sanitizeArgv(JSON.parse(argv.argv)) : ''
+  const rawArgv = yargsParser(processArgv.slice(2)).parseSync()
+
+  const argvFlag = typeof rawArgv.argv === 'string' ? rawArgv.argv : undefined
+  const typeFlag = typeof rawArgv.type === 'string' ? rawArgv.type : undefined
+  const durationFlag =
+    typeof rawArgv.duration === 'string' ? rawArgv.duration : undefined
+  const rwVersionFlag =
+    typeof rawArgv.rwVersion === 'string' ? rawArgv.rwVersion : undefined
+  const errorFlag =
+    typeof rawArgv.error === 'string' ? rawArgv.error : undefined
+
+  const command = argvFlag ? sanitizeArgv(JSON.parse(argvFlag)) : ''
   payload = {
-    type: argv.type || 'command',
+    type: typeFlag || 'command',
     command,
-    duration: argv.duration ? parseInt(argv.duration) : null,
+    duration: durationFlag ? parseInt(durationFlag) : null,
     uid: uniqueId(),
     ci: ci.isCI,
     cedarCi: !!process.env.CEDAR_CI,
     NODE_ENV: process.env.NODE_ENV || null,
-    ...(await getInfo({ cedarVersion: argv.rwVersion, command })),
+    ...(await getInfo({ cedarVersion: rwVersionFlag, command })),
   }
 
-  if (argv.error) {
+  if (errorFlag) {
     payload.type = 'error'
-    payload.error = argv.error
+    payload.error = errorFlag
       .split('\n')[0]
       .replace(/(\/[@\-\.\w]+)/g, '[path]')
   }

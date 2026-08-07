@@ -1,5 +1,3 @@
-import { writeFileSync } from 'node:fs'
-
 import * as esbuild from 'esbuild'
 
 import {
@@ -7,38 +5,18 @@ import {
   defaultBuildOptions,
   defaultIgnorePatterns,
 } from '@cedarjs/framework-tools'
+import { generateTypesEsm } from '@cedarjs/framework-tools/generateTypes'
 
-// CJS build
-/**
- * Notes:
- * - we don't build the webpack entry point in CJS, because it produces a double wrapped module
- * instead we use the ESM version (see ./webpackEntry in package.json). The double wrapping happens
- * when you set type: module in package.json, and occurs on the App & Routes import from the project.
- * - we build bins in CJS, until projects fully switch to ESM (or we produce .mts files) this is probably
- * the better option
- */
 await build({
   entryPointOptions: {
     ignore: [
       ...defaultIgnorePatterns,
+      // defaultIgnorePatterns only covers .test.{ts,js}, so also ignore the
+      // .tsx test files to keep them out of the build output
+      '**/*.test.tsx',
       'src/__typetests__/**',
       'src/bundled/**', // <-- ⭐
     ],
-  },
-  buildOptions: {
-    ...defaultBuildOptions,
-    tsconfig: 'tsconfig.build.json',
-    outdir: 'dist/cjs',
-    packages: 'external',
-  },
-})
-
-// ESM build
-await build({
-  entryPointOptions: {
-    // @NOTE: building the cjs bins only...
-    // I haven't tried esm bins yet...
-    ignore: [...defaultIgnorePatterns, 'src/bins/**', 'src/__typetests__/**'],
   },
   buildOptions: {
     ...defaultBuildOptions,
@@ -48,28 +26,23 @@ await build({
   },
 })
 
-// Workaround for apollo-client-upload being ESM-only
-// In ESM version of rwjs/web, we don't actually bundle it, we just reexport.
-// In the CJS version (see ⭐ above), we bundle it below.
-// This only ever gets used during prerender, so bundle size is not a concern.
+// apollo-upload-client (and its own transitive deps, e.g. extract-files ->
+// is-plain-obj) ship real ESM. That's fine for this package's own build, but
+// once a generated project's Jest run pulls in @cedarjs/web (see ⭐ above --
+// web is in the web-side Jest preset's transformIgnorePatterns carve-out),
+// Jest's CJS runtime would need every one of those transitive node_modules
+// files individually carved out too, and that list isn't ours to maintain --
+// it's whatever apollo-upload-client's own dependency tree happens to be at
+// any given version. Bundling this one file inlines the whole chain into a
+// single self-contained module, so nothing outside of it needs its own
+// carve-out entry.
 await esbuild.build({
   entryPoints: ['src/bundled/*'],
-  outdir: 'dist/cjs/bundled',
-  format: 'cjs',
+  outdir: 'dist/bundled',
+  format: 'esm',
   bundle: true,
   logLevel: 'info',
   tsconfig: 'tsconfig.build.json',
 })
 
-// Place a package.json file with `type: commonjs` in the dist/cjs folder so
-// that all .js files are treated as CommonJS files.
-writeFileSync('dist/cjs/package.json', JSON.stringify({ type: 'commonjs' }))
-
-// Place a package.json file with `type: module` in the dist folder so that
-// all .js files are treated as ES Module files.
-writeFileSync('dist/package.json', JSON.stringify({ type: 'module' }))
-
-// tsc doesn't generate any types here, because the source file is a javascript
-// file. But it's really simple. It doesn't have any exports. So we can just
-// write the type definitions ourselves
-writeFileSync('dist/entry/index.d.ts', 'export {}\n')
+await generateTypesEsm()

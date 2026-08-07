@@ -145,14 +145,14 @@ const App = () => (
   <FatalErrorBoundary page={FatalErrorPage}>
     <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
       <AuthProvider type="dbAuth">
-        <RedwoodApolloProvider
+        <CedarApolloProvider
           useAuth={useAuth}
           graphQLClientConfig={{
             httpLinkConfig: { credentials: 'include' },
           }}
         >
           <Routes />
-        </RedwoodApolloProvider>
+        </CedarApolloProvider>
       </AuthProvider>
     </RedwoodProvider>
   </FatalErrorBoundary>

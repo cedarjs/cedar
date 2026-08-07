@@ -1,9 +1,9 @@
 import type fs from 'node:fs'
 import path from 'node:path'
 
-import dedent from 'dedent'
 import { fs as memfs, vol } from 'memfs'
 import prompts from 'prompts'
+import dedent from 'ts-dedent'
 import {
   vi,
   beforeAll,
@@ -116,13 +116,14 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
   }
 })
 
-vi.mock('@prisma/internals', () => ({
-  getSchemaWithPath: () => {
+vi.mock('@prisma/internals', () => {
+  const getSchemaWithPath = () => {
     return {
       schemas: [[dbSchemaPath, memfs.readFileSync(dbSchemaPath, 'utf-8')]],
     }
-  },
-  getDMMF: () => {
+  }
+
+  const getDMMF = () => {
     const schema: string = memfs.readFileSync(dbSchemaPath, 'utf-8').toString()
 
     const models = schema
@@ -136,13 +137,19 @@ vi.mock('@prisma/internals', () => ({
         models,
       },
     }
-  },
-  default: {
-    createSchemaPathInput: vi.fn(),
-    getConfig: vi.fn(),
-    getSchemaWithPath: vi.fn(),
-  },
-}))
+  }
+
+  return {
+    getSchemaWithPath,
+    getDMMF,
+    default: {
+      createSchemaPathInput: vi.fn(),
+      getConfig: vi.fn(),
+      getSchemaWithPath,
+      getDMMF,
+    },
+  }
+})
 
 vi.mock('prompts', () => {
   return {

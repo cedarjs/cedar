@@ -1,21 +1,56 @@
 import React from 'react'
 
+import { CombinedGraphQLErrors } from '@apollo/client'
+import { useQuery } from '@apollo/client/react'
+
 import { fragmentRegistry } from '../../apollo/fragmentRegistry.js'
 import { getOperationName } from '../../graphql.js'
-/**
- * This is part of how we let users swap out their GraphQL client while staying compatible with Cells.
- */
-import { useQuery } from '../GraphQLHooksProvider.js'
 
 import { useCellCacheContext } from './CellCacheContext.js'
-import type { CreateCellProps } from './cellTypes.js'
+import type { CreateCellProps, DataObject } from './cellTypes.js'
+import { createFragmentCell } from './createFragmentCell.js'
 import { createSuspendingCell } from './createSuspendingCell.js'
 import { isDataEmpty } from './isCellEmpty.js'
 
-// 👇 Note how we switch which cell factory to use!
-export const createCell = RWJS_ENV.RWJS_EXP_STREAMING_SSR
-  ? createSuspendingCell
-  : createNonSuspendingCell
+export function createCell<
+  CellProps extends Record<string, unknown>,
+  CellVariables extends Record<string, unknown>,
+>(
+  createCellProps: CreateCellProps<CellProps, CellVariables>,
+): React.FC<CellProps> {
+  // Cells that declare their data requirements with a FRAGMENT don't fire
+  // queries of their own – they read their slice of a parent Cell's query
+  // result via a prop named after the fragment. If a Cell exports both QUERY
+  // and FRAGMENT it stays a query Cell (the FRAGMENT export might just be a
+  // helper for other Cells to spread)
+  if (createCellProps.FRAGMENT) {
+    if (!createCellProps.QUERY) {
+      return createFragmentCell(createCellProps)
+    }
+
+    // The Cell stays a query Cell, but other Cells might still spread its
+    // FRAGMENT export by name, so it has to be registered (createFragmentCell
+    // handles registration for fragment Cells)
+    fragmentRegistry.register(createCellProps.FRAGMENT)
+  }
+
+  // 👇 Note how we switch which cell factory to use!
+  if (RWJS_ENV.RWJS_EXP_STREAMING_SSR) {
+    // createSuspendingCell types its argument with `Record<string, unknown>`
+    // instead of the Cell's own props type (see the note in its
+    // implementation), so the generics don't line up even though the runtime
+    // shape is identical. The returned component is re-typed with this Cell's
+    // props.
+    const suspendingCellProps = createCellProps as CreateCellProps<
+      Record<string, unknown>,
+      CellVariables
+    >
+
+    return createSuspendingCell<CellProps, CellVariables>(suspendingCellProps)
+  }
+
+  return createNonSuspendingCell(createCellProps)
+}
 
 /**
  * Creates a Cell out of a GraphQL query and components that track to its lifecycle.
@@ -45,13 +80,25 @@ function createNonSuspendingCell<
   Success,
   displayName = 'Cell',
 }: CreateCellProps<CellProps, CellVariables>): React.FC<CellProps> {
+  if (!QUERY) {
+    throw new Error(
+      `Can't create a Cell (${displayName}) without a QUERY or FRAGMENT export`,
+    )
+  }
+
+  // Assigning to a `const` here (as opposed to using the destructured
+  // parameter directly) makes the `!QUERY` narrowing above hold inside
+  // `NamedCell` below
+  const cellQuery = QUERY
+
   function NamedCell(props: React.PropsWithChildren<CellProps>) {
     /**
      * Right now, Cells don't render `children`.
      */
     const { children: _, ...variables } = props
     const options = beforeQuery(variables as CellProps)
-    const query = typeof QUERY === 'function' ? QUERY(options) : QUERY
+    const query =
+      typeof cellQuery === 'function' ? cellQuery(options) : cellQuery
 
     // queryRest includes `variables: { ... }`, with any variables returned
     // from beforeQuery
@@ -61,7 +108,7 @@ function createNonSuspendingCell<
       loading,
       data,
       ...queryResult
-    } = useQuery(query, options)
+    } = useQuery<DataObject>(query, options)
 
     if (globalThis.__REDWOOD__PRERENDERING) {
       // __REDWOOD__PRERENDERING will always either be set, or not set. So
@@ -95,7 +142,9 @@ function createNonSuspendingCell<
       } else {
         if (queryInfo?.hasProcessed) {
           loading = false
-          data = queryInfo.data
+          // The prerender query cache stores the untyped result of executing
+          // this Cell's query, so it has the `DataObject` shape
+          data = queryInfo.data as DataObject
 
           // All of the gql client's props aren't available when pre-rendering,
           // so using `any` here
@@ -124,7 +173,9 @@ function createNonSuspendingCell<
             errorCode={
               // Use the ad-hoc QueryResultWithErrorCode type to access the errorCode
               (queryResult as QueryResultWithErrorCode).errorCode ??
-              (error.graphQLErrors?.[0]?.extensions?.['code'] as string)
+              (CombinedGraphQLErrors.is(error)
+                ? (error.errors[0]?.extensions?.['code'] as string)
+                : undefined)
             }
             {...props}
             updating={loading}
@@ -132,7 +183,9 @@ function createNonSuspendingCell<
           />
         )
       } else {
-        throw error
+        // Apollo Client types errors as `ErrorLike`, but at runtime they're
+        // `Error` instances
+        throw error instanceof Error ? error : new Error(error.message)
       }
     } else if (data) {
       const afterQueryData = afterQuery(data)

@@ -1,19 +1,17 @@
 {
   "name": "@cedarjs/forms",
-  "version": "4.2.0",
+  "version": "5.0.6",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
     "directory": "packages/forms"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "exports": {
     ".": {
-      "default": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      }
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
   "main": "./dist/index.js",
@@ -22,38 +20,37 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts && yarn build:types",
+    "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-forms.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
-    "check:attw": "yarn rw-fwtools-attw",
+    "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "graphql": "16.13.2",
+    "graphql": "16.14.2",
     "pascalcase": "1.0.0",
     "react-hook-form": "7.74.0"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@testing-library/dom": "9.3.4",
+    "@testing-library/dom": "10.4.1",
     "@testing-library/jest-dom": "6.9.1",
-    "@testing-library/react": "14.3.1",
+    "@testing-library/react": "16.3.2",
     "@testing-library/user-event": "14.6.1",
     "@types/pascalcase": "1.0.3",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
-    "concurrently": "9.2.1",
+    "concurrently": "9.2.4",
     "nodemon": "3.1.14",
-    "publint": "0.3.21",
+    "publint": "0.3.22",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "tsx": "4.21.0",
     "typescript": "5.9.3",
-    "vitest": "3.2.4"
+    "vitest": "4.1.10"
   },
   "peerDependencies": {
     "react": "19.2.3"

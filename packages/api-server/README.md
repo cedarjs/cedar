@@ -16,7 +16,6 @@ From package.json
 
 ```
   "bin": {
-    "cedarjs-api-server-watch": "./dist/watch.js",
     "cedarjs-log-formatter": "./dist/logFormatter/bin.js",
     "cedarjs-server": "./dist/bin.js",
   },

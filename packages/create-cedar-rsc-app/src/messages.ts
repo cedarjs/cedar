@@ -1,7 +1,7 @@
 import ansis from 'ansis'
 
-import type { Config } from './config.js'
-import { getCcrscaVersion } from './version.js'
+import type { Config } from './config.ts'
+import { getCcrscaVersion } from './version.ts'
 
 export function printWelcome() {
   console.log()

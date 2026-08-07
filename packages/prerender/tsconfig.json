@@ -4,7 +4,6 @@
     "rootDir": "."
   },
   "include": ["."],
-  "exclude": ["dist", "node_modules", "**/__fixtures__"],
   "references": [
     { "path": "../babel-config" },
     { "path": "../project-config" },

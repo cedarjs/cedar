@@ -47,10 +47,10 @@ yarn rw setup auth auth0
 We mentioned that Cedar has a simple API you can use to integrate any provider you want.
 Whether you roll your own auth provider or choose one of Cedar's integrations, it's good to be familiar with it, so let's dive into it here.
 
-On the web side, there are two components that can be auth enabled: the `RedwoodApolloProvider` in `web/src/App.tsx` and the `Router` in `web/src/Routes.tsx`.
-Both take a `useAuth` prop. If provided, they'll use this hook to get information about the app's auth state. The `RedwoodApolloProvider` uses it to get a token to include in every GraphQL request, and the `Router` uses it to determine if a user has access to private or role-restricted routes.
+On the web side, there are two components that can be auth enabled: the `CedarApolloProvider` in `web/src/App.tsx` and the `Router` in `web/src/Routes.tsx`.
+Both take a `useAuth` prop. If provided, they'll use this hook to get information about the app's auth state. The `CedarApolloProvider` uses it to get a token to include in every GraphQL request, and the `Router` uses it to determine if a user has access to private or role-restricted routes.
 
-When you set up an auth provider, the setup command makes a new file, `web/src/auth.ts`. This file's job is to create the `AuthProvider` component and the `useAuth` hook by integrating with the auth provider of your choice. Whenever you need access to the auth context, you'll import the `useAuth` hook from this file. The `RedwoodApolloProvider` and the `Router` are no exceptions:
+When you set up an auth provider, the setup command makes a new file, `web/src/auth.ts`. This file's job is to create the `AuthProvider` component and the `useAuth` hook by integrating with the auth provider of your choice. Whenever you need access to the auth context, you'll import the `useAuth` hook from this file. The `CedarApolloProvider` and the `Router` are no exceptions:
 
 ![web-side-auth](https://user-images.githubusercontent.com/32992335/208549951-469617d7-c798-4d9a-8a29-46efe23cca6a.png)
 

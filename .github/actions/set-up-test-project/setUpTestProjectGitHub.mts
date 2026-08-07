@@ -8,10 +8,16 @@ import {
   CEDAR_FRAMEWORK_PATH,
 } from '../actionsLib.mjs'
 
-import { setUpTestProject } from './setUpTestProject.mts'
+import {
+  optionalPackageManager,
+  setUpTestProject,
+} from './setUpTestProject.mts'
 
 const parentDir = path.dirname(process.cwd())
-const testProjectPath = path.join(parentDir, 'test-project')
+// The space in the directory name is deliberate: it makes every CI run
+// exercise paths with spaces, which catches missing shell quoting on all
+// platforms (historically a Windows-breakage class we otherwise never test).
+const testProjectPath = path.join(parentDir, 'test project')
 
 setUpTestProject({
   setOutput: core.setOutput,
@@ -20,4 +26,5 @@ setUpTestProject({
   execInFramework,
   cedarFrameworkPath: CEDAR_FRAMEWORK_PATH,
   testProjectPath,
+  packageManager: optionalPackageManager(core.getInput('packageManager')),
 })

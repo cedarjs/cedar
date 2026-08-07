@@ -22,9 +22,9 @@ export async function smokeTest({ page }: PlaywrightTestArgs) {
   ).toBeVisible()
 
   // CSS checks. We saw this break when we switched bundlers, so while it's not comprehensive, it's at least something.
-  // While playwright recommends against using locators that are too-closely tied to the DOM, `#redwood-app` is a stable ID.
+  // While playwright recommends against using locators that are too-closely tied to the DOM, `#cedar-app` is a stable ID.
   const bgBlue700 = 'rgb(29, 78, 216)'
-  await expect(page.locator('#redwood-app > header')).toHaveCSS(
+  await expect(page.locator('#cedar-app > header')).toHaveCSS(
     'background-color',
     bgBlue700,
   )

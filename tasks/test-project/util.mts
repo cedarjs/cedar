@@ -15,38 +15,69 @@ export async function applyCodemod(codemod: string, target: string) {
   const args = [
     '--fail-on-error',
     '-t',
-    `${path.resolve(__dirname, 'codemods', codemod)} ${target}`,
+    // These commands run with `shell: true`, so the paths have to be quoted
+    // to survive shell parsing when they contain spaces (the CI test projects
+    // deliberately live in paths with spaces)
+    `"${path.resolve(__dirname, 'codemods', codemod)}"`,
+    `"${target}"`,
     '--parser',
     'tsx',
     '--verbose=2',
   ]
 
-  args.push()
-
-  const subprocess = exec(
+  const result = await exec(
     'yarn jscodeshift',
     args,
     getExecaOptions(path.resolve(import.meta.dirname)),
   )
 
-  return subprocess
+  // jscodeshift exits with code 0 even when the target path doesn't exist or
+  // no files were modified, which would leave the project silently
+  // unconverted. All codemods here are expected to modify their target file.
+  if (/\b0 ok\b/.test(result.stdout)) {
+    throw new Error(
+      `Codemod ${codemod} did not modify ${target}:\n` +
+        `${result.stdout}\n${result.stderr}`,
+    )
+  }
+
+  return result
 }
 
 export const getExecaOptions = (
   cwd: string,
   stdio: 'inherit' | 'pipe' = 'pipe',
-): ExecaOptions => ({
-  shell: true,
-  stdio,
-  cleanup: true,
-  cwd,
-  env: {
-    ...process.env,
-    RW_PATH: path.join(__dirname, '../../'),
-    CFW_PATH: path.join(__dirname, '../../'),
-    RWFW_PATH: path.join(__dirname, '../../'),
-  },
-})
+): ExecaOptions => {
+  // Yarn sets PROJECT_CWD which causes @cedarjs/web/dist/cjs/bins/cedar.js to
+  // chdir to the Yarn project root, overriding our explicit cwd. Unset it so
+  // that the child process inherits our intended working directory.
+  //
+  // Yarn also sets npm_config_user_agent, which getPackageManager() trusts
+  // over the target directory's own lockfiles. When this script is invoked
+  // via `yarn rebuild-test-project-fixture --pm npm/pnpm`, that leaked agent
+  // makes nested tools (cfw's script dispatch, the CLI's internal
+  // `<pm> cedar prisma generate` spawn, ...) pick yarn inside npm/pnpm
+  // projects. Unset it so detection falls back to lockfiles, which are
+  // correct both in the framework repo (yarn) and in the test project.
+  const droppedEnvVars = ['PROJECT_CWD', 'npm_config_user_agent']
+  const env = Object.fromEntries(
+    Object.entries(process.env).filter(
+      ([key]) => !droppedEnvVars.includes(key),
+    ),
+  )
+  env.RW_PATH = path.join(__dirname, '../../')
+  env.CFW_PATH = path.join(__dirname, '../../')
+  env.RWFW_PATH = path.join(__dirname, '../../')
+
+  return {
+    shell: true,
+    stdio,
+    cleanup: true,
+    cwd,
+    env,
+    extendEnv: false,
+  }
+}
 
 // Confirmation prompt when using --no-copyFromFixture --no-link'
 export async function confirmNoFixtureNoLink(

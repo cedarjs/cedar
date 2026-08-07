@@ -4,7 +4,7 @@ module.exports = defineConfig({
   schema: 'db/schema.prisma',
   migrations: {
     path: 'db/migrations',
-    seed: 'yarn cedar exec seed',
+    seed: '{{CEDAR_CLI}} exec seed',
   },
   datasource: {
     url: env('DATABASE_URL'),

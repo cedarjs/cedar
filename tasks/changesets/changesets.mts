@@ -9,7 +9,7 @@ import {
   resolveArgv,
   shouldShowHelp,
   showHelp,
-} from './changesetsHelpers.mjs'
+} from './changesetsHelpers.mts'
 
 async function main() {
   if (shouldShowHelp()) {

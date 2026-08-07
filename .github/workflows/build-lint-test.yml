@@ -11,12 +11,19 @@ jobs:
   build-lint-test:
     runs-on: ${{ inputs.os }}
 
+    # Nx intermittently exits with code 1 and no output at all on Windows, at
+    # the point where it hands off to the task runner. Verbose logging costs us
+    # nothing but log noise and keeps the Nx Cloud cache, unlike disabling the
+    # cloud, so we can leave it on until we have caught the failure.
+    env:
+      NX_VERBOSE_LOGGING: ${{ inputs.os == 'windows-latest' && 'true' || '' }}
+
     steps:
       - name: Remove the tsc problem matcher if not ubuntu-latest
         if: inputs.os != 'ubuntu-latest'
         run: echo "echo "::remove-matcher owner=tsc::""
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - name: Set up job
         uses: ./.github/actions/set-up-job
 
@@ -28,7 +35,8 @@ jobs:
       #   run: yarn check:package
 
       - name: 🌡 Test Types
-        run: yarn test:types
+        shell: bash
+        run: bash "$GITHUB_WORKSPACE/.github/scripts/run-nx.sh" yarn test:types
 
       - name: Get number of CPU cores
         if: always()
@@ -36,4 +44,5 @@ jobs:
         uses: SimenB/github-actions-cpu-cores@97330871fe1b7d3529392ea000e3d2c4b357e403 # v3
 
       - name: 🧪 Test
-        run: yarn test-ci --minWorkers=1 --maxWorkers=${{ steps.cpu-cores.outputs.count }}
+        shell: bash
+        run: bash "$GITHUB_WORKSPACE/.github/scripts/run-nx.sh" yarn test-ci --maxWorkers=${{ steps.cpu-cores.outputs.count }}

@@ -1,4 +1,4 @@
-import { contacts } from 'api/src/services/contacts/contacts'
+import { contacts } from 'api/src/services/contacts'
 
 export default async () => {
   const _allContacts = await contacts()

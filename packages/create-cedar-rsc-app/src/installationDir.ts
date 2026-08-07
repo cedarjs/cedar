@@ -3,8 +3,8 @@ import fs from 'node:fs'
 import enquirer from 'enquirer'
 import untildify from 'untildify'
 
-import type { Config } from './config.js'
-import { ExitCodeError } from './error.js'
+import type { Config } from './config.ts'
+import { ExitCodeError } from './error.ts'
 
 export async function setInstallationDir(config: Config) {
   if (!config.installationDir) {

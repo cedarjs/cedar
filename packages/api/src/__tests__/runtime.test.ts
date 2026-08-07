@@ -62,6 +62,35 @@ describe('buildCedarContext', () => {
     expect(ctx.query.getAll('tag')).toEqual(['cedar', 'framework'])
   })
 
+  // Function routes never pass an auth decoder, so there's nothing to decode
+  // and no reason to parse the `Authorization` header. Consumers that always
+  // send `auth-provider` used to get a 500 out of routes that don't use auth.
+  it('skips auth state for routes without an auth decoder', async () => {
+    const request = new Request('http://localhost:8911/tokenFromApiKey', {
+      headers: {
+        'auth-provider': 'custom',
+      },
+    })
+
+    const ctx = await buildCedarContext(request, {
+      params: { routeName: 'tokenFromApiKey' },
+    })
+
+    expect(ctx.serverAuthState).toBeUndefined()
+  })
+
+  it('skips auth state when the auth decoder array is empty', async () => {
+    const request = new Request('http://localhost:8911/tokenFromApiKey', {
+      headers: {
+        'auth-provider': 'custom',
+      },
+    })
+
+    const ctx = await buildCedarContext(request, { authDecoder: [] })
+
+    expect(ctx.serverAuthState).toBeUndefined()
+  })
+
   it('hydrates auth state when an auth decoder is provided', async () => {
     const authDecoder = vi.fn(async (token: string, type: string) => {
       expect(token).toBe('auth-provider=test; session=token-123')
@@ -93,7 +122,52 @@ describe('buildCedarContext', () => {
         token: 'auth-provider=test; session=token-123',
       },
       {
-        event: request,
+        event: {
+          body: null,
+          headers: { cookie: 'auth-provider=test; session=token-123' },
+          httpMethod: 'GET',
+          isBase64Encoded: false,
+          multiValueHeaders: {
+            cookie: ['auth-provider=test; session=token-123'],
+          },
+          multiValueQueryStringParameters: null,
+          path: '/graphql',
+          pathParameters: null,
+          queryStringParameters: {},
+          requestContext: {
+            accountId: 'cedar',
+            apiId: 'cedar',
+            authorizer: undefined,
+            httpMethod: 'GET',
+            identity: {
+              accessKey: null,
+              accountId: null,
+              apiKey: null,
+              apiKeyId: null,
+              caller: null,
+              clientCert: null,
+              cognitoAuthenticationProvider: null,
+              cognitoAuthenticationType: null,
+              cognitoIdentityId: null,
+              cognitoIdentityPoolId: null,
+              principalOrgId: null,
+              sourceIp: '',
+              user: null,
+              userAgent: null,
+              userArn: null,
+            },
+            path: '/graphql',
+            protocol: 'HTTP/1.1',
+            requestId: 'cedar-request',
+            requestTimeEpoch: expect.any(Number),
+            resourceId: 'cedar',
+            resourcePath: '/graphql',
+            stage: '',
+          },
+          resource: '/graphql',
+          stageVariables: null,
+        },
+        request,
         context: undefined,
       },
     ])
@@ -229,6 +303,119 @@ describe('legacyResultToResponse', () => {
     expect(response.headers.get('set-cookie')).toContain('a=1')
     expect(response.headers.get('set-cookie')).toContain('b=2')
     expect(await response.text()).toBe(JSON.stringify({ ok: true }))
+  })
+
+  it('decodes base64 encoded bodies', async () => {
+    const result: APIGatewayProxyResult = {
+      statusCode: 200,
+      isBase64Encoded: true,
+      body: Buffer.from('hello cedar').toString('base64'),
+    }
+
+    const response = legacyResultToResponse(result)
+
+    expect(response.status).toBe(200)
+    expect(await response.text()).toBe('hello cedar')
+  })
+
+  it('defaults to status 200 and an empty body', async () => {
+    const response = legacyResultToResponse({} as APIGatewayProxyResult)
+
+    expect(response.status).toBe(200)
+    expect(await response.text()).toBe('')
+  })
+
+  it('sends no body for status 204', async () => {
+    const result: APIGatewayProxyResult = {
+      statusCode: 204,
+      headers: {
+        'x-test': 'true',
+      },
+      body: 'this body should be dropped',
+    }
+
+    const response = legacyResultToResponse(result)
+
+    expect(response.status).toBe(204)
+    expect(response.headers.get('x-test')).toBe('true')
+    expect(response.body).toBeNull()
+    expect(await response.text()).toBe('')
+  })
+
+  it('sends no body for status 205', async () => {
+    const result: APIGatewayProxyResult = {
+      statusCode: 205,
+      headers: {
+        'x-test': 'true',
+      },
+      body: 'this body should be dropped',
+    }
+
+    const response = legacyResultToResponse(result)
+
+    expect(response.status).toBe(205)
+    expect(response.headers.get('x-test')).toBe('true')
+    expect(response.body).toBeNull()
+    expect(await response.text()).toBe('')
+  })
+
+  it('sends no body for status 304', async () => {
+    const result: APIGatewayProxyResult = {
+      statusCode: 304,
+      headers: {
+        'x-test': 'true',
+      },
+      body: 'this body should be dropped',
+    }
+
+    const response = legacyResultToResponse(result)
+
+    expect(response.status).toBe(304)
+    expect(response.headers.get('x-test')).toBe('true')
+    expect(response.body).toBeNull()
+    expect(await response.text()).toBe('')
+  })
+
+  it('sends no body for status 204 even when base64 encoded', async () => {
+    const result: APIGatewayProxyResult = {
+      statusCode: 204,
+      isBase64Encoded: true,
+      body: Buffer.from('this body should be dropped').toString('base64'),
+    }
+
+    const response = legacyResultToResponse(result)
+
+    expect(response.status).toBe(204)
+    expect(response.body).toBeNull()
+    expect(await response.text()).toBe('')
+  })
+
+  it('sends no body for status 205 even when base64 encoded', async () => {
+    const result: APIGatewayProxyResult = {
+      statusCode: 205,
+      isBase64Encoded: true,
+      body: Buffer.from('this body should be dropped').toString('base64'),
+    }
+
+    const response = legacyResultToResponse(result)
+
+    expect(response.status).toBe(205)
+    expect(response.body).toBeNull()
+    expect(await response.text()).toBe('')
+  })
+
+  it('sends no body for status 304 even when base64 encoded', async () => {
+    const result: APIGatewayProxyResult = {
+      statusCode: 304,
+      isBase64Encoded: true,
+      body: Buffer.from('this body should be dropped').toString('base64'),
+    }
+
+    const response = legacyResultToResponse(result)
+
+    expect(response.status).toBe(304)
+    expect(response.body).toBeNull()
+    expect(await response.text()).toBe('')
   })
 
   it('returns a Response unchanged when given one', async () => {

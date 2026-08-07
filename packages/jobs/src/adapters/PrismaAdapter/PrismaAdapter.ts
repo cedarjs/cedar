@@ -177,9 +177,7 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
 
     // camelCase name of the model, as accessed on `db`
     // TODO: Remove type casting of `options.model` in the next major release
-    this.model = (options.model || DEFAULT_MODEL_NAME) as
-      | DelegateKey<TDb>
-      | string
+    this.model = options.model || DEFAULT_MODEL_NAME
 
     // the function to call on `db` to make queries: `db.backgroundJob`
     // TODO: Remove the camelCase call in the next major release. It's only here

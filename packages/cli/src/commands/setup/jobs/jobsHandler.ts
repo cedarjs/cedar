@@ -1,0 +1,147 @@
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+
+import prismaInternals from '@prisma/internals'
+import { Listr } from 'listr2'
+import { terminalLink } from 'termi-link'
+
+import { addApiPackages, colors as c } from '@cedarjs/cli-helpers'
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
+import { getSchemaPath, getPrismaSchemas } from '@cedarjs/project-config'
+
+import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
+import { isTypeScriptProject } from '../../../lib/project.js'
+
+const { getDMMF } = prismaInternals
+
+const MODEL_SCHEMA = `
+model BackgroundJob {
+  id        Int       @id @default(autoincrement())
+  attempts  Int       @default(0)
+  handler   String
+  queue     String
+  priority  Int
+  runAt     DateTime?
+  cron      String?
+  lockedAt  DateTime?
+  lockedBy  String?
+  lastError String?
+  failedAt  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+`
+
+const getModelNames = async (): Promise<string[]> => {
+  const { schemas } = await getPrismaSchemas()
+  const schema = await getDMMF({ datamodel: schemas })
+
+  return schema.datamodel.models.map((model: { name: string }) => model.name)
+}
+
+// TODO(jgmw): This won't handle prisma with schema folder preview feature
+const addDatabaseModel = async (): Promise<void> => {
+  const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
+  const schema = fs.readFileSync(schemaPath, 'utf-8')
+
+  const schemaWithUser = schema + MODEL_SCHEMA
+
+  fs.writeFileSync(schemaPath, schemaWithUser)
+}
+
+const tasks = async ({ force }: { force: boolean }) => {
+  const modelExists = (await getModelNames()).includes('BackgroundJob')
+
+  const packageJsonPath = path.join(getPaths().base, 'package.json')
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8')) as {
+    devDependencies?: Record<string, string>
+  }
+  const cedarjsVersion =
+    packageJson.devDependencies?.['@cedarjs/core'] ?? 'latest'
+  const jobsPackage = `@cedarjs/jobs@${cedarjsVersion}`
+
+  return new Listr(
+    [
+      {
+        title: 'Creating job database model...',
+        task: async () => {
+          await addDatabaseModel()
+        },
+        skip: (): string | boolean => {
+          if (modelExists) {
+            return 'BackgroundJob model exists, skipping'
+          }
+          return false
+        },
+      },
+      {
+        title: 'Creating config file in api/src/lib...',
+        task: async () => {
+          const isTs = isTypeScriptProject()
+          const outputExtension = isTs ? 'ts' : 'js'
+          const outputPath = path.join(
+            getPaths().api.lib,
+            `jobs.${outputExtension}`,
+          )
+          let template = fs
+            .readFileSync(
+              path.resolve(
+                import.meta.dirname,
+                'templates',
+                'jobs.ts.template',
+              ),
+            )
+            .toString()
+
+          if (!isTs) {
+            template = await transformTSToJS(outputPath, template)
+          }
+
+          writeFile(outputPath, template, {
+            overwriteExisting: force,
+          })
+        },
+      },
+      {
+        title: 'Creating jobs dir at api/src/jobs...',
+        task: () => {
+          fs.mkdirSync(getPaths().api.jobs, { recursive: true })
+          writeFile(path.join(getPaths().api.jobs, '.keep'), '', {
+            overwriteExisting: force,
+          })
+        },
+      },
+      addApiPackages([jobsPackage]),
+      {
+        title: 'One more thing...',
+        task: (_ctx: unknown, task: { title: string }) => {
+          task.title = `One more thing...
+
+          ${c.success('\nBackground jobs configured!\n')}
+
+          ${!modelExists ? 'Migrate your database to finish setting up jobs:\n' : ''}
+          ${!modelExists ? c.highlight(`\n\u00A0\u00A0${formatCedarCommand(['prisma', 'migrate', 'dev'])}\n`) : ''}
+
+          Generate jobs with: ${c.highlight(formatCedarCommand(['g', 'job', '<name>']))}
+          Execute jobs with:  ${c.highlight(`${formatCedarCommand(['jobs', 'work'])}\n`)}
+
+          Check out the docs for more info:
+          ${terminalLink('', 'https://cedarjs.com/docs/background-jobs')}
+
+        `
+        },
+      },
+    ],
+    { rendererOptions: { collapseSubtasks: false }, exitOnError: true },
+  )
+}
+
+export const handler = async ({ force }: { force: boolean }) => {
+  const t = await tasks({ force })
+
+  try {
+    await t.run()
+  } catch (e) {
+    console.error(c.error(e instanceof Error ? e.message : String(e)))
+  }
+}

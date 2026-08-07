@@ -1,12 +1,10 @@
-import execa from 'execa'
-
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 import { ensurePosixPath } from '@cedarjs/project-config'
 import { errorTelemetry, timedTelemetry } from '@cedarjs/telemetry'
 
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../lib/index.js'
-// @ts-expect-error - Types not available for JS files
 import * as project from '../../lib/project.js'
 
 import { warnIfNonStandardDatasourceUrl } from './datasourceWarning.js'
@@ -128,7 +126,7 @@ export const handler = async ({
 
     // TODO: Run vitest programmatically. See https://vitest.dev/advanced/api/
     const runCommand = async () => {
-      await execa('yarn', ['vitest', ...vitestArgs], {
+      await runBin('vitest', vitestArgs, {
         cwd: rwjsPaths.base,
         stdio: 'inherit',
         env: { ...process.env, DATABASE_URL },

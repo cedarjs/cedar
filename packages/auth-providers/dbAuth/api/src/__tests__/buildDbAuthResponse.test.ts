@@ -1,4 +1,3 @@
-import type { APIGatewayProxyEvent } from 'aws-lambda'
 import { describe, it, expect } from 'vitest'
 
 import { getDbAuthResponseBuilder } from '../shared'
@@ -34,7 +33,7 @@ describe('buildDbAuthResponse', () => {
       },
     }
 
-    const createResponse = getDbAuthResponseBuilder({} as Request)
+    const createResponse = getDbAuthResponseBuilder({})
     const result = createResponse(response, corsHeaders)
 
     expect(result).toEqual(expectedResponse)
@@ -74,7 +73,7 @@ describe('buildDbAuthResponse', () => {
 
     const createResponse = getDbAuthResponseBuilder({
       multiValueHeaders: {},
-    } as unknown as APIGatewayProxyEvent)
+    })
     const result = createResponse(response, corsHeaders)
 
     expect(result).toEqual(expectedResponse)
@@ -104,7 +103,7 @@ describe('buildDbAuthResponse', () => {
       },
     }
 
-    const createResponse = getDbAuthResponseBuilder({} as Request)
+    const createResponse = getDbAuthResponseBuilder({})
     const result = createResponse(response, corsHeaders)
 
     expect(result).toEqual(expectedResponse)

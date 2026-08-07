@@ -44,12 +44,24 @@ export const builder = (yargs: Argv) => {
         'with no value it defaults to 1 prepended to the api port (e.g. api ' +
         'port 8913 -> debug port 18913).',
     })
+    .option('debugBrk', {
+      type: 'boolean',
+      description:
+        'Wait for a debugger to connect before starting the API dev server, ' +
+        'similar to Node.js --inspect-brk. Only works in --ud mode.',
+    })
     .option('ud', {
       type: 'boolean',
       default: false,
       description:
         'Use the unified Vite dev server that handles both web and API in a ' +
         'single process (experimental).',
+    })
+    .option('nodeArgs', {
+      type: 'string',
+      description:
+        'CLI args to pass to the node process running the web dev server, for ' +
+        'example: `--node-args="--inspect --max-old-space-size=8192"`.',
     })
     .middleware(() => {
       const check = checkNodeVersion()

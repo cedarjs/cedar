@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/web-server",
-  "version": "4.2.0",
+  "version": "5.0.6",
   "description": "CedarJS's server for the Web side",
   "repository": {
     "type": "git",
@@ -8,7 +8,7 @@
     "directory": "packages/web-server"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "main": "./dist/cliConfig.js",
   "types": "./dist/cliConfig.d.ts",
   "bin": {
@@ -19,9 +19,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts && yarn build:types",
+    "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-web-server.tgz",
-    "build:types": "tsc --build --verbose",
+    "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build && yarn fix:permissions\"",
     "fix:permissions": "chmod +x dist/index.js; chmod +x dist/watch.js",
     "prepublishOnly": "NODE_ENV=production yarn build"
@@ -29,14 +29,13 @@
   "dependencies": {
     "@cedarjs/fastify-web": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
-    "ansis": "4.2.0",
+    "ansis": "4.3.1",
     "dotenv-defaults": "5.0.2",
-    "fastify": "5.8.5",
-    "yargs": "17.7.2"
+    "fastify": "5.10.0",
+    "yargs": "17.7.3"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "tsx": "4.21.0",
     "typescript": "5.9.3"
   },
   "engines": {

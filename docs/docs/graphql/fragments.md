@@ -263,7 +263,7 @@ For example:
 ```ts
 /// web/src/App.tsx
 
-<RedwoodApolloProvider graphQLClientConfig={{
+<CedarApolloProvider graphQLClientConfig={{
   cacheConfig: {
     possibleTypes: {
       Character: ["Jedi", "Droid"],
@@ -290,7 +290,7 @@ const graphQLClientConfig = {
   },
 }
 
-<RedwoodApolloProvider graphQLClientConfig={graphQLClientConfig}>
+<CedarApolloProvider graphQLClientConfig={graphQLClientConfig}>
 ```
 
 To generate the `src/graphql/possibleTypes` file, enable fragments in `cedar.toml`:

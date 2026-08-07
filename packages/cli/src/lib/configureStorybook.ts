@@ -1,0 +1,73 @@
+import fse from 'node:fs'
+import path from 'path'
+
+import prettier from 'prettier'
+
+import { merge } from './merge/index.js'
+import {
+  interleave,
+  concatUnique,
+  keepBoth,
+  keepBothStatementParents,
+} from './merge/strategy.js'
+import { isTypeScriptProject } from './project.js'
+
+import { getPaths, transformTSToJS, writeFile } from './index.js'
+
+/**
+ * Extends the Storybook configuration file with the new configuration file
+ * @param newConfigPath - The path to the new configuration file
+ */
+export default async function extendStorybookConfiguration(
+  newConfigPath?: string,
+): Promise<void> {
+  const webPaths = getPaths().web
+  const ts = isTypeScriptProject()
+  const sbPreviewConfigPath =
+    webPaths.storybookPreviewConfig ??
+    `${webPaths.storybook}/preview.${ts ? 'tsx' : 'js'}`
+  const read = (filePath: string) =>
+    fse.readFileSync(filePath, { encoding: 'utf-8' })
+
+  if (!fse.existsSync(sbPreviewConfigPath)) {
+    // If the Storybook preview config file doesn't exist, create it from the template
+    const templateContent = read(
+      path.resolve(
+        import.meta.dirname,
+        'templates',
+        'storybook.preview.tsx.template',
+      ),
+    )
+    const storybookPreviewContent = ts
+      ? templateContent
+      : await transformTSToJS(sbPreviewConfigPath, templateContent)
+
+    writeFile(sbPreviewConfigPath, storybookPreviewContent)
+  }
+
+  const storybookPreviewContent = read(sbPreviewConfigPath)
+
+  if (newConfigPath) {
+    // If the new config file path is provided, merge it with the Storybook preview config file
+    const newConfigTemplate = read(newConfigPath)
+    const newConfigContent = ts
+      ? newConfigTemplate
+      : await transformTSToJS(newConfigPath, newConfigTemplate)
+
+    const merged = await merge(storybookPreviewContent, newConfigContent, {
+      ImportDeclaration: interleave,
+      ArrayExpression: concatUnique,
+      ObjectExpression: concatUnique,
+      ArrowFunctionExpression: keepBothStatementParents,
+      FunctionDeclaration: keepBoth,
+    })
+
+    const pConfig = await prettier.resolveConfig(sbPreviewConfigPath)
+    const formatted = await prettier.format(merged, {
+      parser: ts ? 'babel-ts' : 'babel',
+      ...pConfig,
+    })
+
+    writeFile(sbPreviewConfigPath, formatted, { overwriteExisting: true })
+  }
+}

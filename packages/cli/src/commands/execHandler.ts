@@ -9,10 +9,8 @@ import type { ListrTask } from 'listr2'
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { findScripts } from '@cedarjs/internal/dist/files'
 
-// @ts-expect-error - Types not available for JS files
 import { runScriptFunction } from '../lib/exec.js'
 import { generatePrismaClient } from '../lib/generatePrismaClient.js'
-// @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
 
 const printAvailableScriptsToConsole = () => {

@@ -1,5 +1,8 @@
 {
   "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src/"
+  },
   "include": ["src/**/*", "./ambient.d.ts", "./modules.d.ts"],
   "exclude": ["**/__tests__", "**/*.test.*"],
   "references": [
@@ -8,6 +11,7 @@
     { "path": "../project-config" },
     { "path": "../router/tsconfig.build.json" },
     { "path": "../server-store" },
+    { "path": "../structure" },
     { "path": "../testing/tsconfig.build.json" },
     { "path": "../web/tsconfig.build.json" }
   ]

@@ -9,15 +9,31 @@ import type { Argv } from 'yargs'
 import * as apiServerCLIConfig from '@cedarjs/api-server/apiCliConfig'
 import * as bothServerCLIConfig from '@cedarjs/api-server/bothCliConfig'
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
-import { projectIsEsm } from '@cedarjs/project-config'
 import * as webServerCLIConfig from '@cedarjs/web-server'
 
 // @ts-expect-error - Types not available for JS files
 import { getPaths, getConfig } from '../lib/index.js'
-// @ts-expect-error - Types not available for JS files
 import { serverFileExists } from '../lib/project.js'
 
 import { webSsrServerHandler } from './serveWebHandler.js'
+
+/**
+ * A custom api/src/server.ts is a Fastify concept — Realtime, custom
+ * plugins, and custom middleware registered there have no equivalent in the
+ * UD entry (a plain Fetchable), so there's no way to honour it. Refuse
+ * rather than silently produce a different app than what's configured.
+ */
+function refuseServerFileUnderUD(): never {
+  console.error(
+    c.error(
+      '\n api/src/server.ts was detected, but a custom server file is not ' +
+        'supported with --ud. It is a Fastify concept — anything ' +
+        'registered there (Realtime, custom plugins, custom middleware) ' +
+        'would silently be skipped if serving continued.\n',
+    ),
+  )
+  process.exit(1)
+}
 
 /**
  * Resolve the path to the UD server entry, checking for either .mjs or .js
@@ -75,6 +91,7 @@ async function startUDServer(
 export const command = 'serve [side]'
 export const description =
   'Start a server for serving both the api and web sides'
+
 type ServeArgv = Record<string, unknown> & {
   _: (string | number)[]
   port?: number
@@ -152,13 +169,7 @@ export const builder = async (yargs: Argv) => {
           }
 
           if (serverFileExists()) {
-            console.warn(
-              c.warning(
-                '\n Note: api/src/server.ts was detected. ' +
-                  'This file is a Fastify concept and will be ignored when using --ud. ' +
-                  'You are testing the experimental UD support, so the behavior will not match your production Fastify setup.\n',
-              ),
-            )
+            refuseServerFileUnderUD()
           }
 
           const { getAPIHost, getAPIPort, getWebHost, getWebPort } =
@@ -166,8 +177,10 @@ export const builder = async (yargs: Argv) => {
 
           const apiPort = argv.apiPort ?? getAPIPort()
           const apiHost = argv.apiHost ?? getAPIHost()
-          const webPort = argv.webPort ?? getWebPort()
-          const webHost = argv.webHost ?? getWebHost()
+          // The web server is the one taking public traffic here, so it's the
+          // side that gets to use the host's `HOST`/`PORT` env vars.
+          const webPort = argv.webPort ?? getWebPort({ isPublicSide: true })
+          const webHost = argv.webHost ?? getWebHost({ isPublicSide: true })
 
           const apiRootPath = argv.apiRootPath ?? '/'
           const apiTarget = `http://${apiHost.includes(':') ? `[${apiHost}]` : apiHost}:${apiPort}`
@@ -177,15 +190,21 @@ export const builder = async (yargs: Argv) => {
           // 1. serveStatic: serve files from web/dist/ (SPA assets)
           // 2. apiProxy: forward API-prefixed requests to UD Fetchable on API
           //    port
-          // 3. spaFallback: serve index.html for client-side routing
+          // 3. spaFallback: serve the unprerendered SPA shell for client-side
+          //    routing
           const { serveStatic } = await import('srvx/static')
           const apiUrl = getConfig().web.apiUrl
           const webDist = getPaths().web.dist
 
-          const indexHtml = fs.readFileSync(
-            path.join(webDist, 'index.html'),
-            'utf-8',
-          )
+          // SPA fallback: use `200.html` (unprerendered shell) if it exists,
+          // otherwise `index.html`. This matches the Fastify web adapter
+          // behaviour and prevents client-side prerender detection from
+          // triggering on routes that weren't actually prerendered.
+          const prerenderIndexPath = path.join(webDist, '200.html')
+          const fallbackIndexPath = fs.existsSync(prerenderIndexPath)
+            ? prerenderIndexPath
+            : path.join(webDist, 'index.html')
+          const spaHtml = fs.readFileSync(fallbackIndexPath, 'utf-8')
 
           const webServer = serveSrvx({
             // Dummy fetch handler. All requests are handled by middleware
@@ -210,11 +229,14 @@ export const builder = async (yargs: Argv) => {
                   method: req.method,
                   headers: req.headers,
                   body: req.body,
+                  // @ts-expect-error - `duplex` is required when forwarding a
+                  // request body via fetch (Node 18+).
+                  duplex: 'half',
                 })
               },
               () => {
                 const headers = { 'Content-Type': 'text/html' }
-                return new Response(indexHtml, { headers })
+                return new Response(spaHtml, { headers })
               },
             ],
             port: webPort,
@@ -249,13 +271,7 @@ export const builder = async (yargs: Argv) => {
           const serveBothHandlers = await import('./serveBothHandler.js')
           await serveBothHandlers.bothSsrRscServerHandler(argv, rscEnabled)
         } else {
-          if (!projectIsEsm()) {
-            const { handler } =
-              await import('@cedarjs/api-server/cjs/bothCliConfigHandler')
-            await handler(argv)
-          } else {
-            await bothServerCLIConfig.handler(argv)
-          }
+          await bothServerCLIConfig.handler(argv)
         }
       },
     })
@@ -285,7 +301,22 @@ export const builder = async (yargs: Argv) => {
           apiRootPath: argv.apiRootPath,
         })
 
+        // Serving the api on its own makes it the side taking public traffic,
+        // so it's the side that gets to use the host's `HOST`/`PORT` env vars.
+        const { getAPIHost, getAPIPort } =
+          await import('@cedarjs/api-server/cliHelpers')
+
+        const apiPort = argv.port ?? getAPIPort({ isPublicSide: true })
+        const apiHost = argv.host ?? getAPIHost({ isPublicSide: true })
+
+        argv.port = apiPort
+        argv.host = apiHost
+
         if (argv.ud) {
+          if (serverFileExists()) {
+            refuseServerFileUnderUD()
+          }
+
           // Import the built Fetchable and host it in-process with srvx.
           // The artifact at api/dist/ud/index.js is a pure Fetchable (`export
           // default { fetch }`) emitted by buildUDApiServer.
@@ -300,9 +331,6 @@ export const builder = async (yargs: Argv) => {
             )
             process.exit(1)
           }
-
-          const apiPort = argv.port ?? parseInt(process.env.PORT ?? '8911', 10)
-          const apiHost = argv.host ?? process.env.HOST ?? 'localhost'
 
           process.stdout.write(
             `API server starting at http://${apiHost}:${apiPort}...`,
@@ -322,13 +350,7 @@ export const builder = async (yargs: Argv) => {
           const { apiServerFileHandler } = await import('./serveApiHandler.js')
           await apiServerFileHandler(argv)
         } else {
-          if (!projectIsEsm()) {
-            const { handler } =
-              await import('@cedarjs/api-server/cjs/apiCliConfigHandler')
-            await handler(argv)
-          } else {
-            await apiServerCLIConfig.handler(argv)
-          }
+          await apiServerCLIConfig.handler(argv)
         }
       },
     })
@@ -349,8 +371,6 @@ export const builder = async (yargs: Argv) => {
         if (streamingEnabled) {
           await webSsrServerHandler(rscEnabled)
         } else {
-          // @cedarjs/web-server is still built as CJS only, so we don't need
-          // the same solution here as we do for the api side
           await webServerCLIConfig.handler(argv)
         }
       },

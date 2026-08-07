@@ -1,22 +1,22 @@
 {
   "name": "@cedarjs/cli-storybook-vite",
-  "version": "4.2.0",
+  "version": "5.0.6",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
     "directory": "packages/cli-packages/storybook-vite"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts && yarn build:types",
+    "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-cli-storybook-vite.tgz",
-    "build:types": "tsc --build --verbose",
+    "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "yarn test:unit",
@@ -31,14 +31,13 @@
     "storybook": "8.6.18",
     "storybook-framework-cedarjs": "workspace:*",
     "termi-link": "1.1.0",
-    "vitest": "3.2.4",
-    "yargs": "17.7.2"
+    "vitest": "4.1.10",
+    "yargs": "17.7.3"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@types/semver": "^7",
     "@types/yargs": "17.0.35",
-    "tsx": "4.21.0",
     "typescript": "5.9.3"
   },
   "engines": {

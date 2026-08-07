@@ -1,6 +1,18 @@
 import path from 'node:path'
 
-import unimportPlugin from 'unimport/unplugin'
+// unimport/unplugin is ESM-only. CJS builds double-wrap its default export:
+// unimportPluginMod.default is the module object, and
+// unimportPluginMod.default.default is the actual plugin object.
+// The `||` chain resolves correctly for both.
+import unimportPluginMod from 'unimport/unplugin'
+const unimportPlugin =
+  // @ts-expect-error – .default only exists at runtime in CJS double-wrap
+  // interop
+  unimportPluginMod.default?.default ||
+  // @ts-expect-error – .default only exists at runtime in CJS double-wrap
+  // interop
+  unimportPluginMod.default ||
+  unimportPluginMod
 import autoImport from 'unplugin-auto-import/vite'
 
 import {

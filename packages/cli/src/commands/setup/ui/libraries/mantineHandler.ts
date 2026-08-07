@@ -1,0 +1,176 @@
+import fs from 'node:fs'
+import path from 'node:path'
+
+import { Listr } from 'listr2'
+
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { addWorkspacePackages } from '@cedarjs/cli-helpers/packageManager/packages'
+
+import extendStorybookConfiguration from '../../../../lib/configureStorybook.js'
+import { extendJSXFile, fileIncludes } from '../../../../lib/extendFile.js'
+import { getPaths, writeFile } from '../../../../lib/index.js'
+
+import { ALL_KEYWORD } from './mantine.js'
+
+const ALL_MANTINE_PACKAGES = [
+  'core',
+  'dates',
+  'dropzone',
+  'form',
+  'hooks',
+  'modals',
+  'notifications',
+  'prism',
+  'rte',
+  'spotlight',
+]
+
+const MANTINE_THEME_AND_COMMENTS = `\
+import { createTheme } from '@mantine/core'
+
+/**
+ * This object will be used to override Mantine theme defaults.
+ * See https://mantine.dev/theming/mantine-provider/#theme-object for theming options
+ * @type {import("@mantine/core").MantineThemeOverride}
+ */
+const theme = {}
+
+export default createTheme(theme)
+`
+
+export async function handler({
+  force,
+  install,
+  packages,
+}: {
+  force: boolean
+  install: boolean
+  packages: string[]
+}) {
+  recordTelemetryAttributes({
+    command: 'setup ui mantine',
+    force,
+    install,
+    packages,
+  })
+
+  const cedarPaths = getPaths()
+  const configFilePath = path.join(cedarPaths.web.config, 'mantine.config.js')
+
+  const installPackages = (
+    packages.includes(ALL_KEYWORD) ? ALL_MANTINE_PACKAGES : packages
+  )
+    .map((pack) => `@mantine/${pack}`)
+    .concat('postcss', 'postcss-preset-mantine', 'postcss-simple-vars')
+
+  const tasks = new Listr(
+    [
+      {
+        title: 'Installing packages...',
+        skip: () => !install,
+        task: () => {
+          return new Listr(
+            [
+              {
+                title: `Install ${installPackages.join(', ')}`,
+                task: async () => {
+                  await addWorkspacePackages('web', installPackages, {
+                    cwd: cedarPaths.base,
+                    dev: true,
+                  })
+                  await addWorkspacePackages('web', ['@emotion/react'], {
+                    cwd: cedarPaths.base,
+                    dev: true,
+                  })
+                },
+              },
+            ],
+            { rendererOptions: { collapseSubtasks: false } },
+          )
+        },
+      },
+      {
+        title: 'Setting up Mantine...',
+        skip: () => fileIncludes(cedarPaths.web.app, 'MantineProvider'),
+        task: () =>
+          extendJSXFile(cedarPaths.web.app, {
+            insertComponent: {
+              name: 'MantineProvider',
+              props: { theme: 'theme' },
+              within: 'RedwoodProvider',
+            },
+            imports: [
+              "import { MantineProvider } from '@mantine/core'",
+              "import theme from 'config/mantine.config'",
+              "import '@mantine/core/styles.css'",
+            ],
+          }),
+      },
+      {
+        title: 'Configuring PostCSS...',
+        task: () => {
+          /**
+           * Check if PostCSS config already exists.
+           * If it exists, throw an error.
+           */
+          const postCSSConfigPath = cedarPaths.web.postcss
+
+          if (!force && fs.existsSync(postCSSConfigPath)) {
+            throw new Error(
+              'PostCSS config already exists.\nUse --force to override existing config.',
+            )
+          } else {
+            const postCSSConfig = fs.readFileSync(
+              path.join(
+                import.meta.dirname,
+                '../templates/mantine-postcss.config.cjs.template',
+              ),
+              'utf-8',
+            )
+
+            fs.mkdirSync(path.dirname(postCSSConfigPath), { recursive: true })
+            return fs.writeFileSync(postCSSConfigPath, postCSSConfig)
+          }
+        },
+      },
+      {
+        title: `Creating Theme File...`,
+        task: () => {
+          writeFile(configFilePath, MANTINE_THEME_AND_COMMENTS, {
+            overwriteExisting: force,
+          })
+        },
+      },
+      {
+        title: 'Configure Storybook...',
+        skip: () => {
+          const previewConfig = cedarPaths.web.storybookPreviewConfig
+          return previewConfig != null
+            ? fileIncludes(previewConfig, 'withMantine')
+            : false
+        },
+        task: async () =>
+          await extendStorybookConfiguration(
+            path.join(
+              import.meta.dirname,
+              '..',
+              'templates',
+              'mantine.storybook.preview.tsx.template',
+            ),
+          ),
+      },
+    ],
+    { rendererOptions: { collapseSubtasks: false } },
+  )
+
+  try {
+    await tasks.run()
+  } catch (e) {
+    console.error(c.error(e instanceof Error ? e.message : String(e)))
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    process.exit(exitCode)
+  }
+}

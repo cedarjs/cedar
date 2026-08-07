@@ -1,0 +1,190 @@
+globalThis.__dirname = import.meta.dirname
+
+import type * as NodeFs from 'node:fs'
+
+import type * as FastGlob from 'fast-glob'
+import { vol, fs as memfs } from 'memfs'
+import { ufs } from 'unionfs'
+import { afterEach, beforeEach, describe, test, expect, vi } from 'vitest'
+
+import { ensurePosixPath } from '@cedarjs/project-config'
+import type * as ProjectConfig from '@cedarjs/project-config'
+
+import * as ogImageHandler from '../ogImageHandler.js'
+
+// memfs v4 (IFs) extends @jsonjoy.com/fs-node which overloads readdir with a
+// `recursive` option instead of `withFileTypes`. fast-glob's FileSystemAdapter
+// expects the node:fs-style `withFileTypes` overloads. At runtime fast-glob
+// only calls the methods it needs (lstat, stat, lstatSync, statSync, readdir,
+// readdirSync), all of which memfs provides. They just have different overload
+// signatures that TypeScript sees as incompatible. The cast is safe.
+const fsAdapter = memfs as Partial<FastGlob.FileSystemAdapter>
+
+vi.mock('node:fs', async (importOriginal) => {
+  const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
+    await import('../../../../__tests__/ufsFsProxy.js')
+  const fs = await importOriginal<typeof NodeFs>()
+  ufs.use(wrapFsForUnionfs(fs))
+  ufs.use(wrapMemfsForUnionfs(memfs))
+
+  return { ...ufs, default: ufs }
+})
+
+vi.mock('@cedarjs/project-config', async (importOriginal) => {
+  const actual = await importOriginal<typeof ProjectConfig>()
+
+  return {
+    ...actual,
+    getPaths: () => ({
+      api: {
+        base: '/path/to/project/api',
+      },
+      web: {
+        base: '/path/to/project/web',
+        pages: '/path/to/project/web/src/pages',
+      },
+      generatorTemplates: '/path/to/project/generatorTemplates',
+      base: '/path/to/project',
+    }),
+  }
+})
+
+let original_CEDAR_CWD: string | undefined
+
+describe('ogImage generator', () => {
+  beforeEach(() => {
+    original_CEDAR_CWD = process.env.CEDAR_CWD
+    process.env.CEDAR_CWD = '/path/to/project'
+    vol.fromJSON(
+      {
+        'redwood.toml': '',
+        'web/src/pages/AboutPage/AboutPage.jsx': 'This is the AboutPage',
+        'web/src/pages/ContactUsPage/ContactUsPage.jsx':
+          'This is the ContactUsPage',
+        'web/src/pages/Products/Display/ProductPage/ProductPage.tsx':
+          'This is the ProductsPage',
+      },
+      '/path/to/project',
+    )
+  })
+
+  afterEach(() => {
+    vi.clearAllMocks()
+    process.env.CEDAR_CWD = original_CEDAR_CWD
+  })
+
+  describe('files', () => {
+    test('returns the path to the .jsx template to be written', async () => {
+      const files = await ogImageHandler.files({
+        pagePath: 'AboutPage/AboutPage',
+        typescript: false,
+      })
+      const filePath = ensurePosixPath(Object.keys(files)[0])
+
+      expect(filePath).toEqual(
+        '/path/to/project/web/src/pages/AboutPage/AboutPage.og.jsx',
+      )
+    })
+
+    test('returns the path to the .tsx template to be written', async () => {
+      const files = await ogImageHandler.files({
+        pagePath: 'AboutPage/AboutPage',
+        typescript: true,
+      })
+      const filePath = ensurePosixPath(Object.keys(files)[0])
+
+      expect(filePath).toEqual(
+        '/path/to/project/web/src/pages/AboutPage/AboutPage.og.tsx',
+      )
+    })
+
+    test('returns the path to the template when the page is nested in subdirectories', async () => {
+      const files = await ogImageHandler.files({
+        pagePath: 'Products/Display/ProductPage/ProductPage',
+        typescript: true,
+      })
+      const filePath = ensurePosixPath(Object.keys(files)[0])
+
+      expect(filePath).toEqual(
+        '/path/to/project/web/src/pages/Products/Display/ProductPage/ProductPage.og.tsx',
+      )
+    })
+
+    test('returns the template to be written', async () => {
+      const files = await ogImageHandler.files({
+        pagePath: 'AboutPage/AboutPage',
+        typescript: false,
+      })
+
+      expect(Object.values(files)[0]).toMatchSnapshot()
+    })
+  })
+
+  describe('normalizedPath', () => {
+    test('returns an array without a leading "pages" dir', () => {
+      expect(
+        ogImageHandler.normalizedPath('pages/AboutPage/AboutPage'),
+      ).toEqual('AboutPage/AboutPage')
+    })
+
+    test('returns an array prepended with a missing page directory', () => {
+      expect(ogImageHandler.normalizedPath('AboutPage')).toEqual(
+        'AboutPage/AboutPage',
+      )
+    })
+
+    test('returns an array when page is nested in subdirectories', () => {
+      expect(
+        ogImageHandler.normalizedPath(
+          'Products/Display/ProductPage/ProductPage',
+        ),
+      ).toEqual('Products/Display/ProductPage/ProductPage')
+    })
+
+    test('returns an array including a missing page directory when deeply nested', () => {
+      expect(
+        ogImageHandler.normalizedPath('Products/Display/ProductPage'),
+      ).toEqual('Products/Display/ProductPage/ProductPage')
+    })
+  })
+
+  describe('validatePath', () => {
+    test('does nothing if path to jsx page exists', async () => {
+      await expect(
+        ogImageHandler.validatePath('AboutPage/AboutPage', 'jsx', {
+          fs: fsAdapter,
+        }),
+      ).resolves.toEqual(true)
+    })
+
+    test('does nothing if path to tsx page exists in nested directory structure', async () => {
+      await expect(
+        ogImageHandler.validatePath(
+          'Products/Display/ProductPage/ProductPage',
+          'tsx',
+          { fs: fsAdapter },
+        ),
+      ).resolves.toEqual(true)
+    })
+
+    test('does nothing if path to tsx page exists in nested directory structure', async () => {
+      const pagePath = 'ContactUsPage/ContactUsPage'
+      const ext = 'tsx'
+      await expect(
+        ogImageHandler.validatePath(pagePath, ext, {
+          fs: fsAdapter,
+        }),
+      ).rejects.toThrow()
+    })
+
+    test('throws an error if page does not exist', async () => {
+      const pagePath = 'HomePage/HomePage'
+      const ext = 'jsx'
+      await expect(
+        ogImageHandler.validatePath(pagePath, ext, {
+          fs: fsAdapter,
+        }),
+      ).rejects.toThrow()
+    })
+  })
+})

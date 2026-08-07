@@ -1,22 +1,25 @@
 {
   "name": "@cedarjs/babel-config",
-  "version": "4.2.0",
+  "version": "5.0.6",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
     "directory": "packages/babel-config"
   },
   "license": "MIT",
-  "type": "commonjs",
-  "exports": "./dist/index.js",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./dist/plugins/*": "./dist/plugins/*"
+  },
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts && run build:types",
+    "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-babel-config.tgz",
-    "build:types": "tsc --build --verbose",
+    "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,ts,tsx\" --ignore dist --exec \"yarn build\"",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
@@ -24,31 +27,31 @@
   },
   "dependencies": {
     "@babel/core": "^7.26.10",
-    "@babel/parser": "7.29.3",
-    "@babel/plugin-transform-react-jsx": "7.28.6",
-    "@babel/plugin-transform-runtime": "7.29.0",
-    "@babel/preset-env": "7.29.5",
-    "@babel/preset-react": "7.28.5",
-    "@babel/preset-typescript": "7.28.5",
-    "@babel/register": "7.29.3",
-    "@babel/traverse": "7.29.0",
+    "@babel/parser": "7.29.7",
+    "@babel/plugin-transform-react-jsx": "7.29.7",
+    "@babel/plugin-transform-runtime": "7.29.7",
+    "@babel/preset-env": "7.29.7",
+    "@babel/preset-react": "7.29.7",
+    "@babel/preset-typescript": "7.29.7",
+    "@babel/register": "7.29.7",
+    "@babel/traverse": "7.29.7",
     "@cedarjs/project-config": "workspace:*",
     "babel-plugin-auto-import": "1.1.0",
     "babel-plugin-graphql-tag": "3.3.0",
     "babel-plugin-module-resolver": "5.0.3",
     "fast-glob": "3.3.3",
-    "graphql": "16.13.2",
+    "graphql": "16.14.2",
     "typescript": "5.9.3"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
+    "@jridgewell/trace-mapping": "0.3.31",
     "@types/babel-plugin-tester": "11.0.0",
     "@types/babel__core": "7.20.5",
     "@types/babel__register": "7.17.3",
     "@types/node": "24.10.4",
     "babel-plugin-tester": "11.0.4",
-    "tsx": "4.21.0",
-    "vitest": "3.2.4"
+    "vitest": "4.1.10"
   },
   "engines": {
     "node": ">=24"

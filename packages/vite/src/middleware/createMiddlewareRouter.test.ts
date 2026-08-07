@@ -33,17 +33,36 @@ vi.mock('@cedarjs/project-config', () => {
 })
 
 const distRegisterMwMock = vi.fn()
-vi.mock('/proj/web/dist/ssr/entry-server.mjs', () => {
+
+// Vitest 4's module runner resolves the dynamic import in register.ts to the
+// file:// URL produced by makeFilePath(), and internally keys mocks by both
+// path- and URL-style ids, so the mock has to be registered under every
+// specifier form the current platform can produce. The Unix-style
+// 'file:///proj/...' form must never be registered on Windows —
+// fileURLToPath() throws on drive-less file URLs there.
+const entryServerSpecifiers = await vi.hoisted(async () => {
+  const url = await import('node:url')
+
+  const entryPath =
+    process.platform === 'win32'
+      ? 'C:/proj/web/dist/ssr/entry-server.mjs'
+      : '/proj/web/dist/ssr/entry-server.mjs'
+  const entryUrl = url.pathToFileURL(entryPath)
+
+  return [entryPath, entryUrl.pathname, entryUrl.href]
+})
+
+vi.mock(entryServerSpecifiers[0], () => {
   return {
     registerMiddleware: distRegisterMwMock,
   }
 })
-vi.mock('/C:/proj/web/dist/ssr/entry-server.mjs', () => {
+vi.mock(entryServerSpecifiers[1], () => {
   return {
     registerMiddleware: distRegisterMwMock,
   }
 })
-vi.mock('C:/proj/web/dist/ssr/entry-server.mjs', () => {
+vi.mock(entryServerSpecifiers[2], () => {
   return {
     registerMiddleware: distRegisterMwMock,
   }

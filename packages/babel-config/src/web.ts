@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import type { TransformOptions } from '@babel/core'
@@ -8,12 +9,17 @@ import { getConfig, getPaths } from '@cedarjs/project-config'
 
 import type { RegisterHookOptions } from './common.js'
 import {
-  getCommonPlugins,
   registerBabel,
   parseTypeScriptConfigFiles,
   getPathsFromTypeScriptConfig,
 } from './common.js'
 import type { PluginOptions as RoutesAutoLoaderOptions } from './plugins/babel-plugin-redwood-routes-auto-loader.js'
+
+// This package is ESM-only, so `require` isn't a global here — use
+// `createRequire` to synchronously load sibling plugin files and the user's
+// babel.config.js. These all have to stay synchronous: Babel's config API
+// takes a plain object, not a promise.
+const require = createRequire(import.meta.url)
 
 // These flags toggle on/off certain features
 export interface Flags {
@@ -31,7 +37,7 @@ export interface Flags {
   forJavaScriptLinting?: boolean
   /**
    * skip src/ alias and directory-named-import handling. The Vite
-   * `cedarjs-directory-named-import` plugin covers these
+   * `cedarjs-resolve-cedar-style-imports` plugin covers these
    */
   forVite?: boolean
 }
@@ -58,18 +64,18 @@ export const getWebSideBabelPlugins = (
   const plugins = [
     // It is important that this plugin run first, as noted here: https://react.dev/learn/react-compiler
     useReactCompiler && ['babel-plugin-react-compiler', { target: '19' }],
-    ...(forJest ? getCommonPlugins() : []),
     // === Import path handling
-    [
+    // Vite resolves the src/ and $api/ aliases via
+    // cedarjsResolveCedarStyleImportsPlugin, and tsconfig `paths` aliases via
+    // vite-tsconfig-paths, instead of this babel plugin
+    !forVite && [
       'babel-plugin-module-resolver',
       {
         alias: {
-          ...(!forVite && {
-            // Jest monorepo and multi project runner is not correctly
-            // determining the `cwd`:
-            // https://github.com/facebook/jest/issues/7359
-            src: forJest ? rwjsPaths.web.src : './src',
-          }),
+          // Jest monorepo and multi project runner is not correctly
+          // determining the `cwd`:
+          // https://github.com/facebook/jest/issues/7359
+          src: forJest ? rwjsPaths.web.src : './src',
           // adds the paths from [ts|js]config.json to the module resolver
           ...getPathsFromTypeScriptConfig(tsConfigs.web, rwjsPaths.web.base),
           $api: rwjsPaths.api.base,
@@ -88,7 +94,7 @@ export const getWebSideBabelPlugins = (
       'rwjs-module-resolver',
     ],
     // Vite uses
-    // packages/vite/src/plugins/vite-plugin-cedarjs-directory-named-import.ts
+    // packages/vite/src/plugins/vite-plugin-cedarjs-resolve-cedar-style-imports.ts
     // instead of this babel plugin
     !forVite && [
       require('./plugins/babel-plugin-redwood-directory-named-import').default,
@@ -97,7 +103,9 @@ export const getWebSideBabelPlugins = (
     ],
 
     // === Auto imports, and transforms
-    [
+    // Vite handles auto-imports via cedarAutoImportsPlugin; only keep for
+    // non-Vite consumers (Jest web tests).
+    !forVite && [
       'babel-plugin-auto-import',
       {
         declarations: [
@@ -125,27 +133,35 @@ export const getWebSideBabelPlugins = (
       },
       'rwjs-web-auto-import',
     ],
-    ['babel-plugin-graphql-tag', undefined, 'rwjs-babel-graphql-tag'],
-    process.env.NODE_ENV !== 'development' && [
-      require('./plugins/babel-plugin-redwood-remove-dev-fatal-error-page')
-        .default,
+    // Prerender uses rollup-plugin-cedar-remove-dev-fatal-error-page
+    // Vite uses        vite-plugin-cedar-remove-dev-fatal-error-page
+    !forVite && [
+      'babel-plugin-graphql-tag',
       undefined,
-      'rwjs-remove-dev-fatal-error-page',
+      'rwjs-babel-graphql-tag',
     ],
+    forJest &&
+      process.env.NODE_ENV !== 'development' && [
+        require('./plugins/babel-plugin-redwood-remove-dev-fatal-error-page')
+          .default,
+        undefined,
+        'rwjs-remove-dev-fatal-error-page',
+      ],
   ].filter(Boolean) as TransformOptions[]
 
   return plugins
 }
 
 export const getWebSideOverrides = (
-  { forPrerender }: Flags = { forPrerender: false },
+  { forPrerender, forVite }: Flags = { forPrerender: false },
 ): TransformOptions[] => {
   // Have to use a readonly array here because of a limitation in TS
   // See https://stackoverflow.com/a/70763406/88106
   const overrides: readonly (false | TransformOptions)[] = [
     // Automatically import files in `./web/src/pages/*` in to
     // the `./web/src/Routes.[ts|jsx]` file.
-    {
+    // Vite uses vite-plugin-cedar-routes-auto-loader instead
+    !forVite && {
       test: /src[\/\\]Routes.(js|tsx|jsx)$/,
       plugins: [
         [
@@ -162,12 +178,17 @@ export const getWebSideOverrides = (
     // ** Files ending in `Cell.mock.[js,ts]` **
     // Automatically determine keys for saving and retrieving mock data.
     // Only required for storybook and jest
-    process.env.NODE_ENV !== 'production' && {
-      test: /.+Cell.mock.(js|ts)$/,
-      plugins: [
-        require('./plugins/babel-plugin-redwood-mock-cell-data').default,
-      ],
-    },
+    // Vite/Vitest runs the mock-cell-data transform via its own plugin
+    // (vite-plugin-cedar-mock-cell-data). Jest (CJS projects) still needs the
+    // Babel plugin because it doesn't go through Vite's pipeline, so we keep
+    // the override active for non-Vite contexts.
+    !forVite &&
+      process.env.NODE_ENV !== 'production' && {
+        test: /.+Cell.mock.(js|ts)$/,
+        plugins: [
+          require('./plugins/babel-plugin-redwood-mock-cell-data').default,
+        ],
+      },
   ]
 
   return overrides.filter(

@@ -47,7 +47,7 @@ By specifying `goTrue` as the provider, Cedar automatically added the necessary 
 import { AuthProvider } from '@cedarjs/auth'
 import GoTrue from 'gotrue-js'
 import { FatalErrorBoundary } from '@cedarjs/web'
-import { RedwoodApolloProvider } from '@cedarjs/web/apollo'
+import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 import FatalErrorPage from 'src/pages/FatalErrorPage'
 import Routes from 'src/Routes'
@@ -62,9 +62,9 @@ const goTrueClient = new GoTrue({
 const App = () => (
   <FatalErrorBoundary page={FatalErrorPage}>
     <AuthProvider client={goTrueClient} type="goTrue">
-      <RedwoodApolloProvider>
+      <CedarApolloProvider>
         <Routes />
-      </RedwoodApolloProvider>
+      </CedarApolloProvider>
     </AuthProvider>
   </FatalErrorBoundary>
 )

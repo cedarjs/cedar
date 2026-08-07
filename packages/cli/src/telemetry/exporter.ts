@@ -74,7 +74,7 @@ export class CustomFileExporter {
   }
 
   /** Stops the exporter. */
-  shutdown() {
+  async shutdown() {
     // Close the JSON array
     if (!this.#isShutdown) {
       // Remove the trailing comma

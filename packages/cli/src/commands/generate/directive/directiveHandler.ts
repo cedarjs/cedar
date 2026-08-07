@@ -1,0 +1,172 @@
+import camelcase from 'camelcase'
+import { Listr } from 'listr2'
+import prompts from 'prompts'
+
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
+import { getConfig } from '@cedarjs/project-config'
+
+import { writeFilesTask, transformTSToJSMap } from '../../../lib/index.js'
+import {
+  prepareForRollback,
+  addFunctionToRollback,
+} from '../../../lib/rollback.js'
+import { validateName } from '../helpers.js'
+import { templateForComponentFile } from '../yargsHandlerHelpers.js'
+
+export const files = async ({
+  name,
+  typescript = false,
+  type,
+  tests,
+}: {
+  name: string
+  typescript?: boolean
+  type?: string
+  tests?: boolean
+}): Promise<Record<string, string>> => {
+  if (tests === undefined) {
+    tests = getConfig().generate.tests
+  }
+
+  if (!type) {
+    throw new Error('You must specify a directive type')
+  }
+
+  const camelName = camelcase(name)
+  const extension = typescript ? '.ts' : '.js'
+
+  const directiveFile = await templateForComponentFile({
+    name,
+    extension,
+    generator: 'directive',
+    apiPathSection: 'directives',
+    templatePath: `${type}.directive.ts.template`,
+    templateVars: { camelName },
+  })
+
+  const files = [directiveFile]
+
+  if (tests) {
+    const testFile = await templateForComponentFile({
+      name,
+      extension: `.test${extension}`,
+      generator: 'directive',
+      apiPathSection: 'directives',
+      templatePath: `${type}.directive.test.ts.template`,
+      templateVars: { camelName },
+    })
+    files.push(testFile)
+  }
+
+  return transformTSToJSMap(files, typescript)
+}
+
+export const handler = async (args: {
+  name: string
+  type?: string
+  typescript?: boolean
+  tests?: boolean
+  force?: boolean
+  rollback?: boolean
+}) => {
+  recordTelemetryAttributes({
+    command: 'generate directive',
+    type: args.type,
+    force: args.force,
+    rollback: args.rollback,
+  })
+
+  let notes = ''
+  const POST_RUN_INSTRUCTIONS = `
+   ${c.note('After modifying your directive, you can add it to your SDLs e.g.:')}
+
+    ${c.info('// example todo.sdl.js')}
+    ${c.info('# Option A: Add it to a field')}
+    type Todo {
+      id: Int!
+      body: String! ${c.tip(`@${args.name}`)}
+    }
+
+    ${c.info('# Option B: Add it to query/mutation')}
+    type Query {
+      todos: [Todo] ${c.tip(`@${args.name}`)}
+    }
+`
+
+  validateName(args.name)
+
+  let directiveType = args.type
+
+  // Prompt to select what type if not specified
+  if (!directiveType) {
+    const response = await prompts({
+      type: 'select',
+      name: 'directiveType',
+      choices: [
+        {
+          value: 'validator',
+          title: 'Validator',
+          description:
+            'Implement a validation: throw an error if criteria not met to stop execution',
+        },
+        {
+          value: 'transformer',
+          title: 'Transformer',
+          description: 'Modify values of fields or query responses',
+        },
+      ],
+      message: 'What type of directive would you like to generate?',
+    })
+
+    directiveType = response.directiveType
+  }
+
+  const tasks = new Listr(
+    [
+      {
+        title: 'Generating directive file ...',
+        task: async () => {
+          const f = await files({ ...args, type: directiveType })
+          return writeFilesTask(f, {
+            overwriteExisting: args.force,
+          })
+        },
+      },
+      {
+        title: 'Generating TypeScript definitions and GraphQL schemas ...',
+        task: () => {
+          // Regenerate again at the end if we rollback changes
+          addFunctionToRollback(async () => {
+            await runBin('cedar-gen', [], { stdio: 'pipe' })
+          }, true)
+
+          return runBin('cedar-gen', [], { stdio: 'inherit' })
+        },
+      },
+      {
+        title: 'Next steps...',
+        task: () => {
+          // Can't do this, since it strips formatting
+          // task.title = POST_RUN_INSTRUCTIONS
+          // Instead we just console.log the instructions at the end
+          notes = POST_RUN_INSTRUCTIONS
+        },
+      },
+    ].filter(Boolean),
+    { rendererOptions: { collapseSubtasks: false } },
+  )
+
+  try {
+    if (args.rollback && !args.force) {
+      prepareForRollback(tasks)
+    }
+    await tasks.run()
+    if (notes) {
+      console.log(notes)
+    }
+  } catch (e) {
+    console.log(c.error(e instanceof Error ? e.message : String(e)))
+    process.exit(1)
+  }
+}

@@ -1,24 +1,65 @@
+import fs from 'node:fs'
 import { glob } from 'node:fs/promises'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 import ansis from 'ansis'
 import type { Handler } from 'aws-lambda'
+import type { SourceMap } from 'magic-string'
 import { normalizePath } from 'vite'
-import type { ModuleNode, ViteDevServer } from 'vite'
+import type { ModuleNode, Plugin, ViteDevServer } from 'vite'
+import { gqlPlugin as gqlTagPlugin } from 'vite-plugin-graphql-tag'
+import tsPathsMod from 'vite-tsconfig-paths'
+
+// vite-tsconfig-paths is ESM-only. CJS builds double-wrap its default
+// export: tsconfigPaths.default is the module object, and
+// tsconfigPaths.default.default is the actual function. ESM gets the
+// function directly. The `||` chain resolves correctly for both.
+const tsconfigPaths =
+  // @ts-expect-error – .default only exists at runtime in CJS double-wrap
+  // interop
+  tsPathsMod.default?.default || tsPathsMod.default || tsPathsMod
 
 import { buildCedarContext, wrapLegacyHandler } from '@cedarjs/api/runtime'
 import type { CedarHandler, LegacyHandler } from '@cedarjs/api/runtime'
 import {
-  getApiSideBabelPlugins,
+  getApiSideBabelConfigPath,
+  getApiSideBabelPluginsForVite,
   transformWithBabel,
 } from '@cedarjs/babel-config'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { createGraphQLYoga } from '@cedarjs/graphql-server'
 import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
-import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
+import { applyGqlormInject } from '@cedarjs/internal/dist/build/api-graphql-transforms.js'
+import { getConfig, getPaths } from '@cedarjs/project-config'
 
+import { generateDiffSourceMap } from './lib/generateDiffSourceMap.js'
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
+import { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
+import { cedarDirectoryNamedImportPlugin } from './plugins/vite-plugin-cedar-directory-named-import.js'
+import { applyGraphqlOptionsExtract } from './plugins/vite-plugin-cedar-graphql-options-extract.js'
+import { cedarImportDirPlugin } from './plugins/vite-plugin-cedar-import-dir.js'
+import { cedarApiLogFormatterDevPlugin } from './plugins/vite-plugin-cedar-log-formatter-dev.js'
+import { applyOtelWrapping } from './plugins/vite-plugin-cedar-otel-wrapping.js'
+import { cedarjsJobPathInjectorPlugin } from './plugins/vite-plugin-cedarjs-job-path-injector.js'
+
+function resolveWithExtensions(id: string): string {
+  // A bare `fs.existsSync(id)` also returns true for directories (e.g. a
+  // directory-named-import target). Since this plugin's resolveId return
+  // short-circuits Vite's resolveId chain, that would incorrectly claim the
+  // bare directory path as fully resolved instead of letting a later plugin
+  // (e.g. one resolving directory-named imports) handle it.
+  if (fs.existsSync(id) && fs.statSync(id).isFile()) {
+    return id
+  }
+  for (const ext of ['.js', '.ts', '.jsx', '.tsx', '.mjs', '.mts']) {
+    const withExt = id + ext
+    if (fs.existsSync(withExt)) {
+      return withExt
+    }
+  }
+  return id
+}
 
 const LAMBDA_FUNCTIONS: Record<string, CedarHandler> = {}
 
@@ -27,7 +68,17 @@ interface YogaInstance {
   graphqlEndpoint: string
 }
 
-let graphqlYoga: YogaInstance | null = null
+interface LoadedGraphqlServer {
+  yoga: YogaInstance
+  options: GraphQLYogaOptions
+}
+
+// The Yoga instance together with the options it was built from. The request
+// handler needs the options too, to build a Cedar context from their auth
+// decoder – and it has to be the decoder that belongs to this exact instance,
+// so a reload (HMR) replaces both at once and the handler reads them as one
+// value
+let loadedGraphqlServer: LoadedGraphqlServer | null = null
 
 let loadApiFunctionsInFlight: Promise<void> | null = null
 let needsReloadAfterInFlight = false
@@ -129,8 +180,9 @@ async function internalLoadApiFunctions(viteServer: ViteDevServer) {
         )
       }
 
-      if (routeName === 'graphql' && '__rw_graphqlOptions' in mod) {
-        extractedGraphqlOptions = mod.__rw_graphqlOptions as GraphQLYogaOptions
+      if (routeName === 'graphql' && '__cedar_graphqlOptions' in mod) {
+        extractedGraphqlOptions =
+          mod.__cedar_graphqlOptions as GraphQLYogaOptions
       }
     } catch (err) {
       viteServer.ssrFixStacktrace(err as Error)
@@ -145,11 +197,11 @@ async function internalLoadApiFunctions(viteServer: ViteDevServer) {
 
   if (extractedGraphqlOptions) {
     const { yoga } = await createGraphQLYoga(extractedGraphqlOptions)
-    graphqlYoga = yoga
+    loadedGraphqlServer = { yoga, options: extractedGraphqlOptions }
   } else {
     // Reset so deleted/missing graphql.ts is reflected immediately (i.e. during
     // a dev session)
-    graphqlYoga = null
+    loadedGraphqlServer = null
   }
 
   console.log(
@@ -160,15 +212,16 @@ async function internalLoadApiFunctions(viteServer: ViteDevServer) {
 export async function createApiViteServer(): Promise<ViteDevServer> {
   const cedarPaths = getPaths()
   const cedarConfig = getConfig()
-  const isEsm = projectSideIsEsm('api')
   const normalizedBase = normalizePath(cedarPaths.base)
 
-  const babelPlugins = getApiSideBabelPlugins({
-    openTelemetry:
-      (cedarConfig.experimental?.opentelemetry?.enabled ?? false) &&
-      (cedarConfig.experimental?.opentelemetry?.wrapApi ?? false),
-    projectIsEsm: isEsm,
-  })
+  // The Babel pass is only needed to apply a user's custom
+  // api/babel.config.js: getApiSideBabelPluginsForVite() is empty (all of
+  // Cedar's api-side Babel transforms are handled by dedicated Vite plugins
+  // in this pipeline) and Vite strips TypeScript itself. Skip Babel entirely
+  // when the project has no such config file.
+  const babelPlugins = getApiSideBabelConfigPath()
+    ? getApiSideBabelPluginsForVite()
+    : null
 
   const workspacePkgSourceMap = Object.fromEntries(
     Object.entries(getWorkspacePackageAliases(cedarPaths, cedarConfig)).map(
@@ -191,9 +244,47 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
       alias: workspacePkgSourceMap,
     },
     plugins: [
+      // tsconfigPaths resolves user-defined tsconfig.json `paths` aliases; it
+      // replaces the Babel module-resolver's tsconfig-paths handling for dev.
+      tsconfigPaths(),
+      cedarApiLogFormatterDevPlugin(),
+      {
+        name: 'cedar-api-src-redirect',
+        enforce: 'pre',
+        resolveId(id: string, importer: string | undefined) {
+          // Normalize both sides: on Windows, cedarPaths.api.src can contain
+          // backslashes while Vite supplies forward-slash importer ids, so a
+          // raw startsWith would never match. The trailing separator guards
+          // against matching an adjacent directory (e.g. `api/src-extra`).
+          const normalizedImporter = importer && normalizePath(importer)
+          const normalizedApiSrc = normalizePath(cedarPaths.api.src)
+
+          if (!normalizedImporter?.startsWith(`${normalizedApiSrc}/`)) {
+            return null
+          }
+
+          if (id.startsWith('src/')) {
+            return resolveWithExtensions(
+              path.join(cedarPaths.api.src, id.slice(4)),
+            )
+          }
+
+          return null
+        },
+      },
+      cedarImportDirPlugin(),
+      cedarDirectoryNamedImportPlugin(),
+      cedarAutoImportsPlugin(),
+      cedarjsJobPathInjectorPlugin(),
+      (() => {
+        const p = gqlTagPlugin() as Plugin
+        p.enforce = 'post'
+        return p
+      })(),
       {
         name: 'cedar-api-babel-transform',
-        async transform(_code, id) {
+        enforce: 'pre',
+        async transform(code, id) {
           if (!/\.(ts|tsx|js|jsx)$/.test(id)) {
             return null
           }
@@ -206,8 +297,99 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
             return null
           }
 
+          // Apply graphql-specific transforms BEFORE Babel CJS compilation
+          // (and before the tolerant try/catch below). These transforms use
+          // AST patterns that match ESM syntax; running them first ensures
+          // they always work regardless of the project's module format.
+          let sourceCode = code
+          // Exact sourcemap for the string transforms applied so far. Only
+          // the graphql options extract produces one; if a later transform
+          // changes the code again the map no longer matches and is cleared.
+          let sourceMap: SourceMap | null = null
+          if (
+            normalizePath(id).endsWith('/graphql.ts') ||
+            normalizePath(id).endsWith('/graphql.js')
+          ) {
+            // Deliberately outside the try/catch below: a graphql.ts Cedar
+            // can't statically read means the app has no working GraphQL
+            // server. That's a hard failure that should abort startup, not
+            // something to warn-and-continue past like a Babel hiccup —
+            // continuing here previously left the dev server starting
+            // successfully with GraphQL silently uninitialized.
+            const extracted = applyGraphqlOptionsExtract(sourceCode)
+            if (extracted) {
+              sourceCode = extracted.code
+              sourceMap = extracted.map
+            }
+
+            const injected = applyGqlormInject(sourceCode, id)
+            if (injected) {
+              sourceCode = injected
+              sourceMap = null
+            }
+          }
+
           try {
-            const result = await transformWithBabel(id, babelPlugins)
+            if (
+              cedarConfig.experimental?.opentelemetry?.enabled &&
+              cedarConfig.experimental?.opentelemetry?.wrapApi
+            ) {
+              const relativePath = normalizePath(id).slice(
+                normalizedBase.length + '/api/src/'.length,
+              )
+              const apiFolder = relativePath.split('/')[0] ?? '?'
+              const wrapped = applyOtelWrapping(sourceCode, id, apiFolder)
+              if (wrapped) {
+                sourceCode = wrapped
+                sourceMap = null
+              }
+            }
+
+            // Without a user Babel config there is nothing left for Babel to
+            // do — Vite's own pipeline strips TypeScript — so only return the
+            // string-transformed code (if it changed at all). When no exact
+            // map is available (gqlorm injection or OTel wrapping changed the
+            // code), derive one by diffing input and output so that line
+            // insertions still map every unchanged line — and therefore
+            // ssrFixStacktrace positions — correctly.
+            if (!babelPlugins) {
+              if (sourceCode === code) {
+                return null
+              }
+
+              return {
+                code: sourceCode,
+                map: sourceMap ?? generateDiffSourceMap(code, sourceCode),
+              }
+            }
+
+            // Babel maps its output back to `sourceCode`, but Vite needs a
+            // map back to `code` (this transform hook's input). Feed the
+            // string transforms' map (exact when available, diff-derived
+            // otherwise) as inputSourceMap so Babel emits the composed map.
+            const inputSourceMap =
+              sourceCode === code
+                ? null
+                : (sourceMap ?? generateDiffSourceMap(code, sourceCode))
+
+            // Babel can only compose the input map when its `sources` names
+            // the module — magic-string maps default to an empty source name,
+            // which makes the merged map's positions resolve to nothing.
+            if (inputSourceMap) {
+              inputSourceMap.sources = [id]
+            }
+
+            // Use the code Vite already loaded instead of reading from disk, so
+            // Vite's originalCode matches the Babel input. This ensures the SSR
+            // transform's sourcesContent is consistent with the map.
+            const result = await transformWithBabel(
+              sourceCode,
+              id,
+              babelPlugins,
+              true,
+              true,
+              inputSourceMap ?? undefined,
+            )
 
             if (!result?.code) {
               return null
@@ -352,17 +534,48 @@ export function createApiFetchHandler() {
 
     // GraphQL routes
     if (pathname === '/graphql' || pathname.startsWith('/graphql/')) {
-      if (!graphqlYoga) {
+      // Read once. A reload can replace this while the request is in flight,
+      // and the Yoga instance and the auth decoder used to build the context
+      // for it have to come from the same load.
+      const graphqlServer = loadedGraphqlServer
+
+      if (!graphqlServer) {
         return new Response(
           JSON.stringify({ error: 'GraphQL Yoga instance not initialized' }),
           { status: 503, headers: { 'Content-Type': 'application/json' } },
         )
       }
 
-      const yoga = graphqlYoga
-
       return getAsyncStoreInstance().run(new Map(), async () => {
-        return yoga.handle(request, { request })
+        try {
+          // `buildCedarContext` resolves auth state, and the auth payload
+          // carries a Lambda-style event built by reading the request body.
+          // This has to happen before Yoga consumes it otherwise
+          // `buildCedarContext` would try to build the event from a `Request`
+          // that's already been consumed, which would throw.
+          const cedarContext = await buildCedarContext(request, {
+            authDecoder: graphqlServer.options.authDecoder,
+          })
+
+          return await graphqlServer.yoga.handle(request, {
+            request,
+            cedarContext,
+          })
+        } catch (e) {
+          if (
+            !!e &&
+            typeof e === 'object' &&
+            'code' in e &&
+            e.code === 'ERR_STREAM_PREMATURE_CLOSE'
+          ) {
+            // Client disconnected while the request was being processed
+            // (e.g., page navigation, tab close). Return a 499 so the
+            // dev server doesn't log this as a 500.
+            return new Response(null, { status: 499 })
+          }
+
+          throw e
+        }
       })
     }
 
