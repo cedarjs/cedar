@@ -220,6 +220,8 @@ Using `--forward` (alias `--fwd`), you can pass one or more Vite Dev Server [con
 ~/redwood-app$ yarn redwood dev --fwd="--port=1234 --open=false"
 ```
 
+When there's no interactive terminal attached (CI, AI coding agents, etc.), the dev server defaults to `--open=false` automatically, so you don't need to pass it explicitly in those environments.
+
 You may need to access your dev application from a different host, like your mobile device or an SSH tunnel. To resolve the “Invalid Host Header” message, run the following:
 
 ```bash
