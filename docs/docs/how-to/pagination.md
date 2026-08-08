@@ -231,11 +231,13 @@ export const beforeQuery = ({ page }) => {
 ```tsx title="web/src/components/BlogPostsCell/BlogPostsCell.tsx"
 import type { CellBeforeQueryResult } from '@cedarjs/web'
 
-export const beforeQuery = ({
-  page,
-}: {
+interface BeforeQueryProps {
   page?: number | string
-}): CellBeforeQueryResult<BlogPostsQueryVariables> => {
+}
+
+type BeforeQueryResult = CellBeforeQueryResult<BlogPostsQueryVariables>
+
+export const beforeQuery = ({ page }: BeforeQueryProps): BeforeQueryResult => {
   const pageNumber = page ? parseInt(page.toString(), 10) : 1
 
   return { variables: { page: pageNumber } }

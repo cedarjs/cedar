@@ -180,12 +180,14 @@ export const beforeQuery = ({ word }) => {
 ```tsx
 import type { CellBeforeQueryResult } from '@cedarjs/web'
 
-// The cell will take 1 prop named "word" that is a string: <Cell word="abc">
-export const beforeQuery = ({
-  word,
-}: {
+interface BeforeQueryProps {
   word: string
-}): CellBeforeQueryResult<{ magicWord: string }> => {
+}
+
+type BeforeQueryResult = CellBeforeQueryResult<{ magicWord: string }>
+
+// The cell will take 1 prop named "word" that is a string: <Cell word="abc">
+export const beforeQuery = ({ word }: BeforeQueryProps): BeforeQueryResult => {
   return {
     variables: { magicWord: word },
   }
