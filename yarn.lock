@@ -11889,8 +11889,8 @@ __metadata:
   linkType: hard
 
 "@universal-deploy/store@npm:^0.2.1":
-  version: 0.2.1
-  resolution: "@universal-deploy/store@npm:0.2.1"
+  version: 0.2.2
+  resolution: "@universal-deploy/store@npm:0.2.2"
   dependencies:
     rou3: "npm:^0.8.1"
     srvx: "npm:*"
@@ -11899,7 +11899,7 @@ __metadata:
   peerDependenciesMeta:
     srvx:
       optional: true
-  checksum: 10c0/8079a2d41d17b5b9a8d3dc5859ca18875d989fb695d592bee7a8dff13dfdf34af682384c4cc577ed10b2fbba9686953bdcb6ce4fb528548f10c5a8f9191ed8fe
+  checksum: 10c0/88314de33923cfde675efa2e4b897447febc202ca667d4ad2877e87e70a3e0fff79a293ab6df18d3b42eeda7a338179f6682a9d55af33959ed12c2a4c5ce8d10
   languageName: node
   linkType: hard
 
