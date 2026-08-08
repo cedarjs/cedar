@@ -27,14 +27,10 @@ function renameSyncWithRetry(
       renameSync(oldPath, newPath)
       return
     } catch (e) {
-      const isRetryableFsError =
-        typeof e === 'object' &&
-        e !== null &&
-        'code' in e &&
-        (e.code === 'EPERM' || e.code === 'EBUSY')
+      const code = getErrorCode(e)
 
       if (
-        !isRetryableFsError ||
+        (code !== 'EPERM' && code !== 'EBUSY') ||
         attempt >= retries ||
         process.platform !== 'win32'
       ) {
@@ -111,6 +107,18 @@ function getExitCode(e: unknown): number | undefined {
 
     if (typeof exitCode === 'number') {
       return exitCode
+    }
+  }
+
+  return undefined
+}
+
+function getErrorCode(e: unknown): string | undefined {
+  if (typeof e === 'object' && e !== null && 'code' in e) {
+    const code = e.code
+
+    if (typeof code === 'string') {
+      return code
     }
   }
 
