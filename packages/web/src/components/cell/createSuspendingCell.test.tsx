@@ -15,7 +15,8 @@ import { createSuspendingCell } from './createSuspendingCell.js'
 
 vi.mock('@apollo/client/react', async (importOriginal) => {
   return {
-    // Keep the real `skipToken` – it's a symbol the Cell compares against
+    // We want to keep the real `skipToken` because it's a symbol the Cell
+    // compares against
     ...(await importOriginal<typeof ApolloClientReact>()),
     useApolloClient: vi.fn(),
     useBackgroundQuery: vi.fn(),
