@@ -18,8 +18,8 @@
     "@cedarjs/web": "5.0.0",
     "graphql-tag": "2.12.6",
     "humanize-string": "2.1.0",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "react-hook-form": "7.74.0",
     "@my-org/validators": "workspace:*"
   },
