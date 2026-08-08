@@ -6,6 +6,51 @@ import execa from 'execa'
 import type { PackageJson } from 'type-fest'
 
 /**
+ * `nx run-many -t build` runs every package's build script in parallel, and
+ * several of them (this file included) spawn their own `yarn` child process,
+ * which parses every workspace's package.json on startup. On Windows,
+ * renaming over a file that another process momentarily has open for reading
+ * throws EPERM (unlike POSIX, where that's always safe). That makes this
+ * rename transient and worth a few retries rather than a hard failure.
+ *
+ * See: https://github.com/cedarjs/cedar/issues/2146 and specifically
+ * https://github.com/cedarjs/cedar/actions/runs/31239552284
+ */
+function renameSyncWithRetry(
+  oldPath: string,
+  newPath: string,
+  retries = 5,
+  delayMs = 50,
+) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      renameSync(oldPath, newPath)
+      return
+    } catch (e) {
+      const code = getErrorCode(e)
+
+      if (
+        (code !== 'EPERM' && code !== 'EBUSY') ||
+        attempt >= retries ||
+        process.platform !== 'win32'
+      ) {
+        throw e
+      }
+
+      // Retries are blocking on purpose: this only ever runs on Windows CI,
+      // where the delay is a few tens of ms, and the callers are synchronous
+      // build scripts with nothing else to do in the meantime.
+      Atomics.wait(
+        new Int32Array(new SharedArrayBuffer(4)),
+        0,
+        0,
+        delayMs * attempt,
+      )
+    }
+  }
+}
+
+/**
  * This function will run `yarn build:types-cjs` to generate the CJS type
  * definitions.
  *
@@ -29,7 +74,7 @@ export async function generateTypesCjs() {
   // manifest during setup) read a partially written file and crash with a
   // JSON syntax error.
   writeFileSync('./package.json.tmp', JSON.stringify(packageJson, null, 2))
-  renameSync('./package.json.tmp', './package.json')
+  renameSyncWithRetry('./package.json.tmp', './package.json')
 
   try {
     await execa('yarn', ['build:types-cjs'], { stdio: 'inherit' })
@@ -38,7 +83,7 @@ export async function generateTypesCjs() {
     process.exitCode = getExitCode(e) ?? 1
     throw e
   } finally {
-    renameSync('package.json.bak', 'package.json')
+    renameSyncWithRetry('package.json.bak', 'package.json')
   }
 }
 
@@ -62,6 +107,18 @@ function getExitCode(e: unknown): number | undefined {
 
     if (typeof exitCode === 'number') {
       return exitCode
+    }
+  }
+
+  return undefined
+}
+
+function getErrorCode(e: unknown): string | undefined {
+  if (typeof e === 'object' && e !== null && 'code' in e) {
+    const code = e.code
+
+    if (typeof code === 'string') {
+      return code
     }
   }
 
