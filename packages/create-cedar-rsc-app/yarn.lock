@@ -1493,7 +1493,7 @@ __metadata:
     prettier-plugin-curly: "npm:^0.3.0"
     prettier-plugin-packagejson: "npm:3.0.2"
     prettier-plugin-sh: "npm:^0.19.0"
-    publint: "npm:0.3.22"
+    publint: "npm:0.3.23"
     rimraf: "npm:^6.0.1"
     semver: "npm:7.7.4"
     typescript: "npm:5.9.3"
@@ -3096,9 +3096,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"publint@npm:0.3.22":
-  version: 0.3.22
-  resolution: "publint@npm:0.3.22"
+"publint@npm:0.3.23":
+  version: 0.3.23
+  resolution: "publint@npm:0.3.23"
   dependencies:
     "@publint/pack": "npm:^0.1.6"
     package-manager-detector: "npm:^1.7.0"
@@ -3106,7 +3106,7 @@ __metadata:
     sade: "npm:^1.8.1"
   bin:
     publint: ./src/cli.js
-  checksum: 10c0/9877bf8b8846ff23ce68a24fcd2ec38468ec4823eefbf697ca53f7a0c074cfd7aa740bf1be54d5d661fbc812df26688e904533f71b04ae7f2067be1386eefabe
+  checksum: 10c0/2f1acfdb6b79ce90baca87e6df52ff82bbbf5954e01964b4135d392a2ae5840a70ddcfdd43435c8fe1e7d32f50b5a9385d9fd8070407712f3389c501efbb1e89
   languageName: node
   linkType: hard
 

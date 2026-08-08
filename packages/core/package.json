@@ -61,7 +61,7 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "5.0.1",
-    "publint": "0.3.22"
+    "publint": "0.3.23"
   },
   "engines": {
     "node": ">=24"

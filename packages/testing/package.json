@@ -151,7 +151,7 @@
     "@cedarjs/web": "5.0.1",
     "concurrently": "9.2.4",
     "jsdom": "27.4.0",
-    "publint": "0.3.22",
+    "publint": "0.3.23",
     "typescript": "5.9.3",
     "vitest": "4.1.10"
   },
