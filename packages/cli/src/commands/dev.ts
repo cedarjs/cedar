@@ -28,9 +28,6 @@ export const builder = (yargs: Argv) => {
         'String of one or more vite dev server config options, for example: ' +
         '`--fwd="--port=1234 --open=false"`',
       type: 'string',
-      // The reason `forward` is hidden is that it's been broken with Vite and
-      // it's not clear how to fix it.
-      hidden: true,
     })
     .option('generate', {
       type: 'boolean',
