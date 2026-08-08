@@ -229,15 +229,16 @@ export const beforeQuery = ({ page }) => {
 <TabItem value="ts" label="TypeScript">
 
 ```tsx title="web/src/components/BlogPostsCell/BlogPostsCell.tsx"
+import type { CellBeforeQueryResult } from '@cedarjs/web'
+
 export const beforeQuery = ({
   page,
-}: FindBlogPostQueryVariables): GraphQLQueryHookOptions<
-  FindBlogPostQuery,
-  FindBlogPostQueryVariables
-> => {
-  page = page ? parseInt(page, 10) : 1
+}: {
+  page?: number | string
+}): CellBeforeQueryResult<BlogPostsQueryVariables> => {
+  const pageNumber = page ? parseInt(page.toString(), 10) : 1
 
-  return { variables: { page } }
+  return { variables: { page: pageNumber } }
 }
 ```
 

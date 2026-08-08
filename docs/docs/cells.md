@@ -178,8 +178,14 @@ export const beforeQuery = ({ word }) => {
 <TabItem value="ts" label="TypeScript">
 
 ```tsx
+import type { CellBeforeQueryResult } from '@cedarjs/web'
+
 // The cell will take 1 prop named "word" that is a string: <Cell word="abc">
-export const beforeQuery = ({ word }: { word: string }) => {
+export const beforeQuery = ({
+  word,
+}: {
+  word: string
+}): CellBeforeQueryResult<{ magicWord: string }> => {
   return {
     variables: { magicWord: word },
   }
