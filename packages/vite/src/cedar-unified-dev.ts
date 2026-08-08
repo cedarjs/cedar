@@ -339,6 +339,13 @@ export async function startUnifiedDevServer() {
   const { forceOptimize, debug, portArg, debugPort, debugBrk, serverArgs } =
     parseCliArgs()
 
+  // Default to not auto-opening a browser when there's no interactive
+  // terminal attached (CI, AI coding agents, etc.), unless the user
+  // explicitly forwarded --open.
+  if (serverArgs.open === undefined && !process.stdout.isTTY) {
+    serverArgs.open = false
+  }
+
   if (debugPort !== undefined) {
     await openDebugger(debugPort, debugBrk)
   }
