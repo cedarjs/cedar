@@ -19,6 +19,8 @@
 [api]
   port = 8911
 [browser]
+  # Only applies to interactive sessions. CI/agent runs always default to
+  # false. Override with `--fwd="--open=true"`.
   open = true
 [notifications]
   versionUpdates = ["latest"]
