@@ -16,7 +16,9 @@ import type { A, L, O, U } from 'ts-toolbelt'
 
 /**
  * If the Cell has a `beforeQuery` function, then the variables are not required,
- * but instead the arguments of the `beforeQuery` function are required.
+ * but instead the arguments of the `beforeQuery` function are required. If
+ * `beforeQuery` takes no arguments, or its first argument is untyped, any
+ * props are accepted.
  *
  * If the Cell does not have a `beforeQuery` function, then the variables are required.
  *
@@ -27,9 +29,13 @@ import type { A, L, O, U } from 'ts-toolbelt'
 type CellPropsVariables<Cell, GQLVariables> = Cell extends {
   beforeQuery: (...args: any[]) => any
 }
-  ? Parameters<Cell['beforeQuery']>[0] extends unknown
-    ? Record<string, unknown>
-    : Parameters<Cell['beforeQuery']>[0]
+  ? Parameters<Cell['beforeQuery']> extends [infer FirstArg, ...any[]]
+    ? // `unknown extends T` is only true for `unknown` and `any`, i.e. an
+      // untyped first argument
+      unknown extends FirstArg
+      ? Record<string, unknown>
+      : FirstArg
+    : Record<string, unknown>
   : GQLVariables extends Record<string, never>
     ? unknown
     : GQLVariables
@@ -46,6 +52,16 @@ export type CellProps<
   Omit<
     ComponentProps<CellSuccess>,
     | keyof CellPropsVariables<CellType, GQLVariables>
+    // Success components are typically annotated with the query's variables
+    // (via `CellSuccessProps<TData, TVariables>`). When a `beforeQuery`
+    // computes the variables from different props, the variables must not
+    // leak into the props required at the Cell's call site, so they're
+    // omitted here. Without a `beforeQuery` this is a no-op since
+    // `CellPropsVariables` already equals the variables. `keyof unknown` is
+    // `never`, so queries without variables are unaffected.
+    | keyof (GQLVariables extends Record<string, never>
+        ? unknown
+        : GQLVariables)
     | keyof GQLResult
     | 'updating'
     | 'queryResult'
