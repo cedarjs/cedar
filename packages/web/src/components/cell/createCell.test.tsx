@@ -9,7 +9,7 @@ import { vi, describe, beforeAll, beforeEach, test, expect } from 'vitest'
 import { createCell } from './createCell.js'
 
 vi.mock('@apollo/client/react', async (importOriginal) => ({
-  // Keep the real `skipToken` – it's a symbol the Cell compares against
+  // Keep the real `skipToken`. It's a symbol the Cell compares against
   ...(await importOriginal<typeof ApolloClientReact>()),
   useQuery: vi.fn(),
 }))

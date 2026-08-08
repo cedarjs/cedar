@@ -134,7 +134,7 @@ function createNonSuspendingCell<
 
       // A skipped Cell doesn't render any data, so there's no point in having
       // the prerenderer execute its query. Note that the hook above still has
-      // to run unconditionally – `skipped` can change between renders
+      // to run unconditionally because `skipped` can change between renders
       if (!skipped) {
         const operationName = getOperationName(query)
         const transformedQuery = fragmentRegistry.transform(query)

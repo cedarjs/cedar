@@ -139,11 +139,7 @@ export type DataObject = { [key: string]: unknown }
 
 /**
  * What `beforeQuery` returns is handed straight to the GraphQL client's query
- * hook, so any of that hook's options can be set here – not just `variables`.
- *
- * These are `useQuery`'s options. With streaming SSR enabled a Cell runs
- * through `useBackgroundQuery` instead, which accepts a slightly narrower set
- * (no `fetchPolicy: 'cache-only'`, for example).
+ * hook, so any of that hook's options can be set here.
  */
 export type CellBeforeQueryOptions<CellVariables> = {
   variables: CellVariables
@@ -151,7 +147,7 @@ export type CellBeforeQueryOptions<CellVariables> = {
 
 /**
  * `beforeQuery` can return `skipToken` instead of an options object to keep the
- * query from being executed at all. A skipped Cell renders nothing – none of
+ * query from being executed at all. A skipped Cell renders nothing -- none of
  * `Loading`, `Empty`, `Failure` or `Success` are rendered.
  *
  * @see {@link https://www.apollographql.com/docs/react/api/react/hooks#skiptoken}
