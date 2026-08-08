@@ -16,14 +16,27 @@ const startDevServer = async () => {
   // Tries to maintain the same options as vite's dev cli
   // See here: https://github.com/vitejs/vite/blob/main/packages/vite/src/node/cli.ts#L103
   // e.g. yarn cedar dev web --fwd="--force"
+  //
+  // `force` and `debug` aren't Vite server options, so pull those out.
+  // Everything else yargs-parser picks out of argv (e.g. `open`, `port`,
+  // `https`, `strictPort`, `cors`) is a forwarded server option and gets
+  // passed straight through to Vite's `server` config.
   const {
     force: forceOptimize,
-    forwardedServerArgs,
     debug,
+    _: _positional,
+    ...forwardedServerArgs
   } = yargsParser(process.argv.slice(2), {
     boolean: ['https', 'open', 'strictPort', 'force', 'cors', 'debug'],
     number: ['port'],
   })
+
+  // Default to not auto-opening a browser when there's no interactive
+  // terminal attached (CI, AI coding agents, etc.), unless the user
+  // explicitly forwarded --open.
+  if (forwardedServerArgs.open === undefined && !process.stdout.isTTY) {
+    forwardedServerArgs.open = false
+  }
 
   const devServer = await createServer({
     configFile,
