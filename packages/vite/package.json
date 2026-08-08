@@ -108,7 +108,7 @@
     "@types/yargs-parser": "21.0.3",
     "concurrently": "9.2.4",
     "memfs": "4.64.0",
-    "publint": "0.3.22",
+    "publint": "0.3.23",
     "rollup": "4.60.4",
     "ts-dedent": "2.3.0",
     "typescript": "5.9.3",
