@@ -13,7 +13,8 @@ import type { PackageJson } from 'type-fest'
  * throws EPERM (unlike POSIX, where that's always safe). That makes this
  * rename transient and worth a few retries rather than a hard failure.
  *
- * See: https://github.com/cedarjs/cedar/issues/2146
+ * See: https://github.com/cedarjs/cedar/issues/2146 and specifically
+ * https://github.com/cedarjs/cedar/actions/runs/31239552284
  */
 function renameSyncWithRetry(
   oldPath: string,
