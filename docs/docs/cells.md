@@ -178,8 +178,16 @@ export const beforeQuery = ({ word }) => {
 <TabItem value="ts" label="TypeScript">
 
 ```tsx
+import type { CellBeforeQueryResult } from '@cedarjs/web'
+
+interface BeforeQueryProps {
+  word: string
+}
+
+type BeforeQueryResult = CellBeforeQueryResult<{ magicWord: string }>
+
 // The cell will take 1 prop named "word" that is a string: <Cell word="abc">
-export const beforeQuery = ({ word }: { word: string }) => {
+export const beforeQuery = ({ word }: BeforeQueryProps): BeforeQueryResult => {
   return {
     variables: { magicWord: word },
   }
@@ -418,6 +426,23 @@ Absolutely. We do so in our [example todo app](https://github.com/redwoodjs/exam
 We also don't think it's an anti-pattern to do so. Far from it—your cells might end up containing a lot of logic and really serve as the hub of your app in many ways.
 
 It's also important to remember that, besides exporting certain things with certain names, there aren't many rules around Cells&mdash;everything you can do in a regular component still goes.
+
+## Cell Types Reference
+
+All Cell-related types are exported from `@cedarjs/web` and share the `Cell` prefix. A nice side effect of the shared prefix is that typing `Cell` inside an `import type { ... } from '@cedarjs/web'` statement makes your editor's autocomplete list the whole family.
+
+| Type                                   | What it types                                                                                                                                       |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CellSuccessProps<TData, TVariables>`  | Props of the `Success` and `Empty` components: the query's data (spread as individual props), plus `queryResult` and `updating`                     |
+| `CellFailureProps<TVariables>`         | Props of the `Failure` component: `error`, `errorCode`, `queryResult` and `updating`                                                                |
+| `CellLoadingProps<TVariables>`         | Props of the `Loading` component                                                                                                                    |
+| `CellSuccessData<TData>`               | Just the data part of `CellSuccessProps`, useful when passing the query result on to other functions or components                                  |
+| `CellBeforeQueryResult<TVariables>`    | Return type of [`beforeQuery`](#beforequery): the query options, or `skipToken` to [skip the query](#skipping-the-query)                            |
+| `CellBeforeQueryOptions<TVariables>`   | The options object variant of `CellBeforeQueryResult`: `variables` plus any other option Apollo Client's `useQuery` hook accepts                    |
+| `TypedDocumentNode<TData, TVariables>` | The `QUERY` document. Annotating `QUERY` with it flows the query's data and variable types through to the rest of the Cell                          |
+| `CellProps<...>`                       | The complete prop interface of a Cell as seen by the components rendering it. Used by Cedar's generated types&mdash;you'll rarely write it yourself |
+
+For worked examples of `CellSuccessProps`, `CellFailureProps`, and `CellLoadingProps`, see the [Utility Types](typescript/utility-types.md#cells) doc. For `CellBeforeQueryResult`, see the [`beforeQuery`](#beforequery) section above.
 
 ## Fragment Cells: Aggregating Queries
 
