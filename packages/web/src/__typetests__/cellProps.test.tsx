@@ -60,6 +60,23 @@ const recipeCell = {
   },
 }
 
+// Like real generated Cells, this fixture's Success is annotated with both
+// the query result and the query variables. (`recipeCell` above leaves
+// `TVariables` at its default.)
+interface SuccessWithVariablesProps extends CellSuccessProps<
+  QueryResult,
+  ExampleQueryVariables
+> {
+  customProp: number
+}
+
+const recipeCellWithVariables = {
+  ...recipeCell,
+  Success: (props: SuccessWithVariablesProps) => {
+    return <h1>{props.recipes.length}</h1>
+  },
+}
+
 describe('CellProps mapper type', () => {
   describe('when beforeQuery does not exist', () => {
     test('Inputs expect props outside cell', () => {
@@ -120,6 +137,73 @@ describe('CellProps mapper type', () => {
       })
     })
 
+    test('Inputs reject beforeQuery args that are missing or of the wrong type', () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const cellWithBeforeQuery = {
+        ...recipeCellWithVariables,
+        beforeQuery: ({ word }: { word: string }) => {
+          return {
+            variables: {
+              category: word,
+              saved: !!word,
+            },
+          }
+        },
+      }
+
+      type CellWithBeforeQueryInputs = CellProps<
+        typeof cellWithBeforeQuery.Success,
+        QueryResult,
+        typeof cellWithBeforeQuery,
+        ExampleQueryVariables
+      >
+
+      // `word` is missing
+      expect<CellWithBeforeQueryInputs>().type.not.toBeAssignableFrom({
+        customProp: 99,
+      })
+
+      // `word` has the wrong type
+      expect<CellWithBeforeQueryInputs>().type.not.toBeAssignableFrom({
+        word: 42,
+        customProp: 99,
+      })
+
+      // `customProp` is missing
+      expect<CellWithBeforeQueryInputs>().type.not.toBeAssignableFrom({
+        word: 'abracadabra',
+      })
+    })
+
+    test('Inputs do not require the query variables when beforeQuery computes them', () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const cellWithBeforeQuery = {
+        ...recipeCellWithVariables,
+        beforeQuery: ({ word }: { word: string }) => {
+          return {
+            variables: {
+              category: word,
+              saved: !!word,
+            },
+          }
+        },
+      }
+
+      type CellWithBeforeQueryInputs = CellProps<
+        typeof cellWithBeforeQuery.Success,
+        QueryResult,
+        typeof cellWithBeforeQuery,
+        ExampleQueryVariables
+      >
+
+      // Even though `Success` is annotated with the query's variables
+      // (`category` and `saved`), the Cell's caller only provides `word`
+      expect<CellWithBeforeQueryInputs>().type.toBeAssignableFrom({
+        word: 'abracadabra',
+        customProp: 99,
+      })
+    })
+
     test('Inputs still expect custom props when query does not take variables', () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const cellWithBeforeQuery = {
@@ -170,6 +254,12 @@ describe('CellProps mapper type', () => {
       // Note that the gql variables are no longer required here
       expect<CellWithBeforeQueryInputs>().type.toBeAssignableFrom({
         customProp: 99,
+      })
+
+      // A zero-arg beforeQuery accepts any props, including none at all
+      expect<CellWithBeforeQueryInputs>().type.toBeAssignableFrom({})
+      expect<CellWithBeforeQueryInputs>().type.toBeAssignableFrom({
+        anything: 'goes',
       })
     })
 
