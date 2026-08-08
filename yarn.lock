@@ -11864,34 +11864,34 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@universal-deploy/netlify@npm:^0.2.2":
-  version: 0.2.2
-  resolution: "@universal-deploy/netlify@npm:0.2.2"
+"@universal-deploy/netlify@npm:^0.2.3":
+  version: 0.2.3
+  resolution: "@universal-deploy/netlify@npm:0.2.3"
   dependencies:
-    "@universal-deploy/store": "npm:^0.2.1"
+    "@universal-deploy/store": "npm:^0.2.2"
   peerDependencies:
     vite: ">=7.1"
-  checksum: 10c0/28571de13a4b72d4f2bc9e8758f602972444e5d933c558dbcfa4b4efd85003b312cb6f5963f24ecde20e0f00e01fb5dcad99af78f22e6d11e9c7bda1212b5dc1
+  checksum: 10c0/68ad45ae62dea3b3b5a578d875d3d3c35eae2b173f4f6832108b91742285efe2b983b9a95f286026687789fd572497506b126c2c215e8876dcf180679e268c5b
   languageName: node
   linkType: hard
 
-"@universal-deploy/node@npm:^0.1.7":
-  version: 0.1.7
-  resolution: "@universal-deploy/node@npm:0.1.7"
+"@universal-deploy/node@npm:^0.1.10":
+  version: 0.1.10
+  resolution: "@universal-deploy/node@npm:0.1.10"
   dependencies:
-    "@universal-deploy/store": "npm:^0.2.1"
+    "@universal-deploy/store": "npm:^0.2.2"
     magic-string: "npm:^0.30.21"
-    srvx: "npm:^0.11.9"
+    srvx: "npm:^0.12.5"
   peerDependencies:
     vite: ">=7.1"
   peerDependenciesMeta:
     vite:
       optional: true
-  checksum: 10c0/3215fc8edf6a73ad8dca7a67f83586f44938bfbc443cd1be6109eda4de3823b11271a4f0f055fb75b61476c0559e9d55eb4d46480ec9509ad32f4e86eece0895
+  checksum: 10c0/0e9dd02ae26da020271dad897015b53b7030ffbfb2fed7cc1e5bddfa8addf5037a049b4c35a5a1b7e3a593976def4e3b059158b3c2427e2f50494bf4c5016b67
   languageName: node
   linkType: hard
 
-"@universal-deploy/store@npm:^0.2.1":
+"@universal-deploy/store@npm:^0.2.1, @universal-deploy/store@npm:^0.2.2":
   version: 0.2.2
   resolution: "@universal-deploy/store@npm:0.2.2"
   dependencies:
@@ -11907,13 +11907,13 @@ __metadata:
   linkType: hard
 
 "@universal-deploy/vite@npm:^0.1.9":
-  version: 0.1.10
-  resolution: "@universal-deploy/vite@npm:0.1.10"
+  version: 0.1.11
+  resolution: "@universal-deploy/vite@npm:0.1.11"
   dependencies:
-    "@universal-deploy/netlify": "npm:^0.2.2"
-    "@universal-deploy/node": "npm:^0.1.7"
-    "@universal-deploy/store": "npm:^0.2.1"
-    "@universal-middleware/express": "npm:^0.4.26"
+    "@universal-deploy/netlify": "npm:^0.2.3"
+    "@universal-deploy/node": "npm:^0.1.10"
+    "@universal-deploy/store": "npm:^0.2.2"
+    "@universal-middleware/express": "npm:^0.4.31"
     magic-string: "npm:^0.30.21"
     rou3: "npm:^0.8.1"
   peerDependencies:
@@ -11921,25 +11921,25 @@ __metadata:
   peerDependenciesMeta:
     vite:
       optional: true
-  checksum: 10c0/76a309971f02c3ce36f7767ce870f8dd868917956ec0f45d61f8873c6714676142e088c340d41162bb54419dca635f9d6dc38bde7379f6f93170b3d26ad13436
+  checksum: 10c0/38e689c18c0ee473d220a29a031176f9b3aaaf29836d38c534bcfa89ad6ef046b924ccc7008ef0ad13f5bc5aae89e3c50bb9302014052d2003ebfee8590528c3
   languageName: node
   linkType: hard
 
-"@universal-middleware/core@npm:^0.4.17":
-  version: 0.4.17
-  resolution: "@universal-middleware/core@npm:0.4.17"
+"@universal-middleware/core@npm:^0.4.18":
+  version: 0.4.18
+  resolution: "@universal-middleware/core@npm:0.4.18"
   dependencies:
     regexparam: "npm:^3.0.0"
-    tough-cookie: "npm:^6.0.0"
+    tough-cookie: "npm:^6.0.1"
   peerDependencies:
-    "@cloudflare/workers-types": ^4.20260302.0
+    "@cloudflare/workers-types": ^4.20260608.1
     "@hattip/core": ^0.0.49
     "@types/express": ^4 || ^5
     "@webroute/route": ^0.8.0
-    elysia: ^1.4.25
-    fastify: ^5.7.4
-    h3: ^1.15.5
-    hono: ^4.11.9
+    elysia: ^1.4.28
+    fastify: ^5.8.5
+    h3: ^1.15.11
+    hono: ^4.12.23
     srvx: ">=0.8"
   peerDependenciesMeta:
     "@cloudflare/workers-types":
@@ -11960,26 +11960,26 @@ __metadata:
       optional: true
     srvx:
       optional: true
-  checksum: 10c0/f3f79be4af3749fcb3396833a57b8e737414b7f66ebdbcd60e5e05b4e06dcac5007050c129ffe26bf85c992062b34419b46ec71eac694217f7d3f166d25cfe9c
+  checksum: 10c0/4986667f6bcea8666575d3343109a0d884962309730d18e7329d264ba4fd81f59e5216ac84ffb317a6efeed2ebd4f38005ce897b0f53bde3c4cd6b2e49796ba5
   languageName: node
   linkType: hard
 
-"@universal-middleware/express@npm:^0.4.26":
-  version: 0.4.26
-  resolution: "@universal-middleware/express@npm:0.4.26"
+"@universal-middleware/express@npm:^0.4.31":
+  version: 0.4.31
+  resolution: "@universal-middleware/express@npm:0.4.31"
   dependencies:
-    "@universal-middleware/core": "npm:^0.4.17"
-    "@universal-middleware/node": "npm:^0.1.0"
-  checksum: 10c0/4693d00e30253a968e06d947a2038e44a58601548fa4a3ab21135129179c5f3f81917a1c397d212f568f7b55dd804468adb55a198df60d7d6de3eb551151633e
+    "@universal-middleware/core": "npm:^0.4.18"
+    "@universal-middleware/node": "npm:^0.2.2"
+  checksum: 10c0/5805c2109258d0000d95f9d1bcf7a5210cf68cfdf81c579eb235b33d5b15782ba806d645b3dae318712c725952b39e04c3ea03b12f1d4d5e6149f0e2e43ccf2a
   languageName: node
   linkType: hard
 
-"@universal-middleware/node@npm:^0.1.0":
-  version: 0.1.0
-  resolution: "@universal-middleware/node@npm:0.1.0"
+"@universal-middleware/node@npm:^0.2.2":
+  version: 0.2.2
+  resolution: "@universal-middleware/node@npm:0.2.2"
   dependencies:
-    "@universal-middleware/core": "npm:^0.4.17"
-  checksum: 10c0/48c833e970db9a5e0883898eb9c6d1912815018dc6e977b845fc256be09fd2cf67b02fe58e6d0df878afb1d26073c3c283da6f46fa483802542d14ff3337000c
+    "@universal-middleware/core": "npm:^0.4.18"
+  checksum: 10c0/ae4a696688a4ec4df2a290ac8b3cdf33cad7ed7c268d23f03dd3eba2e4227d41382a9dc86f6b9f940b8c4a2932c535a68ee1bc10828bc4838e84c57575384818
   languageName: node
   linkType: hard
 
@@ -27065,7 +27065,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"srvx@npm:*, srvx@npm:0.11.16, srvx@npm:^0.11.9":
+"srvx@npm:*, srvx@npm:^0.12.5":
+  version: 0.12.5
+  resolution: "srvx@npm:0.12.5"
+  bin:
+    srvx: bin/srvx.mjs
+  checksum: 10c0/89d844b55c1858f567bb5dac8839d0a4d217fc25306c1c7caa4a6cc8236381812c3c84352d974ecfd5b655a690883c172f49d51b13f4181160a1da4e982ba792
+  languageName: node
+  linkType: hard
+
+"srvx@npm:0.11.16":
   version: 0.11.16
   resolution: "srvx@npm:0.11.16"
   bin:
