@@ -22565,9 +22565,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"neon-new@npm:0.15.0":
-  version: 0.15.0
-  resolution: "neon-new@npm:0.15.0"
+"neon-new@npm:0.15.1":
+  version: 0.15.1
+  resolution: "neon-new@npm:0.15.1"
   dependencies:
     "@clack/prompts": "npm:0.10.1"
     "@neondatabase/serverless": "npm:^1.0.1"
@@ -22580,7 +22580,7 @@ __metadata:
     yoctocolors: "npm:^2.1.2"
   bin:
     neon-new: dist/cli.js
-  checksum: 10c0/c6fc52354c141baf75b09d49c8334e959240e54c151a0929e235a6b9d4b91a56a2cdca63b6b4c5cc6da7eaa90801ff189f44bfc03176b631caa4e653aaab478f
+  checksum: 10c0/e9f297a0c33cc6bdbcfdf7be54ba86071e217149dad749108c213e0e2e49a2c22b4c894e270d0458ae11c1da3a56b270395453b9ad0291b80aeef1212c97ab6c
   languageName: node
   linkType: hard
 
@@ -26137,7 +26137,7 @@ __metadata:
     make-dir-cli: "npm:4.0.0"
     msw: "npm:2.15.0"
     ncp: "npm:2.0.0"
-    neon-new: "npm:0.15.0"
+    neon-new: "npm:0.15.1"
     nodemon: "npm:3.1.14"
     npm-packlist: "npm:10.0.4"
     nx: "npm:23.1.0"
