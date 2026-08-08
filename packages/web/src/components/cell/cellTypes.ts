@@ -7,6 +7,7 @@ import type {
 } from '@apollo/client'
 import type {
   QueryRef,
+  SkipToken,
   useBackgroundQuery,
   useQuery,
 } from '@apollo/client/react'
@@ -137,6 +138,36 @@ export type CellSuccessProps<
 export type DataObject = { [key: string]: unknown }
 
 /**
+ * What `beforeQuery` returns is handed straight to the GraphQL client's query
+ * hook, so any of that hook's options can be set here.
+ */
+export type CellBeforeQueryOptions<CellVariables> = {
+  variables: CellVariables
+} & Omit<useQuery.Options<DataObject, OperationVariables>, 'variables'>
+
+/**
+ * `beforeQuery` can return `skipToken` instead of an options object to keep the
+ * query from being executed at all. A skipped Cell renders nothing -- none of
+ * `Loading`, `Empty`, `Failure` or `Success` are rendered.
+ *
+ * @see {@link https://www.apollographql.com/docs/react/api/react/hooks#skiptoken}
+ *
+ * @example
+ * ```ts
+ * import { skipToken } from '@apollo/client/react'
+ *
+ * export const beforeQuery = ({ id }) => {
+ *   const otherId = useStore((state) => state.getOther(id))
+ *
+ *   return otherId ? { variables: { id, otherId } } : skipToken
+ * }
+ * ```
+ */
+export type CellBeforeQueryResult<CellVariables> =
+  | CellBeforeQueryOptions<CellVariables>
+  | SkipToken
+
+/**
  * The main interface.
  */
 export interface CreateCellProps<CellProps, CellVariables> {
@@ -160,10 +191,13 @@ export interface CreateCellProps<CellProps, CellVariables> {
   FRAGMENT?: DocumentNode
   /**
    * Parse `props` into query variables. Most of the time `props` are appropriate variables as is.
+   *
+   * Any other option the GraphQL client's query hook accepts can be returned
+   * here as well. Return `skipToken` to not execute the query at all.
    */
   beforeQuery?:
-    | ((props: CellProps) => { variables: CellVariables })
-    | (() => { variables: CellVariables })
+    | ((props: CellProps) => CellBeforeQueryResult<CellVariables>)
+    | (() => CellBeforeQueryResult<CellVariables>)
   /**
    * Sanitize the data returned from the query.
    */
@@ -235,8 +269,7 @@ export type NonSuspenseCellQueryResult<
 export interface SuspenseCellQueryResult<
   _TData = any,
   _TVariables extends OperationVariables = any,
->
-  extends useBackgroundQuery.Result {
+> extends useBackgroundQuery.Result<DataObject> {
   client: ApolloClient
   // fetchMore & refetch come from useBackgroundQuery.Result
   networkStatus?: NetworkStatus

@@ -25,6 +25,8 @@ export type {
   CellLoadingProps,
   CellSuccessProps,
   CellSuccessData,
+  CellBeforeQueryOptions,
+  CellBeforeQueryResult,
 } from './components/cell/cellTypes.js'
 
 export * from './graphql.js'

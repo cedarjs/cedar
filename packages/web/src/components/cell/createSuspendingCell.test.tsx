@@ -1,15 +1,23 @@
 import React from 'react'
 
 import { loadErrorMessages, loadDevMessages } from '@apollo/client/dev'
-import { useBackgroundQuery, useReadQuery } from '@apollo/client/react'
+import type * as ApolloClientReact from '@apollo/client/react'
+import {
+  skipToken,
+  useBackgroundQuery,
+  useReadQuery,
+} from '@apollo/client/react'
 import { render, screen } from '@testing-library/react'
 import type { Mock } from 'vitest'
-import { vi, describe, beforeAll, beforeEach, test } from 'vitest'
+import { vi, describe, beforeAll, beforeEach, test, expect } from 'vitest'
 
 import { createSuspendingCell } from './createSuspendingCell.js'
 
-vi.mock('@apollo/client/react', () => {
+vi.mock('@apollo/client/react', async (importOriginal) => {
   return {
+    // We want to keep the real `skipToken` because it's a symbol the Cell
+    // compares against
+    ...(await importOriginal<typeof ApolloClientReact>()),
     useApolloClient: vi.fn(),
     useBackgroundQuery: vi.fn(),
     useReadQuery: vi.fn(),
@@ -126,5 +134,62 @@ describe('createSuspendingCell', () => {
 
     screen.getByText(/bazinga/)
     screen.getByText(/kittens/)
+  })
+
+  test('Renders nothing when beforeQuery returns skipToken', () => {
+    const TestCell = createSuspendingCell({
+      // @ts-expect-error - Purposefully using a plain string here.
+      QUERY: 'query TestQuery { answer }',
+      Success: () => <>Should not render</>,
+      Loading: () => <>Should not render</>,
+      Empty: () => <>Should not render</>,
+      Failure: () => <>Should not render</>,
+      beforeQuery: () => skipToken,
+    })
+
+    // Apollo Client hands back an undefined query reference for a skipped query
+    mockUseBackgroundQuery.mockImplementation(() => {
+      return [undefined, { refetch: vi.fn(), fetchMore: vi.fn() }]
+    })
+
+    const { container } = render(<TestCell />)
+
+    expect(screen.queryByText(/^Should not render$/)).not.toBeInTheDocument()
+    expect(container).toBeEmptyDOMElement()
+    // `useReadQuery` throws when given an undefined query reference, so the
+    // Cell has to bail out before it gets there
+    expect(mockUseReadQuery).not.toHaveBeenCalled()
+    expect(mockUseBackgroundQuery).toHaveBeenCalledWith(
+      expect.anything(),
+      skipToken,
+    )
+  })
+
+  test('Renders nothing when an active Cell becomes skipped', () => {
+    const TestCell = createSuspendingCell({
+      // @ts-expect-error - Purposefully using a plain string here.
+      QUERY: 'query TestQuery($name: String) { greeting(name: $name) }',
+      Success: ({ greeting }) => <>{greeting}</>,
+      beforeQuery: ({ name }: { name?: string }) =>
+        name ? { variables: { name } } : skipToken,
+    })
+
+    // Once the query has run, Apollo Client keeps handing back the same query
+    // reference even when the Cell is skipped again later
+    mockUseBackgroundQuery.mockImplementation(() => {
+      return ['mocked-query-ref', { refetch: vi.fn(), fetchMore: vi.fn() }]
+    })
+    mockUseReadQuery.mockImplementation(() => ({
+      data: { greeting: 'Hello Bob!' },
+    }))
+
+    const { container, rerender } = render(<TestCell name="Bob" />)
+
+    screen.getByText(/^Hello Bob!$/)
+
+    rerender(<TestCell />)
+
+    expect(screen.queryByText(/^Hello Bob!$/)).not.toBeInTheDocument()
+    expect(container).toBeEmptyDOMElement()
   })
 })
