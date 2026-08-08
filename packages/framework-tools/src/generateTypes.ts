@@ -27,9 +27,14 @@ function renameSyncWithRetry(
       renameSync(oldPath, newPath)
       return
     } catch (e) {
-      const code = (e as NodeJS.ErrnoException).code
+      const isRetryableFsError =
+        typeof e === 'object' &&
+        e !== null &&
+        'code' in e &&
+        (e.code === 'EPERM' || e.code === 'EBUSY')
+
       if (
-        (code !== 'EPERM' && code !== 'EBUSY') ||
+        !isRetryableFsError ||
         attempt >= retries ||
         process.platform !== 'win32'
       ) {
