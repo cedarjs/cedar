@@ -2,7 +2,7 @@ import React, { Suspense } from 'react'
 
 import type { OperationVariables } from '@apollo/client'
 import { CombinedGraphQLErrors } from '@apollo/client'
-import type { QueryRef } from '@apollo/client/react'
+import type { SkipToken } from '@apollo/client/react'
 import {
   useApolloClient,
   useBackgroundQuery,
@@ -12,6 +12,7 @@ import {
 import type { FallbackProps } from './CellErrorBoundary.js'
 import { CellErrorBoundary } from './CellErrorBoundary.js'
 import type {
+  CellBeforeQueryResult,
   CreateCellProps,
   DataObject,
   SuspendingSuccessProps,
@@ -33,7 +34,11 @@ export function createSuspendingCell<
 ): React.FC<CellProps> {
   const {
     QUERY,
-    beforeQuery = (props) => ({
+    // Unlike in createCell this is destructured from a variable rather than
+    // from an annotated parameter, so the default's return type has to be
+    // spelled out. Without it the inferred object literal type widens the
+    // union and options like `skip` are no longer visible on it
+    beforeQuery = (props): CellBeforeQueryResult<CellVariables> => ({
       // By default, we assume that the props are the gql-variables.
       variables: props as unknown as CellVariables,
       /**
@@ -108,11 +113,51 @@ export function createSuspendingCell<
      */
     const { children: _, ...variables } = props
     const options = beforeQuery(variables)
+
+    // `beforeQuery` can keep the query from running, either by returning
+    // Apollo's `skipToken` (recommended) or by setting the `skip` option.
+    // `skipToken` is a symbol rather than an options object, so everything that
+    // reads individual options has to go through `queryOptions`.
+    // We check for a symbol instead of comparing against `skipToken` itself
+    // because Apollo Client deliberately leaves `skipToken` out of its
+    // react-server build, where importing it is a bundling error
+    const queryOptions = typeof options === 'symbol' ? undefined : options
+    const skipped = !queryOptions || queryOptions.skip === true
+
+    // While skipped the document is never executed, it just has to exist to
+    // satisfy the query hook
     const query =
-      typeof cellQuery === 'function' ? cellQuery(options) : cellQuery
-    const [queryRef, other] = useBackgroundQuery(query, options)
+      typeof cellQuery === 'function'
+        ? cellQuery(queryOptions ?? {})
+        : cellQuery
+    // `beforeQuery`'s options are typed against `useQuery`, which accepts a
+    // slightly wider `fetchPolicy` than `useBackgroundQuery` does. Streaming
+    // Cells that set one of the extra policies aren't supported
+    const backgroundQueryOptions = options as
+      | SkipToken
+      | useBackgroundQuery.Options<OperationVariables>
+
+    // The query document is untyped, so Apollo Client would infer `unknown` for
+    // the data. Cells treat query results as `DataObject`s, same as `useQuery`
+    // is called in createCell
+    const [queryRef, other] = useBackgroundQuery<DataObject>(
+      query,
+      backgroundQueryOptions,
+    )
 
     const client = useApolloClient()
+
+    // Like the non-suspending Cell, a skipped Cell renders nothing.
+    //
+    // `queryRef` is undefined while the query has never run, and passing that
+    // to `useReadQuery` throws. But once the query has run even once, Apollo
+    // Client keeps handing back the previous `queryRef` even if the Cell is
+    // skipped again later, so a Cell going from active to skipped would keep
+    // rendering stale data. That's why this checks `skipped` – derived from
+    // what `beforeQuery` returned – and not just the query reference
+    if (skipped || !queryRef) {
+      return null
+    }
 
     const suspenseQueryResult: SuspenseCellQueryResult = {
       client,
@@ -179,7 +224,7 @@ export function createSuspendingCell<
         {wrapInSuspenseIfLoadingPresent(
           <SuspendingSuccess
             userProps={props}
-            queryRef={queryRef as QueryRef<DataObject>}
+            queryRef={queryRef}
             suspenseQueryResult={suspenseQueryResult}
           />,
           Loading,

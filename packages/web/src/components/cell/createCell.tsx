@@ -97,8 +97,23 @@ function createNonSuspendingCell<
      */
     const { children: _, ...variables } = props
     const options = beforeQuery(variables as CellProps)
+
+    // `beforeQuery` can keep the query from running, either by returning
+    // Apollo's `skipToken` (recommended) or by setting the `skip` option.
+    // `skipToken` is a symbol rather than an options object, so everything that
+    // reads individual options has to go through `queryOptions`.
+    // We check for a symbol instead of comparing against `skipToken` itself
+    // because Apollo Client deliberately leaves `skipToken` out of its
+    // react-server build, where importing it is a bundling error
+    const queryOptions = typeof options === 'symbol' ? undefined : options
+    const skipped = !queryOptions || queryOptions.skip === true
+
+    // While skipped the document is never executed, it just has to exist to
+    // satisfy the query hook
     const query =
-      typeof cellQuery === 'function' ? cellQuery(options) : cellQuery
+      typeof cellQuery === 'function'
+        ? cellQuery(queryOptions ?? {})
+        : cellQuery
 
     // queryRest includes `variables: { ... }`, with any variables returned
     // from beforeQuery
@@ -116,47 +131,60 @@ function createNonSuspendingCell<
       // statement
       /* eslint-disable-next-line react-hooks/rules-of-hooks */
       const { queryCache } = useCellCacheContext()
-      const operationName = getOperationName(query)
-      const transformedQuery = fragmentRegistry.transform(query)
 
-      let cacheKey
+      // A skipped Cell doesn't render any data, so there's no point in having
+      // the prerenderer execute its query. Note that the hook above still has
+      // to run unconditionally because `skipped` can change between renders
+      if (!skipped) {
+        const operationName = getOperationName(query)
+        const transformedQuery = fragmentRegistry.transform(query)
 
-      if (operationName) {
-        cacheKey = operationName + '_' + JSON.stringify(variables)
-      } else {
-        const cellName = displayName === 'Cell' ? 'the cell' : displayName
+        let cacheKey
 
-        throw new Error(
-          `The gql query in ${cellName} is missing an operation name. ` +
-            'Something like FindBlogPostQuery in ' +
-            '`query FindBlogPostQuery($id: Int!)`',
-        )
-      }
-
-      const queryInfo = queryCache[cacheKey]
-
-      // This is true when the graphql handler couldn't be loaded
-      // So we fallback to the loading state
-      if (queryInfo?.renderLoading) {
-        loading = true
-      } else {
-        if (queryInfo?.hasProcessed) {
-          loading = false
-          // The prerender query cache stores the untyped result of executing
-          // this Cell's query, so it has the `DataObject` shape
-          data = queryInfo.data as DataObject
-
-          // All of the gql client's props aren't available when pre-rendering,
-          // so using `any` here
-          queryResult = { variables } as any
+        if (operationName) {
+          cacheKey = operationName + '_' + JSON.stringify(variables)
         } else {
-          queryCache[cacheKey] ||= {
-            query: transformedQuery,
-            variables: options.variables,
-            hasProcessed: false,
+          const cellName = displayName === 'Cell' ? 'the cell' : displayName
+
+          throw new Error(
+            `The gql query in ${cellName} is missing an operation name. ` +
+              'Something like FindBlogPostQuery in ' +
+              '`query FindBlogPostQuery($id: Int!)`',
+          )
+        }
+
+        const queryInfo = queryCache[cacheKey]
+
+        // This is true when the graphql handler couldn't be loaded
+        // So we fallback to the loading state
+        if (queryInfo?.renderLoading) {
+          loading = true
+        } else {
+          if (queryInfo?.hasProcessed) {
+            loading = false
+            // The prerender query cache stores the untyped result of executing
+            // this Cell's query, so it has the `DataObject` shape
+            data = queryInfo.data as DataObject
+
+            // All of the gql client's props aren't available when pre-rendering,
+            // so using `any` here
+            queryResult = { variables } as any
+          } else {
+            queryCache[cacheKey] ||= {
+              query: transformedQuery,
+              variables: queryOptions.variables,
+              hasProcessed: false,
+            }
           }
         }
       }
+    }
+
+    // A skipped Cell never asked for any data, which is a different thing from
+    // asking and getting nothing back, so it renders nothing at all rather than
+    // `Empty` or `Loading`
+    if (skipped) {
+      return null
     }
 
     if (error) {

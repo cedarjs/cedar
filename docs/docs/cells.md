@@ -189,6 +189,89 @@ export const beforeQuery = ({ word }: { word: string }) => {
 </TabItem>
 </Tabs>
 
+#### Skipping the query
+
+Sometimes you don't want a Cell's query to run at all—maybe a value it depends on isn't available yet. Say you have a search page where `SearchResultsCell` takes the search term as a prop: until the user has typed something, there's nothing to search for. Most of the time the idiomatic solution is to not render the Cell until you have what you need:
+
+```jsx
+const SearchPage = () => {
+  const [searchTerm, setSearchTerm] = useState('')
+
+  return (
+    <>
+      <SearchInput value={searchTerm} onChange={setSearchTerm} />
+      {searchTerm ? (
+        <SearchResultsCell searchTerm={searchTerm} />
+      ) : (
+        <p>Start typing to search</p>
+      )}
+    </>
+  )
+}
+```
+
+This keeps the Cell's contract simple (a rendered Cell always shows one of
+`Loading`, `Empty`, `Failure` or `Success`), and TypeScript checks the Cell's
+props at the call site with no extra work.
+
+But sometimes the condition is the Cell's own business rather than the parent's.
+Maybe the query depends on a value from a global store, or should only run when
+there's a signed-in user. The parent could check that too, but then every place
+that renders the Cell has to duplicate the check. To keep the condition in the
+Cell itself, return Apollo's
+[`skipToken`](https://www.apollographql.com/docs/react/api/react/skipToken)
+from `beforeQuery` instead of an options object:
+
+```jsx
+import { skipToken } from '@apollo/client/react'
+
+export const beforeQuery = ({ id }) => {
+  const otherId = useStore((state) => state.getOther(id))
+
+  return otherId ? { variables: { id, otherId } } : skipToken
+}
+```
+
+A skipped Cell renders nothing at all (neither `Loading`, `Empty`, `Failure` nor
+`Success`) just as if the parent hadn't rendered it.
+
+You can also skip by returning Apollo's `skip` option
+(`{ variables, skip: true }`), but prefer `skipToken`: with `skip` you still
+have to supply fully typed variables even though the query won't run, which
+tends to force non-null assertions like `id!`. With `skipToken` each branch of
+the ternary type-checks on its own.
+([Apollo recommends `skipToken` for the same reason](https://www.apollographql.com/docs/react/api/react/skipToken#why-do-we-recommend-skiptoken-over--skip-true-).)
+In TypeScript, you can annotate `beforeQuery`'s return type with
+`CellBeforeQueryResult<YourQueryVariables>` from `@cedarjs/web` to get full type
+checking of your variables.
+
+Finally, if you want to keep showing the previous result instead of rendering
+nothing, like keeping the last search results on screen while the user clears
+the search box, don't skip. Render the Cell unconditionally, freeze the
+variables at their last valid value, and let the cache serve the stale data:
+
+```jsx
+export const beforeQuery = ({ searchTerm }) => {
+  const lastSearchTerm = useRef(searchTerm)
+
+  if (searchTerm) {
+    lastSearchTerm.current = searchTerm
+  }
+
+  if (searchTerm) {
+    return { variables: { searchTerm } }
+  } else if (lastSearchTerm.current) {
+    // Serve the last result from the cache without hitting the network
+    return {
+      variables: { searchTerm: lastSearchTerm.current },
+      fetchPolicy: 'cache-first',
+    }
+  }
+
+  return skipToken
+}
+```
+
 ### isEmpty
 
 `isEmpty` is an optional lifecycle hook. It returns a boolean to indicate if the Cell should render empty. Use it to override the default check, which checks if the Cell's root fields are null or empty arrays.
