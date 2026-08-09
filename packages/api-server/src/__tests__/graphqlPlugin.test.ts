@@ -12,7 +12,10 @@ import {
 } from 'vitest'
 
 import { createFastifyInstance } from '../fastify.js'
-import { cedarFastifyGraphQLServer } from '../plugins/graphql.js'
+import {
+  cedarFastifyGraphQLServer,
+  isClientDisconnectError,
+} from '../plugins/graphql.js'
 
 // Set up CEDAR_CWD.
 let original_CEDAR_CWD: string | undefined
@@ -55,5 +58,30 @@ describe('CedarFastifyGraphqlServer Fastify Plugin', () => {
     expect(registerSpy).toHaveBeenCalledWith(fastifyMultipart)
 
     await fastifyInstance.close()
+  })
+})
+
+describe('isClientDisconnectError', () => {
+  it('returns true for ERR_STREAM_PREMATURE_CLOSE errors', () => {
+    const e = new Error('premature close')
+    Object.assign(e, { code: 'ERR_STREAM_PREMATURE_CLOSE' })
+
+    expect(isClientDisconnectError(e)).toBe(true)
+  })
+
+  it('returns true for AbortError DOMExceptions', () => {
+    const e = new DOMException('This operation was aborted', 'AbortError')
+
+    expect(isClientDisconnectError(e)).toBe(true)
+  })
+
+  it('returns false for unrelated errors', () => {
+    expect(isClientDisconnectError(new Error('boom'))).toBe(false)
+  })
+
+  it('returns false for non-object values', () => {
+    expect(isClientDisconnectError('boom')).toBe(false)
+    expect(isClientDisconnectError(null)).toBe(false)
+    expect(isClientDisconnectError(undefined)).toBe(false)
   })
 })
