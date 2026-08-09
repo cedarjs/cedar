@@ -11,8 +11,43 @@ import {
   expect,
 } from 'vitest'
 
+import { createGraphQLYoga } from '@cedarjs/graphql-server'
+import type * as GraphqlServerModule from '@cedarjs/graphql-server'
+import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
+
 import { createFastifyInstance } from '../fastify.js'
-import { cedarFastifyGraphQLServer } from '../plugins/graphql.js'
+import {
+  cedarFastifyGraphQLServer,
+  isClientDisconnectError,
+} from '../plugins/graphql.js'
+
+// Delegates to the real implementation by default, so existing tests are
+// unaffected. Individual tests override the resolved value with
+// `mockResolvedValueOnce` to control what `yoga.handle` does without needing
+// a real GraphQL schema.
+vi.mock('@cedarjs/graphql-server', async (importOriginal) => {
+  const actual = await importOriginal<typeof GraphqlServerModule>()
+
+  return {
+    ...actual,
+    createGraphQLYoga: vi.fn(actual.createGraphQLYoga),
+  }
+})
+
+// Test double: `cedarFastifyGraphQLServer` only reads `yoga.graphqlEndpoint`
+// and calls `yoga.handle`, so that's all this fake needs to implement. Safe
+// because it's only ever passed to the mocked `createGraphQLYoga` above.
+function fakeYogaResult(handle: () => Promise<Response>) {
+  return {
+    yoga: { graphqlEndpoint: '/graphql', handle },
+  } as Awaited<ReturnType<typeof createGraphQLYoga>>
+}
+
+// createGraphQLYoga is mocked in these tests, so its input is never actually
+// read — only used to satisfy cedarFastifyGraphQLServer's option type and
+// skip the fixture-based `dist/functions/graphql.js` lookup, which has no
+// `__cedar_graphqlOptions` export.
+const fakeGraphqlOptions = {} as GraphQLYogaOptions
 
 // Set up CEDAR_CWD.
 let original_CEDAR_CWD: string | undefined
@@ -55,5 +90,91 @@ describe('CedarFastifyGraphqlServer Fastify Plugin', () => {
     expect(registerSpy).toHaveBeenCalledWith(fastifyMultipart)
 
     await fastifyInstance.close()
+  })
+})
+
+describe('isClientDisconnectError', () => {
+  it('returns true for ERR_STREAM_PREMATURE_CLOSE errors', () => {
+    const e = new Error('premature close')
+    Object.assign(e, { code: 'ERR_STREAM_PREMATURE_CLOSE' })
+
+    expect(isClientDisconnectError(e)).toBe(true)
+  })
+
+  it('returns true for AbortError DOMExceptions', () => {
+    const e = new DOMException('This operation was aborted', 'AbortError')
+
+    expect(isClientDisconnectError(e)).toBe(true)
+  })
+
+  it('returns false for unrelated errors', () => {
+    expect(isClientDisconnectError(new Error('boom'))).toBe(false)
+  })
+
+  it('returns false for a plain Error renamed to AbortError', () => {
+    const e = Object.assign(new Error('boom'), { name: 'AbortError' })
+
+    expect(isClientDisconnectError(e)).toBe(false)
+  })
+
+  it('returns false for non-object values', () => {
+    expect(isClientDisconnectError('boom')).toBe(false)
+    expect(isClientDisconnectError(null)).toBe(false)
+    expect(isClientDisconnectError(undefined)).toBe(false)
+  })
+})
+
+describe('GraphQL route handler client-disconnect handling', () => {
+  // Tracked so `afterEach` can always close it, even if registration,
+  // injection, or an assertion throws partway through a test.
+  let fastifyInstance: Awaited<ReturnType<typeof createFastifyInstance>>
+
+  afterEach(async () => {
+    vi.mocked(createGraphQLYoga).mockClear()
+    await fastifyInstance?.close()
+  })
+
+  it('responds 499 when yoga.handle throws a recognized disconnect error', async () => {
+    fastifyInstance = await createFastifyInstance()
+
+    vi.mocked(createGraphQLYoga).mockResolvedValueOnce(
+      fakeYogaResult(() =>
+        Promise.reject(
+          new DOMException('This operation was aborted', 'AbortError'),
+        ),
+      ),
+    )
+
+    await fastifyInstance.register(cedarFastifyGraphQLServer, {
+      cedar: { graphql: fakeGraphqlOptions },
+    })
+    await fastifyInstance.ready()
+
+    const response = await fastifyInstance.inject({
+      method: 'GET',
+      url: '/graphql',
+    })
+
+    expect(response.statusCode).toBe(499)
+  })
+
+  it('keeps the normal failure path (500) for unrelated errors', async () => {
+    fastifyInstance = await createFastifyInstance()
+
+    vi.mocked(createGraphQLYoga).mockResolvedValueOnce(
+      fakeYogaResult(() => Promise.reject(new Error('boom'))),
+    )
+
+    await fastifyInstance.register(cedarFastifyGraphQLServer, {
+      cedar: { graphql: fakeGraphqlOptions },
+    })
+    await fastifyInstance.ready()
+
+    const response = await fastifyInstance.inject({
+      method: 'GET',
+      url: '/graphql',
+    })
+
+    expect(response.statusCode).toBe(500)
   })
 })
