@@ -130,6 +130,12 @@ This means you can think backwards about your Cell's props from your SDL: whatev
 
 `beforeQuery` is a lifecycle hook. The best way to think about it is as a chance to configure [Apollo Client's `useQuery` hook](https://www.apollographql.com/docs/react/api/react/hooks#options).
 
+You can scaffold a typed `beforeQuery` stub with the cell generator's `--before-query` flag (`isEmpty` and `afterQuery` have `--is-empty` and `--after-query` equivalents):
+
+```bash
+yarn cedar generate cell Post --before-query
+```
+
 By default, `beforeQuery` gives any props passed from the parent component to `QUERY` so that they're available as variables for it. It'll also set the fetch policy to `'cache-and-network'` since we felt it matched the behavior users want most of the time:
 
 ```jsx
