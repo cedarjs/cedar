@@ -129,3 +129,12 @@ export const noteGenerate = [
   '',
   '  yarn cedar generate dbAuth',
 ]
+
+export const notePrivateSet = [
+  '',
+  'Ready to protect a route? Wrap it in `<PrivateSet>` in Routes.tsx:',
+  '',
+  '  <PrivateSet unauthenticated="login">',
+  '    <Route path="/admin" page={AdminPage} name="admin" />',
+  '  </PrivateSet>',
+]
