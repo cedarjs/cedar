@@ -116,12 +116,7 @@ export async function cedarFastifyGraphQLServer(
               requestContext: undefined,
             })
           } catch (e) {
-            if (
-              !!e &&
-              typeof e === 'object' &&
-              'code' in e &&
-              e.code === 'ERR_STREAM_PREMATURE_CLOSE'
-            ) {
+            if (isClientDisconnectError(e)) {
               // Client disconnected while the request was being processed
               // (e.g., page navigation, tab close). Return a 499 so Fastify
               // doesn't log this as a 500.
@@ -160,6 +155,37 @@ export async function cedarFastifyGraphQLServer(
 
 function trimSlashes(path: string) {
   return path.replace(/^\/|\/$/g, '')
+}
+
+/**
+ * Detects errors that indicate the client disconnected before the response
+ * finished, rather than a genuine server-side failure.
+ *
+ * `ERR_STREAM_PREMATURE_CLOSE` can surface from the underlying Node stream
+ * closing early. The `DOMException` named `AbortError` is thrown by Yoga
+ * when the AbortSignal wired up in `createFetchRequest`'s
+ * `reply.raw.on('close', ...)` handler is aborted, which only happens when
+ * the client itself has gone away.
+ *
+ * The `DOMException` check (rather than just `name === 'AbortError'`) is
+ * deliberate: a resolver or hook could throw a plain `Error` renamed to
+ * `AbortError`, which would otherwise be misclassified as a benign
+ * disconnect and hide a real server-side failure behind a 499.
+ */
+export function isClientDisconnectError(e: unknown): boolean {
+  if (!e || typeof e !== 'object') {
+    return false
+  }
+
+  if ('code' in e && e.code === 'ERR_STREAM_PREMATURE_CLOSE') {
+    return true
+  }
+
+  if (e instanceof DOMException && e.name === 'AbortError') {
+    return true
+  }
+
+  return false
 }
 
 function createFetchRequest(req: FastifyRequest, reply: FastifyReply) {
