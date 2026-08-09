@@ -79,6 +79,12 @@ describe('isClientDisconnectError', () => {
     expect(isClientDisconnectError(new Error('boom'))).toBe(false)
   })
 
+  it('returns false for a plain Error renamed to AbortError', () => {
+    const e = Object.assign(new Error('boom'), { name: 'AbortError' })
+
+    expect(isClientDisconnectError(e)).toBe(false)
+  })
+
   it('returns false for non-object values', () => {
     expect(isClientDisconnectError('boom')).toBe(false)
     expect(isClientDisconnectError(null)).toBe(false)

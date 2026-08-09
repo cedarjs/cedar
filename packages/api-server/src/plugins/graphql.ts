@@ -162,9 +162,15 @@ function trimSlashes(path: string) {
  * finished, rather than a genuine server-side failure.
  *
  * `ERR_STREAM_PREMATURE_CLOSE` can surface from the underlying Node stream
- * closing early. `AbortError` is thrown by Yoga when the AbortSignal wired up
- * in `createFetchRequest`'s `reply.raw.on('close', ...)` handler is aborted,
- * which only happens when the client itself has gone away.
+ * closing early. The `DOMException` named `AbortError` is thrown by Yoga
+ * when the AbortSignal wired up in `createFetchRequest`'s
+ * `reply.raw.on('close', ...)` handler is aborted, which only happens when
+ * the client itself has gone away.
+ *
+ * The `DOMException` check (rather than just `name === 'AbortError'`) is
+ * deliberate: a resolver or hook could throw a plain `Error` renamed to
+ * `AbortError`, which would otherwise be misclassified as a benign
+ * disconnect and hide a real server-side failure behind a 499.
  */
 export function isClientDisconnectError(e: unknown): boolean {
   if (!e || typeof e !== 'object') {
@@ -175,7 +181,7 @@ export function isClientDisconnectError(e: unknown): boolean {
     return true
   }
 
-  if ('name' in e && e.name === 'AbortError') {
+  if (e instanceof DOMException && e.name === 'AbortError') {
     return true
   }
 
