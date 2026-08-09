@@ -25,7 +25,7 @@ export const QUERY: TypedDocumentNode<
 export const beforeQuery = (
   props: ${operationName}Variables,
 ): CellBeforeQueryResult<${operationName}Variables> => {
-  return { variables: props }
+  return { variables: props, fetchPolicy: 'cache-and-network' }
 }
 <% } %><% if (isEmpty) { %>
 export const isEmpty = (

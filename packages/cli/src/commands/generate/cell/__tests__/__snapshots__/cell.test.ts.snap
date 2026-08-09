@@ -482,7 +482,7 @@ export const QUERY: TypedDocumentNode<FindUserQuery, FindUserQueryVariables> =
 export const beforeQuery = (
   props: FindUserQueryVariables
 ): CellBeforeQueryResult<FindUserQueryVariables> => {
-  return { variables: props }
+  return { variables: props, fetchPolicy: 'cache-and-network' }
 }
 
 export const Loading = () => <div>Loading...</div>
@@ -570,7 +570,7 @@ export const QUERY: TypedDocumentNode<FindUserQuery, FindUserQueryVariables> =
 export const beforeQuery = (
   props: FindUserQueryVariables
 ): CellBeforeQueryResult<FindUserQueryVariables> => {
-  return { variables: props }
+  return { variables: props, fetchPolicy: 'cache-and-network' }
 }
 
 export const isEmpty = (
@@ -612,7 +612,7 @@ exports[`Lifecycle hook flags > strips types from stubs when generating JavaScri
 \`
 
 export const beforeQuery = (props) => {
-  return { variables: props }
+  return { variables: props, fetchPolicy: 'cache-and-network' }
 }
 
 export const isEmpty = (data, { isDataEmpty }) => {
@@ -647,7 +647,7 @@ exports[`Lifecycle hook flags > works for list cells too 1`] = `
 \`
 
 export const beforeQuery = (props) => {
-  return { variables: props }
+  return { variables: props, fetchPolicy: 'cache-and-network' }
 }
 
 export const isEmpty = (data, { isDataEmpty }) => {
