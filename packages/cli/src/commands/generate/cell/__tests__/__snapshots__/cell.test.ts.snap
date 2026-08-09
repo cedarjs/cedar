@@ -419,6 +419,265 @@ describe('UserProfileCell', () => {
 "
 `;
 
+exports[`Lifecycle hook flags > includes a typed afterQuery stub when --after-query is passed 1`] = `
+"import type { FindUserQuery, FindUserQueryVariables } from 'types/graphql'
+
+import type {
+  CellSuccessProps,
+  CellFailureProps,
+  TypedDocumentNode,
+  DataObject,
+} from '@cedarjs/web'
+
+export const QUERY: TypedDocumentNode<FindUserQuery, FindUserQueryVariables> =
+  gql\`
+    query FindUserQuery($id: Int!) {
+      user: user(id: $id) {
+        id
+      }
+    }
+  \`
+
+export const afterQuery = (data: DataObject): DataObject => {
+  return data
+}
+
+export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>Empty</div>
+
+export const Failure = ({
+  error,
+}: CellFailureProps<FindUserQueryVariables>) => (
+  <div style={{ color: 'red' }}>Error: {error?.message}</div>
+)
+
+export const Success = ({
+  user,
+}: CellSuccessProps<FindUserQuery, FindUserQueryVariables>) => {
+  return <div>{JSON.stringify(user)}</div>
+}
+"
+`;
+
+exports[`Lifecycle hook flags > includes a typed beforeQuery stub when --before-query is passed 1`] = `
+"import type { FindUserQuery, FindUserQueryVariables } from 'types/graphql'
+
+import type {
+  CellSuccessProps,
+  CellFailureProps,
+  TypedDocumentNode,
+  CellBeforeQueryResult,
+} from '@cedarjs/web'
+
+export const QUERY: TypedDocumentNode<FindUserQuery, FindUserQueryVariables> =
+  gql\`
+    query FindUserQuery($id: Int!) {
+      user: user(id: $id) {
+        id
+      }
+    }
+  \`
+
+export const beforeQuery = (
+  props: FindUserQueryVariables
+): CellBeforeQueryResult<FindUserQueryVariables> => {
+  return { variables: props }
+}
+
+export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>Empty</div>
+
+export const Failure = ({
+  error,
+}: CellFailureProps<FindUserQueryVariables>) => (
+  <div style={{ color: 'red' }}>Error: {error?.message}</div>
+)
+
+export const Success = ({
+  user,
+}: CellSuccessProps<FindUserQuery, FindUserQueryVariables>) => {
+  return <div>{JSON.stringify(user)}</div>
+}
+"
+`;
+
+exports[`Lifecycle hook flags > includes a typed isEmpty stub when --is-empty is passed 1`] = `
+"import type { FindUserQuery, FindUserQueryVariables } from 'types/graphql'
+
+import type {
+  CellSuccessProps,
+  CellFailureProps,
+  TypedDocumentNode,
+  DataObject,
+} from '@cedarjs/web'
+
+export const QUERY: TypedDocumentNode<FindUserQuery, FindUserQueryVariables> =
+  gql\`
+    query FindUserQuery($id: Int!) {
+      user: user(id: $id) {
+        id
+      }
+    }
+  \`
+
+export const isEmpty = (
+  data: DataObject,
+  { isDataEmpty }: { isDataEmpty: (data: DataObject) => boolean }
+) => {
+  return isDataEmpty(data)
+}
+
+export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>Empty</div>
+
+export const Failure = ({
+  error,
+}: CellFailureProps<FindUserQueryVariables>) => (
+  <div style={{ color: 'red' }}>Error: {error?.message}</div>
+)
+
+export const Success = ({
+  user,
+}: CellSuccessProps<FindUserQuery, FindUserQueryVariables>) => {
+  return <div>{JSON.stringify(user)}</div>
+}
+"
+`;
+
+exports[`Lifecycle hook flags > includes all three stubs when all flags are passed 1`] = `
+"import type { FindUserQuery, FindUserQueryVariables } from 'types/graphql'
+
+import type {
+  CellSuccessProps,
+  CellFailureProps,
+  TypedDocumentNode,
+  CellBeforeQueryResult,
+  DataObject,
+} from '@cedarjs/web'
+
+export const QUERY: TypedDocumentNode<FindUserQuery, FindUserQueryVariables> =
+  gql\`
+    query FindUserQuery($id: Int!) {
+      user: user(id: $id) {
+        id
+      }
+    }
+  \`
+
+export const beforeQuery = (
+  props: FindUserQueryVariables
+): CellBeforeQueryResult<FindUserQueryVariables> => {
+  return { variables: props }
+}
+
+export const isEmpty = (
+  data: DataObject,
+  { isDataEmpty }: { isDataEmpty: (data: DataObject) => boolean }
+) => {
+  return isDataEmpty(data)
+}
+
+export const afterQuery = (data: DataObject): DataObject => {
+  return data
+}
+
+export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>Empty</div>
+
+export const Failure = ({
+  error,
+}: CellFailureProps<FindUserQueryVariables>) => (
+  <div style={{ color: 'red' }}>Error: {error?.message}</div>
+)
+
+export const Success = ({
+  user,
+}: CellSuccessProps<FindUserQuery, FindUserQueryVariables>) => {
+  return <div>{JSON.stringify(user)}</div>
+}
+"
+`;
+
+exports[`Lifecycle hook flags > strips types from stubs when generating JavaScript 1`] = `
+"export const QUERY = gql\`
+  query FindUserQuery($id: Int!) {
+    user: user(id: $id) {
+      id
+    }
+  }
+\`
+
+export const beforeQuery = (props) => {
+  return { variables: props }
+}
+
+export const isEmpty = (data, { isDataEmpty }) => {
+  return isDataEmpty(data)
+}
+
+export const afterQuery = (data) => {
+  return data
+}
+
+export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>Empty</div>
+
+export const Failure = ({ error }) => (
+  <div style={{ color: 'red' }}>Error: {error?.message}</div>
+)
+
+export const Success = ({ user }) => {
+  return <div>{JSON.stringify(user)}</div>
+}
+"
+`;
+
+exports[`Lifecycle hook flags > works for list cells too 1`] = `
+"export const QUERY = gql\`
+  query UsersQuery {
+    users {
+      id
+    }
+  }
+\`
+
+export const beforeQuery = (props) => {
+  return { variables: props }
+}
+
+export const isEmpty = (data, { isDataEmpty }) => {
+  return isDataEmpty(data)
+}
+
+export const afterQuery = (data) => {
+  return data
+}
+
+export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>Empty</div>
+
+export const Failure = ({ error }) => (
+  <div style={{ color: 'red' }}>Error: {error?.message}</div>
+)
+
+export const Success = ({ users }) => {
+  return (
+    <ul>
+      {users.map((item) => {
+        return <li key={item.id}>{JSON.stringify(item)}</li>
+      })}
+    </ul>
+  )
+}
+"
+`;
+
 exports[`Multiword files > creates a cell component with a multi word name 1`] = `
 "export const QUERY = gql\`
   query FindUserProfileQuery($id: Int!) {

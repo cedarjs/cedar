@@ -27,6 +27,7 @@ export type {
   CellSuccessData,
   CellBeforeQueryOptions,
   CellBeforeQueryResult,
+  DataObject,
 } from './components/cell/cellTypes.js'
 
 export * from './graphql.js'
