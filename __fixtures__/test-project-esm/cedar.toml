@@ -19,8 +19,8 @@
 [api]
   port = "${API_DEV_PORT:8911}"
 [browser]
-  # Only applies to interactive sessions. CI/agent runs always default to
-  # false. Override with `--fwd="--open=true"`.
+  # Only applies to interactive sessions
+  # Override with `--fwd="--open=true"` (including for CI/agent runs)
   open = true
 [notifications]
   versionUpdates = ["latest"]
