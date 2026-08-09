@@ -30,6 +30,9 @@ const CEDAR_WEB_PATH_NAME = 'components'
 type CellArgv = TypescriptHandlerArgv & {
   list?: boolean
   query?: string
+  beforeQuery?: boolean
+  afterQuery?: boolean
+  isEmpty?: boolean
 }
 
 export const files = async ({
@@ -39,6 +42,9 @@ export const files = async ({
   query,
   stories,
   tests,
+  beforeQuery = false,
+  afterQuery = false,
+  isEmpty = false,
 }: CellArgv): Promise<Record<string, string>> => {
   let cellName = removeGeneratorName(name, 'cell')
   let idName: string | undefined = 'id'
@@ -103,6 +109,9 @@ export const files = async ({
       operationName,
       idName,
       idType,
+      beforeQuery,
+      afterQuery,
+      isEmpty,
     },
   })
 

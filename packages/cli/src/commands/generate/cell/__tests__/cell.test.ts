@@ -690,6 +690,115 @@ describe('Custom query names', () => {
   })
 })
 
+describe('Lifecycle hook flags', () => {
+  const CELL_PATH = path.normalize(
+    '/path/to/project/web/src/components/UserCell/UserCell.jsx',
+  )
+
+  const CELL_PATH_TS = path.normalize(
+    '/path/to/project/web/src/components/UserCell/UserCell.tsx',
+  )
+
+  const LIST_CELL_PATH = path.normalize(
+    '/path/to/project/web/src/components/UsersCell/UsersCell.jsx',
+  )
+
+  test('does not include beforeQuery, afterQuery or isEmpty by default', async () => {
+    const files = await cellHandler.files({
+      name: 'User',
+      tests: false,
+      stories: false,
+      list: false,
+    })
+
+    expect(files[CELL_PATH]).not.toContain('beforeQuery')
+    expect(files[CELL_PATH]).not.toContain('afterQuery')
+    expect(files[CELL_PATH]).not.toContain('isEmpty')
+  })
+
+  test('includes a typed beforeQuery stub when --before-query is passed', async () => {
+    const files = await cellHandler.files({
+      name: 'User',
+      tests: false,
+      stories: false,
+      list: false,
+      typescript: true,
+      beforeQuery: true,
+    })
+
+    expect(files[CELL_PATH_TS]).toMatchSnapshot()
+  })
+
+  test('includes a typed afterQuery stub when --after-query is passed', async () => {
+    const files = await cellHandler.files({
+      name: 'User',
+      tests: false,
+      stories: false,
+      list: false,
+      typescript: true,
+      afterQuery: true,
+    })
+
+    expect(files[CELL_PATH_TS]).toMatchSnapshot()
+  })
+
+  test('includes a typed isEmpty stub when --is-empty is passed', async () => {
+    const files = await cellHandler.files({
+      name: 'User',
+      tests: false,
+      stories: false,
+      list: false,
+      typescript: true,
+      isEmpty: true,
+    })
+
+    expect(files[CELL_PATH_TS]).toMatchSnapshot()
+  })
+
+  test('includes all three stubs when all flags are passed', async () => {
+    const files = await cellHandler.files({
+      name: 'User',
+      tests: false,
+      stories: false,
+      list: false,
+      typescript: true,
+      beforeQuery: true,
+      afterQuery: true,
+      isEmpty: true,
+    })
+
+    expect(files[CELL_PATH_TS]).toMatchSnapshot()
+  })
+
+  test('strips types from stubs when generating JavaScript', async () => {
+    const files = await cellHandler.files({
+      name: 'User',
+      tests: false,
+      stories: false,
+      list: false,
+      beforeQuery: true,
+      afterQuery: true,
+      isEmpty: true,
+    })
+
+    expect(files[CELL_PATH]).toMatchSnapshot()
+  })
+
+  test('works for list cells too', async () => {
+    const files = await cellHandler.files({
+      name: 'Users',
+      tests: false,
+      stories: false,
+      list: true,
+      beforeQuery: true,
+      afterQuery: true,
+      isEmpty: true,
+    })
+
+    expect(files[LIST_CELL_PATH]).toMatchSnapshot()
+  })
+})
+
 describe('Custom Id Field files', () => {
   let customIdFieldFiles: Record<string, string>
   let customIdFieldListFiles: Record<string, string>
