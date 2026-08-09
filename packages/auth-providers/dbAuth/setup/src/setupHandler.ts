@@ -10,6 +10,7 @@ import {
   notes,
   noteGenerate,
   notesCreatedUserModel,
+  notePrivateSet,
   extraTask,
   createUserModelTask,
 } from './setupData.js'
@@ -68,6 +69,8 @@ export async function handler({
       oneMoreThing.push(...noteGenerate)
     }
   }
+
+  oneMoreThing.push(...notePrivateSet)
 
   let createDbUserModelTask: typeof createUserModelTask | undefined = undefined
 
