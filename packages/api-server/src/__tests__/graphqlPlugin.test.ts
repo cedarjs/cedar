@@ -125,12 +125,17 @@ describe('isClientDisconnectError', () => {
 })
 
 describe('GraphQL route handler client-disconnect handling', () => {
+  // Tracked so `afterEach` can always close it, even if registration,
+  // injection, or an assertion throws partway through a test.
+  let fastifyInstance: Awaited<ReturnType<typeof createFastifyInstance>>
+
   afterEach(async () => {
     vi.mocked(createGraphQLYoga).mockClear()
+    await fastifyInstance?.close()
   })
 
   it('responds 499 when yoga.handle throws a recognized disconnect error', async () => {
-    const fastifyInstance = await createFastifyInstance()
+    fastifyInstance = await createFastifyInstance()
 
     vi.mocked(createGraphQLYoga).mockResolvedValueOnce(
       fakeYogaResult(() =>
@@ -151,12 +156,10 @@ describe('GraphQL route handler client-disconnect handling', () => {
     })
 
     expect(response.statusCode).toBe(499)
-
-    await fastifyInstance.close()
   })
 
   it('keeps the normal failure path (500) for unrelated errors', async () => {
-    const fastifyInstance = await createFastifyInstance()
+    fastifyInstance = await createFastifyInstance()
 
     vi.mocked(createGraphQLYoga).mockResolvedValueOnce(
       fakeYogaResult(() => Promise.reject(new Error('boom'))),
@@ -173,7 +176,5 @@ describe('GraphQL route handler client-disconnect handling', () => {
     })
 
     expect(response.statusCode).toBe(500)
-
-    await fastifyInstance.close()
   })
 })
