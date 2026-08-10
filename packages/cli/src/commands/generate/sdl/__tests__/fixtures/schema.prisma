@@ -85,3 +85,24 @@ model Counter {
   id    Int    @id @default(0)
   count Int    @default(0)
 }
+
+// Order -> Customer -> Address chain, used to test that traversal continues
+// through a model that already has SDL defined (Customer) to find a missing
+// model further down the chain (Address).
+model Order {
+  id         Int      @id @default(autoincrement())
+  customerId Int
+  customer   Customer @relation(fields: [customerId], references: [id])
+}
+
+model Customer {
+  id        Int     @id @default(autoincrement())
+  orders    Order[]
+  addressId Int
+  address   Address @relation(fields: [addressId], references: [id])
+}
+
+model Address {
+  id        Int        @id @default(autoincrement())
+  customers Customer[]
+}

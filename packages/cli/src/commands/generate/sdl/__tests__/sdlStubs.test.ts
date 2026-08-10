@@ -69,18 +69,17 @@ describe('missingRelatedModels', () => {
 
   test('traverses through defined intermediate models to find missing models', async () => {
     // This tests the case where A -> B -> C, B has SDL but C doesn't.
-    // We should discover C and generate a stub for it.
-    // In the fixture: UserProfile -> User (exists), User -> UserProfile (circular)
-    // Both have relations, and we should find missing models through defined ones.
-    // Since all related models in the fixture have SDL or are being checked,
-    // this is a regression test to ensure the queue.push happens for all models.
+    // We should still discover C by continuing to traverse through B, even
+    // though B itself isn't "missing".
+    // In the fixture: Order -> Customer -> Address.
     vol.fromJSON({
-      [sdlPath('userProfiles.sdl.ts')]:
-        'export const schema = gql`\n  type UserProfile {\n    id: Int!\n  }\n`\n',
+      [sdlPath('customers.sdl.ts')]:
+        'export const schema = gql`\n  type Customer {\n    id: Int!\n  }\n`\n',
     })
 
-    // With only UserProfile having SDL, User should be discovered as missing
-    expect(await missingRelatedModels('UserProfile')).toContain('User')
+    // Customer has SDL, so it isn't missing, but traversal should continue
+    // through it to discover that Address is missing.
+    expect(await missingRelatedModels('Order')).toEqual(['Address'])
   })
 })
 
