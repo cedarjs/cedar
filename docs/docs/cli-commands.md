@@ -1049,6 +1049,8 @@ A scaffold quickly creates a CRUD for a model by generating the following files 
 
 The content of the generated components is different from what you'd get by running them individually.
 
+Like [generate sdl](#generate-sdl), the scaffold generator never includes dbAuth's sensitive fields (`hashedPassword`, `salt`, `resetToken`, `resetTokenExpiresAt`, `webAuthnChallenge`) in the generated SDL, forms, cells or display pages. As with `generate sdl`, `salt` is only excluded when the model has at least one of the other auth fields too — a standalone `salt` field is kept.
+
 | Arguments & Options  | Description                                                                                                                                                                                           |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `model`              | Model to scaffold. You can also use `<path/model>` to nest files by type at the given path directory (or directories). For example, `redwood g scaffold admin/post`                                   |
@@ -1229,6 +1231,8 @@ yarn redwood generate sdl <model>
 The sdl will inspect your `schema.prisma` and will do its best with relations. Schema to generators isn't one-to-one yet (and might never be).
 
 If the model has relations to models that don't have SDL files of their own yet, read-only stub SDLs (and services) are generated for those models too — without them, GraphQL type generation would fail with an `Unknown type` error. Replace a stub by running `generate sdl` for that model; unedited stubs are overwritten without needing `--force`. See [Troubleshooting Generators](./schema-relations#troubleshooting-generators) for details.
+
+Fields that Cedar's [dbAuth](auth/dbauth.md) setup uses for authentication (`hashedPassword`, `salt`, `resetToken`, `resetTokenExpiresAt` and `webAuthnChallenge`) are never included in the generated SDL — they should not be queryable or settable through your GraphQL API. (Since `salt` is a generic word that can be totally benign on other models, it's only excluded when the model has at least one of the other auth fields too.) The generator prints a note naming any fields it excluded. If you really do want one of them exposed, add it to the generated SDL file manually.
 
 | Arguments & Options  | Description                                                                                                                                                                                            |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

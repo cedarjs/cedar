@@ -106,3 +106,24 @@ model Address {
   id        Int        @id @default(autoincrement())
   customers Customer[]
 }
+
+// `salt` is only sensitive in combination with other auth fields — on its own
+// it's benign and should be kept in the generated SDL
+model Recipe {
+  id   Int    @id @default(autoincrement())
+  name String
+  salt String
+}
+
+// Mirrors the user model that Cedar's dbAuth setup creates. Used to test that
+// auth/sensitive fields are excluded from generated SDL
+model Account {
+  id                  Int       @id @default(autoincrement())
+  email               String    @unique
+  fullName            String
+  hashedPassword      String
+  salt                String
+  resetToken          String?
+  resetTokenExpiresAt DateTime?
+  webAuthnChallenge   String?   @unique
+}

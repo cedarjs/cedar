@@ -20,7 +20,7 @@ import {
   getEnum,
   verifyModelName,
 } from '../../../lib/schemaHelpers.js'
-import { relationsForModel } from '../helpers.js'
+import { redactedModelFields, relationsForModel } from '../helpers.js'
 import { files as serviceFiles } from '../service/serviceHandler.js'
 import { templateForFile } from '../yargsHandlerHelpers.js'
 
@@ -118,12 +118,23 @@ const modelFieldToSDL = ({
   }
 }
 
+const modelRedactedFields = (model: ModelSchema) => {
+  return redactedModelFields(model.fields.map((field) => field.name))
+}
+
 const querySDL = (model: ModelSchema, docs = false) => {
-  return model.fields.map((field) => modelFieldToSDL({ field, docs }))
+  const redactedFields = modelRedactedFields(model)
+
+  return model.fields
+    .filter((field) => !redactedFields.includes(field.name))
+    .map((field) => modelFieldToSDL({ field, docs }))
 }
 
 const inputSDL = (model: ModelSchema, required: boolean, docs = false) => {
-  const ignoredFields = [...DEFAULT_IGNORE_FIELDS_FOR_INPUT]
+  const ignoredFields = [
+    ...DEFAULT_IGNORE_FIELDS_FOR_INPUT,
+    ...modelRedactedFields(model),
+  ]
   const idField = model.fields.find((field) => field.isId)
 
   // Only ignore the id field if it has a default value
@@ -321,6 +332,53 @@ export const stubFiles = async (
   return generatedFiles
 }
 
+/**
+ * Returns `Model.fieldName` strings for every field on the given models that
+ * the generator excludes from the GraphQL schema because it may contain
+ * sensitive data (see `SENSITIVE_FIELDS`)
+ */
+export const redactedSensitiveFields = async (modelNames: string[]) => {
+  const redacted: string[] = []
+
+  for (const modelName of modelNames) {
+    const model = await getSchema(modelName)
+
+    if (!model || !('fields' in model)) {
+      continue
+    }
+
+    for (const fieldName of modelRedactedFields(model)) {
+      redacted.push(`${model.name}.${fieldName}`)
+    }
+  }
+
+  return redacted
+}
+
+/**
+ * Prints a warning naming the fields that were excluded from the generated
+ * SDL because they may contain sensitive data
+ */
+export const printRedactedFieldsNote = (redactedFields: string[]) => {
+  if (redactedFields.length === 0) {
+    return
+  }
+
+  console.log()
+  console.log(
+    c.warning(
+      'The following fields were excluded from the generated SDL because ' +
+        `they may contain sensitive data: ${redactedFields.join(', ')}`,
+    ),
+  )
+  console.log(
+    c.warning(
+      'If you want to expose any of them through your GraphQL API you can ' +
+        'add them to the SDL file manually.',
+    ),
+  )
+}
+
 // TODO: Add --dry-run command
 export const handler = async ({
   model,
@@ -356,6 +414,10 @@ export const handler = async ({
   try {
     const { name } = await verifyModelName({ name: model })
     const missingModels = await missingRelatedModels(name)
+    const redactedFields = await redactedSensitiveFields([
+      name,
+      ...missingModels,
+    ])
 
     const tasks = new Listr(
       [
@@ -416,6 +478,8 @@ export const handler = async ({
         console.log(c.info(`  yarn cedar generate sdl ${stubModel}`))
       }
     }
+
+    printRedactedFieldsNote(redactedFields)
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : String(e)
     const exitCode =
