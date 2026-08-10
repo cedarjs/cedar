@@ -9,6 +9,8 @@ import { vi, describe, test, expect, beforeAll } from 'vitest'
 // Load mocks
 import '../../../../lib/test'
 
+import { ensurePosixPath } from '@cedarjs/project-config'
+
 import { getDefaultArgs } from '../../../../lib/index.js'
 import { getYargsDefaults } from '../../yargsCommandHelpers.js'
 import * as scaffoldHandler from '../scaffoldHandler.js'
@@ -52,7 +54,7 @@ describe('scaffolding a model with sensitive fields', () => {
 
   test('excludes sensitive fields from every web-side file', () => {
     const webFiles = Object.entries(files).filter(([filePath]) =>
-      filePath.includes('/web/'),
+      ensurePosixPath(filePath).includes('/web/'),
     )
 
     expect(webFiles.length).toBeGreaterThan(0)
@@ -67,7 +69,7 @@ describe('scaffolding a model with sensitive fields', () => {
   test('excludes sensitive fields from the generated SDL', () => {
     const [sdlPath, sdl] =
       Object.entries(files).find(([filePath]) =>
-        filePath.endsWith('accounts.sdl.js'),
+        ensurePosixPath(filePath).endsWith('accounts.sdl.js'),
       ) ?? []
 
     expect(sdlPath).toBeDefined()
@@ -80,7 +82,7 @@ describe('scaffolding a model with sensitive fields', () => {
   test('still renders non-sensitive fields in the form', () => {
     const [formPath, form] =
       Object.entries(files).find(([filePath]) =>
-        filePath.endsWith('AccountForm/AccountForm.jsx'),
+        ensurePosixPath(filePath).endsWith('AccountForm/AccountForm.jsx'),
       ) ?? []
 
     expect(formPath).toBeDefined()

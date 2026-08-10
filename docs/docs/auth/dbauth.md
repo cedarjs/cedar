@@ -100,7 +100,7 @@ Read the post-install instructions carefully as they contain instructions for ad
 
 Note that if you change the fields named `hashedPassword` and `salt`, and you have some verbose logging in your app, you'll want to scrub those fields from appearing in your logs. See the [Redaction](logger.md#redaction) docs for info.
 
-Renaming these fields also means the SDL and scaffold generators no longer recognize them: by default the generators exclude `hashedPassword`, `salt`, `resetToken`, `resetTokenExpiresAt` and `webAuthnChallenge` (by name) from generated SDL, forms and cells, so they can't leak through your GraphQL API. (`salt` is only excluded when the model has at least one of the other auth fields too.) If you rename them, make sure to remove your renamed fields from any generated SDL yourself.
+Renaming these fields also means the SDL and scaffold generators no longer recognize them: by default the generators exclude `hashedPassword`, `salt`, `resetToken`, `resetTokenExpiresAt` and `webAuthnChallenge` (by name) from generated SDL, forms and cells, so they can't leak through your GraphQL API. (`salt` is only excluded when the model has at least one of the other auth fields too.) If you rename them, make sure to remove your renamed fields from everything you generate for the model yourself — the SDL as well as any scaffolded forms, cells and display pages.
 
 ## Scaffolding Login/Signup/Forgot Password Pages
 

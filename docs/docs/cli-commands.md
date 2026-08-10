@@ -1052,7 +1052,7 @@ A scaffold quickly creates a CRUD for a model by generating the following files 
 
 The content of the generated components is different from what you'd get by running them individually.
 
-Like [generate sdl](#generate-sdl), the scaffold generator never includes dbAuth's sensitive fields (`hashedPassword`, `salt`, `resetToken`, `resetTokenExpiresAt`, `webAuthnChallenge`) in the generated SDL, forms, cells or display pages.
+Like [generate sdl](#generate-sdl), the scaffold generator never includes dbAuth's sensitive fields (`hashedPassword`, `salt`, `resetToken`, `resetTokenExpiresAt`, `webAuthnChallenge`) in the generated SDL, forms, cells or display pages. As with `generate sdl`, `salt` is only excluded when the model has at least one of the other auth fields too — a standalone `salt` field is kept.
 
 | Arguments & Options  | Description                                                                                                                                                                                           |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
