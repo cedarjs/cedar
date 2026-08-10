@@ -32,7 +32,6 @@ import * as sdlHandler from '../sdlHandler.js'
 
 afterEach(() => {
   vi.clearAllMocks()
-  vi.spyOn(console, 'log').mockRestore()
   vol.reset()
 })
 
