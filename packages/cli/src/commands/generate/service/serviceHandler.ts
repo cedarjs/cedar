@@ -6,7 +6,7 @@ import { pluralize, singularize } from '@cedarjs/utils/cedarPluralize'
 
 import { transformTSToJS } from '../../../lib/index.js'
 import { getSchema, verifyModelName } from '../../../lib/schemaHelpers.js'
-import { relationsForModel } from '../helpers.js'
+import { redactedModelFields, relationsForModel } from '../helpers.js'
 import { createHandler, templateForFile } from '../yargsHandlerHelpers.js'
 
 interface ServiceModel {
@@ -76,7 +76,13 @@ export const parseSchema = async (model: string) => {
     )
   })
 
-  return { scalarFields, relations, foreignKeys }
+  // Computed from the full field list, not just `scalarFields` — optional
+  // fields like `resetToken` count towards a model being auth-related
+  const redactedFields = redactedModelFields(
+    schema.fields.map((field: PrismaField) => field.name),
+  )
+
+  return { scalarFields, relations, foreignKeys, redactedFields }
 }
 
 export function scenarioFieldValue(field: PrismaField) {
@@ -243,9 +249,21 @@ export const fieldTypes = async (model: string) => {
 
 // outputs fields necessary to create an object in the test file
 export const fieldsToInput = async (model: string) => {
-  const { scalarFields, foreignKeys } = await parseSchema(model)
+  const { scalarFields, foreignKeys, redactedFields } = await parseSchema(model)
   const modelName = camelcase(singularize(model))
   const inputObj: Record<string, unknown> = {}
+
+  // `scalarFields` only contains required fields without defaults, so if any
+  // of them is a field the SDL generator excludes from the GraphQL input
+  // types (see `redactedModelFields`), creating a record through the
+  // generated create input can't succeed. Skip the create test entirely.
+  if (
+    scalarFields.some((field: PrismaField) =>
+      redactedFields.includes(field.name),
+    )
+  ) {
+    return false
+  }
 
   scalarFields.forEach((field: PrismaField) => {
     if (foreignKeys.includes(field.name)) {
@@ -264,20 +282,28 @@ export const fieldsToInput = async (model: string) => {
 
 // outputs fields necessary to update an object in the test file
 export const fieldsToUpdate = async (model: string) => {
-  const { scalarFields, relations, foreignKeys } = await parseSchema(model)
+  const { scalarFields, relations, foreignKeys, redactedFields } =
+    await parseSchema(model)
   const modelName = camelcase(singularize(model))
   let field: PrismaField | undefined,
     newValue: unknown,
     fieldName: string | string[]
 
+  // never pick a field the SDL generator excludes from the GraphQL input
+  // types (see `redactedModelFields`) — it won't exist in the generated
+  // UpdateInput type
+  const updatableFields = scalarFields.filter(
+    (scalar: PrismaField) => !redactedFields.includes(scalar.name),
+  )
+
   // find an editable scalar field, ideally one that isn't a foreign key
-  field = scalarFields.find(
+  field = updatableFields.find(
     (scalar: PrismaField) => !foreignKeys.includes(scalar.name),
   )
 
   // no non-foreign keys, so just take the first one
   if (!field) {
-    field = scalarFields[0]
+    field = updatableFields[0]
   }
 
   // if the model has no editable scalar fields, skip update test completely

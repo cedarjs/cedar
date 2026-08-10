@@ -34,12 +34,17 @@ import {
 } from '../../../lib/rollback.js'
 import { getSchema, verifyModelName } from '../../../lib/schemaHelpers.js'
 import {
+  redactedModelFields,
   relationsForModel,
   intForeignKeysForModel,
   mapPrismaScalarToPagePropTsType,
 } from '../helpers.js'
 import { builder as sdlBuilder } from '../sdl/sdl.js'
-import { files as sdlFiles } from '../sdl/sdlHandler.js'
+import {
+  files as sdlFiles,
+  printRedactedFieldsNote,
+  redactedSensitiveFields,
+} from '../sdl/sdlHandler.js'
 import { writeFilesWithStubsTask } from '../sdl/stubFiles.js'
 import { builder as serviceBuilder } from '../service/service.js'
 import { files as serviceFiles } from '../service/serviceHandler.js'
@@ -408,8 +413,15 @@ const modelRelatedVariables = (model: ScaffoldModel) => {
 
   const relations = relationsForModel(model)?.map((relation) => relation)
 
+  // The SDL generator excludes these fields from the GraphQL schema, so
+  // cells, forms and display pages must not reference them either
+  const redactedFields = redactedModelFields(
+    model.fields.map((field) => field.name),
+  )
+
   const columns = model.fields
     .filter((field) => field.kind !== 'object')
+    .filter((field) => !redactedFields.includes(field.name))
     .map((column) => {
       let validation: string | false | null
       const meta = componentMetadata[column.type]
@@ -1057,6 +1069,8 @@ export const handler = async ({
       prepareForRollback(t)
     }
     await t.run()
+
+    printRedactedFieldsNote(await redactedSensitiveFields([name]))
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
     const exitCode =
