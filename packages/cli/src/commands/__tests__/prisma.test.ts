@@ -41,6 +41,7 @@ beforeEach(() => {
   vi.spyOn(console, 'info').mockImplementation(() => {})
   vi.spyOn(console, 'log').mockImplementation(() => {})
   vi.spyOn(fs, 'existsSync').mockReturnValue(true)
+  vi.mocked(execa.sync).mockClear()
 })
 
 afterEach(() => {
@@ -70,15 +71,15 @@ test('the prisma command handles spaces', async () => {
     '/Users/bazinga/My Projects/rwprj/rwprj/api/prisma.config.js',
   ])
 
-  // The informational output, on the other hand, must quote values with
-  // spaces so that copy-pasting the printed command into a shell runs the
-  // same invocation.
+  // The informational output is a plain, space-joined rendering of the same
+  // args (matching every other formatXxx display helper, none of which
+  // quote or escape their args either).
   const loggedCommand = vi
     .mocked(console.log)
     .mock.calls.flat()
     .find((line) => String(line).includes('prisma migrate dev'))
-  expect(loggedCommand).toContain('-n "add bazingas"')
+  expect(loggedCommand).toContain('-n add bazingas')
   expect(loggedCommand).toContain(
-    '--config "/Users/bazinga/My Projects/rwprj/rwprj/api/prisma.config.js"',
+    '--config /Users/bazinga/My Projects/rwprj/rwprj/api/prisma.config.js',
   )
 })

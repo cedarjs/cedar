@@ -107,6 +107,29 @@ export function formatRunBinCommand(bin: string, args: string[] = []): string {
 }
 
 /**
+ * Returns a formatted string for running a transitive dependency's binary
+ * (one not listed directly in the project's package.json, e.g. Prisma) via
+ * the detected package manager.
+ *
+ * yarn → `npx <bin> [args]`
+ * npm  → `npx <bin> [args]`
+ * pnpm → `pnpm exec <bin> [args]`
+ */
+export function formatRunTransitiveBinCommand(
+  bin: string,
+  args: string[] = [],
+): string {
+  const pm = getPackageManager()
+  const argStr = args.length > 0 ? ` ${args.join(' ')}` : ''
+
+  if (pm === 'pnpm') {
+    return `pnpm exec ${bin}${argStr}`
+  }
+
+  return `npx ${bin}${argStr}`
+}
+
+/**
  * Returns a formatted string for running a local binary in a workspace context
  * via the detected package manager.
  *
