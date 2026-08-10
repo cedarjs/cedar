@@ -76,8 +76,23 @@ export const SENSITIVE_FIELDS = [
   'webAuthnChallenge',
 ]
 
-export const isSensitiveField = (fieldName: string) => {
-  return SENSITIVE_FIELDS.includes(fieldName)
+/**
+ * Given all field names of a model, returns the ones the generators should
+ * exclude from generated SDL, forms, cells and test inputs (see
+ * `SENSITIVE_FIELDS`).
+ *
+ * `salt` is a generic enough word that it can be totally benign on its own
+ * (think `Recipe.salt`), so it's only treated as sensitive when the model has
+ * at least one other sensitive field
+ */
+export const redactedModelFields = (fieldNames: string[]) => {
+  const sensitive = fieldNames.filter((name) => SENSITIVE_FIELDS.includes(name))
+
+  if (sensitive.length === 1 && sensitive[0] === 'salt') {
+    return []
+  }
+
+  return sensitive
 }
 
 // Returns all relations to other models

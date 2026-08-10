@@ -20,11 +20,7 @@ import {
   getEnum,
   verifyModelName,
 } from '../../../lib/schemaHelpers.js'
-import {
-  isSensitiveField,
-  relationsForModel,
-  SENSITIVE_FIELDS,
-} from '../helpers.js'
+import { redactedModelFields, relationsForModel } from '../helpers.js'
 import { files as serviceFiles } from '../service/serviceHandler.js'
 import { templateForFile } from '../yargsHandlerHelpers.js'
 
@@ -122,16 +118,22 @@ const modelFieldToSDL = ({
   }
 }
 
+const modelRedactedFields = (model: ModelSchema) => {
+  return redactedModelFields(model.fields.map((field) => field.name))
+}
+
 const querySDL = (model: ModelSchema, docs = false) => {
+  const redactedFields = modelRedactedFields(model)
+
   return model.fields
-    .filter((field) => !isSensitiveField(field.name))
+    .filter((field) => !redactedFields.includes(field.name))
     .map((field) => modelFieldToSDL({ field, docs }))
 }
 
 const inputSDL = (model: ModelSchema, required: boolean, docs = false) => {
   const ignoredFields = [
     ...DEFAULT_IGNORE_FIELDS_FOR_INPUT,
-    ...SENSITIVE_FIELDS,
+    ...modelRedactedFields(model),
   ]
   const idField = model.fields.find((field) => field.isId)
 
@@ -345,10 +347,8 @@ export const redactedSensitiveFields = async (modelNames: string[]) => {
       continue
     }
 
-    for (const field of model.fields) {
-      if (isSensitiveField(field.name)) {
-        redacted.push(`${model.name}.${field.name}`)
-      }
+    for (const fieldName of modelRedactedFields(model)) {
+      redacted.push(`${model.name}.${fieldName}`)
     }
   }
 

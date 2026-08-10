@@ -34,7 +34,7 @@ import {
 } from '../../../lib/rollback.js'
 import { getSchema, verifyModelName } from '../../../lib/schemaHelpers.js'
 import {
-  isSensitiveField,
+  redactedModelFields,
   relationsForModel,
   intForeignKeysForModel,
   mapPrismaScalarToPagePropTsType,
@@ -413,11 +413,15 @@ const modelRelatedVariables = (model: ScaffoldModel) => {
 
   const relations = relationsForModel(model)?.map((relation) => relation)
 
+  // The SDL generator excludes these fields from the GraphQL schema, so
+  // cells, forms and display pages must not reference them either
+  const redactedFields = redactedModelFields(
+    model.fields.map((field) => field.name),
+  )
+
   const columns = model.fields
     .filter((field) => field.kind !== 'object')
-    // The SDL generator excludes these fields from the GraphQL schema, so
-    // cells, forms and display pages must not reference them either
-    .filter((field) => !isSensitiveField(field.name))
+    .filter((field) => !redactedFields.includes(field.name))
     .map((column) => {
       let validation: string | false | null
       const meta = componentMetadata[column.type]

@@ -108,3 +108,26 @@ describe('sensitive fields', () => {
     expect(await sdlHandler.redactedSensitiveFields(['Post'])).toEqual([])
   })
 })
+
+describe('a lone `salt` field', () => {
+  test('is kept in the generated SDL', async () => {
+    const files = await sdlHandler.files({
+      name: 'Recipe',
+      crud: true,
+      tests: true,
+      typescript: true,
+    })
+
+    const sdl = files[sdlPath('recipes.sdl.ts')]
+    expect(sdl).toContain('salt: String!')
+
+    // The create test is generated as usual, `salt` included
+    const testFile = files[servicePath('recipes/recipes.test.ts')]
+    expect(testFile).toContain('creates a recipe')
+    expect(testFile).toContain('salt')
+  })
+
+  test('is not reported as redacted', async () => {
+    expect(await sdlHandler.redactedSensitiveFields(['Recipe'])).toEqual([])
+  })
+})
