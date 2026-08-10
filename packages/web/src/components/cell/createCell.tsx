@@ -194,15 +194,16 @@ function createNonSuspendingCell<
     }
 
     // `Failure`/`Empty`/`Success`/`Loading` are checked against this Cell's
-    // real `GQLResult` and `CellVariables` at its own call site (that's the
-    // whole point of threading those generics through `CreateCellProps`).
+    // real `GQLResult` and `CellVariables` at its own call site (i.e. inside
+    // the developer's own *Cell.ts file).
     // Inside this generic factory function, though, `GQLResult` and
     // `CellVariables` are still abstract, and the props assembled below are
-    // built from `useQuery<DataObject>`'s untyped result -- there's no way
-    // for TS to verify structurally, at this level, that they line up with
-    // the concrete types each Cell's components declare. The objects below
-    // are exactly what `CellFailureProps`/`CellSuccessProps`/`CellLoadingProps`
-    // describe at runtime, so they're asserted here rather than checked.
+    // built from `useQuery<DataObject>`'s untyped result -- there's no way for
+    // TS to verify structurally, at this level, that they line up with the
+    // concrete types each Cell's components declare. The objects below are
+    // exactly what `CellFailureProps`/`CellSuccessProps`/`CellLoadingProps`
+    // describe at runtime, so they're cast to `any` below rather than checked.
+
     if (error) {
       if (Failure) {
         // errorCode is not part of the type returned by useQuery
@@ -224,6 +225,7 @@ function createNonSuspendingCell<
           queryResult,
         }
 
+        // See the long comment around line 200 about why we cast to `any` here
         return <Failure {...(failureProps as any)} />
       } else {
         // Apollo Client types errors as `ErrorLike`, but at runtime they're
@@ -241,6 +243,7 @@ function createNonSuspendingCell<
           queryResult,
         }
 
+        // See the long comment around line 200 about why we cast to `any` here
         return <Empty {...(emptyProps as any)} />
       } else {
         const successProps = {
@@ -250,11 +253,13 @@ function createNonSuspendingCell<
           queryResult,
         }
 
+        // See the long comment around line 200 about why we cast to `any` here
         return <Success {...(successProps as any)} />
       }
     } else if (loading) {
       const loadingProps = { ...props, queryResult }
 
+      // See the long comment around line 200 about why we cast to `any` here
       return <Loading {...(loadingProps as any)} />
     } else {
       /**
