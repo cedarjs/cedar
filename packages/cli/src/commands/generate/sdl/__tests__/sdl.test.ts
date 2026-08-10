@@ -238,22 +238,16 @@ const itCreatesAnSDLFileWithByteDefinitions = (baseArgs = {}) => {
 
 const itCreatesAnSslFileForModelWithOnlyIdAndRelation = (baseArgs = {}) => {
   test('create an sdl file for model with only id and relation', async () => {
-    // Both models are generated "for real" here, so stub generation is
-    // disabled. (Without that, each files() call would also generate a stub
-    // for the other model, and the stub would overwrite the real file in the
-    // merged object below.)
     const files = {
       ...(await sdlHandler.files({
         ...baseArgs,
         name: 'Car',
         crud: true,
-        stubModels: [],
       })),
       ...(await sdlHandler.files({
         ...baseArgs,
         name: 'CarBrand',
         crud: true,
-        stubModels: [],
       })),
     }
     const extension = extensionForBaseArgs(baseArgs)

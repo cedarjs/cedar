@@ -12,9 +12,7 @@ export const tasks = ({ model }: { model: string }) =>
       {
         title: 'Destroying GraphQL schema and service component files...',
         task: async () => {
-          // `stubModels: []` so we only ever destroy the named model's own
-          // files, never stubs generated for related models
-          const f = await files({ name: model, stubModels: [] })
+          const f = await files({ name: model })
           return deleteFilesTask(f)
         },
       },

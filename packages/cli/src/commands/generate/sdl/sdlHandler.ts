@@ -243,12 +243,6 @@ const sdlFromSchemaModel = async (
 
 /**
  * Returns the SDL and service files to generate for the given model.
- *
- * Also returns read-only stub files for the models listed in `stubModels`,
- * since GraphQL type generation fails when a generated SDL references a type
- * that isn't defined anywhere. Defaults to `[]` (no stubs); pass the result
- * of `missingRelatedModels(name)` to stub out related models that don't have
- * SDL files of their own yet.
  */
 export const files = async ({
   name,
@@ -256,14 +250,12 @@ export const files = async ({
   docs = false,
   tests,
   typescript,
-  stubModels = [],
 }: {
   name: string
   crud?: boolean
   docs?: boolean
   tests?: boolean
   typescript?: boolean
-  stubModels?: string[]
 }) => {
   const extension = typescript ? 'ts' : 'js'
   const sdlData = await sdlFromSchemaModel(name, crud, docs)
@@ -282,7 +274,7 @@ export const files = async ({
     ? content
     : await transformTSToJS(outputPath, content)
 
-  const generatedFiles: Record<string, string> = {
+  return {
     [outputPath]: template,
     ...(await serviceFiles({
       name,
@@ -292,24 +284,36 @@ export const files = async ({
       typescript,
     })),
   }
+}
 
-  for (const stubModel of stubModels) {
-    // `missingRelatedModels` already includes transitively related models, so
-    // the recursive call doesn't need to generate stubs of its own
+/**
+ * Returns read-only stub SDL and service files for each model in `models`,
+ * since GraphQL type generation fails when a generated SDL references a type
+ * that isn't defined anywhere. Each stub is tagged with a header explaining
+ * why it exists and how to replace it with the real thing (see
+ * `addStubHeader`).
+ */
+export const stubFiles = async (
+  models: string[],
+  generatedFor: string,
+  { docs = false, typescript }: { docs?: boolean; typescript?: boolean },
+) => {
+  const generatedFiles: Record<string, string> = {}
+
+  for (const stubModel of models) {
     const stubModelFiles = await files({
       name: stubModel,
       crud: false,
       docs,
       tests: false,
       typescript,
-      stubModels: [],
     })
 
     for (const [stubPath, stubContent] of Object.entries(stubModelFiles)) {
       generatedFiles[stubPath] = addStubHeader({
         content: stubContent,
         stubModel,
-        generatedFor: name,
+        generatedFor,
       })
     }
   }
@@ -351,21 +355,17 @@ export const handler = async ({
 
   try {
     const { name } = await verifyModelName({ name: model })
-    const stubModels = await missingRelatedModels(name)
+    const missingModels = await missingRelatedModels(name)
 
     const tasks = new Listr(
       [
         {
           title: 'Generating SDL files...',
           task: async () => {
-            const f = await files({
-              name,
-              tests,
-              crud,
-              typescript,
-              docs,
-              stubModels,
-            })
+            const f = {
+              ...(await files({ name, tests, crud, typescript, docs })),
+              ...(await stubFiles(missingModels, name, { typescript, docs })),
+            }
             return writeFilesWithStubsTask(f, { overwriteExisting: force })
           },
         },
@@ -397,12 +397,12 @@ export const handler = async ({
     }
     await tasks.run()
 
-    if (stubModels.length > 0) {
+    if (missingModels.length > 0) {
       console.log()
       console.log(
         c.info(
           `${name} has relations to models that don't have SDL files of ` +
-            `their own yet: ${stubModels.join(', ')}`,
+            `their own yet: ${missingModels.join(', ')}`,
         ),
       )
       console.log(
@@ -412,7 +412,7 @@ export const handler = async ({
         ),
       )
       console.log(c.info('To replace a stub with a full SDL and service, run'))
-      for (const stubModel of stubModels) {
+      for (const stubModel of missingModels) {
         console.log(c.info(`  yarn cedar generate sdl ${stubModel}`))
       }
     }

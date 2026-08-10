@@ -85,13 +85,18 @@ describe('missingRelatedModels', () => {
 
 describe('files with stubs', () => {
   test('generates read-only stubs for missing related models', async () => {
-    const files = await sdlHandler.files({
-      name: 'UserProfile',
-      crud: true,
-      tests: true,
-      typescript: true,
-      stubModels: await missingRelatedModels('UserProfile'),
-    })
+    const missingModels = await missingRelatedModels('UserProfile')
+    const files = {
+      ...(await sdlHandler.files({
+        name: 'UserProfile',
+        crud: true,
+        tests: true,
+        typescript: true,
+      })),
+      ...(await sdlHandler.stubFiles(missingModels, 'UserProfile', {
+        typescript: true,
+      })),
+    }
 
     // The target model's own files
     expect(files).toHaveProperty([sdlPath('userProfiles.sdl.ts')])
@@ -115,16 +120,23 @@ describe('files with stubs', () => {
     expect(files).not.toHaveProperty([servicePath('users/users.scenarios.ts')])
   })
 
-  test('does not generate stubs when passing an empty stubModels list', async () => {
+  test('files() alone never generates stubs for related models', async () => {
     const files = await sdlHandler.files({
       name: 'UserProfile',
       crud: true,
       tests: true,
       typescript: true,
-      stubModels: [],
     })
 
     expect(files).not.toHaveProperty([sdlPath('users.sdl.ts')])
+  })
+
+  test('stubFiles() generates nothing for an empty model list', async () => {
+    const files = await sdlHandler.stubFiles([], 'UserProfile', {
+      typescript: true,
+    })
+
+    expect(files).toEqual({})
   })
 })
 

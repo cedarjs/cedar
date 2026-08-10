@@ -223,9 +223,6 @@ export const files = async ({
       docs,
       name,
       typescript,
-      // The scaffold generator doesn't (yet) generate stubs for related
-      // models that are missing SDL files. `cedar generate sdl` does.
-      stubModels: [],
     })),
     ...(await serviceFiles({
       ...getDefaultArgs(serviceBuilder),
