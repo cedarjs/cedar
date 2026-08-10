@@ -8,6 +8,7 @@ import {
   formatRunScriptCommand,
   formatRunWorkspaceScriptCommand,
   formatRunBinCommand,
+  formatRunTransitiveBinCommand,
   formatRunWorkspaceBinCommand,
   formatDlxCommand,
   formatAddRootPackagesCommand,
@@ -185,6 +186,42 @@ describe('formatRunBinCommand', () => {
     expect(formatRunBinCommand('eslint', ['--fix'])).toBe(
       'pnpm exec eslint --fix',
     )
+  })
+})
+
+describe('formatRunTransitiveBinCommand', () => {
+  it('yarn: returns npx <bin>', () => {
+    expect(formatRunTransitiveBinCommand('prisma')).toBe('npx prisma')
+  })
+
+  it('yarn: returns npx <bin> with args', () => {
+    expect(
+      formatRunTransitiveBinCommand('prisma', ['migrate', 'dev']),
+    ).toBe('npx prisma migrate dev')
+  })
+
+  it('npm: returns npx <bin>', () => {
+    vi.mocked(getPackageManager).mockReturnValue('npm')
+    expect(formatRunTransitiveBinCommand('prisma')).toBe('npx prisma')
+  })
+
+  it('npm: returns npx <bin> with args', () => {
+    vi.mocked(getPackageManager).mockReturnValue('npm')
+    expect(
+      formatRunTransitiveBinCommand('prisma', ['migrate', 'dev']),
+    ).toBe('npx prisma migrate dev')
+  })
+
+  it('pnpm: returns pnpm exec <bin>', () => {
+    vi.mocked(getPackageManager).mockReturnValue('pnpm')
+    expect(formatRunTransitiveBinCommand('prisma')).toBe('pnpm exec prisma')
+  })
+
+  it('pnpm: returns pnpm exec <bin> with args', () => {
+    vi.mocked(getPackageManager).mockReturnValue('pnpm')
+    expect(
+      formatRunTransitiveBinCommand('prisma', ['migrate', 'dev']),
+    ).toBe('pnpm exec prisma migrate dev')
   })
 })
 

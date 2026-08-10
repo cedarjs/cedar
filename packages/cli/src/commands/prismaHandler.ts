@@ -6,6 +6,7 @@ import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import {
   formatCedarCommand,
   formatRunBinCommand,
+  formatRunTransitiveBinCommand,
 } from '@cedarjs/cli-helpers/packageManager/display'
 import { runTransitiveBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
 import { errorTelemetry } from '@cedarjs/telemetry'
@@ -89,13 +90,15 @@ export const handler = async ({
   // The real invocation passes `args` as an array without a shell, but this
   // informational line may get copy-pasted into a shell — so args containing
   // spaces need quotes here (and only here) to represent the same command.
-  const displayCommand = args
-    .map((arg) => (arg.includes(' ') ? `"${arg}"` : arg))
-    .join(' ')
+  const quotedArgs = args.map((arg) =>
+    arg.includes(' ') ? `"${arg}"` : arg,
+  )
 
   console.log()
   console.log(c.note('Running Prisma CLI...'))
-  console.log(c.underline(`$ <pm exec> prisma ${displayCommand}`))
+  console.log(
+    c.underline(`$ ${formatRunTransitiveBinCommand('prisma', quotedArgs)}`),
+  )
   console.log()
 
   try {
