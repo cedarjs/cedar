@@ -137,11 +137,18 @@ export function createFragmentCell<
 
     const afterQueryData = afterQuery({ [propName]: data })
 
+    // `rest` is typed as `Omit<PropsWithChildren<CellProps>, string>` because
+    // `propName` is only known at runtime, not as a string literal type --
+    // TS can't tell which key was destructured out, so it conservatively
+    // omits every string key. At runtime `rest` does hold the remaining
+    // `CellProps`, so this reflects that.
+    const restProps = rest as Partial<CellProps>
+
     if (isEmpty({ [propName]: data }, { isDataEmpty }) && Empty) {
-      return <Empty {...rest} {...afterQueryData} />
+      return <Empty {...restProps} {...afterQueryData} />
     }
 
-    return <Success {...rest} {...afterQueryData} />
+    return <Success {...restProps} {...afterQueryData} />
   }
 
   NamedCell.displayName = displayName

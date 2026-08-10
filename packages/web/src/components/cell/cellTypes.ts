@@ -69,7 +69,16 @@ export type CellProps<
     CellPropsVariables<CellType, GQLVariables>
 >
 
-type InputVarProps<T> = T extends { [key: string]: never } ? unknown : T
+// `unknown extends T` is only true for `unknown`/`any` and is non-distributive
+// in this position. Without this guard, when `T` is `any` the conditional
+// below distributes over `any`'s implicit `unknown | {}` union, resolving to
+// `unknown | any` = `any` -- which then poisons any intersection it's used
+// in (`X & any` = `any`), silently disabling all prop checking.
+type InputVarProps<T> = unknown extends T
+  ? unknown
+  : T extends { [key: string]: never }
+    ? unknown
+    : T
 
 export type CellLoadingProps<TVariables extends OperationVariables = any> = {
   queryResult?:

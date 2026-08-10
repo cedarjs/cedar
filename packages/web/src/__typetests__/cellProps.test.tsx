@@ -6,7 +6,12 @@ import { gql } from 'graphql-tag'
 import { describe, expect, test } from 'tstyche'
 
 import { createCell } from '@cedarjs/web'
-import type { CellProps, CellSuccessProps } from '@cedarjs/web'
+import type {
+  CellFailureProps,
+  CellLoadingProps,
+  CellProps,
+  CellSuccessProps,
+} from '@cedarjs/web'
 
 type ExampleQueryVariables = {
   category: string
@@ -288,10 +293,22 @@ describe('CellProps mapper type', () => {
   })
 
   describe('what beforeQuery is allowed to return', () => {
+    // These tests are only about the shape `beforeQuery` is allowed to
+    // return, so `Success` is deliberately left at the bare `CellSuccessProps`
+    // type here, rather than reusing `recipeCell.Success` (which is annotated
+    // with `CellSuccessProps<QueryResult>` plus a custom prop). `createCell`
+    // structurally checks `Success` against `CellSuccessProps & Partial<CellProps>`
+    // (see #2366 for why that's a loose check), and a `Success` typed more
+    // specifically than that doesn't satisfy it when passed by reference.
+    const recipeCellForBeforeQuery = {
+      ...recipeCell,
+      Success: (_props: CellSuccessProps) => null,
+    }
+
     test('Just variables', () => {
       expect(
         createCell({
-          ...recipeCell,
+          ...recipeCellForBeforeQuery,
           beforeQuery: ({ word }: { word: string }) => ({
             variables: { category: word, saved: true },
           }),
@@ -302,7 +319,7 @@ describe('CellProps mapper type', () => {
     test('Other query hook options alongside the variables', () => {
       expect(
         createCell({
-          ...recipeCell,
+          ...recipeCellForBeforeQuery,
           beforeQuery: ({ word }: { word: string }) => ({
             variables: { category: word, saved: true },
             fetchPolicy: 'cache-only' as const,
@@ -315,11 +332,59 @@ describe('CellProps mapper type', () => {
     test('skipToken, to not run the query at all', () => {
       expect(
         createCell({
-          ...recipeCell,
+          ...recipeCellForBeforeQuery,
           beforeQuery: ({ word }: { word: string }) =>
             word ? { variables: { category: word, saved: true } } : skipToken,
         }),
       ).type.not.toRaiseError()
+    })
+  })
+
+  describe('InputVarProps does not degrade to any when TVariables is defaulted', () => {
+    // Regression test for https://github.com/cedarjs/cedar/issues/2353
+    //
+    // TVariables defaults to `any` on CellSuccessProps/CellFailureProps/
+    // CellLoadingProps. If InputVarProps doesn't guard against that, the
+    // conditional distributes over `any` and resolves to `any`, which
+    // poisons the whole intersected props type (`X & any` = `any`) --
+    // silently disabling all prop checking.
+    //
+    // Note this can't be caught by redeclaring a custom prop on an
+    // `interface ... extends ...`, since TypeScript keeps an interface's own
+    // explicitly-typed members even when the type it extends is poisoned to
+    // `any`. Instead, these tests lean on excess property checks: TypeScript
+    // only flags unknown properties on an object literal when it's checked
+    // against a real object type, not against `any`, so a bogus property is
+    // a reliable way to tell "properly typed" apart from "poisoned to any".
+
+    test('CellSuccessProps<TData> (single-arg form) rejects unknown properties', () => {
+      expect<CellSuccessProps<QueryResult>>().type.not.toBeAssignableFrom({
+        recipes: [],
+        bogusProp: 'should not be allowed',
+      })
+    })
+
+    test('CellSuccessProps<TData, TVariables> (two-arg form) rejects unknown properties', () => {
+      expect<
+        CellSuccessProps<QueryResult, ExampleQueryVariables>
+      >().type.not.toBeAssignableFrom({
+        recipes: [],
+        category: 'Dinner',
+        saved: true,
+        bogusProp: 'should not be allowed',
+      })
+    })
+
+    test('CellFailureProps (no-arg form) rejects unknown properties', () => {
+      expect<CellFailureProps>().type.not.toBeAssignableFrom({
+        bogusProp: 'should not be allowed',
+      })
+    })
+
+    test('CellLoadingProps (no-arg form) rejects unknown properties', () => {
+      expect<CellLoadingProps>().type.not.toBeAssignableFrom({
+        bogusProp: 'should not be allowed',
+      })
     })
   })
 })
