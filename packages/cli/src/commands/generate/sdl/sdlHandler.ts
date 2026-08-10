@@ -5,6 +5,7 @@ import camelcase from 'camelcase'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
@@ -475,7 +476,9 @@ export const handler = async ({
       )
       console.log(c.info('To replace a stub with a full SDL and service, run'))
       for (const stubModel of missingModels) {
-        console.log(c.info(`  yarn cedar generate sdl ${stubModel}`))
+        console.log(
+          c.info(`  ${formatCedarCommand(['generate', 'sdl', stubModel])}`),
+        )
       }
     }
 
