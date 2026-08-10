@@ -90,6 +90,7 @@ describe('files with stubs', () => {
       crud: true,
       tests: true,
       typescript: true,
+      stubModels: await missingRelatedModels('UserProfile'),
     })
 
     // The target model's own files

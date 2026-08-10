@@ -244,12 +244,11 @@ const sdlFromSchemaModel = async (
 /**
  * Returns the SDL and service files to generate for the given model.
  *
- * Also returns read-only stub files for related models that don't have SDL
- * files of their own yet, since GraphQL type generation fails when a
- * generated SDL references a type that isn't defined anywhere. Pass
- * `stubModels` to control which models get stubbed (pass `[]` to disable
- * stub generation); when it's undefined the missing related models are
- * detected automatically
+ * Also returns read-only stub files for the models listed in `stubModels`,
+ * since GraphQL type generation fails when a generated SDL references a type
+ * that isn't defined anywhere. Defaults to `[]` (no stubs); pass the result
+ * of `missingRelatedModels(name)` to stub out related models that don't have
+ * SDL files of their own yet.
  */
 export const files = async ({
   name,
@@ -257,7 +256,7 @@ export const files = async ({
   docs = false,
   tests,
   typescript,
-  stubModels,
+  stubModels = [],
 }: {
   name: string
   crud?: boolean
@@ -294,9 +293,7 @@ export const files = async ({
     })),
   }
 
-  const modelsToStub = stubModels ?? (await missingRelatedModels(name))
-
-  for (const stubModel of modelsToStub) {
+  for (const stubModel of stubModels) {
     // `missingRelatedModels` already includes transitively related models, so
     // the recursive call doesn't need to generate stubs of its own
     const stubModelFiles = await files({
