@@ -106,3 +106,16 @@ model Address {
   id        Int        @id @default(autoincrement())
   customers Customer[]
 }
+
+// Mirrors the user model that Cedar's dbAuth setup creates. Used to test that
+// auth/sensitive fields are excluded from generated SDL
+model Account {
+  id                  Int       @id @default(autoincrement())
+  email               String    @unique
+  fullName            String
+  hashedPassword      String
+  salt                String
+  resetToken          String?
+  resetTokenExpiresAt DateTime?
+  webAuthnChallenge   String?   @unique
+}

@@ -61,6 +61,25 @@ export const validateName = (name: string) => {
   }
 }
 
+/**
+ * Names of the fields that Cedar's dbAuth setup adds to the user model for
+ * authentication. They should never be exposed through the GraphQL API, so
+ * the SDL, service and scaffold generators skip them when generating GraphQL
+ * types and inputs, forms, cells and test inputs. (Database scenarios keep
+ * them, since creating rows requires the ones that are non-optional.)
+ */
+export const SENSITIVE_FIELDS = [
+  'hashedPassword',
+  'salt',
+  'resetToken',
+  'resetTokenExpiresAt',
+  'webAuthnChallenge',
+]
+
+export const isSensitiveField = (fieldName: string) => {
+  return SENSITIVE_FIELDS.includes(fieldName)
+}
+
 // Returns all relations to other models
 export const relationsForModel = (model: Model | undefined) => {
   return model?.fields

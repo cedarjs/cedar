@@ -6,7 +6,7 @@ import { pluralize, singularize } from '@cedarjs/utils/cedarPluralize'
 
 import { transformTSToJS } from '../../../lib/index.js'
 import { getSchema, verifyModelName } from '../../../lib/schemaHelpers.js'
-import { relationsForModel } from '../helpers.js'
+import { isSensitiveField, relationsForModel } from '../helpers.js'
 import { createHandler, templateForFile } from '../yargsHandlerHelpers.js'
 
 interface ServiceModel {
@@ -247,6 +247,14 @@ export const fieldsToInput = async (model: string) => {
   const modelName = camelcase(singularize(model))
   const inputObj: Record<string, unknown> = {}
 
+  // `scalarFields` only contains required fields without defaults, so if any
+  // of them is a field the SDL generator excludes from the GraphQL input
+  // types (see `SENSITIVE_FIELDS`), creating a record through the generated
+  // create input can't succeed. Skip the create test entirely.
+  if (scalarFields.some((field: PrismaField) => isSensitiveField(field.name))) {
+    return false
+  }
+
   scalarFields.forEach((field: PrismaField) => {
     if (foreignKeys.includes(field.name)) {
       inputObj[field.name] = `scenario.${modelName}.two.${field.name}`
@@ -270,14 +278,21 @@ export const fieldsToUpdate = async (model: string) => {
     newValue: unknown,
     fieldName: string | string[]
 
+  // never pick a field the SDL generator excludes from the GraphQL input
+  // types (see `SENSITIVE_FIELDS`) — it won't exist in the generated
+  // UpdateInput type
+  const updatableFields = scalarFields.filter(
+    (scalar: PrismaField) => !isSensitiveField(scalar.name),
+  )
+
   // find an editable scalar field, ideally one that isn't a foreign key
-  field = scalarFields.find(
+  field = updatableFields.find(
     (scalar: PrismaField) => !foreignKeys.includes(scalar.name),
   )
 
   // no non-foreign keys, so just take the first one
   if (!field) {
-    field = scalarFields[0]
+    field = updatableFields[0]
   }
 
   // if the model has no editable scalar fields, skip update test completely
