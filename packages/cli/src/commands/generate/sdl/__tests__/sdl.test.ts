@@ -296,14 +296,12 @@ const itHandlesFalsyDefaults = (baseArgs = {}) => {
     const createInputMatch = sdlContent.match(
       /input CreateCounterInput \{[^}]*\}/s,
     )
-    expect(createInputMatch).toBeDefined()
+    expect(createInputMatch).not.toBeNull()
 
-    if (createInputMatch) {
-      // The input should NOT contain the id field
-      expect(createInputMatch[0]).not.toContain('id')
-      // But count should not be required either (it also has @default(0))
-      expect(createInputMatch[0]).toContain('count')
-    }
+    // The input should NOT contain the id field (since it has a default)
+    expect(createInputMatch?.[0]).not.toContain('id')
+    // But count should be present
+    expect(createInputMatch?.[0]).toContain('count')
   })
 }
 

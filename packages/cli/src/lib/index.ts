@@ -14,6 +14,7 @@ import template from 'lodash/template.js'
 import pascalcase from 'pascalcase'
 import { format } from 'prettier'
 import type { Options as PrettierOptions } from 'prettier'
+import type { Options as YargsOptions } from 'yargs'
 
 import { colors as c } from '@cedarjs/cli-helpers'
 import {
@@ -722,9 +723,7 @@ export const runCommandTask = async (
 }
 
 /** Extract default CLI args from an exported builder */
-export const getDefaultArgs = (
-  builder: Record<string, { default?: unknown; [key: string]: unknown }>,
-) => {
+export const getDefaultArgs = (builder: Record<string, YargsOptions>) => {
   return Object.entries(builder).reduce<Record<string, unknown>>(
     (options, [optionName, optionConfig]) => {
       // If a default is defined use it
