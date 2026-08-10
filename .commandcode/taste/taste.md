@@ -9,6 +9,7 @@
 - Testing Windows-specific code paths on Linux is reasonable when the branch logic is simple enough to exercise via platform mocking (e.g., `process.platform = 'win32'`). This catches regressions before they reach the Windows runner. The blanket rule of "never test Windows paths on Linux" oversimplifies — apply judgment: simple mocking is worth doing, complex Windows-only integration tests belong on Windows CI runners. Confidence: 0.65
 - Keep tests and adapt them with proper test bodies — do not mark tests as `it.todo()` or remove them entirely when behavior changes. Write proper test bodies that validate the new behavior instead. Confidence: 0.85
 - Prefer flattened tests over parametrized tests when there are only a few variants (e.g., two). Parametrized tests add indirection that makes them harder to read; the readability benefit of separate test functions outweighs the DRY benefit of parametrization for small N. Confidence: 0.75
+- When a change intentionally alters generated output (e.g., a codegen template fix), update the affected snapshots after confirming the diff matches the intended change — a failing snapshot on an intended behavior change is a signal to update, not a regression to work around. Confidence: 0.70
 
 # TypeScript
 
