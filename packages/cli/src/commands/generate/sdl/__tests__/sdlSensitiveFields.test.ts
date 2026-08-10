@@ -3,9 +3,18 @@ globalThis.__dirname = import.meta.dirname
 import type * as NodeFs from 'node:fs'
 import path from 'node:path'
 
+import ansis from 'ansis'
 import { vol, fs as memfs } from 'memfs'
 import { ufs } from 'unionfs'
-import { vi, describe, test, expect, beforeAll, afterEach } from 'vitest'
+import {
+  vi,
+  describe,
+  test,
+  expect,
+  beforeAll,
+  beforeEach,
+  afterEach,
+} from 'vitest'
 
 // Load mocks
 import '../../../../lib/test'
@@ -23,11 +32,16 @@ import * as sdlHandler from '../sdlHandler.js'
 
 afterEach(() => {
   vi.clearAllMocks()
+  vi.spyOn(console, 'log').mockRestore()
   vol.reset()
 })
 
 beforeAll(() => {
-  vol.fromJSON({ 'redwood.toml': '' }, '/')
+  vol.fromJSON({ 'cedar.toml': '' }, '/')
+})
+
+beforeEach(() => {
+  vi.spyOn(console, 'log').mockImplementation(() => {})
 })
 
 const sdlPath = (fileName: string) =>
@@ -111,7 +125,7 @@ describe('sensitive fields', () => {
 
 describe('the redacted-fields note', () => {
   test('is printed when running the command', async () => {
-    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    let output = ''
 
     await sdlHandler.handler({
       model: 'Account',
@@ -123,13 +137,7 @@ describe('the redacted-fields note', () => {
       rollback: false,
     })
 
-    const output = logSpy.mock.calls
-      .flat()
-      .join('\n')
-      // strip any ansi color codes
-      .replaceAll(/\[[0-9;]*m/g, '')
-
-    logSpy.mockRestore()
+    output = ansis.strip(vi.mocked(console).log.mock.calls.flat().join('\n'))
 
     for (const field of SENSITIVE_ACCOUNT_FIELDS) {
       expect(output).toContain(`Account.${field}`)
