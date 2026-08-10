@@ -90,9 +90,7 @@ export const handler = async ({
   // The real invocation passes `args` as an array without a shell, but this
   // informational line may get copy-pasted into a shell — so args containing
   // spaces need quotes here (and only here) to represent the same command.
-  const quotedArgs = args.map((arg) =>
-    arg.includes(' ') ? `"${arg}"` : arg,
-  )
+  const quotedArgs = args.map((arg) => (arg.includes(' ') ? `"${arg}"` : arg))
 
   console.log()
   console.log(c.note('Running Prisma CLI...'))
