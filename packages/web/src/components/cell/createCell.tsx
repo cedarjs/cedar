@@ -1,5 +1,6 @@
 import React from 'react'
 
+import type { OperationVariables } from '@apollo/client'
 import { CombinedGraphQLErrors } from '@apollo/client'
 import { useQuery } from '@apollo/client/react'
 
@@ -14,9 +15,10 @@ import { isDataEmpty } from './isCellEmpty.js'
 
 export function createCell<
   CellProps extends Record<string, unknown>,
-  CellVariables extends Record<string, unknown>,
+  CellVariables extends OperationVariables = OperationVariables,
+  GQLResult = any,
 >(
-  createCellProps: CreateCellProps<CellProps, CellVariables>,
+  createCellProps: CreateCellProps<CellProps, CellVariables, GQLResult>,
 ): React.FC<CellProps> {
   // Cells that declare their data requirements with a FRAGMENT don't fire
   // queries of their own – they read their slice of a parent Cell's query
@@ -43,10 +45,13 @@ export function createCell<
     // props.
     const suspendingCellProps = createCellProps as CreateCellProps<
       Record<string, unknown>,
-      CellVariables
+      CellVariables,
+      GQLResult
     >
 
-    return createSuspendingCell<CellProps, CellVariables>(suspendingCellProps)
+    return createSuspendingCell<CellProps, CellVariables, GQLResult>(
+      suspendingCellProps,
+    )
   }
 
   return createNonSuspendingCell(createCellProps)
@@ -57,7 +62,8 @@ export function createCell<
  */
 function createNonSuspendingCell<
   CellProps extends Record<string, unknown>,
-  CellVariables extends Record<string, unknown>,
+  CellVariables extends OperationVariables = OperationVariables,
+  GQLResult = any,
 >({
   QUERY,
   beforeQuery = (props) => ({
@@ -79,7 +85,7 @@ function createNonSuspendingCell<
   Empty,
   Success,
   displayName = 'Cell',
-}: CreateCellProps<CellProps, CellVariables>): React.FC<CellProps> {
+}: CreateCellProps<CellProps, CellVariables, GQLResult>): React.FC<CellProps> {
   if (!QUERY) {
     throw new Error(
       `Can't create a Cell (${displayName}) without a QUERY or FRAGMENT export`,
@@ -187,6 +193,16 @@ function createNonSuspendingCell<
       return null
     }
 
+    // `Failure`/`Empty`/`Success`/`Loading` are checked against this Cell's
+    // real `GQLResult` and `CellVariables` at its own call site (that's the
+    // whole point of threading those generics through `CreateCellProps`).
+    // Inside this generic factory function, though, `GQLResult` and
+    // `CellVariables` are still abstract, and the props assembled below are
+    // built from `useQuery<DataObject>`'s untyped result -- there's no way
+    // for TS to verify structurally, at this level, that they line up with
+    // the concrete types each Cell's components declare. The objects below
+    // are exactly what `CellFailureProps`/`CellSuccessProps`/`CellLoadingProps`
+    // describe at runtime, so they're asserted here rather than checked.
     if (error) {
       if (Failure) {
         // errorCode is not part of the type returned by useQuery
@@ -195,21 +211,20 @@ function createNonSuspendingCell<
           errorCode: string
         }
 
-        return (
-          <Failure
-            error={error}
-            errorCode={
-              // Use the ad-hoc QueryResultWithErrorCode type to access the errorCode
-              (queryResult as QueryResultWithErrorCode).errorCode ??
-              (CombinedGraphQLErrors.is(error)
-                ? (error.errors[0]?.extensions?.['code'] as string)
-                : undefined)
-            }
-            {...props}
-            updating={loading}
-            queryResult={queryResult}
-          />
-        )
+        const failureProps = {
+          error,
+          errorCode:
+            // Use the ad-hoc QueryResultWithErrorCode type to access the errorCode
+            (queryResult as QueryResultWithErrorCode).errorCode ??
+            (CombinedGraphQLErrors.is(error)
+              ? (error.errors[0]?.extensions?.['code'] as string)
+              : undefined),
+          ...props,
+          updating: loading,
+          queryResult,
+        }
+
+        return <Failure {...(failureProps as any)} />
       } else {
         // Apollo Client types errors as `ErrorLike`, but at runtime they're
         // `Error` instances
@@ -219,26 +234,28 @@ function createNonSuspendingCell<
       const afterQueryData = afterQuery(data)
 
       if (isEmpty(data, { isDataEmpty }) && Empty) {
-        return (
-          <Empty
-            {...props}
-            {...afterQueryData}
-            updating={loading}
-            queryResult={queryResult}
-          />
-        )
+        const emptyProps = {
+          ...props,
+          ...afterQueryData,
+          updating: loading,
+          queryResult,
+        }
+
+        return <Empty {...(emptyProps as any)} />
       } else {
-        return (
-          <Success
-            {...props}
-            {...afterQueryData}
-            updating={loading}
-            queryResult={queryResult}
-          />
-        )
+        const successProps = {
+          ...props,
+          ...afterQueryData,
+          updating: loading,
+          queryResult,
+        }
+
+        return <Success {...(successProps as any)} />
       }
     } else if (loading) {
-      return <Loading {...props} queryResult={queryResult} />
+      const loadingProps = { ...props, queryResult }
+
+      return <Loading {...(loadingProps as any)} />
     } else {
       /**
        * There really shouldn't be an `else` here, but like any piece of software, GraphQL clients have bugs.

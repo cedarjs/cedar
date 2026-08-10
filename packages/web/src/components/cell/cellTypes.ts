@@ -4,6 +4,7 @@ import type {
   ApolloClient,
   NetworkStatus,
   OperationVariables,
+  TypedDocumentNode,
 } from '@apollo/client'
 import type {
   QueryRef,
@@ -194,15 +195,29 @@ export type CellBeforeQueryResult<CellVariables> =
 
 /**
  * The main interface.
+ *
+ * @param GQLResult - The shape of the data returned by `QUERY` (or, for
+ * fragment Cells, the shape of the fragment's data). This is what
+ * `Success`/`Empty` receive their data as. Defaults to `any` so Cells that
+ * don't -- or can't -- type their `QUERY` with `TypedDocumentNode` (e.g. in
+ * tests, or Cells built from a plain string) keep the pre-existing loose
+ * behavior instead of erroring.
  */
-export interface CreateCellProps<CellProps, CellVariables> {
+export interface CreateCellProps<
+  CellProps,
+  CellVariables extends OperationVariables = OperationVariables,
+  GQLResult = any,
+> {
   /**
    * The GraphQL syntax tree to execute or function to call that returns it.
    * If `QUERY` is a function, it's called with the result of `beforeQuery`.
    *
    * Either `QUERY` or `FRAGMENT` must be provided.
    */
-  QUERY?: DocumentNode | ((variables: Record<string, unknown>) => DocumentNode)
+  QUERY?:
+    | TypedDocumentNode<GQLResult, CellVariables>
+    | DocumentNode
+    | ((variables: Record<string, unknown>) => DocumentNode)
   /**
    * A GraphQL fragment that declares this Cell's data requirements. Fragment
    * Cells don't fire their own query. Instead a parent Cell spreads the
@@ -255,19 +270,19 @@ export interface CreateCellProps<CellProps, CellVariables> {
   /**
    * If the query's in flight and there's no stale data, render this.
    */
-  Loading?: React.FC<CellLoadingProps & Partial<CellProps>>
+  Loading?: React.FC<CellLoadingProps<CellVariables> & Partial<CellProps>>
   /**
    * If something went wrong, render this.
    */
-  Failure?: React.FC<CellFailureProps & Partial<CellProps>>
+  Failure?: React.FC<CellFailureProps<CellVariables> & Partial<CellProps>>
   /**
    * If no data was returned, render this.
    */
-  Empty?: React.FC<CellSuccessProps & Partial<CellProps>>
+  Empty?: React.FC<CellSuccessProps<GQLResult, CellVariables> & Partial<CellProps>>
   /**
    * If data was returned, render this.
    */
-  Success: React.FC<CellSuccessProps & Partial<CellProps>>
+  Success: React.FC<CellSuccessProps<GQLResult, CellVariables> & Partial<CellProps>>
   /**
    * What to call the Cell. Defaults to the filename.
    */

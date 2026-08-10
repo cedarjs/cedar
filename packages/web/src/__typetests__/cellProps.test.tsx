@@ -11,6 +11,7 @@ import type {
   CellLoadingProps,
   CellProps,
   CellSuccessProps,
+  TypedDocumentNode,
 } from '@cedarjs/web'
 
 type ExampleQueryVariables = {
@@ -295,11 +296,10 @@ describe('CellProps mapper type', () => {
   describe('what beforeQuery is allowed to return', () => {
     // These tests are only about the shape `beforeQuery` is allowed to
     // return, so `Success` is deliberately left at the bare `CellSuccessProps`
-    // type here, rather than reusing `recipeCell.Success` (which is annotated
-    // with `CellSuccessProps<QueryResult>` plus a custom prop). `createCell`
-    // structurally checks `Success` against `CellSuccessProps & Partial<CellProps>`
-    // (see #2366 for why that's a loose check), and a `Success` typed more
-    // specifically than that doesn't satisfy it when passed by reference.
+    // type here, rather than reusing `recipeCell.Success`. `recipeCell.Success`
+    // requires a `customProp` that isn't part of these tests' `beforeQuery`
+    // props (just `{ word: string }`), which is an unrelated mismatch to what
+    // these tests are checking, not something #2366 fixed.
     const recipeCellForBeforeQuery = {
       ...recipeCell,
       Success: (_props: CellSuccessProps) => null,
@@ -385,6 +385,57 @@ describe('CellProps mapper type', () => {
       expect<CellLoadingProps>().type.not.toBeAssignableFrom({
         bogusProp: 'should not be allowed',
       })
+    })
+  })
+
+  describe('createCell checks Success/Empty/Failure/Loading against the real QUERY type', () => {
+    // Regression test for https://github.com/cedarjs/cedar/issues/2366
+    //
+    // Real, CLI-generated Cells type QUERY with TypedDocumentNode<TData,
+    // TVariables> and type Success/Failure/Loading with CellSuccessProps<
+    // TData, TVariables> etc, exactly like this fixture does. Before #2366,
+    // CreateCellProps checked those components against the bare, defaulted-
+    // to-`any` CellSuccessProps/CellFailureProps/CellLoadingProps instead of
+    // this Cell's own QUERY type, so a Success reading a field that doesn't
+    // exist on the query result went uncaught.
+    const typedQuery = gql`
+      query ListRecipes {
+        recipes {
+          id
+          name
+        }
+      }
+    ` as TypedDocumentNode<QueryResult, EmptyVariables>
+
+    test('Success typed against the real query result is fine', () => {
+      expect(
+        createCell({
+          QUERY: typedQuery,
+          Success: (props: CellSuccessProps<QueryResult>) => (
+            <ul>{props.recipes.length}</ul>
+          ),
+        }),
+      ).type.not.toRaiseError()
+    })
+
+    // Mirrors the `SuccessProps`/`customProp` fixture near the top of this
+    // file, but requires a prop the query result doesn't provide -- before
+    // #2366, this went unnoticed because `Success` was checked against the
+    // bare, defaulted-to-`any` `CellSuccessProps`, not against this Cell's
+    // own `QUERY` type
+    interface MismatchedSuccessProps extends CellSuccessProps<QueryResult> {
+      totallyWrongProp: number
+    }
+
+    test('Success requiring a prop the query result does not provide raises an error', () => {
+      expect(
+        createCell({
+          QUERY: typedQuery,
+          Success: (props: MismatchedSuccessProps) => (
+            <p>{props.totallyWrongProp}</p>
+          ),
+        }),
+      ).type.toRaiseError()
     })
   })
 })

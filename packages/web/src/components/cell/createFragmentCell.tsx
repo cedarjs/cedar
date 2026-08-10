@@ -1,5 +1,6 @@
 import React from 'react'
 
+import type { OperationVariables } from '@apollo/client'
 import type { DocumentNode, FragmentDefinitionNode } from 'graphql'
 import { Kind } from 'graphql'
 
@@ -75,7 +76,8 @@ function isDataRef(value: unknown): value is Record<string, unknown> {
  */
 export function createFragmentCell<
   CellProps extends Record<string, unknown>,
-  CellVariables extends Record<string, unknown>,
+  CellVariables extends OperationVariables = OperationVariables,
+  GQLResult = any,
 >({
   FRAGMENT,
   afterQuery = (data) => data,
@@ -83,7 +85,7 @@ export function createFragmentCell<
   Empty,
   Success,
   displayName = 'Cell',
-}: CreateCellProps<CellProps, CellVariables>): React.FC<CellProps> {
+}: CreateCellProps<CellProps, CellVariables, GQLResult>): React.FC<CellProps> {
   if (!FRAGMENT) {
     throw new Error(
       `createFragmentCell() for ${displayName} requires a FRAGMENT`,
@@ -144,11 +146,19 @@ export function createFragmentCell<
     // `CellProps`, so this reflects that.
     const restProps = rest as Partial<CellProps>
 
+    // `Empty`/`Success` are checked against this Cell's real `GQLResult` and
+    // `CellVariables` at its own call site. Inside this generic factory
+    // function those are still abstract, and there's no way for TS to verify
+    // structurally that `restProps`/`afterQueryData` line up with them, so
+    // the merged props are asserted here rather than checked (see the same
+    // pattern, with more detail, in createCell.tsx)
+    const successProps = { ...restProps, ...afterQueryData }
+
     if (isEmpty({ [propName]: data }, { isDataEmpty }) && Empty) {
-      return <Empty {...restProps} {...afterQueryData} />
+      return <Empty {...(successProps as any)} />
     }
 
-    return <Success {...restProps} {...afterQueryData} />
+    return <Success {...(successProps as any)} />
   }
 
   NamedCell.displayName = displayName
