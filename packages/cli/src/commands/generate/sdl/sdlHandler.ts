@@ -10,7 +10,7 @@ import { getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 import { pluralize } from '@cedarjs/utils/cedarPluralize'
 
-import { transformTSToJS, writeFilesTask } from '../../../lib/index.js'
+import { transformTSToJS } from '../../../lib/index.js'
 import {
   prepareForRollback,
   addFunctionToRollback,
@@ -23,6 +23,12 @@ import {
 import { relationsForModel } from '../helpers.js'
 import { files as serviceFiles } from '../service/serviceHandler.js'
 import { templateForFile } from '../yargsHandlerHelpers.js'
+
+import {
+  addStubHeader,
+  missingRelatedModels,
+  writeFilesWithStubsTask,
+} from './stubFiles.js'
 
 const DEFAULT_IGNORE_FIELDS_FOR_INPUT = ['createdAt', 'updatedAt']
 
@@ -117,17 +123,16 @@ const querySDL = (model: ModelSchema, docs = false) => {
 }
 
 const inputSDL = (model: ModelSchema, required: boolean, docs = false) => {
-  const ignoredFields = DEFAULT_IGNORE_FIELDS_FOR_INPUT
+  const ignoredFields = [...DEFAULT_IGNORE_FIELDS_FOR_INPUT]
+  const idField = model.fields.find((field) => field.isId)
+
+  // Only ignore the id field if it has a default value
+  if (idField?.default !== undefined) {
+    ignoredFields.push(idField.name)
+  }
 
   return model.fields
     .filter((field) => {
-      const idField = model.fields.find((field) => field.isId)
-
-      // Only ignore the id field if it has a default value
-      if (idField?.default) {
-        ignoredFields.push(idField.name)
-      }
-
       return !ignoredFields.includes(field.name) && field.kind !== 'object'
     })
     .map((field) => modelFieldToSDL({ field, required, docs }))
@@ -236,6 +241,9 @@ const sdlFromSchemaModel = async (
   }
 }
 
+/**
+ * Returns the SDL and service files to generate for the given model.
+ */
 export const files = async ({
   name,
   crud = true,
@@ -278,6 +286,41 @@ export const files = async ({
   }
 }
 
+/**
+ * Returns read-only stub SDL and service files for each model in `models`,
+ * since GraphQL type generation fails when a generated SDL references a type
+ * that isn't defined anywhere. Each stub is tagged with a header explaining
+ * why it exists and how to replace it with the real thing (see
+ * `addStubHeader`).
+ */
+export const stubFiles = async (
+  models: string[],
+  generatedFor: string,
+  { docs = false, typescript }: { docs?: boolean; typescript?: boolean },
+) => {
+  const generatedFiles: Record<string, string> = {}
+
+  for (const stubModel of models) {
+    const stubModelFiles = await files({
+      name: stubModel,
+      crud: false,
+      docs,
+      tests: false,
+      typescript,
+    })
+
+    for (const [stubPath, stubContent] of Object.entries(stubModelFiles)) {
+      generatedFiles[stubPath] = addStubHeader({
+        content: stubContent,
+        stubModel,
+        generatedFor,
+      })
+    }
+  }
+
+  return generatedFiles
+}
+
 // TODO: Add --dry-run command
 export const handler = async ({
   model,
@@ -312,14 +355,18 @@ export const handler = async ({
 
   try {
     const { name } = await verifyModelName({ name: model })
+    const missingModels = await missingRelatedModels(name)
 
     const tasks = new Listr(
       [
         {
           title: 'Generating SDL files...',
           task: async () => {
-            const f = await files({ name, tests, crud, typescript, docs })
-            return writeFilesTask(f, { overwriteExisting: force })
+            const f = {
+              ...(await files({ name, tests, crud, typescript, docs })),
+              ...(await stubFiles(missingModels, name, { typescript, docs })),
+            }
+            return writeFilesWithStubsTask(f, { overwriteExisting: force })
           },
         },
         {
@@ -349,6 +396,26 @@ export const handler = async ({
       prepareForRollback(tasks)
     }
     await tasks.run()
+
+    if (missingModels.length > 0) {
+      console.log()
+      console.log(
+        c.info(
+          `${name} has relations to models that don't have SDL files of ` +
+            `their own yet: ${missingModels.join(', ')}`,
+        ),
+      )
+      console.log(
+        c.info(
+          'Read-only SDL stubs were generated for them, since GraphQL type ' +
+            'generation fails otherwise.',
+        ),
+      )
+      console.log(c.info('To replace a stub with a full SDL and service, run'))
+      for (const stubModel of missingModels) {
+        console.log(c.info(`  yarn cedar generate sdl ${stubModel}`))
+      }
+    }
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : String(e)
     const exitCode =
