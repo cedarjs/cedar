@@ -109,6 +109,36 @@ describe('sensitive fields', () => {
   })
 })
 
+describe('the redacted-fields note', () => {
+  test('is printed when running the command', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+
+    await sdlHandler.handler({
+      model: 'Account',
+      crud: true,
+      force: false,
+      tests: true,
+      typescript: false,
+      docs: false,
+      rollback: false,
+    })
+
+    const output = logSpy.mock.calls
+      .flat()
+      .join('\n')
+      // strip any ansi color codes
+      .replaceAll(/\[[0-9;]*m/g, '')
+
+    logSpy.mockRestore()
+
+    for (const field of SENSITIVE_ACCOUNT_FIELDS) {
+      expect(output).toContain(`Account.${field}`)
+    }
+
+    expect(output).toContain('add them to the SDL file manually')
+  })
+})
+
 describe('a lone `salt` field', () => {
   test('is kept in the generated SDL', async () => {
     const files = await sdlHandler.files({
