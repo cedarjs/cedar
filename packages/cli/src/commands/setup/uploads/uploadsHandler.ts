@@ -19,10 +19,11 @@ import { runTransform } from '../../../lib/runTransform.js'
 
 export const handler = async ({ force }: { force: boolean }) => {
   const projectIsTypescript = isTypeScriptProject()
-  const redwoodVersion =
-    (await import(path.join(getPaths().base, 'package.json'), {
-      with: { type: 'json ' },
-    }).default.devDependencies['@cedarjs/core']) ?? 'latest'
+  const packageJson = await import(path.join(getPaths().base, 'package.json'), {
+    with: { type: 'json' },
+  })
+  const cedarVersion =
+    packageJson.default.devDependencies['@cedarjs/core'] ?? 'latest'
 
   const tasks = new Listr(
     [
@@ -81,7 +82,7 @@ export const handler = async ({ force }: { force: boolean }) => {
         },
       },
       {
-        ...addApiPackages([`@cedarjs/storage@${redwoodVersion}`]),
+        ...addApiPackages([`@cedarjs/storage@${cedarVersion}`]),
         title: 'Adding dependencies to your api side...',
       },
       {
