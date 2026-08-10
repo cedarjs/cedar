@@ -89,9 +89,7 @@ export const handler = async ({
 
   console.log()
   console.log(c.note('Running Prisma CLI...'))
-  console.log(
-    c.underline(`$ ${formatRunTransitiveBinCommand('prisma', args)}`),
-  )
+  console.log(c.underline(`$ ${formatRunTransitiveBinCommand('prisma', args)}`))
   console.log()
 
   try {
