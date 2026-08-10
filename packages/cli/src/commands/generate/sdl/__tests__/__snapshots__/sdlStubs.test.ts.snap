@@ -6,7 +6,7 @@ exports[`files with stubs > generates read-only stubs for missing related models
 // Run \`cedar generate sdl User\` to replace this stub with the real thing.
 // If you edit this file, the hash below will stop matching and you'll
 // need to pass \`--force\` to overwrite it.
-// @cedar-generator-stub-hash d94c8f09bc1c00b4
+// @cedar-generator-stub-hash 0393c2637174b7eb
 
 export const schema = gql\`
   type User {

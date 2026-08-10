@@ -155,7 +155,7 @@ exports[`handler > can be called with PascalCase model name 5`] = `
 // Run \`cedar generate sdl UserProfile\` to replace this stub with the real thing.
 // If you edit this file, the hash below will stop matching and you'll
 // need to pass \`--force\` to overwrite it.
-// @cedar-generator-stub-hash 03fbabcdbd9a5ba1
+// @cedar-generator-stub-hash a610beb597de9ce0
 
 export const schema = gql\`
   type UserProfile {
@@ -181,7 +181,7 @@ exports[`handler > can be called with PascalCase model name 6`] = `
 // Run \`cedar generate sdl UserProfile\` to replace this stub with the real thing.
 // If you edit this file, the hash below will stop matching and you'll
 // need to pass \`--force\` to overwrite it.
-// @cedar-generator-stub-hash 21e7144a59c837b8
+// @cedar-generator-stub-hash 27591029bcfaf860
 
 import { db } from 'src/lib/db'
 
@@ -506,7 +506,7 @@ exports[`handler > can be called with camelCase model name 5`] = `
 // Run \`cedar generate sdl UserProfile\` to replace this stub with the real thing.
 // If you edit this file, the hash below will stop matching and you'll
 // need to pass \`--force\` to overwrite it.
-// @cedar-generator-stub-hash 03fbabcdbd9a5ba1
+// @cedar-generator-stub-hash a610beb597de9ce0
 
 export const schema = gql\`
   type UserProfile {
@@ -532,7 +532,7 @@ exports[`handler > can be called with camelCase model name 6`] = `
 // Run \`cedar generate sdl UserProfile\` to replace this stub with the real thing.
 // If you edit this file, the hash below will stop matching and you'll
 // need to pass \`--force\` to overwrite it.
-// @cedar-generator-stub-hash 21e7144a59c837b8
+// @cedar-generator-stub-hash 27591029bcfaf860
 
 import { db } from 'src/lib/db'
 

@@ -127,7 +127,7 @@ const inputSDL = (model: ModelSchema, required: boolean, docs = false) => {
   const idField = model.fields.find((field) => field.isId)
 
   // Only ignore the id field if it has a default value
-  if (idField?.default) {
+  if (idField?.default !== undefined) {
     ignoredFields.push(idField.name)
   }
 

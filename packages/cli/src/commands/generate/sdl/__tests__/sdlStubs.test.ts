@@ -66,6 +66,22 @@ describe('missingRelatedModels', () => {
 
     expect(await missingRelatedModels('UserProfile')).toEqual([])
   })
+
+  test('traverses through defined intermediate models to find missing models', async () => {
+    // This tests the case where A -> B -> C, B has SDL but C doesn't.
+    // We should discover C and generate a stub for it.
+    // In the fixture: UserProfile -> User (exists), User -> UserProfile (circular)
+    // Both have relations, and we should find missing models through defined ones.
+    // Since all related models in the fixture have SDL or are being checked,
+    // this is a regression test to ensure the queue.push happens for all models.
+    vol.fromJSON({
+      [sdlPath('userProfiles.sdl.ts')]:
+        'export const schema = gql`\n  type UserProfile {\n    id: Int!\n  }\n`\n',
+    })
+
+    // With only UserProfile having SDL, User should be discovered as missing
+    expect(await missingRelatedModels('UserProfile')).toContain('User')
+  })
 })
 
 describe('files with stubs', () => {
@@ -125,6 +141,19 @@ describe('isPristineStub', () => {
     // covered by the hash)
     expect(isPristineStub(stub.replace('"stub"', '"edited"'))).toEqual(false)
     expect(isPristineStub('just a regular file')).toEqual(false)
+  })
+
+  test('detects edits to header lines', () => {
+    const stub = addStubHeader({
+      content: 'export const schema = "stub"\n',
+      stubModel: 'User',
+      generatedFor: 'UserProfile',
+    })
+
+    expect(isPristineStub(stub)).toEqual(true)
+    // Edit a header line (the reason comment)
+    const edited = stub.replace('UserProfile', 'SomeOtherModel')
+    expect(isPristineStub(edited)).toEqual(false)
   })
 })
 

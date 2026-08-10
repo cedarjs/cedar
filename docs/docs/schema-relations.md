@@ -123,8 +123,8 @@ model Shelf {
 
 The data model looks great. Let's make it real with SDLs and services:
 
-```
-yarn rw g sdl Book
+```bash
+yarn cedar g sdl Book
 ```
 
 The type of `Book`'s `shelf` field is `Shelf`, but there's no SDL defining a `Shelf` GraphQL type yet. To keep type generation working, the SDL generator detects this and also generates a read-only _stub_ SDL (and service) for `Shelf`:
@@ -149,8 +149,8 @@ The stub defines the `Shelf` type and a read-only query — no mutations. Each s
 
 When you're ready to flesh out `Shelf`, run the generator for it:
 
-```
-yarn rw g sdl Shelf
+```bash
+yarn cedar g sdl Shelf
 ```
 
 As long as you haven't edited the stub files, they're replaced without needing `--force`. If you _have_ edited a stub, the generator refuses to overwrite it until you pass `--force`, so your changes are never silently lost.
@@ -159,12 +159,15 @@ As long as you haven't edited the stub files, they're replaced without needing `
 
 The scaffold generator doesn't generate stubs for missing related models (yet), so scaffolding a model whose related models have no SDLs fails during type generation with an error like:
 
-```
+```text
         Unknown type: "Shelf".
         Error: Unknown type: "Shelf".
 ```
 
-The fix: generate the SDL for (or scaffold out) each model in the relation, ignoring the intermediate errors — the last model in the relation should generate cleanly. Or run `yarn rw g sdl <model>` for the related models first, since the SDL generator handles missing relations automatically.
+The fix: generate the SDL for (or scaffold out) each model in the relation,
+inoring the intermediate errors. The last model in the relation should generate
+cleanly. Or run `yarn cedar g sdl <model>` for the related models first, since
+the SDL generator handles missing relations automatically.
 
 ### Self-Relations
 

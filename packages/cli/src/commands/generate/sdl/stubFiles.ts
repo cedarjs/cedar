@@ -33,9 +33,8 @@ export function addStubHeader({
   stubModel: string
   generatedFor: string
 }) {
-  // The hash only covers what comes after the marker line, so that the header
-  // itself isn't part of the hashed content
   const body = '\n\n' + content
+  const marker = `// ${STUB_HASH_MARKER} PLACEHOLDER`
   const header = [
     `// Generated as a read-only stub by \`cedar generate sdl ` +
       `${generatedFor}\`,`,
@@ -45,10 +44,14 @@ export function addStubHeader({
       `the real thing.`,
     `// If you edit this file, the hash below will stop matching and you'll`,
     `// need to pass \`--force\` to overwrite it.`,
-    `// ${STUB_HASH_MARKER} ${stubHash(body)}`,
+    marker,
   ].join('\n')
 
-  return header + body
+  const contentToHash = header + body
+  const hash = stubHash(contentToHash)
+  const finalMarker = `// ${STUB_HASH_MARKER} ${hash}`
+
+  return (header + body).replace(marker, finalMarker)
 }
 
 /**
@@ -62,9 +65,12 @@ export function isPristineStub(contents: string) {
     return false
   }
 
-  const body = contents.slice(match.index + match[0].length)
+  const contentToHash = contents.replace(
+    match[0],
+    `// ${STUB_HASH_MARKER} PLACEHOLDER`,
+  )
 
-  return stubHash(body) === match[1]
+  return stubHash(contentToHash) === match[1]
 }
 
 function readExistingSdlFiles(): string[] {
@@ -138,10 +144,10 @@ export async function missingRelatedModels(
       }
 
       seen.add(field.type)
+      queue.push(field.type)
 
       if (!isDefined(field.type)) {
         missing.push(field.type)
-        queue.push(field.type)
       }
     }
   }

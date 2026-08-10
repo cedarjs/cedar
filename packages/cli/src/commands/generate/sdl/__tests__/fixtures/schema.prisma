@@ -80,3 +80,8 @@ model Car {
   brand    String
   carBrand CarBrand @relation(fields: [brand], references: [brand])
 }
+
+model Counter {
+  id    Int    @id @default(0)
+  count Int    @default(0)
+}
