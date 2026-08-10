@@ -165,7 +165,7 @@ The scaffold generator doesn't generate stubs for missing related models (yet), 
 ```
 
 The fix: generate the SDL for (or scaffold out) each model in the relation,
-inoring the intermediate errors. The last model in the relation should generate
+ignoring the intermediate errors. The last model in the relation should generate
 cleanly. Or run `yarn cedar g sdl <model>` for the related models first, since
 the SDL generator handles missing relations automatically.
 
