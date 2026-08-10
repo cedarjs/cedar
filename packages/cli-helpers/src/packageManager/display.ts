@@ -251,26 +251,3 @@ export function formatRemoveWorkspacePackagesCommand(
   // pnpm
   return `pnpm remove ${pkgStr} --filter ${workspace}`
 }
-
-// Matches values made up only of characters that are never special to a
-// POSIX shell, so they can be printed bare.
-const SHELL_SAFE_ARG = /^[\w@%+=:,./-]+$/
-
-/**
- * Quotes a single argv value for safe copy-paste into a POSIX shell (e.g.
- * bash, zsh). Values containing only "safe" characters are left bare;
- * anything else is wrapped in single quotes, which suppress all shell
- * expansion (globbing, command substitution, variable expansion, etc.), with
- * any embedded single quotes escaped by closing the quote, emitting an
- * escaped quote, then reopening it. Ported from Python's `shlex.quote`.
- *
- * Like the rest of this module, this targets POSIX shells — it does not
- * produce PowerShell- or cmd.exe-safe output.
- */
-export function formatShellArg(arg: string): string {
-  if (arg.length > 0 && SHELL_SAFE_ARG.test(arg)) {
-    return arg
-  }
-
-  return `'${arg.replace(/'/g, `'"'"'`)}'`
-}

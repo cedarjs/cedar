@@ -7,7 +7,6 @@ import {
   formatCedarCommand,
   formatRunBinCommand,
   formatRunTransitiveBinCommand,
-  formatShellArg,
 } from '@cedarjs/cli-helpers/packageManager/display'
 import { runTransitiveBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
 import { errorTelemetry } from '@cedarjs/telemetry'
@@ -88,15 +87,10 @@ export const handler = async ({
     }
   }
 
-  // The real invocation passes `args` as an array without a shell, but this
-  // informational line may get copy-pasted into a shell — so args need
-  // shell-safe quoting here (and only here) to represent the same command.
-  const quotedArgs = args.map(formatShellArg)
-
   console.log()
   console.log(c.note('Running Prisma CLI...'))
   console.log(
-    c.underline(`$ ${formatRunTransitiveBinCommand('prisma', quotedArgs)}`),
+    c.underline(`$ ${formatRunTransitiveBinCommand('prisma', args)}`),
   )
   console.log()
 

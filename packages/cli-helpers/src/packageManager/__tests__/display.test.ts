@@ -14,7 +14,6 @@ import {
   formatAddRootPackagesCommand,
   formatAddWorkspacePackagesCommand,
   formatRemoveWorkspacePackagesCommand,
-  formatShellArg,
 } from '../display.js'
 
 vi.mock('@cedarjs/project-config/packageManager', () => ({
@@ -427,38 +426,5 @@ describe('formatRemoveWorkspacePackagesCommand', () => {
     expect(
       formatRemoveWorkspacePackagesCommand('api', ['lodash', 'moment']),
     ).toBe('pnpm remove lodash moment --filter api')
-  })
-})
-
-describe('formatShellArg', () => {
-  it('returns simple values bare', () => {
-    expect(formatShellArg('migrate')).toBe('migrate')
-    expect(formatShellArg('--config')).toBe('--config')
-    expect(formatShellArg('-n')).toBe('-n')
-    expect(formatShellArg('api/db/schema.prisma')).toBe('api/db/schema.prisma')
-  })
-
-  it('quotes values containing spaces', () => {
-    expect(formatShellArg('add bazingas')).toBe("'add bazingas'")
-  })
-
-  it('quotes and escapes embedded single quotes', () => {
-    expect(formatShellArg("it's")).toBe(`'it'"'"'s'`)
-  })
-
-  it('quotes values containing double quotes without escaping them', () => {
-    expect(formatShellArg('say "hi"')).toBe(`'say "hi"'`)
-  })
-
-  it('quotes values containing command substitution', () => {
-    expect(formatShellArg('$(rm -rf /)')).toBe("'$(rm -rf /)'")
-  })
-
-  it('quotes values containing semicolons', () => {
-    expect(formatShellArg('a;b')).toBe("'a;b'")
-  })
-
-  it('quotes values containing backticks', () => {
-    expect(formatShellArg('`whoami`')).toBe("'`whoami`'")
   })
 })
