@@ -99,8 +99,7 @@ Almost identical! But now there's an `id` and the SDL/scaffold generators will w
 
 ## Troubleshooting Generators
 
-Are you getting errors when generating SDLs or scaffolds for your Prisma models?
-There's a known limitation in Cedar's GraphQL type generation that happens when generating SDL for, or scaffolding out, a Prisma model that has relations before the SDL for the related model exists.
+GraphQL type generation fails when an SDL references a type that isn't defined anywhere — which is what would happen if you generated the SDL for a Prisma model with relations before the SDLs for the related models exist.
 
 This may sound a little abstract, so let's look at an example. Let's say that you're modeling bookshelves. Your prisma schema has two data models, `Book` and `Shelf`. This is a one to many relationship: a shelf has many books, but a book can only be on one shelf:
 
@@ -128,7 +127,7 @@ The data model looks great. Let's make it real with SDLs and services:
 yarn rw g sdl Book
 ```
 
-Here's how the output from the command starts:
+The type of `Book`'s `shelf` field is `Shelf`, but there's no SDL defining a `Shelf` GraphQL type yet. To keep type generation working, the SDL generator detects this and also generates a read-only _stub_ SDL (and service) for `Shelf`:
 
 ```bash
 ✔ Generating SDL files...
@@ -136,77 +135,36 @@ Here's how the output from the command starts:
 ✔ Successfully wrote file $(./api/src/services/books/books.scenarios.js)
 ✔ Successfully wrote file $(./api/src/services/books/books.test.js)
 ✔ Successfully wrote file $(./api/src/services/books/books.js)
+✔ Successfully wrote file $(./api/src/graphql/shelves.sdl.js)
+✔ Successfully wrote file $(./api/src/services/shelves/shelves.js)
+✔ Generating types ...
+
+Book has relations to models that don't have SDL files of their own yet: Shelf
+Read-only SDL stubs were generated for them, since GraphQL type generation fails otherwise.
+To replace a stub with a full SDL and service, run
+  yarn cedar generate sdl Shelf
 ```
 
-Looks like it's working so far. The SDL and service files generated!
-But, when the command starts generating types... 💥
+The stub defines the `Shelf` type and a read-only query — no mutations. Each stub file starts with a comment explaining why it exists and how to replace it.
+
+When you're ready to flesh out `Shelf`, run the generator for it:
 
 ```
-  ⠙ Generating types ...
-Failed to load schema
+yarn rw g sdl Shelf
+```
 
-# ...
+As long as you haven't edited the stub files, they're replaced without needing `--force`. If you _have_ edited a stub, the generator refuses to overwrite it until you pass `--force`, so your changes are never silently lost.
 
-type Query {
-  redwood: Cedar
-},graphql/**/*.sdl.{js,ts},directives/**/*.{js,ts}:
+### Scaffolds
 
+The scaffold generator doesn't generate stubs for missing related models (yet), so scaffolding a model whose related models have no SDLs fails during type generation with an error like:
+
+```
         Unknown type: "Shelf".
         Error: Unknown type: "Shelf".
 ```
 
-What happened?
-Remember, the first thing to do when you get an error: _read the error message_.
-The key is `Unknown type: "Shelf"`.
-The type of `Book`'s `shelf` field is `Shelf`.
-But we didn't generate the SDL for `Shelf` yet, so it doesn't exist.
-And naturally, types can't be generated for it.
-
-But fear not.
-This should be an easy fix.
-There are two ways you can go about it.
-
-You can generate the SDLs for all the models in the relation, ignoring the errors. This way the last model in the relation should generate cleanly.
-
-Or, you can remove or comment out the relations:
-
-```js
-model Book {
-  id      Int    @id @default(autoincrement())
-  title   String @unique
-  // highlight-start
-  // Shelf   Shelf? @relation(fields: [shelfId], references: [id])
-  // shelfId Int?
-  // highlight-end
-}
-
-model Shelf {
-  id    Int    @id @default(autoincrement())
-  name  String @unique
-  // highlight-next-line
-  // books Book[]
-}
-```
-
-Then, generate the SDL for, or scaffold out, each model separately:
-
-```
-yarn rw g sdl Book
-# ...
-
-yarn rw g sdl Shelf
-# ...
-```
-
-And lastly, add or comment in the relationships and regenerate their SDLs or scaffolds using the `--force` flag to overwrite the existing files, adding the `--no-tests` flag to preserve your tests and scenario files (if needed):
-
-```
-yarn rw g sdl Book --force --no-tests
-# ...
-
-yarn rw g sdl Shelf --force --no-tests
-# ...
-```
+The fix: generate the SDL for (or scaffold out) each model in the relation, ignoring the intermediate errors — the last model in the relation should generate cleanly. Or run `yarn rw g sdl <model>` for the related models first, since the SDL generator handles missing relations automatically.
 
 ### Self-Relations
 

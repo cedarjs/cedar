@@ -150,6 +150,63 @@ export const User = {
 
 exports[`handler > can be called with PascalCase model name 5`] = `
 {
+  "fileContent": "// Generated as a read-only stub by \`cedar generate sdl User\`,
+// because User has a relation to UserProfile, which had no SDL yet.
+// Run \`cedar generate sdl UserProfile\` to replace this stub with the real thing.
+// If you edit this file, the hash below will stop matching and you'll
+// need to pass \`--force\` to overwrite it.
+// @cedar-generator-stub-hash 03fbabcdbd9a5ba1
+
+export const schema = gql\`
+  type UserProfile {
+    id: Int!
+    username: String!
+    userId: Int!
+    user: User!
+  }
+
+  type Query {
+    userProfiles: [UserProfile!]! @requireAuth
+  }
+\`
+",
+  "filePath": "/path/to/project/api/src/graphql/userProfiles.sdl.js",
+}
+`;
+
+exports[`handler > can be called with PascalCase model name 6`] = `
+{
+  "fileContent": "// Generated as a read-only stub by \`cedar generate sdl User\`,
+// because User has a relation to UserProfile, which had no SDL yet.
+// Run \`cedar generate sdl UserProfile\` to replace this stub with the real thing.
+// If you edit this file, the hash below will stop matching and you'll
+// need to pass \`--force\` to overwrite it.
+// @cedar-generator-stub-hash 21e7144a59c837b8
+
+import { db } from 'src/lib/db'
+
+export const userProfiles = () => {
+  return db.userProfile.findMany()
+}
+
+export const userProfile = ({ id }) => {
+  return db.userProfile.findUnique({
+    where: { id },
+  })
+}
+
+export const UserProfile = {
+  user: (_obj, { root }) => {
+    return db.userProfile.findUnique({ where: { id: root?.id } }).user()
+  },
+}
+",
+  "filePath": "/path/to/project/api/src/services/userProfiles/userProfiles.js",
+}
+`;
+
+exports[`handler > can be called with PascalCase model name 7`] = `
+{
   "fileContent": "export const schema = gql\`
   type CustomData {
     id: Int!
@@ -181,7 +238,7 @@ exports[`handler > can be called with PascalCase model name 5`] = `
 }
 `;
 
-exports[`handler > can be called with PascalCase model name 6`] = `
+exports[`handler > can be called with PascalCase model name 8`] = `
 {
   "fileContent": "export const standard = defineScenario({
   customData: {
@@ -194,7 +251,7 @@ exports[`handler > can be called with PascalCase model name 6`] = `
 }
 `;
 
-exports[`handler > can be called with PascalCase model name 7`] = `
+exports[`handler > can be called with PascalCase model name 9`] = `
 {
   "fileContent": "import {
   customDatums,
@@ -257,7 +314,7 @@ describe('customDatums', () => {
 }
 `;
 
-exports[`handler > can be called with PascalCase model name 8`] = `
+exports[`handler > can be called with PascalCase model name 10`] = `
 {
   "fileContent": "import { db } from 'src/lib/db'
 
@@ -444,6 +501,63 @@ export const User = {
 
 exports[`handler > can be called with camelCase model name 5`] = `
 {
+  "fileContent": "// Generated as a read-only stub by \`cedar generate sdl User\`,
+// because User has a relation to UserProfile, which had no SDL yet.
+// Run \`cedar generate sdl UserProfile\` to replace this stub with the real thing.
+// If you edit this file, the hash below will stop matching and you'll
+// need to pass \`--force\` to overwrite it.
+// @cedar-generator-stub-hash 03fbabcdbd9a5ba1
+
+export const schema = gql\`
+  type UserProfile {
+    id: Int!
+    username: String!
+    userId: Int!
+    user: User!
+  }
+
+  type Query {
+    userProfiles: [UserProfile!]! @requireAuth
+  }
+\`
+",
+  "filePath": "/path/to/project/api/src/graphql/userProfiles.sdl.js",
+}
+`;
+
+exports[`handler > can be called with camelCase model name 6`] = `
+{
+  "fileContent": "// Generated as a read-only stub by \`cedar generate sdl User\`,
+// because User has a relation to UserProfile, which had no SDL yet.
+// Run \`cedar generate sdl UserProfile\` to replace this stub with the real thing.
+// If you edit this file, the hash below will stop matching and you'll
+// need to pass \`--force\` to overwrite it.
+// @cedar-generator-stub-hash 21e7144a59c837b8
+
+import { db } from 'src/lib/db'
+
+export const userProfiles = () => {
+  return db.userProfile.findMany()
+}
+
+export const userProfile = ({ id }) => {
+  return db.userProfile.findUnique({
+    where: { id },
+  })
+}
+
+export const UserProfile = {
+  user: (_obj, { root }) => {
+    return db.userProfile.findUnique({ where: { id: root?.id } }).user()
+  },
+}
+",
+  "filePath": "/path/to/project/api/src/services/userProfiles/userProfiles.js",
+}
+`;
+
+exports[`handler > can be called with camelCase model name 7`] = `
+{
   "fileContent": "export const schema = gql\`
   type CustomData {
     id: Int!
@@ -475,7 +589,7 @@ exports[`handler > can be called with camelCase model name 5`] = `
 }
 `;
 
-exports[`handler > can be called with camelCase model name 6`] = `
+exports[`handler > can be called with camelCase model name 8`] = `
 {
   "fileContent": "export const standard = defineScenario({
   customData: {
@@ -488,7 +602,7 @@ exports[`handler > can be called with camelCase model name 6`] = `
 }
 `;
 
-exports[`handler > can be called with camelCase model name 7`] = `
+exports[`handler > can be called with camelCase model name 9`] = `
 {
   "fileContent": "import {
   customDatums,
@@ -551,7 +665,7 @@ describe('customDatums', () => {
 }
 `;
 
-exports[`handler > can be called with camelCase model name 8`] = `
+exports[`handler > can be called with camelCase model name 10`] = `
 {
   "fileContent": "import { db } from 'src/lib/db'
 

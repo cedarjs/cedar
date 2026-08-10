@@ -10,7 +10,7 @@ import { getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 import { pluralize } from '@cedarjs/utils/cedarPluralize'
 
-import { transformTSToJS, writeFilesTask } from '../../../lib/index.js'
+import { transformTSToJS } from '../../../lib/index.js'
 import {
   prepareForRollback,
   addFunctionToRollback,
@@ -23,6 +23,12 @@ import {
 import { relationsForModel } from '../helpers.js'
 import { files as serviceFiles } from '../service/serviceHandler.js'
 import { templateForFile } from '../yargsHandlerHelpers.js'
+
+import {
+  addStubHeader,
+  missingRelatedModels,
+  writeFilesWithStubsTask,
+} from './stubFiles.js'
 
 const DEFAULT_IGNORE_FIELDS_FOR_INPUT = ['createdAt', 'updatedAt']
 
@@ -117,17 +123,16 @@ const querySDL = (model: ModelSchema, docs = false) => {
 }
 
 const inputSDL = (model: ModelSchema, required: boolean, docs = false) => {
-  const ignoredFields = DEFAULT_IGNORE_FIELDS_FOR_INPUT
+  const ignoredFields = [...DEFAULT_IGNORE_FIELDS_FOR_INPUT]
+  const idField = model.fields.find((field) => field.isId)
+
+  // Only ignore the id field if it has a default value
+  if (idField?.default) {
+    ignoredFields.push(idField.name)
+  }
 
   return model.fields
     .filter((field) => {
-      const idField = model.fields.find((field) => field.isId)
-
-      // Only ignore the id field if it has a default value
-      if (idField?.default) {
-        ignoredFields.push(idField.name)
-      }
-
       return !ignoredFields.includes(field.name) && field.kind !== 'object'
     })
     .map((field) => modelFieldToSDL({ field, required, docs }))
@@ -236,18 +241,30 @@ const sdlFromSchemaModel = async (
   }
 }
 
+/**
+ * Returns the SDL and service files to generate for the given model.
+ *
+ * Also returns read-only stub files for related models that don't have SDL
+ * files of their own yet, since GraphQL type generation fails when a
+ * generated SDL references a type that isn't defined anywhere. Pass
+ * `stubModels` to control which models get stubbed (pass `[]` to disable
+ * stub generation); when it's undefined the missing related models are
+ * detected automatically
+ */
 export const files = async ({
   name,
   crud = true,
   docs = false,
   tests,
   typescript,
+  stubModels,
 }: {
   name: string
   crud?: boolean
   docs?: boolean
   tests?: boolean
   typescript?: boolean
+  stubModels?: string[]
 }) => {
   const extension = typescript ? 'ts' : 'js'
   const sdlData = await sdlFromSchemaModel(name, crud, docs)
@@ -266,7 +283,7 @@ export const files = async ({
     ? content
     : await transformTSToJS(outputPath, content)
 
-  return {
+  const generatedFiles: Record<string, string> = {
     [outputPath]: template,
     ...(await serviceFiles({
       name,
@@ -276,6 +293,31 @@ export const files = async ({
       typescript,
     })),
   }
+
+  const modelsToStub = stubModels ?? (await missingRelatedModels(name))
+
+  for (const stubModel of modelsToStub) {
+    // `missingRelatedModels` already includes transitively related models, so
+    // the recursive call doesn't need to generate stubs of its own
+    const stubModelFiles = await files({
+      name: stubModel,
+      crud: false,
+      docs,
+      tests: false,
+      typescript,
+      stubModels: [],
+    })
+
+    for (const [stubPath, stubContent] of Object.entries(stubModelFiles)) {
+      generatedFiles[stubPath] = addStubHeader({
+        content: stubContent,
+        stubModel,
+        generatedFor: name,
+      })
+    }
+  }
+
+  return generatedFiles
 }
 
 // TODO: Add --dry-run command
@@ -312,14 +354,22 @@ export const handler = async ({
 
   try {
     const { name } = await verifyModelName({ name: model })
+    const stubModels = await missingRelatedModels(name)
 
     const tasks = new Listr(
       [
         {
           title: 'Generating SDL files...',
           task: async () => {
-            const f = await files({ name, tests, crud, typescript, docs })
-            return writeFilesTask(f, { overwriteExisting: force })
+            const f = await files({
+              name,
+              tests,
+              crud,
+              typescript,
+              docs,
+              stubModels,
+            })
+            return writeFilesWithStubsTask(f, { overwriteExisting: force })
           },
         },
         {
@@ -349,6 +399,26 @@ export const handler = async ({
       prepareForRollback(tasks)
     }
     await tasks.run()
+
+    if (stubModels.length > 0) {
+      console.log()
+      console.log(
+        c.info(
+          `${name} has relations to models that don't have SDL files of ` +
+            `their own yet: ${stubModels.join(', ')}`,
+        ),
+      )
+      console.log(
+        c.info(
+          'Read-only SDL stubs were generated for them, since GraphQL type ' +
+            'generation fails otherwise.',
+        ),
+      )
+      console.log(c.info('To replace a stub with a full SDL and service, run'))
+      for (const stubModel of stubModels) {
+        console.log(c.info(`  yarn cedar generate sdl ${stubModel}`))
+      }
+    }
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : String(e)
     const exitCode =
