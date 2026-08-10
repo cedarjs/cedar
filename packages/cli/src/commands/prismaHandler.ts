@@ -7,6 +7,7 @@ import {
   formatCedarCommand,
   formatRunBinCommand,
   formatRunTransitiveBinCommand,
+  formatShellArg,
 } from '@cedarjs/cli-helpers/packageManager/display'
 import { runTransitiveBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
 import { errorTelemetry } from '@cedarjs/telemetry'
@@ -34,27 +35,6 @@ function getExitCode(value: unknown) {
   }
 
   return value.exitCode
-}
-
-// Matches values made up only of characters that are never special to a
-// POSIX shell, so they can be printed bare.
-const SHELL_SAFE_ARG = /^[\w@%+=:,./-]+$/
-
-/**
- * Quotes a single argv value for safe copy-paste into a POSIX shell.
- *
- * Ported from Python's `shlex.quote`: values containing only "safe"
- * characters are left bare; anything else is wrapped in single quotes,
- * which suppress all shell expansion (globbing, command substitution,
- * variable expansion, etc.), with any embedded single quotes escaped by
- * closing the quote, emitting an escaped quote, then reopening it.
- */
-function quoteForShellDisplay(arg: string): string {
-  if (arg.length > 0 && SHELL_SAFE_ARG.test(arg)) {
-    return arg
-  }
-
-  return `'${arg.replace(/'/g, `'"'"'`)}'`
 }
 
 export const handler = async ({
@@ -111,7 +91,7 @@ export const handler = async ({
   // The real invocation passes `args` as an array without a shell, but this
   // informational line may get copy-pasted into a shell — so args need
   // shell-safe quoting here (and only here) to represent the same command.
-  const quotedArgs = args.map(quoteForShellDisplay)
+  const quotedArgs = args.map(formatShellArg)
 
   console.log()
   console.log(c.note('Running Prisma CLI...'))

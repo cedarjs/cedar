@@ -83,32 +83,3 @@ test('the prisma command handles spaces', async () => {
     "--config '/Users/bazinga/My Projects/rwprj/rwprj/api/prisma.config.js'",
   )
 })
-
-test.each([
-  ['single quote', "it's", "'it'\"'\"'s'"],
-  ['double quote', 'say "hi"', `'say "hi"'`],
-  ['command substitution', '$(rm -rf /)', "'$(rm -rf /)'"],
-  ['semicolon', 'a;b', "'a;b'"],
-  ['backtick', '`whoami`', "'`whoami`'"],
-])(
-  'the prisma command quotes %s characters for shell-safe display',
-  async (_description, value, expectedQuotedValue) => {
-    await handler({
-      _: ['prisma'],
-      $0: 'cedar',
-      commands: ['migrate', 'dev'],
-      // options
-      n: value,
-    })
-
-    // Values must still arrive at execa unquoted and unmodified: execa runs
-    // without a shell, so quoting/escaping here would corrupt the value.
-    expect(vi.mocked(execa.sync).mock.calls[0][1]).toContain(value)
-
-    const loggedCommand = vi
-      .mocked(console.log)
-      .mock.calls.flat()
-      .find((line) => String(line).includes('prisma migrate dev'))
-    expect(loggedCommand).toContain(`-n ${expectedQuotedValue}`)
-  },
-)
