@@ -435,9 +435,7 @@ describe('formatShellArg', () => {
     expect(formatShellArg('migrate')).toBe('migrate')
     expect(formatShellArg('--config')).toBe('--config')
     expect(formatShellArg('-n')).toBe('-n')
-    expect(formatShellArg('api/db/schema.prisma')).toBe(
-      'api/db/schema.prisma',
-    )
+    expect(formatShellArg('api/db/schema.prisma')).toBe('api/db/schema.prisma')
   })
 
   it('quotes values containing spaces', () => {
