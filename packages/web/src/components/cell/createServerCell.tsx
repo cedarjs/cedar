@@ -16,7 +16,10 @@ type CreateServerCellProps<
   CellProps,
   CellVariables extends OperationVariables = OperationVariables,
   GQLResult = any,
-> = Omit<CreateCellProps<CellProps, CellVariables, GQLResult>, 'QUERY' | 'Failure'> & {
+> = Omit<
+  CreateCellProps<CellProps, CellVariables, GQLResult>,
+  'QUERY' | 'Failure'
+> & {
   data: (variables?: AnyObj) => any
   Failure?: React.ComponentType<{
     error: unknown

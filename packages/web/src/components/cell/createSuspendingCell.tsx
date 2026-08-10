@@ -224,9 +224,7 @@ export function createSuspendingCell<
       const loadingProps = { ...props, queryResult: suspenseQueryResult }
 
       return (
-        <Suspense
-          fallback={<LoadingComponent {...(loadingProps as any)} />}
-        >
+        <Suspense fallback={<LoadingComponent {...(loadingProps as any)} />}>
           {suspendingSuccessElement}
         </Suspense>
       )

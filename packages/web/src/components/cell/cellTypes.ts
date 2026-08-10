@@ -278,11 +278,15 @@ export interface CreateCellProps<
   /**
    * If no data was returned, render this.
    */
-  Empty?: React.FC<CellSuccessProps<GQLResult, CellVariables> & Partial<CellProps>>
+  Empty?: React.FC<
+    CellSuccessProps<GQLResult, CellVariables> & Partial<CellProps>
+  >
   /**
    * If data was returned, render this.
    */
-  Success: React.FC<CellSuccessProps<GQLResult, CellVariables> & Partial<CellProps>>
+  Success: React.FC<
+    CellSuccessProps<GQLResult, CellVariables> & Partial<CellProps>
+  >
   /**
    * What to call the Cell. Defaults to the filename.
    */
