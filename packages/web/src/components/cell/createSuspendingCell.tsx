@@ -28,9 +28,10 @@ type AnyObj = Record<string, unknown>
  */
 export function createSuspendingCell<
   CellProps extends AnyObj,
-  CellVariables extends AnyObj,
+  CellVariables extends OperationVariables = OperationVariables,
+  GQLResult = any,
 >(
-  createCellProps: CreateCellProps<AnyObj, CellVariables>, // 👈 AnyObj, because using CellProps causes a TS error
+  createCellProps: CreateCellProps<AnyObj, CellVariables, GQLResult>, // 👈 AnyObj, because using CellProps causes a TS error
 ): React.FC<CellProps> {
   const {
     QUERY,
@@ -85,23 +86,29 @@ export function createSuspendingCell<
       networkStatus,
     }
 
+    // `Empty`/`Success` are checked against this Cell's real `GQLResult` and
+    // `CellVariables` at its own call site. Inside this generic factory
+    // function those are still abstract, and there's no way for TS to verify
+    // structurally that `userProps`/`afterQueryData` line up with them, so
+    // the merged props are asserted here rather than checked (see the same
+    // pattern, with more detail, in createCell.tsx)
     if (isEmpty(data, { isDataEmpty }) && Empty) {
-      return (
-        <Empty
-          {...userProps}
-          {...afterQueryData}
-          queryResult={queryResultWithNetworkStatus}
-        />
-      )
+      const emptyProps = {
+        ...userProps,
+        ...afterQueryData,
+        queryResult: queryResultWithNetworkStatus,
+      }
+
+      return <Empty {...(emptyProps as any)} />
     }
 
-    return (
-      <Success
-        {...afterQueryData}
-        {...userProps}
-        queryResult={queryResultWithNetworkStatus}
-      />
-    )
+    const successProps = {
+      ...afterQueryData,
+      ...userProps,
+      queryResult: queryResultWithNetworkStatus,
+    }
+
+    return <Success {...(successProps as any)} />
   }
 
   SuspendingSuccess.displayName = displayName
@@ -187,17 +194,19 @@ export function createSuspendingCell<
         },
       }
 
-      return (
-        <Failure
-          error={error}
-          errorCode={
-            CombinedGraphQLErrors.is(error)
-              ? (error.errors[0]?.extensions?.['code'] as string)
-              : undefined
-          }
-          queryResult={queryResultWithErrorReset}
-        />
-      )
+      // `Failure` is checked against this Cell's real `CellVariables` at its
+      // own call site. Inside this generic factory function that's still
+      // abstract, so the props object is asserted here rather than checked
+      // (see the same pattern, with more detail, in createCell.tsx)
+      const failureProps = {
+        error,
+        errorCode: CombinedGraphQLErrors.is(error)
+          ? (error.errors[0]?.extensions?.['code'] as string)
+          : undefined,
+        queryResult: queryResultWithErrorReset,
+      }
+
+      return <Failure {...(failureProps as any)} />
     }
 
     const wrapInSuspenseIfLoadingPresent = (
@@ -208,12 +217,14 @@ export function createSuspendingCell<
         return suspendingSuccessElement
       }
 
+      // `Loading` is checked against this Cell's real `CellVariables` at its
+      // own call site. Inside this generic factory function that's still
+      // abstract, so the props object is asserted here rather than checked
+      // (see the same pattern, with more detail, in createCell.tsx)
+      const loadingProps = { ...props, queryResult: suspenseQueryResult }
+
       return (
-        <Suspense
-          fallback={
-            <LoadingComponent {...props} queryResult={suspenseQueryResult} />
-          }
-        >
+        <Suspense fallback={<LoadingComponent {...(loadingProps as any)} />}>
           {suspendingSuccessElement}
         </Suspense>
       )

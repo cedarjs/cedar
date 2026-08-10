@@ -6,7 +6,13 @@ import { gql } from 'graphql-tag'
 import { describe, expect, test } from 'tstyche'
 
 import { createCell } from '@cedarjs/web'
-import type { CellProps, CellSuccessProps } from '@cedarjs/web'
+import type {
+  CellFailureProps,
+  CellLoadingProps,
+  CellProps,
+  CellSuccessProps,
+  TypedDocumentNode,
+} from '@cedarjs/web'
 
 type ExampleQueryVariables = {
   category: string
@@ -288,10 +294,21 @@ describe('CellProps mapper type', () => {
   })
 
   describe('what beforeQuery is allowed to return', () => {
+    // These tests are only about the shape `beforeQuery` is allowed to
+    // return, so `Success` is deliberately left at the bare `CellSuccessProps`
+    // type here, rather than reusing `recipeCell.Success`. `recipeCell.Success`
+    // requires a `customProp` that isn't part of these tests' `beforeQuery`
+    // props (just `{ word: string }`), which is an unrelated mismatch to what
+    // these tests are checking, not something #2366 fixed.
+    const recipeCellForBeforeQuery = {
+      ...recipeCell,
+      Success: (_props: CellSuccessProps) => null,
+    }
+
     test('Just variables', () => {
       expect(
         createCell({
-          ...recipeCell,
+          ...recipeCellForBeforeQuery,
           beforeQuery: ({ word }: { word: string }) => ({
             variables: { category: word, saved: true },
           }),
@@ -302,7 +319,7 @@ describe('CellProps mapper type', () => {
     test('Other query hook options alongside the variables', () => {
       expect(
         createCell({
-          ...recipeCell,
+          ...recipeCellForBeforeQuery,
           beforeQuery: ({ word }: { word: string }) => ({
             variables: { category: word, saved: true },
             fetchPolicy: 'cache-only' as const,
@@ -315,11 +332,110 @@ describe('CellProps mapper type', () => {
     test('skipToken, to not run the query at all', () => {
       expect(
         createCell({
-          ...recipeCell,
+          ...recipeCellForBeforeQuery,
           beforeQuery: ({ word }: { word: string }) =>
             word ? { variables: { category: word, saved: true } } : skipToken,
         }),
       ).type.not.toRaiseError()
+    })
+  })
+
+  describe('InputVarProps does not degrade to any when TVariables is defaulted', () => {
+    // Regression test for https://github.com/cedarjs/cedar/issues/2353
+    //
+    // TVariables defaults to `any` on CellSuccessProps/CellFailureProps/
+    // CellLoadingProps. If InputVarProps doesn't guard against that, the
+    // conditional distributes over `any` and resolves to `any`, which
+    // poisons the whole intersected props type (`X & any` = `any`) --
+    // silently disabling all prop checking.
+    //
+    // Note this can't be caught by redeclaring a custom prop on an
+    // `interface ... extends ...`, since TypeScript keeps an interface's own
+    // explicitly-typed members even when the type it extends is poisoned to
+    // `any`. Instead, these tests lean on excess property checks: TypeScript
+    // only flags unknown properties on an object literal when it's checked
+    // against a real object type, not against `any`, so a bogus property is
+    // a reliable way to tell "properly typed" apart from "poisoned to any".
+
+    test('CellSuccessProps<TData> (single-arg form) rejects unknown properties', () => {
+      expect<CellSuccessProps<QueryResult>>().type.not.toBeAssignableFrom({
+        recipes: [],
+        bogusProp: 'should not be allowed',
+      })
+    })
+
+    test('CellSuccessProps<TData, TVariables> (two-arg form) rejects unknown properties', () => {
+      expect<
+        CellSuccessProps<QueryResult, ExampleQueryVariables>
+      >().type.not.toBeAssignableFrom({
+        recipes: [],
+        category: 'Dinner',
+        saved: true,
+        bogusProp: 'should not be allowed',
+      })
+    })
+
+    test('CellFailureProps (no-arg form) rejects unknown properties', () => {
+      expect<CellFailureProps>().type.not.toBeAssignableFrom({
+        bogusProp: 'should not be allowed',
+      })
+    })
+
+    test('CellLoadingProps (no-arg form) rejects unknown properties', () => {
+      expect<CellLoadingProps>().type.not.toBeAssignableFrom({
+        bogusProp: 'should not be allowed',
+      })
+    })
+  })
+
+  describe('createCell checks Success/Empty/Failure/Loading against the real QUERY type', () => {
+    // Regression test for https://github.com/cedarjs/cedar/issues/2366
+    //
+    // Real, CLI-generated Cells type QUERY with TypedDocumentNode<TData,
+    // TVariables> and type Success/Failure/Loading with CellSuccessProps<
+    // TData, TVariables> etc, exactly like this fixture does. Before #2366,
+    // CreateCellProps checked those components against the bare, defaulted-
+    // to-`any` CellSuccessProps/CellFailureProps/CellLoadingProps instead of
+    // this Cell's own QUERY type, so a Success reading a field that doesn't
+    // exist on the query result went uncaught.
+    const typedQuery = gql`
+      query ListRecipes {
+        recipes {
+          id
+          name
+        }
+      }
+    ` as TypedDocumentNode<QueryResult, EmptyVariables>
+
+    test('Success typed against the real query result is fine', () => {
+      expect(
+        createCell({
+          QUERY: typedQuery,
+          Success: (props: CellSuccessProps<QueryResult>) => (
+            <ul>{props.recipes.length}</ul>
+          ),
+        }),
+      ).type.not.toRaiseError()
+    })
+
+    // Mirrors the `SuccessProps`/`customProp` fixture near the top of this
+    // file, but requires a prop the query result doesn't provide -- before
+    // #2366, this went unnoticed because `Success` was checked against the
+    // bare, defaulted-to-`any` `CellSuccessProps`, not against this Cell's
+    // own `QUERY` type
+    interface MismatchedSuccessProps extends CellSuccessProps<QueryResult> {
+      totallyWrongProp: number
+    }
+
+    test('Success requiring a prop the query result does not provide raises an error', () => {
+      expect(
+        createCell({
+          QUERY: typedQuery,
+          Success: (props: MismatchedSuccessProps) => (
+            <p>{props.totallyWrongProp}</p>
+          ),
+        }),
+      ).type.toRaiseError()
     })
   })
 })
