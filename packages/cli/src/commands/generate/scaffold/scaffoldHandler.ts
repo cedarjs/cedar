@@ -23,7 +23,6 @@ import {
   writeFile,
   getDefaultArgs,
   getPaths,
-  writeFilesTask,
   addRoutesToRouterTask,
   addScaffoldImport,
   transformTSToJS,
@@ -41,6 +40,7 @@ import {
 } from '../helpers.js'
 import { builder as sdlBuilder } from '../sdl/sdl.js'
 import { files as sdlFiles } from '../sdl/sdlHandler.js'
+import { writeFilesWithStubsTask } from '../sdl/stubFiles.js'
 import { builder as serviceBuilder } from '../service/service.js'
 import { files as serviceFiles } from '../service/serviceHandler.js'
 import { customOrDefaultTemplatePath } from '../yargsHandlerHelpers.js'
@@ -963,7 +963,7 @@ export const tasks = ({
             tailwind,
             force,
           })
-          return writeFilesTask(f, { overwriteExisting: force })
+          return writeFilesWithStubsTask(f, { overwriteExisting: force })
         },
       },
       {

@@ -1228,6 +1228,8 @@ yarn redwood generate sdl <model>
 
 The sdl will inspect your `schema.prisma` and will do its best with relations. Schema to generators isn't one-to-one yet (and might never be).
 
+If the model has relations to models that don't have SDL files of their own yet, read-only stub SDLs (and services) are generated for those models too — without them, GraphQL type generation would fail with an `Unknown type` error. Replace a stub by running `generate sdl` for that model; unedited stubs are overwritten without needing `--force`. See [Troubleshooting Generators](./schema-relations#troubleshooting-generators) for details.
+
 | Arguments & Options  | Description                                                                                                                                                                                            |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `model`              | Model to generate the sdl for                                                                                                                                                                          |

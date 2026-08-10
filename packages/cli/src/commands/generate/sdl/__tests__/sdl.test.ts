@@ -267,6 +267,38 @@ const itCreatesAnSslFileForModelWithOnlyIdAndRelation = (baseArgs = {}) => {
   })
 }
 
+const itHandlesFalsyDefaults = (baseArgs = {}) => {
+  test('handles falsy defaults like @default(0) correctly', async () => {
+    const files = await sdlHandler.files({
+      ...baseArgs,
+      name: 'Counter',
+      crud: true,
+    })
+    const extension = extensionForBaseArgs(baseArgs)
+
+    const sdlContent =
+      files[
+        path.normalize(
+          `/path/to/project/api/src/graphql/counters.sdl.${extension}`,
+        )
+      ]
+
+    // The Counter model has @id @default(0), so the id field should NOT be
+    // required in the CreateInput (since it defaults to 0)
+    expect(sdlContent).toContain('input CreateCounterInput')
+    // Extract just the CreateCounterInput section
+    const createInputMatch = sdlContent.match(
+      /input CreateCounterInput \{[^}]*\}/s,
+    )
+    expect(createInputMatch).not.toBeNull()
+
+    // The input should NOT contain the id field (since it has a default)
+    expect(createInputMatch?.[0]).not.toContain('id')
+    // But count should be present
+    expect(createInputMatch?.[0]).toContain('count')
+  })
+}
+
 describe('without graphql documentations', () => {
   describe('in javascript mode', () => {
     const baseArgs = { ...getDefaultArgs(sdl.getDefaultOptions()), tests: true }
@@ -281,6 +313,7 @@ describe('without graphql documentations', () => {
     itCreatesAnSDLFileWithJsonDefinitions(baseArgs)
     itCreatesAnSDLFileWithByteDefinitions(baseArgs)
     itCreatesAnSslFileForModelWithOnlyIdAndRelation(baseArgs)
+    itHandlesFalsyDefaults(baseArgs)
   })
 
   describe('in typescript mode', () => {
@@ -300,6 +333,7 @@ describe('without graphql documentations', () => {
     itCreatesAnSDLFileWithJsonDefinitions(baseArgs)
     itCreatesAnSDLFileWithByteDefinitions(baseArgs)
     itCreatesAnSslFileForModelWithOnlyIdAndRelation(baseArgs)
+    itHandlesFalsyDefaults(baseArgs)
   })
 })
 
@@ -320,6 +354,7 @@ describe('with graphql documentations', () => {
     itCreatesAnSDLFileWithEnumDefinitions(baseArgs)
     itCreatesAnSDLFileWithJsonDefinitions(baseArgs)
     itCreatesAnSDLFileWithByteDefinitions(baseArgs)
+    itHandlesFalsyDefaults(baseArgs)
   })
 
   describe('in typescript mode', () => {
@@ -339,6 +374,7 @@ describe('with graphql documentations', () => {
     itCreatesAnSDLFileWithEnumDefinitions(baseArgs)
     itCreatesAnSDLFileWithJsonDefinitions(baseArgs)
     itCreatesAnSDLFileWithByteDefinitions(baseArgs)
+    itHandlesFalsyDefaults(baseArgs)
   })
 })
 
