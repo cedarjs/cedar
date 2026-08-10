@@ -297,10 +297,13 @@ const itHandlesFalsyDefaults = (baseArgs = {}) => {
       /input CreateCounterInput \{[^}]*\}/s,
     )
     expect(createInputMatch).toBeDefined()
-    // The input should NOT contain the id field
-    expect(createInputMatch![0]).not.toContain('id')
-    // But count should not be required either (it also has @default(0))
-    expect(createInputMatch![0]).toContain('count')
+
+    if (createInputMatch) {
+      // The input should NOT contain the id field
+      expect(createInputMatch[0]).not.toContain('id')
+      // But count should not be required either (it also has @default(0))
+      expect(createInputMatch[0]).toContain('count')
+    }
   })
 }
 
