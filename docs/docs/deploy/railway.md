@@ -62,35 +62,18 @@ To split into the
 
 1. Add a second service from the same repo.
 2. On the api service, set the start command to `yarn start:api`.
-3. Railway's build system (Railpack) does have a static-file provider, but it's
-   not a reliable one-click option for a monorepo subdirectory like `web/dist`
-   — Railway's own monorepo and SPA-routing guides recommend a hand-rolled
-   Caddyfile or a Node-build/Caddy-serve Dockerfile instead of relying on it.
-   `start:web` is the documented Cedar path here (unlike
-   [Coolify](./coolify.md), which has a dedicated Static build pack that
-   handles this cleanly): point it at the api service with
-   `--api-proxy-target`, a fully-qualified URL (scheme required).
+3. Railway's static-file provider isn't reliable for monorepo subdirectories
+   like `web/dist`, so `start:web` is the documented Cedar path here: point it
+   at the api service with `--api-proxy-target`, a fully-qualified URL (scheme
+   required). This needs `apiUrl` in `cedar.toml` to stay relative — see
+   [relative vs. absolute apiUrl](./introduction.md#relative-apiurl--proxy-or-absolute-apiurl--cors).
 
-   This only works if `apiUrl` in `cedar.toml` is left relative (the
-   default) — that's what makes the web service's Fastify proxy the thing
-   handling API requests in the first place. If you instead set `apiUrl` to
-   an absolute URL, the browser calls the api service directly and bypasses
-   this proxy entirely, `apiProxyTarget` has no effect, and you need the
-   separate CORS/cookie setup described in
-   [Introduction to Deployment](./introduction.md#relative-apiurl--proxy-or-absolute-apiurl--cors)
-   instead.
+   Railway's `${{Service.VAR}}` syntax only resolves in a service's
+   **Variables** tab, not in the Start Command field — define it as a
+   variable first, then read it as a shell variable:
 
-   Railway's `${{Service.VAR}}` reference syntax only resolves inside a
-   service's **Variables** tab — it isn't substituted if you paste it directly
-   into the Start Command field. So define the target as a variable first,
-   then read it from the start command as a normal shell variable (Railpack
-   start commands already run in a shell, so `$VAR` expansion works with no
-   extra wrapping):
-
-   `RAILWAY_PUBLIC_DOMAIN` only exists for a service once it has a public
-   domain — Railway doesn't assign one automatically. On the api service, go
-   to **Settings → Networking** and generate a domain first.
-
+   - Api service: generate a public domain first (**Settings → Networking**)
+     if it doesn't have one.
    - Web service **Variables** tab: `API_PROXY_TARGET=${{api.RAILWAY_PUBLIC_DOMAIN}}`
    - Web service start command:
 
@@ -98,21 +81,11 @@ To split into the
      yarn start:web --api-proxy-target="https://$API_PROXY_TARGET"
      ```
 
-   For private networking instead — keeps this traffic off the public
-   internet, and off the public domain's TLS termination too, since Railway
-   doesn't provision TLS certs for `*.railway.internal` domains. That's not a
-   security downside: Railway's private network is already encrypted in
-   transit at the WireGuard layer, so app-level TLS on top would be
-   redundant — Railway's own docs recommend `http://` here for exactly that
-   reason. The practical cost is just that you can't reuse an `https://` URL
-   — reference the api service's private domain and port the same way, using
-   `http://`:
+   For private networking instead (`http://` — already encrypted via
+   WireGuard, so no TLS needed), the private domain is a bare hostname with no
+   automatic port forwarding, so also give the api service a fixed `PORT`:
 
-   - Api service **Variables** tab: add a fixed `PORT` (e.g. `8911`). Cedar's
-     api server binds to whatever `PORT` is set to, and Railway's automatic
-     runtime port assignment isn't itself referenceable from another
-     service — `${{api.PORT}}` only resolves to a variable explicitly
-     declared in the api service's Variables tab.
+   - Api service **Variables** tab: `PORT=8911`
    - Web service **Variables** tab:
      `API_PROXY_TARGET=${{api.RAILWAY_PRIVATE_DOMAIN}}:${{api.PORT}}`
    - Web service start command:
@@ -121,12 +94,9 @@ To split into the
      yarn start:web --api-proxy-target="http://$API_PROXY_TARGET"
      ```
 
-   `RAILWAY_PRIVATE_DOMAIN` is a bare hostname, and unlike the public domain
-   (where Railway's edge proxy forwards to your app's actual port for you),
-   private-network traffic connects to that port directly — hence needing the
-   explicit `PORT` variable above. Either way, replace `api` with your api
-   service's actual name. A missing or schemeless `apiProxyTarget` leaves
-   `apiUrl` requests unhandled and Cedar returns a Bad Gateway error.
+   Either way, replace `api` with your api service's actual name. A missing
+   or schemeless `apiProxyTarget` leaves `apiUrl` requests unhandled and Cedar
+   returns a Bad Gateway error.
 
 ## Config as code
 
