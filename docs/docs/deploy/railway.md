@@ -62,18 +62,17 @@ To split into the
 
 1. Add a second service from the same repo.
 2. On the api service, set the start command to `yarn start:api`.
-3. Railway's static-file provider isn't reliable for monorepo subdirectories
-   like `web/dist`, so `start:web` is the documented Cedar path here: point it
-   at the api service with `--api-proxy-target`, a fully-qualified URL (scheme
-   required). This needs `apiUrl` in `cedar.toml` to stay relative — see
+3. Set the web service's start command to proxy to the api service with
+   `--api-proxy-target`, a fully-qualified URL (scheme required). Requires
+   `apiUrl` in `cedar.toml` to stay relative — see
    [relative vs. absolute apiUrl](./introduction.md#relative-apiurl--proxy-or-absolute-apiurl--cors).
 
-   Railway's `${{Service.VAR}}` syntax only resolves in a service's
-   **Variables** tab, not in the Start Command field — define it as a
-   variable first, then read it as a shell variable:
+   Define the target as a Variable first, then reference it from the start
+   command (Railway's `${{Service.VAR}}` syntax doesn't resolve directly in
+   the Start Command field):
 
-   - Api service: generate a public domain first (**Settings → Networking**)
-     if it doesn't have one.
+   - Api service: generate a public domain (**Settings → Networking**) if it
+     doesn't have one.
    - Web service **Variables** tab: `API_PROXY_TARGET=${{api.RAILWAY_PUBLIC_DOMAIN}}`
    - Web service start command:
 
@@ -81,9 +80,8 @@ To split into the
      yarn start:web --api-proxy-target="https://$API_PROXY_TARGET"
      ```
 
-   For private networking instead (`http://` — already encrypted via
-   WireGuard, so no TLS needed), the private domain is a bare hostname with no
-   automatic port forwarding, so also give the api service a fixed `PORT`:
+   For private networking instead, use `http://` and give the api service a
+   fixed `PORT`:
 
    - Api service **Variables** tab: `PORT=8911`
    - Web service **Variables** tab:
@@ -95,8 +93,7 @@ To split into the
      ```
 
    Either way, replace `api` with your api service's actual name. A missing
-   or schemeless `apiProxyTarget` leaves `apiUrl` requests unhandled and Cedar
-   returns a Bad Gateway error.
+   or schemeless `apiProxyTarget` returns a Bad Gateway error.
 
 ## Config as code
 
