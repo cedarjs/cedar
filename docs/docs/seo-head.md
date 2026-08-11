@@ -31,7 +31,7 @@ Add `titleTemplate` as a prop for `CedarProvider` to have a title template for e
 -  <CedarProvider>
 +  <CedarProvider titleTemplate="%PageTitle | %AppTitle">
     /* ... */
-  <CedarProvider />
+  </CedarProvider>
 ```
 
 You can use whatever formatting you'd like in here. Some examples:

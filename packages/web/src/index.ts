@@ -32,7 +32,7 @@ export type {
 
 export * from './graphql.js'
 
-export * from './components/CedarProvider.tsx'
+export * from './components/CedarProvider.js'
 
 export * from './components/MetaTags.js'
 export * from './components/Metadata.js'

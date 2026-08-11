@@ -123,6 +123,11 @@ export const handler = async ({ force }: Args) => {
         const webImportIndex = contentLines.findLastIndex((line) =>
           webImportRe.test(line),
         )
+        if (webImportIndex === -1) {
+          throw new Error(
+            'Could not find "import { FatalErrorBoundary, CedarProvider } from \'@cedarjs/web\'" in web/src/App',
+          )
+        }
         const providerName =
           contentLines[webImportIndex].match(webImportRe)?.[1]
         contentLines.splice(
