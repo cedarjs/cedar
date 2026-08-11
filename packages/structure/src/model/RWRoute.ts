@@ -30,47 +30,102 @@ export class RWRoute extends BaseNode {
     return LocationLike_toLocation(this.jsxNode)
   }
 
+  /**
+   * All enclosing `<Private>` / `<PrivateSet>` JSX elements, walking up from
+   * this route's `<Route>` tag to (but not including) the `<Router>` tag.
+   * Ordered innermost-first, so `privateAncestors[0]` (if present) is the
+   * nearest wrapper. A route can be nested inside a plain `<Set>` that is
+   * itself inside a `<PrivateSet>`, so we can't just look at the immediate
+   * JSX parent.
+   */
+  @lazy() private get privateAncestors(): tsm.JsxElement[] {
+    const ancestors: tsm.JsxElement[] = []
+    let current: tsm.Node | undefined = this.jsxNode
+
+    let parentElement = current.getParentIfKind(tsm.SyntaxKind.JsxElement)
+    while (parentElement) {
+      const tagName = parentElement
+        .getOpeningElement()
+        .getTagNameNode()
+        .getText()
+
+      // Don't walk past the <Router> tag
+      if (tagName === 'Router') {
+        break
+      }
+
+      if (tagName === 'Private' || tagName === 'PrivateSet') {
+        ancestors.push(parentElement)
+      }
+
+      current = parentElement
+      parentElement = current.getParentIfKind(tsm.SyntaxKind.JsxElement)
+    }
+
+    return ancestors
+  }
+
   @lazy() get isPrivate() {
-    const tagText = this.jsxNode
-      .getParentIfKind(tsm.SyntaxKind.JsxElement)
-      ?.getOpeningElement()
-      ?.getTagNameNode()
-      ?.getText()
-    return tagText === 'Private' || tagText === 'PrivateSet'
+    return this.privateAncestors.length > 0
   }
 
   @lazy() get unauthenticated() {
-    if (!this.isPrivate) {
-      return undefined
-    }
-
-    const a = this.jsxNode
-      .getParentIfKind(tsm.SyntaxKind.JsxElement)
-      ?.getOpeningElement()
-      .getAttribute('unauthenticated')
-
-    if (!a) {
-      return undefined
-    }
-    if (tsm.Node.isJsxAttribute(a)) {
-      const init = a.getInitializer()
-      if (tsm.Node.isStringLiteral(init)) {
-        return init.getLiteralValue()
+    // Use the innermost Private/PrivateSet ancestor that carries the
+    // attribute
+    for (const ancestor of this.privateAncestors) {
+      const a = ancestor.getOpeningElement().getAttribute('unauthenticated')
+      if (!a) {
+        continue
       }
+      if (tsm.Node.isJsxAttribute(a)) {
+        const init = a.getInitializer()
+        if (tsm.Node.isStringLiteral(init)) {
+          return init.getLiteralValue()
+        }
+      }
+      return undefined
     }
     return undefined
   }
 
   @lazy()
   get roles() {
-    if (!this.isPrivate) {
+    // Each Private/PrivateSet wrapper independently guards the route, so the
+    // effective requirement is the union of roles across all of them
+    const rolesPerAncestor = this.privateAncestors
+      .map((ancestor) => this.getRolesAttr(ancestor.getOpeningElement()))
+      .filter((val): val is string | string[] => val !== undefined)
+
+    if (rolesPerAncestor.length === 0) {
       return undefined
     }
 
-    const a = this.jsxNode
-      .getParentIfKind(tsm.SyntaxKind.JsxElement)
-      ?.getOpeningElement()
-      .getAttribute('roles')
+    // Preserve today's single-wrapper behavior (and its return shape)
+    // exactly when there's only one ancestor with roles
+    if (rolesPerAncestor.length === 1) {
+      return rolesPerAncestor[0]
+    }
+
+    const union = new Set<string>()
+    for (const roles of rolesPerAncestor) {
+      if (Array.isArray(roles)) {
+        roles.forEach((role) => union.add(role))
+      } else {
+        union.add(roles)
+      }
+    }
+    return [...union]
+  }
+
+  /**
+   * Reads the `roles` attribute off a `<Private>`/`<PrivateSet>` opening
+   * element, handling the string literal, quasi-JSON string
+   * (e.g. `"['a','b']"`), and JSX array-literal expression forms.
+   */
+  private getRolesAttr(
+    openingElement: tsm.JsxOpeningElement,
+  ): string | string[] | undefined {
+    const a = openingElement.getAttribute('roles')
 
     if (!a) {
       return undefined
@@ -115,7 +170,7 @@ export class RWRoute extends BaseNode {
               }
               return undefined
             })
-            .filter((val) => val !== undefined)
+            .filter((val): val is string => val !== undefined)
         }
       }
     }
