@@ -36,6 +36,17 @@ running container:
 yarn cedar prisma migrate deploy
 ```
 
+## Custom server file
+
+If your app has a custom [server file](../server-file.md) (`api/src/server.ts`),
+single-service won't work — a custom server file is a Fastify concept with no
+equivalent in the single-container in-process server, so `start` refuses to
+start rather than silently skipping what you configured (Realtime, custom
+plugins, custom middleware). Skip straight to
+[scaling up to two services](#scaling-up-two-services-the-coolify-way) below,
+and set the api service's start command to `yarn start:api` — that path does
+run the server file.
+
 ## Scaling up: two services, the Coolify way
 
 This is what sets Coolify apart from the other platforms on the

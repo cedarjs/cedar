@@ -57,6 +57,17 @@ So the setup on any of these platforms is: connect the repo, point the build
 command at `yarn build`, point the start command at `yarn start`, add a
 `DATABASE_URL`. Nothing Cedar-specific beyond that.
 
+## Custom server file caveat
+
+If your app has a custom [server file](../server-file.md)
+(`api/src/server.ts`), `start` won't work on any of these platforms — a
+custom server file is a Fastify concept with no equivalent in the
+single-container in-process server, so it refuses to start rather than
+silently skipping what you configured. You'll need the
+[two-service topology](./introduction.md#two-topologies-and-which-to-pick)
+instead, which means per-platform wiring — see
+[Railway](./railway.md) and [Coolify](./coolify.md).
+
 ## devDependency pruning caveat
 
 Two platforms in the list above strip `devDependencies` after the build step

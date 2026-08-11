@@ -36,6 +36,17 @@ yarn cedar prisma migrate deploy
 Railway runs this once per deploy, before traffic is switched over, which is a
 better fit than trying to run migrations from inside `start`.
 
+## Custom server file
+
+If your app has a custom [server file](../server-file.md) (`api/src/server.ts`),
+single-service won't work — a custom server file is a Fastify concept with no
+equivalent in the single-container in-process server, so `start` refuses to
+start rather than silently skipping what you configured (Realtime, custom
+plugins, custom middleware). Skip straight to
+[scaling up to two services](#scaling-up-two-services) below, and set the api
+service's start command to `yarn start:api` — that path does run the server
+file.
+
 ## Enabling Railway's CDN
 
 Railway's CDN is per-service, free on all plans, and caches static assets by
