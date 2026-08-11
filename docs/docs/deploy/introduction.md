@@ -38,12 +38,45 @@ There are examples of deploying CedarJS on other providers such as Google Cloud 
 | Command                | Role                                                                                                                                                                 |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `cedar serve api`      | Production. Web side served separately — by nginx, a CDN, or a static host.                                                                                          |
-| `cedar serve web`      | Production, behind a CDN or reverse proxy. Proxies API requests to `cedar serve api`.                                                                                |
+| `cedar serve web`      | Local production-like testing of the web side. Not a recommended production topology on its own — see below.                                                         |
 | `cedar serve`          | Single-container: both sides in one process. Also useful for local production-like testing.                                                                          |
 | `cedar serve api --ud` | Production, using [Universal Deploy](./universal-deploy.md). Runs `api/dist/ud/index.js` via [srvx](https://github.com/h3js/srvx), behind a reverse proxy.           |
 | `cedar serve --ud`     | Local production-like testing only, for a Universal Deploy build. Not a production topology — see [Universal Deploy](./universal-deploy.md#deploying-to-a-provider). |
 
 The generated `package.json` scripts map onto these: `start` is `cedar serve` (single-container), `start:api` is `cedar serve api`, `start:web` is `cedar serve web`.
+
+`cedar serve web` / `yarn start:web` is primarily a local tool, for testing
+the web side in production mode before deploying. In production, use it only
+if your platform can't reliably serve `web/dist` as static files — see
+[Railway](./railway.md#scaling-up-two-services).
+
+Point it at a separate api process with `--apiProxyTarget`, a fully-qualified
+URL (CLI-flag only — no `cedar.toml` or environment variable equivalent):
+
+```shell
+yarn start:web --apiProxyTarget=https://api.example.com
+```
+
+Required whenever `apiUrl` is relative (the default); otherwise API calls get
+a 502. The alternative is an absolute `apiUrl` with no proxy — see
+[Coolify](./coolify.md#scaling-up-two-services-the-coolify-way).
+
+### Relative `apiUrl` + proxy, or absolute `apiUrl` + CORS?
+
+`apiUrl` (baked into the web bundle at build time) always determines what URL
+the browser calls; `apiProxyTarget` only matters if you keep `apiUrl`
+relative. The choice is between two setups:
+
+|                | Relative `apiUrl` + `start:web` proxy | Absolute `apiUrl`, no proxy                                                                                                                                                                                                                                   |
+| -------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Requires       | Running web as a Node process         | Nothing extra — works with pure static/CDN hosting                                                                                                                                                                                                            |
+| Browser sees   | Same-origin                           | Cross-origin                                                                                                                                                                                                                                                  |
+| CORS / cookies | None needed                           | Required if the web and api origins differ (the common case here) — see [CORS](../cors.md): GraphQL and auth-function `cors`, cookie `SameSite: 'None'` + `Secure`, and `credentials: 'include'` on both the Apollo and dbAuth clients if you're using dbAuth |
+
+Prefer absolute `apiUrl` when your platform can reliably serve `web/dist` as
+static files (a CDN, Coolify's Static build pack, Netlify, etc.). Prefer the
+relative `apiUrl` + proxy setup when it can't — see
+[Railway](./railway.md#scaling-up-two-services).
 
 ## Two topologies, and which to pick
 
