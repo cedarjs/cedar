@@ -38,19 +38,73 @@ There are examples of deploying CedarJS on other providers such as Google Cloud 
 | Command                | Role                                                                                                                                                                 |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `cedar serve api`      | Production. Web side served separately — by nginx, a CDN, or a static host.                                                                                          |
-| `cedar serve web`      | Production, behind a CDN or reverse proxy. Proxies API requests to `cedar serve api`.                                                                                |
+| `cedar serve web`      | Local production-like testing of the web side. Not a recommended production topology on its own — see below.                                                         |
 | `cedar serve`          | Single-container: both sides in one process. Also useful for local production-like testing.                                                                          |
 | `cedar serve api --ud` | Production, using [Universal Deploy](./universal-deploy.md). Runs `api/dist/ud/index.js` via [srvx](https://github.com/h3js/srvx), behind a reverse proxy.           |
 | `cedar serve --ud`     | Local production-like testing only, for a Universal Deploy build. Not a production topology — see [Universal Deploy](./universal-deploy.md#deploying-to-a-provider). |
 
 The generated `package.json` scripts map onto these: `start` is `cedar serve` (single-container), `start:api` is `cedar serve api`, `start:web` is `cedar serve web`.
 
+`cedar serve web` / `yarn start:web` is primarily a local tool — it lets you run
+the web side standalone to test how it behaves in production mode before
+deploying. Reach for it in production only as a fallback: if your platform has
+no way to host `web/dist` as static files (no CDN, no static build pack),
+running it as a Fastify process via `start:web` is the way to get the
+two-service topology working there anyway — see
+[Railway](./railway.md#scaling-up-two-services), which does exactly this.
+
+When you do run it against a separate api process, point it there with
+`--apiProxyTarget`, a fully-qualified URL:
+
+```shell
+yarn start:web --apiProxyTarget=https://api.example.com
+```
+
+This is a CLI-flag-only option — there's no `cedar.toml` or environment variable
+equivalent. It's required whenever `apiUrl` is a relative path (the default):
+without it, `apiUrl` has nothing to proxy through and API calls get a 502 Bad
+Gateway response. The alternative is to skip the proxy entirely — set `apiUrl`
+in `cedar.toml` to a fully-qualified URL pointing directly at the api service,
+so the browser calls it directly instead of routing through the web process.
+That's what static-hosting setups do, since there's no Fastify process there to
+pass `--apiProxyTarget` to — see
+[Coolify](./coolify.md#scaling-up-two-services-the-coolify-way) for that
+approach.
+
+### Relative `apiUrl` + proxy, or absolute `apiUrl` + CORS?
+
+`apiUrl` and `apiProxyTarget` aren't two competing ways to do the same thing —
+`apiUrl` always determines what URL the browser calls (it's baked into the web
+bundle at build time, so changing it means rebuilding); `apiProxyTarget` only
+matters if you keep `apiUrl` relative, since then something has to be
+listening on that path to forward the request to the api process. The actual
+choice is between two setups:
+
+|                | Relative `apiUrl` + `start:web` proxy | Absolute `apiUrl`, no proxy                                                                                                                                                                          |
+| -------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Requires       | Running web as a Node process         | Nothing extra — works with pure static/CDN hosting                                                                                                                                                   |
+| Browser sees   | Same-origin                           | Cross-origin                                                                                                                                                                                         |
+| CORS / cookies | None needed                           | Required — see [CORS](../cors.md): GraphQL and auth-function `cors`, cookie `SameSite: 'None'` + `Secure`, and `credentials: 'include'` on both the Apollo and dbAuth clients if you're using dbAuth |
+
+Prefer absolute `apiUrl` when your platform can serve static files (a CDN,
+Coolify's Static build pack, Netlify, etc.) — you avoid running a Node process
+just to serve static assets, and you get real edge caching, at the one-time
+cost of the CORS/cookie setup above. Prefer the relative `apiUrl` + proxy setup
+when your platform can't do static hosting (Railway, for example) — you're
+already running `start:web` as a Node process there, so the proxy is free and
+you skip the CORS/cookie configuration entirely.
+
 ## Two topologies, and which to pick
 
 Once you're past `cedar dev`, there are two ways to run Cedar in production:
 
 - **Single-container** (`yarn start`) — one process serves both sides; the web server proxies API requests to the API in-process. This is the **convenient** path: no service-to-service wiring, so it works with zero configuration on any container host — see [any container host](./any-container-host.md).
-- **api process + static/CDN web** (`yarn start:api`, with the web side served separately) — this is the **recommended** path, and what the generated Dockerfile, the baremetal nginx setup, and the Render blueprint all use.
+- **api process + static/CDN web** (`yarn start:api`, with the web side served
+  separately) — this is the **recommended** path, and what the generated
+  Dockerfile, the baremetal nginx setup, and the Render blueprint all use.
+  "Served separately" usually means static/CDN hosting rather than a Node
+  process; reach for `yarn start:web` there only if your platform doesn't offer
+  static hosting — see the note on `cedar serve web` above.
 
 Start with single-container — it's the fastest way to get a working deploy, and for small apps or early-stage projects it's often all you need. Move to the two-part topology when you want your web assets served from a CDN edge (rather than round-tripping through your api process), or when you want to scale the api and web sides independently. The reason this needs to be stated explicitly: without it, it's easy to land on single-container, get a working app, and never learn why the split is worth doing later.
 

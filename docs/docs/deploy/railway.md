@@ -62,8 +62,10 @@ To split into the
 
 1. Add a second service from the same repo.
 2. On the api service, set the start command to `yarn start:api`.
-3. On the web service, set the start command to pass `--api-proxy-target`, a
-   fully-qualified URL (scheme required) pointing at the api service:
+3. Railway has no static-hosting build pack (unlike [Coolify](./coolify.md)),
+   so the web service also needs to run as a Node process: set its start
+   command to pass `--api-proxy-target`, a fully-qualified URL (scheme
+   required) pointing at the api service.
 
    ```shell
    yarn start:web --api-proxy-target=https://${{api.RAILWAY_PUBLIC_DOMAIN}}
