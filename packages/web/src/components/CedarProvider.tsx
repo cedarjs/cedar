@@ -8,7 +8,7 @@ interface RedwoodProviderProps {
   titleTemplate?: string
 }
 
-export const RedwoodProvider = ({
+export const CedarProvider = ({
   children,
   titleTemplate,
 }: RedwoodProviderProps) => {
@@ -35,5 +35,8 @@ export const RedwoodProvider = ({
     </HelmetProvider>
   )
 }
+
+/** @deprecated Please use CedarProvider instead */
+export const RedwoodProvider = CedarProvider
 
 declare global {}
