@@ -68,24 +68,47 @@ To split into the
    Caddyfile or a Node-build/Caddy-serve Dockerfile instead of relying on it.
    `start:web` is the documented Cedar path here (unlike
    [Coolify](./coolify.md), which has a dedicated Static build pack that
-   handles this cleanly): set the web service's start command to pass
-   `--api-proxy-target`, a fully-qualified URL (scheme required) pointing at
-   the api service.
+   handles this cleanly): point it at the api service with
+   `--api-proxy-target`, a fully-qualified URL (scheme required).
 
-   ```shell
-   yarn start:web --api-proxy-target=https://${{api.RAILWAY_PUBLIC_DOMAIN}}
-   ```
+   Railway's `${{Service.VAR}}` reference syntax only resolves inside a
+   service's **Variables** tab — it isn't substituted if you paste it directly
+   into the Start Command field. So define the target as a variable first,
+   then read it from the start command as a normal shell variable (Railpack
+   start commands already run in a shell, so `$VAR` expansion works with no
+   extra wrapping):
 
-   Swap in `http://${{api.RAILWAY_PRIVATE_DOMAIN}}:${{api.PORT}}` to keep this
-   traffic off the public internet instead (Railway's private network doesn't
-   terminate TLS, so use `http://`). The port is required here —
+   - Web service **Variables** tab: `API_PROXY_TARGET=${{api.RAILWAY_PUBLIC_DOMAIN}}`
+   - Web service start command:
+
+     ```shell
+     yarn start:web --api-proxy-target="https://$API_PROXY_TARGET"
+     ```
+
+   For private networking instead — keeps this traffic off the public
+   internet, at the cost of needing `http://` since Railway's private network
+   doesn't terminate TLS — reference the api service's private domain and
+   port the same way:
+
+   - Api service **Variables** tab: add a fixed `PORT` (e.g. `8911`). Cedar's
+     api server binds to whatever `PORT` is set to, and Railway's automatic
+     runtime port assignment isn't itself referenceable from another
+     service — `${{api.PORT}}` only resolves to a variable explicitly
+     declared in the api service's Variables tab.
+   - Web service **Variables** tab:
+     `API_PROXY_TARGET=${{api.RAILWAY_PRIVATE_DOMAIN}}:${{api.PORT}}`
+   - Web service start command:
+
+     ```shell
+     yarn start:web --api-proxy-target="http://$API_PROXY_TARGET"
+     ```
+
    `RAILWAY_PRIVATE_DOMAIN` is a bare hostname, and unlike the public domain
    (where Railway's edge proxy forwards to your app's actual port for you),
-   private-network traffic connects to that port directly. Either way, replace
-   `api` with your api service's actual name — Railway resolves
-   `${{<service>.<VAR>}}` at deploy time. A missing or schemeless
-   `apiProxyTarget` leaves `apiUrl` requests unhandled and Cedar returns a Bad
-   Gateway error.
+   private-network traffic connects to that port directly — hence needing the
+   explicit `PORT` variable above. Either way, replace `api` with your api
+   service's actual name. A missing or schemeless `apiProxyTarget` leaves
+   `apiUrl` requests unhandled and Cedar returns a Bad Gateway error.
 
 ## Config as code
 
