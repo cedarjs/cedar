@@ -78,6 +78,10 @@ To split into the
    start commands already run in a shell, so `$VAR` expansion works with no
    extra wrapping):
 
+   `RAILWAY_PUBLIC_DOMAIN` only exists for a service once it has a public
+   domain — Railway doesn't assign one automatically. On the api service, go
+   to **Settings → Networking** and generate a domain first.
+
    - Web service **Variables** tab: `API_PROXY_TARGET=${{api.RAILWAY_PUBLIC_DOMAIN}}`
    - Web service start command:
 
