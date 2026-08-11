@@ -62,10 +62,15 @@ To split into the
 
 1. Add a second service from the same repo.
 2. On the api service, set the start command to `yarn start:api`.
-3. Railway has no static-hosting build pack (unlike [Coolify](./coolify.md)),
-   so the web service also needs to run as a Node process: set its start
-   command to pass `--api-proxy-target`, a fully-qualified URL (scheme
-   required) pointing at the api service.
+3. Railway's build system (Railpack) does have a static-file provider, but it's
+   not a reliable one-click option for a monorepo subdirectory like `web/dist`
+   — Railway's own monorepo and SPA-routing guides recommend a hand-rolled
+   Caddyfile or a Node-build/Caddy-serve Dockerfile instead of relying on it.
+   `start:web` is the documented Cedar path here (unlike
+   [Coolify](./coolify.md), which has a dedicated Static build pack that
+   handles this cleanly): set the web service's start command to pass
+   `--api-proxy-target`, a fully-qualified URL (scheme required) pointing at
+   the api service.
 
    ```shell
    yarn start:web --api-proxy-target=https://${{api.RAILWAY_PUBLIC_DOMAIN}}

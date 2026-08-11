@@ -47,10 +47,12 @@ The generated `package.json` scripts map onto these: `start` is `cedar serve` (s
 
 `cedar serve web` / `yarn start:web` is primarily a local tool — it lets you run
 the web side standalone to test how it behaves in production mode before
-deploying. Reach for it in production only as a fallback: if your platform has
-no way to host `web/dist` as static files (no CDN, no static build pack),
-running it as a Fastify process via `start:web` is the way to get the
-two-service topology working there anyway — see
+deploying. In production it's the documented Cedar path for the two-service
+topology, but not a hard requirement everywhere — if your platform can reliably
+serve `web/dist` as static files (a CDN, a static build pack, or your own
+Caddy/nginx/Dockerfile service), that's leaner than running a Node process just
+to serve static assets. Where that isn't practical, running `start:web` gets
+you the two-service topology anyway — see
 [Railway](./railway.md#scaling-up-two-services), which does exactly this.
 
 When you do run it against a separate api process, point it there with
@@ -84,15 +86,18 @@ choice is between two setups:
 | -------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Requires       | Running web as a Node process         | Nothing extra — works with pure static/CDN hosting                                                                                                                                                   |
 | Browser sees   | Same-origin                           | Cross-origin                                                                                                                                                                                         |
-| CORS / cookies | None needed                           | Required — see [CORS](../cors.md): GraphQL and auth-function `cors`, cookie `SameSite: 'None'` + `Secure`, and `credentials: 'include'` on both the Apollo and dbAuth clients if you're using dbAuth |
+| CORS / cookies | None needed                           | Required if the web and api origins differ (the common case here) — see [CORS](../cors.md): GraphQL and auth-function `cors`, cookie `SameSite: 'None'` + `Secure`, and `credentials: 'include'` on both the Apollo and dbAuth clients if you're using dbAuth |
 
-Prefer absolute `apiUrl` when your platform can serve static files (a CDN,
-Coolify's Static build pack, Netlify, etc.) — you avoid running a Node process
-just to serve static assets, and you get real edge caching, at the one-time
-cost of the CORS/cookie setup above. Prefer the relative `apiUrl` + proxy setup
-when your platform can't do static hosting (Railway, for example) — you're
-already running `start:web` as a Node process there, so the proxy is free and
-you skip the CORS/cookie configuration entirely.
+Prefer absolute `apiUrl` when your platform can reliably serve `web/dist` as
+static files (a CDN, Coolify's Static build pack, Netlify, etc.) — you avoid
+running a Node process just to serve static assets, and you get real edge
+caching, at the one-time cost of the CORS/cookie setup above. Prefer the
+relative `apiUrl` + proxy setup when static hosting for your build output isn't
+a reliable option on your platform (Railway's monorepo subdirectory support is
+flaky enough that its own guides recommend a hand-rolled Caddy/Dockerfile setup
+instead — see [Railway](./railway.md#scaling-up-two-services)) — you're already
+running `start:web` as a Node process there, so the proxy is free and you skip
+the CORS/cookie configuration entirely.
 
 ## Two topologies, and which to pick
 
