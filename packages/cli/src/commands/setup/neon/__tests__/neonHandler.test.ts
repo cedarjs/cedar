@@ -238,6 +238,52 @@ describe('neon handler', () => {
     ).toContain("env('DATABASE_URL')")
   })
 
+  it('provisions when the existing DATABASE_URL is a SQLite file: path', async () => {
+    // A `file:` DATABASE_URL (e.g. carried over from .env.defaults) is not
+    // an already-configured Postgres connection string, so it must not
+    // trip the "already set" skip.
+    seedSqliteProject()
+    memfsFs.writeFileSync(
+      path.join(BASE_PATH, '.env'),
+      'DATABASE_URL=file:./db/dev.db\n',
+    )
+
+    await handler({ force: false })
+
+    expect(global.fetch).toHaveBeenCalled()
+    expect(Listr2Mock.skippedTaskTitles).not.toContain(
+      'Provisioning Neon database',
+    )
+
+    const envContent = memfsFs.readFileSync(
+      path.join(BASE_PATH, '.env'),
+      'utf-8',
+    )
+    expect(envContent).toContain(
+      'DATABASE_URL=postgresql://user:pass@ep-abc-pooler.neon.tech/db',
+    )
+  })
+
+  it('provisions when the existing DATABASE_URL is blank', async () => {
+    seedSqliteProject()
+    memfsFs.writeFileSync(path.join(BASE_PATH, '.env'), 'DATABASE_URL=\n')
+
+    await handler({ force: false })
+
+    expect(global.fetch).toHaveBeenCalled()
+    expect(Listr2Mock.skippedTaskTitles).not.toContain(
+      'Provisioning Neon database',
+    )
+
+    const envContent = memfsFs.readFileSync(
+      path.join(BASE_PATH, '.env'),
+      'utf-8',
+    )
+    expect(envContent).toContain(
+      'DATABASE_URL=postgresql://user:pass@ep-abc-pooler.neon.tech/db',
+    )
+  })
+
   it('provisions again with --force even when DATABASE_URL is already set', async () => {
     seedSqliteProject()
     memfsFs.writeFileSync(

@@ -45,11 +45,17 @@ export async function handler({ force }: Args) {
   // `process.env` on every CLI invocation regardless of whether Postgres
   // has been configured. Checking `process.env` would make this guard
   // permanently true and skip provisioning on every fresh project.
+  //
+  // The value is inspected too, not just the key's presence — a `file:`
+  // SQLite path (e.g. from `.env.defaults`) or a blank value must not be
+  // mistaken for an already-configured Postgres connection string.
   let hasExistingDatabaseUrl = false
   if (fs.existsSync(envPath)) {
-    hasExistingDatabaseUrl = /^DATABASE_URL=/m.test(
-      fs.readFileSync(envPath, 'utf-8'),
-    )
+    const match = fs
+      .readFileSync(envPath, 'utf-8')
+      .match(/^DATABASE_URL=(.*)$/m)
+    hasExistingDatabaseUrl =
+      !!match?.[1] && /^postgres(ql)?:\/\//.test(match[1].trim())
   }
 
   // Provisioning a new database when one is already configured would orphan
