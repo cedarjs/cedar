@@ -117,6 +117,24 @@ describe('RWRoute isPrivate/unauthenticated/roles ancestor walk', () => {
     expect(route.unauthenticated).toBe('home')
   })
 
+  it('prefers the inner ancestor when both wrappers set unauthenticated', () => {
+    const src = `
+      const Routes = () => (
+        <Router>
+          <PrivateSet unauthenticated="outer">
+            <PrivateSet unauthenticated="inner">
+              <Route path="/nested" page={NestedPage} name="nestedPage" />
+            </PrivateSet>
+          </PrivateSet>
+        </Router>
+      )
+    `
+    const route = new RWRoute(getRouteNode(src, 'nestedPage'), fakeRouter)
+
+    expect(route.isPrivate).toBe(true)
+    expect(route.unauthenticated).toBe('inner')
+  })
+
   it('unions roles across two nested <PrivateSet> ancestors', () => {
     const src = `
       const Routes = () => (
