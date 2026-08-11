@@ -1,0 +1,10 @@
+# Minimal config for the `mutation-auth-check` structure package fixture.
+# Only used as an anchor for the project root - content beyond [web]/[api]
+# is irrelevant to these tests.
+
+[web]
+  title = "Mutation Auth Check Fixture"
+  port = 8910
+  apiUrl = "/.redwood/functions"
+[api]
+  port = 8911

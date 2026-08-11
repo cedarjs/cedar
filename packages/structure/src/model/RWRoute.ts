@@ -1,13 +1,33 @@
+import path from 'node:path'
+
 import * as tsm from 'ts-morph'
 
 import { RWError } from '../errors.js'
 import { BaseNode } from '../nodes.js'
 import { validateRoutePath } from '../util.js'
 import { lazy } from '../x/decorators.js'
-import { err, LocationLike_toLocation } from '../x/diagnostics.js'
+import type { ExtendedDiagnostic } from '../x/diagnostics.js'
+import {
+  err,
+  DiagnosticSeverity,
+  LocationLike_toLocation,
+} from '../x/diagnostics.js'
 import type { Location } from '../x/Location.js'
 
 import type { RWRouter } from './RWRouter.js'
+import { getMutationFieldsUsedTransitively } from './util/pageMutationUsage.js'
+
+/**
+ * A `@requireAuth`-gated GraphQL mutation used (transitively) by a route's
+ * page, but not guarded by a `<Private>`/`<PrivateSet>` wrapper.
+ */
+interface UnprotectedAuthMutationUsage {
+  fieldName: string
+  /** SDL file path, relative to the project root */
+  sdlFilePath: string
+  /** Component file path (where the mutation was found), relative to the project root */
+  componentFilePath: string
+}
 
 export class RWRoute extends BaseNode {
   constructor(
@@ -300,6 +320,78 @@ export class RWRoute extends BaseNode {
         this.path_literal_node!,
         "The 'Not Found' page cannot have a path",
       )
+    }
+    for (const warning of this.unprotectedAuthMutationUsages) {
+      const { uri, range } = this.location
+      const routeLabel = this.name ?? this.path ?? '(unnamed route)'
+      yield {
+        uri,
+        diagnostic: {
+          range,
+          message:
+            `Route '${routeLabel}' is not wrapped in <PrivateSet>, but its ` +
+            `page uses the mutation '${warning.fieldName}', which is ` +
+            `marked @requireAuth in ${warning.sdlFilePath} (found in ` +
+            `${warning.componentFilePath})`,
+          severity: DiagnosticSeverity.Warning,
+          code: RWError.UNPROTECTED_ROUTE_USES_AUTH_GATED_MUTATION,
+        },
+      } as ExtendedDiagnostic
+    }
+  }
+
+  /**
+   * For an unprotected route (not wrapped in `<Private>`/`<PrivateSet>`),
+   * transitively walks the page's imports to find any GraphQL mutations
+   * that are marked `@requireAuth` in the api-side SDL.
+   *
+   * This is a best-effort static analysis (see `pageMutationUsage.ts`), so
+   * any internal failure degrades to "no warning" rather than surfacing a
+   * crash diagnostic - this check must never break the other diagnostics.
+   */
+  @lazy()
+  private get unprotectedAuthMutationUsages(): UnprotectedAuthMutationUsage[] {
+    if (this.isPrivate) {
+      return []
+    }
+
+    const page = this.page
+    if (!page) {
+      return []
+    }
+
+    try {
+      const project = this.parent.parent
+      const requireAuthFields = project.requireAuthMutationFields
+      if (requireAuthFields.size === 0) {
+        return []
+      }
+
+      const usedMutations = getMutationFieldsUsedTransitively(
+        project,
+        page.filePath,
+      )
+
+      const warnings: UnprotectedAuthMutationUsage[] = []
+
+      for (const [fieldName, componentFilePath] of usedMutations) {
+        const sdlFilePath = requireAuthFields.get(fieldName)
+        if (!sdlFilePath) {
+          continue
+        }
+        warnings.push({
+          fieldName,
+          sdlFilePath,
+          componentFilePath: path.relative(
+            project.pathHelper.base,
+            componentFilePath,
+          ),
+        })
+      }
+
+      return warnings
+    } catch {
+      return []
     }
   }
 

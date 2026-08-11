@@ -8,4 +8,5 @@ export enum RWError {
   // this error should be broken down into more specialized errors: syntax error, duplicate parameters
   INVALID_ROUTE_PATH_SYNTAX = 'INVALID_ROUTE_PATH_SYNTAX',
   SCHEMA_NOT_DEFINED = 'SCHEMA_NOT_DEFINED',
+  UNPROTECTED_ROUTE_USES_AUTH_GATED_MUTATION = 'UNPROTECTED_ROUTE_USES_AUTH_GATED_MUTATION',
 }
