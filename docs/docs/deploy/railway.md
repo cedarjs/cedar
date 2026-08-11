@@ -71,6 +71,15 @@ To split into the
    handles this cleanly): point it at the api service with
    `--api-proxy-target`, a fully-qualified URL (scheme required).
 
+   This only works if `apiUrl` in `cedar.toml` is left relative (the
+   default) — that's what makes the web service's Fastify proxy the thing
+   handling API requests in the first place. If you instead set `apiUrl` to
+   an absolute URL, the browser calls the api service directly and bypasses
+   this proxy entirely, `apiProxyTarget` has no effect, and you need the
+   separate CORS/cookie setup described in
+   [Introduction to Deployment](./introduction.md#relative-apiurl--proxy-or-absolute-apiurl--cors)
+   instead.
+
    Railway's `${{Service.VAR}}` reference syntax only resolves inside a
    service's **Variables** tab — it isn't substituted if you paste it directly
    into the Start Command field. So define the target as a variable first,
