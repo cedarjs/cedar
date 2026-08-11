@@ -99,9 +99,14 @@ To split into the
      ```
 
    For private networking instead — keeps this traffic off the public
-   internet, at the cost of needing `http://` since Railway's private network
-   doesn't terminate TLS — reference the api service's private domain and
-   port the same way:
+   internet, and off the public domain's TLS termination too, since Railway
+   doesn't provision TLS certs for `*.railway.internal` domains. That's not a
+   security downside: Railway's private network is already encrypted in
+   transit at the WireGuard layer, so app-level TLS on top would be
+   redundant — Railway's own docs recommend `http://` here for exactly that
+   reason. The practical cost is just that you can't reuse an `https://` URL
+   — reference the api service's private domain and port the same way, using
+   `http://`:
 
    - Api service **Variables** tab: add a fixed `PORT` (e.g. `8911`). Cedar's
      api server binds to whatever `PORT` is set to, and Railway's automatic
