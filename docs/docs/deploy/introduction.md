@@ -45,42 +45,27 @@ There are examples of deploying CedarJS on other providers such as Google Cloud 
 
 The generated `package.json` scripts map onto these: `start` is `cedar serve` (single-container), `start:api` is `cedar serve api`, `start:web` is `cedar serve web`.
 
-`cedar serve web` / `yarn start:web` is primarily a local tool — it lets you run
-the web side standalone to test how it behaves in production mode before
-deploying. In production it's the documented Cedar path for the two-service
-topology, but not a hard requirement everywhere — if your platform can reliably
-serve `web/dist` as static files (a CDN, a static build pack, or your own
-Caddy/nginx/Dockerfile service), that's leaner than running a Node process just
-to serve static assets. Where that isn't practical, running `start:web` gets
-you the two-service topology anyway — see
-[Railway](./railway.md#scaling-up-two-services), which does exactly this.
+`cedar serve web` / `yarn start:web` is primarily a local tool, for testing
+the web side in production mode before deploying. In production, use it only
+if your platform can't reliably serve `web/dist` as static files — see
+[Railway](./railway.md#scaling-up-two-services).
 
-When you do run it against a separate api process, point it there with
-`--apiProxyTarget`, a fully-qualified URL:
+Point it at a separate api process with `--apiProxyTarget`, a fully-qualified
+URL (CLI-flag only — no `cedar.toml` or environment variable equivalent):
 
 ```shell
 yarn start:web --apiProxyTarget=https://api.example.com
 ```
 
-This is a CLI-flag-only option — there's no `cedar.toml` or environment variable
-equivalent. It's required whenever `apiUrl` is a relative path (the default):
-without it, `apiUrl` has nothing to proxy through and API calls get a 502 Bad
-Gateway response. The alternative is to skip the proxy entirely — set `apiUrl`
-in `cedar.toml` to a fully-qualified URL pointing directly at the api service,
-so the browser calls it directly instead of routing through the web process.
-That's what static-hosting setups do, since there's no Fastify process there to
-pass `--apiProxyTarget` to — see
-[Coolify](./coolify.md#scaling-up-two-services-the-coolify-way) for that
-approach.
+Required whenever `apiUrl` is relative (the default); otherwise API calls get
+a 502. The alternative is an absolute `apiUrl` with no proxy — see
+[Coolify](./coolify.md#scaling-up-two-services-the-coolify-way).
 
 ### Relative `apiUrl` + proxy, or absolute `apiUrl` + CORS?
 
-`apiUrl` and `apiProxyTarget` aren't two competing ways to do the same thing —
-`apiUrl` always determines what URL the browser calls (it's baked into the web
-bundle at build time, so changing it means rebuilding); `apiProxyTarget` only
-matters if you keep `apiUrl` relative, since then something has to be
-listening on that path to forward the request to the api process. The actual
-choice is between two setups:
+`apiUrl` (baked into the web bundle at build time) always determines what URL
+the browser calls; `apiProxyTarget` only matters if you keep `apiUrl`
+relative. The choice is between two setups:
 
 |                | Relative `apiUrl` + `start:web` proxy | Absolute `apiUrl`, no proxy                                                                                                                                                                                                                                   |
 | -------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -89,27 +74,16 @@ choice is between two setups:
 | CORS / cookies | None needed                           | Required if the web and api origins differ (the common case here) — see [CORS](../cors.md): GraphQL and auth-function `cors`, cookie `SameSite: 'None'` + `Secure`, and `credentials: 'include'` on both the Apollo and dbAuth clients if you're using dbAuth |
 
 Prefer absolute `apiUrl` when your platform can reliably serve `web/dist` as
-static files (a CDN, Coolify's Static build pack, Netlify, etc.) — you avoid
-running a Node process just to serve static assets, and you get real edge
-caching, at the one-time cost of the CORS/cookie setup above. Prefer the
-relative `apiUrl` + proxy setup when static hosting for your build output isn't
-a reliable option on your platform (Railway's monorepo subdirectory support is
-flaky enough that its own guides recommend a hand-rolled Caddy/Dockerfile setup
-instead — see [Railway](./railway.md#scaling-up-two-services)) — you're already
-running `start:web` as a Node process there, so the proxy is free and you skip
-the CORS/cookie configuration entirely.
+static files (a CDN, Coolify's Static build pack, Netlify, etc.). Prefer the
+relative `apiUrl` + proxy setup when it can't — see
+[Railway](./railway.md#scaling-up-two-services).
 
 ## Two topologies, and which to pick
 
 Once you're past `cedar dev`, there are two ways to run Cedar in production:
 
 - **Single-container** (`yarn start`) — one process serves both sides; the web server proxies API requests to the API in-process. This is the **convenient** path: no service-to-service wiring, so it works with zero configuration on any container host — see [any container host](./any-container-host.md).
-- **api process + static/CDN web** (`yarn start:api`, with the web side served
-  separately) — this is the **recommended** path, and what the generated
-  Dockerfile, the baremetal nginx setup, and the Render blueprint all use.
-  "Served separately" usually means static/CDN hosting rather than a Node
-  process; reach for `yarn start:web` there only if your platform doesn't offer
-  static hosting — see the note on `cedar serve web` above.
+- **api process + static/CDN web** (`yarn start:api`, with the web side served separately) — this is the **recommended** path, and what the generated Dockerfile, the baremetal nginx setup, and the Render blueprint all use.
 
 Start with single-container — it's the fastest way to get a working deploy, and for small apps or early-stage projects it's often all you need. Move to the two-part topology when you want your web assets served from a CDN edge (rather than round-tripping through your api process), or when you want to scale the api and web sides independently. The reason this needs to be stated explicitly: without it, it's easy to land on single-container, get a working app, and never learn why the split is worth doing later.
 
