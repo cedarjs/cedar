@@ -23,6 +23,33 @@ interface NeonCtx {
   directDatabaseUrlNotSet?: boolean
 }
 
+// Mirrors how dotenv-style tooling (and `readEnvVar` in postgresHandler.ts)
+// treats a single layer of matching quotes around a value, then requires
+// what's left to actually parse as a Postgres URL with a host — rejecting
+// protocol-only values like `postgres://` that `new URL()` accepts but
+// Neon/Prisma can't connect with.
+function isPostgresConnectionString(rawValue: string): boolean {
+  let value = rawValue.trim()
+  const quoted = value.match(/^(['"])(.*)\1$/)
+  if (quoted) {
+    value = quoted[2]
+  }
+
+  if (!value) {
+    return false
+  }
+
+  try {
+    const url = new URL(value)
+    return (
+      (url.protocol === 'postgres:' || url.protocol === 'postgresql:') &&
+      !!url.hostname
+    )
+  } catch {
+    return false
+  }
+}
+
 export async function handler({ force }: Args) {
   const cedarPaths = getPaths()
 
@@ -47,15 +74,16 @@ export async function handler({ force }: Args) {
   // permanently true and skip provisioning on every fresh project.
   //
   // The value is inspected too, not just the key's presence — a `file:`
-  // SQLite path (e.g. from `.env.defaults`) or a blank value must not be
-  // mistaken for an already-configured Postgres connection string.
+  // SQLite path (e.g. from `.env.defaults`), a blank value, or a malformed
+  // one (e.g. `postgres://` with no host) must not be mistaken for an
+  // already-configured Postgres connection string.
   let hasExistingDatabaseUrl = false
   if (fs.existsSync(envPath)) {
     const match = fs
       .readFileSync(envPath, 'utf-8')
       .match(/^DATABASE_URL=(.*)$/m)
     hasExistingDatabaseUrl =
-      !!match?.[1] && /^postgres(ql)?:\/\//.test(match[1].trim())
+      !!match?.[1] && isPostgresConnectionString(match[1])
   }
 
   // Provisioning a new database when one is already configured would orphan
@@ -225,16 +253,18 @@ export async function handler({ force }: Args) {
           if (fs.existsSync(envPath)) {
             envContent = fs.readFileSync(envPath, 'utf-8')
 
-            if (force) {
-              // Filter out existing DATABASE_URL and DIRECT_DATABASE_URL lines
-              const lines = envContent.split('\n')
-              const filtered = lines.filter(
-                (line) =>
-                  !line.startsWith('DATABASE_URL=') &&
-                  !line.startsWith('DIRECT_DATABASE_URL='),
-              )
-              envContent = filtered.join('\n').trimEnd()
-            }
+            // This task only runs when provisioning wasn't skipped — either
+            // --force was passed, or there was no usable DATABASE_URL to
+            // begin with (absent, blank, SQLite, or malformed). In every
+            // case any existing DATABASE_URL/DIRECT_DATABASE_URL lines are
+            // stale and must be replaced, not appended alongside.
+            const lines = envContent.split('\n')
+            const filtered = lines.filter(
+              (line) =>
+                !line.startsWith('DATABASE_URL=') &&
+                !line.startsWith('DIRECT_DATABASE_URL='),
+            )
+            envContent = filtered.join('\n').trimEnd()
 
             if (envContent && !envContent.endsWith('\n')) {
               envContent += '\n'
