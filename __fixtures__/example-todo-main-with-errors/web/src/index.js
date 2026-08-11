@@ -1,5 +1,5 @@
 import ReactDOM from 'react-dom'
-import { RedwoodProvider, FatalErrorBoundary } from '@cedarjs/web'
+import { CedarProvider, FatalErrorBoundary } from '@cedarjs/web'
 import FatalErrorPage from 'src/pages/FatalErrorPage'
 
 import Routes from './Routes'
@@ -8,9 +8,9 @@ import './index.css'
 
 ReactDOM.render(
   <FatalErrorBoundary page={FatalErrorPage}>
-    <RedwoodProvider>
+    <CedarProvider>
       <Routes />
-    </RedwoodProvider>
+    </CedarProvider>
   </FatalErrorBoundary>,
   document.getElementById('redwood-app')
 )

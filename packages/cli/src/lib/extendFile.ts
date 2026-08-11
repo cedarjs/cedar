@@ -122,7 +122,9 @@ function insertComponent(
     )
   }
 
-  const target = around ?? within
+  // Wrapped in a non-capturing group so callers can pass alternations, e.g.
+  // 'CedarProvider|RedwoodProvider', without it leaking out of the tag match.
+  const target = `(?:${around ?? within})`
   const findTagIndex = (regex: RegExp) =>
     content.findIndex((line) => regex.test(line))
 

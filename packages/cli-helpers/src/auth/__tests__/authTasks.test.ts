@@ -79,6 +79,7 @@ import {
   graphqlTs,
   legacyApolloProviderAppTsx,
   legacyAuthWebAppTsx,
+  legacyProviderAppTsx,
   nonStandardAuthDecoderGraphqlTs,
   routesTsx,
   useAuthRoutesTsx,
@@ -200,6 +201,27 @@ describe('authTasks', () => {
     addConfigToWebApp().task(ctx, {} as any)
 
     expect(fs.readFileSync(getPaths().web.app, 'utf-8')).toMatchSnapshot()
+  })
+
+  it('Should still add auth config for apps still using the deprecated RedwoodProvider name', () => {
+    vol.fromJSON({
+      ...vol.toJSON(),
+      [getPaths().web.app]: legacyProviderAppTsx,
+    })
+
+    const ctx: AuthGeneratorCtx = {
+      provider: 'clerk',
+      setupMode: 'FORCE',
+      force: false,
+    }
+
+    addConfigToWebApp().task(ctx, {} as any)
+
+    const app = fs.readFileSync(getPaths().web.app, 'utf-8')
+    expect(app).toContain(
+      '<RedwoodProvider titleTemplate="%PageTitle | %AppTitle">',
+    )
+    expect(app).toContain('<AuthProvider>')
   })
 
   describe('Components with props', () => {

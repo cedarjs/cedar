@@ -143,7 +143,7 @@ import { AuthProvider, useAuth } from 'src/auth'
 
 const App = () => (
   <FatalErrorBoundary page={FatalErrorPage}>
-    <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
+    <CedarProvider titleTemplate="%PageTitle | %AppTitle">
       <AuthProvider type="dbAuth">
         <CedarApolloProvider
           useAuth={useAuth}
@@ -154,7 +154,7 @@ const App = () => (
           <Routes />
         </CedarApolloProvider>
       </AuthProvider>
-    </RedwoodProvider>
+    </CedarProvider>
   </FatalErrorBoundary>
 )
 ```

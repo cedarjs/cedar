@@ -116,15 +116,19 @@ export const handler = async ({ force }: Args) => {
           .toString()
           .split('\n')
 
+        // Older projects (created before CedarProvider replaced the
+        // deprecated RedwoodProvider) may still import RedwoodProvider here.
+        const webImportRe =
+          /^import \{ FatalErrorBoundary, ((?:Cedar|Redwood)Provider) \} from '@cedarjs\/web'$/
         const webImportIndex = contentLines.findLastIndex((line) =>
-          /^import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs\/web'$/.test(
-            line,
-          ),
+          webImportRe.test(line),
         )
+        const providerName =
+          contentLines[webImportIndex].match(webImportRe)?.[1]
         contentLines.splice(
           webImportIndex,
           1,
-          "import { RedwoodProvider } from '@cedarjs/web'",
+          `import { ${providerName} } from '@cedarjs/web'`,
         )
 
         const boundaryOpenIndex = contentLines.findLastIndex((line) =>

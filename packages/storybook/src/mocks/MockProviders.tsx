@@ -6,7 +6,7 @@ import React from 'react'
 
 import { LocationProvider } from '@cedarjs/router'
 import { useAuth } from '@cedarjs/testing/auth'
-import { RedwoodProvider } from '@cedarjs/web'
+import { CedarProvider } from '@cedarjs/web'
 import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 import { MockParamsProvider } from './MockParamsProvider.js'
@@ -33,13 +33,13 @@ export const MockProviders: React.FunctionComponent<{
   children: React.ReactNode
 }> = ({ children }) => {
   return (
-    <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
+    <CedarProvider titleTemplate="%PageTitle | %AppTitle">
       <CedarApolloProvider useAuth={useAuth}>
         <UserRoutes />
         <LocationProvider>
           <MockParamsProvider>{children}</MockParamsProvider>
         </LocationProvider>
       </CedarApolloProvider>
-    </RedwoodProvider>
+    </CedarProvider>
   )
 }

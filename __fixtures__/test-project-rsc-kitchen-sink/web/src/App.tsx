@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'
+import { FatalErrorBoundary, CedarProvider } from '@cedarjs/web'
 import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 import { AuthProvider, useAuth } from './auth'
@@ -15,11 +15,11 @@ interface AppProps {
 
 const App = ({ children }: AppProps) => (
   <FatalErrorBoundary page={FatalErrorPage}>
-    <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
+    <CedarProvider titleTemplate="%PageTitle | %AppTitle">
       <AuthProvider>
         <CedarApolloProvider useAuth={useAuth}>{children}</CedarApolloProvider>
       </AuthProvider>
-    </RedwoodProvider>
+    </CedarProvider>
   </FatalErrorBoundary>
 )
 
