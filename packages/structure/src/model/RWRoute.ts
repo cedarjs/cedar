@@ -40,26 +40,27 @@ export class RWRoute extends BaseNode {
    */
   @lazy() private get privateAncestors(): tsm.JsxElement[] {
     const ancestors: tsm.JsxElement[] = []
-    let current: tsm.Node | undefined = this.jsxNode
+    // Walk every ancestor node, not just immediate JsxElement parents, so a
+    // <Route> nested inside a fragment or a JSX expression (e.g. `{cond &&
+    // <Route .../>}`) still finds an enclosing <Private>/<PrivateSet> that
+    // isn't its direct parent.
+    let current: tsm.Node | undefined = this.jsxNode.getParent()
 
-    let parentElement = current.getParentIfKind(tsm.SyntaxKind.JsxElement)
-    while (parentElement) {
-      const tagName = parentElement
-        .getOpeningElement()
-        .getTagNameNode()
-        .getText()
+    while (current) {
+      if (tsm.Node.isJsxElement(current)) {
+        const tagName = current.getOpeningElement().getTagNameNode().getText()
 
-      // Don't walk past the <Router> tag
-      if (tagName === 'Router') {
-        break
+        // Don't walk past the <Router> tag
+        if (tagName === 'Router') {
+          break
+        }
+
+        if (tagName === 'Private' || tagName === 'PrivateSet') {
+          ancestors.push(current)
+        }
       }
 
-      if (tagName === 'Private' || tagName === 'PrivateSet') {
-        ancestors.push(parentElement)
-      }
-
-      current = parentElement
-      parentElement = current.getParentIfKind(tsm.SyntaxKind.JsxElement)
+      current = current.getParent()
     }
 
     return ancestors
