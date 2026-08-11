@@ -82,10 +82,10 @@ matters if you keep `apiUrl` relative, since then something has to be
 listening on that path to forward the request to the api process. The actual
 choice is between two setups:
 
-|                | Relative `apiUrl` + `start:web` proxy | Absolute `apiUrl`, no proxy                                                                                                                                                                          |
-| -------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Requires       | Running web as a Node process         | Nothing extra — works with pure static/CDN hosting                                                                                                                                                   |
-| Browser sees   | Same-origin                           | Cross-origin                                                                                                                                                                                         |
+|                | Relative `apiUrl` + `start:web` proxy | Absolute `apiUrl`, no proxy                                                                                                                                                                                                                                   |
+| -------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Requires       | Running web as a Node process         | Nothing extra — works with pure static/CDN hosting                                                                                                                                                                                                            |
+| Browser sees   | Same-origin                           | Cross-origin                                                                                                                                                                                                                                                  |
 | CORS / cookies | None needed                           | Required if the web and api origins differ (the common case here) — see [CORS](../cors.md): GraphQL and auth-function `cors`, cookie `SameSite: 'None'` + `Secure`, and `credentials: 'include'` on both the Apollo and dbAuth clients if you're using dbAuth |
 
 Prefer absolute `apiUrl` when your platform can reliably serve `web/dist` as
