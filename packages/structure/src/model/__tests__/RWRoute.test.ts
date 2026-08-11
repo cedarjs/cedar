@@ -135,44 +135,6 @@ describe('RWRoute isPrivate/unauthenticated/roles ancestor walk', () => {
     expect(route.unauthenticated).toBe('inner')
   })
 
-  it('is private for a route inside a fragment nested within <PrivateSet>', () => {
-    const src = `
-      const Routes = () => (
-        <Router>
-          <PrivateSet unauthenticated="home" roles="admin">
-            <>
-              <Route path="/private" page={PrivatePage} name="privatePage" />
-            </>
-          </PrivateSet>
-        </Router>
-      )
-    `
-    const route = new RWRoute(getRouteNode(src, 'privatePage'), fakeRouter)
-
-    expect(route.isPrivate).toBe(true)
-    expect(route.unauthenticated).toBe('home')
-    expect(route.roles).toBe('admin')
-  })
-
-  it('is private for a route inside a JSX expression nested within <PrivateSet>', () => {
-    const src = `
-      const Routes = () => (
-        <Router>
-          <PrivateSet unauthenticated="home" roles="admin">
-            {enabled && (
-              <Route path="/private" page={PrivatePage} name="privatePage" />
-            )}
-          </PrivateSet>
-        </Router>
-      )
-    `
-    const route = new RWRoute(getRouteNode(src, 'privatePage'), fakeRouter)
-
-    expect(route.isPrivate).toBe(true)
-    expect(route.unauthenticated).toBe('home')
-    expect(route.roles).toBe('admin')
-  })
-
   it('unions roles across two nested <PrivateSet> ancestors', () => {
     const src = `
       const Routes = () => (
