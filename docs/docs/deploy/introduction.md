@@ -54,6 +54,14 @@ Once you're past `cedar dev`, there are two ways to run Cedar in production:
 
 Start with single-container — it's the fastest way to get a working deploy, and for small apps or early-stage projects it's often all you need. Move to the two-part topology when you want your web assets served from a CDN edge (rather than round-tripping through your api process), or when you want to scale the api and web sides independently. The reason this needs to be stated explicitly: without it, it's easy to land on single-container, get a working app, and never learn why the split is worth doing later.
 
+:::important
+If your app has a custom [server file](../server-file.md) (`api/src/server.ts`),
+single-container isn't an option — it's a Fastify concept with no equivalent in
+the single-container in-process server, so `yarn start` refuses to start rather
+than silently skipping what you configured. Use the two-service topology
+(`yarn start:api` / `yarn start:web`) instead.
+:::
+
 ## General Deployment Setup
 
 Deploying Cedar requires setup for the following four categories.

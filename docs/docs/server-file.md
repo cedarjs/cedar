@@ -40,6 +40,17 @@ With the server file, there's no indirection. Just use `node`:
 yarn node api/dist/server.js
 ```
 
+:::important
+A custom server file is a Fastify concept, and isn't supported when serving
+both sides from one process — the single-container topology (`yarn start` /
+`cedar serve` / `cedarjs-server` with no side argument). If Cedar detects a
+built server file in that mode, it refuses to start rather than silently
+skipping what you configured (Realtime, custom plugins, custom middleware).
+Use the [two-service topology](./deploy/introduction.md#two-topologies-and-which-to-pick)
+instead: run the api and web sides as separate processes with
+`cedarjs-server api` / `cedarjs-server web` (`yarn start:api` / `yarn start:web`).
+:::
+
 ### Building
 
 You can't run the server file directly with Node.js; it has to be built first:
