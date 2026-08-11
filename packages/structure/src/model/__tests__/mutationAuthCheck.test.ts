@@ -24,7 +24,11 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  process.env.CEDAR_CWD = original_CEDAR_CWD
+  if (original_CEDAR_CWD === undefined) {
+    delete process.env.CEDAR_CWD
+  } else {
+    process.env.CEDAR_CWD = original_CEDAR_CWD
+  }
 })
 
 function getRoute(project: RWProject, name: string): RWRoute {
@@ -112,18 +116,20 @@ describe('RWRoute: unprotected route using a @requireAuth mutation', () => {
     expect(warning).toBeUndefined()
   })
 
-  it('terminates without crashing when components import each other cyclically', async () => {
+  it('warns exactly once when a mutation is reached through a component cycle', async () => {
     const project = new RWProject()
     const route = getRoute(project, 'adminPostsCycle')
 
     const diagnostics = await route.collectDiagnostics()
-    const warning = diagnostics.find(
+    const mutationWarnings = diagnostics.filter(
       (d) =>
         d.diagnostic.code ===
         RWError.UNPROTECTED_ROUTE_USES_AUTH_GATED_MUTATION,
     )
 
-    expect(diagnostics).toBeDefined()
-    expect(warning).toBeUndefined()
+    expect(mutationWarnings).toHaveLength(1)
+    expect(mutationWarnings[0].diagnostic.message).toContain(
+      "mutation 'deletePost'",
+    )
   })
 })

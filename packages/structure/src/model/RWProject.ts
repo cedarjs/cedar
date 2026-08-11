@@ -30,6 +30,7 @@ import { RWLayout } from './RWLayout.js'
 import { RWPage } from './RWPage.js'
 import { RWRouter } from './RWRouter.js'
 import { RWSDL } from './RWSDL.js'
+import type { RWSDLField } from './RWSDLField.js'
 import { RWService } from './RWService.js'
 import { RWTOML } from './RWTOML.js'
 
@@ -227,7 +228,7 @@ export class RWProject extends BaseNode {
       // can throw for a malformed/in-progress schema. Isolate that per SDL
       // file so one bad file doesn't hide `@requireAuth` fields declared in
       // otherwise-valid SDL files.
-      let fields
+      let fields: RWSDLField[]
       try {
         fields = sdl.implementableFields
       } catch {

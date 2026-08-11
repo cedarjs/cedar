@@ -49,8 +49,10 @@ export function getMutationFieldsUsedTransitively(
   const queue = [path.normalize(entryFilePath)]
 
   while (queue.length > 0) {
-    // Guaranteed defined: the loop condition checked queue.length > 0
-    const filePath = queue.shift() as string
+    const filePath = queue.shift()
+    if (!filePath) {
+      break
+    }
 
     if (visited.has(filePath)) {
       continue
@@ -248,6 +250,19 @@ function resolveModuleSpecifier(
 function resolveWithExtensions(basePath: string): string | undefined {
   if (isFile(basePath)) {
     return basePath
+  }
+
+  // An ESM-style specifier (e.g. `./Foo.js`) refers to the TS source
+  // (`./Foo.tsx`), not a literal `.js` file.
+  const jsExtMatch = /\.(js|jsx)$/.exec(basePath)
+  if (jsExtMatch) {
+    const withoutExt = basePath.slice(0, -jsExtMatch[0].length)
+    for (const ext of RESOLVE_EXTENSIONS) {
+      const candidate = withoutExt + ext
+      if (isFile(candidate)) {
+        return candidate
+      }
+    }
   }
 
   for (const ext of RESOLVE_EXTENSIONS) {

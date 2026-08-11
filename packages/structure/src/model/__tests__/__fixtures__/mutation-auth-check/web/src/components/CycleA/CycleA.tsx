@@ -1,7 +1,13 @@
+import DeletePostButton from '../DeletePostButton/DeletePostButton'
 import CycleB from '../CycleB/CycleB'
 
 const CycleA = () => {
-  return <CycleB />
+  return (
+    <>
+      <CycleB />
+      <DeletePostButton />
+    </>
+  )
 }
 
 export default CycleA

@@ -324,7 +324,7 @@ export class RWRoute extends BaseNode {
     for (const warning of this.unprotectedAuthMutationUsages) {
       const { uri, range } = this.location
       const routeLabel = this.name ?? this.path ?? '(unnamed route)'
-      yield {
+      const diagnostic: ExtendedDiagnostic = {
         uri,
         diagnostic: {
           range,
@@ -336,7 +336,8 @@ export class RWRoute extends BaseNode {
           severity: DiagnosticSeverity.Warning,
           code: RWError.UNPROTECTED_ROUTE_USES_AUTH_GATED_MUTATION,
         },
-      } as ExtendedDiagnostic
+      }
+      yield diagnostic
     }
   }
 
