@@ -62,23 +62,38 @@ To split into the
 
 1. Add a second service from the same repo.
 2. On the api service, set the start command to `yarn start:api`.
-3. On the web service, set the start command to pass `--api-proxy-target`, a
-   fully-qualified URL (scheme required) pointing at the api service:
+3. Set the web service's start command to proxy to the api service with
+   `--api-proxy-target`, a fully-qualified URL (scheme required). Requires
+   `apiUrl` in `cedar.toml` to stay relative — see
+   [relative vs. absolute apiUrl](./introduction.md#relative-apiurl--proxy-or-absolute-apiurl--cors).
 
-   ```shell
-   yarn start:web --api-proxy-target=https://${{api.RAILWAY_PUBLIC_DOMAIN}}
-   ```
+   Define the target as a Variable first, then reference it from the start
+   command (Railway's `${{Service.VAR}}` syntax doesn't resolve directly in
+   the Start Command field):
 
-   Swap in `http://${{api.RAILWAY_PRIVATE_DOMAIN}}:${{api.PORT}}` to keep this
-   traffic off the public internet instead (Railway's private network doesn't
-   terminate TLS, so use `http://`). The port is required here —
-   `RAILWAY_PRIVATE_DOMAIN` is a bare hostname, and unlike the public domain
-   (where Railway's edge proxy forwards to your app's actual port for you),
-   private-network traffic connects to that port directly. Either way, replace
-   `api` with your api service's actual name — Railway resolves
-   `${{<service>.<VAR>}}` at deploy time. A missing or schemeless
-   `apiProxyTarget` leaves `apiUrl` requests unhandled and Cedar returns a Bad
-   Gateway error.
+   - Api service: generate a public domain (**Settings → Networking**) if it
+     doesn't have one.
+   - Web service **Variables** tab: `API_PROXY_TARGET=${{api.RAILWAY_PUBLIC_DOMAIN}}`
+   - Web service start command:
+
+     ```shell
+     yarn start:web --api-proxy-target="https://$API_PROXY_TARGET"
+     ```
+
+   For private networking instead, use `http://` and give the api service a
+   fixed `PORT`:
+
+   - Api service **Variables** tab: `PORT=8911`
+   - Web service **Variables** tab:
+     `API_PROXY_TARGET=${{api.RAILWAY_PRIVATE_DOMAIN}}:${{api.PORT}}`
+   - Web service start command:
+
+     ```shell
+     yarn start:web --api-proxy-target="http://$API_PROXY_TARGET"
+     ```
+
+   Either way, replace `api` with your api service's actual name. A missing
+   or schemeless `apiProxyTarget` returns a Bad Gateway error.
 
 ## Config as code
 
