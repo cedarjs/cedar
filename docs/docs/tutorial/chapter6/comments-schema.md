@@ -7,7 +7,7 @@ Unfortunately, even with all of this flexibility there's still no such thing as 
 If you went through the first part of the tutorial you should be somewhat familiar with this flow:
 
 1. Add a model to `schema.prisma`
-2. Run a `yarn rw prisma migrate dev` commands to create a migration and apply it to the database
+2. Run a `yarn cedar prisma migrate dev` commands to create a migration and apply it to the database
 3. Generate an SDL and service
 
 ### Adding the Comment model
@@ -102,14 +102,14 @@ db.post.findUnique({ where: { id: 1 } }).comments()
 This one is easy enough: we'll create a new migration with a name and then run it:
 
 ```bash
-yarn rw prisma migrate dev
+yarn cedar prisma migrate dev
 ```
 
 When prompted, give this one a name something like "create comment".
 
 :::tip
 
-You'll need to restart the test suite runner at this point if it's still running. You can do a Ctrl-C or just press `q`. Cedar creates a second, test database for you to run your tests against (it is at `.redwood/test.db` by default). The database migrations are run against that test database whenever the test suite is _started_, not while it's running, so you'll need to restart it to test against the new database structure.
+You'll need to restart the test suite runner at this point if it's still running. You can do a Ctrl-C or just press `q`. Cedar creates a second, test database for you to run your tests against (it is at `.cedar/test.db` by default). The database migrations are run against that test database whenever the test suite is _started_, not while it's running, so you'll need to restart it to test against the new database structure.
 
 :::
 
@@ -118,7 +118,7 @@ You'll need to restart the test suite runner at this point if it's still running
 Next we'll create the SDL (that defines the GraphQL interface) and a service (to get the records out of the database) with a generator call:
 
 ```bash
-yarn rw g sdl Comment --no-crud
+yarn cedar g sdl Comment --no-crud
 ```
 
 Note the `--no-crud` flag here. This gives us bare-bones functionality to start with (read-only access to our model) that we can build on. We got all the CRUD endpoints for free when we created the Post section of our site, so let's do the opposite here and see how to add functionality from scratch.

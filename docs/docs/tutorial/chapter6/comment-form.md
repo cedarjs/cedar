@@ -3,13 +3,13 @@
 Let's generate a component to house our new comment form, build it out and integrate it via Storybook, then add some tests:
 
 ```bash
-yarn rw g component CommentForm
+yarn cedar g component CommentForm
 ```
 
 And startup Storybook again if it isn't still running:
 
 ```bash
-yarn rw storybook
+yarn cedar storybook
 ```
 
 You'll see that there's a **CommentForm** entry in Storybook now, ready for us to get started.
@@ -1155,7 +1155,7 @@ It would be nice if we could try out sending some arguments to our Prisma calls 
 That's where the Cedar Console comes in! In a new terminal instance, try this:
 
 ```bash
-yarn rw console
+yarn cedar console
 ```
 
 You'll see a standard Node console but with most of Cedar's internals already imported and ready to go! Most importantly, that includes the database. Try it out:
@@ -1563,7 +1563,7 @@ Now if you try refreshing the real site in dev mode you'll see an error where th
 
 ![image](https://user-images.githubusercontent.com/300/198095941-bbd07ede-2006-422a-8635-ea8fe57dd403.png)
 
-For security reasons we don't show the internal error message here, but if you check the terminal window where `yarn rw dev` is running you'll see the real message:
+For security reasons we don't show the internal error message here, but if you check the terminal window where `yarn cedar dev` is running you'll see the real message:
 
 ```text
 Field "comments" argument "postId" of type "Int!" is required, but it was not provided.
