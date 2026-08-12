@@ -1,11 +1,28 @@
-import fs from 'node:fs'
+import type NodeFs from 'node:fs'
 import path from 'node:path'
 
-vi.mock('node:fs')
-
 import { Listr } from 'listr2'
-import { vol } from 'memfs'
 import { vi, it, expect, beforeEach } from 'vitest'
+
+const { memfs, ufs, vol } = await vi.hoisted(async () => {
+  const { vol, fs: memfs } = await import('memfs')
+  const { ufs } = await import('unionfs')
+  return { memfs, ufs, vol }
+})
+
+vi.mock('node:fs', async (importOriginal) => {
+  const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
+    await import('../../__tests__/ufsFsProxy.js')
+  const originalFs = await importOriginal<typeof NodeFs>()
+  ufs.use(wrapFsForUnionfs(originalFs)).use(wrapMemfsForUnionfs(memfs))
+
+  return {
+    ...ufs,
+    default: ufs,
+  }
+})
+
+const fs = await import('node:fs')
 
 import * as rollback from '../rollback.js'
 
@@ -65,6 +82,46 @@ it('removes empty folders after removing files', async () => {
     fs.existsSync(path.join('fake_dir', 'mock_dir', 'test_dir', 'fake-file')),
   ).toBe(false)
   expect(fs.readdirSync('fake_dir')).toStrictEqual([])
+})
+
+it('removes a build artifact tracked before it was created, e.g. tsconfig.tsbuildinfo', async () => {
+  // Mirrors the package generator's `installAndBuild()`: the build artifact
+  // doesn't exist yet when it's registered for rollback, `tsc` then creates
+  // it, and a later failure should remove it again.
+  const tsBuildInfoPath = path.join(
+    'packages',
+    'my-package',
+    'tsconfig.tsbuildinfo',
+  )
+  vol.fromJSON({
+    [path.join('packages', 'my-package', 'package.json')]: '{}',
+  })
+
+  rollback.addFileToRollback(tsBuildInfoPath)
+  fs.writeFileSync(tsBuildInfoPath, 'fake-tsbuildinfo-content')
+  expect(fs.existsSync(tsBuildInfoPath)).toBe(true)
+
+  await executeRollback()
+  expect(fs.existsSync(tsBuildInfoPath)).toBe(false)
+})
+
+it('restores a pre-existing build artifact tracked before it was overwritten', async () => {
+  const tsBuildInfoPath = path.join(
+    'packages',
+    'my-package',
+    'tsconfig.tsbuildinfo',
+  )
+  vol.fromJSON({
+    [tsBuildInfoPath]: 'original-tsbuildinfo-content',
+  })
+
+  rollback.addFileToRollback(tsBuildInfoPath)
+  fs.writeFileSync(tsBuildInfoPath, 'new-tsbuildinfo-content')
+
+  await executeRollback()
+  expect(fs.readFileSync(tsBuildInfoPath, 'utf-8')).toBe(
+    'original-tsbuildinfo-content',
+  )
 })
 
 it('executes sync functions', async () => {
