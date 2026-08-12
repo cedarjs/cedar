@@ -62,7 +62,7 @@
     "@cedarjs/server-store": "workspace:*",
     "@cedarjs/structure": "workspace:*",
     "@cedarjs/testing": "workspace:*",
-    "@swc/core": "1.15.46",
+    "@swc/core": "1.15.47",
     "@universal-deploy/store": "^0.2.1",
     "@universal-deploy/vite": "^0.1.9",
     "@vitejs/plugin-react": "4.7.0",
