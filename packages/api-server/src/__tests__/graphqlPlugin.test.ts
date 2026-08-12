@@ -16,7 +16,6 @@ import type * as GraphqlServerModule from '@cedarjs/graphql-server'
 import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
 
 import { createFastifyInstance } from '../fastify.js'
-import { cedarFastifyAPI } from '../plugins/api.js'
 import {
   cedarFastifyGraphQLServer,
   isClientDisconnectError,
@@ -192,49 +191,60 @@ describe('GraphQL route handler client-disconnect handling', () => {
 //
 // `createServer.ts` now runs `configureApiServer` directly on the root
 // server instance, *before* registering either plugin, so hooks it adds
-// apply to both. This test simulates that by adding an `onSend` hook
-// directly on the root instance, then asserting it applies to both a
-// function route (served by `cedarFastifyAPI`) and the GraphQL route
-// (served by `cedarFastifyGraphQLServer`).
+// apply to both. This test verifies this by passing a `configureApiServer`
+// callback to `createServer` that adds an `onSend` hook, then asserting
+// it applies to both a function route (served by `cedarFastifyAPI`) and
+// the GraphQL route (served by `cedarFastifyGraphQLServer`).
 describe('root-level hooks apply across sibling plugins (issue #2304)', () => {
-  let fastifyInstance: Awaited<ReturnType<typeof createFastifyInstance>>
+  let server: Awaited<ReturnType<typeof createServer>>
 
   afterEach(async () => {
     vi.mocked(createGraphQLYoga).mockClear()
-    await fastifyInstance?.close()
+    await server?.close()
   })
 
-  it('a header set by an onSend hook on the root instance is present on both api-function and GraphQL responses', async () => {
-    fastifyInstance = await createFastifyInstance()
+  it('a header set by an onSend hook in configureApiServer is present on both api-function and GraphQL responses', async () => {
+    // Import createServer locally to avoid affecting other tests' setup
+    const { createServer: createServerFn } = await import('../createServer.js')
 
-    // Stands in for what a user's `configureApiServer` callback might do,
-    // e.g. `server.register(compress)`, which itself adds an `onSend` hook.
-    fastifyInstance.addHook('onSend', (_req, reply, payload, done) => {
-      reply.header('x-configure-api-server', 'applied')
-      done(null, payload)
-    })
+    // The fixture's graphql.js doesn't export __cedar_graphqlOptions, so
+    // createServer will skip GraphQL setup. We need to mock the dynamic import
+    // to provide proper options so the GraphQL plugin registers.
+    vi.doMock(
+      `file://${path.join(__dirname, './fixtures/graphql/cedar-app/api/dist/functions/graphql.js')}`,
+      () => ({
+        handler: async () => ({}),
+        __cedar_graphqlOptions: fakeGraphqlOptions,
+      }),
+      { virtual: true },
+    )
 
-    await fastifyInstance.register(cedarFastifyAPI, {
-      cedar: { loadUserConfig: false },
-    })
-
-    vi.mocked(createGraphQLYoga).mockResolvedValueOnce(
+    // Mock the GraphQL Yoga creation so we get a real /graphql route without
+    // needing a full GraphQL schema
+    vi.mocked(createGraphQLYoga).mockResolvedValue(
       fakeYogaResult(() => Promise.resolve(new Response('{}'))),
     )
 
-    await fastifyInstance.register(cedarFastifyGraphQLServer, {
-      cedar: { graphql: fakeGraphqlOptions },
+    // Create the server with a configureApiServer callback that adds a header.
+    // This is what real users do, e.g. `server.register(compress)`.
+    server = await createServerFn({
+      configureApiServer: async (fastifyServer) => {
+        fastifyServer.addHook('onSend', (_req, reply, payload, done) => {
+          reply.header('x-configure-api-server', 'applied')
+          done(null, payload)
+        })
+      },
     })
 
-    await fastifyInstance.ready()
-
-    const helloResponse = await fastifyInstance.inject({
+    // The header should be present on function routes
+    const helloResponse = await server.inject({
       method: 'GET',
       url: '/hello',
     })
     expect(helloResponse.headers['x-configure-api-server']).toEqual('applied')
 
-    const graphqlResponse = await fastifyInstance.inject({
+    // And on GraphQL routes
+    const graphqlResponse = await server.inject({
       method: 'GET',
       url: '/graphql',
     })
