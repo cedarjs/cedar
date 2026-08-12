@@ -53,7 +53,7 @@ yarn cedar setup auth supabase
 By specifying `supabase` as the provider, Cedar automatically added the necessary Supabase config to our app. Let's open up `web/src/App.[js/tsx]` and inspect. You should see:
 
 ```jsx {1-2,12,17} title="web/src/App.[js/tsx]"
-import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'
+import { FatalErrorBoundary, CedarProvider } from '@cedarjs/web'
 import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 import FatalErrorPage from 'src/pages/FatalErrorPage'
@@ -65,13 +65,13 @@ import './index.css'
 
 const App = () => (
   <FatalErrorBoundary page={FatalErrorPage}>
-    <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
+    <CedarProvider titleTemplate="%PageTitle | %AppTitle">
       <AuthProvider>
         <CedarApolloProvider useAuth={useAuth}>
           <Routes />
         </CedarApolloProvider>
       </AuthProvider>
-    </RedwoodProvider>
+    </CedarProvider>
   </FatalErrorBoundary>
 )
 

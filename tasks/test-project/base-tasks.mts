@@ -791,9 +791,9 @@ async function addGqlorm() {
   let appTsxContent = fs.readFileSync(appTsxPath, 'utf8')
 
   appTsxContent = appTsxContent.replace(
-    "import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'",
+    "import { FatalErrorBoundary, CedarProvider } from '@cedarjs/web'",
     "import { configureGqlorm } from '@cedarjs/gqlorm/setup'\n" +
-      "import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'",
+      "import { FatalErrorBoundary, CedarProvider } from '@cedarjs/web'",
   )
 
   appTsxContent = appTsxContent.replace(

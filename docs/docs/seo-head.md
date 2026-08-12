@@ -25,13 +25,13 @@ It will also be used for the title template.
 
 Now that you have the app title set, you probably want some consistence with the page title, that's what the title template is for.
 
-Add `titleTemplate` as a prop for `RedwoodProvider` to have a title template for every page.
+Add `titleTemplate` as a prop for `CedarProvider` to have a title template for every page.
 
 ```diff title=web/src/App.(tsx|jsx)
--  <RedwoodProvider>
-+  <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
+-  <CedarProvider>
++  <CedarProvider titleTemplate="%PageTitle | %AppTitle">
     /* ... */
-  <RedwoodProvider />
+  </CedarProvider>
 ```
 
 You can use whatever formatting you'd like in here. Some examples:

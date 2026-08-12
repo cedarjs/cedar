@@ -1,4 +1,28 @@
 export const webAppTsx =
+  "import { FatalErrorBoundary, CedarProvider } from '@cedarjs/web'\n" +
+  `import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
+
+import FatalErrorPage from 'src/pages/FatalErrorPage'
+import Routes from 'src/Routes'
+
+import './index.css'
+
+const App = () => (
+  <FatalErrorBoundary page={FatalErrorPage}>
+    <CedarProvider titleTemplate="%PageTitle | %AppTitle">
+      <CedarApolloProvider>
+        <Routes />
+      </CedarApolloProvider>
+    </CedarProvider>
+  </FatalErrorBoundary>
+)
+
+export default App
+`
+
+// Same as `webAppTsx`, but still using the deprecated `RedwoodProvider` name,
+// to make sure we still support apps that haven't migrated yet.
+export const legacyProviderAppTsx =
   "import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'\n" +
   `import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
@@ -177,7 +201,7 @@ export const legacyAuthWebAppTsx =
   `
 import { AuthProvider } from '@cedarjs/auth'
 import { isBrowser } from '@cedarjs/prerender/browserUtils'
-import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'
+import { FatalErrorBoundary, CedarProvider } from '@cedarjs/web'
 import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 import FatalErrorPage from 'src/pages/FatalErrorPage'
@@ -189,13 +213,13 @@ isBrowser && netlifyIdentity.init()
 
 const App = () => (
   <FatalErrorBoundary page={FatalErrorPage}>
-    <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
+    <CedarProvider titleTemplate="%PageTitle | %AppTitle">
       <AuthProvider client={netlifyIdentity} type="netlify">
         <CedarApolloProvider>
           <Routes />
         </CedarApolloProvider>
       </AuthProvider>
-    </RedwoodProvider>
+    </CedarProvider>
   </FatalErrorBoundary>
 )
 
@@ -203,7 +227,7 @@ export default App
 `
 
 export const customApolloAppTsx =
-  "import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'\n" +
+  "import { FatalErrorBoundary, CedarProvider } from '@cedarjs/web'\n" +
   `import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 import FatalErrorPage from 'src/pages/FatalErrorPage'
@@ -213,11 +237,11 @@ import './index.css'
 
 const App = () => (
   <FatalErrorBoundary page={FatalErrorPage}>
-    <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
+    <CedarProvider titleTemplate="%PageTitle | %AppTitle">
       <CedarApolloProvider graphQLClientConfig={{ cache }}>
         <Routes />
       </CedarApolloProvider>
-    </RedwoodProvider>
+    </CedarProvider>
   </FatalErrorBoundary>
 )
 
@@ -294,7 +318,7 @@ export default Routes
 
 export const explicitReturnAppTsx =
   "import { useEffect } from 'react'\n" +
-  `import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'
+  `import { FatalErrorBoundary, CedarProvider } from '@cedarjs/web'
 import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 import FatalErrorPage from 'src/pages/FatalErrorPage'
@@ -311,13 +335,13 @@ const App = (props) => {
 
   return (
     <FatalErrorBoundary page={FatalErrorPage}>
-      <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
+      <CedarProvider titleTemplate="%PageTitle | %AppTitle">
         <CedarApolloProvider>
           <AnotherProvider>
             <Routes />
           </AnotherProvider>
         </CedarApolloProvider>
-      </RedwoodProvider>
+      </CedarProvider>
     </FatalErrorBoundary>
   )
 }
@@ -326,7 +350,7 @@ export default App
 `
 
 export const withoutApolloProviderAppTsx =
-  "import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'\n" +
+  "import { FatalErrorBoundary, CedarProvider } from '@cedarjs/web'\n" +
   `
 import FatalErrorPage from 'src/pages/FatalErrorPage'
 import Routes from 'src/Routes'
@@ -337,13 +361,13 @@ const queryClient = {}
 
 const App = () => (
   <FatalErrorBoundary page={FatalErrorPage}>
-    <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
+    <CedarProvider titleTemplate="%PageTitle | %AppTitle">
       <QueryClientProvider client={queryClient}>
         <RedwoodReactQueryProvider>
           <Routes />
         </RedwoodReactQueryProvider>
       </QueryClientProvider>
-    </RedwoodProvider>
+    </CedarProvider>
   </FatalErrorBoundary>
 )
 

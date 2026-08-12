@@ -237,12 +237,15 @@ const addAuthProviderToApp = (content: string, setupMode: AuthSetupMode) => {
     content = removeAuthProvider(content)
   }
 
+  // Older projects (created before CedarProvider replaced the deprecated
+  // RedwoodProvider) may still have <RedwoodProvider> in App.{jsx,tsx}, so
+  // both names are matched here.
   const match = content.match(
-    /(\s+)(<RedwoodProvider.*?>)(.*)(<\/RedwoodProvider>)/s,
+    /(\s+)(<(?:Cedar|Redwood)Provider.*?>)(.*)(<\/(?:Cedar|Redwood)Provider>)/s,
   )
 
   if (!match) {
-    throw new Error('Could not find <RedwoodProvider> in App.{jsx,tsx}')
+    throw new Error('Could not find <CedarProvider> in App.{jsx,tsx}')
   }
 
   // If Auth.tsx already contains exactly what we're trying to add there's no
@@ -255,12 +258,12 @@ const addAuthProviderToApp = (content: string, setupMode: AuthSetupMode) => {
   const [
     _,
     newlineAndIndent,
-    redwoodProviderOpen,
-    redwoodProviderChildren,
-    redwoodProviderClose,
+    cedarProviderOpen,
+    cedarProviderChildren,
+    cedarProviderClose,
   ] = match
 
-  const redwoodProviderChildrenLines = redwoodProviderChildren
+  const cedarProviderChildrenLines = cedarProviderChildren
     .split('\n')
     .map((line, index) => {
       return `${index === 0 ? '' : '  '}` + line
@@ -268,17 +271,17 @@ const addAuthProviderToApp = (content: string, setupMode: AuthSetupMode) => {
 
   const renderContent =
     newlineAndIndent +
-    redwoodProviderOpen +
+    cedarProviderOpen +
     newlineAndIndent +
     '  ' +
     `<AuthProvider>` +
-    redwoodProviderChildrenLines.join('\n') +
+    cedarProviderChildrenLines.join('\n') +
     `</AuthProvider>` +
     newlineAndIndent +
-    redwoodProviderClose
+    cedarProviderClose
 
   return content.replace(
-    /\s+<RedwoodProvider.*?>.*<\/RedwoodProvider>/s,
+    /\s+<(?:Cedar|Redwood)Provider.*?>.*<\/(?:Cedar|Redwood)Provider>/s,
     renderContent,
   )
 }
