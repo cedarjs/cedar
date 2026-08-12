@@ -7,7 +7,7 @@ Unfortunately, even with all of this flexibility there's still no such thing as 
 If you went through the first part of the tutorial you should be somewhat familiar with this flow:
 
 1. Add a model to `schema.prisma`
-2. Run a `yarn cedar prisma migrate dev` commands to create a migration and apply it to the database
+2. Run the `yarn cedar prisma migrate dev` command to create a migration and apply it to the database
 3. Generate an SDL and service
 
 ### Adding the Comment model

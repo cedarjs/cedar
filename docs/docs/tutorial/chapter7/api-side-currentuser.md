@@ -158,7 +158,7 @@ yarn cedar prisma migrate dev
 
 And then the seed:
 
-```
+```bash
 yarn cedar prisma db seed
 ```
 
