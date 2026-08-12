@@ -2090,7 +2090,7 @@ __metadata:
     "@cedarjs/project-config": "npm:5.0.1"
     "@cedarjs/web-server": "npm:5.0.1"
     "@fastify/multipart": "npm:9.4.0"
-    "@fastify/url-data": "npm:6.0.3"
+    "@fastify/url-data": "npm:6.0.4"
     "@types/aws-lambda": "npm:8.10.162"
     "@types/dotenv-defaults": "npm:^5.0.0"
     "@types/split2": "npm:4.2.3"
@@ -2997,7 +2997,7 @@ __metadata:
     "@fastify/compress": "npm:9.1.1"
     "@fastify/http-proxy": "npm:11.6.0"
     "@fastify/static": "npm:8.3.0"
-    "@fastify/url-data": "npm:6.0.3"
+    "@fastify/url-data": "npm:6.0.4"
     fast-glob: "npm:3.3.3"
     fastify: "npm:5.10.0"
     typescript: "npm:5.9.3"
@@ -4973,13 +4973,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fastify/url-data@npm:6.0.3":
-  version: 6.0.3
-  resolution: "@fastify/url-data@npm:6.0.3"
+"@fastify/url-data@npm:6.0.4":
+  version: 6.0.4
+  resolution: "@fastify/url-data@npm:6.0.4"
   dependencies:
-    fast-uri: "npm:^3.0.0"
-    fastify-plugin: "npm:^5.0.0"
-  checksum: 10c0/9a21ea143a86f03a32bdc2ebcc0408d75ee630105c0dca50886c983324a61ea6d2920d1f4ba8977e007fdac90807806e3b59827f20e7160da978489a5d04ab4b
+    fast-uri: "npm:^4.0.0"
+    fastify-plugin: "npm:^6.0.0"
+  checksum: 10c0/02b36f6eba5fd058c64b742d340a8b5a103e5a6180def16e9520b91add21d9ff4a8a9fb882bc08cc6cfe2673ec54803dbf544fb33f6babb0007f7a3e0b0a1997
   languageName: node
   linkType: hard
 
