@@ -75,7 +75,7 @@ describe.skipIf(process.env.CI && process.platform === 'win32')(
         testProjectAppTsx,
         `import type { ReactNode } from 'react'
 
-      import { FatalErrorBoundary, RedwoodProvider } from \"@cedarjs/web\";
+      import { FatalErrorBoundary, CedarProvider } from \"@cedarjs/web\";
       import { CedarApolloProvider } from \"@cedarjs/web/apollo/CedarApolloProvider\";
 
       import FatalErrorPage from \"src/pages/FatalErrorPage\";
@@ -97,7 +97,7 @@ describe.skipIf(process.env.CI && process.platform === 'win32')(
 
       const App = ({ children }: AppProps) => (
         <FatalErrorBoundary page={FatalErrorPage}>
-          <RedwoodProvider titleTemplate=\"%PageTitle | %AppTitle\">
+          <CedarProvider titleTemplate=\"%PageTitle | %AppTitle\">
             <AuthProvider>
               <CedarApolloProvider
                 useAuth={useAuth}
@@ -106,7 +106,7 @@ describe.skipIf(process.env.CI && process.platform === 'win32')(
                 {children}
               </CedarApolloProvider>
             </AuthProvider>
-          </RedwoodProvider>
+          </CedarProvider>
         </FatalErrorBoundary>
       );
 

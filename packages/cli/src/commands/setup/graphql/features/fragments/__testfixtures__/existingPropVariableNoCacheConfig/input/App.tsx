@@ -1,4 +1,4 @@
-import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'
+import { FatalErrorBoundary, CedarProvider } from '@cedarjs/web'
 import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 import possibleTypes from 'src/graphql/possibleTypes'
@@ -17,7 +17,7 @@ const graphQLClientConfig = {
 
 const App = () => (
   <FatalErrorBoundary page={FatalErrorPage}>
-    <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
+    <CedarProvider titleTemplate="%PageTitle | %AppTitle">
       <AuthProvider>
         <CedarApolloProvider
           useAuth={useAuth}
@@ -26,7 +26,7 @@ const App = () => (
           <Routes />
         </CedarApolloProvider>
       </AuthProvider>
-    </RedwoodProvider>
+    </CedarProvider>
   </FatalErrorBoundary>
 )
 

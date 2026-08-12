@@ -97,7 +97,9 @@ export async function handler({
             insertComponent: {
               name: 'MantineProvider',
               props: { theme: 'theme' },
-              within: 'RedwoodProvider',
+              // Older projects (created before CedarProvider replaced the
+              // deprecated RedwoodProvider) may still use RedwoodProvider.
+              within: 'CedarProvider|RedwoodProvider',
             },
             imports: [
               "import { MantineProvider } from '@mantine/core'",
