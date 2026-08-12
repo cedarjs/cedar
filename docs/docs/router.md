@@ -424,7 +424,7 @@ We call built-in parameter types _core parameter types_. All core parameter type
 - `Boolean` - Matches and converts Boolean (true or false only)
 
 > Note on TypeScript support
-> Cedar will automatically generate types for your named routes, but you do have to run `yarn redwood dev` or `yarn redwood build` at least once for your `Routes.{js,ts}` to be parsed
+> Cedar will automatically generate types for your named routes, but you do have to run `yarn cedar dev` or `yarn cedar build` at least once for your `Routes.{js,ts}` to be parsed
 
 ### Glob Type
 

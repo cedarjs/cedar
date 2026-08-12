@@ -611,16 +611,16 @@ export const handler = async (req, _context) => {
 
 #### How to invoke serverless functions while in dev
 
-So long as `yarn rw dev` is running, `netlify-cli` can be used to invoke your function. Steps are:
+So long as `yarn cedar dev` is running, `netlify-cli` can be used to invoke your function. Steps are:
 
 ```bash
 # Install the cli
 yarn add netlify-cli -g
 
 # Rebuild api after any changes to /functions
-yarn rw build api
+yarn cedar build api
 
-# Invoke your function with the CLI, pointing it to the rw dev port
+# Invoke your function with the CLI, pointing it to the cedar dev port
 netlify functions:invoke 8910 < function-name > --port
 ```
 

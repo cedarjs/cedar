@@ -7,12 +7,12 @@ description: A look at automatic type generation in Cedar
 To add to the TypeScript (and JavaScript!) experience, Cedar generates types for you.
 These generated types not only include your GraphQL operations, but also your named routes, Cells, scenarios, and tests.
 
-When you run `yarn rw dev`, the CLI watches files for changes and triggers type generation automatically, but you can trigger it manually too:
+When you run `yarn cedar dev`, the CLI watches files for changes and triggers type generation automatically, but you can trigger it manually too:
 
 ```shell
-yarn rw g types
+yarn cedar g types
 # or
-# yarn redwood generate types
+# yarn cedar generate types
 ```
 
 :::tip[Getting errors trying to generate types?]
@@ -53,7 +53,7 @@ The types for both `useAuth().currentUser` on the web side and `context.currentU
 
 :::info[Type of `context.currentUser` unknown?]
 This usually happens when you don't have the various generated and utility types in your project.
-Run `yarn rw g types`, and just to be sure, restart your TS server.
+Run `yarn cedar g types`, and just to be sure, restart your TS server.
 In VSCode, you can do this by running "TypeScript: Restart TS server" in the command palette (Cmd+Shift+P on Mac, Ctrl+Shift+P on Windows)
 :::
 
@@ -176,7 +176,7 @@ There is also an experimental code generator based on [sdl-codegen](https://gith
   useSDLCodeGenForGraphQLTypes = true
 ```
 
-Running `yarn rw g types` will generate types for your resolvers on a per-file basis, this feature can be paired with the optional eslint auto-fix rule to have types automatically applied to your resolvers in TypeScript service files by editing your root `package.json` with:
+Running `yarn cedar g types` will generate types for your resolvers on a per-file basis, this feature can be paired with the optional eslint auto-fix rule to have types automatically applied to your resolvers in TypeScript service files by editing your root `package.json` with:
 
 ```diff title="package.json"
    "eslintConfig": {

@@ -43,19 +43,19 @@ When in doubt, `upsert`!
 Seeds are automatically run the first time you migrate your database:
 
 ```bash
-yarn rw prisma migrate dev
+yarn cedar prisma migrate dev
 ```
 
 They are run _every_ time you reset your database:
 
 ```bash
-yarn rw prisma migrate reset
+yarn cedar prisma migrate reset
 ```
 
 You can manually run seeds at any time with the following command:
 
 ```
-yarn rw prisma db seed
+yarn cedar prisma db seed
 ```
 
 You generally don't need to keep invoking your seeds over and over again, so it
@@ -216,7 +216,7 @@ your app:
 
 ```json
 "prisma": {
-  "seed": "yarn rw exec seed"
+  "seed": "yarn cedar exec seed"
 },
 ```
 

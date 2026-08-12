@@ -246,11 +246,11 @@ export const beforeQuery = ({
 
 The query parameter is passed to the component as a string, so we need to parse it into a number.
 
-If you run the project with `yarn rw dev` on the default port 8910 you can now go to http://localhost:8910 and you should only see the first five posts. Change the URL to http://localhost:8910?page=2 and you should see the next five posts (if you have that many, if you only have six posts total you should now see just one post).
+If you run the project with `yarn cedar dev` on the default port 8910 you can now go to http://localhost:8910 and you should only see the first five posts. Change the URL to http://localhost:8910?page=2 and you should see the next five posts (if you have that many, if you only have six posts total you should now see just one post).
 
 The final thing to add is a page selector, or pagination component, to the end of the list of posts to be able to click and jump between the different pages.
 
-Generate a new component with`yarn rw g component Pagination`
+Generate a new component with`yarn cedar g component Pagination`
 
 <Tabs groupId="js-ts">
 <TabItem value="js" label="JavaScript">

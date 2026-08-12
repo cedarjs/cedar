@@ -7,7 +7,7 @@ sidebar_label: Netlify
 To get started, run the setup command:
 
 ```bash
-yarn rw setup auth netlify
+yarn cedar setup auth netlify
 ```
 
 This installs all the packages, writes all the files, and makes all the code modifications you need.
@@ -17,7 +17,7 @@ For now let's focus on Netlify's side of things.
 There's a catch with Netlify Identity: your app has to be be deployed to Netlify to use it.
 If this's a deal breaker for you, there are [other great auth providers to choose from](../authentication.md#official-integrations).
 But here we'll assume it's not and that your app is already deployed.
-(If it isn't, do that first, then come back. And yes, there's a setup command for that: `yarn rw setup deploy netlify`.)
+(If it isn't, do that first, then come back. And yes, there's a setup command for that: `yarn cedar setup deploy netlify`.)
 
 Once you've deployed your app, go to its overview, click "Projects" in the nav on the side, click on the name of your project. You should now be at `app.netlify.com/projects/<name-of-your-app>/overview`. Look for "Project configuration" on the side menu. Scroll down and find "Identity". Search for Netlify Identity, enable it, and copy the API endpoint in the Identity card.
 (It should look something like `https://my-redwood-app.netlify.app/.netlify/identity`.)
@@ -33,7 +33,7 @@ So let's go ahead and use it: if this is a brand new project, generate a home pa
 There we'll try to sign up by destructuring `signUp` from the `useAuth` hook (import that from `'src/auth'`). We'll also destructure and display `isAuthenticated` to see if it worked:
 
 ```
-yarn rw g page home /
+yarn cedar g page home /
 ```
 
 ```tsx title="web/src/pages/HomePage.tsx"

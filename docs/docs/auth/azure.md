@@ -7,7 +7,7 @@ sidebar_label: Azure
 To get started, run the setup command:
 
 ```bash
-yarn rw setup auth azure-active-directory
+yarn cedar setup auth azure-active-directory
 ```
 
 This installs all the packages, writes all the files, and makes all the code
@@ -80,7 +80,7 @@ a home page. There we'll try to sign up by destructuring `signUp` from the
 display `isAuthenticated` to see if it worked:
 
 ```
-yarn rw g page home /
+yarn cedar g page home /
 ```
 
 ```tsx title="web/src/pages/HomePage.tsx"

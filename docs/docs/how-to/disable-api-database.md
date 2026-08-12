@@ -24,7 +24,7 @@ The `--prisma` and `--dm` flags are set to `true` by default and need to be set 
 
 ```toml {4}
 [build]
-  command = "yarn rw deploy netlify --prisma=false --dm=false"
+  command = "yarn cedar deploy netlify --prisma=false --dm=false"
 ```
 
 While omitting these flags won't prevent you from developing the site in a local environment, not setting them to `false` will lead to a `'No Prisma Schema found'` error when you attempt to deploy your site to a production environment, at least when Netlify is the deployment target.
@@ -37,12 +37,12 @@ Open up `netlify.toml`. We're going to comment out one line:
 
 ```toml {4}
 [build]
-  command = "yarn rw deploy netlify --prisma=false --dm=false"
+  command = "yarn cedar deploy netlify --prisma=false --dm=false"
   publish = "web/dist"
   # functions = "api/dist/functions"
 
 [dev]
-  command = "yarn rw dev"
+  command = "yarn cedar dev"
 
 [[redirects]]
   from = "/*"
@@ -254,7 +254,7 @@ Any files that you put in `web/public` will be served by Netlify, skipping any b
 Next let's have a React component get that data remotely and then display it on a page. For this example we'll generate a homepage:
 
 ```bash
-yarn rw generate page home /
+yarn cedar generate page home /
 ```
 
 Next we'll use the browser's builtin `fetch()` function to get the data and then we'll just dump it to the screen to make sure it works:

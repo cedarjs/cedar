@@ -225,7 +225,7 @@ Normally the dev server only binds to `127.0.0.1` (home sweet home) which means 
   title = "Cedar App"
   port = 8910
   host = '0.0.0.0'
-  apiUrl = '/.redwood/functions'
+  apiUrl = '/.api/functions'
   includeEnvironmentVariables = []
 [api]
   port = 8911

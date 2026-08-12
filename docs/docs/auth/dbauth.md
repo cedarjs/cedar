@@ -42,7 +42,7 @@ If there are any shenanigans detected (the cookie can't be decrypted properly, o
 A single CLI command will get you everything you need to get dbAuth working, minus the actual login/signup pages:
 
 ```bash
-yarn rw setup auth dbAuth
+yarn cedar setup auth dbAuth
 ```
 
 You will be prompted to ask if you want to enable **WebAuthn** support. WebAuthn is an open standard for allowing authentication from devices like TouchID, FaceID, USB fingerprint scanners, and more. If you think you want to use WebAuthn, enter `y` at this prompt and read on configuration options.
@@ -89,13 +89,13 @@ Read the post-install instructions carefully as they contain instructions for ad
 > Finally, we created a `SESSION_SECRET` environment variable for you in `.env`. This value should NOT be checked into version control and should be unique for each environment you deploy to. If you ever need to log everyone out of your app at once change this secret to a new value. To create a new secret, run:
 >
 > ```
-> yarn rw g secret
+> yarn cedar g secret
 > ```
 >
 > Need simple Login, Signup and Forgot Password pages? Of course we have a generator for those:
 >
 > ```
-> yarn rw generate dbAuth
+> yarn cedar generate dbAuth
 > ```
 
 Note that if you change the fields named `hashedPassword` and `salt`, and you have some verbose logging in your app, you'll want to scrub those fields from appearing in your logs. See the [Redaction](logger.md#redaction) docs for info.
@@ -107,7 +107,7 @@ Renaming these fields also means the SDL and scaffold generators no longer recog
 If you don't want to create your own login, signup and forgot password pages from scratch we've got a generator for that:
 
 ```bash
-yarn rw g dbAuth
+yarn cedar g dbAuth
 ```
 
 Once again you will be asked if you want to create a WebAuthn-enabled version of the LoginPage. If so, enter `y` and follow the setup instructions.
@@ -376,7 +376,7 @@ cookie: {
 If you need to change the secret key that's used to encrypt the session cookie, or deploy to a new target (each deploy environment should have its own unique secret key) we've got a CLI tool for creating a new one:
 
 ```
-yarn rw g secret
+yarn cedar g secret
 ```
 
 Note that the secret that's output is _not_ appended to your `.env` file or anything else, it's merely output to the screen. You'll need to put it in the right place after that.
@@ -539,7 +539,7 @@ model UserCredential {
 // highlight-end
 ```
 
-Run `yarn rw prisma migrate dev` to apply the changes to your database.
+Run `yarn cedar prisma migrate dev` to apply the changes to your database.
 
 :::warning[Do Not Allow GraphQL Access to `UserCredential`]
 
@@ -716,7 +716,7 @@ The api-side is now ready to go.
 
 ### App.js Updates
 
-If you generated your login/signup pages with `yarn rw g dbAuth --webauthn` then all of these changes are in place and you can start using WebAuthn right away! Otherwise, read on.
+If you generated your login/signup pages with `yarn cedar g dbAuth --webauthn` then all of these changes are in place and you can start using WebAuthn right away! Otherwise, read on.
 
 First you'll need to import the `WebAuthnClient` and give it to the `<AuthProvider>` component:
 
@@ -751,7 +751,7 @@ const App = () => (
 export default App
 ```
 
-Now you're ready to access the functionality added by the WebAuthn client. The easiest way to do this would be to generate a new `LoginPage` with `yarn rw g dbAuth --webauthn`, even if it's in a brand new, throwaway app, and copy the pieces you need (or just replace your existing login page with it).
+Now you're ready to access the functionality added by the WebAuthn client. The easiest way to do this would be to generate a new `LoginPage` with `yarn cedar g dbAuth --webauthn`, even if it's in a brand new, throwaway app, and copy the pieces you need (or just replace your existing login page with it).
 
 The gist of building a login flow is that you now need to stop after username/password authentication and, if the browser supports WebAuthn, give the user the chance to register their device. If they come to the login page and already have the `webAuthn` cookie then you can show the prompt to authenticate, skipping the username/password form completely. This is all handled in the LoginPage template that Cedar generates for you.
 

@@ -966,8 +966,8 @@ The _key_ to writing a good key (!) is to think carefully about the circumstance
 We have a setup command which creates a file `api/src/lib/cache.js` and include basic initialization for Memcached or Redis:
 
 ```bash
-yarn rw setup cache memcached
-yarn rw setup cache redis
+yarn cedar setup cache memcached
+yarn cedar setup cache redis
 ```
 
 This generates the following (memcached example shown):

@@ -95,7 +95,7 @@ export default class User extends RedwoodRecord {}
 Now we need to parse the Prisma schema, store it as a cached JSON file, and create an `index.js` file with a couple of config settings:
 
 ```
-yarn rw record init
+yarn cedar record init
 ```
 
 You'll see that this created `api/src/models/datamodel.js` and `api/src/models/index.js`.
@@ -105,7 +105,7 @@ Believe it or not, that's enough to get started! Let's try using the Cedar conso
 > TODO: Models don't quite work correctly in the console. The require and fetching of records below will work, but actually trying to read any properties returns `undefined`. For now you'll need to test out RedwoodRecord directly in your app.
 
 ```
-yarn rw c
+yarn cedar c
 ```
 
 Now we've got a standard Node REPL but with a bunch of Cedar goodness loaded up for us already. First, let's require our model:

@@ -7,7 +7,7 @@ sidebar_label: Supabase
 To get started, run the setup command:
 
 ```bash
-yarn rw setup auth supabase
+yarn cedar setup auth supabase
 ```
 
 This installs all the packages, writes all the files, and makes all the code modifications you need.

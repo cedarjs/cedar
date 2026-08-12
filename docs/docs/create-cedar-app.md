@@ -79,7 +79,7 @@ Once the Create Cedar app has finished running, you can start your development s
 
 ```terminal
 cd <your-app-name>
-yarn rw dev
+yarn cedar dev
 ```
 
 - This will start your development server at `http://localhost:8910`.
