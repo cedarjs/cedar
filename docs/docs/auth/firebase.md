@@ -7,7 +7,7 @@ sidebar_label: Firebase
 To get started, run the setup command:
 
 ```bash
-yarn rw setup auth firebase
+yarn cedar setup auth firebase
 ```
 
 This installs all the packages, writes all the files, and makes all the code modifications you need.

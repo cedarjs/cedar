@@ -24,7 +24,7 @@ Prerendering a page is as easy as it gets. Just add the `prerender` prop to the 
 <Route path="/" page={HomePage} name="home" prerender/>
 ```
 
-Then run `yarn rw build` and enjoy the performance boost!
+Then run `yarn cedar build` and enjoy the performance boost!
 
 {/* this doesn't render... */}
 {/* ![https://s3-us-west-2.amazonaws.com/secure.notion-static.com/b2c2aa27-3b2b-4ab7-b514-6ebc963d5312/2021-02-19_20.24.00.gif](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/b2c2aa27-3b2b-4ab7-b514-6ebc963d5312/2021-02-19_20.24.00.gif) */}
@@ -219,7 +219,7 @@ if (isBrowser) {
 If you just want to debug your app, or check for possible prerendering errors, after you've built it, you can run this command:
 
 ```bash
-yarn rw prerender --dry-run
+yarn cedar prerender --dry-run
 ```
 
 We're actively looking for feedback! Do let us know if: everything built ok? you encountered specific libraries that you were using that didn’t work?

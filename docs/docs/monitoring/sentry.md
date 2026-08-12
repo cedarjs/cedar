@@ -9,7 +9,7 @@ description: Monitor errors, performance and more in your Cedar app using Sentry
 From your command line, run:
 
 ```
-yarn redwood setup monitoring sentry
+yarn cedar setup monitoring sentry
 ```
 
 This command installs and sets up [`@sentry/node`](https://docs.sentry.io/platforms/node/) and [`@sentry/react`](https://docs.sentry.io/platforms/javascript/guides/react/), enabling [Prisma](https://docs.sentry.io/platforms/node/performance/database/opt-in/#prisma-orm-integration) and [Browser](https://docs.sentry.io/platforms/javascript/performance/instrumentation/automatic-instrumentation/) tracing to capture 100% of events. The following sections detail how you may further integrate Sentry in your Cedar application.

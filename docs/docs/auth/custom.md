@@ -26,7 +26,7 @@ When it comes to writing a custom auth integration, there's a little more work t
 To get started, run the setup command:
 
 ```bash
-yarn rw setup auth custom
+yarn cedar setup auth custom
 ```
 
 This makes all the code modifications it can, but whereas with other auth providers, all you have to do now is get your keys, here you have to write some code.

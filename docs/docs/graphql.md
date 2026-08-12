@@ -274,7 +274,7 @@ model User {
 }
 ```
 
-If you create your Services for this model using Cedar's generator (`yarn rw g service user`), your Services will look like this:
+If you create your Services for this model using Cedar's generator (`yarn cedar g service user`), your Services will look like this:
 
 ```jsx title="api/src/services/user/user.js"
 import { db } from 'src/lib/db'
@@ -404,7 +404,7 @@ export const handler = createGraphQLHandler({
 
 ### The Root Schema
 
-Did you know that you can query `redwood`? Try it in the GraphQL Playground (you can find the GraphQL Playground at http://localhost:8911/graphql when your dev server is running&mdash;`yarn rw dev api`):
+Did you know that you can query `redwood`? Try it in the GraphQL Playground (you can find the GraphQL Playground at http://localhost:8911/graphql when your dev server is running&mdash;`yarn cedar dev api`):
 
 ```graphql
 query {
@@ -572,7 +572,7 @@ For local development,
 with the proxy using `curl` from the command line:
 
 ```bash
-curl "http://localhost:8910/.redwood/functions/graphql/health" -i
+curl "http://localhost:8910/.api/functions/graphql/health" -i
 ```
 
 or by directly invoking the graphql function:
@@ -604,7 +604,7 @@ To perform a readiness check, make a HTTP GET request to the `/graphql/readiness
 For local development, you can make a request to the proxy:
 
 ```bash
-curl "http://localhost:8910/.redwood/functions/graphql/readiness" \
+curl "http://localhost:8910/.api/functions/graphql/readiness" \
   -H 'x-yoga-id: yoga' \
   -i
 ```
@@ -639,7 +639,7 @@ If any fail this check, you will see:
 
 ### Build-time Verification
 
-When building via the `yarn rw build` command and the SDL fails verification, you will see output that lists each query or mutation missing the directive:
+When building via the `yarn cedar build` command and the SDL fails verification, you will see output that lists each query or mutation missing the directive:
 
 ```bash
 ✔ Generating Prisma Client...
@@ -662,7 +662,7 @@ You must specify one of @requireAuth, @skipAuth or a custom directive for
 
 ### Dev Server Verification
 
-When launching the dev server via the `yarn rw dev` command, you will see output that lists each query or mutation missing the directive:
+When launching the dev server via the `yarn cedar dev` command, you will see output that lists each query or mutation missing the directive:
 
 ```bash
 gen | Generating TypeScript definitions and GraphQL schemas...
@@ -2246,7 +2246,7 @@ When used with `--docs` option, [SDL generator](cli-commands#generate-sdl) adds 
 By default, the `--docs` option to the SDL generator is false and comments are not created.
 :::
 
-Comments [enclosed in `"""` or `"`]([GraphQL spec](https://spec.graphql.org/October2021/#sec-Descriptions) in your sdl files will be included in the generated GraphQL schema at the root of your project (.redwood/schema.graphql).
+Comments [enclosed in `"""` or `"`]([GraphQL spec](https://spec.graphql.org/October2021/#sec-Descriptions) in your sdl files will be included in the generated GraphQL schema at the root of your project (.cedar/schema.graphql).
 
 ```
 """
@@ -2454,7 +2454,7 @@ mkdir docs/graphql-api // if needed
     [
       '@graphql-markdown/docusaurus',
       {
-        schema: '../.redwood/schema.graphql',
+        schema: '../.cedar/schema.graphql',
         rootPath: './docs',
         baseURL: 'graphql-api',
         linkRoot: '../..',

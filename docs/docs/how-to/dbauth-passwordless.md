@@ -42,7 +42,7 @@ Make note of the optional `salt` field.
 Once you've made the changes, you'll need to migrate your database.
 
 ```bash
-yarn rw prisma migrate dev
+yarn cedar prisma migrate dev
 ```
 
 ### 2. Setting up the generateToken function
@@ -50,7 +50,7 @@ yarn rw prisma migrate dev
 Next, we need to create a function that will generate a token and an expiration date. For this you will need a Users service. If you don't already have a `/api/src/services/users/users.{js|ts}` file you can generate one with the following command.
 
 ```bash
-yarn rw g service users
+yarn cedar g service users
 ```
 
 Now that you have the file, let's add the `generateToken` function.
@@ -214,7 +214,7 @@ We need to make a form that will allow the user to enter their email address.
 Let's start with the generator.
 
 ```bash
-yarn rw g component LoginPasswordlessForm
+yarn cedar g component LoginPasswordlessForm
 ```
 
 This created a component in `web/src/components/LoginPasswordlessForm/LoginPasswordlessForm.{js|tsx}`. Let's update it.
@@ -321,7 +321,7 @@ We aren't rendering it anywhere yet, but when we do it will look like this.
 Now we also need a form that will accept the code that was sent to the user.
 
 ```bash
-yarn rw g component LoginPasswordlessTokenForm
+yarn cedar g component LoginPasswordlessTokenForm
 ```
 
 ```jsx title="/web/src/components/LoginPasswordlessTokenForm/LoginPasswordlessTokenForm.js"
@@ -446,7 +446,7 @@ Here's a preview of the form.
 Now each of those forms are controlled with the props we pass to them. We will make a new page that will control the state of the forms.
 
 ```bash
-yarn rw g page LoginPasswordless
+yarn cedar g page LoginPasswordless
 ```
 
 ```jsx title="/web/pages/LoginPasswordlessPage/LoginPasswordlessPage.js"

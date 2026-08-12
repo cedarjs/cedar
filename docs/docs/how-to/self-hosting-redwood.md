@@ -98,7 +98,7 @@ const user = 'deploy' // Server user
 const path = `/home/${user}/${name}` // Path on the server to deploy to
 const host = 'example.com' // Server hostname
 const port = 8911 // Port to use locally on the server
-const build = `yarn install && yarn rw build && yarn rw prisma migrate deploy`
+const build = `yarn install && yarn cedar build && yarn cedar prisma migrate deploy`
 
 module.exports = {
   apps: [
@@ -106,7 +106,7 @@ module.exports = {
       name,
       node_args: '-r dotenv/config',
       cwd: `${path}/current/`,
-      script: 'yarn rw serve api',
+      script: 'yarn cedar serve api',
       args: `--port ${port}`,
       env: {
         NODE_ENV: 'development',
@@ -131,7 +131,7 @@ module.exports = {
 }
 ```
 
-If you need to seed your production database during your first deployment, `yarn redwood prisma migrate dev` will do that for you.
+If you need to seed your production database during your first deployment, `yarn cedar prisma migrate dev` will do that for you.
 
 > **Caveat:** the API seems to only work in fork mode in PM2, not [cluster mode](https://pm2.keymetrics.io/docs/usage/cluster-mode/).
 

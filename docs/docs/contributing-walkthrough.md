@@ -116,7 +116,7 @@ But when you’re ready, learn how to use it in the section at the end [“GitPo
 There are several options for creating a local Cedar Project to use during development. Anytime you are developing against a test project, there are some specific gotchas to keep in mind:
 
 - New projects always use the latest stable version of the Cedar packages, which will not be up to date with the latest Framework code in the `main` branch.
-- To use the packages corresponding with the latest code in the Framework `main` branch, you can use the canary version published to NPM. All you need to do to install the canary versions is run `yarn rw upgrade --tag canary` in your Project
+- To use the packages corresponding with the latest code in the Framework `main` branch, you can use the canary version published to NPM. All you need to do to install the canary versions is run `yarn cedar upgrade --tag canary` in your Project
 - Using a cloned project or repo? Just know there are likely breaking changes in `main` that haven’t been applied. You can examine merged PRs with the “breaking” label for more info.
 - Just because you are using canary doesn’t mean you are using your local Framework branch code! Make sure you run `yarn cfw project:sync`. And anytime you switch branches or get out of sync, you might need to start over beginning with the `git clean -fxd` command
 

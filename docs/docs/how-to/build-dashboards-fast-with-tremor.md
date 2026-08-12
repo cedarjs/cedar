@@ -38,7 +38,7 @@ If you do not want a TypeScript project, omit the `--ts` flag.
 Use the Cedar setup command to install `TailwindCSS`, its peer dependencies, and create the `tailwind.config.cjs` file.
 
 ```bash
-yarn rw setup ui tailwindcss
+yarn cedar setup ui tailwindcss
 ```
 
 Install `tremor` in the web workspace from your command line via yarn.
@@ -76,7 +76,7 @@ module.exports = {
 Generate a page from your command line.
 
 ```bash
-yarn rw g page dashboard /
+yarn cedar g page dashboard /
 ```
 
 You will now have a new page at `web/src/pages/DashboardPage/DashboardPage.tsx` and `web/src/Routes.tsx` will have a new route added at:
@@ -163,7 +163,7 @@ export default DashboardPage
 Start your CedarJS development server
 
 ```bash
-yarn rw dev
+yarn cedar dev
 ```
 
 Your app will start up and you should see the Dashboard page with an area with two `Newsletter revenue over time (USD)` data series.
@@ -173,7 +173,7 @@ Your app will start up and you should see the Dashboard page with an area with t
 Generate a component for a KPI (Key Performance Indicator) from your command line.
 
 ```bash
-yarn rw g component KpiCard
+yarn cedar g component KpiCard
 ```
 
 You will now have a new React component at `/web/src/components/KpiCard/KpiCard.tsx`.

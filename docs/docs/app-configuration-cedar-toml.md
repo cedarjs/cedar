@@ -125,7 +125,7 @@ Additional server configuration can be done using [Server File](docker.md#using-
 ```
 
 Setting `open` to `true` opens your browser to `http://${web.host}:${web.port}` (by default, `http://localhost:8910`) after the dev server starts.
-If you want your browser to stop opening when you run `yarn rw dev`, set this to `false`.
+If you want your browser to stop opening when you run `yarn cedar dev`, set this to `false`.
 (Or just remove it entirely.)
 
 There's actually a lot more you can do here. For more, see Vite's docs on [`preview.open`](https://vitejs.dev/config/preview-options.html#preview-open).

@@ -7,7 +7,7 @@ sidebar_label: Auth0
 To get started, run the setup command:
 
 ```bash
-yarn rw setup auth auth0
+yarn cedar setup auth auth0
 ```
 
 This installs all the packages, writes all the files, and makes all the code modifications you need.
@@ -62,7 +62,7 @@ Let's make sure: if this is a brand new project, generate a home page.
 There we'll try to sign up by destructuring `signUp` from the `useAuth` hook (import that from `'src/auth'`). We'll also destructure and display `isAuthenticated` to see if it worked:
 
 ```
-yarn rw g page home /
+yarn cedar g page home /
 ```
 
 ```tsx title="web/src/pages/HomePage.tsx"

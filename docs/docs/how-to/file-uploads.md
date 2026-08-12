@@ -38,7 +38,7 @@ REDWOOD_ENV_FILESTACK_API_KEY=AM18i8xV4QpoiGwetoTWd
 Now we can start our development server:
 
 ```bash
-yarn rw dev
+yarn cedar dev
 ```
 
 ### The Database
@@ -58,13 +58,13 @@ model Image {
 Create a migration to update the database; when prompted, name it "add image":
 
 ```bash
-yarn rw prisma migrate dev
+yarn cedar prisma migrate dev
 ```
 
 To make our lives easier, let's scaffold the screens necessary to create/update/delete an image, then we'll worry about adding the uploader:
 
 ```bash
-yarn rw generate scaffold image
+yarn cedar generate scaffold image
 ```
 
 Now head to http://localhost:8910/images/new and let's figure this out!
