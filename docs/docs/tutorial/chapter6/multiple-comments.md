@@ -27,7 +27,7 @@ Look, we gotta end this sidebar and get back to building this thing. You can ask
 Let's generate a **CommentsCell**:
 
 ```bash
-yarn rw g cell Comments
+yarn cedar g cell Comments
 ```
 
 Storybook updates with a new **CommentsCell** under the **Cells** folder, and it's actually showing something:

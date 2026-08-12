@@ -27,7 +27,7 @@ model User {
 Next we'll (try) to migrate the database:
 
 ```bash
-yarn rw prisma migrate dev
+yarn cedar prisma migrate dev
 ```
 
 But that will fail with an error:
@@ -57,7 +57,7 @@ model User {
 Now the migration should be able to be applied:
 
 ```bash
-yarn rw prisma migrate dev
+yarn cedar prisma migrate dev
 ```
 
 And you can name it something like "add roles to user".
@@ -211,7 +211,7 @@ Now if you browse to [http://localhost:8910/admin/posts](http://localhost:8910/a
 Let's use the Cedar console again to quickly update our admin user to actually have the `admin` role:
 
 ```bash
-yarn rw c
+yarn cedar c
 ```
 
 :::tip
@@ -921,7 +921,7 @@ We moved the default `comment` object to a constant `COMMENT` and then used that
 We added fields to the database and sometimes the test runner doesn't realize this. You may need to restart it to get the test database migrated to match what's in `schema.prisma`. Press `q` or `Ctrl-C` in your test runner if it's still running, then:
 
 ```bash
-yarn rw test
+yarn cedar test
 ```
 
 The suite should automatically run the tests for `Comment` and `CommentCell` at the very least, and maybe a few more if you haven't committed your code to git in a while.
