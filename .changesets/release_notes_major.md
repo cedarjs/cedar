@@ -103,6 +103,47 @@ prefer `request.headers.get('...')` over `event.headers['...']` where
 - API functions returning status 204, 205, or 304 no longer crash under the
   fetch-native runtime.
 
+### Better DX for AI coding agents
+
+A batch of fixes came out of watching an AI coding agent build a Cedar app
+end-to-end and tracking down every place it got stuck or produced insecure
+code:
+
+- **`PrivateSet` is easier to find.** It's now an explicit named export from
+  `@cedarjs/router` instead of hiding behind a wildcard re-export, and its
+  doc comment calls out the `RequireAuth`/`ProtectedRoute` names other
+  routers use for the same concept.
+- **The scaffold generator teaches route protection.** When a project has
+  auth set up and a `login` route exists, `yarn cedar generate scaffold`
+  now wraps the generated routes in `<PrivateSet unauthenticated="login">`
+  automatically, so `PrivateSet` shows up in the first generated code most
+  developers see.
+- **dbAuth setup notes mention `PrivateSet`.** `yarn cedar setup auth dbAuth`
+  now prints a short snippet showing how to protect a route right after
+  auth is wired up.
+- **`cedar check` warns about unprotected auth-gated mutations.** If a route
+  isn't wrapped in `<PrivateSet>`/`<Private>` but its page transitively
+  calls a mutation marked `@requireAuth` in the SDL, `cedar check` now flags
+  it. This also fixed `isPrivate`/`unauthenticated`/`roles` to look past the
+  immediate JSX parent, so routes nested inside `<PrivateSet><Set>...` are
+  now correctly recognized as protected.
+- **`cedar test` fails fast on a database mismatch.** Instead of hanging
+  indefinitely, it now checks that `TEST_DATABASE_URL` matches the provider
+  configured in `schema.prisma` and throws an actionable, credential-redacted
+  error before Prisma is invoked.
+- **`cedar generate sdl` is relation-aware and redacts sensitive fields.**
+  Generating SDL for a model with an unrelated model now generates read-only
+  stubs for those related models instead of leaving the project in a broken
+  state with a failing type-generation step. dbAuth's sensitive fields
+  (`hashedPassword`, `salt`, `resetToken`, and friends) are also excluded by
+  name from generated SDL, inputs, scaffolds, and service tests, so they're
+  no longer queryable or settable through the GraphQL API by default.
+- **`cedar dev --fwd` actually forwards args now.** Dev server options like
+  `--port` and `--open` passed through `--fwd` used to be silently dropped;
+  the flag is also no longer hidden. `cedar dev` also now defaults to
+  `open: false` when there's no interactive TTY (CI, AI agents), regardless
+  of `[browser] open` in `cedar.toml`.
+
 ### `postcss-loader` is no longer installed
 
 `yarn cedar setup ui tailwindcss` used to install `postcss-loader` alongside
