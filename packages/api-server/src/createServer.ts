@@ -116,6 +116,19 @@ export async function createServer(options: CreateServerOptions = {}) {
     getAsyncStoreInstance().run(new Map<string, GlobalContext>(), done)
   })
 
+  // Run the user's custom server configuration function directly on the root
+  // `server` instance, *before* registering the api/GraphQL plugins.
+  //
+  // `cedarFastifyAPI` and `cedarFastifyGraphQLServer` are registered below as
+  // sibling plugins (each gets its own Fastify encapsulation context), so
+  // anything registered *inside* one of them (e.g. hooks/plugins added via
+  // `configureApiServer` if it ran inside `cedarFastifyAPI`) would not apply
+  // to the other. Running it here, on the root instance, means hooks and
+  // plugins added by `configureApiServer` (e.g. `@fastify/compress`) apply to
+  // both the api functions and the GraphQL endpoint alike.
+  // See: https://github.com/cedarjs/cedar/issues/2304
+  await configureApiServer(server)
+
   await server.register(cedarFastifyAPI, {
     cedar: {
       apiRootPath,
@@ -123,7 +136,6 @@ export async function createServer(options: CreateServerOptions = {}) {
         ignore: ['**/dist/functions/graphql.js'],
       },
       discoverFunctionsGlob,
-      configureServer: configureApiServer,
     },
   })
 

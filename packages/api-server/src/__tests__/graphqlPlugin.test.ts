@@ -16,6 +16,7 @@ import type * as GraphqlServerModule from '@cedarjs/graphql-server'
 import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
 
 import { createFastifyInstance } from '../fastify.js'
+import { cedarFastifyAPI } from '../plugins/api.js'
 import {
   cedarFastifyGraphQLServer,
   isClientDisconnectError,
@@ -176,5 +177,67 @@ describe('GraphQL route handler client-disconnect handling', () => {
     })
 
     expect(response.statusCode).toBe(500)
+  })
+})
+
+// Regression test for https://github.com/cedarjs/cedar/issues/2304
+//
+// `cedarFastifyAPI` and `cedarFastifyGraphQLServer` are registered as
+// *sibling* plugins (see `createServer.ts`), each getting its own Fastify
+// encapsulation context. A hook/plugin registered *inside* one of them
+// (e.g. by running the user's `configureApiServer` callback inside
+// `cedarFastifyAPI`) would never apply to the other sibling's routes. This
+// bit real users using `configureApiServer` to register `@fastify/compress`:
+// it compressed function responses, but not GraphQL responses.
+//
+// `createServer.ts` now runs `configureApiServer` directly on the root
+// server instance, *before* registering either plugin, so hooks it adds
+// apply to both. This test simulates that by adding an `onSend` hook
+// directly on the root instance, then asserting it applies to both a
+// function route (served by `cedarFastifyAPI`) and the GraphQL route
+// (served by `cedarFastifyGraphQLServer`).
+describe('root-level hooks apply across sibling plugins (issue #2304)', () => {
+  let fastifyInstance: Awaited<ReturnType<typeof createFastifyInstance>>
+
+  afterEach(async () => {
+    vi.mocked(createGraphQLYoga).mockClear()
+    await fastifyInstance?.close()
+  })
+
+  it('a header set by an onSend hook on the root instance is present on both api-function and GraphQL responses', async () => {
+    fastifyInstance = await createFastifyInstance()
+
+    // Stands in for what a user's `configureApiServer` callback might do,
+    // e.g. `server.register(compress)`, which itself adds an `onSend` hook.
+    fastifyInstance.addHook('onSend', (_req, reply, payload, done) => {
+      reply.header('x-configure-api-server', 'applied')
+      done(null, payload)
+    })
+
+    await fastifyInstance.register(cedarFastifyAPI, {
+      cedar: { loadUserConfig: false },
+    })
+
+    vi.mocked(createGraphQLYoga).mockResolvedValueOnce(
+      fakeYogaResult(() => Promise.resolve(new Response('{}'))),
+    )
+
+    await fastifyInstance.register(cedarFastifyGraphQLServer, {
+      cedar: { graphql: fakeGraphqlOptions },
+    })
+
+    await fastifyInstance.ready()
+
+    const helloResponse = await fastifyInstance.inject({
+      method: 'GET',
+      url: '/hello',
+    })
+    expect(helloResponse.headers['x-configure-api-server']).toEqual('applied')
+
+    const graphqlResponse = await fastifyInstance.inject({
+      method: 'GET',
+      url: '/graphql',
+    })
+    expect(graphqlResponse.headers['x-configure-api-server']).toEqual('applied')
   })
 })
