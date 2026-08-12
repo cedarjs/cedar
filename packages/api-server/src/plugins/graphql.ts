@@ -18,12 +18,14 @@ import { createGraphQLYoga } from '@cedarjs/graphql-server'
 import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
 import { getPaths } from '@cedarjs/project-config'
 
+import type { Server } from '../createServerHelpers.js'
 import { lambdaEventForFastifyRequest } from '../requestHandlers/awsLambdaFastify.js'
 
 export interface CedarFastifyGraphQLOptions {
   cedar: {
     apiRootPath?: string
     graphql?: GraphQLYogaOptions
+    configureServer?: (server: Server) => void | Promise<void>
   }
 }
 
@@ -45,6 +47,15 @@ export async function cedarFastifyGraphQLServer(
   fastify.addHook('onRequest', (_req, _reply, done) => {
     getAsyncStoreInstance().run(new Map<string, GlobalContext>(), done)
   })
+
+  // Run the user's custom server configuration function, scoped to this
+  // plugin's own encapsulation context (i.e. it applies to the GraphQL
+  // routes only, not to the sibling api function routes). For config that
+  // should apply to both, register it directly on the `server` instance
+  // returned by `createServer()` instead.
+  if (cedarOptions.configureServer) {
+    await cedarOptions.configureServer(fastify as Server)
+  }
 
   try {
     // Load the graphql options from the user's graphql function if none are

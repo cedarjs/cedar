@@ -7,6 +7,7 @@ import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers.js'
 
+import type { Server } from '../createServerHelpers.js'
 import { loadFastifyConfig } from '../fastify.js'
 
 import { lambdaRequestHandler, loadFunctionsFromDist } from './lambdaLoader.js'
@@ -17,6 +18,7 @@ export interface CedarFastifyAPIOptions {
     fastGlobOptions?: FastGlobOptions
     discoverFunctionsGlob?: string | string[]
     loadUserConfig?: boolean
+    configureServer?: (server: Server) => void | Promise<void>
     // TODO(UD): Future potential integration point. Remove if we don't end up
     // using it
     // onRoutesDiscovered?: (routes: unknown[]) => void | Promise<void>
@@ -56,6 +58,15 @@ export async function cedarFastifyAPI(
         apiRootPath: cedarOptions.apiRootPath,
       })
     }
+  }
+
+  // Run the user's custom server configuration function, scoped to this
+  // plugin's own encapsulation context (i.e. it applies to api function
+  // routes only, not to the sibling GraphQL server). For config that should
+  // apply to both, register it directly on the `server` instance returned by
+  // `createServer()` instead.
+  if (cedarOptions.configureServer) {
+    await cedarOptions.configureServer(fastify as Server)
   }
 
   fastify.all(`${cedarOptions.apiRootPath}:routeName`, lambdaRequestHandler)

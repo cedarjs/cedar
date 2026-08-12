@@ -114,6 +114,7 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
+    "@fastify/compress": "9.1.1",
     "@types/aws-lambda": "8.10.162",
     "@types/dotenv-defaults": "^5.0.0",
     "@types/split2": "4.2.3",

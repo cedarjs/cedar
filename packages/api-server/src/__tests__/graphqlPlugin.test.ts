@@ -1,5 +1,7 @@
 import path from 'path'
+import { gunzipSync } from 'zlib'
 
+import fastifyCompress from '@fastify/compress'
 import fastifyMultipart from '@fastify/multipart'
 import {
   vi,
@@ -15,6 +17,8 @@ import { createGraphQLYoga } from '@cedarjs/graphql-server'
 import type * as GraphqlServerModule from '@cedarjs/graphql-server'
 import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
 
+import type { createServer } from '../createServer.js'
+import type { CreateServerOptions } from '../createServerHelpers.js'
 import { createFastifyInstance } from '../fastify.js'
 import {
   cedarFastifyGraphQLServer,
@@ -179,32 +183,44 @@ describe('GraphQL route handler client-disconnect handling', () => {
   })
 })
 
-// Regression test for https://github.com/cedarjs/cedar/issues/2304
+// Regression tests for https://github.com/cedarjs/cedar/issues/2304
 //
 // `cedarFastifyAPI` and `cedarFastifyGraphQLServer` are registered as
 // *sibling* plugins (see `createServer.ts`), each getting its own Fastify
 // encapsulation context. A hook/plugin registered *inside* one of them
-// (e.g. by running the user's `configureApiServer` callback inside
-// `cedarFastifyAPI`) would never apply to the other sibling's routes. This
-// bit real users using `configureApiServer` to register `@fastify/compress`:
-// it compressed function responses, but not GraphQL responses.
+// (e.g. via `configureApiServer`, which runs inside `cedarFastifyAPI`, or
+// `configureGraphQLServer`, which runs inside `cedarFastifyGraphQLServer`)
+// only applies to that plugin's own routes, never the sibling's. This is
+// intentional: the two are configured independently on purpose (see PR
+// review discussion on #2389).
 //
-// `createServer.ts` now runs `configureApiServer` directly on the root
-// server instance, *before* registering either plugin, so hooks it adds
-// apply to both. This test verifies this by passing a `configureApiServer`
-// callback to `createServer` that adds an `onSend` hook, then asserting
-// it applies to both a function route (served by `cedarFastifyAPI`) and
-// the GraphQL route (served by `cedarFastifyGraphQLServer`).
-describe('root-level hooks apply across sibling plugins (issue #2304)', () => {
+// Real users hit #2304 by registering `@fastify/compress` via
+// `configureApiServer`, expecting it to also compress GraphQL responses.
+//
+// Applying a plugin/hook to *both* function and GraphQL routes has two
+// supported options, depending on what the plugin does:
+//
+// - Plain request-lifecycle hooks (`onRequest`, `onSend`, etc.) can be
+//   registered directly on the `server` instance returned by
+//   `createServer()`. That works because Fastify resolves hooks added to a
+//   parent context against its children's routes at request-dispatch time,
+//   regardless of whether they were added before or after the children were
+//   registered.
+// - Plugins with a "global" mode that works by hooking Fastify's `onRoute`
+//   (e.g. `@fastify/compress`) are different: `onRoute` only fires for
+//   routes registered *after* the plugin itself, so registering them on the
+//   returned `server` (i.e. after `cedarFastifyAPI`/
+//   `cedarFastifyGraphQLServer` already registered their routes) silently
+//   does nothing. These must be registered via the new `configureServer`
+//   option, which runs *before* any routes exist.
+describe('configureApiServer / configureGraphQLServer scoping (issue #2304)', () => {
   let server: Awaited<ReturnType<typeof createServer>>
 
-  afterEach(async () => {
-    vi.mocked(createGraphQLYoga).mockClear()
-    await server?.close()
-  })
-
-  it('a header set by an onSend hook in configureApiServer is present on both api-function and GraphQL responses', async () => {
-    // Import createServer locally to avoid affecting other tests' setup
+  async function createServerWithGraphQL(
+    options: CreateServerOptions,
+    yogaHandle: () => Promise<Response> = () =>
+      Promise.resolve(new Response('{}')),
+  ) {
     const { createServer: createServerFn } = await import('../createServer.js')
 
     // The fixture's graphql.js doesn't export __cedar_graphqlOptions, so
@@ -220,14 +236,20 @@ describe('root-level hooks apply across sibling plugins (issue #2304)', () => {
     )
 
     // Mock the GraphQL Yoga creation so we get a real /graphql route without
-    // needing a full GraphQL schema
-    vi.mocked(createGraphQLYoga).mockResolvedValue(
-      fakeYogaResult(() => Promise.resolve(new Response('{}'))),
-    )
+    // needing a full GraphQL schema. Defaults to a small `{}` response, but
+    // callers (e.g. the compression test below) can override the body.
+    vi.mocked(createGraphQLYoga).mockResolvedValue(fakeYogaResult(yogaHandle))
 
-    // Create the server with a configureApiServer callback that adds a header.
-    // This is what real users do, e.g. `server.register(compress)`.
-    server = await createServerFn({
+    return createServerFn(options)
+  }
+
+  afterEach(async () => {
+    vi.mocked(createGraphQLYoga).mockClear()
+    await server?.close()
+  })
+
+  it('configureApiServer only applies to api-function routes, not GraphQL', async () => {
+    server = await createServerWithGraphQL({
       configureApiServer: async (fastifyServer) => {
         fastifyServer.addHook('onSend', (_req, reply, payload, done) => {
           reply.header('x-configure-api-server', 'applied')
@@ -236,18 +258,110 @@ describe('root-level hooks apply across sibling plugins (issue #2304)', () => {
       },
     })
 
-    // The header should be present on function routes
-    const helloResponse = await server.inject({
-      method: 'GET',
-      url: '/hello',
-    })
+    const helloResponse = await server.inject({ method: 'GET', url: '/hello' })
     expect(helloResponse.headers['x-configure-api-server']).toEqual('applied')
 
-    // And on GraphQL routes
     const graphqlResponse = await server.inject({
       method: 'GET',
       url: '/graphql',
     })
-    expect(graphqlResponse.headers['x-configure-api-server']).toEqual('applied')
+    expect(graphqlResponse.headers['x-configure-api-server']).toBeUndefined()
+  })
+
+  it('configureGraphQLServer only applies to GraphQL routes, not api-functions', async () => {
+    server = await createServerWithGraphQL({
+      configureGraphQLServer: async (fastifyServer) => {
+        fastifyServer.addHook('onSend', (_req, reply, payload, done) => {
+          reply.header('x-configure-graphql-server', 'applied')
+          done(null, payload)
+        })
+      },
+    })
+
+    const graphqlResponse = await server.inject({
+      method: 'GET',
+      url: '/graphql',
+    })
+    expect(graphqlResponse.headers['x-configure-graphql-server']).toEqual(
+      'applied',
+    )
+
+    const helloResponse = await server.inject({ method: 'GET', url: '/hello' })
+    expect(helloResponse.headers['x-configure-graphql-server']).toBeUndefined()
+  })
+
+  it('registering a plugin directly on the returned server applies to both', async () => {
+    server = await createServerWithGraphQL({})
+
+    server.addHook('onSend', (_req, reply, payload, done) => {
+      reply.header('x-root-hook', 'applied')
+      done(null, payload)
+    })
+    await server.ready()
+
+    const helloResponse = await server.inject({ method: 'GET', url: '/hello' })
+    expect(helloResponse.headers['x-root-hook']).toEqual('applied')
+
+    const graphqlResponse = await server.inject({
+      method: 'GET',
+      url: '/graphql',
+    })
+    expect(graphqlResponse.headers['x-root-hook']).toEqual('applied')
+  })
+
+  it('registering @fastify/compress via configureServer actually compresses both api-function and GraphQL responses', async () => {
+    // Use a real (non-mocked) yoga.handle response with a body large enough
+    // that @fastify/compress's default threshold (1024 bytes) kicks in, so
+    // this exercises real gzip compression end to end rather than just
+    // asserting a header was set.
+    const largeJsonBody = JSON.stringify({
+      data: 'x'.repeat(2000),
+    })
+
+    server = await createServerWithGraphQL(
+      {
+        // `configureServer` runs before `cedarFastifyAPI`/
+        // `cedarFastifyGraphQLServer` register their routes, which is
+        // required for `@fastify/compress`'s `onRoute`-based global hook to
+        // catch them. `threshold: 0` forces compression regardless of
+        // payload size, so the tiny `/hello` fixture response (well under
+        // the default 1024-byte threshold) is compressed too, not just the
+        // larger GraphQL response.
+        configureServer: async (fastifyServer) => {
+          await fastifyServer.register(fastifyCompress, {
+            global: true,
+            threshold: 0,
+          })
+        },
+      },
+      () =>
+        Promise.resolve(
+          new Response(largeJsonBody, {
+            headers: { 'content-type': 'application/json' },
+          }),
+        ),
+    )
+
+    const helloResponse = await server.inject({
+      method: 'GET',
+      url: '/hello',
+      headers: { 'accept-encoding': 'gzip' },
+    })
+    expect(helloResponse.headers['content-encoding']).toEqual('gzip')
+
+    const graphqlResponse = await server.inject({
+      method: 'GET',
+      url: '/graphql',
+      headers: { 'accept-encoding': 'gzip' },
+    })
+    expect(graphqlResponse.headers['content-encoding']).toEqual('gzip')
+
+    // Confirm the compressed payload actually decompresses back to the
+    // original body, i.e. this isn't just a header being set with
+    // uncompressed bytes underneath.
+    const decompressed = gunzipSync(graphqlResponse.rawPayload).toString(
+      'utf-8',
+    )
+    expect(decompressed).toEqual(largeJsonBody)
   })
 })
