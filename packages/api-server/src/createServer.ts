@@ -50,13 +50,29 @@ if (!process.env.CEDAR_ENV_FILES_LOADED) {
  *   const server = await createServer({
  *     logger,
  *     apiRootPath: 'api'
+ *     configureServer: (server) => {
+ *       // Runs before the api functions and GraphQL plugins are
+ *       // registered, i.e. before any routes exist. This is the right
+ *       // place for plugins with a "global" mode that hooks `onRoute`
+ *       // (e.g. `@fastify/compress`), since those only affect routes
+ *       // registered *after* the plugin itself — registering them here
+ *       // applies them to *both* api functions and the GraphQL endpoint:
+ *       server.register(compress, { global: true })
+ *     },
  *     configureApiServer: (server) => {
- *       // Configure the API server fastify instance, e.g. add content type parsers
+ *       // Configure just the api functions' fastify instance, e.g. add
+ *       // content type parsers. Doesn't apply to the GraphQL endpoint.
+ *     },
+ *     configureGraphQLServer: (server) => {
+ *       // Configure just the GraphQL fastify instance. Doesn't apply to
+ *       // api function routes.
  *     },
  *   })
  *
- *   // Configure the returned fastify instance:
- *   server.register(myPlugin)
+ *   // Plain request-lifecycle hooks (onRequest, onSend, etc.) don't depend
+ *   // on registration order, so they can also be added to the returned
+ *   // instance after the fact and will still apply to both:
+ *   server.addHook('onRequest', myHook)
  *
  *   // When ready, start the server:
  *   await server.start()
@@ -70,7 +86,9 @@ export async function createServer(options: CreateServerOptions = {}) {
     apiRootPath,
     fastifyServerOptions,
     discoverFunctionsGlob,
+    configureServer,
     configureApiServer,
+    configureGraphQLServer,
     apiPort,
     apiHost,
   } = resolveOptions(options)
@@ -116,6 +134,26 @@ export async function createServer(options: CreateServerOptions = {}) {
     getAsyncStoreInstance().run(new Map<string, GlobalContext>(), done)
   })
 
+  // Run the user's `configureServer` *before* the api functions and GraphQL
+  // plugins are registered below, i.e. before any routes exist. This matters
+  // for plugins with a "global" mode that works by hooking Fastify's
+  // `onRoute` (e.g. `@fastify/compress`) — those only affect routes
+  // registered *after* the plugin itself, so registering them any later
+  // (including directly on the returned `server` once `createServer()`
+  // resolves) would silently fail to compress api-function/GraphQL
+  // responses. See https://github.com/cedarjs/cedar/issues/2304.
+  if (configureServer) {
+    await configureServer(server)
+  }
+
+  // `cedarFastifyAPI` and `cedarFastifyGraphQLServer` are registered below as
+  // sibling plugins, each getting its own Fastify encapsulation context.
+  // `configureApiServer`/`configureGraphQLServer` are run *inside* their
+  // respective plugin's context, so they're scoped to that plugin's routes
+  // only and don't leak into the other. Plain request-lifecycle hooks
+  // (onRequest, onSend, etc.) don't depend on registration order and can
+  // still be added directly to the `server` instance returned by
+  // `createServer()` — see the example above.
   await server.register(cedarFastifyAPI, {
     cedar: {
       apiRootPath,
@@ -145,6 +183,7 @@ export async function createServer(options: CreateServerOptions = {}) {
       cedar: {
         apiRootPath,
         graphql: __cedar_graphqlOptions,
+        configureServer: configureGraphQLServer,
       },
     })
   }

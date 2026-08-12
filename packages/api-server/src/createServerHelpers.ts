@@ -38,8 +38,23 @@ export interface CreateServerOptions {
    */
   discoverFunctionsGlob?: string | string[]
 
-  /** Customise the API server fastify plugin before it is registered */
-  configureApiServer?: (server: Server) => void | Promise<void>
+  /**
+   * Configure the root fastify instance *before* the api functions and
+   * GraphQL plugins are registered. Use this to register Fastify plugins
+   * that need to run before any routes exist — most notably plugins with a
+   * "global" mode that works by hooking `onRoute` (e.g. `@fastify/compress`),
+   * which only affects routes registered *after* the plugin itself. Simple
+   * request-lifecycle hooks (`onRequest`, `onSend`, etc.) don't have this
+   * restriction and can also be added to the returned server after
+   * `createServer()` resolves.
+   */
+  configureServer?: (server: FastifyInstance) => void | Promise<void>
+
+  /** Customise the API functions fastify plugin before it is registered */
+  configureApiServer?: (server: FastifyInstance) => void | Promise<void>
+
+  /** Customise the GraphQL fastify plugin before it is registered */
+  configureGraphQLServer?: (server: FastifyInstance) => void | Promise<void>
 
   /** Whether to parse args or not. Defaults to `true` */
   parseArgs?: boolean
@@ -72,7 +87,9 @@ export const getDefaultCreateServerOptions: () => DefaultCreateServerOptions =
       bodyLimit: 1024 * 1024 * 100, // 100MB
     },
     discoverFunctionsGlob: 'dist/functions/**/*.{ts,js}',
+    configureServer: () => {},
     configureApiServer: () => {},
+    configureGraphQLServer: () => {},
     parseArgs: true,
     // `createServer()`'s only callers are `cedarjs-server api` and custom
     // `api/src/server.ts` files — both only ever run with the api side
@@ -115,8 +132,11 @@ export function resolveOptions(
     },
     discoverFunctionsGlob:
       options.discoverFunctionsGlob ?? defaults.discoverFunctionsGlob,
+    configureServer: options.configureServer ?? defaults.configureServer,
     configureApiServer:
       options.configureApiServer ?? defaults.configureApiServer,
+    configureGraphQLServer:
+      options.configureGraphQLServer ?? defaults.configureGraphQLServer,
     apiHost: options.apiHost ?? defaults.apiHost,
     apiPort: options.apiPort ?? defaults.apiPort,
   }

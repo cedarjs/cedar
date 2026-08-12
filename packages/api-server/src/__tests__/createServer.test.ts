@@ -295,7 +295,9 @@ describe('resolveOptions', () => {
       // Can't really compare functions with toEqual() unless it's the same
       // reference. And when calling `getDefaulCreateServerOptions()` you get a
       // new function, and thus a new reference, each time
+      configureServer: resolvedOptions.configureServer,
       configureApiServer: resolvedOptions.configureApiServer,
+      configureGraphQLServer: resolvedOptions.configureGraphQLServer,
       fastifyServerOptions: {
         requestTimeout: defaults.fastifyServerOptions.requestTimeout,
         logger: defaults.logger,
@@ -306,8 +308,14 @@ describe('resolveOptions', () => {
       apiPort: defaults.apiPort,
     })
 
+    expect(resolvedOptions.configureServer.toString()).toEqual(
+      defaults.configureServer.toString(),
+    )
     expect(resolvedOptions.configureApiServer.toString()).toEqual(
       defaults.configureApiServer.toString(),
+    )
+    expect(resolvedOptions.configureGraphQLServer.toString()).toEqual(
+      defaults.configureGraphQLServer.toString(),
     )
   })
 

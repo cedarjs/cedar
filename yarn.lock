@@ -2084,6 +2084,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@cedarjs/web-server": "workspace:*"
+    "@fastify/compress": "npm:9.1.1"
     "@fastify/multipart": "npm:9.4.0"
     "@fastify/url-data": "npm:6.0.4"
     "@types/aws-lambda": "npm:8.10.162"
