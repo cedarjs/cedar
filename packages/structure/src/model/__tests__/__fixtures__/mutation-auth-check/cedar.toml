@@ -5,6 +5,6 @@
 [web]
   title = "Mutation Auth Check Fixture"
   port = 8910
-  apiUrl = "/.redwood/functions"
+  apiUrl = "/.api/functions"
 [api]
   port = 8911
