@@ -7,7 +7,6 @@ import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers.js'
 
-import type { Server } from '../createServerHelpers.js'
 import { loadFastifyConfig } from '../fastify.js'
 
 import { lambdaRequestHandler, loadFunctionsFromDist } from './lambdaLoader.js'
@@ -18,7 +17,7 @@ export interface CedarFastifyAPIOptions {
     fastGlobOptions?: FastGlobOptions
     discoverFunctionsGlob?: string | string[]
     loadUserConfig?: boolean
-    configureServer?: (server: Server) => void | Promise<void>
+    configureServer?: (server: FastifyInstance) => void | Promise<void>
     // TODO(UD): Future potential integration point. Remove if we don't end up
     // using it
     // onRoutesDiscovered?: (routes: unknown[]) => void | Promise<void>
@@ -66,7 +65,7 @@ export async function cedarFastifyAPI(
   // apply to both, register it directly on the `server` instance returned by
   // `createServer()` instead.
   if (cedarOptions.configureServer) {
-    await cedarOptions.configureServer(fastify as Server)
+    await cedarOptions.configureServer(fastify)
   }
 
   fastify.all(`${cedarOptions.apiRootPath}:routeName`, lambdaRequestHandler)

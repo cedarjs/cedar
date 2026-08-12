@@ -48,13 +48,13 @@ export interface CreateServerOptions {
    * restriction and can also be added to the returned server after
    * `createServer()` resolves.
    */
-  configureServer?: (server: Server) => void | Promise<void>
+  configureServer?: (server: FastifyInstance) => void | Promise<void>
 
   /** Customise the API functions fastify plugin before it is registered */
-  configureApiServer?: (server: Server) => void | Promise<void>
+  configureApiServer?: (server: FastifyInstance) => void | Promise<void>
 
   /** Customise the GraphQL fastify plugin before it is registered */
-  configureGraphQLServer?: (server: Server) => void | Promise<void>
+  configureGraphQLServer?: (server: FastifyInstance) => void | Promise<void>
 
   /** Whether to parse args or not. Defaults to `true` */
   parseArgs?: boolean
