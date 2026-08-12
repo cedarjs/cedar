@@ -18,7 +18,7 @@ import { getPackageManager } from '@cedarjs/project-config/packageManager'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { getPaths, writeFilesTask } from '../../../lib/index.js'
-import { prepareForRollback } from '../../../lib/rollback.js'
+import { addFileToRollback, prepareForRollback } from '../../../lib/rollback.js'
 
 import { files } from './filesTask.js'
 
@@ -372,6 +372,12 @@ export function updateWorkspaceTsconfigReferences(
 async function installAndBuild(folderName: string) {
   const packagePath = path.join('packages', folderName)
   await installPackages({ stdio: 'inherit', cwd: getPaths().base })
+  // `tsc` (via the generated tsconfig.json's `"composite": true`) writes a
+  // tsconfig.tsbuildinfo file at the package root. Track it for rollback
+  // before running the build so a later failure cleans it up too.
+  addFileToRollback(
+    path.join(getPaths().base, packagePath, 'tsconfig.tsbuildinfo'),
+  )
   // TODO: `yarn cedar build <packageName>`
   await runScript('build', [], { stdio: 'inherit', cwd: packagePath })
 }
