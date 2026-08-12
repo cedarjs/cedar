@@ -30,6 +30,7 @@ import { RWLayout } from './RWLayout.js'
 import { RWPage } from './RWPage.js'
 import { RWRouter } from './RWRouter.js'
 import { RWSDL } from './RWSDL.js'
+import type { RWSDLField } from './RWSDLField.js'
 import { RWService } from './RWService.js'
 import { RWTOML } from './RWTOML.js'
 
@@ -208,5 +209,51 @@ export class RWProject extends BaseNode {
 
   @lazy() get envHelper(): RWEnvHelper {
     return new RWEnvHelper(this)
+  }
+
+  /**
+   * Maps GraphQL `Mutation` root field name -> the (project-root-relative)
+   * path of the SDL file that declares it with a literal `@requireAuth`
+   * directive.
+   *
+   * Used by `RWRoute` to warn when an unprotected route's page uses one of
+   * these mutations. Only literal `@requireAuth` is considered - custom
+   * directives (and `@skipAuth`) are intentionally ignored.
+   */
+  @lazy() get requireAuthMutationFields(): Map<string, string> {
+    const result = new Map<string, string>()
+
+    for (const sdl of this.sdls) {
+      // `implementableFields` parses the SDL's GraphQL schema string, which
+      // can throw for a malformed/in-progress schema. Isolate that per SDL
+      // file so one bad file doesn't hide `@requireAuth` fields declared in
+      // otherwise-valid SDL files.
+      let fields: RWSDLField[]
+      try {
+        fields = sdl.implementableFields
+      } catch {
+        continue
+      }
+
+      for (const field of fields) {
+        if (field.objectTypeDef.name.value !== 'Mutation') {
+          continue
+        }
+
+        const hasRequireAuth = (field.field.directives ?? []).some(
+          (directive) => directive.name.value === 'requireAuth',
+        )
+        if (!hasRequireAuth) {
+          continue
+        }
+
+        result.set(
+          field.name,
+          path.relative(this.pathHelper.base, sdl.filePath),
+        )
+      }
+    }
+
+    return result
   }
 }
