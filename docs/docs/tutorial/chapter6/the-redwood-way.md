@@ -16,7 +16,7 @@ Which order we build them in is up to us. To ease into things, let's start with 
 Let's create a component for the display of a single comment. First up, the generator:
 
 ```bash
-yarn rw g component Comment
+yarn cedar g component Comment
 ```
 
 Storybook should refresh and our "Generated" Comment story will be ready to go:
@@ -306,7 +306,7 @@ Here we're testing for both elements of the output `createdAt` timestamp: the ac
 If your tests aren't already running in another terminal window, you can start them now:
 
 ```bash
-yarn rw test
+yarn cedar test
 ```
 
 :::info[What happens if we change the formatted output of the timestamp? Wouldn't we have to change the test?]

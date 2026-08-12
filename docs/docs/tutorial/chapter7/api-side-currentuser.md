@@ -63,7 +63,7 @@ We created a User model in Chapter 4 when we set up authentication for our blog.
 If you followed our recommendation in the Intermission to use the Example repo, the User SDL and service is already added for you. If not, you'll need to add it yourself:
 
 ```bash
-yarn rw g sdl User --no-crud
+yarn cedar g sdl User --no-crud
 ```
 
 We'll comment out the sensitive fields of our GraphQL User type so there's no chance of them leaking:
@@ -103,7 +103,7 @@ We'll comment out the sensitive fields of our GraphQL User type so there's no ch
 Next, migrate the database to apply the changes (when given the option, name the migration something like "add userId to post"):
 
 ```
-yarn rw prisma migrate dev
+yarn cedar prisma migrate dev
 ```
 
 Whoops!
@@ -125,7 +125,7 @@ This would get us past this problem, but could cause hard-to-track-down bugs in 
 Since we're in development, let's just blow away the database and start over:
 
 ```
-yarn rw prisma migrate reset
+yarn cedar prisma migrate reset
 ```
 
 :::info[Database Seeds]
@@ -144,7 +144,7 @@ If you started the second half the tutorial from the [Cedar Tutorial repo](https
 },
 ```
 
-Now run `yarn rw prisma migrate reset` and and...you'll get a different error. But that's okay, read on...
+Now run `yarn cedar prisma migrate reset` and and...you'll get a different error. But that's okay, read on...
 
 :::
 
@@ -153,13 +153,13 @@ We've got an error here because running a database `reset` doesn't also apply pe
 It may feel like we're stuck, but note that the database did reset successfully, it's just the seed that failed. So now let's migrate the database to add the new `userId` to `Post`, and then re-run the seed to populate the database, naming it something like "add userId to post":
 
 ```
-yarn rw prisma migrate dev
+yarn cedar prisma migrate dev
 ```
 
 And then the seed:
 
-```
-yarn rw prisma db seed
+```bash
+yarn cedar prisma db seed
 ```
 
 :::info

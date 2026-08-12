@@ -7,7 +7,7 @@ If you've never done any kind of testing before this may be a little hard to fol
 If you still have the test process running from the previous page then then you can just press `a` to run **a**ll tests. If you stopped your test process, you can start it again with:
 
 ```bash
-yarn rw test
+yarn cedar test
 ```
 
 Can you guess what broke in this test?

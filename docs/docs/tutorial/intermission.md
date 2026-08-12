@@ -17,7 +17,7 @@ If you've been through the tutorial so far, you can pick up where you left off a
 If you want to use the same CSS classes we use in the following examples you'll need to add Tailwind to your repo:
 
 ```bash
-yarn rw setup ui tailwindcss
+yarn cedar setup ui tailwindcss
 ```
 
 However, none of the screenshots that follow will come anywhere close to what you're seeing in your browser (except for those isolated components you build in Storybook) so you may want to just start with the [example repo](https://github.com/cedarjs/cedar-tutorial). You'll also be missing out on a good starting test suite that we've added!
@@ -27,7 +27,7 @@ If you're _still_ set on continuing with your own repo, and you deployed to a se
 Once you're ready, start up the dev server:
 
 ```bash
-yarn rw dev
+yarn cedar dev
 ```
 
 ### Using the Example Repo (Recommended)
