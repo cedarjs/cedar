@@ -16,7 +16,7 @@ See the [migration guide](https://github.com/redwoodjs/redwood/releases/tag/v5.3
 To get started, run the setup command:
 
 ```text
-yarn rw setup auth clerk
+yarn cedar setup auth clerk
 ```
 
 This installs all the packages, writes all the files, and makes all the code modifications you need.
@@ -58,7 +58,7 @@ That should be enough; now, things should just work.
 Let's make sure: if this is a brand new project, generate a home page:
 
 ```bash
-yarn rw g page Home /
+yarn cedar g page Home /
 ```
 
 There we'll try to sign up by destructuring `signUp` from the `useAuth` hook (import that from `'src/auth'`). We'll also destructure and display `isAuthenticated` to see if it worked:

@@ -10,7 +10,7 @@ If you simply want to experience the Netlify deployment process without a databa
 
 1. create a new redwood project: `yarn create cedar-app ./netlify-deploy`
 2. after your "netlify-deploy" project installation is complete, init git, commit, and add it as a new repo to GitHub, BitBucket, or GitLab
-3. run the command `yarn rw setup deploy netlify` and commit and push changes
+3. run the command `yarn cedar setup deploy netlify` and commit and push changes
 4. use the Netlify [Quick Start](https://app.netlify.com/signup) to deploy
 
 :::warning

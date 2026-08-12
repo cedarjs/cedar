@@ -39,7 +39,7 @@ Other than bearing the `@cedarjs` scope, the reason these providers are official
 You can set up any of them via the corresponding auth setup command:
 
 ```
-yarn rw setup auth auth0
+yarn cedar setup auth auth0
 ```
 
 ## The API at a high-level

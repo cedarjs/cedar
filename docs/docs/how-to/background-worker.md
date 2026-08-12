@@ -18,7 +18,7 @@ Let's create our faktory worker.
 First, generate the worker script:
 
 ```
-yarn rw g script faktoryWorker
+yarn cedar g script faktoryWorker
 ```
 
 We'll start by registering a task called `postSignupTask` in our worker:
@@ -89,6 +89,6 @@ export const signUp = async ({ input }) => {
 ```
 
 That's it—we're done!
-Run your Faktory server using Docker and run the worker using `yarn rw exec faktoryWorker`.
+Run your Faktory server using Docker and run the worker using `yarn cedar exec faktoryWorker`.
 
 If your Faktory server is running and you have set `FAKTORY_URL` correctly, you'll see the server pick up the jobs and your worker process the job.

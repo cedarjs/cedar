@@ -12,7 +12,7 @@ If you simply want to experience the Vercel deployment process without a databas
 
 1. create a new redwood project: `yarn create cedar-app ./vercel-deploy`
 2. after your "vercel-deploy" project installation is complete, init git, commit, and add it as a new repo to GitHub, BitBucket, or GitLab
-3. run the command `yarn rw setup deploy vercel` and commit and push changes
+3. run the command `yarn cedar setup deploy vercel` and commit and push changes
 4. use the Vercel [Quick Start](https://vercel.com/#get-started) to deploy
 
 _If you choose this quick deploy experience, the following steps do not apply._
@@ -32,7 +32,7 @@ Complete the following two steps. Then save, commit, and push your changes.
 Run the following CLI Command:
 
 ```shell
-yarn rw setup deploy vercel
+yarn cedar setup deploy vercel
 ```
 
 This updates your `cedar.toml` file, setting `apiUrl = "/api"`:
@@ -46,7 +46,7 @@ Follow the steps in the [Prisma and Database](./introduction#3-prisma-and-databa
 If you're using Vercel Postgres, you may want to limit certain Prisma operations when you deploy. For example, if you're on the Hobby plan, there are some storage and write limits that you can mitigate by turning the Prisma and data migration steps off during deploy and only enabling them on a case-by-case basis when needed:
 
 ```
-yarn rw deploy vercel --prisma=false --data-migrate=false
+yarn cedar deploy vercel --prisma=false --data-migrate=false
 ```
 
 :::

@@ -81,16 +81,16 @@ We'll start our app the way we start all Cedar apps:
 ```bash
 yarn create cedar-app weatherstation
 cd weatherstation
-yarn rw dev
+yarn cedar dev
 ```
 
 That will open a browser to http://localhost:8910. Let's create a landing page:
 
 ```bash
-yarn rw generate page home /
+yarn cedar generate page home /
 ```
 
-> If you like typing you can use the full command `yarn redwood generate page home /`
+> If you like typing you can use the full command `yarn cedarjs generate page home /`
 
 The browser should have refreshed with a message about where to find our new homepage, `web/src/pages/HomePage/HomePage.js`. Let's open that up and create a form so the user can actually enter their zip code:
 
@@ -375,7 +375,7 @@ If you click "Play" in the GraphQL playground we should see the real data from t
 All that's left now is to display it in the client! Since we're getting data from our GraphQL API we can use a Cedar Cell to simplify all the work that goes around writing API access, displaying a loading state, etc. We can use a generator to get the shell of our Cell:
 
 ```bash
-yarn rw generate cell weather
+yarn cedar generate cell weather
 ```
 
 This will create `web/src/components/WeatherCell/WeatherCell.js`:

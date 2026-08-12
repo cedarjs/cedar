@@ -28,7 +28,7 @@ Enable strict mode by setting `strict` to true in `web/tsconfig.json` and `api/t
 Cedar's type generator behaves a bit differently in strict mode, so now that you've opted in, make sure to generate types:
 
 ```
-yarn rw g types
+yarn cedar g types
 ```
 
 ## Manual tweaks to generated code

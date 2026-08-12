@@ -84,7 +84,7 @@ const { fragment, typename, getCacheKey, useRegisteredFragment } =
 
 ### Setup
 
-`yarn rw setup graphql fragments`
+`yarn cedar setup graphql fragments`
 
 See more in [cli commands - setup graphql fragments](../cli-commands.md#setup-graphql-fragments).
 

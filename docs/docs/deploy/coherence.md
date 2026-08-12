@@ -28,7 +28,7 @@ But if you don't use prerender, carry on!
 If you want to deploy your Cedar project on Coherence, run the setup command:
 
 ```
-yarn rw setup deploy coherence
+yarn cedar setup deploy coherence
 ```
 
 The command will inspect your Prisma config to determine if you're using a supported database (at the moment, only `postgres` or `mysql` are supported on Coherence).

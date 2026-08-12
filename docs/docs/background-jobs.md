@@ -63,8 +63,8 @@ Start here if you want to get up and running with jobs as quickly as possible an
 Run the setup command to get the jobs configuration file created and migrate the database with a new `BackgroundJob` table:
 
 ```bash
-yarn rw setup jobs
-yarn rw prisma migrate dev
+yarn cedar setup jobs
+yarn cedar prisma migrate dev
 ```
 
 This created `api/src/lib/jobs.js` (or `.ts`) with a sensible default config. You can leave this as is for now.
@@ -72,7 +72,7 @@ This created `api/src/lib/jobs.js` (or `.ts`) with a sensible default config. Yo
 ### Create a Job
 
 ```bash
-yarn rw g job SampleJob
+yarn cedar g job SampleJob
 ```
 
 This created `api/src/jobs/SampleJob/SampleJob.js` and a test and scenario file. For now the job just outputs a message to the logs, but you'll fill out the `perform()` function to take any arguments you want and perform any work you want to do. Let's update the job to take a user's `id` and then just print that to the logs:
@@ -116,7 +116,7 @@ The first argument is the job itself, the second argument is an array of all the
 Start the worker process to find jobs in the DB and execute them:
 
 ```bash
-yarn rw jobs work
+yarn cedar jobs work
 ```
 
 This process will stay attached to the terminal and show you debug log output as it looks for jobs to run. Note that since we scheduled our job to wait 60 seconds before running, the runner will not find a job to work on right away (unless it's already been a minute since you scheduled it!).
@@ -132,13 +132,13 @@ Let's go into more depth in each of the parts of the job system.
 To get started with jobs, run the setup command:
 
 ```bash
-yarn rw setup jobs
+yarn cedar setup jobs
 ```
 
 This will add a new model to your Prisma schema, and create a configuration file at `api/src/lib/jobs.js` (or `.ts` for a TypeScript project). You'll need to run migrations in order to actually create the model in your database:
 
 ```bash
-yarn rw prisma migrate dev
+yarn cedar prisma migrate dev
 ```
 
 This added the following model:
@@ -202,7 +202,7 @@ We'll go into more detail on this file later (see [JobManager Config](#jobmanage
 We have a generator that creates a job in `api/src/jobs`:
 
 ```bash
-yarn rw g job SendWelcomeEmail
+yarn cedar g job SendWelcomeEmail
 ```
 
 Jobs are defined as a plain object and given to the `createJob()` function (which is called on the `jobs` export in the config file above). An example `SendWelcomeEmailJob` may look something like:
@@ -279,7 +279,7 @@ later(MillenniumAnnouncementJob, [user.id], {
 If we were to query the `BackgroundJob` table after the job has been scheduled you'd see a new row. We can use the Cedar Console to query the table from the command line:
 
 ```js
-% yarn rw console
+% yarn cedar console
 > db.backgroundJob.findMany()
 [
   {
@@ -309,7 +309,7 @@ The `handler` column contains the name of the job, file path to find it, and the
 
 :::warning[Jobs Must Be Built]
 
-Jobs are run from the `api/dist` directory, which will exist only after running `yarn rw build api` or `yarn rw dev`. If you are working on a job in development, you're probably running `yarn rw dev` anyway. But just be aware that if the dev server is _not_ running then any changes to your job will not be reflected unless you run `yarn rw build api` (or start the dev server) to compile your job into `api/dist`.
+Jobs are run from the `api/dist` directory, which will exist only after running `yarn cedar build api` or `yarn cedar dev`. If you are working on a job in development, you're probably running `yarn cedar dev` anyway. But just be aware that if the dev server is _not_ running then any changes to your job will not be reflected unless you run `yarn cedar build api` (or start the dev server) to compile your job into `api/dist`.
 
 :::
 
@@ -318,7 +318,7 @@ Jobs are run from the `api/dist` directory, which will exist only after running 
 In development you can start a job worker via the **job runner** from the command line:
 
 ```bash
-yarn rw jobs work
+yarn cedar jobs work
 ```
 
 The runner is a sort of overseer that doesn't do any work itself, but spawns workers to actually execute the jobs. When starting in `work` mode your `workers` config will be used to start the workers and they will stay attached to the terminal, updating you on the status of what they're doing:
@@ -334,16 +334,16 @@ To stop the runner (and the workers it started), press `Ctrl-C` (or send `SIGINT
 There are a couple of additional modes that `rw jobs` can run in:
 
 ```bash
-yarn rw jobs workoff
+yarn cedar jobs workoff
 ```
 
 This mode will execute all jobs that are eligible to run, then stop itself.
 
 ```bash
-yarn rw jobs start
+yarn cedar jobs start
 ```
 
-Starts the workers and then detaches them to run forever. Use `yarn rw jobs stop` to stop them, or `yarn rw jobs restart` to pick up any code changes to your jobs.
+Starts the workers and then detaches them to run forever. Use `yarn cedar jobs stop` to stop them, or `yarn cedar jobs restart` to pick up any code changes to your jobs.
 
 ### Everything Else
 
@@ -570,7 +570,7 @@ The runner has several modes it can start in depending on how you want it to beh
 These modes are ideal when you're creating a job and want to be sure it runs correctly while developing. You could also use this in production if you wanted (maybe a job is failing and you want to watch verbose logs and see what's happening).
 
 ```bash
-yarn rw jobs work
+yarn cedar jobs work
 ```
 
 This process will stay attached to the console and continually look for new jobs and execute them as they are found. The log level is set to `debug` by default so you'll see everything. Pressing `Ctrl-C` to cancel the process (sending `SIGINT`) will start a graceful shutdown: the workers will complete any work they're in the middle of before exiting. To cancel immediately, hit `Ctrl-C` again (or send `SIGTERM`) and they'll stop in the middle of what they're doing. Note that this could leave locked jobs in the database, but they will be picked back up again if a new worker starts with the same name as the one that locked the process. They'll also be picked up automatically after `maxRuntime` has expired, even if they are still locked.
@@ -586,7 +586,7 @@ The only way to guarantee a job will completely stop no matter what is for your 
 To work on whatever outstanding jobs there are and then automatically exit use the `workoff` mode:
 
 ```bash
-yarn rw jobs workoff
+yarn cedar jobs workoff
 ```
 
 As soon as there are no more jobs to be executed (either the store is empty, or they are scheduled in the future) the process will automatically exit.
@@ -596,7 +596,7 @@ As soon as there are no more jobs to be executed (either the store is empty, or 
 You can remove all jobs from storage with:
 
 ```bash
-yarn rw jobs clear
+yarn cedar jobs clear
 ```
 
 ### Production Modes
@@ -604,7 +604,7 @@ yarn rw jobs clear
 In production you'll want your job workers running forever in the background. For that, use the `start` mode:
 
 ```bash
-yarn rw jobs start
+yarn cedar jobs start
 ```
 
 That will start a number of workers determined by the `workers` config on the `JobManager` and then detach them from the console. If you care about the output of that worker then you'll want to have configured a logger that writes to the filesystem or sends to a third party log aggregator.
@@ -612,18 +612,18 @@ That will start a number of workers determined by the `workers` config on the `J
 To stop the workers:
 
 ```bash
-yarn rw jobs stop
+yarn cedar jobs stop
 ```
 
 Or to restart any that are already running:
 
 ```bash
-yarn rw jobs restart
+yarn cedar jobs restart
 ```
 
 ### Multiple Workers
 
-With the default configuration options generated with the `yarn rw setup jobs` command you'll have one worker group. If you simply want more workers that use the same `adapter` and `queue` settings, increase the `count`:
+With the default configuration options generated with the `yarn cedar setup jobs` command you'll have one worker group. If you simply want more workers that use the same `adapter` and `queue` settings, increase the `count`:
 
 ```js
 export const jobs = new JobManager({
@@ -721,13 +721,13 @@ By checking the `lastError` field in the database you can see what the last erro
 For many use cases you may be able to rely on the job runner to start and detach your job workers, which will then run forever:
 
 ```bash
-yarn rw jobs start
+yarn cedar jobs start
 ```
 
 When you deploy new code you'll want to restart your runners to make sure they get the latest source files:
 
 ```bash
-yarn rw jobs restart
+yarn cedar jobs restart
 ```
 
 Using this utility, however, gives you nothing to monitor that your jobs workers are still running: the runner starts the required number of workers, detaches them, and then exits itself. Node processes are pretty robust, but by no means are they guaranteed to run forever with no problems. You could mistakenly release a bad job that has an infinite loop or even just a random gamma ray striking the RAM of the server could cause a panic and the process will be shut down.
@@ -756,7 +756,7 @@ ENV NODE_ENV="production"
 
 ## Advanced Job Workers
 
-As noted above, although the workers are started and detached using the `yarn rw jobs start` command, there is nothing to monitor those workers to make sure they keep running. To do that, you'll want to start the workers yourself (or have your process monitor start them) using command line flags.
+As noted above, although the workers are started and detached using the `yarn cedar jobs start` command, there is nothing to monitor those workers to make sure they keep running. To do that, you'll want to start the workers yourself (or have your process monitor start them) using command line flags.
 
 You can do this with the `yarn cedar-jobs-worker` command. The flags passed to the script tell it which worker group config to use to start itself, and which `id` to give this worker (if you're running more than one). To start a single worker, using the first `workers` config object, you would run:
 
@@ -766,7 +766,7 @@ yarn cedar-jobs-worker --index=0 --id=0
 
 :::info
 
-The job runner started with `yarn rw jobs start` runs this same command behind the scenes for you, keeping it attached or detached depending on if you start in `work` or `start` mode!
+The job runner started with `yarn cedar jobs start` runs this same command behind the scenes for you, keeping it attached or detached depending on if you start in `work` or `start` mode!
 
 :::
 

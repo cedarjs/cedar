@@ -125,7 +125,7 @@ Thus preventing unwanted queries or GraphQL traversal attacks,
 
 Below are instructions to manually configure Trusted Documents in your CedarJS project.
 
-Alternatively, you can use the `yarn redwood setup graphql trusted-documents` [CLI setup command](../cli-commands.md#setup-graphql-trusted-docs).
+Alternatively, you can use the `yarn cedar setup graphql trusted-documents` [CLI setup command](../cli-commands.md#setup-graphql-trusted-docs).
 
 ### Configure cedar.toml
 

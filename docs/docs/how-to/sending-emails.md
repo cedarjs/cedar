@@ -47,7 +47,7 @@ Technically all we really need in the User model is the email address and the Au
 Now we can go ahead and migrate our database and create the SDLs and services needed to interact with the Prisma model using GraphQL.
 
 ```zsh
-yarn rw prisma migrate dev --name email
+yarn cedar prisma migrate dev --name email
 ```
 
 ### Scaffold
@@ -55,19 +55,19 @@ yarn rw prisma migrate dev --name email
 One of Cedar's stand-out features is the scaffolds. We'll be using scaffolds here to quickly get a nice visual list of the users in our database to work with.
 
 ```zsh
-yarn rw g scaffold User
+yarn cedar g scaffold User
 ```
 
 Let's do it for Audit as well
 
 ```zsh
-yarn rw g scaffold Audit
+yarn cedar g scaffold Audit
 ```
 
 Now let's run the Cedar dev server to see what we've created so far.
 
 ```zsh
-yarn rw dev
+yarn cedar dev
 ```
 
 Your web browser should open up and show the default Cedar app home page with a list of links to all your pages. Click on the `/users` link and then go ahead and create a few users. Since we're going to send emails to these users, use emails you can actually check. So you can make sure it works. A service I like to use for generating random users with real email addresses is https://www.fakenamegenerator.com. Just click the link on that page to activate the email address and you'll be able to send emails from your app, and see them arrive.

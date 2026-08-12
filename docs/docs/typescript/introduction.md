@@ -21,7 +21,7 @@ Started your project in JavaScript but want to switch to TypeScript?
 Start by using the `tsconfig` setup command:
 
 ```shell
-yarn rw setup tsconfig
+yarn cedar setup tsconfig
 ```
 
 This adds `tsconfig.json` files to both the web and the api side, telling VSCode that this's a TypeScript project.
@@ -37,15 +37,15 @@ Start by renaming your files from `.js` to `.ts`. (Or, if they have a React comp
 ### 1. Automatic types
 
 When you're developing in TypeScript, the Cedar CLI is your trusted companion—focus on writing code and it'll generate as many of the types as it can.
-When you run `yarn rw dev`, the CLI watches files for changes so that it can generate types.
+When you run `yarn cedar dev`, the CLI watches files for changes so that it can generate types.
 (More on this in the [Generated Types](/typescript/generated-types.md) doc.)
 
 But let's say that you don't have the dev server running, and are just coding and notice missing types.
-You can always run `yarn rw g types` to make sure you have all the types you need.
+You can always run `yarn cedar g types` to make sure you have all the types you need.
 
 ### 2. Use generators to learn about available utility types
 
-Let's say you generate a Cell using the command `yarn rw g cell Post`. If your project is in TypeScript, the generated files will contain a bunch of utility types (imported from `@cedarjs/web`), as well as types specific to your project (imported from `types/graphql`).
+Let's say you generate a Cell using the command `yarn cedar g cell Post`. If your project is in TypeScript, the generated files will contain a bunch of utility types (imported from `@cedarjs/web`), as well as types specific to your project (imported from `types/graphql`).
 You don't need to learn all the utility types up front, but they're documented in detail in the [Utility Types](/typescript/utility-types.md) doc when you're ready.
 
 ### 3. Cedar won't force you to type everything
@@ -72,7 +72,7 @@ This's why you're able to convert your project from JavaScript to TypeScript inc
 That's where the `type-check` command comes in:
 
 ```
-yarn rw type-check
+yarn cedar type-check
 ```
 
 This runs `tsc` on your project and ensures that all the necessary generated types are generated first. Checkout the [CLI reference for type-check](cli-commands.md#type-check)

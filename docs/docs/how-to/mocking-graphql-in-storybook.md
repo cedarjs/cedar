@@ -2,7 +2,7 @@
 
 ## Pre-requisites
 
-1. Storybook should be running, start it by running `yarn rw storybook`
+1. Storybook should be running, start it by running `yarn cedar storybook`
 2. Have a Cell, Query, or Mutation that you would like to mock
 
 ## Where to put mock-requests

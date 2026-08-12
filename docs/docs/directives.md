@@ -487,11 +487,11 @@ Just generate one using the Cedar CLI; it takes care of the boilerplate and even
 
 ### Generators
 
-When using the `yarn redwood generate` command,
+When using the `yarn cedar generate` command,
 you'll be presented with a choice of creating a Validator or a Transformer directive.
 
 ```bash
-yarn redwood generate directive myDirective
+yarn cedar generate directive myDirective
 
 ? What type of directive would you like to generate? › - Use arrow-keys. Return to submit.
 ❯ Validator - Implement a validation: throw an error if criteria not met to stop execution
@@ -528,7 +528,7 @@ After picking the directive type, the files will be created in your `api/src/dir
 Let's create a `@isSubscriber` directive that checks roles to see if the user is a subscriber.
 
 ```bash
-yarn rw g directive isSubscriber --type validator
+yarn cedar g directive isSubscriber --type validator
 ```
 
 Next, implement your validation logic in the directive's `validate` function.
@@ -618,7 +618,7 @@ describe('isSubscriber directive', () => {
 Let's create a `@maskedEmail` directive that checks roles to see if the user should see the complete email address or if it should be obfuscated from prying eyes:
 
 ```bash
-yarn rw g directive maskedEmail --type transformer
+yarn cedar g directive maskedEmail --type transformer
 ```
 
 Next, implement your validation logic in the directive's `transform` function.

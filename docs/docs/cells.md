@@ -17,7 +17,7 @@ All without you having to write a single line of imperative code!
 You can generate a Cell with Cedar's Cell generator:
 
 ```bash
-yarn rw generate cell <name>
+yarn cedar generate cell <name>
 ```
 
 This creates a directory named `<name>Cell` in `web/src/components` with four files:
@@ -35,11 +35,11 @@ Sometimes you want a Cell that renders a single item and other times you want a 
 Cedar's Cell generator can do both.
 
 First, it detects if `<name>` is singular or plural.
-For example, to generate a Cell that renders a list of users, run `yarn rw generate cell users`.
+For example, to generate a Cell that renders a list of users, run `yarn cedar generate cell users`.
 Second, for irregular words whose singular and plural are the same, such as "equipment" or "pokemon", you can pass `--list` to tell Cedar to generate a list Cell explicitly:
 
 ```bash
-yarn rw generate cell equipment --list
+yarn cedar generate cell equipment --list
 ```
 
 ## Cells in-depth
