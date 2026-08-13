@@ -140,3 +140,27 @@ const authFile = fs
 fs.writeFileSync(authFilePath, authFile)
 
 console.groupEnd()
+
+console.group(
+  'Removing the cell-type-annotations override from eslint.config.mjs',
+)
+
+// `cell-type-annotations` only matches `.tsx` Cells, so it can never fire in
+// a JS project -- drop the override rather than ship a dead rule reference.
+const eslintConfigFilePath = path.join(JS_TEMPLATE_PATH, 'eslint.config.mjs')
+const eslintConfigFile = fs.readFileSync(eslintConfigFilePath, 'utf-8').replace(
+  `export default [
+  ...(await cedarConfig()),
+  {
+    files: ['web/src/**/*Cell.tsx'],
+    rules: {
+      '@cedarjs/cell-type-annotations': 'error',
+    },
+  },
+]
+`,
+  'export default await cedarConfig()\n',
+)
+fs.writeFileSync(eslintConfigFilePath, eslintConfigFile)
+
+console.groupEnd()
