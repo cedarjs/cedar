@@ -56,7 +56,7 @@
     "@cedarjs/framework-tools": "workspace:*",
     "@cedarjs/realtime": "workspace:*",
     "@envelop/types": "5.2.1",
-    "@escape.tech/graphql-armor-types": "0.6.0",
+    "@escape.tech/graphql-armor-types": "0.7.0",
     "@types/aws-lambda": "8.10.162",
     "@types/jsonwebtoken": "9.0.10",
     "@types/lodash": "4.17.25",
