@@ -158,6 +158,21 @@ export default async function createConfig() {
     },
   })
 
+  // Cell type annotations. The rule requires both the `*Cell.tsx` filename
+  // convention and a QUERY/FRAGMENT export alongside a Success export before
+  // it treats a file as a Cell. `.jsx` is excluded: it's plain
+  // JavaScript-project output with no build step that strips TypeScript
+  // syntax, so the rule's fixes don't apply there.
+  configs.push({
+    files: ['web/src/**/*Cell.tsx'],
+    plugins: {
+      '@cedarjs': cedarjsPlugin,
+    },
+    rules: {
+      '@cedarjs/cell-type-annotations': 'off',
+    },
+  })
+
   // Test, stories, scenarios, and mock files
   configs.push({
     files: [
