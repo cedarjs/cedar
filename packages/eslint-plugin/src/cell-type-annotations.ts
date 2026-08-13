@@ -31,9 +31,10 @@ function paramHasTypeAnnotation(param: ParamNode): boolean {
   return 'typeAnnotation' in pattern && !!pattern.typeAnnotation
 }
 
-// Finds the `)` that closes the function's parameter list, so a missing
-// return type can be inserted right after it regardless of function form
-// (arrow, function expression, or function declaration).
+// Finds the `)` that closes the function's parameter list, so a missing return
+// type can be inserted right after it regardless of function form (arrow,
+// function expression, or function declaration). Only valid to call when the
+// params are actually parenthesized -- see `isUnparenthesizedArrowParam`.
 function getParamsClosingParen(
   sourceCode: TSESLint.SourceCode,
   fn: FunctionLikeNode,
@@ -44,6 +45,43 @@ function getParamsClosingParen(
   }
 
   return sourceCode.getFirstToken(fn, (token) => token.value === ')')
+}
+
+// A single-identifier arrow param (`x => ...`) is the one case where a
+// param/return type can't just be inserted next to the existing tokens: there's
+// no `)` to anchor on (searching forward for one risks landing on an unrelated
+// `)` inside the function body), and TypeScript requires parens as soon as
+// either the param or the return type is annotated. Destructured, defaulted,
+// and multi-param arrows are always parenthesized already, and function
+// declarations/expressions always require parens, so this can only be true for
+// a bare identifier arrow param.
+function isUnparenthesizedArrowParam(
+  fn: FunctionLikeNode,
+  param: ParamNode,
+  sourceCode: TSESLint.SourceCode,
+): boolean {
+  if (fn.type !== AST_NODE_TYPES.ArrowFunctionExpression) {
+    return false
+  }
+  if (fn.params.length !== 1 || fn.params[0] !== param) {
+    return false
+  }
+  return sourceCode.getTokenBefore(param)?.value !== '('
+}
+
+// Wraps a bare identifier arrow param in parens while inserting its annotation
+// and/or the function's return type, e.g. `data => data` becomes
+// `(data: DataObject): DataObject => data`.
+function* insertWrappedAnnotations(
+  fixer: TSESLint.RuleFixer,
+  param: ParamNode,
+  paramTypeText: string | null,
+  returnTypeText: string | null,
+) {
+  yield fixer.insertTextBefore(param, '(')
+  const paramPart = paramTypeText ? `: ${paramTypeText}` : ''
+  const returnPart = returnTypeText ? `: ${returnTypeText}` : ''
+  yield fixer.insertTextAfter(param, `${paramPart})${returnPart}`)
 }
 
 function extractTypedDocumentNodeArgs(
@@ -110,6 +148,11 @@ export const cellTypeAnnotations = createRule({
 
     let webTypeImport: TSESTree.ImportDeclaration | null = null
 
+    // Names already imported as types from `@cedarjs/web`, either via
+    // `import type { X } from '@cedarjs/web'` or the inline modifier
+    // (`import { type X } from '@cedarjs/web'`).
+    const importedWebTypeNames = new Set<string>()
+
     const checks: (() => void)[] = []
 
     // Names already given an insertion fix earlier in this same lint pass.
@@ -124,13 +167,8 @@ export const cellTypeAnnotations = createRule({
         return false
       }
 
-      if (webTypeImport) {
-        const alreadyImported = webTypeImport.specifiers
-          .filter(isImportSpecifier)
-          .some((s) => s.local.name === importName)
-        if (alreadyImported) {
-          return false
-        }
+      if (importedWebTypeNames.has(importName)) {
+        return false
       }
 
       if (claimedImportNames.has(importName)) {
@@ -142,9 +180,11 @@ export const cellTypeAnnotations = createRule({
     }
 
     function* importEdit(fixer: TSESLint.RuleFixer, importName: string) {
-      if (webTypeImport) {
-        const specifiers = webTypeImport.specifiers.filter(isImportSpecifier)
-        const lastSpecifier = specifiers[specifiers.length - 1]
+      const specifiers =
+        webTypeImport?.specifiers.filter(isImportSpecifier) ?? []
+      const lastSpecifier = specifiers[specifiers.length - 1]
+
+      if (lastSpecifier) {
         yield fixer.insertTextAfter(lastSpecifier, `, ${importName}`)
         return
       }
@@ -173,11 +213,23 @@ export const cellTypeAnnotations = createRule({
             location: 'return type',
           },
           *fix(fixer) {
-            const closingParen = getParamsClosingParen(sourceCode, fn)
-            if (!closingParen) {
-              return
+            const [firstParam] = fn.params
+
+            if (
+              firstParam &&
+              isUnparenthesizedArrowParam(fn, firstParam, sourceCode)
+            ) {
+              yield* insertWrappedAnnotations(fixer, firstParam, null, typeName)
+            } else {
+              const closingParen = getParamsClosingParen(sourceCode, fn)
+
+              if (!closingParen) {
+                return
+              }
+
+              yield fixer.insertTextAfter(closingParen, `: ${typeName}`)
             }
-            yield fixer.insertTextAfter(closingParen, `: ${typeName}`)
+
             if (shouldImport) {
               yield* importEdit(fixer, 'CellBeforeQueryResult')
             }
@@ -185,7 +237,8 @@ export const cellTypeAnnotations = createRule({
         })
       }
 
-      const [firstParam] = fn.params
+      const firstParam = fn.params[0]
+
       if (firstParam && !paramHasTypeAnnotation(firstParam)) {
         // The shape of `beforeQuery`'s first argument can't be safely
         // inferred from the QUERY's variables type (it may only partially
@@ -199,7 +252,7 @@ export const cellTypeAnnotations = createRule({
 
     function checkAfterQuery(fn: FunctionLikeNode, reportNode: TSESTree.Node) {
       const missingReturn = !fn.returnType
-      const [firstParam] = fn.params
+      const firstParam = fn.params[0]
       const missingParam = !!firstParam && !paramHasTypeAnnotation(firstParam)
 
       if (!missingReturn && !missingParam) {
@@ -224,16 +277,28 @@ export const cellTypeAnnotations = createRule({
           location,
         },
         *fix(fixer) {
-          if (missingParam && firstParam) {
-            yield fixer.insertTextAfter(
-              getParamPattern(firstParam),
-              ': DataObject',
+          if (
+            firstParam &&
+            isUnparenthesizedArrowParam(fn, firstParam, sourceCode)
+          ) {
+            yield* insertWrappedAnnotations(
+              fixer,
+              firstParam,
+              missingParam ? 'DataObject' : null,
+              missingReturn ? 'DataObject' : null,
             )
-          }
-          if (missingReturn) {
-            const closingParen = getParamsClosingParen(sourceCode, fn)
-            if (closingParen) {
-              yield fixer.insertTextAfter(closingParen, ': DataObject')
+          } else {
+            if (missingParam && firstParam) {
+              yield fixer.insertTextAfter(
+                getParamPattern(firstParam),
+                ': DataObject',
+              )
+            }
+            if (missingReturn) {
+              const closingParen = getParamsClosingParen(sourceCode, fn)
+              if (closingParen) {
+                yield fixer.insertTextAfter(closingParen, ': DataObject')
+              }
             }
           }
           if (shouldImport) {
@@ -257,36 +322,54 @@ export const cellTypeAnnotations = createRule({
 
       // `boolean` needs no import; the option param's inline type references
       // `DataObject`, so that's the only name that might need importing.
-      const shouldImport =
-        (missingResponseType || missingOptionsType) &&
-        needsImportEdit('DataObject')
+      const missingParams = missingResponseType || missingOptionsType
+      const shouldImport = missingParams && needsImportEdit('DataObject')
+
+      const location =
+        missingReturn && missingParams
+          ? 'parameters and return type'
+          : missingReturn
+            ? 'return type'
+            : 'parameters'
 
       context.report({
         node: reportNode,
         messageId: 'needsTypeAnnotation',
         data: {
           name: 'isEmpty',
-          typeName: 'boolean',
+          typeName: missingReturn ? 'boolean' : 'DataObject',
           kind: 'function',
-          location: missingReturn ? 'return type' : 'parameters',
+          location,
         },
         *fix(fixer) {
-          if (missingResponseType && responseParam) {
-            yield fixer.insertTextAfter(
-              getParamPattern(responseParam),
-              ': DataObject',
+          if (
+            responseParam &&
+            isUnparenthesizedArrowParam(fn, responseParam, sourceCode)
+          ) {
+            yield* insertWrappedAnnotations(
+              fixer,
+              responseParam,
+              missingResponseType ? 'DataObject' : null,
+              missingReturn ? 'boolean' : null,
             )
-          }
-          if (missingOptionsType && optionsParam) {
-            yield fixer.insertTextAfter(
-              getParamPattern(optionsParam),
-              ': { isDataEmpty: (data: DataObject) => boolean }',
-            )
-          }
-          if (missingReturn) {
-            const closingParen = getParamsClosingParen(sourceCode, fn)
-            if (closingParen) {
-              yield fixer.insertTextAfter(closingParen, ': boolean')
+          } else {
+            if (missingResponseType && responseParam) {
+              yield fixer.insertTextAfter(
+                getParamPattern(responseParam),
+                ': DataObject',
+              )
+            }
+            if (missingOptionsType && optionsParam) {
+              yield fixer.insertTextAfter(
+                getParamPattern(optionsParam),
+                ': { isDataEmpty: (data: DataObject) => boolean }',
+              )
+            }
+            if (missingReturn) {
+              const closingParen = getParamsClosingParen(sourceCode, fn)
+              if (closingParen) {
+                yield fixer.insertTextAfter(closingParen, ': boolean')
+              }
             }
           }
           if (shouldImport) {
@@ -336,10 +419,14 @@ export const cellTypeAnnotations = createRule({
           location: 'parameter',
         },
         *fix(fixer) {
-          yield fixer.insertTextAfter(
-            getParamPattern(propsParam),
-            `: ${insertText}`,
-          )
+          if (isUnparenthesizedArrowParam(fn, propsParam, sourceCode)) {
+            yield* insertWrappedAnnotations(fixer, propsParam, insertText, null)
+          } else {
+            yield fixer.insertTextAfter(
+              getParamPattern(propsParam),
+              `: ${insertText}`,
+            )
+          }
           if (shouldImport) {
             yield* importEdit(fixer, importName)
           }
@@ -365,12 +452,19 @@ export const cellTypeAnnotations = createRule({
 
     return {
       ImportDeclaration(node) {
-        if (
-          node.source.value === '@cedarjs/web' &&
-          node.importKind === 'type'
-        ) {
+        if (node.source.value !== '@cedarjs/web') {
+          return
+        }
+
+        if (node.importKind === 'type') {
           webTypeImport = node
         }
+
+        node.specifiers.filter(isImportSpecifier).forEach((specifier) => {
+          if (node.importKind === 'type' || specifier.importKind === 'type') {
+            importedWebTypeNames.add(specifier.local.name)
+          }
+        })
       },
 
       ExportNamedDeclaration(node) {

@@ -59,9 +59,7 @@ are missing type annotations, and autofixes most of them using the types from
 `CellFailureProps`, `CellSuccessProps`). `beforeQuery`'s parameter type is
 flagged but never autofixed — Cedar can't safely guess your props shape — but
 it's worth annotating by hand, since it drives Cedar's prop-type inference for
-the rest of the Cell. It only applies to `.tsx` Cells — `.jsx` Cells are plain
-JavaScript-project output with no build step to strip the annotations back
-out.
+the rest of the Cell. 
 
 Like `service-type-annotations`, it's off by default. Enable it in your
 project's `eslint.config.mjs`:
@@ -174,6 +172,10 @@ code:
   the flag is also no longer hidden. `cedar dev` also now defaults to
   `open: false` when there's no interactive TTY (CI, AI agents), regardless
   of `[browser] open` in `cedar.toml`.
+- **The new `cell-type-annotations` ESLint rule catches untyped Cells.**
+  Cells generated (or hand-edited) without their `beforeQuery`/`afterQuery`/
+  `isEmpty` and `Loading`/`Failure`/`Success` type annotations now get flagged
+  and mostly autofixed. See the Highlights section above for how to enable it.
 
 ### `postcss-loader` is no longer installed
 

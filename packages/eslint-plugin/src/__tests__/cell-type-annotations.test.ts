@@ -430,5 +430,274 @@ ruleTester.run('cell-type-annotations', cellTypeAnnotations, {
         },
       ],
     },
+    {
+      // Unparenthesized single-param arrow: both the param and return type are
+      // missing, so the fix has to wrap the param in parens itself rather than
+      // anchoring on an existing `)`.
+      filename: CELL_FILENAME,
+      code: `
+        export const QUERY = gql\`query { blogPosts { id } }\`
+
+        export const afterQuery = data => data
+
+        export const Success = () => <div>Success</div>
+      `,
+      output: `import type { DataObject } from '@cedarjs/web'
+
+        export const QUERY = gql\`query { blogPosts { id } }\`
+
+        export const afterQuery = (data: DataObject): DataObject => data
+
+        export const Success = () => <div>Success</div>
+      `,
+      errors: [
+        {
+          messageId: 'needsTypeAnnotation',
+          data: {
+            name: 'afterQuery',
+            typeName: 'DataObject',
+            kind: 'function',
+            location: 'parameter and return type',
+          },
+        },
+      ],
+    },
+    {
+      // Unparenthesized single-param arrow on a render prop: only the param
+      // needs wrapping (no return type involved).
+      filename: CELL_FILENAME,
+      code: `
+        export const QUERY = gql\`query { blogPosts { id } }\`
+
+        export const Success = props => <div>{props.blogPosts.length}</div>
+      `,
+      output: `import type { CellSuccessProps } from '@cedarjs/web'
+
+        export const QUERY = gql\`query { blogPosts { id } }\`
+
+        export const Success = (props: CellSuccessProps) => <div>{props.blogPosts.length}</div>
+      `,
+      errors: [
+        {
+          messageId: 'needsTypeAnnotation',
+          data: {
+            name: 'Success',
+            typeName: 'CellSuccessProps',
+            kind: 'component',
+            location: 'parameter',
+          },
+        },
+      ],
+    },
+    {
+      // Inline `import { type X }` specifiers count as already imported --
+      // the fix must not add a second, duplicate import for the same name.
+      filename: CELL_FILENAME,
+      code: `
+        import { type CellSuccessProps } from '@cedarjs/web'
+
+        export const QUERY = gql\`query { blogPosts { id } }\`
+
+        export const Success = ({ blogPosts }) => (
+          <div>{blogPosts.length}</div>
+        )
+      `,
+      output: `
+        import { type CellSuccessProps } from '@cedarjs/web'
+
+        export const QUERY = gql\`query { blogPosts { id } }\`
+
+        export const Success = ({ blogPosts }: CellSuccessProps) => (
+          <div>{blogPosts.length}</div>
+        )
+      `,
+      errors: [
+        {
+          messageId: 'needsTypeAnnotation',
+          data: {
+            name: 'Success',
+            typeName: 'CellSuccessProps',
+            kind: 'component',
+            location: 'parameter',
+          },
+        },
+      ],
+    },
+    {
+      // A `@cedarjs/web` type import with no named specifier (a namespace
+      // import here) has nothing to append to -- the fix must fall back to
+      // inserting a new `import type` line instead of crashing.
+      filename: CELL_FILENAME,
+      code: `
+        import type * as Web from '@cedarjs/web'
+
+        export const QUERY = gql\`query { blogPosts { id } }\`
+
+        export const Success = ({ blogPosts }) => (
+          <div>{blogPosts.length}</div>
+        )
+      `,
+      output: `import type { CellSuccessProps } from '@cedarjs/web'
+
+        import type * as Web from '@cedarjs/web'
+
+        export const QUERY = gql\`query { blogPosts { id } }\`
+
+        export const Success = ({ blogPosts }: CellSuccessProps) => (
+          <div>{blogPosts.length}</div>
+        )
+      `,
+      errors: [
+        {
+          messageId: 'needsTypeAnnotation',
+          data: {
+            name: 'Success',
+            typeName: 'CellSuccessProps',
+            kind: 'component',
+            location: 'parameter',
+          },
+        },
+      ],
+    },
+    {
+      // `Loading`'s props type, derived from QUERY's variables type.
+      filename: CELL_FILENAME,
+      code: `
+        import type { CellSuccessProps } from '@cedarjs/web'
+        import type { FindBlogPost, FindBlogPostVariables } from 'types/graphql'
+
+        export const QUERY: TypedDocumentNode<
+          FindBlogPost,
+          FindBlogPostVariables
+        > = gql\`
+          query FindBlogPost($id: Int!) {
+            blogPost(id: $id) {
+              id
+            }
+          }
+        \`
+
+        export const Loading = ({ id }) => <div>Loading {id}...</div>
+        export const Success = ({ blogPost }: CellSuccessProps) => (
+          <div>{blogPost.id}</div>
+        )
+      `,
+      output: `
+        import type { CellSuccessProps, CellLoadingProps } from '@cedarjs/web'
+        import type { FindBlogPost, FindBlogPostVariables } from 'types/graphql'
+
+        export const QUERY: TypedDocumentNode<
+          FindBlogPost,
+          FindBlogPostVariables
+        > = gql\`
+          query FindBlogPost($id: Int!) {
+            blogPost(id: $id) {
+              id
+            }
+          }
+        \`
+
+        export const Loading = ({ id }: CellLoadingProps<FindBlogPostVariables>) => <div>Loading {id}...</div>
+        export const Success = ({ blogPost }: CellSuccessProps) => (
+          <div>{blogPost.id}</div>
+        )
+      `,
+      errors: [
+        {
+          messageId: 'needsTypeAnnotation',
+          data: {
+            name: 'Loading',
+            typeName: 'CellLoadingProps<FindBlogPostVariables>',
+            kind: 'component',
+            location: 'parameter',
+          },
+        },
+      ],
+    },
+    {
+      // isEmpty with untyped response and options params but an already
+      // typed return -- the message and fix should only cover the params.
+      filename: CELL_FILENAME,
+      code: `
+        import type { CellSuccessProps, DataObject } from '@cedarjs/web'
+
+        export const QUERY = gql\`query { blogPosts { id } }\`
+        export const isEmpty = (response, { isDataEmpty }): boolean => {
+          return isDataEmpty(response)
+        }
+        export const Success = ({ blogPosts }: CellSuccessProps) => (
+          <div>{blogPosts.length}</div>
+        )
+      `,
+      output: `
+        import type { CellSuccessProps, DataObject } from '@cedarjs/web'
+
+        export const QUERY = gql\`query { blogPosts { id } }\`
+        export const isEmpty = (response: DataObject, { isDataEmpty }: { isDataEmpty: (data: DataObject) => boolean }): boolean => {
+          return isDataEmpty(response)
+        }
+        export const Success = ({ blogPosts }: CellSuccessProps) => (
+          <div>{blogPosts.length}</div>
+        )
+      `,
+      errors: [
+        {
+          messageId: 'needsTypeAnnotation',
+          data: {
+            name: 'isEmpty',
+            typeName: 'DataObject',
+            kind: 'function',
+            location: 'parameters',
+          },
+        },
+      ],
+    },
+    {
+      // Cell detection via a `FRAGMENT` export instead of `QUERY`.
+      filename: CELL_FILENAME,
+      code: `
+        import type { CellSuccessProps } from '@cedarjs/web'
+
+        export const FRAGMENT = gql\`
+          fragment BlogPostCell_post on Post {
+            id
+            title
+          }
+        \`
+
+        export const afterQuery = (data) => data
+
+        export const Success = ({ post }: CellSuccessProps) => (
+          <div>{post.title}</div>
+        )
+      `,
+      output: `
+        import type { CellSuccessProps, DataObject } from '@cedarjs/web'
+
+        export const FRAGMENT = gql\`
+          fragment BlogPostCell_post on Post {
+            id
+            title
+          }
+        \`
+
+        export const afterQuery = (data: DataObject): DataObject => data
+
+        export const Success = ({ post }: CellSuccessProps) => (
+          <div>{post.title}</div>
+        )
+      `,
+      errors: [
+        {
+          messageId: 'needsTypeAnnotation',
+          data: {
+            name: 'afterQuery',
+            typeName: 'DataObject',
+            kind: 'function',
+            location: 'parameter and return type',
+          },
+        },
+      ],
+    },
   ],
 })
