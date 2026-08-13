@@ -49,6 +49,37 @@ the fragment selects the type's `id`, the Cell reads its data live from the
 Apollo cache and re-renders when mutations update the entity. See the new
 "Fragment Cells: Aggregating Queries" section in the Cells docs.
 
+### New `cell-type-annotations` ESLint rule
+
+`@cedarjs/eslint-plugin` has a new `cell-type-annotations` rule, mirroring the
+existing `service-type-annotations` rule but for Cells. It flags Cell exports
+(`beforeQuery`, `afterQuery`, `isEmpty`, `Loading`, `Failure`, `Success`) that
+are missing type annotations, and autofixes most of them using the types from
+`@cedarjs/web` (`CellBeforeQueryResult`, `DataObject`, `CellLoadingProps`,
+`CellFailureProps`, `CellSuccessProps`). `beforeQuery`'s parameter type is
+flagged but never autofixed — Cedar can't safely guess your props shape — but
+it's worth annotating by hand, since it drives Cedar's prop-type inference for
+the rest of the Cell. It only applies to `.tsx` Cells — `.jsx` Cells are plain
+JavaScript-project output with no build step to strip the annotations back
+out.
+
+Like `service-type-annotations`, it's off by default. Enable it in your
+project's `eslint.config.mjs`:
+
+```js
+import cedarConfig from '@cedarjs/eslint-config'
+
+export default [
+  ...(await cedarConfig()),
+  {
+    files: ['web/src/components/**/*Cell.tsx'],
+    rules: {
+      '@cedarjs/cell-type-annotations': 'error',
+    },
+  },
+]
+```
+
 ### CedarApolloProvider
 
 Continuing the move from Redwood to Cedar naming, `RedwoodApolloProvider` is
