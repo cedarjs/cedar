@@ -12,8 +12,11 @@ type FunctionLikeNode =
 
 type ParamNode = TSESTree.Parameter
 
-// `beforeQuery`/`afterQuery`/`isEmpty` are lifecycle hooks (return-type led);
-// `Loading`/`Failure`/`Success` are components (props-param led).
+// `beforeQuery`/`afterQuery`/`isEmpty` are lifecycle hooks; `Loading`/
+// `Failure`/`Success` are components. Both groups are checked param-first --
+// only `beforeQuery` also requires an explicit return type, since its return
+// type isn't otherwise checked anywhere (unlike its first param, which is
+// load-bearing for `CellPropsVariables`).
 const LIFECYCLE_EXPORTS = new Set(['beforeQuery', 'afterQuery', 'isEmpty'])
 const RENDER_PROP_EXPORTS = new Set(['Loading', 'Failure', 'Success'])
 
@@ -157,9 +160,9 @@ export const cellTypeAnnotations = createRule({
 
     // Names already given an insertion fix earlier in this same lint pass.
     // Two reports that both need a brand-new `@cedarjs/web` import (e.g.
-    // `afterQuery`'s param and return type both needing `DataObject`) would
-    // otherwise each independently insert the same import text at the same
-    // position, producing a duplicate/conflicting fix.
+    // `isEmpty`'s response and options params both needing `DataObject`)
+    // would otherwise each independently insert the same import text at the
+    // same position, producing a duplicate/conflicting fix.
     const claimedImportNames = new Set<string>()
 
     function needsImportEdit(importName: string | null): importName is string {
@@ -251,21 +254,20 @@ export const cellTypeAnnotations = createRule({
     }
 
     function checkAfterQuery(fn: FunctionLikeNode, reportNode: TSESTree.Node) {
-      const missingReturn = !fn.returnType
+      // Only the param is checked. `afterQuery`'s return type isn't fed into
+      // any other type via `Parameters<>`/`ReturnType<>` the way
+      // `beforeQuery`'s first param is (see `CellPropsVariables` in
+      // `@cedarjs/web`'s cellTypes.ts) -- nothing downstream ever inspects
+      // it, so annotating it doesn't add any checking that isn't already
+      // happening (or not happening) locally in this function body.
       const firstParam = fn.params[0]
       const missingParam = !!firstParam && !paramHasTypeAnnotation(firstParam)
 
-      if (!missingReturn && !missingParam) {
+      if (!missingParam) {
         return
       }
 
       const shouldImport = needsImportEdit('DataObject')
-      const location =
-        missingReturn && missingParam
-          ? 'parameter and return type'
-          : missingReturn
-            ? 'return type'
-            : 'parameter'
 
       context.report({
         node: reportNode,
@@ -274,7 +276,7 @@ export const cellTypeAnnotations = createRule({
           name: 'afterQuery',
           typeName: 'DataObject',
           kind: 'function',
-          location,
+          location: 'parameter',
         },
         *fix(fixer) {
           if (
@@ -284,22 +286,14 @@ export const cellTypeAnnotations = createRule({
             yield* insertWrappedAnnotations(
               fixer,
               firstParam,
-              missingParam ? 'DataObject' : null,
-              missingReturn ? 'DataObject' : null,
+              'DataObject',
+              null,
             )
-          } else {
-            if (missingParam && firstParam) {
-              yield fixer.insertTextAfter(
-                getParamPattern(firstParam),
-                ': DataObject',
-              )
-            }
-            if (missingReturn) {
-              const closingParen = getParamsClosingParen(sourceCode, fn)
-              if (closingParen) {
-                yield fixer.insertTextAfter(closingParen, ': DataObject')
-              }
-            }
+          } else if (firstParam) {
+            yield fixer.insertTextAfter(
+              getParamPattern(firstParam),
+              ': DataObject',
+            )
           }
           if (shouldImport) {
             yield* importEdit(fixer, 'DataObject')
@@ -309,37 +303,28 @@ export const cellTypeAnnotations = createRule({
     }
 
     function checkIsEmpty(fn: FunctionLikeNode, reportNode: TSESTree.Node) {
-      const missingReturn = !fn.returnType
+      // Only the params are checked; see the comment in `checkAfterQuery` --
+      // the same reasoning applies to `isEmpty`'s return type.
       const [responseParam, optionsParam] = fn.params
       const missingResponseType =
         !!responseParam && !paramHasTypeAnnotation(responseParam)
       const missingOptionsType =
         !!optionsParam && !paramHasTypeAnnotation(optionsParam)
 
-      if (!missingReturn && !missingResponseType && !missingOptionsType) {
+      if (!missingResponseType && !missingOptionsType) {
         return
       }
 
-      // `boolean` needs no import; the option param's inline type references
-      // `DataObject`, so that's the only name that might need importing.
-      const missingParams = missingResponseType || missingOptionsType
-      const shouldImport = missingParams && needsImportEdit('DataObject')
-
-      const location =
-        missingReturn && missingParams
-          ? 'parameters and return type'
-          : missingReturn
-            ? 'return type'
-            : 'parameters'
+      const shouldImport = needsImportEdit('DataObject')
 
       context.report({
         node: reportNode,
         messageId: 'needsTypeAnnotation',
         data: {
           name: 'isEmpty',
-          typeName: missingReturn ? 'boolean' : 'DataObject',
+          typeName: 'DataObject',
           kind: 'function',
-          location,
+          location: 'parameters',
         },
         *fix(fixer) {
           if (
@@ -350,7 +335,7 @@ export const cellTypeAnnotations = createRule({
               fixer,
               responseParam,
               missingResponseType ? 'DataObject' : null,
-              missingReturn ? 'boolean' : null,
+              null,
             )
           } else {
             if (missingResponseType && responseParam) {
@@ -364,12 +349,6 @@ export const cellTypeAnnotations = createRule({
                 getParamPattern(optionsParam),
                 ': { isDataEmpty: (data: DataObject) => boolean }',
               )
-            }
-            if (missingReturn) {
-              const closingParen = getParamsClosingParen(sourceCode, fn)
-              if (closingParen) {
-                yield fixer.insertTextAfter(closingParen, ': boolean')
-              }
             }
           }
           if (shouldImport) {
