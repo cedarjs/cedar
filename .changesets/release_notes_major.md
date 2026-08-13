@@ -59,7 +59,7 @@ are missing type annotations, and autofixes most of them using the types from
 `CellFailureProps`, `CellSuccessProps`). `beforeQuery`'s parameter type is
 flagged but never autofixed — Cedar can't safely guess your props shape — but
 it's worth annotating by hand, since it drives Cedar's prop-type inference for
-the rest of the Cell. 
+the rest of the Cell.
 
 Like `service-type-annotations`, it's off by default. Enable it in your
 project's `eslint.config.mjs`:
