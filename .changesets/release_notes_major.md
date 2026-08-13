@@ -49,6 +49,35 @@ the fragment selects the type's `id`, the Cell reads its data live from the
 Apollo cache and re-renders when mutations update the entity. See the new
 "Fragment Cells: Aggregating Queries" section in the Cells docs.
 
+### New `cell-type-annotations` ESLint rule
+
+`@cedarjs/eslint-plugin` has a new `cell-type-annotations` rule, mirroring the
+existing `service-type-annotations` rule but for Cells. It flags Cell exports
+(`beforeQuery`, `afterQuery`, `isEmpty`, `Loading`, `Failure`, `Success`) that
+are missing type annotations, and autofixes most of them using the types from
+`@cedarjs/web` (`CellBeforeQueryResult`, `DataObject`, `CellLoadingProps`,
+`CellFailureProps`, `CellSuccessProps`). `beforeQuery`'s parameter type is
+flagged but never autofixed — Cedar can't safely guess your props shape — but
+it's worth annotating by hand, since it drives Cedar's prop-type inference for
+the rest of the Cell.
+
+Like `service-type-annotations`, it's off by default. Enable it in your
+project's `eslint.config.mjs`:
+
+```js
+import cedarConfig from '@cedarjs/eslint-config'
+
+export default [
+  ...(await cedarConfig()),
+  {
+    files: ['web/src/components/**/*Cell.tsx'],
+    rules: {
+      '@cedarjs/cell-type-annotations': 'error',
+    },
+  },
+]
+```
+
 ### `configureGraphQLServer` and `configureServer` options for the API server
 
 `createServer()` gains two new configuration hooks alongside the existing
@@ -241,6 +270,10 @@ code:
   the flag is also no longer hidden. `cedar dev` also now defaults to
   `open: false` when there's no interactive TTY (CI, AI agents), regardless
   of `[browser] open` in `cedar.toml`.
+- **The new `cell-type-annotations` ESLint rule catches untyped Cells.**
+  Cells generated (or hand-edited) without their `beforeQuery`/`afterQuery`/
+  `isEmpty` and `Loading`/`Failure`/`Success` type annotations now get flagged
+  and mostly autofixed. See the Highlights section above for how to enable it.
 
 ### `postcss-loader` is no longer installed
 
