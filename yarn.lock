@@ -3096,7 +3096,7 @@ __metadata:
     "@envelop/on-resolve": "npm:4.1.1"
     "@envelop/types": "npm:5.2.1"
     "@escape.tech/graphql-armor": "npm:3.0.1"
-    "@escape.tech/graphql-armor-types": "npm:0.6.0"
+    "@escape.tech/graphql-armor-types": "npm:0.7.0"
     "@graphql-tools/merge": "npm:9.2.2"
     "@graphql-tools/schema": "npm:10.0.38"
     "@graphql-tools/utils": "npm:10.11.0"
@@ -4717,6 +4717,15 @@ __metadata:
   dependencies:
     graphql: "npm:^16.0.0"
   checksum: 10c0/6c135cbf895dca4128e82a446906544cca416def678e2c9a90c7b6adf69feeccc6c9ca94f06e0cd6d05e41f5a104779346e3d76dbea9dbb94ba8d69541c58c64
+  languageName: node
+  linkType: hard
+
+"@escape.tech/graphql-armor-types@npm:0.7.0":
+  version: 0.7.0
+  resolution: "@escape.tech/graphql-armor-types@npm:0.7.0"
+  dependencies:
+    graphql: "npm:^16.0.0"
+  checksum: 10c0/555d8ce8c364b31dfd8239cfb3cac3b44307950df457ce7f3585aa30d112edb9332ea6aa417f9e9fb245ed913004f8350ba9abbc60847fde75d4c006fd5c68b7
   languageName: node
   linkType: hard
 
