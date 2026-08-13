@@ -119,6 +119,23 @@ ruleTester.run('cell-type-annotations', cellTypeAnnotations, {
         )
       `,
     },
+    {
+      // afterQuery/isEmpty's return types aren't checked -- fully typed
+      // params with an untyped return is valid.
+      filename: CELL_FILENAME,
+      code: `
+        import type { CellSuccessProps, DataObject } from '@cedarjs/web'
+
+        export const QUERY = gql\`query { blogPosts { id } }\`
+        export const afterQuery = (data: DataObject) => data
+        export const isEmpty = (response: DataObject, { isDataEmpty }: { isDataEmpty: (data: DataObject) => boolean }) => {
+          return isDataEmpty(response)
+        }
+        export const Success = ({ blogPosts }: CellSuccessProps) => (
+          <div>{blogPosts.length}</div>
+        )
+      `,
+    },
   ],
   invalid: [
     {
@@ -271,8 +288,8 @@ ruleTester.run('cell-type-annotations', cellTypeAnnotations, {
       ],
     },
     {
-      // afterQuery -- both param and return type are always `DataObject`.
-      // A single report covers both missing pieces.
+      // afterQuery -- only the param is checked. Its return type isn't
+      // load-bearing for anything downstream, so it's left alone.
       filename: CELL_FILENAME,
       code: `
         import type { CellSuccessProps } from '@cedarjs/web'
@@ -287,7 +304,7 @@ ruleTester.run('cell-type-annotations', cellTypeAnnotations, {
         import type { CellSuccessProps, DataObject } from '@cedarjs/web'
 
         export const QUERY = gql\`query { blogPosts { id } }\`
-        export const afterQuery = (data: DataObject): DataObject => data
+        export const afterQuery = (data: DataObject) => data
         export const Success = ({ blogPosts }: CellSuccessProps) => (
           <div>{blogPosts.length}</div>
         )
@@ -299,44 +316,7 @@ ruleTester.run('cell-type-annotations', cellTypeAnnotations, {
             name: 'afterQuery',
             typeName: 'DataObject',
             kind: 'function',
-            location: 'parameter and return type',
-          },
-        },
-      ],
-    },
-    {
-      // isEmpty's return type is always `boolean` -- no import needed.
-      filename: CELL_FILENAME,
-      code: `
-        import type { CellSuccessProps, DataObject } from '@cedarjs/web'
-
-        export const QUERY = gql\`query { blogPosts { id } }\`
-        export const isEmpty = (response: DataObject, { isDataEmpty }: { isDataEmpty: (data: DataObject) => boolean }) => {
-          return isDataEmpty(response)
-        }
-        export const Success = ({ blogPosts }: CellSuccessProps) => (
-          <div>{blogPosts.length}</div>
-        )
-      `,
-      output: `
-        import type { CellSuccessProps, DataObject } from '@cedarjs/web'
-
-        export const QUERY = gql\`query { blogPosts { id } }\`
-        export const isEmpty = (response: DataObject, { isDataEmpty }: { isDataEmpty: (data: DataObject) => boolean }): boolean => {
-          return isDataEmpty(response)
-        }
-        export const Success = ({ blogPosts }: CellSuccessProps) => (
-          <div>{blogPosts.length}</div>
-        )
-      `,
-      errors: [
-        {
-          messageId: 'needsTypeAnnotation',
-          data: {
-            name: 'isEmpty',
-            typeName: 'boolean',
-            kind: 'function',
-            location: 'return type',
+            location: 'parameter',
           },
         },
       ],
@@ -431,9 +411,8 @@ ruleTester.run('cell-type-annotations', cellTypeAnnotations, {
       ],
     },
     {
-      // Unparenthesized single-param arrow: both the param and return type are
-      // missing, so the fix has to wrap the param in parens itself rather than
-      // anchoring on an existing `)`.
+      // Unparenthesized single-param arrow: the fix has to wrap the param in
+      // parens itself rather than anchoring on an existing `)`.
       filename: CELL_FILENAME,
       code: `
         export const QUERY = gql\`query { blogPosts { id } }\`
@@ -446,7 +425,7 @@ ruleTester.run('cell-type-annotations', cellTypeAnnotations, {
 
         export const QUERY = gql\`query { blogPosts { id } }\`
 
-        export const afterQuery = (data: DataObject): DataObject => data
+        export const afterQuery = (data: DataObject) => data
 
         export const Success = () => <div>Success</div>
       `,
@@ -457,7 +436,7 @@ ruleTester.run('cell-type-annotations', cellTypeAnnotations, {
             name: 'afterQuery',
             typeName: 'DataObject',
             kind: 'function',
-            location: 'parameter and return type',
+            location: 'parameter',
           },
         },
       ],
@@ -681,7 +660,7 @@ ruleTester.run('cell-type-annotations', cellTypeAnnotations, {
           }
         \`
 
-        export const afterQuery = (data: DataObject): DataObject => data
+        export const afterQuery = (data: DataObject) => data
 
         export const Success = ({ post }: CellSuccessProps) => (
           <div>{post.title}</div>
@@ -694,7 +673,7 @@ ruleTester.run('cell-type-annotations', cellTypeAnnotations, {
             name: 'afterQuery',
             typeName: 'DataObject',
             kind: 'function',
-            location: 'parameter and return type',
+            location: 'parameter',
           },
         },
       ],
