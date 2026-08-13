@@ -149,7 +149,7 @@
     "@sdl-codegen/node": "2.0.1",
     "ansis": "4.3.1",
     "chokidar": "3.6.0",
-    "esbuild": "0.28.1",
+    "esbuild": "0.28.2",
     "execa": "5.1.1",
     "fast-glob": "3.3.3",
     "graphql": "16.14.2",
