@@ -30,3 +30,26 @@ For a more detailed walkthrough, see
 predates the Cedar fork and uses `rw` naming throughout, but it's still the most
 thorough deploy walkthrough available for this setup. Everywhere it says
 `yarn rw`, use `yarn cedar` instead, and the rest applies as written.
+
+## Database Migrations
+
+The generated `render.yaml` runs `prisma migrate deploy` as part of the api
+service's `startCommand` (`yarn cedar deploy render api`, see
+`renderHandler.ts`), right before the server starts accepting traffic. That's
+intentional, and not a stand-in for a missing feature: Render has a native
+[pre-deploy command](https://render.com/docs/deploys#pre-deploy-command)
+(`preDeployCommand` in the Blueprint spec) for exactly this kind of task, but
+it has two limitations that rule it out as the default here:
+
+- **Paid instances only** — the pre-deploy command isn't available on Render's
+  free plan, but Cedar's generated `api` service defaults to `plan: free`
+  (see the tl;dr walkthrough above).
+- **No persistent disk access** — it "executes on a separate instance from
+  your running service" and can't reach an attached persistent disk, so it
+  couldn't run migrations against the `sqlite` deploy option's database file,
+  which lives on one.
+
+If you're on a paid plan and using Postgres (i.e. not the `sqlite` deploy
+option), you can switch to `preDeployCommand` instead: move the
+`prisma migrate deploy` call out of `startCommand` and into a
+`preDeployCommand` entry on the `api` service in `render.yaml`.
