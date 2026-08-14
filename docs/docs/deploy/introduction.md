@@ -48,7 +48,7 @@ The generated `package.json` scripts map onto these: `start` is `cedar serve` (s
 `cedar serve web` / `yarn start:web` is primarily a local tool, for testing
 the web side in production mode before deploying. In production, use it only
 if your platform can't reliably serve `web/dist` as static files — see
-[Railway](./railway.md#scaling-up-two-services).
+[Railway](./railway.md#two-services).
 
 Point it at a separate api process with `--apiProxyTarget`, a fully-qualified
 URL (CLI-flag only — no `cedar.toml` or environment variable equivalent):
@@ -76,7 +76,7 @@ relative. The choice is between two setups:
 Prefer absolute `apiUrl` when your platform can reliably serve `web/dist` as
 static files (a CDN, Coolify's Static build pack, Netlify, etc.). Prefer the
 relative `apiUrl` + proxy setup when it can't — see
-[Railway](./railway.md#scaling-up-two-services).
+[Railway](./railway.md#two-services).
 
 ## Two topologies, and which to pick
 
@@ -85,7 +85,9 @@ Once you're past `cedar dev`, there are two ways to run Cedar in production:
 - **Single-container** (`yarn start`) — one process serves both sides; the web server proxies API requests to the API in-process. This is the **convenient** path: no service-to-service wiring, so it builds and starts with no platform-specific setup on any container host — see [any container host](./any-container-host.md).
 - **api process + static/CDN web** (`yarn start:api`, with the web side served separately) — this is the **recommended** path, and what the generated Dockerfile, the baremetal nginx setup, and the Render blueprint all use.
 
-Start with single-container — it's the fastest way to get a working deploy, and for small apps or early-stage projects it's often all you need. Move to the two-part topology when you want your web assets served from a CDN edge (rather than round-tripping through your api process), or when you want to scale the api and web sides independently. The reason this needs to be stated explicitly: without it, it's easy to land on single-container, get a working app, and never learn why the split is worth doing later.
+For any container host without a dedicated guide, start with single-container — it's the fastest way to get a working deploy, and for small apps or early-stage projects it's often all you need. Move to the two-part topology when you want your web assets served from a CDN edge (rather than round-tripping through your api process), or when you want to scale the api and web sides independently. The reason this needs to be stated explicitly: without it, it's easy to land on single-container, get a working app, and never learn why the split is worth doing later.
+
+Hosts with a dedicated guide ([Railway](./railway.md), [Coolify](./coolify.md)) may recommend starting elsewhere on that gradient — check the provider page first, since platform-specific defaults (e.g. what a GitHub-import wizard sets up for you) can make a different starting point the easier path on that host.
 
 :::important
 If your app has a custom [server file](../server-file.md) (`api/src/server.ts`),
