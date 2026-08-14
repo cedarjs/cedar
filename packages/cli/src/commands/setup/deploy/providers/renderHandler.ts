@@ -2,6 +2,7 @@ import path from 'path'
 
 import prismaInternals from '@prisma/internals'
 import { Listr } from 'listr2'
+import prompts from 'prompts'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
@@ -11,6 +12,11 @@ import { writeFilesTask, printSetupNotes } from '../../../../lib/index.js'
 import { POSTGRES_YAML, RENDER_YAML, SQLITE_YAML } from '../templates/render.js'
 
 const { getConfig } = prismaInternals
+
+// Persistent disks (which the `sqlite` option attaches to the api service)
+// aren't available on Render's free plan, so that service needs to be on a
+// paid plan for the sqlite deploy option to actually work.
+const SQLITE_API_PLAN = 'starter'
 
 interface RenderFileData {
   path: string
@@ -41,7 +47,7 @@ const getRenderYamlContent = async (
       case 'sqlite':
         return {
           path: path.join(getPaths().base, 'render.yaml'),
-          content: RENDER_YAML(SQLITE_YAML),
+          content: RENDER_YAML(SQLITE_YAML, SQLITE_API_PLAN),
         }
       default:
         throw new Error(`
@@ -81,6 +87,40 @@ export const handler = async ({
     force,
     database,
   })
+
+  // The sqlite option stores its database file on a persistent disk, which
+  // Render's free plan doesn't support. Warn and confirm before generating a
+  // render.yaml that bills the api service, instead of a config that would
+  // silently fail to deploy.
+  if (database === 'sqlite') {
+    console.warn(
+      c.warning(
+        "Render's free plan doesn't support persistent disks, which the " +
+          '`sqlite` deploy option requires for its database file. The ' +
+          `generated render.yaml will set the api service's plan to ` +
+          `"${SQLITE_API_PLAN}" (a paid plan) instead of "free" so the ` +
+          'disk can actually attach.\n\n' +
+          'If you want to stay on the free plan, rerun this command with ' +
+          '`--database postgresql` (a managed database, not a disk) or ' +
+          '`--database none`.',
+      ),
+    )
+    console.log()
+
+    const { confirmed } = await prompts({
+      type: 'confirm',
+      name: 'confirmed',
+      message: `Generate render.yaml with the api service on the "${SQLITE_API_PLAN}" plan?`,
+    })
+
+    if (!confirmed) {
+      console.log('Aborting render setup.')
+      return
+    }
+
+    console.log()
+  }
+
   const tasks = new Listr(
     [
       {
