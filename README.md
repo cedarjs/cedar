@@ -70,9 +70,9 @@ infrastructure
   - [x] `@cedarjs/api-server`
   - [x] `@cedarjs/api`
   - [x] etc. Full list: https://github.com/cedarjs/cedar/issues/19
-- [ ] Future major version: Make all packages ESM only
+- [x] Future major version: Make all packages ESM only or dual mode ESM/CJS
 - [ ] Future major version: Make new Cedar apps ESM only
-- [ ] Future major version: Make it possible to switch existing Cedar apps to
+- [x] Future major version: Make it possible to switch existing Cedar apps to
       ESM
 - [ ] Enable strict mode for new Cedar TypeScript apps.
 - [x] Upgrade to Node 24
@@ -83,7 +83,7 @@ infrastructure
 
 - [ ] Update packages we use to their latest versions. Notable examples:
   - [ ] `react`
-  - [ ] `prisma`
+  - [x] `prisma`
   - [ ] `apollo`
   - [ ] `vite`
   - [x] `fastify`
@@ -94,7 +94,8 @@ infrastructure
 - [ ] dbAuth version with OAuth support
 - [ ] Whatever I need to make it easier to work with the OpenAI API/SDK and
       other AI tools
-- [ ] New real-time features (`useLiveQuery` hook)
+- [x] New real-time features (`useLiveQuery` hook)
+- [x] Support npm and pnpm in addition to yarn
 - [ ] Your feature request here! Let me know what you need!
 
 ## The CedarJS Team
