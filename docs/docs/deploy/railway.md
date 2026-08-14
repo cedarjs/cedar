@@ -81,8 +81,6 @@ To split into the
      yarn start:web --api-proxy-target="http://$API_PROXY_TARGET"
      ```
 
-   A missing or schemeless `apiProxyTarget` returns a Bad Gateway error.
-
 ## Config as code
 
 Railway supports config-as-code via `railway.json` or `railway.toml` in your
