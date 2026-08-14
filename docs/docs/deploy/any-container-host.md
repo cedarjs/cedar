@@ -1,7 +1,7 @@
 ---
 description:
-  Deploy to Railway, Render, Cloud Run, and other container hosts with zero
-  configuration
+  Deploy to Railway, Render, Cloud Run, and other container hosts using
+  Cedar's built-in build and start conventions
 ---
 
 # Any Container Host
@@ -38,9 +38,9 @@ Every generated Cedar app ships these `package.json` scripts:
 "start:web": "cedarjs-server web"
 ```
 
-A zero-config builder (Railpack, Nixpacks, Paketo, Google Cloud buildpacks,
-Heroku's buildpack) finds `build` and `start` and runs them without further
-input. `start` runs both sides in one process — the
+A buildpack-style builder (Railpack, Nixpacks, Paketo, Google Cloud
+buildpacks, Heroku's buildpack) finds `build` and `start` and runs them
+without further input. `start` runs both sides in one process — the
 [single-container topology](./introduction.md#two-topologies-and-which-to-pick)
 — so there's no service-to-service wiring for the platform to get right.
 
@@ -55,7 +55,33 @@ automatically:
 
 So the setup on any of these platforms is: connect the repo, point the build
 command at `yarn build`, point the start command at `yarn start`, add a
-`DATABASE_URL`. Nothing Cedar-specific beyond that.
+`DATABASE_URL`. Nothing Cedar-specific beyond that — except migrations, which
+every database-backed app needs regardless of platform. See below.
+
+## Migrations
+
+Every Cedar app with a database needs `yarn cedar prisma migrate deploy` run
+once per deploy — after the build finishes, before the new version starts
+taking traffic. This is the one piece that doesn't fit the "no
+platform-specific setup" story above: there's no build-tool convention for
+"run this command once, at the right moment, per deploy," so each platform
+needs its own answer.
+
+Don't run it from inside `start` if you have multiple replicas or overlapping
+deploys. The instances could race to migrate the same database concurrently.
+
+- Platforms with a dedicated pre-deploy or release hook (Railway's Pre-Deploy
+  Command, Heroku's `release` phase in the `Procfile`) run it there — see
+  [Railway](./railway.md#migrations).
+- Platforms without one, like Coolify, fold it into the build command or run
+  it as a one-off command against the deployed container — see
+  [Coolify](./coolify.md#migrations).
+- Render's `yarn cedar setup deploy render` generator already handles this
+  for you — see [Render](./render.md).
+- For a platform not documented here (Cloud Run, DigitalOcean, Dokku,
+  Dokploy, Koyeb, Northflank), look for that platform's equivalent of a
+  pre-deploy, release, or init hook before falling back to a manual one-off
+  run.
 
 ## Custom server file caveat
 
