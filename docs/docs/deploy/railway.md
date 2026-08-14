@@ -81,9 +81,7 @@ To split into the
      yarn start:web --api-proxy-target="http://$API_PROXY_TARGET"
      ```
 
-   A missing or schemeless `apiProxyTarget` returns a Bad Gateway error. See
-   [private networking](#private-networking) below for why this works with no
-   extra host configuration.
+   A missing or schemeless `apiProxyTarget` returns a Bad Gateway error.
 
 ## Config as code
 
