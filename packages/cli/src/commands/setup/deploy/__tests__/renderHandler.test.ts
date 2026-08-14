@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 
-const mockWriteFilesTask = vi.fn(() => undefined)
+const mockWriteFilesTask = vi.fn((_files: Record<string, string>) => undefined)
 
 vi.mock('../../../../lib/index.js', async (importOriginal) => {
   const originalLib = await importOriginal<object>()
@@ -49,6 +49,8 @@ vi.mock('prompts', () => ({
 const { handler } = await import('../providers/renderHandler.js')
 
 describe('render setup handler', () => {
+  // `process.exit`'s real signature returns `never`, so the no-op mock has
+  // to lie about its return type to satisfy that signature.
   const processExitSpy = vi
     .spyOn(process, 'exit')
     .mockImplementation(() => undefined as never)
@@ -82,7 +84,7 @@ describe('render setup handler', () => {
 
     expect(mockPrompts).toHaveBeenCalledTimes(1)
     expect(mockWriteFilesTask).toHaveBeenCalledTimes(1)
-    const files = mockWriteFilesTask.mock.calls[0][0] as Record<string, string>
+    const files = mockWriteFilesTask.mock.calls[0][0]
     const content = Object.values(files)[0]
     expect(content).toContain('plan: starter')
     expect(content).not.toContain('plan: free')
@@ -97,7 +99,7 @@ describe('render setup handler', () => {
 
     expect(mockPrompts).not.toHaveBeenCalled()
     expect(mockWriteFilesTask).toHaveBeenCalledTimes(1)
-    const files = mockWriteFilesTask.mock.calls[0][0] as Record<string, string>
+    const files = mockWriteFilesTask.mock.calls[0][0]
     const content = Object.values(files)[0]
     expect(content).toContain('plan: free')
   })
@@ -107,7 +109,7 @@ describe('render setup handler', () => {
 
     expect(mockPrompts).not.toHaveBeenCalled()
     expect(mockWriteFilesTask).toHaveBeenCalledTimes(1)
-    const files = mockWriteFilesTask.mock.calls[0][0] as Record<string, string>
+    const files = mockWriteFilesTask.mock.calls[0][0]
     const content = Object.values(files)[0]
     expect(content).toContain('plan: free')
   })
