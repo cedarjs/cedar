@@ -8,7 +8,7 @@ Cedar is designed for both serverless and traditional infrastructure deployments
 
 1. code is committed to a repository on GitHub, GitLab, or Bitbucket, which triggers the deployment
 2. the Cedar API Side and Web Side are individually prepared via a build process
-3. during the build process, any database related actions are run (e.g. migrations)
+3. any database related actions (e.g. migrations) are run
 4. the hosting provider deploys the built Web static assets to a CDN and the API code to a serverless backend (e.g. AWS Lambdas)
 
 Currently, these are the officially supported deploy targets:

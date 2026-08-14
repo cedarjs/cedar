@@ -40,7 +40,7 @@ Every generated Cedar app ships these `package.json` scripts:
 
 A buildpack-style builder (Railpack, Nixpacks, Paketo, Google Cloud
 buildpacks, Heroku's buildpack) finds `build` and `start` and runs them
-without further input. `start` runs both sides in one process — the
+automatically. `start` runs both sides in one process — the
 [single-container topology](./introduction.md#two-topologies-and-which-to-pick)
 — so there's no service-to-service wiring for the platform to get right.
 
