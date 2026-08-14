@@ -4,10 +4,10 @@ description: Deploy to Railway, single-service or split into api/web services
 
 # Deploy to Railway
 
-Railway builds with [Railpack](https://railpack.com) by default (Nixpacks is
-deprecated), and it handles Cedar's Yarn 4 workspaces and `engines.node`
-correctly with no configuration. Cedar needs nothing beyond the conventions
-described in [any container host](./any-container-host.md) to deploy there.
+Railway builds with [Railpack](https://railpack.com) by default, and it handles
+Cedar's Yarn 4 workspaces and `engines.node` correctly with no configuration.
+Cedar needs nothing beyond the conventions described in
+[any container host](./any-container-host.md) to deploy there.
 
 ## Single-service (start here)
 
@@ -68,41 +68,21 @@ To split into the
    [relative vs. absolute apiUrl](./introduction.md#relative-apiurl--proxy-or-absolute-apiurl--cors).
 
    Define the target as a Variable first, then reference it from the start
-   command (Railway's `${{Service.VAR}}` syntax doesn't resolve directly in
-   the Start Command field):
-
-   - Api service: generate a public domain (**Settings → Networking**) if it
-     doesn't have one.
-   - Web service **Variables** tab: `API_PROXY_TARGET=${{api.RAILWAY_PUBLIC_DOMAIN}}`
-   - Web service start command:
-
-     ```shell
-     yarn start:web --api-proxy-target="https://$API_PROXY_TARGET"
-     ```
-
-   For private networking instead, use `http://` and give the api service a
-   fixed `PORT`:
+   command (Railway's `${{Service.VAR}}` syntax doesn't resolve directly in the
+   Start Command field):
 
    - Api service **Variables** tab: `PORT=8911`
    - Web service **Variables** tab:
-     `API_PROXY_TARGET=${{api.RAILWAY_PRIVATE_DOMAIN}}:${{api.PORT}}`
+     `API_PROXY_TARGET=${{api.RAILWAY_PRIVATE_DOMAIN}}:${{api.PORT}}`, replacing
+     `api` with your api service's actual Railway service name
    - Web service start command:
 
      ```shell
      yarn start:web --api-proxy-target="http://$API_PROXY_TARGET"
      ```
 
-   Either way, replace `api` with your api service's actual name. A missing
-   or schemeless `apiProxyTarget` returns a Bad Gateway error.
-
 ## Config as code
 
 Railway supports config-as-code via `railway.json` or `railway.toml` in your
 repo. There's no JSONC support, so if you want comments in your config, use
 `railway.toml`.
-
-## Private networking
-
-Railway's private network is IPv6-native. Cedar's servers default to binding
-`::` (dual-stack — both IPv4 and IPv6), so the two-service topology's internal
-service-to-service traffic works with no host configuration on your part.
