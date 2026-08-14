@@ -25,7 +25,8 @@ production Cedar app. Before your first deploy, follow the steps below.
    - Settings tab, Healthcheck Path: `/graphql/health`.
    - Variables tab: `PORT=8911`
    - Variables tab: reference the database, usually
-     `DATABASE_URL=${{Postgres.DATABASE_URL}}`
+     `DATABASE_URL=${{Postgres.DATABASE_URL}}`. Possibly also 
+     `DIRECT_DATABASE_URL`
 4. On the **web** service:
    - Variables tab: whatever database URL(s) `api/prisma.config.cjs` references
      — usually `DATABASE_URL`, plus possibly `DIRECT_DATABASE_URL`.
@@ -50,9 +51,18 @@ production Cedar app. Before your first deploy, follow the steps below.
 5. Deploy. Railpack finds each service's `build`/`start` scripts and runs them —
    no further build configuration needed.
 
-It might seem starange to have to add `DATABASE_URL` to the web service. But
+It might seem strange to have to add `DATABASE_URL` to the web service. But
 it's used for prerendering. During build Cedar will execute Cell queries against
 your database to generate the static HTML it serves when prerendering.
+
+This means a schema-changing deploy has an ordering risk: the web service's
+build (and its prerender step) isn't gated on the api service's Pre-Deploy
+Command finishing, only on it being started, so it can run before or during a
+migration. If you use `<Set prerender>` on routes with Cell data and are
+shipping a breaking schema change, run the migration yourself against
+production before pushing (`yarn cedar prisma migrate deploy`), or keep
+changes backward-compatible (expand/contract) so prerendering succeeds
+against both the old and new shape.
 
 This two-services topology is the only one that supports a custom
 [server file](../server-file.md) (`api/src/server.ts`) — it's a Fastify concept
@@ -88,11 +98,19 @@ This isn't Railway's default: its GitHub import creates the two services
 described above, so getting to one means undoing that.
 
 1. Delete one of the two auto-created services, keeping the other.
-2. On the remaining service, check Settings → Source and clear any
-   root-directory override, so it builds from the repo root rather than the
-   `api` or `web` workspace.
-3. Add Postgres and reference `DATABASE_URL` as above.
-4. Push. Railpack runs the root `build`/`start` scripts, which serve both sides
+2. On the remaining service's Settings tab, clear Railway's auto-configured
+   Root Directory, Build Command, Start Command, and Watch Paths. Railway's
+   monorepo import sets these per-workspace (e.g. Start Command
+   `yarn start:api`), and single-container needs the root-level `build`/`start`
+   scripts instead — leaving a workspace-specific Start Command in place just
+   keeps running that one side, not both.
+3. Add Postgres and reference the same database variable(s) as the api
+   service above — `DATABASE_URL`, plus `DIRECT_DATABASE_URL` if you used the
+   Neon Postgres setup.
+4. If you kept the **api** service (deleted web), it never had a public
+   domain generated — Settings → Networking → Public Networking →
+   **Generate Domain**, same as the web service's step above.
+5. Push. Railpack runs the root `build`/`start` scripts, which serve both sides
    from one process.
 
 Single-container doesn't support a custom server file (see above). Railway's CDN
