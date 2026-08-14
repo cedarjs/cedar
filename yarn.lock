@@ -2084,7 +2084,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@cedarjs/web-server": "workspace:*"
-    "@fastify/compress": "npm:9.1.1"
+    "@fastify/compress": "npm:9.2.0"
     "@fastify/multipart": "npm:9.4.0"
     "@fastify/url-data": "npm:6.0.4"
     "@types/aws-lambda": "npm:8.10.162"
@@ -2990,7 +2990,7 @@ __metadata:
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
-    "@fastify/compress": "npm:9.1.1"
+    "@fastify/compress": "npm:9.2.0"
     "@fastify/http-proxy": "npm:11.6.0"
     "@fastify/static": "npm:8.3.0"
     "@fastify/url-data": "npm:6.0.4"
@@ -4844,16 +4844,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fastify/compress@npm:9.1.1":
-  version: 9.1.1
-  resolution: "@fastify/compress@npm:9.1.1"
+"@fastify/compress@npm:9.2.0":
+  version: 9.2.0
+  resolution: "@fastify/compress@npm:9.2.0"
   dependencies:
     "@fastify/accept-negotiator": "npm:^2.0.0"
     fastify-plugin: "npm:^6.0.0"
     mime-db: "npm:^1.52.0"
     minipass: "npm:^7.0.4"
     readable-stream: "npm:^4.5.2"
-  checksum: 10c0/900349d6760b754f0a0c6f0659c987c3ca4737f099678468dc40446cbc104abf5817e6a6ca506b57f22ef0ce183a0bfeab138927c97f28cab7e7c6d3c74a808b
+  checksum: 10c0/c2274fd2329625766ae7a01d7333ac45a06636608cce7e4f0e816c7530fb1f1eb99aa190b446c3bb6d26ebe6414da7a4895410f97e76a37a6c24534d11c0a7f3
   languageName: node
   linkType: hard
 
