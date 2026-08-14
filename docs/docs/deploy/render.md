@@ -21,9 +21,8 @@ Postgres or SQLite database, you can do the following:
    [default : `postgresql`]. Note: `sqlite` stores its database file on a
    persistent disk, which Render's free plan doesn't support — the setup
    command will prompt you to confirm putting the `api` service on a paid
-   plan before generating `render.yaml`. With `postgresql` or `none`, the
-   `api` service itself stays on the free plan (the managed Postgres database
-   that `postgresql` provisions has its own separate plan, set by Render).
+   plan before generating `render.yaml`. `postgresql` and `none` stay on the
+   free plan.
 4. commit the generated `render.yaml`, then create a new Blueprint from your
    repo at https://dashboard.render.com/iacs
 5. after the first deploy, replace the `destination` placeholder in

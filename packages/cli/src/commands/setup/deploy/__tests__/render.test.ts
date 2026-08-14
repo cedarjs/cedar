@@ -62,6 +62,12 @@ describe('render.yaml', () => {
     expect(yaml).toContain('property: connectionString')
   })
 
+  it('keeps the postgres database itself on the free plan', () => {
+    // Render defaults an omitted `databases[].plan` to a paid plan
+    // (`basic-256mb`), so this has to be set explicitly.
+    expect(POSTGRES_YAML).toContain('plan: free')
+  })
+
   it('mounts a disk instead of a database for sqlite', () => {
     const sqliteYaml = RENDER_YAML(SQLITE_YAML)
 

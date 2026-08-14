@@ -74,6 +74,7 @@ export const POSTGRES_YAML = `\
 
 databases:
   - name: ${PROJECT_NAME}-db
+    plan: free
     region: oregon`
 
 export const SQLITE_YAML = `\
