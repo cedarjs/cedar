@@ -5,7 +5,7 @@ import { getUserApiUrl } from '../helpers/index.js'
 
 export const PROJECT_NAME = path.basename(getPaths().base)
 
-export const RENDER_YAML = (database: string) => {
+export const RENDER_YAML = (database: string, plan = 'free') => {
   const apiUrl = getUserApiUrl().replace(/\/$/, '')
   return `# Quick links to the docs:
 # - Deploying Cedar: https://cedarjs.com/docs/deploy/render
@@ -44,7 +44,7 @@ services:
 
 - name: ${PROJECT_NAME}-api
   type: web
-  plan: free
+  plan: ${plan}
   runtime: node
   region: oregon
   buildCommand: npm install --global corepack && yarn install && yarn cedar build api
@@ -74,11 +74,14 @@ export const POSTGRES_YAML = `\
 
 databases:
   - name: ${PROJECT_NAME}-db
+    plan: free
     region: oregon`
 
 export const SQLITE_YAML = `\
   - key: DATABASE_URL
     value: file:./data/sqlite.db
+  # Persistent disks aren't available on Render's free plan, which is why
+  # the api service above is on a paid plan when SQLite is selected.
   disk:
     name: sqlite-data
     mountPath: /opt/render/project/src/api/db/data

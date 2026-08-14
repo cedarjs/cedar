@@ -62,10 +62,29 @@ describe('render.yaml', () => {
     expect(yaml).toContain('property: connectionString')
   })
 
+  it('keeps the postgres database itself on the free plan', () => {
+    // Render defaults an omitted `databases[].plan` to a paid plan
+    // (`basic-256mb`), so this has to be set explicitly.
+    expect(POSTGRES_YAML).toContain('plan: free')
+  })
+
   it('mounts a disk instead of a database for sqlite', () => {
     const sqliteYaml = RENDER_YAML(SQLITE_YAML)
 
     expect(sqliteYaml).toContain('mountPath:')
     expect(sqliteYaml).not.toContain('fromDatabase:')
+  })
+
+  it('defaults the api service to the free plan', () => {
+    expect(yaml).toContain('plan: free')
+  })
+
+  it('lets the caller override the api service plan', () => {
+    // Render's free plan doesn't support persistent disks, so callers using
+    // the sqlite option (which attaches one) need to pass a paid plan here.
+    const paidYaml = RENDER_YAML(SQLITE_YAML, 'starter')
+
+    expect(paidYaml).toContain('plan: starter')
+    expect(paidYaml).not.toContain('plan: free')
   })
 })
