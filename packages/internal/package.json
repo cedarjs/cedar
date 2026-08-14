@@ -171,7 +171,7 @@
     "@oxc-project/types": "^0.144.0",
     "concurrently": "9.2.4",
     "graphql-tag": "2.12.6",
-    "memfs": "4.64.0",
+    "memfs": "4.68.1",
     "publint": "0.3.23",
     "ts-dedent": "2.3.0",
     "vitest": "4.1.10"
