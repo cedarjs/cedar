@@ -18,7 +18,11 @@ Postgres or SQLite database, you can do the following:
    commit, and add it as a new repo to GitHub or GitLab
 3. run the command `yarn cedar setup deploy render`, use the flag `--database`
    to select from `postgresql`, `sqlite` or `none` to proceed without a database
-   [default : `postgresql`]
+   [default : `postgresql`]. Note: `sqlite` stores its database file on a
+   persistent disk, which Render's free plan doesn't support — the setup
+   command will prompt you to confirm putting the `api` service on a paid
+   plan before generating `render.yaml`. `postgresql` and `none` stay on the
+   free plan.
 4. commit the generated `render.yaml`, then create a new Blueprint from your
    repo at https://dashboard.render.com/iacs
 5. after the first deploy, replace the `destination` placeholder in
