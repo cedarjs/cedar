@@ -8,7 +8,7 @@ Cedar is designed for both serverless and traditional infrastructure deployments
 
 1. code is committed to a repository on GitHub, GitLab, or Bitbucket, which triggers the deployment
 2. the Cedar API Side and Web Side are individually prepared via a build process
-3. during the build process, any database related actions are run (e.g. migrations)
+3. any database related actions (e.g. migrations) are run
 4. the hosting provider deploys the built Web static assets to a CDN and the API code to a serverless backend (e.g. AWS Lambdas)
 
 Currently, these are the officially supported deploy targets:
@@ -82,7 +82,7 @@ relative `apiUrl` + proxy setup when it can't — see
 
 Once you're past `cedar dev`, there are two ways to run Cedar in production:
 
-- **Single-container** (`yarn start`) — one process serves both sides; the web server proxies API requests to the API in-process. This is the **convenient** path: no service-to-service wiring, so it works with zero configuration on any container host — see [any container host](./any-container-host.md).
+- **Single-container** (`yarn start`) — one process serves both sides; the web server proxies API requests to the API in-process. This is the **convenient** path: no service-to-service wiring, so it builds and starts with no platform-specific setup on any container host — see [any container host](./any-container-host.md).
 - **api process + static/CDN web** (`yarn start:api`, with the web side served separately) — this is the **recommended** path, and what the generated Dockerfile, the baremetal nginx setup, and the Render blueprint all use.
 
 Start with single-container — it's the fastest way to get a working deploy, and for small apps or early-stage projects it's often all you need. Move to the two-part topology when you want your web assets served from a CDN edge (rather than round-tripping through your api process), or when you want to scale the api and web sides independently. The reason this needs to be stated explicitly: without it, it's easy to land on single-container, get a working app, and never learn why the split is worth doing later.
