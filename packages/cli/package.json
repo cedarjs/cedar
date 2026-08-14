@@ -97,7 +97,7 @@
     "@cedarjs/framework-tools": "workspace:*",
     "@prisma/dmmf": "7.8.0",
     "@types/archiver": "^7.0.0",
-    "memfs": "4.64.0",
+    "memfs": "4.68.1",
     "node-ssh": "13.2.1",
     "ts-dedent": "2.3.0",
     "typescript": "5.9.3",
