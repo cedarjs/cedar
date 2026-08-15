@@ -157,17 +157,13 @@ As long as you haven't edited the stub files, they're replaced without needing `
 
 ### Scaffolds
 
-The scaffold generator doesn't generate stubs for missing related models (yet), so scaffolding a model whose related models have no SDLs fails during type generation with an error like:
-
-```text
-        Unknown type: "Shelf".
-        Error: Unknown type: "Shelf".
-```
-
-The fix: generate the SDL for (or scaffold out) each model in the relation,
-ignoring the intermediate errors. The last model in the relation should generate
-cleanly. Or run `yarn cedar g sdl <model>` for the related models first, since
-the SDL generator handles missing relations automatically.
+The scaffold generator generates the same read-only stubs for missing related
+models, so scaffolding `Book` behaves just like generating its SDL: a stub SDL
+and service are generated for `Shelf`, and the same "Read-only SDL stubs were
+generated for them" message is printed once the scaffold finishes. When you're
+ready to flesh out `Shelf`, run `yarn cedar g sdl Shelf` for just the GraphQL
+type and service, or `yarn cedar g scaffold Shelf` if you also want a full
+CRUD UI for it.
 
 ### Self-Relations
 
