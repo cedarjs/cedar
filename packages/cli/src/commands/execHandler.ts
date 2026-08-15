@@ -103,12 +103,13 @@ export const handler = async (args: ExecOptions) => {
   delete scriptArgs.silent
 
   // Anything the user puts after a literal `--` (e.g.
-  // `yarn cedar exec myScript -- --force`) reaches us here as unparsed
-  // strings tacked onto the end of `scriptArgs._`, because yargs stops
-  // parsing flags the moment it sees `--` and just appends whatever follows
-  // verbatim. Left alone, `--force` after `--` would silently never become
-  // `scriptArgs.force`. Re-parse that tail with the same parser yargs uses
-  // everywhere else, so a flag after `--` behaves the same as one before it.
+  // `yarn cedar exec myScript -- --force`) reaches us here after yargs has
+  // already partially processed it: yargs stops parsing flags the moment it
+  // sees `--` but still applies type coercion to positionals (e.g. '123'
+  // becomes the number 123). The flag syntax itself (`--force`) is left
+  // unparsed and lands as raw strings. Re-parse that tail with the same
+  // parser yargs uses everywhere else, so a flag after `--` behaves the same
+  // as one before it.
   //
   // Nothing before the original `--` can start with a dash by the time we
   // get here — yargs would already have parsed it as a flag — so the first
@@ -119,7 +120,7 @@ export const handler = async (args: ExecOptions) => {
     )
 
     if (dashBlockIndex !== -1) {
-      const unparsedTail = scriptArgs._.splice(dashBlockIndex) as string[]
+      const unparsedTail = scriptArgs._.splice(dashBlockIndex)
       const { _: reparsedPositionals, ...reparsedFlags } = Parser(unparsedTail)
 
       scriptArgs._.push(...reparsedPositionals)
