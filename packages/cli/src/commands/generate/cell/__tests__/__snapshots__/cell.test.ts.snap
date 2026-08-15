@@ -318,7 +318,7 @@ import type { CellSuccessProps } from '@cedarjs/web'
 //     }
 //   }
 //
-//   <AuthorBioCell user={something.user} />
+//   <AuthorBioCell user={something} />
 export const FRAGMENT = gql\`
   fragment AuthorBioCell_user on User {
     id
@@ -327,7 +327,9 @@ export const FRAGMENT = gql\`
 
 export const Empty = () => <div>Empty</div>
 
-export const Success = ({ user }: CellSuccessProps<AuthorBioCell_user>) => {
+export const Success = ({
+  user,
+}: CellSuccessProps<{ user: AuthorBioCell_user }>) => {
   return <div>{JSON.stringify(user)}</div>
 }
 "
@@ -421,7 +423,7 @@ import type { CellSuccessProps, DataObject } from '@cedarjs/web'
 //     }
 //   }
 //
-//   <AuthorBioCell user={something.user} />
+//   <AuthorBioCell user={something} />
 export const FRAGMENT = gql\`
   fragment AuthorBioCell_user on User {
     id
@@ -441,7 +443,9 @@ export const afterQuery = (data: DataObject): DataObject => {
 
 export const Empty = () => <div>Empty</div>
 
-export const Success = ({ user }: CellSuccessProps<AuthorBioCell_user>) => {
+export const Success = ({
+  user,
+}: CellSuccessProps<{ user: AuthorBioCell_user }>) => {
   return <div>{JSON.stringify(user)}</div>
 }
 "
@@ -459,7 +463,7 @@ exports[`Fragment cells > strips types from a FRAGMENT cell when generating Java
 //     }
 //   }
 //
-//   <AuthorBioCell user={something.user} />
+//   <AuthorBioCell user={something} />
 export const FRAGMENT = gql\`
   fragment AuthorBioCell_user on User {
     id

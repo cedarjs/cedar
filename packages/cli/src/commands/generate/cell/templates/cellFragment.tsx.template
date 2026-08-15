@@ -16,7 +16,7 @@ import type {
 //     }
 //   }
 //
-//   <${pascalName}Cell ${camelName}={something.${camelName}} />
+//   <${pascalName}Cell ${camelName}={something} />
 export const FRAGMENT = gql`
   fragment ${fragmentName} on ${fragmentOnType} {
     id
@@ -38,6 +38,6 @@ export const Empty = () => <div>Empty</div>
 
 export const Success = ({
   ${camelName},
-}: CellSuccessProps<${fragmentName}>) => {
+}: CellSuccessProps<{ ${camelName}: ${fragmentName} }>) => {
   return <div>{JSON.stringify(${camelName})}</div>
 }
