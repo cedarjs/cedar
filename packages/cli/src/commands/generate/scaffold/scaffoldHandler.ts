@@ -9,6 +9,7 @@ import type { ListrTaskWrapper } from 'listr2'
 import pascalcase from 'pascalcase'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import {
   addWorkspacePackages,
   removeWorkspacePackages,
@@ -42,10 +43,14 @@ import {
 import { builder as sdlBuilder } from '../sdl/sdl.js'
 import {
   files as sdlFiles,
+  stubFiles as sdlStubFiles,
   printRedactedFieldsNote,
   redactedSensitiveFields,
 } from '../sdl/sdlHandler.js'
-import { writeFilesWithStubsTask } from '../sdl/stubFiles.js'
+import {
+  missingRelatedModels,
+  writeFilesWithStubsTask,
+} from '../sdl/stubFiles.js'
 import { builder as serviceBuilder } from '../service/service.js'
 import { files as serviceFiles } from '../service/serviceHandler.js'
 import { customOrDefaultTemplatePath } from '../yargsHandlerHelpers.js'
@@ -949,6 +954,7 @@ interface TasksOptions {
   typescript: boolean
   javascript?: boolean
   tailwind: boolean
+  missingModels: string[]
 }
 
 export const tasks = ({
@@ -960,21 +966,25 @@ export const tasks = ({
   typescript,
   javascript: _javascript,
   tailwind,
+  missingModels,
 }: TasksOptions) => {
   return new Listr(
     [
       {
         title: 'Generating scaffold files...',
         task: async () => {
-          const f = await files({
-            docs,
-            model,
-            path,
-            tests,
-            typescript,
-            tailwind,
-            force,
-          })
+          const f = {
+            ...(await files({
+              docs,
+              model,
+              path,
+              tests,
+              typescript,
+              tailwind,
+              force,
+            })),
+            ...(await sdlStubFiles(missingModels, model, { docs, typescript })),
+          }
           return writeFilesWithStubsTask(f, { overwriteExisting: force })
         },
       },
@@ -1056,6 +1066,9 @@ export const handler = async ({
 
   try {
     const { name } = await verifyModelName({ name: model })
+    // Computed before `t.run()` writes the stub SDL files: once those exist
+    // on disk, `missingRelatedModels` would no longer see them as missing
+    const missingModels = await missingRelatedModels(name)
     const t = tasks({
       docs,
       model: name,
@@ -1064,13 +1077,47 @@ export const handler = async ({
       tests,
       typescript,
       tailwind,
+      missingModels,
     })
     if (rollback && !force) {
       prepareForRollback(t)
     }
     await t.run()
 
-    printRedactedFieldsNote(await redactedSensitiveFields([name]))
+    if (missingModels.length > 0) {
+      console.log()
+      console.log(
+        c.info(
+          `${name} has relations to models that don't have SDL files of ` +
+            `their own yet: ${missingModels.join(', ')}`,
+        ),
+      )
+      console.log(
+        c.info(
+          'Read-only SDL stubs were generated for them, since GraphQL type ' +
+            'generation fails otherwise.',
+        ),
+      )
+      console.log(
+        c.info('To replace a stub, run one of the following for each model:'),
+      )
+      for (const stubModel of missingModels) {
+        console.log(
+          c.info(
+            `  ${formatCedarCommand(['generate', 'sdl', stubModel])} (SDL + service only)`,
+          ),
+        )
+        console.log(
+          c.info(
+            `  ${formatCedarCommand(['generate', 'scaffold', stubModel])} (adds pages, cells, and forms too)`,
+          ),
+        )
+      }
+    }
+
+    printRedactedFieldsNote(
+      await redactedSensitiveFields([name, ...missingModels]),
+    )
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
     const exitCode =

@@ -1051,6 +1051,15 @@ The content of the generated components is different from what you'd get by runn
 
 Like [generate sdl](#generate-sdl), the scaffold generator never includes dbAuth's sensitive fields (`hashedPassword`, `salt`, `resetToken`, `resetTokenExpiresAt`, `webAuthnChallenge`) in the generated SDL, forms, cells or display pages. As with `generate sdl`, `salt` is only excluded when the model has at least one of the other auth fields too — a standalone `salt` field is kept.
 
+Also like `generate sdl`, if the model has relations to models that don't have
+SDL files of their own yet, read-only stub SDLs (and services) are generated for
+those models too, so GraphQL type generation doesn't fail with an `Unknown type`
+error. Replace a stub by running `generate sdl` (SDL + service only) or
+`generate scaffold` (adds pages, cells, and forms too) for that model; unedited
+stubs are overwritten without needing `--force`. See
+[Troubleshooting Generators](./schema-relations#troubleshooting-generators) for
+details.
+
 | Arguments & Options  | Description                                                                                                                                                                                           |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `model`              | Model to scaffold. You can also use `<path/model>` to nest files by type at the given path directory (or directories). For example, `redwood g scaffold admin/post`                                   |
@@ -1182,10 +1191,13 @@ Notes:
 
 **Troubleshooting**
 
-If you see `Error: Unknown type: ...`, don't panic!
-It's a known limitation with GraphQL type generation.
-It happens when you generate the SDL of a Prisma model that has relations **before the SDL for the related model exists**.
-Please see [Troubleshooting Generators](./schema-relations#troubleshooting-generators) for help.
+As described above, `generate scaffold` generates read-only stub SDLs for any
+related models that don't have one yet, before type generation runs, so in the
+common case you won't run into `Error: Unknown type: ...`. If you do hit
+it — for example after destroying an SDL that another stub still relies on,
+or with an implicit many-to-many relation, which isn't stubbed — see
+[Troubleshooting Generators](./schema-relations#troubleshooting-generators)
+for help.
 
 ### generate script
 
@@ -1385,10 +1397,12 @@ export const User = {
 
 **Troubleshooting**
 
-If you see `Error: Unknown type: ...`, don't panic!
-It's a known limitation with GraphQL type generation.
-It happens when you generate the SDL of a Prisma model that has relations **before the SDL for the related model exists**.
-Please see [Troubleshooting Generators](./schema-relations#troubleshooting-generators) for help.
+As described above, `generate sdl` generates read-only stub SDLs for any
+related models that don't have one yet, before type generation runs, so in
+the common case you won't run into `Error: Unknown type: ...`. If you do hit
+it — for example after destroying an SDL that another stub still relies on,
+or with an implicit many-to-many relation, which isn't stubbed — see
+[Troubleshooting Generators](./schema-relations#troubleshooting-generators) for help.
 
 ### generate secret
 
