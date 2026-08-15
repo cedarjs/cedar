@@ -5,8 +5,9 @@
 
 interface ScriptArgs {
   args: {
-    // positional args, e.g. `yarn cedar exec myScript foo bar` -> ['foo', 'bar']
-    _: string[]
+    // positional args, e.g. `yarn cedar exec myScript foo 123` -> ['foo', 123]
+    // numeric-looking args are parsed as numbers, others as strings
+    _: Array<string | number>
     // named flags, e.g. `--force` -> { force: true }
     [flag: string]: unknown
   }
