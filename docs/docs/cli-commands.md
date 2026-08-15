@@ -1195,11 +1195,10 @@ Notes:
 **Troubleshooting**
 
 As described above, `generate scaffold` generates read-only stub SDLs for any
-related models that don't have one yet, before type generation runs — so in
-the common case you won't see `Error: Unknown type: ...` at all anymore. If
-you still hit it — for example after destroying an SDL that another stub
-still relies on, or with an implicit many-to-many relation, which isn't
-stubbed — see
+related models that don't have one yet, before type generation runs, so in the
+common case you won't run into `Error: Unknown type: ...`. If you do hit
+it — for example after destroying an SDL that another stub still relies on,
+or with an implicit many-to-many relation, which isn't stubbed — see
 [Troubleshooting Generators](./schema-relations#troubleshooting-generators)
 for help.
 
@@ -1402,11 +1401,11 @@ export const User = {
 **Troubleshooting**
 
 As described above, `generate sdl` generates read-only stub SDLs for any
-related models that don't have one yet, before type generation runs — so in
-the common case you won't see `Error: Unknown type: ...` at all anymore. If
-you still hit it — for example after destroying an SDL that another stub
-still relies on, or with an implicit many-to-many relation, which isn't
-stubbed — see [Troubleshooting Generators](./schema-relations#troubleshooting-generators) for help.
+related models that don't have one yet, before type generation runs, so in
+the common case you won't run into `Error: Unknown type: ...`. If you do hit
+it — for example after destroying an SDL that another stub still relies on,
+or with an implicit many-to-many relation, which isn't stubbed — see
+[Troubleshooting Generators](./schema-relations#troubleshooting-generators) for help.
 
 ### generate secret
 
