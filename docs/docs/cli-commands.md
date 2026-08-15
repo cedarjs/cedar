@@ -1194,12 +1194,12 @@ Notes:
 
 **Troubleshooting**
 
-If you see `Error: Unknown type: ...`, don't panic! In most cases this is now
-handled automatically: as described above, `generate scaffold` generates
-read-only stub SDLs for any related models that don't have one yet, so type
-generation doesn't fail. If you still hit this error — for example after
-destroying an SDL that another stub still relies on, or with an implicit
-many-to-many relation — see
+As described above, `generate scaffold` generates read-only stub SDLs for any
+related models that don't have one yet, before type generation runs — so in
+the common case you won't see `Error: Unknown type: ...` at all anymore. If
+you still hit it — for example after destroying an SDL that another stub
+still relies on, or with an implicit many-to-many relation, which isn't
+stubbed — see
 [Troubleshooting Generators](./schema-relations#troubleshooting-generators)
 for help.
 
@@ -1401,10 +1401,12 @@ export const User = {
 
 **Troubleshooting**
 
-If you see `Error: Unknown type: ...`, don't panic!
-It's a known limitation with GraphQL type generation.
-It happens when you generate the SDL of a Prisma model that has relations **before the SDL for the related model exists**.
-Please see [Troubleshooting Generators](./schema-relations#troubleshooting-generators) for help.
+As described above, `generate sdl` generates read-only stub SDLs for any
+related models that don't have one yet, before type generation runs — so in
+the common case you won't see `Error: Unknown type: ...` at all anymore. If
+you still hit it — for example after destroying an SDL that another stub
+still relies on, or with an implicit many-to-many relation, which isn't
+stubbed — see [Troubleshooting Generators](./schema-relations#troubleshooting-generators) for help.
 
 ### generate secret
 
