@@ -46,6 +46,12 @@ export const builder = createBuilder({
           'Include a typed `isEmpty` stub for overriding the default check for the Empty component.',
         type: 'boolean',
       },
+      fragment: {
+        default: '',
+        description:
+          'Generate a fragment cell (exports FRAGMENT instead of QUERY) that reads its data from a parent Cell, given the GraphQL type it selects from - e.g. --fragment User.',
+        type: 'string',
+      },
     }
   },
 })

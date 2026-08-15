@@ -33,6 +33,7 @@ type CellArgv = TypescriptHandlerArgv & {
   beforeQuery?: boolean
   afterQuery?: boolean
   isEmpty?: boolean
+  fragment?: string
 }
 
 export const files = async ({
@@ -45,6 +46,7 @@ export const files = async ({
   beforeQuery = false,
   afterQuery = false,
   isEmpty = false,
+  fragment = '',
 }: CellArgv): Promise<Record<string, string>> => {
   let cellName = removeGeneratorName(name, 'cell')
   let idName: string | undefined = 'id'
@@ -55,26 +57,47 @@ export const files = async ({
   let typeName = cellName
   // Create a unique operation name.
 
+  if (fragment) {
+    if (list) {
+      throw new Error(
+        'The --list flag cannot be combined with --fragment; fragment cells always render a single item.',
+      )
+    }
+    if (beforeQuery) {
+      throw new Error(
+        'The --before-query flag cannot be combined with --fragment; fragment cells never fire a query of their own.',
+      )
+    }
+    if (query) {
+      throw new Error(
+        "The --query flag cannot be combined with --fragment; fragment cells don't have an operation name.",
+      )
+    }
+  }
+
   const shouldGenerateList =
-    (isWordPluralizable(cellName) ? isPlural(cellName) : list) || list
+    !fragment &&
+    ((isWordPluralizable(cellName) ? isPlural(cellName) : list) || list)
 
   // needed for the singular cell GQL query find by id case
-  try {
-    // todo should pull from graphql schema rather than prisma!
-    model = await getSchema(pascalcase(singularize(cellName)))
-    idName = getIdName(model)
-    idType = getIdType(model)
-    typeName = model.name
-    mockIdValues =
-      idType === 'String'
-        ? mockIdValues.map((value) => `'${value}'`)
-        : mockIdValues
-  } catch {
-    // Eat error so that the destroy cell generator doesn't raise an error
-    // when trying to find prisma query engine in test runs.
+  if (!fragment) {
+    try {
+      // todo should pull from graphql schema rather than prisma!
+      model = await getSchema(pascalcase(singularize(cellName)))
+      idName = getIdName(model)
+      idType = getIdType(model)
+      typeName = model.name
+      mockIdValues =
+        idType === 'String'
+          ? mockIdValues.map((value) => `'${value}'`)
+          : mockIdValues
+    } catch {
+      // Eat error so that the destroy cell generator doesn't raise an error
+      // when trying to find prisma query engine in test runs.
 
-    // Assume id will be Int, otherwise generated cell will keep throwing
-    idType = 'Int'
+      // Assume id will be Int, otherwise generated cell will keep throwing
+      idType = 'Int'
+    }
   }
 
   if (shouldGenerateList) {
@@ -84,7 +107,19 @@ export const files = async ({
   }
 
   let operationName: string | undefined = query
-  if (operationName) {
+  let fragmentName: string | undefined
+  let fragmentOnType: string | undefined
+  let fragmentPropName: string | undefined
+
+  if (fragment) {
+    // The data prop (and fragment name suffix) is derived from the GraphQL
+    // type the fragment selects from, matching createFragmentCell's own
+    // fallback naming (see getFragmentPropName in createFragmentCell.tsx).
+    const fragmentTypeVariants = nameVariants(fragment)
+    fragmentOnType = fragmentTypeVariants.pascalName
+    fragmentPropName = fragmentTypeVariants.camelName
+    fragmentName = `${nameVariants(cellName).pascalName}Cell_${fragmentPropName}`
+  } else if (operationName) {
     const userSpecifiedOperationNameIsUnique =
       await operationNameIsUnique(operationName)
 
@@ -104,15 +139,25 @@ export const files = async ({
     extension,
     webPathSection: CEDAR_WEB_PATH_NAME,
     generator: 'cell',
-    templatePath: `cell${templateNameSuffix}.tsx.template`,
-    templateVars: {
-      operationName,
-      idName,
-      idType,
-      beforeQuery,
-      afterQuery,
-      isEmpty,
-    },
+    templatePath: fragment
+      ? 'cellFragment.tsx.template'
+      : `cell${templateNameSuffix}.tsx.template`,
+    templateVars: fragment
+      ? {
+          fragmentName,
+          fragmentOnType,
+          camelName: fragmentPropName,
+          afterQuery,
+          isEmpty,
+        }
+      : {
+          operationName,
+          idName,
+          idType,
+          beforeQuery,
+          afterQuery,
+          isEmpty,
+        },
   })
 
   const testFile = await templateForComponentFile({
@@ -121,11 +166,13 @@ export const files = async ({
     extension: `.test${extension}`,
     webPathSection: CEDAR_WEB_PATH_NAME,
     generator: 'cell',
-    templatePath: 'test.js.template',
-    templateVars: {
-      idName: shouldGenerateList ? undefined : idName,
-      mockIdValues: shouldGenerateList ? undefined : mockIdValues,
-    },
+    templatePath: fragment ? 'testFragment.js.template' : 'test.js.template',
+    templateVars: fragment
+      ? { camelName: fragmentPropName }
+      : {
+          idName: shouldGenerateList ? undefined : idName,
+          mockIdValues: shouldGenerateList ? undefined : mockIdValues,
+        },
   })
 
   const storiesFile = await templateForComponentFile({
@@ -134,7 +181,9 @@ export const files = async ({
     extension: `.stories${extension}`,
     webPathSection: CEDAR_WEB_PATH_NAME,
     generator: 'cell',
-    templatePath: 'stories.tsx.template',
+    templatePath: fragment
+      ? 'storiesFragment.tsx.template'
+      : 'stories.tsx.template',
   })
 
   const mockFile = await templateForComponentFile({
@@ -144,11 +193,18 @@ export const files = async ({
     webPathSection: CEDAR_WEB_PATH_NAME,
     generator: 'cell',
     templatePath: `mock${templateNameSuffix}.ts.template`,
-    templateVars: {
-      idName,
-      mockIdValues,
-      typeName,
-    },
+    templateVars: fragment
+      ? {
+          idName,
+          mockIdValues,
+          typeName: fragmentOnType,
+          camelName: fragmentPropName,
+        }
+      : {
+          idName,
+          mockIdValues,
+          typeName,
+        },
   })
 
   const files = [cellFile]
@@ -171,7 +227,13 @@ export const files = async ({
 export const handler = createHandler({
   componentName: 'cell',
   filesFn: files,
-  includeAdditionalTasks: ({ name: cellName }: { name: string }) => {
+  includeAdditionalTasks: ({
+    name: cellName,
+    fragment,
+  }: {
+    name: string
+    fragment?: string
+  }) => {
     return [
       {
         title: `Generating types ...`,
@@ -179,7 +241,11 @@ export const handler = createHandler({
           const queryFieldName = nameVariants(
             removeGeneratorName(cellName, 'cell'),
           ).camelName
-          const projectHasSdl = await checkProjectForQueryField(queryFieldName)
+          // Fragment cells aren't backed by a query field on the Query type,
+          // so there's no SDL field to check for - always generate types.
+          const projectHasSdl =
+            Boolean(fragment) ||
+            (await checkProjectForQueryField(queryFieldName))
 
           if (projectHasSdl) {
             const { errors } = await generateTypes()
