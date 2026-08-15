@@ -159,11 +159,13 @@ As long as you haven't edited the stub files, they're replaced without needing `
 
 The scaffold generator generates the same read-only stubs for missing related
 models, so scaffolding `Book` behaves just like generating its SDL: a stub SDL
-and service are generated for `Shelf`, and the same "Read-only SDL stubs were
-generated for them" message is printed once the scaffold finishes. When you're
-ready to flesh out `Shelf`, run `yarn cedar g sdl Shelf` for just the GraphQL
-type and service, or `yarn cedar g scaffold Shelf` if you also want a full
-CRUD UI for it.
+and service are generated for `Shelf`, and a corresponding "Read-only SDL
+stubs were generated for them" message is printed once the scaffold finishes.
+Unlike the SDL generator's message, which only offers `yarn cedar generate sdl
+Shelf`, the scaffold generator's message offers both `yarn cedar generate sdl
+Shelf` (just the GraphQL type and service) and `yarn cedar generate scaffold
+Shelf` (adds pages, cells, and forms too), since scaffolding the related model
+is a reasonable next step but not always the desired one.
 
 ### Self-Relations
 

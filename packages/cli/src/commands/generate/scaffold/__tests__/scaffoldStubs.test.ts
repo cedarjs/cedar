@@ -22,7 +22,11 @@ vi.mock('execa')
 
 import { getDefaultArgs } from '../../../../lib/index.js'
 import { stubFiles as sdlStubFiles } from '../../sdl/sdlHandler.js'
-import { isPristineStub, missingRelatedModels } from '../../sdl/stubFiles.js'
+import {
+  isPristineStub,
+  missingRelatedModels,
+  writeFilesWithStubsTask,
+} from '../../sdl/stubFiles.js'
 import { getYargsDefaults } from '../../yargsCommandHelpers.js'
 import * as scaffoldHandler from '../scaffoldHandler.js'
 
@@ -115,5 +119,38 @@ describe("files() alone never generates stubs (relied on by 'destroy scaffold')"
 
     expect(files).not.toHaveProperty([sdlPath('users.sdl.js')])
     expect(files).not.toHaveProperty([servicePath('users/users.js')])
+  })
+})
+
+// Regression test: `scaffoldHandler.handler()` used to call
+// `missingRelatedModels(name)` *after* running the Listr tasks that write the
+// stub SDL files. By that point the stub SDL already exists on disk, so
+// `missingRelatedModels` no longer sees it as missing, and the "run one of
+// the following" message (and the redacted-fields note for the stubbed
+// model) silently never printed. The fix computes the list once, before
+// anything is written, and threads it through. This test demonstrates why
+// that ordering matters: computed too late, the same list comes back empty.
+describe('missingRelatedModels ordering around the stub write', () => {
+  test('returns [] once the stub SDL for the related model exists on disk', async () => {
+    const missingBeforeWrite = await missingRelatedModels('UserProfile')
+    expect(missingBeforeWrite).toEqual(['User'])
+
+    const files = {
+      ...(await scaffoldHandler.files({
+        ...getDefaultArgs(getYargsDefaults()),
+        docs: false,
+        model: 'UserProfile',
+        tests: true,
+        nestScaffoldByModel: true,
+      })),
+      ...(await sdlStubFiles(missingBeforeWrite, 'UserProfile', {
+        typescript: false,
+      })),
+    }
+    await writeFilesWithStubsTask(files).run()
+
+    // If `handler()` (re-)computed the list at this point, it would
+    // incorrectly conclude nothing is missing
+    expect(await missingRelatedModels('UserProfile')).toEqual([])
   })
 })

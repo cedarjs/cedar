@@ -954,6 +954,7 @@ interface TasksOptions {
   typescript: boolean
   javascript?: boolean
   tailwind: boolean
+  missingModels: string[]
 }
 
 export const tasks = ({
@@ -965,13 +966,13 @@ export const tasks = ({
   typescript,
   javascript: _javascript,
   tailwind,
+  missingModels,
 }: TasksOptions) => {
   return new Listr(
     [
       {
         title: 'Generating scaffold files...',
         task: async () => {
-          const missingModels = await missingRelatedModels(model)
           const f = {
             ...(await files({
               docs,
@@ -1065,6 +1066,9 @@ export const handler = async ({
 
   try {
     const { name } = await verifyModelName({ name: model })
+    // Computed before `t.run()` writes the stub SDL files: once those exist
+    // on disk, `missingRelatedModels` would no longer see them as missing
+    const missingModels = await missingRelatedModels(name)
     const t = tasks({
       docs,
       model: name,
@@ -1073,13 +1077,12 @@ export const handler = async ({
       tests,
       typescript,
       tailwind,
+      missingModels,
     })
     if (rollback && !force) {
       prepareForRollback(t)
     }
     await t.run()
-
-    const missingModels = await missingRelatedModels(name)
 
     if (missingModels.length > 0) {
       console.log()
