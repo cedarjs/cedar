@@ -380,7 +380,8 @@ It's GraphQL-only because:
 - Auto-imports (Vite plugin): `gql` from graphql-tag, `context` from @cedarjs/context, `React` from react
 - Page auto-loading: `cedar-routes-auto-loader` (Vite plugin for dev/build; Babel plugin for Jest/prerender) scans `src/pages/` and auto-imports page components in `Routes.tsx`
 - Components/services: manual imports
-- `*Cell.tsx` → Vite plugin wraps in createCell() (exports QUERY+Loading+Success+Failure+Empty)
+- `*Cell.tsx` → Vite plugin wraps in createCell() (exports QUERY+Loading+Success+Failure+Empty,
+  or FRAGMENT+Success+Empty for fragment Cells — createCell() dispatches to createFragmentCell())
 - `*.sdl.ts` → GraphQL schema ONLY (types, queries, mutations, inputs). Resolvers live in services/.
 - `*.ts` in services/ → business logic (api/src/services/)
 - `*.routeHooks.ts` → exports `routeParameters()` (prerendering: expands params for dynamic routes)
