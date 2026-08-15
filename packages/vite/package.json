@@ -109,7 +109,7 @@
     "concurrently": "9.2.4",
     "memfs": "4.68.1",
     "publint": "0.3.23",
-    "rollup": "4.60.4",
+    "rollup": "4.62.4",
     "ts-dedent": "2.3.0",
     "typescript": "5.9.3",
     "vitest": "4.1.10"
