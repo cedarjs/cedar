@@ -5,7 +5,7 @@
 
 interface ScriptArgs {
   args: {
-    // positional args, [0] is the script name
+    // positional args, e.g. `yarn cedar exec myScript foo bar` -> ['foo', 'bar']
     _: string[]
     // named flags, e.g. `--force` -> { force: true }
     [flag: string]: unknown

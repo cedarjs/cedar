@@ -123,6 +123,43 @@ describe('yarn cedar exec', () => {
       path: path.join('cedar-app', 'scripts', 'normalScript.ts'),
     })
   })
+
+  it('forwards a reserved-looking flag name (e.g. `--silent`) placed after `--` instead of stripping it', async () => {
+    vol.fromJSON({
+      'redwood.toml': '# redwood.toml',
+      [path.join('cedar-app', 'scripts', 'normalScript.ts')]: '// script',
+    })
+
+    // Running:
+    // `yarn cedar exec normalScript -- --silent`
+    //
+    // `--silent`, `-s` and `-l` are also cedar's own reserved exec flags, and
+    // are stripped from `scriptArgs` before being passed to the script. But
+    // if the *user's* script defines its own `--silent` flag and the user
+    // passes it after a literal `--`, it should reach the script rather than
+    // being silently deleted by that reserved-flag cleanup.
+    const args = {
+      _: ['exec', '--silent'],
+      prisma: false,
+      list: false,
+      l: false,
+      silent: false,
+      s: false,
+      $0: 'cedar',
+      name: 'normalScript',
+    }
+    await handler(args)
+    expect(runScriptFunction).toHaveBeenCalledWith({
+      args: {
+        args: {
+          _: [],
+          silent: true,
+        },
+      },
+      functionName: 'default',
+      path: path.join('cedar-app', 'scripts', 'normalScript.ts'),
+    })
+  })
 })
 
 describe('yarn cedar exec --list', () => {

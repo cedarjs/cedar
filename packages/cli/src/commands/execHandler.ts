@@ -86,6 +86,22 @@ export const handler = async (args: ExecOptions) => {
     scriptArgs._ = scriptArgs._.slice(1)
   }
 
+  // 'cedar' is not meant for the script's args, so delete that
+  delete scriptArgs.$0
+
+  // Other arguments that yargs adds are `prisma`, `list`, `l`, `silent` and
+  // `s`.
+  // We eat `prisma` and `list` above. So that leaves us with `l`, `s` and
+  // `silent` that we need to delete as well
+  //
+  // We do this *before* re-parsing anything after a literal `--` below, so
+  // that if the user's script actually wants a flag called `--silent`,
+  // `-s`, or `-l` after `--`, it isn't clobbered by this cleanup once it's
+  // been re-parsed into `scriptArgs`.
+  delete scriptArgs.l
+  delete scriptArgs.s
+  delete scriptArgs.silent
+
   // Anything the user puts after a literal `--` (e.g.
   // `yarn cedar exec myScript -- --force`) reaches us here as unparsed
   // strings tacked onto the end of `scriptArgs._`, because yargs stops
@@ -110,17 +126,6 @@ export const handler = async (args: ExecOptions) => {
       Object.assign(scriptArgs, reparsedFlags)
     }
   }
-
-  // 'cedar' is not meant for the script's args, so delete that
-  delete scriptArgs.$0
-
-  // Other arguments that yargs adds are `prisma`, `list`, `l`, `silent` and
-  // `s`.
-  // We eat `prisma` and `list` above. So that leaves us with `l`, `s` and
-  // `silent` that we need to delete as well
-  delete scriptArgs.l
-  delete scriptArgs.s
-  delete scriptArgs.silent
 
   const scriptPath = resolveScriptPath(name)
 
