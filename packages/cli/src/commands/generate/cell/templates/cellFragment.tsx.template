@@ -1,0 +1,43 @@
+import type { ${fragmentName} } from 'types/graphql'
+
+import type {
+  CellSuccessProps,<% if (afterQuery || isEmpty) { %>
+  DataObject,<% } %>
+} from '@cedarjs/web'
+
+// A parent Cell spreads this fragment by name in its own QUERY, and passes
+// the matching field down as the `${camelName}` prop - no import needed,
+// just render <${pascalName}Cell />:
+//
+//   query FindSomething($id: Int!) {
+//     something(id: $id) {
+//       id
+//       ...${fragmentName}
+//     }
+//   }
+//
+//   <${pascalName}Cell ${camelName}={something} />
+export const FRAGMENT = gql`
+  fragment ${fragmentName} on ${fragmentOnType} {
+    id
+  }
+`
+<% if (isEmpty) { %>
+export const isEmpty = (
+  data: DataObject,
+  { isDataEmpty }: { isDataEmpty: (data: DataObject) => boolean },
+) => {
+  return isDataEmpty(data)
+}
+<% } %><% if (afterQuery) { %>
+export const afterQuery = (data: DataObject): DataObject => {
+  return data
+}
+<% } %>
+export const Empty = () => <div>Empty</div>
+
+export const Success = ({
+  ${camelName},
+}: CellSuccessProps<{ ${camelName}: ${fragmentName} }>) => {
+  return <div>{JSON.stringify(${camelName})}</div>
+}

@@ -799,6 +799,111 @@ describe('Lifecycle hook flags', () => {
   })
 })
 
+describe('Fragment cells', () => {
+  const CELL_PATH = path.normalize(
+    '/path/to/project/web/src/components/AuthorBioCell/AuthorBioCell.tsx',
+  )
+
+  const TEST_PATH = path.normalize(
+    '/path/to/project/web/src/components/AuthorBioCell/AuthorBioCell.test.tsx',
+  )
+
+  const STORY_PATH = path.normalize(
+    '/path/to/project/web/src/components/AuthorBioCell/AuthorBioCell.stories.tsx',
+  )
+
+  const MOCK_PATH = path.normalize(
+    '/path/to/project/web/src/components/AuthorBioCell/AuthorBioCell.mock.ts',
+  )
+
+  test('generates a FRAGMENT cell for the given GraphQL type', async () => {
+    const generatedFiles = await cellHandler.files({
+      name: 'AuthorBio',
+      typescript: true,
+      tests: true,
+      stories: true,
+      fragment: 'User',
+    })
+
+    expect(Object.keys(generatedFiles)).toEqual([
+      MOCK_PATH,
+      TEST_PATH,
+      STORY_PATH,
+      CELL_PATH,
+    ])
+
+    expect(generatedFiles[CELL_PATH]).toMatchSnapshot()
+    expect(generatedFiles[TEST_PATH]).toMatchSnapshot()
+    expect(generatedFiles[STORY_PATH]).toMatchSnapshot()
+    expect(generatedFiles[MOCK_PATH]).toMatchSnapshot()
+  })
+
+  test('strips types from a FRAGMENT cell when generating JavaScript', async () => {
+    const generatedFiles = await cellHandler.files({
+      name: 'AuthorBio',
+      tests: false,
+      stories: false,
+      fragment: 'User',
+    })
+
+    const jsCellPath = path.normalize(
+      '/path/to/project/web/src/components/AuthorBioCell/AuthorBioCell.jsx',
+    )
+
+    expect(generatedFiles[jsCellPath]).toMatchSnapshot()
+  })
+
+  test('includes afterQuery and isEmpty stubs when passed', async () => {
+    const generatedFiles = await cellHandler.files({
+      name: 'AuthorBio',
+      typescript: true,
+      tests: false,
+      stories: false,
+      fragment: 'User',
+      afterQuery: true,
+      isEmpty: true,
+    })
+
+    expect(generatedFiles[CELL_PATH]).toMatchSnapshot()
+  })
+
+  test('throws when combined with --list', async () => {
+    await expect(
+      cellHandler.files({
+        name: 'AuthorBio',
+        tests: false,
+        stories: false,
+        fragment: 'User',
+        list: true,
+      }),
+    ).rejects.toThrow('--list flag cannot be combined with --fragment')
+  })
+
+  test('throws when combined with --before-query', async () => {
+    await expect(
+      cellHandler.files({
+        name: 'AuthorBio',
+        tests: false,
+        stories: false,
+        fragment: 'User',
+        beforeQuery: true,
+      }),
+    ).rejects.toThrow('--before-query flag cannot be combined with --fragment')
+  })
+
+  test('throws when combined with --query', async () => {
+    await expect(
+      cellHandler.files({
+        name: 'AuthorBio',
+        tests: false,
+        stories: false,
+        fragment: 'User',
+        query: 'FindAuthorBio',
+      }),
+    ).rejects.toThrow('--query flag cannot be combined with --fragment')
+  })
+})
+
 describe('Custom Id Field files', () => {
   let customIdFieldFiles: Record<string, string>
   let customIdFieldListFiles: Record<string, string>

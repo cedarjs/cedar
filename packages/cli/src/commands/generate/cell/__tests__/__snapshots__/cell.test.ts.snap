@@ -302,6 +302,182 @@ describe('CustomIdFieldCell', () => {
 "
 `;
 
+exports[`Fragment cells > generates a FRAGMENT cell for the given GraphQL type 1`] = `
+"import type { AuthorBioCell_user } from 'types/graphql'
+
+import type { CellSuccessProps } from '@cedarjs/web'
+
+// A parent Cell spreads this fragment by name in its own QUERY, and passes
+// the matching field down as the \`user\` prop - no import needed,
+// just render <AuthorBioCell />:
+//
+//   query FindSomething($id: Int!) {
+//     something(id: $id) {
+//       id
+//       ...AuthorBioCell_user
+//     }
+//   }
+//
+//   <AuthorBioCell user={something} />
+export const FRAGMENT = gql\`
+  fragment AuthorBioCell_user on User {
+    id
+  }
+\`
+
+export const Empty = () => <div>Empty</div>
+
+export const Success = ({
+  user,
+}: CellSuccessProps<{ user: AuthorBioCell_user }>) => {
+  return <div>{JSON.stringify(user)}</div>
+}
+"
+`;
+
+exports[`Fragment cells > generates a FRAGMENT cell for the given GraphQL type 2`] = `
+"import { render } from '@cedarjs/testing/web'
+
+import { Empty, Success } from './AuthorBioCell'
+import { standard } from './AuthorBioCell.mock'
+
+// Generated boilerplate tests do not account for all circumstances
+// and can fail without adjustments, e.g. Float and DateTime types.
+//           Please refer to the RedwoodJS Testing Docs:
+//        https://cedarjs.com/docs/testing#testing-cells
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+
+describe('AuthorBioCell', () => {
+  it('renders Empty successfully', async () => {
+    expect(() => {
+      render(<Empty />)
+    }).not.toThrow()
+  })
+
+  // When you're ready to test the actual output of your component render
+  // you could test that, for example, certain text is present:
+  //
+  // 1. import { screen } from '@cedarjs/testing/web'
+  // 2. Add test: expect(screen.getByText('Hello, world')).toBeInTheDocument()
+
+  it('renders Success successfully', async () => {
+    expect(() => {
+      render(<Success user={standard().user} />)
+    }).not.toThrow()
+  })
+})
+"
+`;
+
+exports[`Fragment cells > generates a FRAGMENT cell for the given GraphQL type 3`] = `
+"import type { Meta, StoryObj } from '@storybook/react'
+
+import { Empty, Success } from './AuthorBioCell'
+import { standard } from './AuthorBioCell.mock'
+
+const meta: Meta = {
+  title: 'Cells/AuthorBioCell',
+  tags: ['autodocs'],
+}
+
+export default meta
+
+export const empty: StoryObj<typeof Empty> = {
+  render: () => {
+    return Empty ? <Empty /> : <></>
+  },
+}
+
+export const success: StoryObj<typeof Success> = {
+  render: (args) => {
+    return Success ? <Success {...standard()} {...args} /> : <></>
+  },
+}
+"
+`;
+
+exports[`Fragment cells > generates a FRAGMENT cell for the given GraphQL type 4`] = `
+"// Define your own mock data here:
+export const standard = (/* vars, { ctx, req } */) => ({
+  user: {
+    __typename: 'User' as const,
+    id: 42,
+  },
+})
+"
+`;
+
+exports[`Fragment cells > includes afterQuery and isEmpty stubs when passed 1`] = `
+"import type { AuthorBioCell_user } from 'types/graphql'
+
+import type { CellSuccessProps, DataObject } from '@cedarjs/web'
+
+// A parent Cell spreads this fragment by name in its own QUERY, and passes
+// the matching field down as the \`user\` prop - no import needed,
+// just render <AuthorBioCell />:
+//
+//   query FindSomething($id: Int!) {
+//     something(id: $id) {
+//       id
+//       ...AuthorBioCell_user
+//     }
+//   }
+//
+//   <AuthorBioCell user={something} />
+export const FRAGMENT = gql\`
+  fragment AuthorBioCell_user on User {
+    id
+  }
+\`
+
+export const isEmpty = (
+  data: DataObject,
+  { isDataEmpty }: { isDataEmpty: (data: DataObject) => boolean }
+) => {
+  return isDataEmpty(data)
+}
+
+export const afterQuery = (data: DataObject): DataObject => {
+  return data
+}
+
+export const Empty = () => <div>Empty</div>
+
+export const Success = ({
+  user,
+}: CellSuccessProps<{ user: AuthorBioCell_user }>) => {
+  return <div>{JSON.stringify(user)}</div>
+}
+"
+`;
+
+exports[`Fragment cells > strips types from a FRAGMENT cell when generating JavaScript 1`] = `
+"// A parent Cell spreads this fragment by name in its own QUERY, and passes
+// the matching field down as the \`user\` prop - no import needed,
+// just render <AuthorBioCell />:
+//
+//   query FindSomething($id: Int!) {
+//     something(id: $id) {
+//       id
+//       ...AuthorBioCell_user
+//     }
+//   }
+//
+//   <AuthorBioCell user={something} />
+export const FRAGMENT = gql\`
+  fragment AuthorBioCell_user on User {
+    id
+  }
+\`
+
+export const Empty = () => <div>Empty</div>
+
+export const Success = ({ user }) => {
+  return <div>{JSON.stringify(user)}</div>
+}
+"
+`;
+
 exports[`Kebab case words > creates a cell component with a kebabCase word name 1`] = `
 "export const QUERY = gql\`
   query FindUserProfileQuery($id: Int!) {
