@@ -5,6 +5,7 @@ import { context } from '@opentelemetry/api'
 import { suppressTracing } from '@opentelemetry/core'
 import { Listr } from 'listr2'
 import type { ListrTask } from 'listr2'
+import { Parser } from 'yargs/helpers'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { findScripts } from '@cedarjs/internal/dist/files'
@@ -83,6 +84,31 @@ export const handler = async (args: ExecOptions) => {
   // to their script. And so we remove it from the array.
   if (Array.isArray(scriptArgs._)) {
     scriptArgs._ = scriptArgs._.slice(1)
+  }
+
+  // Anything the user puts after a literal `--` (e.g.
+  // `yarn cedar exec myScript -- --force`) reaches us here as unparsed
+  // strings tacked onto the end of `scriptArgs._`, because yargs stops
+  // parsing flags the moment it sees `--` and just appends whatever follows
+  // verbatim. Left alone, `--force` after `--` would silently never become
+  // `scriptArgs.force`. Re-parse that tail with the same parser yargs uses
+  // everywhere else, so a flag after `--` behaves the same as one before it.
+  //
+  // Nothing before the original `--` can start with a dash by the time we
+  // get here — yargs would already have parsed it as a flag — so the first
+  // dash-prefixed entry in `_` reliably marks where the `--` block began.
+  if (Array.isArray(scriptArgs._)) {
+    const dashBlockIndex = scriptArgs._.findIndex(
+      (arg) => typeof arg === 'string' && arg.startsWith('-'),
+    )
+
+    if (dashBlockIndex !== -1) {
+      const unparsedTail = scriptArgs._.splice(dashBlockIndex) as string[]
+      const { _: reparsedPositionals, ...reparsedFlags } = Parser(unparsedTail)
+
+      scriptArgs._.push(...reparsedPositionals)
+      Object.assign(scriptArgs, reparsedFlags)
+    }
   }
 
   // 'cedar' is not meant for the script's args, so delete that

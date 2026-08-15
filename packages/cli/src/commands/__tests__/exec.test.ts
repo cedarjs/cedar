@@ -87,6 +87,42 @@ describe('yarn cedar exec', () => {
       path: path.join('cedar-app', 'scripts', 'normalScript.ts'),
     })
   })
+
+  it('re-parses args placed after a literal `--` instead of dropping them', async () => {
+    vol.fromJSON({
+      'redwood.toml': '# redwood.toml',
+      [path.join('cedar-app', 'scripts', 'normalScript.ts')]: '// script',
+    })
+
+    // Running:
+    // `yarn cedar exec normalScript -- positional1 --force --env=prod`
+    //
+    // yargs stops parsing flags at `--`, so everything after it lands in
+    // `_` as literal, unparsed strings instead of being split out into
+    // `force`/`env`.
+    const args = {
+      _: ['exec', 'positional1', '--force', '--env=prod'],
+      prisma: false,
+      list: false,
+      l: false,
+      silent: false,
+      s: false,
+      $0: 'cedar',
+      name: 'normalScript',
+    }
+    await handler(args)
+    expect(runScriptFunction).toHaveBeenCalledWith({
+      args: {
+        args: {
+          _: ['positional1'],
+          force: true,
+          env: 'prod',
+        },
+      },
+      functionName: 'default',
+      path: path.join('cedar-app', 'scripts', 'normalScript.ts'),
+    })
+  })
 })
 
 describe('yarn cedar exec --list', () => {
