@@ -484,8 +484,12 @@ describe('cancel()', () => {
 
     const result = await adapter.cancel({ jobId: 123 })
 
+    // The `failedAt`/`runAt` conditions ensure only active jobs can be
+    // cancelled: a completed job that's kept in the database (with
+    // `deleteSuccessfulJobs: false`) has `failedAt: null` but also
+    // `runAt: null`, and must not be marked as cancelled
     expect(spy).toHaveBeenCalledWith({
-      where: { id: 123, failedAt: null },
+      where: { id: 123, failedAt: null, runAt: { not: null } },
       data: {
         failedAt: new Date(),
         lastError: 'Job cancelled by user',
@@ -495,7 +499,9 @@ describe('cancel()', () => {
     expect(result).toEqual(true)
   })
 
-  it('returns false when there is no cancellable job with the given id', async () => {
+  it('returns false when there is no active job with the given id', async () => {
+    // no rows match the conditions: the job doesn't exist, already
+    // completed, or already failed
     vi.spyOn(mockDb.backgroundJob, 'updateMany').mockReturnValue({ count: 0 })
     const adapter = new PrismaAdapter({ db: mockDb, logger: mockLogger })
 

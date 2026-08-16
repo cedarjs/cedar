@@ -334,7 +334,7 @@ const scheduledJob = await later(SendWelcomeEmailJob, [user.id])
 await later.cancel(scheduledJob.id)
 ```
 
-`later.cancel()` returns `true` if a job was cancelled and `false` if no cancellable job with that id was found (it may have already completed and been deleted, or already failed).
+`later.cancel()` returns `true` if a job was cancelled and `false` if no cancellable job with that id was found (it may have already completed, or already failed).
 
 What cancelling means depends on the state of the job:
 

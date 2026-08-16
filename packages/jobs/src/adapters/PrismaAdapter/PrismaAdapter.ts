@@ -418,9 +418,13 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
     this.logger.debug(`[CedarJS Jobs] Cancelling job ${jobId}`)
 
     // updateMany so that nothing throws if the job no longer exists, and so
-    // we can make the update conditional on the job not already being failed
+    // we can make the update conditional on the job still being active:
+    // not already failed (`failedAt: null`) and not already completed—a
+    // completed job that's kept in the database has its `runAt` set to null,
+    // while every active state (queued, running, awaiting retry, rescheduled
+    // cron) has a non-null `runAt`
     const { count } = await this.accessor.updateMany({
-      where: { id: jobId, failedAt: null },
+      where: { id: jobId, failedAt: null, runAt: { not: null } },
       data: {
         failedAt: new Date(),
         lastError: 'Job cancelled by user',
