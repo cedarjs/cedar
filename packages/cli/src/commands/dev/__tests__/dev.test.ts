@@ -18,6 +18,11 @@ import { handler } from '../devHandler.js'
 
 let mockCedarToml = ''
 let mockJobsDirEntries: string[] = []
+// `getPaths()` resolves `jobsConfig` once and caches it, so it can point at
+// a path that used to exist but has since been deleted. Lets tests exercise
+// that "configured path, missing file" case independently of `readdirSync`
+// (see the `existsSync` mock below).
+let mockJobsConfigExists = true
 
 vi.mock('concurrently', () => ({
   __esModule: true, // this property makes it work
@@ -54,7 +59,13 @@ vi.mock('node:fs', async (importOriginal) => {
 
         return 'File content'
       },
-      existsSync: () => true,
+      existsSync: (filePath: string) => {
+        if (filePath === '/mocked/project/api/src/lib/jobs.ts') {
+          return mockJobsConfigExists
+        }
+
+        return true
+      },
       readdirSync: () => mockJobsDirEntries,
     },
   }
@@ -220,6 +231,7 @@ describe('yarn cedar dev', () => {
     // api port" test below) would otherwise leak `serverFile: true` into
     // every test that runs after it.
     vi.mocked(serverFileExists).mockReturnValue(false)
+    mockJobsConfigExists = true
     mockCedarToml = ''
     mockJobsDirEntries = []
   })
@@ -522,6 +534,41 @@ describe('yarn cedar dev', () => {
     // finishes writing asynchronously after `cedar dev` starts.
     expect(jobsCommand?.command).toContain('nodemon')
     expect(jobsCommand?.command).toContain('/mocked/project/api/dist')
+  })
+
+  it('Should not start the jobs worker when jobsConfig path is set but the file no longer exists', async () => {
+    // `getPaths()` resolves and caches `jobsConfig` once; if `api/src/lib/jobs.ts`
+    // is deleted after that (e.g. mid dev session, or a stale cache), the
+    // cached path would still look "configured" even though there's no
+    // config file left for the worker to load.
+    vi.mocked(getPaths).mockReturnValue({
+      base: '/mocked/project',
+      // @ts-expect-error - only declaring what the test needs
+      api: {
+        base: '/mocked/project/api',
+        src: '/mocked/project/api/src',
+        functions: '/mocked/project/api/src/functions',
+        dist: '/mocked/project/api/dist',
+        jobs: '/mocked/project/api/src/jobs',
+        jobsConfig: '/mocked/project/api/src/lib/jobs.ts',
+      },
+      // @ts-expect-error - only declaring what the test needs
+      web: {
+        base: '/mocked/project/web',
+        src: '/mocked/project/web/src',
+        dist: '/mocked/project/web/dist',
+      },
+      packages: '/mocked/project/packages',
+      generated: {
+        base: '/mocked/project/.cedar',
+      },
+    })
+    mockJobsDirEntries = ['.keep', 'WelcomeNoticeJob']
+    mockJobsConfigExists = false
+
+    await handler({ workspace: ['api', 'web'] })
+
+    expect(findJobsCommand()).toBeUndefined()
   })
 
   it('Should not start the jobs worker under --ud, and should warn instead', async () => {

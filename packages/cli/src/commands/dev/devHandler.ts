@@ -452,6 +452,11 @@ export const handler = async ({
     jobsOption !== false &&
     workspace.includes('api') &&
     !!cedarPaths.api.jobsConfig &&
+    // `getPaths()` resolves `jobsConfig` once and caches it in-process, so
+    // if `api/src/lib/jobs.ts` is deleted mid-session the cached path would
+    // otherwise still look "configured". Guard against starting a worker
+    // that can't load a jobs config that no longer exists.
+    fs.existsSync(cedarPaths.api.jobsConfig) &&
     fs.existsSync(cedarPaths.api.jobs) &&
     // Job files always live in `api/src/jobs/<ComponentName>Job/`
     // subdirectories (see `generate/job/jobHandler.ts`), so entries here are
