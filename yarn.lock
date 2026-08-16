@@ -2717,7 +2717,7 @@ __metadata:
     prettier-plugin-tailwindcss: "npm:0.8.1"
     prompts: "npm:2.4.2"
     semver: "npm:7.8.5"
-    smol-toml: "npm:1.6.1"
+    smol-toml: "npm:1.8.0"
     termi-link: "npm:1.1.0"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.10"
@@ -2807,7 +2807,7 @@ __metadata:
     prisma: "npm:7.8.0"
     prompts: "npm:2.4.2"
     semver: "npm:7.8.5"
-    smol-toml: "npm:1.6.1"
+    smol-toml: "npm:1.8.0"
     srvx: "npm:0.11.16"
     string-env-interpolation: "npm:1.0.1"
     systeminformation: "npm:5.31.7"
@@ -3169,7 +3169,7 @@ __metadata:
     prettier: "npm:3.8.4"
     publint: "npm:0.3.23"
     rimraf: "npm:6.1.3"
-    source-map: "npm:0.7.6"
+    source-map: "npm:0.8.0"
     termi-link: "npm:1.1.0"
     ts-dedent: "npm:2.3.0"
     tsconfig-paths: "npm:4.2.0"
@@ -3364,7 +3364,7 @@ __metadata:
     prisma: "npm:7.8.0"
     publint: "npm:0.3.23"
     rimraf: "npm:6.1.3"
-    smol-toml: "npm:1.6.1"
+    smol-toml: "npm:1.8.0"
     string-env-interpolation: "npm:1.0.1"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.10"
@@ -3382,7 +3382,7 @@ __metadata:
     "@envelop/types": "npm:5.2.1"
     "@graphql-tools/schema": "npm:10.1.0"
     "@graphql-tools/utils": "npm:10.11.0"
-    "@graphql-yoga/plugin-defer-stream": "npm:3.21.2"
+    "@graphql-yoga/plugin-defer-stream": "npm:3.21.3"
     "@graphql-yoga/plugin-graphql-sse": "npm:3.21.2"
     "@graphql-yoga/redis-event-target": "npm:3.0.3"
     "@graphql-yoga/subscription": "npm:5.0.5"
@@ -3500,7 +3500,7 @@ __metadata:
     line-column: "npm:1.0.2"
     lodash: "npm:4.18.1"
     lru-cache: "npm:11.5.2"
-    smol-toml: "npm:1.6.1"
+    smol-toml: "npm:1.8.0"
     ts-morph: "npm:23.0.0"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.10"
@@ -6342,15 +6342,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/plugin-defer-stream@npm:3.21.2":
-  version: 3.21.2
-  resolution: "@graphql-yoga/plugin-defer-stream@npm:3.21.2"
+"@graphql-yoga/plugin-defer-stream@npm:3.21.3":
+  version: 3.21.3
+  resolution: "@graphql-yoga/plugin-defer-stream@npm:3.21.3"
   dependencies:
     "@graphql-tools/utils": "npm:^10.11.0"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-    graphql-yoga: ^5.21.2
-  checksum: 10c0/049782c15040d3b23214714c37b7d821b039d1e05a41fe809ef2d9fde883698270f645b4a7f198c594bc245eb1b7ca6204d3a67c766051c12906699f8dcd7a2a
+    graphql-yoga: ^5.21.3
+  checksum: 10c0/361c2349bb230253d658bb1331c10be0d032819014c5968b1c2eab9aecf9203e92620a429a87a7027bccaae12200618781187616ea927219c5b48ae20fc7dee5
   languageName: node
   linkType: hard
 
@@ -26826,7 +26826,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"smol-toml@npm:^1.7.1":
+"smol-toml@npm:1.8.0, smol-toml@npm:^1.7.1":
   version: 1.8.0
   resolution: "smol-toml@npm:1.8.0"
   checksum: 10c0/4e01dbfb7c7af142176b037ebedaccccafb8229cc873feaa47c184ee31073d86e30b4b1b0fe9a5a6d083ed3ce21615eda9e81d1f5d779ad8b2e2e9459b900aea
@@ -26946,10 +26946,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"source-map@npm:0.7.6":
-  version: 0.7.6
-  resolution: "source-map@npm:0.7.6"
-  checksum: 10c0/59f6f05538539b274ba771d2e9e32f6c65451982510564438e048bc1352f019c6efcdc6dd07909b1968144941c14015c2c7d4369fb7c4d7d53ae769716dcc16c
+"source-map@npm:0.8.0":
+  version: 0.8.0
+  resolution: "source-map@npm:0.8.0"
+  checksum: 10c0/fd2a5b81a1bf40f6155592f19c44abb46fc75b0f0f9473dd40c665b6f3866516a26218dad3d76b58b8b3e44560f3ab2191a837e1ce6631987e51a2db2e1cac56
   languageName: node
   linkType: hard
 

@@ -72,8 +72,13 @@ export interface WorkerSharedOptions {
   maxAttempts?: number
 
   /**
-   * The maximum amount of time in seconds that a job can run before another
-   * worker will attempt to retry it.
+   * The maximum amount of time in seconds that a job is allowed to run. A job
+   * that runs longer than this is marked as failed (it will not be retried)
+   * and the `AbortSignal` available inside the job via
+   * `getJobExecutionContext()` is aborted. This is also how long a job's lock
+   * can be held before another worker considers the lock stale and is allowed
+   * to pick the job up again (which only happens if the locking worker
+   * crashed and could not clean up after itself).
    *
    * @default 14,400 (4 hours)
    */
@@ -142,12 +147,15 @@ export interface JobManagerConfig<
   workers: WorkerConfig<TAdapters, TQueues>[]
 }
 
-export interface CreateSchedulerConfig<TAdapters extends Adapters> {
+export interface CreateSchedulerConfig<
+  TAdapters extends Adapters,
+  TAdapterName extends keyof TAdapters = keyof TAdapters,
+> {
   /**
    * The name of the adapter to use for this scheduler. This must be one of the
    * keys in the `adapters` object when you created the `JobManager`.
    */
-  adapter: keyof TAdapters
+  adapter: TAdapterName
 
   /**
    * The logger to use for this scheduler. If not provided, the logger from the

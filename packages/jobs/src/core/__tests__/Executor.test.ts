@@ -3,6 +3,8 @@ import { afterEach, beforeEach, describe, expect, vi, it } from 'vitest'
 import { DEFAULT_LOGGER } from '../../consts.js'
 import * as errors from '../../errors.js'
 import type { BaseJob } from '../../types.js'
+import type { JobExecutionContext } from '../executionContext.js'
+import { getJobExecutionContext } from '../executionContext.js'
 import { Executor } from '../Executor.js'
 import type { ExecutorOptions } from '../Executor.js'
 
@@ -304,6 +306,113 @@ describe('perform', () => {
       job: options.job,
       deleteJob: true,
     })
+  })
+
+  it('makes an execution context with an abort signal available to the job', async () => {
+    const mockAdapter = new MockAdapter()
+    let context: JobExecutionContext | undefined
+    const mockJob = {
+      id: 1,
+      name: 'TestJob',
+      path: 'TestJob/TestJob',
+      args: ['foo'],
+      attempts: 0,
+
+      perform: vi.fn(() => {
+        context = getJobExecutionContext()
+      }),
+    }
+    const executor = new Executor({
+      adapter: mockAdapter,
+      logger: mockLogger,
+      job: mockJob,
+    })
+
+    // mock the `loadJob` loader to return the job mock
+    loadersMockFns.loadJob.mockImplementation(() => mockJob)
+
+    await executor.perform()
+
+    expect(context?.job).toEqual(mockJob)
+    expect(context?.signal).toBeInstanceOf(AbortSignal)
+    expect(context?.signal.aborted).toEqual(false)
+  })
+
+  it('fails a job that runs longer than `maxRuntime` and aborts its signal', async () => {
+    const mockAdapter = new MockAdapter()
+    let context: JobExecutionContext | undefined
+    const mockJob = {
+      id: 1,
+      name: 'TestJob',
+      path: 'TestJob/TestJob',
+      args: ['foo'],
+      attempts: 0,
+
+      perform: vi.fn(() => {
+        context = getJobExecutionContext()
+        // a job that never finishes
+        return new Promise<void>(() => {})
+      }),
+    }
+    const executor = new Executor({
+      adapter: mockAdapter,
+      logger: mockLogger,
+      job: mockJob,
+      maxRuntime: 10,
+      deleteFailedJobs: true,
+    })
+
+    const adapterErrorSpy = vi.spyOn(mockAdapter, 'error')
+    const adapterFailureSpy = vi.spyOn(mockAdapter, 'failure')
+    // mock the `loadJob` loader to return the job mock
+    loadersMockFns.loadJob.mockImplementation(() => mockJob)
+
+    const performPromise = executor.perform()
+    await vi.advanceTimersByTimeAsync(10_000)
+    await performPromise
+
+    // Timed out jobs are failed right away – they should not be retried
+    // while the previous attempt might still be running. The job is failed
+    // with a single `failure()` call (never `error()`, which would unlock the
+    // job before it's marked as failed) that also records the timeout error
+    expect(adapterErrorSpy).not.toHaveBeenCalled()
+    expect(adapterFailureSpy).toHaveBeenCalledWith({
+      job: mockJob,
+      deleteJob: true,
+      error: expect.any(errors.JobTimeoutError),
+    })
+    expect(context?.signal.aborted).toEqual(true)
+  })
+
+  it('does not time out a job that completes before `maxRuntime`', async () => {
+    const mockAdapter = new MockAdapter()
+    const mockJob = {
+      id: 1,
+      name: 'TestJob',
+      path: 'TestJob/TestJob',
+      args: ['foo'],
+      attempts: 0,
+
+      perform: vi.fn(),
+    }
+    const executor = new Executor({
+      adapter: mockAdapter,
+      logger: mockLogger,
+      job: mockJob,
+      maxRuntime: 10,
+    })
+
+    const adapterErrorSpy = vi.spyOn(mockAdapter, 'error')
+    const adapterSuccessSpy = vi.spyOn(mockAdapter, 'success')
+    // mock the `loadJob` loader to return the job mock
+    loadersMockFns.loadJob.mockImplementation(() => mockJob)
+
+    await executor.perform()
+    // advance past `maxRuntime` to prove the timeout was cleaned up
+    await vi.advanceTimersByTimeAsync(20_000)
+
+    expect(adapterSuccessSpy).toHaveBeenCalled()
+    expect(adapterErrorSpy).not.toHaveBeenCalled()
   })
 
   it('reschedules cron jobs', async () => {

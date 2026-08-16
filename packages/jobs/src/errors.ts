@@ -168,6 +168,29 @@ export class PerformError extends RethrownJobError {
   }
 }
 
+/**
+ * Thrown (and recorded as the job's error) when a job runs longer than the
+ * worker's `maxRuntime`
+ */
+export class JobTimeoutError extends CedarJSJobsError {
+  constructor(jobIdentifier: string, maxRuntime: number) {
+    super(
+      `Job ${jobIdentifier} exceeded max runtime of ${maxRuntime} seconds ` +
+        'and was marked as failed',
+    )
+  }
+}
+
+/**
+ * Thrown when trying to cancel a job through an adapter that does not
+ * implement the optional `cancel()` method
+ */
+export class CancelNotImplementedError extends CedarJSJobsError {
+  constructor() {
+    super('The configured adapter does not support cancelling jobs')
+  }
+}
+
 export class QueueNotDefinedError extends CedarJSJobsError {
   constructor() {
     super('Scheduler requires a named `queue` to place jobs in')
