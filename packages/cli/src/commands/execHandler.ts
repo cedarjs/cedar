@@ -5,6 +5,7 @@ import { context } from '@opentelemetry/api'
 import { suppressTracing } from '@opentelemetry/core'
 import { Listr } from 'listr2'
 import type { ListrTask } from 'listr2'
+import { Parser } from 'yargs/helpers'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { findScripts } from '@cedarjs/internal/dist/files'
@@ -92,9 +93,45 @@ export const handler = async (args: ExecOptions) => {
   // `s`.
   // We eat `prisma` and `list` above. So that leaves us with `l`, `s` and
   // `silent` that we need to delete as well
+  //
+  // We do this *before* re-parsing anything after a literal `--` below, so
+  // that if the user's script actually wants a flag called `--silent`,
+  // `-s`, or `-l` after `--`, it isn't clobbered by this cleanup once it's
+  // been re-parsed into `scriptArgs`.
   delete scriptArgs.l
   delete scriptArgs.s
   delete scriptArgs.silent
+
+  // Anything the user puts after a literal `--` (e.g.
+  // `yarn cedar exec myScript -- --force`) reaches us here after yargs has
+  // already partially processed it: yargs stops parsing flags the moment it
+  // sees `--` but still applies type coercion to positionals (e.g. '123'
+  // becomes the number 123). The flag syntax itself (`--force`) is left
+  // unparsed and lands as raw strings. Re-parse that tail with the same
+  // parser yargs uses everywhere else, so a flag after `--` behaves the same
+  // as one before it.
+  //
+  // Nothing before the original `--` can start with a dash by the time we
+  // get here — yargs would already have parsed it as a flag — so we look
+  // for the first dash-prefixed entry in `_` to find where re-parsing needs
+  // to start. Plain positionals before it are left as-is in `_`, and
+  // everything from that index onward (not just the dash-prefixed entry
+  // itself) is spliced off into `unparsedTail` and re-parsed below. Nothing
+  // is discarded — the re-parsed tail's positionals are pushed back onto
+  // `_` and its flags are merged into `scriptArgs`.
+  if (Array.isArray(scriptArgs._)) {
+    const dashBlockIndex = scriptArgs._.findIndex(
+      (arg) => typeof arg === 'string' && arg.startsWith('-'),
+    )
+
+    if (dashBlockIndex !== -1) {
+      const unparsedTail = scriptArgs._.splice(dashBlockIndex)
+      const { _: reparsedPositionals, ...reparsedFlags } = Parser(unparsedTail)
+
+      scriptArgs._.push(...reparsedPositionals)
+      Object.assign(scriptArgs, reparsedFlags)
+    }
+  }
 
   const scriptPath = resolveScriptPath(name)
 
