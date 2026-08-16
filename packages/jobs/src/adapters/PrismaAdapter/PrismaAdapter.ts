@@ -312,20 +312,26 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
   // doesn't await the Promise then the queries will never be executed!)
   //
   // All of these updates/deletes are done with updateMany/deleteMany guarded
-  // on `failedAt: null` so that a job that was cancelled (or otherwise
-  // permanently failed) while this attempt was running keeps its
-  // failed/cancelled state instead of being overwritten or deleted by the
-  // in-flight attempt's outcome
+  // on `failedAt: null` and on `attempts` still being this attempt's value,
+  // so the in-flight attempt's outcome can't overwrite or delete the row
+  // when:
+  // - the job was cancelled (or otherwise permanently failed) while this
+  //   attempt was running (`failedAt` is no longer null), or
+  // - the job was reclaimed by another worker because this attempt stalled
+  //   past `maxRuntime` plus the grace period (relocking increments
+  //   `attempts`, so this attempt's remembered value no longer matches).
+  // `lockedBy` can't serve as that second fence because worker process names
+  // are deterministic and reused across restarts
   override async success({ job, runAt, deleteJob }: SuccessOptions<PrismaJob>) {
     this.logger.debug(`[CedarJS Jobs] Job ${job.id} success`)
 
     if (deleteJob) {
       await this.accessor.deleteMany({
-        where: { id: job.id, failedAt: null },
+        where: { id: job.id, failedAt: null, attempts: job.attempts },
       })
     } else {
       await this.accessor.updateMany({
-        where: { id: job.id, failedAt: null },
+        where: { id: job.id, failedAt: null, attempts: job.attempts },
         data: {
           lockedAt: null,
           lockedBy: null,
@@ -349,7 +355,7 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
     }
 
     await this.accessor.updateMany({
-      where: { id: job.id, failedAt: null },
+      where: { id: job.id, failedAt: null, attempts: job.attempts },
       data,
     })
   }
@@ -360,7 +366,7 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
   override async failure({ job, deleteJob, error }: FailureOptions<PrismaJob>) {
     if (deleteJob) {
       await this.accessor.deleteMany({
-        where: { id: job.id, failedAt: null },
+        where: { id: job.id, failedAt: null, attempts: job.attempts },
       })
     } else {
       const data: { failedAt: Date; runAt: null; lastError?: string } = {
@@ -373,7 +379,7 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
       }
 
       await this.accessor.updateMany({
-        where: { id: job.id, failedAt: null },
+        where: { id: job.id, failedAt: null, attempts: job.attempts },
         data,
       })
     }

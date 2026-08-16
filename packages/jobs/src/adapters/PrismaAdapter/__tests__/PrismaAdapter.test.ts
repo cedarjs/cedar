@@ -339,7 +339,9 @@ describe('success()', () => {
 
     // guarded on `failedAt: null` so a job that was cancelled while running
     // is not deleted when the in-flight attempt completes
-    expect(spy).toHaveBeenCalledWith({ where: { id: 1, failedAt: null } })
+    expect(spy).toHaveBeenCalledWith({
+      where: { id: 1, failedAt: null, attempts: 10 },
+    })
   })
 
   it('updates the job if option not set', async () => {
@@ -357,7 +359,7 @@ describe('success()', () => {
     })
 
     expect(spy).toHaveBeenCalledWith({
-      where: { id: mockPrismaJob.id, failedAt: null },
+      where: { id: mockPrismaJob.id, failedAt: null, attempts: 10 },
       data: {
         lockedAt: null,
         lockedBy: null,
@@ -379,7 +381,9 @@ describe('error()', () => {
     })
 
     expect(spy).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: 1, failedAt: null } }),
+      expect.objectContaining({
+        where: { id: 1, failedAt: null, attempts: 10 },
+      }),
     )
   })
 
@@ -444,7 +448,7 @@ describe('failure()', () => {
     await adapter.failure({ job: mockPrismaJob, deleteJob: false })
 
     expect(spy).toHaveBeenCalledWith({
-      where: { id: 1, failedAt: null },
+      where: { id: 1, failedAt: null, attempts: 10 },
       data: {
         failedAt: new Date(),
         runAt: null,
@@ -462,7 +466,7 @@ describe('failure()', () => {
     })
 
     expect(spy).toHaveBeenCalledWith({
-      where: { id: 1, failedAt: null },
+      where: { id: 1, failedAt: null, attempts: 10 },
       data: {
         failedAt: new Date(),
         runAt: null,
@@ -476,7 +480,9 @@ describe('failure()', () => {
     const adapter = new PrismaAdapter({ db: mockDb, logger: mockLogger })
     await adapter.failure({ job: mockPrismaJob, deleteJob: true })
 
-    expect(spy).toHaveBeenCalledWith({ where: { id: 1, failedAt: null } })
+    expect(spy).toHaveBeenCalledWith({
+      where: { id: 1, failedAt: null, attempts: 10 },
+    })
   })
 })
 
