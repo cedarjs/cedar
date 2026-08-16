@@ -33,6 +33,7 @@ interface DevHandlerOptions {
   debugBrk?: boolean
   ud?: boolean
   nodeArgs?: string
+  jobs?: boolean
 }
 
 interface VitePackageJson {
@@ -112,6 +113,7 @@ export const handler = async ({
   debugBrk,
   ud = false,
   nodeArgs = '',
+  jobs: jobsOption,
 }: DevHandlerOptions) => {
   recordTelemetryAttributes({
     command: 'dev',
@@ -437,6 +439,72 @@ export const handler = async ({
       name: 'gen',
       command: formatRunBinCommand('cedar-gen-watch'),
       prefixColor: 'green',
+    })
+  }
+
+  // Start the background jobs worker automatically once jobs are configured
+  // (`cedar setup jobs`) and at least one job exists (`cedar g job`) — the
+  // deliberate opt-in already happened at setup time, so this follows the
+  // same "just works" pattern as the api/web/gen watchers above. `--no-jobs`
+  // is the escape hatch for folks who want to run `cedar jobs work`
+  // themselves (custom queue selection, `--workoff`, etc).
+  const jobsConfigured =
+    jobsOption !== false &&
+    workspace.includes('api') &&
+    !!cedarPaths.api.jobsConfig &&
+    // `getPaths()` resolves `jobsConfig` once and caches it in-process, so
+    // if `api/src/lib/jobs.ts` is deleted mid-session the cached path would
+    // otherwise still look "configured". Guard against starting a worker
+    // that can't load a jobs config that no longer exists.
+    fs.existsSync(cedarPaths.api.jobsConfig) &&
+    fs.existsSync(cedarPaths.api.jobs) &&
+    // Job files always live in `api/src/jobs/<ComponentName>Job/`
+    // subdirectories (see `generate/job/jobHandler.ts`), so entries here are
+    // directories, not files — only the `.keep` placeholder (and any stray
+    // dotfiles, e.g. `.DS_Store`) should be excluded.
+    fs.readdirSync(cedarPaths.api.jobs).some((entry) => !entry.startsWith('.'))
+
+  if (jobsConfigured && unifiedDevCommand) {
+    // `cedar-jobs work` loads its config and job files from `api/dist`
+    // (compiled output). Unified dev never writes that output — API
+    // functions are served in-process straight from `api/src` via Vite's
+    // module runner — so there's no dist directory for the worker to ever
+    // find, not just a startup race like in classic dev below. Rather than
+    // let the worker crash with a confusing "file not found" error, skip it
+    // and say so up front. Note this checks `unifiedDevCommand`, not the
+    // `ud` flag directly: `buildUnifiedDevCommand()` can still fall back to
+    // `null` even when `--ud` was passed (streaming SSR, API-only/web-only
+    // workspace, a custom server file), in which case classic dev runs
+    // instead and does produce `api/dist` — see the `else` branch below.
+    // Tracked for a proper fix (loading jobs through Vite's Environment API
+    // instead of compiled output) in
+    // https://github.com/cedarjs/cedar/issues/2421.
+    console.log(
+      c.warning(
+        'Background jobs are not yet supported with Unified Dev (--ud). ' +
+          'Run `cedar jobs work` in a separate terminal once you have a ' +
+          'production-like `api/dist` build, or omit --ud for now.',
+      ),
+    )
+  } else if (jobsConfigured) {
+    jobs.push({
+      name: 'jobs',
+      // `cedar-jobs work` loads its config and job files from `api/dist`
+      // (compiled output), not `api/src`. That dist output is only written
+      // once the `api` watcher's initial build finishes, which happens
+      // asynchronously — so on a clean `cedar dev` start there's a window
+      // where `api/dist` doesn't exist yet and the worker would exit
+      // immediately. Wrapping it in nodemon (same tool the `api` job above
+      // uses) means it retries as soon as `api/dist` changes, instead of
+      // staying dead for the rest of the session. This also means the
+      // worker restarts automatically whenever job code is rebuilt, since
+      // Node's ESM cache would otherwise keep serving stale job code.
+      command: formatRunBinCommand('nodemon', [
+        '--quiet',
+        `--watch "${cedarPaths.api.dist}"`,
+        `--exec "${formatRunBinCommand('cedar-jobs', ['work'])}"`,
+      ]),
+      prefixColor: 'magenta',
     })
   }
 

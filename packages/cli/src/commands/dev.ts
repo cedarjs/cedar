@@ -60,6 +60,14 @@ export const builder = (yargs: Argv) => {
         'CLI args to pass to the node process running the web dev server, for ' +
         'example: `--node-args="--inspect --max-old-space-size=8192"`.',
     })
+    .option('jobs', {
+      type: 'boolean',
+      description:
+        'Start the background jobs worker alongside the other dev servers ' +
+        'when jobs are configured (`cedar setup jobs` + at least one ' +
+        '`cedar g job`). Pass `--no-jobs` to opt out and run `cedar jobs ' +
+        'work` yourself instead.',
+    })
     .middleware(() => {
       const check = checkNodeVersion()
 

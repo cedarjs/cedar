@@ -116,8 +116,13 @@ cedar dev:
                   │      (aliases of the same ESM watch.js; chokidar + esbuild,
                   │      kept for SSR/RSC)
                   ├─ web: cedar-vite-dev (SPA) or cedar-dev-fe (Streaming SSR)
-                  └─ cedar-gen-watch (regenerate types on SDL or Prisma schema
-                     change)
+                  ├─ gen: cedar-gen-watch (regenerate types on SDL or Prisma
+                  │      schema change)
+                  └─ jobs: nodemon-wrapped `cedar-jobs work` (only when jobs
+                     are set up via `cedar setup jobs` and at least one job
+                     exists; opt out with `--no-jobs`). Wrapped in nodemon,
+                     watching api/dist, since the worker loads its config
+                     from compiled api/dist output, not api/src.
 
   With --ud (opt-in unified dev):
     concurrently ─┬─ cedar-unified-dev (single Vite dev server on one port)
@@ -125,7 +130,9 @@ cedar dev:
                   │    │    middleware (Vite SSR + fetch-native dispatch,
                   │    │    no separate Fastify listener)
                   │    └─ Web assets served by Vite client dev server (SPA, HMR)
-                  └─ cedar-gen-watch
+                  ├─ cedar-gen-watch
+                  └─ jobs: same as above (still conditional, still opt-out via
+                     --no-jobs)
 
 *SSR/RSC: cedar-vite-dev adds Express + Vite SSR servers. See [SSR-RSC-DOC].
 
