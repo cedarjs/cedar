@@ -102,7 +102,20 @@ export const files = async ({
       outputPath: path.join(folderName, 'src', `${fileName}.test${extension}`),
     })
 
+    // Without a config of its own the package isn't a Vitest project, so
+    // nothing — not `cedar test`, not a plain `vitest` run — picks up the
+    // test file above
+    const vitestConfigFile = await templateForFile({
+      name,
+      side: 'packages',
+      generator: 'package',
+      templatePath: 'vitest.config.ts.template',
+      templateVars: { folderName, ...rest },
+      outputPath: path.join(folderName, `vitest.config${extension}`),
+    })
+
     outputFiles.push(testFile)
+    outputFiles.push(vitestConfigFile)
   }
 
   return outputFiles.reduce(async (accP, [outputPath, content]) => {

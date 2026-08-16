@@ -29,13 +29,14 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-test('Runs tests for all available sides if no filter passed', async () => {
+test('Runs every project if no filter passed', async () => {
   await handler({})
 
   expect(execa.mock.results[0].value.cmd).toBe('yarn')
   expect(execa.mock.results[0].value.params).toContain('vitest')
-  expect(execa.mock.results[0].value.params).toContain('web')
-  expect(execa.mock.results[0].value.params).toContain('api')
+  // No --project filter, so Vitest runs every project in the root config —
+  // both sides, plus any packages/* workspaces
+  expect(execa.mock.results[0].value.params).not.toContain('--project')
 })
 
 test('Syncs or creates test database when the flag --db-push is set to true', async () => {
@@ -62,16 +63,17 @@ test('Skips test database sync/creation when the flag --db-push is set to false'
   expect(execa.mock.results[0].value.params).toContain('vitest')
 })
 
-test('Runs tests for all available sides if no side filter passed', async () => {
+test('Runs every project if no side filter passed', async () => {
   await handler({
     filter: ['bazinga'],
   })
 
   expect(execa.mock.results[0].value.cmd).toBe('yarn')
   expect(execa.mock.results[0].value.params).toContain('vitest')
+  // Passed on to Vitest as a test name filter, and it doesn't narrow the
+  // run to any particular project
   expect(execa.mock.results[0].value.params).toContain('bazinga')
-  expect(execa.mock.results[0].value.params).toContain('web')
-  expect(execa.mock.results[0].value.params).toContain('api')
+  expect(execa.mock.results[0].value.params).not.toContain('--project')
 })
 
 test('Runs tests specified side even with additional filters', async () => {

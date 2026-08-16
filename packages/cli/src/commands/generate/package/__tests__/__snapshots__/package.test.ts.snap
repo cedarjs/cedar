@@ -97,7 +97,8 @@ exports[`packageHandler > files > multi-word package names > uses the provided s
   },
   "scripts": {
     "build": "tsc",
-    "watch": "tsc --watch"
+    "watch": "tsc --watch",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@cedarjs/testing": "2.2.1",
@@ -133,6 +134,19 @@ describe('formValidatorsPkg', () => {
   it('should not throw any errors', async () => {
     expect(formValidatorsPkg()).not.toThrow()
   })
+})
+"
+`;
+
+exports[`packageHandler > files > multi-word package names > uses the provided scope for multiWord-package name > vitestConfig 1`] = `
+"import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    name: 'form-validators-pkg',
+    // Enables global test APIs like describe, it, expect
+    globals: true,
+  },
 })
 "
 `;
@@ -190,7 +204,8 @@ exports[`packageHandler > files > single word package name > infers package scop
   },
   "scripts": {
     "build": "tsc",
-    "watch": "tsc --watch"
+    "watch": "tsc --watch",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@cedarjs/testing": "2.2.1",

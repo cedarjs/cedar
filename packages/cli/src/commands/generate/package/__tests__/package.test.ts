@@ -148,13 +148,14 @@ describe('packageHandler', () => {
         })
 
         const fileNames = Object.keys(files)
-        expect(fileNames.length).toEqual(5)
+        expect(fileNames.length).toEqual(6)
 
         expect(fileNames).toEqual(
           expect.arrayContaining([
             expect.stringContaining('README.md'),
             expect.stringContaining('package.json'),
             expect.stringContaining('tsconfig.json'),
+            expect.stringContaining('vitest.config.ts'),
             expect.stringContaining('index.ts'),
             expect.stringContaining('foo.test.ts'),
           ]),
@@ -300,6 +301,9 @@ describe('packageHandler', () => {
           mockBase.path +
             '/packages/form-validators-pkg/src/formValidatorsPkg.test.ts',
         )
+        const vitestConfigPath = path.normalize(
+          mockBase.path + '/packages/form-validators-pkg/vitest.config.ts',
+        )
 
         // Both making sure the file is valid json (parsing would fail otherwise)
         // and that the package name is correct
@@ -310,10 +314,15 @@ describe('packageHandler', () => {
           'export function formValidatorsPkg() {',
         )
 
+        // The Vitest project is named after the folder, so it can be run
+        // with `vitest --project form-validators-pkg`
+        expect(files[vitestConfigPath]).toMatch("name: 'form-validators-pkg'")
+
         expect(files[readmePath]).toMatchSnapshot('readme')
         expect(files[packageJsonPath]).toMatchSnapshot('packageJson')
         expect(files[indexPath]).toMatchSnapshot('index')
         expect(files[testPath]).toMatchSnapshot('test')
+        expect(files[vitestConfigPath]).toMatchSnapshot('vitestConfig')
       })
     })
 
@@ -322,7 +331,7 @@ describe('packageHandler', () => {
         ...packageHandler.nameVariants('Sample'),
       })
       const fileNames = Object.keys(jsFiles)
-      expect(fileNames.length).toEqual(5)
+      expect(fileNames.length).toEqual(6)
 
       expect(fileNames).toEqual(
         expect.arrayContaining([
@@ -330,10 +339,17 @@ describe('packageHandler', () => {
           expect.stringContaining('package.json'),
           // TODO: Make the script output jsconfig.json
           expect.stringContaining('tsconfig.json'),
+          expect.stringContaining('vitest.config.js'),
           expect.stringContaining('index.js'),
           expect.stringContaining('sample.test.js'),
         ]),
       )
+
+      const vitestConfigPath = fileNames.find((fileName) =>
+        fileName.endsWith('vitest.config.js'),
+      )
+
+      expect(jsFiles[vitestConfigPath as string]).toMatch("name: 'sample'")
     })
   })
 
