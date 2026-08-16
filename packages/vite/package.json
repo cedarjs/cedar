@@ -58,6 +58,7 @@
     "@cedarjs/context": "workspace:*",
     "@cedarjs/graphql-server": "workspace:*",
     "@cedarjs/internal": "workspace:*",
+    "@cedarjs/jobs": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/server-store": "workspace:*",
     "@cedarjs/structure": "workspace:*",

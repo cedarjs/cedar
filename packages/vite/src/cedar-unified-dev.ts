@@ -7,6 +7,7 @@ import yargsParser from 'yargs-parser'
 import { getPaths, getConfig } from '@cedarjs/project-config'
 
 import { startApiDevMiddleware } from './apiDevMiddleware.js'
+import { startJobsDevWorkers } from './jobsDevMiddleware.js'
 
 /**
  * How long to wait for the dev servers to close gracefully after a SIGINT or
@@ -356,8 +357,18 @@ export async function startUnifiedDevServer() {
   // Start the API dev middleware (Vite SSR, no separate HTTP listener).
   // API requests will be handled inline via the web Vite dev server's
   // middleware pipeline.
-  const { close: closeApi, handler: apiHandler } = await startApiDevMiddleware()
+  const {
+    viteServer: apiViteServer,
+    close: closeApi,
+    handler: apiHandler,
+  } = await startApiDevMiddleware()
   const apiAdapter = createServerAdapter(apiHandler)
+
+  // Background jobs, loaded and run in-process via the api Vite server
+  // instead of `cedar-jobs work`'s `api/dist`-only loading (see
+  // `jobsDevMiddleware.ts`). Returns `null` when the project has no jobs
+  // configured.
+  const jobsWorkerPool = await startJobsDevWorkers(apiViteServer)
 
   const devServer = await createServer({
     configFile,
@@ -453,6 +464,7 @@ export async function startUnifiedDevServer() {
   const shutdown = createShutdownHandler({
     close: async () => {
       await devServer.close()
+      await jobsWorkerPool?.stop()
       await closeApi()
     },
   })
