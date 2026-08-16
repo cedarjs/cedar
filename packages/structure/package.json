@@ -64,7 +64,7 @@
     "line-column": "1.0.2",
     "lodash": "4.18.1",
     "lru-cache": "11.5.2",
-    "smol-toml": "1.6.1",
+    "smol-toml": "1.8.0",
     "ts-morph": "23.0.0",
     "yargs-parser": "21.1.1"
   },
