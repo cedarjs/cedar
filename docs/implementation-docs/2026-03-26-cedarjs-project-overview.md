@@ -130,7 +130,7 @@ cedar dev:
                   │    │    middleware (Vite SSR + fetch-native dispatch,
                   │    │    no separate Fastify listener)
                   │    ├─ Web assets served by Vite client dev server (SPA, HMR)
-                  │    └─ jobs: run in-process, in the same Vite server
+                  │    └─ jobs: run in-process, in the API Vite SSR server
                   │         (still conditional, still opt-out via --no-jobs).
                   │         Loads config/job files from api/src via Vite's
                   │         SSR module runner instead of api/dist, since
