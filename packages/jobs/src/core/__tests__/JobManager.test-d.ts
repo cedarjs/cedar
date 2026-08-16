@@ -31,12 +31,12 @@ describe('JobManager Type Tests', () => {
 
     const scheduler = manager.createScheduler({ adapter: 'mock' })
 
-    it('should accept correct arguments and return Promise<boolean>', () => {
+    it("should accept correct arguments and return the adapter's schedule() return type", () => {
       expectTypeOf(
         scheduler(jobWithRequiredArgs, [{ foo: 'foo', bar: 645 }], {
           wait: 30,
         }),
-      ).toEqualTypeOf<Promise<boolean>>()
+      ).toEqualTypeOf<Promise<void>>()
     })
 
     it('should reject undefined when arguments are required', () => {
@@ -61,30 +61,28 @@ describe('JobManager Type Tests', () => {
     const scheduler = manager.createScheduler({ adapter: 'mock' })
 
     it('should accept empty array', () => {
-      expectTypeOf(scheduler(jobWithNoArgs, [])).toEqualTypeOf<
-        Promise<boolean>
-      >()
+      expectTypeOf(scheduler(jobWithNoArgs, [])).toEqualTypeOf<Promise<void>>()
     })
 
     it('should accept empty array and options', () => {
       expectTypeOf(scheduler(jobWithNoArgs, [], { wait: 30 })).toEqualTypeOf<
-        Promise<boolean>
+        Promise<void>
       >()
     })
 
     it('should accept undefined as second parameter', () => {
       expectTypeOf(scheduler(jobWithNoArgs, undefined)).toEqualTypeOf<
-        Promise<boolean>
+        Promise<void>
       >()
     })
 
     it('should accept no arguments at all', () => {
-      expectTypeOf(scheduler(jobWithNoArgs)).toEqualTypeOf<Promise<boolean>>()
+      expectTypeOf(scheduler(jobWithNoArgs)).toEqualTypeOf<Promise<void>>()
     })
 
     it('should accept no arguments, but with options', () => {
       expectTypeOf(scheduler(jobWithNoArgs, { wait: 30 })).toEqualTypeOf<
-        Promise<boolean>
+        Promise<void>
       >()
     })
   })
@@ -102,25 +100,25 @@ describe('JobManager Type Tests', () => {
     it('should accept correct arguments', () => {
       expectTypeOf(
         scheduler(jobWithOptionalArgs, ['1st', '2nd']),
-      ).toEqualTypeOf<Promise<boolean>>()
+      ).toEqualTypeOf<Promise<void>>()
     })
 
     it('should accept only one argument', () => {
       expectTypeOf(scheduler(jobWithOptionalArgs, ['1st'])).toEqualTypeOf<
-        Promise<boolean>
+        Promise<void>
       >()
     })
 
     it('should require array even for just one argument', () => {
       // @ts-expect-error - array required
       expectTypeOf(scheduler(jobWithOptionalArgs, '1st')).toEqualTypeOf<
-        Promise<boolean>
+        Promise<void>
       >()
     })
 
     it('should accept empty array', () => {
       expectTypeOf(scheduler(jobWithOptionalArgs, [])).toEqualTypeOf<
-        Promise<boolean>
+        Promise<void>
       >()
     })
   })
@@ -137,7 +135,7 @@ describe('JobManager Type Tests', () => {
 
     it('should accept cron as an option', () => {
       expectTypeOf(scheduler(job, [], { cron: '0 0 * * *' })).toEqualTypeOf<
-        Promise<boolean>
+        Promise<void>
       >()
     })
 
@@ -153,13 +151,13 @@ describe('JobManager Type Tests', () => {
 
     it('should accept wait option without cron', () => {
       expectTypeOf(scheduler(job, [], { wait: 30 })).toEqualTypeOf<
-        Promise<boolean>
+        Promise<void>
       >()
     })
 
     it('should accept waitUntil option without cron', () => {
       expectTypeOf(scheduler(job, [], { waitUntil: new Date() })).toEqualTypeOf<
-        Promise<boolean>
+        Promise<void>
       >()
     })
   })
@@ -180,9 +178,17 @@ describe('JobManager Type Tests', () => {
   describe('scheduler function type', () => {
     const scheduler = manager.createScheduler({ adapter: 'mock' })
 
-    it('should be a function that returns Promise<boolean>', () => {
+    it("should be a function that returns the adapter's schedule() return type", () => {
       expectTypeOf(scheduler).toBeFunction()
-      expectTypeOf(scheduler).returns.toEqualTypeOf<Promise<boolean>>()
+      expectTypeOf(scheduler).returns.toEqualTypeOf<Promise<void>>()
+    })
+
+    it('should have a cancel function', () => {
+      expectTypeOf(scheduler.cancel).toBeFunction()
+      expectTypeOf(scheduler.cancel)
+        .parameter(0)
+        .toEqualTypeOf<string | number>()
+      expectTypeOf(scheduler.cancel).returns.toEqualTypeOf<Promise<boolean>>()
     })
   })
 })

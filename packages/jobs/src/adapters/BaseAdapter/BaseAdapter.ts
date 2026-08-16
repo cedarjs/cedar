@@ -39,6 +39,11 @@ export interface FailureOptions<TJob extends BaseJob = BaseJob> {
   deleteJob?: boolean
 }
 
+export interface CancelOptions {
+  /** The id of the job to cancel, as returned by `schedule()` */
+  jobId: string | number
+}
+
 /**
  * Base class for all job adapters. Provides a common interface for scheduling
  * jobs. At a minimum, you must implement the `schedule` method in your adapter.
@@ -92,4 +97,15 @@ export abstract class BaseAdapter<
    * Clear all jobs from storage
    */
   abstract clear(): void | Promise<void>
+
+  /**
+   * Cancel a job so that it will not be run (if it's still queued) or not be
+   * retried or picked up by another worker (if it's currently running).
+   * Should return `true` if a job was cancelled and `false` if no cancellable
+   * job with the given id was found.
+   *
+   * This method is optional: adapters that don't implement it don't support
+   * cancellation and `later.cancel()` will throw a `CancelNotImplementedError`
+   */
+  cancel?(options: CancelOptions): boolean | Promise<boolean>
 }

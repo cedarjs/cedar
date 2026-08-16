@@ -9,6 +9,7 @@ import type {
   SuccessOptions,
   ErrorOptions,
   FailureOptions,
+  CancelOptions,
 } from '../BaseAdapter/BaseAdapter.js'
 import { BaseAdapter } from '../BaseAdapter/BaseAdapter.js'
 
@@ -163,7 +164,8 @@ interface FailureData {
  * ```
  */
 export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
-  PrismaAdapterOptions<TDb>
+  PrismaAdapterOptions<TDb>,
+  Promise<PrismaJob>
 > {
   db: TDb
   model: DelegateKey<TDb> | string
@@ -202,8 +204,10 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
     maxRuntime,
     queues,
   }: FindArgs): Promise<PrismaJob | undefined> {
+    // The oldest a job's lock is allowed to be before it's considered stale
+    // and the job is eligible to be picked up by another worker
     const maxRuntimeExpire = new Date(
-      new Date().getTime() + (maxRuntime || DEFAULT_MAX_RUNTIME * 1000),
+      new Date().getTime() - (maxRuntime || DEFAULT_MAX_RUNTIME) * 1000,
     )
 
     // This query is gnarly but not so bad once you know what it's doing. For a
@@ -342,7 +346,9 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
     }
   }
 
-  // Schedules a job by creating a new record in the background job table
+  // Schedules a job by creating a new record in the background job table.
+  // Returns the created job so that callers get access to its `id` (to cancel
+  // it later, poll its status, etc.)
   override async schedule({
     name,
     path,
@@ -351,8 +357,8 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
     cron,
     queue,
     priority,
-  }: SchedulePayload) {
-    await this.accessor.create({
+  }: SchedulePayload): Promise<PrismaJob> {
+    const data = await this.accessor.create({
       data: {
         handler: JSON.stringify({ name, path, args }),
         runAt,
@@ -361,6 +367,38 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
         priority,
       },
     })
+
+    // The delegate is untyped, but the shape of the created row is guaranteed
+    // by the schema contract documented on this class
+    const row = data as Omit<PrismaJob, 'name' | 'path' | 'args'>
+
+    return { ...row, name, path, args }
+  }
+
+  /**
+   * Cancels a job by marking it as permanently failed so no worker will pick
+   * it up (or retry it, if it's currently being worked on).
+   *
+   * If the job is currently running, the in-progress attempt is not
+   * interrupted (the worker will stop it when `maxRuntime` is exceeded), but
+   * it will not be retried and will not be picked up by another worker once
+   * its lock goes stale.
+   */
+  override async cancel({ jobId }: CancelOptions) {
+    this.logger.debug(`[CedarJS Jobs] Cancelling job ${jobId}`)
+
+    // updateMany so that nothing throws if the job no longer exists, and so
+    // we can make the update conditional on the job not already being failed
+    const { count } = await this.accessor.updateMany({
+      where: { id: jobId, failedAt: null },
+      data: {
+        failedAt: new Date(),
+        lastError: 'Job cancelled by user',
+        runAt: null,
+      },
+    })
+
+    return count > 0
   }
 
   override async clear() {
