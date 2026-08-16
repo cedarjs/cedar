@@ -11,7 +11,6 @@ import {
   DEFAULT_DELETE_FAILED_JOBS,
   DEFAULT_DELETE_SUCCESSFUL_JOBS,
   DEFAULT_LOGGER,
-  MAX_RUNTIME_GRACE_PERIOD,
 } from '../consts.js'
 import {
   AdapterRequiredError,
@@ -141,36 +140,46 @@ export class Executor {
       this.logger.error(errorMessage)
       this.logger.error(error.stack)
 
-      // For a timed out job, push `runAt` out by at least the grace period so
-      // no other worker can claim the job in the moment between this update
-      // (which unlocks the job) and `failure()` below marking it as
-      // permanently failed
-      const backoff = this.backoffMilliseconds(this.job.attempts)
-      const retryDelay = timedOut
-        ? Math.max(backoff, MAX_RUNTIME_GRACE_PERIOD * 1000)
-        : backoff
-
-      await this.adapter.error({
-        job: this.job,
-        runAt: new Date(new Date().getTime() + retryDelay),
-        error,
-      })
-
-      // A timed out job is failed immediately instead of being retried: its
-      // previous attempt may still be holding on to resources, so silently
-      // re-running it could mean two copies of the job running at once
-      if (timedOut || this.job.attempts >= this.maxAttempts) {
-        const failureMessage = timedOut
-          ? `[CedarJS Jobs] Failed job ${this.jobIdentifier}: exceeded max ` +
-            `runtime (${this.maxRuntime} seconds)`
-          : `[CedarJS Jobs] Failed job ${this.jobIdentifier}: reached max ` +
-            `attempts (${this.maxAttempts})`
-        this.logger.warn(this.job, failureMessage)
+      if (timedOut) {
+        // A timed out job is failed immediately instead of being retried: its
+        // previous attempt may still be holding on to resources, so silently
+        // re-running it could mean two copies of the job running at once.
+        // It's failed in a single `failure()` call (rather than `error()`
+        // followed by `failure()`) because `error()` unlocks the job, and a
+        // two-step write would leave a moment where another worker could
+        // claim the job before `failure()` marks it as permanently failed
+        this.logger.warn(
+          this.job,
+          `[CedarJS Jobs] Failed job ${this.jobIdentifier}: exceeded max ` +
+            `runtime (${this.maxRuntime} seconds)`,
+        )
 
         await this.adapter.failure({
           job: this.job,
           deleteJob: this.deleteFailedJobs,
+          error,
         })
+      } else {
+        await this.adapter.error({
+          job: this.job,
+          runAt: new Date(
+            new Date().getTime() + this.backoffMilliseconds(this.job.attempts),
+          ),
+          error,
+        })
+
+        if (this.job.attempts >= this.maxAttempts) {
+          this.logger.warn(
+            this.job,
+            `[CedarJS Jobs] Failed job ${this.jobIdentifier}: reached max ` +
+              `attempts (${this.maxAttempts})`,
+          )
+
+          await this.adapter.failure({
+            job: this.job,
+            deleteJob: this.deleteFailedJobs,
+          })
+        }
       }
     } finally {
       clearTimeout(timeoutId)

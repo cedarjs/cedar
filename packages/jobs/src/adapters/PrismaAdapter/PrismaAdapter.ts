@@ -307,14 +307,22 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
   // Prisma queries are lazily evaluated and only sent to the db when they are
   // awaited, so do the await here to ensure they actually run (if the user
   // doesn't await the Promise then the queries will never be executed!)
+  //
+  // All of these updates/deletes are done with updateMany/deleteMany guarded
+  // on `failedAt: null` so that a job that was cancelled (or otherwise
+  // permanently failed) while this attempt was running keeps its
+  // failed/cancelled state instead of being overwritten or deleted by the
+  // in-flight attempt's outcome
   override async success({ job, runAt, deleteJob }: SuccessOptions<PrismaJob>) {
     this.logger.debug(`[CedarJS Jobs] Job ${job.id} success`)
 
     if (deleteJob) {
-      await this.accessor.delete({ where: { id: job.id } })
+      await this.accessor.deleteMany({
+        where: { id: job.id, failedAt: null },
+      })
     } else {
-      await this.accessor.update({
-        where: { id: job.id },
+      await this.accessor.updateMany({
+        where: { id: job.id, failedAt: null },
         data: {
           lockedAt: null,
           lockedBy: null,
@@ -337,20 +345,33 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
       runAt,
     }
 
-    await this.accessor.update({
-      where: { id: job.id },
+    await this.accessor.updateMany({
+      where: { id: job.id, failedAt: null },
       data,
     })
   }
 
-  // Job has had too many attempts, it has now permanently failed.
-  override async failure({ job, deleteJob }: FailureOptions<PrismaJob>) {
+  // The job will not be retried: it has either had too many attempts or
+  // exceeded maxRuntime (in which case `error` is set so the timeout can be
+  // recorded in the same single write that marks the job as failed)
+  override async failure({ job, deleteJob, error }: FailureOptions<PrismaJob>) {
     if (deleteJob) {
-      await this.accessor.delete({ where: { id: job.id } })
+      await this.accessor.deleteMany({
+        where: { id: job.id, failedAt: null },
+      })
     } else {
-      await this.accessor.update({
-        where: { id: job.id },
-        data: { failedAt: new Date() },
+      const data: { failedAt: Date; runAt: null; lastError?: string } = {
+        failedAt: new Date(),
+        runAt: null,
+      }
+
+      if (error) {
+        data.lastError = `${error.message}\n\n${error.stack}`
+      }
+
+      await this.accessor.updateMany({
+        where: { id: job.id, failedAt: null },
+        data,
       })
     }
   }

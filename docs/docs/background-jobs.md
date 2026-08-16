@@ -339,7 +339,7 @@ await later.cancel(scheduledJob.id)
 What cancelling means depends on the state of the job:
 
 - **Queued, not started yet**: the job will never run. Using the `PrismaAdapter` the job stays in the database marked as failed (`failedAt` is set and `lastError` is `"Job cancelled by user"`) so you keep a record of it.
-- **Currently running**: the in-progress attempt is _not_ interrupted (see [Job Timeouts](#job-timeouts)—the worker will stop waiting on it once `maxRuntime` is exceeded), but the job will not be retried if it errors, and no other worker will pick it up. If the in-progress attempt succeeds, the job completes normally.
+- **Currently running**: the in-progress attempt is _not_ interrupted (see [Job Timeouts](#job-timeouts)—the worker will stop waiting on it once `maxRuntime` is exceeded), but the job will not be retried if it errors, and no other worker will pick it up. Even if the in-progress attempt finishes successfully, the job record keeps its cancelled state (it won't be deleted by `deleteSuccessfulJobs`).
 
 Cancellation requires an adapter that implements the optional `cancel()` function. The `PrismaAdapter` does; for a custom adapter that doesn't, `later.cancel()` throws a `CancelNotImplementedError`.
 
@@ -832,7 +832,7 @@ Your process monitor can now restart the workers automatically if they crash sin
 
 ### What Happens if a Worker Crashes?
 
-If a worker crashes because of circumstances outside of your control the job will remained locked in the storage system: the worker couldn't finish work and clean up after itself. When this happens, the job will be picked up again immediately if a new worker starts with the same process title, otherwise when `maxRuntime` (plus a one-minute grace period) has passed it's eligible for any worker to pick up and re-lock.
+If a worker crashes because of circumstances outside of your control the job will remain locked in the storage system: the worker couldn't finish work and clean up after itself. When this happens, the job will be picked up again immediately if a new worker starts with the same process title, otherwise when `maxRuntime` (plus a one-minute grace period) has passed it's eligible for any worker to pick up and re-lock.
 
 ## Creating Your Own Adapter
 
@@ -844,7 +844,7 @@ The general gist of the required functions:
 - `schedule()` accepts `name`, `path`, `args`, `runAt`, `queue` and `priority` and should store the job. Whatever it returns is returned from `later()`, so return at least an object with the stored job's `id` so users can cancel it or check on it later
 - `success()` accepts the same job object returned from `find()` and a `deleteJob` boolean for whether the job should be deleted upon success.
 - `error()` accepts the same job object returned from `find()` and an error instance. Does whatever failure means to you (like unlock the job and reschedule a time for it to run again in the future)
-- `failure()` is called when the job has reached `maxAttempts` or exceeded `maxRuntime`. Accepts the job object and a `deleteJob` boolean that says whether the job should be deleted.
+- `failure()` is called when the job has reached `maxAttempts` or exceeded `maxRuntime`. Accepts the job object, a `deleteJob` boolean that says whether the job should be deleted, and—when the job is failed directly without a preceding `error()` call (a timeout)—an `error` that should be recorded in the same write that marks the job as failed.
 - `clear()` remove all jobs from the queue (mostly used in development).
 - `cancel()` (optional) accepts an object with a `jobId` property and should make sure that job never runs (or is never retried, if it's currently running). Return `true` if a job was cancelled, `false` otherwise. If you don't implement this function, `later.cancel()` will throw a `CancelNotImplementedError`.
 
