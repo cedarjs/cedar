@@ -267,18 +267,19 @@ Routes.tsx ← 4 routes added inside <Set wrap={ScaffoldLayout} title="Posts" ..
 | cookie-jar           | Typed cookie map. get/set/has/unset/serialize.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | utils                | Pluralization wrapper.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
-## THE FIVE CONTEXTS (`ctx` / `context` disambiguation)
+## THE SIX CONTEXTS (`ctx` / `context` disambiguation)
 
-`ctx` and `context` name five unrelated things in this codebase. Only #2 and #3
+`ctx` and `context` name six unrelated things in this codebase. Only #2 and #3
 are the same data; the rest are entirely separate systems.
 
-| #   | Name                      | Side | Where                                                          | What it is                                                                    |
-| --- | ------------------------- | ---- | -------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| 1   | MSW response transformers | web  | `packages/testing/src/web/mockRequests.ts`                     | Response **builder** in test/Storybook GraphQL mocks. Not request state.      |
-| 2   | GraphQL resolver context  | api  | `packages/graphql-server/src/types.ts` (`CedarGraphQLContext`) | Yoga per-request context: `currentUser`, request, auth state.                 |
-| 3   | Global `context`          | api  | `packages/context`                                             | AsyncLocalStorage-backed Proxy, auto-imported in services. Populated from #2. |
-| 4   | Mocked global `context`   | api  | `packages/testing/src/api/mockContext.ts`                      | Test double for #3, so service tests run with no GraphQL server.              |
-| 5   | Listr2 task `ctx`         | CLI  | `packages/cli/src/commands/**` (setup/generate/upgrade)        | Passes state between tasks in a listr2 task list.                             |
+| #   | Name                      | Side | Where                                                                     | What it is                                                                                                                                                                           |
+| --- | ------------------------- | ---- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | MSW response transformers | web  | `packages/testing/src/web/mockRequests.ts`                                | Response **builder** in test/Storybook GraphQL mocks. Not request state.                                                                                                             |
+| 2   | GraphQL resolver context  | api  | `packages/graphql-server/src/types.ts` (`CedarGraphQLContext`)            | Yoga per-request context: `currentUser`, request, auth state.                                                                                                                        |
+| 3   | Global `context`          | api  | `packages/context`                                                        | AsyncLocalStorage-backed Proxy, auto-imported in services. Populated from #2.                                                                                                        |
+| 4   | Mocked global `context`   | api  | `packages/testing/src/api/mockContext.ts`                                 | Test double for #3, so service tests run with no GraphQL server.                                                                                                                     |
+| 5   | Listr2 task `ctx`         | CLI  | `packages/cli/src/commands/**` (setup/generate/upgrade)                   | Passes state between tasks in a listr2 task list.                                                                                                                                    |
+| 6   | Job execution context     | api  | `packages/jobs/src/core/executionContext.ts` (`getJobExecutionContext()`) | ALS-backed per-job context in background job workers: abort `signal` (aborted on `maxRuntime` timeout) + current `job`. Same ALS pattern as #3, but a separate store—unrelated data. |
 
 **1. MSW response transformers.** The `ctx` in `mockGraphQLQuery('Op', (variables, { ctx, req }) => ...)`
 and in generated `*.mock.ts` cell mocks. In MSW v1 each `ctx.*` call returned a

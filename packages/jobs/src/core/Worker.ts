@@ -189,14 +189,12 @@ export class Worker {
       })
 
       if (job) {
-        // TODO add timeout handling if a job runs for more than
-        // `this.maxRuntime`. Will need to run Executor in a separate process
-        // with a timeout for this to work
         await new Executor({
           adapter: this.adapter,
           logger: this.logger,
           job,
           maxAttempts: this.maxAttempts,
+          maxRuntime: this.maxRuntime,
           deleteSuccessfulJobs: this.deleteSuccessfulJobs,
           deleteFailedJobs: this.deleteFailedJobs,
         }).perform()

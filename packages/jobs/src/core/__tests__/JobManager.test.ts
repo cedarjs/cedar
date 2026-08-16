@@ -146,6 +146,22 @@ describe('createScheduler()', () => {
       options: mockOptions,
     })
   })
+
+  it('attaches a cancel() function that invokes the cancel() method of the scheduler', () => {
+    const manager = new JobManager({
+      adapters: {
+        mock: mockAdapter,
+      },
+      queues: ['default'] as const,
+      logger: mockLogger,
+      workers: [],
+    })
+    const scheduler = manager.createScheduler({ adapter: 'mock' })
+
+    scheduler.cancel(123)
+
+    expect(Scheduler.prototype.cancel).toHaveBeenCalledWith(123)
+  })
 })
 
 describe('createJob()', () => {

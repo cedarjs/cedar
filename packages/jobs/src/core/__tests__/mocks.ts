@@ -1,6 +1,7 @@
 import { vi } from 'vitest'
 
 import type {
+  CancelOptions,
   ErrorOptions,
   FailureOptions,
   FindArgs,
@@ -30,4 +31,5 @@ export class MockAdapter extends BaseAdapter {
   error = vi.fn((_options: ErrorOptions): void => {})
   failure = vi.fn((_options: FailureOptions): void => {})
   clear = vi.fn((): void => {})
+  cancel = vi.fn((_options: CancelOptions): boolean => true)
 }
