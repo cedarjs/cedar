@@ -348,11 +348,11 @@ describe('packageHandler', () => {
         ]),
       )
 
-      const vitestConfigPath = fileNames.find((fileName) =>
-        fileName.endsWith('vitest.config.js'),
+      const vitestConfigPath = path.normalize(
+        mockBase.path + '/packages/sample/vitest.config.js',
       )
 
-      expect(jsFiles[vitestConfigPath as string]).toMatch("name: 'sample'")
+      expect(jsFiles[vitestConfigPath]).toMatch("name: 'sample'")
     })
 
     it('does not generate a Vitest config for a Jest project', async () => {
