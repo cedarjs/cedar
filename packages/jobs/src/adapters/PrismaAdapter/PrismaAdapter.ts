@@ -22,10 +22,13 @@ import { ModelNameError } from './errors.js'
 export interface PrismaJob extends BaseJob {
   id: number
   handler: string
-  runAt: Date
+  /** Null once the job has completed or permanently failed */
+  runAt: Date | null
   cron: string | null | undefined
-  lockedAt: Date
-  lockedBy: string
+  /** Null unless the job is currently locked by a worker */
+  lockedAt: Date | null
+  /** Null unless the job is currently locked by a worker */
+  lockedBy: string | null
   lastError: string | null
   failedAt: Date | null
   createdAt: Date

@@ -121,6 +121,7 @@ describe('schedule()', () => {
   })
 
   it('returns the created job', async () => {
+    // a newly created row has null lock/error fields
     const mockRow = {
       id: 7,
       attempts: 0,
@@ -132,6 +133,10 @@ describe('schedule()', () => {
       queue: 'default',
       priority: 50,
       runAt: new Date(),
+      lockedAt: null,
+      lockedBy: null,
+      lastError: null,
+      failedAt: null,
     }
     vi.spyOn(mockDb.backgroundJob, 'create').mockReturnValue(mockRow)
     const adapter = new PrismaAdapter({ db: mockDb, logger: mockLogger })
