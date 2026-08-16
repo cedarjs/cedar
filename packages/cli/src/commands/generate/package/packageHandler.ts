@@ -60,8 +60,10 @@ export async function updateTsconfig(task: { skip: (msg?: string) => void }) {
       path: path.join(getPaths().api.base, 'tsconfig.json'),
       expectedModule: 'node20',
       // While Cedar doesn't officially endorse NodeNext, it will still work
-      // here, so we'll keep it
-      acceptable: ['node20', 'nodenext'],
+      // here, so we'll keep it. ESNext is also acceptable: it's the current
+      // create-cedar-app default, paired with `moduleResolution: bundler` so
+      // extensionless scaffold/generator imports resolve correctly.
+      acceptable: ['node20', 'nodenext', 'esnext'],
     },
     {
       name: 'web',
