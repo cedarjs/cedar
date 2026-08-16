@@ -119,9 +119,6 @@ export const handler = async (args: ExecOptions) => {
   // itself) is spliced off into `unparsedTail` and re-parsed below. Nothing
   // is discarded — the re-parsed tail's positionals are pushed back onto
   // `_` and its flags are merged into `scriptArgs`.
-  //
-  // See the PR description for a known limitation around dash-prefixed
-  // positional values (e.g. `-file.txt`).
   if (Array.isArray(scriptArgs._)) {
     const dashBlockIndex = scriptArgs._.findIndex(
       (arg) => typeof arg === 'string' && arg.startsWith('-'),
