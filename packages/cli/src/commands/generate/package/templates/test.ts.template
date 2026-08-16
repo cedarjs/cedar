@@ -1,7 +1,7 @@
 import { ${camelName} } from './index.js'
 
 describe('${camelName}', () => {
-  it('should not throw any errors', async () => {
-    expect(${camelName}()).not.toThrow()
+  it('should not throw any errors', () => {
+    expect(() => ${camelName}()).not.toThrow()
   })
 })

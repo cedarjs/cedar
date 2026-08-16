@@ -30,8 +30,8 @@ exports[`packageHandler > files > multi-word package names > creates a multi-wor
 "import { formValidators } from './index.js'
 
 describe('formValidators', () => {
-  it('should not throw any errors', async () => {
-    expect(formValidators()).not.toThrow()
+  it('should not throw any errors', () => {
+    expect(() => formValidators()).not.toThrow()
   })
 })
 "
@@ -67,8 +67,8 @@ exports[`packageHandler > files > multi-word package names > creates a multiWord
 "import { formValidators } from './index.js'
 
 describe('formValidators', () => {
-  it('should not throw any errors', async () => {
-    expect(formValidators()).not.toThrow()
+  it('should not throw any errors', () => {
+    expect(() => formValidators()).not.toThrow()
   })
 })
 "
@@ -97,8 +97,7 @@ exports[`packageHandler > files > multi-word package names > uses the provided s
   },
   "scripts": {
     "build": "tsc",
-    "watch": "tsc --watch",
-    "test": "vitest run"
+    "watch": "tsc --watch"
   },
   "devDependencies": {
     "@cedarjs/testing": "2.2.1",
@@ -131,8 +130,8 @@ exports[`packageHandler > files > multi-word package names > uses the provided s
 "import { formValidatorsPkg } from './index.js'
 
 describe('formValidatorsPkg', () => {
-  it('should not throw any errors', async () => {
-    expect(formValidatorsPkg()).not.toThrow()
+  it('should not throw any errors', () => {
+    expect(() => formValidatorsPkg()).not.toThrow()
   })
 })
 "
@@ -174,8 +173,8 @@ exports[`packageHandler > files > single word package name > infers package scop
 "import { foo } from './index.js'
 
 describe('foo', () => {
-  it('should not throw any errors', async () => {
-    expect(foo()).not.toThrow()
+  it('should not throw any errors', () => {
+    expect(() => foo()).not.toThrow()
   })
 })
 "
@@ -204,8 +203,7 @@ exports[`packageHandler > files > single word package name > infers package scop
   },
   "scripts": {
     "build": "tsc",
-    "watch": "tsc --watch",
-    "test": "vitest run"
+    "watch": "tsc --watch"
   },
   "devDependencies": {
     "@cedarjs/testing": "2.2.1",

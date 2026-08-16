@@ -13,8 +13,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "watch": "tsc --watch",
-    "test": "vitest run"
+    "watch": "tsc --watch"
   },
   "devDependencies": {
     "@cedarjs/testing": "2.2.1",
