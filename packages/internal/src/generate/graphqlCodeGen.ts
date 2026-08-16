@@ -231,10 +231,52 @@ async function importGeneratedPrismaClient() {
     throw new Error(error)
   }
 
+  // Prisma's `prisma-client` generator emits TypeScript unless the schema sets
+  // `generatedFileExtension = "js"`, and `resolveGeneratedPrismaClient` already
+  // defaults to a `.ts` entry point. Node can't `import()` TypeScript, so for a
+  // TS client we read `Prisma.ModelName` straight out of the generated
+  // `internal/prismaNamespace.<ext>` file instead — that's the only thing
+  // codegen needs from the client.
+  if (/\.(m|c)?ts$/.test(clientPath)) {
+    return readPrismaNamespaceFromTs(clientPath)
+  }
+
   const fileUrl = pathToFileURL(clientPath).href + cacheBuster
   const freshPrisma = await import(fileUrl)
 
   return freshPrisma
+}
+
+/**
+ * Statically read `Prisma.ModelName` out of a TypeScript Prisma client.
+ *
+ * The generated client re-exports everything from
+ * `<output>/internal/prismaNamespace.<ext>`, which declares `ModelName` as a
+ * plain object literal of string values. Reading it with a regex avoids having
+ * to transpile the client just to learn the model names.
+ */
+function readPrismaNamespaceFromTs(clientPath: string) {
+  const ext = path.extname(clientPath)
+  const namespacePath = path.join(
+    path.dirname(clientPath),
+    'internal',
+    `prismaNamespace${ext}`,
+  )
+
+  const source = fs.readFileSync(namespacePath, 'utf8')
+  const blockMatch = source.match(/export const ModelName = \{([\s\S]*?)\}/)
+
+  if (!blockMatch) {
+    return { Prisma: { ModelName: {} } }
+  }
+
+  const ModelName: Record<string, string> = {}
+
+  for (const entry of blockMatch[1].matchAll(/(\w+):\s*['"]([^'"]+)['"]/g)) {
+    ModelName[entry[1]] = entry[2]
+  }
+
+  return { Prisma: { ModelName } }
 }
 
 function isModelNameRecord(value: unknown): value is Record<string, string> {
