@@ -1,6 +1,9 @@
 import { describe, expect, vi, it, beforeEach, afterEach } from 'vitest'
 
-import { DEFAULT_MODEL_NAME } from '../../../consts.js'
+import {
+  DEFAULT_MODEL_NAME,
+  MAX_RUNTIME_GRACE_PERIOD,
+} from '../../../consts.js'
 import { mockLogger } from '../../../core/__tests__/mocks.js'
 import * as errors from '../errors.js'
 import { PrismaAdapter } from '../PrismaAdapter.js'
@@ -114,6 +117,44 @@ describe('schedule()', () => {
         queue: 'default',
         runAt: new Date(),
       },
+    })
+  })
+
+  it('returns the created job', async () => {
+    // a newly created row has null lock/error fields
+    const mockRow = {
+      id: 7,
+      attempts: 0,
+      handler: JSON.stringify({
+        name: 'RedwoodJob',
+        path: 'RedwoodJob/RedwoodJob',
+        args: ['foo', 'bar'],
+      }),
+      queue: 'default',
+      priority: 50,
+      runAt: new Date(),
+      lockedAt: null,
+      lockedBy: null,
+      lastError: null,
+      failedAt: null,
+    }
+    vi.spyOn(mockDb.backgroundJob, 'create').mockReturnValue(mockRow)
+    const adapter = new PrismaAdapter({ db: mockDb, logger: mockLogger })
+
+    const job = await adapter.schedule({
+      name: 'RedwoodJob',
+      path: 'RedwoodJob/RedwoodJob',
+      args: ['foo', 'bar'],
+      queue: 'default',
+      priority: 50,
+      runAt: new Date(),
+    })
+
+    expect(job).toEqual({
+      ...mockRow,
+      name: 'RedwoodJob',
+      path: 'RedwoodJob/RedwoodJob',
+      args: ['foo', 'bar'],
     })
   })
 })
@@ -240,6 +281,30 @@ describe('find()', () => {
       }),
     )
   })
+
+  it('only considers a lock stale after `maxRuntime` seconds have passed', async () => {
+    const findFirstSpy = vi
+      .spyOn(mockDb.backgroundJob, 'findFirst')
+      .mockReturnValue(null)
+    const adapter = new PrismaAdapter({ db: mockDb, logger: mockLogger })
+    await adapter.find({
+      processName: 'test',
+      maxRuntime: 1000,
+      queues: ['*'],
+    })
+
+    const where = findFirstSpy.mock.calls[0][0].where
+    const lockCondition = where.AND[0].OR[0].AND[1].OR[1]
+
+    // a lock is stale if it was taken more than `maxRuntime` seconds (plus a
+    // grace period that gives the locking worker time to enforce its own
+    // timeout) ago
+    expect(lockCondition).toEqual({
+      lockedAt: {
+        lt: new Date(Date.now() - (1000 + MAX_RUNTIME_GRACE_PERIOD) * 1000),
+      },
+    })
+  })
 })
 
 const mockPrismaJob = {
@@ -261,7 +326,7 @@ const mockPrismaJob = {
 
 describe('success()', () => {
   it('deletes the job from the DB if option set', async () => {
-    const spy = vi.spyOn(mockDb.backgroundJob, 'delete')
+    const spy = vi.spyOn(mockDb.backgroundJob, 'deleteMany')
     const adapter = new PrismaAdapter({
       db: mockDb,
       logger: mockLogger,
@@ -272,11 +337,15 @@ describe('success()', () => {
       deleteJob: true,
     })
 
-    expect(spy).toHaveBeenCalledWith({ where: { id: 1 } })
+    // guarded on `failedAt: null` so a job that was cancelled while running
+    // is not deleted when the in-flight attempt completes
+    expect(spy).toHaveBeenCalledWith({
+      where: { id: 1, failedAt: null, attempts: 10 },
+    })
   })
 
   it('updates the job if option not set', async () => {
-    const spy = vi.spyOn(mockDb.backgroundJob, 'update')
+    const spy = vi.spyOn(mockDb.backgroundJob, 'updateMany')
     const adapter = new PrismaAdapter({
       db: mockDb,
       logger: mockLogger,
@@ -290,7 +359,7 @@ describe('success()', () => {
     })
 
     expect(spy).toHaveBeenCalledWith({
-      where: { id: mockPrismaJob.id },
+      where: { id: mockPrismaJob.id, failedAt: null, attempts: 10 },
       data: {
         lockedAt: null,
         lockedBy: null,
@@ -303,7 +372,7 @@ describe('success()', () => {
 
 describe('error()', () => {
   it('updates the job by id', async () => {
-    const spy = vi.spyOn(mockDb.backgroundJob, 'update')
+    const spy = vi.spyOn(mockDb.backgroundJob, 'updateMany')
     const adapter = new PrismaAdapter({ db: mockDb, logger: mockLogger })
     await adapter.error({
       job: mockPrismaJob,
@@ -312,12 +381,14 @@ describe('error()', () => {
     })
 
     expect(spy).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: 1 } }),
+      expect.objectContaining({
+        where: { id: 1, failedAt: null, attempts: 10 },
+      }),
     )
   })
 
   it('clears the lock fields', async () => {
-    const spy = vi.spyOn(mockDb.backgroundJob, 'update')
+    const spy = vi.spyOn(mockDb.backgroundJob, 'updateMany')
     const adapter = new PrismaAdapter({ db: mockDb, logger: mockLogger })
     await adapter.error({
       job: mockPrismaJob,
@@ -333,7 +404,7 @@ describe('error()', () => {
   })
 
   it('reschedules the job at a designated backoff time', async () => {
-    const spy = vi.spyOn(mockDb.backgroundJob, 'update')
+    const spy = vi.spyOn(mockDb.backgroundJob, 'updateMany')
     const adapter = new PrismaAdapter({ db: mockDb, logger: mockLogger })
     const runAt = new Date(new Date().getTime() + 1000 * 10 ** 4)
     await adapter.error({
@@ -352,7 +423,7 @@ describe('error()', () => {
   })
 
   it('records the error', async () => {
-    const spy = vi.spyOn(mockDb.backgroundJob, 'update')
+    const spy = vi.spyOn(mockDb.backgroundJob, 'updateMany')
     const adapter = new PrismaAdapter({ db: mockDb, logger: mockLogger })
     await adapter.error({
       job: mockPrismaJob,
@@ -372,25 +443,82 @@ describe('error()', () => {
 
 describe('failure()', () => {
   it('marks the job as failed if max attempts reached', async () => {
-    const spy = vi.spyOn(mockDb.backgroundJob, 'update')
+    const spy = vi.spyOn(mockDb.backgroundJob, 'updateMany')
     const adapter = new PrismaAdapter({ db: mockDb, logger: mockLogger })
     await adapter.failure({ job: mockPrismaJob, deleteJob: false })
 
-    expect(spy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          failedAt: new Date(),
-        }),
-      }),
-    )
+    expect(spy).toHaveBeenCalledWith({
+      where: { id: 1, failedAt: null, attempts: 10 },
+      data: {
+        failedAt: new Date(),
+        runAt: null,
+      },
+    })
+  })
+
+  it('records the error when failing a job directly (timeout)', async () => {
+    const spy = vi.spyOn(mockDb.backgroundJob, 'updateMany')
+    const adapter = new PrismaAdapter({ db: mockDb, logger: mockLogger })
+    await adapter.failure({
+      job: mockPrismaJob,
+      deleteJob: false,
+      error: new Error('timeout error'),
+    })
+
+    expect(spy).toHaveBeenCalledWith({
+      where: { id: 1, failedAt: null, attempts: 10 },
+      data: {
+        failedAt: new Date(),
+        runAt: null,
+        lastError: expect.stringContaining('timeout error'),
+      },
+    })
   })
 
   it('deletes the job if option is set', async () => {
-    const spy = vi.spyOn(mockDb.backgroundJob, 'delete')
+    const spy = vi.spyOn(mockDb.backgroundJob, 'deleteMany')
     const adapter = new PrismaAdapter({ db: mockDb, logger: mockLogger })
     await adapter.failure({ job: mockPrismaJob, deleteJob: true })
 
-    expect(spy).toHaveBeenCalledWith({ where: { id: 1 } })
+    expect(spy).toHaveBeenCalledWith({
+      where: { id: 1, failedAt: null, attempts: 10 },
+    })
+  })
+})
+
+describe('cancel()', () => {
+  it('marks the job as permanently failed', async () => {
+    const spy = vi
+      .spyOn(mockDb.backgroundJob, 'updateMany')
+      .mockReturnValue({ count: 1 })
+    const adapter = new PrismaAdapter({ db: mockDb, logger: mockLogger })
+
+    const result = await adapter.cancel({ jobId: 123 })
+
+    // The `failedAt`/`runAt` conditions ensure only active jobs can be
+    // cancelled: a completed job that's kept in the database (with
+    // `deleteSuccessfulJobs: false`) has `failedAt: null` but also
+    // `runAt: null`, and must not be marked as cancelled
+    expect(spy).toHaveBeenCalledWith({
+      where: { id: 123, failedAt: null, runAt: { not: null } },
+      data: {
+        failedAt: new Date(),
+        lastError: 'Job cancelled by user',
+        runAt: null,
+      },
+    })
+    expect(result).toEqual(true)
+  })
+
+  it('returns false when there is no active job with the given id', async () => {
+    // no rows match the conditions: the job doesn't exist, already
+    // completed, or already failed
+    vi.spyOn(mockDb.backgroundJob, 'updateMany').mockReturnValue({ count: 0 })
+    const adapter = new PrismaAdapter({ db: mockDb, logger: mockLogger })
+
+    const result = await adapter.cancel({ jobId: 123 })
+
+    expect(result).toEqual(false)
   })
 })
 

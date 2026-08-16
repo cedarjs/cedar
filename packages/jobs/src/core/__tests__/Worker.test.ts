@@ -440,6 +440,7 @@ describe('run', async () => {
       },
       logger: worker.logger,
       maxAttempts: 10,
+      maxRuntime: 14_400,
       deleteSuccessfulJobs: false,
       deleteFailedJobs: true,
     })

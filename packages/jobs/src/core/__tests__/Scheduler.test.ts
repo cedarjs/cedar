@@ -1,11 +1,17 @@
 import { describe, expect, vi, it, beforeEach } from 'vitest'
 
+import type {
+  FindArgs,
+  SchedulePayload,
+} from '../../adapters/BaseAdapter/BaseAdapter.js'
+import { BaseAdapter } from '../../adapters/BaseAdapter/BaseAdapter.js'
 import {
   DEFAULT_PRIORITY,
   DEFAULT_WAIT,
   DEFAULT_WAIT_UNTIL,
 } from '../../consts.js'
 import * as errors from '../../errors.js'
+import type { PossibleBaseJob } from '../../types.js'
 import { Scheduler } from '../Scheduler.js'
 
 import { MockAdapter, mockLogger } from './mocks.js'
@@ -282,6 +288,26 @@ describe('schedule()', () => {
     )
   })
 
+  it("returns the adapter's schedule() return value", async () => {
+    class JobReturningAdapter extends MockAdapter {
+      override schedule = vi.fn((_payload: SchedulePayload) => ({ id: 99 }))
+    }
+    const adapter = new JobReturningAdapter()
+    const scheduler = new Scheduler({ adapter, logger: mockLogger })
+    const job = {
+      id: 1,
+      name: 'JobName',
+      path: 'JobPath/JobPath',
+      queue: 'default',
+
+      perform: vi.fn(),
+    }
+
+    const scheduledJob = await scheduler.schedule({ job, args: [] })
+
+    expect(scheduledJob).toEqual({ id: 99 })
+  })
+
   it('re-throws any error that occurs during scheduling', async () => {
     mockAdapter.schedule.mockImplementationOnce(() => {
       throw new Error('Could not schedule')
@@ -306,6 +332,52 @@ describe('schedule()', () => {
 
     await expect(scheduler.schedule({ job, args, options })).rejects.toThrow(
       errors.SchedulingError,
+    )
+  })
+})
+
+describe('cancel()', () => {
+  const mockAdapter = new MockAdapter()
+
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
+  it('calls the cancel() method on the adapter', async () => {
+    mockAdapter.cancel.mockImplementationOnce(() => true)
+    const scheduler = new Scheduler({
+      adapter: mockAdapter,
+      logger: mockLogger,
+    })
+
+    const result = await scheduler.cancel(123)
+
+    expect(mockAdapter.cancel).toHaveBeenCalledWith({ jobId: 123 })
+    expect(result).toEqual(true)
+  })
+
+  it('throws if the adapter does not implement cancel()', async () => {
+    class NoCancelAdapter extends BaseAdapter {
+      constructor() {
+        super({ logger: mockLogger })
+      }
+
+      schedule(_payload: SchedulePayload) {}
+      find(_args: FindArgs): PossibleBaseJob {
+        return undefined
+      }
+      success() {}
+      error() {}
+      failure() {}
+      clear() {}
+    }
+    const scheduler = new Scheduler({
+      adapter: new NoCancelAdapter(),
+      logger: mockLogger,
+    })
+
+    await expect(scheduler.cancel(123)).rejects.toThrow(
+      errors.CancelNotImplementedError,
     )
   })
 })
