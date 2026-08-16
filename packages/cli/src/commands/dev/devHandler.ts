@@ -459,15 +459,20 @@ export const handler = async ({
     // dotfiles, e.g. `.DS_Store`) should be excluded.
     fs.readdirSync(cedarPaths.api.jobs).some((entry) => !entry.startsWith('.'))
 
-  if (jobsConfigured && ud) {
+  if (jobsConfigured && unifiedDevCommand) {
     // `cedar-jobs work` loads its config and job files from `api/dist`
     // (compiled output). Unified dev never writes that output — API
     // functions are served in-process straight from `api/src` via Vite's
     // module runner — so there's no dist directory for the worker to ever
     // find, not just a startup race like in classic dev below. Rather than
     // let the worker crash with a confusing "file not found" error, skip it
-    // and say so up front. Tracked for a proper fix (loading jobs through
-    // Vite's Environment API instead of compiled output) in
+    // and say so up front. Note this checks `unifiedDevCommand`, not the
+    // `ud` flag directly: `buildUnifiedDevCommand()` can still fall back to
+    // `null` even when `--ud` was passed (streaming SSR, API-only/web-only
+    // workspace, a custom server file), in which case classic dev runs
+    // instead and does produce `api/dist` — see the `else` branch below.
+    // Tracked for a proper fix (loading jobs through Vite's Environment API
+    // instead of compiled output) in
     // https://github.com/cedarjs/cedar/issues/2421.
     console.log(
       c.warning(

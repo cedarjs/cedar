@@ -215,6 +215,11 @@ describe('yarn cedar dev', () => {
     vi.clearAllMocks()
     vi.mocked(getPaths).mockReset()
     vi.mocked(getConfig).mockReset()
+    // `mockReturnValue` (unlike `mockReset`) survives `vi.clearAllMocks()`,
+    // so a test that opts into the custom-server lane (like the "reserved
+    // api port" test below) would otherwise leak `serverFile: true` into
+    // every test that runs after it.
+    vi.mocked(serverFileExists).mockReturnValue(false)
     mockCedarToml = ''
     mockJobsDirEntries = []
   })
@@ -556,6 +561,66 @@ describe('yarn cedar dev', () => {
         ),
       ),
     ).toBe(true)
+
+    consoleLogSpy.mockRestore()
+  })
+
+  it('Should start the jobs worker (not warn) when --ud falls back to classic dev', async () => {
+    // `--ud` was requested, but `buildUnifiedDevCommand()` still returns
+    // `null` here (streaming SSR has its own dev server setup), so `cedar
+    // dev` falls back to classic separate api+web servers, which do produce
+    // `api/dist`. The jobs worker should follow that fallback rather than
+    // treating `--ud` as if unified dev were actually running.
+    const config = await defaultConfig()
+
+    vi.mocked(getConfig).mockReturnValue({
+      ...config,
+      experimental: {
+        ...config.experimental,
+        streamingSsr: {
+          enabled: true,
+        },
+      },
+    })
+
+    vi.mocked(getPaths).mockReturnValue({
+      base: '/mocked/project',
+      // @ts-expect-error - only declaring what the test needs
+      api: {
+        base: '/mocked/project/api',
+        src: '/mocked/project/api/src',
+        functions: '/mocked/project/api/src/functions',
+        dist: '/mocked/project/api/dist',
+        jobs: '/mocked/project/api/src/jobs',
+        jobsConfig: '/mocked/project/api/src/lib/jobs.ts',
+      },
+      // @ts-expect-error - only declaring what the test needs
+      web: {
+        base: '/mocked/project/web',
+        src: '/mocked/project/web/src',
+        dist: '/mocked/project/web/dist',
+      },
+      packages: '/mocked/project/packages',
+      generated: {
+        base: '/mocked/project/.cedar',
+      },
+    })
+    mockJobsDirEntries = ['WelcomeNoticeJob']
+
+    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+
+    await handler({ workspace: ['api', 'web'], ud: true })
+
+    const jobsCommand = findJobsCommand()
+    expect(jobsCommand?.command).toContain('cedar-jobs work')
+    expect(jobsCommand?.command).toContain('nodemon')
+    expect(
+      consoleLogSpy.mock.calls.some(([message]) =>
+        String(message).includes(
+          'Background jobs are not yet supported with Unified Dev (--ud)',
+        ),
+      ),
+    ).toBe(false)
 
     consoleLogSpy.mockRestore()
   })
