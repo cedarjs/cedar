@@ -1,6 +1,10 @@
 import { camelCase } from 'change-case'
 
-import { DEFAULT_MAX_RUNTIME, DEFAULT_MODEL_NAME } from '../../consts.js'
+import {
+  DEFAULT_MAX_RUNTIME,
+  DEFAULT_MODEL_NAME,
+  MAX_RUNTIME_GRACE_PERIOD,
+} from '../../consts.js'
 import type { BaseJob } from '../../types.js'
 import type {
   BaseAdapterOptions,
@@ -205,9 +209,14 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
     queues,
   }: FindArgs): Promise<PrismaJob | undefined> {
     // The oldest a job's lock is allowed to be before it's considered stale
-    // and the job is eligible to be picked up by another worker
+    // and the job is eligible to be picked up by another worker. The grace
+    // period gives the worker that locked the job time to enforce its own
+    // `maxRuntime` timeout and mark the job as failed—without it, a second
+    // worker could claim the job in the moment between the lock going stale
+    // and the timeout being recorded
     const maxRuntimeExpire = new Date(
-      new Date().getTime() - (maxRuntime || DEFAULT_MAX_RUNTIME) * 1000,
+      new Date().getTime() -
+        ((maxRuntime || DEFAULT_MAX_RUNTIME) + MAX_RUNTIME_GRACE_PERIOD) * 1000,
     )
 
     // This query is gnarly but not so bad once you know what it's doing. For a

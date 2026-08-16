@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, vi, it } from 'vitest'
 
-import { DEFAULT_LOGGER } from '../../consts.js'
+import { DEFAULT_LOGGER, MAX_RUNTIME_GRACE_PERIOD } from '../../consts.js'
 import * as errors from '../../errors.js'
 import type { BaseJob } from '../../types.js'
 import type { JobExecutionContext } from '../executionContext.js'
@@ -367,16 +367,22 @@ describe('perform', () => {
     // mock the `loadJob` loader to return the job mock
     loadersMockFns.loadJob.mockImplementation(() => mockJob)
 
+    const date = new Date(2025, 6, 7, 9, 50)
+    vi.setSystemTime(date)
+
     const performPromise = executor.perform()
     await vi.advanceTimersByTimeAsync(10_000)
     await performPromise
 
-    expect(adapterErrorSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        job: mockJob,
-        error: expect.any(errors.JobTimeoutError),
-      }),
-    )
+    expect(adapterErrorSpy).toHaveBeenCalledWith({
+      job: mockJob,
+      // The `runAt` for a timed out job is pushed out by at least the grace
+      // period so no other worker can claim it before it's marked as failed
+      runAt: new Date(
+        date.getTime() + 10_000 + MAX_RUNTIME_GRACE_PERIOD * 1000,
+      ),
+      error: expect.any(errors.JobTimeoutError),
+    })
     // Timed out jobs are failed right away – they should not be retried while
     // the previous attempt might still be running
     expect(adapterFailureSpy).toHaveBeenCalledWith({

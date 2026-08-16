@@ -582,7 +582,7 @@ This is an array of objects. Each object represents the config for a single "gro
 - queue: **[required]** the named queue(s) in which this worker group will watch for jobs. There is a reserved `'*'` value you can use which means "all queues." This can be an array of queues as well: `['default', 'email']` for example.
 - `count`: **[required]** the number of workers to start with this config.
 - `maxAttempts`: the maximum number of times to retry a job before giving up. A job that throws an error will be set to retry in the future with an exponential backoff in time equal to the number of previous attempts \*\* 4. After this number, a job is considered "failed" and will not be re-attempted. Default: `24`.
-- `maxRuntime`: the maximum amount of time, in seconds, that a job is allowed to run. A job that runs longer than this is marked as **failed** (it will not be retried, and the timeout is recorded in `lastError`) and the worker moves on to the next job. The job is told to stop what it's doing via an `AbortSignal`—see [Job timeouts](#job-timeouts). This is also how long a job's lock is honored if the worker that locked it crashed without cleaning up after itself: once `maxRuntime` has passed, another worker is allowed to pick the job up again. Default: `14_400` (4 hours).
+- `maxRuntime`: the maximum amount of time, in seconds, that a job is allowed to run. A job that runs longer than this is marked as **failed** (it will not be retried, and the timeout is recorded in `lastError`) and the worker moves on to the next job. The job is told to stop what it's doing via an `AbortSignal`—see [Job timeouts](#job-timeouts). This is also how long a job's lock is honored if the worker that locked it crashed without cleaning up after itself: once `maxRuntime` (plus a one-minute grace period, so a live worker always gets to record the timeout first) has passed, another worker is allowed to pick the job up again. Default: `14_400` (4 hours).
 - `deleteFailedJobs`: when a job has failed (maximum number of retries has occurred) you can keep the job in the database, or delete it. Default: `false`.
 - `deleteSuccessfulJobs`: when a job has succeeded, you can keep the job in the database, or delete it. It's generally assumed that your jobs _will_ succeed so it usually makes sense to clear them out and keep the queue lean. Default: `true`.
 - `sleepDelay`: the amount of time, in seconds, to wait before checking the queue for another job to run. Too low and you'll be thrashing your storage system looking for jobs, too high and you start to have a long delay before any job is run. Default: `5`.
@@ -603,7 +603,7 @@ These modes are ideal when you're creating a job and want to be sure it runs cor
 yarn cedar jobs work
 ```
 
-This process will stay attached to the console and continually look for new jobs and execute them as they are found. The log level is set to `debug` by default so you'll see everything. Pressing `Ctrl-C` to cancel the process (sending `SIGINT`) will start a graceful shutdown: the workers will complete any work they're in the middle of before exiting. To cancel immediately, hit `Ctrl-C` again (or send `SIGTERM`) and they'll stop in the middle of what they're doing. Note that this could leave locked jobs in the database, but they will be picked back up again if a new worker starts with the same name as the one that locked the process. They'll also be picked up automatically after `maxRuntime` has expired, even if they are still locked.
+This process will stay attached to the console and continually look for new jobs and execute them as they are found. The log level is set to `debug` by default so you'll see everything. Pressing `Ctrl-C` to cancel the process (sending `SIGINT`) will start a graceful shutdown: the workers will complete any work they're in the middle of before exiting. To cancel immediately, hit `Ctrl-C` again (or send `SIGTERM`) and they'll stop in the middle of what they're doing. Note that this could leave locked jobs in the database, but they will be picked back up again if a new worker starts with the same name as the one that locked the process. They'll also be picked up automatically after `maxRuntime` (plus a one-minute grace period) has expired, even if they are still locked.
 
 To work on whatever outstanding jobs there are and then automatically exit use the `workoff` mode:
 
@@ -740,11 +740,11 @@ By checking the `lastError` field in the database you can see what the last erro
 
 ### Job Timeouts
 
-A job that runs longer than the worker's `maxRuntime` is timed out: the worker stops waiting on it, records the timeout in the job's `lastError`, marks the job as **failed** and moves on to the next job. A timed out job is _not_ retried—the previous attempt could still be holding on to resources, so silently re-running it could mean two copies of the job doing work at once.
+A job that runs longer than the worker's `maxRuntime` is timed out: the worker stops waiting on it, records the timeout in the job's `lastError`, marks the job as **failed** and moves on to the next job. A timed-out job is _not_ retried—the previous attempt could still be holding on to resources, so silently re-running it could mean two copies of the job doing work at once.
 
-:::caution[Long running jobs]
+:::caution[Long-running jobs]
 
-NodeJS Promises are not truly cancelable: you can reject early, but any Promises that were started _inside_ will continue running unless they are also early rejected, recursively forever. So when a job times out, the worker can't forcefully kill your `perform()` function's promise—it can only stop waiting on it.
+NodeJS Promises are not truly cancellable: you can reject early, but any Promises that were started _inside_ will continue running unless they are also early rejected, recursively forever. So when a job times out, the worker can't forcefully kill your `perform()` function's promise—it can only stop waiting on it. This also means the timeout can only preempt _asynchronous_ work: fully synchronous CPU-bound code blocks the event loop, so the timeout can't fire until it yields (and if such a job eventually returns, it completes normally).
 
 To let your job actually stop working when it's timed out, an `AbortSignal` is available inside `perform()` via `getJobExecutionContext()`. It's aborted the moment the job exceeds `maxRuntime`. Pass it to `fetch()`, hand it to child processes you spawn, or check `signal.aborted` in long-running loops:
 
@@ -763,7 +763,7 @@ export const SampleJob = jobs.createJob({
 })
 ```
 
-The only way to guarantee a job will completely stop no matter what is for your job to spawn an actual OS level process with a timeout (or the abort signal above) that kills it after a certain amount of time.
+The only way to guarantee a job will completely stop no matter what is for your job to spawn an actual OS-level process with a timeout (or the abort signal above) that kills it after a certain amount of time.
 
 :::
 
@@ -832,7 +832,7 @@ Your process monitor can now restart the workers automatically if they crash sin
 
 ### What Happens if a Worker Crashes?
 
-If a worker crashes because of circumstances outside of your control the job will remained locked in the storage system: the worker couldn't finish work and clean up after itself. When this happens, the job will be picked up again immediately if a new worker starts with the same process title, otherwise when `maxRuntime` has passed it's eligible for any worker to pick up and re-lock.
+If a worker crashes because of circumstances outside of your control the job will remained locked in the storage system: the worker couldn't finish work and clean up after itself. When this happens, the job will be picked up again immediately if a new worker starts with the same process title, otherwise when `maxRuntime` (plus a one-minute grace period) has passed it's eligible for any worker to pick up and re-lock.
 
 ## Creating Your Own Adapter
 

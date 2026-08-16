@@ -11,6 +11,7 @@ import {
   DEFAULT_DELETE_FAILED_JOBS,
   DEFAULT_DELETE_SUCCESSFUL_JOBS,
   DEFAULT_LOGGER,
+  MAX_RUNTIME_GRACE_PERIOD,
 } from '../consts.js'
 import {
   AdapterRequiredError,
@@ -91,23 +92,26 @@ export class Executor {
     let performPromise: Promise<void> | undefined
 
     try {
-      const job = await loadJob({ name: this.job.name, path: this.job.path })
-
-      // Wrap in Promise.resolve() because `perform` is allowed to be sync.
-      // The execution context makes the abort signal available to the job via
-      // `getJobExecutionContext()`
-      performPromise = Promise.resolve(
-        executionContext.run(
-          { signal: abortController.signal, job: this.job },
-          () => job.perform(...this.job.args),
-        ),
-      )
-
+      // Start the clock before loading the job module: other workers measure
+      // staleness of this job's lock from when it was taken, so everything
+      // that happens here—including loading the job—has to fit within
+      // `maxRuntime`
       const timeoutPromise = new Promise<never>((_resolve, reject) => {
         timeoutId = setTimeout(() => {
           reject(new JobTimeoutError(this.jobIdentifier, this.maxRuntime))
         }, this.maxRuntime * 1000)
       })
+
+      performPromise = (async () => {
+        const job = await loadJob({ name: this.job.name, path: this.job.path })
+
+        // The execution context makes the abort signal available to the job
+        // via `getJobExecutionContext()`
+        await executionContext.run(
+          { signal: abortController.signal, job: this.job },
+          () => job.perform(...this.job.args),
+        )
+      })()
 
       await Promise.race([performPromise, timeoutPromise])
 
@@ -137,11 +141,18 @@ export class Executor {
       this.logger.error(errorMessage)
       this.logger.error(error.stack)
 
+      // For a timed out job, push `runAt` out by at least the grace period so
+      // no other worker can claim the job in the moment between this update
+      // (which unlocks the job) and `failure()` below marking it as
+      // permanently failed
+      const backoff = this.backoffMilliseconds(this.job.attempts)
+      const retryDelay = timedOut
+        ? Math.max(backoff, MAX_RUNTIME_GRACE_PERIOD * 1000)
+        : backoff
+
       await this.adapter.error({
         job: this.job,
-        runAt: new Date(
-          new Date().getTime() + this.backoffMilliseconds(this.job.attempts),
-        ),
+        runAt: new Date(new Date().getTime() + retryDelay),
         error,
       })
 

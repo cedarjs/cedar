@@ -1,6 +1,9 @@
 import { describe, expect, vi, it, beforeEach, afterEach } from 'vitest'
 
-import { DEFAULT_MODEL_NAME } from '../../../consts.js'
+import {
+  DEFAULT_MODEL_NAME,
+  MAX_RUNTIME_GRACE_PERIOD,
+} from '../../../consts.js'
 import { mockLogger } from '../../../core/__tests__/mocks.js'
 import * as errors from '../errors.js'
 import { PrismaAdapter } from '../PrismaAdapter.js'
@@ -288,9 +291,13 @@ describe('find()', () => {
     const where = findFirstSpy.mock.calls[0][0].where
     const lockCondition = where.AND[0].OR[0].AND[1].OR[1]
 
-    // a lock is stale if it was taken more than `maxRuntime` seconds ago
+    // a lock is stale if it was taken more than `maxRuntime` seconds (plus a
+    // grace period that gives the locking worker time to enforce its own
+    // timeout) ago
     expect(lockCondition).toEqual({
-      lockedAt: { lt: new Date(Date.now() - 1000 * 1000) },
+      lockedAt: {
+        lt: new Date(Date.now() - (1000 + MAX_RUNTIME_GRACE_PERIOD) * 1000),
+      },
     })
   })
 })
