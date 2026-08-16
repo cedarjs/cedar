@@ -36,6 +36,12 @@ const prerenderApolloClient = new ApolloClient({
   link: ApolloLink.empty(),
 })
 
+function hasApolloState(state: unknown): state is Record<string, unknown> {
+  return (
+    typeof state === 'object' && state !== null && Object.keys(state).length > 0
+  )
+}
+
 async function recursivelyRender(
   App: ElementType,
   Routes: ElementType,
@@ -371,11 +377,21 @@ export const runPrerender = async ({
     }
   }
 
-  indexHtmlTree('head').append(
-    `<script> globalThis.__CEDAR__APOLLO_STATE = ${JSON.stringify(
-      prerenderApolloClient.extract(),
-    )}</script>`,
-  )
+  // Only emit the Apollo state bootstrap when there is state to restore. Both
+  // consumers (`CedarApolloProvider` and the suspense provider) already do
+  // `.restore(globalThis?.__CEDAR__APOLLO_STATE ?? {})`, so an empty payload is
+  // a no-op — but it is still an inline <script>, which every strict-CSP app
+  // has to allow-list with a hash that goes stale whenever the payload changes.
+  // A page that prerenders no Cells emits nothing now.
+  const apolloState = prerenderApolloClient.extract()
+
+  if (hasApolloState(apolloState)) {
+    indexHtmlTree('head').append(
+      `<script> globalThis.__CEDAR__APOLLO_STATE = ${JSON.stringify(
+        apolloState,
+      )}</script>`,
+    )
+  }
 
   // Reset the cache after the apollo state is appended into the head
   // If we don't call this all the data will be cached but you can run into issues with the cache being too large
