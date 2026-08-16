@@ -56,7 +56,7 @@ afterEach(() => {
 describe('yarn cedar exec', () => {
   it('passes args on to the script', async () => {
     vol.fromJSON({
-      'redwood.toml': '# redwood.toml',
+      'cedar.toml': '# cedar.toml',
       [path.join('cedar-app', 'scripts', 'normalScript.ts')]: '// script',
     })
 
@@ -90,7 +90,7 @@ describe('yarn cedar exec', () => {
 
   it('re-parses args placed after a literal `--` instead of dropping them', async () => {
     vol.fromJSON({
-      'redwood.toml': '# redwood.toml',
+      'cedar.toml': '# cedar.toml',
       [path.join('cedar-app', 'scripts', 'normalScript.ts')]: '// script',
     })
 
@@ -126,7 +126,7 @@ describe('yarn cedar exec', () => {
 
   it('forwards a reserved-looking flag name (e.g. `--silent`) placed after `--` instead of stripping it', async () => {
     vol.fromJSON({
-      'redwood.toml': '# redwood.toml',
+      'cedar.toml': '# cedar.toml',
       [path.join('cedar-app', 'scripts', 'normalScript.ts')]: '// script',
     })
 
@@ -163,7 +163,7 @@ describe('yarn cedar exec', () => {
 
   it('keeps a negative-number positional after `--` instead of mistaking it for a flag', async () => {
     vol.fromJSON({
-      'redwood.toml': '# redwood.toml',
+      'cedar.toml': '# cedar.toml',
       [path.join('cedar-app', 'scripts', 'normalScript.ts')]: '// script',
     })
 
