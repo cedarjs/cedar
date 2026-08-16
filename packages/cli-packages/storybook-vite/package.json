@@ -27,7 +27,7 @@
     "@cedarjs/project-config": "5.0.1",
     "@cedarjs/telemetry": "5.0.1",
     "execa": "5.1.1",
-    "semver": "7.7.4",
+    "semver": "7.8.5",
     "storybook": "8.6.18",
     "storybook-framework-cedarjs": "5.0.1",
     "termi-link": "1.1.0",

@@ -87,7 +87,7 @@
     "pascalcase": "1.0.0",
     "prettier": "3.8.4",
     "prompts": "2.4.2",
-    "semver": "7.7.4",
+    "semver": "7.8.5",
     "smol-toml": "1.6.1",
     "termi-link": "1.1.0",
     "yargs-parser": "21.1.1"
