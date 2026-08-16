@@ -63,7 +63,7 @@ function buildNumWorkers(workers: { count?: number }[]): [number, number][] {
 }
 
 async function loadJobsManagerViaVite(
-  viteServer: ViteDevServer,
+  viteServer: SsrModuleLoader,
 ): Promise<JobManager<Adapters, QueueNames, BasicLogger>> {
   const jobsConfigPath = getPaths().api.jobsConfig
   if (!jobsConfigPath) {
@@ -80,7 +80,7 @@ async function loadJobsManagerViaVite(
 }
 
 async function loadJobViaVite(
-  viteServer: ViteDevServer,
+  viteServer: SsrModuleLoader,
   { name: jobName, path: jobPath }: JobComputedProperties,
 ) {
   const completeJobPath = `${getPaths().api.jobs}/${jobPath}`
@@ -103,6 +103,11 @@ export interface JobsWorkerPool {
   stop: () => Promise<void>
 }
 
+// Only `ssrLoadModule` is needed from `ViteDevServer` here. Narrowing to it
+// keeps this module's tests from having to fake out (or cast around) the
+// rest of Vite's dev server interface.
+type SsrModuleLoader = Pick<ViteDevServer, 'ssrLoadModule'>
+
 /**
  * Starts the configured background jobs workers in-process, loading both the
  * jobs config and job implementations through the given (already-running)
@@ -113,7 +118,7 @@ export interface JobsWorkerPool {
  * behaviour of classic dev's nodemon-wrapped worker.
  */
 export async function startJobsDevWorkers(
-  viteServer: ViteDevServer,
+  viteServer: SsrModuleLoader,
 ): Promise<JobsWorkerPool | null> {
   setJobLoaderOverrides({
     loadJobsManager: () => loadJobsManagerViaVite(viteServer),
@@ -160,6 +165,15 @@ export async function startJobsDevWorkers(
 
   const runPromise = Promise.all(workers.map((worker) => worker.run()))
 
+  // A worker's adapter can reject (e.g. the DB connection drops) at any
+  // point while it's running, well before anyone calls `stop()` to await
+  // `runPromise`. Attach a handler synchronously so Node doesn't treat that
+  // as an unhandled rejection and crash the whole Unified Dev process -
+  // `stop()` below still awaits the same promise and observes the failure.
+  runPromise.catch((e) => {
+    logger.error('[CedarJS Jobs] A worker stopped unexpectedly', e)
+  })
+
   console.log(
     ansis.dim.italic(
       `[CedarJS Jobs] ${workers.length} worker(s) running: ` +
@@ -175,9 +189,14 @@ export async function startJobsDevWorkers(
       worker.forever = false
     })
 
-    await runPromise
-
-    setJobLoaderOverrides(undefined)
+    try {
+      await runPromise
+    } finally {
+      // Always clear the loader override, even if a worker rejected -
+      // otherwise a failed shutdown would leak Vite-SSR-backed loading into
+      // whatever runs next in this process.
+      setJobLoaderOverrides(undefined)
+    }
   }
 
   return { stop }

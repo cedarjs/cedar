@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import type { JobManager } from '../core/JobManager.js'
 import { JobsLibNotFoundError } from '../errors.js'
 import { loadJob, loadJobsManager, setJobLoaderOverrides } from '../loaders.js'
+import type { Adapters, BasicLogger, Job, QueueNames } from '../types.js'
 
 vi.mock('@cedarjs/project-config', () => ({
   getPaths: () => ({
@@ -19,7 +21,12 @@ describe('setJobLoaderOverrides', () => {
   })
 
   it('loadJobsManager uses the override when one is set', async () => {
-    const fakeManager = { workers: [] } as any
+    // Only `workers` is read by the code under test; the rest of the real
+    // `JobManager` class (adapters, queues, createScheduler, ...) is
+    // irrelevant here, hence the cast rather than constructing a full one.
+    const fakeManager = {
+      workers: [],
+    } as unknown as JobManager<Adapters, QueueNames, BasicLogger>
     const loadJobsManagerOverride = vi.fn().mockResolvedValue(fakeManager)
 
     setJobLoaderOverrides({
@@ -34,7 +41,9 @@ describe('setJobLoaderOverrides', () => {
   })
 
   it('loadJob uses the override when one is set, forwarding the computed properties', async () => {
-    const fakeJob = { perform: vi.fn() } as any
+    const fakeJob = {
+      perform: vi.fn(),
+    } as unknown as Job<QueueNames, unknown[]>
     const loadJobOverride = vi.fn().mockResolvedValue(fakeJob)
 
     setJobLoaderOverrides({

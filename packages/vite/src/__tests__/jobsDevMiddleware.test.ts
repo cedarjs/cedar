@@ -15,7 +15,7 @@ vi.mock('@cedarjs/project-config', () => ({
 }))
 
 function makeFakeWorker(processName: string) {
-  const worker: any = {
+  const worker = {
     processName,
     forever: true,
     run: vi.fn(async () => {
@@ -34,7 +34,7 @@ function makeLogger() {
 function makeViteServer(mod: Record<string, unknown>) {
   return {
     ssrLoadModule: vi.fn().mockResolvedValue(mod),
-  } as any
+  }
 }
 
 describe('startJobsDevWorkers', () => {
@@ -120,7 +120,7 @@ describe('startJobsDevWorkers', () => {
         }
         return Promise.resolve({})
       }),
-    } as any
+    }
     const setOverridesSpy = vi.spyOn(jobsModule, 'setJobLoaderOverrides')
 
     const pool = await startJobsDevWorkers(viteServer)

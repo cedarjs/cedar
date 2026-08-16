@@ -603,6 +603,73 @@ describe('yarn cedar dev', () => {
     expect(findJobsCommand()).toBeUndefined()
   })
 
+  it('Should forward --no-jobs to cedar-unified-dev under --ud', async () => {
+    // `cedar-unified-dev` starts its own in-process jobs worker pool rather
+    // than the nodemon-wrapped worker pushed as a separate job, so `--jobs
+    // false` has to reach it via a CLI flag instead - it isn't otherwise
+    // forwarded (unlike args the user passes after `--`).
+    vi.mocked(getPaths).mockReturnValue({
+      base: '/mocked/project',
+      // @ts-expect-error - only declaring what the test needs
+      api: {
+        base: '/mocked/project/api',
+        src: '/mocked/project/api/src',
+        functions: '/mocked/project/api/src/functions',
+        dist: '/mocked/project/api/dist',
+        jobs: '/mocked/project/api/src/jobs',
+        jobsConfig: '/mocked/project/api/src/lib/jobs.ts',
+      },
+      // @ts-expect-error - only declaring what the test needs
+      web: {
+        base: '/mocked/project/web',
+        src: '/mocked/project/web/src',
+        dist: '/mocked/project/web/dist',
+      },
+      packages: '/mocked/project/packages',
+      generated: {
+        base: '/mocked/project/.cedar',
+      },
+    })
+    mockJobsDirEntries = ['WelcomeNoticeJob']
+
+    await handler({ workspace: ['api', 'web'], ud: true, jobs: false })
+
+    const devCommand = findUnifiedDevCommand()
+    expect(devCommand.command).toContain('--no-jobs')
+    expect(findJobsCommand()).toBeUndefined()
+  })
+
+  it('Should not forward --no-jobs to cedar-unified-dev when jobs are not opted out', async () => {
+    vi.mocked(getPaths).mockReturnValue({
+      base: '/mocked/project',
+      // @ts-expect-error - only declaring what the test needs
+      api: {
+        base: '/mocked/project/api',
+        src: '/mocked/project/api/src',
+        functions: '/mocked/project/api/src/functions',
+        dist: '/mocked/project/api/dist',
+        jobs: '/mocked/project/api/src/jobs',
+        jobsConfig: '/mocked/project/api/src/lib/jobs.ts',
+      },
+      // @ts-expect-error - only declaring what the test needs
+      web: {
+        base: '/mocked/project/web',
+        src: '/mocked/project/web/src',
+        dist: '/mocked/project/web/dist',
+      },
+      packages: '/mocked/project/packages',
+      generated: {
+        base: '/mocked/project/.cedar',
+      },
+    })
+    mockJobsDirEntries = ['WelcomeNoticeJob']
+
+    await handler({ workspace: ['api', 'web'], ud: true })
+
+    const devCommand = findUnifiedDevCommand()
+    expect(devCommand.command).not.toContain('--no-jobs')
+  })
+
   it('Should push the classic nodemon jobs worker when --ud falls back to classic dev', async () => {
     // `--ud` was requested, but `buildUnifiedDevCommand()` still returns
     // `null` here (streaming SSR has its own dev server setup), so `cedar

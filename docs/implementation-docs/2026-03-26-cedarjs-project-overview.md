@@ -129,10 +129,13 @@ cedar dev:
                   │    ├─ API requests handled inline via `configureServer`
                   │    │    middleware (Vite SSR + fetch-native dispatch,
                   │    │    no separate Fastify listener)
-                  │    └─ Web assets served by Vite client dev server (SPA, HMR)
-                  ├─ cedar-gen-watch
-                  └─ jobs: same as above (still conditional, still opt-out via
-                     --no-jobs)
+                  │    ├─ Web assets served by Vite client dev server (SPA, HMR)
+                  │    └─ jobs: run in-process, in the same Vite server
+                  │         (still conditional, still opt-out via --no-jobs).
+                  │         Loads config/job files from api/src via Vite's
+                  │         SSR module runner instead of api/dist, since
+                  │         Unified Dev never writes compiled output.
+                  └─ cedar-gen-watch
 
 *SSR/RSC: cedar-vite-dev adds Express + Vite SSR servers. See [SSR-RSC-DOC].
 

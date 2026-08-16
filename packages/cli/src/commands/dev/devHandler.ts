@@ -336,6 +336,11 @@ export const handler = async ({
       `  --apiPort ${apiAvailablePort}`,
       getApiDebugFlag(apiDebugPort, apiAvailablePort),
       debugBrk ? '--debug-brk' : '',
+      // `cedar-unified-dev` starts its own in-process jobs worker pool (see
+      // `jobsDevMiddleware.ts`) rather than relying on the nodemon-wrapped
+      // worker pushed below, so `--no-jobs` has to be forwarded explicitly -
+      // it isn't part of `forward` unless the user passed it after `--`.
+      jobsOption === false ? '--no-jobs' : '',
       forward,
     ]
       .join(' ')
