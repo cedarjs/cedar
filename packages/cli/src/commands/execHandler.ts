@@ -113,7 +113,12 @@ export const handler = async (args: ExecOptions) => {
   //
   // Nothing before the original `--` can start with a dash by the time we
   // get here — yargs would already have parsed it as a flag — so the first
-  // dash-prefixed entry in `_` reliably marks where the `--` block began.
+  // dash-prefixed entry in `_` reliably marks the split point: plain
+  // positionals before it are left as-is in `_`, and everything from that
+  // index onward (not just the dash-prefixed entry itself) is spliced off
+  // into `unparsedTail` and re-parsed below. Nothing is discarded — the
+  // re-parsed tail's positionals are pushed back onto `_` and its flags are
+  // merged into `scriptArgs`.
   //
   // Known limitation: a positional value after `--` that itself starts with
   // a single dash and isn't purely numeric (e.g. `-file.txt`) is
