@@ -114,6 +114,17 @@ export const handler = async (args: ExecOptions) => {
   // Nothing before the original `--` can start with a dash by the time we
   // get here — yargs would already have parsed it as a flag — so the first
   // dash-prefixed entry in `_` reliably marks where the `--` block began.
+  //
+  // Known limitation: a positional value after `--` that itself starts with
+  // a single dash and isn't purely numeric (e.g. `-file.txt`) is
+  // indistinguishable from a cluster of short flags (`-f -i -l -e .txt`) and
+  // will be parsed as flags rather than kept as a literal positional.
+  // Negative numbers (e.g. `-5`) aren't affected — yargs coerces those to
+  // `number` before this code runs, so they never hit the string check
+  // below. This ambiguity isn't specific to this re-parse step; it's how
+  // yargs (and getopt-style parsers generally) treat any leading-dash
+  // string, so there's no way to resolve it without knowing the target
+  // script's flag schema up front.
   if (Array.isArray(scriptArgs._)) {
     const dashBlockIndex = scriptArgs._.findIndex(
       (arg) => typeof arg === 'string' && arg.startsWith('-'),

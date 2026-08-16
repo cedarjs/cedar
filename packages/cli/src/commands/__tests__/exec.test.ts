@@ -160,6 +160,43 @@ describe('yarn cedar exec', () => {
       path: path.join('cedar-app', 'scripts', 'normalScript.ts'),
     })
   })
+
+  it('keeps a negative-number positional after `--` instead of mistaking it for a flag', async () => {
+    vol.fromJSON({
+      'redwood.toml': '# redwood.toml',
+      [path.join('cedar-app', 'scripts', 'normalScript.ts')]: '// script',
+    })
+
+    // Running:
+    // `yarn cedar exec normalScript -- -5 --force`
+    //
+    // yargs coerces negative-number-looking positionals to `number` even
+    // after a literal `--`, so `-5` arrives here as the number `-5`, not the
+    // string `'-5'`. It must stay a positional and not be swept up as the
+    // start of the flag block just because it also happens to start with a
+    // dash.
+    const args = {
+      _: ['exec', -5, '--force'],
+      prisma: false,
+      list: false,
+      l: false,
+      silent: false,
+      s: false,
+      $0: 'cedar',
+      name: 'normalScript',
+    }
+    await handler(args)
+    expect(runScriptFunction).toHaveBeenCalledWith({
+      args: {
+        args: {
+          _: [-5],
+          force: true,
+        },
+      },
+      functionName: 'default',
+      path: path.join('cedar-app', 'scripts', 'normalScript.ts'),
+    })
+  })
 })
 
 describe('yarn cedar exec --list', () => {
