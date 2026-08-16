@@ -598,8 +598,8 @@ async function rebuildTestProject() {
         "import { validateEmail } from './index.js'\n" +
           '\n' +
           "describe('validators', () => {\n" +
-          "  it('should not throw any errors', async () => {\n" +
-          "    expect(validateEmail('valid@email.com')).not.toThrow()\n" +
+          "  it('returns true for a valid email', () => {\n" +
+          "    expect(validateEmail('valid@email.com')).toBe(true)\n" +
           '  })\n' +
           '})\n',
       )

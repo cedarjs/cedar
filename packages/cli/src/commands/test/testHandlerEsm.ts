@@ -102,12 +102,17 @@ export const handler = async ({
   // When a custom --config is provided the config manages its own project
   // setup, so adding --project flags would fail with "No projects matched".
   if (!others['config']) {
-    // if no sides declared with yargs, default to all sides
+    // Sides named on the command line filter the run. With none named we
+    // pass no --project flag at all, so every project in the root config
+    // runs — including `packages/*` workspaces, which aren't sides and so
+    // could never be named here.
+    sides.forEach((side) => vitestArgs.push('--project', side))
+
     if (!sides.length) {
+      // The database handling below keys off `sides`, and an unfiltered run
+      // covers every side
       project.workspaces().forEach((side: string) => sides.push(side))
     }
-
-    sides.forEach((side) => vitestArgs.push('--project', side))
   }
 
   try {
