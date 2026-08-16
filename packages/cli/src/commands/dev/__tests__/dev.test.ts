@@ -512,6 +512,11 @@ describe('yarn cedar dev', () => {
 
     const jobsCommand = findJobsCommand()
     expect(jobsCommand?.command).toContain('cedar-jobs work')
+    // Wrapped in nodemon watching api/dist, since `cedar-jobs work` loads
+    // its config from compiled dist output, which the api watcher only
+    // finishes writing asynchronously after `cedar dev` starts.
+    expect(jobsCommand?.command).toContain('nodemon')
+    expect(jobsCommand?.command).toContain('/mocked/project/api/dist')
   })
 
   it('Should not start the jobs worker when only a .keep placeholder exists', async () => {
@@ -538,6 +543,36 @@ describe('yarn cedar dev', () => {
       },
     })
     mockJobsDirEntries = ['.keep']
+
+    await handler({ workspace: ['api', 'web'] })
+
+    expect(findJobsCommand()).toBeUndefined()
+  })
+
+  it('Should not start the jobs worker when only stray dotfiles exist (e.g. .DS_Store)', async () => {
+    vi.mocked(getPaths).mockReturnValue({
+      base: '/mocked/project',
+      // @ts-expect-error - only declaring what the test needs
+      api: {
+        base: '/mocked/project/api',
+        src: '/mocked/project/api/src',
+        functions: '/mocked/project/api/src/functions',
+        dist: '/mocked/project/api/dist',
+        jobs: '/mocked/project/api/src/jobs',
+        jobsConfig: '/mocked/project/api/src/lib/jobs.ts',
+      },
+      // @ts-expect-error - only declaring what the test needs
+      web: {
+        base: '/mocked/project/web',
+        src: '/mocked/project/web/src',
+        dist: '/mocked/project/web/dist',
+      },
+      packages: '/mocked/project/packages',
+      generated: {
+        base: '/mocked/project/.cedar',
+      },
+    })
+    mockJobsDirEntries = ['.keep', '.DS_Store']
 
     await handler({ workspace: ['api', 'web'] })
 

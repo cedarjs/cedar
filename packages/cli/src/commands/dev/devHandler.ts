@@ -451,16 +451,34 @@ export const handler = async ({
   if (jobsOption !== false && workspace.includes('api')) {
     jobs.push({
       name: 'jobs',
-      command: formatRunBinCommand('cedar-jobs', ['work']),
+      // `cedar-jobs work` loads its config and job files from `api/dist`
+      // (compiled output), not `api/src`. That dist output is only written
+      // once the `api` watcher's initial build finishes, which happens
+      // asynchronously — so on a clean `cedar dev` start there's a window
+      // where `api/dist` doesn't exist yet and the worker would exit
+      // immediately. Wrapping it in nodemon (same tool the `api` job above
+      // uses) means it retries as soon as `api/dist` changes, instead of
+      // staying dead for the rest of the session. This also means the
+      // worker restarts automatically whenever job code is rebuilt, since
+      // Node's ESM cache would otherwise keep serving stale job code.
+      command: formatRunBinCommand('nodemon', [
+        '--quiet',
+        `--watch "${cedarPaths.api.dist}"`,
+        `--exec "${formatRunBinCommand('cedar-jobs', ['work'])}"`,
+      ]),
       prefixColor: 'magenta',
       runWhen: () => {
         if (!cedarPaths.api.jobsConfig || !fs.existsSync(cedarPaths.api.jobs)) {
           return false
         }
 
+        // Job files always live in `api/src/jobs/<ComponentName>Job/`
+        // subdirectories (see `generate/job/jobHandler.ts`), so entries here
+        // are directories, not files — only the `.keep` placeholder (and any
+        // stray dotfiles, e.g. `.DS_Store`) should be excluded.
         return fs
           .readdirSync(cedarPaths.api.jobs)
-          .some((entry) => entry !== '.keep')
+          .some((entry) => !entry.startsWith('.'))
       },
     })
   }
