@@ -17,6 +17,7 @@ import { serverFileExists } from '../../../lib/project.js'
 import { handler } from '../devHandler.js'
 
 let mockCedarToml = ''
+let mockJobsDirEntries: string[] = []
 
 vi.mock('concurrently', () => ({
   __esModule: true, // this property makes it work
@@ -54,6 +55,7 @@ vi.mock('node:fs', async (importOriginal) => {
         return 'File content'
       },
       existsSync: () => true,
+      readdirSync: () => mockJobsDirEntries,
     },
   }
 })
@@ -107,6 +109,8 @@ vi.mock('../../../lib/index.js', () => ({
         src: '/mocked/project/api/src',
         functions: '/mocked/project/api/src/functions',
         dist: '/mocked/project/api/dist',
+        jobs: '/mocked/project/api/src/jobs',
+        jobsConfig: null,
       },
       web: {
         base: '/mocked/project/web',
@@ -183,6 +187,12 @@ function findSeparateCommands() {
   }
 }
 
+function findJobsCommand() {
+  const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
+
+  return asCommandInfo(find(concurrentlyArgs, { name: 'jobs' }))
+}
+
 function findApiCommands() {
   const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
 
@@ -206,6 +216,7 @@ describe('yarn cedar dev', () => {
     vi.mocked(getPaths).mockReset()
     vi.mocked(getConfig).mockReset()
     mockCedarToml = ''
+    mockJobsDirEntries = []
   })
 
   it('Should run unified dev server when --ud is passed', async () => {
@@ -465,6 +476,133 @@ describe('yarn cedar dev', () => {
     const { apiCommand } = findSeparateCommands()
     expect(apiCommand?.command).toContain('--port 8911')
   })
+
+  it('Should not start the jobs worker when jobs are not configured', async () => {
+    await handler({ workspace: ['api', 'web'] })
+
+    expect(findJobsCommand()).toBeUndefined()
+  })
+
+  it('Should start the jobs worker when jobs are configured and at least one job exists', async () => {
+    vi.mocked(getPaths).mockReturnValue({
+      base: '/mocked/project',
+      // @ts-expect-error - only declaring what the test needs
+      api: {
+        base: '/mocked/project/api',
+        src: '/mocked/project/api/src',
+        functions: '/mocked/project/api/src/functions',
+        dist: '/mocked/project/api/dist',
+        jobs: '/mocked/project/api/src/jobs',
+        jobsConfig: '/mocked/project/api/src/lib/jobs.ts',
+      },
+      // @ts-expect-error - only declaring what the test needs
+      web: {
+        base: '/mocked/project/web',
+        src: '/mocked/project/web/src',
+        dist: '/mocked/project/web/dist',
+      },
+      packages: '/mocked/project/packages',
+      generated: {
+        base: '/mocked/project/.cedar',
+      },
+    })
+    mockJobsDirEntries = ['.keep', 'WelcomeNoticeJob']
+
+    await handler({ workspace: ['api', 'web'] })
+
+    const jobsCommand = findJobsCommand()
+    expect(jobsCommand?.command).toContain('cedar-jobs work')
+  })
+
+  it('Should not start the jobs worker when only a .keep placeholder exists', async () => {
+    vi.mocked(getPaths).mockReturnValue({
+      base: '/mocked/project',
+      // @ts-expect-error - only declaring what the test needs
+      api: {
+        base: '/mocked/project/api',
+        src: '/mocked/project/api/src',
+        functions: '/mocked/project/api/src/functions',
+        dist: '/mocked/project/api/dist',
+        jobs: '/mocked/project/api/src/jobs',
+        jobsConfig: '/mocked/project/api/src/lib/jobs.ts',
+      },
+      // @ts-expect-error - only declaring what the test needs
+      web: {
+        base: '/mocked/project/web',
+        src: '/mocked/project/web/src',
+        dist: '/mocked/project/web/dist',
+      },
+      packages: '/mocked/project/packages',
+      generated: {
+        base: '/mocked/project/.cedar',
+      },
+    })
+    mockJobsDirEntries = ['.keep']
+
+    await handler({ workspace: ['api', 'web'] })
+
+    expect(findJobsCommand()).toBeUndefined()
+  })
+
+  it('Should not start the jobs worker when --no-jobs is passed, even if configured', async () => {
+    vi.mocked(getPaths).mockReturnValue({
+      base: '/mocked/project',
+      // @ts-expect-error - only declaring what the test needs
+      api: {
+        base: '/mocked/project/api',
+        src: '/mocked/project/api/src',
+        functions: '/mocked/project/api/src/functions',
+        dist: '/mocked/project/api/dist',
+        jobs: '/mocked/project/api/src/jobs',
+        jobsConfig: '/mocked/project/api/src/lib/jobs.ts',
+      },
+      // @ts-expect-error - only declaring what the test needs
+      web: {
+        base: '/mocked/project/web',
+        src: '/mocked/project/web/src',
+        dist: '/mocked/project/web/dist',
+      },
+      packages: '/mocked/project/packages',
+      generated: {
+        base: '/mocked/project/.cedar',
+      },
+    })
+    mockJobsDirEntries = ['WelcomeNoticeJob']
+
+    await handler({ workspace: ['api', 'web'], jobs: false })
+
+    expect(findJobsCommand()).toBeUndefined()
+  })
+
+  it('Should not start the jobs worker when the api workspace is not selected', async () => {
+    vi.mocked(getPaths).mockReturnValue({
+      base: '/mocked/project',
+      // @ts-expect-error - only declaring what the test needs
+      api: {
+        base: '/mocked/project/api',
+        src: '/mocked/project/api/src',
+        functions: '/mocked/project/api/src/functions',
+        dist: '/mocked/project/api/dist',
+        jobs: '/mocked/project/api/src/jobs',
+        jobsConfig: '/mocked/project/api/src/lib/jobs.ts',
+      },
+      // @ts-expect-error - only declaring what the test needs
+      web: {
+        base: '/mocked/project/web',
+        src: '/mocked/project/web/src',
+        dist: '/mocked/project/web/dist',
+      },
+      packages: '/mocked/project/packages',
+      generated: {
+        base: '/mocked/project/.cedar',
+      },
+    })
+    mockJobsDirEntries = ['WelcomeNoticeJob']
+
+    await handler({ workspace: ['web'] })
+
+    expect(findJobsCommand()).toBeUndefined()
+  })
 })
 
 describe('npm and pnpm', () => {
@@ -474,6 +612,7 @@ describe('npm and pnpm', () => {
     vi.mocked(getPaths).mockReset()
     vi.mocked(getConfig).mockReset()
     mockCedarToml = ''
+    mockJobsDirEntries = []
     vi.mocked(getPackageManager).mockReset()
     vi.mocked(getPackageManager).mockReturnValue('yarn')
   })

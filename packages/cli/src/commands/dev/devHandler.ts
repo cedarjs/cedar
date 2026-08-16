@@ -33,6 +33,7 @@ interface DevHandlerOptions {
   debugBrk?: boolean
   ud?: boolean
   nodeArgs?: string
+  jobs?: boolean
 }
 
 interface VitePackageJson {
@@ -112,6 +113,7 @@ export const handler = async ({
   debugBrk,
   ud = false,
   nodeArgs = '',
+  jobs: jobsOption,
 }: DevHandlerOptions) => {
   recordTelemetryAttributes({
     command: 'dev',
@@ -437,6 +439,29 @@ export const handler = async ({
       name: 'gen',
       command: formatRunBinCommand('cedar-gen-watch'),
       prefixColor: 'green',
+    })
+  }
+
+  // Start the background jobs worker automatically once jobs are configured
+  // (`cedar setup jobs`) and at least one job exists (`cedar g job`) — the
+  // deliberate opt-in already happened at setup time, so this follows the
+  // same "just works" pattern as the api/web/gen watchers above. `--no-jobs`
+  // is the escape hatch for folks who want to run `cedar jobs work`
+  // themselves (custom queue selection, `--workoff`, etc).
+  if (jobsOption !== false && workspace.includes('api')) {
+    jobs.push({
+      name: 'jobs',
+      command: formatRunBinCommand('cedar-jobs', ['work']),
+      prefixColor: 'magenta',
+      runWhen: () => {
+        if (!cedarPaths.api.jobsConfig || !fs.existsSync(cedarPaths.api.jobs)) {
+          return false
+        }
+
+        return fs
+          .readdirSync(cedarPaths.api.jobs)
+          .some((entry) => entry !== '.keep')
+      },
     })
   }
 
