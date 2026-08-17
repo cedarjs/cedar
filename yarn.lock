@@ -3112,7 +3112,7 @@ __metadata:
     graphql: "npm:16.14.2"
     graphql-scalars: "npm:1.26.0"
     graphql-tag: "npm:2.12.6"
-    graphql-yoga: "npm:5.21.2"
+    graphql-yoga: "npm:5.21.3"
     jsonwebtoken: "npm:9.0.3"
     lodash: "npm:4.18.1"
     publint: "npm:0.3.23"
@@ -3394,7 +3394,7 @@ __metadata:
     "@n1ru4l/graphql-live-query": "npm:0.10.0"
     "@n1ru4l/in-memory-live-query-store": "npm:0.10.0"
     graphql: "npm:16.14.2"
-    graphql-yoga: "npm:5.21.2"
+    graphql-yoga: "npm:5.21.3"
     ioredis: "npm:5.11.1"
     nodemon: "npm:3.1.14"
     typescript: "npm:5.9.3"
@@ -18402,9 +18402,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-yoga@npm:5.21.2":
-  version: 5.21.2
-  resolution: "graphql-yoga@npm:5.21.2"
+"graphql-yoga@npm:5.21.3":
+  version: 5.21.3
+  resolution: "graphql-yoga@npm:5.21.3"
   dependencies:
     "@envelop/core": "npm:^5.5.1"
     "@envelop/instrumentation": "npm:^1.0.0"
@@ -18420,7 +18420,7 @@ __metadata:
     tslib: "npm:^2.8.1"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-  checksum: 10c0/ce3ee29ebf229e229a27114482271519bbc3ef688495512ea3b260824e28922b7fa00278de4265ab3824aaad97e0b82703b05e8c995431539f5c32a39879896e
+  checksum: 10c0/16115946f42d33128178436a80a9b2c4214b546b5f981ac77dc17a7bec5ce6096f0ab9bf67cd4c7f24d5f96b8431469a99b8a7720c4f650bb7a8bd169eb06a8e
   languageName: node
   linkType: hard
 
