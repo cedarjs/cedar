@@ -163,16 +163,20 @@ export async function startJobsDevWorkers(
     })
   })
 
-  const runPromise = Promise.all(workers.map((worker) => worker.run()))
-
   // A worker's adapter can reject (e.g. the DB connection drops) at any
-  // point while it's running, well before anyone calls `stop()` to await
-  // `runPromise`. Attach a handler synchronously so Node doesn't treat that
-  // as an unhandled rejection and crash the whole Unified Dev process -
-  // `stop()` below still awaits the same promise and observes the failure.
-  runPromise.catch((e) => {
-    logger.error('[CedarJS Jobs] A worker stopped unexpectedly', e)
-  })
+  // point while it's running, well before anyone calls `stop()`. Catch per
+  // worker (rather than wrapping everything in a single `Promise.all()`) so:
+  //   1. Node never sees an unhandled rejection, no matter when `stop()` is
+  //      called - each promise gets a handler synchronously here.
+  //   2. One worker crashing doesn't short-circuit the others. `stop()`
+  //      below awaits every worker's promise to let surviving workers finish
+  //      their current job before the caller closes the API Vite SSR server
+  //      they depend on to load job modules.
+  const workerRunPromises = workers.map((worker) =>
+    worker.run().catch((e) => {
+      logger.error('[CedarJS Jobs] A worker stopped unexpectedly', e)
+    }),
+  )
 
   console.log(
     ansis.dim.italic(
@@ -190,7 +194,10 @@ export async function startJobsDevWorkers(
     })
 
     try {
-      await runPromise
+      // Each promise here already swallows its own rejection above, so this
+      // simply waits for every worker to actually finish (or fail) instead
+      // of returning as soon as the first one does.
+      await Promise.all(workerRunPromises)
     } finally {
       // Always clear the loader override, even if a worker rejected -
       // otherwise a failed shutdown would leak Vite-SSR-backed loading into
