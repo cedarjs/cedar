@@ -27,12 +27,18 @@ const FIXTURE_PATH = path.resolve(
   '../../../../__fixtures__/example-todo-main',
 )
 
+const originalCedarCwd = process.env.CEDAR_CWD
+
 beforeAll(() => {
   process.env.CEDAR_CWD = FIXTURE_PATH
 })
 
 afterAll(() => {
-  delete process.env.CEDAR_CWD
+  if (originalCedarCwd === undefined) {
+    delete process.env.CEDAR_CWD
+  } else {
+    process.env.CEDAR_CWD = originalCedarCwd
+  }
 })
 
 afterEach(() => {
