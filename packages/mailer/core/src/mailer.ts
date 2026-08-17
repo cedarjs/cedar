@@ -213,7 +213,7 @@ export class Mailer<
       ...this.config.rendering.options?.[rendererKey],
       ...rendererOptions,
     }
-    const renderedContent = renderer.render(
+    const renderedContent = await renderer.render(
       template,
       defaultedRendererOptions,
       {

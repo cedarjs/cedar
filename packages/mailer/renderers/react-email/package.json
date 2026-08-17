@@ -22,11 +22,17 @@
   },
   "dependencies": {
     "@cedarjs/mailer-core": "workspace:*",
-    "@react-email/render": "0.0.17"
+    "@react-email/render": "2.1.0"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
     "typescript": "5.9.3"
+  },
+  "peerDependencies": {
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
   },
   "publishConfig": {
     "access": "public"
