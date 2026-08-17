@@ -16,6 +16,7 @@ import {
 import { getPaths, ensurePosixPath } from '@cedarjs/project-config'
 import type { QueryInfo } from '@cedarjs/web'
 
+import { hasApolloState } from './apolloState.js'
 import { babelPluginRedwoodCell } from './babelPlugins/babel-plugin-redwood-cell.js'
 import { babelPluginRedwoodPrerenderMediaImports } from './babelPlugins/babel-plugin-redwood-prerender-media-imports.js'
 import { detectPrerenderRoutes } from './detection/detection.js'
@@ -35,12 +36,6 @@ const prerenderApolloClient = new ApolloClient({
   cache: new InMemoryCache(),
   link: ApolloLink.empty(),
 })
-
-function hasApolloState(state: unknown): state is Record<string, unknown> {
-  return (
-    typeof state === 'object' && state !== null && Object.keys(state).length > 0
-  )
-}
 
 async function recursivelyRender(
   App: ElementType,
@@ -377,12 +372,6 @@ export const runPrerender = async ({
     }
   }
 
-  // Only emit the Apollo state bootstrap when there is state to restore. Both
-  // consumers (`CedarApolloProvider` and the suspense provider) already do
-  // `.restore(globalThis?.__CEDAR__APOLLO_STATE ?? {})`, so an empty payload is
-  // a no-op — but it is still an inline <script>, which every strict-CSP app
-  // has to allow-list with a hash that goes stale whenever the payload changes.
-  // A page that prerenders no Cells emits nothing now.
   const apolloState = prerenderApolloClient.extract()
 
   if (hasApolloState(apolloState)) {
