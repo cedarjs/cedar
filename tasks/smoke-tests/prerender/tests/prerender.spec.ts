@@ -25,6 +25,12 @@ test('Check that homepage is prerendered', async () => {
 
   await checkHomePageCellRender(pageWithoutJs)
 
+  // The home page prerenders a Cell (BlogPostsCell), so its extracted Apollo
+  // state is non-empty and the bootstrap script must be inlined for
+  // hydration to pick up the prerendered data.
+  const html = await pageWithoutJs.content()
+  expect(html).toContain('globalThis.__CEDAR__APOLLO_STATE')
+
   pageWithoutJs.close()
 })
 
@@ -254,6 +260,13 @@ test('Check that about is prerendered', async () => {
   expect(aboutPageContent).toBe(
     'This site was created to demonstrate my mastery of Cedar: Look on my works, ye mighty, and despair!',
   )
+
+  // The about page prerenders no Cells, so its extracted Apollo state is
+  // empty and the bootstrap script must be omitted (see
+  // packages/prerender/src/apolloState.ts).
+  const html = await pageWithoutJs.content()
+  expect(html).not.toContain('__CEDAR__APOLLO_STATE')
+
   pageWithoutJs.close()
 })
 

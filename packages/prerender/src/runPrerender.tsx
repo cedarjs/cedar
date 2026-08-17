@@ -16,6 +16,7 @@ import {
 import { getPaths, ensurePosixPath } from '@cedarjs/project-config'
 import type { QueryInfo } from '@cedarjs/web'
 
+import { hasApolloState } from './apolloState.js'
 import { babelPluginRedwoodCell } from './babelPlugins/babel-plugin-redwood-cell.js'
 import { babelPluginRedwoodPrerenderMediaImports } from './babelPlugins/babel-plugin-redwood-prerender-media-imports.js'
 import { detectPrerenderRoutes } from './detection/detection.js'
@@ -371,11 +372,15 @@ export const runPrerender = async ({
     }
   }
 
-  indexHtmlTree('head').append(
-    `<script> globalThis.__CEDAR__APOLLO_STATE = ${JSON.stringify(
-      prerenderApolloClient.extract(),
-    )}</script>`,
-  )
+  const apolloState = prerenderApolloClient.extract()
+
+  if (hasApolloState(apolloState)) {
+    indexHtmlTree('head').append(
+      `<script> globalThis.__CEDAR__APOLLO_STATE = ${JSON.stringify(
+        apolloState,
+      )}</script>`,
+    )
+  }
 
   // Reset the cache after the apollo state is appended into the head
   // If we don't call this all the data will be cached but you can run into issues with the cache being too large
