@@ -23,13 +23,14 @@ production Cedar app. Before your first deploy, follow the steps below.
 3. On the **api** service:
    - Settings tab, Start Command: `yarn start:api`
    - Settings tab, Healthcheck Path: `/graphql/health`.
+   - Settings tab, Pre-Deploy Command: `yarn cedar prisma migrate deploy`.
+     Railway runs this once per deploy, before traffic is switched over.
    - Variables tab: `PORT=8911`
    - Variables tab: reference the database, usually
      `DATABASE_URL=${{Postgres.DATABASE_URL}}`. Possibly also
      `DIRECT_DATABASE_URL`
 4. On the **web** service:
-   - Variables tab: whatever database URL(s) `api/prisma.config.cjs` references
-     — usually `DATABASE_URL`, plus possibly `DIRECT_DATABASE_URL`.
+   - Variables tab: same database URL(s) as the **api** service above.
    - Variables tab:
      `API_PROXY_TARGET=${{api.RAILWAY_PRIVATE_DOMAIN}}:${{api.PORT}}`. Define it
      as a Variable first, since Railway's `${{Service.VAR}}` syntax doesn't
@@ -64,22 +65,11 @@ production before pushing (`yarn cedar prisma migrate deploy`), or keep
 changes backward-compatible (expand/contract) so prerendering succeeds
 against both the old and new shape.
 
-This two-services topology is the only one that supports a custom
-[server file](../server-file.md) (`api/src/server.ts`) — it's a Fastify concept
-with no equivalent in the single-container in-process server, so `yarn start`
-refuses to start rather than silently skipping what you configured (Realtime,
-custom plugins, custom middleware).
-
 ## Migrations
 
-Set the **api** service's **Pre-Deploy Command** (in its Settings tab) to run
-migrations before the new deploy goes live:
-
-```shell
-yarn cedar prisma migrate deploy
-```
-
-Railway runs this once per deploy, before traffic is switched over.
+Set on the **api** service's Pre-Deploy Command — see step 3 under
+[Two services](#two-services) above. For the single-container topology, set
+the same Pre-Deploy Command on the one remaining service.
 
 ## Enabling Railway's CDN
 
@@ -117,11 +107,20 @@ described above, so getting to one means undoing that.
 5. Push. Railpack runs the root `build`/`start` scripts, which serve both sides
    from one process.
 
-Single-container doesn't support a custom server file (see above). Railway's CDN
-still applies the same way — enable it on the one remaining service.
+Single-container doesn't support a custom
+[server file](../server-file.md) — see
+[the note on custom server files](./introduction.md#two-topologies-and-which-to-pick).
+Railway's CDN still applies the same way — enable it on the one remaining
+service.
 
 ## Config as code
 
 Railway supports config-as-code via `railway.json` or `railway.toml` in your
 repo. There's no JSONC support, so if you want comments in your config, use
 `railway.toml`.
+
+Railway also has an experimental Infrastructure as Code mode that goes beyond
+per-service build/deploy config: a `.railway/railway.ts` file, written against
+their TypeScript SDK, can describe project-level resources — services,
+databases, variables, domains — and be applied with `railway config plan` /
+`railway config apply`. TypeScript is the only supported language so far.
