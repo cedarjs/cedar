@@ -460,7 +460,11 @@ async function main() {
   }
 
   if (shouldAbort) {
-    process.exit(1)
+    // Set exitCode and return rather than calling process.exit() directly,
+    // so pending stdout/stderr writes from the console.log/error calls above
+    // aren't truncated before the process terminates.
+    process.exitCode = 1
+    return
   }
 }
 
