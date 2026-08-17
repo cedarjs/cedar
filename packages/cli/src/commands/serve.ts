@@ -187,12 +187,15 @@ export const builder = async (yargs: Argv) => {
 
           // Start the srvx web server (replaces Fastify + proxy).
           // Middleware chain:
-          // 1. serveStatic: serve files from web/dist/ (SPA assets)
+          // 1. staticMiddleware: serve files from web/dist/ (SPA assets)
           // 2. apiProxy: forward API-prefixed requests to UD Fetchable on API
           //    port
           // 3. spaFallback: serve the unprerendered SPA shell for client-side
           //    routing
-          const { serveStatic } = await import('srvx/static')
+          //
+          // srvx v0.12 renamed the `srvx/static` export from `serveStatic`
+          // to `staticMiddleware`.
+          const { staticMiddleware } = await import('srvx/static')
           const apiUrl = getConfig().web.apiUrl
           const webDist = getPaths().web.dist
 
@@ -210,7 +213,7 @@ export const builder = async (yargs: Argv) => {
             // Dummy fetch handler. All requests are handled by middleware
             fetch: async () => new Response('Not Found', { status: 404 }),
             middleware: [
-              serveStatic({ dir: webDist }),
+              staticMiddleware({ dir: webDist }),
               async (req, next) => {
                 const url = new URL(req.url, 'http://localhost')
 
