@@ -17,6 +17,7 @@ import {
 import { matchPath } from '@cedarjs/router/dist/util'
 import type { QueryInfo } from '@cedarjs/web'
 
+import { hasApolloState } from './apolloState.js'
 import { buildAndImport } from './build-and-import/buildAndImport.js'
 import { detectPrerenderRoutes } from './detection/detection.js'
 import {
@@ -385,11 +386,15 @@ export const runPrerender = async ({
     }
   }
 
-  indexHtmlTree('head').append(
-    `<script> globalThis.__CEDAR__APOLLO_STATE = ${JSON.stringify(
-      prerenderApolloClient.extract(),
-    )}</script>`,
-  )
+  const apolloState = prerenderApolloClient.extract()
+
+  if (hasApolloState(apolloState)) {
+    indexHtmlTree('head').append(
+      `<script> globalThis.__CEDAR__APOLLO_STATE = ${JSON.stringify(
+        apolloState,
+      )}</script>`,
+    )
+  }
 
   // Reset the cache after the apollo state is appended into the head
   // If we don't call this all the data will be cached but you can run into issues with the cache being too large
