@@ -3628,6 +3628,7 @@ __metadata:
     "@cedarjs/framework-tools": "npm:5.0.1"
     "@cedarjs/graphql-server": "npm:5.0.1"
     "@cedarjs/internal": "npm:5.0.1"
+    "@cedarjs/jobs": "npm:5.0.1"
     "@cedarjs/project-config": "npm:5.0.1"
     "@cedarjs/router": "npm:5.0.1"
     "@cedarjs/server-store": "npm:5.0.1"
