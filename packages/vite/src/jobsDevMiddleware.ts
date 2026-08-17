@@ -186,6 +186,12 @@ export async function startJobsDevWorkers(
   )
 
   const stop = async () => {
+    console.log(
+      ansis.dim.italic(
+        '[CedarJS Jobs] Waiting for in-progress jobs to finish...',
+      ),
+    )
+
     // Same graceful-shutdown shape as `cedar-jobs-worker.ts`'s SIGINT
     // handler: let each worker finish its current job (if any), then stop
     // picking up new ones.
