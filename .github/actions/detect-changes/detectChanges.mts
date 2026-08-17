@@ -99,14 +99,16 @@ interface GhWorkflowRunsResponse {
 const VERDICT_CONCLUSIONS = ['success', 'failure', 'timed_out']
 
 /**
- * The newest completed workflow run for the branch that produced an actual
- * verdict (see VERDICT_CONCLUSIONS)
+ * All workflow runs for the branch, newest first (as returned by the GitHub
+ * API), regardless of status/conclusion. Paginated, since branches with a lot
+ * of history can have more runs than fit on a single page.
  */
-async function getBaselineWorkflowRun(
+async function getWorkflowRuns(
   branchName: string | undefined,
-): Promise<Workflow | undefined> {
+  page = 1,
+): Promise<Workflow[]> {
   if (!branchName) {
-    return
+    return []
   }
 
   // 154971623 is the ID of the CI workflow (ci.yml). If it changes, or you want
@@ -114,14 +116,49 @@ async function getBaselineWorkflowRun(
   // https://api.github.com/repos/cedarjs/cedar/actions/workflows to get a
   // list of all workflows and their IDs
   const workflowId = '154971623'
-  const url = `${BASE_URL}/actions/workflows/${workflowId}/runs?branch=${branchName}`
-  const { json } = await fetchJson<GhWorkflowRunsResponse>(url)
+  const url = `${BASE_URL}/actions/workflows/${workflowId}/runs?branch=${encodeURIComponent(branchName)}&per_page=100&page=${page}`
+  const { json, res } = await fetchJson<GhWorkflowRunsResponse>(url)
+  let runs = json?.workflow_runs || []
 
-  return json?.workflow_runs?.find(
-    (run) =>
+  const linkHeader = res?.headers?.get('link')
+  if (linkHeader?.includes('rel="next"')) {
+    const nextRuns = await getWorkflowRuns(branchName, page + 1)
+    runs = runs.concat(nextRuns)
+  }
+
+  return runs
+}
+
+/**
+ * Finds the newest completed run with an actual verdict (see
+ * VERDICT_CONCLUSIONS), starting the search right after `afterIndex` in
+ * `runs` (which is assumed newest-first). Used both to find the PR's baseline
+ * run (starting from the top of the list) and, recursively, to find *that*
+ * run's own baseline (starting right after it) - see wasRunDocsOnly.
+ *
+ * `excludeHeadSha`, when given, skips runs at that commit. This is used by
+ * wasRunDocsOnly to see past reruns: a rerun of a run (triggered without a
+ * new push) shows up as a separate entry with the same head_sha, and diffing
+ * a commit against itself would trivially look "docs-only" without telling us
+ * anything real about that commit's own triggering diff.
+ */
+function findBaselineRun(
+  runs: Workflow[],
+  afterIndex = -1,
+  excludeHeadSha?: string,
+): { run: Workflow | undefined; index: number } {
+  for (let i = afterIndex + 1; i < runs.length; i++) {
+    const run = runs[i]
+    if (
       run.status === 'completed' &&
-      VERDICT_CONCLUSIONS.includes(run.conclusion),
-  )
+      VERDICT_CONCLUSIONS.includes(run.conclusion) &&
+      run.head_sha !== excludeHeadSha
+    ) {
+      return { run, index: i }
+    }
+  }
+
+  return { run: undefined, index: -1 }
 }
 
 interface WorkflowJob {
@@ -209,6 +246,86 @@ async function getChangedFilesSince(
   )
 
   return changedFiles
+}
+
+/**
+ * A failed baseline run normally forces the docs-only fast path to fall back
+ * to running all tests (see the comment where this is used below). But
+ * that's overly conservative when the baseline run's *own* triggering diff
+ * was itself docs-only: in that case none of the code-gated jobs would have
+ * run on the baseline either (they'd show up as `skipped`), so whatever made
+ * it fail can't be a masked code regression - it has to be one of the few
+ * jobs/steps that run unconditionally (e.g. the formatting check, which also
+ * covers docs files).
+ *
+ * Crucially, the same reasoning applies even if that baseline *succeeded*: a
+ * `success` conclusion on a run whose own triggering diff was docs-only is
+ * just as uninformative about code health, since the code-gated jobs were
+ * skipped there too - the run only proves the unconditional jobs pass, not
+ * that the (unchanged) code does. So a docs-only run's conclusion - success
+ * or failure - can never by itself be trusted as a "code is validated"
+ * anchor. Only a run whose *own* triggering diff contained code changes
+ * actually exercised the code-gated jobs, so only that run's conclusion is
+ * meaningful.
+ *
+ * This walks back through the chain of consecutive docs-only-diffed runs -
+ * regardless of their individual conclusions - until it finds the run that
+ * last had a code-bearing diff (the run that last actually exercised the
+ * code-gated jobs for this code state), and uses *that* run's conclusion as
+ * the answer. Any untrustworthy diff, or running out of baselines to compare
+ * against, makes the whole chain untrustworthy.
+ *
+ * This walks back by diffing, rather than by inspecting specific job/step
+ * names, so it doesn't need to be kept in sync with ci.yml's job structure.
+ *
+ * @returns `false` (conservative) if there's no prior baseline to compare
+ *   against, or if any comparison in the chain can't be trusted
+ */
+async function wasRunDocsOnly(
+  run: Workflow,
+  runs: Workflow[],
+  runIndex: number,
+): Promise<boolean> {
+  let headRun = run
+  let headIndex = runIndex
+
+  // Walk back through the chain of docs-only-diffed runs until we either
+  // find the run that last actually exercised the code-gated jobs (safe iff
+  // *that* run succeeded) or run out of chain/trust (unsafe)
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const { run: baseline, index: baselineIndex } = findBaselineRun(
+      runs,
+      headIndex,
+      headRun.head_sha,
+    )
+
+    if (!baseline) {
+      return false
+    }
+
+    const files = await getChangedFilesSince(
+      baseline.head_sha,
+      headRun.head_sha,
+    )
+
+    if (!files) {
+      return false
+    }
+
+    if (codeChanges(files)) {
+      // headRun's own triggering diff contained code changes, so it's the
+      // run that last actually exercised the code-gated jobs for this code
+      // state - its conclusion is the definitive answer
+      return headRun.conclusion === 'success'
+    }
+
+    // headRun's own triggering diff was docs-only, so its conclusion (either
+    // way) says nothing about whether this code state passes. Keep walking
+    // back to whichever run last had a code-bearing diff.
+    headRun = baseline
+    headIndex = baselineIndex
+  }
 }
 
 interface GhPrFilesResponseEntry {
@@ -325,7 +442,9 @@ async function main() {
   }
 
   const { branchName, headSha, hasWindowsLabel } = await getPrInfo()
-  const baselineRun = await getBaselineWorkflowRun(branchName)
+  const workflowRuns = await getWorkflowRuns(branchName)
+  const { run: baselineRun, index: baselineRunIndex } =
+    findBaselineRun(workflowRuns)
   const baselineRunSucceeded = baselineRun?.conclusion === 'success'
   const workflowJobs = baselineRun?.id
     ? await getWorkflowJobs(baselineRun.id)
@@ -385,7 +504,15 @@ async function main() {
     // need to run all tests again, even if the latest commit is only touching
     // docs. (Cancelled runs never become the baseline, so a run aborted by a
     // force-push doesn't count as a failure here)
-    if (baselineRun && !baselineRunSucceeded) {
+    //
+    // The one exception is a baseline run whose own triggering diff was also
+    // docs-only - see wasRunDocsOnly for why that's still safe to fast-path
+    const baselineWasDocsOnly =
+      baselineRun && !baselineRunSucceeded
+        ? await wasRunDocsOnly(baselineRun, workflowRuns, baselineRunIndex)
+        : false
+
+    if (baselineRun && !baselineRunSucceeded && !baselineWasDocsOnly) {
       console.log(
         `Baseline run concluded '${baselineRun.conclusion}'. Falling back ` +
           'to running all tests.',
@@ -396,6 +523,13 @@ async function main() {
       core.setOutput('ssr', true)
       core.setOutput('windows', true)
     } else {
+      if (baselineRun && !baselineRunSucceeded) {
+        console.log(
+          `Baseline run concluded '${baselineRun.conclusion}', but its ` +
+            'own triggering diff was also docs-only, so it never ran the ' +
+            'code-gated jobs. Safe to skip heavy CI.',
+        )
+      }
       core.setOutput('code', false)
       core.setOutput('cli', false)
       core.setOutput('rsc', false)
