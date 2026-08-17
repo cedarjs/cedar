@@ -34,7 +34,7 @@ jobs:
           # can't run on Postgres, so remove them before setup neon creates the
           # fresh Postgres baseline migration.
           rm -rf api/db/migrations
-          yarn cedar setup neon
+          yarn cedar setup neon --no-migrations
 
       - name: 🆕 Create Netlify site
         id: create-site

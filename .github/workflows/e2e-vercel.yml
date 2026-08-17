@@ -31,7 +31,7 @@ jobs:
         working-directory: ../cedar-test-app
         run: |
           rm -rf api/db/migrations
-          yarn cedar setup neon
+          yarn cedar setup neon --no-migrations
 
       - name: 🔧 Set up Universal Deploy
         working-directory: ../cedar-test-app
