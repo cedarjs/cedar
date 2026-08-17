@@ -5,11 +5,12 @@ import type {
 } from './types.js'
 
 export abstract class AbstractMailRenderer {
-  // Render a template
-  //
-  // May be async. React Email's `render` has been asynchronous since v3 —
-  // components like `<Tailwind>` suspend while they compute their styles, so
-  // they cannot be rendered synchronously at all.
+  /**
+   * Render a template.
+   *
+   * May be async. The `<Tailwind>` component for example suspend while it
+   * computes it styles, so it cannot be rendered synchronously at all.
+   */
   abstract render(
     template: unknown,
     options: MailRendererOptions<unknown>,
