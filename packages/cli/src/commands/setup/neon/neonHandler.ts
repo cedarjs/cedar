@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import execa from 'execa'
 import { Listr } from 'listr2'
+import prompts from 'prompts'
 
 import { colors, getPaths, installPackages } from '@cedarjs/cli-helpers'
 import { prettyPrintCedarCommand } from '@cedarjs/cli-helpers/packageManager'
@@ -50,7 +51,7 @@ function isPostgresConnectionString(rawValue: string): boolean {
   }
 }
 
-export async function handler({ force }: Args) {
+export async function handler({ force, migrations, verbose }: Args) {
   const cedarPaths = getPaths()
 
   const shape = checkProjectShape(cedarPaths)
@@ -100,6 +101,36 @@ export async function handler({ force }: Args) {
         'DATABASE_URL is already set in .env. Use --force to overwrite.',
       ),
     )
+  }
+
+  // Resolve whether to run migrations: flag > prompt. Only relevant when
+  // provisioning is actually going to happen - the migrations task is
+  // unconditionally skipped otherwise, so prompting would be pointless.
+  let runMigrations = migrations
+  if (!skipProvisioning && runMigrations === undefined) {
+    if (!process.stdin.isTTY) {
+      const error = new Error(
+        'Cannot prompt for confirmation in a non-interactive terminal. ' +
+          'Please pass --migrations or --no-migrations explicitly.',
+      )
+      errorTelemetry(process.argv, error.message)
+      console.error(colors.error(error.message))
+      process.exit(1)
+    }
+
+    const response = await prompts({
+      type: 'toggle',
+      name: 'runMigrations',
+      message: 'Run Prisma migrations now?',
+      initial: true,
+      active: 'Yes',
+      inactive: 'No',
+    })
+    // prompts returns undefined for the value if the user ctrl-c's
+    if (response.runMigrations === undefined) {
+      process.exit(0)
+    }
+    runMigrations = response.runMigrations
   }
 
   const tasks = new Listr<NeonCtx>(
@@ -197,6 +228,12 @@ export async function handler({ force }: Args) {
             return true
           }
 
+          if (!runMigrations) {
+            return migrations === false
+              ? 'Skipped (--no-migrations)'
+              : 'Skipped'
+          }
+
           if (ctx.directDatabaseUrlNotSet) {
             return (
               'Skipping migrations — could not confirm prisma.config is ' +
@@ -218,7 +255,7 @@ export async function handler({ force }: Args) {
             'yarn cedar prisma migrate dev --name init-neon',
             {
               cwd: cedarPaths.base,
-              stdio: ['inherit', 'inherit', 'pipe'],
+              stdio: verbose ? 'inherit' : ['inherit', 'inherit', 'pipe'],
               reject: false,
               env: {
                 ...process.env,
@@ -229,10 +266,13 @@ export async function handler({ force }: Args) {
 
           if (result.exitCode !== 0) {
             throw new Error(
-              'Prisma migration failed:\n\n' +
-                result.stderr +
-                '\n\nYou can try running it manually:\n' +
-                `  ${prettyPrintCedarCommand(['prisma', 'migrate', 'dev', '--name', 'init-neon'])}`,
+              verbose
+                ? 'Prisma migration failed. You can try running it manually:\n' +
+                    `  ${prettyPrintCedarCommand(['prisma', 'migrate', 'dev', '--name', 'init-neon'])}`
+                : 'Prisma migration failed:\n\n' +
+                    result.stderr +
+                    '\n\nYou can try running it manually:\n' +
+                    `  ${prettyPrintCedarCommand(['prisma', 'migrate', 'dev', '--name', 'init-neon'])}`,
             )
           }
         },
