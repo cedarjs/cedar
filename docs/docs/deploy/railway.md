@@ -25,7 +25,7 @@ production Cedar app. Before your first deploy, follow the steps below.
    - Settings tab, Healthcheck Path: `/graphql/health`.
    - Variables tab: `PORT=8911`
    - Variables tab: reference the database, usually
-     `DATABASE_URL=${{Postgres.DATABASE_URL}}`. Possibly also 
+     `DATABASE_URL=${{Postgres.DATABASE_URL}}`. Possibly also
      `DIRECT_DATABASE_URL`
 4. On the **web** service:
    - Variables tab: whatever database URL(s) `api/prisma.config.cjs` references
@@ -109,7 +109,11 @@ described above, so getting to one means undoing that.
    Neon Postgres setup.
 4. If you kept the **api** service (deleted web), it never had a public
    domain generated — Settings → Networking → Public Networking →
-   **Generate Domain**, same as the web service's step above.
+   **Generate Domain**, same as the web service's step above. Also remove its
+   `PORT=8911` Variable from the two-service setup: the combined server always
+   runs its api side internally on `8911` (Cedar's default `api.port`), so a
+   leftover `PORT=8911` makes the public web side try to bind that same port
+   and fail to start.
 5. Push. Railpack runs the root `build`/`start` scripts, which serve both sides
    from one process.
 
