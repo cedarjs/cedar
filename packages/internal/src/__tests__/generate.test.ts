@@ -35,7 +35,10 @@ vi.mock('../generate/clientPreset.js', () => ({
 }))
 
 afterEach(() => {
-  vi.clearAllMocks()
+  vi.resetAllMocks()
+  mockedGetConfig.mockReturnValue({
+    graphql: { trustedDocuments: true },
+  })
 })
 
 describe('generate', () => {
