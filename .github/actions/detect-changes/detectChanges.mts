@@ -215,10 +215,15 @@ async function getChangedFilesSince(
  * A run triggered by a docs-only diff never ran the code-gated jobs (they
  * show up as `skipped`), so its conclusion - success or failure - says
  * nothing about the code. Starting right after `startIndex`, walk back
- * through consecutive docs-only-diffed runs to the newest run whose own
+ * through consecutive docs-only pushes to the newest run whose own
  * triggering diff contained code changes, and return whether *that* run
  * succeeded. (Diffing rather than inspecting job names keeps this independent
  * of ci.yml's job structure.)
+ *
+ * Runs without a verdict (cancelled, in progress) are used as diff anchors -
+ * their pushes still changed files - but never as the run whose conclusion is
+ * trusted: if the code-bearing diff lands on one, we've found code changes no
+ * completed run ever exercised, so be conservative.
  *
  * Returns `false` (conservative) when the chain runs out or any comparison
  * can't be trusted.
@@ -232,10 +237,9 @@ async function lastCodeChangePassedCi(
   for (let i = startIndex + 1; i < runs.length; i++) {
     const candidate = runs[i]
 
-    // Ignore runs without a verdict, and reruns of the current head (same
-    // head_sha): diffing a commit against itself would trivially look
-    // docs-only
-    if (!isVerdictRun(candidate) || candidate.head_sha === headRun.head_sha) {
+    // Skip reruns of the current head (same head_sha): diffing a commit
+    // against itself would trivially look docs-only
+    if (candidate.head_sha === headRun.head_sha) {
       continue
     }
 
@@ -249,7 +253,10 @@ async function lastCodeChangePassedCi(
     }
 
     if (codeChanges(files)) {
-      return headRun.conclusion === 'success'
+      // headRun's own triggering diff contained code changes, so it's the
+      // run that last exercised the code-gated jobs for this code state -
+      // but only a completed run with a verdict actually produced one
+      return isVerdictRun(headRun) && headRun.conclusion === 'success'
     }
 
     headRun = candidate
