@@ -192,9 +192,6 @@ export const builder = async (yargs: Argv) => {
           //    port
           // 3. spaFallback: serve the unprerendered SPA shell for client-side
           //    routing
-          //
-          // srvx v0.12 renamed the `srvx/static` export from `serveStatic`
-          // to `staticMiddleware`.
           const { staticMiddleware } = await import('srvx/static')
           const apiUrl = getConfig().web.apiUrl
           const webDist = getPaths().web.dist
