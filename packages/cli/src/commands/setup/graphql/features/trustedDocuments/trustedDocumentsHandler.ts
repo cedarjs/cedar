@@ -36,7 +36,7 @@ export async function handler({ force }: { force: boolean }) {
       {
         title: 'Generating Trusted Documents store ...',
         task: () => {
-          runBinSync('cedar', ['generate', 'types'], { stdio: 'ignore' })
+          runBinSync('cedar', ['generate', 'types'])
         },
       },
       {

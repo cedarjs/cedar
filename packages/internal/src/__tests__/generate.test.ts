@@ -2,21 +2,31 @@ import { vi, afterEach, describe, expect, test } from 'vitest'
 
 import type ProjectConfig from '@cedarjs/project-config'
 
-import { generate } from '../generate/generate.js'
+import { generate, run } from '../generate/generate.js'
 
-const { mockedGetConfig, mockedGenerateClientPreset } = vi.hoisted(() => {
-  return {
-    mockedGetConfig: vi.fn().mockReturnValue({
-      graphql: { trustedDocuments: true },
-    }),
-    mockedGenerateClientPreset: vi.fn(),
-  }
-})
+const { mockedGetConfig, mockedGetPaths, mockedGenerateClientPreset } =
+  vi.hoisted(() => {
+    return {
+      mockedGetConfig: vi.fn().mockReturnValue({
+        graphql: { trustedDocuments: true },
+      }),
+      mockedGetPaths: vi.fn().mockReturnValue({ base: '/app' }),
+      mockedGenerateClientPreset: vi.fn(),
+    }
+  })
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const projectConfig = await importOriginal<typeof ProjectConfig>()
-  return { ...projectConfig, getConfig: mockedGetConfig }
+  return {
+    ...projectConfig,
+    getConfig: mockedGetConfig,
+    getPaths: mockedGetPaths,
+  }
 })
+
+vi.mock('@cedarjs/cli-helpers/loadEnvFiles', () => ({
+  loadEnvFiles: vi.fn(),
+}))
 
 vi.mock('../generate/graphqlSchema.js', () => ({
   generateGraphQLSchema: async () => ({ schemaPath: '', errors: [] }),
@@ -58,6 +68,28 @@ describe('generate', () => {
     expect(errors[0].message).toBe(
       'Error: Could not generate GraphQL client preset',
     )
+  })
+
+  test('sets a non-zero exit code when run() surfaces client preset errors', async () => {
+    mockedGenerateClientPreset.mockResolvedValue({
+      clientPresetFiles: [],
+      trustedDocumentsStoreFile: '',
+      errors: [
+        {
+          message: 'Error: Could not generate GraphQL client preset',
+          error: new Error('Unable to find any GraphQL type definitions'),
+        },
+      ],
+    })
+
+    const originalExitCode = process.exitCode
+
+    try {
+      await run()
+      expect(process.exitCode).toBe(1)
+    } finally {
+      process.exitCode = originalExitCode
+    }
   })
 
   test('lists the generated trusted documents store', async () => {

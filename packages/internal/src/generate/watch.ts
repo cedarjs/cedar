@@ -108,7 +108,12 @@ watcher
 
     if (absPath.includes('Cell') && isCellFile(absPath)) {
       await generateTypeDefGraphQLWeb()
-      await generateClientPreset()
+      const { errors: clientPresetErrors } = await generateClientPreset()
+      for (const { message, error } of clientPresetErrors) {
+        console.error(message)
+        console.error(error)
+        console.log()
+      }
       if (eventName === 'unlink') {
         fs.unlinkSync(mirrorPathForCell(absPath, rwjsPaths)[0])
       } else {

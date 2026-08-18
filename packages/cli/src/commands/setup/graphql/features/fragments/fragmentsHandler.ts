@@ -45,7 +45,7 @@ export async function handler({ force }: Args) {
       {
         title: 'Generate possibleTypes.ts',
         task: () => {
-          runBinSync('cedar', ['generate', 'types'], { stdio: 'ignore' })
+          runBinSync('cedar', ['generate', 'types'])
         },
       },
       {
