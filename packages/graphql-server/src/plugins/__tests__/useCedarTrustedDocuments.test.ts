@@ -93,8 +93,15 @@ describe('useCedarTrustedDocuments', () => {
   it('rejects an arbitrary operation with the Cedar error', async () => {
     const response = await post({ query: '{ hello }' })
 
+    // Pin the exact error contract the auth flow depends on: the custom
+    // `persistedQueryOnly` error must reach the client unmasked, not as a
+    // masked internal server error. Cedar configures it as a plain string, so
+    // the plugin creates the GraphQLError without any `extensions.code`.
+    expect(response.status).toBe(200)
     const body = await response.json()
+    expect(body.errors).toHaveLength(1)
     expect(body.errors[0].message).toBe('Use Trusted Only!')
+    expect(body.errors[0].extensions).toBeUndefined()
   })
 
   it('allows the Cedar Auth getCurrentUser query', async () => {
@@ -102,7 +109,7 @@ describe('useCedarTrustedDocuments', () => {
       {
         query: 'query __CEDAR__AUTH_GET_CURRENT_USER { cedar { currentUser } }',
       },
-      { 'auth-provider': 'dbAuth', authorization: 'Bearer undefined' },
+      { 'auth-provider': 'dbAuth', authorization: 'Bearer mock-token' },
     )
 
     expect(await response.json()).toEqual({
