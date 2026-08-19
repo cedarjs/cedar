@@ -26,9 +26,9 @@
   "dependencies": {
     "@babel/cli": "7.29.7",
     "@babel/core": "^7.26.10",
-    "@babel/parser": "7.29.7",
+    "@babel/parser": "7.29.8",
     "@babel/plugin-transform-typescript": "^7.26.8",
-    "@babel/traverse": "7.29.7",
+    "@babel/traverse": "7.29.8",
     "@cedarjs/cli-helpers": "5.0.1",
     "@cedarjs/project-config": "5.0.1",
     "@svgr/core": "8.1.0",
