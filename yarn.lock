@@ -2097,7 +2097,7 @@ __metadata:
     esbuild: "npm:0.28.2"
     fast-glob: "npm:3.3.3"
     fast-json-parse: "npm:1.0.3"
-    fastify: "npm:5.11.3"
+    fastify: "npm:5.12.0"
     fastify-raw-body: "npm:5.0.0"
     memfs: "npm:4.68.1"
     picoquery: "npm:2.5.0"
@@ -2808,7 +2808,7 @@ __metadata:
     prompts: "npm:2.4.2"
     semver: "npm:7.8.5"
     smol-toml: "npm:1.8.0"
-    srvx: "npm:0.11.16"
+    srvx: "npm:0.12.5"
     string-env-interpolation: "npm:1.0.1"
     systeminformation: "npm:5.31.7"
     termi-link: "npm:1.1.0"
@@ -2995,7 +2995,7 @@ __metadata:
     "@fastify/static": "npm:8.3.0"
     "@fastify/url-data": "npm:6.0.4"
     fast-glob: "npm:3.3.3"
-    fastify: "npm:5.11.3"
+    fastify: "npm:5.12.0"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.10"
   languageName: unknown
@@ -3095,7 +3095,7 @@ __metadata:
     "@graphql-tools/merge": "npm:9.2.3"
     "@graphql-tools/schema": "npm:10.1.0"
     "@graphql-tools/utils": "npm:10.11.0"
-    "@graphql-yoga/plugin-persisted-operations": "npm:3.21.2"
+    "@graphql-yoga/plugin-persisted-operations": "npm:3.21.3"
     "@opentelemetry/api": "npm:1.9.1"
     "@types/aws-lambda": "npm:8.10.162"
     "@types/jsonwebtoken": "npm:9.0.10"
@@ -3103,11 +3103,11 @@ __metadata:
     "@whatwg-node/promise-helpers": "npm:^1.3.0"
     concurrently: "npm:9.2.4"
     cookie: "npm:1.1.1"
-    fastify: "npm:5.11.3"
+    fastify: "npm:5.12.0"
     graphql: "npm:16.14.2"
     graphql-scalars: "npm:1.26.0"
     graphql-tag: "npm:2.12.6"
-    graphql-yoga: "npm:5.21.2"
+    graphql-yoga: "npm:5.21.3"
     jsonwebtoken: "npm:9.0.3"
     lodash: "npm:4.18.1"
     publint: "npm:0.3.23"
@@ -3192,7 +3192,7 @@ __metadata:
     "@cedarjs/project-config": "workspace:*"
     "@prisma/client": "npm:7.8.0"
     concurrently: "npm:9.2.4"
-    cron-parser: "npm:5.8.1"
+    cron-parser: "npm:5.10.0"
     publint: "npm:0.3.23"
     type-fest: "npm:5.6.0"
     typescript: "npm:5.9.3"
@@ -3279,8 +3279,13 @@ __metadata:
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/mailer-core": "workspace:*"
-    "@react-email/render": "npm:0.0.17"
+    "@react-email/render": "npm:2.1.0"
+    react: "npm:19.2.3"
+    react-dom: "npm:19.2.3"
     typescript: "npm:5.9.3"
+  peerDependencies:
+    react: 19.2.3
+    react-dom: 19.2.3
   languageName: unknown
   linkType: soft
 
@@ -3325,7 +3330,7 @@ __metadata:
     "@rollup/plugin-commonjs": "npm:28.0.9"
     "@rollup/plugin-node-resolve": "npm:16.0.3"
     "@rollup/plugin-replace": "npm:6.0.3"
-    "@swc/core": "npm:1.15.47"
+    "@swc/core": "npm:1.16.0"
     "@types/mime-types": "npm:2.1.4"
     "@types/react": "npm:^18.2.55"
     "@whatwg-node/fetch": "npm:0.10.13"
@@ -3389,7 +3394,7 @@ __metadata:
     "@n1ru4l/graphql-live-query": "npm:0.10.0"
     "@n1ru4l/in-memory-live-query-store": "npm:0.10.0"
     graphql: "npm:16.14.2"
-    graphql-yoga: "npm:5.21.2"
+    graphql-yoga: "npm:5.21.3"
     ioredis: "npm:5.11.1"
     nodemon: "npm:3.1.14"
     typescript: "npm:5.9.3"
@@ -3624,6 +3629,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/graphql-server": "workspace:*"
     "@cedarjs/internal": "workspace:*"
+    "@cedarjs/jobs": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@cedarjs/router": "workspace:*"
     "@cedarjs/server-store": "workspace:*"
@@ -3634,7 +3640,7 @@ __metadata:
     "@hyrious/esbuild-plugin-commonjs": "npm:0.2.6"
     "@jridgewell/trace-mapping": "npm:0.3.31"
     "@oxc-project/types": "npm:^0.144.0"
-    "@swc/core": "npm:1.15.47"
+    "@swc/core": "npm:1.16.0"
     "@types/aws-lambda": "npm:8.10.162"
     "@types/busboy": "npm:^1"
     "@types/express": "npm:4"
@@ -3698,7 +3704,7 @@ __metadata:
     "@cedarjs/project-config": "workspace:*"
     ansis: "npm:4.3.1"
     dotenv-defaults: "npm:5.0.2"
-    fastify: "npm:5.11.3"
+    fastify: "npm:5.12.0"
     typescript: "npm:5.9.3"
     yargs: "npm:17.7.3"
   bin:
@@ -6367,15 +6373,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/plugin-persisted-operations@npm:3.21.2":
-  version: 3.21.2
-  resolution: "@graphql-yoga/plugin-persisted-operations@npm:3.21.2"
+"@graphql-yoga/plugin-persisted-operations@npm:3.21.3":
+  version: 3.21.3
+  resolution: "@graphql-yoga/plugin-persisted-operations@npm:3.21.3"
   dependencies:
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-    graphql-yoga: ^5.21.2
-  checksum: 10c0/03d80f16e30001b0997c67e5a8cc7538336ebff4d97c8694d51d437043b993554cb012823d74d218313d92d5619a13dd30e75308818d13f1283d93142af5517c
+    graphql-yoga: ^5.21.3
+  checksum: 10c0/be7b4c3c1785a574f86b4497b12bc418959c699a59ae876e809655b6447dd1eea1d3c03fe63d667e78b86bd8e1ec5a37f12fb7ca1343fa5718b98b70b79a51db
   languageName: node
   linkType: hard
 
@@ -9440,20 +9446,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-email/render@npm:0.0.17":
-  version: 0.0.17
-  resolution: "@react-email/render@npm:0.0.17"
-  dependencies:
-    html-to-text: "npm:9.0.5"
-    js-beautify: "npm:^1.14.11"
-    react-promise-suspense: "npm:0.3.4"
-  peerDependencies:
-    react: ^18.2.0
-    react-dom: ^18.2.0
-  checksum: 10c0/34a1c5a55586d7cd723638d8cd5328fddf30015e5065a2e9d5204772e0532e84d63af1b2b1b8ec02cef52a8f57d34871200c0075a9ed7b2861362d8138d3db5e
-  languageName: node
-  linkType: hard
-
 "@react-email/render@npm:1.1.2":
   version: 1.1.2
   resolution: "@react-email/render@npm:1.1.2"
@@ -9465,6 +9457,21 @@ __metadata:
     react: ^18.0 || ^19.0 || ^19.0.0-rc
     react-dom: ^18.0 || ^19.0 || ^19.0.0-rc
   checksum: 10c0/def0039a24b797d962d7dcb3a3401c093aa0115545284e00863de4066a826a3e4977b8f2c65b1f3bf77352bee5595e0dedf166ea52467dcb7080e14785e1c3ac
+  languageName: node
+  linkType: hard
+
+"@react-email/render@npm:2.1.0":
+  version: 2.1.0
+  resolution: "@react-email/render@npm:2.1.0"
+  dependencies:
+    entities: "npm:^4.5.0"
+    html-to-text: "npm:^9.0.5"
+    html5parser: "npm:^3.0.0"
+    prettier: "npm:^3.5.3"
+  peerDependencies:
+    react: ^18.0 || ^19.0 || ^19.0.0-rc
+    react-dom: ^18.0 || ^19.0 || ^19.0.0-rc
+  checksum: 10c0/d117fb48711fb491f8f958806278c23f5d816e5baf999faef9d93922581d5c9128c7b320418317c486f9a68760deb32a1aa97efde946f4027a7aadda18aab7fc
   languageName: node
   linkType: hard
 
@@ -10586,108 +10593,108 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/core-darwin-arm64@npm:1.15.47":
-  version: 1.15.47
-  resolution: "@swc/core-darwin-arm64@npm:1.15.47"
+"@swc/core-darwin-arm64@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-darwin-arm64@npm:1.16.0"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@swc/core-darwin-x64@npm:1.15.47":
-  version: 1.15.47
-  resolution: "@swc/core-darwin-x64@npm:1.15.47"
+"@swc/core-darwin-x64@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-darwin-x64@npm:1.16.0"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@swc/core-linux-arm-gnueabihf@npm:1.15.47":
-  version: 1.15.47
-  resolution: "@swc/core-linux-arm-gnueabihf@npm:1.15.47"
+"@swc/core-linux-arm-gnueabihf@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-linux-arm-gnueabihf@npm:1.16.0"
   conditions: os=linux & cpu=arm
   languageName: node
   linkType: hard
 
-"@swc/core-linux-arm64-gnu@npm:1.15.47":
-  version: 1.15.47
-  resolution: "@swc/core-linux-arm64-gnu@npm:1.15.47"
+"@swc/core-linux-arm64-gnu@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-linux-arm64-gnu@npm:1.16.0"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@swc/core-linux-arm64-musl@npm:1.15.47":
-  version: 1.15.47
-  resolution: "@swc/core-linux-arm64-musl@npm:1.15.47"
+"@swc/core-linux-arm64-musl@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-linux-arm64-musl@npm:1.16.0"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@swc/core-linux-ppc64-gnu@npm:1.15.47":
-  version: 1.15.47
-  resolution: "@swc/core-linux-ppc64-gnu@npm:1.15.47"
+"@swc/core-linux-ppc64-gnu@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-linux-ppc64-gnu@npm:1.16.0"
   conditions: os=linux & cpu=ppc64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@swc/core-linux-s390x-gnu@npm:1.15.47":
-  version: 1.15.47
-  resolution: "@swc/core-linux-s390x-gnu@npm:1.15.47"
+"@swc/core-linux-s390x-gnu@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-linux-s390x-gnu@npm:1.16.0"
   conditions: os=linux & cpu=s390x & libc=glibc
   languageName: node
   linkType: hard
 
-"@swc/core-linux-x64-gnu@npm:1.15.47":
-  version: 1.15.47
-  resolution: "@swc/core-linux-x64-gnu@npm:1.15.47"
+"@swc/core-linux-x64-gnu@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-linux-x64-gnu@npm:1.16.0"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@swc/core-linux-x64-musl@npm:1.15.47":
-  version: 1.15.47
-  resolution: "@swc/core-linux-x64-musl@npm:1.15.47"
+"@swc/core-linux-x64-musl@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-linux-x64-musl@npm:1.16.0"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@swc/core-win32-arm64-msvc@npm:1.15.47":
-  version: 1.15.47
-  resolution: "@swc/core-win32-arm64-msvc@npm:1.15.47"
+"@swc/core-win32-arm64-msvc@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-win32-arm64-msvc@npm:1.16.0"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@swc/core-win32-ia32-msvc@npm:1.15.47":
-  version: 1.15.47
-  resolution: "@swc/core-win32-ia32-msvc@npm:1.15.47"
+"@swc/core-win32-ia32-msvc@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-win32-ia32-msvc@npm:1.16.0"
   conditions: os=win32 & cpu=ia32
   languageName: node
   linkType: hard
 
-"@swc/core-win32-x64-msvc@npm:1.15.47":
-  version: 1.15.47
-  resolution: "@swc/core-win32-x64-msvc@npm:1.15.47"
+"@swc/core-win32-x64-msvc@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-win32-x64-msvc@npm:1.16.0"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"@swc/core@npm:1.15.47":
-  version: 1.15.47
-  resolution: "@swc/core@npm:1.15.47"
+"@swc/core@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core@npm:1.16.0"
   dependencies:
-    "@swc/core-darwin-arm64": "npm:1.15.47"
-    "@swc/core-darwin-x64": "npm:1.15.47"
-    "@swc/core-linux-arm-gnueabihf": "npm:1.15.47"
-    "@swc/core-linux-arm64-gnu": "npm:1.15.47"
-    "@swc/core-linux-arm64-musl": "npm:1.15.47"
-    "@swc/core-linux-ppc64-gnu": "npm:1.15.47"
-    "@swc/core-linux-s390x-gnu": "npm:1.15.47"
-    "@swc/core-linux-x64-gnu": "npm:1.15.47"
-    "@swc/core-linux-x64-musl": "npm:1.15.47"
-    "@swc/core-win32-arm64-msvc": "npm:1.15.47"
-    "@swc/core-win32-ia32-msvc": "npm:1.15.47"
-    "@swc/core-win32-x64-msvc": "npm:1.15.47"
+    "@swc/core-darwin-arm64": "npm:1.16.0"
+    "@swc/core-darwin-x64": "npm:1.16.0"
+    "@swc/core-linux-arm-gnueabihf": "npm:1.16.0"
+    "@swc/core-linux-arm64-gnu": "npm:1.16.0"
+    "@swc/core-linux-arm64-musl": "npm:1.16.0"
+    "@swc/core-linux-ppc64-gnu": "npm:1.16.0"
+    "@swc/core-linux-s390x-gnu": "npm:1.16.0"
+    "@swc/core-linux-x64-gnu": "npm:1.16.0"
+    "@swc/core-linux-x64-musl": "npm:1.16.0"
+    "@swc/core-win32-arm64-msvc": "npm:1.16.0"
+    "@swc/core-win32-ia32-msvc": "npm:1.16.0"
+    "@swc/core-win32-x64-msvc": "npm:1.16.0"
     "@swc/counter": "npm:^0.1.3"
-    "@swc/types": "npm:^0.1.27"
+    "@swc/types": "npm:^0.1.28"
   peerDependencies:
     "@swc/helpers": ">=0.5.17"
   dependenciesMeta:
@@ -10718,7 +10725,7 @@ __metadata:
   peerDependenciesMeta:
     "@swc/helpers":
       optional: true
-  checksum: 10c0/34ccbb3ae5db0af520934abfdf2505b8490128b48863d9a2e6db2d8787e2d7415318000c92fd32ebe351b24d93f36f52c58f35b9a98e60a4010b34a1af2c3d5e
+  checksum: 10c0/34b74431b38640e4e4ac3537dfb4222f92a6179b29d3c32a1501cf86c195736c9e16dcfabffeedfb29697d21afd2f6b83e5ff71cf897c71b491ef9e0161cee36
   languageName: node
   linkType: hard
 
@@ -10729,12 +10736,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/types@npm:^0.1.27":
-  version: 0.1.27
-  resolution: "@swc/types@npm:0.1.27"
+"@swc/types@npm:^0.1.28":
+  version: 0.1.28
+  resolution: "@swc/types@npm:0.1.28"
   dependencies:
     "@swc/counter": "npm:^0.1.3"
-  checksum: 10c0/25f1bfa0ac34e9ac60aa7de91778f70906cd77a7abb3eb68c5da8d38d5202286b293300d4bb2792b3bb8840a7f5d5c4627c4ec34d2fae6533bfb3e14a70fd8fb
+  checksum: 10c0/7f2e959a7ee000ec4216acc6b7634e2d2fbe404b6ad3adf72bb91970a67359d7d429f60556342784dbe66912c7c987426683159e749332581a87e04de0524357
   languageName: node
   linkType: hard
 
@@ -14819,12 +14826,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cron-parser@npm:5.8.1":
-  version: 5.8.1
-  resolution: "cron-parser@npm:5.8.1"
+"cron-parser@npm:5.10.0":
+  version: 5.10.0
+  resolution: "cron-parser@npm:5.10.0"
   dependencies:
     luxon: "npm:^3.7.2"
-  checksum: 10c0/823d74248b99a0a5fc9e25263da5159d7616c3b6c67f93081e4f102584cd1739de89c30832502690dd9a3419427f94cfc33aad6e7456535e51391a080b4f7565
+  checksum: 10c0/bf8ad9b121140aadc295eb5a0d0e67df44b237e397e95fa1ab5d9e87f2c9923c727ce3541989af56b8c666a929a51015bcd23d2e37ebda3bcaf3b9f0b555959c
   languageName: node
   linkType: hard
 
@@ -17236,9 +17243,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fastify@npm:5.11.3":
-  version: 5.11.3
-  resolution: "fastify@npm:5.11.3"
+"fastify@npm:5.12.0":
+  version: 5.12.0
+  resolution: "fastify@npm:5.12.0"
   dependencies:
     "@fastify/ajv-compiler": "npm:^4.0.5"
     "@fastify/error": "npm:^4.0.0"
@@ -17250,12 +17257,12 @@ __metadata:
     find-my-way: "npm:^9.6.0"
     light-my-request: "npm:^6.0.0"
     pino: "npm:^9.14.0 || ^10.1.0"
-    process-warning: "npm:^5.0.0"
+    process-warning: "npm:^5.1.0"
     rfdc: "npm:^1.3.1"
     secure-json-parse: "npm:^4.0.0"
     semver: "npm:^7.6.0"
     toad-cache: "npm:^3.7.0"
-  checksum: 10c0/a48aeb99e3dd5fe932400d5610f7cf7d4b3c9915f231090a598d469564e21c7fe0513e8e49bbc713a2a9e8f882960bfea295c30f7af61feb32b1f9a7277c16d1
+  checksum: 10c0/abc39c7a630b923fc2e1eb2cdbe279aa6bbb02033d35a62c3388285b66d9395727a2ff7c0cb6f9992d435aae3c34dea74d92bacfa33bb15261f5536aeaeefe51
   languageName: node
   linkType: hard
 
@@ -18400,9 +18407,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-yoga@npm:5.21.2":
-  version: 5.21.2
-  resolution: "graphql-yoga@npm:5.21.2"
+"graphql-yoga@npm:5.21.3":
+  version: 5.21.3
+  resolution: "graphql-yoga@npm:5.21.3"
   dependencies:
     "@envelop/core": "npm:^5.5.1"
     "@envelop/instrumentation": "npm:^1.0.0"
@@ -18418,7 +18425,7 @@ __metadata:
     tslib: "npm:^2.8.1"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-  checksum: 10c0/ce3ee29ebf229e229a27114482271519bbc3ef688495512ea3b260824e28922b7fa00278de4265ab3824aaad97e0b82703b05e8c995431539f5c32a39879896e
+  checksum: 10c0/16115946f42d33128178436a80a9b2c4214b546b5f981ac77dc17a7bec5ce6096f0ab9bf67cd4c7f24d5f96b8431469a99b8a7720c4f650bb7a8bd169eb06a8e
   languageName: node
   linkType: hard
 
@@ -18663,7 +18670,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"html-to-text@npm:9.0.5, html-to-text@npm:^9.0.5":
+"html-to-text@npm:^9.0.5":
   version: 9.0.5
   resolution: "html-to-text@npm:9.0.5"
   dependencies:
@@ -18673,6 +18680,13 @@ __metadata:
     htmlparser2: "npm:^8.0.2"
     selderee: "npm:^0.11.0"
   checksum: 10c0/5d2c77b798cf88a81b1da2fc1ea1a3b3e2ff49fe5a3d812392f802fff18ec315cf0969bd7846ef2eb7df8c37f463bc63e8cbdcf84e42696c6f3e15dfa61cdf4f
+  languageName: node
+  linkType: hard
+
+"html5parser@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "html5parser@npm:3.0.0"
+  checksum: 10c0/1f64db31ce882504ec73c36bc87e5225ad02e472f4953215cbda7a602ad5f5f85ea12d1b490bcf5713ae9ecbdc1b2b0dc8643075fd4cc3816624746762b5c0b3
   languageName: node
   linkType: hard
 
@@ -20373,7 +20387,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-beautify@npm:^1.14.11, js-beautify@npm:^1.6.14":
+"js-beautify@npm:^1.6.14":
   version: 1.15.1
   resolution: "js-beautify@npm:1.15.1"
   dependencies:
@@ -24867,10 +24881,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"process-warning@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "process-warning@npm:5.0.0"
-  checksum: 10c0/941f48863d368ec161e0b5890ba0c6af94170078f3d6b5e915c19b36fb59edb0dc2f8e834d25e0d375a8bf368a49d490f080508842168832b93489d17843ec29
+"process-warning@npm:^5.0.0, process-warning@npm:^5.1.0":
+  version: 5.1.0
+  resolution: "process-warning@npm:5.1.0"
+  checksum: 10c0/2a48d48b575f4e7888fd4735a6604acd89914efa909f3db5dd20ae56e8a8cdd3c32a3c738bba539b46d1c5096630e15286bcb7c7fca18dfbf04cc7d00fe34a0f
   languageName: node
   linkType: hard
 
@@ -25340,7 +25354,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-promise-suspense@npm:0.3.4, react-promise-suspense@npm:^0.3.4":
+"react-promise-suspense@npm:^0.3.4":
   version: 0.3.4
   resolution: "react-promise-suspense@npm:0.3.4"
   dependencies:
@@ -27024,21 +27038,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"srvx@npm:*, srvx@npm:^0.12.5":
+"srvx@npm:*, srvx@npm:0.12.5, srvx@npm:^0.12.5":
   version: 0.12.5
   resolution: "srvx@npm:0.12.5"
   bin:
     srvx: bin/srvx.mjs
   checksum: 10c0/89d844b55c1858f567bb5dac8839d0a4d217fc25306c1c7caa4a6cc8236381812c3c84352d974ecfd5b655a690883c172f49d51b13f4181160a1da4e982ba792
-  languageName: node
-  linkType: hard
-
-"srvx@npm:0.11.16":
-  version: 0.11.16
-  resolution: "srvx@npm:0.11.16"
-  bin:
-    srvx: bin/srvx.mjs
-  checksum: 10c0/cd3ed12c12481e2852409a7dfaa8c1ae0a7264769e9239e4a34da48033029c2ce4b2bccfd648a49f9bb10d13c4be91fcdbdb50feb08bf3de19bc8cfe71efa0a2
   languageName: node
   linkType: hard
 

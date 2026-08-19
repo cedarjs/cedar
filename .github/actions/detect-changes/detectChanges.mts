@@ -99,14 +99,14 @@ interface GhWorkflowRunsResponse {
 const VERDICT_CONCLUSIONS = ['success', 'failure', 'timed_out']
 
 /**
- * The newest completed workflow run for the branch that produced an actual
- * verdict (see VERDICT_CONCLUSIONS)
+ * The most recent workflow runs for the branch, newest first (as returned by
+ * the GitHub API), regardless of status/conclusion.
  */
-async function getBaselineWorkflowRun(
+async function getWorkflowRuns(
   branchName: string | undefined,
-): Promise<Workflow | undefined> {
+): Promise<Workflow[]> {
   if (!branchName) {
-    return
+    return []
   }
 
   // 154971623 is the ID of the CI workflow (ci.yml). If it changes, or you want
@@ -114,15 +114,15 @@ async function getBaselineWorkflowRun(
   // https://api.github.com/repos/cedarjs/cedar/actions/workflows to get a
   // list of all workflows and their IDs
   const workflowId = '154971623'
-  const url = `${BASE_URL}/actions/workflows/${workflowId}/runs?branch=${branchName}`
+  const url = `${BASE_URL}/actions/workflows/${workflowId}/runs?branch=${encodeURIComponent(branchName)}&per_page=100`
   const { json } = await fetchJson<GhWorkflowRunsResponse>(url)
 
-  return json?.workflow_runs?.find(
-    (run) =>
-      run.status === 'completed' &&
-      VERDICT_CONCLUSIONS.includes(run.conclusion),
-  )
+  return json?.workflow_runs || []
 }
+
+/** Whether the run has an actual verdict (see VERDICT_CONCLUSIONS). */
+const isVerdictRun = (run: Workflow): boolean =>
+  run.status === 'completed' && VERDICT_CONCLUSIONS.includes(run.conclusion)
 
 interface WorkflowJob {
   name: string
@@ -209,6 +209,60 @@ async function getChangedFilesSince(
   )
 
   return changedFiles
+}
+
+/**
+ * A run triggered by a docs-only diff never ran the code-gated jobs (they
+ * show up as `skipped`), so its conclusion - success or failure - says
+ * nothing about the code. Starting right after `startIndex`, walk back
+ * through consecutive docs-only pushes to the newest run whose own
+ * triggering diff contained code changes, and return whether *that* run
+ * succeeded. (Diffing rather than inspecting job names keeps this independent
+ * of ci.yml's job structure.)
+ *
+ * Runs without a verdict (cancelled, in progress) are used as diff anchors -
+ * their pushes still changed files - but never as the run whose conclusion is
+ * trusted: if the code-bearing diff lands on one, we've found code changes no
+ * completed run ever exercised, so be conservative.
+ *
+ * Returns `false` (conservative) when the chain runs out or any comparison
+ * can't be trusted.
+ */
+async function lastCodeChangePassedCi(
+  runs: Workflow[],
+  startIndex: number,
+): Promise<boolean> {
+  let headRun = runs[startIndex]
+
+  for (let i = startIndex + 1; i < runs.length; i++) {
+    const candidate = runs[i]
+
+    // Skip reruns of the current head (same head_sha): diffing a commit
+    // against itself would trivially look docs-only
+    if (candidate.head_sha === headRun.head_sha) {
+      continue
+    }
+
+    const files = await getChangedFilesSince(
+      candidate.head_sha,
+      headRun.head_sha,
+    )
+
+    if (!files) {
+      return false
+    }
+
+    if (codeChanges(files)) {
+      // headRun's own triggering diff contained code changes, so it's the
+      // run that last exercised the code-gated jobs for this code state -
+      // but only a completed run with a verdict actually produced one
+      return isVerdictRun(headRun) && headRun.conclusion === 'success'
+    }
+
+    headRun = candidate
+  }
+
+  return false
 }
 
 interface GhPrFilesResponseEntry {
@@ -325,8 +379,10 @@ async function main() {
   }
 
   const { branchName, headSha, hasWindowsLabel } = await getPrInfo()
-  const baselineRun = await getBaselineWorkflowRun(branchName)
-  const baselineRunSucceeded = baselineRun?.conclusion === 'success'
+  const workflowRuns = await getWorkflowRuns(branchName)
+  const baselineRunIndex = workflowRuns.findIndex(isVerdictRun)
+  const baselineRun =
+    baselineRunIndex >= 0 ? workflowRuns[baselineRunIndex] : undefined
   const workflowJobs = baselineRun?.id
     ? await getWorkflowJobs(baselineRun.id)
     : []
@@ -385,9 +441,20 @@ async function main() {
     // need to run all tests again, even if the latest commit is only touching
     // docs. (Cancelled runs never become the baseline, so a run aborted by a
     // force-push doesn't count as a failure here)
-    if (baselineRun && !baselineRunSucceeded) {
+    //
+    // The one exception is a baseline run whose own triggering diff was also
+    // docs-only - see lastCodeChangePassedCi for why that's still safe to
+    // fast-path
+    const baselineFailed =
+      baselineRun !== undefined && baselineRun.conclusion !== 'success'
+
+    const safeToSkip =
+      !baselineFailed ||
+      (await lastCodeChangePassedCi(workflowRuns, baselineRunIndex))
+
+    if (!safeToSkip) {
       console.log(
-        `Baseline run concluded '${baselineRun.conclusion}'. Falling back ` +
+        `Baseline run concluded '${baselineRun?.conclusion}'. Falling back ` +
           'to running all tests.',
       )
       core.setOutput('code', true)
@@ -396,6 +463,13 @@ async function main() {
       core.setOutput('ssr', true)
       core.setOutput('windows', true)
     } else {
+      if (baselineFailed) {
+        console.log(
+          `Baseline run concluded '${baselineRun.conclusion}', but its ` +
+            'own triggering diff was also docs-only, so it never ran the ' +
+            'code-gated jobs. Safe to skip heavy CI.',
+        )
+      }
       core.setOutput('code', false)
       core.setOutput('cli', false)
       core.setOutput('rsc', false)

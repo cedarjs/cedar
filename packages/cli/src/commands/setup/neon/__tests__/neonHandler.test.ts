@@ -132,7 +132,7 @@ describe('neon handler', () => {
   it('provisions a database, converts the project, and runs migrations', async () => {
     seedSqliteProject()
 
-    await handler({ force: false })
+    await handler({ force: false, migrations: true, verbose: false })
 
     const prismaSchemaPath = path.join(BASE_PATH, 'api/db/schema.prisma')
     const prismaSchema = memfsFs.readFileSync(prismaSchemaPath, 'utf-8')
@@ -168,7 +168,7 @@ describe('neon handler', () => {
       'module.exports = defineConfig({ datasource: { url: someCustomFn() } })',
     )
 
-    await handler({ force: false })
+    await handler({ force: false, migrations: true, verbose: false })
 
     expect(global.fetch).toHaveBeenCalled()
     expect(Listr2Mock.skippedTaskTitles).toContain(
@@ -248,7 +248,7 @@ describe('neon handler', () => {
       'DATABASE_URL=file:./db/dev.db\n',
     )
 
-    await handler({ force: false })
+    await handler({ force: false, migrations: true, verbose: false })
 
     expect(global.fetch).toHaveBeenCalled()
     expect(Listr2Mock.skippedTaskTitles).not.toContain(
@@ -272,7 +272,7 @@ describe('neon handler', () => {
     seedSqliteProject()
     memfsFs.writeFileSync(path.join(BASE_PATH, '.env'), 'DATABASE_URL=\n')
 
-    await handler({ force: false })
+    await handler({ force: false, migrations: true, verbose: false })
 
     expect(global.fetch).toHaveBeenCalled()
     expect(Listr2Mock.skippedTaskTitles).not.toContain(
@@ -299,7 +299,7 @@ describe('neon handler', () => {
       'DATABASE_URL=postgres://\n',
     )
 
-    await handler({ force: false })
+    await handler({ force: false, migrations: true, verbose: false })
 
     expect(global.fetch).toHaveBeenCalled()
     expect(Listr2Mock.skippedTaskTitles).not.toContain(
@@ -351,7 +351,7 @@ describe('neon handler', () => {
       }),
     })) as unknown as typeof fetch
 
-    await handler({ force: true })
+    await handler({ force: true, migrations: true, verbose: false })
 
     expect(global.fetch).toHaveBeenCalled()
     const envContent = memfsFs.readFileSync(
@@ -434,15 +434,88 @@ describe('neon handler', () => {
     })
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    await expect(handler({ force: false })).rejects.toThrow(
-      'process.exit called',
-    )
+    await expect(
+      handler({ force: false, migrations: true, verbose: false }),
+    ).rejects.toThrow('process.exit called')
 
     expect(exitSpy).toHaveBeenCalledWith(1)
     expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('Prisma migration failed'),
     )
     expect(memfsFs.existsSync(path.join(BASE_PATH, '.env'))).toBe(false)
+
+    exitSpy.mockRestore()
+    errorSpy.mockRestore()
+  })
+
+  it('exits with an error instead of prompting when migrations is omitted in a non-interactive terminal', async () => {
+    seedSqliteProject()
+
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit called')
+    })
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    // vitest doesn't run with a TTY attached to stdin, so omitting
+    // `migrations` here exercises the same non-interactive guard a real
+    // CI/script invocation would hit.
+    await expect(handler({ force: false, verbose: false })).rejects.toThrow(
+      'process.exit called',
+    )
+
+    expect(exitSpy).toHaveBeenCalledWith(1)
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Cannot prompt for confirmation in a non-interactive terminal',
+      ),
+    )
+    expect(commandSync).not.toHaveBeenCalled()
+    // Provisioning itself never got a chance to run either, since the
+    // guard fires before the task list is even built.
+    expect(global.fetch).not.toHaveBeenCalled()
+
+    exitSpy.mockRestore()
+    errorSpy.mockRestore()
+  })
+
+  it('skips migrations without prompting when --no-migrations is passed, but still provisions and writes .env', async () => {
+    seedSqliteProject()
+
+    await handler({ force: false, migrations: false, verbose: false })
+
+    expect(global.fetch).toHaveBeenCalled()
+    expect(commandSync).not.toHaveBeenCalled()
+    expect(Listr2Mock.skippedTaskTitles).toContain('Skipped (--no-migrations)')
+
+    const envContent = memfsFs.readFileSync(
+      path.join(BASE_PATH, '.env'),
+      'utf-8',
+    )
+    expect(envContent).toContain(
+      'DATABASE_URL=postgresql://user:pass@ep-abc-pooler.neon.tech/db',
+    )
+  })
+
+  it('runs migrations with inherited stdio and a shorter error message when --verbose is passed', async () => {
+    seedSqliteProject()
+
+    commandSync.mockReturnValueOnce({ exitCode: 1, stderr: 'P1013: boom' })
+
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit called')
+    })
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    await expect(
+      handler({ force: false, migrations: true, verbose: true }),
+    ).rejects.toThrow('process.exit called')
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Prisma migration failed. You can try running'),
+    )
+    // The verbose error message doesn't repeat captured stderr - inherited
+    // stdio already streamed it straight to the terminal.
+    expect(errorSpy).not.toHaveBeenCalledWith(expect.stringContaining('boom'))
 
     exitSpy.mockRestore()
     errorSpy.mockRestore()
