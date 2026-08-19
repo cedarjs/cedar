@@ -211,7 +211,7 @@ jobs:
     with:
       os: ${{ matrix.os }}
 
-  fragments-smoke-tests:
+  fragments-and-td-smoke-tests:
     needs: detect-changes
     if: needs.detect-changes.outputs.code == 'true'
 
@@ -223,7 +223,7 @@ jobs:
         os: ${{ needs.detect-changes.outputs.windows == 'true' && fromJSON('["ubuntu-latest", "windows-latest"]') || fromJSON('["ubuntu-latest"]') }}
 
     name: 📄 Fragments Smoke tests / ${{ matrix.os }}
-    uses: ./.github/workflows/fragments-smoke-tests.yml
+    uses: ./.github/workflows/fragments-and-td-smoke-tests.yml
     with:
       os: ${{ matrix.os }}
 
@@ -329,7 +329,7 @@ jobs:
       - telemetry-check
       - rsc-smoke-tests
       - ssr-smoke-tests
-      - fragments-smoke-tests
+      - fragments-and-td-smoke-tests
       - live-smoke-tests
       - create-cedar-app
       - cli-pm-smoke-tests
