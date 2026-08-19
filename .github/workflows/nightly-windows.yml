@@ -95,7 +95,7 @@ jobs:
       - smoke-tests-esm
       - cli-smoke-tests
       - telemetry-check
-      - fragments-and-ts-smoke-tests
+      - fragments-and-td-smoke-tests
       - rsc-smoke-tests
       - background-jobs-e2e
     if: github.repository == 'cedarjs/cedar' && failure()
