@@ -223,12 +223,72 @@ export function getLoadDocumentsOptions(filename: string) {
   return loadTypedefsConfig
 }
 
+/**
+ * Thrown when the generated `models.<ext>` file is there but doesn't look the
+ * way we expect. That's format drift, not a missing client, so regenerating
+ * won't help and the error has to reach the user.
+ */
+class PrismaModelsFormatError extends Error {}
+
+/**
+ * Matches the re-export lines Prisma writes into `models.<ext>`:
+ *
+ *   export type * from './models/Post.mts'
+ *
+ * The barrel also re-exports `./commonInputTypes.<ext>`, which isn't a model —
+ * requiring the `./models/` prefix leaves it out.
+ */
+const MODEL_REEXPORT_RE = /^export type \* from '\.\/models\/(\w+)\.\w+'/gm
+
+/**
+ * Reads the model names out of the generated `models.<ext>` barrel file that
+ * sits next to the client entry point.
+ *
+ * Codegen only needs `Prisma.ModelName` — a plain map of model names. Importing
+ * the client to get it means loading the whole generated client and the Prisma
+ * runtime with it, and for a TypeScript client it doesn't work at all in a
+ * CommonJS api: Node resolves the `.ts` file as CommonJS and fails on the ESM
+ * syntax Prisma emits (`SyntaxError: Cannot use import statement outside a
+ * module`). Reading the barrel is both cheaper and format-independent.
+ */
+function readPrismaModelNames(clientPath: string): Record<string, string> {
+  const ext = path.extname(clientPath)
+  const modelsPath = path.join(path.dirname(clientPath), `models${ext}`)
+
+  // Let a missing file throw like a failed import would: the caller treats
+  // that as "no client generated yet" and regenerates.
+  const source = fs.readFileSync(modelsPath, 'utf8')
+
+  const modelNames: Record<string, string> = {}
+
+  for (const match of source.matchAll(MODEL_REEXPORT_RE)) {
+    modelNames[match[1]] = match[1]
+  }
+
+  if (Object.keys(modelNames).length === 0) {
+    throw new PrismaModelsFormatError(
+      `Could not read any Prisma model names from ${modelsPath}. Expected ` +
+        "lines like `export type * from './models/Post.ts'`. This is most " +
+        'likely a change in what Prisma generates — please open an issue at ' +
+        'https://github.com/cedarjs/cedar/issues.',
+    )
+  }
+
+  return modelNames
+}
+
 async function importGeneratedPrismaClient() {
   const cacheBuster = `?t=${Date.now()}`
   const { clientPath, error } = await resolveGeneratedPrismaClient()
 
   if (!clientPath) {
     throw new Error(error)
+  }
+
+  // A TypeScript client can't be `import()`ed — read the model names out of
+  // the generated `models.<ext>` barrel instead.
+  if (/\.[mc]?ts$/.test(clientPath)) {
+    return { Prisma: { ModelName: readPrismaModelNames(clientPath) } }
   }
 
   const fileUrl = pathToFileURL(clientPath).href + cacheBuster
@@ -283,7 +343,10 @@ async function getPrismaClient(): Promise<{
     if (modelName) {
       return { ModelName: modelName }
     }
-  } catch {
+  } catch (e) {
+    if (e instanceof PrismaModelsFormatError) {
+      throw e
+    }
     // No generated client exists yet — fall through to generate one.
   }
 
@@ -300,7 +363,10 @@ async function getPrismaClient(): Promise<{
     if (modelName) {
       return { ModelName: modelName }
     }
-  } catch {
+  } catch (e) {
+    if (e instanceof PrismaModelsFormatError) {
+      throw e
+    }
     // Fall through to empty ModelName object below.
   }
 
