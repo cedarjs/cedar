@@ -1,6 +1,6 @@
 import { usePersistedOperations } from '@graphql-yoga/plugin-persisted-operations'
 import type { UsePersistedOperationsOptions } from '@graphql-yoga/plugin-persisted-operations'
-import type { Plugin } from 'graphql-yoga'
+import type { GraphQLParams, Plugin } from 'graphql-yoga'
 
 import type { CedarGraphQLContext } from '../types.js'
 
@@ -25,11 +25,10 @@ export type RedwoodTrustedDocumentOptions = Omit<
   )
 
 const CEDAR__AUTH_GET_CURRENT_USER_QUERY =
-  '{"query":"query __CEDAR__AUTH_GET_CURRENT_USER { cedar { currentUser } }"}'
+  'query __CEDAR__AUTH_GET_CURRENT_USER { cedar { currentUser } }'
 const CEDAR__STUDIO_RESYNC_MAIL_RENDERERS_MUTATION =
-  '{"query":"mutation { resyncMailRenderers }"}'
-const CEDAR__STUDIO_TEMPLATE_MUTATION =
-  '{"query":"mutation { resyncMailTemplate }"}'
+  'mutation { resyncMailRenderers }'
+const CEDAR__STUDIO_TEMPLATE_MUTATION = 'mutation { resyncMailTemplate }'
 
 /**
  * When using Cedar Auth, we want to allow the known, trusted `cedar.currentUser` query to be
@@ -44,7 +43,10 @@ const CEDAR__STUDIO_TEMPLATE_MUTATION =
  * The usePersistedOperations plugin relies on this function to determine if a request
  * should be allowed to execute via its allowArbitraryOperations option.
  */
-const allowCedarAuthCurrentUserQuery = async (request: Request) => {
+const allowCedarAuthCurrentUserQuery = (
+  request: Request,
+  params: GraphQLParams | undefined,
+) => {
   const headers = request.headers
   const hasContentType = headers.get('content-type') === 'application/json'
   const hasAuthProvider = !!headers.get('auth-provider')
@@ -52,8 +54,7 @@ const allowCedarAuthCurrentUserQuery = async (request: Request) => {
   const hasAllowedHeaders =
     hasContentType && hasAuthProvider && hasAuthorization
 
-  const query = await request.text()
-  const hasAllowedQuery = query === CEDAR__AUTH_GET_CURRENT_USER_QUERY
+  const hasAllowedQuery = params?.query === CEDAR__AUTH_GET_CURRENT_USER_QUERY
 
   return hasAllowedHeaders && hasAllowedQuery
 }
@@ -73,7 +74,10 @@ const allowCedarAuthCurrentUserQuery = async (request: Request) => {
  * If you need Studio in production, you just have to add the above mutations to
  * your SDL schema and as dummy resolvers so Trusted Documents can pick them up.
  */
-const allowCedarStudioResyncMailMutations = async (request: Request) => {
+const allowCedarStudioResyncMailMutations = (
+  request: Request,
+  params: GraphQLParams | undefined,
+) => {
   const isLocalDevelopment = process.env.NODE_ENV === 'development'
   if (!isLocalDevelopment) {
     return false
@@ -82,10 +86,9 @@ const allowCedarStudioResyncMailMutations = async (request: Request) => {
   const headers = request.headers
   const hasContentType = headers.get('content-type') === 'application/json'
 
-  const query = await request.text()
   const isAllowedQuery =
-    query === CEDAR__STUDIO_RESYNC_MAIL_RENDERERS_MUTATION ||
-    query === CEDAR__STUDIO_TEMPLATE_MUTATION
+    params?.query === CEDAR__STUDIO_RESYNC_MAIL_RENDERERS_MUTATION ||
+    params?.query === CEDAR__STUDIO_TEMPLATE_MUTATION
 
   return hasContentType && isAllowedQuery
 }
@@ -93,7 +96,22 @@ const allowCedarStudioResyncMailMutations = async (request: Request) => {
 export const useRedwoodTrustedDocuments = (
   options: RedwoodTrustedDocumentOptions,
 ): Plugin<CedarGraphQLContext> => {
-  return usePersistedOperations({
+  // `allowArbitraryOperations` is only handed the `Request`, but by the time it
+  // runs Yoga has already consumed the request body to build `params`. Reading
+  // it a second time throws `TypeError: Body is unusable: Body has already been
+  // read`, and `request.clone()` throws too because the body is disturbed. So
+  // stash the parsed params from `onParams` and let the allow-list inspect the
+  // operation without ever touching the body again.
+  //
+  // Keying on the `Request` assumes Yoga's request batching stays disabled
+  // (`createGraphQLYoga` never enables it and doesn't let apps do so either).
+  // With batching, several operations share one `Request`, and this last-write-
+  // wins map could hand the allow-list the wrong operation's params. If the
+  // framework ever exposes Yoga's `batching` option, this needs a per-operation
+  // key instead.
+  const paramsByRequest = new WeakMap<Request, GraphQLParams>()
+
+  const persistedOperations = usePersistedOperations({
     ...options,
     customErrors: {
       persistedQueryOnly: 'Use Trusted Only!',
@@ -116,10 +134,22 @@ export const useRedwoodTrustedDocuments = (
           }
         }
       }
+
+      const params = paramsByRequest.get(request)
+
       return (
-        allowCedarAuthCurrentUserQuery(request) ||
-        allowCedarStudioResyncMailMutations(request)
+        allowCedarAuthCurrentUserQuery(request, params) ||
+        allowCedarStudioResyncMailMutations(request, params)
       )
     },
   })
+
+  return {
+    ...persistedOperations,
+    onParams(payload) {
+      paramsByRequest.set(payload.request, payload.params)
+
+      return persistedOperations.onParams?.(payload)
+    },
+  }
 }
