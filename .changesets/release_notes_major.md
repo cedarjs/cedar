@@ -366,11 +366,11 @@ reachable from localhost under `--ud`, pass `--host localhost` explicitly.
 (This is a separate command from `cedar dev --ud`, which handles api routes
 in-process through the Vite dev server and isn't affected.)
 
-This is part of a broader, backwards-compatible change: `PORT`/`HOST` are
-now read automatically on whichever side is publicly reachable (web, when
-both sides are served together; api, when served alone) — the other side
-ignores them entirely and keeps using its configured host/port. Resolution
-order, highest priority first: CLI flags, then `CEDAR_API_PORT`/
+Separately, a backwards-compatible environment-variable change now reads
+`PORT`/`HOST` automatically on whichever side is publicly reachable (web,
+when both sides are served together; api, when served alone) — the other
+side ignores them entirely and keeps using its configured host/port.
+Resolution order, highest priority first: CLI flags, then `CEDAR_API_PORT`/
 `CEDAR_WEB_PORT`/`CEDAR_API_HOST`/`CEDAR_WEB_HOST` (non-empty values override
 the deprecated `REDWOOD_*` aliases, which still work as silent fallbacks),
 then `PORT`/`HOST` on the public side only, then `[api].port`/`[web].port`
