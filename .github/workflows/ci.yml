@@ -80,9 +80,11 @@ jobs:
         # Windows-relevant (see cases/windows.mts) or the PR has the `windows`
         # label. The nightly-windows workflow covers anything that slips by.
         os: ${{ needs.detect-changes.outputs.windows == 'true' && fromJSON('["ubuntu-latest", "windows-latest"]') || fromJSON('["ubuntu-latest"]') }}
-        node-version: [24, 26]
+        node-version: ['24', '26']
 
-    name: 🏗 Build, lint, test / ${{ matrix.os }} / node ${{ matrix.node-version }} latest
+    # No "latest" suffix here: Windows Node 24 is pinned to 24.15.0 (see
+    # set-up-job/action.yml), so "node 24 latest" would be misleading there.
+    name: 🏗 Build, lint, test / ${{ matrix.os }} / node ${{ matrix.node-version }}
     uses: ./.github/workflows/build-lint-test.yml
     with:
       os: ${{ matrix.os }}
