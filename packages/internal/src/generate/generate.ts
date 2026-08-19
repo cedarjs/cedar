@@ -17,6 +17,7 @@ export const generate = async () => {
     await generateTypeDefs()
 
   const clientPresetFiles = []
+  const clientPresetErrors = []
 
   const { possibleTypesFiles, errors: generatePossibleTypesErrors } =
     await generatePossibleTypes()
@@ -27,6 +28,12 @@ export const generate = async () => {
   if (config.graphql.trustedDocuments) {
     const preset = await generateClientPreset()
     clientPresetFiles.push(...preset.clientPresetFiles)
+
+    if (preset.trustedDocumentsStoreFile) {
+      clientPresetFiles.push(preset.trustedDocumentsStoreFile)
+    }
+
+    clientPresetErrors.push(...preset.errors)
   }
 
   let files = []
@@ -49,6 +56,7 @@ export const generate = async () => {
       ...generateGraphQLSchemaErrors,
       ...generateTypeDefsErrors,
       ...generatePossibleTypesErrors,
+      ...clientPresetErrors,
       ...gqlormErrors,
     ],
   }
