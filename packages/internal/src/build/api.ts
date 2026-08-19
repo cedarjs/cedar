@@ -44,10 +44,12 @@ import { applyEsmExtensions } from './esm-extensions.js'
 import { applyImportDir } from './import-dir.js'
 import { applyJobPathInjector } from './job-path-injector.js'
 import { applySrcAlias } from './src-alias.js'
+import { applyTsExtensions, assertNoTsSpecifiers } from './ts-extensions.js'
 import { applyTsconfigPaths } from './tsconfig-paths.js'
 
 export { applySrcAlias } from './src-alias.js'
 export { applyEsmExtensions } from './esm-extensions.js'
+export { applyTsExtensions } from './ts-extensions.js'
 
 let BUILD_CTX: BuildContext | null = null
 
@@ -148,6 +150,11 @@ const runCedarBabelTransformsPlugin = {
 
         code = transformedCode.code
       }
+
+      // Rewrite relative `.ts`/`.mts`/`.cts`/`.tsx` specifiers to `.js`, the
+      // extension this build emits. Applies to both module formats — neither
+      // can resolve a `.ts` specifier at runtime.
+      code = applyTsExtensions(code, args.path)
 
       // For ESM projects, append .js/.jsx to extensionless relative imports
       // so Node's ESM resolver can locate the compiled output files at
@@ -370,6 +377,12 @@ function createCedarViteApiPlugin(): Plugin {
           applyOtelWrapping(outputCode, id, cedarPaths.api.src) ?? outputCode
       }
 
+      // Rewrite relative `.ts`/`.mts`/`.cts`/`.tsx` specifiers to `.js`. With
+      // preserveModules:true Rollup keeps relative specifiers as written, so
+      // a `.ts` specifier would otherwise reach the output and break at
+      // runtime — same as on the esbuild path.
+      outputCode = applyTsExtensions(outputCode, id)
+
       // Append .js/.jsx extensions to extensionless relative imports so that
       // Node's ESM resolver can find them at runtime. This replaces the
       // resolvePath hook in babel-plugin-module-resolver, which is not part
@@ -431,7 +444,7 @@ export const buildApiWithVite = async () => {
     input[key] = f
   }
 
-  return viteBuild({
+  const result = await viteBuild({
     root: cedarPaths.api.base,
     logLevel: 'warn',
     build: {
@@ -482,12 +495,17 @@ export const buildApiWithVite = async () => {
       createCedarViteApiPlugin(),
     ],
   })
+
+  await assertNoTsSpecifiers(cedarPaths.api.dist)
+
+  return result
 }
 
 const transpileApi = async (files: string[]) => {
   const result = await build(getEsbuildOptions(files))
   const cedarPaths = getPaths()
   await fixSourceMaps(cedarPaths.api.dist, cedarPaths.api.src)
+  await assertNoTsSpecifiers(cedarPaths.api.dist)
   return result
 }
 
