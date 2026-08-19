@@ -102,10 +102,15 @@ contexts.
 
 ### Background jobs: enforced timeouts and cancellation
 
-A job that runs past `maxRuntime` is now permanently failed (recorded as a
-`JobTimeoutError`) instead of silently staying eligible for another worker to
-pick up and re-run concurrently. Jobs can opt into cooperative cancellation
-via the new `getJobExecutionContext()`:
+A job that runs past `maxRuntime` is now permanently failed by the worker
+that was running it — recorded as a `JobTimeoutError` in `lastError` — instead
+of silently staying eligible for another worker to pick up and re-run
+concurrently (with the default `deleteFailedJobs: false`; if you've set that
+to `true`, the job row is deleted instead of retained with the error). This
+closes the common case, not every case: a worker that crashes outright,
+rather than hitting the timeout, still leaves its job reclaimable by another
+worker once `maxRuntime` plus a short grace period elapses. Jobs can opt into
+cooperative cancellation via the new `getJobExecutionContext()`:
 
 ```ts
 import { getJobExecutionContext } from '@cedarjs/jobs'
@@ -116,7 +121,9 @@ perform: async () => {
 }
 ```
 
-Queued or running jobs can also be cancelled directly:
+Queued or running jobs can also be cancelled directly (shown here with the
+default `PrismaAdapter`, whose `schedule()` returns the job record — see the
+adapter note below if you use a custom one):
 
 ```ts
 const scheduledJob = await later(SampleJob, [args])
@@ -304,9 +311,9 @@ keep them, but you can delete the `dns` import, the comment, and the call.
 ## Breaking changes
 
 - **[No more CJS-only packages](#no-more-cjs-only-packages)** — standard apps are unaffected; only breaks projects that compile their own TypeScript straight to CommonJS with `tsc` and statically import `@cedarjs/*` packages directly.
-- **[`cedar dev --ud`'s api server binds to all interfaces by default](#cedar-dev---uds-api-server-binds-to-all-interfaces-by-default)** — its default host changed from `localhost` to `::`/`0.0.0.0`, matching every other `serve` path.
+- **[`cedar serve api --ud` binds to all interfaces by default](#cedar-serve-api---ud-binds-to-all-interfaces-by-default)** — its default host changed from `localhost` to `::`/`0.0.0.0`, matching every other `serve` path.
 - **[Vitest 4 (ESM projects)](#vitest-4-esm-projects)** — needs a `vite@7.3.5` pin, and your own tests may hit a few Vitest 4 API changes.
-- **[MSW 2](#msw-2)** — only breaks tests/stories that import from `msw` directly, use `whatwg-fetch`, or override the Jest preset's `testEnvironment`/`transformIgnorePatterns`.
+- **[MSW 2](#msw-2)** — breaks tests/stories that import `msw`/`whatwg-fetch` directly, override the Jest preset's `testEnvironment`/`transformIgnorePatterns`, or have an old committed `mockServiceWorker.js`; most apps need no changes.
 - **[`web/babel.config.js` is no longer used by Vite](#webbabelconfigjs-is-no-longer-used-by-vite)** — custom Babel plugins/presets there stop running in the web build unless passed via the new `babel` Vite plugin option.
 - **[GraphQL client-agnostic indirection removed](#graphql-client-agnostic-indirection-removed)** — `GraphQLHooksProvider` and a handful of ambient GraphQL types are gone; switch to Apollo directly.
 - **[`yarn cedar console` removed](#yarn-cedar-console-removed)** — moved to a standalone package, run with `yarn dlx @cedarjs/console` instead.
@@ -348,7 +355,7 @@ handle it at runtime, so the build fails. If you hit this:
   }
   ```
 
-### `cedar dev --ud`'s api server binds to all interfaces by default
+### `cedar serve api --ud` binds to all interfaces by default
 
 `cedar serve api --ud` used to read `process.env.PORT` directly and bind to
 `localhost`. It now goes through the same host/port resolution as every
@@ -356,13 +363,18 @@ other `serve` path, which means its _default_ host changes from `localhost`
 to `::` in dev / `0.0.0.0` in production — matching `cedar serve`/
 `cedar serve api` elsewhere. If you relied on the api side only being
 reachable from localhost under `--ud`, pass `--host localhost` explicitly.
+(This is a separate command from `cedar dev --ud`, which handles api routes
+in-process through the Vite dev server and isn't affected.)
 
 This is part of a broader, backwards-compatible change: `PORT`/`HOST` are
 now read automatically on whichever side is publicly reachable (web, when
-both sides are served together; api, when served alone), and
-`CEDAR_API_PORT`/`CEDAR_WEB_PORT`/`CEDAR_API_HOST`/`CEDAR_WEB_HOST` are now
-the primary env var names — the old `REDWOOD_*` names still work as silent
-fallbacks.
+both sides are served together; api, when served alone) — the other side
+ignores them entirely and keeps using its configured host/port. Resolution
+order, highest priority first: CLI flags, then `CEDAR_API_PORT`/
+`CEDAR_WEB_PORT`/`CEDAR_API_HOST`/`CEDAR_WEB_HOST` (non-empty values override
+the deprecated `REDWOOD_*` aliases, which still work as silent fallbacks),
+then `PORT`/`HOST` on the public side only, then `[api].port`/`[web].port`
+in `cedar.toml`, then the built-in default.
 
 ### Vitest 4 (ESM projects)
 
