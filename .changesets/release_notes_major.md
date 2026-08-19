@@ -343,7 +343,9 @@ handle it at runtime, so the build fails. If you hit this:
 - For type-only imports, add a `resolution-mode: 'import'` attribute:
 
   ```ts
-  import type { Foo } from '@cedarjs/some-package' with { 'resolution-mode': 'import' }
+  import type { Foo } from '@cedarjs/some-package' with {
+    'resolution-mode': 'import',
+  }
   ```
 
 ### `cedar dev --ud`'s api server binds to all interfaces by default
