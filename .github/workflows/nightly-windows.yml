@@ -69,7 +69,7 @@ jobs:
   fragments-smoke-tests:
     if: github.repository == 'cedarjs/cedar'
     name: 📄 Fragments Smoke tests / windows-latest
-    uses: ./.github/workflows/fragments-smoke-tests.yml
+    uses: ./.github/workflows/fragments-and-td-smoke-tests.yml
     with:
       os: windows-latest
 
@@ -95,7 +95,7 @@ jobs:
       - smoke-tests-esm
       - cli-smoke-tests
       - telemetry-check
-      - fragments-smoke-tests
+      - fragments-and-ts-smoke-tests
       - rsc-smoke-tests
       - background-jobs-e2e
     if: github.repository == 'cedarjs/cedar' && failure()
