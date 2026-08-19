@@ -49,17 +49,89 @@ the fragment selects the type's `id`, the Cell reads its data live from the
 Apollo cache and re-renders when mutations update the entity. See the new
 "Fragment Cells: Aggregating Queries" section in the Cells docs.
 
-### CedarApolloProvider
+### `configureGraphQLServer` and `configureServer` options for the API server
 
-Continuing the move from Redwood to Cedar naming, `RedwoodApolloProvider` is
-now `CedarApolloProvider`, imported from a dedicated subpath:
+`createServer()` gains two new configuration hooks alongside the existing
+`configureApiServer`: `configureGraphQLServer`, scoped to just the GraphQL
+route, and `configureServer`, which runs on the root Fastify instance
+_before_ either the api functions or the GraphQL plugin register their
+routes — the right place for plugins with a "global" registration mode (like
+`@fastify/compress`) that only affect routes registered after them:
 
-```tsx
-import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
+```js
+const server = await createServer({
+  configureServer: (server) => {
+    server.register(compress, { global: true })
+  },
+})
 ```
 
-`RedwoodApolloProvider` keeps working as a deprecated alias, but it will be
-removed in a future release, so update your `web/src/App.tsx` when convenient.
+This also fixes a bug where registering something like `@fastify/compress`
+through `configureApiServer` alone only compressed api-function responses,
+never GraphQL responses — the two are separate Fastify encapsulation
+contexts.
+
+### Background jobs: enforced timeouts and cancellation
+
+A job that runs past `maxRuntime` is now permanently failed by the worker
+that was running it — recorded as a `JobTimeoutError` in `lastError` — instead
+of silently staying eligible for another worker to pick up and re-run
+concurrently (with the default `deleteFailedJobs: false`; if you've set that
+to `true`, the job row is deleted instead of retained with the error). This
+closes the common case, not every case: a worker that crashes outright,
+rather than hitting the timeout, still leaves its job reclaimable by another
+worker once `maxRuntime` plus a short grace period elapses. Jobs can opt into
+cooperative cancellation via the new `getJobExecutionContext()`:
+
+```ts
+import { getJobExecutionContext } from '@cedarjs/jobs'
+
+perform: async () => {
+  const context = getJobExecutionContext()
+  await fetch(url, { signal: context?.signal })
+}
+```
+
+Queued or running jobs can also be cancelled directly (shown here with the
+default `PrismaAdapter`, whose `schedule()` returns the job record — see the
+adapter note below if you use a custom one):
+
+```ts
+const scheduledJob = await later(SampleJob, [args])
+await later.cancel(scheduledJob.id)
+```
+
+If you have a custom job adapter: `later()`/`Scheduler.schedule()` used to
+always resolve to `true`; it now resolves to whatever your adapter's
+`schedule()` returns. `PrismaAdapter` returns the created job record (still
+truthy), but a custom adapter whose `schedule()` returns nothing will now
+see `undefined` from `later()` instead of `true`.
+
+### More Redwood → Cedar renaming
+
+Continuing the move from Redwood to Cedar naming, several more public APIs
+now have Cedar-named counterparts. The Redwood-named originals keep working
+as deprecated aliases — nothing breaks — but update to the new names when
+convenient, since the old ones will be removed in a future release:
+
+- `RedwoodApolloProvider` → `CedarApolloProvider`, now imported from a
+  dedicated subpath:
+
+  ```tsx
+  import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
+  ```
+
+- `RedwoodProvider` → `CedarProvider` (`@cedarjs/web`)
+- The GraphQL Yoga plugins in `@cedarjs/graphql-server` — `useRedwoodDirective`,
+  `useRedwoodAuthContext`, `useRedwoodError`, `useRedwoodGlobalContextSetter`,
+  `useRedwoodLogger`, `useRedwoodPopulateContext`, `useRedwoodOpenTelemetry`,
+  and `useRedwoodTrustedDocuments` — and their supporting types now have
+  `useCedar*`/`Cedar*` equivalents
+- `RedwoodError` and `RedwoodLoggerOptions` in `@cedarjs/api` are now
+  `CedarError` and `CedarLoggerOptions`
+
+Update `web/src/App.tsx` and any custom GraphQL server config to the new
+names when convenient.
 
 ### A Vite-native build pipeline
 
@@ -72,13 +144,33 @@ enable the React Compiler, Babel is now entirely out of the web build — faster
 transforms, correct sourcemaps, and fewer configuration edge cases. (See the
 breaking `web/babel.config.js` change below if you have a custom Babel setup.)
 
-### Testing now works in pnpm projects
+### Deploy: standard container-host conventions
 
-`yarn cedar test` used to fail before running a single test in pnpm projects
-because the Jest presets assumed a hoisted `node_modules` layout. Module paths
-are now resolved properly, msw interop understands pnpm's `.pnpm` store paths,
-and CI now continuously exercises real pnpm and npm test projects alongside
-yarn.
+Several changes together let a generated Cedar app deploy to a container
+host (Railway, Render, Fly.io, Google Cloud Run, Coolify, Dokku, Dokploy,
+Koyeb, Northflank, and similar) with little to no platform-specific
+configuration:
+
+- Generated apps now ship `build`/`dev`/`start`/`start:api`/`start:web`
+  scripts in their root `package.json`, so zero-config builders that detect
+  a `start` script (and run `build` first) — Railpack, Nixpacks, Paketo,
+  Google Cloud buildpacks — can boot a Cedar app with no Dockerfile or config
+  file. Heroku and DigitalOcean App Platform prune `devDependencies` before
+  running `start` by default, which breaks this unless you disable pruning
+  (`NPM_CONFIG_PRODUCTION=false` / `YARN_PRODUCTION=false` on Heroku,
+  `YARN2_SKIP_PRUNING=true` / `NPM_CONFIG_PRODUCTION=false` on DigitalOcean).
+- `cedar serve` and `cedar serve api` now read the `PORT`/`HOST` environment
+  variables every container PaaS sets, instead of requiring an explicit
+  `--port`/`--host`. See the breaking change below for the one existing
+  behavior this changes.
+- `yarn cedar setup database postgres` converts a project from SQLite to
+  Postgres — schema, Prisma adapter, config — without also provisioning a
+  Neon database. Previously that conversion was only reachable through
+  `setup neon`, which coupled it to one specific provider; `setup neon` now
+  builds on top of this new, provider-agnostic command.
+- `create-cedar-app` no longer bundles a lockfile in the base template —
+  each package-manager overlay (yarn/npm/pnpm) generates and ships its own,
+  so a new project never ends up with two conflicting lockfiles.
 
 ### `request` in getCurrentUser and authDecoder
 
@@ -99,6 +191,10 @@ prefer `request.headers.get('...')` over `event.headers['...']` where
 - Data migrations in ESM projects now run through Vite, so migration scripts
   get the same import aliases and plugin behavior as the rest of your api
   side.
+- Background job workers now run in-process under Unified Dev
+  (`yarn cedar dev --ud`), through the same Vite server that serves
+  `api/src`, instead of requiring a separate `cedar-jobs work` process
+  against a manually built `api/dist`.
 - Projects located in filesystem paths containing spaces now work correctly.
 - API functions returning status 204, 205, or 304 no longer crash under the
   fetch-native runtime.
@@ -131,10 +227,12 @@ code:
   indefinitely, it now checks that `TEST_DATABASE_URL` matches the provider
   configured in `schema.prisma` and throws an actionable, credential-redacted
   error before Prisma is invoked.
-- **`cedar generate sdl` is relation-aware and redacts sensitive fields.**
-  Generating SDL for a model with an unrelated model now generates read-only
-  stubs for those related models instead of leaving the project in a broken
-  state with a failing type-generation step. dbAuth's sensitive fields
+- **`cedar generate sdl` and `cedar generate scaffold` are relation-aware and
+  redact sensitive fields.** Generating SDL (or scaffolding) a model with a
+  relation to a model that has no SDL yet now generates read-only stubs for
+  those related models instead of leaving the project in a broken state with
+  a failing type-generation step — run `cedar generate sdl <Model>` later to
+  replace a stub with the real thing. dbAuth's sensitive fields
   (`hashedPassword`, `salt`, `resetToken`, and friends) are also excluded by
   name from generated SDL, inputs, scaffolds, and service tests, so they're
   no longer queryable or settable through the GraphQL API by default.
@@ -178,6 +276,72 @@ those lines are still in your `web/vite.config.{js,ts}`. Nothing breaks if you
 keep them, but you can delete the `dns` import, the comment, and the call.
 
 ## Breaking changes
+
+- **[No more CJS-only packages](#no-more-cjs-only-packages)** — standard apps are unaffected; only breaks projects that compile their own TypeScript straight to CommonJS with `tsc` and statically import `@cedarjs/*` packages directly.
+- **[`cedar serve api --ud` binds to all interfaces by default](#cedar-serve-api---ud-binds-to-all-interfaces-by-default)** — its default host changed from `localhost` to `::`/`0.0.0.0`, matching every other `serve` path.
+- **[Vitest 4 (ESM projects)](#vitest-4-esm-projects)** — needs a `vite@7.3.5` pin, and your own tests may hit a few Vitest 4 API changes.
+- **[MSW 2](#msw-2)** — breaks tests/stories that import `msw`/`whatwg-fetch` directly, override the Jest preset's `testEnvironment`/`transformIgnorePatterns`, or have an old committed `mockServiceWorker.js`; most apps need no changes.
+- **[`web/babel.config.js` is no longer used by Vite](#webbabelconfigjs-is-no-longer-used-by-vite)** — custom Babel plugins/presets there stop running in the web build unless passed via the new `babel` Vite plugin option.
+- **[GraphQL client-agnostic indirection removed](#graphql-client-agnostic-indirection-removed)** — `GraphQLHooksProvider` and a handful of ambient GraphQL types are gone; switch to Apollo directly.
+- **[`yarn cedar console` removed](#yarn-cedar-console-removed)** — moved to a standalone package, run with `yarn dlx @cedarjs/console` instead.
+- **[Custom generator templates path removed](#custom-generator-templates-path-removed)** — move `api/generators/`/`web/generators/` templates to `generatorTemplates/` (a codemod does this for you).
+- **[`getCommonPlugins()` removed](#getcommonplugins-removed)** — delete any `...getCommonPlugins()` usage; it's returned an empty array for a long time.
+- **[Web dev server `Buffer` polyfill removed](#web-dev-server-buffer-polyfill-removed)** — web code relying on the global `Buffer` in dev now fails immediately instead of only in production.
+- **[Context-wrapping plugin renamed](#context-wrapping-plugin-renamed)** — only affects advanced setups that reference the AsyncLocalStorage-wrapping plugin by name.
+
+### No more CJS-only packages
+
+Every `@cedarjs/*` package that used to be CommonJS-only or dual-mode
+(CJS+ESM) has moved to ESM-only, except `@cedarjs/prerender`,
+`@cedarjs/testing`, and `@cedarjs/project-config`, which stay dual-mode for
+now — no package in the framework is CommonJS-only anymore. See the
+[ESM migration plan](https://github.com/cedarjs/cedar/blob/main/docs/implementation-plans/2026-07-25-esm-migration.md)
+for the full package-by-package rationale.
+
+**For a standard generated Cedar app — CJS or ESM template — this is not
+breaking.** Framework code is always reached either through a plain `import`
+(bundled by Vite/Rollup) or, for API-side CJS-template projects, through
+Babel-transpiled `require()` calls, and Node 24 (Cedar's minimum supported
+version) transparently handles `require()`-ing an ESM module via its
+`require(esm)` support. No action is needed if you import these packages the
+standard way, through the generated templates.
+
+**It is breaking if you compile your own TypeScript straight to CommonJS
+with `tsc`** (not Babel) and statically `import` a `@cedarjs/*` package —
+for example, a custom auth integration built directly against
+`@cedarjs/auth-*-api`. `tsc` refuses to emit a static `require()` for a
+module it resolves as ESM-only (`TS1479`/`TS1541`), even though Node can
+handle it at runtime, so the build fails. If you hit this:
+
+- Switch the value import to a dynamic `import()`.
+- For type-only imports, add a `resolution-mode: 'import'` attribute:
+
+  ```ts
+  import type { Foo } from '@cedarjs/some-package' with {
+    'resolution-mode': 'import',
+  }
+  ```
+
+### `cedar serve api --ud` binds to all interfaces by default
+
+`cedar serve api --ud` used to read `process.env.PORT` directly and bind to
+`localhost`. It now goes through the same host/port resolution as every
+other `serve` path, which means its _default_ host changes from `localhost`
+to `::` in dev / `0.0.0.0` in production — matching `cedar serve`/
+`cedar serve api` elsewhere. If you relied on the api side only being
+reachable from localhost under `--ud`, pass `--host localhost` explicitly.
+(This is a separate command from `cedar dev --ud`, which handles api routes
+in-process through the Vite dev server and isn't affected.)
+
+Separately, a backwards-compatible environment-variable change now reads
+`PORT`/`HOST` automatically on whichever side is publicly reachable (web,
+when both sides are served together; api, when served alone) — the other
+side ignores them entirely and keeps using its configured host/port.
+Resolution order, highest priority first: CLI flags, then `CEDAR_API_PORT`/
+`CEDAR_WEB_PORT`/`CEDAR_API_HOST`/`CEDAR_WEB_HOST` (non-empty values override
+the deprecated `REDWOOD_*` aliases, which still work as silent fallbacks),
+then `PORT`/`HOST` on the public side only, then `[api].port`/`[web].port`
+in `cedar.toml`, then the built-in default.
 
 ### Vitest 4 (ESM projects)
 
@@ -231,12 +395,17 @@ changes, most commonly:
 See the Vitest migration guide for the full list:
 https://vitest.dev/guide/migration
 
-### MSW 2 (web-side Jest tests and Storybook)
+### MSW 2
 
 `@cedarjs/testing` now uses MSW 2 internally (up from MSW 1). Cedar's mocking
 API is unchanged: `mockGraphQLQuery`, `mockGraphQLMutation`, `mockCurrentUser`,
 and Cell `*.mock.ts` files keep working as before, including the
 `(variables, { ctx, req })` data-function signature. Most apps need no changes.
+
+This release also starts MSW for ESM/Vitest web-side tests for the first
+time — previously, GraphQL requests in those tests silently went out
+unmocked instead of being intercepted. Existing apps pick this up
+automatically on upgrade, with no changes needed to `web/vitest.setup.ts`.
 
 You do need to act if you:
 
@@ -310,8 +479,8 @@ with:
 yarn dlx @cedarjs/console
 ```
 
-(or `npx @cedarjs/console` / `pnpm dlx @cedarjs/console`). No app-side changes
-are needed.
+or `npx @cedarjs/console` if your app uses npm, or `pnpm dlx @cedarjs/console`
+if it uses pnpm. No app-side changes are needed.
 
 ### Custom generator templates path removed
 
