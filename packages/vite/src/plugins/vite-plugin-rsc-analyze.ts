@@ -60,9 +60,17 @@ function isServerAction(
     | swc.FunctionExpression
     | swc.ArrowFunctionExpression,
 ): boolean {
+  const body = node.body
+
+  // Checking for `stmts` instead of `body?.type === 'BlockStatement'` because
+  // newer versions of @swc/core (1.16+) parse function bodies as a
+  // `FunctionBody` node instead of `BlockStatement`, even though `@swc/types`
+  // still types `body` as `BlockStatement | Expression`. Both node shapes
+  // carry a `stmts` array, so this check is resilient to that rename.
   return (
-    node.body?.type === 'BlockStatement' &&
-    node.body.stmts.some(
+    !!body &&
+    'stmts' in body &&
+    body.stmts.some(
       (s) =>
         s.type === 'ExpressionStatement' &&
         s.expression.type === 'StringLiteral' &&
