@@ -24,7 +24,7 @@ export const generateClientPreset = async () => {
   const errors: { message: string; error: unknown }[] = []
 
   if (!shouldGenerateTrustedDocuments()) {
-    return { clientPresetFiles, trustedDocumentsStoreFile: [], errors }
+    return { clientPresetFiles, trustedDocumentsStoreFile: '', errors }
   }
 
   // The documents glob and the generates path have to be relative (resolved
@@ -82,7 +82,7 @@ export const generateClientPreset = async () => {
 
     return {
       clientPresetFiles,
-      trustedDocumentsStoreFile: [],
+      trustedDocumentsStoreFile: '',
       errors,
     }
   }
