@@ -1,9 +1,8 @@
-import execa from 'execa'
-
+import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 import { getPaths } from '@cedarjs/project-config'
 
 export const webSsrServerHandler = async (rscEnabled?: boolean) => {
-  await execa('yarn', ['cedar-serve-fe'], {
+  await runBin('cedar-serve-fe', [], {
     cwd: getPaths().web.base,
     stdio: 'inherit',
     env: rscEnabled

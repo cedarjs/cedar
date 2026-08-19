@@ -6,8 +6,8 @@ import yargs from 'yargs/yargs'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import { description, builder } from './commands/up'
-import { handler } from './commands/upHandler'
+import { description, builder } from './commands/up.js'
+import { handler } from './commands/upHandler.js'
 
 if (!process.env.CEDAR_ENV_FILES_LOADED) {
   config({

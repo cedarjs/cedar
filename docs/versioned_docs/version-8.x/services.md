@@ -792,7 +792,7 @@ How does a cache work? At its simplest, a cache is just a big chunk of memory or
 
 Why use a cache? If you have an expensive or time-consuming process in your service that doesn't change on every request, this is a great candidate. For example, for a store front, you may want to show the most popular products. This may be computed by a combination of purchases, views, time spent on the product page, social media posts, or a whole host of additional information. Aggregating this data may take seconds or more, but the list of popular products probably doesn't change that often. There's no reason to make every user wait all that time just to see the same list of products. With service caching, just wrap this computation in the `cache()` function, and give it an expiration time of 24 hours, and now the result is returned in milliseconds for every user (except the first one in a 24 hour period, it has to be computed from scratch and then stored in the cache again). You can even remove this first user's wait by "warming" the cache: trigging the service function by a process you run on the server, rather than by a user's first visit, on a 24 hour schedule so that it's the one that ends up waiting for the results to be computed.
 
-:::info What about GraphQL caching?
+:::info[What about GraphQL caching?]
 
 You could also cache data at the [GraphQL layer](https://community.redwoodjs.com/t/guide-power-of-graphql-caching/2624) which has some of the same benefits. Using Envelop plugins you can add a response cache _after_ your services (resolver functions in the context of GraphQL) run - with a global configuration.
 

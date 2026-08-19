@@ -3,7 +3,9 @@ import type { ${operationName}, ${operationName}Variables  } from 'types/graphql
 import type {
   CellSuccessProps,
   CellFailureProps,
-  TypedDocumentNode,
+  TypedDocumentNode,<% if (beforeQuery) { %>
+  CellBeforeQueryResult,<% } %><% if (afterQuery || isEmpty) { %>
+  DataObject,<% } %>
 } from '@cedarjs/web'
 
 export const QUERY: TypedDocumentNode<
@@ -16,7 +18,24 @@ export const QUERY: TypedDocumentNode<
     }
   }
 `
-
+<% if (beforeQuery) { %>
+export const beforeQuery = (
+  props: ${operationName}Variables,
+): CellBeforeQueryResult<${operationName}Variables> => {
+  return { variables: props, fetchPolicy: 'cache-and-network' }
+}
+<% } %><% if (isEmpty) { %>
+export const isEmpty = (
+  data: DataObject,
+  { isDataEmpty }: { isDataEmpty: (data: DataObject) => boolean },
+) => {
+  return isDataEmpty(data)
+}
+<% } %><% if (afterQuery) { %>
+export const afterQuery = (data: DataObject): DataObject => {
+  return data
+}
+<% } %>
 export const Loading = () => <div>Loading...</div>
 
 export const Empty = () => <div>Empty</div>

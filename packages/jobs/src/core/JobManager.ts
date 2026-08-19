@@ -47,13 +47,15 @@ export class JobManager<
     this.workers = config.workers
   }
 
-  createScheduler(schedulerConfig: CreateSchedulerConfig<TAdapters>) {
+  createScheduler<TAdapterName extends keyof TAdapters>(
+    schedulerConfig: CreateSchedulerConfig<TAdapters, TAdapterName>,
+  ) {
     const scheduler = new Scheduler({
       adapter: this.adapters[schedulerConfig.adapter],
       logger: schedulerConfig.logger ?? this.logger,
     })
 
-    return <TJob extends Job<TQueues, any[]>>(
+    const schedule = <TJob extends Job<TQueues, any[]>>(
       job: TJob,
       ...argsAndOptions: CreateSchedulerArgs<TJob>
     ) => {
@@ -65,6 +67,12 @@ export class JobManager<
 
       return scheduler.schedule({ job, args, options })
     }
+
+    // Attach `cancel` to the scheduling function itself, so app code can do
+    // `const job = await later(MyJob, [...])` and then `later.cancel(job.id)`
+    return Object.assign(schedule, {
+      cancel: (jobId: string | number) => scheduler.cancel(jobId),
+    })
   }
 
   createJob<TArgs extends unknown[]>(

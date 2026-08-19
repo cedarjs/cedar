@@ -117,12 +117,23 @@ module.exports = {
           },
           items: [
             { type: 'doc', label: 'Introduction', id: 'deploy/introduction' },
+            {
+              type: 'doc',
+              label: 'Any Container Host',
+              id: 'deploy/any-container-host',
+            },
+            {
+              type: 'doc',
+              label: 'Universal Deploy',
+              id: 'deploy/universal-deploy',
+            },
             { type: 'doc', label: 'Baremetal', id: 'deploy/baremetal' },
             {
               type: 'doc',
               label: 'GCP or AWS via Coherence',
               id: 'deploy/coherence',
             },
+            { type: 'doc', label: 'Coolify', id: 'deploy/coolify' },
             {
               type: 'doc',
               label: 'AWS via Flightcontrol',
@@ -130,6 +141,7 @@ module.exports = {
             },
             { type: 'doc', label: 'Edgio', id: 'deploy/edgio' },
             { type: 'doc', label: 'Netlify', id: 'deploy/netlify' },
+            { type: 'doc', label: 'Railway', id: 'deploy/railway' },
             { type: 'doc', label: 'Render', id: 'deploy/render' },
             {
               type: 'doc',
@@ -156,6 +168,7 @@ module.exports = {
             { type: 'doc', label: 'About', id: 'graphql' },
             { type: 'doc', label: 'Caching', id: 'graphql/caching' },
             { type: 'doc', label: 'Fragments', id: 'graphql/fragments' },
+            { type: 'doc', label: 'gqlorm', id: 'graphql/gqlorm' },
             {
               type: 'doc',
               label: 'Trusted Documents',

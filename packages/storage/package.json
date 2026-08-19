@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/storage",
-  "version": "4.1.0",
+  "version": "5.0.6",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -10,42 +10,25 @@
   "type": "module",
   "exports": {
     ".": {
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.js"
-      },
-      "import": {
+      "default": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
       }
     },
-    "./FileSystemStorage": {
-      "require": "./dist/cjs/adapters/FileSystemStorage/FileSystemStorage.js",
-      "import": "./dist/adapters/FileSystemStorage/FileSystemStorage.js"
-    },
-    "./MemoryStorage": {
-      "require": "./dist/cjs/adapters/MemoryStorage/MemoryStorage.js",
-      "import": "./dist/adapters/MemoryStorage/MemoryStorage.js"
-    },
-    "./BaseStorageAdapter": {
-      "require": "./dist/cjs/adapters/BaseStorageAdapter.js",
-      "import": "./dist/adapters/BaseStorageAdapter.js"
-    },
-    "./UrlSigner": {
-      "require": "./dist/cjs/UrlSigner.js",
-      "import": "./dist/UrlSigner.js"
-    }
+    "./FileSystemStorage": "./dist/adapters/FileSystemStorage/FileSystemStorage.js",
+    "./MemoryStorage": "./dist/adapters/MemoryStorage/MemoryStorage.js",
+    "./BaseStorageAdapter": "./dist/adapters/BaseStorageAdapter.js",
+    "./UrlSigner": "./dist/UrlSigner.js"
   },
   "files": [
     "dist",
     "!dist/**/*.test.d.*"
   ],
   "scripts": {
-    "build": "tsx ./build.mts",
+    "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-storage.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
-    "build:types-cjs": "tsc --build --verbose tsconfig.types-cjs.json",
-    "check:attw": "tsx attw.ts",
+    "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn publint",
     "setup:test": "npx prisma db push --accept-data-loss --config ./src/__tests__/prisma.config.ts && npx prisma generate --config ./src/__tests__/prisma.config.ts",
     "test": "vitest run",
@@ -58,21 +41,20 @@
     "ulid": "3.0.2"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.2",
+    "@arethetypeswrong/cli": "0.18.5",
     "@cedarjs/framework-tools": "workspace:*",
     "@prisma/adapter-better-sqlite3": "7.8.0",
     "@prisma/client": "7.8.0",
     "@types/better-sqlite3": "7.6.13",
     "@types/mime-types": "2.1.4",
-    "better-sqlite3": "12.9.0",
-    "concurrently": "9.2.1",
-    "esbuild": "0.27.7",
+    "better-sqlite3": "12.11.1",
+    "concurrently": "9.2.4",
+    "esbuild": "0.28.2",
     "prisma": "7.8.0",
-    "publint": "0.3.18",
+    "publint": "0.3.23",
     "tstyche": "5.0.2",
-    "tsx": "4.21.0",
     "typescript": "5.9.3",
-    "vitest": "3.2.4"
+    "vitest": "4.1.10"
   },
   "engines": {
     "node": ">=24"

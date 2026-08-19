@@ -7,7 +7,7 @@ sidebar_label: Azure
 To get started, run the setup command:
 
 ```bash
-yarn rw setup auth azure-active-directory
+yarn cedar setup auth azure-active-directory
 ```
 
 This installs all the packages, writes all the files, and makes all the code
@@ -47,7 +47,7 @@ At the end, it says...
 Cedar uses [MSAL.js 2.0 with auth code flow](https://learn.microsoft.com/en-us/azure/active-directory/develop/scenario-spa-app-registration#redirect-uri-msaljs-20-with-auth-code-flow), so follow the steps there next.
 When it asks you for a Redirect URI, enter `http://localhost:8910` and `http://localhost:8910/login`, and copy these into your `.env` file as `AZURE_ACTIVE_DIRECTORY_REDIRECT_URI` and `AZURE_ACTIVE_DIRECTORY_LOGOUT_REDIRECT_URI`:
 
-:::tip Can't add multiple URI's?
+:::tip[Can't add multiple URI's?]
 
 Configure one, then you'll be able to configure another.
 
@@ -80,7 +80,7 @@ a home page. There we'll try to sign up by destructuring `signUp` from the
 display `isAuthenticated` to see if it worked:
 
 ```
-yarn rw g page home /
+yarn cedar g page home /
 ```
 
 ```tsx title="web/src/pages/HomePage.tsx"

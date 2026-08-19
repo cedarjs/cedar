@@ -29,17 +29,17 @@ For certain options, instead of having to configure build tools directly, there'
 
 ## [web]
 
-| Key                           | Description                                                                                                     | Default                                                         |
-| :---------------------------- | :-------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------- |
-| `title`                       | Title of your Cedar app                                                                                         | `'Cedar App'`                                                   |
-| `port`                        | Port for the web server to listen at                                                                            | `8910`                                                          |
-| `apiUrl`                      | URL to your api server. This can be a relative URL in which case it acts like a proxy, or a fully-qualified URL | `'/.api/functions'`                                             |
-| `includeEnvironmentVariables` | Environment variables made available to the web side during dev and build                                       | `[]`                                                            |
-| `host`                        | Hostname for the web server to listen at                                                                        | Defaults to `'0.0.0.0'` in production and `'::'` in development |
-| `apiGraphQLUrl`               | URL to your GraphQL function                                                                                    | `'${apiUrl}/graphql'`                                           |
-| `apiDbAuthUrl`                | URL to your dbAuth function                                                                                     | `'${apiUrl}/auth'`                                              |
-| `sourceMap`                   | Enable source maps for production builds                                                                        | `false`                                                         |
-| `a11y`                        | Enable storybook `addon-a11y` and `eslint-plugin-jsx-a11y`                                                      | `true`                                                          |
+| Key                           | Description                                                                                                     | Default               |
+| :---------------------------- | :-------------------------------------------------------------------------------------------------------------- | :-------------------- |
+| `title`                       | Title of your Cedar app                                                                                         | `'Cedar App'`         |
+| `port`                        | Port for the web server to listen at                                                                            | `8910`                |
+| `apiUrl`                      | URL to your api server. This can be a relative URL in which case it acts like a proxy, or a fully-qualified URL | `'/.api/functions'`   |
+| `includeEnvironmentVariables` | Environment variables made available to the web side during dev and build                                       | `[]`                  |
+| `host`                        | Hostname for the web server to listen at                                                                        | `'::'`                |
+| `apiGraphQLUrl`               | URL to your GraphQL function                                                                                    | `'${apiUrl}/graphql'` |
+| `apiDbAuthUrl`                | URL to your dbAuth function                                                                                     | `'${apiUrl}/auth'`    |
+| `sourceMap`                   | Enable source maps for production builds                                                                        | `false`               |
+| `a11y`                        | Enable storybook `addon-a11y` and `eslint-plugin-jsx-a11y`                                                      | `true`                |
 
 ### Customizing the GraphQL Endpoint
 
@@ -100,7 +100,7 @@ PUBLIC_KEY=...
 
 Instead of including them in `includeEnvironmentVariables`, you can also prefix them with `REDWOOD_ENV_` (see [Environment Variables](environment-variables.md#web)).
 
-:::caution `includeEnvironmentVariables` isn't for secrets
+:::caution[`includeEnvironmentVariables` isn't for secrets]
 
 Don't make secrets available to your web side. Everything in `includeEnvironmentVariables` is included in the bundle.
 
@@ -108,12 +108,12 @@ Don't make secrets available to your web side. Everything in `includeEnvironment
 
 ## [api]
 
-| Key            | Description                              | Default                                                         |
-| :------------- | :--------------------------------------- | :-------------------------------------------------------------- |
-| `port`         | Port for the api server to listen at     | `8911`                                                          |
-| `host`         | Hostname for the api server to listen at | Defaults to `'0.0.0.0'` in production and `'::'` in development |
-| `prismaConfig` | Path to the Prisma configuration file    | Defaults to `./api/prisma.config.cjs`                           |
-| `debugPort`    | Port for the debugger to listen at       | `18911`                                                         |
+| Key            | Description                              | Default                               |
+| :------------- | :--------------------------------------- | :------------------------------------ |
+| `port`         | Port for the api server to listen at     | `8911`                                |
+| `host`         | Hostname for the api server to listen at | `'::'`                                |
+| `prismaConfig` | Path to the Prisma configuration file    | Defaults to `./api/prisma.config.cjs` |
+| `debugPort`    | Port for the debugger to listen at       | `18911`                               |
 
 Additional server configuration can be done using [Server File](docker.md#using-the-server-file)
 
@@ -125,7 +125,7 @@ Additional server configuration can be done using [Server File](docker.md#using-
 ```
 
 Setting `open` to `true` opens your browser to `http://${web.host}:${web.port}` (by default, `http://localhost:8910`) after the dev server starts.
-If you want your browser to stop opening when you run `yarn rw dev`, set this to `false`.
+If you want your browser to stop opening when you run `yarn cedar dev`, set this to `false`.
 (Or just remove it entirely.)
 
 There's actually a lot more you can do here. For more, see Vite's docs on [`preview.open`](https://vitejs.dev/config/preview-options.html#preview-open).
@@ -186,7 +186,11 @@ Just remember two things:
 
 ## Running in a Container or VM
 
-To run a Cedar app in a container or VM, you'll want to set both the web and api's `host` to `0.0.0.0` to allow network connections to and from the host:
+The web and api servers both default to `host = '::'`, which binds dual-stack
+(IPv4 and IPv6) on hosts that support it — no configuration needed to accept
+connections from outside the container.
+
+If you need to pin to IPv4 only, set `host` explicitly:
 
 ```toml title="cedar.toml"
 [web]
@@ -195,21 +199,23 @@ To run a Cedar app in a container or VM, you'll want to set both the web and api
   host = '0.0.0.0'
 ```
 
-You can also configure these values via `REDWOOD_WEB_HOST` and `REDWOOD_API_HOST`.
-And if you set `NODE_ENV` to production, these will be the defaults anyway.
+You can also configure these values via `CEDAR_WEB_HOST` and `CEDAR_API_HOST`.
 
-## ESLint Configuration
+### Container hosts
 
-| Key                         | Description                                                                   | Default |
-| :-------------------------- | :---------------------------------------------------------------------------- | :------ |
-| `eslintLegacyConfigWarning` | Show deprecation warnings when legacy ESLint configuration files are detected | `true`  |
+Most container hosts (Railway, Render, Fly.io, Cloud Run, Heroku) tell your app
+what to bind to with the `HOST` and `PORT` env vars. Cedar reads both, so you
+usually don't have to configure anything.
 
-The `eslintLegacyConfigWarning` option controls whether Cedar shows deprecation warnings when it detects legacy ESLint configuration files (like `.eslintrc.js`, `.eslintrc.json`, or `eslint` in `package.json`).
+`PORT` is only used by the side serving public traffic. When you run both sides
+together with `yarn cedar serve`, that's the web server — the api server keeps
+its own port, because the two would otherwise try to bind the same one. Serving
+a single side with `yarn cedar serve api` or `yarn cedar serve web` makes that
+side the public one.
 
-To disable these warnings, set it to `false`:
+The full order of precedence is:
 
-```toml title="cedar.toml"
-eslintLegacyConfigWarning = false
-```
-
-This can be useful if you need to temporarily maintain legacy ESLint configurations while transitioning to the new flat config format.
+1. CLI flags (`--port`, `--host`, `--api-port`, …)
+2. `CEDAR_API_PORT` / `CEDAR_WEB_PORT` (and the `_HOST` equivalents)
+3. `PORT` / `HOST`, for the public side only
+4. `[api].port` / `[web].port` in `cedar.toml`

@@ -21,7 +21,7 @@ The api side of Cedar is transpiled by Babel into the `./api/dist` folder.
 To emulate Netlify's build steps locally:
 
 ```bash
-yarn rw build api
+yarn cedar build api
 cd api
 yarn zip-it-and-ship-it dist/functions/ zipballs/
 ```

@@ -21,6 +21,14 @@ import { apiSideFiles, generateUniqueFileNames } from './authFiles.js'
 const AUTH_PROVIDER_HOOK_IMPORT = `import { AuthProvider, useAuth } from './auth.js'`
 const AUTH_HOOK_IMPORT = `import { useAuth } from './auth.js'`
 
+// `CedarApolloProvider` is checked first since it's what current templates
+// use. `RedwoodApolloProvider` is still checked as a fallback so this keeps
+// working for apps that haven't migrated off the deprecated name.
+const APOLLO_PROVIDER_COMPONENT_NAMES = [
+  'CedarApolloProvider',
+  'RedwoodApolloProvider',
+]
+
 export const getWebAppPath = () => getPaths().web.app
 
 /**
@@ -229,12 +237,15 @@ const addAuthProviderToApp = (content: string, setupMode: AuthSetupMode) => {
     content = removeAuthProvider(content)
   }
 
+  // Older projects (created before CedarProvider replaced the deprecated
+  // RedwoodProvider) may still have <RedwoodProvider> in App.{jsx,tsx}, so
+  // both names are matched here.
   const match = content.match(
-    /(\s+)(<RedwoodProvider.*?>)(.*)(<\/RedwoodProvider>)/s,
+    /(\s+)(<(?:Cedar|Redwood)Provider.*?>)(.*)(<\/(?:Cedar|Redwood)Provider>)/s,
   )
 
   if (!match) {
-    throw new Error('Could not find <RedwoodProvider> in App.{jsx,tsx}')
+    throw new Error('Could not find <CedarProvider> in App.{jsx,tsx}')
   }
 
   // If Auth.tsx already contains exactly what we're trying to add there's no
@@ -247,12 +258,12 @@ const addAuthProviderToApp = (content: string, setupMode: AuthSetupMode) => {
   const [
     _,
     newlineAndIndent,
-    redwoodProviderOpen,
-    redwoodProviderChildren,
-    redwoodProviderClose,
+    cedarProviderOpen,
+    cedarProviderChildren,
+    cedarProviderClose,
   ] = match
 
-  const redwoodProviderChildrenLines = redwoodProviderChildren
+  const cedarProviderChildrenLines = cedarProviderChildren
     .split('\n')
     .map((line, index) => {
       return `${index === 0 ? '' : '  '}` + line
@@ -260,17 +271,17 @@ const addAuthProviderToApp = (content: string, setupMode: AuthSetupMode) => {
 
   const renderContent =
     newlineAndIndent +
-    redwoodProviderOpen +
+    cedarProviderOpen +
     newlineAndIndent +
     '  ' +
     `<AuthProvider>` +
-    redwoodProviderChildrenLines.join('\n') +
+    cedarProviderChildrenLines.join('\n') +
     `</AuthProvider>` +
     newlineAndIndent +
-    redwoodProviderClose
+    cedarProviderClose
 
   return content.replace(
-    /\s+<RedwoodProvider.*?>.*<\/RedwoodProvider>/s,
+    /\s+<(?:Cedar|Redwood)Provider.*?>.*<\/(?:Cedar|Redwood)Provider>/s,
     renderContent,
   )
 }
@@ -322,13 +333,17 @@ export const addConfigToWebApp = <
 
       content = addAuthProviderToApp(content, ctx.setupMode)
 
-      if (/\s*<RedwoodApolloProvider/.test(content)) {
-        if (!hasUseAuthHook('RedwoodApolloProvider', content)) {
-          content = addUseAuthHook('RedwoodApolloProvider', content)
+      const apolloProviderComponentName = APOLLO_PROVIDER_COMPONENT_NAMES.find(
+        (componentName) => new RegExp(`\\s*<${componentName}`).test(content),
+      )
+
+      if (apolloProviderComponentName) {
+        if (!hasUseAuthHook(apolloProviderComponentName, content)) {
+          content = addUseAuthHook(apolloProviderComponentName, content)
         }
       } else {
         task.output = colors.warning(
-          'Could not find <RedwoodApolloProvider>.\nIf you are using a custom ' +
+          'Could not find <CedarApolloProvider>.\nIf you are using a custom ' +
             'GraphQL Client you will have to make sure it gets access to your ' +
             '`useAuth`, if it needs it.',
         )

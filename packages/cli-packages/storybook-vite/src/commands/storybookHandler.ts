@@ -14,7 +14,7 @@ import {
 import { getPaths } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import type { StorybookYargsOptions } from '../types'
+import type { StorybookYargsOptions } from '../types.js'
 
 const readFile = (target: fs.PathOrFileDescriptor) =>
   fs.readFileSync(target, { encoding: 'utf8' })
@@ -75,7 +75,7 @@ export async function handler({
     cwd,
   }
 
-  // Create the `MockServiceWorker.js` file. See https://v1.mswjs.io/docs/cli/init
+  // Create the `MockServiceWorker.js` file. See https://mswjs.io/docs/cli/init
   await execa.command(
     `yarn msw init "${staticAssetsFolder}" --no-save`,
     execaOptions,
@@ -84,9 +84,9 @@ export async function handler({
   const usingTS = isTypeScriptProject()
   const mainFileName = usingTS ? 'main.ts' : 'main.js'
 
-  const redwoodProjectPaths = getPaths()
+  const cedarProjectPaths = getPaths()
   const storybookConfigPath = path.dirname(
-    `${redwoodProjectPaths.web.storybook}/${mainFileName}`,
+    `${cedarProjectPaths.web.storybook}/${mainFileName}`,
   )
 
   const storybookMainFilePath = path.join(storybookConfigPath, mainFileName)
@@ -104,7 +104,7 @@ export async function handler({
     const isTSProject = isTypeScriptProject()
     console.log(`Storybook's ${mainFileName} not found. Creating it now...`)
     const mainConfigTemplatePath = path.join(
-      __dirname,
+      import.meta.dirname,
       'templates/main.ts.template', // The template is TS, and we'll convert it to JS if needed
     )
     const mainConfigContentTS = readFile(mainConfigTemplatePath)
@@ -123,7 +123,7 @@ export async function handler({
   if (!fs.existsSync(storybookPreviewBodyFilePath)) {
     console.log("Storybook's preview-body.html not found. Creating it now...")
     const previewBodyTemplatePath = path.join(
-      __dirname,
+      import.meta.dirname,
       'templates/preview-body.html.template',
     )
     const previewBodyConfigContent = readFile(previewBodyTemplatePath)

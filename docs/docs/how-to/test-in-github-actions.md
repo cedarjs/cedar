@@ -40,7 +40,7 @@ cd rw-testing-gh-actions
 Then make sure everything is working:
 
 ```sh
-yarn rw test
+yarn cedar test
 ```
 
 If it is, you should see something like this:
@@ -65,7 +65,7 @@ Watch Usage: Press w to show more.
 For the purpose of this how to, we'll use the `UserExample` model that comes with the Cedar app.
 We'll also change the database to Postgres since that's what we'll be using in our GitHub Actions.
 
-:::note Make sure you have a Postgres instance ready to use
+:::note[Make sure you have a Postgres instance ready to use]
 
 Here's a handy guide for how to [set it up locally](../local-postgres-setup). We'll need the connection string so our Cedar app knows where to store the data
 
@@ -115,7 +115,7 @@ Next, navigate to the `scripts/seed.ts` file. Uncomment the contents of the arra
 
     const data: Prisma.UserExampleCreateArgs['data'][] = [
       // To try this example data with the UserExample model in schema.prisma,
-      // uncomment the lines below and run 'yarn rw prisma migrate dev'
+      // uncomment the lines below and run 'yarn cedar prisma migrate dev'
       //
       { name: 'alice', email: 'alice@example.com' },
       { name: 'mark', email: 'mark@example.com' },
@@ -147,7 +147,7 @@ Next, navigate to the `scripts/seed.ts` file. Uncomment the contents of the arra
 Finally, migrate your database:
 
 ```sh
-yarn rw prisma migrate dev --name init
+yarn cedar prisma migrate dev --name init
 ```
 
 ### 3. Generate the UserExample scaffold
@@ -155,13 +155,13 @@ yarn rw prisma migrate dev --name init
 We need some real tests to work with. Scaffolding out the `UserExample` model gives us everything we need to create "users" in our app, including some of the services tests which interact with our test database:
 
 ```sh
-yarn rw g scaffold UserExample
+yarn cedar g scaffold UserExample
 ```
 
 Make sure everything is still working:
 
 ```sh
-yarn rw test
+yarn cedar test
 ```
 
 You should see something like this:
@@ -237,11 +237,11 @@ jobs:
       # install all the dependencies
       - run: yarn install
       # build the redwood app
-      - run: yarn rw build
+      - run: yarn cedar build
       # run the api tests
-      - run: yarn rw test api --no-watch
+      - run: yarn cedar test api --no-watch
       # run the web tests
-      - run: yarn rw test web --no-watch
+      - run: yarn cedar test web --no-watch
 ```
 
 Now push your changes to the `main` branch on GitHub; the "Cedar CI" action we just made will run like this:
@@ -347,15 +347,15 @@ jobs:
       # install all the dependencies
       - run: yarn install
       # build the redwood app
-      - run: yarn rw build
+      - run: yarn cedar build
       # run the api tests
-      - run: yarn rw test api --no-watch
+      - run: yarn cedar test api --no-watch
       # run the web tests
-      - run: yarn rw test web --no-watch
+      - run: yarn cedar test web --no-watch
       # run migrations on the actual database
-      - run: yarn rw prisma migrate deploy
+      - run: yarn cedar prisma migrate deploy
       # run seed script in the actual db
-      - run: yarn rw prisma db seed
+      - run: yarn cedar prisma db seed
 ```
 
 The main changes are:

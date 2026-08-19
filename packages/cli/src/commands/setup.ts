@@ -7,6 +7,7 @@ import { detectCedarVersion } from '../middleware/detectProjectCedarVersion.js'
 import * as setupAuth from './setup/auth/auth.js'
 // @ts-expect-error - Types not available for JS files
 import * as setupCache from './setup/cache/cache.js'
+import * as setupDatabase from './setup/database/database.js'
 // @ts-expect-error - Types not available for JS files
 import * as setupDeploy from './setup/deploy/deploy.js'
 // @ts-expect-error - Types not available for JS files
@@ -22,6 +23,7 @@ import * as setupJobs from './setup/jobs/jobs.js'
 import * as setupMailer from './setup/mailer/mailer.js'
 import * as setupMiddleware from './setup/middleware/middleware.js'
 import * as setupMonitoring from './setup/monitoring/monitoring.js'
+import * as setupNeon from './setup/neon/neon.js'
 // @ts-expect-error - Types not available for JS files
 import * as setupPackage from './setup/package/package.js'
 // @ts-expect-error - Types not available for JS files
@@ -33,9 +35,6 @@ import * as setupTsconfig from './setup/tsconfig/tsconfig.js'
 import * as setupUi from './setup/ui/ui.js'
 // @ts-expect-error - Types not available for JS files
 import * as setupUploads from './setup/uploads/uploads.js'
-// @ts-expect-error - Types not available for JS files
-import * as setupVite from './setup/vite/vite.js'
-
 export const command = 'setup <command>'
 export const description = 'Initialize project config and install packages'
 
@@ -43,6 +42,7 @@ export const builder = (yargs: Argv) =>
   yargs
     .command(setupAuth)
     .command(setupCache)
+    .command(setupDatabase)
     .command(setupDeploy)
     .command(setupDocker)
     .command(setupGenerator)
@@ -55,6 +55,7 @@ export const builder = (yargs: Argv) =>
     .command(setupMiddleware)
     // @ts-expect-error - Yargs TS types aren't very good
     .command(setupMonitoring)
+    .command(setupNeon)
     .command(setupPackage)
     .command(setupRealtime)
     .command(setupServerFile)
@@ -62,7 +63,6 @@ export const builder = (yargs: Argv) =>
     // @ts-expect-error - Yargs TS types aren't very good
     .command(setupUi)
     .command(setupUploads)
-    .command(setupVite)
     .demandCommand()
     // @ts-expect-error - Yargs TS types aren't very good
     .middleware(detectCedarVersion)

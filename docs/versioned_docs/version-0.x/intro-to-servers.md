@@ -55,7 +55,7 @@ You can see a list of all known servers by looking in this file:
 ~/.ssh/known_hosts
 ```
 
-:::info Reusing IP addresses
+:::info[Reusing IP addresses]
 
 If you're connecting to cloud-based servers, turning them on and off, and potentially reusing IP addresses, you'll get an error message the next time you try to connect to that IP (because the signature of the server itself is now different than what's recorded in `known_hosts`. Find that line and delete it from `~/.ssh/known_hosts` and you'll be able to connect again.
 
@@ -63,7 +63,7 @@ If you're connecting to cloud-based servers, turning them on and off, and potent
 
 Once you're past that prompt you'll then either be prompted for your password, or logged in automatically (when using a private or public key). Let's look at each one in detail.
 
-:::warning Baremetal First Deploy Woes?
+:::warning[Baremetal First Deploy Woes?]
 
 If you're having trouble deploying to your server with Baremetal, and you've never connected to your server manually via SSH, this could be why: Baremetal provides no interactive prompt to accept this server fingerprint. You need to connect manually at least once before Baremetal can connect.
 
@@ -97,7 +97,7 @@ Whether or not you connected successfully, skip ahead to the [Connected](#connec
 
 Some providers, like AWS, will give you a private key at the time the server is created, rather than a password. This file usually ends in `.pem`. Make sure you know where you put this file on your computer because, for now, it's the only way you'll be able to connect to your server. If you lose it, you'll need to terminate that instance and start a new one. I generally put them in the `~/.ssh` folder to keep all SSH-related stuff together, usually in a subdirectory. (I also move this directory to iCloud and then create a symlink back to `~/.ssh` so that it's synchronized across all of my systems.)
 
-:::info More About Public/Private Keypairs
+:::info[More About Public/Private Keypairs]
 
 Learn more about [public/private key authentication](https://www.ssh.com/academy/ssh/public-key-authentication). But the gist is that you create two keys, one public and one private. Either one can encrypt a document, but, only the private key can _decrypt_ it. This means that anyone can have the public key and it can be freely distrubted (thus the "public" name), and the owner of the private key can always verify that it was encrypted using the related public key. A related technique can happen in reverse: the private key can be used to create a signature of a document, and the public key can be used to _verify_ that the signature was created by the matching private key. So you can get the original message, and after verifying the signature, trust that it was sent by the owner of the private key.
 
@@ -280,7 +280,7 @@ The key's randomart image is:
 +----[SHA256]-----+
 ```
 
-:::info What's this randomart thing?
+:::info[What's this randomart thing?]
 
 From this [Super User answer](https://superuser.com/a/22541):
 
@@ -306,7 +306,7 @@ ssh-add ~/.ssh/id_ed25519
 
 Now running `ssh-add -L` should list our key.
 
-:::info Missing key after computer restart
+:::info[Missing key after computer restart]
 
 I've had cases where my key was unknown to `ssh-agent` after a computer restart. I added the following to the `~/.zshrc` file on my computer (not the server) so that the key is added every time I start a new terminal session:
 

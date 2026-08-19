@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import { Listr } from 'listr2'
@@ -7,7 +8,14 @@ import { registerApiSideBabelHook } from '@cedarjs/babel-config'
 import { colors as c } from '@cedarjs/cli-helpers'
 import { getPaths, getDataMigrationsPath } from '@cedarjs/project-config'
 
-import type { DataMigrateUpOptions, DataMigration } from '../types'
+import type { DataMigrateUpOptions, DataMigration } from '../types.js'
+
+// `require()` isn't a global in ESM, so we need our own via `createRequire`.
+// We need real `require()` (not `import()`) here because
+// `registerApiSideBabelHook()` patches Node's CJS module loader
+// (`Module.prototype._compile`) to transpile on the fly, and that patch only
+// intercepts `require()`, not dynamic `import()`.
+const require = createRequire(import.meta.url)
 
 /**
  * The subset of a Prisma client that the dataMigrate up handler requires.

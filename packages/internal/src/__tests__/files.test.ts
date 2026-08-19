@@ -39,6 +39,7 @@ test('finds all the cells', () => {
       "web/src/components/NumTodosCell/NumTodosCell.js",
       "web/src/components/NumTodosTwoCell/NumTodosTwoCell.js",
       "web/src/components/TodoListCell/TodoListCell.tsx",
+      "web/src/components/TodoStatusCell/TodoStatusCell.js",
     ]
   `)
 })

@@ -21,7 +21,7 @@ Cedar looks for serverless functions in `api/src/functions`. Each function is ma
 Creating serverless functions is easy with Cedar's function generator:
 
 ```bash
-yarn rw g function <name>
+yarn cedar g function <name>
 ```
 
 This will generate a stub serverless function in the folder `api/src/functions/<name>`, along with a test and an empty scenarios file.
@@ -86,7 +86,7 @@ api/src
 
 ## Developing locally
 
-When you run `yarn rw dev` - it'll watch for changes and make your functions available at:
+When you run `yarn cedar dev` - it'll watch for changes and make your functions available at:
 
 - `localhost:8911/{functionName}` and
 - `localhost:8910/.api/functions/{functionName}` (used by the web side).
@@ -116,7 +116,7 @@ See [Working with AWS Lambda proxy integrations for HTTP APIs](https://docs.aws.
 Let's generate our function:
 
 ```bash
-yarn rw generate function divide
+yarn cedar generate function divide
 ```
 
 We'll use the querystring to pass the `dividend` and `divisor` to the function handler on the event as seen here to divide 10 by 2.
@@ -286,7 +286,7 @@ You can also `mockContext` and pass the mocked `context` to the handler and even
 To run an individual serverless function test:
 
 ```bash
-yarn rw test api divide
+yarn cedar test api divide
 ```
 
 When the test run completes (and succeeds), you see the results:
@@ -377,7 +377,7 @@ Want to learn more about webhooks? See a [Detailed discussion of webhooks](webho
 
 In the following example, we'll have the webhook interact with our app's database, so we can see how we can use **scenario testing** to create data that the handler can access and modify.
 
-:::tip **Why testing webhooks is hard**
+:::tip[**Why testing webhooks is hard**]
 
 Because your webhook is typically sent from a third-party's system, manually testing webhooks can be difficult. For one thing, you often have to create some kind of event in their system that will trigger the event -- and you'll often have to do that in a production environment with real data. Second, for each case you'll have to find data that represents each case and issue a hook for each -- which can take a lot of time and is tedious.
 
@@ -408,7 +408,7 @@ model Order {
 Let's generate our webhook function:
 
 ```bash
-yarn rw generate function updateOrderStatus
+yarn cedar generate function updateOrderStatus
 ```
 
 ```bash
@@ -711,7 +711,7 @@ As with other serverless function testing, you can also `mockContext` and pass t
 To run an individual webhook test:
 
 ```bash
-yarn rw test api updateOrderStatus
+yarn cedar test api updateOrderStatus
 ```
 
 When the test run completes (and succeeds), you see the results:

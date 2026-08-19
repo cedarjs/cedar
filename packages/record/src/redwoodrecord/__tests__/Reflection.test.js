@@ -20,9 +20,10 @@
 
 import { describe, it, expect } from 'vitest'
 
-import datamodel from '../__fixtures__/datamodel.js'
 import RedwoodRecord from '../RedwoodRecord'
 import Reflection from '../Reflection'
+
+import datamodel from './__fixtures__/datamodel.js'
 
 class User extends RedwoodRecord {}
 class Post extends RedwoodRecord {}

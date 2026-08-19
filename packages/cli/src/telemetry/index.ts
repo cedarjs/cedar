@@ -1,0 +1,110 @@
+import path from 'path'
+
+import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api'
+import opentelemetry from '@opentelemetry/api'
+import {
+  NodeTracerProvider,
+  SimpleSpanProcessor,
+  SamplingDecision,
+} from '@opentelemetry/sdk-trace-node'
+import { hideBin } from 'yargs/helpers'
+
+import { getNodeRunnerArgs } from '@cedarjs/cli-helpers/packageManager/exec'
+
+import { spawnBackgroundProcess } from '../lib/background.js'
+
+import { CustomFileExporter } from './exporter.js'
+
+let traceProvider: NodeTracerProvider
+let traceProcessor: SimpleSpanProcessor
+let traceExporter: CustomFileExporter
+
+let isStarted = false
+let isShutdown = false
+
+export async function startTelemetry() {
+  if (isStarted) {
+    return
+  }
+  isStarted = true
+
+  try {
+    diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.ERROR)
+
+    // Tracing
+    traceProvider = new NodeTracerProvider({
+      sampler: {
+        shouldSample: () => {
+          return {
+            decision: isShutdown
+              ? SamplingDecision.NOT_RECORD
+              : SamplingDecision.RECORD_AND_SAMPLED,
+          }
+        },
+        toString: () => {
+          return 'AlwaysSampleWhenNotShutdown'
+        },
+      },
+    })
+    traceExporter = new CustomFileExporter()
+    traceProcessor = new SimpleSpanProcessor(traceExporter)
+    traceProvider.addSpanProcessor(traceProcessor)
+    traceProvider.register()
+
+    // Without any listeners for these signals, nodejs will terminate the process and will not
+    // trigger the exit event when doing so. This means our process.on('exit') handler will not run.
+    // We add a listner which either calls process.exit or if some other handler has been added,
+    // then we leave it to that handler to handle the signal.
+    // See https://nodejs.org/dist/latest/docs/api/process.html#signal-events for more info on the
+    // behaviour of nodejs for various signals.
+    const cleanArgv = hideBin(process.argv)
+    if (!cleanArgv.includes('sb') && !cleanArgv.includes('storybook')) {
+      for (const signal of ['SIGTERM', 'SIGINT', 'SIGHUP'] as const) {
+        process.on(signal, () => {
+          if (process.listenerCount(signal) === 1) {
+            process.exit()
+          }
+        })
+      }
+    } else {
+      process.on('shutdown-telemetry', () => {
+        shutdownTelemetry()
+      })
+    }
+
+    // Ensure to shutdown telemetry when the process exits so that we can be sure that all spans
+    // are ended and all data is flushed to the exporter.
+    process.on('exit', () => {
+      shutdownTelemetry()
+    })
+  } catch (error) {
+    console.error('Telemetry error')
+    console.error(error)
+  }
+}
+
+export function shutdownTelemetry() {
+  if (isShutdown || !isStarted) {
+    return
+  }
+  isShutdown = true
+
+  try {
+    // End the active spans
+    while (opentelemetry.trace.getActiveSpan()?.isRecording()) {
+      opentelemetry.trace.getActiveSpan()?.end()
+    }
+
+    // Shutdown exporter to ensure all data is flushed
+    traceExporter?.shutdown()
+
+    // Send the telemetry in a background process, so we don't block the CLI
+    const [cmd, args] = getNodeRunnerArgs(
+      path.join(import.meta.dirname, 'send.js'),
+    )
+    spawnBackgroundProcess('telemetry', cmd, args)
+  } catch (error) {
+    console.error('Telemetry error')
+    console.error(error)
+  }
+}

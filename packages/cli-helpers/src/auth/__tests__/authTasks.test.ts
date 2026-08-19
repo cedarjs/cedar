@@ -77,13 +77,15 @@ import {
   customPropsRoutesTsx,
   explicitReturnAppTsx,
   graphqlTs,
+  legacyApolloProviderAppTsx,
   legacyAuthWebAppTsx,
+  legacyProviderAppTsx,
   nonStandardAuthDecoderGraphqlTs,
   routesTsx,
   useAuthRoutesTsx,
   webAppTsx,
   withAuthDecoderGraphqlTs,
-  withoutRedwoodApolloAppTsx,
+  withoutApolloProviderAppTsx,
 } from './mockFsFiles.js'
 
 function platformPath(filePath: string) {
@@ -201,6 +203,27 @@ describe('authTasks', () => {
     expect(fs.readFileSync(getPaths().web.app, 'utf-8')).toMatchSnapshot()
   })
 
+  it('Should still add auth config for apps still using the deprecated RedwoodProvider name', () => {
+    vol.fromJSON({
+      ...vol.toJSON(),
+      [getPaths().web.app]: legacyProviderAppTsx,
+    })
+
+    const ctx: AuthGeneratorCtx = {
+      provider: 'clerk',
+      setupMode: 'FORCE',
+      force: false,
+    }
+
+    addConfigToWebApp().task(ctx, {} as any)
+
+    const app = fs.readFileSync(getPaths().web.app, 'utf-8')
+    expect(app).toContain(
+      '<RedwoodProvider titleTemplate="%PageTitle | %AppTitle">',
+    )
+    expect(app).toContain('<AuthProvider>')
+  })
+
   describe('Components with props', () => {
     it('Should add useAuth on the same line for single line components, and separate line for multiline components', () => {
       vol.fromJSON({
@@ -263,10 +286,10 @@ describe('authTasks', () => {
   })
 
   describe('Swapped out GraphQL client', () => {
-    it('Should add auth config when app is missing RedwoodApolloProvider', () => {
+    it('Should add auth config when app is missing CedarApolloProvider', () => {
       vol.fromJSON({
         ...vol.toJSON(),
-        [getPaths().web.app]: withoutRedwoodApolloAppTsx,
+        [getPaths().web.app]: withoutApolloProviderAppTsx,
       })
 
       const ctx: AuthGeneratorCtx = {
@@ -280,6 +303,27 @@ describe('authTasks', () => {
 
       expect(task.output).toMatch(/GraphQL.*useAuth/)
       expect(fs.readFileSync(getPaths().web.app, 'utf-8')).toMatchSnapshot()
+    })
+
+    it('Should still add auth config for apps still using the deprecated RedwoodApolloProvider name', () => {
+      vol.fromJSON({
+        ...vol.toJSON(),
+        [getPaths().web.app]: legacyApolloProviderAppTsx,
+      })
+
+      const ctx: AuthGeneratorCtx = {
+        provider: 'clerk',
+        setupMode: 'FORCE',
+        force: false,
+      }
+
+      const task = { output: '' } as any
+      addConfigToWebApp().task(ctx, task)
+
+      expect(task.output).toBe('')
+      expect(fs.readFileSync(getPaths().web.app, 'utf-8')).toContain(
+        '<RedwoodApolloProvider useAuth={useAuth}>',
+      )
     })
   })
 
@@ -343,9 +387,9 @@ describe('authTasks', () => {
           <FatalErrorBoundary page={FatalErrorPage}>
             <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
               <AuthProvider client={netlifyIdentity} type="netlify">
-                <RedwoodApolloProvider>
+                <CedarApolloProvider>
                   <Routes />
-                </RedwoodApolloProvider>
+                </CedarApolloProvider>
               </AuthProvider>
             </RedwoodProvider>
           </FatalErrorBoundary>
@@ -365,13 +409,13 @@ describe('authTasks', () => {
                 type="dbAuth"
                 config={{ fetchConfig: { credentials: 'include' } }}
               >
-                <RedwoodApolloProvider
+                <CedarApolloProvider
                   graphQLClientConfig={{
                     httpLinkConfig: { credentials: 'include' },
                   }}
                 >
                   <Routes />
-                </RedwoodApolloProvider>
+                </CedarApolloProvider>
               </AuthProvider>
             </RedwoodProvider>
           </FatalErrorBoundary>
@@ -387,9 +431,9 @@ describe('authTasks', () => {
           <FatalErrorBoundary page={FatalErrorPage}>
             <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
               <AuthProvider>
-                <RedwoodApolloProvider useAuth={useAuth}>
+                <CedarApolloProvider useAuth={useAuth}>
                   <Routes />
-                </RedwoodApolloProvider>
+                </CedarApolloProvider>
               </AuthProvider>
             </RedwoodProvider>
           </FatalErrorBoundary>
@@ -404,9 +448,9 @@ describe('authTasks', () => {
         const App = () => (
           <FatalErrorBoundary page={FatalErrorPage}>
             <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
-              <RedwoodApolloProvider>
+              <CedarApolloProvider>
                 <Routes />
-              </RedwoodApolloProvider>
+              </CedarApolloProvider>
             </RedwoodProvider>
           </FatalErrorBoundary>
         )
@@ -423,9 +467,9 @@ describe('authTasks', () => {
           <FatalErrorBoundary page={FatalErrorPage}>
             <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
               <AuthProvider client={netlifyIdentity} type="netlify">
-                <RedwoodApolloProvider>
+                <CedarApolloProvider>
                   <Routes />
-                </RedwoodApolloProvider>
+                </CedarApolloProvider>
               </AuthProvider>
             </RedwoodProvider>
           </FatalErrorBoundary>
@@ -436,9 +480,9 @@ describe('authTasks', () => {
         const App = () => (
           <FatalErrorBoundary page={FatalErrorPage}>
             <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
-              <RedwoodApolloProvider>
+              <CedarApolloProvider>
                 <Routes />
-              </RedwoodApolloProvider>
+              </CedarApolloProvider>
             </RedwoodProvider>
           </FatalErrorBoundary>
         )
@@ -451,9 +495,9 @@ describe('authTasks', () => {
           <FatalErrorBoundary page={FatalErrorPage}>
             <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
               <AuthProvider client={netlifyIdentity} type="netlify">
-                <RedwoodApolloProvider>
+                <CedarApolloProvider>
                   <Routes />
-                </RedwoodApolloProvider>
+                </CedarApolloProvider>
               </AuthProvider>
             </RedwoodProvider>
           </FatalErrorBoundary>
@@ -465,9 +509,9 @@ describe('authTasks', () => {
         const App = () => (
           <FatalErrorBoundary page={FatalErrorPage}>
             <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
-              <RedwoodApolloProvider>
+              <CedarApolloProvider>
                 <Routes />
-              </RedwoodApolloProvider>
+              </CedarApolloProvider>
             </RedwoodProvider>
           </FatalErrorBoundary>
         )
@@ -485,13 +529,13 @@ describe('authTasks', () => {
                 type="dbAuth"
                 config={{ fetchConfig: { credentials: 'include' } }}
               >
-                <RedwoodApolloProvider
+                <CedarApolloProvider
                   graphQLClientConfig={{
                     httpLinkConfig: { credentials: 'include' },
                   }}
                 >
                   <Routes />
-                </RedwoodApolloProvider>
+                </CedarApolloProvider>
               </AuthProvider>
             </RedwoodProvider>
           </FatalErrorBoundary>
@@ -502,13 +546,13 @@ describe('authTasks', () => {
         const App = () => (
           <FatalErrorBoundary page={FatalErrorPage}>
             <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
-              <RedwoodApolloProvider
+              <CedarApolloProvider
                 graphQLClientConfig={{
                   httpLinkConfig: { credentials: 'include' },
                 }}
               >
                 <Routes />
-              </RedwoodApolloProvider>
+              </CedarApolloProvider>
             </RedwoodProvider>
           </FatalErrorBoundary>
         )
@@ -525,13 +569,13 @@ describe('authTasks', () => {
                 type="dbAuth"
                 config={{ fetchConfig: { credentials: 'include' } }}
               >
-                <RedwoodApolloProvider
+                <CedarApolloProvider
                   graphQLClientConfig={{
                     httpLinkConfig: { credentials: 'include' },
                   }}
                 >
                   <Routes />
-                </RedwoodApolloProvider>
+                </CedarApolloProvider>
               </AuthProvider>
             </RedwoodProvider>
           </FatalErrorBoundary>
@@ -543,13 +587,13 @@ describe('authTasks', () => {
         const App = () => (
           <FatalErrorBoundary page={FatalErrorPage}>
             <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
-              <RedwoodApolloProvider
+              <CedarApolloProvider
                 graphQLClientConfig={{
                   httpLinkConfig: { credentials: 'include' },
                 }}
               >
                 <Routes />
-              </RedwoodApolloProvider>
+              </CedarApolloProvider>
             </RedwoodProvider>
           </FatalErrorBoundary>
         )
@@ -563,9 +607,9 @@ describe('authTasks', () => {
           <FatalErrorBoundary page={FatalErrorPage}>
             <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
               <AuthProvider>
-                <RedwoodApolloProvider useAuth={useAuth}>
+                <CedarApolloProvider useAuth={useAuth}>
                   <Routes />
-                </RedwoodApolloProvider>
+                </CedarApolloProvider>
               </AuthProvider>
             </RedwoodProvider>
           </FatalErrorBoundary>
@@ -576,9 +620,9 @@ describe('authTasks', () => {
         const App = () => (
           <FatalErrorBoundary page={FatalErrorPage}>
             <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
-              <RedwoodApolloProvider useAuth={useAuth}>
+              <CedarApolloProvider useAuth={useAuth}>
                 <Routes />
-              </RedwoodApolloProvider>
+              </CedarApolloProvider>
             </RedwoodProvider>
           </FatalErrorBoundary>
         )
@@ -591,9 +635,9 @@ describe('authTasks', () => {
           <FatalErrorBoundary page={FatalErrorPage}>
             <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
               <AuthProvider>
-                <RedwoodApolloProvider useAuth={useAuth}>
+                <CedarApolloProvider useAuth={useAuth}>
                   <Routes />
-                </RedwoodApolloProvider>
+                </CedarApolloProvider>
               </AuthProvider>
             </RedwoodProvider>
           </FatalErrorBoundary>
@@ -605,9 +649,9 @@ describe('authTasks', () => {
         const App = () => (
           <FatalErrorBoundary page={FatalErrorPage}>
             <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
-              <RedwoodApolloProvider useAuth={useAuth}>
+              <CedarApolloProvider useAuth={useAuth}>
                 <Routes />
-              </RedwoodApolloProvider>
+              </CedarApolloProvider>
             </RedwoodProvider>
           </FatalErrorBoundary>
         )
@@ -620,9 +664,9 @@ describe('authTasks', () => {
         const App = () => (
           <FatalErrorBoundary page={FatalErrorPage}>
             <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
-              <RedwoodApolloProvider>
+              <CedarApolloProvider>
                 <Routes />
-              </RedwoodApolloProvider>
+              </CedarApolloProvider>
             </RedwoodProvider>
           </FatalErrorBoundary>
         )
@@ -632,9 +676,9 @@ describe('authTasks', () => {
         const App = () => (
           <FatalErrorBoundary page={FatalErrorPage}>
             <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
-              <RedwoodApolloProvider>
+              <CedarApolloProvider>
                 <Routes />
-              </RedwoodApolloProvider>
+              </CedarApolloProvider>
             </RedwoodProvider>
           </FatalErrorBoundary>
         )

@@ -1,9 +1,9 @@
+import fs from 'node:fs'
 import path from 'node:path'
 
 import ansis from 'ansis'
 import execa from 'execa'
 import fg from 'fast-glob'
-import fs from 'node:fs'
 import { rimrafSync } from 'rimraf'
 
 export function buildRedwoodFramework({
@@ -62,7 +62,7 @@ export function createRedwoodJSApp({
       ].filter(Boolean),
       {
         cwd: path.join(frameworkPath, 'packages/create-cedar-app'),
-        env: { REDWOOD_CI: '1' },
+        env: { CEDAR_CI: '1' },
         shell: true,
         stdio: verbose ? 'inherit' : 'ignore',
       },

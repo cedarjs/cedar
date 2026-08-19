@@ -17,7 +17,7 @@ To deploy to Coherence, your Cedar project needs to be hosted on GitHub and you 
 
 ## Coherence Deploy
 
-:::warning Prerender doesn't work with Coherence yet
+:::warning[Prerender doesn't work with Coherence yet]
 
 You can see its current status and follow updates here on GitHub: https://github.com/redwoodjs/redwood/issues/8333.
 
@@ -28,7 +28,7 @@ But if you don't use prerender, carry on!
 If you want to deploy your Cedar project on Coherence, run the setup command:
 
 ```
-yarn rw setup deploy coherence
+yarn cedar setup deploy coherence
 ```
 
 The command will inspect your Prisma config to determine if you're using a supported database (at the moment, only `postgres` or `mysql` are supported on Coherence).

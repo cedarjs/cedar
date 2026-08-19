@@ -42,6 +42,10 @@ vi.mock('@cedarjs/internal/dist/dev', () => {
   }
 })
 
+vi.mock('@cedarjs/project-config/packageManager', () => ({
+  getPackageManager: vi.fn(() => 'yarn'),
+}))
+
 vi.mock('@cedarjs/project-config', async (importActual) => {
   const actualProjectConfig = await importActual<typeof ProjectConfig>()
 
@@ -124,6 +128,7 @@ import concurrently, { type Command } from 'concurrently'
 import { vi, describe, afterEach, it, expect } from 'vitest'
 
 import type * as ProjectConfig from '@cedarjs/project-config'
+import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 import { handler } from '../devHandler.js'
 
@@ -200,5 +205,68 @@ describe('yarn cedar dev - package watching', () => {
     expect(packagesCommands[1]).toMatchObject({
       name: 'pkg-two',
     })
+  })
+})
+
+describe('yarn cedar dev - package watching', () => {
+  afterEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(getPackageManager).mockReset()
+    vi.mocked(getPackageManager).mockReturnValue('yarn')
+  })
+
+  it('can generate yarn commands', async () => {
+    vi.mocked(getPackageManager).mockReturnValue('yarn')
+    await handler({ workspace: ['api', 'web'] })
+
+    const concurrentlyCommands = vi.mocked(concurrently).mock.calls[0][0]
+    const genCommand = concurrentlyCommands.find(
+      (c): c is Command => typeof c === 'object' && c?.name === 'gen',
+    )
+    const apiCommand = concurrentlyCommands.find(
+      (c): c is Command => typeof c === 'object' && c?.name === 'api',
+    )
+
+    expect(genCommand?.command).toEqual('yarn cedar-gen-watch')
+    expect(apiCommand?.command).toMatchInlineSnapshot(
+      `"yarn nodemon --quiet --watch "/mocked/project/redwood.toml" --exec "yarn cedar-api-server-watch --port 8911 --debug-port 18911 | yarn cedar-log-formatter""`,
+    )
+  })
+
+  it('can generate npm commands', async () => {
+    vi.mocked(getPackageManager).mockReturnValue('npm')
+    await handler({ workspace: ['api', 'web'] })
+
+    const concurrentlyCommands = vi.mocked(concurrently).mock.calls[0][0]
+    const genCommand = concurrentlyCommands.find(
+      (c): c is Command => typeof c === 'object' && c?.name === 'gen',
+    )
+    const apiCommand = concurrentlyCommands.find(
+      (c): c is Command => typeof c === 'object' && c?.name === 'api',
+    )
+
+    expect(genCommand?.command).toEqual('npx cedar-gen-watch')
+    expect(apiCommand?.command).toMatchInlineSnapshot(
+      `"npx nodemon --quiet --watch "/mocked/project/redwood.toml" --exec "npx cedar-api-server-watch --port 8911 --debug-port 18911 | npx cedar-log-formatter""`,
+    )
+  })
+
+  it('can generate pnpm commands', async () => {
+    vi.mocked(getPackageManager).mockReturnValue('pnpm')
+    await handler({ workspace: ['api', 'web'] })
+
+    const concurrentlyCommands = vi.mocked(concurrently).mock.calls[0][0]
+    const genCommand = concurrentlyCommands.find(
+      (c): c is Command => typeof c === 'object' && c?.name === 'gen',
+    )
+    const apiCommand = concurrentlyCommands.find(
+      (c): c is Command => typeof c === 'object' && c?.name === 'api',
+    )
+
+    expect(genCommand?.command).toEqual('pnpm exec cedar-gen-watch')
+    console.log(apiCommand?.command)
+    expect(apiCommand?.command).toMatchInlineSnapshot(
+      `"pnpm exec nodemon --quiet --watch "/mocked/project/redwood.toml" --exec "pnpm exec cedar-api-server-watch --port 8911 --debug-port 18911 | pnpm exec cedar-log-formatter""`,
+    )
   })
 })

@@ -1,0 +1,33 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`sensitive fields > are excluded from the generated SDL 1`] = `
+"export const schema = gql\`
+  type Account {
+    id: Int!
+    email: String!
+    fullName: String!
+  }
+
+  type Query {
+    accounts: [Account!]! @requireAuth
+    account(id: Int!): Account @requireAuth
+  }
+
+  input CreateAccountInput {
+    email: String!
+    fullName: String!
+  }
+
+  input UpdateAccountInput {
+    email: String
+    fullName: String
+  }
+
+  type Mutation {
+    createAccount(input: CreateAccountInput!): Account! @requireAuth
+    updateAccount(id: Int!, input: UpdateAccountInput!): Account! @requireAuth
+    deleteAccount(id: Int!): Account! @requireAuth
+  }
+\`
+"
+`;

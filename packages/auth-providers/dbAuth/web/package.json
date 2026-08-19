@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-dbauth-web",
-  "version": "4.1.0",
+  "version": "5.0.6",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -10,30 +10,29 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": {
+      "default": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
-      },
+      }
+    },
+    "./webAuthn": {
       "default": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.js"
+        "types": "./dist/webAuthn.d.ts",
+        "default": "./dist/webAuthn.js"
       }
     }
   },
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/index.js",
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist",
-    "webAuthn"
+    "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.ts",
+    "build": "node ./build.ts",
     "build:pack": "yarn pack -o cedarjs-auth-dbauth-web.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
-    "build:types-cjs": "tsc --build --verbose ./tsconfig.cjs.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx,template\" --ignore dist --exec \"yarn build\"",
-    "check:attw": "yarn rw-fwtools-attw",
+    "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
@@ -44,16 +43,13 @@
     "@simplewebauthn/browser": "10.0.0"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.2",
     "@cedarjs/framework-tools": "workspace:*",
-    "@simplewebauthn/types": "10.0.0",
     "@types/react": "^18.2.55",
-    "concurrently": "9.2.1",
-    "publint": "0.3.18",
+    "concurrently": "9.2.4",
+    "publint": "0.3.23",
     "react": "19.2.3",
-    "tsx": "4.21.0",
     "typescript": "5.9.3",
-    "vitest": "3.2.4"
+    "vitest": "4.1.10"
   },
   "engines": {
     "node": ">=24"

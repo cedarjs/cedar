@@ -8,7 +8,7 @@ Prerendering is great for providing a faster experience for your end users. Your
 
 We thought a lot about what the developer experience should be for route-based prerendering. The result is one of the smallest APIs imaginable!
 
-:::info How's Prerendering different from SSR/SSG/SWR/ISSG/...?
+:::info[How's Prerendering different from SSR/SSG/SWR/ISSG/...?]
 As Danny said in his [Prerender demo](https://www.youtube.com/watch?v=iorKyMlASZc&t=2844s) at our Community Meetup, the thing all of these have in common is that they render your markup in a Node.js context to produce HTML. The difference is when (build or runtime) and how often.
 
 Cedar currently supports prerendering at _build_ time. So before you deploy your web side, Cedar will render your pages into HTML, and once the JavaScript has been loaded on the browser, the page becomes dynamic.
@@ -24,7 +24,7 @@ Prerendering a page is as easy as it gets. Just add the `prerender` prop to the 
 <Route path="/" page={HomePage} name="home" prerender/>
 ```
 
-Then run `yarn rw build` and enjoy the performance boost!
+Then run `yarn cedar build` and enjoy the performance boost!
 
 {/* this doesn't render... */}
 {/* ![https://s3-us-west-2.amazonaws.com/secure.notion-static.com/b2c2aa27-3b2b-4ab7-b514-6ebc963d5312/2021-02-19_20.24.00.gif](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/b2c2aa27-3b2b-4ab7-b514-6ebc963d5312/2021-02-19_20.24.00.gif) */}
@@ -145,6 +145,12 @@ export async function routeParameters() {
 
 Take note of the special syntax for the import, with a dollar-sign in front of api. This lets our tooling (typescript and babel) know that you want to break out of the web side the page is in to access code on the api side. This only works in the routeHook scripts (and scripts in the root /scripts directory).
 
+:::warning `$api` imports are server-side only
+
+Importing `$api/...` from a page, component, or any other file that ends up in the browser bundle is an error. Those imports pull api-side code – like your Prisma client – into the web bundle, so Cedar fails the build with an explanatory message instead. If you need the data in the browser, fetch it through GraphQL.
+
+:::
+
 ---
 
 ## Prerender Utils
@@ -155,7 +161,7 @@ Sometimes you need more fine-grained control over whether something gets prerend
 - `useIsBrowser`
 - `isBrowser`
 
-:::tip Heads-up!
+:::tip[Heads-up!]
 If you're prerendering a page that uses a third-party library, make sure it's "universal". If it's not, try calling the library after doing a browser check using one of the utils above.
 
 Look for these key words when choosing a library: _universal module, SSR compatible, server compatible_&mdash;all these indicate that the library also works in Node.js.
@@ -213,7 +219,7 @@ if (isBrowser) {
 If you just want to debug your app, or check for possible prerendering errors, after you've built it, you can run this command:
 
 ```bash
-yarn rw prerender --dry-run
+yarn cedar prerender --dry-run
 ```
 
 We're actively looking for feedback! Do let us know if: everything built ok? you encountered specific libraries that you were using that didn’t work?

@@ -15,11 +15,13 @@ export {
   getApiSideBabelConfigPath,
   /** Used by @cedarjs/internal and @cedarjs/testing */
   getApiSideBabelPlugins,
+  /** Used by @cedarjs/internal and @cedarjs/vite */
+  getApiSideBabelPluginsForVite,
   /** Used by @cedarjs/testing */
   getApiSideBabelPresets,
   /** Used by @cedarjs/testing and @cedarjs/eslint-config */
   getApiSideDefaultBabelConfig,
-  /** Used by @cedarjs/cli, @remix/cli-helpers and @cedarjs/prerender */
+  /** Used by @cedarjs/cli, @cedarjs/cli-helpers and @cedarjs/prerender */
   registerApiSideBabelHook,
   /** Used by @cedarjs/internal and @cedarjs/vite */
   transformWithBabel,
@@ -55,8 +57,6 @@ export {
 export type { Flags } from './web.js'
 
 export {
-  /** Used by our eslint-config  */
-  getCommonPlugins,
   /**
    * @deprecated This export isn't used by the framework, so it'll be removed
    * in a future version.

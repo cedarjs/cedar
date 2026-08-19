@@ -1,0 +1,92 @@
+name: 🧪 Consolidated Tests
+
+# Consolidates three small, historically stable Ubuntu suites (server tests,
+# the Ubuntu telemetry check, and the tutorial E2E) into a single job so the
+# ~3-4 minute setup cost (checkout, yarn install, framework build) is paid
+# once instead of three times, and so they occupy one runner queue slot
+# instead of three. The Windows telemetry check still runs in its own job via
+# telemetry-check.yml.
+
+on:
+  workflow_call:
+
+jobs:
+  consolidated-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - name: 🖥️ Server tests
+        run: yarn vitest run
+        working-directory: ./tasks/server-tests
+
+      # When releasing a new version of Cedar the telemetry checks would try
+      # to install @cedar/* package versions that aren't published yet, so
+      # they would always fail. That's why they're skipped on release
+      # branches.
+      - name: 📢 Listen for telemetry (CCA)
+        if: github.event_name == 'pull_request' || !startsWith(github.ref, 'refs/heads/release/')
+        run: node ./.github/actions/telemetry_check/check.mjs --mode cca
+        env:
+          REDWOOD_REDIRECT_TELEMETRY: 'http://127.0.0.1:48619' # Random port
+
+      - name: 📢 Listen for telemetry (CLI)
+        if: github.event_name == 'pull_request' || !startsWith(github.ref, 'refs/heads/release/')
+        run: node ./.github/actions/telemetry_check/check.mjs --mode cli
+        env:
+          REDWOOD_REDIRECT_TELEMETRY: 'http://127.0.0.1:48619' # Random port
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
+
+      - name: 🌲 Install Cypress
+        run: yarn cypress install
+
+      - name: 🌲 Create a Cedar App
+        id: crwa
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
+        run: |
+          project_path=$(mktemp -d -t cedar.XXXXXX)
+          echo "project-path=$project_path" >> $GITHUB_OUTPUT
+
+          git config --global user.email "you@example.com"
+          git config --global user.name "Your Name"
+
+          ./tasks/run-e2e.cjs "$project_path" \
+            --no-build-framework \
+            --no-start
+
+      - name: Start the dev server in the background
+        run: |
+          yarn cedar dev --fwd="--no-open" 2>&1 | tee dev_server.log &
+        working-directory: ${{ steps.crwa.outputs.project-path }}
+
+      - name: 🌲 Run Cypress
+        env:
+          CYPRESS_RW_PATH: ${{ steps.crwa.outputs.project-path }}
+        working-directory: ./tasks/e2e
+        run: |
+          echo "Waiting for dev server..."
+          attempt=0
+          until curl --silent --fail http://[::1]:8910; do
+            attempt=$((attempt + 1))
+            if [ $attempt -ge 60 ]; then
+              echo "Dev server did not start in time" >&2
+              exit 1
+            fi
+            sleep 2
+          done
+          echo "Dev server is up"
+          npx cypress run \
+            --browser chrome \
+            --spec 'cypress/e2e/01-tutorial/*.cy.js'
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: logs
+          path: |
+            ${{ steps.crwa.outputs.project-path }}/dev_server.log
+            ${{ steps.crwa.outputs.project-path }}/e2e.log

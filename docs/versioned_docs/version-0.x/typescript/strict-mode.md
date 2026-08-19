@@ -108,7 +108,7 @@ export const Post: PostRelationResolvers = {
 }
 ```
 
-:::tip An optimization tip
+:::tip[An optimization tip]
 
 If the relation truly is required, it may make more sense to include `author` in your `post` Service's Prisma query and modify the `Post.author` resolver accordingly:
 

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import { RedwoodApolloProvider} from '@cedarjs/web/apollo'
+import { CedarApolloProvider} from '@cedarjs/web/apollo/CedarApolloProvider'
 
 interface AppProps {
   children?: ReactNode
@@ -8,7 +8,7 @@ interface AppProps {
 
 const App = ({ children }: AppProps) => {
   return (
-    <RedwoodApolloProvider>{children}</RedwoodApolloProvider>
+    <CedarApolloProvider>{children}</CedarApolloProvider>
   )
 }
 

@@ -1,7 +1,8 @@
 import fs from 'node:fs'
+import { createRequire } from 'node:module'
 import path from 'path'
 
-import type { PluginItem, PluginOptions, TransformOptions } from '@babel/core'
+import type { PluginItem, TransformOptions } from '@babel/core'
 import type { RegisterOptions } from '@babel/register'
 import { parseConfigFileTextToJson } from 'typescript'
 
@@ -9,6 +10,11 @@ import { getPaths } from '@cedarjs/project-config'
 
 import { getWebSideBabelPlugins } from './web.js'
 import type { Flags as WebFlags } from './web.js'
+
+// `@babel/register` patches Node's CJS `require()` to compile files on the
+// fly. This package is ESM-only, so `require` isn't a global here — use
+// `createRequire` to get a real one for loading the (CJS) npm package.
+const require = createRequire(import.meta.url)
 
 export interface RegisterHookOptions {
   /**
@@ -51,28 +57,10 @@ export const registerBabel = (options: RegisterOptions) => {
   require('@babel/register')(options)
 }
 
-export const getCommonPlugins = (): [string, PluginOptions][] => {
-  return []
-}
-
 // TODO (STREAMING) double check this, think about it more carefully please!
 // It's related to yarn workspaces to be or not to be
 export const getRouteHookBabelPlugins = () => {
-  return [
-    ...getWebSideBabelPlugins(),
-    [
-      'babel-plugin-module-resolver',
-      {
-        alias: {
-          'api/src': './src',
-        },
-        root: [getPaths().api.base],
-        cwd: 'packagejson',
-        loglevel: 'silent', // to silence the unnecessary warnings
-      },
-      'rwjs-api-module-resolver',
-    ],
-  ]
+  return [...getWebSideBabelPlugins()]
 }
 
 /**

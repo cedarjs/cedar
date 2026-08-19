@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.build.base.json",
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "./dist",
@@ -10,5 +10,5 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "files": ["index.mjs", "index.js", "shared.mjs", "shared.js"]
+  "files": ["index.mjs", "shared.mjs"]
 }

@@ -23,6 +23,7 @@ import type * as t from '@babel/types'
 const EXPECTED_EXPORTS_FROM_CELL = [
   'beforeQuery',
   'QUERY',
+  'FRAGMENT',
   'data',
   'isEmpty',
   'afterQuery',
@@ -92,6 +93,7 @@ export default function ({
         exit(path, state) {
           const hasQueryOrDataExport =
             state.exportNames.includes('QUERY') ||
+            state.exportNames.includes('FRAGMENT') ||
             state.exportNames.includes('data')
 
           // If the file already has a default export then
@@ -99,7 +101,8 @@ export default function ({
           //      wrapped in `createCell`
           //   2. If we added another default export we'd be breaking JS module
           //      rules. There can only be one default export.
-          // If there's no `QUERY` or `data` export it's not a valid cell
+          // If there's no `QUERY`, `FRAGMENT` or `data` export it's not a
+          // valid cell
           if (state.hasDefaultExport || !hasQueryOrDataExport) {
             return
           }

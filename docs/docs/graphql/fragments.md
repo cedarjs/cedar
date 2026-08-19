@@ -84,7 +84,7 @@ const { fragment, typename, getCacheKey, useRegisteredFragment } =
 
 ### Setup
 
-`yarn rw setup graphql fragments`
+`yarn cedar setup graphql fragments`
 
 See more in [cli commands - setup graphql fragments](../cli-commands.md#setup-graphql-fragments).
 
@@ -263,7 +263,7 @@ For example:
 ```ts
 /// web/src/App.tsx
 
-<RedwoodApolloProvider graphQLClientConfig={{
+<CedarApolloProvider graphQLClientConfig={{
   cacheConfig: {
     possibleTypes: {
       Character: ["Jedi", "Droid"],
@@ -290,7 +290,7 @@ const graphQLClientConfig = {
   },
 }
 
-<RedwoodApolloProvider graphQLClientConfig={graphQLClientConfig}>
+<CedarApolloProvider graphQLClientConfig={graphQLClientConfig}>
 ```
 
 To generate the `src/graphql/possibleTypes` file, enable fragments in `cedar.toml`:
@@ -360,7 +360,7 @@ export const standard = {
 
 If using [fragments](../graphql/fragments.md) it is important to include the `__typename` otherwise Apollo client will not be able to map the mocked data to the fragment attributes.
 
-:::tip note
+:::tip[note]
 
 The `__typename: 'Book' as const` ensures that `'Book'` is considered to be a `type` and not a `string`.
 :::

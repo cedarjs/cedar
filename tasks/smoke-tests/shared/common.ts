@@ -22,9 +22,9 @@ export async function smokeTest({ page }: PlaywrightTestArgs) {
   ).toBeVisible()
 
   // CSS checks. We saw this break when we switched bundlers, so while it's not comprehensive, it's at least something.
-  // While playwright recommends against using locators that are too-closely tied to the DOM, `#redwood-app` is a stable ID.
+  // While playwright recommends against using locators that are too-closely tied to the DOM, `#cedar-app` is a stable ID.
   const bgBlue700 = 'rgb(29, 78, 216)'
-  await expect(page.locator('#redwood-app > header')).toHaveCSS(
+  await expect(page.locator('#cedar-app > header')).toHaveCSS(
     'background-color',
     bgBlue700,
   )
@@ -37,7 +37,7 @@ export async function smokeTest({ page }: PlaywrightTestArgs) {
 
   // Check the about page.
   await page.getByRole('link', { name: 'About', exact: true }).click()
-  expect(page.url()).toBe('http://localhost:8910/about')
+  expect(page.url()).toBe('http://127.0.0.1:8910/about')
   await expect(
     page.getByText(
       'This site was created to demonstrate my mastery of Cedar: Look on my works, ye',
@@ -46,11 +46,11 @@ export async function smokeTest({ page }: PlaywrightTestArgs) {
 
   // Check the contact us page.
   await page.getByRole('link', { name: 'Contact Us' }).click()
-  expect(page.url()).toBe('http://localhost:8910/contact')
+  expect(page.url()).toBe('http://127.0.0.1:8910/contact')
 
   // Check the admin page.
   await page.getByRole('link', { name: 'Admin' }).click()
-  expect(page.url()).toBe('http://localhost:8910/posts')
+  expect(page.url()).toBe('http://127.0.0.1:8910/posts')
 }
 
 interface AuthUtilsParams {

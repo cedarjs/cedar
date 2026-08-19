@@ -1,5 +1,3 @@
-import { pathToFileURL } from 'node:url'
-
 import { fs, path } from 'zx'
 
 export function projectFileExists({
@@ -28,8 +26,4 @@ export function projectDirectoryExists({
     return false
   }
   return fs.statSync(path.join(projectPath, directoryPath)).isDirectory()
-}
-
-export function makeFilePath(path: string) {
-  return pathToFileURL(path).href
 }

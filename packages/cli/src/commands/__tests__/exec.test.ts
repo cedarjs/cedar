@@ -3,7 +3,6 @@ import path from 'node:path'
 import { fs as memfs, vol } from 'memfs'
 import { vi, afterEach, beforeEach, describe, it, expect } from 'vitest'
 
-// @ts-expect-error - No types for .js files
 import { runScriptFunction } from '../../lib/exec.js'
 import '../../lib/mockTelemetry'
 import { handler } from '../execHandler.js'
@@ -57,7 +56,7 @@ afterEach(() => {
 describe('yarn cedar exec', () => {
   it('passes args on to the script', async () => {
     vol.fromJSON({
-      'redwood.toml': '# redwood.toml',
+      'cedar.toml': '# cedar.toml',
       [path.join('cedar-app', 'scripts', 'normalScript.ts')]: '// script',
     })
 
@@ -82,6 +81,116 @@ describe('yarn cedar exec', () => {
           _: ['positional1', 'positional2'],
           arg1: 'foo',
           arg2: 'bar',
+        },
+      },
+      functionName: 'default',
+      path: path.join('cedar-app', 'scripts', 'normalScript.ts'),
+    })
+  })
+
+  it('re-parses args placed after a literal `--` instead of dropping them', async () => {
+    vol.fromJSON({
+      'cedar.toml': '# cedar.toml',
+      [path.join('cedar-app', 'scripts', 'normalScript.ts')]: '// script',
+    })
+
+    // Running:
+    // `yarn cedar exec normalScript -- positional1 --force --env=prod`
+    //
+    // yargs stops parsing flags at `--`, so everything after it lands in
+    // `_` as literal, unparsed strings instead of being split out into
+    // `force`/`env`.
+    const args = {
+      _: ['exec', 'positional1', '--force', '--env=prod'],
+      prisma: false,
+      list: false,
+      l: false,
+      silent: false,
+      s: false,
+      $0: 'cedar',
+      name: 'normalScript',
+    }
+    await handler(args)
+    expect(runScriptFunction).toHaveBeenCalledWith({
+      args: {
+        args: {
+          _: ['positional1'],
+          force: true,
+          env: 'prod',
+        },
+      },
+      functionName: 'default',
+      path: path.join('cedar-app', 'scripts', 'normalScript.ts'),
+    })
+  })
+
+  it('forwards a reserved-looking flag name (e.g. `--silent`) placed after `--` instead of stripping it', async () => {
+    vol.fromJSON({
+      'cedar.toml': '# cedar.toml',
+      [path.join('cedar-app', 'scripts', 'normalScript.ts')]: '// script',
+    })
+
+    // Running:
+    // `yarn cedar exec normalScript -- --silent`
+    //
+    // `--silent`, `-s` and `-l` are also cedar's own reserved exec flags, and
+    // are stripped from `scriptArgs` before being passed to the script. But
+    // if the *user's* script defines its own `--silent` flag and the user
+    // passes it after a literal `--`, it should reach the script rather than
+    // being silently deleted by that reserved-flag cleanup.
+    const args = {
+      _: ['exec', '--silent'],
+      prisma: false,
+      list: false,
+      l: false,
+      silent: false,
+      s: false,
+      $0: 'cedar',
+      name: 'normalScript',
+    }
+    await handler(args)
+    expect(runScriptFunction).toHaveBeenCalledWith({
+      args: {
+        args: {
+          _: [],
+          silent: true,
+        },
+      },
+      functionName: 'default',
+      path: path.join('cedar-app', 'scripts', 'normalScript.ts'),
+    })
+  })
+
+  it('keeps a negative-number positional after `--` instead of mistaking it for a flag', async () => {
+    vol.fromJSON({
+      'cedar.toml': '# cedar.toml',
+      [path.join('cedar-app', 'scripts', 'normalScript.ts')]: '// script',
+    })
+
+    // Running:
+    // `yarn cedar exec normalScript -- -5 --force`
+    //
+    // yargs coerces negative-number-looking positionals to `number` even
+    // after a literal `--`, so `-5` arrives here as the number `-5`, not the
+    // string `'-5'`. It must stay a positional and not be swept up as the
+    // start of the flag block just because it also happens to start with a
+    // dash.
+    const args = {
+      _: ['exec', -5, '--force'],
+      prisma: false,
+      list: false,
+      l: false,
+      silent: false,
+      s: false,
+      $0: 'cedar',
+      name: 'normalScript',
+    }
+    await handler(args)
+    expect(runScriptFunction).toHaveBeenCalledWith({
+      args: {
+        args: {
+          _: [-5],
+          force: true,
         },
       },
       functionName: 'default',

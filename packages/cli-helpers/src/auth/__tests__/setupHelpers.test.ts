@@ -65,7 +65,9 @@ describe('Auth generator tests', () => {
 
   const mockListrRun = vi.fn()
 
-  ;(Listr as MockedFunction<Mock>).mockImplementation(() => {
+  // Vitest 4 requires mock implementations invoked with `new` to be
+  // constructible, so use a `function` expression instead of an arrow function
+  ;(Listr as MockedFunction<Mock>).mockImplementation(function () {
     return {
       run: mockListrRun,
     }

@@ -3,13 +3,13 @@
 Let's generate a component to house our new comment form, build it out and integrate it via Storybook, then add some tests:
 
 ```bash
-yarn rw g component CommentForm
+yarn cedar g component CommentForm
 ```
 
 And startup Storybook again if it isn't still running:
 
 ```bash
-yarn rw storybook
+yarn cedar storybook
 ```
 
 You'll see that there's a **CommentForm** entry in Storybook now, ready for us to get started.
@@ -530,7 +530,7 @@ Now comes the ultimate test: creating a comment! LET'S DO IT:
 
 What happened here? Notice towards the end of the error message: `Field "postId" of required type "Int!" was not provided`. When we created our data schema we said that a post belongs to a comment via the `postId` field. And that field is required, so the GraphQL server is rejecting the request because we're not including that field. We're only sending `name` and `body`. Luckily we have access to the ID of the post we're commenting on thanks to the `article` object that's being passed into `Article` itself!
 
-:::info Why didn't the Storybook story we wrote earlier expose this problem?
+:::info[Why didn't the Storybook story we wrote earlier expose this problem?]
 
 We manually mocked the GraphQL response in the story, and our mock always returns a correct response, regardless of the input!
 
@@ -1155,7 +1155,7 @@ It would be nice if we could try out sending some arguments to our Prisma calls 
 That's where the Cedar Console comes in! In a new terminal instance, try this:
 
 ```bash
-yarn rw console
+yarn cedar console
 ```
 
 You'll see a standard Node console but with most of Cedar's internals already imported and ready to go! Most importantly, that includes the database. Try it out:
@@ -1261,7 +1261,7 @@ Now we'll try our comment query again, once with each `postId`:
 
 Great! Now that we've tested out the syntax let's use that in the service. You can exit the console by pressing Ctrl-C twice or typing `.exit`
 
-:::info Where's the `await`?
+:::info[Where's the `await`?]
 
 Calls to `db` return a Promise, which you would normally need to add an `await` to in order to get the results right away. Having to add `await` every time is pretty annoying though, so the Cedar console does it for you—Cedar `await`s so you don't have to!
 
@@ -1563,7 +1563,7 @@ Now if you try refreshing the real site in dev mode you'll see an error where th
 
 ![image](https://user-images.githubusercontent.com/300/198095941-bbd07ede-2006-422a-8635-ea8fe57dd403.png)
 
-For security reasons we don't show the internal error message here, but if you check the terminal window where `yarn rw dev` is running you'll see the real message:
+For security reasons we don't show the internal error message here, but if you check the terminal window where `yarn cedar dev` is running you'll see the real message:
 
 ```text
 Field "comments" argument "postId" of type "Int!" is required, but it was not provided.

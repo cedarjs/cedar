@@ -1,13 +1,11 @@
-import type { HttpOptions, Operation } from '@apollo/client'
-import { Observable } from '@apollo/client/core/index.js'
-import { setContext } from '@apollo/client/link/context/index.js'
-import { ApolloLink } from '@apollo/client/link/core/index.js'
-import { HttpLink } from '@apollo/client/link/http/index.js'
+import { ApolloLink, HttpLink } from '@apollo/client'
+import { SetContextLink } from '@apollo/client/link/context'
 import { print } from 'graphql/language/printer.js'
+import { Observable } from 'rxjs'
 
 export function createHttpLink(
   uri: string,
-  httpLinkConfig: HttpOptions | undefined,
+  httpLinkConfig: HttpLink.Options | undefined,
   cookieHeader?: string | null,
 ) {
   const headers: Record<string, string> = {}
@@ -24,7 +22,7 @@ export function createHttpLink(
   })
 }
 
-function enhanceError(operation: Operation, error: any) {
+function enhanceError(operation: ApolloLink.Operation, error: any) {
   const { operationName, query, variables } = operation
 
   error.__RedwoodEnhancedError = {
@@ -39,10 +37,10 @@ function enhanceError(operation: Operation, error: any) {
 
 export function createUpdateDataLink() {
   return new ApolloLink((operation, forward) => {
-    return new Observable((observer) => {
-      forward(operation).subscribe({
+    return new Observable<ApolloLink.Result>((observer) => {
+      const subscription = forward(operation).subscribe({
         next(result) {
-          if (result.errors) {
+          if ('errors' in result && result.errors) {
             result.errors.forEach((error) => {
               enhanceError(operation, error)
             })
@@ -54,6 +52,8 @@ export function createUpdateDataLink() {
         },
         complete: observer.complete.bind(observer),
       })
+
+      return () => subscription.unsubscribe()
     })
   })
 }
@@ -95,7 +95,7 @@ export function createAuthApolloLink(
   })
 }
 export function createTokenLink(getToken: () => Promise<string | null>) {
-  return setContext(async () => {
+  return new SetContextLink(async () => {
     const token = await getToken()
 
     return { token }

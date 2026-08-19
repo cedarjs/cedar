@@ -21,7 +21,7 @@ async function copyAssets() {
       // Generators, etc.
       '**/*.template',
       // Docker
-      '**/Dockerfile',
+      '**/Dockerfile.*',
       '**/dockerignore',
       '**/*.yml',
     ],

@@ -3,14 +3,16 @@ import fs from 'node:fs'
 import { fullPath, getOutputPath } from './paths.mts'
 import { createBuilder } from './util.mts'
 
-export function getPrerenderTasks() {
+export function getPrerenderTasks(packageManager = 'yarn') {
+  const cedarBin = packageManager === 'npm' ? 'npx' : packageManager
+
   return [
     {
       // We need to do this here, and not where we create the other pages, to
       // keep it outside of BlogLayout
       title: 'Creating double rendering test page',
       task: async () => {
-        const createPage = createBuilder('yarn cedar g page')
+        const createPage = createBuilder(`${cedarBin} cedar g page`)
         await createPage('double')
 
         const doublePageContent = `import { Metadata } from '@cedarjs/web'

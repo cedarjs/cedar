@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/cli-helpers",
-  "version": "4.1.0",
+  "version": "5.0.6",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -10,73 +10,51 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": {
+      "default": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
-      },
-      "default": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.js"
       }
     },
     "./loadEnvFiles": {
-      "import": {
+      "default": {
         "types": "./dist/lib/loadEnvFiles.d.ts",
         "default": "./dist/lib/loadEnvFiles.js"
-      },
-      "default": {
-        "types": "./dist/cjs/lib/loadEnvFiles.d.ts",
-        "default": "./dist/cjs/lib/loadEnvFiles.js"
       }
     },
     "./dist/lib/loadEnvFiles.js": {
-      "import": {
+      "default": {
         "types": "./dist/lib/loadEnvFiles.d.ts",
         "default": "./dist/lib/loadEnvFiles.js"
-      },
-      "default": {
-        "types": "./dist/cjs/lib/loadEnvFiles.d.ts",
-        "default": "./dist/cjs/lib/loadEnvFiles.js"
       }
     },
     "./packageManager": {
-      "import": {
+      "default": {
         "types": "./dist/packageManager/index.d.ts",
         "default": "./dist/packageManager/index.js"
-      },
-      "default": {
-        "types": "./dist/cjs/packageManager/index.d.ts",
-        "default": "./dist/cjs/packageManager/index.js"
       }
     },
     "./packageManager/exec": {
-      "import": {
+      "default": {
         "types": "./dist/packageManager/exec.d.ts",
         "default": "./dist/packageManager/exec.js"
-      },
-      "default": {
-        "types": "./dist/cjs/packageManager/exec.d.ts",
-        "default": "./dist/cjs/packageManager/exec.js"
       }
     },
     "./packageManager/packages": {
-      "import": {
+      "default": {
         "types": "./dist/packageManager/packages.d.ts",
         "default": "./dist/packageManager/packages.js"
-      },
-      "default": {
-        "types": "./dist/cjs/packageManager/packages.d.ts",
-        "default": "./dist/cjs/packageManager/packages.js"
       }
     },
     "./packageManager/display": {
-      "import": {
+      "default": {
         "types": "./dist/packageManager/display.d.ts",
         "default": "./dist/packageManager/display.js"
-      },
+      }
+    },
+    "./packageManager/workspaces": {
       "default": {
-        "types": "./dist/cjs/packageManager/display.d.ts",
-        "default": "./dist/cjs/packageManager/display.js"
+        "types": "./dist/packageManager/workspaces.d.ts",
+        "default": "./dist/packageManager/workspaces.js"
       }
     }
   },
@@ -85,9 +63,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.ts && yarn build:types",
+    "build": "node ./build.ts",
     "build:pack": "yarn pack -o cedarjs-cli-helpers.tgz",
-    "build:types": "tsc --build --verbose ./tsconfig.build.json ./tsconfig.cjs.json",
+    "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
@@ -97,35 +75,34 @@
     "@babel/core": "^7.26.10",
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/telemetry": "workspace:*",
-    "@listr2/prompt-adapter-enquirer": "4.2.1",
-    "@opentelemetry/api": "1.9.0",
-    "ansis": "4.2.0",
+    "@listr2/prompt-adapter-enquirer": "4.3.0",
+    "@opentelemetry/api": "1.9.1",
+    "ansis": "4.3.1",
     "dotenv": "16.6.1",
     "dotenv-defaults": "5.0.2",
     "enquirer": "2.4.1",
     "execa": "5.1.1",
-    "listr2": "10.2.1",
+    "listr2": "10.2.2",
     "lodash": "4.18.1",
     "pascalcase": "1.0.0",
-    "prettier": "3.8.3",
+    "prettier": "3.8.4",
     "prompts": "2.4.2",
-    "semver": "7.7.4",
-    "smol-toml": "1.6.1",
+    "semver": "7.8.5",
+    "smol-toml": "1.8.0",
     "termi-link": "1.1.0",
     "yargs-parser": "21.1.1"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@types/dotenv-defaults": "^5.0.0",
-    "@types/lodash": "4.17.24",
+    "@types/lodash": "4.17.25",
     "@types/pascalcase": "1.0.3",
     "@types/semver": "^7",
     "@types/yargs": "17.0.35",
     "@types/yargs-parser": "21.0.3",
-    "prettier-plugin-tailwindcss": "0.7.3",
-    "tsx": "4.21.0",
+    "prettier-plugin-tailwindcss": "0.8.1",
     "typescript": "5.9.3",
-    "vitest": "3.2.4"
+    "vitest": "4.1.10"
   },
   "engines": {
     "node": ">=24"

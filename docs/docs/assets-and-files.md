@@ -68,7 +68,7 @@ web/public/
 └── favicon.png
 ```
 
-When you run `yarn rw dev` and `yarn rw build`, Cedar copies
+When you run `yarn cedar dev` and `yarn cedar build`, Cedar copies
 `web/public/img/logo.png` to `web/dist/img/logo.png` and `web/public/favicon.png` to `web/dist/favicon.png`:
 
 ```text

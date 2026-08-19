@@ -27,17 +27,16 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.ts && run build:types",
+    "build": "node ./build.ts && run build:types",
     "build:types": "tsc --build --verbose"
   },
   "dependencies": {
-    "@arethetypeswrong/cli": "0.18.2",
-    "esbuild": "0.27.7",
-    "fast-glob": "3.3.3",
-    "zx": "8.8.5"
+    "@arethetypeswrong/cli": "0.18.5",
+    "esbuild": "0.28.2",
+    "execa": "5.1.1",
+    "fast-glob": "3.3.3"
   },
   "devDependencies": {
-    "tsx": "4.21.0",
     "type-fest": "5.6.0",
     "typescript": "5.9.3"
   },

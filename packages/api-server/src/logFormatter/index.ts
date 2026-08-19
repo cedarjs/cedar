@@ -31,11 +31,14 @@ import {
 export const LogFormatter = () => {
   const parse = (inputData: string | Record<string, unknown>) => {
     let logData
+
     if (typeof inputData === 'string') {
       const parsedData = jsonParse(inputData)
+
       if (!parsedData.value || parsedData.err || !isPinoLog(parsedData.value)) {
         return inputData + NEWLINE
       }
+
       logData = parsedData.value
     } else if (isObject(inputData) && isPinoLog(inputData)) {
       logData = inputData
@@ -116,7 +119,7 @@ export const LogFormatter = () => {
       url: logDataUrl,
       userAgent,
       ...rest
-    }: Record<string, unknown> = logData
+    } = logData
 
     const statusCode = responseStatusCode || logDataStatusCode
     const responseTime = logDataResponseTime || elapsed
@@ -208,7 +211,7 @@ export const LogFormatter = () => {
     }
 
     if (rest) {
-      output.push(formatCustom(rest as Record<string, unknown>))
+      output.push(formatCustom(rest))
     }
 
     return output.filter(noEmpty).join(' ')

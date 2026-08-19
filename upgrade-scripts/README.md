@@ -59,3 +59,11 @@ To specify a specific version, use a comment directive at the top of the file:
 import memoize from 'lodash/memoize.js'
 import { getConfig } from '@cedarjs/project-config'
 ```
+
+## Manual Testing
+
+Do something like this
+
+```shell
+CEDAR_CWD=~/dev/cedar-app node upgrade-scripts/4.x.ts
+```

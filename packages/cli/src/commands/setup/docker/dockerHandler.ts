@@ -1,0 +1,395 @@
+import fs from 'node:fs'
+import { createRequire } from 'node:module'
+import path from 'node:path'
+
+import execa from 'execa'
+import { Listr } from 'listr2'
+
+import { writeFile, colors as c } from '@cedarjs/cli-helpers'
+import { dedupe } from '@cedarjs/cli-helpers/packageManager'
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
+import { addWorkspacePackages } from '@cedarjs/cli-helpers/packageManager/packages'
+import { getConfig, getConfigPath, getPaths } from '@cedarjs/project-config'
+import { getPackageManager } from '@cedarjs/project-config/packageManager'
+import { errorTelemetry } from '@cedarjs/telemetry'
+
+interface PackageJson {
+  dependencies?: Record<string, string>
+}
+
+interface Packument {
+  versions?: Record<string, unknown>
+  error?: string
+}
+
+export async function handler({ force }: { force: boolean }) {
+  const TEMPLATE_DIR = path.join(import.meta.dirname, 'templates')
+  const pm = getPackageManager()
+
+  let dockerfileTemplateContent = fs.readFileSync(
+    path.resolve(TEMPLATE_DIR, `Dockerfile.${pm}`),
+    'utf-8',
+  )
+
+  let dockerComposeDevTemplateContent = fs.readFileSync(
+    path.resolve(TEMPLATE_DIR, 'docker-compose.dev.yml'),
+    'utf-8',
+  )
+  const dockerComposeProdTemplateContent = fs.readFileSync(
+    path.resolve(TEMPLATE_DIR, 'docker-compose.prod.yml'),
+    'utf-8',
+  )
+  const dockerignoreTemplateContent = fs.readFileSync(
+    path.resolve(TEMPLATE_DIR, 'dockerignore'),
+    'utf-8',
+  )
+
+  const dockerfilePath = path.join(getPaths().base, 'Dockerfile')
+  const dockerComposeDevFilePath = path.join(
+    getPaths().base,
+    'docker-compose.dev.yml',
+  )
+  const dockerComposeProdFilePath = path.join(
+    getPaths().base,
+    'docker-compose.prod.yml',
+  )
+  const dockerignoreFilePath = path.join(getPaths().base, '.dockerignore')
+
+  const configTomlPath = getConfigPath()
+  const configFileName = path.basename(configTomlPath)
+
+  // Replace PM-specific placeholders in templates.
+  // The command line uses `'{{DEV_CMD}}'` (quoted to keep YAML valid with
+  // the replacement marker), while the inline comment uses `{{CEDAR_CMD}}`.
+  dockerComposeDevTemplateContent = dockerComposeDevTemplateContent
+    .replace(/'{{DEV_CMD}}'/g, formatCedarCommand(['dev']))
+    .replace(/{{CEDAR_CMD}}/g, formatCedarCommand([]))
+
+  const tasks = new Listr<never>(
+    [
+      // The yarn workspace-tools plugin only exists for yarn.
+      // For pnpm, pnpm install --prod --filter api is built-in. Workspaces are
+      // a first-class feature with no plugin needed. For npm, there's no
+      // workspace-focus equivalent at all, so npm ci --omit=dev installs
+      // production deps for all workspaces (slightly less optimized but
+      // functionally correct).
+      ...(pm === 'yarn'
+        ? [
+            {
+              title: 'Adding the official yarn workspace-tools plugin...',
+              task: async (
+                _: unknown,
+                task: { skip: (msg?: string) => void },
+              ) => {
+                const { stdout } = await execa(
+                  'yarn',
+                  ['plugin', 'runtime', '--json'],
+                  {
+                    cwd: getPaths().base,
+                  },
+                )
+
+                const hasWorkspaceToolsPlugin = stdout
+                  .trim()
+                  .split('\n')
+                  // JSON.parse returns `any`; each line is a yarn plugin object
+                  .map((line) => JSON.parse(line) as { name: string })
+                  .some(
+                    ({ name }) => name === '@yarnpkg/plugin-workspace-tools',
+                  )
+
+                if (hasWorkspaceToolsPlugin) {
+                  task.skip(
+                    'The official yarn workspace-tools plugin is already installed',
+                  )
+                  return
+                }
+
+                return execa('yarn', ['plugin', 'import', 'workspace-tools'], {
+                  cwd: getPaths().base,
+                }).stdout
+              },
+            },
+          ]
+        : []),
+      {
+        title: 'Adding @cedarjs/api-server and @cedarjs/web-server...',
+        task: async (_ctx, task) => {
+          const apiServerPackageName = '@cedarjs/api-server'
+          // JSON.parse returns `any`; we assert the expected package.json shape here.
+          // `dependencies` is optional so we default to {} if absent.
+          const { dependencies: apiDependencies = {} } = JSON.parse(
+            fs.readFileSync(
+              path.join(getPaths().api.base, 'package.json'),
+              'utf-8',
+            ),
+          ) as PackageJson
+          const hasApiServerPackage =
+            Object.keys(apiDependencies).includes(apiServerPackageName)
+
+          const webServerPackageName = '@cedarjs/web-server'
+          // JSON.parse returns `any`; we assert the expected package.json shape here.
+          // `dependencies` is optional so we default to {} if absent.
+          const { dependencies: webDependencies = {} } = JSON.parse(
+            fs.readFileSync(
+              path.join(getPaths().web.base, 'package.json'),
+              'utf-8',
+            ),
+          ) as PackageJson
+          const hasWebServerPackage =
+            Object.keys(webDependencies).includes(webServerPackageName)
+
+          if (hasApiServerPackage && hasWebServerPackage) {
+            task.skip(
+              `${apiServerPackageName} and ${webServerPackageName} are already installed`,
+            )
+            return
+          }
+
+          if (!hasApiServerPackage) {
+            const apiServerPackageVersion =
+              await getVersionOfRedwoodPackageToInstall(apiServerPackageName)
+
+            await addWorkspacePackages(
+              'api',
+              [`${apiServerPackageName}@${apiServerPackageVersion}`],
+              { cwd: getPaths().base },
+            )
+          }
+
+          if (!hasWebServerPackage) {
+            const webServerPackageVersion =
+              await getVersionOfRedwoodPackageToInstall(webServerPackageName)
+
+            await addWorkspacePackages(
+              'web',
+              [`${webServerPackageName}@${webServerPackageVersion}`],
+              { cwd: getPaths().base },
+            )
+          }
+
+          const dedupeCommand = dedupe()
+          if (dedupeCommand) {
+            await execa(getPackageManager(), [dedupeCommand], {
+              cwd: getPaths().base,
+            })
+          }
+        },
+      },
+      {
+        title: 'Adding the Dockerfile and compose files...',
+        task: (_ctx, task) => {
+          const shouldSkip = [
+            dockerfilePath,
+            dockerComposeDevFilePath,
+            dockerComposeProdFilePath,
+            dockerignoreFilePath,
+          ].every(fs.existsSync)
+
+          if (!force && shouldSkip) {
+            task.skip('The Dockerfile and compose files already exist')
+            return
+          }
+
+          const config = getConfig()
+          const { includeEnvironmentVariables } = config.web
+
+          if (includeEnvironmentVariables.length) {
+            const webBuildWithPrerenderStageDelimeter =
+              'FROM api_build as web_build_with_prerender\n'
+            const webBuildStageDelimeter = 'FROM base as web_build\n'
+
+            const [
+              beforeWebBuildWithPrerenderStageDelimeter,
+              afterWebBuildWithPrerenderStageDelimeter,
+            ] = dockerfileTemplateContent.split(
+              webBuildWithPrerenderStageDelimeter,
+            )
+
+            const [beforeWebBuildStageDelimeter, afterWebBuildStageDelimeter] =
+              afterWebBuildWithPrerenderStageDelimeter.split(
+                webBuildStageDelimeter,
+              )
+
+            dockerfileTemplateContent = [
+              beforeWebBuildWithPrerenderStageDelimeter.trim(),
+              webBuildWithPrerenderStageDelimeter,
+              ...includeEnvironmentVariables.map((envVar) => `ARG ${envVar}`),
+              '',
+              beforeWebBuildStageDelimeter.trim(),
+              webBuildStageDelimeter,
+              ...includeEnvironmentVariables.map((envVar) => `ARG ${envVar}`),
+              afterWebBuildStageDelimeter,
+            ].join('\n')
+          }
+
+          writeFile(
+            dockerfilePath,
+            dockerfileTemplateContent,
+            {
+              existingFiles: force ? 'OVERWRITE' : 'SKIP',
+            },
+            task,
+          )
+          writeFile(
+            dockerComposeDevFilePath,
+            dockerComposeDevTemplateContent,
+            {
+              existingFiles: force ? 'OVERWRITE' : 'SKIP',
+            },
+            task,
+          )
+          writeFile(
+            dockerComposeProdFilePath,
+            dockerComposeProdTemplateContent,
+            { existingFiles: force ? 'OVERWRITE' : 'SKIP' },
+            task,
+          )
+          writeFile(
+            dockerignoreFilePath,
+            dockerignoreTemplateContent,
+            {
+              existingFiles: force ? 'OVERWRITE' : 'SKIP',
+            },
+            task,
+          )
+        },
+      },
+      {
+        title: 'Adding postgres to .gitignore...',
+        task: (_ctx, task) => {
+          const gitignoreFilePath = path.join(getPaths().base, '.gitignore')
+          const gitignoreFileContent = fs.readFileSync(
+            gitignoreFilePath,
+            'utf-8',
+          )
+
+          if (gitignoreFileContent.includes('postgres')) {
+            task.skip('postgres is already ignored by git')
+            return
+          }
+
+          writeFile(
+            gitignoreFilePath,
+            gitignoreFileContent.concat('\npostgres\n'),
+            { existingFiles: 'OVERWRITE' },
+          )
+        },
+      },
+      {
+        title: `Adding config to ${configFileName}...`,
+        task: () => {
+          let configContent = fs.readFileSync(configTomlPath, 'utf-8')
+
+          const browserOpenRegExp = /open\s*=\s*true/
+          if (browserOpenRegExp.test(configContent)) {
+            configContent = configContent.replace(
+              /open\s*=\s*true/,
+              'open = false',
+            )
+          }
+
+          // using string replace here to preserve comments and formatting.
+          writeFile(configTomlPath, configContent, {
+            existingFiles: 'OVERWRITE',
+          })
+        },
+      },
+    ],
+    {
+      renderer: process.env.NODE_ENV === 'test' ? 'verbose' : 'default',
+    },
+  )
+
+  try {
+    await tasks.run()
+
+    console.log(
+      [
+        '',
+        "We've written four files:",
+        '',
+        '- ./Dockerfile',
+        '- ./.dockerignore',
+        '- ./docker-compose.dev.yml',
+        '- ./docker-compose.prod.yml',
+        '',
+        'To start the docker compose dev:',
+        '',
+        '  docker compose -f docker-compose.dev.yml up ',
+        '',
+        'Then, connect to the container and migrate your database:',
+        '',
+        '  docker compose -f ./docker-compose.dev.yml run --rm -it console /bin/bash',
+        '  root@...:/home/node/app# ' +
+          formatCedarCommand(['prisma', 'migrate', 'dev']),
+        '',
+        "We assume you're using Postgres. If you're not, you'll need to make other changes to switch over.",
+        "Lastly, ensure you have Docker. If you don't, see https://docs.docker.com/desktop/",
+        '',
+        "There's a lot in the Dockerfile and there's a reason for every line.",
+        'Be sure to check out the docs: https://cedarjs.com/docs/docker',
+      ].join('\n'),
+    )
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e)
+    const exitCode =
+      e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+        ? e.exitCode
+        : 1
+    errorTelemetry(process.argv, msg)
+    console.error(c.error(msg))
+    process.exit(exitCode)
+  }
+}
+
+export async function getVersionOfRedwoodPackageToInstall(
+  module: string,
+): Promise<string> {
+  const createdRequire = createRequire(import.meta.url)
+  const packageJsonPath = createdRequire.resolve('@cedarjs/cli/package.json', {
+    paths: [getPaths().base],
+  })
+  // JSON.parse returns `any`; we assert the expected package.json shape here.
+  // `version` is optional so we default to '' if absent.
+  let { version = '' } = JSON.parse(
+    fs.readFileSync(packageJsonPath, 'utf8'),
+  ) as {
+    version?: string
+  }
+
+  const packumentP = await fetch(`https://registry.npmjs.org/${module}`)
+  // fetch().json() returns `any`; we assert the expected npm packument shape here
+  const packument = (await packumentP.json()) as Packument
+
+  if (packument.error) {
+    throw new Error(
+      `Couldn't fetch packument for ${module}: ${packument.error}`,
+    )
+  }
+
+  if (
+    !packument.versions ||
+    typeof packument.versions !== 'object' ||
+    Array.isArray(packument.versions)
+  ) {
+    throw new Error(
+      `Couldn't fetch packument for ${module}: invalid versions field`,
+    )
+  }
+
+  // If the version includes a plus, like '4.0.0-rc.428+dd79f1726'
+  // (all @canary, @next, and @rc packages do), get rid of everything after the plus.
+  if (version.includes('+')) {
+    version = version.split('+')[0]
+  }
+
+  const versionIsPublished = Object.keys(packument.versions).includes(version)
+
+  // Fallback to canary. This is most likely because it's a new package
+  if (!versionIsPublished) {
+    version = 'canary'
+  }
+
+  return version
+}

@@ -200,7 +200,7 @@ Let's explore each one and how they're integrated with Cedar.
 
 ### Jest
 
-[Jest](https://jestjs.io/) is Cedar's test runner. By default, starting Jest via `yarn rw test` will start a watch process that monitors your files for changes and re-runs the test(s) that are affected by that changed file (either the test itself, or the subject under test).
+[Jest](https://jestjs.io/) is Cedar's test runner. By default, starting Jest via `yarn cedar test` will start a watch process that monitors your files for changes and re-runs the test(s) that are affected by that changed file (either the test itself, or the subject under test).
 
 ### React Testing Library
 
@@ -225,7 +225,7 @@ Cedar's generators will include test files for basic functionality automatically
 You can use a single command to run your entire suite :
 
 ```bash
-yarn rw test
+yarn cedar test
 ```
 
 This will start Jest in "watch" mode which will continually run and monitor the file system for changes. If you change a test or the component that's being tested, Jest will re-run any associated test file. This is handy when you're spending the afternoon writing tests and always want to verify the code you're adding without swapping back and forth to a terminal and pressing `↑` `Enter` to run the last command again.
@@ -233,7 +233,7 @@ This will start Jest in "watch" mode which will continually run and monitor the 
 To start the process without watching, add the `--no-watch` flag:
 
 ```bash
-yarn rw test --no-watch
+yarn cedar test --no-watch
 ```
 
 This one is handy before committing some changes to be sure you didn't inadvertently break something you didn't expect, or before a deploy to production.
@@ -243,20 +243,20 @@ This one is handy before committing some changes to be sure you didn't inadverte
 You can run only the web- or api-side test suites by including the side as another argument to the command:
 
 ```bash
-yarn rw test web
-yarn rw test api
+yarn cedar test web
+yarn cedar test api
 ```
 
 Let's say you have a test file called `CommentForm.test.js`. In order to only watch and run tests in this file you can run
 
 ```bash
-yarn rw test CommentForm
+yarn cedar test CommentForm
 ```
 
 If you need to be more specific, you can combine side filters, with other filters
 
 ```bash
-yarn rw test api Comment
+yarn cedar test api Comment
 ```
 
 which will only run test specs matching "Comment" in the API side
@@ -285,7 +285,7 @@ describe('Article', () => {
 
 This test (if it worked) would prove that you are indeed rendering an article. But it's also extremely brittle: any change to the component, even adding a `className` attribute for styling, will cause the test to break. That's not ideal, especially when you're just starting out building your components and will constantly be making changes as you improve them.
 
-:::info Why do we keep saying this test won't work?
+:::info[Why do we keep saying this test won't work?]
 Because as far as we can tell there's no easy way to simply render to a string. `render` actually returns an object that has several functions for testing different parts of the output. Those are what we'll look into in the next section.
 
 Note that Cedar's `render` function is based on React Testing Library's. The only difference is that Cedar's wraps everything with mock providers for the various providers in Cedar, such as auth, the GraphQL client, the router, etc.
@@ -1051,7 +1051,7 @@ describe('ArticleCell', () => {
 
 Note that this second mock simply returns an object instead of a function. In the simplest case all you need your mock to return is an object. But there are cases where you may want to include logic in your mock, and in these cases you'll appreciate the function container. Especially in the following scenario...
 
-:::tip important
+:::tip[important]
 If using [fragments](./graphql/fragments.md) it is important to include the `__typename` otherwise Apollo client will not be able to map the mocked data to the fragment attributes.
 :::
 
@@ -1162,7 +1162,7 @@ yarn workspace web add -D @testing-library/user-event
 
 ### Building a Form
 
-Let's assume you've already created a component using `yarn rw g component`. This component is built using the `@cedarjs/forms` package and provides a simple interface for using the form: we subscribe to changes via an `onSubmit` callback-prop.
+Let's assume you've already created a component using `yarn cedar g component`. This component is built using the `@cedarjs/forms` package and provides a simple interface for using the form: we subscribe to changes via an `onSubmit` callback-prop.
 
 ```jsx title="NameForm.js"
 import { Form, Submit, TextField } from '@cedarjs/forms'
@@ -1314,7 +1314,7 @@ Services will usually contain most of your business logic which is important to 
 
 ### The Test Database
 
-To simplify Service testing, rather than mess with your development database, Cedar creates a test database that it executes queries against. By default this database will be located at the location defined by a `TEST_DATABASE_URL` environment variable and will fall back to `.redwood/test.db` if that var does not exist.
+To simplify Service testing, rather than mess with your development database, Cedar creates a test database that it executes queries against. By default this database will be located at the location defined by a `TEST_DATABASE_URL` environment variable and will fall back to `.cedar/test.db` if that var does not exist.
 
 If you're using Postgres or MySQL locally you'll want to set that env var to your connection string for a test database in those services.
 
@@ -1324,9 +1324,9 @@ Does anyone else find it confusing that the software itself is called a "databas
 
 :::
 
-When you start your test suite you may notice some output from Prisma talking about migrating the database. Cedar will automatically run `yarn rw prisma db push` against your test database to make sure it's up-to-date.
+When you start your test suite you may notice some output from Prisma talking about migrating the database. Cedar will automatically run `yarn cedar prisma db push` against your test database to make sure it's up-to-date.
 
-:::warning What if I have custom migration SQL?
+:::warning[What if I have custom migration SQL?]
 
 The `prisma db push` command only restores a snapshot of the current database schema (so that it runs as fast as possible). **It does not actually run migrations in sequence.** This can cause a [problem](https://github.com/cedarjs/cedar/issues/5818) if you have certain database configuration that _must_ occur as a result of the SQL statements inside the migration files.
 
@@ -1336,7 +1336,7 @@ In order to preserve those statements in your test database, you can set an addi
 TEST_DATABASE_STRATEGY=reset
 ```
 
-Set the variable to `push`, or remove it completely, and it will use the default behavior of running `yarn rw prisma db push`.
+Set the variable to `push`, or remove it completely, and it will use the default behavior of running `yarn cedar prisma db push`.
 
 :::
 
@@ -1837,7 +1837,7 @@ describeScenario<StandardScenario>('user query service', (getScenario) => {
 })
 ```
 
-:::tip Using named scenarios with describeScenario
+:::tip[Using named scenarios with describeScenario]
 
 If you have multiple scenarios, you can also use named scenario with `describeScenario`
 
@@ -2020,7 +2020,7 @@ scenario('returns a single product', async (scenario: StandardScenario) => {
   )
 ```
 
-:::info Serialized Objects in Cache
+:::info[Serialized Objects in Cache]
 Remember that the cache only ever contains serialized objects. So if you passed an object like this:
 
 ```js

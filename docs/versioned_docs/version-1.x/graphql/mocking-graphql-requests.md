@@ -89,7 +89,7 @@ mockGraphQLQuery('OperationName', (_variables, { ctx }) => {
 
 If using [fragments](../graphql/fragments.md) it is important to include the `__typename` otherwise Apollo client will not be able to map the mocked data to the fragment attributes.
 
-:::tip note
+:::tip[note]
 
 The `__typename: 'Book' as const` ensures that `'Book'` is considered to be a `type` and not a `string`.
 :::

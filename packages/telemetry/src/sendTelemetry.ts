@@ -7,6 +7,7 @@ import ci from 'ci-info'
 import envinfo from 'envinfo'
 import system from 'systeminformation'
 import { v4 as uuidv4 } from 'uuid'
+import yargsParser from 'yargs/yargs'
 
 import { getRawConfig, getPaths } from '@cedarjs/project-config'
 import { RWProject } from '@cedarjs/structure/dist/model/RWProject'
@@ -71,7 +72,7 @@ const SENSITIVE_ARG_POSITIONS: SensitiveArgPositions = {
 }
 
 interface Args {
-  redwoodVersion?: string
+  cedarVersion?: string
   command?: string
 }
 
@@ -112,10 +113,9 @@ const getInfo = async (presets: Args = {}) => {
     yarnVersion: info.Binaries?.Yarn?.version,
     npmVersion: info.Binaries?.npm?.version,
     vsCodeVersion: info.IDEs?.VSCode?.version,
-    redwoodVersion:
-      presets.redwoodVersion || info.npmPackages?.['@cedarjs/core']?.installed,
+    cedarVersion:
+      presets.cedarVersion || info.npmPackages?.['@cedarjs/core']?.installed,
     system: `${cpu.physicalCores}.${Math.round(mem.total / 1073741824)}`,
-    webBundler: 'vite', // Hardcoded as this is now the only supported bundler
     experiments,
   }
 }
@@ -191,22 +191,32 @@ const buildPayload = async () => {
     }
   }
 
-  const argv = require('yargs/yargs')(processArgv.slice(2)).parse()
-  const command = argv.argv ? sanitizeArgv(JSON.parse(argv.argv)) : ''
+  const rawArgv = yargsParser(processArgv.slice(2)).parseSync()
+
+  const argvFlag = typeof rawArgv.argv === 'string' ? rawArgv.argv : undefined
+  const typeFlag = typeof rawArgv.type === 'string' ? rawArgv.type : undefined
+  const durationFlag =
+    typeof rawArgv.duration === 'string' ? rawArgv.duration : undefined
+  const rwVersionFlag =
+    typeof rawArgv.rwVersion === 'string' ? rawArgv.rwVersion : undefined
+  const errorFlag =
+    typeof rawArgv.error === 'string' ? rawArgv.error : undefined
+
+  const command = argvFlag ? sanitizeArgv(JSON.parse(argvFlag)) : ''
   payload = {
-    type: argv.type || 'command',
+    type: typeFlag || 'command',
     command,
-    duration: argv.duration ? parseInt(argv.duration) : null,
+    duration: durationFlag ? parseInt(durationFlag) : null,
     uid: uniqueId(),
     ci: ci.isCI,
-    redwoodCi: !!process.env.REDWOOD_CI,
+    cedarCi: !!process.env.CEDAR_CI,
     NODE_ENV: process.env.NODE_ENV || null,
-    ...(await getInfo({ redwoodVersion: argv.rwVersion, command })),
+    ...(await getInfo({ cedarVersion: rwVersionFlag, command })),
   }
 
-  if (argv.error) {
+  if (errorFlag) {
     payload.type = 'error'
-    payload.error = argv.error
+    payload.error = errorFlag
       .split('\n')[0]
       .replace(/(\/[@\-\.\w]+)/g, '[path]')
   }
@@ -262,14 +272,17 @@ function uniqueId() {
 // actually call the API with telemetry data
 export const sendTelemetry = async () => {
   const telemetryUrl =
+    process.env.CEDAR_REDIRECT_TELEMETRY ||
     process.env.REDWOOD_REDIRECT_TELEMETRY ||
     'https://telemetry.redwoodjs.com/api/v1/telemetry'
+  const verboseTelemetry =
+    process.env.CEDAR_VERBOSE_TELEMETRY || process.env.REDWOOD_VERBOSE_TELEMETRY
 
   try {
     const payload = await buildPayload()
 
-    if (process.env.REDWOOD_VERBOSE_TELEMETRY) {
-      console.info('Redwood Telemetry Payload', payload)
+    if (verboseTelemetry) {
+      console.info('Cedar Telemetry Payload', payload)
     }
 
     const response = await fetch(telemetryUrl, {
@@ -278,20 +291,20 @@ export const sendTelemetry = async () => {
       headers: { 'Content-Type': 'application/json' },
     })
 
-    if (process.env.REDWOOD_VERBOSE_TELEMETRY) {
-      console.info('Redwood Telemetry Response:', response)
+    if (verboseTelemetry) {
+      console.info('Cedar Telemetry Response:', response)
     }
 
     // Normally we would report on any non-error response here (like a 500)
     // but since the process is spawned and stdout/stderr is ignored, it can
     // never be seen by the user, so ignore.
-    if (process.env.REDWOOD_VERBOSE_TELEMETRY && response.status !== 200) {
+    if (verboseTelemetry && response.status !== 200) {
       console.error('Error from telemetry insert:', await response.text())
     }
   } catch (e) {
     // service interruption: network down or telemetry API not responding
     // don't let telemetry errors bubble up to user, just do nothing.
-    if (process.env.REDWOOD_VERBOSE_TELEMETRY) {
+    if (verboseTelemetry) {
       console.error('Uncaught error in telemetry:', e)
     }
   }

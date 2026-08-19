@@ -13,16 +13,16 @@ Deploying from a client (like your own development machine) consists of running 
 First time deploy:
 
 ```bash
-yarn rw deploy baremetal production --first-run
+yarn cedar deploy baremetal production --first-run
 ```
 
 Subsequent deploys:
 
 ```bash
-yarn rw deploy baremetal production
+yarn cedar deploy baremetal production
 ```
 
-:::warning Deploying to baremetal is an advanced topic
+:::warning[Deploying to baremetal is an advanced topic]
 
 If you haven't done any kind of remote server work before, you may be in a little over your head to start with. But don't worry: until relatively recently (cloud computing, serverless, lambda functions) this is how all websites were deployed, so we've got a good 30 years of experience getting this working!
 
@@ -80,7 +80,7 @@ So a reference to `/var/www/myapp/current` will always be the latest deployed ve
 Run the following to add the required config files to your codebase:
 
 ```bash
-yarn rw setup deploy baremetal
+yarn cedar setup deploy baremetal
 ```
 
 This will add dependencies to your `package.json` and create two files:
@@ -96,7 +96,7 @@ Before your first deploy you'll need to add some configuration.
 
 #### ecosystem.config.js
 
-By default, baremetal assumes you want to run the `yarn rw serve` command, which provides both the web and api sides. The web side will be available on port 8910 unless you update your `cedar.toml` file to make it available on another port. The default generated `ecosystem.config.js` will contain this config only, within a service called "serve":
+By default, baremetal assumes you want to run the `yarn cedar serve` command, which provides both the web and api sides. The web side will be available on port 8910 unless you update your `cedar.toml` file to make it available on another port. The default generated `ecosystem.config.js` will contain this config only, within a service called "serve":
 
 ```jsx title="ecosystem.config.js"
 module.exports = {
@@ -261,7 +261,7 @@ processNames = ["serve", "stage-logging"]
 At deploy time, include the environment in the command:
 
 ```bash
-yarn rw deploy baremetal staging
+yarn cedar deploy baremetal staging
 ```
 
 Note that the codebase shares a single `ecosystem.config.js` file. If you need a different set of services running in different environments you'll need to simply give them a unique name and reference them in the `processNames` option of `deploy.toml` (see the additional `stage-logging` process in the above example).
@@ -277,7 +277,7 @@ sudo chown deploy:deploy /var/www/myapp
 
 You'll want to create an `.env` file in this directory containing any environment variables that are needed by your app (like `DATABASE_URL` at a minimum). This will be symlinked to each release directory so that it's available as the app expects (in the root directory of the codebase).
 
-:::warning SSH and Non-interactive Sessions
+:::warning[SSH and Non-interactive Sessions]
 
 The deployment process uses a '[non-interactive](https://tldp.org/LDP/abs/html/intandnonint.html)' SSH session to run commands on the remote server. A non-interactive session will often load a minimal amount of settings for better compatibility and speed. In some versions of Linux `.bashrc` by default does not load (by design) from a non-interactive session. This can lead to `yarn` (or other commands) not being found by the deployment script, even though they are in your path, because additional ENV vars are set in `~/.bashrc` which provide things like NPM paths and setup.
 
@@ -313,7 +313,7 @@ There are techniques for getting `node`, `npm` and `yarn` to be available withou
 Back on your development machine, enter your details in `deploy.toml`, commit it and push it up, and then try a first deploy:
 
 ```bash
-yarn rw deploy baremetal production --first-run
+yarn cedar deploy baremetal production --first-run
 ```
 
 If there are any issues the deploy should stop and you'll see the error message printed to the console.
@@ -339,16 +339,16 @@ Next, try performing all of the steps yourself that would happen during a deploy
 
 ```
 yarn install
-yarn rw prisma migrate deploy
-yarn rw prisma generate
-yarn rw dataMigrate up
-yarn rw build
+yarn cedar prisma migrate deploy
+yarn cedar prisma generate
+yarn cedar dataMigrate up
+yarn cedar build
 ln -nsf "$(pwd)" ../current
 ```
 
 If they worked for you, the deploy process should have no problem as it runs the same commands (after all, it connects via SSH and runs the same commands you just did!)
 
-Next we can check that the site is being served correctly. Run `yarn rw serve` and make sure your processes start and are accessible (by default on port 8910):
+Next we can check that the site is being served correctly. Run `yarn cedar serve` and make sure your processes start and are accessible (by default on port 8910):
 
 ```bash
 curl http://localhost:8910
@@ -356,7 +356,7 @@ curl http://localhost:8910
 wget http://localhost:8910
 ```
 
-If you don't see the content of your `web/src/index.html` file then something isn't working. You'll need to fix those issues before you can deploy. Verify the api side is responding:
+If you don't see the content of your `web/index.html` file then something isn't working. You'll need to fix those issues before you can deploy. Verify the api side is responding:
 
 ```bash
 curl http://localhost:8910/.api/functions/graphql?query={redwood{version}}
@@ -380,7 +380,7 @@ If so then your API side is up and running! The only thing left to test is that 
 
 Was the problem with starting your PM2 process? That will be harder to debug here in this doc, but visit us in the [forums](https://community.redwoodjs.com) or [Discord](https://cedarjs.com/discord) and we'll try to help!
 
-:::note My pm2 processes are running but your app has errors, how do I see them?
+:::note[My pm2 processes are running but your app has errors, how do I see them?]
 
 If your processes are up and running in pm2 you can monitor their log output. Run `pm2 monit` and get a nice graphical interface for watching the logs on your processes. Press the up/down arrows to move through the processes and left/right to switch panes.
 
@@ -446,10 +446,10 @@ There are several ways you can customize the deploys steps, whether that's skipp
 If you want to speed things up you can skip one or more steps during the deploy. For example, if you have no database migrations, you can skip them completely and save some time:
 
 ```bash
-yarn rw deploy baremetal production --no-migrate
+yarn cedar deploy baremetal production --no-migrate
 ```
 
-Run `yarn rw deploy baremetal --help` for the full list of flags. You can set them as `--migrate=false` or use the `--no-migrate` variant.
+Run `yarn cedar deploy baremetal --help` for the full list of flags. You can set them as `--migrate=false` or use the `--no-migrate` variant.
 
 ### Inserting Custom Commands
 
@@ -565,13 +565,13 @@ Would result in the commands running in this order, all before running `yarn ins
 If you deploy and find something has gone horribly wrong, you can rollback your deploy to the previous release:
 
 ```bash
-yarn rw deploy baremetal production --rollback
+yarn cedar deploy baremetal production --rollback
 ```
 
 You can even rollback multiple deploys, up to the total number you still have denoted with the `keepReleases` option:
 
 ```bash
-yarn rw deploy baremetal production --rollback 3
+yarn cedar deploy baremetal production --rollback 3
 ```
 
 Note that this will _not_ rollback your database—if you had a release that changed the database, that updated database will still be in effect, but with the previous version of the web and api sides. Trying to undo database migrations is a very difficult proposition and isn't even possible in many cases.
@@ -583,7 +583,7 @@ Make sure to thoroughly test releases that change the database before doing it f
 If you find that you have a particular complex deploy, one that may involve incompatible database changes with the current codebase, or want to make sure that database changes don't occur while in the middle of a deploy, you can put up a maintenance page:
 
 ```bash
-yarn rw deploy baremetal production --maintenance up
+yarn cedar deploy baremetal production --maintenance up
 ```
 
 It does this by replacing `web/dist/200.html` with `web/src/maintenance.html`. This means any new web requests, at any URL, will show the maintenance page. This process also stops any services listed in the `processNames` option of `deploy.toml`—this is important for the api server as it will otherwise keep serving requests to users currently running the app, even though no _new_ users can get the Javascript packages required to start a new session in their browser.
@@ -591,7 +591,7 @@ It does this by replacing `web/dist/200.html` with `web/src/maintenance.html`. T
 You can remove the maintenance page with:
 
 ```bash
-yarn rw deploy baremetal production --maintenance down
+yarn cedar deploy baremetal production --maintenance down
 ```
 
 Note that the maintenance page will automatically come down as the result of a new deploy as it checks out a new copy of the codebase (with a brand new copy of `web/dist/200.html` and will automatically restart services (bring them all back online).
@@ -699,7 +699,7 @@ server {
 Now when you start Cedar, you're only going to start the api server:
 
 ```
-yarn rw serve api
+yarn cedar serve api
 ```
 
 When using `pm2` to start/monitor your processes, you can simplify your `deploy.toml` and `ecosystem.config.js` files to only worry about the api side:

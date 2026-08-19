@@ -56,26 +56,22 @@ vi.mock('../../../../lib/index.js', async (importOriginal) => {
 })
 
 import fs from 'node:fs'
+import type * as NodeFs from 'node:fs'
 import path from 'node:path'
 
 import { dedent } from 'ts-dedent'
 import { vi, describe, it, expect, afterEach } from 'vitest'
 
-// @ts-expect-error - No types for JS files
 import type * as LibIndex from '../../../../lib/index.js'
 // TODO: Separate test file for filesTask.js
-// @ts-expect-error - No types for JS files
 import * as filesTask from '../filesTask.js'
-// @ts-expect-error - No types for JS files
 import * as packageHandler from '../packageHandler.js'
 
 vi.mock('node:fs', async (importOriginal) => {
-  const { wrapFsForUnionfs } = await import(
-    // @ts-expect-error - No types for JS files
-    '../../../../__tests__/ufsFsProxy.js'
-  )
-  const originalFs = await importOriginal()
-  ufs.use(wrapFsForUnionfs(originalFs)).use(memfs as any)
+  const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
+    await import('../../../../__tests__/ufsFsProxy.js')
+  const originalFs = await importOriginal<typeof NodeFs>()
+  ufs.use(wrapFsForUnionfs(originalFs)).use(wrapMemfsForUnionfs(memfs))
 
   return {
     ...ufs,
@@ -95,13 +91,16 @@ describe('packageHandler', () => {
   describe('handler', () => {
     it('throws on package name with two slashes', async () => {
       await expect(() =>
-        packageHandler.handler({ name: 'package//name' }),
+        packageHandler.handler({ name: 'package//name', force: false }),
       ).rejects.toThrowError(
         'Invalid package name "package//name". Package names can have at most one slash.',
       )
 
       await expect(() =>
-        packageHandler.handler({ name: '@test-org/package/name' }),
+        packageHandler.handler({
+          name: '@test-org/package/name',
+          force: false,
+        }),
       ).rejects.toThrowError(
         'Invalid package name "@test-org/package/name". Package names can have at most one slash.',
       )
@@ -146,16 +145,18 @@ describe('packageHandler', () => {
         const files = await filesTask.files({
           ...packageHandler.nameVariants('foo'),
           typescript: true,
+          esm: true,
         })
 
         const fileNames = Object.keys(files)
-        expect(fileNames.length).toEqual(5)
+        expect(fileNames.length).toEqual(6)
 
         expect(fileNames).toEqual(
           expect.arrayContaining([
             expect.stringContaining('README.md'),
             expect.stringContaining('package.json'),
             expect.stringContaining('tsconfig.json'),
+            expect.stringContaining('vitest.config.ts'),
             expect.stringContaining('index.ts'),
             expect.stringContaining('foo.test.ts'),
           ]),
@@ -286,6 +287,7 @@ describe('packageHandler', () => {
         const files = await filesTask.files({
           ...packageHandler.nameVariants('@myOrg/formValidators-pkg'),
           typescript: true,
+          esm: true,
         })
 
         const readmePath = path.normalize(
@@ -301,6 +303,9 @@ describe('packageHandler', () => {
           mockBase.path +
             '/packages/form-validators-pkg/src/formValidatorsPkg.test.ts',
         )
+        const vitestConfigPath = path.normalize(
+          mockBase.path + '/packages/form-validators-pkg/vitest.config.ts',
+        )
 
         // Both making sure the file is valid json (parsing would fail otherwise)
         // and that the package name is correct
@@ -311,19 +316,25 @@ describe('packageHandler', () => {
           'export function formValidatorsPkg() {',
         )
 
+        // The Vitest project is named after the folder, so it can be run
+        // with `vitest --project form-validators-pkg`
+        expect(files[vitestConfigPath]).toMatch("name: 'form-validators-pkg'")
+
         expect(files[readmePath]).toMatchSnapshot('readme')
         expect(files[packageJsonPath]).toMatchSnapshot('packageJson')
         expect(files[indexPath]).toMatchSnapshot('index')
         expect(files[testPath]).toMatchSnapshot('test')
+        expect(files[vitestConfigPath]).toMatchSnapshot('vitestConfig')
       })
     })
 
     it('returns the corrent files for JS', async () => {
       const jsFiles = await filesTask.files({
         ...packageHandler.nameVariants('Sample'),
+        esm: true,
       })
       const fileNames = Object.keys(jsFiles)
-      expect(fileNames.length).toEqual(5)
+      expect(fileNames.length).toEqual(6)
 
       expect(fileNames).toEqual(
         expect.arrayContaining([
@@ -331,9 +342,33 @@ describe('packageHandler', () => {
           expect.stringContaining('package.json'),
           // TODO: Make the script output jsconfig.json
           expect.stringContaining('tsconfig.json'),
+          expect.stringContaining('vitest.config.js'),
           expect.stringContaining('index.js'),
           expect.stringContaining('sample.test.js'),
         ]),
+      )
+
+      const vitestConfigPath = path.normalize(
+        mockBase.path + '/packages/sample/vitest.config.js',
+      )
+
+      expect(jsFiles[vitestConfigPath]).toMatch("name: 'sample'")
+    })
+
+    it('does not generate a Vitest config for a Jest project', async () => {
+      const files = await filesTask.files({
+        ...packageHandler.nameVariants('Sample'),
+        typescript: true,
+        esm: false,
+      })
+      const fileNames = Object.keys(files)
+
+      expect(fileNames.length).toEqual(5)
+      expect(fileNames).toEqual(
+        expect.arrayContaining([expect.stringContaining('sample.test.ts')]),
+      )
+      expect(fileNames).not.toEqual(
+        expect.arrayContaining([expect.stringContaining('vitest.config')]),
       )
     })
   })
@@ -694,7 +729,7 @@ describe('packageHandler', () => {
 
       await packageHandler
         .updateWorkspaceTsconfigReferences({ skip: () => {} }, 'newpkg', 'api')
-        .run()
+        ?.run()
 
       const updated = JSON.parse(fs.readFileSync(tsconfigPath, 'utf8'))
 
@@ -727,7 +762,7 @@ describe('packageHandler', () => {
 
       await packageHandler
         .updateWorkspaceTsconfigReferences({ skip: () => {} }, 'newpkg', 'api')
-        .run()
+        ?.run()
 
       const updatedText = await fs.promises.readFile(tsconfigPath, 'utf8')
       const expectedPath = path
@@ -768,7 +803,7 @@ describe('packageHandler', () => {
 
       await packageHandler
         .updateWorkspaceTsconfigReferences({ skip: () => {} }, 'newpkg', 'api')
-        .run()
+        ?.run()
 
       const after = fs.readFileSync(tsconfigPath, 'utf8')
       expect(after).toEqual(before)
@@ -794,7 +829,7 @@ describe('packageHandler', () => {
 
       await packageHandler
         .updateWorkspaceTsconfigReferences({ skip: () => {} }, 'newpkg', 'api')
-        .run()
+        ?.run()
 
       const updatedText = fs.readFileSync(tsconfigPath, 'utf8')
       const expectedPath = path
@@ -831,7 +866,7 @@ describe('packageHandler', () => {
 
       await packageHandler
         .updateWorkspaceTsconfigReferences({ skip: () => {} }, 'newpkg', 'api')
-        .run()
+        ?.run()
 
       const updatedText = fs.readFileSync(scriptsTsconfigPath, 'utf8')
       const expectedPath = path
@@ -865,7 +900,7 @@ describe('packageHandler', () => {
 
       await packageHandler
         .updateWorkspaceTsconfigReferences({ skip: () => {} }, 'newpkg', 'api')
-        .run()
+        ?.run()
 
       const updated = JSON.parse(fs.readFileSync(scriptsTsconfigPath, 'utf8'))
       const expectedPath = path
@@ -910,7 +945,7 @@ describe('packageHandler', () => {
 
       await packageHandler
         .updateWorkspaceTsconfigReferences({ skip: () => {} }, 'newpkg', 'api')
-        .run()
+        ?.run()
 
       const after = fs.readFileSync(scriptsTsconfigPath, 'utf8')
       expect(after).toEqual(before)

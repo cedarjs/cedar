@@ -3,7 +3,11 @@ import { useFilterAllowedOperations } from '@envelop/filter-operation-type'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { OperationTypeNode } from 'graphql'
 import type { GraphQLSchema } from 'graphql'
-import { useReadinessCheck, createYoga } from 'graphql-yoga'
+import {
+  useReadinessCheck,
+  createYoga,
+  useExecutionCancellation,
+} from 'graphql-yoga'
 import type { Plugin } from 'graphql-yoga'
 
 import { mapRwCorsOptionsToYoga } from './cors.js'
@@ -13,21 +17,21 @@ import { configureGraphQLIntrospection } from './introspection.js'
 import { makeMergedSchema } from './makeMergedSchema.js'
 import {
   useArmor,
-  useRedwoodAuthContext,
-  useRedwoodDirective,
-  useRedwoodError,
-  useRedwoodGlobalContextSetter,
-  useRedwoodOpenTelemetry,
-  useRedwoodLogger,
-  useRedwoodPopulateContext,
-  useRedwoodTrustedDocuments,
+  useCedarAuthContext,
+  useCedarDirective,
+  useCedarError,
+  useCedarGlobalContextSetter,
+  useCedarOpenTelemetry,
+  useCedarLogger,
+  useCedarPopulateContext,
+  useCedarTrustedDocuments,
 } from './plugins/index.js'
 import type {
-  useRedwoodDirectiveReturn,
+  UseCedarDirectiveReturn,
   DirectivePluginOptions,
 } from './plugins/useRedwoodDirective.js'
 import { makeSubscriptions } from './subscriptions/makeSubscriptions.js'
-import type { RedwoodSubscription } from './subscriptions/makeSubscriptions.js'
+import type { CedarSubscription } from './subscriptions/makeSubscriptions.js'
 import type { GraphQLYogaOptions, CedarGraphQLContext } from './types.js'
 
 export const createGraphQLYoga = async ({
@@ -56,7 +60,7 @@ export const createGraphQLYoga = async ({
   includeScalars,
 }: GraphQLYogaOptions) => {
   let schema: GraphQLSchema
-  let redwoodDirectivePlugins: Plugin[] = []
+  let cedarDirectivePlugins: Plugin[] = []
   const logger = loggerConfig.logger
 
   const isDevEnv = process.env.NODE_ENV === 'development'
@@ -66,14 +70,14 @@ export const createGraphQLYoga = async ({
     const projectDirectives = makeDirectivesForPlugin(directives)
 
     if (projectDirectives.length > 0) {
-      ;(redwoodDirectivePlugins as useRedwoodDirectiveReturn[]) =
+      ;(cedarDirectivePlugins as UseCedarDirectiveReturn[]) =
         projectDirectives.map((directive) =>
-          useRedwoodDirective(directive as DirectivePluginOptions),
+          useCedarDirective(directive as DirectivePluginOptions),
         )
     }
 
     // @NOTE: Subscriptions are optional and only work in the context of a server
-    let projectSubscriptions: RedwoodSubscription[] = []
+    let projectSubscriptions: CedarSubscription[] = []
 
     if (realtime?.subscriptions?.subscriptions) {
       projectSubscriptions = makeSubscriptions(
@@ -114,6 +118,13 @@ export const createGraphQLYoga = async ({
       plugins.push(useCedarRealtime(realtime))
     }
 
+    // Abort resolver execution when the client disconnects (e.g., page
+    // navigation, tab close). Without this, resolvers continue running
+    // unnecessarily and the response stream write may fail with
+    // ERR_STREAM_PREMATURE_CLOSE, producing a logged 500 even though the client
+    // is already gone.
+    plugins.push(useExecutionCancellation())
+
     const { disableIntrospection } = configureGraphQLIntrospection({
       allowIntrospection,
     })
@@ -122,20 +133,20 @@ export const createGraphQLYoga = async ({
       plugins.push(useDisableIntrospection())
     }
 
-    // Custom Redwood plugins
-    plugins.push(useRedwoodAuthContext(getCurrentUser, authDecoder))
-    plugins.push(useRedwoodGlobalContextSetter())
+    // Custom Cedar plugins
+    plugins.push(useCedarAuthContext(getCurrentUser, authDecoder))
+    plugins.push(useCedarGlobalContextSetter())
 
     if (context) {
-      plugins.push(useRedwoodPopulateContext(context))
+      plugins.push(useCedarPopulateContext(context))
     }
 
-    // Custom Redwood plugins
-    plugins.push(...redwoodDirectivePlugins)
+    // Custom Cedar plugins
+    plugins.push(...cedarDirectivePlugins)
 
-    // Custom Redwood OpenTelemetry plugin
+    // Custom Cedar OpenTelemetry plugin
     if (openTelemetryOptions !== undefined) {
-      plugins.push(useRedwoodOpenTelemetry(openTelemetryOptions))
+      plugins.push(useCedarOpenTelemetry(openTelemetryOptions))
     }
 
     // Secure the GraphQL server
@@ -157,7 +168,7 @@ export const createGraphQLYoga = async ({
     )
 
     if (trustedDocuments && !trustedDocuments.disabled) {
-      plugins.push(useRedwoodTrustedDocuments(trustedDocuments))
+      plugins.push(useCedarTrustedDocuments(trustedDocuments))
     }
 
     // App-defined plugins
@@ -165,7 +176,7 @@ export const createGraphQLYoga = async ({
       plugins.push(...extraPlugins)
     }
 
-    plugins.push(useRedwoodError(logger))
+    plugins.push(useCedarError(logger))
 
     plugins.push(
       useReadinessCheck({
@@ -194,7 +205,7 @@ export const createGraphQLYoga = async ({
 
     // Must be "last" in plugin chain, but before error masking
     // so can process any data added to results and extensions
-    plugins.push(useRedwoodLogger(loggerConfig))
+    plugins.push(useCedarLogger(loggerConfig))
 
     const yoga = createYoga<
       {

@@ -160,7 +160,7 @@ This nicely formatted JSON comes from the [JSON Viewer](https://chrome.google.co
 We can have Cedar generate a shell of our new function for us:
 
 ```bash
-yarn rw g function oauth
+yarn cedar g function oauth
 ```
 
 That will create the function at `/api/src/functions/oauth/oauth.js`. If we retry the **Login with GitHub** button now, we'll see the output of that function instead of the error:
@@ -380,7 +380,7 @@ model User {
 Save these as a migration and apply them to the database:
 
 ```bash
-yarn rw prisma migrate dev
+yarn cedar prisma migrate dev
 ```
 
 Give it a name like "create identity". That's it for the database. Let's return to the `/oauth` function and start working with our new `Identity` model.
@@ -566,7 +566,7 @@ If everything worked then on clicking **Login with GitHub** we should now see a 
 You can take a look in the database and verify that the User and Identity were created. Start up the [Prisma Studio](https://www.prisma.io/studio) (which is already included with Cedar):
 
 ```bash
-yarn rw prisma studio
+yarn cedar prisma studio
 ```
 
 ![Inspecting the Identity record](https://user-images.githubusercontent.com/300/245923393-d61233cc-52d2-4568-858e-9059dfe31bfc.png)

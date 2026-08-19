@@ -3,7 +3,7 @@ import type { Argv } from 'yargs'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
-import type { StorybookYargsOptions } from '../types'
+import type { StorybookYargsOptions } from '../types.js'
 
 export const command = 'storybook'
 export const aliases = ['sb']

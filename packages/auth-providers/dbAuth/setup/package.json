@@ -1,22 +1,22 @@
 {
   "name": "@cedarjs/auth-dbauth-setup",
-  "version": "4.1.0",
+  "version": "5.0.6",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
     "directory": "packages/auth-providers/dbAuth/setup"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "node ./build.mts && yarn build:types",
+    "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-auth-dbauth-setup.tgz",
-    "build:types": "tsc --build --verbose",
+    "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx,template\" --ignore dist --exec \"yarn build\"",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "yarn vitest run src",
@@ -24,19 +24,19 @@
   },
   "dependencies": {
     "@cedarjs/cli-helpers": "workspace:*",
+    "@cedarjs/project-config": "workspace:*",
     "@prisma/internals": "7.8.0",
-    "@simplewebauthn/browser": "10.0.0",
     "prompts": "2.4.2",
     "termi-link": "1.1.0"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@simplewebauthn/types": "10.0.0",
     "@types/yargs": "17.0.35",
+    "memfs": "4.68.1",
     "nodemon": "3.1.14",
-    "ts-dedent": "2.2.0",
+    "ts-dedent": "2.3.0",
     "typescript": "5.9.3",
-    "vitest": "3.2.4"
+    "vitest": "4.1.10"
   },
   "engines": {
     "node": ">=24"

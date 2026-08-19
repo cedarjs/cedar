@@ -66,11 +66,9 @@ export async function rscBuildForSsr({
     plugins: [
       cjsInterop({
         dependencies: [
-          // Skip ESM modules: rwjs/auth, rwjs/web, rwjs/auth-*-middleware, rwjs/router
-          '@cedarjs/forms',
+          // Skip ESM modules: rwjs/auth, rwjs/web, rwjs/auth-*-middleware,
+          // rwjs/router, rwjs/auth-*-api, rwjs/auth-*-web, rwjs/forms
           '@cedarjs/prerender/*',
-          '@cedarjs/auth-*-api',
-          '@cedarjs/auth-!(dbauth)-web',
         ],
       }),
       rscRoutesAutoLoader(),

@@ -10,7 +10,7 @@ declare global {
     RWJS_EXP_RSC: boolean
 
     __REDWOOD__APP_TITLE: string
-    __REDWOOD__APOLLO_STATE: NormalizedCacheObject
+    __CEDAR__APOLLO_STATE: NormalizedCacheObject
 
     RWJS_EXP_SSR_GRAPHQL_ENDPOINT: string
   }

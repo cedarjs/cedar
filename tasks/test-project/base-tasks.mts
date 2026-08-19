@@ -10,6 +10,7 @@ import {
 import { contactTask } from './contact-task.mts'
 import { fullPath, getOutputPath } from './paths.mts'
 import { getPrerenderTasks } from './prerender-tasks.mts'
+import type { PackageManager } from './typing.mts'
 import {
   getExecaOptions,
   applyCodemod,
@@ -20,11 +21,13 @@ import {
   createBuilder,
 } from './util.mts'
 
-function getPagesTasks(live = false) {
+function getPagesTasks(live = false, packageManager: PackageManager = 'yarn') {
+  const cedarBin = packageManager === 'npm' ? 'npx' : packageManager
+
   // Passing 'web' here to test executing 'yarn cedar' in the /web directory
   // to make sure it works as expected. We do the same for the /api directory
   // further down in this file.
-  const createPage = createBuilder('yarn cedar g page', 'web')
+  const createPage = createBuilder(`${cedarBin} cedar g page`, 'web')
 
   const pages = [
     {
@@ -35,6 +38,29 @@ function getPagesTasks(live = false) {
         await applyCodemod(
           'homePage.js',
           fullPath('web/src/pages/HomePage/HomePage'),
+        )
+
+        // The home page renders BlogPostsCell, so this test verifies that cell
+        // mock data is registered as MSW request handlers and that the cell's
+        // GraphQL request is intercepted
+        const testFileContent = `import { render, screen } from '@cedarjs/testing/web'
+
+          import HomePage from './HomePage'
+
+          describe('HomePage', () => {
+            it('renders the blog posts from the cell mock', async () => {
+              render(<HomePage />)
+
+              const titles = await screen.findAllByText('Mocked title')
+
+              expect(titles).toHaveLength(3)
+            })
+          })
+        `
+
+        fs.writeFileSync(
+          fullPath('web/src/pages/HomePage/HomePage.test'),
+          testFileContent,
         )
       },
     },
@@ -147,6 +173,26 @@ function getPagesTasks(live = false) {
         )
       },
     },
+    {
+      title: 'Creating aggregated cells test page',
+      task: async () => {
+        await createPage('aggregatedBlogPost /aggregated-blog-post/{id:Int}')
+
+        const templatesPath = path.join(import.meta.dirname, 'templates', 'web')
+        const pageDir = 'web/src/pages/AggregatedBlogPostPage'
+
+        for (const file of [
+          'AggregatedBlogPostPage.tsx',
+          'AggregatedBlogPostPage.stories.tsx',
+          'AggregatedBlogPostPage.test.tsx',
+        ]) {
+          fs.copyFileSync(
+            path.join(templatesPath, file),
+            fullPath(`${pageDir}/${file}`, { addExtension: false }),
+          )
+        }
+      },
+    },
     ...(live
       ? [
           {
@@ -196,24 +242,27 @@ function getPagesTasks(live = false) {
   return pages
 }
 
-export function webTasksList(live = false) {
+export function webTasksList(
+  live = false,
+  packageManager: PackageManager = 'yarn',
+) {
   const taskList = [
     {
       title: 'Creating pages',
-      task: async () => getPagesTasks(live),
+      task: async () => getPagesTasks(live, packageManager),
       isNested: true,
     },
     {
       title: 'Creating layout',
-      task: () => createLayout(),
+      task: () => createLayout(packageManager),
     },
     {
       title: 'Creating components',
-      task: () => createComponents(live),
+      task: () => createComponents(live, packageManager),
     },
     {
       title: 'Creating cells',
-      task: () => createCells(live),
+      task: () => createCells(live, packageManager),
     },
     {
       title: 'Updating cell mocks',
@@ -283,6 +332,7 @@ interface ApiTasksOptions {
   linkWithLatestFwBuild?: boolean
   esm?: boolean
   live?: boolean
+  packageManager?: PackageManager
 }
 
 export function apiTasksList({
@@ -290,9 +340,11 @@ export function apiTasksList({
   linkWithLatestFwBuild = false,
   esm = false,
   live = false,
+  packageManager = 'yarn',
 }: ApiTasksOptions) {
+  const cedarBin = packageManager === 'npm' ? 'npx' : packageManager
   const execaOptions = getExecaOptions(getOutputPath())
-  const generateScaffold = createBuilder('yarn cedar g scaffold')
+  const generateScaffold = createBuilder(`${cedarBin} cedar g scaffold`)
 
   const taskList = [
     {
@@ -305,7 +357,7 @@ export function apiTasksList({
         await addModel(user)
 
         return exec(
-          `yarn cedar prisma migrate dev --name create_post_user`,
+          `${cedarBin} cedar prisma migrate dev --name create_post_user`,
           [],
           execaOptions,
         )
@@ -366,7 +418,7 @@ export function apiTasksList({
       : []),
     {
       title: 'Adding contact model to prisma',
-      task: () => contactTask({ esm }),
+      task: () => contactTask({ esm, packageManager }),
     },
     {
       title: 'Adjust dates within migration folder names',
@@ -377,7 +429,10 @@ export function apiTasksList({
     {
       title: 'Add users service',
       task: async () => {
-        const generateSdl = createBuilder('yarn cedar g sdl --no-crud', 'api')
+        const generateSdl = createBuilder(
+          `${cedarBin} cedar g sdl --no-crud`,
+          'api',
+        )
 
         await generateSdl('user')
 
@@ -407,12 +462,13 @@ export function apiTasksList({
 
         fs.writeFileSync(fullPath('api/src/services/users/users.test'), test)
 
-        return createBuilder('yarn cedar g types')()
+        return createBuilder(`${cedarBin} cedar g types`)()
       },
     },
     {
       title: 'Add dbAuth',
-      task: async () => addDbAuth(dbAuth === 'local', linkWithLatestFwBuild),
+      task: async () =>
+        addDbAuth(dbAuth === 'local', linkWithLatestFwBuild, packageManager),
     },
     {
       title: 'Add describeScenario tests',
@@ -443,7 +499,7 @@ export function apiTasksList({
       // instead of doing some up in the web side tasks, and then the rest here
       // I decided to move all of them here
       title: 'Add Prerender to Routes',
-      task: async () => getPrerenderTasks(),
+      task: async () => getPrerenderTasks(packageManager),
       isNested: true,
     },
     {
@@ -505,8 +561,8 @@ export function apiTasksList({
           return
         }
 
-        const setup = createBuilder('yarn cedar setup')
-        const experimental = createBuilder('yarn cedar experimental')
+        const setup = createBuilder(`${cedarBin} cedar setup`)
+        const experimental = createBuilder(`${cedarBin} cedar experimental`)
 
         await setup(['realtime', '--no-examples'])
         await experimental('setup-live-queries')
@@ -543,10 +599,14 @@ export function apiTasksList({
         // holds the old timestamp names. Reset the database first so all
         // existing migrations are re-applied under their current names, then
         // create the Todo migration on top of a clean, in-sync baseline.
-        await exec('yarn cedar prisma migrate reset', ['--force'], execaOptions)
+        await exec(
+          `${cedarBin} cedar prisma migrate reset --force`,
+          [],
+          execaOptions,
+        )
 
         return exec(
-          'yarn cedar prisma migrate dev --name todo-model',
+          `${cedarBin} cedar prisma migrate dev --name todo-model`,
           [],
           execaOptions,
         )
@@ -567,8 +627,9 @@ export function apiTasksList({
   return taskList
 }
 
-export async function createLayout() {
-  const createLayout = createBuilder('yarn cedar g layout')
+export async function createLayout(packageManager: PackageManager = 'yarn') {
+  const cedarBin = packageManager === 'npm' ? 'npx' : packageManager
+  const createLayout = createBuilder(`${cedarBin} cedar g layout`)
 
   await createLayout('blog')
 
@@ -578,8 +639,12 @@ export async function createLayout() {
   )
 }
 
-export async function createComponents(live = false) {
-  const createComponent = createBuilder('yarn cedar g component')
+export async function createComponents(
+  live = false,
+  packageManager: PackageManager = 'yarn',
+) {
+  const cedarBin = packageManager === 'npm' ? 'npx' : packageManager
+  const createComponent = createBuilder(`${cedarBin} cedar g component`)
 
   await createComponent('blogPost')
 
@@ -627,8 +692,12 @@ export async function createComponents(live = false) {
   }
 }
 
-export async function createCells(live = false) {
-  const createCell = createBuilder('yarn cedar g cell')
+export async function createCells(
+  live = false,
+  packageManager: PackageManager = 'yarn',
+) {
+  const cedarBin = packageManager === 'npm' ? 'npx' : packageManager
+  const createCell = createBuilder(`${cedarBin} cedar g cell`)
 
   await createCell('blogPosts')
 
@@ -662,10 +731,26 @@ export async function createCells(live = false) {
 
   await createCell('waterfallBlogPost')
 
-  return applyCodemod(
+  await applyCodemod(
     'waterfallBlogPostCell.js',
     fullPath('web/src/components/WaterfallBlogPostCell/WaterfallBlogPostCell'),
   )
+
+  // Fragment cells aren't supported by the cell generator (yet), so we create
+  // them (and the cell that spreads their fragment) from templates instead
+  const templatesPath = path.join(import.meta.dirname, 'templates', 'web')
+
+  for (const cellName of ['AuthorFragmentCell', 'AggregatedBlogPostCell']) {
+    const cellDir = fullPath(`web/src/components/${cellName}`, {
+      addExtension: false,
+    })
+
+    fs.mkdirSync(cellDir, { recursive: true })
+    fs.copyFileSync(
+      path.join(templatesPath, `${cellName}.tsx`),
+      path.join(cellDir, `${cellName}.tsx`),
+    )
+  }
 }
 
 export async function updateCellMocks() {
@@ -706,9 +791,9 @@ async function addGqlorm() {
   let appTsxContent = fs.readFileSync(appTsxPath, 'utf8')
 
   appTsxContent = appTsxContent.replace(
-    "import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'",
+    "import { FatalErrorBoundary, CedarProvider } from '@cedarjs/web'",
     "import { configureGqlorm } from '@cedarjs/gqlorm/setup'\n" +
-      "import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'",
+      "import { FatalErrorBoundary, CedarProvider } from '@cedarjs/web'",
   )
 
   appTsxContent = appTsxContent.replace(
@@ -726,8 +811,13 @@ async function addGqlorm() {
   return fs.promises.writeFile(appTsxPath, appTsxContent)
 }
 
-async function addDbAuth(localDbAuth: boolean, linkWithLatestFwBuild: boolean) {
+async function addDbAuth(
+  localDbAuth: boolean,
+  linkWithLatestFwBuild: boolean,
+  packageManager: PackageManager = 'yarn',
+) {
   const outputPath = getOutputPath()
+  const cedarBin = packageManager === 'npm' ? 'npx' : packageManager
   const execaOptions = getExecaOptions(outputPath)
 
   // (This is really only needed for `tasks.mts`)
@@ -811,11 +901,11 @@ async function addDbAuth(localDbAuth: boolean, linkWithLatestFwBuild: boolean) {
 
     // Run `yarn install` to have the resolutions take effect and install the
     // tarballs we copied over
-    await exec('yarn install', [], execaOptions)
+    await exec(`${packageManager} install`, [], execaOptions)
   }
 
   await exec(
-    'yarn cedar setup auth dbAuth --force --no-webauthn --no-createUserModel --no-generateAuthPages',
+    `${cedarBin} cedar setup auth dbAuth --force --no-webauthn --no-createUserModel --no-generateAuthPages`,
     [],
     execaOptions,
   )
@@ -838,11 +928,15 @@ async function addDbAuth(localDbAuth: boolean, linkWithLatestFwBuild: boolean) {
   }
 
   if (linkWithLatestFwBuild) {
-    await exec(`yarn ${getCfwBin(outputPath)} project:copy`, [], execaOptions)
+    await exec(
+      `${cedarBin} ${getCfwBin(outputPath)} project:copy`,
+      [],
+      execaOptions,
+    )
   }
 
   await exec(
-    'yarn cedar g dbAuth --no-webauthn --username-label=username --password-label=password',
+    `${cedarBin} cedar g dbAuth --no-webauthn --username-label=username --password-label=password`,
     [],
     execaOptions,
   )

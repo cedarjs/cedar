@@ -17,7 +17,7 @@ tasks:
       - postDevcontainerStart
     command: |
       export CFW_PATH="/workspaces/cedar"
-      export REDWOOD_DISABLE_TELEMETRY=1
+      export CEDAR_DISABLE_TELEMETRY=1
       echo "Setting up CedarJS development environment..."
       mkdir -p /workspaces/cedar-test-app
       cd /workspaces/cedar

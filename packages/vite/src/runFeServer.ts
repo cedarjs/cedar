@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 // TODO (STREAMING) Move this to a new package called @cedarjs/fe-server (goes
 // well in naming with @cedarjs/api-server)
 // Only things used during dev can be in @cedarjs/vite. Everything else has
@@ -95,8 +97,8 @@ export async function runFeServer() {
   // In addition to all the above the discovered CSS files are also passed to
   // all middleware that have been registered
   const clientEntry = rscEnabled
-    ? clientBuildManifest['entry.client.tsx'] ||
-      clientBuildManifest['entry.client.jsx']
+    ? clientBuildManifest['src/entry.client.tsx'] ||
+      clientBuildManifest['src/entry.client.jsx']
     : Object.values(clientBuildManifest).find(
         (manifestItem) => manifestItem.isEntry,
       )

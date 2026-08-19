@@ -15,10 +15,10 @@ How about a custom Function that returns the timestamp from the server?
 Step one is to actually create the custom Function. Naturally, we have a generator for that. Let's call our custom Function "serverTime":
 
 ```bash
-yarn rw generate function serverTime
+yarn cedar generate function serverTime
 ```
 
-That creates a stub you can test out right away. Make sure your dev server is running (`yarn rw dev`), then point your browser to `http://localhost:8910/.api/functions/serverTime`.
+That creates a stub you can test out right away. Make sure your dev server is running (`yarn cedar dev`), then point your browser to `http://localhost:8910/.api/functions/serverTime`.
 
 ![serverTime Function output](https://user-images.githubusercontent.com/32992335/107839683-609c2300-6d62-11eb-93d7-ff9c1bfb0ff2.png)
 
@@ -34,7 +34,7 @@ The `.api/functions` bit in the link you pointed your browser to is what's calle
   apiUrl = "/.api/functions"
 ```
 
-After you setup a deploy (via `yarn rw setup deploy <provider>`), it'll change to something more appropriate, like `.netlify/functions` in Netlify's case.
+After you setup a deploy (via `yarn cedar setup deploy <provider>`), it'll change to something more appropriate, like `.netlify/functions` in Netlify's case.
 
 {/* https://community.redwoodjs.com/t/getting-cors-error-while-calling-a-lambda-function/186 */}
 {/* link to something; maybe even */}
@@ -120,7 +120,7 @@ export const handler = async (event, context) => {
 }
 ```
 
-Take a look in the terminal window where you're running `yarn rw dev` to see the output:
+Take a look in the terminal window where you're running `yarn cedar dev` to see the output:
 
 ```json
 {

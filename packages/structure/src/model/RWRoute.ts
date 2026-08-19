@@ -1,13 +1,33 @@
+import path from 'node:path'
+
 import * as tsm from 'ts-morph'
 
 import { RWError } from '../errors.js'
 import { BaseNode } from '../nodes.js'
 import { validateRoutePath } from '../util.js'
 import { lazy } from '../x/decorators.js'
-import { err, LocationLike_toLocation } from '../x/diagnostics.js'
+import type { ExtendedDiagnostic } from '../x/diagnostics.js'
+import {
+  err,
+  DiagnosticSeverity,
+  LocationLike_toLocation,
+} from '../x/diagnostics.js'
 import type { Location } from '../x/Location.js'
 
 import type { RWRouter } from './RWRouter.js'
+import { getMutationFieldsUsedTransitively } from './util/pageMutationUsage.js'
+
+/**
+ * A `@requireAuth`-gated GraphQL mutation used (transitively) by a route's
+ * page, but not guarded by a `<Private>`/`<PrivateSet>` wrapper.
+ */
+interface UnprotectedAuthMutationUsage {
+  fieldName: string
+  /** SDL file path, relative to the project root */
+  sdlFilePath: string
+  /** Component file path (where the mutation was found), relative to the project root */
+  componentFilePath: string
+}
 
 export class RWRoute extends BaseNode {
   constructor(
@@ -30,47 +50,102 @@ export class RWRoute extends BaseNode {
     return LocationLike_toLocation(this.jsxNode)
   }
 
+  /**
+   * All enclosing `<Private>` / `<PrivateSet>` JSX elements, walking up from
+   * this route's `<Route>` tag to (but not including) the `<Router>` tag.
+   * Ordered innermost-first, so `privateAncestors[0]` (if present) is the
+   * nearest wrapper. A route can be nested inside a plain `<Set>` that is
+   * itself inside a `<PrivateSet>`, so we can't just look at the immediate
+   * JSX parent.
+   */
+  @lazy() private get privateAncestors(): tsm.JsxElement[] {
+    const ancestors: tsm.JsxElement[] = []
+    let current: tsm.Node | undefined = this.jsxNode
+
+    let parentElement = current.getParentIfKind(tsm.SyntaxKind.JsxElement)
+    while (parentElement) {
+      const tagName = parentElement
+        .getOpeningElement()
+        .getTagNameNode()
+        .getText()
+
+      // Don't walk past the <Router> tag
+      if (tagName === 'Router') {
+        break
+      }
+
+      if (tagName === 'Private' || tagName === 'PrivateSet') {
+        ancestors.push(parentElement)
+      }
+
+      current = parentElement
+      parentElement = current.getParentIfKind(tsm.SyntaxKind.JsxElement)
+    }
+
+    return ancestors
+  }
+
   @lazy() get isPrivate() {
-    const tagText = this.jsxNode
-      .getParentIfKind(tsm.SyntaxKind.JsxElement)
-      ?.getOpeningElement()
-      ?.getTagNameNode()
-      ?.getText()
-    return tagText === 'Private' || tagText === 'PrivateSet'
+    return this.privateAncestors.length > 0
   }
 
   @lazy() get unauthenticated() {
-    if (!this.isPrivate) {
-      return undefined
-    }
-
-    const a = this.jsxNode
-      .getParentIfKind(tsm.SyntaxKind.JsxElement)
-      ?.getOpeningElement()
-      .getAttribute('unauthenticated')
-
-    if (!a) {
-      return undefined
-    }
-    if (tsm.Node.isJsxAttribute(a)) {
-      const init = a.getInitializer()
-      if (tsm.Node.isStringLiteral(init)) {
-        return init.getLiteralValue()
+    // Use the innermost Private/PrivateSet ancestor that carries the
+    // attribute
+    for (const ancestor of this.privateAncestors) {
+      const a = ancestor.getOpeningElement().getAttribute('unauthenticated')
+      if (!a) {
+        continue
       }
+      if (tsm.Node.isJsxAttribute(a)) {
+        const init = a.getInitializer()
+        if (tsm.Node.isStringLiteral(init)) {
+          return init.getLiteralValue()
+        }
+      }
+      return undefined
     }
     return undefined
   }
 
   @lazy()
   get roles() {
-    if (!this.isPrivate) {
+    // Each Private/PrivateSet wrapper independently guards the route, so the
+    // effective requirement is the union of roles across all of them
+    const rolesPerAncestor = this.privateAncestors
+      .map((ancestor) => this.getRolesAttr(ancestor.getOpeningElement()))
+      .filter((val): val is string | string[] => val !== undefined)
+
+    if (rolesPerAncestor.length === 0) {
       return undefined
     }
 
-    const a = this.jsxNode
-      .getParentIfKind(tsm.SyntaxKind.JsxElement)
-      ?.getOpeningElement()
-      .getAttribute('roles')
+    // Preserve today's single-wrapper behavior (and its return shape)
+    // exactly when there's only one ancestor with roles
+    if (rolesPerAncestor.length === 1) {
+      return rolesPerAncestor[0]
+    }
+
+    const union = new Set<string>()
+    for (const roles of rolesPerAncestor) {
+      if (Array.isArray(roles)) {
+        roles.forEach((role) => union.add(role))
+      } else {
+        union.add(roles)
+      }
+    }
+    return [...union]
+  }
+
+  /**
+   * Reads the `roles` attribute off a `<Private>`/`<PrivateSet>` opening
+   * element, handling the string literal, quasi-JSON string
+   * (e.g. `"['a','b']"`), and JSX array-literal expression forms.
+   */
+  private getRolesAttr(
+    openingElement: tsm.JsxOpeningElement,
+  ): string | string[] | undefined {
+    const a = openingElement.getAttribute('roles')
 
     if (!a) {
       return undefined
@@ -115,7 +190,7 @@ export class RWRoute extends BaseNode {
               }
               return undefined
             })
-            .filter((val) => val !== undefined)
+            .filter((val): val is string => val !== undefined)
         }
       }
     }
@@ -245,6 +320,79 @@ export class RWRoute extends BaseNode {
         this.path_literal_node!,
         "The 'Not Found' page cannot have a path",
       )
+    }
+    for (const warning of this.unprotectedAuthMutationUsages) {
+      const { uri, range } = this.location
+      const routeLabel = this.name ?? this.path ?? '(unnamed route)'
+      const diagnostic: ExtendedDiagnostic = {
+        uri,
+        diagnostic: {
+          range,
+          message:
+            `Route '${routeLabel}' is not wrapped in <PrivateSet>, but its ` +
+            `page uses the mutation '${warning.fieldName}', which is ` +
+            `marked @requireAuth in ${warning.sdlFilePath} (found in ` +
+            `${warning.componentFilePath})`,
+          severity: DiagnosticSeverity.Warning,
+          code: RWError.UNPROTECTED_ROUTE_USES_AUTH_GATED_MUTATION,
+        },
+      }
+      yield diagnostic
+    }
+  }
+
+  /**
+   * For an unprotected route (not wrapped in `<Private>`/`<PrivateSet>`),
+   * transitively walks the page's imports to find any GraphQL mutations
+   * that are marked `@requireAuth` in the api-side SDL.
+   *
+   * This is a best-effort static analysis (see `pageMutationUsage.ts`), so
+   * any internal failure degrades to "no warning" rather than surfacing a
+   * crash diagnostic - this check must never break the other diagnostics.
+   */
+  @lazy()
+  private get unprotectedAuthMutationUsages(): UnprotectedAuthMutationUsage[] {
+    if (this.isPrivate) {
+      return []
+    }
+
+    const page = this.page
+    if (!page) {
+      return []
+    }
+
+    try {
+      const project = this.parent.parent
+      const requireAuthFields = project.requireAuthMutationFields
+      if (requireAuthFields.size === 0) {
+        return []
+      }
+
+      const usedMutations = getMutationFieldsUsedTransitively(
+        project,
+        page.filePath,
+      )
+
+      const warnings: UnprotectedAuthMutationUsage[] = []
+
+      for (const [fieldName, componentFilePath] of usedMutations) {
+        const sdlFilePath = requireAuthFields.get(fieldName)
+        if (!sdlFilePath) {
+          continue
+        }
+        warnings.push({
+          fieldName,
+          sdlFilePath,
+          componentFilePath: path.relative(
+            project.pathHelper.base,
+            componentFilePath,
+          ),
+        })
+      }
+
+      return warnings
+    } catch {
+      return []
     }
   }
 

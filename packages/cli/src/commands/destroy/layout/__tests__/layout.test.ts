@@ -1,0 +1,65 @@
+globalThis.__dirname = __dirname
+vi.mock('node:fs')
+vi.mock('../../../../lib', async (importOriginal) => {
+  const originalLib = await importOriginal<typeof Lib>()
+  return {
+    ...originalLib,
+    generateTemplate: () => '',
+  }
+})
+
+import fs from 'node:fs'
+
+import { vol } from 'memfs'
+import { vi, beforeEach, afterEach, test, expect } from 'vitest'
+
+import '../../../../lib/test'
+
+import type * as Lib from '../../../../lib/index.js'
+import { files } from '../../../generate/layout/layoutHandler.js'
+import { tasks } from '../layoutHandler.js'
+
+beforeEach(() => {
+  vol.fromJSON(files({ name: 'Blog' }))
+  vi.spyOn(console, 'info').mockImplementation(() => {})
+  vi.spyOn(console, 'log').mockImplementation(() => {})
+})
+
+afterEach(() => {
+  vol.reset()
+  vi.spyOn(fs, 'unlinkSync').mockClear()
+  vi.restoreAllMocks()
+})
+
+test('destroys layout files', async () => {
+  const unlinkSpy = vi.spyOn(fs, 'unlinkSync')
+  const t = tasks({ componentName: 'layout', filesFn: files, name: 'Blog' })
+  t.options.renderer = 'silent'
+
+  return t.run().then(() => {
+    const generatedFiles = Object.keys(files({ name: 'Blog' }))
+    expect(generatedFiles.length).toEqual(unlinkSpy.mock.calls.length)
+    generatedFiles.forEach((f) => expect(unlinkSpy).toHaveBeenCalledWith(f))
+  })
+})
+
+test('destroys layout files with stories and tests', async () => {
+  vol.fromJSON(files({ name: 'Blog', stories: true, tests: true }))
+  const unlinkSpy = vi.spyOn(fs, 'unlinkSync')
+  const t = tasks({
+    componentName: 'layout',
+    filesFn: files,
+    name: 'Blog',
+    stories: true,
+    tests: true,
+  })
+  t.options.renderer = 'silent'
+
+  return t.run().then(() => {
+    const generatedFiles = Object.keys(
+      files({ name: 'Blog', stories: true, tests: true }),
+    )
+    expect(generatedFiles.length).toEqual(unlinkSpy.mock.calls.length)
+    generatedFiles.forEach((f) => expect(unlinkSpy).toHaveBeenCalledWith(f))
+  })
+})

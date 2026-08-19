@@ -1,8 +1,10 @@
 import path from 'node:path'
 
 import concurrently from 'concurrently'
-import execa from 'execa'
 import { vi, beforeEach, afterEach, test, expect } from 'vitest'
+
+import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
+import type * as ProjectConfig from '@cedarjs/project-config'
 
 import '../../lib/mockTelemetry.js'
 
@@ -22,6 +24,64 @@ vi.mock('concurrently', () => ({
     options,
   })),
 }))
+
+vi.mock('@cedarjs/project-config/packageManager', () => ({
+  getPackageManager: vi.fn(() => 'yarn'),
+}))
+
+vi.mock('@cedarjs/cli-helpers/packageManager/exec', () => ({
+  runBin: vi.fn((cmd, params, options) => ({
+    cmd,
+    params,
+    options,
+  })),
+}))
+
+vi.mock('@cedarjs/cli-helpers/packageManager/display', () => ({
+  formatRunBinCommand: vi.fn(
+    (cmd, params) => `yarn ${cmd} ${params.join(' ')}`,
+  ),
+}))
+
+vi.mock('@cedarjs/project-config', async (importOriginal) => {
+  const actual = await importOriginal<typeof ProjectConfig>()
+
+  return {
+    ...actual,
+    getConfig: () => ({
+      api: {
+        prismaGenerateArgs: [],
+        prismaConfig: 'cedar-app/api/prisma.config.cjs',
+        port: 8911,
+        title: 'Cedar App',
+        path: './api',
+        target: 'node',
+        serverConfig: './api/server.config.js',
+      },
+      web: {
+        title: 'Cedar App',
+        port: 8910,
+        path: './web',
+        target: 'browser',
+        includeEnvironmentVariables: [],
+        apiUrl: '/.api/functions',
+        fastRefresh: true,
+        a11y: true,
+        sourceMap: false,
+      },
+      browser: { open: false },
+      generate: { tests: true, stories: true, nestScaffoldByModel: true },
+      graphql: {
+        fragments: false,
+        trustedDocuments: false,
+        includeScalars: { File: true },
+      },
+      notifications: { versionUpdates: [] },
+      studio: { basePort: 4318 },
+      experimental: {},
+    }),
+  }
+})
 
 const mockedRedwoodConfig = {
   api: {},
@@ -52,9 +112,7 @@ vi.mock('../../lib', async (importOriginal) => {
   }
 })
 
-// @ts-expect-error - No types for .js files
 import type * as Lib from '../../lib/index.js'
-// @ts-expect-error - No types for .js files
 import { runCommandTask } from '../../lib/index.js'
 import { handler } from '../type-checkHandler.js'
 
@@ -79,18 +137,24 @@ test('Should run tsc commands correctly, in order', async () => {
 
   const concurrentlyArgs = vi.mocked(concurrently).mock.results[0].value
 
-  expect(vi.mocked(execa).mock.results[0].value.cmd).toEqual('yarn cedar-gen')
+  // Check that runBin was called for cedar-gen
+  expect(vi.mocked(runBin)).toHaveBeenCalledOnce()
+  expect(vi.mocked(runBin)).toHaveBeenCalledWith('cedar-gen', [], {
+    stdio: 'ignore',
+  })
 
   // Ensure tsc command run correctly for web side
   expect(concurrentlyArgs.commands).toContainEqual({
     cwd: path.join('myBasePath', 'web'),
     command: 'yarn tsc --noEmit --skipLibCheck',
   })
-  // Ensure tsc command run correctly for web side
+
+  // Ensure tsc command run correctly for api side
   expect(concurrentlyArgs.commands).toContainEqual({
     cwd: path.join('myBasePath', 'api'),
     command: 'yarn tsc --noEmit --skipLibCheck',
   })
+
   // Ensure we have raw sequential output from tsc
   expect(concurrentlyArgs.options).toEqual({ group: true, raw: true })
 })
@@ -105,9 +169,13 @@ test('Should generate prisma client', async () => {
 
   const concurrentlyArgs = vi.mocked(concurrently).mock.results[0].value
 
-  expect(vi.mocked(execa).mock.results[0].value.cmd).toEqual('yarn cedar-gen')
+  // Check that runBin was called for cedar-gen
+  expect(vi.mocked(runBin)).toHaveBeenCalledOnce()
+  expect(vi.mocked(runBin)).toHaveBeenCalledWith('cedar-gen', [], {
+    stdio: 'ignore',
+  })
 
-  // Ensure tsc command run correctly for web side
+  // Ensure tsc command run correctly for api side
   expect(concurrentlyArgs.commands).toContainEqual({
     cwd: path.join('myBasePath', 'api'),
     command: 'yarn tsc --noEmit --skipLibCheck',

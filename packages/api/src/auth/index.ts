@@ -4,6 +4,7 @@ import type { APIGatewayProxyEvent, Context as LambdaContext } from 'aws-lambda'
 import * as cookie from 'cookie'
 
 import { getEventHeader } from '../event.js'
+import { isFetchApiRequest, requestToBaseEvent } from '../transforms.js'
 
 import type { Decoded } from './parseJWT.js'
 export type { Decoded }
@@ -14,12 +15,23 @@ export const AUTH_PROVIDER_HEADER = 'auth-provider'
 export const getAuthProviderHeader = (
   event: APIGatewayProxyEvent | Request,
 ) => {
-  const authProviderKey = Object.keys(event?.headers ?? {}).find(
+  // Fetch `Request.headers` is a `Headers` instance — `Object.keys()` returns
+  // `[]` for it, so we have to dispatch on the event type. `isFetchApiRequest`
+  // is the canonical dispatch helper, also used by `getEventHeader`.
+  if (isFetchApiRequest(event)) {
+    return event.headers.get(AUTH_PROVIDER_HEADER) ?? undefined
+  }
+
+  // Lambda `event.headers` is a plain object. API Gateway preserves the header
+  // case the client sent, so we need to match case-insensitively
+  const authProviderKey = Object.keys(event.headers ?? {}).find(
     (key) => key.toLowerCase() === AUTH_PROVIDER_HEADER,
   )
+
   if (authProviderKey) {
-    return getEventHeader(event, authProviderKey)
+    return event.headers[authProviderKey]
   }
+
   return undefined
 }
 
@@ -85,16 +97,47 @@ export type AuthContextPayload = [
   { type: string } & AuthorizationHeader,
   // @MARK: Context is not passed when using middleware auth
   {
+    /**
+     * The Lambda-style event. On serverless deploys this is the canonical
+     * request object; on fetch-native paths a synthetic one is provided for
+     * backwards compatibility with existing `event.headers['key']` access.
+     */
     event: APIGatewayProxyEvent | Request
+    /**
+     * The native fetch `Request`, available on fetch-native paths. Prefer
+     * this when available.
+     * Do `request.headers.get('key')` to access headers
+     */
+    request?: Request
     context?: LambdaContext
   },
 ]
+
+/**
+ * Whether a project has auth configured.
+ *
+ * An empty decoder array counts as no auth: there's nothing to decode with, so
+ * auth state can never be resolved. Anything deciding whether auth is set up
+ * has to agree with `buildCedarContext` on this, or they'll disagree about
+ * whether a request should have had auth state resolved.
+ */
+export function hasAuthDecoder(
+  authDecoder: Decoder | Decoder[] | undefined,
+): authDecoder is Decoder | Decoder[] {
+  if (Array.isArray(authDecoder)) {
+    return authDecoder.length > 0
+  }
+
+  return !!authDecoder
+}
 
 export type Decoder = (
   token: string,
   type: string,
   req: {
+    /** The Lambda-style request event */
     event: APIGatewayProxyEvent | Request
+    request?: Request
     context?: LambdaContext
   },
 ) => Promise<Decoded>
@@ -137,7 +180,7 @@ export const getAuthenticationContext = async ({
     schema = 'cookie'
     // If type is set in the header, use Bearer token auth (priority 2)
   } else if (typeFromHeader) {
-    const parsedAuthHeader = parseAuthorizationHeader(event as any)
+    const parsedAuthHeader = parseAuthorizationHeader(event)
     token = parsedAuthHeader.token
     type = typeFromHeader
     schema = parsedAuthHeader.schema
@@ -159,11 +202,16 @@ export const getAuthenticationContext = async ({
 
   let decoded = null
 
+  const normalizedEvent = isFetchApiRequest(event)
+    ? await requestToBaseEvent(event)
+    : event
+  const underlyingRequest = isFetchApiRequest(event) ? event : undefined
+
   let i = 0
   while (!decoded && i < authDecoders.length) {
     decoded = await authDecoders[i](token, type, {
-      // @MARK: When called from middleware, the decoder will pass Request, not Lambda event
-      event,
+      event: normalizedEvent,
+      request: underlyingRequest,
       context,
     })
     i++
@@ -171,5 +219,13 @@ export const getAuthenticationContext = async ({
 
   // @TODO should we rename token? It's not actually the token - its the cookie header -because
   // some auth providers will have a cookie where we don't know the key
-  return [decoded, { type, schema, token }, { event, context }]
+  return [
+    decoded,
+    { type, schema, token },
+    {
+      event: normalizedEvent,
+      request: underlyingRequest,
+      context,
+    },
+  ]
 }

@@ -1,0 +1,275 @@
+globalThis.__dirname = __dirname
+// Load mocks
+import '../../../../lib/test'
+
+import { describe, test, expect } from 'vitest'
+
+import type { PrismaField } from '../serviceHandler.js'
+import * as serviceHandler from '../serviceHandler.js'
+
+function createField(overrides: Partial<PrismaField>): PrismaField {
+  return {
+    name: '',
+    type: '',
+    kind: 'scalar',
+    isList: false,
+    isRequired: false,
+    isId: false,
+    ...overrides,
+  }
+}
+
+describe('the scenario generator', () => {
+  test('parseSchema returns an object with required scalar fields', async () => {
+    const { scalarFields } = await serviceHandler.parseSchema('UserProfile')
+
+    expect(scalarFields).toEqual([
+      {
+        name: 'username',
+        kind: 'scalar',
+        isList: false,
+        isRequired: true,
+        isUnique: true,
+        isId: false,
+        isReadOnly: false,
+        type: 'String',
+        nativeType: null,
+        hasDefaultValue: false,
+        isGenerated: false,
+        isUpdatedAt: false,
+      },
+      {
+        hasDefaultValue: false,
+        isGenerated: false,
+        isId: false,
+        isList: false,
+        isReadOnly: true,
+        isRequired: true,
+        isUnique: false,
+        isUpdatedAt: false,
+        kind: 'scalar',
+        name: 'userId',
+        type: 'Int',
+        nativeType: null,
+      },
+    ])
+  })
+
+  test('parseSchema returns an object with BigINt scalar fields', async () => {
+    const { scalarFields } = await serviceHandler.parseSchema('Favorite')
+
+    expect(scalarFields).toEqual([
+      {
+        name: 'postId',
+        kind: 'scalar',
+        isList: false,
+        isRequired: true,
+        isUnique: false,
+        isId: false,
+        isReadOnly: true,
+        type: 'Int',
+        nativeType: null,
+        hasDefaultValue: false,
+        isGenerated: false,
+        isUpdatedAt: false,
+      },
+      {
+        name: 'likes',
+        kind: 'scalar',
+        isList: false,
+        isRequired: true,
+        isUnique: false,
+        isId: false,
+        isReadOnly: false,
+        type: 'BigInt',
+        nativeType: null,
+        hasDefaultValue: false,
+        isGenerated: false,
+        isUpdatedAt: false,
+      },
+    ])
+  })
+
+  test('parseSchema returns an empty object when no relation fields', async () => {
+    const { relations } = await serviceHandler.parseSchema('User')
+
+    expect(relations).toEqual({})
+  })
+
+  test('parseSchema returns an object with relation fields', async () => {
+    const { relations } = await serviceHandler.parseSchema('UserProfile')
+
+    expect(relations).toEqual({
+      user: { foreignKey: ['userId'], type: 'User' },
+    })
+  })
+
+  test('parseSchema returns an object with foreign keys', async () => {
+    const { foreignKeys } = await serviceHandler.parseSchema('UserProfile')
+
+    expect(foreignKeys).toEqual(['userId'])
+  })
+
+  test('scenarioFieldValue returns a plain string for non-unique String types', () => {
+    const field = createField({ type: 'String', isUnique: false })
+    const value = serviceHandler.scenarioFieldValue(field)
+
+    expect(value).toEqual(expect.any(String))
+    expect(typeof value).toBe('string')
+  })
+
+  test('scenarioFieldValue returns a valid email for non-unique String types with a field name that includes "email"', () => {
+    const field = createField({
+      type: 'String',
+      isUnique: false,
+      name: 'email',
+    })
+    const value = serviceHandler.scenarioFieldValue(field)
+
+    expect(typeof value).toBe('string')
+    expect(value).toEqual('foo@bar.com')
+  })
+
+  test('scenarioFieldValue returns a unique string for unique String types', () => {
+    const field = createField({ type: 'String', isUnique: true })
+    const value = serviceHandler.scenarioFieldValue(field)
+
+    expect(value).toEqual(expect.any(String))
+    // contains some unique digits somewhere
+    expect(value).toMatch(/\d{1,}$/)
+    expect(typeof value).toBe('string')
+  })
+
+  test('scenarioFieldValue returns a valid unique email for unique String types with a field name that includes "email"', () => {
+    const field = createField({
+      type: 'String',
+      isUnique: true,
+      name: 'authorEmail',
+    })
+    const value = serviceHandler.scenarioFieldValue(field)
+
+    expect(value).toMatch(/foo\d+@bar\.com/)
+    expect(typeof value).toBe('string')
+  })
+
+  test('scenarioFieldValue returns a true for BigInt types', () => {
+    const field = createField({ type: 'BigInt' })
+    const value = serviceHandler.scenarioFieldValue(field)
+
+    expect(value).toMatch(/^\d+n$/)
+    expect(typeof value).toBe('string') // pseudo-bigint
+  })
+
+  test('scenarioFieldValue returns a true for Boolean types', () => {
+    const field = createField({ type: 'Boolean' })
+    const value = serviceHandler.scenarioFieldValue(field)
+
+    expect(value).toEqual(true)
+    expect(typeof value).toBe('boolean')
+  })
+
+  test('scenarioFieldValue returns a float for Decimal types', () => {
+    const field = createField({ type: 'Decimal' })
+    const value = serviceHandler.scenarioFieldValue(field)
+
+    expect(typeof value).toBe('number')
+  })
+
+  test('scenarioFieldValue returns a float for Float types', () => {
+    const field = createField({ type: 'Float' })
+    const value = serviceHandler.scenarioFieldValue(field)
+
+    expect(typeof value).toBe('number')
+  })
+
+  test('scenarioFieldValue returns a number for Int types', () => {
+    const field = createField({ type: 'Int' })
+    const value = serviceHandler.scenarioFieldValue(field)
+
+    expect(typeof value).toBe('number')
+  })
+
+  test('scenarioFieldValue returns a valid Date for DateTime types', () => {
+    const field = createField({ type: 'DateTime' })
+    const value = serviceHandler.scenarioFieldValue(field)
+
+    expect(value instanceof Date).toBe(true)
+  })
+
+  test('scenarioFieldValue returns JSON for Json types', () => {
+    const field = createField({ type: 'Json' })
+
+    expect(serviceHandler.scenarioFieldValue(field)).toEqual({ foo: 'bar' })
+  })
+
+  test('scenarioFieldValue returns the first enum option for enum kinds', () => {
+    const field = createField({
+      type: 'Color',
+      kind: 'enum',
+      enumValues: [{ name: 'Red' }, { name: 'Blue' }],
+    })
+
+    expect(serviceHandler.scenarioFieldValue(field)).toEqual('Red')
+  })
+
+  test('scenarioFieldValue returns the dbName for enum types if present', () => {
+    const field = createField({
+      type: 'Color',
+      kind: 'enum',
+      enumValues: [
+        { name: 'Red', dbName: 'color-red' },
+        { name: 'Blue', dbName: 'color-blue' },
+      ],
+    })
+
+    expect(serviceHandler.scenarioFieldValue(field)).toEqual('color-red')
+  })
+
+  test('fieldsToScenario returns scenario data for scalarFields', async () => {
+    const scalarFields: PrismaField[] = [
+      {
+        name: 'firstName',
+        type: 'String',
+        isUnique: false,
+        kind: 'scalar',
+        isList: false,
+        isRequired: false,
+        isId: false,
+      },
+      {
+        name: 'lastName',
+        type: 'String',
+        isUnique: true,
+        kind: 'scalar',
+        isList: false,
+        isRequired: false,
+        isId: false,
+      },
+    ]
+    const scenario = await serviceHandler.fieldsToScenario(scalarFields, {}, [])
+
+    expect(Object.keys(scenario).length).toEqual(2)
+    expect(scenario.firstName).toEqual(expect.any(String))
+    expect(scenario.lastName).toEqual(expect.any(String))
+    expect(scenario.lastName).toMatch(/\d{1,}$/)
+  })
+
+  test('fieldsToScenario returns scenario data for nested relations', async () => {
+    const { scalarFields, relations, foreignKeys } =
+      await serviceHandler.parseSchema('UserProfile')
+
+    const scenario = await serviceHandler.fieldsToScenario(
+      scalarFields,
+      relations,
+      foreignKeys,
+    )
+
+    expect(scenario.user).toEqual(
+      expect.objectContaining({
+        create: expect.objectContaining({
+          email: expect.any(String),
+        }),
+      }),
+    )
+  })
+})

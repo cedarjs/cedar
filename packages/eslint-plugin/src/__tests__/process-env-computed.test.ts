@@ -16,7 +16,7 @@ ruleTester.run('process-env-computed', processEnvComputedRule, {
       code: 'process.env.REDWOOD_ENV_FOOBAR',
     },
     {
-      filename: 'packages/testing/src/api/__tests__/directUrlHelpers.test.ts',
+      filename: 'packages/testing/src/api/__tests__/some-test-file.test.ts',
       code: 'expect(process.env[directUrlEnvVar]).toBe(defaultDb)',
     },
   ],

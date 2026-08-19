@@ -1,28 +1,69 @@
 import React from 'react'
 
+import type { OperationVariables } from '@apollo/client'
+import { CombinedGraphQLErrors } from '@apollo/client'
+import { useQuery } from '@apollo/client/react'
+
 import { fragmentRegistry } from '../../apollo/fragmentRegistry.js'
 import { getOperationName } from '../../graphql.js'
-/**
- * This is part of how we let users swap out their GraphQL client while staying compatible with Cells.
- */
-import { useQuery } from '../GraphQLHooksProvider.js'
 
 import { useCellCacheContext } from './CellCacheContext.js'
-import type { CreateCellProps } from './cellTypes.js'
+import type { CreateCellProps, DataObject } from './cellTypes.js'
+import { createFragmentCell } from './createFragmentCell.js'
 import { createSuspendingCell } from './createSuspendingCell.js'
 import { isDataEmpty } from './isCellEmpty.js'
 
-// 👇 Note how we switch which cell factory to use!
-export const createCell = RWJS_ENV.RWJS_EXP_STREAMING_SSR
-  ? createSuspendingCell
-  : createNonSuspendingCell
+export function createCell<
+  CellProps extends Record<string, unknown>,
+  CellVariables extends OperationVariables = OperationVariables,
+  GQLResult = any,
+>(
+  createCellProps: CreateCellProps<CellProps, CellVariables, GQLResult>,
+): React.FC<CellProps> {
+  // Cells that declare their data requirements with a FRAGMENT don't fire
+  // queries of their own – they read their slice of a parent Cell's query
+  // result via a prop named after the fragment. If a Cell exports both QUERY
+  // and FRAGMENT it stays a query Cell (the FRAGMENT export might just be a
+  // helper for other Cells to spread)
+  if (createCellProps.FRAGMENT) {
+    if (!createCellProps.QUERY) {
+      return createFragmentCell(createCellProps)
+    }
+
+    // The Cell stays a query Cell, but other Cells might still spread its
+    // FRAGMENT export by name, so it has to be registered (createFragmentCell
+    // handles registration for fragment Cells)
+    fragmentRegistry.register(createCellProps.FRAGMENT)
+  }
+
+  // 👇 Note how we switch which cell factory to use!
+  if (RWJS_ENV.RWJS_EXP_STREAMING_SSR) {
+    // createSuspendingCell types its argument with `Record<string, unknown>`
+    // instead of the Cell's own props type (see the note in its
+    // implementation), so the generics don't line up even though the runtime
+    // shape is identical. The returned component is re-typed with this Cell's
+    // props.
+    const suspendingCellProps = createCellProps as CreateCellProps<
+      Record<string, unknown>,
+      CellVariables,
+      GQLResult
+    >
+
+    return createSuspendingCell<CellProps, CellVariables, GQLResult>(
+      suspendingCellProps,
+    )
+  }
+
+  return createNonSuspendingCell(createCellProps)
+}
 
 /**
  * Creates a Cell out of a GraphQL query and components that track to its lifecycle.
  */
 function createNonSuspendingCell<
   CellProps extends Record<string, unknown>,
-  CellVariables extends Record<string, unknown>,
+  CellVariables extends OperationVariables = OperationVariables,
+  GQLResult = any,
 >({
   QUERY,
   beforeQuery = (props) => ({
@@ -44,14 +85,41 @@ function createNonSuspendingCell<
   Empty,
   Success,
   displayName = 'Cell',
-}: CreateCellProps<CellProps, CellVariables>): React.FC<CellProps> {
+}: CreateCellProps<CellProps, CellVariables, GQLResult>): React.FC<CellProps> {
+  if (!QUERY) {
+    throw new Error(
+      `Can't create a Cell (${displayName}) without a QUERY or FRAGMENT export`,
+    )
+  }
+
+  // Assigning to a `const` here (as opposed to using the destructured
+  // parameter directly) makes the `!QUERY` narrowing above hold inside
+  // `NamedCell` below
+  const cellQuery = QUERY
+
   function NamedCell(props: React.PropsWithChildren<CellProps>) {
     /**
      * Right now, Cells don't render `children`.
      */
     const { children: _, ...variables } = props
     const options = beforeQuery(variables as CellProps)
-    const query = typeof QUERY === 'function' ? QUERY(options) : QUERY
+
+    // `beforeQuery` can keep the query from running, either by returning
+    // Apollo's `skipToken` (recommended) or by setting the `skip` option.
+    // `skipToken` is a symbol rather than an options object, so everything that
+    // reads individual options has to go through `queryOptions`.
+    // We check for a symbol instead of comparing against `skipToken` itself
+    // because Apollo Client deliberately leaves `skipToken` out of its
+    // react-server build, where importing it is a bundling error
+    const queryOptions = typeof options === 'symbol' ? undefined : options
+    const skipped = !queryOptions || queryOptions.skip === true
+
+    // While skipped the document is never executed, it just has to exist to
+    // satisfy the query hook
+    const query =
+      typeof cellQuery === 'function'
+        ? cellQuery(queryOptions ?? {})
+        : cellQuery
 
     // queryRest includes `variables: { ... }`, with any variables returned
     // from beforeQuery
@@ -61,7 +129,7 @@ function createNonSuspendingCell<
       loading,
       data,
       ...queryResult
-    } = useQuery(query, options)
+    } = useQuery<DataObject>(query, options)
 
     if (globalThis.__REDWOOD__PRERENDERING) {
       // __REDWOOD__PRERENDERING will always either be set, or not set. So
@@ -69,46 +137,72 @@ function createNonSuspendingCell<
       // statement
       /* eslint-disable-next-line react-hooks/rules-of-hooks */
       const { queryCache } = useCellCacheContext()
-      const operationName = getOperationName(query)
-      const transformedQuery = fragmentRegistry.transform(query)
 
-      let cacheKey
+      // A skipped Cell doesn't render any data, so there's no point in having
+      // the prerenderer execute its query. Note that the hook above still has
+      // to run unconditionally because `skipped` can change between renders
+      if (!skipped) {
+        const operationName = getOperationName(query)
+        const transformedQuery = fragmentRegistry.transform(query)
 
-      if (operationName) {
-        cacheKey = operationName + '_' + JSON.stringify(variables)
-      } else {
-        const cellName = displayName === 'Cell' ? 'the cell' : displayName
+        let cacheKey
 
-        throw new Error(
-          `The gql query in ${cellName} is missing an operation name. ` +
-            'Something like FindBlogPostQuery in ' +
-            '`query FindBlogPostQuery($id: Int!)`',
-        )
-      }
-
-      const queryInfo = queryCache[cacheKey]
-
-      // This is true when the graphql handler couldn't be loaded
-      // So we fallback to the loading state
-      if (queryInfo?.renderLoading) {
-        loading = true
-      } else {
-        if (queryInfo?.hasProcessed) {
-          loading = false
-          data = queryInfo.data
-
-          // All of the gql client's props aren't available when pre-rendering,
-          // so using `any` here
-          queryResult = { variables } as any
+        if (operationName) {
+          cacheKey = operationName + '_' + JSON.stringify(variables)
         } else {
-          queryCache[cacheKey] ||= {
-            query: transformedQuery,
-            variables: options.variables,
-            hasProcessed: false,
+          const cellName = displayName === 'Cell' ? 'the cell' : displayName
+
+          throw new Error(
+            `The gql query in ${cellName} is missing an operation name. ` +
+              'Something like FindBlogPostQuery in ' +
+              '`query FindBlogPostQuery($id: Int!)`',
+          )
+        }
+
+        const queryInfo = queryCache[cacheKey]
+
+        // This is true when the graphql handler couldn't be loaded
+        // So we fallback to the loading state
+        if (queryInfo?.renderLoading) {
+          loading = true
+        } else {
+          if (queryInfo?.hasProcessed) {
+            loading = false
+            // The prerender query cache stores the untyped result of executing
+            // this Cell's query, so it has the `DataObject` shape
+            data = queryInfo.data as DataObject
+
+            // All of the gql client's props aren't available when pre-rendering,
+            // so using `any` here
+            queryResult = { variables } as any
+          } else {
+            queryCache[cacheKey] ||= {
+              query: transformedQuery,
+              variables: queryOptions.variables,
+              hasProcessed: false,
+            }
           }
         }
       }
     }
+
+    // A skipped Cell never asked for any data, which is a different thing from
+    // asking and getting nothing back, so it renders nothing at all rather than
+    // `Empty` or `Loading`
+    if (skipped) {
+      return null
+    }
+
+    // `Failure`/`Empty`/`Success`/`Loading` are checked against this Cell's
+    // real `GQLResult` and `CellVariables` at its own call site (i.e. inside
+    // the developer's own *Cell.ts file).
+    // Inside this generic factory function, though, `GQLResult` and
+    // `CellVariables` are still abstract, and the props assembled below are
+    // built from `useQuery<DataObject>`'s untyped result -- there's no way for
+    // TS to verify structurally, at this level, that they line up with the
+    // concrete types each Cell's components declare. The objects below are
+    // exactly what `CellFailureProps`/`CellSuccessProps`/`CellLoadingProps`
+    // describe at runtime, so they're cast to `any` below rather than checked.
 
     if (error) {
       if (Failure) {
@@ -118,46 +212,55 @@ function createNonSuspendingCell<
           errorCode: string
         }
 
-        return (
-          <Failure
-            error={error}
-            errorCode={
-              // Use the ad-hoc QueryResultWithErrorCode type to access the errorCode
-              (queryResult as QueryResultWithErrorCode).errorCode ??
-              (error.graphQLErrors?.[0]?.extensions?.['code'] as string)
-            }
-            {...props}
-            updating={loading}
-            queryResult={queryResult}
-          />
-        )
+        const failureProps = {
+          error,
+          errorCode:
+            // Use the ad-hoc QueryResultWithErrorCode type to access the errorCode
+            (queryResult as QueryResultWithErrorCode).errorCode ??
+            (CombinedGraphQLErrors.is(error)
+              ? (error.errors[0]?.extensions?.['code'] as string)
+              : undefined),
+          ...props,
+          updating: loading,
+          queryResult,
+        }
+
+        // See the long comment around line 200 about why we cast to `any` here
+        return <Failure {...(failureProps as any)} />
       } else {
-        throw error
+        // Apollo Client types errors as `ErrorLike`, but at runtime they're
+        // `Error` instances
+        throw error instanceof Error ? error : new Error(error.message)
       }
     } else if (data) {
       const afterQueryData = afterQuery(data)
 
       if (isEmpty(data, { isDataEmpty }) && Empty) {
-        return (
-          <Empty
-            {...props}
-            {...afterQueryData}
-            updating={loading}
-            queryResult={queryResult}
-          />
-        )
+        const emptyProps = {
+          ...props,
+          ...afterQueryData,
+          updating: loading,
+          queryResult,
+        }
+
+        // See the long comment around line 200 about why we cast to `any` here
+        return <Empty {...(emptyProps as any)} />
       } else {
-        return (
-          <Success
-            {...props}
-            {...afterQueryData}
-            updating={loading}
-            queryResult={queryResult}
-          />
-        )
+        const successProps = {
+          ...props,
+          ...afterQueryData,
+          updating: loading,
+          queryResult,
+        }
+
+        // See the long comment around line 200 about why we cast to `any` here
+        return <Success {...(successProps as any)} />
       }
     } else if (loading) {
-      return <Loading {...props} queryResult={queryResult} />
+      const loadingProps = { ...props, queryResult }
+
+      // See the long comment around line 200 about why we cast to `any` here
+      return <Loading {...(loadingProps as any)} />
     } else {
       /**
        * There really shouldn't be an `else` here, but like any piece of software, GraphQL clients have bugs.

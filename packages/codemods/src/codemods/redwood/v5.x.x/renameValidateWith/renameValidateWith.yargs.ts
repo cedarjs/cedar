@@ -19,7 +19,7 @@ export const handler = () => {
       const redwoodProjectPaths = getPaths()
 
       const files = getFilesWithPattern({
-        pattern: 'validateWith',
+        substring: 'validateWith',
         filesToSearch: [redwoodProjectPaths.api.src],
       })
 

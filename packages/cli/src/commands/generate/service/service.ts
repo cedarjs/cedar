@@ -1,0 +1,51 @@
+import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
+
+import {
+  createCommand,
+  createDescription,
+  createHandler,
+  getYargsDefaults,
+} from '../yargsCommandHelpers.js'
+
+export const getDefaultOptions = () => {
+  return {
+    ...getYargsDefaults(),
+    tests: {
+      description: 'Generate test files',
+      type: 'boolean',
+    },
+    crud: {
+      default: true,
+      description: 'Create CRUD functions',
+      type: 'boolean',
+    },
+  }
+}
+
+export const command = createCommand('service')
+export const description = createDescription('service')
+export const builder = (yargs: Argv) => {
+  yargs
+    .positional('name', {
+      description: 'Name of the service',
+      type: 'string',
+    })
+    .option('rollback', {
+      description: 'Revert all generator actions if an error occurs',
+      type: 'boolean',
+      default: true,
+    })
+    .epilogue(
+      `Also see the ${terminalLink(
+        'CedarJS CLI Reference',
+        'https://cedarjs.com/docs/cli-commands#generate-service',
+      )}`,
+    )
+  Object.entries(getDefaultOptions()).forEach(([option, config]) => {
+    yargs.option(option, config)
+  })
+
+  return yargs
+}
+export const handler = createHandler('service')

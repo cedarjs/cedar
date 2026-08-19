@@ -12,7 +12,7 @@ The router is designed to list all routes in a single file, with limited nesting
 
 The first thing you need is a `Router`. It will contain all of your routes. The router will attempt to match the current URL to each route in turn, and only render those with a matching `path`. The only exception to this is the `notfound` route, which can be placed anywhere in the list and only matches when no other routes do.
 
-:::note The `notfound` route can't be nested in a `Set`
+:::note[The `notfound` route can't be nested in a `Set`]
 
 If you want to wrap your custom notfound page in a `Layout`, then you should add the `Layout` to the page instead. See [customizing the NotFoundPage](#customizing-the-notfoundpage).
 
@@ -199,7 +199,7 @@ To protect private routes for access by multiple roles:
 </Router>
 ```
 
-:::note Note about roles
+:::note[Note about roles]
 A route is permitted when authenticated and user has **any** of the provided roles such as `"admin"` or `["admin", "editor", "publisher"]`.
 :::
 
@@ -846,7 +846,7 @@ export default RedwoodDevFatalErrorPage ||
 
 Note that if you're copy-pasting this example, it uses [Tailwind CSS](https://tailwindcss.com), so you'll have to set that up first. See the [setup ui](./cli-commands.md#setup-ui) CLI command to add it to your project.
 
-:::note Can I customize the development one?
+:::note[Can I customize the development one?]
 
 As it's part of the RedwoodJS framework, you can't _change_ the dev fatal error page, but you can always build your own that takes the same props. If there's a feature you want to add to the built-in version, let us know on the [forums](https://community.redwoodjs.com/).
 

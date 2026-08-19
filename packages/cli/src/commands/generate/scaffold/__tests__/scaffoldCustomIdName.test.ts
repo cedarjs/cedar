@@ -1,0 +1,108 @@
+globalThis.__dirname = import.meta.dirname
+
+import type * as NodeFs from 'node:fs'
+import path from 'node:path'
+
+import { vol, fs as memfs } from 'memfs'
+import { ufs } from 'unionfs'
+import { vi, describe, beforeAll, test, expect } from 'vitest'
+
+// Load mocks
+import '../../../../lib/test'
+
+import { getDefaultArgs } from '../../../../lib/index.js'
+import { getYargsDefaults } from '../../yargsCommandHelpers.js'
+import * as scaffoldHandler from '../scaffoldHandler.js'
+
+vi.mock('node:fs', async (importOriginal) => {
+  const { wrapFsForUnionfs, wrapMemfsForUnionfs } =
+    await import('../../../../__tests__/ufsFsProxy.js')
+  ufs
+    .use(wrapFsForUnionfs(await importOriginal<typeof NodeFs>()))
+    .use(wrapMemfsForUnionfs(memfs))
+  return { ...ufs, default: { ...ufs } }
+})
+vi.mock('execa')
+
+describe('support custom @id name', () => {
+  let files: Record<string, string>
+
+  beforeAll(async () => {
+    vol.fromJSON({ 'redwood.toml': '' }, '/')
+
+    files = await scaffoldHandler.files({
+      ...getDefaultArgs(getYargsDefaults()),
+      docs: false,
+      typescript: true,
+      model: 'CustomIdField',
+      tests: true,
+      nestScaffoldByModel: true,
+    })
+  })
+
+  test('creates routes with the custom id name', async () => {
+    const customIdFieldRoutes = await scaffoldHandler.routes({
+      model: 'CustomIdField',
+      nestScaffoldByModel: true,
+    })
+    expect(customIdFieldRoutes).toEqual([
+      '<Route path="/custom-id-fields/new" page={CustomIdFieldNewCustomIdFieldPage} name="newCustomIdField" />',
+      '<Route path="/custom-id-fields/{uuid}/edit" page={CustomIdFieldEditCustomIdFieldPage} name="editCustomIdField" />',
+      '<Route path="/custom-id-fields/{uuid}" page={CustomIdFieldCustomIdFieldPage} name="customIdField" />',
+      '<Route path="/custom-id-fields" page={CustomIdFieldCustomIdFieldsPage} name="customIdFields" />',
+    ])
+  })
+
+  test('creates a cell with the custom id name', async () => {
+    const customIdFieldCellPath =
+      '/path/to/project/web/src/components/CustomIdField/CustomIdFieldCell/CustomIdFieldCell.tsx'
+
+    const cell = files[path.normalize(customIdFieldCellPath)]
+    expect(cell).toContain('FindCustomIdFieldByUuid($uuid: String!)')
+    expect(cell).toContain('customIdField: customIdField(uuid: $uuid)')
+  })
+
+  test('creates an edit cell with the custom id name', async () => {
+    const customIdFieldEditCellPath =
+      '/path/to/project/web/src/components/CustomIdField/EditCustomIdFieldCell/EditCustomIdFieldCell.tsx'
+
+    const cell = files[path.normalize(customIdFieldEditCellPath)]
+    expect(cell).toContain('query EditCustomIdFieldByUuid($uuid: String!)')
+  })
+
+  test('creates a component with the custom id name', async () => {
+    const customIdFieldComponentPath =
+      '/path/to/project/web/src/components/CustomIdField/CustomIdField/CustomIdField.tsx'
+
+    const cell = files[path.normalize(customIdFieldComponentPath)]
+    expect(cell).toContain('DeleteCustomIdFieldMutation($uuid: String!)')
+    expect(cell).toContain('deleteCustomIdField(uuid: $uuid)')
+    expect(cell).toContain('deleteCustomIdField({ variables: { uuid } })')
+  })
+
+  test('creates a form with the custom id name', async () => {
+    const customIdFieldFormPath =
+      '/path/to/project/web/src/components/CustomIdField/CustomIdFieldForm/CustomIdFieldForm.tsx'
+
+    const cell = files[path.normalize(customIdFieldFormPath)]
+    expect(cell).toContain('props.onSave(data, props?.customIdField?.uuid)')
+  })
+
+  test('creates a sdl with the custom id name', async () => {
+    const customIdFieldSdlPath =
+      '/path/to/project/api/src/graphql/customIdFields.sdl.ts'
+
+    const sdl = files[path.normalize(customIdFieldSdlPath)]
+    const match = sdl.match(/uuid: String!/g)
+    expect(match).toHaveLength(4)
+  })
+
+  test('creates a service with the custom id name', async () => {
+    const customIdFieldServicePath =
+      '/path/to/project/api/src/graphql/customIdFields.sdl.ts'
+
+    const sdl = files[path.normalize(customIdFieldServicePath)]
+    const match = sdl.match(/uuid: String!/g)
+    expect(match).toHaveLength(4)
+  })
+})

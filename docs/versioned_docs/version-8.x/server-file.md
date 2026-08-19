@@ -176,7 +176,7 @@ const server = await createServer({
 server.register(myFastifyPlugin)
 ```
 
-:::note Fastify encapsulation
+:::note[Fastify encapsulation]
 
 Fastify is built around the concept of [encapsulation](https://fastify.dev/docs/latest/Reference/Encapsulation/). It is important to note that redwood's API plugin cannot be mutated after it is registered, see [here](https://fastify.dev/docs/latest/Reference/Plugins/#asyncawait). This is why you must use the `configureApiServer` option to do as shown above.
 

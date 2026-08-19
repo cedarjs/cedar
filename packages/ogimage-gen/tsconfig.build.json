@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "tsBuildInfoFile": "./tsconfig.build.tsbuildinfo"
+  },
+  "include": ["src"],
+  "exclude": ["**/__mocks__", "**/__fixtures__", "**/__tests__", "**/*.test.*"],
+  "references": [
+    { "path": "../project-config" },
+    { "path": "../vite/tsconfig.build.json" },
+    { "path": "../router/tsconfig.build.json" },
+    { "path": "../internal/tsconfig.build.json" },
+    { "path": "../web/tsconfig.build.json" }
+  ]
+}

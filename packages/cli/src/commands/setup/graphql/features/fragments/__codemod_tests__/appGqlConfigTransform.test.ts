@@ -58,7 +58,7 @@ describe.skipIf(process.env.CI && process.platform === 'win32')(
     })
 
     test('test-project App.tsx', async () => {
-      const rootFwPath = path.dirname(findUp('lerna.json') || '')
+      const rootFwPath = path.dirname(findUp('nx.json') || '')
       const testProjectAppTsx = fs.readFileSync(
         path.join(
           rootFwPath,
@@ -75,8 +75,8 @@ describe.skipIf(process.env.CI && process.platform === 'win32')(
         testProjectAppTsx,
         `import type { ReactNode } from 'react'
 
-      import { FatalErrorBoundary, RedwoodProvider } from \"@cedarjs/web\";
-      import { RedwoodApolloProvider } from \"@cedarjs/web/apollo\";
+      import { FatalErrorBoundary, CedarProvider } from \"@cedarjs/web\";
+      import { CedarApolloProvider } from \"@cedarjs/web/apollo/CedarApolloProvider\";
 
       import FatalErrorPage from \"src/pages/FatalErrorPage\";
 
@@ -97,16 +97,16 @@ describe.skipIf(process.env.CI && process.platform === 'win32')(
 
       const App = ({ children }: AppProps) => (
         <FatalErrorBoundary page={FatalErrorPage}>
-          <RedwoodProvider titleTemplate=\"%PageTitle | %AppTitle\">
+          <CedarProvider titleTemplate=\"%PageTitle | %AppTitle\">
             <AuthProvider>
-              <RedwoodApolloProvider
+              <CedarApolloProvider
                 useAuth={useAuth}
                 graphQLClientConfig={graphQLClientConfig}
               >
                 {children}
-              </RedwoodApolloProvider>
+              </CedarApolloProvider>
             </AuthProvider>
-          </RedwoodProvider>
+          </CedarProvider>
         </FatalErrorBoundary>
       );
 

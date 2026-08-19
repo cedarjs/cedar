@@ -2,13 +2,40 @@ import React, { useCallback, useState } from 'react'
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { vi, describe, it, expect } from 'vitest'
-import 'whatwg-fetch'
 
 import { mockGraphQLQuery } from '../mockRequests.js'
 
 vi.setConfig({ testTimeout: 6_000 })
 
 describe('GraphQLMockHandlers', () => {
+  it('resolves async mock-data functions before serializing the response', async () => {
+    mockGraphQLQuery('GetAsyncArticle', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10))
+
+      return { article: { id: 7, title: 'Async title' } }
+    })
+
+    const response = await fetch('https://example.com/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: `
+          query GetAsyncArticle {
+            article {
+              id
+              title
+            }
+          }
+        `,
+      }),
+    })
+
+    // Without awaiting the callback the pending promise serializes to `{}`
+    expect(await response.json()).toEqual({
+      data: { article: { id: 7, title: 'Async title' } },
+    })
+  })
+
   it('should allow you to compose mock graphql handlers for more complex tests', async () => {
     const baseResult = {
       article: {

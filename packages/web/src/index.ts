@@ -7,16 +7,17 @@ export {
   FetchConfigProvider,
   useFetchConfig,
 } from './components/FetchConfigProvider.js'
-export {
-  GraphQLHooksProvider,
-  useQuery,
-  useMutation,
-  useSubscription,
-} from './components/GraphQLHooksProvider.js'
+export { useQuery, useMutation, useSubscription } from '@apollo/client/react'
+export { useFragment } from './apollo/fragmentRegistry.js'
+export type {
+  FragmentHookOptions,
+  FragmentHookResult,
+} from './apollo/fragmentRegistry.js'
 
 export * from './components/cell/CellCacheContext.js'
 
 export { createCell } from './components/cell/createCell.js'
+export { createFragmentCell } from './components/cell/createFragmentCell.js'
 
 export type {
   CellProps,
@@ -24,11 +25,14 @@ export type {
   CellLoadingProps,
   CellSuccessProps,
   CellSuccessData,
+  CellBeforeQueryOptions,
+  CellBeforeQueryResult,
+  DataObject,
 } from './components/cell/cellTypes.js'
 
 export * from './graphql.js'
 
-export * from './components/RedwoodProvider.js'
+export * from './components/CedarProvider.js'
 
 export * from './components/MetaTags.js'
 export * from './components/Metadata.js'
@@ -40,4 +44,4 @@ export * from './routeHooks.types.js'
 
 export * from './components/ServerInject.js'
 
-export type { TypedDocumentNode } from './components/GraphQLHooksProvider.js'
+export type { TypedDocumentNode } from '@apollo/client'

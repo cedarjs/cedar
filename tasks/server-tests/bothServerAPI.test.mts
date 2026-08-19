@@ -17,20 +17,20 @@ describe.each([[[cedar, 'serve']], [cedarServer]])('serve both (%s)', (cmd) => {
       await test({ apiPort })
     })
 
-    it("`REDWOOD_API_PORT` changes the api server's port", async () => {
-      process.env.REDWOOD_API_PORT = '8921'
-      const apiPort = +process.env.REDWOOD_API_PORT
+    it("`CEDAR_API_PORT` changes the api server's port", async () => {
+      process.env.CEDAR_API_PORT = '8921'
+      const apiPort = +process.env.CEDAR_API_PORT
       testContext.p = $`yarn node ${cmd}`
       await test({ apiPort })
-      delete process.env.REDWOOD_API_PORT
+      delete process.env.CEDAR_API_PORT
     })
 
-    it('`--apiPort` takes precedence over `REDWOOD_API_PORT`', async () => {
+    it('`--apiPort` takes precedence over `CEDAR_API_PORT`', async () => {
       const apiPort = 8922
-      process.env.REDWOOD_API_PORT = '8923'
+      process.env.CEDAR_API_PORT = '8923'
       testContext.p = $`yarn node ${cmd} --apiPort ${apiPort}`
       await test({ apiPort })
-      delete process.env.REDWOOD_API_PORT
+      delete process.env.CEDAR_API_PORT
     })
 
     it('`[api].port` changes the port', async () => {
@@ -46,20 +46,20 @@ describe.each([[[cedar, 'serve']], [cedarServer]])('serve both (%s)', (cmd) => {
       await test({ apiHost })
     })
 
-    it("`REDWOOD_API_HOST` changes the api server's host", async () => {
-      process.env.REDWOOD_API_HOST = '::1'
-      const apiHost = process.env.REDWOOD_API_HOST
+    it("`CEDAR_API_HOST` changes the api server's host", async () => {
+      process.env.CEDAR_API_HOST = '::1'
+      const apiHost = process.env.CEDAR_API_HOST
       testContext.p = $`yarn node ${cmd}`
       await test({ apiHost })
-      delete process.env.REDWOOD_API_HOST
+      delete process.env.CEDAR_API_HOST
     })
 
-    it('`--apiHost` takes precedence over `REDWOOD_API_HOST`', async () => {
+    it('`--apiHost` takes precedence over `CEDAR_API_HOST`', async () => {
       const apiHost = '::'
-      process.env.REDWOOD_API_HOST = '0.0.0.0'
+      process.env.CEDAR_API_HOST = '0.0.0.0'
       testContext.p = $`yarn node ${cmd} --apiHost ${apiHost}`
       await test({ apiHost })
-      delete process.env.REDWOOD_API_HOST
+      delete process.env.CEDAR_API_HOST
     })
 
     it("`[api].host` changes the api server's host", async () => {

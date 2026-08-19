@@ -19,6 +19,8 @@
 [api]
   port = 8911
 [browser]
+  # Only applies to interactive sessions
+  # Override with `--fwd="--open=true"` (including for CI/agent runs)
   open = true
 [notifications]
   versionUpdates = ["latest"]

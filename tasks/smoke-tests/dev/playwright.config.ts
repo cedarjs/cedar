@@ -1,6 +1,9 @@
 import { defineConfig } from '@playwright/test'
 
-import { basePlaywrightConfig } from '../basePlaywright.config.mts'
+import {
+  basePlaywrightConfig,
+  windowsNoMaglevDevArgs,
+} from '../basePlaywright.config.mts'
 
 // See https://playwright.dev/docs/test-configuration#global-configuration
 export default defineConfig({
@@ -9,16 +12,16 @@ export default defineConfig({
   timeout: 30_000 * 2,
 
   use: {
-    baseURL: 'http://localhost:8910',
+    baseURL: 'http://127.0.0.1:8910',
   },
 
   // Run your local dev server before starting the tests
   webServer: {
-    command: 'yarn cedar dev --no-generate --fwd="--no-open"',
+    command: `yarn cedar dev --no-generate --fwd="--no-open"${windowsNoMaglevDevArgs}`,
     cwd: process.env.CEDAR_TEST_PROJECT_PATH,
     // We wait for the api server to be ready instead of the web server
     // because web starts much faster with Vite.
-    url: 'http://localhost:8911/graphql?query={redwood{version}}',
+    url: 'http://127.0.0.1:8911/graphql?query={redwood{version}}',
     reuseExistingServer: !process.env.CI,
     stdout: 'pipe',
   },

@@ -11,6 +11,7 @@
     "**/__tests__",
     "**/__mocks__",
     "**/*.test.*",
-    "src/api/vitest"
+    "src/api/vitest",
+    "src/web/vitest"
   ]
 }

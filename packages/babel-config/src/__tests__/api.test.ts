@@ -13,8 +13,8 @@ import {
 
 vi.mock('node:fs', async () => ({ ...memfs, default: { ...memfs } }))
 
-const redwoodProjectPath = '/redwood-app'
-process.env.CEDAR_CWD = redwoodProjectPath
+const cedarProjectPath = '/cedar-app'
+process.env.CEDAR_CWD = cedarProjectPath
 
 afterEach(() => {
   vol.reset()
@@ -90,27 +90,27 @@ describe('api', () => {
     it("gets babel.config.js if it's there", () => {
       vol.fromNestedJSON(
         {
-          'redwood.toml': '',
+          'cedar.toml': '',
           api: {
             'babel.config.js': '',
           },
         },
-        redwoodProjectPath,
+        cedarProjectPath,
       )
 
       const apiSideBabelConfigPath = getApiSideBabelConfigPath()
       expect(ensurePosixPath(apiSideBabelConfigPath || '')).toMatch(
-        '/redwood-app/api/babel.config.js',
+        '/cedar-app/api/babel.config.js',
       )
     })
 
     it("returns undefined if it's not there", () => {
       vol.fromNestedJSON(
         {
-          'redwood.toml': '',
+          'cedar.toml': '',
           api: {},
         },
-        redwoodProjectPath,
+        cedarProjectPath,
       )
 
       const apiSideBabelConfigPath = getApiSideBabelConfigPath()
@@ -122,20 +122,19 @@ describe('api', () => {
     it('returns babel plugins', () => {
       vol.fromNestedJSON(
         {
-          'redwood.toml': '',
+          'cedar.toml': '',
           api: {},
         },
-        redwoodProjectPath,
+        cedarProjectPath,
       )
 
       const apiSideBabelPlugins = getApiSideBabelPlugins()
-      expect(apiSideBabelPlugins).toHaveLength(7)
+      expect(apiSideBabelPlugins).toHaveLength(6)
 
       const pluginNames = apiSideBabelPlugins.map(([name]) => name)
       expect(pluginNames).toMatchInlineSnapshot(`
         [
           "@babel/plugin-transform-react-jsx",
-          "@babel/plugin-transform-runtime",
           "babel-plugin-module-resolver",
           [Function],
           "babel-plugin-auto-import",
@@ -154,11 +153,6 @@ describe('api', () => {
           "rwjs-babel-glob-import-dir",
         ]
       `)
-
-      expect(apiSideBabelPlugins).toContainEqual([
-        '@babel/plugin-transform-runtime',
-        {},
-      ])
 
       expect(apiSideBabelPlugins).toContainEqual([
         '@babel/plugin-transform-react-jsx',
@@ -190,39 +184,6 @@ describe('api', () => {
       expect(babelPluginModuleResolverConfig.root[0]).toMatch(
         getPaths().api.base,
       )
-
-      expect(apiSideBabelPlugins).toContainEqual([
-        'babel-plugin-auto-import',
-        {
-          declarations: [
-            {
-              default: 'gql',
-              path: 'graphql-tag',
-            },
-            {
-              members: ['context'],
-              path: '@cedarjs/context',
-            },
-          ],
-        },
-        'rwjs-babel-auto-import',
-      ])
-    })
-
-    it('can include openTelemetry', () => {
-      vol.fromNestedJSON(
-        {
-          'redwood.toml': '',
-          api: {},
-        },
-        redwoodProjectPath,
-      )
-
-      const apiSideBabelPlugins = getApiSideBabelPlugins({
-        openTelemetry: true,
-      })
-      const pluginAliases = getPluginAliases(apiSideBabelPlugins)
-      expect(pluginAliases).toContain('rwjs-babel-otel-wrapping')
     })
   })
 })

@@ -1,0 +1,30 @@
+import { render } from '@cedarjs/testing/web'
+
+import { Empty, Success } from './${pascalName}Cell'
+import { standard } from './${pascalName}Cell.mock'
+
+// Generated boilerplate tests do not account for all circumstances
+// and can fail without adjustments, e.g. Float and DateTime types.
+//           Please refer to the RedwoodJS Testing Docs:
+//        https://cedarjs.com/docs/testing#testing-cells
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+
+describe('${pascalName}Cell', () => {
+  it('renders Empty successfully', async () => {
+    expect(() => {
+      render(<Empty />)
+    }).not.toThrow()
+  })
+
+  // When you're ready to test the actual output of your component render
+  // you could test that, for example, certain text is present:
+  //
+  // 1. import { screen } from '@cedarjs/testing/web'
+  // 2. Add test: expect(screen.getByText('Hello, world')).toBeInTheDocument()
+
+  it('renders Success successfully', async () => {
+    expect(() => {
+      render(<Success ${camelName}={standard().${camelName}} />)
+    }).not.toThrow()
+  })
+})

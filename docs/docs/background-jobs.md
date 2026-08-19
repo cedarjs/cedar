@@ -34,7 +34,7 @@ There are three components to the Background Job system in Cedar:
 
 **Execution** is handled by a **job worker**, which takes a job from storage, executes it, and then does something with the result, whether it was a success or failure.
 
-:::info Job execution time is never guaranteed
+:::info[Job execution time is never guaranteed]
 
 When scheduling a job, you're really saying "this is the earliest possible time I want this job to run": based on what other jobs are in the queue, and how busy the workers are, they may not get a chance to execute this one particular job for an indeterminate amount of time.
 
@@ -63,8 +63,8 @@ Start here if you want to get up and running with jobs as quickly as possible an
 Run the setup command to get the jobs configuration file created and migrate the database with a new `BackgroundJob` table:
 
 ```bash
-yarn rw setup jobs
-yarn rw prisma migrate dev
+yarn cedar setup jobs
+yarn cedar prisma migrate dev
 ```
 
 This created `api/src/lib/jobs.js` (or `.ts`) with a sensible default config. You can leave this as is for now.
@@ -72,7 +72,7 @@ This created `api/src/lib/jobs.js` (or `.ts`) with a sensible default config. Yo
 ### Create a Job
 
 ```bash
-yarn rw g job SampleJob
+yarn cedar g job SampleJob
 ```
 
 This created `api/src/jobs/SampleJob/SampleJob.js` and a test and scenario file. For now the job just outputs a message to the logs, but you'll fill out the `perform()` function to take any arguments you want and perform any work you want to do. Let's update the job to take a user's `id` and then just print that to the logs:
@@ -116,7 +116,7 @@ The first argument is the job itself, the second argument is an array of all the
 Start the worker process to find jobs in the DB and execute them:
 
 ```bash
-yarn rw jobs work
+yarn cedar jobs work
 ```
 
 This process will stay attached to the terminal and show you debug log output as it looks for jobs to run. Note that since we scheduled our job to wait 60 seconds before running, the runner will not find a job to work on right away (unless it's already been a minute since you scheduled it!).
@@ -132,13 +132,13 @@ Let's go into more depth in each of the parts of the job system.
 To get started with jobs, run the setup command:
 
 ```bash
-yarn rw setup jobs
+yarn cedar setup jobs
 ```
 
 This will add a new model to your Prisma schema, and create a configuration file at `api/src/lib/jobs.js` (or `.ts` for a TypeScript project). You'll need to run migrations in order to actually create the model in your database:
 
 ```bash
-yarn rw prisma migrate dev
+yarn cedar prisma migrate dev
 ```
 
 This added the following model:
@@ -202,7 +202,7 @@ We'll go into more detail on this file later (see [JobManager Config](#jobmanage
 We have a generator that creates a job in `api/src/jobs`:
 
 ```bash
-yarn rw g job SendWelcomeEmail
+yarn cedar g job SendWelcomeEmail
 ```
 
 Jobs are defined as a plain object and given to the `createJob()` function (which is called on the `jobs` export in the config file above). An example `SendWelcomeEmailJob` may look something like:
@@ -228,7 +228,7 @@ At a minimum, a job must contain the name of the `queue` the job should be saved
 
 Note that `perform()` can take any argument(s) you want (or none at all), but it's a best practice to keep them as simple as possible. With the `PrismaAdapter` the arguments are stored in the database, so the list of arguments must be serializable to and from a string of JSON.
 
-:::info Keeping Arguments Simple
+:::info[Keeping Arguments Simple]
 
 Most jobs will probably act against data in your database, so it makes sense to have the arguments simply be the `id` of those database records. When the job executes it will look up the full database record and then proceed from there.
 
@@ -276,10 +276,17 @@ later(MillenniumAnnouncementJob, [user.id], {
 })
 ```
 
+`later()` returns whatever the adapter's `schedule()` function returns. For the `PrismaAdapter` that's the job record that was created in the database, so you can hold on to its `id` to check on the job later, or to [cancel it](#cancelling-jobs):
+
+```js
+const scheduledJob = await later(SendWelcomeEmailJob, [user.id])
+// scheduledJob.id can be used with `later.cancel()`
+```
+
 If we were to query the `BackgroundJob` table after the job has been scheduled you'd see a new row. We can use the Cedar Console to query the table from the command line:
 
 ```js
-% yarn rw console
+% yarn cedar console
 > db.backgroundJob.findMany()
 [
   {
@@ -307,18 +314,41 @@ Because we're using the `PrismaAdapter` here all jobs are stored in the database
 
 The `handler` column contains the name of the job, file path to find it, and the arguments its `perform()` function will receive. Where did the `name` and `path` come from? We have a babel plugin that adds them to your job when they are built!
 
-:::warning Jobs Must Be Built
+:::warning[Jobs Must Be Built]
 
-Jobs are run from the `api/dist` directory, which will exist only after running `yarn rw build api` or `yarn rw dev`. If you are working on a job in development, you're probably running `yarn rw dev` anyway. But just be aware that if the dev server is _not_ running then any changes to your job will not be reflected unless you run `yarn rw build api` (or start the dev server) to compile your job into `api/dist`.
+Jobs are run from the `api/dist` directory, which will exist only after running `yarn cedar build api` or `yarn cedar dev`. If you are working on a job in development, you're probably running `yarn cedar dev` anyway. But just be aware that if the dev server is _not_ running then any changes to your job will not be reflected unless you run `yarn cedar build api` (or start the dev server) to compile your job into `api/dist`.
 
 :::
+
+### Cancelling Jobs
+
+Sometimes you schedule a job and then change your mind—maybe the user deleted the record the job was going to work on, or an admin wants to stop an expensive job that's no longer needed. Use `later.cancel()`, passing the `id` of the job that `later()` returned:
+
+```js
+import { later } from 'src/lib/jobs'
+import { SendWelcomeEmailJob } from 'src/jobs/SendWelcomeEmailJob'
+
+const scheduledJob = await later(SendWelcomeEmailJob, [user.id])
+
+// somewhere else, later on
+await later.cancel(scheduledJob.id)
+```
+
+`later.cancel()` returns `true` if a job was cancelled and `false` if no cancellable job with that id was found (it may have already completed, or already failed).
+
+What cancelling means depends on the state of the job:
+
+- **Queued, not started yet**: the job will never run. Using the `PrismaAdapter` the job stays in the database marked as failed (`failedAt` is set and `lastError` is `"Job cancelled by user"`) so you keep a record of it.
+- **Currently running**: the in-progress attempt is _not_ interrupted (see [Job Timeouts](#job-timeouts)—the worker will stop waiting on it once `maxRuntime` is exceeded), but the job will not be retried if it errors, and no other worker will pick it up. Even if the in-progress attempt finishes successfully, the job record keeps its cancelled state (it won't be deleted by `deleteSuccessfulJobs`).
+
+Cancellation requires an adapter that implements the optional `cancel()` function. The `PrismaAdapter` does; for a custom adapter that doesn't, `later.cancel()` throws a `CancelNotImplementedError`.
 
 ### Executing Jobs
 
 In development you can start a job worker via the **job runner** from the command line:
 
 ```bash
-yarn rw jobs work
+yarn cedar jobs work
 ```
 
 The runner is a sort of overseer that doesn't do any work itself, but spawns workers to actually execute the jobs. When starting in `work` mode your `workers` config will be used to start the workers and they will stay attached to the terminal, updating you on the status of what they're doing:
@@ -334,16 +364,16 @@ To stop the runner (and the workers it started), press `Ctrl-C` (or send `SIGINT
 There are a couple of additional modes that `rw jobs` can run in:
 
 ```bash
-yarn rw jobs workoff
+yarn cedar jobs workoff
 ```
 
 This mode will execute all jobs that are eligible to run, then stop itself.
 
 ```bash
-yarn rw jobs start
+yarn cedar jobs start
 ```
 
-Starts the workers and then detaches them to run forever. Use `yarn rw jobs stop` to stop them, or `yarn rw jobs restart` to pick up any code changes to your jobs.
+Starts the workers and then detaches them to run forever. Use `yarn cedar jobs stop` to stop them, or `yarn cedar jobs restart` to pick up any code changes to your jobs.
 
 ### Everything Else
 
@@ -552,7 +582,7 @@ This is an array of objects. Each object represents the config for a single "gro
 - queue: **[required]** the named queue(s) in which this worker group will watch for jobs. There is a reserved `'*'` value you can use which means "all queues." This can be an array of queues as well: `['default', 'email']` for example.
 - `count`: **[required]** the number of workers to start with this config.
 - `maxAttempts`: the maximum number of times to retry a job before giving up. A job that throws an error will be set to retry in the future with an exponential backoff in time equal to the number of previous attempts \*\* 4. After this number, a job is considered "failed" and will not be re-attempted. Default: `24`.
-- `maxRuntime`: the maximum amount of time, in seconds, to try running a job before another worker will pick it up and try again. It's up to you to make sure your job doesn't run for longer than this amount of time! Default: `14_400` (4 hours).
+- `maxRuntime`: the maximum amount of time, in seconds, that a job is allowed to run. A job that runs longer than this is marked as **failed** (it will not be retried, and the timeout is recorded in `lastError`) and the worker moves on to the next job. The job is told to stop what it's doing via an `AbortSignal`—see [Job timeouts](#job-timeouts). This is also how long a job's lock is honored if the worker that locked it crashed without cleaning up after itself: once `maxRuntime` (plus a one-minute grace period, so a live worker always gets to record the timeout first) has passed, another worker is allowed to pick the job up again. Default: `14_400` (4 hours).
 - `deleteFailedJobs`: when a job has failed (maximum number of retries has occurred) you can keep the job in the database, or delete it. Default: `false`.
 - `deleteSuccessfulJobs`: when a job has succeeded, you can keep the job in the database, or delete it. It's generally assumed that your jobs _will_ succeed so it usually makes sense to clear them out and keep the queue lean. Default: `true`.
 - `sleepDelay`: the amount of time, in seconds, to wait before checking the queue for another job to run. Too low and you'll be thrashing your storage system looking for jobs, too high and you start to have a long delay before any job is run. Default: `5`.
@@ -570,23 +600,15 @@ The runner has several modes it can start in depending on how you want it to beh
 These modes are ideal when you're creating a job and want to be sure it runs correctly while developing. You could also use this in production if you wanted (maybe a job is failing and you want to watch verbose logs and see what's happening).
 
 ```bash
-yarn rw jobs work
+yarn cedar jobs work
 ```
 
-This process will stay attached to the console and continually look for new jobs and execute them as they are found. The log level is set to `debug` by default so you'll see everything. Pressing `Ctrl-C` to cancel the process (sending `SIGINT`) will start a graceful shutdown: the workers will complete any work they're in the middle of before exiting. To cancel immediately, hit `Ctrl-C` again (or send `SIGTERM`) and they'll stop in the middle of what they're doing. Note that this could leave locked jobs in the database, but they will be picked back up again if a new worker starts with the same name as the one that locked the process. They'll also be picked up automatically after `maxRuntime` has expired, even if they are still locked.
-
-:::caution Long running jobs
-
-It's currently up to you to make sure your job completes before your `maxRuntime` limit is reached! NodeJS Promises are not truly cancelable: you can reject early, but any Promises that were started _inside_ will continue running unless they are also early rejected, recursively forever.
-
-The only way to guarantee a job will completely stop no matter what is for your job to spawn an actual OS level process with a timeout that kills it after a certain amount of time. We may add this functionality natively to Jobs in the near future: let us know if you'd benefit from this being built in!
-
-:::
+This process will stay attached to the console and continually look for new jobs and execute them as they are found. The log level is set to `debug` by default so you'll see everything. Pressing `Ctrl-C` to cancel the process (sending `SIGINT`) will start a graceful shutdown: the workers will complete any work they're in the middle of before exiting. To cancel immediately, hit `Ctrl-C` again (or send `SIGTERM`) and they'll stop in the middle of what they're doing. Note that this could leave locked jobs in the database, but they will be picked back up again if a new worker starts with the same name as the one that locked the process. They'll also be picked up automatically after `maxRuntime` (plus a one-minute grace period) has expired, even if they are still locked.
 
 To work on whatever outstanding jobs there are and then automatically exit use the `workoff` mode:
 
 ```bash
-yarn rw jobs workoff
+yarn cedar jobs workoff
 ```
 
 As soon as there are no more jobs to be executed (either the store is empty, or they are scheduled in the future) the process will automatically exit.
@@ -596,7 +618,7 @@ As soon as there are no more jobs to be executed (either the store is empty, or 
 You can remove all jobs from storage with:
 
 ```bash
-yarn rw jobs clear
+yarn cedar jobs clear
 ```
 
 ### Production Modes
@@ -604,7 +626,7 @@ yarn rw jobs clear
 In production you'll want your job workers running forever in the background. For that, use the `start` mode:
 
 ```bash
-yarn rw jobs start
+yarn cedar jobs start
 ```
 
 That will start a number of workers determined by the `workers` config on the `JobManager` and then detach them from the console. If you care about the output of that worker then you'll want to have configured a logger that writes to the filesystem or sends to a third party log aggregator.
@@ -612,18 +634,18 @@ That will start a number of workers determined by the `workers` config on the `J
 To stop the workers:
 
 ```bash
-yarn rw jobs stop
+yarn cedar jobs stop
 ```
 
 Or to restart any that are already running:
 
 ```bash
-yarn rw jobs restart
+yarn cedar jobs restart
 ```
 
 ### Multiple Workers
 
-With the default configuration options generated with the `yarn rw setup jobs` command you'll have one worker group. If you simply want more workers that use the same `adapter` and `queue` settings, increase the `count`:
+With the default configuration options generated with the `yarn cedar setup jobs` command you'll have one worker group. If you simply want more workers that use the same `adapter` and `queue` settings, increase the `count`:
 
 ```js
 export const jobs = new JobManager({
@@ -716,18 +738,47 @@ If you're using the `PrismaAdapter` and an uncaught error occurs while the worke
 
 By checking the `lastError` field in the database you can see what the last error was and attempt to correct it, if possible. If the retry occurs and another error is thrown, the same sequence above will happen _unless_ the number of attempts is equal to the `maxAttempts` config variable set in the jobs config. If `maxAttempts` is reached then the job is considered **failed** and will not be rescheduled. `runAt` is set to `NULL`, the `failedAt` timestamp is set to now and, assuming you have `deleteFailedJobs` set to `false`, the job will remain in the database so you can inspect it and potentially correct the problem.
 
+### Job Timeouts
+
+A job that runs longer than the worker's `maxRuntime` is timed out: the worker stops waiting on it, records the timeout in the job's `lastError`, marks the job as **failed** and moves on to the next job. A timed-out job is _not_ retried—the previous attempt could still be holding on to resources, so silently re-running it could mean two copies of the job doing work at once.
+
+:::caution[Long-running jobs]
+
+NodeJS Promises are not truly cancellable: you can reject early, but any Promises that were started _inside_ will continue running unless they are also early rejected, recursively forever. So when a job times out, the worker can't forcefully kill your `perform()` function's promise—it can only stop waiting on it. This also means the timeout can only preempt _asynchronous_ work: fully synchronous CPU-bound code blocks the event loop, so the timeout can't fire until it yields (and if such a job eventually returns, it completes normally).
+
+To let your job actually stop working when it's timed out, an `AbortSignal` is available inside `perform()` via `getJobExecutionContext()`. It's aborted the moment the job exceeds `maxRuntime`. Pass it to `fetch()`, hand it to child processes you spawn, or check `signal.aborted` in long-running loops:
+
+```js
+import { getJobExecutionContext } from '@cedarjs/jobs'
+
+export const SampleJob = jobs.createJob({
+  queue: 'default',
+  perform: async (userId) => {
+    const context = getJobExecutionContext()
+
+    await fetch('https://example.com/expensive-thing', {
+      signal: context?.signal,
+    })
+  },
+})
+```
+
+The only way to guarantee a job will completely stop no matter what is for your job to spawn an actual OS-level process with a timeout (or the abort signal above) that kills it after a certain amount of time.
+
+:::
+
 ## Deployment
 
 For many use cases you may be able to rely on the job runner to start and detach your job workers, which will then run forever:
 
 ```bash
-yarn rw jobs start
+yarn cedar jobs start
 ```
 
 When you deploy new code you'll want to restart your runners to make sure they get the latest source files:
 
 ```bash
-yarn rw jobs restart
+yarn cedar jobs restart
 ```
 
 Using this utility, however, gives you nothing to monitor that your jobs workers are still running: the runner starts the required number of workers, detaches them, and then exits itself. Node processes are pretty robust, but by no means are they guaranteed to run forever with no problems. You could mistakenly release a bad job that has an infinite loop or even just a random gamma ray striking the RAM of the server could cause a panic and the process will be shut down.
@@ -756,7 +807,7 @@ ENV NODE_ENV="production"
 
 ## Advanced Job Workers
 
-As noted above, although the workers are started and detached using the `yarn rw jobs start` command, there is nothing to monitor those workers to make sure they keep running. To do that, you'll want to start the workers yourself (or have your process monitor start them) using command line flags.
+As noted above, although the workers are started and detached using the `yarn cedar jobs start` command, there is nothing to monitor those workers to make sure they keep running. To do that, you'll want to start the workers yourself (or have your process monitor start them) using command line flags.
 
 You can do this with the `yarn cedar-jobs-worker` command. The flags passed to the script tell it which worker group config to use to start itself, and which `id` to give this worker (if you're running more than one). To start a single worker, using the first `workers` config object, you would run:
 
@@ -766,7 +817,7 @@ yarn cedar-jobs-worker --index=0 --id=0
 
 :::info
 
-The job runner started with `yarn rw jobs start` runs this same command behind the scenes for you, keeping it attached or detached depending on if you start in `work` or `start` mode!
+The job runner started with `yarn cedar jobs start` runs this same command behind the scenes for you, keeping it attached or detached depending on if you start in `work` or `start` mode!
 
 :::
 
@@ -781,7 +832,7 @@ Your process monitor can now restart the workers automatically if they crash sin
 
 ### What Happens if a Worker Crashes?
 
-If a worker crashes because of circumstances outside of your control the job will remained locked in the storage system: the worker couldn't finish work and clean up after itself. When this happens, the job will be picked up again immediately if a new worker starts with the same process title, otherwise when `maxRuntime` has passed it's eligible for any worker to pick up and re-lock.
+If a worker crashes because of circumstances outside of your control the job will remain locked in the storage system: the worker couldn't finish work and clean up after itself. When this happens, the job will be picked up again immediately if a new worker starts with the same process title, otherwise when `maxRuntime` (plus a one-minute grace period) has passed it's eligible for any worker to pick up and re-lock.
 
 ## Creating Your Own Adapter
 
@@ -790,19 +841,20 @@ We'd love the community to contribute adapters for Cedar Jobs! Take a look at th
 The general gist of the required functions:
 
 - `find()` should find a job to be run, lock it and return it (minimum return of an object containing `id`, `name`, `path`, `args` and `attempts` properties)
-- `schedule()` accepts `name`, `path`, `args`, `runAt`, `queue` and `priority` and should store the job
+- `schedule()` accepts `name`, `path`, `args`, `runAt`, `queue` and `priority` and should store the job. Whatever it returns is returned from `later()`, so return at least an object with the stored job's `id` so users can cancel it or check on it later
 - `success()` accepts the same job object returned from `find()` and a `deleteJob` boolean for whether the job should be deleted upon success.
 - `error()` accepts the same job object returned from `find()` and an error instance. Does whatever failure means to you (like unlock the job and reschedule a time for it to run again in the future)
-- `failure()` is called when the job has reached `maxAttempts`. Accepts the job object and a `deleteJob` boolean that says whether the job should be deleted.
+- `failure()` is called when the job has reached `maxAttempts` or exceeded `maxRuntime`. Accepts the job object, a `deleteJob` boolean that says whether the job should be deleted, and—when the job is failed directly without a preceding `error()` call (a timeout)—an `error` that should be recorded in the same write that marks the job as failed.
 - `clear()` remove all jobs from the queue (mostly used in development).
+- `cancel()` (optional) accepts an object with a `jobId` property and should make sure that job never runs (or is never retried, if it's currently running). Return `true` if a job was cancelled, `false` otherwise. If you don't implement this function, `later.cancel()` will throw a `CancelNotImplementedError`.
 
 ## The Future
 
 There's still more to add to background jobs! Our current TODO list:
 
 - More adapters: Redis, SQS, RabbitMQ...
-- CedarJS Admin integration: monitor the state of your outstanding jobs, provide
-  a way to cancel or retry jobs, read failure logs, and more.
+- CedarJS Admin integration: monitor the state of your outstanding jobs,
+  cancel or retry jobs from a UI, read failure logs, and more.
 - Baremetal integration: if jobs are enabled, monitor the workers with pm2 or
   systemd
 - Lifecycle hooks: `beforePerform()`, `afterPerform()`, `afterSuccess()`,

@@ -1,0 +1,145 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignore": [
+    ".github/actions/**",
+    ".github/scripts/**",
+    "__fixtures__/**",
+    "docs/**",
+    "local-testing-project/**",
+    "local-testing-project-live/**",
+    "packages/**/__fixtures__/**",
+    "packages/**/__testfixtures__/**",
+    "packages/**/dist/**",
+    "packages/**/fixtures/**",
+    "packages/create-cedar-app/templates/**"
+  ],
+  "exclude": ["files", "exports", "types", "enumMembers", "duplicates"],
+  "ignoreBinaries": [
+    "cedar",
+    "code",
+    "create-cedar-app",
+    "cygpath",
+    "k6",
+    "powershell",
+    "redwood",
+    "rw"
+  ],
+  "ignoreUnresolved": ["/@react-refresh", "~__CEDAR__USER_ROUTES_FOR_MOCK"],
+  "ignoreExportsUsedInFile": {
+    "interface": true,
+    "type": true
+  },
+  "workspaces": {
+    "packages/api-server": {
+      "entry": ["src/bin.ts", "src/logFormatter/bin.ts"],
+      // publint: only invoked via `concurrently`'s `yarn:publint` job syntax
+      // in the "check:package" script, which knip doesn't parse.
+      // @cedarjs/graphql-server: optional peer dep, dynamically imported in
+      // src/plugins/graphql.ts only when a project has a GraphQL function.
+      "ignoreDependencies": ["publint", "@cedarjs/graphql-server"]
+    },
+    "packages/api-server-watch": {
+      // package.json main/bin point into dist/, which is globally ignored, so
+      // knip needs to be pointed at the sources explicitly.
+      "entry": ["src/watch.ts", "src/bin.ts"]
+    },
+    "packages/eslint-config": {
+      // eslint-plugin-react-compiler: optional peer dep, dynamically imported
+      // in index.mjs only when experimental.reactCompiler is enabled.
+      "ignoreDependencies": ["eslint-plugin-react-compiler"]
+    },
+    "packages/cli": {
+      // package.json bin points into dist/, which is globally ignored, so knip
+      // needs to be pointed at the sources explicitly. index.ts backs the
+      // `cedar`/`cedarjs`/`redwood`/`rw` bins, cfw.ts backs `cfw`, and
+      // telemetry/send.ts is spawned as a detached background process from
+      // src/telemetry/index.ts. Setting `entry` replaces knip's defaults, so
+      // index.ts has to be listed here even though it matches a default
+      // pattern.
+      "entry": ["src/index.ts", "src/cfw.ts", "src/telemetry/send.ts"],
+      // These graphql.js files are input fixtures for the realtime setup
+      // tests, not real source, so their imports don't resolve.
+      "ignore": ["src/commands/setup/realtime/__tests__/*/graphql.js"],
+      // @babel/preset-typescript: never imported, only named as a string in
+      // the `presets` option passed to babel in src/lib/merge/index.ts.
+      // @vercel/nft, @cedarjs/record, @cedarjs/studio: dynamically imported
+      // and resolved from the user's project, not from the CLI. They're
+      // deliberately not CLI dependencies -- `setup deploy serverless`,
+      // `generate model` and `studio` install them into the project instead.
+      "ignoreDependencies": [
+        "@babel/preset-typescript",
+        "@vercel/nft",
+        "@cedarjs/record",
+        "@cedarjs/studio"
+      ]
+    },
+    "packages/core": {
+      "entry": ["src/bins/*.ts"],
+      // graphql-tag: not imported by core's own source. It's a deliberate
+      // phantom dependency -- the js/ts create-cedar-app templates import it
+      // directly in generated code (api/src/directives/*) without declaring
+      // it themselves, relying on it hoisting in via @cedarjs/core.
+      "ignoreDependencies": ["graphql-tag"]
+    },
+    "packages/graphql-server": {
+      // publint: only invoked via `concurrently`'s `yarn:publint` job syntax
+      // in the "check:package" script, which knip doesn't parse.
+      "ignoreDependencies": ["publint"]
+    },
+    "packages/internal": {
+      // package.json bin and exports point into dist/, which is globally
+      // ignored, so knip needs to be pointed at the sources explicitly.
+      // watch.ts backs the `cedar-gen-watch` bin and is the one source root
+      // nothing else reaches; every other export subpath is reachable from
+      // index.ts. Setting `entry` replaces knip's defaults, so index.ts has to
+      // be listed here even though it matches a default pattern.
+      "entry": ["src/index.ts", "src/generate/watch.ts"],
+      // publint: only invoked via `concurrently`'s `yarn:publint` job syntax
+      // in the "check:package" script, which knip doesn't parse.
+      // @babel/plugin-transform-typescript: never imported, only named as a
+      // string in the babel `plugins` option in src/ts2js.ts.
+      // @cedarjs/realtime: optional, dynamically imported in
+      // src/generate/graphqlSchema.ts and resolved from the user's project.
+      "ignoreDependencies": [
+        "publint",
+        "@babel/plugin-transform-typescript",
+        "@cedarjs/realtime"
+      ]
+    },
+    "packages/vite": {
+      // publint: only invoked via `concurrently`'s `yarn:publint` job syntax
+      // in the "check:package" script, which knip doesn't parse.
+      "ignoreDependencies": ["publint"]
+    },
+    "packages/auth-providers/*/{api,setup,middleware}": {
+      // publint: only invoked via `concurrently`'s `yarn:publint` job syntax
+      // in the "check:package" script, which knip doesn't parse.
+      "ignoreDependencies": ["publint"]
+    },
+    "packages/auth-providers/dbAuth/setup": {
+      // No publint here -- this package has no check:package/publint script
+      // at all, unlike its sibling auth-provider packages.
+    },
+    "packages/auth-providers/dbAuth/middleware": {
+      // publint: see the general */{api,setup,middleware} entry above.
+      // ts-toolbelt: not imported directly, but needed for `tsc --build` --
+      // index.ts imports a type from @cedarjs/graphql-server that re-exports
+      // @cedarjs/api's types.d.ts wholesale, which itself imports from
+      // ts-toolbelt. TS must resolve it to load that .d.ts at all.
+      "ignoreDependencies": ["publint", "ts-toolbelt"]
+    },
+    "packages/auth-providers/supertokens/web": {
+      // publint: see the general */web entry below -- react/@types/react
+      // aren't listed here because, unlike the other auth providers, knip
+      // doesn't flag them as unused for this package.
+      "ignoreDependencies": ["publint"]
+    },
+    "packages/auth-providers/*/web": {
+      // publint: see above.
+      // react, @types/react: not imported by shipped source (these provider
+      // packages have no UI of their own), but satisfy @testing-library/react's
+      // peerDependencies so the test suite runs.
+      "ignoreDependencies": ["publint", "react", "@types/react"]
+    }
+  }
+}

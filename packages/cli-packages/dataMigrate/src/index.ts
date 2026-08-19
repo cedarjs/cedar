@@ -6,13 +6,13 @@ import {
   description as installDescription,
   builder as installBuilder,
   handler as installHandler,
-} from './commands/install'
+} from './commands/install.js'
 import {
   command as upCommand,
   description as upDescription,
   builder as upBuilder,
   handler as upHandler,
-} from './commands/up'
+} from './commands/up.js'
 
 const command = 'data-migrate <command>'
 const aliases = ['dataMigrate', 'dm']

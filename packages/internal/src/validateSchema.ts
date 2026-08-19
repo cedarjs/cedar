@@ -82,7 +82,7 @@ export function validateSchema(
           const fieldTypeName = typeNode.name.value
 
           // TODO: Remove this when I remove the root schema
-          const isRedwoodQuery =
+          const isLegacyRedwoodQuery =
             fieldName === 'redwood' && fieldTypeName === 'Query'
           const isCedarQuery =
             (fieldName === 'cedar' && fieldTypeName === 'Query') ||
@@ -90,8 +90,8 @@ export function validateSchema(
             (fieldName === 'cedarjs' && fieldTypeName === 'Query')
           const isCurrentUserQuery =
             fieldName === 'currentUser' && fieldTypeName === 'Query'
-          // skip validation for redwood query and currentUser
-          if (!(isRedwoodQuery || isCedarQuery || isCurrentUserQuery)) {
+          // skip validation for cedar query and currentUser
+          if (!(isCedarQuery || isCurrentUserQuery || isLegacyRedwoodQuery)) {
             const hasDirective = field.directives?.length
 
             if (!hasDirective) {

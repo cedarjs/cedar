@@ -17,7 +17,7 @@ All without you having to write a single line of imperative code!
 You can generate a Cell with Cedar's Cell generator:
 
 ```bash
-yarn rw generate cell <name>
+yarn cedar generate cell <name>
 ```
 
 This creates a directory named `<name>Cell` in `web/src/components` with four files:
@@ -35,11 +35,11 @@ Sometimes you want a Cell that renders a single item and other times you want a 
 Cedar's Cell generator can do both.
 
 First, it detects if `<name>` is singular or plural.
-For example, to generate a Cell that renders a list of users, run `yarn rw generate cell users`.
+For example, to generate a Cell that renders a list of users, run `yarn cedar generate cell users`.
 Second, for irregular words whose singular and plural are the same, such as "equipment" or "pokemon", you can pass `--list` to tell Cedar to generate a list Cell explicitly:
 
 ```bash
-yarn rw generate cell equipment --list
+yarn cedar generate cell equipment --list
 ```
 
 ## Cells in-depth
@@ -74,7 +74,7 @@ We mentioned above that Cells receive "most" of what's returned from the `useQue
 It's more-than ok to have more than one root query. Here's an example:
 
 ```jsx {7-10}
-export const QUERY = gql`{
+export const QUERY = gql`
   query {
     posts {
       id
@@ -85,7 +85,7 @@ export const QUERY = gql`{
       name
     }
   }
-}
+`
 ```
 
 So in this case, both `posts` and `authors` would be available to `Success`:
@@ -130,6 +130,12 @@ This means you can think backwards about your Cell's props from your SDL: whatev
 
 `beforeQuery` is a lifecycle hook. The best way to think about it is as a chance to configure [Apollo Client's `useQuery` hook](https://www.apollographql.com/docs/react/api/react/hooks#options).
 
+You can scaffold a typed `beforeQuery` stub with the cell generator's `--before-query` flag (`isEmpty` and `afterQuery` have `--is-empty` and `--after-query` equivalents):
+
+```bash
+yarn cedar generate cell Post --before-query
+```
+
 By default, `beforeQuery` gives any props passed from the parent component to `QUERY` so that they're available as variables for it. It'll also set the fetch policy to `'cache-and-network'` since we felt it matched the behavior users want most of the time:
 
 ```jsx
@@ -162,12 +168,121 @@ export const beforeQuery = () => {
 }
 ```
 
+<Tabs groupId="js-ts">
+<TabItem value="js" label="JavaScript">
+
 ```jsx
-// The cell will take 1 prop named "word" that is a string: <Cell word="abc">
-export const beforeQuery = ({ word }: { word: string }) => {
+// The cell will take 1 prop named "word": <Cell word="abc">
+export const beforeQuery = ({ word }) => {
   return {
-    variables: { magicWord: word }
-   }
+    variables: { magicWord: word },
+  }
+}
+```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+```tsx
+import type { CellBeforeQueryResult } from '@cedarjs/web'
+
+interface BeforeQueryProps {
+  word: string
+}
+
+type BeforeQueryResult = CellBeforeQueryResult<{ magicWord: string }>
+
+// The cell will take 1 prop named "word" that is a string: <Cell word="abc">
+export const beforeQuery = ({ word }: BeforeQueryProps): BeforeQueryResult => {
+  return {
+    variables: { magicWord: word },
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+#### Skipping the query
+
+Sometimes you don't want a Cell's query to run at all—maybe a value it depends on isn't available yet. Say you have a search page where `SearchResultsCell` takes the search term as a prop: until the user has typed something, there's nothing to search for. Most of the time the idiomatic solution is to not render the Cell until you have what you need:
+
+```jsx
+const SearchPage = () => {
+  const [searchTerm, setSearchTerm] = useState('')
+
+  return (
+    <>
+      <SearchInput value={searchTerm} onChange={setSearchTerm} />
+      {searchTerm ? (
+        <SearchResultsCell searchTerm={searchTerm} />
+      ) : (
+        <p>Start typing to search</p>
+      )}
+    </>
+  )
+}
+```
+
+This keeps the Cell's contract simple (a rendered Cell always shows one of
+`Loading`, `Empty`, `Failure` or `Success`), and TypeScript checks the Cell's
+props at the call site with no extra work.
+
+But sometimes the condition is the Cell's own business rather than the parent's.
+Maybe the query depends on a value from a global store, or should only run when
+there's a signed-in user. The parent could check that too, but then every place
+that renders the Cell has to duplicate the check. To keep the condition in the
+Cell itself, return Apollo's
+[`skipToken`](https://www.apollographql.com/docs/react/api/react/skipToken)
+from `beforeQuery` instead of an options object:
+
+```jsx
+import { skipToken } from '@apollo/client/react'
+
+export const beforeQuery = ({ id }) => {
+  const otherId = useStore((state) => state.getOther(id))
+
+  return otherId ? { variables: { id, otherId } } : skipToken
+}
+```
+
+A skipped Cell renders nothing at all (neither `Loading`, `Empty`, `Failure` nor
+`Success`) just as if the parent hadn't rendered it.
+
+You can also skip by returning Apollo's `skip` option
+(`{ variables, skip: true }`), but prefer `skipToken`: with `skip` you still
+have to supply fully typed variables even though the query won't run, which
+tends to force non-null assertions like `id!`. With `skipToken` each branch of
+the ternary type-checks on its own.
+([Apollo recommends `skipToken` for the same reason](https://www.apollographql.com/docs/react/api/react/skipToken#why-do-we-recommend-skiptoken-over--skip-true-).)
+In TypeScript, you can annotate `beforeQuery`'s return type with
+`CellBeforeQueryResult<YourQueryVariables>` from `@cedarjs/web` to get full type
+checking of your variables.
+
+Finally, if you want to keep showing the previous result instead of rendering
+nothing, like keeping the last search results on screen while the user clears
+the search box, don't skip. Render the Cell unconditionally, freeze the
+variables at their last valid value, and let the cache serve the stale data:
+
+```jsx
+export const beforeQuery = ({ searchTerm }) => {
+  const lastSearchTerm = useRef(searchTerm)
+
+  if (searchTerm) {
+    lastSearchTerm.current = searchTerm
+  }
+
+  if (searchTerm) {
+    return { variables: { searchTerm } }
+  } else if (lastSearchTerm.current) {
+    // Serve the last result from the cache without hitting the network
+    return {
+      variables: { searchTerm: lastSearchTerm.current },
+      fetchPolicy: 'cache-first',
+    }
+  }
+
+  return skipToken
 }
 ```
 
@@ -226,7 +341,27 @@ But, like `Loading`, Storybook is probably a better place to develop this.
 
 In this example, we use the `errorCode` to conditionally render the error heading title, and we also use it for our translation string.
 
+<Tabs groupId="js-ts">
+<TabItem value="js" label="JavaScript">
+
 ```jsx
+export const Failure = ({ error, errorCode }) => {
+  const { t } = useTranslation()
+  return (
+    <div style={{ color: 'red' }}>
+      {errorCode === 'NO_CONFIG' ? <h1>NO_CONFIG</h1> : <h1>ERROR</h1>}
+      Error: {error.message} - Code: {errorCode} - {t(`error.${errorCode}`)}
+    </div>
+  )
+}
+```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+```tsx
+import type { CellFailureProps } from '@cedarjs/web'
+
 export const Failure = ({ error, errorCode }: CellFailureProps) => {
   const { t } = useTranslation()
   return (
@@ -237,6 +372,9 @@ export const Failure = ({ error, errorCode }: CellFailureProps) => {
   )
 }
 ```
+
+</TabItem>
+</Tabs>
 
 ### Success
 
@@ -295,11 +433,189 @@ We also don't think it's an anti-pattern to do so. Far from it—your cells migh
 
 It's also important to remember that, besides exporting certain things with certain names, there aren't many rules around Cells&mdash;everything you can do in a regular component still goes.
 
+## Cell Types Reference
+
+All Cell-related types are exported from `@cedarjs/web` and share the `Cell` prefix. A nice side effect of the shared prefix is that typing `Cell` inside an `import type { ... } from '@cedarjs/web'` statement makes your editor's autocomplete list the whole family.
+
+| Type                                   | What it types                                                                                                                                       |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CellSuccessProps<TData, TVariables>`  | Props of the `Success` and `Empty` components: the query's data (spread as individual props), plus `queryResult` and `updating`                     |
+| `CellFailureProps<TVariables>`         | Props of the `Failure` component: `error`, `errorCode`, `queryResult` and `updating`                                                                |
+| `CellLoadingProps<TVariables>`         | Props of the `Loading` component                                                                                                                    |
+| `CellSuccessData<TData>`               | Just the data part of `CellSuccessProps`, useful when passing the query result on to other functions or components                                  |
+| `CellBeforeQueryResult<TVariables>`    | Return type of [`beforeQuery`](#beforequery): the query options, or `skipToken` to [skip the query](#skipping-the-query)                            |
+| `CellBeforeQueryOptions<TVariables>`   | The options object variant of `CellBeforeQueryResult`: `variables` plus any other option Apollo Client's `useQuery` hook accepts                    |
+| `TypedDocumentNode<TData, TVariables>` | The `QUERY` document. Annotating `QUERY` with it flows the query's data and variable types through to the rest of the Cell                          |
+| `CellProps<...>`                       | The complete prop interface of a Cell as seen by the components rendering it. Used by Cedar's generated types&mdash;you'll rarely write it yourself |
+
+For worked examples of `CellSuccessProps`, `CellFailureProps`, and `CellLoadingProps`, see the [Utility Types](typescript/utility-types.md#cells) doc. For `CellBeforeQueryResult`, see the [`beforeQuery`](#beforequery) section above.
+
+## Fragment Cells: Aggregating Queries
+
+Nesting a Cell inside another Cell's `Success` component works, but it creates a
+request waterfall: the parent Cell has to finish its query before the child Cell
+can even start its own. For a Cell that only ever renders a slice of its
+parent's data, you can avoid the second request entirely by exporting a
+`FRAGMENT` instead of a `QUERY`:
+
+<Tabs groupId="js-ts">
+<TabItem value="js" label="JavaScript">
+
+```jsx title="web/src/components/AuthorCell/AuthorCell.jsx"
+export const FRAGMENT = gql`
+  fragment AuthorCell_author on User {
+    id
+    email
+    fullName
+  }
+`
+
+export const Success = ({ author }) => (
+  <span>
+    {author.fullName} ({author.email})
+  </span>
+)
+```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+```tsx title="web/src/components/AuthorCell/AuthorCell.tsx"
+import type { AuthorCell_author } from 'types/graphql'
+
+export const FRAGMENT = gql`
+  fragment AuthorCell_author on User {
+    id
+    email
+    fullName
+  }
+`
+
+interface SuccessProps {
+  author: AuthorCell_author
+}
+
+export const Success = ({ author }: SuccessProps) => (
+  <span>
+    {author.fullName} ({author.email})
+  </span>
+)
+```
+
+</TabItem>
+</Tabs>
+
+The parent Cell spreads the fragment in its `QUERY` and passes the matching data
+object down as a prop named after the fragment &mdash; `AuthorCell_author`
+means the Cell takes (and `Success` receives) an `author` prop:
+
+<Tabs groupId="js-ts">
+<TabItem value="js" label="JavaScript">
+
+```jsx title="web/src/components/BlogPostCell/BlogPostCell.jsx"
+import AuthorCell from 'src/components/AuthorCell'
+
+export const QUERY = gql`
+  query FindBlogPostQuery($id: Int!) {
+    post(id: $id) {
+      id
+      title
+      body
+      author {
+        ...AuthorCell_author
+      }
+    }
+  }
+`
+
+export const Success = ({ post }) => (
+  <article>
+    <h2>{post.title}</h2>
+    <AuthorCell author={post.author} />
+    <div>{post.body}</div>
+  </article>
+)
+```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+```tsx title="web/src/components/BlogPostCell/BlogPostCell.tsx"
+import type {
+  FindBlogPostQuery,
+  FindBlogPostQueryVariables,
+} from 'types/graphql'
+
+import type { CellSuccessProps, TypedDocumentNode } from '@cedarjs/web'
+
+import AuthorCell from 'src/components/AuthorCell'
+
+export const QUERY: TypedDocumentNode<
+  FindBlogPostQuery,
+  FindBlogPostQueryVariables
+> = gql`
+  query FindBlogPostQuery($id: Int!) {
+    post(id: $id) {
+      id
+      title
+      body
+      author {
+        ...AuthorCell_author
+      }
+    }
+  }
+`
+
+export const Success = ({
+  post,
+}: CellSuccessProps<FindBlogPostQuery, FindBlogPostQueryVariables>) => (
+  <article>
+    <h2>{post.title}</h2>
+    <AuthorCell author={post.author} />
+    <div>{post.body}</div>
+  </article>
+)
+```
+
+</TabItem>
+</Tabs>
+
+One network request fetches everything. You don't have to import or interpolate
+the fragment into the parent's `QUERY` &mdash; fragment Cells automatically
+register their fragment with the GraphQL client, so spreading it by name is
+enough (importing the child Cell to render it is what pulls the fragment in).
+
+A few things to know about fragment Cells:
+
+- The data prop's name is derived from the fragment name: for a name with an
+  underscore, like `AuthorCell_author`, it's the part after the last underscore
+  (`author`). Otherwise it's the camelCased name of the type the fragment is
+  defined on (`on User` becomes `user`). The parent passes the data in with
+  that prop, and `Success` (and `Empty`) receive the data as that same prop.
+- In TypeScript projects, a type named exactly like the fragment
+  (`AuthorCell_author` in the example above) is generated in `types/graphql`,
+  and the Cell's data prop is typed with it. So if the parent's `QUERY` is
+  missing the fragment spread (or the spread doesn't cover all the fields),
+  you'll get a TypeScript error right where the fragment Cell is rendered.
+- There's no `Loading` or `Failure` state. The data is read synchronously from
+  the parent's query result, so by the time a fragment Cell renders, the data is
+  already there. `Empty`, `isEmpty`, and `afterQuery` work like they do in
+  regular Cells, and a `null` data prop (a nullable field, or a partial error
+  when the parent uses `errorPolicy: 'all'`) renders `Empty`.
+- Include the type's `id` in the fragment. With it, the Cell reads its data live
+  from the GraphQL client's cache, so it automatically re-renders when a
+  mutation or another query updates that entity. Without it, the Cell still
+  renders (it falls back to the data object it was passed), but it only updates
+  when the parent re-renders.
+- This works for lists too: a parent Cell that fetches
+  `posts { author { ...AuthorCell_author } }` can render one
+  `<AuthorCell author={post.author} />` per post, still with a single request.
+
 ## How Does Cedar Know a Cell is a Cell?
 
 You just have to end a filename in "Cell" right? Well, while that's basically correct, there is one other thing you should know.
 
-Cedar looks for all files ending in "Cell" (so if you want your component to be a Cell, its filename does have to end in "Cell"), but if the file 1) doesn't export a const named `QUERY` and 2) has a default export, then it'll be skipped.
+Cedar looks for all files ending in "Cell" (so if you want your component to be a Cell, its filename does have to end in "Cell"), but if the file 1) doesn't export a const named `QUERY` (or `FRAGMENT`) and 2) has a default export, then it'll be skipped.
 
 When would you want to do this? If you just want a file to end in "Cell" for some reason. Otherwise, don't worry about it!
 
@@ -314,9 +630,12 @@ If we didn't do all that build-time stuff for you, how might you go about implem
 
 Consider the [example from the Tutorial](tutorial/chapter2/cells.md#our-first-cell) where we're fetching posts:
 
+<Tabs groupId="js-ts">
+<TabItem value="js" label="JavaScript">
+
 ```jsx
 export const QUERY = gql`
-  query {
+  query FindPosts {
     posts {
       id
       title
@@ -336,13 +655,59 @@ export const Failure = ({ error }) => (
 
 export const Success = ({ posts }) => {
   return posts.map((post) => (
-    <article>
+    <article key={post.id}>
       <h2>{post.title}</h2>
       <div>{post.body}</div>
     </article>
   ))
 }
 ```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+```tsx
+import type { FindPosts, FindPostsVariables } from 'types/graphql'
+
+import type {
+  CellFailureProps,
+  CellSuccessProps,
+  TypedDocumentNode,
+} from '@cedarjs/web'
+
+export const QUERY: TypedDocumentNode<FindPosts, FindPostsVariables> = gql`
+  query FindPosts {
+    posts {
+      id
+      title
+      body
+      createdAt
+    }
+  }
+`
+
+export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>No posts yet!</div>
+
+export const Failure = ({ error }: CellFailureProps<FindPostsVariables>) => (
+  <div>Error loading posts: {error.message}</div>
+)
+
+export const Success = ({
+  posts,
+}: CellSuccessProps<FindPosts, FindPostsVariables>) => {
+  return posts.map((post) => (
+    <article key={post.id}>
+      <h2>{post.title}</h2>
+      <div>{post.body}</div>
+    </article>
+  ))
+}
+```
+
+</TabItem>
+</Tabs>
 
 And now let's say that Babel isn't going to come along and assemble our exports. What might we do?
 

@@ -377,7 +377,7 @@ Want to learn more about webhooks? See a [Detailed discussion of webhooks](webho
 
 In the following example, we'll have the webhook interact with our app's database, so we can see how we can use **scenario testing** to create data that the handler can access and modify.
 
-:::tip **Why testing webhooks is hard**
+:::tip[**Why testing webhooks is hard**]
 
 Because your webhook is typically sent from a third-party's system, manually testing webhooks can be difficult. For one thing, you often have to create some kind of event in their system that will trigger the event -- and you'll often have to do that in a production environment with real data. Second, for each case you'll have to find data that represents each case and issue a hook for each -- which can take a lot of time and is tedious.
 

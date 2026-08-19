@@ -1,8 +1,8 @@
 import React from 'react'
 
 import { LocationProvider } from '@cedarjs/router'
-import { RedwoodProvider } from '@cedarjs/web'
-import { RedwoodApolloProvider } from '@cedarjs/web/apollo'
+import { CedarProvider } from '@cedarjs/web'
+import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 import { UserRoutes as VitestUserRoutes } from './globRoutesImporter.js'
 import { useAuth } from './mockAuth.js'
@@ -13,12 +13,12 @@ import { MockParamsProvider } from './MockParamsProvider.js'
 // so that we can populate the `routes object` in Storybook and tests.
 let UserRoutes: React.FC
 
-// we need to do this to avoid "Could not resolve "~__REDWOOD__USER_ROUTES_FOR_MOCK"" errors
+// we need to do this to avoid "Could not resolve "~__CEDAR__USER_ROUTES_FOR_MOCK"" errors
 try {
-  const userRoutesModule = require('~__REDWOOD__USER_ROUTES_FOR_MOCK')
+  const userRoutesModule = require('~__CEDAR__USER_ROUTES_FOR_MOCK')
   UserRoutes = userRoutesModule.default
 } catch (error) {
-  if (!isModuleNotFoundError(error, '~__REDWOOD__USER_ROUTES_FOR_MOCK')) {
+  if (!isModuleNotFoundError(error, '~__CEDAR__USER_ROUTES_FOR_MOCK')) {
     // if it's not "MODULE_NOT_FOUND" it's more likely a user error. Let's
     // surface that to help the user debug the issue.
     console.warn(error)
@@ -33,25 +33,41 @@ export const MockProviders: React.FunctionComponent<{
   children: React.ReactNode
 }> = ({ children }) => {
   return (
-    <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
-      <RedwoodApolloProvider useAuth={useAuth}>
+    <CedarProvider titleTemplate="%PageTitle | %AppTitle">
+      <CedarApolloProvider useAuth={useAuth}>
         <UserRoutes />
         <VitestUserRoutes />
         <LocationProvider>
           <MockParamsProvider>{children}</MockParamsProvider>
         </LocationProvider>
-      </RedwoodApolloProvider>
-    </RedwoodProvider>
+      </CedarApolloProvider>
+    </CedarProvider>
   )
 }
 
 function isModuleNotFoundError(error: unknown, module: string) {
+  if (
+    !error ||
+    typeof error !== 'object' ||
+    !('code' in error) ||
+    error.code !== 'MODULE_NOT_FOUND'
+  ) {
+    return false
+  }
+
+  // Jest sets moduleName; plain Node does not.
+  // TODO: once Cedar is ESM-only and Jest is no longer used, remove this branch
+  // and rely solely on the message check below.
+  if ('moduleName' in error) {
+    return error.moduleName === module
+  }
+
+  // Node-style error: module name appears in the message string.
+  // Check for the quoted form to avoid substring collisions with similar module names.
   return (
-    !!error &&
-    typeof error === 'object' &&
-    'code' in error &&
-    error.code === 'MODULE_NOT_FOUND' &&
-    'moduleName' in error &&
-    error.moduleName === module
+    'message' in error &&
+    typeof error.message === 'string' &&
+    (error.message.includes(`'${module}'`) ||
+      error.message.includes(`"${module}"`))
   )
 }

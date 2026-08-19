@@ -12,7 +12,10 @@ let original_CEDAR_CWD: string | undefined
 
 beforeAll(() => {
   original_CEDAR_CWD = process.env.CEDAR_CWD
-  process.env.CEDAR_CWD = path.join(__dirname, '__fixtures__/fallback')
+  process.env.CEDAR_CWD = path.join(
+    __dirname,
+    '__tests__/__fixtures__/fallback',
+  )
 })
 
 afterAll(() => {

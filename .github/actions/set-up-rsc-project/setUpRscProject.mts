@@ -1,4 +1,3 @@
-import fs from 'node:fs'
 import path from 'node:path'
 
 import type { ExecOptions } from '@actions/exec'
@@ -56,20 +55,27 @@ async function setUpRscProject(
     CEDAR_FRAMEWORK_PATH,
     'packages/cli/dist/index.js',
   )
+  const createCedarAppBinPath = path.join(
+    CEDAR_FRAMEWORK_PATH,
+    'packages/create-cedar-app/dist/create-cedar-app.js',
+  )
+  const cfwBinPath = path.join(CEDAR_FRAMEWORK_PATH, 'packages/cli/dist/cfw.js')
 
   console.log(`Creating project at ${rscProjectPath}`)
   console.log()
-  await exec('npx', [
-    '-y',
-    'create-cedar-app@canary',
+
+  // `-y` implies `--install`, so this also creates the project's yarn.lock.
+  // Nothing else may run yarn in the project before this finishes — yarn 4's
+  // hardened mode (on for public PRs) rejects any invocation made without a
+  // lockfile present.
+  await exec('node', [
+    createCedarAppBinPath,
     '-y',
     '--no-git',
     '--pm',
     'yarn',
     rscProjectPath,
   ])
-  await execInProject('yarn install')
-  await execInProject('yarn cedar upgrade --yes --tag canary')
 
   console.log(`Setting up Streaming/SSR in ${rscProjectPath}`)
   const cmdSetupStreamingSSR = `node ${cedarBinPath} experimental setup-streaming-ssr -f`
@@ -80,8 +86,14 @@ async function setUpRscProject(
   await execInProject(`node ${cedarBinPath} experimental setup-rsc`)
   console.log()
 
+  // Run the cfw bin built from this commit rather than the project's own
+  // (`yarn cfw`). The project installs the last *released* `@cedarjs/*`
+  // packages, so `yarn cfw` would resolve to a released tarsync, which is both
+  // older than the framework it is syncing and blind to any tarsync change the
+  // PR makes. The RSA and RSC-kitchen-sink setups already invoke the local bin
+  // this way (see `actionsLib.mjs`).
   console.log('Syncing framework')
-  await execInProject(`yarn cfw project:tarsync --verbose`, {
+  await execInProject(`node ${cfwBinPath} project:tarsync --verbose`, {
     env: {
       CFW_PATH: CEDAR_FRAMEWORK_PATH,
     },

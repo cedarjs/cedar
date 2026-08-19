@@ -29,12 +29,8 @@ import {
   SAMPLE_JOB_PERFORM_BODY,
   SAMPLE_CRON_JOB,
   SCHEDULE_CRON_JOB_SCRIPT,
-} from './fixtures.mjs'
-import {
-  makeFilePath,
-  projectDirectoryExists,
-  projectFileExists,
-} from './util.mjs'
+} from './fixtures.mts'
+import { projectDirectoryExists, projectFileExists } from './util.mts'
 
 // job {
 //   id: 1,
@@ -117,12 +113,16 @@ async function main() {
   await scheduleCronJob(projectPath)
   await confirmJobDidNotRunSynchronously(projectPath, testFileName)
   const job = await confirmJobsWereScheduled(testFileLocation, testFileData)
+  const reportFilesBefore = fs
+    .readdirSync(projectPath)
+    .filter((file) => /^report-.*\.txt$/.test(file))
   await jobsWorkoff()
   await confirmJobsRan(
     projectPath,
     testFileName,
     testFileLocation,
     testFileData,
+    reportFilesBefore,
   )
   await confirmJobWasRemoved(job)
   await runCronJob(projectPath)
@@ -194,8 +194,8 @@ async function runJobsSetup(projectPath: string) {
   console.log('Confirmed: jobs directory')
 
   // Confirm jobs dependency in api package.json
-  const apiPackageJson = await import(
-    makeFilePath(path.join(projectPath, 'api/package.json'))
+  const apiPackageJson = JSON.parse(
+    fs.readFileSync(path.join(projectPath, 'api/package.json'), 'utf-8'),
   )
   if (!apiPackageJson.dependencies['@cedarjs/jobs']) {
     console.error(
@@ -495,6 +495,7 @@ async function confirmJobsRan(
   testFileName: string,
   testFileLocation: string,
   testFileData: string,
+  reportFilesBefore: string[] = [],
 ) {
   console.log('\n❓ Testing: Confirming the jobs ran')
 
@@ -515,29 +516,29 @@ async function confirmJobsRan(
   }
   console.log('Confirmed: data job ran')
 
-  const reportFiles = fs
+  const reportFilesAfter = fs
     .readdirSync(projectPath)
     .filter((file) => /^report-.*\.txt$/.test(file))
 
-  const nbrOfReports = reportFiles.length
+  const newReportFiles = reportFilesAfter.filter(
+    (file) => !reportFilesBefore.includes(file),
+  )
+  const nbrOfReports = newReportFiles.length
 
   if (nbrOfReports !== 1) {
-    fs.readdirSync(projectPath).forEach((file) => {
-      console.log()
-      console.log('--- Cron job report files:')
-      console.log()
-      if (/^report-.*\.txt$/.test(file)) {
-        // Sometimes this e2e test fails in CI, and I'm not sure why. When I run
-        // it locally there's always just one cron job report file written, but
-        // in CI there's sometimes two.
-        // I want to know the timestamps in the report file names to see when
-        // they're created (if they're both created at the same time)
-        console.log(' - ' + file)
-      }
-      console.log()
-    })
-
-    console.error('💥 Expected 1 cron job report, but found', nbrOfReports)
+    console.log()
+    console.log('--- Cron job report files before workoff:')
+    console.log(
+      reportFilesBefore.map((f) => ' - ' + f).join('\n') || '  (none)',
+    )
+    console.log()
+    console.log('--- Cron job report files after workoff:')
+    console.log(reportFilesAfter.map((f) => ' - ' + f).join('\n') || '  (none)')
+    console.log()
+    console.error(
+      '💥 Expected 1 new cron job report after workoff, but found',
+      nbrOfReports,
+    )
     process.exit(1)
   }
   console.log('Confirmed: cron job ran')

@@ -191,38 +191,96 @@ describe('createServer', () => {
   })
 
   describe('`server.start`', () => {
-    it('starts the server using [api].port in redwood.toml if none is specified', async () => {
-      const server = await createServer()
-      await server.start()
+    // Guaranteed cleanup, even when an assertion above throws — otherwise a
+    // failed assertion leaks the env vars and the still-listening server into
+    // later tests in this file.
+    let startedServer: Awaited<ReturnType<typeof createServer>> | undefined
+    const touchedEnvVars: string[] = []
 
-      const address = server.server.address()
+    function setEnvVar(name: string, value: string) {
+      touchedEnvVars.push(name)
+      process.env[name] = value
+    }
+
+    afterEach(async () => {
+      await startedServer?.close()
+      startedServer = undefined
+
+      touchedEnvVars.splice(0).forEach((name) => delete process.env[name])
+    })
+
+    it('starts the server using [api].port in redwood.toml if none is specified', async () => {
+      startedServer = await createServer()
+      await startedServer.start()
+
+      const address = startedServer.server.address()
 
       if (!address || typeof address === 'string') {
         throw new Error('No address or address is a string')
       }
 
       expect(address.port).toBe(getConfig().api.port)
-
-      await server.close()
     })
 
-    it('the `REDWOOD_API_PORT` env var takes precedence over [api].port', async () => {
-      process.env.REDWOOD_API_PORT = '8920'
+    it('the `CEDAR_API_PORT` env var takes precedence over [api].port', async () => {
+      setEnvVar('CEDAR_API_PORT', '8920')
 
-      const server = await createServer()
-      await server.start()
+      startedServer = await createServer()
+      await startedServer.start()
 
-      const address = server.server.address()
+      const address = startedServer.server.address()
 
       if (!address || typeof address === 'string') {
         throw new Error('No address or address is a string')
       }
 
-      expect(address.port).toBe(+process.env.REDWOOD_API_PORT)
+      expect(address.port).toBe(8920)
+    })
 
-      await server.close()
+    it('the deprecated `REDWOOD_API_PORT` env var still works', async () => {
+      setEnvVar('REDWOOD_API_PORT', '8921')
 
-      delete process.env.REDWOOD_API_PORT
+      startedServer = await createServer()
+      await startedServer.start()
+
+      const address = startedServer.server.address()
+
+      if (!address || typeof address === 'string') {
+        throw new Error('No address or address is a string')
+      }
+
+      expect(address.port).toBe(8921)
+    })
+
+    it('falls back to `PORT` — `createServer()` always serves the api on its own', async () => {
+      setEnvVar('PORT', '8922')
+
+      startedServer = await createServer()
+      await startedServer.start()
+
+      const address = startedServer.server.address()
+
+      if (!address || typeof address === 'string') {
+        throw new Error('No address or address is a string')
+      }
+
+      expect(address.port).toBe(8922)
+    })
+
+    it('the `CEDAR_API_PORT` env var takes precedence over `PORT`', async () => {
+      setEnvVar('CEDAR_API_PORT', '8923')
+      setEnvVar('PORT', '8924')
+
+      startedServer = await createServer()
+      await startedServer.start()
+
+      const address = startedServer.server.address()
+
+      if (!address || typeof address === 'string') {
+        throw new Error('No address or address is a string')
+      }
+
+      expect(address.port).toBe(8923)
     })
   })
 })
@@ -237,7 +295,9 @@ describe('resolveOptions', () => {
       // Can't really compare functions with toEqual() unless it's the same
       // reference. And when calling `getDefaulCreateServerOptions()` you get a
       // new function, and thus a new reference, each time
+      configureServer: resolvedOptions.configureServer,
       configureApiServer: resolvedOptions.configureApiServer,
+      configureGraphQLServer: resolvedOptions.configureGraphQLServer,
       fastifyServerOptions: {
         requestTimeout: defaults.fastifyServerOptions.requestTimeout,
         logger: defaults.logger,
@@ -248,8 +308,14 @@ describe('resolveOptions', () => {
       apiPort: defaults.apiPort,
     })
 
+    expect(resolvedOptions.configureServer.toString()).toEqual(
+      defaults.configureServer.toString(),
+    )
     expect(resolvedOptions.configureApiServer.toString()).toEqual(
       defaults.configureApiServer.toString(),
+    )
+    expect(resolvedOptions.configureGraphQLServer.toString()).toEqual(
+      defaults.configureGraphQLServer.toString(),
     )
   })
 

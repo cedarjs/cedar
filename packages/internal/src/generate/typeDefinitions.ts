@@ -6,13 +6,18 @@ import { SourceMapGenerator } from 'source-map'
 import { getPaths, processPagesDir } from '@cedarjs/project-config'
 
 import {
+  getCellGqlFragment,
   getCellGqlQuery,
   fileToAst,
   getDefaultExportLocation,
   getNamedExports,
 } from '../ast.js'
 import { findCells, findDirectoryNamedModules } from '../files.js'
-import { parseGqlQueryToAst } from '../gql.js'
+import {
+  parseGqlFragmentName,
+  parseGqlFragmentPropName,
+  parseGqlQueryToAst,
+} from '../gql.js'
 import { getJsxElements } from '../jsx.js'
 
 import {
@@ -171,6 +176,13 @@ export const generateMirrorCell = (p: string, rwjsPaths = getPaths()) => {
 
   const fileContents = fileToAst(p)
   const cellQuery = getCellGqlQuery(fileContents)
+  const cellFragment = cellQuery ? undefined : getCellGqlFragment(fileContents)
+  const cellFragmentName = cellFragment
+    ? parseGqlFragmentName(cellFragment)
+    : undefined
+  const cellFragmentPropName = cellFragment
+    ? parseGqlFragmentPropName(cellFragment)
+    : undefined
 
   if (cellQuery) {
     const gqlDoc = parseGqlQueryToAst(cellQuery)[0]
@@ -179,6 +191,18 @@ export const generateMirrorCell = (p: string, rwjsPaths = getPaths()) => {
       name,
       queryResultType: `${gqlDoc?.name}`,
       queryVariablesType: `${gqlDoc?.name}Variables`,
+    })
+  } else if (cellFragmentName && cellFragmentPropName) {
+    // Fragment Cells don't have a QUERY. They receive their data through the
+    // prop named after their fragment instead, typed by the fragment they
+    // export.
+    // graphql-codegen is configured with `namingConvention: 'keep'` and
+    // `omitOperationSuffix: true`, so the generated type is named exactly
+    // like the fragment
+    writeTemplate('templates/mirror-cell-fragment.d.ts.template', typeDefPath, {
+      name,
+      fragmentType: cellFragmentName,
+      fragmentPropName: cellFragmentPropName,
     })
   } else {
     // If for some reason we can't parse the query, generated the mirror cell anyway
@@ -391,10 +415,10 @@ export const generateTypeDefGlobalContext = () => {
  */
 export const generateViteClientTypesDirective = () => {
   const viteClientDirective = `/// <reference types="vite/client" />`
-  const redwoodProjectPaths = getPaths()
+  const cedarProjectPaths = getPaths()
 
   const viteClientDirectivePath = path.join(
-    redwoodProjectPaths.generated.types.includes,
+    cedarProjectPaths.generated.types.includes,
     'web-vite-client.d.ts',
   )
   fs.writeFileSync(viteClientDirectivePath, viteClientDirective)
@@ -410,13 +434,10 @@ declare module '@storybook/react' {
 }
 `
 
-  const redwoodProjectPaths = getPaths()
+  const cedarProjectPaths = getPaths()
 
   const packageJson = JSON.parse(
-    fs.readFileSync(
-      path.join(redwoodProjectPaths.base, 'package.json'),
-      'utf-8',
-    ),
+    fs.readFileSync(path.join(cedarProjectPaths.base, 'package.json'), 'utf-8'),
   )
 
   const hasCliStorybookVite = Object.keys(
@@ -428,7 +449,7 @@ declare module '@storybook/react' {
   }
 
   const stubStorybookTypesFilePath = path.join(
-    redwoodProjectPaths.generated.types.includes,
+    cedarProjectPaths.generated.types.includes,
     'web-storybook.d.ts',
   )
   fs.writeFileSync(stubStorybookTypesFilePath, stubStorybookTypesFileContent)

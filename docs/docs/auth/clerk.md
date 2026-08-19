@@ -4,7 +4,7 @@ sidebar_label: Clerk
 
 # Clerk Authentication
 
-:::warning Did you set up Clerk a while ago?
+:::warning[Did you set up Clerk a while ago?]
 
 If you set up Clerk a while ago, you may be using a deprecated `authDecoder` that's subject to rate limiting.
 This decoder will be removed in the next major.
@@ -16,7 +16,7 @@ See the [migration guide](https://github.com/redwoodjs/redwood/releases/tag/v5.3
 To get started, run the setup command:
 
 ```text
-yarn rw setup auth clerk
+yarn cedar setup auth clerk
 ```
 
 This installs all the packages, writes all the files, and makes all the code modifications you need.
@@ -27,7 +27,7 @@ If you don't have a Clerk account yet, now's the time to make one: navigate to h
 The defaults are good enough to get us going, but feel free to configure things as you wish.
 We'll get the application's API keys from its dashboard next.
 
-:::note we'll only focus on the development instance
+:::note[we'll only focus on the development instance]
 
 By default, Clerk applications have two instances, "Development" and "Production".
 We'll only focus on the "Development" instance here, which is used for local development.
@@ -58,7 +58,7 @@ That should be enough; now, things should just work.
 Let's make sure: if this is a brand new project, generate a home page:
 
 ```bash
-yarn rw g page Home /
+yarn cedar g page Home /
 ```
 
 There we'll try to sign up by destructuring `signUp` from the `useAuth` hook (import that from `'src/auth'`). We'll also destructure and display `isAuthenticated` to see if it worked:

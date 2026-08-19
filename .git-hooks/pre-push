@@ -1,0 +1,2 @@
+#!/bin/sh
+node tasks/git-hooks/pre-push.mts

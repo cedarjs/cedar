@@ -1,13 +1,13 @@
 {
   "name": "@cedarjs/server-store",
-  "version": "4.1.0",
+  "version": "5.0.6",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
     "directory": "packages/server-store"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "exports": {
     "types": "./dist/serverStore.d.ts",
     "default": "./dist/serverStore.js"
@@ -17,19 +17,18 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts && run build:types",
+    "build": "node ./build.mts && run build:types",
     "build:pack": "yarn pack -o cedarjs-server-store.tgz",
     "build:types": "tsc --build --verbose"
   },
   "dependencies": {
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/cookie-jar": "workspace:*",
-    "esbuild": "0.27.7",
+    "esbuild": "0.28.2",
     "fast-glob": "3.3.3"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "tsx": "4.21.0",
     "typescript": "5.9.3"
   },
   "engines": {

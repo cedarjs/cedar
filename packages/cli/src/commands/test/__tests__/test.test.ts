@@ -13,6 +13,10 @@ vi.mock('execa', () => ({
   })),
 }))
 
+vi.mock('@cedarjs/project-config/packageManager', () => ({
+  getPackageManager: vi.fn(() => 'yarn'),
+}))
+
 import { handler } from '../testHandler.js'
 
 vi.mock('@cedarjs/structure', () => {
@@ -84,7 +88,7 @@ test('Runs tests for all available sides if no side filter passed', async () => 
 test('Runs tests specified side if even with additional filters', async () => {
   await handler({ ...defaultOptions, filter: ['web', 'bazinga'] })
 
-  expect(vi.mocked(execa).mock.results[0].value.cmd).not.toBe('yarn rw')
+  expect(vi.mocked(execa).mock.results[0].value.cmd).toBe('yarn')
   expect(vi.mocked(execa).mock.results[0].value.params).not.toContain('api')
 
   expect(vi.mocked(execa).mock.results[0].value.cmd).toBe('yarn')

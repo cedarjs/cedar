@@ -7,7 +7,8 @@ import type {
 import * as cookie from 'cookie'
 import { parse } from 'picoquery'
 
-import { getAuthenticationContext } from './auth/index.js'
+import { getAuthenticationContext, hasAuthDecoder } from './auth/index.js'
+import { requestToBaseEvent } from './transforms.js'
 
 export interface CedarRequestContext {
   params: Record<string, string>
@@ -97,11 +98,23 @@ export async function buildCedarContext(
   )
   const params = options.params ?? {}
 
-  const serverAuthState = await getAuthenticationContext({
-    authDecoder: options.authDecoder,
-    event: request,
-    context: options.lambdaContext,
-  })
+  // Only GraphQL consumes `serverAuthState`, and it's the only caller that
+  // supplies an auth decoder. Computing it for plain function routes is wasted
+  // work — without a decoder nothing can be decoded, so the payload could only
+  // ever come back with `decoded` set to `null` — and it lets `Authorization`
+  // header parse errors escape and turn requests to functions that don't use
+  // auth at all into 500s.
+  //
+  // This is also the only place auth state is resolved. It runs before the
+  // GraphQL server reads the request body, which is what keeps building the
+  // Lambda-style event here safe.
+  const serverAuthState = hasAuthDecoder(options.authDecoder)
+    ? await getAuthenticationContext({
+        authDecoder: options.authDecoder,
+        event: request,
+        context: options.lambdaContext,
+      })
+    : undefined
 
   return {
     params,
@@ -155,8 +168,7 @@ export async function requestToLegacyEvent(
   ctx: CedarRequestContext,
 ): Promise<APIGatewayProxyEvent> {
   const url = new URL(request.url)
-  const bodyText = await request.clone().text()
-  const headers = Object.fromEntries(request.headers.entries())
+  const base = await requestToBaseEvent(request)
   // @ts-expect-error - picoquery returns nested objects and arrays for
   // bracket-notation params (e.g. ids[]=1&ids[]=2, user[name]=alice).
   // APIGatewayProxyEventQueryStringParameters is too narrow for this richer
@@ -169,47 +181,10 @@ export async function requestToLegacyEvent(
     })
 
   return {
-    body: bodyText || null,
-    headers,
-    multiValueHeaders: toMultiValueHeaders(request.headers) ?? {},
-    httpMethod: request.method,
-    isBase64Encoded: false,
-    path: url.pathname,
-    pathParameters: Object.keys(ctx.params).length > 0 ? ctx.params : null,
+    ...base,
     queryStringParameters,
-    multiValueQueryStringParameters: toMultiValueQueryStringParameters(url),
-    stageVariables: null,
-    requestContext: {
-      accountId: 'cedar',
-      apiId: 'cedar',
-      authorizer: undefined,
-      protocol: 'HTTP/1.1',
-      identity: {
-        accessKey: null,
-        accountId: null,
-        apiKey: null,
-        apiKeyId: null,
-        caller: null,
-        clientCert: null,
-        cognitoAuthenticationProvider: null,
-        cognitoAuthenticationType: null,
-        cognitoIdentityId: null,
-        cognitoIdentityPoolId: null,
-        principalOrgId: null,
-        sourceIp: '',
-        user: null,
-        userAgent: request.headers.get('user-agent'),
-        userArn: null,
-      },
-      path: url.pathname,
-      stage: '',
-      requestId: 'cedar-request',
-      requestTimeEpoch: Date.now(),
-      resourceId: 'cedar',
-      resourcePath: url.pathname,
-      httpMethod: request.method,
-    },
-    resource: url.pathname,
+    pathParameters:
+      Object.keys(ctx.params).length > 0 ? ctx.params : base.pathParameters,
   }
 }
 
@@ -244,53 +219,27 @@ export function legacyResultToResponse(result: LegacyHandlerResult): Response {
     }
   }
 
-  const body = result.body ?? ''
+  const status = result.statusCode ?? 200
 
-  if (result.isBase64Encoded) {
-    return new Response(Buffer.from(body, 'base64'), {
-      status: result.statusCode ?? 200,
+  // The `Response` constructor throws a TypeError if a "null body status" is
+  // given a non-null body. Per the WHATWG Fetch spec those statuses are 101,
+  // 103, 204, 205 and 304. The 1xx ones are unreachable here because the same
+  // constructor throws a RangeError for any status outside 200-599.
+  // See: https://fetch.spec.whatwg.org/#null-body-status and
+  // https://fetch.spec.whatwg.org/#response-class ('If init["status"] is not in
+  // the range 200 to 599, inclusive, then throw a RangeError.')
+  const isNoBodyStatus = status === 204 || status === 205 || status === 304
+  const body = isNoBodyStatus ? null : (result.body ?? '')
+
+  if (result.isBase64Encoded && !isNoBodyStatus) {
+    return new Response(Buffer.from(body || '', 'base64'), {
+      status,
       headers,
     })
   }
 
   return new Response(body, {
-    status: result.statusCode ?? 200,
+    status,
     headers,
   })
-}
-
-function toMultiValueHeaders(
-  headers: Headers,
-): Record<string, string[]> | null {
-  const values = new Map<string, string[]>()
-
-  for (const [name, value] of headers.entries()) {
-    const existing = values.get(name) ?? []
-    existing.push(value)
-    values.set(name, existing)
-  }
-
-  if (values.size === 0) {
-    return null
-  }
-
-  return Object.fromEntries(values.entries())
-}
-
-function toMultiValueQueryStringParameters(
-  url: URL,
-): Record<string, string[]> | null {
-  const values = new Map<string, string[]>()
-
-  for (const [name, value] of url.searchParams.entries()) {
-    const existing = values.get(name) ?? []
-    existing.push(value)
-    values.set(name, existing)
-  }
-
-  if (values.size === 0) {
-    return null
-  }
-
-  return Object.fromEntries(values.entries())
 }

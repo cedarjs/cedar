@@ -3,7 +3,7 @@
 Let's see what this Storybook thing is all about. Run this command to start up the Storybook server (you could stop your dev or test runners and then run this, or start another new terminal instance):
 
 ```bash
-yarn rw storybook
+yarn cedar storybook
 ```
 
 After some compiling you should get a message saying that Storybook has started and it's available at [http://localhost:7910](http://localhost:7910)
@@ -105,7 +105,7 @@ Components
 
 This makes it easy to create variants of your component and have them all displayed together.
 
-:::info Where did that sample blog post data come from?
+:::info[Where did that sample blog post data come from?]
 
 In your actual app you'd use this component like so:
 

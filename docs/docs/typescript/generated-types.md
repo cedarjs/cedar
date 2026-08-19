@@ -7,15 +7,15 @@ description: A look at automatic type generation in Cedar
 To add to the TypeScript (and JavaScript!) experience, Cedar generates types for you.
 These generated types not only include your GraphQL operations, but also your named routes, Cells, scenarios, and tests.
 
-When you run `yarn rw dev`, the CLI watches files for changes and triggers type generation automatically, but you can trigger it manually too:
+When you run `yarn cedar dev`, the CLI watches files for changes and triggers type generation automatically, but you can trigger it manually too:
 
 ```shell
-yarn rw g types
+yarn cedar g types
 # or
-# yarn redwood generate types
+# yarn cedar generate types
 ```
 
-:::tip Getting errors trying to generate types?
+:::tip[Getting errors trying to generate types?]
 
 If you're getting errors trying to generate types, it's worth checking the GraphQL operations in your Cells and SDLs.
 Make sure that they're syntactically valid, and that every query and mutation on the web side is defined in an `*.sdl.js` file on the api side.
@@ -51,9 +51,9 @@ const getCurrentUser = ({ decoded }): MyCurrentUser => {
 
 The types for both `useAuth().currentUser` on the web side and `context.currentUser` on the api side will be the same—the `MyCurrentUser` interface.
 
-:::info Type of `context.currentUser` unknown?
+:::info[Type of `context.currentUser` unknown?]
 This usually happens when you don't have the various generated and utility types in your project.
-Run `yarn rw g types`, and just to be sure, restart your TS server.
+Run `yarn cedar g types`, and just to be sure, restart your TS server.
 In VSCode, you can do this by running "TypeScript: Restart TS server" in the command palette (Cmd+Shift+P on Mac, Ctrl+Shift+P on Windows)
 :::
 
@@ -120,7 +120,7 @@ If the type doesn't match your Prisma models (by name), the TypeScript type will
 
 The resolver types help you by making sure you're returning an object in the shape of what you've defined in your SDL.
 
-:::note A note on union types
+:::note[A note on union types]
 
 Lets say that in one of your SDLs, you define a union type
 
@@ -149,7 +149,7 @@ Cedar uses [GraphQL Code Generator](https://www.graphql-code-generator.com) (aka
 
 While the default settings are configured so that things just work️, you can customize them to your liking by adding a `./codegen.yml` file to the root of your project.
 
-:::info Curious about the defaults?
+:::info[Curious about the defaults?]
 
 You can find them [here](https://github.com/cedarjs/cedar/blob/main/packages/internal/src/generate/graphqlCodeGen.ts) in Cedar's source. Look for the `generateTypeDefGraphQLWeb` and `generateTypeDefGraphQLApi` functions.
 
@@ -176,7 +176,7 @@ There is also an experimental code generator based on [sdl-codegen](https://gith
   useSDLCodeGenForGraphQLTypes = true
 ```
 
-Running `yarn rw g types` will generate types for your resolvers on a per-file basis, this feature can be paired with the optional eslint auto-fix rule to have types automatically applied to your resolvers in TypeScript service files by editing your root `package.json` with:
+Running `yarn cedar g types` will generate types for your resolvers on a per-file basis, this feature can be paired with the optional eslint auto-fix rule to have types automatically applied to your resolvers in TypeScript service files by editing your root `package.json` with:
 
 ```diff title="package.json"
    "eslintConfig": {
@@ -198,7 +198,7 @@ Running `yarn rw g types` will generate types for your resolvers on a per-file b
    },
 ```
 
-:::tip Using VSCode?
+:::tip[Using VSCode?]
 
 As a part of type generation, the extension [GraphQL: Language Feature Support](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql) configures itself based on the merged schema Cedar generates in `.cedar/schema.graphql`.
 You can configure it further in `graphql.config.cjs` at the root of your project.

@@ -1,4 +1,4 @@
-import { build, defaultBuildOptions } from './framework-tools.js'
+import { build, defaultBuildOptions } from './framework-tools.ts'
 
 await build({
   buildOptions: {

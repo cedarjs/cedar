@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/core",
-  "version": "4.1.0",
+  "version": "5.0.6",
   "description": "Foundational packages and config required to build CedarJS",
   "repository": {
     "type": "git",
@@ -42,19 +42,18 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts",
+    "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-core.tgz",
     "check:package": "yarn publint",
     "prepublishOnly": "NODE_ENV=production yarn build"
   },
   "dependencies": {
-    "@babel/cli": "7.28.6",
     "@cedarjs/api-server": "workspace:*",
+    "@cedarjs/api-server-watch": "workspace:*",
     "@cedarjs/cli": "workspace:*",
-    "@cedarjs/eslint-config": "workspace:*",
     "@cedarjs/internal": "workspace:*",
-    "@cedarjs/project-config": "workspace:*",
-    "@cedarjs/testing": "workspace:*",
+    "@cedarjs/jobs": "workspace:*",
+    "@cedarjs/vite": "workspace:*",
     "@cedarjs/web-server": "workspace:*",
     "graphql-tag": "2.12.6",
     "nodemon": "3.1.14",
@@ -62,8 +61,7 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "publint": "0.3.18",
-    "tsx": "4.21.0"
+    "publint": "0.3.23"
   },
   "engines": {
     "node": ">=24"

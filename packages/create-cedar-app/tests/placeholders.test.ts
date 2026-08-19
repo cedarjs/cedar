@@ -16,7 +16,7 @@ vi.mock('node:fs', async () => {
   async function* glob(
     ...args: Parameters<typeof memfs.promises.glob>
   ): AsyncGenerator<string> {
-    yield* await (memfs.promises.glob(...args) as unknown as Promise<string[]>)
+    yield* await memfs.promises.glob(...args)
   }
 
   const patchedPromises = { ...memfs.promises, glob }

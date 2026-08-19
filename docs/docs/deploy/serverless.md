@@ -27,7 +27,7 @@ We'll handle most of the deployment commands for you, you just need an [AWS acco
 One command will set you up with (almost) everything you need:
 
 ```bash
-yarn rw setup deploy serverless
+yarn cedar setup deploy serverless
 ```
 
 As you'll see mentioned in the post-install instructions, you'll need to provide your AWS Access and AWS Secret Access keys. Add those to the designated places in your `.env` file:
@@ -46,7 +46,7 @@ Make sure you don't check `.env` into your repo! It's set in `.gitignore` by def
 You'll need to add a special flag to the deploy command for your first deploy:
 
 ```bash
-yarn rw deploy serverless --first-run
+yarn cedar deploy serverless --first-run
 ```
 
 The first time you deploy your app we'll first deploy just the API side. Once it's live we can get the URL that it's been deployed to and add that as an environment variable `API_URL` so that web side will know what it is during build-time (it needs to know where to send GraphQL and function requests).
@@ -63,7 +63,7 @@ Once that command completes you should see a message including the URL of your s
 
 ## Subsequent Deploys
 
-From now on you can simply run `yarn rw deploy serverless` when you're ready to deploy (which will also be much faster).
+From now on you can simply run `yarn cedar deploy serverless` when you're ready to deploy (which will also be much faster).
 
 :::info
 Remember, if you add or generate new serverless functions (or endpoints), you'll need to update the configuration in your serverless.yml in `./api/serverless.yml`.
@@ -98,7 +98,7 @@ By default we assume you want to deploy to a production environment, but Serverl
 Once configured, just add the stage to your deploy command:
 
 ```bash
-yarn rw deploy serverless --stage qa
+yarn cedar deploy serverless --stage qa
 ```
 
 ## Removing Your Deploy
@@ -111,12 +111,12 @@ You'll need to run this command in both the `api` and `web` directories:
 yarn serverless remove --stage production
 ```
 
-Note that `production` is the default stage when you deploy with `yarn rw serverless deploy` - if you have customized this, you have to use the same stage as you deployed with!
+Note that `production` is the default stage when you deploy with `yarn cedar serverless deploy` - if you have customized this, you have to use the same stage as you deployed with!
 
 This will take several minutes, so grab your favorite beverage and enjoy your new $0 monthly bill!
 
-:::tip Pro tip
-If you get tired of typing `serverless` each time, you can use the much shorter `sls` alias: `yarn rw deploy sls`
+:::tip[Pro tip]
+If you get tired of typing `serverless` each time, you can use the much shorter `sls` alias: `yarn cedar deploy sls`
 :::
 
 ## Troubleshooting

@@ -1,10 +1,13 @@
 export { useArmor } from './useArmor.js'
-export { useRedwoodAuthContext } from './useRedwoodAuthContext.js'
-export { useRedwoodDirective } from './useRedwoodDirective.js'
-export { useRedwoodError } from './useRedwoodError.js'
-export { useRedwoodGlobalContextSetter } from './useRedwoodGlobalContextSetter.js'
-export { useRedwoodLogger } from './useRedwoodLogger.js'
-export { useRedwoodTrustedDocuments } from './useRedwoodTrustedDocuments.js'
+export { useCedarAuthContext } from './useCedarAuthContext.js'
+export {
+  useCedarDirective,
+  useRedwoodDirective,
+} from './useRedwoodDirective.js'
+export { useCedarError } from './useCedarError.js'
+export { useCedarGlobalContextSetter } from './useCedarGlobalContextSetter.js'
+export { useCedarLogger } from './useCedarLogger.js'
+export { useCedarTrustedDocuments } from './useCedarTrustedDocuments.js'
 
-export { useRedwoodPopulateContext } from './useRedwoodPopulateContext.js'
-export { useRedwoodOpenTelemetry } from './useRedwoodOpenTelemetry.js'
+export { useCedarPopulateContext } from './useCedarPopulateContext.js'
+export { useCedarOpenTelemetry } from './useCedarOpenTelemetry.js'

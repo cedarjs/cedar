@@ -92,6 +92,23 @@ export async function getPrismaSchemas() {
 }
 
 /**
+ * Gets the active datasource provider (e.g. `postgresql`, `mysql`, `sqlite`)
+ * configured in the project's `schema.prisma`.
+ */
+export async function getPrismaDatasourceProvider(): Promise<string> {
+  const mod = await import('@prisma/internals')
+  // `mod.default || mod` handles ESM vs CJS interop: in ESM context
+  // @prisma/internals resolves everything onto `default`, in CJS it's
+  // directly on the module object.
+  const { getConfig } = mod.default || mod
+
+  const { schemas } = await getPrismaSchemas()
+  const config = await getConfig({ datamodel: schemas })
+
+  return config.datasources[0].activeProvider
+}
+
+/**
  * Gets the migrations path from Prisma config.
  * Defaults to 'migrations' in the same directory as the schema.
  *

@@ -3,11 +3,9 @@
 // Framework main config is in monorepo root ./eslint.config.js
 
 import jsxA11yPlugin from 'eslint-plugin-jsx-a11y'
-import reactCompilerPlugin from 'eslint-plugin-react-compiler'
 import globals from 'globals'
 
 import {
-  getCommonPlugins,
   getApiSideDefaultBabelConfig,
   getWebSideDefaultBabelConfig,
 } from '@cedarjs/babel-config'
@@ -17,9 +15,11 @@ import { getConfig, isTypeScriptProject } from '@cedarjs/project-config'
 import sharedConfigs from './shared.mjs'
 
 // Note: This config is async to support getConfig()
+/** @returns {Promise<import('eslint').Linter.FlatConfig[]>} */
 export default async function createConfig() {
   const config = await getConfig()
 
+  /** @returns {import('@babel/core').TransformOptions} */
   const getProjectBabelOptions = () => {
     // We can't nest the web overrides inside the overrides block
     // So we just take it out and put it as a separate item
@@ -34,7 +34,7 @@ export default async function createConfig() {
       getApiSideDefaultBabelConfig()
 
     return {
-      plugins: getCommonPlugins(),
+      plugins: [],
       overrides: [
         {
           test: ['./api/', './scripts/'],
@@ -55,6 +55,8 @@ export default async function createConfig() {
   const reactCompilerEnabled =
     config.experimental?.reactCompiler?.enabled ?? false
   if (reactCompilerEnabled) {
+    const { default: reactCompilerPlugin } =
+      await import('eslint-plugin-react-compiler')
     plugins['react-compiler'] = reactCompilerPlugin
     rules['react-compiler/react-compiler'] = 2
   }
@@ -153,6 +155,21 @@ export default async function createConfig() {
         require: 'readonly',
       },
       sourceType: 'module',
+    },
+  })
+
+  // Cell type annotations. The rule requires both the `*Cell.tsx` filename
+  // convention and a QUERY/FRAGMENT export alongside a Success export before
+  // it treats a file as a Cell. `.jsx` is excluded: it's plain
+  // JavaScript-project output with no build step that strips TypeScript
+  // syntax, so the rule's fixes don't apply there.
+  configs.push({
+    files: ['web/src/**/*Cell.tsx'],
+    plugins: {
+      '@cedarjs': cedarjsPlugin,
+    },
+    rules: {
+      '@cedarjs/cell-type-annotations': 'off',
     },
   })
 

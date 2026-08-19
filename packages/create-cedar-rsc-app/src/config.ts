@@ -1,4 +1,4 @@
-import { ExitCodeError } from './error.js'
+import { ExitCodeError } from './error.ts'
 
 export interface Config {
   installationDir: string

@@ -168,19 +168,19 @@ All this gets us closer to Cedar's goal of being able to deploy to a "generic co
 
 ## Client-side
 
-### RedwoodApolloProvider
+### CedarApolloProvider
 
-By default, Cedar Apps come ready-to-query with the `RedwoodApolloProvider`. As you can tell from the name, this Provider wraps [ApolloProvider](https://www.apollographql.com/docs/react/api/react/hooks/#the-apolloprovider-component). Omitting a few things, this is what you'll normally see in Cedar Apps:
+By default, Cedar Apps come ready-to-query with the `CedarApolloProvider`. As you can tell from the name, this Provider wraps [ApolloProvider](https://www.apollographql.com/docs/react/api/react/hooks/#the-apolloprovider-component). Omitting a few things, this is what you'll normally see in Cedar Apps:
 
 ```jsx title="web/src/App.js"
-import { RedwoodApolloProvider } from '@cedarjs/web/apollo'
+import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 // ...
 
 const App = () => (
-  <RedwoodApolloProvider>
+  <CedarApolloProvider>
     <Routes />
-  </RedwoodApolloProvider>
+  </CedarApolloProvider>
 )
 
 // ...
@@ -215,7 +215,7 @@ Note that you're free to use any of Apollo's other hooks, you'll just have to im
 
 ### Customizing the Apollo Client and Cache
 
-By default, `RedwoodApolloProvider` configures an `ApolloClient` instance with 1) a default instance of `InMemoryCache` to cache responses from the GraphQL API and 2) an `authMiddleware` to sign API requests for use with [Cedar's built-in auth](authentication.md). Beyond the `cache` and `link` params, which are used to set up that functionality, you can specify additional params to be passed to `ApolloClient` using the `graphQLClientConfig` prop. The full list of available configuration options for the client are [documented here on Apollo's site](https://www.apollographql.com/docs/react/api/core/ApolloClient/#options).
+By default, `CedarApolloProvider` configures an `ApolloClient` instance with 1) a default instance of `InMemoryCache` to cache responses from the GraphQL API and 2) an `authMiddleware` to sign API requests for use with [Cedar's built-in auth](authentication.md). Beyond the `cache` and `link` params, which are used to set up that functionality, you can specify additional params to be passed to `ApolloClient` using the `graphQLClientConfig` prop. The full list of available configuration options for the client are [documented here on Apollo's site](https://www.apollographql.com/docs/react/api/core/ApolloClient/#options).
 
 Depending on your use case, you may want to configure `InMemoryCache`. For example, you may need to specify a type policy to change the key by which a model is cached or to enable pagination on a query. [This article from Apollo](https://www.apollographql.com/docs/react/caching/cache-configuration/) explains in further detail why and how you might want to do this.
 
@@ -224,7 +224,7 @@ To configure the cache when it's created, use the `cacheConfig` property on `gra
 For example, if you have a query named `search` that supports [Apollo's offset pagination](https://www.apollographql.com/docs/react/pagination/core-api/), you could enable it by specifying:
 
 ```jsx
-<RedwoodApolloProvider graphQLClientConfig={{
+<CedarApolloProvider graphQLClientConfig={{
   cacheConfig: {
     typePolicies: {
       Query: {
@@ -239,18 +239,6 @@ For example, if you have a query named `search` that supports [Apollo's offset p
   }
 }}>
 ```
-
-### Swapping out the RedwoodApolloProvider
-
-As long as you're willing to do a bit of configuring yourself, you can swap out `RedwoodApolloProvider` with your GraphQL Client of choice. You'll just have to get to know a bit of the make up of the [RedwoodApolloProvider](https://github.com/cedarjs/cedar/blob/main/packages/web/src/apollo/index.tsx#L71-L84); it's actually composed of a few more Providers and hooks:
-
-- `FetchConfigProvider`
-- `useFetchConfig`
-- `GraphQLHooksProvider`
-
-For an example of configuring your own GraphQL Client, see the [redwoodjs-react-query-provider](https://www.npmjs.com/package/redwoodjs-react-query-provider). If you were thinking about using [react-query](https://react-query.tanstack.com/), you can also just go ahead and install it!
-
-Note that if you don't import `RedwoodApolloProvider`, it won't be included in your bundle, dropping your bundle size quite a lot!
 
 ## Server-side
 
@@ -286,7 +274,7 @@ model User {
 }
 ```
 
-If you create your Services for this model using Cedar's generator (`yarn rw g service user`), your Services will look like this:
+If you create your Services for this model using Cedar's generator (`yarn cedar g service user`), your Services will look like this:
 
 ```jsx title="api/src/services/user/user.js"
 import { db } from 'src/lib/db'
@@ -416,7 +404,7 @@ export const handler = createGraphQLHandler({
 
 ### The Root Schema
 
-Did you know that you can query `redwood`? Try it in the GraphQL Playground (you can find the GraphQL Playground at http://localhost:8911/graphql when your dev server is running&mdash;`yarn rw dev api`):
+Did you know that you can query `redwood`? Try it in the GraphQL Playground (you can find the GraphQL Playground at http://localhost:8911/graphql when your dev server is running&mdash;`yarn cedar dev api`):
 
 ```graphql
 query {
@@ -584,7 +572,7 @@ For local development,
 with the proxy using `curl` from the command line:
 
 ```bash
-curl "http://localhost:8910/.redwood/functions/graphql/health" -i
+curl "http://localhost:8910/.api/functions/graphql/health" -i
 ```
 
 or by directly invoking the graphql function:
@@ -616,7 +604,7 @@ To perform a readiness check, make a HTTP GET request to the `/graphql/readiness
 For local development, you can make a request to the proxy:
 
 ```bash
-curl "http://localhost:8910/.redwood/functions/graphql/readiness" \
+curl "http://localhost:8910/.api/functions/graphql/readiness" \
   -H 'x-yoga-id: yoga' \
   -i
 ```
@@ -651,7 +639,7 @@ If any fail this check, you will see:
 
 ### Build-time Verification
 
-When building via the `yarn rw build` command and the SDL fails verification, you will see output that lists each query or mutation missing the directive:
+When building via the `yarn cedar build` command and the SDL fails verification, you will see output that lists each query or mutation missing the directive:
 
 ```bash
 ✔ Generating Prisma Client...
@@ -674,7 +662,7 @@ You must specify one of @requireAuth, @skipAuth or a custom directive for
 
 ### Dev Server Verification
 
-When launching the dev server via the `yarn rw dev` command, you will see output that lists each query or mutation missing the directive:
+When launching the dev server via the `yarn cedar dev` command, you will see output that lists each query or mutation missing the directive:
 
 ```bash
 gen | Generating TypeScript definitions and GraphQL schemas...
@@ -2258,7 +2246,7 @@ When used with `--docs` option, [SDL generator](cli-commands#generate-sdl) adds 
 By default, the `--docs` option to the SDL generator is false and comments are not created.
 :::
 
-Comments [enclosed in `"""` or `"`]([GraphQL spec](https://spec.graphql.org/October2021/#sec-Descriptions) in your sdl files will be included in the generated GraphQL schema at the root of your project (.redwood/schema.graphql).
+Comments [enclosed in `"""` or `"`]([GraphQL spec](https://spec.graphql.org/October2021/#sec-Descriptions) in your sdl files will be included in the generated GraphQL schema at the root of your project (.cedar/schema.graphql).
 
 ```
 """
@@ -2466,7 +2454,7 @@ mkdir docs/graphql-api // if needed
     [
       '@graphql-markdown/docusaurus',
       {
-        schema: '../.redwood/schema.graphql',
+        schema: '../.cedar/schema.graphql',
         rootPath: './docs',
         baseURL: 'graphql-api',
         linkRoot: '../..',

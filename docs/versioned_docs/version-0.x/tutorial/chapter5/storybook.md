@@ -105,7 +105,7 @@ Components
 
 This makes it easy to create variants of your component and have them all displayed together.
 
-:::info Where did that sample blog post data come from?
+:::info[Where did that sample blog post data come from?]
 
 In your actual app you'd use this component like so:
 

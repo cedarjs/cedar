@@ -23,7 +23,7 @@ Before getting started, there are a few steps you should have completed:
 - [Create a Netlify account](https://www.netlify.com/)
 - [Deploy your Netlify site](../tutorial/chapter4/deployment.md)
 - [Enable Netlify Identity](#enable-netlify-identity)
-- Fire up a dev server: `yarn redwood dev`
+- Fire up a dev server: `yarn cedar dev`
 
 ### Enable Netlify Identity
 
@@ -38,7 +38,7 @@ Now you should see an Identity API endpoint, e.g. `https://my-bodacious-app.netl
 Let's start by installing the required packages and generating boilerplate code and files for Cedar Auth, all with this simple [CLI command](../cli-commands.md#setup-auth):
 
 ```bash
-yarn redwood setup auth goTrue
+yarn cedar setup auth goTrue
 ```
 
 By specifying `goTrue` as the provider, Cedar automatically added the necessary GoTrue-JS config to our App.js. Let's open up `web/src/App.js` and inspect. You should see:
@@ -47,7 +47,7 @@ By specifying `goTrue` as the provider, Cedar automatically added the necessary 
 import { AuthProvider } from '@cedarjs/auth'
 import GoTrue from 'gotrue-js'
 import { FatalErrorBoundary } from '@cedarjs/web'
-import { RedwoodApolloProvider } from '@cedarjs/web/apollo'
+import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 import FatalErrorPage from 'src/pages/FatalErrorPage'
 import Routes from 'src/Routes'
@@ -62,9 +62,9 @@ const goTrueClient = new GoTrue({
 const App = () => (
   <FatalErrorBoundary page={FatalErrorPage}>
     <AuthProvider client={goTrueClient} type="goTrue">
-      <RedwoodApolloProvider>
+      <CedarApolloProvider>
         <Routes />
-      </RedwoodApolloProvider>
+      </CedarApolloProvider>
     </AuthProvider>
   </FatalErrorBoundary>
 )
@@ -106,7 +106,7 @@ Nicely done. Now, back to our app.
 Let's generate a Sign Up page:
 
 ```bash
-yarn redwood generate page Signup
+yarn cedar generate page Signup
 ```
 
 This adds a Signup [route](../router.md#router-and-route) to our routes file and creates a SignupPage component.
@@ -260,7 +260,7 @@ Now we can handle a successful submission. Once a user has signed up, we should 
 Start by [generating](../cli-commands.md#generate-page) a sign in page:
 
 ```bash
-yarn redwood generate page Signin
+yarn cedar generate page Signin
 ```
 
 Back in our `SignupPage`, let's import `routes` and `navigate` from [Cedar Router](../router.md#navigate) and use them to redirect on successful sign up:
@@ -399,7 +399,7 @@ export default SigninPage
 Now then, upon a successful login let's redirect our user back to the home page. First, [generate](../cli-commands.md#generate-page) a homepage (if you haven't already):
 
 ```bash
-yarn redwood generate page Home /
+yarn cedar generate page Home /
 ```
 
 In our `SigninPage`, import `navigate` and `routes` from [`@cedarjs/router`](../router.md) and add them to the `then` function:
@@ -445,7 +445,7 @@ Sign out is by far the easiest auth functionality to implement: all we need to d
 Let's start by [generating a component](../cli-commands.md#generate-component) to house our Sign Out Button:
 
 ```bash
-yarn redwood generate component SignoutBtn
+yarn cedar generate component SignoutBtn
 ```
 
 In the `web/src/components/SignoutBtn/SignoutBtn.js` file we just generated, let's render a button and add a click handler:
@@ -510,7 +510,7 @@ Here we'll implement some auth-related navigation that conditionally renders the
 Let's start by [generating a navigation component](../cli-commands.md#generate-component):
 
 ```bash
-yarn redwood generate component Navigation
+yarn cedar generate component Navigation
 ```
 
 This creates `web/src/components/Navigation/Navigation.js`. In that file, let's import [the `Link` component and the `routes` object](../router.md#link-and-named-route-functions) from `@cedarjs/router`.
@@ -581,7 +581,7 @@ export default Navigation
 We have a working navigation component, but we still need to render it somewhere. Let's [generate a layout](../cli-commands.md#generate-layout) called GlobalLayout:
 
 ```bash
-yarn redwood generate layout Global
+yarn cedar generate layout Global
 ```
 
 Then import and render the navigation component in the newly generated `web/src/layouts/GlobalLayout/GlobalLayout.js`:

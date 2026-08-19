@@ -35,11 +35,16 @@ export default function transform(file: FileInfo, api: API) {
   const j = api.jscodeshift
   const root = j(file.source)
 
-  // Find the RedwoodApolloProvider component
-  const redwoodApolloProvider = root.findJSXElements('RedwoodApolloProvider')
+  // Find the CedarApolloProvider component, falling back to the deprecated
+  // RedwoodApolloProvider name for apps that haven't migrated yet.
+  let apolloProviderElements = root.findJSXElements('CedarApolloProvider')
+
+  if (apolloProviderElements.length === 0) {
+    apolloProviderElements = root.findJSXElements('RedwoodApolloProvider')
+  }
 
   // Find the graphQLClientConfig prop
-  const graphQLClientConfigCollection = redwoodApolloProvider.find(
+  const graphQLClientConfigCollection = apolloProviderElements.find(
     j.JSXAttribute,
     {
       name: { name: 'graphQLClientConfig' },
@@ -77,7 +82,7 @@ export default function transform(file: FileInfo, api: API) {
 
   if (isIdentifier(graphQLClientConfigExpression)) {
     // graphQLClientConfig is already something like
-    // <RedwoodApolloProvider graphQLClientConfig={graphQLClientConfig} />
+    // <CedarApolloProvider graphQLClientConfig={graphQLClientConfig} />
     // Get the variable name
     graphQLClientConfigVariableName = graphQLClientConfigExpression.name
   }
@@ -96,7 +101,7 @@ export default function transform(file: FileInfo, api: API) {
 
   if (isObjectExpression(graphQLClientConfigExpression)) {
     // graphQLClientConfig is something like
-    // <RedwoodApolloProvider
+    // <CedarApolloProvider
     //   graphQLClientConfig={{ cacheConfig: { resultCaching: true } }}
     // >
 
@@ -192,13 +197,13 @@ export default function transform(file: FileInfo, api: API) {
   }
 
   // Now we have a proper graphQLClientConfig object stored in a const. Now we
-  // just need to tell <RedwoodApolloProvider> about it by setting the
+  // just need to tell <CedarApolloProvider> about it by setting the
   // `graphQLClientConfig` prop
 
   // Remove existing graphQLClientConfig prop (if there is one) and then add a
   // new one for the variable we created or updated
   graphQLClientConfigCollection.remove()
-  redwoodApolloProvider
+  apolloProviderElements
     .get(0)
     .node.openingElement.attributes.push(
       j.jsxAttribute(

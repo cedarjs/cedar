@@ -17,7 +17,7 @@ If you've been through the tutorial so far, you can pick up where you left off a
 If you want to use the same CSS classes we use in the following examples you'll need to add Tailwind to your repo:
 
 ```bash
-yarn rw setup ui tailwindcss
+yarn cedar setup ui tailwindcss
 ```
 
 However, none of the screenshots that follow will come anywhere close to what you're seeing in your browser (except for those isolated components you build in Storybook) so you may want to just start with the [example repo](https://github.com/cedarjs/cedar-tutorial). You'll also be missing out on a good starting test suite that we've added!
@@ -27,14 +27,14 @@ If you're _still_ set on continuing with your own repo, and you deployed to a se
 Once you're ready, start up the dev server:
 
 ```bash
-yarn rw dev
+yarn cedar dev
 ```
 
 ### Using the Example Repo (Recommended)
 
 If you haven't been through the first part of the tutorial you can clone [this repo](https://github.com/cedarjs/cedar-tutorial) which contains everything built so far and also adds a little styling so it isn't quite so...tough to look at. The example repo includes [TailwindCSS](https://tailwindcss.com) to style things up and adds a `<div>` or two to give us some additional hooks to hang styling on.
 
-:::warning The TypeScript version of the Example Repo is currently in progress
+:::warning[The TypeScript version of the Example Repo is currently in progress]
 
 If you want to complete the tutorial in TypeScript, continue with your own repo, making any necessary edits. Don't worry, the remainder of the tutorial continues to offer both TypeScript and JavaScript example code changes.
 

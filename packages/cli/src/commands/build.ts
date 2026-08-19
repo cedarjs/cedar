@@ -3,11 +3,8 @@ import type { Argv } from 'yargs'
 
 import { colors as c } from '@cedarjs/cli-helpers'
 
-// @ts-expect-error - Types not available for JS files
 import { exitWithError } from '../lib/exit.js'
-// @ts-expect-error - Types not available for JS files
 import { workspaces } from '../lib/project.js'
-// @ts-expect-error - Types not available for JS files
 import { checkNodeVersion } from '../middleware/checkNodeVersion.js'
 
 export const command = 'build [workspace..]'
@@ -48,8 +45,14 @@ export const builder = (yargs: Argv) => {
     .option('ud', {
       type: 'boolean',
       default: false,
+      description: 'Build the Universal Deploy server entry (api/dist/ud/).',
+    })
+    .option('apiRootPath', {
+      type: 'string',
       description:
-        'Build the Universal Deploy server entry (api/dist/ud/index.js).',
+        'Root path where API functions are served. Overrides the ' +
+        'apiRootPath option on cedarUniversalDeployPlugin() in your ' +
+        'vite config. Defaults to "/".',
     })
     .middleware(() => {
       const check = checkNodeVersion()
@@ -68,6 +71,15 @@ export const builder = (yargs: Argv) => {
 
       if (!Array.isArray(workspacesArg)) {
         return 'Workspace must be an array'
+      }
+
+      // --apiRootPath requires --ud; silently ignoring it would be confusing
+      if (argv.apiRootPath && !argv.ud) {
+        return (
+          c.error('Error:') +
+          ' --apiRootPath requires --ud.\n' +
+          '  Use --ud to build the Universal Deploy server entry.'
+        )
       }
 
       // Remove all default workspace names and then check if there are any

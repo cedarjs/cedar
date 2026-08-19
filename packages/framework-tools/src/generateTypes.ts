@@ -1,9 +1,54 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+import { copyFileSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import execa from 'execa'
 import type { PackageJson } from 'type-fest'
-import { $ } from 'zx'
+
+/**
+ * `nx run-many -t build` runs every package's build script in parallel, and
+ * several of them (this file included) spawn their own `yarn` child process,
+ * which parses every workspace's package.json on startup. On Windows,
+ * renaming over a file that another process momentarily has open for reading
+ * throws EPERM (unlike POSIX, where that's always safe). That makes this
+ * rename transient and worth a few retries rather than a hard failure.
+ *
+ * See: https://github.com/cedarjs/cedar/issues/2146 and specifically
+ * https://github.com/cedarjs/cedar/actions/runs/31239552284
+ */
+function renameSyncWithRetry(
+  oldPath: string,
+  newPath: string,
+  retries = 5,
+  delayMs = 50,
+) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      renameSync(oldPath, newPath)
+      return
+    } catch (e) {
+      const code = getErrorCode(e)
+
+      if (
+        (code !== 'EPERM' && code !== 'EBUSY') ||
+        attempt >= retries ||
+        process.platform !== 'win32'
+      ) {
+        throw e
+      }
+
+      // Retries are blocking on purpose: this only ever runs on Windows CI,
+      // where the delay is a few tens of ms, and the callers are synchronous
+      // build scripts with nothing else to do in the meantime.
+      Atomics.wait(
+        new Int32Array(new SharedArrayBuffer(4)),
+        0,
+        0,
+        delayMs * attempt,
+      )
+    }
+  }
+}
 
 /**
  * This function will run `yarn build:types-cjs` to generate the CJS type
@@ -17,22 +62,28 @@ import { $ } from 'zx'
  * [1]: https://github.com/arethetypeswrong/arethetypeswrong.github.io/issues/21#issuecomment-1494618930
  */
 export async function generateTypesCjs() {
-  await $`cp package.json package.json.bak`
+  copyFileSync('package.json', 'package.json.bak')
 
   const packageJson: PackageJson = JSON.parse(
     readFileSync('./package.json', 'utf-8'),
   )
   packageJson.type = 'commonjs'
-  writeFileSync('./package.json', JSON.stringify(packageJson, null, 2))
+  // Write to a temp file and rename it into place. Rename is atomic, whereas
+  // writing directly to package.json would truncate it first, letting any
+  // concurrently starting `yarn` process (which parses every workspace
+  // manifest during setup) read a partially written file and crash with a
+  // JSON syntax error.
+  writeFileSync('./package.json.tmp', JSON.stringify(packageJson, null, 2))
+  renameSyncWithRetry('./package.json.tmp', './package.json')
 
   try {
-    await $`yarn build:types-cjs`
-  } catch (e: any) {
+    await execa('yarn', ['build:types-cjs'], { stdio: 'inherit' })
+  } catch (e) {
     console.error('---- Error building CJS types ----')
-    process.exitCode = e.exitCode
-    throw new Error(e)
+    process.exitCode = getExitCode(e) ?? 1
+    throw e
   } finally {
-    await $`mv package.json.bak package.json`
+    renameSyncWithRetry('package.json.bak', 'package.json')
   }
 }
 
@@ -42,12 +93,36 @@ export async function generateTypesCjs() {
  */
 export async function generateTypesEsm() {
   try {
-    await $`yarn build:types`
-  } catch (e: any) {
+    await execa('yarn', ['build:types'], { stdio: 'inherit' })
+  } catch (e) {
     console.error('---- Error building ESM types ----')
-    process.exitCode = e.exitCode
-    throw new Error(e)
+    process.exitCode = getExitCode(e) ?? 1
+    throw e
   }
+}
+
+function getExitCode(e: unknown): number | undefined {
+  if (typeof e === 'object' && e !== null && 'exitCode' in e) {
+    const exitCode = e.exitCode
+
+    if (typeof exitCode === 'number') {
+      return exitCode
+    }
+  }
+
+  return undefined
+}
+
+function getErrorCode(e: unknown): string | undefined {
+  if (typeof e === 'object' && e !== null && 'code' in e) {
+    const code = e.code
+
+    if (typeof code === 'string') {
+      return code
+    }
+  }
+
+  return undefined
 }
 
 /**

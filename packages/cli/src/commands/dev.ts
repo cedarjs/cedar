@@ -28,9 +28,6 @@ export const builder = (yargs: Argv) => {
         'String of one or more vite dev server config options, for example: ' +
         '`--fwd="--port=1234 --open=false"`',
       type: 'string',
-      // The reason `forward` is hidden is that it's been broken with Vite and
-      // it's not clear how to fix it.
-      hidden: true,
     })
     .option('generate', {
       type: 'boolean',
@@ -44,12 +41,32 @@ export const builder = (yargs: Argv) => {
         'with no value it defaults to 1 prepended to the api port (e.g. api ' +
         'port 8913 -> debug port 18913).',
     })
+    .option('debugBrk', {
+      type: 'boolean',
+      description:
+        'Wait for a debugger to connect before starting the API dev server, ' +
+        'similar to Node.js --inspect-brk. Only works in --ud mode.',
+    })
     .option('ud', {
       type: 'boolean',
       default: false,
       description:
         'Use the unified Vite dev server that handles both web and API in a ' +
         'single process (experimental).',
+    })
+    .option('nodeArgs', {
+      type: 'string',
+      description:
+        'CLI args to pass to the node process running the web dev server, for ' +
+        'example: `--node-args="--inspect --max-old-space-size=8192"`.',
+    })
+    .option('jobs', {
+      type: 'boolean',
+      description:
+        'Start the background jobs worker alongside the other dev servers ' +
+        'when jobs are configured (`cedar setup jobs` + at least one ' +
+        '`cedar g job`). Pass `--no-jobs` to opt out and run `cedar jobs ' +
+        'work` yourself instead.',
     })
     .middleware(() => {
       const check = checkNodeVersion()

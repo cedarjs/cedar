@@ -31,7 +31,16 @@ beforeEach(() => {
   vol.reset()
 
   // @ts-expect-error - This is assignable in tests
-  fs.statSync = vi.fn(() => {
+  fs.statSync = vi.fn((lockfilePath) => {
+    if (!vol.existsSync(lockfilePath as string)) {
+      const error = new Error(
+        `ENOENT: no such file or directory, stat '${lockfilePath}'`,
+      ) as NodeJS.ErrnoException
+      error.code = 'ENOENT'
+
+      throw error
+    }
+
     return {
       birthtimeMs: Date.now(),
     }
@@ -99,6 +108,30 @@ it('Detects a stale lock', () => {
   expect(fs.rmSync).toHaveBeenCalled()
 
   spy.mockRestore()
+})
+
+it('Returns false when statSync throws ENOENT', () => {
+  // Simulate a stale `existsSync`/`statSync` race (or a broken symlink, as
+  // seen in Vercel's cached builds) where the lockfile disappears between
+  // the existence check and the stat call.
+  vi.mocked(fs).statSync.mockImplementation(() => {
+    const error = new Error('ENOENT') as NodeJS.ErrnoException
+    error.code = 'ENOENT'
+    throw error
+  })
+
+  const isSet = isLockSet('TEST')
+  expect(isSet).toBe(false)
+})
+
+it('Re-throws non-ENOENT statSync errors', () => {
+  vi.mocked(fs).statSync.mockImplementation(() => {
+    const error = new Error('EACCES') as NodeJS.ErrnoException
+    error.code = 'EACCES'
+    throw error
+  })
+
+  expect(() => isLockSet('TEST')).toThrow('EACCES')
 })
 
 it('Clear a list of locks', () => {

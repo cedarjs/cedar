@@ -1,0 +1,148 @@
+import { spawnSync } from 'child_process'
+import type { SpawnSyncOptions } from 'child_process'
+import path from 'path'
+
+import { describe, it, expect } from 'vitest'
+
+const BASE_DIR = path.resolve(import.meta.dirname, '..', '..', '..', '..')
+const CLI = path.join(BASE_DIR, 'packages', 'cli', 'dist', 'index.js')
+
+function cedar(args: string[], options?: SpawnSyncOptions) {
+  const { status, stdout, stderr } = spawnSync('node', [CLI, ...args], {
+    cwd: BASE_DIR,
+    ...options,
+  })
+
+  return {
+    status,
+    stdout: stdout.toString().trim(),
+    stderr: stderr.toString().trim(),
+  }
+}
+
+// Support '11.0.75-canary.234' if we ever do something like that
+const VERSION = /^\d+\.\d+\.\d/
+
+describe('The CLI sets `cwd` correctly', () => {
+  describe('--cwd', () => {
+    it('lets the user set the cwd via the `--cwd` option', async () => {
+      const cwd = path.join('__fixtures__', 'test-project')
+      const { status, stdout, stderr } = cedar(['--cwd', cwd, '--version'])
+
+      expect(status, 'status').toBe(0)
+      expect(stdout, 'stdout').toMatch(VERSION)
+      expect(stderr, 'stderr').toBe('')
+    })
+
+    it(`throws if set via --cwd and there's no "cedar.toml"`, () => {
+      const { status, stdout, stderr } = cedar([
+        '--cwd',
+        '__fixtures__',
+        '--version',
+      ])
+
+      const fullCwdPath = path.join(process.cwd(), '..', '..', '__fixtures__')
+
+      expect(status).toBe(1)
+      expect(stdout).toBe('')
+      expect(stderr).toMatchInlineSnapshot(
+        `"Couldn't find a "cedar.toml" or "redwood.toml" file in ${fullCwdPath}"`,
+      )
+    })
+  })
+
+  describe('CEDAR_CWD', () => {
+    it('lets the user set the cwd via the CEDAR_CWD environment variable', () => {
+      const { status, stdout, stderr } = cedar(['--version'], {
+        env: {
+          ...process.env,
+          CEDAR_CWD: path.join('__fixtures__', 'test-project'),
+        },
+      })
+
+      expect(status).toBe(0)
+      expect(stdout).toMatch(VERSION)
+      expect(stderr).toBe('')
+    })
+
+    it(`throws if set via CEDAR_CWD and there's no "cedar.toml"`, () => {
+      const { status, stdout, stderr } = cedar(['--version'], {
+        env: {
+          ...process.env,
+          CEDAR_CWD: '__fixtures__',
+        },
+      })
+
+      const fullCwdPath = path.join(process.cwd(), '..', '..', '__fixtures__')
+
+      expect(status).toBe(1)
+      expect(stdout).toBe('')
+      expect(stderr).toMatchInlineSnapshot(
+        `"Couldn't find a "cedar.toml" or "redwood.toml" file in ${fullCwdPath}"`,
+      )
+    })
+  })
+
+  describe('Prefers --cwd to CEDAR_CWD', () => {
+    it('Succeeds when --cwd is a cedar project', () => {
+      const { status, stdout, stderr } = cedar(
+        ['--cwd', path.join('__fixtures__', 'test-project'), '--version'],
+        {
+          env: {
+            ...process.env,
+            CEDAR_CWD: '/ignored/path',
+          },
+        },
+      )
+
+      expect(status).toBe(0)
+      expect(stdout).toMatch(VERSION)
+      expect(stderr).toBe('')
+    })
+
+    it("Fails when --cwd isn't a cedar project", () => {
+      const { status, stdout, stderr } = cedar(
+        ['--cwd', path.join('__fixtures__'), '--version'],
+        {
+          env: {
+            ...process.env,
+            CEDAR_CWD: path.join('__fixtures__', 'test-project'),
+          },
+        },
+      )
+
+      const fullCwdPath = path.join(process.cwd(), '..', '..', '__fixtures__')
+
+      expect(status).toBe(1)
+      expect(stdout).toBe('')
+      expect(stderr).toMatchInlineSnapshot(
+        `"Couldn't find a "cedar.toml" or "redwood.toml" file in ${fullCwdPath}"`,
+      )
+    })
+  })
+
+  describe('find up', () => {
+    it("finds up for a cedar.toml if --cwd and CEDAR_CWD aren't set", () => {
+      const { status, stdout, stderr } = cedar(['--version'], {
+        cwd: path.join(BASE_DIR, '__fixtures__', 'test-project', 'api'),
+      })
+
+      expect(status).toBe(0)
+      expect(stdout).toMatch(VERSION)
+      expect(stderr).toBe('')
+    })
+
+    it("fails if it can't find up a cedar.toml", () => {
+      const { status, stdout, stderr } = cedar(['--version'], {
+        cwd: path.join(BASE_DIR, '__fixtures__'),
+      })
+
+      expect(status).toBe(1)
+      expect(stdout).toBe('')
+      // We don't want to match on the entire error message since it includes an absolute path.
+      expect(stderr).toMatch(
+        `Couldn't find up a "cedar.toml" or "redwood.toml" file from`,
+      )
+    })
+  })
+})

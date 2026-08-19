@@ -18,7 +18,7 @@ This document covers the `redwood` command . For `redwood-tools`, see [Contribut
 We use [yargs](http://yargs.js.org/) and borrow its syntax here:
 
 ```
-yarn redwood generate page <name> [path] --option
+yarn cedar generate page <name> [path] --option
 ```
 
 - `redwood generate page` is the command.
@@ -32,12 +32,12 @@ Every argument and option has a type. Here `<name>` and `[path]` are strings and
 You'll also sometimes see arguments with trailing `..` like:
 
 ```
-yarn redwood build [side..]
+yarn cedar build [side..]
 ```
 
 The `..` operator indicates that the argument accepts an array of values. See [Variadic Positional Arguments](https://github.com/yargs/yargs/blob/master/docs/advanced.md#variadic-positional-arguments).
 
-## create redwood-app
+## create cedar-app
 
 Create a Cedar project using the yarn create command:
 
@@ -66,7 +66,7 @@ yarn create cedar-app my-redwood-project --yarn1
 Build for production.
 
 ```bash
-yarn redwood build [side..]
+yarn cedar build [side..]
 ```
 
 We use Babel to transpile the api side into `./api/dist` and Vite to package the web side into `./web/dist`.
@@ -82,12 +82,12 @@ See [Builds](builds.md).
 
 #### Example
 
-Running `yarn redwood build` without any arguments generates the Prisma client and builds both sides of your project:
+Running `yarn cedar build` without any arguments generates the Prisma client and builds both sides of your project:
 
 ```bash
-~/redwood-app$ yarn redwood build
+~/cedar-app$ yarn cedar build
 yarn run v1.22.4
-$ /redwood-app/node_modules/.bin/redwood build
+$ /cedar-app/node_modules/.bin/cedar build
 ✔ Generating the Prisma client...
 ✔ Building "api"...
 ✔ Building "web"...
@@ -112,13 +112,13 @@ Files are output to each side's `dist` directory:
 Get structural diagnostics for a Cedar project (experimental).
 
 ```
-yarn redwood check
+yarn cedar check
 ```
 
 #### Example
 
 ```bash
-~/redwood-app$ yarn redwood check
+~/cedar-app$ yarn cedar check
 yarn run v1.22.4
 web/src/Routes.js:14:5: error: You must specify a 'notfound' page
 web/src/Routes.js:14:19: error: Duplicate Path
@@ -132,10 +132,10 @@ web/src/Routes.js:17:19: error (INVALID_ROUTE_PATH_SYNTAX): Error: Route path co
 Launch an interactive Cedar shell (experimental):
 
 - This has not yet been tested on Windows.
-- The Prisma Client must be generated _prior_ to running this command, e.g. `yarn redwood prisma generate`. This is a known issue.
+- The Prisma Client must be generated _prior_ to running this command, e.g. `yarn cedar prisma generate`. This is a known issue.
 
 ```
-yarn redwood console
+yarn cedar console
 ```
 
 Right now, you can only use the Cedar console to interact with your database (always with `await`):
@@ -143,7 +143,7 @@ Right now, you can only use the Cedar console to interact with your database (al
 #### Example
 
 ```bash
-~/redwood-app$ yarn redwood console
+~/cedar-app$ yarn cedar console
 yarn run v1.22.4
 > await db.user.findMany()
 > [ { id: 1, email: 'tom@cedarjs.com', name: 'Tom'  } ]
@@ -154,7 +154,7 @@ yarn run v1.22.4
 Data migration tools.
 
 ```bash
-yarn redwood data-migrate <command>
+yarn cedar data-migrate <command>
 ```
 
 | Command   | Description                                                                                 |
@@ -165,11 +165,11 @@ yarn redwood data-migrate <command>
 ### data-migrate install
 
 - Appends a `DataMigration` model to `schema.prisma` for tracking which data migrations have already run.
-- Creates a DB migration using `yarn redwood prisma migrate dev --create-only create_data_migrations`.
+- Creates a DB migration using `yarn cedar prisma migrate dev --create-only create_data_migrations`.
 - Creates `api/db/dataMigrations` directory to contain data migration scripts
 
 ```bash
-yarn redwood data-migrate install
+yarn cedar data-migrate install
 ```
 
 ### data-migrate up
@@ -179,7 +179,7 @@ Executes outstanding data migrations against the database. Compares the list of 
 If an error occurs during script execution, any remaining scripts are skipped and console output will let you know the error and how many subsequent scripts were skipped.
 
 ```bash
-yarn redwood data-migrate up
+yarn cedar data-migrate up
 ```
 
 ## dev
@@ -187,10 +187,10 @@ yarn redwood data-migrate up
 Start development servers for api and web.
 
 ```bash
-yarn redwood dev [side..]
+yarn cedar dev [side..]
 ```
 
-`yarn redwood dev api` starts the Cedar dev server and `yarn redwood dev web` starts the Vite dev server with Cedar's config.
+`yarn cedar dev api` starts the Cedar dev server and `yarn cedar dev web` starts the Vite dev server with Cedar's config.
 
 | Argument           | Description                                                                            |
 | :----------------- | :------------------------------------------------------------------------------------- |
@@ -202,12 +202,12 @@ yarn redwood dev [side..]
 If you're only working on your sdl and services, you can run just the api server to get GraphQL Playground on port 8911:
 
 ```bash
-~/redwood-app$ yarn redwood dev api
+~/cedar-app$ yarn cedar dev api
 yarn run v1.22.4
-$ /redwood-app/node_modules/.bin/redwood dev api
-$ /redwood-app/node_modules/.bin/dev-server
+$ /cedar-app/node_modules/.bin/cedar dev api
+$ /cedar-app/node_modules/.bin/dev-server
 15:04:51 api | Listening on http://localhost:8911
-15:04:51 api | Watching /home/dominic/projects/redwood/redwood-app/api
+15:04:51 api | Watching /home/dominic/projects/cedar/cedar-app/api
 15:04:51 api \
   | 15:04:51 api | Now serving
 15:04:51 api \
@@ -217,13 +217,15 @@ $ /redwood-app/node_modules/.bin/dev-server
 Using `--forward` (alias `--fwd`), you can pass one or more Vite Dev Server [config options](https://vitejs.dev/guide/cli#vite). The following will run the dev server, set the port to `1234`, and disable automatic browser opening.
 
 ```bash
-~/redwood-app$ yarn redwood dev --fwd="--port=1234 --open=false"
+~/cedar-app$ yarn cedar dev --fwd="--port=1234 --open=false"
 ```
+
+When there's no interactive terminal attached (CI, AI coding agents, etc.), the dev server defaults to `--open=false` automatically, so you don't need to pass it explicitly in those environments.
 
 You may need to access your dev application from a different host, like your mobile device or an SSH tunnel. To resolve the “Invalid Host Header” message, run the following:
 
 ```bash
-~/redwood-app$ yarn redwood dev --fwd="--allowed-hosts all"
+~/cedar-app$ yarn cedar dev --fwd="--allowed-hosts all"
 ```
 
 For the full list of Vite Dev Server settings, see [this documentation](https://vitejs.dev/guide/cli#vite).
@@ -243,7 +245,7 @@ For hosting providers that auto deploy from Git, the deploy command runs the set
 This command runs the steps to both build your project _and_ deploy it to AWS.
 
 ```
-yarn redwood deploy <target>
+yarn cedar deploy <target>
 ```
 
 | Commands                      | Description                              |
@@ -258,7 +260,7 @@ yarn redwood deploy <target>
 Deploy to AWS CloudFront and Lambda using [Serverless](https://www.serverless.com/) framework
 
 ```
-yarn redwood deploy serverless
+yarn cedar deploy serverless
 ```
 
 | Options & Arguments | Description                                                                                                                                 |
@@ -273,7 +275,7 @@ yarn redwood deploy serverless
 Build command for Netlify deploy
 
 ```
-yarn redwood deploy netlify
+yarn cedar deploy netlify
 ```
 
 | Options                | Description                                         |
@@ -287,7 +289,7 @@ yarn redwood deploy netlify
 The following command will build, apply Prisma DB migrations, and skip data migrations.
 
 ```
-yarn redwood deploy netlify --no-data-migrate
+yarn cedar deploy netlify --no-data-migrate
 ```
 
 :::warning
@@ -305,7 +307,7 @@ The [Netlify CLI](https://cli.netlify.com) still works well for [linking your pr
 Build (web) and Start (api) command for Render deploy. (For usage instructions, see the Render [Deploy Cedar](https://render.com/docs/deploy-redwood) doc.)
 
 ```
-yarn redwood deploy render <side>
+yarn cedar deploy render <side>
 ```
 
 | Options & Arguments    | Description                                         |
@@ -320,13 +322,13 @@ yarn redwood deploy render <side>
 The following command will build the Web side for static-site CDN deployment.
 
 ```
-yarn redwood deploy render web
+yarn cedar deploy render web
 ```
 
 The following command will apply Prisma DB migrations, run data migrations, and start the api server.
 
 ```
-yarn redwood deploy render api
+yarn cedar deploy render api
 ```
 
 ### deploy vercel
@@ -334,7 +336,7 @@ yarn redwood deploy render api
 Build command for Vercel deploy
 
 ```
-yarn redwood deploy vercel
+yarn cedar deploy vercel
 ```
 
 | Options                | Description                                         |
@@ -348,7 +350,7 @@ yarn redwood deploy vercel
 The following command will build, apply Prisma DB migrations, and skip data migrations.
 
 ```
-yarn redwood deploy vercel --no-data-migrate
+yarn cedar deploy vercel --no-data-migrate
 ```
 
 ## destroy (alias d)
@@ -356,7 +358,7 @@ yarn redwood deploy vercel --no-data-migrate
 Rollback changes made by the generate command.
 
 ```
-yarn redwood destroy <type>
+yarn cedar destroy <type>
 ```
 
 | Command              | Description                                                                     |
@@ -373,14 +375,14 @@ yarn redwood destroy <type>
 
 ## exec
 
-Execute scripts generated by [`yarn redwood generate script <name>`](#generate-script) to run one-off operations, long-running jobs, or utility scripts.
+Execute scripts generated by [`yarn cedar generate script <name>`](#generate-script) to run one-off operations, long-running jobs, or utility scripts.
 
 #### Usage
 
-You can pass any flags to the command and use them within your script:
+You can pass any flags to the command and use them within your script. A literal `--` before your script's own flags is optional and passed through the same way (e.g. `yarn cedar exec syncStripeProducts -- foo --firstParam 'hello'`):
 
 ```
-❯ yarn redwood exec syncStripeProducts foo --firstParam 'hello' --two 'world'
+❯ yarn cedar exec syncStripeProducts foo --firstParam 'hello' --two 'world'
 
 [18:13:56] Generating Prisma client [started]
 [18:13:57] Generating Prisma client [completed]
@@ -416,7 +418,7 @@ For more information, including details about specific features, see this Cedar 
 View all that can be _set up_:
 
 ```
-yarn redwood experimental --help
+yarn cedar experimental --help
 ```
 
 ## generate (alias g)
@@ -424,7 +426,7 @@ yarn redwood experimental --help
 Save time by generating boilerplate code.
 
 ```
-yarn redwood generate <type>
+yarn cedar generate <type>
 ```
 
 Some generators require that their argument be a model in your `schema.prisma`. When they do, their argument is named `<model>`.
@@ -453,14 +455,14 @@ If your project is configured for TypeScript (see the [TypeScript docs](typescri
 
 **Undoing a Generator with a Destroyer**
 
-Most generate commands (i.e., everything but `yarn redwood generate dataMigration`) can be undone by their corresponding destroy command. For example, `yarn redwood generate cell` can be undone with `yarn redwood destroy cell`.
+Most generate commands (i.e., everything but `yarn cedar generate dataMigration`) can be undone by their corresponding destroy command. For example, `yarn cedar generate cell` can be undone with `yarn cedar destroy cell`.
 
 ### generate cell
 
 Generate a cell component.
 
 ```bash
-yarn redwood generate cell <name>
+yarn cedar generate cell <name>
 ```
 
 Cells are signature to Cedar. We think they provide a simpler and more declarative approach to data fetching.
@@ -472,6 +474,9 @@ Cells are signature to Cedar. We think they provide a simpler and more declarati
 | `--typescript, --ts` | Generate TypeScript files Enabled by default if we detect your project is TypeScript                                                                             |
 | `--query`            | Use this flag to specify a specific name for the GraphQL query. The query name must be unique                                                                    |
 | `--list`             | Use this flag to generate a list cell. This flag is needed when dealing with irregular words whose plural and singular is identical such as equipment or pokemon |
+| `--before-query`     | Include a typed `beforeQuery` stub for configuring the query (e.g. variables, fetch policy)                                                                      |
+| `--after-query`      | Include a typed `afterQuery` stub for sanitizing data returned from the query                                                                                    |
+| `--is-empty`         | Include a typed `isEmpty` stub for overriding the default check for the Empty component                                                                          |
 | `--tests`            | Generate test files [default: true]                                                                                                                              |
 | `--stories`          | Generate Storybook files [default: true]                                                                                                                         |
 | `--rollback`         | Rollback changes if an error occurs [default: true]                                                                                                              |
@@ -485,7 +490,7 @@ See the [Cells](tutorial/chapter2/cells.md) section of the Tutorial for usage ex
 **Destroying**
 
 ```
-yarn redwood destroy cell <name>
+yarn cedar destroy cell <name>
 ```
 
 #### Example
@@ -493,9 +498,9 @@ yarn redwood destroy cell <name>
 Generating a user cell:
 
 ```bash
-~/redwood-app$ yarn redwood generate cell user
+~/cedar-app$ yarn cedar generate cell user
 yarn run v1.22.4
-$ /redwood-app/node_modules/.bin/redwood g cell user
+$ /cedar-app/node_modules/.bin/cedar g cell user
 ✔ Generating cell files...
 ✔ Writing $(./web/src/components/UserCell/UserCell.test.js)...
 ✔ Writing $(./web/src/components/UserCell/UserCell.js)...
@@ -529,7 +534,7 @@ export const Success = ({ user }) => {
 Generate a component.
 
 ```bash
-yarn redwood generate component <name>
+yarn cedar generate component <name>
 ```
 
 Cedar loves function components and makes extensive use of React Hooks, which are only enabled in function components.
@@ -546,7 +551,7 @@ Cedar loves function components and makes extensive use of React Hooks, which ar
 **Destroying**
 
 ```
-yarn redwood destroy component <name>
+yarn cedar destroy component <name>
 ```
 
 #### Example
@@ -554,9 +559,9 @@ yarn redwood destroy component <name>
 Generating a user component:
 
 ```bash
-~/redwood-app$ yarn redwood generate component user
+~/cedar-app$ yarn cedar generate component user
 yarn run v1.22.4
-$ /redwood-app/node_modules/.bin/redwood g component user
+$ /cedar-app/node_modules/.bin/cedar g component user
 ✔ Generating component files...
 ✔ Writing $(./web/src/components/User/User.test.js)...
 ✔ Writing $(./web/src/components/User/User.js)...
@@ -583,7 +588,7 @@ export default User
 Generate a data migration script.
 
 ```
-yarn redwood generate dataMigration <name>
+yarn cedar generate dataMigration <name>
 ```
 
 Creates a data migration script in `api/db/dataMigrations`.
@@ -606,7 +611,7 @@ See the [Deploy](/docs/deploy/introduction) docs.
 Generate log in, sign up, forgot password and password reset pages for dbAuth
 
 ```
-yarn redwood generate dbAuth
+yarn cedar generate dbAuth
 ```
 
 | Arguments & Options | Description                                                                                                                          |
@@ -628,7 +633,7 @@ log in credentials or sign up fields to the server for processing.
 
 :::important
 This `generate dbAuth` command simply adds the pages. You must add the necessary dbAuth functions and
-app setup by running `yarn rw setup auth dbAuth` to fully use dbAuth.
+app setup by running `yarn cedar setup auth dbAuth` to fully use dbAuth.
 :::
 
 ### generate directive
@@ -636,7 +641,7 @@ app setup by running `yarn rw setup auth dbAuth` to fully use dbAuth.
 Generate a directive.
 
 ```bash
-yarn redwood generate directive <name>
+yarn cedar generate directive <name>
 ```
 
 | Arguments & Options  | Description                                                           |
@@ -654,7 +659,7 @@ See [Cedar Directives](directives.md).
 **Destroying**
 
 ```
-yarn redwood destroy directive <name>
+yarn cedar destroy directive <name>
 ```
 
 #### Example
@@ -662,7 +667,7 @@ yarn redwood destroy directive <name>
 Generating a `myDirective` directive using the interactive command:
 
 ```bash
-yarn rw g directive myDirective
+yarn cedar g directive myDirective
 
 ? What type of directive would you like to generate? › - Use arrow-keys. Return to submit.
 ❯ Validator - Implement a validation: throw an error if criteria not met to stop execution
@@ -674,7 +679,7 @@ Transformer - Modify values of fields or query responses
 Generate a Function.
 
 ```
-yarn redwood generate function <name>
+yarn cedar generate function <name>
 ```
 
 Not to be confused with Javascript functions, Capital-F Functions are meant to be deployed to serverless endpoints like AWS Lambda.
@@ -693,7 +698,7 @@ See the [Custom Function](how-to/custom-function.md) how to.
 **Destroying**
 
 ```
-yarn redwood destroy function <name>
+yarn cedar destroy function <name>
 ```
 
 #### Example
@@ -701,9 +706,9 @@ yarn redwood destroy function <name>
 Generating a user function:
 
 ```bash
-~/redwood-app$ yarn redwood generate function user
+~/cedar-app$ yarn cedar generate function user
 yarn run v1.22.4
-$ /redwood-app/node_modules/.bin/redwood g function user
+$ /cedar-app/node_modules/.bin/cedar g function user
 ✔ Generating function files...
 ✔ Writing $(./api/src/functions/user.js)...
 Done in 16.04s.
@@ -720,15 +725,15 @@ export const handler = async (event, context) => {
 }
 ```
 
-Now if we run `yarn redwood dev api`:
+Now if we run `yarn cedar dev api`:
 
 ```plaintext {11}
-~/redwood-app$ yarn redwood dev api
+~/cedar-app$ yarn cedar dev api
 yarn run v1.22.4
-$ /redwood-app/node_modules/.bin/redwood dev api
-$ /redwood-app/node_modules/.bin/dev-server
+$ /cedar-app/node_modules/.bin/cedar dev api
+$ /cedar-app/node_modules/.bin/dev-server
 17:21:49 api | Listening on http://localhost:8911
-17:21:49 api | Watching /home/dominic/projects/redwood/redwood-app/api
+17:21:49 api | Watching /home/dominic/projects/cedar/cedar-app/api
 17:21:49 api |
 17:21:49 api | Now serving
 17:21:49 api |
@@ -741,7 +746,7 @@ $ /redwood-app/node_modules/.bin/dev-server
 Generate a background job file (and optional tests) in `api/src/jobs`.
 
 ```bash
-yarn redwood generate job <name>
+yarn cedar generate job <name>
 ```
 
 | Arguments & Options  | Description                                                                           |
@@ -754,12 +759,12 @@ yarn redwood generate job <name>
 #### Example
 
 ```bash
-yarn redwood generate job WelcomeEmail
+yarn cedar generate job WelcomeEmail
 # or
-yarn rw g job WelcomeEmail
+yarn cedar g job WelcomeEmail
 ```
 
-:::info Job naming
+:::info[Job naming]
 By convention a job filename and exported code ends in `Job` and the generate command enforces this. If you don't include "Job" at the end of the name, the generator will add it. For example, with the above command, the file generated would be `api/src/jobs/WelcomeEmailJob/WelcomeEmailJob.{js|ts}`.
 :::
 
@@ -770,7 +775,7 @@ Learn more about jobs in the [Background Jobs docs](background-jobs).
 Generate a layout component.
 
 ```bash
-yarn redwood generate layout <name>
+yarn cedar generate layout <name>
 ```
 
 Layouts wrap pages and help you stay DRY.
@@ -792,7 +797,7 @@ See the [Layouts](tutorial/chapter1/layouts.md) section of the tutorial.
 **Destroying**
 
 ```
-yarn redwood destroy layout <name>
+yarn cedar destroy layout <name>
 ```
 
 #### Example
@@ -800,9 +805,9 @@ yarn redwood destroy layout <name>
 Generating a user layout:
 
 ```bash
-~/redwood-app$ yarn redwood generate layout user
+~/cedar-app$ yarn cedar generate layout user
 yarn run v1.22.4
-$ /redwood-app/node_modules/.bin/redwood g layout user
+$ /cedar-app/node_modules/.bin/cedar g layout user
 ✔ Generating layout files...
 ✔ Writing $(./web/src/layouts/UserLayout/UserLayout.test.js)...
 ✔ Writing $(./web/src/layouts/UserLayout/UserLayout.js)...
@@ -824,7 +829,7 @@ export default UserLayout
 Generate a RedwoodRecord model.
 
 ```bash
-yarn redwood generate model <name>
+yarn cedar generate model <name>
 ```
 
 | Arguments & Options | Description                                         |
@@ -840,27 +845,27 @@ See the [RedwoodRecord docs](redwoodrecord.md).
 #### Example
 
 ```bash
-~/redwood-app$ yarn redwood generate model User
+~/cedar-app$ yarn cedar generate model User
 yarn run v1.22.4
-$ /redwood-app/node_modules/.bin/redwood g model User
+$ /cedar-app/node_modules/.bin/cedar g model User
 ✔ Generating model file...
 ✔ Successfully wrote file $(./api/src/models/User.js)
 ✔ Parsing datamodel, generating api/src/models/index.js...
 
-Wrote /Users/rob/Sites/cedarjs/cedar_record/.redwood/datamodel.json
+Wrote /Users/rob/Sites/cedarjs/cedar_record/.cedar/datamodel.json
 Wrote /Users/rob/Sites/cedarjs/cedar_record/api/src/models/index.js
 
 ✨ Done in 3.74s.
 ```
 
-Generating a model automatically runs `yarn rw record init` as well.
+Generating a model automatically runs `yarn cedar record init` as well.
 
 ### generate page
 
 Generates a page component and updates the routes.
 
 ```bash
-yarn redwood generate page < name > [path]
+yarn cedar generate page < name > [path]
 ```
 
 `path` can include a route parameter which will be passed to the generated
@@ -884,7 +889,7 @@ This also updates `Routes.js` in `./web/src`.
 **Destroying**
 
 ```
-yarn redwood destroy page <name> [path]
+yarn cedar destroy page <name> [path]
 ```
 
 **Examples**
@@ -892,9 +897,9 @@ yarn redwood destroy page <name> [path]
 Generating a home page:
 
 ```plaintext
-~/redwood-app$ yarn redwood generate page home /
+~/cedar-app$ yarn cedar generate page home /
 yarn run v1.22.4
-$ /redwood-app/node_modules/.bin/redwood g page home /
+$ /cedar-app/node_modules/.bin/cedar g page home /
   ✔ Generating page files...
     ✔ Writing `./web/src/pages/HomePage/HomePage.test.js`...
     ✔ Writing `./web/src/pages/HomePage/HomePage.js`...
@@ -933,9 +938,9 @@ const Routes = () => {
 Generating a page to show quotes:
 
 ```plaintext
-~/redwood-app$ yarn redwood generate page quote {id}
+~/cedar-app$ yarn cedar generate page quote {id}
 yarn run v1.22.4
-$ /redwood-app/node_modules/.bin/redwood g page quote {id}
+$ /cedar-app/node_modules/.bin/cedar g page quote {id}
   ✔ Generating page files...
     ✔ Writing `./web/src/pages/QuotePage/QuotePage.stories.js`...
     ✔ Writing `./web/src/pages/QuotePage/QuotePage.test.js`...
@@ -984,7 +989,7 @@ const Routes = () => {
 Generate a boilerplate subscription or live query used with CedarJS Realtime.
 
 ```bash
-yarn redwood generate realtime <name>
+yarn cedar generate realtime <name>
 ```
 
 | Arguments & Options | Description                                                                                      |
@@ -1002,7 +1007,7 @@ See Realtime for more information on how to [setup CedarJS Realtime](#setup-real
 Generate a live query.
 
 ```bash
-~/redwood-app$ yarn rw g realtime NewLiveQuery
+~/cedar-app$ yarn cedar g realtime NewLiveQuery
 ? What type of realtime event would you like to create? › - Use arrow-keys. Return to submit.
 ❯ Live Query
 Create a Live Query to watch for changes in data
@@ -1017,7 +1022,7 @@ Subscription
 Generate a subscription.
 
 ```bash
-~/redwood-app$ yarn rw g realtime NewSub
+~/cedar-app$ yarn cedar g realtime NewSub
 ? What type of realtime event would you like to create? › - Use arrow-keys. Return to submit.
 Live Query
 ❯ Subscription - Create a Subscription to watch for events
@@ -1033,7 +1038,7 @@ Live Query
 Generate Pages, SDL, and Services files based on a given DB schema Model. Also accepts `<path/model>`.
 
 ```bash
-yarn redwood generate scaffold <model>
+yarn cedar generate scaffold <model>
 ```
 
 A scaffold quickly creates a CRUD for a model by generating the following files and corresponding routes:
@@ -1046,6 +1051,17 @@ A scaffold quickly creates a CRUD for a model by generating the following files 
 - components
 
 The content of the generated components is different from what you'd get by running them individually.
+
+Like [generate sdl](#generate-sdl), the scaffold generator never includes dbAuth's sensitive fields (`hashedPassword`, `salt`, `resetToken`, `resetTokenExpiresAt`, `webAuthnChallenge`) in the generated SDL, forms, cells or display pages. As with `generate sdl`, `salt` is only excluded when the model has at least one of the other auth fields too — a standalone `salt` field is kept.
+
+Also like `generate sdl`, if the model has relations to models that don't have
+SDL files of their own yet, read-only stub SDLs (and services) are generated for
+those models too, so GraphQL type generation doesn't fail with an `Unknown type`
+error. Replace a stub by running `generate sdl` (SDL + service only) or
+`generate scaffold` (adds pages, cells, and forms too) for that model; unedited
+stubs are overwritten without needing `--force`. See
+[Troubleshooting Generators](./schema-relations#troubleshooting-generators) for
+details.
 
 | Arguments & Options  | Description                                                                                                                                                                                           |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1063,7 +1079,7 @@ See [Creating a Post Editor](tutorial/chapter2/getting-dynamic.md#creating-a-pos
 **Nesting of Components and Pages**
 
 By default, redwood will nest the components and pages in a directory named as per the model. For example (where `post` is the model):
-`yarn rw g scaffold post`
+`yarn cedar g scaffold post`
 will output the following files, with the components and pages nested in a `Post` directory:
 
 ```plaintext {9-20}
@@ -1106,12 +1122,12 @@ Notes:
 
 **Namespacing Scaffolds**
 
-You can namespace your scaffolds by providing `<path/model>`. The layout, pages, cells, and components will be nested in newly created dir(s). In addition, the nesting folder, based upon the model name, is still applied after the path for components and pages, unless turned off in the `cedar.toml` as described above. For example, given a model `user`, running `yarn redwood generate scaffold admin/user` will nest the layout, pages, and components in a newly created `Admin` directory created for each of the `layouts`, `pages`, and `components` folders:
+You can namespace your scaffolds by providing `<path/model>`. The layout, pages, cells, and components will be nested in newly created dir(s). In addition, the nesting folder, based upon the model name, is still applied after the path for components and pages, unless turned off in the `cedar.toml` as described above. For example, given a model `user`, running `yarn cedar generate scaffold admin/user` will nest the layout, pages, and components in a newly created `Admin` directory created for each of the `layouts`, `pages`, and `components` folders:
 
 ```plaintext {9-20}
-~/redwood-app$ yarn redwood generate scaffold admin/user
+~/cedar-app$ yarn cedar generate scaffold admin/user
 yarn run v1.22.4
-$ /redwood-app/node_modules/.bin/redwood g scaffold admin/user
+$ /cedar-app/node_modules/.bin/cedar g scaffold admin/user
   ✔ Generating scaffold files...
     ✔ Successfully wrote file `./api/src/graphql/users.sdl.js`
     ✔ Successfully wrote file `./api/src/services/users/users.js`
@@ -1162,7 +1178,7 @@ Notes:
 **Destroying**
 
 ```
-yarn redwood destroy scaffold <model>
+yarn cedar destroy scaffold <model>
 ```
 
 Notes:
@@ -1178,10 +1194,13 @@ Notes:
 
 **Troubleshooting**
 
-If you see `Error: Unknown type: ...`, don't panic!
-It's a known limitation with GraphQL type generation.
-It happens when you generate the SDL of a Prisma model that has relations **before the SDL for the related model exists**.
-Please see [Troubleshooting Generators](./schema-relations#troubleshooting-generators) for help.
+As described above, `generate scaffold` generates read-only stub SDLs for any
+related models that don't have one yet, before type generation runs, so in the
+common case you won't run into `Error: Unknown type: ...`. If you do hit
+it — for example after destroying an SDL that another stub still relies on,
+or with an implicit many-to-many relation, which isn't stubbed — see
+[Troubleshooting Generators](./schema-relations#troubleshooting-generators)
+for help.
 
 ### generate script
 
@@ -1203,7 +1222,7 @@ Scripts have access to services and libraries used in your project. Some example
 #### Usage
 
 ```
-❯ yarn rw g script syncStripeProducts
+❯ yarn cedar g script syncStripeProducts
 
   ✔ Generating script file...
     ✔ Successfully wrote file `./scripts/syncStripeProducts.ts`
@@ -1211,9 +1230,9 @@ Scripts have access to services and libraries used in your project. Some example
 
     After modifying your script, you can invoke it like:
 
-      yarn rw exec syncStripeProducts
+      yarn cedar exec syncStripeProducts
 
-      yarn rw exec syncStripeProducts --param1 true
+      yarn cedar exec syncStripeProducts --param1 true
 ```
 
 ### generate sdl
@@ -1221,10 +1240,14 @@ Scripts have access to services and libraries used in your project. Some example
 Generate a GraphQL schema and service object.
 
 ```bash
-yarn redwood generate sdl <model>
+yarn cedar generate sdl <model>
 ```
 
 The sdl will inspect your `schema.prisma` and will do its best with relations. Schema to generators isn't one-to-one yet (and might never be).
+
+If the model has relations to models that don't have SDL files of their own yet, read-only stub SDLs (and services) are generated for those models too — without them, GraphQL type generation would fail with an `Unknown type` error. Replace a stub by running `generate sdl` for that model; unedited stubs are overwritten without needing `--force`. See [Troubleshooting Generators](./schema-relations#troubleshooting-generators) for details.
+
+Fields that Cedar's [dbAuth](auth/dbauth.md) setup uses for authentication (`hashedPassword`, `salt`, `resetToken`, `resetTokenExpiresAt` and `webAuthnChallenge`) are never included in the generated SDL — they should not be queryable or settable through your GraphQL API. (Since `salt` is a generic word that can be totally benign on other models, it's only excluded when the model has at least one of the other auth fields too.) The generator prints a note naming any fields it excluded. If you really do want one of them exposed, add it to the generated SDL file manually.
 
 | Arguments & Options  | Description                                                                                                                                                                                            |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -1247,15 +1270,15 @@ But, since the `generate` command prevents you from overwriting files accidental
 In that case, you can run the following to "regenerate" **just** the SDL file and leave your tests and scenarios intact and not lose your hard work.
 
 ```
-yarn redwood g sdl <model> --force --no-tests
+yarn cedar g sdl <model> --force --no-tests
 ```
 
 #### Example
 
 ```bash
-~/redwood-app$ yarn redwood generate sdl user --force --no-tests
+~/cedar-app$ yarn cedar generate sdl user --force --no-tests
 yarn run v1.22.4
-$ /redwood-app/node_modules/.bin/redwood g sdl user
+$ /cedar-app/node_modules/.bin/cedar g sdl user
 ✔ Generating SDL files...
 ✔ Writing $(./api/src/graphql/users.sdl.js)...
 ✔ Writing $(./api/src/services/users/users.js)...
@@ -1265,7 +1288,7 @@ Done in 1.04s.
 **Destroying**
 
 ```
-yarn redwood destroy sdl <model>
+yarn cedar destroy sdl <model>
 ```
 
 #### Example
@@ -1273,9 +1296,9 @@ yarn redwood destroy sdl <model>
 Generating a user sdl:
 
 ```bash
-~/redwood-app$ yarn redwood generate sdl user
+~/cedar-app$ yarn cedar generate sdl user
 yarn run v1.22.4
-$ /redwood-app/node_modules/.bin/redwood g sdl user
+$ /cedar-app/node_modules/.bin/cedar g sdl user
 ✔ Generating SDL files...
 ✔ Writing $(./api/src/graphql/users.sdl.js)...
 ✔ Writing $(./api/src/services/users/users.scenarios.js)...
@@ -1377,10 +1400,12 @@ export const User = {
 
 **Troubleshooting**
 
-If you see `Error: Unknown type: ...`, don't panic!
-It's a known limitation with GraphQL type generation.
-It happens when you generate the SDL of a Prisma model that has relations **before the SDL for the related model exists**.
-Please see [Troubleshooting Generators](./schema-relations#troubleshooting-generators) for help.
+As described above, `generate sdl` generates read-only stub SDLs for any
+related models that don't have one yet, before type generation runs, so in
+the common case you won't run into `Error: Unknown type: ...`. If you do hit
+it — for example after destroying an SDL that another stub still relies on,
+or with an implicit many-to-many relation, which isn't stubbed — see
+[Troubleshooting Generators](./schema-relations#troubleshooting-generators) for help.
 
 ### generate secret
 
@@ -1396,10 +1421,10 @@ Using the `--raw` option you can easily append a secret key to your .env file, l
 
 ```
 # yarn v1
-echo "SESSION_SECRET=$(yarn --silent rw g secret --raw)" >> .env
+echo "SESSION_SECRET=$(yarn --silent cedar g secret --raw)" >> .env
 
 # yarn v3
-echo "SESSION_SECRET=$(yarn rw g secret --raw)" >> .env
+echo "SESSION_SECRET=$(yarn cedar g secret --raw)" >> .env
 ```
 
 ### generate service
@@ -1407,7 +1432,7 @@ echo "SESSION_SECRET=$(yarn rw g secret --raw)" >> .env
 Generate a service component.
 
 ```bash
-yarn redwood generate service <name>
+yarn cedar generate service <name>
 ```
 
 Services are where Cedar puts its business logic. They can be used by your GraphQL API or any other place in your backend code. See [How Cedar Works with Data](tutorial/chapter2/side-quest.md).
@@ -1423,7 +1448,7 @@ Services are where Cedar puts its business logic. They can be used by your Graph
 **Destroying**
 
 ```
-yarn redwood destroy service <name>
+yarn cedar destroy service <name>
 ```
 
 #### Example
@@ -1431,9 +1456,9 @@ yarn redwood destroy service <name>
 Generating a user service:
 
 ```bash
-~/redwood-app$ yarn redwood generate service user
+~/cedar-app$ yarn cedar generate service user
 yarn run v1.22.4
-$ /redwood-app/node_modules/.bin/redwood g service user
+$ /cedar-app/node_modules/.bin/cedar g service user
 ✔ Generating service files...
 ✔ Writing $(./api/src/services/users/users.scenarios.js)...
 ✔ Writing $(./api/src/services/users/users.test.js)...
@@ -1498,9 +1523,9 @@ yarn cedar info
 This command's primarily intended for getting information others might need to know to help you debug:
 
 ```bash
-~/redwood-app$ yarn redwood info
+~/cedar-app$ yarn cedar info
 yarn run v1.22.4
-$ /redwood-app/node_modules/.bin/redwood info
+$ /cedar-app/node_modules/.bin/cedar info
 
   System:
     OS: Linux 5.4 Ubuntu 20.04 LTS (Focal Fossa)
@@ -1522,10 +1547,10 @@ Done in 1.98s.
 Lint your files.
 
 ```bash
-yarn redwood lint
+yarn cedar lint
 ```
 
-[Our ESLint configuration](https://github.com/cedarjs/cedar/blob/master/packages/eslint-config/index.js) is a mix of [ESLint's recommended rules](https://eslint.org/docs/rules/), [React's recommended rules](https://www.npmjs.com/package/eslint-plugin-react#list-of-supported-rules), and a bit of our own stylistic flair:
+[Our ESLint configuration](https://github.com/cedarjs/cedar/blob/master/packages/eslint-config/shared.mjs) is a mix of [ESLint's recommended rules](https://eslint.org/docs/rules/), [React's recommended rules](https://www.npmjs.com/package/eslint-plugin-react#list-of-supported-rules), and a bit of our own stylistic flair:
 
 - no semicolons
 - comma dangle when multiline
@@ -1706,7 +1731,7 @@ export default async () => {
 You can pipe the script output to the formatter:
 
 ```bash
-yarn rw prisma db seed | yarn cedar-log-formatter
+yarn cedar prisma db seed | yarn cedar-log-formatter
 ```
 
 > Note: Just be sure to set `data` attribute, so the formatter recognizes the content.
@@ -1719,12 +1744,12 @@ Update the database schema with migrations.
 > 👉 Quick link to the [Prisma Concepts](https://www.prisma.io/docs/concepts/components/prisma-migrate).
 
 ```
-yarn redwood prisma migrate <command>
+yarn cedar prisma migrate <command>
 ```
 
 As a database toolkit, Prisma strives to be as holistic as possible. Prisma Migrate lets you use Prisma schema to make changes to your database declaratively, all while keeping things deterministic and fully customizable by generating the migration steps in a simple, familiar format: SQL.
 
-Since migrate generates plain SQL files, you can edit those SQL files before applying the migration using `yarn redwood prisma migrate --create-only`. This creates the migration based on the changes in the Prisma schema, but doesn't apply it, giving you the chance to go in and make any modifications you want. [Daniel Norman's tour of Prisma Migrate](https://www.youtube.com/watch?v=0LKhksstrfg) demonstrates this and more to great effect.
+Since migrate generates plain SQL files, you can edit those SQL files before applying the migration using `yarn cedar prisma migrate --create-only`. This creates the migration based on the changes in the Prisma schema, but doesn't apply it, giving you the chance to go in and make any modifications you want. [Daniel Norman's tour of Prisma Migrate](https://www.youtube.com/watch?v=0LKhksstrfg) demonstrates this and more to great effect.
 
 Prisma Migrate has separate commands for applying migrations based on whether you're in dev or in production. The Prisma [Migration flows](https://www.prisma.io/docs/concepts/components/prisma-migrate/prisma-migrate-flows) goes over the difference between these workflows in more detail.
 
@@ -1735,7 +1760,7 @@ Create a migration from changes in Prisma schema, apply it to the database, trig
 > 👉 Quick link to the [Prisma CLI Reference](https://www.prisma.io/docs/reference/api-reference/command-reference#migrate-dev).
 
 ```
-yarn redwood prisma migrate dev
+yarn cedar prisma migrate dev
 ```
 
 #### prisma migrate deploy
@@ -1745,7 +1770,7 @@ Apply pending migrations to update the database schema in production/staging.
 > 👉 Quick link to the [Prisma CLI Reference](https://www.prisma.io/docs/reference/api-reference/command-reference#migrate-deploy).
 
 ```
-yarn redwood prisma migrate deploy
+yarn cedar prisma migrate deploy
 ```
 
 #### prisma migrate reset
@@ -1767,7 +1792,7 @@ Commands for working with RedwoodRecord.
 Parses `schema.prisma` and caches the datamodel as JSON. Reads relationships between models and adds some configuration in `api/src/models/index.js`.
 
 ```
-yarn rw record init
+yarn cedar record init
 ```
 
 ## redwood-tools (alias rwt)
@@ -1779,7 +1804,7 @@ Cedar's companion CLI development tool. You'll be using this if you're contribut
 Initialize configuration and integrate third-party libraries effortlessly.
 
 ```
-yarn redwood setup <category>
+yarn cedar setup <category>
 ```
 
 | Commands           | Description                                                                              |
@@ -1800,7 +1825,7 @@ yarn redwood setup <category>
 Integrate an auth provider.
 
 ```
-yarn redwood setup auth <provider>
+yarn cedar setup auth <provider>
 ```
 
 | Arguments & Options | Description                                                                                                                                                                   |
@@ -1817,7 +1842,7 @@ See [Authentication](authentication.md).
 This command creates a setup file in `api/src/lib/cache.{ts|js}` for connecting to a Memcached or Redis server and allows caching in services. See the [**Caching** section of the Services docs](/docs/services#caching) for usage.
 
 ```
-yarn redwood setup cache <client>
+yarn cedar setup cache <client>
 ```
 
 | Arguments & Options | Description                                             |
@@ -1830,7 +1855,7 @@ yarn redwood setup cache <client>
 Copies a given generator's template files to your local app for customization. The next time you generate that type again, it will use your custom template instead of Cedar's default.
 
 ```
-yarn rw setup generator <name>
+yarn cedar setup generator <name>
 ```
 
 | Arguments & Options | Description                                                   |
@@ -1843,12 +1868,12 @@ yarn rw setup generator <name>
 If you wanted to customize the page generator template, run the command:
 
 ```
-yarn rw setup generator page
+yarn cedar setup generator page
 ```
 
-And then check `web/generators/page` for the page, storybook and test template files. You don't need to keep all of these templates—you could customize just `page.tsx.template` and delete the others and they would still be generated, but using the default Cedar templates.
+And then check `generatorTemplates/web/page` for the page, storybook and test template files. You don't need to keep all of these templates—you could customize just `page.tsx.template` and delete the others and they would still be generated, but using the default Cedar templates.
 
-The only exception to this rule is the scaffold templates. You'll get four directories, `assets`, `components`, `layouts` and `pages`. If you want to customize any one of the templates in those directories, you will need to keep all the other files inside of that same directory, even if you make no changes besides the one you care about. (This is due to the way the scaffold looks up its template files.) For example, if you wanted to customize only the index page of the scaffold (the one that lists all available records in the database) you would edit `web/generators/scaffold/pages/NamesPage.tsx.template` and keep the other pages in that directory. You _could_ delete the other three directories (`assets`, `components`, `layouts`) if you don't need to customize them.
+The only exception to this rule is the scaffold templates. You'll get four directories, `assets`, `components`, `layouts` and `pages`. If you want to customize any one of the templates in those directories, you will need to keep all the other files inside of that same directory, even if you make no changes besides the one you care about. (This is due to the way the scaffold looks up its template files.) For example, if you wanted to customize only the index page of the scaffold (the one that lists all available records in the database) you would edit `generatorTemplates/web/scaffold/pages/NamesPage.tsx.template` and keep the other pages in that directory. You _could_ delete the other three directories (`assets`, `components`, `layouts`) if you don't need to customize them.
 
 **Name Variants**
 
@@ -1874,11 +1899,11 @@ For example, given the name `fooBar` your template will receive the following _v
 Copying the cell generator templates:
 
 ```bash
-~/redwood-app$ yarn rw setup generator cell
+~/cedar-app$ yarn cedar setup generator cell
 yarn run v1.22.4
-$ /redwood-app/node_modules/.bin/rw setup generator cell
+$ /cedar-app/node_modules/.bin/cedar setup generator cell
 ✔ Copying generator templates...
-✔ Wrote templates to /web/generators/cell
+✔ Wrote templates to /generatorTemplates/web/cell
 ✨ Done in 2.33s.
 ```
 
@@ -1887,7 +1912,7 @@ $ /redwood-app/node_modules/.bin/rw setup generator cell
 Set up a deployment configuration.
 
 ```
-yarn redwood setup deploy <provider>
+yarn cedar setup deploy <provider>
 ```
 
 | Arguments & Options | Description                                                                                                                                                    |
@@ -1937,7 +1962,7 @@ In order to use [Netlify Dev](https://www.netlify.com/products/dev/) you need to
 This command adds the necessary packages and files defining the configuration for Cedar's [Background Jobs](background-jobs) processing.
 
 ```
-yarn redwood setup jobs
+yarn cedar setup jobs
 ```
 
 | Arguments & Options | Description              |
@@ -1949,7 +1974,7 @@ yarn redwood setup jobs
 This command adds the necessary packages and files to get started using the CedarJS mailer. By default it also creates an example mail template which can be skipped with the `--skip-examples` flag.
 
 ```
-yarn redwood setup mailer
+yarn cedar setup mailer
 ```
 
 | Arguments & Options | Description                                                    |
@@ -1964,7 +1989,7 @@ This command takes a published npm package that you specify, performs some compa
 This command behaves similarly to `yarn dlx` but will attempt to confirm compatibility between the package you are attempting to run and the current version of Cedar you are running. You can bypass this check by passing the `--force` flag if you feel you understand any potential compatibility issues.
 
 ```
-yarn redwood setup package <npm-package>
+yarn cedar setup package <npm-package>
 ```
 
 | Arguments & Options | Description                |
@@ -1976,13 +2001,13 @@ yarn redwood setup package <npm-package>
 Run the made up `@cedarjs/setup-example` package:
 
 ```bash
-~/cedar-app$ yarn rw setup package @cedarjs/setup-example
+~/cedar-app$ yarn cedar setup package @cedarjs/setup-example
 ```
 
 Run the same package but using a particular npm tag and avoiding any compatibility checks:
 
 ```bash
-~/cedar-app$ yarn rw setup package @cedarjs/setup-example@beta --force
+~/cedar-app$ yarn cedar setup package @cedarjs/setup-example@beta --force
 ```
 
 **Compatibility Checks**
@@ -1997,14 +2022,14 @@ This command creates the necessary files to support GraphQL features like fragme
 
 #### Usage
 
-Run `yarn rw setup graphql <feature>`
+Run `yarn cedar setup graphql <feature>`
 
 #### setup graphql fragments
 
 This command creates the necessary configuration to start using [GraphQL Fragments](./graphql/fragments.md).
 
 ```
-yarn redwood setup graphql fragments
+yarn cedar setup graphql fragments
 ```
 
 | Arguments & Options | Description                              |
@@ -2013,12 +2038,12 @@ yarn redwood setup graphql fragments
 
 #### Usage
 
-Run `yarn rw setup graphql fragments`
+Run `yarn cedar setup graphql fragments`
 
 #### Example
 
 ```bash
-~/redwood-app$ yarn rw setup graphql fragments
+~/cedar-app$ yarn cedar setup graphql fragments
 ✔ Update Cedar Project Configuration to enable GraphQL Fragments
 ✔ Generate possibleTypes.ts
 ✔ Import possibleTypes in App.tsx
@@ -2030,17 +2055,17 @@ Run `yarn rw setup graphql fragments`
 This command creates the necessary configuration to start using [GraphQL Trusted Documents](./graphql/trusted-documents.md).
 
 ```
-yarn redwood setup graphql trusted-documents
+yarn cedar setup graphql trusted-documents
 ```
 
 #### Usage
 
-Run `yarn rw setup graphql trusted-documents`
+Run `yarn cedar setup graphql trusted-documents`
 
 #### Example
 
 ```bash
-~/redwood-app$ yarn rw setup graphql trusted-documents
+~/cedar-app$ yarn cedar setup graphql trusted-documents
 ✔ Update Cedar Project Configuration to enable GraphQL Trusted Documents ...
 ✔ Generating Trusted Documents store ...
 ✔ Configuring the GraphQL Handler to use a Trusted Documents store ...
@@ -2059,7 +2084,7 @@ If you have not setup the CedarJS server file, it will be setup:
 This command creates the necessary files, installs the required packages, and provides examples to setup CedarJS Realtime from GraphQL live queries and subscriptions. See the Realtime docs for more information.
 
 ```
-yarn redwood setup realtime
+yarn cedar setup realtime
 ```
 
 | Arguments & Options                 | Description                                                                        |
@@ -2075,12 +2100,12 @@ If the CedarJS Server is not setup, it will be installed as well.
 
 #### Usage
 
-Run `yarn rw setup realtime`
+Run `yarn cedar setup realtime`
 
 #### Example
 
 ```bash
-~/redwood-app$ yarn rw setup realtime
+~/cedar-app$ yarn cedar setup realtime
 ✔ Checking for realtime environment prerequisites ...
 ✔ Adding required api packages...
 ✔ Adding the realtime api lib ...
@@ -2103,7 +2128,7 @@ If you have not setup the CedarJS server file, it will be setup:
 Add a `tsconfig.json` to both the web and api sides so you can start using [TypeScript](typescript).
 
 ```
-yarn redwood setup tsconfig
+yarn cedar setup tsconfig
 ```
 
 | Arguments & Options | Description              |
@@ -2115,7 +2140,7 @@ yarn redwood setup tsconfig
 Set up a UI design or style library. Right now the choices are [TailwindCSS](https://tailwindcss.com/), [Chakra UI](https://chakra-ui.com/), and [Mantine UI](https://ui.mantine.dev/).
 
 ```
-yarn rw setup ui <library>
+yarn cedar setup ui <library>
 ```
 
 | Arguments & Options | Description                                                                 |
@@ -2128,7 +2153,7 @@ yarn rw setup ui <library>
 Starts Storybook locally
 
 ```bash
-yarn redwood storybook
+yarn cedar storybook
 ```
 
 [Storybook](https://storybook.js.org/docs/6/get-started/install) is a tool for UI development that allows you to develop your components in isolation, away from all the conflated cruft of your real app.
@@ -2148,7 +2173,7 @@ CedarJS supports Storybook by creating stories when generating cells, components
 Run Jest tests for api and web.
 
 ```bash
-yarn redwood test [side..]
+yarn cedar test [side..]
 ```
 
 | Arguments & Options | Description                                                                                                                                                                                                                                                 |
@@ -2169,7 +2194,7 @@ yarn redwood test [side..]
 Runs a TypeScript compiler check on both the api and the web sides.
 
 ```bash
-yarn redwood type-check [side]
+yarn cedar type-check [side]
 ```
 
 | Arguments & Options | Description                                                                    |
@@ -2185,12 +2210,12 @@ See [Running Type Checks](typescript/introduction.md#running-type-checks).
 Runs a server that serves both the api and the web sides.
 
 ```bash
-yarn redwood serve [side]
+yarn cedar serve [side]
 ```
 
-> You should run `yarn rw build` before running this command to make sure all the static assets that will be served have been built.
+> You should run `yarn cedar build` before running this command to make sure all the static assets that will be served have been built.
 
-`yarn rw serve` is useful for debugging locally or for self-hosting—deploying a single server into a serverful environment. Since both the api and the web sides run in the same server, CORS isn't a problem.
+`yarn cedar serve` is useful for debugging locally or for self-hosting—deploying a single server into a serverful environment. Since both the api and the web sides run in the same server, CORS isn't a problem.
 
 | Arguments & Options | Description                                                                    |
 | ------------------- | ------------------------------------------------------------------------------ |
@@ -2203,7 +2228,7 @@ yarn redwood serve [side]
 Runs a server that only serves the api side.
 
 ```
-yarn rw serve api
+yarn cedar serve api
 ```
 
 This command uses `apiUrl` in your `cedar.toml`. Use this command if you want to run just the api side on a server (e.g. running on Render).
@@ -2218,7 +2243,7 @@ For the full list of Server Configuration settings, see [this documentation](app
 If you want to format your log output, you can pipe the command to the Cedar LogFormatter:
 
 ```
-yarn rw serve api | yarn cedar-log-formatter
+yarn cedar serve api | yarn cedar-log-formatter
 ```
 
 ### serve web
@@ -2226,7 +2251,7 @@ yarn rw serve api | yarn cedar-log-formatter
 Runs a server that only serves the web side.
 
 ```
-yarn rw serve web
+yarn cedar serve web
 ```
 
 This command serves the contents in `web/dist`. Use this command if you're debugging (e.g. great for debugging prerender) or if you want to run your api and web sides on separate servers, which is often considered a best practice for scalability (since your api side likely has much higher scaling requirements).
@@ -2244,7 +2269,7 @@ This command serves the contents in `web/dist`. Use this command if you're debug
 If you want to format your log output, you can pipe the command to the Cedar LogFormatter:
 
 ```
-yarn rw serve web | yarn cedar-log-formatter
+yarn cedar serve web | yarn cedar-log-formatter
 ```
 
 ## upgrade
@@ -2252,7 +2277,7 @@ yarn rw serve web | yarn cedar-log-formatter
 Upgrade all `@cedarjs` packages via an interactive CLI.
 
 ```bash
-yarn redwood upgrade
+yarn cedar upgrade
 ```
 
 This command does all the heavy-lifting of upgrading to a new release for you.
@@ -2271,13 +2296,13 @@ A canary release is published to npm every time a PR is merged to the `main` bra
 Upgrade to the most recent canary:
 
 ```bash
-yarn redwood upgrade -t canary
+yarn cedar upgrade -t canary
 ```
 
 Upgrade to a specific version:
 
 ```bash
-yarn redwood upgrade -t 0.19.3
+yarn cedar upgrade -t 0.19.3
 ```
 
 ## Background checks

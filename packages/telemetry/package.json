@@ -1,22 +1,22 @@
 {
   "name": "@cedarjs/telemetry",
-  "version": "4.1.0",
+  "version": "5.0.6",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
     "directory": "packages/telemetry"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsx build.mts && yarn build:types",
+    "build": "node build.mts",
     "build:pack": "yarn pack -o cedarjs-telemetry.tgz",
-    "build:types": "tsc --build --verbose",
+    "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
     "test:watch": "vitest watch"
@@ -27,16 +27,15 @@
     "@whatwg-node/fetch": "0.10.13",
     "ci-info": "4.4.0",
     "envinfo": "7.21.0",
-    "systeminformation": "5.31.5",
+    "systeminformation": "5.31.7",
     "uuid": "11.1.0",
-    "yargs": "17.7.2"
+    "yargs": "17.7.3"
   },
   "devDependencies": {
     "@types/envinfo": "7.8.4",
     "@types/yargs": "17.0.35",
-    "tsx": "4.21.0",
     "typescript": "5.9.3",
-    "vitest": "3.2.4"
+    "vitest": "4.1.10"
   },
   "engines": {
     "node": ">=24"

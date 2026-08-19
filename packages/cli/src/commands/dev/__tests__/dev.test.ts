@@ -7,16 +7,22 @@ import { vi, describe, afterEach, it, expect } from 'vitest'
 
 import { getConfig } from '@cedarjs/project-config'
 import type * as ProjectConfig from '@cedarjs/project-config'
+import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 import { generatePrismaClient } from '../../../lib/generatePrismaClient.js'
-// @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../../lib/index.js'
-import { getFreePort } from '../../../lib/ports'
+import { getFreePort } from '../../../lib/ports.js'
 import '../../../lib/mockTelemetry.js'
 import { serverFileExists } from '../../../lib/project.js'
 import { handler } from '../devHandler.js'
 
 let mockCedarToml = ''
+let mockJobsDirEntries: string[] = []
+// `getPaths()` resolves `jobsConfig` once and caches it, so it can point at
+// a path that used to exist but has since been deleted. Lets tests exercise
+// that "configured path, missing file" case independently of `readdirSync`
+// (see the `existsSync` mock below).
+let mockJobsConfigExists = true
 
 vi.mock('concurrently', () => ({
   __esModule: true, // this property makes it work
@@ -53,7 +59,14 @@ vi.mock('node:fs', async (importOriginal) => {
 
         return 'File content'
       },
-      existsSync: () => true,
+      existsSync: (filePath: string) => {
+        if (filePath === '/mocked/project/api/src/lib/jobs.ts') {
+          return mockJobsConfigExists
+        }
+
+        return true
+      },
+      readdirSync: () => mockJobsDirEntries,
     },
   }
 })
@@ -74,6 +87,10 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     getConfigPath: vi.fn(() => '/mocked/project/cedar.toml'),
   }
 })
+
+vi.mock('@cedarjs/project-config/packageManager', () => ({
+  getPackageManager: vi.fn(() => 'yarn'),
+}))
 
 vi.mock('../../../lib/generatePrismaClient', () => {
   return {
@@ -103,6 +120,8 @@ vi.mock('../../../lib/index.js', () => ({
         src: '/mocked/project/api/src',
         functions: '/mocked/project/api/src/functions',
         dist: '/mocked/project/api/dist',
+        jobs: '/mocked/project/api/src/jobs',
+        jobsConfig: null,
       },
       web: {
         base: '/mocked/project/web',
@@ -179,6 +198,12 @@ function findSeparateCommands() {
   }
 }
 
+function findJobsCommand() {
+  const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
+
+  return asCommandInfo(find(concurrentlyArgs, { name: 'jobs' }))
+}
+
 function findApiCommands() {
   const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
 
@@ -201,7 +226,14 @@ describe('yarn cedar dev', () => {
     vi.clearAllMocks()
     vi.mocked(getPaths).mockReset()
     vi.mocked(getConfig).mockReset()
+    // `mockReturnValue` (unlike `mockReset`) survives `vi.clearAllMocks()`,
+    // so a test that opts into the custom-server lane (like the "reserved
+    // api port" test below) would otherwise leak `serverFile: true` into
+    // every test that runs after it.
+    vi.mocked(serverFileExists).mockReturnValue(false)
+    mockJobsConfigExists = true
     mockCedarToml = ''
+    mockJobsDirEntries = []
   })
 
   it('Should run unified dev server when --ud is passed', async () => {
@@ -270,12 +302,15 @@ describe('yarn cedar dev', () => {
 
     const { webCommand, apiCommand, generateCommand } = findSeparateCommands()
 
-    // In streaming SSR mode the web side uses the cedar-dev-fe server
-    expect(webCommand?.command).toContain(
-      'yarn cross-env NODE_ENV=development cedar-dev-fe',
-    )
+    // In streaming SSR mode the web side uses the cedar-dev-fe server, launched
+    // explicitly (like the other dev servers) so node flags apply. NODE_ENV
+    // comes from the job env, not a cross-env wrapper.
+    expect(webCommand?.command).toContain('yarn node ')
+    expect(webCommand?.command).toContain('devFeServer.js')
+    expect(webCommand?.env?.NODE_ENV).toEqual('development')
 
-    // API side uses nodemon with cedar-api-server-watch in streaming SSR fallback mode
+    // API side uses nodemon with cedar-api-server-watch in streaming SSR
+    // fallback mode
     expect(
       apiCommand?.command
         .replace(/\s+/g, ' ')
@@ -283,7 +318,9 @@ describe('yarn cedar dev', () => {
         // test environments (vite sets this in their vite-ecosystem-ci tests)
         .replace(/--max-old-space-size=\d+\s/, ''),
     ).toEqual(
-      'yarn nodemon --quiet --watch "/mocked/project/cedar.toml" --exec "yarn cedar-api-server-watch --port 8911 --debug-port 18911 | cedar-log-formatter"',
+      'yarn nodemon --quiet --watch "/mocked/project/cedar.toml" ' +
+        '--exec "yarn cedar-api-server-watch --port 8911 ' +
+        '--debug-port 18911 | yarn cedar-log-formatter"',
     )
     expect(apiCommand?.env?.NODE_ENV).toEqual('development')
     expect(apiCommand?.env?.NODE_OPTIONS).toContain('--enable-source-maps')
@@ -320,9 +357,14 @@ describe('yarn cedar dev', () => {
 
     const { webCommand } = findSeparateCommands()
 
-    expect(webCommand?.command).toContain(
-      'yarn cross-env NODE_ENV=development cedar-vite-dev',
-    )
+    // The bin is launched via an explicit `node <flags> <path>` (under yarn:
+    // `yarn node`) so node flags can be applied. NODE_ENV comes from the job
+    // env. See `formatViteDevBinCommand`.
+    // The full command will be something like:
+    // yarn node "/Users/tobbe/dev/cedarjs/cedar/packages/vite/bins/cedar-vite-dev.mjs"
+    expect(webCommand?.command).toContain('yarn node ')
+    expect(webCommand?.command).toContain('cedar-vite-dev.mjs')
+    expect(webCommand?.env?.NODE_ENV).toEqual('development')
 
     // No unified dev command and no api command
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
@@ -332,15 +374,43 @@ describe('yarn cedar dev', () => {
     expect(apiCommand).toBeUndefined()
   })
 
+  it('Should forward --node-args to the web dev server node process', async () => {
+    await handler({ workspace: ['web'], nodeArgs: '--inspect' })
+
+    const { webCommand } = findSeparateCommands()
+
+    // Node flags must appear before the bin path (node-flag position), not
+    // after.
+    expect(webCommand?.command).toMatch(
+      /yarn node .*--inspect.*cedar-vite-dev\.mjs/,
+    )
+  })
+
+  it('Should forward --node-args to the unified dev server node process', async () => {
+    await handler({
+      workspace: ['api', 'web'],
+      ud: true,
+      nodeArgs: '--inspect',
+    })
+
+    const devCommand = findUnifiedDevCommand()
+
+    expect(devCommand.command).toMatch(
+      /yarn node .*--inspect.*cedar-unified-dev\.mjs/,
+    )
+  })
+
   it('Should use esm api-server-watch bin in fallback mode for esm projects', async () => {
     vi.mocked(getPaths).mockReturnValue({
       base: '/mocked/esm-project',
+      // @ts-expect-error - only declaring what the test needs
       api: {
         base: '/mocked/esm-project/api',
         src: '/mocked/esm-project/api/src',
         functions: '/mocked/esm-project/api/src/functions',
         dist: '/mocked/esm-project/api/dist',
       },
+      // @ts-expect-error - only declaring what the test needs
       web: {
         base: '/mocked/esm-project/web',
         src: '/mocked/esm-project/web/src',
@@ -349,6 +419,12 @@ describe('yarn cedar dev', () => {
       packages: '/mocked/esm-project/packages',
       generated: {
         base: '/mocked/esm-project/.cedar',
+        schema: '/mocked/esm-project/.cedar/schema.prisma',
+        types: {
+          includes: '/mocked/esm-project/.cedar/types',
+          mirror: '/mocked/esm-project/.cedar/types/mirror',
+        },
+        prebuild: '/mocked/esm-project/.cedar/prebuild',
       },
     })
 
@@ -416,5 +492,402 @@ describe('yarn cedar dev', () => {
     // The configured API port must still be forwarded in the command.
     const { apiCommand } = findSeparateCommands()
     expect(apiCommand?.command).toContain('--port 8911')
+  })
+
+  it('Should not start the jobs worker when jobs are not configured', async () => {
+    await handler({ workspace: ['api', 'web'] })
+
+    expect(findJobsCommand()).toBeUndefined()
+  })
+
+  it('Should start the jobs worker when jobs are configured and at least one job exists', async () => {
+    vi.mocked(getPaths).mockReturnValue({
+      base: '/mocked/project',
+      // @ts-expect-error - only declaring what the test needs
+      api: {
+        base: '/mocked/project/api',
+        src: '/mocked/project/api/src',
+        functions: '/mocked/project/api/src/functions',
+        dist: '/mocked/project/api/dist',
+        jobs: '/mocked/project/api/src/jobs',
+        jobsConfig: '/mocked/project/api/src/lib/jobs.ts',
+      },
+      // @ts-expect-error - only declaring what the test needs
+      web: {
+        base: '/mocked/project/web',
+        src: '/mocked/project/web/src',
+        dist: '/mocked/project/web/dist',
+      },
+      packages: '/mocked/project/packages',
+      generated: {
+        base: '/mocked/project/.cedar',
+      },
+    })
+    mockJobsDirEntries = ['.keep', 'WelcomeNoticeJob']
+
+    await handler({ workspace: ['api', 'web'] })
+
+    const jobsCommand = findJobsCommand()
+    expect(jobsCommand?.command).toContain('cedar-jobs work')
+    // Wrapped in nodemon watching api/dist, since `cedar-jobs work` loads
+    // its config from compiled dist output, which the api watcher only
+    // finishes writing asynchronously after `cedar dev` starts.
+    expect(jobsCommand?.command).toContain('nodemon')
+    expect(jobsCommand?.command).toContain('/mocked/project/api/dist')
+  })
+
+  it('Should not start the jobs worker when jobsConfig path is set but the file no longer exists', async () => {
+    // `getPaths()` resolves and caches `jobsConfig` once; if `api/src/lib/jobs.ts`
+    // is deleted after that (e.g. mid dev session, or a stale cache), the
+    // cached path would still look "configured" even though there's no
+    // config file left for the worker to load.
+    vi.mocked(getPaths).mockReturnValue({
+      base: '/mocked/project',
+      // @ts-expect-error - only declaring what the test needs
+      api: {
+        base: '/mocked/project/api',
+        src: '/mocked/project/api/src',
+        functions: '/mocked/project/api/src/functions',
+        dist: '/mocked/project/api/dist',
+        jobs: '/mocked/project/api/src/jobs',
+        jobsConfig: '/mocked/project/api/src/lib/jobs.ts',
+      },
+      // @ts-expect-error - only declaring what the test needs
+      web: {
+        base: '/mocked/project/web',
+        src: '/mocked/project/web/src',
+        dist: '/mocked/project/web/dist',
+      },
+      packages: '/mocked/project/packages',
+      generated: {
+        base: '/mocked/project/.cedar',
+      },
+    })
+    mockJobsDirEntries = ['.keep', 'WelcomeNoticeJob']
+    mockJobsConfigExists = false
+
+    await handler({ workspace: ['api', 'web'] })
+
+    expect(findJobsCommand()).toBeUndefined()
+  })
+
+  it('Should not push a separate jobs worker job under --ud (cedar-unified-dev runs jobs in-process)', async () => {
+    vi.mocked(getPaths).mockReturnValue({
+      base: '/mocked/project',
+      // @ts-expect-error - only declaring what the test needs
+      api: {
+        base: '/mocked/project/api',
+        src: '/mocked/project/api/src',
+        functions: '/mocked/project/api/src/functions',
+        dist: '/mocked/project/api/dist',
+        jobs: '/mocked/project/api/src/jobs',
+        jobsConfig: '/mocked/project/api/src/lib/jobs.ts',
+      },
+      // @ts-expect-error - only declaring what the test needs
+      web: {
+        base: '/mocked/project/web',
+        src: '/mocked/project/web/src',
+        dist: '/mocked/project/web/dist',
+      },
+      packages: '/mocked/project/packages',
+      generated: {
+        base: '/mocked/project/.cedar',
+      },
+    })
+    mockJobsDirEntries = ['WelcomeNoticeJob']
+
+    await handler({ workspace: ['api', 'web'], ud: true })
+
+    // `cedar-unified-dev` (started as the single unified dev job) loads and
+    // runs jobs workers itself - see `jobsDevMiddleware.ts` in `@cedarjs/vite`.
+    expect(findJobsCommand()).toBeUndefined()
+  })
+
+  it('Should forward --no-jobs to cedar-unified-dev under --ud', async () => {
+    // `cedar-unified-dev` starts its own in-process jobs worker pool rather
+    // than the nodemon-wrapped worker pushed as a separate job, so `--jobs
+    // false` has to reach it via a CLI flag instead - it isn't otherwise
+    // forwarded (unlike args the user passes after `--`).
+    vi.mocked(getPaths).mockReturnValue({
+      base: '/mocked/project',
+      // @ts-expect-error - only declaring what the test needs
+      api: {
+        base: '/mocked/project/api',
+        src: '/mocked/project/api/src',
+        functions: '/mocked/project/api/src/functions',
+        dist: '/mocked/project/api/dist',
+        jobs: '/mocked/project/api/src/jobs',
+        jobsConfig: '/mocked/project/api/src/lib/jobs.ts',
+      },
+      // @ts-expect-error - only declaring what the test needs
+      web: {
+        base: '/mocked/project/web',
+        src: '/mocked/project/web/src',
+        dist: '/mocked/project/web/dist',
+      },
+      packages: '/mocked/project/packages',
+      generated: {
+        base: '/mocked/project/.cedar',
+      },
+    })
+    mockJobsDirEntries = ['WelcomeNoticeJob']
+
+    await handler({ workspace: ['api', 'web'], ud: true, jobs: false })
+
+    const devCommand = findUnifiedDevCommand()
+    expect(devCommand.command).toContain('--no-jobs')
+    expect(findJobsCommand()).toBeUndefined()
+  })
+
+  it('Should not forward --no-jobs to cedar-unified-dev when jobs are not opted out', async () => {
+    vi.mocked(getPaths).mockReturnValue({
+      base: '/mocked/project',
+      // @ts-expect-error - only declaring what the test needs
+      api: {
+        base: '/mocked/project/api',
+        src: '/mocked/project/api/src',
+        functions: '/mocked/project/api/src/functions',
+        dist: '/mocked/project/api/dist',
+        jobs: '/mocked/project/api/src/jobs',
+        jobsConfig: '/mocked/project/api/src/lib/jobs.ts',
+      },
+      // @ts-expect-error - only declaring what the test needs
+      web: {
+        base: '/mocked/project/web',
+        src: '/mocked/project/web/src',
+        dist: '/mocked/project/web/dist',
+      },
+      packages: '/mocked/project/packages',
+      generated: {
+        base: '/mocked/project/.cedar',
+      },
+    })
+    mockJobsDirEntries = ['WelcomeNoticeJob']
+
+    await handler({ workspace: ['api', 'web'], ud: true })
+
+    const devCommand = findUnifiedDevCommand()
+    expect(devCommand.command).not.toContain('--no-jobs')
+  })
+
+  it('Should push the classic nodemon jobs worker when --ud falls back to classic dev', async () => {
+    // `--ud` was requested, but `buildUnifiedDevCommand()` still returns
+    // `null` here (streaming SSR has its own dev server setup), so `cedar
+    // dev` falls back to classic separate api+web servers, which do produce
+    // `api/dist`. The jobs worker should follow that fallback (classic
+    // nodemon+dist job) rather than treating `--ud` as if unified dev (and
+    // its in-process job loading) were actually running.
+    const config = await defaultConfig()
+
+    vi.mocked(getConfig).mockReturnValue({
+      ...config,
+      experimental: {
+        ...config.experimental,
+        streamingSsr: {
+          enabled: true,
+        },
+      },
+    })
+
+    vi.mocked(getPaths).mockReturnValue({
+      base: '/mocked/project',
+      // @ts-expect-error - only declaring what the test needs
+      api: {
+        base: '/mocked/project/api',
+        src: '/mocked/project/api/src',
+        functions: '/mocked/project/api/src/functions',
+        dist: '/mocked/project/api/dist',
+        jobs: '/mocked/project/api/src/jobs',
+        jobsConfig: '/mocked/project/api/src/lib/jobs.ts',
+      },
+      // @ts-expect-error - only declaring what the test needs
+      web: {
+        base: '/mocked/project/web',
+        src: '/mocked/project/web/src',
+        dist: '/mocked/project/web/dist',
+      },
+      packages: '/mocked/project/packages',
+      generated: {
+        base: '/mocked/project/.cedar',
+      },
+    })
+    mockJobsDirEntries = ['WelcomeNoticeJob']
+
+    await handler({ workspace: ['api', 'web'], ud: true })
+
+    const jobsCommand = findJobsCommand()
+    expect(jobsCommand?.command).toContain('cedar-jobs work')
+    expect(jobsCommand?.command).toContain('nodemon')
+  })
+
+  it('Should not start the jobs worker when only a .keep placeholder exists', async () => {
+    vi.mocked(getPaths).mockReturnValue({
+      base: '/mocked/project',
+      // @ts-expect-error - only declaring what the test needs
+      api: {
+        base: '/mocked/project/api',
+        src: '/mocked/project/api/src',
+        functions: '/mocked/project/api/src/functions',
+        dist: '/mocked/project/api/dist',
+        jobs: '/mocked/project/api/src/jobs',
+        jobsConfig: '/mocked/project/api/src/lib/jobs.ts',
+      },
+      // @ts-expect-error - only declaring what the test needs
+      web: {
+        base: '/mocked/project/web',
+        src: '/mocked/project/web/src',
+        dist: '/mocked/project/web/dist',
+      },
+      packages: '/mocked/project/packages',
+      generated: {
+        base: '/mocked/project/.cedar',
+      },
+    })
+    mockJobsDirEntries = ['.keep']
+
+    await handler({ workspace: ['api', 'web'] })
+
+    expect(findJobsCommand()).toBeUndefined()
+  })
+
+  it('Should not start the jobs worker when only stray dotfiles exist (e.g. .DS_Store)', async () => {
+    vi.mocked(getPaths).mockReturnValue({
+      base: '/mocked/project',
+      // @ts-expect-error - only declaring what the test needs
+      api: {
+        base: '/mocked/project/api',
+        src: '/mocked/project/api/src',
+        functions: '/mocked/project/api/src/functions',
+        dist: '/mocked/project/api/dist',
+        jobs: '/mocked/project/api/src/jobs',
+        jobsConfig: '/mocked/project/api/src/lib/jobs.ts',
+      },
+      // @ts-expect-error - only declaring what the test needs
+      web: {
+        base: '/mocked/project/web',
+        src: '/mocked/project/web/src',
+        dist: '/mocked/project/web/dist',
+      },
+      packages: '/mocked/project/packages',
+      generated: {
+        base: '/mocked/project/.cedar',
+      },
+    })
+    mockJobsDirEntries = ['.keep', '.DS_Store']
+
+    await handler({ workspace: ['api', 'web'] })
+
+    expect(findJobsCommand()).toBeUndefined()
+  })
+
+  it('Should not start the jobs worker when --no-jobs is passed, even if configured', async () => {
+    vi.mocked(getPaths).mockReturnValue({
+      base: '/mocked/project',
+      // @ts-expect-error - only declaring what the test needs
+      api: {
+        base: '/mocked/project/api',
+        src: '/mocked/project/api/src',
+        functions: '/mocked/project/api/src/functions',
+        dist: '/mocked/project/api/dist',
+        jobs: '/mocked/project/api/src/jobs',
+        jobsConfig: '/mocked/project/api/src/lib/jobs.ts',
+      },
+      // @ts-expect-error - only declaring what the test needs
+      web: {
+        base: '/mocked/project/web',
+        src: '/mocked/project/web/src',
+        dist: '/mocked/project/web/dist',
+      },
+      packages: '/mocked/project/packages',
+      generated: {
+        base: '/mocked/project/.cedar',
+      },
+    })
+    mockJobsDirEntries = ['WelcomeNoticeJob']
+
+    await handler({ workspace: ['api', 'web'], jobs: false })
+
+    expect(findJobsCommand()).toBeUndefined()
+  })
+
+  it('Should not start the jobs worker when the api workspace is not selected', async () => {
+    vi.mocked(getPaths).mockReturnValue({
+      base: '/mocked/project',
+      // @ts-expect-error - only declaring what the test needs
+      api: {
+        base: '/mocked/project/api',
+        src: '/mocked/project/api/src',
+        functions: '/mocked/project/api/src/functions',
+        dist: '/mocked/project/api/dist',
+        jobs: '/mocked/project/api/src/jobs',
+        jobsConfig: '/mocked/project/api/src/lib/jobs.ts',
+      },
+      // @ts-expect-error - only declaring what the test needs
+      web: {
+        base: '/mocked/project/web',
+        src: '/mocked/project/web/src',
+        dist: '/mocked/project/web/dist',
+      },
+      packages: '/mocked/project/packages',
+      generated: {
+        base: '/mocked/project/.cedar',
+      },
+    })
+    mockJobsDirEntries = ['WelcomeNoticeJob']
+
+    await handler({ workspace: ['web'] })
+
+    expect(findJobsCommand()).toBeUndefined()
+  })
+})
+
+describe('npm and pnpm', () => {
+  afterEach(async () => {
+    // Reset spy counters
+    vi.clearAllMocks()
+    vi.mocked(getPaths).mockReset()
+    vi.mocked(getConfig).mockReset()
+    mockCedarToml = ''
+    mockJobsDirEntries = []
+    vi.mocked(getPackageManager).mockReset()
+    vi.mocked(getPackageManager).mockReturnValue('yarn')
+  })
+
+  it('can generate npm commands', async () => {
+    vi.mocked(getPackageManager).mockReturnValue('npm')
+
+    await handler({ workspace: ['api', 'web'] })
+
+    const { webCommand, apiCommand, generateCommand } = findSeparateCommands()
+
+    // npm uses npx for local binaries, except the web dev server, which is
+    // launched with bare `node` (npm/pnpm always have a real node_modules tree,
+    // so no PnP-aware `yarn node` launcher is needed).
+    expect(webCommand?.command).toContain('node "')
+    expect(webCommand?.command).toContain('cedar-vite-dev.mjs')
+    expect(webCommand?.command).not.toContain('npx')
+    expect(webCommand?.env?.NODE_ENV).toEqual('development')
+    expect(apiCommand?.command).toContain('npx nodemon')
+    expect(apiCommand?.command).toContain('cedar-api-server-watch')
+    expect(generateCommand?.command).toEqual('npx cedar-gen-watch')
+  })
+
+  it('can generate pnpm commands', async () => {
+    vi.mocked(getPackageManager).mockReturnValue('pnpm')
+
+    await handler({ workspace: ['api', 'web'] })
+
+    const { webCommand, apiCommand, generateCommand } = findSeparateCommands()
+
+    // pnpm uses pnpm exec for local binaries, except the web dev server, which
+    // is launched with bare `node` (npm/pnpm always have a real node_modules
+    // tree, so no PnP-aware `yarn node` launcher is needed).
+    expect(webCommand?.command).toContain('node "')
+    expect(webCommand?.command).toContain('cedar-vite-dev.mjs')
+    expect(webCommand?.command).not.toContain('pnpm exec')
+    expect(webCommand?.env?.NODE_ENV).toEqual('development')
+    expect(apiCommand?.command).toContain('pnpm exec nodemon')
+    expect(apiCommand?.command).toContain('cedar-api-server-watch')
+    expect(generateCommand?.command).toEqual('pnpm exec cedar-gen-watch')
   })
 })

@@ -4,7 +4,7 @@ import path from 'node:path'
 import React from 'react'
 import type { ElementType, FunctionComponent } from 'react'
 
-import * as apolloClient from '@apollo/client'
+import { ApolloClient, ApolloLink, InMemoryCache } from '@apollo/client'
 import type { CheerioAPI } from 'cheerio'
 import { load as loadHtml } from 'cheerio'
 import ReactDOMServer from 'react-dom/server'
@@ -17,6 +17,7 @@ import {
 import { matchPath } from '@cedarjs/router/dist/util'
 import type { QueryInfo } from '@cedarjs/web'
 
+import { hasApolloState } from './apolloState.js'
 import { buildAndImport } from './build-and-import/buildAndImport.js'
 import { detectPrerenderRoutes } from './detection/detection.js'
 import {
@@ -29,11 +30,13 @@ import type { FileImporter } from './graphql/graphql.js'
 import { NodeRunner } from './graphql/node-runner.js'
 import { getRootHtmlPath, registerShims, writeToDist } from './internal.js'
 
-// @ts-expect-error - ESM/CJS issue
-const { ApolloClient, InMemoryCache } = apolloClient.default
-
 // Create an apollo client that we can use to prepopulate the cache and restore it client-side
-const prerenderApolloClient = new ApolloClient({ cache: new InMemoryCache() })
+// The client never sends requests during prerendering, so it terminates in an
+// empty link
+const prerenderApolloClient = new ApolloClient({
+  cache: new InMemoryCache(),
+  link: ApolloLink.empty(),
+})
 
 async function recursivelyRender(
   App: ElementType,
@@ -198,7 +201,7 @@ function insertChunkLoadingScript(
 
   if (route?.filePath) {
     const pagesIndex =
-      route.filePath.indexOf(path.join('web', 'src', 'pages')) + 8
+      route.filePath.indexOf(path.join('web', 'src', 'pages')) + 4
     const pagePath = ensurePosixPath(route.filePath.slice(pagesIndex))
     const pageChunkPath = buildManifest[pagePath]?.file
 
@@ -385,11 +388,15 @@ export const runPrerender = async ({
     }
   }
 
-  indexHtmlTree('head').append(
-    `<script> globalThis.__REDWOOD__APOLLO_STATE = ${JSON.stringify(
-      prerenderApolloClient.extract(),
-    )}</script>`,
-  )
+  const apolloState = prerenderApolloClient.extract()
+
+  if (hasApolloState(apolloState)) {
+    indexHtmlTree('head').append(
+      `<script> globalThis.__CEDAR__APOLLO_STATE = ${JSON.stringify(
+        apolloState,
+      )}</script>`,
+    )
+  }
 
   // Reset the cache after the apollo state is appended into the head
   // If we don't call this all the data will be cached but you can run into issues with the cache being too large
@@ -398,7 +405,7 @@ export const runPrerender = async ({
 
   insertChunkLoadingScript(indexHtmlTree, renderPath)
 
-  indexHtmlTree('#redwood-app').append(componentAsHtml)
+  indexHtmlTree('#cedar-app, #redwood-app').append(componentAsHtml)
 
   const renderOutput = indexHtmlTree.html()
 

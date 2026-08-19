@@ -1,13 +1,13 @@
 {
   "name": "@cedarjs/cli-data-migrate",
-  "version": "4.1.0",
+  "version": "5.0.6",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
     "directory": "packages/cli-packages/dataMigrate"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "exports": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
@@ -17,9 +17,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts && yarn build:types",
+    "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-cli-data-migrate.tgz",
-    "build:types": "tsc --build --verbose",
+    "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "yarn test:unit && yarn test:dist",
     "test:dist": "vitest run ./dist.test.ts",
@@ -29,21 +29,21 @@
     "@cedarjs/babel-config": "workspace:*",
     "@cedarjs/cli-helpers": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
-    "bundle-require": "^5.1.0",
+    "@cedarjs/vite": "workspace:*",
     "dotenv-defaults": "5.0.2",
     "execa": "5.1.1",
-    "listr2": "10.2.1",
+    "listr2": "10.2.2",
     "termi-link": "1.1.0",
-    "yargs": "17.7.2"
+    "vite": "7.3.6",
+    "yargs": "17.7.3"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@prisma/client": "7.8.0",
     "@types/yargs": "17.0.35",
-    "memfs": "4.57.2",
-    "tsx": "4.21.0",
+    "memfs": "4.68.1",
     "typescript": "5.9.3",
-    "vitest": "3.2.4"
+    "vitest": "4.1.10"
   },
   "engines": {
     "node": ">=24"

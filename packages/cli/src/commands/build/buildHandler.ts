@@ -22,16 +22,13 @@ import { generate } from '@cedarjs/internal/dist/generate/generate'
 import { generateGqlormArtifacts } from '@cedarjs/internal/dist/generate/gqlormSchema'
 import { loadAndValidateSdls } from '@cedarjs/internal/dist/validateSchema'
 import { detectPrerenderRoutes } from '@cedarjs/prerender/detection'
-import { type Paths } from '@cedarjs/project-config'
+import type { Paths } from '@cedarjs/project-config'
 import { timedTelemetry } from '@cedarjs/telemetry'
 import { buildCedarApp } from '@cedarjs/vite/build'
-import { buildUDApiServer } from '@cedarjs/vite/buildUDApiServer'
 
 import { generatePrismaCommand } from '../../lib/generatePrismaClient.js'
-// @ts-expect-error - Types not available for JS files
 import { getPaths, getConfig } from '../../lib/index.js'
 
-// @ts-expect-error - Types not available for JS files
 import { buildPackagesTask } from './buildPackagesTask.js'
 
 interface PackageJson {
@@ -121,6 +118,7 @@ export interface BuildHandlerOptions {
   prisma?: boolean
   prerender?: boolean
   ud?: boolean
+  apiRootPath?: string
 }
 
 export const handler = async ({
@@ -129,6 +127,7 @@ export const handler = async ({
   prisma = true,
   prerender = true,
   ud = false,
+  apiRootPath,
 }: BuildHandlerOptions) => {
   recordTelemetryAttributes({
     command: 'build',
@@ -136,6 +135,7 @@ export const handler = async ({
     verbose,
     prisma,
     prerender,
+    apiRootPath,
   })
 
   const cedarPaths: Paths = getPaths()
@@ -153,15 +153,9 @@ export const handler = async ({
     prismaSchemaExists &&
     (workspace.includes('api') || prerenderRoutes.length > 0)
 
-  const packageJsonPath = path.join(cedarPaths.base, 'package.json')
-  const packageJson: { workspaces?: unknown } = JSON.parse(
-    fs.readFileSync(packageJsonPath, 'utf8'),
+  const nonApiWebWorkspaces = workspace.filter(
+    (w) => w !== 'api' && w !== 'web',
   )
-  const packageJsonWorkspaces = packageJson.workspaces
-  const nonApiWebWorkspaces =
-    Array.isArray(packageJsonWorkspaces) && packageJsonWorkspaces.length > 2
-      ? workspace.filter((w) => w !== 'api' && w !== 'web')
-      : []
 
   const gqlFeaturesTaskTitle = `Generating types needed for ${[
     useFragments && 'GraphQL Fragments',
@@ -170,7 +164,7 @@ export const handler = async ({
     .filter(Boolean)
     .join(' and ')} support...`
 
-  const tasks = [
+  const tasks: (ListrTask | false)[] = [
     shouldGeneratePrismaClient && {
       title: 'Generating Prisma Client...',
       task: async () => {
@@ -185,8 +179,7 @@ export const handler = async ({
     nonApiWebWorkspaces.length > 0 &&
       usePackagesWorkspace && {
         title: 'Building Packages...',
-        task: (_ctx: unknown, task: unknown) =>
-          buildPackagesTask(task, nonApiWebWorkspaces),
+        task: (_ctx, task) => buildPackagesTask(task, nonApiWebWorkspaces),
       },
     (workspace.includes('web') || workspace.includes('api')) &&
       usePackagesWorkspace && {
@@ -263,11 +256,18 @@ export const handler = async ({
             '@cedarjs/vite/bins/cedar-vite-build.mjs',
           )
 
+          // Args are passed as an array without a shell so that paths
+          // containing spaces (bin path and webDir) survive as single argv
+          // entries.
           await execa(
-            `node ${buildBinPath} --webDir="${cedarPaths.web.base}" --verbose=${verbose}`,
+            'node',
+            [
+              buildBinPath,
+              `--webDir=${cedarPaths.web.base}`,
+              `--verbose=${verbose}`,
+            ],
             {
               stdio: verbose ? 'inherit' : 'pipe',
-              shell: true,
               cwd: cedarPaths.web.base,
             },
           )
@@ -327,12 +327,20 @@ export const handler = async ({
           // it could affect other things that run in parallel while building.
           // We don't have any parallel tasks right now, but someone might add
           // one in the future as a performance optimization.
+          // Args are passed as an array without a shell so that paths
+          // containing spaces (bin path and webDir) survive as single argv
+          // entries.
           await execa(
-            `node ${buildBinPath} --webDir="${cedarPaths.web.base}" --verbose=${verbose}`,
+            'node',
+            [
+              buildBinPath,
+              `--webDir=${cedarPaths.web.base}`,
+              `--verbose=${verbose}`,
+            ],
             {
               stdio: verbose ? 'inherit' : 'pipe',
-              shell: true,
-              // `cwd` is needed for yarn to find the cedar-vite-build binary
+              // `cwd` makes postcss/tailwind config resolution work (see the
+              // @NOTE above)
               // It won't change process.cwd for anything else here, in this
               // process
               cwd: cedarPaths.web.base,
@@ -374,7 +382,7 @@ export const handler = async ({
           process.chdir(cedarPaths.web.base)
 
           try {
-            await buildCedarApp({ verbose, workspace })
+            await buildCedarApp({ verbose, workspace, ud: true })
           } finally {
             process.chdir(originalCwd)
           }
@@ -392,46 +400,56 @@ export const handler = async ({
           }
         },
       },
-    ud &&
-      workspace.includes('api') && {
-        title: 'Bundling API server entry (Universal Deploy)...',
-        task: async () => {
-          await buildUDApiServer({ verbose })
-        },
-      },
-  ].filter((t): t is ListrTask => Boolean(t))
+  ]
 
-  const triggerPrerender = async () => {
-    console.log('Starting prerendering...')
-    if (prerenderRoutes.length === 0) {
-      console.log(
-        `You have not marked any routes to "prerender" in your ${terminalLink(
-          'Routes',
-          'file://' + cedarPaths.web.routes,
-        )}.`,
-      )
-
-      return
-    }
-
-    // Running a separate process here, otherwise it wouldn't pick up the
-    // generated Prisma Client due to require module caching
-    await runBin('cedar', ['prerender'], {
-      stdio: 'inherit',
-      cwd: cedarPaths.web.base,
-    })
+  // When --apiRootPath is passed via CLI we propagate it to
+  // cedarUniversalDeployPlugin via an env var so the plugin can use the cli
+  // argument value instead of the value from the user's Vite config (if they
+  // have set it there)
+  if (apiRootPath !== undefined) {
+    process.env.CEDAR_API_ROOT_PATH = apiRootPath
   }
 
-  const jobs = new Listr(tasks, {
-    renderer: verbose ? 'verbose' : undefined,
-  })
+  try {
+    await timedTelemetry(process.argv, { type: 'build' }, async () => {
+      const listrTasks = tasks.filter((t): t is ListrTask => Boolean(t))
+      const jobs = new Listr(listrTasks, {
+        renderer: verbose ? 'verbose' : undefined,
+      })
 
-  await timedTelemetry(process.argv, { type: 'build' }, async () => {
-    await jobs.run()
+      await jobs.run()
 
-    if (workspace.includes('web') && prerender && prismaSchemaExists) {
-      // This step is outside Listr so that it prints clearer, complete messages
-      await triggerPrerender()
-    }
+      if (workspace.includes('web') && prerender && prismaSchemaExists) {
+        // This step is outside Listr so that it prints clearer, complete
+        // messages
+        await triggerPrerender(prerenderRoutes)
+      }
+    })
+  } finally {
+    delete process.env.CEDAR_API_ROOT_PATH
+  }
+}
+
+type Routes = ReturnType<typeof detectPrerenderRoutes>
+async function triggerPrerender(prerenderRoutes: Routes) {
+  const cedarPaths = getPaths()
+
+  console.log('Starting prerendering...')
+  if (prerenderRoutes.length === 0) {
+    console.log(
+      `You have not marked any routes to "prerender" in your ${terminalLink(
+        'Routes',
+        'file://' + cedarPaths.web.routes,
+      )}.`,
+    )
+
+    return
+  }
+
+  // Running a separate process here, otherwise it wouldn't pick up the
+  // generated Prisma Client due to require module caching
+  await runBin('cedar', ['prerender'], {
+    stdio: 'inherit',
+    cwd: cedarPaths.web.base,
   })
 }

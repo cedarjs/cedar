@@ -14,6 +14,26 @@ import type {
 } from './types.js'
 import { makeFilePath } from './util.js'
 
+export interface JobLoaderOverrides {
+  loadJobsManager: () => Promise<JobManager<Adapters, QueueNames, BasicLogger>>
+  loadJob: (
+    computedProperties: JobComputedProperties,
+  ) => Promise<Job<QueueNames, unknown[]>>
+}
+
+// Allows an alternative loading strategy (e.g. Vite's SSR module runner
+// under Unified Dev, where compiled `api/dist` output never exists on disk)
+// to be swapped in without changing `Executor`, `JobManager`, or any of the
+// `cedar-jobs*` bins, all of which only ever call the `loadJobsManager`/
+// `loadJob` functions exported below.
+let overrides: JobLoaderOverrides | undefined
+
+export const setJobLoaderOverrides = (
+  newOverrides: JobLoaderOverrides | undefined,
+) => {
+  overrides = newOverrides
+}
+
 /**
  * Loads the job manager from the users project
  *
@@ -22,6 +42,10 @@ import { makeFilePath } from './util.js'
 export const loadJobsManager = async (): Promise<
   JobManager<Adapters, QueueNames, BasicLogger>
 > => {
+  if (overrides) {
+    return overrides.loadJobsManager()
+  }
+
   // Confirm the specific lib/jobs.ts file exists
   const jobsConfigPath = getPaths().api.distJobsConfig
   if (!jobsConfigPath) {
@@ -41,10 +65,15 @@ export const loadJobsManager = async (): Promise<
 /**
  * Load a specific job implementation from the users project
  */
-export const loadJob = async ({
-  name: jobName,
-  path: jobPath,
-}: JobComputedProperties): Promise<Job<QueueNames, unknown[]>> => {
+export const loadJob = async (
+  computedProperties: JobComputedProperties,
+): Promise<Job<QueueNames, unknown[]>> => {
+  if (overrides) {
+    return overrides.loadJob(computedProperties)
+  }
+
+  const { name: jobName, path: jobPath } = computedProperties
+
   // Confirm the specific job file exists
   const completeJobPath = path.join(getPaths().api.distJobs, jobPath) + '.js'
 

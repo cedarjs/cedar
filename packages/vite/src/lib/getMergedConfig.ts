@@ -1,6 +1,5 @@
 import path from 'node:path'
 
-import type { InputOption } from 'rollup'
 import { mergeConfig } from 'vite'
 import type { ConfigEnv, ViteUserConfig } from 'vitest/config'
 
@@ -9,6 +8,8 @@ import {
   getConfig,
   getEnvVarDefinitions,
   getPaths,
+  parsePort,
+  readEnvVar,
 } from '@cedarjs/project-config'
 
 import { getWorkspacePackageAliases } from './workspacePackageAliases.js'
@@ -30,27 +31,47 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
         ? getWorkspacePackageAliases(cedarPaths, cedarConfig)
         : {}
 
-    let apiHost = process.env.REDWOOD_API_HOST
-    apiHost ??= cedarConfig.api.host
-    // In dev, use the IPv4 loopback so Node's http-proxy can connect to the
-    // API server. Vite's proxy library does a DNS lookup on the literal string
-    apiHost ??= process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1'
+    const hostEnv = readEnvVar('CEDAR_API_HOST', {
+      deprecatedAlias: 'REDWOOD_API_HOST',
+    })
+
+    // It has to be an address the dev server's proxy can dial, which is why we
+    // use the IPv4 loopback literal as the last fallback rather than the api
+    // server's own `::` default, which is a bind address meaning "listen on
+    // everything". The literal also skips a DNS lookup and Node's dual-stack
+    // connection race on every proxied request.
+    const apiHost = hostEnv ?? cedarConfig.api.host ?? '127.0.0.1'
 
     const streamingSsrEnabled = cedarConfig.experimental.streamingSsr?.enabled
     // @MARK: note that most RSC settings sit in their individual build functions
     const rscEnabled = cedarConfig.experimental.rsc?.enabled
 
+    const apiPortEnvVar = readEnvVar('CEDAR_API_PORT', {
+      deprecatedAlias: 'REDWOOD_API_PORT',
+    })
+
     let apiPort
-    if (process.env.REDWOOD_API_PORT) {
-      apiPort = parseInt(process.env.REDWOOD_API_PORT)
+    if (apiPortEnvVar) {
+      apiPort = parsePort(apiPortEnvVar, 'CEDAR_API_PORT')
     } else {
       apiPort = cedarConfig.api.port
     }
 
     const defaultCedarViteConfig: ViteUserConfig = {
-      root: cedarPaths.web.src,
+      root: cedarPaths.web.base,
       resolve: {
-        alias: workspaceAliases,
+        alias: {
+          ...workspaceAliases,
+          // $api/ bare specifiers (e.g. "from '$api/src/lib/db'") are
+          // resolved by cedarjsResolveCedarStyleImportsPlugin, which is
+          // always included alongside this config in cedar()'s plugin list
+          // (see packages/vite/src/index.ts) — no alias needed here too.
+          // In test mode, register the virtual module alias so that
+          // MockProviders can resolve the user's Routes file
+          ...(env.mode === 'test'
+            ? { '~__CEDAR__USER_ROUTES_FOR_MOCK': cedarPaths.web.routes }
+            : {}),
+        },
       },
       // @MARK: when we have these aliases, the warnings from the FE server go
       // away BUT, if you have imports like this:
@@ -105,7 +126,7 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
         // Note that sourcemap can be boolean or 'inline'
         sourcemap: !env.isSsrBuild && cedarConfig.web.sourceMap,
         rollupOptions: {
-          input: getRollupInput(!!env.isSsrBuild),
+          input: getRollupInput(userConfig, !!env.isSsrBuild),
         },
       },
       // @MARK: do not set buildSsrCjsExternalHeuristics here
@@ -153,9 +174,15 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
  * @param ssr Whether to return the SSR inputs or not
  * @returns Rollup input Options
  */
-function getRollupInput(ssr: boolean): InputOption | undefined {
+function getRollupInput(userConfig: ViteUserConfig, ssr: boolean) {
   const cedarConfig = getConfig()
   const cedarPaths = getPaths()
+
+  // Don't override the input if the user has already set it in their config.
+  // This is also needed for when this runs inside Storybook's Vite server.
+  if (userConfig.build?.rollupOptions?.input) {
+    return userConfig.build.rollupOptions.input
+  }
 
   if (!cedarPaths.web.entryClient) {
     throw new Error('entryClient not defined')

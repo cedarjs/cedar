@@ -1,6 +1,6 @@
 # Uploads & Storage
 
-:::warning Experimental
+:::warning[Experimental]
 
 The storage and upload functionality is currently experimental.
 

@@ -79,6 +79,44 @@ export function cedarjsResolveCedarStyleImportsPlugin(): Plugin {
         }
       }
 
+      // Handle $api/ bare specifiers (web side only; used in routeHooks etc.)
+      // Never resolve them for the client environment – that would bundle
+      // server-only code into the browser. See cedarApiImportGuardPlugin, which
+      // is what turns such an import into a helpful error message.
+      // vite-tsconfig-paths resolves most $api imports through the web side's
+      // `$api/*` -> `../api/*` mapping, but it only does plain path mapping, so
+      // Cedar's directory named modules (`$api/src/services/posts` ->
+      // posts/posts.ts) still need this. Consumers without vite-tsconfig-paths
+      // (the Vitest api preset, dataMigrate, prerender's node runner) need all
+      // of it
+      if (
+        cedarPaths &&
+        id.startsWith('$api/') &&
+        this.environment?.name !== 'client'
+      ) {
+        const resolved = resolveFromAbsolutePath(
+          path.join(cedarPaths.api.base, id.slice('$api/'.length)),
+        )
+
+        if (resolved) {
+          return normalizePath(resolved)
+        }
+      }
+
+      // Handle api/ bare specifiers, like the ESM template's
+      // `import { PrismaClient } from 'api/db/generated/prisma/client.mts'`.
+      // Under yarn and npm these happen to resolve through the root
+      // node_modules workspace symlink, but pnpm's strict isolation creates
+      // no such link. Only resolves ids that match a file under the api side,
+      // so an actual `api` npm package would still resolve normally.
+      if (cedarPaths && id.startsWith('api/')) {
+        const resolved = resolveFromAbsolutePath(path.join(cedarPaths.base, id))
+
+        if (resolved) {
+          return normalizePath(resolved)
+        }
+      }
+
       // We only need this plugin when the module could not be found
       const resolvedPath = path.resolve(path.dirname(importer), id)
 

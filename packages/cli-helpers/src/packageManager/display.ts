@@ -15,9 +15,9 @@ export function formatInstallCommand(): string {
  * Returns a formatted string for running a Cedar CLI command via the detected
  * package manager.
  *
- * yarn → `yarn cedar <args>`
  * npm  → `npx cedar <args>`
- * pnpm → `pnpm exec cedar <args>`
+ * yarn → `yarn cedar <args>`
+ * pnpm → `pnpm cedar <args>`
  */
 export function formatCedarCommand(args: string[]): string {
   const pm = getPackageManager()
@@ -27,19 +27,15 @@ export function formatCedarCommand(args: string[]): string {
     return `npx cedar${argStr}`
   }
 
-  if (pm === 'pnpm') {
-    return `pnpm exec cedar${argStr}`
-  }
-
-  return `yarn cedar${argStr}`
+  return `${pm} cedar${argStr}`
 }
 
 /**
  * Returns a formatted string for running a package.json script via the
  * detected package manager.
  *
- * yarn → `yarn <script> [args]`
  * npm  → `npm run <script>[ -- args]`
+ * yarn → `yarn <script> [args]`
  * pnpm → `pnpm <script> [args]`
  */
 export function formatRunScriptCommand(
@@ -108,6 +104,29 @@ export function formatRunBinCommand(bin: string, args: string[] = []): string {
   }
 
   return `yarn ${bin}${argStr}`
+}
+
+/**
+ * Returns a formatted string for running a transitive dependency's binary
+ * (one not listed directly in the project's package.json, e.g. Prisma) via
+ * the detected package manager.
+ *
+ * yarn → `npx <bin> [args]`
+ * npm  → `npx <bin> [args]`
+ * pnpm → `pnpm exec <bin> [args]`
+ */
+export function formatRunTransitiveBinCommand(
+  bin: string,
+  args: string[] = [],
+): string {
+  const pm = getPackageManager()
+  const argStr = args.length > 0 ? ` ${args.join(' ')}` : ''
+
+  if (pm === 'pnpm') {
+    return `pnpm exec ${bin}${argStr}`
+  }
+
+  return `npx ${bin}${argStr}`
 }
 
 /**

@@ -12,16 +12,28 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { setTimeout } from 'node:timers/promises'
 
+import {
+  generateNpmLockfile,
+  generatePnpmLockfile,
+  generateYarnLockfile,
+} from '../../packages/create-cedar-app/scripts/generateLockfile.js'
+
 const REPO_ROOT = process.cwd()
 const CREATE_CEDAR_APP_DIR = path.join(REPO_ROOT, 'packages/create-cedar-app')
 const TEMPLATES_DIR = path.join(CREATE_CEDAR_APP_DIR, 'templates')
 
-// Template directories
-const TEMPLATE_DIRS = ['ts', 'js', 'esm-ts', 'esm-js']
+// Dependency fields whose in-monorepo entries get rewritten to the version
+// being published
+const DEPENDENCY_FIELDS = [
+  'dependencies',
+  'devDependencies',
+  'peerDependencies',
+] as const
 
 interface PackageJson {
   dependencies?: Record<string, string>
   devDependencies?: Record<string, string>
+  peerDependencies?: Record<string, string>
   workspaces?: string[] | { packages: string[] }
   [key: string]: any
 }
@@ -64,82 +76,191 @@ function execCommand(
   }
 }
 
+/**
+ * Rewrites the deps of a package.json that lives outside the workspace graph
+ * (create-cedar-app itself and its templates) to `version`.
+ *
+ * `workspaceNames` covers packages published from this monorepo that aren't
+ * `@cedarjs/`-scoped, such as `storybook-framework-cedarjs`.
+ */
+function readPackageJson(pkgJsonPath: string): PackageJson {
+  return JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8'))
+}
+
+function writePackageJson(pkgJsonPath: string, pkgJson: PackageJson) {
+  fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n')
+}
+
+/**
+ * Resolves a workspace's package.json path, failing loudly if it's missing.
+ *
+ * Yarn only reports a workspace because it found a package.json there, so a
+ * missing one means the checkout is corrupt — never something to skip past on
+ * the way to publishing.
+ */
+function workspacePackageJsonPath(workspace: WorkspaceInfo) {
+  const pkgJsonPath = path.join(REPO_ROOT, workspace.location, 'package.json')
+
+  if (!fs.existsSync(pkgJsonPath)) {
+    throw new Error(`No package.json at ${workspace.location}/package.json`)
+  }
+
+  return pkgJsonPath
+}
+
 function updatePackageJsonWithVersion(
   filePath: string,
   version: string,
+  workspaceNames: Set<string>,
   updateOwnVersion = false,
 ) {
   log(`Updating ${filePath}`)
 
-  const content = fs.readFileSync(filePath, 'utf-8')
-  const packageJson: PackageJson = JSON.parse(content)
+  const packageJson = readPackageJson(filePath)
 
   // Update the package's own version if requested
   if (updateOwnVersion) {
     packageJson.version = version
   }
 
-  // Update dependencies
-  if (packageJson.dependencies) {
-    for (const [pkg] of Object.entries(packageJson.dependencies)) {
-      if (pkg.startsWith('@cedarjs/')) {
-        packageJson.dependencies[pkg] = version
-      }
-    }
-  }
+  for (const depField of DEPENDENCY_FIELDS) {
+    const deps = packageJson[depField]
 
-  // Update devDependencies
-  if (packageJson.devDependencies) {
-    for (const [pkg] of Object.entries(packageJson.devDependencies)) {
-      if (pkg.startsWith('@cedarjs/')) {
-        packageJson.devDependencies[pkg] = version
-      }
-    }
-  }
-
-  fs.writeFileSync(filePath, JSON.stringify(packageJson, null, 2) + '\n')
-}
-
-function updateWorkspaceDependencies(version: string) {
-  log('Updating workspace dependencies across all packages')
-
-  // Get all workspace packages
-  const workspacesOutput = execCommand('yarn workspaces list --json')
-  const workspaces: WorkspaceInfo[] = workspacesOutput
-    .split('\n')
-    .filter((line) => line.trim())
-    .map((line) => JSON.parse(line))
-    .filter((ws) => ws.location !== '.')
-
-  for (const workspace of workspaces) {
-    const packageJsonPath = path.join(
-      REPO_ROOT,
-      workspace.location,
-      'package.json',
-    )
-
-    try {
-      const content = fs.readFileSync(packageJsonPath, 'utf-8')
-      let updatedContent = content.replace(/workspace:\*/g, version)
-
-      // Also update any @cedarjs dependencies to use the new version
-      updatedContent = updatedContent.replace(
-        /"@cedarjs\/([^"]+)":\s*"[^"]*"/g,
-        `"@cedarjs/$1": "${version}"`,
-      )
-
-      if (updatedContent !== content) {
-        fs.writeFileSync(packageJsonPath, updatedContent)
-        log(
-          'Updated workspace dependencies in ' +
-            `${workspace.location}/package.json`,
-        )
-      }
-    } catch {
-      // Skip if package.json doesn't exist or can't be read
+    if (!deps) {
       continue
     }
+
+    for (const depName of Object.keys(deps)) {
+      if (depName.startsWith('@cedarjs/') || workspaceNames.has(depName)) {
+        deps[depName] = version
+      }
+    }
   }
+
+  writePackageJson(filePath, packageJson)
+}
+
+/**
+ * Rewrites every dependency that points at another package in this monorepo to
+ * `version`.
+ *
+ * Membership is decided by package *name* (from `yarn workspaces list`), not by
+ * the `@cedarjs/` prefix or the `workspace:*` spec. Release branches carry a
+ * "update package versions to vX.Y.Z" commit that has already replaced
+ * `workspace:*` with a plain release version, and not every workspace package
+ * is `@cedarjs/`-scoped (e.g. `storybook-framework-cedarjs`), so both of those
+ * narrower checks miss deps that still need bumping.
+ */
+function updateWorkspaceDependencies(
+  workspaces: WorkspaceInfo[],
+  version: string,
+) {
+  log('Updating workspace dependencies across all packages')
+
+  const workspaceNames = new Set(workspaces.map((ws) => ws.name))
+
+  for (const workspace of workspaces) {
+    const packageJsonPath = workspacePackageJsonPath(workspace)
+    const packageJson = readPackageJson(packageJsonPath)
+    let changed = false
+
+    for (const depField of DEPENDENCY_FIELDS) {
+      const deps = packageJson[depField]
+
+      if (!deps) {
+        continue
+      }
+
+      for (const depName of Object.keys(deps)) {
+        if (workspaceNames.has(depName) && deps[depName] !== version) {
+          deps[depName] = version
+          changed = true
+        }
+      }
+    }
+
+    if (changed) {
+      writePackageJson(packageJsonPath, packageJson)
+      log(
+        'Updated workspace dependencies in ' +
+          `${workspace.location}/package.json`,
+      )
+    }
+  }
+}
+
+/**
+ * Fails the release before anything reaches npm if a package still points at a
+ * version of a sibling package that isn't the one being published.
+ *
+ * RC 5.0.2-rc.3 shipped `storybook-framework-cedarjs@5.0.2`, a version that
+ * never existed on npm, and nothing caught it until users hit
+ * "No candidates found" during install.
+ */
+function verifyWorkspaceDependencies(
+  workspaces: WorkspaceInfo[],
+  version: string,
+) {
+  log('Verifying in-monorepo dependencies all point at the version to publish')
+
+  const workspaceNames = new Set(workspaces.map((ws) => ws.name))
+  const problems: string[] = []
+
+  for (const workspace of workspaces) {
+    const packageJson = readPackageJson(workspacePackageJsonPath(workspace))
+
+    if (packageJson.version !== version) {
+      problems.push(`${workspace.name} has version ${packageJson.version}`)
+    }
+
+    for (const depField of DEPENDENCY_FIELDS) {
+      const deps = packageJson[depField]
+
+      if (!deps) {
+        continue
+      }
+
+      for (const [depName, depVersion] of Object.entries(deps)) {
+        if (workspaceNames.has(depName) && depVersion !== version) {
+          problems.push(
+            `${workspace.name} ${depField}.${depName} is ${depVersion}`,
+          )
+        }
+      }
+    }
+  }
+
+  if (problems.length > 0) {
+    throw new Error(
+      `Expected every in-monorepo dependency to be ${version}, but found:\n` +
+        problems.map((problem) => `  - ${problem}`).join('\n'),
+    )
+  }
+
+  log('✅ All in-monorepo dependencies point at ' + version)
+}
+
+/** The newest release tag in the repo (no matter what branch it's on) */
+function getLatestVersionTag(): string | null {
+  const tags = execCommand("git tag -l 'v*'")
+    .split('\n')
+    .map((tag) => tag.trim())
+    .filter((tag) => /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(tag))
+
+  tags.sort((a, b) => {
+    const partsA = a.slice(1).split('.').map(Number)
+    const partsB = b.slice(1).split('.').map(Number)
+
+    for (let i = 0; i < 3; i++) {
+      if (partsA[i] !== partsB[i]) {
+        return partsA[i] - partsB[i]
+      }
+    }
+
+    return 0
+  })
+
+  return tags.at(-1) ?? null
 }
 
 async function removeCreateCedarAppFromWorkspaces(): Promise<() => void> {
@@ -198,51 +319,6 @@ async function removeCreateCedarAppFromWorkspaces(): Promise<() => void> {
   }
 }
 
-function generateYarnLockFile(templateDir: string) {
-  const templatePath = path.join(TEMPLATES_DIR, templateDir)
-  log(`Generating yarn.lock in ${templatePath}`)
-
-  // Remove any existing node_modules and lock files to ensure clean generation
-  fs.rmSync(path.join(templatePath, 'node_modules'), {
-    recursive: true,
-    force: true,
-  })
-  fs.rmSync(path.join(templatePath, 'yarn.lock'), { force: true })
-  fs.rmSync(path.join(templatePath, '.yarn'), { recursive: true, force: true })
-
-  // Create empty yarn.lock file (required for yarn to treat as separate
-  // project)
-  fs.writeFileSync(path.join(templatePath, 'yarn.lock'), '')
-  log(`Created empty yarn.lock for ${templateDir}`)
-
-  try {
-    // Set CI=false to disable immutable mode for yarn install
-    const originalCI = process.env.CI
-    process.env.CI = 'false'
-
-    execCommand('yarn install', templatePath)
-
-    // Restore original CI value
-    if (originalCI) {
-      process.env.CI = originalCI
-    } else {
-      delete process.env.CI
-    }
-
-    log(`✅ Generated yarn.lock for ${templateDir}`)
-  } catch (error) {
-    console.error(`❌ Failed to generate yarn.lock for ${templateDir}`)
-    throw error
-  }
-
-  // Clean up generated files except yarn.lock
-  fs.rmSync(path.join(templatePath, 'node_modules'), {
-    recursive: true,
-    force: true,
-  })
-  fs.rmSync(path.join(templatePath, '.yarn'), { recursive: true, force: true })
-}
-
 function updateJavaScriptTemplates() {
   log('Updating JavaScript templates using ts-to-js')
 
@@ -296,101 +372,43 @@ async function main() {
     log('Step 1: Removing create-cedar-app from workspaces')
     restoreWorkspaces = await removeCreateCedarAppFromWorkspaces()
 
-    log('Step 2: Calculating RC version without publishing')
+    log('Step 2: Calculating RC version')
 
-    // Temporarily set workspace to only include @cedarjs/core for version
-    // calculation
-    log('Setting workspace to only @cedarjs/core for version calculation')
-    const versionCalcPackageConfigPath = path.join(REPO_ROOT, 'package.json')
-    const originalVersionCalcConfig = fs.readFileSync(
-      versionCalcPackageConfigPath,
-      'utf-8',
-    )
-    const versionCalcPackageConfig: PackageJson = JSON.parse(
-      originalVersionCalcConfig,
-    )
+    const latestTag = getLatestVersionTag()
 
-    // Update workspace to only include core package
-    if (Array.isArray(versionCalcPackageConfig.workspaces)) {
-      versionCalcPackageConfig.workspaces = ['packages/core']
-    } else if (
-      versionCalcPackageConfig.workspaces &&
-      typeof versionCalcPackageConfig.workspaces === 'object' &&
-      'packages' in versionCalcPackageConfig.workspaces
-    ) {
-      versionCalcPackageConfig.workspaces.packages = ['packages/core']
+    if (!latestTag) {
+      throw new Error('No version tags (vX.Y.Z) found in the repository')
     }
 
-    fs.writeFileSync(
-      versionCalcPackageConfigPath,
-      JSON.stringify(versionCalcPackageConfig, null, 2) + '\n',
-    )
+    log(`Latest tag: ${latestTag}`)
 
-    execCommand('git add package.json')
-    execCommand('git commit -m "tmp @cedarjs/core only workspace update"')
+    const currentVersion = latestTag.replace(/^v/, '')
+    const [major, minor, patch] = currentVersion.split('.').map(Number)
 
-    const versioningArgs = [
-      'lerna',
-      'publish',
-      `pre${semver}`,
-      '--include-merged-tags',
-      '--exact',
-      '--canary',
-      '--preid',
-      'rc',
-      '--dist-tag',
-      'rc',
-      '--force-publish',
-      '--loglevel',
-      'verbose',
-      '--no-git-reset',
-    ].join(' ')
-
-    log('📝 dry-run canary publish of @cedarjs/core to calculate version')
-    // lerna will ask for confirmation before publishing. We pass 'n' as input
-    // to answer "no" to that question to abort the publishing process. That's
-    // how we make this a dry-run
-    const publishOutput = execCommand(
-      `yarn ${versioningArgs}`,
-      REPO_ROOT,
-      'n\n',
-    )
-
-    log('Restoring original workspace configuration')
-    fs.writeFileSync(versionCalcPackageConfigPath, originalVersionCalcConfig)
-    log('✅ Completed version calculation without publishing')
-
-    log('Step 3: Extracting calculated version')
-
-    let publishedVersion: string | null = null
-
-    // Look for RC version pattern in the canary publish output
-    const rcVersionMatch = publishOutput.match(/(\d+\.\d+\.\d+-rc\.\d+)/g)
-    if (rcVersionMatch && rcVersionMatch.length > 0) {
-      publishedVersion = rcVersionMatch[rcVersionMatch.length - 1]
+    let baseVersion: string
+    switch (semver) {
+      case 'major':
+        baseVersion = `${major + 1}.0.0`
+        break
+      case 'minor':
+        baseVersion = `${major}.${minor + 1}.0`
+        break
+      case 'patch':
+        baseVersion = `${major}.${minor}.${patch + 1}`
+        break
+      default:
+        throw new Error(`Unknown semver type: ${semver}`)
     }
 
-    // Fallback: Look for "=> version" pattern
-    if (!publishedVersion) {
-      const versionMatch = publishOutput.match(/=> ([^\s+]+)/g)
-      if (versionMatch && versionMatch.length > 0) {
-        const lastMatch = versionMatch[versionMatch.length - 1]
-        publishedVersion = lastMatch.replace(/^=> /, '').replace(/\+.*$/, '')
-      }
-    }
+    const commitCount = execCommand(
+      `git rev-list --count ${latestTag}..HEAD`,
+    ).trim()
 
-    if (!publishedVersion) {
-      console.error('Lerna publish output:')
-      console.error(publishOutput)
-      throw new Error('Could not extract RC version from lerna output')
-    }
-
-    log(`✅ Extracted published version: ${publishedVersion}`)
+    const versionToPublish = `${baseVersion}-rc.${commitCount}`
+    log(`✅ Calculated RC version: ${versionToPublish}`)
 
     log('Step 4: Manually updating package.json files with calculated version')
 
-    // Since we only did a dry-run canary publish lerna didn't actually version
-    // the files, we need to do it manually
     // Get all workspace packages and update their versions
     const workspacesOutput = execCommand('yarn workspaces list --json')
     const workspaces: WorkspaceInfo[] = workspacesOutput
@@ -400,31 +418,22 @@ async function main() {
       .filter((ws) => ws.location !== '.')
 
     for (const workspace of workspaces) {
-      const packageJsonPath = path.join(
-        REPO_ROOT,
-        workspace.location,
-        'package.json',
-      )
-      try {
-        const content = fs.readFileSync(packageJsonPath, 'utf-8')
-        const packageJson = JSON.parse(content)
+      const packageJsonPath = workspacePackageJsonPath(workspace)
+      const packageJson = readPackageJson(packageJsonPath)
 
-        // Update the version
-        packageJson.version = publishedVersion
+      // Update the version
+      packageJson.version = versionToPublish
 
-        fs.writeFileSync(
-          packageJsonPath,
-          JSON.stringify(packageJson, null, 2) + '\n',
-        )
-        log(`Updated version in ${workspace.location}/package.json`)
-      } catch {
-        // Skip if package.json doesn't exist or can't be read
-        continue
-      }
+      writePackageJson(packageJsonPath, packageJson)
+      log(`Updated version in ${workspace.location}/package.json`)
     }
 
     log('Step 5: Updating workspace dependencies')
-    updateWorkspaceDependencies(publishedVersion)
+    updateWorkspaceDependencies(workspaces, versionToPublish)
+
+    const workspaceNames = new Set(workspaces.map((ws) => ws.name))
+
+    verifyWorkspaceDependencies(workspaces, versionToPublish)
 
     log('Step 6: Committing version and dependency updates')
     execCommand('git add .')
@@ -432,24 +441,7 @@ async function main() {
 
     log('Step 7: Publishing RC versions of all packages')
 
-    const publishArgs = [
-      'lerna',
-      'publish',
-      'from-package',
-      '--dist-tag',
-      'rc',
-      '--loglevel',
-      'verbose',
-    ].join(' ')
-
-    if (isDryRun) {
-      // Pipe 'n' to answer "no" to publish prompt
-      execCommand(`yarn ${publishArgs}`, REPO_ROOT, 'n\n')
-      log('✅ Dry-run - tested publish command without actually publishing')
-    } else {
-      execCommand(`yarn ${publishArgs} --yes`)
-      log('✅ Published packages except create-cedar-app')
-    }
+    await publishPackages('rc', isDryRun)
 
     log('Step 8: Restoring workspaces configuration')
     if (restoreWorkspaces) {
@@ -483,7 +475,7 @@ async function main() {
         continue
       }
 
-      const packageAvailable = await waitForNpm(packageName, publishedVersion)
+      const packageAvailable = await waitForNpm(packageName, versionToPublish)
       if (!packageAvailable) {
         throw new Error(`Package ${packageName} not available in time on npm`)
       }
@@ -507,7 +499,8 @@ async function main() {
     for (const pkgJsonFile of packageJsonFiles) {
       updatePackageJsonWithVersion(
         path.join(CREATE_CEDAR_APP_DIR, pkgJsonFile),
-        publishedVersion,
+        versionToPublish,
+        workspaceNames,
       )
     }
 
@@ -515,18 +508,40 @@ async function main() {
 
     updateJavaScriptTemplates()
 
-    log('Step 11: Generating yarn.lock files for templates')
+    log('Step 11: Generating lockfiles for the package-manager overlays')
 
-    for (const templateDir of TEMPLATE_DIRS) {
+    // The pm-specific overlays replace the base template's root package.json
+    // wholesale, so lockfiles are generated against the base template +
+    // overlay composition and shipped in the overlay dirs — the base
+    // templates themselves carry no lockfile. The cjs overlays are used by
+    // both the ts and js templates, and the esm overlays by both esm-ts and
+    // esm-js, so ts and esm-ts act as representative bases.
+    const overlayLockfileConfigs = [
+      { baseTemplateDir: 'ts', overlayBase: 'cjs' },
+      { baseTemplateDir: 'esm-ts', overlayBase: 'esm' },
+    ]
+
+    for (const { baseTemplateDir, overlayBase } of overlayLockfileConfigs) {
       if (isDryRun) {
-        log(`Dry-run - skip generateYarnLockFile for ${templateDir}`)
+        log(`Dry-run - skip overlay lockfile generation for ${overlayBase}`)
         continue
       }
 
-      generateYarnLockFile(templateDir)
+      const templatePath = path.join(TEMPLATES_DIR, baseTemplateDir)
+      const overlaysBaseDir = path.join(TEMPLATES_DIR, 'overlays', overlayBase)
+
+      await generateYarnLockfile(
+        templatePath,
+        path.join(overlaysBaseDir, 'yarn'),
+      )
+      await generateNpmLockfile(templatePath, path.join(overlaysBaseDir, 'npm'))
+      await generatePnpmLockfile(
+        templatePath,
+        path.join(overlaysBaseDir, 'pnpm'),
+      )
     }
 
-    log('✅ Generated all yarn.lock files')
+    log('✅ Generated lockfiles for all package-manager overlays')
 
     if (isDryRun) {
       log('📝 Dry-run - skipping git commit and create-cedar-app publish')
@@ -584,34 +599,29 @@ async function main() {
     )
     updatePackageJsonWithVersion(
       createCedarAppPackageJsonPath,
-      publishedVersion,
+      versionToPublish,
+      workspaceNames,
       true,
     )
-    log(`✅ Updated create-cedar-app version to ${publishedVersion}`)
+    log(`✅ Updated create-cedar-app version to ${versionToPublish}`)
 
     // Commit the version update
     execCommand('git add packages/create-cedar-app/package.json')
     execCommand(
-      `git commit -m "Update create-cedar-app version to ${publishedVersion}"`,
+      `git commit -m "Update create-cedar-app version to ${versionToPublish}"`,
     )
     log('✅ Committed create-cedar-app version update')
 
-    const ccaPublishArgs = [
-      'lerna',
-      'publish',
-      'from-package',
-      '--dist-tag',
-      'rc',
-      '--loglevel',
-      'verbose',
-    ]
-
     if (isDryRun) {
-      // Pipe 'n' to answer "no" to publish prompt
-      execCommand(`yarn ${ccaPublishArgs.join(' ')}`, REPO_ROOT, 'n\n')
       log('✅ Dry-run completed - would have published create-cedar-app')
     } else {
-      execCommand(`yarn ${ccaPublishArgs.join(' ')} --yes`)
+      const ccaPkgJsonPath = path.join(CREATE_CEDAR_APP_DIR, 'package.json')
+      const ccaPkgJson: PackageJson = JSON.parse(
+        fs.readFileSync(ccaPkgJsonPath, 'utf-8'),
+      )
+      const ccaPackageName = ccaPkgJson.name || 'create-cedar-app'
+      log(`Publishing ${ccaPackageName}@${versionToPublish}...`)
+      execCommand(`npm publish --tag rc --access public`, CREATE_CEDAR_APP_DIR)
       log('✅ Published create-cedar-app')
     }
 
@@ -640,7 +650,7 @@ function isErrorWithMessage(err: unknown): err is { message: string } {
     typeof err === 'object' &&
     err !== null &&
     'message' in err &&
-    typeof (err as { message: unknown }).message === 'string'
+    typeof err.message === 'string'
   )
 }
 
@@ -713,6 +723,61 @@ async function waitForNpm(packageName: string, version: string) {
   }
 
   return packageAvailable
+}
+
+async function publishPackage(
+  packageName: string,
+  version: string,
+  distTag: string,
+  packageDir: string,
+  dryRun: boolean,
+) {
+  if (dryRun) {
+    log(`Dry-run: would publish ${packageName}@${version} --tag ${distTag}`)
+    return
+  }
+
+  const alreadyPublished = await isPublished(packageName, version)
+  if (alreadyPublished) {
+    log(`Already published: ${packageName}@${version}`)
+    return
+  }
+
+  log(`Publishing ${packageName}@${version}...`)
+  execCommand(`npm publish --tag ${distTag} --access public`, packageDir)
+  log(`✅ Published ${packageName}@${version}`)
+}
+
+async function publishPackages(distTag: string, dryRun: boolean) {
+  const workspacesOutput = execCommand('yarn workspaces list --json')
+  const workspaces: WorkspaceInfo[] = workspacesOutput
+    .split('\n')
+    .filter((line) => line.trim())
+    .map((line) => JSON.parse(line))
+    .filter((ws) => ws.location !== '.')
+
+  for (const workspace of workspaces) {
+    const pkgJsonPath = path.join(REPO_ROOT, workspace.location, 'package.json')
+    try {
+      const pkgJson: PackageJson = JSON.parse(
+        fs.readFileSync(pkgJsonPath, 'utf-8'),
+      )
+      if (pkgJson.private) {
+        log(`Skipping private package: ${pkgJson.name}`)
+        continue
+      }
+      await publishPackage(
+        pkgJson.name,
+        pkgJson.version,
+        distTag,
+        path.join(REPO_ROOT, workspace.location),
+        dryRun,
+      )
+    } catch (e) {
+      log(`❌ Failed to publish ${workspace.location}: ${e}`)
+      throw e
+    }
+  }
 }
 
 // Run the script

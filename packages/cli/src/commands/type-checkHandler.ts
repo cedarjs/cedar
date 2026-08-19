@@ -1,10 +1,11 @@
 import path from 'node:path'
 
 import concurrently from 'concurrently'
-import execa from 'execa'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { formatRunBinCommand } from '@cedarjs/cli-helpers/packageManager/display'
+import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 
 import { generatePrismaClient } from '../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
@@ -55,7 +56,7 @@ export const handler = async ({
       const projectDir = path.join(getPaths().base, side)
       return {
         cwd: projectDir,
-        command: 'yarn tsc --noEmit --skipLibCheck',
+        command: formatRunBinCommand('tsc', ['--noEmit', '--skipLibCheck']),
       }
     })
 
@@ -89,10 +90,7 @@ export const handler = async ({
         {
           title: 'Generating types',
           task: () =>
-            execa('yarn cedar-gen', {
-              shell: true,
-              stdio: verbose ? 'inherit' : 'ignore',
-            }),
+            runBin('cedar-gen', [], { stdio: verbose ? 'inherit' : 'ignore' }),
         },
       ],
       {

@@ -1,17 +1,19 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-const { mockPrismaClientPath, mockPrismaClientFileUrl } = await vi.hoisted(
-  async () => {
-    const path = await import('node:path')
-    const { pathToFileURL } = await import('node:url')
+const { mockPrismaClientPath } = await vi.hoisted(async () => {
+  const path = await import('node:path')
 
-    // On Windows, path.resolve('/foo') gives e.g. 'C:\foo'
-    const mockPrismaClientPath = path.resolve('/mock-prisma-client-path')
-    const mockPrismaClientFileUrl = pathToFileURL(mockPrismaClientPath)
-    return { mockPrismaClientPath, mockPrismaClientFileUrl }
-  },
-)
+  // A real file on disk that acts as the generated Prisma client. Vitest 4's
+  // module runner can't mock `file://` URLs (which is how
+  // `importGeneratedPrismaClient` imports the client), so we point it at an
+  // actual fixture module instead
+  const mockPrismaClientPath = path.resolve(
+    import.meta.dirname,
+    '__fixtures__/graphqlCodeGen/mockPrismaClient.mjs',
+  )
+  return { mockPrismaClientPath }
+})
 
 import {
   beforeAll,
@@ -58,25 +60,8 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
   }
 })
 
-const mockNow = vi.hoisted(() => new Date().getTime())
-
-vi.mock(mockPrismaClientFileUrl + '?t=' + mockNow, () => {
-  return {
-    Prisma: {
-      ModelName: {
-        PrismaModelOne: 'PrismaModelOne',
-        PrismaModelTwo: 'PrismaModelTwo',
-        Post: 'Post',
-        Todo: 'Todo',
-      },
-    },
-  }
-})
-
 test('Generate gql typedefs web', async () => {
   await generateGraphQLSchema()
-
-  vi.setSystemTime(mockNow)
 
   vi.spyOn(fs, 'writeFileSync').mockImplementation(
     (file: fs.PathOrFileDescriptor, data: string | ArrayBufferView) => {

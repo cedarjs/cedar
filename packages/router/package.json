@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/router",
-  "version": "4.1.0",
+  "version": "5.0.6",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -10,69 +10,28 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.js"
-      }
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
-    "./Route": {
-      "import": "./dist/Route.js",
-      "require": "./dist/cjs/Route.js"
-    },
-    "./Set": {
-      "import": "./dist/Set.js",
-      "require": "./dist/cjs/Set.js"
-    },
-    "./Link": {
-      "import": "./dist/link.js",
-      "require": "./dist/cjs/link.js"
-    },
-    "./NavLink": {
-      "import": "./dist/navLink.js",
-      "require": "./dist/cjs/navLink.js"
-    },
-    "./location": {
-      "import": "./dist/location.js",
-      "require": "./dist/cjs/location.js"
-    },
-    "./namedRoutes": {
-      "import": "./dist/namedRoutes.js",
-      "require": "./dist/cjs/namedRoutes.js"
-    },
-    "./util": {
-      "import": "./dist/util.js",
-      "require": "./dist/cjs/util.js"
-    },
-    "./react-util": {
-      "import": "./dist/react-util.js",
-      "require": "./dist/cjs/react-util.js"
-    },
-    "./rscCss": {
-      "require": "./dist/cjs/rsc/rscCss.js",
-      "import": "./dist/rsc/rscCss.js"
-    },
-    "./serverRouter": {
-      "import": "./dist/rsc/ServerRouter.js",
-      "require": "./dist/cjs/rsc/ServerRouter.js"
-    },
+    "./Route": "./dist/Route.js",
+    "./Set": "./dist/Set.js",
+    "./Link": "./dist/link.js",
+    "./NavLink": "./dist/navLink.js",
+    "./location": "./dist/location.js",
+    "./namedRoutes": "./dist/namedRoutes.js",
+    "./util": "./dist/util.js",
+    "./react-util": "./dist/react-util.js",
+    "./rscCss": "./dist/rsc/rscCss.js",
+    "./serverRouter": "./dist/rsc/ServerRouter.js",
     "./RscRouter": {
       "react-server": "./dist/rsc/ServerRouter.js",
-      "require": "./dist/cjs/rsc/ClientRouter.js",
-      "import": "./dist/rsc/ClientRouter.js"
+      "default": "./dist/rsc/ClientRouter.js"
     },
     "./SsrRouter": {
       "react-server": "./dist/rsc/ServerRouter.js",
-      "require": "./dist/cjs/rsc/SsrRouter.js",
-      "import": "./dist/rsc/SsrRouter.js"
+      "default": "./dist/rsc/SsrRouter.js"
     },
-    "./dist/*": {
-      "require": "./dist/cjs/*.js",
-      "import": "./dist/*.js"
-    }
+    "./dist/*": "./dist/*.js"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -81,12 +40,11 @@
     "skip-nav.css"
   ],
   "scripts": {
-    "build": "tsx ./build.ts",
+    "build": "node ./build.ts",
     "build:pack": "yarn pack -o cedarjs-router.tgz",
     "build:types": "tsc --build --verbose tsconfig.build.json",
-    "build:types-cjs": "tsc --build --verbose tsconfig.cjs.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
-    "check:attw": "tsx ./attw.ts",
+    "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn publint",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
@@ -94,28 +52,29 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/auth": "workspace:*",
+    "@cedarjs/project-config": "workspace:*",
     "@cedarjs/server-store": "workspace:*",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-server-dom-webpack": "19.2.4"
+    "react-server-dom-webpack": "19.2.7",
+    "ts-toolbelt": "9.6.0"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.2",
-    "@babel/cli": "7.28.6",
-    "@babel/core": "^7.26.10",
+    "@arethetypeswrong/cli": "0.18.5",
+    "@cedarjs/auth": "workspace:*",
     "@cedarjs/framework-tools": "workspace:*",
     "@testing-library/jest-dom": "6.9.1",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
-    "concurrently": "9.2.1",
-    "publint": "0.3.18",
+    "concurrently": "9.2.4",
+    "publint": "0.3.23",
     "tstyche": "5.0.2",
-    "tsx": "4.21.0",
     "typescript": "5.9.3",
-    "vitest": "3.2.4"
+    "vite": "7.3.6",
+    "vitest": "4.1.10"
   },
   "peerDependencies": {
+    "@cedarjs/auth": "workspace:*",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },

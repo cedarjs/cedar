@@ -1,8 +1,8 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`authTasks > Components with props > Should add useAuth on the same line for single line components, and separate line for multiline components 1`] = `
-"import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'
-import { RedwoodApolloProvider } from '@cedarjs/web/apollo'
+"import { FatalErrorBoundary, CedarProvider } from '@cedarjs/web'
+import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 import FatalErrorPage from 'src/pages/FatalErrorPage'
 import Routes from 'src/Routes'
@@ -13,13 +13,13 @@ import './index.css'
 
 const App = () => (
   <FatalErrorBoundary page={FatalErrorPage}>
-    <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
+    <CedarProvider titleTemplate="%PageTitle | %AppTitle">
       <AuthProvider>
-        <RedwoodApolloProvider useAuth={useAuth} graphQLClientConfig={{ cache }}>
+        <CedarApolloProvider useAuth={useAuth} graphQLClientConfig={{ cache }}>
           <Routes />
-        </RedwoodApolloProvider>
+        </CedarApolloProvider>
       </AuthProvider>
-    </RedwoodProvider>
+    </CedarProvider>
   </FatalErrorBoundary>
 )
 
@@ -63,8 +63,8 @@ export default Routes
 `;
 
 exports[`authTasks > Components with props > Should not add useAuth if one already exists 1`] = `
-"import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'
-import { RedwoodApolloProvider } from '@cedarjs/web/apollo'
+"import { FatalErrorBoundary, CedarProvider } from '@cedarjs/web'
+import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 import FatalErrorPage from 'src/pages/FatalErrorPage'
 import Routes from 'src/Routes'
@@ -75,13 +75,13 @@ import './index.css'
 
 const App = () => (
   <FatalErrorBoundary page={FatalErrorPage}>
-    <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
+    <CedarProvider titleTemplate="%PageTitle | %AppTitle">
       <AuthProvider>
-        <RedwoodApolloProvider useAuth={useAuth} graphQLClientConfig={{ cache }}>
+        <CedarApolloProvider useAuth={useAuth} graphQLClientConfig={{ cache }}>
           <Routes />
-        </RedwoodApolloProvider>
+        </CedarApolloProvider>
       </AuthProvider>
-    </RedwoodProvider>
+    </CedarProvider>
   </FatalErrorBoundary>
 )
 
@@ -130,8 +130,8 @@ export default Routes
 
 exports[`authTasks > Customized App.js > Should add auth config when using explicit return 1`] = `
 "import { useEffect } from 'react'
-import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'
-import { RedwoodApolloProvider } from '@cedarjs/web/apollo'
+import { FatalErrorBoundary, CedarProvider } from '@cedarjs/web'
+import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 import FatalErrorPage from 'src/pages/FatalErrorPage'
 import Routes from 'src/Routes'
@@ -149,15 +149,15 @@ const App = (props) => {
 
   return (
     <FatalErrorBoundary page={FatalErrorPage}>
-      <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
+      <CedarProvider titleTemplate="%PageTitle | %AppTitle">
         <AuthProvider>
-          <RedwoodApolloProvider useAuth={useAuth}>
+          <CedarApolloProvider useAuth={useAuth}>
             <AnotherProvider>
               <Routes />
             </AnotherProvider>
-          </RedwoodApolloProvider>
+          </CedarApolloProvider>
         </AuthProvider>
-      </RedwoodProvider>
+      </CedarProvider>
     </FatalErrorBoundary>
   )
 }
@@ -167,8 +167,8 @@ export default App
 `;
 
 exports[`authTasks > Should update App.{jsx,tsx}, Routes.{jsx,tsx} and add auth.ts (Auth0) 1`] = `
-"import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'
-import { RedwoodApolloProvider } from '@cedarjs/web/apollo'
+"import { FatalErrorBoundary, CedarProvider } from '@cedarjs/web'
+import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 import FatalErrorPage from 'src/pages/FatalErrorPage'
 import Routes from 'src/Routes'
@@ -179,13 +179,13 @@ import './index.css'
 
 const App = () => (
   <FatalErrorBoundary page={FatalErrorPage}>
-    <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
+    <CedarProvider titleTemplate="%PageTitle | %AppTitle">
       <AuthProvider>
-        <RedwoodApolloProvider useAuth={useAuth}>
+        <CedarApolloProvider useAuth={useAuth}>
           <Routes />
-        </RedwoodApolloProvider>
+        </CedarApolloProvider>
       </AuthProvider>
-    </RedwoodProvider>
+    </CedarProvider>
   </FatalErrorBoundary>
 )
 
@@ -248,8 +248,8 @@ export default Routes
 `;
 
 exports[`authTasks > Should update App.{jsx,tsx}, Routes.{jsx,tsx} and add auth.ts (Clerk) 1`] = `
-"import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'
-import { RedwoodApolloProvider } from '@cedarjs/web/apollo'
+"import { FatalErrorBoundary, CedarProvider } from '@cedarjs/web'
+import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 import FatalErrorPage from 'src/pages/FatalErrorPage'
 import Routes from 'src/Routes'
@@ -260,13 +260,13 @@ import './index.css'
 
 const App = () => (
   <FatalErrorBoundary page={FatalErrorPage}>
-    <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
+    <CedarProvider titleTemplate="%PageTitle | %AppTitle">
       <AuthProvider>
-        <RedwoodApolloProvider useAuth={useAuth}>
+        <CedarApolloProvider useAuth={useAuth}>
           <Routes />
-        </RedwoodApolloProvider>
+        </CedarApolloProvider>
       </AuthProvider>
-    </RedwoodProvider>
+    </CedarProvider>
   </FatalErrorBoundary>
 )
 
@@ -361,8 +361,8 @@ exports[`authTasks > Should update App.tsx for legacy apps 1`] = `
 "import netlifyIdentity from 'netlify-identity-widget'
 
 import { isBrowser } from '@cedarjs/prerender/browserUtils'
-import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'
-import { RedwoodApolloProvider } from '@cedarjs/web/apollo'
+import { FatalErrorBoundary, CedarProvider } from '@cedarjs/web'
+import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 import FatalErrorPage from 'src/pages/FatalErrorPage'
 import Routes from 'src/Routes'
@@ -375,13 +375,13 @@ isBrowser && netlifyIdentity.init()
 
 const App = () => (
   <FatalErrorBoundary page={FatalErrorPage}>
-    <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
+    <CedarProvider titleTemplate="%PageTitle | %AppTitle">
       <AuthProvider>
-        <RedwoodApolloProvider useAuth={useAuth}>
+        <CedarApolloProvider useAuth={useAuth}>
           <Routes />
-        </RedwoodApolloProvider>
+        </CedarApolloProvider>
       </AuthProvider>
-    </RedwoodProvider>
+    </CedarProvider>
   </FatalErrorBoundary>
 )
 
@@ -389,8 +389,8 @@ export default App
 "
 `;
 
-exports[`authTasks > Swapped out GraphQL client > Should add auth config when app is missing RedwoodApolloProvider 1`] = `
-"import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'
+exports[`authTasks > Swapped out GraphQL client > Should add auth config when app is missing CedarApolloProvider 1`] = `
+"import { FatalErrorBoundary, CedarProvider } from '@cedarjs/web'
 
 import FatalErrorPage from 'src/pages/FatalErrorPage'
 import Routes from 'src/Routes'
@@ -403,7 +403,7 @@ const queryClient = {}
 
 const App = () => (
   <FatalErrorBoundary page={FatalErrorPage}>
-    <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
+    <CedarProvider titleTemplate="%PageTitle | %AppTitle">
       <AuthProvider>
         <QueryClientProvider client={queryClient}>
           <RedwoodReactQueryProvider>
@@ -411,7 +411,7 @@ const App = () => (
           </RedwoodReactQueryProvider>
         </QueryClientProvider>
       </AuthProvider>
-    </RedwoodProvider>
+    </CedarProvider>
   </FatalErrorBoundary>
 )
 

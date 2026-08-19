@@ -11,7 +11,7 @@ If you're not familiar with Docker, we recommend going through their [getting st
 To get started, run the setup command:
 
 ```
-yarn rw setup docker
+yarn cedar setup docker
 ```
 
 The setup commands does several things:
@@ -34,7 +34,7 @@ And the prod compose file with:
 docker compose -f ./docker-compose.prod.yml up
 ```
 
-:::info make sure to specify build args
+:::info[make sure to specify build args]
 
 If your api side or web side depend on env vars at build time, you may need to supply them as `--build-args`, or in the compose files.
 
@@ -46,10 +46,10 @@ The first time you do this, you'll have to use the `console` stage to go in and 
 
 ```
 docker compose -f ./docker-compose.dev.yml run --rm -it console /bin/bash
-root@...:/home/node/app# yarn rw prisma migrate dev
+root@...:/home/node/app# yarn cedar prisma migrate dev
 ```
 
-:::info database choice
+:::info[database choice]
 The docker setup command assumes that you are using Postgres as your database provider and sets up a local Postgres database for you. You may have to switch from SQLite to Postgres if you have not done so and want to continue with the default setup.
 :::
 
@@ -60,7 +60,7 @@ If you are using a [Server File](server-file.md) then you should [change the com
 ## Dockerfile
 
 The documentation here goes through and explains every line of Cedar's Dockerfile.
-If you'd like to see the whole Dockerfile for reference, you can find it [here](https://github.com/cedarjs/cedar/tree/main/packages/cli/src/commands/setup/docker/templates/Dockerfile) or by setting it up in your project: `yarn rw setup docker`.
+If you'd like to see the whole Dockerfile for reference, you can find it [here](https://github.com/cedarjs/cedar/tree/main/packages/cli/src/commands/setup/docker/templates/Dockerfile) or by setting it up in your project: `yarn cedar setup docker`.
 
 Cedar takes advantage of [Docker's multi-stage build support](https://docs.docker.com/build/building/multi-stage/) to keep the final production images lean.
 
@@ -77,7 +77,7 @@ We use a Node.js 20 image as the base image because that's the version Cedar tar
 "bookworm" is the codename for the current stable distribution of Debian (version 12).
 Lastly, the "slim" variant of the `node:20-bookworm` image only includes what Node.js needs which reduces the image's size while making it more secure.
 
-:::tip Why not alpine?
+:::tip[Why not alpine?]
 
 While alpine may be smaller, it uses musl, a different C standard library.
 In developing this Dockerfile, we prioritized security over size.
@@ -172,7 +172,7 @@ We'll need these config files for the build and production stages.
 The `cedar.toml` file is Cedar's de-facto config file.
 Both the build and serve stages read it to enable and configure functionality.
 
-:::warning `.env.defaults` is ok to include but `.env` is not
+:::warning[`.env.defaults` is ok to include but `.env` is not]
 
 If you add a secret to the Dockerfile, it can be excavated.
 While it's technically true that multi stage builds add a sort of security layer, it's not a best practice.
@@ -193,10 +193,10 @@ FROM base as api_build
 # ARG MY_BUILD_TIME_ENV_VAR
 
 COPY --chown=node:node api api
-RUN yarn rw build api
+RUN yarn cedar build api
 ```
 
-After the work we did in the base stage, building the api side amounts to copying in the api directory and running `yarn rw build api`.
+After the work we did in the base stage, building the api side amounts to copying in the api directory and running `yarn cedar build api`.
 
 ### The `api_serve` stage
 
@@ -294,10 +294,10 @@ This `web_build` builds the web side:
 FROM base as web_build
 
 COPY --chown=node:node web web
-RUN yarn rw build web --no-prerender
+RUN yarn cedar build web --no-prerender
 ```
 
-After the work we did in the base stage, building the web side amounts to copying in the web directory and running `yarn rw build web`.
+After the work we did in the base stage, building the web side amounts to copying in the web directory and running `yarn cedar build web`.
 
 This stage is a bit of a simplification.
 It foregoes Cedar's prerendering (SSG) capability.
@@ -314,7 +314,7 @@ The `web_prerender_build` stage builds the web side with prerender.
 FROM api_build as web_build_with_prerender
 
 COPY --chown=node:node web web
-RUN yarn rw build web
+RUN yarn cedar build web
 ```
 
 Building the web side with prerendering poses a challenge.

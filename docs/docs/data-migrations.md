@@ -24,7 +24,7 @@ Just like Prisma, we will store which data migrations have run in the database i
 Rather than create this model by hand, Cedar includes a CLI tool to add the model to `schema.prisma` and create the DB migration that adds the table to the database:
 
 ```
-yarn rw data-migrate install
+yarn cedar data-migrate install
 ```
 
 You'll see a new directory created at `api/db/dataMigrations` which will store our individual migration tasks.
@@ -40,10 +40,10 @@ model RW_DataMigration {
 }
 ```
 
-The install script also ran `yarn rw prisma migrate dev --create-only` automatically so you have a DB migration ready to go. You just need to run the `prisma migrate dev` command to apply it:
+The install script also ran `yarn cedar prisma migrate dev --create-only` automatically so you have a DB migration ready to go. You just need to run the `prisma migrate dev` command to apply it:
 
 ```
-yarn rw prisma migrate dev
+yarn cedar prisma migrate dev
 ```
 
 ## Creating a New Data Migration
@@ -59,7 +59,7 @@ Where `version` is a timestamp, like `20200721123456` (an ISO8601 datetime witho
 To create a data migration we have a generator:
 
 ```
-yarn rw generate dataMigration copyPreferences
+yarn cedar generate dataMigration copyPreferences
 ```
 
 This will create `api/db/dataMigrations/20200721123456-copy-preferences.js`:
@@ -117,7 +117,7 @@ This loops through each existing `User` and creates a new `Preference` record co
 When you're ready, you can execute your data migration with `data-migrate`'s `up` command:
 
 ```
-yarn rw data-migrate up
+yarn cedar data-migrate up
 ```
 
 This goes through each file in `api/db/dataMigrations`, compares it against the list of migrations that have already run according to the `DataMigration` table in the database, and executes any that aren't present in that table, sorted oldest to newest based on the timestamp in the filename.
@@ -160,13 +160,13 @@ export default async ({ db }) => {
 Run once:
 
 ```
-yarn rw data-migrate install
-yarn rw prisma migrate dev
+yarn cedar data-migrate install
+yarn cedar prisma migrate dev
 ```
 
 Run every time you need a new data migration:
 
 ```
-yarn rw generate dataMigration migrationName
-yarn rw data-migrate up
+yarn cedar generate dataMigration migrationName
+yarn cedar data-migrate up
 ```

@@ -8,6 +8,9 @@ datasource db {
   provider = "postgresql"
 }
 
+// This specific combination of settings is the only way to make Prisma 7 work
+// in both CJS and ESM Cedar apps.
+// See https://github.com/cedarjs/cedar/pull/1761 for more info
 generator client {
   provider               = "prisma-client"
   output                 = "./generated/prisma"

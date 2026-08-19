@@ -40,6 +40,17 @@ With the server file, there's no indirection. Just use `node`:
 yarn node api/dist/server.js
 ```
 
+:::important
+A custom server file is a Fastify concept, and isn't supported when serving
+both sides from one process — the single-container topology (`yarn start` /
+`cedar serve` / `cedarjs-server` with no side argument). If Cedar detects a
+built server file in that mode, it refuses to start rather than silently
+skipping what you configured (Realtime, custom plugins, custom middleware).
+Use the [two-service topology](./deploy/introduction.md#two-topologies-and-which-to-pick)
+instead: run the api and web sides as separate processes with
+`cedarjs-server api` / `cedarjs-server web` (`yarn start:api` / `yarn start:web`).
+:::
+
 ### Building
 
 You can't run the server file directly with Node.js; it has to be built first:
@@ -207,7 +218,7 @@ const server = await createServer({
 server.register(myFastifyPlugin)
 ```
 
-:::note Fastify encapsulation
+:::note[Fastify encapsulation]
 
 Fastify is built around the concept of [encapsulation](https://fastify.dev/docs/latest/Reference/Encapsulation/). It is important to note that CedarJS's API plugin cannot be mutated after it is registered, see [here](https://fastify.dev/docs/latest/Reference/Plugins/#asyncawait). This is why you must use the `configureApiServer` option to do as shown above.
 
@@ -230,11 +241,11 @@ It takes the same arguments as `listen`, except for host and port. It computes t
 yarn node api/dist/server.js --apiHost 0.0.0.0 --apiPort 8913
 ```
 
-2. `REDWOOD_API_HOST` or `REDWOOD_API_PORT` env vars:
+2. `CEDAR_API_HOST` or `CEDAR_API_PORT` env vars:
 
 ```
-export REDWOOD_API_HOST='0.0.0.0'
-export REDWOOD_API_PORT='8913'
+export CEDAR_API_HOST='0.0.0.0'
+export CEDAR_API_PORT='8913'
 yarn node api/dist/server.js
 ```
 
@@ -263,5 +274,6 @@ await server.listen({
 })
 ```
 
-If you don't specify a host, `createServer` uses `NODE_ENV` to set it. If `NODE_ENV` is production, it defaults to `'0.0.0.0'` and `'::'` otherwise.
-Our default Dockerfile sets `NODE_ENV` to production so that things work out of the box.
+If you don't specify a host, `createServer` defaults to `'::'`, which binds
+dual-stack (IPv4 and IPv6) on hosts that support it — no `NODE_ENV`-specific
+behavior, so it works the same in development and production.

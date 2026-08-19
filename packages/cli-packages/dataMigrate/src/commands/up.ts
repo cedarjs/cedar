@@ -3,7 +3,7 @@ import type { Argv } from 'yargs'
 
 import { getPaths, projectIsEsm } from '@cedarjs/project-config'
 
-import type { DataMigrateUpOptions } from '../types'
+import type { DataMigrateUpOptions } from '../types.js'
 
 export const command = 'up'
 export const description =

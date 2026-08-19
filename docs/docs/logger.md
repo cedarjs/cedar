@@ -186,25 +186,25 @@ Output:
 
 #### Usage
 
-Log formatting is automatically setup in the `yarn rw dev` command.
+Log formatting is automatically setup in the `yarn cedar dev` command.
 
 ```bash
-yarn rw dev
+yarn cedar dev
 ```
 
-You may also pipe logs to the formatter when using `rw serve`:
+You may also pipe logs to the formatter when using `cedar serve`:
 
 ```bash
-yarn rw serve | yarn cedar-log-formatter
-yarn rw serve api | yarn cedar-log-formatter
+yarn cedar serve | yarn cedar-log-formatter
+yarn cedar serve api | yarn cedar-log-formatter
 ```
 
-> Note: Since `rw serve` sets the Node environment to `production` you will not see log non-warn/error output unless you configure your logging level to `debug` or below.
+> Note: Since `cedar serve` sets the Node environment to `production` you will not see log non-warn/error output unless you configure your logging level to `debug` or below.
 
 You'll see that formatted output by default when you launch your CedarJS app using:
 
 ```bash
-yarn rw dev
+yarn cedar dev
 ```
 
 ### Examples

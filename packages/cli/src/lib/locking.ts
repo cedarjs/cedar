@@ -67,15 +67,26 @@ export function unsetLock(identifier: string) {
 export function isLockSet(identifier: string): boolean {
   const lockfilePath = path.join(getPaths().generated.base, 'locks', identifier)
 
-  // Check if the lock file exists
-  const exists = fs.existsSync(lockfilePath)
-  if (!exists) {
-    return false
+  // We stat the lockfile directly here instead of doing `existsSync` +
+  // `statSync` so that we don't race against another process removing it
+  // between the `existsSync` check and the subsequent `stat` call
+  //
+  // This also helps in environments with aggressive build caches (e.g. Vercel),
+  // where cache restoration can restore a dangling symlink which satisfies
+  // `existsSync` but makes `statSync` throw ENOENT
+  let createdAt: number
+  try {
+    createdAt = fs.statSync(lockfilePath).birthtimeMs
+  } catch (error) {
+    if (isErrorWithCode(error, 'ENOENT')) {
+      return false
+    }
+
+    throw error
   }
 
   // Ensure this lock isn't stale due to some error
   // Locks are only valid for 1 hour
-  const createdAt = fs.statSync(lockfilePath).birthtimeMs
   if (Date.now() - createdAt > 3600000) {
     unsetLock(identifier)
     return false

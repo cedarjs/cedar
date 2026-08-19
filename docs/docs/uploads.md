@@ -1,6 +1,6 @@
 # Uploads & Storage
 
-:::warning Experimental
+:::warning[Experimental]
 
 The storage and upload functionality is currently experimental.
 
@@ -197,7 +197,7 @@ The rest of the doc assumes you are running a "Serverful" configuration for your
 Let's first run the setup command:
 
 ```shell
-yarn rw setup uploads
+yarn cedar setup uploads
 ```
 
 This will do three things:
@@ -259,7 +259,7 @@ We create a storage adapter, in this case `FileSystemStorage`, that will save yo
 This just sets the base path. The actual filenames and folders are determined by the saveFiles utility functions, but [can be overridden!](#customizing-save-file-name-or-save-path)
 
 **3. Url Signer instance**
-This is an optional class that will help you generate signed urls for your files, so you can limit access to these files. Generate a secret with `yarn rw g secret` and add to your .env as `UPLOADS_SECRET`.
+This is an optional class that will help you generate signed urls for your files, so you can limit access to these files. Generate a secret with `yarn cedar g secret` and add to your .env as `UPLOADS_SECRET`.
 
 **4. Utility Functions**
 We provide utility functions that can be exported from this file to be used elsewhere, such as services.

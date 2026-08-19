@@ -12,11 +12,11 @@ jobs:
     runs-on: ${{ inputs.os }}
 
     env:
-      REDWOOD_CI: 1
-      REDWOOD_VERBOSE_TELEMETRY: 1
+      CEDAR_CI: 1
+      CEDAR_VERBOSE_TELEMETRY: 1
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - name: Set up job
         uses: ./.github/actions/set-up-job
 
@@ -30,6 +30,6 @@ jobs:
           YARN_ENABLE_IMMUTABLE_INSTALLS: false
 
       - name: Run E2E test script
-        run: yarn e2e:background-jobs ${{ steps.set-up-test-project.outputs.test-project-path }}
+        run: yarn e2e:background-jobs "${{ steps.set-up-test-project.outputs.test-project-path }}"
         env:
-          REDWOOD_VERBOSE_TELEMETRY: ''
+          CEDAR_VERBOSE_TELEMETRY: ''

@@ -6,7 +6,7 @@ sidebar_label: Custom
 
 If Cedar doesn't officially integrate with the auth provider you want to use, you're not out of luck just yet: Cedar has an API you can use to integrate your auth provider of choice.
 
-:::tip Were you using Nhost, magic.link, GoTrue, Okta or Wallet Connect (ethereum)?
+:::tip[Were you using Nhost, magic.link, GoTrue, Okta or Wallet Connect (ethereum)?]
 
 If you're here because you're using one of the providers Cedar used to support (Nhost, magic.link, GoTrue, Okta or Wallet Connect (Ethereum)), we've moved the code for them out into their own separate repos:
 
@@ -26,7 +26,7 @@ When it comes to writing a custom auth integration, there's a little more work t
 To get started, run the setup command:
 
 ```bash
-yarn rw setup auth custom
+yarn cedar setup auth custom
 ```
 
 This makes all the code modifications it can, but whereas with other auth providers, all you have to do now is get your keys, here you have to write some code.

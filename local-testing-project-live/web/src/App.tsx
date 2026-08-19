@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 
 import { configureGqlorm } from '@cedarjs/gqlorm/setup'
-import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'
-import { RedwoodApolloProvider } from '@cedarjs/web/apollo'
+import { FatalErrorBoundary, CedarProvider } from '@cedarjs/web'
+import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 import FatalErrorPage from 'src/pages/FatalErrorPage'
 
@@ -21,13 +21,11 @@ interface AppProps {
 
 const App = ({ children }: AppProps) => (
   <FatalErrorBoundary page={FatalErrorPage}>
-    <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
+    <CedarProvider titleTemplate="%PageTitle | %AppTitle">
       <AuthProvider>
-        <RedwoodApolloProvider useAuth={useAuth}>
-          {children}
-        </RedwoodApolloProvider>
+        <CedarApolloProvider useAuth={useAuth}>{children}</CedarApolloProvider>
       </AuthProvider>
-    </RedwoodProvider>
+    </CedarProvider>
   </FatalErrorBoundary>
 )
 

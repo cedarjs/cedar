@@ -1,27 +1,97 @@
-import { fork } from 'node:child_process'
 import fs from 'node:fs'
-import net from 'node:net'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
+import { serve as serveSrvx } from 'srvx'
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
 import * as apiServerCLIConfig from '@cedarjs/api-server/apiCliConfig'
 import * as bothServerCLIConfig from '@cedarjs/api-server/bothCliConfig'
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
-import { projectIsEsm } from '@cedarjs/project-config'
 import * as webServerCLIConfig from '@cedarjs/web-server'
 
 // @ts-expect-error - Types not available for JS files
 import { getPaths, getConfig } from '../lib/index.js'
-// @ts-expect-error - Types not available for JS files
 import { serverFileExists } from '../lib/project.js'
 
 import { webSsrServerHandler } from './serveWebHandler.js'
 
+/**
+ * A custom api/src/server.ts is a Fastify concept — Realtime, custom
+ * plugins, and custom middleware registered there have no equivalent in the
+ * UD entry (a plain Fetchable), so there's no way to honour it. Refuse
+ * rather than silently produce a different app than what's configured.
+ */
+function refuseServerFileUnderUD(): never {
+  console.error(
+    c.error(
+      '\n api/src/server.ts was detected, but a custom server file is not ' +
+        'supported with --ud. It is a Fastify concept — anything ' +
+        'registered there (Realtime, custom plugins, custom middleware) ' +
+        'would silently be skipped if serving continued.\n',
+    ),
+  )
+  process.exit(1)
+}
+
+/**
+ * Resolve the path to the UD server entry, checking for either .mjs or .js
+ * extension. Vite's SSR build outputs index.mjs when the project is ESM;
+ * the serve command must accept both.
+ */
+function resolveUDEntryPath(): string | null {
+  const base = path.join(getPaths().api.dist, 'ud', 'index')
+  for (const ext of ['.mjs', '.js']) {
+    const entryPath = base + ext
+    if (fs.existsSync(entryPath)) {
+      return entryPath
+    }
+  }
+  return null
+}
+
+/**
+ * Import the built UD Fetchable from disk and host it with srvx on the
+ * configured host and port. Does NOT fork — the Fetchable runs in-process.
+ *
+ * Returns the srvx server instance so callers can await server.ready() or
+ * close it on shutdown.
+ */
+async function startUDServer(
+  entryPath: string,
+  host: string,
+  port: number,
+): Promise<ReturnType<typeof serveSrvx>> {
+  const mod = await import(pathToFileURL(entryPath).href)
+  const fetchable = mod.default ?? mod
+
+  if (!fetchable || typeof fetchable.fetch !== 'function') {
+    throw new Error(
+      `UD entry at ${entryPath} does not export a Fetchable ` +
+        '(`export default { fetch }`).',
+    )
+  }
+
+  const server = serveSrvx({
+    ...fetchable,
+    port,
+    hostname: host,
+    gracefulShutdown: false,
+    manual: true,
+  })
+
+  server.serve()
+
+  await server.ready()
+
+  return server
+}
+
 export const command = 'serve [side]'
 export const description =
   'Start a server for serving both the api and web sides'
+
 type ServeArgv = Record<string, unknown> & {
   _: (string | number)[]
   port?: number
@@ -74,12 +144,12 @@ export const builder = async (yargs: Argv) => {
             process.exit(1)
           }
 
-          const udEntryPath = path.join(getPaths().api.dist, 'ud', 'index.js')
+          const udEntryPath = resolveUDEntryPath()
 
-          if (!fs.existsSync(udEntryPath)) {
+          if (!udEntryPath) {
             console.error(
               c.error(
-                `\n Universal Deploy server entry not found at ${udEntryPath}.\n` +
+                '\n Universal Deploy server entry not found. ' +
                   ' Please run `yarn cedar build --ud` before serving.\n',
               ),
             )
@@ -99,13 +169,7 @@ export const builder = async (yargs: Argv) => {
           }
 
           if (serverFileExists()) {
-            console.warn(
-              c.warning(
-                '\n Note: api/src/server.ts was detected. ' +
-                  'This file is a Fastify concept and will be ignored when using --ud. ' +
-                  'You are testing the experimental UD support, so the behavior will not match your production Fastify setup.\n',
-              ),
-            )
+            refuseServerFileUnderUD()
           }
 
           const { getAPIHost, getAPIPort, getWebHost, getWebPort } =
@@ -113,70 +177,84 @@ export const builder = async (yargs: Argv) => {
 
           const apiPort = argv.apiPort ?? getAPIPort()
           const apiHost = argv.apiHost ?? getAPIHost()
-          const webPort = argv.webPort ?? getWebPort()
-          const webHost = argv.webHost ?? getWebHost()
+          // The web server is the one taking public traffic here, so it's the
+          // side that gets to use the host's `HOST`/`PORT` env vars.
+          const webPort = argv.webPort ?? getWebPort({ isPublicSide: true })
+          const webHost = argv.webHost ?? getWebHost({ isPublicSide: true })
 
           const apiRootPath = argv.apiRootPath ?? '/'
-          const apiProxyTarget = [
-            'http://',
-            apiHost.includes(':') ? `[${apiHost}]` : apiHost,
-            ':',
-            apiPort,
-            apiRootPath,
-          ].join('')
+          const apiTarget = `http://${apiHost.includes(':') ? `[${apiHost}]` : apiHost}:${apiPort}`
 
-          const { redwoodFastifyWeb } = await import('@cedarjs/fastify-web')
-          const { createFastifyInstance } =
-            await import('@cedarjs/api-server/fastify')
+          // Start the srvx web server (replaces Fastify + proxy).
+          // Middleware chain:
+          // 1. staticMiddleware: serve files from web/dist/ (SPA assets)
+          // 2. apiProxy: forward API-prefixed requests to UD Fetchable on API
+          //    port
+          // 3. spaFallback: serve the unprerendered SPA shell for client-side
+          //    routing
+          const { staticMiddleware } = await import('srvx/static')
+          const apiUrl = getConfig().web.apiUrl
+          const webDist = getPaths().web.dist
 
-          const webFastify = await createFastifyInstance()
-          webFastify.register(redwoodFastifyWeb, {
-            redwood: {
-              apiProxyTarget,
-            },
-          })
+          // SPA fallback: use `200.html` (unprerendered shell) if it exists,
+          // otherwise `index.html`. This matches the Fastify web adapter
+          // behaviour and prevents client-side prerender detection from
+          // triggering on routes that weren't actually prerendered.
+          const prerenderIndexPath = path.join(webDist, '200.html')
+          const fallbackIndexPath = fs.existsSync(prerenderIndexPath)
+            ? prerenderIndexPath
+            : path.join(webDist, 'index.html')
+          const spaHtml = fs.readFileSync(fallbackIndexPath, 'utf-8')
 
-          await webFastify.listen({
-            port: webPort,
-            host: webHost,
-          })
+          const webServer = serveSrvx({
+            // Dummy fetch handler. All requests are handled by middleware
+            fetch: async () => new Response('Not Found', { status: 404 }),
+            middleware: [
+              staticMiddleware({ dir: webDist }),
+              async (req, next) => {
+                const url = new URL(req.url, 'http://localhost')
 
-          const child = fork(
-            udEntryPath,
-            ['--port', String(apiPort), '--host', apiHost],
-            {
-              execArgv: process.execArgv,
-              env: {
-                ...process.env,
-                NODE_ENV: process.env.NODE_ENV ?? 'production',
-                PORT: String(apiPort),
-                HOST: apiHost,
+                if (!url.pathname.startsWith(apiUrl)) {
+                  return next()
+                }
+
+                // Strip the apiUrl prefix and forward to the API server.
+                // Normalise apiRootPath to avoid double-slash when it's '/'
+                // and targetPath already starts with '/'.
+                const targetPath = url.pathname.slice(apiUrl.length) || '/'
+                const root = apiRootPath === '/' ? '' : apiRootPath
+                const targetUrl = `${apiTarget}${root}${targetPath}${url.search}`
+
+                return fetch(targetUrl, {
+                  method: req.method,
+                  headers: req.headers,
+                  body: req.body,
+                  // @ts-expect-error - `duplex` is required when forwarding a
+                  // request body via fetch (Node 18+).
+                  duplex: 'half',
+                })
               },
-            },
-          )
-
-          child.on('error', (err) => {
-            console.error(
-              c.error(`\n Failed to start UD API server: ${err.message}\n`),
-            )
-            process.exit(1)
+              () => {
+                const headers = { 'Content-Type': 'text/html' }
+                return new Response(spaHtml, { headers })
+              },
+            ],
+            port: webPort,
+            hostname: webHost,
+            gracefulShutdown: false,
+            manual: true,
           })
 
-          child.on('exit', (code) => {
-            if (code !== 0) {
-              console.error(
-                c.error(`\n UD API server exited with code ${code}\n`),
-              )
-              process.exit(1)
-            }
-          })
+          webServer.serve()
+          await webServer.ready()
 
+          // Import and host the UD Fetchable in-process with srvx
           console.log(`Web server listening at http://${webHost}:${webPort}`)
           process.stdout.write(
             `API server starting at http://${apiHost}:${apiPort}...`,
           )
 
-          await waitForPort(apiHost, apiPort)
+          await startUDServer(udEntryPath, apiHost, apiPort)
 
           process.stdout.write(
             `\rAPI server listening at http://${apiHost}:${apiPort}\n`,
@@ -193,13 +271,7 @@ export const builder = async (yargs: Argv) => {
           const serveBothHandlers = await import('./serveBothHandler.js')
           await serveBothHandlers.bothSsrRscServerHandler(argv, rscEnabled)
         } else {
-          if (!projectIsEsm()) {
-            const { handler } =
-              await import('@cedarjs/api-server/cjs/bothCliConfigHandler')
-            await handler(argv)
-          } else {
-            await bothServerCLIConfig.handler(argv)
-          }
+          await bothServerCLIConfig.handler(argv)
         }
       },
     })
@@ -229,73 +301,46 @@ export const builder = async (yargs: Argv) => {
           apiRootPath: argv.apiRootPath,
         })
 
-        if (argv.ud) {
-          // Launch the Vite-built Universal Deploy Node server entry produced
-          // by `cedar build api`. The entry at api/dist/ud/index.js is a
-          // self-contained srvx server that imports virtual:ud:catch-all,
-          // resolved by cedarUniversalDeployPlugin to Cedar's aggregate fetch
-          // dispatcher.
-          const udEntryPath = path.join(getPaths().api.dist, 'ud', 'index.js')
+        // Serving the api on its own makes it the side taking public traffic,
+        // so it's the side that gets to use the host's `HOST`/`PORT` env vars.
+        const { getAPIHost, getAPIPort } =
+          await import('@cedarjs/api-server/cliHelpers')
 
-          if (!fs.existsSync(udEntryPath)) {
+        const apiPort = argv.port ?? getAPIPort({ isPublicSide: true })
+        const apiHost = argv.host ?? getAPIHost({ isPublicSide: true })
+
+        argv.port = apiPort
+        argv.host = apiHost
+
+        if (argv.ud) {
+          if (serverFileExists()) {
+            refuseServerFileUnderUD()
+          }
+
+          // Import the built Fetchable and host it in-process with srvx.
+          // The artifact at api/dist/ud/index.js is a pure Fetchable (`export
+          // default { fetch }`) emitted by buildUDApiServer.
+          const udEntryPath = resolveUDEntryPath()
+
+          if (!udEntryPath) {
             console.error(
               c.error(
-                `\n Universal Deploy server entry not found at ${udEntryPath}.\n` +
+                '\n Universal Deploy server entry not found. ' +
                   ' Please run `yarn cedar build --ud` before serving.\n',
               ),
             )
             process.exit(1)
           }
 
-          const udArgs: string[] = []
-
-          if (argv.port) {
-            udArgs.push('--port', String(argv.port))
-          }
-
-          if (argv.host) {
-            udArgs.push('--host', argv.host)
-          }
-
-          const child = fork(udEntryPath, udArgs, {
-            execArgv: process.execArgv,
-            env: {
-              ...process.env,
-              NODE_ENV: process.env.NODE_ENV ?? 'production',
-              PORT: argv.port ? String(argv.port) : process.env.PORT,
-              HOST: argv.host ?? process.env.HOST,
-            },
-          })
-
-          child.on('error', (err) => {
-            console.error(
-              c.error(`\n Failed to start UD server: ${err.message}\n`),
-            )
-            process.exit(1)
-          })
-
-          const apiPort = argv.port ?? parseInt(process.env.PORT ?? '8911', 10)
-          const apiHost = argv.host ?? process.env.HOST ?? 'localhost'
-
           process.stdout.write(
             `API server starting at http://${apiHost}:${apiPort}...`,
           )
 
-          await waitForPort(apiHost, apiPort)
+          await startUDServer(udEntryPath, apiHost, apiPort)
 
           process.stdout.write(
             `\rAPI server listening at http://${apiHost}:${apiPort}\n`,
           )
-
-          await new Promise<void>((resolve, reject) => {
-            child.on('exit', (code) => {
-              if (code !== 0) {
-                reject(new Error(`UD server exited with code ${code}`))
-              } else {
-                resolve()
-              }
-            })
-          })
 
           return
         }
@@ -305,13 +350,7 @@ export const builder = async (yargs: Argv) => {
           const { apiServerFileHandler } = await import('./serveApiHandler.js')
           await apiServerFileHandler(argv)
         } else {
-          if (!projectIsEsm()) {
-            const { handler } =
-              await import('@cedarjs/api-server/cjs/apiCliConfigHandler')
-            await handler(argv)
-          } else {
-            await apiServerCLIConfig.handler(argv)
-          }
+          await apiServerCLIConfig.handler(argv)
         }
       },
     })
@@ -332,8 +371,6 @@ export const builder = async (yargs: Argv) => {
         if (streamingEnabled) {
           await webSsrServerHandler(rscEnabled)
         } else {
-          // @cedarjs/web-server is still built as CJS only, so we don't need
-          // the same solution here as we do for the api side
           await webServerCLIConfig.handler(argv)
         }
       },
@@ -379,11 +416,11 @@ export const builder = async (yargs: Argv) => {
         }
 
         if (argv.ud) {
-          const udEntryPath = path.join(getPaths().api.dist, 'ud', 'index.js')
-          if (!fs.existsSync(udEntryPath)) {
+          const udEntryPath = resolveUDEntryPath()
+          if (!udEntryPath) {
             console.error(
               c.error(
-                `\n Universal Deploy server entry not found at ${udEntryPath}.\n` +
+                '\n Universal Deploy server entry not found. ' +
                   ' Please run `yarn cedar build --ud` before serving.\n',
               ),
             )
@@ -405,11 +442,11 @@ export const builder = async (yargs: Argv) => {
         }
 
         if (argv.ud) {
-          const udEntryPath = path.join(getPaths().api.dist, 'ud', 'index.js')
-          if (!fs.existsSync(udEntryPath)) {
+          const udEntryPath = resolveUDEntryPath()
+          if (!udEntryPath) {
             console.error(
               c.error(
-                `\n Universal Deploy server entry not found at ${udEntryPath}.\n` +
+                '\n Universal Deploy server entry not found. ' +
                   ' Please run `yarn cedar build --ud` before serving.\n',
               ),
             )
@@ -474,38 +511,4 @@ function webSideIsBuilt(isStreamingOrRSC: boolean) {
   } else {
     return fs.existsSync(path.join(getPaths().web.dist, 'index.html'))
   }
-}
-
-function waitForPort(host: string, port: number): Promise<void> {
-  const maxAttempts = 50
-  const intervalMs = 200
-
-  return new Promise<void>((resolve, reject) => {
-    let attempts = 0
-
-    const tryConnect = () => {
-      attempts++
-      const socket = net.createConnection({ host, port })
-
-      socket.on('connect', () => {
-        socket.destroy()
-        resolve()
-      })
-
-      socket.on('error', () => {
-        socket.destroy()
-        if (attempts >= maxAttempts) {
-          reject(
-            new Error(
-              `API server did not become ready on port ${port} after ${maxAttempts * intervalMs}ms`,
-            ),
-          )
-        } else {
-          setTimeout(tryConnect, intervalMs)
-        }
-      })
-    }
-
-    tryConnect()
-  })
 }

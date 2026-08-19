@@ -1,0 +1,63 @@
+import crypto from 'node:crypto'
+
+import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
+
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+
+export const DEFAULT_LENGTH = 32
+
+export const generateSecret = (length = DEFAULT_LENGTH): string => {
+  return crypto.randomBytes(Math.trunc(length)).toString('base64')
+}
+
+export interface SecretOptions {
+  length: number
+  raw: boolean
+}
+
+export const command = 'secret'
+export const description =
+  'Generates a secret key using a cryptographically-secure source of entropy'
+
+export function builder(yargs: Argv): Argv<SecretOptions> {
+  return yargs
+    .option('length', {
+      description: 'Length of the generated secret',
+      type: 'number' as const,
+      default: DEFAULT_LENGTH,
+    })
+    .option('raw', {
+      description: 'Prints just the raw secret',
+      type: 'boolean' as const,
+      default: false,
+    })
+    .epilogue(
+      `Also see the ${terminalLink(
+        'CedarJS CLI Reference',
+        'https://cedarjs.com/docs/cli-commands#generate-secret',
+      )}`,
+    )
+}
+
+export function handler({ length, raw }: SecretOptions) {
+  recordTelemetryAttributes({
+    command: 'generate secret',
+    length,
+    raw,
+  })
+
+  if (raw) {
+    console.log(generateSecret(length))
+    return
+  }
+
+  console.info('')
+  console.info(`  ${generateSecret(length)}`)
+  console.info('')
+  console.info(
+    "If you're using this with dbAuth, set a SESSION_SECRET environment variable to this value.",
+  )
+  console.info('')
+  console.info('Keep it secret, keep it safe!')
+}

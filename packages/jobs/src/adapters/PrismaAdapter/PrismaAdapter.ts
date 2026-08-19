@@ -1,6 +1,10 @@
 import { camelCase } from 'change-case'
 
-import { DEFAULT_MAX_RUNTIME, DEFAULT_MODEL_NAME } from '../../consts.js'
+import {
+  DEFAULT_MAX_RUNTIME,
+  DEFAULT_MODEL_NAME,
+  MAX_RUNTIME_GRACE_PERIOD,
+} from '../../consts.js'
 import type { BaseJob } from '../../types.js'
 import type {
   BaseAdapterOptions,
@@ -9,6 +13,7 @@ import type {
   SuccessOptions,
   ErrorOptions,
   FailureOptions,
+  CancelOptions,
 } from '../BaseAdapter/BaseAdapter.js'
 import { BaseAdapter } from '../BaseAdapter/BaseAdapter.js'
 
@@ -17,10 +22,13 @@ import { ModelNameError } from './errors.js'
 export interface PrismaJob extends BaseJob {
   id: number
   handler: string
-  runAt: Date
+  /** Null once the job has completed or permanently failed */
+  runAt: Date | null
   cron: string | null | undefined
-  lockedAt: Date
-  lockedBy: string
+  /** Null unless the job is currently locked by a worker */
+  lockedAt: Date | null
+  /** Null unless the job is currently locked by a worker */
+  lockedBy: string | null
   lastError: string | null
   failedAt: Date | null
   createdAt: Date
@@ -163,7 +171,8 @@ interface FailureData {
  * ```
  */
 export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
-  PrismaAdapterOptions<TDb>
+  PrismaAdapterOptions<TDb>,
+  Promise<PrismaJob>
 > {
   db: TDb
   model: DelegateKey<TDb> | string
@@ -177,9 +186,7 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
 
     // camelCase name of the model, as accessed on `db`
     // TODO: Remove type casting of `options.model` in the next major release
-    this.model = (options.model || DEFAULT_MODEL_NAME) as
-      | DelegateKey<TDb>
-      | string
+    this.model = options.model || DEFAULT_MODEL_NAME
 
     // the function to call on `db` to make queries: `db.backgroundJob`
     // TODO: Remove the camelCase call in the next major release. It's only here
@@ -204,8 +211,15 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
     maxRuntime,
     queues,
   }: FindArgs): Promise<PrismaJob | undefined> {
+    // The oldest a job's lock is allowed to be before it's considered stale
+    // and the job is eligible to be picked up by another worker. The grace
+    // period gives the worker that locked the job time to enforce its own
+    // `maxRuntime` timeout and mark the job as failed—without it, a second
+    // worker could claim the job in the moment between the lock going stale
+    // and the timeout being recorded
     const maxRuntimeExpire = new Date(
-      new Date().getTime() + (maxRuntime || DEFAULT_MAX_RUNTIME * 1000),
+      new Date().getTime() -
+        ((maxRuntime || DEFAULT_MAX_RUNTIME) + MAX_RUNTIME_GRACE_PERIOD) * 1000,
     )
 
     // This query is gnarly but not so bad once you know what it's doing. For a
@@ -296,14 +310,28 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
   // Prisma queries are lazily evaluated and only sent to the db when they are
   // awaited, so do the await here to ensure they actually run (if the user
   // doesn't await the Promise then the queries will never be executed!)
+  //
+  // All of these updates/deletes are done with updateMany/deleteMany guarded
+  // on `failedAt: null` and on `attempts` still being this attempt's value,
+  // so the in-flight attempt's outcome can't overwrite or delete the row
+  // when:
+  // - the job was cancelled (or otherwise permanently failed) while this
+  //   attempt was running (`failedAt` is no longer null), or
+  // - the job was reclaimed by another worker because this attempt stalled
+  //   past `maxRuntime` plus the grace period (relocking increments
+  //   `attempts`, so this attempt's remembered value no longer matches).
+  // `lockedBy` can't serve as that second fence because worker process names
+  // are deterministic and reused across restarts
   override async success({ job, runAt, deleteJob }: SuccessOptions<PrismaJob>) {
     this.logger.debug(`[CedarJS Jobs] Job ${job.id} success`)
 
     if (deleteJob) {
-      await this.accessor.delete({ where: { id: job.id } })
+      await this.accessor.deleteMany({
+        where: { id: job.id, failedAt: null, attempts: job.attempts },
+      })
     } else {
-      await this.accessor.update({
-        where: { id: job.id },
+      await this.accessor.updateMany({
+        where: { id: job.id, failedAt: null, attempts: job.attempts },
         data: {
           lockedAt: null,
           lockedBy: null,
@@ -326,25 +354,40 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
       runAt,
     }
 
-    await this.accessor.update({
-      where: { id: job.id },
+    await this.accessor.updateMany({
+      where: { id: job.id, failedAt: null, attempts: job.attempts },
       data,
     })
   }
 
-  // Job has had too many attempts, it has now permanently failed.
-  override async failure({ job, deleteJob }: FailureOptions<PrismaJob>) {
+  // The job will not be retried: it has either had too many attempts or
+  // exceeded maxRuntime (in which case `error` is set so the timeout can be
+  // recorded in the same single write that marks the job as failed)
+  override async failure({ job, deleteJob, error }: FailureOptions<PrismaJob>) {
     if (deleteJob) {
-      await this.accessor.delete({ where: { id: job.id } })
+      await this.accessor.deleteMany({
+        where: { id: job.id, failedAt: null, attempts: job.attempts },
+      })
     } else {
-      await this.accessor.update({
-        where: { id: job.id },
-        data: { failedAt: new Date() },
+      const data: { failedAt: Date; runAt: null; lastError?: string } = {
+        failedAt: new Date(),
+        runAt: null,
+      }
+
+      if (error) {
+        data.lastError = `${error.message}\n\n${error.stack}`
+      }
+
+      await this.accessor.updateMany({
+        where: { id: job.id, failedAt: null, attempts: job.attempts },
+        data,
       })
     }
   }
 
-  // Schedules a job by creating a new record in the background job table
+  // Schedules a job by creating a new record in the background job table.
+  // Returns the created job so that callers get access to its `id` (to cancel
+  // it later, poll its status, etc.)
   override async schedule({
     name,
     path,
@@ -353,8 +396,8 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
     cron,
     queue,
     priority,
-  }: SchedulePayload) {
-    await this.accessor.create({
+  }: SchedulePayload): Promise<PrismaJob> {
+    const data = await this.accessor.create({
       data: {
         handler: JSON.stringify({ name, path, args }),
         runAt,
@@ -363,6 +406,42 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
         priority,
       },
     })
+
+    // The delegate is untyped, but the shape of the created row is guaranteed
+    // by the schema contract documented on this class
+    const row = data as Omit<PrismaJob, 'name' | 'path' | 'args'>
+
+    return { ...row, name, path, args }
+  }
+
+  /**
+   * Cancels a job by marking it as permanently failed so no worker will pick
+   * it up (or retry it, if it's currently being worked on).
+   *
+   * If the job is currently running, the in-progress attempt is not
+   * interrupted (the worker will stop it when `maxRuntime` is exceeded), but
+   * it will not be retried and will not be picked up by another worker once
+   * its lock goes stale.
+   */
+  override async cancel({ jobId }: CancelOptions) {
+    this.logger.debug(`[CedarJS Jobs] Cancelling job ${jobId}`)
+
+    // updateMany so that nothing throws if the job no longer exists, and so
+    // we can make the update conditional on the job still being active:
+    // not already failed (`failedAt: null`) and not already completed—a
+    // completed job that's kept in the database has its `runAt` set to null,
+    // while every active state (queued, running, awaiting retry, rescheduled
+    // cron) has a non-null `runAt`
+    const { count } = await this.accessor.updateMany({
+      where: { id: jobId, failedAt: null, runAt: { not: null } },
+      data: {
+        failedAt: new Date(),
+        lastError: 'Job cancelled by user',
+        runAt: null,
+      },
+    })
+
+    return count > 0
   }
 
   override async clear() {
