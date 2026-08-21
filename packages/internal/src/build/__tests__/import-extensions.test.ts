@@ -1,13 +1,29 @@
 import path from 'node:path'
 
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+import type * as ProjectConfig from '@cedarjs/project-config'
 
 import { applyImportExtensions } from '../import-extensions.js'
 
 // Pretend the importer lives at api/src/functions/graphql.ts so that
 // relative imports like `../lib/db` resolve to the fixture files.
-const FIXTURE_SRC = path.join(__dirname, '__fixtures__/import-extensions/src')
+const FIXTURE_ROOT = path.join(__dirname, '__fixtures__/import-extensions')
+const FIXTURE_SRC = path.join(FIXTURE_ROOT, 'src')
 const IMPORTER = path.join(FIXTURE_SRC, 'functions/graphql.ts')
+const GENERATED_BASE = path.join(FIXTURE_ROOT, '.cedar')
+
+vi.mock('@cedarjs/project-config', async (importOriginal) => {
+  const original = await importOriginal<typeof ProjectConfig>()
+
+  return {
+    ...original,
+    // import-extensions.ts only reads `generated.base`; avoid calling the
+    // real getPaths(), which requires a cedar.toml on disk to resolve.
+    getPaths: () =>
+      ({ generated: { base: GENERATED_BASE } }) as ProjectConfig.Paths,
+  }
+})
 
 describe('applyImportExtensions', () => {
   it('appends .js when a .ts source file exists', () => {
@@ -135,6 +151,34 @@ describe('applyImportExtensions', () => {
 
   it('leaves a .ts import alone when no such source file exists', () => {
     const code = `import { x } from '../lib/nonexistent.ts'`
+    expect(applyImportExtensions(code, IMPORTER)).toBe(code)
+  })
+
+  it('rewrites explicit .ts extension in require() calls', () => {
+    // A custom api/babel.config.js can lower `import ... from './db.ts'` to
+    // `require('./db.ts')` before applyImportExtensions runs.
+    const code = `const { db } = require('../lib/db.ts')`
+    expect(applyImportExtensions(code, IMPORTER)).toBe(
+      `const { db } = require('../lib/db.js')`,
+    )
+  })
+
+  it('appends .js to extensionless require() calls', () => {
+    const code = `const { db } = require('../lib/db')`
+    expect(applyImportExtensions(code, IMPORTER)).toBe(
+      `const { db } = require('../lib/db.js')`,
+    )
+  })
+
+  it('leaves require() of bare package specifiers untouched', () => {
+    const code = `const pkg = require('some-package')`
+    expect(applyImportExtensions(code, IMPORTER)).toBe(code)
+  })
+
+  it('leaves an explicit .ts import into the generated data directory alone', () => {
+    // The gqlorm backend (.cedar/gqlorm/backend.ts) is a generated artifact
+    // that is never compiled to .js, unlike files under api/src.
+    const code = `import * as __gqlorm_sdl__ from '../../.cedar/gqlorm/backend.ts'`
     expect(applyImportExtensions(code, IMPORTER)).toBe(code)
   })
 

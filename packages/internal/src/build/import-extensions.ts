@@ -1,6 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { getPaths } from '@cedarjs/project-config'
+
 /**
  * Rewrites relative import specifiers so they point at the compiled `.js`
  * output files instead of the TypeScript/JSX source files:
@@ -16,8 +18,9 @@ import path from 'node:path'
  *    `.ts` specifier to a `.js` file.
  *
  * Handles static imports/re-exports (`from '../lib/db'`), side-effect
- * imports (`import '../lib/setup'`), and dynamic imports
- * (`import('../lib/db')`).
+ * imports (`import '../lib/setup'`), dynamic imports (`import('../lib/db')`),
+ * and `require('../lib/db')` calls (emitted when a custom api/babel.config.js
+ * lowers ESM to CommonJS before this function runs).
  *
  * Always outputs `.js` because both build pipelines compile every source
  * file (`.ts`, `.tsx`, `.jsx`) to `.js` output. For a source file
@@ -39,9 +42,15 @@ import path from 'node:path'
  * Example: in `api/src/functions/graphql.ts` importing `../lib/db`, this
  * rewrites it to `../lib/db.js` when `api/src/lib/db.ts` (or `db.tsx`)
  * exists on disk.
+ *
+ * Files under the generated data directory (`.cedar/` or `.redwood/`) are
+ * excluded from rewriting: generated artifacts such as the gqlorm backend
+ * (`.cedar/gqlorm/backend.ts`) are never compiled to `.js`, so an explicit
+ * `.ts` import pointing there must stay `.ts` at runtime.
  */
 export function applyImportExtensions(code: string, fromFile: string): string {
   const fromDir = path.dirname(fromFile)
+  const generatedBase = getPaths().generated.base
 
   const rewriteImportPath = (
     importPath: string,
@@ -50,6 +59,15 @@ export function applyImportExtensions(code: string, fromFile: string): string {
   ): string => {
     const existingExt = path.extname(importPath)
     const absImport = path.join(fromDir, importPath)
+
+    const relativeToGeneratedBase = path.relative(generatedBase, absImport)
+    if (
+      relativeToGeneratedBase === '' ||
+      (!relativeToGeneratedBase.startsWith('..') &&
+        !path.isAbsolute(relativeToGeneratedBase))
+    ) {
+      return preservePrefix + importPath + preserveSuffix
+    }
 
     // Explicit TypeScript-extension import (allowImportingTsExtensions):
     // `./hello.ts` compiles to `hello.js` on disk, so rewrite the extension.
@@ -126,6 +144,17 @@ export function applyImportExtensions(code: string, fromFile: string): string {
     /\bimport\s*\(\s*(['"])(\.\.?\/[^'"]+)\1\s*\)/g,
     (match, quote, importPath) => {
       return `import(${rewriteImportPath(importPath, quote, quote)})`
+    },
+  )
+
+  // Handle `require('../lib/db')`: a user's custom api/babel.config.js may
+  // lower ESM imports to CommonJS `require()` calls before this function
+  // runs, so an explicit `.ts` specifier surviving that lowering needs the
+  // same rewrite as the other import forms.
+  result = result.replace(
+    /\brequire\s*\(\s*(['"])(\.\.?\/[^'"]+)\1\s*\)/g,
+    (match, quote, importPath) => {
+      return `require(${rewriteImportPath(importPath, quote, quote)})`
     },
   )
 
