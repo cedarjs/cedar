@@ -242,14 +242,8 @@ const MODEL_REEXPORT_RE = /^export type \* from '\.\/models\/(\w+)\.\w+'/gm
 
 /**
  * Reads the model names out of the generated `models.<ext>` barrel file that
- * sits next to the client entry point.
- *
- * Codegen only needs `Prisma.ModelName` — a plain map of model names. Importing
- * the client to get it means loading the whole generated client and the Prisma
- * runtime with it, and for a TypeScript client it doesn't work at all in a
- * CommonJS api: Node resolves the `.ts` file as CommonJS and fails on the ESM
- * syntax Prisma emits (`SyntaxError: Cannot use import statement outside a
- * module`). Reading the barrel is both cheaper and format-independent.
+ * sits next to the client entry point. A plain map of model names is all
+ * codegen needs
  */
 function readPrismaModelNames(clientPath: string): Record<string, string> {
   const ext = path.extname(clientPath)
@@ -269,7 +263,7 @@ function readPrismaModelNames(clientPath: string): Record<string, string> {
     throw new PrismaModelsFormatError(
       `Could not read any Prisma model names from ${modelsPath}. Expected ` +
         "lines like `export type * from './models/Post.ts'`. This is most " +
-        'likely a change in what Prisma generates — please open an issue at ' +
+        'likely a change in what Prisma generates. Please open an issue at ' +
         'https://github.com/cedarjs/cedar/issues.',
     )
   }
