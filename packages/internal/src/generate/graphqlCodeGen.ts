@@ -248,8 +248,8 @@ function readPrismaModelNames(clientPath: string): Record<string, string> {
   const ext = path.extname(clientPath)
   const modelsPath = path.join(path.dirname(clientPath), `models${ext}`)
 
-  // Let a missing file throw like a failed import would: the caller treats
-  // that as "no client generated yet" and regenerates.
+  // Let a missing file throw: the caller treats that as "no client generated
+  // yet" and regenerates.
   const source = fs.readFileSync(modelsPath, 'utf8')
 
   const modelNames: Record<string, string> = {}
