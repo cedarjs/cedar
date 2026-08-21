@@ -23,7 +23,7 @@ import {
   transformWithBabel,
 } from '@cedarjs/babel-config'
 import {
-  applyEsmExtensions,
+  applyImportExtensions,
   applySrcAlias,
 } from '@cedarjs/internal/dist/build/api.js'
 import { findApiFiles } from '@cedarjs/internal/dist/files.js'
@@ -418,15 +418,16 @@ export async function buildCedarApp({
         const applyImportRewrites = (source: string) => {
           let rewritten = applySrcAlias(source, fromDirRelativeToApiSrc)
 
-          // For ESM projects, append .js/.jsx extensions to extensionless
-          // relative imports so Node's ESM resolver can find them at runtime.
-          // This is needed because cedarImportDirPlugin expands glob imports
-          // (e.g. `src/directives/**/*.{js,ts}`) into individual extensionless
+          // Rewrite relative import specifiers to point at the compiled .js
+          // output: append .js to extensionless imports (needed by Node's
+          // ESM resolver) and rewrite explicit .ts/.tsx extensions
+          // (allowImportingTsExtensions) to .js, which both module formats
+          // need. Extensionless specifiers appear because
+          // cedarImportDirPlugin expands glob imports (e.g.
+          // `src/directives/**/*.{js,ts}`) into individual extensionless
           // import statements, and Rollup with preserveModules:true preserves
           // those specifiers as-is in the output.
-          if (projectSideIsEsm('api')) {
-            rewritten = applyEsmExtensions(rewritten, id)
-          }
+          rewritten = applyImportExtensions(rewritten, id)
 
           return rewritten
         }

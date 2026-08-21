@@ -2,23 +2,31 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 /**
- * For ESM projects using esbuild with `bundle: false`, rewrites extensionless
- * relative imports to include `.js` extension so that Node's ESM resolver can
- * locate the compiled output files at runtime.
+ * Rewrites relative import specifiers so they point at the compiled `.js`
+ * output files instead of the TypeScript/JSX source files:
  *
- * Handles both static imports (`from '../lib/db'`) and dynamic imports
+ *  - Extensionless imports (`from '../lib/db'`) get `.js` appended so that
+ *    Node's ESM resolver can locate the compiled output at runtime. Node's
+ *    CJS resolver appends the extension itself, so for CJS output this
+ *    rewrite is behavior-neutral.
+ *  - Explicit TypeScript-extension imports (`from './hello.ts'`, allowed by
+ *    `allowImportingTsExtensions` in the project tsconfig) are rewritten to
+ *    `.js`, since the file on disk after compilation is `hello.js`. This is
+ *    required for both CJS and ESM output — neither Node resolver maps a
+ *    `.ts` specifier to a `.js` file.
+ *
+ * Handles static imports/re-exports (`from '../lib/db'`), side-effect
+ * imports (`import '../lib/setup'`), and dynamic imports
  * (`import('../lib/db')`).
  *
- * Always outputs `.js` because esbuild with `loader: 'js'` compiles all source
- * files (`.ts`, `.tsx`, `.jsx`) to `.js` output. For a source file `api/src/lib/db.ts`
- * or `api/src/lib/db.tsx`, the output is always `api/dist/lib/db.js`, so all
- * import specifiers must use `.js` at runtime.
+ * Always outputs `.js` because both build pipelines compile every source
+ * file (`.ts`, `.tsx`, `.jsx`) to `.js` output. For a source file
+ * `api/src/lib/db.ts` or `api/src/lib/db.tsx`, the output is always
+ * `api/dist/lib/db.js`, so all import specifiers must use `.js` at runtime.
  *
- * This replaces the `resolvePath` hook in `babel-plugin-module-resolver` for
- * the standalone esbuild build path (`runCedarBabelTransformsPlugin`), which
- * was previously responsible for this extension-appending behaviour.  Vite
- * and Rollup resolve extensions themselves during bundling; only the esbuild
- * `bundle: false` path needs explicit extension suffixes in the source.
+ * For the standalone esbuild build path (`runCedarBabelTransformsPlugin`)
+ * this replaces the `resolvePath` hook in `babel-plugin-module-resolver`,
+ * which is not part of `getApiSideBabelPluginsForVite()`.
  *
  * It is a plain function called inline — not an esbuild plugin — following
  * the same pattern as `applySrcAlias`, `applyTsconfigPaths`, etc.
@@ -32,7 +40,7 @@ import path from 'node:path'
  * rewrites it to `../lib/db.js` when `api/src/lib/db.ts` (or `db.tsx`)
  * exists on disk.
  */
-export function applyEsmExtensions(code: string, fromFile: string): string {
+export function applyImportExtensions(code: string, fromFile: string): string {
   const fromDir = path.dirname(fromFile)
 
   const rewriteImportPath = (
@@ -42,6 +50,19 @@ export function applyEsmExtensions(code: string, fromFile: string): string {
   ): string => {
     const existingExt = path.extname(importPath)
     const absImport = path.join(fromDir, importPath)
+
+    // Explicit TypeScript-extension import (allowImportingTsExtensions):
+    // `./hello.ts` compiles to `hello.js` on disk, so rewrite the extension.
+    // Only when the source file actually exists — otherwise fall through to
+    // the compound-extension probing below (e.g. a file literally named
+    // `hello.ts.ts` imported as `./hello.ts`).
+    if (
+      (existingExt === '.ts' || existingExt === '.tsx') &&
+      fs.existsSync(absImport)
+    ) {
+      const base = importPath.slice(0, -existingExt.length)
+      return preservePrefix + base + '.js' + preserveSuffix
+    }
 
     // Non-JS extension (e.g. `.sdl`, `.json`, `.css`): probe for a TypeScript
     // source file that uses the import path as its full base name. Cedar SDL
@@ -80,11 +101,19 @@ export function applyEsmExtensions(code: string, fromFile: string): string {
     return preservePrefix + importPath + preserveSuffix
   }
 
-  // Handle static imports/exports: `from '../lib/db'` or `from "../lib/db"`
+  // Handle static imports/re-exports: `from '../lib/db'` or `from "../lib/db"`
   let result = code.replace(
     /\bfrom\s+(['"])(\.\.?\/[^'"]+)\1/g,
     (match, quote, importPath) => {
       return `from ${rewriteImportPath(importPath, quote, quote)}`
+    },
+  )
+
+  // Handle side-effect imports: `import '../lib/setup'`
+  result = result.replace(
+    /\bimport\s+(['"])(\.\.?\/[^'"]+)\1/g,
+    (match, quote, importPath) => {
+      return `import ${rewriteImportPath(importPath, quote, quote)}`
     },
   )
 
