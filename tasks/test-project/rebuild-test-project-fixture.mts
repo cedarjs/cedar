@@ -811,9 +811,27 @@ async function rebuildTestProject() {
       )
 
       fs.writeFileSync(
+        path.join(OUTPUT_PROJECT_PATH, 'api', 'src', 'lib', 'greeting.ts'),
+        [
+          '/**',
+          ' * Imported by functions/hello.ts with an explicit `.ts` extension (allowed',
+          ' * by `allowImportingTsExtensions` in api/tsconfig.json) so that builds and',
+          " * smoke tests exercise the framework's rewriting of `.ts` import specifiers",
+          ' * to the compiled `.js` output files.',
+          ' */',
+          'export function greeting() {',
+          "  return 'hello from cedar'",
+          '}',
+          '',
+        ].join('\n'),
+      )
+
+      fs.writeFileSync(
         path.join(functionsDir, 'hello.ts'),
         [
           "import { validateEmail } from '@my-org/validators'",
+          '',
+          "import { greeting } from 'src/lib/greeting.ts'",
           '',
           'export async function handleRequest(request: Request) {',
           '  const url = new URL(request.url)',
@@ -822,7 +840,7 @@ async function rebuildTestProject() {
           '  if (email) {',
           '    const valid = validateEmail(email)',
           '    return new Response(',
-          "      JSON.stringify({ data: 'hello from cedar', url: request.url, email, valid }),",
+          '      JSON.stringify({ data: greeting(), url: request.url, email, valid }),',
           '      {',
           '        status: 200,',
           "        headers: { 'Content-Type': 'application/json' },",
@@ -831,7 +849,7 @@ async function rebuildTestProject() {
           '  }',
           '',
           '  return new Response(',
-          "    JSON.stringify({ data: 'hello from cedar', url: request.url }),",
+          '    JSON.stringify({ data: greeting(), url: request.url }),',
           '    {',
           '      status: 200,',
           "      headers: { 'Content-Type': 'application/json' },",
