@@ -109,11 +109,15 @@ export function applyImportExtensions(code: string, fromFile: string): string {
     },
   )
 
-  // Handle side-effect imports: `import '../lib/setup'`
+  // Handle side-effect imports: `import '../lib/setup'`. Anchored to
+  // statement position (start of line or after a `;`) because side-effect
+  // imports are always statements; without the anchor, import-statement text
+  // occurring inside string data (e.g. code snippets or codegen templates)
+  // would be rewritten too.
   result = result.replace(
-    /\bimport\s+(['"])(\.\.?\/[^'"]+)\1/g,
-    (match, quote, importPath) => {
-      return `import ${rewriteImportPath(importPath, quote, quote)}`
+    /(^[ \t]*|;\s*)import\s+(['"])(\.\.?\/[^'"]+)\2/gm,
+    (match, prefix, quote, importPath) => {
+      return `${prefix}import ${rewriteImportPath(importPath, quote, quote)}`
     },
   )
 

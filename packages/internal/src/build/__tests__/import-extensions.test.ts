@@ -152,4 +152,37 @@ describe('applyImportExtensions', () => {
     const code = `import 'some-package'`
     expect(applyImportExtensions(code, IMPORTER)).toBe(code)
   })
+
+  it('rewrites indented side-effect imports', () => {
+    const code = `  import '../lib/db.ts'`
+    expect(applyImportExtensions(code, IMPORTER)).toBe(
+      `  import '../lib/db.js'`,
+    )
+  })
+
+  it('rewrites side-effect imports after a semicolon', () => {
+    const code = `setup(); import '../lib/db.ts'`
+    expect(applyImportExtensions(code, IMPORTER)).toBe(
+      `setup(); import '../lib/db.js'`,
+    )
+  })
+
+  it('leaves side-effect import text inside string data alone', () => {
+    const code = `const hint = "add import '../lib/db.ts' to your file"`
+    expect(applyImportExtensions(code, IMPORTER)).toBe(code)
+  })
+
+  it('rewrites import lines inside multi-line template strings', () => {
+    // Documents a known limitation: inside a template literal, a line that
+    // starts with a side-effect import is lexically indistinguishable from a
+    // real statement, so the statement-position anchor matches it. Avoiding
+    // this would require a real parser instead of regex-based rewriting.
+    const code = ['const snippet = `', "  import '../lib/db.ts'", '`'].join(
+      '\n',
+    )
+    const expected = ['const snippet = `', "  import '../lib/db.js'", '`'].join(
+      '\n',
+    )
+    expect(applyImportExtensions(code, IMPORTER)).toBe(expected)
+  })
 })
