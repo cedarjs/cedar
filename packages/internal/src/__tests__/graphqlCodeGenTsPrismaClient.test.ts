@@ -86,8 +86,6 @@ test('Reads Prisma models from a TypeScript prisma-client', async () => {
 
   const { data } = codegenOutput
 
-  // Without the static read, `import()` of a `.ts` client throws, the model
-  // list comes back empty and no Prisma models are imported at all
   expect(data).toContain(
     "import { PrismaModelOne as PrismaPrismaModelOne, PrismaModelTwo as PrismaPrismaModelTwo, Post as PrismaPost, Todo as PrismaTodo } from 'src/lib/db'",
   )
