@@ -13,7 +13,7 @@ export async function handleRequest(request: Request) {
       {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
-      },
+      }
     )
   }
 
