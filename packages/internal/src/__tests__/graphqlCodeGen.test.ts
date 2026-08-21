@@ -4,13 +4,13 @@ import path from 'node:path'
 const { mockPrismaClientPath } = await vi.hoisted(async () => {
   const path = await import('node:path')
 
-  // A real file on disk that acts as the generated Prisma client. Vitest 4's
-  // module runner can't mock `file://` URLs (which is how
-  // `importGeneratedPrismaClient` imports the client), so we point it at an
-  // actual fixture module instead
+  // A JavaScript Prisma client, as emitted by the `prisma-client` generator
+  // when `generatedFileExtension` is e.g. "mjs". Codegen reads the model
+  // names out of the `models.mjs` barrel next to it rather than importing
+  // the client.
   const mockPrismaClientPath = path.resolve(
     import.meta.dirname,
-    '__fixtures__/graphqlCodeGen/mockPrismaClient.mjs',
+    '__fixtures__/graphqlCodeGen/jsPrismaClient/client.mjs',
   )
   return { mockPrismaClientPath }
 })

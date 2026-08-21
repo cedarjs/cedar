@@ -1,6 +1,5 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
 
 import * as addPlugin from '@graphql-codegen/add'
 import { loadCodegenConfig } from '@graphql-codegen/cli'
@@ -271,76 +270,27 @@ function readPrismaModelNames(clientPath: string): Record<string, string> {
   return modelNames
 }
 
-async function importGeneratedPrismaClient() {
-  const cacheBuster = `?t=${Date.now()}`
+async function readGeneratedPrismaModelNames() {
   const { clientPath, error } = await resolveGeneratedPrismaClient()
 
   if (!clientPath) {
     throw new Error(error)
   }
 
-  // A TypeScript client can't be `import()`ed — read the model names out of
-  // the generated `models.<ext>` barrel instead.
-  if (/\.[mc]?ts$/.test(clientPath)) {
-    return { Prisma: { ModelName: readPrismaModelNames(clientPath) } }
-  }
-
-  const fileUrl = pathToFileURL(clientPath).href + cacheBuster
-  const freshPrisma = await import(fileUrl)
-
-  return freshPrisma
-}
-
-function isModelNameRecord(value: unknown): value is Record<string, string> {
-  if (typeof value !== 'object' || value === null) {
-    return false
-  }
-
-  return Object.values(value).every((entry) => typeof entry === 'string')
-}
-
-function getModelName(mod: unknown): Record<string, string> | null {
-  if (typeof mod !== 'object' || mod === null || !('Prisma' in mod)) {
-    return null
-  }
-
-  const prismaModule = mod.Prisma
-
-  if (
-    typeof prismaModule !== 'object' ||
-    prismaModule === null ||
-    !('ModelName' in prismaModule)
-  ) {
-    return null
-  }
-
-  const modelName = prismaModule.ModelName
-
-  if (typeof modelName !== 'object' || modelName === null) {
-    return null
-  }
-
-  if (isModelNameRecord(modelName)) {
-    return modelName
-  }
-
-  return null
+  return readPrismaModelNames(clientPath)
 }
 
 async function getPrismaClient(): Promise<{
   ModelName: Record<string, string>
 }> {
-  // Try to import the already-generated client directly.
+  // Try reading the already-generated client's model names directly.
   try {
-    const localPrisma = await importGeneratedPrismaClient()
-    const modelName = getModelName(localPrisma)
-    if (modelName) {
-      return { ModelName: modelName }
-    }
+    return { ModelName: await readGeneratedPrismaModelNames() }
   } catch (e) {
     if (e instanceof PrismaModelsFormatError) {
       throw e
     }
+
     // No generated client exists yet — fall through to generate one.
   }
 
@@ -352,15 +302,12 @@ async function getPrismaClient(): Promise<{
   execa.sync(pmExec, ['cedar', 'prisma', 'generate'])
 
   try {
-    const freshPrisma = await importGeneratedPrismaClient()
-    const modelName = getModelName(freshPrisma)
-    if (modelName) {
-      return { ModelName: modelName }
-    }
+    return { ModelName: await readGeneratedPrismaModelNames() }
   } catch (e) {
     if (e instanceof PrismaModelsFormatError) {
       throw e
     }
+
     // Fall through to empty ModelName object below.
   }
 
