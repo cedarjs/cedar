@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import * as addPlugin from '@graphql-codegen/add'
 import { loadCodegenConfig } from '@graphql-codegen/cli'
@@ -270,14 +271,72 @@ function readPrismaModelNames(clientPath: string): Record<string, string> {
   return modelNames
 }
 
-async function readGeneratedPrismaModelNames() {
+/**
+ * Reads `Prisma.ModelName` from the generated client.
+ *
+ * For a `.ts`, `.mts`, or `.cts` client (the `prisma-client` generator),
+ * this reads the model names straight out of the `models.<ext>` barrel next
+ * to it, which is fast and uses very little memory.
+ *
+ * Any other client has no `models.<ext>` barrel to read, so this falls back
+ * to importing it directly — the legacy `prisma-client-js` generator emits a
+ * single compiled `.js` client that's safe to import this way.
+ */
+async function readGeneratedPrismaModelNames(): Promise<
+  Record<string, string>
+> {
+  const cacheBuster = `?t=${Date.now()}`
   const { clientPath, error } = await resolveGeneratedPrismaClient()
 
   if (!clientPath) {
     throw new Error(error)
   }
 
-  return readPrismaModelNames(clientPath)
+  if (/\.[mc]?ts$/.test(clientPath)) {
+    return readPrismaModelNames(clientPath)
+  }
+
+  const fileUrl = pathToFileURL(clientPath).href + cacheBuster
+  const freshPrisma = await import(fileUrl)
+  const modelName = getModelName(freshPrisma)
+
+  return modelName ?? {}
+}
+
+function isModelNameRecord(value: unknown): value is Record<string, string> {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+
+  return Object.values(value).every((entry) => typeof entry === 'string')
+}
+
+function getModelName(mod: unknown): Record<string, string> | null {
+  if (typeof mod !== 'object' || mod === null || !('Prisma' in mod)) {
+    return null
+  }
+
+  const prismaModule = mod.Prisma
+
+  if (
+    typeof prismaModule !== 'object' ||
+    prismaModule === null ||
+    !('ModelName' in prismaModule)
+  ) {
+    return null
+  }
+
+  const modelName = prismaModule.ModelName
+
+  if (typeof modelName !== 'object' || modelName === null) {
+    return null
+  }
+
+  if (isModelNameRecord(modelName)) {
+    return modelName
+  }
+
+  return null
 }
 
 async function getPrismaClient(): Promise<{
@@ -285,7 +344,10 @@ async function getPrismaClient(): Promise<{
 }> {
   // Try reading the already-generated client's model names directly.
   try {
-    return { ModelName: await readGeneratedPrismaModelNames() }
+    const modelName = await readGeneratedPrismaModelNames()
+    if (Object.keys(modelName).length > 0) {
+      return { ModelName: modelName }
+    }
   } catch (e) {
     if (e instanceof PrismaModelsFormatError) {
       throw e
@@ -302,7 +364,10 @@ async function getPrismaClient(): Promise<{
   execa.sync(pmExec, ['cedar', 'prisma', 'generate'])
 
   try {
-    return { ModelName: await readGeneratedPrismaModelNames() }
+    const modelName = await readGeneratedPrismaModelNames()
+    if (Object.keys(modelName).length > 0) {
+      return { ModelName: modelName }
+    }
   } catch (e) {
     if (e instanceof PrismaModelsFormatError) {
       throw e
