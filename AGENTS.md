@@ -51,6 +51,15 @@ Use `yarn dedupe` to manage duplicate packages. Keep `package.json` files sorted
 - Avoid introducing new dependencies unless necessary.
 - Always put type imports on a separate `import type { ... }` line. Never combine type and value imports in a single `import` statement (e.g., avoid `import { foo, type Bar } from '...'`; instead write `import { foo } from '...'` and `import type { Bar } from '...'` on separate lines).
 
+### Writing Comments, PR Descriptions, and Changelogs
+
+Write for readers who see only the **current** state of the code and have no historical context. Do not write prose that references earlier versions, past behavior, or the evolution of the code. The reader should never need to know what the code _used_ to do to understand what it does now.
+
+- **Describe the present, not the history.** Comment on what the current code does and why. Never say "don't do X anymore", "no longer", "previously", "this was once Y", "we used to", or "instead of the old approach". These require the reader to reconstruct a timeline they don't have.
+- **Write the removed-information directly.** If a comment explains why a behavior was _removed_ or why a particular approach is _not_ used, state the current reason plainly. For example, prefer "This path is not supported" over "we removed support for this path". Prefer "X is not done here" over "X used to be done here, but not anymore".
+- **Comments in code, PR descriptions, release notes, and changelog entries are all self-contained.** The same rule applies everywhere prose is written. Description text should read correctly if read in isolation, months or years later.
+- **If a decision's reasoning matters, frame it in terms of the current trade-off**, not the decision history: "We use Y because X is unreliable" rather than "We switched from X to Y".
+
 ## Type Safety & Casting
 
 - Prefer precise types and type guards over casts whenever possible.

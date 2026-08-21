@@ -223,7 +223,68 @@ export function getLoadDocumentsOptions(filename: string) {
   return loadTypedefsConfig
 }
 
-async function importGeneratedPrismaClient() {
+/**
+ * Thrown when the generated `models.<ext>` file is there but doesn't look the
+ * way we expect. That's format drift, not a missing client, so regenerating
+ * won't help and the error has to reach the user.
+ */
+class PrismaModelsFormatError extends Error {}
+
+/**
+ * Matches the re-export lines Prisma writes into `models.<ext>`:
+ *
+ *   export type * from './models/Post.mts'
+ *
+ * The barrel also re-exports `./commonInputTypes.<ext>`, which isn't a model —
+ * requiring the `./models/` prefix leaves it out.
+ */
+const MODEL_REEXPORT_RE = /^export type \* from '\.\/models\/(\w+)\.\w+'/gm
+
+/**
+ * Reads the model names out of the generated `models.<ext>` barrel file that
+ * sits next to the client entry point. A plain map of model names is all
+ * codegen needs
+ */
+function readPrismaModelNames(clientPath: string): Record<string, string> {
+  const ext = path.extname(clientPath)
+  const modelsPath = path.join(path.dirname(clientPath), `models${ext}`)
+
+  // Let a missing file throw: the caller treats that as "no client generated
+  // yet" and regenerates.
+  const source = fs.readFileSync(modelsPath, 'utf8')
+
+  const modelNames: Record<string, string> = {}
+
+  for (const match of source.matchAll(MODEL_REEXPORT_RE)) {
+    modelNames[match[1]] = match[1]
+  }
+
+  if (Object.keys(modelNames).length === 0) {
+    throw new PrismaModelsFormatError(
+      `Could not read any Prisma model names from ${modelsPath}. Expected ` +
+        "lines like `export type * from './models/Post.ts'`. This is most " +
+        'likely a change in what Prisma generates. Please open an issue at ' +
+        'https://github.com/cedarjs/cedar/issues.',
+    )
+  }
+
+  return modelNames
+}
+
+/**
+ * Reads `Prisma.ModelName` from the generated client.
+ *
+ * For a `.ts`, `.mts`, or `.cts` client (the `prisma-client` generator),
+ * this reads the model names straight out of the `models.<ext>` barrel next
+ * to it, which is fast and uses very little memory.
+ *
+ * Any other client has no `models.<ext>` barrel to read, so this falls back
+ * to importing it directly — the legacy `prisma-client-js` generator emits a
+ * single compiled `.js` client that's safe to import this way.
+ */
+async function readGeneratedPrismaModelNames(): Promise<
+  Record<string, string>
+> {
   const cacheBuster = `?t=${Date.now()}`
   const { clientPath, error } = await resolveGeneratedPrismaClient()
 
@@ -231,10 +292,15 @@ async function importGeneratedPrismaClient() {
     throw new Error(error)
   }
 
+  if (/\.[mc]?ts$/.test(clientPath)) {
+    return readPrismaModelNames(clientPath)
+  }
+
   const fileUrl = pathToFileURL(clientPath).href + cacheBuster
   const freshPrisma = await import(fileUrl)
+  const modelName = getModelName(freshPrisma)
 
-  return freshPrisma
+  return modelName ?? {}
 }
 
 function isModelNameRecord(value: unknown): value is Record<string, string> {
@@ -276,14 +342,17 @@ function getModelName(mod: unknown): Record<string, string> | null {
 async function getPrismaClient(): Promise<{
   ModelName: Record<string, string>
 }> {
-  // Try to import the already-generated client directly.
+  // Try reading the already-generated client's model names directly.
   try {
-    const localPrisma = await importGeneratedPrismaClient()
-    const modelName = getModelName(localPrisma)
-    if (modelName) {
+    const modelName = await readGeneratedPrismaModelNames()
+    if (Object.keys(modelName).length > 0) {
       return { ModelName: modelName }
     }
-  } catch {
+  } catch (e) {
+    if (e instanceof PrismaModelsFormatError) {
+      throw e
+    }
+
     // No generated client exists yet — fall through to generate one.
   }
 
@@ -295,12 +364,15 @@ async function getPrismaClient(): Promise<{
   execa.sync(pmExec, ['cedar', 'prisma', 'generate'])
 
   try {
-    const freshPrisma = await importGeneratedPrismaClient()
-    const modelName = getModelName(freshPrisma)
-    if (modelName) {
+    const modelName = await readGeneratedPrismaModelNames()
+    if (Object.keys(modelName).length > 0) {
       return { ModelName: modelName }
     }
-  } catch {
+  } catch (e) {
+    if (e instanceof PrismaModelsFormatError) {
+      throw e
+    }
+
     // Fall through to empty ModelName object below.
   }
 

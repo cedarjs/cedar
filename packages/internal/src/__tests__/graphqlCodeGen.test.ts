@@ -6,8 +6,8 @@ const { mockPrismaClientPath } = await vi.hoisted(async () => {
 
   // A real file on disk that acts as the generated Prisma client. Vitest 4's
   // module runner can't mock `file://` URLs (which is how
-  // `importGeneratedPrismaClient` imports the client), so we point it at an
-  // actual fixture module instead
+  // `readGeneratedPrismaModelNames` imports the client), so we point it at
+  // an actual fixture module instead
   const mockPrismaClientPath = path.resolve(
     import.meta.dirname,
     '__fixtures__/graphqlCodeGen/mockPrismaClient.mjs',
