@@ -1,5 +1,7 @@
 import { validateEmail } from '@my-org/validators'
 
+import { greeting } from 'src/lib/greeting.ts'
+
 export async function handleRequest(request: Request) {
   const url = new URL(request.url)
   const email = url.searchParams.get('email')
@@ -8,7 +10,7 @@ export async function handleRequest(request: Request) {
     const valid = validateEmail(email)
     return new Response(
       JSON.stringify({
-        data: 'hello from cedar',
+        data: greeting(),
         url: request.url,
         email,
         valid,
@@ -21,7 +23,7 @@ export async function handleRequest(request: Request) {
   }
 
   return new Response(
-    JSON.stringify({ data: 'hello from cedar', url: request.url }),
+    JSON.stringify({ data: greeting(), url: request.url }),
     {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
