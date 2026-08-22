@@ -123,6 +123,13 @@ export const handler = async (upgradeOptions: UpgradeOptions) => {
         title: 'Updating other packages in your package.json(s)',
         task: (ctx) =>
           updatePackageVersionsFromTemplate(ctx, { dryRun, verbose }),
+        // Canary only. This forces the template's dependency versions onto the
+        // project and adds back any the project is missing, which resurrects
+        // packages people have deliberately removed — a project that moved off
+        // SQLite gets better-sqlite3 back, for example. That's too blunt for
+        // regular upgrades, but people running canary are already signed up
+        // for rougher edges.
+        // https://github.com/redwoodjs/redwood/pull/8855
         enabled: (ctx) =>
           String(ctx.versionToUpgradeTo).includes('canary') &&
           !ctx.preUpgradeError,
@@ -403,6 +410,49 @@ function updateCedarJSDepsForAllSides(
   )
 }
 
+interface TemplatePackageJson {
+  dependencies?: Record<string, string>
+  devDependencies?: Record<string, string>
+}
+
+/**
+ * Copies one section (`dependencies` or `devDependencies`) of the app
+ * template's package.json into the project's own, pinning each package to the
+ * template's version and collecting a line into `messages` for every change.
+ *
+ * CedarJS packages are skipped. The earlier "Updating your CedarJS version"
+ * task owns the ones the project already has, and ones it doesn't have can't
+ * be handled from this comparison at all: a package missing from the project
+ * looks exactly like one the user deliberately removed.
+ */
+export function mergeTemplateDependencies(
+  field: 'dependencies' | 'devDependencies',
+  templatePackageJson: TemplatePackageJson,
+  localPackageJson: TemplatePackageJson,
+  messages: string[],
+  { dryRun, verbose }: { dryRun?: boolean; verbose?: boolean } = {},
+) {
+  const templateDeps = templatePackageJson[field]
+
+  if (!templateDeps) {
+    return
+  }
+
+  for (const [depName, depVersion] of Object.entries(templateDeps)) {
+    if (depName.startsWith('@cedarjs/')) {
+      continue
+    }
+
+    const localDeps = (localPackageJson[field] ??= {})
+
+    if (verbose || dryRun) {
+      messages.push(` - ${depName}: ${localDeps[depName]} => ${depVersion}`)
+    }
+
+    localDeps[depName] = depVersion
+  }
+}
+
 async function updatePackageVersionsFromTemplate(
   ctx: Record<string, unknown>,
   { dryRun, verbose }: { dryRun?: boolean; verbose?: boolean },
@@ -448,35 +498,15 @@ async function updatePackageVersionsFromTemplate(
 
           const messages: string[] = []
 
-          Object.entries(templatePackageJson.dependencies || {}).forEach(
-            ([depName, depVersion]: [string, unknown]) => {
-              // CedarJS packages are handled in another task
-              if (!depName.startsWith('@cedarjs/')) {
-                if (verbose || dryRun) {
-                  messages.push(
-                    ` - ${depName}: ${localPackageJson.dependencies[depName]} => ${depVersion}`,
-                  )
-                }
-
-                localPackageJson.dependencies[depName] = depVersion
-              }
-            },
-          )
-
-          Object.entries(templatePackageJson.devDependencies || {}).forEach(
-            ([depName, depVersion]: [string, unknown]) => {
-              // CedarJS packages are handled in another task
-              if (!depName.startsWith('@cedarjs/')) {
-                if (verbose || dryRun) {
-                  messages.push(
-                    ` - ${depName}: ${localPackageJson.devDependencies[depName]} => ${depVersion}`,
-                  )
-                }
-
-                localPackageJson.devDependencies[depName] = depVersion
-              }
-            },
-          )
+          for (const field of ['dependencies', 'devDependencies'] as const) {
+            mergeTemplateDependencies(
+              field,
+              templatePackageJson,
+              localPackageJson,
+              messages,
+              { dryRun, verbose },
+            )
+          }
 
           if (messages.length > 0) {
             task.title = task.title + '\n' + messages.join('\n')
