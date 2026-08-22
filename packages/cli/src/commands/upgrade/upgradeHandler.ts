@@ -404,6 +404,78 @@ function updateCedarJSDepsForAllSides(
   )
 }
 
+interface TemplatePackageJson {
+  dependencies?: Record<string, string>
+  devDependencies?: Record<string, string>
+}
+
+function hasDependency(packageJson: TemplatePackageJson, depName: string) {
+  return (
+    depName in (packageJson.dependencies ?? {}) ||
+    depName in (packageJson.devDependencies ?? {})
+  )
+}
+
+/**
+ * Copies one section (`dependencies` or `devDependencies`) of the app
+ * template's package.json into the project's own, collecting a line into
+ * `messages` for every change worth telling the user about.
+ *
+ * Non-CedarJS packages are always pinned to the template's version. CedarJS
+ * packages are only added when the project doesn't already have them
+ * somewhere, because:
+ *
+ * - Ones the project already has were bumped to the version being upgraded to
+ *   by the earlier "Updating your CedarJS version" task.
+ * - The template's literal version is whatever is on `main`, which is not
+ *   necessarily the version being upgraded to, so it can't be used as-is.
+ */
+export function mergeTemplateDependencies(
+  field: 'dependencies' | 'devDependencies',
+  templatePackageJson: TemplatePackageJson,
+  localPackageJson: TemplatePackageJson,
+  cedarVersion: string,
+  messages: string[],
+  { dryRun, verbose }: { dryRun?: boolean; verbose?: boolean } = {},
+) {
+  const templateDeps = templatePackageJson[field]
+
+  if (!templateDeps || Object.keys(templateDeps).length === 0) {
+    return
+  }
+
+  const localDeps = (localPackageJson[field] ??= {})
+
+  for (const [depName, depVersion] of Object.entries(templateDeps)) {
+    if (depName.startsWith('@cedarjs/')) {
+      // @cedarjs/studio is never managed by the upgrade command, matching
+      // `updatePackageJsonVersion`
+      if (depName === '@cedarjs/studio') {
+        continue
+      }
+
+      if (hasDependency(localPackageJson, depName)) {
+        continue
+      }
+
+      localDeps[depName] = cedarVersion
+
+      // Deliberately not gated behind `verbose`. Bumping a version the project
+      // already has is routine, but a package the project has never had before
+      // is worth surfacing every time
+      messages.push(` - ${depName}: (added) => ${cedarVersion}`)
+
+      continue
+    }
+
+    if (verbose || dryRun) {
+      messages.push(` - ${depName}: ${localDeps[depName]} => ${depVersion}`)
+    }
+
+    localDeps[depName] = depVersion
+  }
+}
+
 async function updatePackageVersionsFromTemplate(
   ctx: Record<string, unknown>,
   { dryRun, verbose }: { dryRun?: boolean; verbose?: boolean },
@@ -449,35 +521,16 @@ async function updatePackageVersionsFromTemplate(
 
           const messages: string[] = []
 
-          Object.entries(templatePackageJson.dependencies || {}).forEach(
-            ([depName, depVersion]: [string, unknown]) => {
-              // CedarJS packages are handled in another task
-              if (!depName.startsWith('@cedarjs/')) {
-                if (verbose || dryRun) {
-                  messages.push(
-                    ` - ${depName}: ${localPackageJson.dependencies[depName]} => ${depVersion}`,
-                  )
-                }
-
-                localPackageJson.dependencies[depName] = depVersion
-              }
-            },
-          )
-
-          Object.entries(templatePackageJson.devDependencies || {}).forEach(
-            ([depName, depVersion]: [string, unknown]) => {
-              // CedarJS packages are handled in another task
-              if (!depName.startsWith('@cedarjs/')) {
-                if (verbose || dryRun) {
-                  messages.push(
-                    ` - ${depName}: ${localPackageJson.devDependencies[depName]} => ${depVersion}`,
-                  )
-                }
-
-                localPackageJson.devDependencies[depName] = depVersion
-              }
-            },
-          )
+          for (const field of ['dependencies', 'devDependencies'] as const) {
+            mergeTemplateDependencies(
+              field,
+              templatePackageJson,
+              localPackageJson,
+              String(ctx.versionToUpgradeTo),
+              messages,
+              { dryRun, verbose },
+            )
+          }
 
           if (messages.length > 0) {
             task.title = task.title + '\n' + messages.join('\n')
