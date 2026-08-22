@@ -3,11 +3,29 @@ import type { SpawnOptions } from 'child_process'
 import os from 'os'
 import path from 'path'
 
+/**
+ * Quotes a single argument for a Windows shell command string.
+ *
+ * On Windows we spawn with `shell: true` and a command string, so every
+ * argument is re-parsed by the shell. Without quoting, anything containing a
+ * space is split: a project at `C:\Users\Ada Lovelace\app` makes node try to
+ * load `C:\Users\Ada`, and the process dies with MODULE_NOT_FOUND. The JSON
+ * payloads passed below need it too, since they contain double quotes.
+ *
+ * Follows the usual Windows argument-encoding rules: backslashes immediately
+ * before a double quote are doubled, the quote itself is escaped, and trailing
+ * backslashes are doubled so they can't escape the closing quote.
+ */
+export function quoteForWindowsShell(arg: string) {
+  const escaped = arg.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\*)$/, '$1$1')
+
+  return `"${escaped}"`
+}
+
 const spawnProcess = (...args: string[]) => {
   // "os.type()" returns 'Windows_NT' on Windows.
   // See https://nodejs.org/docs/latest-v12.x/api/os.html#os_os_type.
   const isWindows = os.type() === 'Windows_NT'
-  const execPath = isWindows ? `"${process.execPath}"` : process.execPath
 
   const spawnOptions: Partial<SpawnOptions> = isWindows
     ? {
@@ -44,7 +62,11 @@ const spawnProcess = (...args: string[]) => {
   if (isWindows) {
     // Use command string with empty args array to avoid DEP0190 warning when
     // `shell: true`
-    spawn([execPath, ...scriptArgs].join(' '), [], spawnOptions).unref()
+    const command = [process.execPath, ...scriptArgs]
+      .map(quoteForWindowsShell)
+      .join(' ')
+
+    spawn(command, [], spawnOptions).unref()
   } else {
     // Use proper args array when no shell needed
     spawn(process.execPath, scriptArgs, spawnOptions).unref()
