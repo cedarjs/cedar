@@ -279,3 +279,8 @@ status = 301
 from = "/docs/app-configuration-redwood-toml.md"
 to = "/docs/app-configuration-cedar-toml.md"
 status = 301
+
+[[redirects]]
+from = "/docs/upgrade-guides/v8"
+to = "/docs/upgrade-guides/redwood-v8"
+status = 301
