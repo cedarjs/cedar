@@ -138,6 +138,7 @@ async function main() {
   const filesWithContextWrapping: string[] = []
   const filesWithMswImports: string[] = []
   const filesWithWhatwgFetch: string[] = []
+  const filesWithRedwoodProvider: string[] = []
 
   const removedGraphQLTypesRegex =
     /\b(QueryOperationResult|MutationOperationResult|GraphQLQueryHookOptions|GraphQLMutationHookOptions|GraphQLOperationVariables)\b/
@@ -181,6 +182,10 @@ async function main() {
 
     if (content.includes('whatwg-fetch')) {
       filesWithWhatwgFetch.push(file)
+    }
+
+    if (content.includes('RedwoodProvider')) {
+      filesWithRedwoodProvider.push(file)
     }
   }
 
@@ -267,6 +272,16 @@ async function main() {
         'you can usually just delete the import. If you still need it, add\n' +
         'whatwg-fetch to your own devDependencies (in which case you can\n' +
         'ignore this warning).',
+    ])
+  }
+
+  if (filesWithRedwoodProvider.length > 0) {
+    info('Deprecated component detected: RedwoodProvider', [
+      'Found RedwoodProvider in: ' + filesWithRedwoodProvider.join(', '),
+      'RedwoodProvider has been renamed to CedarProvider. The old name is\n' +
+        'kept as a deprecated alias for now, but will be removed in a\n' +
+        'future release. Update your imports and JSX usage to\n' +
+        'CedarProvider.',
     ])
   }
 
