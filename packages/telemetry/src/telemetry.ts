@@ -17,9 +17,28 @@ import path from 'path'
  * backslashes are doubled so they can't escape the closing quote.
  */
 export function quoteForWindowsShell(arg: string) {
-  const escaped = arg.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\*)$/, '$1$1')
+  let quoted = '"'
+  let backslashes = 0
 
-  return `"${escaped}"`
+  for (const char of arg) {
+    if (char === '\\') {
+      backslashes += 1
+      continue
+    }
+
+    if (char === '"') {
+      // Double the run of backslashes before the quote so they aren't read as
+      // escapes themselves, then escape the quote
+      quoted += '\\'.repeat(backslashes * 2 + 1) + '"'
+    } else {
+      quoted += '\\'.repeat(backslashes) + char
+    }
+
+    backslashes = 0
+  }
+
+  // Trailing backslashes would escape the closing quote, so double them
+  return quoted + '\\'.repeat(backslashes * 2) + '"'
 }
 
 const spawnProcess = (...args: string[]) => {
