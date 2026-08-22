@@ -38,6 +38,7 @@ async function main() {
   // skip label requirement
   const conventionalCommitPrefixes = [
     /^chore\([^)]+\)!?:/,
+    /^refactor\([^)]+\)!?:/,
     /^feat\([^)]+\)!?:/,
     /^fix\([^)]+\)!?:/,
     /^docs\([^)]+\)!?:/,
