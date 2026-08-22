@@ -1782,11 +1782,28 @@ completes, `cedar prerender` renders all 9 pages.
 
 ### Why 3 seconds matters
 
-In a passing run the 19s splits into roughly 15s of `yarn cedar serve` startup
-and 17s of tests (they overlap). Playwright's `webServer` timeout is far longer
-than 3s, so a failure at 3-4s is **not** a startup timeout. Playwright fails
-fast in one specific case: when the `webServer` command process _exits_ before
-the URL responds. That is the shape this matches.
+Measured on an instrumented passing Windows run (see the diagnostics section
+below), `yarn cedar serve` becomes available about **3 seconds** after
+Playwright starts it:
+
+```
+15:15:11.975 pw:webserver Starting WebServer process yarn cedar serve...
+15:15:11.978 pw:webserver Process started
+15:15:12.083 pw:webserver Error ... ECONNREFUSED ... Waiting 250ms
+15:15:14.855 pw:webserver HTTP Status: 200
+15:15:14.857 pw:webserver WebServer available
+15:15:27.264 pw:webserver Terminating the WebServer
+             playwright exited 0
+```
+
+So the failures at 3-4s land almost exactly where the server would normally
+have come up — not early in a long startup, but right at the moment of truth.
+
+Playwright's `webServer` timeout is far longer than that, so this is **not** a
+startup timeout. Playwright only aborts that fast in one case: when the
+`webServer` command process _exits_ before the URL responds. That is the shape
+this matches — the server appears to start, then dies right around the point it
+should begin serving.
 
 ### Hypothesis (unconfirmed)
 
@@ -1849,6 +1866,21 @@ thousands of lines per test. The explicit `echo` guarantees at least one line of
 signal even if Playwright stays silent. If the hypothesis above is right, the
 `pw:webserver` output will show the command exiting rather than the URL
 timing out.
+
+#### Diagnostics verified on Windows (2026-08-22)
+
+Confirmed working on a passing Windows run of PR
+[#2483](https://github.com/cedarjs/cedar/pull/2483): about 27 lines of
+`pw:webserver` output covering the full lifecycle, plus the
+`playwright exited 0` line. So on the next failure we will see whether the
+process exits, and where in the retry ladder it stops.
+
+One thing to know when waiting for that: **Windows jobs do not run on every
+PR.** `ci.yml` only adds `windows-latest` to the matrix when `detect-changes`
+deems the diff Windows-relevant (`cases/windows.mts`) or the PR carries the
+`windows` label; `nightly-windows` catches the rest. A docs-or-workflow-only PR
+gets no Windows jobs at all, so add the `windows` label to exercise these
+diagnostics.
 
 ### Unrelated finding from the same logs
 
