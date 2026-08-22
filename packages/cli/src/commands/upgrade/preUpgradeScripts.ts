@@ -8,6 +8,20 @@ import type { ExecaError } from 'execa'
 import type { ListrRendererFactory, ListrTaskWrapper } from 'listr2'
 import semver from 'semver'
 
+/**
+ * Prerelease tags whose version number is a placeholder rather than a real
+ * planned release.
+ *
+ * A canary is "whatever is on main right now", so the major version it carries
+ * says nothing about which major the project is upgrading to, and the
+ * version-scoped scripts must not run for it — `canary.ts` can, and eventually
+ * will, need to say something different from the current `<major>.x.ts`.
+ *
+ * Other prereleases aren't like that. `6.0.0-rc.312` really is v6, so it gets
+ * `6.x.ts` like any other v6 release.
+ */
+const PLACEHOLDER_PRERELEASE_TAGS = ['canary']
+
 function isExecaError(e: unknown): e is ExecaError {
   return (
     e instanceof Error && ('stdout' in e || 'stderr' in e || 'exitCode' in e)
@@ -54,9 +68,19 @@ export async function runPreUpgradeScripts(
     return
   }
 
+  const prereleaseTag = parsed?.prerelease[0]
+  const isPlaceholderPrerelease =
+    typeof prereleaseTag === 'string' &&
+    PLACEHOLDER_PRERELEASE_TAGS.includes(prereleaseTag)
+
   const checkLevels: { id: string; candidates: string[] }[] = []
-  if (parsed && !parsed.prerelease.length) {
-    // 1. Exact match: 3.4.1
+  if (parsed && isPlaceholderPrerelease) {
+    checkLevels.push({
+      id: 'tag',
+      candidates: [`${prereleaseTag}.ts`, `${prereleaseTag}/index.ts`],
+    })
+  } else if (parsed) {
+    // 1. Exact match: 3.4.1, or 6.0.0-rc.312 for something only that RC needs
     checkLevels.push({
       id: 'exact',
       candidates: [`${version}.ts`, `${version}/index.ts`],
@@ -75,15 +99,6 @@ export async function runPreUpgradeScripts(
     checkLevels.push({
       id: 'minor',
       candidates: [`${parsed.major}.x.ts`, `${parsed.major}.x/index.ts`],
-    })
-  } else if (parsed && parsed.prerelease.length > 0) {
-    // `parsed.prerelease[0]` is the prerelease tag, e.g. 'canary'
-    checkLevels.push({
-      id: 'tag',
-      candidates: [
-        `${parsed.prerelease[0]}.ts`,
-        `${parsed.prerelease[0]}/index.ts`,
-      ],
     })
   }
 
