@@ -9,18 +9,21 @@ import type { ListrRendererFactory, ListrTaskWrapper } from 'listr2'
 import semver from 'semver'
 
 /**
- * Prerelease tags whose version number is a placeholder rather than a real
- * planned release.
+ * Prerelease tags published from `main` rather than from a release branch.
  *
- * A canary is "whatever is on main right now", so the major version it carries
- * says nothing about which major the project is upgrading to, and the
- * version-scoped scripts must not run for it — `canary.ts` can, and eventually
- * will, need to say something different from the current `<major>.x.ts`.
+ * Canaries are published by `publish-prerelease.yml`, which runs on `main`.
+ * That's a different line of development from the branch a release is cut
+ * from, so `canary.ts` can legitimately need to say something quite different
+ * from the current `<major>.x.ts`, and the version-scoped scripts must not run
+ * for it.
  *
- * Other prereleases aren't like that. `6.0.0-rc.312` really is v6, so it gets
- * `6.x.ts` like any other v6 release.
+ * Release candidates are the opposite case. `publish-release-candidate.yml`
+ * runs on `release/**`, the same branch the release itself will be cut from, so
+ * `6.0.0-rc.312` needs exactly what 6.0.0 will need and gets `6.x.ts` like any
+ * other v6 release. Same for `next` prereleases, published from the `next`
+ * branch.
  */
-const PLACEHOLDER_PRERELEASE_TAGS = ['canary']
+const MAIN_BRANCH_PRERELEASE_TAGS = ['canary']
 
 function isExecaError(e: unknown): e is ExecaError {
   return (
@@ -69,12 +72,12 @@ export async function runPreUpgradeScripts(
   }
 
   const prereleaseTag = parsed?.prerelease[0]
-  const isPlaceholderPrerelease =
+  const isMainBranchPrerelease =
     typeof prereleaseTag === 'string' &&
-    PLACEHOLDER_PRERELEASE_TAGS.includes(prereleaseTag)
+    MAIN_BRANCH_PRERELEASE_TAGS.includes(prereleaseTag)
 
   const checkLevels: { id: string; candidates: string[] }[] = []
-  if (parsed && isPlaceholderPrerelease) {
+  if (parsed && isMainBranchPrerelease) {
     checkLevels.push({
       id: 'tag',
       candidates: [`${prereleaseTag}.ts`, `${prereleaseTag}/index.ts`],
