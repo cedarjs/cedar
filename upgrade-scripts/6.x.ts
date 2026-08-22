@@ -36,13 +36,15 @@ interface PackageJson {
   }
 }
 
+// Deliberately only the three ESLint 8.57 looks for, which is the version
+// @cedarjs/eslint-config brings. It has no TypeScript loader hook, so an
+// eslint.config.ts is invisible to it and the project silently falls back to
+// eslintrc mode — which is exactly the case the legacy warning below needs to
+// catch, so a .ts config must not count as having migrated
 const flatEslintConfigFileNames = [
   'eslint.config.js',
   'eslint.config.mjs',
   'eslint.config.cjs',
-  'eslint.config.ts',
-  'eslint.config.mts',
-  'eslint.config.cts',
 ]
 
 const legacyEslintConfigFileNames = [
@@ -416,15 +418,22 @@ async function main() {
       !!packageJson.dependencies?.['@cedarjs/eslint-config']
 
     // Only worth warning about for projects that actually reach for Cedar's
-    // shared config — a project is free to bring its own ESLint setup
-    let usesCedarEslintConfig = JSON.stringify(
-      packageJson.eslintConfig ?? null,
-    ).includes('@cedarjs/eslint-config')
+    // shared config — a project is free to bring its own ESLint setup.
+    // ESLint reads one config: a flat config, when present, wins and the legacy
+    // ones are ignored entirely. So only the active config gets a say here, or
+    // a stale .eslintrc.js left behind after migrating would keep asking for a
+    // package the flat config never mentions
+    const activeEslintConfigPaths = flatEslintConfigPath
+      ? [flatEslintConfigPath]
+      : legacyEslintConfigPaths
 
-    for (const configPath of [
-      ...(flatEslintConfigPath ? [flatEslintConfigPath] : []),
-      ...legacyEslintConfigPaths,
-    ]) {
+    let usesCedarEslintConfig =
+      !flatEslintConfigPath &&
+      JSON.stringify(packageJson.eslintConfig ?? null).includes(
+        '@cedarjs/eslint-config',
+      )
+
+    for (const configPath of activeEslintConfigPaths) {
       const content = await fs.promises.readFile(configPath, 'utf8')
 
       if (content.includes('@cedarjs/eslint-config')) {
