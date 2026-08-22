@@ -50,6 +50,17 @@ export const handler = async (upgradeOptions: UpgradeOptions) => {
   let preUpgradeMessage = ''
   let preUpgradeError = ''
 
+  /**
+   * Whether the tasks that do the actual upgrading are allowed to run.
+   *
+   * A failed pre-upgrade check normally stops everything after it. `--force`
+   * is documented as "Force upgrade even if pre-upgrade checks fail", so it
+   * has to get past that — the error is still recorded and printed, it just
+   * doesn't hold the upgrade back.
+   */
+  const notBlockedByPreUpgradeChecks = (ctx: { preUpgradeError?: unknown }) =>
+    force || !ctx.preUpgradeError
+
   // structuring as nested tasks to avoid bug with task.title causing duplicates
   const tasks = new Listr(
     [
@@ -117,7 +128,8 @@ export const handler = async (upgradeOptions: UpgradeOptions) => {
       {
         title: 'Updating your CedarJS version',
         task: (ctx) => updateCedarJSDepsForAllSides(ctx, { dryRun, verbose }),
-        enabled: (ctx) => !!ctx.versionToUpgradeTo && !ctx.preUpgradeError,
+        enabled: (ctx) =>
+          !!ctx.versionToUpgradeTo && notBlockedByPreUpgradeChecks(ctx),
       },
       {
         title: 'Updating other packages in your package.json(s)',
@@ -132,36 +144,37 @@ export const handler = async (upgradeOptions: UpgradeOptions) => {
         // https://github.com/redwoodjs/redwood/pull/8855
         enabled: (ctx) =>
           String(ctx.versionToUpgradeTo).includes('canary') &&
-          !ctx.preUpgradeError,
+          notBlockedByPreUpgradeChecks(ctx),
       },
       {
         title: 'Downloading yarn patches',
         task: (ctx) => downloadYarnPatches(ctx, { dryRun, verbose }),
         enabled: (ctx) =>
           String(ctx.versionToUpgradeTo).includes('canary') &&
-          !ctx.preUpgradeError,
+          notBlockedByPreUpgradeChecks(ctx),
       },
       {
         title: 'Removing CLI cache',
         task: () => removeCliCache({ dryRun, verbose }),
-        enabled: (ctx) => !ctx.preUpgradeError,
+        enabled: (ctx) => notBlockedByPreUpgradeChecks(ctx),
       },
       {
         title: `Running ${getPackageManager()} ${install()}`,
         task: () => packageManagerInstall({ verbose }),
-        enabled: (ctx) => !ctx.preUpgradeError,
+        enabled: (ctx) => notBlockedByPreUpgradeChecks(ctx),
         skip: () => !!dryRun,
       },
       {
         title: 'Refreshing the Prisma client',
         task: (_ctx, task) => refreshPrismaClient(task, { verbose }),
-        enabled: (ctx) => !ctx.preUpgradeError,
+        enabled: (ctx) => notBlockedByPreUpgradeChecks(ctx),
         skip: () => !!dryRun,
       },
       {
         title: 'De-duplicating dependencies',
         skip: () => !!dryRun || !dedupe,
-        enabled: (ctx) => dedupeIsSupported() && !ctx.preUpgradeError,
+        enabled: (ctx) =>
+          dedupeIsSupported() && notBlockedByPreUpgradeChecks(ctx),
         task: (_ctx, task) => dedupeDeps(task, { verbose }),
       },
       {
