@@ -10,6 +10,42 @@ const redirectUrl =
 
 console.log(`Telemetry is being redirected to ${redirectUrl}`)
 
+const mode = process.argv[process.argv.indexOf('--mode') + 1]
+
+// The two modes exercise two different telemetry senders with different
+// payload shapes:
+//  - `cca` (create-cedar-app) sends an OpenTelemetry OTLP trace payload
+//    (packages/create-cedar-app/src/telemetry.ts) — there's no top-level
+//    "command" field, the closest equivalent is a span name.
+//  - `cli` (the CLI) sends the legacy, hand-rolled JSON payload built by
+//    packages/telemetry/src/sendTelemetry.ts, which does have a "command"
+//    field.
+function validatePayload(payload) {
+  if (typeof payload !== 'object' || payload === null) {
+    return `Telemetry payload is not an object. Got: ${JSON.stringify(payload)} (type: ${typeof payload})`
+  }
+
+  if (mode === 'cca') {
+    const spanNames = (payload.resourceSpans ?? []).flatMap((resourceSpan) =>
+      (resourceSpan.scopeSpans ?? []).flatMap((scopeSpan) =>
+        (scopeSpan.spans ?? []).map((span) => span.name),
+      ),
+    )
+
+    if (!spanNames.some((name) => typeof name === 'string' && name)) {
+      return `Telemetry payload is missing a non-empty span name. Got: ${JSON.stringify(payload)}`
+    }
+
+    return null
+  }
+
+  if (!payload.command || typeof payload.command !== 'string') {
+    return `Telemetry payload is missing a non-empty "command" field. Got: ${JSON.stringify(payload)}`
+  }
+
+  return null
+}
+
 // Setup fake telemetry server
 const server = http.createServer((req, res) => {
   let data = ''
@@ -31,15 +67,9 @@ const server = http.createServer((req, res) => {
       process.exit(1)
     }
 
-    if (
-      typeof payload !== 'object' ||
-      payload === null ||
-      !payload.command ||
-      typeof payload.command !== 'string'
-    ) {
-      console.error(
-        `Telemetry payload is missing a non-empty "command" field. Got: ${JSON.stringify(payload)} (type: ${typeof payload})`,
-      )
+    const validationError = validatePayload(payload)
+    if (validationError) {
+      console.error(validationError)
       process.exit(1)
     }
 
@@ -56,7 +86,6 @@ server.listen(port, host, () => {
 
 // Run a command and await output
 try {
-  const mode = process.argv[process.argv.indexOf('--mode') + 1]
   let exitCode = 0
   switch (mode) {
     case 'cca':
