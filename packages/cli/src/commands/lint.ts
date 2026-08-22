@@ -7,6 +7,8 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 import { getPaths } from '@cedarjs/project-config'
 
+import { getEslintSetupError } from './lintPreflight.js'
+
 export const command = 'lint [paths..]'
 export const description = 'Lint your files'
 export const builder = (yargs: Argv) => {
@@ -47,6 +49,16 @@ export const handler = async ({
   format = 'stylish',
 }: LintOptions) => {
   recordTelemetryAttributes({ command: 'lint', fix, format })
+
+  // TODO: Remove this pre-flight check in the next major release. See
+  // `lintPreflight.ts` for why it's here.
+  const eslintSetupError = await getEslintSetupError()
+
+  if (eslintSetupError) {
+    console.error(eslintSetupError)
+    process.exitCode = 1
+    return
+  }
 
   try {
     const sbPath = getPaths().web.storybook
