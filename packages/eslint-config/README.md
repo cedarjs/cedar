@@ -33,10 +33,10 @@ This package doesn't depend on other CedarJS Framework packages. To contribute, 
 
 ## Usage
 
-CedarJS uses ESLint's flat config format by default. Create an `eslint.config.js` file in your project root:
+CedarJS uses ESLint's flat config format by default. Create an `eslint.config.mjs` file in your project root — the `.mjs` extension means the ESM syntax below works whether or not your project has `"type": "module"` set:
 
 ```javascript
-// cedar-app/eslint.config.js
+// cedar-app/eslint.config.mjs
 import cedarConfig from '@cedarjs/eslint-config'
 
 export default await cedarConfig()
@@ -49,7 +49,7 @@ Note: The config is async because it needs to load your Cedar project configurat
 To override rules in your CedarJS app, add additional config objects after the Cedar config:
 
 ```javascript
-// cedar-app/eslint.config.js
+// cedar-app/eslint.config.mjs
 import cedarConfig from '@cedarjs/eslint-config'
 
 export default [
@@ -66,7 +66,7 @@ export default [
 You can also add file-specific overrides:
 
 ```javascript
-// cedar-app/eslint.config.js
+// cedar-app/eslint.config.mjs
 import cedarConfig from '@cedarjs/eslint-config'
 
 export default [
@@ -83,7 +83,7 @@ export default [
 To ignore specific files or directories:
 
 ```javascript
-// cedar-app/eslint.config.js
+// cedar-app/eslint.config.mjs
 import cedarConfig from '@cedarjs/eslint-config'
 
 export default [
@@ -101,8 +101,8 @@ export default [
 1. **Create a new flat config file** in your project root:
 
    ```javascript
-   // eslint.config.mjs (for CommonJS projects)
-   // or eslint.config.js (for ESM projects with "type": "module")
+   // eslint.config.mjs (or, optionally, eslint.config.js for ESM projects with
+   // "type": "module")
    import cedarConfig from '@cedarjs/eslint-config'
 
    export default await cedarConfig()

@@ -7,11 +7,16 @@ import { getPaths } from '@cedarjs/project-config'
 
 // TODO: Remove this whole module, and its call site in `lint.ts`, in the next
 // major release. It only exists to give people upgrading from v5 an actionable
-// error for the two breaking ESLint changes in v6: flat config became
-// mandatory (#2244), and `@cedarjs/core` stopped depending on
-// `@cedarjs/eslint-config` (#2249), so projects that never listed the config
-// package themselves suddenly had no ESLint at all. By the next major everyone
-// will have moved past both.
+// error for the two breaking ESLint changes in v6:
+//
+// - Flat config became mandatory
+//   https://github.com/cedarjs/cedar/pull/2244
+// - `@cedarjs/core` stopped depending on `@cedarjs/eslint-config`, so projects
+//   that never listed the config package themselves suddenly had no ESLint at
+//   all
+//   https://github.com/cedarjs/cedar/pull/2249
+//
+// By the next major everyone will have moved past both.
 
 const FLAT_CONFIG_FILENAMES = [
   'eslint.config.js',
@@ -90,8 +95,8 @@ function listsEslintConfigPackage(packageJson: Record<string, unknown>) {
 }
 
 /**
- * The `<pm> add -D @cedarjs/eslint-config@<version>` line we tell people to
- * run, pinned to the version of Cedar they're currently running.
+ * Returns the `<pm> add -D @cedarjs/eslint-config@<version>` line we tell
+ * people to run, pinned to the version of Cedar they're currently running.
  */
 async function formatAddConfigPackageCommand() {
   let version = ''
@@ -131,8 +136,7 @@ async function legacyConfigMessage(
     colors.error("Cedar no longer supports ESLint's legacy config format"),
     '',
     'Support for `.eslintrc.*` and the `eslintConfig` field in package.json',
-    'was removed in v6. Create an `eslint.config.mjs` in your project root',
-    '(`eslint.config.js` if your project is ESM, i.e. has `"type": "module"`):',
+    'was removed in v6. Create an `eslint.config.mjs` in your project root:',
     '',
     colors.tip("  import cedarConfig from '@cedarjs/eslint-config'"),
     '',
