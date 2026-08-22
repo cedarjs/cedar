@@ -31,9 +31,14 @@ const server = http.createServer((req, res) => {
       process.exit(1)
     }
 
-    if (!payload.command || typeof payload.command !== 'string') {
+    if (
+      typeof payload !== 'object' ||
+      payload === null ||
+      !payload.command ||
+      typeof payload.command !== 'string'
+    ) {
       console.error(
-        `Telemetry payload is missing a non-empty "command" field. Got: ${JSON.stringify(payload.command)}`,
+        `Telemetry payload is missing a non-empty "command" field. Got: ${JSON.stringify(payload)} (type: ${typeof payload})`,
       )
       process.exit(1)
     }
