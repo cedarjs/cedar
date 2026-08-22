@@ -95,6 +95,24 @@ function warn(title: string, lines: string[]) {
 }
 
 /**
+ * Like `warn`, but for problems that block the upgrade. Callers must also set
+ * `shouldAbort`, which makes the script exit non-zero.
+ *
+ * Writes to stdout like the other two helpers, even though this is an error.
+ * The CLI reads a failed script's stdout into the message it shows the user
+ * (`preUpgradeScripts.ts`: `errorOutput = e.stdout || e.message`) and only
+ * surfaces stderr under `--verbose`, so anything written to stderr here would
+ * be invisible in the default output.
+ */
+function fail(title: string, lines: string[]) {
+  console.log(util.styleText('red', title) + '\n')
+
+  for (const line of lines) {
+    console.log(line + '\n')
+  }
+}
+
+/**
  * Like `warn`, but for things that don't break anything and that the user can
  * safely ignore. Deliberately not colored, so it doesn't compete with the
  * warnings about actual breaking changes.
@@ -108,6 +126,11 @@ function info(title: string, lines: string[]) {
 }
 
 async function main() {
+  // Set by any check that has found something the user must fix before
+  // upgrading. Checked once at the end so every problem gets reported in one
+  // pass, rather than the user fixing one and rerunning to find the next
+  let shouldAbort = false
+
   const filesWithGetCommonPlugins: string[] = []
   const filesWithNodePolyfills: string[] = []
   const filesWithGraphQLHooksProvider: string[] = []
@@ -397,7 +420,9 @@ async function main() {
     }
 
     if (!flatEslintConfigPath && legacyEslintConfigSources.length > 0) {
-      warn('Legacy ESLint config detected', [
+      shouldAbort = true
+
+      fail('Legacy ESLint config detected', [
         'Found: ' + legacyEslintConfigSources.join(', '),
         'Support for .eslintrc.* and the eslintConfig field in package.json\n' +
           'was removed in v6. Create an eslint.config.mjs in your project\n' +
@@ -442,7 +467,9 @@ async function main() {
     }
 
     if (usesCedarEslintConfig && !hasEslintConfigPackage) {
-      warn('Missing dependency: @cedarjs/eslint-config', [
+      shouldAbort = true
+
+      fail('Missing dependency: @cedarjs/eslint-config', [
         'Your ESLint config uses @cedarjs/eslint-config, but the package is\n' +
           'not in your root package.json.',
         'Up until v6 @cedarjs/core depended on @cedarjs/eslint-config, so\n' +
@@ -520,8 +547,6 @@ async function main() {
       ])
     }
   }
-
-  let shouldAbort = false
 
   const apiGeneratorTemplatesPath = path.join(
     projectPaths.api.base,
