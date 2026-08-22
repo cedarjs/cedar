@@ -564,21 +564,13 @@ async function main() {
     if (fs.existsSync(generatorTemplatesPath)) {
       shouldAbort = true
 
-      console.error(
-        'Unsupported generator templates path detected at ' +
-          generatorTemplatesPath,
-      )
-      console.log()
-      console.log(
-        'Run `yarn dlx @cedarjs/codemods move-generator-templates` to move ' +
-          'them to the new supported path',
-      )
-      console.log()
-      console.log(
-        'Please see https://github.com/cedarjs/cedar/pull/813 for more ' +
+      fail('Unsupported generator templates path detected', [
+        'Found: ' + path.relative(projectRoot, generatorTemplatesPath),
+        'Run `yarn dlx @cedarjs/codemods move-generator-templates` to move\n' +
+          'them to the new supported path.',
+        'Please see https://github.com/cedarjs/cedar/pull/813 for more\n' +
           'information.',
-      )
-      console.log()
+      ])
     }
   }
 
