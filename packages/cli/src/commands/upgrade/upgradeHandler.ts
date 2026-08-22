@@ -124,6 +124,13 @@ export const handler = async (upgradeOptions: UpgradeOptions) => {
         title: 'Updating other packages in your package.json(s)',
         task: (ctx) =>
           updatePackageVersionsFromTemplate(ctx, { dryRun, verbose }),
+        // Canary only. This forces the template's dependency versions onto the
+        // project and adds back any the project is missing, which resurrects
+        // packages people have deliberately removed — a project that moved off
+        // SQLite gets better-sqlite3 back, for example. That's too blunt for
+        // regular upgrades, but people running canary are already signed up
+        // for rougher edges.
+        // https://github.com/redwoodjs/redwood/pull/8855
         enabled: (ctx) =>
           String(ctx.versionToUpgradeTo).includes('canary') &&
           !ctx.preUpgradeError,
@@ -417,9 +424,7 @@ interface TemplatePackageJson {
  * CedarJS packages are skipped. The earlier "Updating your CedarJS version"
  * task owns the ones the project already has, and ones it doesn't have can't
  * be handled from this comparison at all: a package missing from the project
- * looks exactly like one the user deliberately removed. Telling those apart
- * needs a diff between the template at the version being upgraded from and the
- * one being upgraded to, which this task doesn't have.
+ * looks exactly like one the user deliberately removed.
  */
 export function mergeTemplateDependencies(
   field: 'dependencies' | 'devDependencies',
