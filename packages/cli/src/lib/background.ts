@@ -6,6 +6,44 @@ import path from 'path'
 import { getPaths } from '@cedarjs/project-config'
 
 /**
+ * Quotes a single argument for a Windows shell command string.
+ *
+ * The Windows branch below spawns with `shell: true` and a command string, so
+ * every argument is re-parsed by the shell. Without quoting, anything with a
+ * space in it is split: a project at `C:\Users\Ada Lovelace\app` makes node
+ * try to load `C:\Users\Ada` and the background process dies immediately with
+ * MODULE_NOT_FOUND, silently, because its output goes to a log file.
+ *
+ * Follows the usual Windows argument-encoding rules: backslashes immediately
+ * before a double quote are doubled, the quote itself is escaped, and trailing
+ * backslashes are doubled so they can't escape the closing quote.
+ */
+export function quoteForWindowsShell(arg: string) {
+  let quoted = '"'
+  let backslashes = 0
+
+  for (const char of arg) {
+    if (char === '\\') {
+      backslashes += 1
+      continue
+    }
+
+    if (char === '"') {
+      // Double the run of backslashes before the quote so they aren't read as
+      // escapes themselves, then escape the quote
+      quoted += '\\'.repeat(backslashes * 2 + 1) + '"'
+    } else {
+      quoted += '\\'.repeat(backslashes) + char
+    }
+
+    backslashes = 0
+  }
+
+  // Trailing backslashes would escape the closing quote, so double them
+  return quoted + '\\'.repeat(backslashes * 2) + '"'
+}
+
+/**
  * Spawn a background process with the stdout/stderr redirected to log files
  * within the `.cedar` directory. Stdin will not be available to the process as
  * it will be set to the 'ignore' value.
@@ -66,10 +104,13 @@ export function spawnBackgroundProcess(
     // argument, but when the spawn options include `shell: true`, like they do
     // here, that causes Node.js to print a DEP0190 warning. To get around this
     // we instead concatenate the command and arguments into a single string.
-    // It's safe to do that here since the arguments aren't user-provided.
+    // Each argument has to be quoted on the way in -- they're not
+    // user-provided, but they are filesystem paths, and those routinely
+    // contain spaces.
     //
     // https://nodejs.org/api/deprecations.html#DEP0190
-    const child = spawn(cmd + ' ' + args.join(' '), spawnOptions)
+    const command = [cmd, ...args].map(quoteForWindowsShell).join(' ')
+    const child = spawn(command, spawnOptions)
     child.unref()
   } else {
     const spawnOptions = {
