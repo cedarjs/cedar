@@ -1,5 +1,6 @@
 ---
 description: How to switch from RedwoodJS/RedwoodGraphQL to CedarJS
+sidebar_position: 2
 ---
 
 # Migrating from RedwoodJS to CedarJS

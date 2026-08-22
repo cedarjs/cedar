@@ -1,6 +1,7 @@
 ---
 title: Redwood v8.0.0
 description: Getting started & Core Concepts
+sidebar_position: 3
 ---
 
 # Background Jobs
