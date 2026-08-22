@@ -23,6 +23,21 @@ const server = http.createServer((req, res) => {
     res.end()
     console.log('Telemetry packet received', data)
 
+    let payload
+    try {
+      payload = JSON.parse(data)
+    } catch (error) {
+      console.error('Telemetry payload was not valid JSON:', error)
+      process.exit(1)
+    }
+
+    if (!payload.command || typeof payload.command !== 'string') {
+      console.error(
+        `Telemetry payload is missing a non-empty "command" field. Got: ${JSON.stringify(payload.command)}`,
+      )
+      process.exit(1)
+    }
+
     process.exit(0)
   })
 })
@@ -41,7 +56,7 @@ try {
   switch (mode) {
     case 'cca':
       exitCode = await exec(
-        `yarn node ./packages/create-cedar-app/dist/create-cedar-app.js ../project-for-telemetry --typescript true --git false --no-install --pm yarn`,
+        `yarn node ./packages/create-cedar-app/dist/create-cedar-app.js "../project for telemetry" --typescript true --git false --no-install --pm yarn`,
       )
       if (exitCode) {
         process.exit(1)
@@ -49,13 +64,13 @@ try {
       break
     case 'cli':
       exitCode = await exec(`yarn install`, null, {
-        cwd: path.join(process.cwd(), '../project-for-telemetry'),
+        cwd: path.join(process.cwd(), '../project for telemetry'),
       })
       if (exitCode) {
         process.exit(1)
       }
       exitCode = await exec(
-        `yarn --cwd ../project-for-telemetry node ../cedar/packages/cli/dist/index.js info`,
+        `yarn --cwd "../project for telemetry" node ../cedar/packages/cli/dist/index.js info`,
       )
       if (exitCode) {
         process.exit(1)
