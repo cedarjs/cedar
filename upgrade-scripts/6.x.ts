@@ -30,10 +30,30 @@ interface PackageJson {
   devDependencies?: Record<string, string>
   resolutions?: Record<string, string>
   overrides?: Record<string, string>
+  eslintConfig?: unknown
   pnpm?: {
     overrides?: Record<string, string>
   }
 }
+
+const flatEslintConfigFileNames = [
+  'eslint.config.js',
+  'eslint.config.mjs',
+  'eslint.config.cjs',
+  'eslint.config.ts',
+  'eslint.config.mts',
+  'eslint.config.cts',
+]
+
+const legacyEslintConfigFileNames = [
+  '.eslintrc',
+  '.eslintrc.js',
+  '.eslintrc.cjs',
+  '.eslintrc.mjs',
+  '.eslintrc.json',
+  '.eslintrc.yaml',
+  '.eslintrc.yml',
+]
 
 /**
  * Returns the value of the top-level `overrides.vite` entry in a
@@ -356,6 +376,75 @@ async function main() {
           : 'Missing vite version pin',
         lines,
       )
+    }
+
+    const flatEslintConfigPath = flatEslintConfigFileNames
+      .map((file) => path.join(projectRoot, file))
+      .find((file) => fs.existsSync(file))
+
+    const legacyEslintConfigPaths = legacyEslintConfigFileNames
+      .map((file) => path.join(projectRoot, file))
+      .filter((file) => fs.existsSync(file))
+
+    const legacyEslintConfigSources = legacyEslintConfigPaths.map((file) =>
+      path.relative(projectRoot, file),
+    )
+
+    if (packageJson.eslintConfig) {
+      legacyEslintConfigSources.push('the eslintConfig field in package.json')
+    }
+
+    if (!flatEslintConfigPath && legacyEslintConfigSources.length > 0) {
+      warn('Legacy ESLint config detected', [
+        'Found: ' + legacyEslintConfigSources.join(', '),
+        'Support for .eslintrc.* and the eslintConfig field in package.json\n' +
+          'was removed in v6. Create an eslint.config.mjs in your project\n' +
+          'root:\n' +
+          '\n' +
+          "  import cedarConfig from '@cedarjs/eslint-config'\n" +
+          '\n' +
+          '  export default await cedarConfig()',
+        'Then delete the config listed above, moving any custom rules you had\n' +
+          'into an extra config object after cedarConfig().',
+        'See https://github.com/cedarjs/cedar/blob/main/packages/eslint-config' +
+          '/README.md#migrating-from-legacy-eslintrcjs-config',
+      ])
+    }
+
+    const hasEslintConfigPackage =
+      !!packageJson.devDependencies?.['@cedarjs/eslint-config'] ||
+      !!packageJson.dependencies?.['@cedarjs/eslint-config']
+
+    // Only worth warning about for projects that actually reach for Cedar's
+    // shared config — a project is free to bring its own ESLint setup
+    let usesCedarEslintConfig = JSON.stringify(
+      packageJson.eslintConfig ?? null,
+    ).includes('@cedarjs/eslint-config')
+
+    for (const configPath of [
+      ...(flatEslintConfigPath ? [flatEslintConfigPath] : []),
+      ...legacyEslintConfigPaths,
+    ]) {
+      const content = await fs.promises.readFile(configPath, 'utf8')
+
+      if (content.includes('@cedarjs/eslint-config')) {
+        usesCedarEslintConfig = true
+      }
+    }
+
+    if (usesCedarEslintConfig && !hasEslintConfigPackage) {
+      warn('Missing dependency: @cedarjs/eslint-config', [
+        'Your ESLint config uses @cedarjs/eslint-config, but the package is\n' +
+          'not in your root package.json.',
+        'Up until v6 @cedarjs/core depended on @cedarjs/eslint-config, so\n' +
+          'every project got it transitively. It no longer does, and nothing\n' +
+          'else in the framework pulls it in, so `yarn cedar lint` will fail\n' +
+          'to find eslint.',
+        'Add it to the devDependencies in your root package.json, using the\n' +
+          'same version as your other @cedarjs packages.',
+        '@cedarjs/eslint-config brings its own eslint, so you do not need to\n' +
+          'add eslint separately.',
+      ])
     }
   }
 
