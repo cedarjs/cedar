@@ -276,12 +276,12 @@ describe('runPreUpgradeScripts script selection', () => {
       const href = url.toString()
 
       if (href.endsWith('/manifest.json')) {
-        return { status: 200, json: async () => manifest } as Response
+        return new Response(JSON.stringify(manifest), { status: 200 })
       }
 
       downloaded.push(href.slice(BASE.length))
 
-      return { status: 200, text: async () => '// script' } as Response
+      return new Response('// script', { status: 200 })
     })
 
     // @ts-expect-error - only mocking the shape these tests exercise
