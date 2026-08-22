@@ -101,7 +101,7 @@ export const handler = async ({ force }: { force: boolean }) => {
           if (transformResult.error) {
             if (transformResult.error === 'RW_CODEMOD_ERR_OLD_FORMAT') {
               throw new Error(
-                'It looks like your src/lib/db file is using the old format. Please update it as per the v8 upgrade guide: https://cedarjs.com/docs/upgrade-guides/v8#database-file-structure-change. And run again. \n\nYou can also manually modify your api/src/lib/db to include the prisma extension: https://cedarjs.com/docs/uploads/#attaching-the-prisma-extension',
+                'It looks like your src/lib/db file is using the old format. Please update it as per the v8 upgrade guide: https://cedarjs.com/docs/8.x/upgrade-guides/v8#database-file-structure-change. And run again. \n\nYou can also manually modify your api/src/lib/db to include the prisma extension: https://cedarjs.com/docs/uploads/#attaching-the-prisma-extension',
               )
             }
 
