@@ -43,7 +43,7 @@ export function getMilestoneEnv() {
  */
 export function getMilestoneFromConventionalCommit(title) {
   // Breaking changes (indicated by !)
-  if (/^(feat|fix|docs|chore)(\([^)]+\))!:/.test(title)) {
+  if (/^(feat|fix|docs|chore|refactor)(\([^)]+\))!:/.test(title)) {
     return 'next-release-major'
   }
 
@@ -57,8 +57,9 @@ export function getMilestoneFromConventionalCommit(title) {
     return 'next-release-patch'
   }
 
-  // Chore (framework-side maintenance)
-  if (/^chore\([^)]+\):/.test(title)) {
+  // Chore (framework-side maintenance). `refactor` is treated the same as
+  // `chore` — no user-facing behavior change, just internal code movement.
+  if (/^(chore|refactor)\([^)]+\):/.test(title)) {
     return 'chore'
   }
 

@@ -76,6 +76,7 @@ async function main() {
   // skip label requirement
   const conventionalCommitPrefixes = [
     /^chore\([^)]+\)!?:/,
+    /^refactor\([^)]+\)!?:/,
     /^feat\([^)]+\)!?:/,
     /^fix\([^)]+\)!?:/,
     /^docs\([^)]+\)!?:/,
@@ -129,6 +130,7 @@ async function main() {
         'Alternatively, you can update the PR title to start with one of ' +
           'these conventional commit prefixes:',
         '- chore(scope): for maintenance tasks',
+        '- refactor(scope): for internal-only code changes',
         '- feat(scope): for new features',
         '- fix(scope): for bug fixes',
         '- docs(scope): for documentation changes',
