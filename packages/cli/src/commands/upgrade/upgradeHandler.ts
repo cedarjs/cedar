@@ -409,64 +409,37 @@ interface TemplatePackageJson {
   devDependencies?: Record<string, string>
 }
 
-function hasDependency(packageJson: TemplatePackageJson, depName: string) {
-  return (
-    depName in (packageJson.dependencies ?? {}) ||
-    depName in (packageJson.devDependencies ?? {})
-  )
-}
-
 /**
  * Copies one section (`dependencies` or `devDependencies`) of the app
- * template's package.json into the project's own, collecting a line into
- * `messages` for every change worth telling the user about.
+ * template's package.json into the project's own, pinning each package to the
+ * template's version and collecting a line into `messages` for every change.
  *
- * Non-CedarJS packages are always pinned to the template's version. CedarJS
- * packages are only added when the project doesn't already have them
- * somewhere, because:
- *
- * - Ones the project already has were bumped to the version being upgraded to
- *   by the earlier "Updating your CedarJS version" task.
- * - The template's literal version is whatever is on `main`, which is not
- *   necessarily the version being upgraded to, so it can't be used as-is.
+ * CedarJS packages are skipped. The earlier "Updating your CedarJS version"
+ * task owns the ones the project already has, and ones it doesn't have can't
+ * be handled from this comparison at all: a package missing from the project
+ * looks exactly like one the user deliberately removed. Telling those apart
+ * needs a diff between the template at the version being upgraded from and the
+ * one being upgraded to, which this task doesn't have.
  */
 export function mergeTemplateDependencies(
   field: 'dependencies' | 'devDependencies',
   templatePackageJson: TemplatePackageJson,
   localPackageJson: TemplatePackageJson,
-  cedarVersion: string,
   messages: string[],
   { dryRun, verbose }: { dryRun?: boolean; verbose?: boolean } = {},
 ) {
   const templateDeps = templatePackageJson[field]
 
-  if (!templateDeps || Object.keys(templateDeps).length === 0) {
+  if (!templateDeps) {
     return
   }
 
-  const localDeps = (localPackageJson[field] ??= {})
-
   for (const [depName, depVersion] of Object.entries(templateDeps)) {
     if (depName.startsWith('@cedarjs/')) {
-      // @cedarjs/studio is never managed by the upgrade command, matching
-      // `updatePackageJsonVersion`
-      if (depName === '@cedarjs/studio') {
-        continue
-      }
-
-      if (hasDependency(localPackageJson, depName)) {
-        continue
-      }
-
-      localDeps[depName] = cedarVersion
-
-      // Deliberately not gated behind `verbose`. Bumping a version the project
-      // already has is routine, but a package the project has never had before
-      // is worth surfacing every time
-      messages.push(` - ${depName}: (added) => ${cedarVersion}`)
-
       continue
     }
+
+    const localDeps = (localPackageJson[field] ??= {})
 
     if (verbose || dryRun) {
       messages.push(` - ${depName}: ${localDeps[depName]} => ${depVersion}`)
@@ -526,7 +499,6 @@ async function updatePackageVersionsFromTemplate(
               field,
               templatePackageJson,
               localPackageJson,
-              String(ctx.versionToUpgradeTo),
               messages,
               { dryRun, verbose },
             )
