@@ -8,6 +8,23 @@ import type { ExecaError } from 'execa'
 import type { ListrRendererFactory, ListrTaskWrapper } from 'listr2'
 import semver from 'semver'
 
+/**
+ * Prerelease tags published from `main` rather than from a release branch.
+ *
+ * Canaries are published by `publish-prerelease.yml`, which runs on `main`.
+ * That's a different line of development from the branch a release is cut
+ * from, so `canary.ts` can legitimately need to say something quite different
+ * from the current `<major>.x.ts`, and the version-scoped scripts must not run
+ * for it.
+ *
+ * Release candidates are the opposite case. `publish-release-candidate.yml`
+ * runs on `release/**`, the same branch the release itself will be cut from, so
+ * `6.0.0-rc.312` needs exactly what 6.0.0 will need and gets `6.x.ts` like any
+ * other v6 release. Same for `next` prereleases, published from the `next`
+ * branch.
+ */
+const MAIN_BRANCH_PRERELEASE_TAGS = ['canary']
+
 function isExecaError(e: unknown): e is ExecaError {
   return (
     e instanceof Error && ('stdout' in e || 'stderr' in e || 'exitCode' in e)
@@ -54,9 +71,19 @@ export async function runPreUpgradeScripts(
     return
   }
 
+  const prereleaseTag = parsed?.prerelease[0]
+  const isMainBranchPrerelease =
+    typeof prereleaseTag === 'string' &&
+    MAIN_BRANCH_PRERELEASE_TAGS.includes(prereleaseTag)
+
   const checkLevels: { id: string; candidates: string[] }[] = []
-  if (parsed && !parsed.prerelease.length) {
-    // 1. Exact match: 3.4.1
+  if (parsed && isMainBranchPrerelease) {
+    checkLevels.push({
+      id: 'tag',
+      candidates: [`${prereleaseTag}.ts`, `${prereleaseTag}/index.ts`],
+    })
+  } else if (parsed) {
+    // 1. Exact match: 3.4.1, or 6.0.0-rc.312 for something only that RC needs
     checkLevels.push({
       id: 'exact',
       candidates: [`${version}.ts`, `${version}/index.ts`],
@@ -75,15 +102,6 @@ export async function runPreUpgradeScripts(
     checkLevels.push({
       id: 'minor',
       candidates: [`${parsed.major}.x.ts`, `${parsed.major}.x/index.ts`],
-    })
-  } else if (parsed && parsed.prerelease.length > 0) {
-    // `parsed.prerelease[0]` is the prerelease tag, e.g. 'canary'
-    checkLevels.push({
-      id: 'tag',
-      candidates: [
-        `${parsed.prerelease[0]}.ts`,
-        `${parsed.prerelease[0]}/index.ts`,
-      ],
     })
   }
 

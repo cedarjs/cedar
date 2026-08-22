@@ -257,3 +257,85 @@ describe('runPreUpgradeScripts', () => {
     })
   })
 })
+
+describe('runPreUpgradeScripts script selection', () => {
+  const BASE =
+    'https://raw.githubusercontent.com/cedarjs/cedar/main/upgrade-scripts/'
+
+  /**
+   * Runs the pre-upgrade step against a fake manifest and returns the names of
+   * the scripts it chose to download.
+   */
+  async function selectedScripts(version: string, manifest: string[]) {
+    const execa = await import('execa')
+    const downloaded: string[] = []
+
+    vi.mocked(fs.promises.readFile).mockResolvedValue('// no dependencies')
+
+    vi.mocked(fetch).mockImplementation(async (url: string | URL | Request) => {
+      const href = url.toString()
+
+      if (href.endsWith('/manifest.json')) {
+        return new Response(JSON.stringify(manifest), { status: 200 })
+      }
+
+      downloaded.push(href.slice(BASE.length))
+
+      return new Response('// script', { status: 200 })
+    })
+
+    // @ts-expect-error - only mocking the shape these tests exercise
+    vi.mocked(execa.default).mockImplementation(async () => ({
+      stdout: '',
+      stderr: '',
+    }))
+
+    await runPreUpgradeScripts(
+      { versionToUpgradeTo: version },
+      createMockTask(),
+      { verbose: false, force: false },
+    )
+
+    return downloaded
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    vi.resetAllMocks()
+  })
+
+  it('runs the major version script for a release candidate', async () => {
+    // An RC of 6.0.0 is v6, so it needs everything 6.x.ts has to say
+    expect(
+      await selectedScripts('6.0.0-rc.312', ['canary.ts', '6.x.ts']),
+    ).toEqual(['6.x.ts'])
+  })
+
+  it('runs only the tag script for a canary', async () => {
+    // A canary's version number is a placeholder, so 6.x.ts must not run
+    expect(
+      await selectedScripts('6.0.0-canary.2956', ['canary.ts', '6.x.ts']),
+    ).toEqual(['canary.ts'])
+  })
+
+  it('runs the major version script for a stable release', async () => {
+    expect(await selectedScripts('6.0.0', ['canary.ts', '6.x.ts'])).toEqual([
+      '6.x.ts',
+    ])
+  })
+
+  it('prefers an exact-version script for a release candidate', async () => {
+    expect(
+      await selectedScripts('6.0.0-rc.312', ['6.0.0-rc.312.ts', '6.x.ts']),
+    ).toEqual(['6.0.0-rc.312.ts', '6.x.ts'])
+  })
+
+  it('falls back to the patch wildcard for a release candidate', async () => {
+    expect(await selectedScripts('6.2.0-rc.5', ['6.2.x.ts', '6.x.ts'])).toEqual(
+      ['6.2.x.ts', '6.x.ts'],
+    )
+  })
+})
