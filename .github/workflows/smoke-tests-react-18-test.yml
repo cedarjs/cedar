@@ -94,7 +94,7 @@ jobs:
         run: |
           npx playwright test && code=0 || code=$?
           echo "playwright exited $code"
-          exit $code
+          exit "$code"
         env:
           CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-test-project-react-18.outputs.test-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1

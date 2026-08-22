@@ -1833,7 +1833,12 @@ step:
 - name: 🖥️ Run serve smoke tests
   shell: bash # relay stderr, and match the build step above
   working-directory: tasks/smoke-tests/serve
-  run: npx playwright test; echo "playwright exited $?"
+  run: |
+    # `&& code=0 || code=$?` rather than a plain `;` because Actions runs
+    # bash with `-e`, where a plain sequence aborts before the echo
+    npx playwright test && code=0 || code=$?
+    echo "playwright exited $code"
+    exit "$code"
   env:
     DEBUG: pw:webserver # web server lifecycle only, ~10 lines
     ...
