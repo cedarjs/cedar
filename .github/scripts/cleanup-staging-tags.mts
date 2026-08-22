@@ -17,13 +17,15 @@
  *
  * Environment variables required: NPM_AUTH_TOKEN
  */
-import { exec as execCb } from 'node:child_process'
+import { execFile as execFileCb } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import util from 'node:util'
 
-const exec = util.promisify(execCb)
+// execFile rather than exec: package and tag names come from the registry, so
+// they must never be interpolated into a shell command line
+const execFile = util.promisify(execFileCb)
 
 const REPO_ROOT = process.cwd()
 const REGISTRY = 'https://registry.npmjs.org'
@@ -81,7 +83,7 @@ async function runWithConcurrency<T, R>(
 
 /** Every non-private workspace, i.e. everything that gets published */
 async function getPublishablePackageNames(): Promise<string[]> {
-  const { stdout } = await exec('yarn workspaces list --json', {
+  const { stdout } = await execFile('yarn', ['workspaces', 'list', '--json'], {
     cwd: REPO_ROOT,
   })
 
@@ -219,7 +221,9 @@ async function main() {
     REMOVE_CONCURRENCY,
     async ({ packageName, tag }) => {
       try {
-        await exec(`npm dist-tag rm ${packageName} ${tag}`, { cwd: REPO_ROOT })
+        await execFile('npm', ['dist-tag', 'rm', packageName, tag], {
+          cwd: REPO_ROOT,
+        })
         removed += 1
       } catch (error) {
         failed += 1
