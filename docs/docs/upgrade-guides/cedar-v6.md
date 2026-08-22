@@ -8,8 +8,8 @@ toc_max_heading_level: 4
 
 CedarJS v6 focuses on three things: a new Fragment Cell for cutting query
 waterfalls between components, a build pipeline that's fully Vite instead of
-half Babel, and deploying to a plain container host with as close to zero
-config as we can get you.
+half Babel, and deploying to a plain container host with little to no
+configuration.
 
 ### Fragment Cells
 
@@ -69,8 +69,7 @@ directory-named imports, GraphQL options extraction, gql tag handling, mock Cell
 data, OpenTelemetry wrapping, job path injection, and the
 `src/`/`$api/`/tsconfig-paths aliases. Transforms that Vite already handles
 natively are no longer duplicated through Babel. Unless you enable the React
-Compiler, Babel is now entirely out of the web build — faster transforms,
-correct sourcemaps, and fewer configuration edge cases.
+Compiler, Babel is now entirely out of the web build.
 
 ### Deploy: standard container-host conventions
 
@@ -116,25 +115,24 @@ await later.cancel(scheduledJob.id)
 `createServer()` gains two configuration hooks alongside the existing
 `configureApiServer`: `configureGraphQLServer`, scoped to the GraphQL route, and
 `configureServer`, which runs on the root Fastify instance before either the api
-functions or the GraphQL plugin register their routes — the right place for
-plugins with a "global" registration mode, like `@fastify/compress`, that only
-affect routes registered after them. This also fixes a bug where registering
-compression through `configureApiServer` alone only ever compressed api-function
-responses, never GraphQL responses.
+functions or the GraphQL plugin register their routes. Use `configureServer` for
+plugins with a "global" registration mode, like `@fastify/compress`, since those
+only affect routes registered after them. This also fixes a bug where
+registering compression through `configureApiServer` alone only ever compressed
+api-function responses, never GraphQL responses.
 
 ### Better DX for AI coding agents
 
-A batch of fixes came out of watching an AI coding agent build a Cedar app
-end-to-end and tracking down every place it got stuck or produced insecure code
-— `cedar generate scaffold` now wraps generated routes in `<PrivateSet>`
-automatically when auth is set up, `cedar check` warns when a route isn't
-protected but its page calls an `@requireAuth` mutation,
-`cedar generate sdl`/`scaffold` generate read-only stubs for related models
-instead of leaving the project broken, and dbAuth's sensitive fields
-(`hashedPassword`, `salt`, `resetToken`, ...) are now excluded by name from
-generated SDL, inputs, and scaffolds.
+Several fixes address mistakes an AI coding agent made while building a Cedar
+app: `cedar generate scaffold` now wraps generated routes in
+`<PrivateSet>` automatically when auth is set up, `cedar check` warns when a
+route isn't protected but its page calls an `@requireAuth` mutation, `cedar
+generate sdl`/`scaffold` generate read-only stubs for related models instead of
+leaving the project broken, and dbAuth's sensitive fields (`hashedPassword`,
+`salt`, `resetToken`, ...) are now excluded by name from generated SDL, inputs,
+and scaffolds.
 
-There's plenty more in this release — more Redwood → Cedar renaming, CLI
+There's plenty more in this release, like more Redwood → Cedar renaming, CLI
 improvements, and smaller fixes. The
 [v6.0.0 release on GitHub](https://github.com/cedarjs/cedar/releases/tag/v6.0.0)
 has the full, PR-by-PR list.
