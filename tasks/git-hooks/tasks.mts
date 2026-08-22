@@ -1,4 +1,4 @@
-import { statSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import path, { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -15,13 +15,8 @@ const monorepoRoot = path.join(__dirname, '..', '..')
 // below fail with a confusing, unrelated-looking Yarn/PnP error. Catch that
 // up front and tell the user exactly what to do instead.
 function checkDependenciesInstalled(): boolean {
-  const nodeModulesPath = path.join(monorepoRoot, 'node_modules')
-  try {
-    if (statSync(nodeModulesPath).isDirectory()) {
-      return true
-    }
-  } catch {
-    // ENOENT, EACCES, or other errors all mean "not installed"
+  if (existsSync(path.join(monorepoRoot, 'node_modules'))) {
+    return true
   }
 
   console.error(
