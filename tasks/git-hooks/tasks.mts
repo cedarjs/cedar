@@ -22,8 +22,7 @@ function checkDependenciesInstalled(): boolean {
   console.error(
     `[git-hooks] No node_modules found in this checkout (${monorepoRoot}).\n` +
       '  Dependencies are not shared across git worktrees — if this is a ' +
-      'linked worktree, run `yarn install` here first, then try again.\n' +
-      '  To skip this check for one commit/push, use `--no-verify`.',
+      'linked worktree, run `yarn install` here first, then try again.',
   )
   return false
 }
