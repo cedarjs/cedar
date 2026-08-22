@@ -232,7 +232,7 @@ v3 to v4:
      vite: '7.3.6'
    ```
 
-Cedar's generated `vitest.config.ts` files are already compatibe with Vitest 4.
+Cedar's generated `vitest.config.ts` files are already compatible with Vitest 4.
 However, your own tests and config customizations may hit some of Vitest 4's
 breaking changes. The most common ones are the removal of
 `poolOptions`/`minWorkers`/`maxThreads`/`minThreads`, `workspace` being renamed
