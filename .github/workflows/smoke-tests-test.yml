@@ -82,11 +82,23 @@ jobs:
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}/api
 
       - name: 🖥️ Run serve smoke tests
+        # TEMPORARY diagnostics for the silent 3s exit of this step on
+        # Windows. `shell: bash` relays stderr (and matches the build step
+        # above), the echo guarantees a line of output even when Playwright
+        # prints nothing, and `pw:webserver` logs the web server lifecycle
+        # only -- `pw:*` would add thousands of lines per test. Remove all
+        # three once the failure has been captured. See
+        # docs/implementation-plans/flaky-smoke-tests-investigation.md
+        shell: bash
         working-directory: tasks/smoke-tests/serve
-        run: npx playwright test
+        run: |
+          npx playwright test && code=0 || code=$?
+          echo "playwright exited $code"
+          exit $code
         env:
           CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-test-project.outputs.test-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1
+          DEBUG: pw:webserver
 
       - name: 📄 Run prerender smoke tests
         working-directory: tasks/smoke-tests/prerender

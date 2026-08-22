@@ -1739,3 +1739,118 @@ at once, but a test only awaits one of them — sibling promises are passed
 through a `markRejectionHandled()` helper at creation so their rejections are
 observed (no unhandled-rejection noise contaminating the vitest run) while a
 later `await` on them still throws.
+
+## Update 2026-08-22 — New signature: `serve` smoke tests exit 1 in 3s with no output (Windows)
+
+### Not the same as the earlier `ERR_CONNECTION_REFUSED` entries
+
+Every previous Windows entry in this document has _output_ — a failing test, a
+stack trace, `net::ERR_CONNECTION_REFUSED`, a V8 fatal. This one has none. The
+step produces literally nothing before exiting 1, which is why it is easy to
+mistake for a generic infrastructure blip.
+
+### Evidence
+
+Observed on 2026-08-22 across several unrelated PRs. Durations for the
+`🖥️ Run serve smoke tests` step, from the jobs API:
+
+| Result  | Workflow / OS             | Duration |
+| ------- | ------------------------- | -------- |
+| failure | React 18 / windows        | 4s       |
+| failure | Smoke tests ESM / windows | 3s       |
+| success | React 18 / windows        | 19s      |
+| success | React 18 / windows        | 19s      |
+
+A failing run emits no Playwright output at all: no test lines, no summary, no
+error. Job annotations contain only `Process completed with exit code 1`, and
+the trace upload reports `No files were found with the provided path:
+tasks/smoke-tests/test-results/**` even though `basePlaywrightConfig` sets
+`trace: 'retain-on-failure'` — so no test ever started.
+
+That silence is real, not a log-capture artifact. In a passing run of the same
+step the log contains the full suite:
+
+```
+14:17:50  ok  1 [chromium] › tests\aggregatedCells.spec.ts:5:1 › ...
+...
+14:18:02  ok 11 [chromium] › tests\serve.spec.ts:5:1 › Smoke test with rw serve (517ms)
+14:18:03  13 passed (17.0s)
+```
+
+Everything before the step succeeds — the dev smoke tests pass, `cedar build`
+completes, `cedar prerender` renders all 9 pages.
+
+### Why 3 seconds matters
+
+In a passing run the 19s splits into roughly 15s of `yarn cedar serve` startup
+and 17s of tests (they overlap). Playwright's `webServer` timeout is far longer
+than 3s, so a failure at 3-4s is **not** a startup timeout. Playwright fails
+fast in one specific case: when the `webServer` command process _exits_ before
+the URL responds. That is the shape this matches.
+
+### Hypothesis (unconfirmed)
+
+`yarn cedar serve` exits immediately, most plausibly because ports 8910/8911 are
+still held by the dev-server processes torn down at the end of the preceding
+`🧑‍💻 Run dev smoke tests` step — Windows is lazy about releasing listening
+sockets, and that step's teardown logs `exited with code 1` for the web, api and
+validators watchers moments earlier. This is the same _class_ as the
+2026-07-25 UD entry (leaked servers → port collision) but a different suite and
+a different signature.
+
+Playwright would report that as an error on **stderr**, which is being lost —
+see below.
+
+### Why the error is invisible
+
+The step runs under PowerShell. It sets no `shell:`, so it gets the Windows
+default:
+
+```
+shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+```
+
+The `Run cedar build --no-prerender` step immediately above it explicitly sets
+`shell: bash`; the serve step does not.
+
+Note this does **not** mean pwsh swallows all output: the `Run dev smoke tests`
+step also runs under pwsh and prints its results normally. Whatever is lost is
+specific to the error path, i.e. stderr, not to stdout.
+
+### Prevalence
+
+Four occurrences in one afternoon across PRs #2478 (×3, including one on the
+ESM workflow) and #2480 (×1). Every one cleared on re-run, so it is
+intermittent rather than deterministic — but frequent enough to cost a re-run
+on most PRs, and it is **not** React-18-specific.
+
+### Recommended next step
+
+The blocker is that there is no error text to read. To capture it, on that one
+step:
+
+```yaml
+- name: 🖥️ Run serve smoke tests
+  shell: bash # relay stderr, and match the build step above
+  working-directory: tasks/smoke-tests/serve
+  run: npx playwright test; echo "playwright exited $?"
+  env:
+    DEBUG: pw:webserver # web server lifecycle only, ~10 lines
+    ...
+```
+
+`DEBUG=pw:webserver` is deliberately scoped — `pw:*` or `pw:api` would add
+thousands of lines per test. The explicit `echo` guarantees at least one line of
+signal even if Playwright stays silent. If the hypothesis above is right, the
+`pw:webserver` output will show the command exiting rather than the URL
+timing out.
+
+### Unrelated finding from the same logs
+
+`Cannot find module 'D:\a\cedar\test'` appears several times in these jobs (the
+test project lives at `D:\a\cedar\test project`). That is a genuine
+Windows-quoting bug in the telemetry and background-process spawns, fixed in
+[#2481](https://github.com/cedarjs/cedar/pull/2481) — but it is **not** this
+failure. Those errors are non-fatal: `cedar build` and `cedar prerender` both
+complete immediately afterwards, and the serve step disables telemetry anyway
+via `REDWOOD_DISABLE_TELEMETRY: 1`.
