@@ -44,6 +44,14 @@ const MIN_AGE_MS = 6 * 60 * 60 * 1000
 const READ_CONCURRENCY = 12
 const REMOVE_CONCURRENCY = 6
 
+/**
+ * Deadlines, so a stalled request or child process can't hold the whole run
+ * open until the job-level timeout kills it hours later. A timeout is counted
+ * as a failure like any other.
+ */
+const REGISTRY_TIMEOUT_MS = 30_000
+const COMMAND_TIMEOUT_MS = 60_000
+
 interface Packument {
   'dist-tags'?: Record<string, string>
   time?: Record<string, string>
@@ -52,6 +60,13 @@ interface Packument {
 interface StaleTag {
   packageName: string
   tag: string
+}
+
+interface ScanResult {
+  tags: StaleTag[]
+  /** False when the registry couldn't be read, as opposed to read fine with
+   * nothing stale on it */
+  ok: boolean
 }
 
 function log(message: string) {
@@ -85,6 +100,7 @@ async function runWithConcurrency<T, R>(
 async function getPublishablePackageNames(): Promise<string[]> {
   const { stdout } = await execFile('yarn', ['workspaces', 'list', '--json'], {
     cwd: REPO_ROOT,
+    timeout: COMMAND_TIMEOUT_MS,
   })
 
   const locations: string[] = stdout
@@ -125,20 +141,31 @@ async function getPublishablePackageNames(): Promise<string[]> {
  * A packument gives both the dist-tags and the publish time of every version,
  * so the age of a staging tag is the age of the version it points at.
  */
-async function getStaleTags(packageName: string): Promise<StaleTag[]> {
-  const response = await fetch(
-    `${REGISTRY}/${packageName.replace('/', '%2F')}`,
-    { headers: { accept: 'application/json' } },
-  )
+async function getStaleTags(packageName: string): Promise<ScanResult> {
+  let response: Response
 
+  try {
+    response = await fetch(`${REGISTRY}/${packageName.replace('/', '%2F')}`, {
+      headers: { accept: 'application/json' },
+      signal: AbortSignal.timeout(REGISTRY_TIMEOUT_MS),
+    })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    log(`⚠️  Couldn't read ${packageName} (${message})`)
+
+    return { tags: [], ok: false }
+  }
+
+  // A package that has never been published has nothing to clean up. That's a
+  // successful read, not a failure
   if (response.status === 404) {
-    return []
+    return { tags: [], ok: true }
   }
 
   if (!response.ok) {
-    log(`⚠️  Couldn't read ${packageName} (HTTP ${response.status}), skipping`)
+    log(`⚠️  Couldn't read ${packageName} (HTTP ${response.status})`)
 
-    return []
+    return { tags: [], ok: false }
   }
 
   const packument = (await response.json()) as Packument
@@ -146,7 +173,7 @@ async function getStaleTags(packageName: string): Promise<StaleTag[]> {
   const times = packument.time ?? {}
   const now = Date.now()
 
-  return Object.keys(distTags)
+  const tags = Object.keys(distTags)
     .filter((tag) => tag.startsWith(STAGING_TAG_PREFIX))
     .filter((tag) => {
       const publishedAt = times[distTags[tag]]
@@ -160,6 +187,8 @@ async function getStaleTags(packageName: string): Promise<StaleTag[]> {
       return now - new Date(publishedAt).getTime() > MIN_AGE_MS
     })
     .map((tag) => ({ packageName, tag }))
+
+  return { tags, ok: true }
 }
 
 async function main() {
@@ -182,12 +211,40 @@ async function main() {
   )
   process.env['npm_config_userconfig'] = npmrcPath
 
+  try {
+    await cleanUpStagingTags()
+  } finally {
+    // The token lives in here. On a runner the whole machine is thrown away,
+    // but this also gets run locally
+    fs.rmSync(npmrcDir, { recursive: true, force: true })
+  }
+}
+
+async function cleanUpStagingTags() {
   const packageNames = await getPublishablePackageNames()
   log(`Checking ${packageNames.length} published packages`)
 
-  const staleTags = (
-    await runWithConcurrency(packageNames, READ_CONCURRENCY, getStaleTags)
-  ).flat()
+  const scans = await runWithConcurrency(
+    packageNames,
+    READ_CONCURRENCY,
+    getStaleTags,
+  )
+
+  const unreadable = scans.filter((scan) => !scan.ok).length
+  const staleTags = scans.flatMap((scan) => scan.tags)
+
+  // Without this, a registry-wide outage or rate limit reads as "nothing to
+  // clean up" and the job goes green having looked at nothing
+  if (unreadable === packageNames.length) {
+    throw new Error(
+      `Couldn't read any of the ${packageNames.length} packages from the ` +
+        'registry',
+    )
+  }
+
+  if (unreadable > 0) {
+    log(`⚠️  ${unreadable} package(s) couldn't be read and were skipped`)
+  }
 
   // `npm dist-tag rm` removes whatever it's given, so make sure nothing that
   // isn't a staging tag can reach it -- getting this wrong would drop `latest`
@@ -223,6 +280,7 @@ async function main() {
       try {
         await execFile('npm', ['dist-tag', 'rm', packageName, tag], {
           cwd: REPO_ROOT,
+          timeout: COMMAND_TIMEOUT_MS,
         })
         removed += 1
       } catch (error) {
