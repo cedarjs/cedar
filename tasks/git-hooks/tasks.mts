@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import path, { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -7,6 +8,25 @@ import { execAsync, isOnReleaseBranch } from './utils.mts'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const monorepoRoot = path.join(__dirname, '..', '..')
+
+// Yarn's install state (node_modules, .yarn/install-state.gz) is per
+// checkout — it is NOT shared between linked git worktrees. A worktree that
+// hasn't had `yarn install` run in it yet will make every `yarn <cmd>` call
+// below fail with a confusing, unrelated-looking Yarn/PnP error. Catch that
+// up front and tell the user exactly what to do instead.
+function checkDependenciesInstalled(): boolean {
+  if (existsSync(path.join(monorepoRoot, 'node_modules'))) {
+    return true
+  }
+
+  console.error(
+    `[git-hooks] No node_modules found in this checkout (${monorepoRoot}).\n` +
+      '  Dependencies are not shared across git worktrees — if this is a ' +
+      'linked worktree, run `yarn install` here first, then try again.\n' +
+      '  To skip this check for one commit/push, use `--no-verify`.',
+  )
+  return false
+}
 
 function isExcluded(file: string): boolean {
   // __fixtures__ at any depth (covers __fixtures__/* and **/__fixtures__/**)
@@ -175,6 +195,10 @@ export async function runPreCommitTasks(): Promise<number> {
     return 0
   }
 
+  if (!checkDependenciesInstalled()) {
+    return 1
+  }
+
   const stagedFiles = getStagedFiles()
 
   if (stagedFiles.length === 0) {
@@ -204,6 +228,10 @@ export async function runPrePushTasks(): Promise<number> {
   // Skip on release branches. We have other tooling for releasing
   if (isOnReleaseBranch()) {
     return 0
+  }
+
+  if (!checkDependenciesInstalled()) {
+    return 1
   }
 
   const buildPromise = execAsync('yarn', ['build'], 'git-hooks', {
