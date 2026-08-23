@@ -61,8 +61,11 @@ flagged but never autofixed — Cedar can't safely guess your props shape — bu
 it's worth annotating by hand, since it drives Cedar's prop-type inference for
 the rest of the Cell.
 
-Like `service-type-annotations`, it's off by default. Enable it in your
-project's `eslint.config.mjs`:
+New TypeScript projects get the rule enabled out of the box. JavaScript
+projects don't — there are no type annotations for it to check. For projects
+generated before v6 it's off by default, like `service-type-annotations`;
+enable it in your project's `eslint.config.mjs` (`eslint.config.js` in ESM
+projects):
 
 ```js
 import cedarConfig from '@cedarjs/eslint-config'
@@ -70,7 +73,7 @@ import cedarConfig from '@cedarjs/eslint-config'
 export default [
   ...(await cedarConfig()),
   {
-    files: ['web/src/components/**/*Cell.tsx'],
+    files: ['web/src/**/*Cell.tsx'],
     rules: {
       '@cedarjs/cell-type-annotations': 'error',
     },
@@ -273,7 +276,8 @@ code:
 - **The new `cell-type-annotations` ESLint rule catches untyped Cells.**
   Cells generated (or hand-edited) without their `beforeQuery`/`afterQuery`/
   `isEmpty` and `Loading`/`Failure`/`Success` type annotations now get flagged
-  and mostly autofixed. See the Highlights section above for how to enable it.
+  and mostly autofixed. New TypeScript projects get the rule out of the box;
+  see the Highlights section above for enabling it in an existing project.
 
 ### `postcss-loader` is no longer installed
 
