@@ -1772,7 +1772,7 @@ From run
 2026-08-23T04:08:18.254Z pw:webserver Error while checking if http://127.0.0.1:8910/ is available: connect ECONNREFUSED 127.0.0.1:8910
 2026-08-23T04:08:18.254Z pw:webserver Waiting 100ms
 2026-08-23T04:08:18.364Z pw:webserver HTTP GET: http://127.0.0.1:8910/
-playwright exited 127
+2026-08-23T04:08:18.646Z playwright exited 127
 ```
 
 The RSC smoke tests job in the same run also failed
@@ -1785,17 +1785,22 @@ output exists for it — it's outside the scope of this investigation.
 Consistent with the "server died" branch from the diagnostics plan, not the
 "URL timed out" branch:
 
-- Only **2** availability checks happen (both `ECONNREFUSED`, 100ms apart)
-  before Playwright gives up — nowhere near the ~10-line, multi-second retry
-  ladder a passing run shows (see the 2026-08-22 entry above: ~3s to
-  `HTTP Status: 200`).
-- The last logged line is an `HTTP GET` attempt at `18.364Z` with no matching
-  `Error while checking`/`HTTP Status` response — the process disappeared
-  mid-check.
-- Total elapsed time from `Starting WebServer process` to exit: **~400ms**,
-  the fastest failure observed yet (previously "3-4s" from duration data
-  alone). That number was always the _step_ duration including setup; the
-  actual webServer-to-exit window is much shorter.
+- Only **2** post-start availability checks happen before Playwright gives
+  up — nowhere near the ~10-line, multi-second retry ladder a passing run
+  shows (see the 2026-08-22 entry above: ~3s to `HTTP Status: 200`). The
+  first (`18.251Z`) gets `ECONNREFUSED` at `18.254Z`; the second (`18.364Z`)
+  gets no logged response at all — `playwright exited 127` is the very next
+  line.
+- That second check being interrupted, with the exit line following
+  immediately, is consistent with something dying mid-probe — though the
+  `127` is the outer `npx playwright test` process's own exit code (from our
+  wrapper script), not a directly observed exit code from the `yarn cedar
+serve` child. See "What doesn't fit" below for what that code does and
+  doesn't tell us.
+- Elapsed time from `Starting WebServer process` (`18.247Z`) to
+  `playwright exited 127` (`18.646Z`): **~400ms**, the fastest failure
+  observed yet (previously "3-4s" from duration data alone, which was always
+  the _step_ duration including setup, not the webServer-to-exit window).
 
 This confirms the earlier duration-based inference: the process really does
 exit, it doesn't stall waiting for a URL. That part of the hypothesis holds.
@@ -1805,26 +1810,27 @@ exit, it doesn't stall waiting for a URL. That part of the hypothesis holds.
 `playwright exited 127` is new information the duration data couldn't show.
 127 is the shell's "command not found" code — not a code a Node process
 returns for `EADDRINUSE` (that's typically an uncaught-exception exit of 1).
-Two readings:
+Worth being precise about what this code actually is: it's the exit status
+of the outer `npx playwright test` invocation (what our wrapper script
+captures), not a directly observed exit code from the `yarn cedar serve`
+child — we're inferring the child died from the interrupted probe, not
+reading its status directly.
 
-1. This is `npx playwright test`'s own exit code, and something about
-   resolving/spawning `playwright` intermittently fails on this runner —
-   which would make this unrelated to the webServer/port story entirely,
-   despite the `pw:webserver` lines appearing first (Playwright can start
-   generating webServer debug output before the CLI's own resolution
-   completes).
-2. Windows CI has an existing, unrelated exit-127 signature (signature C —
-   `yarn`/tarsync "Resolution step" exit 127, documented 2026-05-22 and
-   2026-06-26 above) that involves a "command not found" during npm-scripts
-   resolution. If the same class of failure now also hits Playwright's own
-   process or the `yarn cedar serve` child it spawns, that would explain a
-   process disappearing without a Node-level crash trace.
+By the time the `pw:webserver` lines appear, Playwright has already resolved
+its own CLI and loaded the webServer config — that debug output only starts
+once the test runner is orchestrating the webServer — so "Playwright itself
+failed to resolve/spawn" doesn't fit the evidence here; resolution had
+already succeeded. More plausible: this is the same exit-127 "command not
+found" signature already documented elsewhere in Windows CI (signature C —
+`yarn`/tarsync "Resolution step" exit 127, documented 2026-05-22 and
+2026-06-26 above), this time surfacing through the webServer child
+(`yarn cedar serve`) rather than a `yarn install`/tarsync step.
 
-Either reading undercuts the port-collision hypothesis as specifically
-stated (nothing here points at 8910/8911 being held) without ruling out the
-broader "something about this runner's process/shell state after the
-preceding dev-smoke-tests step is bad" idea. Not enough signal yet — one
-`127` is not a pattern.
+This undercuts the port-collision hypothesis as specifically stated (nothing
+here points at 8910/8911 being held) without ruling out the broader
+"something about this runner's process/shell state after the preceding
+dev-smoke-tests step is bad" idea. Not enough signal yet — one `127` is not
+a pattern.
 
 ### Next steps
 
