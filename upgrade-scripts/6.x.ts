@@ -373,14 +373,14 @@ async function main() {
       vitePinInstructions =
         'Add this to your pnpm-workspace.yaml:\n' +
         '  overrides:\n' +
-        "    vite: '7.3.5'"
+        "    vite: '7.3.6'"
     } else if (packageManager === 'npm') {
       vitePinValue = packageJson.overrides?.vite
 
       vitePinInstructions =
         'Add this to your root package.json:\n' +
         '  "overrides": {\n' +
-        '    "vite": "7.3.5"\n' +
+        '    "vite": "7.3.6"\n' +
         '  }'
     } else {
       vitePinValue = packageJson.resolutions?.vite
@@ -388,7 +388,7 @@ async function main() {
       vitePinInstructions =
         'Add this to your root package.json:\n' +
         '  "resolutions": {\n' +
-        '    "vite": "7.3.5"\n' +
+        '    "vite": "7.3.6"\n' +
         '  }'
     }
 

@@ -279,7 +279,7 @@ keep them, but you can delete the `dns` import, the comment, and the call.
 
 - **[No more CJS-only packages](#no-more-cjs-only-packages)** — standard apps are unaffected; only breaks projects that compile their own TypeScript straight to CommonJS with `tsc` and statically import `@cedarjs/*` packages directly.
 - **[`cedar serve api --ud` binds to all interfaces by default](#cedar-serve-api---ud-binds-to-all-interfaces-by-default)** — its default host changed from `localhost` to `::`/`0.0.0.0`, matching every other `serve` path.
-- **[Vitest 4 (ESM projects)](#vitest-4-esm-projects)** — needs a `vite@7.3.5` pin, and your own tests may hit a few Vitest 4 API changes.
+- **[Vitest 4 (ESM projects)](#vitest-4-esm-projects)** — needs a `vite@7.3.6` pin, and your own tests may hit a few Vitest 4 API changes.
 - **[MSW 2](#msw-2)** — breaks tests/stories that import `msw`/`whatwg-fetch` directly, override the Jest preset's `testEnvironment`/`transformIgnorePatterns`, or have an old committed `mockServiceWorker.js`; most apps need no changes.
 - **[`web/babel.config.js` is no longer used by Vite](#webbabelconfigjs-is-no-longer-used-by-vite)** — custom Babel plugins/presets there stop running in the web build unless passed via the new `babel` Vite plugin option.
 - **[GraphQL client-agnostic indirection removed](#graphql-client-agnostic-indirection-removed)** — `GraphQLHooksProvider` and a handful of ambient GraphQL types are gone; switch to Apollo directly.
@@ -357,7 +357,7 @@ v4. After upgrading Cedar:
 
    ```json
    "resolutions": {
-     "vite": "7.3.5"
+     "vite": "7.3.6"
    }
    ```
 
@@ -365,7 +365,7 @@ v4. After upgrading Cedar:
 
    ```json
    "overrides": {
-     "vite": "7.3.5"
+     "vite": "7.3.6"
    }
    ```
 
@@ -373,7 +373,7 @@ v4. After upgrading Cedar:
 
    ```yaml
    overrides:
-     vite: '7.3.5'
+     vite: '7.3.6'
    ```
 
 Cedar's generated `vitest.config.ts` files are already Vitest 4 compatible.
