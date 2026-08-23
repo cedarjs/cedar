@@ -5,7 +5,6 @@ import path from 'node:path'
 import type { PresetProperty } from '@storybook/types'
 import type { PluginBuild } from 'esbuild'
 import { mergeConfig } from 'vite'
-import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 import { getPaths } from '@cedarjs/project-config'
 
@@ -51,7 +50,6 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
 
   // Needs to run before the react plugin, so add to the front
   plugins.unshift(await reactDocgen())
-  plugins.unshift(nodePolyfills())
 
   return mergeConfig(
     { ...config, plugins },
@@ -103,14 +101,6 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
           '@apollo/client/utilities',
           'rxjs',
           'graphql/language/printer.js',
-          // Pre-bundle node-polyfill shims so Vite doesn't discover them
-          // mid-session when storybook-framework-cedarjs (which uses
-          // nodePolyfills()) is first rendered. Without this, each shim
-          // triggers a separate optimized-deps reload that tears down the
-          // Apollo provider and breaks nested-Cell stories.
-          'vite-plugin-node-polyfills/shims/buffer',
-          'vite-plugin-node-polyfills/shims/global',
-          'vite-plugin-node-polyfills/shims/process',
           // Pre-bundle @cedarjs/testing and graphql-tag so they don't cause
           // mid-session reloads when StorybookProvider loads mock files.
           '@cedarjs/testing/web',
