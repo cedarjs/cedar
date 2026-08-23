@@ -620,9 +620,21 @@ async function main() {
         fs.readFileSync(ccaPkgJsonPath, 'utf-8'),
       )
       const ccaPackageName = ccaPkgJson.name || 'create-cedar-app'
-      log(`Publishing ${ccaPackageName}@${versionToPublish}...`)
-      execCommand(`npm publish --tag rc --access public`, CREATE_CEDAR_APP_DIR)
-      log('✅ Published create-cedar-app')
+
+      const alreadyPublished = await isPublished(
+        ccaPackageName,
+        versionToPublish,
+      )
+      if (alreadyPublished) {
+        log(`Already published: ${ccaPackageName}@${versionToPublish}`)
+      } else {
+        log(`Publishing ${ccaPackageName}@${versionToPublish}...`)
+        execCommand(
+          `npm publish --tag rc --access public`,
+          CREATE_CEDAR_APP_DIR,
+        )
+        log('✅ Published create-cedar-app')
+      }
     }
 
     log('🎉 Release candidate publishing completed successfully!')
