@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/vite",
-  "version": "5.0.6",
+  "version": "6.0.0",
   "description": "Vite configuration package for CedarJS",
   "repository": {
     "type": "git",
