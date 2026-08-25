@@ -124,8 +124,13 @@ yarn cedar upgrade -t rc
 #### Storybook `legacyRootApi` option removed
 
 The `legacyRootApi` framework option is gone from `storybook-framework-cedarjs`.
-React 19 has no legacy root API, so the option had no effect. If your
-`web/.storybook/main.ts` sets it, remove it:
+Storybook's React renderer honors this option by mounting stories with
+`ReactDOM.render()` instead of `createRoot()`. React 19 removed
+`ReactDOM.render()`, so with the option set every story fails to mount. If your
+`web/.storybook/main.ts` sets it, remove it. Stories are then rendered with
+`createRoot()`, which is what the option's absence has always meant on React 18
+and 19. If a story only worked with `legacyRootApi: true`, the component has a
+concurrent-rendering issue to fix.
 
 ```diff title="web/.storybook/main.ts"
   framework: {
