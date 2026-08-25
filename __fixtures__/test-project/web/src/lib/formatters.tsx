@@ -40,7 +40,7 @@ export const jsonTruncate = (obj: unknown) => {
 }
 
 export const timeTag = (dateTime?: string) => {
-  let output: string | JSX.Element = ''
+  let output: string | React.JSX.Element = ''
 
   if (dateTime) {
     output = (

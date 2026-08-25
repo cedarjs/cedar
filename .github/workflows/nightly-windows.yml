@@ -38,13 +38,6 @@ jobs:
     with:
       os: windows-latest
 
-  smoke-tests-react-18:
-    if: github.repository == 'cedarjs/cedar'
-    name: 🔄 Smoke tests React 18 / windows-latest
-    uses: ./.github/workflows/smoke-tests-react-18-test.yml
-    with:
-      os: windows-latest
-
   smoke-tests-esm:
     if: github.repository == 'cedarjs/cedar'
     name: 🔄 Smoke tests ESM / windows-latest
@@ -91,7 +84,6 @@ jobs:
     needs:
       - build-lint-test
       - smoke-tests
-      - smoke-tests-react-18
       - smoke-tests-esm
       - cli-smoke-tests
       - telemetry-check

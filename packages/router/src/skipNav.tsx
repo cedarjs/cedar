@@ -1,5 +1,6 @@
 // Original Code Source https://github.com/reach/reach-ui
-// Moving here to resolve unmet peer dependency issues related to React 18
+// Vendored here because @reach/skip-nav declares a peer dependency on older
+// React versions and does not support the React version Cedar uses.
 // If resolved, should consider reverting to @reach/skip-nav
 // See: https://github.com/reach/reach-ui/issues/916
 
@@ -38,11 +39,11 @@ interface ForwardRefComponent<
    */
   <As = IntrinsicElementString>(
     props: As extends ''
-      ? { as: keyof JSX.IntrinsicElements }
+      ? { as: keyof React.JSX.IntrinsicElements }
       : As extends React.ComponentType<infer P>
         ? Merge<P, OwnProps & { as: As }>
-        : As extends keyof JSX.IntrinsicElements
-          ? Merge<JSX.IntrinsicElements[As], OwnProps & { as: As }>
+        : As extends keyof React.JSX.IntrinsicElements
+          ? Merge<React.JSX.IntrinsicElements[As], OwnProps & { as: As }>
           : never,
   ): React.ReactElement | null
 }

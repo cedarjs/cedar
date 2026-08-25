@@ -28,9 +28,15 @@ type ServerInjectType = typeof ServerInjectModule
 type LocationType = typeof LocationModule
 type ServerAuthProviderType = typeof ServerAuthProviderModule
 
+interface FallbackDocumentProps {
+  css: string[]
+  meta: TagDescriptor[]
+  children?: React.ReactNode
+}
+
 interface RenderToStreamArgs {
   ServerEntry: ServerEntryType
-  FallbackDocument: React.FunctionComponent
+  FallbackDocument: React.FunctionComponent<FallbackDocumentProps>
   currentUrl: URL
   metaTags: TagDescriptor[]
   cssLinks: string[]
@@ -248,7 +254,7 @@ export async function reactRenderToStreamResponse(
     // Having the Document (and bootstrap scripts) here allows client to recover from errors in the shell
     // To test this, throw an error in the App on the server only
     const fallbackShell = await renderToReadableStream(
-      FallbackDocument({
+      createElement(FallbackDocument, {
         children: null,
         css: cssLinks,
         meta: metaTags,

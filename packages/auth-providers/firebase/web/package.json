@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "6.0.0",
-    "@types/react": "^18.2.55",
+    "@types/react": "^19.2.0",
     "concurrently": "9.2.4",
     "firebase": "10.14.1",
     "publint": "0.3.23",
