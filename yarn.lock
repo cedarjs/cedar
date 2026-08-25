@@ -3672,6 +3672,7 @@ __metadata:
     oxc-parser: "npm:0.144.0"
     publint: "npm:0.3.23"
     react: "npm:19.2.3"
+    react-dom: "npm:19.2.3"
     react-server-dom-webpack: "npm:19.2.7"
     rollup: "npm:4.60.4"
     ts-dedent: "npm:2.3.0"
@@ -3690,6 +3691,7 @@ __metadata:
     "@cedarjs/router": "workspace:*"
     "@cedarjs/web": "workspace:*"
     react: 19.2.3
+    react-dom: 19.2.3
   bin:
     cedar-dev-fe: ./dist/devFeServer.js
     cedar-serve-fe: ./dist/runFeServer.js

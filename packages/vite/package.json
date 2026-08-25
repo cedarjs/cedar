@@ -110,6 +110,7 @@
     "memfs": "4.68.1",
     "publint": "0.3.23",
     "react": "19.2.3",
+    "react-dom": "19.2.3",
     "rollup": "4.60.4",
     "ts-dedent": "2.3.0",
     "typescript": "5.9.3",
@@ -119,7 +120,8 @@
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/router": "workspace:*",
     "@cedarjs/web": "workspace:*",
-    "react": "19.2.3"
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
   },
   "engines": {
     "node": ">=24"
