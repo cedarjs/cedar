@@ -144,11 +144,11 @@ considered and rejected because we would have done the migration twice.)
 
 ## Prerequisites
 
-| Prerequisite             | Needed by | Status                            |
-| ------------------------ | --------- | --------------------------------- |
-| Vite 7 (Environment API) | Track 1   | ✅ Done (7.3.5)                   |
-| Apollo Client 4 upgrade  | Track 2   | ✅ Done (4.2.7)                   |
-| React 18 support removal | Track 2   | 🔜 Planned (React 19.2.3 in tree) |
+| Prerequisite             | Needed by | Status                  |
+| ------------------------ | --------- | ----------------------- |
+| Vite 7 (Environment API) | Track 1   | ✅ Done (7.3.5)         |
+| Apollo Client 4 upgrade  | Track 2   | ✅ Done (4.2.7)         |
+| React 18 support removal | Track 2   | ✅ Done (React 19 only) |
 
 Track 1 has no unmet prerequisites and can start now. Track 2's only remaining
 prerequisite is React 18 support removal; it targets `prerenderToNodeStream`

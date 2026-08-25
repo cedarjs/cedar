@@ -23,7 +23,8 @@ module.exports = {
   plugins: [
     /**
      * NOTE
-     * Needed for react@18
+     * Needed so that TypeScript `declare` class fields are stripped before the
+     * class-properties transform runs.
      *
      * ```
      * ✖  @cedarjs/router:build
