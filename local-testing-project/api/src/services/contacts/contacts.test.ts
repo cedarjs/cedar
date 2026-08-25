@@ -13,7 +13,7 @@ import type { StandardScenario } from './contacts.scenarios.js'
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
 //       https://cedarjs.com/docs/testing#testing-services
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('contacts', () => {
   afterEach(() => {
