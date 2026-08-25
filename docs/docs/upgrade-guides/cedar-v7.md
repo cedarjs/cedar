@@ -18,7 +18,7 @@ React 18.
 
 ### Breaking changes
 
-- **[React 18 support removed](#react-18-support-removed)**
+- **[React 18 support removed](#upgrade-to-react-19-while-still-on-v6)**
 - **[Storybook `legacyRootApi` option removed](#storybook-legacyrootapi-option-removed)**
 
 If you want to see every single change in this release, including all the PRs
@@ -37,24 +37,18 @@ v7:
 yarn cedar upgrade -t 6
 ```
 
-#### Running the upgrade command
+#### Upgrade to React 19 (while still on v6)
 
-Now you're ready to upgrade to v7:
+Do this step **while still on Cedar v6**, before running the upgrade command.
+Cedar v6 already fully supports React 19 (it's what every project created with
+`create-cedar-app` ships with), so you can migrate React on its own, confirm
+the app works, and then move to v7 as a separate, much smaller step. Upgrading
+to v7 first would leave the framework's React 19 types at odds with your app's
+React 18 types and make `yarn cedar type-check` fail for reasons unrelated to
+your own code.
 
-```bash
-yarn cedar upgrade
-```
-
-If you want to try a pre-release/RC build instead, target `rc`:
-
-```bash
-yarn cedar upgrade -t rc
-```
-
-#### React 18 support removed
-
-If your app is already on React 19 (the default for every project created with
-`create-cedar-app`), there is nothing to do here.
+If your app is already on React 19, there is nothing to do here — skip ahead to
+[Running the upgrade command](#running-the-upgrade-command).
 
 If `web/package.json` still pins React 18, update these four entries:
 
@@ -103,8 +97,23 @@ codemod above handles this, but if you'd rather do it by hand:
 + let output: string | React.JSX.Element = ''
 ```
 
-Finally, run `yarn cedar type-check` and `yarn cedar test` to make sure
-everything is happy.
+Run `yarn cedar type-check` and `yarn cedar test`, and click around the app
+with `yarn cedar dev`. Once everything is happy on React 19 + Cedar v6, you're
+ready for v7.
+
+#### Running the upgrade command
+
+With the app running on React 19, you're ready to upgrade to v7:
+
+```bash
+yarn cedar upgrade
+```
+
+If you want to try a pre-release/RC build instead, target `rc`:
+
+```bash
+yarn cedar upgrade -t rc
+```
 
 #### Storybook `legacyRootApi` option removed
 
