@@ -3029,7 +3029,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.10"
   peerDependencies:
-    react: 18.3.1
+    react: 18.3.1 || ^19.0.0
   languageName: unknown
   linkType: soft
 
@@ -3077,8 +3077,8 @@ __metadata:
     vitest: "npm:4.1.10"
   peerDependencies:
     "@cedarjs/web": 6.0.0
-    react: 18.3.1
-    react-dom: 18.3.1
+    react: 18.3.1 || ^19.0.0
+    react-dom: 18.3.1 || ^19.0.0
   languageName: unknown
   linkType: soft
 
@@ -3289,8 +3289,8 @@ __metadata:
     react-dom: "npm:18.3.1"
     typescript: "npm:5.9.3"
   peerDependencies:
-    react: 18.3.1
-    react-dom: 18.3.1
+    react: 18.3.1 || ^19.0.0
+    react-dom: 18.3.1 || ^19.0.0
   languageName: unknown
   linkType: soft
 
@@ -3356,8 +3356,8 @@ __metadata:
   peerDependencies:
     "@cedarjs/router": 6.0.0
     "@cedarjs/web": 6.0.0
-    react: 18.3.1
-    react-dom: 18.3.1
+    react: 18.3.1 || ^19.0.0
+    react-dom: 18.3.1 || ^19.0.0
   languageName: unknown
   linkType: soft
 
@@ -3451,8 +3451,8 @@ __metadata:
     vitest: "npm:4.1.10"
   peerDependencies:
     "@cedarjs/auth": 6.0.0
-    react: 18.3.1
-    react-dom: 18.3.1
+    react: 18.3.1 || ^19.0.0
+    react-dom: 18.3.1 || ^19.0.0
   languageName: unknown
   linkType: soft
 
@@ -3759,8 +3759,8 @@ __metadata:
     vitest: "npm:4.1.10"
   peerDependencies:
     "@cedarjs/auth": 6.0.0
-    react: 18.3.1
-    react-dom: 18.3.1
+    react: 18.3.1 || ^19.0.0
+    react-dom: 18.3.1 || ^19.0.0
   bin:
     cedar: ./dist/bins/cedar.js
     cedarjs: ./dist/bins/cedar.js
@@ -26701,8 +26701,8 @@ __metadata:
   peerDependencies:
     "@cedarjs/project-config": 6.0.0
     "@cedarjs/router": 6.0.0
-    react: 18.3.1
-    react-dom: 18.3.1
+    react: 18.3.1 || ^19.0.0
+    react-dom: 18.3.1 || ^19.0.0
     storybook: 8.6.18
   languageName: unknown
   linkType: soft
