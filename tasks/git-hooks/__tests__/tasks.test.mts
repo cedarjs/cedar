@@ -1,4 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import type * as NodeFs from 'node:fs'
+import path from 'node:path'
+
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import { runPrePushTasks } from '../tasks.mts'
 
@@ -6,6 +9,8 @@ const callOrder: string[] = []
 let resolveBuild: () => void
 let buildDeferred: Promise<void>
 let buildShouldFail: boolean
+let branchChangedFiles: string
+let ccrscaNodeModulesExists: boolean
 
 vi.mock('../utils.mts', () => ({
   isOnReleaseBranch: () => false,
@@ -32,15 +37,33 @@ vi.mock('../utils.mts', () => ({
 vi.mock('node:child_process', () => ({
   spawnSync: vi.fn(() => ({
     status: 0,
-    stdout: 'api/src/foo.ts\n',
+    stdout: branchChangedFiles,
     stderr: '',
   })),
 }))
+
+// The hook checks for node_modules before running package-specific lint
+// commands. Simulate a checkout (e.g. a fresh git worktree) where the root
+// install has been done but create-cedar-rsc-app's separate install hasn't.
+vi.mock('node:fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof NodeFs>()
+  return {
+    ...actual,
+    existsSync: (p: string) => {
+      if (p.endsWith(path.join('create-cedar-rsc-app', 'node_modules'))) {
+        return ccrscaNodeModulesExists
+      }
+      return actual.existsSync(p)
+    },
+  }
+})
 
 describe('runPrePushTasks', () => {
   beforeEach(() => {
     callOrder.length = 0
     buildShouldFail = false
+    branchChangedFiles = 'api/src/foo.ts\n'
+    ccrscaNodeModulesExists = true
     buildDeferred = new Promise<void>((resolve) => {
       resolveBuild = resolve
     })
@@ -83,5 +106,39 @@ describe('runPrePushTasks', () => {
 
     expect(exitCode).toEqual(1)
     expect(callOrder.some((c) => c.startsWith('yarn eslint'))).toBe(false)
+  })
+
+  describe('create-cedar-rsc-app changes', () => {
+    beforeEach(() => {
+      branchChangedFiles = 'packages/create-cedar-rsc-app/src/index.ts\n'
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+    })
+
+    afterEach(() => {
+      vi.restoreAllMocks()
+    })
+
+    it('runs lint:ccrsca when its node_modules are installed', async () => {
+      const runPromise = runPrePushTasks()
+      resolveBuild()
+
+      expect(await runPromise).toEqual(0)
+      expect(callOrder).toContain('yarn lint:ccrsca')
+    })
+
+    it('fails with instructions, without running lint:ccrsca, when its node_modules are missing', async () => {
+      ccrscaNodeModulesExists = false
+
+      const runPromise = runPrePushTasks()
+      resolveBuild()
+
+      expect(await runPromise).toEqual(1)
+      expect(callOrder).not.toContain('yarn lint:ccrsca')
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'yarn --cwd packages/create-cedar-rsc-app install',
+        ),
+      )
+    })
   })
 })
