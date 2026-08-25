@@ -89,7 +89,7 @@ export default HomePage
 
 Let's point out a few things here:
 
-- Cedar loves [Function Components](https://www.robinwieruch.de/react-function-component). We'll make extensive use of [React Hooks](https://react.dev/reference/react) as we go and these are only enabled in function components. Cedar is on React 19, so we discourage using class components since they won't be able to take advantage of React's concurrent rendering features.
+- Cedar components are [function components](https://react.dev/learn/your-first-component). We'll make extensive use of [React Hooks](https://react.dev/reference/react) as we go through the tutorial.
 - Cedar's `<Link>` tag, in its most basic usage, takes a single `to` attribute. That `to` attribute calls a [_named route function_](../../router.md#link-and-named-route-functions) to generate the correct URL. The function has the same name as the `name` attribute on the `<Route>`:
 
   `<Route path="/about" page={AboutPage} name="about" />`
