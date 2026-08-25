@@ -144,15 +144,15 @@ considered and rejected because we would have done the migration twice.)
 
 ## Prerequisites
 
-| Prerequisite             | Needed by | Status                            |
-| ------------------------ | --------- | --------------------------------- |
-| Vite 7 (Environment API) | Track 1   | ✅ Done (7.3.5)                   |
-| Apollo Client 4 upgrade  | Track 2   | ✅ Done (4.2.7)                   |
-| React 18 support removal | Track 2   | 🔜 Planned (React 19.2.3 in tree) |
+| Prerequisite             | Needed by | Status                  |
+| ------------------------ | --------- | ----------------------- |
+| Vite 7 (Environment API) | Track 1   | ✅ Done (7.3.5)         |
+| Apollo Client 4 upgrade  | Track 2   | ✅ Done (4.2.7)         |
+| React 18 support removal | Track 2   | ✅ Done (React 19 only) |
 
-Track 1 has no unmet prerequisites and can start now. Track 2's only remaining
-prerequisite is React 18 support removal; it targets `prerenderToNodeStream`
-directly and skips the legacy `renderToString` render function entirely.
+Neither track has unmet prerequisites; both can start now. Track 2 targets
+`prerenderToNodeStream` directly and skips the legacy `renderToString` render
+function entirely.
 
 ---
 
@@ -250,9 +250,8 @@ not the default carried forward from the old architecture.
 
 ## Track 2 — Replace the custom data/render layer with `prerenderStatic`
 
-The Apollo Client 4 upgrade is done; this track now only waits on React 18
-removal. Deletes Cedar's prerender-specific data machinery in favor of Apollo's
-supported API.
+All prerequisites for this track are met. Deletes Cedar's prerender-specific
+data machinery in favor of Apollo's supported API.
 
 ### 2.1 Per-route rendering
 
@@ -332,8 +331,8 @@ const apolloState = client.extract()
 - The prerender interception path of `CellCacheContextProvider` in
   `@cedarjs/web` (`packages/web/src/components/cell/CellCacheContext.tsx`) —
   check nothing else depends on it before removal
-- `runPrerender.tsx` (legacy Babel/CJS path) — React 18 removal is the natural
-  point to delete it along with its babel plugins
+- `runPrerender.tsx` (legacy Babel/CJS path) — delete it along with its babel
+  plugins as part of this track
 
 ---
 
@@ -444,8 +443,7 @@ first wave is scoped to land around here rather than waiting for RSC v1.
 
 **Track 2 — deleted:**
 
-- `packages/prerender/src/runPrerender.tsx` + `babelPlugins/` (legacy path, with
-  React 18 removal)
+- `packages/prerender/src/runPrerender.tsx` + `babelPlugins/` (legacy path)
 - `packages/prerender/src/graphql/node-runner.ts` (if open question 4 resolves
   in favor of built-handler import)
 
@@ -454,7 +452,7 @@ first wave is scoped to land around here rather than waiting for RSC v1.
 ## What This Does NOT Cover
 
 - The Apollo Client 4 upgrade itself (✅ complete — Cedar is on 4.2.7)
-- React 18 support removal (prerequisite, separate effort)
+- React 18 support removal (✅ complete — Cedar is React 19 only)
 - The RSC build — the old implementation is being removed and rewritten per
   [2026-07-20-rsc-rewrite.md](./2026-07-20-rsc-rewrite.md); nothing in this
   plan should follow or preserve current patterns from it

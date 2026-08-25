@@ -1,0 +1,142 @@
+---
+title: CedarJS v7.0.0
+description: React 19 only
+toc_max_heading_level: 4
+---
+
+## Highlights
+
+### React 19 only
+
+CedarJS v7 requires React 19. Every framework package that touches the web side
+(`@cedarjs/web`, `@cedarjs/router`, `@cedarjs/forms`, the auth provider web
+packages, Storybook, prerendering, and the streaming/SSR pipeline) is built and
+typed against React 19, and the framework no longer runs its test suite against
+React 18.
+
+## Upgrade Guide
+
+### Breaking changes
+
+- **[React 18 support removed](#upgrade-to-react-19-while-still-on-v6)**
+- **[Storybook `legacyRootApi` option removed](#storybook-legacyrootapi-option-removed)**
+
+If you want to see every single change in this release, including all the PRs
+that went into it, check the
+[release notes on GitHub](https://github.com/cedarjs/cedar/releases/tag/v7.0.0).
+
+### Let's get started!
+
+#### Begin with the latest v6
+
+It's always best to start from the latest previous version. Make sure you're on
+the latest v6 release and everything is working as expected before upgrading to
+v7:
+
+```bash
+yarn cedar upgrade -t 6
+```
+
+#### Upgrade to React 19 (while still on v6)
+
+Do this step **while still on Cedar v6**, before running the upgrade command.
+Cedar v6 works with React 19 (type-check, tests, build, dev server, and
+production serve have all been verified on a v6 app running React 19.2.3), so
+you can migrate React on its own, confirm the app works, and then move to v7 as
+a separate, much smaller step. Upgrading to v7 first would leave the
+framework's React 19 types at odds with your app's React 18 types and make
+`yarn cedar type-check` fail for reasons unrelated to your own code.
+
+If your app is already on React 19, there is nothing to do here — skip ahead to
+[Running the upgrade command](#running-the-upgrade-command).
+
+Projects created with `create-cedar-app` v6 ship with React 18.3.1. Update these
+four entries in `web/package.json`:
+
+```diff title="web/package.json"
+  "dependencies": {
+-   "react": "18.3.1",
+-   "react-dom": "18.3.1"
++   "react": "19.2.3",
++   "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+-   "@types/react": "^18.2.55",
+-   "@types/react-dom": "^18.2.19"
++   "@types/react": "^19.2.0",
++   "@types/react-dom": "^19.2.0"
+  }
+```
+
+Then run `yarn install`. On Cedar v6.0.0 this prints `YN0060` peer-dependency
+warnings saying that `@cedarjs/web`, `@cedarjs/router`, and `@cedarjs/forms`
+request React `18.3.1`: those packages declare an exact React version rather
+than a range. The warnings are harmless and can be ignored.
+
+React 19 itself has a handful of breaking changes in both runtime behavior and
+TypeScript types. The React team maintains codemods that handle almost all of
+them, so run those next rather than fixing type errors by hand:
+
+```bash
+# Runtime changes: ReactDOM.render → createRoot, forwardRef, defaultProps on
+# function components, string refs, `act` import location, etc.
+npx codemod@latest react/19/migration-recipe
+
+# Type changes: the removed global `JSX` namespace, `useRef()` requiring an
+# argument, `ReactElement.props` being `unknown`, etc.
+npx types-react-codemod@latest preset-19 ./web/src
+```
+
+See the official
+[React 19 Upgrade Guide](https://react.dev/blog/2024/04/25/react-19-upgrade-guide)
+for the full list of changes.
+
+One Cedar-generated file is affected by the type changes. If you scaffolded
+anything with `yarn cedar g scaffold`, `web/src/lib/formatters.tsx` references
+the global `JSX` namespace, which no longer exists in `@types/react` 19, and
+`yarn cedar type-check` fails with `Cannot find namespace 'JSX'` on that line.
+In a freshly scaffolded app this is the only file the types codemod touches. If
+you'd rather fix it by hand:
+
+```diff title="web/src/lib/formatters.tsx"
+- let output: string | JSX.Element = ''
++ let output: string | React.JSX.Element = ''
+```
+
+Run `yarn cedar type-check` and `yarn cedar test`, and click around the app
+with `yarn cedar dev`. Once everything is happy on React 19 + Cedar v6, you're
+ready for v7.
+
+#### Running the upgrade command
+
+With the app running on React 19, you're ready to upgrade to v7:
+
+```bash
+yarn cedar upgrade
+```
+
+If you want to try a pre-release/RC build instead, target `rc`:
+
+```bash
+yarn cedar upgrade -t rc
+```
+
+#### Storybook `legacyRootApi` option removed
+
+The `legacyRootApi` framework option is gone from `storybook-framework-cedarjs`.
+Storybook's React renderer honors this option by mounting stories with
+`ReactDOM.render()` instead of `createRoot()`. React 19 removed
+`ReactDOM.render()`, so with the option set every story fails to mount. If your
+`web/.storybook/main.ts` sets it, remove it. Stories are then rendered with
+`createRoot()`, which is what the option's absence has always meant on React 18
+and 19. If a story only worked with `legacyRootApi: true`, the component has a
+concurrent-rendering issue to fix.
+
+```diff title="web/.storybook/main.ts"
+  framework: {
+    name: 'storybook-framework-cedarjs',
+    options: {
+-     legacyRootApi: true,
+    },
+  },
+```

@@ -166,10 +166,9 @@ add a fixture.
   `tasks/test-project` scripts generate the same files from
   `tasks/test-project/templates/web/`, and the "Check test-project fixture" CI
   job enforces byte-exact parity between the two. The Playwright spec
-  (`tasks/smoke-tests/shared/aggregatedCells.ts`) asserts the fragment was
-  inlined into the request and that no separate author query fired — but
-  deliberately **not** an exact request count, because React 18 fires the same
-  query twice on mount (React 19 doesn't).
+  (`tasks/smoke-tests/shared/aggregatedCells.ts`) asserts that exactly one
+  aggregated request fired on mount, that the fragment was inlined into it, and
+  that no separate author query fired.
 - The `storybook.spec.ts` sidebar locators are substring-sensitive: adding
   `AggregatedBlogPostPage` broke `text=BlogPostPage`. Use word-boundary regexes
   (`text=/\bBlogPostPage\b/`) for story names.

@@ -190,7 +190,7 @@ export function analyzeRoutes(
           ...otherPropsFromCurrentSet
         } = node.props
 
-        let wrapperComponentsArray = []
+        let wrapperComponentsArray: Wrappers = []
         if (wrapFromCurrentSet) {
           wrapperComponentsArray = Array.isArray(wrapFromCurrentSet)
             ? wrapFromCurrentSet

@@ -165,13 +165,13 @@ kept; the provider itself is rebased onto `CedarApolloProvider` (Track 4).
 
 ## Prerequisites
 
-| Prerequisite                                                        | Status                                                                                         |
-| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Vite 7 Environment API                                              | ✅ Done (7.3.5)                                                                                |
-| Apollo Client 4 upgrade                                             | ✅ Done (4.2.7)                                                                                |
-| Universal Deploy foundation (`buildCedarApp`, UD store, srvx serve) | ✅ Done                                                                                        |
-| React 18 support removal                                            | 🔜 Planned (streaming already de facto requires React 19 via `@apollo/client-react-streaming`) |
-| RSC removal                                                         | 🔜 Planned (this plan must not block on it, but coordinates with it)                           |
+| Prerequisite                                                        | Status                                                               |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Vite 7 Environment API                                              | ✅ Done (7.3.5)                                                      |
+| Apollo Client 4 upgrade                                             | ✅ Done (4.2.7)                                                      |
+| Universal Deploy foundation (`buildCedarApp`, UD store, srvx serve) | ✅ Done                                                              |
+| React 18 support removal                                            | ✅ Done (React 19 only)                                              |
+| RSC removal                                                         | 🔜 Planned (this plan must not block on it, but coordinates with it) |
 
 ---
 

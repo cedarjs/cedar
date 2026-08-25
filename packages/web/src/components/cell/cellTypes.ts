@@ -1,4 +1,4 @@
-import type { ComponentProps, JSXElementConstructor } from 'react'
+import type { ComponentProps, JSX, JSXElementConstructor } from 'react'
 
 import type {
   ApolloClient,
