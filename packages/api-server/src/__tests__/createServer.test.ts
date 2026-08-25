@@ -124,7 +124,13 @@ describe('createServer', () => {
       url: '/hello',
     })
     expect(res.json()).toEqual({ data: 'hello function' })
-    await server.listen({ port: 8910 })
+    // Bind an explicit host. Fastify defaults to `localhost`, and for that
+    // host it additionally binds every address `dns.lookup('localhost')`
+    // returns, logging one "Server listening at" line per binding. How many
+    // addresses that is depends on the machine's `/etc/hosts` (WSL2, for
+    // example, only maps `localhost` to 127.0.0.1), so the default host makes
+    // the number of log lines environment dependent.
+    await server.listen({ port: 8910, host: '127.0.0.1' })
     await server.close()
 
     // We expect console log to be called with `withFunctions` logs.
@@ -174,20 +180,14 @@ describe('createServer', () => {
       },
     })
 
-    // There will be two lines saying what address the server is listening to,
-    // one IPv4 and one IPv6. But after a recent OS update the order of the
-    // logs switched. So now I just check that they're there, but don't care
-    // what order they're in
+    // And last, one line saying what address the server is listening to — one
+    // per bound address, and we bound exactly one above.
     expect(loggerLogs[2]).toMatchObject({
       level: 30,
-      msg: /Server listening at http:\/\/(127\.0\.0\.1|\[::1\]):8910/,
-    })
-    expect(loggerLogs[3]).toMatchObject({
-      level: 30,
-      msg: /Server listening at http:\/\/(127\.0\.0\.1|\[::1\]):8910/,
+      msg: 'Server listening at http://127.0.0.1:8910',
     })
 
-    expect(loggerLogs[2].msg).not.toEqual(loggerLogs[3].msg)
+    expect(loggerLogs).toHaveLength(3)
   })
 
   describe('`server.start`', () => {
