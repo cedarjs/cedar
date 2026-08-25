@@ -10,39 +10,6 @@
   "license": "MIT",
   "type": "module",
   "exports": {
-    "./config/jest/web": {
-      "default": "./config/jest/web/index.js"
-    },
-    "./config/jest/api": {
-      "default": "./config/jest/api/index.js"
-    },
-    "./config/jest/api/jest-preset": {
-      "default": "./config/jest/api/jest-preset.js"
-    },
-    "./config/jest/web/jest-preset": {
-      "default": "./config/jest/web/jest-preset.js"
-    },
-    "./dist/cjs/api/scenario.js": {
-      "default": "./dist/cjs/api/scenario.js"
-    },
-    "./dist/cjs/api/checkTestDatabase.js": {
-      "default": "./dist/cjs/api/checkTestDatabase.js"
-    },
-    "./dist/cjs/web/findCellMocks": {
-      "default": "./dist/cjs/web/findCellMocks.js"
-    },
-    "./dist/cjs/web/findCellMocks.js": {
-      "default": "./dist/cjs/web/findCellMocks.js"
-    },
-    "./dist/cjs/web/mockRequests": {
-      "default": "./dist/cjs/web/mockRequests.js"
-    },
-    "./dist/cjs/web/mockRequests.js": {
-      "default": "./dist/cjs/web/mockRequests.js"
-    },
-    "./dist/cjs/web/fileMock.js": {
-      "default": "./dist/cjs/web/fileMock.js"
-    },
     "./auth": {
       "import": {
         "types": "./dist/web/mockAuth.d.ts",
@@ -103,7 +70,6 @@
     }
   },
   "files": [
-    "config",
     "dist"
   ],
   "scripts": {
@@ -119,8 +85,6 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@babel/preset-env": "7.29.7",
-    "@cedarjs/babel-config": "workspace:*",
     "@cedarjs/context": "workspace:*",
     "@cedarjs/graphql-server": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
@@ -133,12 +97,7 @@
     "@types/jest": "29.5.14",
     "@types/node": "24.10.4",
     "ansis": "4.3.1",
-    "babel-jest": "^29.7.0",
     "fast-glob": "3.3.3",
-    "jest": "29.7.0",
-    "jest-environment-jsdom": "29.7.0",
-    "jest-fixed-jsdom": "0.0.11",
-    "jest-watch-typeahead": "2.2.2",
     "msw": "2.15.0",
     "ts-toolbelt": "9.6.0",
     "unplugin-auto-import": "19.3.0"

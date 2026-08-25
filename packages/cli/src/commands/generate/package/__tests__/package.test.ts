@@ -145,7 +145,6 @@ describe('packageHandler', () => {
         const files = await filesTask.files({
           ...packageHandler.nameVariants('foo'),
           typescript: true,
-          esm: true,
         })
 
         const fileNames = Object.keys(files)
@@ -287,7 +286,6 @@ describe('packageHandler', () => {
         const files = await filesTask.files({
           ...packageHandler.nameVariants('@myOrg/formValidators-pkg'),
           typescript: true,
-          esm: true,
         })
 
         const readmePath = path.normalize(
@@ -331,7 +329,6 @@ describe('packageHandler', () => {
     it('returns the corrent files for JS', async () => {
       const jsFiles = await filesTask.files({
         ...packageHandler.nameVariants('Sample'),
-        esm: true,
       })
       const fileNames = Object.keys(jsFiles)
       expect(fileNames.length).toEqual(6)
@@ -353,23 +350,6 @@ describe('packageHandler', () => {
       )
 
       expect(jsFiles[vitestConfigPath]).toMatch("name: 'sample'")
-    })
-
-    it('does not generate a Vitest config for a Jest project', async () => {
-      const files = await filesTask.files({
-        ...packageHandler.nameVariants('Sample'),
-        typescript: true,
-        esm: false,
-      })
-      const fileNames = Object.keys(files)
-
-      expect(fileNames.length).toEqual(5)
-      expect(fileNames).toEqual(
-        expect.arrayContaining([expect.stringContaining('sample.test.ts')]),
-      )
-      expect(fileNames).not.toEqual(
-        expect.arrayContaining([expect.stringContaining('vitest.config')]),
-      )
     })
   })
 

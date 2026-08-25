@@ -10,7 +10,7 @@
  * // and can fail without adjustments, e.g. Float and DateTime types.
  * //           Please refer to the RedwoodJS Testing Docs:
  * //        https://cedarjs.com/docs/testing#testing-cells
- * // https://cedarjs.com/docs/testing#jest-expect-type-considerations
+ * // https://cedarjs.com/docs/testing#expect-type-considerations
  *
  * describe('AuthorCell', () => {
  *   it('renders Loading successfully', () => {

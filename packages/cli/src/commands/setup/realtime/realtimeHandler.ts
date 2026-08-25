@@ -7,7 +7,6 @@ import prompts from 'prompts'
 import { addApiPackages, colors as c } from '@cedarjs/cli-helpers'
 import { runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
-import { projectIsEsm } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
@@ -103,7 +102,7 @@ export async function handler(args: {
         title: 'Adding Countdown example subscription...',
         enabled: () => includeExamples,
         task: async () => {
-          let exampleSubscriptionTemplateContent = fs.readFileSync(
+          const exampleSubscriptionTemplateContent = fs.readFileSync(
             path.resolve(
               import.meta.dirname,
               'templates',
@@ -113,14 +112,6 @@ export async function handler(args: {
             ),
             'utf-8',
           )
-
-          if (projectIsEsm()) {
-            exampleSubscriptionTemplateContent =
-              exampleSubscriptionTemplateContent.replace(
-                "import gql from 'graphql-tag'",
-                "import { gql } from 'graphql-tag'",
-              )
-          }
 
           const exampleFile = path.join(
             cedarPaths.api.subscriptions,
@@ -192,7 +183,7 @@ export async function handler(args: {
 
           // subscription
 
-          let exampleSubscriptionTemplateContent = fs.readFileSync(
+          const exampleSubscriptionTemplateContent = fs.readFileSync(
             path.resolve(
               import.meta.dirname,
               'templates',
@@ -202,14 +193,6 @@ export async function handler(args: {
             ),
             'utf-8',
           )
-
-          if (projectIsEsm()) {
-            exampleSubscriptionTemplateContent =
-              exampleSubscriptionTemplateContent.replace(
-                "import gql from 'graphql-tag'",
-                "import { gql } from 'graphql-tag'",
-              )
-          }
 
           const exampleFile = path.join(
             cedarPaths.api.subscriptions,

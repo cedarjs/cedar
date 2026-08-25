@@ -5,10 +5,7 @@
 // apply it directly here. Keep this in sync with
 // packages/vite/src/plugins/vite-plugin-handler-als-wrapping.ts.
 
-export function applyHandlerAlsWrapping(
-  code: string,
-  { projectIsEsm = false }: { projectIsEsm?: boolean } = {},
-): string | null {
+export function applyHandlerAlsWrapping(code: string): string | null {
   const handlerRe =
     /^export\s+(?:const|let|var)\s+handler(?:[^=]|=>)*?=(?![>=])/m
 
@@ -22,11 +19,7 @@ export function applyHandlerAlsWrapping(
     .trimStart()
   const isAsync = /^async(?:\s*[\(\*]|\s+function)/.test(afterEquals)
 
-  const storePath = projectIsEsm
-    ? '@cedarjs/context/dist/store.js'
-    : '@cedarjs/context/dist/store'
-
-  const importStatement = `import { getAsyncStoreInstance as __cedar_getAsyncStoreInstance } from '${storePath}'\n`
+  const importStatement = `import { getAsyncStoreInstance as __cedar_getAsyncStoreInstance } from '@cedarjs/context/dist/store.js'\n`
 
   const handlerStart = handlerMatch.index
   const before = code.slice(0, handlerStart)

@@ -19,7 +19,7 @@ import {
   getApiSideBabelPluginsForVite,
   transformWithBabel,
 } from '@cedarjs/babel-config'
-import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
+import { getConfig, getPaths } from '@cedarjs/project-config'
 
 import {
   applyGqlormInject,
@@ -134,10 +134,7 @@ export const cedarApiGraphqlPlugin = {
         code = applyOtelWrapping(code, args.path, getPaths().api.src) ?? code
       }
 
-      code =
-        applyHandlerAlsWrapping(code, {
-          projectIsEsm: projectSideIsEsm('api'),
-        }) ?? code
+      code = applyHandlerAlsWrapping(code) ?? code
 
       return {
         contents: code,

@@ -400,44 +400,6 @@ describe('yarn cedar dev', () => {
     )
   })
 
-  it('Should use esm api-server-watch bin in fallback mode for esm projects', async () => {
-    vi.mocked(getPaths).mockReturnValue({
-      base: '/mocked/esm-project',
-      // @ts-expect-error - only declaring what the test needs
-      api: {
-        base: '/mocked/esm-project/api',
-        src: '/mocked/esm-project/api/src',
-        functions: '/mocked/esm-project/api/src/functions',
-        dist: '/mocked/esm-project/api/dist',
-      },
-      // @ts-expect-error - only declaring what the test needs
-      web: {
-        base: '/mocked/esm-project/web',
-        src: '/mocked/esm-project/web/src',
-        dist: '/mocked/esm-project/web/dist',
-      },
-      packages: '/mocked/esm-project/packages',
-      generated: {
-        base: '/mocked/esm-project/.cedar',
-        schema: '/mocked/esm-project/.cedar/schema.prisma',
-        types: {
-          includes: '/mocked/esm-project/.cedar/types',
-          mirror: '/mocked/esm-project/.cedar/types/mirror',
-        },
-        prebuild: '/mocked/esm-project/.cedar/prebuild',
-      },
-    })
-
-    // Request only API so we hit the fallback path
-    await handler({ workspace: ['api'] })
-
-    const { apiCommand } = findSeparateCommands()
-
-    // ESM project should use the ESM bin
-    expect(apiCommand?.command).toContain('cedarjs-api-server-watch')
-    expect(apiCommand?.command).toContain('--port 8911')
-  })
-
   it('Debug port passed in command line overrides TOML', async () => {
     await handler({ workspace: ['api'], apiDebugPort: 90909090 })
 

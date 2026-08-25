@@ -45,6 +45,9 @@ export default [
       'packages/vite/src/plugins/__tests__/__fixtures__/**/*',
       'packages/create-cedar-rsc-app/**',
       'packages/create-cedar-app/templates/**',
+      // Cedar apps with their own ESLint config, linted from inside the app
+      'local-testing-project/**',
+      'local-testing-project-live/**',
     ],
   },
 

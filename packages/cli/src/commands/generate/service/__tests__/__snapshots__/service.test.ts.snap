@@ -28,7 +28,7 @@ exports[`in javascript mode > creates a multi word service test file 1`] = `
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
 //       https://cedarjs.com/docs/testing#testing-services
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('userProfiles', () => {
   scenario('returns all userProfiles', async (scenario) => {
@@ -53,7 +53,7 @@ exports[`in javascript mode > creates a multi word service test file with crud a
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
 //       https://cedarjs.com/docs/testing#testing-services
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('transactions', () => {
   scenario('returns all transactions', async (scenario) => {
@@ -113,7 +113,7 @@ exports[`in javascript mode > creates a multi word service test file with multip
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
 //       https://cedarjs.com/docs/testing#testing-services
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('scalarTypes', () => {
   scenario('returns all scalarTypes', async (scenario) => {
@@ -336,7 +336,7 @@ exports[`in javascript mode > creates a single word service test file 1`] = `
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
 //       https://cedarjs.com/docs/testing#testing-services
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('users', () => {
   scenario('returns all users', async (scenario) => {
@@ -415,7 +415,7 @@ import type { StandardScenario } from './userProfiles.scenarios.js'
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
 //       https://cedarjs.com/docs/testing#testing-services
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('userProfiles', () => {
   scenario('returns all userProfiles', async (scenario: StandardScenario) => {
@@ -443,7 +443,7 @@ import type { StandardScenario } from './transactions.scenarios.js'
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
 //       https://cedarjs.com/docs/testing#testing-services
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('transactions', () => {
   scenario('returns all transactions', async (scenario: StandardScenario) => {
@@ -509,7 +509,7 @@ import type { StandardScenario } from './scalarTypes.scenarios.js'
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
 //       https://cedarjs.com/docs/testing#testing-services
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('scalarTypes', () => {
   scenario('returns all scalarTypes', async (scenario: StandardScenario) => {
@@ -762,7 +762,7 @@ import type { StandardScenario } from './users.scenarios.js'
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
 //       https://cedarjs.com/docs/testing#testing-services
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('users', () => {
   scenario('returns all users', async (scenario: StandardScenario) => {

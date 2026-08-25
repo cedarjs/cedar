@@ -11,10 +11,8 @@ import {
 } from './util.mts'
 
 export async function contactTask({
-  esm = false,
   packageManager = 'yarn',
 }: {
-  esm?: boolean
   packageManager?: string
 } = {}) {
   const cedarBin = packageManager === 'npm' ? 'npx' : packageManager
@@ -34,10 +32,7 @@ export async function contactTask({
 
   const contactsServicePath = fullPath('api/src/services/contacts/contacts')
 
-  await Promise.all([
-    updateService(contactsServicePath),
-    updateServiceTest({ esm }),
-  ])
+  await Promise.all([updateService(contactsServicePath), updateServiceTest()])
 
   return applyCodemod('contacts.mts', contactsServicePath)
 }
@@ -57,8 +52,7 @@ async function updateService(contactsServicePath: string) {
   )
 }
 
-async function updateServiceTest({ esm } = { esm: false }) {
-  const testFramework = esm ? 'vi' : 'jest'
+async function updateServiceTest() {
   const contactsTestPath = fullPath('api/src/services/contacts/contacts.test')
   const contactsTest = await fs.promises.readFile(contactsTestPath, 'utf-8')
 
@@ -71,13 +65,13 @@ async function updateServiceTest({ esm } = { esm: false }) {
         "describe('contacts', () => {",
         "describe('contacts', () => {\n" +
           '  afterEach(() => {\n' +
-          `    ${testFramework}.mocked(console).log.mockRestore?.()\n` +
+          `    vi.mocked(console).log.mockRestore?.()\n` +
           '  })\n',
       )
       .replace(
         "  scenario('creates a contact', async () => {",
         "  scenario('creates a contact', async () => {\n" +
-          `    ${testFramework}.spyOn(console, 'log').mockImplementation(() => {})\n`,
+          `    vi.spyOn(console, 'log').mockImplementation(() => {})\n`,
       ),
   )
 }

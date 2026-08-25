@@ -22,7 +22,7 @@ import {
   exec,
 } from './util.mts'
 
-function recommendedNodeVersion({ esm } = { esm: false }) {
+function recommendedNodeVersion() {
   const templatePackageJsonPath = path.join(
     import.meta.dirname,
     '..',
@@ -30,7 +30,7 @@ function recommendedNodeVersion({ esm } = { esm: false }) {
     'packages',
     'create-cedar-app',
     'templates',
-    esm ? 'esm-ts' : 'ts',
+    'ts',
     'package.json',
   )
   const json = JSON.parse(fs.readFileSync(templatePackageJsonPath, 'utf8'))
@@ -76,11 +76,6 @@ const args = yargs(hideBin(process.argv))
     describe:
       'Rebuild the @live test-project, using PostgreSQL compatible migrations',
   })
-  .option('esm', {
-    default: false,
-    type: 'boolean',
-    describe: 'Rebuild the esm test-project',
-  })
   .option('packageManager', {
     alias: 'pm',
     default: 'yarn',
@@ -91,7 +86,7 @@ const args = yargs(hideBin(process.argv))
   .help()
   .parseSync()
 
-const { verbose, resume, resumePath, resumeStep, live, esm } = args
+const { verbose, resume, resumePath, resumeStep, live } = args
 
 const packageManager: PackageManager = assertPackageManager(args.packageManager)
 const cedarBin = packageManager === 'npm' ? 'npx' : packageManager
@@ -101,10 +96,10 @@ const cedarBin = packageManager === 'npm' ? 'npx' : packageManager
 // hangs this script without any information to the user that tries to rebuild
 // the test-project. It's better to fail early so the correct node version can
 // be installed.
-if (!semver.satisfies(process.version, recommendedNodeVersion({ esm }))) {
+if (!semver.satisfies(process.version, recommendedNodeVersion())) {
   console.error('Unsupported Node.js version')
   console.error('  You are using:', process.version)
-  console.error('  Supported version:', recommendedNodeVersion({ esm }))
+  console.error('  Supported version:', recommendedNodeVersion())
   process.exit(1)
 }
 
@@ -116,8 +111,6 @@ if (packageManager !== 'yarn') {
 
 if (live) {
   folderSuffix += '-live'
-} else if (esm) {
-  folderSuffix += '-esm'
 }
 
 const CEDAR_FRAMEWORK_PATH = path.join(import.meta.dirname, '../../')
@@ -373,7 +366,6 @@ const createProject = () => {
       '--typescript',
       '--overwrite',
       '--no-git',
-      esm || live ? '--esm' : '',
       live ? '--db' : '',
       live ? 'neon-postgres' : '',
     ],
@@ -555,7 +547,7 @@ async function rebuildTestProject() {
     task: async () => {
       setOutputPath(OUTPUT_PROJECT_PATH)
 
-      return apiTasksList({ dbAuth: 'local', live, esm, packageManager })
+      return apiTasksList({ dbAuth: 'local', live, packageManager })
     },
   })
 
@@ -968,7 +960,6 @@ async function rebuildTestProject() {
         'create-cedar-app',
         'templates',
         'overlays',
-        esm ? 'esm' : 'cjs',
         packageManager,
         'package.json',
       )
@@ -979,7 +970,7 @@ async function rebuildTestProject() {
         'packages',
         'create-cedar-app',
         'templates',
-        esm ? 'esm-ts' : 'ts',
+        'ts',
         'package.json',
       )
       const newRootPackageJson = fs.existsSync(templateOverlayPackageJsonPath)
@@ -1001,7 +992,6 @@ async function rebuildTestProject() {
           'create-cedar-app',
           'templates',
           'overlays',
-          esm ? 'esm' : 'cjs',
           'pnpm',
           'pnpm-workspace.yaml',
         )

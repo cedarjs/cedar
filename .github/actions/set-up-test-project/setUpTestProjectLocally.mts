@@ -17,13 +17,10 @@ import {
 const { values } = parseArgs({
   options: {
     packageManager: { type: 'string', short: 'p', default: 'yarn' },
-    esm: { type: 'boolean', default: false },
   },
 })
 
-const fixture = values.esm ? 'test-project-esm' : 'test-project'
-const dirName = values.esm ? 'ci-test-project-esm' : 'ci-test-project'
-const testProjectPath = path.join(process.cwd(), dirName)
+const testProjectPath = path.join(process.cwd(), 'ci-test-project')
 
 setUpTestProject({
   setOutput,
@@ -33,5 +30,4 @@ setUpTestProject({
   cedarFrameworkPath: CEDAR_FRAMEWORK_PATH,
   testProjectPath,
   packageManager: optionalPackageManager(values.packageManager),
-  fixture,
 })

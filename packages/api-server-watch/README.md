@@ -15,6 +15,5 @@ dependency.
 cedar-api-server-watch
 ```
 
-Also installed as `cedarjs-api-server-watch`. Both names are what
-`yarn cedar dev` shells out to; you shouldn't normally need to run this
-directly.
+This is what `yarn cedar dev` shells out to; you shouldn't normally need to
+run this directly.

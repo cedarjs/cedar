@@ -58,52 +58,72 @@ module.exports = {
 That's it!
 Now your custom web-side Babel config will be merged with Cedar's.
 
-## Jest
+## Vitest
 
-Cedar uses [Jest](https://jestjs.io/) for testing.
+Cedar uses [Vitest](https://vitest.dev/) for testing.
 Let's take a peek at how it's all configured.
 
-At the root of your project is `jest.config.js`.
+At the root of your project is `vitest.config.ts`.
 It should look like this:
 
-```jsx title="jest.config.js"
-module.exports = {
-  rootDir: '.',
-  projects: ['<rootDir>/{*,!(node_modules)/**/}/jest.config.js'],
-}
+```ts title="vitest.config.ts"
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    projects: ['<rootDir>/{*,packages/*}/vite?(st).config.{js,ts}'],
+  },
+})
 ```
 
-This just tells Jest that the actual config files sit in each side, allowing Jest to pick up the individual settings for each.
-`rootDir` also makes sure that if you're running Jest with the `--collectCoverage` flag, it'll produce the report in the root directory.
+This just tells Vitest that the actual config files sit in each side (and in any workspace packages you've generated), allowing Vitest to pick up the individual settings for each.
 
-#### Web Jest Config
+#### Web Vitest Config
 
-The web side's configuration sits in `./web/jest.config.js`
+The web side's test configuration is part of `./web/vite.config.ts`
 
-```jsx
-const config = {
-  rootDir: '../',
-  preset: '@cedarjs/testing/config/jest/web',
-  // ☝️ load the built-in Cedar Jest configuration
-}
+```ts
+/// <reference types="vitest/config" />
 
-module.exports = config
+import { defineConfig } from 'vite'
+
+import { cedar } from '@cedarjs/vite'
+
+export default defineConfig(({ mode }) => ({
+  plugins: [cedar({ mode })],
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./vitest.setup.ts'],
+    globals: true,
+  },
+}))
 ```
 
-> You can always see Cedar's latest configuration templates in the [create-cedar-app package](https://github.com/cedarjs/cedar/blob/main/packages/create-cedar-app/templates/ts/web/jest.config.js).
+> You can always see Cedar's latest configuration templates in the [create-cedar-app package](https://github.com/cedarjs/cedar/blob/main/packages/create-cedar-app/templates/ts/web/vite.config.ts).
 
-The preset includes all the setup required to test everything that's going on in web: rendering React components and transforming JSX, automatically mocking Cells, transpiling with Babel, mocking the Router and the GraphQL client—the list goes on!
-You can find all the details in the [source](https://github.com/cedarjs/cedar/blob/main/packages/testing/config/jest/web/jest-preset.js).
+The `cedar()` Vite plugin together with `web/vitest.setup.ts` includes all the setup required to test everything that's going on in web: rendering React components and transforming JSX, automatically mocking Cells, mocking the Router and the GraphQL client—the list goes on!
 
 #### Api Side Config
 
-The api side is configured similarly, with the configuration sitting in `./api/jest.config.js`.
-But the api preset is slightly different in that:
+The api side is configured in `./api/vitest.config.ts`.
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+import { cedarVitestPreset } from '@cedarjs/vite/api'
+
+export default defineConfig({
+  plugins: [cedarVitestPreset()],
+  test: {
+    globals: true,
+  },
+})
+```
+
+The api preset is slightly different from the web side in that:
 
 - it's configured to run tests serially (because Scenarios seed your test database)
 - it has setup code to make sure your database is 1) seeded before running tests 2) reset between Scenarios
-
-You can find all the details in the [source](https://github.com/cedarjs/cedar/blob/main/packages/testing/config/jest/api/jest-preset.js).
 
 ## GraphQL Codegen
 

@@ -17,7 +17,6 @@ interface CreateProjectFilesOptions {
   templatesDir: string
   overwrite: boolean
   packageManager: PackageManager
-  useEsm: boolean
   database: string
 }
 
@@ -28,17 +27,11 @@ export async function createProjectFiles(
     templatesDir,
     overwrite,
     packageManager,
-    useEsm,
     database,
   }: CreateProjectFilesOptions,
 ) {
   let newAppDir = appDir
-  const overlayDir = path.join(
-    templatesDir,
-    'overlays',
-    useEsm ? 'esm' : 'cjs',
-    packageManager,
-  )
+  const overlayDir = path.join(templatesDir, 'overlays', packageManager)
 
   const tuiContent = new ReactiveTUIContent({
     mode: 'text',
