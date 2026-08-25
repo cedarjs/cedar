@@ -3331,7 +3331,6 @@ __metadata:
     "@types/react": "npm:^19.2.0"
     "@whatwg-node/fetch": "npm:0.10.13"
     babel-plugin-ignore-html-and-css-imports: "npm:0.1.0"
-    babel-plugin-tester: "npm:11.0.4"
     cheerio: "npm:1.2.0"
     concurrently: "npm:9.2.4"
     graphql: "npm:16.14.2"
