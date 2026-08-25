@@ -98,6 +98,7 @@
     "@types/node": "24.10.4",
     "ansis": "4.3.1",
     "fast-glob": "3.3.3",
+    "jsdom": "27.4.0",
     "msw": "2.15.0",
     "ts-toolbelt": "9.6.0",
     "unplugin-auto-import": "19.3.0"
@@ -109,7 +110,6 @@
     "@cedarjs/router": "workspace:*",
     "@cedarjs/web": "workspace:*",
     "concurrently": "9.2.4",
-    "jsdom": "27.4.0",
     "publint": "0.3.23",
     "typescript": "5.9.3",
     "vitest": "4.1.10"
