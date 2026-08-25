@@ -333,18 +333,24 @@ export const runPrerender = async ({
     throw new Error('LocationProvider not found')
   }
 
-  const componentAsHtml = await recursivelyRender(
-    App,
-    Routes,
-    CellCacheContextProvider,
-    LocationProvider,
-    renderPath,
-    nodeRunner.importFile.bind(nodeRunner),
-    gqlHandler,
-    queryCache,
-  )
+  let componentAsHtml: string
 
-  nodeRunner.close()
+  try {
+    componentAsHtml = await recursivelyRender(
+      App,
+      Routes,
+      CellCacheContextProvider,
+      LocationProvider,
+      renderPath,
+      nodeRunner.importFile.bind(nodeRunner),
+      gqlHandler,
+      queryCache,
+    )
+  } finally {
+    // Each route gets its own NodeRunner (and Vite server), so close it even
+    // when rendering throws
+    await nodeRunner.close()
+  }
 
   const { helmet } = globalThis.__REDWOOD__HELMET_CONTEXT
 
