@@ -40,17 +40,18 @@ yarn cedar upgrade -t 6
 #### Upgrade to React 19 (while still on v6)
 
 Do this step **while still on Cedar v6**, before running the upgrade command.
-Cedar v6 already fully supports React 19 (it's what every project created with
-`create-cedar-app` ships with), so you can migrate React on its own, confirm
-the app works, and then move to v7 as a separate, much smaller step. Upgrading
-to v7 first would leave the framework's React 19 types at odds with your app's
-React 18 types and make `yarn cedar type-check` fail for reasons unrelated to
-your own code.
+Cedar v6 works with React 19 (type-check, tests, build, dev server, and
+production serve have all been verified on a v6 app running React 19.2.3), so
+you can migrate React on its own, confirm the app works, and then move to v7 as
+a separate, much smaller step. Upgrading to v7 first would leave the
+framework's React 19 types at odds with your app's React 18 types and make
+`yarn cedar type-check` fail for reasons unrelated to your own code.
 
 If your app is already on React 19, there is nothing to do here — skip ahead to
 [Running the upgrade command](#running-the-upgrade-command).
 
-If `web/package.json` still pins React 18, update these four entries:
+Projects created with `create-cedar-app` v6 ship with React 18.3.1. Update these
+four entries in `web/package.json`:
 
 ```diff title="web/package.json"
   "dependencies": {
@@ -67,7 +68,10 @@ If `web/package.json` still pins React 18, update these four entries:
   }
 ```
 
-Then run `yarn install`.
+Then run `yarn install`. On Cedar v6.0.0 this prints `YN0060` peer-dependency
+warnings saying that `@cedarjs/web`, `@cedarjs/router`, and `@cedarjs/forms`
+request React `18.3.1`: those packages declare an exact React version rather
+than a range. The warnings are harmless and can be ignored.
 
 React 19 itself has a handful of breaking changes in both runtime behavior and
 TypeScript types. The React team maintains codemods that handle almost all of
@@ -89,8 +93,10 @@ for the full list of changes.
 
 One Cedar-generated file is affected by the type changes. If you scaffolded
 anything with `yarn cedar g scaffold`, `web/src/lib/formatters.tsx` references
-the global `JSX` namespace, which no longer exists in `@types/react` 19. The
-codemod above handles this, but if you'd rather do it by hand:
+the global `JSX` namespace, which no longer exists in `@types/react` 19, and
+`yarn cedar type-check` fails with `Cannot find namespace 'JSX'` on that line.
+In a freshly scaffolded app this is the only file the types codemod touches. If
+you'd rather fix it by hand:
 
 ```diff title="web/src/lib/formatters.tsx"
 - let output: string | JSX.Element = ''
