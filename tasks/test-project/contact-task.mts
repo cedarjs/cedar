@@ -60,18 +60,19 @@ async function updateServiceTest() {
   // lines compared to proper codemods with jscodeshift. Plus it's faster
   await fs.promises.writeFile(
     contactsTestPath,
-    contactsTest
-      .replace(
-        "describe('contacts', () => {",
-        "describe('contacts', () => {\n" +
-          '  afterEach(() => {\n' +
-          `    vi.mocked(console).log.mockRestore?.()\n` +
-          '  })\n',
-      )
-      .replace(
-        "  scenario('creates a contact', async () => {",
-        "  scenario('creates a contact', async () => {\n" +
-          `    vi.spyOn(console, 'log').mockImplementation(() => {})\n`,
-      ),
+    "import { vi } from 'vitest'\n\n" +
+      contactsTest
+        .replace(
+          "describe('contacts', () => {",
+          "describe('contacts', () => {\n" +
+            '  afterEach(() => {\n' +
+            `    vi.mocked(console).log.mockRestore?.()\n` +
+            '  })\n',
+        )
+        .replace(
+          "  scenario('creates a contact', async () => {",
+          "  scenario('creates a contact', async () => {\n" +
+            `    vi.spyOn(console, 'log').mockImplementation(() => {})\n`,
+        ),
   )
 }

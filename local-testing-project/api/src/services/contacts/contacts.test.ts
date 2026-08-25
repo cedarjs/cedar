@@ -1,3 +1,5 @@
+import { vi } from 'vitest'
+
 import type { Contact } from 'src/lib/db'
 
 import {
