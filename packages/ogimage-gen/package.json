@@ -39,22 +39,24 @@
     "@cedarjs/internal": "6.0.0",
     "@cedarjs/project-config": "6.0.0",
     "fast-glob": "3.3.3",
-    "lodash": "4.18.1",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "lodash": "4.18.1"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "6.0.0",
     "@cedarjs/router": "6.0.0",
     "@cedarjs/web": "6.0.0",
     "@playwright/test": "1.62.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
     "ts-toolbelt": "9.6.0",
     "typescript": "5.9.3",
     "vite": "7.3.6",
     "vitest": "4.1.10"
   },
   "peerDependencies": {
-    "@cedarjs/router": "6.0.0"
+    "@cedarjs/router": "6.0.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
   },
   "engines": {
     "node": ">=24"
