@@ -4,7 +4,7 @@ import path from 'path'
 import ansis from 'ansis'
 import boxen from 'boxen'
 import latestVersion from 'latest-version'
-import semver from 'semver'
+import { isGreater, isValid } from 'verkit'
 
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { getNodeRunnerArgs } from '@cedarjs/cli-helpers/packageManager/exec'
@@ -82,7 +82,7 @@ function getLocalVersion(): string | undefined {
     return undefined
   }
 
-  if (typeof version === 'string' && semver.valid(version)) {
+  if (typeof version === 'string' && isValid(version)) {
     return version
   }
 
@@ -203,7 +203,7 @@ export function shouldShow() {
 
   let newerVersion = false
   data.remoteVersions.forEach((version) => {
-    newerVersion ||= semver.gt(version, localVersion)
+    newerVersion ||= isGreater(version, localVersion)
   })
   return data.shownAt < new Date().getTime() - SHOW_PERIOD && newerVersion
 }
@@ -230,7 +230,7 @@ function getUpdateMessage() {
   let updateCount = 0
   let message = ` New updates to Cedar are available via \`${formatCedarCommand(['upgrade#REPLACEME#'])}\` `
   data.remoteVersions.forEach((version, tag) => {
-    if (semver.gt(version, data.localVersion)) {
+    if (isGreater(version, data.localVersion)) {
       updateCount += 1
 
       if (tag === localTag) {

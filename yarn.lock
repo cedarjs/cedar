@@ -2596,7 +2596,6 @@ __metadata:
     "@types/dotenv-defaults": "npm:^5.0.0"
     "@types/lodash": "npm:4.17.25"
     "@types/pascalcase": "npm:1.0.3"
-    "@types/semver": "npm:^7"
     "@types/yargs": "npm:17.0.35"
     "@types/yargs-parser": "npm:21.0.3"
     ansis: "npm:4.3.1"
@@ -2610,11 +2609,11 @@ __metadata:
     prettier: "npm:3.8.4"
     prettier-plugin-tailwindcss: "npm:0.8.1"
     prompts: "npm:2.4.2"
-    semver: "npm:7.8.5"
     smol-toml: "npm:1.8.0"
     sucrase: "npm:3.35.1"
     termi-link: "npm:1.1.0"
     typescript: "npm:5.9.3"
+    verkit: "npm:0.4.0"
     vitest: "npm:4.1.10"
     yargs-parser: "npm:21.1.1"
   languageName: unknown
@@ -2628,14 +2627,13 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@cedarjs/telemetry": "workspace:*"
-    "@types/semver": "npm:^7"
     "@types/yargs": "npm:17.0.35"
     execa: "npm:5.1.1"
-    semver: "npm:7.8.5"
     storybook: "npm:8.6.18"
     storybook-framework-cedarjs: "workspace:*"
     termi-link: "npm:1.1.0"
     typescript: "npm:5.9.3"
+    verkit: "npm:0.4.0"
     vitest: "npm:4.1.10"
     yargs: "npm:17.7.3"
   languageName: unknown
@@ -2701,7 +2699,6 @@ __metadata:
     prettier: "npm:3.8.4"
     prisma: "npm:7.8.0"
     prompts: "npm:2.4.2"
-    semver: "npm:7.8.5"
     smol-toml: "npm:1.8.0"
     srvx: "npm:0.12.5"
     string-env-interpolation: "npm:1.0.1"
@@ -2712,6 +2709,7 @@ __metadata:
     typescript: "npm:5.9.3"
     unionfs: "npm:4.6.0"
     uuid: "npm:11.1.0"
+    verkit: "npm:0.4.0"
     vitest: "npm:4.1.10"
     yargs: "npm:17.7.3"
   bin:
@@ -11266,13 +11264,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/semver@npm:^7":
-  version: 7.8.0
-  resolution: "@types/semver@npm:7.8.0"
-  checksum: 10c0/46a1f38e36013448b279798e8b134e7e8de3b3630b1f40683903b9d57d36dd1d70838515570ed9a149fa09e9c381b9e39319b58d7b9f3b929b42ae2becff7aa3
-  languageName: node
-  linkType: hard
-
 "@types/send@npm:*, @types/send@npm:<1":
   version: 0.17.6
   resolution: "@types/send@npm:0.17.6"
@@ -14270,11 +14261,11 @@ __metadata:
     execa: "npm:5.1.1"
     gradient-string: "npm:3.0.0"
     klaw-sync: "npm:7.0.0"
-    semver: "npm:7.8.5"
     systeminformation: "npm:5.33.1"
     termi-link: "npm:1.1.0"
     untildify: "npm:4.0.0"
     uuid: "npm:11.1.0"
+    verkit: "npm:0.4.0"
     vitest: "npm:4.1.10"
     yargs: "npm:17.7.3"
   bin:
@@ -25653,15 +25644,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:7.8.5, semver@npm:^7.1.1, semver@npm:^7.3.5, semver@npm:^7.3.7, semver@npm:^7.5.2, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.0, semver@npm:^7.6.2, semver@npm:^7.7.2, semver@npm:^7.7.3, semver@npm:^7.7.4":
-  version: 7.8.5
-  resolution: "semver@npm:7.8.5"
-  bin:
-    semver: bin/semver.js
-  checksum: 10c0/b1f3127a5be8125a94f37188b361c212466c292c6910adce3ec106cff5dc211ccaedc4739c11bb70fda59d6fc1f040a9bca289f4e093451521a2372e5231fe0c
-  languageName: node
-  linkType: hard
-
 "semver@npm:^5.6.0":
   version: 5.7.2
   resolution: "semver@npm:5.7.2"
@@ -25677,6 +25659,15 @@ __metadata:
   bin:
     semver: bin/semver.js
   checksum: 10c0/e3d79b609071caa78bcb6ce2ad81c7966a46a7431d9d58b8800cfa9cb6a63699b3899a0e4bcce36167a284578212d9ae6942b6929ba4aa5015c079a67751d42d
+  languageName: node
+  linkType: hard
+
+"semver@npm:^7.1.1, semver@npm:^7.3.5, semver@npm:^7.3.7, semver@npm:^7.5.2, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.0, semver@npm:^7.6.2, semver@npm:^7.7.2, semver@npm:^7.7.3, semver@npm:^7.7.4":
+  version: 7.8.5
+  resolution: "semver@npm:7.8.5"
+  bin:
+    semver: bin/semver.js
+  checksum: 10c0/b1f3127a5be8125a94f37188b361c212466c292c6910adce3ec106cff5dc211ccaedc4739c11bb70fda59d6fc1f040a9bca289f4e093451521a2372e5231fe0c
   languageName: node
   linkType: hard
 
@@ -28231,6 +28222,13 @@ __metadata:
   version: 1.1.2
   resolution: "vary@npm:1.1.2"
   checksum: 10c0/f15d588d79f3675135ba783c91a4083dcd290a2a5be9fcb6514220a1634e23df116847b1cc51f66bfb0644cf9353b2abb7815ae499bab06e46dd33c1a6bf1f4f
+  languageName: node
+  linkType: hard
+
+"verkit@npm:0.4.0":
+  version: 0.4.0
+  resolution: "verkit@npm:0.4.0"
+  checksum: 10c0/a3b794fa0902a3643ee2ae073eeb6fcc50e1245aa339f888aab7e02120d9d195beae9894fd1a8f8ea0fc2c0b20f089459d6d1aecfebe889e94bf8bf70f01c60e
   languageName: node
   linkType: hard
 

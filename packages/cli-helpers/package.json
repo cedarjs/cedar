@@ -86,10 +86,10 @@
     "pascalcase": "1.0.0",
     "prettier": "3.8.4",
     "prompts": "2.4.2",
-    "semver": "7.8.5",
     "smol-toml": "1.8.0",
     "sucrase": "3.35.1",
     "termi-link": "1.1.0",
+    "verkit": "0.4.0",
     "yargs-parser": "21.1.1"
   },
   "devDependencies": {
@@ -97,7 +97,6 @@
     "@types/dotenv-defaults": "^5.0.0",
     "@types/lodash": "4.17.25",
     "@types/pascalcase": "1.0.3",
-    "@types/semver": "^7",
     "@types/yargs": "17.0.35",
     "@types/yargs-parser": "21.0.3",
     "prettier-plugin-tailwindcss": "0.8.1",
