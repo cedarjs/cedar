@@ -32,7 +32,6 @@
     "@babel/core": "^7.26.10",
     "@babel/eslint-parser": "7.29.7",
     "@babel/eslint-plugin": "7.29.7",
-    "@cedarjs/babel-config": "6.0.0",
     "@cedarjs/eslint-plugin": "6.0.0",
     "@cedarjs/project-config": "6.0.0",
     "@eslint/js": "8.57.1",

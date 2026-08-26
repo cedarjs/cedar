@@ -2854,7 +2854,6 @@ __metadata:
     "@babel/core": "npm:^7.26.10"
     "@babel/eslint-parser": "npm:7.29.7"
     "@babel/eslint-plugin": "npm:7.29.7"
-    "@cedarjs/babel-config": "npm:6.0.0"
     "@cedarjs/eslint-plugin": "npm:6.0.0"
     "@cedarjs/project-config": "npm:6.0.0"
     "@eslint/js": "npm:8.57.1"
