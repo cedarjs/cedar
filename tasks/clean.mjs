@@ -17,7 +17,3 @@ await rimraf('packages/**/tsconfig.tsbuildinfo', {
 await rimraf('packages/**/tsconfig.build.tsbuildinfo', {
   glob: true,
 })
-
-await rimraf('packages/**/tsconfig.cjs.tsbuildinfo', {
-  glob: true,
-})
