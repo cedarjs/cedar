@@ -5,7 +5,7 @@ import type { PluginOptions, PluginTarget, TransformOptions } from '@babel/core'
 import { transformAsync } from '@babel/core'
 import { resolvePath } from 'babel-plugin-module-resolver'
 
-import { getPaths, projectSideIsEsm } from '@cedarjs/project-config'
+import { getPaths } from '@cedarjs/project-config'
 
 import type { RegisterHookOptions } from './common.js'
 import {
@@ -13,7 +13,6 @@ import {
   parseTypeScriptConfigFiles,
   registerBabel,
 } from './common.js'
-import handlerAlsWrappingPlugin from './plugins/babel-plugin-handler-als-wrapping.js'
 import pluginRedwoodDirectoryNamedImport from './plugins/babel-plugin-redwood-directory-named-import.js'
 import pluginRedwoodImportDir from './plugins/babel-plugin-redwood-import-dir.js'
 import pluginRedwoodJobPathInjector from './plugins/babel-plugin-redwood-job-path-injector.js'
@@ -53,10 +52,7 @@ type PluginShape =
   | [PluginTarget, PluginOptions, undefined | string]
   | [PluginTarget, PluginOptions]
 
-export const getApiSideBabelPlugins = ({
-  forVite = false,
-  projectIsEsm = false,
-} = {}) => {
+export const getApiSideBabelPlugins = ({ forVite = false } = {}) => {
   if (forVite) {
     return getApiSideBabelPluginsForVite()
   }
@@ -67,14 +63,13 @@ export const getApiSideBabelPlugins = ({
     // Needed to support `/** @jsxImportSource custom-jsx-library */`
     // comments in JSX files
     ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }],
-    // For the non-Vite consumers this function serves (Jest,
-    // registerApiSideBabelHook / Babel registerRequire paths such as
-    // data-migrate CJS and prerender CJS):
+    // For the non-Vite consumers this function serves (the Babel ESLint
+    // parser and registerApiSideBabelHook):
     //   • alias config: rewrites `src/` and tsconfig paths to relative paths
-    //   • resolvePath: appends `.js`/`.jsx` to extensionless imports in ESM
-    //     projects so Node's module resolver can find them, and strips `.js`
-    //     suffixes in data-migrate / prerender contexts where the TypeScript
-    //     source is `.ts` but callers write `.js` import specifiers.
+    //   • resolvePath: appends `.js`/`.jsx` to extensionless imports so Node's
+    //     module resolver can find them, and strips `.js` suffixes in
+    //     data-migrate / prerender contexts where the TypeScript source is
+    //     `.ts` but callers write `.js` import specifiers.
     [
       'babel-plugin-module-resolver',
       {
@@ -103,7 +98,7 @@ export const getApiSideBabelPlugins = ({
 
           const resolvedPath = resolvePath(importPath, currentFile, opts)
 
-          if (!resolvedPath || !projectIsEsm || resolvedPath.includes('/**/')) {
+          if (!resolvedPath || resolvedPath.includes('/**/')) {
             return resolvedPath
           }
 
@@ -190,8 +185,6 @@ export const getApiSideBabelPlugins = ({
  * is why the Vite pipelines skip Babel entirely unless the project has a
  * custom api/babel.config.js.
  *
- * The `projectIsEsm` option needs no equivalent here: it only affects the
- * module-resolver `resolvePath` hook, which is a `!forVite` plugin.
  */
 export const getApiSideBabelPluginsForVite = (): PluginList => {
   return []
@@ -206,26 +199,8 @@ export const getApiSideBabelConfigPath = () => {
   }
 }
 
-export const getApiSideBabelOverrides = ({
-  forVite = false,
-  projectIsEsm = false,
-  forJest = false,
-} = {}) => {
+export const getApiSideBabelOverrides = ({ forVite = false } = {}) => {
   const overrides = [
-    // Apply handler ALS wrapping to all functions (Jest only; Vite uses
-    // handlerAlsWrappingPlugin instead)
-    forJest && {
-      // match */api/src/functions/*.js|ts
-      test: /.+api(?:[\\|/])src(?:[\\|/])functions(?:[\\|/]).+.(?:js|ts)$/,
-      plugins: [
-        [
-          handlerAlsWrappingPlugin,
-          {
-            projectIsEsm,
-          },
-        ],
-      ],
-    },
     // Add import names and paths to job definitions. Vite uses
     // cedarjsJobPathInjectorPlugin instead.
     !forVite && {
@@ -238,17 +213,14 @@ export const getApiSideBabelOverrides = ({
 }
 
 /**
- * The default api-side Babel config for Jest (@cedarjs/testing) and the
- * Babel ESLint parser (@cedarjs/eslint-config). The Jest-only handler ALS
- * wrapping override is always included: it only matches api/src/functions
- * files, and for the parse-only ESLint consumer transform plugins have no
- * effect.
+ * The default api-side Babel config for the Babel ESLint parser
+ * (@cedarjs/eslint-config).
  */
 export const getApiSideDefaultBabelConfig = () => {
   return {
     presets: getApiSideBabelPresets(),
     plugins: getApiSideBabelPlugins(),
-    overrides: getApiSideBabelOverrides({ forJest: true }),
+    overrides: getApiSideBabelOverrides(),
     extends: getApiSideBabelConfigPath(),
     babelrc: false,
     ignore: ['node_modules'],
@@ -260,18 +232,16 @@ export const registerApiSideBabelHook = ({
   plugins = [],
   ...rest
 }: RegisterHookOptions = {}) => {
-  const projectIsEsm = projectSideIsEsm('api')
-
   registerBabel({
     presets: getApiSideBabelPresets({
       presetEnv: true,
     }),
-    overrides: getApiSideBabelOverrides({ projectIsEsm }),
+    overrides: getApiSideBabelOverrides(),
     extends: getApiSideBabelConfigPath(),
     babelrc: false,
     ignore: ['node_modules'],
     extensions: ['.js', '.ts', '.jsx', '.tsx'],
-    plugins: [...getApiSideBabelPlugins({ projectIsEsm }), ...plugins],
+    plugins: [...getApiSideBabelPlugins(), ...plugins],
     cache: false,
     ...rest,
   })
@@ -290,10 +260,7 @@ export const transformWithBabel = async (
 ) => {
   const result = transformAsync(sourceCode, {
     presets: getApiSideBabelPresets(),
-    overrides: getApiSideBabelOverrides({
-      forVite,
-      projectIsEsm: projectSideIsEsm('api'),
-    }),
+    overrides: getApiSideBabelOverrides({ forVite }),
     extends: getApiSideBabelConfigPath(),
     babelrc: false,
     ignore: ['node_modules'],

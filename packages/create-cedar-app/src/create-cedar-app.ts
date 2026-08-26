@@ -15,7 +15,6 @@ import {
   detectPackageManagerFromEnv,
   handleCommitMessagePreference,
   handleDatabasePreference,
-  handleEsmPreference,
   handleGitPreference,
   handleInstallPreference,
   handlePackageManagerPreference,
@@ -259,12 +258,6 @@ async function createCedarApp() {
       type: 'boolean',
       describe: 'Generate a TypeScript project',
     })
-    .option('esm', {
-      hidden: true,
-      default: null,
-      type: 'boolean',
-      describe: 'Generate an ESM project',
-    })
     .option('git-init', {
       alias: 'git',
       default: null,
@@ -334,7 +327,6 @@ async function createCedarApp() {
     (parsedFlags.yes ? (detectedPm ?? 'yarn') : null)
   const installFlag = parsedFlags.install ?? (parsedFlags.yes ? true : null)
   const typescriptFlag = parsedFlags.typescript ?? parsedFlags.yes
-  const esmFlag = parsedFlags.esm // TODO: ?? parsedFlags.yes
   const overwriteFlag = parsedFlags.overwrite
   const databaseFlag = parsedFlags.database ?? null
   const gitInitFlag = parsedFlags['git-init'] ?? parsedFlags.yes
@@ -366,11 +358,7 @@ async function createCedarApp() {
   const useTypescript = await handleTypescriptPreference(typescriptFlag)
   trace.getActiveSpan()?.setAttribute('typescript', useTypescript)
 
-  // Determine ESM or not
-  const useEsm = await handleEsmPreference(esmFlag)
-  trace.getActiveSpan()?.setAttribute('esm', useEsm)
-
-  const database = await handleDatabasePreference(databaseFlag, useEsm)
+  const database = await handleDatabasePreference(databaseFlag)
   trace.getActiveSpan()?.setAttribute('database', database)
 
   // Determine package manager preference
@@ -381,10 +369,7 @@ async function createCedarApp() {
   )
   trace.getActiveSpan()?.setAttribute('package-manager', packageManager)
 
-  const templateDir = path.join(
-    templatesDir,
-    useTypescript ? (useEsm ? 'esm-ts' : 'ts') : useEsm ? 'esm-js' : 'js',
-  )
+  const templateDir = path.join(templatesDir, useTypescript ? 'ts' : 'js')
   // Determine git preference
   const useGit = await handleGitPreference(gitInitFlag)
   trace.getActiveSpan()?.setAttribute('git', useGit)
@@ -410,7 +395,6 @@ async function createCedarApp() {
     templatesDir,
     overwrite: overwriteFlag,
     packageManager,
-    useEsm,
     database,
   })
 

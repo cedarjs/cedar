@@ -29,7 +29,6 @@ export const IGNORED = [
   /__mocks__/,
   /__tests__/,
   /\.test\./,
-  /jest.config.{js,ts}/,
 
   /README.md/,
 

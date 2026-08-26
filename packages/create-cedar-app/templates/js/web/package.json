@@ -1,6 +1,6 @@
 {
   "name": "web",
-  "type": "commonjs",
+  "type": "module",
   "version": "0.0.0",
   "private": true,
   "browserslist": {
@@ -21,6 +21,10 @@
   "devDependencies": {
     "@cedarjs/vite": "6.0.0",
     "@types/react": "^19.2.0",
-    "@types/react-dom": "^19.2.0"
+    "@types/react-dom": "^19.2.0",
+    "@cedarjs/testing": "6.0.0",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
+    "vite": "7.3.6"
   }
 }

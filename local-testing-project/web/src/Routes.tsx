@@ -36,8 +36,8 @@ const Routes = () => {
         <Route path="/posts" page={PostPostsPage} name="posts" />
       </Set>
       <Set wrap={BlogLayout}>
-        <Route path="/waterfall/{id:Int}" page={WaterfallPage} prerender name="waterfall" />
         <Route path="/aggregated-blog-post/{id:Int}" page={AggregatedBlogPostPage} name="aggregatedBlogPost" />
+        <Route path="/waterfall/{id:Int}" page={WaterfallPage} prerender name="waterfall" />
         <Private unauthenticated="login">
           <Route path="/profile" page={ProfilePage} name="profile" />
         </Private>

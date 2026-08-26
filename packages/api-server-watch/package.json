@@ -12,8 +12,7 @@
   "main": "./dist/watch.js",
   "types": "./dist/watch.d.ts",
   "bin": {
-    "cedar-api-server-watch": "./dist/bin.js",
-    "cedarjs-api-server-watch": "./dist/bin.js"
+    "cedar-api-server-watch": "./dist/bin.js"
   },
   "files": [
     "dist"

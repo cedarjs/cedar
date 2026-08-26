@@ -18,10 +18,7 @@ export interface PluginOptions {
 }
 
 // When running from the CLI another plugin in the pipeline will convert:
-// - For dev, build and prerender (forJest === false):
 //   'src/pages/ExamplePage' -> './pages/ExamplePage'
-// - For test (forJest === true):
-//   'src/pages/ExamplePage' -> '/Users/blah/pathToProject/web/src/pages/ExamplePage'
 function getPathRelativeToSrc(maybeAbsolutePath: string) {
   // If the path is already relative
   if (!path.isAbsolute(maybeAbsolutePath)) {

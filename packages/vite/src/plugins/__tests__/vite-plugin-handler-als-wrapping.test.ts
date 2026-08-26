@@ -15,8 +15,8 @@ vi.mock('@cedarjs/project-config', () => ({
   }),
 }))
 
-function getPluginTransform(options?: { projectIsEsm?: boolean }) {
-  const plugin = handlerAlsWrappingPlugin(options)
+function getPluginTransform() {
+  const plugin = handlerAlsWrappingPlugin()
 
   if (typeof plugin.transform !== 'function') {
     expect.fail('Expected plugin to have a transform function')
@@ -45,7 +45,7 @@ describe('handlerAlsWrappingPlugin', () => {
     const output = (result as { code: string }).code
 
     expect(output).toContain(
-      "import { getAsyncStoreInstance as __cedar_getAsyncStoreInstance } from '@cedarjs/context/dist/store'",
+      "import { getAsyncStoreInstance as __cedar_getAsyncStoreInstance } from '@cedarjs/context/dist/store.js'",
     )
     expect(output).toContain(
       'const __cedar_handler = async (event, _context) =>',
@@ -85,20 +85,6 @@ describe('handlerAlsWrappingPlugin', () => {
     )
     expect(output).not.toContain(
       'export const handler = async (__cedar_event, __cedar_context)',
-    )
-  })
-
-  it('uses the ESM store path when projectIsEsm is true', () => {
-    const transform = getPluginTransform({ projectIsEsm: true })
-    const code = `export const handler = async (event) => {}`
-
-    const result = transform(code, path.join(FUNCTIONS_DIR, 'custom.ts'))
-
-    expect(result).not.toBeNull()
-    const output = (result as { code: string }).code
-
-    expect(output).toContain(
-      "import { getAsyncStoreInstance as __cedar_getAsyncStoreInstance } from '@cedarjs/context/dist/store.js'",
     )
   })
 

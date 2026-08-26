@@ -1,9 +1,4 @@
-import fs from 'node:fs'
-import path from 'node:path'
-
-import execa from 'execa'
-
-import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 import { ensurePosixPath } from '@cedarjs/project-config'
 import { errorTelemetry, timedTelemetry } from '@cedarjs/telemetry'
@@ -14,10 +9,8 @@ import * as project from '../../lib/project.js'
 
 import { warnIfNonStandardDatasourceUrl } from './datasourceWarning.js'
 
-type TestHandlerArgs = Record<string, unknown> & {
+type TestEsmHandlerArgs = Record<string, unknown> & {
   filter?: string[]
-  watch?: boolean
-  collectCoverage?: boolean
   dbPush?: boolean
   force?: boolean
 }
@@ -44,80 +37,22 @@ function getExitCode(value: unknown) {
   return value.exitCode
 }
 
-// https://github.com/facebook/create-react-app/blob/cbad256a4aacfc3084be7ccf91aad87899c63564/packages/react-scripts/scripts/test.js#L39
-function isInGitRepository() {
-  try {
-    execa.commandSync('git rev-parse --is-inside-work-tree')
-    return true
-  } catch {
-    return false
-  }
-}
-
-function isInMercurialRepository() {
-  try {
-    execa.commandSync('hg --cwd . root')
-    return true
-  } catch {
-    return false
-  }
-}
-
-function isJestConfigFile(sides: string[]) {
-  for (const side of sides) {
-    try {
-      const jestConfigExists =
-        fs.existsSync(path.join(side, 'jest.config.js')) ||
-        fs.existsSync(path.join(side, 'jest.config.ts'))
-
-      if (!jestConfigExists) {
-        console.error(
-          c.error(
-            `\nError: Missing Jest config file ${side}/jest.config.js` +
-              '\nTo add this file, run `npx @cedarjs/codemods update-jest-config`\n',
-          ),
-        )
-        throw new Error(`Error: Jest config file not found in ${side} side`)
-      }
-    } catch (error: unknown) {
-      const message = hasStringMessage(error)
-        ? error.message
-        : `Error: Jest config file not found in ${side} side`
-
-      errorTelemetry(process.argv, message)
-      process.exit(getExitCode(error) ?? 1)
-    }
-  }
-}
-
 export const handler = async ({
   filter: filterParams = [],
-  watch = true,
-  collectCoverage = false,
   dbPush = true,
   force = false,
   ...others
-}: TestHandlerArgs) => {
+}: TestEsmHandlerArgs) => {
   recordTelemetryAttributes({
     command: 'test',
-    watch,
-    collectCoverage,
     dbPush,
   })
 
+  let watch = true
   const rwjsPaths = getPaths()
-  const forwardJestFlags = Object.keys(others).flatMap((flagName) => {
-    if (
-      [
-        'collect-coverage',
-        'db-push',
-        'force',
-        'loadEnvFiles',
-        'watch',
-        '$0',
-        '_',
-      ].includes(flagName)
-    ) {
+
+  const forwardVitestFlags = Object.keys(others).flatMap((flagName) => {
+    if (['db-push', 'force', 'loadEnvFiles', '$0', '_'].includes(flagName)) {
       // filter out flags meant for the rw test command only
       return []
     }
@@ -126,8 +61,14 @@ export const handler = async ({
     const flag = flagName.length > 1 ? `--${flagName}` : `-${flagName}`
     const flagValue = others[flagName]
 
+    if (flagName === 'watch') {
+      watch = flagValue === true
+    } else if (flagName === 'run' && flagValue) {
+      watch = false
+    }
+
     if (Array.isArray(flagValue)) {
-      // jest does not collapse flags e.g. --coverageReporters=html --coverageReporters=text
+      // vitest does not collapse flags e.g. --coverageReporters=html --coverageReporters=text
       // so we pass it on. Yargs collapses these flags into an array of values
       return flagValue.flatMap((val) => [flag, val])
     }
@@ -141,37 +82,38 @@ export const handler = async ({
   )
 
   // All the other params, apart from sides
-  const jestFilterArgs = [
+  const vitestFilterArgs = [
     ...filterParams.filter(
       (filterString) => !project.workspaces().includes(filterString),
     ),
   ]
 
-  const jestArgs = [
-    ...jestFilterArgs,
-    ...forwardJestFlags,
-    collectCoverage ? '--collectCoverage' : null,
+  const vitestArgs = [
+    ...vitestFilterArgs,
+    ...forwardVitestFlags,
     '--passWithNoTests',
   ].filter((flagOrValue) => flagOrValue !== null) // Filter out nulls, not booleans because user may have passed a --something false flag
 
-  // If the user wants to watch, set the proper watch flag based on what kind of repo this is
-  // because of https://github.com/facebook/create-react-app/issues/5210
-  if (watch && !process.env.CI && !collectCoverage) {
-    const hasSourceControl = isInGitRepository() || isInMercurialRepository()
-    jestArgs.push(hasSourceControl ? '--watch' : '--watchAll')
+  if (process.env.CI) {
+    // Force run mode in CI
+    vitestArgs.push('--run')
   }
 
-  // if no sides declared with yargs, default to all sides
-  if (!sides.length) {
-    project.workspaces().forEach((side: string) => sides.push(side))
-  }
+  // When a custom --config is provided the config manages its own project
+  // setup, so adding --project flags would fail with "No projects matched".
+  if (!others['config']) {
+    // Sides named on the command line filter the run. With none named we
+    // pass no --project flag at all, so every project in the root config
+    // runs — including `packages/*` workspaces, which aren't sides and so
+    // could never be named here.
+    sides.forEach((side) => vitestArgs.push('--project', side))
 
-  if (sides.length > 0) {
-    jestArgs.push('--projects', ...sides)
+    if (!sides.length) {
+      // The database handling below keys off `sides`, and an unfiltered run
+      // covers every side
+      project.workspaces().forEach((side: string) => sides.push(side))
+    }
   }
-
-  // checking if Jest config files exists in each of the sides
-  isJestConfigFile(sides)
 
   try {
     const cacheDirDb = `file:${ensurePosixPath(
@@ -180,8 +122,6 @@ export const handler = async ({
     const DATABASE_URL = process.env.TEST_DATABASE_URL || cacheDirDb
 
     if (sides.includes('api') && !dbPush) {
-      // @NOTE
-      // DB push code now lives in packages/testing/config/jest/api/jest-preset.js
       process.env.SKIP_DB_PUSH = '1'
     }
 
@@ -189,11 +129,9 @@ export const handler = async ({
       await warnIfNonStandardDatasourceUrl({ force })
     }
 
-    // **NOTE** There is no official way to run Jest programmatically,
-    // so we're running it via execa, since `jest.run()` is a bit unstable.
-    // https://github.com/facebook/jest/issues/5048
+    // TODO: Run vitest programmatically. See https://vitest.dev/advanced/api/
     const runCommand = async () => {
-      await runBin('jest', jestArgs, {
+      await runBin('vitest', vitestArgs, {
         cwd: rwjsPaths.base,
         stdio: 'inherit',
         env: { ...process.env, DATABASE_URL },

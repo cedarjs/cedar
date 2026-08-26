@@ -60,7 +60,7 @@ exports[`handler > can be called with PascalCase model name 3`] = `
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
 //       https://cedarjs.com/docs/testing#testing-services
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('users', () => {
   scenario('returns all users', async (scenario) => {
@@ -265,7 +265,7 @@ exports[`handler > can be called with PascalCase model name 9`] = `
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
 //       https://cedarjs.com/docs/testing#testing-services
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('customDatums', () => {
   scenario('returns all customDatums', async (scenario) => {
@@ -411,7 +411,7 @@ exports[`handler > can be called with camelCase model name 3`] = `
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
 //       https://cedarjs.com/docs/testing#testing-services
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('users', () => {
   scenario('returns all users', async (scenario) => {
@@ -616,7 +616,7 @@ exports[`handler > can be called with camelCase model name 9`] = `
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
 //       https://cedarjs.com/docs/testing#testing-services
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('customDatums', () => {
   scenario('returns all customDatums', async (scenario) => {

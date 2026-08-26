@@ -149,7 +149,7 @@ import { standard } from './CustomIdFieldsCell.mock'
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
 //        https://cedarjs.com/docs/testing#testing-cells
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('CustomIdFieldsCell', () => {
   it('renders Loading successfully', () => {
@@ -266,7 +266,7 @@ import { standard } from './CustomIdFieldCell.mock'
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
 //        https://cedarjs.com/docs/testing#testing-cells
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('CustomIdFieldCell', () => {
   it('renders Loading successfully', () => {
@@ -345,7 +345,7 @@ import { standard } from './AuthorBioCell.mock'
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
 //        https://cedarjs.com/docs/testing#testing-cells
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('AuthorBioCell', () => {
   it('renders Empty successfully', async () => {
@@ -559,7 +559,7 @@ import { standard } from './UserProfileCell.mock'
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
 //        https://cedarjs.com/docs/testing#testing-cells
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('UserProfileCell', () => {
   it('renders Loading successfully', () => {
@@ -935,7 +935,7 @@ import { standard } from './UserProfileCell.mock'
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
 //        https://cedarjs.com/docs/testing#testing-cells
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('UserProfileCell', () => {
   it('renders Loading successfully', () => {
@@ -1052,7 +1052,7 @@ import { standard } from './UserCell.mock'
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
 //        https://cedarjs.com/docs/testing#testing-cells
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('UserCell', () => {
   it('renders Loading successfully', () => {
@@ -1169,7 +1169,7 @@ import { standard } from './UserProfileCell.mock'
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
 //        https://cedarjs.com/docs/testing#testing-cells
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('UserProfileCell', () => {
   it('renders Loading successfully', () => {
@@ -1253,7 +1253,7 @@ import { standard } from './BazingaCell.mock'
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
 //        https://cedarjs.com/docs/testing#testing-cells
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('BazingaCell', () => {
   it('renders Loading successfully', () => {
@@ -1460,7 +1460,7 @@ import { standard } from './UserProfileCell.mock'
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
 //        https://cedarjs.com/docs/testing#testing-cells
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('UserProfileCell', () => {
   it('renders Loading successfully', () => {
@@ -1529,7 +1529,7 @@ import { standard } from './AddressCell.mock'
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
 //        https://cedarjs.com/docs/testing#testing-cells
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('AddressCell', () => {
   it('renders Loading successfully', () => {
@@ -1652,7 +1652,7 @@ import { standard } from './AddressesCell.mock'
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
 //        https://cedarjs.com/docs/testing#testing-cells
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('AddressesCell', () => {
   it('renders Loading successfully', () => {
@@ -1785,7 +1785,7 @@ import { standard } from './MembersCell.mock'
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
 //        https://cedarjs.com/docs/testing#testing-cells
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('MembersCell', () => {
   it('renders Loading successfully', () => {

@@ -27,7 +27,7 @@ import {
   applySrcAlias,
 } from '@cedarjs/internal/dist/build/api.js'
 import { findApiFiles } from '@cedarjs/internal/dist/files.js'
-import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
+import { getConfig, getPaths } from '@cedarjs/project-config'
 
 import { generateDiffSourceMap } from './lib/generateDiffSourceMap.js'
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
@@ -93,8 +93,6 @@ export async function buildCedarApp({
   }
 
   if (workspace.includes('api')) {
-    const isEsm = projectSideIsEsm('api')
-    const format = isEsm ? 'es' : 'cjs'
     const apiFiles = findApiFiles()
 
     const input: Record<string, string> = {}
@@ -114,7 +112,7 @@ export async function buildCedarApp({
         rollupOptions: {
           input,
           output: {
-            format,
+            format: 'es',
             preserveModules: true,
             preserveModulesRoot: cedarPaths.api.src,
             entryFileNames: '[name].js',
@@ -370,9 +368,7 @@ export async function buildCedarApp({
     plugins.push(cedarDirectoryNamedImportPlugin())
     plugins.push(cedarOtelWrappingPlugin())
     plugins.push(cedarjsJobPathInjectorPlugin())
-    plugins.push(
-      handlerAlsWrappingPlugin({ projectIsEsm: projectSideIsEsm('api') }),
-    )
+    plugins.push(handlerAlsWrappingPlugin())
   }
 
   plugins.push(cedarMockCellDataPlugin())

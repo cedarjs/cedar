@@ -227,7 +227,7 @@ const sharedConfigs = [
     ...jestDomPlugin.configs['flat/recommended'],
     languageOptions: {
       globals: {
-        ...globals.jest,
+        ...globals.vitest,
         // Cedar test globals
         mockCurrentUser: 'readonly',
         defineScenario: 'readonly',
@@ -247,7 +247,6 @@ const sharedConfigs = [
       '**/*.config.js',
       '**/*.config.cjs',
       '**/*.config.mjs',
-      '**/jest.setup.js',
     ],
     languageOptions: {
       parser: babelParser,

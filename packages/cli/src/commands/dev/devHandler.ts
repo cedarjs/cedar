@@ -393,11 +393,6 @@ export const handler = async ({
   } else {
     // Fallback: start api and web as separate processes.
     if (workspace.includes('api')) {
-      const isEsm = rootPackageJson.type === 'module'
-      const serverWatchCommand = isEsm
-        ? `cedarjs-api-server-watch`
-        : `cedar-api-server-watch`
-
       const cedarConfigPath = getConfigPath()
 
       jobs.push({
@@ -405,7 +400,7 @@ export const handler = async ({
         command: formatRunBinCommand('nodemon', [
           '--quiet',
           `--watch "${cedarConfigPath}"`,
-          `--exec "${formatRunBinCommand(serverWatchCommand)} ` +
+          `--exec "${formatRunBinCommand('cedar-api-server-watch')} ` +
             `--port ${apiAvailablePort} ` +
             `${getApiDebugFlag(apiDebugPort, apiAvailablePort)} ` +
             `| ${formatRunBinCommand('cedar-log-formatter')}"`,

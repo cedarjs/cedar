@@ -227,7 +227,6 @@ const globalTasks = () =>
           apiTasks(OUTPUT_PROJECT_PATH, {
             verbose,
             linkWithLatestFwBuild: link,
-            esm: false,
           }),
         enabled: () => !copyFromFixture,
       },

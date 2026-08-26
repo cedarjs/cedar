@@ -16,7 +16,6 @@ import { templateForFile } from '../yargsHandlerHelpers.js'
  * @param {string} options.fileName - The camelCase file name
  * @param {boolean} [options.typescript] - Whether to generate TypeScript files (defaults to JS if not provided)
  * @param {boolean} [options.tests=true] - Whether to generate test files
- * @param {boolean} [options.esm] - Whether the project runs its tests with Vitest, in which case the package gets a Vitest config of its own
  *
  * @returns {Promise<Object>} A promise that resolves to an object mapping file paths to their content
  *
@@ -29,7 +28,6 @@ import { templateForFile } from '../yargsHandlerHelpers.js'
  *   fileName: 'myPackage',
  *   typescript: true,
  *   tests: true,
- *   esm: true
  * })
  */
 export const files = async ({
@@ -39,7 +37,6 @@ export const files = async ({
   fileName,
   typescript,
   tests: generateTests = true,
-  esm = false,
   ...rest
 }: {
   name: string
@@ -48,7 +45,6 @@ export const files = async ({
   fileName: string
   typescript?: boolean
   tests?: boolean
-  esm?: boolean
   [key: string]: unknown
 }) => {
   const extension = typescript ? '.ts' : '.js'
@@ -110,20 +106,17 @@ export const files = async ({
 
     // Without a config of its own the package isn't a Vitest project, so
     // nothing — not `cedar test`, not a plain `vitest` run — picks up the
-    // test file above. Jest projects don't get one: they have no Vitest to
-    // import, and their own root config doesn't look for packages either.
-    if (esm) {
-      const vitestConfigFile = await templateForFile({
-        name,
-        side: 'packages',
-        generator: 'package',
-        templatePath: 'vitest.config.ts.template',
-        templateVars: { folderName, ...rest },
-        outputPath: path.join(folderName, `vitest.config${extension}`),
-      })
+    // test file above.
+    const vitestConfigFile = await templateForFile({
+      name,
+      side: 'packages',
+      generator: 'package',
+      templatePath: 'vitest.config.ts.template',
+      templateVars: { folderName, ...rest },
+      outputPath: path.join(folderName, `vitest.config${extension}`),
+    })
 
-      outputFiles.push(vitestConfigFile)
-    }
+    outputFiles.push(vitestConfigFile)
   }
 
   return outputFiles.reduce(async (accP, [outputPath, content]) => {

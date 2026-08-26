@@ -22,12 +22,7 @@ import {
   getApiSideBabelPluginsForVite,
   transformWithBabel,
 } from '@cedarjs/babel-config'
-import {
-  getConfig,
-  getPaths,
-  projectSideIsEsm,
-  resolveFile,
-} from '@cedarjs/project-config'
+import { getConfig, getPaths, resolveFile } from '@cedarjs/project-config'
 
 import { findApiFiles } from '../files.js'
 
@@ -123,7 +118,6 @@ const runCedarBabelTransformsPlugin = {
 
       const normalizedPath = normalizePath(args.path)
       const cedarPaths = getPaths()
-      const isEsm = projectSideIsEsm('api')
 
       // The Babel pass is only needed to apply a user's custom
       // api/babel.config.js: getApiSideBabelPluginsForVite() is empty (the
@@ -168,10 +162,7 @@ const runCedarBabelTransformsPlugin = {
       // never reaches this branch.
       const functionsDir = normalizePath(cedarPaths.api.functions)
       if (normalizedPath.startsWith(functionsDir + '/')) {
-        code =
-          applyHandlerAlsWrapping(code, {
-            projectIsEsm: isEsm,
-          }) ?? code
+        code = applyHandlerAlsWrapping(code) ?? code
       }
 
       if (normalizedPath.startsWith(normalizePath(cedarPaths.api.src) + '/')) {
@@ -289,7 +280,6 @@ function createDirectoryNamedImportVitePlugin(): Plugin {
 
 function createCedarViteApiPlugin(): Plugin {
   const cedarConfig = getConfig()
-  const isEsm = projectSideIsEsm('api')
 
   return {
     name: 'cedar-vite-api-babel-transform',
@@ -325,12 +315,9 @@ function createCedarViteApiPlugin(): Plugin {
       sourceCode =
         applyJobPathInjector(sourceCode, id, cedarPaths.api.jobs) ?? sourceCode
 
-      // Apply graphql-specific transforms on the raw TypeScript BEFORE
-      // Babel CJS compilation. The ESM-pattern regexes in these
-      // transforms require `export const handler = createGraphQLHandler(`
-      // syntax, which Babel rewrites to CJS form when the project uses
-      // "type": "commonjs". Running them first ensures the patterns
-      // always match regardless of the project's module format.
+      // Apply graphql-specific transforms on the raw TypeScript before the
+      // Babel pass, so the `export const handler = createGraphQLHandler(`
+      // pattern these transforms match is guaranteed to still be intact.
       if (
         normalizedId.endsWith('/graphql.ts') ||
         normalizedId.endsWith('/graphql.js')
@@ -385,10 +372,7 @@ function createCedarViteApiPlugin(): Plugin {
       // replaced.
       const functionsDir = normalizePath(cedarPaths.api.functions)
       if (normalizedId.startsWith(functionsDir + '/')) {
-        outputCode =
-          applyHandlerAlsWrapping(outputCode, {
-            projectIsEsm: isEsm,
-          }) ?? outputCode
+        outputCode = applyHandlerAlsWrapping(outputCode) ?? outputCode
       }
 
       if (!transformedCode) {
@@ -418,8 +402,6 @@ function createCedarViteApiPlugin(): Plugin {
 
 export const buildApiWithVite = async () => {
   const cedarPaths = getPaths()
-  const isEsm = projectSideIsEsm('api')
-  const format = isEsm ? 'es' : 'cjs'
   const apiFiles = findApiFiles()
 
   const input: Record<string, string> = {}
@@ -440,7 +422,7 @@ export const buildApiWithVite = async () => {
       rollupOptions: {
         input,
         output: {
-          format,
+          format: 'es',
           preserveModules: true,
           preserveModulesRoot: cedarPaths.api.src,
           entryFileNames: '[name].js',
@@ -554,14 +536,13 @@ export async function fixSourceMaps(
 
 function getEsbuildOptions(files: string[]): BuildOptions {
   const cedarPaths = getPaths()
-  const format = projectSideIsEsm('api') ? 'esm' : 'cjs'
 
   return {
     absWorkingDir: cedarPaths.api.base,
     entryPoints: files,
     platform: 'node',
     target: 'node24',
-    format,
+    format: 'esm',
     allowOverwrite: true,
     bundle: false,
     // Registration order matters: cedarApiGraphqlPlugin (narrow filter) must
