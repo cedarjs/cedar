@@ -69,3 +69,13 @@ token endpoints and HTTP proxy `CONNECT` requests. Fetching from a host with a
 self-signed, expired or hostname-mismatched certificate fails where it used to
 succeed. Opt out per transport with `tls: { rejectUnauthorized: false }` in
 the transport options, or per attachment with the attachment's `tls` option.
+
+## Middleware route `params` is a null-prototype object
+
+`@cedarjs/vite` matches `registerMiddleware()` route patterns with
+`find-my-way` v9. The `params` object passed to middleware as
+`options.params` has no `Object.prototype` on its chain. Reading keys,
+spreading, `Object.keys()`, the `in` operator and `JSON.stringify()` all work
+as expected, but calling `options.params.hasOwnProperty(...)` or
+`options.params.toString()` throws a `TypeError`. Use
+`Object.hasOwn(options.params, key)` for ownership checks.
