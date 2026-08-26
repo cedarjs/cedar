@@ -3,9 +3,10 @@
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
-import { transformFileSync } from '@babel/core'
 import { format } from 'prettier'
 import { glob, path } from 'zx'
+
+import { transpileTSToJS } from '@cedarjs/cli-helpers'
 
 const TS_TEMPLATE_PATH = fileURLToPath(
   new URL('../templates/ts', import.meta.url),
@@ -52,26 +53,11 @@ const { default: prettierConfig } = await import(
 for (const filePath of filePaths) {
   console.log(`• ${filePath}`)
 
-  const result = transformFileSync(filePath, {
-    cwd: TS_TEMPLATE_PATH,
-    configFile: false,
-    plugins: [
-      [
-        '@babel/plugin-transform-typescript',
-        {
-          isTSX: true,
-          allExtensions: true,
-        },
-      ],
-    ],
-    retainLines: true,
-  })
+  const source = await fs.promises.readFile(filePath, 'utf-8')
 
-  if (!result) {
-    throw new Error(`Error: Couldn't transform ${filePath}`)
-  }
+  const code = transpileTSToJS(filePath, source)
 
-  const formattedCode = await format(result.code, {
+  const formattedCode = await format(code, {
     ...prettierConfig,
     parser: 'babel',
   })
@@ -142,12 +128,12 @@ fs.writeFileSync(authFilePath, authFile)
 console.groupEnd()
 
 console.group(
-  'Removing the cell-type-annotations override from eslint.config.mjs',
+  'Removing the cell-type-annotations override from eslint.config.js',
 )
 
 // `cell-type-annotations` only matches `.tsx` Cells, so it can never fire in
 // a JS project -- drop the override rather than ship a dead rule reference.
-const eslintConfigFilePath = path.join(JS_TEMPLATE_PATH, 'eslint.config.mjs')
+const eslintConfigFilePath = path.join(JS_TEMPLATE_PATH, 'eslint.config.js')
 const eslintConfigFile = fs.readFileSync(eslintConfigFilePath, 'utf-8').replace(
   `export default [
   ...(await cedarConfig()),

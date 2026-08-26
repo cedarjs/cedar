@@ -2,7 +2,6 @@ import fs from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import path from 'path'
 
-import * as babel from '@babel/core'
 import type {
   ListrTaskWrapper,
   ListrRenderer,
@@ -13,6 +12,7 @@ import { format } from 'prettier'
 
 import { colors } from './colors.js'
 import { getPaths } from './paths.js'
+import { transpileTSToJS } from './transpileTSToJS.js'
 
 // TODO: Move this into `generateTemplate` when all templates have TS support
 /*
@@ -23,31 +23,17 @@ export const transformTSToJS = (filename: string, content: string) => {
     return content
   }
 
-  const babelFileResult = babel.transform(content, {
-    filename,
-    // If you ran `yarn cedar generate` in `./web` transformSync would import the `.babelrc.js` file,
-    // in `./web`? despite us setting `configFile: false`.
-    cwd: process.env.NODE_ENV === 'test' ? undefined : getPaths().base,
-    configFile: false,
-    plugins: [
-      [
-        '@babel/plugin-transform-typescript',
-        {
-          isTSX: true,
-          allExtensions: true,
-        },
-      ],
-    ],
-    retainLines: true,
-  })
+  let code: string
 
-  if (!babelFileResult?.code) {
-    console.error(colors.error(`Could not transform ${filename} to JS`))
+  try {
+    code = transpileTSToJS(filename, content)
+  } catch (e) {
+    console.error(colors.error(e instanceof Error ? e.message : String(e)))
 
     process.exit(1)
   }
 
-  return prettify(filename.replace(/\.ts(x)?$/, '.js$1'), babelFileResult.code)
+  return prettify(filename.replace(/\.ts(x)?$/, '.js$1'), code)
 }
 
 /**
