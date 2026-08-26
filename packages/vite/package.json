@@ -81,7 +81,7 @@
     "isbot": "5.2.1",
     "magic-string": "0.30.21",
     "oxc-parser": "0.144.0",
-    "react-server-dom-webpack": "19.2.7",
+    "react-server-dom-webpack": "19.2.8",
     "unimport": "5.7.0",
     "unplugin-auto-import": "19.3.0",
     "vite": "7.3.6",
@@ -109,8 +109,8 @@
     "concurrently": "9.2.4",
     "memfs": "4.68.1",
     "publint": "0.3.23",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "rollup": "4.60.4",
     "ts-dedent": "2.3.0",
     "typescript": "5.9.3",
@@ -120,8 +120,8 @@
     "@cedarjs/auth": "6.0.0",
     "@cedarjs/router": "6.0.0",
     "@cedarjs/web": "6.0.0",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "engines": {
     "node": ">=24"
