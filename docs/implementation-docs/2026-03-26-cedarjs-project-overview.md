@@ -389,7 +389,7 @@ It's GraphQL-only because:
 - User project is a monorepo workspace: `["api", "web"]` (+ optional `packages/*`); framework monorepo: `["packages/*"]`
 - User projects are ESM-only: root, `api/` and `web/` `package.json` all have `"type": "module"`; the API build always emits ESM and tests always run on Vitest
 - Auto-imports (Vite plugin): `gql` from graphql-tag, `context` from @cedarjs/context, `React` from react
-- Page auto-loading: `cedar-routes-auto-loader` (Vite plugin for dev/build; Babel plugin for prerender) scans `src/pages/` and auto-imports page components in `Routes.tsx`
+- Page auto-loading: `cedar-routes-auto-loader` (Vite plugin for dev/build; Rollup plugin for prerender's `buildAndImport`) scans `src/pages/` and auto-imports page components in `Routes.tsx`
 - Components/services: manual imports
 - `*Cell.tsx` → Vite plugin wraps in createCell() (exports QUERY+Loading+Success+Failure+Empty,
   or FRAGMENT+Success+Empty for fragment Cells — createCell() dispatches to createFragmentCell())

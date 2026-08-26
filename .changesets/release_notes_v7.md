@@ -34,3 +34,13 @@ This also means:
 
 If your project is still CJS, follow the ESM migration steps in the v6 upgrade
 guide before upgrading.
+
+## All framework packages are ESM-only
+
+`@cedarjs/prerender`, `@cedarjs/testing` and `@cedarjs/project-config` no
+longer ship a CommonJS build, so every `@cedarjs/*` package is ESM-only. Node
+24 handles `require()`-ing an ESM module, so config files like
+`graphql.config.cjs` (`require('@cedarjs/project-config')`) keep working. The
+only breaking case is compiling your own TypeScript straight to CommonJS with
+`tsc` and statically importing one of these packages; use a dynamic `import()`
+there.

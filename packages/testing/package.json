@@ -11,58 +11,28 @@
   "type": "module",
   "exports": {
     "./auth": {
-      "import": {
-        "types": "./dist/web/mockAuth.d.ts",
-        "default": "./dist/web/mockAuth.js"
-      },
-      "require": {
-        "types": "./dist/cjs/web/index.d.ts",
-        "default": "./dist/cjs/web/mockAuth.js"
-      }
+      "types": "./dist/web/mockAuth.d.ts",
+      "default": "./dist/web/mockAuth.js"
     },
     "./api": {
-      "import": {
-        "types": "./dist/api/index.d.ts",
-        "default": "./dist/api/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/api/index.d.ts",
-        "default": "./dist/cjs/api/index.js"
-      }
+      "types": "./dist/api/index.d.ts",
+      "default": "./dist/api/index.js"
     },
     "./api/vitest": {
       "types": "./dist/api/vitest/index.d.ts",
       "default": "./dist/api/vitest/index.js"
     },
     "./cache": {
-      "import": {
-        "types": "./dist/cache/index.d.ts",
-        "default": "./dist/cache/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/cache/index.d.ts",
-        "default": "./dist/cjs/cache/index.js"
-      }
+      "types": "./dist/cache/index.d.ts",
+      "default": "./dist/cache/index.js"
     },
     "./web": {
-      "import": {
-        "types": "./dist/web/index.d.ts",
-        "default": "./dist/web/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/web/index.d.ts",
-        "default": "./dist/cjs/web/index.js"
-      }
+      "types": "./dist/web/index.d.ts",
+      "default": "./dist/web/index.js"
     },
     "./web/MockRouter.js": {
-      "import": {
-        "types": "./dist/web/MockRouter.d.ts",
-        "default": "./dist/web/MockRouter.js"
-      },
-      "require": {
-        "types": "./dist/cjs/web/MockRouter.d.ts",
-        "default": "./dist/cjs/web/MockRouter.js"
-      }
+      "types": "./dist/web/MockRouter.d.ts",
+      "default": "./dist/web/MockRouter.js"
     },
     "./web/vitest": {
       "types": "./dist/web/vitest/index.d.ts",
@@ -76,7 +46,6 @@
     "build": "node ./build.mts && yarn build:types",
     "build:pack": "yarn pack -o cedarjs-testing.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
-    "build:types-cjs": "tsc --build --verbose ./tsconfig.cjs.json",
     "build:watch": "nodemon --watch src --ext 'js,jsx,ts,tsx' --ignore dist --exec 'yarn build'",
     "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",
