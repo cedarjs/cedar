@@ -26,11 +26,6 @@ export interface Flags {
   /** changes what babel-plugin-redwood-routes-auto-loader does */
   forPrerender?: boolean
   /**
-   * will enable presets to supporting linting in the absence of typescript
-   * related presets/plugins/parsers
-   */
-  forJavaScriptLinting?: boolean
-  /**
    * skip src/ alias and directory-named-import handling. The Vite
    * `cedarjs-resolve-cedar-style-imports` plugin covers these
    */
@@ -182,7 +177,7 @@ export const getWebSideOverrides = (
 export const getWebSideBabelPresets = (options: Flags) => {
   // When we perform prerendering we don't use vite, so we need to add the
   // appropriate presets for react, env, and typescript, etc.
-  if (options.forPrerender || options.forJavaScriptLinting) {
+  if (options.forPrerender) {
     let reactPresetConfig: babel.PluginItem = { runtime: 'automatic' }
 
     // This is a special case, where @babel/preset-react needs config

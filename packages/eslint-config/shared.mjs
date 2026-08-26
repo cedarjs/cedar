@@ -12,8 +12,6 @@
 // [^1] https://eslint.org/docs/rules/
 // [^2] https://www.npmjs.com/package/eslint-plugin-react#list-of-supported-rules
 
-import babelParser from '@babel/eslint-parser'
-import babelPlugin from '@babel/eslint-plugin'
 import js from '@eslint/js'
 import importPlugin from 'eslint-plugin-import-x'
 import jestDomPlugin from 'eslint-plugin-jest-dom'
@@ -49,21 +47,20 @@ const sharedConfigs = [
   // Base configuration
   {
     plugins: {
-      '@babel': babelPlugin,
       'import-x': importPlugin,
       'jsx-a11y': jsxA11yPlugin,
       'react-hooks': reactHooksPlugin,
       '@cedarjs': cedarjsPlugin,
     },
     languageOptions: {
-      parser: babelParser,
+      // typescript-eslint's parser handles both JavaScript and TypeScript
+      // files without type information. It accepts JSX in `.js` and `.jsx`
+      // files on its own and decides TS vs TSX by extension, so no
+      // `ecmaFeatures.jsx` is needed.
+      parser: tseslint.parser,
       parserOptions: {
-        requireConfigFile: false,
         ecmaVersion: 'latest',
         sourceType: 'module',
-        ecmaFeatures: {
-          jsx: true,
-        },
       },
     },
     settings: {
@@ -241,17 +238,13 @@ const sharedConfigs = [
   // Config files
   {
     files: [
-      '.babelrc.js',
-      'babel.config.js',
       '.eslintrc.js',
       '**/*.config.js',
       '**/*.config.cjs',
       '**/*.config.mjs',
     ],
     languageOptions: {
-      parser: babelParser,
       parserOptions: {
-        requireConfigFile: false,
         ecmaVersion: 'latest',
       },
       globals: {
