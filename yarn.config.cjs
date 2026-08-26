@@ -6,6 +6,8 @@ const path = require('node:path')
 
 const semver = require('semver')
 
+const { getCurrentGitBranch } = require('./tasks/git-hooks/git-branch.cjs')
+
 /**
  * @typedef {import('@yarnpkg/types').Yarn.Constraints.Context} Context
  * @typedef {import('@yarnpkg/types').Yarn.Constraints.Workspace} Workspace
@@ -386,7 +388,7 @@ function enforceFieldsWithValuesOnAllWorkspaces({ Yarn }, fields) {
 
 module.exports = defineConfig({
   constraints: async (ctx) => {
-    const branch = await gitBranch()
+    const branch = getCurrentGitBranch()
 
     enforceConsistentDependenciesAcrossTheProject(ctx)
     if (branch !== 'next' && !branch?.startsWith('release/')) {
@@ -410,39 +412,3 @@ module.exports = defineConfig({
     await enforceEsbuildMatchesVite(ctx)
   },
 })
-
-function gitBranch() {
-  function parseBranch(buf) {
-    const match = /ref: refs\/heads\/([^\n]+)/.exec(buf.toString())
-    return match ? match[1] : null
-  }
-
-  function findGitHead(startDir = process.cwd()) {
-    let currentDir = path.resolve(startDir)
-    let foundGitHeadPath
-
-    while (!foundGitHeadPath) {
-      const gitHeadPath = path.join(currentDir, '.git', 'HEAD')
-
-      if (fs.existsSync(gitHeadPath)) {
-        foundGitHeadPath = gitHeadPath
-      } else {
-        const parentDir = path.dirname(currentDir)
-
-        if (parentDir === currentDir) {
-          throw new Error('.git/HEAD does not exist')
-        }
-
-        currentDir = parentDir
-      }
-    }
-
-    return foundGitHeadPath
-  }
-
-  const promise = fs.promises
-    .readFile(findGitHead())
-    .then((buf) => parseBranch(buf))
-
-  return promise
-}
