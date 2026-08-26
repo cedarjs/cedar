@@ -77,7 +77,7 @@
     "dotenv-defaults": "5.0.2",
     "express": "4.22.2",
     "fast-glob": "3.3.3",
-    "find-my-way": "8.2.2",
+    "find-my-way": "9.7.0",
     "http-proxy-middleware": "3.0.7",
     "isbot": "5.2.1",
     "magic-string": "0.30.21",

@@ -81,3 +81,13 @@ generates the `<body>` tag from `mj-body` (the `class` attribute lands on
 unless `includePath` is configured, and accepts any string for
 `border-radius`. Expect small differences in the generated HTML if you
 compare rendered output byte for byte.
+
+## Middleware route `params` is a null-prototype object
+
+`@cedarjs/vite` matches `registerMiddleware()` route patterns with
+`find-my-way` v9. The `params` object passed to middleware as
+`options.params` has no `Object.prototype` on its chain. Reading keys,
+spreading, `Object.keys()`, the `in` operator and `JSON.stringify()` all work
+as expected, but calling `options.params.hasOwnProperty(...)` or
+`options.params.toString()` throws a `TypeError`. Use
+`Object.hasOwn(options.params, key)` for ownership checks.
