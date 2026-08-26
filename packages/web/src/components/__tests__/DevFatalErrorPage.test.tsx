@@ -79,7 +79,7 @@ describe('DevFatalErrorPage', () => {
       [
         '## Error',
         '',
-        'Error: Test error message',
+        '`Error`: `Test error message`',
         '',
         '## Stack trace',
         '',
@@ -140,6 +140,34 @@ describe('DevFatalErrorPage', () => {
     )
     expect(window.navigator.clipboard.writeText).toHaveBeenCalledWith(
       expect.stringContaining('```graphql\nquery GetUser { user { id } }\n```'),
+    )
+  })
+
+  it('uses safe Markdown delimiters for backticks in copied details', async () => {
+    const user = userEvent.setup()
+    vi.spyOn(window.navigator.clipboard, 'writeText')
+
+    const error: any = new Error('Message with `inline` code')
+    error.mostRecentRequest = {
+      query: ['query GetCode {', '  code', '}', '```'].join('\n'),
+      operationName: 'GetCode',
+      operationKind: 'query',
+      variables: { markdown: '```' },
+    }
+
+    render(<DevFatalErrorPage error={error} />)
+    await user.click(screen.getByRole('button', { name: /Copy All/ }))
+
+    expect(window.navigator.clipboard.writeText).toHaveBeenCalledWith(
+      expect.stringContaining('`Error`: ``Message with `inline` code``'),
+    )
+    expect(window.navigator.clipboard.writeText).toHaveBeenCalledWith(
+      expect.stringContaining('````json\n{\n  "markdown": "```"\n}\n````'),
+    )
+    expect(window.navigator.clipboard.writeText).toHaveBeenCalledWith(
+      expect.stringContaining(
+        '````graphql\nquery GetCode {\n  code\n}\n```\n````',
+      ),
     )
   })
 

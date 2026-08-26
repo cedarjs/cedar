@@ -43,13 +43,35 @@ type ErrorWithRequestMeta = Error & {
   mostRecentResponse?: any
 }
 
+function formatMarkdownCode(value: string): string {
+  const fence = '`'.repeat(longestBacktickRun(value) + 1)
+  const padding = value.startsWith('`') || value.endsWith('`') ? ' ' : ''
+
+  return `${fence}${padding}${value}${padding}${fence}`
+}
+
+function formatMarkdownCodeBlock(value: string, language: string): string {
+  const fence = '`'.repeat(Math.max(3, longestBacktickRun(value) + 1))
+
+  return `${fence}${language}\n${value}\n${fence}`
+}
+
+function longestBacktickRun(value: string): number {
+  return Array.from(value.matchAll(/`+/g)).reduce(
+    (longest, [run]) => Math.max(longest, run.length),
+    0,
+  )
+}
+
 function formatErrorForClipboard(
   stack: StackTracey,
   typeName: string,
   msg: string,
   errorWithMeta: ErrorWithRequestMeta,
 ): string {
-  const sections = [`## Error\n\n${typeName}: ${msg}`]
+  const sections = [
+    `## Error\n\n${formatMarkdownCode(typeName)}: ${formatMarkdownCode(msg)}`,
+  ]
 
   const mostRecentRequest =
     errorWithMeta.mostRecentRequest ||
@@ -73,15 +95,11 @@ function formatErrorForClipboard(
         '',
         '### Variables',
         '',
-        '```json',
-        variables,
-        '```',
+        formatMarkdownCodeBlock(variables, 'json'),
         '',
         '### Query',
         '',
-        '```graphql',
-        mostRecentRequest.query,
-        '```',
+        formatMarkdownCodeBlock(mostRecentRequest.query, 'graphql'),
       ].join('\n'),
     )
   }
@@ -95,7 +113,7 @@ function formatErrorForClipboard(
       response = 'Unable to stringify response'
     }
 
-    sections.push(`## Response\n\n\`\`\`json\n${response}\n\`\`\``)
+    sections.push(`## Response\n\n${formatMarkdownCodeBlock(response, 'json')}`)
   }
 
   const stackEntries = stack.items.map((entry, i) => {
@@ -116,14 +134,14 @@ function formatErrorForClipboard(
       const start = Math.max(0, lineIndex - window)
       const end = Math.min(sourceFile.lines.length, lineIndex + window + 1)
 
-      lines.push('', '```text')
+      const sourceLines = []
       for (let idx = start; idx < end; idx++) {
         const marker = idx === lineIndex ? '>' : ' '
-        lines.push(
+        sourceLines.push(
           `${marker} ${(idx + 1).toString().padStart(4)} | ${sourceFile.lines[idx]}`,
         )
       }
-      lines.push('```')
+      lines.push('', formatMarkdownCodeBlock(sourceLines.join('\n'), 'text'))
     }
 
     return lines.join('\n')
