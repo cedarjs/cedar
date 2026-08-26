@@ -44,21 +44,19 @@ export async function redwoodFastifyWeb(
   // and the other prerendered HTML entry points — so it all has to stay
   // revalidate-on-every-request, or a deploy wouldn't be picked up.
   //
-  // `cacheControl: false` turns off `@fastify/static`'s own Cache-Control
-  // handling. It's not just redundant with `setHeaders` below, it actively
-  // conflicts: `@fastify/static` calls `setHeaders` and *then* writes its own
-  // Cache-Control header afterwards, clobbering whatever we set here.
+  // `cacheControl: false` disables `@fastify/static`'s own Cache-Control
+  // handling, so the header set in `setHeaders` below is the only one.
   const assetsDir = path.join(getPaths().web.dist, 'assets') + path.sep
 
   fastify.register(fastifyStatic, {
     root: getPaths().web.dist,
     cacheControl: false,
-    setHeaders: (res, filePath) => {
+    setHeaders: (reply, filePath) => {
       const isHashedAsset =
         filePath.startsWith(assetsDir) &&
         HASHED_ASSET_FILENAME.test(path.basename(filePath))
 
-      res.setHeader(
+      reply.header(
         'Cache-Control',
         isHashedAsset
           ? `public, max-age=${ONE_YEAR_IN_SECONDS}, immutable`
