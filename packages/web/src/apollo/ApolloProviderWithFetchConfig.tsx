@@ -25,6 +25,7 @@ import type {
   GraphQLClientConfigProp,
 } from './apolloLinkTypes.js'
 import { ErrorBoundary } from './ErrorBoundary.js'
+import { getOperationKind } from './links.js'
 import * as SSELinkExports from './sseLink.js'
 
 // Not sure why we need to import it this way for legacy builds to work
@@ -95,7 +96,10 @@ export function ApolloProviderWithFetchConfig({
 
     data.mostRecentRequest = {}
     data.mostRecentRequest.operationName = operationName
-    data.mostRecentRequest.operationKind = query?.kind.toString()
+    data.mostRecentRequest.operationKind = getOperationKind(
+      query,
+      operationName,
+    )
     data.mostRecentRequest.variables = variables
     data.mostRecentRequest.query = query && print(operation.query)
 

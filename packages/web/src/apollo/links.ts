@@ -1,7 +1,16 @@
 import { ApolloLink, HttpLink } from '@apollo/client'
 import { SetContextLink } from '@apollo/client/link/context'
+import type { DocumentNode } from 'graphql'
+import { getOperationAST } from 'graphql'
 import { print } from 'graphql/language/printer.js'
 import { Observable } from 'rxjs'
+
+export function getOperationKind(
+  query: DocumentNode,
+  operationName?: string,
+): string | undefined {
+  return getOperationAST(query, operationName)?.operation
+}
 
 export function createHttpLink(
   uri: string,
@@ -27,7 +36,7 @@ function enhanceError(operation: ApolloLink.Operation, error: any) {
 
   error.__RedwoodEnhancedError = {
     operationName,
-    operationKind: query?.kind.toString(),
+    operationKind: getOperationKind(query, operationName),
     variables,
     query: query && print(query),
   }
