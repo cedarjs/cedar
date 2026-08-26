@@ -44,3 +44,13 @@ longer ship a CommonJS build, so every `@cedarjs/*` package is ESM-only. Node
 only breaking case is compiling your own TypeScript straight to CommonJS with
 `tsc` and statically importing one of these packages; use a dynamic `import()`
 there.
+
+## Nodemailer 9
+
+`@cedarjs/mailer-handler-nodemailer` uses Nodemailer 9. The handler API is
+unchanged, but Nodemailer now validates TLS certificates when it fetches
+remote content over HTTPS: attachments with an `href` or `path` URL, OAuth2
+token endpoints and HTTP proxy `CONNECT` requests. Fetching from a host with a
+self-signed, expired or hostname-mismatched certificate fails where it used to
+succeed. Opt out per transport with `tls: { rejectUnauthorized: false }` in
+the transport options, or per attachment with the attachment's `tls` option.
