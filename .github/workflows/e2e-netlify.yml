@@ -22,7 +22,7 @@ jobs:
         uses: ./.github/actions/set-up-job
 
       - name: 📋 Set up test project
-        run: cp -r __fixtures__/test-project-esm ../cedar-test-app
+        run: cp -r __fixtures__/test-project ../cedar-test-app
 
       - name: 🔗 Link local packages via tarsync
         run: yarn project:tarsync ../cedar-test-app

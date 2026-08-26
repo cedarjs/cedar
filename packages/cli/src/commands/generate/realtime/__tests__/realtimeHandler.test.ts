@@ -7,12 +7,10 @@ import { handler } from '../realtimeHandler.js'
 const mocks: {
   realtimeTs: string
   serverTs: string
-  isEsm: boolean
   writtenFiles: Record<string, string>
 } = vi.hoisted(() => ({
   realtimeTs: '',
   serverTs: '',
-  isEsm: false,
   writtenFiles: {},
 }))
 
@@ -62,7 +60,6 @@ vi.mock('@cedarjs/project-config', () => ({
   },
   getConfig: () => ({ experimental: { streamingSsr: { enabled: false } } }),
   resolveFile: (path: string) => path,
-  projectIsEsm: () => mocks.isEsm,
 }))
 
 beforeEach(() => {
@@ -71,7 +68,6 @@ beforeEach(() => {
   vi.spyOn(process, 'exit').mockImplementation(() => void 0 as never)
   mocks.realtimeTs = 'export const realtime: CedarRealtimeOptions = {}'
   mocks.serverTs = 'export const serverFile: RedwoodServerFileOptions = {}'
-  mocks.isEsm = false
 })
 
 afterEach(() => {
@@ -136,9 +132,7 @@ describe('realtimeHandler', () => {
     )
   })
 
-  it('should use the correct graphql-tag import in ESM projects', async () => {
-    mocks.isEsm = true
-
+  it('should use a named graphql-tag import', async () => {
     await handler({
       name: 'foobar',
       type: 'subscription',

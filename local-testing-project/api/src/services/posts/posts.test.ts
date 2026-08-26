@@ -7,7 +7,7 @@ import type { StandardScenario } from './posts.scenarios.js'
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
 //       https://cedarjs.com/docs/testing#testing-services
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('posts', () => {
   scenario('returns all posts', async (scenario: StandardScenario) => {
@@ -25,13 +25,13 @@ describe('posts', () => {
   scenario('creates a post', async (scenario: StandardScenario) => {
     const result = await createPost({
       input: {
-        title: 'StringUnique',
+        title: 'String',
         body: 'String',
         authorId: scenario.post.two.authorId,
       },
     })
 
-    expect(result.title).toEqual('StringUnique')
+    expect(result.title).toEqual('String')
     expect(result.body).toEqual('String')
     expect(result.authorId).toEqual(scenario.post.two.authorId)
   })

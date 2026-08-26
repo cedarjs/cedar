@@ -1,13 +1,21 @@
 {
   "name": "api",
+  "type": "module",
   "version": "0.0.0",
   "private": true,
   "dependencies": {
-    "@cedarjs/api": "4.1.0",
-    "@cedarjs/auth-dbauth-api": "4.1.0",
-    "@cedarjs/graphql-server": "4.1.0",
+    "@cedarjs/api": "6.0.0",
+    "@cedarjs/auth-dbauth-api": "6.0.0",
+    "@cedarjs/context": "6.0.0",
+    "@cedarjs/graphql-server": "6.0.0",
     "@my-org/validators": "workspace:*",
     "@prisma/adapter-better-sqlite3": "7.8.0",
-    "better-sqlite3": "12.11.1"
+    "@prisma/client": "7.8.0",
+    "better-sqlite3": "12.11.1",
+    "graphql-tag": "2.12.6"
+  },
+  "devDependencies": {
+    "@cedarjs/vite": "6.0.0",
+    "vitest": "4.1.10"
   }
 }

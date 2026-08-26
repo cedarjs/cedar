@@ -63,9 +63,7 @@
     "tsc": "./dist/bins/tsc.js"
   },
   "files": [
-    "dist",
-    "apollo",
-    "toast"
+    "dist"
   ],
   "scripts": {
     "build": "node ./build.ts",
@@ -114,16 +112,16 @@
     "concurrently": "9.2.4",
     "nodemon": "3.1.14",
     "publint": "0.3.23",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "tstyche": "5.0.2",
     "typescript": "5.9.3",
     "vitest": "4.1.10"
   },
   "peerDependencies": {
     "@cedarjs/auth": "workspace:*",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "engines": {
     "node": ">=24"

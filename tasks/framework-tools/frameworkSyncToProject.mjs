@@ -42,7 +42,6 @@ const ignored = [
   /__mocks__/,
   /__tests__/,
   /\.test\./,
-  /jest.config.{js,ts}/,
 
   /README.md/,
 
@@ -51,7 +50,6 @@ const ignored = [
 
   /tsconfig.tsbuildinfo/,
   /tsconfig.build.tsbuildinfo/,
-  /tsconfig.cjs.tsbuildinfo/,
 
   (filePath) => IGNORE_EXTENSIONS.some((ext) => filePath.endsWith(ext)),
 ]
@@ -273,9 +271,6 @@ async function main() {
       )
       await rimraf(
         path.join(path.dirname(packageJsonPath), 'tsconfig.build.tsbuildinfo'),
-      )
-      await rimraf(
-        path.join(path.dirname(packageJsonPath), 'tsconfig.cjs.tsbuildinfo'),
       )
 
       logStatus(`Building ${c.magenta(packageName)}...`)

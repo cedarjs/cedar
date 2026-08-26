@@ -96,7 +96,7 @@ test('api prebuild uses babel config only from the api side root', () => {
   expect(code).not.toContain(`import kitty from "kitty-purr"`)
 })
 
-test('jest mock statements also handle', () => {
+test('mock statements also get their import paths rewritten', () => {
   const pathToTest = path.join(getPaths().api.services, 'todos/todos.test.js')
 
   const code = fs.readFileSync(pathToTest, 'utf-8')
@@ -104,17 +104,16 @@ test('jest mock statements also handle', () => {
   const defaultOptions = getApiSideDefaultBabelConfig()
 
   // Step 1: prebuild service/todos.test.js
-  const outputForJest = babel.transform(code, {
+  const output = babel.transform(code, {
     ...defaultOptions,
     filename: pathToTest,
     cwd: getPaths().api.base,
-    // We override the plugins, to match
-    // packages/testing/src/config/jest/api/jest-preset.ts
+    // Use Cedar's default (non-Vite) api-side Babel plugins
     plugins: getApiSideBabelPlugins(),
   })?.code
 
   // Step 2: check that output has correct import statement path
-  expect(outputForJest).toContain('import dog from "../../lib/dog"')
-  // Step 3: check that output has correct jest.mock path
-  expect(outputForJest).toContain('jest.mock("../../lib/dog"')
+  expect(output).toContain('import dog from "../../lib/dog.js"')
+  // Step 3: check that output has correct mock path
+  expect(output).toContain('mock("../../lib/dog.js"')
 })

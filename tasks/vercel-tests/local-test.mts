@@ -73,7 +73,7 @@ function assert(condition: boolean, msg: string) {
 
 const SCRIPT_DIR = new URL('.', import.meta.url).pathname
 const REPO_ROOT = path.join(SCRIPT_DIR, '..', '..')
-const FIXTURE_DIR = path.join(REPO_ROOT, '__fixtures__', 'test-project-esm')
+const FIXTURE_DIR = path.join(REPO_ROOT, '__fixtures__', 'test-project')
 
 function cleanup() {
   if (!args.keep && testProjectDir && fs.existsSync(testProjectDir)) {

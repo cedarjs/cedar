@@ -1,5 +1,6 @@
 {
   "name": "web",
+  "type": "module",
   "version": "0.0.0",
   "private": true,
   "browserslist": {
@@ -11,21 +12,25 @@
     ]
   },
   "dependencies": {
-    "@cedarjs/auth-dbauth-web": "4.1.0",
-    "@cedarjs/forms": "4.1.0",
-    "@cedarjs/router": "4.1.0",
-    "@cedarjs/web": "4.1.0",
+    "@cedarjs/auth-dbauth-web": "6.0.0",
+    "@cedarjs/forms": "6.0.0",
+    "@cedarjs/router": "6.0.0",
+    "@cedarjs/web": "6.0.0",
     "@my-org/validators": "workspace:*",
     "humanize-string": "2.1.0",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
-    "@cedarjs/vite": "4.1.0",
+    "@cedarjs/testing": "6.0.0",
+    "@cedarjs/vite": "6.0.0",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
-    "autoprefixer": "^10.4.27",
-    "postcss": "^8.5.12",
-    "tailwindcss": "^3.4.17"
+    "autoprefixer": "^10.5.4",
+    "postcss": "^8.5.26",
+    "tailwindcss": "^3.4.17",
+    "vite": "7.3.6"
   }
 }

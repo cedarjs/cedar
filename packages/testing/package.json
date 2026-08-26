@@ -10,92 +10,29 @@
   "license": "MIT",
   "type": "module",
   "exports": {
-    "./config/jest/web": {
-      "default": "./config/jest/web/index.js"
-    },
-    "./config/jest/api": {
-      "default": "./config/jest/api/index.js"
-    },
-    "./config/jest/api/jest-preset": {
-      "default": "./config/jest/api/jest-preset.js"
-    },
-    "./config/jest/web/jest-preset": {
-      "default": "./config/jest/web/jest-preset.js"
-    },
-    "./dist/cjs/api/scenario.js": {
-      "default": "./dist/cjs/api/scenario.js"
-    },
-    "./dist/cjs/api/checkTestDatabase.js": {
-      "default": "./dist/cjs/api/checkTestDatabase.js"
-    },
-    "./dist/cjs/web/findCellMocks": {
-      "default": "./dist/cjs/web/findCellMocks.js"
-    },
-    "./dist/cjs/web/findCellMocks.js": {
-      "default": "./dist/cjs/web/findCellMocks.js"
-    },
-    "./dist/cjs/web/mockRequests": {
-      "default": "./dist/cjs/web/mockRequests.js"
-    },
-    "./dist/cjs/web/mockRequests.js": {
-      "default": "./dist/cjs/web/mockRequests.js"
-    },
-    "./dist/cjs/web/fileMock.js": {
-      "default": "./dist/cjs/web/fileMock.js"
-    },
     "./auth": {
-      "import": {
-        "types": "./dist/web/mockAuth.d.ts",
-        "default": "./dist/web/mockAuth.js"
-      },
-      "require": {
-        "types": "./dist/cjs/web/index.d.ts",
-        "default": "./dist/cjs/web/mockAuth.js"
-      }
+      "types": "./dist/web/mockAuth.d.ts",
+      "default": "./dist/web/mockAuth.js"
     },
     "./api": {
-      "import": {
-        "types": "./dist/api/index.d.ts",
-        "default": "./dist/api/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/api/index.d.ts",
-        "default": "./dist/cjs/api/index.js"
-      }
+      "types": "./dist/api/index.d.ts",
+      "default": "./dist/api/index.js"
     },
     "./api/vitest": {
       "types": "./dist/api/vitest/index.d.ts",
       "default": "./dist/api/vitest/index.js"
     },
     "./cache": {
-      "import": {
-        "types": "./dist/cache/index.d.ts",
-        "default": "./dist/cache/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/cache/index.d.ts",
-        "default": "./dist/cjs/cache/index.js"
-      }
+      "types": "./dist/cache/index.d.ts",
+      "default": "./dist/cache/index.js"
     },
     "./web": {
-      "import": {
-        "types": "./dist/web/index.d.ts",
-        "default": "./dist/web/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/web/index.d.ts",
-        "default": "./dist/cjs/web/index.js"
-      }
+      "types": "./dist/web/index.d.ts",
+      "default": "./dist/web/index.js"
     },
     "./web/MockRouter.js": {
-      "import": {
-        "types": "./dist/web/MockRouter.d.ts",
-        "default": "./dist/web/MockRouter.js"
-      },
-      "require": {
-        "types": "./dist/cjs/web/MockRouter.d.ts",
-        "default": "./dist/cjs/web/MockRouter.js"
-      }
+      "types": "./dist/web/MockRouter.d.ts",
+      "default": "./dist/web/MockRouter.js"
     },
     "./web/vitest": {
       "types": "./dist/web/vitest/index.d.ts",
@@ -103,14 +40,12 @@
     }
   },
   "files": [
-    "config",
     "dist"
   ],
   "scripts": {
     "build": "node ./build.mts && yarn build:types",
     "build:pack": "yarn pack -o cedarjs-testing.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
-    "build:types-cjs": "tsc --build --verbose ./tsconfig.cjs.json",
     "build:watch": "nodemon --watch src --ext 'js,jsx,ts,tsx' --ignore dist --exec 'yarn build'",
     "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",
@@ -119,8 +54,6 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@babel/preset-env": "7.29.7",
-    "@cedarjs/babel-config": "workspace:*",
     "@cedarjs/context": "workspace:*",
     "@cedarjs/graphql-server": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
@@ -133,12 +66,8 @@
     "@types/jest": "29.5.14",
     "@types/node": "24.10.4",
     "ansis": "4.3.1",
-    "babel-jest": "^29.7.0",
     "fast-glob": "3.3.3",
-    "jest": "29.7.0",
-    "jest-environment-jsdom": "29.7.0",
-    "jest-fixed-jsdom": "0.0.11",
-    "jest-watch-typeahead": "2.2.2",
+    "jsdom": "27.4.0",
     "msw": "2.15.0",
     "ts-toolbelt": "9.6.0",
     "unplugin-auto-import": "19.3.0"
@@ -150,7 +79,6 @@
     "@cedarjs/router": "workspace:*",
     "@cedarjs/web": "workspace:*",
     "concurrently": "9.2.4",
-    "jsdom": "27.4.0",
     "publint": "0.3.23",
     "typescript": "5.9.3",
     "vitest": "4.1.10"

@@ -5,5 +5,5 @@
     "tsBuildInfoFile": "./tsconfig.build.tsbuildinfo"
   },
   "include": ["src", "ambient.d.ts"],
-  "exclude": ["**/__tests__", "src/runPrerender.tsx", "src/index.ts"]
+  "exclude": ["**/__tests__"]
 }
