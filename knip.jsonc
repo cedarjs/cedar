@@ -109,7 +109,10 @@
     "packages/vite": {
       // publint: only invoked via `concurrently`'s `yarn:publint` job syntax
       // in the "check:package" script, which knip doesn't parse.
-      "ignoreDependencies": ["publint"]
+      // @babel/preset-typescript: never imported, only named as a string in
+      // the `presets` option passed to babel in
+      // src/plugins/vite-plugin-rsc-transform-server.ts.
+      "ignoreDependencies": ["publint", "@babel/preset-typescript"]
     },
     "packages/auth-providers/*/{api,setup,middleware}": {
       // publint: only invoked via `concurrently`'s `yarn:publint` job syntax
