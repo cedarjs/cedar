@@ -322,7 +322,6 @@ exports[`in javascript (default) mode > creates a new component 1`] = `undefined
 exports[`in javascript (default) mode > creates a new component with int foreign keys converted in onSave 1`] = `
 "import { navigate, routes } from '@cedarjs/router'
 import { useMutation } from '@cedarjs/web'
-
 import { toast } from '@cedarjs/web/toast'
 
 import UserProfileForm from 'src/components/UserProfileForm'
@@ -420,7 +419,6 @@ export const Success = ({ post }) => {
 exports[`in javascript (default) mode > creates a show component 1`] = `
 "import { Link, routes, navigate } from '@cedarjs/router'
 import { useMutation } from '@cedarjs/web'
-
 import { toast } from '@cedarjs/web/toast'
 
 import { checkboxInputTag, jsonDisplay, timeTag } from 'src/lib/formatters.js'
@@ -955,7 +953,6 @@ exports[`in javascript (default) mode > creates an edit cell 1`] = `undefined`;
 
 exports[`in javascript (default) mode > creates an edit component with int foreign keys converted in onSave 1`] = `
 "import { navigate, routes } from '@cedarjs/router'
-
 import { useMutation } from '@cedarjs/web'
 import { toast } from '@cedarjs/web/toast'
 
@@ -1080,7 +1077,6 @@ export const Success = ({ posts }) => {
 exports[`in javascript (default) mode > creates an index component 1`] = `
 "import { Link, routes } from '@cedarjs/router'
 import { useMutation } from '@cedarjs/web'
-
 import { toast } from '@cedarjs/web/toast'
 
 import { QUERY } from 'src/components/PostsCell'

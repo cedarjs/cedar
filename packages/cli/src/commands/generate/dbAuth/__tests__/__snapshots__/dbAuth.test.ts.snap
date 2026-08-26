@@ -438,7 +438,6 @@ const SignupPage = () => {
                       },
                     }}
                   />
-
                   <FieldError name="username" className="rw-field-error" />
 
                   <Label
@@ -460,7 +459,6 @@ const SignupPage = () => {
                       },
                     }}
                   />
-
                   <FieldError name="secret" className="rw-field-error" />
 
                   <div className="rw-button-group">
@@ -918,7 +916,6 @@ const SignupPage = () => {
                       },
                     }}
                   />
-
                   <FieldError name="username" className="rw-field-error" />
 
                   <Label
@@ -940,7 +937,6 @@ const SignupPage = () => {
                       },
                     }}
                   />
-
                   <FieldError name="secret" className="rw-field-error" />
 
                   <div className="rw-button-group">
@@ -1398,7 +1394,6 @@ const SignupPage = () => {
                       },
                     }}
                   />
-
                   <FieldError name="email" className="rw-field-error" />
 
                   <Label
@@ -1420,7 +1415,6 @@ const SignupPage = () => {
                       },
                     }}
                   />
-
                   <FieldError name="secret" className="rw-field-error" />
 
                   <div className="rw-button-group">
@@ -1878,7 +1872,6 @@ const SignupPage = () => {
                       },
                     }}
                   />
-
                   <FieldError name="email" className="rw-field-error" />
 
                   <Label
@@ -1900,7 +1893,6 @@ const SignupPage = () => {
                       },
                     }}
                   />
-
                   <FieldError name="secret" className="rw-field-error" />
 
                   <div className="rw-button-group">
@@ -2490,7 +2482,6 @@ const SignupPage = () => {
                       },
                     }}
                   />
-
                   <FieldError name="email" className="rw-field-error" />
 
                   <Label
@@ -2512,7 +2503,6 @@ const SignupPage = () => {
                       },
                     }}
                   />
-
                   <FieldError name="secret" className="rw-field-error" />
 
                   <div className="rw-button-group">
@@ -3102,7 +3092,6 @@ const SignupPage = () => {
                       },
                     }}
                   />
-
                   <FieldError name="email" className="rw-field-error" />
 
                   <Label
@@ -3124,7 +3113,6 @@ const SignupPage = () => {
                       },
                     }}
                   />
-
                   <FieldError name="secret" className="rw-field-error" />
 
                   <div className="rw-button-group">
@@ -3588,7 +3576,6 @@ const SignupPage = () => {
                       },
                     }}
                   />
-
                   <FieldError name="email" className="rw-field-error" />
 
                   <Label
@@ -3610,7 +3597,6 @@ const SignupPage = () => {
                       },
                     }}
                   />
-
                   <FieldError name="password" className="rw-field-error" />
 
                   <div className="rw-button-group">
@@ -4074,7 +4060,6 @@ const SignupPage = () => {
                       },
                     }}
                   />
-
                   <FieldError name="email" className="rw-field-error" />
 
                   <Label
@@ -4096,7 +4081,6 @@ const SignupPage = () => {
                       },
                     }}
                   />
-
                   <FieldError name="password" className="rw-field-error" />
 
                   <div className="rw-button-group">
@@ -4560,7 +4544,6 @@ const SignupPage = () => {
                       },
                     }}
                   />
-
                   <FieldError name="username" className="rw-field-error" />
 
                   <Label
@@ -4582,7 +4565,6 @@ const SignupPage = () => {
                       },
                     }}
                   />
-
                   <FieldError name="password" className="rw-field-error" />
 
                   <div className="rw-button-group">

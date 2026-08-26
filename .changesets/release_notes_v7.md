@@ -59,3 +59,25 @@ file on the web side that contains JSX fails `yarn cedar build web` with a
 parse error (`Expression expected`) pointing at the first JSX tag. Rename such
 files to `.jsx`. The pre-upgrade check run by `yarn cedar upgrade` lists every
 `.js` file it finds JSX in.
+
+## Nodemailer 9
+
+`@cedarjs/mailer-handler-nodemailer` uses Nodemailer 9. The handler API is
+unchanged, but Nodemailer now validates TLS certificates when it fetches
+remote content over HTTPS: attachments with an `href` or `path` URL, OAuth2
+token endpoints and HTTP proxy `CONNECT` requests. Fetching from a host with a
+self-signed, expired or hostname-mismatched certificate fails where it used to
+succeed. Opt out per transport with `tls: { rejectUnauthorized: false }` in
+the transport options, or per attachment with the attachment's `tls` option.
+
+## MJML mailer renderer uses MJML 5
+
+`@cedarjs/mailer-renderer-mjml-react` renders with MJML 5 and
+`@faire/mjml-react` 4. Rendering is asynchronous, which `Mailer.send` handles
+transparently; only code that calls `MJMLReactRenderer.render()` directly
+needs to `await` the result. MJML 5 minifies with htmlnano and cssnano,
+generates the `<body>` tag from `mj-body` (the `class` attribute lands on
+`<body>`, `background-color` only on the inner `div`), ignores `mj-include`
+unless `includePath` is configured, and accepts any string for
+`border-radius`. Expect small differences in the generated HTML if you
+compare rendered output byte for byte.
