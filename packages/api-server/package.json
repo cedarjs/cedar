@@ -124,7 +124,7 @@
     "memfs": "4.68.1",
     "pino": "9.7.0",
     "pino-abstract-transport": "1.2.0",
-    "publint": "0.3.23",
+    "publint": "0.3.24",
     "typescript": "5.9.3",
     "vitest": "4.1.10"
   },
