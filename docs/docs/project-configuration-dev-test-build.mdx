@@ -9,54 +9,57 @@ import ReactPlayer from './ReactPlayer'
 
 ## Babel
 
-Out of the box Cedar configures [Babel](https://babeljs.io/) so that you can write modern JavaScript and TypeScript without needing to worry about transpilation at all.
+Out of the box Cedar compiles your modern JavaScript and TypeScript without you needing to worry about transpilation at all.
 GraphQL tags, JSX, SVG imports—all of it's handled for you.
 
-For those well-versed in Babel config, you can find Cedar's in [@cedarjs/internal](https://github.com/cedarjs/cedar/tree/main/packages/internal/src/build/babel).
+For those well-versed in Babel config, you can find Cedar's in [@cedarjs/babel-config](https://github.com/cedarjs/cedar/tree/main/packages/babel-config).
 
 ### Configuring Babel
 
-For most projects, you won't need to configure Babel at all, but if you need to you can configure each side (web, api) individually using side-specific `babel.config.js` files.
+For most projects, you won't need to configure Babel at all. When you do, the two sides are configured differently:
+
+- **api**: put your config in `api/babel.config.js`. Cedar merges it with its own api-side config when it builds your api side (`yarn cedar build`, `yarn cedar dev` and the Vite-based api pipeline).
+- **web**: Vite doesn't apply `web/babel.config.js`. Pass custom plugins and presets through the `cedar()` Vite plugin's `babel` option instead, see [Custom Babel plugins](vite-configuration.md#custom-babel-plugins).
 
 > **Heads up**
 >
 > `.babelrc{.js}` files are ignored.
-> You have to put your custom config in the appropriate side's `babel.config.js`: `web/babel.config.js` for web and `api/babel.config.js` for api.
+> Api-side config has to live in `api/babel.config.js`.
 
-Let's go over an example.
+#### Installing Babel for the api side
 
-#### Example: Adding Emotion
-
-Let's say we want to add the styling library [emotion](https://emotion.sh), which requires adding a Babel plugin.
-
-1. Create a `babel.config.js` file in `web`:
+Cedar itself doesn't need Babel to build your api side, so `@cedarjs/babel-config` treats `@babel/core` and `@babel/preset-typescript` as optional peer dependencies and doesn't install them for you. An `api/babel.config.js` is only applied when both packages are installed in your api workspace. Cedar's api-side config is written for Babel 7, so pin that major:
 
 ```shell
-touch web/babel.config.js
+yarn workspace api add -D @babel/core@^7 @babel/preset-typescript@^7
+```
+
+If `api/babel.config.js` exists but either package is missing, the api build fails with an error telling you to run that command.
+
+#### Example: Removing `console` calls on the api side
+
+Let's say we want to strip `console.*` calls from the api side using [babel-plugin-transform-remove-console](https://www.npmjs.com/package/babel-plugin-transform-remove-console).
+
+1. Install Babel and the plugin in the api workspace:
+
+```shell
+yarn workspace api add -D @babel/core@^7 @babel/preset-typescript@^7 babel-plugin-transform-remove-console
 ```
 
 <br />
 
-2. Add the `@emotion/babel-plugin` as a dependency:
+2. Create `api/babel.config.js` and add the plugin:
 
-```shell
-yarn workspace web add --dev @emotion/babel-plugin
-```
-
-<br />
-
-3. Add the plugin to `web/babel.config.js`:
-
-```jsx title="web/babel.config.js"
-module.exports = {
-  plugins: ['@emotion'], // 👈 add the emotion plugin
+```js title="api/babel.config.js"
+export default {
+  plugins: ['transform-remove-console'], // 👈 add the plugin
 }
 
 // ℹ️ Notice how we don't need the `extends` property
 ```
 
 That's it!
-Now your custom web-side Babel config will be merged with Cedar's.
+Your custom api-side Babel config is merged with Cedar's.
 
 ## Vitest
 
