@@ -3029,7 +3029,6 @@ __metadata:
   dependencies:
     "@babel/core": "npm:^7.26.10"
     "@babel/parser": "npm:7.29.8"
-    "@babel/plugin-transform-typescript": "npm:^7.26.8"
     "@babel/traverse": "npm:7.29.8"
     "@cedarjs/api": "npm:6.0.0"
     "@cedarjs/babel-config": "npm:6.0.0"

@@ -44,3 +44,10 @@ longer ship a CommonJS build, so every `@cedarjs/*` package is ESM-only. Node
 only breaking case is compiling your own TypeScript straight to CommonJS with
 `tsc` and statically importing one of these packages; use a dynamic `import()`
 there.
+
+## `yarn cedar ts-to-js` removed
+
+The deprecated `ts-to-js` CLI command, which converted a TypeScript project to
+JavaScript, has been removed. Cedar has no built-in way to convert a project
+from TypeScript to JavaScript. If you need a JavaScript project, generate one
+with `yarn create cedar-app --no-typescript`.
