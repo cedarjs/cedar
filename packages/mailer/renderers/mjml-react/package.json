@@ -22,12 +22,12 @@
   },
   "dependencies": {
     "@cedarjs/mailer-core": "6.0.0",
-    "@faire/mjml-react": "3.5.4",
-    "mjml": "4.18.0"
+    "@faire/mjml-react": "4.0.1",
+    "mjml": "5.0.0"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "6.0.0",
-    "@types/mjml": "4",
+    "@types/mjml": "5",
     "typescript": "5.9.3"
   },
   "publishConfig": {
