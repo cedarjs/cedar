@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { Listr } from 'listr2'
-import semver from 'semver'
+import { coerce, isGreaterOrEqual } from 'verkit'
 
 import { colors as c } from '@cedarjs/cli-helpers'
 import {
@@ -60,10 +60,10 @@ export const handler = async (options: Opts) => {
             ),
           )
           const reactVersion = webPkgJson['dependencies']['react']
-          const coercedReactVersion = semver.coerce(reactVersion)
+          const coercedReactVersion = coerce(reactVersion)
           if (
             !coercedReactVersion ||
-            !semver.gte(coercedReactVersion, '19.0.0')
+            !isGreaterOrEqual(coercedReactVersion, '19.0.0')
           ) {
             throw new Error(
               'You need to be using at least React version 19 to enable the React Compiler',
