@@ -78,7 +78,7 @@
     "@cedarjs/router": "6.0.0",
     "@cedarjs/web": "6.0.0",
     "concurrently": "9.2.4",
-    "publint": "0.3.23",
+    "publint": "0.3.24",
     "typescript": "5.9.3",
     "vitest": "4.1.10"
   },
