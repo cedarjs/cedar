@@ -91,7 +91,6 @@ But how do you actually test your changes in the Cedar Framework in your Cedar P
 > | Arguments & Options   | Description                                                                          |
 > | --------------------- | ------------------------------------------------------------------------------------ |
 > | `<project directory>` | Directory to build test project [default: "./blog-test-project"]                     |
-> | `--javascript`        | Generate a JavaScript project [default: false]                                       |
 > | `--link`              | Copy Framework dependencies and packages into Test-project [default: false]          |
 > | `--verbose`           | Verbose output [default: false]                                                      |
 > | `--clean`             | Delete existing directory and recreate Test-project [default: false]                 |
@@ -102,7 +101,7 @@ But how do you actually test your changes in the Cedar Framework in your Cedar P
 >
 > ```terminal
 > cd cedar/
-> yarn run build:test-project ~/my-repos/cedar-project --javascript --link
+> yarn run build:test-project ~/my-repos/cedar-project --link
 > ```
 
 ### Testing the Framework in Your Project

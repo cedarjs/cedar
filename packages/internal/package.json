@@ -52,12 +52,6 @@
         "default": "./dist/routes.js"
       }
     },
-    "./dist/ts2js": {
-      "default": {
-        "types": "./dist/ts2js.d.ts",
-        "default": "./dist/ts2js.js"
-      }
-    },
     "./dist/validateSchema": {
       "default": {
         "types": "./dist/validateSchema.d.ts",
