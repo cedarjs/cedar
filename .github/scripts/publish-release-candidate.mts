@@ -487,7 +487,7 @@ async function main() {
 
     // Find all package.json files across templates and database-overlays,
     // excluding node_modules. This covers base templates, overlay variants
-    // (cjs/esm × npm/pnpm/yarn), and database overlays in one pass.
+    // (npm/pnpm/yarn), and database overlays in one pass.
     const packageJsonFiles = fs.globSync(
       ['templates/**/package.json', 'database-overlays/**/package.json'],
       {
@@ -513,32 +513,17 @@ async function main() {
     // The pm-specific overlays replace the base template's root package.json
     // wholesale, so lockfiles are generated against the base template +
     // overlay composition and shipped in the overlay dirs — the base
-    // templates themselves carry no lockfile. The cjs overlays are used by
-    // both the ts and js templates, and the esm overlays by both esm-ts and
-    // esm-js, so ts and esm-ts act as representative bases.
-    const overlayLockfileConfigs = [
-      { baseTemplateDir: 'ts', overlayBase: 'cjs' },
-      { baseTemplateDir: 'esm-ts', overlayBase: 'esm' },
-    ]
+    // templates themselves carry no lockfile. The overlays are used by both
+    // the ts and js templates, so ts acts as the representative base.
+    if (isDryRun) {
+      log('Dry-run - skip overlay lockfile generation')
+    } else {
+      const tsTemplatePath = path.join(TEMPLATES_DIR, 'ts')
+      const overlaysDir = path.join(TEMPLATES_DIR, 'overlays')
 
-    for (const { baseTemplateDir, overlayBase } of overlayLockfileConfigs) {
-      if (isDryRun) {
-        log(`Dry-run - skip overlay lockfile generation for ${overlayBase}`)
-        continue
-      }
-
-      const templatePath = path.join(TEMPLATES_DIR, baseTemplateDir)
-      const overlaysBaseDir = path.join(TEMPLATES_DIR, 'overlays', overlayBase)
-
-      await generateYarnLockfile(
-        templatePath,
-        path.join(overlaysBaseDir, 'yarn'),
-      )
-      await generateNpmLockfile(templatePath, path.join(overlaysBaseDir, 'npm'))
-      await generatePnpmLockfile(
-        templatePath,
-        path.join(overlaysBaseDir, 'pnpm'),
-      )
+      await generateYarnLockfile(tsTemplatePath, path.join(overlaysDir, 'yarn'))
+      await generateNpmLockfile(tsTemplatePath, path.join(overlaysDir, 'npm'))
+      await generatePnpmLockfile(tsTemplatePath, path.join(overlaysDir, 'pnpm'))
     }
 
     log('✅ Generated lockfiles for all package-manager overlays')
