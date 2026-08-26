@@ -33,23 +33,8 @@ export default async function createConfig() {
     {
       ignores: ['!.storybook/'],
     },
-    // `@babel/eslint-parser` only parses, so it needs no presets, transform
-    // plugins or project Babel config. It ignores `ecmaFeatures.jsx` and takes
-    // its syntax plugins from `babelOptions.parserOpts` instead, so JSX is
-    // enabled there. The `React`, `gql` and `context` globals are declared
-    // further down in this file.
     {
       files: ['**/*.js', '**/*.jsx'],
-      languageOptions: {
-        parserOptions: {
-          requireConfigFile: false,
-          babelOptions: {
-            parserOpts: {
-              plugins: ['jsx'],
-            },
-          },
-        },
-      },
       plugins,
       rules,
     },
