@@ -49,7 +49,7 @@
     "@rollup/plugin-commonjs": "28.0.9",
     "@rollup/plugin-node-resolve": "16.0.3",
     "@rollup/plugin-replace": "6.0.3",
-    "@swc/core": "1.16.0",
+    "@swc/core": "1.16.1",
     "@whatwg-node/fetch": "0.10.13",
     "cheerio": "1.2.0",
     "graphql": "16.14.2",
