@@ -4,7 +4,6 @@
     "default": ["{projectRoot}/**/*"],
     "prod": [
       "!{projectRoot}/**/*.test.{js,jsx,ts,tsx}",
-      "{workspaceRoot}/babel.config.js",
       "{workspaceRoot}/tsconfig.json",
       {
         "runtime": "node -v"

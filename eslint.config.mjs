@@ -1,5 +1,3 @@
-import babelParser from '@babel/eslint-parser'
-import babelPlugin from '@babel/eslint-plugin'
 import js from '@eslint/js'
 import importPlugin from 'eslint-plugin-import-x'
 import jestDomPlugin from 'eslint-plugin-jest-dom'
@@ -11,18 +9,6 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 import cedarjsPlugin from '@cedarjs/eslint-plugin'
-import { findUp } from '@cedarjs/project-config'
-
-// Framework Babel config is monorepo root ./babel.config.js
-// `yarn lint` runs for each workspace, which needs findUp for path to root
-const findBabelConfig = (cwd = process.cwd()) => {
-  const configPath = findUp('babel.config.js', cwd)
-  if (!configPath) {
-    throw new Error(`Eslint-parser could not find a "babel.config.js" file`)
-  }
-  return configPath
-}
-
 export default [
   // Global ignores
   {
@@ -62,7 +48,6 @@ export default [
   js.configs.recommended,
   {
     plugins: {
-      '@babel': babelPlugin,
       'import-x': importPlugin,
       'jsx-a11y': jsxA11yPlugin,
       react: reactPlugin,
@@ -181,15 +166,16 @@ export default [
   {
     files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
     languageOptions: {
-      parser: babelParser,
+      // typescript-eslint's parser handles JavaScript files without type
+      // information. It only infers JSX from the `.jsx`/`.tsx` extension;
+      // `ecmaFeatures.jsx` keeps `.js` files parseable as JSX as well, which
+      // is what the previous parser setup allowed.
+      parser: tseslint.parser,
       ecmaVersion: 'latest',
       sourceType: 'module',
       parserOptions: {
         ecmaFeatures: {
           jsx: true,
-        },
-        babelOptions: {
-          configFile: findBabelConfig(),
         },
       },
       globals: {
@@ -286,12 +272,9 @@ export default [
     },
   },
 
-  // Config files (.babelrc.js, jest.config.js, etc.) and CJS wrapper files
+  // Config files (jest.config.js, *.config.js, etc.) and CJS wrapper files
   {
     files: [
-      '**/.babelrc.js',
-      '**/.babelrc.cjs',
-      '**/babel.config.js',
       '**/jest.config.js',
       '**/jest.setup.js',
       '**/*.config.js',
