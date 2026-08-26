@@ -26,7 +26,6 @@
     "test:unit": "vitest run src"
   },
   "dependencies": {
-    "@cedarjs/babel-config": "6.0.0",
     "@cedarjs/cli-helpers": "6.0.0",
     "@cedarjs/project-config": "6.0.0",
     "@cedarjs/vite": "6.0.0",
