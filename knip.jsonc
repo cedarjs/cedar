@@ -96,15 +96,9 @@
       "entry": ["src/index.ts", "src/generate/watch.ts"],
       // publint: only invoked via `concurrently`'s `yarn:publint` job syntax
       // in the "check:package" script, which knip doesn't parse.
-      // @babel/plugin-transform-typescript: never imported, only named as a
-      // string in the babel `plugins` option in src/ts2js.ts.
       // @cedarjs/realtime: optional, dynamically imported in
       // src/generate/graphqlSchema.ts and resolved from the user's project.
-      "ignoreDependencies": [
-        "publint",
-        "@babel/plugin-transform-typescript",
-        "@cedarjs/realtime"
-      ]
+      "ignoreDependencies": ["publint", "@cedarjs/realtime"]
     },
     "packages/vite": {
       // publint: only invoked via `concurrently`'s `yarn:publint` job syntax

@@ -1,6 +1,5 @@
 export * from '@cedarjs/project-config'
 
-export * from './ts2js.js'
 export * from './dev.js'
 export * from './routes.js'
 

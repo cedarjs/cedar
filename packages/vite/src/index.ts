@@ -33,7 +33,6 @@ import { cedarRemoveFromBundle } from './plugins/vite-plugin-cedar-remove-from-b
 import { cedarRoutesAutoLoaderPlugin } from './plugins/vite-plugin-cedar-routes-auto-loader.js'
 import { cedarWaitForApiServer } from './plugins/vite-plugin-cedar-wait-for-api-server.js'
 import { cedarjsResolveCedarStyleImportsPlugin } from './plugins/vite-plugin-cedarjs-resolve-cedar-style-imports.js'
-import { cedarTransformJsAsJsx } from './plugins/vite-plugin-jsx-loader.js'
 import { cedarMergedConfig } from './plugins/vite-plugin-merged-config.js'
 import { cedarSwapApolloProvider } from './plugins/vite-plugin-swap-apollo-provider.js'
 
@@ -59,7 +58,6 @@ export { cedarRemoveFromBundle } from './plugins/vite-plugin-cedar-remove-from-b
 export { cedarjsResolveCedarStyleImportsPlugin } from './plugins/vite-plugin-cedarjs-resolve-cedar-style-imports.js'
 export { cedarjsJobPathInjectorPlugin } from './plugins/vite-plugin-cedarjs-job-path-injector.js'
 export { cedarMockCellDataPlugin } from './plugins/vite-plugin-cedar-mock-cell-data.js'
-export { cedarTransformJsAsJsx } from './plugins/vite-plugin-jsx-loader.js'
 export { cedarMergedConfig } from './plugins/vite-plugin-merged-config.js'
 export { cedarSwapApolloProvider } from './plugins/vite-plugin-swap-apollo-provider.js'
 export { cedarUniversalDeployPlugin } from './plugins/vite-plugin-cedar-universal-deploy.js'
@@ -112,7 +110,6 @@ export function cedar({ mode, babel }: PluginOptions = {}): PluginOption[] {
     cedarjsResolveCedarStyleImportsPlugin(),
     cedarSwapApolloProvider(),
     cedarCellTransform(),
-    cedarTransformJsAsJsx(),
     cedarRemoveFromBundle(),
     cedarRemoveDevFatalErrorPage(),
     // RSC handles route auto-loading differently in each build stage

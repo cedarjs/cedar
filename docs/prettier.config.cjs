@@ -1,7 +1,6 @@
-/* eslint-env node */
 // @ts-check
 
-const rootConfig = require('../prettier.config')
+const rootConfig = require('../prettier.config.cjs')
 
 /**
  * @see https://prettier.io/docs/en/configuration.html
