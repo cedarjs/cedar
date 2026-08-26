@@ -165,7 +165,9 @@ export default [
     },
   },
 
-  // JavaScript files specific configuration
+  // JavaScript files specific configuration. The parser set up here applies
+  // to .cjs files as well; the CommonJS block further down overrides their
+  // sourceType and globals.
   {
     files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
     languageOptions: {
@@ -269,19 +271,9 @@ export default [
     },
   },
 
-  // Config files (jest.config.js, *.config.js, etc.) and CJS wrapper files
+  // CommonJS files use the .cjs extension
   {
-    files: [
-      '**/jest.config.js',
-      '**/jest.setup.js',
-      '**/*.config.js',
-      '**/*.config.cjs',
-      '**/*.config.mjs',
-      'docs/sidebars.js',
-      'packages/web/apollo/index.js',
-      'packages/web/toast/index.js',
-      'packages/auth-providers/dbAuth/web/webAuthn/index.js',
-    ],
+    files: ['**/*.cjs'],
     languageOptions: {
       globals: {
         ...globals.node,
