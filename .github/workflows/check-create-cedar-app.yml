@@ -2,7 +2,10 @@ name: 🌲 Check create-cedar-app
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, labeled, unlabeled]
+    paths:
+      - 'packages/create-cedar-app/**'
+      - 'packages/cli-helpers/**'
+      - '.github/workflows/check-create-cedar-app.yml'
 
 # Cancel in-progress runs of this workflow.
 # See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-only-cancel-in-progress-jobs-or-runs-for-the-current-workflow.
@@ -18,14 +21,40 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
       - name: Set up job
         uses: ./.github/actions/set-up-job
         with:
-          set-up-yarn-cache: false
-          yarn-install-directory: ./.github/actions/check_create_redwood_app
           build: false
 
-      - name: Check create cedar app
-        uses: ./.github/actions/check_create_redwood_app
-        with:
-          labels: '{ "labels": ${{ toJSON(github.event.pull_request.labels) }} }'
+      # The ts-to-js script imports `@cedarjs/cli-helpers`, so that package
+      # (and what it depends on) must be built.
+      - name: 🏗️ Build cli-helpers
+        run: bash "$GITHUB_WORKSPACE/.github/scripts/run-nx.sh" yarn nx run @cedarjs/cli-helpers:build --output-style=stream
+
+      - name: 🌲 Regenerate the JS template from the TS template
+        run: yarn workspace create-cedar-app ts-to-js
+
+      - name: 🔍 Check that the committed JS template is up to date
+        run: |
+          if ! git diff --exit-code packages/create-cedar-app/templates/js; then
+            echo ""
+            echo "::error::The committed create-cedar-app JS template differs from what the ts-to-js script generates from the TS template (see the diff above)."
+            echo "Regenerate it and commit the result:"
+            echo ""
+            echo "  yarn workspace create-cedar-app ts-to-js"
+            echo ""
+            exit 1
+          fi
+
+          untracked=$(git ls-files --others --exclude-standard packages/create-cedar-app/templates/js)
+          if [ -n "$untracked" ]; then
+            echo "::error::The ts-to-js script generated files that are not committed in the JS template:"
+            echo "$untracked"
+            echo ""
+            echo "Regenerate the template and commit the result:"
+            echo ""
+            echo "  yarn workspace create-cedar-app ts-to-js"
+            echo ""
+            exit 1
+          fi
