@@ -25020,7 +25020,6 @@ __metadata:
     "@actions/core": "npm:2.0.3"
     "@actions/exec": "npm:2.0.0"
     "@actions/glob": "npm:0.6.1"
-    "@babel/core": "npm:^7.26.10"
     "@babel/generator": "npm:7.29.8"
     "@babel/parser": "npm:7.29.8"
     "@babel/traverse": "npm:7.29.8"
