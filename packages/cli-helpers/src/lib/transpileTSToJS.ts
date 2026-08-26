@@ -45,8 +45,8 @@ export function transpileTSToJS(filename: string, content: string) {
 }
 
 /**
- * sucrase keeps every line break, so line `n` of the output corresponds to
- * line `n` of the input. A line that is blank in the output but was not blank
+ * sucrase keeps every line break, so line number X of the output corresponds to
+ * line X of the input. A line that is blank in the output but was not blank
  * in the input only contained TypeScript syntax and is removed.
  */
 function dropEmptiedLines(input: string, output: string) {
@@ -60,10 +60,8 @@ function dropEmptiedLines(input: string, output: string) {
   return outputLines
     .filter(
       (line, index) =>
-        !(
-          BLANK_LINE_REGEX.test(line) &&
-          !BLANK_LINE_REGEX.test(inputLines[index])
-        ),
+        !BLANK_LINE_REGEX.test(line) ||
+        BLANK_LINE_REGEX.test(inputLines[index]),
     )
     .join('\n')
 }
