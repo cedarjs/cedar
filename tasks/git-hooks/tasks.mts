@@ -138,14 +138,14 @@ function hasCrwrsaChanges(files: string[]): boolean {
 }
 
 async function runAllLint(changedFiles: string[]): Promise<void> {
-  // Check for template/crwrsca changes on the original file list before filtering,
+  // Check for template/ccrsca changes on the original file list before filtering,
   // since getFilesToLint() excludes template .tsx files
   const hasTemplates = hasTemplateChanges(changedFiles)
   const hasCrwrsa = hasCrwrsaChanges(changedFiles)
 
   const filesToLint = getFilesToLint(changedFiles)
 
-  // Template and crwrsca packages have package-specific ESLint configs
+  // Template and ccrsca packages have package-specific ESLint configs
   // that the root config ignores, so run their dedicated lint commands
 
   const otherFiles = filesToLint.filter(
@@ -165,7 +165,7 @@ async function runAllLint(changedFiles: string[]): Promise<void> {
   }
 
   if (hasCrwrsa) {
-    lintTasks.push(execAsync('yarn', ['lint:crwrsca'], 'git-hooks'))
+    lintTasks.push(execAsync('yarn', ['lint:ccrsca'], 'git-hooks'))
   }
 
   const results = await Promise.allSettled(lintTasks)
