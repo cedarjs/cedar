@@ -1669,7 +1669,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-transform-typescript@npm:^7.26.8, @babel/plugin-transform-typescript@npm:^7.29.7":
+"@babel/plugin-transform-typescript@npm:^7.29.7":
   version: 7.29.7
   resolution: "@babel/plugin-transform-typescript@npm:7.29.7"
   dependencies:
@@ -2580,7 +2580,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/cli-helpers@workspace:packages/cli-helpers"
   dependencies:
-    "@babel/core": "npm:^7.26.10"
     "@cedarjs/framework-tools": "npm:6.0.0"
     "@cedarjs/project-config": "npm:6.0.0"
     "@cedarjs/telemetry": "npm:6.0.0"
@@ -2605,6 +2604,7 @@ __metadata:
     prompts: "npm:2.4.2"
     semver: "npm:7.8.5"
     smol-toml: "npm:1.8.0"
+    sucrase: "npm:3.35.1"
     termi-link: "npm:1.1.0"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.10"
@@ -6986,7 +6986,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jridgewell/gen-mapping@npm:^0.3.12, @jridgewell/gen-mapping@npm:^0.3.5":
+"@jridgewell/gen-mapping@npm:^0.3.12, @jridgewell/gen-mapping@npm:^0.3.2, @jridgewell/gen-mapping@npm:^0.3.5":
   version: 0.3.13
   resolution: "@jridgewell/gen-mapping@npm:0.3.13"
   dependencies:
@@ -13939,6 +13939,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"commander@npm:^4.0.0":
+  version: 4.1.1
+  resolution: "commander@npm:4.1.1"
+  checksum: 10c0/84a76c08fe6cc08c9c93f62ac573d2907d8e79138999312c92d4155bc2325d487d64d13f669b2000c9f8caf70493c1be2dac74fec3c51d5a04f8bc3ae1830bab
+  languageName: node
+  linkType: hard
+
 "commander@npm:^6.1.0, commander@npm:^6.2.1":
   version: 6.2.1
   resolution: "commander@npm:6.2.1"
@@ -14228,8 +14235,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "create-cedar-app@workspace:packages/create-cedar-app"
   dependencies:
-    "@babel/core": "npm:^7.26.10"
-    "@babel/plugin-transform-typescript": "npm:^7.26.8"
+    "@cedarjs/cli-helpers": "npm:6.0.0"
     "@cedarjs/framework-tools": "npm:6.0.0"
     "@cedarjs/tui": "npm:6.0.0"
     "@opentelemetry/api": "npm:1.9.1"
@@ -14237,7 +14243,6 @@ __metadata:
     "@opentelemetry/resources": "npm:1.30.1"
     "@opentelemetry/sdk-trace-node": "npm:1.30.1"
     "@opentelemetry/semantic-conventions": "npm:1.41.1"
-    "@types/babel__core": "npm:7.20.5"
     "@types/klaw-sync": "npm:6.0.5"
     ansis: "npm:4.3.1"
     ci-info: "npm:4.4.0"
@@ -21520,7 +21525,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mz@npm:^2.4.0":
+"mz@npm:^2.4.0, mz@npm:^2.7.0":
   version: 2.7.0
   resolution: "mz@npm:2.7.0"
   dependencies:
@@ -23345,7 +23350,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pirates@npm:^4.0.4, pirates@npm:^4.0.6":
+"pirates@npm:^4.0.1, pirates@npm:^4.0.4, pirates@npm:^4.0.6":
   version: 4.0.7
   resolution: "pirates@npm:4.0.7"
   checksum: 10c0/a51f108dd811beb779d58a76864bbd49e239fa40c7984cd11596c75a121a8cc789f1c8971d8bb15f0dbf9d48b76c05bb62fcbce840f89b688c0fa64b37e8478a
@@ -26334,6 +26339,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"sucrase@npm:3.35.1":
+  version: 3.35.1
+  resolution: "sucrase@npm:3.35.1"
+  dependencies:
+    "@jridgewell/gen-mapping": "npm:^0.3.2"
+    commander: "npm:^4.0.0"
+    lines-and-columns: "npm:^1.1.6"
+    mz: "npm:^2.7.0"
+    pirates: "npm:^4.0.1"
+    tinyglobby: "npm:^0.2.11"
+    ts-interface-checker: "npm:^0.1.9"
+  bin:
+    sucrase: bin/sucrase
+    sucrase-node: bin/sucrase-node
+  checksum: 10c0/6fa22329c261371feb9560630d961ad0d0b9c87dce21ea74557c5f3ffbe5c1ee970ea8bcce9962ae9c90c3c47165ffa7dd41865c7414f5d8ea7a40755d612c5c
+  languageName: node
+  linkType: hard
+
 "supertokens-auth-react@npm:0.51.3":
   version: 0.51.3
   resolution: "supertokens-auth-react@npm:0.51.3"
@@ -26690,7 +26713,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tinyglobby@npm:^0.2.12, tinyglobby@npm:^0.2.15, tinyglobby@npm:^0.2.17":
+"tinyglobby@npm:^0.2.11, tinyglobby@npm:^0.2.12, tinyglobby@npm:^0.2.15, tinyglobby@npm:^0.2.17":
   version: 0.2.17
   resolution: "tinyglobby@npm:0.2.17"
   dependencies:
@@ -26882,6 +26905,13 @@ __metadata:
   version: 2.3.0
   resolution: "ts-dedent@npm:2.3.0"
   checksum: 10c0/bfc3331e0740191c0134fb526e7f01e16657e50955c9395de14703c6ef17119c91651fa044cf558dc9c1dbb0fe1b2a74e303aeebcbd5e3b31acd14f72f545a54
+  languageName: node
+  linkType: hard
+
+"ts-interface-checker@npm:^0.1.9":
+  version: 0.1.13
+  resolution: "ts-interface-checker@npm:0.1.13"
+  checksum: 10c0/232509f1b84192d07b81d1e9b9677088e590ac1303436da1e92b296e9be8e31ea042e3e1fd3d29b1742ad2c959e95afe30f63117b8f1bc3a3850070a5142fea7
   languageName: node
   linkType: hard
 
