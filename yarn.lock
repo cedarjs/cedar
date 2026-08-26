@@ -528,32 +528,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/eslint-parser@npm:7.29.7":
-  version: 7.29.7
-  resolution: "@babel/eslint-parser@npm:7.29.7"
-  dependencies:
-    "@nicolo-ribaudo/eslint-scope-5-internals": "npm:5.1.1-v1"
-    eslint-visitor-keys: "npm:^2.1.0"
-    semver: "npm:^6.3.1"
-  peerDependencies:
-    "@babel/core": ^7.11.0
-    eslint: ^7.5.0 || ^8.0.0 || ^9.0.0
-  checksum: 10c0/c24dcd941b0a149b197a9e9c3297a01d621775ac71cdf2e1134b1097c1691b46ce969355e1be3676d83b88f62c43ed33cf3a499da21ea11a5eb07339ce64ac20
-  languageName: node
-  linkType: hard
-
-"@babel/eslint-plugin@npm:7.29.7":
-  version: 7.29.7
-  resolution: "@babel/eslint-plugin@npm:7.29.7"
-  dependencies:
-    eslint-rule-composer: "npm:^0.3.0"
-  peerDependencies:
-    "@babel/eslint-parser": ^7.11.0
-    eslint: ^7.5.0 || ^8.0.0 || ^9.0.0
-  checksum: 10c0/e7f08daf7a1a52daf310399ae974b5e95dffd8ed329ee3faec2a9e586a210f98580c55e103a3676d97c874c0631a48147409cc20047d8a7bab4d5620aa89064c
-  languageName: node
-  linkType: hard
-
 "@babel/generator@npm:7.29.8, @babel/generator@npm:^7.18.13, @babel/generator@npm:^7.25.7, @babel/generator@npm:^7.29.7, @babel/generator@npm:^7.29.8, @babel/generator@npm:^7.7.2":
   version: 7.29.8
   resolution: "@babel/generator@npm:7.29.8"
@@ -2851,9 +2825,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/eslint-config@workspace:packages/eslint-config"
   dependencies:
-    "@babel/core": "npm:^7.26.10"
-    "@babel/eslint-parser": "npm:7.29.7"
-    "@babel/eslint-plugin": "npm:7.29.7"
     "@cedarjs/eslint-plugin": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@eslint/js": "npm:8.57.1"
@@ -7457,15 +7428,6 @@ __metadata:
     "@types/node": "npm:^22.15.30"
     "@types/pg": "npm:^8.8.0"
   checksum: 10c0/21998f959f8645b6118e677e9433cec1e9d357111d8c414fda74e4c4c67b33054c652cf9b636a50fcfe8b7a5542ca817cc15ecb513c09ccae8ad8279ac806dfa
-  languageName: node
-  linkType: hard
-
-"@nicolo-ribaudo/eslint-scope-5-internals@npm:5.1.1-v1":
-  version: 5.1.1-v1
-  resolution: "@nicolo-ribaudo/eslint-scope-5-internals@npm:5.1.1-v1"
-  dependencies:
-    eslint-scope: "npm:5.1.1"
-  checksum: 10c0/75dda3e623b8ad7369ca22552d6beee337a814b2d0e8a32d23edd13fcb65c8082b32c5d86e436f3860dd7ade30d91d5db55d4ef9a08fb5a976c718ecc0d88a74
   languageName: node
   linkType: hard
 
@@ -15957,23 +15919,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-rule-composer@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "eslint-rule-composer@npm:0.3.0"
-  checksum: 10c0/1f0c40d209e1503a955101a0dbba37e7fc67c8aaa47a5b9ae0b0fcbae7022c86e52b3df2b1b9ffd658e16cd80f31fff92e7222460a44d8251e61d49e0af79a07
-  languageName: node
-  linkType: hard
-
-"eslint-scope@npm:5.1.1":
-  version: 5.1.1
-  resolution: "eslint-scope@npm:5.1.1"
-  dependencies:
-    esrecurse: "npm:^4.3.0"
-    estraverse: "npm:^4.1.1"
-  checksum: 10c0/d30ef9dc1c1cbdece34db1539a4933fe3f9b14e1ffb27ecc85987902ee663ad7c9473bbd49a9a03195a373741e62e2f807c4938992e019b511993d163450e70a
-  languageName: node
-  linkType: hard
-
 "eslint-scope@npm:^7.2.2":
   version: 7.2.2
   resolution: "eslint-scope@npm:7.2.2"
@@ -15981,13 +15926,6 @@ __metadata:
     esrecurse: "npm:^4.3.0"
     estraverse: "npm:^5.2.0"
   checksum: 10c0/613c267aea34b5a6d6c00514e8545ef1f1433108097e857225fed40d397dd6b1809dffd11c2fde23b37ca53d7bf935fe04d2a18e6fc932b31837b6ad67e1c116
-  languageName: node
-  linkType: hard
-
-"eslint-visitor-keys@npm:^2.1.0":
-  version: 2.1.0
-  resolution: "eslint-visitor-keys@npm:2.1.0"
-  checksum: 10c0/9f0e3a2db751d84067d15977ac4b4472efd6b303e369e6ff241a99feac04da758f46d5add022c33d06b53596038dbae4b4aceb27c7e68b8dfc1055b35e495787
   languageName: node
   linkType: hard
 
@@ -16103,13 +16041,6 @@ __metadata:
   dependencies:
     estraverse: "npm:^5.2.0"
   checksum: 10c0/81a37116d1408ded88ada45b9fb16dbd26fba3aadc369ce50fcaf82a0bac12772ebd7b24cd7b91fc66786bf2c1ac7b5f196bc990a473efff972f5cb338877cf5
-  languageName: node
-  linkType: hard
-
-"estraverse@npm:^4.1.1":
-  version: 4.3.0
-  resolution: "estraverse@npm:4.3.0"
-  checksum: 10c0/9cb46463ef8a8a4905d3708a652d60122a0c20bb58dec7e0e12ab0e7235123d74214fc0141d743c381813e1b992767e2708194f6f6e0f9fd00c1b4e0887b8b6d
   languageName: node
   linkType: hard
 
@@ -25019,7 +24950,6 @@ __metadata:
     "@actions/core": "npm:2.0.3"
     "@actions/exec": "npm:2.0.0"
     "@actions/glob": "npm:0.6.1"
-    "@babel/core": "npm:^7.26.10"
     "@babel/generator": "npm:7.29.8"
     "@babel/parser": "npm:7.29.8"
     "@babel/traverse": "npm:7.29.8"
