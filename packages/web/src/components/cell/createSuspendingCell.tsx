@@ -141,8 +141,7 @@ export function createSuspendingCell<
     // slightly wider `fetchPolicy` than `useBackgroundQuery` does. Streaming
     // Cells that set one of the extra policies aren't supported
     const backgroundQueryOptions = options as
-      | SkipToken
-      | useBackgroundQuery.Options<OperationVariables>
+      SkipToken | useBackgroundQuery.Options<OperationVariables>
 
     // The query document is untyped, so Apollo Client would infer `unknown` for
     // the data. Cells treat query results as `DataObject`s, same as `useQuery`
