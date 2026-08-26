@@ -6,7 +6,7 @@ import path from 'node:path'
 import execa from 'execa'
 import type { ExecaError } from 'execa'
 import type { ListrRendererFactory, ListrTaskWrapper } from 'listr2'
-import semver from 'semver'
+import { tryParse } from 'verkit'
 
 /**
  * Prerelease tags published from `main` rather than from a release branch.
@@ -45,7 +45,7 @@ export async function runPreUpgradeScripts(
       ? ctx.versionToUpgradeTo
       : undefined
 
-  const parsed = semver.parse(version)
+  const parsed = version ? tryParse(version) : null
   const baseUrl =
     'https://raw.githubusercontent.com/cedarjs/cedar/main/upgrade-scripts/'
   const manifestUrl = `${baseUrl}manifest.json`
@@ -71,7 +71,7 @@ export async function runPreUpgradeScripts(
     return
   }
 
-  const prereleaseTag = parsed?.prerelease[0]
+  const prereleaseTag = parsed?.prerelease?.[0]
   const isMainBranchPrerelease =
     typeof prereleaseTag === 'string' &&
     MAIN_BRANCH_PRERELEASE_TAGS.includes(prereleaseTag)

@@ -1,5 +1,5 @@
 import enq from 'enquirer'
-import semver from 'semver'
+import { isGreaterOrEqual, isLess, tryParse } from 'verkit'
 
 import { getCompatibilityData } from '@cedarjs/cli-helpers'
 import { dlx } from '@cedarjs/cli-helpers/packageManager/exec'
@@ -29,10 +29,7 @@ export async function handler({
     console.log(
       'No compatibility check will be performed because you used the --force flag.',
     )
-    if (
-      semver.parse(packageVersion) !== null &&
-      semver.lt(packageVersion, '1.0.0')
-    ) {
+    if (tryParse(packageVersion) !== null && isLess(packageVersion, '1.0.0')) {
       console.log(
         'Be aware that this package is under version 1.0.0 and so should be considered experimental.',
       )
@@ -123,8 +120,8 @@ export async function handler({
 async function showExperimentalWarning(version: string | undefined) {
   if (
     version === undefined ||
-    semver.parse(version) === null ||
-    semver.gte(version, '1.0.0')
+    tryParse(version) === null ||
+    isGreaterOrEqual(version, '1.0.0')
   ) {
     return
   }

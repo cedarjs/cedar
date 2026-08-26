@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 
-import semver from 'semver'
+import { satisfies } from 'verkit'
 import which from 'which'
 
 import type { Config } from './config.ts'
@@ -26,7 +26,7 @@ export function checkNodeVersion(config: Config) {
     console.log('Node version:', version)
   }
 
-  if (!semver.satisfies(version, '=24')) {
+  if (!satisfies(version, '=24')) {
     console.error('❌You must be using Node.js version 24')
     console.error('Please install or switch to the correct version of Node')
     console.error(
