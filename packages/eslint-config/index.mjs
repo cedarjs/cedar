@@ -5,12 +5,8 @@
 import jsxA11yPlugin from 'eslint-plugin-jsx-a11y'
 import globals from 'globals'
 
-import {
-  getApiSideDefaultBabelConfig,
-  getWebSideDefaultBabelConfig,
-} from '@cedarjs/babel-config'
 import cedarjsPlugin from '@cedarjs/eslint-plugin'
-import { getConfig, isTypeScriptProject } from '@cedarjs/project-config'
+import { getConfig } from '@cedarjs/project-config'
 
 import sharedConfigs from './shared.mjs'
 
@@ -18,35 +14,6 @@ import sharedConfigs from './shared.mjs'
 /** @returns {Promise<import('eslint').Linter.FlatConfig[]>} */
 export default async function createConfig() {
   const config = await getConfig()
-
-  /** @returns {import('@babel/core').TransformOptions} */
-  const getProjectBabelOptions = () => {
-    // We can't nest the web overrides inside the overrides block
-    // So we just take it out and put it as a separate item
-    // Ignoring overrides, as I don't think it has any impact on linting
-    const { overrides: _webOverrides, ...otherWebConfig } =
-      getWebSideDefaultBabelConfig({
-        // We have to enable certain presets like `@babel/preset-react` for JavaScript projects
-        forJavaScriptLinting: !isTypeScriptProject(),
-      })
-
-    const { overrides: _apiOverrides, ...otherApiConfig } =
-      getApiSideDefaultBabelConfig()
-
-    return {
-      plugins: [],
-      overrides: [
-        {
-          test: ['./api/', './scripts/'],
-          ...otherApiConfig,
-        },
-        {
-          test: ['./web/'],
-          ...otherWebConfig,
-        },
-      ],
-    }
-  }
 
   const plugins = {}
   const rules = {}
@@ -66,12 +33,21 @@ export default async function createConfig() {
     {
       ignores: ['!.storybook/'],
     },
+    // `@babel/eslint-parser` only parses, so it needs no presets, transform
+    // plugins or project Babel config. It ignores `ecmaFeatures.jsx` and takes
+    // its syntax plugins from `babelOptions.parserOpts` instead, so JSX is
+    // enabled there. The `React`, `gql` and `context` globals are declared
+    // further down in this file.
     {
       files: ['**/*.js', '**/*.jsx'],
       languageOptions: {
         parserOptions: {
           requireConfigFile: false,
-          babelOptions: getProjectBabelOptions(),
+          babelOptions: {
+            parserOpts: {
+              plugins: ['jsx'],
+            },
+          },
         },
       },
       plugins,
