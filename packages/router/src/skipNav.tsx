@@ -1,8 +1,7 @@
 // Original Code Source https://github.com/reach/reach-ui
-// Vendored here because @reach/skip-nav declares a peer dependency on older
-// React versions and does not support the React version Cedar uses.
-// If resolved, should consider reverting to @reach/skip-nav
-// See: https://github.com/reach/reach-ui/issues/916
+// (@reach/skip-nav, with types from @reach/polymorphic)
+// Vendored here because @reach/skip-nav is unmaintained and does not support
+// the React versions Cedar uses.
 
 import * as React from 'react'
 
