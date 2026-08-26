@@ -59,3 +59,15 @@ file on the web side that contains JSX fails `yarn cedar build web` with a
 parse error (`Expression expected`) pointing at the first JSX tag. Rename such
 files to `.jsx`. The pre-upgrade check run by `yarn cedar upgrade` lists every
 `.js` file it finds JSX in.
+
+## MJML mailer renderer uses MJML 5
+
+`@cedarjs/mailer-renderer-mjml-react` renders with MJML 5 and
+`@faire/mjml-react` 4. Rendering is asynchronous, which `Mailer.send` handles
+transparently; only code that calls `MJMLReactRenderer.render()` directly
+needs to `await` the result. MJML 5 minifies with htmlnano and cssnano,
+generates the `<body>` tag from `mj-body` (the `class` attribute lands on
+`<body>`, `background-color` only on the inner `div`), ignores `mj-include`
+unless `includePath` is configured, and accepts any string for
+`border-radius`. Expect small differences in the generated HTML if you
+compare rendered output byte for byte.
