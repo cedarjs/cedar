@@ -986,13 +986,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/semver@npm:7.8.0":
-  version: 7.8.0
-  resolution: "@types/semver@npm:7.8.0"
-  checksum: 10c0/46a1f38e36013448b279798e8b134e7e8de3b3630b1f40683903b9d57d36dd1d70838515570ed9a149fa09e9c381b9e39319b58d7b9f3b929b42ae2becff7aa3
-  languageName: node
-  linkType: hard
-
 "@types/unist@npm:*":
   version: 3.0.2
   resolution: "@types/unist@npm:3.0.2"
@@ -1401,7 +1394,6 @@ __metadata:
     "@eslint/js": "npm:9.39.5"
     "@types/eslint-plugin-markdown": "npm:^2.0.2"
     "@types/node": "npm:24.10.4"
-    "@types/semver": "npm:7.8.0"
     "@types/which": "npm:3.0.4"
     "@types/yauzl-promise": "npm:4.0.1"
     ansis: "npm:4.3.1"
@@ -1428,10 +1420,10 @@ __metadata:
     prettier-plugin-sh: "npm:^0.19.0"
     publint: "npm:0.3.24"
     rimraf: "npm:^6.0.1"
-    semver: "npm:7.8.5"
     typescript: "npm:5.9.3"
     typescript-eslint: "npm:^8.0.0"
     untildify: "npm:5.0.0"
+    verkit: "npm:0.4.0"
     which: "npm:6.0.1"
     yauzl-promise: "npm:4.0.0"
     zx: "npm:8.8.5"
@@ -3168,7 +3160,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:7.8.5, semver@npm:^7.3.5, semver@npm:^7.5.4, semver@npm:^7.6.3, semver@npm:^7.7.2, semver@npm:^7.7.3":
+"semver@npm:^7.3.5, semver@npm:^7.5.4, semver@npm:^7.6.3, semver@npm:^7.7.2, semver@npm:^7.7.3":
   version: 7.8.5
   resolution: "semver@npm:7.8.5"
   bin:
@@ -3533,6 +3525,13 @@ __metadata:
   version: 7.0.0
   resolution: "validate-npm-package-name@npm:7.0.0"
   checksum: 10c0/b725d816fd9503772e4e01a5a3a3791f9faf05d4c5ca12c11a0e0a62c048f5c555af7e407f327a720c22842dc285d07fca43cf67345ee10acfd821e94b380251
+  languageName: node
+  linkType: hard
+
+"verkit@npm:0.4.0":
+  version: 0.4.0
+  resolution: "verkit@npm:0.4.0"
+  checksum: 10c0/a3b794fa0902a3643ee2ae073eeb6fcc50e1245aa339f888aab7e02120d9d195beae9894fd1a8f8ea0fc2c0b20f089459d6d1aecfebe889e94bf8bf70f01c60e
   languageName: node
   linkType: hard
 
