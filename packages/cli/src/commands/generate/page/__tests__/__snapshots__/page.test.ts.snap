@@ -14,9 +14,9 @@ const CatsPage = () => {
         Find me in <code>./web/src/pages/CatsPage/CatsPage.jsx</code>
       </p>
       {/*
-           My default route is named \`cats\`, link to me with:
-           \`<Link to={routes.cats()}>Cats</Link>\`
-        */}
+          My default route is named \`cats\`, link to me with:
+          \`<Link to={routes.cats()}>Cats</Link>\`
+      */}
     </>
   )
 }
@@ -39,9 +39,9 @@ const HomePage = () => {
         Find me in <code>./web/src/pages/HomePage/HomePage.jsx</code>
       </p>
       {/*
-           My default route is named \`home\`, link to me with:
-           \`<Link to={routes.home()}>Home</Link>\`
-        */}
+          My default route is named \`home\`, link to me with:
+          \`<Link to={routes.home()}>Home</Link>\`
+      */}
     </>
   )
 }
@@ -261,9 +261,9 @@ const HomePage = () => {
         Find me in <code>./web/src/pages/HomePage/HomePage.jsx</code>
       </p>
       {/*
-           My default route is named \`home\`, link to me with:
-           \`<Link to={routes.home()}>Home</Link>\`
-        */}
+          My default route is named \`home\`, link to me with:
+          \`<Link to={routes.home()}>Home</Link>\`
+      */}
     </>
   )
 }
@@ -348,9 +348,9 @@ const PostPage = ({ id }) => {
         The parameter passed to me is <code>{id}</code>
       </p>
       {/*
-           My default route is named \`post\`, link to me with:
-           \`<Link to={routes.post({ id: '42' })}>Post 42</Link>\`
-        */}
+          My default route is named \`post\`, link to me with:
+          \`<Link to={routes.post({ id: '42' })}>Post 42</Link>\`
+      */}
     </>
   )
 }
@@ -394,9 +394,9 @@ const ContactUsPage = () => {
         Find me in <code>./web/src/pages/ContactUsPage/ContactUsPage.jsx</code>
       </p>
       {/*
-           My default route is named \`contactUs\`, link to me with:
-           \`<Link to={routes.contactUs()}>ContactUs</Link>\`
-        */}
+          My default route is named \`contactUs\`, link to me with:
+          \`<Link to={routes.contactUs()}>ContactUs</Link>\`
+      */}
     </>
   )
 }
@@ -453,9 +453,9 @@ const PostPage = ({ id }) => {
         The parameter passed to me is <code>{id}</code>
       </p>
       {/*
-           My default route is named \`post\`, link to me with:
-           \`<Link to={routes.post({ id: '42' })}>Post 42</Link>\`
-        */}
+          My default route is named \`post\`, link to me with:
+          \`<Link to={routes.post({ id: '42' })}>Post 42</Link>\`
+      */}
     </>
   )
 }

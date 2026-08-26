@@ -2,7 +2,6 @@ import fs from 'node:fs'
 import https from 'node:https'
 import path from 'node:path'
 
-import * as babel from '@babel/core'
 import boxen from 'boxen'
 import camelcase from 'camelcase'
 import { paramCase } from 'change-case'
@@ -16,7 +15,7 @@ import { format } from 'prettier'
 import type { Options as PrettierOptions } from 'prettier'
 import type { Options as YargsOptions } from 'yargs'
 
-import { colors as c } from '@cedarjs/cli-helpers'
+import { colors as c, transpileTSToJS } from '@cedarjs/cli-helpers'
 import {
   addRootPackages,
   addWorkspacePackages,
@@ -323,30 +322,10 @@ export const transformTSToJS = async (
   filename: string,
   content: string,
 ): Promise<string> => {
-  const result = babel.transform(content, {
-    filename,
-    // If you ran `yarn cedar generate` in `./web` transformSync would import
-    // the `.babelrc.js` file, in `./web` despite us setting `configFile: false`
-    cwd: process.env.NODE_ENV === 'test' ? undefined : getPaths().base,
-    configFile: false,
-    plugins: [
-      [
-        '@babel/plugin-transform-typescript',
-        {
-          isTSX: true,
-          allExtensions: true,
-        },
-      ],
-    ],
-    retainLines: true,
-  })
-
-  if (result?.code == null) {
-    throw new Error(
-      `Could not transform ${filename} from TypeScript to JavaScript`,
-    )
-  }
-  return prettify(filename.replace(/\.ts(x)?$/, '.js$1'), result.code)
+  return prettify(
+    filename.replace(/\.ts(x)?$/, '.js$1'),
+    transpileTSToJS(filename, content),
+  )
 }
 
 /**
