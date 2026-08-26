@@ -3,9 +3,8 @@
     "noEmit": true,
     "esModuleInterop": true,
     "target": "es2023",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "allowImportingTsExtensions": true,
+    "module": "node20",
+    "moduleResolution": "node16",
     "skipLibCheck": false,
     "rootDirs": [
       "./src",

@@ -2170,7 +2170,7 @@ CedarJS supports Storybook by creating stories when generating cells, components
 
 ## test
 
-Run Jest tests for api and web.
+Run Vitest tests for api and web.
 
 ```bash
 yarn cedar test [side..]
@@ -2184,10 +2184,9 @@ yarn cedar test [side..]
 | `--watch`           | Run tests related to changed files based on hg/git (uncommitted files). Specify the name or path to a file to focus on a specific set of tests [default: true]                                                                                              |
 | `--watchAll`        | Run all tests                                                                                                                                                                                                                                               |
 | `--collectCoverage` | Show test coverage summary and output info to `coverage` directory in project root. See this directory for an .html coverage report                                                                                                                         |
-| `--clearCache`      | Delete the Jest cache directory and exit without running tests                                                                                                                                                                                              |
 | `--db-push`         | Syncs the test database with your Prisma schema without requiring a migration. It creates a test database if it doesn't already exist [default: true]. This flag is ignored if your project doesn't have an `api` side. [👉 More details](#prisma-db-push). |
 
-> **Note** all other flags are passed onto the jest cli. So for example if you wanted to update your snapshots you can pass the `-u` flag
+> **Note** all other flags are passed onto the vitest cli. So for example if you wanted to update your snapshots you can pass the `-u` flag
 
 ## type-check (alias tsc or tc)
 

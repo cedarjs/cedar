@@ -15,7 +15,6 @@ describe('dist', () => {
     expect(packageConfig.bin).toMatchInlineSnapshot(`
       {
         "cedar-api-server-watch": "./dist/bin.js",
-        "cedarjs-api-server-watch": "./dist/bin.js",
       }
     `)
   })

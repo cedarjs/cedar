@@ -18,8 +18,8 @@ function makeArray<T>(input?: T | T[]) {
   return !input ? [] : Array.isArray(input) ? input : [input]
 }
 
-// When running jest tests, this is what they'll get when they import `useAuth`
-// thanks to some magic we do in jest-preset.js
+// When running tests, this is what they'll get when they import `useAuth`
+// thanks to the router import transform in the Vitest setup
 export function useAuth() {
   return {
     loading: false,

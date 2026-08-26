@@ -67,7 +67,7 @@ Let's get to some terminology:
 - The value you actually get (whatever the output of `add(1, 1)` is) is sometimes called the **actual** or **received value**
 - The file that contains the test is a **test file**
 - Multiple test files, all run together, is known as a **test suite**
-- You'll generally run your test files and suites with another piece of software. In Cedar that's Jest, and it's known as a **test runner**
+- You'll generally run your test files and suites with another piece of software. In Cedar that's Vitest, and it's known as a **test runner**
 - The amount of code you have that is exercised by tests is referred to as **coverage** and is usually reported as a percentage. If every single line of code is touched as a result of running your test suite then you have 100% coverage!
 
 This is the basic idea behind all the tests you'll write: when you add code, you'll add another piece of code that uses the first and verifies that the result is what you expect.
@@ -160,9 +160,9 @@ Javascript doesn't have a simple way to check how many arguments were passed to 
 
 We've covered passing too few arguments, what if we pass too many? We'll leave writing that test as homework, but you should have everything you need, and you won't even need any changes to the `add()` function to make it work!
 
-### Our Test Runner Compared to Jest
+### Our Test Runner Compared to Vitest
 
-Our tests are a little verbose (10 lines of code to test that the right number of arguments were passed). Luckily, the test runner that Cedar uses, Jest, provides a simpler syntax for the same assertions. Here's the complete test file, but using Jest's provided helpers:
+Our tests are a little verbose (10 lines of code to test that the right number of arguments were passed). Luckily, the test runner that Cedar uses, Vitest, provides a simpler syntax for the same assertions. Here's the complete test file, but using Vitest's provided helpers:
 
 ```jsx
 describe('add()', () => {
@@ -176,11 +176,11 @@ describe('add()', () => {
 })
 ```
 
-Jest lets us be very clear about our subject in the first argument to the `describe()` function, letting us know what we're testing. Note that it's just a string and doesn't have to be exactly the same as the function/class you're testing (but usually is for clarity).
+Vitest lets us be very clear about our subject in the first argument to the `describe()` function, letting us know what we're testing. Note that it's just a string and doesn't have to be exactly the same as the function/class you're testing (but usually is for clarity).
 
-Likewise, each test is given a descriptive name as the first argument to the `it()` functions ("it" being the subject under test). Functions like `expect()` and `toEqual()` make it clear what values we expect to receive when running the test suite. If the expectation fails, Jest will indicate that in the output letting us know the name of the test that failed and what went wrong (the expected and actual values didn't match, or an error was thrown that we didn't expect).
+Likewise, each test is given a descriptive name as the first argument to the `it()` functions ("it" being the subject under test). Functions like `expect()` and `toEqual()` make it clear what values we expect to receive when running the test suite. If the expectation fails, Vitest will indicate that in the output letting us know the name of the test that failed and what went wrong (the expected and actual values didn't match, or an error was thrown that we didn't expect).
 
-Jest also has a nicer output than our cobbled-together test runner using `console.log`:
+Vitest also has a nicer output than our cobbled-together test runner using `console.log`:
 
 ![image](https://user-images.githubusercontent.com/300/105783200-c6974680-5f2a-11eb-98af-d1884ecf2f99.png)
 
@@ -190,7 +190,7 @@ Are you convinced? Let's keep going and see what Cedar brings to the table.
 
 Cedar relies on several packages to do the heavy lifting, but many are wrapped in Cedar's own functionality which makes them even better suited to their individual jobs:
 
-- [Jest](https://jestjs.io/)
+- [Vitest](https://vitest.dev/)
 - [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
 - [Mock Service Worker](https://mswjs.io/) or **msw** for short.
 
@@ -198,9 +198,9 @@ Cedar Generators get your test suite bootstrapped. Cedar also includes [Storyboo
 
 Let's explore each one and how they're integrated with Cedar.
 
-### Jest
+### Vitest
 
-[Jest](https://jestjs.io/) is Cedar's test runner. By default, starting Jest via `yarn cedar test` will start a watch process that monitors your files for changes and re-runs the test(s) that are affected by that changed file (either the test itself, or the subject under test).
+[Vitest](https://vitest.dev/) is Cedar's test runner. By default, starting Vitest via `yarn cedar test` will start a watch process that monitors your files for changes and re-runs the test(s) that are affected by that changed file (either the test itself, or the subject under test).
 
 ### React Testing Library
 
@@ -228,7 +228,7 @@ You can use a single command to run your entire suite :
 yarn cedar test
 ```
 
-This will start Jest in "watch" mode which will continually run and monitor the file system for changes. If you change a test or the component that's being tested, Jest will re-run any associated test file. This is handy when you're spending the afternoon writing tests and always want to verify the code you're adding without swapping back and forth to a terminal and pressing `↑` `Enter` to run the last command again.
+This will start Vitest in "watch" mode which will continually run and monitor the file system for changes. If you change a test or the component that's being tested, Vitest will re-run any associated test file. This is handy when you're spending the afternoon writing tests and always want to verify the code you're adding without swapping back and forth to a terminal and pressing `↑` `Enter` to run the last command again.
 
 To start the process without watching, add the `--no-watch` flag:
 
@@ -360,7 +360,7 @@ describe('Article', () => {
 
 Note the additional `screen` import. This is a convenience helper from React Testing Library that automatically puts you in the `document.body` context before any of the following checks.
 
-We can use `getByText()` to find text content anywhere in the rendered DOM nodes. `toBeInTheDocument()` is a [matcher](https://jestjs.io/docs/en/expect) added to Jest by React Testing Library that returns true if the `getByText()` query finds the given text in the document.
+We can use `getByText()` to find text content anywhere in the rendered DOM nodes. `toBeInTheDocument()` is a [matcher](https://vitest.dev/api/expect.html) added to Vitest by React Testing Library that returns true if the `getByText()` query finds the given text in the document.
 
 So, the above test in plain English says "if there is any DOM node containing the text 'Foobar' anywhere in the document, return true."
 
@@ -472,7 +472,7 @@ it('renders a link with a name', () => {
 >
 > Most tests will contain at least the last two, but sometimes all three of these parts, and in some communities it's become standard to include a newline between each "section". Remember the acronym SEA: setup, execute, assert.
 
-#### Jest Expect: Type Considerations
+#### Expect: Type Considerations
 
 Cedar uses [prisma](https://www.prisma.io/) as an ORM for connecting to different databases like PostgreSQL, MySQL, and many more. The database models are defined in the `schema.prisma` file. Prisma schema supports [`model` field scaler types](https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-field-scalar-types) which is used to define the data types for the models properties.
 
@@ -502,7 +502,7 @@ expect(result.floatingNumber).toEqual(7420440.088194787)
 
 In the above examples, we can see expect doesn't preserve the floating numbers. Using decimals, the number is matched with the expected result.
 
-> For cases where using decimal is not optimal, see the [Jest Expect documentation](https://jestjs.io/docs/expect) for other options and methods.
+> For cases where using decimal is not optimal, see the [Vitest Expect documentation](https://vitest.dev/api/expect.html) for other options and methods.
 
 #### DateTime
 
@@ -769,7 +769,7 @@ That's it!
 
 ### Handling Duplication
 
-We had to duplicate the `mockCurrentUser()` call and duplication is usually another sign that things can be refactored. In Jest you can nest `describe` blocks and include setup that is shared by the members of that block:
+We had to duplicate the `mockCurrentUser()` call and duplication is usually another sign that things can be refactored. In Vitest you can nest `describe` blocks and include setup that is shared by the members of that block:
 
 ```jsx
 describe('HomePage', () => {
@@ -1209,7 +1209,7 @@ import NameForm from './NameForm'
 describe('NameForm', () => {
   it('renders successfully', () => {
     expect(() => {
-      const onSubmit = jest.fn()
+      const onSubmit = vi.fn()
 
       render(<NameForm onSubmit={onSubmit} />)
     }).not.toThrow()
@@ -1238,7 +1238,7 @@ import NameForm from './NameForm'
 describe('NameForm', () => {
 
   it('does not submit when required fields are empty', async () => {
-    const onSubmit = jest.fn()
+    const onSubmit = vi.fn()
 
     render(<NameForm onSubmit={onSubmit} />)
 
@@ -1253,7 +1253,7 @@ describe('NameForm', () => {
     const name = 'My Name'
     const nickname = ''
 
-    const onSubmit = jest.fn()
+    const onSubmit = vi.fn()
 
     render(<NameForm onSubmit={onSubmit} />)
 
@@ -1278,7 +1278,7 @@ describe('NameForm', () => {
     const name = 'My Name'
     const nickname = 'My Nickname'
 
-    const onSubmit = jest.fn()
+    const onSubmit = vi.fn()
 
     render(<NameForm onSubmit={onSubmit} />)
 
@@ -1982,7 +1982,7 @@ describe('products', () => {
 
 ### The `toHaveCached` matcher
 
-We have a custom Jest matcher included in Cedar to make things a little easier. To use it simply add an import to the top of your test file:
+We have a custom Vitest matcher included in Cedar to make things a little easier. To use it simply add an import to the top of your test file:
 
 ```ts
 // highlight-next-line
@@ -2078,7 +2078,7 @@ scenario('finds a single product', () = {
 })
 ```
 
-Partial match is just syntactic sugar—underneath it uses Jest's `expect.objectContaining` and `expect.arrayContaining`.
+Partial match is just syntactic sugar—underneath it uses Vitest's `expect.objectContaining` and `expect.arrayContaining`.
 
 The `partialMatch` helper takes two forms of arguments:
 

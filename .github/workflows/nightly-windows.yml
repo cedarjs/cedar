@@ -38,13 +38,6 @@ jobs:
     with:
       os: windows-latest
 
-  smoke-tests-esm:
-    if: github.repository == 'cedarjs/cedar'
-    name: 🔄 Smoke tests ESM / windows-latest
-    uses: ./.github/workflows/smoke-tests-test-esm.yml
-    with:
-      os: windows-latest
-
   cli-smoke-tests:
     if: github.repository == 'cedarjs/cedar'
     name: 🔄 CLI smoke tests / windows-latest
@@ -84,7 +77,6 @@ jobs:
     needs:
       - build-lint-test
       - smoke-tests
-      - smoke-tests-esm
       - cli-smoke-tests
       - telemetry-check
       - fragments-and-td-smoke-tests

@@ -31,11 +31,7 @@ import { getPaths } from '@cedarjs/project-config'
  * This replaces `babel-plugin-handler-als-wrapping` for Vite builds.
  * The babel plugin is still used for Jest and prerender.
  */
-export function handlerAlsWrappingPlugin({
-  projectIsEsm = false,
-}: {
-  projectIsEsm?: boolean
-} = {}): Plugin {
+export function handlerAlsWrappingPlugin(): Plugin {
   return {
     name: 'handler-als-wrapping',
 
@@ -54,7 +50,7 @@ export function handlerAlsWrappingPlugin({
         return null
       }
 
-      const wrapped = applyHandlerAlsWrapping(code, { projectIsEsm })
+      const wrapped = applyHandlerAlsWrapping(code)
       return wrapped ? { code: wrapped, map: null } : null
     },
   }
@@ -70,10 +66,7 @@ export function handlerAlsWrappingPlugin({
  * function so it can be applied from build pipelines that don't go through
  * Vite's plugin pipeline (e.g. the legacy esbuild API build).
  */
-export function applyHandlerAlsWrapping(
-  code: string,
-  { projectIsEsm = false }: { projectIsEsm?: boolean } = {},
-): string | null {
+export function applyHandlerAlsWrapping(code: string): string | null {
   // Matches the full export declaration up to (and including) the assignment =.
   // (?:[^=]|=>)* handles => inside TypeScript function type annotations without backtracking issues.
   // The final = is matched only when not part of => or == (lookahead (?![>=])).
@@ -93,11 +86,7 @@ export function applyHandlerAlsWrapping(
     .trimStart()
   const isAsync = /^async(?:\s*[\(\*]|\s+function)/.test(afterEquals)
 
-  const storePath = projectIsEsm
-    ? '@cedarjs/context/dist/store.js'
-    : '@cedarjs/context/dist/store'
-
-  const importStatement = `import { getAsyncStoreInstance as __cedar_getAsyncStoreInstance } from '${storePath}'\n`
+  const importStatement = `import { getAsyncStoreInstance as __cedar_getAsyncStoreInstance } from '@cedarjs/context/dist/store.js'\n`
 
   // Insert the import just before the handler declaration, rename the
   // handler export to a private const, then append the wrapped export.

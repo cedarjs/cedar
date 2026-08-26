@@ -8,7 +8,6 @@ import prompts from 'prompts'
 
 import { colors as c } from '@cedarjs/cli-helpers'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
-import { projectIsEsm } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 // Move this check out of experimental when server file is moved as well
@@ -158,17 +157,10 @@ export async function handler({
                 exampleSubscriptionTemplateContent,
               )
 
-          let blankTemplateContent = await generateTemplate(
+          const blankTemplateContent = await generateTemplate(
             setupScriptContent,
             templateVariables(name),
           )
-
-          if (projectIsEsm()) {
-            blankTemplateContent = blankTemplateContent.replace(
-              "import gql from 'graphql-tag'",
-              "import { gql } from 'graphql-tag'",
-            )
-          }
 
           // write all files
           return [
