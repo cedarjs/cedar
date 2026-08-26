@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import React from 'react'
-import type { ElementType, FunctionComponent } from 'react'
+import type { ElementType } from 'react'
 
 import { ApolloClient, ApolloLink, InMemoryCache } from '@apollo/client'
 import type { CheerioAPI } from 'cheerio'
@@ -272,10 +272,10 @@ async function createCombinedEntry({ appPath, routesPath, outDir }: Args) {
 }
 
 const renderCache: {
-  App?: FunctionComponent
-  Routes?: FunctionComponent
-  CellCacheContextProvider?: FunctionComponent
-  LocationProvider?: FunctionComponent
+  App?: ElementType
+  Routes?: ElementType
+  CellCacheContextProvider?: ElementType
+  LocationProvider?: ElementType
 } = {}
 
 interface PrerenderParams {
