@@ -292,6 +292,16 @@ function updateWorkspaceDependencies(
   }
 }
 
+/**
+ * Points the `@cedarjs/*` deps in the create-cedar-app templates at the
+ * prerelease version.
+ *
+ * Unlike RC publishes, this intentionally does not generate lockfiles for the
+ * package-manager overlays. Generating them takes a while, and getting a
+ * canary published quickly matters more than a faster first install for the
+ * few canaries that are actually installed — that resolution cost is paid on
+ * install instead.
+ */
 function updateCreateCedarAppTemplates(version: string) {
   log(`Updating create-cedar-app templates to ${version}`)
 
