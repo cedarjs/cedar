@@ -54,8 +54,6 @@
   "dependencies": {
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/server-store": "workspace:*",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
     "react-server-dom-webpack": "19.2.7",
     "ts-toolbelt": "9.6.0"
   },
@@ -68,6 +66,8 @@
     "@types/react-dom": "^19.2.0",
     "concurrently": "9.2.4",
     "publint": "0.3.23",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
     "tstyche": "5.0.2",
     "typescript": "5.9.3",
     "vite": "7.3.6",
