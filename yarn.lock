@@ -2635,6 +2635,8 @@ __metadata:
     type-fest: "npm:5.8.0"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.10"
+  peerDependencies:
+    react: 18.3.1
   languageName: unknown
   linkType: soft
 
@@ -3314,6 +3316,8 @@ __metadata:
     vitest: "npm:4.1.10"
   peerDependencies:
     "@cedarjs/router": 6.0.0
+    react: 18.3.1
+    react-dom: 18.3.1
   languageName: unknown
   linkType: soft
 
@@ -3444,6 +3448,7 @@ __metadata:
     publint: "npm:0.3.23"
     react: "npm:18.3.1"
     react-dom: "npm:18.3.1"
+    react-server-dom-webpack: "npm:19.2.7"
     ts-toolbelt: "npm:9.6.0"
     tstyche: "npm:5.0.2"
     typescript: "npm:5.9.3"
@@ -3672,6 +3677,7 @@ __metadata:
     oxc-parser: "npm:0.144.0"
     publint: "npm:0.3.23"
     react: "npm:18.3.1"
+    react-dom: "npm:18.3.1"
     react-server-dom-webpack: "npm:19.2.7"
     rollup: "npm:4.60.4"
     ts-dedent: "npm:2.3.0"
@@ -3689,6 +3695,8 @@ __metadata:
     "@cedarjs/auth": 6.0.0
     "@cedarjs/router": 6.0.0
     "@cedarjs/web": 6.0.0
+    react: 18.3.1
+    react-dom: 18.3.1
   bin:
     cedar-dev-fe: ./dist/devFeServer.js
     cedar-serve-fe: ./dist/runFeServer.js
