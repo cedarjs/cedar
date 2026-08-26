@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'path'
 
-import semver from 'semver'
+import { rangesIntersect, sort, tryParse } from 'verkit'
 
 import { getPaths } from '@cedarjs/project-config'
 
@@ -34,7 +34,7 @@ export async function getCompatibilityData(
     projectPackageJson.devDependencies['@cedarjs/core']
 
   // Parse the version, we'll assume it's a tag if it's not a valid semver version
-  const semverVersion = semver.parse(preferredVersionOrTag)
+  const semverVersion = tryParse(preferredVersionOrTag)
   const isUsingTag = semverVersion === null
 
   // Get the package information from NPM registry
@@ -71,10 +71,10 @@ export async function getCompatibilityData(
   const packageRedwoodSpecification =
     packument.versions[preferredVersion].engines?.redwoodjs
 
-  // We have to use the semver.intersects function because the package's redwoodjs engine could be a range
+  // We have to use rangesIntersect because the package's redwoodjs engine could be a range
   if (
     packageRedwoodSpecification !== undefined &&
-    semver.intersects(projectRedwoodVersion, packageRedwoodSpecification)
+    rangesIntersect(projectRedwoodVersion, packageRedwoodSpecification)
   ) {
     const tag = getCorrespondingTag(preferredVersion, packument['dist-tags'])
     return {
@@ -90,14 +90,14 @@ export async function getCompatibilityData(
   }
 
   // Look in the pacument for the latest version that is compatible with the current version of RedwoodJS
-  const versions = semver.sort(Object.keys(packument.versions))
+  const versions = sort(Object.keys(packument.versions))
   for (let i = versions.length - 1; i >= 0; i--) {
     const redwoodVersionRequired =
       packument.versions[versions[i]].engines?.redwoodjs
     if (redwoodVersionRequired === undefined) {
       continue
     }
-    if (semver.intersects(projectRedwoodVersion, redwoodVersionRequired)) {
+    if (rangesIntersect(projectRedwoodVersion, redwoodVersionRequired)) {
       return {
         preferred: {
           tag: getCorrespondingTag(preferredVersion, packument['dist-tags']),

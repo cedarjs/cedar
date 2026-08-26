@@ -48,8 +48,10 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
+    "@babel/core": "^7.26.10",
     "@babel/generator": "7.29.8",
     "@babel/parser": "7.29.8",
+    "@babel/preset-typescript": "7.29.7",
     "@babel/traverse": "7.29.8",
     "@babel/types": "7.29.8",
     "@cedarjs/api": "workspace:*",
@@ -63,7 +65,7 @@
     "@cedarjs/server-store": "workspace:*",
     "@cedarjs/structure": "workspace:*",
     "@cedarjs/testing": "workspace:*",
-    "@swc/core": "1.16.0",
+    "@swc/core": "1.16.1",
     "@universal-deploy/store": "^0.2.1",
     "@universal-deploy/vite": "^0.1.9",
     "@vitejs/plugin-react": "4.7.0",
@@ -76,7 +78,7 @@
     "dotenv-defaults": "5.0.2",
     "express": "4.22.2",
     "fast-glob": "3.3.3",
-    "find-my-way": "8.2.2",
+    "find-my-way": "9.7.0",
     "http-proxy-middleware": "3.0.7",
     "isbot": "5.2.1",
     "magic-string": "0.30.21",
@@ -88,7 +90,7 @@
     "vite-plugin-cjs-interop": "2.4.4",
     "vite-plugin-graphql-tag": "0.1.1",
     "vite-tsconfig-paths": "^6.1.1",
-    "ws": "8.20.0",
+    "ws": "8.21.0",
     "yargs-parser": "21.1.1"
   },
   "devDependencies": {
@@ -108,7 +110,7 @@
     "@types/yargs-parser": "21.0.3",
     "concurrently": "9.2.4",
     "memfs": "4.68.1",
-    "publint": "0.3.23",
+    "publint": "0.3.24",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "rollup": "4.62.5",

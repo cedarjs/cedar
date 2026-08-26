@@ -13,12 +13,7 @@ This article assumes you have an app set up and are using dbAuth. We're going to
 ```bash
 yarn install
 yarn build
-
-# typescript
 yarn run build:test-project ~/oauth-app
-
-# javascript
-yarn run build:test-project ~/oauth-app --javascript
 ```
 
 That will create a simple blog application at `~/oauth-app`. You'll get a login and signup page, which we're going to enhance to include a **Login with GitHub** button.

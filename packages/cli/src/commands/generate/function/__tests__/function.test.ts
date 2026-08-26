@@ -87,8 +87,9 @@ test('creates a .js file if --javascript=true', async () => {
       )
     ],
   ).toMatchSnapshot()
-  // ^ JS-function-args should be stripped of their types and consequently the unused 'aws-lamda' import removed.
-  // https://babeljs.io/docs/en/babel-plugin-transform-typescript
+  // ^ JavaScript function arguments carry no types, so the `aws-lambda`
+  // import, whose bindings are only used as types, is removed by
+  // `transpileTSToJS`.
 })
 
 test('creates a .ts file if --typescript=true', async () => {

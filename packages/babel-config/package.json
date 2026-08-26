@@ -26,13 +26,10 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@babel/core": "^7.26.10",
     "@babel/parser": "7.29.8",
     "@babel/plugin-transform-react-jsx": "7.29.7",
-    "@babel/plugin-transform-runtime": "7.29.7",
     "@babel/preset-env": "7.29.7",
     "@babel/preset-react": "7.29.7",
-    "@babel/preset-typescript": "7.29.7",
     "@babel/register": "7.29.7",
     "@babel/traverse": "7.29.8",
     "@cedarjs/project-config": "workspace:*",
@@ -44,6 +41,8 @@
     "typescript": "5.9.3"
   },
   "devDependencies": {
+    "@babel/core": "^7.26.10",
+    "@babel/preset-typescript": "7.29.7",
     "@cedarjs/framework-tools": "workspace:*",
     "@types/babel-plugin-tester": "11.0.0",
     "@types/babel__core": "7.20.5",
@@ -51,6 +50,18 @@
     "@types/node": "24.10.4",
     "babel-plugin-tester": "11.0.4",
     "vitest": "4.1.10"
+  },
+  "peerDependencies": {
+    "@babel/core": "^7.26.10",
+    "@babel/preset-typescript": "^7.29.7"
+  },
+  "peerDependenciesMeta": {
+    "@babel/core": {
+      "optional": true
+    },
+    "@babel/preset-typescript": {
+      "optional": true
+    }
   },
   "engines": {
     "node": ">=24"

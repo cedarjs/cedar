@@ -223,7 +223,7 @@ const config: Config = {
       '@docusaurus/preset-classic',
       {
         docs: {
-          sidebarPath: require.resolve('./sidebars.js'),
+          sidebarPath: require.resolve('./sidebars.cjs'),
           // ? — blob? tree?
           editUrl: 'https://github.com/cedarjs/cedar/blob/main/docs', // base path for repo edit pages
           editCurrentVersion: true,

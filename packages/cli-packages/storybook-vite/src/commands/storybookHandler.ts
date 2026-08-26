@@ -4,7 +4,7 @@ import process from 'node:process'
 
 import type { ExecaError } from 'execa'
 import execa from 'execa'
-import semver from 'semver'
+import { isGreaterOrEqual, isLess, tryParse } from 'verkit'
 
 import {
   isTypeScriptProject,
@@ -166,9 +166,9 @@ export async function handler({
   const env: Record<string, string> = {}
 
   if (
-    semver.parse(process.version) !== null &&
-    semver.lt(process.version, '22.0.0') &&
-    semver.gte(process.version, '20.19.0')
+    tryParse(process.version) !== null &&
+    isLess(process.version, '22.0.0') &&
+    isGreaterOrEqual(process.version, '20.19.0')
   ) {
     env.NODE_OPTIONS = '--no-experimental-require-module'
   }

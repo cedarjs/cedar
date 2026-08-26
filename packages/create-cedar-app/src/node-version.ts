@@ -1,8 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import semver from 'semver'
 import { terminalLink } from 'termi-link'
+import { findMinimumForRange, isLess, satisfies } from 'verkit'
 
 import { ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 
@@ -33,9 +33,9 @@ export async function executeNodeCompatibilityCheck(templateDir: string) {
     return
   }
 
-  const minRequired = semver.minVersion(nodeRange)
+  const minRequired = findMinimumForRange(nodeRange)
   const nodeVersionIsTooOld =
-    minRequired && semver.lt(process.version, minRequired)
+    minRequired && isLess(process.version, minRequired)
 
   if (nodeVersionIsTooOld) {
     tui.stopReactive(true)
@@ -131,6 +131,6 @@ function checkNodeVersion(templateDir: string) {
     throw new Error('Invalid node engine version range in package.json')
   }
 
-  const isSatisfied = semver.satisfies(process.version, nodeRange)
+  const isSatisfied = satisfies(process.version, nodeRange)
   return { isSatisfied, nodeRange }
 }

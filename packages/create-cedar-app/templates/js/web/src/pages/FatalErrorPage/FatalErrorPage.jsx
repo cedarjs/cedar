@@ -48,7 +48,6 @@ export default DevFatalErrorPage ||
             `,
         }}
       />
-
       <section>
         <h1>
           <span>Something went wrong</span>
