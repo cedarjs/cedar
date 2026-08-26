@@ -63,7 +63,7 @@
     "@cedarjs/server-store": "6.0.0",
     "@cedarjs/structure": "6.0.0",
     "@cedarjs/testing": "6.0.0",
-    "@swc/core": "1.16.0",
+    "@swc/core": "1.16.1",
     "@universal-deploy/store": "^0.2.1",
     "@universal-deploy/vite": "^0.1.9",
     "@vitejs/plugin-react": "4.7.0",
