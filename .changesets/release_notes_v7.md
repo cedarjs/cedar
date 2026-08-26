@@ -44,3 +44,18 @@ longer ship a CommonJS build, so every `@cedarjs/*` package is ESM-only. Node
 only breaking case is compiling your own TypeScript straight to CommonJS with
 `tsc` and statically importing one of these packages; use a dynamic `import()`
 there.
+
+## `yarn cedar ts-to-js` removed
+
+The deprecated `ts-to-js` CLI command, which converted a TypeScript project to
+JavaScript, has been removed. Cedar has no built-in way to convert a project
+from TypeScript to JavaScript. If you need a JavaScript project, generate one
+with `yarn create cedar-app --no-typescript`.
+
+## JSX is only compiled in `.jsx` and `.tsx` files
+
+Vite compiles JSX only in files with a `.jsx` or `.tsx` extension. A `.js`
+file on the web side that contains JSX fails `yarn cedar build web` with a
+parse error (`Expression expected`) pointing at the first JSX tag. Rename such
+files to `.jsx`. The pre-upgrade check run by `yarn cedar upgrade` lists every
+`.js` file it finds JSX in.

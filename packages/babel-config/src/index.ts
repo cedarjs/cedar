@@ -63,7 +63,6 @@ export {
    */
   getPathsFromTypeScriptConfig as getPathsFromConfig,
   /** Used by vite */
-  getRouteHookBabelPlugins,
   /**
    * @deprecated This export isn't used by the framework, so it'll be removed
    * in a future version.
