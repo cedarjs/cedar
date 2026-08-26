@@ -15,7 +15,6 @@ describe('dist', () => {
         "getApiSideBabelPresets": [Function],
         "getApiSideDefaultBabelConfig": [Function],
         "getPathsFromConfig": [Function],
-        "getRouteHookBabelPlugins": [Function],
         "getWebSideBabelConfigPath": [Function],
         "getWebSideBabelPlugins": [Function],
         "getWebSideBabelPresets": [Function],
