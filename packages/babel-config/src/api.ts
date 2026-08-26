@@ -1,8 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import type * as BabelCore from '@babel/core'
 import type { PluginOptions, PluginTarget, TransformOptions } from '@babel/core'
-import { transformAsync } from '@babel/core'
 import { resolvePath } from 'babel-plugin-module-resolver'
 
 import { getPaths } from '@cedarjs/project-config'
@@ -16,15 +16,33 @@ import {
 import pluginRedwoodDirectoryNamedImport from './plugins/babel-plugin-redwood-directory-named-import.js'
 import pluginRedwoodImportDir from './plugins/babel-plugin-redwood-import-dir.js'
 import pluginRedwoodJobPathInjector from './plugins/babel-plugin-redwood-job-path-injector.js'
+import {
+  loadBabelCoreFromProject,
+  resolveFromProject,
+} from './resolveFromProject.js'
 
 export const TARGETS_NODE = '24'
 
-export const getApiSideBabelPresets = (
-  { presetEnv } = { presetEnv: false },
-) => {
+// Resolves packages from this package's own dependency tree, i.e. the copies
+// the framework ships (through @cedarjs/cli, @cedarjs/vite, ...).
+
+interface ApiSideBabelPresetsOptions {
+  presetEnv?: boolean
+  /**
+   * Maps a preset's package name to what is put in the `presets` option.
+   * Babel resolves bare package names relative to the file it compiles;
+   * passing a resolver that returns absolute paths makes resolution explicit.
+   */
+  resolvePreset?: (packageName: string) => string
+}
+
+export const getApiSideBabelPresets = ({
+  presetEnv = false,
+  resolvePreset = (packageName) => packageName,
+}: ApiSideBabelPresetsOptions = {}) => {
   return [
     [
-      '@babel/preset-typescript',
+      resolvePreset('@babel/preset-typescript'),
       {
         isTSX: true,
         allExtensions: true,
@@ -33,7 +51,7 @@ export const getApiSideBabelPresets = (
     ],
     // Preset-env is required when we are not doing the transpilation with esbuild
     presetEnv && [
-      '@babel/preset-env',
+      resolvePreset('@babel/preset-env'),
       {
         targets: {
           node: TARGETS_NODE,
@@ -247,6 +265,16 @@ export const registerApiSideBabelHook = ({
   })
 }
 
+/**
+ * Runs `sourceCode` through Babel with Cedar's api-side config plus the
+ * project's `api/babel.config.js` when there is one.
+ *
+ * `@babel/core` and `@babel/preset-typescript` are optional peer dependencies
+ * of this package, resolved from the project's api workspace; a missing
+ * install fails with an actionable error. Every caller checks for
+ * `api/babel.config.js` before calling this, so Babel is only ever loaded for
+ * projects that opted into a custom api-side Babel config.
+ */
 export const transformWithBabel = async (
   sourceCode: string,
   filename: string,
@@ -258,10 +286,15 @@ export const transformWithBabel = async (
   // the result maps all the way back to the original source.
   inputSourceMap: TransformOptions['inputSourceMap'] = undefined,
 ) => {
-  const result = transformAsync(sourceCode, {
-    presets: getApiSideBabelPresets(),
+  const customConfigPath = getApiSideBabelConfigPath()
+
+  const babel: typeof BabelCore = loadBabelCoreFromProject()
+  const resolvePreset = resolveFromProject
+
+  const result = babel.transformAsync(sourceCode, {
+    presets: getApiSideBabelPresets({ resolvePreset }),
     overrides: getApiSideBabelOverrides({ forVite }),
-    extends: getApiSideBabelConfigPath(),
+    extends: customConfigPath,
     babelrc: false,
     ignore: ['node_modules'],
     cwd: getPaths().api.base,

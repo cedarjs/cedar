@@ -91,3 +91,16 @@ spreading, `Object.keys()`, the `in` operator and `JSON.stringify()` all work
 as expected, but calling `options.params.hasOwnProperty(...)` or
 `options.params.toString()` throws a `TypeError`. Use
 `Object.hasOwn(options.params, key)` for ownership checks.
+
+## `api/babel.config.js` needs Babel installed in the api workspace
+
+`@cedarjs/babel-config` lists `@babel/core` and `@babel/preset-typescript` as
+optional peer dependencies and resolves them from the project's api workspace
+when `api/babel.config.js` exists. Projects without a custom api-side Babel
+config are unaffected. Projects that have an `api/babel.config.js` must
+install the two packages themselves, or the api build fails with an error
+pointing to this command:
+
+```shell
+yarn workspace api add -D @babel/core@^7 @babel/preset-typescript@^7
+```

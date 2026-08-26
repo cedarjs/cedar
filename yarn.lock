@@ -2549,6 +2549,14 @@ __metadata:
     graphql: "npm:16.14.2"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.10"
+  peerDependencies:
+    "@babel/core": ^7.26.10
+    "@babel/preset-typescript": ^7.29.7
+  peerDependenciesMeta:
+    "@babel/core":
+      optional: true
+    "@babel/preset-typescript":
+      optional: true
   languageName: unknown
   linkType: soft
 
@@ -3485,6 +3493,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/vite@workspace:packages/vite"
   dependencies:
+    "@babel/core": "npm:^7.26.10"
     "@babel/generator": "npm:7.29.8"
     "@babel/parser": "npm:7.29.8"
     "@babel/preset-typescript": "npm:7.29.7"
