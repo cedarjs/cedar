@@ -26,7 +26,7 @@ import {
   PrerenderGqlError,
 } from './errors.js'
 import { executeQuery, getGqlHandler } from './graphql/graphql.js'
-import type { FileImporter } from './graphql/graphql.js'
+import type { FileImporter, GqlHandler } from './graphql/graphql.js'
 import { NodeRunner } from './graphql/node-runner.js'
 import { getRootHtmlPath, registerShims, writeToDist } from './internal.js'
 
@@ -38,16 +38,30 @@ const prerenderApolloClient = new ApolloClient({
   link: ApolloLink.empty(),
 })
 
-async function recursivelyRender(
-  App: ElementType,
-  Routes: ElementType,
-  CellCacheContextProvider: ElementType,
-  LocationProvider: ElementType,
-  renderPath: string,
-  fileImporter: FileImporter,
-  gqlHandler: any,
-  queryCache: Record<string, QueryInfo>,
-): Promise<string> {
+interface RenderArgs {
+  App: ElementType
+  Routes: ElementType
+  CellCacheContextProvider: ElementType
+  LocationProvider: ElementType
+  /** The path (url) to render e.g. /about, /dashboard/me, /blog-post/3 */
+  renderPath: string
+  fileImporter: FileImporter
+  gqlHandler: GqlHandler
+  queryCache: Record<string, QueryInfo>
+}
+
+async function recursivelyRender(args: RenderArgs): Promise<string> {
+  const {
+    App,
+    Routes,
+    CellCacheContextProvider,
+    LocationProvider,
+    renderPath,
+    fileImporter,
+    gqlHandler,
+    queryCache,
+  } = args
+
   // Load this async, to prevent rwjs/web being loaded before shims
   const { getOperationName } = await import('@cedarjs/web')
 
@@ -71,13 +85,15 @@ async function recursivelyRender(
         let result
 
         try {
-          result = JSON.parse(resultString)
+          // A handler response without a body is a parse failure too:
+          // JSON.parse('') throws a SyntaxError
+          result = JSON.parse(resultString ?? '')
         } catch (e) {
           if (e instanceof SyntaxError) {
             throw new JSONParseError({
               query: value.query,
               variables: value.variables,
-              result: resultString,
+              result: resultString ?? '',
             })
           }
         }
@@ -147,16 +163,7 @@ async function recursivelyRender(
   if (Object.values(queryCache).some((value) => !value.hasProcessed)) {
     // We found new queries that we haven't fetched yet. Execute all new
     // queries and render again
-    return recursivelyRender(
-      App,
-      Routes,
-      CellCacheContextProvider,
-      LocationProvider,
-      renderPath,
-      fileImporter,
-      gqlHandler,
-      queryCache,
-    )
+    return recursivelyRender(args)
   } else {
     if (shouldShowGraphqlHandlerNotFoundWarn) {
       console.warn(
@@ -341,16 +348,16 @@ export const runPrerender = async ({
       throw new Error('LocationProvider not found')
     }
 
-    componentAsHtml = await recursivelyRender(
+    componentAsHtml = await recursivelyRender({
       App,
       Routes,
       CellCacheContextProvider,
       LocationProvider,
       renderPath,
-      nodeRunner.importFile.bind(nodeRunner),
+      fileImporter: nodeRunner.importFile.bind(nodeRunner),
       gqlHandler,
       queryCache,
-    )
+    })
   } finally {
     await nodeRunner.close()
   }
