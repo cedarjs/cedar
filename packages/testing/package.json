@@ -79,7 +79,7 @@
     "@cedarjs/router": "workspace:*",
     "@cedarjs/web": "workspace:*",
     "concurrently": "9.2.4",
-    "publint": "0.3.23",
+    "publint": "0.3.24",
     "typescript": "5.9.3",
     "vitest": "4.1.10"
   },
