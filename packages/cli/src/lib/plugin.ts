@@ -93,7 +93,6 @@ export const PLUGIN_CACHE_BUILTIN = [
   'serve',
   'setup',
   'test',
-  'ts-to-js',
   'type-check',
   'tsc',
   'tc',

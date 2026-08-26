@@ -52,23 +52,10 @@ const args = yargs(hideBin(process.argv))
     describe:
       'Upgrade project to latest canary version. NOT compatible with --link.',
   })
-  .option('javascript', {
-    default: false,
-    type: 'boolean',
-    describe: 'Build a Javascript project.',
-  })
   .help()
   .parseSync()
 
-const {
-  canary,
-  link,
-  verbose,
-  clean,
-  copyFromFixture,
-  javascript,
-  streamingSsr,
-} = args
+const { canary, link, verbose, clean, copyFromFixture, streamingSsr } = args
 
 if (args._.length > 1) {
   console.log(
@@ -117,7 +104,6 @@ const createProject = async () => {
 
   const cmd = `yarn node ./packages/create-cedar-app/dist/create-cedar-app.js ${OUTPUT_PROJECT_PATH}`
 
-  // We create a ts project and convert using ts-to-js at the end if typescript flag is false
   return execa(
     cmd,
     ['--no-install', '--pm', 'yarn', '--typescript', '--overwrite', '--no-git'],
@@ -174,17 +160,6 @@ const globalTasks = () =>
           )
         },
         enabled: () => link,
-      },
-      {
-        title: 'Converting to Javascript',
-        task: () => {
-          return execa(
-            'yarn cedar ts-to-js',
-            [],
-            getExecaOptions(OUTPUT_PROJECT_PATH),
-          )
-        },
-        enabled: () => javascript,
       },
       {
         title: 'Upgrading to latest canary version',

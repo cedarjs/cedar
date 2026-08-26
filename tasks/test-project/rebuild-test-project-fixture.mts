@@ -365,7 +365,6 @@ const createProject = () => {
 
   const subprocess = exec(
     cmd,
-    // We create a ts project and convert using ts-to-js at the end if typescript flag is false
     [
       '--no-install',
       '--pm',

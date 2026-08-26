@@ -14,3 +14,10 @@ Client 4:
 
 See Apollo's migration guide for the full list:
 https://www.apollographql.com/docs/react/migration/3.x-to-4.x
+
+## `yarn cedar ts-to-js` removed
+
+The deprecated `ts-to-js` CLI command, which converted a TypeScript project to
+JavaScript, has been removed. Cedar has no built-in way to convert a project
+from TypeScript to JavaScript. If you need a JavaScript project, generate one
+with `yarn create cedar-app --no-typescript`.
