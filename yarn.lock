@@ -2629,6 +2629,8 @@ __metadata:
     type-fest: "npm:5.8.0"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.10"
+  peerDependencies:
+    react: 19.2.3
   languageName: unknown
   linkType: soft
 
@@ -3305,6 +3307,8 @@ __metadata:
     vitest: "npm:4.1.10"
   peerDependencies:
     "@cedarjs/router": "workspace:*"
+    react: 19.2.3
+    react-dom: 19.2.3
   languageName: unknown
   linkType: soft
 
@@ -3656,6 +3660,7 @@ __metadata:
     oxc-parser: "npm:0.144.0"
     publint: "npm:0.3.23"
     react: "npm:19.2.3"
+    react-dom: "npm:19.2.3"
     react-server-dom-webpack: "npm:19.2.7"
     rollup: "npm:4.60.4"
     ts-dedent: "npm:2.3.0"
@@ -3673,6 +3678,8 @@ __metadata:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/router": "workspace:*"
     "@cedarjs/web": "workspace:*"
+    react: 19.2.3
+    react-dom: 19.2.3
   bin:
     cedar-dev-fe: ./dist/devFeServer.js
     cedar-serve-fe: ./dist/runFeServer.js
