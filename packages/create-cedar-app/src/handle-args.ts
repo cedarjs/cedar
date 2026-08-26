@@ -85,36 +85,6 @@ export async function handleTypescriptPreference(
   }
 }
 
-export async function handleEsmPreference(esmFlag: boolean | null) {
-  // Handle case where flag is set
-  if (esmFlag !== null) {
-    tui.drawText(
-      `${RedwoodStyling.green('✔')} Setting up ${
-        esmFlag ? 'an ESM' : 'a CJS'
-      } project based on command line flag`,
-    )
-    return esmFlag
-  }
-
-  return false
-  // Disable this for now, while the ESM flag is hidden
-  // Prompt user for preference
-  // try {
-  //   const response = await tui.prompt({
-  //     type: 'Select',
-  //     name: 'esm',
-  //     choices: ['CJS', 'ESM'],
-  //     message: 'Select your preferred project type',
-  //     initial: 'CJS',
-  //   })
-  //   return response.esm === 'ESM'
-  // } catch (_error) {
-  //   recordErrorViaTelemetry('User cancelled install at esm prompt')
-  //   await shutdownTelemetry()
-  //   process.exit(1)
-  // }
-}
-
 export async function handleGitPreference(gitInitFlag: boolean | null) {
   // Handle case where flag is set
   if (gitInitFlag !== null) {
@@ -266,10 +236,7 @@ export async function handlePackageManagerPreference(
   }
 }
 
-export async function handleDatabasePreference(
-  databaseFlag: string | null,
-  useEsm: boolean,
-) {
+export async function handleDatabasePreference(databaseFlag: string | null) {
   const supportedDatabases = ['sqlite', 'pglite', 'neon-postgres']
   if (databaseFlag && !supportedDatabases.includes(databaseFlag)) {
     tui.stopReactive(true)
@@ -279,30 +246,6 @@ export async function handleDatabasePreference(
         supportedDatabases.join(', '),
     )
     recordErrorViaTelemetry('Invalid database flag')
-    await shutdownTelemetry()
-    process.exit(1)
-  }
-
-  if (databaseFlag === 'pglite' && !useEsm) {
-    tui.stopReactive(true)
-    tui.displayError(
-      'Invalid configuration',
-      'The --db pglite flag requires --esm. Use:\n' +
-        '  create-cedar-app --esm --db pglite my-app',
-    )
-    recordErrorViaTelemetry('pglite without esm')
-    await shutdownTelemetry()
-    process.exit(1)
-  }
-
-  if (databaseFlag === 'neon-postgres' && !useEsm) {
-    tui.stopReactive(true)
-    tui.displayError(
-      'Invalid configuration',
-      'The --db neon-postgres flag requires --esm. Use:\n' +
-        '  create-cedar-app --esm --db neon-postgres my-app',
-    )
-    recordErrorViaTelemetry('neon-postgres without esm')
     await shutdownTelemetry()
     process.exit(1)
   }

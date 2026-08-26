@@ -17,7 +17,7 @@ const projectPath = await fs.realpath(process.env.PROJECT_PATH)
 const SNAPSHOT_DIR = fileURLToPath(new URL('./__snapshots__', import.meta.url))
 
 const templatesDir = fileURLToPath(new URL('../templates', import.meta.url))
-for (const dir of ['esm-js', 'esm-ts', 'js', 'ts']) {
+for (const dir of ['js', 'ts']) {
   if (fs.existsSync(path.join(templatesDir, dir, 'node_modules'))) {
     throw new Error(
       `Found node_modules in templates/${dir}. Remove it or the tests will ` +

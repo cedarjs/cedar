@@ -14,47 +14,19 @@ const tsTemplatePath = fileURLToPath(
   new URL('../templates/ts', import.meta.url),
 )
 
-const esmTsTemplatePath = fileURLToPath(
-  new URL('../templates/esm-ts', import.meta.url),
-)
-
 const overlaysPath = fileURLToPath(
   new URL('../templates/overlays', import.meta.url),
 )
 
-// For each (baseTemplate, overlayBase) pair we generate lockfiles for all
-// three package managers and store them in the PM-specific overlay dir.
-// The cjs overlays are used by both the ts and js templates.
-// The esm overlays are used by both the esm-ts and esm-js templates.
-// We use the ts / esm-ts templates as the representative base because they
-// contain the same workspace member package.json files as js / esm-js.
-const configs = [
-  { templatePath: tsTemplatePath, overlayBase: 'cjs' },
-  { templatePath: esmTsTemplatePath, overlayBase: 'esm' },
+// Generate lockfiles for all three package managers and store them in the
+// PM-specific overlay dir. The overlays are used by both the ts and js
+// templates. We use the ts template as the representative base because it
+// contains the same workspace member package.json files as js.
+const generatedFiles = [
+  await generateYarnLockfile(tsTemplatePath, path.join(overlaysPath, 'yarn')),
+  await generateNpmLockfile(tsTemplatePath, path.join(overlaysPath, 'npm')),
+  await generatePnpmLockfile(tsTemplatePath, path.join(overlaysPath, 'pnpm')),
 ]
-
-const generatedFiles = []
-
-for (const { templatePath, overlayBase } of configs) {
-  const overlaysBaseDir = path.join(overlaysPath, overlayBase)
-
-  const yarnLock = await generateYarnLockfile(
-    templatePath,
-    path.join(overlaysBaseDir, 'yarn'),
-  )
-
-  const npmLock = await generateNpmLockfile(
-    templatePath,
-    path.join(overlaysBaseDir, 'npm'),
-  )
-
-  const pnpmLock = await generatePnpmLockfile(
-    templatePath,
-    path.join(overlaysBaseDir, 'pnpm'),
-  )
-
-  generatedFiles.push(yarnLock, npmLock, pnpmLock)
-}
 
 await $`yarn pack -o create-cedar-app.tgz`
 

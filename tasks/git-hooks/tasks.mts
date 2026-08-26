@@ -1,5 +1,5 @@
-import { existsSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import path, { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -25,6 +25,35 @@ function checkDependenciesInstalled(): boolean {
       'linked worktree, run `yarn install` here first, then try again.',
   )
   return false
+}
+
+// packages/create-cedar-rsc-app is excluded from the root Yarn workspaces and
+// has its own lockfile and node_modules, so a root `yarn install` doesn't
+// install its dependencies. Running its lint without them fails with an
+// unrelated-looking Yarn error, so check up front and say what to do.
+function checkCcrscaDependenciesInstalled(): boolean {
+  const ccrscaRoot = path.join(monorepoRoot, 'packages', 'create-cedar-rsc-app')
+
+  if (existsSync(path.join(ccrscaRoot, 'node_modules'))) {
+    return true
+  }
+
+  console.error(
+    `[git-hooks] No node_modules found in ${ccrscaRoot}.\n` +
+      '  This branch changes packages/create-cedar-rsc-app, which has its own ' +
+      'dependencies. Run `yarn --cwd packages/create-cedar-rsc-app install` ' +
+      'first, then try again.',
+  )
+  return false
+}
+
+/**
+ * Creates an error carrying the exit code the hook should finish with, in
+ * the same shape as the errors thrown by `execAsync`
+ */
+function exitError(exitCode: number): Error & { exitCode: number } {
+  const err = new Error(`[git-hooks] failed with exit code ${exitCode}`)
+  return Object.assign(err, { exitCode })
 }
 
 function isExcluded(file: string): boolean {
@@ -138,14 +167,14 @@ function hasCrwrsaChanges(files: string[]): boolean {
 }
 
 async function runAllLint(changedFiles: string[]): Promise<void> {
-  // Check for template/crwrsca changes on the original file list before filtering,
+  // Check for template/ccrsca changes on the original file list before filtering,
   // since getFilesToLint() excludes template .tsx files
   const hasTemplates = hasTemplateChanges(changedFiles)
   const hasCrwrsa = hasCrwrsaChanges(changedFiles)
 
   const filesToLint = getFilesToLint(changedFiles)
 
-  // Template and crwrsca packages have package-specific ESLint configs
+  // Template and ccrsca packages have package-specific ESLint configs
   // that the root config ignores, so run their dedicated lint commands
 
   const otherFiles = filesToLint.filter(
@@ -165,13 +194,17 @@ async function runAllLint(changedFiles: string[]): Promise<void> {
   }
 
   if (hasCrwrsa) {
-    lintTasks.push(execAsync('yarn', ['lint:crwrsca'], 'git-hooks'))
+    if (!checkCcrscaDependenciesInstalled()) {
+      throw exitError(1)
+    }
+
+    lintTasks.push(execAsync('yarn', ['lint:ccrsca'], 'git-hooks'))
   }
 
   const results = await Promise.allSettled(lintTasks)
   for (const r of results) {
     if (r.status === 'rejected') {
-      throw (r.reason as Error & { exitCode?: number }).exitCode ?? 1
+      throw exitError((r.reason as Error & { exitCode?: number }).exitCode ?? 1)
     }
   }
 }

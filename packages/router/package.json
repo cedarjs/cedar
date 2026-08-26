@@ -54,9 +54,7 @@
   "dependencies": {
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/server-store": "workspace:*",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "react-server-dom-webpack": "19.2.7",
+    "react-server-dom-webpack": "19.2.8",
     "ts-toolbelt": "9.6.0"
   },
   "devDependencies": {
@@ -67,7 +65,9 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "concurrently": "9.2.4",
-    "publint": "0.3.23",
+    "publint": "0.3.24",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "tstyche": "5.0.2",
     "typescript": "5.9.3",
     "vite": "7.3.6",
@@ -75,8 +75,8 @@
   },
   "peerDependencies": {
     "@cedarjs/auth": "workspace:*",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "engines": {
     "node": ">=24"

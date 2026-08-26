@@ -9,7 +9,7 @@ import { rollup } from 'rollup'
 import { swc } from 'rollup-plugin-swc3'
 import unimportPlugin from 'unimport/unplugin'
 
-import { getConfig, getPaths, projectIsEsm } from '@cedarjs/project-config'
+import { getConfig, getPaths } from '@cedarjs/project-config'
 
 import {
   getPathsFromTypeScriptConfig,
@@ -48,7 +48,7 @@ interface Options {
 
 export async function buildAndImport(
   options: Options,
-): Promise<Record<string, React.FunctionComponent>> {
+): Promise<Record<string, React.ElementType>> {
   if (!isValidJsFile(options.filepath)) {
     throw new Error(`${options.filepath} is not a valid JS file`)
   }
@@ -72,8 +72,6 @@ export async function buildAndImport(
   if (!fs.existsSync(outDir)) {
     fs.mkdirSync(outDir, { recursive: true })
   }
-
-  const isEsm = projectIsEsm()
 
   const build = await rollup({
     input: [options.filepath],
@@ -146,18 +144,10 @@ export async function buildAndImport(
             from: 'react',
           },
           // import { gql } from 'graphql-tag'
-          !useTrustedDocumentsGqlTag &&
-            isEsm && {
-              name: 'gql',
-              from: 'graphql-tag',
-            },
-          // import gql from 'graphql-tag'
-          !useTrustedDocumentsGqlTag &&
-            !isEsm && {
-              name: 'default',
-              as: 'gql',
-              from: 'graphql-tag',
-            },
+          !useTrustedDocumentsGqlTag && {
+            name: 'gql',
+            from: 'graphql-tag',
+          },
           // import { gql } from 'src/graphql/gql'
           useTrustedDocumentsGqlTag && {
             name: 'gql',

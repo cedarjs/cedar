@@ -48,7 +48,7 @@ export const getExecaOptions = (
   cwd: string,
   stdio: 'inherit' | 'pipe' = 'pipe',
 ): ExecaOptions => {
-  // Yarn sets PROJECT_CWD which causes @cedarjs/web/dist/cjs/bins/cedar.js to
+  // Yarn sets PROJECT_CWD which causes @cedarjs/web/dist/bins/cedar.js to
   // chdir to the Yarn project root, overriding our explicit cwd. Unset it so
   // that the child process inherits our intended working directory.
   //

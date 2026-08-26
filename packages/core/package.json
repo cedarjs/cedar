@@ -23,12 +23,10 @@
     "cedar-server": "./dist/bins/cedar-server.js",
     "cedar-web-server": "./dist/bins/cedar-web-server.js",
     "cedarjs": "./dist/bins/cedar.js",
-    "cedarjs-api-server-watch": "./dist/bins/cedarjs-api-server-watch.js",
     "cedarjs-serve-api": "./dist/bins/cedarjs-serve-api.js",
     "cfw": "./dist/bins/cfw.js",
     "cross-env": "./dist/bins/cross-env.js",
     "eslint": "./dist/bins/eslint.js",
-    "jest": "./dist/bins/jest.js",
     "nodemon": "./dist/bins/nodemon.js",
     "redwood": "./dist/bins/redwood.js",
     "rw": "./dist/bins/redwood.js",
@@ -61,7 +59,7 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "publint": "0.3.23"
+    "publint": "0.3.24"
   },
   "engines": {
     "node": ">=24"

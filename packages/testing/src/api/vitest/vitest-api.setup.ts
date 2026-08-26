@@ -323,7 +323,7 @@ async function loadScenarios(testPath: string, scenarioName: string) {
  * do any of the teardown logic - allowing simple tests to run faster
  * At the same time, if the db is used, disconnecting it in this context
  * prevents connection limit errors.
- * Just disconnecting db in jest-preset is not enough, because the Prisma client
+ * Just disconnecting db in the test setup is not enough, because the Prisma client
  * is created in a different context.
  */
 const wasDbImported = () => {

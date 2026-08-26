@@ -5,8 +5,9 @@ import url from 'node:url'
 import type { Manifest as ViteBuildManifest } from 'vite'
 
 import { getProjectRoutes } from '@cedarjs/internal/dist/routes.js'
-import { getAppRouteHook, getPaths } from '@cedarjs/project-config'
+import { getPaths } from '@cedarjs/project-config'
 
+import { getRouteHookDistPath } from './buildRouteHooks.js'
 import type { RWRouteManifest } from './types.js'
 
 /**
@@ -39,7 +40,9 @@ export async function buildRouteManifest() {
       // E.g. /blog/post/{id:Int}
       pathDefinition: route.pathDefinition,
       hasParams: route.hasParams,
-      routeHooks: FIXME_constructRouteHookPath(route.routeHooks),
+      routeHooks: route.routeHooks
+        ? getRouteHookDistPath(route.routeHooks)
+        : null,
       redirect: route.redirect
         ? {
             to: route.redirect?.to,
@@ -61,26 +64,4 @@ export async function buildRouteManifest() {
   const webRouteManifest = rwPaths.web.routeManifest
   await fs.mkdir(rwPaths.web.distSsr, { recursive: true })
   return fs.writeFile(webRouteManifest, JSON.stringify(routeManifest, null, 2))
-}
-
-// TODO (STREAMING) Hacky work around because when you don't have a App.routeHook, esbuild doesn't create
-// the pages folder in the dist/ssr/routeHooks directory.
-// @MARK need to change to .mjs here if we use esm
-const FIXME_constructRouteHookPath = (
-  routeHookSrcPath: string | null | undefined,
-) => {
-  const rwPaths = getPaths()
-  if (!routeHookSrcPath) {
-    return null
-  }
-
-  if (getAppRouteHook()) {
-    return path
-      .relative(rwPaths.web.src, routeHookSrcPath)
-      .replace('.ts', '.js')
-  } else {
-    return path
-      .relative(path.join(rwPaths.web.src, 'pages'), routeHookSrcPath)
-      .replace('.ts', '.js')
-  }
 }

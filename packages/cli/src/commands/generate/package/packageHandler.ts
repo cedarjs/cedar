@@ -13,7 +13,7 @@ import { workspacePackageSpecifier } from '@cedarjs/cli-helpers/packageManager'
 import { runScript, runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
 import { installPackages } from '@cedarjs/cli-helpers/packageManager/packages'
 import { addWorkspaceDir } from '@cedarjs/cli-helpers/packageManager/workspaces'
-import { getConfig, projectIsEsm } from '@cedarjs/project-config'
+import { getConfig } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -514,8 +514,6 @@ export const handler = async ({
         task: async (ctx) => {
           packageFiles = await files({
             ...ctx.nameVariants,
-            // Only Vitest projects get a config generated for them
-            esm: projectIsEsm(),
             ...rest,
           })
           return writeFilesTask(packageFiles, { overwriteExisting: force })

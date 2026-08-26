@@ -13,11 +13,11 @@ export type RendererOptions = MailRendererOptions<SupportedOutputFormats> &
   Parameters<typeof mjml2html>[1]
 
 export class MJMLReactRenderer extends AbstractMailRenderer {
-  render(
+  async render(
     template: Parameters<typeof renderToMjml>[0],
     options: RendererOptions,
     _utilities?: MailUtilities,
-  ): MailRenderedContent {
+  ): Promise<MailRenderedContent> {
     const renderingResult = mjml2html(renderToMjml(template), options)
     if (renderingResult.errors.length > 0) {
       throw new Error(renderingResult.errors.join('\n'))

@@ -92,25 +92,18 @@ export async function webTasks(
 interface ApiTasksOptions {
   verbose: boolean
   linkWithLatestFwBuild: boolean
-  esm: boolean
   packageManager?: 'yarn' | 'npm' | 'pnpm'
 }
 
 export async function apiTasks(
   outputPath: string,
-  {
-    verbose,
-    linkWithLatestFwBuild,
-    esm,
-    packageManager = 'yarn',
-  }: ApiTasksOptions,
+  { verbose, linkWithLatestFwBuild, packageManager = 'yarn' }: ApiTasksOptions,
 ) {
   setOutputPath(outputPath)
 
   const baseTasks = apiTasksList({
     dbAuth: 'canary',
     linkWithLatestFwBuild,
-    esm,
     packageManager,
   })
 

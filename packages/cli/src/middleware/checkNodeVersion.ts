@@ -1,4 +1,4 @@
-import semver from 'semver'
+import { clean, isGreaterOrEqual } from 'verkit'
 
 import { colors as c } from '@cedarjs/cli-helpers'
 
@@ -11,7 +11,7 @@ export function checkNodeVersion(): NodeVersionCheck {
   const checks: NodeVersionCheck = { ok: true }
 
   const pVersion = process.version
-  const pVersionC = semver.clean(pVersion)
+  const pVersionC = clean(pVersion)
   const LOWER_BOUND = 'v24.0.0'
 
   // pVersionC is null if the version string is invalid
@@ -22,7 +22,7 @@ export function checkNodeVersion(): NodeVersionCheck {
     return checks
   }
 
-  if (semver.gte(pVersionC, LOWER_BOUND)) {
+  if (isGreaterOrEqual(pVersionC, LOWER_BOUND)) {
     return checks
   }
 

@@ -26,7 +26,6 @@
     "test:unit": "vitest run src"
   },
   "dependencies": {
-    "@cedarjs/babel-config": "workspace:*",
     "@cedarjs/cli-helpers": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/vite": "workspace:*",

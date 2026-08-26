@@ -4,7 +4,6 @@ exports[`'use client' directive > creates a new EditPostCell cell with the 'use 
 "'use client'
 
 import { navigate, routes } from '@cedarjs/router'
-
 import { useMutation } from '@cedarjs/web'
 import { toast } from '@cedarjs/web/toast'
 
@@ -92,7 +91,6 @@ exports[`'use client' directive > creates a new NewPost component with the 'use 
 
 import { navigate, routes } from '@cedarjs/router'
 import { useMutation } from '@cedarjs/web'
-
 import { toast } from '@cedarjs/web/toast'
 
 import PostForm from 'src/components/Post/PostForm'
@@ -908,7 +906,6 @@ export default ScaffoldLayout
 exports[`in javascript (default) mode > creates a new component 1`] = `
 "import { navigate, routes } from '@cedarjs/router'
 import { useMutation } from '@cedarjs/web'
-
 import { toast } from '@cedarjs/web/toast'
 
 import PostForm from 'src/components/Post/PostForm'
@@ -955,7 +952,6 @@ export default NewPost
 exports[`in javascript (default) mode > creates a new component with int foreign keys converted in onSave 1`] = `
 "import { navigate, routes } from '@cedarjs/router'
 import { useMutation } from '@cedarjs/web'
-
 import { toast } from '@cedarjs/web/toast'
 
 import UserProfileForm from 'src/components/UserProfile/UserProfileForm'
@@ -1053,7 +1049,6 @@ export const Success = ({ post }) => {
 exports[`in javascript (default) mode > creates a show component 1`] = `
 "import { Link, routes, navigate } from '@cedarjs/router'
 import { useMutation } from '@cedarjs/web'
-
 import { toast } from '@cedarjs/web/toast'
 
 import { checkboxInputTag, jsonDisplay, timeTag } from 'src/lib/formatters.js'
@@ -1588,7 +1583,6 @@ exports[`in javascript (default) mode > creates an edit cell 1`] = `undefined`;
 
 exports[`in javascript (default) mode > creates an edit component with int foreign keys converted in onSave 1`] = `
 "import { navigate, routes } from '@cedarjs/router'
-
 import { useMutation } from '@cedarjs/web'
 import { toast } from '@cedarjs/web/toast'
 
@@ -1713,7 +1707,6 @@ export const Success = ({ posts }) => {
 exports[`in javascript (default) mode > creates an index component 1`] = `
 "import { Link, routes } from '@cedarjs/router'
 import { useMutation } from '@cedarjs/web'
-
 import { toast } from '@cedarjs/web/toast'
 
 import { QUERY } from 'src/components/Post/PostsCell'
@@ -1874,7 +1867,6 @@ const PixelForm = (props) => {
             className="rw-input"
             errorClassName="rw-input rw-input-error"
           />
-
           <div>Red</div>
         </div>
 
@@ -1887,7 +1879,6 @@ const PixelForm = (props) => {
             className="rw-input"
             errorClassName="rw-input rw-input-error"
           />
-
           <div>Green</div>
         </div>
 
@@ -1900,7 +1891,6 @@ const PixelForm = (props) => {
             className="rw-input"
             errorClassName="rw-input rw-input-error"
           />
-
           <div>Blue</div>
         </div>
 
@@ -1923,7 +1913,6 @@ const PixelForm = (props) => {
             className="rw-input"
             errorClassName="rw-input rw-input-error"
           />
-
           <div className="rw-check-radio-item-none">None</div>
         </div>
 
@@ -1936,7 +1925,6 @@ const PixelForm = (props) => {
             className="rw-input"
             errorClassName="rw-input rw-input-error"
           />
-
           <div>Triangular</div>
         </div>
 
@@ -1949,7 +1937,6 @@ const PixelForm = (props) => {
             className="rw-input"
             errorClassName="rw-input rw-input-error"
           />
-
           <div>Stripes</div>
         </div>
 
@@ -1962,7 +1949,6 @@ const PixelForm = (props) => {
             className="rw-input"
             errorClassName="rw-input rw-input-error"
           />
-
           <div>Diagonal</div>
         </div>
 

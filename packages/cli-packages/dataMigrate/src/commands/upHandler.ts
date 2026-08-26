@@ -1,30 +1,19 @@
 import fs from 'node:fs'
-import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import { Listr } from 'listr2'
+import { createServer, isRunnableDevEnvironment } from 'vite'
 
-import { registerApiSideBabelHook } from '@cedarjs/babel-config'
 import { colors as c } from '@cedarjs/cli-helpers'
-import { getPaths, getDataMigrationsPath } from '@cedarjs/project-config'
+import {
+  getPaths,
+  getDataMigrationsPath,
+  resolveFile,
+  importStatementPath,
+} from '@cedarjs/project-config'
 
 import type { DataMigrateUpOptions, DataMigration } from '../types.js'
 
-// `require()` isn't a global in ESM, so we need our own via `createRequire`.
-// We need real `require()` (not `import()`) here because
-// `registerApiSideBabelHook()` patches Node's CJS module loader
-// (`Module.prototype._compile`) to transpile on the fly, and that patch only
-// intercepts `require()`, not dynamic `import()`.
-const require = createRequire(import.meta.url)
-
-/**
- * The subset of a Prisma client that the dataMigrate up handler requires.
- *
- * Using a structural interface rather than importing PrismaClient keeps this
- * package decoupled from wherever the generated Prisma client lives (v6
- * node_modules default or a v7 custom output path). A real PrismaClient
- * instance always satisfies this interface.
- */
 interface DataMigrateDb {
   rW_DataMigration: {
     findMany(args?: {
@@ -35,12 +24,100 @@ interface DataMigrateDb {
   $disconnect(): Promise<void>
 }
 
+function resolveId(id: string): string {
+  if (fs.existsSync(id) && fs.statSync(id).isFile()) {
+    return id
+  }
+
+  const withoutExt = /\.jsx?$/.test(id) ? id.replace(/\.jsx?$/, '') : id
+  for (const ext of ['.ts', '.tsx', '.js', '.jsx']) {
+    if (fs.existsSync(withoutExt + ext)) {
+      return withoutExt + ext
+    }
+  }
+
+  if (fs.existsSync(id) && fs.statSync(id).isDirectory()) {
+    for (const base of ['index', path.basename(id)]) {
+      for (const ext of ['.ts', '.tsx', '.js', '.jsx']) {
+        const candidate = path.join(id, base + ext)
+        if (fs.existsSync(candidate)) {
+          return candidate
+        }
+      }
+    }
+  }
+
+  return id
+}
+
 export async function handler({
   importDbClientFromDist,
   distPath,
 }: DataMigrateUpOptions) {
   let db: any
-  let requireHookRegistered = false
+  let server: any = null
+  let cedarPlugins: Record<string, (...args: any[]) => any>
+
+  async function getRunner() {
+    if (!server) {
+      if (!cedarPlugins) {
+        // Dynamic import works in both CJS and ESM contexts. The CJS barrel
+        // uses `export type *` which makes TypeScript see only types, but the
+        // real CJS module has values at runtime.
+        const mod = await import('@cedarjs/vite')
+        cedarPlugins = mod as Record<string, (...args: any[]) => any>
+      }
+
+      server = await createServer({
+        mode: 'production',
+        optimizeDeps: {
+          noDiscovery: true,
+          include: undefined,
+        },
+        server: {
+          hmr: false,
+          watch: null,
+        },
+        environments: {
+          nodeRunnerEnv: {},
+        },
+        resolve: {
+          alias: [
+            {
+              find: /^api\//,
+              replacement: getPaths().api.base + '/',
+            },
+            {
+              find: /^src\//,
+              replacement: 'src/',
+              customResolver: (id, importer, _options) => {
+                const apiImportBase = importStatementPath(getPaths().api.base)
+                if (importer?.startsWith(apiImportBase)) {
+                  const apiImportSrc = importStatementPath(getPaths().api.src)
+                  const apiId = id.replace('src', apiImportSrc)
+                  return { id: resolveId(apiId) }
+                }
+                return null
+              },
+            },
+          ],
+        },
+        plugins: [
+          cedarPlugins.cedarCjsCompatPlugin(),
+          cedarPlugins.cedarjsResolveCedarStyleImportsPlugin(),
+          cedarPlugins.cedarImportDirPlugin(),
+          cedarPlugins.cedarAutoImportsPlugin(),
+        ],
+      })
+    }
+
+    const env = server.environments.nodeRunnerEnv
+    if (!env || !isRunnableDevEnvironment(env)) {
+      throw new Error('Vite environment is not runnable.')
+    }
+
+    return env.runner
+  }
 
   if (importDbClientFromDist) {
     if (!fs.existsSync(distPath)) {
@@ -66,10 +143,22 @@ export async function handler({
 
     db = (await import(distLibDbPath)).db
   } else {
-    registerApiSideBabelHook()
-    requireHookRegistered = true
+    const dbPath = resolveFile(path.join(getPaths().api.lib, 'db'))
 
-    db = require(path.join(getPaths().api.lib, 'db')).db
+    if (!dbPath) {
+      console.error(`Can't find your db file in ${getPaths().api.lib}`)
+      process.exitCode = 1
+      return
+    }
+
+    try {
+      const runner = await getRunner()
+      const dbModule = await runner.import(dbPath)
+      db = dbModule.db
+    } catch (e) {
+      await server?.close()
+      throw e
+    }
   }
 
   const pendingDataMigrations = await getPendingDataMigrations(db)
@@ -77,6 +166,7 @@ export async function handler({
   if (!pendingDataMigrations.length) {
     console.info(c.success(`\n${NO_PENDING_MIGRATIONS_MESSAGE}\n`))
     process.exitCode = 0
+    await server?.close()
     return
   }
 
@@ -96,10 +186,6 @@ export async function handler({
         }
       },
       async task() {
-        if (!requireHookRegistered) {
-          registerApiSideBabelHook()
-        }
-
         try {
           const { startedAt, finishedAt } = await runDataMigration(
             db,
@@ -114,9 +200,8 @@ export async function handler({
           })
         } catch (e) {
           counters.error++
-          console.error(
-            c.error(`Error in data migration: ${(e as Error).message}`),
-          )
+          const message = e instanceof Error ? e.message : String(e)
+          console.error(c.error(`Error in data migration: ${message}`))
         }
       },
     }
@@ -144,12 +229,28 @@ export async function handler({
     console.log()
     reportDataMigrations(counters)
     console.log()
+  } finally {
+    if (server) {
+      await server.close()
+    }
+  }
+
+  async function runDataMigration(
+    db: DataMigrateDb,
+    dataMigrationPath: string,
+  ) {
+    const runner = await getRunner()
+    const dataMigrationModule = await runner.import(dataMigrationPath)
+    const dataMigration = dataMigrationModule.default
+
+    const startedAt = new Date()
+    await dataMigration({ db })
+    const finishedAt = new Date()
+
+    return { startedAt, finishedAt }
   }
 }
 
-/**
- * Return the list of migrations that haven't run against the database yet
- */
 async function getPendingDataMigrations(db: DataMigrateDb) {
   const dataMigrationsPath = await getDataMigrationsPath(
     getPaths().api.prismaConfig,
@@ -161,7 +262,6 @@ async function getPendingDataMigrations(db: DataMigrateDb) {
 
   const dataMigrations = fs
     .readdirSync(dataMigrationsPath)
-    // There may be a `.keep` file in the data migrations directory.
     .filter((dataMigrationFileName) =>
       ['js', '.ts'].some((extension) =>
         dataMigrationFileName.endsWith(extension),
@@ -194,9 +294,6 @@ async function getPendingDataMigrations(db: DataMigrateDb) {
   return pendingDataMigrations
 }
 
-/**
- * Sorts migrations by date, oldest first
- */
 function sortDataMigrationsByVersion(
   dataMigrationA: { version: string },
   dataMigrationB: { version: string },
@@ -213,22 +310,9 @@ function sortDataMigrationsByVersion(
   return 0
 }
 
-async function runDataMigration(db: DataMigrateDb, dataMigrationPath: string) {
-  const dataMigration = require(dataMigrationPath)
-
-  const startedAt = new Date()
-  await dataMigration.default({ db })
-  const finishedAt = new Date()
-
-  return { startedAt, finishedAt }
-}
-
 export const NO_PENDING_MIGRATIONS_MESSAGE =
   'No pending data migrations run, already up-to-date.'
 
-/**
- * Adds data for completed migrations to the DB
- */
 async function recordDataMigration(
   db: DataMigrateDb,
   { version, name, startedAt, finishedAt }: DataMigration,
@@ -238,9 +322,6 @@ async function recordDataMigration(
   })
 }
 
-/**
- * Output run status to the console
- */
 function reportDataMigrations(counters: {
   run: number
   skipped: number

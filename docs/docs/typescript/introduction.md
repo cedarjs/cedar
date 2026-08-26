@@ -30,7 +30,7 @@ This adds `tsconfig.json` files to both the web and the api side, telling VSCode
 You don't need to convert all your JavaScript files to TypeScript right away.
 In fact, you probably shouldn't.
 Do it incrementally.
-Start by renaming your files from `.js` to `.ts`. (Or, if they have a React component, `.tsx`.)
+Start by renaming your files: `.jsx` files become `.tsx`, and `.js` files become `.ts` (or `.tsx` if they contain JSX).
 
 ## Core Concepts
 
@@ -133,21 +133,4 @@ import { CustomModal } from '@adminUI/CustomModal'
 1. **Code maintainability**, aliases allow you to decouple your code from the file structure and more easily move files around, as they are not tied to the longer path.
 1. **Reduce boilerplate**, no more `../../src/components/modules/admin/common/ui/` 😮‍💨
 
-When you start writing tests for components that contain alias paths, you will need to add the following to your Jest configuration in `jest.config.js`:
-
-```js
-const config = {
-  rootDir: '../',
-  preset: '@cedarjs/testing/config/jest/web',
-  moduleNameMapper: {
-    '^@adminUI/(.*)$':
-      '<rootDir>/web/src/components/modules/admin/common/ui/$1',
-  },
-}
-
-module.exports = config
-```
-
-:::info
-There are 3 `jest.config.js` files within a Cedar project. There's one inside the `web` directory, one inside the `api` directory, and one at the root of the project. Since the alias I created is used within the `web` directory, I added the `moduleNameMapper` to the `jest.config.js` file within the `web` directory.
-:::
+When you start writing tests for components that contain alias paths, Vitest picks up the aliases from your `tsconfig.json` `paths` through the Cedar Vite plugin, so no extra test configuration is needed.

@@ -21,15 +21,6 @@ const config = {
     // 'prettier-plugin-sh',
     'prettier-plugin-packagejson',
   ],
-  overrides: [
-    {
-      files: ['tsconfig.cjs.json'],
-      options: {
-        parser: 'jsonc',
-        trailingComma: 'none',
-      },
-    },
-  ],
 }
 
 module.exports = config

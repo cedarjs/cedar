@@ -1,5 +1,3 @@
-import babelParser from '@babel/eslint-parser'
-import babelPlugin from '@babel/eslint-plugin'
 import js from '@eslint/js'
 import importPlugin from 'eslint-plugin-import-x'
 import jestDomPlugin from 'eslint-plugin-jest-dom'
@@ -11,18 +9,6 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 import cedarjsPlugin from '@cedarjs/eslint-plugin'
-import { findUp } from '@cedarjs/project-config'
-
-// Framework Babel config is monorepo root ./babel.config.js
-// `yarn lint` runs for each workspace, which needs findUp for path to root
-const findBabelConfig = (cwd = process.cwd()) => {
-  const configPath = findUp('babel.config.js', cwd)
-  if (!configPath) {
-    throw new Error(`Eslint-parser could not find a "babel.config.js" file`)
-  }
-  return configPath
-}
-
 export default [
   // Global ignores
   {
@@ -45,6 +31,9 @@ export default [
       'packages/vite/src/plugins/__tests__/__fixtures__/**/*',
       'packages/create-cedar-rsc-app/**',
       'packages/create-cedar-app/templates/**',
+      // Cedar apps with their own ESLint config, linted from inside the app
+      'local-testing-project/**',
+      'local-testing-project-live/**',
     ],
   },
 
@@ -62,7 +51,6 @@ export default [
   js.configs.recommended,
   {
     plugins: {
-      '@babel': babelPlugin,
       'import-x': importPlugin,
       'jsx-a11y': jsxA11yPlugin,
       react: reactPlugin,
@@ -177,21 +165,18 @@ export default [
     },
   },
 
-  // JavaScript files specific configuration
+  // JavaScript files specific configuration. The parser set up here applies
+  // to .cjs files as well; the CommonJS block further down overrides their
+  // sourceType and globals.
   {
     files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
     languageOptions: {
-      parser: babelParser,
+      // typescript-eslint's parser handles JavaScript files without type
+      // information. It accepts JSX in `.js` and `.jsx` files on its own, so
+      // no `ecmaFeatures.jsx` is needed.
+      parser: tseslint.parser,
       ecmaVersion: 'latest',
       sourceType: 'module',
-      parserOptions: {
-        ecmaFeatures: {
-          jsx: true,
-        },
-        babelOptions: {
-          configFile: findBabelConfig(),
-        },
-      },
       globals: {
         ...globals.es2022,
       },
@@ -286,22 +271,9 @@ export default [
     },
   },
 
-  // Config files (.babelrc.js, jest.config.js, etc.) and CJS wrapper files
+  // CommonJS files use the .cjs extension
   {
-    files: [
-      '**/.babelrc.js',
-      '**/.babelrc.cjs',
-      '**/babel.config.js',
-      '**/jest.config.js',
-      '**/jest.setup.js',
-      '**/*.config.js',
-      '**/*.config.cjs',
-      '**/*.config.mjs',
-      'docs/sidebars.js',
-      'packages/web/apollo/index.js',
-      'packages/web/toast/index.js',
-      'packages/auth-providers/dbAuth/web/webAuthn/index.js',
-    ],
+    files: ['**/*.cjs'],
     languageOptions: {
       globals: {
         ...globals.node,

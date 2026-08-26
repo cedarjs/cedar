@@ -856,12 +856,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@publint/pack@npm:^0.1.6":
-  version: 0.1.6
-  resolution: "@publint/pack@npm:0.1.6"
+"@publint/pack@npm:^0.1.7":
+  version: 0.1.7
+  resolution: "@publint/pack@npm:0.1.7"
   dependencies:
-    tinyexec: "npm:^1.2.4"
-  checksum: 10c0/0dcfe125ac577667c9349dfdc7316b1af245a3b4cd06e91e6177d9a88e84e00d615c36b594180d074ff58fa65cf6fdf849227833c4cb098b387d8830f80c7b58
+    tinyexec: "npm:^1.3.0"
+  checksum: 10c0/bbb63243bd86991074ea06bcdc84ad574a0ee30d694df70fdba2f5f7bbf82d4257717c243807e985b0f75199ed1fc03e17d9e86bc8944b86da49025b1f38d769
   languageName: node
   linkType: hard
 
@@ -983,13 +983,6 @@ __metadata:
   dependencies:
     undici-types: "npm:~7.16.0"
   checksum: 10c0/069639cb7233ee747df1897b5e784f6b6c5da765c96c94773c580aac888fa1a585048d2a6e95eb8302d89c7a9df75801c8b5a0b7d0221d4249059cf09a5f4228
-  languageName: node
-  linkType: hard
-
-"@types/semver@npm:7.8.0":
-  version: 7.8.0
-  resolution: "@types/semver@npm:7.8.0"
-  checksum: 10c0/46a1f38e36013448b279798e8b134e7e8de3b3630b1f40683903b9d57d36dd1d70838515570ed9a149fa09e9c381b9e39319b58d7b9f3b929b42ae2becff7aa3
   languageName: node
   linkType: hard
 
@@ -1401,7 +1394,6 @@ __metadata:
     "@eslint/js": "npm:9.39.5"
     "@types/eslint-plugin-markdown": "npm:^2.0.2"
     "@types/node": "npm:24.10.4"
-    "@types/semver": "npm:7.8.0"
     "@types/which": "npm:3.0.4"
     "@types/yauzl-promise": "npm:4.0.1"
     ansis: "npm:4.3.1"
@@ -1426,12 +1418,12 @@ __metadata:
     prettier-plugin-curly: "npm:^0.3.0"
     prettier-plugin-packagejson: "npm:3.0.2"
     prettier-plugin-sh: "npm:^0.19.0"
-    publint: "npm:0.3.23"
+    publint: "npm:0.3.24"
     rimraf: "npm:^6.0.1"
-    semver: "npm:7.8.5"
     typescript: "npm:5.9.3"
     typescript-eslint: "npm:^8.0.0"
     untildify: "npm:5.0.0"
+    verkit: "npm:0.4.0"
     which: "npm:6.0.1"
     yauzl-promise: "npm:4.0.0"
     zx: "npm:8.8.5"
@@ -2889,7 +2881,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"package-manager-detector@npm:^1.7.0":
+"package-manager-detector@npm:^1.8.0":
   version: 1.8.0
   resolution: "package-manager-detector@npm:1.8.0"
   checksum: 10c0/4c8e2c47fdc874465d3b3b11934401db9d73470ccbdabeb092e46cb94abbc491d5befc8c271b5ea1ae9c6a881f44c2997e011873365bde9fd6c3dc001221ff7a
@@ -3036,17 +3028,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"publint@npm:0.3.23":
-  version: 0.3.23
-  resolution: "publint@npm:0.3.23"
+"publint@npm:0.3.24":
+  version: 0.3.24
+  resolution: "publint@npm:0.3.24"
   dependencies:
-    "@publint/pack": "npm:^0.1.6"
-    package-manager-detector: "npm:^1.7.0"
+    "@publint/pack": "npm:^0.1.7"
+    package-manager-detector: "npm:^1.8.0"
     picocolors: "npm:^1.1.1"
     sade: "npm:^1.8.1"
   bin:
     publint: ./src/cli.js
-  checksum: 10c0/2f1acfdb6b79ce90baca87e6df52ff82bbbf5954e01964b4135d392a2ae5840a70ddcfdd43435c8fe1e7d32f50b5a9385d9fd8070407712f3389c501efbb1e89
+  checksum: 10c0/ad938ca375aa196845cd2705c49295662839fb991374c24d9acb85945177ebe73c95c8b82666858826b36a8dad943427a0ef0eb1f8b7eaa8abe4c8bc5f55781c
   languageName: node
   linkType: hard
 
@@ -3168,7 +3160,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:7.8.5, semver@npm:^7.3.5, semver@npm:^7.5.4, semver@npm:^7.6.3, semver@npm:^7.7.2, semver@npm:^7.7.3":
+"semver@npm:^7.3.5, semver@npm:^7.5.4, semver@npm:^7.6.3, semver@npm:^7.7.2, semver@npm:^7.7.3":
   version: 7.8.5
   resolution: "semver@npm:7.8.5"
   bin:
@@ -3374,10 +3366,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tinyexec@npm:^1.2.4":
-  version: 1.2.4
-  resolution: "tinyexec@npm:1.2.4"
-  checksum: 10c0/153b8db6b080194b558ff145b9cffc36b80a6e07babd644dcfbe49c807eee668c876049d28bdee90b96304476f883352f2dad91b3f86bc23832532f4363e66ff
+"tinyexec@npm:^1.3.0":
+  version: 1.3.0
+  resolution: "tinyexec@npm:1.3.0"
+  checksum: 10c0/e9b89f97489d2aab2cef408da279e6b32547e738d1275032ccb8fd0028a006d93eb70fc51c6cffd9fc2f5aca6c2a273d8b6f73b52d46ee5116da6b94969ef958
   languageName: node
   linkType: hard
 
@@ -3533,6 +3525,13 @@ __metadata:
   version: 7.0.0
   resolution: "validate-npm-package-name@npm:7.0.0"
   checksum: 10c0/b725d816fd9503772e4e01a5a3a3791f9faf05d4c5ca12c11a0e0a62c048f5c555af7e407f327a720c22842dc285d07fca43cf67345ee10acfd821e94b380251
+  languageName: node
+  linkType: hard
+
+"verkit@npm:0.4.0":
+  version: 0.4.0
+  resolution: "verkit@npm:0.4.0"
+  checksum: 10c0/a3b794fa0902a3643ee2ae073eeb6fcc50e1245aa339f888aab7e02120d9d195beae9894fd1a8f8ea0fc2c0b20f089459d6d1aecfebe889e94bf8bf70f01c60e
   languageName: node
   linkType: hard
 

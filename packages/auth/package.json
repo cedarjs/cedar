@@ -49,9 +49,6 @@
     "test": "vitest run",
     "test:watch": "vitest watch"
   },
-  "dependencies": {
-    "react": "19.2.3"
-  },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
     "@cedarjs/framework-tools": "workspace:*",
@@ -60,10 +57,14 @@
     "@testing-library/react": "16.3.2",
     "concurrently": "9.2.4",
     "msw": "2.15.0",
-    "publint": "0.3.23",
+    "publint": "0.3.24",
+    "react": "19.2.8",
     "type-fest": "5.8.0",
     "typescript": "5.9.3",
     "vitest": "4.1.10"
+  },
+  "peerDependencies": {
+    "react": "19.2.8"
   },
   "engines": {
     "node": ">=24"

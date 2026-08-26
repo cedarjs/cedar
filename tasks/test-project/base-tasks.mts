@@ -330,7 +330,6 @@ function normalizeMigrationFolderNames() {
 interface ApiTasksOptions {
   dbAuth: 'local' | 'canary'
   linkWithLatestFwBuild?: boolean
-  esm?: boolean
   live?: boolean
   packageManager?: PackageManager
 }
@@ -338,7 +337,6 @@ interface ApiTasksOptions {
 export function apiTasksList({
   dbAuth,
   linkWithLatestFwBuild = false,
-  esm = false,
   live = false,
   packageManager = 'yarn',
 }: ApiTasksOptions) {
@@ -418,7 +416,7 @@ export function apiTasksList({
       : []),
     {
       title: 'Adding contact model to prisma',
-      task: () => contactTask({ esm, packageManager }),
+      task: () => contactTask({ packageManager }),
     },
     {
       title: 'Adjust dates within migration folder names',
@@ -484,7 +482,7 @@ export function apiTasksList({
           import.meta.dirname,
           'templates',
           'api',
-          (esm ? 'esm-' : '') + 'contacts.describeScenario.test.ts.template',
+          'contacts.describeScenario.test.ts.template',
         )
 
         fs.copyFileSync(
@@ -524,12 +522,8 @@ export function apiTasksList({
       },
     },
     {
-      title: 'Add vitest db import tracking tests for ESM test project',
+      title: 'Add vitest db import tracking tests',
       task: () => {
-        if (!esm) {
-          return
-        }
-
         const templatesDir = path.join(import.meta.dirname, 'templates', 'api')
         const templatePath1 = path.join(templatesDir, '1-db-import.test.ts')
         const templatePath2 = path.join(templatesDir, '2-db-import.test.ts')

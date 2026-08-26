@@ -6,7 +6,7 @@ import { Listr } from 'listr2'
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import type * as Prerender from '@cedarjs/prerender'
-import { getConfig, getPaths, projectIsEsm } from '@cedarjs/project-config'
+import { getConfig, getPaths } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 import type { QueryInfo } from '@cedarjs/web'
 
@@ -181,9 +181,7 @@ export const getTasks = async (
   dryrun: boolean,
   routerPathFilter: string | null = null,
 ) => {
-  const detector = projectIsEsm()
-    ? await import('@cedarjs/prerender/detection')
-    : await import('@cedarjs/prerender/cjs/detection')
+  const detector = await import('@cedarjs/prerender/detection')
 
   const detectedRoutes =
     detector.detectPrerenderRoutes() as MaybePrerenderRoute[]
@@ -219,9 +217,7 @@ export const getTasks = async (
     prerenderRoutes.map((route) => expandRouteParameters(route)),
   )
 
-  const prerenderer = projectIsEsm()
-    ? await import('@cedarjs/prerender')
-    : await import('@cedarjs/prerender/cjs')
+  const prerenderer = await import('@cedarjs/prerender')
 
   const listrTasks = expandedRouteParameters.flatMap((routesToPrerender) => {
     const queryCache: Record<string, QueryInfo> = {}

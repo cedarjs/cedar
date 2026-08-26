@@ -9,101 +9,124 @@ import ReactPlayer from './ReactPlayer'
 
 ## Babel
 
-Out of the box Cedar configures [Babel](https://babeljs.io/) so that you can write modern JavaScript and TypeScript without needing to worry about transpilation at all.
+Out of the box Cedar compiles your modern JavaScript and TypeScript without you needing to worry about transpilation at all.
 GraphQL tags, JSX, SVG imports—all of it's handled for you.
 
-For those well-versed in Babel config, you can find Cedar's in [@cedarjs/internal](https://github.com/cedarjs/cedar/tree/main/packages/internal/src/build/babel).
+For those well-versed in Babel config, you can find Cedar's in [@cedarjs/babel-config](https://github.com/cedarjs/cedar/tree/main/packages/babel-config).
 
 ### Configuring Babel
 
-For most projects, you won't need to configure Babel at all, but if you need to you can configure each side (web, api) individually using side-specific `babel.config.js` files.
+For most projects, you won't need to configure Babel at all. When you do, the two sides are configured differently:
+
+- **api**: put your config in `api/babel.config.js`. Cedar merges it with its own api-side config when it builds your api side (`yarn cedar build`, `yarn cedar dev` and the Vite-based api pipeline).
+- **web**: Vite doesn't apply `web/babel.config.js`. Pass custom plugins and presets through the `cedar()` Vite plugin's `babel` option instead, see [Custom Babel plugins](vite-configuration.md#custom-babel-plugins).
 
 > **Heads up**
 >
 > `.babelrc{.js}` files are ignored.
-> You have to put your custom config in the appropriate side's `babel.config.js`: `web/babel.config.js` for web and `api/babel.config.js` for api.
+> Api-side config has to live in `api/babel.config.js`.
 
-Let's go over an example.
+#### Installing Babel for the api side
 
-#### Example: Adding Emotion
-
-Let's say we want to add the styling library [emotion](https://emotion.sh), which requires adding a Babel plugin.
-
-1. Create a `babel.config.js` file in `web`:
+Cedar itself doesn't need Babel to build your api side, so `@cedarjs/babel-config` treats `@babel/core` and `@babel/preset-typescript` as optional peer dependencies and doesn't install them for you. An `api/babel.config.js` is only applied when both packages are installed in your api workspace. Cedar's api-side config is written for Babel 7, so pin that major:
 
 ```shell
-touch web/babel.config.js
+yarn workspace api add -D @babel/core@^7 @babel/preset-typescript@^7
+```
+
+If `api/babel.config.js` exists but either package is missing, the api build fails with an error telling you to run that command.
+
+#### Example: Removing `console` calls on the api side
+
+Let's say we want to strip `console.*` calls from the api side using [babel-plugin-transform-remove-console](https://www.npmjs.com/package/babel-plugin-transform-remove-console).
+
+1. Install Babel and the plugin in the api workspace:
+
+```shell
+yarn workspace api add -D @babel/core@^7 @babel/preset-typescript@^7 babel-plugin-transform-remove-console
 ```
 
 <br />
 
-2. Add the `@emotion/babel-plugin` as a dependency:
+2. Create `api/babel.config.js` and add the plugin:
 
-```shell
-yarn workspace web add --dev @emotion/babel-plugin
-```
-
-<br />
-
-3. Add the plugin to `web/babel.config.js`:
-
-```jsx title="web/babel.config.js"
-module.exports = {
-  plugins: ['@emotion'], // 👈 add the emotion plugin
+```js title="api/babel.config.js"
+export default {
+  plugins: ['transform-remove-console'], // 👈 add the plugin
 }
 
 // ℹ️ Notice how we don't need the `extends` property
 ```
 
 That's it!
-Now your custom web-side Babel config will be merged with Cedar's.
+Your custom api-side Babel config is merged with Cedar's.
 
-## Jest
+## Vitest
 
-Cedar uses [Jest](https://jestjs.io/) for testing.
+Cedar uses [Vitest](https://vitest.dev/) for testing.
 Let's take a peek at how it's all configured.
 
-At the root of your project is `jest.config.js`.
+At the root of your project is `vitest.config.ts`.
 It should look like this:
 
-```jsx title="jest.config.js"
-module.exports = {
-  rootDir: '.',
-  projects: ['<rootDir>/{*,!(node_modules)/**/}/jest.config.js'],
-}
+```ts title="vitest.config.ts"
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    projects: ['<rootDir>/{*,packages/*}/vite?(st).config.{js,ts}'],
+  },
+})
 ```
 
-This just tells Jest that the actual config files sit in each side, allowing Jest to pick up the individual settings for each.
-`rootDir` also makes sure that if you're running Jest with the `--collectCoverage` flag, it'll produce the report in the root directory.
+This just tells Vitest that the actual config files sit in each side (and in any workspace packages you've generated), allowing Vitest to pick up the individual settings for each.
 
-#### Web Jest Config
+#### Web Vitest Config
 
-The web side's configuration sits in `./web/jest.config.js`
+The web side's test configuration is part of `./web/vite.config.ts`
 
-```jsx
-const config = {
-  rootDir: '../',
-  preset: '@cedarjs/testing/config/jest/web',
-  // ☝️ load the built-in Cedar Jest configuration
-}
+```ts
+/// <reference types="vitest/config" />
 
-module.exports = config
+import { defineConfig } from 'vite'
+
+import { cedar } from '@cedarjs/vite'
+
+export default defineConfig(({ mode }) => ({
+  plugins: [cedar({ mode })],
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./vitest.setup.ts'],
+    globals: true,
+  },
+}))
 ```
 
-> You can always see Cedar's latest configuration templates in the [create-cedar-app package](https://github.com/cedarjs/cedar/blob/main/packages/create-cedar-app/templates/ts/web/jest.config.js).
+> You can always see Cedar's latest configuration templates in the [create-cedar-app package](https://github.com/cedarjs/cedar/blob/main/packages/create-cedar-app/templates/ts/web/vite.config.ts).
 
-The preset includes all the setup required to test everything that's going on in web: rendering React components and transforming JSX, automatically mocking Cells, transpiling with Babel, mocking the Router and the GraphQL client—the list goes on!
-You can find all the details in the [source](https://github.com/cedarjs/cedar/blob/main/packages/testing/config/jest/web/jest-preset.js).
+The `cedar()` Vite plugin together with `web/vitest.setup.ts` includes all the setup required to test everything that's going on in web: rendering React components and transforming JSX, automatically mocking Cells, mocking the Router and the GraphQL client—the list goes on!
 
 #### Api Side Config
 
-The api side is configured similarly, with the configuration sitting in `./api/jest.config.js`.
-But the api preset is slightly different in that:
+The api side is configured in `./api/vitest.config.ts`.
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+import { cedarVitestPreset } from '@cedarjs/vite/api'
+
+export default defineConfig({
+  plugins: [cedarVitestPreset()],
+  test: {
+    globals: true,
+  },
+})
+```
+
+The api preset is slightly different from the web side in that:
 
 - it's configured to run tests serially (because Scenarios seed your test database)
 - it has setup code to make sure your database is 1) seeded before running tests 2) reset between Scenarios
-
-You can find all the details in the [source](https://github.com/cedarjs/cedar/blob/main/packages/testing/config/jest/api/jest-preset.js).
 
 ## GraphQL Codegen
 

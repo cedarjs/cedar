@@ -45,7 +45,6 @@ vi.mock('@cedarjs/project-config', async () => {
         },
       }
     }),
-    projectIsEsm: () => true,
     getConfig: () => {
       return {
         experimental: mocks.projectConfig.experimental

@@ -4,7 +4,7 @@ import { Link, routes } from '@cedarjs/router'
 
 import Author from 'src/components/Author'
 
-type Props = FindBlogPostQuery
+interface Props extends FindBlogPostQuery {}
 
 const BlogPost = ({ blogPost }: Props) => {
   return (

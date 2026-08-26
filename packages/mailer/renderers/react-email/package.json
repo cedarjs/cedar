@@ -26,13 +26,13 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "typescript": "5.9.3"
   },
   "peerDependencies": {
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "publishConfig": {
     "access": "public"

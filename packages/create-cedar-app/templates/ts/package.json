@@ -1,6 +1,6 @@
 {
   "private": true,
-  "type": "commonjs",
+  "type": "module",
   "workspaces": [
     "api",
     "web"
@@ -19,13 +19,15 @@
     "@cedarjs/core": "6.0.0",
     "@cedarjs/eslint-config": "6.0.0",
     "@cedarjs/project-config": "6.0.0",
-    "@cedarjs/testing": "6.0.0"
+    "@cedarjs/testing": "6.0.0",
+    "vitest": "4.1.10"
   },
   "engines": {
     "node": "24.x"
   },
   "packageManager": "yarn@4.14.1",
   "resolutions": {
-    "react-is": "19.2.3"
+    "react-is": "19.2.8",
+    "vite": "7.3.6"
   }
 }

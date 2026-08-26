@@ -33,7 +33,6 @@ interface Args {
   cedarFrameworkPath: string
   testProjectPath: string
   packageManager?: PackageManager
-  fixture?: 'test-project' | 'test-project-esm'
 }
 
 export function optionalPackageManager(pm: string): PackageManager | undefined {
@@ -52,7 +51,6 @@ export async function setUpTestProject({
   cedarFrameworkPath,
   testProjectPath,
   packageManager = 'yarn',
-  fixture = 'test-project',
 }: Args) {
   const execInProject = createExecWithEnvInCwd(testProjectPath)
 
@@ -67,7 +65,7 @@ export async function setUpTestProject({
   const TEST_PROJECT_FIXTURE_PATH = path.join(
     cedarFrameworkPath,
     '__fixtures__',
-    fixture,
+    'test-project',
   )
 
   console.log(`Creating project at ${testProjectPath}`)
@@ -118,9 +116,9 @@ export async function setUpTestProject({
       fs.writeFileSync(path.join(testProjectPath, 'package-lock.json'), '')
     }
 
-    // The fixtures pin packages via yarn's `resolutions` (react-is in both
-    // fixtures, plus vite in the ESM fixture so that Vitest 4 doesn't nest
-    // its own Vite 8), but npm uses `overrides` instead. Without the react-is
+    // The fixture pins packages via yarn's `resolutions` (react-is, plus vite
+    // so that Vitest 4 doesn't nest its own Vite 8), but npm uses `overrides`
+    // instead. Without the react-is
     // override, react-is resolves to 17.x (from pretty-format's dep range),
     // which doesn't properly recognize React 19 elements. This breaks
     // snapshot serialization.
@@ -304,10 +302,9 @@ export async function setUpTestProject({
   if (canary) {
     console.log('Upgrading project to canary')
 
-    // The ESM fixture's upgrade prompts for confirmation, so feed it a 'Y'
-    // (matching what the standalone ESM setup action always did)
+    // The upgrade prompts for confirmation, so feed it a 'Y'
     await execInProject(`${cedar} upgrade -t canary`, {
-      input: fixture === 'test-project-esm' ? Buffer.from('Y') : undefined,
+      input: Buffer.from('Y'),
     })
 
     console.log()

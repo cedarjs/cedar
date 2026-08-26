@@ -1,6 +1,6 @@
 {
   "name": "web",
-  "type": "commonjs",
+  "type": "module",
   "version": "0.0.0",
   "private": true,
   "browserslist": {
@@ -15,12 +15,16 @@
     "@cedarjs/forms": "6.0.0",
     "@cedarjs/router": "6.0.0",
     "@cedarjs/web": "6.0.0",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@cedarjs/vite": "6.0.0",
     "@types/react": "^19.2.0",
-    "@types/react-dom": "^19.2.0"
+    "@types/react-dom": "^19.2.0",
+    "@cedarjs/testing": "6.0.0",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
+    "vite": "7.3.6"
   }
 }

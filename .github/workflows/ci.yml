@@ -111,22 +111,6 @@ jobs:
     with:
       os: ${{ matrix.os }}
 
-  smoke-tests-esm:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.code == 'true'
-
-    strategy:
-      matrix:
-        # windows-latest is only included when detect-changes deems the diff
-        # Windows-relevant (see cases/windows.mts) or the PR has the `windows`
-        # label. The nightly-windows workflow covers anything that slips by.
-        os: ${{ needs.detect-changes.outputs.windows == 'true' && fromJSON('["ubuntu-latest", "windows-latest"]') || fromJSON('["ubuntu-latest"]') }}
-
-    name: 🔄 Smoke tests ESM / ${{ matrix.os }} / node 24 latest
-    uses: ./.github/workflows/smoke-tests-test-esm.yml
-    with:
-      os: ${{ matrix.os }}
-
   cli-smoke-tests:
     needs: detect-changes
     if: needs.detect-changes.outputs.code == 'true'
