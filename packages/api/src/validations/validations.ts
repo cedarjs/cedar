@@ -734,8 +734,7 @@ export async function validateUniqueness<
   model: string,
   fields: Record<string, unknown>,
   optionsOrCallback:
-    | UniquenessValidatorOptions<TDb>
-    | ((tx: TxClientOf<TDb>) => Promise<any>),
+    UniquenessValidatorOptions<TDb> | ((tx: TxClientOf<TDb>) => Promise<any>),
   callback?: (tx: TxClientOf<TDb>) => Promise<any>,
 ): Promise<any> {
   const { $self, $scope, ...rest } = fields

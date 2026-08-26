@@ -23,8 +23,7 @@ export interface CreateServerOptions {
   // TODO: This should probably be split, to match Fastify's way of doing things
   /** Logger instance or options */
   logger?:
-    | FastifyServerOptions['logger']
-    | FastifyServerOptions['loggerInstance']
+    FastifyServerOptions['logger'] | FastifyServerOptions['loggerInstance']
 
   /**
    * Options for the fastify server instance.
@@ -107,8 +106,7 @@ type ResolvedOptions = Required<
 
 function isCustomLoggerInstance(
   logger:
-    | FastifyServerOptions['logger']
-    | FastifyServerOptions['loggerInstance'],
+    FastifyServerOptions['logger'] | FastifyServerOptions['loggerInstance'],
 ): logger is FastifyServerOptions['loggerInstance'] {
   return !!logger && typeof logger === 'object' && 'info' in logger
 }

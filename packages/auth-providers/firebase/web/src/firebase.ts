@@ -26,10 +26,7 @@ export type emailLinkProvider = 'emailLink'
 
 interface Options {
   providerId?:
-    | anonymousProvider
-    | customTokenProvider
-    | emailLinkProvider
-    | oAuthProvider
+    anonymousProvider | customTokenProvider | emailLinkProvider | oAuthProvider
   email?: string
   emailLink?: string
   customToken?: string
