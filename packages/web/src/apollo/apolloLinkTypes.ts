@@ -9,10 +9,7 @@ import type {
 export type ApolloClientCacheConfig = InMemoryCacheConfig
 
 export type CedarApolloLinkName =
-  | 'withToken'
-  | 'authMiddleware'
-  | 'updateDataApolloLink'
-  | 'httpLink'
+  'withToken' | 'authMiddleware' | 'updateDataApolloLink' | 'httpLink'
 
 export type CedarApolloLink<
   Name extends CedarApolloLinkName,
