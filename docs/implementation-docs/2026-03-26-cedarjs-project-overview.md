@@ -200,7 +200,7 @@ cedar
 │   └── opentelemetry        │
 ├── info│jobs│lint           ├── test│type-check│upgrade
 ├── prerender│prisma [args]  ├── serve [api|web]
-├── record│studio            └── ts-to-js (deprecated)
+└── record│studio
 cedar new → yarn create cedar-app (standalone)
 ```
 
