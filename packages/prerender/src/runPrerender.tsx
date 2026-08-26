@@ -291,51 +291,56 @@ export const runPrerender = async ({
 
   const nodeRunner = new NodeRunner()
 
-  const gqlHandler = await getGqlHandler(nodeRunner.importFile.bind(nodeRunner))
-
-  const prerenderDistPath = path.join(getPaths().web.dist, '__prerender')
-  fs.mkdirSync(prerenderDistPath, { recursive: true })
-
-  if (!renderCache.App) {
-    const entryPath = await createCombinedEntry({
-      appPath: getPaths().web.app,
-      routesPath: getPaths().web.routes,
-      outDir: prerenderDistPath,
-    })
-
-    const required = await buildAndImport({
-      filepath: entryPath,
-      preserveTemporaryFile: true,
-    })
-
-    renderCache.App = required.App
-    renderCache.Routes = required.Routes
-    renderCache.CellCacheContextProvider = required.CellCacheContextProvider
-    renderCache.LocationProvider = required.LocationProvider
-  }
-
-  const { LocationProvider, App, Routes, CellCacheContextProvider } =
-    renderCache
-
-  if (!App) {
-    throw new Error('App not found')
-  }
-
-  if (!Routes) {
-    throw new Error('Routes not found')
-  }
-
-  if (!CellCacheContextProvider) {
-    throw new Error('CellCacheContextProvider not found')
-  }
-
-  if (!LocationProvider) {
-    throw new Error('LocationProvider not found')
-  }
-
   let componentAsHtml: string
 
+  // Each route gets its own NodeRunner (and Vite server). Setting up the
+  // GraphQL handler and importing the app can start that server, so close it
+  // whenever any of the setup or rendering below throws
   try {
+    const gqlHandler = await getGqlHandler(
+      nodeRunner.importFile.bind(nodeRunner),
+    )
+
+    const prerenderDistPath = path.join(getPaths().web.dist, '__prerender')
+    fs.mkdirSync(prerenderDistPath, { recursive: true })
+
+    if (!renderCache.App) {
+      const entryPath = await createCombinedEntry({
+        appPath: getPaths().web.app,
+        routesPath: getPaths().web.routes,
+        outDir: prerenderDistPath,
+      })
+
+      const required = await buildAndImport({
+        filepath: entryPath,
+        preserveTemporaryFile: true,
+      })
+
+      renderCache.App = required.App
+      renderCache.Routes = required.Routes
+      renderCache.CellCacheContextProvider = required.CellCacheContextProvider
+      renderCache.LocationProvider = required.LocationProvider
+    }
+
+    const { LocationProvider, App, Routes, CellCacheContextProvider } =
+      renderCache
+
+    if (!App) {
+      throw new Error('App not found')
+    }
+
+    if (!Routes) {
+      throw new Error('Routes not found')
+    }
+
+    if (!CellCacheContextProvider) {
+      throw new Error('CellCacheContextProvider not found')
+    }
+
+    if (!LocationProvider) {
+      throw new Error('LocationProvider not found')
+    }
+
     componentAsHtml = await recursivelyRender(
       App,
       Routes,
@@ -347,8 +352,6 @@ export const runPrerender = async ({
       queryCache,
     )
   } finally {
-    // Each route gets its own NodeRunner (and Vite server), so close it even
-    // when rendering throws
     await nodeRunner.close()
   }
 
