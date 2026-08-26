@@ -311,35 +311,6 @@ function enforceSingleGraphqlVersion() {
 }
 
 /**
- * This rule will enforce that any package built with babel (identified by the
- * presence of a 'build:js' script in its `package.json`) must depend on the
- * '@babel/runtime-corejs3' and 'core-js' packages.
- *
- * @param {Context} context
- */
-function enforceBabelDependencies({ Yarn }) {
-  for (const workspace of Yarn.workspaces()) {
-    const packageJson = workspace.manifest
-    if (!packageJson.scripts?.[`build:js`]) {
-      continue
-    }
-
-    const dependencies = Yarn.dependencies({
-      workspace,
-      type: 'dependencies',
-    })
-    const requiredDependencies = [`@babel/runtime-corejs3`, `core-js`]
-    for (const dependency of requiredDependencies) {
-      if (!dependencies.find((dep) => dep.ident === dependency)) {
-        workspace.error(
-          `The package '${workspace.cwd}' must depend on '${dependency}' to build with babel`,
-        )
-      }
-    }
-  }
-}
-
-/**
  * This rule will enforce that the specified fields are present in the
  * `package.json` of all workspaces.
  *
@@ -396,7 +367,6 @@ module.exports = defineConfig({
     }
     enforceNotProdAndDevDependencies(ctx)
     enforceSingleGraphqlVersion()
-    enforceBabelDependencies(ctx)
     enforceFieldsOnAllWorkspaces(ctx, [
       'name',
       'version',

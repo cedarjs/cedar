@@ -50,6 +50,7 @@
   "dependencies": {
     "@babel/generator": "7.29.8",
     "@babel/parser": "7.29.8",
+    "@babel/preset-typescript": "7.29.7",
     "@babel/traverse": "7.29.8",
     "@babel/types": "7.29.8",
     "@cedarjs/api": "workspace:*",
