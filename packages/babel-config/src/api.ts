@@ -1,5 +1,4 @@
 import fs from 'node:fs'
-import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import type * as BabelCore from '@babel/core'
@@ -26,7 +25,6 @@ export const TARGETS_NODE = '24'
 
 // Resolves packages from this package's own dependency tree, i.e. the copies
 // the framework ships (through @cedarjs/cli, @cedarjs/vite, ...).
-const frameworkRequire = createRequire(import.meta.url)
 
 interface ApiSideBabelPresetsOptions {
   presetEnv?: boolean
@@ -272,11 +270,10 @@ export const registerApiSideBabelHook = ({
  * project's `api/babel.config.js` when there is one.
  *
  * `@babel/core` and `@babel/preset-typescript` are optional peer dependencies
- * of this package. When the project has an `api/babel.config.js` they are
- * resolved from the project's api workspace and a missing install fails with
- * an actionable error. Without a custom config (the route hooks build is the
- * remaining caller then) they are resolved from the framework's own
- * dependency tree.
+ * of this package, resolved from the project's api workspace; a missing
+ * install fails with an actionable error. Every caller checks for
+ * `api/babel.config.js` before calling this, so Babel is only ever loaded for
+ * projects that opted into a custom api-side Babel config.
  */
 export const transformWithBabel = async (
   sourceCode: string,
@@ -291,12 +288,8 @@ export const transformWithBabel = async (
 ) => {
   const customConfigPath = getApiSideBabelConfigPath()
 
-  const babel: typeof BabelCore = customConfigPath
-    ? loadBabelCoreFromProject()
-    : frameworkRequire('@babel/core')
-  const resolvePreset = customConfigPath
-    ? resolveFromProject
-    : (packageName: string) => frameworkRequire.resolve(packageName)
+  const babel: typeof BabelCore = loadBabelCoreFromProject()
+  const resolvePreset = resolveFromProject
 
   const result = babel.transformAsync(sourceCode, {
     presets: getApiSideBabelPresets({ resolvePreset }),
