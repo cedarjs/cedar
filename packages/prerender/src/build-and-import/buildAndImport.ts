@@ -48,7 +48,7 @@ interface Options {
 
 export async function buildAndImport(
   options: Options,
-): Promise<Record<string, React.FunctionComponent>> {
+): Promise<Record<string, React.ElementType>> {
   if (!isValidJsFile(options.filepath)) {
     throw new Error(`${options.filepath} is not a valid JS file`)
   }

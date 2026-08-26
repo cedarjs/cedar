@@ -63,9 +63,7 @@
     "tsc": "./dist/bins/tsc.js"
   },
   "files": [
-    "dist",
-    "apollo",
-    "toast"
+    "dist"
   ],
   "scripts": {
     "build": "node ./build.ts",
