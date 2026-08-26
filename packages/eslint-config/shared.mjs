@@ -54,17 +54,13 @@ const sharedConfigs = [
     },
     languageOptions: {
       // typescript-eslint's parser handles both JavaScript and TypeScript
-      // files without type information. It only infers JSX from the `.jsx`
-      // and `.tsx` extensions. Templates and generators put JSX in `.jsx`
-      // files; `ecmaFeatures.jsx` additionally accepts JSX in `.js` files,
-      // matching what the web build compiles.
+      // files without type information. It accepts JSX in `.js` and `.jsx`
+      // files on its own and decides TS vs TSX by extension, so no
+      // `ecmaFeatures.jsx` is needed.
       parser: tseslint.parser,
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
-        ecmaFeatures: {
-          jsx: true,
-        },
       },
     },
     settings: {

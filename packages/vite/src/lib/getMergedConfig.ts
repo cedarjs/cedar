@@ -133,11 +133,6 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
       // because rsc builds want false, client and server build wants true
       optimizeDeps: {
         esbuildOptions: {
-          // @MARK this is because JS projects in Cedar don't have .jsx
-          // extensions
-          loader: {
-            '.js': 'jsx',
-          },
           // Node.js global to browser globalThis
           // @MARK unsure why we need this, but required for DevFatalErrorPage
           // at least
