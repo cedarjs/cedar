@@ -30,7 +30,7 @@ This adds `tsconfig.json` files to both the web and the api side, telling VSCode
 You don't need to convert all your JavaScript files to TypeScript right away.
 In fact, you probably shouldn't.
 Do it incrementally.
-Start by renaming your files from `.js` to `.ts`. (Or, if they have a React component, `.tsx`.)
+Start by renaming your files from `.js` to `.ts` and from `.jsx` to `.tsx`.
 
 ## Core Concepts
 
