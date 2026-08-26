@@ -170,17 +170,11 @@ export default [
     files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
     languageOptions: {
       // typescript-eslint's parser handles JavaScript files without type
-      // information. It only infers JSX from the `.jsx`/`.tsx` extension;
-      // `ecmaFeatures.jsx` keeps `.js` files parseable as JSX as well, which
-      // is what the previous parser setup allowed.
+      // information. It accepts JSX in `.js` and `.jsx` files on its own, so
+      // no `ecmaFeatures.jsx` is needed.
       parser: tseslint.parser,
       ecmaVersion: 'latest',
       sourceType: 'module',
-      parserOptions: {
-        ecmaFeatures: {
-          jsx: true,
-        },
-      },
       globals: {
         ...globals.es2022,
       },
