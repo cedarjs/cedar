@@ -11,6 +11,15 @@ import { GqlHandlerImportError } from '../errors.js'
 
 export type FileImporter = (path: string) => Promise<any>
 
+/**
+ * The project's GraphQL API handler, wrapped so it can be called with a bare
+ * GraphQL operation. Resolves to the handler's response, whose `body` holds
+ * the JSON-encoded result.
+ */
+export type GqlHandler = (
+  operation: GqlOperation,
+) => Promise<{ body?: string } | undefined>
+
 interface GqlOperation {
   operationName: string
   query: string | undefined
@@ -28,7 +37,7 @@ interface GqlOperation {
  */
 export async function executeQuery(
   fileImporter: FileImporter,
-  gqlHandler: (args: any) => Promise<any>,
+  gqlHandler: GqlHandler,
   query: DocumentNode,
   variables?: Record<string, unknown>,
 ) {
@@ -73,13 +82,15 @@ export async function executeQuery(
  *
  * Throws GqlHandlerImportError, so that we can warn the user (but not blow up)
  */
-export async function getGqlHandler(fileImporter: FileImporter) {
+export async function getGqlHandler(
+  fileImporter: FileImporter,
+): Promise<GqlHandler> {
   const gqlPath = path.join(getPaths().api.functions, 'graphql')
 
   try {
     const { handler } = await fileImporter(gqlPath)
 
-    return async (operation: Record<string, unknown>) => {
+    return async (operation: GqlOperation) => {
       return await handler(buildApiEvent(operation), buildContext())
     }
   } catch {
@@ -91,7 +102,7 @@ export async function getGqlHandler(fileImporter: FileImporter) {
   }
 }
 
-function buildApiEvent(body: Record<string, unknown>) {
+function buildApiEvent(body: GqlOperation) {
   return {
     body: JSON.stringify(body),
     headers: {
