@@ -34,7 +34,6 @@ import * as serveCommand from './commands/serve.js'
 import * as setupCommand from './commands/setup.js'
 import * as studioCommand from './commands/studio.js'
 import * as testCommand from './commands/test.js'
-import * as tstojsCommand from './commands/ts-to-js.js'
 import * as typeCheckCommand from './commands/type-check.js'
 import * as upgradeCommand from './commands/upgrade/upgrade.js'
 import { exitWithError } from './lib/exit.js'
@@ -230,7 +229,6 @@ async function runYargs() {
     .command(setupCommand)
     .command(studioCommand)
     .command(testCommand)
-    .command(tstojsCommand)
     .command(typeCheckCommand)
     .command(upgradeCommand)
 

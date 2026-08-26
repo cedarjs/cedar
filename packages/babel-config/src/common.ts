@@ -8,7 +8,6 @@ import { parseConfigFileTextToJson } from 'typescript'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import { getWebSideBabelPlugins } from './web.js'
 import type { Flags as WebFlags } from './web.js'
 
 // `@babel/register` patches Node's CJS `require()` to compile files on the
@@ -55,12 +54,6 @@ export const registerBabel = (options: RegisterOptions) => {
   // the extensions .es6, .es, .jsx, .mjs, and .js will be transformed by Babel
   // (unless options.extensions override the default exensions).
   require('@babel/register')(options)
-}
-
-// TODO (STREAMING) double check this, think about it more carefully please!
-// It's related to yarn workspaces to be or not to be
-export const getRouteHookBabelPlugins = () => {
-  return [...getWebSideBabelPlugins()]
 }
 
 /**

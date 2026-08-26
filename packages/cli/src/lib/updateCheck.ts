@@ -46,7 +46,7 @@ export const CHECK_LOCK_IDENTIFIER = 'UPDATE_CHECK'
 export const SHOW_LOCK_IDENTIFIER = 'UPDATE_CHECK_SHOW'
 
 /** The name of commands which should NOT execute the update checker */
-export const EXCLUDED_COMMANDS = ['upgrade', 'ts-to-js']
+export const EXCLUDED_COMMANDS = ['upgrade']
 
 /**
  * Filepath of the file which persists update check data within the .cedar
