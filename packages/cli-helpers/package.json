@@ -72,7 +72,6 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@babel/core": "^7.26.10",
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/telemetry": "workspace:*",
     "@listr2/prompt-adapter-enquirer": "4.3.0",
@@ -89,6 +88,7 @@
     "prompts": "2.4.2",
     "semver": "7.8.5",
     "smol-toml": "1.8.0",
+    "sucrase": "3.35.1",
     "termi-link": "1.1.0",
     "yargs-parser": "21.1.1"
   },

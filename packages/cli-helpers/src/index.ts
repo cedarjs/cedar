@@ -11,6 +11,7 @@ export {
 } from './lib/loadEnvFiles.js'
 export * from './lib/paths.js'
 export * from './lib/project.js'
+export * from './lib/transpileTSToJS.js'
 export * from './lib/version.js'
 export * from './auth/setupHelpers.js'
 export type { AuthHandlerArgs, AuthGeneratorCtx } from './auth/setupHelpers.js'
