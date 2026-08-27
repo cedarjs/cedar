@@ -45,6 +45,14 @@ only breaking case is compiling your own TypeScript straight to CommonJS with
 `tsc` and statically importing one of these packages; use a dynamic `import()`
 there.
 
+## `yarn cedar setup tsconfig` removed
+
+The `setup tsconfig` CLI command, which added `tsconfig.json` files to an
+existing JavaScript project so it could start using TypeScript, has been
+removed. Choose TypeScript up front with `yarn create cedar-app --typescript`,
+or convert an existing JavaScript project manually—see
+[Converting a JavaScript Project to TypeScript](https://cedarjs.com/docs/typescript/introduction#converting-a-javascript-project-to-typescript).
+
 ## `yarn cedar ts-to-js` removed
 
 The deprecated `ts-to-js` CLI command, which converted a TypeScript project to
