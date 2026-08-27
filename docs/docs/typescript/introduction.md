@@ -21,7 +21,7 @@ Cedar doesn't provide a command to convert an existing JavaScript project to Typ
 
 Started your project in JavaScript but want to switch to TypeScript? You'll need to convert it manually:
 
-1. Add a `tsconfig.json` to both the web and api sides, telling VSCode that this's a TypeScript project. You can base yours on the [templates Cedar generates for new TypeScript projects](https://github.com/cedarjs/cedar/tree/main/packages/create-cedar-app/templates/ts), or copy them from a new TypeScript project created with `yarn create cedar-app --typescript`.
+1. Add a `tsconfig.json` to both the web and api sides, telling VSCode this is a TypeScript project. You can base yours on the [templates Cedar generates for new TypeScript projects](https://github.com/cedarjs/cedar/tree/main/packages/create-cedar-app/templates/ts), or copy them from a new TypeScript project created with `yarn create cedar-app --typescript`.
 2. Remove the `jsconfig.json` files from both sides.
 
 You don't need to convert all your JavaScript files to TypeScript right away.
