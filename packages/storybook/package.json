@@ -70,8 +70,8 @@
   "peerDependencies": {
     "@cedarjs/project-config": "6.0.0",
     "@cedarjs/router": "6.0.0",
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
     "storybook": "8.6.18"
   },
   "engines": {

@@ -26,13 +26,13 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "6.0.0",
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
     "typescript": "5.9.3"
   },
   "peerDependencies": {
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
   },
   "publishConfig": {
     "access": "public"

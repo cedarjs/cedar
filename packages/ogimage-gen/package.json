@@ -40,8 +40,8 @@
     "@cedarjs/project-config": "6.0.0",
     "fast-glob": "3.3.3",
     "lodash": "4.18.1",
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "6.0.0",
