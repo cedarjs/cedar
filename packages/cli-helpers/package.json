@@ -101,7 +101,7 @@
     "@types/yargs-parser": "21.0.3",
     "prettier-plugin-tailwindcss": "0.8.1",
     "typescript": "5.9.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "engines": {
     "node": ">=24"

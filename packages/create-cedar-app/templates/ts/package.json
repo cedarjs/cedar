@@ -20,7 +20,7 @@
     "@cedarjs/eslint-config": "6.0.0",
     "@cedarjs/project-config": "6.0.0",
     "@cedarjs/testing": "6.0.0",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "engines": {
     "node": "24.x"

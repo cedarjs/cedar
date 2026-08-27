@@ -45,7 +45,7 @@
     "untildify": "4.0.0",
     "uuid": "11.1.0",
     "verkit": "0.4.0",
-    "vitest": "4.1.10",
+    "vitest": "4.1.11",
     "yargs": "17.7.3"
   },
   "engines": {
