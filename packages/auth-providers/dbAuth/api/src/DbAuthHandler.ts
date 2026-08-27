@@ -862,19 +862,26 @@ export class DbAuthHandler<
 
     const { verified, authenticationInfo } = verification
 
-    if (verified) {
-      // update counter in credentials
-      await this.dbCredentialAccessor.update({
-        where: {
-          [webAuthnOptions.credentialFields.id]:
-            credential[webAuthnOptions.credentialFields.id],
-        },
-        data: {
-          [webAuthnOptions.credentialFields.counter]:
-            authenticationInfo.newCounter,
-        },
-      })
+    // `verifyAuthenticationResponse()` throws for most failure modes, but a
+    // response whose signature simply does not match the stored public key
+    // comes back as `verified: false` with no error. Bail out before issuing
+    // any cookies — otherwise an unverified assertion is answered with a
+    // valid session for the credential's owner.
+    if (!verified) {
+      throw new DbAuthError.WebAuthnError('Authentication failed')
     }
+
+    // update counter in credentials
+    await this.dbCredentialAccessor.update({
+      where: {
+        [webAuthnOptions.credentialFields.id]:
+          credential[webAuthnOptions.credentialFields.id],
+      },
+      data: {
+        [webAuthnOptions.credentialFields.counter]:
+          authenticationInfo.newCounter,
+      },
+    })
 
     // get the regular `login` cookies
     const [, headers] = this._loginResponse(user)
