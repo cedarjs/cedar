@@ -1,14 +1,28 @@
 import type { QueryResolvers<% if (crud) { %>, MutationResolvers<% } %><% if (relations.length) { %>, ${singularPascalName}RelationResolvers<% } %> } from 'types/graphql'
 
 import { db } from 'src/lib/db'
-
+<%
+  // A compound `@@id([...])` key comes through as `{ fields, whereArg }`
+  // instead of a single field name -- build the destructure/where-clause
+  // snippets for both shapes here so the rest of the template can stay
+  // shape-agnostic.
+  const idIsComposite = idName != null && typeof idName === 'object'
+  const idFields = idIsComposite ? idName.fields : [idName]
+  const idArgs = idFields.join(', ')
+  const idWhere = idIsComposite
+    ? `${idName.whereArg}: { ${idFields.join(', ')} }`
+    : idName
+  const idWhereFromRoot = idIsComposite
+    ? `${idName.whereArg}: { ${idFields.map((f) => `${f}: root?.${f}`).join(', ')} }`
+    : `${idName}: root?.${idName}`
+%>
 export const ${pluralCamelName}: QueryResolvers['${pluralCamelName}'] = () => {
   return db.${singularCamelName}.findMany()
 }<% if (crud || relations.length) { %>
 
-export const ${singularCamelName}: QueryResolvers['${singularCamelName}'] = ({ ${idName} }) => {
+export const ${singularCamelName}: QueryResolvers['${singularCamelName}'] = ({ ${idArgs} }) => {
   return db.${singularCamelName}.findUnique({
-    where: { ${idName} },
+    where: { ${idWhere} },
   })
 }<% } %><% if (crud) { %>
 
@@ -18,21 +32,21 @@ export const create${singularPascalName}: MutationResolvers['create${singularPas
   })
 }
 
-export const update${singularPascalName}: MutationResolvers['update${singularPascalName}'] = ({ ${idName}, input }) => {
+export const update${singularPascalName}: MutationResolvers['update${singularPascalName}'] = ({ ${idArgs}, input }) => {
   return db.${singularCamelName}.update({
     data: input,
-    where: { ${idName} },
+    where: { ${idWhere} },
   })
 }
 
-export const delete${singularPascalName}: MutationResolvers['delete${singularPascalName}'] = ({ ${idName} }) => {
+export const delete${singularPascalName}: MutationResolvers['delete${singularPascalName}'] = ({ ${idArgs} }) => {
   return db.${singularCamelName}.delete({
-    where: { ${idName} },
+    where: { ${idWhere} },
   })
 }<% } %><% if (relations.length) { %>
 
 export const ${singularPascalName}: ${singularPascalName}RelationResolvers = {<% relations.forEach(relation => { %>
   ${relation}: (_obj, { root }) => {
-    return db.${singularCamelName}.findUnique({ where: { ${idName}: root?.${idName} } }).${relation}()
+    return db.${singularCamelName}.findUnique({ where: { ${idWhereFromRoot} } }).${relation}()
   },<% }) %>
 }<% } %>
