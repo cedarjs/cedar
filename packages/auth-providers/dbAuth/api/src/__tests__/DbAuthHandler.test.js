@@ -2087,6 +2087,17 @@ describe('dbAuth', () => {
         },
       })
 
+      // Return `verified: true` so this test exercises a successfully
+      // verified assertion without depending on a cryptographic fixture.
+      const { verifyAuthenticationResponse } =
+        await import('@simplewebauthn/server')
+      vi.mocked(verifyAuthenticationResponse).mockImplementationOnce(
+        async () => ({
+          verified: true,
+          authenticationInfo: { newCounter: 1 },
+        }),
+      )
+
       event = {
         headers: { 'Content-Type': 'application/json' },
         body: '{"method":"webAuthnAuthenticate","id":"CxMJqILwYufSaEQsJX6rKHw_LkMXAGU64PaKU55l6ejZ4FNO5kBLiA","rawId":"CxMJqILwYufSaEQsJX6rKHw_LkMXAGU64PaKU55l6ejZ4FNO5kBLiA","response":{"authenticatorData":"SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAA","clientDataJSON":"eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiTHRnV3BoWUtfZU41clhjX0hkdlVMdk9xcFBXeW9SdmJtbDJQbzAwVUhhZyIsIm9yaWdpbiI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODkxMCIsImNyb3NzT3JpZ2luIjpmYWxzZSwib3RoZXJfa2V5c19jYW5fYmVfYWRkZWRfaGVyZSI6ImRvIG5vdCBjb21wYXJlIGNsaWVudERhdGFKU09OIGFnYWluc3QgYSB0ZW1wbGF0ZS4gU2VlIGh0dHBzOi8vZ29vLmdsL3lhYlBleCJ9","signature":"MEUCIQD3NOM7Aw0HxPw6EFGf86iwf2yd3p4NncNNLcjd-86zgwIgHuh80bLNV7EcwBi4IAcH57iueLg0X2gLtO5_Y6PMCFE","userHandle":"2"},"type":"public-key","clientExtensionResults":{}}',
@@ -2096,10 +2107,17 @@ describe('dbAuth', () => {
 
       const [body, headers] = await dbAuth.webAuthnAuthenticate()
 
-      expect(body).toEqual(false)
+      expect(body).toEqual(true)
       expect(headers.get('set-cookie')).toMatch(
         'webAuthn=CxMJqILwYufSaEQsJX6rKHw_LkMXAGU64PaKU55l6ejZ4FNO5kBLiA',
       )
+
+      const credential = await db.userCredential.findUnique({
+        where: {
+          id: 'CxMJqILwYufSaEQsJX6rKHw_LkMXAGU64PaKU55l6ejZ4FNO5kBLiA',
+        },
+      })
+      expect(credential.counter).toEqual(1)
     })
 
     it('returns 400 and issues no cookies when the assertion does not verify', async () => {
