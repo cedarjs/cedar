@@ -33,7 +33,7 @@
     "@cedarjs/framework-tools": "workspace:*",
     "fastify": "5.12.1",
     "typescript": "5.9.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "engines": {
     "node": ">=24"
