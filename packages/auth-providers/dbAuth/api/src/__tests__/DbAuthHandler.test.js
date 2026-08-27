@@ -3,9 +3,8 @@ import path from 'node:path'
 
 vi.mock('@simplewebauthn/server', async (importOriginal) => {
   const original = await importOriginal()
-  // Wrap the real verifier so the existing tests keep their current behavior.
-  // Individual tests can override with `vi.mocked(...).mockImplementation(...)`
-  // when they need to control the return value.
+  // Delegate to the real verifier by default.
+  // Individual tests can override the result with `vi.mocked(...).mockImplementation(...)`.
   return {
     ...original,
     verifyAuthenticationResponse: vi.fn((opts) =>
@@ -2124,15 +2123,10 @@ describe('dbAuth', () => {
         },
       })
 
-      // Force the verifier to return `verified: false` without throwing, so
-      // the new `if (!verified) throw` guard is the only thing that can
-      // produce the 400 response. A real signature mismatch against this
-      // public key would also resolve with `verified: false`, but mocking
-      // keeps the test focused on the new branch instead of a real
-      // key/signature fixture.
-      const { verifyAuthenticationResponse } = await import(
-        '@simplewebauthn/server'
-      )
+      // Return `verified: false` without throwing to exercise the rejection
+      // path without depending on a cryptographic fixture.
+      const { verifyAuthenticationResponse } =
+        await import('@simplewebauthn/server')
       vi.mocked(verifyAuthenticationResponse).mockImplementationOnce(
         async () => ({
           verified: false,
@@ -2153,6 +2147,13 @@ describe('dbAuth', () => {
       expect(response.statusCode).toEqual(400)
       expect(setCookie.join('\n')).not.toMatch(/session=/)
       expect(setCookie.join('\n')).not.toMatch(/webAuthn=/)
+
+      const credential = await db.userCredential.findUnique({
+        where: {
+          id: 'CxMJqILwYufSaEQsJX6rKHw_LkMXAGU64PaKU55l6ejZ4FNO5kBLiA',
+        },
+      })
+      expect(credential.counter).toEqual(0)
     })
   })
 
