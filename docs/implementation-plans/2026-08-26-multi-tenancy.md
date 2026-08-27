@@ -352,7 +352,7 @@ where route params exist:
 
 ```tsx
 // web/src/Routes.tsx
-<Set wrap={OrgScope} path="/org/{orgSlug}">
+<Set wrap={OrgScope}>
   <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
 </Set>
 ```
@@ -422,7 +422,7 @@ Steps performed:
    `yarn cedar data-migrate up`, in that order.
 10. Add the Apollo link to `web/src/App.tsx` and generate
     `web/src/components/OrgScope/OrgScope.tsx`. Routes are not edited; the
-    printed next steps show the `<Set wrap={OrgScope} path="/org/{orgSlug}">`
+    printed next steps show the `<Set wrap={OrgScope}>`
     shape.
 11. Print next steps: run the migrations, add `organizationId` to existing
     models, wrap organization routes in `OrgScope`, use `withTenancy` on any
