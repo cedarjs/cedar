@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@cedarjs/api": "6.0.0",
-    "@supabase/ssr": "0.12.4",
+    "@supabase/ssr": "0.12.5",
     "jsonwebtoken": "9.0.3"
   },
   "devDependencies": {

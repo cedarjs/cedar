@@ -2390,7 +2390,7 @@ __metadata:
   dependencies:
     "@cedarjs/api": "npm:6.0.0"
     "@cedarjs/framework-tools": "npm:6.0.0"
-    "@supabase/ssr": "npm:0.12.4"
+    "@supabase/ssr": "npm:0.12.5"
     "@types/aws-lambda": "npm:8.10.162"
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:9.2.4"
@@ -2437,7 +2437,7 @@ __metadata:
   dependencies:
     "@cedarjs/auth": "npm:6.0.0"
     "@cedarjs/framework-tools": "npm:6.0.0"
-    "@supabase/ssr": "npm:0.12.4"
+    "@supabase/ssr": "npm:0.12.5"
     "@supabase/supabase-js": "npm:2.112.4"
     "@types/react": "npm:^19.2.0"
     concurrently: "npm:9.2.4"
@@ -10265,14 +10265,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@supabase/ssr@npm:0.12.4":
-  version: 0.12.4
-  resolution: "@supabase/ssr@npm:0.12.4"
+"@supabase/ssr@npm:0.12.5":
+  version: 0.12.5
+  resolution: "@supabase/ssr@npm:0.12.5"
   dependencies:
     cookie: "npm:^1.0.2"
   peerDependencies:
-    "@supabase/supabase-js": ^2.111.0
-  checksum: 10c0/a509857c93ce7abad9766599dca702b9189f1aa644e29c94a1cec42eecaddb2bd50b3237790b8394a6daaef69c5baeef8ef60a4860a66d11a9202a1a678b477a
+    "@supabase/supabase-js": ^2.112.4
+  checksum: 10c0/7e6adbfa93c7207ffedd5ac0f37c99eb21bfd2c7233341c574896412d77db3ad130aaec77d5290f648e9a526f558cb34890366731d4b504b731e5450dbe45d6e
   languageName: node
   linkType: hard
 
