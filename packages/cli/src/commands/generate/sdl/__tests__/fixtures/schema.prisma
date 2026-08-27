@@ -127,3 +127,27 @@ model Account {
   resetTokenExpiresAt DateTime?
   webAuthnChallenge   String?   @unique
 }
+
+// A junction table with a compound `@@id`, used to test that generating SDL
+// for a *neighboring* model (Warehouse) doesn't crash when it stubs out a
+// related model that has no single `@id` field.
+model Part {
+  id    Int         @id @default(autoincrement())
+  name  String
+  stock PartStock[]
+}
+
+model Warehouse {
+  id    Int         @id @default(autoincrement())
+  name  String      @unique
+  stock PartStock[]
+}
+
+model PartStock {
+  partId      Int
+  warehouseId Int
+  part        Part      @relation(fields: [partId], references: [id])
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+
+  @@id([partId, warehouseId])
+}

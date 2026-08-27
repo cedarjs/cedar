@@ -543,3 +543,64 @@ test("doesn't include test file when --tests is set to false", async () => {
     path.normalize('/path/to/project/api/src/services/users/users.js'),
   ])
 })
+
+describe('compound `@@id` models', () => {
+  test('generates a query resolver and relation resolvers without crashing', async () => {
+    const files = await serviceHandler.files({
+      ...getDefaultArgs(service.getDefaultOptions()),
+      typescript: true,
+      name: 'PartStock',
+      relations: ['part', 'warehouse'],
+      crud: false,
+      tests: false,
+    })
+
+    const serviceContent =
+      files[
+        path.normalize(
+          '/path/to/project/api/src/services/partStocks/partStocks.ts',
+        )
+      ]
+
+    expect(serviceContent).toBeDefined()
+    expect(serviceContent).toMatchSnapshot()
+
+    // The exact bug from #2429: an empty `where` key from an unhandled
+    // compound id.
+    expect(serviceContent).not.toContain('where: { : ')
+  })
+
+  test('generates working composite CRUD mutations when requested directly', async () => {
+    const files = await serviceHandler.files({
+      ...getDefaultArgs(service.getDefaultOptions()),
+      typescript: true,
+      name: 'PartStock',
+      crud: true,
+      tests: false,
+    })
+
+    const serviceContent =
+      files[
+        path.normalize(
+          '/path/to/project/api/src/services/partStocks/partStocks.ts',
+        )
+      ]
+
+    expect(serviceContent).toContain(
+      'where: { partId_warehouseId: { partId, warehouseId } }',
+    )
+    expect(serviceContent).toMatchSnapshot()
+  })
+
+  test('throws a clear error instead of generating broken CRUD tests', async () => {
+    await expect(
+      serviceHandler.files({
+        ...getDefaultArgs(service.getDefaultOptions()),
+        typescript: true,
+        name: 'PartStock',
+        crud: true,
+        tests: true,
+      }),
+    ).rejects.toThrow(/compound primary key/)
+  })
+})

@@ -138,6 +138,32 @@ describe('files with stubs', () => {
 
     expect(files).toEqual({})
   })
+
+  // https://github.com/cedarjs/cedar/issues/2429 -- generating SDL for a
+  // model that merely *neighbors* a compound-`@@id` model used to crash,
+  // because the stub service's relation resolvers interpolated an
+  // undefined id name into `where: { : root?. }`.
+  test('stubs a related model with a compound `@@id` without crashing', async () => {
+    const missingModels = await missingRelatedModels('Warehouse')
+    expect(missingModels).toEqual(['PartStock', 'Part'])
+
+    const files = {
+      ...(await sdlHandler.files({
+        name: 'Warehouse',
+        crud: false,
+        tests: true,
+        typescript: true,
+      })),
+      ...(await sdlHandler.stubFiles(missingModels, 'Warehouse', {
+        typescript: true,
+      })),
+    }
+
+    const stubService = files[servicePath('partStocks/partStocks.ts')]
+    expect(stubService).toBeDefined()
+    expect(stubService).not.toContain('where: { : ')
+    expect(stubService).toMatchSnapshot()
+  })
 })
 
 describe('isPristineStub', () => {
