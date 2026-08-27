@@ -1814,7 +1814,6 @@ yarn cedar setup <category>
 | `i18n`             | Set up i18n                                                                              |
 | `jobs`             | Set up background job creation and processing                                            |
 | `package`          | Peform setup actions by running a third-party npm package                                |
-| `tsconfig`         | Add relevant tsconfig so you can start using TypeScript                                  |
 | `ui`               | Set up a UI design or style library                                                      |
 
 ### setup auth
@@ -2119,18 +2118,6 @@ If you have not setup the CedarJS server file, it will be setup:
 ✔ Adding config to cedar.toml...
 ✔ Adding required api packages...
 ```
-
-### setup tsconfig
-
-Add a `tsconfig.json` to both the web and api sides so you can start using [TypeScript](typescript).
-
-```
-yarn cedar setup tsconfig
-```
-
-| Arguments & Options | Description              |
-| :------------------ | :----------------------- |
-| `--force, -f`       | Overwrite existing files |
 
 ### setup ui
 
