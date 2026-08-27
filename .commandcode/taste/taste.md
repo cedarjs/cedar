@@ -121,6 +121,8 @@ See [debugging/taste.md](debugging/taste.md)
 
 - When testing source map correctness, decode the VLQ mappings to verify output lines map to the correct original source lines. Structural checks (existence of `mappings`, counting semicolons) are insufficient on their own — the key validation is that a position in the generated output actually maps back to the expected source line, not just that some mapping exists. Confidence: 0.65
 - Use `ts-dedent` in test files to indent template literals instead of leaving them unindented or using manual indentation tricks. Confidence: 0.85
+- When a test is added specifically to guard a new code branch (e.g. a security fix, a new `if (!verified) throw` guard), verify it's a true regression guard by temporarily reverting the production change and confirming the new test fails for the right reason (not passes-via-a-different-path or fails-on-unrelated-fixture). If the test would still pass without the fix, the test isn't actually targeting the branch it claims to. Confidence: 0.90
+- For vitest tests that need to override a single function from a real module without breaking other tests in the same file, use a file-level `vi.mock('module', async (importOriginal) => { const original = await importOriginal(); return { ...original, fnToOverride: vi.fn((opts) => original.fnToOverride(opts)) } })` — the factory re-exports the real module by default and wraps the target function in a `vi.fn` that delegates to the real one. Then `vi.mocked(fnToOverride).mockImplementationOnce(...)` inside individual tests to control just that one call. `vi.spyOn` does not work on ESM module exports. `vi.doMock` + dynamic re-import with cache-buster fails at Vite/esbuild parse time. Confidence: 0.80
 
 # Code Design
 
