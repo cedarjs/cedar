@@ -13,7 +13,18 @@ interface ServiceModel {
   name: string
   documentation?: string
   fields: PrismaField[]
-  primaryKey?: { fields: string[] }
+  primaryKey?: { fields: string[]; name?: string | null } | null
+}
+
+/**
+ * Describes a model's compound `@@id([...])` primary key, as opposed to a
+ * single field with `@id`. `whereArg` is the Prisma Client `where` key for
+ * looking a record up by its compound id: the user-supplied `@@id(name:
+ * "...")`, or Prisma's default of joining the field names with `_`.
+ */
+export interface CompositeIdName {
+  fields: string[]
+  whereArg: string
 }
 
 function isServiceModel(schema: unknown): schema is ServiceModel {
@@ -384,11 +395,20 @@ export const fieldsToUpdate = async (model: string) => {
   return { [fieldName]: newValue }
 }
 
-const getIdName = async (model: string): Promise<string | undefined> => {
+const getIdName = async (
+  model: string,
+): Promise<string | CompositeIdName | undefined> => {
   const schemaResult = await getSchema(model)
 
   if (!isServiceModel(schemaResult)) {
     return undefined
+  }
+
+  // Compound `@@id([a, b])` keys don't have a single field with `isId: true`
+  // -- Prisma puts them on `primaryKey.fields` instead.
+  if (schemaResult.primaryKey?.fields.length) {
+    const { fields, name } = schemaResult.primaryKey
+    return { fields, whereArg: name || fields.join('_') }
   }
 
   return schemaResult.fields.find((field: PrismaField) => field.isId)?.name
@@ -412,6 +432,24 @@ export const files = async ({
   const componentName = camelcase(pluralize(name))
   const model = name
   const idName = await getIdName(model)
+
+  // The query/mutation/relation-resolver blocks in service.ts.template
+  // support compound `@@id([...])` keys, but the generated test file's
+  // CRUD scenarios don't know how to build a compound `where` value or
+  // scenario id lookup yet -- so give a clear error instead of emitting
+  // broken tests.
+  if (
+    tests &&
+    rest.crud &&
+    idName !== undefined &&
+    typeof idName !== 'string'
+  ) {
+    throw new Error(
+      `Cannot generate CRUD tests for "${model}": it has a compound primary ` +
+        `key (@@id([${idName.fields.join(', ')}])), which isn't supported ` +
+        'by the generated test file yet. Re-run with `--tests=false`.',
+    )
+  }
 
   const prismaImportSource = 'src/lib/db'
 
@@ -442,48 +480,54 @@ export const files = async ({
     },
   })
 
-  const testFile = await templateForFile({
-    name,
-    side: 'api',
-    sidePathSection: 'services',
-    generator: 'service',
-    outputPath: path.join(componentName, componentName + '.test.ts'),
-    templatePath: 'test.ts.template',
-    templateVars: {
-      relations: relations || [],
-      create: await fieldsToInput(model),
-      update: await fieldsToUpdate(model),
-      types: await fieldTypes(model),
-      prismaImport: (await parseSchema(model)).scalarFields.some(
-        (field: PrismaField) => field.type === 'Decimal',
-      ),
-      prismaModel: model,
-      idName,
-      prismaImportSource,
-      ...rest,
-    },
-  })
-
-  const scenariosFile = await templateForFile({
-    name,
-    side: 'api',
-    sidePathSection: 'services',
-    generator: 'service',
-    outputPath: path.join(componentName, componentName + '.scenarios.ts'),
-    templatePath: 'scenarios.ts.template',
-    templateVars: {
-      scenario: await buildScenario(model),
-      stringifiedScenario: await buildStringifiedScenario(model),
-      prismaModel: model,
-      idName,
-      relations: modelRelations,
-      prismaImportSource,
-      ...rest,
-    },
-  })
-
   const files = [serviceFile]
+
+  // Only render the test/scenarios templates when they're actually needed --
+  // besides being wasted work, `test.ts.template` interpolates `idName`
+  // directly (unlike `service.ts.template`, it doesn't support compound
+  // `@@id([...])` keys), so rendering it unconditionally would blow up on
+  // the compound-id models the guard above is meant to protect against.
   if (tests) {
+    const testFile = await templateForFile({
+      name,
+      side: 'api',
+      sidePathSection: 'services',
+      generator: 'service',
+      outputPath: path.join(componentName, componentName + '.test.ts'),
+      templatePath: 'test.ts.template',
+      templateVars: {
+        relations: relations || [],
+        create: await fieldsToInput(model),
+        update: await fieldsToUpdate(model),
+        types: await fieldTypes(model),
+        prismaImport: (await parseSchema(model)).scalarFields.some(
+          (field: PrismaField) => field.type === 'Decimal',
+        ),
+        prismaModel: model,
+        idName,
+        prismaImportSource,
+        ...rest,
+      },
+    })
+
+    const scenariosFile = await templateForFile({
+      name,
+      side: 'api',
+      sidePathSection: 'services',
+      generator: 'service',
+      outputPath: path.join(componentName, componentName + '.scenarios.ts'),
+      templatePath: 'scenarios.ts.template',
+      templateVars: {
+        scenario: await buildScenario(model),
+        stringifiedScenario: await buildStringifiedScenario(model),
+        prismaModel: model,
+        idName,
+        relations: modelRelations,
+        prismaImportSource,
+        ...rest,
+      },
+    })
+
     files.push(testFile)
     files.push(scenariosFile)
   }

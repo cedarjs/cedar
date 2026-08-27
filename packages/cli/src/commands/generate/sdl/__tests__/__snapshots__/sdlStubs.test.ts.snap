@@ -23,3 +23,57 @@ export const schema = gql\`
 \`
 "
 `;
+
+exports[`files with stubs > stubs a related model with a compound \`@@id\` without crashing 1`] = `
+"// Generated as a read-only stub by \`cedar generate sdl Warehouse\`,
+// because Warehouse has a relation to PartStock, which had no SDL yet.
+// Run \`cedar generate sdl PartStock\` to replace this stub with the real thing.
+// If you edit this file, the hash below will stop matching and you'll
+// need to pass \`--force\` to overwrite it.
+// @cedar-generator-stub-hash 4ac4a06a9c219999
+
+import type { QueryResolvers, PartStockRelationResolvers } from 'types/graphql'
+
+import { db } from 'src/lib/db'
+
+export const partStocks: QueryResolvers['partStocks'] = () => {
+  return db.partStock.findMany()
+}
+
+export const partStock: QueryResolvers['partStock'] = ({
+  partId,
+  warehouseId,
+}) => {
+  return db.partStock.findUnique({
+    where: { partId_warehouseId: { partId, warehouseId } },
+  })
+}
+
+export const PartStock: PartStockRelationResolvers = {
+  part: (_obj, { root }) => {
+    return db.partStock
+      .findUnique({
+        where: {
+          partId_warehouseId: {
+            partId: root?.partId,
+            warehouseId: root?.warehouseId,
+          },
+        },
+      })
+      .part()
+  },
+  warehouse: (_obj, { root }) => {
+    return db.partStock
+      .findUnique({
+        where: {
+          partId_warehouseId: {
+            partId: root?.partId,
+            warehouseId: root?.warehouseId,
+          },
+        },
+      })
+      .warehouse()
+  },
+}
+"
+`;
