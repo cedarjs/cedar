@@ -34,7 +34,7 @@
   "dependencies": {
     "@cedarjs/api": "6.0.0",
     "@cedarjs/context": "6.0.0",
-    "@envelop/core": "5.5.1",
+    "@envelop/core": "5.6.0",
     "@envelop/disable-introspection": "6.0.0",
     "@envelop/filter-operation-type": "6.0.0",
     "@envelop/on-resolve": "4.1.1",
