@@ -3032,7 +3032,7 @@ __metadata:
     "@graphql-tools/load": "npm:8.1.16"
     "@graphql-tools/merge": "npm:9.2.3"
     "@jridgewell/trace-mapping": "npm:0.3.31"
-    "@oxc-project/types": "npm:^0.146.0"
+    "@oxc-project/types": "npm:^0.147.0"
     "@prisma/dmmf": "npm:7.8.0"
     "@prisma/internals": "npm:7.8.0"
     "@sdl-codegen/node": "npm:2.0.1"
@@ -3515,7 +3515,7 @@ __metadata:
     "@dr.pogodin/react-helmet": "npm:2.0.4"
     "@hyrious/esbuild-plugin-commonjs": "npm:0.2.6"
     "@jridgewell/trace-mapping": "npm:0.3.31"
-    "@oxc-project/types": "npm:^0.146.0"
+    "@oxc-project/types": "npm:^0.147.0"
     "@swc/core": "npm:1.16.1"
     "@types/aws-lambda": "npm:8.10.162"
     "@types/busboy": "npm:^1"
@@ -8536,10 +8536,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oxc-project/types@npm:^0.146.0":
-  version: 0.146.0
-  resolution: "@oxc-project/types@npm:0.146.0"
-  checksum: 10c0/15e99d1d4d9233244262779b6e3bbaf7f11a4e62b57c21ef3755acbec469cb90cd468548103fec282af649096e9c6389fd5221c28b268579061352c49b29f4c8
+"@oxc-project/types@npm:^0.147.0":
+  version: 0.147.0
+  resolution: "@oxc-project/types@npm:0.147.0"
+  checksum: 10c0/adec7c1d4c0a031a83afe976884695ff1467987da3f9e775d24bd596ca82346d3734cc9898f5645955050246a13621b4442696753a2d83d2954127fbdfbd5a5f
   languageName: node
   linkType: hard
 
