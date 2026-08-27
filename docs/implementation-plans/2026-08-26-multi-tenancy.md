@@ -132,8 +132,8 @@ needs the compound selector, and the scaffold generators do not produce that
 shape. The default is therefore the loose model (`id` primary key,
 `organizationId` indexed column) with scoping enforced by the Prisma extension
 below. The how-to documents the compound-PK variant for apps that want
-database-level enforcement of parent/child `organizationId` agreement, which the
-extension cannot check for relation `connect`s.
+database-level enforcement of parent/child `organizationId` agreement
+independent of application code.
 
 ## Architecture decisions
 
@@ -155,8 +155,10 @@ extension cannot check for relation `connect`s.
    on the operation. Apps can replace this with their own `resolveCurrentOrg`
    function. The web client sends the header from `useCurrentOrg()`, which
    derives it from the URL by default.
-4. **Membership is validated when the org is resolved.** `setCurrentOrg` refuses
-   an organization the current user has no membership in, so
+4. **Membership is validated when the org is resolved.** `setCurrentOrg` takes
+   only the organization's identity and derives `role` and `membershipId` from
+   the authenticated user's memberships; it refuses an organization the user has
+   no membership in. A custom resolver therefore cannot grant a role, and
    `context.currentOrg` is trustworthy by the time any service runs. Unauthed
    requests get no `currentOrg`, and public tenant data must be read through the
    explicit `db.$forOrg(id)` escape hatch.
@@ -191,21 +193,28 @@ Behavior, implemented with `$allModels.$allOperations`. Every operation keeps
 its own method; the extension only adds an `organizationId` equality to the
 arguments:
 
-| Operation                                                                                                | Injection                                                  |
-| -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `findUnique`, `findUniqueOrThrow`, `update`, `delete`, `upsert`                                          | `where.organizationId = tenantId` beside the unique field  |
-| `findFirst`, `findFirstOrThrow`, `findMany`, `count`, `aggregate`, `groupBy`, `updateMany`, `deleteMany` | `where.organizationId = tenantId` merged with `AND`        |
-| `create`, `createMany`, `upsert.create`                                                                  | `data.organizationId = tenantId` (error if set to another) |
-| Nested `create`/`createMany` under a tenant-owned relation                                               | same `data` injection, recursively                         |
+| Operation                                                                                                                       | Injection                                                                                                         |
+| ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `findUnique`, `findUniqueOrThrow`, `update`, `delete`, `upsert`                                                                 | `where.organizationId = tenantId` beside the unique field                                                         |
+| `findFirst`, `findFirstOrThrow`, `findMany`, `count`, `aggregate`, `groupBy`, `updateMany`, `updateManyAndReturn`, `deleteMany` | `where.organizationId = tenantId` merged with `AND`                                                               |
+| `create`, `createMany`, `createManyAndReturn`, `upsert.create`                                                                  | `data.organizationId = tenantId` on every row (`data` may be one object or an array); error if a row sets another |
+| `update`, `updateMany`, `updateManyAndReturn`, `upsert.update`                                                                  | `data.organizationId` rejected unless equal to `tenantId`; a row can never move to another organization           |
+| Nested `create`/`createMany`/`update`/`updateMany`/`upsert` under a tenant-owned relation                                       | same `data` rules, recursively                                                                                    |
+| Nested `connect`/`connectOrCreate`/`disconnect`/`set` targeting a tenant-owned model                                            | `organizationId` added to the `where` (`{ id, organizationId }`); `connectOrCreate.create` gets `data` injection  |
+| Nested list `include`/`select`/`_count` of a tenant-owned relation (from any model, including global ones)                      | `where.organizationId = tenantId` merged into the relation arguments                                              |
+| `$queryRaw`, `$executeRaw`, `$queryRawUnsafe`, `$executeRawUnsafe` on a scoped client                                           | `TenantScopeError`; raw SQL is only available on `db.$withoutTenant()`                                            |
 
-The first row relies on `WhereUniqueInput` accepting non-unique filter fields
+The `where` rows rely on `WhereUniqueInput` accepting non-unique filter fields
 next to the unique one (`{ id, organizationId }`), which Prisma supports since
-5.0. The query stays a primary-key lookup with one extra equality check; no
-operation is rewritten to a different one.
-
-Not covered, and stated in the docs: `connect`/`connectOrCreate` to a row in a
-different organization, and raw queries. Both are the compound-PK / RLS
-territory.
+5.0 and which applies to `connect` as well. The query stays a primary-key lookup
+with one extra equality check; no operation is rewritten to a different one,
+and a `connect` to a row in another organization fails with Prisma's
+record-not-found error. Relation targets are resolved from `Prisma.dmmf`, so
+the extension knows which relations point at tenant-owned models without
+configuration. The one shape left to the compound-PK variant is a to-one
+relation from a global model directly to a tenant-owned row; the how-to calls
+that out as a modeling smell (assign to memberships, which are per
+organization).
 
 ### Escape hatches: `$forOrg` and `$withoutTenant`
 
@@ -267,17 +276,35 @@ export interface CurrentOrg {
   membershipId: string
 }
 
-export function setCurrentOrg(org: CurrentOrg): void
+interface Memberships {
+  memberships: Array<{ organizationId: string; role: string; id: string }>
+}
+
+// Takes only the organization identity; role and membershipId are derived
+// from currentUser.memberships, never from the caller, so a custom resolver
+// cannot grant privileges. Throws ForbiddenError when there is no membership.
+export function setCurrentOrg(
+  org: { id: string; slug: string },
+  currentUser: Memberships
+): CurrentOrg
 export function getCurrentOrg(): CurrentOrg | undefined
 export function requireCurrentOrg(): CurrentOrg // throws TenantScopeError
 export function resolveCurrentOrg(args: {
   event: APIGatewayProxyEvent | Request
-  currentUser: {
-    memberships: Array<{ organizationId: string; role: string; id: string }>
-  }
+  variables?: Record<string, unknown> // parsed GraphQL variables, when available
+  currentUser: Memberships
   lookupOrg: (idOrSlug: string) => Promise<{ id: string; slug: string } | null>
 }): Promise<CurrentOrg | undefined>
+export function withTenancy<H extends Handler>(handler: H): H
 ```
+
+`resolveCurrentOrg` reads the `cedar-org` header first and, when absent and
+`variables` is provided, `variables.orgId` / `variables.orgSlug`. It calls
+`setCurrentOrg` itself, so the derived `role`/`membershipId` are the only ones
+that ever reach the context. `withTenancy` is for plain `api/src/functions/*`
+handlers, which do not go through the GraphQL context: it runs `getCurrentUser`
+via the existing auth helpers, then `resolveCurrentOrg` with the request
+headers, then the wrapped handler inside that context.
 
 `GlobalContext` in `@cedarjs/context` gains an optional `currentOrg` via
 declaration merging from this package.
@@ -316,10 +343,25 @@ export function useCurrentOrg(): { org: CurrentOrgSummary | undefined; membershi
 export function hasOrgRole(roles, organizationId?): boolean   // reads useAuth().currentUser.memberships
 ```
 
-Plus an Apollo link that sets `cedar-org` from `useCurrentOrg()`. The default
-source of truth for the active org is a `:orgSlug` route param; `setOrg` is for
-apps that prefer a stored selection. Multiple tabs on different orgs work
-because the header, not the session, carries the choice.
+The active organization is held in a small module-level store, not in React
+context alone, so two things that live at different depths of the tree can use
+it: an Apollo link (installed in `App.tsx`, above the router) reads the store to
+set the `cedar-org` header on every request, and `useCurrentOrg()` subscribes to
+it. The store is written by `<OrgScope>`, which is placed inside the router
+where route params exist:
+
+```tsx
+// web/src/Routes.tsx
+<Set wrap={OrgScope} path="/org/{orgSlug}">
+  <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
+</Set>
+```
+
+`OrgScope` reads `orgSlug` with `useParams()` and writes it to the store on
+change, so navigating between organizations updates the header before the next
+query. Apps that prefer a stored selection instead of a URL segment call
+`setOrg` from their own switcher and omit the `Set`. Multiple tabs on different
+organizations work because the header, not the session, carries the choice.
 
 ### Jobs and scripts
 
@@ -343,31 +385,48 @@ Steps performed:
    model does not exist (the app needs auth set up first) or if
    `Organization`/`Membership` already exist.
 3. Codemod `api/src/lib/db.ts`: wrap the client in
-   `.$extends(createTenancyExtension({ models: { allExcept: ['User', 'Organization', 'Membership'] } }))`.
-   The `allExcept` form is the default because new models are then scoped
-   automatically; forgetting to list a model fails closed.
+   `.$extends(createTenancyExtension({ tenantField, models: { allExcept: ['User', 'Organization', 'Membership'] } }))`,
+   where `tenantField` is the `--tenant-field` value and is omitted when it is
+   the default. The `allExcept` form is the default because new models are then
+   scoped automatically; forgetting to list a model fails closed.
 4. Codemod `api/src/lib/auth.ts`: include `memberships` in `getCurrentUser()`
-   and re-export `hasOrgRole` / `requireMembership`. If the file cannot be
-   codemodded safely, print the snippet to add instead of guessing.
-5. Codemod `api/src/functions/graphql.ts`: add
-   `context: async ({ event, context }) => ({ currentOrg: await resolveCurrentOrg(...) })`
-   (or a `currentOrg` option on `createGraphQLHandler` if that turns out
-   cleaner; see open questions).
+   and re-export `hasOrgRole` / `requireMembership`. `getCurrentUser()` stays
+   read-only. If the file cannot be codemodded safely, print the snippet to add
+   instead of guessing.
+5. Codemod `api/src/functions/graphql.ts`: add a `context` function that calls
+   `ensureDefaultOrganization(currentUser)` (see step 8) and then
+   `resolveCurrentOrg({ event, variables, currentUser, lookupOrg })`, where
+   `variables` are the parsed operation variables the GraphQL context exposes.
+   A first-class `currentOrg` option on `createGraphQLHandler` may replace this
+   boilerplate; see open questions.
 6. Generate `api/src/directives/requireMembership/` with its test.
 7. Generate `api/src/services/organizations/` (create org, invite, accept
    invitation, list memberships) and matching SDL, all scoped with
    `@requireMembership` / `@requireAuth` as appropriate.
-8. Create the default organization on signup. For dbAuth, codemod the
-   `signup.handler` in `api/src/functions/auth.ts` to call
-   `createOrganizationForUser(user)` (exported from the generated organizations
-   service; creates the org and an `owner` membership, or attaches a pending
-   membership when `invitationToken` is present). For other providers,
-   `getCurrentUser()` calls the same helper when the user has no memberships, so
-   first login creates the org.
-9. Wrap `web/src/App.tsx` providers with `<CurrentOrgProvider>` and add the
-   Apollo link.
-10. Print next steps: run the migration, add `organizationId` to existing
-    models, add `:orgSlug` to routes.
+8. Generate `ensureDefaultOrganization(user)` in the organizations service. It
+   is idempotent: it returns early when the user has any membership, otherwise
+   creates the organization with the deterministic slug `user-<userId>` and an
+   `owner` membership in one transaction, and treats a unique-constraint
+   failure on that slug (two concurrent first requests) as "already created"
+   and refetches. When a pending membership matches an `invitationToken` on the
+   request, it attaches that membership instead of creating an organization.
+   For dbAuth the `signup.handler` in `api/src/functions/auth.ts` is codemodded
+   to call it; for every provider the GraphQL `context` function from step 5
+   calls it too, so first login through any provider ends with a membership
+   before `resolveCurrentOrg` runs.
+9. Generate a data migration (`yarn cedar data-migrate`, in
+   `api/db/dataMigrations/`) that runs `ensureDefaultOrganization` for every
+   existing `User` without a membership, in batches. Existing users otherwise
+   have no `currentOrg` and every tenant-owned query for them fails by design.
+   The setup output says to run `yarn cedar prisma migrate dev` and then
+   `yarn cedar data-migrate up`, in that order.
+10. Add the Apollo link to `web/src/App.tsx` and generate
+    `web/src/components/OrgScope/OrgScope.tsx`. Routes are not edited; the
+    printed next steps show the `<Set wrap={OrgScope} path="/org/{orgSlug}">`
+    shape.
+11. Print next steps: run the migrations, add `organizationId` to existing
+    models, wrap organization routes in `OrgScope`, use `withTenancy` on any
+    plain function that touches tenant-owned models.
 
 Flags: `--tenant-field <name>` (default `organizationId`), `--force`.
 
@@ -413,11 +472,24 @@ same shape as `uploads.md`.
 ## Testing
 
 - `packages/tenancy`: unit tests for the query-argument rewriting on every
-  operation in the table above, nested writes, `$forOrg`, `$withoutTenant`, and
-  the `TenantScopeError` path. Run against a real SQLite Prisma client generated
-  from a fixture schema (the `storage` package does the same), not against
-  mocks, so Prisma's argument shapes are exercised for real.
-- `resolveCurrentOrg`: header, variable, slug/id lookup, non-member rejection.
+  operation in the table above, including `createManyAndReturn` /
+  `updateManyAndReturn`, `createMany.data` as an object and as an array with
+  one conflicting row, an `update` that tries to change `organizationId`,
+  nested writes, `connect` to a row in another organization (must fail), nested
+  list `include`/`select`/`_count` reached from a global model (must be
+  scoped), raw queries on the scoped client (must throw), `$forOrg`,
+  `$withoutTenant`, and the `TenantScopeError` path. Run against a real SQLite
+  Prisma client generated from a fixture schema (the `storage` package does the
+  same), not against mocks, so Prisma's argument shapes are exercised for real.
+- `resolveCurrentOrg` / `setCurrentOrg`: header, `variables.orgId`,
+  `variables.orgSlug`, slug/id lookup, non-member rejection, and a resolver
+  that returns a forged `role: 'owner'` for a viewer membership (the context
+  must hold `viewer`).
+- `ensureDefaultOrganization`: idempotent on repeat calls, two concurrent
+  first calls produce one organization, invitation token attaches instead of
+  creating.
+- The generated data migration: users with and without memberships, batch
+  boundaries.
 - `packages/cli` setup command: codemod tests under `__codemod_tests__` with
   `__testfixtures__` for the default `db.ts`, an already-extended `db.ts`
   (uploads), and a `db.ts` the codemod refuses to touch.
@@ -450,10 +522,6 @@ that plan lands, and the hardcoded path until then.
   `currentOrg` option on the handler (like `getCurrentUser`) would be cleaner
   and would let the `@cedarjs/graphql-server` cache the lookup. Decide during
   step 1.
-- **Non-GraphQL functions.** Plain `api/src/functions/*` handlers do not go
-  through the GraphQL context. They need an explicit
-  `await resolveCurrentOrg(...)` call; document it, or provide a
-  `withTenancy(handler)` wrapper.
 - **RSC / server-rendered routes.** When the streaming SSR rewrite
   (`2026-07-20-streaming-ssr-rewrite.md`) gives server code direct `db` access,
   the same `context.currentOrg` needs to be set from the route param in the
