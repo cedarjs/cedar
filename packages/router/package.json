@@ -71,7 +71,7 @@
     "tstyche": "5.0.2",
     "typescript": "5.9.3",
     "vite": "7.3.6",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "peerDependencies": {
     "@cedarjs/auth": "6.0.0",

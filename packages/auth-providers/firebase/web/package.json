@@ -49,7 +49,7 @@
     "publint": "0.3.24",
     "react": "19.2.8",
     "typescript": "5.9.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "peerDependencies": {
     "firebase": "10.14.1"

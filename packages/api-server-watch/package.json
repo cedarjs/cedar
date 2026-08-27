@@ -41,7 +41,7 @@
     "@types/dotenv-defaults": "^5.0.0",
     "@types/yargs": "17.0.35",
     "typescript": "5.9.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "engines": {
     "node": ">=24"
