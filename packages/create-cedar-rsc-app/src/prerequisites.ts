@@ -114,7 +114,7 @@ export function checkYarnInstallation(config: Config) {
 
   console.log('')
   console.log("Found yarn, but it's not enabled by corepack.")
-  console.log('CedarJS works best with yarn enabled via corepack.')
+  console.log('Cedar works best with yarn enabled via corepack.')
   console.log(
     'Please completely uninstall yarn and then enable it using corepack',
   )

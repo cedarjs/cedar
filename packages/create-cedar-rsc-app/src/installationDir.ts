@@ -9,7 +9,7 @@ import { ExitCodeError } from './error.ts'
 export async function setInstallationDir(config: Config) {
   if (!config.installationDir) {
     console.log()
-    console.log('Where do you want to install the CedarJS RSC project?')
+    console.log('Where do you want to install the Cedar RSC project?')
     config.installationDir = await promptForInstallationDir()
   } else if (fs.existsSync(config.installationDir)) {
     console.log()

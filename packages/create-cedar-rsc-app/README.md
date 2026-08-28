@@ -1,11 +1,11 @@
 # Create Cedar RSC App
 
-This is the CedarJS RSC quick-start installer. It's designed to get you
+This is the Cedar RSC quick-start installer. It's designed to get you
 started as fast as possible with a new Cedar project with RSC support
 enabled.
 
 It's _very_ opinionated. If you need more control over your project setup,
-please use our standard CedarJS installer.
+please use our standard Cedar installer.
 
 ## Usage
 
