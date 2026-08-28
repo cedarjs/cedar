@@ -100,6 +100,7 @@ export const handler = async (upgradeOptions: UpgradeOptions) => {
               return 'Yes'
             },
           })
+
           if (!proceed) {
             task.skip('Upgrade cancelled by user.')
             process.exit(0)
