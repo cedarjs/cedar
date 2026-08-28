@@ -169,9 +169,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/client@npm:4.2.7, @apollo/client@npm:^4.0.0":
-  version: 4.2.7
-  resolution: "@apollo/client@npm:4.2.7"
+"@apollo/client@npm:4.2.12, @apollo/client@npm:^4.0.0":
+  version: 4.2.12
+  resolution: "@apollo/client@npm:4.2.12"
   dependencies:
     "@graphql-typed-document-node/core": "npm:^3.1.1"
     "@wry/caches": "npm:^1.0.0"
@@ -196,7 +196,7 @@ __metadata:
       optional: true
     subscriptions-transport-ws:
       optional: true
-  checksum: 10c0/77b4ab06cb7a7c824f88ef5b2e0ddd21d9ff284feec9c333c6cfd8bb3d684d8d1655d505f81ae7f750d4a9026cf7f88dcdfcb446276c562790026c76e2dc8b46
+  checksum: 10c0/97852e2a88231ea15b3cc6f1cef307f0df655d96d8f96531717f764cb8440b0a8931ca13b8a73623b6fffe156cccdfaf75f940e0d72f928fbc68edad6345e301
   languageName: node
   linkType: hard
 
@@ -2794,7 +2794,7 @@ __metadata:
     "@cedarjs/jobs": "workspace:*"
     "@cedarjs/vite": "workspace:*"
     "@cedarjs/web-server": "workspace:*"
-    graphql-tag: "npm:2.12.6"
+    graphql-tag: "npm:2.12.7"
     nodemon: "npm:3.1.14"
     publint: "npm:0.3.24"
     typescript: "npm:5.9.3"
@@ -2989,7 +2989,7 @@ __metadata:
     fastify: "npm:5.12.1"
     graphql: "npm:16.14.2"
     graphql-scalars: "npm:1.26.0"
-    graphql-tag: "npm:2.12.6"
+    graphql-tag: "npm:2.12.7"
     graphql-yoga: "npm:5.22.0"
     jsonwebtoken: "npm:9.0.3"
     lodash: "npm:4.18.1"
@@ -3043,7 +3043,7 @@ __metadata:
     execa: "npm:5.1.1"
     fast-glob: "npm:3.3.3"
     graphql: "npm:16.14.2"
-    graphql-tag: "npm:2.12.6"
+    graphql-tag: "npm:2.12.7"
     kill-port: "npm:1.6.1"
     magic-string: "npm:0.30.21"
     memfs: "npm:4.68.1"
@@ -3596,7 +3596,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/web@workspace:packages/web"
   dependencies:
-    "@apollo/client": "npm:4.2.7"
+    "@apollo/client": "npm:4.2.12"
     "@apollo/client-react-streaming": "npm:0.14.5"
     "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/auth": "workspace:*"
@@ -3616,7 +3616,7 @@ __metadata:
     cookie: "npm:1.1.1"
     graphql: "npm:16.14.2"
     graphql-sse: "npm:2.6.0"
-    graphql-tag: "npm:2.12.6"
+    graphql-tag: "npm:2.12.7"
     nodemon: "npm:3.1.14"
     publint: "npm:0.3.24"
     react: "npm:19.2.8"
@@ -17844,14 +17844,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-tag@npm:2.12.6, graphql-tag@npm:^2.11.0, graphql-tag@npm:^2.12.6":
-  version: 2.12.6
-  resolution: "graphql-tag@npm:2.12.6"
+"graphql-tag@npm:2.12.7, graphql-tag@npm:^2.11.0, graphql-tag@npm:^2.12.6":
+  version: 2.12.7
+  resolution: "graphql-tag@npm:2.12.7"
   dependencies:
     tslib: "npm:^2.1.0"
   peerDependencies:
-    graphql: ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/7763a72011bda454ed8ff1a0d82325f43ca6478e4ce4ab8b7910c4c651dd00db553132171c04d80af5d5aebf1ef6a8a9fd53ccfa33b90ddc00aa3d4be6114419
+    graphql: ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: 10c0/c5b973b6b0477d3f734a0df7ebea2061790e268774d7fea310fde64820c1686c3b43f3e7262e4224d689917f42ae8e84c67f32772c003c308d38896ed960c5ec
   languageName: node
   linkType: hard
 

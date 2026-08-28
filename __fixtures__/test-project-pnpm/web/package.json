@@ -16,7 +16,7 @@
     "@cedarjs/forms": "5.0.0",
     "@cedarjs/router": "5.0.0",
     "@cedarjs/web": "5.0.0",
-    "graphql-tag": "2.12.6",
+    "graphql-tag": "2.12.7",
     "humanize-string": "2.1.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
