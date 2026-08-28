@@ -4,7 +4,7 @@ import { fs as memfs, vol } from 'memfs'
 import { vi, afterEach, beforeEach, describe, it, expect } from 'vitest'
 
 import { runScriptFunction } from '../../lib/exec.js'
-import '../../lib/mockTelemetry.js'
+import '../../lib/mockTelemetry'
 import { handler } from '../execHandler.js'
 
 vi.mock('@cedarjs/babel-config', () => ({
@@ -21,7 +21,7 @@ vi.mock('@cedarjs/project-config', () => ({
     web: { base: '', src: '' },
     scripts: path.join('cedar-app', 'scripts'),
   }),
-  getConfig: () => ({}),
+  getConfig: () => ({ experimental: { streamingSsr: { enabled: false } } }),
   resolveFile: (path: string) => path,
 }))
 
@@ -43,7 +43,6 @@ vi.mock('../../lib/exec', () => ({
   runScriptFunction: vi.fn(),
 }))
 
-vi.mock('fs', () => ({ ...memfs, default: { ...memfs } }))
 vi.mock('node:fs', () => ({ ...memfs, default: { ...memfs } }))
 
 beforeEach(() => {
