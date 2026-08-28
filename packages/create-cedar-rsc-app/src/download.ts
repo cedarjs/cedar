@@ -13,7 +13,7 @@ export async function downloadTemplate(config: Config) {
 
   const tmpDir = path.join(
     os.tmpdir(),
-    'rw-rsc-app',
+    'cedar-rsc-app',
     // ":" is problematic with paths
     new Date().toISOString().split(':').join('-'),
   )
