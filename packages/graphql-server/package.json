@@ -47,7 +47,7 @@
     "cookie": "1.1.1",
     "graphql": "16.14.2",
     "graphql-scalars": "1.26.0",
-    "graphql-tag": "2.12.6",
+    "graphql-tag": "2.12.7",
     "graphql-yoga": "5.22.0",
     "lodash": "4.18.1",
     "uuid": "11.1.0"

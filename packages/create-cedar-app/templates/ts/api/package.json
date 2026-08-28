@@ -10,7 +10,7 @@
     "@prisma/client": "7.8.0",
     "better-sqlite3": "12.11.1",
     "@cedarjs/context": "6.0.0",
-    "graphql-tag": "2.12.6"
+    "graphql-tag": "2.12.7"
   },
   "devDependencies": {
     "@cedarjs/vite": "6.0.0",
