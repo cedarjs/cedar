@@ -1,6 +1,6 @@
 # Pagination
 
-This tutorial will show you one way to implement pagination in an app built using Redmix. It builds on top of [the tutorial](../tutorial/foreword.md) and I'll assume you have a folder with the code from the tutorial that you can continue working on. (If you don't, you can clone this repo: https://github.com/thedavidprice/redwood-tutorial-test)
+This tutorial will show you one way to implement pagination in an app built using RedwoodJS. It builds on top of [the tutorial](../tutorial/foreword.md) and I'll assume you have a folder with the code from the tutorial that you can continue working on. (If you don't, you can clone this repo: https://github.com/thedavidprice/redwood-tutorial-test)
 
 ![redwoodjs-pagination](https://user-images.githubusercontent.com/30793/94778130-ec6d6e00-03c4-11eb-9fd0-97cbcdf68ec2.png)
 
@@ -179,7 +179,7 @@ export const Success = ({
 </TabItem>
 </Tabs>
 
-Now we need a way to pass a value for the `page` parameter to the query. To do that we'll take advantage of a little Redmix magic. Remember from the tutorial how you made the post id part of the route path `(<Route path="/blog-post/{id:Int}" page={BlogPostPage} name="blogPost" />)` and that id was then sent as a prop to the BlogPostPage component? We'll do something similar here for the page number, but instead of making it a part of the url path, we'll make it a url query string. These, too, are magically passed as a prop to the relevant page component. And you don't even have to update the route to make it work! Let's update `HomePage.js` to handle the prop.
+Now we need a way to pass a value for the `page` parameter to the query. To do that we'll take advantage of a little RedwoodJS magic. Remember from the tutorial how you made the post id part of the route path `(<Route path="/blog-post/{id:Int}" page={BlogPostPage} name="blogPost" />)` and that id was then sent as a prop to the BlogPostPage component? We'll do something similar here for the page number, but instead of making it a part of the url path, we'll make it a url query string. These, too, are magically passed as a prop to the relevant page component. And you don't even have to update the route to make it work! Let's update `HomePage.js` to handle the prop.
 
 <Tabs groupId="js-ts">
 <TabItem value="js" label="JavaScript">
@@ -210,7 +210,7 @@ const HomePage = ({ page = 1 }) => {
 </TabItem>
 </Tabs>
 
-So now if someone navigates to https://awesomeredmixblog.com?page=2 (and the blog was actually hosted on awesomeredmixblog.com), then `HomePage` would have its `page` prop set to `"2"`, and we then pass that value along to `BlogPostsCell`. If no `?page=` query parameter is provided `page` will default to `1`
+So now if someone navigates to https://awesomeredwoodjsblog.com?page=2 (and the blog was actually hosted on awesomeredwoodjsblog.com), then `HomePage` would have its `page` prop set to `"2"`, and we then pass that value along to `BlogPostsCell`. If no `?page=` query parameter is provided `page` will default to `1`
 
 Going back to `BlogPostsCell` there is one me thing to add before the query parameter work.
 
@@ -368,7 +368,7 @@ export const Success = ({
 </TabItem>
 </Tabs>
 
-And there you have it! You have now added pagination to your Redmix blog. One technical limitation to the current implementation is that it doesn't handle too many pages very gracefully. Just imagine what that list of pages would look like if you had 100 pages! It's left as an exercise to the reader to build a more fully featured Pagination component.
+And there you have it! You have now added pagination to your redwood blog. One technical limitation to the current implementation is that it doesn't handle too many pages very gracefully. Just imagine what that list of pages would look like if you had 100 pages! It's left as an exercise to the reader to build a more fully featured Pagination component.
 
 Most of the code in this tutorial was copy/pasted from the ["Hammer Blog" RedwoodJS example](https://github.com/redwoodjs/example-blog)
 
