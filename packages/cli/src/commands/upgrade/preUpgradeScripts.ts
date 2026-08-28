@@ -11,7 +11,7 @@ import { tryParse } from 'verkit'
 /**
  * Prerelease tags published from `main` rather than from a release branch.
  *
- * Canaries are published by `publish-prerelease.yml`, which runs on `main`.
+ * Canaries are published by the `prerelease` job in `publish.yml`, which runs on `main`.
  * That's a different line of development from the branch a release is cut
  * from, so `canary.ts` can legitimately need to say something quite different
  * from the current `<major>.x.ts`, and the version-scoped scripts must not run

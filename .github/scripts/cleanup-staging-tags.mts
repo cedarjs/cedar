@@ -15,13 +15,16 @@
  * Removing a dist-tag does not unpublish anything. Every version stays exactly
  * where it is and remains installable by exact version -- only the alias goes.
  *
- * Environment variables required: NPM_AUTH_TOKEN
+ * Authentication is npm trusted publishing (OIDC) in CI, or NPM_AUTH_TOKEN as
+ * a fallback (see lib/npm-auth.mts).
  */
 import { execFile as execFileCb } from 'node:child_process'
 import fs from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
 import util from 'node:util'
+
+import { createNpmAuth } from './lib/npm-auth.mts'
+import type { NpmAuth } from './lib/npm-auth.mts'
 
 // execFile rather than exec: package and tag names come from the registry, so
 // they must never be interpolated into a shell command line
@@ -192,35 +195,19 @@ async function getStaleTags(packageName: string): Promise<ScanResult> {
 }
 
 async function main() {
-  const npmAuthToken = process.env.NPM_AUTH_TOKEN
-
-  if (!npmAuthToken) {
-    throw new Error('NPM_AUTH_TOKEN is not set or is empty')
-  }
-
-  // Into a temp dir rather than the repo root. `.npmrc` is neither tracked nor
-  // gitignored, so a token written there is one `git add .` away from being
-  // committed by anyone who runs this locally. Child npm processes pick this up
-  // through the inherited environment.
-  const npmrcDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-npmrc-'))
-  const npmrcPath = path.join(npmrcDir, '.npmrc')
-
-  fs.writeFileSync(
-    npmrcPath,
-    `//registry.npmjs.org/:_authToken=${npmAuthToken}\n`,
-  )
-  process.env['npm_config_userconfig'] = npmrcPath
+  const auth = createNpmAuth()
+  log(`npm auth mode: ${auth.mode}`)
 
   try {
-    await cleanUpStagingTags()
+    await cleanUpStagingTags(auth)
   } finally {
-    // The token lives in here. On a runner the whole machine is thrown away,
+    // The tokens live in there. On a runner the whole machine is thrown away,
     // but this also gets run locally
-    fs.rmSync(npmrcDir, { recursive: true, force: true })
+    auth.dispose()
   }
 }
 
-async function cleanUpStagingTags() {
+async function cleanUpStagingTags(auth: NpmAuth) {
   const packageNames = await getPublishablePackageNames()
   log(`Checking ${packageNames.length} published packages`)
 
@@ -280,6 +267,7 @@ async function cleanUpStagingTags() {
       try {
         await execFile('npm', ['dist-tag', 'rm', packageName, tag], {
           cwd: REPO_ROOT,
+          env: await auth.forDistTag(packageName),
           timeout: COMMAND_TIMEOUT_MS,
         })
         removed += 1
@@ -298,7 +286,10 @@ async function cleanUpStagingTags() {
   // aren't worth failing the job over. A total wipeout usually means the token
   // expired, which is worth being loud about
   if (removed === 0 && failed > 0) {
-    throw new Error('Every removal failed. Is NPM_AUTH_TOKEN still valid?')
+    throw new Error(
+      'Every removal failed. Are the npm credentials still valid? (auth ' +
+        `mode: ${auth.mode})`,
+    )
   }
 }
 

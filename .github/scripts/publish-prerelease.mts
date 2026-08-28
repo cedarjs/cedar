@@ -11,13 +11,18 @@
  * Used in the publish-prerelease.yml GitHub Action workflow.
  *
  * Usage: node .github/scripts/publish-prerelease.mts
- * Environment variables required: NPM_AUTH_TOKEN, GITHUB_REF_NAME
+ * Environment variables required: GITHUB_REF_NAME. Authentication is npm
+ * trusted publishing (OIDC) in CI, or NPM_AUTH_TOKEN as a fallback (see
+ * lib/npm-auth.mts).
  */
 
 import { exec as execCb, execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import util from 'node:util'
+
+import { createNpmAuth, isOidcAvailable } from './lib/npm-auth.mts'
+import type { NpmAuth } from './lib/npm-auth.mts'
 
 // Dependency fields whose in-monorepo entries get rewritten to the version
 // being published
@@ -40,17 +45,6 @@ interface PackageJson {
 interface WorkspaceInfo {
   name: string
   location: string
-}
-
-interface NpmTokenScope {
-  name: string | null
-  type: string
-}
-
-interface NpmTokenEntry {
-  token: string
-  expiry: string | null
-  scopes: NpmTokenScope[]
 }
 
 const REPO_ROOT = process.cwd()
@@ -97,9 +91,15 @@ function getExecErrorDetails(error: unknown): {
   return { message: String(error), stderr: '' }
 }
 
-async function execCommandAsync(command: string, cwd: string = REPO_ROOT) {
+async function execCommandAsync(
+  command: string,
+  {
+    cwd = REPO_ROOT,
+    env = process.env,
+  }: { cwd?: string; env?: NodeJS.ProcessEnv } = {},
+) {
   try {
-    const { stdout } = await exec(command, { cwd, encoding: 'utf-8' })
+    const { stdout } = await exec(command, { cwd, env, encoding: 'utf-8' })
     return stdout.trim()
   } catch (error) {
     const { message, stderr } = getExecErrorDetails(error)
@@ -192,24 +192,6 @@ function readPackageJson(pkgJsonPath: string): PackageJson {
 
 function writePackageJson(pkgJsonPath: string, pkgJson: PackageJson) {
   fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n')
-}
-
-function getValidCedarjsToken(): string | null {
-  const tokens: NpmTokenEntry[] = JSON.parse(
-    execCommand('npm token list --json'),
-  )
-
-  const now = new Date().toISOString()
-
-  const validToken = tokens.find(
-    (token) =>
-      token.scopes?.some(
-        (scope) => scope.name === 'cedarjs' && scope.type === 'org',
-      ) &&
-      (token.expiry === null || token.expiry > now),
-  )
-
-  return validToken?.token ?? null
 }
 
 // vX.Y.Z tags only, sorted ascending so the last entry is the newest
@@ -399,8 +381,14 @@ async function isPackagePublished(
 async function publishPackagesToStagingTag(
   packages: PublishablePackage[],
   stagingTag: string,
+  auth: NpmAuth,
 ): Promise<void> {
   log(`Publishing ${packages.length} packages under staging tag ${stagingTag}`)
+
+  // With trusted publishing npm adds provenance on its own. Asking for it
+  // explicitly makes a token-based publish from CI do the same, and turns a
+  // silent downgrade into a loud failure.
+  const provenanceFlag = isOidcAvailable() ? ' --provenance' : ''
 
   await runWithConcurrency(packages, PUBLISH_CONCURRENCY, async (pkg) => {
     const { name, version, workspace } = pkg
@@ -410,10 +398,13 @@ async function publishPackagesToStagingTag(
       return
     }
 
-    await withRetry(() =>
+    await withRetry(async () =>
       execCommandAsync(
-        `npm publish --tag ${stagingTag} --access public`,
-        path.join(REPO_ROOT, workspace.location),
+        `npm publish --tag ${stagingTag} --access public${provenanceFlag}`,
+        {
+          cwd: path.join(REPO_ROOT, workspace.location),
+          env: await auth.forPublish(name),
+        },
       ),
     )
     log(`  ✅ Published ${name}@${version} (staging tag: ${stagingTag})`)
@@ -453,6 +444,7 @@ async function getCurrentTagVersion(
 async function flipToFinalTag(
   packages: PublishablePackage[],
   finalTag: string,
+  auth: NpmAuth,
 ): Promise<void> {
   log(`Flipping ${packages.length} packages to tag ${finalTag}`)
 
@@ -465,8 +457,10 @@ async function flipToFinalTag(
 
       previousVersions.set(name, await getCurrentTagVersion(name, finalTag))
 
-      await withRetry(() =>
-        execCommandAsync(`npm dist-tag add ${name}@${version} ${finalTag}`),
+      await withRetry(async () =>
+        execCommandAsync(`npm dist-tag add ${name}@${version} ${finalTag}`, {
+          env: await auth.forDistTag(name),
+        }),
       )
       flipped.push(pkg)
       log(`  🏷 ${name}@${version} -> ${finalTag}`)
@@ -478,7 +472,7 @@ async function flipToFinalTag(
         `already flipped so the registry doesn't end up in a mixed-version ` +
         `state.`,
     )
-    await rollBackFlips(flipped, finalTag, previousVersions)
+    await rollBackFlips(flipped, finalTag, previousVersions, auth)
     throw error
   }
 }
@@ -487,6 +481,7 @@ async function rollBackFlips(
   flipped: PublishablePackage[],
   finalTag: string,
   previousVersions: Map<string, string | null>,
+  auth: NpmAuth,
 ): Promise<void> {
   await runWithConcurrency(flipped, DIST_TAG_CONCURRENCY, async (pkg) => {
     const previousVersion = previousVersions.get(pkg.name)
@@ -502,6 +497,7 @@ async function rollBackFlips(
     try {
       await execCommandAsync(
         `npm dist-tag add ${pkg.name}@${previousVersion} ${finalTag}`,
+        { env: await auth.forDistTag(pkg.name) },
       )
       log(`  ↩️ Rolled back ${pkg.name} to ${previousVersion}`)
     } catch {
@@ -519,12 +515,15 @@ async function rollBackFlips(
 async function removeStagingTag(
   packages: PublishablePackage[],
   stagingTag: string,
+  auth: NpmAuth,
 ): Promise<void> {
   log(`Cleaning up staging tag ${stagingTag}`)
 
   await runWithConcurrency(packages, DIST_TAG_CONCURRENCY, async (pkg) => {
     try {
-      await execCommandAsync(`npm dist-tag rm ${pkg.name} ${stagingTag}`)
+      await execCommandAsync(`npm dist-tag rm ${pkg.name} ${stagingTag}`, {
+        env: await auth.forDistTag(pkg.name),
+      })
     } catch {
       log(`  Could not remove staging tag for ${pkg.name}, ignoring`)
     }
@@ -532,39 +531,13 @@ async function removeStagingTag(
 }
 
 async function main() {
-  const npmAuthToken = process.env.NPM_AUTH_TOKEN
-
-  if (!npmAuthToken) {
-    throw new Error('NPM_AUTH_TOKEN is not set or is empty')
-  }
-
-  fs.writeFileSync(
-    path.join(REPO_ROOT, '.npmrc'),
-    `//registry.npmjs.org/:_authToken=${npmAuthToken}\n`,
-  )
-
-  // Make sure the token is valid and not expired
-  log(`npm user: ${execCommand('npm whoami')}`)
-
-  // Make sure the token is valid and not expired, and has "cedarjs" org
-  // scope
-  const validToken = getValidCedarjsToken()
-
-  if (!validToken) {
-    console.error(
-      "Error: No valid, non-expired NPM token found for 'cedarjs' org scope",
-    )
-    throw new Error('No valid npm token found')
-  }
-
-  log("NPM token for 'cedarjs' org scope is valid and not expired")
+  // Fails early if there are no credentials at all, before any of the
+  // version bumping below
+  const auth = createNpmAuth()
 
   const githubRefName = process.env.GITHUB_REF_NAME || ''
   const tag = githubRefName === 'next' ? 'next' : 'canary'
-  log(
-    `Publishing ${tag} from ${githubRefName} using npm token ` +
-      `${npmAuthToken.slice(0, 5)}`,
-  )
+  log(`Publishing ${tag} from ${githubRefName} (npm auth mode: ${auth.mode})`)
 
   // ── Calculate version ────────────────────────────────────────────────────
 
@@ -613,9 +586,13 @@ async function main() {
   const packages = getPublishablePackages(workspaces)
   const stagingTag = `staging-${canaryVersion}`
 
-  await publishPackagesToStagingTag(packages, stagingTag)
-  await flipToFinalTag(packages, tag)
-  await removeStagingTag(packages, stagingTag)
+  try {
+    await publishPackagesToStagingTag(packages, stagingTag, auth)
+    await flipToFinalTag(packages, tag, auth)
+    await removeStagingTag(packages, stagingTag, auth)
+  } finally {
+    auth.dispose()
+  }
 
   log('✅ Canary publishing completed successfully!')
 }
