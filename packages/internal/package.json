@@ -148,7 +148,7 @@
     "graphql": "16.14.2",
     "kill-port": "1.6.1",
     "magic-string": "0.30.21",
-    "oxc-parser": "0.144.0",
+    "oxc-parser": "0.147.0",
     "prettier": "3.9.6",
     "rimraf": "6.1.3",
     "source-map": "0.8.0",
