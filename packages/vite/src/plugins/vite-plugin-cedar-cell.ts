@@ -42,7 +42,8 @@ const EXPECTED_EXPORTS_FROM_CELL = [
  * export const QUERY = gql`...`
  * export const Loading = () => <div>Loading...</div>
  * export const Success = ({ data }) => <div>{data}</div>
- * export default createCell({ QUERY, Loading, Success, displayName: 'MyCell' })
+ * const MyCell = createCell({ QUERY, Loading, Success, displayName: 'MyCell' })
+ * export default MyCell
  * ```
  */
 export function cedarCellTransform(): Plugin {
@@ -173,21 +174,51 @@ export function cedarCellTransform(): Plugin {
               },
             ]
 
+            // Assign the `createCell(...)` call to a named `const` and
+            // export that binding by reference, rather than exporting the
+            // call expression directly as an anonymous default export.
+            // React Fast Refresh requires a named binding to register a
+            // component as an HMR boundary -- an anonymous default export
+            // of a call expression is exactly the shape it declines to
+            // handle, so editing a Cell would otherwise force a full
+            // remount of the nearest refresh-eligible ancestor (typically
+            // the Page), discarding any state held in the Cell's subtree.
+            const cellComponentName = parsePath(id).name
+
+            const cellVariableDeclaration = {
+              type: 'VariableDeclaration' as const,
+              kind: 'const' as const,
+              declarations: [
+                {
+                  type: 'VariableDeclarator' as const,
+                  id: {
+                    type: 'Identifier' as const,
+                    name: cellComponentName,
+                  },
+                  init: {
+                    type: 'CallExpression' as const,
+                    callee: {
+                      type: 'Identifier' as const,
+                      name: createCellHookName,
+                    },
+                    arguments: [
+                      {
+                        type: 'ObjectExpression' as const,
+                        properties: objectProperties,
+                      },
+                    ],
+                  },
+                },
+              ],
+            }
+            path.node.body.push(cellVariableDeclaration)
+
             // Insert export default at the bottom of the file
             const exportDefaultDeclaration = {
               type: 'ExportDefaultDeclaration' as const,
               declaration: {
-                type: 'CallExpression' as const,
-                callee: {
-                  type: 'Identifier' as const,
-                  name: createCellHookName,
-                },
-                arguments: [
-                  {
-                    type: 'ObjectExpression' as const,
-                    properties: objectProperties,
-                  },
-                ],
+                type: 'Identifier' as const,
+                name: cellComponentName,
               },
             }
             path.node.body.push(exportDefaultDeclaration)
