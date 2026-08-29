@@ -50,7 +50,7 @@
     "better-sqlite3": "12.11.1",
     "concurrently": "9.2.4",
     "esbuild": "0.28.2",
-    "prisma": "7.8.0",
+    "prisma": "7.10.0",
     "publint": "0.3.24",
     "tstyche": "5.0.2",
     "typescript": "5.9.3",
