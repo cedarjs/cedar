@@ -100,10 +100,13 @@ jobs:
         # keep this even though the original temporary pw:webserver
         # diagnostics have been removed (see the 2026-08-29 update in
         # docs/implementation-plans/flaky-smoke-tests-investigation.md).
-        # `DEBUG=pw:webserver` is re-added below (narrower this time, kept
-        # long-term) so Playwright forwards the webServer child's raw
-        # stdout/stderr and its own spawn/exit error text into this log --
-        # the previous capture showed neither, which is itself a clue.
+        # `DEBUG=pw:webserver` (same flag as before) is re-added below so
+        # Playwright forwards the webServer child's stdout/stderr and the
+        # retry-ladder timing into this log. It didn't reveal the actual
+        # spawn error in the one failure captured so far, but it's cheap
+        # (a handful of lines on the webServer health-check polling, not
+        # full Playwright debug spam) so it stays on in case a future
+        # failure looks different.
         shell: bash
         working-directory: tasks/smoke-tests/serve
         run: npx playwright test
