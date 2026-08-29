@@ -11228,9 +11228,9 @@ __metadata:
   linkType: hard
 
 "@types/mjml-core@npm:*":
-  version: 4.7.1
-  resolution: "@types/mjml-core@npm:4.7.1"
-  checksum: 10c0/11deecd239b81d4f4cfa9440881e90379b28243d6c7108ca1ce7738e0e1f94fca23883ba1c872e39037e9d954746fdac79692d7fb36cfc41d48f22dfea75381c
+  version: 5.1.0
+  resolution: "@types/mjml-core@npm:5.1.0"
+  checksum: 10c0/30806ad342f3e58fc602015ba1545e969733cb77c8967d7b41d0ef83d599351fcac45a302e63aec5996d01cc30263bd8daf73d16d17c88580dbbe14ede7f1af0
   languageName: node
   linkType: hard
 
