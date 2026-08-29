@@ -16,7 +16,7 @@
     "@cedarjs/eslint-config": "6.0.1",
     "@cedarjs/project-config": "6.0.1",
     "@cedarjs/testing": "6.0.1",
-    "prisma": "7.8.0",
+    "prisma": "7.10.0",
     "vitest": "4.1.11"
   },
   "engines": {
