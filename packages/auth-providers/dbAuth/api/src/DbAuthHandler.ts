@@ -860,10 +860,10 @@ export class DbAuthHandler<
     const { verified, authenticationInfo } = verification
 
     // `verifyAuthenticationResponse()` throws for most failure modes, but a
-    // response whose signature simply doesn't match the stored public key comes
-    // back as `verified: false` with no error. Bail out before issuing any
-    // cookies — otherwise an unverified assertion is answered with a valid
-    // session for the credential's owner.
+    // response whose signature simply does not match the stored public key
+    // comes back as `verified: false` with no error. Bail out before issuing
+    // any cookies — otherwise an unverified assertion is answered with a
+    // valid session for the credential's owner.
     if (!verified) {
       throw new DbAuthError.WebAuthnError('Authentication failed')
     }
