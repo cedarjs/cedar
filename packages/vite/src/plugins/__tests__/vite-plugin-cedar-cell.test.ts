@@ -237,4 +237,31 @@ describe('redwoodCellTransform', () => {
 
     expect(result).toBeNull()
   })
+
+  it('should reject cell filenames that are not valid JavaScript identifiers', async () => {
+    const input = `
+      export const QUERY = gql\`
+        query UserQuery($id: Int!) {
+          user(id: $id) {
+            id
+            name
+          }
+        }
+      \`
+
+      export const Success = ({ user }) => {
+        return <div>Hello {user.name}</div>
+      }
+    `
+
+    // Filename "2Cell" is not a valid identifier because it starts with a digit
+    // @ts-expect-error The PluginOption type doesn't guarantee transform method exists
+    const transformCall = async () => {
+      await plugin.transform(input, '/path/to/2Cell.tsx')
+    }
+
+    await expect(transformCall()).rejects.toThrow(
+      'Cell filename "2Cell" must be a valid JavaScript identifier'
+    )
+  })
 })

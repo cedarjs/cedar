@@ -26,6 +26,16 @@ const EXPECTED_EXPORTS_FROM_CELL = [
 ]
 
 /**
+ * Check if a string is a valid JavaScript identifier.
+ * Valid identifiers must start with a letter, underscore, or $, and can
+ * contain only letters, digits, underscores, or $.
+ */
+function isValidIdentifier(name: string): boolean {
+  const identifierRegex = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/
+  return identifierRegex.test(name)
+}
+
+/**
  * Vite plugin that wraps files with a suffix of `Cell` in CedarJS's `createCell`
  * higher order component. The HOC deals with the lifecycle methods during a GraphQL query.
  *
@@ -53,6 +63,16 @@ export function cedarCellTransform(): Plugin {
       // Only process files that end with 'Cell' (e.g., UserCell.tsx, PostCell.js)
       if (!id.match(/Cell\.[jt]sx?$/)) {
         return null
+      }
+
+      // Validate that the Cell filename is a valid JavaScript identifier
+      // Extract the filename without extension (e.g., "UserCell" from "/path/to/UserCell.tsx")
+      const cellComponentName = parsePath(id).name
+      if (!isValidIdentifier(cellComponentName)) {
+        throw new Error(
+          `Cell filename "${cellComponentName}" must be a valid JavaScript identifier (PascalCase is recommended). ` +
+            `Valid identifiers must start with a letter, underscore, or $ and contain only letters, digits, underscores, or $.`,
+        )
       }
 
       try {
@@ -183,7 +203,6 @@ export function cedarCellTransform(): Plugin {
             // handle, so editing a Cell would otherwise force a full
             // remount of the nearest refresh-eligible ancestor (typically
             // the Page), discarding any state held in the Cell's subtree.
-            const cellComponentName = parsePath(id).name
 
             const cellVariableDeclaration = {
               type: 'VariableDeclaration' as const,
