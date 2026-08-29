@@ -101,7 +101,11 @@ export const handler = async ({
     // instead of hanging on an unanswerable prompt.
     runTransitiveBinSync('prisma', args, {
       cwd: cedarPaths.base,
-      stdio: [process.stdin.isTTY && !process.env.CI ? 'inherit' : 'pipe', 'inherit', 'inherit'],
+      stdio: [
+        process.stdin.isTTY && !process.env.CI ? 'inherit' : 'pipe',
+        'inherit',
+        'inherit',
+      ],
     })
 
     if (hasHelpOption || args.length === 0) {
