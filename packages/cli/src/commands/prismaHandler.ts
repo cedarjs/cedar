@@ -93,9 +93,19 @@ export const handler = async ({
   console.log()
 
   try {
+    // In an interactive local TTY (and not in a CI environment), stdin is
+    // inherited so interactive Prisma prompts (e.g. naming a migration,
+    // confirming a destructive change) work normally. In CI, scripts,
+    // backgrounded, or piped contexts, stdin is piped with no input, so
+    // Prisma sees immediate EOF and exits with its non-interactive error
+    // instead of hanging on an unanswerable prompt.
     runTransitiveBinSync('prisma', args, {
       cwd: cedarPaths.base,
-      stdio: 'inherit',
+      stdio: [
+        process.stdin.isTTY && !process.env.CI ? 'inherit' : 'pipe',
+        'inherit',
+        'inherit',
+      ],
     })
 
     if (hasHelpOption || args.length === 0) {
