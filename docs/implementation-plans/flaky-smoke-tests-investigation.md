@@ -1994,3 +1994,118 @@ Windows-quoting bug in the telemetry and background-process spawns, fixed in
 failure. Those errors are non-fatal: `cedar build` and `cedar prerender` both
 complete immediately afterwards, and the serve step disables telemetry anyway
 via `REDWOOD_DISABLE_TELEMETRY: 1`.
+
+## Update 2026-08-29 — Diagnostics checked and removed (#2489)
+
+Per issue [#2489](https://github.com/cedarjs/cedar/issues/2489), checked
+`nightly-windows` runs from 2026-08-22 through 2026-08-28 (7 nights) for the
+diagnostics added above.
+
+### What was captured
+
+Only **one** nightly run actually hit the diagnosed step (`🖥️ Run serve smoke
+tests` in `smoke-tests-test.yml`, `smoke-tests-react-18-test.yml`, or
+`smoke-tests-test-esm.yml`) and failed there:
+
+| Date                       | Run                                                                      | Workflow    | Step that failed                                                   |
+| -------------------------- | ------------------------------------------------------------------------ | ----------- | ------------------------------------------------------------------ |
+| 2026-08-22                 | [32550367786](https://github.com/cedarjs/cedar/actions/runs/32550367786) | React 18    | `🧑‍💻 Run dev smoke tests` (different step, not instrumented)        |
+| 2026-08-23                 | [32616842579](https://github.com/cedarjs/cedar/actions/runs/32616842579) | Smoke tests | `🖥️ Run serve smoke tests` — **diagnostics captured**              |
+| 2026-08-25                 | [32807315098](https://github.com/cedarjs/cedar/actions/runs/32807315098) | —           | Only Fragments/RSC smoke tests failed (not instrumented workflows) |
+| 08-24, 08-26, 08-27, 08-28 | —                                                                        | —           | All green                                                          |
+
+The captured run (2026-08-23, job
+[97138853001](https://github.com/cedarjs/cedar/actions/runs/32616842579/job/97138853001)):
+
+```
+04:08:18.241 pw:webserver HTTP GET: http://127.0.0.1:8910/
+04:08:18.247 pw:webserver Error while checking if http://127.0.0.1:8910/ is available: connect ECONNREFUSED 127.0.0.1:8910
+04:08:18.247 pw:webserver Starting WebServer process yarn cedar serve...
+04:08:18.251 pw:webserver Process started
+04:08:18.251 pw:webserver Waiting for availability...
+04:08:18.251 pw:webserver HTTP GET: http://127.0.0.1:8910/
+04:08:18.254 pw:webserver Error while checking if http://127.0.0.1:8910/ is available: connect ECONNREFUSED 127.0.0.1:8910
+04:08:18.254 pw:webserver Waiting 100ms
+04:08:18.364 pw:webserver HTTP GET: http://127.0.0.1:8910/
+04:08:18.646 playwright exited 127
+```
+
+### Reading it
+
+The retry ladder does **not** run out a long timeout — it stops after two
+retries, ~400ms after the process was spawned, with no further `pw:webserver`
+lines before Playwright exits. That's consistent with the **process-died**
+hypothesis, not a URL timeout: a real timeout would keep retrying every
+100–250ms for the full `webServer` timeout window (tens of seconds), not stop
+after 400ms. The `playwright exited 127` code (rather than `1`) is new
+information the earlier passing/failing duration data didn't have, but nothing
+here pins down _why_ the process died — no explicit "process exited" line
+appears in the ~10-line `pw:webserver` capture, so this doesn't fully confirm
+the port-collision theory, just narrows it to "the webServer command process
+did not survive to answer the second poll."
+
+### Conclusion
+
+Sample count came in far lower than expected: only 1 of the 3 instrumented
+workflows actually reproduced the silent-exit signature in 7 nights, versus
+the ~50% per-run rate observed in the original 2026-08-22 same-day burst. The
+failure is real (one clean capture, matching the process-died shape) but much
+rarer under nightly conditions than it looked in that initial cluster —
+possibly because the original burst was tied to a specific PR's timing/load
+rather than a steady-state rate. Not chasing this further; removing the
+temporary diagnostics per the issue and keeping the `shell: bash` fix, which
+is the durable improvement regardless of root cause.
+
+## Update 2026-08-29 — Root-cause follow-up: refuting port collision
+
+Per Tobbe's ask to keep digging, pulled the **full** raw job log for the one
+captured failure (job 97138853001) via
+`gh api repos/cedarjs/cedar/actions/jobs/97138853001/logs`, rather than just
+the ~10 captured `pw:webserver` DEBUG lines shown above. Two findings refute
+the leading port-collision hypothesis:
+
+1. **65+ second gap, not milliseconds.** The preceding `🧑‍💻 Run dev smoke tests` step's teardown (web/api nodemon watchers `exited with code 1`)
+   happened at `04:07:10`; `cedar serve` wasn't spawned until `04:08:16` —
+   `cedar build`, `cedar prerender`, `cedar test web`, and `cedar test api`
+   all ran in between. A lingering-socket/`EADDRINUSE` theory requires the OS
+   to still be holding port 8910/8911 a full minute later, well outside
+   normal Windows `TIME_WAIT`/lazy-release delays.
+2. **Total silence, not a crash.** Between the last `HTTP GET` poll
+   (`18.364Z`) and `playwright exited 127` (`18.646Z`, ~280ms later) there is
+   zero output — no `Starting API and Web Servers...` (the first line
+   `bothCLIConfigHandler.ts` prints, before any `listen()` call), no stack
+   trace, nothing. Neither `createServer.ts` nor `bothCLIConfigHandler.ts`
+   wraps their `.listen()` calls in a try/catch, so a real `EADDRINUSE` would
+   surface as an uncaught exception (exit 1, with a stack trace) — not exit
+   127 with no output at all.
+
+**Working theory**: exit code 127 is the shell/`npm-exec` "command not
+found" convention, not a code `cedar serve`'s own error handling would
+produce. Combined with the silence and the 65s gap, the most plausible
+explanation is that Playwright's `webServer` spawn of `yarn cedar serve`
+failed to resolve/exec `yarn` itself on that runner — a transient Windows
+Corepack/Yarn-shim resolution flake — rather than a bug in Cedar's own
+serve/port-binding code. This has a different symptom shape than the
+already-documented `create-cedar-app` Corepack flake (that one is a slow
+~4min network-download failure with explicit stderr and exit code 1), so
+it's treated as a related but distinct, unconfirmed flake class. Single
+sample — not proven.
+
+### New diagnostics added (commit on PR #2565)
+
+Rather than re-adding the old capture as-is, added two narrower, longer-lived
+diagnostics to `smoke-tests-test.yml` and `tasks/smoke-tests/serve/playwright.config.ts`:
+
+- A Windows-only step immediately before `🖥️ Run serve smoke tests` that
+  prints `PATH`, `ComSpec`, `where yarn`, and `yarn --version` — captures the
+  yarn-resolution state at the exact point the next step spawns it, to test
+  the yarn-resolution-flake theory directly.
+- `DEBUG=pw:webserver` re-added to the serve smoke tests step's `env:`, and
+  `stderr: 'pipe'` made explicit in `playwright.config.ts` — so a repeat
+  failure captures Playwright's webServer stdout/stderr and its own
+  spawn/exit error text, which were both absent from the one sample so far.
+
+Unlike the original diagnostics, these are intended to stay in place
+long-term (not removed after a fixed sampling window), since the failure
+rate is low enough that a short window isn't reliable — see the sample-count
+finding above.
