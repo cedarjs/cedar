@@ -95,7 +95,7 @@ export const handler = async ({
   try {
     runTransitiveBinSync('prisma', args, {
       cwd: cedarPaths.base,
-      stdio: 'inherit',
+      stdio: ['pipe', 'inherit', 'inherit'],
     })
 
     if (hasHelpOption || args.length === 0) {
