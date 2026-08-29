@@ -1994,3 +1994,64 @@ Windows-quoting bug in the telemetry and background-process spawns, fixed in
 failure. Those errors are non-fatal: `cedar build` and `cedar prerender` both
 complete immediately afterwards, and the serve step disables telemetry anyway
 via `REDWOOD_DISABLE_TELEMETRY: 1`.
+
+## Update 2026-08-29 — Diagnostics checked and removed (#2489)
+
+Per issue [#2489](https://github.com/cedarjs/cedar/issues/2489), checked
+`nightly-windows` runs from 2026-08-22 through 2026-08-28 (7 nights) for the
+diagnostics added above.
+
+### What was captured
+
+Only **one** nightly run actually hit the diagnosed step (`🖥️ Run serve smoke
+tests` in `smoke-tests-test.yml`, `smoke-tests-react-18-test.yml`, or
+`smoke-tests-test-esm.yml`) and failed there:
+
+| Date                       | Run                                                                      | Workflow    | Step that failed                                                   |
+| -------------------------- | ------------------------------------------------------------------------ | ----------- | ------------------------------------------------------------------ |
+| 2026-08-22                 | [32550367786](https://github.com/cedarjs/cedar/actions/runs/32550367786) | React 18    | `🧑‍💻 Run dev smoke tests` (different step, not instrumented)        |
+| 2026-08-23                 | [32616842579](https://github.com/cedarjs/cedar/actions/runs/32616842579) | Smoke tests | `🖥️ Run serve smoke tests` — **diagnostics captured**              |
+| 2026-08-25                 | [32807315098](https://github.com/cedarjs/cedar/actions/runs/32807315098) | —           | Only Fragments/RSC smoke tests failed (not instrumented workflows) |
+| 08-24, 08-26, 08-27, 08-28 | —                                                                        | —           | All green                                                          |
+
+The captured run (2026-08-23, job
+[97138853001](https://github.com/cedarjs/cedar/actions/runs/32616842579/job/97138853001)):
+
+```
+04:08:18.241 pw:webserver HTTP GET: http://127.0.0.1:8910/
+04:08:18.247 pw:webserver Error while checking if http://127.0.0.1:8910/ is available: connect ECONNREFUSED 127.0.0.1:8910
+04:08:18.247 pw:webserver Starting WebServer process yarn cedar serve...
+04:08:18.251 pw:webserver Process started
+04:08:18.251 pw:webserver Waiting for availability...
+04:08:18.251 pw:webserver HTTP GET: http://127.0.0.1:8910/
+04:08:18.254 pw:webserver Error while checking if http://127.0.0.1:8910/ is available: connect ECONNREFUSED 127.0.0.1:8910
+04:08:18.254 pw:webserver Waiting 100ms
+04:08:18.364 pw:webserver HTTP GET: http://127.0.0.1:8910/
+04:08:18.646 playwright exited 127
+```
+
+### Reading it
+
+The retry ladder does **not** run out a long timeout — it stops after two
+retries, ~400ms after the process was spawned, with no further `pw:webserver`
+lines before Playwright exits. That's consistent with the **process-died**
+hypothesis, not a URL timeout: a real timeout would keep retrying every
+100–250ms for the full `webServer` timeout window (tens of seconds), not stop
+after 400ms. The `playwright exited 127` code (rather than `1`) is new
+information the earlier passing/failing duration data didn't have, but nothing
+here pins down _why_ the process died — no explicit "process exited" line
+appears in the ~10-line `pw:webserver` capture, so this doesn't fully confirm
+the port-collision theory, just narrows it to "the webServer command process
+did not survive to answer the second poll."
+
+### Conclusion
+
+Sample count came in far lower than expected: only 1 of the 3 instrumented
+workflows actually reproduced the silent-exit signature in 7 nights, versus
+the ~50% per-run rate observed in the original 2026-08-22 same-day burst. The
+failure is real (one clean capture, matching the process-died shape) but much
+rarer under nightly conditions than it looked in that initial cluster —
+possibly because the original burst was tied to a specific PR's timing/load
+rather than a steady-state rate. Not chasing this further; removing the
+temporary diagnostics per the issue and keeping the `shell: bash` fix, which
+is the durable improvement regardless of root cause.
