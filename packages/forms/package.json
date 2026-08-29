@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/forms",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -36,7 +36,7 @@
     "react-hook-form": "7.85.0"
   },
   "devDependencies": {
-    "@cedarjs/framework-tools": "6.0.0",
+    "@cedarjs/framework-tools": "6.0.1",
     "@testing-library/dom": "10.4.1",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.2",

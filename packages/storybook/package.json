@@ -1,6 +1,6 @@
 {
   "name": "storybook-framework-cedarjs",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "description": "Storybook for CedarJS",
   "keywords": [
     "Storybook",
@@ -49,7 +49,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/testing": "6.0.0",
+    "@cedarjs/testing": "6.0.1",
     "@rollup/pluginutils": "5.4.0",
     "@storybook/addon-essentials": "8.6.14",
     "@storybook/builder-vite": "8.6.18",
@@ -68,8 +68,8 @@
     "vitest": "4.1.10"
   },
   "peerDependencies": {
-    "@cedarjs/project-config": "6.0.0",
-    "@cedarjs/router": "6.0.0",
+    "@cedarjs/project-config": "6.0.1",
+    "@cedarjs/router": "6.0.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "storybook": "8.6.18"

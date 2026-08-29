@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-dbauth-middleware",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -32,13 +32,13 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/auth-dbauth-api": "6.0.0",
-    "@cedarjs/web": "6.0.0"
+    "@cedarjs/auth-dbauth-api": "6.0.1",
+    "@cedarjs/web": "6.0.1"
   },
   "devDependencies": {
-    "@cedarjs/api": "6.0.0",
-    "@cedarjs/framework-tools": "6.0.0",
-    "@cedarjs/graphql-server": "6.0.0",
+    "@cedarjs/api": "6.0.1",
+    "@cedarjs/framework-tools": "6.0.1",
+    "@cedarjs/graphql-server": "6.0.1",
     "@types/aws-lambda": "8.10.162",
     "concurrently": "9.2.4",
     "publint": "0.3.23",

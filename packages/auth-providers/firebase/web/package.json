@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-firebase-web",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -39,10 +39,10 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/auth": "6.0.0"
+    "@cedarjs/auth": "6.0.1"
   },
   "devDependencies": {
-    "@cedarjs/framework-tools": "6.0.0",
+    "@cedarjs/framework-tools": "6.0.1",
     "@types/react": "^18.2.55",
     "concurrently": "9.2.4",
     "firebase": "10.14.1",

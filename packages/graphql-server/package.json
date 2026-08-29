@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/graphql-server",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -32,8 +32,8 @@
     "test:watch": "yarn test --watch"
   },
   "dependencies": {
-    "@cedarjs/api": "6.0.0",
-    "@cedarjs/context": "6.0.0",
+    "@cedarjs/api": "6.0.1",
+    "@cedarjs/context": "6.0.1",
     "@envelop/core": "5.5.1",
     "@envelop/disable-introspection": "6.0.0",
     "@envelop/filter-operation-type": "6.0.0",
@@ -53,8 +53,8 @@
     "uuid": "11.1.0"
   },
   "devDependencies": {
-    "@cedarjs/framework-tools": "6.0.0",
-    "@cedarjs/realtime": "6.0.0",
+    "@cedarjs/framework-tools": "6.0.1",
+    "@cedarjs/realtime": "6.0.1",
     "@envelop/types": "5.2.1",
     "@escape.tech/graphql-armor-types": "0.7.0",
     "@types/aws-lambda": "8.10.162",
