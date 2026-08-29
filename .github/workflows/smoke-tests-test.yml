@@ -78,17 +78,39 @@ jobs:
           yarn cedar test api --no-watch --config api/vitest-sort.config.ts --load-env-files smoke
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
+      - name: 🔎 Diagnose yarn resolution (Windows, #2489)
+        # Targeted diagnostic per #2489 follow-up: the one captured failure
+        # of the serve smoke tests looked like `yarn` itself failed to
+        # resolve/exec (exit code 127, zero output) rather than a `cedar
+        # serve` port-binding bug. Print what would be resolved at the
+        # exact point the next step spawns `yarn cedar serve`, so a repeat
+        # failure has something to correlate against. Windows-only since
+        # `where` isn't available on the Ubuntu/macOS runners and this
+        # investigation is Windows-specific.
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          echo "PATH=$PATH"
+          echo "ComSpec=$ComSpec"
+          where yarn || echo "where yarn: not found on PATH"
+          yarn --version || echo "yarn --version: failed"
+
       - name: 🖥️ Run serve smoke tests
         # `shell: bash` relays stderr and matches the build step above --
-        # keep this even though the temporary pw:webserver diagnostics have
-        # been removed (see the 2026-08-29 update in
+        # keep this even though the original temporary pw:webserver
+        # diagnostics have been removed (see the 2026-08-29 update in
         # docs/implementation-plans/flaky-smoke-tests-investigation.md).
+        # `DEBUG=pw:webserver` is re-added below (narrower this time, kept
+        # long-term) so Playwright forwards the webServer child's raw
+        # stdout/stderr and its own spawn/exit error text into this log --
+        # the previous capture showed neither, which is itself a clue.
         shell: bash
         working-directory: tasks/smoke-tests/serve
         run: npx playwright test
         env:
           CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-test-project.outputs.test-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1
+          DEBUG: pw:webserver
 
       - name: 📄 Run prerender smoke tests
         working-directory: tasks/smoke-tests/prerender

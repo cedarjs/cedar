@@ -21,5 +21,10 @@ export default defineConfig({
     url: 'http://127.0.0.1:8910',
     reuseExistingServer: !process.env.CI,
     stdout: 'pipe',
+    // Explicit (matches Playwright's own default when unset) so it's clear
+    // this is intentional: we want the webServer child's stderr forwarded
+    // to the test report, not swallowed, to help diagnose #2489-style
+    // silent startup failures.
+    stderr: 'pipe',
   },
 })
