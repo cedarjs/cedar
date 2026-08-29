@@ -1,6 +1,6 @@
 {
   "name": "storybook-framework-cedarjs",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "description": "Storybook for CedarJS",
   "keywords": [
     "Storybook",
@@ -65,7 +65,7 @@
     "@types/node": "24.10.4",
     "typescript": "5.9.3",
     "vite": "7.3.6",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "peerDependencies": {
     "@cedarjs/project-config": "workspace:*",

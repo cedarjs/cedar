@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/utils",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "description": "Shared utilities for CedarJS packages and apps",
   "repository": {
     "type": "git",
@@ -39,7 +39,7 @@
     "nodemon": "3.1.14",
     "publint": "0.3.24",
     "typescript": "5.9.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "engines": {
     "node": ">=24"

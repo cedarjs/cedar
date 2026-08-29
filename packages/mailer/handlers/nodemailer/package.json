@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/mailer-handler-nodemailer",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@cedarjs/mailer-core": "workspace:*",
-    "nodemailer": "9.0.1"
+    "nodemailer": "9.0.5"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",

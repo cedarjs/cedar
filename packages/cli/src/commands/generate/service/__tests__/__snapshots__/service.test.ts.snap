@@ -1,5 +1,131 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`compound \`@@id\` models > generates a query resolver and relation resolvers without crashing 1`] = `
+"import type { QueryResolvers, PartStockRelationResolvers } from 'types/graphql'
+
+import { db } from 'src/lib/db'
+
+export const partStocks: QueryResolvers['partStocks'] = () => {
+  return db.partStock.findMany()
+}
+
+export const partStock: QueryResolvers['partStock'] = ({
+  partId,
+  warehouseId,
+}) => {
+  return db.partStock.findUnique({
+    where: { partId_warehouseId: { partId, warehouseId } },
+  })
+}
+
+export const PartStock: PartStockRelationResolvers = {
+  part: (_obj, { root }) => {
+    return db.partStock
+      .findUnique({
+        where: {
+          partId_warehouseId: {
+            partId: root?.partId,
+            warehouseId: root?.warehouseId,
+          },
+        },
+      })
+      .part()
+  },
+  warehouse: (_obj, { root }) => {
+    return db.partStock
+      .findUnique({
+        where: {
+          partId_warehouseId: {
+            partId: root?.partId,
+            warehouseId: root?.warehouseId,
+          },
+        },
+      })
+      .warehouse()
+  },
+}
+"
+`;
+
+exports[`compound \`@@id\` models > generates working composite CRUD mutations when requested directly 1`] = `
+"import type {
+  QueryResolvers,
+  MutationResolvers,
+  PartStockRelationResolvers,
+} from 'types/graphql'
+
+import { db } from 'src/lib/db'
+
+export const partStocks: QueryResolvers['partStocks'] = () => {
+  return db.partStock.findMany()
+}
+
+export const partStock: QueryResolvers['partStock'] = ({
+  partId,
+  warehouseId,
+}) => {
+  return db.partStock.findUnique({
+    where: { partId_warehouseId: { partId, warehouseId } },
+  })
+}
+
+export const createPartStock: MutationResolvers['createPartStock'] = ({
+  input,
+}) => {
+  return db.partStock.create({
+    data: input,
+  })
+}
+
+export const updatePartStock: MutationResolvers['updatePartStock'] = ({
+  partId,
+  warehouseId,
+  input,
+}) => {
+  return db.partStock.update({
+    data: input,
+    where: { partId_warehouseId: { partId, warehouseId } },
+  })
+}
+
+export const deletePartStock: MutationResolvers['deletePartStock'] = ({
+  partId,
+  warehouseId,
+}) => {
+  return db.partStock.delete({
+    where: { partId_warehouseId: { partId, warehouseId } },
+  })
+}
+
+export const PartStock: PartStockRelationResolvers = {
+  part: (_obj, { root }) => {
+    return db.partStock
+      .findUnique({
+        where: {
+          partId_warehouseId: {
+            partId: root?.partId,
+            warehouseId: root?.warehouseId,
+          },
+        },
+      })
+      .part()
+  },
+  warehouse: (_obj, { root }) => {
+    return db.partStock
+      .findUnique({
+        where: {
+          partId_warehouseId: {
+            partId: root?.partId,
+            warehouseId: root?.warehouseId,
+          },
+        },
+      })
+      .warehouse()
+  },
+}
+"
+`;
+
 exports[`in javascript mode > creates a multi word service file 1`] = `
 "import { db } from 'src/lib/db'
 

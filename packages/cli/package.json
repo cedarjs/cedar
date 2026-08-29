@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/cli",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "description": "The CedarJS Command Line",
   "repository": {
     "type": "git",
@@ -79,13 +79,13 @@
     "pascalcase": "1.0.0",
     "pluralize": "8.0.0",
     "portfinder": "1.0.38",
-    "prettier": "3.8.4",
+    "prettier": "3.9.6",
     "prisma": "7.8.0",
     "prompts": "2.4.2",
     "smol-toml": "1.8.0",
     "srvx": "0.12.5",
     "string-env-interpolation": "1.0.1",
-    "systeminformation": "5.33.1",
+    "systeminformation": "5.33.2",
     "termi-link": "1.1.0",
     "title-case": "3.0.3",
     "unionfs": "4.6.0",
@@ -101,7 +101,7 @@
     "node-ssh": "13.2.1",
     "ts-dedent": "2.3.0",
     "typescript": "5.9.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "engines": {
     "node": ">=24"

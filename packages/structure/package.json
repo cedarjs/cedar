@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/structure",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "description": "noun: the arrangement of and relations between the parts or elements of something complex",
   "repository": {
     "type": "git",
@@ -72,7 +72,7 @@
     "@types/lodash": "4.17.25",
     "@types/node": "24.10.4",
     "typescript": "5.9.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "engines": {
     "node": ">=24"

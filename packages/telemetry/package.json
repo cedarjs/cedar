@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/telemetry",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -27,7 +27,7 @@
     "@whatwg-node/fetch": "0.10.13",
     "ci-info": "4.4.0",
     "envinfo": "7.21.0",
-    "systeminformation": "5.33.1",
+    "systeminformation": "5.33.2",
     "uuid": "11.1.0",
     "yargs": "17.7.3"
   },
@@ -35,7 +35,7 @@
     "@types/envinfo": "7.8.4",
     "@types/yargs": "17.0.35",
     "typescript": "5.9.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "engines": {
     "node": ">=24"

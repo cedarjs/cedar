@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/testing",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "description": "Tools, wrappers and configuration for testing a Cedar project.",
   "repository": {
     "type": "git",
@@ -80,13 +80,13 @@
     "concurrently": "9.2.4",
     "publint": "0.3.24",
     "typescript": "5.9.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "peerDependencies": {
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/router": "workspace:*",
     "@cedarjs/web": "workspace:*",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "peerDependenciesMeta": {
     "vitest": {

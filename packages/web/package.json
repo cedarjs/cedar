@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/web",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -78,7 +78,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@apollo/client": "4.2.7",
+    "@apollo/client": "4.2.12",
     "@cedarjs/server-store": "workspace:*",
     "@dr.pogodin/react-helmet": "2.0.4",
     "@whatwg-node/fetch": "0.10.13",
@@ -86,7 +86,7 @@
     "cookie": "1.1.1",
     "graphql": "16.14.2",
     "graphql-sse": "2.6.0",
-    "graphql-tag": "2.12.6",
+    "graphql-tag": "2.12.7",
     "react-hot-toast": "2.6.0",
     "rxjs": "7.8.2",
     "stacktracey": "2.2.0",
@@ -111,7 +111,7 @@
     "react-dom": "19.2.8",
     "tstyche": "5.0.2",
     "typescript": "5.9.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "peerDependencies": {
     "@cedarjs/auth": "workspace:*",

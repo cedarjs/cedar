@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-supertokens-setup",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -48,7 +48,7 @@
     "memfs": "4.68.1",
     "publint": "0.3.24",
     "typescript": "5.9.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "engines": {
     "node": ">=24"

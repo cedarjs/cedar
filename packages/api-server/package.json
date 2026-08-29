@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/api-server",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "description": "CedarJS's HTTP server for Serverless Functions",
   "repository": {
     "type": "git",
@@ -103,7 +103,7 @@
     "dotenv-defaults": "5.0.2",
     "fast-glob": "3.3.3",
     "fast-json-parse": "1.0.3",
-    "fastify": "5.12.0",
+    "fastify": "5.12.1",
     "fastify-raw-body": "5.0.0",
     "picoquery": "2.5.0",
     "pretty-bytes": "5.6.0",
@@ -126,7 +126,7 @@
     "pino-abstract-transport": "1.2.0",
     "publint": "0.3.24",
     "typescript": "5.9.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "peerDependencies": {
     "@cedarjs/graphql-server": "workspace:*"

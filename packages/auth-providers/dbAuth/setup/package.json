@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-dbauth-setup",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -36,7 +36,7 @@
     "nodemon": "3.1.14",
     "ts-dedent": "2.3.0",
     "typescript": "5.9.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "engines": {
     "node": ">=24"

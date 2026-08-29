@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/mailer-renderer-mjml-react",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -23,7 +23,7 @@
   "dependencies": {
     "@cedarjs/mailer-core": "workspace:*",
     "@faire/mjml-react": "4.0.1",
-    "mjml": "5.0.0"
+    "mjml": "5.4.0"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",

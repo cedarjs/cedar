@@ -1,6 +1,18 @@
 import crypto from 'node:crypto'
 import path from 'node:path'
 
+vi.mock('@simplewebauthn/server', async (importOriginal) => {
+  const original = await importOriginal()
+  // Delegate to the real verifier by default.
+  // Individual tests can override the result with `vi.mocked(...).mockImplementation(...)`.
+  return {
+    ...original,
+    verifyAuthenticationResponse: vi.fn((opts) =>
+      original.verifyAuthenticationResponse(opts),
+    ),
+  }
+})
+
 import {
   vi,
   describe,

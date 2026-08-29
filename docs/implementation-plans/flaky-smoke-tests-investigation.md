@@ -318,7 +318,7 @@ From run
 | 2    | `authChecks` — requireAuth graphql checks                      | ✅ pass |
 | 3    | `dev.spec.ts` — Smoke test with dev server                     | ✅ pass |
 | 4    | `rbacChecks` — Should not be able to delete as non-admin       | ❌ fail |
-| 5    | `rbacChecks` — Admin user should be able to delete (skipped)   | ⏭ skip |
+| 5    | `rbacChecks` — Admin user should be able to delete (skipped)   | ⏭ skip  |
 | 6–15 | Retries of tests 4–5 + static assets (robots.txt, favicon.png) | ❌ fail |
 
 ### Failure breakdown per test

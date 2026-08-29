@@ -12,10 +12,10 @@
     "@prisma/adapter-better-sqlite3": "7.8.0",
     "@prisma/client": "7.8.0",
     "better-sqlite3": "12.11.1",
-    "graphql-tag": "2.12.6"
+    "graphql-tag": "2.12.7"
   },
   "devDependencies": {
     "@cedarjs/vite": "6.0.0",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   }
 }
