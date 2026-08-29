@@ -18,7 +18,7 @@ export class MJMLReactRenderer extends AbstractMailRenderer {
     options: RendererOptions,
     _utilities?: MailUtilities,
   ): Promise<MailRenderedContent> {
-    const renderingResult = mjml2html(renderToMjml(template), options)
+    const renderingResult = await mjml2html(renderToMjml(template), options)
     if (renderingResult.errors.length > 0) {
       throw new Error(renderingResult.errors.join('\n'))
     }

@@ -19,11 +19,6 @@ packages/testing/config
 /local-testing-project-live/api/types/graphql.d.ts
 /local-testing-project-live/web/types/graphql.d.ts
 
-# .gitignore has no file extension, and these fixtures' own prettier config
-# doesn't have a plugin that can infer a parser for it
-/local-testing-project/.gitignore
-/local-testing-project-live/.gitignore
-
 # Ignore the certain files in /docs
 /docs/.docusaurus
 /docs/build
