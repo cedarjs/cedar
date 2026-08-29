@@ -2064,8 +2064,7 @@ captured failure (job 97138853001) via
 the ~10 captured `pw:webserver` DEBUG lines shown above. Two findings refute
 the leading port-collision hypothesis:
 
-1. **65+ second gap, not milliseconds.** The preceding `🧑‍💻 Run dev smoke
-   tests` step's teardown (web/api nodemon watchers `exited with code 1`)
+1. **65+ second gap, not milliseconds.** The preceding `🧑‍💻 Run dev smoke tests` step's teardown (web/api nodemon watchers `exited with code 1`)
    happened at `04:07:10`; `cedar serve` wasn't spawned until `04:08:16` —
    `cedar build`, `cedar prerender`, `cedar test web`, and `cedar test api`
    all ran in between. A lingering-socket/`EADDRINUSE` theory requires the OS
