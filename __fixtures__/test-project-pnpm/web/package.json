@@ -20,7 +20,7 @@
     "humanize-string": "2.1.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "react-hook-form": "7.85.0",
+    "react-hook-form": "7.86.0",
     "@my-org/validators": "workspace:*"
   },
   "devDependencies": {
