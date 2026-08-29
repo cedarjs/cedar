@@ -78,20 +78,37 @@ jobs:
           yarn cedar test api --no-watch --config api/vitest-sort.config.ts --load-env-files smoke
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
+      - name: 🔎 Diagnose yarn resolution (Windows, #2489)
+        # Targeted diagnostic per #2489 follow-up: the one captured failure
+        # of the serve smoke tests looked like `yarn` itself failed to
+        # resolve/exec (exit code 127, zero output) rather than a `cedar
+        # serve` port-binding bug. Print what would be resolved at the
+        # exact point the next step spawns `yarn cedar serve`, so a repeat
+        # failure has something to correlate against. Windows-only since
+        # `where` isn't available on the Ubuntu/macOS runners and this
+        # investigation is Windows-specific.
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          echo "PATH=$PATH"
+          echo "ComSpec=$ComSpec"
+          where yarn || echo "where yarn: not found on PATH"
+          yarn --version || echo "yarn --version: failed"
+
       - name: 🖥️ Run serve smoke tests
-        # TEMPORARY diagnostics for the silent 3s exit of this step on
-        # Windows. `shell: bash` relays stderr (and matches the build step
-        # above), the echo guarantees a line of output even when Playwright
-        # prints nothing, and `pw:webserver` logs the web server lifecycle
-        # only -- `pw:*` would add thousands of lines per test. Remove all
-        # three once the failure has been captured. See
-        # docs/implementation-plans/flaky-smoke-tests-investigation.md
+        # `shell: bash` relays stderr and matches the build step above.
+        # `DEBUG=pw:webserver` forwards the webServer child's stdout/stderr
+        # and Playwright's own retry-ladder timing into this log, which is
+        # useful context for the Windows-specific silent-exit failure
+        # tracked in #2489 (see the "Root-cause follow-up" section of
+        # docs/implementation-plans/flaky-smoke-tests-investigation.md).
+        # It doesn't surface the underlying spawn error by itself, but it's
+        # cheap -- only a handful of health-check-polling lines, not full
+        # Playwright debug spam -- so it's worth leaving on until #2489's
+        # root cause is found.
         shell: bash
         working-directory: tasks/smoke-tests/serve
-        run: |
-          npx playwright test && code=0 || code=$?
-          echo "playwright exited $code"
-          exit "$code"
+        run: npx playwright test
         env:
           CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-test-project.outputs.test-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1
