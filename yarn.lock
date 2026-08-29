@@ -2700,7 +2700,7 @@ __metadata:
     prisma: "npm:7.10.0"
     prompts: "npm:2.4.2"
     smol-toml: "npm:1.8.0"
-    srvx: "npm:0.12.5"
+    srvx: "npm:0.12.7"
     string-env-interpolation: "npm:1.0.1"
     systeminformation: "npm:5.33.2"
     termi-link: "npm:1.1.0"
@@ -26760,12 +26760,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"srvx@npm:*, srvx@npm:0.12.5, srvx@npm:^0.12.5":
-  version: 0.12.5
-  resolution: "srvx@npm:0.12.5"
+"srvx@npm:*, srvx@npm:0.12.7, srvx@npm:^0.12.5":
+  version: 0.12.7
+  resolution: "srvx@npm:0.12.7"
   bin:
     srvx: bin/srvx.mjs
-  checksum: 10c0/89d844b55c1858f567bb5dac8839d0a4d217fc25306c1c7caa4a6cc8236381812c3c84352d974ecfd5b655a690883c172f49d51b13f4181160a1da4e982ba792
+  checksum: 10c0/924ba9153b40f438558fccfeb531158f628d27baa1e048674df8dd4cc768b34bdf244d710cfa97b10d1ac9d262066cd24dca67b73dd77c076c4d25762e294f85
   languageName: node
   linkType: hard
 
