@@ -261,7 +261,36 @@ describe('redwoodCellTransform', () => {
     }
 
     await expect(transformCall()).rejects.toThrow(
-      'Cell filename "2Cell" must be a valid JavaScript identifier'
+      'Cell filename "2Cell" must be a valid JavaScript identifier',
+    )
+  })
+
+  it('should reject cell filenames that collide with existing bindings', async () => {
+    const input = `
+      const UserCell = () => <div>Collision!</div>
+
+      export const QUERY = gql\`
+        query UserQuery($id: Int!) {
+          user(id: $id) {
+            id
+            name
+          }
+        }
+      \`
+
+      export const Success = ({ user }) => {
+        return <div>Hello {user.name}</div>
+      }
+    `
+
+    // Filename "UserCell" collides with the existing const declaration
+    // @ts-expect-error The PluginOption type doesn't guarantee transform method exists
+    const transformCall = async () => {
+      await plugin.transform(input, '/path/to/UserCell.tsx')
+    }
+
+    await expect(transformCall()).rejects.toThrow(
+      'collides with an existing binding in the file',
     )
   })
 })

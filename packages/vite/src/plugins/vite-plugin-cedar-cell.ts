@@ -27,11 +27,13 @@ const EXPECTED_EXPORTS_FROM_CELL = [
 
 /**
  * Check if a string is a valid JavaScript identifier.
- * Valid identifiers must start with a letter, underscore, or $, and can
- * contain only letters, digits, underscores, or $.
+ * Valid identifiers must start with a letter, underscore, $, or Unicode letter,
+ * and can continue with letters, digits, underscores, $, or Unicode combining marks.
+ * This uses a simplified regex that accepts most valid ECMAScript identifiers.
  */
 function isValidIdentifier(name: string): boolean {
-  const identifierRegex = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/
+  // ASCII letters, digits, underscore, $ + Unicode letters/marks
+  const identifierRegex = /^[a-zA-Z_$\u0080-\uffff][a-zA-Z0-9_$\u0080-\uffff]*$/
   return identifierRegex.test(name)
 }
 
@@ -97,8 +99,9 @@ export function cedarCellTransform(): Plugin {
 
         const exportNames: string[] = []
         let hasDefaultExport = false
+        const existingBindings = new Set<string>()
 
-        // Traverse the AST to collect export information
+        // Traverse the AST to collect export information and existing bindings
         traverse(ast, {
           ExportDefaultDeclaration() {
             hasDefaultExport = true
@@ -123,6 +126,33 @@ export function cedarCellTransform(): Plugin {
               exportNames.push(name)
             }
           },
+          // Collect existing top-level bindings (variables, functions, imports)
+          VariableDeclaration(path) {
+            if (path.parent.type === 'Program') {
+              path.node.declarations.forEach((decl) => {
+                if (decl.id.type === 'Identifier') {
+                  existingBindings.add(decl.id.name)
+                }
+              })
+            }
+          },
+          FunctionDeclaration(path) {
+            if (path.parent.type === 'Program' && path.node.id) {
+              existingBindings.add(path.node.id.name)
+            }
+          },
+          ClassDeclaration(path) {
+            if (path.parent.type === 'Program' && path.node.id) {
+              existingBindings.add(path.node.id.name)
+            }
+          },
+          ImportDeclaration(path) {
+            path.node.specifiers.forEach((spec) => {
+              if (spec.local.type === 'Identifier') {
+                existingBindings.add(spec.local.name)
+              }
+            })
+          },
         })
 
         const hasQueryOrDataExport =
@@ -139,6 +169,15 @@ export function cedarCellTransform(): Plugin {
         // cell
         if (hasDefaultExport || !hasQueryOrDataExport) {
           return null
+        }
+
+        // Check for binding collisions: the Cell filename (which becomes the
+        // component name) must not collide with existing declarations or imports
+        if (existingBindings.has(cellComponentName)) {
+          throw new Error(
+            `Cell filename "${cellComponentName}" collides with an existing binding in the file. ` +
+              `Rename the Cell file to use a unique identifier, or remove the conflicting binding.`,
+          )
         }
 
         // Determine which create function to use based on exports
@@ -255,7 +294,15 @@ export function cedarCellTransform(): Plugin {
           map: result.map,
         }
       } catch (error) {
-        // If parsing fails, return the original code
+        // Re-throw validation errors so they surface to the dev/build
+        if (
+          error instanceof Error &&
+          (error.message.includes('collides with an existing binding') ||
+            error.message.includes('must be a valid JavaScript identifier'))
+        ) {
+          throw error
+        }
+        // If parsing fails, return null
         console.warn(`Failed to transform Cell file ${id}:`, error)
         return null
       }
