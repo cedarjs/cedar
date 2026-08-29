@@ -96,17 +96,15 @@ jobs:
           yarn --version || echo "yarn --version: failed"
 
       - name: 🖥️ Run serve smoke tests
-        # `shell: bash` relays stderr and matches the build step above --
-        # keep this even though the original temporary pw:webserver
-        # diagnostics have been removed (see the 2026-08-29 update in
+        # `shell: bash` relays stderr and matches the build step above.
+        # `DEBUG=pw:webserver` forwards the webServer child's stdout/stderr
+        # and Playwright's own retry-ladder timing into this log, which is
+        # useful context for the Windows-specific silent-exit failure
+        # tracked in #2489 (see the "Root-cause follow-up" section of
         # docs/implementation-plans/flaky-smoke-tests-investigation.md).
-        # `DEBUG=pw:webserver` (same flag as before) is re-added below so
-        # Playwright forwards the webServer child's stdout/stderr and the
-        # retry-ladder timing into this log. It didn't reveal the actual
-        # spawn error in the one failure captured so far, but it's cheap
-        # (a handful of lines on the webServer health-check polling, not
-        # full Playwright debug spam) so it stays on in case a future
-        # failure looks different.
+        # It doesn't surface the underlying spawn error by itself, but it's
+        # cheap -- only a handful of health-check-polling lines, not full
+        # Playwright debug spam -- so it's worth leaving on.
         shell: bash
         working-directory: tasks/smoke-tests/serve
         run: npx playwright test
