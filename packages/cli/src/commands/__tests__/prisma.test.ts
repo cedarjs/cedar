@@ -83,3 +83,20 @@ test('the prisma command handles spaces', async () => {
     '--config /Users/bazinga/My Projects/rwprj/rwprj/api/prisma.config.js',
   )
 })
+
+test('the prisma command does not inherit stdin', async () => {
+  await handler({
+    _: ['prisma'],
+    $0: 'cedar',
+    commands: ['migrate', 'dev'],
+  })
+
+  // stdin must not be inherited from the parent process: if it were, a
+  // non-interactive invocation (CI, piped output, backgrounded) could still
+  // present as a TTY to Prisma, causing it to render an interactive prompt
+  // that can never be answered and hangs forever instead of failing fast.
+  // stdout/stderr are still inherited so Prisma's normal output/formatting
+  // reaches the user.
+  const options = vi.mocked(execa.sync).mock.calls[0][2]
+  expect(options?.stdio).toEqual(['pipe', 'inherit', 'inherit'])
+})
