@@ -3615,7 +3615,7 @@ __metadata:
     concurrently: "npm:9.2.4"
     cookie: "npm:1.1.1"
     graphql: "npm:16.14.2"
-    graphql-sse: "npm:2.6.0"
+    graphql-sse: "npm:2.6.1"
     graphql-tag: "npm:2.12.7"
     nodemon: "npm:3.1.14"
     publint: "npm:0.3.24"
@@ -18197,12 +18197,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-sse@npm:2.6.0, graphql-sse@npm:^2.0.0":
-  version: 2.6.0
-  resolution: "graphql-sse@npm:2.6.0"
+"graphql-sse@npm:2.6.1, graphql-sse@npm:^2.0.0":
+  version: 2.6.1
+  resolution: "graphql-sse@npm:2.6.1"
   peerDependencies:
-    graphql: ">=0.11 <=16"
-  checksum: 10c0/e05f0b5c8539d61e5ce34af8e0bb418c02bf922d6a7f9232a9abd53c77df5654684ca14f674ac771645c8fba9c37ce666c5d06f46eef54ea07e63653468065b0
+    graphql: ">=0.11 <=17"
+  checksum: 10c0/8a767b83c970dea75db634b27cd28d5040d6e7b07234c38919bc88d15eacf978171e380ba8ab3fa21a1779421e24b8e19dc51a798a90c5766382c406b3d6c221
   languageName: node
   linkType: hard
 
