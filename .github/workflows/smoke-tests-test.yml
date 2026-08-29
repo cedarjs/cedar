@@ -104,7 +104,8 @@ jobs:
         # docs/implementation-plans/flaky-smoke-tests-investigation.md).
         # It doesn't surface the underlying spawn error by itself, but it's
         # cheap -- only a handful of health-check-polling lines, not full
-        # Playwright debug spam -- so it's worth leaving on.
+        # Playwright debug spam -- so it's worth leaving on until #2489's
+        # root cause is found.
         shell: bash
         working-directory: tasks/smoke-tests/serve
         run: npx playwright test
