@@ -2,6 +2,9 @@ import fs from 'node:fs'
 
 import { vi, afterEach, describe, it, expect, beforeEach } from 'vitest'
 
+import { getConfig } from '@cedarjs/project-config'
+import type * as ProjectConfig from '@cedarjs/project-config'
+
 import { getPackageWatchCommands } from '../packageWatchCommands.js'
 
 vi.mock('node:fs', () => {
@@ -30,6 +33,19 @@ vi.mock('../../../lib/index.js', () => {
   }
 })
 
+vi.mock('@cedarjs/project-config', async (importOriginal) => {
+  const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
+
+  return {
+    ...originalProjectConfig,
+    getConfig: vi.fn(() => ({
+      experimental: {
+        packagesWorkspace: { enabled: true },
+      },
+    })),
+  }
+})
+
 vi.mock('../../../lib/colors.js', () => ({
   default: {
     warning: (str: string) => `Warning: ${str}`,
@@ -52,6 +68,9 @@ describe('getWatchPackagesCommands', () => {
       }),
     )
     vi.mocked(console).warn = vi.fn()
+    vi.mocked(getConfig).mockReturnValue({
+      experimental: { packagesWorkspace: { enabled: true } },
+    } as ReturnType<typeof getConfig>)
   })
 
   it('expands packages/* to all packages', async () => {
@@ -165,6 +184,61 @@ describe('getWatchPackagesCommands', () => {
     expect(console.warn).toHaveBeenCalledWith(
       expect.stringMatching(/Warning: .*skipped: .*bar.*/),
     )
+  })
+
+  it('does not warn about a package with skipWatchWarning set', async () => {
+    vi.mocked(getConfig).mockReturnValue({
+      experimental: {
+        packagesWorkspace: {
+          enabled: true,
+          bar: { skipWatchWarning: true },
+        },
+      },
+    } as ReturnType<typeof getConfig>)
+
+    vi.mocked(fs.promises.glob).mockReturnValue(
+      (async function* () {
+        yield '/mocked/project/packages/foo'
+        yield '/mocked/project/packages/bar'
+        return undefined
+      })(),
+    )
+
+    vi.mocked(fs).readFileSync.mockImplementation((filePath) => {
+      const pathStr = filePath.toString()
+
+      if (pathStr.includes('foo')) {
+        return JSON.stringify({
+          name: 'foo',
+          scripts: { watch: 'tsc --watch' },
+        })
+      }
+
+      if (pathStr.includes('bar')) {
+        return JSON.stringify({
+          name: 'bar',
+          scripts: {
+            // No watch script
+            build: 'tsc',
+          },
+        })
+      }
+
+      return '{}'
+    })
+
+    const commands = await getPackageWatchCommands(['packages/*'])
+
+    expect(commands).toEqual([
+      {
+        name: 'foo',
+        command: 'yarn watch',
+        cwd: '/mocked/project/packages/foo',
+      },
+    ])
+
+    // Should not warn about 'bar' since it opted out
+    expect(console.warn).not.toHaveBeenCalled()
   })
 
   it('returns an empty array when no watchable packages exist', async () => {
