@@ -101,7 +101,9 @@ export default class WebAuthnClient {
     const { startAuthentication } = await import('@simplewebauthn/browser')
 
     try {
-      const browserResponse = await startAuthentication(authOptions)
+      const browserResponse = await startAuthentication({
+        optionsJSON: authOptions,
+      })
 
       const xhr = new XMLHttpRequest()
       xhr.withCredentials = true
@@ -176,7 +178,7 @@ export default class WebAuthnClient {
     const { startRegistration } = await import('@simplewebauthn/browser')
 
     try {
-      regResponse = await startRegistration(options)
+      regResponse = await startRegistration({ optionsJSON: options })
     } catch (e: any) {
       if (e.name === 'InvalidStateError') {
         throw new WebAuthnAlreadyRegisteredError()

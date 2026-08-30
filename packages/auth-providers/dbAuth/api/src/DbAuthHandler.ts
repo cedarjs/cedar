@@ -1,15 +1,13 @@
 import type {
+  AuthenticationResponseJSON,
   GenerateAuthenticationOptionsOpts,
   GenerateRegistrationOptionsOpts,
+  RegistrationResponseJSON,
   VerifiedAuthenticationResponse,
   VerifiedRegistrationResponse,
   VerifyAuthenticationResponseOpts,
   VerifyRegistrationResponseOpts,
 } from '@simplewebauthn/server'
-import type {
-  AuthenticationResponseJSON,
-  RegistrationResponseJSON,
-} from '@simplewebauthn/types'
 import type { APIGatewayProxyEvent, Context as LambdaContext } from 'aws-lambda'
 import md5 from 'md5'
 import { v4 as uuidv4 } from 'uuid'
@@ -837,10 +835,9 @@ export class DbAuthHandler<
         expectedChallenge: user[this.options.authFields.challenge as string],
         expectedOrigin: webAuthnOptions.origin,
         expectedRPID: webAuthnOptions.domain,
-        authenticator: {
-          credentialID: credential[webAuthnOptions.credentialFields.id],
-          credentialPublicKey:
-            credential[webAuthnOptions.credentialFields.publicKey],
+        credential: {
+          id: credential[webAuthnOptions.credentialFields.id],
+          publicKey: credential[webAuthnOptions.credentialFields.publicKey],
           counter: credential[webAuthnOptions.credentialFields.counter],
           transports: credential[webAuthnOptions.credentialFields.transports]
             ? JSON.parse(
@@ -1041,7 +1038,11 @@ export class DbAuthHandler<
       throw new DbAuthError.WebAuthnError('Registration failed')
     }
 
-    const { credentialPublicKey, credentialID, counter } = registrationInfo
+    const {
+      id: credentialID,
+      publicKey: credentialPublicKey,
+      counter,
+    } = registrationInfo.credential
 
     const existingDevice = await this.dbCredentialAccessor.findFirst({
       where: {
