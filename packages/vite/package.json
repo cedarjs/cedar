@@ -80,7 +80,7 @@
     "fast-glob": "3.3.3",
     "find-my-way": "9.9.0",
     "http-proxy-middleware": "3.0.7",
-    "isbot": "5.2.1",
+    "isbot": "5.2.2",
     "magic-string": "0.30.21",
     "oxc-parser": "0.147.0",
     "react-server-dom-webpack": "19.2.8",
