@@ -148,7 +148,8 @@ export interface PackageWorkspaceOptions {
 /**
  * Config for the experimental `cedar g package` workspace feature. Besides
  * the `enabled` gate, this can hold a named sub-table per package, keyed by
- * package name, e.g.:
+ * package name, which also defines per-package `cedar dev` behavior (e.g.
+ * `skipWatchWarning`), e.g.:
  *
  * ```toml
  * [experimental.packagesWorkspace.pipeline]

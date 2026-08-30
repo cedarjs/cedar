@@ -2,7 +2,7 @@ import fs from 'node:fs'
 
 import { vi, afterEach, describe, it, expect, beforeEach } from 'vitest'
 
-import { getConfig } from '@cedarjs/project-config'
+import { DEFAULT_CONFIG, getConfig } from '@cedarjs/project-config'
 import type * as ProjectConfig from '@cedarjs/project-config'
 
 import { getPackageWatchCommands } from '../packageWatchCommands.js'
@@ -69,8 +69,12 @@ describe('getWatchPackagesCommands', () => {
     )
     vi.mocked(console).warn = vi.fn()
     vi.mocked(getConfig).mockReturnValue({
-      experimental: { packagesWorkspace: { enabled: true } },
-    } as ReturnType<typeof getConfig>)
+      ...DEFAULT_CONFIG,
+      experimental: {
+        ...DEFAULT_CONFIG.experimental,
+        packagesWorkspace: { enabled: true },
+      },
+    })
   })
 
   it('expands packages/* to all packages', async () => {
@@ -188,13 +192,15 @@ describe('getWatchPackagesCommands', () => {
 
   it('does not warn about a package with skipWatchWarning set', async () => {
     vi.mocked(getConfig).mockReturnValue({
+      ...DEFAULT_CONFIG,
       experimental: {
+        ...DEFAULT_CONFIG.experimental,
         packagesWorkspace: {
           enabled: true,
           bar: { skipWatchWarning: true },
         },
       },
-    } as ReturnType<typeof getConfig>)
+    })
 
     vi.mocked(fs.promises.glob).mockReturnValue(
       (async function* () {

@@ -59,8 +59,7 @@ export async function getPackageWatchCommands(
     if (packageJson.scripts?.watch) {
       watchablePackages.push(workspacePath)
     } else {
-      const packageConfig =
-        packageName && packagesWorkspaceConfig[packageName]
+      const packageConfig = packageName && packagesWorkspaceConfig[packageName]
 
       const skipWatchWarning =
         typeof packageConfig === 'object' && packageConfig.skipWatchWarning
