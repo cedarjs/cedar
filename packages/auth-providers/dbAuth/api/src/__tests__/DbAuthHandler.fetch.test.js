@@ -2309,18 +2309,20 @@ describe('dbAuth', () => {
             109, 240,
           ]),
           transports: null,
-          counter: 0,
+          counter: 41,
         },
       })
 
       // Return `verified: false` without throwing to exercise the rejection
-      // path without depending on a cryptographic fixture.
+      // path without depending on a cryptographic fixture. `newCounter`
+      // is deliberately different from the seeded counter so the assertion
+      // below can tell a skipped update apart from one that happened anyway.
       const { verifyAuthenticationResponse } =
         await import('@simplewebauthn/server')
       vi.mocked(verifyAuthenticationResponse).mockImplementationOnce(
         async () => ({
           verified: false,
-          authenticationInfo: { newCounter: 0 },
+          authenticationInfo: { newCounter: 42 },
         }),
       )
 
@@ -2344,7 +2346,7 @@ describe('dbAuth', () => {
           id: 'CxMJqILwYufSaEQsJX6rKHw_LkMXAGU64PaKU55l6ejZ4FNO5kBLiA',
         },
       })
-      expect(credential.counter).toEqual(0)
+      expect(credential.counter).toEqual(41)
     })
   })
 
