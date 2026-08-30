@@ -27,13 +27,13 @@ const EXPECTED_EXPORTS_FROM_CELL = [
 
 /**
  * Check if a string is a valid JavaScript identifier.
- * Valid identifiers must start with a letter, underscore, $, or Unicode letter,
- * and can continue with letters, digits, underscores, $, or Unicode combining marks.
- * This uses a simplified regex that accepts most valid ECMAScript identifiers.
+ * Valid identifiers must start with a letter, underscore, or $, and can
+ * contain only letters, digits, underscores, or $. ASCII only -- Cell
+ * filenames are expected to be ASCII, this isn't meant to cover the full
+ * ECMAScript identifier grammar (e.g. Unicode identifiers).
  */
 function isValidIdentifier(name: string): boolean {
-  // ASCII letters, digits, underscore, $ + Unicode letters/marks
-  const identifierRegex = /^[a-zA-Z_$\u0080-\uffff][a-zA-Z0-9_$\u0080-\uffff]*$/
+  const identifierRegex = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/
   return identifierRegex.test(name)
 }
 
