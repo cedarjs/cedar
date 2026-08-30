@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@cedarjs/mailer-core": "workspace:*",
-    "nodemailer": "9.0.5"
+    "nodemailer": "9.0.6"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
