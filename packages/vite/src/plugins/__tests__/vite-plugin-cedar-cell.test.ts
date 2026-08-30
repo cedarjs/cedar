@@ -40,7 +40,8 @@ describe('redwoodCellTransform', () => {
 
     expect(result).toBeTruthy()
     expect(result.code).toContain('import { createCell } from "@cedarjs/web"')
-    expect(result.code).toContain('export default createCell({')
+    expect(result.code).toContain('const UserCell = createCell({')
+    expect(result.code).toContain('export default UserCell;')
     expect(result.code).toContain('QUERY,')
     expect(result.code).toContain('Loading,')
     expect(result.code).toContain('Success,')
@@ -68,7 +69,8 @@ describe('redwoodCellTransform', () => {
     expect(result.code).toContain(
       'import { createServerCell } from "@cedarjs/web/dist/components/cell/createServerCell"',
     )
-    expect(result.code).toContain('export default createServerCell({')
+    expect(result.code).toContain('const ServerUserCell = createServerCell({')
+    expect(result.code).toContain('export default ServerUserCell;')
     expect(result.code).toContain('data,')
     expect(result.code).toContain('Loading,')
     expect(result.code).toContain('Success,')
@@ -94,7 +96,8 @@ describe('redwoodCellTransform', () => {
 
     expect(result).toBeTruthy()
     expect(result.code).toContain('import { createCell } from "@cedarjs/web"')
-    expect(result.code).toContain('export default createCell({')
+    expect(result.code).toContain('const AuthorCell = createCell({')
+    expect(result.code).toContain('export default AuthorCell;')
     expect(result.code).toContain('FRAGMENT,')
     expect(result.code).toContain('Success,')
     expect(result.code).toContain('displayName: "AuthorCell"')
@@ -159,7 +162,8 @@ describe('redwoodCellTransform', () => {
 
     expect(result).toBeTruthy()
     expect(result.code).toContain('import { createCell } from "@cedarjs/web"')
-    expect(result.code).toContain('export default createCell({')
+    expect(result.code).toContain('const UsersCell = createCell({')
+    expect(result.code).toContain('export default UsersCell;')
     expect(result.code).toContain('QUERY,')
     expect(result.code).toContain('Loading,')
     expect(result.code).toContain('Success,')

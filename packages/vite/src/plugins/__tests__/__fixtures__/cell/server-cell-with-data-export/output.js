@@ -3,4 +3,4 @@ import { createServerCell } from "@cedarjs/web/dist/components/cell/createServer
 };
 
 export const Loading = () => <div>Loading...</div>;
-export const Success = ({ user }) => <div>{user.name}</div>;export default createServerCell({ data, Loading, Success, displayName: "ServerUserCell" });
+export const Success = ({ user }) => <div>{user.name}</div>;const ServerUserCell = createServerCell({ data, Loading, Success, displayName: "ServerUserCell" });export default ServerUserCell;
