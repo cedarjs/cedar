@@ -25,4 +25,4 @@ export function Failure({ error }) {
 
 export const Success = ({ posts }) => {
   return JSON.stringify(posts, null, 2);
-};export default createCell({ QUERY, beforeQuery, afterQuery, Loading, Empty, Failure, Success, displayName: "CodeCell" });
+};const CodeCell = createCell({ QUERY, beforeQuery, afterQuery, Loading, Empty, Failure, Success, displayName: "CodeCell" });export default CodeCell;

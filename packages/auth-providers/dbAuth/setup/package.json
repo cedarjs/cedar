@@ -25,7 +25,7 @@
   "dependencies": {
     "@cedarjs/cli-helpers": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
-    "@prisma/internals": "7.8.0",
+    "@prisma/internals": "7.10.0",
     "prompts": "2.4.2",
     "termi-link": "1.1.0"
   },
