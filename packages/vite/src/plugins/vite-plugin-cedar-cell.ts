@@ -26,18 +26,6 @@ const EXPECTED_EXPORTS_FROM_CELL = [
 ]
 
 /**
- * Check if a string is a valid JavaScript identifier.
- * Valid identifiers must start with a letter, underscore, or $, and can
- * contain only letters, digits, underscores, or $. ASCII only -- Cell
- * filenames are expected to be ASCII, this isn't meant to cover the full
- * ECMAScript identifier grammar (e.g. Unicode identifiers).
- */
-function isValidIdentifier(name: string): boolean {
-  const identifierRegex = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/
-  return identifierRegex.test(name)
-}
-
-/**
  * Vite plugin that wraps files with a suffix of `Cell` in CedarJS's `createCell`
  * higher order component. The HOC deals with the lifecycle methods during a GraphQL query.
  *
@@ -67,15 +55,8 @@ export function cedarCellTransform(): Plugin {
         return null
       }
 
-      // Validate that the Cell filename is a valid JavaScript identifier
       // Extract the filename without extension (e.g., "UserCell" from "/path/to/UserCell.tsx")
       const cellComponentName = parsePath(id).name
-      if (!isValidIdentifier(cellComponentName)) {
-        throw new Error(
-          `Cell filename "${cellComponentName}" must be a valid JavaScript identifier (PascalCase is recommended). ` +
-            `Valid identifiers must start with a letter, underscore, or $ and contain only letters, digits, underscores, or $.`,
-        )
-      }
 
       try {
         // Parse the code into an AST
@@ -99,9 +80,8 @@ export function cedarCellTransform(): Plugin {
 
         const exportNames: string[] = []
         let hasDefaultExport = false
-        const existingBindings = new Set<string>()
 
-        // Traverse the AST to collect export information and existing bindings
+        // Traverse the AST to collect export information
         traverse(ast, {
           ExportDefaultDeclaration() {
             hasDefaultExport = true
@@ -126,33 +106,6 @@ export function cedarCellTransform(): Plugin {
               exportNames.push(name)
             }
           },
-          // Collect existing top-level bindings (variables, functions, imports)
-          VariableDeclaration(path) {
-            if (path.parent.type === 'Program') {
-              path.node.declarations.forEach((decl) => {
-                if (decl.id.type === 'Identifier') {
-                  existingBindings.add(decl.id.name)
-                }
-              })
-            }
-          },
-          FunctionDeclaration(path) {
-            if (path.parent.type === 'Program' && path.node.id) {
-              existingBindings.add(path.node.id.name)
-            }
-          },
-          ClassDeclaration(path) {
-            if (path.parent.type === 'Program' && path.node.id) {
-              existingBindings.add(path.node.id.name)
-            }
-          },
-          ImportDeclaration(path) {
-            path.node.specifiers.forEach((spec) => {
-              if (spec.local.type === 'Identifier') {
-                existingBindings.add(spec.local.name)
-              }
-            })
-          },
         })
 
         const hasQueryOrDataExport =
@@ -169,15 +122,6 @@ export function cedarCellTransform(): Plugin {
         // cell
         if (hasDefaultExport || !hasQueryOrDataExport) {
           return null
-        }
-
-        // Check for binding collisions: the Cell filename (which becomes the
-        // component name) must not collide with existing declarations or imports
-        if (existingBindings.has(cellComponentName)) {
-          throw new Error(
-            `Cell filename "${cellComponentName}" collides with an existing binding in the file. ` +
-              `Rename the Cell file to use a unique identifier, or remove the conflicting binding.`,
-          )
         }
 
         // Determine which create function to use based on exports
@@ -294,14 +238,6 @@ export function cedarCellTransform(): Plugin {
           map: result.map,
         }
       } catch (error) {
-        // Re-throw validation errors so they surface to the dev/build
-        if (
-          error instanceof Error &&
-          (error.message.includes('collides with an existing binding') ||
-            error.message.includes('must be a valid JavaScript identifier'))
-        ) {
-          throw error
-        }
         // If parsing fails, return null
         console.warn(`Failed to transform Cell file ${id}:`, error)
         return null
