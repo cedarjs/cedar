@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@cedarjs/mailer-core": "6.0.2",
-    "nodemailer": "9.0.5"
+    "nodemailer": "9.0.6"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "6.0.2",
