@@ -2291,6 +2291,61 @@ describe('dbAuth', () => {
       })
       expect(credential.counter).toEqual(1)
     })
+
+    it('returns 400 and issues no cookies when the assertion does not verify', async () => {
+      const user = await createDbUser({
+        webAuthnChallenge: 'LtgWphYK_eN5rXc_HdvULvOqpPWyoRvbml2Po00UHag',
+      })
+      await db.userCredential.create({
+        data: {
+          id: 'CxMJqILwYufSaEQsJX6rKHw_LkMXAGU64PaKU55l6ejZ4FNO5kBLiA',
+          userId: user.id,
+          publicKey: new Uint8Array([
+            165, 1, 2, 3, 38, 32, 1, 33, 88, 32, 24, 136, 169, 77, 11, 126, 129,
+            202, 3, 60, 234, 86, 233, 152, 222, 252, 11, 253, 11, 79, 163, 89,
+            189, 145, 216, 240, 102, 92, 146, 75, 249, 207, 34, 88, 32, 187,
+            235, 12, 104, 222, 236, 198, 241, 195, 234, 111, 64, 60, 86, 40,
+            254, 118, 163, 27, 172, 76, 173, 16, 120, 238, 20, 235, 98, 67, 103,
+            109, 240,
+          ]),
+          transports: null,
+          counter: 0,
+        },
+      })
+
+      // Return `verified: false` without throwing to exercise the rejection
+      // path without depending on a cryptographic fixture.
+      const { verifyAuthenticationResponse } =
+        await import('@simplewebauthn/server')
+      vi.mocked(verifyAuthenticationResponse).mockImplementationOnce(
+        async () => ({
+          verified: false,
+          authenticationInfo: { newCounter: 0 },
+        }),
+      )
+
+      const req = new Request('http://localhost:8910/_rw_mw', {
+        method: 'POST',
+        body: '{"method":"webAuthnAuthenticate","id":"CxMJqILwYufSaEQsJX6rKHw_LkMXAGU64PaKU55l6ejZ4FNO5kBLiA","rawId":"CxMJqILwYufSaEQsJX6rKHw_LkMXAGU64PaKU55l6ejZ4FNO5kBLiA","response":{"authenticatorData":"SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAA","clientDataJSON":"eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiTHRnV3BoWUtfZU41clhjX0hkdlVMdk9xcFBXeW9SdmJtbDJQbzAwVUhhZyIsIm9yaWdpbiI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODkxMCIsImNyb3NzT3JpZ2luIjpmYWxzZSwib3RoZXJfa2V5c19jYW5fYmVfYWRkZWRfaGVyZSI6ImRvIG5vdCBjb21wYXJlIGNsaWVudERhdGFKU09OIGFnYWluc3QgYSB0ZW1wbGF0ZS4gU2VlIGh0dHBzOi8vZ29vLmdsL3lhYlBleCJ9","signature":"MEUCIQD3NOM7Aw0HxPw6EFGf86iwf2yd3p4NncNNLcjd-86zgwIgHuh80bLNV7EcwBi4IAcH57iueLg0X2gLtO5_Y6PMCFE","userHandle":"2"},"type":"public-key","clientExtensionResults":{}}',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const dbAuth = new DbAuthHandler(req, context, options)
+      const response = await dbAuth.invoke()
+
+      const setCookie = [].concat(response?.headers?.['set-cookie'] ?? [])
+
+      expect(response.statusCode).toEqual(400)
+      expect(setCookie.join('\n')).not.toMatch(/session=/)
+      expect(setCookie.join('\n')).not.toMatch(/webAuthn=/)
+
+      const credential = await db.userCredential.findUnique({
+        where: {
+          id: 'CxMJqILwYufSaEQsJX6rKHw_LkMXAGU64PaKU55l6ejZ4FNO5kBLiA',
+        },
+      })
+      expect(credential.counter).toEqual(0)
+    })
   })
 
   describe('webAuthnAuthOptions', () => {
