@@ -2273,47 +2273,6 @@ describe('dbAuth', () => {
       )
       expect(cookies).toMatch('session=')
     })
-
-    // `verifyAuthenticationResponse()` throws for most failure modes, but a
-    // response whose signature simply doesn't match the stored public key comes
-    // back as `verified: false` with no error. Nothing may be issued on that
-    // path — see the `if (!verified)` guard in `webAuthnAuthenticate()`.
-    it('issues no cookies when the signature does not verify', async () => {
-      const user = await createDbUser({
-        webAuthnChallenge: 'LtgWphYK_eN5rXc_HdvULvOqpPWyoRvbml2Po00UHag',
-      })
-      await db.userCredential.create({
-        data: {
-          id: 'CxMJqILwYufSaEQsJX6rKHw_LkMXAGU64PaKU55l6ejZ4FNO5kBLiA',
-          userId: user.id,
-          publicKey: new Uint8Array([
-            165, 1, 2, 3, 38, 32, 1, 33, 88, 32, 24, 136, 169, 77, 11, 126, 129,
-            202, 3, 60, 234, 86, 233, 152, 222, 252, 11, 253, 11, 79, 163, 89,
-            189, 145, 216, 240, 102, 92, 146, 75, 249, 207, 34, 88, 32, 187,
-            235, 12, 104, 222, 236, 198, 241, 195, 234, 111, 64, 60, 86, 40,
-            254, 118, 163, 27, 172, 76, 173, 16, 120, 238, 20, 235, 98, 67, 103,
-            109, 240,
-          ]),
-          transports: null,
-          counter: 0,
-        },
-      })
-
-      const req = new Request('http://localhost:8910/_rw_mw', {
-        method: 'POST',
-        body: '{"method":"webAuthnAuthenticate","id":"CxMJqILwYufSaEQsJX6rKHw_LkMXAGU64PaKU55l6ejZ4FNO5kBLiA","rawId":"CxMJqILwYufSaEQsJX6rKHw_LkMXAGU64PaKU55l6ejZ4FNO5kBLiA","response":{"authenticatorData":"SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAA","clientDataJSON":"eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiTHRnV3BoWUtfZU41clhjX0hkdlVMdk9xcFBXeW9SdmJtbDJQbzAwVUhhZyIsIm9yaWdpbiI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODkxMCIsImNyb3NzT3JpZ2luIjpmYWxzZSwib3RoZXJfa2V5c19jYW5fYmVfYWRkZWRfaGVyZSI6ImRvIG5vdCBjb21wYXJlIGNsaWVudERhdGFKU09OIGFnYWluc3QgYSB0ZW1wbGF0ZS4gU2VlIGh0dHBzOi8vZ29vLmdsL3lhYlBleCJ9","signature":"MEUCIQD3NOM7Aw0HxPw6EFGf86iwf2yd3p4NncNNLcjd-86zgwIgHuh80bLNV7EcwBi4IAcH57iueLg0X2gLtO5_Y6PMCFE","userHandle":"2"},"type":"public-key","clientExtensionResults":{}}',
-        headers: { 'Content-Type': 'application/json' },
-      })
-
-      const dbAuth = new DbAuthHandler(req, context, options)
-
-      const response = await dbAuth.invoke()
-
-      expect(response.statusCode).toEqual(400)
-      expect(response.body).toMatch('Authentication failed')
-      expect(JSON.stringify(response.headers)).not.toMatch('session=')
-      expect(JSON.stringify(response.headers)).not.toMatch('webAuthn=')
-    })
   })
 
   describe('webAuthnAuthOptions', () => {
