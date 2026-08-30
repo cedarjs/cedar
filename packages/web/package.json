@@ -100,7 +100,7 @@
     "@cedarjs/internal": "workspace:*",
     "@testing-library/dom": "10.4.1",
     "@testing-library/jest-dom": "6.9.1",
-    "@testing-library/react": "16.3.2",
+    "@testing-library/react": "16.3.3",
     "@types/apollo-upload-client": "^19",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
