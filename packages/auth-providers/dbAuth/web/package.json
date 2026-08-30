@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@cedarjs/auth": "workspace:*",
-    "@simplewebauthn/browser": "10.0.0"
+    "@simplewebauthn/browser": "13.3.0"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
