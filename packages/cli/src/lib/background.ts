@@ -5,6 +5,36 @@ import path from 'path'
 
 import { getPaths } from '@cedarjs/project-config'
 
+// Follows the MSVC/CommandLineToArgvW rules for backslashes preceding quotes:
+// https://learn.microsoft.com/en-us/cpp/c-language/parsing-c-command-line-arguments
+function quoteWindowsShellArg(arg: string): string {
+  if (arg.length === 0) {
+    return '""'
+  }
+  if (!/[\s"]/.test(arg)) {
+    return arg
+  }
+
+  let quoted = '"'
+  let numBackslashes = 0
+  for (const char of arg) {
+    if (char === '\\') {
+      numBackslashes += 1
+      continue
+    }
+    if (char === '"') {
+      quoted += '\\'.repeat(numBackslashes * 2 + 1) + '"'
+      numBackslashes = 0
+      continue
+    }
+    quoted += '\\'.repeat(numBackslashes) + char
+    numBackslashes = 0
+  }
+  // Trailing backslashes must be doubled so they don't escape the closer.
+  quoted += '\\'.repeat(numBackslashes * 2) + '"'
+  return quoted
+}
+
 /**
  * Spawn a background process with the stdout/stderr redirected to log files
  * within the `.cedar` directory. Stdin will not be available to the process as
@@ -47,7 +77,6 @@ export function spawnBackgroundProcess(
   )
   fs.writeSync(stderr, logHeader)
 
-  // We must account for some platform specific behaviour
   if (os.type() === 'Windows_NT') {
     const spawnOptions = {
       // The following options run the process in the background without a
@@ -60,16 +89,13 @@ export function spawnBackgroundProcess(
       stdio: ['ignore' as const, stdout, stderr],
     }
 
-    // Spawn and detach the process
-    //
     // The best way to use `spawn` is to pass the process args as a separate
     // argument, but when the spawn options include `shell: true`, like they do
     // here, that causes Node.js to print a DEP0190 warning. To get around this
     // we instead concatenate the command and arguments into a single string.
-    // It's safe to do that here since the arguments aren't user-provided.
-    //
     // https://nodejs.org/api/deprecations.html#DEP0190
-    const child = spawn(cmd + ' ' + args.join(' '), spawnOptions)
+    const cmdline = [cmd, ...args].map(quoteWindowsShellArg).join(' ')
+    const child = spawn(cmdline, spawnOptions)
     child.unref()
   } else {
     const spawnOptions = {
@@ -77,10 +103,6 @@ export function spawnBackgroundProcess(
       stdio: ['ignore' as const, stdout, stderr],
     }
 
-    // Spawn and detach the process
-    //
-    // For Linux and MacOS we don't need `shell: true`, so here we can use the
-    // `cmd` and `args` arguments separately.
     const child = spawn(cmd, args, spawnOptions)
     child.unref()
   }
