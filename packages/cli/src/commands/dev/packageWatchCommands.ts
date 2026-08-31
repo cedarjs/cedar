@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { colors as c } from '@cedarjs/cli-helpers'
-import { importStatementPath } from '@cedarjs/project-config'
+import { getConfig, importStatementPath } from '@cedarjs/project-config'
 
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../lib/index.js'
@@ -40,6 +40,8 @@ export async function getPackageWatchCommands(
         return importStatementPath(workspacePath)
       })
 
+  const packagesWorkspaceConfig = getConfig().experimental.packagesWorkspace
+
   // Filter to only packages that have a watch script
   const watchablePackages: string[] = []
   const packagesWithoutWatch: (string | undefined)[] = []
@@ -57,7 +59,14 @@ export async function getPackageWatchCommands(
     if (packageJson.scripts?.watch) {
       watchablePackages.push(workspacePath)
     } else {
-      packagesWithoutWatch.push(packageName)
+      const packageConfig = packageName && packagesWorkspaceConfig[packageName]
+
+      const skipWatchWarning =
+        typeof packageConfig === 'object' && packageConfig.skipWatchWarning
+
+      if (!skipWatchWarning) {
+        packagesWithoutWatch.push(packageName)
+      }
     }
   }
 
