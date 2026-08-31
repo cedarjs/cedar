@@ -120,9 +120,7 @@ export interface Config {
       enabled: boolean
       lintOnly: boolean
     }
-    packagesWorkspace: {
-      enabled: boolean
-    }
+    packagesWorkspace: PackagesWorkspaceConfig
     gqlorm: {
       enabled: boolean
       organizationModel?: string
@@ -136,6 +134,31 @@ export interface Config {
 export interface CLIPlugin {
   package: string
   enabled?: boolean
+}
+
+export interface PackageWorkspaceOptions {
+  /**
+   * Suppress `cedar dev`'s "missing watch script" warning for this package.
+   * Useful for packages that are intentionally watch-less, e.g. a
+   * script/CLI package run directly with `node` and no build step.
+   */
+  skipWatchWarning?: boolean
+}
+
+/**
+ * Config for the experimental `cedar g package` workspace feature. Besides
+ * the `enabled` gate, this can hold a named sub-table per package, keyed by
+ * package name, which also defines per-package `cedar dev` behavior (e.g.
+ * `skipWatchWarning`), e.g.:
+ *
+ * ```toml
+ * [experimental.packagesWorkspace.pipeline]
+ *   skipWatchWarning = true
+ * ```
+ */
+export interface PackagesWorkspaceConfig {
+  enabled: boolean
+  [packageName: string]: boolean | PackageWorkspaceOptions | undefined
 }
 
 export const DEFAULT_CONFIG: Config = {

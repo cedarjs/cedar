@@ -191,8 +191,19 @@
         },
         "packagesWorkspace": {
           "type": "object",
+          "description": "Configuration for the experimental `cedar g package` workspace feature. Besides the `enabled` gate, this can hold a named sub-table per package, keyed by package name, for per-package cedar dev behavior.",
           "properties": {
             "enabled": { "type": "boolean" }
+          },
+          "additionalProperties": {
+            "type": "object",
+            "description": "Per-package config, keyed by package name.",
+            "properties": {
+              "skipWatchWarning": {
+                "type": "boolean",
+                "description": "Suppress cedar dev's \"missing watch script\" warning for this package."
+              }
+            }
           }
         },
         "gqlorm": {
