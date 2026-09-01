@@ -68,6 +68,11 @@ logging out. Tenant scoping is enforced at the Prisma layer so that forgetting
   as any other access: a `Membership` in that organization. The how-to documents
   the pattern.
 - Changing any auth provider's session or token format.
+- Prerendering organization routes. They are per-user by nature, and
+  `OrgScope`'s nested `ApolloProvider` shadows the per-route client that the
+  [prerender rewrite](./2026-07-18-prerender-rewrite.md) injects above `App`,
+  so its queries would not go through the in-process GraphQL link. Routes under
+  `OrgScope` must not carry `prerender`.
 
 ## The model
 
