@@ -375,10 +375,51 @@ as soon as it mounts, so an effect would let the first request after mounting
 or switching organizations go out with no `cedar-org` header or with the
 previous organization's. The write is a plain assignment of a string that is
 already known, so repeating it on every render is harmless, and the link reads
-the store at request time rather than capturing it. Apps that prefer a stored
-selection instead of a URL segment call `setOrg` from their own switcher and
-omit the `Set`. Multiple tabs on different organizations work because the
-header, not the session, carries the choice.
+the store at request time rather than capturing it. The URL owns the current
+organization; the store is a bridge that lets the link, which is not a
+component and sits above the router, read a value only the router can derive.
+It is not a second source of truth. Apps that prefer a stored selection instead
+of a URL segment call `setOrg` from their own switcher and omit the `Set`.
+Multiple tabs on different organizations work because the header, not the
+session, carries the choice.
+
+The store has two halves that are updated separately. The render-phase write
+updates the readable value and nothing else; notifying subscribers from inside
+another component's render is a React error ("cannot update a component while
+rendering a different component"). Notification runs in a `useLayoutEffect` in
+`OrgScope`. Components below `OrgScope` render after it in the same pass, read
+the new value directly and do not need the notification; components above it
+(a navigation bar with an organization switcher) rendered with the old value
+and are re-rendered by the notification.
+
+`useCurrentOrg()` subscribes with `useSyncExternalStore`, not a hand-rolled
+`useState` plus `useEffect` subscription, for two reasons:
+
+- Tearing. Under concurrent rendering a manual subscription lets two components
+  in the same tree render with different store values. For tenant identity that
+  is the worst inconsistency available: half a page rendered for one
+  organization, half for another. `useSyncExternalStore` compares the snapshot
+  at render and at commit and forces a synchronous re-render when they differ,
+  so every committed frame agrees on the organization. This is also what makes
+  the deferred notification above safe: a component that rendered before the
+  render-phase write is caught by the consistency check even if the
+  notification has not fired yet.
+- Server snapshot. `getServerSnapshot` is where the organization comes from
+  when there is no `window`. When server rendering gives server code direct
+  `db` access (see open questions), seeding the store from the route param on
+  the server is a `getServerSnapshot` implementation, not a redesign of the
+  web side.
+
+`currentUser.memberships` on the web is a snapshot taken at authentication, not
+live data. The API validates against fresh memberships on every request because
+`getCurrentUser()` runs per request, so a removed member is refused immediately
+on the API side; the web side keeps believing in the membership until
+`reauthenticate()` runs. The same staleness hides a newly accepted invitation or
+a newly created organization from the org switcher and from `hasOrgRole()`.
+Web-side callers of any membership-changing mutation (`createOrganization`,
+`acceptInvitation`, role changes, member removal) call `reauthenticate()` from
+`useAuth()` in the mutation's `onCompleted`; the generated organization services
+document this on their SDL, and the how-to states it as a rule.
 
 ### Jobs and scripts
 
@@ -490,7 +531,11 @@ tracked in `sdl-stub-followups`; it is sequenced after those.
 3. `setup tenancy` walkthrough with the resulting diff.
 4. Request flow: URL → header → `resolveCurrentOrg` → `context.currentOrg` →
    extension.
-5. Services, directives, web hooks, with examples.
+5. Services, directives, web hooks, with examples. Includes the rule that
+   web-side callers of membership-changing mutations call `reauthenticate()`
+   in `onCompleted`, with the API-fresh / web-stale distinction: the API
+   re-reads memberships per request, the web reads them once per
+   authentication.
 6. Jobs, scripts, seeds and `$forOrg` / `$withoutTenant`.
 7. Strict variant: compound primary keys, and Postgres RLS as a second layer.
 8. Agencies and parent/child organizations. One organization (an agency,
@@ -584,7 +629,9 @@ that plan lands, and the hardcoded path until then.
 - **RSC / server-rendered routes.** When the streaming SSR rewrite
   (`2026-07-20-streaming-ssr-rewrite.md`) gives server code direct `db` access,
   the same `context.currentOrg` needs to be set from the route param in the
-  server entry. Note it there; no work in this plan.
+  server entry, and the web store's `getServerSnapshot` needs to return that
+  same organization so the server-rendered tree agrees with the API. Note it
+  there; no work in this plan.
 - **Role source.** `role` as a free string on `Membership` versus a
   `MembershipRole` enum in the generated schema. Free string is the default in
   this plan; revisit if the generated organization services want exhaustive
