@@ -777,6 +777,188 @@ describe('dbAuth', () => {
         foo: 'bar',
       })
     })
+
+    describe('origin validation', () => {
+      const SESSION_COOKIE_HEADER = {
+        cookie:
+          'session=ko6iXKV11DSjb6kFJ4iwcf1FEqa5wPpbL1sdtKiV51Y=|cQaYkOPG/r3ILxWiFiz90w==',
+      }
+
+      it('allows a POST request with no Origin header', async () => {
+        const fetchEvent = new Request('http://api.example.com/_rw_mw', {
+          method: 'POST',
+          body: JSON.stringify({ method: 'logout' }),
+          headers: SESSION_COOKIE_HEADER,
+        })
+
+        const dbAuth = new DbAuthHandler(fetchEvent, context, options)
+        await dbAuth.init()
+        dbAuth.logout = vi.fn(() => ['body', new Headers()])
+        const response = await dbAuth.invoke()
+
+        expect(dbAuth.logout).toHaveBeenCalled()
+        expect(response.statusCode).toEqual(200)
+      })
+
+      it('allows a POST request whose Origin matches the request host', async () => {
+        const fetchEvent = new Request('http://api.example.com/_rw_mw', {
+          method: 'POST',
+          body: JSON.stringify({ method: 'logout' }),
+          headers: {
+            ...SESSION_COOKIE_HEADER,
+            origin: 'https://api.example.com',
+          },
+        })
+
+        const dbAuth = new DbAuthHandler(fetchEvent, context, options)
+        await dbAuth.init()
+        dbAuth.logout = vi.fn(() => ['body', new Headers()])
+        const response = await dbAuth.invoke()
+
+        expect(dbAuth.logout).toHaveBeenCalled()
+        expect(response.statusCode).toEqual(200)
+      })
+
+      it('allows a POST request whose Origin is in a string `trustedOrigins`', async () => {
+        const fetchEvent = new Request('http://api.example.com/_rw_mw', {
+          method: 'POST',
+          body: JSON.stringify({ method: 'logout' }),
+          headers: {
+            ...SESSION_COOKIE_HEADER,
+            origin: 'https://trusted.example.com',
+          },
+        })
+
+        const dbAuth = new DbAuthHandler(fetchEvent, context, {
+          ...options,
+          trustedOrigins: 'https://trusted.example.com',
+        })
+        await dbAuth.init()
+        dbAuth.logout = vi.fn(() => ['body', new Headers()])
+        const response = await dbAuth.invoke()
+
+        expect(dbAuth.logout).toHaveBeenCalled()
+        expect(response.statusCode).toEqual(200)
+      })
+
+      it('allows a POST request whose Origin is in an array `trustedOrigins`', async () => {
+        const fetchEvent = new Request('http://api.example.com/_rw_mw', {
+          method: 'POST',
+          body: JSON.stringify({ method: 'logout' }),
+          headers: {
+            ...SESSION_COOKIE_HEADER,
+            origin: 'https://trusted.example.com',
+          },
+        })
+
+        const dbAuth = new DbAuthHandler(fetchEvent, context, {
+          ...options,
+          trustedOrigins: [
+            'https://other.example.com',
+            'https://trusted.example.com',
+          ],
+        })
+        await dbAuth.init()
+        dbAuth.logout = vi.fn(() => ['body', new Headers()])
+        const response = await dbAuth.invoke()
+
+        expect(dbAuth.logout).toHaveBeenCalled()
+        expect(response.statusCode).toEqual(200)
+      })
+
+      it('allows a POST request whose Origin is in `cors.origin` (array)', async () => {
+        const fetchEvent = new Request('http://api.example.com/_rw_mw', {
+          method: 'POST',
+          body: JSON.stringify({ method: 'logout' }),
+          headers: {
+            ...SESSION_COOKIE_HEADER,
+            origin: 'https://www.myRedwoodWebSide.com',
+          },
+        })
+
+        const dbAuth = new DbAuthHandler(fetchEvent, context, {
+          ...options,
+          cors: {
+            origin: ['https://www.myRedwoodWebSide.com'],
+            credentials: true,
+          },
+        })
+        await dbAuth.init()
+        dbAuth.logout = vi.fn(() => ['body', new Headers()])
+        const response = await dbAuth.invoke()
+
+        expect(dbAuth.logout).toHaveBeenCalled()
+        expect(response.statusCode).toEqual(200)
+      })
+
+      it('does NOT trust a foreign Origin just because `cors.origin` is `true`', async () => {
+        const fetchEvent = new Request('http://api.example.com/_rw_mw', {
+          method: 'POST',
+          body: JSON.stringify({ method: 'logout' }),
+          headers: {
+            ...SESSION_COOKIE_HEADER,
+            origin: 'https://evil.example.com',
+          },
+        })
+
+        const dbAuth = new DbAuthHandler(fetchEvent, context, {
+          ...options,
+          cors: { origin: true, credentials: true },
+        })
+        await dbAuth.init()
+        dbAuth.logout = vi.fn(() => ['body', new Headers()])
+        const response = await dbAuth.invoke()
+
+        expect(dbAuth.logout).not.toHaveBeenCalled()
+        expect(response.statusCode).toEqual(403)
+        expect(JSON.parse(response.body)).toEqual({
+          error: 'Request origin is not trusted',
+        })
+      })
+
+      it('rejects a POST request with a mismatched Origin', async () => {
+        const fetchEvent = new Request('http://api.example.com/_rw_mw', {
+          method: 'POST',
+          body: JSON.stringify({ method: 'logout' }),
+          headers: {
+            ...SESSION_COOKIE_HEADER,
+            origin: 'https://evil.example.com',
+          },
+        })
+
+        const dbAuth = new DbAuthHandler(fetchEvent, context, options)
+        await dbAuth.init()
+        dbAuth.logout = vi.fn(() => ['body', new Headers()])
+        const response = await dbAuth.invoke()
+
+        expect(dbAuth.logout).not.toHaveBeenCalled()
+        expect(response.statusCode).toEqual(403)
+        expect(JSON.parse(response.body)).toEqual({
+          error: 'Request origin is not trusted',
+        })
+      })
+
+      it('does not check Origin for GET methods', async () => {
+        const fetchEvent = new Request(
+          'http://api.example.com/_rw_mw?method=getToken',
+          {
+            method: 'GET',
+            headers: {
+              ...SESSION_COOKIE_HEADER,
+              origin: 'https://evil.example.com',
+            },
+          },
+        )
+
+        const dbAuth = new DbAuthHandler(fetchEvent, context, options)
+        await dbAuth.init()
+        dbAuth.getToken = vi.fn(() => ['some-id', new Headers()])
+        const response = await dbAuth.invoke()
+
+        expect(dbAuth.getToken).toHaveBeenCalled()
+        expect(response.statusCode).toEqual(200)
+      })
+    })
   })
 
   describe('forgotPassword', () => {
@@ -2726,44 +2908,6 @@ describe('dbAuth', () => {
       expect(cookieString).toMatch(SET_SESSION_REGEX)
       // and we can check that it's a certain number of characters
       expect(cookieString.split(';')[0].length).toEqual(77)
-    })
-  })
-
-  describe('_validateCsrf()', () => {
-    it('returns true if session and header token match', async () => {
-      const data = { foo: 'bar' }
-      const token = 'abcd'
-
-      const req = new Request('http://localhost:8910/_rw_mw', {
-        method: 'POST',
-        headers: {
-          cookie: encryptToCookie(JSON.stringify(data) + ';' + token),
-          'csrf-token': token,
-        },
-      })
-
-      const dbAuth = new DbAuthHandler(req, context, options)
-      await dbAuth.init()
-      const output = await dbAuth._validateCsrf()
-
-      expect(output).toEqual(true)
-    })
-
-    it('throws an error if session and header token do not match', async () => {
-      const data = { foo: 'bar' }
-      const token = 'abcd'
-      req = {
-        headers: {
-          cookie: encryptToCookie(JSON.stringify(data) + ';' + token),
-          'csrf-token': 'invalid',
-        },
-      }
-      const dbAuth = new DbAuthHandler(req, context, options)
-      await dbAuth.init()
-
-      await expect(dbAuth._validateCsrf()).rejects.toThrow(
-        dbAuthError.CsrfTokenMismatchError,
-      )
     })
   })
 
