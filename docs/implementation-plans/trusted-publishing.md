@@ -27,14 +27,19 @@ token to `npm dist-tag` through a throwaway user config. The scripts still honor
 
 1. Merge the `publish.yml` change. Nothing changes yet: the scripts keep using
    `NPM_AUTH_TOKEN` while the secret exists.
-2. On npmjs.com, for **every** published package (all non-private workspaces,
-   ~70 of them, plus `create-cedar-app`): Settings → Publishing access → Trusted
-   publisher → GitHub Actions:
-   - Organization: `cedarjs`
-   - Repository: `cedar`
-   - Workflow filename: `publish.yml`
-   - Environment: leave blank (only the `release` job uses one) There's no bulk
-     UI for this.
+2. Configure npm trusted publishing for **every** published package (all
+   non-private workspaces, ~70 of them, plus `create-cedar-app`). Run
+   `.github/scripts/configure-trusted-publishers.mts` (requires npm CLI 11.15.0
+   or later, 2FA enabled on the npm account, and publish access to every
+   package):
+
+   ```
+   node .github/scripts/configure-trusted-publishers.mts --dry-run  # preview
+   node .github/scripts/configure-trusted-publishers.mts             # apply
+   ```
+
+   It runs `npm trust github <package> --repo cedarjs/cedar --file publish.yml --allow-publish --yes` for each package, leaving the environment blank (only the `release` job uses one). A single package can also be configured by hand with `npm trust`, or through npmjs.com's per-package Settings → Publishing access → Trusted publisher UI.
+
 3. Run the `release` job manually with `dry-run: true` against the latest
    release tag (Actions → 🚢 Publish → Run workflow). Besides packing every
    package, a dry run does one no-op `npm dist-tag add` on `@cedarjs/core`,
