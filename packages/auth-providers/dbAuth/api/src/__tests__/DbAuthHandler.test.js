@@ -931,6 +931,49 @@ describe('dbAuth', () => {
         expect(dbAuth.getToken).toHaveBeenCalled()
         expect(response.statusCode).toEqual(200)
       })
+
+      describe('behind a proxy (e.g. `cedar serve --ud`)', () => {
+        it('allows a POST request whose Origin matches `x-forwarded-host`, even though it differs from the connection host', async () => {
+          // Mirrors the shape `cedar serve --ud` forwards: the web side
+          // (127.0.0.1:8910) proxies to the api side (127.0.0.1:8911), so
+          // the connection-level `Host` header is the internal api-server
+          // hop
+          event.headers.origin = 'http://127.0.0.1:8910'
+          event.headers.host = '127.0.0.1:8911'
+          event.headers['x-forwarded-host'] = '127.0.0.1:8910'
+          const dbAuth = new DbAuthHandler(event, context, options)
+          await dbAuth.init()
+          dbAuth.logout = vi.fn(() => ['body', new Headers()])
+          const response = await dbAuth.invoke()
+
+          expect(dbAuth.logout).toHaveBeenCalled()
+          expect(response.statusCode).toEqual(200)
+        })
+
+        it('rejects the same request when `x-forwarded-host` is missing', async () => {
+          event.headers.origin = 'http://127.0.0.1:8910'
+          event.headers.host = '127.0.0.1:8911'
+          const dbAuth = new DbAuthHandler(event, context, options)
+          await dbAuth.init()
+          dbAuth.logout = vi.fn(() => ['body', new Headers()])
+          const response = await dbAuth.invoke()
+
+          expect(dbAuth.logout).not.toHaveBeenCalled()
+          expect(response.statusCode).toEqual(403)
+        })
+
+        it('uses the first entry of a comma-separated `x-forwarded-host` list', async () => {
+          event.headers.origin = 'http://a.example'
+          event.headers['x-forwarded-host'] = 'a.example, b.internal'
+          const dbAuth = new DbAuthHandler(event, context, options)
+          await dbAuth.init()
+          dbAuth.logout = vi.fn(() => ['body', new Headers()])
+          const response = await dbAuth.invoke()
+
+          expect(dbAuth.logout).toHaveBeenCalled()
+          expect(response.statusCode).toEqual(200)
+        })
+      })
     })
   })
 

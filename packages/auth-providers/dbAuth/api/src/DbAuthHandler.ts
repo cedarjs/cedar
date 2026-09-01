@@ -23,6 +23,8 @@ import * as DbAuthError from './errors.js'
 import {
   isRequestOriginTrusted,
   requiresOriginValidation,
+  resolveRequestHost,
+  resolveRequestProtocol,
 } from './originValidation.js'
 import {
   decryptSession,
@@ -566,6 +568,7 @@ export class DbAuthHandler<
             method: this.httpMethod,
             headers: this.normalizedRequest.headers,
             host: this._requestHost(),
+            protocol: this._requestProtocol(),
           },
           {
             trustedOrigins: this.options.trustedOrigins,
@@ -596,19 +599,23 @@ export class DbAuthHandler<
   }
 
   // best-effort host the request was sent to, used by origin validation to
-  // allow same-origin requests through with no extra configuration
+  // allow same-origin requests through with no extra configuration. Prefers
+  // `X-Forwarded-Host` over the connection-level host/URL -- see
+  // `resolveRequestHost` for why that's safe behind a proxy
   _requestHost(): string | null {
-    if (isFetchApiRequest(this.event)) {
-      try {
-        return new URL(this.event.url).host
-      } catch {
-        return null
-      }
-    }
+    return resolveRequestHost(
+      this.normalizedRequest.headers,
+      isFetchApiRequest(this.event) ? this.event.url : undefined,
+    )
+  }
 
-    return (
-      this.normalizedRequest.headers.get('host') ||
-      this.normalizedRequest.headers.get('x-forwarded-host')
+  // best-effort scheme the request arrived over, used alongside
+  // `_requestHost` for origin validation. See `resolveRequestProtocol` for
+  // when it can and can't be determined reliably
+  _requestProtocol(): string | null {
+    return resolveRequestProtocol(
+      this.normalizedRequest.headers,
+      isFetchApiRequest(this.event) ? this.event.url : undefined,
     )
   }
 

@@ -19,14 +19,22 @@ export interface OriginValidationRequest {
    */
   headers: Headers
   /**
-   * Host (and port, if non-default) the request was sent to. Either the
-   * request's own URL host (Fetch API requests) or its `Host` /
-   * `X-Forwarded-Host` header (Lambda-style events). Used to allow
-   * same-origin requests through with no extra configuration, which covers
-   * the standard Cedar setup where the web side proxies API requests
-   * through its own origin. Pass `null` when the host can't be determined.
+   * Host (and port, if non-default) the request was sent to, resolved with
+   * {@link resolveRequestHost}. Used to allow same-origin requests through
+   * with no extra configuration, which covers the standard Cedar setup
+   * where the web side proxies API requests through its own origin. Pass
+   * `null` when the host can't be determined.
    */
   host?: string | null
+  /**
+   * Scheme (`http`/`https`) the request is considered to have arrived
+   * over, resolved with {@link resolveRequestProtocol}, when it can be
+   * determined reliably. Used as an extra check alongside `host` when
+   * deciding whether the `Origin` header matches the request's own
+   * origin. Pass `null`/`undefined` when it can't be determined -- in that
+   * case only the host is compared.
+   */
+  protocol?: string | null
 }
 
 export interface OriginValidationConfig {
@@ -69,9 +77,105 @@ function toOriginList(value: string | string[] | undefined): string[] {
   return Array.isArray(value) ? value : [value]
 }
 
-function isSameOrigin(origin: string, host: string): boolean {
+function firstForwardedValue(headerValue: string): string {
+  // A chain of proxies appends its own entry to a forwarded header; the
+  // first one is the one closest to the original client
+  return headerValue.split(',')[0].trim()
+}
+
+/**
+ * Resolves the host a request should be considered as having arrived at,
+ * preferring a forwarding proxy's advertised host over the connection-level
+ * one.
+ *
+ * A proxy in front of the api side (this framework's own `cedar serve
+ * --ud`, or an external nginx/CDN) terminates the browser's connection and
+ * opens a new one to the api server, so the request's own URL/`Host` header
+ * reflects that internal hop rather than the origin-facing host the
+ * browser actually targeted. `X-Forwarded-Host` carries the origin-facing
+ * host instead.
+ *
+ * Trusting `X-Forwarded-Host` here is safe for CSRF purposes: a cross-site
+ * HTML form can't set arbitrary request headers, and a cross-origin
+ * `fetch()` that sets a custom header triggers a CORS preflight, so an
+ * attacker can't forge it without already having crossed the browser's
+ * CORS checks.
+ *
+ * @param url - The request's own URL (Fetch API requests only), used as a
+ * fallback when neither `X-Forwarded-Host` nor `Host` is present.
+ */
+export function resolveRequestHost(
+  headers: Headers,
+  url?: string | null,
+): string | null {
+  const forwardedHost = headers.get('x-forwarded-host')
+  if (forwardedHost) {
+    return firstForwardedValue(forwardedHost)
+  }
+
+  const host = headers.get('host')
+  if (host) {
+    return host
+  }
+
+  if (url) {
+    try {
+      return new URL(url).host
+    } catch {
+      return null
+    }
+  }
+
+  return null
+}
+
+/**
+ * Resolves the scheme (`http`/`https`) a request should be considered as
+ * having arrived over, mirroring {@link resolveRequestHost}.
+ *
+ * The request's own URL is only used as a fallback when no
+ * `X-Forwarded-Host` is present -- once a proxy has declared itself by
+ * setting that header, the request's own URL reflects the internal hop to
+ * the proxy, and its scheme can't be assumed to match what the browser
+ * actually used unless the proxy also set `X-Forwarded-Proto`.
+ *
+ * @param url - The request's own URL (Fetch API requests only).
+ */
+export function resolveRequestProtocol(
+  headers: Headers,
+  url?: string | null,
+): string | null {
+  const forwardedProto = headers.get('x-forwarded-proto')
+  if (forwardedProto) {
+    return firstForwardedValue(forwardedProto).toLowerCase()
+  }
+
+  if (!headers.get('x-forwarded-host') && url) {
+    try {
+      return new URL(url).protocol.replace(':', '')
+    } catch {
+      return null
+    }
+  }
+
+  return null
+}
+
+function isSameOrigin(
+  origin: string,
+  host: string,
+  protocol?: string | null,
+): boolean {
   try {
-    return new URL(origin).host === host
+    const originUrl = new URL(origin)
+    if (originUrl.host !== host) {
+      return false
+    }
+
+    // Scheme is only compared when it's reliably known (see
+    // `resolveRequestProtocol`); host-only matching is still a strong CSRF
+    // check on its own, since `Origin` already includes the host
+    return !protocol || originUrl.protocol === `${protocol}:`
   } catch {
     // `origin` wasn't a valid absolute URL -- treat it as untrusted rather
     // than throwing
@@ -100,7 +204,7 @@ export function isRequestOriginTrusted(
     return true
   }
 
-  if (request.host && isSameOrigin(origin, request.host)) {
+  if (request.host && isSameOrigin(origin, request.host, request.protocol)) {
     return true
   }
 

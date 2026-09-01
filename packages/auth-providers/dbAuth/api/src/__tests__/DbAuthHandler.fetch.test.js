@@ -806,7 +806,7 @@ describe('dbAuth', () => {
           body: JSON.stringify({ method: 'logout' }),
           headers: {
             ...SESSION_COOKIE_HEADER,
-            origin: 'https://api.example.com',
+            origin: 'http://api.example.com',
           },
         })
 
@@ -957,6 +957,70 @@ describe('dbAuth', () => {
 
         expect(dbAuth.getToken).toHaveBeenCalled()
         expect(response.statusCode).toEqual(200)
+      })
+
+      describe('behind a proxy (e.g. `cedar serve --ud`)', () => {
+        it('allows a POST request whose Origin matches `x-forwarded-host`, even though it differs from the request URL host', async () => {
+          // Mirrors the shape `cedar serve --ud` forwards: the web side
+          // (127.0.0.1:8910) proxies to the api side (127.0.0.1:8911), so
+          // the request's own URL host is the internal api-server hop
+          const fetchEvent = new Request('http://127.0.0.1:8911/_rw_mw', {
+            method: 'POST',
+            body: JSON.stringify({ method: 'logout' }),
+            headers: {
+              ...SESSION_COOKIE_HEADER,
+              origin: 'http://127.0.0.1:8910',
+              'x-forwarded-host': '127.0.0.1:8910',
+            },
+          })
+
+          const dbAuth = new DbAuthHandler(fetchEvent, context, options)
+          await dbAuth.init()
+          dbAuth.logout = vi.fn(() => ['body', new Headers()])
+          const response = await dbAuth.invoke()
+
+          expect(dbAuth.logout).toHaveBeenCalled()
+          expect(response.statusCode).toEqual(200)
+        })
+
+        it('rejects the same request when `x-forwarded-host` is missing', async () => {
+          const fetchEvent = new Request('http://127.0.0.1:8911/_rw_mw', {
+            method: 'POST',
+            body: JSON.stringify({ method: 'logout' }),
+            headers: {
+              ...SESSION_COOKIE_HEADER,
+              origin: 'http://127.0.0.1:8910',
+            },
+          })
+
+          const dbAuth = new DbAuthHandler(fetchEvent, context, options)
+          await dbAuth.init()
+          dbAuth.logout = vi.fn(() => ['body', new Headers()])
+          const response = await dbAuth.invoke()
+
+          expect(dbAuth.logout).not.toHaveBeenCalled()
+          expect(response.statusCode).toEqual(403)
+        })
+
+        it('uses the first entry of a comma-separated `x-forwarded-host` list', async () => {
+          const fetchEvent = new Request('http://127.0.0.1:8911/_rw_mw', {
+            method: 'POST',
+            body: JSON.stringify({ method: 'logout' }),
+            headers: {
+              ...SESSION_COOKIE_HEADER,
+              origin: 'http://a.example',
+              'x-forwarded-host': 'a.example, b.internal',
+            },
+          })
+
+          const dbAuth = new DbAuthHandler(fetchEvent, context, options)
+          await dbAuth.init()
+          dbAuth.logout = vi.fn(() => ['body', new Headers()])
+          const response = await dbAuth.invoke()
+
+          expect(dbAuth.logout).toHaveBeenCalled()
+          expect(response.statusCode).toEqual(200)
+        })
       })
     })
   })
