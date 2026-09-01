@@ -18,12 +18,66 @@ export interface DbAuthMiddlewareOptions {
     req: Request | APIGatewayProxyEvent,
     context?: Context,
   ) => DbAuthResponse
+  /**
+   * Handler for dbAuth's OAuth routes (`/auth/oauth/...` by default),
+   * mirroring `dbAuthHandler`. Typically built by wrapping `OAuthHandler`
+   * from `@cedarjs/auth-dbauth-oauth`:
+   *
+   * ```ts
+   * oauthHandler: (req, context) =>
+   *   new OAuthHandler(req, context, oauthOptions).invoke()
+   * ```
+   *
+   * Omitting this option leaves OAuth routing disabled entirely — requests
+   * under `oauthUrl` fall through to the normal dbAuth handling below,
+   * exactly as they did before this option existed.
+   */
+  oauthHandler?: (
+    req: Request | APIGatewayProxyEvent,
+    context?: Context,
+  ) => DbAuthResponse
+  /**
+   * URL segment routed to `oauthHandler`. Defaults to `/auth/oauth`,
+   * matching `OAuthHandlerOptions.basePath`'s default in
+   * `@cedarjs/auth-dbauth-oauth`. Only takes effect when `oauthHandler` is
+   * set.
+   */
+  oauthUrl?: string
   getRoles?: (decoded: any) => string[]
   getCurrentUser: GetCurrentUser
 }
 
+/**
+ * Converts a dbAuth-shaped handler response (the format both `DbAuthHandler`
+ * and `OAuthHandler` return, via `getDbAuthResponseBuilder`) into a
+ * `MiddlewareResponse`, faithfully carrying over multi-value headers such as
+ * `Set-Cookie`.
+ */
+function toMiddlewareResponse(output: {
+  headers: Record<string, string | string[]>
+  body?: string
+  statusCode: number
+}): MiddlewareResponse {
+  const finalHeaders = new Headers()
+
+  Object.entries(output.headers).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      value.forEach((mvhHeader) => finalHeaders.append(key, mvhHeader))
+    } else {
+      finalHeaders.append(key, value)
+    }
+  })
+
+  return new MiddlewareResponse(output.body, {
+    headers: finalHeaders,
+    status: output.statusCode,
+  })
+}
+
 export const initDbAuthMiddleware = ({
   dbAuthHandler,
+  oauthHandler,
+  oauthUrl = '/auth/oauth',
   getCurrentUser,
   getRoles = defaultGetRoles,
   cookieName,
@@ -32,6 +86,15 @@ export const initDbAuthMiddleware = ({
   const mw: Middleware = async (req, res = MiddlewareResponse.next()) => {
     console.log('dbAuthUrl', dbAuthUrl)
     console.log('req.url', req.url)
+
+    // Handoff redirect-flow OAuth requests (authorize/callback/unlink) to
+    // the OAuth handler. This is opt-in: apps that don't configure
+    // `oauthHandler` never take this branch, so their requests fall through
+    // to the normal dbAuth handling below unchanged.
+    if (oauthHandler && req.url.includes(oauthUrl)) {
+      const output = await oauthHandler(req)
+      return toMiddlewareResponse(output)
+    }
 
     // Handoff POST and some GET requests to the dbAuthHandler. The url is
     // configurable on the dbAuth client side.
@@ -57,20 +120,7 @@ export const initDbAuthMiddleware = ({
       } else {
         const output = await dbAuthHandler(req)
         console.log('output', output)
-        const finalHeaders = new Headers()
-
-        Object.entries(output.headers).forEach(([key, value]) => {
-          if (Array.isArray(value)) {
-            value.forEach((mvhHeader) => finalHeaders.append(key, mvhHeader))
-          } else {
-            finalHeaders.append(key, value)
-          }
-        })
-
-        return new MiddlewareResponse(output.body, {
-          headers: finalHeaders,
-          status: output.statusCode,
-        })
+        return toMiddlewareResponse(output)
       }
     }
 

@@ -208,6 +208,19 @@ jobs:
     with:
       os: ${{ matrix.os }}
 
+  dbauth-oauth-smoke-tests:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.code == 'true'
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    name: 🔑 dbAuth OAuth Smoke tests / ${{ matrix.os }}
+    uses: ./.github/workflows/dbauth-oauth-smoke-tests.yml
+    with:
+      os: ${{ matrix.os }}
+
   create-cedar-app:
     needs: detect-changes
 
@@ -285,6 +298,12 @@ jobs:
     name: 🖥️ E2E Node self-host
     uses: ./.github/workflows/e2e-node.yml
 
+  e2e-keycloak:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.code == 'true'
+    name: 🔐 E2E Keycloak OAuth
+    uses: ./.github/workflows/e2e-keycloak.yml
+
   ci-status-check:
     needs:
       - detect-changes
@@ -298,6 +317,7 @@ jobs:
       - ssr-smoke-tests
       - fragments-and-td-smoke-tests
       - live-smoke-tests
+      - dbauth-oauth-smoke-tests
       - create-cedar-app
       - cli-pm-smoke-tests
       - ud-tests
@@ -305,6 +325,7 @@ jobs:
       - e2e-netlify
       - e2e-vercel
       - e2e-node
+      - e2e-keycloak
     if: always()
 
     name: ✅ CI Status Check

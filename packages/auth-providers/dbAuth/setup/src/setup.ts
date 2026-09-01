@@ -18,6 +18,14 @@ export function builder(yargs: Argv) {
       description: 'Include WebAuthn support (TouchID/FaceID)',
       type: 'boolean',
     })
+    .option('oauth', {
+      alias: 'o',
+      default: null,
+      description:
+        'Include OAuth support for the given comma-separated providers ' +
+        '(google, github), e.g. --oauth google,github',
+      type: 'string',
+    })
     .option('createUserModel', {
       alias: 'u',
       default: null,
@@ -40,6 +48,7 @@ export function builder(yargs: Argv) {
 
 export interface Args {
   webauthn: boolean | null
+  oauth: string | null
   createUserModel: boolean | null
   generateAuthPages: boolean | null
   force: boolean

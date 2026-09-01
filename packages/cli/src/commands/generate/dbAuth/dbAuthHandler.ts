@@ -36,6 +36,7 @@ export interface DbAuthFilesOptions {
   skipReset?: boolean
   skipSignup?: boolean
   webauthn?: boolean | null
+  oauth?: boolean
   usernameLabel?: string
   passwordLabel?: string
 }
@@ -105,6 +106,7 @@ export const files = async ({
   skipReset,
   skipSignup,
   webauthn,
+  oauth,
   usernameLabel,
   passwordLabel,
 }: DbAuthFilesOptions): Promise<Record<string, string>> => {
@@ -112,6 +114,8 @@ export const files = async ({
 
   usernameLabel = usernameLabel || 'username'
   passwordLabel = passwordLabel || 'password'
+
+  const oauthEnabled = oauth ?? isOAuthEnabled()
 
   const templateVars = {
     usernameLowerCase: usernameLabel.toLowerCase(),
@@ -144,9 +148,7 @@ export const files = async ({
         extension: typescript ? '.tsx' : '.jsx',
         webPathSection: 'pages',
         generator: 'dbAuth',
-        templatePath: webauthn
-          ? 'login.webAuthn.tsx.template'
-          : 'login.tsx.template',
+        templatePath: loginTemplatePath(webauthn, oauthEnabled),
         templateVars,
       }),
     )
@@ -174,7 +176,9 @@ export const files = async ({
         extension: typescript ? '.tsx' : '.jsx',
         webPathSection: 'pages',
         generator: 'dbAuth',
-        templatePath: 'signup.tsx.template',
+        templatePath: oauthEnabled
+          ? 'signup.oauth.tsx.template'
+          : 'signup.tsx.template',
         templateVars,
       }),
     )
@@ -466,4 +470,40 @@ function isWebAuthnEnabled() {
   )
 
   return webPackageJson.includes('"@simplewebauthn/browser": ')
+}
+
+/**
+ * `cedar setup auth dbAuth --oauth <provider,...>` adds
+ * `@cedarjs/auth-dbauth-oauth` as an api-side dependency, so its presence in
+ * the api package.json is what tells the page generator to include OAuth
+ * provider buttons.
+ */
+function isOAuthEnabled() {
+  const apiPackageJsonPath = path.join(getPaths().base, 'api', 'package.json')
+
+  if (!fs.existsSync(apiPackageJsonPath)) {
+    return false
+  }
+
+  const apiPackageJson = fs.readFileSync(apiPackageJsonPath, 'utf-8')
+
+  return apiPackageJson.includes('"@cedarjs/auth-dbauth-oauth": ')
+}
+
+/**
+ * Picks the LoginPage template variant. WebAuthn's login variant replaces
+ * the password form with fingerprint/face/PIN prompts, so it takes
+ * precedence over the OAuth-only variant when both are enabled: each
+ * variant is a standalone template, and only one renders at a time.
+ */
+function loginTemplatePath(webauthn?: boolean | null, oauth?: boolean) {
+  if (webauthn) {
+    return 'login.webAuthn.tsx.template'
+  }
+
+  if (oauth) {
+    return 'login.oauth.tsx.template'
+  }
+
+  return 'login.tsx.template'
 }

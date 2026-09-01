@@ -52,6 +52,7 @@ export interface AuthHandlerArgs {
   provider: string
   authDecoderImport?: string
   webAuthn?: boolean
+  oauth?: boolean
   webPackages?: string[]
   apiPackages?: string[]
   extraTasks?: (ListrTask<AuthGeneratorCtx> | undefined)[]
@@ -76,6 +77,7 @@ export const standardAuthHandler = async ({
   provider,
   authDecoderImport,
   webAuthn = false,
+  oauth = false,
   webPackages = [],
   apiPackages = [],
   extraTasks,
@@ -90,7 +92,7 @@ export const standardAuthHandler = async ({
   const tasks = new Listr<AuthGeneratorCtx, 'verbose' | 'default'>(
     [
       setAuthSetupMode(forceArg),
-      generateAuthApiFiles(basedir, webAuthn),
+      generateAuthApiFiles(basedir, webAuthn, oauth),
 
       addConfigToWebApp(),
       createWebAuth(basedir, webAuthn),

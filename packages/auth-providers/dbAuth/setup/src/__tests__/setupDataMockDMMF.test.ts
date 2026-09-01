@@ -321,6 +321,7 @@ describe('setupData createUserModelTask', () => {
 
     await handler({
       webauthn: false,
+      oauth: null,
       createUserModel: null,
       generateAuthPages: false,
       force: false,
@@ -363,6 +364,7 @@ describe('setupData createUserModelTask', () => {
 
     await handler({
       webauthn: false,
+      oauth: null,
       createUserModel: null,
       generateAuthPages: false,
       force: false,
@@ -416,6 +418,7 @@ describe('setupData createUserModelTask', () => {
 
     await handler({
       webauthn: false,
+      oauth: null,
       createUserModel: null,
       generateAuthPages: false,
       force: false,

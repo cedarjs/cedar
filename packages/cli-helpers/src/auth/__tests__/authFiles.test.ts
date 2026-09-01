@@ -90,6 +90,44 @@ it('generates a record of webAuthn files', async () => {
   ).toBeTruthy()
 })
 
+it('generates a record of oauth files', async () => {
+  const filesRecord = await apiSideFiles({
+    basedir: path.join(__dirname, 'fixtures/dbAuthOAuthSetup'),
+    webAuthn: false,
+    oauth: true,
+  })
+
+  expect(filesRecord[path.join(getPaths().api.functions, 'auth.ts')]).toContain(
+    'oauth',
+  )
+})
+
+it('prefers the combined webAuthn+oauth variant when both are enabled', async () => {
+  const filesRecord = await apiSideFiles({
+    basedir: path.join(__dirname, 'fixtures/dbAuthOAuthSetup'),
+    webAuthn: true,
+    oauth: true,
+  })
+
+  expect(filesRecord[path.join(getPaths().api.functions, 'auth.ts')]).toContain(
+    'webAuthn+oauth',
+  )
+})
+
+it('falls back to the webAuthn-only variant when no combined variant exists for a file', async () => {
+  // lib/auth.ts.template has no webAuthn or oauth variant, so it should
+  // always fall back to the base template regardless of active flags
+  const filesRecord = await apiSideFiles({
+    basedir: path.join(__dirname, 'fixtures/dbAuthOAuthSetup'),
+    webAuthn: true,
+    oauth: true,
+  })
+
+  expect(filesRecord[path.join(getPaths().api.lib, 'auth.ts')]).toContain(
+    'session',
+  )
+})
+
 it('generates new filenames to avoid overwriting existing files', () => {
   mockBasePath = path.join(__dirname, 'fixtures', 'app')
 

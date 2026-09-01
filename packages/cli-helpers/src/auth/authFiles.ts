@@ -10,6 +10,75 @@ import { isTypeScriptProject } from '../lib/project.js'
 interface FilesArgs {
   basedir: string
   webAuthn: boolean
+  /**
+   * Selects the `*.oauth.*` template variant, the same way `webAuthn` selects
+   * the `*.webAuthn.*` variant. When both are true, the most specific
+   * template available is preferred (`*.webAuthn.oauth.*`), falling back to
+   * a single-variant or the base template when a more specific one doesn't
+   * exist for a given template file.
+   */
+  oauth?: boolean
+}
+
+/**
+ * The recognized variant tags a template file name can carry between its
+ * base name and its `<ext>.template` suffix, e.g. `auth.webAuthn.oauth.ts.template`
+ * has tags `['webAuthn', 'oauth']`.
+ */
+const VARIANT_TAGS = ['webAuthn', 'oauth']
+
+interface TemplateVariant {
+  fileName: string
+  tags: string[]
+}
+
+/**
+ * Splits a template file name into its base name, variant tags, and
+ * extension, e.g. `auth.webAuthn.oauth.ts.template` becomes
+ * `{ baseName: 'auth', tags: ['webAuthn', 'oauth'], ext: 'ts' }`.
+ */
+function parseTemplateFileName(fileName: string) {
+  const parts = fileName.split('.')
+  const baseName = parts[0]
+  const ext = parts.at(-2)
+  const tags = parts.slice(1, -2).filter((part) => VARIANT_TAGS.includes(part))
+
+  return { baseName, tags, ext }
+}
+
+/**
+ * For every distinct (base name + extension) template in `templateFiles`,
+ * picks the most specific variant whose tags are all present in
+ * `activeTags`, falling back to the base template (no tags) when no more
+ * specific variant applies.
+ */
+function pickTemplateVariants(templateFiles: string[], activeTags: string[]) {
+  const candidatesByKey = new Map<string, TemplateVariant[]>()
+
+  for (const fileName of templateFiles) {
+    const { baseName, tags, ext } = parseTemplateFileName(fileName)
+    const key = `${baseName}.${ext}`
+
+    const candidates = candidatesByKey.get(key) ?? []
+    candidates.push({ fileName, tags })
+    candidatesByKey.set(key, candidates)
+  }
+
+  const picked: TemplateVariant[] = []
+
+  for (const candidates of candidatesByKey.values()) {
+    const applicable = candidates.filter((candidate) =>
+      candidate.tags.every((tag) => activeTags.includes(tag)),
+    )
+
+    const mostSpecific = applicable.reduce((best, candidate) =>
+      candidate.tags.length > best.tags.length ? candidate : best,
+    )
+
+    picked.push(mostSpecific)
+  }
+
+  return picked
 }
 
 /**
@@ -24,59 +93,40 @@ interface FilesArgs {
  * }
  * ```
  */
-export const apiSideFiles = async ({ basedir, webAuthn }: FilesArgs) => {
+export const apiSideFiles = async ({
+  basedir,
+  webAuthn,
+  oauth = false,
+}: FilesArgs) => {
   const apiSrcPath = getPaths().api.src
   const apiBaseTemplatePath = path.join(basedir, 'templates', 'api')
   const templateDirectories = fs.readdirSync(apiBaseTemplatePath)
 
   let filesRecord: Record<string, string> = {}
 
+  const activeTags = [
+    ...(webAuthn ? ['webAuthn'] : []),
+    ...(oauth ? ['oauth'] : []),
+  ]
+
   for (const dir of templateDirectories) {
     const templateFiles = fs.readdirSync(path.join(apiBaseTemplatePath, dir))
-    const filePaths = templateFiles
-      .filter((fileName) => {
-        const fileNameParts = fileName.split('.')
-        // Remove all webAuthn files. We'll handle those in the next step
-        return fileNameParts.length <= 3 || fileNameParts.at(-3) !== 'webAuthn'
-      })
-      .map((fileName) => {
-        // remove "template" from the end, and change from {ts,tsx} to {js,jsx} for
-        // JavaScript projects
-        let outputFileName = fileName.replace(/\.template$/, '')
-        if (!isTypeScriptProject()) {
-          outputFileName = outputFileName.replace(/\.ts(x?)$/, '.js$1')
-        }
+    const pickedVariants = pickTemplateVariants(templateFiles, activeTags)
 
-        if (!webAuthn) {
-          return { templateFileName: fileName, outputFileName }
-        }
+    const filePaths = pickedVariants.map(({ fileName }) => {
+      const { baseName, ext } = parseTemplateFileName(fileName)
+      // remove "template" from the end, and change from {ts,tsx} to
+      // {js,jsx} for JavaScript projects
+      let outputFileName = `${baseName}.${ext}`
+      if (!isTypeScriptProject()) {
+        outputFileName = outputFileName.replace(/\.ts(x?)$/, '.js$1')
+      }
 
-        // Insert "webAuthn." before the second to last part
-        const webAuthnFileName = fileName
-          .split('.')
-          .reverse()
-          .map((part, i) => (i === 1 ? 'webAuthn.' + part : part))
-          .reverse()
-          .join('.')
+      const templateFilePath = path.join(apiBaseTemplatePath, dir, fileName)
+      const outputFilePath = path.join(apiSrcPath, dir, outputFileName)
 
-        // Favor the abc.xyz.webAuthn.ts.template file if it exists, otherwise
-        // just go with the "normal" filename
-        if (templateFiles.includes(webAuthnFileName)) {
-          return { templateFileName: webAuthnFileName, outputFileName }
-        } else {
-          return { templateFileName: fileName, outputFileName }
-        }
-      })
-      .map((f) => {
-        const templateFilePath = path.join(
-          apiBaseTemplatePath,
-          dir,
-          f.templateFileName,
-        )
-        const outputFilePath = path.join(apiSrcPath, dir, f.outputFileName)
-
-        return { templateFilePath, outputFilePath }
-      })
+      return { templateFilePath, outputFilePath }
+    })
 
     for (const paths of filePaths) {
       const content = fs.readFileSync(paths.templateFilePath, 'utf8')

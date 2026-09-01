@@ -1,839 +1,414 @@
 # OAuth
 
-If you're using an auth provider like [Auth0](/docs/auth/auth0), OAuth login to third party services (GitHub, Google, Facebook) is usually just a setting you can toggle on in your provider's dashboard. But if you're using [dbAuth](/docs/auth/dbauth) you'll only have username/password login to start. But, adding one or more OAuth clients isn't hard. This recipe will walk you through it from scratch, adding OAuth login via GitHub.
+dbAuth ships built-in OAuth login as an opt-in feature: `yarn cedar setup auth dbAuth --oauth google,github` gets you Google and GitHub login, generated buttons on your login/signup pages, and account linking, without touching the username/password flow you already have. This guide walks through setting it up and shows how to add a provider that isn't built in.
 
-Alternatively, consider using the [redwoodjs-dbauth-oauth](https://github.com/spoonjoy/redwoodjs-dbauth-oauth) community package. This package streamlines the setup, includes support for multiple providers, and even includes UI components that you can use for making setup even easier.
+If you haven't set up dbAuth yet, start with the [dbAuth docs](../auth/dbauth.md) — everything below assumes dbAuth is already configured.
 
-If you do prefer to set this up manually or are just curious how OAuth and dbAuth can work together, read on!
+## What you get
 
-## Prerequisites
+- **Google and GitHub, built in.** Both ship as complete strategies — OIDC discovery and id_token verification for Google, GitHub's OAuth-app-plus-userinfo flow for GitHub.
+- **Any OIDC-compliant provider**, via `createOidcStrategy` and an issuer URL — no per-provider code needed for anything that speaks standard OpenID Connect (Keycloak, Auth0, GitLab, Azure AD, ...).
+- **A custom-strategy escape hatch** for anything else (Apple, Facebook, or an internal SSO system) — implement the `OAuthStrategy` interface and you're done. Cedar's own Google and GitHub strategies are written against this exact interface, so nothing is off-limits to a userland strategy.
+- **Login, signup, link, and unlink**, with guards that stop a user from ever accidentally creating a duplicate account by logging in with a provider they haven't linked yet.
+- **PKCE, `state`, and (for OIDC) `nonce` handled for you** for every provider, built on [`oauth4webapi`](https://github.com/panva/oauth4webapi). Provider access/refresh tokens are never persisted.
+- **Zero impact on apps that don't opt in.** If you never pass `--oauth`, nothing changes about dbAuth's username/password flow.
 
-This article assumes you have an app set up and are using dbAuth. We're going to make use of the dbAuth system to validate that you're who you say you are. If you just want to try this code out in a sandbox app, you can create a test blog app from scratch by checking out the [Cedar codebase](https://github.com/cedarjs/cedar) itself and then running a couple of commands:
+## Quickstart
 
-```bash
-yarn install
-yarn build
-yarn run build:test-project ~/oauth-app
-```
-
-That will create a simple blog application at `~/oauth-app`. You'll get a login and signup page, which we're going to enhance to include a **Login with GitHub** button.
-
-Speaking of GitHub, you'll also need a GitHub account so you can create an [OAuth app](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app).
-
-We also assume you're familiar with the basics of OAuth and the terminology surrounding it.
-
-## Login Flow
-
-Here's the logic flow we're going to implement:
-
-1. User comes to the login page and clicks a **Login with GitHub** button/link.
-2. The link directs the browser to GitHub's OAuth process at github.com.
-3. The user logs in with their GitHub credentials and approves our app.
-4. The browser is redirected back to our app, to a new function `/api/src/functions/oauth/oauth.js`.
-5. The function fetches the OAuth **access_token** with a call to GitHub, using the **code** that was included with the redirect from GitHub in the previous step.
-6. When the **access_token** is received, the function then requests the user data from GitHub via another fetch to GitHub's API.
-7. The function then checks our database for a user identified by GitHub's `id`. If no user is found, the `User` record is created using the info from the fetch in the previous step.
-8. The user data from our own database is used to create the same cookie that dbAuth creates on a successful login.
-9. The browser is redirected back to our site, and the user is now logged in.
-
-## GitHub OAuth App Setup
-
-In order to allow OAuth login with GitHub, we need to create an OAuth App. The instructions below are for creating one on your personal GitHub account, but if your app lives in a separate organization then you can perform the same steps under the org instead.
-
-First go to your [Settings](https://github.com/settings/profile) and then the [Developer settings](https://github.com/settings/apps) at the bottom left. Finally, click the [OAuth Apps](https://github.com/settings/developers) nav item at left:
-
-![OAuth app settings screenshot](https://user-images.githubusercontent.com/300/245297416-34821cb6-ace0-4a6a-9bf6-4e434d3cefc5.png)
-
-Click [**New OAuth App**](https://github.com/settings/applications/new) and fill it in something like this:
-
-![New OAuth app settings](https://user-images.githubusercontent.com/300/245298106-b35a6abe-6e8c-4ab1-8ab5-7b7e1dcc0a39.png)
-
-The important part is the **Authorization callback URL** which is where GitHub will redirect you back once authenticated (step 4 of the login flow above). This callback URL assumes you're using the default function location of `/.api/functions`. If you've changed that in your app be sure to change it here as well.
-
-Click **Register application** and then on the screen that follows, click the **Generate a new client secret** button:
-
-![New client secret button](https://user-images.githubusercontent.com/300/245298639-6e08a201-b0db-4df6-975f-592544bdced7.png)
-
-You may be asked to use your 2FA code to verify that you're who you say you are, but eventually you should see your new **Client secret**. Copy that, and the **Client ID** above it:
-
-![Client secret](https://user-images.githubusercontent.com/300/245298897-129b5d00-3bed-4d7e-a40e-f4c9cda8a21f.png)
-
-Add those to your app's `.env` file (or wherever you're managing your secrets). Note that it's best to have a different OAuth app on GitHub for each environment you deploy to. Consider this one the **dev** app, and you'll create a separate one with a different client ID and secret when you're ready to deploy to production:
-
-```bash title="/.env"
-GITHUB_OAUTH_CLIENT_ID=41a08ae238b5aee4121d
-GITHUB_OAUTH_CLIENT_SECRET=92e8662e9c562aca8356d45562911542d89450e1
-```
-
-We also need to denote what data we want permission to read from GitHub once someone authorizes our app. We'll want the user's public info, and probably their email address. That's only two scopes, and we can add those as another ENV var:
-
-```bash title="/.env"
-GITHUB_OAUTH_CLIENT_ID=41a08ae238b5aee4121d
-GITHUB_OAUTH_CLIENT_SECRET=92e8662e9c562aca8356d45562911542d89450e1
-# highlight-next-line
-GITHUB_OAUTH_SCOPES="read:user user:email"
-```
-
-If you wanted access to more GitHub data, you can specify [additional scopes](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps) here and they'll be listed to the user when they go to authorize your app. You can also change this list in the future, but you'll need to log the user out and the next time they click **Login with GitHub** they'll be asked to authorize your app again, with a new list of requested scopes.
-
-One more ENV var, this is the same callback URL we told GitHub about. This is used in the link in the **Login with GitHub** button and gives GitHub another chance to verify that you're who you say you are: you're proving that you know where you're supposed to redirect back to:
-
-```bash title="/.env"
-GITHUB_OAUTH_CLIENT_ID=41a08ae238b5aee4121d
-GITHUB_OAUTH_CLIENT_SECRET=92e8662e9c562aca8356d45562911542d89450e1
-GITHUB_OAUTH_SCOPES="read:user user:email"
-# highlight-next-line
-GITHUB_OAUTH_REDIRECT_URI="http://localhost:8910/.api/functions/oauth/callback"
-```
-
-## The Login Button
-
-This part is pretty easy, we're just going to add a link/button to go directly to GitHub to begin the OAuth process:
-
-```jsx title="/web/src/pages/LoginPage/LoginPage.jsx"
-<a
-  href={`https://github.com/login/oauth/authorize?client_id=${
-    process.env.GITHUB_OAUTH_CLIENT_ID
-  }&redirect_uri=${
-    process.env.GITHUB_OAUTH_REDIRECT_URI
-  }&scope=${process.env.GITHUB_OAUTH_SCOPES.split(' ').join('+')}`}
-  className="mx-auto block w-48 rounded bg-gray-800 px-4 py-2 text-center text-xs font-semibold uppercase tracking-wide text-white"
->
-  Login with GitHub
-</a>
-```
-
-:::info
-This example uses Tailwind to style the link to match the rest of the default dbAuth login page
-:::
-
-You can put this same link on your signup page as well, since using the OAuth flow will be dual-purpose: it will log the user in if a local user already exists, or it will create the user and then log them in.
-
-We're using several of our new ENV vars here, and need to tell Cedar to make them available to the web side during the build process. Add them to the `includeEnvironmentVariables` key in `cedar.toml`:
-
-```toml title="/cedar.toml"
-[web]
-  title = "Cedar App"
-  port = "${WEB_DEV_PORT:8910}"
-  apiUrl = "/.api/functions"
-  # highlight-next-line
-  includeEnvironmentVariables = ["GITHUB_OAUTH_CLIENT_ID", "GITHUB_OAUTH_REDIRECT_URI", "GITHUB_OAUTH_SCOPES"]
-[api]
-  port = "${API_DEV_PORT:8911}"
-[browser]
-  open = true
-[notifications]
-  versionUpdates = ["latest"]
-```
-
-Restart your dev server to pick up the new TOML settings, and your link should appear:
-
-![Login button](https://user-images.githubusercontent.com/300/245899085-0b946a14-cd7c-402a-9d86-b6527fd89c7f.png)
-
-Go ahead and click it, and you should be taken to GitHub to authorize your GitHub login to work with your app. You'll see the scopes we requested listed under the **Personal User Data** heading:
-
-![GitHub Oauth Access Page](https://user-images.githubusercontent.com/300/245899872-8ddd7e69-dbfa-4544-ab6f-78fd4ff02da8.png)
-
-:::warning
-
-If you get an error here that says "The redirect_uri MUST match the registered callback URL for this application" verify that the redirect URL you entered on GitHub and the one you put into the `GITHUB_OAUTH_REDIRECT_URL` ENV var are identical!
-
-:::
-
-Click **authorize** and you should end up seeing some JSON, and an error:
-
-![/oauth function not found](https://user-images.githubusercontent.com/300/245900327-b21a178e-5539-4c6d-a5d6-9bb736100940.png)
-
-That's coming from our app because we haven't created the `oauth` function that GitHub redirects to. But you'll see a `code` in the URL, which means GitHub is happy with our flow so far. Now we need to trade that `code` for an `access_token`. We'll do that in our `/oauth` function.
-
-:::info
-This nicely formatted JSON comes from the [JSON Viewer](https://chrome.google.com/webstore/detail/json-viewer/gbmdgpbipfallnflgajpaliibnhdgobh) Chrome extension.
-:::
-
-## The `/oauth` Function
-
-We can have Cedar generate a shell of our new function for us:
+### 1. Run setup
 
 ```bash
-yarn cedar g function oauth
+yarn cedar setup auth dbAuth --oauth google,github
 ```
 
-That will create the function at `/api/src/functions/oauth/oauth.js`. If we retry the **Login with GitHub** button now, we'll see the output of that function instead of the error:
+This is additive to the regular dbAuth setup: it adds an `OAuth` model to your Prisma schema, makes `hashedPassword`/`salt` on `User` optional (a user can now sign up with just a provider, no password), stubs the provider env vars into `.env`, and adds `@cedarjs/auth-dbauth-oauth` as an api-side dependency.
 
-![Oauth function responding](https://user-images.githubusercontent.com/300/245903068-760596fa-4139-4d11-b3b3-a90edfbbf496.png)
+You can pass either provider on its own (`--oauth google` or `--oauth github`) or both, comma-separated. If you already have dbAuth set up, re-run the command against your existing project — it's safe to run more than once.
 
-Now let's start filling out this function with the code we need to get the `access_token`.
+### 2. Update the Prisma schema
 
-### Fetching the `access_token`
+Setup prints the exact model to add — it looks like this:
 
-We told GitHub to redirect to `/oauth/callback` which _appears_ like it would be a subdirectory, or child route of our `oauth` function, but in reality everything after `/oauth` just gets shoved into an `event.path` variable that we'll need to inspect to make sure it has the proper parts (like `/callback`). We can do that in the `hander()`:
+```prisma title="api/db/schema.prisma"
+model OAuth {
+  id               String   @id @default(uuid())
+  provider         String
+  providerUserId   String
+  providerUsername String?
+  providerEmail    String?
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-```js title="/api/src/functions/oauth/oauth.js"
-export const handler = async (event, _context) => {
-  switch (event.path) {
-    case '/oauth/callback':
-      return await callback(event)
-    default:
-      // Whatever this is, it's not correct, so return "Not Found"
-      return {
-        statusCode: 404,
-      }
-  }
-}
-
-const callback = async (event) => {
-  return { body: 'ok' }
+  @@unique([provider, providerUserId])
+  @@unique([userId, provider])
 }
 ```
 
-The `callback()` function is where we'll actually define the rest of our flow. We can verify this is working by trying a couple of different URLs in the browser and see that `/oauth/callback` returns a 200 and "ok" in the body of the page, but anything else returns a 404.
+Add the inverse relation and make the password fields optional on `User`:
 
-Now we need to make a request to GitHub to trade the `code` for an `access_token`. This is handled by a `fetch`:
-
-```js title="/api/src/functions/oauth/oauth.js"
-const callback = async (event) => {
-  // highlight-start
-  const { code } = event.queryStringParameters
-
-  const response = await fetch(`https://github.com/login/oauth/access_token`, {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      client_id: process.env.GITHUB_OAUTH_CLIENT_ID,
-      client_secret: process.env.GITHUB_OAUTH_CLIENT_SECRET,
-      redirect_uri: process.env.GITHUB_OAUTH_REDIRECT_URI,
-      code,
-    }),
-  })
-
-  const { access_token, scope, error } = JSON.parse(await response.text())
-
-  if (error) {
-    return { statuscode: 400, body: error }
-  }
-
-  return {
-    body: JSON.stringify({ access_token, scope, error }),
-  }
-  // highlight-end
-}
-```
-
-First we get the `code` out of the query string variables, then make a POST `fetch()` to GitHub, setting the required JSON body to include several of the ENV vars we've set, as well as the `code` we got from the GitHub redirect. Then we parse the response JSON and just return it in the browser to make sure it worked. If something went wrong (`error` is not `undefined`) then we'll output the error message in the body of the page.
-
-Let's try it: go back to the login page, click the **Login with GitHub** button and see what happens:
-
-![GitHub OAuth access_token granted](https://user-images.githubusercontent.com/300/245906529-d08f9d6e-4947-4d14-9377-def3645d9c68.png)
-
-You can also verify that the error response works by, for example, removing the `code` key from the `fetch()`, and see GitHub complain:
-
-![GitHub OAuth error](https://user-images.githubusercontent.com/300/245906827-703a4a21-b279-428c-be1c-b73c559a72b3.png)
-
-Great, GitHub has authorized us and now we can get details about the actual user from GitHub.
-
-### Retrieving GitHub User Details
-
-We need some unique identifier to tie a user in GitHub to a user in our database. The `access_token` we retrieved allows us to make requests to GitHub's API and return data for the user that the `access_token` is attached to, up to the limits of the `scopes` we requested. GitHub has a unique user `id` that we can use to tie the two together. Let's request that data and dump it to the browser so we can see that the request works.
-
-To keep things straight in our heads, let's call our local user `user` and the GitHub user the `providerUser` (since GitHub is "providing" the OAuth credentials).
-
-Let's make the API call to GitHub's user info endpoint and dump the result to the browser:
-
-```js title="/api/src/functions/oauth/oauth.js"
-const callback = async (event) => {
-  const { code } = event.queryStringParameters
-
-  const response = await fetch(`https://github.com/login/oauth/access_token`, {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      client_id: process.env.GITHUB_OAUTH_CLIENT_ID,
-      client_secret: process.env.GITHUB_OAUTH_CLIENT_SECRET,
-      redirect_uri: process.env.GITHUB_OAUTH_REDIRECT_URI,
-      code,
-    }),
-  })
-
-  const { access_token, scope, error } = JSON.parse(await response.text())
-
-  if (error) {
-    return { statuscode: 400, body: error }
-  }
-
-  // highlight-start
-  try {
-    const providerUser = await getProviderUser(access_token)
-    return {
-      body: JSON.stringify(providerUser),
-    }
-  } catch (e) {
-    return { statuscode: 500, body: e.message }
-  }
-  // highlight-end
-}
-
-// highlight-start
-const getProviderUser = async (token) => {
-  const response = await fetch('https://api.github.com/user', {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  const body = JSON.parse(await response.text())
-
-  return body
-}
-// highlight-end
-```
-
-If all went well you should get a ton of juicy data:
-
-![GitHub user output](https://user-images.githubusercontent.com/300/245909925-c984eeb4-f172-46f6-8102-297b72e26bbd.png)
-
-If something went wrong with the fetch you should get a 500 and the error message output in the body. Try setting the `token` in the `Authorization` header to something like `foobar` to verify:
-
-![GitHub API error](https://user-images.githubusercontent.com/300/245910198-2975e90e-9af1-49b1-a41a-81b9269ff71d.png)
-
-Great, we've got the user data, now what do we do with it?
-
-### Database Updates
-
-We've got a bunch of user data that we can use to create a `User` in our own database. But we'll want to look up that same user in the future when they log back in. We have a couple of ways we can go about doing this:
-
-1. Keep our `User` model as-is and create the user in our local database. When the user logs in again, look them by their email address stored in GitHub. **Cons:** If the user changes their email in GitHub we won't be able to find them the next time they log in, and we would create a new user.
-2. Keep the `User` model as-is but create the user with the same `id` as the one we get from GitHub. **Cons:** If we keep username/password login, we would need to create new users with an `id` that won't ever clash with the ones from GitHub.
-3. Add a column to `User` like `githubId` that stores the GitHub `id` so that we can find the user again the next time they come to login. **Cons:** If we add more providers in the future we'll need to keep adding new `*Id` columns for each.
-4. Create a new one-to-many relationship model that stores the GitHub `id` as a single row, tied to the `userId` of the `User` table, and a new row for each ID of any future providers. **Cons:** More complex data structure.
-
-Option #4 will be the most flexible going forward if we ever decide to add more OAuth providers. And if my experience is any indication, everyone always wants more login providers.
-
-So let's create a new `Identity` table that stores the name of the provider and the ID in that system. Logically it will look like this:
-
-```
-┌───────────┐       ┌────────────┐
-│   User    │       │  Identity  │
-├───────────┤       ├────────────┤
-│ id        │•──┐   │ id         │
-│ name      │   └──<│ userId     │
-│ email     │       │ provider   │
-│ ...       │       │ uid        │
-└───────────┘       │ ...        │
-                    └────────────┘
-```
-
-For now `provider` will always be `github` and the `uid` will be the GitHub's unique ID. `uid` should be a `String`, because although GitHub's ID's are integers, not every OAuth provider is guaranteed to use ints.
-
-#### Prisma Schema Updates
-
-Here's the `Identity` model definition:
-
-```prisma title="/api/db/schema.prisma"
-model Identity {
-  id                  Int       @id @default(autoincrement())
-  provider            String
-  uid                 String
-  userId              Int
-  user                User      @relation(fields: [userId], references: [id])
-  accessToken         String?
-  scope               String?
-  lastLoginAt         DateTime  @default(now())
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-
-  @@unique([provider, uid])
-  @@index(userId)
-}
-```
-
-We're also storing the `accessToken` and `scope` that we got back from the last time we retrived them from GitHub, as well as a timestamp for the last time the user logged in. Storing the `scope` is useful because if you ever change them, you may want to notify users that have the previous scope definition to re-login so the new scopes can be authorized.
-
-:::caution
-
-There's no GraphQL SDL tied to the Identity table, so it is not accessible via our API. But, if you ever did create an SDL and service, be sure that `accessToken` is not in the list of fields exposed publicly!
-
-:::
-
-We'll need to add an `identities` relation to the `User` model, and make the previously required `hashedPassword` and `salt` fields optional (since users may want to _only_ authenticate via GitHub, they'll never get to enter a password):
-
-```prisma title="/api/db/schema.prisma"
+```prisma title="api/db/schema.prisma"
 model User {
-  id                  Int       @id @default(autoincrement())
+  id                  String    @id @default(uuid())
   email               String    @unique
   // highlight-start
   hashedPassword      String?
   salt                String?
-  identities          Identity[]
+  oauthIdentities     OAuth[]
   // highlight-end
-  ...
+  resetToken          String?
+  resetTokenExpiresAt DateTime?
 }
 ```
 
-Save these as a migration and apply them to the database:
+Then migrate:
 
 ```bash
 yarn cedar prisma migrate dev
 ```
 
-Give it a name like "create identity". That's it for the database. Let's return to the `/oauth` function and start working with our new `Identity` model.
+Account lookup always keys on `(provider, providerUserId)` — never on email or username — so `providerUserId` is the field that matters for the unique constraint. `providerUsername`/`providerEmail` are just denormalized copies of what the provider returned, useful for display.
 
-### Creating Users and Identities
+### 3. Register OAuth apps with each provider
 
-On a successful GitHub OAuth login we'll want to first check and see if a user already exists with the provider info. If so, we can go ahead and log them in. If not, we'll need to create it first, then log them in.
+**Google**
 
-Let's add some code that returns the user if found, otherwise it creates the user _and_ returns it, so that the rest of our code doesn't have to care.
+1. In the [Google Cloud Console](https://console.cloud.google.com/apis/credentials), create an OAuth client ID of type "Web application".
+2. Add an authorized redirect URI of `${apiUrl}/auth/oauth/google/callback` (e.g. `http://localhost:8911/auth/oauth/google/callback` in dev).
+3. Copy the client ID and client secret into `.env`:
 
-:::info
-Be sure to import `db` at the top of the file if you haven't already!
-:::
+```bash title=".env"
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+```
 
-```js title="/api/src/functions/oauth/oauth.js"
-// highlight-next-line
-import { db } from 'src/lib/db'
+**GitHub**
 
-const callback = async (event) => {
-  const { code } = event.queryStringParameters
+1. Create an [OAuth app](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app) under your GitHub account or org settings.
+2. Set the authorization callback URL to `${apiUrl}/auth/oauth/github/callback`.
+3. Copy the client ID and client secret into `.env`:
 
-  const response = await fetch(`https://github.com/login/oauth/access_token`, {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      client_id: process.env.GITHUB_OAUTH_CLIENT_ID,
-      client_secret: process.env.GITHUB_OAUTH_CLIENT_SECRET,
-      redirect_uri: process.env.GITHUB_OAUTH_REDIRECT_URI,
-      code,
-    }),
-  })
+```bash title=".env"
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+```
 
-  const { access_token, scope, error } = JSON.parse(await response.text())
+The redirect URI is significant — it must exactly match what's registered with the provider _and_ what's configured in `providers` in your generated `api/src/functions/auth.ts` (see below). Use a distinct OAuth app per environment (dev, staging, production) since each has a different callback host.
 
-  if (error) {
-    return { statuscode: 400, body: error }
-  }
+### 4. Review the generated auth function
 
-  try {
-    const providerUser = await getProviderUser(access_token)
-    // highlight-start
-    const user = await getUser({ providerUser, accessToken: access_token, scope })
-    return {
-      body: JSON.stringify(user)
-    }
-    // highlight-end
-  } catch (e) {
-    return { statuscode: 500, body: e.message }
-  }
-}
+Setup writes (or updates) `api/src/functions/auth.ts` so that any request under `/auth/oauth` is routed to an `OAuthHandler` instead of the regular `DbAuthHandler`:
 
-// highlight-start
-const getUser = async ({ providerUser, accessToken, scope }) => {
-  const { user, identity } = await findOrCreateUser(providerUser)
+```ts title="api/src/functions/auth.ts"
+import {
+  OAuthHandler,
+  googleProvider,
+  githubProvider,
+} from '@cedarjs/auth-dbauth-oauth'
 
-  await db.identity.update({
-    where: { id: identity.id },
-    data: { accessToken, scope, lastLoginAt: new Date() },
-  })
+const OAUTH_BASE_PATH = '/auth/oauth'
 
-  return user
-}
-// highlight-end
-
-// highlight-start
-const findOrCreateUser = async (providerUser) => {
-  const identity = await db.identity.findFirst({
-    where: { provider: 'github', uid: providerUser.id.toString() }
-  })
-
-  if (identity) {
-    // identity exists, return the user
-    const user = await db.user.findUnique({ where: { id: identity.userId }})
-    return { user, identity }
-  }
-
-  // identity not found, need to create it and the user
-  return await db.$transaction(async (tx) => {
-    const user = await tx.user.create({
-      data: {
-        email: providerUser.email,
-        fullName: providerUser.name,
+export const handler = async (event, context) => {
+  if (event.path?.includes(OAUTH_BASE_PATH)) {
+    const oauthHandler = new OAuthHandler(event, context, {
+      db,
+      authModelAccessor: 'user',
+      oauthModelAccessor: 'oAuth',
+      authFields: {
+        id: 'id',
+        username: 'email',
+        hashedPassword: 'hashedPassword',
       },
-    }
-
-    const identity = await tx.identity.create({
-      data: {
-        userId: user.id,
-        provider: 'github',
-        uid: providerUser.id.toString()
-      }
+      basePath: OAUTH_BASE_PATH,
+      providers: {
+        google: googleProvider({
+          clientId: process.env.GOOGLE_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          redirectUri: `${apiUrl}/auth/oauth/google/callback`,
+        }),
+        github: githubProvider({
+          clientId: process.env.GITHUB_CLIENT_ID,
+          clientSecret: process.env.GITHUB_CLIENT_SECRET,
+          redirectUri: `${apiUrl}/auth/oauth/github/callback`,
+        }),
+      },
+      redirects: {
+        afterLogin: '/',
+        error: '/login',
+      },
+      signup: {
+        handler: ({ profile }) => {
+          return db.user.create({
+            data: {
+              email: profile.email ?? `${profile.providerUserId}@example.com`,
+            },
+          })
+        },
+      },
+      sessionExpires: 60 * 60 * 24 * 365 * 10,
+      cookie: { attributes: cookieAttributes, name: cookieName },
     })
 
-    return { user, identity }
-  })
-}
-// highlight-end
-```
-
-Let's break that down.
-
-```js
-const providerUser = await getProviderUser(access_token)
-// highlight-next-line
-const user = await getUser({ providerUser, accessToken: access_token, scope })
-return {
-  body: JSON.stringify(user),
-}
-```
-
-After getting the `providerUser` we're going to find our local `user`, and then dump the user to the browser to verify.
-
-```js
-const getUser = async ({ providerUser, accessToken, scope }) => {
-  const { user, identity } = await getOrCreateUser(providerUser)
-
-  await db.identity.update({
-    where: { id: identity.id },
-    data: { accessToken, scope, lastLoginAt: new Date() },
-  })
-
-  return user
-}
-```
-
-The `getUser()` function is going to return the user, whether it had to be created or not. Either way, the attached identity is updated with the current value for the `access_token` (note the case change, try not to get confused!), as well as the `scope` and `lastLoginAt` timestamp. `findOrCreateUser()` is going to do the heavy lifting:
-
-```js
-const findOrCreateUser = async (providerUser) => {
-  const identity = await db.identity.findFirst({
-    where: { provider: 'github', uid: providerUser.id.toString() },
-  })
-
-  if (identity) {
-    const user = await db.user.findUnique({ where: { id: identity.userId } })
-    return { user, identity }
+    return await oauthHandler.invoke()
   }
 
-  // ...
+  // ...regular DbAuthHandler setup below
 }
 ```
 
-If the user already exists, great! Return it, and the attached `identity` so that we can update the details. If the user doesn't exist already:
+The only file you're expected to edit by hand is that `signup.handler` — decide what to do when the provider doesn't return an email (some GitHub accounts keep theirs private), and add any other user fields you want to populate on first sign-in. Everything else — routing, redirect URIs, provider config — is generated so that re-running setup with a different `--oauth` list stays idempotent instead of requiring manual surgery.
 
-```js
-const findOrCreateUser = async (providerUser) => {
-  // ...
+Update `apiUrl` at the top of the file (or however you already derive your deployed api URL) once you know your production host — it's used to build every provider's redirect URI.
 
-  return await db.$transaction(async (tx) => {
-    const user = await tx.user.create({
-      data: {
-        email: providerUser.email,
-        fullName: providerUser.name,
-      },
-    }
+### 5. Generate login/signup pages (optional)
 
-    const identity = await tx.identity.create({
-      data: {
-        userId: user.id,
-        provider: 'github',
-        uid: providerUser.id.toString()
-      }
-    })
-
-    return { user, identity }
-  })
-}
-```
-
-We create the `user` and the `identity` records inside a transaction so that if something goes wrong, both records fail to create. The error would bubble up to the try/catch inside `callback()`. (The Cedar test project has a required `fullName` field that we fill with the `name` attribute from GitHub.)
-
-:::info
-Don't forget the `toString()` calls whenever we read or write the `providerUser.id` since we made the `uid` of type `String`.
-:::
-
-If everything worked then on clicking **Login with GitHub** we should now see a dump of the actual user from our local database:
-
-![User details](https://user-images.githubusercontent.com/300/245922971-caaeb3ed-9231-4edf-aac5-9ea76b488824.png)
-
-You can take a look in the database and verify that the User and Identity were created. Start up the [Prisma Studio](https://www.prisma.io/studio) (which is already included with Cedar):
+If you don't already have login/signup pages, or want to regenerate them with OAuth buttons included:
 
 ```bash
-yarn cedar prisma studio
+yarn cedar generate dbAuth
 ```
 
-![Inspecting the Identity record](https://user-images.githubusercontent.com/300/245923393-d61233cc-52d2-4568-858e-9059dfe31bfc.png)
+The generator detects that `@cedarjs/auth-dbauth-oauth` is installed and includes "Continue with Google" / "Continue with GitHub" buttons automatically. If you already have hand-written pages, see [Generated pages and the web client API](#generated-pages-and-the-web-client-api) below to add the buttons yourself.
 
-Great! But, if you go back to your homepage, you'll find that you're not actually logged in. That's because we're not setting the cookie that dbAuth expects to see to consider you logged in. Let's do that, and then our login will be complete!
+## How the flows work
 
-### Setting the Login Cookie
+Every provider has to support four distinct account flows, and the whole point of separating them is that a user can never accidentally create a duplicate account:
 
-In order to let dbAuth do the work of actually considering us logged in (and handling stuff like reauthentication and logout) we'll just set the same cookie that the username/password login system would have if the user logged in with a username and password.
+- **`login`** — the `(provider, providerUserId)` identity must already exist. If nobody has linked this provider identity to an account yet, the flow fails with `unknown_identity` rather than silently creating a new user.
+- **`signup`** — creates a new user and a new identity row. If the provider identity is already linked, this behaves like a login instead. If the provider's email matches an existing account's `username` field, it fails with `email_in_use` — the fix is for the user to log in with a password (or another linked provider) and link this provider from there, not to create a second account.
+- **`link`** — attaches a provider identity to the account of the currently logged-in dbAuth user. Requires a valid session cookie; fails with `not_authenticated` otherwise. If the identity is already linked to a _different_ account, it fails with `identity_in_use`.
+- **`unlink`** — removes a provider identity from the current user's account. Unlike the other three, this is a same-origin JSON `POST`, not a redirect round trip. It refuses to remove the last identity from an account that has no password set (`cannot_unlink_last_identity`) — otherwise the account would become permanently inaccessible.
 
-Setting a cookie in the browser is a matter of returning a `Set-Cookie` header in the response from the server. We've been responding with a dump of the user object, but now we'll do a real return, including the cookie and a `Location` header to redirect us back to the site.
+`login`, `signup`, and `link` are started by navigating the full page to the provider's `authorize` URL (`?flow=login|signup|link`, default `login`) and end with a `302` redirect back into your app — either to `redirects.afterLogin` / `afterSignup` / `afterLink` on success, or to `redirects.error` with `?error=<code>&provider=<name>` appended on failure. `unlink` returns `{ ok: true }` or `{ error: <code> }` directly.
 
-Don't forget the new `CryptoJS` import at the top!
+The full set of error codes that can appear on the error redirect (or in the `unlink` JSON body):
 
-```js title="/api/src/functions/oauth/oauth.js"
-// highlight-next-line
-import CryptoJS from 'crypto-js'
-import { cookieName } from '@cedarjs/auth-dbauth-api'
-import { cookieName as cookie } from 'src/lib/auth'
+| Code                          | Meaning                                                                                                                                                       |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `unknown_provider`            | The `{provider}` segment in the URL isn't configured in `providers`.                                                                                          |
+| `invalid_state`               | The OAuth transaction cookie is missing, expired, or its `state` doesn't match the callback — a login-CSRF or replay attempt, or the user just took too long. |
+| `provider_error`              | The provider returned an `error` parameter to the callback, or the strategy threw during the callback.                                                        |
+| `unknown_identity`            | `login` flow, but no account is linked to this provider identity yet.                                                                                         |
+| `email_in_use`                | `signup` flow, but the provider's email matches an existing account.                                                                                          |
+| `identity_in_use`             | `link` flow, but this provider identity is already linked to a different account.                                                                             |
+| `not_authenticated`           | `link` or `unlink` flow, but there's no valid dbAuth session.                                                                                                 |
+| `flow_not_enabled`            | `signup` flow, but `signup.enabled` is `false`.                                                                                                               |
+| `cannot_unlink_last_identity` | `unlink` flow, but this is the account's last identity and it has no password.                                                                                |
+| `server_error`                | Anything unexpected — the real error is logged server-side, never sent to the client.                                                                         |
 
-const callback = async (event) => {
-  const { code } = event.queryStringParameters
+Whatever a strategy throws during `handleCallback` is caught, logged server-side, and turned into `provider_error` (or `server_error` for a non-OAuth exception) — exception text never reaches the browser.
 
-  const response = await fetch(`https://github.com/login/oauth/access_token`, {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
+## Generated pages and the web client API
+
+The generated login/signup pages import their OAuth helpers from `@cedarjs/auth-dbauth-web/oauth`:
+
+```tsx title="web/src/pages/LoginPage/LoginPage.tsx"
+import { getOAuthUrl, getOAuthError } from '@cedarjs/auth-dbauth-web/oauth'
+
+// Surface an error the OAuth redirect sent back, e.g. after the user
+// cancels the provider's consent screen.
+useEffect(() => {
+  const oauthError = getOAuthError(window.location.search)
+  if (oauthError) {
+    toast.error('Could not log in: ' + oauthError)
+  }
+}, [])
+```
+
+```tsx
+<a href={getOAuthUrl('google', { flow: 'login' })} className="rw-button rw-button-blue">
+  Continue with Google
+</a>
+<a href={getOAuthUrl('github', { flow: 'login' })} className="rw-button rw-button-blue">
+  Continue with GitHub
+</a>
+```
+
+The signup page uses the same buttons with `{ flow: 'signup' }`. These have to be real `<a>` tags navigated as a full page load — the browser needs to actually leave for the provider — not a `fetch`/XHR call.
+
+The web client exports three functions:
+
+- **`getOAuthUrl(provider, options?)`** — builds the absolute `authorize` URL for a provider. `options.flow` defaults to `'login'`; pass `'signup'` or `'link'` as needed.
+- **`unlinkOAuthProvider(provider, options?)`** — `POST`s to the `unlink` route with credentials included, and resolves to `{ ok: true }` or `{ error: <code> }`.
+- **`getOAuthError(searchParams)`** — extracts and narrows the `?error=<code>` query param from `window.location.search` (or a `URLSearchParams`) after a failed redirect; returns `null` if there's no recognized error code present.
+
+## Using any OIDC-compliant provider
+
+Google and GitHub ship as complete strategies, but every OpenID Connect-compliant provider — Keycloak, Auth0, GitLab, Azure AD, and more — can be added with nothing but an issuer URL, using `createOidcStrategy` from `@cedarjs/auth-dbauth-oauth`. It runs OIDC discovery, the authorization-code + PKCE + nonce flow, and id_token/JWKS verification for you.
+
+Here's Keycloak as an example — add it to the `providers` map in your generated `auth.ts`:
+
+```ts title="api/src/functions/auth.ts"
+import { OAuthHandler, createOidcStrategy } from '@cedarjs/auth-dbauth-oauth'
+
+const KEYCLOAK_PRESET = {
+  name: 'Keycloak',
+  issuer: 'https://keycloak.example.com/realms/my-realm',
+  scope: 'openid email profile',
+}
+
+// ...inside the `providers` map passed to `new OAuthHandler(event, context, { ... })`:
+providers: {
+  keycloak: createOidcStrategy(KEYCLOAK_PRESET, {
+    clientId: process.env.KEYCLOAK_CLIENT_ID,
+    clientSecret: process.env.KEYCLOAK_CLIENT_SECRET,
+    redirectUri: `${apiUrl}/auth/oauth/keycloak/callback`,
+  }),
+},
+```
+
+That's it — the issuer's `/.well-known/openid-configuration` document supplies the authorization and token endpoints and the JWKS Cedar needs to verify the id_token, and the resulting `providerUserId` is the id_token's validated `sub` claim. Register `${apiUrl}/auth/oauth/keycloak/callback` as the redirect URI in the provider's admin console, add a login/signup button with `getOAuthUrl('keycloak', { flow: 'login' })`, and it behaves exactly like Google or GitHub — same flows, same error codes, same session issuance.
+
+`createOidcStrategy` takes a `ProviderPreset` (`{ name, issuer, scope }`) and per-app `credentials` (`{ clientId, clientSecret, redirectUri, scope? }`); the `scope` on `credentials` overrides the preset's default when set.
+
+## Writing a custom strategy
+
+Not every provider speaks OIDC. GitHub's own standard OAuth flow, for instance, issues no id_token — that's why it needs a real (if thin) built-in strategy rather than the OIDC preset path. Anything with the same shape — an OAuth2 authorization-code flow plus a separate userinfo endpoint, with quirky guarantees about what fields are present — is served by writing a small object against the public `OAuthStrategy` interface:
+
+```ts
+interface OAuthStrategy {
+  name: string
+  redirectUri: string
+  usesOidc?: boolean
+  getAuthorizationUrl(ctx: OAuthAuthorizationContext): Promise<URL> | URL
+  handleCallback(ctx: OAuthCallbackContext): Promise<OAuthUserInfo>
+}
+```
+
+`getAuthorizationUrl` builds the URL to redirect the browser to; the handler already generated `state`, PKCE `codeVerifier`/`codeChallenge`, and (for OIDC strategies) `nonce` — your job is just folding them into the URL your provider expects. `handleCallback` completes the token exchange and returns an `OAuthUserInfo` (`{ providerUserId, email?, emailVerified?, username?, raw? }`); throwing aborts the flow with `provider_error`.
+
+Here's a worked example for Facebook — the same OAuth2-plus-userinfo shape as GitHub, using [`oauth4webapi`](https://github.com/panva/oauth4webapi) directly the way Cedar's own strategies do:
+
+```ts
+import { OAuthHandler } from '@cedarjs/auth-dbauth-oauth'
+import type {
+  OAuthAuthorizationContext,
+  OAuthCallbackContext,
+  OAuthStrategy,
+  OAuthUserInfo,
+} from '@cedarjs/auth-dbauth-oauth'
+import type { AuthorizationServer, Client } from 'oauth4webapi'
+
+const AUTHORIZATION_ENDPOINT = 'https://www.facebook.com/v19.0/dialog/oauth'
+const TOKEN_ENDPOINT = 'https://graph.facebook.com/v19.0/oauth/access_token'
+const PROFILE_ENDPOINT = 'https://graph.facebook.com/v19.0/me'
+
+function facebookProvider(credentials: {
+  clientId: string
+  clientSecret: string
+  redirectUri: string
+}): OAuthStrategy {
+  return {
+    name: 'Facebook',
+    redirectUri: credentials.redirectUri,
+    usesOidc: false,
+
+    getAuthorizationUrl(ctx: OAuthAuthorizationContext): URL {
+      const url = new URL(AUTHORIZATION_ENDPOINT)
+      url.searchParams.set('client_id', credentials.clientId)
+      url.searchParams.set('redirect_uri', ctx.redirectUri)
+      url.searchParams.set('scope', 'email public_profile')
+      url.searchParams.set('state', ctx.state)
+      // PKCE support on Facebook's OAuth2 flow is inconsistent, but sending
+      // it is harmless when the provider ignores it.
+      url.searchParams.set('code_challenge', ctx.codeChallenge)
+      url.searchParams.set('code_challenge_method', 'S256')
+      return url
     },
-    body: JSON.stringify({
-      client_id: process.env.GITHUB_OAUTH_CLIENT_ID,
-      client_secret: process.env.GITHUB_OAUTH_CLIENT_SECRET,
-      redirect_uri: process.env.GITHUB_OAUTH_REDIRECT_URI,
-      code,
-    }),
-  })
 
-  const { access_token, scope, error } = JSON.parse(await response.text())
+    async handleCallback(ctx: OAuthCallbackContext): Promise<OAuthUserInfo> {
+      const oauth = await import('oauth4webapi')
 
-  if (error) {
-    return { statuscode: 400, body: error }
-  }
-
-  try {
-    const providerUser = await getProviderUser(access_token)
-    const user = await getUser({
-      providerUser,
-      accessToken: access_token,
-      scope,
-    })
-    // highlight-start
-    const cookie = secureCookie(user)
-
-    return {
-      statusCode: 302,
-      headers: {
-        'Set-Cookie': cookie,
-        Location: '/',
-      },
-    }
-    // highlight-end
-  } catch (e) {
-    return { statuscode: 500, body: e.message }
-  }
-}
-
-// highlight-start
-const secureCookie = (user) => {
-  const expires = new Date()
-  expires.setFullYear(expires.getFullYear() + 1)
-
-  const cookieAttrs = [
-    `Expires=${expires.toUTCString()}`,
-    'HttpOnly=true',
-    'Path=/',
-    'SameSite=Lax',
-    `Secure=${process.env.NODE_ENV !== 'development'}`,
-  ]
-  const data = JSON.stringify({ id: user.id })
-
-  const encrypted = CryptoJS.AES.encrypt(
-    data,
-    process.env.SESSION_SECRET
-  ).toString()
-  //if you're using dbAuth v7.6.2, you have to change the cookie name. You can comment out the line below and make the next line as comment.
-  //return [`${cookieName(cookie)}=${encrypted}`, ...cookieAttrs].join('; ')
-  return [`session=${encrypted}`, ...cookieAttrs].join('; ')
-}
-// highlight-end
-```
-
-`secureCookie()` takes care of creating the cookie that matches the one set by dbAuth. The attributes that we're setting are actually a copy of the ones set in the `authHandler` in `/api/src/functions/auth.js` and you could remove some duplication between the two by exporting the `cookie` object from `auth.js` and then importing it and using it here. We've set the cookie to expire in a year because, let's admit it, no one likes having to log back in again.
-
-At the end of `callback()` we set the `Set-Cookie` and `Location` headers to send the browser back to the homepage of our app.
-
-Try it out, and as long as you have an indication on your site that a user is logged in, you should see it! In the case of the test project, you'll see "Log Out" at the right side of the top nav instead of "Log In". Try logging out and then back again to test the whole flow from scratch.
-
-## The Complete `/oauth` Function
-
-Here's the `oauth` function in its entirety:
-
-```jsx title="/api/src/functions/oauth/oauth.js"
-import CryptoJS from 'crypto-js'
-
-import { db } from 'src/lib/db'
-
-export const handler = async (event, _context) => {
-  switch (event.path) {
-    case '/oauth/callback':
-      return await callback(event)
-    default:
-      // Whatever this is, it's not correct, so return "Not Found"
-      return {
-        statusCode: 404,
+      const as: AuthorizationServer = {
+        issuer: 'https://www.facebook.com',
+        token_endpoint: TOKEN_ENDPOINT,
       }
-  }
-}
+      const client: Client = { client_id: credentials.clientId }
+      const clientAuth = oauth.ClientSecretPost(credentials.clientSecret)
 
-const callback = async (event) => {
-  const { code } = event.queryStringParameters
+      const params = oauth.validateAuthResponse(
+        as,
+        client,
+        new URLSearchParams({ ...ctx.query, ...ctx.form }),
+        ctx.state
+      )
 
-  const response = await fetch(`https://github.com/login/oauth/access_token`, {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
+      const response = await oauth.authorizationCodeGrantRequest(
+        as,
+        client,
+        clientAuth,
+        params,
+        ctx.redirectUri,
+        ctx.codeVerifier
+      )
+
+      const result = await oauth.processAuthorizationCodeResponse(
+        as,
+        client,
+        response,
+        { requireIdToken: false }
+      )
+
+      const profileResponse = await fetch(
+        `${PROFILE_ENDPOINT}?fields=id,name,email&access_token=${result.access_token}`
+      )
+      const profile = (await profileResponse.json()) as {
+        id: string
+        name?: string
+        email?: string
+      }
+
+      return {
+        // Facebook's numeric `id` is the only stable field — never key
+        // lookup on `email`, which the Graph API omits entirely (not
+        // `email: null`) whenever it wasn't granted or isn't on file.
+        providerUserId: profile.id,
+        email: profile.email,
+        username: profile.name,
+        raw: profile,
+      }
     },
-    body: JSON.stringify({
-      client_id: process.env.GITHUB_OAUTH_CLIENT_ID,
-      client_secret: process.env.GITHUB_OAUTH_CLIENT_SECRET,
-      redirect_uri: process.env.GITHUB_OAUTH_REDIRECT_URI,
-      code,
-    }),
-  })
-
-  const { access_token, scope, error } = JSON.parse(await response.text())
-
-  if (error) {
-    return { statuscode: 400, body: error }
   }
-
-  try {
-    const providerUser = await getProviderUser(access_token)
-    const user = await getUser({
-      providerUser,
-      accessToken: access_token,
-      scope,
-    })
-    const cookie = secureCookie(user)
-
-    return {
-      statusCode: 302,
-      headers: {
-        'Set-Cookie': cookie,
-        Location: '/',
-      },
-    }
-  } catch (e) {
-    return { statuscode: 500, body: e.message }
-  }
-}
-
-const secureCookie = (user) => {
-  const expires = new Date()
-  expires.setFullYear(expires.getFullYear() + 1)
-
-  const cookieAttrs = [
-    `Expires=${expires.toUTCString()}`,
-    'HttpOnly=true',
-    'Path=/',
-    'SameSite=Lax',
-    `Secure=${process.env.NODE_ENV !== 'development'}`,
-  ]
-  const data = JSON.stringify({ id: user.id })
-
-  const encrypted = CryptoJS.AES.encrypt(
-    data,
-    process.env.SESSION_SECRET
-  ).toString()
-
-  return [`session=${encrypted}`, ...cookieAttrs].join('; ')
-}
-
-const getProviderUser = async (token) => {
-  const response = await fetch('https://api.github.com/user', {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  const body = JSON.parse(await response.text())
-
-  return body
-}
-
-const getUser = async ({ providerUser, accessToken, scope }) => {
-  const { user, identity } = await findOrCreateUser(providerUser)
-
-  await db.identity.update({
-    where: { id: identity.id },
-    data: { accessToken, scope, lastLoginAt: new Date() },
-  })
-
-  return user
-}
-
-const findOrCreateUser = async (providerUser) => {
-  const identity = await db.identity.findFirst({
-    where: { provider: 'github', uid: providerUser.id.toString() },
-  })
-
-  if (identity) {
-    // identity exists, return the user
-    const user = await db.user.findUnique({ where: { id: identity.userId } })
-    return { user, identity }
-  }
-
-  // identity not found, need to create it and the user
-  return await db.$transaction(async (tx) => {
-    const user = await tx.user.create({
-      data: {
-        email: providerUser.email,
-        fullName: providerUser.name,
-      },
-    })
-
-    const identity = await tx.identity.create({
-      data: {
-        userId: user.id,
-        provider: 'github',
-        uid: providerUser.id.toString(),
-      },
-    })
-
-    return { user, identity }
-  })
 }
 ```
 
-## Enhancements
+Add it to `providers` the same way as any built-in strategy: `facebook: facebookProvider({ clientId: ..., clientSecret: ..., redirectUri: \`${apiUrl}/auth/oauth/facebook/callback\` })`.
 
-This is barebones implementation of a single OAuth provider. What can we do to make it better?
+### Apple-shaped providers
 
-### More Providers
+Apple's Sign in with Apple needs more than the Facebook example above, and it's the acceptance test for the `OAuthStrategy` interface — every part of it is implementable purely through public fields:
 
-We hardcoded "github" as the provider in a couple of places, as well as hardcoding GitHub's API endpoint for fetching user data. That obviously limits this implementation to only support GitHub.
+- **A dynamically computed client secret.** Apple's `client_secret` is an ES256-signed JWT with a short expiry that has to be minted per token request, not read out of a static config value. Compute it inside `handleCallback` (with [`jose`](https://github.com/panva/jose), for example) and pass it to `oauth.ClientSecretPost(...)` there — nothing about the interface assumes a static secret.
+- **`form_post` callbacks.** Apple POSTs the callback as `application/x-www-form-urlencoded` rather than a `GET` with query params, because it defaults to `response_mode=form_post` whenever scopes are requested. `OAuthCallbackContext.form` carries the parsed form body (`OAuthCallbackContext.query` is empty on a `form_post` callback); read whichever is populated.
+- **The one-time `user` form field.** Apple sends the user's name (and sometimes email) as a JSON string in a `user` form field, but only on the very first authorization — never again on subsequent logins, and never in the id_token itself. Read it from `ctx.form.user` in `handleCallback` and treat it as best-effort profile enrichment, since it won't be there on a later login.
+- **`SameSite=None` on the session cookie**, since Apple's callback arrives as a cross-site `POST`. Only apps that enable an Apple-shaped provider need this — don't set it globally for a provider that doesn't require it.
 
-A more flexible version could include the provider as part of the callback URL, and then our code can see that and choose which provider to set and how to get user details. Maybe the OAuth redirect is `/oauth/github/callback` and `/oauth/twitter/callback`. Then parse that out and delegate to a different function altogether, or implement each provider's specific info into separate files and `import` them into the `/oauth` function, invoking each as needed.
+## SSR / middleware wiring
 
-### Changing User Details
+Apps using `@cedarjs/auth-dbauth-middleware` (SSR/RSC apps that authenticate through middleware instead of the plain function handler) opt in by also passing an `oauthHandler` to `initDbAuthMiddleware`, built the same way `dbAuthHandler` is — by wrapping `OAuthHandler`'s `invoke()`:
 
-Right now we just copy the user details from GitHub right into our new User object. Maybe we want to give the user a chance to update those details first, or add additional information before saving to the database. One solution could be to create the `Identity` record, but redirect to your real Signup page with the info from GitHub (and the `accessToken`) and prefill the signup fields, giving the user a chance to change or enhance them, adding the `accessToken` to a hidden field. Then when the user submits that form, if the `accessToken` is part of the form, get the user details from GitHub again (so we can get their GitHub `id`) and then create the `Identity` and `User` record as before.
+```ts title="web/src/entry.server.tsx"
+import { OAuthHandler } from '@cedarjs/auth-dbauth-oauth'
+import initDbAuthMiddleware from '@cedarjs/auth-dbauth-middleware'
 
-### Better Error Handling
+import { handler as dbAuthHandler } from '$api/src/functions/auth'
+import { oauthOptions } from '$api/src/lib/auth'
 
-Right now if an error occurs in the OAuth flow, the browser just stays on the `/oauth/callback` function and sees a plain text error message. A better experience would be to redirect the user back to the login page, with the error message in a query string variable, something like `http://localhost:8910/login?error=Application+not+authorized` Then in the LoginPage, add a `useParams()` to pull out the query variables, and show a toast message if an error is present:
-
-```jsx
-import { useParams } from '@cedarjs/router'
-import { toast, Toaster } from '@cedarjs/web/toast'
-
-const LoginPage = () => {
-  const params = useParams()
-
-  useEffect(() => {
-    if (params.error) {
-      toast.error(params.error)
-    }
-  }, [params.error])
-
-  return (
-    <>
-      <Toaster />
-      // ...
-    </>
-  )
-}
+const authMw = initDbAuthMiddleware({
+  dbAuthHandler,
+  getCurrentUser,
+  oauthHandler: (req, context) =>
+    new OAuthHandler(req, context, oauthOptions).invoke(),
+  // oauthUrl? optional, defaults to '/auth/oauth'
+})
 ```
+
+Requests under `oauthUrl` (`authorize`/`callback`/`unlink`) are dispatched to `oauthHandler` instead of the normal dbAuth session-validation path — its redirects, `Set-Cookie` headers, and JSON bodies carry through to the middleware response unchanged. Omitting `oauthHandler` disables OAuth routing entirely, exactly as if the option didn't exist.
+
+## Security notes
+
+- **PKCE, `state`, and (for OIDC strategies) `nonce` are generated and validated for every provider**, not just the OIDC ones — `state` is checked against a short-lived, `HttpOnly` transaction cookie on every callback, closing the login-CSRF hole a hand-rolled OAuth integration is most likely to miss.
+- **Provider access/refresh tokens are never stored.** The `OAuth` identity table only ever holds `provider`, `providerUserId`, `providerUsername`, and `providerEmail` — once a strategy's `handleCallback` returns the canonical profile, the token it used to fetch it is discarded. This also means the built-in strategies give you authentication only: your app can't call provider APIs on the user's behalf later (say, listing their GitHub repos), because there's no stored token to do it with. If you genuinely need delegated API access, write a [custom strategy](#writing-a-custom-strategy) — it performs the token exchange itself inside `handleCallback`, so it can persist the tokens on its own terms. Storing provider tokens turns your database into a secrets store for other people's accounts, so encrypt them and treat them like passwords.
+- **Account lookup always keys on `(provider, providerUserId)`, never on email.** A provider's own numeric/opaque user id is immutable; email addresses (and, for GitHub, usernames) can change or be reused.
+- id_token verification (signature, `iss`, `aud`, `exp`, and — when supplied — `nonce`) runs through `oauth4webapi`'s audited implementation for every OIDC-based strategy, including `createOidcStrategy` and Google.

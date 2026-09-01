@@ -769,3 +769,108 @@ const { isAuthenticated, client, logIn } = useAuth()
 - `client.isEnabled()`: returns a boolean for whether the user currently has a `webAuthn` cookie, which means this device has been registered already and can be used for login
 - `client.register()`: returns a Promise which gets options from the server, presents the prompt to scan your fingerprint/face, and then sends the result up to the server. It will either resolve successfully with an object `{ verified: true }` or throw an error. This function is used when the user has not registered this device yet (`client.isEnabled()` returns `false`).
 - `client.authenticate()`: returns a Promise which gets options from the server, presents the prompt to scan the user's fingerprint/face, and then sends the result up to the server. It will either resolve successfully with an object `{ verified: true }` or throw an error. This should be used when the user has already registered this device (`client.isEnabled()` returns `true`)
+
+## OAuth
+
+dbAuth ships built-in OAuth login (Google, GitHub, and any OpenID Connect provider) as an opt-in feature, in the `@cedarjs/auth-dbauth-oauth` package. It's invisible to apps that don't enable it, and lives outside `DbAuthHandler`'s `login`/`signup`/etc dispatch table entirely — OAuth is a redirect flow, not a JSON API call, so it gets its own routes under `/auth/oauth`.
+
+This section is a reference for the shape of the feature. For a full setup walkthrough — provider app registration, the Prisma schema change, generated login/signup buttons, an OIDC example, and a worked custom-strategy example — see the [OAuth how-to](../how-to/oauth.md).
+
+### Setup
+
+```bash
+yarn cedar setup auth dbAuth --oauth google,github
+```
+
+`--oauth` (alias `-o`) takes a comma-separated list of providers. Cedar ships built-in support for `google` and `github`; any other provider is served by a [custom strategy](#oauth-custom-strategies) or, if it's OIDC-compliant, by `createOidcStrategy` and an issuer URL — no CLI flag needed for those, since they're configured directly in code. Setup adds an `OAuth` identity model to your Prisma schema, makes `hashedPassword`/`salt` on `User` optional, stubs the provider env vars into `.env`, and generates a variant of `api/src/functions/auth.ts` that dispatches `/auth/oauth` requests to an `OAuthHandler`. Re-running setup with a different `--oauth` list is idempotent — it doesn't require manual surgery on `auth.ts`.
+
+### `OAuthHandler` and `OAuthHandlerOptions`
+
+`OAuthHandler` wraps the same session-issuance path `DbAuthHandler` uses, so a successful OAuth login sets the identical session cookie a username/password login would. It's constructed per-request and accepts both a Lambda-style event and a Fetch `Request`, so it works from a function handler and from `@cedarjs/auth-dbauth-middleware`:
+
+```ts
+import { OAuthHandler } from '@cedarjs/auth-dbauth-oauth'
+
+const oauthHandler = new OAuthHandler(event, context, {
+  db,
+  authModelAccessor: 'user',
+  oauthModelAccessor: 'oAuth',
+  authFields: { id: 'id', username: 'email', hashedPassword: 'hashedPassword' },
+  providers: {/* provider key -> OAuthStrategy */},
+  redirects: { afterLogin: '/', error: '/login' },
+  signup: {
+    handler: ({ profile }) =>
+      db.user.create({ data: { email: profile.email } }),
+  },
+  sessionExpires: 60 * 60 * 24 * 365 * 10,
+  cookie: { attributes: cookieAttributes, name: cookieName },
+})
+
+return await oauthHandler.invoke()
+```
+
+`OAuthHandlerOptions` fields:
+
+| Option                | Description                                                                                                                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `db`                  | Prisma client (or a compatible mock in tests).                                                                                                                                             |
+| `authModelAccessor`   | Property on `db` for the user table, e.g. `'user'` for `db.user`.                                                                                                                          |
+| `oauthModelAccessor`  | Property on `db` for the identity table, e.g. `'oAuth'` for `db.oAuth`.                                                                                                                    |
+| `oauthFields?`        | Field name mapping on the identity model. Unset fields default to `provider`, `providerUserId`, `userId`, `providerUsername`, `providerEmail`.                                             |
+| `authFields`          | `{ id, username, hashedPassword }` — matches the same fields used by `DbAuthHandler`. `hashedPassword` lets the `unlink` guard tell a password-protected account from a provider-only one. |
+| `allowedUserFields?`  | Fields allowed back to the client in the session cookie payload. Defaults to `['id', 'email']`.                                                                                            |
+| `providers`           | Configured providers, keyed by the path segment used in `/auth/oauth/{key}/...`.                                                                                                           |
+| `basePath?`           | Defaults to `/auth/oauth`.                                                                                                                                                                 |
+| `redirects`           | `{ afterLogin, afterSignup?, afterLink?, error }`. `afterSignup`/`afterLink` default to `afterLogin`. The error redirect gets `?error=<code>&provider=<name>` appended.                    |
+| `signup`              | `{ enabled?, handler }` or `{ enabled: false }` to disable the signup flow entirely.                                                                                                       |
+| `sessionExpires`      | How long the minted session lasts, in seconds. Mirrors `DbAuthHandlerOptions['login'].expires`.                                                                                            |
+| `transactionExpires?` | How long the OAuth transaction cookie (carrying `state`/PKCE/`nonce`) is valid for, in seconds. Defaults to 600 (10 minutes).                                                              |
+| `cookie?`             | Cookie config applied to both the session cookie and the transaction cookie.                                                                                                               |
+| `cors?`               | CORS config, same shape as `DbAuthHandlerOptions.cors`.                                                                                                                                    |
+
+### Routes
+
+Every route lives under `basePath` (`/auth/oauth` by default), keyed by provider:
+
+| Route                                                      | Method          | Behavior                                                                                                                                                                                                           |
+| ---------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `{basePath}/{provider}/authorize?flow=login\|signup\|link` | `GET`           | Redirects to the provider's authorization endpoint. `flow` defaults to `login`.                                                                                                                                    |
+| `{basePath}/{provider}/callback`                           | `GET` or `POST` | The provider's registered redirect URI. `POST` supports `form_post` callbacks (Apple-shaped providers). Redirects to `redirects.afterLogin`/`afterSignup`/`afterLink` on success, or `redirects.error` on failure. |
+| `{basePath}/{provider}/unlink`                             | `POST`          | Removes a linked identity from the current session's user. Requires a valid session cookie. Returns JSON, not a redirect.                                                                                          |
+
+The web client (`@cedarjs/auth-dbauth-web/oauth`) builds these URLs for you — see the [how-to](../how-to/oauth.md#generated-pages-and-the-web-client-api) for `getOAuthUrl`, `unlinkOAuthProvider`, and `getOAuthError`.
+
+### Error codes
+
+Every `OAuthErrorCode` that can appear on the error redirect's `?error=` param, or in the `unlink` route's JSON body:
+
+`unknown_provider`, `invalid_state`, `provider_error`, `unknown_identity`, `email_in_use`, `identity_in_use`, `not_authenticated`, `flow_not_enabled`, `cannot_unlink_last_identity`, `server_error`.
+
+Exception text from a strategy or an unexpected error is never sent to the client — only one of these stable codes is. See the [how-to's error table](../how-to/oauth.md#how-the-flows-work) for what triggers each one.
+
+### OAuth Custom Strategies
+
+Google and GitHub ship as built-in strategies, but both are written entirely against the same public `OAuthStrategy` interface available to userland code — there's no private back door either one uses that a custom strategy can't:
+
+```ts
+interface OAuthStrategy {
+  name: string
+  redirectUri: string
+  usesOidc?: boolean
+  getAuthorizationUrl(ctx: OAuthAuthorizationContext): Promise<URL> | URL
+  handleCallback(ctx: OAuthCallbackContext): Promise<OAuthUserInfo>
+}
+```
+
+- **`getAuthorizationUrl(ctx)`** builds the URL to redirect the browser to. `ctx` (`OAuthAuthorizationContext`) carries the handler-generated `state`, PKCE `codeVerifier`/`codeChallenge`, and — when `usesOidc` is `true` — `nonce`, plus `provider`, `redirectUri`, and `flow`.
+- **`handleCallback(ctx)`** completes the token exchange and returns an `OAuthUserInfo` (`{ providerUserId, email?, emailVerified?, username?, raw? }`). `ctx` (`OAuthCallbackContext`) adds `query` and `form` — parsed query-string and `application/x-www-form-urlencoded` body params respectively, so a `form_post` callback (Apple) is fully readable. Throwing aborts the flow with `provider_error`.
+
+For an OIDC-compliant provider, `createOidcStrategy(preset, credentials)` builds a complete `OAuthStrategy` from a `ProviderPreset` (`{ name, issuer, scope }`) — no custom code needed. `googleProvider` is `createOidcStrategy(GOOGLE_PRESET, credentials)`.
+
+`providerUserId` is the only field account lookup ever keys on — never `email` or `username`. For an OIDC strategy it must be the id_token's validated `sub` claim; for a non-OIDC strategy (GitHub, or a Facebook/Apple-shaped custom strategy) it must be the provider's immutable user id, stringified.
+
+See the [how-to's custom-strategy walkthrough](../how-to/oauth.md#writing-a-custom-strategy) for a full worked Facebook example and notes on what an Apple-shaped provider needs (a dynamically computed client secret, `form_post` callbacks, the one-time `user` form field).
+
+### SSR / middleware wiring
+
+Apps using `@cedarjs/auth-dbauth-middleware` pass an `oauthHandler` to `initDbAuthMiddleware`, built by wrapping `OAuthHandler`'s `invoke()` — see the [how-to's middleware section](../how-to/oauth.md#ssr--middleware-wiring).

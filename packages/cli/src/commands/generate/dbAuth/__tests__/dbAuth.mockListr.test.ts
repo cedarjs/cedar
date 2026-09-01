@@ -39,8 +39,10 @@ const dbAuthTemplateFiles = [
   'forgotPassword.tsx.template',
   'login.tsx.template',
   'login.webAuthn.tsx.template',
+  'login.oauth.tsx.template',
   'resetPassword.tsx.template',
   'signup.tsx.template',
+  'signup.oauth.tsx.template',
 ]
 dbAuthTemplateFiles.forEach((templateFilename) => {
   mockFiles[path.join(__dirname, `../templates/${templateFilename}`)] = actualFs
