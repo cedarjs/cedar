@@ -932,6 +932,24 @@ describe('dbAuth', () => {
         expect(response.statusCode).toEqual(200)
       })
 
+      describe('direct connection (no forwarding headers)', () => {
+        it('allows a same-host plain-http Origin, e.g. classic `cedar serve` in dev', async () => {
+          // The exact shape a Fetch->Lambda-event conversion produces for
+          // an unproxied dev server: no `X-Forwarded-*` headers at all, so
+          // the scheme can't be recovered from the event, but that's a
+          // limitation of the event shape, not evidence of a proxy
+          event.headers.origin = 'http://127.0.0.1:8911'
+          event.headers.host = '127.0.0.1:8911'
+          const dbAuth = new DbAuthHandler(event, context, options)
+          await dbAuth.init()
+          dbAuth.logout = vi.fn(() => ['body', new Headers()])
+          const response = await dbAuth.invoke()
+
+          expect(dbAuth.logout).toHaveBeenCalled()
+          expect(response.statusCode).toEqual(200)
+        })
+      })
+
       describe('behind a proxy (e.g. `cedar serve --ud`)', () => {
         it('allows a POST request whose Origin matches `x-forwarded-host`, even though it differs from the connection host', async () => {
           // Mirrors the shape `cedar serve --ud` forwards: the web side

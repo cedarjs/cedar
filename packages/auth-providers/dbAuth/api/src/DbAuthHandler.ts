@@ -21,6 +21,7 @@ import {
 
 import * as DbAuthError from './errors.js'
 import {
+  isProxiedRequest,
   isRequestOriginTrusted,
   requiresOriginValidation,
   resolveRequestHost,
@@ -569,6 +570,7 @@ export class DbAuthHandler<
             headers: this.normalizedRequest.headers,
             host: this._requestHost(),
             protocol: this._requestProtocol(),
+            proxied: isProxiedRequest(this.normalizedRequest.headers),
           },
           {
             trustedOrigins: this.options.trustedOrigins,

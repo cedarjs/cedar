@@ -32,9 +32,17 @@ export interface OriginValidationRequest {
    * determined reliably. Used as an extra check alongside `host` when
    * deciding whether the `Origin` header matches the request's own
    * origin. Pass `null`/`undefined` when it can't be determined -- in that
-   * case only the host is compared.
+   * case only the host is compared, unless `proxied` narrows that further
+   * (see {@link isProxiedRequest}).
    */
   protocol?: string | null
+  /**
+   * Whether the request declares itself as arriving through a forwarding
+   * proxy, resolved with {@link isProxiedRequest}. Scopes the
+   * unknown-scheme same-host restriction to requests a proxy actually
+   * touched -- see `isSameOrigin`.
+   */
+  proxied?: boolean
 }
 
 export interface OriginValidationConfig {
@@ -161,10 +169,25 @@ export function resolveRequestProtocol(
   return null
 }
 
+/**
+ * Whether a request declares itself as arriving through a forwarding
+ * proxy, i.e. carries an `X-Forwarded-Host` header.
+ *
+ * Used to scope the unknown-scheme same-host restriction (see
+ * `isSameOrigin`) to requests a proxy actually touched. A request with no
+ * forwarding headers at all is a direct connection -- the normal case for
+ * dev servers, classic `cedar serve`, and most self-hosts -- not evidence
+ * of a proxy.
+ */
+export function isProxiedRequest(headers: Headers): boolean {
+  return headers.get('x-forwarded-host') !== null
+}
+
 function isSameOrigin(
   origin: string,
   host: string,
   protocol?: string | null,
+  proxied?: boolean,
 ): boolean {
   try {
     const originUrl = new URL(origin)
@@ -178,16 +201,26 @@ function isSameOrigin(
       return originUrl.protocol === `${protocol}:`
     }
 
-    // The request's own scheme isn't known (behind a proxy that set
-    // `X-Forwarded-Host` but not `X-Forwarded-Proto`). Trust is asymmetric
-    // here: an `https:` Origin for this host can't be forged from a
-    // network position without the site's TLS certificate, so it's safe to
-    // accept even though the transport scheme is unconfirmed. A `http:`
-    // Origin has no such guarantee -- a network attacker serving a plain
-    // page from the same hostname could produce it -- so it's rejected by
-    // this same-host check (it can still be allowed explicitly via
-    // `trustedOrigins`/`cors.origin`)
-    return originUrl.protocol === 'https:'
+    if (proxied) {
+      // A proxy declared itself (`X-Forwarded-Host` present) but didn't
+      // confirm the scheme (no `X-Forwarded-Proto`). Trust is asymmetric
+      // here: an `https:` Origin for this host can't be forged from a
+      // network position without the site's TLS certificate, so it's safe
+      // to accept even though the transport scheme is unconfirmed. A
+      // `http:` Origin has no such guarantee -- a network attacker serving
+      // a plain page from the same hostname could produce it -- so it's
+      // rejected by this same-host check (it can still be allowed
+      // explicitly via `trustedOrigins`/`cors.origin`)
+      return originUrl.protocol === 'https:'
+    }
+
+    // No forwarding headers at all, so this is a direct connection. The
+    // transport scheme being unknown here is a limitation of the event
+    // shape (a Lambda-style event carries no URL), not evidence of a
+    // proxy. An attacker in a position to forge same-host plain-http
+    // traffic on a direct connection controls the transport entirely,
+    // which no origin check addresses, so host-only matching is accepted
+    return true
   } catch {
     // `origin` wasn't a valid absolute URL -- treat it as untrusted rather
     // than throwing
@@ -216,7 +249,10 @@ export function isRequestOriginTrusted(
     return true
   }
 
-  if (request.host && isSameOrigin(origin, request.host, request.protocol)) {
+  if (
+    request.host &&
+    isSameOrigin(origin, request.host, request.protocol, request.proxied)
+  ) {
     return true
   }
 
