@@ -335,6 +335,29 @@ As shown above the cookie name defaults to `'session_%port%'` but can also be cu
 
 If you're using dbAuth and your api and web sides are deployed to different domains then you'll need to configure CORS for both GraphQL in general and dbAuth. You'll also need to enable a couple of options to be sure and send/accept credentials in XHR requests. For more info, see the complete [CORS doc](cors.md#cors-and-authentication).
 
+### trustedOrigins
+
+To protect against CSRF, dbAuth rejects state-changing requests (any method other than `GET`) whose `Origin` header doesn't come from a trusted source. A request is trusted when any of the following is true:
+
+- it has no `Origin` header at all (non-browser clients, like server-to-server calls, don't carry ambient cookies and aren't CSRF vectors)
+- its `Origin` matches the host the request was sent to, which covers the standard Cedar setup where the web side proxies API requests through its own origin
+- its `Origin` is listed in `trustedOrigins`
+- its `Origin` is listed in [`cors.origin`](#cors-config)
+
+Everything else is rejected with a 403 response. If your web and api sides are on different domains and aren't already covered by `cors.origin`, list the web origin explicitly:
+
+```javascript
+trustedOrigins: ['https://app.example.com']
+```
+
+`trustedOrigins` also accepts a single string.
+
+If a proxy sits in front of your api side (a load balancer, nginx, a CDN, or `cedar serve --ud`'s own web-to-api proxy), it should set both `X-Forwarded-Host` and `X-Forwarded-Proto` so dbAuth can resolve the request's real origin and scheme rather than the proxy's internal connection details. A plain-HTTP deployment behind a proxy that sets only `X-Forwarded-Host` (no `X-Forwarded-Proto`) needs to list its web origin in `trustedOrigins` explicitly, since an unconfirmed `http:` origin isn't trusted as same-host. dbAuth honors `X-Forwarded-Host` and `X-Forwarded-Proto` as supplied on the request, so a proxy that acts as your security boundary (the one terminating TLS, or the first hop clients can reach) must overwrite any client-supplied `X-Forwarded-*` headers with values it derives itself -- the default behavior of nginx's `proxy_set_header` and most CDNs -- rather than passing them through.
+
+:::warning
+Setting `cors: { origin: true, credentials: true }` reflects any request's `Origin` back in `Access-Control-Allow-Origin`, letting any website read authenticated responses from your api side. dbAuth's origin validation never treats `cors.origin: true` as trust, precisely because it's this misconfiguration. Apps using it must list their actual origins in `trustedOrigins` explicitly.
+:::
+
 ### Error Messages
 
 There are several error messages that can be displayed, including:

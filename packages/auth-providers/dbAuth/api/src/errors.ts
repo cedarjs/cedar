@@ -144,10 +144,10 @@ export class IncorrectPasswordError extends Error {
   }
 }
 
-export class CsrfTokenMismatchError extends Error {
-  constructor() {
-    super(`CSRF token mismatch`)
-    this.name = 'CsrfTokenMismatchError'
+export class UntrustedOriginError extends Error {
+  constructor(message = 'Request origin is not trusted') {
+    super(message)
+    this.name = 'UntrustedOriginError'
   }
 }
 
