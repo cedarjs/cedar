@@ -52,7 +52,7 @@ export interface Args {
   // when the flag is parsed from argv and absent, but a caller that invokes
   // the setup handler directly (e.g. a test-project fixture rebuild) can
   // omit the property entirely, which comes through as `undefined`.
-  oauth: string | null | undefined
+  oauth?: string | null
   createUserModel: boolean | null
   generateAuthPages: boolean | null
   force: boolean

@@ -98,9 +98,15 @@ export const initDbAuthMiddleware = ({
     // `/auth/oauthx` or a query-string value that happens to contain
     // `oauthUrl`.
     const pathname = new URL(req.url).pathname
+    // Trailing slashes in the configured `oauthUrl` are tolerated so
+    // `/auth/oauth/` and `/auth/oauth` configure the same route.
+    let oauthBasePath = oauthUrl
+    while (oauthBasePath.length > 1 && oauthBasePath.endsWith('/')) {
+      oauthBasePath = oauthBasePath.slice(0, -1)
+    }
     if (
       oauthHandler &&
-      (pathname === oauthUrl || pathname.startsWith(`${oauthUrl}/`))
+      (pathname === oauthBasePath || pathname.startsWith(`${oauthBasePath}/`))
     ) {
       const output = await oauthHandler(req)
       return toMiddlewareResponse(output)
