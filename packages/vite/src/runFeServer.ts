@@ -136,7 +136,7 @@ export async function runFeServer() {
     express.static(rwPaths.web.distBrowser + '/assets', { index: false }),
   )
 
-  app.use('*', (req, _res, next) => {
+  app.use((req, _res, next) => {
     const fullUrl = getFullUrl(req, rscEnabled)
     const headers = convertExpressHeaders(req.headersDistinct)
     // Convert express headers to fetch headers
@@ -189,9 +189,9 @@ export async function runFeServer() {
   })
 
   // Wrap with whatwg/server adapter. Express handler -> Fetch API handler
-  app.get('*', createServerAdapter(routeHandler))
+  app.get('/{*splat}', createServerAdapter(routeHandler))
 
-  app.post('*', handleWithMiddleware())
+  app.post('/{*splat}', handleWithMiddleware())
 
   app.listen(rwConfig.web.port)
   console.log(
