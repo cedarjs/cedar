@@ -55,7 +55,18 @@ logging out. Tenant scoping is enforced at the Prisma layer so that forgetting
 - Organization types, nested organizations (parent/child) and
   organization-to-organization collaboration. All three are additive columns or
   relations on `Organization`/`Membership` that an app can add; the tooling does
-  not generate them.
+  not generate them. Parent/child in particular (agencies serving client
+  organizations, resellers, franchises) is a common need, but the column is the
+  trivial part: a nullable `parentId` self-relation can be added by any app at
+  any time with no data to migrate. What the framework deliberately does not do
+  is make scoping hierarchy-aware. The extension, `setCurrentOrg` and
+  `context.currentOrg` all rest on one organization per request; a parent scope
+  that reads or writes child rows would have to answer which organization owns a
+  `create`, whether an `update` from parent scope may touch a child row and what
+  role a parent member holds in a child, and every answer weakens the fail-closed
+  guarantee. Access to a child organization is therefore expressed the same way
+  as any other access: a `Membership` in that organization. The how-to documents
+  the pattern.
 - Changing any auth provider's session or token format.
 
 ## The model
@@ -463,7 +474,29 @@ tracked in `sdl-stub-followups`; it is sequenced after those.
 5. Services, directives, web hooks, with examples.
 6. Jobs, scripts, seeds and `$forOrg` / `$withoutTenant`.
 7. Strict variant: compound primary keys, and Postgres RLS as a second layer.
-8. Pitfalls from the article restated for Cedar: mixed auth methods per org,
+8. Agencies and parent/child organizations. One organization (an agency,
+   reseller or franchisor) onboards and serves other organizations (its
+   clients). The pattern keeps the runtime untouched:
+   - Schema: `parentId String?` on `Organization` with a `parent` /
+     `children` self-relation. The link is metadata for navigation, billing
+     roll-ups and the org switcher; it has no effect on scoping.
+   - Access: a `createClientOrganization` service, callable by agency members
+     with a suitable role, creates the child organization and fans out
+     `Membership` rows in it for the agency's staff (all of them, or a chosen
+     subset, with a chosen role). Agency staff working in a client is the
+     ordinary org switch; `context.currentOrg` is the client and every query is
+     scoped to it.
+   - Provenance: an optional `viaOrganizationId String?` on `Membership`
+     records that a membership exists because the user is staff at the parent.
+     Removing someone from the agency then cascades to the client memberships
+     they hold through it, and a client can tell agency staff apart from its own
+     members. This is the detail that is hard to add after the fact, so it is
+     shown as part of the pattern rather than as an afterthought.
+   - Cross-client work: agency-level reporting or bulk operations over all
+     clients run `db.$forOrg(child.id)` per child, looked up through the
+     `children` relation on plain `db`. There is no parent scope that sees
+     child rows in one query.
+9. Pitfalls from the article restated for Cedar: mixed auth methods per org,
    assigning to users instead of memberships, analytics group ids.
 
 `docs/docs/tenancy.md` (reference page) is added when the package ships, in the
