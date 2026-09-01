@@ -62,9 +62,18 @@
    storage key. This gives a single source of truth.
 
 5. **Manual lifecycle management.** Developers explicitly call storage
-   operations in their services. No automatic Prisma extension magic. This is
-   more boilerplate but dramatically simpler to reason about, debug, and
-   customize.
+   operations in their services. No automatic Prisma extension magic. The
+   criterion for ambient magic (#2595): it must both prevent an omission
+   that would fail silently and catastrophically, and stay pure and
+   transactional with respect to the query. Storage hooks fail both gates:
+   a forgotten storage call is a visible bug (the file is missing), and
+   file I/O inside a query hook is non-transactional external work with
+   its own failure modes. Explicit calls are more boilerplate but
+   dramatically simpler to reason about, debug, and customize. (The
+   tenancy extension in #2544 passes both gates — omission would be a
+   silent cross-tenant leak, and where-clause injection is pure query
+   rewriting — which is why these two designs land on opposite sides of
+   the same principle.)
 
 6. **Uppy on the frontend.** Uppy's pluggable architecture maps perfectly
    onto our providers: `@uppy/aws-s3` for presigned uploads,
@@ -169,6 +178,15 @@ export interface StorageProvider {
   /** Name of this provider instance, set by defineStorageTargets() */
   name: string
 
+  /**
+   * 'db' is the only value the framework branches on — it marks the
+   * provider that stores file content inline in the Upload row. All
+   * other values ('s3', 'fs', 'azure', …) are treated identically as
+   * object storage. See "Provider Type Discrimination" under
+   * Implementation Notes.
+   */
+  providerType: 'db' | string
+
   /** Write bytes to storage, return nothing (key is provided) */
   write(key: string, data: Buffer, opts: { contentType: string }): Promise<void>
 
@@ -180,6 +198,9 @@ export interface StorageProvider {
 
   /** Check if an object exists */
   exists(key: string): Promise<boolean>
+
+  /** Size in bytes of a stored object, or null when the provider cannot know */
+  getObjectSize(key: string): Promise<number | null>
 
   /** Generate a time-limited URL for reading/downloading */
   getSignedReadUrl(key: string, expiresIn?: number): Promise<string>
@@ -583,8 +604,10 @@ model Upload {
   /// MIME type (e.g., "image/png")
   mimeType   String
 
-  /// File size in bytes
-  size       Int
+  /// File size in bytes. BigInt because Prisma's Int is signed 32-bit,
+  /// which caps at 2 GB — too small for the multipart and tus futures
+  /// this plan anticipates. Exposed through GraphQL as the BigInt scalar.
+  size       BigInt
 
   /// Provider-specific storage reference.
   /// S3: the object key (e.g., "avatars/clx123.png")
@@ -596,6 +619,20 @@ model Upload {
 
   /// Inline binary data — only for the DB provider
   data       Bytes?
+
+  /// The user this file belongs to. Nullable so apps without auth are
+  /// unaffected. Stamped from the upload token's `sub` claim for user
+  /// uploads; set explicitly for server-generated files when relevant.
+  /// See "Upload Ownership (`userId`)" under Implementation Notes.
+  userId     String?
+
+  /// The organization this file belongs to, for apps using multi-tenancy
+  /// (#2544). When the tenancy extension counts Upload as tenant-owned,
+  /// every lookup in the serving directives is scoped automatically —
+  /// which closes the hole where a cross-tenant Upload id stored in a
+  /// field would otherwise yield a signed URL. Nullable so single-tenant
+  /// apps are unaffected.
+  organizationId String?
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -680,6 +717,9 @@ the developer uses), ensuring all existing Cedar auth tooling is leveraged.
 // packages/uploads/core/src/uploadToken.ts
 
 interface UploadTokenPayload {
+  /** The upload profile this token was issued for */
+  profile: string
+
   /** Allowed MIME types (e.g., ["image/png", "image/jpeg"]) */
   allowedMimeTypes: string[]
 
@@ -691,8 +731,50 @@ interface UploadTokenPayload {
 
   /** Target name — which storage target this token authorizes */
   target: string
+
+  /**
+   * Subject — the id of the user the token was issued to (from
+   * context.currentUser). Stamped onto the Upload record as userId and
+   * checked by confirmUpload, so a leaked token is bound to one account
+   * for its short lifetime instead of being bearer-anyone.
+   */
+  sub: string
 }
 ```
+
+#### Upload Profiles
+
+Constraints are server-defined, never client-supplied. The client names a
+**profile**; the server owns what that profile allows. Without this, the
+token query would merely notarize whatever constraints the client asked
+for — any authenticated user could request a token for any target at any
+size, and `@requireAuth` gates *who*, not *what*.
+
+Profiles live next to the targets in `api/src/lib/uploads.ts`:
+
+```ts
+import { defineUploadProfiles } from '@cedarjs/uploads'
+
+export const profiles = defineUploadProfiles({
+  avatar: {
+    target: 'avatars',
+    allowedMimeTypes: ['image/png', 'image/jpeg'],
+    maxFileSize: 5 * 1024 * 1024,
+    maxFiles: 1,
+  },
+  attachment: {
+    target: 'local',
+    allowedMimeTypes: ['application/pdf', 'image/png', 'image/jpeg'],
+    maxFileSize: 25 * 1024 * 1024,
+    maxFiles: 10,
+  },
+})
+```
+
+The generated `requestUploadToken(profile: String!)` resolver looks the
+profile up, refuses unknown names, and signs the profile's constraints
+plus the current user's id into the token. Per-user or per-role variation
+(pro accounts get bigger limits) is plain code in that resolver.
 
 #### Token Issuance
 
@@ -736,7 +818,10 @@ server.
    - Looks up the target from the validated token payload
    - Generates a storage key (e.g., `avatars/clx123abc.png`)
    - Calls `target.getPresignedUploadUrl(key, { contentType, ... })`
-   - Creates an `Upload` record with status `pending`
+   - Creates an `Upload` record with status `pending`, `userId` from the
+     token's `sub`, and `size` set to the declared size after validating
+     it against the token's `maxFileSize` — completion-time verification
+     compares the real object against this value
    - Returns `{ uploadId, url, method, headers }` — this shape is exactly
      what Uppy's `@uppy/aws-s3` plugin expects from `getUploadParameters()`
 
@@ -751,6 +836,23 @@ server.
    Alternatively, for development or simpler setups, the **client confirms**
    via a `confirmUpload` mutation and the server verifies the object exists
    before marking it completed.
+
+#### Size Enforcement
+
+A presigned PUT pins only the headers that were signed — it cannot cap the
+body size, so `maxFileSize` is not enforceable at upload time on this
+path. Two complementary mechanisms cover it:
+
+- **Post-hoc verification (built in).** The pending `Upload` row records
+  the declared, token-validated `size`. Both completion paths — the S3
+  webhook and `confirmUpload` — compare the actual object size against
+  it; a mismatch deletes the object and marks the row `failed`. An
+  oversized object lives in the bucket only until confirmation and is
+  never marked `completed` or served.
+- **Presigned POST policies (documented alternative).** S3's POST policy
+  supports `content-length-range`, which rejects oversized bodies during
+  the upload itself. Uppy's `@uppy/aws-s3` supports POST policies; the
+  how-to shows the swap for apps that want hard enforcement at the edge.
 
 #### Presigned URL Generation
 
@@ -786,12 +888,16 @@ filesystem. Protected by JWT upload tokens.
 3. **Fastify route handler:**
    - Validates the JWT token (checks expiry, resolves target)
    - Checks `Content-Length` against `maxFileSize` from token — rejects
-     before buffering if too large
+     before buffering when the header is present and too large. The
+     header can be absent (chunked encoding) or dishonest, so
+     `@fastify/multipart` is also configured with a per-file `fileSize`
+     limit from the token, which aborts the stream mid-flight
    - Processes the multipart stream via `@fastify/multipart`
    - Validates MIME type against `allowedMimeTypes` from token
    - Generates a storage key: `<cuid>.<ext>`
    - Calls `target.write(key, data, { contentType })` to save to disk
-   - Creates an `Upload` record with status `completed`
+   - Creates an `Upload` record with status `completed`, `userId` from
+     the token's `sub`
    - Returns the upload record as JSON
 
 #### File Serving
@@ -803,7 +909,14 @@ serving:
 2. Looks up the `Upload` record
 3. Resolves the target provider
 4. Streams the file from disk with appropriate `Content-Type`,
-   `Cache-Control`, and `ETag` headers
+   `Cache-Control`, and `ETag` headers — plus
+   `X-Content-Type-Options: nosniff` and, by default,
+   `Content-Disposition: attachment`. Inline rendering is opt-in, because
+   the stored MIME type is client-asserted: an "image" allowlist that
+   admits `image/svg+xml` is admitting a scriptable document, and inline
+   SVG served from the app's origin is stored XSS. Apps that want inline
+   images should restrict inline serving to raster types or verify magic
+   bytes at upload time
 
 The HMAC signing reuses the same `UPLOAD_TOKEN_SECRET`. The FS provider's
 `getSignedReadUrl()` generates these token URLs.
@@ -845,6 +958,16 @@ Fastify routes needed — data flows through GraphQL as base64-encoded strings.
      })
    }
    ```
+
+#### Size Cap
+
+This path is the deliberate exception to design principle 1: the base64
+payload rides through GraphQL, which buffers the whole request before any
+directive runs. That trade is acceptable only because these files are
+small — so "small" gets a number. DB-target profiles default to a
+`maxFileSize` of 1 MB, enforced in `useDbUpload` on the client and again
+in `storeFile()` for `providerType: 'db'` targets on the server. Files
+that can exceed it belong on an FS or S3 target.
 
 #### Serving DB Files
 
@@ -891,10 +1014,9 @@ export async function storeFile(
   const ext = mime.extension(mimeType)
   const key = ext ? `${createId()}.${ext}` : createId()
 
-  // For DB provider, data goes in the Upload.data column
+  // For the DB provider, data goes in the Upload.data column
   // For S3/FS/etc., data goes to external storage via the provider
-  const isDbProvider =
-    !target.getConfig().uploadDir && !target.getConfig().bucket
+  const isDbProvider = target.providerType === 'db'
 
   if (!isDbProvider) {
     await target.write(key, data, { contentType: mimeType })
@@ -954,6 +1076,40 @@ understanding provider internals, generating keys, creating Upload records,
 and wiring it all together. `storeFile()` reduces it to a single call:
 target + metadata + bytes → Upload record. This makes the "storage without
 uploads" workflow just as easy as the user-upload workflow.
+
+### Deleting Files (`deleteFile`) and Stale-Upload Cleanup
+
+Manual lifecycle cuts both ways: deleting an `Upload` row does nothing to
+the bytes, by design. The two pieces of boilerplate every app then needs
+ship in the package rather than being reimplemented per app:
+
+```ts
+/**
+ * Delete a stored file: bytes first, then the Upload record. Bytes-first
+ * ordering means a crash between the two steps leaves a dangling row
+ * that cleanup can find — the reverse order leaves an unreachable orphan
+ * file that nothing can find. A missing object is tolerated, so the call
+ * is idempotent.
+ */
+export async function deleteFile(
+  target: StorageProvider,
+  options: { db: PrismaClient; upload: Upload }
+): Promise<void>
+
+/**
+ * Delete `pending` Upload rows older than `olderThan` (default: 1 hour)
+ * along with any bytes that did land in storage. Covers presigned
+ * uploads that were issued but never completed, and FS uploads that
+ * crashed between write and record. Run it from a recurring
+ * `@cedarjs/jobs` job; the setup command's next-steps output shows the
+ * job.
+ */
+export async function cleanupStaleUploads(options: {
+  db: PrismaClient
+  targets: Record<string, StorageProvider>
+  olderThan?: number
+}): Promise<{ deleted: number }>
+```
 
 ### Fastify Upload Plugin
 
@@ -1037,6 +1193,14 @@ everything comes from the targets map.
 
 type UploadToken {
   token: String!
+  """
+  The profile's constraints, echoed for client-side UX (file-picker
+  filters, pre-upload validation). The authoritative copy is inside the
+  signed token.
+  """
+  allowedMimeTypes: [String!]!
+  maxFileSize: Int!
+  maxFiles: Int!
 }
 
 type PresignedUploadUrl {
@@ -1046,13 +1210,6 @@ type PresignedUploadUrl {
   headers: JSON!
 }
 
-input RequestUploadTokenInput {
-  target: String! # target name from targets config
-  allowedMimeTypes: [String!]!
-  maxFileSize: Int!
-  maxFiles: Int
-}
-
 input CreatePresignedUploadUrlInput {
   filename: String!
   contentType: String!
@@ -1060,7 +1217,12 @@ input CreatePresignedUploadUrlInput {
 }
 
 type Query {
-  requestUploadToken(input: RequestUploadTokenInput!): UploadToken! @requireAuth
+  """
+  The profile name must match a key in the app's upload-profiles config.
+  Constraints come from that server-side profile — the client never
+  supplies them. See "Upload Profiles".
+  """
+  requestUploadToken(profile: String!): UploadToken! @requireAuth
 }
 
 type Mutation {
@@ -1177,6 +1339,21 @@ the target from the Upload record and resolves the right provider
 automatically. This means the directive works identically for S3, FS, DB,
 and any future provider.
 
+Two implementation requirements keep the directive safe on list queries:
+
+- **Batch the lookups.** A transformer directive runs per field per row —
+  a 100-row list with one decorated field is 100 `findUnique` calls
+  unless the directive resolves through a per-request DataLoader keyed on
+  upload id. URL signing itself is local crypto (the S3 presigner, the FS
+  HMAC) and needs no batching.
+- **Never fetch `data` for non-DB targets.** `Upload.data` holds the
+  inline bytes for DB targets; an unqualified `findUnique` drags the blob
+  into memory for every S3/FS row too. The lookup selects everything
+  except `data`, then fetches `data` only when the resolved target has
+  `providerType === 'db'`. And because the DB path embeds a full base64
+  data URI into the response, DB-target fields belong on detail queries,
+  not list queries — the DB size cap keeps the worst case bounded.
+
 #### `@withDataUri` Directive
 
 A **transformer directive** that always returns a data URI, regardless of
@@ -1248,16 +1425,17 @@ function createUppy(options: CreateUppyOptions): Uppy
 #### `useUploadToken`
 
 Fetches an upload token from the GraphQL API. Uses Apollo's `useLazyQuery`
-so the token is only fetched when needed (not on mount).
+with `fetchPolicy: 'no-cache'` — tokens expire, so Apollo's cache must
+never answer this query — and only fetches when needed (not on mount).
+The response carries the profile's constraints for client-side UX, and
+the hook exposes them alongside the token.
 
 ```ts
 // packages/uploads/web/src/hooks/useUploadToken.ts
 
 interface UseUploadTokenOptions {
-  target: string
-  allowedMimeTypes: string[]
-  maxFileSize: number
-  maxFiles?: number
+  /** Name of a server-defined upload profile — see "Upload Profiles" */
+  profile: string
 }
 
 interface UseUploadTokenResult {
@@ -1283,11 +1461,8 @@ management for S3 direct uploads.
 // packages/uploads/web/src/hooks/useS3Upload.ts
 
 interface UseS3UploadOptions {
-  /** Target name from the storage targets config */
-  target: string
-  allowedMimeTypes: string[]
-  maxFileSize: number
-  maxFiles?: number
+  /** Name of a server-defined upload profile — see "Upload Profiles" */
+  profile: string
   onUploadComplete?: (uploadIds: string[]) => void
   onUploadError?: (error: Error) => void
 }
@@ -1321,11 +1496,8 @@ Fastify upload route.
 // packages/uploads/web/src/hooks/useFsUpload.ts
 
 interface UseFsUploadOptions {
-  /** Target name from the storage targets config */
-  target: string
-  allowedMimeTypes: string[]
-  maxFileSize: number
-  maxFiles?: number
+  /** Name of a server-defined upload profile — see "Upload Profiles" */
+  profile: string
   endpoint?: string // default: '/upload/fs'
   onUploadComplete?: (uploadIds: string[]) => void
   onUploadError?: (error: Error) => void
@@ -1398,7 +1570,10 @@ function useDbUpload(options: UseDbUploadOptions): UseDbUploadResult
 ```
 
 This hook validates file type/size client-side and returns base64-encoded
-data that the developer passes to their GraphQL mutation.
+data that the developer passes to their GraphQL mutation. The client-side
+checks are UX only — the service is the enforcement point (`storeFile()`
+applies the DB size cap, and the developer's resolver validates the MIME
+type against the profile).
 
 ### React Components
 
@@ -1411,11 +1586,8 @@ above.
 // packages/uploads/web/src/components/S3Uploader.tsx
 
 interface S3UploaderProps {
-  /** Target name from the storage targets config */
-  target: string
-  allowedMimeTypes: string[]
-  maxFileSize: number
-  maxFiles?: number
+  /** Name of a server-defined upload profile — see "Upload Profiles" */
+  profile: string
   onUploadComplete?: (uploadIds: string[]) => void
   onUploadError?: (error: Error) => void
   /** "dashboard" | "drag-drop" | "file-input" — default: "dashboard" */
@@ -1470,7 +1642,8 @@ accordingly.
    - `defineStorageTargets()` call with selected providers
    - S3 client setup (if an S3 target is selected)
    - FS config (if an FS target is selected)
-   - Export of `targets`
+   - `defineUploadProfiles()` with one starter profile per selected target
+   - Export of `targets` and `profiles`
 
 3. **Creates `api/src/graphql/uploads.sdl.ts`** — SDL with upload token
    query, presigned URL mutation, confirm mutation, and directives
@@ -1564,8 +1737,10 @@ async function handleS3Webhook(
   // 4. For each s3:ObjectCreated event:
   //    a. Extract the bucket and object key
   //    b. Find the matching Upload record by storageKey
-  //    c. Update status to "completed"
-  //    d. Update size from the actual S3 object size
+  //    c. Compare the actual S3 object size against the size recorded at
+  //       presign time — on mismatch, delete the object, mark the record
+  //       "failed", and stop (see "Size Enforcement")
+  //    d. Update status to "completed" and size from the actual object
 }
 ```
 
@@ -1604,6 +1779,11 @@ export const confirmUpload = async ({ uploadId }) => {
     where: { id: uploadId },
   })
 
+  // Only the user the upload token was issued to can confirm it
+  if (upload.userId && upload.userId !== context.currentUser.id) {
+    throw new ForbiddenError("You don't have access to this upload")
+  }
+
   const target = resolveTarget(targets, upload.target)
 
   // Verify the object actually exists in storage
@@ -1611,6 +1791,17 @@ export const confirmUpload = async ({ uploadId }) => {
 
   if (!exists) {
     throw new Error('Upload not found in storage')
+  }
+
+  // Verify the object matches what the token authorized — a presigned
+  // PUT cannot cap body size (see "Size Enforcement")
+  const actualSize = await target.getObjectSize(upload.storageKey!)
+  if (actualSize !== null && actualSize !== Number(upload.size)) {
+    await target.delete(upload.storageKey!)
+    return db.upload.update({
+      where: { id: uploadId },
+      data: { status: 'failed' },
+    })
   }
 
   return db.upload.update({
@@ -1865,8 +2056,10 @@ the Prisma Upload model work end to end.
 - [ ] `createFsProvider()` implementation
 - [ ] `createDbProvider()` implementation
 - [ ] `defineStorageTargets()` and `resolveTarget()`
-- [ ] `storeFile()` utility
-- [ ] Upload token JWT creation and validation
+- [ ] `storeFile()`, `deleteFile()` and `cleanupStaleUploads()` utilities
+- [ ] `defineUploadProfiles()` and profile-based token issuance
+- [ ] Upload token JWT creation and validation (profile constraints +
+      `sub` claim)
 - [ ] Fastify upload plugin with FS upload route (`POST /upload/fs`)
 - [ ] Fastify file serving route (`GET /upload/serve/:token`) with HMAC
       signed URLs
@@ -1890,7 +2083,8 @@ the Prisma Upload model work end to end.
 - [ ] `getPresignedUploadUrl()` in S3 provider
 - [ ] `getSignedReadUrl()` in S3 provider (native S3 presigned GET)
 - [ ] `createPresignedUploadUrl` GraphQL mutation and service
-- [ ] `confirmUpload` mutation and service (client-side confirmation)
+- [ ] `confirmUpload` mutation and service (client-side confirmation
+      with ownership and size verification)
 - [ ] S3 webhook handler (SNS message parsing and signature validation)
 - [ ] `@withSignedUrl` directive — works with S3 targets automatically
 - [ ] CLI: S3 target option in setup command
@@ -1952,9 +2146,10 @@ provider.
 
 ### Provider Type Discrimination
 
-The `StorageProvider` interface must include an explicit `providerType: string`
-property. The current `storeFile()` heuristic of inspecting `getConfig()` output
-to detect the DB provider is fragile and should be replaced.
+The `StorageProvider` interface includes an explicit `providerType: string`
+property, and `storeFile()` branches on it. Inspecting `getConfig()` output
+to detect the DB provider is not an option: config shapes are
+provider-defined and offer no stable signal.
 
 The framework only ever branches on a single special value — `'db'` — which
 identifies the database-backed provider that stores file content inline. Every
@@ -1977,7 +2172,7 @@ Built-in values: `'db'`, `'s3'`, `'fs'`.
 
 ### Upload Ownership (`userId`)
 
-Add a nullable `userId` field to the `Upload` model. Implicit ownership via a
+The `Upload` model carries a nullable `userId`. Implicit ownership via a
 FK on the application model (e.g. `user.avatarId`) works for the simplest cases
 but breaks down as soon as you need to answer "show all files uploaded by user X"
 or enforce download authorisation without traversing every possible join.
@@ -1990,8 +2185,9 @@ A `userId` on `Upload` directly:
   (`db.upload.findMany({ where: { userId: currentUser.id } })`).
 - Is nullable, so applications that don't use auth are completely unaffected.
 
-Developers should populate it from `context.currentUser.id` in their mutation
-resolvers or in the token-issuance endpoint.
+For token-based uploads the framework stamps it from the token's `sub`
+claim. For `storeFile()` calls, developers set it explicitly when the
+file belongs to a user.
 
 ### Large File Uploads (S3 Multipart, >5 GB)
 
