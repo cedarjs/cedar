@@ -937,10 +937,14 @@ describe('dbAuth', () => {
           // Mirrors the shape `cedar serve --ud` forwards: the web side
           // (127.0.0.1:8910) proxies to the api side (127.0.0.1:8911), so
           // the connection-level `Host` header is the internal api-server
-          // hop
+          // hop. `cedar serve --ud` always sets `x-forwarded-proto`
+          // alongside `x-forwarded-host` (see
+          // `packages/cli/src/commands/serve.ts`), so the scheme is known
+          // here too
           event.headers.origin = 'http://127.0.0.1:8910'
           event.headers.host = '127.0.0.1:8911'
           event.headers['x-forwarded-host'] = '127.0.0.1:8910'
+          event.headers['x-forwarded-proto'] = 'http'
           const dbAuth = new DbAuthHandler(event, context, options)
           await dbAuth.init()
           dbAuth.logout = vi.fn(() => ['body', new Headers()])
@@ -965,6 +969,7 @@ describe('dbAuth', () => {
         it('uses the first entry of a comma-separated `x-forwarded-host` list', async () => {
           event.headers.origin = 'http://a.example'
           event.headers['x-forwarded-host'] = 'a.example, b.internal'
+          event.headers['x-forwarded-proto'] = 'http'
           const dbAuth = new DbAuthHandler(event, context, options)
           await dbAuth.init()
           dbAuth.logout = vi.fn(() => ['body', new Headers()])
@@ -972,6 +977,54 @@ describe('dbAuth', () => {
 
           expect(dbAuth.logout).toHaveBeenCalled()
           expect(response.statusCode).toEqual(200)
+        })
+
+        describe('when `x-forwarded-proto` is not set (scheme unknown)', () => {
+          it('allows an https Origin matching `x-forwarded-host`', async () => {
+            // An `https:` Origin for this host can't be forged from a
+            // network position without the site's TLS certificate, so
+            // it's trusted even though the proxy didn't confirm the
+            // scheme
+            event.headers.origin = 'https://app.example.com'
+            event.headers['x-forwarded-host'] = 'app.example.com'
+            const dbAuth = new DbAuthHandler(event, context, options)
+            await dbAuth.init()
+            dbAuth.logout = vi.fn(() => ['body', new Headers()])
+            const response = await dbAuth.invoke()
+
+            expect(dbAuth.logout).toHaveBeenCalled()
+            expect(response.statusCode).toEqual(200)
+          })
+
+          it('rejects an http Origin matching `x-forwarded-host`', async () => {
+            // A network attacker serving a plain-HTTP page on the same
+            // hostname could produce this Origin, so it isn't trusted as
+            // same-host when the scheme can't be confirmed
+            event.headers.origin = 'http://app.example.com'
+            event.headers['x-forwarded-host'] = 'app.example.com'
+            const dbAuth = new DbAuthHandler(event, context, options)
+            await dbAuth.init()
+            dbAuth.logout = vi.fn(() => ['body', new Headers()])
+            const response = await dbAuth.invoke()
+
+            expect(dbAuth.logout).not.toHaveBeenCalled()
+            expect(response.statusCode).toEqual(403)
+          })
+
+          it('still allows that http Origin when listed in `trustedOrigins`', async () => {
+            event.headers.origin = 'http://app.example.com'
+            event.headers['x-forwarded-host'] = 'app.example.com'
+            const dbAuth = new DbAuthHandler(event, context, {
+              ...options,
+              trustedOrigins: 'http://app.example.com',
+            })
+            await dbAuth.init()
+            dbAuth.logout = vi.fn(() => ['body', new Headers()])
+            const response = await dbAuth.invoke()
+
+            expect(dbAuth.logout).toHaveBeenCalled()
+            expect(response.statusCode).toEqual(200)
+          })
         })
       })
     })

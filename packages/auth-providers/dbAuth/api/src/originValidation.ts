@@ -172,10 +172,22 @@ function isSameOrigin(
       return false
     }
 
-    // Scheme is only compared when it's reliably known (see
-    // `resolveRequestProtocol`); host-only matching is still a strong CSRF
-    // check on its own, since `Origin` already includes the host
-    return !protocol || originUrl.protocol === `${protocol}:`
+    if (protocol) {
+      // The request's own scheme is reliably known (see
+      // `resolveRequestProtocol`), so require an exact match
+      return originUrl.protocol === `${protocol}:`
+    }
+
+    // The request's own scheme isn't known (behind a proxy that set
+    // `X-Forwarded-Host` but not `X-Forwarded-Proto`). Trust is asymmetric
+    // here: an `https:` Origin for this host can't be forged from a
+    // network position without the site's TLS certificate, so it's safe to
+    // accept even though the transport scheme is unconfirmed. A `http:`
+    // Origin has no such guarantee -- a network attacker serving a plain
+    // page from the same hostname could produce it -- so it's rejected by
+    // this same-host check (it can still be allowed explicitly via
+    // `trustedOrigins`/`cors.origin`)
+    return originUrl.protocol === 'https:'
   } catch {
     // `origin` wasn't a valid absolute URL -- treat it as untrusted rather
     // than throwing

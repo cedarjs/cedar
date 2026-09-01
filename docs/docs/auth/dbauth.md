@@ -352,6 +352,8 @@ trustedOrigins: ['https://app.example.com']
 
 `trustedOrigins` also accepts a single string.
 
+If a proxy sits in front of your api side (a load balancer, nginx, a CDN, or `cedar serve --ud`'s own web-to-api proxy), it should set both `X-Forwarded-Host` and `X-Forwarded-Proto` so dbAuth can resolve the request's real origin and scheme rather than the proxy's internal connection details. A plain-HTTP deployment behind a proxy that sets only `X-Forwarded-Host` (no `X-Forwarded-Proto`) needs to list its web origin in `trustedOrigins` explicitly, since an unconfirmed `http:` origin isn't trusted as same-host.
+
 :::warning
 Setting `cors: { origin: true, credentials: true }` reflects any request's `Origin` back in `Access-Control-Allow-Origin`, letting any website read authenticated responses from your api side. dbAuth's origin validation never treats `cors.origin: true` as trust, precisely because it's this misconfiguration. Apps using it must list their actual origins in `trustedOrigins` explicitly.
 :::
