@@ -385,9 +385,17 @@ from `CedarApolloProvider`.
 
 The organization client is the app client's link chain with a `cedar-org`
 header added, and its own `InMemoryCache` built from the app's `cacheConfig`.
-Clients are kept in a module-level `Map<slug, client>` so returning to an
-organization reuses its cache; they share the HTTP transport and the auth
-link, so the cost per organization visited in a tab is one cache. This design
+Clients are kept in a module-level map keyed by `currentUser.id` and slug so
+returning to an organization reuses its cache; they share the HTTP transport
+and the auth link, so the cost per organization visited in a tab is one cache.
+The map is tied to the authenticated user, not to the tab: when
+`useAuth().isAuthenticated` turns false or `currentUser.id` changes, every
+client in it is dropped after `clearStore()`. Keying by user id means a second
+user in the same tab can never be handed the first user's client even if the
+teardown is missed, and the teardown frees the memory. The app client from
+`CedarApolloProvider` has no logout teardown of its own; the how-to tells apps
+to call `clearStore()` from `useCache()` on logout for the same reason, but
+the organization clients do not depend on the app doing so. This design
 is chosen over a shared client with a header set from a store for one reason
 that has nothing to do with how the header is set: the Apollo cache is keyed by
 field name and arguments, not by request headers. With one shared client,
@@ -607,7 +615,9 @@ same shape as `uploads.md`.
   separate caches, so a Cell that ran `projects` under the first never shows
   that list under the second; returning to the first reuses its client; a slug
   with no membership renders the not-a-member state and issues no query; a
-  tenant-scoped query issued above `OrgScope` carries no `cedar-org` header.
+  tenant-scoped query issued above `OrgScope` carries no `cedar-org` header;
+  logging out and logging in as another user in the same tab yields a fresh
+  client for the same slug with an empty cache.
 - `resolveCurrentOrg` / `setCurrentOrg`: header, `variables.orgId`,
   `variables.orgSlug`, slug/id lookup, non-member rejection, and a resolver
   that returns a forged `role: 'owner'` for a viewer membership (the context
