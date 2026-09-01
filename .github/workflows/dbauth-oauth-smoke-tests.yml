@@ -1,0 +1,60 @@
+name: 🔑 dbAuth OAuth Smoke Tests
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+
+jobs:
+  dbauth-oauth-smoke-tests:
+    runs-on: ${{ inputs.os }}
+
+    env:
+      CEDAR_CI: 1
+      CEDAR_VERBOSE_TELEMETRY: 1
+
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - name: 🌲 Set up test project
+        id: set-up-test-project
+        uses: ./.github/actions/set-up-test-project
+        with:
+          canary: false
+        env:
+          CEDAR_DISABLE_TELEMETRY: 1
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
+
+      - name: Add the OAuth identity model, auth function, and login buttons to the test project
+        run: node ./tasks/test-project/add-oauth.mts "${{ steps.set-up-test-project.outputs.test-project-path }}"
+        env:
+          CEDAR_DISABLE_TELEMETRY: 1
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
+
+      - name: 🎭 Install Playwright OS dependencies
+        if: runner.os == 'Linux'
+        run: npx playwright install-deps chromium
+
+      - name: 🎭 Install playwright dependencies
+        run: npx playwright install chromium
+
+      - name: 🔑 Run dbAuth OAuth smoke tests
+        working-directory: ./tasks/smoke-tests/dbauth-oauth
+        run: npx playwright test
+        env:
+          CEDAR_TEST_PROJECT_PATH: '${{ steps.set-up-test-project.outputs.test-project-path }}'
+          CEDAR_DISABLE_TELEMETRY: 1
+
+      - name: 🎭 Upload Playwright traces
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: playwright-traces-dbauth-oauth-smoke-tests-${{ runner.os }}
+          path: tasks/smoke-tests/dbauth-oauth/test-results/**
+          if-no-files-found: ignore

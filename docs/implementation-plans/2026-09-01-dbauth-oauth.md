@@ -442,7 +442,11 @@ Fetch `Request`s):
   endpoints with **msw** (already a dependency of `packages/testing`), using
   recorded real responses as fixtures. Quirk knowledge is frozen here: a GitHub
   profile with `email: null`, a Facebook profile with no email, Apple's one-time
-  `user` form field.
+  `user` form field. The fixtures pin down the worst input each strategy must
+  handle, not the provider's current behavior — a provider that starts sending
+  friendlier responses leaves the defensive path unexercised but correct.
+  Breaking drift, and quirks that providers fix, are both detected by layer 6,
+  whose Tier 3 asserts the same shapes against live responses.
 
 ### 2. Middleware seam (vitest)
 
@@ -501,7 +505,15 @@ provider outage never blocks merges) runs three tiers:
   assertion + bogus code must yield `invalid_grant`, not `invalid_client`.
 - **Tier 3 — real API calls with non-interactive tokens:** contract-test the msw
   fixtures against live responses so drift fails with a diff naming the fixture
-  and strategy to update.
+  and strategy to update. The assertions mirror the fixtures as _shape
+  assertions on the subset of fields the strategies read_ — a provider adding
+  fields must not fail the cron — and they assert the quirks themselves: the
+  GitHub test account keeps its email private, so `/user` must return
+  `email: null` (and the `/user/emails` fallback must work); the Facebook test
+  user is created without an email, so the profile response must omit `email`.
+  A provider that fixes a quirk flips its assertion and the cron goes red at the
+  next scheduled run, so frozen quirk knowledge carries an expiry alarm instead
+  of rotting silently.
   - _Facebook (if ever promoted to built-in):_ app-scoped **test users** are
     created and issued access tokens programmatically via the app API — call
     `/me?fields=id,name,email` with a real token.
@@ -512,7 +524,10 @@ provider outage never blocks merges) runs three tiers:
     real refresh → userinfo flow and pushes the fresh id_token through the
     actual oauth4webapi verification path.
   - _Apple:_ no non-interactive Apple ID auth exists, so Apple tops out at Tier
-    2 — one of the reasons Apple is not in the launch scope.
+    2 — one of the reasons Apple is not in the launch scope. Apple's one-time
+    `user` form field sits outside monitoring entirely: it only appears during a
+    real browser first-authorization, which is why the strategy treats it as
+    best-effort profile enrichment and never depends on it.
 
 Operational shape: a failure opens a GitHub issue; the release process checks
 that the latest contract run is green. Bootstrap is once per provider (register

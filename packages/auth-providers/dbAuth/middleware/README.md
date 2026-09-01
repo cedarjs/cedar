@@ -39,6 +39,27 @@ export const ServerEntry: React.FC<Props> = ({ css, meta }) => {
 }
 ```
 
+### OAuth routing
+
+Apps using [`@cedarjs/auth-dbauth-oauth`](../oauth) opt in by also passing an `oauthHandler`, built the same way `dbAuthHandler` is — by wrapping `OAuthHandler`'s `invoke()`:
+
+```tsx
+import { OAuthHandler } from '@cedarjs/auth-dbauth-oauth'
+
+import { handler as dbAuthHandler } from '$api/src/functions/auth'
+import { oauthOptions } from '$api/src/lib/auth'
+
+const authMw = initDbAuthMiddleware({
+  dbAuthHandler,
+  getCurrentUser,
+  oauthHandler: (req, context) =>
+    new OAuthHandler(req, context, oauthOptions).invoke(),
+  // oauthUrl? optional, defaults to '/auth/oauth' (OAuthHandlerOptions.basePath's default)
+})
+```
+
+Requests whose URL falls under `oauthUrl` (`authorize`/`callback`/`unlink`) are dispatched to `oauthHandler` instead of the normal dbAuth session-validation path; its 302 redirects, `Set-Cookie` headers (session, `auth-provider`, and the OAuth transaction cookie), and JSON bodies are carried over to the middleware response unchanged. Omitting `oauthHandler` entirely disables OAuth routing — requests under `oauthUrl` simply fall through to the normal dbAuth handling below.
+
 ### Roles handling
 
 By default the middleware assumes your roles will be in `currentUser.roles` - either as a string or an array of strings.

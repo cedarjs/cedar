@@ -1,7 +1,21 @@
 import path from 'node:path'
 
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 
+import { decryptSession, getSession } from '@cedarjs/auth-dbauth-api'
+import { OAuthHandler } from '@cedarjs/auth-dbauth-oauth'
+import type {
+  OAuthHandlerOptions,
+  OAuthStrategy,
+} from '@cedarjs/auth-dbauth-oauth'
 import {
   MiddlewareRequest as MWRequest,
   MiddlewareRequest,
@@ -812,6 +826,296 @@ describe('dbAuthMiddleware', () => {
 
       const serverAuthState = req.serverAuthState.get()
       expect(serverAuthState).toHaveProperty('isAuthenticated', false)
+    })
+  })
+
+  describe('OAuth routing', () => {
+    const SESSION_SECRET = '540d03ebb00b441f8f7442cbc39958ad'
+
+    beforeEach(() => {
+      process.env.SESSION_SECRET = SESSION_SECRET
+    })
+
+    /**
+     * Minimal mock Prisma accessor, just enough for the `login` flow
+     * `OAuthHandler` exercises in these tests: creating rows and finding one
+     * by an exact-match `where`.
+     */
+    class TableMock {
+      records: Record<string, any>[] = []
+      private nextId = 1
+
+      create({ data }: { data: Record<string, any> }) {
+        const record = { id: this.nextId++, ...data }
+        this.records.push(record)
+        return record
+      }
+
+      findFirst({ where }: { where?: Record<string, unknown> } = {}) {
+        const record = this.records.find((r) =>
+          Object.entries(where ?? {}).every(([key, value]) => r[key] === value),
+        )
+        return record ?? null
+      }
+    }
+
+    function mockOAuthStrategy(
+      overrides: Partial<OAuthStrategy> = {},
+    ): OAuthStrategy {
+      return {
+        name: 'Mock',
+        redirectUri: 'https://example.com/auth/oauth/mock/callback',
+        usesOidc: false,
+        // Echo the handler-generated `state` back in the authorization URL,
+        // the same way a real provider does, so the test can read it off
+        // the redirect and use it in the callback request.
+        getAuthorizationUrl: (ctx) => {
+          const url = new URL('https://provider.example.com/authorize')
+          url.searchParams.set('state', ctx.state)
+          return url
+        },
+        handleCallback: async () => ({ providerUserId: 'known-id' }),
+        ...overrides,
+      }
+    }
+
+    function buildOAuthOptions(db: {
+      user: TableMock
+      oAuth: TableMock
+    }): OAuthHandlerOptions<any> {
+      return {
+        db,
+        authModelAccessor: 'user',
+        oauthModelAccessor: 'oAuth',
+        authFields: {
+          id: 'id',
+          username: 'email',
+          hashedPassword: 'hashedPassword',
+        },
+        providers: { mock: mockOAuthStrategy() },
+        redirects: { afterLogin: '/dashboard', error: '/auth/error' },
+        signup: { enabled: false },
+        sessionExpires: 60 * 60,
+      }
+    }
+
+    it('routes an authorize request to the oauth handler and sets the transaction cookie', async () => {
+      const db = { user: new TableMock(), oAuth: new TableMock() }
+      const oauthOptions = buildOAuthOptions(db)
+
+      const options: DbAuthMiddlewareOptions = {
+        getCurrentUser: vi.fn(),
+        dbAuthHandler: vi.fn(),
+        oauthHandler: (req) =>
+          new OAuthHandler(req, {} as any, oauthOptions).invoke(),
+      }
+      const [middleware] = initDbAuthMiddleware(options)
+
+      const req = new MWRequest(
+        new Request('http://localhost:8911/auth/oauth/mock/authorize', {
+          method: 'GET',
+        }),
+      )
+
+      const res = await middleware(req, MiddlewareResponse.next())
+
+      expect(res).toBeDefined()
+      expect(res?.status).toBe(302)
+      expect(res?.headers.get('Location')).toContain(
+        'https://provider.example.com/authorize',
+      )
+      expect(
+        res?.headers
+          .getSetCookie()
+          .some((c) => c.startsWith('oauth-transaction=')),
+      ).toBe(true)
+    })
+
+    it('routes a callback request to the oauth handler and issues a session cookie', async () => {
+      const db = { user: new TableMock(), oAuth: new TableMock() }
+      const user = db.user.create({
+        data: { email: 'oauth-user@example.com' },
+      })
+      db.oAuth.create({
+        data: { provider: 'mock', providerUserId: 'known-id', userId: user.id },
+      })
+      const oauthOptions = buildOAuthOptions(db)
+
+      const options: DbAuthMiddlewareOptions = {
+        getCurrentUser: vi.fn(),
+        dbAuthHandler: vi.fn(),
+        oauthHandler: (req) =>
+          new OAuthHandler(req, {} as any, oauthOptions).invoke(),
+      }
+      const [middleware] = initDbAuthMiddleware(options)
+
+      // Drive the real authorize step first, to get a genuine transaction
+      // cookie + state pair, the same way the browser round-trip would.
+      const authorizeReq = new MWRequest(
+        new Request('http://localhost:8911/auth/oauth/mock/authorize', {
+          method: 'GET',
+        }),
+      )
+      const authorizeRes = await middleware(
+        authorizeReq,
+        MiddlewareResponse.next(),
+      )
+      const state = new URL(
+        authorizeRes!.headers.get('Location')!,
+      ).searchParams.get('state')!
+      const transactionCookie = authorizeRes!.headers
+        .getSetCookie()
+        .find((c) => c.startsWith('oauth-transaction='))!
+        .split(';')[0]
+
+      const callbackReq = new MWRequest(
+        new Request(
+          `http://localhost:8911/auth/oauth/mock/callback?code=test-code&state=${state}`,
+          { method: 'GET', headers: { Cookie: transactionCookie } },
+        ),
+      )
+      const callbackRes = await middleware(
+        callbackReq,
+        MiddlewareResponse.next(),
+      )
+
+      expect(callbackRes).toBeDefined()
+      expect(callbackRes?.status).toBe(302)
+      expect(callbackRes?.headers.get('Location')).toBe('/dashboard')
+
+      const sessionCookie = callbackRes?.headers
+        .getSetCookie()
+        .find((c) => c.startsWith('session='))
+      expect(sessionCookie).toBeDefined()
+
+      const [session] = decryptSession(getSession(sessionCookie, undefined))
+      expect(session?.id).toBe(user.id)
+
+      // The transaction cookie must be cleared once the callback consumes it.
+      expect(
+        callbackRes?.headers
+          .getSetCookie()
+          .some((c) => c.startsWith('oauth-transaction=;')),
+      ).toBe(true)
+    })
+
+    it('still routes non-OAuth requests to dbAuthHandler when oauthHandler is configured', async () => {
+      const db = { user: new TableMock(), oAuth: new TableMock() }
+      const oauthOptions = buildOAuthOptions(db)
+      const user = { id: 2, email: 'user-login@example.com' }
+
+      const request = new Request(
+        'http://localhost:8911/middleware/dbauth/auth?method=login',
+        {
+          method: 'POST',
+          body: JSON.stringify({ username: user.email, password: 'password' }),
+        },
+      )
+      const req = new MWRequest(request)
+
+      const options: DbAuthMiddlewareOptions = {
+        cookieName: 'session_8911',
+        getCurrentUser: async () => {
+          return {}
+        },
+        dbAuthHandler: vi.fn(async () => {
+          return {
+            body: JSON.stringify(user),
+            headers: {},
+            statusCode: 200,
+          }
+        }),
+        oauthHandler: vi.fn((req) =>
+          new OAuthHandler(req, {} as any, oauthOptions).invoke(),
+        ),
+      }
+      const [middleware] = initDbAuthMiddleware(options)
+
+      const res = await middleware(req, MiddlewareResponse.next())
+
+      expect(options.dbAuthHandler).toHaveBeenCalledWith(req)
+      expect(options.oauthHandler).not.toHaveBeenCalled()
+      expect(res).toHaveProperty('body', JSON.stringify(user))
+      expect(res).toHaveProperty('status', 200)
+    })
+
+    it('does not route a path that only shares a prefix with oauthUrl (e.g. /auth/oauthx/...) to the oauth handler', async () => {
+      const db = { user: new TableMock(), oAuth: new TableMock() }
+      const oauthOptions = buildOAuthOptions(db)
+
+      const options: DbAuthMiddlewareOptions = {
+        getCurrentUser: vi.fn(),
+        dbAuthHandler: vi.fn(async () => ({
+          body: '{}',
+          headers: {},
+          statusCode: 200,
+        })),
+        oauthHandler: vi.fn((req) =>
+          new OAuthHandler(req, {} as any, oauthOptions).invoke(),
+        ),
+      }
+      const [middleware] = initDbAuthMiddleware(options)
+
+      const req = new MWRequest(
+        new Request('http://localhost:8911/auth/oauthx/authorize', {
+          method: 'GET',
+        }),
+      )
+
+      await middleware(req, MiddlewareResponse.next())
+
+      expect(options.oauthHandler).not.toHaveBeenCalled()
+      expect(options.dbAuthHandler).not.toHaveBeenCalled()
+    })
+
+    it('routes OAuth requests when the configured oauthUrl has a trailing slash', async () => {
+      const db = { user: new TableMock(), oAuth: new TableMock() }
+      const oauthOptions = buildOAuthOptions(db)
+
+      const options: DbAuthMiddlewareOptions = {
+        getCurrentUser: vi.fn(),
+        dbAuthHandler: vi.fn(async () => ({
+          body: '{}',
+          headers: {},
+          statusCode: 200,
+        })),
+        oauthUrl: '/auth/oauth/',
+        oauthHandler: vi.fn((req) =>
+          new OAuthHandler(req, {} as any, oauthOptions).invoke(),
+        ),
+      }
+      const [middleware] = initDbAuthMiddleware(options)
+
+      const req = new MWRequest(
+        new Request(
+          'http://localhost:8911/auth/oauth/mock/authorize?flow=login',
+          { method: 'GET' },
+        ),
+      )
+
+      await middleware(req, MiddlewareResponse.next())
+
+      expect(options.oauthHandler).toHaveBeenCalledOnce()
+      expect(options.dbAuthHandler).not.toHaveBeenCalled()
+    })
+
+    it('leaves OAuth-path requests untouched when oauthHandler is not configured', async () => {
+      const options: DbAuthMiddlewareOptions = {
+        getCurrentUser: vi.fn(),
+        dbAuthHandler: vi.fn(),
+      }
+      const [middleware] = initDbAuthMiddleware(options)
+
+      const req = {
+        method: 'GET',
+        headers: new Headers(),
+        url: 'http://localhost:8911/auth/oauth/mock/authorize',
+      } as MiddlewareRequest
+
+      const res = await middleware(req, { passthrough: true } as any)
+
+      expect(options.dbAuthHandler).not.toHaveBeenCalled()
+      expect(res).toEqual({ passthrough: true })
     })
   })
 })

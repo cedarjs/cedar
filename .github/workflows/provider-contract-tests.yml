@@ -1,0 +1,84 @@
+name: 🔌 Provider Contract Tests
+
+# Scheduled contract tests for the OAuth providers dbAuth OAuth ships
+# built-in (Google, GitHub) — see "6. Scheduled provider-contract job" in
+# docs/implementation-plans/2026-09-01-dbauth-oauth.md for the design.
+# Scheduled, not per-PR, so a provider outage never blocks merges.
+
+on:
+  schedule:
+    # Weekly, Monday 04:11 UTC (off the top of the hour to avoid the
+    # scheduled-run thundering herd).
+    - cron: '11 4 * * 1'
+  workflow_dispatch: {}
+
+permissions: {}
+
+jobs:
+  provider-contract-tests:
+    # Restricts workflow_dispatch (which lets a caller pick any branch) to
+    # the default branch, so the OAuth contract secrets are never exposed
+    # to a run against an arbitrary branch. The scheduled trigger always
+    # runs against the default branch already.
+    if: github.repository == 'cedarjs/cedar' && (github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main')
+    name: 🔌 Provider contract tests
+    runs-on: ubuntu-latest
+
+    env:
+      CEDAR_CI: 1
+
+    steps:
+      - name: Checkout the framework code
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+        with:
+          build: false
+
+      - name: 🔌 Run provider contract tests
+        working-directory: tasks/provider-contract-tests
+        run: yarn vitest run
+        env:
+          OAUTH_CONTRACT_GOOGLE_CLIENT_ID: ${{ secrets.OAUTH_CONTRACT_GOOGLE_CLIENT_ID }}
+          OAUTH_CONTRACT_GOOGLE_CLIENT_SECRET: ${{ secrets.OAUTH_CONTRACT_GOOGLE_CLIENT_SECRET }}
+          OAUTH_CONTRACT_GOOGLE_REFRESH_TOKEN: ${{ secrets.OAUTH_CONTRACT_GOOGLE_REFRESH_TOKEN }}
+          OAUTH_CONTRACT_GITHUB_CLIENT_ID: ${{ secrets.OAUTH_CONTRACT_GITHUB_CLIENT_ID }}
+          OAUTH_CONTRACT_GITHUB_CLIENT_SECRET: ${{ secrets.OAUTH_CONTRACT_GITHUB_CLIENT_SECRET }}
+          OAUTH_CONTRACT_GITHUB_TOKEN: ${{ secrets.OAUTH_CONTRACT_GITHUB_TOKEN }}
+
+  report-failure:
+    needs: provider-contract-tests
+    if: github.repository == 'cedarjs/cedar' && failure()
+
+    name: 📣 Report failure
+    runs-on: ubuntu-latest
+
+    permissions:
+      issues: write
+
+    steps:
+      - name: Open or update the tracking issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Provider contract check failed"
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          body="The scheduled provider-contract check failed: $run_url
+
+          A live Google or GitHub OAuth endpoint may have changed shape, or a Tier 2/3 credential may have expired. See tasks/provider-contract-tests/README.md for what each tier proves and how to re-bootstrap credentials."
+
+          existing=$(gh issue list \
+            --repo "$GITHUB_REPOSITORY" \
+            --state open \
+            --search "in:title \"$title\"" \
+            --json number \
+            --jq '.[0].number')
+
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body "$body"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body"
+          fi
