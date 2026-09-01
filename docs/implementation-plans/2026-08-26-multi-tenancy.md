@@ -164,8 +164,9 @@ independent of application code.
    `cedar-org` request header (no `X-` prefix, per RFC 6648, and matching the
    existing `auth-provider` header), then `orgId` / `orgSlug` GraphQL variable
    on the operation. Apps can replace this with their own `resolveCurrentOrg`
-   function. The web client sends the header from `useCurrentOrg()`, which
-   derives it from the URL by default.
+   function. On the web the header is baked into a per-organization Apollo
+   client that `OrgScope` provides under the organization routes; see
+   [Web side](#web-side-packagestenancysrcweb).
 4. **Membership is validated when the org is resolved.** `setCurrentOrg` takes
    only the organization's identity and derives `role` and `membershipId` from
    the authenticated user's memberships; it refuses an organization the user has
@@ -354,61 +355,69 @@ export function useCurrentOrg(): { org: CurrentOrgSummary | undefined; membershi
 export function hasOrgRole(roles, organizationId?): boolean   // reads useAuth().currentUser.memberships
 ```
 
-The active organization is held in a small module-level store, not in React
-context alone, so two things that live at different depths of the tree can use
-it: an Apollo link (installed in `App.tsx`, above the router) reads the store to
-set the `cedar-org` header on every request, and `useCurrentOrg()` subscribes to
-it. The store is written by `<OrgScope>`, which is placed inside the router
-where route params exist:
+The current organization is a per-organization Apollo client, provided by
+`<OrgScope>` under the organization routes with the router's own per-subtree
+provider mechanism, `Set wrap`:
 
 ```tsx
 // web/src/Routes.tsx
-<Set wrap={OrgScope}>
+<Set wrap={[OrgScope, OrgLayout]}>
   <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
 </Set>
 ```
 
-`OrgScope` reads `orgSlug` with `useParams()` and writes it to the store
-synchronously during render, before its children render, not in an effect. A
-parent's effects run after its children's, and a Cell starts its Apollo query
-as soon as it mounts, so an effect would let the first request after mounting
-or switching organizations go out with no `cedar-org` header or with the
-previous organization's. The write is a plain assignment of a string that is
-already known, so repeating it on every render is harmless, and the link reads
-the store at request time rather than capturing it. The URL owns the current
-organization; the store is a bridge that lets the link, which is not a
-component and sits above the router, read a value only the router can derive.
-It is not a second source of truth. Apps that prefer a stored selection instead
-of a URL segment call `setOrg` from their own switcher and omit the `Set`.
-Multiple tabs on different organizations work because the header, not the
-session, carries the choice.
+`OrgScope` reads `orgSlug` with `useParams()`, finds the matching entry in
+`useAuth().currentUser.memberships` (which `getCurrentUser()` returns with
+`organization: { id, slug, name }` for this reason, so no bootstrap query is
+needed), and renders a nested `<ApolloProvider client={orgClient}>` plus an
+`OrgContext` that `useCurrentOrg()` reads. When there is no matching
+membership it renders the app's not-a-member state instead of its children.
+Apollo resolves the nearest provider, so every Cell, `useQuery` and
+`useMutation` under the organization routes uses the organization's client,
+and everything above `OrgScope` (the app shell, the organization switcher, the
+create-organization and accept-invitation pages) keeps using the app client
+from `CedarApolloProvider`.
 
-The store has two halves that are updated separately. The render-phase write
-updates the readable value and nothing else; notifying subscribers from inside
-another component's render is a React error ("cannot update a component while
-rendering a different component"). Notification runs in a `useLayoutEffect` in
-`OrgScope`. Components below `OrgScope` render after it in the same pass, read
-the new value directly and do not need the notification; components above it
-(a navigation bar with an organization switcher) rendered with the old value
-and are re-rendered by the notification.
+The organization client is the app client's link chain with a `cedar-org`
+header added, and its own `InMemoryCache` built from the app's `cacheConfig`.
+Clients are kept in a module-level `Map<slug, client>` so returning to an
+organization reuses its cache; they share the HTTP transport and the auth
+link, so the cost per organization visited in a tab is one cache. This design
+is chosen over a shared client with a header set from a store for one reason
+that has nothing to do with how the header is set: the Apollo cache is keyed by
+field name and arguments, not by request headers. With one shared client,
+`query { projects { id name } }` under `/org/acme` and under `/org/globex`
+normalize to the same `ROOT_QUERY.projects` entry, and a `cache-first` Cell
+mounted after switching renders the first organization's list for the second
+one with no network request to blame. Tenant identity has to be visible to the
+cache, not only to the transport; a client per organization is the direct way
+to make it so.
 
-`useCurrentOrg()` subscribes with `useSyncExternalStore`, not a hand-rolled
-`useState` plus `useEffect` subscription, for two reasons:
+Consequences of the client being the tenant:
 
-- Tearing. Under concurrent rendering a manual subscription lets two components
-  in the same tree render with different store values. For tenant identity that
-  is the worst inconsistency available: half a page rendered for one
-  organization, half for another. `useSyncExternalStore` compares the snapshot
-  at render and at commit and forces a synchronous re-render when they differ,
-  so every committed frame agrees on the organization. This is also what makes
-  the deferred notification above safe: a component that rendered before the
-  render-phase write is caught by the consistency check even if the
-  notification has not fired yet.
-- Server snapshot. `getServerSnapshot` is where the organization comes from
-  when there is no `window`. When server rendering gives server code direct
-  `db` access (see open questions), seeding the store from the route param on
-  the server is a `getServerSnapshot` implementation, not a redesign of the
-  web side.
+- There is no store, no render-phase write and no subscription to reason about.
+  React context is consistent within a committed frame, and a Cell under
+  `OrgScope` cannot mount before `OrgScope` has rendered its provider.
+- A tenant-scoped query issued outside `OrgScope` goes through the app client,
+  carries no `cedar-org` header, and is refused by the API with
+  `TenantScopeError`. Forgetting to put organization pages under the `Set`
+  fails closed on the web side the same way a missing `organizationId` fails
+  closed on the API side.
+- Multiple tabs on different organizations work because each tab's client
+  carries its own header; nothing is stored in the session.
+- Apps that select the organization from state rather than a URL segment
+  render `<OrgScope orgSlug={selected}>` themselves with the same component;
+  the route param is the default source, a prop overrides it. `setOrg` from
+  `useCurrentOrg()` is `navigate(routes.<same route>({ orgSlug }))` in the URL
+  model and a state setter in the other.
+
+Building the organization client needs the app client's link chain and cache
+configuration. `CedarApolloProvider` assembles those internally (auth link,
+SSE link, fragment registry, `cacheConfig`, user `graphQLClientConfig`), so
+`@cedarjs/web/apollo` gains a helper that builds a second client from the same
+configuration with additional headers. The helper is the framework change this
+layer needs; `OrgScope` itself is generated app code that calls it. Its exact
+shape is decided in step 2 of the sequencing.
 
 `currentUser.memberships` on the web is a snapshot taken at authentication, not
 live data. The API validates against fresh memberships on every request because
@@ -461,12 +470,16 @@ Steps performed:
    ones: `getCurrentUser()` ran before `ensureDefaultOrganization`, so on a
    first login the memberships on `currentUser` are empty and membership
    validation would refuse the organization that was just created.
-   `invitationToken` is read from the `cedar-invitation-token` request header,
-   which the Apollo link sends while the web store holds a token; the store
-   picks the token up from the `invitationToken` URL query parameter on the
-   invitation landing page and clears it once a request has claimed it. A
-   first-class `currentOrg` option on `createGraphQLHandler` may replace this
-   boilerplate; see open questions.
+   `invitationToken` is read from the `cedar-invitation-token` request header.
+   Only one operation ever carries it: the generated invitation landing page
+   (`/invite/{token}`, outside `OrgScope`) calls the `acceptInvitation`
+   mutation with the token as a variable and as that header through Apollo's
+   per-operation `context: { headers }`. The context function reads the
+   header, so `ensureDefaultOrganization` attaches the pending membership
+   before the resolver runs, and the resolver returns the organization,
+   idempotently when the membership is already attached. A first-class
+   `currentOrg` option on `createGraphQLHandler` may replace this boilerplate;
+   see open questions.
 6. Generate `api/src/directives/requireMembership/` with its test.
 7. Generate `api/src/services/organizations/` (create org, invite, accept
    invitation, list memberships) and matching SDL, all scoped with
@@ -491,10 +504,10 @@ Steps performed:
    have no `currentOrg` and every tenant-owned query for them fails by design.
    The setup output says to run `yarn cedar prisma migrate dev` and then
    `yarn cedar data-migrate up`, in that order.
-10. Add the Apollo link to `web/src/App.tsx` and generate
-    `web/src/components/OrgScope/OrgScope.tsx`. Routes are not edited; the
-    printed next steps show the `<Set wrap={OrgScope}>`
-    shape.
+10. Generate `web/src/components/OrgScope/OrgScope.tsx` (per-organization
+    Apollo client, `OrgContext`, not-a-member state) and the invitation landing
+    page. `web/src/App.tsx` and `Routes.tsx` are not edited; the printed next
+    steps show the `<Set wrap={OrgScope}>` shape and the invitation route.
 11. Print next steps: run the migrations, add `organizationId` to existing
     models, wrap organization routes in `OrgScope`, use `withTenancy` on any
     plain function that touches tenant-owned models.
@@ -585,6 +598,11 @@ same shape as `uploads.md`.
   `$withoutTenant`, and the `TenantScopeError` path. Run against a real SQLite
   Prisma client generated from a fixture schema (the `storage` package does the
   same), not against mocks, so Prisma's argument shapes are exercised for real.
+- `OrgScope` (web): two organizations visited in sequence get two clients with
+  separate caches, so a Cell that ran `projects` under the first never shows
+  that list under the second; returning to the first reuses its client; a slug
+  with no membership renders the not-a-member state and issues no query; a
+  tenant-scoped query issued above `OrgScope` carries no `cedar-org` header.
 - `resolveCurrentOrg` / `setCurrentOrg`: header, `variables.orgId`,
   `variables.orgSlug`, slug/id lookup, non-member rejection, and a resolver
   that returns a forged `role: 'owner'` for a viewer membership (the context
@@ -607,9 +625,10 @@ same shape as `uploads.md`.
 
 1. How-to as spec (`docs/docs/how-to/multi-tenancy.md`). Review the API on paper
    before writing code.
-2. `packages/tenancy`: extension, context helpers, auth helpers, web hooks.
-   Publishable on its own; usable by hand-wiring before the setup command
-   exists.
+2. `packages/tenancy`: extension, context helpers, auth helpers, web hooks,
+   plus the `@cedarjs/web/apollo` helper that builds an organization client
+   from `CedarApolloProvider`'s configuration. Publishable on its own; usable
+   by hand-wiring before the setup command exists.
 3. `setup tenancy` command with codemods and generated services/directive.
 4. Reference docs page and a `local-testing-project` run through the full flow
    (create org, invite, accept, scoped CRUD, two orgs in two tabs).
@@ -629,9 +648,13 @@ that plan lands, and the hardcoded path until then.
 - **RSC / server-rendered routes.** When the streaming SSR rewrite
   (`2026-07-20-streaming-ssr-rewrite.md`) gives server code direct `db` access,
   the same `context.currentOrg` needs to be set from the route param in the
-  server entry, and the web store's `getServerSnapshot` needs to return that
-  same organization so the server-rendered tree agrees with the API. Note it
-  there; no work in this plan.
+  server entry, and `OrgScope` needs to construct its organization client
+  during server rendering from that same param so the server-rendered tree
+  agrees with the API. Both require route matching to happen before rendering
+  starts, which is a split of the router into route analysis and page
+  rendering that the SSR rewrite may want for its own reasons (per-route
+  dispatch); tenancy is a consumer of that split, not a reason to do it. Note
+  it there; no work in this plan.
 - **Role source.** `role` as a free string on `Membership` versus a
   `MembershipRole` enum in the generated schema. Free string is the default in
   this plan; revisit if the generated organization services want exhaustive
