@@ -851,6 +851,7 @@ return await oauthHandler.invoke()
 | `cookie?`             | Cookie config applied to both the session cookie and the transaction cookie.                                                                                                                                                                                                                    |
 | `transactionCookie?`  | Cookie config for just the OAuth transaction cookie, overriding `cookie` for that cookie only. Needed for a provider with a cross-site `form_post` callback (e.g. Apple), which requires `SameSite: 'None'` on the transaction cookie without loosening the session cookie's `SameSite` policy. |
 | `cors?`               | CORS config, same shape as `DbAuthHandlerOptions.cors`.                                                                                                                                                                                                                                         |
+| `trustedOrigins?`     | Extra origins trusted for the `unlink` route's `POST` request, on top of the request's own host and any origins already listed in `cors.origin`. Same shape and semantics as `DbAuthHandlerOptions.trustedOrigins` — see [`trustedOrigins`](#trustedorigins).                                   |
 
 ### Routes
 
@@ -860,7 +861,7 @@ Every route lives under `basePath` (`/auth/oauth` by default), keyed by provider
 | ---------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `{basePath}/{provider}/authorize?flow=login\|signup\|link` | `GET`           | Redirects to the provider's authorization endpoint. `flow` defaults to `login`.                                                                                                                                    |
 | `{basePath}/{provider}/callback`                           | `GET` or `POST` | The provider's registered redirect URI. `POST` supports `form_post` callbacks (Apple-shaped providers). Redirects to `redirects.afterLogin`/`afterSignup`/`afterLink` on success, or `redirects.error` on failure. |
-| `{basePath}/{provider}/unlink`                             | `POST`          | Removes a linked identity from the current session's user. Requires a valid session cookie and an `x-oauth-action` header (CSRF defense — a cross-site HTML form can't set it). Returns JSON, not a redirect.      |
+| `{basePath}/{provider}/unlink`                             | `POST`          | Removes a linked identity from the current session's user. Requires a valid session cookie and a trusted request `Origin` — see [`trustedOrigins`](#trustedorigins). Returns JSON, not a redirect.                 |
 
 The web client (`@cedarjs/auth-dbauth-web/oauth`) builds these URLs for you — see the [how-to](../how-to/oauth.md#generated-pages-and-the-web-client-api) for `getOAuthUrl`, `unlinkOAuthProvider`, and `getOAuthError`.
 
@@ -868,7 +869,7 @@ The web client (`@cedarjs/auth-dbauth-web/oauth`) builds these URLs for you — 
 
 Every `OAuthErrorCode` that can appear on the error redirect's `?error=` param, or in the `unlink` route's JSON body:
 
-`unknown_provider`, `invalid_state`, `provider_error`, `unknown_identity`, `email_in_use`, `identity_in_use`, `not_authenticated`, `flow_not_enabled`, `cannot_unlink_last_identity`, `forbidden`, `server_error`.
+`unknown_provider`, `invalid_state`, `provider_error`, `unknown_identity`, `email_in_use`, `identity_in_use`, `not_authenticated`, `flow_not_enabled`, `cannot_unlink_last_identity`, `untrusted_origin`, `server_error`.
 
 Exception text from a strategy or an unexpected error is never sent to the client — only one of these stable codes is. See the [how-to's error table](../how-to/oauth.md#how-the-flows-work) for what triggers each one.
 

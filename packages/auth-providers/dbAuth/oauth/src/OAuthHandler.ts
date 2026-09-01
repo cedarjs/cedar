@@ -1,25 +1,29 @@
 import type { APIGatewayProxyEvent, Context as LambdaContext } from 'aws-lambda'
 
 import type { CorsContext, PartialRequest } from '@cedarjs/api'
-import { createCorsContext } from '@cedarjs/api'
+import { createCorsContext, isFetchApiRequest } from '@cedarjs/api'
 import {
   createExpiresAtDate,
   createLoginResponse,
   dbAuthSession,
   extractCookie,
   getDbAuthResponseBuilder,
+  isProxiedRequest,
+  isRequestOriginTrusted,
+  resolveRequestHost,
+  resolveRequestProtocol,
 } from '@cedarjs/auth-dbauth-api'
 
 import {
   CannotUnlinkLastIdentityError,
   EmailInUseError,
   FlowNotEnabledError,
-  ForbiddenError,
   IdentityInUseError,
   NotAuthenticatedError,
   OAuthError,
   UnknownIdentityError,
   UnknownProviderError,
+  UntrustedOriginError,
 } from './errors.js'
 import type { OAuthErrorCode } from './errors.js'
 import { resolveIdentityFields, IdentityModel } from './identity.js'
@@ -151,6 +155,11 @@ export class OAuthHandler<TDb extends object = Record<string, unknown>> {
       if (method !== 'GET' && method !== 'POST') {
         return this.createResponse(this._notFound(), corsHeaders)
       }
+      // No origin validation here: a cross-site `form_post` callback (e.g.
+      // Apple) is a legitimate, expected POST from the provider's own
+      // origin, not the caller's. This route is protected instead by the
+      // single-use encrypted transaction cookie plus the `state` param
+      // matching it — both of which `_callback` checks below.
       return this.createResponse(
         await this._callback(route.provider),
         corsHeaders,
@@ -460,13 +469,26 @@ export class OAuthHandler<TDb extends object = Record<string, unknown>> {
 
   private async _unlink(providerKey: string): Promise<HandlerResult> {
     try {
-      // Forced-preflight CSRF defense: a cross-site HTML form can POST to
-      // this endpoint using only the session cookie, but it cannot set a
-      // custom header. A cross-origin `fetch` that sets one triggers a CORS
-      // preflight this endpoint doesn't approve, so requiring the header
-      // restricts this route to same-origin JavaScript callers.
-      if (!this.normalizedRequest.headers.get('x-oauth-action')) {
-        throw new ForbiddenError()
+      // `unlink` is the only state-changing (non-GET) route this handler
+      // exposes, so it needs the same Origin check `DbAuthHandler` applies
+      // to its own state-changing requests -- a cross-site HTML form can
+      // POST here using only the ambient session cookie.
+      if (
+        !isRequestOriginTrusted(
+          {
+            method: this.normalizedRequest.method,
+            headers: this.normalizedRequest.headers,
+            host: this._requestHost(),
+            protocol: this._requestProtocol(),
+            proxied: isProxiedRequest(this.normalizedRequest.headers),
+          },
+          {
+            trustedOrigins: this.options.trustedOrigins,
+            corsOrigin: this.options.cors?.origin,
+          },
+        )
+      ) {
+        throw new UntrustedOriginError()
       }
 
       const session = dbAuthSession(this.event, this.options.cookie?.name)
@@ -535,13 +557,34 @@ export class OAuthHandler<TDb extends object = Record<string, unknown>> {
     switch (code) {
       case 'not_authenticated':
         return 401
-      case 'forbidden':
+      case 'untrusted_origin':
         return 403
       case 'unknown_provider':
         return 404
       default:
         return 400
     }
+  }
+
+  // best-effort host the request was sent to, used by origin validation to
+  // allow same-origin `unlink` requests through with no extra
+  // configuration. Prefers `X-Forwarded-Host` over the connection-level
+  // host/URL -- see `resolveRequestHost` for why that's safe behind a proxy
+  private _requestHost(): string | null {
+    return resolveRequestHost(
+      this.normalizedRequest.headers,
+      isFetchApiRequest(this.event) ? this.event.url : undefined,
+    )
+  }
+
+  // best-effort scheme the request arrived over, used alongside
+  // `_requestHost` for origin validation. See `resolveRequestProtocol` for
+  // when it can and can't be determined reliably
+  private _requestProtocol(): string | null {
+    return resolveRequestProtocol(
+      this.normalizedRequest.headers,
+      isFetchApiRequest(this.event) ? this.event.url : undefined,
+    )
   }
 
   // -- response helpers -------------------------------------------------

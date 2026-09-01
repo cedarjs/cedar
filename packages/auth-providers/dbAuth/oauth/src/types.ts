@@ -272,4 +272,15 @@ export interface OAuthHandlerOptions<
    */
   transactionCookie?: DbAuthCookieConfig
   cors?: CorsConfig
+  /**
+   * Extra origins that are trusted for the `unlink` route's state-changing
+   * `POST` request, on top of the request's own host and any origins
+   * already listed in `cors.origin`.
+   *
+   * Needed when the web side and API are on different origins and
+   * `cors.origin` isn't set to those origins, or when `cors.origin` is set
+   * to `true` -- reflecting any request origin is never treated as trust,
+   * so that combination requires listing trusted origins here explicitly.
+   */
+  trustedOrigins?: string | string[]
 }

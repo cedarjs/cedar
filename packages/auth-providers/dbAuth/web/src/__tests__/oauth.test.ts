@@ -44,7 +44,7 @@ describe('unlinkOAuthProvider', () => {
     globalThis.fetch = fetchMock
   })
 
-  it('POSTs to the unlink route with credentials included', async () => {
+  it('POSTs to the unlink route with credentials included and no extra headers', async () => {
     fetchMock.mockResolvedValue({
       json: () => Promise.resolve({ ok: true }),
     })
@@ -56,7 +56,6 @@ describe('unlinkOAuthProvider', () => {
       {
         method: 'POST',
         credentials: 'include',
-        headers: { 'x-oauth-action': 'unlink' },
       },
     )
     expect(result).toEqual({ ok: true })
@@ -76,7 +75,6 @@ describe('unlinkOAuthProvider', () => {
       {
         method: 'POST',
         credentials: 'include',
-        headers: { 'x-oauth-action': 'unlink' },
       },
     )
   })

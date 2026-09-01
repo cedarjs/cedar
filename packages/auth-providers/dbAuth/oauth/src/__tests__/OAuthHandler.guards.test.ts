@@ -115,19 +115,23 @@ function authorizeEvent({
 function unlinkEvent({
   provider,
   cookie,
-  withOAuthAction = true,
+  origin,
+  host = 'example.com',
 }: {
   provider: string
   cookie?: string
-  /** Whether to send the `x-oauth-action` CSRF-defense header. Defaults to `true`. */
-  withOAuthAction?: boolean
+  /** `Origin` header to send. Omit to simulate a non-browser caller. */
+  origin?: string
+  /** `Host` header to send. Defaults to `'example.com'`. */
+  host?: string
 }): APIGatewayProxyEvent {
   return {
     httpMethod: 'POST',
     path: `/auth/oauth/${provider}/unlink`,
     headers: {
       ...(cookie ? { cookie, 'content-type': 'application/json' } : {}),
-      ...(withOAuthAction ? { 'x-oauth-action': 'unlink' } : {}),
+      ...(origin ? { origin } : {}),
+      host,
     },
     queryStringParameters: {},
     body: '{}',
@@ -538,7 +542,33 @@ describe('OAuthHandler guards', () => {
   })
 
   describe('unlink', () => {
-    it('returns 403 forbidden when the x-oauth-action header is missing', async () => {
+    it('succeeds when the Origin header matches the request host', async () => {
+      const user = db.user.create({
+        data: { email: 'me@example.com', hashedPassword: 'hashed' },
+      })
+      db.oAuth.create({
+        data: { provider: 'mock', providerUserId: 'only-id', userId: user.id },
+      })
+
+      const handler = new OAuthHandler(
+        unlinkEvent({
+          provider: 'mock',
+          cookie: sessionCookieHeaderFor(user),
+          origin: 'https://example.com',
+          host: 'example.com',
+        }),
+        {} as any,
+        { ...baseOptions, providers: { mock: mockStrategy() } },
+      )
+
+      const response = await handler.invoke()
+
+      expect(response.statusCode).toBe(200)
+      expect(JSON.parse(response.body).ok).toBe(true)
+      expect(db.oAuth.records).toHaveLength(0)
+    })
+
+    it('returns 403 untrusted_origin when the Origin header is a foreign origin', async () => {
       const user = db.user.create({ data: { email: 'me@example.com' } })
       db.oAuth.create({
         data: { provider: 'mock', providerUserId: 'only-id', userId: user.id },
@@ -548,7 +578,8 @@ describe('OAuthHandler guards', () => {
         unlinkEvent({
           provider: 'mock',
           cookie: sessionCookieHeaderFor(user),
-          withOAuthAction: false,
+          origin: 'https://evil.example',
+          host: 'example.com',
         }),
         {} as any,
         { ...baseOptions, providers: { mock: mockStrategy() } },
@@ -557,8 +588,59 @@ describe('OAuthHandler guards', () => {
       const response = await handler.invoke()
 
       expect(response.statusCode).toBe(403)
-      expect(JSON.parse(response.body).error).toBe('forbidden')
+      expect(JSON.parse(response.body).error).toBe('untrusted_origin')
       expect(db.oAuth.records).toHaveLength(1)
+    })
+
+    it('succeeds when the foreign Origin is listed in trustedOrigins', async () => {
+      const user = db.user.create({
+        data: { email: 'me@example.com', hashedPassword: 'hashed' },
+      })
+      db.oAuth.create({
+        data: { provider: 'mock', providerUserId: 'only-id', userId: user.id },
+      })
+
+      const handler = new OAuthHandler(
+        unlinkEvent({
+          provider: 'mock',
+          cookie: sessionCookieHeaderFor(user),
+          origin: 'https://admin.example.com',
+          host: 'example.com',
+        }),
+        {} as any,
+        {
+          ...baseOptions,
+          providers: { mock: mockStrategy() },
+          trustedOrigins: ['https://admin.example.com'],
+        },
+      )
+
+      const response = await handler.invoke()
+
+      expect(response.statusCode).toBe(200)
+      expect(JSON.parse(response.body).ok).toBe(true)
+      expect(db.oAuth.records).toHaveLength(0)
+    })
+
+    it('succeeds when there is no Origin header (non-browser caller)', async () => {
+      const user = db.user.create({
+        data: { email: 'me@example.com', hashedPassword: 'hashed' },
+      })
+      db.oAuth.create({
+        data: { provider: 'mock', providerUserId: 'only-id', userId: user.id },
+      })
+
+      const handler = new OAuthHandler(
+        unlinkEvent({ provider: 'mock', cookie: sessionCookieHeaderFor(user) }),
+        {} as any,
+        { ...baseOptions, providers: { mock: mockStrategy() } },
+      )
+
+      const response = await handler.invoke()
+
+      expect(response.statusCode).toBe(200)
+      expect(JSON.parse(response.body).ok).toBe(true)
+      expect(db.oAuth.records).toHaveLength(0)
     })
 
     it('returns 401 when there is no dbAuth session', async () => {

@@ -14,7 +14,7 @@ export type OAuthErrorCode =
   | 'not_authenticated'
   | 'flow_not_enabled'
   | 'cannot_unlink_last_identity'
-  | 'forbidden'
+  | 'untrusted_origin'
   | 'server_error'
 
 /**
@@ -102,9 +102,9 @@ export class CannotUnlinkLastIdentityError extends OAuthError {
   }
 }
 
-export class ForbiddenError extends OAuthError {
-  constructor(message = 'Missing required x-oauth-action header') {
-    super('forbidden', message)
-    this.name = 'ForbiddenError'
+export class UntrustedOriginError extends OAuthError {
+  constructor(message = 'Request origin is not trusted') {
+    super('untrusted_origin', message)
+    this.name = 'UntrustedOriginError'
   }
 }
