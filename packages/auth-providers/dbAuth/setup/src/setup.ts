@@ -48,7 +48,11 @@ export function builder(yargs: Argv) {
 
 export interface Args {
   webauthn: boolean | null
-  oauth: string | null
+  // `undefined` is legal alongside `null`/a string: yargs supplies `null`
+  // when the flag is parsed from argv and absent, but a caller that invokes
+  // the setup handler directly (e.g. a test-project fixture rebuild) can
+  // omit the property entirely, which comes through as `undefined`.
+  oauth: string | null | undefined
   createUserModel: boolean | null
   generateAuthPages: boolean | null
   force: boolean

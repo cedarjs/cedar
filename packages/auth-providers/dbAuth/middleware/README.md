@@ -58,7 +58,7 @@ const authMw = initDbAuthMiddleware({
 })
 ```
 
-Requests whose URL falls under `oauthUrl` (`authorize`/`callback`/`unlink`) are dispatched to `oauthHandler` instead of the normal dbAuth session-validation path; its 302 redirects, `Set-Cookie` headers (session, `auth-provider`, and the OAuth transaction cookie), and JSON bodies are carried over to the middleware response unchanged. Omitting `oauthHandler` entirely disables OAuth routing — requests under `oauthUrl` fall through to the normal dbAuth handling, exactly as if the option didn't exist.
+Requests whose URL falls under `oauthUrl` (`authorize`/`callback`/`unlink`) are dispatched to `oauthHandler` instead of the normal dbAuth session-validation path; its 302 redirects, `Set-Cookie` headers (session, `auth-provider`, and the OAuth transaction cookie), and JSON bodies are carried over to the middleware response unchanged. Omitting `oauthHandler` entirely disables OAuth routing — requests under `oauthUrl` simply fall through to the normal dbAuth handling below.
 
 ### Roles handling
 

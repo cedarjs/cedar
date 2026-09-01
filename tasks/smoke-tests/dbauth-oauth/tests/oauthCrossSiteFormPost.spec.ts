@@ -13,18 +13,18 @@ import { test, expect } from '@playwright/test'
  * `crossSiteMockProvider.ts`).
  *
  * This is a real finding, not just a scenario to cover: a cookie with
- * `SameSite=Lax` (the default dbAuth cookie policy, and what the OAuth
- * transaction cookie inherited before this suite existed) is *not* sent on
- * a cross-site top-level POST navigation -- only on cross-site top-level GET
- * navigations. Without a fix, the transaction cookie set at `/authorize`
- * would silently fail to arrive at `/callback`, and the flow would look
- * like a CSRF attack (`error=invalid_state`) instead of a working login.
- * `@cedarjs/auth-dbauth-oauth` now has a `transactionCookie` option
- * (`OAuthHandlerOptions.transactionCookie`, independent of the session
- * cookie's `cookie` option) precisely so an app can give the transaction
- * cookie `SameSite: 'None'` for this provider without loosening the session
- * cookie's own `SameSite` policy -- see `tasks/test-project/templates/oauth-smoke/api/auth.ts`
- * for how the test project configures it.
+ * `SameSite=Lax` (the default dbAuth cookie policy) is *not* sent on a
+ * cross-site top-level POST navigation -- only on cross-site top-level GET
+ * navigations. Without a distinct policy for the transaction cookie, the
+ * cookie set at `/authorize` would silently fail to arrive at `/callback`,
+ * and the flow would look like a CSRF attack (`error=invalid_state`)
+ * instead of a working login. `@cedarjs/auth-dbauth-oauth`'s
+ * `transactionCookie` option (`OAuthHandlerOptions.transactionCookie`,
+ * independent of the session cookie's `cookie` option) is precisely for
+ * this: it lets an app give the transaction cookie `SameSite: 'None'` for
+ * this provider without loosening the session cookie's own `SameSite`
+ * policy -- see `tasks/test-project/templates/oauth-smoke/api/auth.ts` for
+ * how the test project configures it.
  */
 test('logs in through a cross-site form_post callback (Apple-shaped provider)', async ({
   page,
@@ -41,9 +41,10 @@ test('logs in through a cross-site form_post callback (Apple-shaped provider)', 
   await page.waitForURL('http://localhost:8910/')
 
   const cookies = await page.context().cookies()
-  const sessionCookie = cookies.find((cookie) =>
-    cookie.name.startsWith('session'),
-  )
+  // The dbAuth cookie name is `session_%port%` with the api port filled in;
+  // this suite's `webServer` (playwright.config.ts) always runs the api on
+  // the fixed port 8911, so the resolved name is exact and stable here.
+  const sessionCookie = cookies.find((cookie) => cookie.name === 'session_8911')
 
   expect(sessionCookie).toBeTruthy()
   expect(sessionCookie?.httpOnly).toBe(true)

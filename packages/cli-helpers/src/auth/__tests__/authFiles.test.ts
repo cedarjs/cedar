@@ -97,9 +97,12 @@ it('generates a record of oauth files', async () => {
     oauth: true,
   })
 
-  expect(filesRecord[path.join(getPaths().api.functions, 'auth.ts')]).toContain(
-    'oauth',
-  )
+  // Exact match, not `.toContain('oauth')` -- that substring also matches
+  // the combined `webAuthn+oauth` variant's content, so it wouldn't catch a
+  // regression that picked the wrong template.
+  expect(
+    filesRecord[path.join(getPaths().api.functions, 'auth.ts')].trim(),
+  ).toBe("export const handler = async () => 'oauth'")
 })
 
 it('prefers the combined webAuthn+oauth variant when both are enabled', async () => {
@@ -109,12 +112,24 @@ it('prefers the combined webAuthn+oauth variant when both are enabled', async ()
     oauth: true,
   })
 
-  expect(filesRecord[path.join(getPaths().api.functions, 'auth.ts')]).toContain(
-    'webAuthn+oauth',
-  )
+  expect(
+    filesRecord[path.join(getPaths().api.functions, 'auth.ts')].trim(),
+  ).toBe("export const handler = async () => 'webAuthn+oauth'")
 })
 
-it('falls back to the webAuthn-only variant when no combined variant exists for a file', async () => {
+it('selects the webAuthn-only variant when oauth is disabled', async () => {
+  const filesRecord = await apiSideFiles({
+    basedir: path.join(__dirname, 'fixtures/dbAuthOAuthSetup'),
+    webAuthn: true,
+    oauth: false,
+  })
+
+  expect(
+    filesRecord[path.join(getPaths().api.functions, 'auth.ts')].trim(),
+  ).toBe("export const handler = async () => 'webAuthn'")
+})
+
+it('falls back to the base template for a file with no variant of its own, even with webAuthn and oauth both enabled', async () => {
   // lib/auth.ts.template has no webAuthn or oauth variant, so it should
   // always fall back to the base template regardless of active flags
   const filesRecord = await apiSideFiles({
@@ -123,8 +138,8 @@ it('falls back to the webAuthn-only variant when no combined variant exists for 
     oauth: true,
   })
 
-  expect(filesRecord[path.join(getPaths().api.lib, 'auth.ts')]).toContain(
-    'session',
+  expect(filesRecord[path.join(getPaths().api.lib, 'auth.ts')].trim()).toBe(
+    "export const cookieName = 'session'",
   )
 })
 

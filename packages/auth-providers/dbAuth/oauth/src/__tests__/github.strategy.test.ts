@@ -150,4 +150,32 @@ describe('githubProvider', () => {
 
     expect(profile.email).toBeUndefined()
   })
+
+  it('throws a provider error when the profile response has no numeric id', async () => {
+    server.use(
+      http.post('https://github.com/login/oauth/access_token', () =>
+        HttpResponse.json({
+          access_token: 'gho_test_token',
+          token_type: 'bearer',
+        }),
+      ),
+      http.get('https://api.github.com/user', () =>
+        // A malformed/unexpected profile response -- `id` missing entirely.
+        HttpResponse.json({ login: 'ghost', email: 'ghost@example.com' }),
+      ),
+    )
+
+    await expect(
+      strategy().handleCallback({
+        provider: 'github',
+        redirectUri: 'https://example.com/auth/oauth/github/callback',
+        flow: 'login',
+        state: 'the-state',
+        codeVerifier: 'the-verifier',
+        nonce: undefined,
+        query: { code: 'the-code', state: 'the-state' },
+        form: {},
+      }),
+    ).rejects.toThrow(/numeric id/)
+  })
 })

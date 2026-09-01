@@ -54,7 +54,13 @@ export default async function globalSetup() {
   )
 
   return async function globalTeardown() {
-    await oidcServer.stop()
-    await crossSiteProvider.close()
+    // A `stop()`/`close()` failure on one server must not prevent the other
+    // from being torn down, or a single flaky shutdown leaks a listening
+    // port into subsequent runs.
+    try {
+      await oidcServer.stop()
+    } finally {
+      await crossSiteProvider.close()
+    }
   }
 }

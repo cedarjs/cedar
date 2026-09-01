@@ -120,6 +120,32 @@ export interface OAuthRoute {
 }
 
 /**
+ * Trims trailing `/` characters with a plain index scan rather than a regex.
+ * `basePath` is app-configured, but `path` (trimmed the same way below) is
+ * attacker-controlled request input, and a regex-based trim on unbounded
+ * input risks catastrophic backtracking.
+ */
+function trimTrailingSlashes(value: string): string {
+  let end = value.length
+  while (end > 0 && value[end - 1] === '/') {
+    end--
+  }
+  return value.slice(0, end)
+}
+
+/**
+ * Trims leading `/` characters with a plain index scan, for the same reason
+ * `trimTrailingSlashes` avoids a regex.
+ */
+function trimLeadingSlashes(value: string): string {
+  let start = 0
+  while (start < value.length && value[start] === '/') {
+    start++
+  }
+  return value.slice(start)
+}
+
+/**
  * Parses `{basePath}/{provider}/{action}` out of a request path. Returns
  * `null` when the path doesn't match a recognized OAuth route (the caller
  * should treat that as a 404).
@@ -128,13 +154,24 @@ export function parseOAuthRoute(
   path: string,
   basePath: string,
 ): OAuthRoute | null {
-  const normalizedBase = basePath.replace(/\/+$/, '')
+  const normalizedBase = trimTrailingSlashes(basePath)
 
   if (!path.startsWith(normalizedBase)) {
     return null
   }
 
-  const rest = path.slice(normalizedBase.length).replace(/^\/+/, '')
+  // `startsWith` alone isn't a route boundary: without this check a path
+  // like `/auth/oauthgoogle/authorize` would match a `basePath` of
+  // `/auth/oauth` too, parsing out a bogus provider name (`google`). The
+  // character right after `normalizedBase` must be a `/` (the start of the
+  // `{provider}/{action}` segment), or the path must equal `normalizedBase`
+  // exactly.
+  const boundaryChar = path[normalizedBase.length]
+  if (boundaryChar !== undefined && boundaryChar !== '/') {
+    return null
+  }
+
+  const rest = trimLeadingSlashes(path.slice(normalizedBase.length))
   const segments = rest.split('/').filter(Boolean)
 
   if (segments.length !== 2) {

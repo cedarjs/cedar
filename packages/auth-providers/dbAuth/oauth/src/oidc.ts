@@ -48,7 +48,16 @@ export function createOidcStrategy(
   }
 
   function getDiscovery() {
-    discoveryPromise ??= discover()
+    if (!discoveryPromise) {
+      discoveryPromise = discover()
+      // A rejected discovery attempt (e.g. a transient network error, or the
+      // discovery endpoint being briefly unavailable) must not be cached
+      // forever -- clearing it here lets the next call retry instead of
+      // permanently disabling the provider after one failure.
+      discoveryPromise.catch(() => {
+        discoveryPromise = undefined
+      })
+    }
     return discoveryPromise
   }
 
@@ -132,13 +141,23 @@ export function createOidcStrategy(
         throw new ProviderError(`${preset.name} did not return an id_token`)
       }
 
+      const emailVerified =
+        typeof claims.email_verified === 'boolean'
+          ? claims.email_verified
+          : undefined
+
       return {
         providerUserId: claims.sub,
-        email: typeof claims.email === 'string' ? claims.email : undefined,
-        emailVerified:
-          typeof claims.email_verified === 'boolean'
-            ? claims.email_verified
+        // An unverified email must never seed a username or feed the
+        // duplicate-account (`email_in_use`) check -- anyone can put an
+        // arbitrary address in an OIDC profile the provider hasn't
+        // confirmed they control, so only a claim with
+        // `email_verified: true` is passed through.
+        email:
+          typeof claims.email === 'string' && emailVerified === true
+            ? claims.email
             : undefined,
+        emailVerified,
         username: typeof claims.name === 'string' ? claims.name : undefined,
         raw: claims,
       }

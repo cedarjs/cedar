@@ -14,6 +14,7 @@ export type OAuthErrorCode =
   | 'not_authenticated'
   | 'flow_not_enabled'
   | 'cannot_unlink_last_identity'
+  | 'forbidden'
   | 'server_error'
 
 /**
@@ -98,5 +99,12 @@ export class CannotUnlinkLastIdentityError extends OAuthError {
   ) {
     super('cannot_unlink_last_identity', message)
     this.name = 'CannotUnlinkLastIdentityError'
+  }
+}
+
+export class ForbiddenError extends OAuthError {
+  constructor(message = 'Missing required x-oauth-action header') {
+    super('forbidden', message)
+    this.name = 'ForbiddenError'
   }
 }

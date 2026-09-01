@@ -1,5 +1,5 @@
 import type { APIGatewayProxyEvent } from 'aws-lambda'
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import {
   createExpiresAtDate,
@@ -115,14 +115,20 @@ function authorizeEvent({
 function unlinkEvent({
   provider,
   cookie,
+  withOAuthAction = true,
 }: {
   provider: string
   cookie?: string
+  /** Whether to send the `x-oauth-action` CSRF-defense header. Defaults to `true`. */
+  withOAuthAction?: boolean
 }): APIGatewayProxyEvent {
   return {
     httpMethod: 'POST',
     path: `/auth/oauth/${provider}/unlink`,
-    headers: cookie ? { cookie, 'content-type': 'application/json' } : {},
+    headers: {
+      ...(cookie ? { cookie, 'content-type': 'application/json' } : {}),
+      ...(withOAuthAction ? { 'x-oauth-action': 'unlink' } : {}),
+    },
     queryStringParameters: {},
     body: '{}',
     isBase64Encoded: false,
@@ -532,6 +538,29 @@ describe('OAuthHandler guards', () => {
   })
 
   describe('unlink', () => {
+    it('returns 403 forbidden when the x-oauth-action header is missing', async () => {
+      const user = db.user.create({ data: { email: 'me@example.com' } })
+      db.oAuth.create({
+        data: { provider: 'mock', providerUserId: 'only-id', userId: user.id },
+      })
+
+      const handler = new OAuthHandler(
+        unlinkEvent({
+          provider: 'mock',
+          cookie: sessionCookieHeaderFor(user),
+          withOAuthAction: false,
+        }),
+        {} as any,
+        { ...baseOptions, providers: { mock: mockStrategy() } },
+      )
+
+      const response = await handler.invoke()
+
+      expect(response.statusCode).toBe(403)
+      expect(JSON.parse(response.body).error).toBe('forbidden')
+      expect(db.oAuth.records).toHaveLength(1)
+    })
+
     it('returns 401 when there is no dbAuth session', async () => {
       const handler = new OAuthHandler(
         unlinkEvent({ provider: 'mock' }),
@@ -625,6 +654,43 @@ describe('OAuthHandler guards', () => {
 
       expect(response.statusCode).toBe(404)
       expect(JSON.parse(response.body).error).toBe('unknown_identity')
+    })
+
+    it('restores the identity when a concurrent unlink already removed the account to zero identities (TOCTOU race)', async () => {
+      const user = db.user.create({ data: { email: 'me@example.com' } })
+      const identity = db.oAuth.create({
+        data: { provider: 'mock', providerUserId: 'only-id', userId: user.id },
+      })
+
+      const handler = new OAuthHandler(
+        unlinkEvent({ provider: 'mock', cookie: sessionCookieHeaderFor(user) }),
+        {} as any,
+        { ...baseOptions, providers: { mock: mockStrategy() } },
+      )
+
+      // Simulates the race: the pre-delete guard's count check observes two
+      // identities (as if a second identity still existed), so it passes,
+      // but the store has really only ever had one — the same as if a
+      // concurrent unlink request had already removed the other one by the
+      // time this request's delete runs.
+      const findManySpy = vi
+        .spyOn(db.oAuth, 'findMany')
+        .mockReturnValueOnce([
+          identity,
+          { ...identity, id: identity.id + 1, provider: 'other' },
+        ])
+
+      const response = await handler.invoke()
+
+      findManySpy.mockRestore()
+
+      expect(response.statusCode).toBe(400)
+      expect(JSON.parse(response.body).error).toBe(
+        'cannot_unlink_last_identity',
+      )
+      expect(db.oAuth.records).toHaveLength(1)
+      expect(db.oAuth.records[0].provider).toBe('mock')
+      expect(db.oAuth.records[0].providerUserId).toBe('only-id')
     })
   })
 

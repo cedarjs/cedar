@@ -1,5 +1,13 @@
 import { Events, OAuth2Server } from 'oauth2-mock-server'
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  vi,
+} from 'vitest'
 
 import { decryptSession, getSession } from '@cedarjs/auth-dbauth-api'
 
@@ -54,51 +62,56 @@ async function runOidcFlow({
   }
   server.service.on(Events.BeforeTokenSigning, beforeTokenSigning)
 
-  const authorizeHandler = new OAuthHandler(
-    {
-      httpMethod: 'GET',
-      path: '/auth/oauth/google/authorize',
-      headers: {},
-      queryStringParameters: { flow },
-      body: null,
-      isBase64Encoded: false,
-    },
-    {} as any,
-    handlerOptions,
-  )
-
-  const authorizeResponse = await authorizeHandler.invoke()
-  const authorizationUrl = (authorizeResponse.headers as any).location
-  const transactionSetCookie = (
-    (authorizeResponse.headers['set-cookie'] as string[] | undefined) ?? []
-  ).find((c) => c.startsWith('oauth-transaction='))!
-  const transactionCookie = transactionSetCookie.split(';')[0]
-
-  const authorizeUrlResponse = await fetch(authorizationUrl, {
-    redirect: 'manual',
-  })
-  expect(authorizeUrlResponse.status).toBeGreaterThanOrEqual(300)
-  expect(authorizeUrlResponse.status).toBeLessThan(400)
-  const redirectLocation = new URL(
-    authorizeUrlResponse.headers.get('location')!,
-  )
-
-  const callbackHandler = new OAuthHandler(
-    {
-      httpMethod: 'GET',
-      path: '/auth/oauth/google/callback',
-      headers: { cookie: transactionCookie },
-      queryStringParameters: Object.fromEntries(
-        redirectLocation.searchParams.entries(),
-      ),
-      body: null,
-      isBase64Encoded: false,
-    },
-    {} as any,
-    handlerOptions,
-  )
-
+  // Everything between registering the listener above and the callback
+  // invocation below can throw (the fetch, the status/redirect assertions,
+  // handler construction) -- the `finally` needs to wrap all of it, not
+  // just the final `invoke()` call, or a failure earlier in the flow would
+  // leak the listener into later tests.
   try {
+    const authorizeHandler = new OAuthHandler(
+      {
+        httpMethod: 'GET',
+        path: '/auth/oauth/google/authorize',
+        headers: {},
+        queryStringParameters: { flow },
+        body: null,
+        isBase64Encoded: false,
+      },
+      {} as any,
+      handlerOptions,
+    )
+
+    const authorizeResponse = await authorizeHandler.invoke()
+    const authorizationUrl = (authorizeResponse.headers as any).location
+    const transactionSetCookie = (
+      (authorizeResponse.headers['set-cookie'] as string[] | undefined) ?? []
+    ).find((c) => c.startsWith('oauth-transaction='))!
+    const transactionCookie = transactionSetCookie.split(';')[0]
+
+    const authorizeUrlResponse = await fetch(authorizationUrl, {
+      redirect: 'manual',
+    })
+    expect(authorizeUrlResponse.status).toBeGreaterThanOrEqual(300)
+    expect(authorizeUrlResponse.status).toBeLessThan(400)
+    const redirectLocation = new URL(
+      authorizeUrlResponse.headers.get('location')!,
+    )
+
+    const callbackHandler = new OAuthHandler(
+      {
+        httpMethod: 'GET',
+        path: '/auth/oauth/google/callback',
+        headers: { cookie: transactionCookie },
+        queryStringParameters: Object.fromEntries(
+          redirectLocation.searchParams.entries(),
+        ),
+        body: null,
+        isBase64Encoded: false,
+      },
+      {} as any,
+      handlerOptions,
+    )
+
     return await callbackHandler.invoke()
   } finally {
     server.service.off(Events.BeforeTokenSigning, beforeTokenSigning)
@@ -189,5 +202,62 @@ describe('OAuthHandler + createOidcStrategy against a real OIDC provider', () =>
     expect(db.user.records[0].email).toBe('new-via-google@cedarjs.com')
     expect(db.oAuth.records).toHaveLength(1)
     expect(db.oAuth.records[0].providerUserId).toBe('google-sub-456')
+  })
+
+  it('does not pass through an unverified email claim', async () => {
+    const db = new DbMock(['user', 'oAuth'])
+
+    const response = await runOidcFlow({
+      handlerOptions: baseOptions(db),
+      flow: 'signup',
+      claims: {
+        sub: 'google-sub-789',
+        email: 'unverified@cedarjs.com',
+        email_verified: false,
+      },
+    })
+
+    expect((response.headers as any).location).toBe('/welcome')
+    expect(db.user.records).toHaveLength(1)
+    // The signup handler in `baseOptions` reads `profile.email` -- an
+    // unverified claim must come through as `undefined`, not the address
+    // itself, so it can't seed a username or a duplicate-account check.
+    expect(db.user.records[0].email).toBeUndefined()
+  })
+})
+
+describe('createOidcStrategy discovery retry', () => {
+  it('retries discovery after a transient failure instead of caching the rejection forever', async () => {
+    const strategy = createOidcStrategy(
+      { name: 'Google', issuer, scope: 'openid email profile' },
+      {
+        clientId: 'test-client-id',
+        clientSecret: 'test-client-secret',
+        redirectUri: 'https://example.com/auth/oauth/google/callback',
+        allowInsecureRequests: true,
+      },
+    )
+
+    const authCtx = {
+      redirectUri: 'https://example.com/auth/oauth/google/callback',
+      state: 'test-state',
+      codeChallenge: 'test-code-challenge',
+    }
+
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockRejectedValueOnce(new Error('simulated discovery failure'))
+
+    await expect(strategy.getAuthorizationUrl(authCtx)).rejects.toThrow(
+      'simulated discovery failure',
+    )
+
+    fetchSpy.mockRestore()
+
+    // A cached rejection would make every subsequent call fail the same
+    // way; this second attempt must succeed once the transient failure is
+    // gone.
+    const url = await strategy.getAuthorizationUrl(authCtx)
+    expect(url).toBeInstanceOf(URL)
   })
 })

@@ -24,11 +24,15 @@ function isKnownOAuthProvider(value: string): value is OAuthProviderName {
  * Parses the comma-separated value of `--oauth` into a deduped list of
  * provider names, validating every entry against `KNOWN_OAUTH_PROVIDERS`.
  *
- * Returns an empty array when `oauth` is `null` (the flag wasn't passed),
- * which callers treat as "OAuth disabled".
+ * Returns an empty array when `oauth` is nullish (the flag wasn't passed).
+ * Some callers pass `null` explicitly for "flag absent"; others invoke the
+ * setup handler programmatically and simply omit the argument, which comes
+ * through as `undefined`. Both mean "OAuth disabled".
  */
-export function parseOAuthProviders(oauth: string | null): OAuthProviderName[] {
-  if (oauth === null) {
+export function parseOAuthProviders(
+  oauth: string | null | undefined,
+): OAuthProviderName[] {
+  if (oauth === null || oauth === undefined) {
     return []
   }
 

@@ -62,6 +62,21 @@ describe('parseOAuthRoute()', () => {
       parseOAuthRoute('/auth/oauth/google/authorize/extra', '/auth/oauth'),
     ).toBeNull()
   })
+
+  it('returns null for a path that only shares a prefix with basePath (no boundary)', () => {
+    expect(
+      parseOAuthRoute('/auth/oauthgoogle/authorize', '/auth/oauth'),
+    ).toBeNull()
+  })
+
+  it('respects a basePath with a trailing slash', () => {
+    expect(
+      parseOAuthRoute('/auth/oauth/google/authorize', '/auth/oauth/'),
+    ).toEqual({
+      provider: 'google',
+      action: 'authorize',
+    })
+  })
 })
 
 describe('parseAuthorizeFlow()', () => {

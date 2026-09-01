@@ -1039,6 +1039,35 @@ describe('dbAuthMiddleware', () => {
       expect(res).toHaveProperty('status', 200)
     })
 
+    it('does not route a path that only shares a prefix with oauthUrl (e.g. /auth/oauthx/...) to the oauth handler', async () => {
+      const db = { user: new TableMock(), oAuth: new TableMock() }
+      const oauthOptions = buildOAuthOptions(db)
+
+      const options: DbAuthMiddlewareOptions = {
+        getCurrentUser: vi.fn(),
+        dbAuthHandler: vi.fn(async () => ({
+          body: '{}',
+          headers: {},
+          statusCode: 200,
+        })),
+        oauthHandler: vi.fn((req) =>
+          new OAuthHandler(req, {} as any, oauthOptions).invoke(),
+        ),
+      }
+      const [middleware] = initDbAuthMiddleware(options)
+
+      const req = new MWRequest(
+        new Request('http://localhost:8911/auth/oauthx/authorize', {
+          method: 'GET',
+        }),
+      )
+
+      await middleware(req, MiddlewareResponse.next())
+
+      expect(options.oauthHandler).not.toHaveBeenCalled()
+      expect(options.dbAuthHandler).not.toHaveBeenCalled()
+    })
+
     it('leaves OAuth-path requests untouched when oauthHandler is not configured', async () => {
       const options: DbAuthMiddlewareOptions = {
         getCurrentUser: vi.fn(),

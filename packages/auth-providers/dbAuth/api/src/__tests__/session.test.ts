@@ -41,17 +41,19 @@ beforeEach(() => {
 
 describe('createExpiresAtDate()', () => {
   it('returns a date in the future as a UTCString', () => {
-    const expiresAt = new Date()
-    expiresAt.setSeconds(expiresAt.getSeconds() + 60 * 60)
-
+    const before = Date.now()
     const result = createExpiresAtDate(60 * 60)
+    const after = Date.now()
 
-    // Avoid flakiness if the test runs right at a second boundary
-    if (result !== expiresAt.toUTCString()) {
-      expiresAt.setSeconds(expiresAt.getSeconds() - 1)
-    }
-
-    expect(result).toEqual(expiresAt.toUTCString())
+    // `createExpiresAtDate` reads the current time itself, so the result
+    // can legitimately fall in either the same second as `before` or the
+    // same second as `after` (or, rarely, a second in between) depending on
+    // exactly when it ran relative to this test's own two `Date.now()`
+    // calls. Comparing epoch values with a tolerance avoids asserting on a
+    // specific second and failing at a boundary.
+    const resultMs = new Date(result).getTime()
+    expect(resultMs).toBeGreaterThanOrEqual(before + 60 * 60 * 1000 - 1500)
+    expect(resultMs).toBeLessThanOrEqual(after + 60 * 60 * 1000 + 1500)
   })
 })
 

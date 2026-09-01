@@ -16,7 +16,15 @@ const args = yargs(hideBin(process.argv))
  * `dbauth-oauth` smoke test suite has something to run against.
  */
 function runCommand() {
-  const OUTPUT_PROJECT_PATH = path.resolve(String(args._))
+  // `args._` collects every positional argument; `String()` on the array
+  // would silently join zero args into `''` or several into `'a,b'`
+  // instead of failing, resolving to a nonsensical project path.
+  if (args._.length !== 1) {
+    console.error('Usage: add-oauth.mts <project directory>')
+    process.exit(1)
+  }
+
+  const OUTPUT_PROJECT_PATH = path.resolve(String(args._[0]))
   const tasks = oauthTasks(OUTPUT_PROJECT_PATH)
   const listr = new Listr(tasks, { exitOnError: true, renderer: 'verbose' })
 

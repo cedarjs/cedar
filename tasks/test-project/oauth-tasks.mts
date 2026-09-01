@@ -78,6 +78,19 @@ function addOAuthDependencies(apiPackageJsonPath: string) {
   const pkg = JSON.parse(fs.readFileSync(apiPackageJsonPath, 'utf-8'))
 
   pkg.dependencies ??= {}
+
+  // `@cedarjs/auth-dbauth-oauth`'s version is pinned to whatever
+  // `@cedarjs/auth-dbauth-api` already resolved to, so both packages come
+  // from the same tarsync'd build. A silently-missing `auth-dbauth-api`
+  // dependency would set `auth-dbauth-oauth` to `undefined`, which
+  // `JSON.stringify` then drops entirely -- failing to add the dependency
+  // without any indication why.
+  if (!pkg.dependencies['@cedarjs/auth-dbauth-api']) {
+    throw new Error(
+      `Expected "@cedarjs/auth-dbauth-api" to already be a dependency in ${apiPackageJsonPath}, but it was missing.`,
+    )
+  }
+
   pkg.dependencies['@cedarjs/auth-dbauth-oauth'] ??=
     pkg.dependencies['@cedarjs/auth-dbauth-api']
   pkg.dependencies['oauth4webapi'] ??= OAUTH4WEBAPI_VERSION

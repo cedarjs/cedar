@@ -14,6 +14,7 @@ import {
   CannotUnlinkLastIdentityError,
   EmailInUseError,
   FlowNotEnabledError,
+  ForbiddenError,
   IdentityInUseError,
   NotAuthenticatedError,
   OAuthError,
@@ -459,6 +460,15 @@ export class OAuthHandler<TDb extends object = Record<string, unknown>> {
 
   private async _unlink(providerKey: string): Promise<HandlerResult> {
     try {
+      // Forced-preflight CSRF defense: a cross-site HTML form can POST to
+      // this endpoint using only the session cookie, but it cannot set a
+      // custom header. A cross-origin `fetch` that sets one triggers a CORS
+      // preflight this endpoint doesn't approve, so requiring the header
+      // restricts this route to same-origin JavaScript callers.
+      if (!this.normalizedRequest.headers.get('x-oauth-action')) {
+        throw new ForbiddenError()
+      }
+
       const session = dbAuthSession(this.event, this.options.cookie?.name)
       if (!session) {
         throw new NotAuthenticatedError()
@@ -491,6 +501,24 @@ export class OAuthHandler<TDb extends object = Record<string, unknown>> {
 
       await this.identities.delete(userId, providerKey)
 
+      if (!hasPassword) {
+        // The guard above is advisory under concurrency: two simultaneous
+        // unlink requests from a passwordless user with exactly two
+        // identities can each observe two identities, both pass the guard,
+        // and both delete, leaving the account with zero login methods.
+        // Re-check the count after this delete and restore the row just
+        // removed if a concurrent unlink already took the account to zero.
+        const remaining = await this.identities.findAllForUser(userId)
+        if (remaining.length === 0) {
+          await this.identities.create(
+            userId,
+            providerKey,
+            this.identities.profileOf(identity),
+          )
+          throw new CannotUnlinkLastIdentityError()
+        }
+      }
+
       return this._json({ ok: true }, 200)
     } catch (e) {
       if (e instanceof OAuthError) {
@@ -507,6 +535,8 @@ export class OAuthHandler<TDb extends object = Record<string, unknown>> {
     switch (code) {
       case 'not_authenticated':
         return 401
+      case 'forbidden':
+        return 403
       case 'unknown_provider':
         return 404
       default:

@@ -29,8 +29,8 @@ export interface DbAuthMiddlewareOptions {
    * ```
    *
    * Omitting this option leaves OAuth routing disabled entirely — requests
-   * under `oauthUrl` fall through to the normal dbAuth handling below,
-   * exactly as they did before this option existed.
+   * under `oauthUrl` simply fall through to the normal dbAuth handling
+   * below.
    */
   oauthHandler?: (
     req: Request | APIGatewayProxyEvent,
@@ -43,7 +43,7 @@ export interface DbAuthMiddlewareOptions {
    * set.
    */
   oauthUrl?: string
-  getRoles?: (decoded: any) => string[]
+  getRoles?: (decoded: Parameters<GetCurrentUser>[0]) => string[]
   getCurrentUser: GetCurrentUser
 }
 
@@ -91,7 +91,17 @@ export const initDbAuthMiddleware = ({
     // the OAuth handler. This is opt-in: apps that don't configure
     // `oauthHandler` never take this branch, so their requests fall through
     // to the normal dbAuth handling below unchanged.
-    if (oauthHandler && req.url.includes(oauthUrl)) {
+    //
+    // Matched against the parsed pathname, not a substring check against
+    // the full URL, and only at a `/` route boundary -- a plain
+    // `req.url.includes(oauthUrl)` would also match an unrelated route like
+    // `/auth/oauthx` or a query-string value that happens to contain
+    // `oauthUrl`.
+    const pathname = new URL(req.url).pathname
+    if (
+      oauthHandler &&
+      (pathname === oauthUrl || pathname.startsWith(`${oauthUrl}/`))
+    ) {
       const output = await oauthHandler(req)
       return toMiddlewareResponse(output)
     }

@@ -106,7 +106,7 @@ that account's email to private, to keep the `email: null` quirk pinned):
 
 1. In a browser, signed in as the dedicated account, open:
 
-   ```
+   ```text
    https://github.com/login/oauth/authorize?client_id=<Tier 2 GitHub client id>&scope=read:user%20user:email&redirect_uri=<the app's callback URL>
    ```
 

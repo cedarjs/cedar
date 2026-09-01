@@ -120,6 +120,16 @@ export function githubProvider(
         result.access_token,
       )
 
+      // GitHub's user id is always a number; without this check a
+      // malformed or unexpected profile response would fall through to
+      // `String(profile.id)`, silently keying the identity on the string
+      // `'undefined'` instead of failing loudly.
+      if (typeof profile.id !== 'number') {
+        throw new ProviderError(
+          'GitHub profile response is missing a numeric id',
+        )
+      }
+
       let email = profile.email ?? undefined
       let emailVerified: boolean | undefined
 

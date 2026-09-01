@@ -60,6 +60,10 @@ describe('parseOAuthProviders', () => {
     expect(parseOAuthProviders(null)).toEqual([])
   })
 
+  it('returns an empty list when the argument is omitted entirely', () => {
+    expect(parseOAuthProviders(undefined)).toEqual([])
+  })
+
   it('parses a comma-separated list', () => {
     expect(parseOAuthProviders('google,github')).toEqual(['google', 'github'])
   })

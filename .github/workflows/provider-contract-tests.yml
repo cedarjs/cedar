@@ -16,7 +16,11 @@ permissions: {}
 
 jobs:
   provider-contract-tests:
-    if: github.repository == 'cedarjs/cedar'
+    # Restricts workflow_dispatch (which lets a caller pick any branch) to
+    # the default branch, so the OAuth contract secrets are never exposed
+    # to a run against an arbitrary branch. The scheduled trigger always
+    # runs against the default branch already.
+    if: github.repository == 'cedarjs/cedar' && (github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main')
     name: 🔌 Provider contract tests
     runs-on: ubuntu-latest
 
@@ -26,6 +30,8 @@ jobs:
     steps:
       - name: Checkout the framework code
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
 
       - name: Set up job
         uses: ./.github/actions/set-up-job

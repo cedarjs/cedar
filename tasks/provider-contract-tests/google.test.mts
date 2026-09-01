@@ -29,6 +29,8 @@ interface Jwks {
     kid: string
     n: string
     e: string
+    use?: string
+    alg?: string
   }[]
 }
 
@@ -73,6 +75,15 @@ describe('Google OIDC discovery (Tier 1 — zero credentials)', () => {
         e: expect.any(String),
       })
     }
+
+    // An RSA key isn't necessarily usable for *signing* -- an encryption
+    // key (`use: 'enc'`) can have the same `kty`. `createOidcStrategy`
+    // verifies RS256 id_token signatures, so the document must publish at
+    // least one key actually marked for that.
+    const hasUsableSigningKey = jwks.keys.some(
+      (key) => key.use === 'sig' || key.alg === 'RS256',
+    )
+    expect(hasUsableSigningKey).toBe(true)
   })
 })
 

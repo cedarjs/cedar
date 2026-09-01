@@ -4,7 +4,15 @@ import { DEFAULT_OAUTH_IDENTITY_FIELDS } from './types.js'
 export function resolveIdentityFields(
   fields: Partial<OAuthIdentityFields> | undefined,
 ): OAuthIdentityFields {
-  return { ...DEFAULT_OAUTH_IDENTITY_FIELDS, ...fields }
+  // An explicitly-`undefined` value in `fields` (e.g. from a spread that
+  // included an unset optional key) must not win over the default -- only
+  // keys the caller actually set to a string should override
+  // `DEFAULT_OAUTH_IDENTITY_FIELDS`.
+  const definedFields = Object.fromEntries(
+    Object.entries(fields ?? {}).filter(([, value]) => value !== undefined),
+  )
+
+  return { ...DEFAULT_OAUTH_IDENTITY_FIELDS, ...definedFields }
 }
 
 /**
@@ -90,5 +98,18 @@ export class IdentityModel {
 
   userIdOf(identity: UserType): unknown {
     return identity[this.fields.userId]
+  }
+
+  /**
+   * Reads a fetched identity row back into the `OAuthUserInfo` shape
+   * `create` accepts, so a row can be recreated from a snapshot taken
+   * before it was deleted.
+   */
+  profileOf(identity: UserType): OAuthUserInfo {
+    return {
+      providerUserId: identity[this.fields.providerUserId],
+      username: identity[this.fields.providerUsername] ?? undefined,
+      email: identity[this.fields.providerEmail] ?? undefined,
+    }
   }
 }

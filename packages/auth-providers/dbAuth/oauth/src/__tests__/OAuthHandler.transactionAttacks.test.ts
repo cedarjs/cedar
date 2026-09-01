@@ -141,7 +141,12 @@ describe('OAuthHandler callback: transaction cookie attacks', () => {
     // Corrupt the ciphertext so `decodeTransactionCookie` can't decrypt it —
     // simulates an attacker (or corruption in transit) tampering with the
     // cookie value.
-    const [name, value] = validCookie.split('=')
+    // Split on the first `=` only -- the cookie value itself can contain
+    // `=` (e.g. base64 padding), and `split('=')` would silently truncate
+    // it at the first one found inside the value too.
+    const eqIndex = validCookie.indexOf('=')
+    const name = validCookie.slice(0, eqIndex)
+    const value = validCookie.slice(eqIndex + 1)
     const tampered = `${name}=${value.slice(0, -6)}zzzzzz`
 
     const handler = new OAuthHandler(

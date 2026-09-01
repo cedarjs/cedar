@@ -105,6 +105,47 @@ describe('createTransactionCookieString() / getTransactionCookieValue()', () => 
     expect(setCookie).toContain('Path=/')
     expect(setCookie).toContain('SameSite=Lax')
   })
+
+  it('applies secure defaults (HttpOnly, SameSite=Lax, Path=/) when no cookieConfig is supplied at all', () => {
+    const setCookie = createTransactionCookieString({
+      data: sampleData,
+      expiresSeconds: 600,
+    })
+
+    expect(setCookie).toContain('HttpOnly')
+    expect(setCookie).toContain('SameSite=Lax')
+    expect(setCookie).toContain('Path=/')
+  })
+
+  it('applies the secure defaults when cookieConfig is set but has no attributes', () => {
+    const setCookie = createTransactionCookieString({
+      data: sampleData,
+      expiresSeconds: 600,
+      cookieConfig: { name: 'my-cookie' },
+    })
+
+    expect(setCookie).toContain('HttpOnly')
+    expect(setCookie).toContain('SameSite=Lax')
+    expect(setCookie).toContain('Path=/')
+  })
+
+  it('lets explicit attributes fully override the secure defaults (e.g. SameSite=None for a cross-site form_post provider)', () => {
+    const setCookie = createTransactionCookieString({
+      data: sampleData,
+      expiresSeconds: 600,
+      cookieConfig: {
+        attributes: { SameSite: 'None', Secure: true },
+      },
+    })
+
+    expect(setCookie).toContain('SameSite=None')
+    expect(setCookie).not.toContain('SameSite=Lax')
+    // Explicit attributes replace the whole default set rather than merging
+    // with it, so `HttpOnly` and `Path=/` aren't present unless the caller
+    // asked for them too.
+    expect(setCookie).not.toContain('HttpOnly')
+    expect(setCookie).not.toContain('Path=/')
+  })
 })
 
 describe('clearTransactionCookieString()', () => {

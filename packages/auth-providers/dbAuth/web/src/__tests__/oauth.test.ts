@@ -56,6 +56,7 @@ describe('unlinkOAuthProvider', () => {
       {
         method: 'POST',
         credentials: 'include',
+        headers: { 'x-oauth-action': 'unlink' },
       },
     )
     expect(result).toEqual({ ok: true })
@@ -75,6 +76,7 @@ describe('unlinkOAuthProvider', () => {
       {
         method: 'POST',
         credentials: 'include',
+        headers: { 'x-oauth-action': 'unlink' },
       },
     )
   })
@@ -87,6 +89,17 @@ describe('unlinkOAuthProvider', () => {
     const result = await unlinkOAuthProvider('google')
 
     expect(result).toEqual({ error: 'cannot_unlink_last_identity' })
+  })
+
+  it('returns a server_error result instead of throwing when the response body is not valid JSON', async () => {
+    fetchMock.mockResolvedValue({
+      json: () =>
+        Promise.reject(new SyntaxError('Unexpected end of JSON input')),
+    })
+
+    const result = await unlinkOAuthProvider('google')
+
+    expect(result).toEqual({ error: 'server_error' })
   })
 })
 

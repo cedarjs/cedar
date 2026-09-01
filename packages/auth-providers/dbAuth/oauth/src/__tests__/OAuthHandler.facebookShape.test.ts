@@ -111,7 +111,10 @@ function facebookLikeStrategy(credentials: {
       )
 
       const profileResponse = await fetch(
-        `${PROFILE_ENDPOINT}?fields=id,name,email&access_token=${result.access_token}`,
+        `${PROFILE_ENDPOINT}?fields=id,name,email`,
+        {
+          headers: { Authorization: `Bearer ${result.access_token}` },
+        },
       )
       if (!profileResponse.ok) {
         throw new Error(
@@ -182,8 +185,7 @@ function tokenAndProfileHandlers(profile: Record<string, unknown>) {
       }),
     ),
     http.get(PROFILE_ENDPOINT, ({ request }) => {
-      const url = new URL(request.url)
-      expect(url.searchParams.get('access_token')).toBe('fb-test-token')
+      expect(request.headers.get('authorization')).toBe('Bearer fb-test-token')
       return HttpResponse.json(profile)
     }),
   ]

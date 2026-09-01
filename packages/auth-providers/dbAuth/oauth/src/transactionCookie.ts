@@ -4,7 +4,10 @@ import {
   decryptSession,
   encryptSession,
 } from '@cedarjs/auth-dbauth-api'
-import type { DbAuthCookieConfig } from '@cedarjs/auth-dbauth-api'
+import type {
+  DbAuthCookieAttributes,
+  DbAuthCookieConfig,
+} from '@cedarjs/auth-dbauth-api'
 
 import type { OAuthFlow } from './types.js'
 
@@ -12,6 +15,21 @@ export const TRANSACTION_COOKIE_NAME = 'oauth-transaction'
 
 /** Default lifetime of the OAuth transaction cookie: 10 minutes. */
 export const DEFAULT_TRANSACTION_EXPIRES_SECONDS = 60 * 10
+
+/**
+ * Secure defaults applied to the transaction cookie (the PKCE verifier and
+ * nonce) when the caller hasn't configured any cookie attributes of its
+ * own. `HttpOnly` keeps the value out of reach of page JavaScript, and
+ * `SameSite: 'Lax'` is the standard baseline for a same-site flow. A
+ * provider that needs a cross-site `form_post` callback (e.g. Apple) opts
+ * out of this by passing explicit `transactionCookie` attributes such as
+ * `SameSite: 'None'`, which take full precedence over these defaults.
+ */
+const DEFAULT_TRANSACTION_COOKIE_ATTRIBUTES: DbAuthCookieAttributes = {
+  HttpOnly: true,
+  SameSite: 'Lax',
+  Path: '/',
+}
 
 export interface OAuthTransactionData {
   provider: string
@@ -97,9 +115,24 @@ export function createTransactionCookieString({
 }): string {
   const expiresAt = createExpiresAtDate(expiresSeconds)
 
+  // Only fall back to the secure defaults when the caller hasn't configured
+  // any cookie attributes at all -- explicit attributes (including a
+  // `transactionCookie` option set up for a cross-site `form_post`
+  // callback) always take full precedence over them.
+  const effectiveCookieConfig: DbAuthCookieConfig | undefined =
+    cookieConfig?.attributes
+      ? cookieConfig
+      : {
+          ...cookieConfig,
+          attributes: DEFAULT_TRANSACTION_COOKIE_ATTRIBUTES,
+        }
+
   return [
     `${TRANSACTION_COOKIE_NAME}=${encodeTransactionCookie(data)}`,
-    ...buildCookieAttributes({ cookieConfig, expires: expiresAt }),
+    ...buildCookieAttributes({
+      cookieConfig: effectiveCookieConfig,
+      expires: expiresAt,
+    }),
   ].join(';')
 }
 

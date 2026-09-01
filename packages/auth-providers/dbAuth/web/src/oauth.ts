@@ -27,6 +27,7 @@ export type OAuthErrorCode =
   | 'not_authenticated'
   | 'flow_not_enabled'
   | 'cannot_unlink_last_identity'
+  | 'forbidden'
   | 'server_error'
 
 const OAUTH_ERROR_CODES: readonly OAuthErrorCode[] = [
@@ -39,6 +40,7 @@ const OAUTH_ERROR_CODES: readonly OAuthErrorCode[] = [
   'not_authenticated',
   'flow_not_enabled',
   'cannot_unlink_last_identity',
+  'forbidden',
   'server_error',
 ]
 
@@ -95,6 +97,10 @@ export function getOAuthUrl(
 /**
  * Unlinks a provider identity from the current dbAuth session. Requires the
  * dbAuth session cookie, so the request is sent with credentials included.
+ *
+ * Also sends the `x-oauth-action` header the server requires as a
+ * forced-preflight CSRF defense: a cross-site HTML form can't set a custom
+ * header, so only a same-origin caller like this one can reach the route.
  */
 export async function unlinkOAuthProvider(
   provider: string,
@@ -107,10 +113,19 @@ export async function unlinkOAuthProvider(
     {
       method: 'POST',
       credentials: 'include',
+      headers: { 'x-oauth-action': 'unlink' },
     },
   )
 
-  return response.json()
+  try {
+    return await response.json()
+  } catch {
+    // An empty or non-JSON response (e.g. a proxy/gateway error page, or a
+    // network failure surfaced as an unexpected body) can't be parsed --
+    // treat that the same as the server's own `server_error` code rather
+    // than throwing out of this function.
+    return { error: 'server_error' }
+  }
 }
 
 /**
