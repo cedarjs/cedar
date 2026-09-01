@@ -28,13 +28,13 @@ jobs:
         with:
           canary: false
         env:
-          REDWOOD_DISABLE_TELEMETRY: 1
+          CEDAR_DISABLE_TELEMETRY: 1
           YARN_ENABLE_IMMUTABLE_INSTALLS: false
 
       - name: Add the OAuth identity model, auth function, and login buttons to the test project
         run: node ./tasks/test-project/add-oauth.mts "${{ steps.set-up-test-project.outputs.test-project-path }}"
         env:
-          REDWOOD_DISABLE_TELEMETRY: 1
+          CEDAR_DISABLE_TELEMETRY: 1
           YARN_ENABLE_IMMUTABLE_INSTALLS: false
 
       - name: 🎭 Install Playwright OS dependencies
@@ -49,7 +49,7 @@ jobs:
         run: npx playwright test
         env:
           CEDAR_TEST_PROJECT_PATH: '${{ steps.set-up-test-project.outputs.test-project-path }}'
-          REDWOOD_DISABLE_TELEMETRY: 1
+          CEDAR_DISABLE_TELEMETRY: 1
 
       - name: 🎭 Upload Playwright traces
         if: failure()
