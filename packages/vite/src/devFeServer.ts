@@ -59,7 +59,7 @@ async function createServer() {
   // Per request store is only used in server components
   const serverStorage = createServerStorage()
 
-  app.use('*', (req, _res, next) => {
+  app.use((req, _res, next) => {
     const fullUrl = getFullUrl(req, rscEnabled)
 
     const perReqStore = createPerRequestMap({
@@ -450,10 +450,10 @@ async function createServer() {
     viteSsrDevServer,
   )
 
-  app.get('*', createServerAdapter(routeHandler))
+  app.get('/{*splat}', createServerAdapter(routeHandler))
 
   // invokes middleware for any POST request for auth
-  app.post('*', handleWithMiddleware())
+  app.post('/{*splat}', handleWithMiddleware())
 
   const port = getConfig().web.port
   console.log(`Started server on http://localhost:${port}`)
