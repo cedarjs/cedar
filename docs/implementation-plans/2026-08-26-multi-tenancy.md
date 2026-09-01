@@ -368,11 +368,17 @@ where route params exist:
 </Set>
 ```
 
-`OrgScope` reads `orgSlug` with `useParams()` and writes it to the store on
-change, so navigating between organizations updates the header before the next
-query. Apps that prefer a stored selection instead of a URL segment call
-`setOrg` from their own switcher and omit the `Set`. Multiple tabs on different
-organizations work because the header, not the session, carries the choice.
+`OrgScope` reads `orgSlug` with `useParams()` and writes it to the store
+synchronously during render, before its children render, not in an effect. A
+parent's effects run after its children's, and a Cell starts its Apollo query
+as soon as it mounts, so an effect would let the first request after mounting
+or switching organizations go out with no `cedar-org` header or with the
+previous organization's. The write is a plain assignment of a string that is
+already known, so repeating it on every render is harmless, and the link reads
+the store at request time rather than capturing it. Apps that prefer a stored
+selection instead of a URL segment call `setOrg` from their own switcher and
+omit the `Set`. Multiple tabs on different organizations work because the
+header, not the session, carries the choice.
 
 ### Jobs and scripts
 
@@ -405,26 +411,39 @@ Steps performed:
    read-only. If the file cannot be codemodded safely, print the snippet to add
    instead of guessing.
 5. Codemod `api/src/functions/graphql.ts`: add a `context` function that calls
-   `ensureDefaultOrganization(currentUser)` (see step 8) and then
-   `resolveCurrentOrg({ event, variables, currentUser, lookupOrg })`, where
-   `variables` are the parsed operation variables the GraphQL context exposes.
-   A first-class `currentOrg` option on `createGraphQLHandler` may replace this
+   `ensureDefaultOrganization({ currentUser, invitationToken })` (see step 8),
+   which returns the user's memberships as they are after any write it made,
+   and then
+   `resolveCurrentOrg({ event, variables, currentUser: { ...currentUser, memberships }, lookupOrg })`,
+   where `variables` are the parsed operation variables the GraphQL context
+   exposes. The memberships passed to `resolveCurrentOrg` must be the returned
+   ones: `getCurrentUser()` ran before `ensureDefaultOrganization`, so on a
+   first login the memberships on `currentUser` are empty and membership
+   validation would refuse the organization that was just created.
+   `invitationToken` is read from the `cedar-invitation-token` request header,
+   which the Apollo link sends while the web store holds a token; the store
+   picks the token up from the `invitationToken` URL query parameter on the
+   invitation landing page and clears it once a request has claimed it. A
+   first-class `currentOrg` option on `createGraphQLHandler` may replace this
    boilerplate; see open questions.
 6. Generate `api/src/directives/requireMembership/` with its test.
 7. Generate `api/src/services/organizations/` (create org, invite, accept
    invitation, list memberships) and matching SDL, all scoped with
    `@requireMembership` / `@requireAuth` as appropriate.
-8. Generate `ensureDefaultOrganization(user)` in the organizations service. It
-   is idempotent: it returns early when the user has any membership, otherwise
-   creates the organization with the deterministic slug `user-<userId>` and an
-   `owner` membership in one transaction, and treats a unique-constraint
-   failure on that slug (two concurrent first requests) as "already created"
-   and refetches. When a pending membership matches an `invitationToken` on the
-   request, it attaches that membership instead of creating an organization.
-   For dbAuth the `signup.handler` in `api/src/functions/auth.ts` is codemodded
-   to call it; for every provider the GraphQL `context` function from step 5
-   calls it too, so first login through any provider ends with a membership
-   before `resolveCurrentOrg` runs.
+8. Generate `ensureDefaultOrganization({ currentUser, invitationToken })` in
+   the organizations service. It returns the user's memberships
+   (`{ id, organizationId, role }[]`) as they are after it ran, so callers
+   never continue with a list read before the write. It is idempotent: it
+   returns the existing memberships when the user has any, otherwise creates
+   the organization with the deterministic slug `user-<userId>` and an `owner`
+   membership in one transaction, and treats a unique-constraint failure on
+   that slug (two concurrent first requests) as "already created" and
+   refetches. When `invitationToken` matches a pending membership, it attaches
+   that membership instead of creating an organization. For dbAuth the
+   `signup.handler` in `api/src/functions/auth.ts` is codemodded to call it
+   with the token from the signup form's `userAttributes`; for every provider
+   the GraphQL `context` function from step 5 calls it too, so first login
+   through any provider ends with a membership before `resolveCurrentOrg` runs.
 9. Generate a data migration (`yarn cedar data-migrate`, in
    `api/db/dataMigrations/`) that runs `ensureDefaultOrganization` for every
    existing `User` without a membership, in batches. Existing users otherwise
@@ -486,12 +505,19 @@ tracked in `sdl-stub-followups`; it is sequenced after those.
      subset, with a chosen role). Agency staff working in a client is the
      ordinary org switch; `context.currentOrg` is the client and every query is
      scoped to it.
-   - Provenance: an optional `viaOrganizationId String?` on `Membership`
-     records that a membership exists because the user is staff at the parent.
-     Removing someone from the agency then cascades to the client memberships
-     they hold through it, and a client can tell agency staff apart from its own
-     members. This is the detail that is hard to add after the fact, so it is
-     shown as part of the pattern rather than as an afterthought.
+   - Provenance: an optional `viaMembershipId String?` on `Membership`, a
+     second self-relation (beside `Inviter`) that points at the agency
+     membership the client membership was derived from, declared with
+     `onDelete: Cascade`. Deleting the agency membership then deletes every
+     client membership derived from it at the database level, so no service,
+     admin tool or script can revoke agency access and leave client access
+     behind. Memberships a client grants directly have `viaMembershipId` null
+     and are untouched; a client that wants to keep a specific agency person
+     after the agency relationship ends sets the column to null, which turns
+     the row into a direct membership. The column also lets a client tell
+     agency staff apart from its own members. This is shown as part of the
+     pattern because retrofitting provenance onto existing memberships means
+     guessing which ones were derived.
    - Cross-client work: agency-level reporting or bulk operations over all
      clients run `db.$forOrg(child.id)` per child, looked up through the
      `children` relation on plain `db`. There is no parent scope that sees
