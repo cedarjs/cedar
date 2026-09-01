@@ -20,6 +20,12 @@
         "types": "./dist/webAuthn.d.ts",
         "default": "./dist/webAuthn.js"
       }
+    },
+    "./oauth": {
+      "default": {
+        "types": "./dist/oauth.d.ts",
+        "default": "./dist/oauth.js"
+      }
     }
   },
   "main": "./dist/index.js",

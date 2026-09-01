@@ -159,6 +159,7 @@ export const handler = createGraphQLHandler({
 
     await handler({
       webauthn: false,
+      oauth: null,
       createUserModel: false,
       generateAuthPages: null,
       force: false,
@@ -188,6 +189,7 @@ export const handler = createGraphQLHandler({
 
     await handler({
       webauthn: false,
+      oauth: null,
       createUserModel: false,
       generateAuthPages: null,
       force: false,
@@ -210,6 +212,7 @@ export const handler = createGraphQLHandler({
 
         await handler({
           webauthn: false,
+          oauth: null,
           createUserModel: false,
           generateAuthPages: true,
           force: false,
@@ -232,6 +235,7 @@ export const handler = createGraphQLHandler({
 
         await handler({
           webauthn: true,
+          oauth: null,
           createUserModel: false,
           generateAuthPages: true,
           force: false,
@@ -254,6 +258,7 @@ export const handler = createGraphQLHandler({
 
         await handler({
           webauthn: false,
+          oauth: null,
           createUserModel: true,
           generateAuthPages: true,
           force: false,
@@ -276,6 +281,7 @@ export const handler = createGraphQLHandler({
 
         await handler({
           webauthn: true,
+          oauth: null,
           createUserModel: true,
           generateAuthPages: true,
           force: false,
@@ -298,6 +304,7 @@ export const handler = createGraphQLHandler({
 
         await handler({
           webauthn: false,
+          oauth: null,
           createUserModel: false,
           generateAuthPages: false,
           force: false,
@@ -326,6 +333,7 @@ export const handler = createGraphQLHandler({
 
         await handler({
           webauthn: true,
+          oauth: null,
           createUserModel: false,
           generateAuthPages: false,
           force: false,
@@ -354,6 +362,7 @@ export const handler = createGraphQLHandler({
 
         await handler({
           webauthn: false,
+          oauth: null,
           createUserModel: false,
           generateAuthPages: true,
           force: false,
@@ -376,6 +385,7 @@ export const handler = createGraphQLHandler({
 
         await handler({
           webauthn: true,
+          oauth: null,
           createUserModel: false,
           generateAuthPages: true,
           force: false,
@@ -398,6 +408,7 @@ export const handler = createGraphQLHandler({
 
         await handler({
           webauthn: false,
+          oauth: null,
           createUserModel: true,
           generateAuthPages: true,
           force: false,
@@ -420,6 +431,7 @@ export const handler = createGraphQLHandler({
 
         await handler({
           webauthn: false,
+          oauth: null,
           createUserModel: true,
           generateAuthPages: true,
           force: false,

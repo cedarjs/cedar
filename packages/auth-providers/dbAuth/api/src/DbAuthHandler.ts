@@ -28,8 +28,18 @@ import {
   resolveRequestProtocol,
 } from './originValidation.js'
 import {
+  buildCookieAttributes,
+  createAuthProviderCookieString,
+  createCsrfToken,
+  createExpiresAtDate,
+  createLoginResponse,
+  createSessionCookieString,
+  DEFAULT_ALLOWED_USER_FIELDS,
+  sanitizeUser,
+} from './session.js'
+import type { DbAuthCookieConfig } from './session.js'
+import {
   decryptSession,
-  encryptSession,
   extractCookie,
   extractHashingOptions,
   generateCookieName,
@@ -225,33 +235,7 @@ export interface DbAuthHandlerOptions<
   /**
    * Object containing cookie config options
    */
-  cookie?: {
-    /** @deprecated set this option in `cookie.attributes` */
-    Path?: string
-    /** @deprecated set this option in `cookie.attributes` */
-    HttpOnly?: boolean
-    /** @deprecated set this option in `cookie.attributes` */
-    Secure?: boolean
-    /** @deprecated set this option in `cookie.attributes` */
-    SameSite?: string
-    /** @deprecated set this option in `cookie.attributes` */
-    Domain?: string
-    attributes?: {
-      Path?: string
-      HttpOnly?: boolean
-      Secure?: boolean
-      SameSite?: string
-      Domain?: string
-    }
-    /**
-     * The name of the cookie that dbAuth sets
-     *
-     * %port% will be replaced with the port the api server is running on.
-     * If you have multiple RW apps running on the same host, you'll need to
-     * make sure they all use unique cookie names
-     */
-    name?: string
-  }
+  cookie?: DbAuthCookieConfig
   /**
    * Object containing forgot password options
    */
@@ -325,8 +309,6 @@ type Params = AuthenticationResponseJSON &
 
 type DbAuthSession<T = unknown> = Record<string, T>
 type CorsHeaders = Record<string, string>
-
-const DEFAULT_ALLOWED_USER_FIELDS = ['id', 'email']
 
 export class DbAuthHandler<
   TUser extends UserType,
@@ -414,7 +396,7 @@ export class DbAuthHandler<
 
   // generate a new token (standard UUID)
   static get CSRF_TOKEN() {
-    return uuidv4()
+    return createCsrfToken()
   }
 
   static get AVAILABLE_WEBAUTHN_TRANSPORTS() {
@@ -475,12 +457,9 @@ export class DbAuthHandler<
     this.allowedUserFields =
       this.options.allowedUserFields || DEFAULT_ALLOWED_USER_FIELDS
 
-    const sessionExpiresAt = new Date()
-    sessionExpiresAt.setSeconds(
-      sessionExpiresAt.getSeconds() +
-        (this.options.login as LoginFlowOptions).expires,
+    this.sessionExpiresDate = createExpiresAtDate(
+      (this.options.login as LoginFlowOptions).expires,
     )
-    this.sessionExpiresDate = sessionExpiresAt.toUTCString()
 
     const webAuthnExpiresAt = new Date()
     webAuthnExpiresAt.setSeconds(
@@ -1239,15 +1218,7 @@ export class DbAuthHandler<
   // removes any fields not explicitly allowed to be sent to the client before
   // sending a response over the wire
   _sanitizeUser(user: Record<string, unknown>) {
-    const sanitized = JSON.parse(JSON.stringify(user))
-
-    Object.keys(sanitized).forEach((key) => {
-      if (!this.allowedUserFields.includes(key)) {
-        delete sanitized[key]
-      }
-    })
-
-    return sanitized
+    return sanitizeUser(user, this.allowedUserFields)
   }
 
   // Converts LambdaEvent or FetchRequest to
@@ -1264,45 +1235,18 @@ export class DbAuthHandler<
     expires?: 'now' | string
     options?: DbAuthHandlerOptions['cookie']
   }) {
-    // TODO: When we drop support for specifying cookie attributes directly on
-    // `options.cookie` we can get rid of all of this and just spread
-    // `this.options.cookie?.attributes` directly into `cookieOptions` below
-    const userCookieAttributes = this.options.cookie?.attributes
-      ? { ...this.options.cookie?.attributes }
-      : { ...this.options.cookie }
-    if (!this.options.cookie?.attributes) {
-      delete userCookieAttributes.name
-    }
-
-    const cookieOptions = { ...userCookieAttributes, ...options }
-    const meta = Object.keys(cookieOptions)
-      .map((key) => {
-        const optionValue =
-          cookieOptions[key as keyof DbAuthHandlerOptions['cookie']]
-
-        // Convert the options to valid cookie string
-        if (optionValue === true) {
-          return key
-        } else if (optionValue === false) {
-          return null
-        } else {
-          return `${key}=${optionValue}`
-        }
-      })
-      .filter((v) => v)
-
-    const expiresAt =
-      expires === 'now' ? DbAuthHandler.PAST_EXPIRES_DATE : expires
-    meta.push(`Expires=${expiresAt}`)
-
-    return meta
+    return buildCookieAttributes({
+      cookieConfig: this.options.cookie,
+      expires,
+      overrideAttributes: options,
+    })
   }
 
   _createAuthProviderCookieString(): string {
-    return [
-      `auth-provider=dbAuth`,
-      ...this._cookieAttributes({ expires: this.sessionExpiresDate }),
-    ].join(';')
+    return createAuthProviderCookieString({
+      cookieConfig: this.options.cookie,
+      expiresAt: this.sessionExpiresDate,
+    })
   }
 
   // returns the set-cookie header to be returned in the request (effectively
@@ -1311,14 +1255,12 @@ export class DbAuthHandler<
     data: DbAuthSession<TIdType>,
     csrfToken: string,
   ): string {
-    const session = JSON.stringify(data) + ';' + csrfToken
-    const encrypted = encryptSession(session)
-    const sessionCookieString = [
-      `${generateCookieName(this.options.cookie?.name)}=${encrypted}`,
-      ...this._cookieAttributes({ expires: this.sessionExpiresDate }),
-    ].join(';')
-
-    return sessionCookieString
+    return createSessionCookieString({
+      data,
+      csrfToken,
+      cookieConfig: this.options.cookie,
+      expiresAt: this.sessionExpiresDate,
+    })
   }
 
   async _findUserByToken(token: string) {
@@ -1576,22 +1518,13 @@ export class DbAuthHandler<
   _loginResponse(
     user: Record<string, any>,
     statusCode = 200,
-  ): [{ id: string }, Headers, { statusCode: number }] {
-    const sessionData = this._sanitizeUser(user)
-
-    // TODO: this needs to go into graphql somewhere so that each request makes a new CSRF token and sets it in both the encrypted session and the csrf-token header
-    const csrfToken = DbAuthHandler.CSRF_TOKEN
-
-    const headers = new Headers()
-
-    headers.append('csrf-token', csrfToken)
-    headers.append('set-cookie', this._createAuthProviderCookieString())
-    headers.append(
-      'set-cookie',
-      this._createSessionCookieString(sessionData, csrfToken),
-    )
-
-    return [sessionData, headers, { statusCode }]
+  ): [Record<string, any>, Headers, { statusCode: number }] {
+    return createLoginResponse(user, {
+      cookie: this.options.cookie,
+      allowedUserFields: this.allowedUserFields,
+      expiresAt: this.sessionExpiresDate,
+      statusCode,
+    })
   }
 
   _logoutResponse(response?: Record<string, unknown>): AuthMethodOutput {

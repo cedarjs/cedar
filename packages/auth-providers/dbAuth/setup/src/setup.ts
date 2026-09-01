@@ -18,6 +18,14 @@ export function builder(yargs: Argv) {
       description: 'Include WebAuthn support (TouchID/FaceID)',
       type: 'boolean',
     })
+    .option('oauth', {
+      alias: 'o',
+      default: null,
+      description:
+        'Include OAuth support for the given comma-separated providers ' +
+        '(google, github), e.g. --oauth google,github',
+      type: 'string',
+    })
     .option('createUserModel', {
       alias: 'u',
       default: null,
@@ -40,6 +48,11 @@ export function builder(yargs: Argv) {
 
 export interface Args {
   webauthn: boolean | null
+  // `undefined` is legal alongside `null`/a string: yargs supplies `null`
+  // when the flag is parsed from argv and absent, but a caller that invokes
+  // the setup handler directly (e.g. a test-project fixture rebuild) can
+  // omit the property entirely, which comes through as `undefined`.
+  oauth?: string | null
   createUserModel: boolean | null
   generateAuthPages: boolean | null
   force: boolean

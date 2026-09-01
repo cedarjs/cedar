@@ -460,6 +460,7 @@ export const addConfigToRoutes = () => {
 export const generateAuthApiFiles = <Renderer extends typeof ListrRenderer>(
   basedir: string,
   webAuthn: boolean,
+  oauth = false,
 ): ListrTask<AuthGeneratorCtx, Renderer> => {
   return {
     title: 'Generating auth api side files...',
@@ -472,7 +473,7 @@ export const generateAuthApiFiles = <Renderer extends typeof ListrRenderer>(
 
       // The keys in `filesRecord` are the full paths to where the file contents,
       // which is the values in `filesRecord`, will be written.
-      let filesRecord = await apiSideFiles({ basedir, webAuthn })
+      let filesRecord = await apiSideFiles({ basedir, webAuthn, oauth })
 
       // Always overwrite files in force mode, no need to prompt
       let existingFiles: ExistingFiles = 'FAIL'

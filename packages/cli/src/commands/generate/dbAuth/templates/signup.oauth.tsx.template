@@ -1,0 +1,147 @@
+import { useEffect, useRef } from 'react'
+
+import {
+  Form,
+  Label,
+  TextField,
+  PasswordField,
+  FieldError,
+  Submit,
+} from '@cedarjs/forms'
+import { Link, navigate, routes } from '@cedarjs/router'
+import { Metadata } from '@cedarjs/web'
+import { toast, Toaster } from '@cedarjs/web/toast'
+
+import { getOAuthUrl } from '@cedarjs/auth-dbauth-web/oauth'
+
+import { useAuth } from 'src/auth'
+
+const SignupPage = () => {
+  const { isAuthenticated, signUp } = useAuth()
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(routes.home())
+    }
+  }, [isAuthenticated])
+
+  // focus on ${usernameLowerCase} box on page load
+  const ${usernameCamelCase}Ref = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    ${usernameCamelCase}Ref.current?.focus()
+  }, [])
+
+  const onSubmit = async (data: Record<string, string>) => {
+    const response = await signUp({ username: data.${usernameCamelCase}, password: data.${passwordCamelCase} })
+
+    if (response.message) {
+      toast(response.message)
+    } else if (response.error) {
+      toast.error(response.error)
+    } else {
+      // user is signed in automatically
+      toast.success('Welcome!')
+    }
+  }
+
+  return (
+    <>
+      <Metadata title="Signup" />
+
+      <main className="rw-main">
+        <Toaster toastOptions={{ className: 'rw-toast', duration: 6000 }} />
+        <div className="rw-scaffold rw-login-container">
+          <div className="rw-segment">
+            <header className="rw-segment-header">
+              <h2 className="rw-heading rw-heading-secondary">Signup</h2>
+            </header>
+
+            <div className="rw-segment-main">
+              <div className="rw-form-wrapper">
+                <Form onSubmit={onSubmit} className="rw-form-wrapper">
+                  <Label
+                    name="${usernameCamelCase}"
+                    className="rw-label"
+                    errorClassName="rw-label rw-label-error"
+                  >
+                    ${usernameTitleCase}
+                  </Label>
+                  <TextField
+                    name="${usernameCamelCase}"
+                    className="rw-input"
+                    errorClassName="rw-input rw-input-error"
+                    ref={${usernameCamelCase}Ref}
+                    validation={{
+                      required: {
+                        value: true,
+                        message: '${usernameTitleCase} is required',
+                      },
+                    }}
+                  />
+                  <FieldError name="${usernameCamelCase}" className="rw-field-error" />
+
+                  <Label
+                    name="${passwordCamelCase}"
+                    className="rw-label"
+                    errorClassName="rw-label rw-label-error"
+                  >
+                    ${passwordTitleCase}
+                  </Label>
+                  <PasswordField
+                    name="${passwordCamelCase}"
+                    className="rw-input"
+                    errorClassName="rw-input rw-input-error"
+                    autoComplete="current-password"
+                    validation={{
+                      required: {
+                        value: true,
+                        message: '${passwordTitleCase} is required',
+                      },
+                    }}
+                  />
+                  <FieldError name="${passwordCamelCase}" className="rw-field-error" />
+
+                  <div className="rw-button-group">
+                    <Submit className="rw-button rw-button-blue">
+                      Sign Up
+                    </Submit>
+                  </div>
+                </Form>
+
+                {/*
+                 * OAuth signup buttons. Delete the ones for providers you
+                 * haven't configured in `cedar setup auth dbAuth --oauth`.
+                 * Each link is a full-page navigation to the provider's
+                 * authorize route — it must not be turned into a fetch/XHR
+                 * call.
+                 */}
+                <div className="rw-button-group">
+                  <a
+                    href={getOAuthUrl('google', { flow: 'signup' })}
+                    className="rw-button rw-button-blue"
+                  >
+                    Continue with Google
+                  </a>
+                  <a
+                    href={getOAuthUrl('github', { flow: 'signup' })}
+                    className="rw-button rw-button-blue"
+                  >
+                    Continue with GitHub
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="rw-login-link">
+            <span>Already have an account?</span>{' '}
+            <Link to={routes.login()} className="rw-link">
+              Log in!
+            </Link>
+          </div>
+        </div>
+      </main>
+    </>
+  )
+}
+
+export default SignupPage

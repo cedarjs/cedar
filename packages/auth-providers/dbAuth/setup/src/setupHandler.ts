@@ -5,6 +5,17 @@ import prompts from 'prompts'
 
 import { getGraphqlPath, standardAuthHandler } from '@cedarjs/cli-helpers'
 
+import {
+  apiPackages as oauthApiPackages,
+  configureOAuthProvidersTask,
+  createUserModelTask as oauthCreateUserModelTask,
+  envVarNotes as oauthEnvVarNotes,
+  noteGenerate as oauthNoteGenerate,
+  notes as oauthNotes,
+  parseOAuthProviders,
+  webAuthnCreateUserModelTask as webAuthnOauthCreateUserModelTask,
+  webAuthnOauthNotes,
+} from './oauth.setupData.js'
 import type { Args } from './setup.js'
 import {
   notes,
@@ -31,6 +42,7 @@ import {
 
 export async function handler({
   webauthn,
+  oauth,
   createUserModel,
   generateAuthPages,
   force: forceArg,
@@ -43,12 +55,25 @@ export async function handler({
   )
 
   const webAuthn = await shouldIncludeWebAuthn(webauthn)
+  const oauthProviders = parseOAuthProviders(oauth)
+  const includeOAuth = oauthProviders.length > 0
   const createDbUserModel = await shouldCreateUserModel(createUserModel)
   const generateDbAuthPages = await shouldGenerateDbAuthPages(generateAuthPages)
 
   const oneMoreThing: string[] = []
 
-  if (webAuthn) {
+  if (webAuthn && includeOAuth) {
+    if (createDbUserModel) {
+      oneMoreThing.push(...notesCreatedUserModel)
+    } else {
+      oneMoreThing.push(...webAuthnOauthNotes())
+    }
+    oneMoreThing.push(...oauthEnvVarNotes(oauthProviders))
+
+    if (!generateDbAuthPages) {
+      oneMoreThing.push(...webAuthnNoteGenerate)
+    }
+  } else if (webAuthn) {
     if (createDbUserModel) {
       oneMoreThing.push(...notesCreatedUserModel)
     } else {
@@ -57,6 +82,17 @@ export async function handler({
 
     if (!generateDbAuthPages) {
       oneMoreThing.push(...webAuthnNoteGenerate)
+    }
+  } else if (includeOAuth) {
+    if (createDbUserModel) {
+      oneMoreThing.push(...notesCreatedUserModel)
+    } else {
+      oneMoreThing.push(...oauthNotes())
+    }
+    oneMoreThing.push(...oauthEnvVarNotes(oauthProviders))
+
+    if (!generateDbAuthPages) {
+      oneMoreThing.push(...oauthNoteGenerate)
     }
   } else {
     if (createDbUserModel) {
@@ -75,8 +111,12 @@ export async function handler({
   let createDbUserModelTask: typeof createUserModelTask | undefined = undefined
 
   if (createDbUserModel) {
-    if (webAuthn) {
+    if (webAuthn && includeOAuth) {
+      createDbUserModelTask = webAuthnOauthCreateUserModelTask
+    } else if (webAuthn) {
       createDbUserModelTask = webAuthnCreateUserModelTask
+    } else if (includeOAuth) {
+      createDbUserModelTask = oauthCreateUserModelTask
     } else {
       createDbUserModelTask = createUserModelTask
     }
@@ -89,6 +129,7 @@ export async function handler({
     authDecoderImport:
       "import { createAuthDecoder } from '@cedarjs/auth-dbauth-api'",
     webAuthn,
+    oauth: includeOAuth,
     webPackages: [
       `@cedarjs/auth-dbauth-web@${version}`,
       ...(webAuthn ? webAuthnWebPackages : []),
@@ -96,11 +137,15 @@ export async function handler({
     apiPackages: [
       `@cedarjs/auth-dbauth-api@${version}`,
       ...(webAuthn ? webAuthnApiPackages : []),
+      ...(includeOAuth
+        ? [`@cedarjs/auth-dbauth-oauth@${version}`, ...oauthApiPackages]
+        : []),
     ],
     extraTasks: [
       webAuthn ? webAuthnExtraTask : extraTask,
       createDbUserModelTask,
       createAuthDecoderFunction,
+      includeOAuth ? configureOAuthProvidersTask(oauthProviders) : undefined,
       generateDbAuthPages
         ? generateAuthPagesTask(createDbUserModel)
         : undefined,

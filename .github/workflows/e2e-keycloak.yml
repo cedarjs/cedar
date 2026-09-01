@@ -1,0 +1,63 @@
+name: 🔐 E2E - Keycloak OAuth
+
+on:
+  workflow_call:
+
+jobs:
+  e2e-keycloak:
+    runs-on: ubuntu-latest
+
+    env:
+      CEDAR_CI: 1
+      YARN_ENABLE_HARDENED_MODE: 0
+      YARN_ENABLE_IMMUTABLE_INSTALLS: false
+      KEYCLOAK_BASE_URL: http://localhost:8080
+      KEYCLOAK_ADMIN_USERNAME: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+
+    steps:
+      - name: Checkout the framework code
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      # Started as a plain `docker run` step, not a job-level `services:`
+      # container: the Keycloak image's entrypoint requires a command
+      # argument (`start-dev`) to boot at all, and GitHub Actions' `services:`
+      # block has no field for passing one.
+      - name: 🔐 Start Keycloak
+        run: |
+          docker run -d --name keycloak \
+            -p 8080:8080 \
+            -e KC_BOOTSTRAP_ADMIN_USERNAME="$KEYCLOAK_ADMIN_USERNAME" \
+            -e KC_BOOTSTRAP_ADMIN_PASSWORD="$KEYCLOAK_ADMIN_PASSWORD" \
+            quay.io/keycloak/keycloak:26.0 start-dev
+
+      # Readiness is probed with an admin token request — the first call the
+      # test suite makes — so a 200 here proves the admin REST API accepts
+      # the bootstrap credentials, not merely that the realm endpoint serves.
+      - name: ⏳ Wait for Keycloak to be ready
+        run: |
+          for i in $(seq 1 60); do
+            if curl --silent --fail \
+              --data "grant_type=password&client_id=admin-cli&username=$KEYCLOAK_ADMIN_USERNAME&password=$KEYCLOAK_ADMIN_PASSWORD" \
+              "$KEYCLOAK_BASE_URL/realms/master/protocol/openid-connect/token" > /dev/null; then
+              echo "Keycloak is up after ${i} attempt(s)"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Keycloak did not become ready in time"
+          docker logs keycloak
+          exit 1
+
+      - name: 🧪 Run Keycloak OAuth integration tests
+        working-directory: packages/auth-providers/dbAuth/oauth
+        run: CI=1 yarn vitest run src/__tests__/keycloak.integration.test.ts
+
+      - name: 🧹 Stop Keycloak
+        if: always()
+        run: docker rm --force keycloak

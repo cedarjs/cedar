@@ -30,8 +30,10 @@ const dbAuthTemplateFiles = [
   'forgotPassword.tsx.template',
   'login.tsx.template',
   'login.webAuthn.tsx.template',
+  'login.oauth.tsx.template',
   'resetPassword.tsx.template',
   'signup.tsx.template',
+  'signup.oauth.tsx.template',
 ]
 dbAuthTemplateFiles.forEach((templateFilename) => {
   mockFiles[path.join(__dirname, `../templates/${templateFilename}`)] = actualFs
@@ -741,6 +743,145 @@ describe('dbAuth', () => {
         )
         .toString()
       expect(signupPage).toMatchSnapshot()
+    })
+
+    it('produces the correct files with oauth enabled (detected via api package.json)', async () => {
+      const customEnquirer = new Enquirer()
+      customEnquirer.on('prompt', (prompt) => {
+        prompt.submit()
+      })
+
+      const localMockFiles = { ...mockFiles }
+      localMockFiles[path.join(getPaths().base, 'api', 'package.json')] = `{
+  "name": "api",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@cedarjs/auth-dbauth-oauth": "1.0.0"
+  }
+}
+`
+
+      vol.reset()
+      vol.fromJSON(localMockFiles)
+
+      await dbAuth.handler({
+        enquirer: customEnquirer,
+        listr2: { silentRendererCondition: true },
+        webauthn: false,
+      })
+
+      const loginPage = fs
+        .readFileSync(
+          path.normalize(
+            '/path/to/project/web/src/pages/LoginPage/LoginPage.jsx',
+          ),
+        )
+        .toString()
+      expect(loginPage).toContain('Continue with Google')
+      expect(loginPage).toContain('Continue with GitHub')
+      expect(loginPage).toContain('getOAuthUrl')
+      expect(loginPage).toMatchSnapshot()
+
+      const signupPage = fs
+        .readFileSync(
+          path.normalize(
+            '/path/to/project/web/src/pages/SignupPage/SignupPage.jsx',
+          ),
+        )
+        .toString()
+      expect(signupPage).toContain('Continue with Google')
+      expect(signupPage).toContain('Continue with GitHub')
+      expect(signupPage).toMatchSnapshot()
+    })
+
+    it('does not include oauth buttons when the api package.json does not depend on @cedarjs/auth-dbauth-oauth', async () => {
+      const customEnquirer = new Enquirer()
+      customEnquirer.on('prompt', (prompt) => {
+        prompt.submit()
+      })
+
+      const localMockFiles = { ...mockFiles }
+      localMockFiles[path.join(getPaths().base, 'api', 'package.json')] = `{
+  "name": "api",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {}
+}
+`
+
+      vol.reset()
+      vol.fromJSON(localMockFiles)
+
+      await dbAuth.handler({
+        enquirer: customEnquirer,
+        listr2: { silentRendererCondition: true },
+        webauthn: false,
+      })
+
+      const loginPage = fs
+        .readFileSync(
+          path.normalize(
+            '/path/to/project/web/src/pages/LoginPage/LoginPage.jsx',
+          ),
+        )
+        .toString()
+      expect(loginPage).not.toContain('Continue with Google')
+
+      const signupPage = fs
+        .readFileSync(
+          path.normalize(
+            '/path/to/project/web/src/pages/SignupPage/SignupPage.jsx',
+          ),
+        )
+        .toString()
+      expect(signupPage).not.toContain('Continue with Google')
+    })
+
+    it('prefers the webAuthn login variant over the oauth variant when both are enabled, but still adds oauth buttons to the signup page', async () => {
+      const customEnquirer = new Enquirer()
+      customEnquirer.on('prompt', (prompt) => {
+        prompt.submit()
+      })
+
+      const localMockFiles = { ...mockFiles }
+      localMockFiles[path.join(getPaths().base, 'api', 'package.json')] = `{
+  "name": "api",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@cedarjs/auth-dbauth-oauth": "1.0.0"
+  }
+}
+`
+
+      vol.reset()
+      vol.fromJSON(localMockFiles)
+
+      await dbAuth.handler({
+        enquirer: customEnquirer,
+        listr2: { silentRendererCondition: true },
+        webauthn: true,
+      })
+
+      const loginPage = fs
+        .readFileSync(
+          path.normalize(
+            '/path/to/project/web/src/pages/LoginPage/LoginPage.jsx',
+          ),
+        )
+        .toString()
+      expect(loginPage).toContain('WebAuthn')
+      expect(loginPage).not.toContain('Continue with Google')
+
+      const signupPage = fs
+        .readFileSync(
+          path.normalize(
+            '/path/to/project/web/src/pages/SignupPage/SignupPage.jsx',
+          ),
+        )
+        .toString()
+      expect(signupPage).toContain('Continue with Google')
     })
   })
 })
