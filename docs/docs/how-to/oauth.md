@@ -139,9 +139,19 @@ export const handler = async (event, context) => {
       },
       signup: {
         handler: ({ profile }) => {
+          // Providers can omit the email (a GitHub account keeping its email
+          // private, for example). Throwing here aborts the signup instead of
+          // creating an account with a fabricated address -- customize this
+          // handler if you want to support email-less providers.
+          if (!profile.email) {
+            throw new Error(
+              `OAuth signup needs an email, but ${profile.providerUserId} didn't return one`
+            )
+          }
+
           return db.user.create({
             data: {
-              email: profile.email ?? `${profile.providerUserId}@example.com`,
+              email: profile.email,
             },
           })
         },
