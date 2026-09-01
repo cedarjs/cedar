@@ -54,8 +54,18 @@ export const requestToBaseEvent = async (
     queryStringParameters[key] = value
   })
 
+  const headers = Object.fromEntries(request.headers.entries())
+
+  // A Lambda-style event has no URL of its own, so once this event is
+  // built, the request's scheme survives only as a forwarded header.
+  // Backfill it from the Fetch API request's own URL when the caller
+  // hasn't already set one (e.g. a proxy that already forwarded it).
+  if (!headers['x-forwarded-proto']) {
+    headers['x-forwarded-proto'] = url.protocol.replace(':', '')
+  }
+
   const event = {
-    headers: Object.fromEntries(request.headers.entries()),
+    headers,
     body: bodyText || null,
     httpMethod: request.method,
     path: url.pathname,

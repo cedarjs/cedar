@@ -803,6 +803,249 @@ describe('dbAuth', () => {
         foo: 'bar',
       })
     })
+
+    describe('origin validation', () => {
+      beforeEach(() => {
+        event.body = JSON.stringify({ method: 'logout' })
+        event.httpMethod = 'POST'
+        event.headers.cookie =
+          'session=ko6iXKV11DSjb6kFJ4iwcf1FEqa5wPpbL1sdtKiV51Y=|cQaYkOPG/r3ILxWiFiz90w=='
+      })
+
+      it('allows a POST request with no Origin header', async () => {
+        const dbAuth = new DbAuthHandler(event, context, options)
+        await dbAuth.init()
+        dbAuth.logout = vi.fn(() => ['body', new Headers()])
+        const response = await dbAuth.invoke()
+
+        expect(dbAuth.logout).toHaveBeenCalled()
+        expect(response.statusCode).toEqual(200)
+      })
+
+      it('allows a POST request whose Origin matches the request host', async () => {
+        event.headers.origin = 'https://example.com'
+        event.headers.host = 'example.com'
+        const dbAuth = new DbAuthHandler(event, context, options)
+        await dbAuth.init()
+        dbAuth.logout = vi.fn(() => ['body', new Headers()])
+        const response = await dbAuth.invoke()
+
+        expect(dbAuth.logout).toHaveBeenCalled()
+        expect(response.statusCode).toEqual(200)
+      })
+
+      it('allows a POST request whose Origin is in a string `trustedOrigins`', async () => {
+        event.headers.origin = 'https://trusted.example.com'
+        event.headers.host = 'api.example.com'
+        const dbAuth = new DbAuthHandler(event, context, {
+          ...options,
+          trustedOrigins: 'https://trusted.example.com',
+        })
+        await dbAuth.init()
+        dbAuth.logout = vi.fn(() => ['body', new Headers()])
+        const response = await dbAuth.invoke()
+
+        expect(dbAuth.logout).toHaveBeenCalled()
+        expect(response.statusCode).toEqual(200)
+      })
+
+      it('allows a POST request whose Origin is in an array `trustedOrigins`', async () => {
+        event.headers.origin = 'https://trusted.example.com'
+        event.headers.host = 'api.example.com'
+        const dbAuth = new DbAuthHandler(event, context, {
+          ...options,
+          trustedOrigins: [
+            'https://other.example.com',
+            'https://trusted.example.com',
+          ],
+        })
+        await dbAuth.init()
+        dbAuth.logout = vi.fn(() => ['body', new Headers()])
+        const response = await dbAuth.invoke()
+
+        expect(dbAuth.logout).toHaveBeenCalled()
+        expect(response.statusCode).toEqual(200)
+      })
+
+      it('allows a POST request whose Origin is in `cors.origin` (array)', async () => {
+        event.headers.origin = 'https://www.myRedwoodWebSide.com'
+        event.headers.host = 'api.example.com'
+        const dbAuth = new DbAuthHandler(event, context, {
+          ...options,
+          cors: {
+            origin: ['https://www.myRedwoodWebSide.com'],
+            credentials: true,
+          },
+        })
+        await dbAuth.init()
+        dbAuth.logout = vi.fn(() => ['body', new Headers()])
+        const response = await dbAuth.invoke()
+
+        expect(dbAuth.logout).toHaveBeenCalled()
+        expect(response.statusCode).toEqual(200)
+      })
+
+      it('does NOT trust a foreign Origin just because `cors.origin` is `true`', async () => {
+        event.headers.origin = 'https://evil.example.com'
+        event.headers.host = 'api.example.com'
+        const dbAuth = new DbAuthHandler(event, context, {
+          ...options,
+          cors: { origin: true, credentials: true },
+        })
+        await dbAuth.init()
+        dbAuth.logout = vi.fn(() => ['body', new Headers()])
+        const response = await dbAuth.invoke()
+
+        expect(dbAuth.logout).not.toHaveBeenCalled()
+        expect(response.statusCode).toEqual(403)
+        expect(JSON.parse(response.body)).toEqual({
+          error: 'Request origin is not trusted',
+        })
+      })
+
+      it('rejects a POST request with a mismatched Origin', async () => {
+        event.headers.origin = 'https://evil.example.com'
+        event.headers.host = 'api.example.com'
+        const dbAuth = new DbAuthHandler(event, context, options)
+        await dbAuth.init()
+        dbAuth.logout = vi.fn(() => ['body', new Headers()])
+        const response = await dbAuth.invoke()
+
+        expect(dbAuth.logout).not.toHaveBeenCalled()
+        expect(response.statusCode).toEqual(403)
+        expect(JSON.parse(response.body)).toEqual({
+          error: 'Request origin is not trusted',
+        })
+      })
+
+      it('does not check Origin for GET methods', async () => {
+        event.body = JSON.stringify({ method: 'getToken' })
+        event.httpMethod = 'GET'
+        event.headers.origin = 'https://evil.example.com'
+        event.headers.host = 'api.example.com'
+        const dbAuth = new DbAuthHandler(event, context, options)
+        await dbAuth.init()
+        dbAuth.getToken = vi.fn(() => ['some-id', new Headers()])
+        const response = await dbAuth.invoke()
+
+        expect(dbAuth.getToken).toHaveBeenCalled()
+        expect(response.statusCode).toEqual(200)
+      })
+
+      describe('direct connection (no forwarding headers)', () => {
+        it('allows a same-host plain-http Origin, e.g. classic `cedar serve` in dev', async () => {
+          // The exact shape a Fetch->Lambda-event conversion produces for
+          // an unproxied dev server: no `X-Forwarded-*` headers at all, so
+          // the scheme can't be recovered from the event, but that's a
+          // limitation of the event shape, not evidence of a proxy
+          event.headers.origin = 'http://127.0.0.1:8911'
+          event.headers.host = '127.0.0.1:8911'
+          const dbAuth = new DbAuthHandler(event, context, options)
+          await dbAuth.init()
+          dbAuth.logout = vi.fn(() => ['body', new Headers()])
+          const response = await dbAuth.invoke()
+
+          expect(dbAuth.logout).toHaveBeenCalled()
+          expect(response.statusCode).toEqual(200)
+        })
+      })
+
+      describe('behind a proxy (e.g. `cedar serve --ud`)', () => {
+        it('allows a POST request whose Origin matches `x-forwarded-host`, even though it differs from the connection host', async () => {
+          // Mirrors the shape `cedar serve --ud` forwards: the web side
+          // (127.0.0.1:8910) proxies to the api side (127.0.0.1:8911), so
+          // the connection-level `Host` header is the internal api-server
+          // hop. `cedar serve --ud` always sets `x-forwarded-proto`
+          // alongside `x-forwarded-host` (see
+          // `packages/cli/src/commands/serve.ts`), so the scheme is known
+          // here too
+          event.headers.origin = 'http://127.0.0.1:8910'
+          event.headers.host = '127.0.0.1:8911'
+          event.headers['x-forwarded-host'] = '127.0.0.1:8910'
+          event.headers['x-forwarded-proto'] = 'http'
+          const dbAuth = new DbAuthHandler(event, context, options)
+          await dbAuth.init()
+          dbAuth.logout = vi.fn(() => ['body', new Headers()])
+          const response = await dbAuth.invoke()
+
+          expect(dbAuth.logout).toHaveBeenCalled()
+          expect(response.statusCode).toEqual(200)
+        })
+
+        it('rejects the same request when `x-forwarded-host` is missing', async () => {
+          event.headers.origin = 'http://127.0.0.1:8910'
+          event.headers.host = '127.0.0.1:8911'
+          const dbAuth = new DbAuthHandler(event, context, options)
+          await dbAuth.init()
+          dbAuth.logout = vi.fn(() => ['body', new Headers()])
+          const response = await dbAuth.invoke()
+
+          expect(dbAuth.logout).not.toHaveBeenCalled()
+          expect(response.statusCode).toEqual(403)
+        })
+
+        it('uses the first entry of a comma-separated `x-forwarded-host` list', async () => {
+          event.headers.origin = 'http://a.example'
+          event.headers['x-forwarded-host'] = 'a.example, b.internal'
+          event.headers['x-forwarded-proto'] = 'http'
+          const dbAuth = new DbAuthHandler(event, context, options)
+          await dbAuth.init()
+          dbAuth.logout = vi.fn(() => ['body', new Headers()])
+          const response = await dbAuth.invoke()
+
+          expect(dbAuth.logout).toHaveBeenCalled()
+          expect(response.statusCode).toEqual(200)
+        })
+
+        describe('when `x-forwarded-proto` is not set (scheme unknown)', () => {
+          it('allows an https Origin matching `x-forwarded-host`', async () => {
+            // An `https:` Origin for this host can't be forged from a
+            // network position without the site's TLS certificate, so
+            // it's trusted even though the proxy didn't confirm the
+            // scheme
+            event.headers.origin = 'https://app.example.com'
+            event.headers['x-forwarded-host'] = 'app.example.com'
+            const dbAuth = new DbAuthHandler(event, context, options)
+            await dbAuth.init()
+            dbAuth.logout = vi.fn(() => ['body', new Headers()])
+            const response = await dbAuth.invoke()
+
+            expect(dbAuth.logout).toHaveBeenCalled()
+            expect(response.statusCode).toEqual(200)
+          })
+
+          it('rejects an http Origin matching `x-forwarded-host`', async () => {
+            // A network attacker serving a plain-HTTP page on the same
+            // hostname could produce this Origin, so it isn't trusted as
+            // same-host when the scheme can't be confirmed
+            event.headers.origin = 'http://app.example.com'
+            event.headers['x-forwarded-host'] = 'app.example.com'
+            const dbAuth = new DbAuthHandler(event, context, options)
+            await dbAuth.init()
+            dbAuth.logout = vi.fn(() => ['body', new Headers()])
+            const response = await dbAuth.invoke()
+
+            expect(dbAuth.logout).not.toHaveBeenCalled()
+            expect(response.statusCode).toEqual(403)
+          })
+
+          it('still allows that http Origin when listed in `trustedOrigins`', async () => {
+            event.headers.origin = 'http://app.example.com'
+            event.headers['x-forwarded-host'] = 'app.example.com'
+            const dbAuth = new DbAuthHandler(event, context, {
+              ...options,
+              trustedOrigins: 'http://app.example.com',
+            })
+            await dbAuth.init()
+            dbAuth.logout = vi.fn(() => ['body', new Headers()])
+            const response = await dbAuth.invoke()
+
+            expect(dbAuth.logout).toHaveBeenCalled()
+            expect(response.statusCode).toEqual(200)
+          })
+        })
+      })
+    })
   })
 
   describe('forgotPassword', () => {
@@ -2484,42 +2727,6 @@ describe('dbAuth', () => {
       expect(cookieString).toMatch(SET_SESSION_REGEX)
       // and we can check that it's a certain number of characters
       expect(cookieString.split(';')[0].length).toEqual(77)
-    })
-  })
-
-  describe('_validateCsrf()', () => {
-    it('returns true if session and header token match', async () => {
-      const data = { foo: 'bar' }
-      const token = 'abcd'
-      event = {
-        headers: {
-          cookie: encryptToCookie(JSON.stringify(data) + ';' + token),
-          'csrf-token': token,
-        },
-      }
-      const dbAuth = new DbAuthHandler(event, context, options)
-      await dbAuth.init()
-
-      const output = await dbAuth._validateCsrf()
-
-      expect(output).toEqual(true)
-    })
-
-    it('throws an error if session and header token do not match', async () => {
-      const data = { foo: 'bar' }
-      const token = 'abcd'
-      event = {
-        headers: {
-          cookie: encryptToCookie(JSON.stringify(data) + ';' + token),
-          'csrf-token': 'invalid',
-        },
-      }
-      const dbAuth = new DbAuthHandler(event, context, options)
-      await dbAuth.init()
-
-      await expect(dbAuth._validateCsrf()).rejects.toThrow(
-        dbAuthError.CsrfTokenMismatchError,
-      )
     })
   })
 

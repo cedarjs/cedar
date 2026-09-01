@@ -1,6 +1,31 @@
 import { describe, it, expect } from 'vitest'
 
-import { removeNulls } from '../transforms.js'
+import { removeNulls, requestToBaseEvent } from '../transforms.js'
+
+describe('requestToBaseEvent', () => {
+  it('backfills x-forwarded-proto from the request URL when absent', async () => {
+    const request = new Request('https://example.com/graphql', {
+      method: 'POST',
+    })
+
+    const event = await requestToBaseEvent(request)
+
+    expect(event.headers['x-forwarded-proto']).toEqual('https')
+  })
+
+  it('preserves an existing x-forwarded-proto header', async () => {
+    const request = new Request('https://internal.example.com/graphql', {
+      method: 'POST',
+      headers: {
+        'x-forwarded-proto': 'http',
+      },
+    })
+
+    const event = await requestToBaseEvent(request)
+
+    expect(event.headers['x-forwarded-proto']).toEqual('http')
+  })
+})
 
 describe('removeNulls utility', () => {
   it('Changes nulls to undefined', () => {

@@ -225,9 +225,30 @@ export const builder = async (yargs: Argv) => {
                 const root = apiRootPath === '/' ? '' : apiRootPath
                 const targetUrl = `${apiTarget}${root}${targetPath}${url.search}`
 
+                // `fetch()` derives its own Host header from `targetUrl`, so
+                // the API server would otherwise see the internal api-host
+                // hop (e.g. `127.0.0.1:8911`) instead of the origin-facing
+                // host the browser actually requested. Forward the original
+                // Host/protocol as X-Forwarded-* headers so downstream
+                // origin checks (like dbAuth's) see the real origin. Copy
+                // the headers into a mutable `Headers` first so the
+                // incoming request isn't mutated, and only set these when
+                // they're not already present, in case this server itself
+                // sits behind another proxy that already set them.
+                const forwardedHeaders = new Headers(req.headers)
+                if (!forwardedHeaders.has('x-forwarded-host')) {
+                  forwardedHeaders.set(
+                    'x-forwarded-host',
+                    req.headers.get('host') || url.host,
+                  )
+                }
+                if (!forwardedHeaders.has('x-forwarded-proto')) {
+                  forwardedHeaders.set('x-forwarded-proto', 'http')
+                }
+
                 return fetch(targetUrl, {
                   method: req.method,
-                  headers: req.headers,
+                  headers: forwardedHeaders,
                   body: req.body,
                   // @ts-expect-error - `duplex` is required when forwarding a
                   // request body via fetch (Node 18+).
