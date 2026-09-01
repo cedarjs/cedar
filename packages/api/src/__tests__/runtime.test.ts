@@ -124,7 +124,10 @@ describe('buildCedarContext', () => {
       {
         event: {
           body: null,
-          headers: { cookie: 'auth-provider=test; session=token-123' },
+          headers: {
+            cookie: 'auth-provider=test; session=token-123',
+            'x-forwarded-proto': 'http',
+          },
           httpMethod: 'GET',
           isBase64Encoded: false,
           multiValueHeaders: {

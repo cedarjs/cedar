@@ -21,6 +21,13 @@ import {
 
 import * as DbAuthError from './errors.js'
 import {
+  isProxiedRequest,
+  isRequestOriginTrusted,
+  requiresOriginValidation,
+  resolveRequestHost,
+  resolveRequestProtocol,
+} from './originValidation.js'
+import {
   decryptSession,
   encryptSession,
   extractCookie,
@@ -271,6 +278,18 @@ export interface DbAuthHandlerOptions<
    * CORS settings, same as in createGraphqlHandler
    */
   cors?: CorsConfig
+
+  /**
+   * Extra origins that are trusted for state-changing (non-GET) requests,
+   * on top of the request's own host and any origins already listed in
+   * `cors.origin`.
+   *
+   * Needed when the web side and API are on different origins and
+   * `cors.origin` isn't set to those origins, or when `cors.origin` is set
+   * to `true` -- reflecting any request origin is never treated as trust,
+   * so that combination requires listing trusted origins here explicitly.
+   */
+  trustedOrigins?: string | string[]
 }
 
 export interface SignupHandlerOptions<TUserAttributes> {
@@ -539,6 +558,29 @@ export class DbAuthHandler<
         return this.createResponse(this._notFound(), corsHeaders)
       }
 
+      // state-changing (non-GET) requests must come from a trusted Origin.
+      // `SameSite` cookies alone don't protect apps that relax that
+      // attribute, or bodies delivered via a content type that doesn't
+      // trigger a CORS preflight
+      if (
+        requiresOriginValidation(this.httpMethod) &&
+        !isRequestOriginTrusted(
+          {
+            method: this.httpMethod,
+            headers: this.normalizedRequest.headers,
+            host: this._requestHost(),
+            protocol: this._requestProtocol(),
+            proxied: isProxiedRequest(this.normalizedRequest.headers),
+          },
+          {
+            trustedOrigins: this.options.trustedOrigins,
+            corsOrigin: this.options.cors?.origin,
+          },
+        )
+      ) {
+        throw new DbAuthError.UntrustedOriginError()
+      }
+
       // call whatever auth method was requested and return the body and headers
       const [body, headers, options = { statusCode: 200 }] =
         await this[method]()
@@ -547,6 +589,8 @@ export class DbAuthHandler<
     } catch (e: any) {
       if (e instanceof DbAuthError.WrongVerbError) {
         return this.createResponse(this._notFound(), corsHeaders)
+      } else if (e instanceof DbAuthError.UntrustedOriginError) {
+        return this.createResponse(this._forbidden(e.message), corsHeaders)
       } else {
         return this.createResponse(
           this._badRequest(e.message || e),
@@ -554,6 +598,27 @@ export class DbAuthHandler<
         )
       }
     }
+  }
+
+  // best-effort host the request was sent to, used by origin validation to
+  // allow same-origin requests through with no extra configuration. Prefers
+  // `X-Forwarded-Host` over the connection-level host/URL -- see
+  // `resolveRequestHost` for why that's safe behind a proxy
+  _requestHost(): string | null {
+    return resolveRequestHost(
+      this.normalizedRequest.headers,
+      isFetchApiRequest(this.event) ? this.event.url : undefined,
+    )
+  }
+
+  // best-effort scheme the request arrived over, used alongside
+  // `_requestHost` for origin validation. See `resolveRequestProtocol` for
+  // when it can and can't be determined reliably
+  _requestProtocol(): string | null {
+    return resolveRequestProtocol(
+      this.normalizedRequest.headers,
+      isFetchApiRequest(this.event) ? this.event.url : undefined,
+    )
   }
 
   async forgotPassword(): Promise<AuthMethodOutput> {
@@ -1256,17 +1321,6 @@ export class DbAuthHandler<
     return sessionCookieString
   }
 
-  // checks the CSRF token in the header against the CSRF token in the session
-  // and throw an error if they are not the same (not used yet)
-  async _validateCsrf() {
-    if (
-      this.sessionCsrfToken !== this.normalizedRequest.headers.get('csrf-token')
-    ) {
-      throw new DbAuthError.CsrfTokenMismatchError()
-    }
-    return true
-  }
-
   async _findUserByToken(token: string) {
     const tokenExpires = new Date()
     tokenExpires.setSeconds(
@@ -1567,6 +1621,14 @@ export class DbAuthHandler<
   _badRequest(message: string) {
     return {
       statusCode: 400,
+      body: JSON.stringify({ error: message }),
+      headers: new Headers({ 'content-type': 'application/json' }),
+    }
+  }
+
+  _forbidden(message: string) {
+    return {
+      statusCode: 403,
       body: JSON.stringify({ error: message }),
       headers: new Headers({ 'content-type': 'application/json' }),
     }
