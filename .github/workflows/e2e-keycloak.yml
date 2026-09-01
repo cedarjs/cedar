@@ -32,14 +32,19 @@ jobs:
         run: |
           docker run -d --name keycloak \
             -p 8080:8080 \
-            -e KEYCLOAK_ADMIN="$KEYCLOAK_ADMIN_USERNAME" \
-            -e KEYCLOAK_ADMIN_PASSWORD="$KEYCLOAK_ADMIN_PASSWORD" \
+            -e KC_BOOTSTRAP_ADMIN_USERNAME="$KEYCLOAK_ADMIN_USERNAME" \
+            -e KC_BOOTSTRAP_ADMIN_PASSWORD="$KEYCLOAK_ADMIN_PASSWORD" \
             quay.io/keycloak/keycloak:26.0 start-dev
 
+      # Readiness is probed with an admin token request — the first call the
+      # test suite makes — so a 200 here proves the admin REST API accepts
+      # the bootstrap credentials, not merely that the realm endpoint serves.
       - name: ⏳ Wait for Keycloak to be ready
         run: |
           for i in $(seq 1 60); do
-            if curl --silent --fail "$KEYCLOAK_BASE_URL/realms/master" > /dev/null; then
+            if curl --silent --fail \
+              --data "grant_type=password&client_id=admin-cli&username=$KEYCLOAK_ADMIN_USERNAME&password=$KEYCLOAK_ADMIN_PASSWORD" \
+              "$KEYCLOAK_BASE_URL/realms/master/protocol/openid-connect/token" > /dev/null; then
               echo "Keycloak is up after ${i} attempt(s)"
               exit 0
             fi
