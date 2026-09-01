@@ -29,8 +29,7 @@ export class RedisClient extends BaseClient {
     // async import to make sure Redis isn't imported for MemCache
     const { createClient } = await import('redis')
 
-    // NOTE: type in redis client does not match the return type of createClient
-    this.client = createClient(this.redisOptions) as RedisClientType
+    this.client = createClient(this.redisOptions)
     this.client.on(
       'error',
       (err: Error) => this.logger?.error(err) || console.error(err),
