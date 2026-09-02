@@ -199,11 +199,25 @@ export interface StorageProvider {
   /** Check if an object exists */
   exists(key: string): Promise<boolean>
 
-  /** Size in bytes of a stored object, or null when the provider cannot know */
+  /**
+   * Size in bytes of a stored object, or null when the provider cannot
+   * know. Completion-time verification treats null as a failed check —
+   * a provider that cannot report size cannot prove the object is
+   * within the profile's limit.
+   */
   getObjectSize(key: string): Promise<number | null>
 
-  /** Generate a time-limited URL for reading/downloading */
-  getSignedReadUrl(key: string, expiresIn?: number): Promise<string>
+  /**
+   * Generate a time-limited URL for reading/downloading. Defaults to
+   * attachment disposition wherever the provider controls response
+   * headers (S3 response overrides, the FS serve route) — the stored
+   * MIME type is client-asserted, so inline rendering is opt-in. See
+   * "File Serving".
+   */
+  getSignedReadUrl(
+    key: string,
+    opts?: { expiresIn?: number; disposition?: 'attachment' | 'inline' }
+  ): Promise<string>
 
   /**
    * Generate a presigned URL for direct client upload.
@@ -308,12 +322,16 @@ export function createS3Provider(opts: S3ProviderOptions): StorageProvider {
       }
     },
 
-    async getSignedReadUrl(key, expiresIn = 3600) {
+    async getSignedReadUrl(key, opts = {}) {
+      const { expiresIn = 3600, disposition = 'attachment' } = opts
       return getSignedUrl(
         client,
         new GetObjectCommand({
           Bucket: bucket,
           Key: `${keyPrefix}${key}`,
+          // Safe serving default, mirroring the FS serve route — the
+          // stored MIME type is client-asserted, so inline is opt-in
+          ResponseContentDisposition: disposition,
         }),
         { expiresIn }
       )
@@ -364,9 +382,11 @@ export function createFsProvider(opts: FsProviderOptions): StorageProvider
 ```
 
 The FS provider's `getSignedReadUrl` generates an HMAC-signed token URL
-pointing to the Fastify file-serving route. Its `getPresignedUploadUrl`
-throws — FS uploads go through the Fastify `POST /upload/fs` route, not
-direct-to-storage.
+pointing to the Fastify file-serving route; the requested disposition is
+encoded into the signed token, so inline serving is granted per-URL by
+the code that signs the URL, never chosen by the requester. Its
+`getPresignedUploadUrl` throws — FS uploads go through the Fastify
+`POST /upload/fs` route, not direct-to-storage.
 
 #### DB Provider
 
@@ -626,6 +646,11 @@ model Upload {
   /// See "Upload Ownership (`userId`)" under Implementation Notes.
   userId     String?
 
+  /// Id (`jti`) of the upload token that created this row. Null for
+  /// server-generated files. Counting a token's rows is how the server
+  /// enforces the profile's `maxFiles` across requests.
+  tokenId    String?
+
   /// The organization this file belongs to, for apps using multi-tenancy
   /// (#2544). When the tenancy extension counts Upload as tenant-owned,
   /// every lookup in the serving directives is scoped automatically —
@@ -697,9 +722,14 @@ provider's storage key is just another string in the `storageKey` column.
 
 For S3 presigned uploads, the record starts as `pending` and transitions to
 `completed` when the S3 event notification webhook fires (or when the client
-confirms and the server verifies). For FS, DB, and server-generated files,
-the record goes directly to `completed` (the server has the bytes and saves
-synchronously).
+confirms and the server verifies). FS uploads also pass through `pending`:
+the row is created before the bytes are written and flipped to `completed`
+in the same request (see "Local FS Provider"). DB and server-generated
+files go directly to `completed` (the server has the bytes and saves
+synchronously). Every `pending` → `completed`/`failed` transition is a
+conditional update (`updateMany` filtered on the current status), so the
+webhook, `confirmUpload`, and the stale-upload cleanup job cannot race
+each other into inconsistent states.
 
 ---
 
@@ -739,6 +769,19 @@ interface UploadTokenPayload {
    * for its short lifetime instead of being bearer-anyone.
    */
   sub: string
+
+  /**
+   * Unique token id. Stamped onto Upload records as tokenId; counting a
+   * token's records is how the server enforces maxFiles across requests.
+   */
+  jti: string
+
+  /**
+   * The organization the token was issued under, for apps using
+   * multi-tenancy (#2544). Stamped onto Upload records and checked at
+   * confirmation, mirroring sub. Absent in single-tenant apps.
+   */
+  organizationId?: string
 }
 ```
 
@@ -748,7 +791,7 @@ Constraints are server-defined, never client-supplied. The client names a
 **profile**; the server owns what that profile allows. Without this, the
 token query would merely notarize whatever constraints the client asked
 for — any authenticated user could request a token for any target at any
-size, and `@requireAuth` gates *who*, not *what*.
+size, and `@requireAuth` gates _who_, not _what_.
 
 Profiles live next to the targets in `api/src/lib/uploads.ts`:
 
@@ -773,8 +816,10 @@ export const profiles = defineUploadProfiles({
 
 The generated `requestUploadToken(profile: String!)` resolver looks the
 profile up, refuses unknown names, and signs the profile's constraints
-plus the current user's id into the token. Per-user or per-role variation
-(pro accounts get bigger limits) is plain code in that resolver.
+into the token together with the current user's id (`sub`), a fresh
+token id (`jti`), and — in multi-tenant apps (#2544) — the current
+organization id. Per-user or per-role variation (pro accounts get bigger
+limits) is plain code in that resolver.
 
 #### Token Issuance
 
@@ -794,6 +839,11 @@ function verifyUploadToken(token: string, secret: string): UploadTokenPayload
 
 The secret is stored in an environment variable (`UPLOAD_TOKEN_SECRET`). The
 CLI setup command generates a random secret and adds it to `.env`.
+
+Token responses are sent with `Cache-Control: no-store`. The token varies
+per user and expires in minutes; the web side's `fetchPolicy: 'no-cache'`
+only bypasses Apollo's client cache, so this response header is what keeps
+HTTP intermediaries from ever storing or replaying a token.
 
 #### Token Header
 
@@ -815,13 +865,20 @@ server.
 2. **Client requests presigned URL** via GraphQL (`createPresignedUploadUrl`
    mutation, protected by `@requireUploadToken`). The server:
    - Validates the JWT from the `x-upload-token` header
+   - Validates the requested `contentType` against the token's
+     `allowedMimeTypes` — a disallowed type is refused before anything
+     is signed, and the presigned PUT pins the `Content-Type` header it
+     was signed with, so S3 rejects an upload that swaps it
    - Looks up the target from the validated token payload
    - Generates a storage key (e.g., `avatars/clx123abc.png`)
    - Calls `target.getPresignedUploadUrl(key, { contentType, ... })`
    - Creates an `Upload` record with status `pending`, `userId` from the
-     token's `sub`, and `size` set to the declared size after validating
-     it against the token's `maxFileSize` — completion-time verification
-     compares the real object against this value
+     token's `sub`, `organizationId` and `tokenId` from the token's
+     claims, and `size` set to the declared size after validating it
+     against the token's `maxFileSize` — completion-time verification
+     compares the real object against this value. The create runs in a
+     transaction that counts the token's existing records and refuses
+     the request once `maxFiles` is reached
    - Returns `{ uploadId, url, method, headers }` — this shape is exactly
      what Uppy's `@uppy/aws-s3` plugin expects from `getUploadParameters()`
 
@@ -863,11 +920,16 @@ which uses `@aws-sdk/s3-request-presigner` directly.
 #### Reading Files Back (Signed Download URLs)
 
 The S3 provider's `getSignedReadUrl()` generates native S3 presigned GET
-URLs using `@aws-sdk/s3-request-presigner`. These are used by the
+URLs using `@aws-sdk/s3-request-presigner`, signing
+`ResponseContentDisposition: attachment` by default so S3 serves the
+object with the same safe defaults as the FS serve route (see "File
+Serving" for why inline is opt-in). These are used by the
 `@withSignedUrl` directive and can be called directly in services:
 
 ```ts
-const url = await targets.avatars.getSignedReadUrl(upload.storageKey!, 3600)
+const url = await targets.avatars.getSignedReadUrl(upload.storageKey!, {
+  expiresIn: 3600,
+})
 ```
 
 ### Local FS Provider
@@ -887,18 +949,28 @@ filesystem. Protected by JWT upload tokens.
 
 3. **Fastify route handler:**
    - Validates the JWT token (checks expiry, resolves target)
-   - Checks `Content-Length` against `maxFileSize` from token — rejects
-     before buffering when the header is present and too large. The
-     header can be absent (chunked encoding) or dishonest, so
-     `@fastify/multipart` is also configured with a per-file `fileSize`
-     limit from the token, which aborts the stream mid-flight
+   - When the plugin's `authenticate` option is configured, resolves the
+     requesting user and rejects a token whose `sub` is a different user
+     — one user cannot spend another user's token
+   - Checks `Content-Length` against the batch bound — the token's
+     `maxFiles × maxFileSize` plus an allowance for the multipart
+     envelope — and rejects before buffering when the header is present
+     and too large. The header can be absent (chunked encoding) or
+     dishonest, and it measures the whole request rather than any one
+     file, so `@fastify/multipart` is also configured with the per-file
+     `fileSize` limit and the `files` count limit from the token, which
+     abort the stream mid-flight
    - Processes the multipart stream via `@fastify/multipart`
    - Validates MIME type against `allowedMimeTypes` from token
    - Generates a storage key: `<cuid>.<ext>`
+   - Creates the `Upload` record with status `pending`, `userId` from
+     the token's `sub`, and `organizationId`/`tokenId` from the token's
+     claims. Row-first ordering means a crash between record and write
+     leaves a pending row the cleanup job can find — bytes-first would
+     leave an object on disk that nothing references
    - Calls `target.write(key, data, { contentType })` to save to disk
-   - Creates an `Upload` record with status `completed`, `userId` from
-     the token's `sub`
-   - Returns the upload record as JSON
+   - Flips the record `pending` → `completed` (conditional update) and
+     returns it as JSON
 
 #### File Serving
 
@@ -966,14 +1038,21 @@ payload rides through GraphQL, which buffers the whole request before any
 directive runs. That trade is acceptable only because these files are
 small — so "small" gets a number. DB-target profiles default to a
 `maxFileSize` of 1 MB, enforced in `useDbUpload` on the client and again
-in `storeFile()` for `providerType: 'db'` targets on the server. Files
-that can exceed it belong on an FS or S3 target.
+in `storeFile()` for `providerType: 'db'` targets on the server, which
+rejects the decoded buffer before anything is persisted. The GraphQL
+endpoint's request body limit is the outer guard on how much a single
+request can buffer at all — configure it with the cap in mind (1 MB of
+file data is ~1.4 MB of base64). Files that can exceed the cap belong on
+an FS or S3 target.
 
 #### Serving DB Files
 
 DB uploads are served as data URIs (for inline display) via the
 `@withDataUri` GraphQL directive, or the provider's `getSignedReadUrl()`
-which also returns a `data:` URI:
+which also returns a `data:` URI. Browsers render `data:` URIs in an
+opaque origin and refuse top-level `data:` navigation, so this path does
+not carry the same-origin stored-XSS risk that makes the FS serve route
+default to attachment disposition:
 
 ```ts
 function toDataUri(mimeType: string, data: Buffer): string {
@@ -999,6 +1078,12 @@ interface StoreFileOptions {
   filename: string
   mimeType: string
   data: Buffer
+  /**
+   * Reject `data` larger than this many bytes. Defaults to the 1 MB DB
+   * size cap for `providerType: 'db'` targets (see "Size Cap") and to
+   * unlimited for object-storage targets.
+   */
+  maxSize?: number
 }
 
 /**
@@ -1010,13 +1095,18 @@ export async function storeFile(
   target: StorageProvider,
   options: StoreFileOptions
 ): Promise<Upload> {
-  const { db, filename, mimeType, data } = options
+  const { db, filename, mimeType, data, maxSize } = options
   const ext = mime.extension(mimeType)
   const key = ext ? `${createId()}.${ext}` : createId()
 
   // For the DB provider, data goes in the Upload.data column
   // For S3/FS/etc., data goes to external storage via the provider
   const isDbProvider = target.providerType === 'db'
+
+  const cap = maxSize ?? (isDbProvider ? DB_MAX_FILE_SIZE : undefined)
+  if (cap !== undefined && data.length > cap) {
+    throw new Error(`File exceeds the ${cap} byte limit`)
+  }
 
   if (!isDbProvider) {
     await target.write(key, data, { contentType: mimeType })
@@ -1028,7 +1118,7 @@ export async function storeFile(
       status: 'completed',
       filename,
       mimeType,
-      size: data.length,
+      size: BigInt(data.length),
       storageKey: isDbProvider ? null : key,
       data: isDbProvider ? data : null,
     },
@@ -1086,10 +1176,11 @@ ship in the package rather than being reimplemented per app:
 ```ts
 /**
  * Delete a stored file: bytes first, then the Upload record. Bytes-first
- * ordering means a crash between the two steps leaves a dangling row
- * that cleanup can find — the reverse order leaves an unreachable orphan
- * file that nothing can find. A missing object is tolerated, so the call
- * is idempotent.
+ * ordering means a crash between the two steps leaves a row whose object
+ * is gone — visible to the app and fixed by retrying the call — where
+ * the reverse order leaves an unreachable orphan object that nothing
+ * references. A missing object is tolerated, so the call is idempotent
+ * and safe to retry.
  */
 export async function deleteFile(
   target: StorageProvider,
@@ -1100,7 +1191,13 @@ export async function deleteFile(
  * Delete `pending` Upload rows older than `olderThan` (default: 1 hour)
  * along with any bytes that did land in storage. Covers presigned
  * uploads that were issued but never completed, and FS uploads that
- * crashed between write and record. Run it from a recurring
+ * crashed between row creation and write. The sweep is race-safe: each
+ * row is first claimed with a conditional update (`pending` → `failed`,
+ * filtered on status and age), and only rows the claim actually matched
+ * have their bytes and row removed. Because the completion paths flip
+ * `pending` → `completed` with the same conditional pattern, a row that
+ * completes mid-sweep is skipped (its claim matches zero rows) and a
+ * claimed row can no longer complete. Run it from a recurring
  * `@cedarjs/jobs` job; the setup command's next-steps output shows the
  * job.
  */
@@ -1136,6 +1233,15 @@ interface UploadPluginOptions {
 
   /** Body limit for FS uploads — default: 50MB */
   bodyLimit?: number
+
+  /**
+   * Resolve the authenticated user for a request (e.g. from the app's
+   * auth header). When provided, upload routes reject tokens whose
+   * `sub` is a different user, so one user cannot spend another user's
+   * token. Without it, the token itself is the only identity on the
+   * route.
+   */
+  authenticate?: (req: FastifyRequest) => Promise<{ id: string } | null>
 }
 
 async function cedarUploadsPlugin(
@@ -1199,7 +1305,7 @@ type UploadToken {
   signed token.
   """
   allowedMimeTypes: [String!]!
-  maxFileSize: Int!
+  maxFileSize: BigInt!
   maxFiles: Int!
 }
 
@@ -1213,7 +1319,7 @@ type PresignedUploadUrl {
 input CreatePresignedUploadUrlInput {
   filename: String!
   contentType: String!
-  size: Int!
+  size: BigInt!
 }
 
 type Query {
@@ -1233,6 +1339,11 @@ type Mutation {
   confirmUpload(uploadId: String!): Upload! @requireAuth
 }
 ```
+
+`size` and `maxFileSize` use the `BigInt` scalar that ships with Cedar's
+GraphQL server, matching `Upload.size` — GraphQL's `Int` is signed 32-bit
+and caps at 2 GB, which the multipart and tus futures this plan
+anticipates would outgrow.
 
 #### `@requireUploadToken` Directive
 
@@ -1264,6 +1375,12 @@ const validate: ValidatorDirectiveFunc = ({ context }) => {
     tokenHeader,
     process.env.UPLOAD_TOKEN_SECRET!
   )
+
+  // A token is bound to the user it was issued to — an authenticated
+  // user cannot spend someone else's token
+  if (context.currentUser && String(context.currentUser.id) !== payload.sub) {
+    throw new Error('Upload token was issued to a different user')
+  }
 
   // Attach the validated payload to context for use in resolvers
   context.uploadTokenPayload = payload
@@ -1307,15 +1424,19 @@ export const schema = gql`
   directive @withSignedUrl on FIELD_DEFINITION
 `
 
-const transform: TransformerDirectiveFunc = async ({ resolvedValue }) => {
+const transform: TransformerDirectiveFunc = async ({
+  context,
+  resolvedValue,
+}) => {
   if (!resolvedValue) {
     return null
   }
 
-  // resolvedValue is an Upload ID
-  const upload = await db.upload.findUnique({
-    where: { id: resolvedValue },
-  })
+  // resolvedValue is an Upload ID. One DataLoader per request batches
+  // the row lookups (a transformer directive runs per field per row),
+  // and its batch query selects every column except `data`, so S3/FS
+  // rows never drag inline blobs into memory.
+  const upload = await uploadLoader(context).load(resolvedValue)
 
   if (!upload || upload.status !== 'completed') {
     return null
@@ -1323,9 +1444,14 @@ const transform: TransformerDirectiveFunc = async ({ resolvedValue }) => {
 
   const target = resolveTarget(targets, upload.target)
 
-  if (upload.data) {
-    // DB provider — return data URI
-    return `data:${upload.mimeType};base64,${upload.data.toString('base64')}`
+  if (target.providerType === 'db') {
+    // Fetch `data` only now that the target is known to be the DB
+    // provider — return a data URI
+    const { data } = await db.upload.findUniqueOrThrow({
+      where: { id: upload.id },
+      select: { data: true },
+    })
+    return `data:${upload.mimeType};base64,${data!.toString('base64')}`
   }
 
   return target.getSignedReadUrl(upload.storageKey!)
@@ -1339,20 +1465,22 @@ the target from the Upload record and resolves the right provider
 automatically. This means the directive works identically for S3, FS, DB,
 and any future provider.
 
-Two implementation requirements keep the directive safe on list queries:
+Two implementation requirements — both visible in the example above —
+keep the directive safe on list queries:
 
 - **Batch the lookups.** A transformer directive runs per field per row —
-  a 100-row list with one decorated field is 100 `findUnique` calls
-  unless the directive resolves through a per-request DataLoader keyed on
-  upload id. URL signing itself is local crypto (the S3 presigner, the FS
-  HMAC) and needs no batching.
+  a 100-row list with one decorated field is 100 single-row queries
+  unless the directive resolves through `uploadLoader`, a per-request
+  DataLoader keyed on upload id. URL signing itself is local crypto (the
+  S3 presigner, the FS HMAC) and needs no batching.
 - **Never fetch `data` for non-DB targets.** `Upload.data` holds the
-  inline bytes for DB targets; an unqualified `findUnique` drags the blob
-  into memory for every S3/FS row too. The lookup selects everything
-  except `data`, then fetches `data` only when the resolved target has
-  `providerType === 'db'`. And because the DB path embeds a full base64
-  data URI into the response, DB-target fields belong on detail queries,
-  not list queries — the DB size cap keeps the worst case bounded.
+  inline bytes for DB targets; an unqualified lookup drags the blob
+  into memory for every S3/FS row too. The loader's batch query selects
+  everything except `data`; the directive fetches `data` only when the
+  resolved target has `providerType === 'db'`. And because the DB path
+  embeds a full base64 data URI into the response, DB-target fields
+  belong on detail queries, not list queries — the DB size cap keeps the
+  worst case bounded.
 
 #### `@withDataUri` Directive
 
@@ -1443,6 +1571,15 @@ interface UseUploadTokenResult {
   requestToken: () => Promise<string>
   /** The current token (null if not yet fetched) */
   token: string | null
+  /**
+   * The profile's constraints, echoed by the server alongside the token
+   * for client-side UX. Null until the first successful fetch.
+   */
+  constraints: {
+    allowedMimeTypes: string[]
+    maxFileSize: number
+    maxFiles: number
+  } | null
   /** Loading state */
   loading: boolean
   /** Error state */
@@ -1573,7 +1710,7 @@ This hook validates file type/size client-side and returns base64-encoded
 data that the developer passes to their GraphQL mutation. The client-side
 checks are UX only — the service is the enforcement point (`storeFile()`
 applies the DB size cap, and the developer's resolver validates the MIME
-type against the profile).
+type and file count against the profile).
 
 ### React Components
 
@@ -1736,11 +1873,16 @@ async function handleS3Webhook(
   // 3. Extract S3 event from notification
   // 4. For each s3:ObjectCreated event:
   //    a. Extract the bucket and object key
-  //    b. Find the matching Upload record by storageKey
+  //    b. Resolve the target whose config matches the event's bucket
+  //       (via getConfig()), then find the Upload record by target +
+  //       storageKey — storageKey alone is not guaranteed unique across
+  //       targets
   //    c. Compare the actual S3 object size against the size recorded at
   //       presign time — on mismatch, delete the object, mark the record
   //       "failed", and stop (see "Size Enforcement")
-  //    d. Update status to "completed" and size from the actual object
+  //    d. Flip status "pending" → "completed" (conditional update — a
+  //       row the cleanup job already claimed stays untouched) and
+  //       record the actual object size
 }
 ```
 
@@ -1779,35 +1921,55 @@ export const confirmUpload = async ({ uploadId }) => {
     where: { id: uploadId },
   })
 
-  // Only the user the upload token was issued to can confirm it
+  // Only the user (and, in multi-tenant apps, the organization) the
+  // upload token was issued to can confirm it
   if (upload.userId && upload.userId !== context.currentUser.id) {
     throw new ForbiddenError("You don't have access to this upload")
+  }
+  if (
+    upload.organizationId &&
+    upload.organizationId !== context.currentUser.organizationId
+  ) {
+    throw new ForbiddenError("You don't have access to this upload")
+  }
+
+  // Only pending object-storage uploads await confirmation. DB uploads
+  // have no storageKey and complete synchronously; a row that is not
+  // pending is already settled.
+  if (upload.status !== 'pending' || !upload.storageKey) {
+    throw new Error('Upload is not awaiting confirmation')
   }
 
   const target = resolveTarget(targets, upload.target)
 
   // Verify the object actually exists in storage
-  const exists = await target.exists(upload.storageKey!)
+  const exists = await target.exists(upload.storageKey)
 
   if (!exists) {
     throw new Error('Upload not found in storage')
   }
 
   // Verify the object matches what the token authorized — a presigned
-  // PUT cannot cap body size (see "Size Enforcement")
-  const actualSize = await target.getObjectSize(upload.storageKey!)
-  if (actualSize !== null && actualSize !== Number(upload.size)) {
-    await target.delete(upload.storageKey!)
+  // PUT cannot cap body size (see "Size Enforcement"). An unknown size
+  // counts as a failed verification: a provider that cannot report size
+  // cannot prove the object is within the profile's limit.
+  const actualSize = await target.getObjectSize(upload.storageKey)
+  if (actualSize === null || BigInt(actualSize) !== upload.size) {
+    await target.delete(upload.storageKey)
     return db.upload.update({
       where: { id: uploadId },
       data: { status: 'failed' },
     })
   }
 
-  return db.upload.update({
-    where: { id: uploadId },
+  // Conditional transition — a row the cleanup job already claimed
+  // stays failed instead of being resurrected
+  await db.upload.updateMany({
+    where: { id: uploadId, status: 'pending' },
     data: { status: 'completed' },
   })
+
+  return db.upload.findUniqueOrThrow({ where: { id: uploadId } })
 }
 ```
 
@@ -1879,7 +2041,9 @@ const upload = await db.upload.findUniqueOrThrow({
   where: { id: uploadId },
 })
 const target = resolveTarget(targets, upload.target)
-const signedUrl = await target.getSignedReadUrl(upload.storageKey!, 600)
+const signedUrl = await target.getSignedReadUrl(upload.storageKey!, {
+  expiresIn: 600,
+})
 
 // Feed the signed URL to Cloudflare Images
 const response = await fetch(
@@ -1959,7 +2123,7 @@ const tusServer = new TusServer({
         status: 'completed',
         filename: upload.metadata?.filename ?? 'unknown',
         mimeType: upload.metadata?.filetype ?? 'application/octet-stream',
-        size: upload.size ?? 0,
+        size: BigInt(upload.size ?? 0),
         storageKey: upload.id, // tus-s3-store uses the upload ID as S3 key
       },
     })
