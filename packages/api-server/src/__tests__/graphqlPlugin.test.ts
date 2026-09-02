@@ -13,9 +13,13 @@ import {
   expect,
 } from 'vitest'
 
+import { buildCedarContext } from '@cedarjs/api/runtime'
 import { createGraphQLYoga } from '@cedarjs/graphql-server'
 import type * as GraphqlServerModule from '@cedarjs/graphql-server'
-import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
+import type {
+  CedarGraphQLServer,
+  GraphQLYogaOptions,
+} from '@cedarjs/graphql-server'
 
 import type { createServer } from '../createServer.js'
 import type { CreateServerOptions } from '../createServerHelpers.js'
@@ -38,13 +42,15 @@ vi.mock('@cedarjs/graphql-server', async (importOriginal) => {
   }
 })
 
-// Test double: `cedarFastifyGraphQLServer` only reads `yoga.graphqlEndpoint`
-// and calls `yoga.handle`, so that's all this fake needs to implement. Safe
+// Test double: `cedarFastifyGraphQLServer` only reads `yoga.graphqlEndpoint`,
+// calls `yoga.handle`, and builds the context to hand it with
+// `buildRequestContext`, so that's all this fake needs to implement. Safe
 // because it's only ever passed to the mocked `createGraphQLYoga` above.
 function fakeYogaResult(handle: () => Promise<Response>) {
   return {
     yoga: { graphqlEndpoint: '/graphql', handle },
-  } as Awaited<ReturnType<typeof createGraphQLYoga>>
+    buildRequestContext: (request: Request) => buildCedarContext(request),
+  } as CedarGraphQLServer
 }
 
 // createGraphQLYoga is mocked in these tests, so its input is never actually

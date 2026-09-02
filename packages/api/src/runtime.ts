@@ -7,14 +7,21 @@ import type {
 import * as cookie from 'cookie'
 import { parse } from 'picoquery'
 
-import { getAuthenticationContext, hasAuthDecoder } from './auth/index.js'
+import type { AuthContextPayload } from './auth/index.js'
 import { requestToBaseEvent } from './transforms.js'
 
 export interface CedarRequestContext {
   params: Record<string, string>
   query: URLSearchParams
   cookies: ReadonlyMap<string, string>
-  serverAuthState?: Awaited<ReturnType<typeof getAuthenticationContext>>
+  /**
+   * The auth state the request carries, for `getCurrentUser` to turn into a
+   * current user. Only GraphQL requests have one: the GraphQL server resolves
+   * it, through the `buildRequestContext` that `createGraphQLYoga` returns,
+   * because it's the only thing that reads it. `buildCedarContext` leaves it
+   * unset.
+   */
+  serverAuthState?: AuthContextPayload
 }
 
 export type CedarHandler = (
@@ -42,7 +49,6 @@ export interface CedarRouteRecord {
 
 export interface BuildCedarContextOptions {
   params?: Record<string, string>
-  authDecoder?: Parameters<typeof getAuthenticationContext>[0]['authDecoder']
   lambdaContext?: LambdaContext
 }
 
@@ -98,29 +104,14 @@ export async function buildCedarContext(
   )
   const params = options.params ?? {}
 
-  // Only GraphQL consumes `serverAuthState`, and it's the only caller that
-  // supplies an auth decoder. Computing it for plain function routes is wasted
-  // work — without a decoder nothing can be decoded, so the payload could only
-  // ever come back with `decoded` set to `null` — and it lets `Authorization`
-  // header parse errors escape and turn requests to functions that don't use
-  // auth at all into 500s.
-  //
-  // This is also the only place auth state is resolved. It runs before the
-  // GraphQL server reads the request body, which is what keeps building the
-  // Lambda-style event here safe.
-  const serverAuthState = hasAuthDecoder(options.authDecoder)
-    ? await getAuthenticationContext({
-        authDecoder: options.authDecoder,
-        event: request,
-        context: options.lambdaContext,
-      })
-    : undefined
-
+  // Auth state is deliberately not resolved here. Plain function routes never
+  // read it, and resolving it parses the `Authorization` header, which would
+  // turn a request carrying a stray `auth-provider` header into a 500 on a
+  // function that doesn't use auth at all.
   return {
     params,
     query,
     cookies,
-    serverAuthState,
   }
 }
 

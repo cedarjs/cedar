@@ -11,8 +11,11 @@ import type {
   CedarRouteRecord,
   LegacyHandler,
 } from '@cedarjs/api/runtime'
-import type * as graphqlServer from '@cedarjs/graphql-server'
-import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
+import type * as graphqlServerModule from '@cedarjs/graphql-server'
+import type {
+  CedarGraphQLServer,
+  GraphQLYogaOptions,
+} from '@cedarjs/graphql-server'
 import { findApiServerFunctions } from '@cedarjs/internal/dist/files.js'
 import { getPaths } from '@cedarjs/project-config'
 
@@ -429,7 +432,7 @@ async function generateFunctionModule(distPath: string): Promise<string> {
 declare const buildCedarContext: typeof apiRuntime.buildCedarContext
 declare const requestToLegacyEvent: typeof apiRuntime.requestToLegacyEvent
 declare const wrapLegacyHandler: typeof apiRuntime.wrapLegacyHandler
-declare const createGraphQLYoga: typeof graphqlServer.createGraphQLYoga
+declare const createGraphQLYoga: typeof graphqlServerModule.createGraphQLYoga
 
 /**
  * The default export of a compiled Cedar api function, as seen from the
@@ -535,21 +538,19 @@ function createFunctionFetch(cedarHandler: CedarHandler) {
 }
 
 function createGraphQLFetch(graphqlOptions: GraphQLYogaOptions) {
-  let yogaInitPromise: ReturnType<typeof createGraphQLYoga> | null = null
+  let graphqlServerPromise: Promise<CedarGraphQLServer> | null = null
 
-  function getYoga() {
-    if (!yogaInitPromise) {
-      yogaInitPromise = createGraphQLYoga(graphqlOptions)
+  function getGraphQLServer() {
+    if (!graphqlServerPromise) {
+      graphqlServerPromise = createGraphQLYoga(graphqlOptions)
     }
 
-    return yogaInitPromise
+    return graphqlServerPromise
   }
 
   return async function fetch(request: Request) {
-    const { yoga } = await getYoga()
-    const cedarContext = await buildCedarContext(request, {
-      authDecoder: graphqlOptions?.authDecoder,
-    })
+    const graphqlServer = await getGraphQLServer()
+    const cedarContext = await graphqlServer.buildRequestContext(request)
     const event = await requestToLegacyEvent(request, cedarContext)
 
     // Wrap yoga.handle in an AsyncLocalStorage run so directive validators
@@ -562,7 +563,7 @@ function createGraphQLFetch(graphqlOptions: GraphQLYogaOptions) {
 
     try {
       const response = await store.run(new Map(), () => {
-        return yoga.handle(request, {
+        return graphqlServer.yoga.handle(request, {
           request,
           cedarContext,
           event,

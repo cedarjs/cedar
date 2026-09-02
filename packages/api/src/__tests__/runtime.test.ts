@@ -62,13 +62,14 @@ describe('buildCedarContext', () => {
     expect(ctx.query.getAll('tag')).toEqual(['cedar', 'framework'])
   })
 
-  // Function routes never pass an auth decoder, so there's nothing to decode
-  // and no reason to parse the `Authorization` header. Consumers that always
-  // send `auth-provider` used to get a 500 out of routes that don't use auth.
-  it('skips auth state for routes without an auth decoder', async () => {
+  // Resolving auth state parses the `Authorization` header, and consumers
+  // that always send `auth-provider` would get a 500 out of routes that don't
+  // use auth. The GraphQL server resolves auth state for its own requests.
+  it('never resolves auth state, even for a request carrying auth headers', async () => {
     const request = new Request('http://localhost:8911/tokenFromApiKey', {
       headers: {
         'auth-provider': 'custom',
+        cookie: 'auth-provider=custom; session=token-123',
       },
     })
 
@@ -77,103 +78,6 @@ describe('buildCedarContext', () => {
     })
 
     expect(ctx.serverAuthState).toBeUndefined()
-  })
-
-  it('skips auth state when the auth decoder array is empty', async () => {
-    const request = new Request('http://localhost:8911/tokenFromApiKey', {
-      headers: {
-        'auth-provider': 'custom',
-      },
-    })
-
-    const ctx = await buildCedarContext(request, { authDecoder: [] })
-
-    expect(ctx.serverAuthState).toBeUndefined()
-  })
-
-  it('hydrates auth state when an auth decoder is provided', async () => {
-    const authDecoder = vi.fn(async (token: string, type: string) => {
-      expect(token).toBe('auth-provider=test; session=token-123')
-      expect(type).toBe('test')
-
-      return {
-        sub: 'user-1',
-      }
-    })
-
-    const request = new Request('http://localhost:8911/graphql', {
-      headers: {
-        cookie: 'auth-provider=test; session=token-123',
-      },
-    })
-
-    const ctx = await buildCedarContext(request, {
-      authDecoder,
-    })
-
-    expect(authDecoder).toHaveBeenCalledTimes(1)
-    expect(ctx.serverAuthState).toEqual([
-      {
-        sub: 'user-1',
-      },
-      {
-        type: 'test',
-        schema: 'cookie',
-        token: 'auth-provider=test; session=token-123',
-      },
-      {
-        event: {
-          body: null,
-          headers: {
-            cookie: 'auth-provider=test; session=token-123',
-            'x-forwarded-proto': 'http',
-          },
-          httpMethod: 'GET',
-          isBase64Encoded: false,
-          multiValueHeaders: {
-            cookie: ['auth-provider=test; session=token-123'],
-          },
-          multiValueQueryStringParameters: null,
-          path: '/graphql',
-          pathParameters: null,
-          queryStringParameters: {},
-          requestContext: {
-            accountId: 'cedar',
-            apiId: 'cedar',
-            authorizer: undefined,
-            httpMethod: 'GET',
-            identity: {
-              accessKey: null,
-              accountId: null,
-              apiKey: null,
-              apiKeyId: null,
-              caller: null,
-              clientCert: null,
-              cognitoAuthenticationProvider: null,
-              cognitoAuthenticationType: null,
-              cognitoIdentityId: null,
-              cognitoIdentityPoolId: null,
-              principalOrgId: null,
-              sourceIp: '',
-              user: null,
-              userAgent: null,
-              userArn: null,
-            },
-            path: '/graphql',
-            protocol: 'HTTP/1.1',
-            requestId: 'cedar-request',
-            requestTimeEpoch: expect.any(Number),
-            resourceId: 'cedar',
-            resourcePath: '/graphql',
-            stage: '',
-          },
-          resource: '/graphql',
-          stageVariables: null,
-        },
-        request,
-        context: undefined,
-      },
-    ])
   })
 })
 
