@@ -1,6 +1,6 @@
 import type { Argv } from 'yargs'
 
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 export const command = 'sentry'
 
 export const description = 'Setup Sentry error and performance tracking'

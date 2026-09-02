@@ -2,7 +2,7 @@ import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
 import { runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 
 import * as generateCell from './generate/cell/cell.js'
 import * as generateComponent from './generate/component/component.js'

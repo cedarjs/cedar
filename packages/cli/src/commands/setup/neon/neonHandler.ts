@@ -5,11 +5,11 @@ import execa from 'execa'
 import { Listr } from 'listr2'
 import prompts from 'prompts'
 
-import { colors } from "@cedarjs/cli-helpers/colors";
-import { installPackages } from "@cedarjs/cli-helpers/installHelpers";
+import { colors } from '@cedarjs/cli-helpers/colors'
+import { installPackages } from '@cedarjs/cli-helpers/installHelpers'
 import { prettyPrintCedarCommand } from '@cedarjs/cli-helpers/packageManager'
-import { getPaths } from "@cedarjs/cli-helpers/paths";
-import { requireTTYOrExit } from "@cedarjs/cli-helpers/tty";
+import { getPaths } from '@cedarjs/cli-helpers/paths'
+import { requireTTYOrExit } from '@cedarjs/cli-helpers/tty'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import {

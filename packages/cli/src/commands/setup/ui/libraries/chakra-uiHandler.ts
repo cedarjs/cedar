@@ -2,9 +2,9 @@ import path from 'path'
 
 import { Listr } from 'listr2'
 
-import { colors as c } from "@cedarjs/cli-helpers/colors";
+import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { addWorkspacePackages } from '@cedarjs/cli-helpers/packageManager/packages'
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 
 import extendStorybookConfiguration from '../../../../lib/configureStorybook.js'
 import { extendJSXFile, fileIncludes } from '../../../../lib/extendFile.js'

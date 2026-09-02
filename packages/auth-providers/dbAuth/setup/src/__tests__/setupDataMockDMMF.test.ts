@@ -15,7 +15,10 @@ import {
   expect,
 } from 'vitest'
 
-import type { AuthHandlerArgs, AuthGeneratorCtx } from "@cedarjs/cli-helpers/auth/setupHelpers";
+import type {
+  AuthHandlerArgs,
+  AuthGeneratorCtx,
+} from '@cedarjs/cli-helpers/auth/setupHelpers'
 import type ProjectConfig from '@cedarjs/project-config'
 
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))

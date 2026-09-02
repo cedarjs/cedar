@@ -3,7 +3,7 @@ import { terminalLink } from 'termi-link'
 import type { Argv, Options, PositionalOptions } from 'yargs'
 
 // Don't import anything here that isn't already imported by the CLI
-import { isTypeScriptProject } from "@cedarjs/cli-helpers/project";
+import { isTypeScriptProject } from '@cedarjs/cli-helpers/project'
 
 /**
  * Don't invoke this function at the top level of a file. Always call it within

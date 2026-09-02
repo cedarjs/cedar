@@ -2,9 +2,9 @@ import camelcase from 'camelcase'
 import { Listr } from 'listr2'
 import prompts from 'prompts'
 
-import { colors as c } from "@cedarjs/cli-helpers/colors";
+import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { getConfig } from '@cedarjs/project-config'
 
 import { writeFilesTask, transformTSToJSMap } from '../../../lib/index.js'

@@ -1,7 +1,7 @@
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 export const command = 'baremetal [environment]'

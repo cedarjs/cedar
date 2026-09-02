@@ -1,7 +1,7 @@
 import { Listr } from 'listr2'
 
-import { colors as c } from "@cedarjs/cli-helpers/colors";
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { colors as c } from '@cedarjs/cli-helpers/colors'
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 
 import { deleteFilesTask } from '../../../lib/index.js'
 import { verifyModelName } from '../../../lib/schemaHelpers.js'

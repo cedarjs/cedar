@@ -4,9 +4,9 @@ import { pathToFileURL } from 'node:url'
 import * as changeCase from 'change-case'
 import { Listr } from 'listr2'
 
-import { colors as c } from "@cedarjs/cli-helpers/colors";
+import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import {

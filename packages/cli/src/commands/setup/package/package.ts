@@ -1,7 +1,7 @@
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 export const command = 'package <npm-package>'
 export const description =
   'Run a bin from an NPM package with version compatibility checks'

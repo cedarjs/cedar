@@ -1,6 +1,6 @@
 import type { Argv } from 'yargs'
 
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 export const command = 'coherence'
 
 export const description = 'Setup Coherence deploy'

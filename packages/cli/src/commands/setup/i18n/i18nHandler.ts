@@ -4,7 +4,7 @@ import path from 'path'
 import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 
-import { colors as c } from "@cedarjs/cli-helpers/colors";
+import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { addWorkspacePackages } from '@cedarjs/cli-helpers/packageManager/packages'
 import { errorTelemetry } from '@cedarjs/telemetry'
 

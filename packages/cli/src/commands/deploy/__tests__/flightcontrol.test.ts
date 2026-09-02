@@ -86,9 +86,8 @@ describe('handler', () => {
         dm: false,
       })
 
-      const { recordTelemetryAttributes } = await import(
-        '@cedarjs/cli-helpers/telemetry'
-      )
+      const { recordTelemetryAttributes } =
+        await import('@cedarjs/cli-helpers/telemetry')
       expect(recordTelemetryAttributes).toHaveBeenCalled()
     })
 

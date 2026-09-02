@@ -4,8 +4,8 @@ import path from 'node:path'
 import execa from 'execa'
 import { Listr } from 'listr2'
 
-import { colors as c } from "@cedarjs/cli-helpers/colors";
-import { prettify } from "@cedarjs/cli-helpers/fileHelpers";
+import { colors as c } from '@cedarjs/cli-helpers/colors'
+import { prettify } from '@cedarjs/cli-helpers/fileHelpers'
 import { install } from '@cedarjs/cli-helpers/packageManager'
 import { getConfig, getConfigPath } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'

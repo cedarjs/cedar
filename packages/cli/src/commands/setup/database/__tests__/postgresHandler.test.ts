@@ -5,7 +5,7 @@ import path from 'node:path'
 import { vol, fs as memfsFs } from 'memfs'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 
-import type { getPaths } from "@cedarjs/cli-helpers/paths";
+import type { getPaths } from '@cedarjs/cli-helpers/paths'
 import '../../../../lib/mockTelemetry.js'
 
 import { globSyncByExtension } from '../../../../__tests__/globSyncStub.js'

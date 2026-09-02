@@ -5,8 +5,8 @@ import fg from 'fast-glob'
 import { Listr } from 'listr2'
 import type { ListrDefaultRendererValue } from 'listr2'
 
-import { colors as c } from "@cedarjs/cli-helpers/colors";
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { colors as c } from '@cedarjs/cli-helpers/colors'
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { ensurePosixPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 

@@ -5,9 +5,9 @@ import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
-import { colors as c } from "@cedarjs/cli-helpers/colors";
+import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { getDataMigrationsPath } from '@cedarjs/project-config'
 
 import {

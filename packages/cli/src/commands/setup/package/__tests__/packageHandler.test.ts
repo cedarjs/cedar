@@ -70,7 +70,7 @@ import { vi, describe, beforeEach, afterEach, test, expect } from 'vitest'
 const mockEnq = enq as unknown as { Select: ReturnType<typeof vi.fn> }
 
 import { dlx } from '@cedarjs/cli-helpers/packageManager/exec'
-import { getCompatibilityData } from "@cedarjs/cli-helpers/version";
+import { getCompatibilityData } from '@cedarjs/cli-helpers/version'
 
 import { handler } from '../packageHandler.js'
 

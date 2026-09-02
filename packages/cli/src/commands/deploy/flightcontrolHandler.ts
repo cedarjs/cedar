@@ -8,7 +8,7 @@ import {
   runTransitiveBin,
   runWithNode,
 } from '@cedarjs/cli-helpers/packageManager/exec'
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { getPaths } from '@cedarjs/project-config'
 
 export interface HandlerArgs {

@@ -4,9 +4,9 @@ import boxen from 'boxen'
 import camelcase from 'camelcase'
 import { Listr } from 'listr2'
 
-import { colors as c } from "@cedarjs/cli-helpers/colors";
+import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'

@@ -4,8 +4,8 @@ import camelcase from 'camelcase'
 import { Listr } from 'listr2'
 import pascalcase from 'pascalcase'
 
-import { colors as c } from "@cedarjs/cli-helpers/colors";
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { colors as c } from '@cedarjs/cli-helpers/colors'
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'

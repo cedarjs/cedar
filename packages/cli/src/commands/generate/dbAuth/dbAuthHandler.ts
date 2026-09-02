@@ -7,10 +7,10 @@ import type Enquirer from 'enquirer'
 import { Listr } from 'listr2'
 import { titleCase } from 'title-case'
 
-import { colors as c } from "@cedarjs/cli-helpers/colors";
+import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 
 import {
   addRoutesToRouterTask,

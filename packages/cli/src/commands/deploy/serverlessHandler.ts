@@ -8,13 +8,13 @@ import execa from 'execa'
 import { Listr } from 'listr2'
 import prompts from 'prompts'
 
-import { colors as c } from "@cedarjs/cli-helpers/colors";
+import { colors as c } from '@cedarjs/cli-helpers/colors'
 import {
   formatAddRootPackagesCommand,
   formatRunBinCommand,
 } from '@cedarjs/cli-helpers/packageManager/display'
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 
 import { getPaths } from '../../lib/index.js'
 

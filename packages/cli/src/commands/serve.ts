@@ -8,8 +8,8 @@ import type { Argv } from 'yargs'
 
 import * as apiServerCLIConfig from '@cedarjs/api-server/apiCliConfig'
 import * as bothServerCLIConfig from '@cedarjs/api-server/bothCliConfig'
-import { colors as c } from "@cedarjs/cli-helpers/colors";
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { colors as c } from '@cedarjs/cli-helpers/colors'
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import * as webServerCLIConfig from '@cedarjs/web-server'
 
 // @ts-expect-error - Types not available for JS files

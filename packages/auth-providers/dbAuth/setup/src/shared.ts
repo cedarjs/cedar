@@ -4,7 +4,7 @@ import path from 'node:path'
 import prismaInternals from '@prisma/internals'
 
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
-import { getPaths } from "@cedarjs/cli-helpers/paths";
+import { getPaths } from '@cedarjs/cli-helpers/paths'
 import {
   processPagesDir,
   getSchemaPath,

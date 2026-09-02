@@ -1,6 +1,6 @@
 import type { Argv } from 'yargs'
 
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 export const command = 'neon'
 export const description =
   'Provision a Neon Postgres database and configure your project'

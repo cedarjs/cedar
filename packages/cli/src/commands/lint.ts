@@ -4,7 +4,7 @@ import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { getPaths } from '@cedarjs/project-config'
 
 export const command = 'lint [paths..]'

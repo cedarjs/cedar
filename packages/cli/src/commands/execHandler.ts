@@ -7,8 +7,8 @@ import { Listr } from 'listr2'
 import type { ListrTask } from 'listr2'
 import { Parser } from 'yargs/helpers'
 
-import { colors as c } from "@cedarjs/cli-helpers/colors";
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { colors as c } from '@cedarjs/cli-helpers/colors'
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { findScripts } from '@cedarjs/internal/dist/files'
 
 import { runScriptFunction } from '../lib/exec.js'

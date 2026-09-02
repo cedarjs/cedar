@@ -8,7 +8,7 @@ import {
   runWithNode,
 } from '@cedarjs/cli-helpers/packageManager/exec'
 import { installPackages } from '@cedarjs/cli-helpers/packageManager/packages'
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { getPaths } from '@cedarjs/project-config'
 
 interface RenderHandlerArgs {

@@ -4,7 +4,7 @@ import path from 'node:path'
 import execa from 'execa'
 import { Listr } from 'listr2'
 
-import { colors as c } from "@cedarjs/cli-helpers/colors";
+import { colors as c } from '@cedarjs/cli-helpers/colors'
 import {
   getPaths,
   getSchemaPath,

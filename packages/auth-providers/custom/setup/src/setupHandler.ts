@@ -1,8 +1,8 @@
 import fs from 'node:fs'
 import path from 'path'
 
-import { standardAuthHandler } from "@cedarjs/cli-helpers/auth/setupHelpers";
-import { isTypeScriptProject } from "@cedarjs/cli-helpers/project";
+import { standardAuthHandler } from '@cedarjs/cli-helpers/auth/setupHelpers'
+import { isTypeScriptProject } from '@cedarjs/cli-helpers/project'
 
 import type { Args } from './setup.js'
 

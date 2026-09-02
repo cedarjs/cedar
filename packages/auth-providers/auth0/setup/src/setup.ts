@@ -1,6 +1,6 @@
 import type { Argv } from 'yargs'
 
-import { standardAuthBuilder } from "@cedarjs/cli-helpers/auth/setupHelpers";
+import { standardAuthBuilder } from '@cedarjs/cli-helpers/auth/setupHelpers'
 export const command = 'auth0'
 export const description = 'Set up auth for for Auth0'
 

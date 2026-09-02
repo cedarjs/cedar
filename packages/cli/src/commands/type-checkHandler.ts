@@ -5,7 +5,7 @@ import { Listr } from 'listr2'
 
 import { formatRunBinCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 
 import { generatePrismaClient } from '../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files

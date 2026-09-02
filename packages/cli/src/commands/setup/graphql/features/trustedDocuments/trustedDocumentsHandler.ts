@@ -4,9 +4,9 @@ import path from 'node:path'
 import { Listr } from 'listr2'
 import { format } from 'prettier'
 
-import { getPrettierOptions } from "@cedarjs/cli-helpers/fileHelpers";
+import { getPrettierOptions } from '@cedarjs/cli-helpers/fileHelpers'
 import { runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
-import { setTomlSetting } from "@cedarjs/cli-helpers/project";
+import { setTomlSetting } from '@cedarjs/cli-helpers/project'
 import { getConfig, getPaths, resolveFile } from '@cedarjs/project-config'
 
 import { runTransform } from '../../../../../lib/runTransform.js'

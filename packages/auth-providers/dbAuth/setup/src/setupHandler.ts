@@ -3,9 +3,9 @@ import path from 'node:path'
 
 import prompts from 'prompts'
 
-import { standardAuthHandler } from "@cedarjs/cli-helpers/auth/setupHelpers";
-import { getGraphqlPath } from "@cedarjs/cli-helpers/project";
-import { requireTTYOrExit } from "@cedarjs/cli-helpers/tty";
+import { standardAuthHandler } from '@cedarjs/cli-helpers/auth/setupHelpers'
+import { getGraphqlPath } from '@cedarjs/cli-helpers/project'
+import { requireTTYOrExit } from '@cedarjs/cli-helpers/tty'
 
 import {
   apiPackages as oauthApiPackages,

@@ -14,7 +14,7 @@ import {
   assert,
 } from 'vitest'
 
-import type { AuthHandlerArgs } from "@cedarjs/cli-helpers/auth/setupHelpers";
+import type { AuthHandlerArgs } from '@cedarjs/cli-helpers/auth/setupHelpers'
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
 import { createAuthDecoderFunction, handler } from '../setupHandler'

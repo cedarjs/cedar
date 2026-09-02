@@ -7,13 +7,13 @@ import { Listr } from 'listr2'
 import type { ListrTask } from 'listr2'
 import { terminalLink } from 'termi-link'
 
-import { colors as c } from "@cedarjs/cli-helpers/colors";
+import { colors as c } from '@cedarjs/cli-helpers/colors'
 import {
   formatCedarCommand,
   formatRunWorkspaceScriptCommand,
 } from '@cedarjs/cli-helpers/packageManager/display'
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import {
   buildApi,
   buildApiWithVite,

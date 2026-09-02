@@ -6,9 +6,9 @@ import { Writable } from 'node:stream'
 import concurrently from 'concurrently'
 import type { Command } from 'concurrently'
 
-import { colors as c } from "@cedarjs/cli-helpers/colors";
+import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { formatRunBinCommand } from '@cedarjs/cli-helpers/packageManager/display'
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { shutdownPort } from '@cedarjs/internal/dist/dev'
 import { generateGqlormArtifacts } from '@cedarjs/internal/dist/generate/gqlormSchema'
 import { getConfig, getConfigPath } from '@cedarjs/project-config'

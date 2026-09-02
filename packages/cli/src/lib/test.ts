@@ -102,7 +102,8 @@ vi.mock('@cedarjs/project-config/packageManager', () => ({
 }))
 
 vi.mock('@cedarjs/cli-helpers/project', async (importOriginal) => {
-  const originalCliHelpers = await importOriginal<typeof CedarCliHelpersProject>()
+  const originalCliHelpers =
+    await importOriginal<typeof CedarCliHelpersProject>()
 
   return {
     ...originalCliHelpers,

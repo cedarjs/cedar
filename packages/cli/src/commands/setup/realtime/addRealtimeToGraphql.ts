@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { isTypeScriptProject } from "@cedarjs/cli-helpers/project";
+import { isTypeScriptProject } from '@cedarjs/cli-helpers/project'
 import { getPaths } from '@cedarjs/project-config'
 
 export function addRealtimeToGraphqlHandler(

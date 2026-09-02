@@ -4,9 +4,9 @@ import path from 'node:path'
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
-import { standardAuthBuilder } from "@cedarjs/cli-helpers/auth/setupHelpers";
+import { standardAuthBuilder } from '@cedarjs/cli-helpers/auth/setupHelpers'
 import { addRootPackages } from '@cedarjs/cli-helpers/packageManager/packages'
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 
 import { getPaths } from '../../../lib/index.js'
 

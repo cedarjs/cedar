@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url'
 import { format } from 'prettier'
 import { glob, path } from 'zx'
 
-import { transpileTSToJS } from "@cedarjs/cli-helpers/transpileTSToJS";
+import { transpileTSToJS } from '@cedarjs/cli-helpers/transpileTSToJS'
 const TS_TEMPLATE_PATH = fileURLToPath(
   new URL('../templates/ts', import.meta.url),
 )

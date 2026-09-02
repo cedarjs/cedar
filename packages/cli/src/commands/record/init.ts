@@ -1,4 +1,4 @@
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 export const handler = async (_argv?: Record<string, unknown>) => {
   recordTelemetryAttributes({
     command: 'record',

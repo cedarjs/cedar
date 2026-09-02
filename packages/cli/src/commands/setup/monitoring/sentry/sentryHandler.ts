@@ -3,11 +3,17 @@ import path from 'path'
 
 import { Listr } from 'listr2'
 
-import { colors } from "@cedarjs/cli-helpers/colors";
-import { prettify, writeFilesTask } from "@cedarjs/cli-helpers/fileHelpers";
-import { addApiPackages, addWebPackages } from "@cedarjs/cli-helpers/installHelpers";
-import { getPaths } from "@cedarjs/cli-helpers/paths";
-import { addEnvVarTask, isTypeScriptProject } from "@cedarjs/cli-helpers/project";
+import { colors } from '@cedarjs/cli-helpers/colors'
+import { prettify, writeFilesTask } from '@cedarjs/cli-helpers/fileHelpers'
+import {
+  addApiPackages,
+  addWebPackages,
+} from '@cedarjs/cli-helpers/installHelpers'
+import { getPaths } from '@cedarjs/cli-helpers/paths'
+import {
+  addEnvVarTask,
+  isTypeScriptProject,
+} from '@cedarjs/cli-helpers/project'
 import { getConfigPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 

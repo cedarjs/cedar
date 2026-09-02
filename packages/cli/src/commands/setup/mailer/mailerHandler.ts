@@ -3,8 +3,8 @@ import path from 'node:path'
 
 import { Listr } from 'listr2'
 
-import { colors as c } from "@cedarjs/cli-helpers/colors";
-import { addApiPackages } from "@cedarjs/cli-helpers/installHelpers";
+import { colors as c } from '@cedarjs/cli-helpers/colors'
+import { addApiPackages } from '@cedarjs/cli-helpers/installHelpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'

@@ -1,6 +1,6 @@
 import { vi, test, describe, expect } from 'vitest'
 
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 
 import { command, description, builder, handler } from '../docker.js'
 

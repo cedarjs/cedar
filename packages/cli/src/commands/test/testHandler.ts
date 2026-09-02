@@ -1,5 +1,5 @@
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
-import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { ensurePosixPath } from '@cedarjs/project-config'
 import { errorTelemetry, timedTelemetry } from '@cedarjs/telemetry'
 

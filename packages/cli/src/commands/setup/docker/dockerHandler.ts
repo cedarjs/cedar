@@ -5,8 +5,8 @@ import path from 'node:path'
 import execa from 'execa'
 import { Listr } from 'listr2'
 
-import { colors as c } from "@cedarjs/cli-helpers/colors";
-import { writeFile } from "@cedarjs/cli-helpers/fileHelpers";
+import { colors as c } from '@cedarjs/cli-helpers/colors'
+import { writeFile } from '@cedarjs/cli-helpers/fileHelpers'
 import { dedupe } from '@cedarjs/cli-helpers/packageManager'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { addWorkspacePackages } from '@cedarjs/cli-helpers/packageManager/packages'
