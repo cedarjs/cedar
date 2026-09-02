@@ -427,9 +427,12 @@ path stops being opt-out for streaming projects.
    `Router` matches again to produce `useParams()`. Anything rendered between
    the two — the per-request store, providers in `App.tsx` — cannot see the
    params. The first consumer that needs them there is the
-   [multi-tenancy plan](./2026-08-26-multi-tenancy.md): it sets
-   `context.currentOrg` from the route param in the server entry and builds a
-   per-organization Apollo client in a `Set wrap` component during SSR. Decide
+   [multi-tenancy plan](./2026-08-26-multi-tenancy.md): in the server entry it
+   resolves the route param through its `setCurrentOrg`, which derives the
+   role from the authenticated user's memberships and refuses an organization
+   the user has no membership in, and it builds a per-organization Apollo
+   client in a `Set wrap` component during SSR — the param names the
+   organization, membership authorizes it. Decide
    whether the handler's match result flows into the tree (a provider beside
    `LocationProvider` that `Router` consumes instead of re-matching) or whether
    the client `Router` is split into a route-analysis half that can sit above
@@ -465,9 +468,10 @@ path stops being opt-out for streaming projects.
   RSC v1 itself, rather than waiting for it.
 - **Route params and per-request consumers:** the
   [multi-tenancy plan](./2026-08-26-multi-tenancy.md) needs the matched route's
-  params on the server before rendering starts (to set `context.currentOrg`)
-  and inside the tree under `App` (to build a per-organization Apollo client
-  from a `Set wrap`). Its steps 1–3 work without any of this plan; its SSR
+  params on the server before rendering starts (to resolve
+  `context.currentOrg` through its membership-validating `setCurrentOrg`) and
+  inside the tree under `App` (to build a per-organization Apollo client from
+  a `Set wrap`). Its steps 1–3 work without any of this plan; its SSR
   support depends on open question 8 being answered.
 
 ---

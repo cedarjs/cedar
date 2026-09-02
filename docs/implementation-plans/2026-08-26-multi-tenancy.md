@@ -385,14 +385,19 @@ from `CedarApolloProvider`.
 
 The organization client is the app client's link chain with a `cedar-org`
 header added, and its own `InMemoryCache` built from the app's `cacheConfig`.
-Clients are kept in a module-level map keyed by `currentUser.id` and slug so
-returning to an organization reuses its cache; they share the HTTP transport
-and the auth link, so the cost per organization visited in a tab is one cache.
-The map is tied to the authenticated user, not to the tab: when
-`useAuth().isAuthenticated` turns false or `currentUser.id` changes, every
-client in it is dropped after `clearStore()`. Keying by user id means a second
-user in the same tab can never be handed the first user's client even if the
-teardown is missed, and the teardown frees the memory. The app client from
+Clients are kept in a module-level map keyed by `currentUser.id` and
+`organizationId` — the immutable id, not the slug, which is routing input that
+an organization rename or a deleted organization's reused slug can point at a
+different tenant — so returning to an organization reuses its cache; they
+share the HTTP transport and the auth link, so the cost per organization
+visited in a tab is one cache. The map is tied to the authenticated user's
+memberships, not to the tab: when `useAuth().isAuthenticated` turns false or
+`currentUser.id` changes, every client in it is dropped after `clearStore()`,
+and when a memberships refresh (`reauthenticate()`) shows a membership gone or
+its role changed, that organization's client is dropped the same way, so data
+cached under the previous authorization does not outlive it. Keying by user id
+means a second user in the same tab can never be handed the first user's
+client even if the teardown is missed, and the teardown frees the memory. The app client from
 `CedarApolloProvider` has no logout teardown of its own; the how-to tells apps
 to call `clearStore()` from `useCache()` on logout for the same reason, but
 the organization clients do not depend on the app doing so. This design
@@ -473,7 +478,8 @@ Steps performed:
    and re-export `hasOrgRole` / `requireMembership`. `getCurrentUser()` stays
    read-only. If the file cannot be codemodded safely, print the snippet to add
    instead of guessing.
-5. Codemod `api/src/functions/graphql.ts`: add a `context` function that calls
+5. Codemod `api/src/functions/graphql.ts`: add a `context` function that, only
+   when there is a `currentUser`, calls
    `ensureDefaultOrganization({ currentUser, invitationToken })` (see step 8),
    which returns the user's memberships as they are after any write it made,
    and then
@@ -483,6 +489,9 @@ Steps performed:
    ones: `getCurrentUser()` ran before `ensureDefaultOrganization`, so on a
    first login the memberships on `currentUser` are empty and membership
    validation would refuse the organization that was just created.
+   An anonymous request skips both calls and leaves `context.currentOrg`
+   undefined, consistent with architecture decision 4: public tenant data is
+   read through `db.$forOrg(id)`, never through an anonymously resolved scope.
    `invitationToken` is read from the `cedar-invitation-token` request header.
    Only one operation ever carries it: the generated invitation landing page
    (`/invite/{token}`, outside `OrgScope`) calls the `acceptInvitation`
@@ -617,7 +626,10 @@ same shape as `uploads.md`.
   with no membership renders the not-a-member state and issues no query; a
   tenant-scoped query issued above `OrgScope` carries no `cedar-org` header;
   logging out and logging in as another user in the same tab yields a fresh
-  client for the same slug with an empty cache.
+  client for the same slug with an empty cache; a role change or membership
+  removal surfaced by a memberships refresh drops that organization's client;
+  a renamed organization keeps its client (same id), while a new organization
+  reusing a deleted organization's slug gets a fresh one.
 - `resolveCurrentOrg` / `setCurrentOrg`: header, `variables.orgId`,
   `variables.orgSlug`, slug/id lookup, non-member rejection, and a resolver
   that returns a forged `role: 'owner'` for a viewer membership (the context

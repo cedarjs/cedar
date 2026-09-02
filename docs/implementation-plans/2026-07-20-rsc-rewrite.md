@@ -364,8 +364,9 @@ raises "why isn't Prisma under `api/` anymore" with no answer.
   Router. v1: it discriminates renderers. Stage D: it is the authoritative
   router for RSC-routed apps (redirects, private routes, 404s resolved
   server-side). Route params resolved here have consumers outside the router:
-  the [multi-tenancy plan](./2026-08-26-multi-tenancy.md) sets
-  `context.currentOrg` from them per request and provides a per-organization
+  the [multi-tenancy plan](./2026-08-26-multi-tenancy.md) resolves
+  `context.currentOrg` from them per request through its
+  membership-validating `setCurrentOrg` and provides a per-organization
   Apollo client under the matched route, so the dispatcher exposes its match to
   the render tree rather than leaving the client `Router` to re-derive it (the
   streaming-SSR plan's open question 8).
