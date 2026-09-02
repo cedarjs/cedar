@@ -116,7 +116,7 @@ describe('dbAuth setup command -- --oauth', () => {
     ])
   })
 
-  it('rejects an unknown provider, naming the custom-strategy escape hatch', async () => {
+  it('rejects an unknown provider, naming the `OAuthStrategy` interface', async () => {
     await expect(
       handler({
         webauthn: false,
@@ -125,7 +125,7 @@ describe('dbAuth setup command -- --oauth', () => {
         generateAuthPages: true,
         force: false,
       }),
-    ).rejects.toThrow(/custom-strategy escape hatch/)
+    ).rejects.toThrow(/implement the `OAuthStrategy` interface/)
   })
 
   it('rejects an empty --oauth value', async () => {

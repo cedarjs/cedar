@@ -8,8 +8,8 @@ import { addModels, functionsPath, hasModel, libPath } from './shared.js'
 
 /**
  * The OAuth providers `cedar setup auth dbAuth --oauth` knows how to
- * configure out of the box. Anything else is served by the custom-strategy
- * escape hatch documented at
+ * configure out of the box. Anything else is served by implementing the
+ * `OAuthStrategy` interface, documented at
  * https://cedarjs.com/docs/auth/dbauth#oauth-custom-strategies
  */
 export const KNOWN_OAUTH_PROVIDERS = ['google', 'github'] as const
@@ -59,9 +59,8 @@ export function parseOAuthProviders(
         `Cedar ships built-in support for ${KNOWN_OAUTH_PROVIDERS.join(
           ', ',
         )}. ` +
-        'For any other provider, use the custom-strategy escape hatch ' +
-        '(implement the `OAuthStrategy` interface from ' +
-        '`@cedarjs/auth-dbauth-oauth`) -- see ' +
+        'For any other provider, implement the `OAuthStrategy` interface ' +
+        'from `@cedarjs/auth-dbauth-oauth` -- see ' +
         'https://cedarjs.com/docs/auth/dbauth#oauth-custom-strategies',
     )
   }
