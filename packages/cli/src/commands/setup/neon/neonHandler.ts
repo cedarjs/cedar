@@ -5,7 +5,12 @@ import execa from 'execa'
 import { Listr } from 'listr2'
 import prompts from 'prompts'
 
-import { colors, getPaths, installPackages } from '@cedarjs/cli-helpers'
+import {
+  colors,
+  getPaths,
+  installPackages,
+  requireTTYOrExit,
+} from '@cedarjs/cli-helpers'
 import { prettyPrintCedarCommand } from '@cedarjs/cli-helpers/packageManager'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -108,15 +113,7 @@ export async function handler({ force, migrations, verbose }: Args) {
   // unconditionally skipped otherwise, so prompting would be pointless.
   let runMigrations = migrations
   if (!skipProvisioning && runMigrations === undefined) {
-    if (!process.stdin.isTTY) {
-      const error = new Error(
-        'Cannot prompt for confirmation in a non-interactive terminal. ' +
-          'Please pass --migrations or --no-migrations explicitly.',
-      )
-      errorTelemetry(process.argv, error.message)
-      console.error(colors.error(error.message))
-      process.exit(1)
-    }
+    requireTTYOrExit('--migrations or --no-migrations')
 
     const response = await prompts({
       type: 'toggle',

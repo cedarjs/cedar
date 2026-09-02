@@ -70,6 +70,10 @@ vi.mock('@cedarjs/cli-helpers', () => {
       bold: (str: string) => str,
       underline: (str: string) => str,
     },
+    // Real implementation is a no-op whenever stdin is a TTY, which it never
+    // is under vitest, so this stub only needs to not block the prompts
+    // these tests are asserting on.
+    requireTTYOrExit: () => undefined,
     // I wish I could have used something like
     // vi.requireActual(@cedarjs/cli-helpers) here, but I couldn't because
     // jest doesn't support ESM
