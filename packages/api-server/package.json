@@ -122,8 +122,8 @@
     "concurrently": "9.2.4",
     "esbuild": "0.28.2",
     "memfs": "4.68.2",
-    "pino": "9.7.0",
-    "pino-abstract-transport": "1.2.0",
+    "pino": "10.3.1",
+    "pino-abstract-transport": "3.0.0",
     "publint": "0.3.24",
     "typescript": "5.9.3",
     "vitest": "4.1.11"

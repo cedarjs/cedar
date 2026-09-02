@@ -53,9 +53,12 @@ export class Mailer<
     >,
   ) {
     // Logger
+    // Pino v10's Logger type is incompatible with Console.
+    // When a Pino logger is provided, use it; otherwise use console via type assertion.
     this.logger = this.config.logger
       ? this.config.logger.child({ module: 'mailer' })
-      : console
+      : // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+        (console as unknown as Logger)
 
     // Mode
     this.mode = this.isTest()
