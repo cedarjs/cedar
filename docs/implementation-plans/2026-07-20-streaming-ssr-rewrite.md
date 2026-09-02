@@ -422,6 +422,24 @@ path stops being opt-out for streaming projects.
    without it before deleting the legacy branch — self-host is covered twice
    over (`cedar serve` via srvx, custom servers via the Fastify bridge), since
    both host the same built Fetchable.
+8. **Route params above `App`.** The handler matches the route (1.1) before
+   rendering, then renders `<App><Routes /></App>`, inside which the client
+   `Router` matches again to produce `useParams()`. Anything rendered between
+   the two — the per-request store, providers in `App.tsx` — cannot see the
+   params. The first consumer that needs them there is the
+   [multi-tenancy plan](./2026-08-26-multi-tenancy.md): in the server entry it
+   resolves the route param through its `setCurrentOrg`, which derives the
+   role from the authenticated user's memberships and refuses an organization
+   the user has no membership in, and it builds a per-organization Apollo
+   client in its `OrgScope` component (mounted through the router's
+   `Set wrap`) during SSR — the param names the organization, membership
+   authorizes it. Decide
+   whether the handler's match result flows into the tree (a provider beside
+   `LocationProvider` that `Router` consumes instead of re-matching) or whether
+   the client `Router` is split into a route-analysis half that can sit above
+   `App`'s providers and a page-rendering half below them. Tenancy is a
+   consumer of either answer, not the reason to pick one; the dispatcher design
+   under the RSC plan is.
 
 ---
 
@@ -449,6 +467,13 @@ path stops being opt-out for streaming projects.
   is the concrete, near-term motivation for landing the first wave of the
   [RSC plan's `/db/` move](./2026-07-20-rsc-rewrite.md#the-db-move) ahead of
   RSC v1 itself, rather than waiting for it.
+- **Route params and per-request consumers:** the
+  [multi-tenancy plan](./2026-08-26-multi-tenancy.md) needs the matched route's
+  params on the server before rendering starts (to resolve
+  `context.currentOrg` through its membership-validating `setCurrentOrg`) and
+  inside the tree under `App` (to build a per-organization Apollo client in
+  its `OrgScope` component). Its steps 1–3 work without any of this plan; its SSR
+  support depends on open question 8 being answered.
 
 ---
 

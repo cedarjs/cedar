@@ -73,6 +73,18 @@ No blocking dependencies between these; all can proceed concurrently.
 
 ---
 
+## Consumers outside the four plans
+
+- [2026-08-26-multi-tenancy.md](./2026-08-26-multi-tenancy.md) — steps 1–3
+  (how-to as spec, runtime package, setup command) depend on none of the above
+  and can land in Phase 0. Its SSR support follows the resolution of the
+  streaming-SSR plan's open question 8 (matched route params exposed to the
+  render tree), which sits with the Phase 0 streaming-SSR tracks; its RSC
+  support follows Phase 3, where the dispatcher owns that exposure. Organization routes are not prerenderable by design, so
+  it has no dependency on the prerender tracks.
+
+---
+
 ## Key sequencing decisions baked into this order
 
 - The unified plan is additive-only by design (`api.prismaConfig` keeps working

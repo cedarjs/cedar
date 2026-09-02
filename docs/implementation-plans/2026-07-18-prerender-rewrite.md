@@ -308,6 +308,13 @@ const apolloState = client.extract()
   hit the restored cache and render data immediately on hydration — no
   client streaming/Suspense support required, so this does not depend on
   Cedar's experimental streaming work.
+- The per-route client is the outermost client only. A nested `ApolloProvider`
+  rendered inside `Routes` shadows it for its subtree, and that subtree's
+  queries bypass `inProcessGqlLink` and `client.extract()`. The
+  [multi-tenancy plan](./2026-08-26-multi-tenancy.md)'s `OrgScope` is such a
+  provider, so organization routes are outside the per-route-client model and
+  must not be marked `prerender`; the tenancy plan states the same from its
+  side.
 
 ### 2.2 Orchestration: concurrency and memory
 
