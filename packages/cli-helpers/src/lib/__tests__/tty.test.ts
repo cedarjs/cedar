@@ -26,7 +26,7 @@ describe('requireTTYOrExit', () => {
       throw new Error('process.exit called')
     })
 
-    expect(() => requireTTYOrExit('--foo=true or --foo=false')).not.toThrow()
+    expect(() => requireTTYOrExit('--foo or --no-foo')).not.toThrow()
     expect(exitSpy).not.toHaveBeenCalled()
   })
 
@@ -37,7 +37,7 @@ describe('requireTTYOrExit', () => {
     })
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    expect(() => requireTTYOrExit('--foo=true or --foo=false')).toThrow(
+    expect(() => requireTTYOrExit('--foo or --no-foo')).toThrow(
       'process.exit called',
     )
 
@@ -47,7 +47,7 @@ describe('requireTTYOrExit', () => {
       ),
     )
     expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('--foo=true or --foo=false'),
+      expect.stringContaining('--foo or --no-foo'),
     )
     expect(exitSpy).toHaveBeenCalledWith(1)
     expect(errorTelemetry).toHaveBeenCalled()
