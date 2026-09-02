@@ -363,7 +363,13 @@ raises "why isn't Prisma under `api/` anymore" with no answer.
 - **Server side:** the dispatcher in the web Fetchable is the server-side Cedar
   Router. v1: it discriminates renderers. Stage D: it is the authoritative
   router for RSC-routed apps (redirects, private routes, 404s resolved
-  server-side).
+  server-side). Route params resolved here have consumers outside the router:
+  the [multi-tenancy plan](./2026-08-26-multi-tenancy.md) resolves
+  `context.currentOrg` from them per request through its
+  membership-validating `setCurrentOrg` and provides a per-organization
+  Apollo client under the matched route, so the dispatcher exposes its match to
+  the render tree rather than leaving the client `Router` to re-derive it (the
+  streaming-SSR plan's open question 8).
 - **Client side:** the thin shell — link interception, history integration,
   flight re-fetch on navigation (the `no-ssr` example's `listenNavigation`
   pattern, owned by Cedar Router). For SPA/stage B routes, today's client router
@@ -384,6 +390,11 @@ raises "why isn't Prisma under `api/` anymore" with no answer.
    `CedarApolloProvider` living in the client shell above the payload. Define
    the supported level for v1 (probably: works, no SSR'd cache transport) and
    how it relates to Apollo's own RSC integration (`PreloadQuery` etc.) later.
+   A shell-level client is not the only client an island may use: the
+   [multi-tenancy plan](./2026-08-26-multi-tenancy.md) provides a
+   per-organization Apollo client from a `Set wrap` component under the route
+   match, so the v1 answer must allow a nested `ApolloProvider` inside the
+   payload's client tree to shadow the shell's.
 3. **Server function key management.** plugin-rsc encrypts closures with a
    build-time key (`defineEncryptionKey`); multi-function/multi-region deploys
    and rebuilds need a stable-key story (env var, UD-provided).
