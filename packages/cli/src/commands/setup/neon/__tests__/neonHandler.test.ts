@@ -5,6 +5,8 @@ import path from 'node:path'
 import { vol, fs as memfsFs } from 'memfs'
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 
+import type * as CliHelpers from '@cedarjs/cli-helpers'
+
 import '../../../../lib/mockTelemetry.js'
 
 import { globSyncByExtension } from '../../../../__tests__/globSyncStub.js'
@@ -37,45 +39,39 @@ vi.mock('@cedarjs/cli-helpers/packageManager', () => ({
 
 const BASE_PATH = '/path/to/project'
 
-vi.mock('@cedarjs/cli-helpers', () => ({
-  colors: Object.fromEntries(
-    [
-      'error',
-      'warning',
-      'highlight',
-      'success',
-      'info',
-      'bold',
-      'underline',
-      'note',
-      'tip',
-      'important',
-      'caution',
-      'link',
-    ].map((k) => [k, (s: string) => s]),
-  ),
-  getPaths: () => ({
-    base: BASE_PATH,
-    api: {
-      base: path.join(BASE_PATH, 'api'),
-      src: path.join(BASE_PATH, 'api', 'src'),
-      lib: path.join(BASE_PATH, 'api', 'src', 'lib'),
-    },
-    scripts: path.join(BASE_PATH, 'scripts'),
-  }),
-  installPackages: { title: 'Installing packages...', task: async () => {} },
-  requireTTYOrExit: (flagHint: string) => {
-    if (process.stdin.isTTY) {
-      return
-    }
+vi.mock('@cedarjs/cli-helpers', async (importOriginal) => {
+  const original = await importOriginal<typeof CliHelpers>()
 
-    console.error(
-      'Cannot prompt for confirmation in a non-interactive terminal. ' +
-        `Please pass ${flagHint} explicitly.`,
-    )
-    process.exit(1)
-  },
-}))
+  return {
+    ...original,
+    colors: Object.fromEntries(
+      [
+        'error',
+        'warning',
+        'highlight',
+        'success',
+        'info',
+        'bold',
+        'underline',
+        'note',
+        'tip',
+        'important',
+        'caution',
+        'link',
+      ].map((k) => [k, (s: string) => s]),
+    ),
+    getPaths: () => ({
+      base: BASE_PATH,
+      api: {
+        base: path.join(BASE_PATH, 'api'),
+        src: path.join(BASE_PATH, 'api', 'src'),
+        lib: path.join(BASE_PATH, 'api', 'src', 'lib'),
+      },
+      scripts: path.join(BASE_PATH, 'scripts'),
+    }),
+    installPackages: { title: 'Installing packages...', task: async () => {} },
+  }
+})
 
 const { handler } = await import('../neonHandler.js')
 

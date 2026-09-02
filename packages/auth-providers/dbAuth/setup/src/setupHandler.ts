@@ -164,7 +164,7 @@ export async function handler({
  */
 async function shouldIncludeWebAuthn(webauthn: boolean | null) {
   if (webauthn === null) {
-    requireTTYOrExit('--webauthn or --no-webauthn')
+    requireTTYOrExit('--webauthn or --webauthn=false')
 
     const webAuthnResponse = await prompts({
       type: 'confirm',
@@ -195,7 +195,7 @@ async function shouldCreateUserModel(createUserModel: boolean | null) {
   }
 
   if (createUserModel === null && !hasUserModel) {
-    requireTTYOrExit('--createUserModel or --no-createUserModel')
+    requireTTYOrExit('--createUserModel or --createUserModel=false')
 
     const createModelResponse = await prompts({
       type: 'confirm',
@@ -217,7 +217,7 @@ async function shouldCreateUserModel(createUserModel: boolean | null) {
  */
 async function shouldGenerateDbAuthPages(generateAuthPages: boolean | null) {
   if (generateAuthPages === null && !hasAuthPages()) {
-    requireTTYOrExit('--generateAuthPages or --no-generateAuthPages')
+    requireTTYOrExit('--generateAuthPages or --generateAuthPages=false')
 
     const generateAuthPagesResponse = await prompts({
       type: 'confirm',
