@@ -64,6 +64,17 @@ vi.mock('@cedarjs/cli-helpers', () => ({
     scripts: path.join(BASE_PATH, 'scripts'),
   }),
   installPackages: { title: 'Installing packages...', task: async () => {} },
+  requireTTYOrExit: (flagHint: string) => {
+    if (process.stdin.isTTY) {
+      return
+    }
+
+    console.error(
+      'Cannot prompt for confirmation in a non-interactive terminal. ' +
+        `Please pass ${flagHint} explicitly.`,
+    )
+    process.exit(1)
+  },
 }))
 
 const { handler } = await import('../neonHandler.js')
