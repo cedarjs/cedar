@@ -1218,20 +1218,27 @@ export async function deleteFile(
  * longer complete.
  *
  * Claimed rows are kept as `failed` tombstones rather than deleted, and
- * each sweep re-attempts byte deletion for recent `failed` rows whose
- * object still exists in storage. That makes byte deletion retryable —
- * a `target.delete()` that errors is retried on the next run — and it
- * catches the pathological in-flight upload whose bytes land after the
- * row was claimed. The default `olderThan` (1 hour) sits far above the
- * presigned URL expiry (5 minutes), so a claimed row's upload window
- * is long closed by the time it is swept. Run it from a recurring
- * `@cedarjs/jobs` job; the setup command's next-steps output shows the
- * job.
+ * each sweep re-attempts byte deletion for `failed` rows younger than
+ * `retryWindow` (default: 24 hours) whose object still exists in
+ * storage. That makes byte deletion retryable — a `target.delete()`
+ * that errors is retried on the next run — and it catches the
+ * pathological in-flight upload whose bytes land after the row was
+ * claimed. The windows are chosen against the upload timeline: a
+ * presigned PUT must start within the URL's 5-minute validity, so
+ * `olderThan` (1 hour) claims rows whose upload window is long closed,
+ * and an upload would have to stay in flight for a full `retryWindow`
+ * after issuance to land bytes after the final deletion attempt —
+ * beyond any realistic client or S3 connection lifetime. Operators
+ * with unusual transfer profiles raise `retryWindow` to match. Run it
+ * from a recurring `@cedarjs/jobs` job; the setup command's next-steps
+ * output shows the job.
  */
 export async function cleanupStaleUploads(options: {
   db: PrismaClient
   targets: Record<string, StorageProvider>
   olderThan?: number
+  /** How long `failed` tombstones stay in the re-check set — default: 24 hours */
+  retryWindow?: number
 }): Promise<{ deleted: number }>
 ```
 
@@ -1271,9 +1278,13 @@ interface UploadPluginOptions {
    * Resolve the authenticated user for a request (e.g. from the app's
    * auth header). Upload routes reject tokens whose `sub` — or, in
    * multi-tenant apps, `organizationId` — belongs to someone else, so
-   * one user cannot spend another user's token. The setup command wires
-   * this to the app's `getCurrentUser` for apps with auth; without it,
-   * the token itself is the only identity on the route.
+   * one user cannot spend another user's token. The setup command
+   * builds this callback with `createUploadAuthenticator({ authDecoder,
+   * getCurrentUser })`, which decodes the request's auth header with
+   * the app's auth decoder and passes the decoded auth data to the
+   * app's `getCurrentUser` — the same pipeline the GraphQL server
+   * uses. Without it, the token itself is the only identity on the
+   * route.
    */
   authenticate?: (
     req: FastifyRequest
@@ -1299,7 +1310,8 @@ async function cedarUploadsPlugin(
 
 ```ts
 import { createServer } from '@cedarjs/api-server'
-import { cedarUploadsPlugin } from '@cedarjs/uploads'
+import { authDecoder } from '@cedarjs/auth-dbauth-api'
+import { cedarUploadsPlugin, createUploadAuthenticator } from '@cedarjs/uploads'
 
 import { getCurrentUser } from 'src/lib/auth'
 import { logger } from 'src/lib/logger'
@@ -1315,10 +1327,14 @@ async function main() {
     tokenSecret: process.env.UPLOAD_TOKEN_SECRET!,
     targets,
     db,
-    // Binds upload tokens to the requesting user — the setup command
-    // generates this line for apps with auth, so user binding is on in
-    // the default setup, not an opt-in extra
-    authenticate: (req) => getCurrentUser(req),
+    // Binds upload tokens to the requesting user. The authenticator
+    // mirrors the GraphQL server's auth pipeline: it decodes the
+    // request's auth header with the app's auth decoder, then resolves
+    // the user with the app's getCurrentUser — getCurrentUser itself
+    // takes decoded auth data, not a raw request. The setup command
+    // generates these lines for apps with auth, so user binding is on
+    // in the default setup, not an opt-in extra.
+    authenticate: createUploadAuthenticator({ authDecoder, getCurrentUser }),
   })
 
   await server.start()
