@@ -443,8 +443,11 @@ live data. The API validates against fresh memberships on every request because
 on the API side; the web side keeps believing in the membership until
 `reauthenticate()` runs. The same staleness hides a newly accepted invitation or
 a newly created organization from the org switcher and from `hasOrgRole()`.
-Web-side callers of any membership-changing mutation (`createOrganization`,
-`acceptInvitation`, role changes, member removal) call `reauthenticate()` from
+Web-side callers of any mutation that changes memberships or the
+organizations they point at (`createOrganization`, `acceptInvitation`, role
+changes, member removal, organization renames — the snapshot carries the slug
+`OrgScope` matches routes against, so a stale slug renders the not-a-member
+state for an organization the user belongs to) call `reauthenticate()` from
 `useAuth()` in the mutation's `onCompleted`; the generated organization services
 document this on their SDL, and the how-to states it as a rule.
 
@@ -628,8 +631,10 @@ same shape as `uploads.md`.
   logging out and logging in as another user in the same tab yields a fresh
   client for the same slug with an empty cache; a role change or membership
   removal surfaced by a memberships refresh drops that organization's client;
-  a renamed organization keeps its client (same id), while a new organization
-  reusing a deleted organization's slug gets a fresh one.
+  a renamed organization keeps its client (same id) once the memberships
+  snapshot is refreshed, and matches the new slug only after that refresh,
+  while a new organization reusing a deleted organization's slug gets a fresh
+  one.
 - `resolveCurrentOrg` / `setCurrentOrg`: header, `variables.orgId`,
   `variables.orgSlug`, slug/id lookup, non-member rejection, and a resolver
   that returns a forged `role: 'owner'` for a viewer membership (the context

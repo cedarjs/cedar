@@ -431,8 +431,9 @@ path stops being opt-out for streaming projects.
    resolves the route param through its `setCurrentOrg`, which derives the
    role from the authenticated user's memberships and refuses an organization
    the user has no membership in, and it builds a per-organization Apollo
-   client in a `Set wrap` component during SSR — the param names the
-   organization, membership authorizes it. Decide
+   client in its `OrgScope` component (mounted through the router's
+   `Set wrap`) during SSR — the param names the organization, membership
+   authorizes it. Decide
    whether the handler's match result flows into the tree (a provider beside
    `LocationProvider` that `Router` consumes instead of re-matching) or whether
    the client `Router` is split into a route-analysis half that can sit above
@@ -470,8 +471,8 @@ path stops being opt-out for streaming projects.
   [multi-tenancy plan](./2026-08-26-multi-tenancy.md) needs the matched route's
   params on the server before rendering starts (to resolve
   `context.currentOrg` through its membership-validating `setCurrentOrg`) and
-  inside the tree under `App` (to build a per-organization Apollo client from
-  a `Set wrap`). Its steps 1–3 work without any of this plan; its SSR
+  inside the tree under `App` (to build a per-organization Apollo client in
+  its `OrgScope` component). Its steps 1–3 work without any of this plan; its SSR
   support depends on open question 8 being answered.
 
 ---
