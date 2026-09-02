@@ -8,7 +8,7 @@ If you haven't set up dbAuth yet, start with the [dbAuth docs](../auth/dbauth.md
 
 - **Google and GitHub, built in.** Both ship as complete strategies — OIDC discovery and id_token verification for Google, GitHub's OAuth-app-plus-userinfo flow for GitHub.
 - **Any OIDC-compliant provider**, via `createOidcStrategy` and an issuer URL — no per-provider code needed for anything that speaks standard OpenID Connect (Keycloak, Auth0, GitLab, Azure AD, ...).
-- **A custom-strategy escape hatch** for anything else (Apple, Facebook, or an internal SSO system) — implement the `OAuthStrategy` interface and you're done. Cedar's own Google and GitHub strategies are written against this exact interface, so nothing is off-limits to a userland strategy.
+- **Custom provider strategies** for anything else (Apple, Facebook, or an internal SSO system) — implement the `OAuthStrategy` interface and you're done. Cedar's own Google and GitHub strategies are written against this exact interface, so nothing is off-limits to a userland strategy.
 - **Login, signup, link, and unlink**, with guards that stop a user from ever accidentally creating a duplicate account by logging in with a provider they haven't linked yet.
 - **PKCE, `state`, and (for OIDC) `nonce` handled for you** for every provider, built on [`oauth4webapi`](https://github.com/panva/oauth4webapi). Provider access/refresh tokens are never persisted.
 - **Zero impact on apps that don't opt in.** If you never pass `--oauth`, nothing changes about dbAuth's username/password flow.
