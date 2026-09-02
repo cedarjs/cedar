@@ -6,13 +6,14 @@ import execa from 'execa'
 import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 
-import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { colors as c } from "@cedarjs/cli-helpers/colors";
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 import {
   addRootPackages,
   addWorkspacePackages,
 } from '@cedarjs/cli-helpers/packageManager/packages'
+import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { getPaths, usingVSCode } from '../../../../lib/index.js'

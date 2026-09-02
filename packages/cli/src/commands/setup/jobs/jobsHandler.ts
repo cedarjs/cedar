@@ -5,7 +5,8 @@ import prismaInternals from '@prisma/internals'
 import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 
-import { addApiPackages, colors as c } from '@cedarjs/cli-helpers'
+import { colors as c } from "@cedarjs/cli-helpers/colors";
+import { addApiPackages } from "@cedarjs/cli-helpers/installHelpers";
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { getSchemaPath, getPrismaSchemas } from '@cedarjs/project-config'
 

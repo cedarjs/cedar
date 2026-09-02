@@ -1,7 +1,6 @@
 import type { Argv } from 'yargs'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-
+import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
 export const command = 'i18n'
 export const description = 'Set up i18n'
 export const builder = (yargs: Argv) => {

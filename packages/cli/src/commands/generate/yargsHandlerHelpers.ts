@@ -15,7 +15,8 @@ import type { ListrDefaultRendererValue, ListrTask } from 'listr2'
 import pascalcase from 'pascalcase'
 import type { Options, PositionalOptions } from 'yargs'
 
-import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { colors as c } from "@cedarjs/cli-helpers/colors";
+import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
 import { ensurePosixPath, getConfig } from '@cedarjs/project-config'
 import type { NodeTargetPaths, WebPaths } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'

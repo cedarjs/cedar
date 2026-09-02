@@ -4,7 +4,8 @@ import path from 'path'
 import { Listr } from 'listr2'
 import prompts from 'prompts'
 
-import { addApiPackages, colors as c } from '@cedarjs/cli-helpers'
+import { colors as c } from "@cedarjs/cli-helpers/colors";
+import { addApiPackages } from "@cedarjs/cli-helpers/installHelpers";
 import { runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { errorTelemetry } from '@cedarjs/telemetry'

@@ -1,6 +1,6 @@
 import { clean, isGreaterOrEqual } from 'verkit'
 
-import { colors as c } from '@cedarjs/cli-helpers'
+import { colors as c } from "@cedarjs/cli-helpers/colors";
 
 interface NodeVersionCheck {
   ok: boolean

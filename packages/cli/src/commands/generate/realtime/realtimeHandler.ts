@@ -6,7 +6,7 @@ import pascalcase from 'pascalcase'
 import pluralize from 'pluralize'
 import prompts from 'prompts'
 
-import { colors as c } from '@cedarjs/cli-helpers'
+import { colors as c } from "@cedarjs/cli-helpers/colors";
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { errorTelemetry } from '@cedarjs/telemetry'
 

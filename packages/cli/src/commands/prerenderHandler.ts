@@ -3,8 +3,9 @@ import path from 'node:path'
 
 import { Listr } from 'listr2'
 
-import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { colors as c } from "@cedarjs/cli-helpers/colors";
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
+import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
 import type * as Prerender from '@cedarjs/prerender'
 import { getConfig, getPaths } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'

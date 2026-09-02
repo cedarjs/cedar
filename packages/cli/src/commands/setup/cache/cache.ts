@@ -1,8 +1,7 @@
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-
+import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
 export const command = 'cache <client>'
 
 export const description = 'Sets up an init file for service caching'

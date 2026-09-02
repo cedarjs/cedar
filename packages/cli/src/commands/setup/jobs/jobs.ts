@@ -1,8 +1,7 @@
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-
+import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
 export const command = 'jobs'
 export const description =
   'Sets up the config file and parent directory for background jobs'

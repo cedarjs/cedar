@@ -4,7 +4,8 @@ import path from 'node:path'
 import { Listr } from 'listr2'
 import { format } from 'prettier'
 
-import { addWebPackages, getPrettierOptions } from '@cedarjs/cli-helpers'
+import { getPrettierOptions } from "@cedarjs/cli-helpers/fileHelpers";
+import { addWebPackages } from "@cedarjs/cli-helpers/installHelpers";
 import { getConfig, getPaths } from '@cedarjs/project-config'
 
 import { runTransform } from '../../../../lib/runTransform.js'

@@ -14,8 +14,7 @@ import {
   assert,
 } from 'vitest'
 
-import type { AuthHandlerArgs } from '@cedarjs/cli-helpers'
-
+import type { AuthHandlerArgs } from "@cedarjs/cli-helpers/auth/setupHelpers";
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
 import { createAuthDecoderFunction, handler } from '../setupHandler'
@@ -53,15 +52,25 @@ vi.mock('../shared', () => ({
   libPath: () => cedarProjectPath + '/api/src/lib',
 }))
 
-vi.mock('@cedarjs/cli-helpers', () => {
+vi.mock('@cedarjs/cli-helpers/project', () => {
   return {
     getGraphqlPath: () => {
       return cedarProjectPath + '/api/src/functions/graphql.ts'
     },
     addEnvVarTask: () => undefined,
+  }
+})
+
+vi.mock('@cedarjs/cli-helpers/paths', () => {
+  return {
     getPaths: () => ({
       base: cedarProjectPath,
     }),
+  }
+})
+
+vi.mock('@cedarjs/cli-helpers/colors', () => {
+  return {
     colors: {
       error: (str: string) => str,
       warning: (str: string) => str,
@@ -70,10 +79,20 @@ vi.mock('@cedarjs/cli-helpers', () => {
       bold: (str: string) => str,
       underline: (str: string) => str,
     },
+  }
+})
+
+vi.mock('@cedarjs/cli-helpers/tty', () => {
+  return {
     // Real implementation is a no-op whenever stdin is a TTY, which it never
     // is under vitest, so this stub only needs to not block the prompts
     // these tests are asserting on.
     requireTTYOrExit: () => undefined,
+  }
+})
+
+vi.mock('@cedarjs/cli-helpers/auth/setupHelpers', () => {
+  return {
     // I wish I could have used something like
     // vi.requireActual(@cedarjs/cli-helpers) here, but I couldn't because
     // jest doesn't support ESM

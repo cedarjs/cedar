@@ -4,7 +4,7 @@ import ansis from 'ansis'
  * Canonical color/style palette for all Cedar CLI packages.
  *
  * Import from here rather than defining local copies:
- *   import { colors } from '@cedarjs/cli-helpers'
+ *   import { colors } from '@cedarjs/cli-helpers/colors'
  *
  * If you need a color that isn't here, add it here rather than
  * introducing a one-off in another package.

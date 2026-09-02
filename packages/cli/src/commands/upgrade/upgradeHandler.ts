@@ -7,7 +7,7 @@ import latestVersion from 'latest-version'
 import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 
-import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { colors as c } from "@cedarjs/cli-helpers/colors";
 import {
   dedupe,
   dedupeIsSupported,
@@ -15,6 +15,7 @@ import {
   installationErrorMessage,
   prettyPrintCedarCommand,
 } from '@cedarjs/cli-helpers/packageManager'
+import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
 import { getConfig } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 

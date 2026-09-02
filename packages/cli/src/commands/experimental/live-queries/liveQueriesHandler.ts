@@ -3,11 +3,8 @@ import path from 'node:path'
 
 import { Listr } from 'listr2'
 
-import {
-  addApiPackages,
-  addWebPackages,
-  colors as c,
-} from '@cedarjs/cli-helpers'
+import { colors as c } from "@cedarjs/cli-helpers/colors";
+import { addApiPackages, addWebPackages } from "@cedarjs/cli-helpers/installHelpers";
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import {
   getConfigPath,

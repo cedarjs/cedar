@@ -3,12 +3,10 @@ import path from 'node:path'
 
 import { Listr } from 'listr2'
 
-import {
-  colors as c,
-  getPaths,
-  isTypeScriptProject,
-  recordTelemetryAttributes,
-} from '@cedarjs/cli-helpers'
+import { colors as c } from "@cedarjs/cli-helpers/colors";
+import { getPaths } from "@cedarjs/cli-helpers/paths";
+import { isTypeScriptProject } from "@cedarjs/cli-helpers/project";
+import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 // @ts-expect-error - No types for JS files

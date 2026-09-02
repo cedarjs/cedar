@@ -5,7 +5,8 @@ import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import { Listr } from 'listr2'
 import type { ListrPromptAdapter } from 'listr2'
 
-import { addWebPackages, colors as c } from '@cedarjs/cli-helpers'
+import { colors as c } from "@cedarjs/cli-helpers/colors";
+import { addWebPackages } from "@cedarjs/cli-helpers/installHelpers";
 import { getConfigPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 

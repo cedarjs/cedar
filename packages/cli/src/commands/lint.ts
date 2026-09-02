@@ -3,8 +3,8 @@ import fs from 'node:fs'
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
+import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
 import { getPaths } from '@cedarjs/project-config'
 
 export const command = 'lint [paths..]'

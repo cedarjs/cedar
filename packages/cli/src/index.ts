@@ -7,11 +7,9 @@ import { trace, SpanStatusCode } from '@opentelemetry/api'
 import { hideBin, Parser } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
-import {
-  loadEnvFiles,
-  recordTelemetryAttributes,
-  colors as c,
-} from '@cedarjs/cli-helpers'
+import { colors as c } from "@cedarjs/cli-helpers/colors";
+import { loadEnvFiles } from "@cedarjs/cli-helpers/loadEnvFiles";
+import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
 import { findUp, getConfigPath } from '@cedarjs/project-config'
 import { telemetryMiddleware } from '@cedarjs/telemetry'
 

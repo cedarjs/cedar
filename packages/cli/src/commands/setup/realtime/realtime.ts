@@ -1,7 +1,6 @@
 import type { Argv } from 'yargs'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-
+import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
 export const command = 'realtime'
 
 export const description = 'Setup RedwoodJS Realtime'

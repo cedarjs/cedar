@@ -4,7 +4,7 @@ import path from 'node:path'
 import { Listr } from 'listr2'
 import { coerce, isGreaterOrEqual } from 'verkit'
 
-import { colors as c } from '@cedarjs/cli-helpers'
+import { colors as c } from "@cedarjs/cli-helpers/colors";
 import {
   addRootPackages,
   addWorkspacePackages,

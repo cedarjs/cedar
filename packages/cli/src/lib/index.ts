@@ -15,11 +15,12 @@ import { format } from 'prettier'
 import type { Options as PrettierOptions } from 'prettier'
 import type { Options as YargsOptions } from 'yargs'
 
-import { colors as c, transpileTSToJS } from '@cedarjs/cli-helpers'
+import { colors as c } from "@cedarjs/cli-helpers/colors";
 import {
   addRootPackages,
   addWorkspacePackages,
 } from '@cedarjs/cli-helpers/packageManager/packages'
+import { transpileTSToJS } from "@cedarjs/cli-helpers/transpileTSToJS";
 import type { Config, Paths } from '@cedarjs/project-config'
 import {
   getConfig as getCedarConfig,

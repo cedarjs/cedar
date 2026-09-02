@@ -1,7 +1,7 @@
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
-import { colors as c } from '@cedarjs/cli-helpers'
+import { colors as c } from "@cedarjs/cli-helpers/colors";
 import { dedupeIsSupported } from '@cedarjs/cli-helpers/packageManager'
 
 import { isValidCedarJSTag } from './tags.js'

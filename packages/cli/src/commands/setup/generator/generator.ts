@@ -4,8 +4,7 @@ import path from 'path'
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-
+import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
 export const command = 'generator <name>'
 export const description =
   'Copies generator templates locally for customization'

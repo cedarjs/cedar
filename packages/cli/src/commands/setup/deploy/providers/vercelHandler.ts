@@ -4,8 +4,9 @@ import path from 'path'
 import { Listr } from 'listr2'
 import type { ListrTask } from 'listr2'
 
-import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { colors as c } from "@cedarjs/cli-helpers/colors";
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
+import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import {

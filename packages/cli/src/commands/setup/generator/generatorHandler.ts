@@ -3,7 +3,7 @@ import path from 'path'
 
 import { Listr } from 'listr2'
 
-import { colors as c } from '@cedarjs/cli-helpers'
+import { colors as c } from "@cedarjs/cli-helpers/colors";
 
 import { getPaths } from '../../../lib/index.js'
 

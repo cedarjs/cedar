@@ -1,12 +1,12 @@
 import { vi, test, describe, expect } from 'vitest'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
 
 import { command, description, builder, handler } from '../docker.js'
 
 vi.mock('../dockerHandler.js')
 
-vi.mock('@cedarjs/cli-helpers', () => {
+vi.mock('@cedarjs/cli-helpers/colors', () => {
   return {
     colors: Object.fromEntries(
       [
@@ -24,6 +24,11 @@ vi.mock('@cedarjs/cli-helpers', () => {
         'link',
       ].map((k) => [k, (s: string) => s]),
     ),
+  }
+})
+
+vi.mock('@cedarjs/cli-helpers/telemetry', () => {
+  return {
     recordTelemetryAttributes: vi.fn(),
   }
 })

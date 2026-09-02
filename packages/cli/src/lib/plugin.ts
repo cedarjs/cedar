@@ -4,7 +4,7 @@ import path from 'path'
 import ansis from 'ansis'
 import enquirer from 'enquirer'
 
-import { getCompatibilityData } from '@cedarjs/cli-helpers'
+import { getCompatibilityData } from "@cedarjs/cli-helpers/version";
 
 import { installModule, isModuleInstalled } from './packages.js'
 

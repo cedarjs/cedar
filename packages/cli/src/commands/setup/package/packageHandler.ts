@@ -1,8 +1,8 @@
 import enq from 'enquirer'
 import { isGreaterOrEqual, isLess, tryParse } from 'verkit'
 
-import { getCompatibilityData } from '@cedarjs/cli-helpers'
 import { dlx } from '@cedarjs/cli-helpers/packageManager/exec'
+import { getCompatibilityData } from "@cedarjs/cli-helpers/version";
 import { getPaths } from '@cedarjs/project-config'
 
 export async function handler({

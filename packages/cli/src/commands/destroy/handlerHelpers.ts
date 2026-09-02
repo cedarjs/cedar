@@ -1,6 +1,6 @@
 import { Listr } from 'listr2'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes } from "@cedarjs/cli-helpers/telemetry";
 
 import { deleteFilesTask } from '../../lib/index.js'
 

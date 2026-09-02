@@ -4,7 +4,7 @@ import path from 'node:path'
 import { Listr } from 'listr2'
 import { createServer, isRunnableDevEnvironment } from 'vite'
 
-import { colors as c } from '@cedarjs/cli-helpers'
+import { colors as c } from "@cedarjs/cli-helpers/colors";
 import {
   getPaths,
   getDataMigrationsPath,

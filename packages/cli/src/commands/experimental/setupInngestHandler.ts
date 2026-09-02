@@ -1,6 +1,6 @@
 import { Listr } from 'listr2'
 
-import { colors as c } from '@cedarjs/cli-helpers'
+import { colors as c } from "@cedarjs/cli-helpers/colors";
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 import { addRootPackages } from '@cedarjs/cli-helpers/packageManager/packages'
 import { errorTelemetry } from '@cedarjs/telemetry'

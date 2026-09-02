@@ -5,8 +5,7 @@ import path from 'node:path'
 import { vol, fs as memfsFs } from 'memfs'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 
-import type { getPaths } from '@cedarjs/cli-helpers'
-
+import type { getPaths } from "@cedarjs/cli-helpers/paths";
 import '../../../../lib/mockTelemetry.js'
 
 import { globSyncByExtension } from '../../../../__tests__/globSyncStub.js'
@@ -53,7 +52,7 @@ function mockPaths() {
   } as ReturnType<typeof getPaths>
 }
 
-vi.mock('@cedarjs/cli-helpers', () => ({
+vi.mock('@cedarjs/cli-helpers/colors', () => ({
   colors: Object.fromEntries(
     [
       'error',
@@ -70,7 +69,13 @@ vi.mock('@cedarjs/cli-helpers', () => ({
       'link',
     ].map((k) => [k, (s: string) => s]),
   ),
+}))
+
+vi.mock('@cedarjs/cli-helpers/paths', () => ({
   getPaths: () => mockPaths(),
+}))
+
+vi.mock('@cedarjs/cli-helpers/installHelpers', () => ({
   installPackages: { title: 'Installing packages...', task: async () => {} },
 }))
 

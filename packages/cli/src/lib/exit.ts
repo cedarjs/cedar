@@ -2,10 +2,7 @@ import ansis from 'ansis'
 import { terminalLink } from 'termi-link'
 import { v4 as uuidv4 } from 'uuid'
 
-import {
-  recordTelemetryAttributes,
-  recordTelemetryError,
-} from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes, recordTelemetryError } from "@cedarjs/cli-helpers/telemetry";
 
 interface ExitWithErrorOptions {
   exitCode?: number
