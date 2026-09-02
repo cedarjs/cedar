@@ -1924,8 +1924,13 @@ Alternative: S3 → SNS (direct, without EventBridge). Both work.
 interface S3WebhookHandlerOptions {
   db: PrismaClient
   targets: Record<string, StorageProvider>
-  /** SNS topic ARN for message validation */
-  topicArn?: string
+  /**
+   * The trusted SNS topic. Required — the handler rejects any
+   * notification whose TopicArn does not exactly match, so a valid
+   * signature from an attacker-controlled topic is not enough to feed
+   * the webhook events.
+   */
+  topicArn: string
 }
 
 async function handleS3Webhook(
@@ -1933,7 +1938,9 @@ async function handleS3Webhook(
   options: S3WebhookHandlerOptions
 ): Promise<void> {
   // 1. Parse SNS message (handles SubscriptionConfirmation + Notification)
-  // 2. Validate SNS signature (prevent spoofing)
+  // 2. Validate SNS signature (prevent spoofing) AND require the
+  //    message's TopicArn to exactly match the configured topicArn —
+  //    a validly signed message from an untrusted topic is rejected
   // 3. Extract S3 event from notification
   // 4. For each s3:ObjectCreated event:
   //    a. Extract the bucket and the URL-encoded object key, and
