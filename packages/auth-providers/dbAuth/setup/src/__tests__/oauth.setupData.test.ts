@@ -83,11 +83,13 @@ describe('parseOAuthProviders', () => {
     expect(() => parseOAuthProviders('')).toThrow(/at least one provider/)
   })
 
-  it('throws for unknown providers, naming the custom-strategy escape hatch', () => {
+  it('throws for unknown providers, naming the `OAuthStrategy` interface', () => {
     expect(() => parseOAuthProviders('facebook')).toThrow(
-      /custom-strategy escape hatch/,
+      /implement the `OAuthStrategy` interface/,
     )
-    expect(() => parseOAuthProviders('facebook')).toThrow(/OAuthStrategy/)
+    expect(() => parseOAuthProviders('facebook')).toThrow(
+      /@cedarjs\/auth-dbauth-oauth/,
+    )
   })
 })
 
