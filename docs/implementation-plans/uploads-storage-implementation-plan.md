@@ -876,9 +876,10 @@ server.
      token's `sub`, `organizationId` and `tokenId` from the token's
      claims, and `size` set to the declared size after validating it
      against the token's `maxFileSize` — completion-time verification
-     compares the real object against this value. The create runs in a
-     transaction that counts the token's existing records and refuses
-     the request once `maxFiles` is reached
+     compares the real object against this value. The count of the
+     token's existing records and the insert are one atomic
+     count-and-create (a serialized transaction keyed on `tokenId`), so
+     concurrent requests sharing one token cannot exceed `maxFiles`
    - Returns `{ uploadId, url, method, headers }` — this shape is exactly
      what Uppy's `@uppy/aws-s3` plugin expects from `getUploadParameters()`
 
@@ -965,7 +966,10 @@ filesystem. Protected by JWT upload tokens.
    - Generates a storage key: `<cuid>.<ext>`
    - Creates the `Upload` record with status `pending`, `userId` from
      the token's `sub`, and `organizationId`/`tokenId` from the token's
-     claims. Row-first ordering means a crash between record and write
+     claims — using the same atomic count-and-create against `tokenId`
+     as the presign path, so `maxFiles` holds token-wide across
+     requests and under concurrency, not just per multipart batch.
+     Row-first ordering means a crash between record and write
      leaves a pending row the cleanup job can find — bytes-first would
      leave an object on disk that nothing references
    - Calls `target.write(key, data, { contentType })` to save to disk
@@ -1022,6 +1026,10 @@ Fastify routes needed — data flows through GraphQL as base64-encoded strings.
        filename: input.filename,
        mimeType: input.mimeType,
        data: Buffer.from(input.data, 'base64'),
+       // The avatar belongs to the requesting user — persisting the
+       // owner keeps the signed-URL ownership checks effective for
+       // files stored through storeFile() too
+       userId: context.currentUser.id,
      })
 
      return db.user.update({
@@ -1084,6 +1092,14 @@ interface StoreFileOptions {
    * unlimited for object-storage targets.
    */
   maxSize?: number
+  /**
+   * Owner of the file, when it belongs to a user. Persisted onto the
+   * Upload row so the ownership checks that guard user uploads apply
+   * to server-stored files too.
+   */
+  userId?: string
+  /** Owning organization, for multi-tenant apps (#2544). */
+  organizationId?: string
 }
 
 /**
@@ -1095,7 +1111,8 @@ export async function storeFile(
   target: StorageProvider,
   options: StoreFileOptions
 ): Promise<Upload> {
-  const { db, filename, mimeType, data, maxSize } = options
+  const { db, filename, mimeType, data, maxSize, userId, organizationId } =
+    options
   const ext = mime.extension(mimeType)
   const key = ext ? `${createId()}.${ext}` : createId()
 
@@ -1121,6 +1138,8 @@ export async function storeFile(
       size: BigInt(data.length),
       storageKey: isDbProvider ? null : key,
       data: isDbProvider ? data : null,
+      userId: userId ?? null,
+      organizationId: organizationId ?? null,
     },
   })
 }
@@ -1188,16 +1207,24 @@ export async function deleteFile(
 ): Promise<void>
 
 /**
- * Delete `pending` Upload rows older than `olderThan` (default: 1 hour)
- * along with any bytes that did land in storage. Covers presigned
- * uploads that were issued but never completed, and FS uploads that
- * crashed between row creation and write. The sweep is race-safe: each
- * row is first claimed with a conditional update (`pending` → `failed`,
- * filtered on status and age), and only rows the claim actually matched
- * have their bytes and row removed. Because the completion paths flip
- * `pending` → `completed` with the same conditional pattern, a row that
- * completes mid-sweep is skipped (its claim matches zero rows) and a
- * claimed row can no longer complete. Run it from a recurring
+ * Sweep stale uploads. Claims `pending` Upload rows older than
+ * `olderThan` (default: 1 hour) with a conditional `pending` → `failed`
+ * update, then deletes any bytes that did land in storage. Covers
+ * presigned uploads that were issued but never completed, and FS
+ * uploads that crashed between row creation and write. The sweep is
+ * race-safe: because the completion paths flip `pending` → `completed`
+ * with the same conditional pattern, a row that completes mid-sweep is
+ * skipped (its claim matches zero rows) and a claimed row can no
+ * longer complete.
+ *
+ * Claimed rows are kept as `failed` tombstones rather than deleted, and
+ * each sweep re-attempts byte deletion for recent `failed` rows whose
+ * object still exists in storage. That makes byte deletion retryable —
+ * a `target.delete()` that errors is retried on the next run — and it
+ * catches the pathological in-flight upload whose bytes land after the
+ * row was claimed. The default `olderThan` (1 hour) sits far above the
+ * presigned URL expiry (5 minutes), so a claimed row's upload window
+ * is long closed by the time it is swept. Run it from a recurring
  * `@cedarjs/jobs` job; the setup command's next-steps output shows the
  * job.
  */
@@ -1231,17 +1258,26 @@ interface UploadPluginOptions {
   /** Route prefix — default: '/upload' */
   prefix?: string
 
-  /** Body limit for FS uploads — default: 50MB */
+  /**
+   * Hard outer ceiling on FS upload request size — default: 500 MB.
+   * The effective per-request bound comes from the token (`maxFiles` ×
+   * `maxFileSize` plus a multipart-envelope allowance), so this only
+   * needs to sit above the largest FS profile's aggregate — a
+   * profile-valid batch is never rejected by the outer ceiling.
+   */
   bodyLimit?: number
 
   /**
    * Resolve the authenticated user for a request (e.g. from the app's
-   * auth header). When provided, upload routes reject tokens whose
-   * `sub` is a different user, so one user cannot spend another user's
-   * token. Without it, the token itself is the only identity on the
-   * route.
+   * auth header). Upload routes reject tokens whose `sub` — or, in
+   * multi-tenant apps, `organizationId` — belongs to someone else, so
+   * one user cannot spend another user's token. The setup command wires
+   * this to the app's `getCurrentUser` for apps with auth; without it,
+   * the token itself is the only identity on the route.
    */
-  authenticate?: (req: FastifyRequest) => Promise<{ id: string } | null>
+  authenticate?: (
+    req: FastifyRequest
+  ) => Promise<{ id: string; organizationId?: string } | null>
 }
 
 async function cedarUploadsPlugin(
@@ -1265,6 +1301,7 @@ async function cedarUploadsPlugin(
 import { createServer } from '@cedarjs/api-server'
 import { cedarUploadsPlugin } from '@cedarjs/uploads'
 
+import { getCurrentUser } from 'src/lib/auth'
 import { logger } from 'src/lib/logger'
 import { db } from 'src/lib/db'
 import { targets } from 'src/lib/uploads'
@@ -1278,6 +1315,10 @@ async function main() {
     tokenSecret: process.env.UPLOAD_TOKEN_SECRET!,
     targets,
     db,
+    // Binds upload tokens to the requesting user — the setup command
+    // generates this line for apps with auth, so user binding is on in
+    // the default setup, not an opt-in extra
+    authenticate: (req) => getCurrentUser(req),
   })
 
   await server.start()
@@ -1376,10 +1417,17 @@ const validate: ValidatorDirectiveFunc = ({ context }) => {
     process.env.UPLOAD_TOKEN_SECRET!
   )
 
-  // A token is bound to the user it was issued to — an authenticated
-  // user cannot spend someone else's token
+  // A token is bound to the user (and, in multi-tenant apps, the
+  // organization) it was issued to — an authenticated user cannot
+  // spend someone else's token or carry one across organizations
   if (context.currentUser && String(context.currentUser.id) !== payload.sub) {
     throw new Error('Upload token was issued to a different user')
+  }
+  if (
+    payload.organizationId &&
+    payload.organizationId !== context.currentUser?.organizationId
+  ) {
+    throw new Error('Upload token was issued for a different organization')
   }
 
   // Attach the validated payload to context for use in resolvers
@@ -1872,14 +1920,19 @@ async function handleS3Webhook(
   // 2. Validate SNS signature (prevent spoofing)
   // 3. Extract S3 event from notification
   // 4. For each s3:ObjectCreated event:
-  //    a. Extract the bucket and object key
+  //    a. Extract the bucket and the URL-encoded object key, and
+  //       decode the key
   //    b. Resolve the target whose config matches the event's bucket
-  //       (via getConfig()), then find the Upload record by target +
-  //       storageKey — storageKey alone is not guaranteed unique across
-  //       targets
-  //    c. Compare the actual S3 object size against the size recorded at
-  //       presign time — on mismatch, delete the object, mark the record
-  //       "failed", and stop (see "Size Enforcement")
+  //       and key prefix (via getConfig()), strip the prefix, and find
+  //       the Upload record by target + storageKey with status
+  //       "pending" — an exact bucket-plus-effective-key match
+  //       (storageKey alone is not guaranteed unique across targets,
+  //       and providers store it without the keyPrefix), and duplicate
+  //       notifications for already-settled rows are ignored
+  //    c. Compare the actual S3 object size against the size recorded
+  //       at presign time — on mismatch, claim the row "pending" →
+  //       "failed" (conditional update), delete the object only when
+  //       the claim matched, and stop (see "Size Enforcement")
   //    d. Flip status "pending" → "completed" (conditional update — a
   //       row the cleanup job already claimed stays untouched) and
   //       record the actual object size
@@ -1955,11 +2008,16 @@ export const confirmUpload = async ({ uploadId }) => {
   // cannot prove the object is within the profile's limit.
   const actualSize = await target.getObjectSize(upload.storageKey)
   if (actualSize === null || BigInt(actualSize) !== upload.size) {
-    await target.delete(upload.storageKey)
-    return db.upload.update({
-      where: { id: uploadId },
+    // Claim the row before touching bytes — if a concurrent path
+    // settled it first, skip deletion and leave the settled state
+    const { count } = await db.upload.updateMany({
+      where: { id: uploadId, status: 'pending' },
       data: { status: 'failed' },
     })
+    if (count === 1) {
+      await target.delete(upload.storageKey)
+    }
+    return db.upload.findUniqueOrThrow({ where: { id: uploadId } })
   }
 
   // Conditional transition — a row the cleanup job already claimed
