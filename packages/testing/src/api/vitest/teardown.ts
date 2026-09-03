@@ -1,51 +1,41 @@
 /**
- * Foreign-key violations a `DELETE FROM <table>` raises when scenario
- * teardown empties the tables in an order a relation doesn't allow. Hitting
- * one means that table is emptied later instead, so recognising them is what
- * lets teardown settle on a working order.
+ * The driver errors scenario teardown recovers from by emptying that table
+ * later: a row still referenced by another table, whether the constraint
+ * rejects the delete outright or restricts it.
  *
- * Codes are strings because drivers report them either numerically or
- * symbolically:
- *
- * - `1451`: MySQL FK constraint violation on DELETE
- * - `1811`: SQLite FK constraint violation on DELETE
- * - `23001`: PostgreSQL RESTRICT violation. PG 18+ strictly enforces this on
- *   DELETE
- * - `23503`: PostgreSQL FK constraint violation on DELETE
- * - `SQLITE_CONSTRAINT_FOREIGNKEY`, `SQLITE_CONSTRAINT_TRIGGER`: the same
- *   SQLite violation as `1811`, as the driver adapter names it
+ * Prisma 7 talks to every database through a driver adapter, and adapters
+ * report errors with a `kind` from a vocabulary they all share, so the
+ * database's own error codes never have to be read here.
  */
-const HANDLED_ERROR_CODES = [
-  '1451',
-  '1811',
-  '23001',
-  '23503',
-  'SQLITE_CONSTRAINT_FOREIGNKEY',
-  'SQLITE_CONSTRAINT_TRIGGER',
+const RETRYABLE_ERROR_KINDS = [
+  'ForeignKeyConstraintViolation',
+  'RestrictViolation',
 ]
 
-function isErrorWithMessage(e: unknown): e is { message: string } {
-  return (
-    !!e &&
-    typeof e === 'object' &&
-    'message' in e &&
-    typeof e.message === 'string'
-  )
+/**
+ * Reads `key` off a value that may not be an object, so a driver error can be
+ * walked without assuming any part of its shape exists.
+ */
+function property(value: unknown, key: string): unknown {
+  // The `typeof` check above the index makes this safe: only an object is
+  // ever indexed, and a missing key reads as `undefined`.
+  return typeof value === 'object' && value !== null
+    ? (value as Record<string, unknown>)[key]
+    : undefined
 }
 
 /**
- * Whether `e` is a foreign-key violation that scenario teardown recovers from
- * by emptying the table later. Prisma reports the driver's code in the error
- * message as ``Code: `<code>` ``.
+ * Whether `e` is a constraint violation that scenario teardown recovers from
+ * by emptying the table later, rather than an error worth raising.
  */
 export function isHandledTeardownError(e: unknown): boolean {
-  if (!isErrorWithMessage(e)) {
-    return false
-  }
+  const cause = property(
+    property(property(e, 'meta'), 'driverAdapterError'),
+    'cause',
+  )
+  const kind = property(cause, 'kind')
 
-  const match = e.message.match(/Code: `([^`]+)`/)
-
-  return !!match && HANDLED_ERROR_CODES.includes(match[1])
+  return typeof kind === 'string' && RETRYABLE_ERROR_KINDS.includes(kind)
 }
 
 /**

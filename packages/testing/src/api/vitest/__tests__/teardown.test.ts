@@ -5,40 +5,60 @@ import {
   isHandledTeardownError,
 } from '../teardown.js'
 
-const prismaError = (code: string) => ({
-  message:
-    'Invalid `prisma.$executeRawUnsafe()` invocation:\n\n' +
-    `Raw query failed. Code: \`${code}\`. Message: \`FOREIGN KEY constraint failed\``,
-})
+/**
+ * The shape Prisma reports a driver error in, taken from a real
+ * `DELETE FROM` against a row another table still references.
+ */
+const driverError = (
+  kind: string,
+  { originalMessage = 'FOREIGN KEY constraint failed' } = {},
+) =>
+  Object.assign(
+    new Error(
+      'Invalid `prisma.$executeRawUnsafe()` invocation:\n\n' +
+        `Raw query failed. Code: \`SQLITE_CONSTRAINT_TRIGGER\`. Message: \`${originalMessage}\``,
+    ),
+    {
+      code: 'P2010',
+      meta: {
+        driverAdapterError: {
+          name: 'DriverAdapterError',
+          cause: {
+            kind,
+            originalCode: 'SQLITE_CONSTRAINT_TRIGGER',
+            originalMessage,
+          },
+        },
+      },
+    },
+  )
+
+const foreignKeyError = () => driverError('ForeignKeyConstraintViolation')
 
 describe('isHandledTeardownError', () => {
-  it('recognises the numeric codes MySQL, SQLite and PostgreSQL report', () => {
-    for (const code of ['1451', '1811', '23001', '23503']) {
-      expect(isHandledTeardownError(prismaError(code))).toBe(true)
-    }
+  it('recognises a row another table still references', () => {
+    expect(isHandledTeardownError(foreignKeyError())).toBe(true)
   })
 
-  it('recognises the symbolic codes the SQLite driver adapter reports', () => {
+  it('recognises a constraint that restricts the delete', () => {
+    expect(isHandledTeardownError(driverError('RestrictViolation'))).toBe(true)
+  })
+
+  it('does not recognise a constraint no ordering fixes', () => {
     expect(
-      isHandledTeardownError(prismaError('SQLITE_CONSTRAINT_TRIGGER')),
-    ).toBe(true)
-    expect(
-      isHandledTeardownError(prismaError('SQLITE_CONSTRAINT_FOREIGNKEY')),
-    ).toBe(true)
+      isHandledTeardownError(driverError('UniqueConstraintViolation')),
+    ).toBe(false)
+    expect(isHandledTeardownError(driverError('TableDoesNotExist'))).toBe(false)
   })
 
-  it('does not recognise an unrelated database error', () => {
-    expect(isHandledTeardownError(prismaError('SQLITE_BUSY'))).toBe(false)
-    expect(isHandledTeardownError(prismaError('42601'))).toBe(false)
-  })
-
-  it('does not recognise an error with no code in its message', () => {
+  it('does not recognise an error that never reached the driver', () => {
     expect(isHandledTeardownError(new Error('connection closed'))).toBe(false)
   })
 
   it('does not recognise a value that is not an error', () => {
     expect(isHandledTeardownError(undefined)).toBe(false)
-    expect(isHandledTeardownError('SQLITE_CONSTRAINT_TRIGGER')).toBe(false)
+    expect(isHandledTeardownError('ForeignKeyConstraintViolation')).toBe(false)
+    expect(isHandledTeardownError({ meta: null })).toBe(false)
   })
 })
 
@@ -66,7 +86,7 @@ describe('emptyTablesInWorkingOrder', () => {
       ['User', 'Post'],
       async (modelName) => {
         if (modelName === 'User' && !emptied.includes('Post')) {
-          throw new Error('Raw query failed. Code: `SQLITE_CONSTRAINT_TRIGGER`')
+          throw foreignKeyError()
         }
 
         emptied.push(modelName)
@@ -82,12 +102,10 @@ describe('emptyTablesInWorkingOrder', () => {
 
     const run = emptyTablesInWorkingOrder(['A', 'B'], async () => {
       attempts++
-      throw new Error(
-        'Raw query failed. Code: `SQLITE_CONSTRAINT_TRIGGER`. Message: `abort`',
-      )
+      throw foreignKeyError()
     })
 
-    await expect(run).rejects.toThrow('SQLITE_CONSTRAINT_TRIGGER')
+    await expect(run).rejects.toMatchObject({ code: 'P2010' })
     // One pass over both tables, then the third failure ends it rather than
     // appending the same table forever.
     expect(attempts).toBe(3)
@@ -108,26 +126,24 @@ describe('emptyTablesInWorkingOrder', () => {
 
         if (modelName === 'Blocked' || !alreadyTried.has(modelName)) {
           alreadyTried.add(modelName)
-          throw new Error(
-            'Raw query failed. Code: `SQLITE_CONSTRAINT_TRIGGER`. Message: `abort`',
-          )
+          throw foreignKeyError()
         }
       },
     )
 
-    await expect(run).rejects.toThrow('SQLITE_CONSTRAINT_TRIGGER')
+    await expect(run).rejects.toMatchObject({ code: 'P2010' })
     expect(attempts).toBeLessThan(30)
   })
 
-  it('raises an error that is not a foreign-key violation straight away', async () => {
+  it('raises an error that no reordering can fix straight away', async () => {
     let attempts = 0
 
     const run = emptyTablesInWorkingOrder(['A', 'B'], async () => {
       attempts++
-      throw new Error('Raw query failed. Code: `SQLITE_BUSY`')
+      throw driverError('TableDoesNotExist')
     })
 
-    await expect(run).rejects.toThrow('SQLITE_BUSY')
+    await expect(run).rejects.toMatchObject({ code: 'P2010' })
     expect(attempts).toBe(1)
   })
 })
