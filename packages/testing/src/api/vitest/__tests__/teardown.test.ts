@@ -93,6 +93,32 @@ describe('emptyTablesInWorkingOrder', () => {
     expect(attempts).toBe(3)
   })
 
+  it('still raises when tables that empty successfully keep landing between the attempts', async () => {
+    let attempts = 0
+    const alreadyTried = new Set<string>()
+
+    // Every table but `Blocked` fails once and succeeds on its second
+    // attempt, so a successful delete keeps landing between `Blocked`'s
+    // attempts. Deferring appends to the order being walked, so this has to
+    // end in the error rather than in a growing order.
+    const run = emptyTablesInWorkingOrder(
+      ['Post', 'Blocked', 'Tag', 'User'],
+      async (modelName) => {
+        attempts++
+
+        if (modelName === 'Blocked' || !alreadyTried.has(modelName)) {
+          alreadyTried.add(modelName)
+          throw new Error(
+            'Raw query failed. Code: `SQLITE_CONSTRAINT_TRIGGER`. Message: `abort`',
+          )
+        }
+      },
+    )
+
+    await expect(run).rejects.toThrow('SQLITE_CONSTRAINT_TRIGGER')
+    expect(attempts).toBeLessThan(30)
+  })
+
   it('raises an error that is not a foreign-key violation straight away', async () => {
     let attempts = 0
 
