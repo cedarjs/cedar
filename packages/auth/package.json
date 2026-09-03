@@ -59,7 +59,7 @@
     "msw": "2.15.0",
     "publint": "0.3.24",
     "react": "19.2.8",
-    "type-fest": "5.8.0",
+    "type-fest": "5.9.0",
     "typescript": "5.9.3",
     "vitest": "4.1.11"
   },
