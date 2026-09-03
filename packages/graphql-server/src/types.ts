@@ -7,7 +7,7 @@ import type {
   GraphQLInterfaceType,
   DocumentNode,
 } from 'graphql'
-import type { Plugin } from 'graphql-yoga'
+import type { GraphQLParams, Plugin } from 'graphql-yoga'
 
 import type { AuthContextPayload, CorsConfig, Decoder } from '@cedarjs/api'
 import type { CedarRequestContext } from '@cedarjs/api/runtime'
@@ -89,6 +89,11 @@ export interface CedarGraphQLContext {
   event?: APIGatewayProxyEvent
   requestContext?: LambdaContext | undefined
   currentUser?: ThenArg<ReturnType<GetCurrentUser>> | AuthContextPayload | null
+  /**
+   * The GraphQL request's query, variables and operation name, as Yoga parsed
+   * them. Available to a `context` function, which runs after parsing.
+   */
+  params: GraphQLParams
 
   [index: string]: unknown
 }
