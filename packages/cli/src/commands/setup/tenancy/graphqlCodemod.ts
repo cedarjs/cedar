@@ -11,7 +11,10 @@ function buildContextProperty() {
       context: async ({ context: gqlContext }) => {
         const { currentUser, event, request, params } = gqlContext
 
-        if (!currentUser) {
+        // A user whose getCurrentUser result doesn't carry memberships
+        // can't be matched to an organization, so the request runs with
+        // no current organization set.
+        if (!isUserWithMemberships(currentUser)) {
           return {}
         }
 
@@ -40,8 +43,8 @@ function buildContextProperty() {
     }
   `
 
-  // The snippet uses a TypeScript `as` cast, which the default babel parser
-  // (no typescript plugin) can't parse, so parse it with the `ts` parser.
+  // Parsed with a TypeScript-aware parser so the node matches the AST of the
+  // target file, which is parsed the same way below.
   const property = j
     .withParser('ts')(snippet)
     .find(j.ObjectProperty, { key: { name: 'context' } })
@@ -118,7 +121,11 @@ export default function transform(fileInfo: j.FileInfo) {
     config.properties.push(buildContextProperty())
   })
 
-  addNamedImport(root, ['resolveCurrentOrg'], '@cedarjs/tenancy')
+  addNamedImport(
+    root,
+    ['isUserWithMemberships', 'resolveCurrentOrg'],
+    '@cedarjs/tenancy',
+  )
 
   return root.toSource()
 }

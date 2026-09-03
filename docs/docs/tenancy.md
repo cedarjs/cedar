@@ -1,19 +1,5 @@
 # Multi-Tenancy
 
-:::warning[Experimental]
-
-Multi-tenancy support is currently experimental.
-
-While we believe this feature will be included in the framework the interface is
-currently subject to change. Breaking changes will be made in minor and patch
-releases until the feature is released as stable, after which normal SemVer
-rules will apply.
-
-We'd love to hear any feedback you might have on our
-[community forum](https://community.redwoodjs.com/).
-
-:::
-
 `@cedarjs/tenancy` adds organizations, memberships, per-organization roles and
 tenant-scoped database access to a Cedar app: one user account can belong to
 several organizations, each membership carries its own role, and every read and

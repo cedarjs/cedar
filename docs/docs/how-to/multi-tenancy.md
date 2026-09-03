@@ -237,7 +237,7 @@ the org-aware helpers:
 before any resolver runs:
 
 ```diff title="api/src/functions/graphql.ts"
-+import { resolveCurrentOrg } from '@cedarjs/tenancy'
++import { isUserWithMemberships, resolveCurrentOrg } from '@cedarjs/tenancy'
 
  export const handler = createGraphQLHandler({
    getCurrentUser,
@@ -247,7 +247,9 @@ before any resolver runs:
    services,
 +  context: async ({ context: gqlContext }) => {
 +    const { currentUser, event, request, params } = gqlContext
-+    if (!currentUser) {
++    // A user whose getCurrentUser result doesn't carry memberships can't be
++    // matched to an organization, so the request runs with none set.
++    if (!isUserWithMemberships(currentUser)) {
 +      return {}
 +    }
 +
@@ -614,10 +616,10 @@ export const inviteMember: MutationResolvers['inviteMember'] = ({ input }) => {
 plus a check that the membership being removed isn't the organization's last
 `owner`, so an admin can never remove an owner and an organization can never end
 up with zero owners. `acceptInvitation` claims a pending invitation with a
-single `updateManyAndReturn` guarded by
-`{ invitationToken: token, userId: null }`, so two concurrent accepts of the
-same token can never both win, and it spends the token in that same write so it
-can't be replayed by anyone who observed it beforehand.
+single `updateMany` guarded by `{ invitationToken: token, userId: null }`, so
+two concurrent accepts of the same token can never both win, and it spends the
+token in that same write so it can't be replayed by anyone who observed it
+beforehand.
 
 ### `@requireMembership`
 

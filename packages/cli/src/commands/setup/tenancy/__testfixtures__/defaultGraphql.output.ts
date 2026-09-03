@@ -9,7 +9,7 @@ import { cookieName, getCurrentUser } from 'src/lib/auth'
 import { db } from 'src/lib/db'
 import { logger } from 'src/lib/logger'
 
-import { resolveCurrentOrg } from '@cedarjs/tenancy'
+import { isUserWithMemberships, resolveCurrentOrg } from '@cedarjs/tenancy'
 
 const authDecoder = createAuthDecoder(cookieName)
 
@@ -29,7 +29,10 @@ export const handler = createGraphQLHandler({
   context: async ({ context: gqlContext }) => {
     const { currentUser, event, request, params } = gqlContext
 
-    if (!currentUser) {
+    // A user whose getCurrentUser result doesn't carry memberships
+    // can't be matched to an organization, so the request runs with
+    // no current organization set.
+    if (!isUserWithMemberships(currentUser)) {
       return {}
     }
 

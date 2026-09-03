@@ -197,33 +197,30 @@ interface ClaimedInvitation {
  * Atomically attaches the pending membership matching `token` to `userId`:
  * the `where` guard (the token, still unclaimed) is checked by the same
  * write that assigns `userId` and spends the token, so two concurrent
- * claims of the same token can never both win.
+ * claims of the same token can never both win. The row is then read back by
+ * its spent token, which is the same read a repeat call by the user who
+ * already holds it needs. The claim is an `updateMany` rather than
+ * `updateManyAndReturn` because Prisma only supports the latter on
+ * PostgreSQL, CockroachDB and SQLite.
  *
- * Returns the claimed membership's organization id on a fresh claim, the
- * same organization id when `userId` already holds it (a repeat call with
- * the same token), or `null` when the token is invalid or was claimed by a
- * different user.
+ * Returns the claimed membership's organization id when `userId` holds the
+ * membership, whether this call claimed it or an earlier one did, or `null`
+ * when the token is invalid or was claimed by a different user.
  */
 const claimInvitation = async (
   token: string,
   userId: string,
 ): Promise<ClaimedInvitation | null> => {
-  const claimed = await db.membership.updateManyAndReturn({
+  await db.membership.updateMany({
     where: { invitationToken: token, userId: null },
     data: { userId, invitationToken: spentInvitationToken(token) },
   })
 
-  if (claimed.length > 0) {
-    return { organizationId: claimed[0].organizationId }
-  }
-
-  const alreadyClaimedByUser = await db.membership.findFirst({
+  const claimed = await db.membership.findFirst({
     where: { invitationToken: spentInvitationToken(token), userId },
   })
 
-  return alreadyClaimedByUser
-    ? { organizationId: alreadyClaimedByUser.organizationId }
-    : null
+  return claimed ? { organizationId: claimed.organizationId } : null
 }
 
 /**
@@ -281,12 +278,10 @@ export const removeMember: MutationResolvers['removeMember'] = async ({
   // request has already invalidated. A pending invitation is not an owner
   // yet, so `userId` has to be set for one to count.
   //
-  // The guard reads the other memberships, which a concurrent transaction may
-  // be deleting, so two owners removing each other in the same instant can
-  // still both succeed on a database that reads committed rows. An app that
-  // needs that closed should run this in a serializable transaction, which
-  // PostgreSQL and MySQL support and SQLite does not need, since it takes one
-  // writer at a time.
+  // The guard reads other memberships that a concurrent request may be
+  // deleting, so the delete runs in a serializable transaction: when two
+  // owners remove each other in the same instant the database rejects one of
+  // the two requests with a write conflict, and that caller can retry.
   const requireAnotherOwner =
     membership.role === 'owner'
       ? {
@@ -302,13 +297,17 @@ export const removeMember: MutationResolvers['removeMember'] = async ({
         }
       : {}
 
-  const { count } = await db.membership.deleteMany({
-    where: {
-      id: membershipId,
-      organizationId: currentOrg.id,
-      ...requireAnotherOwner,
-    },
-  })
+  const { count } = await db.$transaction(
+    (tx) =>
+      tx.membership.deleteMany({
+        where: {
+          id: membershipId,
+          organizationId: currentOrg.id,
+          ...requireAnotherOwner,
+        },
+      }),
+    { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+  )
 
   if (count === 0) {
     throw new ValidationError(
