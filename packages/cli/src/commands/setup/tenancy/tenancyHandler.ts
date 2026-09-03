@@ -169,10 +169,11 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
 
           fs.writeFileSync(schemaPath, updatedSchema)
 
-          // Cosmetic: `prisma format` aligns columns the way a `model User {`
-          // block edited by hand would be. Best-effort -- an app without a
-          // reachable `prisma` binary (offline install, unusual package
-          // manager setup) still ends up with a valid, just less tidy, schema.
+          // Adds the `memberships` back-relation on `User`: appending
+          // `Organization` and `Membership`, both of which declare a relation
+          // to `User`, is enough for Prisma's formatter to add the matching
+          // field. Not best-effort -- the generated `getCurrentUser` selects
+          // `memberships`, so a schema without it breaks at runtime.
           try {
             await runTransitiveBin(
               'prisma',
@@ -180,7 +181,30 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
               { cwd: paths.base },
             )
           } catch {
-            // Formatting is cosmetic; the schema written above is already valid.
+            throw new Error(
+              '`prisma format` failed, so the `memberships` relation was not added to the `User` model. Add it by hand: `memberships Membership[]` as the last field of `model User { ... }`, then re-run this command.',
+            )
+          }
+
+          // The field name comes from the formatter, not from us. A rename
+          // would break loudly at type-check in every generated app, but
+          // verify anyway so a formatter that exits 0 without adding the
+          // field stops here with instructions rather than a runtime crash.
+          // `Organization` already declares `memberships Membership[]`, so
+          // the count should rise by one when the formatter adds the
+          // back-relation to `User`.
+          const membershipsOccurrences = (schema: string): number =>
+            (schema.match(/memberships\s+Membership\[\]/g) ?? []).length
+
+          const formattedSchema = fs.readFileSync(schemaPath, 'utf-8')
+
+          if (
+            membershipsOccurrences(formattedSchema) <=
+            membershipsOccurrences(updatedSchema)
+          ) {
+            throw new Error(
+              '`prisma format` did not add the `memberships` relation to the `User` model. Add it by hand: `memberships Membership[]` as the last field of `model User { ... }`, then re-run this command.',
+            )
           }
         },
       },

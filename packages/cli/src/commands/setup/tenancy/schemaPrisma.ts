@@ -2,11 +2,12 @@
  * Plain-text editing of `api/db/schema.prisma` for `yarn cedar setup tenancy`.
  *
  * The setup command appends the framework-known `Organization` and
- * `Membership` models and adds a `memberships` relation to the app's
- * existing `User` model. This is done with text manipulation, not a schema
- * AST, because Prisma's schema parser (`@prisma/internals`) is read-only:
- * there is no supported way to print a modified schema back out while
- * preserving the user's formatting and comments.
+ * `Membership` models. The `memberships` back-relation on the app's existing
+ * `User` model is added by `prisma format`, not by this module: appending
+ * models that declare a relation to `User` is enough for Prisma's formatter
+ * to add the matching field. This avoids a hand-rolled schema parser, which
+ * can't preserve the user's formatting and comments the way the formatter
+ * does.
  */
 
 export const ORGANIZATION_MODEL = `model Organization {
@@ -27,7 +28,7 @@ export const MEMBERSHIP_MODEL = `model Membership {
   invitedById     String?
   invitationToken String?      @unique
   createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  updatedAt   DateTime     @updatedAt
   user            User?        @relation(fields: [userId], references: [id])
   organization    Organization @relation(fields: [organizationId], references: [id])
   invitedBy       Membership?  @relation("Inviter", fields: [invitedById], references: [id])
@@ -59,69 +60,24 @@ export function hasModel(schema: string, modelName: string): boolean {
   return new RegExp(`\\bmodel\\s+${modelName}\\s*\\{`).test(schema)
 }
 
-interface ModelBlock {
-  /** Index of the character right after the model's opening `{`. */
-  bodyStart: number
-  /** Index of the model's closing `}`. */
-  bodyEnd: number
-}
-
-/**
- * Locates `model <modelName> { ... }` in `schema` by counting braces from
- * the opening one, so nested `{}` (none expected in a Prisma model, but
- * cheap to handle correctly) do not confuse the search.
- */
-function findModelBlock(schema: string, modelName: string): ModelBlock | null {
-  const headerMatch = new RegExp(`model\\s+${modelName}\\s*\\{`).exec(schema)
-
-  if (!headerMatch) {
-    return null
-  }
-
-  const bodyStart = headerMatch.index + headerMatch[0].length
-  let depth = 1
-  let index = bodyStart
-
-  for (; index < schema.length; index++) {
-    if (schema[index] === '{') {
-      depth++
-    } else if (schema[index] === '}') {
-      depth--
-      if (depth === 0) {
-        break
-      }
-    }
-  }
-
-  if (depth !== 0) {
-    return null
-  }
-
-  return { bodyStart, bodyEnd: index }
-}
-
-/**
- * Adds `memberships Membership[]` as the last field of `model User { ... }`.
- * Throws `RW_TENANCY_ERR_NO_USER_MODEL` when there is no `User` model, since
- * tenancy is layered on top of an app that already has auth set up.
- */
-export function addMembershipsToUser(schema: string): string {
-  const block = findModelBlock(schema, 'User')
-
-  if (!block) {
-    throw new Error('RW_TENANCY_ERR_NO_USER_MODEL')
-  }
-
-  const before = schema.slice(0, block.bodyEnd)
-  const after = schema.slice(block.bodyEnd)
-  const separator = before.endsWith('\n') ? '' : '\n'
-
-  return `${before}${separator}  memberships Membership[]\n${after}`
-}
-
 /** Appends the `Organization` and `Membership` models to the end of `schema`. */
 export function addTenancyModels(schema: string): string {
-  return `${schema.trimEnd()}\n\n${ORGANIZATION_MODEL}\n\n${MEMBERSHIP_MODEL}\n`
+  return [ORGANIZATION_MODEL, MEMBERSHIP_MODEL].reduce(appendModel, schema)
+}
+
+/**
+ * Appends `model`, unless the schema already contains it exactly as written
+ * here, which makes running the command twice a no-op rather than a
+ * duplicate. A model of the same name that differs is left alone and this one
+ * appended beside it, so Prisma reports the clash rather than this command
+ * guessing which one the app wanted.
+ */
+function appendModel(schema: string, model: string): string {
+  if (schema.includes(model)) {
+    return schema
+  }
+
+  return `${schema.trimEnd()}\n\n${model}\n`
 }
 
 /**
@@ -146,15 +102,17 @@ export interface EditSchemaOptions {
 /**
  * Applies every schema.prisma edit `setup tenancy` needs, in one pass.
  *
- * Throws `RW_TENANCY_ERR_NO_USER_MODEL` when there is no `User` model to add
- * `memberships` to (auth has not been set up yet), and
- * `RW_TENANCY_ERR_MODELS_EXIST` when `Organization` or `Membership` already
- * exist and `force` was not passed. With `force`, existing `Organization`/
- * `Membership` models are left untouched (there is no safe way to merge a
- * user's model with the framework's), and only the `User.memberships`
- * relation is added if it is missing. `RW_DataMigration` is added whenever
- * it is absent, regardless of `force` or whether Organization/Membership
- * were already present.
+ * The `memberships` relation on `User` is not added here: `prisma format`
+ * adds it once `Organization` and `Membership` declare relations to `User`.
+ * The handler runs formatting after this and stops with instructions if the
+ * field is missing, since the generated `getCurrentUser` selects it.
+ *
+ * Throws `RW_TENANCY_ERR_NO_USER_MODEL` when there is no `User` model (auth
+ * has not been set up yet), and `RW_TENANCY_ERR_MODELS_EXIST` when
+ * `Organization` or `Membership` already exist and `force` was not passed.
+ * With `force`, existing `Organization`/`Membership` models are left
+ * untouched. `RW_DataMigration` is added whenever it is absent, regardless of
+ * `force` or whether Organization/Membership were already present.
  */
 export function editSchema(schema: string, options: EditSchemaOptions): string {
   if (!hasModel(schema, 'User')) {
@@ -164,13 +122,17 @@ export function editSchema(schema: string, options: EditSchemaOptions): string {
   const modelsExist =
     hasModel(schema, 'Organization') || hasModel(schema, 'Membership')
 
-  if (modelsExist && !options.force) {
+  // Models this command wrote itself are not a clash: appending skips them,
+  // so running it twice changes nothing. A model of the same name that
+  // differs is the app's own, which is what `--force` is for.
+  const modelsAreThisCommands =
+    schema.includes(ORGANIZATION_MODEL) && schema.includes(MEMBERSHIP_MODEL)
+
+  if (modelsExist && !modelsAreThisCommands && !options.force) {
     throw new Error('RW_TENANCY_ERR_MODELS_EXIST')
   }
 
-  const withTenancyModels = modelsExist
-    ? schema
-    : addMembershipsToUser(addTenancyModels(schema))
+  const withTenancyModels = addTenancyModels(schema)
 
   // Independent of whether Organization/Membership were just added or
   // already existed: an app that never ran `data-migrate install` still

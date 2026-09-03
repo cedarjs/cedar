@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest'
 
 import {
   addDataMigrationModel,
-  addMembershipsToUser,
   addTenancyModels,
   editSchema,
   hasModel,
@@ -35,28 +34,6 @@ describe('hasModel', () => {
 
   it('returns false when the model is not declared', () => {
     expect(hasModel(BASE_SCHEMA, 'Organization')).toBe(false)
-  })
-})
-
-describe('addMembershipsToUser', () => {
-  it('throws RW_TENANCY_ERR_NO_USER_MODEL when there is no User model', () => {
-    const schemaWithoutUser = `model Contact {\n  id Int @id\n}\n`
-
-    expect(() => addMembershipsToUser(schemaWithoutUser)).toThrow(
-      'RW_TENANCY_ERR_NO_USER_MODEL',
-    )
-  })
-
-  it('adds the memberships relation as the last field of User', () => {
-    const result = addMembershipsToUser(BASE_SCHEMA)
-
-    expect(result).toContain(
-      'model User {\n  id    String @id @default(uuid())\n  email String @unique\n  memberships Membership[]\n}',
-    )
-    // Every other model is untouched.
-    expect(result).toContain(
-      'model Contact {\n  id   Int    @id @default(autoincrement())\n  name String\n}',
-    )
   })
 })
 
@@ -98,10 +75,9 @@ describe('editSchema', () => {
     expect(result).toContain('model Organization {\n  id String @id\n}')
   })
 
-  it('adds both models and the User relation on the happy path', () => {
+  it('adds both models on the happy path', () => {
     const result = editSchema(BASE_SCHEMA, { force: false })
 
-    expect(result).toContain('memberships Membership[]')
     expect(result).toContain('model Organization {')
     expect(result).toContain('model Membership {')
   })
@@ -138,5 +114,25 @@ describe('addDataMigrationModel', () => {
     expect(result).toBe(schemaWithDataMigration)
     // Only one declaration, not a second one appended.
     expect(result.split('model RW_DataMigration {').length - 1).toBe(1)
+  })
+})
+
+describe('appending is idempotent', () => {
+  it('leaves a model this command already wrote alone', () => {
+    const once = editSchema(BASE_SCHEMA, { force: false })
+    const twice = editSchema(once, { force: false })
+
+    expect(twice).toEqual(once)
+  })
+
+  it('appends beside a model of the same name that differs, under force', () => {
+    const schemaWithOrg = `${BASE_SCHEMA}\nmodel Organization {\n  id String @id\n}\n`
+
+    const result = editSchema(schemaWithOrg, { force: true })
+
+    // The app's own model is left as it is, and this command's is added, so
+    // Prisma reports the clash rather than this command picking a winner.
+    expect(result).toContain('model Organization {\n  id String @id\n}')
+    expect(result.match(/model Organization \{/g)).toHaveLength(2)
   })
 })
