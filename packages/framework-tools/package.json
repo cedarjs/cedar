@@ -37,7 +37,7 @@
     "fast-glob": "3.3.3"
   },
   "devDependencies": {
-    "type-fest": "5.8.0",
+    "type-fest": "5.9.0",
     "typescript": "5.9.3"
   },
   "engines": {
