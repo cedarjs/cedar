@@ -37,8 +37,13 @@ export interface RunTransform {
   /** Path(s) to the file(s) to transform. Can also be a directory */
   targetPaths: string[]
   parser?: 'babel' | 'ts' | 'tsx'
-  /** jscodeshift options and transform options */
-  options?: Partial<Record<OptionKeys, any>>
+  /**
+   * jscodeshift options and transform options. Known jscodeshift keys
+   * (`OptionKeys`) override the defaults; any other key is passed straight
+   * through to the transform as its third (`options`) argument, so a
+   * transform can accept its own configuration (e.g. `{ tenantField }`).
+   */
+  options?: Partial<Record<OptionKeys, any>> & Record<string, unknown>
 }
 
 export const runTransform = async ({

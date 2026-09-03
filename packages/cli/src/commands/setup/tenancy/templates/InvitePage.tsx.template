@@ -1,0 +1,63 @@
+import { useEffect, useState } from 'react'
+
+import { navigate, routes, useParams } from '@cedarjs/router'
+import { Metadata, useMutation } from '@cedarjs/web'
+
+import { useAuth } from 'src/auth'
+
+const ACCEPT_INVITATION_MUTATION = gql`
+  mutation AcceptInvitationMutation($token: String!) {
+    acceptInvitation(token: $token) {
+      id
+      slug
+      name
+    }
+  }
+`
+
+/**
+ * Landing page for an invitation link (`/invite/{token}`). Outside
+ * `OrgScope`, since the visitor is not a member of the organization yet.
+ */
+const InvitePage = () => {
+  const { token } = useParams()
+  const { isAuthenticated, reauthenticate } = useAuth()
+  const [error, setError] = useState<string | null>(null)
+
+  const [acceptInvitation] = useMutation(ACCEPT_INVITATION_MUTATION, {
+    onCompleted: async (data) => {
+      await reauthenticate()
+      // TODO: point this at your app's organization home route, e.g.
+      // navigate(routes.orgHome({ orgSlug: data.acceptInvitation.slug }))
+      navigate(`/org/${data.acceptInvitation.slug}`)
+    },
+    onError: (mutationError) => setError(mutationError.message),
+  })
+
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      acceptInvitation({ variables: { token } })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, token])
+
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Metadata title="Accept invitation" />
+        <p>Sign in or create an account to accept this invitation.</p>
+        <a href={`${routes.login()}?invitationToken=${token}`}>Log in</a>
+        <a href={`${routes.signup()}?invitationToken=${token}`}>Sign up</a>
+      </>
+    )
+  }
+
+  return (
+    <>
+      <Metadata title="Accept invitation" />
+      {error ? <p>{error}</p> : <p>Joining organization…</p>}
+    </>
+  )
+}
+
+export default InvitePage

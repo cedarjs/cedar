@@ -1,0 +1,59 @@
+import type { ScenarioData } from '@cedarjs/testing/api'
+
+import type { Membership, Organization, Prisma } from 'src/lib/db'
+
+// This scenario assumes a dbAuth-style `User` model (`email`,
+// `hashedPassword`, `salt`). Adjust the `user` fixture below to match your
+// app's actual `User` fields if you use a different auth provider.
+export const standard = defineScenario<
+  Prisma.OrganizationCreateArgs | Prisma.MembershipCreateArgs
+>({
+  organization: {
+    acme: {
+      data: {
+        name: 'Acme Inc',
+        slug: 'acme-inc',
+      },
+    },
+  },
+  membership: {
+    owner: {
+      data: {
+        role: 'owner',
+        organization: { connect: { slug: 'acme-inc' } },
+        user: {
+          create: {
+            email: 'owner@example.com',
+            hashedPassword: 'x',
+            salt: 'x',
+            fullName: 'Org Owner',
+          },
+        },
+      },
+    },
+    admin: {
+      data: {
+        role: 'admin',
+        organization: { connect: { slug: 'acme-inc' } },
+        user: {
+          create: {
+            email: 'admin@example.com',
+            hashedPassword: 'x',
+            salt: 'x',
+            fullName: 'Org Admin',
+          },
+        },
+      },
+    },
+    pending: {
+      data: {
+        role: 'admin',
+        invitationToken: 'invite-token',
+        organization: { connect: { slug: 'acme-inc' } },
+      },
+    },
+  },
+})
+
+export type StandardScenario = ScenarioData<Organization, 'organization', 'acme'> &
+  ScenarioData<Membership, 'membership', 'owner' | 'admin' | 'pending'>

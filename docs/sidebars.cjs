@@ -224,6 +224,7 @@ module.exports = {
         'services',
         'storybook',
         'studio',
+        'tenancy',
         'testing',
         'toast-notifications',
         {
