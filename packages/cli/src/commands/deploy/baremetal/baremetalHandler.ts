@@ -8,7 +8,7 @@ import * as toml from 'smol-toml'
 import { env as envInterpolation } from 'string-env-interpolation'
 import { titleCase } from 'title-case'
 
-import { colors as c } from '@cedarjs/cli-helpers'
+import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 

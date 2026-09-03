@@ -3,9 +3,9 @@ import path from 'node:path'
 import concurrently from 'concurrently'
 import { Listr } from 'listr2'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { formatRunBinCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 
 import { generatePrismaClient } from '../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files

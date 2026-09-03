@@ -6,11 +6,9 @@ import type { ExecaError } from 'execa'
 import execa from 'execa'
 import { isGreaterOrEqual, isLess, tryParse } from 'verkit'
 
-import {
-  isTypeScriptProject,
-  transformTSToJS,
-  colors as c,
-} from '@cedarjs/cli-helpers'
+import { colors as c } from '@cedarjs/cli-helpers/colors'
+import { transformTSToJS } from '@cedarjs/cli-helpers/fileHelpers'
+import { isTypeScriptProject } from '@cedarjs/cli-helpers/project'
 import { getPaths } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 

@@ -6,7 +6,7 @@ vi.mock('@cedarjs/telemetry', () => {
   }
 })
 
-vi.mock('@cedarjs/cli-helpers', () => {
+vi.mock('@cedarjs/cli-helpers/paths', () => {
   return {
     getPaths: () => {
       return {
@@ -18,6 +18,11 @@ vi.mock('@cedarjs/cli-helpers', () => {
         base: '',
       }
     },
+  }
+})
+
+vi.mock('@cedarjs/cli-helpers/auth/setupHelpers', () => {
+  return {
     standardAuthHandler: () => vi.fn(),
   }
 })

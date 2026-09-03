@@ -18,7 +18,7 @@ vi.mock('@cedarjs/project-config/packageManager', () => ({
   getPackageManager: () => 'yarn',
 }))
 
-vi.mock('@cedarjs/cli-helpers', async () => ({
+vi.mock('@cedarjs/cli-helpers/colors', async () => ({
   colors: Object.fromEntries(
     [
       'error',
@@ -35,6 +35,9 @@ vi.mock('@cedarjs/cli-helpers', async () => ({
       'link',
     ].map((k) => [k, (s) => s]),
   ),
+}))
+
+vi.mock('@cedarjs/cli-helpers/telemetry', async () => ({
   recordTelemetryAttributes: vi.fn(),
 }))
 

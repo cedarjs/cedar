@@ -9,12 +9,6 @@
   "license": "MIT",
   "type": "module",
   "exports": {
-    ".": {
-      "default": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      }
-    },
     "./loadEnvFiles": {
       "default": {
         "types": "./dist/lib/loadEnvFiles.d.ts",
@@ -56,9 +50,68 @@
         "types": "./dist/packageManager/workspaces.d.ts",
         "default": "./dist/packageManager/workspaces.js"
       }
+    },
+    "./fileHelpers": {
+      "default": {
+        "types": "./dist/lib/index.d.ts",
+        "default": "./dist/lib/index.js"
+      }
+    },
+    "./colors": {
+      "default": {
+        "types": "./dist/lib/colors.d.ts",
+        "default": "./dist/lib/colors.js"
+      }
+    },
+    "./paths": {
+      "default": {
+        "types": "./dist/lib/paths.d.ts",
+        "default": "./dist/lib/paths.js"
+      }
+    },
+    "./project": {
+      "default": {
+        "types": "./dist/lib/project.d.ts",
+        "default": "./dist/lib/project.js"
+      }
+    },
+    "./transpileTSToJS": {
+      "default": {
+        "types": "./dist/lib/transpileTSToJS.d.ts",
+        "default": "./dist/lib/transpileTSToJS.js"
+      }
+    },
+    "./tty": {
+      "default": {
+        "types": "./dist/lib/tty.d.ts",
+        "default": "./dist/lib/tty.js"
+      }
+    },
+    "./version": {
+      "default": {
+        "types": "./dist/lib/version.d.ts",
+        "default": "./dist/lib/version.js"
+      }
+    },
+    "./auth/setupHelpers": {
+      "default": {
+        "types": "./dist/auth/setupHelpers.d.ts",
+        "default": "./dist/auth/setupHelpers.js"
+      }
+    },
+    "./installHelpers": {
+      "default": {
+        "types": "./dist/lib/installHelpers.d.ts",
+        "default": "./dist/lib/installHelpers.js"
+      }
+    },
+    "./telemetry": {
+      "default": {
+        "types": "./dist/telemetry/index.d.ts",
+        "default": "./dist/telemetry/index.js"
+      }
     }
   },
-  "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],

@@ -8,9 +8,16 @@ import { describe, it, expect, vi } from 'vitest'
 // `setupData.test.ts` does so that import doesn't need a real Cedar project
 // on disk -- none of the functions under test here (`parseOAuthProviders`,
 // `pruneOAuthProviders`) touch paths at all.
-vi.mock('@cedarjs/cli-helpers', () => {
+vi.mock('@cedarjs/cli-helpers/project', () => {
   return {
     getGraphqlPath: () => '/cedar-app/api/src/functions/graphql.ts',
+    addEnvVarTask: () => {},
+    isTypeScriptProject: () => true,
+  }
+})
+
+vi.mock('@cedarjs/cli-helpers/paths', () => {
+  return {
     getPaths: () => ({
       base: '/cedar-app',
       api: {
@@ -19,6 +26,11 @@ vi.mock('@cedarjs/cli-helpers', () => {
         prismaConfig: '/cedar-app/api/prisma.config.cjs',
       },
     }),
+  }
+})
+
+vi.mock('@cedarjs/cli-helpers/colors', () => {
+  return {
     colors: {
       error: (str: string) => str,
       warning: (str: string) => str,
@@ -27,8 +39,6 @@ vi.mock('@cedarjs/cli-helpers', () => {
       bold: (str: string) => str,
       underline: (str: string) => str,
     },
-    addEnvVarTask: () => {},
-    isTypeScriptProject: () => true,
   }
 })
 

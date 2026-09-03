@@ -13,7 +13,7 @@ import path from 'path'
 
 import { vi } from 'vitest'
 
-import type * as CedarCliHelpers from '@cedarjs/cli-helpers'
+import type * as CedarCliHelpersProject from '@cedarjs/cli-helpers/project'
 import type * as CedarProjectConfig from '@cedarjs/project-config'
 
 import './mockTelemetry.js'
@@ -101,8 +101,9 @@ vi.mock('@cedarjs/project-config/packageManager', () => ({
   resetPackageManagerCache: vi.fn(),
 }))
 
-vi.mock('@cedarjs/cli-helpers', async (importOriginal) => {
-  const originalCliHelpers = await importOriginal<typeof CedarCliHelpers>()
+vi.mock('@cedarjs/cli-helpers/project', async (importOriginal) => {
+  const originalCliHelpers =
+    await importOriginal<typeof CedarCliHelpersProject>()
 
   return {
     ...originalCliHelpers,

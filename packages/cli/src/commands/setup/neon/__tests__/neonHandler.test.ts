@@ -5,7 +5,9 @@ import path from 'node:path'
 import { vol, fs as memfsFs } from 'memfs'
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 
-import type * as CliHelpers from '@cedarjs/cli-helpers'
+import type * as CliHelpersColors from '@cedarjs/cli-helpers/colors'
+import type * as CliHelpersInstallHelpers from '@cedarjs/cli-helpers/installHelpers'
+import type * as CliHelpersPaths from '@cedarjs/cli-helpers/paths'
 
 import '../../../../lib/mockTelemetry.js'
 
@@ -39,8 +41,8 @@ vi.mock('@cedarjs/cli-helpers/packageManager', () => ({
 
 const BASE_PATH = '/path/to/project'
 
-vi.mock('@cedarjs/cli-helpers', async (importOriginal) => {
-  const original = await importOriginal<typeof CliHelpers>()
+vi.mock('@cedarjs/cli-helpers/colors', async (importOriginal) => {
+  const original = await importOriginal<typeof CliHelpersColors>()
 
   return {
     ...original,
@@ -60,6 +62,14 @@ vi.mock('@cedarjs/cli-helpers', async (importOriginal) => {
         'link',
       ].map((k) => [k, (s: string) => s]),
     ),
+  }
+})
+
+vi.mock('@cedarjs/cli-helpers/paths', async (importOriginal) => {
+  const original = await importOriginal<typeof CliHelpersPaths>()
+
+  return {
+    ...original,
     getPaths: () => ({
       base: BASE_PATH,
       api: {
@@ -69,6 +79,14 @@ vi.mock('@cedarjs/cli-helpers', async (importOriginal) => {
       },
       scripts: path.join(BASE_PATH, 'scripts'),
     }),
+  }
+})
+
+vi.mock('@cedarjs/cli-helpers/installHelpers', async (importOriginal) => {
+  const original = await importOriginal<typeof CliHelpersInstallHelpers>()
+
+  return {
+    ...original,
     installPackages: { title: 'Installing packages...', task: async () => {} },
   }
 })

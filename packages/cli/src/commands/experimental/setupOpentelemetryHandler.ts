@@ -4,7 +4,8 @@ import path from 'node:path'
 import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import { Listr } from 'listr2'
 
-import { addApiPackages, colors as c } from '@cedarjs/cli-helpers'
+import { colors as c } from '@cedarjs/cli-helpers/colors'
+import { addApiPackages } from '@cedarjs/cli-helpers/installHelpers'
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 import {
   getConfigPath,

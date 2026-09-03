@@ -1,7 +1,6 @@
 import type { Argv } from 'yargs'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 export const command = 'og-image'
 export const aliases = ['ogImage', 'ogimage']
 export const description = 'Set up OG Image generation middleware'

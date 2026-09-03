@@ -4,7 +4,8 @@ import path from 'path'
 import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 
-import { addEnvVarTask, colors as c } from '@cedarjs/cli-helpers'
+import { colors as c } from '@cedarjs/cli-helpers/colors'
+import { addEnvVarTask } from '@cedarjs/cli-helpers/project'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { addPackagesTask, getPaths, writeFile } from '../../../lib/index.js'

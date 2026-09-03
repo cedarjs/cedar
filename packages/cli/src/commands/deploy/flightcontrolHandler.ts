@@ -3,12 +3,12 @@ import path from 'node:path'
 
 import type { Options as ExecaOptions } from 'execa'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import {
   runBin,
   runTransitiveBin,
   runWithNode,
 } from '@cedarjs/cli-helpers/packageManager/exec'
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { getPaths } from '@cedarjs/project-config'
 
 export interface HandlerArgs {

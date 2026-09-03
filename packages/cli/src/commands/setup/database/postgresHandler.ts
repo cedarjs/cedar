@@ -5,9 +5,11 @@ import execa from 'execa'
 import { Listr } from 'listr2'
 import type { ListrTask } from 'listr2'
 
-import { colors, getPaths, installPackages } from '@cedarjs/cli-helpers'
+import { colors } from '@cedarjs/cli-helpers/colors'
+import { installPackages } from '@cedarjs/cli-helpers/installHelpers'
 import { prettyPrintCedarCommand } from '@cedarjs/cli-helpers/packageManager'
 import { addWorkspacePackages } from '@cedarjs/cli-helpers/packageManager/packages'
+import { getPaths } from '@cedarjs/cli-helpers/paths'
 import { resolveFile } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 

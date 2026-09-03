@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid'
 import {
   recordTelemetryAttributes,
   recordTelemetryError,
-} from '@cedarjs/cli-helpers'
+} from '@cedarjs/cli-helpers/telemetry'
 
 interface ExitWithErrorOptions {
   exitCode?: number

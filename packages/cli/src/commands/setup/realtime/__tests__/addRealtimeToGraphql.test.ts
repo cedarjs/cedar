@@ -57,7 +57,7 @@ vi.mock('@cedarjs/project-config', () => {
   }
 })
 
-vi.mock('@cedarjs/cli-helpers', () => {
+vi.mock('@cedarjs/cli-helpers/colors', () => {
   return {
     colors: Object.fromEntries(
       [
@@ -75,6 +75,11 @@ vi.mock('@cedarjs/cli-helpers', () => {
         'link',
       ].map((k) => [k, (s: string) => s]),
     ),
+  }
+})
+
+vi.mock('@cedarjs/cli-helpers/project', () => {
+  return {
     isTypeScriptProject: () => {
       return false
     },

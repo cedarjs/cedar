@@ -86,7 +86,7 @@ vi.mock('@cedarjs/internal/dist/validateSchema', () => ({
   loadAndValidateSdls: vi.fn(),
 }))
 
-vi.mock('@cedarjs/cli-helpers', () => ({
+vi.mock('@cedarjs/cli-helpers/colors', () => ({
   colors: Object.fromEntries(
     [
       'error',
@@ -103,6 +103,9 @@ vi.mock('@cedarjs/cli-helpers', () => ({
       'link',
     ].map((k) => [k, (s: string) => s]),
   ),
+}))
+
+vi.mock('@cedarjs/cli-helpers/telemetry', () => ({
   recordTelemetryAttributes: vi.fn(),
 }))
 

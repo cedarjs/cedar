@@ -1,7 +1,6 @@
 import type { Argv } from 'yargs'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 export const command = 'postgres'
 export const description =
   'Switch your project from SQLite to PostgreSQL (schema, dependencies, and database adapter)'
