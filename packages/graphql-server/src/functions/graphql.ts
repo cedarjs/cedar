@@ -5,11 +5,11 @@ import type {
 } from 'aws-lambda'
 import * as cookie from 'cookie'
 
-import { getAuthenticationContext } from '@cedarjs/api'
 import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 
 import { createGraphQLYoga } from '../createGraphQLYoga.js'
+import { resolveServerAuthState } from '../serverAuthState.js'
 import type { GraphQLHandlerOptions } from '../types.js'
 
 function lambdaQueryToSearchParams(
@@ -157,11 +157,11 @@ export const createGraphQLHandler = ({
             params: event.pathParameters ?? {},
             query: lambdaQueryToSearchParams(event),
             cookies: parseLambdaCookies(event),
-            serverAuthState: await getAuthenticationContext({
-              authDecoder,
+            serverAuthState: await resolveServerAuthState(
+              { authDecoder, getCurrentUser },
               event,
-              context: requestContext,
-            }),
+              requestContext,
+            ),
           },
         },
       )

@@ -269,6 +269,34 @@ export const handler = createGraphQLHandler({
 ```
 
 That should be enough; now, things should just work.
+
+:::info Providers with opaque tokens
+
+`authDecoder` is optional. If your provider hands out opaque access tokens (GitLab's OAuth tokens, for example), there's nothing to decode locally, so leave `authDecoder` out and validate the raw token in `getCurrentUser` instead. Cedar still calls `getCurrentUser` for every request that carries the `auth-provider` header. `decoded` is `null`, and the raw token is in the second argument:
+
+```ts title="api/src/lib/auth.ts"
+export const getCurrentUser = async (
+  _decoded: null,
+  { token, type }: { token: string; type: string }
+) => {
+  if (type !== 'custom-auth') {
+    return null
+  }
+
+  const response = await fetch('https://gitlab.com/api/v4/user', {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+
+  if (!response.ok) {
+    return null
+  }
+
+  return response.json()
+}
+```
+
+:::
+
 Let's make sure: if this is a brand new project, generate a home page.
 There we'll try to sign up by destructuring `signUp` from the `useAuth` hook (import that from `'src/auth'`). We'll also destructure and display `isAuthenticated` to see if it worked:
 

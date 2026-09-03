@@ -29,7 +29,10 @@ import {
 } from '@cedarjs/babel-config'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { createGraphQLYoga } from '@cedarjs/graphql-server'
-import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
+import type {
+  CedarGraphQLServer,
+  GraphQLYogaOptions,
+} from '@cedarjs/graphql-server'
 import { applyGqlormInject } from '@cedarjs/internal/dist/build/api-graphql-transforms.js'
 import { getConfig, getPaths } from '@cedarjs/project-config'
 
@@ -63,22 +66,11 @@ function resolveWithExtensions(id: string): string {
 
 const LAMBDA_FUNCTIONS: Record<string, CedarHandler> = {}
 
-interface YogaInstance {
-  handle(request: Request, context: Record<string, unknown>): Promise<Response>
-  graphqlEndpoint: string
-}
-
-interface LoadedGraphqlServer {
-  yoga: YogaInstance
-  options: GraphQLYogaOptions
-}
-
-// The Yoga instance together with the options it was built from. The request
-// handler needs the options too, to build a Cedar context from their auth
-// decoder – and it has to be the decoder that belongs to this exact instance,
-// so a reload (HMR) replaces both at once and the handler reads them as one
-// value
-let loadedGraphqlServer: LoadedGraphqlServer | null = null
+// The Yoga instance together with the `buildRequestContext` that belongs to
+// it. The context it builds carries auth state resolved with this exact
+// instance's options, so a reload (HMR) replaces both at once and the handler
+// reads them as one value
+let loadedGraphqlServer: CedarGraphQLServer | null = null
 
 let loadApiFunctionsInFlight: Promise<void> | null = null
 let needsReloadAfterInFlight = false
@@ -196,8 +188,7 @@ async function internalLoadApiFunctions(viteServer: ViteDevServer) {
   await Promise.all(imports)
 
   if (extractedGraphqlOptions) {
-    const { yoga } = await createGraphQLYoga(extractedGraphqlOptions)
-    loadedGraphqlServer = { yoga, options: extractedGraphqlOptions }
+    loadedGraphqlServer = await createGraphQLYoga(extractedGraphqlOptions)
   } else {
     // Reset so deleted/missing graphql.ts is reflected immediately (i.e. during
     // a dev session)
@@ -535,8 +526,8 @@ export function createApiFetchHandler() {
     // GraphQL routes
     if (pathname === '/graphql' || pathname.startsWith('/graphql/')) {
       // Read once. A reload can replace this while the request is in flight,
-      // and the Yoga instance and the auth decoder used to build the context
-      // for it have to come from the same load.
+      // and the Yoga instance and the `buildRequestContext` used to build the
+      // context for it have to come from the same load.
       const graphqlServer = loadedGraphqlServer
 
       if (!graphqlServer) {
@@ -548,14 +539,12 @@ export function createApiFetchHandler() {
 
       return getAsyncStoreInstance().run(new Map(), async () => {
         try {
-          // `buildCedarContext` resolves auth state, and the auth payload
+          // `buildRequestContext` resolves auth state, and the auth payload
           // carries a Lambda-style event built by reading the request body.
-          // This has to happen before Yoga consumes it otherwise
-          // `buildCedarContext` would try to build the event from a `Request`
-          // that's already been consumed, which would throw.
-          const cedarContext = await buildCedarContext(request, {
-            authDecoder: graphqlServer.options.authDecoder,
-          })
+          // This has to happen before Yoga consumes it, otherwise
+          // `buildRequestContext` would try to build the event from a
+          // `Request` that's already been consumed, which would throw.
+          const cedarContext = await graphqlServer.buildRequestContext(request)
 
           return await graphqlServer.yoga.handle(request, {
             request,
