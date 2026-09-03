@@ -18,11 +18,17 @@ const { cedarProjectPath, prismaConfigPath, libPath, functionsPath } =
     }
   })
 
-vi.mock('@cedarjs/cli-helpers', () => {
+vi.mock('@cedarjs/cli-helpers/project', () => {
   return {
     getGraphqlPath: () => {
       return cedarProjectPath + '/api/src/functions/graphql.ts'
     },
+    addEnvVarTask: () => {},
+  }
+})
+
+vi.mock('@cedarjs/cli-helpers/paths', () => {
+  return {
     getPaths: () => ({
       base: cedarProjectPath,
       api: {
@@ -31,6 +37,11 @@ vi.mock('@cedarjs/cli-helpers', () => {
         prismaConfig: prismaConfigPath,
       },
     }),
+  }
+})
+
+vi.mock('@cedarjs/cli-helpers/colors', () => {
+  return {
     colors: {
       error: (str: string) => str,
       warning: (str: string) => str,
@@ -39,7 +50,6 @@ vi.mock('@cedarjs/cli-helpers', () => {
       bold: (str: string) => str,
       underline: (str: string) => str,
     },
-    addEnvVarTask: () => {},
   }
 })
 

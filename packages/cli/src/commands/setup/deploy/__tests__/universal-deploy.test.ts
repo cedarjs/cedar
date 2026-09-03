@@ -217,17 +217,28 @@ async function setupHandlerTest(viteConfigContent: string) {
     getConfigPath: () => '/cedar-app/cedar.toml',
   }))
 
-  vi.doMock('@cedarjs/cli-helpers', async () => {
-    const cliHelpers = await vi.importActual('@cedarjs/cli-helpers')
+  vi.doMock('@cedarjs/cli-helpers/paths', () => ({
+    getPaths: () => ({
+      base: '/cedar-app',
+      web: { base: '/cedar-app/web' },
+      api: { base: '/cedar-app/api' },
+    }),
+  }))
+
+  vi.doMock('@cedarjs/cli-helpers/project', () => ({
+    isTypeScriptProject: () => true,
+  }))
+
+  vi.doMock('@cedarjs/cli-helpers/telemetry', () => ({
+    recordTelemetryAttributes: vi.fn(),
+  }))
+
+  vi.doMock('@cedarjs/cli-helpers/colors', async () => {
+    const cliHelpersColors = await vi.importActual(
+      '@cedarjs/cli-helpers/colors',
+    )
     return {
-      getPaths: () => ({
-        base: '/cedar-app',
-        web: { base: '/cedar-app/web' },
-        api: { base: '/cedar-app/api' },
-      }),
-      isTypeScriptProject: () => true,
-      recordTelemetryAttributes: vi.fn(),
-      colors: cliHelpers.colors,
+      colors: cliHelpersColors.colors,
     }
   })
 

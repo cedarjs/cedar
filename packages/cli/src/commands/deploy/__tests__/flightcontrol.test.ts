@@ -24,7 +24,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     }),
   }
 })
-vi.mock('@cedarjs/cli-helpers', async (importOriginal) => {
+vi.mock('@cedarjs/cli-helpers/telemetry', async (importOriginal) => {
   const originalCliHelpers: object = await importOriginal()
 
   return {
@@ -86,7 +86,8 @@ describe('handler', () => {
         dm: false,
       })
 
-      const { recordTelemetryAttributes } = await import('@cedarjs/cli-helpers')
+      const { recordTelemetryAttributes } =
+        await import('@cedarjs/cli-helpers/telemetry')
       expect(recordTelemetryAttributes).toHaveBeenCalled()
     })
 

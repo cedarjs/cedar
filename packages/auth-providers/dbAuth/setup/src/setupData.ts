@@ -1,8 +1,10 @@
 import crypto from 'node:crypto'
 import path from 'node:path'
 
-import { getPaths, colors, addEnvVarTask } from '@cedarjs/cli-helpers'
-import type { AuthGeneratorCtx } from '@cedarjs/cli-helpers'
+import type { AuthGeneratorCtx } from '@cedarjs/cli-helpers/auth/setupHelpers'
+import { colors } from '@cedarjs/cli-helpers/colors'
+import { getPaths } from '@cedarjs/cli-helpers/paths'
+import { addEnvVarTask } from '@cedarjs/cli-helpers/project'
 
 import { addModels, functionsPath, hasModel, libPath } from './shared.js'
 

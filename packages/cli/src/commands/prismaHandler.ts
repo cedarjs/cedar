@@ -2,13 +2,14 @@ import fs from 'node:fs'
 
 import boxen from 'boxen'
 
-import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { colors as c } from '@cedarjs/cli-helpers/colors'
 import {
   formatCedarCommand,
   formatRunBinCommand,
   formatRunTransitiveBinCommand,
 } from '@cedarjs/cli-helpers/packageManager/display'
 import { runTransitiveBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { getPaths } from '../lib/index.js'

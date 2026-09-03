@@ -32,7 +32,7 @@ vi.mock('node:fs', async (importOriginal) => {
   }
 })
 
-import type * as CliHelpers from '@cedarjs/cli-helpers'
+import type * as CliHelpersProject from '@cedarjs/cli-helpers/project'
 import { ensurePosixPath } from '@cedarjs/project-config'
 import type * as ProjectConfig from '@cedarjs/project-config'
 
@@ -58,8 +58,8 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
   }
 })
 
-vi.mock('@cedarjs/cli-helpers', async (importOriginal) => {
-  const originalCliHelpers = await importOriginal<typeof CliHelpers>()
+vi.mock('@cedarjs/cli-helpers/project', async (importOriginal) => {
+  const originalCliHelpers = await importOriginal<typeof CliHelpersProject>()
 
   return {
     ...originalCliHelpers,

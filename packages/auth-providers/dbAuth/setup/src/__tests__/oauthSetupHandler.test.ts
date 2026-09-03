@@ -12,8 +12,7 @@ import {
   expect,
 } from 'vitest'
 
-import type { AuthHandlerArgs } from '@cedarjs/cli-helpers'
-
+import type { AuthHandlerArgs } from '@cedarjs/cli-helpers/auth/setupHelpers'
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
 import { handler } from '../setupHandler'
@@ -50,15 +49,25 @@ vi.mock('../shared', () => ({
 // directly, in addition to the printed notes.
 let lastStandardAuthHandlerArgs: AuthHandlerArgs | undefined
 
-vi.mock('@cedarjs/cli-helpers', () => {
+vi.mock('@cedarjs/cli-helpers/project', () => {
   return {
     getGraphqlPath: () => {
       return cedarProjectPath + '/api/src/functions/graphql.ts'
     },
     addEnvVarTask: () => undefined,
+  }
+})
+
+vi.mock('@cedarjs/cli-helpers/paths', () => {
+  return {
     getPaths: () => ({
       base: cedarProjectPath,
     }),
+  }
+})
+
+vi.mock('@cedarjs/cli-helpers/colors', () => {
+  return {
     colors: {
       error: (str: string) => str,
       warning: (str: string) => str,
@@ -67,6 +76,11 @@ vi.mock('@cedarjs/cli-helpers', () => {
       bold: (str: string) => str,
       underline: (str: string) => str,
     },
+  }
+})
+
+vi.mock('@cedarjs/cli-helpers/auth/setupHelpers', () => {
+  return {
     standardAuthHandler: async (args: AuthHandlerArgs) => {
       lastStandardAuthHandlerArgs = args
 

@@ -5,16 +5,17 @@ import prismaInternals from '@prisma/internals'
 import { Listr } from 'listr2'
 import * as toml from 'smol-toml'
 
-import {
-  colors as c,
-  isTypeScriptProject,
-  getConfigPath,
-} from '@cedarjs/cli-helpers'
+import { colors as c } from '@cedarjs/cli-helpers/colors'
 import {
   formatCedarCommand,
   formatRunBinCommand,
 } from '@cedarjs/cli-helpers/packageManager/display'
-import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
+import { isTypeScriptProject } from '@cedarjs/cli-helpers/project'
+import {
+  getConfigPath,
+  getPaths,
+  getPrismaSchemas,
+} from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { printSetupNotes } from '../../../../lib/index.js'

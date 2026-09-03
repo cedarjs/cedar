@@ -1,7 +1,6 @@
 import type { Argv } from 'yargs'
 
-import { standardAuthBuilder } from '@cedarjs/cli-helpers'
-
+import { standardAuthBuilder } from '@cedarjs/cli-helpers/auth/setupHelpers'
 export const command = 'supertokens'
 export const description = 'Set up auth for for SuperTokens'
 

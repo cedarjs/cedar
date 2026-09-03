@@ -8,12 +8,13 @@ import { Listr } from 'listr2'
 import type { ListrTaskWrapper } from 'listr2'
 import pascalcase from 'pascalcase'
 
-import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import {
   addWorkspacePackages,
   removeWorkspacePackages,
 } from '@cedarjs/cli-helpers/packageManager/packages'
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { getConfig } from '@cedarjs/project-config'
 import { pluralize, singularize } from '@cedarjs/utils/cedarPluralize'

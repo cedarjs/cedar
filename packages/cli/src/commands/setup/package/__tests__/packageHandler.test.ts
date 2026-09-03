@@ -7,7 +7,7 @@ vi.mock('@cedarjs/project-config', () => {
     },
   }
 })
-vi.mock('@cedarjs/cli-helpers', () => {
+vi.mock('@cedarjs/cli-helpers/colors', () => {
   return {
     colors: Object.fromEntries(
       [
@@ -25,6 +25,10 @@ vi.mock('@cedarjs/cli-helpers', () => {
         'link',
       ].map((k) => [k, (s: string) => s]),
     ),
+  }
+})
+vi.mock('@cedarjs/cli-helpers/version', () => {
+  return {
     getCompatibilityData: vi.fn(() => {
       throw new Error('Mock Not Implemented')
     }),
@@ -65,8 +69,8 @@ import { vi, describe, beforeEach, afterEach, test, expect } from 'vitest'
 
 const mockEnq = enq as unknown as { Select: ReturnType<typeof vi.fn> }
 
-import { getCompatibilityData } from '@cedarjs/cli-helpers'
 import { dlx } from '@cedarjs/cli-helpers/packageManager/exec'
+import { getCompatibilityData } from '@cedarjs/cli-helpers/version'
 
 import { handler } from '../packageHandler.js'
 

@@ -5,11 +5,9 @@ import { Listr } from 'listr2'
 import { format } from 'prettier'
 import { terminalLink } from 'termi-link'
 
-import {
-  addApiPackages,
-  getPrettierOptions,
-  colors as c,
-} from '@cedarjs/cli-helpers'
+import { colors as c } from '@cedarjs/cli-helpers/colors'
+import { getPrettierOptions } from '@cedarjs/cli-helpers/fileHelpers'
+import { addApiPackages } from '@cedarjs/cli-helpers/installHelpers'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { errorTelemetry } from '@cedarjs/telemetry'
 

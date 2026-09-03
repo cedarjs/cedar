@@ -1,6 +1,6 @@
 import execa from 'execa'
 
-import { colors as c } from '@cedarjs/cli-helpers'
+import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { getPaths } from '@cedarjs/project-config'
 

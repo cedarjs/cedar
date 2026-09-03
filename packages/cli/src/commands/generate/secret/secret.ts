@@ -3,8 +3,7 @@ import crypto from 'node:crypto'
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 export const DEFAULT_LENGTH = 32
 
 export const generateSecret = (length = DEFAULT_LENGTH): string => {

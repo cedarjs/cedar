@@ -7,7 +7,7 @@ import envinfo from 'envinfo'
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { getConfigPath } from '@cedarjs/project-config'
 
 export const command = 'info'

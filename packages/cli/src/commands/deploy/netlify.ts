@@ -1,6 +1,6 @@
 import type { Argv } from 'yargs'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 
 // @ts-expect-error - no types for JS files
 import { deployBuilder } from './helpers/deployBuilder.js'

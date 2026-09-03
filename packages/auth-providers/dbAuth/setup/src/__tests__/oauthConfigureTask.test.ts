@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
-vi.mock('@cedarjs/cli-helpers', () => {
+vi.mock('@cedarjs/cli-helpers/paths', () => {
   return {
     getPaths: () => ({
       base: '/cedar-app',
@@ -15,7 +15,18 @@ vi.mock('@cedarjs/cli-helpers', () => {
         lib: '/cedar-app/api/src/lib',
       },
     }),
+  }
+})
+
+vi.mock('@cedarjs/cli-helpers/project', () => {
+  return {
     isTypeScriptProject: () => true,
+    addEnvVarTask: () => {},
+  }
+})
+
+vi.mock('@cedarjs/cli-helpers/colors', () => {
+  return {
     colors: {
       error: (str: string) => str,
       warning: (str: string) => str,
@@ -24,7 +35,6 @@ vi.mock('@cedarjs/cli-helpers', () => {
       bold: (str: string) => str,
       underline: (str: string) => str,
     },
-    addEnvVarTask: () => {},
   }
 })
 

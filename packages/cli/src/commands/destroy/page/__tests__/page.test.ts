@@ -13,7 +13,7 @@ import fs from 'node:fs'
 import { vol } from 'memfs'
 import { vi, beforeEach, afterEach, test, expect } from 'vitest'
 
-import type * as CliHelpers from '@cedarjs/cli-helpers'
+import type * as CliHelpersProject from '@cedarjs/cli-helpers/project'
 import type * as ProjectConfig from '@cedarjs/project-config'
 
 import '../../../../lib/mockTelemetry'
@@ -45,8 +45,8 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
   }
 })
 
-vi.mock('@cedarjs/cli-helpers', async (importOriginal) => {
-  const originalCliHelpers = await importOriginal<typeof CliHelpers>()
+vi.mock('@cedarjs/cli-helpers/project', async (importOriginal) => {
+  const originalCliHelpers = await importOriginal<typeof CliHelpersProject>()
 
   return {
     ...originalCliHelpers,
