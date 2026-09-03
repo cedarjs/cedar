@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import { Listr } from 'listr2'
 import { format } from 'prettier'
@@ -96,9 +97,10 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
   const ext = projectIsTypescript ? 'ts' : 'js'
   const componentExt = projectIsTypescript ? 'tsx' : 'jsx'
 
-  const packageJson = await import(path.join(paths.base, 'package.json'), {
-    with: { type: 'json' },
-  })
+  const packageJson = await import(
+    pathToFileURL(path.join(paths.base, 'package.json')).href,
+    { with: { type: 'json' } }
+  )
   const cedarVersion =
     packageJson.default.devDependencies['@cedarjs/core'] ?? 'latest'
 

@@ -92,15 +92,16 @@ export const createOrganization: MutationResolvers['createOrganization'] =
     // @requireAuth guarantees a signed-in user before this resolver runs.
     const userId = context.currentUser!.id
 
-    return db.$transaction(async (tx) => {
-      let slug = baseSlug
-      let attempt = 0
+    let slug = baseSlug
+    let attempt = 0
 
-      // Retry with a random suffix on a slug collision; two different
-      // organizations can share a display name.
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        try {
+    // Retry with a random suffix on a slug collision; two different
+    // organizations can share a display name. Each attempt runs in its own
+    // transaction so a P2002 on one slug does not abort the retry loop.
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      try {
+        return await db.$transaction(async (tx) => {
           const newOrganization = await tx.organization.create({
             data: { name: input.name, slug },
           })
@@ -114,20 +115,20 @@ export const createOrganization: MutationResolvers['createOrganization'] =
           })
 
           return newOrganization
-        } catch (e) {
-          const isUniqueSlugViolation =
-            e instanceof Prisma.PrismaClientKnownRequestError &&
-            e.code === 'P2002'
+        })
+      } catch (e) {
+        const isUniqueSlugViolation =
+          e instanceof Prisma.PrismaClientKnownRequestError &&
+          e.code === 'P2002'
 
-          if (!isUniqueSlugViolation || attempt >= 5) {
-            throw e
-          }
-
-          attempt += 1
-          slug = `${baseSlug}-${crypto.randomBytes(3).toString('hex')}`
+        if (!isUniqueSlugViolation || attempt >= 5) {
+          throw e
         }
+
+        attempt += 1
+        slug = `${baseSlug}-${crypto.randomBytes(3).toString('hex')}`
       }
-    })
+    }
   }
 
 /**

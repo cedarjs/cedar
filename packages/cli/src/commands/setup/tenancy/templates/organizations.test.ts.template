@@ -49,7 +49,7 @@ describe('organizations service', () => {
     "myMemberships returns the signed-in user's memberships",
     async (scenario: StandardScenario) => {
       setContext({
-        currentUser: asCurrentUser({ id: scenario.membership.owner.userId }),
+        currentUser: asCurrentUser({ id: scenario.membership.owner.userId! }),
       })
 
       const result = await myMemberships()

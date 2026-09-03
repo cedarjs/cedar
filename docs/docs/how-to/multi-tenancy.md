@@ -525,7 +525,6 @@ type Query {
 
 input CreateOrganizationInput {
   name: String!
-  slug: String!
 }
 
 input InviteMemberInput {
@@ -667,7 +666,7 @@ const Routes = () => {
   return (
     <Router>
       <Route path="/invite/{token}" page={InvitePage} name="invite" />
-      // highlight-next-line
+      {/* highlight-next-line */}
       <Set wrap={[OrgScope, OrgLayout]}>
         <Route
           path="/org/{orgSlug}/projects"

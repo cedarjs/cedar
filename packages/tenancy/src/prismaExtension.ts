@@ -284,6 +284,10 @@ const FRAMEWORK_MODELS = new Set(['RW_DataMigration'])
  * list or an `allExcept` list) against the runtime data model's PascalCase
  * model names, returning the set of tenant-owned PascalCase model names.
  * Framework-owned models (`FRAMEWORK_MODELS`) are left out of both forms.
+ *
+ * Throws for any configured name that does not match a runtime model, so a
+ * typo in `models` or `allExcept` stops the app at startup instead of
+ * silently leaving a model un-scoped.
  */
 function resolveTenantModelNames<TClient>(
   modelsConfig: TenancyConfig<TClient>['models'],
@@ -292,15 +296,34 @@ function resolveTenantModelNames<TClient>(
   const allModelNames = Object.keys(runtimeDataModel.models).filter(
     (name) => !FRAMEWORK_MODELS.has(name),
   )
+  const allAccessorNames = new Set(allModelNames.map(pascalToCamel))
 
   if (Array.isArray(modelsConfig)) {
     const configured = new Set(modelsConfig.map((name) => String(name)))
+    const unknown = [...configured].filter(
+      (name) => !allAccessorNames.has(name),
+    )
+    if (unknown.length > 0) {
+      throw new TenantScopeError(
+        `Unknown model${unknown.length > 1 ? 's' : ''} in tenancy ` +
+          `config.models: ${unknown.join(', ')}. Expected one of: ` +
+          `${[...allAccessorNames].join(', ')}.`,
+      )
+    }
     return new Set(
       allModelNames.filter((name) => configured.has(pascalToCamel(name))),
     )
   }
 
   const excluded = new Set(modelsConfig.allExcept.map((name) => String(name)))
+  const unknown = [...excluded].filter((name) => !allAccessorNames.has(name))
+  if (unknown.length > 0) {
+    throw new TenantScopeError(
+      `Unknown model${unknown.length > 1 ? 's' : ''} in tenancy ` +
+        `config.models.allExcept: ${unknown.join(', ')}. Expected one of: ` +
+        `${[...allAccessorNames].join(', ')}.`,
+    )
+  }
   return new Set(
     allModelNames.filter((name) => !excluded.has(pascalToCamel(name))),
   )
@@ -908,6 +931,20 @@ const FILTER_WHERE_OPERATIONS = new Set([
 ])
 
 /**
+ * Every model operation this extension supports. Operations outside this set
+ * (MongoDB's `findRaw`/`aggregateRaw`, and any operation Prisma adds later)
+ * are rejected rather than passed through un-scoped, since the extension has
+ * no way to know whether they honor the `where` clause it injects.
+ */
+const SUPPORTED_OPERATIONS = new Set([
+  ...UNIQUE_WHERE_OPERATIONS,
+  ...FILTER_WHERE_OPERATIONS,
+  'create',
+  'createMany',
+  'createManyAndReturn',
+])
+
+/**
  * Rewrites the arguments for one Prisma operation on `model`, per the
  * behavior table: top-level `where`/`data` injection when `model` is
  * tenant-owned, plus nested-write and `include`/`select` scoping that runs
@@ -919,6 +956,14 @@ function rewriteOperationArgs(
   operation: string,
   argsIn: unknown,
 ): UnknownRecord {
+  if (!SUPPORTED_OPERATIONS.has(operation)) {
+    throw new TenantScopeError(
+      `Operation '${operation}' is not supported on a tenant-scoped client. ` +
+        'Use db.$withoutTenant() for operations that intentionally bypass ' +
+        'tenant scoping.',
+    )
+  }
+
   const args: UnknownRecord = isPlainObject(argsIn) ? { ...argsIn } : {}
   const isTenantOwned = ctx.tenantModels.has(model)
 

@@ -94,3 +94,52 @@ describe('what the scope error says', () => {
     })
   })
 })
+
+describe('createTenancyExtension - model name validation', () => {
+  // The extension validates model names when it is applied (`$extends`), not
+  // when `createTenancyExtension` is called, because it needs the client's
+  // runtime data model to know which names are valid.
+  it('throws TenantScopeError for an unknown model in allExcept', () => {
+    expect(() =>
+      rawDb.$extends(
+        createTenancyExtension<typeof rawDb>({
+          models: {
+            allExcept: ['user', 'organization', 'membership', 'typo'],
+          },
+        }),
+      ),
+    ).toThrow(TenantScopeError)
+  })
+
+  it('lists the unknown model and valid options in the message', () => {
+    expect(() =>
+      rawDb.$extends(
+        createTenancyExtension<typeof rawDb>({
+          models: {
+            allExcept: ['user', 'organization', 'membership', 'typo'],
+          },
+        }),
+      ),
+    ).toThrow(/typo/)
+  })
+
+  it('throws TenantScopeError for an unknown model in an explicit models list', () => {
+    expect(() =>
+      rawDb.$extends(
+        createTenancyExtension<typeof rawDb>({
+          models: ['project', 'typo'],
+        }),
+      ),
+    ).toThrow(TenantScopeError)
+  })
+
+  it('accepts only valid model names', () => {
+    expect(() =>
+      rawDb.$extends(
+        createTenancyExtension<typeof rawDb>({
+          models: { allExcept: ['user', 'organization', 'membership', 'tag'] },
+        }),
+      ),
+    ).not.toThrow()
+  })
+})

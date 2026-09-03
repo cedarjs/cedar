@@ -113,6 +113,20 @@ describe('createTenancyExtension - reads', () => {
       expect(projects.map((p) => p.id)).toEqual(['p1'])
     })
   })
+
+  describe('unsupported operations', () => {
+    it('throws TenantScopeError for operations outside the supported set', async () => {
+      await expect(db.project.findRaw({})).rejects.toThrow(TenantScopeError)
+      await expect(db.project.findRaw({})).rejects.toThrow(/findRaw/)
+      await expect(db.project.findRaw({})).rejects.toThrow(/\$withoutTenant/)
+    })
+
+    it('points at $withoutTenant() for unsupported operations', async () => {
+      await expect(db.project.aggregateRaw({})).rejects.toThrow(
+        /\$withoutTenant\(\)/,
+      )
+    })
+  })
 })
 
 // A sibling process check: the raw base client (no extension) must still
