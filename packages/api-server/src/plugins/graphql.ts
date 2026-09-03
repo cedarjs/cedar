@@ -10,7 +10,6 @@ import type {
   HTTPMethods,
 } from 'fastify'
 
-import { buildCedarContext } from '@cedarjs/api/runtime'
 import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers.js'
@@ -87,9 +86,9 @@ export async function cedarFastifyGraphQLServer(
       method.push('PUT')
     }
 
-    const { yoga } = await createGraphQLYoga(graphqlOptions)
+    const graphqlServer = await createGraphQLYoga(graphqlOptions)
 
-    const graphqlEndpoint = trimSlashes(yoga.graphqlEndpoint)
+    const graphqlEndpoint = trimSlashes(graphqlServer.yoga.graphqlEndpoint)
 
     const routePaths = ['', '/health', '/readiness', '/stream']
     for (const routePath of routePaths) {
@@ -98,9 +97,7 @@ export async function cedarFastifyGraphQLServer(
         method,
         handler: async (req, reply) => {
           const request = createFetchRequest(req, reply)
-          const cedarContext = await buildCedarContext(request, {
-            authDecoder: graphqlOptions.authDecoder,
-          })
+          const cedarContext = await graphqlServer.buildRequestContext(request)
 
           // Phase 1 of transitional context bridge: pass both the Fetch-native
           // fields (request, cedarContext) and the legacy bridge fields
@@ -119,7 +116,7 @@ export async function cedarFastifyGraphQLServer(
           // connected. This is the fetch-native adapter pattern described in
           // the Universal Deploy integration plan.
           try {
-            return await yoga.handle(request, {
+            return await graphqlServer.yoga.handle(request, {
               request,
               cedarContext,
               event: lambdaEventForFastifyRequest(req),
