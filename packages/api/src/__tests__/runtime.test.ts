@@ -62,14 +62,16 @@ describe('buildCedarContext', () => {
     expect(ctx.query.getAll('tag')).toEqual(['cedar', 'framework'])
   })
 
-  // Resolving auth state parses the `Authorization` header, and consumers
-  // that always send `auth-provider` would get a 500 out of routes that don't
-  // use auth. The GraphQL server resolves auth state for its own requests.
-  it('never resolves auth state, even for a request carrying auth headers', async () => {
+  // Resolving auth state parses the `Authorization` header, which throws when
+  // the header is missing or malformed. A request that carries `auth-provider`
+  // without a well-formed `Authorization` header would then 500 on a route
+  // that doesn't use auth at all, which is what consumers that always send
+  // `auth-provider` ran into. The GraphQL server resolves auth state for its
+  // own requests. See https://github.com/cedarjs/cedar/pull/2270
+  it('never resolves auth state, even for a request carrying auth-provider', async () => {
     const request = new Request('http://localhost:8911/tokenFromApiKey', {
       headers: {
         'auth-provider': 'custom',
-        cookie: 'auth-provider=custom; session=token-123',
       },
     })
 

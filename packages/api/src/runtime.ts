@@ -105,9 +105,11 @@ export async function buildCedarContext(
   const params = options.params ?? {}
 
   // Auth state is deliberately not resolved here. Plain function routes never
-  // read it, and resolving it parses the `Authorization` header, which would
-  // turn a request carrying a stray `auth-provider` header into a 500 on a
-  // function that doesn't use auth at all.
+  // read it, and resolving it parses the `Authorization` header, which throws
+  // when that header is missing or malformed. A request carrying
+  // `auth-provider` without a well-formed `Authorization` header would then
+  // 500 on a function that doesn't use auth at all.
+  // See https://github.com/cedarjs/cedar/pull/2270
   return {
     params,
     query,
