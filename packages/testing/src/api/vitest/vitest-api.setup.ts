@@ -7,6 +7,8 @@ import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
 import { defineScenario } from '@cedarjs/testing/api'
 import type { DefineScenario } from '@cedarjs/testing/api'
 
+import { isHandledTeardownError } from './teardownErrors.js'
+
 // Attempt to emulate the request context isolation behavior
 // This is a little more complicated than it would necessarily need to be
 // but we're following the same pattern as in `@cedarjs/context`
@@ -71,12 +73,6 @@ globalThis.defineScenario = defineScenario
 
 const cedarPaths = getPaths()
 
-// Error codes thrown by the database driver when DELETE fails
-// 1451: MySQL FK constraint violation on DELETE
-// 1811: SQLite FK constraint violation on DELETE
-// 23001: PostgreSQL RESTRICT violation. PG 18+ strictly enforces this on DELETE
-// 23503: PostgreSQL FK constraint violation on DELETE
-const HANDLED_ERRORS = [1451, 1811, 23001, 23503]
 const TEARDOWN_CACHE_PATH = path.join(
   cedarPaths.generated.base,
   'scenarioTeardown.json',
@@ -229,9 +225,7 @@ async function teardown() {
       await projectDb.$executeRawUnsafe(query)
     } catch (e) {
       console.error('teardown error\n', e)
-      const match = isErrorWithMessage(e) && e.message.match(/Code: `(\d+)`/)
-
-      if (match && HANDLED_ERRORS.includes(parseInt(match[1]))) {
+      if (isHandledTeardownError(e)) {
         const index = teardownOrder.indexOf(modelName)
         teardownOrder[index] = null
         teardownOrder.push(modelName)
@@ -368,15 +362,6 @@ function isIdenticalArray(a: unknown[], b: unknown[]) {
 
 function deepCopy(obj: unknown[]) {
   return JSON.parse(JSON.stringify(obj))
-}
-
-function isErrorWithMessage(e: unknown): e is { message: string } {
-  return (
-    !!e &&
-    typeof e === 'object' &&
-    'message' in e &&
-    typeof e.message === 'string'
-  )
 }
 
 function isErrorWithCode(e: unknown): e is { code: string } {
