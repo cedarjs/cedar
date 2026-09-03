@@ -1,0 +1,45 @@
+import type { PrismaClient } from 'src/lib/db'
+
+import { ensureDefaultOrganization } from 'src/services/organizations/organizations'
+
+const BATCH_SIZE = 100
+
+/**
+ * Existing users have no organization until this runs once: `setup tenancy`
+ * only wires new signups (via the GraphQL `context` function and, for
+ * dbAuth, the signup handler). Every user without a membership gets one, in
+ * batches, using the same `ensureDefaultOrganization` new signups use.
+ *
+ * Run with `yarn cedar data-migrate up`, after `yarn cedar prisma migrate
+ * dev` has applied the `Organization`/`Membership` migration.
+ */
+export default async ({ db }: { db: PrismaClient }) => {
+  let cursor: string | undefined
+
+  for (;;) {
+    const users = await db.user.findMany({
+      take: BATCH_SIZE,
+      orderBy: { id: 'asc' },
+      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+      include: { memberships: { select: { id: true } } },
+    })
+
+    if (users.length === 0) {
+      break
+    }
+
+    for (const user of users) {
+      if (user.memberships.length === 0) {
+        await ensureDefaultOrganization({
+          currentUser: { id: user.id, memberships: [] },
+        })
+      }
+    }
+
+    cursor = users[users.length - 1].id
+
+    if (users.length < BATCH_SIZE) {
+      break
+    }
+  }
+}

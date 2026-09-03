@@ -1,0 +1,25 @@
+import { gql } from 'graphql-tag'
+
+import type { ValidatorDirectiveFunc } from '@cedarjs/graphql-server'
+import { createValidatorDirective } from '@cedarjs/graphql-server'
+
+import { requireMembership as applicationRequireMembership } from 'src/lib/auth'
+
+export const schema = gql`
+  """
+  Use to check whether or not the current user is a member of the current
+  organization, optionally restricted to a set of roles.
+  """
+  directive @requireMembership(roles: [String]) on FIELD_DEFINITION
+`
+
+type RequireMembershipValidate = ValidatorDirectiveFunc<{ roles?: string[] }>
+
+const validate: RequireMembershipValidate = ({ directiveArgs }) => {
+  const { roles } = directiveArgs
+  applicationRequireMembership({ roles })
+}
+
+const requireMembership = createValidatorDirective(schema, validate)
+
+export default requireMembership

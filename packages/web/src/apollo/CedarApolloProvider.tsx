@@ -1,6 +1,6 @@
 import React from 'react'
 
-import type { DocumentNode, setLogVerbosity } from '@apollo/client'
+import type { ApolloCache, DocumentNode, setLogVerbosity } from '@apollo/client'
 import { InMemoryCache } from '@apollo/client'
 
 import type { UseAuth } from '@cedarjs/auth'
@@ -45,17 +45,26 @@ export function CedarApolloProvider({
     fragmentRegistry.register(...fragments)
   }
 
-  const cache = new InMemoryCache({
-    fragments: fragmentRegistry,
-    possibleTypes: cacheConfig?.possibleTypes,
-    ...cacheConfig,
-  }).restore(globalThis?.__CEDAR__APOLLO_STATE ?? {})
+  // Shared by the app's own cache below and by every cache
+  // `useCreateApolloClient` builds, so every client (the app client and any
+  // per-organization client created from it) uses the same cache
+  // configuration and fragment registry.
+  const createCache = (): ApolloCache => {
+    return new InMemoryCache({
+      fragments: fragmentRegistry,
+      possibleTypes: cacheConfig?.possibleTypes,
+      ...cacheConfig,
+    })
+  }
+
+  const cache = createCache().restore(globalThis?.__CEDAR__APOLLO_STATE ?? {})
 
   return (
     <FetchConfigProvider useAuth={useAuth}>
       <ApolloProviderWithFetchConfig
         // This order so that the user can still completely overwrite the cache.
         config={{ cache, ...config }}
+        createCache={createCache}
         useAuth={useAuth}
         logLevel={logLevel}
       >

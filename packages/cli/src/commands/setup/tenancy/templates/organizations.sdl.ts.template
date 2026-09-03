@@ -1,0 +1,89 @@
+export const schema = gql`
+  type Organization {
+    id: String!
+    name: String!
+    slug: String!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+  }
+
+  type Membership {
+    id: String!
+    role: String!
+    userId: String
+    organizationId: String!
+    invitedById: String
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    organization: Organization!
+  }
+
+  """
+  inviteMember's result. invitationToken is deliberately not a Membership
+  field: Membership is readable by any member (myMemberships, removeMember),
+  and a selectable invitationToken there would let any member read a
+  pending invitation's token and claim it themselves. Invitation exists only
+  as inviteMember's return type, so the token reaches only the caller who
+  just created the invitation -- the one the generated flow expects to email
+  it onward.
+  """
+  type Invitation {
+    membership: Membership!
+    invitationToken: String!
+  }
+
+  input CreateOrganizationInput {
+    name: String!
+  }
+
+  input InviteMemberInput {
+    email: String!
+    role: String!
+  }
+
+  type Query {
+    "Every membership belonging to the signed-in user, across all organizations they belong to."
+    myMemberships: [Membership!]! @requireAuth
+
+    "The current organization, resolved by resolveCurrentOrg for this request."
+    organization(id: String!): Organization @requireMembership
+  }
+
+  type Mutation {
+    "Creates a new organization with the caller as its owner."
+    createOrganization(input: CreateOrganizationInput!): Organization!
+      @requireAuth
+
+    """
+    Creates a pending membership (an invitation) in the current organization,
+    for a role the caller's own role may grant (see ROLE_GRANTS in
+    organizations.ts) -- an admin can invite an admin or a member, but not an
+    owner. The app is responsible for emailing input.email a link built from
+    the returned invitationToken; Membership has no email column of its own.
+    Web callers must call reauthenticate() from useAuth() in onCompleted so
+    the invite shows up if the inviter is also the invitee.
+    """
+    inviteMember(input: InviteMemberInput!): Invitation!
+      @requireMembership(roles: ["owner", "admin"])
+
+    """
+    Attaches the pending membership matching token to the signed-in user, or
+    is a no-op if it is already attached to them. Throws if the token is
+    invalid or was already claimed by someone else.
+    Web callers must call reauthenticate() from useAuth() in onCompleted so
+    the new membership is reflected in currentUser.memberships.
+    """
+    acceptInvitation(token: String!): Organization! @requireAuth
+
+    """
+    Removes a membership from the current organization, for a role the
+    caller's own role may grant (the same rule inviteMember uses) -- an
+    admin can never remove an owner, and an organization's last owner can
+    never be removed.
+    Web callers must call reauthenticate() from useAuth() in onCompleted when
+    removing their own membership.
+    """
+    removeMember(membershipId: String!): Membership!
+      @requireMembership(roles: ["owner", "admin"])
+  }
+`

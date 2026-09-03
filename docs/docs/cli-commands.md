@@ -2135,6 +2135,22 @@ yarn cedar setup ui <library>
 | `library`           | Library to configure. Choices are `chakra-ui`, `tailwindcss`, and `mantine` |
 | `--force, -f`       | Overwrite existing configuration                                            |
 
+### setup tenancy
+
+Set up multi-tenancy: organizations, memberships, a tenant-scoped Prisma client
+extension, and the services, directive and web components an app needs to scope
+data by organization. See the [multi-tenancy how-to](how-to/multi-tenancy.md)
+for the full walkthrough.
+
+```
+yarn cedar setup tenancy
+```
+
+| Arguments & Options     | Description                                                              |
+| :---------------------- | :----------------------------------------------------------------------- |
+| `--tenant-field <name>` | Column name used to scope tenant-owned models. Default: `organizationId` |
+| `--force, -f`           | Overwrite existing configuration                                         |
+
 ## storybook
 
 Starts Storybook locally
