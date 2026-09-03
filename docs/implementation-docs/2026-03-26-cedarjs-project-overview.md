@@ -72,7 +72,9 @@
 │  <PrivateSet> → checks isAuthenticated, redirects if false  │
 └──────────────────────────────────────────────────────────────┘
 
-DECODER INTERFACE (all providers implement this):
+DECODER INTERFACE (all built-in providers implement this; optional for a
+custom provider with opaque tokens, whose getCurrentUser validates the raw
+token itself and receives decoded = null):
   (token: string, type: string, req: {event}) → Promise<decoded | null>
 
 PROVIDERS: dbAuth(cookie), Auth0/Clerk/SuperTokens(JWKS), Firebase(admin SDK),

@@ -1,7 +1,6 @@
 import type { Plugin } from 'graphql-yoga'
 
-import type { AuthContextPayload, Decoder } from '@cedarjs/api'
-import { hasAuthDecoder } from '@cedarjs/api'
+import type { AuthContextPayload } from '@cedarjs/api'
 
 import type { CedarGraphQLContext, GraphQLHandlerOptions } from '../types.js'
 
@@ -11,7 +10,6 @@ import type { CedarGraphQLContext, GraphQLHandlerOptions } from '../types.js'
  */
 export const useCedarAuthContext = (
   getCurrentUser: GraphQLHandlerOptions['getCurrentUser'],
-  authDecoder?: Decoder | Decoder[],
 ): Plugin<CedarGraphQLContext> => {
   return {
     async onContextBuilding({ context, extendContext }) {
@@ -22,14 +20,15 @@ export const useCedarAuthContext = (
       //
       // Every Cedar entry point builds a context. One that doesn't would serve
       // every request as unauthenticated, with nothing to show for it, so say
-      // so instead.
-      if (!context.cedarContext && hasAuthDecoder(authDecoder)) {
+      // so instead. `getCurrentUser` is the only thing that reads the auth
+      // state, so a server without one is left alone.
+      if (!context.cedarContext && getCurrentUser) {
         throw new Error(
           'Auth state is resolved when a request enters Cedar and passed on ' +
             'the GraphQL context, but this context has no `cedarContext`. ' +
-            'Whatever is invoking `yoga.handle` needs to build one with ' +
-            '`buildCedarContext` from `@cedarjs/api/runtime` and pass it as ' +
-            '`cedarContext`.',
+            'Whatever is invoking `yoga.handle` needs to build one with the ' +
+            '`buildRequestContext` returned by `createGraphQLYoga` and pass ' +
+            'it as `cedarContext`.',
         )
       }
 

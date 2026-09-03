@@ -1,10 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { AuthContextPayload, Decoder } from '@cedarjs/api'
+import type { AuthContextPayload } from '@cedarjs/api'
 
 import { useCedarAuthContext } from '../useCedarAuthContext.js'
-
-const authDecoder: Decoder = async (token: string) => ({ token })
 
 const MOCK_AUTH_CONTEXT_PAYLOAD: AuthContextPayload = [
   { sub: '1', email: 'ba@zin.ga' },
@@ -53,7 +51,7 @@ describe('useCedarAuthContext', () => {
     }
 
     const mockedGetCurrentUser = vi.fn().mockResolvedValue(mockUser)
-    const plugin = useCedarAuthContext(mockedGetCurrentUser, authDecoder)
+    const plugin = useCedarAuthContext(mockedGetCurrentUser)
     const onContextBuilding = plugin.onContextBuilding
 
     if (!onContextBuilding) {
@@ -90,7 +88,7 @@ describe('useCedarAuthContext', () => {
       .fn()
       .mockRejectedValue(new Error('Could not fetch user from db.'))
 
-    const plugin = useCedarAuthContext(mockedGetCurrentUser, authDecoder)
+    const plugin = useCedarAuthContext(mockedGetCurrentUser)
     const onContextBuilding = plugin.onContextBuilding
 
     if (!onContextBuilding) {
@@ -117,7 +115,7 @@ describe('useCedarAuthContext', () => {
 
   it('leaves the request unauthenticated when there is no auth state', async () => {
     const mockedGetCurrentUser = vi.fn()
-    const plugin = useCedarAuthContext(mockedGetCurrentUser, authDecoder)
+    const plugin = useCedarAuthContext(mockedGetCurrentUser)
     const onContextBuilding = plugin.onContextBuilding
 
     if (!onContextBuilding) {
@@ -140,8 +138,8 @@ describe('useCedarAuthContext', () => {
 
   // An entry point that doesn't build a context would otherwise serve every
   // request as unauthenticated, with nothing to show for it
-  it('throws when no cedarContext was built and auth is configured', async () => {
-    const plugin = useCedarAuthContext(vi.fn(), authDecoder)
+  it('throws when no cedarContext was built and getCurrentUser is configured', async () => {
+    const plugin = useCedarAuthContext(vi.fn())
     const onContextBuilding = plugin.onContextBuilding
 
     if (!onContextBuilding) {
@@ -159,31 +157,9 @@ describe('useCedarAuthContext', () => {
     ).rejects.toThrow(/no `cedarContext`/)
   })
 
-  // `buildCedarContext` treats an empty decoder array as no auth configured,
-  // so this guard has to agree — otherwise it throws on a setup that never had
-  // auth state to resolve in the first place
-  it('does not throw without a cedarContext for an empty decoder array', async () => {
-    const plugin = useCedarAuthContext(vi.fn(), [])
-    const onContextBuilding = plugin.onContextBuilding
-
-    if (!onContextBuilding) {
-      throw new Error('Expected onContextBuilding hook to be defined')
-    }
-
-    const extendContext = vi.fn()
-
-    await onContextBuilding({
-      context: contextWithoutCedarContext,
-      extendContext,
-      breakContextBuilding() {
-        return undefined
-      },
-    })
-
-    expect(extendContext).not.toHaveBeenCalled()
-  })
-
-  it('does not throw without a cedarContext when auth is not configured', async () => {
+  // `getCurrentUser` is the only consumer of auth state, so a server without
+  // one never had any to resolve in the first place
+  it('does not throw without a cedarContext when getCurrentUser is not configured', async () => {
     const plugin = useCedarAuthContext(undefined)
     const onContextBuilding = plugin.onContextBuilding
 

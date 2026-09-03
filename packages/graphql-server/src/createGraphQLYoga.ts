@@ -8,7 +8,11 @@ import {
   createYoga,
   useExecutionCancellation,
 } from 'graphql-yoga'
-import type { Plugin } from 'graphql-yoga'
+import type { Plugin, YogaServerInstance } from 'graphql-yoga'
+
+import type { Logger } from '@cedarjs/api/logger'
+import { buildCedarContext } from '@cedarjs/api/runtime'
+import type { CedarRequestContext } from '@cedarjs/api/runtime'
 
 import { mapRwCorsOptionsToYoga } from './cors.js'
 import { makeDirectivesForPlugin } from './directives/makeDirectives.js'
@@ -30,9 +34,36 @@ import type {
   UseCedarDirectiveReturn,
   DirectivePluginOptions,
 } from './plugins/useRedwoodDirective.js'
+import { resolveServerAuthState } from './serverAuthState.js'
 import { makeSubscriptions } from './subscriptions/makeSubscriptions.js'
 import type { CedarSubscription } from './subscriptions/makeSubscriptions.js'
 import type { GraphQLYogaOptions, CedarGraphQLContext } from './types.js'
+
+/**
+ * The server context Yoga is created with. The Fastify entry point adds the
+ * request and reply it's handling; every entry point adds `cedarContext`.
+ */
+type CedarYogaServerContext = {
+  req: FastifyRequest
+  reply: FastifyReply
+} & CedarGraphQLContext
+
+/**
+ * A configured Cedar GraphQL server: the Yoga instance, the logger it logs
+ * with, and the builder for the request context `yoga.handle` needs to be
+ * given. They belong together: the context the builder produces carries the
+ * auth state that this instance's plugins read.
+ */
+export interface CedarGraphQLServer {
+  yoga: YogaServerInstance<CedarYogaServerContext, Record<string, never>>
+  logger: Logger
+  /**
+   * Builds the `cedarContext` to hand `yoga.handle` for a request, with the
+   * auth state this server's `getCurrentUser` needs already resolved. Call
+   * it before `yoga.handle`, which reads the request body.
+   */
+  buildRequestContext: (request: Request) => Promise<CedarRequestContext>
+}
 
 export const createGraphQLYoga = async ({
   healthCheckId = 'yoga',
@@ -58,7 +89,7 @@ export const createGraphQLYoga = async ({
   trustedDocuments,
   openTelemetryOptions,
   includeScalars,
-}: GraphQLYogaOptions) => {
+}: GraphQLYogaOptions): Promise<CedarGraphQLServer> => {
   let schema: GraphQLSchema
   let cedarDirectivePlugins: Plugin[] = []
   const logger = loggerConfig.logger
@@ -134,7 +165,7 @@ export const createGraphQLYoga = async ({
     }
 
     // Custom Cedar plugins
-    plugins.push(useCedarAuthContext(getCurrentUser, authDecoder))
+    plugins.push(useCedarAuthContext(getCurrentUser))
     plugins.push(useCedarGlobalContextSetter())
 
     if (context) {
@@ -207,12 +238,7 @@ export const createGraphQLYoga = async ({
     // so can process any data added to results and extensions
     plugins.push(useCedarLogger(loggerConfig))
 
-    const yoga = createYoga<
-      {
-        req: FastifyRequest
-        reply: FastifyReply
-      } & CedarGraphQLContext
-    >({
+    const yoga = createYoga<CedarYogaServerContext>({
       id: healthCheckId,
       landingPage: isDevEnv,
       schema,
@@ -234,7 +260,21 @@ export const createGraphQLYoga = async ({
       },
     })
 
-    return { yoga, logger }
+    const buildRequestContext = async (
+      request: Request,
+    ): Promise<CedarRequestContext> => {
+      const cedarContext = await buildCedarContext(request)
+
+      return {
+        ...cedarContext,
+        serverAuthState: await resolveServerAuthState(
+          { authDecoder, getCurrentUser },
+          request,
+        ),
+      }
+    }
+
+    return { yoga, logger, buildRequestContext }
   } catch (e) {
     if (onException) {
       onException()
