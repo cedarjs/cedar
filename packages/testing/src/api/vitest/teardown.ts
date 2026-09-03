@@ -45,15 +45,16 @@ export function isHandledTeardownError(e: unknown): boolean {
  *
  * A table that cannot be emptied in any order (a trigger that aborts the
  * delete, or a foreign key no ordering satisfies) would otherwise be deferred
- * forever, since deferring appends to the order being walked. One full pass
- * that empties nothing means no order works, so the driver's error is raised
- * instead.
+ * forever, since deferring appends to the order being walked. Deferring every
+ * table still waiting without emptying one means no order works, so the
+ * driver's error is raised instead.
  */
 export async function emptyTablesInWorkingOrder(
   order: string[],
   emptyTable: (modelName: string) => Promise<unknown>,
 ): Promise<string[]> {
   const remaining: (string | null)[] = [...order]
+  let pendingCount = remaining.length
   let deferralsSinceLastEmptied = 0
 
   for (const modelName of remaining) {
@@ -63,11 +64,10 @@ export async function emptyTablesInWorkingOrder(
 
     try {
       await emptyTable(modelName)
+      pendingCount--
       deferralsSinceLastEmptied = 0
     } catch (e) {
       console.error('teardown error\n', e)
-
-      const pendingCount = remaining.filter((name) => name !== null).length
 
       if (
         !isHandledTeardownError(e) ||

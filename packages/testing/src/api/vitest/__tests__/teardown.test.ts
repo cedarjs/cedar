@@ -132,7 +132,10 @@ describe('emptyTablesInWorkingOrder', () => {
     )
 
     await expect(run).rejects.toMatchObject({ code: 'P2010' })
-    expect(attempts).toBeLessThan(30)
+    // Four tables deferred once each, then three of them empty on their
+    // second attempt, then `Blocked` is deferred once more per table still
+    // waiting and raises on the attempt after that.
+    expect(attempts).toBe(10)
   })
 
   it('raises an error that no reordering can fix straight away', async () => {
