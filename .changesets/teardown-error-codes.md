@@ -12,4 +12,10 @@ SQLite project whose models need a teardown order different from their schema
 order would otherwise fail with a raw `FOREIGN KEY constraint failed` error from
 the first test file that seeded a scenario.
 
-The check lives in its own module now, so it has unit tests.
+Deferring is also bounded now. A table that no ordering can empty, such as one
+whose delete a trigger aborts, was appended to the order being walked and
+retried forever, hanging the test run with no error to show for it. One full
+pass that empties nothing now raises the driver's error instead.
+
+Both the error check and the ordering live in their own module now, so they
+have unit tests.

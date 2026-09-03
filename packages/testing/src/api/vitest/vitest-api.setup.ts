@@ -7,7 +7,7 @@ import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
 import { defineScenario } from '@cedarjs/testing/api'
 import type { DefineScenario } from '@cedarjs/testing/api'
 
-import { isHandledTeardownError } from './teardownErrors.js'
+import { emptyTablesInWorkingOrder } from './teardown.js'
 
 // Attempt to emulate the request context isolation behavior
 // This is a little more complicated than it would necessarily need to be
@@ -78,7 +78,7 @@ const TEARDOWN_CACHE_PATH = path.join(
   'scenarioTeardown.json',
 )
 const DEFAULT_SCENARIO = 'standard'
-let teardownOrder: (string | null)[] = []
+let teardownOrder: string[] = []
 let originalTeardownOrder: string[] = []
 
 type It = typeof it | typeof it.only
@@ -219,24 +219,11 @@ async function teardown() {
   const quoteStyle = await getQuoteStyle()
   const projectDb = await getProjectDb()
 
-  for (const modelName of teardownOrder) {
-    try {
-      const query = `DELETE FROM ${quoteStyle}${modelName}${quoteStyle}`
-      await projectDb.$executeRawUnsafe(query)
-    } catch (e) {
-      console.error('teardown error\n', e)
-      if (isHandledTeardownError(e)) {
-        const index = teardownOrder.indexOf(modelName)
-        teardownOrder[index] = null
-        teardownOrder.push(modelName)
-      } else {
-        throw e
-      }
-    }
-  }
-
-  // remove nulls
-  teardownOrder = teardownOrder.filter((val) => val)
+  teardownOrder = await emptyTablesInWorkingOrder(teardownOrder, (modelName) =>
+    projectDb.$executeRawUnsafe(
+      `DELETE FROM ${quoteStyle}${modelName}${quoteStyle}`,
+    ),
+  )
 
   // if the order of delete changed, write out the cached file again
   if (!isIdenticalArray(teardownOrder, originalTeardownOrder)) {
