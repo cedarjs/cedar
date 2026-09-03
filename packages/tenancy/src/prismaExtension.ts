@@ -1,5 +1,8 @@
 import { Prisma as PrismaExtension } from '@prisma/client/extension'
 
+import { context } from '@cedarjs/context'
+import { getAsyncStoreInstance } from '@cedarjs/context/dist/store.js'
+
 import { getCurrentOrg } from './context.js'
 import { TenantScopeError } from './errors.js'
 
@@ -315,13 +318,41 @@ interface RewriteContext {
   getTenantId: () => string | undefined
 }
 
+/**
+ * A query on a tenant-owned model with nothing in scope means one of three
+ * things, and the way out differs for each, so the message says which one
+ * this is rather than listing all three every time. What separates them is
+ * how much request state there is: no request context at all, a request with
+ * nobody signed in, or a signed-in user whose request named no organization.
+ */
 function tenantScopeError(model: string): TenantScopeError {
+  const inRequest = getAsyncStoreInstance().getStore() !== undefined
+
+  if (!inRequest) {
+    return new TenantScopeError(
+      `"${model}" is tenant-owned, and this code is running outside a ` +
+        'request, so there is no organization in scope. Use ' +
+        '`db.$forOrg(organizationId)` when the organization is known (a job ' +
+        'or a webhook), or `db.$withoutTenant()` when the code works across ' +
+        'organizations on purpose (a seed, a data migration, an admin task).',
+    )
+  }
+
+  if (!context.currentUser) {
+    return new TenantScopeError(
+      `"${model}" is tenant-owned, and this request has nobody signed in, ` +
+        "so no organization was resolved for it. Read one organization's " +
+        'data for an anonymous visitor with `db.$forOrg(organizationId)`, ' +
+        'which names the organization explicitly.',
+    )
+  }
+
   return new TenantScopeError(
-    `"${model}" is a tenant-owned model, and no organization is in scope ` +
-      'for this request. Use `db.$forOrg(organizationId)` for code that ' +
-      'knows the organization but runs outside a request (jobs, scripts), ' +
-      'or `db.$withoutTenant()` for code that intentionally reads or ' +
-      'writes across organizations.',
+    `"${model}" is tenant-owned, and the signed-in user has no organization ` +
+      'in scope for this request. Either the request carried no `cedar-org` ' +
+      'header, which queries made outside `OrgScope` and functions not ' +
+      'wrapped in `withTenancy` do not, or the user has no membership yet ' +
+      'and needs one before they can read tenant-owned data.',
   )
 }
 

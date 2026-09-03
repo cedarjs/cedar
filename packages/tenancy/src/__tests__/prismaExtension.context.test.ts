@@ -54,3 +54,43 @@ describe('createTenancyExtension - default getTenantId via @cedarjs/context', ()
     )
   })
 })
+
+describe('what the scope error says', () => {
+  beforeEach(async () => {
+    await resetTestDb()
+  })
+
+  it('points a job or script at the escape hatches', async () => {
+    // No async store at all: this is a job, a script or a seed.
+    await expect(contextScopedDb.project.findMany()).rejects.toThrow(
+      /running outside a request/,
+    )
+    await expect(contextScopedDb.project.findMany()).rejects.toThrow(
+      /\$withoutTenant/,
+    )
+  })
+
+  it('tells an anonymous request to name the organization', async () => {
+    await getAsyncStoreInstance().run(new Map(), async () => {
+      setContext({})
+
+      await expect(contextScopedDb.project.findMany()).rejects.toThrow(
+        /nobody signed in/,
+      )
+    })
+  })
+
+  it('tells a signed-in request what is missing', async () => {
+    await getAsyncStoreInstance().run(new Map(), async () => {
+      setContext({ currentUser: { id: 'u1', memberships: [] } })
+
+      const error = await contextScopedDb.project
+        .findMany()
+        .catch((e: unknown) => e)
+
+      expect(String(error)).toMatch(/signed-in user has no organization/)
+      expect(String(error)).toMatch(/cedar-org/)
+      expect(String(error)).toMatch(/no membership yet/)
+    })
+  })
+})
