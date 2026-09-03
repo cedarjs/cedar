@@ -337,10 +337,18 @@ async function getQuoteStyle() {
   return quoteStyle
 }
 
+/**
+ * The project's `db`, with tenant scoping removed when the project has
+ * `@cedarjs/tenancy` set up. Scenario seeding and teardown write across every
+ * organization and use raw SQL, neither of which a tenant-scoped client
+ * allows. They are fixture setup rather than request handling, which is what
+ * `$withoutTenant()` exists for.
+ */
 async function getProjectDb() {
   const libDb = await import(`${cedarPaths.api.lib}/db`)
+  const db = libDb.db
 
-  return libDb.db
+  return typeof db?.$withoutTenant === 'function' ? db.$withoutTenant() : db
 }
 
 function isIdenticalArray(a: unknown[], b: unknown[]) {

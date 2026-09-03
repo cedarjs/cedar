@@ -1,0 +1,389 @@
+import { setContext } from '@cedarjs/context'
+
+import { db } from 'src/lib/db'
+
+import {
+  myMemberships,
+  organization,
+  inviteMember,
+  acceptInvitation,
+  removeMember,
+  ensureDefaultOrganization,
+} from './organizations.js'
+import type { StandardScenario } from './organizations.scenarios.js'
+
+// Generated boilerplate tests do not account for all circumstances and can
+// fail without adjustments, e.g. a `User` model shaped by a different auth
+// provider than the dbAuth one this scenario assumes. Please refer to the
+// CedarJS Testing Docs:
+//       https://cedarjs.com/docs/testing#testing-services
+
+/**
+ * `context.currentUser` is typed from this app's `getCurrentUser`, which
+ * selects more fields than these tests need.
+ */
+const asCurrentUser = (user: { id: string; memberships?: unknown[] }) =>
+  user as unknown as typeof context.currentUser
+
+/**
+ * Sets `context.currentUser` and `context.currentOrg` the way the GraphQL
+ * `context` function does for an authenticated, in-organization request.
+ */
+const asMember = (
+  scenario: StandardScenario,
+  membership: { id: string; userId: string | null; role: string },
+) => {
+  setContext({
+    currentUser: asCurrentUser({ id: membership.userId! }),
+    currentOrg: {
+      id: scenario.organization.acme.id,
+      slug: scenario.organization.acme.slug,
+      role: membership.role,
+      membershipId: membership.id,
+    },
+  })
+}
+
+describe('organizations service', () => {
+  scenario(
+    "myMemberships returns the signed-in user's memberships",
+    async (scenario: StandardScenario) => {
+      setContext({
+        currentUser: asCurrentUser({ id: scenario.membership.owner.userId! }),
+      })
+
+      const result = await myMemberships()
+
+      expect(result).toHaveLength(1)
+      expect(result[0]).toMatchObject({ id: scenario.membership.owner.id })
+    },
+  )
+
+  scenario(
+    'organization returns the current organization',
+    async (scenario: StandardScenario) => {
+      asMember(scenario, scenario.membership.owner)
+
+      const result = await organization({ id: scenario.organization.acme.id })
+
+      expect(result?.id).toEqual(scenario.organization.acme.id)
+    },
+  )
+
+  scenario(
+    'organization refuses an id other than the current organization',
+    async (scenario: StandardScenario) => {
+      asMember(scenario, scenario.membership.owner)
+
+      await expect(organization({ id: 'some-other-org' })).rejects.toThrow()
+    },
+  )
+
+  describe('inviteMember', () => {
+    scenario(
+      'an owner can invite a member',
+      async (scenario: StandardScenario) => {
+        asMember(scenario, scenario.membership.owner)
+
+        const result = await inviteMember({
+          input: { email: 'new-member@example.com', role: 'member' },
+        })
+
+        expect(result.invitationToken).toBeTruthy()
+
+        // `Invitation.membership` is resolver-backed like any relation
+        // field, so its generated type allows a promise; read the row back
+        // from `db` instead of asserting on `result.membership` directly.
+        const created = await db.membership.findFirst({
+          where: { invitedById: scenario.membership.owner.id },
+        })
+
+        expect(created?.role).toEqual('member')
+        expect(created?.invitationToken).toEqual(result.invitationToken)
+      },
+    )
+
+    scenario(
+      'an admin cannot invite an owner',
+      async (scenario: StandardScenario) => {
+        asMember(scenario, scenario.membership.admin)
+
+        await expect(
+          inviteMember({
+            input: { email: 'new-owner@example.com', role: 'owner' },
+          }),
+        ).rejects.toThrow()
+      },
+    )
+
+    scenario(
+      'an unknown role is rejected',
+      async (scenario: StandardScenario) => {
+        asMember(scenario, scenario.membership.owner)
+
+        await expect(
+          inviteMember({
+            input: { email: 'typo@example.com', role: 'superadmin' },
+          }),
+        ).rejects.toThrow()
+      },
+    )
+  })
+
+  describe('removeMember', () => {
+    scenario(
+      'an owner can remove an admin',
+      async (scenario: StandardScenario) => {
+        asMember(scenario, scenario.membership.owner)
+
+        await removeMember({ membershipId: scenario.membership.admin.id })
+
+        const remaining = await db.membership.findUnique({
+          where: { id: scenario.membership.admin.id },
+        })
+
+        expect(remaining).toBeNull()
+      },
+    )
+
+    scenario(
+      'an admin cannot remove an owner',
+      async (scenario: StandardScenario) => {
+        asMember(scenario, scenario.membership.admin)
+
+        await expect(
+          removeMember({ membershipId: scenario.membership.owner.id }),
+        ).rejects.toThrow()
+      },
+    )
+
+    scenario(
+      "the organization's last owner cannot be removed",
+      async (scenario: StandardScenario) => {
+        asMember(scenario, scenario.membership.owner)
+
+        await expect(
+          removeMember({ membershipId: scenario.membership.owner.id }),
+        ).rejects.toThrow()
+      },
+    )
+
+    scenario(
+      'an unclaimed owner invitation does not count as the remaining owner',
+      async (scenario: StandardScenario) => {
+        asMember(scenario, scenario.membership.owner)
+
+        // Nobody has accepted this one yet, so it leaves the organization
+        // with no owner who can administer it.
+        await db.membership.create({
+          data: {
+            role: 'owner',
+            organizationId: scenario.organization.acme.id,
+            invitationToken: 'pending-owner-token',
+          },
+        })
+
+        await expect(
+          removeMember({ membershipId: scenario.membership.owner.id }),
+        ).rejects.toThrow()
+      },
+    )
+
+    scenario(
+      'an owner can be removed once another owner has accepted',
+      async (scenario: StandardScenario) => {
+        asMember(scenario, scenario.membership.owner)
+
+        const second = await db.user.create({
+          data: {
+            email: 'second-owner@example.com',
+            hashedPassword: 'x',
+            salt: 'x',
+            fullName: 'Second Owner',
+          },
+        })
+        await db.membership.create({
+          data: {
+            role: 'owner',
+            organizationId: scenario.organization.acme.id,
+            userId: second.id,
+          },
+        })
+
+        const result = await removeMember({
+          membershipId: scenario.membership.owner.id,
+        })
+
+        expect(result.id).toEqual(scenario.membership.owner.id)
+        await expect(
+          db.membership.findUnique({
+            where: { id: scenario.membership.owner.id },
+          }),
+        ).resolves.toBeNull()
+      },
+    )
+  })
+
+  describe('acceptInvitation', () => {
+    scenario(
+      'attaches a pending invitation to the signed-in user',
+      async (scenario: StandardScenario) => {
+        const invitee = await db.user.create({
+          data: {
+            email: 'invitee@example.com',
+            hashedPassword: 'x',
+            salt: 'x',
+            fullName: 'Invitee',
+          },
+        })
+
+        setContext({ currentUser: asCurrentUser({ id: invitee.id }) })
+
+        const result = await acceptInvitation({
+          token: scenario.membership.pending.invitationToken!,
+        })
+
+        expect(result.id).toEqual(scenario.organization.acme.id)
+      },
+    )
+
+    scenario(
+      'a repeat call from the same user still succeeds',
+      async (scenario: StandardScenario) => {
+        const invitee = await db.user.create({
+          data: {
+            email: 'invitee@example.com',
+            hashedPassword: 'x',
+            salt: 'x',
+            fullName: 'Invitee',
+          },
+        })
+
+        setContext({ currentUser: asCurrentUser({ id: invitee.id }) })
+
+        const token = scenario.membership.pending.invitationToken!
+
+        const first = await acceptInvitation({ token })
+        const second = await acceptInvitation({ token })
+
+        expect(second.id).toEqual(first.id)
+      },
+    )
+
+    scenario(
+      'a second user cannot claim an already-claimed token',
+      async (scenario: StandardScenario) => {
+        const firstUser = await db.user.create({
+          data: {
+            email: 'first@example.com',
+            hashedPassword: 'x',
+            salt: 'x',
+            fullName: 'First User',
+          },
+        })
+        const secondUser = await db.user.create({
+          data: {
+            email: 'second@example.com',
+            hashedPassword: 'x',
+            salt: 'x',
+            fullName: 'Second User',
+          },
+        })
+
+        const token = scenario.membership.pending.invitationToken!
+
+        setContext({ currentUser: asCurrentUser({ id: firstUser.id }) })
+        await acceptInvitation({ token })
+
+        setContext({ currentUser: asCurrentUser({ id: secondUser.id }) })
+        await expect(acceptInvitation({ token })).rejects.toThrow()
+      },
+    )
+
+    scenario(
+      'clears the invitation token once claimed',
+      async (scenario: StandardScenario) => {
+        const invitee = await db.user.create({
+          data: {
+            email: 'invitee@example.com',
+            hashedPassword: 'x',
+            salt: 'x',
+            fullName: 'Invitee',
+          },
+        })
+
+        const token = scenario.membership.pending.invitationToken!
+
+        setContext({ currentUser: asCurrentUser({ id: invitee.id }) })
+        await acceptInvitation({ token })
+
+        const claimed = await db.membership.findUnique({
+          where: { id: scenario.membership.pending.id },
+        })
+
+        expect(claimed?.userId).toEqual(invitee.id)
+        expect(claimed?.invitationToken).not.toEqual(token)
+      },
+    )
+
+    it('rejects a token that never matched a pending invitation', async () => {
+      setContext({ currentUser: asCurrentUser({ id: 'some-user-id' }) })
+
+      await expect(
+        acceptInvitation({ token: 'not-a-real-token' }),
+      ).rejects.toThrow()
+    })
+  })
+
+  it('ensureDefaultOrganization is idempotent when the user already has memberships', async () => {
+    const existingMemberships = [
+      { id: 'membership-1', organizationId: 'org-1', role: 'owner' },
+    ]
+
+    const result = await ensureDefaultOrganization({
+      currentUser: { id: 'user-1', memberships: existingMemberships },
+    })
+
+    expect(result).toBe(existingMemberships)
+  })
+
+  scenario(
+    'ensureDefaultOrganization attaches a pending invitation',
+    async (scenario: StandardScenario) => {
+      const invitee = await db.user.create({
+        data: {
+          email: 'invitee@example.com',
+          hashedPassword: 'x',
+          salt: 'x',
+          fullName: 'Invitee',
+        },
+      })
+
+      const result = await ensureDefaultOrganization({
+        currentUser: { id: invitee.id, memberships: [] },
+        invitationToken: scenario.membership.pending.invitationToken,
+      })
+
+      expect(result).toHaveLength(1)
+      expect(result[0].organizationId).toEqual(scenario.organization.acme.id)
+    },
+  )
+
+  it('ensureDefaultOrganization creates a new organization when there is no invitation', async () => {
+    const newUser = await db.user.create({
+      data: {
+        email: 'brand-new@example.com',
+        hashedPassword: 'x',
+        salt: 'x',
+        fullName: 'Brand New',
+      },
+    })
+
+    const result = await ensureDefaultOrganization({
+      currentUser: { id: newUser.id, memberships: [] },
+    })
+
+    expect(result).toHaveLength(1)
+    expect(result[0].role).toEqual('owner')
+  })
+})

@@ -20,6 +20,8 @@ import { useNoAuth } from '@cedarjs/auth'
 import { UploadHttpLink } from '../bundled/apollo-upload-client.js'
 import { useFetchConfig } from '../components/FetchConfigProvider.js'
 
+import type { CreateApolloClientOptions } from './ApolloClientFactoryContext.js'
+import { ApolloClientFactoryContext } from './ApolloClientFactoryContext.js'
 import type {
   CedarApolloLinks,
   GraphQLClientConfigProp,
@@ -63,6 +65,12 @@ interface Props {
   config: Omit<GraphQLClientConfigProp, 'cacheConfig' | 'cache'> & {
     cache: ApolloCache
   }
+  /**
+   * Builds a fresh cache from the same cache configuration and fragment
+   * registry as `config.cache`. Used to give every client
+   * `useCreateApolloClient` creates its own cache.
+   */
+  createCache: () => ApolloCache
   useAuth?: UseAuth
   logLevel: ReturnType<typeof setLogVerbosity>
   children: React.ReactNode
@@ -70,6 +78,7 @@ interface Props {
 
 export function ApolloProviderWithFetchConfig({
   config,
+  createCache,
   children,
   useAuth = useNoAuth,
   logLevel,
@@ -205,29 +214,53 @@ export function ApolloProviderWithFetchConfig({
     link = link(cedarApolloLinks)
   }
 
-  const client = new ApolloClient({
-    // Default options for every Cell. Better to specify them here than in
-    // `beforeQuery` where it's too easy to overwrite them.
-    // See https://www.apollographql.com/docs/react/api/core/ApolloClient/#example-defaultoptions-object.
-    defaultOptions: {
-      watchQuery: {
-        // The `fetchPolicy` we expect:
-        //
-        // > Apollo Client executes the full query against both the cache and
-        // > your GraphQL server.
-        // > The query automatically updates if the result of the server-side
-        // > query modifies cached fields.
-        //
-        // See https://www.apollographql.com/docs/react/data/queries/#cache-and-network.
-        fetchPolicy: 'cache-and-network',
-        // So that Cells rerender when refetching.
-        // See https://www.apollographql.com/docs/react/data/queries/#inspecting-loading-states.
-        notifyOnNetworkStatusChange: true,
-      },
+  // Default options for every Cell. Better to specify them here than in
+  // `beforeQuery` where it's too easy to overwrite them.
+  // See https://www.apollographql.com/docs/react/api/core/ApolloClient/#example-defaultoptions-object.
+  const defaultOptions: ApolloClient.Options['defaultOptions'] = {
+    watchQuery: {
+      // The `fetchPolicy` we expect:
+      //
+      // > Apollo Client executes the full query against both the cache and
+      // > your GraphQL server.
+      // > The query automatically updates if the result of the server-side
+      // > query modifies cached fields.
+      //
+      // See https://www.apollographql.com/docs/react/data/queries/#cache-and-network.
+      fetchPolicy: 'cache-and-network',
+      // So that Cells rerender when refetching.
+      // See https://www.apollographql.com/docs/react/data/queries/#inspecting-loading-states.
+      notifyOnNetworkStatusChange: true,
     },
+  }
+
+  const client = new ApolloClient({
+    defaultOptions,
     link,
     ...rest,
   })
+
+  // Builds a client with the same link chain, `defaultOptions` and client
+  // config as `client` above, but with a fresh cache and, when given, extra
+  // headers on every operation. `authMiddleware` spreads
+  // `...operation.getContext().headers` before it sets its own headers, so
+  // the headers this link sets survive the rest of the chain.
+  const createApolloClient = (
+    options?: CreateApolloClientOptions,
+  ): ApolloClient => {
+    const extraHeaders = options?.headers
+
+    const withExtraHeaders = new SetContextLink((prevContext) => ({
+      headers: { ...prevContext.headers, ...extraHeaders },
+    }))
+
+    return new ApolloClient({
+      defaultOptions,
+      ...rest,
+      cache: createCache(),
+      link: ApolloLink.from([withExtraHeaders, link]),
+    })
+  }
 
   const extendErrorAndRethrow = (error: any, _errorInfo: React.ErrorInfo) => {
     error['mostRecentRequest'] = data.mostRecentRequest
@@ -236,8 +269,12 @@ export function ApolloProviderWithFetchConfig({
   }
 
   return (
-    <ApolloProvider client={client}>
-      <ErrorBoundary onError={extendErrorAndRethrow}>{children}</ErrorBoundary>
-    </ApolloProvider>
+    <ApolloClientFactoryContext.Provider value={createApolloClient}>
+      <ApolloProvider client={client}>
+        <ErrorBoundary onError={extendErrorAndRethrow}>
+          {children}
+        </ErrorBoundary>
+      </ApolloProvider>
+    </ApolloClientFactoryContext.Provider>
   )
 }

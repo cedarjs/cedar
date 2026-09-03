@@ -30,6 +30,7 @@ import * as setupPackage from './setup/package/package.js'
 import * as setupRealtime from './setup/realtime/realtime.js'
 // @ts-expect-error - Types not available for JS files
 import * as setupServerFile from './setup/server-file/serverFile.js'
+import * as setupTenancy from './setup/tenancy/tenancy.js'
 import * as setupUi from './setup/ui/ui.js'
 // @ts-expect-error - Types not available for JS files
 import * as setupUploads from './setup/uploads/uploads.js'
@@ -57,6 +58,8 @@ export const builder = (yargs: Argv) =>
     .command(setupPackage)
     .command(setupRealtime)
     .command(setupServerFile)
+    // @ts-expect-error - Yargs TS types aren't very good
+    .command(setupTenancy)
     // @ts-expect-error - Yargs TS types aren't very good
     .command(setupUi)
     .command(setupUploads)

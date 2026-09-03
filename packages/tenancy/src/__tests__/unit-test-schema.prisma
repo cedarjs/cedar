@@ -1,0 +1,124 @@
+datasource db {
+  provider = "sqlite"
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "./prisma-client" // <-- we generated a local prisma client so it doesn't interfere with the mono repo
+}
+
+model User {
+  id          String       @id @default(cuid())
+  email       String       @unique
+  memberships Membership[]
+}
+
+// `config` and `slug` below reproduce the two schema shapes that broke the
+// old first-`}` model-body regex: a JSON-string column default containing a
+// brace character, and a trailing `//` comment containing one. Both are
+// declared before `projects`, the list relation whose scoping regressed
+// when the old regex read them as the model's closing brace (see
+// `parseListFieldsFromSchema.test.ts` and the "still scopes...after a
+// braced default/comment" tests in `prismaExtension.include.test.ts`).
+model Organization {
+  id          String       @id @default(cuid())
+  config      String       @default("{}")
+  name        String
+  slug        String       @unique // e.g. "acme", never "{acme}"
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  memberships Membership[]
+  projects    Project[]
+}
+
+model Membership {
+  id              String       @id @default(cuid())
+  role            String
+  // Null while the membership is a pending invitation.
+  userId          String?
+  organizationId  String
+  invitedById     String?
+  invitationToken String?      @unique
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  user            User?        @relation(fields: [userId], references: [id])
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  invitedBy       Membership?  @relation("Inviter", fields: [invitedById], references: [id])
+  invitees        Membership[] @relation("Inviter")
+  assignedTasks   Task[]
+  ownedDocuments  Document[]
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+}
+
+model Project {
+  id             String           @id @default(cuid())
+  organizationId String
+  name           String
+  organization   Organization     @relation(fields: [organizationId], references: [id])
+  tasks          Task[]
+  tags           Tag[]
+  // The non-owning side of a one-to-one relation: no foreign key lives on
+  // `Project` at all (it lives on `ProjectSettings.projectId`), which is
+  // one of the two shapes the `<field>Id` naming heuristic gets wrong.
+  settings       ProjectSettings?
+  documents      Document[]
+
+  @@index([organizationId])
+}
+
+// A tenant-owned model with two to-one relations whose foreign keys aren't
+// named `<field>Id`: `owner` (to the global `Membership` model) and
+// `project` (to the tenant-owned `Project` model, via `belongsToProjectId`
+// rather than `projectId`) — the latter is the shape that actually breaks
+// under the naming heuristic, since only a to-one relation to a
+// *tenant-owned* model can get a `where` wrongly merged into its include.
+model Document {
+  id                 String      @id @default(cuid())
+  organizationId     String
+  title              String
+  ownerMembershipId  String?
+  owner              Membership? @relation(fields: [ownerMembershipId], references: [id])
+  belongsToProjectId String?
+  project            Project?    @relation(fields: [belongsToProjectId], references: [id])
+
+  @@index([organizationId])
+}
+
+// The foreign-key-owning side of the `Project.settings` one-to-one
+// relation above.
+model ProjectSettings {
+  id             String  @id @default(cuid())
+  organizationId String
+  projectId      String  @unique
+  project        Project @relation(fields: [projectId], references: [id])
+  theme          String?
+
+  @@index([organizationId])
+}
+
+model Task {
+  id             String      @id @default(cuid())
+  organizationId String
+  title          String
+  projectId      String
+  project        Project     @relation(fields: [projectId], references: [id])
+  assigneeId     String?
+  assignee       Membership? @relation(fields: [assigneeId], references: [id])
+
+  @@index([organizationId])
+}
+
+model Tag {
+  id       String    @id @default(cuid())
+  name     String
+  projects Project[]
+}
+
+model RW_DataMigration {
+  version    String   @id
+  name       String
+  startedAt  DateTime
+  finishedAt DateTime
+}

@@ -1,0 +1,394 @@
+import crypto from 'node:crypto'
+
+import type {
+  QueryResolvers,
+  MutationResolvers,
+  MembershipRelationResolvers,
+} from 'types/graphql'
+
+import { ForbiddenError, ValidationError } from '@cedarjs/graphql-server'
+import { requireCurrentOrg } from '@cedarjs/tenancy'
+
+import { Prisma, db } from 'src/lib/db'
+
+interface MembershipSummary {
+  id: string
+  organizationId: string
+  role: string
+}
+
+/** Lowercases, hyphenates and trims `value` into a URL-safe slug. */
+const slugify = (value: string): string =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-+|-+$)/g, '') || 'organization'
+
+const membershipsForUser = (userId: string): Promise<MembershipSummary[]> =>
+  db.membership.findMany({
+    where: { userId },
+    select: { id: true, organizationId: true, role: true },
+  })
+
+/**
+ * Roles this generated service knows how to check, and which of them a
+ * membership with that role may grant to someone else (`inviteMember`) or
+ * revoke (`removeMember`). `owner` may grant or revoke any known role;
+ * `admin` may grant or revoke `admin` and `member`, but never `owner`, so
+ * an admin can never create or remove an owner. `member` grants nothing;
+ * it's listed anyway so `KNOWN_ROLES` below covers every role a membership
+ * can actually hold, which is what makes the "unknown role" check on
+ * `inviteMember` meaningful.
+ *
+ * Add a role here when your app adds one. A role missing from this map can
+ * never be granted to, or removed from, anyone by `inviteMember` /
+ * `removeMember` -- including by an owner.
+ */
+export const ROLE_GRANTS: Readonly<Record<string, readonly string[]>> = {
+  owner: ['owner', 'admin', 'member'],
+  admin: ['admin', 'member'],
+  member: [],
+}
+
+const KNOWN_ROLES = Object.keys(ROLE_GRANTS)
+
+/** Whether a membership with `granterRole` may grant or revoke `targetRole`. */
+const canGrantRole = (granterRole: string, targetRole: string): boolean =>
+  ROLE_GRANTS[granterRole]?.includes(targetRole) ?? false
+
+/**
+ * Every membership belonging to the signed-in user, across all
+ * organizations. `Membership` is a global model, so this reads plain `db`.
+ */
+export const myMemberships: QueryResolvers['myMemberships'] = () => {
+  // @requireAuth guarantees a signed-in user before this resolver runs.
+  return db.membership.findMany({
+    where: { userId: context.currentUser!.id },
+    orderBy: { createdAt: 'asc' },
+  })
+}
+
+/**
+ * The current organization (the one `resolveCurrentOrg` resolved for this
+ * request). `id` is required so callers state which organization they mean,
+ * but it must match the current organization: `@requireMembership` only
+ * checks that the caller belongs to *some* organization, not to `id`.
+ */
+export const organization: QueryResolvers['organization'] = async ({ id }) => {
+  const currentOrg = requireCurrentOrg()
+
+  if (id !== currentOrg.id) {
+    throw new ForbiddenError("You don't have access to that organization.")
+  }
+
+  return db.organization.findUnique({ where: { id: currentOrg.id } })
+}
+
+/** Creates a new organization with the signed-in user as its owner. */
+export const createOrganization: MutationResolvers['createOrganization'] =
+  async ({ input }) => {
+    const baseSlug = slugify(input.name)
+    // @requireAuth guarantees a signed-in user before this resolver runs.
+    const userId = context.currentUser!.id
+
+    let slug = baseSlug
+    let attempt = 0
+
+    // Retry with a random suffix on a slug collision; two different
+    // organizations can share a display name. Each attempt runs in its own
+    // transaction so a P2002 on one slug does not abort the retry loop.
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      try {
+        return await db.$transaction(async (tx) => {
+          const newOrganization = await tx.organization.create({
+            data: { name: input.name, slug },
+          })
+
+          await tx.membership.create({
+            data: {
+              role: 'owner',
+              userId,
+              organizationId: newOrganization.id,
+            },
+          })
+
+          return newOrganization
+        })
+      } catch (e) {
+        const isUniqueSlugViolation =
+          e instanceof Prisma.PrismaClientKnownRequestError &&
+          e.code === 'P2002'
+
+        if (!isUniqueSlugViolation || attempt >= 5) {
+          throw e
+        }
+
+        attempt += 1
+        slug = `${baseSlug}-${crypto.randomBytes(3).toString('hex')}`
+      }
+    }
+  }
+
+/**
+ * Creates a pending membership (an invitation) in the current organization,
+ * for a role the caller's own role may grant per `ROLE_GRANTS` -- an
+ * `admin` can invite an `admin` or a `member`, but not an `owner`, even
+ * though `@requireMembership(roles: ["owner", "admin"])` lets an admin call
+ * this mutation at all. A role that isn't in `ROLE_GRANTS` is rejected
+ * outright, so a typo in `input.role` can never create a membership nobody
+ * can check against.
+ *
+ * `Membership` has no email column: the caller is responsible for emailing
+ * `input.email` a link built from the returned `invitationToken`, with its
+ * own mailer. The token is returned here and nowhere else -- see the SDL
+ * doc comment on `Invitation` for why.
+ */
+export const inviteMember: MutationResolvers['inviteMember'] = async ({
+  input,
+}) => {
+  const currentOrg = requireCurrentOrg()
+
+  if (!KNOWN_ROLES.includes(input.role)) {
+    throw new ValidationError(
+      `"${input.role}" is not a known role. Add it to ROLE_GRANTS in ` +
+        'organizations.ts before inviting with it.',
+    )
+  }
+
+  if (!canGrantRole(currentOrg.role, input.role)) {
+    throw new ForbiddenError(
+      `A "${currentOrg.role}" cannot invite a "${input.role}".`,
+    )
+  }
+
+  const invitationToken = crypto.randomUUID()
+
+  const membership = await db.membership.create({
+    data: {
+      role: input.role,
+      organizationId: currentOrg.id,
+      invitedById: currentOrg.membershipId,
+      invitationToken,
+    },
+  })
+
+  return { membership, invitationToken }
+}
+
+/**
+ * Marks a claimed invitation's token as spent while keeping it queryable by
+ * the exact original token value, so a repeat claim from whoever holds that
+ * value resolves to the same row instead of "invalid token". The prefix can
+ * never collide with a freshly generated token (`crypto.randomUUID()`
+ * output), and a claimed row's `userId` is never `null` again, so this
+ * value can never satisfy a fresh claim's guard (`invitationToken: token,
+ * userId: null`) -- the original credential is spent no matter who ends up
+ * holding it.
+ */
+const spentInvitationToken = (token: string): string => `claimed:${token}`
+
+interface ClaimedInvitation {
+  organizationId: string
+}
+
+/**
+ * Atomically attaches the pending membership matching `token` to `userId`:
+ * the `where` guard (the token, still unclaimed) is checked by the same
+ * write that assigns `userId` and spends the token, so two concurrent
+ * claims of the same token can never both win. The row is then read back by
+ * its spent token, which is the same read a repeat call by the user who
+ * already holds it needs. The claim is an `updateMany` rather than
+ * `updateManyAndReturn` because Prisma only supports the latter on
+ * PostgreSQL, CockroachDB and SQLite.
+ *
+ * Returns the claimed membership's organization id when `userId` holds the
+ * membership, whether this call claimed it or an earlier one did, or `null`
+ * when the token is invalid or was claimed by a different user.
+ */
+const claimInvitation = async (
+  token: string,
+  userId: string,
+): Promise<ClaimedInvitation | null> => {
+  await db.membership.updateMany({
+    where: { invitationToken: token, userId: null },
+    data: { userId, invitationToken: spentInvitationToken(token) },
+  })
+
+  const claimed = await db.membership.findFirst({
+    where: { invitationToken: spentInvitationToken(token), userId },
+  })
+
+  return claimed ? { organizationId: claimed.organizationId } : null
+}
+
+/**
+ * Attaches the pending membership matching `token` to the signed-in user.
+ * Idempotent when it is already attached to them; throws when the token
+ * does not match a pending (unclaimed) membership, including when someone
+ * else has already claimed it.
+ */
+export const acceptInvitation: MutationResolvers['acceptInvitation'] = async ({
+  token,
+}) => {
+  // @requireAuth guarantees a signed-in user before this resolver runs.
+  const userId = context.currentUser!.id
+
+  const claim = await claimInvitation(token, userId)
+
+  if (!claim) {
+    throw new ValidationError('This invitation is invalid or has expired.')
+  }
+
+  return db.organization.findUniqueOrThrow({
+    where: { id: claim.organizationId },
+  })
+}
+
+/**
+ * Removes a membership from the current organization. A caller may only
+ * remove a membership whose role they could grant via `inviteMember` (the
+ * same `ROLE_GRANTS` rule), so an admin can never remove an owner, and the
+ * organization's last owner can never be removed -- including by
+ * themselves -- so an organization always keeps at least one owner who has
+ * accepted their invitation.
+ */
+export const removeMember: MutationResolvers['removeMember'] = async ({
+  membershipId,
+}) => {
+  const currentOrg = requireCurrentOrg()
+
+  const membership = await db.membership.findUnique({
+    where: { id: membershipId },
+  })
+
+  if (!membership || membership.organizationId !== currentOrg.id) {
+    throw new ForbiddenError("You don't have access to that membership.")
+  }
+
+  if (!canGrantRole(currentOrg.role, membership.role)) {
+    throw new ForbiddenError(
+      `A "${currentOrg.role}" cannot remove a "${membership.role}" member.`,
+    )
+  }
+
+  // Removing an owner is guarded in the delete itself rather than by a
+  // count read first, so the same membership cannot pass a check that another
+  // request has already invalidated. A pending invitation is not an owner
+  // yet, so `userId` has to be set for one to count.
+  //
+  // The guard reads other memberships that a concurrent request may be
+  // deleting, so the delete runs in a serializable transaction: when two
+  // owners remove each other in the same instant the database rejects one of
+  // the two requests with a write conflict, and that caller can retry.
+  const requireAnotherOwner =
+    membership.role === 'owner'
+      ? {
+          organization: {
+            memberships: {
+              some: {
+                role: 'owner',
+                userId: { not: null },
+                id: { not: membershipId },
+              },
+            },
+          },
+        }
+      : {}
+
+  const { count } = await db.$transaction(
+    (tx) =>
+      tx.membership.deleteMany({
+        where: {
+          id: membershipId,
+          organizationId: currentOrg.id,
+          ...requireAnotherOwner,
+        },
+      }),
+    { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+  )
+
+  if (count === 0) {
+    throw new ValidationError(
+      'An organization must have at least one owner who has accepted their ' +
+        'invitation.',
+    )
+  }
+
+  return membership
+}
+
+export const Membership: MembershipRelationResolvers = {
+  organization: (_obj, { root }) =>
+    db.membership.findUnique({ where: { id: root?.id } }).organization(),
+}
+
+interface EnsureDefaultOrganizationArgs {
+  currentUser: { id: string; memberships: MembershipSummary[] }
+  invitationToken?: string | null
+}
+
+/**
+ * Ensures the signed-in user has at least one organization: idempotent
+ * (returns the existing memberships unchanged when there are any), attaches
+ * a pending invitation matching `invitationToken` when there is one, and
+ * otherwise creates a new organization with a deterministic slug
+ * (`user-<userId>`) and an `owner` membership in one transaction.
+ *
+ * The invitation branch shares `claimInvitation` with `acceptInvitation`, so
+ * it gets the same atomic, race-safe claim: two concurrent first requests
+ * carrying the same `invitationToken` can never both attach it, and a
+ * request that loses that race still gets the organization once the
+ * winner's write is visible.
+ *
+ * A unique-constraint failure on the deterministic slug means a concurrent
+ * first request already created it; that case is treated as success and the
+ * memberships are refetched rather than raised as an error.
+ *
+ * Not exposed in the SDL: called from the GraphQL `context` function on
+ * every request and, for dbAuth, from the signup handler.
+ */
+export const ensureDefaultOrganization = async ({
+  currentUser,
+  invitationToken,
+}: EnsureDefaultOrganizationArgs): Promise<MembershipSummary[]> => {
+  if (currentUser.memberships.length > 0) {
+    return currentUser.memberships
+  }
+
+  if (invitationToken) {
+    const claim = await claimInvitation(invitationToken, currentUser.id)
+
+    if (claim) {
+      return membershipsForUser(currentUser.id)
+    }
+  }
+
+  const slug = `user-${currentUser.id}`
+
+  try {
+    await db.$transaction(async (tx) => {
+      const newOrganization = await tx.organization.create({
+        data: { name: 'My Organization', slug },
+      })
+
+      await tx.membership.create({
+        data: {
+          role: 'owner',
+          userId: currentUser.id,
+          organizationId: newOrganization.id,
+        },
+      })
+    })
+  } catch (e) {
+    const isUniqueSlugViolation =
+      e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002'
+
+    if (!isUniqueSlugViolation) {
+      throw e
+    }
+  }
+
+  return membershipsForUser(currentUser.id)
+}

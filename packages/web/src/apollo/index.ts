@@ -1,5 +1,6 @@
 import type { ApolloLink } from '@apollo/client'
 
+import type { CreateApolloClientOptions } from './ApolloClientFactoryContext.js'
 import { CedarApolloProvider } from './CedarApolloProvider.js'
 import type {
   ApolloClientCacheConfig as CedarApolloClientCacheConfig,
@@ -15,6 +16,7 @@ import {
   registerFragments,
 } from './fragmentRegistry.js'
 import { useCache } from './useCache.js'
+import { useCreateApolloClient } from './useCreateApolloClient.js'
 
 export type {
   CacheKey,
@@ -22,7 +24,11 @@ export type {
   RegisterFragmentResult,
 } from './fragmentRegistry.js'
 
+export type { CreateApolloClientOptions }
+
 export { useCache }
+
+export { useCreateApolloClient }
 
 export { fragmentRegistry, registerFragment, registerFragments }
 

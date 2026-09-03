@@ -1,0 +1,40 @@
+import type { ReactNode } from 'react'
+
+import { OrgScope as TenancyOrgScope } from '@cedarjs/tenancy/web'
+
+import { useAuth } from 'src/auth'
+
+export interface OrgScopeProps {
+  /** Overrides the `orgSlug` route param. */
+  orgSlug?: string
+  children: ReactNode
+}
+
+/**
+ * Wraps organization routes with a per-organization Apollo client and a
+ * membership check, using this app's `useAuth`. Use with the router's
+ * `Set wrap`:
+ *
+ *   <Set wrap={OrgScope}>
+ *     <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
+ *   </Set>
+ *
+ * Routes under `OrgScope` must not carry `prerender`: `OrgScope`'s nested
+ * Apollo client shadows the per-route client the prerenderer injects above
+ * `App`, so a prerendered query under here would not go through it.
+ */
+export const OrgScope = ({ orgSlug, children }: OrgScopeProps) => {
+  return (
+    <TenancyOrgScope
+      useAuth={useAuth}
+      orgSlug={orgSlug}
+      notAMember={
+        <div>
+          <p>You don&apos;t have access to this organization.</p>
+        </div>
+      }
+    >
+      {children}
+    </TenancyOrgScope>
+  )
+}

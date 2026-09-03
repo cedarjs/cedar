@@ -11,7 +11,12 @@ export function cedarVitestApiConfigPlugin(): Plugin {
       return {
         define: getEnvVarDefinitions(),
         ssr: {
-          noExternal: ['@cedarjs/testing'],
+          // `@cedarjs/tenancy` reads and writes the request context, which
+          // the api test setup replaces with a mock. The mock only reaches
+          // code Vite processes, so the tenancy runtime has to be bundled
+          // rather than loaded as an external dependency, or a service under
+          // test and its Prisma extension would see different contexts.
+          noExternal: ['@cedarjs/testing', '@cedarjs/tenancy'],
         },
         resolve: {
           alias: {

@@ -14,12 +14,15 @@ import React, { useContext } from 'react'
 
 import type {
   ApolloClient as ApolloClientBase,
-  ApolloLink,
   HttpLink,
   InMemoryCacheConfig,
   setLogVerbosity,
 } from '@apollo/client'
-import { setLogVerbosity as apolloSetLogVerbosity } from '@apollo/client'
+import {
+  ApolloLink,
+  setLogVerbosity as apolloSetLogVerbosity,
+} from '@apollo/client'
+import { SetContextLink } from '@apollo/client/link/context'
 import {
   ApolloClient,
   InMemoryCache,
@@ -37,6 +40,8 @@ import {
 } from '../components/FetchConfigProvider.js'
 import { ServerHtmlContext } from '../components/ServerInject.js'
 
+import type { CreateApolloClientOptions } from './ApolloClientFactoryContext.js'
+import { ApolloClientFactoryContext } from './ApolloClientFactoryContext.js'
 import { fragmentRegistry } from './fragmentRegistry.js'
 import type {
   RedwoodApolloLink,
@@ -124,10 +129,16 @@ const ApolloProviderWithFetchConfig: React.FunctionComponent<{
   config: Omit<GraphQLClientConfigProp, 'cacheConfig' | 'cache'> & {
     cache: InMemoryCache
   }
+  /**
+   * Builds a fresh cache from the same cache configuration and fragment
+   * registry as `config.cache`. Used to give every client
+   * `useCreateApolloClient` creates its own cache.
+   */
+  createCache: () => InMemoryCache
   useAuth?: UseAuth
   logLevel: ReturnType<typeof setLogVerbosity>
   children: React.ReactNode
-}> = ({ config, children, logLevel, useAuth = useNoAuth }) => {
+}> = ({ config, createCache, children, logLevel, useAuth = useNoAuth }) => {
   // Should they run into it, this helps users with the "Cannot render cell; GraphQL success but data is null" error.
   // See https://github.com/redwoodjs/redwood/issues/2473.
   apolloSetLogVerbosity(logLevel)
@@ -183,10 +194,39 @@ const ApolloProviderWithFetchConfig: React.FunctionComponent<{
     })
   }
 
+  // Builds a client with the same link chain and client config as
+  // `makeClient` above, but with a fresh cache and, when given, extra
+  // headers on every operation. `authMiddleware` (via `createAuthApolloLink`)
+  // spreads `headersFromFetchProvider` before its own headers, so the
+  // headers this link sets survive the rest of the chain.
+  const createApolloClient = (
+    options?: CreateApolloClientOptions,
+  ): ApolloClientBase => {
+    const extraHeaders = options?.headers
+
+    const withExtraHeaders = new SetContextLink((prevContext) => ({
+      headers: { ...prevContext.headers, ...extraHeaders },
+    }))
+
+    return new ApolloClient({
+      ...otherConfig,
+      cache: createCache(),
+      link: ApolloLink.from([
+        withExtraHeaders,
+        createFinalLink({
+          userConfiguredLink: userPassedLink,
+          defaultLinks: redwoodApolloLinks,
+        }),
+      ]),
+    })
+  }
+
   return (
-    <WrappedApolloProvider makeClient={makeClient}>
-      {children}
-    </WrappedApolloProvider>
+    <ApolloClientFactoryContext.Provider value={createApolloClient}>
+      <WrappedApolloProvider makeClient={makeClient}>
+        {children}
+      </WrappedApolloProvider>
+    </ApolloClientFactoryContext.Provider>
   )
 }
 
@@ -205,17 +245,27 @@ export const CedarApolloProvider: React.FunctionComponent<{
   // we have to instantiate `InMemoryCache` here, so that it doesn't get wiped.
   const { cacheConfig, ...config } = graphQLClientConfig ?? {}
 
+  // Shared by the app's own cache below and by every cache
+  // `useCreateApolloClient` builds, so every client (the app client and any
+  // per-organization client created from it) uses the same cache
+  // configuration and fragment registry.
+  //
   // @MARK we need this special cache
-  const cache = new InMemoryCache({
-    fragments: fragmentRegistry,
-    ...cacheConfig,
-  }).restore(globalThis?.__CEDAR__APOLLO_STATE ?? {})
+  const createCache = (): InMemoryCache => {
+    return new InMemoryCache({
+      fragments: fragmentRegistry,
+      ...cacheConfig,
+    })
+  }
+
+  const cache = createCache().restore(globalThis?.__CEDAR__APOLLO_STATE ?? {})
 
   return (
     <FetchConfigProvider useAuth={useAuth}>
       <ApolloProviderWithFetchConfig
         // This order so that the user can still completely overwrite the cache.
         config={{ cache, ...config }}
+        createCache={createCache}
         useAuth={useAuth}
         logLevel={logLevel}
       >
