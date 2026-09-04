@@ -32,6 +32,11 @@ Love Cedar and want to get involved? You're in the right place! A perfect place 
 - [Creating a Reproduction to Include with Issues](#creating-a-reproduction-to-include-with-issues)
 - [Release Publishing](#release-publishing)
 
+Before proposing a new feature's design, read
+[`docs/design-principles.md`](docs/design-principles.md) — it captures
+cross-cutting design principles (e.g. ambient context with fail-closed
+defaults) that new features should be measured against.
+
 ## Code Organization: Project and Framework
 
 As a Cedar developer, you're already familiar with the codebase created by `yarn create cedar-app`. In this document, we'll refer to that codebase as a **Cedar Project**.

@@ -63,9 +63,10 @@
 
 5. **Manual lifecycle management.** Developers explicitly call storage
    operations in their services. No automatic Prisma extension magic. The
-   criterion for ambient magic (#2595): it must both prevent an omission
-   that would fail silently and catastrophically, and stay pure and
-   transactional with respect to the query. Storage hooks fail both gates:
+   [two-gate test for ambient magic](../design-principles.md#the-two-gate-test-for-ambientextension-magic):
+   it must both prevent an omission that would fail silently and
+   catastrophically, and stay pure and transactional with respect to the
+   query. Storage hooks fail both gates:
    a forgotten storage call is a visible bug (the file is missing), and
    file I/O inside a query hook is non-transactional external work with
    its own failure modes. Explicit calls are more boilerplate but
