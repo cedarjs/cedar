@@ -223,9 +223,13 @@ import { withTenancy } from '@cedarjs/tenancy'
 import { authDecoder, getCurrentUser } from 'src/lib/auth'
 import { db } from 'src/lib/db'
 
-const lookupOrg = (idOrSlug: string) =>
-  db.organization.findFirst({
-    where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
+const lookupOrg = async (idOrSlug: string) =>
+  (await db.organization.findUnique({
+    where: { id: idOrSlug },
+    select: { id: true, slug: true },
+  })) ??
+  db.organization.findUnique({
+    where: { slug: idOrSlug },
     select: { id: true, slug: true },
   })
 
@@ -250,9 +254,13 @@ import { withTenancy } from '@cedarjs/tenancy'
 import { authDecoder, getCurrentUser } from 'api/src/lib/auth'
 import { db } from 'api/src/lib/db'
 
-const lookupOrg = (idOrSlug: string) =>
-  db.organization.findFirst({
-    where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
+const lookupOrg = async (idOrSlug: string) =>
+  (await db.organization.findUnique({
+    where: { id: idOrSlug },
+    select: { id: true, slug: true },
+  })) ??
+  db.organization.findUnique({
+    where: { slug: idOrSlug },
     select: { id: true, slug: true },
   })
 
