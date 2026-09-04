@@ -160,8 +160,9 @@ export async function createProjectFiles(
       const errorMessage = e instanceof Error ? e.message : String(e)
       tui.displayWarning(
         'Could not create database',
-        `Run \`${getDlx(packageManager)} neon-new --yes\` to manually create ` +
-          `one.\n\n${errorMessage}`,
+        `Run \`${getDlx(packageManager)} neon@latest claim create\` to ` +
+          `manually create one, then \`${getDlx(packageManager)} neon@latest claim accept\` ` +
+          `for a link to claim it.\n\n${errorMessage}`,
       )
     }
   }
