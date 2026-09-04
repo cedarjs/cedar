@@ -1107,3 +1107,9 @@ articles this how-to draws on both call out, restated for Cedar:
   grouping by `userId` mixes activity from every organization that user is in
   into one bucket, which is exactly the cross-tenant leak the rest of this
   feature exists to prevent.
+- **Cell tests for org-scoped components.** A component rendered in isolation
+  has no matched route, so `useParams()` sees no `orgSlug`; a component that
+  reads it and passes it to a generated `routes.*()` call fails route param
+  validation in the test. Use `mockRouteParams({ orgSlug: 'acme' })` before
+  `render()` &mdash; see [`mockRouteParams()`](../testing.md#mockrouteparams)
+  in the testing docs.
