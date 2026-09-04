@@ -224,11 +224,11 @@ import { authDecoder, getCurrentUser } from 'src/lib/auth'
 import { db } from 'src/lib/db'
 
 const lookupOrg = async (idOrSlug: string) =>
-  (await db.organization.findFirst({
+  (await db.organization.findUnique({
     where: { id: idOrSlug },
     select: { id: true, slug: true },
   })) ??
-  db.organization.findFirst({
+  db.organization.findUnique({
     where: { slug: idOrSlug },
     select: { id: true, slug: true },
   })
@@ -255,11 +255,11 @@ import { authDecoder, getCurrentUser } from 'api/src/lib/auth'
 import { db } from 'api/src/lib/db'
 
 const lookupOrg = async (idOrSlug: string) =>
-  (await db.organization.findFirst({
+  (await db.organization.findUnique({
     where: { id: idOrSlug },
     select: { id: true, slug: true },
   })) ??
-  db.organization.findFirst({
+  db.organization.findUnique({
     where: { slug: idOrSlug },
     select: { id: true, slug: true },
   })
