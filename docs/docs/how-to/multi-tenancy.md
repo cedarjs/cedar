@@ -265,11 +265,11 @@ before any resolver runs:
 +      variables: params.variables,
 +      currentUser,
 +      lookupOrg: async (idOrSlug) =>
-+        (await db.organization.findUnique({
++        (await db.organization.findFirst({
 +          where: { id: idOrSlug },
 +          select: { id: true, slug: true },
 +        })) ??
-+        db.organization.findUnique({
++        db.organization.findFirst({
 +          where: { slug: idOrSlug },
 +          select: { id: true, slug: true },
 +        }),
