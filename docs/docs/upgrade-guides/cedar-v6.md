@@ -322,8 +322,9 @@ files) is unchanged, and most apps need no action. You do need to act if you:
 - **Customized `web/jest.config.js`** beyond the default preset — don't override
   `testEnvironment` or `transformIgnorePatterns`, both are now load-bearing for
   MSW under Jest.
-- **Have a committed `web/public/mockServiceWorker.js`** — delete it, it's
-  regenerated the next time you run `yarn cedar storybook`.
+- **Have a committed `web/public/mockServiceWorker.js`** — `yarn cedar storybook`
+  overwrites it with the MSW 2 worker on every start, so run it once and
+  commit the result.
 
 #### `cedar serve api --ud` binds to all interfaces by default
 
