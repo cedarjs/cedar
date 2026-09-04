@@ -8,6 +8,13 @@ own role, and a user can be active in several organizations at once without
 logging out. Tenant scoping is enforced at the Prisma layer so that forgetting
 `organizationId` on a query is an error, not a data leak.
 
+This plan applies the principles in
+[`docs/design-principles.md`](../design-principles.md): ambient context that
+fails closed, escape hatches with names (`$forOrg` / `$withoutTenant`),
+enforcement at a single choke point (the Prisma client extension) rather than
+per call site, and a `TenantScopeError` that names both escape hatches and
+when each applies rather than just refusing.
+
 ## Table of Contents
 
 - [Goals](#goals)

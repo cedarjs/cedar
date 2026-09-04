@@ -4,6 +4,8 @@
 
 **CedarJS** is an opinionated, full-stack React framework (frontend: React, API: GraphQL, database: Prisma) forked from [RedwoodJS](https://github.com/redwoodjs/redwood). Active maintenance, experimental ESM support, recurring jobs, and modern Node support (Node 24+).
 
+Before proposing a design for a new feature, read [`docs/design-principles.md`](docs/design-principles.md) — it captures cross-cutting design principles (e.g. ambient context with fail-closed defaults) that new features should be measured against.
+
 ## Project Structure & Module Organization
 
 - Monorepo managed with Nx + Yarn workspaces.
