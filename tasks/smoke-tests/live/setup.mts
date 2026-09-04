@@ -3,8 +3,6 @@ import fs from 'node:fs'
 import path from 'node:path'
 import util from 'node:util'
 
-import { instantPostgres } from 'neon-new/sdk'
-
 const PRISMA_TIMEOUT_MS = 30_000
 const NEON_TIMEOUT_MS = 30_000
 
@@ -38,22 +36,54 @@ export default async function setup() {
   } else {
     console.log('Provisioning ephemeral Neon database...')
 
-    databaseUrlDirect = await Promise.race([
-      instantPostgres({ referrer: 'cedarjs' }).then((r) => r.databaseUrlDirect),
-      new Promise<never>((_, reject) =>
-        setTimeout(
-          () => reject(new Error('Neon database provisioning timed out')),
-          NEON_TIMEOUT_MS,
-        ),
-      ),
-    ])
+    // The Neon CLI has no programmatic API for provisioning a claimable
+    // database, so shell out to it instead of importing an SDK.
+    const neonBin = path.join(
+      import.meta.dirname,
+      '..',
+      '..',
+      '..',
+      'node_modules',
+      '.bin',
+      'neon',
+    )
+
+    await execWithTimeout(
+      `${neonBin} claim create --file .env --output json`,
+      testProjectPath,
+      NEON_TIMEOUT_MS,
+    )
 
     console.log('Neon database provisioned')
 
-    fs.appendFileSync(
+    const updatedEnv = fs.readFileSync(envPath, 'utf-8')
+    const provisionedUrl = updatedEnv
+      .split('\n')
+      .find((line) => line.startsWith('DATABASE_URL='))
+      ?.split('=')
+      .slice(1)
+      .join('=')
+
+    if (!provisionedUrl) {
+      throw new Error('`neon claim create` did not write DATABASE_URL to .env')
+    }
+
+    // `neon claim create` only writes the pooled connection string, but this
+    // smoke test exercises live queries, which rely on LISTEN/NOTIFY over a
+    // persistent session — something PgBouncer's transaction pooling doesn't
+    // support. So derive the direct connection from Neon's endpoint naming
+    // convention (the direct host is the pooled host with "-pooler" removed)
+    // and use it for both the app and Prisma Migrate, same as before.
+    databaseUrlDirect = provisionedUrl.replace('-pooler.', '.')
+
+    fs.writeFileSync(
       envPath,
-      `DIRECT_DATABASE_URL=${databaseUrlDirect}\nDATABASE_URL=${databaseUrlDirect}\n`,
+      updatedEnv.replace(
+        `DATABASE_URL=${provisionedUrl}`,
+        `DATABASE_URL=${databaseUrlDirect}`,
+      ),
     )
+    fs.appendFileSync(envPath, `DIRECT_DATABASE_URL=${databaseUrlDirect}\n`)
   }
 
   console.log('Running Prisma migrations...')

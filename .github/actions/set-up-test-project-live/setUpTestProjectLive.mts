@@ -59,14 +59,32 @@ export async function setUpTestProjectLive({
 
   console.log('Provisioning Neon database...')
 
-  const { instantPostgres } = await import('neon-new/sdk')
-  const { databaseUrlDirect, databaseUrl } = await instantPostgres({
-    referrer: 'cedarjs',
-  })
+  // The Neon CLI has no programmatic API for provisioning a claimable
+  // database, so shell out to it instead of importing an SDK.
+  const neonBin = path.join(cedarFrameworkPath, 'node_modules', '.bin', 'neon')
+  await execInProject(`${neonBin} claim create --file .env --output json`)
 
+  const env = fs.readFileSync(path.join(testProjectPath, '.env'), 'utf-8')
+  const databaseUrl = env
+    .split('\n')
+    .find((line) => line.startsWith('DATABASE_URL='))
+    ?.split('=')
+    .slice(1)
+    .join('=')
+
+  if (!databaseUrl) {
+    throw new Error('`neon claim create` did not write DATABASE_URL to .env')
+  }
+
+  // `neon claim create` only writes the pooled connection string. Prisma
+  // Migrate needs a direct connection (PgBouncer's transaction pooling
+  // doesn't reliably support the advisory locks Migrate takes), so derive
+  // it from Neon's endpoint naming convention: the direct host is the
+  // pooled host with "-pooler" removed.
+  const databaseUrlDirect = databaseUrl.replace('-pooler.', '.')
   fs.appendFileSync(
     path.join(testProjectPath, '.env'),
-    `DIRECT_DATABASE_URL=${databaseUrlDirect}\nDATABASE_URL=${databaseUrl}\n`,
+    `DIRECT_DATABASE_URL=${databaseUrlDirect}\n`,
   )
 
   console.log('Running prisma migrate reset')
