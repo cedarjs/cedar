@@ -8,6 +8,7 @@ import { getPaths } from '../../lib/index.js'
 import * as project from '../../lib/project.js'
 
 import { warnIfNonStandardDatasourceUrl } from './datasourceWarning.js'
+import { assertSingleViteVersion } from './viteVersionCheck.js'
 
 type TestEsmHandlerArgs = Record<string, unknown> & {
   filter?: string[]
@@ -127,6 +128,10 @@ export const handler = async ({
 
     if (sides.includes('api')) {
       await warnIfNonStandardDatasourceUrl({ force })
+    }
+
+    if (sides.includes('web')) {
+      assertSingleViteVersion()
     }
 
     // TODO: Run vitest programmatically. See https://vitest.dev/advanced/api/
