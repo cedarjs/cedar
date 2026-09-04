@@ -65,6 +65,13 @@ global.
 
 ### Behavior
 
+**Writes are explicit and verified; reads are ambient and fail closed.**
+Prisma's generated types still require the tenant field on creates, so you
+should keep writing it. The extension checks that every create (nested ones
+included) targets the current organization and refuses cross-tenant writes.
+Reads, updates and deletes are scoped automatically and throw
+`TenantScopeError` when no organization is in scope.
+
 Every operation keeps its own method; the extension only adds a `tenantField`
 equality to the arguments.
 
