@@ -45,7 +45,7 @@
   "devDependencies": {
     "@cedarjs/api": "workspace:*",
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/aws-lambda": "8.10.162",
+    "@types/aws-lambda": "8.10.163",
     "@types/jsonwebtoken": "9.0.10",
     "concurrently": "9.2.4",
     "publint": "0.3.24",
