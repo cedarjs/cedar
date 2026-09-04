@@ -327,3 +327,21 @@ export const mockCurrentUser = (user: Record<string, unknown> | null) => {
     }
   })
 }
+
+export const mockedRouteParamsMeta: { params: Record<string, string> } = {
+  params: {},
+}
+
+/**
+ * Sets the route params `useParams()` (and generated `routes.*()` calls, via
+ * `MockRouter`) see in a rendered-in-isolation test -- a cell test, for
+ * example, has no matched route to read `{orgSlug}` or similar path params
+ * from. Mirrors `mockCurrentUser`'s effect on `useAuth().currentUser`.
+ *
+ * ```ts
+ * mockRouteParams({ orgSlug: 'acme' })
+ * ```
+ */
+export const mockRouteParams = (params: Record<string, string>) => {
+  mockedRouteParamsMeta.params = params
+}
