@@ -767,6 +767,47 @@ mockCurrentUser({ roles: [] })
 
 That's it!
 
+#### mockRouteParams()
+
+A component rendered in isolation (a cell test, for example) has no matched
+route, so `useParams()` returns an empty object: any route param your route
+declares &mdash; `{orgSlug}` in `/org/{orgSlug}/projects`, say &mdash; is
+`undefined`. If the component reads that param and passes it to a generated
+`routes.*()` call (building a `<Link>`, for instance), the missing value
+fails route param validation:
+
+```
+Error: Missing parameter 'orgSlug' for route '/org/{orgSlug}/projects'
+```
+
+`mockRouteParams()` sets what `useParams()` (and, through it, any `routes.*()`
+call built from those params) sees in that render, the same way
+`mockCurrentUser()` sets what `useAuth().currentUser` sees:
+
+```jsx title="web/src/components/ProjectsCell/ProjectsCell.test.js"
+import { render, screen } from '@cedarjs/testing/web'
+import { mockRouteParams } from '@cedarjs/testing/web'
+
+import { Success } from './ProjectsCell'
+
+describe('ProjectsCell', () => {
+  it('renders links scoped to the current organization', () => {
+    mockRouteParams({ orgSlug: 'acme' })
+
+    render(<Success projects={[{ id: 1, name: 'Website redesign' }]} />)
+
+    expect(screen.getByRole('link', { name: 'Website redesign' })).toHaveAttribute(
+      'href',
+      '/org/acme/projects/1'
+    )
+  })
+})
+```
+
+Call it before `render()`, the same as `mockCurrentUser()`. It's a plain
+substitute for the route params a matched route would otherwise provide, not
+a router mock &mdash; it doesn't affect `location` or navigation.
+
 ### Handling Duplication
 
 We had to duplicate the `mockCurrentUser()` call and duplication is usually another sign that things can be refactored. In Vitest you can nest `describe` blocks and include setup that is shared by the members of that block:
