@@ -7,7 +7,7 @@ This is a test project to use for testing gqlorm related features and changes.
 - Delete the .env file
 - Run `yarn dlx neon@latest claim create` to provision a database and write
   `DATABASE_URL` to a new .env file
-- Run `echo "DIRECT_DATABASE_URL=$(grep DATABASE_URL= .env | cut -d= -f2-)" >> .env`
+- Run `echo "DIRECT_DATABASE_URL=$(grep '^DATABASE_URL=' .env | cut -d= -f2- | sed 's/-pooler\././')" >> .env`
   to set the direct connection Prisma migrations use
 - Run `echo "SESSION_SECRET=$(yarn cedar g secret --raw)" >> .env` to generate
   a new session secret for use with dbAuth

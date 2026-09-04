@@ -37,7 +37,7 @@ export default async function setup() {
     console.log('Provisioning ephemeral Neon database...')
 
     // The Neon CLI has no programmatic API for provisioning a claimable
-    // database, so shell out to it instead of importing an SDK.
+    // database, so provisioning here shells out to the CLI directly.
     const neonBin = path.join(
       import.meta.dirname,
       '..',
@@ -49,7 +49,7 @@ export default async function setup() {
     )
 
     await execWithTimeout(
-      `${neonBin} claim create --file .env --output json`,
+      `"${neonBin}" claim create --file .env --output json`,
       testProjectPath,
       NEON_TIMEOUT_MS,
     )
@@ -71,9 +71,9 @@ export default async function setup() {
     // `neon claim create` only writes the pooled connection string, but this
     // smoke test exercises live queries, which rely on LISTEN/NOTIFY over a
     // persistent session — something PgBouncer's transaction pooling doesn't
-    // support. So derive the direct connection from Neon's endpoint naming
-    // convention (the direct host is the pooled host with "-pooler" removed)
-    // and use it for both the app and Prisma Migrate, same as before.
+    // support. So the direct connection is derived from Neon's endpoint
+    // naming convention (the direct host is the pooled host with "-pooler"
+    // removed) and used for both the app and Prisma Migrate.
     databaseUrlDirect = provisionedUrl.replace('-pooler.', '.')
 
     fs.writeFileSync(

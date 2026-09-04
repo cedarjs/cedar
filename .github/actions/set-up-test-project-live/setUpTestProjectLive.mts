@@ -60,9 +60,9 @@ export async function setUpTestProjectLive({
   console.log('Provisioning Neon database...')
 
   // The Neon CLI has no programmatic API for provisioning a claimable
-  // database, so shell out to it instead of importing an SDK.
+  // database, so provisioning here shells out to the CLI directly.
   const neonBin = path.join(cedarFrameworkPath, 'node_modules', '.bin', 'neon')
-  await execInProject(`${neonBin} claim create --file .env --output json`)
+  await execInProject(`"${neonBin}" claim create --file .env --output json`)
 
   const env = fs.readFileSync(path.join(testProjectPath, '.env'), 'utf-8')
   const databaseUrl = env
