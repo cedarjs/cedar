@@ -74,10 +74,10 @@ global.
 **Creates are explicit and verified; reads, updates and deletes are ambient
 and fail closed.** Prisma's generated types still require the tenant field on
 creates, so you should keep writing it. On a scoped client, the extension
-checks that every create (nested ones included) targets the current
-organization and refuses cross-tenant writes. For tenant-owned models, reads,
-updates and deletes are scoped automatically and throw `TenantScopeError`
-when no organization is in scope.
+checks that every create of a tenant-owned model (nested ones included)
+targets the current organization and refuses cross-tenant writes. Reads,
+updates and deletes on tenant-owned models are scoped automatically and throw
+`TenantScopeError` when no organization is in scope.
 
 Every operation keeps its own method; the extension only adds a `tenantField`
 equality to the arguments.
