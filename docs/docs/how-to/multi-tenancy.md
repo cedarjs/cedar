@@ -113,7 +113,10 @@ are carried over from the article, stated as Cedar defaults:
   [section 7](#7-strict-variant-compound-primary-keys-and-postgres-rls) for
   swapping in a Prisma enum.
 - **`Organization.slug` exists for URLs** (`/org/acme/projects`). Resolving the
-  current organization by `id` or by `slug` are both supported.
+  current organization by `id` or by `slug` are both supported. **The
+  organization lives in the URL** &mdash; see
+  [section 4](#4-request-flow-url-to-header-to-context) for why this is a
+  Cedar opinion, not just an option.
 - **Every user belongs to an organization from signup.** Signup either claims a
   pending invitation or creates an `Organization` named after the user with an
   `owner` membership, so an app never accumulates user-owned resources that
@@ -457,12 +460,27 @@ which is the intended fail-closed behaviour rather than a silent empty list.
 
 ## 4. Request flow: URL to header to context
 
+**The organization lives in the URL.** Put the slug in the path
+(`/org/{orgSlug}/…`) even while every user has exactly one organization: links
+and bookmarks stay unambiguous once a user later belongs to several, support
+staff can reach a customer organization with a URL and a membership, and going
+multi-org changes no routes. Deriving the current organization from the
+signed-in user's membership instead (skipping the URL segment) looks
+convenient and is almost always regretted &mdash; the first shared link or the
+first "look at this customer's account" request exposes the gap.
+
+The `orgSlug` prop and `resolveCurrentOrg`'s variable fallbacks (below) exist
+for the cases where the organization genuinely can't live in the path &mdash;
+a subdomain- or custom-domain-derived organization (white-label deployments),
+or an in-page switcher that navigates. They are not an invitation to keep it
+out of the URL for tidiness.
+
 Every GraphQL request that carries a current organization goes through the same
 four steps:
 
-1. **URL or variable.** The web app is either on a route like
-   `/org/acme/projects` (an `orgSlug` route param) or has an organization
-   id/slug available some other way (a switcher stored in state, for example).
+1. **URL or variable.** The web app is on a route like `/org/acme/projects`
+   (an `orgSlug` route param), or, for the cases above, has an organization
+   id/slug available some other way.
 2. **Header.** `OrgScope` (see
    [section 5](#5-services-directives-and-web-hooks)) builds a per-organization
    Apollo client that sends a `cedar-org` header with every request. This is the
