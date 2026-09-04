@@ -472,8 +472,8 @@ first "look at this customer's account" request exposes the gap.
 The `orgSlug` prop and `resolveCurrentOrg`'s variable fallbacks (below) exist
 for the cases where the organization genuinely can't live in the path &mdash;
 a subdomain- or custom-domain-derived organization (white-label deployments),
-or an in-page switcher that navigates. They are not an invitation to keep it
-out of the URL for tidiness.
+or an in-page switcher that doesn't navigate. They are not an invitation to
+keep it out of the URL for tidiness.
 
 Every GraphQL request that carries a current organization goes through the same
 four steps:
