@@ -31,9 +31,13 @@ function buildContextProperty() {
           event: requestEvent,
           variables: params.variables,
           currentUser,
-          lookupOrg: (idOrSlug) =>
-            db.organization.findFirst({
-              where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
+          lookupOrg: async (idOrSlug) =>
+            (await db.organization.findUnique({
+              where: { id: idOrSlug },
+              select: { id: true, slug: true },
+            })) ??
+            db.organization.findUnique({
+              where: { slug: idOrSlug },
               select: { id: true, slug: true },
             }),
         })
