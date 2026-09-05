@@ -26,7 +26,13 @@ import {
   hasWebAuthFile,
   noUserModelMessage,
 } from './preflight.js'
-import { editSchema, hasModel } from './schemaPrisma.js'
+import {
+  editSchema,
+  hasModel,
+  MEMBERSHIP_MODEL,
+  ORGANIZATION_MODEL,
+} from './schemaPrisma.js'
+import type { EditSchemaResult, ModelsExistOutcome } from './schemaPrisma.js'
 
 const DEFAULT_TENANT_FIELD = 'organizationId'
 
@@ -69,6 +75,11 @@ const SIGNUP_SNIPPET = `
 interface TenancyOptions {
   tenantField: string
   force: boolean
+}
+
+interface TenancyCtx {
+  /** Set once the schema-editing task runs; read by the "Next steps" task. */
+  modelsExistOutcome?: ModelsExistOutcome
 }
 
 export const handler = async ({ tenantField, force }: TenancyOptions) => {
@@ -131,7 +142,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
     return writeFile(outputPath, content, { overwriteExisting: force })
   }
 
-  const tasks = new Listr(
+  const tasks = new Listr<TenancyCtx>(
     [
       {
         ...addApiPackages([`@cedarjs/tenancy@${cedarVersion}`]),
@@ -143,14 +154,14 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
       },
       {
         title: 'Adding Organization and Membership models to schema.prisma...',
-        task: async () => {
+        task: async (ctx, task) => {
           const schemaPath = await getSchemaPath(paths.api.prismaConfig)
           const schema = fs.readFileSync(schemaPath, 'utf-8')
 
-          let updatedSchema: string
+          let editResult: EditSchemaResult
 
           try {
-            updatedSchema = editSchema(schema, { force })
+            editResult = editSchema(schema, { force })
           } catch (e) {
             const message = e instanceof Error ? e.message : String(e)
 
@@ -165,24 +176,33 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
               )
             }
 
-            if (message === 'CEDAR_TENANCY_ERR_MODELS_EXIST') {
-              throw new Error(
-                '`Organization` and/or `Membership` models already exist in ' +
-                  'schema.prisma. Re-run with --force to keep them as-is and ' +
-                  'continue with the rest of the setup.',
-              )
-            }
-
             throw e
           }
 
-          fs.writeFileSync(schemaPath, updatedSchema)
+          ctx.modelsExistOutcome = editResult.outcome
+
+          fs.writeFileSync(schemaPath, editResult.schema)
+
+          // Default path when Organization/Membership already exist,
+          // customized, and --force was not passed: leave them as-is and
+          // print the canonical shape, the same way the auth/signup codemods
+          // fall back to printing AUTH_SNIPPET/SIGNUP_SNIPPET when they can't
+          // transform a file safely. The rest of setup still runs.
+          if (editResult.outcome === 'skipped') {
+            task.output = `\`Organization\` and/or \`Membership\` models already exist in schema.prisma and were left as-is. Add these fields and relations by hand so tenancy can use them:\n\n${ORGANIZATION_MODEL}\n\n${MEMBERSHIP_MODEL}\n\nRe-run with --force to have this command append its own versions beside them instead, so you can diff and merge rather than retype.`
+            return
+          }
 
           // Adds the `memberships` back-relation on `User`: appending
           // `Organization` and `Membership`, both of which declare a relation
           // to `User`, is enough for Prisma's formatter to add the matching
           // field. Not best-effort -- the generated `getCurrentUser` selects
-          // `memberships`, so a schema without it breaks at runtime.
+          // `memberships`, so a schema without it breaks at runtime. When
+          // `--force` appended this command's models beside customized ones
+          // of the same name (`outcome === 'forced'`), the schema is already
+          // known to be invalid Prisma; formatting is attempted anyway, but a
+          // failure here is not fatal -- the user asked for this, and "Next
+          // steps" tells them how to resolve it.
           try {
             await runTransitiveBin(
               'prisma',
@@ -190,6 +210,12 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
               { cwd: paths.base },
             )
           } catch {
+            if (editResult.outcome === 'forced') {
+              task.output =
+                '`prisma format` failed because the appended Organization/Membership clash with your existing ones, as requested by --force. Continuing with the rest of the setup; see "Next steps" for how to merge them.'
+              return
+            }
+
             throw new Error(
               '`prisma format` failed, so the `memberships` relation was not added to the `User` model. Add it by hand: `memberships Membership[]` as the last field of `model User { ... }`, then re-run this command.',
             )
@@ -209,8 +235,14 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
 
           if (
             membershipsOccurrences(formattedSchema) <=
-            membershipsOccurrences(updatedSchema)
+            membershipsOccurrences(editResult.schema)
           ) {
+            if (editResult.outcome === 'forced') {
+              task.output =
+                'The `memberships` relation was not added to the `User` model, likely because of the clash from --force. Continuing with the rest of the setup; see "Next steps" for how to merge the appended models by hand.'
+              return
+            }
+
             throw new Error(
               '`prisma format` did not add the `memberships` relation to the `User` model. Add it by hand: `memberships Membership[]` as the last field of `model User { ... }`, then re-run this command.',
             )
@@ -440,7 +472,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
       },
       {
         title: 'Next steps...',
-        task: (_ctx, task) => {
+        task: (ctx, task) => {
           const migrateCommand = formatCedarCommand([
             'prisma',
             'migrate',
@@ -448,10 +480,21 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
           ])
           const dataMigrateCommand = formatCedarCommand(['data-migrate', 'up'])
 
+          const modelsExistWarning =
+            ctx.modelsExistOutcome === 'forced'
+              ? c.error(
+                  '\nschema.prisma is currently invalid (as requested by --force): merge the appended Organization/Membership blocks with your existing ones, then run `prisma format`.\n',
+                )
+              : ctx.modelsExistOutcome === 'skipped'
+                ? c.warning(
+                    '\nOrganization/Membership already existed and were left as-is: add the fields and relations printed above by hand before continuing.\n',
+                  )
+                : ''
+
           task.title = `Next steps...
 
           ${c.success('\nMulti-tenancy configured!\n')}
-
+          ${modelsExistWarning}
           1. Run ${c.highlight(migrateCommand)} to create the Organization/Membership
              tables, then ${c.highlight(dataMigrateCommand)} to give every existing
              user a default organization.

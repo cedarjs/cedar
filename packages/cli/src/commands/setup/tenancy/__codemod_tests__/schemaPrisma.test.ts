@@ -5,6 +5,8 @@ import {
   addTenancyModels,
   editSchema,
   hasModel,
+  MEMBERSHIP_MODEL,
+  ORGANIZATION_MODEL,
 } from '../schemaPrisma.js'
 
 const BASE_SCHEMA = `datasource db {
@@ -59,41 +61,70 @@ describe('editSchema', () => {
     )
   })
 
-  it('throws CEDAR_TENANCY_ERR_MODELS_EXIST when Organization already exists and force is false', () => {
+  it('leaves a customized Organization model untouched, and reports "skipped", when force is false', () => {
     const schemaWithOrg = `${BASE_SCHEMA}\nmodel Organization {\n  id String @id\n}\n`
 
-    expect(() => editSchema(schemaWithOrg, { force: false })).toThrow(
-      'CEDAR_TENANCY_ERR_MODELS_EXIST',
-    )
+    const result = editSchema(schemaWithOrg, { force: false })
+
+    expect(result.outcome).toBe('skipped')
+    expect(result.schema).toContain('model Organization {\n  id String @id\n}')
+    expect(result.schema.match(/model Organization \{/g)).toHaveLength(1)
   })
 
-  it('leaves an existing Organization model untouched when force is true', () => {
+  it('appends beside a customized Organization model, and reports "forced", when force is true', () => {
     const schemaWithOrg = `${BASE_SCHEMA}\nmodel Organization {\n  id String @id\n}\n`
 
     const result = editSchema(schemaWithOrg, { force: true })
 
-    expect(result).toContain('model Organization {\n  id String @id\n}')
+    expect(result.outcome).toBe('forced')
+    // The app's own model is left as it is, and this command's is added, so
+    // Prisma reports the clash rather than this command picking a winner.
+    expect(result.schema).toContain('model Organization {\n  id String @id\n}')
+    expect(result.schema.match(/model Organization \{/g)).toHaveLength(2)
   })
 
-  it('adds both models on the happy path', () => {
+  it('adds Membership, and reports "added", when Organization is already canonical but Membership is absent', () => {
+    const schemaWithCanonicalOrg = `${BASE_SCHEMA}\n${ORGANIZATION_MODEL}\n`
+
+    const result = editSchema(schemaWithCanonicalOrg, { force: false })
+
+    expect(result.outcome).toBe('added')
+    expect(result.schema).toContain('model Membership {')
+    expect(result.schema.match(/model Organization \{/g)).toHaveLength(1)
+  })
+
+  it('adds Organization, and reports "added", when Membership is already canonical but Organization is absent', () => {
+    const schemaWithCanonicalMembership = `${BASE_SCHEMA}\n${MEMBERSHIP_MODEL}\n`
+
+    const result = editSchema(schemaWithCanonicalMembership, {
+      force: false,
+    })
+
+    expect(result.outcome).toBe('added')
+    expect(result.schema).toContain('model Organization {')
+    expect(result.schema.match(/model Membership \{/g)).toHaveLength(1)
+  })
+
+  it('adds both models on the happy path, and reports "added"', () => {
     const result = editSchema(BASE_SCHEMA, { force: false })
 
-    expect(result).toContain('model Organization {')
-    expect(result).toContain('model Membership {')
+    expect(result.outcome).toBe('added')
+    expect(result.schema).toContain('model Organization {')
+    expect(result.schema).toContain('model Membership {')
   })
 
-  it('adds RW_DataMigration even when force is true and Organization already exists', () => {
+  it('adds RW_DataMigration even when a customized Organization is left as-is', () => {
     const schemaWithOrg = `${BASE_SCHEMA}\nmodel Organization {\n  id String @id\n}\n`
 
-    const result = editSchema(schemaWithOrg, { force: true })
+    const result = editSchema(schemaWithOrg, { force: false })
 
-    expect(result).toContain('model RW_DataMigration {')
+    expect(result.schema).toContain('model RW_DataMigration {')
   })
 
   it('adds RW_DataMigration on the happy path too', () => {
     const result = editSchema(BASE_SCHEMA, { force: false })
 
-    expect(result).toContain('model RW_DataMigration {')
+    expect(result.schema).toContain('model RW_DataMigration {')
   })
 })
 
@@ -120,19 +151,9 @@ describe('addDataMigrationModel', () => {
 describe('appending is idempotent', () => {
   it('leaves a model this command already wrote alone', () => {
     const once = editSchema(BASE_SCHEMA, { force: false })
-    const twice = editSchema(once, { force: false })
+    const twice = editSchema(once.schema, { force: false })
 
     expect(twice).toEqual(once)
-  })
-
-  it('appends beside a model of the same name that differs, under force', () => {
-    const schemaWithOrg = `${BASE_SCHEMA}\nmodel Organization {\n  id String @id\n}\n`
-
-    const result = editSchema(schemaWithOrg, { force: true })
-
-    // The app's own model is left as it is, and this command's is added, so
-    // Prisma reports the clash rather than this command picking a winner.
-    expect(result).toContain('model Organization {\n  id String @id\n}')
-    expect(result.match(/model Organization \{/g)).toHaveLength(2)
+    expect(twice.outcome).toBe('added')
   })
 })

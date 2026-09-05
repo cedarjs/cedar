@@ -166,14 +166,21 @@ yarn cedar setup tenancy
 
 Flags:
 
-| Flag                    | Default          | What it does                                                          |
-| ----------------------- | ---------------- | --------------------------------------------------------------------- |
-| `--tenant-field <name>` | `organizationId` | The column name the extension scopes on, on every tenant-owned model. |
-| `--force`               | off              | Overwrite generated files that already exist.                         |
+| Flag                    | Default          | What it does                                                                   |
+| ----------------------- | ---------------- | ------------------------------------------------------------------------------ |
+| `--tenant-field <name>` | `organizationId` | The column name the extension scopes on, on every tenant-owned model.          |
+| `--force`               | off              | Overwrite generated files that already exist, and see below for schema.prisma. |
 
 The command requires a `User` model to already exist (run
-`yarn cedar setup auth` first) and aborts if `Organization` or `Membership` are
-already defined in `schema.prisma`.
+`yarn cedar setup auth` first). If `Organization` or `Membership` already
+exist in `schema.prisma` with a shape that differs from Cedar's, the default
+(no `--force`) is to leave them untouched, print the canonical models so you
+can add the missing fields/relations by hand, and continue with the rest of
+setup. `--force` instead appends Cedar's versions beside your existing ones
+and keeps going even though the resulting schema is invalid Prisma until you
+merge them &mdash; the "Next steps" output says so explicitly. A byte-for-byte
+match (running the command twice with no changes in between) is always a
+no-op, `--force` or not.
 
 ### What `setup tenancy` changes
 

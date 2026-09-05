@@ -17,13 +17,19 @@ API reference.
 yarn cedar setup tenancy
 ```
 
-| Flag                    | Default          | Description                                                         |
-| ----------------------- | ---------------- | ------------------------------------------------------------------- |
-| `--tenant-field <name>` | `organizationId` | The column name the Prisma extension scopes tenant-owned models on. |
-| `--force`               | off              | Overwrite generated files that already exist.                       |
+| Flag                    | Default          | Description                                                                    |
+| ----------------------- | ---------------- | ------------------------------------------------------------------------------ |
+| `--tenant-field <name>` | `organizationId` | The column name the Prisma extension scopes tenant-owned models on.            |
+| `--force`               | off              | Overwrite generated files that already exist, and see below for schema.prisma. |
 
-Requires a `User` model in `api/db/schema.prisma` (set up auth first) and aborts
-if `Organization` or `Membership` are already defined. It also adds the
+Requires a `User` model in `api/db/schema.prisma` (set up auth first). If
+`Organization` or `Membership` already exist there with a shape that differs
+from Cedar's, the default (no `--force`) is to leave them untouched, print the
+canonical models so you can add the missing fields/relations by hand, and
+continue with the rest of the setup. `--force` instead appends Cedar's
+versions beside your existing ones and keeps going even though the resulting
+schema is invalid Prisma until you merge them &mdash; the "Next steps" output
+says so explicitly. Either way, `setup tenancy` also adds the
 `RW_DataMigration` model (the one `yarn cedar data-migrate install` adds) if it
 isn't already there, since the generated data migration and the setup output's
 `data-migrate up` step both need it. See

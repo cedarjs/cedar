@@ -95,8 +95,27 @@ export function addDataMigrationModel(schema: string): string {
 }
 
 export interface EditSchemaOptions {
-  /** When true, an existing `Organization`/`Membership` model is left as-is instead of aborting. */
+  /** When true, a customized `Organization`/`Membership` model gets this command's version appended beside it instead of being left alone. */
   force: boolean
+}
+
+/**
+ * - `'added'` &mdash; the canonical `Organization`/`Membership` models are
+ *   now in `schema`, whether this call just wrote them or they were already
+ *   there byte-identical (an idempotent re-run).
+ * - `'skipped'` &mdash; a customized `Organization`/`Membership` already
+ *   existed and `force` was not passed, so `schema` is unchanged: the app's
+ *   models are left exactly as they were.
+ * - `'forced'` &mdash; a customized `Organization`/`Membership` already
+ *   existed and `force` was passed, so this command's versions were appended
+ *   beside them. `schema` now declares each model twice, which is invalid
+ *   Prisma; the caller is expected to say so.
+ */
+export type ModelsExistOutcome = 'added' | 'skipped' | 'forced'
+
+export interface EditSchemaResult {
+  schema: string
+  outcome: ModelsExistOutcome
 }
 
 /**
@@ -107,36 +126,48 @@ export interface EditSchemaOptions {
  * The handler runs formatting after this and stops with instructions if the
  * field is missing, since the generated `getCurrentUser` selects it.
  *
- * Throws `CEDAR_TENANCY_ERR_NO_USER_MODEL` when there is no `User` model (auth
- * has not been set up yet), and `CEDAR_TENANCY_ERR_MODELS_EXIST` when
- * `Organization` or `Membership` already exist and `force` was not passed.
- * With `force`, existing `Organization`/`Membership` models are left
- * untouched. `RW_DataMigration` is added whenever it is absent, regardless of
- * `force` or whether Organization/Membership were already present.
+ * Throws `CEDAR_TENANCY_ERR_NO_USER_MODEL` when there is no `User` model
+ * (auth has not been set up yet). A customized `Organization`/`Membership`
+ * that already exists is not an error: see `ModelsExistOutcome`.
+ * `RW_DataMigration` is added whenever it is absent, regardless of `force` or
+ * the models-exist outcome.
  */
-export function editSchema(schema: string, options: EditSchemaOptions): string {
+export function editSchema(
+  schema: string,
+  options: EditSchemaOptions,
+): EditSchemaResult {
   if (!hasModel(schema, 'User')) {
     throw new Error('CEDAR_TENANCY_ERR_NO_USER_MODEL')
   }
 
-  const modelsExist =
-    hasModel(schema, 'Organization') || hasModel(schema, 'Membership')
-
   // Models this command wrote itself are not a clash: appending skips them,
   // so running it twice changes nothing. A model of the same name that
-  // differs is the app's own, which is what `--force` is for.
-  const modelsAreThisCommands =
-    schema.includes(ORGANIZATION_MODEL) && schema.includes(MEMBERSHIP_MODEL)
+  // differs is the app's own. Checked independently per model, so a schema
+  // with a canonical Organization but no Membership (e.g. from copying only
+  // half of the "skipped" guidance by hand) still gets the missing one
+  // added, rather than being treated as fully customized.
+  const organizationIsCustomized =
+    hasModel(schema, 'Organization') && !schema.includes(ORGANIZATION_MODEL)
+  const membershipIsCustomized =
+    hasModel(schema, 'Membership') && !schema.includes(MEMBERSHIP_MODEL)
 
-  if (modelsExist && !modelsAreThisCommands && !options.force) {
-    throw new Error('CEDAR_TENANCY_ERR_MODELS_EXIST')
+  const modelsCustomized = organizationIsCustomized || membershipIsCustomized
+
+  // Default: leave the app's customized models alone rather than appending
+  // duplicate, invalid Prisma beside them. `force` is the only way to make
+  // this command write its own versions in that case.
+  if (modelsCustomized && !options.force) {
+    // Independent of the models-exist outcome: an app that never ran
+    // `data-migrate install` still needs RW_DataMigration before
+    // `data-migrate up` (which the setup output tells the user to run) can
+    // work.
+    return { schema: addDataMigrationModel(schema), outcome: 'skipped' }
   }
 
   const withTenancyModels = addTenancyModels(schema)
 
-  // Independent of whether Organization/Membership were just added or
-  // already existed: an app that never ran `data-migrate install` still
-  // needs RW_DataMigration before `data-migrate up` (which the setup
-  // output tells the user to run) can work.
-  return addDataMigrationModel(withTenancyModels)
+  return {
+    schema: addDataMigrationModel(withTenancyModels),
+    outcome: modelsCustomized ? 'forced' : 'added',
+  }
 }
