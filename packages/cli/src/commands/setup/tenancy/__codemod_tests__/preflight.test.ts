@@ -2,10 +2,14 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+vi.mock('@cedarjs/cli-helpers/packageManager/display', () => ({
+  formatCedarCommand: (args: string[] = []) => `yarn cedar ${args.join(' ')}`,
+}))
 
 import {
-  AUTH_NOT_SET_UP_MESSAGE,
+  authNotSetUpMessage,
   hasWebAuthFile,
   noUserModelMessage,
 } from '../preflight.js'
@@ -50,8 +54,8 @@ describe('hasWebAuthFile', () => {
 
 describe('the messages', () => {
   it('points at the auth setup command when auth is missing', () => {
-    expect(AUTH_NOT_SET_UP_MESSAGE).toContain('Auth is not set up')
-    expect(AUTH_NOT_SET_UP_MESSAGE).toContain('setup auth dbAuth')
+    expect(authNotSetUpMessage()).toContain('Auth is not set up')
+    expect(authNotSetUpMessage()).toContain('setup auth dbAuth')
   })
 
   it('names the schema and shows a model to copy when User is missing', () => {
