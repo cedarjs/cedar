@@ -6,6 +6,7 @@ export * from './types.js'
 export * from './transforms.js'
 export * from './cors.js'
 export * from './event.js'
+export * from './signedTokens/index.js'
 
 // @cedarjs/api's version is injected at compile time by esbuild's `define`
 // option in build.mts (applied to both CJS and ESM builds). This avoids a
