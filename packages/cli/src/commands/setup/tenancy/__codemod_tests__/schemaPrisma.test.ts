@@ -51,11 +51,11 @@ describe('addTenancyModels', () => {
 })
 
 describe('editSchema', () => {
-  it('throws RW_TENANCY_ERR_NO_USER_MODEL when there is no User model', () => {
+  it('throws CEDAR_TENANCY_ERR_NO_USER_MODEL when there is no User model', () => {
     const schemaWithoutUser = `model Contact {\n  id Int @id\n}\n`
 
     expect(() => editSchema(schemaWithoutUser, { force: false })).toThrow(
-      'RW_TENANCY_ERR_NO_USER_MODEL',
+      'CEDAR_TENANCY_ERR_NO_USER_MODEL',
     )
   })
 

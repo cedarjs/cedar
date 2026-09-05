@@ -39,8 +39,8 @@ export const MEMBERSHIP_MODEL = `model Membership {
 }`
 
 // Identical to `RW_DATA_MIGRATION_MODEL` in
-// packages/cli-packages/dataMigrate/src/commands/installHandler.ts (kept as
-// a literal copy here rather than an import, since `@cedarjs/cli` does not
+// packages/cli-packages/dataMigrate/src/commands/installHandler.ts (kept as a
+// literal copy here rather than an import, since `@cedarjs/cli` does not
 // otherwise depend on `@cedarjs/cli-packages/dataMigrate`). `data-migrate up`
 // fails at runtime with no clear error when this model is missing, so
 // `setup tenancy` -- which is what usually creates a project's first data
@@ -126,18 +126,18 @@ export interface EditSchemaResult {
  * The handler runs formatting after this and stops with instructions if the
  * field is missing, since the generated `getCurrentUser` selects it.
  *
- * Throws `RW_TENANCY_ERR_NO_USER_MODEL` when there is no `User` model (auth
- * has not been set up yet). A customized `Organization`/`Membership` that
- * already exists is not an error: see `ModelsExistOutcome`. `RW_DataMigration`
- * is added whenever it is absent, regardless of `force` or the models-exist
- * outcome.
+ * Throws `CEDAR_TENANCY_ERR_NO_USER_MODEL` when there is no `User` model
+ * (auth has not been set up yet). A customized `Organization`/`Membership`
+ * that already exists is not an error: see `ModelsExistOutcome`.
+ * `RW_DataMigration` is added whenever it is absent, regardless of `force` or
+ * the models-exist outcome.
  */
 export function editSchema(
   schema: string,
   options: EditSchemaOptions,
 ): EditSchemaResult {
   if (!hasModel(schema, 'User')) {
-    throw new Error('RW_TENANCY_ERR_NO_USER_MODEL')
+    throw new Error('CEDAR_TENANCY_ERR_NO_USER_MODEL')
   }
 
   const modelsExist =

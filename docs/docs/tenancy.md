@@ -229,9 +229,13 @@ import { withTenancy } from '@cedarjs/tenancy'
 import { authDecoder, getCurrentUser } from 'src/lib/auth'
 import { db } from 'src/lib/db'
 
-const lookupOrg = (idOrSlug: string) =>
-  db.organization.findFirst({
-    where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
+const lookupOrg = async (idOrSlug: string) =>
+  (await db.organization.findUnique({
+    where: { id: idOrSlug },
+    select: { id: true, slug: true },
+  })) ??
+  db.organization.findUnique({
+    where: { slug: idOrSlug },
     select: { id: true, slug: true },
   })
 
@@ -256,9 +260,13 @@ import { withTenancy } from '@cedarjs/tenancy'
 import { authDecoder, getCurrentUser } from 'api/src/lib/auth'
 import { db } from 'api/src/lib/db'
 
-const lookupOrg = (idOrSlug: string) =>
-  db.organization.findFirst({
-    where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
+const lookupOrg = async (idOrSlug: string) =>
+  (await db.organization.findUnique({
+    where: { id: idOrSlug },
+    select: { id: true, slug: true },
+  })) ??
+  db.organization.findUnique({
+    where: { slug: idOrSlug },
     select: { id: true, slug: true },
   })
 
@@ -386,9 +394,12 @@ The generated `web/src/components/OrgScope/OrgScope.tsx` wraps the core
 can't import your app's auth directly, so it takes `useAuth` as a prop,
 defaulting to `useNoAuth` from `@cedarjs/auth`) and a not-a-member message.
 
-`orgSlug` resolves from `useParams().orgSlug` by default; pass the `orgSlug`
-prop to source it from state instead (an organization switcher that isn't
-URL-driven, for example). `memberships` come from
+`orgSlug` resolves from `useParams().orgSlug` by default as the organization
+lives in the URL (see the
+[multi-tenancy how-to](./how-to/multi-tenancy.md#4-request-flow-url-to-header-to-context)
+for why). Pass the `orgSlug` prop only when it genuinely can't come from the
+route: a subdomain- or custom-domain-derived organization, or an in-page
+switcher that doesn't navigate. `memberships` come from
 `getMemberships(useAuth().currentUser)`. Internally, `OrgScope` builds (or
 reuses) a per-organization Apollo client keyed by `${userId}:${organizationId}`
 and renders:

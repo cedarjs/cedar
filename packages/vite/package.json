@@ -102,7 +102,7 @@
     "@hyrious/esbuild-plugin-commonjs": "0.2.6",
     "@jridgewell/trace-mapping": "0.3.31",
     "@oxc-project/types": "^0.147.0",
-    "@types/aws-lambda": "8.10.162",
+    "@types/aws-lambda": "8.10.163",
     "@types/busboy": "^1",
     "@types/express": "5.0.6",
     "@types/react": "^19.2.0",

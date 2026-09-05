@@ -30,7 +30,7 @@ function buildMembershipsSelectProperty() {
 
   if (!property) {
     // Unreachable: the snippet above is a fixed literal.
-    throw new Error('RW_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND')
+    throw new Error('CEDAR_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND')
   }
 
   return property
@@ -47,7 +47,7 @@ function buildMembershipsSelectProperty() {
  *   so app code can `import { hasOrgRole, requireMembership } from
  *   'src/lib/auth'` the same way it already imports `requireAuth`.
  *
- * Throws `RW_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND` when `db.user.findUnique`'s
+ * Throws `CEDAR_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND` when `db.user.findUnique`'s
  * `select` object cannot be located, so the caller can print the snippet to
  * add by hand instead of guessing at an unfamiliar shape.
  */
@@ -109,7 +109,7 @@ export default function transform(fileInfo: j.FileInfo) {
     })
 
   if (!selectFound) {
-    throw new Error('RW_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND')
+    throw new Error('CEDAR_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND')
   }
 
   const tenancyExportSnippet = `export { hasOrgRole, requireMembership } from '@cedarjs/tenancy'\n`

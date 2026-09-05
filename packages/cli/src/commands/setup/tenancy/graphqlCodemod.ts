@@ -31,9 +31,13 @@ function buildContextProperty() {
           event: requestEvent,
           variables: params.variables,
           currentUser,
-          lookupOrg: (idOrSlug) =>
-            db.organization.findFirst({
-              where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
+          lookupOrg: async (idOrSlug) =>
+            (await db.organization.findUnique({
+              where: { id: idOrSlug },
+              select: { id: true, slug: true },
+            })) ??
+            db.organization.findUnique({
+              where: { slug: idOrSlug },
               select: { id: true, slug: true },
             }),
         })
@@ -52,7 +56,7 @@ function buildContextProperty() {
 
   if (!property) {
     // Unreachable: the snippet above is a fixed literal.
-    throw new Error('RW_CODEMOD_ERR_GRAPHQL_HANDLER_NOT_FOUND')
+    throw new Error('CEDAR_CODEMOD_ERR_GRAPHQL_HANDLER_NOT_FOUND')
   }
 
   return property
@@ -79,9 +83,9 @@ function addNamedImport(
  * to `createGraphQLHandler({ ... })` that resolves the request's current
  * organization before every resolver runs.
  *
- * Throws `RW_CODEMOD_ERR_GRAPHQL_HANDLER_NOT_FOUND` when
+ * Throws `CEDAR_CODEMOD_ERR_GRAPHQL_HANDLER_NOT_FOUND` when
  * `createGraphQLHandler({ ... })` cannot be found, and
- * `RW_CODEMOD_ERR_GRAPHQL_CONTEXT_EXISTS` when a `context` option is already
+ * `CEDAR_CODEMOD_ERR_GRAPHQL_CONTEXT_EXISTS` when a `context` option is already
  * present (most likely hand-written), so the caller can print instructions
  * instead of overwriting app code.
  */
@@ -97,14 +101,14 @@ export default function transform(fileInfo: j.FileInfo) {
   })
 
   if (handlerCalls.length === 0) {
-    throw new Error('RW_CODEMOD_ERR_GRAPHQL_HANDLER_NOT_FOUND')
+    throw new Error('CEDAR_CODEMOD_ERR_GRAPHQL_HANDLER_NOT_FOUND')
   }
 
   handlerCalls.forEach((path) => {
     const [config] = path.node.arguments
 
     if (!j.ObjectExpression.check(config)) {
-      throw new Error('RW_CODEMOD_ERR_GRAPHQL_HANDLER_NOT_FOUND')
+      throw new Error('CEDAR_CODEMOD_ERR_GRAPHQL_HANDLER_NOT_FOUND')
     }
 
     const hasContext = config.properties.some(
@@ -115,7 +119,7 @@ export default function transform(fileInfo: j.FileInfo) {
     )
 
     if (hasContext) {
-      throw new Error('RW_CODEMOD_ERR_GRAPHQL_CONTEXT_EXISTS')
+      throw new Error('CEDAR_CODEMOD_ERR_GRAPHQL_CONTEXT_EXISTS')
     }
 
     config.properties.push(buildContextProperty())

@@ -21,7 +21,7 @@ describe.skipIf(process.env.CI && process.platform === 'win32')(
       await matchTransformSnapshot('dbCodemod', 'uploadsDb')
     })
 
-    it('throws RW_CODEMOD_ERR_OLD_FORMAT for the inline new PrismaClient() shape', async () => {
+    it('throws CEDAR_CODEMOD_ERR_OLD_FORMAT for the inline new PrismaClient() shape', async () => {
       const transformResult = await runTransform({
         transformPath: path.join(__dirname, '../dbCodemod.ts'), // Use TS here!
         targetPaths: [
