@@ -78,3 +78,11 @@ Since each of these webhooks will call a function endpoint in your CedarJS api, 
 - Ensure that the hook isn't reprocessed or replayed
 
 For details on how to keep your incoming webhooks secure and how to sign your outgoing webhooks, please see [Webhooks](webhooks.md).
+
+## Signed Tokens
+
+Some values have to leave your api side and come back through an untrusted channel: the `state` parameter of an OAuth flow, a confirmation or unsubscribe link in an email, a short-lived token that grants one specific action. Rather than storing a nonce somewhere and checking it later, you can mint a token that carries its own claims and expiry and is signed with a secret only your app knows.
+
+`@cedarjs/api` exports `createSignedToken` and `verifySignedToken` for exactly this. Each token is bound to a named purpose so it cannot be replayed in a different flow, always expires, and verification throws rather than returning `null`, so a forgotten check cannot fail open.
+
+For details, please see [Signed Tokens](signed-tokens.md).
