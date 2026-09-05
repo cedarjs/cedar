@@ -45,7 +45,7 @@
     "@cedarjs/framework-tools": "workspace:*",
     "@types/yargs": "17.0.35",
     "concurrently": "9.2.4",
-    "memfs": "4.68.2",
+    "memfs": "4.69.0",
     "publint": "0.3.24",
     "typescript": "5.9.3",
     "vitest": "4.1.11"
