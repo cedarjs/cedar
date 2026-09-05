@@ -147,7 +147,7 @@ organization to attach the integration to from the token itself, rather than
 from any ambient context.
 
 ```ts title="api/src/functions/calendarConnect.ts"
-import type { APIGatewayProxyEvent, Context } from 'aws-lambda'
+import type { APIGatewayProxyEvent } from 'aws-lambda'
 
 import { createSignedToken } from '@cedarjs/api'
 import { authDecoder } from '@cedarjs/auth-dbauth-api'
@@ -156,10 +156,7 @@ import { useRequireAuth } from '@cedarjs/graphql-server'
 
 import { getCurrentUser, requireAuth } from 'src/lib/auth'
 
-const calendarConnect = async (
-  _event: APIGatewayProxyEvent,
-  _context: Context
-) => {
+const calendarConnect = async (_event: APIGatewayProxyEvent) => {
   // `useRequireAuth` below populates `context.currentUser` for this function
   requireAuth()
 
