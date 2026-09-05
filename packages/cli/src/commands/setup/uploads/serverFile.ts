@@ -46,31 +46,97 @@ export function detectServerAuth(
   return null
 }
 
-export function uploadsServerImports(auth: UploadsServerAuth | null) {
-  if (!auth) {
-    return [
-      "import { cedarUploadsPlugin } from '@cedarjs/uploads'",
-      '',
-      "import { db } from 'src/lib/db'",
-      "import { targets } from 'src/lib/uploads'",
-    ]
-  }
+/**
+ * True when `name` is already bound at the top level of `source`: imported
+ * by name, or declared with `const`/`let`/`var`/`function`. A custom server
+ * file that already wires auth keeps its own bindings.
+ */
+export function hasBinding(source: string, name: string): boolean {
+  const imported = new RegExp(
+    `import\\s*(?:type\\s*)?\\{[^}]*\\b${name}\\b[^}]*\\}\\s*from`,
+  )
+  const declared = new RegExp(
+    `^\\s*(?:const|let|var|function)\\s+${name}\\b`,
+    'm',
+  )
 
-  return [
-    auth.usesFactory
-      ? `import { createAuthDecoder } from '${auth.decoderPackage}'`
-      : `import { authDecoder } from '${auth.decoderPackage}'`,
-    "import { cedarUploadsPlugin, createUploadAuthenticator } from '@cedarjs/uploads'",
-    '',
-    auth.usesFactory
-      ? "import { cookieName, getCurrentUser } from 'src/lib/auth'"
-      : "import { getCurrentUser } from 'src/lib/auth'",
-    "import { db } from 'src/lib/db'",
-    "import { targets } from 'src/lib/uploads'",
-  ]
+  return imported.test(source) || declared.test(source)
 }
 
-export function uploadsServerRegistration(auth: UploadsServerAuth | null) {
+interface ImportSpec {
+  names: string[]
+  from: string
+}
+
+/**
+ * The import lines the registration needs, minus any name `source` already
+ * binds. Package imports come first, then `src/` imports, separated by a
+ * blank line, matching the layout of a generated server file.
+ */
+export function uploadsServerImports(
+  source: string,
+  auth: UploadsServerAuth | null,
+): string[] {
+  const packageSpecs: ImportSpec[] = []
+  const srcSpecs: ImportSpec[] = []
+
+  if (auth) {
+    if (auth.usesFactory) {
+      // With `authDecoder` already declared there is nothing to build it from
+      if (!hasBinding(source, 'authDecoder')) {
+        packageSpecs.push({
+          names: ['createAuthDecoder'],
+          from: auth.decoderPackage,
+        })
+      }
+    } else {
+      packageSpecs.push({ names: ['authDecoder'], from: auth.decoderPackage })
+    }
+  }
+
+  packageSpecs.push({
+    names: auth
+      ? ['cedarUploadsPlugin', 'createUploadAuthenticator']
+      : ['cedarUploadsPlugin'],
+    from: '@cedarjs/uploads',
+  })
+
+  if (auth) {
+    const authNames = ['getCurrentUser']
+
+    if (auth.usesFactory && !hasBinding(source, 'authDecoder')) {
+      authNames.unshift('cookieName')
+    }
+
+    srcSpecs.push({ names: authNames, from: 'src/lib/auth' })
+  }
+
+  srcSpecs.push({ names: ['db'], from: 'src/lib/db' })
+  srcSpecs.push({ names: ['targets'], from: 'src/lib/uploads' })
+
+  const render = (specs: ImportSpec[]) =>
+    specs
+      .map((spec) => ({
+        ...spec,
+        names: spec.names.filter((name) => !hasBinding(source, name)),
+      }))
+      .filter((spec) => spec.names.length > 0)
+      .map((spec) => `import { ${spec.names.join(', ')} } from '${spec.from}'`)
+
+  const packageLines = render(packageSpecs)
+  const srcLines = render(srcSpecs)
+
+  if (packageLines.length > 0 && srcLines.length > 0) {
+    return [...packageLines, '', ...srcLines]
+  }
+
+  return [...packageLines, ...srcLines]
+}
+
+export function uploadsServerRegistration(
+  source: string,
+  auth: UploadsServerAuth | null,
+) {
   if (!auth) {
     return `  await server.register(cedarUploadsPlugin, {
     tokenSecret: process.env.UPLOAD_TOKEN_SECRET,
@@ -83,9 +149,10 @@ export function uploadsServerRegistration(auth: UploadsServerAuth | null) {
 `
   }
 
-  const decoder = auth.usesFactory
-    ? '  const authDecoder = createAuthDecoder(cookieName)\n\n'
-    : ''
+  const decoder =
+    auth.usesFactory && !hasBinding(source, 'authDecoder')
+      ? '  const authDecoder = createAuthDecoder(cookieName)\n\n'
+      : ''
 
   return `${decoder}  await server.register(cedarUploadsPlugin, {
     tokenSecret: process.env.UPLOAD_TOKEN_SECRET,
@@ -127,12 +194,12 @@ export function addUploadsPlugin(
 
   const withImports = [
     ...lines.slice(0, lastImport + 1),
-    ...uploadsServerImports(auth),
+    ...uploadsServerImports(source, auth),
     ...lines.slice(lastImport + 1),
   ].join('\n')
 
   return withImports.replace(
     START_LINE,
-    (line) => `${uploadsServerRegistration(auth)}\n${line}`,
+    (line) => `${uploadsServerRegistration(source, auth)}\n${line}`,
   )
 }

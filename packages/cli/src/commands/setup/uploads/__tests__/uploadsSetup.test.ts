@@ -4,6 +4,7 @@ import { addUploadModel, hasModel, UPLOAD_MODEL } from '../schemaPrisma.js'
 import {
   addUploadsPlugin,
   detectServerAuth,
+  hasBinding,
   hasUploadsPlugin,
   uploadsServerRegistration,
 } from '../serverFile.js'
@@ -90,7 +91,7 @@ async function main() {
     logger,
   })
 
-${uploadsServerRegistration(null)}
+${uploadsServerRegistration(SERVER, null)}
   await server.start()
 }
 
@@ -135,6 +136,73 @@ main()
     expect(result).toContain(
       'authenticate: createUploadAuthenticator({ authDecoder, getCurrentUser }),',
     )
+  })
+
+  it('keeps bindings a custom server file already has', () => {
+    const custom = `import { createServer } from '@cedarjs/api-server'
+import { createAuthDecoder } from '@cedarjs/auth-dbauth-api'
+
+import { cookieName, getCurrentUser } from 'src/lib/auth'
+import { db } from 'src/lib/db'
+import { logger } from 'src/lib/logger'
+
+const authDecoder = createAuthDecoder(cookieName)
+
+async function main() {
+  const server = await createServer({ logger })
+
+  await server.start()
+}
+
+main()
+`
+
+    const result = addUploadsPlugin(custom, {
+      auth: { decoderPackage: '@cedarjs/auth-dbauth-api', usesFactory: true },
+    })
+
+    expect(result).toBe(`import { createServer } from '@cedarjs/api-server'
+import { createAuthDecoder } from '@cedarjs/auth-dbauth-api'
+
+import { cookieName, getCurrentUser } from 'src/lib/auth'
+import { db } from 'src/lib/db'
+import { logger } from 'src/lib/logger'
+import { cedarUploadsPlugin, createUploadAuthenticator } from '@cedarjs/uploads'
+
+import { targets } from 'src/lib/uploads'
+
+const authDecoder = createAuthDecoder(cookieName)
+
+async function main() {
+  const server = await createServer({ logger })
+
+${uploadsServerRegistration(custom, {
+  decoderPackage: '@cedarjs/auth-dbauth-api',
+  usesFactory: true,
+})}
+  await server.start()
+}
+
+main()
+`)
+    expect(result).not.toContain(
+      'const authDecoder = createAuthDecoder(cookieName)\n\n  await',
+    )
+    expect(result).toContain(
+      "import { cedarUploadsPlugin, createUploadAuthenticator } from '@cedarjs/uploads'",
+    )
+    expect(result).toContain("import { targets } from 'src/lib/uploads'")
+    expect(result).toContain(
+      'authenticate: createUploadAuthenticator({ authDecoder, getCurrentUser }),',
+    )
+  })
+
+  it('detects existing bindings', () => {
+    expect(hasBinding("import { db } from 'src/lib/db'", 'db')).toBe(true)
+    expect(hasBinding("import type { Db } from 'x'", 'Db')).toBe(true)
+    expect(hasBinding('const authDecoder = make()', 'authDecoder')).toBe(true)
+    expect(hasBinding("import { dbx } from 'src/lib/db'", 'db')).toBe(false)
+    expect(hasBinding('server.register(db)', 'db')).toBe(false)
   })
 
   it('throws when there is no server.start() to anchor on', () => {
