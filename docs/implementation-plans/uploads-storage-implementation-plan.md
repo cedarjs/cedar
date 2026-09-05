@@ -314,7 +314,7 @@ export function createS3Provider(opts: S3ProviderOptions): StorageProvider {
         await client.send(
           new HeadObjectCommand({ Bucket: bucket, Key: `${keyPrefix}${key}` })
         )
-        
+
         return true
       } catch {
         return false
