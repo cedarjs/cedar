@@ -151,8 +151,24 @@ through the same browser that started the flow. Without that binding an attacker
 could start a flow, hand the authorization URL to a victim, and have the victim's
 provider account linked to the attacker's organization. So the example also
 generates a random nonce, stores it in a short-lived cookie, and requires the
-callback's cookie to match the nonce inside the signed `state`. Consuming the
-nonce on the row it creates makes the callback single-use.
+callback's cookie to match the nonce inside the signed `state`. Recording each
+nonce in a table with a unique key makes the callback single-use: the second
+callback carrying the same `state` fails the insert and is refused.
+
+The table is one model in `schema.prisma`:
+
+```prisma
+model OAuthNonce {
+  nonce     String   @id
+  createdAt DateTime @default(now())
+}
+```
+
+A row is never needed after the nonce's ten-minute lifetime, so a periodic
+`deleteMany` on `createdAt` keeps the table small. Starting a second attempt in
+the same browser overwrites the cookie, so only the most recent attempt can
+complete; that is the intended behavior for a flow the user drives one step at
+a time.
 
 ```ts title="api/src/functions/calendarConnect.ts"
 import { randomBytes } from 'node:crypto'
@@ -219,7 +235,7 @@ import * as cookie from 'cookie'
 
 import { SignedTokenError, verifySignedToken } from '@cedarjs/api'
 
-import { db } from 'src/lib/db'
+import { db, Prisma } from 'src/lib/db'
 
 interface CalendarOAuthState {
   nonce: string
@@ -252,27 +268,29 @@ export const handler = async (event: APIGatewayProxyEvent) => {
     return rejected
   }
 
+  // Consume the nonce atomically. The primary key makes the insert fail for
+  // a replayed or concurrent callback, which is refused before the code is
+  // exchanged and before anything else is written.
+  try {
+    await db.oAuthNonce.create({ data: { nonce: state.nonce } })
+  } catch (e) {
+    if (
+      e instanceof Prisma.PrismaClientKnownRequestError &&
+      e.code === 'P2002'
+    ) {
+      return rejected
+    }
+
+    throw e
+  }
+
   const tokens = await exchangeCodeForTokens(event.queryStringParameters?.code)
 
-  // Consume the nonce atomically: a second callback carrying the same
-  // state finds it already recorded and is refused before any write
-  const { count } = await db.integration.updateMany({
-    where: {
-      organizationId: state.organizationId,
-      consumedOAuthNonce: { not: state.nonce },
-    },
-    data: { ...tokens, consumedOAuthNonce: state.nonce },
+  await db.integration.upsert({
+    where: { organizationId: state.organizationId },
+    create: { organizationId: state.organizationId, ...tokens },
+    update: tokens,
   })
-
-  if (count === 0) {
-    await db.integration.create({
-      data: {
-        organizationId: state.organizationId,
-        consumedOAuthNonce: state.nonce,
-        ...tokens,
-      },
-    })
-  }
 
   return {
     statusCode: 302,
@@ -288,12 +306,20 @@ Because the organization comes from the verified token and nowhere else, the
 callback works the same whether or not any user session is present. A forged or
 expired `state` is rejected by verification, a `state` presented from a different
 browser is rejected by the cookie check, and a replayed `state` is rejected by the
-consumed nonce, all before any database write.
+nonce insert, all before the code is exchanged or the integration is written.
 
 Verification itself is stateless: a valid token is accepted every time it is
-presented until it expires. The cookie and the consumed nonce are what make this
-flow browser-bound and single-use. A token whose effect does not depend on which
-browser presents it, such as an unsubscribe link, can skip both.
+presented until it expires. The two additions are independent and answer
+different questions:
+
+- **The cookie binds the flow to a browser.** Needed when the callback's effect
+  depends on who is sitting at the browser, as with OAuth login and account
+  linking. A password-set or email-confirmation link is meant to work from any
+  browser, so it skips the cookie.
+- **The recorded nonce makes the token single-use.** Needed whenever acting on
+  the same token twice would be a problem, which includes those password-set and
+  confirmation links. An unsubscribe link, where a repeat is harmless, can skip
+  it.
 
 ## Design notes
 

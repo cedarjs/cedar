@@ -85,6 +85,6 @@ Some values have to leave your api side and come back through an untrusted chann
 
 `@cedarjs/api` exports `createSignedToken` and `verifySignedToken` for exactly this. Each token is bound to a named purpose so it cannot be replayed in a different flow, always expires, and verification throws rather than returning `null`, so a forgotten check cannot fail open.
 
-A signed token proves where a value came from, not which browser is presenting it, and verification is stateless, so a valid token is accepted until it expires. That is enough for links whose effect does not depend on who clicks them. For OAuth login, account linking, and other flows where the callback must come from the browser that started them, pair the token with a session-bound, single-use nonce as shown in the [OAuth example](signed-tokens.md#example-oauth-state-without-a-session-store).
+A signed token proves where a value came from, not which browser is presenting it, and verification is stateless, so a valid token is accepted until it expires. Two independent additions cover what that leaves out: a cookie-bound nonce ties a flow to the browser that started it, which OAuth login and account linking need, and recording each nonce as it is consumed makes a token single-use, which password-set and confirmation links need even though they may be opened from any browser. The [OAuth example](signed-tokens.md#example-oauth-state-without-a-session-store) shows both.
 
 For details, please see [Signed Tokens](signed-tokens.md).
