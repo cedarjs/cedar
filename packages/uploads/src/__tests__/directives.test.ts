@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
+import type { CedarDirective } from '@cedarjs/graphql-server'
+
 import {
   createRequireUploadTokenDirective,
   createWithDataUriDirective,
@@ -16,13 +18,24 @@ import { createMemoryProvider } from './helpers/memoryProvider.js'
 import { db, prisma, resetTestDb } from './helpers/testDb.js'
 import { SECRET, tokenFor } from './helpers/tokens.js'
 
-// Directive callbacks only read `context` and `resolvedValue`; the rest of
-// the resolver arguments are irrelevant to these tests
-const resolverArgs = {
-  root: {},
-  args: {},
-  info: {} as never,
-  directiveArgs: {},
+/**
+ * Invokes a directive the way the GraphQL plugin does. The directives under
+ * test read only `context` and `resolvedValue`; `info` is typed as
+ * `GraphQLResolveInfo` but never touched, so an empty object stands in for it
+ * through one documented cast here instead of one at every call site.
+ */
+function run(
+  directive: CedarDirective,
+  args: { context: Record<string, unknown>; resolvedValue?: unknown },
+) {
+  return directive.onResolvedValue({
+    root: {},
+    args: {},
+    directiveArgs: {},
+    // GraphQLResolveInfo is not consulted by these directives
+    info: {} as never,
+    ...args,
+  })
 }
 
 describe('@requireUploadToken', () => {
@@ -34,7 +47,7 @@ describe('@requireUploadToken', () => {
       currentUser: { id: 'user_1' },
     }
 
-    directive.onResolvedValue({ ...resolverArgs, context } as never)
+    run(directive, { context })
 
     expect(getUploadTokenPayload(context)).toMatchObject({ sub: 'user_1' })
     expect(context[UPLOAD_TOKEN_CONTEXT_KEY]).toBeDefined()
@@ -48,48 +61,41 @@ describe('@requireUploadToken', () => {
       currentUser: { id: 'user_1' },
     }
 
-    directive.onResolvedValue({ ...resolverArgs, context } as never)
+    run(directive, { context })
 
     expect(getUploadTokenPayload(context)).toMatchObject({ sub: 'user_1' })
   })
 
   test('rejects a request with no current user', () => {
     expect(() =>
-      directive.onResolvedValue({
-        ...resolverArgs,
+      run(directive, {
         context: { event: { headers: { 'x-upload-token': tokenFor() } } },
-      } as never),
+      }),
     ).toThrow('You must be logged in to use an upload token.')
   })
 
   test('rejects missing, invalid, and foreign tokens', () => {
     expect(() =>
-      directive.onResolvedValue({
-        ...resolverArgs,
-        context: { event: { headers: {} } },
-      } as never),
+      run(directive, { context: { event: { headers: {} } } }),
     ).toThrow('Missing upload token.')
 
     expect(() =>
-      directive.onResolvedValue({
-        ...resolverArgs,
+      run(directive, {
         context: { event: { headers: { 'x-upload-token': 'nope' } } },
-      } as never),
+      }),
     ).toThrow('Invalid upload token (INVALID).')
 
     expect(() =>
-      directive.onResolvedValue({
-        ...resolverArgs,
+      run(directive, {
         context: {
           event: { headers: { 'x-upload-token': tokenFor() } },
           currentUser: { id: 'user_2' },
         },
-      } as never),
+      }),
     ).toThrow('Upload token was issued to a different user.')
 
     expect(() =>
-      directive.onResolvedValue({
-        ...resolverArgs,
+      run(directive, {
         context: {
           event: {
             headers: {
@@ -98,7 +104,7 @@ describe('@requireUploadToken', () => {
           },
           currentUser: { id: 'user_1', organizationId: 'org_2' },
         },
-      } as never),
+      }),
     ).toThrow('Upload token was issued for a different organization.')
   })
 
@@ -115,9 +121,7 @@ describe('@requireUploadToken', () => {
       org: { id: 'org_1' },
     }
 
-    expect(() =>
-      scoped.onResolvedValue({ ...resolverArgs, context } as never),
-    ).not.toThrow()
+    expect(() => run(scoped, { context })).not.toThrow()
   })
 
   test('getUploadTokenPayload throws without the directive', () => {
@@ -152,11 +156,7 @@ describe('@withSignedUrl and @withDataUri', () => {
       data: Buffer.from('png'),
     })
 
-    const url = await directive.onResolvedValue({
-      ...resolverArgs,
-      context: {},
-      resolvedValue: upload.id,
-    } as never)
+    const url = await run(directive, { context: {}, resolvedValue: upload.id })
 
     expect(url).toBe(`memory://files/${upload.storageKey}?disposition=inline`)
   })
@@ -182,11 +182,7 @@ describe('@withSignedUrl and @withDataUri', () => {
     })
 
     const resolve = (resolvedValue: unknown) =>
-      directive.onResolvedValue({
-        ...resolverArgs,
-        context: {},
-        resolvedValue,
-      } as never)
+      run(directive, { context: {}, resolvedValue })
 
     expect(await resolve(upload.id)).toBe('data:image/png;base64,cG5n')
     expect(await resolve(pending.id)).toBeNull()
@@ -212,11 +208,7 @@ describe('@withSignedUrl and @withDataUri', () => {
     })
 
     const resolve = (resolvedValue: unknown) =>
-      directive.onResolvedValue({
-        ...resolverArgs,
-        context: {},
-        resolvedValue,
-      } as never)
+      run(directive, { context: {}, resolvedValue })
 
     expect(await resolve(stored.id)).toBe('data:text/plain;base64,aGk=')
     expect(await resolve(inline.id)).toBe('data:text/plain;base64,eW8=')
@@ -239,13 +231,7 @@ describe('@withSignedUrl and @withDataUri', () => {
     const context = {}
 
     const urls = await Promise.all(
-      uploads.map((u) =>
-        directive.onResolvedValue({
-          ...resolverArgs,
-          context,
-          resolvedValue: u.id,
-        } as never),
-      ),
+      uploads.map((u) => run(directive, { context, resolvedValue: u.id })),
     )
 
     expect(urls).toHaveLength(3)

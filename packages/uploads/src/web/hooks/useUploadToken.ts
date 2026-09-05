@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { ErrorLike } from '@apollo/client'
 import { useLazyQuery } from '@apollo/client/react'
@@ -51,6 +51,18 @@ export function useUploadToken({
   // to read from Uppy callbacks without waiting for a re-render
   const tokenRef = useRef<string | null>(null)
   const inFlight = useRef<Promise<string> | null>(null)
+  const profileRef = useRef(profile)
+
+  // Everything above is scoped to one profile. Clear it when the profile
+  // changes so the next upload cannot reuse the previous profile's token or
+  // limits; a request still in flight for the old profile is ignored.
+  useEffect(() => {
+    profileRef.current = profile
+    tokenRef.current = null
+    inFlight.current = null
+    setToken(null)
+    setConstraints(null)
+  }, [profile])
 
   const [execute, { loading, error }] = useLazyQuery<
     RequestUploadTokenData,
@@ -62,8 +74,16 @@ export function useUploadToken({
       return inFlight.current
     }
 
+    const requestedProfile = profile
+
     const request = (async () => {
-      const result = await execute({ variables: { profile } })
+      const result = await execute({ variables: { profile: requestedProfile } })
+
+      if (requestedProfile !== profileRef.current) {
+        throw new Error(
+          'The upload profile changed while a token was requested.',
+        )
+      }
 
       if (result.error) {
         throw result.error instanceof Error
@@ -87,7 +107,9 @@ export function useUploadToken({
 
       return data.token
     })().finally(() => {
-      inFlight.current = null
+      if (inFlight.current === request) {
+        inFlight.current = null
+      }
     })
 
     inFlight.current = request

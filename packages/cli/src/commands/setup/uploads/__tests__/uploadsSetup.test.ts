@@ -204,6 +204,7 @@ main()
     expect(hasBinding("import db from 'src/lib/db'", 'db')).toBe(true)
     expect(hasBinding("import * as db from 'src/lib/db'", 'db')).toBe(true)
     expect(hasBinding('const authDecoder = make()', 'authDecoder')).toBe(true)
+    expect(hasBinding('export const db = make()', 'db')).toBe(true)
 
     // Type-only imports and aliases bind something else (or nothing)
     expect(hasBinding("import type { db } from 'x'", 'db')).toBe(false)
@@ -230,6 +231,14 @@ main()
       hasUploadsPlugin('await server.register(cedarUploadsPlugin, {'),
     ).toBe(true)
     expect(hasUploadsPlugin('// TODO: add cedarUploadsPlugin')).toBe(false)
+    expect(
+      hasUploadsPlugin('  // await server.register(cedarUploadsPlugin, {})'),
+    ).toBe(false)
+    expect(
+      hasUploadsPlugin(
+        "const note = 'call server.register(cedarUploadsPlugin, ...)'",
+      ),
+    ).toBe(false)
     expect(
       hasUploadsPlugin("import { cedarUploadsPlugin } from '@cedarjs/uploads'"),
     ).toBe(false)

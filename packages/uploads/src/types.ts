@@ -53,6 +53,7 @@ export interface UploadWhere {
   storageKey?: string | null | { not: null }
   tokenId?: string
   createdAt?: { lt?: Date; gte?: Date }
+  updatedAt?: { lt?: Date; gte?: Date }
 }
 
 export interface UploadUpdateData {

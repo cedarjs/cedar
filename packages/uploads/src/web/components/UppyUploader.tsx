@@ -59,6 +59,10 @@ function DashboardMount({
         })
       })
       .catch((e: unknown) => {
+        if (cancelled) {
+          return
+        }
+
         // Surface a missing or failed chunk through Uppy's own error channel
         uppy.emit(
           'error',

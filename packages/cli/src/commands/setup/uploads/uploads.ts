@@ -41,8 +41,10 @@ export const builder = (yargs: Argv) => {
  * type without a cast.
  */
 export function toTargetChoices(values: string[]): TargetChoice[] {
+  const choices: readonly string[] = TARGET_CHOICES
+
   return [...new Set(values)].filter((t): t is TargetChoice =>
-    (TARGET_CHOICES as readonly string[]).includes(t),
+    choices.includes(t),
   )
 }
 

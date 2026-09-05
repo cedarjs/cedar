@@ -90,11 +90,14 @@ export function importedBindings(source: string): Set<string> {
 
 /**
  * True when `name` is bound at the top level of `source`: imported under
- * that local name, or declared with `const`/`let`/`var`/`function` at column
- * zero. A custom server file that already wires auth keeps its own bindings.
+ * that local name, or declared (optionally exported) with
+ * `const`/`let`/`var`/`function` at column zero. A custom server file that already wires auth keeps its own bindings.
  */
 export function hasBinding(source: string, name: string): boolean {
-  const declared = new RegExp(`^(?:const|let|var|function)\\s+${name}\\b`, 'm')
+  const declared = new RegExp(
+    `^(?:export\\s+)?(?:const|let|var|function)\\s+${name}\\b`,
+    'm',
+  )
 
   return importedBindings(source).has(name) || declared.test(source)
 }
@@ -201,9 +204,15 @@ export function uploadsServerRegistration(
 `
 }
 
-/** True when the server file already registers the plugin. */
+/**
+ * True when the server file already registers the plugin. The call must
+ * start a line (after indentation and an optional `await`), which excludes
+ * commented-out registrations and mentions inside strings.
+ */
 export function hasUploadsPlugin(source: string): boolean {
-  return /\.register\(\s*cedarUploadsPlugin\b/.test(source)
+  return /^[ \t]*(?:await\s+)?[\w.]+\.register\(\s*cedarUploadsPlugin\b/m.test(
+    source,
+  )
 }
 
 export function addUploadsPlugin(

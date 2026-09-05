@@ -223,7 +223,7 @@ describe('cleanupStaleUploads', () => {
     // Bytes that landed after the row was claimed
     targets.files.objects.set('late.txt', Buffer.from('x'))
 
-    await prisma.upload.create({
+    const ancient = await prisma.upload.create({
       data: {
         target: 'files',
         status: 'failed',
@@ -234,6 +234,8 @@ describe('cleanupStaleUploads', () => {
         createdAt: new Date(Date.now() - 48 * HOUR),
       },
     })
+    // Prisma sets updatedAt to now on create; push it outside the window
+    await prisma.$executeRaw`UPDATE "Upload" SET "updatedAt" = ${new Date(Date.now() - 48 * HOUR)} WHERE id = ${ancient.id}`
     targets.files.objects.set('ancient.txt', Buffer.from('x'))
 
     const result = await cleanupStaleUploads({ db, targets })
@@ -245,6 +247,44 @@ describe('cleanupStaleUploads', () => {
     // The reclaimed tombstone drops out of the next run's re-check
     const late = await prisma.upload.findFirst({ where: { filename: 'late' } })
     expect(late?.storageKey).toBeNull()
+  })
+
+  test('retries a claimed row whose reclaim failed, however old the row is', async () => {
+    const targets = makeTargets()
+    const ancient = new Date(Date.now() - 72 * HOUR)
+
+    const row = await prisma.upload.create({
+      data: {
+        target: 'files',
+        status: 'pending',
+        filename: 'ancient',
+        mimeType: 'text/plain',
+        size: 1n,
+        storageKey: 'ancient.txt',
+        createdAt: ancient,
+      },
+    })
+    targets.files.objects.set('ancient.txt', Buffer.from('x'))
+
+    // The first run claims the row but the provider fails
+    const failing = vi
+      .spyOn(targets.files, 'exists')
+      .mockRejectedValueOnce(new Error('storage down'))
+    const first = await cleanupStaleUploads({ db, targets, onError: () => {} })
+    failing.mockRestore()
+
+    expect(first).toEqual({ claimed: 1, deleted: 0, errors: 1 })
+    expect(
+      (await prisma.upload.findUniqueOrThrow({ where: { id: row.id } }))
+        .storageKey,
+    ).toBe('ancient.txt')
+
+    // The next run retries it: the claim updated the row, so it is inside
+    // the retry window even though it was created days ago
+    const second = await cleanupStaleUploads({ db, targets })
+
+    expect(second).toEqual({ claimed: 0, deleted: 1, errors: 0 })
+    expect(targets.files.objects.has('ancient.txt')).toBe(false)
   })
 
   test('reports rows it cannot reclaim and keeps sweeping', async () => {

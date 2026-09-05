@@ -14,8 +14,11 @@ export interface CleanupStaleUploadsOptions {
    */
   olderThan?: number
   /**
-   * `failed` rows younger than this many milliseconds are re-checked and
-   * their bytes deleted if they landed after the claim. Defaults to one day.
+   * `failed` rows that changed within this many milliseconds are re-checked
+   * and their bytes deleted if they landed after the claim. Measured from
+   * the row's last update (the claim, or the last failed attempt), so a row
+   * claimed long after it was created still gets its retries. Defaults to
+   * one day.
    */
   retryWindow?: number
   /** Largest batch of rows to process per call. Defaults to 500. */
@@ -123,7 +126,7 @@ export async function cleanupStaleUploads({
     where: {
       status: 'failed',
       storageKey: { not: null },
-      createdAt: { gte: new Date(now - retryWindow) },
+      updatedAt: { gte: new Date(now - retryWindow) },
     },
     omit: { data: true },
     orderBy: { createdAt: 'asc' },

@@ -60,6 +60,7 @@ export const targets = defineStorageTargets({
   avatars: createS3Provider({
     client: s3Client,
     bucket: process.env.S3_BUCKET_AVATARS,
+    region: process.env.AWS_REGION,
     keyPrefix: 'avatars/',
   }),
   local: createFsProvider({
@@ -239,10 +240,15 @@ You can do the same thing in a service. Object-storage targets sign a URL; a dat
 ```ts
 const target = resolveTarget(targets, upload.target)
 
-const url =
-  target.providerType === 'db'
-    ? toDataUri(upload.mimeType, upload.data)
-    : await target.getSignedReadUrl(upload.storageKey, { expiresIn: 600 })
+if (target.providerType === 'db') {
+  return upload.data ? toDataUri(upload.mimeType, upload.data) : null
+}
+
+if (!upload.storageKey) {
+  return null
+}
+
+return target.getSignedReadUrl(upload.storageKey, { expiresIn: 600 })
 ```
 
 Directive lookups are batched per request and never fetch the inline `data` column for object-storage rows, so a `@withSignedUrl` field on a list query costs one database query, not one per row.
