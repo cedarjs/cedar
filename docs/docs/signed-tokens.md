@@ -85,7 +85,7 @@ const { organizationId, userId } = verifySignedToken<{
 }>(event.queryStringParameters?.state, { purpose: 'google-oauth-state' })
 ```
 
-`verifySignedToken` returns the payload exactly as it was passed to
+`verifySignedToken` returns the JSON-deserialized payload, the same shape it was passed to
 `createSignedToken`. The type parameter tells TypeScript what shape to expect;
 the framework cannot check it at runtime, so treat it the way you would treat
 any value your own code serialized earlier.
@@ -146,7 +146,17 @@ signed token in the `state` parameter. The callback verifies it and learns which
 organization to attach the integration to from the token itself, rather than
 from any ambient context.
 
+The signature proves the token came from your app, but not that it came back
+through the same browser that started the flow. Without that binding an attacker
+could start a flow, hand the authorization URL to a victim, and have the victim's
+provider account linked to the attacker's organization. So the example also
+generates a random nonce, stores it in a short-lived cookie, and requires the
+callback's cookie to match the nonce inside the signed `state`. Consuming the
+nonce on the row it creates makes the callback single-use.
+
 ```ts title="api/src/functions/calendarConnect.ts"
+import { randomBytes } from 'node:crypto'
+
 import type { APIGatewayProxyEvent } from 'aws-lambda'
 
 import { createSignedToken } from '@cedarjs/api'
@@ -160,8 +170,11 @@ const calendarConnect = async (_event: APIGatewayProxyEvent) => {
   // `useRequireAuth` below populates `context.currentUser` for this function
   requireAuth()
 
+  const nonce = randomBytes(16).toString('base64url')
+
   const state = createSignedToken({
     payload: {
+      nonce,
       organizationId: context.currentUser.organizationId,
       userId: context.currentUser.id,
     },
@@ -179,7 +192,18 @@ const calendarConnect = async (_event: APIGatewayProxyEvent) => {
   url.searchParams.set('scope', 'https://www.googleapis.com/auth/calendar')
   url.searchParams.set('state', state)
 
-  return { statusCode: 302, headers: { Location: url.toString() } }
+  return {
+    statusCode: 302,
+    headers: {
+      Location: url.toString(),
+      // The browser that started the flow is the only one that can finish
+      // it. SameSite=Lax is what lets the cookie ride along on the
+      // top-level redirect back from the provider.
+      'Set-Cookie':
+        `calendar_oauth_nonce=${nonce}; Path=/; HttpOnly; Secure; ` +
+        'SameSite=Lax; Max-Age=600',
+    },
+  }
 }
 
 export const handler = useRequireAuth({
@@ -191,15 +215,19 @@ export const handler = useRequireAuth({
 
 ```ts title="api/src/functions/calendarCallback.ts"
 import type { APIGatewayProxyEvent } from 'aws-lambda'
+import * as cookie from 'cookie'
 
 import { SignedTokenError, verifySignedToken } from '@cedarjs/api'
 
 import { db } from 'src/lib/db'
 
 interface CalendarOAuthState {
+  nonce: string
   organizationId: string
   userId: string
 }
+
+const rejected = { statusCode: 400, body: 'Invalid or expired OAuth state.' }
 
 export const handler = async (event: APIGatewayProxyEvent) => {
   let state: CalendarOAuthState
@@ -211,32 +239,61 @@ export const handler = async (event: APIGatewayProxyEvent) => {
     )
   } catch (e) {
     if (e instanceof SignedTokenError) {
-      return { statusCode: 400, body: 'Invalid or expired OAuth state.' }
+      return rejected
     }
 
     throw e
   }
 
+  // Bind the callback to the browser that started the flow
+  const cookies = cookie.parse(event.headers.cookie ?? '')
+
+  if (cookies.calendar_oauth_nonce !== state.nonce) {
+    return rejected
+  }
+
   const tokens = await exchangeCodeForTokens(event.queryStringParameters?.code)
 
-  await db.integration.upsert({
-    where: { organizationId: state.organizationId },
-    create: { organizationId: state.organizationId, ...tokens },
-    update: tokens,
+  // Consume the nonce atomically: a second callback carrying the same
+  // state finds it already recorded and is refused before any write
+  const { count } = await db.integration.updateMany({
+    where: {
+      organizationId: state.organizationId,
+      consumedOAuthNonce: { not: state.nonce },
+    },
+    data: { ...tokens, consumedOAuthNonce: state.nonce },
   })
 
-  return { statusCode: 302, headers: { Location: '/settings/integrations' } }
+  if (count === 0) {
+    await db.integration.create({
+      data: {
+        organizationId: state.organizationId,
+        consumedOAuthNonce: state.nonce,
+        ...tokens,
+      },
+    })
+  }
+
+  return {
+    statusCode: 302,
+    headers: {
+      Location: '/settings/integrations',
+      'Set-Cookie': 'calendar_oauth_nonce=; Path=/; Max-Age=0',
+    },
+  }
 }
 ```
 
 Because the organization comes from the verified token and nowhere else, the
-callback works the same whether or not any user session is present, and a forged
-or expired `state` is rejected before any database write.
+callback works the same whether or not any user session is present. A forged or
+expired `state` is rejected by verification, a `state` presented from a different
+browser is rejected by the cookie check, and a replayed `state` is rejected by the
+consumed nonce, all before any database write.
 
-Verification is stateless: a valid token is accepted every time it is presented
-until it expires. When a flow must be single-use, record the token when it is
-consumed (for example by storing the `state` value on the row it creates) and
-refuse a second callback that carries the same one.
+Verification itself is stateless: a valid token is accepted every time it is
+presented until it expires. The cookie and the consumed nonce are what make this
+flow browser-bound and single-use. A token whose effect does not depend on which
+browser presents it, such as an unsubscribe link, can skip both.
 
 ## Design notes
 
