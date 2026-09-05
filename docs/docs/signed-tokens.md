@@ -147,14 +147,19 @@ organization to attach the integration to from the token itself, rather than
 from any ambient context.
 
 ```ts title="api/src/functions/calendarConnect.ts"
-import type { APIGatewayProxyEvent } from 'aws-lambda'
+import type { APIGatewayProxyEvent, Context } from 'aws-lambda'
 
 import { createSignedToken } from '@cedarjs/api'
+import { authDecoder } from '@cedarjs/auth-dbauth-api'
+import { useRequireAuth } from '@cedarjs/graphql-server'
 
-import { requireAuth } from 'src/lib/auth'
-import { context } from '@cedarjs/context'
+import { getCurrentUser, requireAuth } from 'src/lib/auth'
 
-export const handler = async (event: APIGatewayProxyEvent) => {
+const calendarConnect = async (
+  _event: APIGatewayProxyEvent,
+  _context: Context
+) => {
+  // `useRequireAuth` below populates `context.currentUser` for this function
   requireAuth()
 
   const state = createSignedToken({
@@ -178,6 +183,12 @@ export const handler = async (event: APIGatewayProxyEvent) => {
 
   return { statusCode: 302, headers: { Location: url.toString() } }
 }
+
+export const handler = useRequireAuth({
+  handlerFn: calendarConnect,
+  getCurrentUser,
+  authDecoder,
+})
 ```
 
 ```ts title="api/src/functions/calendarCallback.ts"
@@ -222,7 +233,12 @@ export const handler = async (event: APIGatewayProxyEvent) => {
 
 Because the organization comes from the verified token and nowhere else, the
 callback works the same whether or not any user session is present, and a forged
-or reused `state` is rejected before any database write.
+or expired `state` is rejected before any database write.
+
+Verification is stateless: a valid token is accepted every time it is presented
+until it expires. When a flow must be single-use, record the token when it is
+consumed (for example by storing the `state` value on the row it creates) and
+refuse a second callback that carries the same one.
 
 ## Design notes
 

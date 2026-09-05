@@ -7,12 +7,13 @@ import {
   SignedTokenError,
   verifySignedToken,
 } from '../signedTokens.js'
+import type { SignedTokenErrorCode } from '../signedTokens.js'
 
 const secret = 'MY_VOICE_IS_MY_PASSPORT_VERIFY_ME'
 const purpose = 'google-oauth-state'
 const payload = { organizationId: 'org_1', userId: 'user_1' }
 
-function expectSignedTokenError(fn: () => unknown, code: string) {
+function expectSignedTokenError(fn: () => unknown, code: SignedTokenErrorCode) {
   let thrown: unknown
 
   try {
@@ -21,10 +22,13 @@ function expectSignedTokenError(fn: () => unknown, code: string) {
     thrown = e
   }
 
-  expect(thrown).toBeInstanceOf(SignedTokenError)
+  if (!(thrown instanceof SignedTokenError)) {
+    throw new Error(`Expected a SignedTokenError, got ${String(thrown)}`)
+  }
+
   expect(thrown).toMatchObject({ name: 'SignedTokenError', code })
 
-  return thrown as SignedTokenError
+  return thrown
 }
 
 describe('signed tokens', () => {
