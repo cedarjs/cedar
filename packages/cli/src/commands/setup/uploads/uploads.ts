@@ -1,6 +1,8 @@
+import prompts from 'prompts'
 import type { Argv } from 'yargs'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
+import { requireTTYOrExit } from '@cedarjs/cli-helpers/tty'
 
 export const command = 'uploads'
 
@@ -11,13 +13,18 @@ export const TARGET_CHOICES = ['fs', 'db', 's3'] as const
 
 export type TargetChoice = (typeof TARGET_CHOICES)[number]
 
+const TARGET_DESCRIPTIONS: Record<TargetChoice, string> = {
+  fs: 'Local filesystem, uploaded through the api server (development, single-server deploys)',
+  db: 'Inline in the database, for small files like avatars and thumbnails',
+  s3: 'S3 or S3-compatible storage, uploaded straight from the browser with presigned URLs',
+}
+
 export const builder = (yargs: Argv) => {
   return yargs
     .option('targets', {
       choices: TARGET_CHOICES,
-      default: ['fs', 'db'],
       description:
-        'Storage targets to configure: fs (local filesystem), db (inline in the database), s3 (direct-to-S3 presigned uploads)',
+        'Storage targets to configure: fs (local filesystem), db (inline in the database), s3 (direct-to-S3 presigned uploads). Prompts when omitted.',
       type: 'array',
     })
     .option('force', {
@@ -28,15 +35,47 @@ export const builder = (yargs: Argv) => {
     })
 }
 
-export const handler = async (options: {
-  targets: string[]
-  force: boolean
-}) => {
+function toTargetChoices(values: string[]): TargetChoice[] {
   // yargs validates `choices`, so every entry is a TargetChoice; the
   // predicate narrows the type without a cast
-  const targets = options.targets.filter((t): t is TargetChoice =>
+  return values.filter((t): t is TargetChoice =>
     (TARGET_CHOICES as readonly string[]).includes(t),
   )
+}
+
+async function promptForTargets(): Promise<TargetChoice[]> {
+  requireTTYOrExit('--targets')
+
+  const response = await prompts({
+    type: 'multiselect',
+    name: 'targets',
+    message: 'Which storage targets do you want to configure?',
+    instructions: false,
+    hint: 'Space to toggle, enter to confirm',
+    min: 1,
+    choices: TARGET_CHOICES.map((value) => ({
+      title: value,
+      description: TARGET_DESCRIPTIONS[value],
+      value,
+      selected: value !== 's3',
+    })),
+  })
+
+  // prompts returns undefined for the value if the user ctrl-c's
+  if (response.targets === undefined) {
+    process.exit(0)
+  }
+
+  return toTargetChoices(response.targets)
+}
+
+export const handler = async (options: {
+  targets?: string[]
+  force: boolean
+}) => {
+  const targets = options.targets
+    ? toTargetChoices(options.targets)
+    : await promptForTargets()
 
   recordTelemetryAttributes({
     command: 'setup uploads',

@@ -14,7 +14,7 @@ The design in one paragraph: **GraphQL authorizes, Fastify moves bytes, services
 yarn cedar setup uploads
 ```
 
-By default this configures a local-filesystem target and an in-database target. Pass `--targets` to choose:
+The command asks which storage targets to configure. In a script or CI, pass them with `--targets` instead:
 
 ```bash
 yarn cedar setup uploads --targets fs db s3
