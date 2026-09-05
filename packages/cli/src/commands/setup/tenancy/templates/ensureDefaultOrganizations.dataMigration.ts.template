@@ -10,8 +10,9 @@ const BATCH_SIZE = 100
  * dbAuth, the signup handler). Every user without a membership gets one, in
  * batches, using the same `ensureDefaultOrganization` new signups use.
  *
- * Run with `cedar data-migrate up`, after `cedar prisma migrate dev` has
- * applied the `Organization`/`Membership` migration.
+ * Run with `__DATA_MIGRATE_UP_COMMAND__`, after
+ * `__PRISMA_MIGRATE_DEV_COMMAND__` has applied the
+ * `Organization`/`Membership` migration.
  */
 export default async ({ db }: { db: PrismaClient }) => {
   let cursor: string | undefined

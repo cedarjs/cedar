@@ -114,16 +114,16 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
   const writeTemplateFile = async (
     templateFile: string,
     outputPath: string,
+    replacements: Record<string, string> = {},
   ) => {
-    const templatePath = path.resolve(
-      import.meta.dirname,
-      'templates',
-      templateFile,
-    )
-    const templateContent = fs.readFileSync(templatePath, {
-      encoding: 'utf8',
-      flag: 'r',
-    })
+    const dirname = import.meta.dirname
+    const templatePath = path.resolve(dirname, 'templates', templateFile)
+    let templateContent = fs.readFileSync(templatePath, 'utf-8')
+
+    for (const [token, value] of Object.entries(replacements)) {
+      templateContent = templateContent.replaceAll(token, value)
+    }
+
     const content = projectIsTypescript
       ? templateContent
       : await transformTSToJS(outputPath, templateContent)
@@ -369,6 +369,17 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
               dataMigrationsPath,
               `${timestamp}-ensure-default-organizations.${ext}`,
             ),
+            {
+              __DATA_MIGRATE_UP_COMMAND__: formatCedarCommand([
+                'data-migrate',
+                'up',
+              ]),
+              __PRISMA_MIGRATE_DEV_COMMAND__: formatCedarCommand([
+                'prisma',
+                'migrate',
+                'dev',
+              ]),
+            },
           )
         },
       },
