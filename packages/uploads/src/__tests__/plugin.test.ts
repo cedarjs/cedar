@@ -79,9 +79,16 @@ describe('cedarUploadsPlugin', () => {
       tokenSecret: SECRET,
       targets,
       db,
+      // `anon` simulates a request with no session; anything else names the
+      // requesting user, defaulting to the token's owner
       authenticate: async (req) => {
         const id = req.headers['x-test-user']
-        return typeof id === 'string' ? { id } : null
+
+        if (id === 'anon') {
+          return null
+        }
+
+        return { id: typeof id === 'string' ? id : 'user_1' }
       },
     })
 
@@ -184,6 +191,27 @@ describe('cedarUploadsPlugin', () => {
 
       expect(res.statusCode).toBe(403)
       expect(res.json().error.code).toBe('FORBIDDEN')
+      expect(await prisma.upload.count()).toBe(0)
+    })
+
+    test('rejects an unauthenticated request when an authenticator is configured', async () => {
+      const body = multipart([
+        { filename: 'a.txt', type: 'text/plain', content: 'x' },
+      ])
+
+      const res = await app.inject({
+        method: 'POST',
+        url: '/upload/fs',
+        headers: {
+          ...body.headers,
+          'x-upload-token': tokenFor(),
+          'x-test-user': 'anon',
+        },
+        payload: body.payload,
+      })
+
+      expect(res.statusCode).toBe(401)
+      expect(res.json().error.code).toBe('UNAUTHENTICATED')
       expect(await prisma.upload.count()).toBe(0)
     })
 

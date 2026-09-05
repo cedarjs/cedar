@@ -27,6 +27,7 @@ export default [
       'packages/prerender/**/__tests__/__fixtures__/**/*',
       'packages/storage/src/__tests__/prisma-client/*',
       'packages/tenancy/src/__tests__/prisma-client/*',
+      'packages/uploads/src/__tests__/prisma-client/*',
       'packages/testing/config',
       'packages/testing/**/__fixtures__/**/*',
       'packages/vite/src/plugins/__tests__/__fixtures__/**/*',

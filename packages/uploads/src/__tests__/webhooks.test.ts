@@ -178,6 +178,43 @@ describe('processS3EventRecord', () => {
     ).toBe('completed')
   })
 
+  test('prefers the most specific prefix when targets share a bucket', async () => {
+    const targets = defineStorageTargets({
+      everything: Object.assign(createMemoryProvider({ providerType: 's3' }), {
+        getConfig: () => ({ bucket: 'bucket', keyPrefix: '' }),
+      }),
+      avatars: Object.assign(createMemoryProvider({ providerType: 's3' }), {
+        getConfig: () => ({ bucket: 'bucket', keyPrefix: 'avatars/' }),
+      }),
+    })
+    const row = await prisma.upload.create({
+      data: {
+        target: 'avatars',
+        status: 'pending',
+        filename: 'a.png',
+        mimeType: 'image/png',
+        size: 3n,
+        storageKey: 'a.png',
+      },
+    })
+
+    const outcome = await processS3EventRecord(
+      {
+        eventName: 'ObjectCreated:Put',
+        s3: {
+          bucket: { name: 'bucket' },
+          object: { key: 'avatars/a.png', size: 3 },
+        },
+      },
+      { db, targets },
+    )
+
+    expect(outcome).toBe('completed')
+    expect(
+      (await prisma.upload.findUniqueOrThrow({ where: { id: row.id } })).status,
+    ).toBe('completed')
+  })
+
   test('fails the row and deletes the object on a size mismatch', async () => {
     const targets = makeTargets()
     const row = await pending(3n)

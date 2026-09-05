@@ -45,19 +45,31 @@ function matchTarget(
   bucket: string,
   key: string,
 ): { name: string; storageKey: string } | null {
-  for (const [name, target] of Object.entries(targets)) {
-    if (target.providerType === 's3') {
-      const config = target.getConfig()
-      const keyPrefix =
-        typeof config.keyPrefix === 'string' ? config.keyPrefix : ''
+  let best: { name: string; keyPrefix: string } | null = null
 
-      if (config.bucket === bucket && key.startsWith(keyPrefix)) {
-        return { name, storageKey: key.slice(keyPrefix.length) }
-      }
+  for (const [name, target] of Object.entries(targets)) {
+    if (target.providerType !== 's3') {
+      continue
+    }
+
+    const config = target.getConfig()
+    const keyPrefix =
+      typeof config.keyPrefix === 'string' ? config.keyPrefix : ''
+
+    // Several targets may share a bucket with nested prefixes; the most
+    // specific prefix is the one the object was written under
+    if (
+      config.bucket === bucket &&
+      key.startsWith(keyPrefix) &&
+      (!best || keyPrefix.length > best.keyPrefix.length)
+    ) {
+      best = { name, keyPrefix }
     }
   }
 
-  return null
+  return best
+    ? { name: best.name, storageKey: key.slice(best.keyPrefix.length) }
+    : null
 }
 
 /**

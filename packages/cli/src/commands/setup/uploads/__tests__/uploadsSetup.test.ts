@@ -3,8 +3,9 @@ import { describe, expect, it } from 'vitest'
 import { addUploadModel, hasModel, UPLOAD_MODEL } from '../schemaPrisma.js'
 import {
   addUploadsPlugin,
+  detectServerAuth,
   hasUploadsPlugin,
-  UPLOADS_SERVER_REGISTRATION,
+  uploadsServerRegistration,
 } from '../serverFile.js'
 
 const SCHEMA = `datasource db {
@@ -47,6 +48,31 @@ async function main() {
 main()
 `
 
+describe('detectServerAuth', () => {
+  it("recognizes dbAuth's decoder factory", () => {
+    expect(
+      detectServerAuth(
+        "import { createAuthDecoder } from '@cedarjs/auth-dbauth-api'\n",
+      ),
+    ).toEqual({ decoderPackage: '@cedarjs/auth-dbauth-api', usesFactory: true })
+  })
+
+  it('recognizes a ready-made decoder', () => {
+    expect(
+      detectServerAuth(
+        "import { authDecoder } from '@cedarjs/auth-supabase-api'\n",
+      ),
+    ).toEqual({
+      decoderPackage: '@cedarjs/auth-supabase-api',
+      usesFactory: false,
+    })
+  })
+
+  it('returns null without an auth decoder', () => {
+    expect(detectServerAuth("import { db } from 'src/lib/db'\n")).toBeNull()
+  })
+})
+
 describe('addUploadsPlugin', () => {
   it('adds the imports and registers the plugin before the server starts', () => {
     const result = addUploadsPlugin(SERVER)
@@ -64,7 +90,7 @@ async function main() {
     logger,
   })
 
-${UPLOADS_SERVER_REGISTRATION}
+${uploadsServerRegistration(null)}
   await server.start()
 }
 
@@ -72,6 +98,43 @@ main()
 `)
     expect(hasUploadsPlugin(result)).toBe(true)
     expect(addUploadsPlugin(result)).toBe(result)
+  })
+
+  it('wires the authenticator for a dbAuth app', () => {
+    const result = addUploadsPlugin(SERVER, {
+      auth: { decoderPackage: '@cedarjs/auth-dbauth-api', usesFactory: true },
+    })
+
+    expect(result).toContain(
+      "import { createAuthDecoder } from '@cedarjs/auth-dbauth-api'",
+    )
+    expect(result).toContain(
+      "import { cedarUploadsPlugin, createUploadAuthenticator } from '@cedarjs/uploads'",
+    )
+    expect(result).toContain(
+      "import { cookieName, getCurrentUser } from 'src/lib/auth'",
+    )
+    expect(result).toContain(
+      'const authDecoder = createAuthDecoder(cookieName)',
+    )
+    expect(result).toContain(
+      'authenticate: createUploadAuthenticator({ authDecoder, getCurrentUser }),',
+    )
+  })
+
+  it('wires the authenticator for a provider that exports authDecoder', () => {
+    const result = addUploadsPlugin(SERVER, {
+      auth: { decoderPackage: '@cedarjs/auth-clerk-api', usesFactory: false },
+    })
+
+    expect(result).toContain(
+      "import { authDecoder } from '@cedarjs/auth-clerk-api'",
+    )
+    expect(result).toContain("import { getCurrentUser } from 'src/lib/auth'")
+    expect(result).not.toContain('createAuthDecoder')
+    expect(result).toContain(
+      'authenticate: createUploadAuthenticator({ authDecoder, getCurrentUser }),',
+    )
   })
 
   it('throws when there is no server.start() to anchor on', () => {

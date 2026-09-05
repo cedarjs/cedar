@@ -12,7 +12,7 @@ export const TARGET_CHOICES = ['fs', 'db', 's3'] as const
 export type TargetChoice = (typeof TARGET_CHOICES)[number]
 
 export const builder = (yargs: Argv) => {
-  yargs
+  return yargs
     .option('targets', {
       choices: TARGET_CHOICES,
       default: ['fs', 'db'],
@@ -29,15 +29,21 @@ export const builder = (yargs: Argv) => {
 }
 
 export const handler = async (options: {
-  targets: TargetChoice[]
+  targets: string[]
   force: boolean
 }) => {
+  // yargs validates `choices`, so every entry is a TargetChoice; the
+  // predicate narrows the type without a cast
+  const targets = options.targets.filter((t): t is TargetChoice =>
+    (TARGET_CHOICES as readonly string[]).includes(t),
+  )
+
   recordTelemetryAttributes({
     command: 'setup uploads',
-    targets: options.targets.join(','),
+    targets: targets.join(','),
     force: options.force,
   })
 
   const { handler } = await import('./uploadsHandler.js')
-  return handler(options)
+  return handler({ targets, force: options.force })
 }

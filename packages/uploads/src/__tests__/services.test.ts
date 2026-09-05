@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { defineUploadProfiles } from '../profiles.js'
 import {
@@ -97,7 +97,7 @@ describe('createPresignedUpload', () => {
       /^https:\/\/bucket\.example\.com\/[0-9a-f-]{36}\.png$/,
     )
 
-    const row = await prisma.upload.findUniqueOrThrow({
+    const row = await db.upload.findUniqueOrThrow({
       where: { id: result.uploadId },
     })
     expect(row).toMatchObject({
@@ -132,6 +132,23 @@ describe('createPresignedUpload', () => {
         input: { filename: 'x.png', contentType: 'image/png', size: 1025n },
       }),
     ).rejects.toMatchObject({ code: 'FILE_TOO_LARGE' })
+
+    expect(await prisma.upload.count()).toBe(0)
+  })
+
+  test('releases the token slot when the target cannot presign', async () => {
+    const targets = defineStorageTargets({
+      avatars: createMemoryProvider({ providerType: 'fs' }),
+    })
+
+    await expect(
+      createPresignedUpload({
+        db,
+        targets,
+        tokenPayload,
+        input: { filename: 'x.png', contentType: 'image/png', size: 1 },
+      }),
+    ).rejects.toMatchObject({ code: 'PRESIGN_NOT_SUPPORTED' })
 
     expect(await prisma.upload.count()).toBe(0)
   })
@@ -178,7 +195,7 @@ describe('confirmUpload', () => {
       input: { filename: 'me.png', contentType: 'image/png', size },
     })
 
-    return prisma.upload.findUniqueOrThrow({ where: { id: uploadId } })
+    return db.upload.findUniqueOrThrow({ where: { id: uploadId } })
   }
 
   test('completes a pending upload whose object matches the authorized size', async () => {
@@ -237,6 +254,30 @@ describe('confirmUpload', () => {
       (await prisma.upload.findUniqueOrThrow({ where: { id: upload.id } }))
         .status,
     ).toBe('failed')
+  })
+
+  test('does not report success when cleanup claimed the row first', async () => {
+    const targets = makeTargets()
+    const upload = await pendingUpload(targets)
+    targets.avatars.objects.set(upload.storageKey!, Buffer.from('abc'))
+
+    // Simulate the cleanup job claiming the row between the read and the
+    // conditional completion update
+    const updateMany = vi.spyOn(prisma.upload, 'updateMany')
+    updateMany.mockImplementationOnce(async () => {
+      await prisma.upload.update({
+        where: { id: upload.id },
+        data: { status: 'failed' },
+      })
+
+      return { count: 0 }
+    })
+
+    await expect(
+      confirmUpload({ db, targets, uploadId: upload.id, currentUser: user }),
+    ).rejects.toMatchObject({ code: 'NOT_PENDING' })
+
+    updateMany.mockRestore()
   })
 
   test('refuses settled rows and unknown ids', async () => {

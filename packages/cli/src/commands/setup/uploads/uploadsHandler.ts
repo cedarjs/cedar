@@ -23,7 +23,11 @@ import { generateSecret } from '../../generate/secret/secret.js'
 import { setupServerFileTasks } from '../server-file/serverFileHandler.js'
 
 import { addUploadModel } from './schemaPrisma.js'
-import { addUploadsPlugin, hasUploadsPlugin } from './serverFile.js'
+import {
+  addUploadsPlugin,
+  detectServerAuth,
+  hasUploadsPlugin,
+} from './serverFile.js'
 import type { TargetChoice } from './uploads.js'
 
 const UPPY_VERSION = '^6.0.0'
@@ -251,8 +255,19 @@ export const handler = async ({ targets, force }: UploadsOptions) => {
             return
           }
 
+          // Wire the same identity pipeline the GraphQL server uses, so
+          // upload tokens are bound to the logged-in user out of the box
+          const graphqlPath = path.join(paths.api.functions, `graphql.${ext}`)
+          const authPath = path.join(paths.api.lib, `auth.${ext}`)
+          const auth =
+            fs.existsSync(graphqlPath) &&
+            fs.existsSync(authPath) &&
+            fs.readFileSync(authPath, 'utf-8').includes('getCurrentUser')
+              ? detectServerAuth(fs.readFileSync(graphqlPath, 'utf-8'))
+              : null
+
           try {
-            fs.writeFileSync(serverFilePath, addUploadsPlugin(source))
+            fs.writeFileSync(serverFilePath, addUploadsPlugin(source, { auth }))
           } catch {
             throw new Error(
               `Could not find \`await server.start()\` in ${path.relative(
@@ -357,7 +372,8 @@ export const handler = async ({ targets, force }: UploadsOptions) => {
                 : ''
             }
 
-          To bind upload tokens to the logged-in user, pass
+          Upload tokens are bound to the logged-in user when the app has auth.
+          If you add auth later, pass
           \`authenticate: createUploadAuthenticator({ authDecoder, getCurrentUser })\`
           to the plugin in api/src/server.${ext}.
 

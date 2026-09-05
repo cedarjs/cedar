@@ -45,9 +45,10 @@ export interface UploadPluginOptions {
    */
   bodyLimit?: number
   /**
-   * Resolves the requesting user so a token issued to someone else is
-   * rejected. Build it with `createUploadAuthenticator()`. Without it the
-   * token itself is the only identity on the route.
+   * Resolves the requesting user. When configured, the upload routes reject
+   * unauthenticated requests and tokens issued to someone else. Build it
+   * with `createUploadAuthenticator()`. Without it the token itself is the
+   * only identity on the route, so configure it in any app with auth.
    */
   authenticate?: UploadAuthenticator
   /**
@@ -138,16 +139,16 @@ export async function cedarUploadsPlugin(
     if (authenticate) {
       const user = await authenticate(req)
 
-      if (user) {
-        assertOwnership(
-          {
-            userId: payload.sub,
-            organizationId: payload.organizationId ?? null,
-          },
-          user,
-          'this upload token',
-        )
-      }
+      // With an authenticator configured, an unauthenticated request cannot
+      // spend a user-bound token; `assertOwnership` throws for a null actor
+      assertOwnership(
+        {
+          userId: payload.sub,
+          organizationId: payload.organizationId ?? null,
+        },
+        user,
+        'this upload token',
+      )
     }
 
     return payload

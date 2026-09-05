@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { cleanupStaleUploads } from '../cleanupStaleUploads.js'
 import { deleteFile } from '../deleteFile.js'
@@ -72,6 +72,25 @@ describe('storeFile', () => {
         data: Buffer.alloc(1024 * 1024 + 1),
       }),
     ).rejects.toMatchObject({ code: 'FILE_TOO_LARGE' })
+  })
+
+  test('deletes the written object when the row cannot be created', async () => {
+    const targets = makeTargets()
+    vi.spyOn(prisma.upload, 'create').mockRejectedValueOnce(
+      new Error('db down'),
+    )
+
+    await expect(
+      storeFile(targets.files, {
+        db,
+        filename: 'x.txt',
+        mimeType: 'text/plain',
+        data: Buffer.from('x'),
+      }),
+    ).rejects.toThrow('db down')
+
+    expect(targets.files.objects.size).toBe(0)
+    vi.restoreAllMocks()
   })
 
   test('honors an explicit maxSize for object storage', async () => {

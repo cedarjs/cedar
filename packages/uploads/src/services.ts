@@ -8,7 +8,12 @@ import {
 import { resolveProfile } from './profiles.js'
 import type { UploadProfiles } from './profiles.js'
 import { resolveTarget } from './targets.js'
-import type { StorageTargets, UploadDatabase, UploadRecord } from './types.js'
+import type {
+  PresignedUploadUrl,
+  StorageTargets,
+  UploadDatabase,
+  UploadRecord,
+} from './types.js'
 import { createUploadToken } from './uploadToken.js'
 import type { UploadTokenPayload } from './uploadToken.js'
 
@@ -140,10 +145,18 @@ export async function createPresignedUpload({
     storageKey,
   })
 
-  const presigned = await target.getPresignedUploadUrl(storageKey, {
-    contentType: input.contentType,
-    size,
-  })
+  let presigned: PresignedUploadUrl
+
+  try {
+    presigned = await target.getPresignedUploadUrl(storageKey, {
+      contentType: input.contentType,
+      size,
+    })
+  } catch (e) {
+    // The row was counted against the token; release the slot again
+    await db.upload.delete({ where: { id: upload.id } }).catch(() => undefined)
+    throw e
+  }
 
   return { uploadId: upload.id, ...presigned }
 }
@@ -212,7 +225,7 @@ export async function confirmUpload({
 
   // Conditional transition: a row the cleanup job already claimed stays
   // failed instead of being resurrected
-  await db.upload.updateMany({
+  const { count } = await db.upload.updateMany({
     where: { id: uploadId, status: 'pending' },
     data: { status: 'completed' },
   })
@@ -224,6 +237,14 @@ export async function confirmUpload({
 
   if (!confirmed) {
     throw new UploadError('NOT_FOUND', 'Upload not found.')
+  }
+
+  // A concurrent path settled the row first; only a completed row counts
+  if (count === 0 && confirmed.status !== 'completed') {
+    throw new UploadError(
+      'NOT_PENDING',
+      'Upload was marked failed before it could be confirmed.',
+    )
   }
 
   return confirmed

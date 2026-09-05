@@ -26,7 +26,7 @@ The command:
 - Creates `api/src/lib/uploads.ts` with your storage targets and upload profiles
 - Creates `api/src/graphql/uploads.sdl.ts` and `api/src/services/uploads/uploads.ts`
 - Creates the `@requireUploadToken`, `@withSignedUrl`, and `@withDataUri` directives
-- Creates `api/src/server.ts` if you don't have one and registers the upload plugin in it
+- Creates `api/src/server.ts` if you don't have one and registers the upload plugin in it, wired to your auth decoder and `getCurrentUser` when the app has auth
 - Installs `@cedarjs/uploads` on both sides, plus the AWS SDK and Uppy packages your targets need
 - Adds `UPLOAD_TOKEN_SECRET` (freshly generated) and any target-specific variables to `.env`
 
@@ -352,7 +352,7 @@ main()
 | `/upload/webhook/s3`    | POST   | S3 event notifications via SNS (only with the `s3Webhook` option) |
 | `/upload/health`        | GET    | Lists the configured targets                                      |
 
-`authenticate` resolves the requesting user from the request's auth header using the same decoder and `getCurrentUser` the GraphQL server uses, so a token issued to one user can't be spent by another. Without it, the token itself is the only identity on the route. Other options: `prefix` (default `/upload`), `bodyLimit` (an outer ceiling, default 500 MB; the effective limit per request comes from the token), and `serveCacheControl`.
+`authenticate` resolves the requesting user from the request's auth header using the same decoder and `getCurrentUser` the GraphQL server uses. With it configured, the upload routes reject unauthenticated requests and tokens issued to someone else, so a leaked token can't be spent by anyone but its owner. The setup command wires it up when your app has auth. Without it, the token itself is the only identity on the route, which is only appropriate for apps with no auth at all. Other options: `prefix` (default `/upload`), `bodyLimit` (an outer ceiling, default 500 MB; the effective limit per request comes from the token), and `serveCacheControl`.
 
 The FS route rejects early: a `Content-Length` beyond what the token allows is refused before any body is read, and files are aborted mid-stream once they pass the profile's `maxFileSize`. Each file's row is created before its bytes are written, so a crash in between leaves a pending row the cleanup job can find rather than an orphaned file.
 

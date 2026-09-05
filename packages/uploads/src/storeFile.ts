@@ -52,19 +52,33 @@ export async function storeFile(
     await target.write(key, data, { contentType: mimeType })
   }
 
-  return db.upload.create({
-    data: {
-      target: target.name,
-      status: 'completed',
-      filename,
-      mimeType,
-      size: BigInt(data.byteLength),
-      storageKey: key,
-      // Copying gives Prisma the plain-ArrayBuffer-backed array its `Bytes`
-      // input requires, whatever `data` was backed by
-      data: isDbProvider ? new Uint8Array(data) : null,
-      userId: userId ?? null,
-      organizationId: organizationId ?? null,
-    },
-  })
+  try {
+    return await createRow()
+  } catch (e) {
+    // Nothing references the object yet, so delete it rather than leave it
+    // orphaned; the cleanup job only finds keys through rows
+    if (key) {
+      await target.delete(key).catch(() => undefined)
+    }
+
+    throw e
+  }
+
+  function createRow() {
+    return db.upload.create({
+      data: {
+        target: target.name,
+        status: 'completed',
+        filename,
+        mimeType,
+        size: BigInt(data.byteLength),
+        storageKey: key,
+        // Copying gives Prisma the plain-ArrayBuffer-backed array its `Bytes`
+        // input requires, whatever `data` was backed by
+        data: isDbProvider ? new Uint8Array(data) : null,
+        userId: userId ?? null,
+        organizationId: organizationId ?? null,
+      },
+    })
+  }
 }
