@@ -205,12 +205,13 @@ export function uploadsServerRegistration(
 }
 
 /**
- * True when the server file already registers the plugin. The call must
- * start a line (after indentation and an optional `await`), which excludes
- * commented-out registrations and mentions inside strings.
+ * True when the server file already registers the plugin. The call must be
+ * the statement on its line, optionally preceded by `await`, `void`, or a
+ * variable declaration, which excludes commented-out registrations and
+ * mentions inside strings.
  */
 export function hasUploadsPlugin(source: string): boolean {
-  return /^[ \t]*(?:await\s+)?[\w.]+\.register\(\s*cedarUploadsPlugin\b/m.test(
+  return /^[ \t]*(?:(?:await|void)\s+|(?:const|let|var)\s+\w+\s*=\s*)?[\w.]+\.register\(\s*cedarUploadsPlugin\b/m.test(
     source,
   )
 }

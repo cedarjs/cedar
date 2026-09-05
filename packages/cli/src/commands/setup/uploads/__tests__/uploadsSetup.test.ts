@@ -230,6 +230,13 @@ main()
     expect(
       hasUploadsPlugin('await server.register(cedarUploadsPlugin, {'),
     ).toBe(true)
+    expect(hasUploadsPlugin('void server.register(cedarUploadsPlugin, {')).toBe(
+      true,
+    )
+    expect(
+      hasUploadsPlugin('const reg = server.register(cedarUploadsPlugin, {'),
+    ).toBe(true)
+    expect(hasUploadsPlugin('  app.register(cedarUploadsPlugin, {')).toBe(true)
     expect(hasUploadsPlugin('// TODO: add cedarUploadsPlugin')).toBe(false)
     expect(
       hasUploadsPlugin('  // await server.register(cedarUploadsPlugin, {})'),
