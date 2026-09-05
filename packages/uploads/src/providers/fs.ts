@@ -3,7 +3,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 
 import { UploadError } from '../errors.js'
-import { assertSafeKey } from '../keys.js'
+import { assertSafeKey, trimTrailingSlashes } from '../keys.js'
 import {
   createServeToken,
   DEFAULT_SERVE_URL_EXPIRES_IN,
@@ -132,8 +132,8 @@ export function createFsProvider(opts: FsProviderOptions): StorageProvider {
         expiresIn,
       })
 
-      const base = serveBaseUrl.replace(/\/+$/, '')
-      const prefix = routePrefix.replace(/\/+$/, '')
+      const base = trimTrailingSlashes(serveBaseUrl)
+      const prefix = trimTrailingSlashes(routePrefix)
 
       const params = new URLSearchParams({ [SERVE_TOKEN_PARAM]: token })
 

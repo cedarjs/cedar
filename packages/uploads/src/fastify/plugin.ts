@@ -5,7 +5,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 
 import type { UploadAuthenticator } from '../authenticator.js'
 import { UploadError } from '../errors.js'
-import { generateStorageKey } from '../keys.js'
+import { generateStorageKey, trimTrailingSlashes } from '../keys.js'
 import {
   assertOwnership,
   assertTokenAllowsFile,
@@ -122,7 +122,7 @@ export async function cedarUploadsPlugin(
     )
   }
 
-  const base = prefix.replace(/\/+$/, '')
+  const base = trimTrailingSlashes(prefix)
 
   await fastify.register(fastifyMultipart, {
     throwFileSizeLimit: true,
