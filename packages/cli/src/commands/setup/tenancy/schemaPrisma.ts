@@ -39,8 +39,8 @@ export const MEMBERSHIP_MODEL = `model Membership {
 }`
 
 // Identical to `RW_DATA_MIGRATION_MODEL` in
-// packages/cli-packages/dataMigrate/src/commands/installHandler.ts (kept as
-// a literal copy here rather than an import, since `@cedarjs/cli` does not
+// packages/cli-packages/dataMigrate/src/commands/installHandler.ts (kept as a
+// literal copy here rather than an import, since `@cedarjs/cli` does not
 // otherwise depend on `@cedarjs/cli-packages/dataMigrate`). `data-migrate up`
 // fails at runtime with no clear error when this model is missing, so
 // `setup tenancy` -- which is what usually creates a project's first data
@@ -107,8 +107,8 @@ export interface EditSchemaOptions {
  * The handler runs formatting after this and stops with instructions if the
  * field is missing, since the generated `getCurrentUser` selects it.
  *
- * Throws `RW_TENANCY_ERR_NO_USER_MODEL` when there is no `User` model (auth
- * has not been set up yet), and `RW_TENANCY_ERR_MODELS_EXIST` when
+ * Throws `CEDAR_TENANCY_ERR_NO_USER_MODEL` when there is no `User` model (auth
+ * has not been set up yet), and `CEDAR_TENANCY_ERR_MODELS_EXIST` when
  * `Organization` or `Membership` already exist and `force` was not passed.
  * With `force`, existing `Organization`/`Membership` models are left
  * untouched. `RW_DataMigration` is added whenever it is absent, regardless of
@@ -116,7 +116,7 @@ export interface EditSchemaOptions {
  */
 export function editSchema(schema: string, options: EditSchemaOptions): string {
   if (!hasModel(schema, 'User')) {
-    throw new Error('RW_TENANCY_ERR_NO_USER_MODEL')
+    throw new Error('CEDAR_TENANCY_ERR_NO_USER_MODEL')
   }
 
   const modelsExist =
@@ -129,7 +129,7 @@ export function editSchema(schema: string, options: EditSchemaOptions): string {
     schema.includes(ORGANIZATION_MODEL) && schema.includes(MEMBERSHIP_MODEL)
 
   if (modelsExist && !modelsAreThisCommands && !options.force) {
-    throw new Error('RW_TENANCY_ERR_MODELS_EXIST')
+    throw new Error('CEDAR_TENANCY_ERR_MODELS_EXIST')
   }
 
   const withTenancyModels = addTenancyModels(schema)

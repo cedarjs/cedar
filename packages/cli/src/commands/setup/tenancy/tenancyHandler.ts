@@ -154,13 +154,13 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
           } catch (e) {
             const message = e instanceof Error ? e.message : String(e)
 
-            if (message === 'RW_TENANCY_ERR_NO_USER_MODEL') {
+            if (message === 'CEDAR_TENANCY_ERR_NO_USER_MODEL') {
               throw new Error(
                 'No `User` model found in schema.prisma. Set up authentication first (e.g. `yarn cedar setup auth dbAuth`) before running `yarn cedar setup tenancy`.',
               )
             }
 
-            if (message === 'RW_TENANCY_ERR_MODELS_EXIST') {
+            if (message === 'CEDAR_TENANCY_ERR_MODELS_EXIST') {
               throw new Error(
                 '`Organization` and/or `Membership` models already exist in schema.prisma. Re-run with --force to keep them as-is and continue with the rest of the setup.',
               )
@@ -223,7 +223,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
           })
 
           if (transformResult.error) {
-            if (transformResult.error === 'RW_CODEMOD_ERR_OLD_FORMAT') {
+            if (transformResult.error === 'CEDAR_CODEMOD_ERR_OLD_FORMAT') {
               throw new Error(
                 'It looks like your api/src/lib/db file is using the old format. Please update it as per the v8 upgrade guide, then run `yarn cedar setup tenancy` again.',
               )
@@ -264,7 +264,8 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
 
           if (transformResult.error) {
             if (
-              transformResult.error === 'RW_CODEMOD_ERR_GRAPHQL_CONTEXT_EXISTS'
+              transformResult.error ===
+              'CEDAR_CODEMOD_ERR_GRAPHQL_CONTEXT_EXISTS'
             ) {
               throw new Error(
                 'api/src/functions/graphql already has a `context` option. Please wire it up for tenancy by hand; see the multi-tenancy how-to for the shape it needs.',

@@ -14,8 +14,8 @@ const DEFAULT_GLOBAL_MODELS = ['user', 'organization', 'membership']
  *
  * Chains onto an existing `$extends` call (e.g. from `setup uploads`)
  * instead of replacing it, the same way every extension setup command does.
- * Throws `RW_CODEMOD_ERR_OLD_FORMAT` when `db` is still `new PrismaClient()`
- * inline (pre-v8 shape) and `RW_CODEMOD_ERR_DB_SHAPE_NOT_FOUND` when no `db`
+ * Throws `CEDAR_CODEMOD_ERR_OLD_FORMAT` when `db` is still `new PrismaClient()`
+ * inline (pre-v8 shape) and `CEDAR_CODEMOD_ERR_DB_SHAPE_NOT_FOUND` when no `db`
  * export is found at all.
  *
  * `options.tenantField`, when set, is emitted as the extension's
@@ -80,7 +80,7 @@ export default function transform(
       }
 
       if (j.NewExpression.check(dbDeclaration.init)) {
-        throw new Error('RW_CODEMOD_ERR_OLD_FORMAT')
+        throw new Error('CEDAR_CODEMOD_ERR_OLD_FORMAT')
       }
 
       if (!j.Expression.check(dbDeclaration.init)) {
@@ -101,7 +101,7 @@ export default function transform(
     })
 
   if (!found) {
-    throw new Error('RW_CODEMOD_ERR_DB_SHAPE_NOT_FOUND')
+    throw new Error('CEDAR_CODEMOD_ERR_DB_SHAPE_NOT_FOUND')
   }
 
   // jscodeshift's TypeScript builders for generic type arguments are

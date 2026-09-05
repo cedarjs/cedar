@@ -15,7 +15,7 @@ function useShorthandUserAttributes(fn: { params: unknown[] }): void {
   const [firstParam] = fn.params
 
   if (!j.ObjectPattern.check(firstParam)) {
-    throw new Error('RW_CODEMOD_ERR_SIGNUP_SHAPE_NOT_FOUND')
+    throw new Error('CEDAR_CODEMOD_ERR_SIGNUP_SHAPE_NOT_FOUND')
   }
 
   const userAttributesProperty = firstParam.properties.find(
@@ -29,7 +29,7 @@ function useShorthandUserAttributes(fn: { params: unknown[] }): void {
     !userAttributesProperty ||
     !j.ObjectProperty.check(userAttributesProperty)
   ) {
-    throw new Error('RW_CODEMOD_ERR_SIGNUP_SHAPE_NOT_FOUND')
+    throw new Error('CEDAR_CODEMOD_ERR_SIGNUP_SHAPE_NOT_FOUND')
   }
 
   userAttributesProperty.value = j.identifier('userAttributes')
@@ -133,7 +133,7 @@ function wrapCreateCall(fn: { async?: boolean; body: unknown }): void {
       !j.ReturnStatement.check(returnStatement) ||
       !returnStatement.argument
     ) {
-      throw new Error('RW_CODEMOD_ERR_SIGNUP_SHAPE_NOT_FOUND')
+      throw new Error('CEDAR_CODEMOD_ERR_SIGNUP_SHAPE_NOT_FOUND')
     }
 
     const createUserStatement = j.variableDeclaration('const', [
@@ -177,7 +177,7 @@ function wrapCreateCall(fn: { async?: boolean; body: unknown }): void {
     return
   }
 
-  throw new Error('RW_CODEMOD_ERR_SIGNUP_SHAPE_NOT_FOUND')
+  throw new Error('CEDAR_CODEMOD_ERR_SIGNUP_SHAPE_NOT_FOUND')
 }
 
 /**
@@ -186,7 +186,7 @@ function wrapCreateCall(fn: { async?: boolean; body: unknown }): void {
  * the pending invitation named by the signup form's
  * `userAttributes.invitationToken`.
  *
- * Throws `RW_CODEMOD_ERR_SIGNUP_SHAPE_NOT_FOUND` when `signupOptions.handler`
+ * Throws `CEDAR_CODEMOD_ERR_SIGNUP_SHAPE_NOT_FOUND` when `signupOptions.handler`
  * cannot be located or does not have the expected
  * `({ ..., userAttributes }) => { ...; return <expr> }` shape, so the caller
  * can print the snippet to add by hand instead of guessing.
@@ -203,7 +203,7 @@ export default function transform(fileInfo: j.FileInfo) {
   })
 
   if (signupOptionsDeclarators.length === 0) {
-    throw new Error('RW_CODEMOD_ERR_SIGNUP_SHAPE_NOT_FOUND')
+    throw new Error('CEDAR_CODEMOD_ERR_SIGNUP_SHAPE_NOT_FOUND')
   }
 
   let handlerFound = false
@@ -241,7 +241,7 @@ export default function transform(fileInfo: j.FileInfo) {
   })
 
   if (!handlerFound) {
-    throw new Error('RW_CODEMOD_ERR_SIGNUP_SHAPE_NOT_FOUND')
+    throw new Error('CEDAR_CODEMOD_ERR_SIGNUP_SHAPE_NOT_FOUND')
   }
 
   addInvitationTokenToUserAttributes(root)
