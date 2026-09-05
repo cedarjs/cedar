@@ -27,6 +27,7 @@
   },
   "include": [
     "src",
+    "db",
     "../.cedar/types/includes/all-*",
     "../.cedar/types/includes/api-*",
     "../types"
