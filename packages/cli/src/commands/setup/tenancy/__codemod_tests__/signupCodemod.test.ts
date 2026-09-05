@@ -16,7 +16,7 @@ describe.skipIf(process.env.CI && process.platform === 'win32')(
       await matchTransformSnapshot('signupCodemod', 'defaultSignupAuth')
     })
 
-    it('throws RW_CODEMOD_ERR_SIGNUP_SHAPE_NOT_FOUND when there is no signupOptions', async () => {
+    it('throws CEDAR_CODEMOD_ERR_SIGNUP_SHAPE_NOT_FOUND when there is no signupOptions', async () => {
       const tempDir = fs.mkdtempSync(
         path.join(fs.realpathSync(os.tmpdir()), 'cedar-test-'),
       )

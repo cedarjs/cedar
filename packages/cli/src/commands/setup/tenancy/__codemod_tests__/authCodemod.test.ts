@@ -14,7 +14,7 @@ describe.skipIf(process.env.CI && process.platform === 'win32')(
       await matchTransformSnapshot('authCodemod', 'defaultAuth')
     })
 
-    it('throws RW_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND when getCurrentUser has no recognizable select', async () => {
+    it('throws CEDAR_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND when getCurrentUser has no recognizable select', async () => {
       const transformResult = await runTransform({
         transformPath: path.join(__dirname, '../authCodemod.ts'), // Use TS here!
         targetPaths: [
