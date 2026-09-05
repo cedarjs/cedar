@@ -222,6 +222,7 @@ module.exports = {
         'server-file',
         'serverless-functions',
         'services',
+        'signed-tokens',
         'storybook',
         'studio',
         'tenancy',
