@@ -1,25 +1,24 @@
-import { createUploadsConfig, setupStorage } from '@cedarjs/storage'
-import { FileSystemStorage } from '@cedarjs/storage/FileSystemStorage'
-import { UrlSigner } from '@cedarjs/storage/UrlSigner'
+__PATH_IMPORT____S3_IMPORTS__import {
+  __FS_IMPORT__
+  __DB_IMPORT__
+  __DB_MAX_IMPORT__
+  defineStorageTargets,
+  defineUploadProfiles,
+} from '@cedarjs/uploads'
+__GET_PATHS_IMPORT__
+__S3_CLIENT__
+/**
+ * Where files live. Each target is a provider instance; the Upload row
+ * records which target holds a file so it can be read, served, and deleted
+ * later. Look one up by name with `resolveTarget(targets, upload.target)`.
+ */
+export const targets = defineStorageTargets({
+__TARGETS__})
 
-const uploadsConfig = createUploadsConfig({
-  // Configure your fields here
-  // e.g. modelName: { fields: ['fieldWithUpload']}
-})
-
-export const fsStorage = new FileSystemStorage({
-  baseDir: './uploads',
-})
-
-export const urlSigner = new UrlSigner({
-  secret: process.env.UPLOADS_SECRET,
-  endpoint: '/signedUrl',
-})
-
-const { saveFiles, storagePrismaExtension } = setupStorage({
-  uploadsConfig,
-  storageAdapter: fsStorage,
-  urlSigner,
-})
-
-export { saveFiles, storagePrismaExtension }
+/**
+ * What clients may upload. A profile names a target and the constraints the
+ * server signs into every upload token issued for it. The client never
+ * supplies constraints; it names a profile.
+ */
+export const profiles = defineUploadProfiles({
+__PROFILES__})

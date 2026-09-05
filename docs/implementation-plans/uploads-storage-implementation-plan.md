@@ -312,11 +312,9 @@ export function createS3Provider(opts: S3ProviderOptions): StorageProvider {
     async exists(key) {
       try {
         await client.send(
-          new HeadObjectCommand({
-            Bucket: bucket,
-            Key: `${keyPrefix}${key}`,
-          })
+          new HeadObjectCommand({ Bucket: bucket, Key: `${keyPrefix}${key}` })
         )
+
         return true
       } catch {
         return false

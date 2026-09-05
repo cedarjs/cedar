@@ -1,0 +1,14 @@
+import { createWithDataUriDirective } from '@cedarjs/uploads'
+
+import { db } from 'src/lib/db'
+import { targets } from 'src/lib/uploads'
+
+/**
+ * Resolves a field holding an Upload id to a base64 data: URI of the file.
+ * Every resolved field embeds the whole file, so use it for small files only.
+ */
+const withDataUri = createWithDataUriDirective({ db, targets })
+
+export const schema = withDataUri.schema
+
+export default withDataUri
