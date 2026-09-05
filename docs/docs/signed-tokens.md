@@ -151,6 +151,7 @@ import type { APIGatewayProxyEvent, Context } from 'aws-lambda'
 
 import { createSignedToken } from '@cedarjs/api'
 import { authDecoder } from '@cedarjs/auth-dbauth-api'
+import { context } from '@cedarjs/context'
 import { useRequireAuth } from '@cedarjs/graphql-server'
 
 import { getCurrentUser, requireAuth } from 'src/lib/auth'
