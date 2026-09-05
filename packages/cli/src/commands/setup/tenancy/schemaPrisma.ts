@@ -1,5 +1,5 @@
 /**
- * Plain-text editing of `api/db/schema.prisma` for `yarn cedar setup tenancy`.
+ * Plain-text editing of `api/db/schema.prisma` for `cedar setup tenancy`.
  *
  * The setup command appends the framework-known `Organization` and
  * `Membership` models. The `memberships` back-relation on the app's existing

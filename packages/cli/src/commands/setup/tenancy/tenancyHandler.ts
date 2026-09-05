@@ -22,7 +22,7 @@ import { isTypeScriptProject } from '../../../lib/project.js'
 import { runTransform } from '../../../lib/runTransform.js'
 
 import {
-  AUTH_NOT_SET_UP_MESSAGE,
+  authNotSetUpMessage,
   hasWebAuthFile,
   noUserModelMessage,
 } from './preflight.js'
@@ -78,7 +78,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
   // auth and a `User` model there is nothing for memberships to hang off, so
   // every file this command writes would be wrong.
   if (!hasWebAuthFile(paths.web.src)) {
-    console.error(c.error(AUTH_NOT_SET_UP_MESSAGE))
+    console.error(c.error(authNotSetUpMessage()))
     process.exit(1)
   }
 
@@ -155,14 +155,21 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
             const message = e instanceof Error ? e.message : String(e)
 
             if (message === 'CEDAR_TENANCY_ERR_NO_USER_MODEL') {
+              const authSetup = formatCedarCommand(['setup', 'auth', 'dbAuth'])
+              const tenancySetup = formatCedarCommand(['setup', 'tenancy'])
+
               throw new Error(
-                'No `User` model found in schema.prisma. Set up authentication first (e.g. `yarn cedar setup auth dbAuth`) before running `yarn cedar setup tenancy`.',
+                'No `User` model found in schema.prisma. Set up ' +
+                  `authentication first (e.g. \`${authSetup}\`) before ` +
+                  `running \`${tenancySetup}\`.`,
               )
             }
 
             if (message === 'CEDAR_TENANCY_ERR_MODELS_EXIST') {
               throw new Error(
-                '`Organization` and/or `Membership` models already exist in schema.prisma. Re-run with --force to keep them as-is and continue with the rest of the setup.',
+                '`Organization` and/or `Membership` models already exist in ' +
+                  'schema.prisma. Re-run with --force to keep them as-is and ' +
+                  'continue with the rest of the setup.',
               )
             }
 
@@ -224,13 +231,20 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
 
           if (transformResult.error) {
             if (transformResult.error === 'CEDAR_CODEMOD_ERR_OLD_FORMAT') {
+              const tenancySetup = formatCedarCommand(['setup', 'tenancy'])
+
               throw new Error(
-                'It looks like your api/src/lib/db file is using the old format. Please update it as per the v8 upgrade guide, then run `yarn cedar setup tenancy` again.',
+                'It looks like your api/src/lib/db file is using the old ' +
+                  'format. Please update it as per the v8 upgrade guide, ' +
+                  `then run \`${tenancySetup}\` again.`,
               )
             }
 
             throw new Error(
-              "Could not add the tenancy Prisma extension. Please modify api/src/lib/db by hand: wrap the `db` export in `.$extends(createTenancyExtension({ models: { allExcept: ['user', 'organization', 'membership'] } }))`.",
+              'Could not add the tenancy Prisma extension. Please modify ' +
+                '`api/src/lib/db` by hand: wrap the `db` export in ' +
+                '`.$extends(createTenancyExtension({ models: { allExcept: ' +
+                "['user', 'organization', 'membership'] } }))`.",
             )
           }
         },
