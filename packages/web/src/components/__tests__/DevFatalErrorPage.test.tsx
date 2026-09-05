@@ -76,10 +76,19 @@ describe('DevFatalErrorPage', () => {
 
     expect(window.navigator.clipboard.writeText).toHaveBeenCalledTimes(1)
     expect(window.navigator.clipboard.writeText).toHaveBeenCalledWith(
-      expect.stringContaining('FATAL ERROR REPORT'),
-    )
-    expect(window.navigator.clipboard.writeText).toHaveBeenCalledWith(
-      expect.stringContaining('Test error message'),
+      [
+        '## Error',
+        '',
+        '`Error`: `Test error message`',
+        '',
+        '## Stack trace',
+        '',
+        '1. `DevFatalErrorPage.test.tsx:1:1` in `test`',
+        '',
+        '```text',
+        '>    1 | // mocked source',
+        '```',
+      ].join('\n'),
     )
   })
 
@@ -124,13 +133,41 @@ describe('DevFatalErrorPage', () => {
 
     expect(window.navigator.clipboard.writeText).toHaveBeenCalledTimes(1)
     expect(window.navigator.clipboard.writeText).toHaveBeenCalledWith(
-      expect.stringContaining('REQUEST CONTEXT'),
+      expect.stringContaining('## Request\n\nquery GetUser'),
     )
     expect(window.navigator.clipboard.writeText).toHaveBeenCalledWith(
-      expect.stringContaining('GetUser'),
+      expect.stringContaining('```json\n{\n  "id": "123"\n}\n```'),
     )
     expect(window.navigator.clipboard.writeText).toHaveBeenCalledWith(
-      expect.stringContaining('"id": "123"'),
+      expect.stringContaining('```graphql\nquery GetUser { user { id } }\n```'),
+    )
+  })
+
+  it('uses safe Markdown delimiters for backticks in copied details', async () => {
+    const user = userEvent.setup()
+    vi.spyOn(window.navigator.clipboard, 'writeText')
+
+    const error: any = new Error('Message with `inline` code')
+    error.mostRecentRequest = {
+      query: ['query GetCode {', '  code', '}', '```'].join('\n'),
+      operationName: 'GetCode',
+      operationKind: 'query',
+      variables: { markdown: '```' },
+    }
+
+    render(<DevFatalErrorPage error={error} />)
+    await user.click(screen.getByRole('button', { name: /Copy All/ }))
+
+    expect(window.navigator.clipboard.writeText).toHaveBeenCalledWith(
+      expect.stringContaining('`Error`: ``Message with `inline` code``'),
+    )
+    expect(window.navigator.clipboard.writeText).toHaveBeenCalledWith(
+      expect.stringContaining('````json\n{\n  "markdown": "```"\n}\n````'),
+    )
+    expect(window.navigator.clipboard.writeText).toHaveBeenCalledWith(
+      expect.stringContaining(
+        '````graphql\nquery GetCode {\n  code\n}\n```\n````',
+      ),
     )
   })
 
