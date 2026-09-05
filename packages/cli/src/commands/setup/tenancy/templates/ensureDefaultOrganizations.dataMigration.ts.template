@@ -1,14 +1,13 @@
 import type { PrismaClient } from 'src/lib/db'
-
 import { ensureDefaultOrganization } from 'src/services/organizations/organizations'
 
 const BATCH_SIZE = 100
 
 /**
  * Existing users have no organization until this runs once: `setup tenancy`
- * only wires new signups (via the GraphQL `context` function and, for
- * dbAuth, the signup handler). Every user without a membership gets one, in
- * batches, using the same `ensureDefaultOrganization` new signups use.
+ * only wires new signups (via the GraphQL `context` function and, for dbAuth,
+ * the signup handler). Every user without a membership gets one, in batches,
+ * using the same `ensureDefaultOrganization` new signups use.
  *
  * Run with `__DATA_MIGRATE_UP_COMMAND__`, after
  * `__PRISMA_MIGRATE_DEV_COMMAND__` has applied the
@@ -16,18 +15,15 @@ const BATCH_SIZE = 100
  */
 export default async ({ db }: { db: PrismaClient }) => {
   let cursor: string | undefined
+  let hasMore = true
 
-  for (;;) {
+  while (hasMore) {
     const users = await db.user.findMany({
       take: BATCH_SIZE,
       orderBy: { id: 'asc' },
       ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
       include: { memberships: { select: { id: true } } },
     })
-
-    if (users.length === 0) {
-      break
-    }
 
     for (const user of users) {
       if (user.memberships.length === 0) {
@@ -37,10 +33,7 @@ export default async ({ db }: { db: PrismaClient }) => {
       }
     }
 
-    cursor = users[users.length - 1].id
-
-    if (users.length < BATCH_SIZE) {
-      break
-    }
+    cursor = users[users.length - 1]?.id
+    hasMore = users.length === BATCH_SIZE
   }
 }
