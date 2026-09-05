@@ -373,6 +373,8 @@ await server.register(cedarUploadsPlugin, {
 
 The handler verifies the SNS signature against Amazon's certificate, requires the message to come from exactly that topic, confirms the subscription automatically, and settles each notified object the same way `confirmUpload` does. Duplicate notifications and rows the cleanup job already claimed are left alone. With the webhook in place, pass `confirm: false` to `useS3Upload` to skip client confirmation.
 
+The webhook is an AWS mechanism. S3-compatible services such as Railway buckets, Cloudflare R2, or MinIO don't publish events through SNS, so on those hosts leave `s3Webhook` unset and rely on client confirmation plus the cleanup job. The upload path itself is unaffected: point the `S3Client` at the service's endpoint and everything else works the same.
+
 ## Multi-tenant apps
 
 Tokens carry the organization they were issued under, `Upload` rows record it, and confirmation and the `@requireUploadToken` directive reject a token or upload from another organization. `issueUploadToken` reads `organizationId` from `context.currentUser` by default; pass it explicitly from your `requestUploadToken` resolver when your app resolves the current organization some other way, and give `createRequireUploadTokenDirective` a `getOrganizationId` callback to match. With [tenancy](tenancy.md) treating `Upload` as tenant-owned, the directives' lookups are scoped automatically.
