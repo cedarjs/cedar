@@ -1,6 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
+
 const WEB_AUTH_EXTENSIONS = ['ts', 'tsx', 'js', 'jsx']
 
 /**
@@ -21,18 +23,20 @@ export function hasWebAuthFile(webSrcPath: string): boolean {
  * Prisma config, which a project that has never installed dependencies
  * cannot do.
  */
-export const AUTH_NOT_SET_UP_MESSAGE = [
-  'Auth is not set up in this project.',
-  '',
-  "Tenancy builds on your app's auth: it adds memberships to",
-  '`getCurrentUser`, and resolves the current organization from the',
-  "signed-in user's memberships. Set up auth first, then run this command",
-  'again:',
-  '',
-  '  yarn cedar setup auth dbAuth',
-  '',
-  'Any provider works. See https://cedarjs.com/docs/authentication',
-].join('\n')
+export function authNotSetUpMessage(): string {
+  return [
+    'Auth is not set up in this project.',
+    '',
+    "Tenancy builds on your app's auth: it adds memberships to",
+    '`getCurrentUser`, and resolves the current organization from the',
+    "signed-in user's memberships. Set up auth first, then run this command",
+    'again:',
+    '',
+    `  ${formatCedarCommand(['setup', 'auth', 'dbAuth'])}`,
+    '',
+    'Any provider works. See https://cedarjs.com/docs/authentication',
+  ].join('\n')
+}
 
 /**
  * Shown when the schema has no `User` model. dbAuth adds one; providers that
@@ -50,7 +54,7 @@ export function noUserModelMessage(schemaPath: string): string {
     "provider's id in a column beside it, so memberships keep working if you",
     'switch providers or add a second one.',
     '',
-    'Add a model like this one, run `yarn cedar prisma migrate dev`, then',
+    `Add a model like this one, run \`${formatCedarCommand(['prisma', 'migrate', 'dev'])}\`, then`,
     'run this command again:',
     '',
     '  model User {',
