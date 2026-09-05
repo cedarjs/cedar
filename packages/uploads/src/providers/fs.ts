@@ -25,9 +25,7 @@ export interface FsProviderOptions {
    * given as `tokenSecret`, because the serve route verifies with that.
    */
   signSecret?: string
-  /**
-   * Prefix the upload plugin is registered under. Defaults to `/upload`.
-   */
+  /** Prefix the upload plugin is registered under. Defaults to `/upload`. */
   routePrefix?: string
 }
 
@@ -50,6 +48,7 @@ export function createFsProvider(opts: FsProviderOptions): StorageProvider {
 
   const filePath = (key: string) => {
     assertSafeKey(key)
+
     return path.join(uploadDir, key)
   }
 
@@ -69,9 +68,11 @@ export function createFsProvider(opts: FsProviderOptions): StorageProvider {
 
     async readStream(key) {
       const target = filePath(key)
+
       // Surface a missing file as a rejected promise rather than a stream
       // error, so the serve route can answer 404 before any headers are sent
       await fs.access(target)
+
       return createReadStream(target)
     },
 
@@ -88,6 +89,7 @@ export function createFsProvider(opts: FsProviderOptions): StorageProvider {
     async exists(key) {
       try {
         await fs.access(filePath(key))
+
         return true
       } catch {
         return false
@@ -97,11 +99,13 @@ export function createFsProvider(opts: FsProviderOptions): StorageProvider {
     async getObjectSize(key) {
       try {
         const stat = await fs.stat(filePath(key))
+
         return stat.size
       } catch (e) {
         if (isNotFound(e)) {
           return null
         }
+
         throw e
       }
     },
