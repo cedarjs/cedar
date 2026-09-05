@@ -1,5 +1,4 @@
 import type { PrismaClient } from 'src/lib/db'
-
 import { ensureDefaultOrganization } from 'src/services/organizations/organizations'
 
 const BATCH_SIZE = 100
