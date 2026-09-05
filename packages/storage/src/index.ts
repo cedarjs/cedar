@@ -8,6 +8,16 @@ import type {
 import { createUploadsExtension } from './prismaExtension.js'
 import type { UrlSigner } from './UrlSigner.js'
 
+// `@cedarjs/storage` is superseded by `@cedarjs/uploads`. The warning is
+// printed once per process so the deprecation is visible without being noisy.
+if (!process.env.CEDAR_SUPPRESS_STORAGE_DEPRECATION) {
+  console.warn(
+    '[@cedarjs/storage] This package is deprecated and will be removed in a ' +
+      'future major release. Migrate to @cedarjs/uploads: ' +
+      'https://cedarjs.com/docs/uploads#migrating-from-cedarjsstorage',
+  )
+}
+
 type SetupStorageOptions<
   TClient,
   MNames extends ModelNamesFor<TClient> = ModelNamesFor<TClient>,

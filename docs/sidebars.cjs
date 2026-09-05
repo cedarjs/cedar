@@ -260,6 +260,7 @@ module.exports = {
         },
         'webhooks',
         'uploads',
+        'uploads-legacy',
         'vite-configuration',
       ],
     },

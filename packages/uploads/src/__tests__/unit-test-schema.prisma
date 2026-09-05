@@ -1,0 +1,24 @@
+datasource db {
+  provider = "sqlite"
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "./prisma-client" // <-- a local prisma client so it doesn't interfere with the mono repo
+}
+
+model Upload {
+  id             String   @id @default(cuid())
+  target         String
+  status         String   @default("pending")
+  filename       String
+  mimeType       String
+  size           BigInt
+  storageKey     String?
+  data           Bytes?
+  userId         String?
+  tokenId        String?
+  organizationId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
