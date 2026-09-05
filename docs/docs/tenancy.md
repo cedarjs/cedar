@@ -29,8 +29,7 @@ canonical models so you can add the missing fields/relations by hand, and
 continue with the rest of the setup. `--force` instead appends Cedar's
 versions beside your existing ones and keeps going even though the resulting
 schema is invalid Prisma until you merge them &mdash; the "Next steps" output
-says so explicitly. A byte-for-byte match (running the command twice with no
-changes in between) is always a no-op, `--force` or not. Either way, `setup
+says so explicitly. Either way, `setup
 tenancy` also adds the `RW_DataMigration` model (the one
 `yarn cedar data-migrate install` adds) if it isn't already there, since the
 generated data migration and the setup output's
