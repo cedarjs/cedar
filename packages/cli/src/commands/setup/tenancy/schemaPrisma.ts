@@ -140,16 +140,18 @@ export function editSchema(
     throw new Error('CEDAR_TENANCY_ERR_NO_USER_MODEL')
   }
 
-  const modelsExist =
-    hasModel(schema, 'Organization') || hasModel(schema, 'Membership')
-
   // Models this command wrote itself are not a clash: appending skips them,
   // so running it twice changes nothing. A model of the same name that
-  // differs is the app's own.
-  const modelsAreThisCommands =
-    schema.includes(ORGANIZATION_MODEL) && schema.includes(MEMBERSHIP_MODEL)
+  // differs is the app's own. Checked independently per model, so a schema
+  // with a canonical Organization but no Membership (e.g. from copying only
+  // half of the "skipped" guidance by hand) still gets the missing one
+  // added, rather than being treated as fully customized.
+  const organizationIsCustomized =
+    hasModel(schema, 'Organization') && !schema.includes(ORGANIZATION_MODEL)
+  const membershipIsCustomized =
+    hasModel(schema, 'Membership') && !schema.includes(MEMBERSHIP_MODEL)
 
-  const modelsCustomized = modelsExist && !modelsAreThisCommands
+  const modelsCustomized = organizationIsCustomized || membershipIsCustomized
 
   // Default: leave the app's customized models alone rather than appending
   // duplicate, invalid Prisma beside them. `force` is the only way to make

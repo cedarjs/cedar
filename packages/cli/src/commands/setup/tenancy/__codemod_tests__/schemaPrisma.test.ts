@@ -5,6 +5,8 @@ import {
   addTenancyModels,
   editSchema,
   hasModel,
+  MEMBERSHIP_MODEL,
+  ORGANIZATION_MODEL,
 } from '../schemaPrisma.js'
 
 const BASE_SCHEMA = `datasource db {
@@ -79,6 +81,28 @@ describe('editSchema', () => {
     // Prisma reports the clash rather than this command picking a winner.
     expect(result.schema).toContain('model Organization {\n  id String @id\n}')
     expect(result.schema.match(/model Organization \{/g)).toHaveLength(2)
+  })
+
+  it('adds Membership, and reports "added", when Organization is already canonical but Membership is absent', () => {
+    const schemaWithCanonicalOrg = `${BASE_SCHEMA}\n${ORGANIZATION_MODEL}\n`
+
+    const result = editSchema(schemaWithCanonicalOrg, { force: false })
+
+    expect(result.outcome).toBe('added')
+    expect(result.schema).toContain('model Membership {')
+    expect(result.schema.match(/model Organization \{/g)).toHaveLength(1)
+  })
+
+  it('adds Organization, and reports "added", when Membership is already canonical but Organization is absent', () => {
+    const schemaWithCanonicalMembership = `${BASE_SCHEMA}\n${MEMBERSHIP_MODEL}\n`
+
+    const result = editSchema(schemaWithCanonicalMembership, {
+      force: false,
+    })
+
+    expect(result.outcome).toBe('added')
+    expect(result.schema).toContain('model Organization {')
+    expect(result.schema.match(/model Membership \{/g)).toHaveLength(1)
   })
 
   it('adds both models on the happy path, and reports "added"', () => {
