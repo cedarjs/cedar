@@ -16,7 +16,7 @@ describe.skipIf(process.env.CI && process.platform === 'win32')(
       await matchTransformSnapshot('graphqlCodemod', 'defaultGraphql')
     })
 
-    it('throws RW_CODEMOD_ERR_GRAPHQL_HANDLER_NOT_FOUND when createGraphQLHandler is missing', async () => {
+    it('throws CEDAR_CODEMOD_ERR_GRAPHQL_HANDLER_NOT_FOUND when createGraphQLHandler is missing', async () => {
       const tempDir = fs.mkdtempSync(
         path.join(fs.realpathSync(os.tmpdir()), 'cedar-test-'),
       )
@@ -37,7 +37,7 @@ describe.skipIf(process.env.CI && process.platform === 'win32')(
       fs.promises.rm(tempDir, { recursive: true, force: true }).catch(() => {})
     })
 
-    it('throws RW_CODEMOD_ERR_GRAPHQL_CONTEXT_EXISTS when a context option is already present', async () => {
+    it('throws CEDAR_CODEMOD_ERR_GRAPHQL_CONTEXT_EXISTS when a context option is already present', async () => {
       const tempDir = fs.mkdtempSync(
         path.join(fs.realpathSync(os.tmpdir()), 'cedar-test-'),
       )

@@ -51,19 +51,19 @@ describe('addTenancyModels', () => {
 })
 
 describe('editSchema', () => {
-  it('throws RW_TENANCY_ERR_NO_USER_MODEL when there is no User model', () => {
+  it('throws CEDAR_TENANCY_ERR_NO_USER_MODEL when there is no User model', () => {
     const schemaWithoutUser = `model Contact {\n  id Int @id\n}\n`
 
     expect(() => editSchema(schemaWithoutUser, { force: false })).toThrow(
-      'RW_TENANCY_ERR_NO_USER_MODEL',
+      'CEDAR_TENANCY_ERR_NO_USER_MODEL',
     )
   })
 
-  it('throws RW_TENANCY_ERR_MODELS_EXIST when Organization already exists and force is false', () => {
+  it('throws CEDAR_TENANCY_ERR_MODELS_EXIST when Organization already exists and force is false', () => {
     const schemaWithOrg = `${BASE_SCHEMA}\nmodel Organization {\n  id String @id\n}\n`
 
     expect(() => editSchema(schemaWithOrg, { force: false })).toThrow(
-      'RW_TENANCY_ERR_MODELS_EXIST',
+      'CEDAR_TENANCY_ERR_MODELS_EXIST',
     )
   })
 
