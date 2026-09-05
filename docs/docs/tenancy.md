@@ -380,8 +380,8 @@ The generated `web/src/components/OrgScope/OrgScope.tsx` wraps the core
 can't import your app's auth directly, so it takes `useAuth` as a prop,
 defaulting to `useNoAuth` from `@cedarjs/auth`) and a not-a-member message.
 
-`orgSlug` resolves from `useParams().orgSlug` by default &mdash; the
-organization lives in the URL (see the
+`orgSlug` resolves from `useParams().orgSlug` by default as the organization
+lives in the URL (see the
 [multi-tenancy how-to](./how-to/multi-tenancy.md#4-request-flow-url-to-header-to-context)
 for why). Pass the `orgSlug` prop only when it genuinely can't come from the
 route: a subdomain- or custom-domain-derived organization, or an in-page

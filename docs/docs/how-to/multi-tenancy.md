@@ -114,9 +114,9 @@ are carried over from the article, stated as Cedar defaults:
   swapping in a Prisma enum.
 - **`Organization.slug` exists for URLs** (`/org/acme/projects`). Resolving the
   current organization by `id` or by `slug` are both supported. **The
-  organization lives in the URL** &mdash; see
-  [section 4](#4-request-flow-url-to-header-to-context) for why this is a
-  Cedar opinion, not just an option.
+  organization is part of the URL**. See
+  [section 4](#4-request-flow-url-to-header-to-context) for why this is a Cedar
+  opinion, not just an option.
 - **Every user belongs to an organization from signup.** Signup either claims a
   pending invitation or creates an `Organization` named after the user with an
   `owner` membership, so an app never accumulates user-owned resources that
@@ -461,19 +461,20 @@ which is the intended fail-closed behaviour rather than a silent empty list.
 ## 4. Request flow: URL to header to context
 
 **The organization lives in the URL.** Put the slug in the path
-(`/org/{orgSlug}/…`) even while every user has exactly one organization: links
+(`/org/{orgSlug}/...`) even while every user has exactly one organization: links
 and bookmarks stay unambiguous once a user later belongs to several, support
 staff can reach a customer organization with a URL and a membership, and going
-multi-org changes no routes. Deriving the current organization from the
-signed-in user's membership instead (skipping the URL segment) looks
-convenient and is almost always regretted &mdash; the first shared link or the
-first "look at this customer's account" request exposes the gap.
+multi-org changes no routes. Deriving the current organization from the signed-
+in user's membership instead (skipping the URL segment) looks convenient and is
+almost always regretted. As soon as you want to share a link to a page or the
+first time you want to handle a "look at this customer's account" request you'll
+be thankful you made the org a part of the URL.
 
 The `orgSlug` prop and `resolveCurrentOrg`'s variable fallbacks (below) exist
-for the cases where the organization genuinely can't live in the path &mdash;
-a subdomain- or custom-domain-derived organization (white-label deployments),
-or an in-page switcher that doesn't navigate. They are not an invitation to
-keep it out of the URL for tidiness.
+for the cases where the organization genuinely can't live in the path, like for
+a subdomain- or custom-domain-derived organization (white-label deployments), or
+an in-page switcher that doesn't navigate. They are not an invitation to keep it
+out of the URL for tidiness.
 
 Every GraphQL request that carries a current organization goes through the same
 four steps:
