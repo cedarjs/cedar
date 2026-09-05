@@ -85,7 +85,7 @@ const { organizationId, userId } = verifySignedToken<{
 }>(event.queryStringParameters?.state, { purpose: 'google-oauth-state' })
 ```
 
-`verifySignedToken` returns the payload exactly as it was passed to
+`verifySignedToken` returns the JSON-deserialized payload, the same shape it was passed to
 `createSignedToken`. The type parameter tells TypeScript what shape to expect;
 the framework cannot check it at runtime, so treat it the way you would treat
 any value your own code serialized earlier.
@@ -146,7 +146,33 @@ signed token in the `state` parameter. The callback verifies it and learns which
 organization to attach the integration to from the token itself, rather than
 from any ambient context.
 
+The signature proves the token came from your app, but not that it came back
+through the same browser that started the flow. Without that binding an attacker
+could start a flow, hand the authorization URL to a victim, and have the victim's
+provider account linked to the attacker's organization. So the example also
+generates a random nonce, stores it in a short-lived cookie, and requires the
+callback's cookie to match the nonce inside the signed `state`. Recording each
+nonce in a table with a unique key makes the callback single-use: the second
+callback carrying the same `state` fails the insert and is refused.
+
+The table is one model in `schema.prisma`:
+
+```prisma
+model OAuthNonce {
+  nonce     String   @id
+  createdAt DateTime @default(now())
+}
+```
+
+A row is never needed after the nonce's ten-minute lifetime, so a periodic
+`deleteMany` on `createdAt` keeps the table small. Starting a second attempt in
+the same browser overwrites the cookie, so only the most recent attempt can
+complete; that is the intended behavior for a flow the user drives one step at
+a time.
+
 ```ts title="api/src/functions/calendarConnect.ts"
+import { randomBytes } from 'node:crypto'
+
 import type { APIGatewayProxyEvent } from 'aws-lambda'
 
 import { createSignedToken } from '@cedarjs/api'
@@ -160,8 +186,11 @@ const calendarConnect = async (_event: APIGatewayProxyEvent) => {
   // `useRequireAuth` below populates `context.currentUser` for this function
   requireAuth()
 
+  const nonce = randomBytes(16).toString('base64url')
+
   const state = createSignedToken({
     payload: {
+      nonce,
       organizationId: context.currentUser.organizationId,
       userId: context.currentUser.id,
     },
@@ -179,7 +208,18 @@ const calendarConnect = async (_event: APIGatewayProxyEvent) => {
   url.searchParams.set('scope', 'https://www.googleapis.com/auth/calendar')
   url.searchParams.set('state', state)
 
-  return { statusCode: 302, headers: { Location: url.toString() } }
+  return {
+    statusCode: 302,
+    headers: {
+      Location: url.toString(),
+      // The browser that started the flow is the only one that can finish
+      // it. SameSite=Lax is what lets the cookie ride along on the
+      // top-level redirect back from the provider.
+      'Set-Cookie':
+        `calendar_oauth_nonce=${nonce}; Path=/; HttpOnly; Secure; ` +
+        'SameSite=Lax; Max-Age=600',
+    },
+  }
 }
 
 export const handler = useRequireAuth({
@@ -191,15 +231,19 @@ export const handler = useRequireAuth({
 
 ```ts title="api/src/functions/calendarCallback.ts"
 import type { APIGatewayProxyEvent } from 'aws-lambda'
+import * as cookie from 'cookie'
 
 import { SignedTokenError, verifySignedToken } from '@cedarjs/api'
 
-import { db } from 'src/lib/db'
+import { db, Prisma } from 'src/lib/db'
 
 interface CalendarOAuthState {
+  nonce: string
   organizationId: string
   userId: string
 }
+
+const rejected = { statusCode: 400, body: 'Invalid or expired OAuth state.' }
 
 export const handler = async (event: APIGatewayProxyEvent) => {
   let state: CalendarOAuthState
@@ -211,7 +255,30 @@ export const handler = async (event: APIGatewayProxyEvent) => {
     )
   } catch (e) {
     if (e instanceof SignedTokenError) {
-      return { statusCode: 400, body: 'Invalid or expired OAuth state.' }
+      return rejected
+    }
+
+    throw e
+  }
+
+  // Bind the callback to the browser that started the flow
+  const cookies = cookie.parse(event.headers.cookie ?? '')
+
+  if (cookies.calendar_oauth_nonce !== state.nonce) {
+    return rejected
+  }
+
+  // Consume the nonce atomically. The primary key makes the insert fail for
+  // a replayed or concurrent callback, which is refused before the code is
+  // exchanged and before anything else is written.
+  try {
+    await db.oAuthNonce.create({ data: { nonce: state.nonce } })
+  } catch (e) {
+    if (
+      e instanceof Prisma.PrismaClientKnownRequestError &&
+      e.code === 'P2002'
+    ) {
+      return rejected
     }
 
     throw e
@@ -225,18 +292,34 @@ export const handler = async (event: APIGatewayProxyEvent) => {
     update: tokens,
   })
 
-  return { statusCode: 302, headers: { Location: '/settings/integrations' } }
+  return {
+    statusCode: 302,
+    headers: {
+      Location: '/settings/integrations',
+      'Set-Cookie': 'calendar_oauth_nonce=; Path=/; Max-Age=0',
+    },
+  }
 }
 ```
 
 Because the organization comes from the verified token and nowhere else, the
-callback works the same whether or not any user session is present, and a forged
-or expired `state` is rejected before any database write.
+callback works the same whether or not any user session is present. A forged or
+expired `state` is rejected by verification, a `state` presented from a different
+browser is rejected by the cookie check, and a replayed `state` is rejected by the
+nonce insert, all before the code is exchanged or the integration is written.
 
-Verification is stateless: a valid token is accepted every time it is presented
-until it expires. When a flow must be single-use, record the token when it is
-consumed (for example by storing the `state` value on the row it creates) and
-refuse a second callback that carries the same one.
+Verification itself is stateless: a valid token is accepted every time it is
+presented until it expires. The two additions are independent and answer
+different questions:
+
+- **The cookie binds the flow to a browser.** Needed when the callback's effect
+  depends on who is sitting at the browser, as with OAuth login and account
+  linking. A password-set or email-confirmation link is meant to work from any
+  browser, so it skips the cookie.
+- **The recorded nonce makes the token single-use.** Needed whenever acting on
+  the same token twice would be a problem, which includes those password-set and
+  confirmation links. An unsubscribe link, where a repeat is harmless, can skip
+  it.
 
 ## Design notes
 
