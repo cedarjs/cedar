@@ -29,9 +29,10 @@ canonical models so you can add the missing fields/relations by hand, and
 continue with the rest of the setup. `--force` instead appends Cedar's
 versions beside your existing ones and keeps going even though the resulting
 schema is invalid Prisma until you merge them &mdash; the "Next steps" output
-says so explicitly. Either way, `setup tenancy` also adds the
-`RW_DataMigration` model (the one `yarn cedar data-migrate install` adds) if it
-isn't already there, since the generated data migration and the setup output's
+says so explicitly. Either way, `setup
+tenancy` also adds the `RW_DataMigration` model (the one
+`yarn cedar data-migrate install` adds) if it isn't already there, since the
+generated data migration and the setup output's
 `data-migrate up` step both need it. See
 [What `setup tenancy` changes](how-to/multi-tenancy.md#what-setup-tenancy-changes)
 in the how-to for the full list of generated and modified files.
@@ -74,10 +75,10 @@ global.
 **Creates are explicit and verified; reads, updates and deletes are ambient
 and fail closed.** Prisma's generated types still require the tenant field on
 creates, so you should keep writing it. On a scoped client, the extension
-checks that every create (nested ones included) targets the current
-organization and refuses cross-tenant writes. For tenant-owned models, reads,
-updates and deletes are scoped automatically and throw `TenantScopeError`
-when no organization is in scope.
+checks that every create of a tenant-owned model (nested ones included)
+targets the current organization and refuses cross-tenant writes. Reads,
+updates and deletes on tenant-owned models are scoped automatically and throw
+`TenantScopeError` when no organization is in scope.
 
 Every operation keeps its own method; the extension only adds a `tenantField`
 equality to the arguments.
