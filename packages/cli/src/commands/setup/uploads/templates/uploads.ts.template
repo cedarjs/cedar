@@ -1,0 +1,89 @@
+import {
+  confirmUpload as confirmUploadRecord,
+  createPresignedUpload,
+  getUploadTokenPayload,
+  isMimeTypeAllowed,
+  issueUploadToken,
+  resolveProfile,
+  resolveTarget,
+  storeFile,
+  UploadError,
+} from '@cedarjs/uploads'
+
+import { db } from 'src/lib/db'
+import { profiles, targets } from 'src/lib/uploads'
+
+const secret = () => {
+  if (!process.env.UPLOAD_TOKEN_SECRET) {
+    throw new Error(
+      'UPLOAD_TOKEN_SECRET is not set. Generate one with `yarn cedar generate secret` and add it to .env.',
+    )
+  }
+
+  return process.env.UPLOAD_TOKEN_SECRET
+}
+
+export const requestUploadToken = ({ profile }: { profile: string }) => {
+  return issueUploadToken({
+    profiles,
+    profile,
+    secret: secret(),
+    currentUser: context.currentUser,
+  })
+}
+
+export const createPresignedUploadUrl = ({
+  input,
+}: {
+  input: { filename: string; contentType: string; size: bigint | number }
+}) => {
+  return createPresignedUpload({
+    db,
+    targets,
+    tokenPayload: getUploadTokenPayload(context),
+    input,
+  })
+}
+
+export const confirmUpload = ({ uploadId }: { uploadId: string }) => {
+  return confirmUploadRecord({
+    db,
+    targets,
+    uploadId,
+    currentUser: context.currentUser,
+  })
+}
+
+export const uploadFile = async ({
+  profile: profileName,
+  input,
+}: {
+  profile: string
+  input: { filename: string; mimeType: string; data: string }
+}) => {
+  const profile = resolveProfile(profiles, profileName)
+  const target = resolveTarget(targets, profile.target)
+
+  if (target.providerType !== 'db') {
+    throw new UploadError(
+      'NOT_SUPPORTED',
+      `Upload profile '${profile.name}' does not store files in the database. Use an upload token instead.`,
+    )
+  }
+
+  if (!isMimeTypeAllowed(profile.allowedMimeTypes, input.mimeType)) {
+    throw new UploadError(
+      'MIME_TYPE_NOT_ALLOWED',
+      `File type '${input.mimeType}' is not allowed for upload profile '${profile.name}'.`,
+    )
+  }
+
+  return storeFile(target, {
+    db,
+    filename: input.filename,
+    mimeType: input.mimeType,
+    data: Buffer.from(input.data, 'base64'),
+    maxSize: profile.maxFileSize,
+    userId: context.currentUser ? String(context.currentUser.id) : undefined,
+  })
+}

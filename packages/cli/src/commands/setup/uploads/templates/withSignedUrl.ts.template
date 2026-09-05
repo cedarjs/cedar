@@ -1,0 +1,16 @@
+import { createWithSignedUrlDirective } from '@cedarjs/uploads'
+
+import { db } from 'src/lib/db'
+import { targets } from 'src/lib/uploads'
+
+/**
+ * Resolves a field holding an Upload id to a time-limited URL for the file,
+ * from whichever storage target holds it. Files download by default; pass
+ * `disposition: 'inline'` to render them in the browser instead, and only
+ * for MIME types you trust.
+ */
+const withSignedUrl = createWithSignedUrlDirective({ db, targets })
+
+export const schema = withSignedUrl.schema
+
+export default withSignedUrl

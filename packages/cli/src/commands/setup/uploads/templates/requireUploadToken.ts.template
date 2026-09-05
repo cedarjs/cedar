@@ -1,0 +1,15 @@
+import { createRequireUploadTokenDirective } from '@cedarjs/uploads'
+
+/**
+ * Requires a valid upload token in the x-upload-token request header and
+ * makes its claims available to the resolver through
+ * `getUploadTokenPayload(context)`. The token must have been issued to the
+ * requesting user.
+ */
+const requireUploadToken = createRequireUploadTokenDirective({
+  secret: process.env.UPLOAD_TOKEN_SECRET ?? '',
+})
+
+export const schema = requireUploadToken.schema
+
+export default requireUploadToken

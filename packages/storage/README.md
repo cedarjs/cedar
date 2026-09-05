@@ -1,5 +1,11 @@
 # `@cedarjs/storage`
 
+> **Deprecated.** `@cedarjs/storage` is superseded by
+> [`@cedarjs/uploads`](../uploads/README.md), which replaces the Prisma
+> extension and savers with explicit service calls, named storage targets, and
+> token-gated upload routes. This package will be removed in a future major
+> release. See the [migration guide](https://cedarjs.com/docs/uploads#migrating-from-cedarjsstorage).
+
 This package houses
 
 - Prisma extension for handling uploads. Currently

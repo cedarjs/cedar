@@ -1,0 +1,79 @@
+export const schema = gql`
+  type Upload {
+    id: String!
+    target: String!
+    status: String!
+    filename: String!
+    mimeType: String!
+    size: BigInt!
+    storageKey: String
+    userId: String
+    organizationId: String
+    createdAt: DateTime!
+    updatedAt: DateTime!
+  }
+
+  type UploadToken {
+    token: String!
+    """
+    The profile's constraints, echoed for client-side UX (file-picker
+    filters, pre-upload validation). The authoritative copy is inside the
+    signed token.
+    """
+    allowedMimeTypes: [String!]!
+    maxFileSize: BigInt!
+    maxFiles: Int!
+  }
+
+  type PresignedUploadUrl {
+    uploadId: String!
+    url: String!
+    method: String!
+    headers: JSON!
+  }
+
+  input CreatePresignedUploadUrlInput {
+    filename: String!
+    contentType: String!
+    size: BigInt!
+  }
+
+  input UploadFileInput {
+    filename: String!
+    mimeType: String!
+    """
+    The file's bytes, base64-encoded. Only for profiles whose target stores
+    files inline in the database.
+    """
+    data: String!
+  }
+
+  type Query {
+    """
+    Issues an upload token for a server-defined profile. The profile name
+    must match a key of \`profiles\` in api/src/lib/uploads.
+    """
+    requestUploadToken(profile: String!): UploadToken! @requireAuth
+  }
+
+  type Mutation {
+    """
+    Direct-to-storage uploads: returns a presigned URL for one file. Send the
+    upload token in the x-upload-token header.
+    """
+    createPresignedUploadUrl(
+      input: CreatePresignedUploadUrlInput!
+    ): PresignedUploadUrl! @requireAuth @requireUploadToken
+
+    """
+    Confirms a direct-to-storage upload once the client has PUT the bytes.
+    """
+    confirmUpload(uploadId: String!): Upload! @requireAuth
+
+    """
+    Stores a small file sent as base64, for profiles whose target keeps files
+    inline in the database.
+    """
+    uploadFile(profile: String!, input: UploadFileInput!): Upload! @requireAuth
+  }
+`

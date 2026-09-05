@@ -1,0 +1,22 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext",
+    "baseUrl": ".",
+    "rootDir": "src",
+    "outDir": "dist",
+    "jsx": "react-jsx"
+  },
+  "include": ["src"],
+  // Tests are intentionally included here (not excluded like the build base) so the
+  // IDE type-checks test files too. During actual builds, tsconfig.build.json adds
+  // **/__tests__ back to the exclude.
+  "references": [
+    { "path": "../api" },
+    { "path": "../context" },
+    { "path": "../framework-tools" },
+    { "path": "../graphql-server" },
+    { "path": "../web" }
+  ]
+}
