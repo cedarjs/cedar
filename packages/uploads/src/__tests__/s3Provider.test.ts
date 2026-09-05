@@ -120,9 +120,18 @@ describe('createS3Provider', () => {
 
   test('exposes bucket, region, and prefix', () => {
     const { client } = makeClient()
-    const provider = createS3Provider({ client, bucket: 'b', keyPrefix: 'p/' })
+    const provider = createS3Provider({
+      client,
+      bucket: 'b',
+      region: 'us-east-1',
+      keyPrefix: 'p/',
+    })
 
     expect(provider.providerType).toBe('s3')
-    expect(provider.getConfig()).toMatchObject({ bucket: 'b', keyPrefix: 'p/' })
+    expect(provider.getConfig()).toEqual({
+      bucket: 'b',
+      region: 'us-east-1',
+      keyPrefix: 'p/',
+    })
   })
 })

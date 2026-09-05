@@ -58,6 +58,7 @@ export interface UploadWhere {
 export interface UploadUpdateData {
   status?: UploadStatus
   size?: bigint
+  storageKey?: string | null
 }
 
 /**
@@ -75,6 +76,7 @@ export interface UploadDelegate {
   findMany(args: {
     where: UploadWhere
     omit?: { data?: boolean }
+    orderBy?: { createdAt: 'asc' | 'desc' }
     take?: number
   }): Promise<UploadRecord[]>
   updateMany(args: {

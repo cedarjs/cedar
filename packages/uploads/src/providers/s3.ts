@@ -15,6 +15,11 @@ export interface S3ProviderOptions {
   /** The app's own S3 client. It stays available for provider-specific work. */
   client: S3Client
   bucket: string
+  /**
+   * Region of the bucket, reported by `getConfig()` for third-party
+   * integrations. The client's own region setting is used for requests.
+   */
+  region?: string
   /** Prepended to every key, for example `avatars/`. */
   keyPrefix?: string
   /** Lifetime of presigned upload URLs, in seconds. Defaults to 300. */
@@ -49,6 +54,7 @@ export function createS3Provider(opts: S3ProviderOptions): StorageProvider {
   const {
     client,
     bucket,
+    region,
     keyPrefix = '',
     uploadUrlExpiresIn = 300,
     readUrlExpiresIn = 3600,
@@ -159,7 +165,7 @@ export function createS3Provider(opts: S3ProviderOptions): StorageProvider {
     },
 
     getConfig() {
-      return { bucket, region: client.config.region, keyPrefix }
+      return { bucket, region, keyPrefix }
     },
   }
 

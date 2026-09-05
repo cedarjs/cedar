@@ -11,7 +11,8 @@ export interface UseFsUploadOptions extends UppyUploadCallbacks {
   profile: string
   /**
    * Full URL of the api's upload route. Defaults to the api URL from
-   * `RWJS_API_URL` plus `/upload/fs`.
+   * `RWJS_API_URL` plus `/upload/fs`. Read on every request, so it may
+   * change after mount.
    */
   endpoint?: string
 }
@@ -39,17 +40,22 @@ export function useFsUpload({
   onUploadComplete,
   onUploadError,
 }: UseFsUploadOptions): UseFsUploadResult {
-  const { requestToken, token, constraints } = useUploadToken({ profile })
-  const tokenRef = useRef<string | null>(null)
-  tokenRef.current = token
+  const { requestToken, getToken, constraints } = useUploadToken({ profile })
+  // The Uppy instance is created once; the endpoint is read per request
+  // through this ref, updated in an effect
+  const endpointRef = useRef(endpoint ?? defaultEndpoint())
+
+  useEffect(() => {
+    endpointRef.current = endpoint ?? defaultEndpoint()
+  }, [endpoint])
 
   const upload = useUppyUpload(
     () =>
       createUppy({
         provider: 'fs',
         constraints,
-        endpoint: endpoint ?? defaultEndpoint(),
-        getUploadToken: () => tokenRef.current,
+        endpoint: () => endpointRef.current,
+        getUploadToken: getToken,
       }),
     constraints,
     { onUploadComplete, onUploadError },
@@ -64,29 +70,30 @@ export function useFsUpload({
 
     // The XHR plugin reads headers when the request starts, so the token
     // has to exist before `upload()` runs. Fetch it on the first file and
-    // hold the upload until it is there.
+    // hold the upload until it is there. `requestToken` shares one in-flight
+    // request, so these two callers never race.
     const onFileAdded = () => {
-      if (!tokenRef.current) {
+      if (!getToken()) {
         requestToken().catch((e: unknown) => {
           onUploadError?.(e instanceof Error ? e : new Error(String(e)))
         })
       }
     }
 
-    uppy.on('file-added', onFileAdded)
-    uppy.addPreProcessor(ensureToken)
-
-    async function ensureToken() {
-      if (!tokenRef.current) {
+    const ensureToken = async () => {
+      if (!getToken()) {
         await requestToken()
       }
     }
+
+    uppy.on('file-added', onFileAdded)
+    uppy.addPreProcessor(ensureToken)
 
     return () => {
       uppy.off('file-added', onFileAdded)
       uppy.removePreProcessor(ensureToken)
     }
-  }, [uppy, requestToken, onUploadError])
+  }, [uppy, getToken, requestToken, onUploadError])
 
   return { ...upload, requestToken }
 }

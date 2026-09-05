@@ -35,10 +35,13 @@ export const builder = (yargs: Argv) => {
     })
 }
 
-function toTargetChoices(values: string[]): TargetChoice[] {
-  // yargs validates `choices`, so every entry is a TargetChoice; the
-  // predicate narrows the type without a cast
-  return values.filter((t): t is TargetChoice =>
+/**
+ * Narrows and deduplicates the raw option values. yargs validates
+ * `choices`, so every entry is a TargetChoice; the predicate narrows the
+ * type without a cast.
+ */
+export function toTargetChoices(values: string[]): TargetChoice[] {
+  return [...new Set(values)].filter((t): t is TargetChoice =>
     (TARGET_CHOICES as readonly string[]).includes(t),
   )
 }
@@ -73,7 +76,9 @@ export const handler = async (options: {
   targets?: string[]
   force: boolean
 }) => {
-  const targets = options.targets
+  // `--targets` with no values yields an empty array, which is as good as
+  // omitted
+  const targets = options.targets?.length
     ? toTargetChoices(options.targets)
     : await promptForTargets()
 

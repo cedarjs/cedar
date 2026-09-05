@@ -234,13 +234,15 @@ Resolve `avatarUrl` to the upload id (a plain `avatarUrl: (user) => user.avatarI
 
 Signed URLs default to `Content-Disposition: attachment`. The stored MIME type is whatever the client claimed, and an inline `image/svg+xml` served from your own origin is a stored cross-site-scripting vector, so inline rendering is opt-in. Pass `disposition: 'inline'` to `createWithSignedUrlDirective()` in the generated directive file when your profiles only admit types you trust to render.
 
-You can do the same thing in a service:
+You can do the same thing in a service. Object-storage targets sign a URL; a database target has no URL, so read its bytes into a `data:` URI instead:
 
 ```ts
-const url = await resolveTarget(targets, upload.target).getSignedReadUrl(
-  upload.storageKey,
-  { expiresIn: 600 }
-)
+const target = resolveTarget(targets, upload.target)
+
+const url =
+  target.providerType === 'db'
+    ? toDataUri(upload.mimeType, upload.data)
+    : await target.getSignedReadUrl(upload.storageKey, { expiresIn: 600 })
 ```
 
 Directive lookups are batched per request and never fetch the inline `data` column for object-storage rows, so a `@withSignedUrl` field on a list query costs one database query, not one per row.
@@ -401,7 +403,7 @@ await transloadit.createAssembly({
 
 1. Run `yarn cedar setup uploads` and configure a filesystem target pointing at your existing upload directory.
 2. Replace `saveFiles.forModel(input)` calls in services with `storeFile(target, { db, filename, mimeType, data })` and store the returned `upload.id` in a new `Upload` relation on your model.
-3. Remove `.$extends(storagePrismaExtension)` from `api/src/lib/db.ts`, and add explicit `deleteFile()` calls where the extension used to delete files on `delete` and `update`.
+3. Remove `.$extends(storagePrismaExtension)` from `api/src/lib/db.ts`, and add explicit `deleteFile()` calls for the deletes and replacements that need them.
 4. Replace `@withSignedUrl(strategy: ...)` with `@withSignedUrl` on a field that resolves to the upload id, and drop the `signedUrl` function; the plugin's serve route replaces it.
 5. Backfill the `Upload` table from the location strings in your existing columns with a one-off script: for each row, create an `Upload` with `target`, `storageKey` (the filename on disk), `filename`, `mimeType`, and `size`, then point the new relation at it.
 

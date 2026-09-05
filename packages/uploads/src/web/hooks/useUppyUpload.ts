@@ -20,8 +20,10 @@ export interface UppyUploadResult {
 
 /**
  * Shared plumbing for `useS3Upload` and `useFsUpload`: creates the Uppy
- * instance once, re-applies restrictions when the token's constraints
- * arrive, tracks completion, and destroys the instance on unmount.
+ * instance once per mount, re-applies restrictions when the token's
+ * constraints arrive, tracks completion, and destroys the instance on
+ * unmount. `create` runs once, so anything it closes over (an endpoint, a
+ * presign callback) must read changing values through refs.
  */
 export function useUppyUpload(
   create: () => Promise<CedarUppy>,
@@ -32,21 +34,32 @@ export function useUppyUpload(
   const [completedUploads, setCompletedUploads] = useState<string[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const callbacks = useRef({ onUploadComplete, onUploadError })
-  callbacks.current = { onUploadComplete, onUploadError }
+
+  // Refs are updated in an effect, never during render, so a render React
+  // discards cannot leave a stale callback behind
+  useEffect(() => {
+    callbacks.current = { onUploadComplete, onUploadError }
+  }, [onUploadComplete, onUploadError])
 
   useEffect(() => {
     let instance: CedarUppy | null = null
     let cancelled = false
 
-    create().then((created) => {
-      if (cancelled) {
-        created.destroy()
-        return
-      }
+    create()
+      .then((created) => {
+        if (cancelled) {
+          created.destroy()
+          return
+        }
 
-      instance = created
-      setUppy(created)
-    })
+        instance = created
+        setUppy(created)
+      })
+      .catch((e: unknown) => {
+        callbacks.current.onUploadError?.(
+          e instanceof Error ? e : new Error(String(e)),
+        )
+      })
 
     return () => {
       cancelled = true

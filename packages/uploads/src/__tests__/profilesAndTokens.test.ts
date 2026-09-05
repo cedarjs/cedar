@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from 'vitest'
+import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { createSignedToken } from '@cedarjs/api'
 
@@ -80,6 +80,10 @@ describe('isMimeTypeAllowed', () => {
 })
 
 describe('upload tokens', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   test('round-trip with a generated jti', () => {
     const token = tokenFor()
     const payload = verifyUploadToken(token, { secret: SECRET })
@@ -115,7 +119,6 @@ describe('upload tokens', () => {
     expect(() => verifyUploadToken(expiring, { secret: SECRET })).toThrow(
       'Invalid upload token (EXPIRED).',
     )
-    vi.useRealTimers()
 
     const otherPurpose = createSignedToken({
       payload: basePayload,

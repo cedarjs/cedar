@@ -47,6 +47,8 @@ export function getUploadTokenPayload(
     )
   }
 
+  // Only this module's validator writes the key, and it stores the verified
+  // claims, so the value has the payload shape
   return payload as UploadTokenPayload
 }
 
@@ -146,13 +148,21 @@ export function createRequireUploadTokenDirective({
 
     const user = currentUserOf(context)
 
-    if (user && String(user.id) !== payload.sub) {
+    // Tokens are always user-bound, so a request with no current user
+    // cannot prove it is the token's owner
+    if (!user) {
+      throw new AuthenticationError(
+        'You must be logged in to use an upload token.',
+      )
+    }
+
+    if (String(user.id) !== payload.sub) {
       throw new ForbiddenError('Upload token was issued to a different user.')
     }
 
     const organizationId = getOrganizationId
       ? getOrganizationId(context)
-      : user?.organizationId
+      : user.organizationId
 
     if (payload.organizationId && payload.organizationId !== organizationId) {
       throw new ForbiddenError(

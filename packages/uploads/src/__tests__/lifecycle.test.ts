@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { cleanupStaleUploads } from '../cleanupStaleUploads.js'
 import { deleteFile } from '../deleteFile.js'
@@ -20,6 +20,9 @@ function makeTargets() {
 
 describe('storeFile', () => {
   beforeEach(resetTestDb)
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
 
   test('writes to object storage and records a completed row', async () => {
     const targets = makeTargets()
@@ -90,7 +93,19 @@ describe('storeFile', () => {
     ).rejects.toThrow('db down')
 
     expect(targets.files.objects.size).toBe(0)
-    vi.restoreAllMocks()
+  })
+
+  test('rejects a malformed MIME type', async () => {
+    const targets = makeTargets()
+
+    await expect(
+      storeFile(targets.files, {
+        db,
+        filename: 'x',
+        mimeType: 'not a mime type',
+        data: Buffer.from('x'),
+      }),
+    ).rejects.toMatchObject({ code: 'MIME_TYPE_NOT_ALLOWED' })
   })
 
   test('honors an explicit maxSize for object storage', async () => {
@@ -181,14 +196,14 @@ describe('cleanupStaleUploads', () => {
 
     const result = await cleanupStaleUploads({ db, targets })
 
-    expect(result).toEqual({ claimed: 2, deleted: 1 })
+    expect(result).toEqual({ claimed: 2, deleted: 1, errors: 0 })
     expect(targets.files.objects.has('landed.txt')).toBe(false)
 
     const rows = await prisma.upload.findMany({ orderBy: { filename: 'asc' } })
-    expect(rows.map((r) => [r.id, r.status])).toEqual([
-      [stalePending.id, 'failed'],
-      [staleNoBytes.id, 'failed'],
-      [fresh.id, 'pending'],
+    expect(rows.map((r) => [r.id, r.status, r.storageKey])).toEqual([
+      [stalePending.id, 'failed', null],
+      [staleNoBytes.id, 'failed', null],
+      [fresh.id, 'pending', 'fresh.txt'],
     ])
   })
 
@@ -223,8 +238,55 @@ describe('cleanupStaleUploads', () => {
 
     const result = await cleanupStaleUploads({ db, targets })
 
-    expect(result).toEqual({ claimed: 0, deleted: 1 })
+    expect(result).toEqual({ claimed: 0, deleted: 1, errors: 0 })
     expect(targets.files.objects.has('late.txt')).toBe(false)
     expect(targets.files.objects.has('ancient.txt')).toBe(true)
+
+    // The reclaimed tombstone drops out of the next run's re-check
+    const late = await prisma.upload.findFirst({ where: { filename: 'late' } })
+    expect(late?.storageKey).toBeNull()
+  })
+
+  test('reports rows it cannot reclaim and keeps sweeping', async () => {
+    const targets = makeTargets()
+    const onError = vi.fn()
+    const old = new Date(Date.now() - 2 * HOUR)
+
+    await prisma.upload.create({
+      data: {
+        target: 'renamed-away',
+        status: 'pending',
+        filename: 'orphan',
+        mimeType: 'text/plain',
+        size: 1n,
+        storageKey: 'orphan.txt',
+        createdAt: old,
+      },
+    })
+    await prisma.upload.create({
+      data: {
+        target: 'files',
+        status: 'pending',
+        filename: 'fine',
+        mimeType: 'text/plain',
+        size: 1n,
+        storageKey: 'fine.txt',
+        createdAt: old,
+      },
+    })
+    targets.files.objects.set('fine.txt', Buffer.from('x'))
+
+    const result = await cleanupStaleUploads({ db, targets, onError })
+
+    expect(result).toEqual({ claimed: 2, deleted: 1, errors: 1 })
+    expect(onError).toHaveBeenCalledTimes(1)
+    expect(onError.mock.calls[0][0]).toMatchObject({ code: 'UNKNOWN_TARGET' })
+    expect(targets.files.objects.has('fine.txt')).toBe(false)
+
+    // The failed row keeps its key so the next run retries it
+    const orphan = await prisma.upload.findFirst({
+      where: { filename: 'orphan' },
+    })
+    expect(orphan?.storageKey).toBe('orphan.txt')
   })
 })

@@ -44,13 +44,13 @@ import { createS3Provider } from '@cedarjs/uploads/s3'
 
 const S3_CLIENT = `
 // Your own S3 client. It stays available for S3-specific work (lifecycle
-// rules, CORS, and so on) alongside the storage target below.
+// rules, CORS, and so on) alongside the storage target below. Credentials
+// come from the SDK's default chain: AWS_ACCESS_KEY_ID and
+// AWS_SECRET_ACCESS_KEY in .env, or an IAM role, SSO, or container
+// credentials in production. For an S3-compatible service, add \`endpoint\`
+// and \`forcePathStyle: true\`.
 export const s3Client = new S3Client({
   region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
 })
 `
 
@@ -70,6 +70,7 @@ const TARGET_BLOCKS: Record<TargetChoice, string> = {
   files: createS3Provider({
     client: s3Client,
     bucket: process.env.S3_BUCKET_UPLOADS,
+    region: process.env.AWS_REGION,
     keyPrefix: 'uploads/',
   }),
 `,
@@ -266,8 +267,10 @@ export const handler = async ({ targets, force }: UploadsOptions) => {
               ? detectServerAuth(fs.readFileSync(graphqlPath, 'utf-8'))
               : null
 
+          let updated: string
+
           try {
-            fs.writeFileSync(serverFilePath, addUploadsPlugin(source, { auth }))
+            updated = addUploadsPlugin(source, { auth })
           } catch {
             throw new Error(
               `Could not find \`await server.start()\` in ${path.relative(
@@ -284,6 +287,8 @@ export const handler = async ({ targets, force }: UploadsOptions) => {
                 '  })\n',
             )
           }
+
+          fs.writeFileSync(serverFilePath, updated)
         },
       },
       {

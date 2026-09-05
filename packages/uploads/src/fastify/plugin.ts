@@ -4,6 +4,7 @@ import fastifyMultipart from '@fastify/multipart'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 
 import type { UploadAuthenticator } from '../authenticator.js'
+import { deleteFile } from '../deleteFile.js'
 import { UploadError } from '../errors.js'
 import { generateStorageKey, trimTrailingSlashes } from '../keys.js'
 import {
@@ -18,7 +19,12 @@ import {
   verifyServeToken,
 } from '../serveToken.js'
 import { resolveTarget } from '../targets.js'
-import type { StorageTargets, UploadDatabase } from '../types.js'
+import type {
+  ContentDisposition,
+  StorageTargets,
+  UploadDatabase,
+  UploadRecord,
+} from '../types.js'
 import { UPLOAD_TOKEN_HEADER, verifyUploadToken } from '../uploadToken.js'
 import type { UploadTokenPayload } from '../uploadToken.js'
 import { handleS3Webhook } from '../webhooks/s3.js'
@@ -28,6 +34,26 @@ const FIVE_HUNDRED_MB = 500 * 1024 * 1024
 
 /** Bytes allowed for multipart boundaries, headers, and form fields. */
 const MULTIPART_ENVELOPE_ALLOWANCE = 64 * 1024
+
+/**
+ * MIME types a browser executes or renders as a document when served
+ * inline from this origin. They are always served as attachments, even when
+ * the signed URL asked for inline, because the stored MIME type is
+ * client-asserted and an inline document from the app's origin is stored
+ * cross-site scripting.
+ */
+const ACTIVE_CONTENT_TYPES = new Set([
+  'text/html',
+  'application/xhtml+xml',
+  'image/svg+xml',
+  'text/xml',
+  'application/xml',
+  'text/javascript',
+  'application/javascript',
+  'application/ecmascript',
+  'text/ecmascript',
+  'application/pdf',
+])
 
 export interface UploadPluginOptions {
   /** Secret upload tokens and serve URLs are signed with. */
@@ -79,8 +105,12 @@ function headerValue(req: FastifyRequest, name: string): string | undefined {
   return Array.isArray(value) ? value[0] : value
 }
 
+function isActiveContent(mimeType: string): boolean {
+  return ACTIVE_CONTENT_TYPES.has(mimeType.split(';')[0].trim().toLowerCase())
+}
+
 function contentDispositionHeader(
-  disposition: 'attachment' | 'inline',
+  disposition: ContentDisposition,
   filename: string,
 ) {
   // ASCII fallback plus RFC 5987 encoded form for everything else
@@ -97,7 +127,7 @@ function contentDispositionHeader(
  * - `POST {prefix}/fs` accepts multipart uploads for object-storage targets
  * - `GET {prefix}/serve?token=...` serves files behind signed URLs
  * - `POST {prefix}/webhook/s3` receives S3 event notifications (opt-in)
- * - `GET {prefix}/health` reports the configured targets
+ * - `GET {prefix}/health` answers liveness checks
  */
 export async function cedarUploadsPlugin(
   fastify: FastifyInstance,
@@ -155,6 +185,11 @@ export async function cedarUploadsPlugin(
   }
 
   fastify.post(`${base}/fs`, { bodyLimit }, async (req, reply) => {
+    // Files stored by this request so far. A later part failing validation
+    // rolls them all back: a partial batch would leave completed rows the
+    // client never learns about and the cleanup job never claims.
+    const stored: { target: string; upload: UploadRecord }[] = []
+
     try {
       const payload = await verifyRequestToken(req)
       const target = resolveTarget(targets, payload.target)
@@ -185,8 +220,6 @@ export async function cedarUploadsPlugin(
           'Upload requests must be multipart/form-data.',
         )
       }
-
-      const uploads = []
 
       for await (const part of req.parts({
         limits: { fileSize: payload.maxFileSize, files: payload.maxFiles },
@@ -234,23 +267,40 @@ export async function cedarUploadsPlugin(
           size,
           storageKey,
         })
+        stored.push({ target: payload.target, upload })
 
         await target.write(storageKey, data, { contentType: part.mimetype })
 
-        await db.upload.updateMany({
+        const { count } = await db.upload.updateMany({
           where: { id: upload.id, status: 'pending' },
           data: { status: 'completed' },
         })
 
-        uploads.push(serializeUpload({ ...upload, status: 'completed' }))
+        if (count !== 1) {
+          throw new UploadError(
+            'NOT_PENDING',
+            `Upload ${upload.id} was settled before its bytes were written.`,
+          )
+        }
       }
 
-      if (uploads.length === 0) {
+      if (stored.length === 0) {
         throw new UploadError('NOT_SUPPORTED', 'No file was included.')
       }
 
-      return reply.code(201).send({ uploads })
+      return reply.code(201).send({
+        uploads: stored.map(({ upload }) =>
+          serializeUpload({ ...upload, status: 'completed' }),
+        ),
+      })
     } catch (e) {
+      for (const { target, upload } of stored) {
+        await deleteFile(resolveTarget(targets, target), {
+          db,
+          upload,
+        }).catch(() => undefined)
+      }
+
       return sendError(reply, e)
     }
   })
@@ -262,7 +312,7 @@ export async function cedarUploadsPlugin(
         const {
           target: targetName,
           key,
-          disposition,
+          disposition: requested,
         } = verifyServeToken(req.query[SERVE_TOKEN_PARAM], {
           secret: tokenSecret,
         })
@@ -292,6 +342,10 @@ export async function cedarUploadsPlugin(
         } catch (e) {
           throw new UploadError('NOT_FOUND', 'File not found.', e)
         }
+
+        const disposition: ContentDisposition = isActiveContent(upload.mimeType)
+          ? 'attachment'
+          : requested
 
         return reply
           .code(200)
@@ -339,13 +393,7 @@ export async function cedarUploadsPlugin(
     })
   }
 
-  fastify.get(`${base}/health`, async () => {
-    return {
-      ok: true,
-      targets: Object.entries(targets).map(([name, target]) => ({
-        name,
-        providerType: target.providerType,
-      })),
-    }
-  })
+  // Liveness only: target names and provider types are configuration, and
+  // this route is unauthenticated
+  fastify.get(`${base}/health`, async () => ({ ok: true }))
 }

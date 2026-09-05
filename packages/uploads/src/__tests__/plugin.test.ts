@@ -100,17 +100,11 @@ describe('cedarUploadsPlugin', () => {
     await fs.rm(uploadDir, { recursive: true, force: true })
   })
 
-  test('GET /upload/health lists targets', async () => {
+  test('GET /upload/health answers liveness without configuration details', async () => {
     const res = await app.inject({ method: 'GET', url: '/upload/health' })
 
     expect(res.statusCode).toBe(200)
-    expect(res.json()).toEqual({
-      ok: true,
-      targets: [
-        { name: 'local', providerType: 'fs' },
-        { name: 'thumbs', providerType: 'db' },
-      ],
-    })
+    expect(res.json()).toEqual({ ok: true })
   })
 
   describe('POST /upload/fs', () => {
@@ -293,6 +287,24 @@ describe('cedarUploadsPlugin', () => {
       expect(await prisma.upload.count()).toBe(0)
     })
 
+    test('rolls back every file of a batch when a later part is rejected', async () => {
+      const body = multipart([
+        { filename: 'ok.txt', type: 'text/plain', content: 'fine' },
+        { filename: 'bad.zip', type: 'application/zip', content: 'nope' },
+      ])
+
+      const res = await app.inject({
+        method: 'POST',
+        url: '/upload/fs',
+        headers: { ...body.headers, 'x-upload-token': tokenFor() },
+        payload: body.payload,
+      })
+
+      expect(res.statusCode).toBe(415)
+      expect(await prisma.upload.count()).toBe(0)
+      expect(await fs.readdir(uploadDir)).toEqual([])
+    })
+
     test('enforces maxFiles across requests sharing a token', async () => {
       const token = tokenFor({ maxFiles: 1 })
       const body = multipart([
@@ -382,6 +394,23 @@ describe('cedarUploadsPlugin', () => {
       const res = await app.inject({ method: 'GET', url })
 
       expect(res.headers['content-disposition']).toMatch(/^inline;/)
+    })
+
+    test('serves active content as an attachment even when inline was signed', async () => {
+      const upload = await storeFile(targets.local, {
+        db,
+        filename: 'sneaky.svg',
+        mimeType: 'image/svg+xml',
+        data: Buffer.from('<svg/>'),
+      })
+
+      const url = await targets.local.getSignedReadUrl(upload.storageKey!, {
+        disposition: 'inline',
+      })
+      const res = await app.inject({ method: 'GET', url })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.headers['content-disposition']).toMatch(/^attachment;/)
     })
 
     test('answers 404 for forged tokens, missing rows, and missing files', async () => {

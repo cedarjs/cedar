@@ -48,6 +48,15 @@ const SIGNED_FIELDS: Record<SnsMessage['Type'], (keyof SnsMessage)[]> = {
 
 const SNS_HOST = /^sns\.[a-z0-9-]+\.amazonaws\.com(\.cn)?$/
 
+/** Deadline for the outbound calls the webhook makes to SNS. */
+export const SNS_FETCH_TIMEOUT_MS = 10_000
+
+/** Signing certificates kept in memory. SNS rotates them rarely. */
+const CERT_CACHE_LIMIT = 16
+
+/** How long a cached certificate is reused before it is fetched again. */
+const CERT_CACHE_TTL_MS = 60 * 60 * 1000
+
 export function isSnsMessage(value: unknown): value is SnsMessage {
   if (typeof value !== 'object' || value === null) {
     return false
@@ -101,16 +110,27 @@ export function snsStringToSign(message: SnsMessage): string {
 
 export type FetchCertificate = (url: string) => Promise<string>
 
-const certCache = new Map<string, Promise<string>>()
+interface CachedCertificate {
+  pending: Promise<string>
+  expiresAt: number
+}
+
+// Keyed by certificate URL. Bounded and time-limited because the URL comes
+// from the (not yet verified) message: a forged message can only name a
+// path on the SNS host, but it could name many of them
+const certCache = new Map<string, CachedCertificate>()
 
 async function defaultFetchCertificate(url: string): Promise<string> {
+  const now = Date.now()
   const cached = certCache.get(url)
 
-  if (cached) {
-    return cached
+  if (cached && cached.expiresAt > now) {
+    return cached.pending
   }
 
-  const pending = fetch(url).then(async (res) => {
+  const pending = fetch(url, {
+    signal: AbortSignal.timeout(SNS_FETCH_TIMEOUT_MS),
+  }).then(async (res) => {
     if (!res.ok) {
       throw new UploadError(
         'FORBIDDEN',
@@ -122,7 +142,18 @@ async function defaultFetchCertificate(url: string): Promise<string> {
   })
 
   pending.catch(() => certCache.delete(url))
-  certCache.set(url, pending)
+
+  // Evict the oldest entry once the cache is full; a Map iterates in
+  // insertion order
+  if (certCache.size >= CERT_CACHE_LIMIT) {
+    const oldest = certCache.keys().next().value
+
+    if (oldest !== undefined) {
+      certCache.delete(oldest)
+    }
+  }
+
+  certCache.set(url, { pending, expiresAt: now + CERT_CACHE_TTL_MS })
 
   return pending
 }

@@ -89,7 +89,9 @@ export function resolveProfile(
   profiles: UploadProfiles,
   name: string,
 ): ResolvedUploadProfile {
-  const profile = profiles[name]
+  // Own-property check so inherited names such as `constructor` cannot
+  // resolve to a non-profile value
+  const profile = Object.hasOwn(profiles, name) ? profiles[name] : undefined
 
   if (!profile) {
     throw new UploadError(

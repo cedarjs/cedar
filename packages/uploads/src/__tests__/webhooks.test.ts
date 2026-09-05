@@ -306,7 +306,10 @@ describe('handleS3Webhook', () => {
     })
 
     expect(result).toEqual({ type: 'SubscriptionConfirmation', outcomes: [] })
-    expect(doFetch).toHaveBeenCalledWith(message.SubscribeURL)
+    expect(doFetch).toHaveBeenCalledWith(
+      message.SubscribeURL,
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    )
   })
 
   test('settles every record in a notification', async () => {

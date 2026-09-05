@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import type { ReactNode } from 'react'
 
 import {
   Dropzone,
@@ -23,7 +24,7 @@ export interface UppyUploaderProps {
   dashboardOptions?: Record<string, unknown>
   /** Text shown under the dropzone for the `drag-drop` variant. */
   note?: string
-  children?: React.ReactNode
+  children?: ReactNode
 }
 
 function DashboardMount({
@@ -44,18 +45,26 @@ function DashboardMount({
 
     let cancelled = false
 
-    import('@uppy/dashboard').then(({ default: Dashboard }) => {
-      if (cancelled) {
-        return
-      }
+    import('@uppy/dashboard')
+      .then(({ default: Dashboard }) => {
+        if (cancelled) {
+          return
+        }
 
-      uppy.use(Dashboard, {
-        inline: true,
-        target,
-        proudlyDisplayPoweredByUppy: false,
-        ...options,
+        uppy.use(Dashboard, {
+          inline: true,
+          target,
+          proudlyDisplayPoweredByUppy: false,
+          ...options,
+        })
       })
-    })
+      .catch((e: unknown) => {
+        // Surface a missing or failed chunk through Uppy's own error channel
+        uppy.emit(
+          'error',
+          e instanceof Error ? e : new Error('Could not load @uppy/dashboard'),
+        )
+      })
 
     return () => {
       cancelled = true

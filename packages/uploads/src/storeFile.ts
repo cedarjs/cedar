@@ -3,6 +3,9 @@ import { generateStorageKey } from './keys.js'
 import { DB_MAX_FILE_SIZE } from './profiles.js'
 import type { StorageProvider, UploadDatabase, UploadRecord } from './types.js'
 
+// `type/subtype`, the shape every stored MIME type must have
+const MIME_TYPE = /^[a-z0-9][a-z0-9!#$&^_.+-]*\/[a-z0-9][a-z0-9!#$&^_.+-]*$/i
+
 export interface StoreFileOptions {
   db: UploadDatabase
   filename: string
@@ -34,6 +37,13 @@ export async function storeFile(
 ): Promise<UploadRecord> {
   const { db, filename, mimeType, data, maxSize, userId, organizationId } =
     options
+
+  if (!MIME_TYPE.test(mimeType)) {
+    throw new UploadError(
+      'MIME_TYPE_NOT_ALLOWED',
+      `'${mimeType}' is not a valid MIME type.`,
+    )
+  }
 
   const isDbProvider = target.providerType === 'db'
   const cap = maxSize ?? (isDbProvider ? DB_MAX_FILE_SIZE : undefined)

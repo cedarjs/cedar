@@ -6,8 +6,10 @@ import {
   detectServerAuth,
   hasBinding,
   hasUploadsPlugin,
+  importedBindings,
   uploadsServerRegistration,
 } from '../serverFile.js'
+import { toTargetChoices } from '../uploads.js'
 
 const SCHEMA = `datasource db {
   provider = "sqlite"
@@ -197,12 +199,45 @@ main()
     )
   })
 
-  it('detects existing bindings', () => {
+  it('detects runtime bindings only', () => {
     expect(hasBinding("import { db } from 'src/lib/db'", 'db')).toBe(true)
-    expect(hasBinding("import type { Db } from 'x'", 'Db')).toBe(true)
+    expect(hasBinding("import db from 'src/lib/db'", 'db')).toBe(true)
+    expect(hasBinding("import * as db from 'src/lib/db'", 'db')).toBe(true)
     expect(hasBinding('const authDecoder = make()', 'authDecoder')).toBe(true)
+
+    // Type-only imports and aliases bind something else (or nothing)
+    expect(hasBinding("import type { db } from 'x'", 'db')).toBe(false)
+    expect(hasBinding("import { type db } from 'x'", 'db')).toBe(false)
+    expect(
+      hasBinding("import { authDecoder as decoder } from 'x'", 'authDecoder'),
+    ).toBe(false)
+    expect(
+      hasBinding("import { authDecoder as decoder } from 'x'", 'decoder'),
+    ).toBe(true)
     expect(hasBinding("import { dbx } from 'src/lib/db'", 'db')).toBe(false)
     expect(hasBinding('server.register(db)', 'db')).toBe(false)
+    expect(hasBinding('  const db = 1', 'db')).toBe(false)
+
+    expect([
+      ...importedBindings(
+        "import a, { b, c as d, type e } from 'x'\nimport type { f } from 'y'\nimport * as g from 'z'",
+      ),
+    ]).toEqual(['a', 'b', 'd', 'g'])
+  })
+
+  it('treats only a registration call as an existing plugin', () => {
+    expect(
+      hasUploadsPlugin('await server.register(cedarUploadsPlugin, {'),
+    ).toBe(true)
+    expect(hasUploadsPlugin('// TODO: add cedarUploadsPlugin')).toBe(false)
+    expect(
+      hasUploadsPlugin("import { cedarUploadsPlugin } from '@cedarjs/uploads'"),
+    ).toBe(false)
+  })
+
+  it('narrows and deduplicates target choices', () => {
+    expect(toTargetChoices(['fs', 'fs', 'db', 'bogus'])).toEqual(['fs', 'db'])
+    expect(toTargetChoices([])).toEqual([])
   })
 
   it('throws when there is no server.start() to anchor on', () => {

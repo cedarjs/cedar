@@ -47,20 +47,56 @@ export function detectServerAuth(
 }
 
 /**
- * True when `name` is already bound at the top level of `source`: imported
- * by name, or declared with `const`/`let`/`var`/`function`. A custom server
- * file that already wires auth keeps its own bindings.
+ * Local names a module-level import statement introduces at runtime.
+ * `import type` and inline `type` specifiers bind nothing at runtime, and an
+ * aliased specifier binds its alias, not the exported name.
  */
-export function hasBinding(source: string, name: string): boolean {
-  const imported = new RegExp(
-    `import\\s*(?:type\\s*)?\\{[^}]*\\b${name}\\b[^}]*\\}\\s*from`,
-  )
-  const declared = new RegExp(
-    `^\\s*(?:const|let|var|function)\\s+${name}\\b`,
-    'm',
+export function importedBindings(source: string): Set<string> {
+  const names = new Set<string>()
+  const statements = source.matchAll(
+    /^import\s+(type\s+)?([^;]*?)\s+from\s+['"][^'"]+['"]/gm,
   )
 
-  return imported.test(source) || declared.test(source)
+  for (const [, typeOnly, clause] of statements) {
+    if (typeOnly) {
+      continue
+    }
+
+    const braces = /\{([^}]*)\}/.exec(clause)
+    const defaultOrNamespace = clause.replace(/\{[^}]*\}/, '')
+
+    for (const part of defaultOrNamespace.split(',')) {
+      const local = part.replace(/^\s*\*\s+as\s+/, '').trim()
+
+      if (local) {
+        names.add(local)
+      }
+    }
+
+    for (const specifier of braces?.[1].split(',') ?? []) {
+      const trimmed = specifier.trim()
+
+      if (!trimmed || trimmed.startsWith('type ')) {
+        continue
+      }
+
+      const alias = / as (\w+)$/.exec(trimmed)
+      names.add(alias ? alias[1] : trimmed)
+    }
+  }
+
+  return names
+}
+
+/**
+ * True when `name` is bound at the top level of `source`: imported under
+ * that local name, or declared with `const`/`let`/`var`/`function` at column
+ * zero. A custom server file that already wires auth keeps its own bindings.
+ */
+export function hasBinding(source: string, name: string): boolean {
+  const declared = new RegExp(`^(?:const|let|var|function)\\s+${name}\\b`, 'm')
+
+  return importedBindings(source).has(name) || declared.test(source)
 }
 
 interface ImportSpec {
@@ -165,8 +201,9 @@ export function uploadsServerRegistration(
 `
 }
 
+/** True when the server file already registers the plugin. */
 export function hasUploadsPlugin(source: string): boolean {
-  return source.includes('cedarUploadsPlugin')
+  return /\.register\(\s*cedarUploadsPlugin\b/.test(source)
 }
 
 export function addUploadsPlugin(

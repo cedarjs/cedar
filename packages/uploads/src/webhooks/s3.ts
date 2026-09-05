@@ -1,7 +1,12 @@
 import { UploadError } from '../errors.js'
 import type { StorageTargets, UploadDatabase } from '../types.js'
 
-import { assertTrustedSnsUrl, isSnsMessage, verifySnsMessage } from './sns.js'
+import {
+  assertTrustedSnsUrl,
+  isSnsMessage,
+  SNS_FETCH_TIMEOUT_MS,
+  verifySnsMessage,
+} from './sns.js'
 import type { FetchCertificate } from './sns.js'
 
 /** The parts of an S3 event notification record this handler reads. */
@@ -186,7 +191,9 @@ export async function handleS3Webhook(
 
     assertTrustedSnsUrl(parsed.SubscribeURL)
     const doFetch = options.fetch ?? fetch
-    const res = await doFetch(parsed.SubscribeURL)
+    const res = await doFetch(parsed.SubscribeURL, {
+      signal: AbortSignal.timeout(SNS_FETCH_TIMEOUT_MS),
+    })
 
     if (!res.ok) {
       throw new UploadError(

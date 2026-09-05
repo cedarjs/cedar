@@ -1,5 +1,5 @@
 import { resolveTarget } from './targets.js'
-import type { StorageTargets, UploadDatabase } from './types.js'
+import type { StorageTargets, UploadDatabase, UploadRecord } from './types.js'
 
 const ONE_HOUR = 60 * 60 * 1000
 const ONE_DAY = 24 * ONE_HOUR
@@ -20,6 +20,11 @@ export interface CleanupStaleUploadsOptions {
   retryWindow?: number
   /** Largest batch of rows to process per call. Defaults to 500. */
   batchSize?: number
+  /**
+   * Called for each row whose storage operation failed. Defaults to
+   * `console.error`. The sweep continues with the next row either way.
+   */
+  onError?: (error: unknown, upload: UploadRecord) => void
 }
 
 export interface CleanupStaleUploadsResult {
@@ -27,6 +32,8 @@ export interface CleanupStaleUploadsResult {
   claimed: number
   /** Objects deleted from storage by this run. */
   deleted: number
+  /** Rows whose storage operation failed and will be retried next run. */
+  errors: number
 }
 
 /**
@@ -36,8 +43,12 @@ export interface CleanupStaleUploadsResult {
  * `pending` to `failed` update, deletes any bytes that did land, and keeps
  * the rows as `failed` tombstones so byte deletion can be retried on the
  * next run. A row that completes mid-sweep is skipped because its claim
- * matches zero rows, and a claimed row can no longer complete. Run it from
- * a recurring job.
+ * matches zero rows, and a claimed row can no longer complete.
+ *
+ * Once a tombstone's bytes are confirmed gone its `storageKey` is cleared,
+ * which drops it from the next run's re-check. A row whose target is
+ * unknown or whose provider fails is reported through `onError` and left
+ * for the next run; it never aborts the sweep. Run it from a recurring job.
  */
 export async function cleanupStaleUploads({
   db,
@@ -45,25 +56,48 @@ export async function cleanupStaleUploads({
   olderThan = ONE_HOUR,
   retryWindow = ONE_DAY,
   batchSize = 500,
+  onError = (error, upload) =>
+    console.error(`[cedar uploads] cleanup failed for ${upload.id}:`, error),
 }: CleanupStaleUploadsOptions): Promise<CleanupStaleUploadsResult> {
   const now = Date.now()
   let claimed = 0
   let deleted = 0
+  let errors = 0
+  // Rows claimed by this run are not re-checked by its tombstone pass
+  const claimedIds = new Set<string>()
 
-  const deleteBytes = async (target: string, key: string) => {
-    const provider = resolveTarget(targets, target)
-
-    if (!(await provider.exists(key))) {
+  // Deletes the row's bytes if they exist, then clears `storageKey` so the
+  // row is not re-checked. Returns whether an object was deleted.
+  const reclaim = async (upload: UploadRecord): Promise<boolean> => {
+    if (!upload.storageKey) {
       return false
     }
 
-    await provider.delete(key)
-    return true
+    try {
+      const provider = resolveTarget(targets, upload.target)
+      const existed = await provider.exists(upload.storageKey)
+
+      if (existed) {
+        await provider.delete(upload.storageKey)
+      }
+
+      await db.upload.updateMany({
+        where: { id: upload.id, status: 'failed' },
+        data: { storageKey: null },
+      })
+
+      return existed
+    } catch (e) {
+      errors += 1
+      onError(e, upload)
+      return false
+    }
   }
 
   const stale = await db.upload.findMany({
     where: { status: 'pending', createdAt: { lt: new Date(now - olderThan) } },
     omit: { data: true },
+    orderBy: { createdAt: 'asc' },
     take: batchSize,
   })
 
@@ -78,11 +112,9 @@ export async function cleanupStaleUploads({
     }
 
     claimed += 1
+    claimedIds.add(upload.id)
 
-    if (
-      upload.storageKey &&
-      (await deleteBytes(upload.target, upload.storageKey))
-    ) {
+    if (await reclaim(upload)) {
       deleted += 1
     }
   }
@@ -94,17 +126,19 @@ export async function cleanupStaleUploads({
       createdAt: { gte: new Date(now - retryWindow) },
     },
     omit: { data: true },
+    orderBy: { createdAt: 'asc' },
     take: batchSize,
   })
 
   for (const upload of tombstones) {
-    if (
-      upload.storageKey &&
-      (await deleteBytes(upload.target, upload.storageKey))
-    ) {
+    if (claimedIds.has(upload.id)) {
+      continue
+    }
+
+    if (await reclaim(upload)) {
       deleted += 1
     }
   }
 
-  return { claimed, deleted }
+  return { claimed, deleted, errors }
 }

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
   createRequireUploadTokenDirective,
@@ -45,11 +45,21 @@ describe('@requireUploadToken', () => {
       request: new Request('http://localhost/graphql', {
         headers: { 'x-upload-token': tokenFor() },
       }),
+      currentUser: { id: 'user_1' },
     }
 
     directive.onResolvedValue({ ...resolverArgs, context } as never)
 
     expect(getUploadTokenPayload(context)).toMatchObject({ sub: 'user_1' })
+  })
+
+  test('rejects a request with no current user', () => {
+    expect(() =>
+      directive.onResolvedValue({
+        ...resolverArgs,
+        context: { event: { headers: { 'x-upload-token': tokenFor() } } },
+      } as never),
+    ).toThrow('You must be logged in to use an upload token.')
   })
 
   test('rejects missing, invalid, and foreign tokens', () => {
@@ -117,6 +127,9 @@ describe('@requireUploadToken', () => {
 
 describe('@withSignedUrl and @withDataUri', () => {
   beforeEach(resetTestDb)
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
 
   function makeTargets() {
     return defineStorageTargets({
@@ -246,7 +259,5 @@ describe('@withSignedUrl and @withDataUri', () => {
     // A different context is a different request
     await loadUpload({}, db, uploads[0].id)
     expect(findMany).toHaveBeenCalledTimes(2)
-
-    findMany.mockRestore()
   })
 })

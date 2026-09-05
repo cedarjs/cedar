@@ -23,7 +23,9 @@ export function resolveTarget(
   targets: StorageTargets,
   name: string,
 ): StorageProvider {
-  const target = targets[name]
+  // Own-property check so inherited names such as `toString` cannot
+  // resolve to a non-provider value
+  const target = Object.hasOwn(targets, name) ? targets[name] : undefined
 
   if (!target) {
     throw new UploadError(

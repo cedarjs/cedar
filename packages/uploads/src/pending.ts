@@ -41,11 +41,27 @@ export interface CreatePendingUploadOptions {
   storageKey: string
 }
 
+/** Prisma's error code for a serialization conflict between transactions. */
+const SERIALIZATION_CONFLICT = 'P2034'
+
+/** Attempts per call before a persistent conflict is reported. */
+const MAX_ATTEMPTS = 3
+
+function isSerializationConflict(e: unknown): boolean {
+  return (
+    typeof e === 'object' &&
+    e !== null &&
+    'code' in e &&
+    e.code === SERIALIZATION_CONFLICT
+  )
+}
+
 /**
  * Creates a `pending` row for a token, enforcing the token's `maxFiles`
  * across every request that uses it. The count and the insert run in one
  * serializable transaction keyed on `tokenId`, so concurrent requests sharing
- * a token cannot exceed the limit.
+ * a token cannot exceed the limit. A transaction the database rejects for
+ * conflicting with a concurrent one is retried a bounded number of times.
  */
 export async function createPendingUpload({
   db,
@@ -55,36 +71,52 @@ export async function createPendingUpload({
   size,
   storageKey,
 }: CreatePendingUploadOptions): Promise<UploadRecord> {
-  return db.$transaction(
-    async (tx) => {
-      const existing = await tx.upload.count({
-        where: { tokenId: payload.jti },
-      })
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await db.$transaction(
+        async (tx) => {
+          const existing = await tx.upload.count({
+            where: { tokenId: payload.jti },
+          })
 
-      if (existing >= payload.maxFiles) {
-        throw new UploadError(
-          'TOO_MANY_FILES',
-          `This upload token has already been used for ${existing} of its ` +
-            `${payload.maxFiles} allowed files.`,
-        )
+          if (existing >= payload.maxFiles) {
+            throw new UploadError(
+              'TOO_MANY_FILES',
+              `This upload token has already been used for ${existing} of ` +
+                `its ${payload.maxFiles} allowed files.`,
+            )
+          }
+
+          return tx.upload.create({
+            data: {
+              target: payload.target,
+              status: 'pending',
+              filename,
+              mimeType,
+              size,
+              storageKey,
+              userId: payload.sub,
+              tokenId: payload.jti,
+              organizationId: payload.organizationId ?? null,
+            },
+          })
+        },
+        { isolationLevel: 'Serializable' },
+      )
+    } catch (e) {
+      if (!isSerializationConflict(e)) {
+        throw e
       }
 
-      return tx.upload.create({
-        data: {
-          target: payload.target,
-          status: 'pending',
-          filename,
-          mimeType,
-          size,
-          storageKey,
-          userId: payload.sub,
-          tokenId: payload.jti,
-          organizationId: payload.organizationId ?? null,
-        },
-      })
-    },
-    { isolationLevel: 'Serializable' },
-  )
+      if (attempt >= MAX_ATTEMPTS) {
+        throw new UploadError(
+          'TOO_MANY_FILES',
+          'Too many concurrent uploads for this token. Try again.',
+          e,
+        )
+      }
+    }
+  }
 }
 
 /**

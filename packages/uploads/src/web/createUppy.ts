@@ -1,6 +1,8 @@
 import Uppy from '@uppy/core'
 import type { Meta, UppyFile } from '@uppy/core'
 
+import { UPLOAD_TOKEN_HEADER } from '../constants.js'
+
 import type { UploadConstraints } from './graphql.js'
 
 /** The Uppy instance type every Cedar hook and component works with. */
@@ -9,8 +11,7 @@ export type CedarUppy = Uppy
 /** A file inside a `CedarUppy` instance. */
 export type CedarUppyFile = UppyFile<Meta, Record<string, never>>
 
-/** Header the client sends an upload token in. */
-export const UPLOAD_TOKEN_HEADER = 'x-upload-token'
+export { UPLOAD_TOKEN_HEADER } from '../constants.js'
 
 /** Route the FS uploader posts to, relative to the api origin. */
 export const DEFAULT_FS_UPLOAD_PATH = '/upload/fs'
@@ -47,8 +48,8 @@ export interface S3UppyOptions extends BaseUppyOptions {
 
 export interface FsUppyOptions extends BaseUppyOptions {
   provider: 'fs'
-  /** Full URL of the api's `POST {prefix}/fs` route. */
-  endpoint: string
+  /** Full URL of the api's `POST {prefix}/fs` route, or a function returning it. */
+  endpoint: string | (() => string)
   /** The upload token to send. Called per request so a refreshed token is used. */
   getUploadToken: () => string | null
 }
@@ -92,7 +93,6 @@ export async function createUppy(
 
   if (options.provider === 's3') {
     const { default: AwsS3 } = await import('@uppy/aws-s3')
-    const uploadIds = new Map<string, string>()
 
     uppy.use(AwsS3, {
       shouldUseMultipart: false,
@@ -115,7 +115,6 @@ export async function createUppy(
         }
 
         const params = await options.getUploadParameters(file)
-        uploadIds.set(file.id, params.uploadId)
         uppy.setFileMeta(file.id, { cedarUploadId: params.uploadId })
 
         return { url: params.url }
@@ -127,8 +126,10 @@ export async function createUppy(
 
   const { default: XHRUpload } = await import('@uppy/xhr-upload')
 
+  const { endpoint } = options
+
   uppy.use(XHRUpload, {
-    endpoint: options.endpoint,
+    endpoint: typeof endpoint === 'function' ? () => endpoint() : endpoint,
     method: 'POST',
     formData: true,
     fieldName: 'file',

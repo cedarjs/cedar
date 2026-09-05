@@ -2,7 +2,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
-import { afterEach, beforeEach, describe, expect, test } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { UploadError } from '../errors.js'
 import { createDbProvider } from '../providers/db.js'
@@ -48,6 +48,27 @@ describe('createFsProvider', () => {
 
     // Deleting a missing file is not an error
     await expect(provider.delete('a.txt')).resolves.toBeUndefined()
+  })
+
+  test('reports non-missing filesystem errors from exists()', async () => {
+    // A directory where a file is expected makes access() fail with EISDIR
+    // on read, but ENOTDIR when the key is treated as a path below a file
+    await fs.writeFile(path.join(uploadDir, 'file.txt'), 'x')
+    const provider = createFsProvider({
+      uploadDir: path.join(uploadDir, 'file.txt'),
+    })
+
+    // `nested.txt` resolves below a regular file: ENOTDIR, a missing path
+    expect(await provider.exists('nested.txt')).toBe(false)
+
+    const unreadable = createFsProvider({ uploadDir })
+    const spy = vi
+      .spyOn(fs, 'access')
+      .mockRejectedValueOnce(
+        Object.assign(new Error('denied'), { code: 'EACCES' }),
+      )
+    await expect(unreadable.exists('a.txt')).rejects.toThrow('denied')
+    spy.mockRestore()
   })
 
   test('rejects keys that could escape the upload directory', async () => {
@@ -101,6 +122,45 @@ describe('createFsProvider', () => {
 
     const token = new URL(url).searchParams.get('token')
     expect(verifyServeToken(token, { secret }).disposition).toBe('attachment')
+  })
+
+  test('requires https for non-loopback serve origins', async () => {
+    const insecure = createFsProvider({
+      uploadDir,
+      serveBaseUrl: 'http://api.example.com',
+      signSecret: secret,
+    })
+
+    await expect(insecure.getSignedReadUrl('a.png')).rejects.toMatchObject({
+      code: 'CONFIGURATION',
+      message: expect.stringContaining('must use https'),
+    })
+
+    for (const origin of [
+      'http://localhost:8911',
+      'http://127.0.0.1:8911',
+      'http://[::1]:8911',
+      'https://api.example.com',
+    ]) {
+      const provider = createFsProvider({
+        uploadDir,
+        serveBaseUrl: origin,
+        signSecret: secret,
+      })
+      provider.name = 'local'
+      await expect(provider.getSignedReadUrl('a.png')).resolves.toContain(
+        '/upload/serve?token=',
+      )
+    }
+
+    const malformed = createFsProvider({
+      uploadDir,
+      serveBaseUrl: 'not a url',
+      signSecret: secret,
+    })
+    await expect(malformed.getSignedReadUrl('a.png')).rejects.toMatchObject({
+      code: 'CONFIGURATION',
+    })
   })
 
   test('refuses to sign without a secret and base URL', async () => {
@@ -166,6 +226,10 @@ describe('defineStorageTargets / resolveTarget', () => {
 
     expect(() => resolveTarget(targets, 'nope')).toThrow(
       "Unknown storage target 'nope'. Available targets: thumbs.",
+    )
+    // Inherited property names are not targets
+    expect(() => resolveTarget(targets, 'toString')).toThrow(
+      "Unknown storage target 'toString'.",
     )
   })
 })

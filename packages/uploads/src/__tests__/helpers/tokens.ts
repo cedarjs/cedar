@@ -1,3 +1,5 @@
+import type { SignedTokenExpiresIn } from '@cedarjs/api'
+
 import { createUploadToken } from '../../uploadToken.js'
 import type { UploadTokenPayload } from '../../uploadToken.js'
 
@@ -14,13 +16,11 @@ export const basePayload: Omit<UploadTokenPayload, 'jti'> = {
 
 export function tokenFor(
   overrides: Partial<UploadTokenPayload> = {},
-  expiresIn: string | number = '5m',
+  expiresIn: SignedTokenExpiresIn = '5m',
 ) {
   return createUploadToken({
     payload: { ...basePayload, ...overrides },
     secret: SECRET,
-    // The helper accepts any duration string; the cast keeps the test
-    // signature simple
-    expiresIn: expiresIn as '5m',
+    expiresIn,
   })
 }

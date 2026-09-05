@@ -17,7 +17,9 @@ export interface FsProviderOptions {
   uploadDir: string
   /**
    * Origin (and optional path) the api server is reachable at, for example
-   * `http://localhost:8911`. Required for `getSignedReadUrl()`.
+   * `https://api.example.com`. Required for `getSignedReadUrl()`. Signed
+   * URLs carry a bearer token, so the origin must use `https:` unless it
+   * is a loopback address used in development.
    */
   serveBaseUrl?: string
   /**
@@ -25,9 +27,13 @@ export interface FsProviderOptions {
    * given as `tokenSecret`, because the serve route verifies with that.
    */
   signSecret?: string
-  /** Prefix the upload plugin is registered under. Defaults to `/upload`. */
+  /**
+   * Prefix the upload plugin is registered under. Defaults to `/upload`.
+   */
   routePrefix?: string
 }
+
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]', '::1'])
 
 function isNotFound(e: unknown): boolean {
   return (
@@ -36,6 +42,39 @@ function isNotFound(e: unknown): boolean {
     'code' in e &&
     (e.code === 'ENOENT' || e.code === 'ENOTDIR')
   )
+}
+
+/**
+ * Validates the origin signed URLs are built on. Plain `http:` is only
+ * accepted for loopback hosts, so a bearer token never travels in clear
+ * text to a real network address.
+ */
+export function assertServeBaseUrl(serveBaseUrl: string, targetName: string) {
+  let parsed: URL
+
+  try {
+    parsed = new URL(serveBaseUrl)
+  } catch {
+    throw new UploadError(
+      'CONFIGURATION',
+      `The FS storage target '${targetName}' has an invalid serveBaseUrl: ` +
+        `'${serveBaseUrl}'.`,
+    )
+  }
+
+  const secure =
+    parsed.protocol === 'https:' ||
+    (parsed.protocol === 'http:' &&
+      LOOPBACK_HOSTS.has(parsed.hostname.toLowerCase()))
+
+  if (!secure) {
+    throw new UploadError(
+      'CONFIGURATION',
+      `The FS storage target '${targetName}' has serveBaseUrl ` +
+        `'${serveBaseUrl}'. Signed URLs carry a bearer token, so the origin ` +
+        'must use https, or http on localhost for development.',
+    )
+  }
 }
 
 /**
@@ -48,7 +87,6 @@ export function createFsProvider(opts: FsProviderOptions): StorageProvider {
 
   const filePath = (key: string) => {
     assertSafeKey(key)
-
     return path.join(uploadDir, key)
   }
 
@@ -68,11 +106,9 @@ export function createFsProvider(opts: FsProviderOptions): StorageProvider {
 
     async readStream(key) {
       const target = filePath(key)
-
       // Surface a missing file as a rejected promise rather than a stream
       // error, so the serve route can answer 404 before any headers are sent
       await fs.access(target)
-
       return createReadStream(target)
     },
 
@@ -89,23 +125,26 @@ export function createFsProvider(opts: FsProviderOptions): StorageProvider {
     async exists(key) {
       try {
         await fs.access(filePath(key))
-
         return true
-      } catch {
-        return false
+      } catch (e) {
+        // Only a missing path means "does not exist"; permission and I/O
+        // failures are storage errors the caller must see
+        if (isNotFound(e)) {
+          return false
+        }
+
+        throw e
       }
     },
 
     async getObjectSize(key) {
       try {
         const stat = await fs.stat(filePath(key))
-
         return stat.size
       } catch (e) {
         if (isNotFound(e)) {
           return null
         }
-
         throw e
       }
     },
@@ -121,6 +160,8 @@ export function createFsProvider(opts: FsProviderOptions): StorageProvider {
         )
       }
 
+      assertServeBaseUrl(serveBaseUrl, provider.name)
+
       const {
         expiresIn = DEFAULT_SERVE_URL_EXPIRES_IN,
         disposition = 'attachment',
@@ -134,7 +175,6 @@ export function createFsProvider(opts: FsProviderOptions): StorageProvider {
 
       const base = trimTrailingSlashes(serveBaseUrl)
       const prefix = trimTrailingSlashes(routePrefix)
-
       const params = new URLSearchParams({ [SERVE_TOKEN_PARAM]: token })
 
       return `${base}${prefix}${SERVE_ROUTE_PATH}?${params}`

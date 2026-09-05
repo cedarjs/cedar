@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { defineUploadProfiles } from '../profiles.js'
 import {
@@ -69,6 +69,16 @@ describe('issueUploadToken', () => {
       issueUploadToken({
         profiles,
         profile: 'nope',
+        secret: SECRET,
+        currentUser: user,
+      }),
+    ).toThrow(expect.objectContaining({ code: 'UNKNOWN_PROFILE' }))
+
+    // Inherited property names are not profiles either
+    expect(() =>
+      issueUploadToken({
+        profiles,
+        profile: 'constructor',
         secret: SECRET,
         currentUser: user,
       }),
@@ -178,6 +188,9 @@ describe('createPresignedUpload', () => {
 
 describe('confirmUpload', () => {
   beforeEach(resetTestDb)
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
 
   async function pendingUpload(
     targets: ReturnType<typeof makeTargets>,
@@ -276,8 +289,6 @@ describe('confirmUpload', () => {
     await expect(
       confirmUpload({ db, targets, uploadId: upload.id, currentUser: user }),
     ).rejects.toMatchObject({ code: 'NOT_PENDING' })
-
-    updateMany.mockRestore()
   })
 
   test('refuses settled rows and unknown ids', async () => {

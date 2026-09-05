@@ -37,7 +37,8 @@ export function DbInput({
   })
 
   const onChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files
+    const input = event.target
+    const files = input.files
 
     if (!files || files.length === 0) {
       return
@@ -48,6 +49,10 @@ export function DbInput({
       onFilesReady?.(ready)
     } catch (e) {
       onReadError?.(e instanceof Error ? e : new Error(String(e)))
+    } finally {
+      // A file input only fires `change` when the selection differs, so
+      // clear it to let the user pick the same file again after an error
+      input.value = ''
     }
   }
 

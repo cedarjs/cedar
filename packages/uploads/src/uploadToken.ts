@@ -13,8 +13,7 @@ import { DEFAULT_UPLOAD_TOKEN_EXPIRES_IN } from './profiles.js'
 /** Purpose claim that separates upload tokens from every other signed token. */
 export const UPLOAD_TOKEN_PURPOSE = 'cedar-upload'
 
-/** Header the client sends an upload token in. */
-export const UPLOAD_TOKEN_HEADER = 'x-upload-token'
+export { UPLOAD_TOKEN_HEADER } from './constants.js'
 
 /**
  * The claims inside an upload token. Constraints come from the server-side

@@ -228,17 +228,12 @@ deployments, as it involves the file system.
 
 :::
 
-Let's first run the setup command:
+The `yarn cedar setup uploads` command configures the current `@cedarjs/uploads` package, not this one. To set the legacy package up by hand:
 
-```shell
-yarn cedar setup uploads
-```
-
-This will do three things:
-
-1. Generate a configuration file in `api/src/lib/uploads.{js,ts}`
-2. Configure your Prisma client with the storage extension
-3. Generate a `signedUrl` function
+1. Add `@cedarjs/storage` to your api side: `yarn workspace api add @cedarjs/storage`
+2. Create the configuration file `api/src/lib/uploads.{js,ts}` shown below
+3. Wrap your Prisma client with the storage extension (see [Attaching the Uploads extension](#3-attaching-the-uploads-extension))
+4. Create the `signedUrl` function shown under [Signed URLs](#signed-urls)
 
 Let's break down the key components of the configuration.
 

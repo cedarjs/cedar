@@ -21,8 +21,8 @@ export interface UseS3UploadOptions extends UppyUploadCallbacks {
   profile: string
   /**
    * Confirm each upload through the `confirmUpload` mutation once the PUT
-   * succeeds. Defaults to `true`. Turn it off when an S3 event webhook
-   * confirms uploads instead.
+   * succeeds, before the batch is reported complete. Defaults to `true`.
+   * Turn it off when an S3 event webhook confirms uploads instead.
    */
   confirm?: boolean
 }
@@ -35,7 +35,8 @@ export type UseS3UploadResult = UppyUploadResult & {
 /**
  * Direct-to-S3 uploads: fetches an upload token, asks the api for a
  * presigned URL per file, PUTs the bytes with `@uppy/aws-s3`, and confirms
- * each upload. The returned `uppy` instance plugs into any Uppy UI.
+ * each upload before the batch counts as complete. The returned `uppy`
+ * instance plugs into any Uppy UI.
  */
 export function useS3Upload({
   profile,
@@ -43,9 +44,7 @@ export function useS3Upload({
   onUploadComplete,
   onUploadError,
 }: UseS3UploadOptions): UseS3UploadResult {
-  const { requestToken, token, constraints } = useUploadToken({ profile })
-  const tokenRef = useRef<string | null>(null)
-  tokenRef.current = token
+  const { requestToken, getToken, constraints } = useUploadToken({ profile })
 
   const [createPresignedUploadUrl] = useMutation<
     CreatePresignedUploadUrlData,
@@ -59,7 +58,7 @@ export function useS3Upload({
 
   const getUploadParameters = useCallback(
     async (file: CedarUppyFile): Promise<PresignedUploadParameters> => {
-      const uploadToken = tokenRef.current ?? (await requestToken())
+      const uploadToken = getToken() ?? (await requestToken())
 
       const result = await createPresignedUploadUrl({
         variables: {
@@ -80,15 +79,23 @@ export function useS3Upload({
 
       return data
     },
-    [createPresignedUploadUrl, requestToken],
+    [createPresignedUploadUrl, getToken, requestToken],
   )
+
+  // The Uppy instance is created once and reads the latest callback through
+  // this ref, updated in an effect
+  const getUploadParametersRef = useRef(getUploadParameters)
+
+  useEffect(() => {
+    getUploadParametersRef.current = getUploadParameters
+  }, [getUploadParameters])
 
   const upload = useUppyUpload(
     () =>
       createUppy({
         provider: 's3',
         constraints,
-        getUploadParameters,
+        getUploadParameters: (file) => getUploadParametersRef.current(file),
       }),
     constraints,
     { onUploadComplete, onUploadError },
@@ -104,35 +111,56 @@ export function useS3Upload({
     // Fetch a token as soon as files are added so restrictions apply before
     // the upload starts
     const onFileAdded = () => {
-      if (!tokenRef.current) {
+      if (!getToken()) {
         requestToken().catch((e: unknown) => {
           onUploadError?.(e instanceof Error ? e : new Error(String(e)))
         })
       }
     }
 
-    const onUploadSuccess = (file: CedarUppyFile | undefined) => {
-      if (!confirm || !file) {
+    // A postprocessor runs after every file's PUT and before Uppy emits
+    // `complete`, so an upload whose confirmation fails is reported as an
+    // error instead of as a completed upload
+    const confirmAll = async (fileIDs: string[]) => {
+      if (!confirm) {
         return
       }
 
-      const uploadId = uppy.getFile(file.id)?.meta.cedarUploadId
+      for (const fileID of fileIDs) {
+        const file = uppy.getFile(fileID)
+        const uploadId = file?.meta.cedarUploadId
 
-      if (typeof uploadId === 'string') {
-        confirmUpload({ variables: { uploadId } }).catch((e: unknown) => {
-          onUploadError?.(e instanceof Error ? e : new Error(String(e)))
-        })
+        if (!file || typeof uploadId !== 'string') {
+          continue
+        }
+
+        try {
+          const result = await confirmUpload({ variables: { uploadId } })
+
+          if (result.data?.confirmUpload.status !== 'completed') {
+            throw new Error(`Upload ${uploadId} could not be confirmed.`)
+          }
+        } catch (e) {
+          const error = e instanceof Error ? e : new Error(String(e))
+          // Drop the id so `complete` does not report an unconfirmed upload
+          uppy.setFileMeta(fileID, { cedarUploadId: undefined })
+          uppy.setFileState(fileID, {
+            error: error.message,
+            response: undefined,
+          })
+          uppy.emit('upload-error', file, error)
+        }
       }
     }
 
     uppy.on('file-added', onFileAdded)
-    uppy.on('upload-success', onUploadSuccess)
+    uppy.addPostProcessor(confirmAll)
 
     return () => {
       uppy.off('file-added', onFileAdded)
-      uppy.off('upload-success', onUploadSuccess)
+      uppy.removePostProcessor(confirmAll)
     }
-  }, [uppy, confirm, confirmUpload, requestToken, onUploadError])
+  }, [uppy, confirm, confirmUpload, getToken, requestToken, onUploadError])
 
   return { ...upload, requestToken }
 }
