@@ -13,10 +13,11 @@ name: 🚢 Publish
 #   - release:            stable releases, when a vX.Y.Z tag is pushed
 #   - cleanup-staging-tags: nightly sweep of orphaned staging dist-tags
 #
-# None of the jobs use an npm token. `id-token: write` lets npm mint a
-# short-lived credential for the job (and attach provenance). NPM_AUTH_TOKEN is
-# still honored by the scripts if it's set, so the migration can be finished by
-# simply deleting that secret.
+# The release-candidate and release jobs publish with trusted publishing:
+# `id-token: write` lets npm mint a short-lived credential for the job (and
+# attach provenance), and no token is involved. The prerelease and cleanup jobs
+# move dist-tags, which trusted publishing does not cover
+# (https://github.com/npm/cli/issues/8547), so they run with NPM_AUTH_TOKEN.
 
 on:
   push:
@@ -37,11 +38,11 @@ on:
           - release
           - cleanup-staging-tags
       tag:
-        description: 'For `release`: the vX.Y.Z tag to publish'
+        description: 'For `release`: the vX.Y.Z tag to publish. With dry-run, any ref (e.g. a release branch) works'
         type: string
         required: false
       dry-run:
-        description: 'For `release`: run every check and `npm publish --dry-run`, change no dist-tags'
+        description: 'For `release`: run every check and `npm publish --dry-run` (which still exchanges the OIDC token), publish nothing'
         type: boolean
         required: false
         default: true
@@ -97,6 +98,8 @@ jobs:
 
       - name: 🚢 Publish
         run: node .github/scripts/publish-prerelease.mts
+        env:
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 
       - name: 🏷 Get version
         id: get-version
@@ -271,3 +274,5 @@ jobs:
       # find the published packages, then talks to the registry directly.
       - name: 🧹 Remove orphaned staging dist-tags
         run: node .github/scripts/cleanup-staging-tags.mts
+        env:
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}

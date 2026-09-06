@@ -11,9 +11,9 @@
  * Used in the publish-prerelease.yml GitHub Action workflow.
  *
  * Usage: node .github/scripts/publish-prerelease.mts
- * Environment variables required: GITHUB_REF_NAME. Authentication is npm
- * trusted publishing (OIDC) in CI, or NPM_AUTH_TOKEN as a fallback (see
- * lib/npm-auth.mts).
+ * Environment variables required: GITHUB_REF_NAME and NPM_AUTH_TOKEN. The
+ * dist-tag flip is what makes a token necessary: npm's trusted publishing
+ * only covers `npm publish`, not `npm dist-tag` (see lib/npm-auth.mts).
  */
 
 import { exec as execCb, execSync } from 'node:child_process'

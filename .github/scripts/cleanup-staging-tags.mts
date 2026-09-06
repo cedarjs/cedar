@@ -15,8 +15,8 @@
  * Removing a dist-tag does not unpublish anything. Every version stays exactly
  * where it is and remains installable by exact version -- only the alias goes.
  *
- * Authentication is npm trusted publishing (OIDC) in CI, or NPM_AUTH_TOKEN as
- * a fallback (see lib/npm-auth.mts).
+ * Requires NPM_AUTH_TOKEN: removing dist-tags is not covered by npm's trusted
+ * publishing (see lib/npm-auth.mts).
  */
 import { execFile as execFileCb } from 'node:child_process'
 import fs from 'node:fs'

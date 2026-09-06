@@ -9,25 +9,35 @@
  * version. So there's no version math here. This script only verifies that
  * the tree really is in that state and then publishes it.
  *
- * Publishing happens in two phases, same as the prerelease script:
+ * Packages are published straight under the release dist-tag (`latest`, or
+ * `patch` for a patch to an older major), in dependency order, one level at a
+ * time. npm's trusted publishing only covers `npm publish`, not
+ * `npm dist-tag` (https://github.com/npm/cli/issues/8547), so there is no
+ * staging tag and no flip. The publish order is what keeps a partially
+ * published release from being installable in a mixed state:
  *
- * 1. Every public package is published under a `staging-<version>` dist-tag.
- *    Nothing resolves that tag, so a slow or failed publish is invisible to
- *    users.
- * 2. Once every package is confirmed to be on the registry, the real dist-tag
- *    (`latest`, or `patch` for a patch to an older major) is pointed at the
- *    new version for every package, with create-cedar-app last so that
- *    `yarn create cedar-app` keeps scaffolding a self-consistent release until
- *    all the @cedarjs packages are promoted.
+ * - A package is only published after every in-monorepo package it depends
+ *   on is being served by the registry, so anything that resolves the new
+ *   version at any point during the run can be installed.
+ * - `@cedarjs/core` goes after every other `@cedarjs` package.
+ *   `yarn cedar upgrade` resolves the target version from `@cedarjs/core`
+ *   alone and pins every package to it, so an upgrade only sees the release
+ *   once the packages it will pin are all there.
+ * - `create-cedar-app` goes last, so `yarn create cedar-app` keeps
+ *   scaffolding the previous, self-consistent release until everything else
+ *   is on npm.
  *
- * Re-running after a failure is safe: already published versions are skipped
- * and the flip is idempotent.
+ * Re-running after a failure is safe: already published versions are skipped.
  *
  * Usage: node .github/scripts/publish-release.mts [--dry-run]
  * Environment variables: RELEASE_TAG (e.g. v6.1.0). Authentication is npm
  * trusted publishing (OIDC) in CI, or NPM_AUTH_TOKEN as a fallback.
- * `--dry-run` runs every check and `npm publish --dry-run`, and doesn't
- * change any dist-tags.
+ * `--dry-run` runs every check and `npm publish --dry-run`, which packs every
+ * package and, with trusted publishing, still exchanges the OIDC token for
+ * every package. With `--dry-run`, RELEASE_TAG may also be a branch or any
+ * other ref: the version is then read from packages/core/package.json and
+ * the "HEAD is the tagged commit" check is skipped, so a release branch can
+ * be dry-run before it is tagged.
  */
 
 import { exec as execCb, execSync } from 'node:child_process'
@@ -43,10 +53,21 @@ import {
 } from './lib/npm-auth.mts'
 import type { NpmAuth } from './lib/npm-auth.mts'
 
+// Every field that can point at another package in this monorepo. All of
+// them have to be pinned to the release version.
 const DEPENDENCY_FIELDS = [
   'dependencies',
   'devDependencies',
   'peerDependencies',
+  'optionalDependencies',
+] as const
+
+// The fields a consumer's install resolves. devDependencies aren't installed
+// for a published package, so they don't constrain the publish order.
+const PUBLISH_ORDER_DEPENDENCY_FIELDS = [
+  'dependencies',
+  'peerDependencies',
+  'optionalDependencies',
 ] as const
 
 interface PackageJson {
@@ -56,6 +77,7 @@ interface PackageJson {
   dependencies?: Record<string, string>
   devDependencies?: Record<string, string>
   peerDependencies?: Record<string, string>
+  optionalDependencies?: Record<string, string>
   [key: string]: unknown
 }
 
@@ -73,16 +95,18 @@ interface PublishablePackage {
 const REPO_ROOT = process.cwd()
 const CREATE_CEDAR_APP_DIR = path.join(REPO_ROOT, 'packages/create-cedar-app')
 const CREATE_CEDAR_APP_NAME = 'create-cedar-app'
+const CORE_NAME = '@cedarjs/core'
+const CORE_PACKAGE_JSON = path.join(REPO_ROOT, 'packages/core/package.json')
 const REGISTRY = 'https://registry.npmjs.org'
 
 const exec = util.promisify(execCb)
 
 const isDryRun = process.argv.includes('--dry-run')
 
-// Publishes upload a tarball so they're heavier; dist-tag flips are cheap
-// metadata calls. Kept modest to avoid tripping npm's registry rate limits.
+// How many `npm publish` calls to run at once within a dependency level.
+// Each one uploads a tarball, so this is kept modest to avoid tripping npm's
+// registry rate limits.
 const PUBLISH_CONCURRENCY = 4
-const DIST_TAG_CONCURRENCY = 6
 
 /** How long to wait for the registry to serve every published version */
 const REGISTRY_PROPAGATION_TIMEOUT_MS = 5 * 60 * 1000
@@ -216,22 +240,48 @@ function getWorkspaces(): WorkspaceInfo[] {
 
 // ── Pre-flight checks ───────────────────────────────────────────────────────
 
-function getReleaseVersion(): string {
-  const tag = process.env.RELEASE_TAG
+interface Release {
+  version: string
+  /** The vX.Y.Z tag, or null for a dry run of an untagged ref */
+  tag: string | null
+}
 
-  if (!tag) {
+/**
+ * Normally RELEASE_TAG is the `vX.Y.Z` tag being published and the version
+ * comes from it. A dry run may be pointed at any ref instead, in which case
+ * the version is whatever packages/core/package.json says and `tag` is null.
+ */
+function getRelease(): Release {
+  const releaseTag = process.env.RELEASE_TAG
+
+  if (!releaseTag) {
     throw new Error('RELEASE_TAG is not set (expected something like v6.1.0)')
   }
 
-  const match = /^v((0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*))$/.exec(tag)
+  const match = /^v((0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*))$/.exec(releaseTag)
 
-  if (!match) {
+  if (match) {
+    return { version: match[1], tag: releaseTag }
+  }
+
+  if (!isDryRun) {
     throw new Error(
-      `RELEASE_TAG must be a stable version tag like v6.1.0, got: ${tag}`,
+      `RELEASE_TAG must be a stable version tag like v6.1.0, got: ${releaseTag}`,
     )
   }
 
-  return match[1]
+  const { version } = readPackageJson(CORE_PACKAGE_JSON)
+
+  if (!version) {
+    throw new Error(`No version in ${CORE_PACKAGE_JSON}`)
+  }
+
+  log(
+    `${releaseTag} is not a version tag. Dry-running it as ${version}, the ` +
+      `version in ${path.relative(REPO_ROOT, CORE_PACKAGE_JSON)}`,
+  )
+
+  return { version, tag: null }
 }
 
 /**
@@ -356,6 +406,97 @@ function getPublishablePackages(
   return publishable
 }
 
+// ── Publish order ───────────────────────────────────────────────────────────
+
+/**
+ * Groups the packages into levels so that every in-monorepo package a
+ * package depends on sits in an earlier level. `@cedarjs/core` and
+ * `create-cedar-app` are appended as levels of their own, in that order,
+ * for the reasons given at the top of this file. Nothing may depend on
+ * either of them, since that would put a dependent before its dependency.
+ */
+function getPublishLevels(
+  packages: PublishablePackage[],
+): PublishablePackage[][] {
+  const byName = new Map(packages.map((pkg) => [pkg.name, pkg]))
+  const lastPackages = [CORE_NAME, CREATE_CEDAR_APP_NAME].map((name) => {
+    const pkg = byName.get(name)
+
+    if (!pkg) {
+      throw new Error(`Expected to find a ${name} workspace to publish`)
+    }
+
+    return pkg
+  })
+  const lastPackageNames = new Set(lastPackages.map((pkg) => pkg.name))
+
+  // Package name -> names of the in-monorepo packages it still waits for
+  const pendingDeps = new Map<string, Set<string>>()
+
+  for (const pkg of packages) {
+    if (lastPackageNames.has(pkg.name)) {
+      continue
+    }
+
+    const pkgJson = readPackageJson(
+      path.join(REPO_ROOT, pkg.location, 'package.json'),
+    )
+    const deps = new Set<string>()
+
+    for (const depField of PUBLISH_ORDER_DEPENDENCY_FIELDS) {
+      for (const depName of Object.keys(pkgJson[depField] ?? {})) {
+        if (lastPackageNames.has(depName)) {
+          throw new Error(
+            `${pkg.name} depends on ${depName}, which has to be published ` +
+              'after everything else',
+          )
+        }
+
+        if (byName.has(depName) && depName !== pkg.name) {
+          deps.add(depName)
+        }
+      }
+    }
+
+    pendingDeps.set(pkg.name, deps)
+  }
+
+  const levels: PublishablePackage[][] = []
+
+  while (pendingDeps.size > 0) {
+    const readyNames = [...pendingDeps]
+      .filter(([, deps]) => deps.size === 0)
+      .map(([name]) => name)
+      .sort()
+
+    if (readyNames.length === 0) {
+      throw new Error(
+        'Dependency cycle between these packages, so there is no order to ' +
+          'publish them in: ' +
+          [...pendingDeps.keys()].join(', '),
+      )
+    }
+
+    levels.push(
+      readyNames
+        .map((name) => byName.get(name))
+        .filter((pkg): pkg is PublishablePackage => Boolean(pkg)),
+    )
+
+    for (const name of readyNames) {
+      pendingDeps.delete(name)
+    }
+
+    for (const deps of pendingDeps.values()) {
+      for (const name of readyNames) {
+        deps.delete(name)
+      }
+    }
+  }
+
+  return [...levels, ...lastPackages.map((pkg) => [pkg])]
+}
+
 // ── Registry reads ──────────────────────────────────────────────────────────
 
 interface Packument {
@@ -415,7 +556,7 @@ async function getDistTagVersion(
  * `patch` instead. Mirrors `getDistTagForRelease` in the release tooling.
  */
 async function getDistTagForRelease(version: string): Promise<string> {
-  const currentLatest = await getDistTagVersion('@cedarjs/core', 'latest')
+  const currentLatest = await getDistTagVersion(CORE_NAME, 'latest')
 
   if (!currentLatest) {
     return 'latest'
@@ -455,7 +596,7 @@ async function assertAllPackagesExistOnNpm(packages: PublishablePackage[]) {
 }
 
 async function waitForPackagesOnNpm(packages: PublishablePackage[]) {
-  log(`Waiting for ${packages.length} packages to be served by the registry`)
+  log(`Waiting for ${packages.length} package(s) to be served by the registry`)
 
   const deadline = Date.now() + REGISTRY_PROPAGATION_TIMEOUT_MS
   let pending = [...packages]
@@ -485,18 +626,21 @@ async function waitForPackagesOnNpm(packages: PublishablePackage[]) {
     log(`  ${pending.length} package(s) not visible yet, waiting...`)
     await setTimeout(5_000)
   }
-
-  log('✅ All packages are available on npm')
 }
 
 // ── Registry writes ─────────────────────────────────────────────────────────
 
-async function publishPackagesToStagingTag(
-  packages: PublishablePackage[],
-  stagingTag: string,
+async function publishPackage(
+  pkg: PublishablePackage,
+  distTag: string,
   auth: NpmAuth | null,
 ) {
-  log(`Publishing ${packages.length} packages under staging tag ${stagingTag}`)
+  // A dry run still packs every package, even ones already on npm, so that
+  // a dry run of an already-published tag exercises the real path.
+  if (!isDryRun && (await isPublished(pkg.name, pkg.version))) {
+    log(`  ${pkg.name}@${pkg.version} already published, skipping`)
+    return
+  }
 
   // With trusted publishing npm adds provenance on its own. Asking for it
   // explicitly makes a token-based publish from CI do the same, and turns a
@@ -504,233 +648,96 @@ async function publishPackagesToStagingTag(
   const provenanceFlag = isOidcAvailable() ? ' --provenance' : ''
   const dryRunFlag = isDryRun ? ' --dry-run' : ''
 
-  await runWithConcurrency(packages, PUBLISH_CONCURRENCY, async (pkg) => {
-    // A dry run still packs every package, even ones already on npm, so that
-    // a dry run of an already-published tag exercises the real path.
-    if (!isDryRun && (await isPublished(pkg.name, pkg.version))) {
-      log(`  ${pkg.name}@${pkg.version} already published, skipping`)
-      return
-    }
-
-    await withRetry(async () =>
-      execCommandAsync(
-        `npm publish --tag ${stagingTag} --access public` +
-          `${provenanceFlag}${dryRunFlag}`,
-        {
-          cwd: path.join(REPO_ROOT, pkg.location),
-          env: auth ? await auth.forPublish(pkg.name) : process.env,
-        },
-      ),
-    )
-
-    log(
-      `  ✅ Published ${pkg.name}@${pkg.version} (staging tag: ${stagingTag})`,
-    )
-  })
-}
-
-async function addDistTag(pkg: PublishablePackage, tag: string, auth: NpmAuth) {
   await withRetry(async () =>
-    execCommandAsync(`npm dist-tag add ${pkg.name}@${pkg.version} ${tag}`, {
-      env: await auth.forDistTag(pkg.name),
-    }),
+    execCommandAsync(
+      `npm publish --tag ${distTag} --access public` +
+        `${provenanceFlag}${dryRunFlag}`,
+      {
+        cwd: path.join(REPO_ROOT, pkg.location),
+        env: auth ? await auth.forPublish(pkg.name) : process.env,
+      },
+    ),
   )
+
+  log(`  ✅ Published ${pkg.name}@${pkg.version} (${distTag})`)
 }
 
 /**
- * Points `finalTag` at the new version for every package. npm has no
- * cross-package transaction, so if this fails partway the packages that
- * already flipped are rolled back to whatever `finalTag` pointed at before,
- * converging on a consistent (if old) state rather than a mix.
+ * Publishes one dependency level at a time. The next level only starts once
+ * the registry serves everything in the current one, so a dependent is never
+ * installable before its dependencies.
  */
-async function flipToFinalTag(
-  packages: PublishablePackage[],
-  finalTag: string,
-  auth: NpmAuth,
+async function publishInDependencyOrder(
+  levels: PublishablePackage[][],
+  distTag: string,
+  auth: NpmAuth | null,
 ) {
+  const total = levels.reduce((sum, level) => sum + level.length, 0)
+
   log(
-    `Pointing '${finalTag}' at the new version for ${packages.length} packages`,
+    `Publishing ${total} packages under '${distTag}' in ${levels.length} ` +
+      'dependency levels',
   )
 
-  if (isDryRun) {
-    log('Dry-run: not touching dist-tags')
-    return
-  }
-
-  const previousVersions = new Map<string, string | null>()
-  const flipped: PublishablePackage[] = []
-
-  try {
-    await runWithConcurrency(packages, DIST_TAG_CONCURRENCY, async (pkg) => {
-      previousVersions.set(
-        pkg.name,
-        await getDistTagVersion(pkg.name, finalTag),
-      )
-      await addDistTag(pkg, finalTag, auth)
-      flipped.push(pkg)
-      log(`  🏷 ${pkg.name}@${pkg.version} -> ${finalTag}`)
-    })
-  } catch (error) {
-    console.error(
-      `❌ Flipping to ${finalTag} failed after ${flipped.length}/` +
-        `${packages.length} packages. Rolling back the ones that already ` +
-        'flipped so the registry does not end up in a mixed-version state.',
+  for (const [index, level] of levels.entries()) {
+    log(
+      `Level ${index + 1}/${levels.length}: ` +
+        level.map((pkg) => pkg.name).join(', '),
     )
-    await rollBackFlips(flipped, finalTag, previousVersions, auth)
-    throw error
-  }
-}
 
-async function rollBackFlips(
-  flipped: PublishablePackage[],
-  finalTag: string,
-  previousVersions: Map<string, string | null>,
-  auth: NpmAuth,
-) {
-  await runWithConcurrency(flipped, DIST_TAG_CONCURRENCY, async (pkg) => {
-    const previousVersion = previousVersions.get(pkg.name)
+    await runWithConcurrency(level, PUBLISH_CONCURRENCY, (pkg) =>
+      publishPackage(pkg, distTag, auth),
+    )
 
-    if (!previousVersion) {
-      console.error(
-        `  ⚠️ No previous version recorded for ${pkg.name}, leaving it on ` +
-          `${finalTag} = ${pkg.version}. Manual check required.`,
-      )
-      return
+    if (!isDryRun) {
+      await waitForPackagesOnNpm(level)
     }
-
-    try {
-      await addDistTag({ ...pkg, version: previousVersion }, finalTag, auth)
-      log(`  ↩️ Rolled back ${pkg.name} to ${previousVersion}`)
-    } catch {
-      console.error(
-        `  ⚠️ Failed to roll back ${pkg.name}. It is still pointing at ` +
-          `${finalTag} = ${pkg.version}. Manual intervention required.`,
-      )
-    }
-  })
-}
-
-/**
- * Best-effort. Leftover staging tags are harmless (the nightly cleanup job
- * removes them) so failures here aren't fatal.
- */
-async function removeStagingTag(
-  packages: PublishablePackage[],
-  stagingTag: string,
-  auth: NpmAuth,
-) {
-  log(`Cleaning up staging tag ${stagingTag}`)
-
-  if (isDryRun) {
-    log('Dry-run: not touching dist-tags')
-    return
   }
-
-  await runWithConcurrency(packages, DIST_TAG_CONCURRENCY, async (pkg) => {
-    try {
-      await execCommandAsync(`npm dist-tag rm ${pkg.name} ${stagingTag}`, {
-        env: await auth.forDistTag(pkg.name),
-      })
-    } catch {
-      log(`  Could not remove staging tag from ${pkg.name}, ignoring`)
-    }
-  })
-}
-
-/**
- * A dry run never writes a dist-tag, so it would pass without ever finding
- * out whether the credentials can. This re-points `latest` for one package
- * at the version it already points at: a real, authenticated write that
- * changes nothing.
- */
-async function smokeTestDistTagAuth(auth: NpmAuth) {
-  const packageName = '@cedarjs/core'
-  const currentLatest = await getDistTagVersion(packageName, 'latest')
-
-  if (!currentLatest) {
-    log(`Skipping dist-tag auth check: ${packageName} has no 'latest' tag`)
-    return
-  }
-
-  log(`Checking dist-tag auth (${auth.mode}) with a no-op write`)
-  await addDistTag(
-    { name: packageName, version: currentLatest, location: '' },
-    'latest',
-    auth,
-  )
-  log('✅ dist-tag auth works')
 }
 
 // ── Main ────────────────────────────────────────────────────────────────────
 
 async function main() {
-  const version = getReleaseVersion()
-  const tag = `v${version}`
+  const { version, tag } = getRelease()
+  const releaseName =
+    tag ?? `v${version} (dry run of ${process.env.RELEASE_TAG})`
 
-  log(`Publishing release ${tag}`)
+  log(`Publishing release ${releaseName}`)
 
-  assertHeadIsTag(tag)
+  if (tag) {
+    assertHeadIsTag(tag)
+  } else {
+    log('Skipping the "HEAD is the tagged commit" check for an untagged ref')
+  }
 
   const workspaces = getWorkspaces()
   verifyVersions(workspaces, version)
 
-  const allPackages = getPublishablePackages(workspaces)
-  const cedarPackages = allPackages.filter(
-    (pkg) => pkg.name !== CREATE_CEDAR_APP_NAME,
-  )
-  const ccaPackages = allPackages.filter(
-    (pkg) => pkg.name === CREATE_CEDAR_APP_NAME,
-  )
+  const packages = getPublishablePackages(workspaces)
+  const levels = getPublishLevels(packages)
 
-  if (ccaPackages.length !== 1) {
-    throw new Error(
-      `Expected exactly one ${CREATE_CEDAR_APP_NAME} workspace, found ` +
-        ccaPackages.length,
-    )
-  }
-
-  await assertAllPackagesExistOnNpm(allPackages)
+  await assertAllPackagesExistOnNpm(packages)
 
   const distTag = await getDistTagForRelease(version)
-  const stagingTag = `staging-${version}`
-
   log(`Release dist-tag: ${distTag}`)
 
-  // A dry run can be done without any credentials (e.g. locally). `npm
-  // publish --dry-run` doesn't need them, and no dist-tags are written.
+  // A dry run can be done without any credentials (e.g. locally): `npm
+  // publish --dry-run` doesn't need them.
   const auth = isDryRun && !hasNpmCredentials() ? null : createNpmAuth()
   log(`npm auth mode: ${auth?.mode ?? 'none (dry-run without credentials)'}`)
 
   try {
-    if (isDryRun && auth) {
-      await smokeTestDistTagAuth(auth)
-    }
-
-    await publishPackagesToStagingTag(allPackages, stagingTag, auth)
-
-    if (isDryRun) {
-      log('Dry-run: skipping the registry availability wait')
-      return
-    }
-
-    if (!auth) {
-      throw new Error('Unreachable: publishing for real without credentials')
-    }
-
-    await waitForPackagesOnNpm(allPackages)
-
-    // create-cedar-app last, so `yarn create cedar-app` keeps scaffolding the
-    // previous, self-consistent release until every @cedarjs package has
-    // been promoted.
-    await flipToFinalTag(cedarPackages, distTag, auth)
-    await flipToFinalTag(ccaPackages, distTag, auth)
-
-    await removeStagingTag(allPackages, stagingTag, auth)
+    await publishInDependencyOrder(levels, distTag, auth)
   } finally {
     auth?.dispose()
   }
 
-  log(`🎉 Release ${tag} published under '${distTag}'`)
+  if (isDryRun) {
+    log(`✅ Dry run of ${releaseName} finished, nothing was published`)
+    return
+  }
+
+  log(`🎉 Release ${releaseName} published under '${distTag}'`)
 }
 
 main().catch((error) => {
