@@ -1,0 +1,81 @@
+name: 🚢 Publish
+
+# Stable releases from this branch are published by the `release` job below,
+# in two runs: a packages-only run dispatched by the release tooling against
+# the release branch, then the vX.Y.Z tag push for create-cedar-app. Both use
+# npm trusted publishing (OIDC): `id-token: write` lets npm mint a
+# short-lived credential for the job, and no token is involved. The trusted
+# publisher on npmjs.com is keyed on this file's name, which is why the job
+# lives in a file called publish.yml even though this branch's release
+# candidates and canaries are published by other workflows.
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+  workflow_dispatch:
+    inputs:
+      job:
+        description: Which job to run
+        type: choice
+        required: true
+        options:
+          - release
+      tag:
+        description: 'For `release`: the vX.Y.Z tag to publish. With packages-only or dry-run, any ref (e.g. a release branch) works'
+        type: string
+        required: false
+      packages-only:
+        description: 'For `release`: publish every package except create-cedar-app, from `tag`. The release tooling dispatches this against the release branch before tagging'
+        type: boolean
+        required: false
+        default: false
+      dry-run:
+        description: 'For `release`: run every check, verify the trusted publisher config for every package, `npm publish --dry-run`, publish nothing'
+        type: boolean
+        required: false
+        default: true
+
+permissions: {}
+
+jobs:
+  release:
+    name: 🚀 Publish Release
+    if: >-
+      github.repository == 'cedarjs/cedar' &&
+      (
+        (github.event_name == 'push' && github.ref_type == 'tag') ||
+        (github.event_name == 'workflow_dispatch' && inputs.job == 'release')
+      )
+    runs-on: ubuntu-latest
+    # Protection rules for this environment (required reviewers, etc.) are
+    # configured in the repo settings. Leave the environment field blank in the
+    # trusted publisher config on npmjs.com.
+    environment: npm-release
+    # One release at a time, whichever ref triggered it. Two releases writing
+    # the same dist-tag at once could leave it pointing at different versions
+    # across packages. Never cancelled: a half-finished release is the one
+    # thing that must run to completion.
+    concurrency:
+      group: npm-release
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+          # Tags are needed to verify that HEAD is the tagged commit
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - name: 🚀 Publish Release
+        run: >-
+          node .github/scripts/publish-release.mts
+          ${{ github.event_name == 'workflow_dispatch' && inputs.packages-only && '--packages-only' || '' }}
+          ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run && '--dry-run' || '' }}
+        env:
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
