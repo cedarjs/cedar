@@ -23,6 +23,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
+const REGISTRY = 'https://registry.npmjs.org'
 const REGISTRY_HOST = 'registry.npmjs.org'
 
 /** Trusted publishing needs this or newer, see https://docs.npmjs.com/trusted-publishers */
@@ -93,8 +94,110 @@ function assertNpmSupportsOidc() {
   }
 }
 
-export function createNpmAuth(): NpmAuth {
+/**
+ * The GitHub Actions ID token for the npm registry audience. One token is
+ * enough for a whole run, so it's fetched once.
+ */
+let gitHubIdToken: Promise<string> | null = null
+
+function getGitHubIdToken(): Promise<string> {
+  gitHubIdToken ??= (async () => {
+    const requestUrl = process.env.ACTIONS_ID_TOKEN_REQUEST_URL
+    const requestToken = process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN
+
+    if (!requestUrl || !requestToken) {
+      throw new Error(
+        'ACTIONS_ID_TOKEN_REQUEST_URL/TOKEN are not set. Does the job have ' +
+          '`permissions: id-token: write`?',
+      )
+    }
+
+    const url = new URL(requestUrl)
+    url.searchParams.set('audience', `npm:${REGISTRY_HOST}`)
+
+    const response = await fetch(url, {
+      headers: { authorization: `Bearer ${requestToken}` },
+      signal: AbortSignal.timeout(30_000),
+    })
+
+    if (!response.ok) {
+      throw new Error(
+        `Fetching the GitHub ID token failed with HTTP ${response.status}`,
+      )
+    }
+
+    const { value } = (await response.json()) as { value?: string }
+
+    if (!value) {
+      throw new Error('GitHub returned no ID token')
+    }
+
+    return value
+  })()
+
+  return gitHubIdToken
+}
+
+/**
+ * Checks that the registry accepts this job's OIDC identity as a trusted
+ * publisher for `packageName`, by doing the same token exchange `npm publish`
+ * does internally. `npm publish --dry-run` performs that exchange too, but a
+ * refusal only makes it carry on without a token, and a dry run never
+ * reaches the request that would need one. So without this check a dry run
+ * can't tell a configured trusted publisher from a missing one. The
+ * short-lived token the registry returns is discarded.
+ */
+export async function assertTrustedPublisherConfigured(packageName: string) {
+  const idToken = await getGitHubIdToken()
+  const url =
+    `${REGISTRY}/-/npm/v1/oidc/token/exchange/package/` +
+    packageName.replace('/', '%2F')
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${idToken}`,
+      'content-type': 'application/json',
+    },
+    body: '{}',
+    signal: AbortSignal.timeout(30_000),
+  })
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => '')
+
+    throw new Error(
+      `The registry refused this workflow as a trusted publisher for ` +
+        `${packageName} (HTTP ${response.status}` +
+        `${body ? `: ${body.slice(0, 300)}` : ''}). Is a trusted publisher ` +
+        'for this repo and workflow file configured on npmjs.com?',
+    )
+  }
+}
+
+export interface CreateNpmAuthOptions {
+  /**
+   * Refuse to run in any other mode. For scripts that write dist-tags, which
+   * only work with a token.
+   */
+  requireMode?: NpmAuthMode
+}
+
+export function createNpmAuth({
+  requireMode,
+}: CreateNpmAuthOptions = {}): NpmAuth {
   const mode = getNpmAuthMode()
+
+  if (requireMode && mode !== requireMode) {
+    throw new Error(
+      `This script needs npm auth mode '${requireMode}' but got '${mode}'. ` +
+        (requireMode === 'token'
+          ? 'It writes dist-tags, which npm trusted publishing cannot do ' +
+            '(https://github.com/npm/cli/issues/8547), so it has to run ' +
+            'with NPM_AUTH_TOKEN set.'
+          : 'Unset NPM_AUTH_TOKEN so that trusted publishing is used.'),
+    )
+  }
 
   if (mode === 'oidc') {
     assertNpmSupportsOidc()

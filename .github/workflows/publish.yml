@@ -42,7 +42,7 @@ on:
         type: string
         required: false
       dry-run:
-        description: 'For `release`: run every check and `npm publish --dry-run` (which still exchanges the OIDC token), publish nothing'
+        description: 'For `release`: run every check, verify the trusted publisher config for every package, `npm publish --dry-run`, publish nothing'
         type: boolean
         required: false
         default: true
@@ -218,6 +218,13 @@ jobs:
     # trusted publisher config on npmjs.com, since the other jobs in this file
     # don't use one.
     environment: npm-release
+    # One release at a time, whichever ref triggered it. Two releases writing
+    # the same dist-tag at once could leave it pointing at different versions
+    # across packages. Never cancelled: a half-finished release is the one
+    # thing that must run to completion.
+    concurrency:
+      group: npm-release
+      cancel-in-progress: false
     permissions:
       contents: read
       id-token: write

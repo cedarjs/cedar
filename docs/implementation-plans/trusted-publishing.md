@@ -1,10 +1,12 @@
 # npm trusted publishing
 
-All publishing from this repo goes through `.github/workflows/publish.yml` using
-[npm trusted publishing](https://docs.npmjs.com/trusted-publishers) (OIDC). No
-long-lived npm token is involved: the job has `id-token: write`, GitHub issues a
-short-lived ID token, and npm trades it for a credential that can only publish
-the one package it was minted for. Provenance attestations come for free.
+All publishing from this repo goes through `.github/workflows/publish.yml`.
+Release candidates and stable releases use
+[npm trusted publishing](https://docs.npmjs.com/trusted-publishers) (OIDC): the
+job has `id-token: write`, GitHub issues a short-lived ID token, and npm trades
+it for a credential that can only publish the one package it was minted for.
+Provenance attestations come for free. Canaries and the staging-tag cleanup
+still run with a long-lived `NPM_AUTH_TOKEN`, for the reason given below.
 
 ## Why one workflow file
 
@@ -68,10 +70,13 @@ skipped.
    `NPM_AUTH_TOKEN` exactly as before.
 3. Run the `release` job manually with `dry-run: true` (Actions → 🚢 Publish →
    Run workflow). The `tag` input accepts any ref for a dry run, so a release
-   branch can be checked before it is tagged. `npm publish --dry-run` packs
-   every package and still performs the OIDC token exchange for each one, so a
-   green dry run proves the trusted publisher config for every package. The
-   job never receives `NPM_AUTH_TOKEN`, so it cannot silently fall back to it.
+   branch can be checked before it is tagged. Besides packing every package
+   with `npm publish --dry-run`, the dry run asks the registry for a trusted
+   publisher token for every package and fails on the first refusal. That
+   separate check is needed because `npm publish --dry-run` carries on without
+   a token when the exchange is refused, so on its own it can't tell a
+   configured trusted publisher from a missing one. The job never receives
+   `NPM_AUTH_TOKEN`, so it cannot silently fall back to it.
 4. Release. The push of the `release/**` branch publishes the RC with OIDC, and
    the tag push publishes the release.
 5. Optionally, per package on npmjs.com: "Require two-factor authentication and

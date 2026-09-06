@@ -195,7 +195,8 @@ async function getStaleTags(packageName: string): Promise<ScanResult> {
 }
 
 async function main() {
-  const auth = createNpmAuth()
+  // Removing dist-tags needs a token; trusted publishing can't do it.
+  const auth = createNpmAuth({ requireMode: 'token' })
   log(`npm auth mode: ${auth.mode}`)
 
   try {

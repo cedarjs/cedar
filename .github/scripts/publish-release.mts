@@ -33,8 +33,10 @@
  * Environment variables: RELEASE_TAG (e.g. v6.1.0). Authentication is npm
  * trusted publishing (OIDC) in CI, or NPM_AUTH_TOKEN as a fallback.
  * `--dry-run` runs every check and `npm publish --dry-run`, which packs every
- * package and, with trusted publishing, still exchanges the OIDC token for
- * every package. With `--dry-run`, RELEASE_TAG may also be a branch or any
+ * package. With trusted publishing it also checks, for every package, that
+ * the registry accepts this workflow as a trusted publisher; `npm publish
+ * --dry-run` alone doesn't fail on that. With `--dry-run`, RELEASE_TAG may
+ * also be a branch or any
  * other ref: the version is then read from packages/core/package.json and
  * the "HEAD is the tagged commit" check is skipped, so a release branch can
  * be dry-run before it is tagged.
@@ -47,6 +49,7 @@ import { setTimeout } from 'node:timers/promises'
 import util from 'node:util'
 
 import {
+  assertTrustedPublisherConfigured,
   createNpmAuth,
   hasNpmCredentials,
   isOidcAvailable,
@@ -642,22 +645,45 @@ async function publishPackage(
     return
   }
 
+  // `npm publish --dry-run` doesn't fail when the registry refuses the
+  // workflow as a trusted publisher, so a dry run checks that separately.
+  if (isDryRun && auth?.mode === 'oidc') {
+    await withRetry(() => assertTrustedPublisherConfigured(pkg.name))
+    log(`  ✅ ${pkg.name} accepts this workflow as a trusted publisher`)
+  }
+
   // With trusted publishing npm adds provenance on its own. Asking for it
   // explicitly makes a token-based publish from CI do the same, and turns a
   // silent downgrade into a loud failure.
   const provenanceFlag = isOidcAvailable() ? ' --provenance' : ''
   const dryRunFlag = isDryRun ? ' --dry-run' : ''
 
-  await withRetry(async () =>
-    execCommandAsync(
-      `npm publish --tag ${distTag} --access public` +
-        `${provenanceFlag}${dryRunFlag}`,
-      {
-        cwd: path.join(REPO_ROOT, pkg.location),
-        env: auth ? await auth.forPublish(pkg.name) : process.env,
-      },
-    ),
-  )
+  await withRetry(async () => {
+    try {
+      await execCommandAsync(
+        `npm publish --tag ${distTag} --access public` +
+          `${provenanceFlag}${dryRunFlag}`,
+        {
+          cwd: path.join(REPO_ROOT, pkg.location),
+          env: auth ? await auth.forPublish(pkg.name) : process.env,
+        },
+      )
+    } catch (error) {
+      // The registry can accept a publish and still fail the response on the
+      // way back (a reset connection, say). A retry then hits "cannot publish
+      // over previously published version", which no retry can fix. If the
+      // version is on the registry, the publish went through.
+      if (!isDryRun && (await isPublished(pkg.name, pkg.version))) {
+        log(
+          `  ${pkg.name}@${pkg.version} is on the registry despite the ` +
+            'error above, so the publish went through',
+        )
+        return
+      }
+
+      throw error
+    }
+  })
 
   log(`  ✅ Published ${pkg.name}@${pkg.version} (${distTag})`)
 }

@@ -531,9 +531,9 @@ async function removeStagingTag(
 }
 
 async function main() {
-  // Fails early if there are no credentials at all, before any of the
-  // version bumping below
-  const auth = createNpmAuth()
+  // Fails early if there is no token, before any of the version bumping
+  // below. The dist-tag flip needs a token; trusted publishing can't do it.
+  const auth = createNpmAuth({ requireMode: 'token' })
 
   const githubRefName = process.env.GITHUB_REF_NAME || ''
   const tag = githubRefName === 'next' ? 'next' : 'canary'
