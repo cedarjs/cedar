@@ -97,8 +97,10 @@ skipped.
    a token when the exchange is refused, so on its own it can't tell a
    configured trusted publisher from a missing one. The job never receives
    `NPM_AUTH_TOKEN`, so it cannot silently fall back to it.
-4. Release. The push of the `release/**` branch publishes the RC with OIDC, and
-   the tag push publishes the release.
+4. Release. The push of the `release/**` branch publishes the RC with OIDC.
+   The release tooling then dispatches the `packages-only` run against the
+   branch, commits the generated create-cedar-app lockfiles, and pushes the
+   `vX.Y.Z` tag. The tag push publishes `create-cedar-app`.
 5. Optionally, per package on npmjs.com: "Require two-factor authentication and
    disallow tokens" so the trusted publisher is the only way to publish. Not
    before the prerelease and cleanup jobs have stopped needing the token.
