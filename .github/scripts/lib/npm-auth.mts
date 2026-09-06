@@ -1,0 +1,257 @@
+/**
+ * npm authentication for the publish scripts, with two modes:
+ *
+ * - `oidc` (the default in CI): npm trusted publishing. The workflow has
+ *   `id-token: write`, no npm token exists anywhere, and `npm publish` does
+ *   the OIDC token exchange itself (and attaches provenance).
+ *
+ *   Trusted publishing only covers `npm publish`. It cannot write dist-tags
+ *   (https://github.com/npm/cli/issues/8547), so `forDistTag()` refuses to
+ *   run in this mode rather than letting `npm dist-tag` fail with a bare 401.
+ *   Scripts that move dist-tags (the prerelease publish and the staging-tag
+ *   cleanup) have to run with a token.
+ *
+ * - `token`: a classic `NPM_AUTH_TOKEN`. Used by the jobs that need
+ *   dist-tag writes, and available as a fallback for the others so the
+ *   scripts still work when run by hand.
+ *
+ * Tokens never touch the repo's `.npmrc`. Each one is written to its own
+ * file in a temp dir that's removed by `dispose()`.
+ */
+import { execFileSync } from 'node:child_process'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+
+const REGISTRY = 'https://registry.npmjs.org'
+const REGISTRY_HOST = 'registry.npmjs.org'
+
+/** Trusted publishing needs this or newer, see https://docs.npmjs.com/trusted-publishers */
+const MIN_NPM_VERSION_FOR_OIDC = [11, 5, 1] as const
+
+export type NpmAuthMode = 'oidc' | 'token'
+
+export interface NpmAuth {
+  mode: NpmAuthMode
+  /**
+   * Environment to run `npm publish` with. In `oidc` mode this is the plain
+   * process environment: npm exchanges the ID token itself, and giving it a
+   * token here would make it skip that (and skip provenance).
+   */
+  forPublish(packageName: string): Promise<NodeJS.ProcessEnv>
+  /**
+   * Environment to run `npm dist-tag add/rm` with for `packageName`. Throws
+   * in `oidc` mode, since trusted publishing can't write dist-tags.
+   */
+  forDistTag(packageName: string): Promise<NodeJS.ProcessEnv>
+  /** Removes every token file this instance wrote */
+  dispose(): void
+}
+
+export function isOidcAvailable() {
+  return Boolean(
+    process.env.ACTIONS_ID_TOKEN_REQUEST_URL &&
+    process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN,
+  )
+}
+
+export function hasNpmCredentials() {
+  return Boolean(process.env.NPM_AUTH_TOKEN) || isOidcAvailable()
+}
+
+export function getNpmAuthMode(): NpmAuthMode {
+  if (process.env.NPM_AUTH_TOKEN) {
+    return 'token'
+  }
+
+  if (isOidcAvailable()) {
+    return 'oidc'
+  }
+
+  throw new Error(
+    'No npm credentials available. Either run in a GitHub Actions job with ' +
+      '`id-token: write` (trusted publishing) or set NPM_AUTH_TOKEN.',
+  )
+}
+
+function assertNpmSupportsOidc() {
+  const version = execFileSync('npm', ['--version'], { encoding: 'utf-8' })
+    .trim()
+    .split('.')
+    .map(Number)
+
+  for (let i = 0; i < MIN_NPM_VERSION_FOR_OIDC.length; i++) {
+    if (version[i] > MIN_NPM_VERSION_FOR_OIDC[i]) {
+      return
+    }
+
+    if (version[i] < MIN_NPM_VERSION_FOR_OIDC[i]) {
+      throw new Error(
+        `npm ${version.join('.')} is too old for trusted publishing. Need ` +
+          `${MIN_NPM_VERSION_FOR_OIDC.join('.')} or newer.`,
+      )
+    }
+  }
+}
+
+/**
+ * The GitHub Actions ID token for the npm registry audience. One token is
+ * enough for a whole run, so it's fetched once.
+ */
+let gitHubIdToken: Promise<string> | null = null
+
+function getGitHubIdToken(): Promise<string> {
+  gitHubIdToken ??= (async () => {
+    const requestUrl = process.env.ACTIONS_ID_TOKEN_REQUEST_URL
+    const requestToken = process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN
+
+    if (!requestUrl || !requestToken) {
+      throw new Error(
+        'ACTIONS_ID_TOKEN_REQUEST_URL/TOKEN are not set. Does the job have ' +
+          '`permissions: id-token: write`?',
+      )
+    }
+
+    const url = new URL(requestUrl)
+    url.searchParams.set('audience', `npm:${REGISTRY_HOST}`)
+
+    const response = await fetch(url, {
+      headers: { authorization: `Bearer ${requestToken}` },
+      signal: AbortSignal.timeout(30_000),
+    })
+
+    if (!response.ok) {
+      throw new Error(
+        `Fetching the GitHub ID token failed with HTTP ${response.status}`,
+      )
+    }
+
+    const { value } = (await response.json()) as { value?: string }
+
+    if (!value) {
+      throw new Error('GitHub returned no ID token')
+    }
+
+    return value
+  })()
+
+  return gitHubIdToken
+}
+
+/**
+ * Checks that the registry accepts this job's OIDC identity as a trusted
+ * publisher for `packageName`, by doing the same token exchange `npm publish`
+ * does internally. `npm publish --dry-run` performs that exchange too, but a
+ * refusal only makes it carry on without a token, and a dry run never
+ * reaches the request that would need one. So without this check a dry run
+ * can't tell a configured trusted publisher from a missing one. The
+ * short-lived token the registry returns is discarded.
+ */
+export async function assertTrustedPublisherConfigured(packageName: string) {
+  const idToken = await getGitHubIdToken()
+  const url =
+    `${REGISTRY}/-/npm/v1/oidc/token/exchange/package/` +
+    packageName.replace('/', '%2F')
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${idToken}`,
+      'content-type': 'application/json',
+    },
+    body: '{}',
+    signal: AbortSignal.timeout(30_000),
+  })
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => '')
+
+    throw new Error(
+      `The registry refused this workflow as a trusted publisher for ` +
+        `${packageName} (HTTP ${response.status}` +
+        `${body ? `: ${body.slice(0, 300)}` : ''}). Is a trusted publisher ` +
+        'for this repo and workflow file configured on npmjs.com?',
+    )
+  }
+}
+
+export interface CreateNpmAuthOptions {
+  /**
+   * Refuse to run in any other mode. For scripts that write dist-tags, which
+   * only work with a token.
+   */
+  requireMode?: NpmAuthMode
+}
+
+export function createNpmAuth({
+  requireMode,
+}: CreateNpmAuthOptions = {}): NpmAuth {
+  const mode = getNpmAuthMode()
+
+  if (requireMode && mode !== requireMode) {
+    throw new Error(
+      `This script needs npm auth mode '${requireMode}' but got '${mode}'. ` +
+        (requireMode === 'token'
+          ? 'It writes dist-tags, which npm trusted publishing cannot do ' +
+            '(https://github.com/npm/cli/issues/8547), so it has to run ' +
+            'with NPM_AUTH_TOKEN set.'
+          : 'Unset NPM_AUTH_TOKEN so that trusted publishing is used.'),
+    )
+  }
+
+  if (mode === 'oidc') {
+    assertNpmSupportsOidc()
+  }
+
+  // Into a temp dir rather than the repo root. `.npmrc` is neither tracked
+  // nor gitignored, so a token written there is one `git add .` away from
+  // being committed by anyone who runs this locally.
+  const npmrcDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-npmrc-'))
+  let tokenEnv: NodeJS.ProcessEnv | null = null
+
+  function getTokenEnv(): NodeJS.ProcessEnv {
+    if (tokenEnv) {
+      return tokenEnv
+    }
+
+    const npmrcPath = path.join(npmrcDir, 'token.npmrc')
+    fs.writeFileSync(
+      npmrcPath,
+      `//${REGISTRY_HOST}/:_authToken=${process.env.NPM_AUTH_TOKEN}\n`,
+      { mode: 0o600 },
+    )
+
+    tokenEnv = { ...process.env, npm_config_userconfig: npmrcPath }
+
+    return tokenEnv
+  }
+
+  return {
+    mode,
+
+    async forPublish() {
+      if (mode === 'token') {
+        return getTokenEnv()
+      }
+
+      return { ...process.env }
+    },
+
+    async forDistTag(packageName) {
+      if (mode === 'token') {
+        return getTokenEnv()
+      }
+
+      throw new Error(
+        `Cannot write dist-tags for ${packageName}: npm trusted publishing ` +
+          'only covers `npm publish`, not `npm dist-tag` ' +
+          '(https://github.com/npm/cli/issues/8547). Run this with ' +
+          'NPM_AUTH_TOKEN set.',
+      )
+    },
+
+    dispose() {
+      fs.rmSync(npmrcDir, { recursive: true, force: true })
+    },
+  }
+}
