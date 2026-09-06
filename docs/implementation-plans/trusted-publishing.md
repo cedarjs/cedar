@@ -29,18 +29,32 @@ writes in OIDC mode with a pointer to that issue. The token can go once the
 prerelease and cleanup jobs no longer need dist-tags; see
 [`2026-09-06-canary-releases-on-pkg-pr-new.md`](./2026-09-06-canary-releases-on-pkg-pr-new.md).
 
-## How a release is published without dist-tag writes
+## How a release is published
 
-`publish-release.mts` publishes straight under the release dist-tag (`latest`,
-or `patch` for a patch to an older major), in dependency order, one level at a
-time, waiting for the registry to serve each level before starting the next.
-`@cedarjs/core` is published after every other `@cedarjs` package, and
-`create-cedar-app` last. Between the two, the job generates the
-package-manager overlay lockfiles that ship inside create-cedar-app: they
-resolve against the packages of the release, so they can't exist before the
-tag, and they're a build artifact of the create-cedar-app tarball rather
-than part of the tagged commit. That order is what stands in for the atomic
-flip:
+A release is two runs of the `release` job, so that the tagged commit is
+exactly what ends up on npm:
+
+1. The release tooling dispatches the job with `packages-only` against the
+   head of the release branch (the version-bump commit). It publishes every
+   package except `create-cedar-app`, straight under the release dist-tag
+   (`latest`, or `patch` for a patch to an older major), in dependency order,
+   one level at a time, waiting for the registry to serve each level before
+   starting the next. `@cedarjs/core` is published after every other
+   `@cedarjs` package.
+2. The tooling generates the package-manager overlay lockfiles that ship
+   inside `create-cedar-app`. They resolve against the packages that were just
+   published, which is why they can't be produced earlier. The tooling commits
+   them together with the templates, tags that commit `vX.Y.Z`, and pushes.
+   The tag push runs the job again: every package from run 1 is already on
+   npm and is skipped, the job checks that the lockfiles are in the tree, and
+   publishes `create-cedar-app` from the tagged commit.
+
+The version-bump commit stays in history as the tag's parent. npm provenance
+for the `@cedarjs` packages points at it, and provenance for
+`create-cedar-app` points at the tag.
+
+The publish order is what stands in for the atomic flip that
+`npm dist-tag` would have given:
 
 - Nothing is ever on the registry before the in-monorepo packages it depends
   on, so a version that resolves mid-run can be installed.
@@ -50,7 +64,7 @@ flip:
 - `yarn create cedar-app` keeps scaffolding the previous, self-consistent
   release until `create-cedar-app` is published.
 
-Re-running the job after a failure is safe: already published versions are
+Re-running either run after a failure is safe: already published versions are
 skipped.
 
 ## Rollout checklist
@@ -102,10 +116,11 @@ skipped.
 - The `release` job runs when a `vX.Y.Z` tag is pushed, from the workflow file
   at the tagged commit. A release from an older track (a v5 patch, say) needs
   `publish.yml` and `.github/scripts/publish-release.mts` on that branch
-  before tagging, with the lockfile step adjusted to that tree's
-  create-cedar-app template layout. The tagged commit must already have
-  versions bumped and the create-cedar-app templates updated (the release
-  tooling does this); the script verifies it and refuses otherwise.
+  before tagging, with the list of expected create-cedar-app lockfiles
+  adjusted to that tree's template layout. The tagged commit must already
+  have versions bumped, the create-cedar-app templates updated and their
+  lockfiles committed (the release tooling does this); the script verifies
+  it and refuses otherwise.
 - Only GitHub-hosted runners are supported.
 - The release tooling identifies CI runs by workflow name. With the
   consolidation it has to look at the job (`🏎 Publish Release Candidate`) inside

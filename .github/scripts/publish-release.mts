@@ -1,17 +1,28 @@
 /**
- * Publishes a stable Cedar release (vX.Y.Z) to npm.
- *
- * Runs from the publish.yml workflow when a `vX.Y.Z` tag is pushed. The
- * tagged commit is prepared by the release tooling
+ * Publishes a stable Cedar release (vX.Y.Z) to npm, from the publish.yml
+ * workflow. The commit being released is prepared by the release tooling
  * (https://github.com/cedarjs/release-tooling) and already has every
  * package's version bumped, in-monorepo dependencies pinned, and the
- * create-cedar-app templates (including their lockfiles) pointing at the new
- * version. So there's no version math here. This script only verifies that
- * the tree really is in that state and then publishes it.
+ * create-cedar-app templates pointing at the new version. So there's no
+ * version math here. This script only verifies that the tree really is in
+ * that state and then publishes it.
+ *
+ * A release is published in two runs, so that the tagged commit is exactly
+ * what's on npm:
+ *
+ * 1. `--packages-only`, dispatched by the release tooling against the head
+ *    of the release branch: publishes every package except create-cedar-app.
+ *    The tooling then generates the create-cedar-app lockfiles (which
+ *    resolve against the packages just published), commits them together
+ *    with the templates, and tags that commit.
+ * 2. The tag push: every package from run 1 is already on npm and is
+ *    skipped, and create-cedar-app is published from the tagged commit,
+ *    lockfiles included. The run refuses to publish create-cedar-app if the
+ *    lockfiles are missing from the tree.
  *
  * Packages are published straight under the release dist-tag (`latest`, or
- * `patch` for a patch to an older major), in dependency order, one level at a
- * time. npm's trusted publishing only covers `npm publish`, not
+ * `patch` for a patch to an older major), in dependency order, one level at
+ * a time. npm's trusted publishing only covers `npm publish`, not
  * `npm dist-tag` (https://github.com/npm/cli/issues/8547), so there is no
  * staging tag and no flip. The publish order is what keeps a partially
  * published release from being installable in a mixed state:
@@ -27,27 +38,18 @@
  *   scaffolding the previous, self-consistent release until everything else
  *   is on npm.
  *
- * Between the last `@cedarjs` package and `create-cedar-app`, the
- * package-manager overlay lockfiles that ship inside create-cedar-app are
- * generated. They resolve against the packages of this release, which is
- * why they can't be part of the tagged commit: the tag has to exist before
- * anything is published. They're a build artifact of the create-cedar-app
- * tarball, produced here the same way the release-candidate script produces
- * them.
- *
  * Re-running after a failure is safe: already published versions are skipped.
  *
- * Usage: node .github/scripts/publish-release.mts [--dry-run]
- * Environment variables: RELEASE_TAG (e.g. v6.1.0). Authentication is npm
+ * Usage: node .github/scripts/publish-release.mts [--packages-only] [--dry-run]
+ * Environment variables: RELEASE_TAG, the `vX.Y.Z` tag being published.
+ * With `--packages-only` or `--dry-run` it may instead be a branch or any
+ * other ref: the version is then read from packages/core/package.json and
+ * the "HEAD is the tagged commit" check is skipped. Authentication is npm
  * trusted publishing (OIDC) in CI, or NPM_AUTH_TOKEN as a fallback.
  * `--dry-run` runs every check and `npm publish --dry-run`, which packs every
  * package. With trusted publishing it also checks, for every package, that
  * the registry accepts this workflow as a trusted publisher; `npm publish
- * --dry-run` alone doesn't fail on that. With `--dry-run`, RELEASE_TAG may
- * also be a branch or any
- * other ref: the version is then read from packages/core/package.json and
- * the "HEAD is the tagged commit" check is skipped, so a release branch can
- * be dry-run before it is tagged.
+ * --dry-run` alone doesn't fail on that.
  */
 
 import { exec as execCb, execSync } from 'node:child_process'
@@ -55,12 +57,6 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { setTimeout } from 'node:timers/promises'
 import util from 'node:util'
-
-import {
-  generateNpmLockfile,
-  generatePnpmLockfile,
-  generateYarnLockfile,
-} from '../../packages/create-cedar-app/scripts/generateLockfile.js'
 
 import {
   assertTrustedPublisherConfigured,
@@ -111,7 +107,6 @@ interface PublishablePackage {
 
 const REPO_ROOT = process.cwd()
 const CREATE_CEDAR_APP_DIR = path.join(REPO_ROOT, 'packages/create-cedar-app')
-const TEMPLATES_DIR = path.join(CREATE_CEDAR_APP_DIR, 'templates')
 const CREATE_CEDAR_APP_NAME = 'create-cedar-app'
 const CORE_NAME = '@cedarjs/core'
 const CORE_PACKAGE_JSON = path.join(REPO_ROOT, 'packages/core/package.json')
@@ -120,6 +115,18 @@ const REGISTRY = 'https://registry.npmjs.org'
 const exec = util.promisify(execCb)
 
 const isDryRun = process.argv.includes('--dry-run')
+const isPackagesOnly = process.argv.includes('--packages-only')
+
+/**
+ * The lockfiles that ship inside create-cedar-app, relative to its
+ * directory. They're generated by the release tooling against the published
+ * packages and committed before tagging, so a tag run expects all of them.
+ */
+const CREATE_CEDAR_APP_LOCKFILES = [
+  'templates/overlays/yarn/yarn.lock',
+  'templates/overlays/npm/package-lock.json',
+  'templates/overlays/pnpm/pnpm-lock.yaml',
+]
 
 // How many `npm publish` calls to run at once within a dependency level.
 // Each one uploads a tarball, so this is kept modest to avoid tripping npm's
@@ -266,8 +273,9 @@ interface Release {
 
 /**
  * Normally RELEASE_TAG is the `vX.Y.Z` tag being published and the version
- * comes from it. A dry run may be pointed at any ref instead, in which case
- * the version is whatever packages/core/package.json says and `tag` is null.
+ * comes from it. A packages-only run or a dry run may be pointed at any ref
+ * instead, in which case the version is whatever packages/core/package.json
+ * says and `tag` is null.
  */
 function getRelease(): Release {
   const releaseTag = process.env.RELEASE_TAG
@@ -282,7 +290,7 @@ function getRelease(): Release {
     return { version: match[1], tag: releaseTag }
   }
 
-  if (!isDryRun) {
+  if (!isDryRun && !isPackagesOnly) {
     throw new Error(
       `RELEASE_TAG must be a stable version tag like v6.1.0, got: ${releaseTag}`,
     )
@@ -295,7 +303,7 @@ function getRelease(): Release {
   }
 
   log(
-    `${releaseTag} is not a version tag. Dry-running it as ${version}, the ` +
+    `${releaseTag} is not a version tag. Treating it as ${version}, the ` +
       `version in ${path.relative(REPO_ROOT, CORE_PACKAGE_JSON)}`,
   )
 
@@ -736,52 +744,43 @@ async function publishLevels(
 }
 
 /**
- * The pm-specific overlays replace the base template's root package.json
- * wholesale, so lockfiles are generated against the base template + overlay
- * composition and shipped in the overlay dirs. The base templates themselves
- * carry no lockfile. The overlays are used by both the ts and js templates,
- * so ts acts as the representative base.
+ * The lockfiles are generated by the release tooling once the packages they
+ * resolve against are on npm, and committed before tagging. Publishing
+ * create-cedar-app without them would ship a tarball that doesn't match the
+ * tagged commit, which is the one thing the two-run release exists to
+ * prevent, so this refuses rather than generating them here.
  */
-async function generateOverlayLockfiles(createCedarApp: PublishablePackage) {
+function assertCreateCedarAppLockfilesPresent() {
   if (isDryRun) {
-    log(
-      'Skipping the overlay lockfile generation: the packages the lockfiles ' +
-        'resolve against are not published by a dry run',
-    )
+    log('Skipping the create-cedar-app lockfile check for a dry run')
     return
   }
 
-  // On a re-run after a failure, create-cedar-app may already be out with
-  // its lockfiles. A published version is immutable, so generating them
-  // again would only add three installs that can fail for no gain.
-  if (await isPublished(createCedarApp.name, createCedarApp.version)) {
-    log(
-      `Skipping the overlay lockfile generation: ${createCedarApp.name}@` +
-        `${createCedarApp.version} is already published`,
+  const missing = CREATE_CEDAR_APP_LOCKFILES.filter(
+    (relativePath) =>
+      !fs.existsSync(path.join(CREATE_CEDAR_APP_DIR, relativePath)),
+  )
+
+  if (missing.length > 0) {
+    throw new Error(
+      'These create-cedar-app lockfiles are missing from the tagged commit. ' +
+        'The release tooling generates and commits them after the ' +
+        'packages-only run, before tagging:\n' +
+        missing.map((relativePath) => `  - ${relativePath}`).join('\n'),
     )
-    return
   }
 
-  log('Generating the create-cedar-app overlay lockfiles')
-
-  const tsTemplatePath = path.join(TEMPLATES_DIR, 'ts')
-  const overlaysDir = path.join(TEMPLATES_DIR, 'overlays')
-
-  await generateYarnLockfile(tsTemplatePath, path.join(overlaysDir, 'yarn'))
-  await generateNpmLockfile(tsTemplatePath, path.join(overlaysDir, 'npm'))
-  await generatePnpmLockfile(tsTemplatePath, path.join(overlaysDir, 'pnpm'))
-
-  log('✅ Generated the overlay lockfiles')
+  log('✅ The create-cedar-app lockfiles are in the tree')
 }
 
 // ── Main ────────────────────────────────────────────────────────────────────
 
 async function main() {
   const { version, tag } = getRelease()
-  const releaseName =
-    tag ?? `v${version} (dry run of ${process.env.RELEASE_TAG})`
+  const releaseName = tag ?? `v${version} (${process.env.RELEASE_TAG})`
+  const mode = isPackagesOnly ? 'packages only' : 'create-cedar-app included'
 
-  log(`Publishing release ${releaseName}`)
+  log(`Publishing release ${releaseName}, ${mode}`)
 
   if (tag) {
     assertHeadIsTag(tag)
@@ -805,17 +804,13 @@ async function main() {
   const auth = isDryRun && !hasNpmCredentials() ? null : createNpmAuth()
   log(`npm auth mode: ${auth?.mode ?? 'none (dry-run without credentials)'}`)
 
-  // create-cedar-app is the last level on its own. Everything before it is
-  // published first, then the lockfiles that ship inside create-cedar-app
-  // are generated against those published packages, then create-cedar-app
-  // goes out.
+  // create-cedar-app is the last level on its own. A packages-only run
+  // stops before it; a tag run publishes it, and only with its lockfiles.
   const cedarLevels = levels.slice(0, -1)
   const createCedarAppLevel = levels.slice(-1)
-  const [createCedarApp] = createCedarAppLevel[0]
-  const totalPackages = packages.length
 
   log(
-    `Publishing ${totalPackages} packages under '${distTag}' in ` +
+    `Publishing ${packages.length} packages under '${distTag}' in ` +
       `${levels.length} dependency levels`,
   )
 
@@ -824,17 +819,33 @@ async function main() {
       firstLevelNumber: 1,
       totalLevels: levels.length,
     })
-    await generateOverlayLockfiles(createCedarApp)
-    await publishLevels(createCedarAppLevel, distTag, auth, {
-      firstLevelNumber: levels.length,
-      totalLevels: levels.length,
-    })
+
+    if (isPackagesOnly) {
+      log(
+        `Stopping before ${CREATE_CEDAR_APP_NAME}: it is published by the ` +
+          'tag run, once its lockfiles are committed',
+      )
+    } else {
+      assertCreateCedarAppLockfilesPresent()
+      await publishLevels(createCedarAppLevel, distTag, auth, {
+        firstLevelNumber: levels.length,
+        totalLevels: levels.length,
+      })
+    }
   } finally {
     auth?.dispose()
   }
 
   if (isDryRun) {
     log(`✅ Dry run of ${releaseName} finished, nothing was published`)
+    return
+  }
+
+  if (isPackagesOnly) {
+    log(
+      `✅ Every package except ${CREATE_CEDAR_APP_NAME} is published under ` +
+        `'${distTag}'`,
+    )
     return
   }
 

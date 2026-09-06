@@ -10,7 +10,8 @@ name: 🚢 Publish
 # Jobs:
 #   - prerelease:         canary/next versions, on every push to main/next
 #   - release-candidate:  RCs, on every push to a release/** branch
-#   - release:            stable releases, when a vX.Y.Z tag is pushed
+#   - release:            stable releases: a packages-only run dispatched by
+#                         the release tooling, then the vX.Y.Z tag push
 #   - cleanup-staging-tags: nightly sweep of orphaned staging dist-tags
 #
 # The release-candidate and release jobs publish with trusted publishing:
@@ -38,9 +39,14 @@ on:
           - release
           - cleanup-staging-tags
       tag:
-        description: 'For `release`: the vX.Y.Z tag to publish. With dry-run, any ref (e.g. a release branch) works'
+        description: 'For `release`: the vX.Y.Z tag to publish. With packages-only or dry-run, any ref (e.g. a release branch) works'
         type: string
         required: false
+      packages-only:
+        description: 'For `release`: publish every package except create-cedar-app, from `tag`. The release tooling dispatches this against the release branch before tagging'
+        type: boolean
+        required: false
+        default: false
       dry-run:
         description: 'For `release`: run every check, verify the trusted publisher config for every package, `npm publish --dry-run`, publish nothing'
         type: boolean
@@ -231,7 +237,10 @@ jobs:
         uses: ./.github/actions/set-up-job
 
       - name: 🚀 Publish Release
-        run: node .github/scripts/publish-release.mts ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run && '--dry-run' || '' }}
+        run: >-
+          node .github/scripts/publish-release.mts
+          ${{ github.event_name == 'workflow_dispatch' && inputs.packages-only && '--packages-only' || '' }}
+          ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run && '--dry-run' || '' }}
         env:
           RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
 
