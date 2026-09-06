@@ -742,11 +742,22 @@ async function publishLevels(
  * carry no lockfile. The overlays are used by both the ts and js templates,
  * so ts acts as the representative base.
  */
-async function generateOverlayLockfiles() {
+async function generateOverlayLockfiles(createCedarApp: PublishablePackage) {
   if (isDryRun) {
     log(
       'Skipping the overlay lockfile generation: the packages the lockfiles ' +
         'resolve against are not published by a dry run',
+    )
+    return
+  }
+
+  // On a re-run after a failure, create-cedar-app may already be out with
+  // its lockfiles. A published version is immutable, so generating them
+  // again would only add three installs that can fail for no gain.
+  if (await isPublished(createCedarApp.name, createCedarApp.version)) {
+    log(
+      `Skipping the overlay lockfile generation: ${createCedarApp.name}@` +
+        `${createCedarApp.version} is already published`,
     )
     return
   }
@@ -800,6 +811,7 @@ async function main() {
   // goes out.
   const cedarLevels = levels.slice(0, -1)
   const createCedarAppLevel = levels.slice(-1)
+  const [createCedarApp] = createCedarAppLevel[0]
   const totalPackages = packages.length
 
   log(
@@ -812,7 +824,7 @@ async function main() {
       firstLevelNumber: 1,
       totalLevels: levels.length,
     })
-    await generateOverlayLockfiles()
+    await generateOverlayLockfiles(createCedarApp)
     await publishLevels(createCedarAppLevel, distTag, auth, {
       firstLevelNumber: levels.length,
       totalLevels: levels.length,
