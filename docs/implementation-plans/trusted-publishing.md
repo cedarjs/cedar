@@ -35,7 +35,12 @@ prerelease and cleanup jobs no longer need dist-tags; see
 or `patch` for a patch to an older major), in dependency order, one level at a
 time, waiting for the registry to serve each level before starting the next.
 `@cedarjs/core` is published after every other `@cedarjs` package, and
-`create-cedar-app` last. That order is what stands in for the atomic flip:
+`create-cedar-app` last. Between the two, the job generates the
+package-manager overlay lockfiles that ship inside create-cedar-app: they
+resolve against the packages of the release, so they can't exist before the
+tag, and they're a build artifact of the create-cedar-app tarball rather
+than part of the tagged commit. That order is what stands in for the atomic
+flip:
 
 - Nothing is ever on the registry before the in-monorepo packages it depends
   on, so a version that resolves mid-run can be installed.
@@ -97,9 +102,10 @@ skipped.
 - The `release` job runs when a `vX.Y.Z` tag is pushed, from the workflow file
   at the tagged commit. A release from an older track (a v5 patch, say) needs
   `publish.yml` and `.github/scripts/publish-release.mts` on that branch
-  before tagging. The tagged commit must already have versions bumped and the
-  create-cedar-app templates updated (the release tooling does this); the
-  script verifies it and refuses otherwise.
+  before tagging, with the lockfile step adjusted to that tree's
+  create-cedar-app template layout. The tagged commit must already have
+  versions bumped and the create-cedar-app templates updated (the release
+  tooling does this); the script verifies it and refuses otherwise.
 - Only GitHub-hosted runners are supported.
 - The release tooling identifies CI runs by workflow name. With the
   consolidation it has to look at the job (`🏎 Publish Release Candidate`) inside

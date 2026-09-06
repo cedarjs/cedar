@@ -27,6 +27,14 @@
  *   scaffolding the previous, self-consistent release until everything else
  *   is on npm.
  *
+ * Between the last `@cedarjs` package and `create-cedar-app`, the
+ * package-manager overlay lockfiles that ship inside create-cedar-app are
+ * generated. They resolve against the packages of this release, which is
+ * why they can't be part of the tagged commit: the tag has to exist before
+ * anything is published. They're a build artifact of the create-cedar-app
+ * tarball, produced here the same way the release-candidate script produces
+ * them.
+ *
  * Re-running after a failure is safe: already published versions are skipped.
  *
  * Usage: node .github/scripts/publish-release.mts [--dry-run]
@@ -47,6 +55,12 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { setTimeout } from 'node:timers/promises'
 import util from 'node:util'
+
+import {
+  generateNpmLockfile,
+  generatePnpmLockfile,
+  generateYarnLockfile,
+} from '../../packages/create-cedar-app/scripts/generateLockfile.js'
 
 import {
   assertTrustedPublisherConfigured,
@@ -97,6 +111,7 @@ interface PublishablePackage {
 
 const REPO_ROOT = process.cwd()
 const CREATE_CEDAR_APP_DIR = path.join(REPO_ROOT, 'packages/create-cedar-app')
+const TEMPLATES_DIR = path.join(CREATE_CEDAR_APP_DIR, 'templates')
 const CREATE_CEDAR_APP_NAME = 'create-cedar-app'
 const CORE_NAME = '@cedarjs/core'
 const CORE_PACKAGE_JSON = path.join(REPO_ROOT, 'packages/core/package.json')
@@ -691,23 +706,22 @@ async function publishPackage(
 /**
  * Publishes one dependency level at a time. The next level only starts once
  * the registry serves everything in the current one, so a dependent is never
- * installable before its dependencies.
+ * installable before its dependencies. `firstLevelNumber` and `totalLevels`
+ * only affect the log lines, so that the levels published before and after
+ * the lockfile generation read as one sequence.
  */
-async function publishInDependencyOrder(
+async function publishLevels(
   levels: PublishablePackage[][],
   distTag: string,
   auth: NpmAuth | null,
+  {
+    firstLevelNumber,
+    totalLevels,
+  }: { firstLevelNumber: number; totalLevels: number },
 ) {
-  const total = levels.reduce((sum, level) => sum + level.length, 0)
-
-  log(
-    `Publishing ${total} packages under '${distTag}' in ${levels.length} ` +
-      'dependency levels',
-  )
-
   for (const [index, level] of levels.entries()) {
     log(
-      `Level ${index + 1}/${levels.length}: ` +
+      `Level ${firstLevelNumber + index}/${totalLevels}: ` +
         level.map((pkg) => pkg.name).join(', '),
     )
 
@@ -719,6 +733,34 @@ async function publishInDependencyOrder(
       await waitForPackagesOnNpm(level)
     }
   }
+}
+
+/**
+ * The pm-specific overlays replace the base template's root package.json
+ * wholesale, so lockfiles are generated against the base template + overlay
+ * composition and shipped in the overlay dirs. The base templates themselves
+ * carry no lockfile. The overlays are used by both the ts and js templates,
+ * so ts acts as the representative base.
+ */
+async function generateOverlayLockfiles() {
+  if (isDryRun) {
+    log(
+      'Skipping the overlay lockfile generation: the packages the lockfiles ' +
+        'resolve against are not published by a dry run',
+    )
+    return
+  }
+
+  log('Generating the create-cedar-app overlay lockfiles')
+
+  const tsTemplatePath = path.join(TEMPLATES_DIR, 'ts')
+  const overlaysDir = path.join(TEMPLATES_DIR, 'overlays')
+
+  await generateYarnLockfile(tsTemplatePath, path.join(overlaysDir, 'yarn'))
+  await generateNpmLockfile(tsTemplatePath, path.join(overlaysDir, 'npm'))
+  await generatePnpmLockfile(tsTemplatePath, path.join(overlaysDir, 'pnpm'))
+
+  log('✅ Generated the overlay lockfiles')
 }
 
 // ── Main ────────────────────────────────────────────────────────────────────
@@ -752,8 +794,29 @@ async function main() {
   const auth = isDryRun && !hasNpmCredentials() ? null : createNpmAuth()
   log(`npm auth mode: ${auth?.mode ?? 'none (dry-run without credentials)'}`)
 
+  // create-cedar-app is the last level on its own. Everything before it is
+  // published first, then the lockfiles that ship inside create-cedar-app
+  // are generated against those published packages, then create-cedar-app
+  // goes out.
+  const cedarLevels = levels.slice(0, -1)
+  const createCedarAppLevel = levels.slice(-1)
+  const totalPackages = packages.length
+
+  log(
+    `Publishing ${totalPackages} packages under '${distTag}' in ` +
+      `${levels.length} dependency levels`,
+  )
+
   try {
-    await publishInDependencyOrder(levels, distTag, auth)
+    await publishLevels(cedarLevels, distTag, auth, {
+      firstLevelNumber: 1,
+      totalLevels: levels.length,
+    })
+    await generateOverlayLockfiles()
+    await publishLevels(createCedarAppLevel, distTag, auth, {
+      firstLevelNumber: levels.length,
+      totalLevels: levels.length,
+    })
   } finally {
     auth?.dispose()
   }
