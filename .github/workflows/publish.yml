@@ -81,14 +81,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Enable Corepack
-        run: npm install --global corepack
-
       - name: Set up job
         uses: ./.github/actions/set-up-job
-
-      - name: ⬢ Make sure npm supports trusted publishing
-        run: npm install --global npm@11 && npm --version
 
       - name: 🔎 Lint
         run: yarn lint
@@ -188,9 +182,6 @@ jobs:
       - name: Set up job
         uses: ./.github/actions/set-up-job
 
-      - name: ⬢ Make sure npm supports trusted publishing
-        run: npm install --global npm@11 && npm --version
-
       - name: 🔎 Lint
         run: yarn lint
 
@@ -239,9 +230,6 @@ jobs:
       - name: Set up job
         uses: ./.github/actions/set-up-job
 
-      - name: ⬢ Make sure npm supports trusted publishing
-        run: npm install --global npm@11 && npm --version
-
       - name: 🚀 Publish Release
         run: node .github/scripts/publish-release.mts ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run && '--dry-run' || '' }}
         env:
@@ -273,9 +261,6 @@ jobs:
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 24
-
-      - name: ⬢ Make sure npm supports trusted publishing
-        run: npm install --global npm@11 && npm --version
 
       # No install or build. The script only needs `yarn workspaces list` to
       # find the published packages, then talks to the registry directly.

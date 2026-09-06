@@ -1,6 +1,7 @@
 # npm trusted publishing
 
-All publishing from this repo goes through `.github/workflows/publish.yml`.
+All automated publishing from this repo goes through
+`.github/workflows/publish.yml`.
 Release candidates and stable releases use
 [npm trusted publishing](https://docs.npmjs.com/trusted-publishers) (OIDC): the
 job has `id-token: write`, GitHub issues a short-lived ID token, and npm trades
@@ -24,8 +25,8 @@ npm mints for a publish is rejected by the dist-tag endpoint. Canary publishing
 relies on dist-tag writes (publish under a staging tag, then flip every package
 to `canary`), so the `prerelease` and `cleanup-staging-tags` jobs get
 `NPM_AUTH_TOKEN`, and `.github/scripts/lib/npm-auth.mts` refuses dist-tag
-writes in OIDC mode with a pointer to that issue. The token can go once
-canaries no longer need dist-tags; see
+writes in OIDC mode with a pointer to that issue. The token can go once the
+prerelease and cleanup jobs no longer need dist-tags; see
 [`2026-09-06-canary-releases-on-pkg-pr-new.md`](./2026-09-06-canary-releases-on-pkg-pr-new.md).
 
 ## How a release is published without dist-tag writes
@@ -81,7 +82,7 @@ skipped.
    the tag push publishes the release.
 5. Optionally, per package on npmjs.com: "Require two-factor authentication and
    disallow tokens" so the trusted publisher is the only way to publish. Not
-   before canaries have stopped needing the token.
+   before the prerelease and cleanup jobs have stopped needing the token.
 6. Configure the `npm-release` environment in the repo settings (required
    reviewers) if a human approval step is wanted before a stable release is
    published. GitHub creates the environment on the first run that references
