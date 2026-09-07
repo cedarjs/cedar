@@ -1,11 +1,8 @@
-// TODO: See if we can use `GlobalContext` instead of `any` here to more
-// closely match the production context.
-// https://github.com/cedarjs/cedar/pull/355#discussion_r2264851576
-const mockContextStore = new Map<string, any>()
-const mockContext = new Proxy(
+const mockContextStore = new Map<string, GlobalContext>()
+const mockContext = new Proxy<GlobalContext>(
   {},
   {
-    get: (_target, prop) => {
+    get: (_target, prop: string) => {
       // Handle toJSON() calls, i.e. JSON.stringify(context)
       if (prop === 'toJSON') {
         return () => mockContextStore.get('context')
@@ -19,7 +16,7 @@ const mockContext = new Proxy(
 
       return ctx[prop]
     },
-    set: (_target, prop, value) => {
+    set: (_target, prop: string, value) => {
       const ctx = mockContextStore.get('context')
 
       if (!ctx) {
@@ -40,7 +37,14 @@ export const context = mockContext
 
 export const setContext = (newContext: GlobalContext): GlobalContext => {
   mockContextStore.set('context', newContext)
-  // TODO: See if this should be `newContext` instead
-  // https://github.com/cedarjs/cedar/pull/355#discussion_r2264851567
+  // Intentionally returns `mockContext` (the Proxy), not `newContext`.
+  // Production's `setContext` also returns a Proxy (a freshly-created one
+  // wrapping newContext), not the raw object — see packages/context/src/context.ts.
+  // Both proxies read from their store dynamically on every access, so old
+  // and new proxy instances are behaviorally interchangeable; the important
+  // invariant `context === setContext(x)` holds here exactly like it does
+  // in production. Returning `newContext` (a plain object, not a Proxy)
+  // would actually break that parity. No callers currently use the return
+  // value, but keep this correct for anyone who starts relying on it.
   return mockContext
 }
