@@ -1,7 +1,10 @@
 import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api'
 import opentelemetry, { SpanStatusCode } from '@opentelemetry/api'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
-import { Resource } from '@opentelemetry/resources'
+import {
+  defaultResource,
+  resourceFromAttributes,
+} from '@opentelemetry/resources'
 import {
   NodeTracerProvider,
   BatchSpanProcessor,
@@ -62,8 +65,8 @@ export async function startTelemetry(): Promise<void> {
     developmentEnvironment = 'gitpod'
   }
 
-  const resource = Resource.default().merge(
-    new Resource({
+  const resource = defaultResource().merge(
+    resourceFromAttributes({
       [ATTR_SERVICE_NAME]: packageName,
       [ATTR_SERVICE_VERSION]: packageVersion,
       [SEMRESATTRS_OS_TYPE]: info.System?.OS?.split(' ')[0],
