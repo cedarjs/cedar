@@ -76,7 +76,7 @@
     "better-sqlite3": "12.11.1",
     "concurrently": "9.2.4",
     "esbuild": "0.28.2",
-    "fastify": "5.12.1",
+    "fastify": "5.12.3",
     "jsdom": "27.4.0",
     "prisma": "7.10.0",
     "publint": "0.3.24",
@@ -97,7 +97,7 @@
     "@uppy/drag-drop": "^6.0.0",
     "@uppy/react": "^6.0.0",
     "@uppy/xhr-upload": "^6.0.0",
-    "fastify": "5.12.1",
+    "fastify": "5.12.3",
     "react": "19.2.8"
   },
   "peerDependenciesMeta": {
