@@ -32,6 +32,8 @@ export async function startTelemetry() {
     diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.ERROR)
 
     // Tracing
+    traceExporter = new CustomFileExporter()
+    traceProcessor = new SimpleSpanProcessor(traceExporter)
     traceProvider = new NodeTracerProvider({
       sampler: {
         shouldSample: () => {
@@ -45,10 +47,8 @@ export async function startTelemetry() {
           return 'AlwaysSampleWhenNotShutdown'
         },
       },
+      spanProcessors: [traceProcessor],
     })
-    traceExporter = new CustomFileExporter()
-    traceProcessor = new SimpleSpanProcessor(traceExporter)
-    traceProvider.addSpanProcessor(traceProcessor)
     traceProvider.register()
 
     // Without any listeners for these signals, nodejs will terminate the process and will not

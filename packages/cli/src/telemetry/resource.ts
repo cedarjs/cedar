@@ -102,7 +102,7 @@ export async function getResources() {
     'vscode.version': info.IDEs?.VSCode?.version,
     'cpu.count': cpu.physicalCores,
     'memory.gb': Math.round(mem.total / 1073741824),
-    'env.node_env': process.env.NODE_ENV || null,
+    'env.node_env': process.env.NODE_ENV || undefined,
     'ci.redwood': !!process.env.CEDAR_CI,
     'ci.isci': ci.isCI,
     'dev.environment': developmentEnvironment,
