@@ -3,7 +3,10 @@ import path from 'path'
 
 import { ExportResultCode } from '@opentelemetry/core'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
-import { Resource } from '@opentelemetry/resources'
+import {
+  defaultResource,
+  resourceFromAttributes,
+} from '@opentelemetry/resources'
 import type { ReadableSpan } from '@opentelemetry/sdk-trace-node'
 
 import { getPaths } from '@cedarjs/project-config'
@@ -32,8 +35,9 @@ async function main() {
   console.time('Computed resource information')
   const customResourceData = await getResources()
   console.timeEnd('Computed resource information')
-  // @ts-expect-error - getResources return type has any fields from envinfo
-  const resource = Resource.default().merge(new Resource(customResourceData))
+  const resource = defaultResource().merge(
+    resourceFromAttributes(customResourceData),
+  )
 
   const url =
     process.env.CEDAR_REDIRECT_TELEMETRY ||
