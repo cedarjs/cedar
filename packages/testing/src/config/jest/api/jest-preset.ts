@@ -115,8 +115,13 @@ const config: Config = {
       },
     ],
   },
+  // Jest runs api tests as CommonJS, so the ESM-only packages it reaches have
+  // to be transformed. `picoquery` is one: `@cedarjs/api/runtime` imports it,
+  // and `@cedarjs/graphql-server` pulls that module in, so any test that
+  // imports the GraphQL server (directive tests do, through
+  // `@cedarjs/testing/api`) loads it.
   transformIgnorePatterns: [
-    '[/\\\\]node_modules[/\\\\](?!@cedarjs[/\\\\]context[/\\\\])(?!@cedarjs[/\\\\]api[/\\\\])(?!@cedarjs[/\\\\]graphql-server[/\\\\])(?!@cedarjs[/\\\\]storage[/\\\\])',
+    '[/\\\\]node_modules[/\\\\](?!@cedarjs[/\\\\]context[/\\\\])(?!@cedarjs[/\\\\]api[/\\\\])(?!@cedarjs[/\\\\]graphql-server[/\\\\])(?!@cedarjs[/\\\\]storage[/\\\\])(?!picoquery[/\\\\])',
   ],
   testPathIgnorePatterns: ['.scenarios.[jt]s$'],
 }
