@@ -54,7 +54,7 @@
   "dependencies": {
     "@cedarjs/project-config": "6.0.2",
     "@cedarjs/server-store": "6.0.2",
-    "react-server-dom-webpack": "19.2.7",
+    "react-server-dom-webpack": "19.2.8",
     "ts-toolbelt": "9.6.0"
   },
   "devDependencies": {
