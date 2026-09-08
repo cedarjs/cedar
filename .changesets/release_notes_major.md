@@ -14,6 +14,20 @@ Cedar's anonymous usage telemetry. The 1.x SDK depends on
 (CVE-2026-59892). The 2.x SDK has no dependency on that package, so the
 advisory is gone from a Cedar project's audit output.
 
+### Security fixes in dependencies
+
+Besides the OpenTelemetry upgrade, this release moves off dependency versions
+with published advisories: Nodemailer 9
+([GHSA-p6gq-j5cr-w38f](https://github.com/advisories/GHSA-p6gq-j5cr-w38f) and
+four moderate advisories), MJML 5
+([GHSA-45h5-66jx-r2wf](https://github.com/advisories/GHSA-45h5-66jx-r2wf)),
+react-server-dom-webpack 19.2.8
+([GHSA-wx67-qw84-cm4g](https://github.com/advisories/GHSA-wx67-qw84-cm4g)) and
+uuid 11.1.1
+([GHSA-w5hq-g745-h8pq](https://github.com/advisories/GHSA-w5hq-g745-h8pq)).
+Nodemailer 9 and MJML 5 are major versions with small behaviour changes, see
+the breaking changes below.
+
 ### Route hooks are built with Vite
 
 `web/src/**/*.routeHooks.{js,jsx,ts,tsx}` files are built with Vite and the same
@@ -56,6 +70,28 @@ see timeouts it did not see before. To keep the v5 behaviour, pass
 wire protocol. See the
 [redis v5 to v6 migration guide](https://github.com/redis/node-redis/blob/master/docs/v5-to-v6.md)
 for the full list of changes.
+
+### Nodemailer 9
+
+`@cedarjs/mailer-handler-nodemailer` uses Nodemailer 9. The handler API is
+unchanged, but Nodemailer now validates TLS certificates when it fetches
+remote content over HTTPS: attachments with an `href` or `path` URL, OAuth2
+token endpoints and HTTP proxy `CONNECT` requests. Fetching from a host with a
+self-signed, expired or hostname-mismatched certificate fails where it used to
+succeed. Opt out per transport with `tls: { rejectUnauthorized: false }` in
+the transport options, or per attachment with the attachment's `tls` option.
+
+### MJML mailer renderer uses MJML 5
+
+`@cedarjs/mailer-renderer-mjml-react` renders with MJML 5 and
+`@faire/mjml-react` 4. Rendering is asynchronous, which `Mailer.send` handles
+transparently; only code that calls `MJMLReactRenderer.render()` directly
+needs to `await` the result. MJML 5 minifies with htmlnano and cssnano,
+generates the `<body>` tag from `mj-body` (the `class` attribute lands on
+`<body>`, `background-color` only on the inner `div`), ignores `mj-include`
+unless `includePath` is configured, and accepts any string for
+`border-radius`. Expect small differences in the generated HTML if you
+compare rendered output byte for byte.
 
 ### ESLint parses JavaScript with typescript-eslint
 
