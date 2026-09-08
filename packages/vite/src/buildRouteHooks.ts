@@ -7,7 +7,7 @@ import tsPathsMod from 'vite-tsconfig-paths'
 
 import { findRouteHooksSrc } from '@cedarjs/internal/dist/files.js'
 import type { Paths } from '@cedarjs/project-config'
-import { getPaths } from '@cedarjs/project-config'
+import { getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { cedarApiImportGuardPlugin } from './plugins/vite-plugin-cedar-api-import-guard.js'
 import { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
@@ -24,12 +24,21 @@ const tsconfigPaths =
   tsPathsMod.default?.default || tsPathsMod.default || tsPathsMod
 
 /**
- * Returns the path, relative to `web/dist/ssr/routeHooks` and with a `.js`
- * extension, that the built version of the given route hook source file is
- * written to. The layout mirrors `web/src`, so
- * `web/src/pages/HomePage/HomePage.routeHooks.ts` ends up at
- * `pages/HomePage/HomePage.routeHooks.js` and `web/src/App.routeHooks.ts` at
- * `App.routeHooks.js`.
+ * Route hooks are built as ES modules. Node reads a `.js` file as CommonJS
+ * when the nearest package.json has no `"type": "module"`, so in a CommonJS
+ * web side the output gets the `.mjs` extension instead.
+ */
+export function getRouteHookDistExtension() {
+  return projectSideIsEsm('web') ? '.js' : '.mjs'
+}
+
+/**
+ * Returns the path, relative to `web/dist/ssr/routeHooks`, that the built
+ * version of the given route hook source file is written to. The layout
+ * mirrors `web/src`, so `web/src/pages/HomePage/HomePage.routeHooks.ts` ends
+ * up at `pages/HomePage/HomePage.routeHooks.js` and `web/src/App.routeHooks.ts`
+ * at `App.routeHooks.js` (`.mjs` in a CommonJS web side, see
+ * getRouteHookDistExtension()).
  *
  * Used both by the build (to name the Rollup entries) and by the route
  * manifest (so the streaming handler can find the file at request time).
@@ -37,8 +46,9 @@ const tsconfigPaths =
 export function getRouteHookDistPath(
   routeHookSrcPath: string,
   webSrc = getPaths().web.src,
+  extension = getRouteHookDistExtension(),
 ) {
-  return getRouteHookEntryName(routeHookSrcPath, webSrc) + '.js'
+  return getRouteHookEntryName(routeHookSrcPath, webSrc) + extension
 }
 
 function getRouteHookEntryName(routeHookSrcPath: string, webSrc: string) {
@@ -88,6 +98,8 @@ export async function buildRouteHooks(
     input[getRouteHookEntryName(routeHook, rwPaths.web.src)] = routeHook
   }
 
+  const extension = getRouteHookDistExtension()
+
   await viteBuild({
     // Route hooks run in node, so the project's web/vite.config, which is set
     // up for browser and SSR builds of React code, doesn't apply. Only the
@@ -130,9 +142,9 @@ export async function buildRouteHooks(
         input,
         output: {
           format: 'es',
-          entryFileNames: '[name].js',
+          entryFileNames: '[name]' + extension,
           // Modules shared between route hooks, like the api side's db.js
-          chunkFileNames: 'chunks/[name]-[hash].js',
+          chunkFileNames: 'chunks/[name]-[hash]' + extension,
           exports: 'named',
         },
       },
