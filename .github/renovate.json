@@ -50,8 +50,7 @@
         "stdout-update",
         "title-case",
         "untildify",
-        "/^@cedarjs//",
-        "uuid"
+        "/^@cedarjs//"
       ]
     },
     {
