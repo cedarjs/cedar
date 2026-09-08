@@ -1,6 +1,6 @@
 {
   "name": "create-cedar-app",
-  "version": "6.0.2",
+  "version": "7.0.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -27,8 +27,8 @@
   "devDependencies": {
     "@babel/core": "^7.26.10",
     "@babel/plugin-transform-typescript": "^7.26.8",
-    "@cedarjs/framework-tools": "6.0.2",
-    "@cedarjs/tui": "6.0.2",
+    "@cedarjs/framework-tools": "7.0.0",
+    "@cedarjs/tui": "7.0.0",
     "@opentelemetry/api": "1.9.1",
     "@opentelemetry/exporter-trace-otlp-http": "0.222.0",
     "@opentelemetry/resources": "2.11.0",
