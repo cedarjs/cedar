@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/prerender",
-  "version": "6.0.0",
+  "version": "7.0.0",
   "description": "CedarJS prerender",
   "repository": {
     "type": "git",
@@ -42,9 +42,9 @@
     "@babel/parser": "7.29.9",
     "@babel/traverse": "7.29.8",
     "@babel/types": "7.29.8",
-    "@cedarjs/project-config": "6.0.0",
-    "@cedarjs/structure": "6.0.0",
-    "@cedarjs/vite": "6.0.0",
+    "@cedarjs/project-config": "7.0.0",
+    "@cedarjs/structure": "7.0.0",
+    "@cedarjs/vite": "7.0.0",
     "@rollup/plugin-alias": "5.1.1",
     "@rollup/plugin-commonjs": "28.0.9",
     "@rollup/plugin-node-resolve": "16.0.3",
@@ -61,9 +61,9 @@
     "vite": "7.3.6"
   },
   "devDependencies": {
-    "@cedarjs/framework-tools": "6.0.0",
-    "@cedarjs/router": "6.0.0",
-    "@cedarjs/web": "6.0.0",
+    "@cedarjs/framework-tools": "7.0.0",
+    "@cedarjs/router": "7.0.0",
+    "@cedarjs/web": "7.0.0",
     "@types/mime-types": "2.1.4",
     "@types/react": "^19.2.0",
     "concurrently": "9.2.4",
@@ -72,8 +72,8 @@
     "vitest": "4.1.11"
   },
   "peerDependencies": {
-    "@cedarjs/router": "6.0.0",
-    "@cedarjs/web": "6.0.0",
+    "@cedarjs/router": "7.0.0",
+    "@cedarjs/web": "7.0.0",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
