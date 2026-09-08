@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/router",
-  "version": "6.0.2",
+  "version": "7.0.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -52,15 +52,15 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/project-config": "6.0.2",
-    "@cedarjs/server-store": "6.0.2",
+    "@cedarjs/project-config": "7.0.0",
+    "@cedarjs/server-store": "7.0.0",
     "react-server-dom-webpack": "19.2.8",
     "ts-toolbelt": "9.6.0"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
-    "@cedarjs/auth": "6.0.2",
-    "@cedarjs/framework-tools": "6.0.2",
+    "@cedarjs/auth": "7.0.0",
+    "@cedarjs/framework-tools": "7.0.0",
     "@testing-library/jest-dom": "6.9.1",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
@@ -74,7 +74,7 @@
     "vitest": "4.1.11"
   },
   "peerDependencies": {
-    "@cedarjs/auth": "6.0.2",
+    "@cedarjs/auth": "7.0.0",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },

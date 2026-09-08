@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/fastify-web",
-  "version": "6.0.2",
+  "version": "7.0.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -22,7 +22,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/project-config": "6.0.2",
+    "@cedarjs/project-config": "7.0.0",
     "@fastify/compress": "9.2.0",
     "@fastify/http-proxy": "11.6.2",
     "@fastify/static": "10.1.4",
@@ -30,7 +30,7 @@
     "fast-glob": "3.3.3"
   },
   "devDependencies": {
-    "@cedarjs/framework-tools": "6.0.2",
+    "@cedarjs/framework-tools": "7.0.0",
     "fastify": "5.12.5",
     "typescript": "5.9.3",
     "vitest": "4.1.11"
