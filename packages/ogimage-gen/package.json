@@ -45,7 +45,7 @@
     "@cedarjs/framework-tools": "workspace:*",
     "@cedarjs/router": "workspace:*",
     "@cedarjs/web": "workspace:*",
-    "@playwright/test": "1.62.1",
+    "@playwright/test": "1.63.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "ts-toolbelt": "9.6.0",
