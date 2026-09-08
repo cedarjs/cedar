@@ -2539,7 +2539,7 @@ __metadata:
     concurrently: "npm:9.2.4"
     msw: "npm:2.15.0"
     oauth2-mock-server: "npm:9.2.0"
-    oauth4webapi: "npm:3.8.7"
+    oauth4webapi: "npm:3.8.8"
     publint: "npm:0.3.24"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.11"
@@ -24066,10 +24066,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"oauth4webapi@npm:3.8.7, oauth4webapi@npm:^3.8.2":
-  version: 3.8.7
-  resolution: "oauth4webapi@npm:3.8.7"
-  checksum: 10c0/7e581e24572a12c3b2abd4889d8f5271a7de0166a0971b8398468abe3baf9134012d312775f05b1a64b38b4413563bfb203801ba00909f831557823875b0699e
+"oauth4webapi@npm:3.8.8, oauth4webapi@npm:^3.8.2":
+  version: 3.8.8
+  resolution: "oauth4webapi@npm:3.8.8"
+  checksum: 10c0/1f7d35ba8d7d5aa9ce9ec5959a4611ed2b5dd7830172b1546749b91dda8c53f7934e669c6f81e912c64e3ae4fc681d4d6ce149b42cc9d17db97162bf8765e028
   languageName: node
   linkType: hard
 

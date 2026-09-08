@@ -42,7 +42,7 @@
     "concurrently": "9.2.4",
     "msw": "2.15.0",
     "oauth2-mock-server": "9.2.0",
-    "oauth4webapi": "3.8.7",
+    "oauth4webapi": "3.8.8",
     "publint": "0.3.24",
     "typescript": "5.9.3",
     "vitest": "4.1.11"
