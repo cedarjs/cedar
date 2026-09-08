@@ -59,7 +59,7 @@
   "dependencies": {
     "@cedarjs/project-config": "workspace:*",
     "md5": "2.3.0",
-    "uuid": "11.1.0"
+    "uuid": "11.1.1"
   },
   "devDependencies": {
     "@cedarjs/api": "workspace:*",
