@@ -53,7 +53,7 @@
     "@opentelemetry/exporter-trace-otlp-http": "0.222.0",
     "@opentelemetry/resources": "2.11.0",
     "@opentelemetry/sdk-trace-node": "2.11.0",
-    "@opentelemetry/semantic-conventions": "1.41.1",
+    "@opentelemetry/semantic-conventions": "1.43.0",
     "@prisma/internals": "7.10.0",
     "ansis": "4.3.1",
     "archiver": "7.0.1",

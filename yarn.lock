@@ -2963,7 +2963,7 @@ __metadata:
     "@opentelemetry/exporter-trace-otlp-http": "npm:0.222.0"
     "@opentelemetry/resources": "npm:2.11.0"
     "@opentelemetry/sdk-trace-node": "npm:2.11.0"
-    "@opentelemetry/semantic-conventions": "npm:1.41.1"
+    "@opentelemetry/semantic-conventions": "npm:1.43.0"
     "@prisma/dmmf": "npm:7.10.0"
     "@prisma/internals": "npm:7.10.0"
     "@types/archiver": "npm:^7.0.0"
@@ -8756,14 +8756,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@opentelemetry/semantic-conventions@npm:1.41.1":
-  version: 1.41.1
-  resolution: "@opentelemetry/semantic-conventions@npm:1.41.1"
-  checksum: 10c0/c54b1edf845766e93026d30fd95e15da9dba8d7a5b58f8c320c5d36ab542c77b37868f3e8e3d78ec162da8ee2afd24781f0a65934c9bdbc1aea86b47b12f074c
-  languageName: node
-  linkType: hard
-
-"@opentelemetry/semantic-conventions@npm:^1.29.0":
+"@opentelemetry/semantic-conventions@npm:1.43.0, @opentelemetry/semantic-conventions@npm:^1.29.0":
   version: 1.43.0
   resolution: "@opentelemetry/semantic-conventions@npm:1.43.0"
   checksum: 10c0/ea4b4b07c9414b0c5e7ce7349f608cb2572d16922d96077fb0882b59f173ec9b94aada74896bd5dd4aeb1759924503bd5a34b6dc2847a84c36f71626a0578ec4
@@ -15699,7 +15692,7 @@ __metadata:
     "@opentelemetry/exporter-trace-otlp-http": "npm:0.222.0"
     "@opentelemetry/resources": "npm:2.11.0"
     "@opentelemetry/sdk-trace-node": "npm:2.11.0"
-    "@opentelemetry/semantic-conventions": "npm:1.41.1"
+    "@opentelemetry/semantic-conventions": "npm:1.43.0"
     "@types/klaw-sync": "npm:6.0.5"
     ansis: "npm:4.3.1"
     ci-info: "npm:4.4.0"
