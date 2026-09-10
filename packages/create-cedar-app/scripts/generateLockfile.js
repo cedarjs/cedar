@@ -34,6 +34,7 @@ export async function generateLockfile(
   env = {},
 ) {
   console.log(`Generating ${lockfileName}...`)
+  const originalCwd = process.cwd()
   const tmpDir = fs.mkdtempSync(
     path.join(os.tmpdir(), `cedar-${packageManager}-`),
   )
@@ -43,7 +44,18 @@ export async function generateLockfile(
       recursive: true,
       filter: (src) => !EXCLUDED_TEMPLATE_ENTRIES.includes(path.basename(src)),
     })
-    fs.cpSync(overlayDir, tmpDir, { recursive: true, force: true })
+    // The overlay copy excludes the same entries, upholding the invariant
+    // that the compose dir never contains install artifacts or a
+    // pre-existing lockfile: the install below always resolves dependencies
+    // from the composed template contents and generates `lockfileName` from
+    // scratch. (Overlay dirs can carry the previous release's committed
+    // lockfiles - patch release branches are cut from the previous release's
+    // tag - which pnpm's CI-default frozen install would refuse to update.)
+    fs.cpSync(overlayDir, tmpDir, {
+      recursive: true,
+      force: true,
+      filter: (src) => !EXCLUDED_TEMPLATE_ENTRIES.includes(path.basename(src)),
+    })
 
     await within(async () => {
       cd(tmpDir)
@@ -59,6 +71,10 @@ export async function generateLockfile(
 
     return lockDest
   } finally {
+    // zx's `cd` changes the process's working directory (`within` only
+    // scopes zx's own cwd), and Windows can't remove a directory that is
+    // the process's cwd, so restore the original cwd first
+    process.chdir(originalCwd)
     fs.rmSync(tmpDir, { recursive: true, force: true })
   }
 }
