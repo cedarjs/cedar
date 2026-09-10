@@ -3848,8 +3848,8 @@ __metadata:
     "@types/mime-types": "npm:2.1.4"
     "@types/react": "npm:^19.2.0"
     "@types/react-dom": "npm:^19.2.0"
-    "@uppy/aws-s3": "npm:6.0.0"
-    "@uppy/core": "npm:6.0.0"
+    "@uppy/aws-s3": "npm:6.1.0"
+    "@uppy/core": "npm:6.0.1"
     "@uppy/dashboard": "npm:6.0.0"
     "@uppy/drag-drop": "npm:6.0.0"
     "@uppy/react": "npm:6.0.0"
@@ -12918,12 +12918,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@uppy/aws-s3@npm:6.0.0":
-  version: 6.0.0
-  resolution: "@uppy/aws-s3@npm:6.0.0"
+"@uppy/aws-s3@npm:6.1.0":
+  version: 6.1.0
+  resolution: "@uppy/aws-s3@npm:6.1.0"
   peerDependencies:
-    "@uppy/core": ^6.0.0
-  checksum: 10c0/3ada3744840a6d9543da8b3c8bb439e68dbbb434521c64073c9edd1ec5d7db0d84c9518febe6761e2750ea7c12930bcf9dcd4ff405dca37d55456f97965d4efa
+    "@uppy/core": ^6.0.1
+  checksum: 10c0/93194f2fc1993a202682291286ef4bd9423718c3908dea379e26830bf5e2068f1c7691541ffbcbd9eed00f4b04302e652fd29f1aa9637b873249ef0d742bb5ea
   languageName: node
   linkType: hard
 
@@ -12953,9 +12953,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@uppy/core@npm:6.0.0":
-  version: 6.0.0
-  resolution: "@uppy/core@npm:6.0.0"
+"@uppy/core@npm:6.0.1":
+  version: 6.0.1
+  resolution: "@uppy/core@npm:6.0.1"
   dependencies:
     "@transloadit/prettier-bytes": "npm:^2.0.0"
     classnames: "npm:^2.5.1"
@@ -12966,7 +12966,7 @@ __metadata:
     p-queue: "npm:^9.3.3"
     p-retry: "npm:^6.1.0"
     preact: "npm:^10.29.2"
-  checksum: 10c0/f38e12c7a20a5580f9937d6674b0efabab3f1889cbb123177b916d9a0b9b203bb7f27c4112a64a494cc95aae3138eea5860d4c0d982becd1299fe989d8ee697a
+  checksum: 10c0/220f06fa513e7f8d8b0110cdf9ab1500aac2a507727da9d9a209dc94bfece29991df923d722e46dbd8723f7cfeb6cee9810722c7f2dfa28060023f4c6269e26d
   languageName: node
   linkType: hard
 
