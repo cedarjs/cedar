@@ -43,7 +43,16 @@ export async function generateLockfile(
       recursive: true,
       filter: (src) => !EXCLUDED_TEMPLATE_ENTRIES.includes(path.basename(src)),
     })
-    fs.cpSync(overlayDir, tmpDir, { recursive: true, force: true })
+    // Filter out lockfiles here too: patch release branches are cut from the
+    // previous release's tag, where the overlay dirs carry that release's
+    // committed lockfiles. Copying one into the compose dir would make pnpm's
+    // CI-default frozen install refuse to update it (and would influence the
+    // other package managers' resolution), so always regenerate from scratch
+    fs.cpSync(overlayDir, tmpDir, {
+      recursive: true,
+      force: true,
+      filter: (src) => !EXCLUDED_TEMPLATE_ENTRIES.includes(path.basename(src)),
+    })
 
     await within(async () => {
       cd(tmpDir)
