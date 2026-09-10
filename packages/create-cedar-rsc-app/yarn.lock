@@ -3233,7 +3233,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sort-package-json@npm:3.6.1, sort-package-json@npm:^3.4.0":
+"sort-package-json@npm:3.7.1":
+  version: 3.7.1
+  resolution: "sort-package-json@npm:3.7.1"
+  dependencies:
+    detect-indent: "npm:^7.0.2"
+    detect-newline: "npm:^4.0.1"
+    git-hooks-list: "npm:^4.1.1"
+    is-plain-obj: "npm:^4.1.0"
+    semver: "npm:^7.7.3"
+    sort-object-keys: "npm:^2.0.1"
+    tinyglobby: "npm:^0.2.15"
+  bin:
+    sort-package-json: cli.js
+  checksum: 10c0/2403faf859439c10a0562b02c34ff28480171fa8f3991bac6fe8652c8996cfe04f97409e220185f64eefb4c05a5fd83ba43a92d1c8d52a4cdb635bc81113faba
+  languageName: node
+  linkType: hard
+
+"sort-package-json@npm:^3.4.0":
   version: 3.6.1
   resolution: "sort-package-json@npm:3.6.1"
   dependencies:
