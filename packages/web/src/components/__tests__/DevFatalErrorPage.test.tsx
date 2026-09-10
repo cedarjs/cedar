@@ -147,13 +147,14 @@ describe('DevFatalErrorPage', () => {
     const user = userEvent.setup()
     vi.spyOn(window.navigator.clipboard, 'writeText')
 
-    const error: any = new Error('Message with `inline` code')
-    error.mostRecentRequest = {
-      query: ['query GetCode {', '  code', '}', '```'].join('\n'),
-      operationName: 'GetCode',
-      operationKind: 'query',
-      variables: { markdown: '```' },
-    }
+    const error = Object.assign(new Error('Message with `inline` code'), {
+      mostRecentRequest: {
+        query: ['query GetCode {', '  code', '}', '```'].join('\n'),
+        operationName: 'GetCode',
+        operationKind: 'query',
+        variables: { markdown: '```' },
+      },
+    })
 
     render(<DevFatalErrorPage error={error} />)
     await user.click(screen.getByRole('button', { name: /Copy All/ }))

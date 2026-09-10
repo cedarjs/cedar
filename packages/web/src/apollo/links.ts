@@ -1,6 +1,6 @@
 import { ApolloLink, HttpLink } from '@apollo/client'
 import { SetContextLink } from '@apollo/client/link/context'
-import type { DocumentNode } from 'graphql'
+import type { DocumentNode, OperationTypeNode } from 'graphql'
 import { getOperationAST } from 'graphql'
 import { print } from 'graphql/language/printer.js'
 import { Observable } from 'rxjs'
@@ -8,7 +8,7 @@ import { Observable } from 'rxjs'
 export function getOperationKind(
   query: DocumentNode,
   operationName?: string,
-): string | undefined {
+): OperationTypeNode | undefined {
   return getOperationAST(query, operationName)?.operation
 }
 
