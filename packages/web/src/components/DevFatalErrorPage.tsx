@@ -43,99 +43,113 @@ type ErrorWithRequestMeta = Error & {
   mostRecentResponse?: any
 }
 
+function formatMarkdownCode(value: string): string {
+  const fence = '`'.repeat(longestBacktickRun(value) + 1)
+  const padding = value.startsWith('`') || value.endsWith('`') ? ' ' : ''
+
+  return `${fence}${padding}${value}${padding}${fence}`
+}
+
+function formatMarkdownCodeBlock(value: string, language: string): string {
+  const fence = '`'.repeat(Math.max(3, longestBacktickRun(value) + 1))
+
+  return `${fence}${language}\n${value}\n${fence}`
+}
+
+function longestBacktickRun(value: string): number {
+  return Array.from(value.matchAll(/`+/g)).reduce(
+    (longest, [run]) => Math.max(longest, run.length),
+    0,
+  )
+}
+
 function formatErrorForClipboard(
-  err: Error,
   stack: StackTracey,
   typeName: string,
   msg: string,
   errorWithMeta: ErrorWithRequestMeta,
 ): string {
-  const lines: string[] = []
+  const sections = [
+    `## Error\n\n${formatMarkdownCode(typeName)}: ${formatMarkdownCode(msg)}`,
+  ]
 
-  lines.push('='.repeat(80))
-  lines.push('FATAL ERROR REPORT')
-  lines.push('='.repeat(80))
-  lines.push('')
-
-  // Error summary
-  lines.push(`ERROR TYPE: ${typeName}`)
-  lines.push(`ERROR MESSAGE: ${msg}`)
-  lines.push('')
-
-  // Request details if available
   const mostRecentRequest =
     errorWithMeta.mostRecentRequest ||
     errorWithMeta.errors?.find((gqlErr) => gqlErr.__RedwoodEnhancedError)
       ?.__RedwoodEnhancedError
 
   if (mostRecentRequest) {
-    lines.push('-'.repeat(80))
-    lines.push('REQUEST CONTEXT')
-    lines.push('-'.repeat(80))
-    lines.push(`Operation: ${mostRecentRequest.operationName}`)
-    lines.push(`Kind: ${mostRecentRequest.operationKind}`)
-    lines.push('')
-    lines.push('Variables:')
+    let variables: string
     try {
-      lines.push(JSON.stringify(mostRecentRequest.variables, null, 2))
+      variables =
+        JSON.stringify(mostRecentRequest.variables, null, 2) ?? 'undefined'
     } catch {
-      lines.push('Unable to stringify variables')
+      variables = 'Unable to stringify variables'
     }
-    lines.push('')
-    lines.push('Query:')
-    lines.push(mostRecentRequest.query)
-    lines.push('')
+
+    sections.push(
+      [
+        '## Request',
+        '',
+        `${mostRecentRequest.operationKind} ${mostRecentRequest.operationName}`,
+        '',
+        '### Variables',
+        '',
+        formatMarkdownCodeBlock(variables, 'json'),
+        '',
+        '### Query',
+        '',
+        formatMarkdownCodeBlock(mostRecentRequest.query, 'graphql'),
+      ].join('\n'),
+    )
   }
 
-  // Response details if available
   if (errorWithMeta.mostRecentResponse) {
-    lines.push('-'.repeat(80))
-    lines.push('RESPONSE CONTEXT')
-    lines.push('-'.repeat(80))
+    let response: string
     try {
-      lines.push(JSON.stringify(errorWithMeta.mostRecentResponse, null, 2))
+      response =
+        JSON.stringify(errorWithMeta.mostRecentResponse, null, 2) ?? 'undefined'
     } catch {
-      lines.push('Unable to stringify response')
+      response = 'Unable to stringify response'
     }
-    lines.push('')
+
+    sections.push(`## Response\n\n${formatMarkdownCodeBlock(response, 'json')}`)
   }
 
-  // Stack trace
-  lines.push('-'.repeat(80))
-  lines.push('STACK TRACE')
-  lines.push('-'.repeat(80))
-
-  stack.items.forEach((entry, i) => {
-    const fileShort = entry.fileShort || '[Unknown]'
+  const stackEntries = stack.items.map((entry, i) => {
+    const file = entry.fileShort || '[Unknown]'
     const callee = entry.callee || '[Anonymous]'
-    const line = entry.line || '?'
-    const column = entry.column || '?'
+    const location = `${file}:${entry.line || '?'}:${entry.column || '?'}`
+    const lines = [`${i + 1}. \`${location}\` in \`${callee}\``]
 
-    lines.push(`[${i}] ${fileShort}:${line}:${column} in ${callee}`)
-
-    // Include source code context if available
-    const sourceFile = entry.sourceFile as any
-    if (sourceFile?.lines && sourceFile.lines.length > 0) {
-      const lineIndex = (entry.line || 1) - 1
+    const sourceFile = entry.sourceFile
+    if (
+      sourceFile?.lines.length &&
+      entry.line &&
+      entry.line <= sourceFile.lines.length &&
+      !entry.thirdParty
+    ) {
+      const lineIndex = entry.line - 1
       const window = 2
       const start = Math.max(0, lineIndex - window)
       const end = Math.min(sourceFile.lines.length, lineIndex + window + 1)
 
-      lines.push('  Source context:')
+      const sourceLines = []
       for (let idx = start; idx < end; idx++) {
-        const marker = idx === lineIndex ? '> ' : '  '
-        lines.push(
-          `  ${marker}${(idx + 1).toString().padStart(4)} | ${sourceFile.lines[idx]}`,
+        const marker = idx === lineIndex ? '>' : ' '
+        sourceLines.push(
+          `${marker} ${(idx + 1).toString().padStart(4)} | ${sourceFile.lines[idx]}`,
         )
       }
-      lines.push('')
+      lines.push('', formatMarkdownCodeBlock(sourceLines.join('\n'), 'text'))
     }
+
+    return lines.join('\n')
   })
 
-  lines.push('')
-  lines.push('='.repeat(80))
+  sections.push(`## Stack trace\n\n${stackEntries.join('\n\n')}`)
 
-  return lines.join('\n')
+  return sections.join('\n\n')
 }
 
 export const DevFatalErrorPage = (props: { error?: ErrorWithRequestMeta }) => {
@@ -173,7 +187,7 @@ export const DevFatalErrorPage = (props: { error?: ErrorWithRequestMeta }) => {
   ) : null
 
   const handleCopyAll = async () => {
-    const errorText = formatErrorForClipboard(err, stack, typeName, msg, err)
+    const errorText = formatErrorForClipboard(stack, typeName, msg, err)
 
     try {
       await navigator.clipboard.writeText(errorText)
