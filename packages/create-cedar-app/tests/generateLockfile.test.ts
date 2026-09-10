@@ -23,6 +23,31 @@ const STUB_INSTALL_SCRIPT = `
 
 const LOCKFILE_NAMES = ['yarn.lock', 'package-lock.json', 'pnpm-lock.yaml']
 
+interface InstallReport {
+  entries: string[]
+  lockfileContent: string
+}
+
+function readReport(file: string): InstallReport {
+  const report: unknown = JSON.parse(fs.readFileSync(file, 'utf-8'))
+
+  if (
+    typeof report !== 'object' ||
+    report === null ||
+    !('entries' in report) ||
+    !Array.isArray(report.entries) ||
+    !report.entries.every((entry): entry is string => {
+      return typeof entry === 'string'
+    }) ||
+    !('lockfileContent' in report) ||
+    typeof report.lockfileContent !== 'string'
+  ) {
+    throw new Error(`Malformed install report: ${JSON.stringify(report)}`)
+  }
+
+  return { entries: report.entries, lockfileContent: report.lockfileContent }
+}
+
 let testDir: string
 let templateDir: string
 let overlayDir: string
@@ -56,8 +81,8 @@ afterEach(() => {
 test.each(LOCKFILE_NAMES)(
   'regenerates %s even when the overlay carries a stale one',
   async (lockfileName) => {
-    // The situation on a patch release branch: the previous release committed
-    // its generated lockfiles into the overlay dirs
+    // The overlay carries a stale lockfile for every package manager, as it
+    // does on a patch release branch
     for (const staleLockfileName of LOCKFILE_NAMES) {
       fs.writeFileSync(
         path.join(overlayDir, staleLockfileName),
@@ -74,10 +99,10 @@ test.each(LOCKFILE_NAMES)(
       { REPORT_FILE: reportFile, LOCKFILE_NAME: lockfileName },
     )
 
-    const report = JSON.parse(fs.readFileSync(reportFile, 'utf-8'))
+    const report = readReport(reportFile)
 
-    // The stale lockfiles never made it into the compose dir: the install
-    // only saw the empty placeholder for the lockfile it generates
+    // The stale overlay lockfiles are excluded from the compose dir: the
+    // install sees only the empty placeholder for the lockfile it generates
     expect(report.lockfileContent).toBe('')
     expect(report.entries).toEqual(['package.json', lockfileName, 'web'].sort())
 
@@ -103,7 +128,7 @@ test('excludes install artifacts from the template copy', async () => {
     { REPORT_FILE: reportFile, LOCKFILE_NAME: 'yarn.lock' },
   )
 
-  const report = JSON.parse(fs.readFileSync(reportFile, 'utf-8'))
+  const report = readReport(reportFile)
 
   expect(report.lockfileContent).toBe('')
   expect(report.entries).toEqual(['package.json', 'web', 'yarn.lock'].sort())
