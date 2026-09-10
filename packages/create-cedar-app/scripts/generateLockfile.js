@@ -43,11 +43,13 @@ export async function generateLockfile(
       recursive: true,
       filter: (src) => !EXCLUDED_TEMPLATE_ENTRIES.includes(path.basename(src)),
     })
-    // Filter out lockfiles here too: patch release branches are cut from the
-    // previous release's tag, where the overlay dirs carry that release's
-    // committed lockfiles. Copying one into the compose dir would make pnpm's
-    // CI-default frozen install refuse to update it (and would influence the
-    // other package managers' resolution), so always regenerate from scratch
+    // The overlay copy excludes the same entries, upholding the invariant
+    // that the compose dir never contains install artifacts or a
+    // pre-existing lockfile: the install below always resolves dependencies
+    // from the composed template contents and generates `lockfileName` from
+    // scratch. (Overlay dirs can carry the previous release's committed
+    // lockfiles - patch release branches are cut from the previous release's
+    // tag - which pnpm's CI-default frozen install would refuse to update.)
     fs.cpSync(overlayDir, tmpDir, {
       recursive: true,
       force: true,
