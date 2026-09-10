@@ -34,6 +34,7 @@ export async function generateLockfile(
   env = {},
 ) {
   console.log(`Generating ${lockfileName}...`)
+  const originalCwd = process.cwd()
   const tmpDir = fs.mkdtempSync(
     path.join(os.tmpdir(), `cedar-${packageManager}-`),
   )
@@ -70,6 +71,10 @@ export async function generateLockfile(
 
     return lockDest
   } finally {
+    // zx's `cd` changes the process's working directory (`within` only
+    // scopes zx's own cwd), and Windows can't remove a directory that is
+    // the process's cwd, so restore the original cwd first
+    process.chdir(originalCwd)
     fs.rmSync(tmpDir, { recursive: true, force: true })
   }
 }
