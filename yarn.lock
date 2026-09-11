@@ -2687,7 +2687,7 @@ __metadata:
   dependencies:
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@supabase/ssr": "npm:0.12.6"
+    "@supabase/ssr": "npm:0.12.7"
     "@types/aws-lambda": "npm:8.10.163"
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:9.2.4"
@@ -2734,7 +2734,7 @@ __metadata:
   dependencies:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@supabase/ssr": "npm:0.12.6"
+    "@supabase/ssr": "npm:0.12.7"
     "@supabase/supabase-js": "npm:2.116.0"
     "@types/react": "npm:^19.2.0"
     concurrently: "npm:9.2.4"
@@ -9333,13 +9333,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oxc-project/types@npm:^0.148.0":
-  version: 0.148.0
-  resolution: "@oxc-project/types@npm:0.148.0"
-  checksum: 10c0/23700196086ec996dcaf8cb494d0d378257a4f6f8ac4dfa0ee732bdf9a8a519da535cb33c8654ee6ea771872ae5801f9963c9d402767a4d13c2fa128cf7c42d2
-  languageName: node
-  linkType: hard
-
 "@oxc-project/types@npm:^0.149.0":
   version: 0.149.0
   resolution: "@oxc-project/types@npm:0.149.0"
@@ -11273,14 +11266,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@supabase/ssr@npm:0.12.6":
-  version: 0.12.6
-  resolution: "@supabase/ssr@npm:0.12.6"
+"@supabase/ssr@npm:0.12.7":
+  version: 0.12.7
+  resolution: "@supabase/ssr@npm:0.12.7"
   dependencies:
     cookie: "npm:^1.0.2"
   peerDependencies:
     "@supabase/supabase-js": ^2.114.0
-  checksum: 10c0/52fb7640d35a956246a8acabe5555d9d4f9327899275032cdb14ab18c517edc36959d5d4314ca2c5daf47b1021db5c4014c3e9763420f8e61da5c93752c38b9c
+  checksum: 10c0/d1c02a6a5bb49f138c10c13e465b3d35d0abac779702c234bbd0fb7c46af73ba792202c33a0d11875bb77cab8284da40c4c0d5cde6b4942bd262bcd8e163b635
   languageName: node
   linkType: hard
 
