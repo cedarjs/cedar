@@ -328,14 +328,14 @@ __metadata:
   linkType: hard
 
 "@eslint-community/eslint-plugin-eslint-comments@npm:^4.3.0":
-  version: 4.7.2
-  resolution: "@eslint-community/eslint-plugin-eslint-comments@npm:4.7.2"
+  version: 4.8.0
+  resolution: "@eslint-community/eslint-plugin-eslint-comments@npm:4.8.0"
   dependencies:
     escape-string-regexp: "npm:^4.0.0"
     ignore: "npm:^7.0.5"
   peerDependencies:
     eslint: ^6.0.0 || ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0
-  checksum: 10c0/196028413b216c069d2bd43281951a1031ab01e49045b39a5c903b137f8c5cb0fe46f445fbbe00f9ea8411242c55c642aa32488ed1ea8bd4b6c97344f329026c
+  checksum: 10c0/80117509c8f621a5856103586c1aa3410fa7e5f207e823378dbc1e6d297cfe38a0582f404c6232431fbeff99390c58b30836f7da2197d5356f7988e1b29e202c
   languageName: node
   linkType: hard
 
@@ -3227,7 +3227,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sort-package-json@npm:3.7.1":
+"sort-package-json@npm:3.7.1, sort-package-json@npm:^3.4.0":
   version: 3.7.1
   resolution: "sort-package-json@npm:3.7.1"
   dependencies:
@@ -3241,23 +3241,6 @@ __metadata:
   bin:
     sort-package-json: cli.js
   checksum: 10c0/2403faf859439c10a0562b02c34ff28480171fa8f3991bac6fe8652c8996cfe04f97409e220185f64eefb4c05a5fd83ba43a92d1c8d52a4cdb635bc81113faba
-  languageName: node
-  linkType: hard
-
-"sort-package-json@npm:^3.4.0":
-  version: 3.6.1
-  resolution: "sort-package-json@npm:3.6.1"
-  dependencies:
-    detect-indent: "npm:^7.0.2"
-    detect-newline: "npm:^4.0.1"
-    git-hooks-list: "npm:^4.1.1"
-    is-plain-obj: "npm:^4.1.0"
-    semver: "npm:^7.7.3"
-    sort-object-keys: "npm:^2.0.1"
-    tinyglobby: "npm:^0.2.15"
-  bin:
-    sort-package-json: cli.js
-  checksum: 10c0/169ea6b8fa233b77ff93f928c73392cbd53573b1faec24692b7b5afdd3487f1b1c3f390467628385dd64e3e01632b7be0c6b380fbb471c70d00c4c7884f44916
   languageName: node
   linkType: hard
 
