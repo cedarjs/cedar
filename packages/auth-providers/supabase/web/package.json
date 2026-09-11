@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@supabase/ssr": "0.12.6",
+    "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.116.0",
     "@types/react": "^19.2.0",
     "concurrently": "9.2.4",
