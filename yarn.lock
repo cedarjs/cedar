@@ -8239,33 +8239,33 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@neon/config-runtime@npm:1.2.2":
-  version: 1.2.2
-  resolution: "@neon/config-runtime@npm:1.2.2"
+"@neon/config-runtime@npm:1.2.3":
+  version: 1.2.3
+  resolution: "@neon/config-runtime@npm:1.2.3"
   dependencies:
-    "@neon/config": "npm:1.3.1"
+    "@neon/config": "npm:1.3.2"
     "@vercel/nft": "npm:^1.10.2"
     esbuild: "npm:^0.28.1"
     fflate: "npm:^0.8.3"
-  checksum: 10c0/639d35e935c6db2f098ab3b1921c0c6f3ce17961bfd7c6d71a857374f8879257963a65455b023a72125e8662eac072b4c8d4465dbabf7bbfb5fd2e8b27cea1f0
+  checksum: 10c0/4b67de888e31e8f003ebc950d74385be43e77cefe531a6282106bdcfa0a60fca9f5f0827fe15f44e63d194633b8d8a23b712590ba4fa81838721410d3dd285b1
   languageName: node
   linkType: hard
 
-"@neon/config@npm:1.3.1":
-  version: 1.3.1
-  resolution: "@neon/config@npm:1.3.1"
+"@neon/config@npm:1.3.2":
+  version: 1.3.2
+  resolution: "@neon/config@npm:1.3.2"
   dependencies:
-    "@neon/sdk": "npm:3.2.0"
+    "@neon/sdk": "npm:4.0.0"
     jiti: "npm:^2.7.0"
     zod: "npm:^4.4.3"
-  checksum: 10c0/b419d0ad33419e8efc003e406572b51ad230299e599e7575e1e5accba9d7a1539812b46bd851b32694c58ebd185e20f61d560353a772968b0fe2fdad6285cc54
+  checksum: 10c0/47c2cf09f137891aec08bd9e180b4645a3a4eddad5a84efc924915096d877977ef857c858fe4f58b01d3ff49fb842c88d542d528a6b783e4eb729b9b3ab93ae9
   languageName: node
   linkType: hard
 
-"@neon/sdk@npm:3.2.0":
-  version: 3.2.0
-  resolution: "@neon/sdk@npm:3.2.0"
-  checksum: 10c0/b11e70a90ca85ed0d32ae7037156ddf94871eabe3a093cb9db0241fc14fccab88d01b38f0a4e660befa23eed96fcf1442090ff740afff2e54d945d4a11a525b3
+"@neon/sdk@npm:4.0.0":
+  version: 4.0.0
+  resolution: "@neon/sdk@npm:4.0.0"
+  checksum: 10c0/1b3b7fd0269085101f05856f1f81a0ef8502833b104d31f2a70b48848edd25a3a707ac0a02d33e1ab0ed85d47d89bfae28d16ffe9bf41b624ca77b0adc9355c6
   languageName: node
   linkType: hard
 
@@ -23479,17 +23479,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"neon@npm:4.14.3":
-  version: 4.14.3
-  resolution: "neon@npm:4.14.3"
+"neon@npm:4.14.4":
+  version: 4.14.4
+  resolution: "neon@npm:4.14.4"
   dependencies:
     "@clack/core": "npm:0.4.2"
     "@clack/prompts": "npm:0.10.1"
     "@hono/node-server": "npm:2.0.4"
     "@napi-rs/keyring": "npm:1.3.0"
-    "@neon/config": "npm:1.3.1"
-    "@neon/config-runtime": "npm:1.2.2"
-    "@neon/sdk": "npm:3.2.0"
+    "@neon/config": "npm:1.3.2"
+    "@neon/config-runtime": "npm:1.2.3"
+    "@neon/sdk": "npm:4.0.0"
     "@segment/analytics-node": "npm:1.3.0"
     add-mcp: "npm:2.0.0"
     chalk: "npm:5.3.0"
@@ -23516,7 +23516,7 @@ __metadata:
       optional: true
   bin:
     neon: dist/cli.js
-  checksum: 10c0/4bfcbff57da9e7bb491584347c31b0f7b37bac9840e6cec62b6c63bdc2c507ed7b86336e93b19e435aefb9ef1892db9c181c2c357f51c954f4542def35fe4a4a
+  checksum: 10c0/ca209e21aec915a96e0f17a3f863d32a679bbf98c61a79c0955779e9086e087abc9bdfcb71c232b3c61677dda136358e74d072f1662610cc253f2a506a06373b
   languageName: node
   linkType: hard
 
@@ -27187,7 +27187,7 @@ __metadata:
     make-dir-cli: "npm:4.0.0"
     msw: "npm:2.15.0"
     ncp: "npm:2.0.0"
-    neon: "npm:4.14.3"
+    neon: "npm:4.14.4"
     nodemon: "npm:3.1.14"
     npm-packlist: "npm:10.0.4"
     nx: "npm:23.1.2"
