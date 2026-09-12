@@ -23479,9 +23479,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"neon@npm:4.14.4":
-  version: 4.14.4
-  resolution: "neon@npm:4.14.4"
+"neon@npm:4.14.5":
+  version: 4.14.5
+  resolution: "neon@npm:4.14.5"
   dependencies:
     "@clack/core": "npm:0.4.2"
     "@clack/prompts": "npm:0.10.1"
@@ -23516,7 +23516,7 @@ __metadata:
       optional: true
   bin:
     neon: dist/cli.js
-  checksum: 10c0/ca209e21aec915a96e0f17a3f863d32a679bbf98c61a79c0955779e9086e087abc9bdfcb71c232b3c61677dda136358e74d072f1662610cc253f2a506a06373b
+  checksum: 10c0/23156aab8c3c437a810bae99c05cd2a268a0987ab734be8689287d535b7201f18b1f7e38aba80229fdedbdc764a5bce907dfae6bf6abf6e7f44efb057124e3b5
   languageName: node
   linkType: hard
 
@@ -27187,7 +27187,7 @@ __metadata:
     make-dir-cli: "npm:4.0.0"
     msw: "npm:2.15.0"
     ncp: "npm:2.0.0"
-    neon: "npm:4.14.4"
+    neon: "npm:4.14.5"
     nodemon: "npm:3.1.14"
     npm-packlist: "npm:10.0.4"
     nx: "npm:23.1.2"
