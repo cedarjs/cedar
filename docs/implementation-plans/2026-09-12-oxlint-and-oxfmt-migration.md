@@ -26,7 +26,7 @@ the project-facing half to happen at all; the repo half stands on its own.
 
 `yarn lint` runs three ESLint invocations in parallel: `lint:fw` over
 `packages/` with the root `eslint.config.mjs`, `lint:templates` inside each
-`create-cedar-app` template, and `lint:crwrsca` inside `create-cedar-rsc-app`.
+`create-cedar-app` template, and `lint:ccrsca` inside `create-cedar-rsc-app`.
 `yarn format:check` runs `prettier . --check`. The pre-push git hook in
 `tasks/git-hooks/tasks.mts` runs both over the changed files, and CI runs both
 as separate steps.
@@ -92,8 +92,11 @@ The `create-cedar-app` template ships `prettier.config.cjs`
 Cedar's own code calls Prettier's Node API in 21 places to format code it
 generates: `packages/cli-helpers/src/lib/index.ts` (`getPrettierOptions` reads
 the project's `prettier.config.cjs` or `.mjs`; every generator and setup
-command's templates go through it), `packages/codemods/src/lib/prettify.ts`, and
-`packages/internal/src/generate/{possibleTypes,trustedDocuments}.ts`. Because of
+command's templates go through it), the setup helpers
+`packages/cli/src/lib/configureStorybook.ts` and
+`packages/cli/src/lib/merge/index.ts`, `packages/codemods/src/lib/prettify.ts`,
+and `packages/internal/src/generate/{possibleTypes,trustedDocuments}.ts`. Because
+of
 that, `prettier` is a runtime dependency of `@cedarjs/cli`,
 `@cedarjs/cli-helpers`, `@cedarjs/codemods`, `@cedarjs/internal` and
 `@cedarjs/eslint-config`, and every Cedar project installs it.
@@ -147,11 +150,17 @@ project half is postponed.
 
 ### Keep ESLint for type-aware rules until tsgolint is stable
 
-The type-aware rules catch real bugs in the framework (`no-floating-promises`,
-`no-misused-promises`, the `no-unsafe-*` family). tsgolint covers them but
-depends on TypeScript 7 and is not yet declared stable. The repo runs oxlint for
-everything else and a much smaller ESLint config with only the type-checked
-presets until then. Two linters is a temporary state with a defined exit.
+The root config extends the type-checked presets but turns most of their
+headline rules off with a TODO to revisit (`no-floating-promises`,
+`no-misused-promises`, the `no-unsafe-*` family, `require-await` and others).
+The rules that stay on still need type information and still catch real bugs:
+`await-thenable`, `no-unnecessary-type-assertion`, `only-throw-error`,
+`no-for-in-array`, `no-implied-eval` and the type-checked stylistic rules.
+`await-thenable` is what flagged the stale `@types/mjml-core` resolution on the
+v7 release branch. tsgolint covers these rules but depends on TypeScript 7 and
+is not yet declared stable. The repo runs oxlint for everything else and a much
+smaller ESLint config with only the type-checked presets until then. Two
+linters is a temporary state with a defined exit.
 
 ### `import/order` moves to the formatter
 
@@ -210,8 +219,9 @@ of every shipped package.
   `ignorePatterns` reduced to `**/dist`, `packages/testing/config`,
   `/__fixtures__` and `**/*.sh`.
 - `package.json` scripts: `lint` runs `oxlint` plus `lint:types`; `format` and
-  `format:check` run `oxfmt` and `oxfmt --check`; `lint:templates` and
-  `lint:crwrsca` unchanged until their configs move.
+  `format:check` run `oxfmt` and `oxfmt --check`; `lint:templates` unchanged
+  until phase 4 replaces the template configs; `lint:ccrsca` unchanged, since
+  `create-cedar-rsc-app` is outside this plan.
 - `tasks/git-hooks/tasks.mts` runs `oxlint` and `oxfmt` over the changed files
   instead of `eslint` and `prettier`.
 - `.github/workflows/ci.yml` lint and format steps call the new scripts.
@@ -292,8 +302,9 @@ pre-push hook runs in under the time the Prettier hook took.
    `stylisticTypeChecked` with the existing rule adjustments, and only the
    plugins those need. Rename the script to `lint:types`.
 6. `yarn lint` runs `oxlint` and `lint:types`. Update the git hook and CI.
-   `lint:templates` and `lint:crwrsca` keep running ESLint until phase 4
-   replaces their configs.
+   `lint:templates` keeps running ESLint until phase 4 replaces the template
+   configs. `lint:ccrsca` keeps running ESLint indefinitely; the
+   `create-cedar-rsc-app` package is outside this plan.
 
 Exit criteria: `yarn lint` green, no rule from the old config silently lost
 (diff the effective rule lists), oxlint's wall-clock time recorded in the PR.
@@ -313,7 +324,7 @@ missing rules being ones the repo does not use.
 Gated on: oxlint JS plugins out of alpha (or an explicit decision to ship on
 alpha), oxfmt stable.
 
-1. Create the oxlint config package and the template files. Lint the four
+1. Create the oxlint config package and the template files. Lint the
    `create-cedar-app` templates with them; that replaces `lint:templates`.
 2. Port `yarn cedar lint`, add `yarn cedar format`, swap the `@cedarjs/core`
    bins.
@@ -377,6 +388,11 @@ Phase 4 (projects):
   `packages/cli/src/lib/index.ts` (`getPrettierOptions`)
 - `packages/cli-helpers/src/lib/index.ts` and the setup handlers under
   `packages/cli/src/commands/setup/` that call `format`
+- `packages/cli/src/lib/configureStorybook.ts` (Mantine, Chakra UI and i18n
+  setup) and `packages/cli/src/lib/merge/index.ts`
+- `packages/cli/src/testUtils/index.ts` and
+  `packages/codemods/src/testUtils/index.ts`, which format expected output in
+  tests
 - `packages/codemods/src/lib/prettify.ts`,
   `packages/internal/src/generate/possibleTypes.ts`,
   `packages/internal/src/generate/trustedDocuments.ts`
