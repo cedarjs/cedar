@@ -208,8 +208,12 @@ config, it translates the options the way `oxfmt --migrate prettier` does:
 supported options map one to one, `prettier-plugin-tailwindcss` maps to
 `sortTailwindcss`, and any other plugin produces a warning naming it and is
 skipped. Generated output therefore depends only on options oxfmt understands,
-and never on a Prettier plugin. Prettier leaves the dependency list of every
-shipped package.
+and never on a Prettier plugin. The two copies differ today and the merged
+function keeps both behaviours, with a test for each: the cli-helpers copy
+resolves a relative `tailwindConfig` path against the project root so
+generators work under `--cwd`, and the CLI copy returns the template's default
+options when running under Vitest so generator snapshots do not depend on the
+machine. Prettier leaves the dependency list of every shipped package.
 
 ## Target design
 
@@ -234,7 +238,11 @@ shipped package.
   until phase 4 replaces the template configs; `lint:ccrsca` unchanged, since
   `create-cedar-rsc-app` is outside this plan.
 - `tasks/git-hooks/tasks.mts` runs `oxlint` and `oxfmt` over the changed files
-  instead of `eslint` and `prettier`.
+  instead of `eslint` and `prettier`. Its package-specific paths stay as they
+  are: changes under the `create-cedar-app` templates still run
+  `lint:templates`, and changes under `create-cedar-rsc-app` still run
+  `lint:ccrsca` and format with that package's own Prettier config, since both
+  are excluded from the root configs.
 - `.github/workflows/ci.yml` lint and format steps call the new scripts.
 - `.prettierignore`, `prettier.config.cjs`, `prettier-plugin-*`,
   `eslint-plugin-import-x`, `eslint-plugin-react*` and `eslint-plugin-jsx-a11y`
