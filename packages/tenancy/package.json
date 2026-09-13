@@ -65,8 +65,8 @@
     "jsdom": "27.4.0",
     "prisma": "7.10.0",
     "publint": "0.3.24",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
     "tstyche": "5.0.2",
     "typescript": "5.9.3",
     "vitest": "4.1.11",
@@ -77,7 +77,7 @@
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/router": "workspace:*",
     "@cedarjs/web": "workspace:*",
-    "react": "19.2.8"
+    "react": "19.3.0"
   },
   "peerDependenciesMeta": {
     "@apollo/client": {
