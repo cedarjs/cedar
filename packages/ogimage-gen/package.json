@@ -46,8 +46,8 @@
     "@cedarjs/router": "workspace:*",
     "@cedarjs/web": "workspace:*",
     "@playwright/test": "1.63.0",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
     "ts-toolbelt": "9.6.0",
     "typescript": "5.9.3",
     "vite": "7.3.6",
@@ -55,8 +55,8 @@
   },
   "peerDependencies": {
     "@cedarjs/router": "workspace:*",
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   },
   "engines": {
     "node": ">=24"

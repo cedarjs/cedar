@@ -80,8 +80,8 @@
     "jsdom": "27.4.0",
     "prisma": "7.10.0",
     "publint": "0.3.24",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
     "typescript": "5.9.3",
     "vitest": "4.1.11",
     "zx": "8.8.5"
@@ -98,7 +98,7 @@
     "@uppy/react": "^6.0.0",
     "@uppy/xhr-upload": "^6.0.0",
     "fastify": "5.12.3",
-    "react": "19.2.8"
+    "react": "19.3.0"
   },
   "peerDependenciesMeta": {
     "@apollo/client": {

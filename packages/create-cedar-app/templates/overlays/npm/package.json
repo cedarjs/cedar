@@ -27,7 +27,7 @@
     "node": "24.x"
   },
   "overrides": {
-    "react-is": "19.2.8",
+    "react-is": "19.3.0",
     "vite": "7.3.6"
   }
 }

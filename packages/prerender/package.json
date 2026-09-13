@@ -74,8 +74,8 @@
   "peerDependencies": {
     "@cedarjs/router": "workspace:*",
     "@cedarjs/web": "workspace:*",
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   },
   "engines": {
     "node": ">=24"
