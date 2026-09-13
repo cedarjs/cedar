@@ -90,9 +90,10 @@ The `create-cedar-app` template ships `prettier.config.cjs`
 `prettier-plugin-tailwindcss` to the project's Prettier config.
 
 Cedar's own code calls Prettier's Node API in 21 places to format code it
-generates: `packages/cli-helpers/src/lib/index.ts` (`getPrettierOptions` reads
-the project's `prettier.config.cjs` or `.mjs`; every generator and setup
-command's templates go through it), the setup helpers
+generates: `getPrettierOptions`, which exists as two copies in
+`packages/cli-helpers/src/lib/index.ts` and `packages/cli/src/lib/index.ts`,
+reads the project's `prettier.config.cjs` or `.mjs`, and every generator and
+setup command's templates go through it; the setup helpers
 `packages/cli/src/lib/configureStorybook.ts` and
 `packages/cli/src/lib/merge/index.ts`, `packages/codemods/src/lib/prettify.ts`,
 and `packages/internal/src/generate/{possibleTypes,trustedDocuments}.ts`. Because
@@ -119,9 +120,10 @@ that, `prettier` is a runtime dependency of `@cedarjs/cli`,
   selectors, `sourceCode` text and token access, scope analysis and
   `node.parent`. Labelled **alpha**. No type-aware rules through this path.
 - **Type-aware linting** through the separate `oxlint-tsgolint` package, enabled
-  with `--type-aware`. Implements 59 of typescript-eslint's 61 type-aware rules.
-  Requires TypeScript 7 (typescript-go). Documented as "rule coverage is
-  incomplete (but very close)" with high memory use on very large codebases.
+  with `--type-aware` or `options.typeAware: true` in the config. Declared
+  stable on 22 July 2026; tsgolint v7 tracks TypeScript 7.0.x and implements 59
+  of typescript-eslint's 61 type-aware rules. Requires TypeScript 7
+  (typescript-go). The docs note high memory use on very large codebases.
 - `// oxlint-disable` comments and IDE support exist.
 
 ### oxfmt
@@ -148,7 +150,7 @@ Nothing users see depends on how the framework repo lints itself. The repo half
 is done and verified before the project half starts, and stays done even if the
 project half is postponed.
 
-### Keep ESLint for type-aware rules until tsgolint is stable
+### Keep ESLint for type-aware rules until the repo is on TypeScript 7
 
 The root config extends the type-checked presets but turns most of their
 headline rules off with a TODO to revisit (`no-floating-promises`,
@@ -156,11 +158,13 @@ headline rules off with a TODO to revisit (`no-floating-promises`,
 The rules that stay on still need type information and still catch real bugs:
 `await-thenable`, `no-unnecessary-type-assertion`, `only-throw-error`,
 `no-for-in-array`, `no-implied-eval` and the type-checked stylistic rules.
-`await-thenable` is what flagged the stale `@types/mjml-core` resolution on the
-v7 release branch. tsgolint covers these rules but depends on TypeScript 7 and
-is not yet declared stable. The repo runs oxlint for everything else and a much
-smaller ESLint config with only the type-checked presets until then. Two
-linters is a temporary state with a defined exit.
+`await-thenable` in particular catches an `await` on a value whose type is not
+a promise, which is the kind of mismatch a dependency major introduces when a
+function turns synchronous or asynchronous. tsgolint is stable and covers these
+rules, but it is built on TypeScript 7 and the repo is on TypeScript 5.9. The
+repo runs oxlint for everything else and a much smaller ESLint config with only
+the type-checked presets until the TypeScript upgrade lands. Two linters is a
+temporary state with a defined exit.
 
 ### `import/order` moves to the formatter
 
@@ -197,10 +201,15 @@ ship it is gated on its status at the time.
 
 ### Generators format with oxfmt, reading the project's oxfmt config
 
-The 21 Prettier call sites move to oxfmt's `format()`. `getPrettierOptions`
-becomes `getFormatOptions` and reads `.oxfmtrc.json` (falling back to a Prettier
-config for projects that have not migrated). Prettier leaves the dependency list
-of every shipped package.
+The 21 Prettier call sites move to oxfmt's `format()`. The two copies of
+`getPrettierOptions` become one `getFormatOptions` in `@cedarjs/cli-helpers`
+that reads `.oxfmtrc.json`. For a project that still has only a Prettier
+config, it translates the options the way `oxfmt --migrate prettier` does:
+supported options map one to one, `prettier-plugin-tailwindcss` maps to
+`sortTailwindcss`, and any other plugin produces a warning naming it and is
+skipped. Generated output therefore depends only on options oxfmt understands,
+and never on a Prettier plugin. Prettier leaves the dependency list of every
+shipped package.
 
 ## Target design
 
@@ -217,7 +226,9 @@ of every shipped package.
   `printWidth: 80`, `sortImports` configured to match the current groups,
   `sortPackageJson` left on, the `jsonc`/`trailingComma: 'none'` override kept,
   `ignorePatterns` reduced to `**/dist`, `packages/testing/config`,
-  `/__fixtures__` and `**/*.sh`.
+  `/__fixtures__`, `**/*.sh` and `/packages/create-cedar-rsc-app`. The last one
+  keeps the rsc-app's own Prettier setup authoritative, since that package is
+  outside this plan; the root oxlint run gets the same exclusion.
 - `package.json` scripts: `lint` runs `oxlint` plus `lint:types`; `format` and
   `format:check` run `oxfmt` and `oxfmt --check`; `lint:templates` unchanged
   until phase 4 replaces the template configs; `lint:ccrsca` unchanged, since
@@ -226,17 +237,19 @@ of every shipped package.
   instead of `eslint` and `prettier`.
 - `.github/workflows/ci.yml` lint and format steps call the new scripts.
 - `.prettierignore`, `prettier.config.cjs`, `prettier-plugin-*`,
-  `eslint-plugin-import-x`, `eslint-plugin-react*`, `eslint-plugin-jsx-a11y` and
-  `eslint-plugin-unused-imports` removed from the root `package.json`. `eslint`,
-  `@eslint/js` and `typescript-eslint` stay for `lint:types`.
+  `eslint-plugin-import-x`, `eslint-plugin-react*` and `eslint-plugin-jsx-a11y`
+  removed from the root `package.json`. `eslint-plugin-unused-imports` stays as
+  long as `.oxlintrc.json` loads it (see phase 2 step 2). `eslint`, `@eslint/js`
+  and `typescript-eslint` stay for `lint:types`.
 
 ### Cedar projects (v8)
 
 - `@cedarjs/eslint-config` is replaced by an oxlint config package (working name
-  `@cedarjs/oxlint-config`) exporting a base `.oxlintrc.json` that projects
-  extend with `"extends"`. It enables the same plugins and
-  `jsPlugins: ["@cedarjs/eslint-plugin"]`.
-- The template ships `.oxlintrc.json` and `.oxfmtrc.json` instead of
+  `@cedarjs/oxlint-config`) that exports a config object. Projects import it
+  from an `oxlint.config.ts`; oxlint's JSON `extends` only resolves file paths,
+  not package names, so the JSON form is not used for the shared config. It
+  enables the same plugins and `jsPlugins: ["@cedarjs/eslint-plugin"]`.
+- The template ships `oxlint.config.ts` and `.oxfmtrc.json` instead of
   `eslint.config.js` and `prettier.config.cjs`. `printWidth: 80`,
   `trailingComma: "es5"`, the `Routes.*` override, `sortImports` on with Cedar's
   groups (`src/`, `$api/`, `@cedarjs/*`).
@@ -250,8 +263,8 @@ of every shipped package.
   generator, setup, codemod and `internal/generate` call sites use oxfmt's
   `format()`.
 - An upgrade script for 8.x converts `prettier.config.cjs` to `.oxfmtrc.json`
-  (reusing `oxfmt --migrate prettier`), writes `.oxlintrc.json` extending the
-  Cedar config, removes `eslint.config.js`, `eslint-plugin-prettier` and
+  (reusing `oxfmt --migrate prettier`), writes an `oxlint.config.ts` importing
+  the Cedar config, removes `eslint.config.js`, `eslint-plugin-prettier` and
   `prettier-plugin-tailwindcss` from the project, and reports anything it could
   not translate (custom ESLint rules or plugins in the project's own config).
 
@@ -262,16 +275,19 @@ of every shipped package.
 1. Add `oxfmt` as a root dev dependency. Run `oxfmt --migrate prettier`, then
    set `printWidth: 80` and the ignore patterns.
 2. Run `oxfmt` over the tree and check the diff. It should be empty for JS/TS;
-   review the Markdown, YAML, TOML and CSS diffs by hand. Anything that is not a
-   pure whitespace/quote-style change is a bug to report upstream before
-   continuing.
+   review the Markdown, YAML, TOML and CSS diffs by hand. `package.json` files
+   will change field order, because `sortPackageJson` orders fields differently
+   from `prettier-plugin-packagejson`; review that once and accept it. Any other
+   change that is not a pure whitespace/quote-style change is a bug to report
+   upstream before continuing.
 3. Turn on `sortImports` with groups that reproduce the current
-   `import-x/ order` config. Run again; the diff is the one-time import reorder.
+   `import-x/order` config. Run again; the diff is the one-time import reorder.
    Commit separately.
 4. Enable oxlint's `curly` rule with `--fix` in the same PR to replace
-   `prettier-plugin-curly`, or defer to phase 2 and keep the plugin's output
-   stable meanwhile. (Formatting with oxfmt does not remove braces, so nothing
-   regresses if this waits.)
+   `prettier-plugin-curly`. This has to happen before step 5: the plugin needs
+   Prettier to run, so once Prettier is gone nothing adds braces to new code.
+   (Formatting with oxfmt does not remove existing braces, so the tree does not
+   regress in between.)
 5. Switch the `format` scripts, the git hook and CI. Remove Prettier and its
    plugins from the root `package.json`. Delete `.prettierignore` and
    `prettier.config.cjs`.
@@ -292,7 +308,7 @@ pre-push hook runs in under the time the Prettier hook took.
    `eslint-plugin-unused-imports` through `jsPlugins`. If `unused-imports` is
    fully covered by oxlint's `no-unused-vars` autofix, drop it instead.
 3. Remove `import-x/order` (now handled by oxfmt) and
-   `import-x/ no-extraneous-dependencies` (now
+   `import-x/no-extraneous-dependencies` (now
    `import/no-extraneous-dependencies`).
 4. Run oxlint over `packages/`. Triage every new finding: a rule that fires
    where ESLint did not is either a stricter default (adjust the config) or an
@@ -307,17 +323,24 @@ pre-push hook runs in under the time the Prettier hook took.
    `create-cedar-rsc-app` package is outside this plan.
 
 Exit criteria: `yarn lint` green, no rule from the old config silently lost
-(diff the effective rule lists), oxlint's wall-clock time recorded in the PR.
+(diff the effective rule lists), and every plugin loaded through `jsPlugins`
+verified with a fixture file that must produce that plugin's diagnostic. A
+plugin that fails the fixture check keeps its rules in the ESLint config until
+it passes. oxlint's wall-clock time recorded in the PR.
 
 ### Phase 3 — Type-aware rules on tsgolint
 
-Gated on: tsgolint declared stable, the repo on TypeScript 7, and the two
-missing rules being ones the repo does not use.
+Gated on: the repo on TypeScript 7, and the two type-aware rules tsgolint
+does not implement being ones the repo does not use.
 
-1. Add `oxlint-tsgolint`, enable `typeAware` in `.oxlintrc.json`, port the
-   type-checked rule adjustments.
+1. Add `oxlint-tsgolint`, set `options.typeAware: true` in the root
+   `.oxlintrc.json`, port the type-checked rule adjustments.
 2. Delete `eslint.config.mjs`, `tsconfig.eslint.json`, `lint:types`, and the
    remaining ESLint dev dependencies at the root.
+
+Exit criteria, checked before step 2: with `typeAware` on, each type-checked
+rule the repo keeps enabled reports the same finding as `lint:types` on a
+fixture that violates it.
 
 ### Phase 4 — Cedar projects (v8)
 
@@ -384,10 +407,11 @@ Phase 4 (projects):
 - `packages/eslint-config/` (replaced), `packages/eslint-plugin/` (loaded as a
   JS plugin, package name unchanged)
 - `packages/core/package.json` (bins), `packages/core/src/bins/`
-- `packages/cli/src/commands/lint.ts`, new `format.ts`,
-  `packages/cli/src/lib/index.ts` (`getPrettierOptions`)
-- `packages/cli-helpers/src/lib/index.ts` and the setup handlers under
-  `packages/cli/src/commands/setup/` that call `format`
+- `packages/cli/src/commands/lint.ts`, new `format.ts`
+- `packages/cli/src/lib/index.ts` and `packages/cli-helpers/src/lib/index.ts`
+  (the two `getPrettierOptions` copies, merged into `getFormatOptions`), and
+  the setup handlers under `packages/cli/src/commands/setup/` that call
+  `format`
 - `packages/cli/src/lib/configureStorybook.ts` (Mantine, Chakra UI and i18n
   setup) and `packages/cli/src/lib/merge/index.ts`
 - `packages/cli/src/testUtils/index.ts` and
