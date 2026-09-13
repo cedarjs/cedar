@@ -23,6 +23,8 @@ const exclude = [
   '**/.cedar/**',
   '**/.redwood/**',
   '**/web/public/**',
+  '**/public/storybook/**',
+  '**/storybook-static/**',
 ]
 
 interface PackageJson {
