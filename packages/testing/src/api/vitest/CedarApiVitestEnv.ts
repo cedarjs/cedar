@@ -73,7 +73,7 @@ const CedarApiVitestEnvironment: Environment = {
     // DATABASE_URL. See https://github.com/cedarjs/cedar/issues/2622.
     if (
       testConfig.autoConsentToDbReset &&
-      !env.PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION
+      !('PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION' in env)
     ) {
       env.PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION =
         "Cedar auto-consent: cedar.toml's [test] autoConsentToDbReset is " +

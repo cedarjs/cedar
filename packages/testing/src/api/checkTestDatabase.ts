@@ -101,6 +101,15 @@ interface DatabaseIdentity {
   host?: string
   port?: string
   database?: string
+  /**
+   * The name to check against the test/e2e naming convention and any
+   * accepted-name override — for every provider but sqlite this is the same
+   * as `database`. For sqlite it's the file's basename, not its full
+   * resolved path, so a database living in a directory that happens to
+   * contain "test" (e.g. `file:./test-fixtures/dev.db`) isn't mistaken for
+   * a test database by name.
+   */
+  name?: string
 }
 
 function parseSqlServerIdentity(url: string): DatabaseIdentity | undefined {
@@ -121,6 +130,7 @@ function parseSqlServerIdentity(url: string): DatabaseIdentity | undefined {
     host: host.toLowerCase(),
     port,
     database,
+    name: database,
   }
 }
 
@@ -136,6 +146,7 @@ function parseUriIdentity(url: string): DatabaseIdentity | undefined {
       host: parsed.hostname.toLowerCase() || undefined,
       port: parsed.port || undefined,
       database,
+      name: database,
     }
   } catch {
     return undefined
@@ -155,7 +166,12 @@ function parseDatabaseIdentity(url: string): DatabaseIdentity | undefined {
   }
 
   if (scheme === 'file:') {
-    return { scheme, database: path.resolve(url.slice('file:'.length)) }
+    const filePath = url.slice('file:'.length)
+    return {
+      scheme,
+      database: path.resolve(filePath),
+      name: path.basename(filePath),
+    }
   }
 
   if (scheme === 'sqlserver:') {
@@ -244,7 +260,7 @@ export function checkTestDatabaseIdentity(
     }
   }
 
-  const databaseName = testIdentity?.database
+  const databaseName = testIdentity?.name
 
   if (databaseName && TEST_DATABASE_NAME_PATTERN.test(databaseName)) {
     return

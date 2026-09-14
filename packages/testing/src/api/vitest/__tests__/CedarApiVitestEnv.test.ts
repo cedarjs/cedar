@@ -140,4 +140,22 @@ describe('setup', () => {
       'yes, do it',
     )
   })
+
+  it('preserves an explicitly empty consent value instead of overwriting it', async () => {
+    process.env.DATABASE_URL = 'postgres://host:5432/myapp'
+    process.env.TEST_DATABASE_URL = 'postgres://host:5432/myapp_test'
+    process.env.PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION = ''
+    getPrismaDatasourceProvider.mockResolvedValue('postgresql')
+    getConfig.mockReturnValue({
+      test: { ...DEFAULT_TEST_CONFIG, autoConsentToDbReset: true },
+    })
+    const CedarApiVitestEnvironment = await loadEnvironment()
+
+    await CedarApiVitestEnvironment.setup()
+
+    const [, , options] = vi.mocked(execa.sync).mock.calls[0]
+    expect(options?.env?.PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION).toEqual(
+      '',
+    )
+  })
 })

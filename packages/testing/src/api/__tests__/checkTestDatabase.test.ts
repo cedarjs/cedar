@@ -188,6 +188,34 @@ describe('checkTestDatabaseIdentity', () => {
     ).toThrow(/points at the same database as DATABASE_URL/)
   })
 
+  it('throws for a sqlite database whose directory, but not filename, contains "test"', () => {
+    expect(() =>
+      checkTestDatabaseIdentity('file:./test-fixtures/dev.db', {
+        usedFallback: false,
+        mainDatabaseUrl: 'file:./db/dev.db',
+      }),
+    ).toThrow(/doesn't look like a dedicated test database/)
+  })
+
+  it('does not throw for a sqlite database whose filename contains "test"', () => {
+    expect(() =>
+      checkTestDatabaseIdentity('file:./fixtures/api_test.db', {
+        usedFallback: false,
+        mainDatabaseUrl: 'file:./db/dev.db',
+      }),
+    ).not.toThrow()
+  })
+
+  it('accepts a sqlite database via acceptedTestDatabaseNames matched by filename, not full path', () => {
+    expect(() =>
+      checkTestDatabaseIdentity('file:./ci-fixtures/my_app_ci.db', {
+        usedFallback: false,
+        mainDatabaseUrl: 'file:./db/dev.db',
+        acceptedTestDatabaseNames: ['my_app_ci.db'],
+      }),
+    ).not.toThrow()
+  })
+
   it('does not throw when there is no DATABASE_URL to compare against', () => {
     expect(() =>
       checkTestDatabaseIdentity('postgres://host:5432/myapp_test', {
