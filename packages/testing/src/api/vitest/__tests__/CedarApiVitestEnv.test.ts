@@ -27,7 +27,6 @@ vi.mock('@cedarjs/project-config/packageManager', () => ({
 
 const DEFAULT_TEST_CONFIG = {
   autoConsentToDbReset: false,
-  acceptedTestDatabaseNames: [] as string[],
 }
 
 async function loadEnvironment() {
@@ -52,7 +51,6 @@ beforeEach(() => {
   delete process.env.SKIP_DB_PUSH
   delete process.env.TEST_DATABASE_URL
   delete process.env.TEST_DATABASE_STRATEGY
-  delete process.env.TEST_DATABASE_ACCEPT_TARGET
   delete process.env.CEDAR_APP_DATABASE_URL
   delete process.env.PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION
   delete process.env.DATABASE_URL

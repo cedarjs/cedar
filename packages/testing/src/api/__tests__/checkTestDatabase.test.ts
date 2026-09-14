@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { vi, describe, it, expect, beforeEach } from 'vitest'
 
 const { getPrismaDatasourceProvider } = vi.hoisted(() => ({
   getPrismaDatasourceProvider: vi.fn(),
@@ -99,187 +99,93 @@ describe('checkTestDatabaseUrlMatchesProvider', () => {
 })
 
 describe('checkTestDatabaseIdentity', () => {
-  const originalAcceptTarget = process.env.TEST_DATABASE_ACCEPT_TARGET
-
-  beforeEach(() => {
-    delete process.env.TEST_DATABASE_ACCEPT_TARGET
-  })
-
-  afterEach(() => {
-    if (originalAcceptTarget === undefined) {
-      delete process.env.TEST_DATABASE_ACCEPT_TARGET
-    } else {
-      process.env.TEST_DATABASE_ACCEPT_TARGET = originalAcceptTarget
-    }
-  })
-
-  it('is a no-op when the sqlite fallback was used and differs from DATABASE_URL', () => {
+  it('does not throw when there is no DATABASE_URL to compare against', () => {
     expect(() =>
-      checkTestDatabaseIdentity('file:./.cedar/test.db', {
-        usedFallback: true,
-        mainDatabaseUrl: 'file:./db/dev.db',
-      }),
+      checkTestDatabaseIdentity('postgres://host:5432/myapp_test', undefined),
     ).not.toThrow()
   })
 
-  it('still refuses the sqlite fallback when it happens to equal DATABASE_URL', () => {
+  it('does not throw when the test and main databases differ', () => {
     expect(() =>
-      checkTestDatabaseIdentity('file:./.cedar/test.db', {
-        usedFallback: true,
-        mainDatabaseUrl: 'file:./.cedar/test.db',
-      }),
-    ).toThrow(/points at the same database as DATABASE_URL/)
-  })
-
-  it('does not throw when the test database name contains "test"', () => {
-    expect(() =>
-      checkTestDatabaseIdentity('postgres://host:5432/myapp_test', {
-        usedFallback: false,
-        mainDatabaseUrl: 'postgres://host:5432/myapp',
-      }),
-    ).not.toThrow()
-  })
-
-  it('does not throw when the test database name contains "e2e"', () => {
-    expect(() =>
-      checkTestDatabaseIdentity('postgres://host:5432/myapp_e2e', {
-        usedFallback: false,
-        mainDatabaseUrl: 'postgres://host:5432/myapp',
-      }),
+      checkTestDatabaseIdentity(
+        'postgres://host:5432/myapp_test',
+        'postgres://host:5432/myapp',
+      ),
     ).not.toThrow()
   })
 
   it('throws when the test URL is byte-identical to DATABASE_URL', () => {
     expect(() =>
-      checkTestDatabaseIdentity('postgres://host:5432/myapp_test', {
-        usedFallback: false,
-        mainDatabaseUrl: 'postgres://host:5432/myapp_test',
-      }),
+      checkTestDatabaseIdentity(
+        'postgres://host:5432/myapp_test',
+        'postgres://host:5432/myapp_test',
+      ),
     ).toThrow(/points at the same database as DATABASE_URL/)
   })
 
   it('throws when the test URL resolves to the same host/port/database as DATABASE_URL, even with different credentials', () => {
     expect(() =>
       checkTestDatabaseIdentity(
-        'postgres://tester:pw@host:5432/myapp_test?schema=public',
-        {
-          usedFallback: false,
-          mainDatabaseUrl: 'postgres://admin:secret@host:5432/myapp_test',
-        },
+        'postgres://tester:pw@host:5432/myapp?schema=public',
+        'postgres://admin:secret@host:5432/myapp',
       ),
     ).toThrow(/points at the same database as DATABASE_URL/)
   })
 
   it('treats postgres: and postgresql: as the same provider when comparing identity', () => {
     expect(() =>
-      checkTestDatabaseIdentity('postgresql://host:5432/myapp_test', {
-        usedFallback: false,
-        mainDatabaseUrl: 'postgres://host:5432/myapp_test',
-      }),
+      checkTestDatabaseIdentity(
+        'postgresql://host:5432/myapp',
+        'postgres://host:5432/myapp',
+      ),
     ).toThrow(/points at the same database as DATABASE_URL/)
   })
 
   it('treats an explicit default port as identical to an omitted one', () => {
     expect(() =>
-      checkTestDatabaseIdentity('postgres://host:5432/myapp_test', {
-        usedFallback: false,
-        mainDatabaseUrl: 'postgres://host/myapp_test',
-      }),
+      checkTestDatabaseIdentity(
+        'postgres://host:5432/myapp',
+        'postgres://host/myapp',
+      ),
     ).toThrow(/points at the same database as DATABASE_URL/)
+  })
+
+  it('does not throw when only the port differs', () => {
+    expect(() =>
+      checkTestDatabaseIdentity(
+        'postgres://host:5433/myapp',
+        'postgres://host:5432/myapp',
+      ),
+    ).not.toThrow()
+  })
+
+  it('does not throw when only the host differs (e.g. a separate Neon branch or Supabase project sharing a database name)', () => {
+    expect(() =>
+      checkTestDatabaseIdentity(
+        'postgres://user:pw@ep-test-branch.us-east-2.aws.neon.tech/neondb',
+        'postgres://user:pw@ep-main-branch.us-east-2.aws.neon.tech/neondb',
+      ),
+    ).not.toThrow()
   })
 
   it('throws when two sqlite URLs resolve to the same file', () => {
     expect(() =>
-      checkTestDatabaseIdentity('file:./db/dev.db', {
-        usedFallback: false,
-        mainDatabaseUrl: 'file:./db/dev.db',
-      }),
+      checkTestDatabaseIdentity('file:./db/dev.db', 'file:./db/dev.db'),
     ).toThrow(/points at the same database as DATABASE_URL/)
   })
 
-  it('throws for a sqlite database whose directory, but not filename, contains "test"', () => {
+  it('does not throw for two different sqlite files', () => {
     expect(() =>
-      checkTestDatabaseIdentity('file:./test-fixtures/dev.db', {
-        usedFallback: false,
-        mainDatabaseUrl: 'file:./db/dev.db',
-      }),
-    ).toThrow(/doesn't look like a dedicated test database/)
-  })
-
-  it('does not throw for a sqlite database whose filename contains "test"', () => {
-    expect(() =>
-      checkTestDatabaseIdentity('file:./fixtures/api_test.db', {
-        usedFallback: false,
-        mainDatabaseUrl: 'file:./db/dev.db',
-      }),
+      checkTestDatabaseIdentity('file:./db/test.db', 'file:./db/dev.db'),
     ).not.toThrow()
   })
 
-  it('accepts a sqlite database via acceptedTestDatabaseNames matched by extension-less filename', () => {
+  it('redacts credentials in the thrown error message', () => {
     expect(() =>
-      checkTestDatabaseIdentity('file:./ci-fixtures/my_app_ci.db', {
-        usedFallback: false,
-        mainDatabaseUrl: 'file:./db/dev.db',
-        acceptedTestDatabaseNames: ['my_app_ci'],
-      }),
-    ).not.toThrow()
-  })
-
-  it('does not throw when there is no DATABASE_URL to compare against', () => {
-    expect(() =>
-      checkTestDatabaseIdentity('postgres://host:5432/myapp_test', {
-        usedFallback: false,
-        mainDatabaseUrl: undefined,
-      }),
-    ).not.toThrow()
-  })
-
-  it('throws when the database name looks nothing like a test database', () => {
-    expect(() =>
-      checkTestDatabaseIdentity('postgres://host:5432/myapp', {
-        usedFallback: false,
-        mainDatabaseUrl: 'postgres://host:5432/myapp_prod',
-      }),
-    ).toThrow(/doesn't look like a dedicated test database/)
-  })
-
-  it('redacts credentials in the "not a test database" error message', () => {
-    expect(() =>
-      checkTestDatabaseIdentity('postgres://user:secret@host:5432/myapp', {
-        usedFallback: false,
-      }),
+      checkTestDatabaseIdentity(
+        'postgres://user:secret@host:5432/myapp',
+        'postgres://user:secret@host:5432/myapp',
+      ),
     ).toThrow(/user:\*\*\*@host/)
-  })
-
-  it('accepts a non-matching name via cedar.toml acceptedTestDatabaseNames', () => {
-    expect(() =>
-      checkTestDatabaseIdentity('postgres://host:5432/myapp', {
-        usedFallback: false,
-        mainDatabaseUrl: 'postgres://host:5432/myapp_prod',
-        acceptedTestDatabaseNames: ['myapp'],
-      }),
-    ).not.toThrow()
-  })
-
-  it('accepts a non-matching name via TEST_DATABASE_ACCEPT_TARGET', () => {
-    process.env.TEST_DATABASE_ACCEPT_TARGET = 'myapp'
-
-    expect(() =>
-      checkTestDatabaseIdentity('postgres://host:5432/myapp', {
-        usedFallback: false,
-        mainDatabaseUrl: 'postgres://host:5432/myapp_prod',
-      }),
-    ).not.toThrow()
-  })
-
-  it('does not accept an unrelated TEST_DATABASE_ACCEPT_TARGET value', () => {
-    process.env.TEST_DATABASE_ACCEPT_TARGET = 'some-other-db'
-
-    expect(() =>
-      checkTestDatabaseIdentity('postgres://host:5432/myapp', {
-        usedFallback: false,
-        mainDatabaseUrl: 'postgres://host:5432/myapp_prod',
-      }),
-    ).toThrow(/doesn't look like a dedicated test database/)
   })
 })

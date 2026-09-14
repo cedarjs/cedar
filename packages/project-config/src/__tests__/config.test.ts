@@ -128,7 +128,6 @@ describe('getConfig', () => {
           },
         },
         "test": {
-          "acceptedTestDatabaseNames": [],
           "autoConsentToDbReset": false,
         },
         "web": {

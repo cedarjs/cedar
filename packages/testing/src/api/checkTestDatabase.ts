@@ -101,18 +101,6 @@ interface DatabaseIdentity {
   host?: string
   port?: string
   database?: string
-  /**
-   * The name to check against the test/e2e naming convention and any
-   * accepted-name override — for every provider but sqlite this is the same
-   * as `database`. For sqlite it's the file's basename with its extension
-   * stripped, not its full resolved path, so a database living in a
-   * directory that happens to contain "test" (e.g.
-   * `file:./test-fixtures/dev.db`) isn't mistaken for a test database by
-   * name, and so it matches the same bare-name convention
-   * `acceptedTestDatabaseNames`/`TEST_DATABASE_ACCEPT_TARGET` use for every
-   * other provider (e.g. `my_app_ci`, not `my_app_ci.db`).
-   */
-  name?: string
 }
 
 function parseSqlServerIdentity(url: string): DatabaseIdentity | undefined {
@@ -133,7 +121,6 @@ function parseSqlServerIdentity(url: string): DatabaseIdentity | undefined {
     host: host.toLowerCase(),
     port,
     database,
-    name: database,
   }
 }
 
@@ -149,7 +136,6 @@ function parseUriIdentity(url: string): DatabaseIdentity | undefined {
       host: parsed.hostname.toLowerCase() || undefined,
       port: parsed.port || undefined,
       database,
-      name: database,
     }
   } catch {
     return undefined
@@ -169,12 +155,7 @@ function parseDatabaseIdentity(url: string): DatabaseIdentity | undefined {
   }
 
   if (scheme === 'file:') {
-    const filePath = url.slice('file:'.length)
-    return {
-      scheme,
-      database: path.resolve(filePath),
-      name: path.basename(filePath, path.extname(filePath)),
-    }
+    return { scheme, database: path.resolve(url.slice('file:'.length)) }
   }
 
   if (scheme === 'sqlserver:') {
@@ -207,93 +188,44 @@ function identitiesMatch(a: DatabaseIdentity, b: DatabaseIdentity): boolean {
   return (a.host ?? '') === (b.host ?? '') && portA === portB
 }
 
-// Database names Cedar recognizes as test databases without any explicit
-// override, per https://github.com/cedarjs/cedar/issues/2622.
-const TEST_DATABASE_NAME_PATTERN = /test|e2e/i
-
-export interface CheckTestDatabaseIdentityOptions {
-  /** True when `TEST_DATABASE_URL` wasn't set and Cedar's own generated sqlite fallback was used instead. */
-  usedFallback: boolean
-  /** The app's real `DATABASE_URL`, i.e. the one tests must never reset. */
-  mainDatabaseUrl?: string
-  /** Database names to accept even though they don't match the `test`/`e2e` naming convention, from `cedar.toml`'s `test.acceptedTestDatabaseNames`. */
-  acceptedTestDatabaseNames?: string[]
-}
-
 /**
  * Guards `cedar test api`'s destructive database reset by *identity*, not
  * just provider: refuses to run when the resolved test database is the same
- * database as `DATABASE_URL`, or when it doesn't look like a dedicated test
- * database and hasn't been explicitly accepted as one.
+ * database as `DATABASE_URL` — same host, port, and database name, or the
+ * same sqlite file.
  *
- * Cedar's own generated sqlite fallback (used when `TEST_DATABASE_URL` isn't
- * set) is exempt from the naming check — it's a path Cedar controls, not the
- * app's `DATABASE_URL` — but still has to pass the same-database check,
- * since nothing else guarantees it can't coincide with a misconfigured
- * `DATABASE_URL`.
+ * This is deliberately the only check, rather than also requiring the
+ * database's *name* to look test-like (e.g. containing "test" or "e2e"). A
+ * naming convention doesn't hold for managed Postgres providers with a
+ * fixed default database name shared by every project — every Supabase
+ * project's database is named `postgres`, for instance — so it can't tell a
+ * real project's database apart from a dedicated test one by name alone.
+ * Whether the two connection strings resolve to the same database is the
+ * one fact that holds across every provider.
  */
 export function checkTestDatabaseIdentity(
   testDatabaseUrl: string,
-  {
-    usedFallback,
-    mainDatabaseUrl,
-    acceptedTestDatabaseNames = [],
-  }: CheckTestDatabaseIdentityOptions,
+  mainDatabaseUrl: string | undefined,
 ) {
-  const redactedTestUrl = redactDatabaseUrl(testDatabaseUrl)
+  if (!mainDatabaseUrl) {
+    return
+  }
+
+  const sameRawUrl = mainDatabaseUrl === testDatabaseUrl
   const testIdentity = parseDatabaseIdentity(testDatabaseUrl)
+  const mainIdentity = parseDatabaseIdentity(mainDatabaseUrl)
+  const sameParsedIdentity =
+    !!testIdentity &&
+    !!mainIdentity &&
+    identitiesMatch(testIdentity, mainIdentity)
 
-  if (mainDatabaseUrl) {
-    const sameRawUrl = mainDatabaseUrl === testDatabaseUrl
-    const mainIdentity = parseDatabaseIdentity(mainDatabaseUrl)
-    const sameParsedIdentity =
-      !!testIdentity &&
-      !!mainIdentity &&
-      identitiesMatch(testIdentity, mainIdentity)
-
-    if (sameRawUrl || sameParsedIdentity) {
-      throw new Error(
-        `TEST_DATABASE_URL (${redactedTestUrl}) points at the same database ` +
-          `as DATABASE_URL. Refusing to run a destructive reset against ` +
-          `your app's main database.\n\nSet TEST_DATABASE_URL to a ` +
-          `dedicated test database.`,
-      )
-    }
+  if (sameRawUrl || sameParsedIdentity) {
+    const redactedTestUrl = redactDatabaseUrl(testDatabaseUrl)
+    throw new Error(
+      `TEST_DATABASE_URL (${redactedTestUrl}) points at the same database ` +
+        `as DATABASE_URL. Refusing to run a destructive reset against ` +
+        `your app's main database.\n\nSet TEST_DATABASE_URL to a ` +
+        `dedicated test database.`,
+    )
   }
-
-  // Cedar's own generated sqlite fallback is exempt from the naming check
-  // below — it's a path Cedar controls, not one a naming convention needs to
-  // confirm — but it still has to clear the same-database check above, since
-  // nothing stops it from coinciding with the app's real DATABASE_URL.
-  if (usedFallback) {
-    return
-  }
-
-  const databaseName = testIdentity?.name
-
-  if (databaseName && TEST_DATABASE_NAME_PATTERN.test(databaseName)) {
-    return
-  }
-
-  const acceptedByEnvVar =
-    !!databaseName &&
-    !!process.env.TEST_DATABASE_ACCEPT_TARGET &&
-    process.env.TEST_DATABASE_ACCEPT_TARGET === databaseName
-
-  const acceptedByConfig =
-    !!databaseName && acceptedTestDatabaseNames.includes(databaseName)
-
-  if (acceptedByEnvVar || acceptedByConfig) {
-    return
-  }
-
-  throw new Error(
-    `Test database (${redactedTestUrl}) doesn't look like a dedicated test ` +
-      `database — its name doesn't contain "test" or "e2e". Refusing to run ` +
-      `a destructive reset against it.\n\nIf this is intentional, either ` +
-      `rename the database, add its name to cedar.toml's ` +
-      `\`test.acceptedTestDatabaseNames\`, or set ` +
-      `TEST_DATABASE_ACCEPT_TARGET=${databaseName ?? '<database name>'} for ` +
-      `a one-off/CI override.`,
-  )
 }

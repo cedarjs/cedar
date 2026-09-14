@@ -1383,23 +1383,9 @@ Set the variable to `push`, or remove it completely, and it will use the default
 
 ### Test Database Identity Guard
 
-Before resetting the test database, Cedar checks not just that the URL's _provider_ matches `schema.prisma` (the check above), but that it looks like a genuinely separate, dedicated test database, never the one `DATABASE_URL` points at:
+Before resetting the test database, Cedar runs two checks. First, that the URL's _provider_ matches `schema.prisma` — e.g. a leftover sqlite fallback URL against a `postgresql` schema fails fast with an actionable error instead of hanging. Second, that the resolved test database isn't the same database as `DATABASE_URL` — same host, port, and database name, or, for sqlite, the same file. There's no configuration where the test suite should be resetting the database your app actually reads and writes, so this check refuses outright rather than warning.
 
-- **It refuses outright** if the resolved test database is the same database as `DATABASE_URL` — same host, port, and database name (or, for sqlite, the same file). There's no configuration where the test suite should be resetting the database your app actually reads and writes.
-- **It also refuses** if the database name doesn't look like a test database — specifically, if it doesn't contain `test` or `e2e` — since that's the most common way a misconfigured `TEST_DATABASE_URL` slips through unnoticed. Cedar's own generated sqlite fallback (`.cedar/test.db`, used when `TEST_DATABASE_URL` isn't set at all) always passes this check, since it's a path only Cedar controls.
-
-If your team names test databases some other way, you don't have to rename them. Either list the name in `cedar.toml`:
-
-```toml title="cedar.toml"
-[test]
-  acceptedTestDatabaseNames = ["my_app_ci"]
-```
-
-or, for a one-off run or a CI job you'd rather not check a name into version control for, set an env var instead:
-
-```
-TEST_DATABASE_ACCEPT_TARGET=my_app_ci
-```
+This is a same-database check, not a naming convention — Cedar doesn't require your test database's name to contain `test` or `e2e`. A naming check sounds appealing but doesn't hold up for managed Postgres providers, where every project shares the same default database name: every Supabase project's database is named `postgres`, and a Neon branch inherits its parent's database name (typically `neondb`) unless you rename it. A dedicated test project or branch on either of those providers is a different **host**, with the same database name — which the identity guard handles correctly, since it's comparing the whole connection identity, not just the name.
 
 ### Running Tests With an AI Agent
 

@@ -141,11 +141,6 @@
         "autoConsentToDbReset": {
           "type": "boolean",
           "description": "Automatically supply Prisma's PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION for `cedar test api`'s destructive database reset, once the reset target has passed Cedar's test-database identity guard. Off by default."
-        },
-        "acceptedTestDatabaseNames": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Database names to treat as confirmed test databases even though they don't match the test/e2e naming convention Cedar looks for by default."
         }
       }
     },
