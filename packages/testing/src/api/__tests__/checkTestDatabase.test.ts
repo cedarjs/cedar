@@ -113,13 +113,22 @@ describe('checkTestDatabaseIdentity', () => {
     }
   })
 
-  it('is a no-op when the sqlite fallback was used', () => {
+  it('is a no-op when the sqlite fallback was used and differs from DATABASE_URL', () => {
+    expect(() =>
+      checkTestDatabaseIdentity('file:./.cedar/test.db', {
+        usedFallback: true,
+        mainDatabaseUrl: 'file:./db/dev.db',
+      }),
+    ).not.toThrow()
+  })
+
+  it('still refuses the sqlite fallback when it happens to equal DATABASE_URL', () => {
     expect(() =>
       checkTestDatabaseIdentity('file:./.cedar/test.db', {
         usedFallback: true,
         mainDatabaseUrl: 'file:./.cedar/test.db',
       }),
-    ).not.toThrow()
+    ).toThrow(/points at the same database as DATABASE_URL/)
   })
 
   it('does not throw when the test database name contains "test"', () => {
@@ -206,12 +215,12 @@ describe('checkTestDatabaseIdentity', () => {
     ).not.toThrow()
   })
 
-  it('accepts a sqlite database via acceptedTestDatabaseNames matched by filename, not full path', () => {
+  it('accepts a sqlite database via acceptedTestDatabaseNames matched by extension-less filename', () => {
     expect(() =>
       checkTestDatabaseIdentity('file:./ci-fixtures/my_app_ci.db', {
         usedFallback: false,
         mainDatabaseUrl: 'file:./db/dev.db',
-        acceptedTestDatabaseNames: ['my_app_ci.db'],
+        acceptedTestDatabaseNames: ['my_app_ci'],
       }),
     ).not.toThrow()
   })

@@ -93,6 +93,38 @@ describe('setup', () => {
     expect(execa.sync).not.toHaveBeenCalled()
   })
 
+  it('trusts CEDAR_APP_DATABASE_URL over the already-overwritten DATABASE_URL (the cedar test path)', async () => {
+    // Simulates testHandler.ts having already overwritten this child
+    // process's DATABASE_URL to the resolved test URL before spawning
+    // vitest, while forwarding the real (different) app URL separately.
+    process.env.CEDAR_APP_DATABASE_URL = 'postgres://host:5432/myapp'
+    process.env.DATABASE_URL = 'postgres://host:5432/myapp_test'
+    process.env.TEST_DATABASE_URL = 'postgres://host:5432/myapp_test'
+    getPrismaDatasourceProvider.mockResolvedValue('postgresql')
+    const CedarApiVitestEnvironment = await loadEnvironment()
+
+    await CedarApiVitestEnvironment.setup()
+
+    expect(execa.sync).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not falsely refuse when cedar test forwards an empty CEDAR_APP_DATABASE_URL (no real DATABASE_URL of its own)', async () => {
+    // Simulates `cedar test api` when the app never had its own
+    // DATABASE_URL set — testHandler.ts still forwards the key, but empty,
+    // rather than omitting it (which would make this look like a direct
+    // `vitest` invocation and fall back to the already-overwritten
+    // DATABASE_URL, wrongly matching the test URL).
+    process.env.CEDAR_APP_DATABASE_URL = ''
+    process.env.DATABASE_URL = 'postgres://host:5432/myapp_test'
+    process.env.TEST_DATABASE_URL = 'postgres://host:5432/myapp_test'
+    getPrismaDatasourceProvider.mockResolvedValue('postgresql')
+    const CedarApiVitestEnvironment = await loadEnvironment()
+
+    await CedarApiVitestEnvironment.setup()
+
+    expect(execa.sync).toHaveBeenCalledTimes(1)
+  })
+
   it('auto-consents once opted in, and the target passed the identity guard', async () => {
     process.env.DATABASE_URL = 'postgres://host:5432/myapp'
     process.env.TEST_DATABASE_URL = 'postgres://host:5432/myapp_test'

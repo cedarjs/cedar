@@ -104,10 +104,13 @@ interface DatabaseIdentity {
   /**
    * The name to check against the test/e2e naming convention and any
    * accepted-name override — for every provider but sqlite this is the same
-   * as `database`. For sqlite it's the file's basename, not its full
-   * resolved path, so a database living in a directory that happens to
-   * contain "test" (e.g. `file:./test-fixtures/dev.db`) isn't mistaken for
-   * a test database by name.
+   * as `database`. For sqlite it's the file's basename with its extension
+   * stripped, not its full resolved path, so a database living in a
+   * directory that happens to contain "test" (e.g.
+   * `file:./test-fixtures/dev.db`) isn't mistaken for a test database by
+   * name, and so it matches the same bare-name convention
+   * `acceptedTestDatabaseNames`/`TEST_DATABASE_ACCEPT_TARGET` use for every
+   * other provider (e.g. `my_app_ci`, not `my_app_ci.db`).
    */
   name?: string
 }
@@ -170,7 +173,7 @@ function parseDatabaseIdentity(url: string): DatabaseIdentity | undefined {
     return {
       scheme,
       database: path.resolve(filePath),
-      name: path.basename(filePath),
+      name: path.basename(filePath, path.extname(filePath)),
     }
   }
 
@@ -224,8 +227,10 @@ export interface CheckTestDatabaseIdentityOptions {
  * database and hasn't been explicitly accepted as one.
  *
  * Cedar's own generated sqlite fallback (used when `TEST_DATABASE_URL` isn't
- * set) is always accepted — it's a path Cedar controls, never the app's real
- * database.
+ * set) is exempt from the naming check — it's a path Cedar controls, not the
+ * app's `DATABASE_URL` — but still has to pass the same-database check,
+ * since nothing else guarantees it can't coincide with a misconfigured
+ * `DATABASE_URL`.
  */
 export function checkTestDatabaseIdentity(
   testDatabaseUrl: string,
@@ -235,10 +240,6 @@ export function checkTestDatabaseIdentity(
     acceptedTestDatabaseNames = [],
   }: CheckTestDatabaseIdentityOptions,
 ) {
-  if (usedFallback) {
-    return
-  }
-
   const redactedTestUrl = redactDatabaseUrl(testDatabaseUrl)
   const testIdentity = parseDatabaseIdentity(testDatabaseUrl)
 
@@ -258,6 +259,14 @@ export function checkTestDatabaseIdentity(
           `dedicated test database.`,
       )
     }
+  }
+
+  // Cedar's own generated sqlite fallback is exempt from the naming check
+  // below — it's a path Cedar controls, not one a naming convention needs to
+  // confirm — but it still has to clear the same-database check above, since
+  // nothing stops it from coinciding with the app's real DATABASE_URL.
+  if (usedFallback) {
+    return
   }
 
   const databaseName = testIdentity?.name

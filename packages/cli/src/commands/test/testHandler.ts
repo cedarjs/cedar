@@ -145,9 +145,11 @@ export const handler = async ({
         env: {
           ...process.env,
           DATABASE_URL,
-          ...(mainDatabaseUrl
-            ? { CEDAR_APP_DATABASE_URL: mainDatabaseUrl }
-            : {}),
+          // Always set, even to '', so CedarApiVitestEnv can tell "there's
+          // no real DATABASE_URL to compare against" apart from "this isn't
+          // running through `cedar test` at all" (e.g. a direct `vitest`
+          // invocation, whose own DATABASE_URL hasn't been touched yet).
+          CEDAR_APP_DATABASE_URL: mainDatabaseUrl ?? '',
         },
       })
     }

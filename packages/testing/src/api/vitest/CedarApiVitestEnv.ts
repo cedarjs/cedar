@@ -29,9 +29,20 @@ const CedarApiVitestEnvironment: Environment = {
     // The app's real DATABASE_URL, captured before it's overwritten below.
     // `cedar test` (testHandler.ts) already overwrites its child process's
     // DATABASE_URL before this environment even starts, so it forwards the
-    // original value separately.
+    // original value separately as CEDAR_APP_DATABASE_URL — always, even as
+    // '' when there wasn't one — so its presence marks "this ran through
+    // `cedar test`" and its value can be trusted exclusively. Without that
+    // distinction, a run through `cedar test` with no DATABASE_URL of its
+    // own would fall back here to the already-overwritten DATABASE_URL
+    // (i.e. the test database itself), which would then look identical to
+    // itself and trip the same-database check below. A run that bypasses
+    // `cedar test` entirely (e.g. `vitest` invoked directly) never sets
+    // CEDAR_APP_DATABASE_URL, so DATABASE_URL is still the untouched real
+    // value at this point and is safe to use.
     const mainDatabaseUrl =
-      process.env.CEDAR_APP_DATABASE_URL ?? process.env.DATABASE_URL
+      'CEDAR_APP_DATABASE_URL' in process.env
+        ? process.env.CEDAR_APP_DATABASE_URL
+        : process.env.DATABASE_URL
 
     const defaultDb = `file:${path.join(cedarPaths.generated.base, 'test.db')}`
     const usedFallback = !process.env.TEST_DATABASE_URL
