@@ -242,9 +242,23 @@ on `@cedarjs/vite` — the dependency already runs the other way). Wired in
   anything else (an identifier, a call, a spread attribute on the element) is
   computed. Routes with literal `name` and `path` go into the map. Routes with
   no `name` (`notfound`, unnamed redirects) are skipped, matching
-  `MockRouter.Router`'s `if (name && path)`. A single computed `name` or `path`
-  anywhere in the file, or a parse error, selects the fallback below — the
-  decision is made on the AST, before anything is generated.
+  `MockRouter.Router`'s `if (name && path)`. Element identity is checked
+  through Babel's scope bindings: a `Route` element only counts if its name
+  resolves to an import specifier from `@cedarjs/router` (the source string
+  before `cedarJsRouterImportTransformPlugin` rewrites it); a local component
+  or a differently sourced `Route` is not a Cedar route. A single computed
+  `name` or `path` anywhere in the file, a `Route` whose binding is not the
+  `@cedarjs/router` import, a route name that appears more than once, or a
+  parse error, selects the fallback below — the decision is made on the AST,
+  before anything is generated.
+- What the scan deliberately does not model is conditional inclusion:
+  `{flag && <Route .../>}` or a route inside a branch that does not render
+  contributes to the map regardless. That is the same semantic
+  `web-routerRoutes.d.ts` generation has (it is also built from every `Route`
+  element in the file), so tests see exactly the `routes.*()` set the type
+  system already promises. The only way the superset can mislead is a name
+  reused across branches with different paths, which is why duplicate names
+  select the fallback.
 - `getProjectRoutes()` from `@cedarjs/internal` is _not_ used at runtime even
   though `@cedarjs/vite` already depends on it. `RWRoute.path` and
   `RWRoute.name` return `undefined` for a non-literal attribute, and
@@ -271,8 +285,9 @@ on `@cedarjs/vite` — the dependency already runs the other way). Wired in
 ### Fallback when extraction is not possible
 
 If the AST walk finds a `Route` with a computed `name` or `path` (a variable,
-a call, a spread attribute), or the Routes file fails to parse, the plugin
-emits the current behaviour instead:
+a call, a spread attribute), a `Route` element whose binding is not the
+`@cedarjs/router` import, a route name used more than once, or the Routes
+file fails to parse, the plugin emits the current behaviour instead:
 
 ```js
 export const routeMap = null
@@ -290,8 +305,9 @@ and logs once per run:
 Note the parity limit: `MockRouter.Router` only flattens the React children
 tree, so `<Route>`s rendered from inside a custom component are already
 invisible to `routes.*()` today. The static walker sees every `Route` JSX
-element in the file, which is a superset. Routes composed from a _separate_ file
-(`<AdminRoutes/>`) are not covered by either path.
+element in the file, which is a superset (see the conditional-inclusion note
+above). Routes composed from a _separate_ file (`<AdminRoutes/>`) are not
+covered by either path.
 
 ### Consumers in `@cedarjs/testing`
 
@@ -309,7 +325,12 @@ element in the file, which is a superset. Routes composed from a _separate_ file
 - `vitest-web.setup.ts`:
   `import { routeMap, UserRoutes } from 'virtual:cedar-test-route-map'` and
   `import { registerRoutes } from '../MockRouter.js'`; call
-  `registerRoutes(routeMap)` at module top level when `routeMap` is non-null.
+  `registerRoutes(routeMap ?? {})` unconditionally at module top level. Passing
+  an empty map when `routeMap` is null is what clears the tracked entries on
+  the transition from a static map to the fallback (a watched edit that
+  introduces a computed attribute), so no stale builder survives it; the
+  fallback's rendered `<UserRoutes />` then repopulates `routes` through
+  `MockRouter.Router` as before.
   Setup files run before the test file is imported, and the setup file's
   `MockRouter` module instance is the same one the test file's transformed
   `@cedarjs/router` import resolves to, so `routes.*()` is populated before any
@@ -514,10 +535,13 @@ this phase is not conditional; what it does depends on the Phase 0 profile.
 - Fixture project (`__fixtures__/test-project`) web suite through tarsync: all
   18 files pass unchanged, including `HomePage.test.tsx` and the Cell tests that
   depend on `standard()` and on MSW intercepting the Cell's query.
-- Watch mode: edit Routes.tsx three ways without restarting Vitest — add a
+- Watch mode: edit Routes.tsx four ways without restarting Vitest — add a
   route and confirm a test using the new `routes.*()` entry reruns and passes;
   remove a route and confirm `routes.<removed>` is `undefined` in the rerun;
-  rename a route and confirm only the new name resolves.
+  rename a route and confirm only the new name resolves; change one `path` to
+  a variable and confirm the fallback warning is logged once, the tracked
+  static entries are cleared, and `routes.*()` still resolves through the
+  rendered Routes file.
 - Storybook smoke: `yarn cedar storybook` in the fixture still resolves
   `~__CEDAR__USER_ROUTES_FOR_MOCK` through its own alias.
 - `yarn build && yarn lint && yarn test:types`.
