@@ -1381,6 +1381,38 @@ Set the variable to `push`, or remove it completely, and it will use the default
 
 :::
 
+### Test Database Identity Guard
+
+Before resetting the test database, Cedar checks not just that the URL's _provider_ matches `schema.prisma` (the check above), but that it looks like a genuinely separate, dedicated test database, never the one `DATABASE_URL` points at:
+
+- **It refuses outright** if the resolved test database is the same database as `DATABASE_URL` — same host, port, and database name (or, for sqlite, the same file). There's no configuration where the test suite should be resetting the database your app actually reads and writes.
+- **It also refuses** if the database name doesn't look like a test database — specifically, if it doesn't contain `test` or `e2e` — since that's the most common way a misconfigured `TEST_DATABASE_URL` slips through unnoticed. Cedar's own generated sqlite fallback (`.cedar/test.db`, used when `TEST_DATABASE_URL` isn't set at all) always passes this check, since it's a path only Cedar controls.
+
+If your team names test databases some other way, you don't have to rename them. Either list the name in `cedar.toml`:
+
+```toml title="cedar.toml"
+[test]
+  acceptedTestDatabaseNames = ["my_app_ci"]
+```
+
+or, for a one-off run or a CI job you'd rather not check a name into version control for, set an env var instead:
+
+```
+TEST_DATABASE_ACCEPT_TARGET=my_app_ci
+```
+
+### Running Tests With an AI Agent
+
+Prisma detects when a destructive command like `migrate reset` or `db push --force-reset` is being run by an AI agent, and refuses to run it without the `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION` env var set. Since `cedar test api` runs exactly this kind of command as part of its normal test-database setup, that guard can fire on Cedar's own invocation — inside a test run an agent kicked off, not on anything the agent typed directly.
+
+If you hit this, and you're comfortable letting an agent reset your project's test database, set the env var to the exact text of your message giving consent, e.g.:
+
+```
+PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION="it's fine to reset the test database for this project" yarn cedar test api
+```
+
+If you'd rather not repeat that for every run, opt in to Cedar supplying it automatically instead — see [`test.autoConsentToDbReset`](app-configuration-cedar-toml.md#test). Cedar only fills the env var in for you once the [identity guard](#test-database-identity-guard) above has already confirmed the reset target is a dedicated test database, never your app's real one — the setting shortcuts Prisma's consent prompt, not Cedar's own guard.
+
 ### Writing Service Tests
 
 A Service test can be just as simple as a component test:

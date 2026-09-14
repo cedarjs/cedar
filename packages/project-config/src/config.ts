@@ -96,6 +96,27 @@ export interface Config {
     versionUpdates: string[]
   }
   studio: StudioConfig
+  test: {
+    /**
+     * When true, `cedar test api` automatically supplies Prisma's
+     * `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION` env var for the
+     * destructive test-database reset, instead of requiring a human to set
+     * it, whenever the reset target has already passed Cedar's own
+     * test-database identity guard (see `acceptedTestDatabaseNames` below).
+     * Opt-in and off by default: this only shortcuts Prisma's AI-agent
+     * consent prompt, not Cedar's guard against resetting the wrong
+     * database.
+     */
+    autoConsentToDbReset: boolean
+    /**
+     * Database names Cedar should treat as confirmed test databases even
+     * though they don't match the `test`/`e2e` naming convention it looks
+     * for by default. Use this for a team's own test-database naming
+     * scheme. Equivalent to the `TEST_DATABASE_ACCEPT_TARGET` env var,
+     * which is better suited to a one-off or CI-only override.
+     */
+    acceptedTestDatabaseNames: string[]
+  }
   experimental: {
     opentelemetry: {
       enabled: boolean
@@ -209,6 +230,10 @@ export const DEFAULT_CONFIG: Config = {
         jwtSecret: 'secret',
       },
     },
+  },
+  test: {
+    autoConsentToDbReset: false,
+    acceptedTestDatabaseNames: [],
   },
   experimental: {
     opentelemetry: {
