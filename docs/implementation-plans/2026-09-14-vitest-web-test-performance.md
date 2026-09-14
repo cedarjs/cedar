@@ -70,20 +70,20 @@ The plan below is scoped by these, so they are worth stating explicitly:
   branch and the test-mode alias in `getMergedConfig.ts:71-73` are dead under
   Vitest (Storybook has its own `MockProviders` and its own alias in
   `packages/storybook/src/preset.ts:60` and is unaffected by this plan).
-- **There is no Jest path to compare against, and the Vitest route loading
-  was deliberate.** Jest support was removed in #2500. While it existed, the
-  Jest preset mapped `~__CEDAR__USER_ROUTES_FOR_MOCK` to `Routes.tsx` through
+- **There is no Jest path to compare against, and the Vitest route loading was
+  deliberate.** Jest support was removed in #2500. While it existed, the Jest
+  preset mapped `~__CEDAR__USER_ROUTES_FOR_MOCK` to `Routes.tsx` through
   `moduleNameMapper`, and the CJS build stubbed `import.meta.glob`; so under
   Jest, `MockProviders` _also_ evaluated the Routes file in every test file —
   through the `require` branch instead of the glob. `globRoutesImporter.ts`
   exists because `require` cannot see Vite aliases, so the Vitest path needed
   its own way to reach the same file. Both paths were intended, and both load
-  Routes per file; the cost difference is that Vite transforms and
-  ESM-evaluates the Routes static import graph inside each isolated module
-  runner, where Jest served Babel-cached CJS through `require`. The "Jest did
-  the same work more cheaply" framing is therefore historical and accurate,
-  but not actionable: the relevant comparison is "what does a test file need"
-  vs "what is it paying for".
+  Routes per file; the cost difference is that Vite transforms and ESM-evaluates
+  the Routes static import graph inside each isolated module runner, where Jest
+  served Babel-cached CJS through `require`. The "Jest did the same work more
+  cheaply" framing is therefore historical and accurate, but not actionable: the
+  relevant comparison is "what does a test file need" vs "what is it paying
+  for".
 - **The "Testing Library directly" comparison understates the win.** In that
   measurement (appendix, screenshot 2) the setup file still ran, so Cell/MSW
   cost stayed constant and only the Routes cost moved. Fixing both causes
@@ -103,16 +103,16 @@ calls `getProjectRoutes()` from `@cedarjs/internal`, renders a module that
 and exports `UserRoutes = () => null`, and a `pre` transform hook substitutes
 that module for `@cedarjs/testing/dist/web/globRoutesImporter.js`. With that in
 place CI went from 506s to 318s wall and aggregate import from 1039s to 499s
-(appendix, screenshot 5). That validates Phase 1's magnitude — and shows Phase
-1 alone leaves the suite 39% slower than Jest was. The remaining budget for 211
+(appendix, screenshot 5). That validates Phase 1's magnitude — and shows Phase 1
+alone leaves the suite 39% slower than Jest was. The remaining budget for 211
 files:
 
-| Category            | Aggregate | Per file |
-| ------------------- | --------- | -------- |
-| import              | 499s      | ~2.4s    |
-| setup               | 146s      | ~0.7s    |
-| tests               | 126s      | ~0.6s    |
-| jsdom environment   | 97s       | ~0.46s   |
+| Category          | Aggregate | Per file |
+| ----------------- | --------- | -------- |
+| import            | 499s      | ~2.4s    |
+| setup             | 146s      | ~0.7s    |
+| tests             | 126s      | ~0.6s    |
+| jsdom environment | 97s       | ~0.46s   |
 
 Two consequences for this plan:
 
@@ -120,16 +120,16 @@ Two consequences for this plan:
   isolated module execution overhead" in the abstract; it is the evaluation of
   some concrete set of modules in every file. Which modules — framework
   providers being inlined instead of externalized, or the app's own component
-  graph (barrel imports pulling in the design system) — decides whether the
-  fix is framework-side or guidance. Phase 0 profiles this rather than
-  guessing, and Phase 4 acts on the result.
+  graph (barrel imports pulling in the design system) — decides whether the fix
+  is framework-side or guidance. Phase 0 profiles this rather than guessing, and
+  Phase 4 acts on the result.
 - ~0.7s of setup per file is the Cell-mock discovery + import + MSW start work
   in `vitest-web.setup.ts` plus the user's own setup file. Phase 2 stays
-  justified. The user's attempt to "skip automatic Cell mocks" caused
-  timeouts, which says their tests depend on auto-registered mocks — so any
-  scoping of mock registration has to keep mocks for every Cell a test can
-  render, which is exactly what the transform-injection variant in Phase 2's
-  follow-up does and a blanket skip does not.
+  justified. The user's attempt to "skip automatic Cell mocks" caused timeouts,
+  which says their tests depend on auto-registered mocks — so any scoping of
+  mock registration has to keep mocks for every Cell a test can render, which is
+  exactly what the transform-injection variant in Phase 2's follow-up does and a
+  blanket skip does not.
 
 ## Design principles applied
 
@@ -170,9 +170,9 @@ Two consequences for this plan:
   target of this plan is that framework-owned per-file cost approaches zero;
   whatever remains after that is a Vitest configuration question (`isolate`,
   `pool`, `environment`) the app owns.
-- Supporting `pool: 'vmThreads'`. The user hit a missing `WritableStream` in
-  MSW and ESM-in-CJS failures there; those are Vitest VM-context limitations
-  shared by every MSW user, not something Cedar's setup can shim.
+- Supporting `pool: 'vmThreads'`. The user hit a missing `WritableStream` in MSW
+  and ESM-in-CJS failures there; those are Vitest VM-context limitations shared
+  by every MSW user, not something Cedar's setup can shim.
 
 ## Phase 0 — Reproducible benchmark
 
@@ -201,17 +201,18 @@ each phase can be measured.
      isolated file) versus externalized (loaded through Node and cached per
      worker). `DEBUG=vite-node:*` / Vitest's `server.debug.dumpModules` lists
      them. `@cedarjs/testing` is inlined on purpose (`ssr.noExternal`); check
-     that `@cedarjs/web`, `@apollo/client`, `@cedarjs/router` and `@cedarjs/auth`
-     are externalized and not dragged into the inlined set through the
-     `MockRouter` / `mockAuth` re-exports or the test-mode import transforms.
-   - A CPU profile of one worker (`poolOptions.threads.execArgv:
-     ['--cpu-prof']`, or `--cpu-prof` on the Vitest process with
-     `pool: 'forks'` and a single fork) to see which module bodies dominate
-     evaluation.
+     that `@cedarjs/web`, `@apollo/client`, `@cedarjs/router` and
+     `@cedarjs/auth` are externalized and not dragged into the inlined set
+     through the `MockRouter` / `mockAuth` re-exports or the test-mode import
+     transforms.
+   - A CPU profile of one worker
+     (`poolOptions.threads.execArgv: ['--cpu-prof']`, or `--cpu-prof` on the
+     Vitest process with `pool: 'forks'` and a single fork) to see which module
+     bodies dominate evaluation.
 
-   Separate the result into framework-owned modules and app-owned modules
-   (the component under test's own import graph, e.g. a design-system barrel).
-   Phase 4 acts on the framework-owned part; app-owned cost becomes guidance in
+   Separate the result into framework-owned modules and app-owned modules (the
+   component under test's own import graph, e.g. a design-system barrel). Phase
+   4 acts on the framework-owned part; app-owned cost becomes guidance in
    Phase 5.
 
 ## Phase 1 — Static route map instead of evaluating `Routes.tsx`
@@ -225,26 +226,25 @@ test file evaluates the Routes module or its imports.
 New file `packages/vite/src/plugins/vite-plugin-cedar-test-route-map.ts` (lives
 in `@cedarjs/vite` because that package already depends on `@cedarjs/internal`
 and `@cedarjs/structure` and already consumes `getProjectRoutes()` in
-`buildRouteManifest.ts` and `devFeServer.ts`; `@cedarjs/testing` must not
-depend on `@cedarjs/vite` — the dependency already runs the other way). Wired
-in `packages/vite/src/index.ts` next to the other `mode === 'test'` plugins.
+`buildRouteManifest.ts` and `devFeServer.ts`; `@cedarjs/testing` must not depend
+on `@cedarjs/vite` — the dependency already runs the other way). Wired in
+`packages/vite/src/index.ts` next to the other `mode === 'test'` plugins.
 
 - `resolveId('virtual:cedar-test-route-map')` →
   `\0virtual:cedar-test-route-map`.
 - `load()` calls `getProjectRoutes()` from `@cedarjs/internal/dist/routes.js`
   and keeps every route with `!isNotFound && name`, using `pathDefinition` as
-  the path. This is the same route model that generates
-  `web-routerRoutes.d.ts`, so the `routes.*()` names available in tests match
-  the generated `routes` types by construction. It is also what the user's
-  workaround uses, so it is known to produce the right set on a real app. The
-  cost is one ts-morph project load per Vitest start, in the main process;
-  Phase 0 measures it on the heavy fixture. If it is more than a few hundred
-  milliseconds, the alternative is a `@babel/parser` walk of the Routes file
-  collecting `<Route name path>` literals (the vite package already has the
-  Babel dependencies for `vite-plugin-cedar-routes-auto-loader.ts`), with a
-  test asserting it yields the same set as `getProjectRoutes()` on the
-  fixture. Routes without a `name` are skipped, matching `MockRouter.Router`'s
-  `if (name && path)`.
+  the path. This is the same route model that generates `web-routerRoutes.d.ts`,
+  so the `routes.*()` names available in tests match the generated `routes`
+  types by construction. It is also what the user's workaround uses, so it is
+  known to produce the right set on a real app. The cost is one ts-morph project
+  load per Vitest start, in the main process; Phase 0 measures it on the heavy
+  fixture. If it is more than a few hundred milliseconds, the alternative is a
+  `@babel/parser` walk of the Routes file collecting `<Route name path>`
+  literals (the vite package already has the Babel dependencies for
+  `vite-plugin-cedar-routes-auto-loader.ts`), with a test asserting it yields
+  the same set as `getProjectRoutes()` on the fixture. Routes without a `name`
+  are skipped, matching `MockRouter.Router`'s `if (name && path)`.
 - Emits:
 
   ```js
@@ -303,10 +303,9 @@ element in the file, which is a superset. Routes composed from a _separate_ file
   block and `isModuleNotFoundError`.
 - Delete `globRoutesImporter.ts`. Delete the test-mode
   `~__CEDAR__USER_ROUTES_FOR_MOCK` alias in `getMergedConfig.ts` and the
-  `knip.jsonc` ignore entry. Keep `ssr.noExternal: ['@cedarjs/testing']` for
-  now — the setup file has to be processed by Vite to resolve the virtual
-  module; Phase 4 decides whether that inlining can be narrowed to the setup
-  file alone.
+  `knip.jsonc` ignore entry. Keep `ssr.noExternal: ['@cedarjs/testing']` for now
+  — the setup file has to be processed by Vite to resolve the virtual module;
+  Phase 4 decides whether that inlining can be narrowed to the setup file alone.
 - Ambient types: `declare module 'virtual:cedar-test-route-map'` in
   `packages/testing/src/web/vitest/ambient.d.ts`.
 - `packages/testing`'s own unit tests import `MockRouter` directly and never
@@ -383,8 +382,8 @@ Storybook also bundles) passed into `startMSW`.
 
 ## Phase 4 — Remaining framework-owned import cost
 
-The user's numbers after their own route fix leave ~2.4s of import per file,
-so this phase is not conditional; what it does depends on the Phase 0 profile.
+The user's numbers after their own route fix leave ~2.4s of import per file, so
+this phase is not conditional; what it does depends on the Phase 0 profile.
 
 - If framework modules are being inlined and re-evaluated per file when they
   could be externalized: fix the inline/external split. Candidates are the
@@ -395,46 +394,47 @@ so this phase is not conditional; what it does depends on the Phase 0 profile.
   inlined `@cedarjs/testing` graph. Vitest's `server.deps.inline` /
   `deps.optimizer` and the `ssr.noExternal` entry in `getMergedConfig.ts` are
   the knobs.
-- The specific candidate the user's investigation names (appendix, screenshot
-  8, item 4): stop inlining `@cedarjs/testing` as a whole. The only reason it
-  is inlined is `import.meta.glob` in package code. After Phase 1 the route
-  glob is gone, and Phase 2's Cell-mock glob lives in `vitest-web.setup.ts`,
-  so the inline set can shrink to that one file (a regex entry in
+- The specific candidate the user's investigation names (appendix, screenshot 8,
+  item 4): stop inlining `@cedarjs/testing` as a whole. The only reason it is
+  inlined is `import.meta.glob` in package code. After Phase 1 the route glob is
+  gone, and Phase 2's Cell-mock glob lives in `vitest-web.setup.ts`, so the
+  inline set can shrink to that one file (a regex entry in
   `server.deps.inline`); `MockRouter`, `mockRequests`, `mockAuth`,
   `MockProviders` and `customRender` would then be loaded by Node once per
-  worker instead of re-evaluated per file. Two things have to hold before
-  doing this:
-  - The setup file's relative imports (`../MockRouter.js`,
-    `../mockRequests.js`) must resolve to the _same_ externalized module
-    instances the test file reaches through the transformed `@cedarjs/router`
-    and `@cedarjs/testing/web` imports. Otherwise `routes` and the MSW handler
-    queue split into two copies. Verify with a probe that mutates `routes` in
-    the setup file and reads it in a test.
+  worker instead of re-evaluated per file. Two things have to hold before doing
+  this:
+  - The setup file's relative imports (`../MockRouter.js`, `../mockRequests.js`)
+    must resolve to the _same_ externalized module instances the test file
+    reaches through the transformed `@cedarjs/router` and `@cedarjs/testing/web`
+    imports. Otherwise `routes` and the MSW handler queue split into two copies.
+    Verify with a probe that mutates `routes` in the setup file and reads it in
+    a test.
   - Module-level state in those files stops being per file:
     `mockedUserMeta.currentUser`, `mockedRouteParamsMeta.params`,
     `REQUEST_HANDLER_QUEUE`, `SERVER_INSTANCE`. `closeServer()` already handles
-    `SERVER_INSTANCE`; the rest needs an explicit `resetTestState()` called
-    from the setup file's `beforeAll`, so a `mockCurrentUser()` in one file
-    cannot leak into the next file on the same worker. `REQUEST_HANDLER_QUEUE`
-    is the subtle one: Cell mocks are pushed to it once per worker (their
-    modules are cached), so it must be kept, while handlers a test file
-    registers at module top level before the server starts must not survive
-    the file. Split the queue into "global" (Cell mocks) and "file" entries, or
-    snapshot its length in `beforeAll` and truncate in `afterAll`.
+    `SERVER_INSTANCE`; the rest needs an explicit `resetTestState()` called from
+    the setup file's `beforeAll`, so a `mockCurrentUser()` in one file cannot
+    leak into the next file on the same worker. `REQUEST_HANDLER_QUEUE` is the
+    subtle one: Cell mocks are pushed to it once per worker (their modules are
+    cached), so it must be kept, while handlers a test file registers at module
+    top level before the server starts must not survive the file. Split the
+    queue into "global" (Cell mocks) and "file" entries, or snapshot its length
+    in `beforeAll` and truncate in `afterAll`.
 
   If the Phase 0 profile shows `@cedarjs/testing`'s own evaluation is a small
   share, skip this: the state-scoping change is not worth it for a small win.
-- If the cost is the evaluation of the providers themselves
-  (`CedarProvider`, `CedarApolloProvider`, `LocationProvider`), they are needed
-  by `render` and are shared through Vite's transform cache, so only their
-  evaluation repeats. Moving the `MockProviders` import in `customRender.tsx`
-  behind a `React.lazy` boundary would defer it to the first `render` call —
-  which every test that imports `render` makes, so this only helps files that
-  import `@cedarjs/testing/web` for `screen` / `waitFor` alone. Do it only if
-  the profile shows the providers dominate.
-- If the profile shows the cost is app-owned (the component's own import
-  graph), there is nothing to change in the framework; write it up as guidance
-  in Phase 5.
+
+- If the cost is the evaluation of the providers themselves (`CedarProvider`,
+  `CedarApolloProvider`, `LocationProvider`), they are needed by `render` and
+  are shared through Vite's transform cache, so only their evaluation repeats.
+  Moving the `MockProviders` import in `customRender.tsx` behind a `React.lazy`
+  boundary would defer it to the first `render` call — which every test that
+  imports `render` makes, so this only helps files that import
+  `@cedarjs/testing/web` for `screen` / `waitFor` alone. Do it only if the
+  profile shows the providers dominate.
+- If the profile shows the cost is app-owned (the component's own import graph),
+  there is nothing to change in the framework; write it up as guidance in
+  Phase 5.
 
 ## Phase 5 — Docs and release notes
 
@@ -447,27 +447,26 @@ so this phase is not conditional; what it does depends on the Phase 0 profile.
   `@testing-library/react` directly, or pass React Testing Library's `wrapper`
   option to compose only the providers the test needs. State why there is no
   Cedar-specific "plain" `render` variant or `render` option for this: the
-  providers are set up when the module is imported, not when `render` is
-  called, so a variant would only skip work if it lived in a separate entry
-  point, and the per-file cost that made the question come up is removed by the
-  static route map instead. An entry point users have to choose between would
-  put a test-classification burden on every app and leave the default slow for
-  anyone who does not opt in.
-- `docs/docs/testing.md`, new short subsection "Test suite performance":
-  what a web test file pays for under Cedar's default setup (jsdom, providers,
-  MSW, Cell mocks) and what it does not (the Routes import graph); that
+  providers are set up when the module is imported, not when `render` is called,
+  so a variant would only skip work if it lived in a separate entry point, and
+  the per-file cost that made the question come up is removed by the static
+  route map instead. An entry point users have to choose between would put a
+  test-classification burden on every app and leave the default slow for anyone
+  who does not opt in.
+- `docs/docs/testing.md`, new short subsection "Test suite performance": what a
+  web test file pays for under Cedar's default setup (jsdom, providers, MSW,
+  Cell mocks) and what it does not (the Routes import graph); that
   `isolate: false` is supported by Cedar's setup (`closeServer()` restarts MSW
   per file and keeps the queued global handlers) for suites that accept shared
-  module state; and, if the Phase 0 profile shows app-owned import cost, a
-  note on keeping test import graphs small (import the component file, not a
-  barrel).
+  module state; and, if the Phase 0 profile shows app-owned import cost, a note
+  on keeping test import graphs small (import the component file, not a barrel).
 - Changeset for the `@cedarjs/testing` / `@cedarjs/vite` PR describing the
   per-file cost that is removed and the fallback warning. Phrase it in terms of
   what the current behaviour is. Include a note for apps that carry a userland
   transform targeting `@cedarjs/testing/dist/web/globRoutesImporter.js` (the
   user's workaround in appendix screenshot 6): that file does not exist after
-  this change, so the transform never matches and can be deleted along with
-  its config-time `getProjectRoutes()` call.
+  this change, so the transform never matches and can be deleted along with its
+  config-time `getProjectRoutes()` call.
 - Update the `cedarVitestWebConfigPlugin` doc comment to list what the setup
   file does.
 
@@ -713,8 +712,8 @@ At this point, the residual difference appears to be Vitest/Vite's isolated
 module execution overhead across 211 files, rather than another single
 application graph accidentally loaded everywhere. Closing the remaining gap
 likely requires a platform change in Cedar/Vitest, test-file consolidation, or
-splitting lightweight tests into a separate configuration without Cedar's
-setup. The worktree remains clean; no unsuccessful experiment was retained.
+splitting lightweight tests into a separate configuration without Cedar's setup.
+The worktree remains clean; no unsuccessful experiment was retained.
 
 ### Screenshot 6 — The user's workaround (`web/vite.config.ts` diff)
 
@@ -821,10 +820,10 @@ implementation:
 - It avoids importing layouts and pages merely to register route names.
 
 So the regression was not caused by modifying Jest. It came from switching from
-Cedar's established Jest/CJS testing path to Cedar's Vitest/Vite/ESM path,
-whose route handling and isolated module execution are more expensive. After
-fixing the route discrepancy, Vitest still has about 39% more wall-clock
-overhead than Jest on the same CI host.
+Cedar's established Jest/CJS testing path to Cedar's Vitest/Vite/ESM path, whose
+route handling and isolated module execution are more expensive. After fixing
+the route discrepancy, Vitest still has about 39% more wall-clock overhead than
+Jest on the same CI host.
 
 ### Screenshot 8 — Residual cost and platform recommendations
 
@@ -841,8 +840,8 @@ This now points to Cedar/Vitest platform work:
 1. Cedar should provide a lightweight test renderer that does not import route
    machinery.
 2. Cedar's Vitest setup should make Cell discovery and MSW opt-in.
-3. Vitest/Cedar should support a VM pool without the current globals and
-   ESM/CJS failures.
+3. Vitest/Cedar should support a VM pool without the current globals and ESM/CJS
+   failures.
 4. The testing package should be dependency-optimizer compatible rather than
    containing a runtime `import.meta.glob`.
 5. Cedar should benchmark its Jest and Vitest presets with isolated jsdom files
