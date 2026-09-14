@@ -103,6 +103,13 @@ interface DatabaseIdentity {
   database?: string
 }
 
+// A trailing dot in a hostname is a valid, DNS-equivalent way of writing an
+// absolute (fully-qualified) domain name, e.g. `db.example.com.` resolves to
+// the same host as `db.example.com`, so it's stripped before comparison.
+function normalizeHost(host: string): string {
+  return host.toLowerCase().replace(/\.$/, '')
+}
+
 function parseSqlServerIdentity(url: string): DatabaseIdentity | undefined {
   const [authority, ...params] = url.split(';')
   const match = authority.match(
@@ -118,7 +125,7 @@ function parseSqlServerIdentity(url: string): DatabaseIdentity | undefined {
 
   return {
     scheme: scheme.toLowerCase(),
-    host: host.toLowerCase(),
+    host: normalizeHost(host),
     port,
     database,
   }
@@ -133,7 +140,7 @@ function parseUriIdentity(url: string): DatabaseIdentity | undefined {
 
     return {
       scheme: parsed.protocol.toLowerCase(),
-      host: parsed.hostname.toLowerCase() || undefined,
+      host: parsed.hostname ? normalizeHost(parsed.hostname) : undefined,
       port: parsed.port || undefined,
       database,
     }
@@ -202,13 +209,32 @@ function identitiesMatch(a: DatabaseIdentity, b: DatabaseIdentity): boolean {
  * real project's database apart from a dedicated test one by name alone.
  * Whether the two connection strings resolve to the same database is the
  * one fact that holds across every provider.
+ *
+ * When there's no `DATABASE_URL` at all to compare against, this fails
+ * closed rather than skipping the check: an explicit `TEST_DATABASE_URL`
+ * with nothing to confirm it's not the app's real database is refused,
+ * since there'd be no way to tell it apart from one that is. Cedar's own
+ * generated sqlite fallback (`usedFallback`) is the one exception — it's a
+ * path only Cedar controls, so it's safe regardless of `DATABASE_URL`.
  */
 export function checkTestDatabaseIdentity(
   testDatabaseUrl: string,
   mainDatabaseUrl: string | undefined,
+  usedFallback: boolean,
 ) {
-  if (!mainDatabaseUrl) {
+  if (usedFallback) {
     return
+  }
+
+  if (!mainDatabaseUrl) {
+    const redactedTestUrl = redactDatabaseUrl(testDatabaseUrl)
+    throw new Error(
+      `TEST_DATABASE_URL (${redactedTestUrl}) is set, but there's no ` +
+        `DATABASE_URL to confirm it isn't the same database your app ` +
+        `actually uses. Refusing to run a destructive reset without that ` +
+        `confirmation.\n\nSet DATABASE_URL (even to a placeholder) so ` +
+        `Cedar can verify TEST_DATABASE_URL points somewhere different.`,
+    )
   }
 
   const sameRawUrl = mainDatabaseUrl === testDatabaseUrl

@@ -99,10 +99,20 @@ describe('checkTestDatabaseUrlMatchesProvider', () => {
 })
 
 describe('checkTestDatabaseIdentity', () => {
-  it('does not throw when there is no DATABASE_URL to compare against', () => {
+  it('does not throw when the sqlite fallback was used, even with no DATABASE_URL', () => {
     expect(() =>
-      checkTestDatabaseIdentity('postgres://host:5432/myapp_test', undefined),
+      checkTestDatabaseIdentity('file:./.cedar/test.db', undefined, true),
     ).not.toThrow()
+  })
+
+  it('fails closed when there is no DATABASE_URL to compare an explicit TEST_DATABASE_URL against', () => {
+    expect(() =>
+      checkTestDatabaseIdentity(
+        'postgres://host:5432/myapp_test',
+        undefined,
+        false,
+      ),
+    ).toThrow(/there's no DATABASE_URL to confirm/)
   })
 
   it('does not throw when the test and main databases differ', () => {
@@ -110,6 +120,7 @@ describe('checkTestDatabaseIdentity', () => {
       checkTestDatabaseIdentity(
         'postgres://host:5432/myapp_test',
         'postgres://host:5432/myapp',
+        false,
       ),
     ).not.toThrow()
   })
@@ -119,6 +130,7 @@ describe('checkTestDatabaseIdentity', () => {
       checkTestDatabaseIdentity(
         'postgres://host:5432/myapp_test',
         'postgres://host:5432/myapp_test',
+        false,
       ),
     ).toThrow(/points at the same database as DATABASE_URL/)
   })
@@ -128,6 +140,7 @@ describe('checkTestDatabaseIdentity', () => {
       checkTestDatabaseIdentity(
         'postgres://tester:pw@host:5432/myapp?schema=public',
         'postgres://admin:secret@host:5432/myapp',
+        false,
       ),
     ).toThrow(/points at the same database as DATABASE_URL/)
   })
@@ -137,6 +150,7 @@ describe('checkTestDatabaseIdentity', () => {
       checkTestDatabaseIdentity(
         'postgresql://host:5432/myapp',
         'postgres://host:5432/myapp',
+        false,
       ),
     ).toThrow(/points at the same database as DATABASE_URL/)
   })
@@ -146,6 +160,17 @@ describe('checkTestDatabaseIdentity', () => {
       checkTestDatabaseIdentity(
         'postgres://host:5432/myapp',
         'postgres://host/myapp',
+        false,
+      ),
+    ).toThrow(/points at the same database as DATABASE_URL/)
+  })
+
+  it('treats a trailing dot in the hostname as equivalent to none', () => {
+    expect(() =>
+      checkTestDatabaseIdentity(
+        'postgres://host.example.com./myapp',
+        'postgres://host.example.com/myapp',
+        false,
       ),
     ).toThrow(/points at the same database as DATABASE_URL/)
   })
@@ -155,6 +180,7 @@ describe('checkTestDatabaseIdentity', () => {
       checkTestDatabaseIdentity(
         'postgres://host:5433/myapp',
         'postgres://host:5432/myapp',
+        false,
       ),
     ).not.toThrow()
   })
@@ -164,19 +190,20 @@ describe('checkTestDatabaseIdentity', () => {
       checkTestDatabaseIdentity(
         'postgres://user:pw@ep-test-branch.us-east-2.aws.neon.tech/neondb',
         'postgres://user:pw@ep-main-branch.us-east-2.aws.neon.tech/neondb',
+        false,
       ),
     ).not.toThrow()
   })
 
   it('throws when two sqlite URLs resolve to the same file', () => {
     expect(() =>
-      checkTestDatabaseIdentity('file:./db/dev.db', 'file:./db/dev.db'),
+      checkTestDatabaseIdentity('file:./db/dev.db', 'file:./db/dev.db', false),
     ).toThrow(/points at the same database as DATABASE_URL/)
   })
 
   it('does not throw for two different sqlite files', () => {
     expect(() =>
-      checkTestDatabaseIdentity('file:./db/test.db', 'file:./db/dev.db'),
+      checkTestDatabaseIdentity('file:./db/test.db', 'file:./db/dev.db', false),
     ).not.toThrow()
   })
 
@@ -185,6 +212,7 @@ describe('checkTestDatabaseIdentity', () => {
       checkTestDatabaseIdentity(
         'postgres://user:secret@host:5432/myapp',
         'postgres://user:secret@host:5432/myapp',
+        false,
       ),
     ).toThrow(/user:\*\*\*@host/)
   })

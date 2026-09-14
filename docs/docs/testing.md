@@ -1387,6 +1387,8 @@ Before resetting the test database, Cedar runs two checks. First, that the URL's
 
 This is a same-database check, not a naming convention — Cedar doesn't require your test database's name to contain `test` or `e2e`. A naming check sounds appealing but doesn't hold up for managed Postgres providers, where every project shares the same default database name: every Supabase project's database is named `postgres`, and a Neon branch inherits its parent's database name (typically `neondb`) unless you rename it. A dedicated test project or branch on either of those providers is a different **host**, with the same database name — which the identity guard handles correctly, since it's comparing the whole connection identity, not just the name.
 
+If `TEST_DATABASE_URL` is set but there's no `DATABASE_URL` at all to compare it against, the guard fails closed and refuses to run — there'd be no way to confirm `TEST_DATABASE_URL` isn't an accidentally-supplied production URL. Set `DATABASE_URL` to anything, even a placeholder, so Cedar has something to check against. Cedar's own generated sqlite fallback (used when `TEST_DATABASE_URL` isn't set at all) is the one exception — it's a path only Cedar controls, so it's accepted regardless of `DATABASE_URL`.
+
 ### Running Tests With an AI Agent
 
 Prisma detects when a destructive command like `migrate reset` or `db push --force-reset` is being run by an AI agent, and refuses to run it without the `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION` env var set. Since `cedar test api` runs exactly this kind of command as part of its normal test-database setup, that guard can fire on Cedar's own invocation — inside a test run an agent kicked off, not on anything the agent typed directly.

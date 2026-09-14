@@ -106,16 +106,29 @@ describe('setup', () => {
     expect(execa.sync).toHaveBeenCalledTimes(1)
   })
 
-  it('does not falsely refuse when cedar test forwards an empty CEDAR_APP_DATABASE_URL (no real DATABASE_URL of its own)', async () => {
+  it('fails closed — not on a false same-database match — when cedar test forwards an empty CEDAR_APP_DATABASE_URL (no real DATABASE_URL of its own)', async () => {
     // Simulates `cedar test api` when the app never had its own
     // DATABASE_URL set — testHandler.ts still forwards the key, but empty,
     // rather than omitting it (which would make this look like a direct
     // `vitest` invocation and fall back to the already-overwritten
-    // DATABASE_URL, wrongly matching the test URL).
+    // DATABASE_URL, wrongly matching the test URL). The refusal here should
+    // be the fail-closed "nothing to compare against" one, not a false
+    // "same database" one from comparing the test URL against itself.
     process.env.CEDAR_APP_DATABASE_URL = ''
     process.env.DATABASE_URL = 'postgres://host:5432/myapp_test'
     process.env.TEST_DATABASE_URL = 'postgres://host:5432/myapp_test'
     getPrismaDatasourceProvider.mockResolvedValue('postgresql')
+    const CedarApiVitestEnvironment = await loadEnvironment()
+
+    await expect(CedarApiVitestEnvironment.setup()).rejects.toThrow(
+      /there's no DATABASE_URL to confirm/,
+    )
+    expect(execa.sync).not.toHaveBeenCalled()
+  })
+
+  it('does not fail closed when the sqlite fallback is used, even with no DATABASE_URL', async () => {
+    process.env.CEDAR_APP_DATABASE_URL = ''
+    getPrismaDatasourceProvider.mockResolvedValue('sqlite')
     const CedarApiVitestEnvironment = await loadEnvironment()
 
     await CedarApiVitestEnvironment.setup()

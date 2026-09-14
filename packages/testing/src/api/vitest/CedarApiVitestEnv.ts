@@ -55,7 +55,11 @@ const CedarApiVitestEnvironment: Environment = {
     )
 
     const testConfig = getConfig().test
-    checkTestDatabaseIdentity(process.env.DATABASE_URL, mainDatabaseUrl)
+    checkTestDatabaseIdentity(
+      process.env.DATABASE_URL,
+      mainDatabaseUrl,
+      usedFallback,
+    )
 
     console.log(
       `Setting up test database: ${redactDatabaseUrl(process.env.DATABASE_URL)}`,
