@@ -9,7 +9,7 @@ import { lazy, memo } from '../x/decorators.js'
 import type { ExtendedDiagnostic } from '../x/diagnostics.js'
 import { err, LocationLike_toLocation } from '../x/diagnostics.js'
 import { DiagnosticSeverity } from '../x/diagnostics.js'
-import { URL_file } from '../x/URL.js'
+import { URL_fromFile } from '../x/URL.js'
 
 import type { RWProject } from './RWProject.js'
 import { RWRoute } from './RWRoute.js'
@@ -108,7 +108,7 @@ export class RWRouter extends FileNode {
   *diagnostics() {
     if (!this.fileExists) {
       // should we assign this error to the project? to cedar.toml?
-      const uri = URL_file(getConfigPath())
+      const uri = URL_fromFile(getConfigPath())
       const message = `Routes.js does not exist`
       yield err(uri, message)
       // TODO: add quickFix (create a simple Routes.js)

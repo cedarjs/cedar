@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { Position_fromOffsetOrFail } from './diagnostics.js'
 import type { Location } from './Location.js'
 import { Range_create } from './Range.js'
-import { URL_file, URL_toFile } from './URL.js'
+import { URL_fromFile, URL_toFile } from './URL.js'
 
 /**
  * find "env()" expressions in a prisma file using regex
@@ -12,7 +12,7 @@ import { URL_file, URL_toFile } from './URL.js'
 export function* prisma_parseEnvExpressionsInFile(
   prismaSchemaFilePath: string,
 ) {
-  const uri = URL_file(prismaSchemaFilePath)
+  const uri = URL_fromFile(prismaSchemaFilePath)
   const file = URL_toFile(uri) // convert back and forth in case someone passed a uri
   if (!existsSync(file)) {
     return []

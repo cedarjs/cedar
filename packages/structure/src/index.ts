@@ -2,7 +2,9 @@ import { getPaths } from '@cedarjs/project-config'
 
 export { DiagnosticSeverity } from './x/diagnostics.js'
 export { RWProject, RWRoute } from './model/index.js'
-export { URL_file } from './x/URL.js'
+export { URL_fromFile } from './x/URL.js'
+/** @deprecated Use `URL_fromFile` instead. */
+export { URL_fromFile as URL_file } from './x/URL.js'
 import { RWProject } from './model/index.js'
 import type { GetSeverityLabelFunction } from './x/diagnostics.js'
 import {
