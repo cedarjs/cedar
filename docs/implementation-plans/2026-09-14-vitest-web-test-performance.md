@@ -232,19 +232,31 @@ on `@cedarjs/vite` — the dependency already runs the other way). Wired in
 
 - `resolveId('virtual:cedar-test-route-map')` →
   `\0virtual:cedar-test-route-map`.
-- `load()` calls `getProjectRoutes()` from `@cedarjs/internal/dist/routes.js`
-  and keeps every route with `!isNotFound && name`, using `pathDefinition` as
-  the path. This is the same route model that generates `web-routerRoutes.d.ts`,
-  so the `routes.*()` names available in tests match the generated `routes`
-  types by construction. It is also what the user's workaround uses, so it is
-  known to produce the right set on a real app. The cost is one ts-morph project
-  load per Vitest start, in the main process; Phase 0 measures it on the heavy
-  fixture. If it is more than a few hundred milliseconds, the alternative is a
-  `@babel/parser` walk of the Routes file collecting `<Route name path>`
-  literals (the vite package already has the Babel dependencies for
-  `vite-plugin-cedar-routes-auto-loader.ts`), with a test asserting it yields
-  the same set as `getProjectRoutes()` on the fixture. Routes without a `name`
-  are skipped, matching `MockRouter.Router`'s `if (name && path)`.
+- `load()` reads `getPaths().web.routes`, parses it with `@babel/parser`
+  (`typescript`, `jsx` plugins — the vite package already has the Babel
+  dependencies for `vite-plugin-cedar-routes-auto-loader.ts`), and walks every
+  `JSXElement` named `Route` regardless of nesting (`Set`, `PrivateSet`,
+  `Private`, fragments, arrays). For each one it classifies the `name` and
+  `path` attributes: a `StringLiteral`, a `JSXExpressionContainer` holding a
+  `StringLiteral`, or an expression-free `TemplateLiteral` is a literal;
+  anything else (an identifier, a call, a spread attribute on the element) is
+  computed. Routes with literal `name` and `path` go into the map. Routes with
+  no `name` (`notfound`, unnamed redirects) are skipped, matching
+  `MockRouter.Router`'s `if (name && path)`. A single computed `name` or `path`
+  anywhere in the file, or a parse error, selects the fallback below — the
+  decision is made on the AST, before anything is generated.
+- `getProjectRoutes()` from `@cedarjs/internal` is _not_ used at runtime even
+  though `@cedarjs/vite` already depends on it. `RWRoute.path` and
+  `RWRoute.name` return `undefined` for a non-literal attribute, and
+  `getProjectRoutes()` passes every non-notfound route's `path` straight into
+  `getRouteRegexAndParams()`, which throws on `undefined.matchAll` — so a
+  computed `path` would crash Vitest startup before any fallback could run, and
+  a computed `name` would be dropped silently. The same model does generate
+  `web-routerRoutes.d.ts`, so the plugin's unit tests use `getProjectRoutes()`
+  as the oracle on the fixture Routes file to assert the Babel walk yields the
+  same named set. The user's workaround calls `getProjectRoutes()` from
+  `vite.config.ts` and works because their Routes file has only literal
+  attributes.
 - Emits:
 
   ```js
@@ -258,8 +270,8 @@ on `@cedarjs/vite` — the dependency already runs the other way). Wired in
 
 ### Fallback when extraction is not possible
 
-If `getProjectRoutes()` reports a named route without a usable string
-`pathDefinition` (a `path` computed from a variable, spread props), the plugin
+If the AST walk finds a `Route` with a computed `name` or `path` (a variable,
+a call, a spread attribute), or the Routes file fails to parse, the plugin
 emits the current behaviour instead:
 
 ```js
@@ -284,10 +296,16 @@ element in the file, which is a superset. Routes composed from a _separate_ file
 ### Consumers in `@cedarjs/testing`
 
 - `MockRouter.tsx`: add
-  `export function registerRoutes(map: Record<string, string>)` that fills
+  `export function registerRoutes(map: Record<string, string>)` that
+  _replaces_ the generated entries: it deletes every key it registered on a
+  previous call (tracked in a module-level `Set`), then sets
   `routes[name] = (args = {}) => replaceParams(path, args)` — the same closure
-  `Router` builds. `Router` itself stays as-is for users who render a `<Router>`
-  explicitly in a test.
+  `Router` builds — for each entry in the new map. Replace rather than fill so
+  a route removed or renamed in watch mode (or, under Phase 4, on a worker that
+  keeps the module across files) cannot leave a stale builder behind. `Router`
+  itself stays as-is for users who render a `<Router>` explicitly in a test;
+  entries it adds are not tracked and not cleared. The watch-mode check in
+  Verification covers removal and rename, not just addition.
 - `vitest-web.setup.ts`:
   `import { routeMap, UserRoutes } from 'virtual:cedar-test-route-map'` and
   `import { registerRoutes } from '../MockRouter.js'`; call
@@ -412,14 +430,24 @@ this phase is not conditional; what it does depends on the Phase 0 profile.
   - Module-level state in those files stops being per file:
     `mockedUserMeta.currentUser`, `mockedRouteParamsMeta.params`,
     `REQUEST_HANDLER_QUEUE`, `SERVER_INSTANCE`. `closeServer()` already handles
-    `SERVER_INSTANCE`; the rest needs an explicit `resetTestState()` called from
-    the setup file's `beforeAll`, so a `mockCurrentUser()` in one file cannot
-    leak into the next file on the same worker. `REQUEST_HANDLER_QUEUE` is the
-    subtle one: Cell mocks are pushed to it once per worker (their modules are
-    cached), so it must be kept, while handlers a test file registers at module
-    top level before the server starts must not survive the file. Split the
-    queue into "global" (Cell mocks) and "file" entries, or snapshot its length
-    in `beforeAll` and truncate in `afterAll`.
+    `SERVER_INSTANCE`; the rest needs an explicit `resetTestState()` so a
+    `mockCurrentUser()` in one file cannot leak into the next file on the same
+    worker. The reset has to run at the setup file's module top level, not in
+    its `beforeAll`: Vitest evaluates setup files before it imports the test
+    file, and `beforeAll` runs after the test file's module scope has already
+    executed — so a `mockCurrentUser()` or `mockGraphQLQuery()` call at the top
+    of a test file lands between the two, and a `beforeAll` reset would erase
+    the current file's own state. The setup file is re-executed for every test
+    file even when the rest of `@cedarjs/testing` is externalized, which is
+    what makes its top level the right per-file boundary. `REQUEST_HANDLER_QUEUE`
+    is the subtle one: Cell mocks are pushed to it once per worker (their
+    modules are cached), so those must be kept, while handlers a test file
+    registers at module scope before the server starts must not survive the
+    file. Keep two queues — `GLOBAL_HANDLERS` for Cell mocks (registered
+    through the setup file's own imports) and `FILE_HANDLERS` for everything
+    else — and clear only `FILE_HANDLERS` in the top-level reset. A length
+    snapshot taken in `beforeAll` does not work for the same ordering reason:
+    it would already include the current file's entries.
 
   If the Phase 0 profile shows `@cedarjs/testing`'s own evaluation is a small
   share, skip this: the state-scoping change is not worth it for a small win.
@@ -486,8 +514,10 @@ this phase is not conditional; what it does depends on the Phase 0 profile.
 - Fixture project (`__fixtures__/test-project`) web suite through tarsync: all
   18 files pass unchanged, including `HomePage.test.tsx` and the Cell tests that
   depend on `standard()` and on MSW intercepting the Cell's query.
-- Watch mode: edit Routes.tsx (add a route) and confirm a test using the new
-  `routes.*()` entry reruns and passes without restarting Vitest.
+- Watch mode: edit Routes.tsx three ways without restarting Vitest — add a
+  route and confirm a test using the new `routes.*()` entry reruns and passes;
+  remove a route and confirm `routes.<removed>` is `undefined` in the rerun;
+  rename a route and confirm only the new name resolves.
 - Storybook smoke: `yarn cedar storybook` in the fixture still resolves
   `~__CEDAR__USER_ROUTES_FOR_MOCK` through its own alias.
 - `yarn build && yarn lint && yarn test:types`.
