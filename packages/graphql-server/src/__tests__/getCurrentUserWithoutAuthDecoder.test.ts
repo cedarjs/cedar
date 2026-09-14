@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { createLogger } from '@cedarjs/api/logger'
 
-import { createGraphQLYoga } from '../createGraphQLYoga.js'
+import { createGraphQLServer } from '../createGraphQLServer.js'
 import { createGraphQLHandler } from '../functions/graphql.js'
 import type { GetCurrentUser } from '../types.js'
 
@@ -43,7 +43,7 @@ const yogaOptions = {
 
 describe('getCurrentUser without an authDecoder', () => {
   it('is called on the fetch-native path, with the raw token', async () => {
-    const { yoga, buildRequestContext } = await createGraphQLYoga(yogaOptions)
+    const { yoga, buildRequestContext } = await createGraphQLServer(yogaOptions)
 
     // The global `Request` is what the Fastify, dev and universal-deploy
     // entry points hand `yoga.handle`. Its body can only be read once, which

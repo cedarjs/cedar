@@ -27,7 +27,7 @@ export const useCedarAuthContext = (
           'Auth state is resolved when a request enters Cedar and passed on ' +
             'the GraphQL context, but this context has no `cedarContext`. ' +
             'Whatever is invoking `yoga.handle` needs to build one with the ' +
-            '`buildRequestContext` returned by `createGraphQLYoga` and pass ' +
+            '`buildRequestContext` returned by `createGraphQLServer` and pass ' +
             'it as `cedarContext`.',
         )
       }

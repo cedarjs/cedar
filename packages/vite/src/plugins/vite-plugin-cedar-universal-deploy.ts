@@ -361,11 +361,11 @@ async function generateGraphQLModule(distPath: string): Promise<string> {
   //   - No build-time Rollup resolution of files that don't exist yet
   //
   // The __cedar_graphqlOptions export from the bundled code is used directly
-  // by createGraphQLYoga, so we can initialise yoga synchronously from the
+  // by createGraphQLServer, so we can initialise yoga synchronously from the
   // inline bundle rather than going through a separate file import.
   //
   // Bundle only the graphql options export. The UD wrapper uses
-  // createGraphQLYoga directly, so the legacy createGraphQLHandler call and
+  // createGraphQLServer directly, so the legacy createGraphQLHandler call and
   // its handler export are unnecessary and would trigger wasteful eager Yoga
   // initialization (plus the Prisma client import) on module load. By only
   // requesting __cedar_graphqlOptions, esbuild tree-shakes the rest away.
@@ -375,7 +375,7 @@ async function generateGraphQLModule(distPath: string): Promise<string> {
 
   return `
     import { buildCedarContext, requestToLegacyEvent } from '@cedarjs/api/runtime';
-    import { createGraphQLYoga } from '@cedarjs/graphql-server';
+    import { createGraphQLServer } from '@cedarjs/graphql-server';
 
     // Inlined bundle of ${path.basename(distPath)} (node_modules kept external)
     ${bundledCode}
@@ -432,7 +432,7 @@ async function generateFunctionModule(distPath: string): Promise<string> {
 declare const buildCedarContext: typeof apiRuntime.buildCedarContext
 declare const requestToLegacyEvent: typeof apiRuntime.requestToLegacyEvent
 declare const wrapLegacyHandler: typeof apiRuntime.wrapLegacyHandler
-declare const createGraphQLYoga: typeof graphqlServerModule.createGraphQLYoga
+declare const createGraphQLServer: typeof graphqlServerModule.createGraphQLServer
 
 /**
  * The default export of a compiled Cedar api function, as seen from the
@@ -542,7 +542,7 @@ function createGraphQLFetch(graphqlOptions: GraphQLYogaOptions) {
 
   function getGraphQLServer() {
     if (!graphqlServerPromise) {
-      graphqlServerPromise = createGraphQLYoga(graphqlOptions)
+      graphqlServerPromise = createGraphQLServer(graphqlOptions)
     }
 
     return graphqlServerPromise
