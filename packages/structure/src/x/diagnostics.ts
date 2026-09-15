@@ -10,7 +10,7 @@ import type { Position } from './Position.js'
 import { Position_compare } from './Position.js'
 import type { Range } from './Range.js'
 import { Range_create } from './Range.js'
-import { URL_file } from './URL.js'
+import { URL_fromFile } from './URL.js'
 
 export type DocumentUri = string
 
@@ -109,13 +109,13 @@ export function Range_fromNode(node: tsm.Node): Range {
 
 export function Location_fromNode(node: tsm.Node): Location {
   return {
-    uri: URL_file(node.getSourceFile().getFilePath()),
+    uri: URL_fromFile(node.getSourceFile().getFilePath()),
     range: Range_fromNode(node),
   }
 }
 
 export function Location_fromFilePath(filePath: string): Location {
-  return { uri: URL_file(filePath), range: Range_create(0, 0, 0, 0) }
+  return { uri: URL_fromFile(filePath), range: Range_create(0, 0, 0, 0) }
 }
 
 /**
@@ -152,7 +152,7 @@ export type LocationLike = tsm.Node | string | Location | ExtendedDiagnostic
 
 export function LocationLike_toLocation(x: LocationLike): Location {
   if (typeof x === 'string') {
-    return { uri: URL_file(x), range: Range_create(0, 0, 0, 0) }
+    return { uri: URL_fromFile(x), range: Range_create(0, 0, 0, 0) }
   }
   if (typeof x === 'object') {
     if (x instanceof tsm.Node) {
@@ -308,7 +308,7 @@ export function ExtendedDiagnostic_format(
 
   let base = 'file://'
   if (cwd) {
-    base = URL_file(cwd)
+    base = URL_fromFile(cwd)
   }
   if (!base.endsWith('/')) {
     base += '/'

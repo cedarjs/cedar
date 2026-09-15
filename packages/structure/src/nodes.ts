@@ -10,7 +10,7 @@ import type { ExtendedDiagnostic } from './x/diagnostics.js'
 import { basenameNoExt } from './x/path.js'
 import { Range_create } from './x/Range.js'
 import { createTSMSourceFile_cached } from './x/ts-morph.js'
-import { URL_file } from './x/URL.js'
+import { URL_fromFile } from './x/URL.js'
 
 export type NodeID = string
 
@@ -117,7 +117,7 @@ export abstract class BaseNode {
    */
   @memo()
   async findNode(id: NodeID): Promise<BaseNode | undefined> {
-    id = URL_file(id)
+    id = URL_fromFile(id)
     if (this.id === id) {
       return this
     }
@@ -137,7 +137,7 @@ export abstract class BaseNode {
 export abstract class FileNode extends BaseNode {
   abstract get filePath(): string
   @lazy() get uri(): string {
-    return URL_file(this.filePath)
+    return URL_fromFile(this.filePath)
   }
   /**
    * the ID of a FileNode is its file:// uri.

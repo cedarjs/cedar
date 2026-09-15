@@ -4,7 +4,7 @@ import path from 'node:path'
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 
-import { URL_file } from '../../x/URL'
+import { URL_fromFile } from '../../x/URL'
 import { RWProject } from '../RWProject'
 
 let originalEnv: NodeJS.ProcessEnv
@@ -68,7 +68,7 @@ describe('Redwood Project Model', () => {
     const ds = await project.collectDiagnostics()
     ds.length
 
-    const uri = URL_file(projectRoot, 'api/src/graphql/todos.sdl.js')
+    const uri = URL_fromFile(projectRoot, 'api/src/graphql/todos.sdl.js')
     const node = await project.findNode(uri)
     expect(node).toBeDefined()
     expect(node?.id).toEqual(uri)

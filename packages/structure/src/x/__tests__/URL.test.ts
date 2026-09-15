@@ -2,21 +2,21 @@ import { sep } from 'path'
 
 import { describe, it, expect } from 'vitest'
 
-import { URL_file, URL_toFile } from '../URL'
+import { URL_fromFile, URL_toFile } from '../URL'
 
 describe('URL_fromFile', () => {
   it('works for windows style paths', () => {
-    expect(URL_file(`\\a\\b.c`)).toEqual('file:///a/b.c')
-    expect(URL_file(`\\a\\b.c`)).toEqual('file:///a/b.c')
-    expect(URL_file(`C:\\a`, `b.c`)).toEqual('file:///C:/a/b.c')
+    expect(URL_fromFile(`\\a\\b.c`)).toEqual('file:///a/b.c')
+    expect(URL_fromFile(`\\a\\b.c`)).toEqual('file:///a/b.c')
+    expect(URL_fromFile(`C:\\a`, `b.c`)).toEqual('file:///C:/a/b.c')
   })
   it('works for linux style paths', () => {
-    expect(URL_file(`/a/b.c`)).toEqual('file:///a/b.c')
-    expect(URL_file(`/a`, 'b.c')).toEqual('file:///a/b.c')
+    expect(URL_fromFile(`/a/b.c`)).toEqual('file:///a/b.c')
+    expect(URL_fromFile(`/a`, 'b.c')).toEqual('file:///a/b.c')
   })
   it('works with file:// URLs', () => {
-    expect(URL_file('file:///a/b.c')).toEqual('file:///a/b.c')
-    expect(URL_file(`file:///a`, 'b.c')).toEqual('file:///a/b.c')
+    expect(URL_fromFile('file:///a/b.c')).toEqual('file:///a/b.c')
+    expect(URL_fromFile(`file:///a`, 'b.c')).toEqual('file:///a/b.c')
   })
 })
 
