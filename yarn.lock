@@ -3371,7 +3371,7 @@ __metadata:
     "@cedarjs/project-config": "workspace:*"
     "@prisma/client": "npm:7.10.0"
     concurrently: "npm:9.2.4"
-    cron-parser: "npm:5.10.0"
+    cron-parser: "npm:5.10.1"
     publint: "npm:0.3.24"
     type-fest: "npm:5.9.0"
     typescript: "npm:5.9.3"
@@ -15743,12 +15743,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cron-parser@npm:5.10.0":
-  version: 5.10.0
-  resolution: "cron-parser@npm:5.10.0"
+"cron-parser@npm:5.10.1":
+  version: 5.10.1
+  resolution: "cron-parser@npm:5.10.1"
   dependencies:
     luxon: "npm:^3.7.2"
-  checksum: 10c0/bf8ad9b121140aadc295eb5a0d0e67df44b237e397e95fa1ab5d9e87f2c9923c727ce3541989af56b8c666a929a51015bcd23d2e37ebda3bcaf3b9f0b555959c
+  checksum: 10c0/e5150167be9a5dddeaf2a8b27a52d6d449f3f2c99222cab1e4773973eb935117a9218ea050438b869183f00a7af6cdb2638f601172da57ba828ed1b5bc5165a5
   languageName: node
   linkType: hard
 
