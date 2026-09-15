@@ -6,7 +6,7 @@ export * from './errors.js'
 export * from './functions/graphql.js'
 export * from './functions/useRequireAuth.js'
 export * from './makeMergedSchema.js'
-export * from './createGraphQLYoga.js'
+export * from './createGraphQLServer.js'
 export * from './types.js'
 
 export {

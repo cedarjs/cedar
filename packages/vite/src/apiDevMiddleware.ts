@@ -28,7 +28,7 @@ import {
   transformWithBabel,
 } from '@cedarjs/babel-config'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
-import { createGraphQLYoga } from '@cedarjs/graphql-server'
+import { createGraphQLServer } from '@cedarjs/graphql-server'
 import type {
   CedarGraphQLServer,
   GraphQLYogaOptions,
@@ -188,7 +188,7 @@ async function internalLoadApiFunctions(viteServer: ViteDevServer) {
   await Promise.all(imports)
 
   if (extractedGraphqlOptions) {
-    loadedGraphqlServer = await createGraphQLYoga(extractedGraphqlOptions)
+    loadedGraphqlServer = await createGraphQLServer(extractedGraphqlOptions)
   } else {
     // Reset so deleted/missing graphql.ts is reflected immediately (i.e. during
     // a dev session)

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { createLogger } from '@cedarjs/api/logger'
 
-import { createGraphQLYoga } from '../createGraphQLYoga.js'
+import { createGraphQLServer } from '../createGraphQLServer.js'
 import type { CedarGraphQLContext } from '../types.js'
 
 const sdls = {
@@ -25,7 +25,7 @@ async function contextSeenBy(
 ) {
   const seen: CedarGraphQLContext[] = []
 
-  const { yoga } = await createGraphQLYoga({
+  const { yoga } = await createGraphQLServer({
     loggerConfig: { logger: createLogger({}) },
     // The SDL and service shapes here are the minimum a query needs, not the
     // full generated ones these options are typed for.

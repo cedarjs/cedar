@@ -17,7 +17,7 @@ export interface CedarRequestContext {
   /**
    * The auth state the request carries, for `getCurrentUser` to turn into a
    * current user. Only GraphQL requests have one: the GraphQL server resolves
-   * it, through the `buildRequestContext` that `createGraphQLYoga` returns,
+   * it, through the `buildRequestContext` that `createGraphQLServer` returns,
    * because it's the only thing that reads it. `buildCedarContext` leaves it
    * unset.
    */

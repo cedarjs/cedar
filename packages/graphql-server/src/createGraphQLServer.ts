@@ -65,7 +65,7 @@ export interface CedarGraphQLServer {
   buildRequestContext: (request: Request) => Promise<CedarRequestContext>
 }
 
-export const createGraphQLYoga = async ({
+export const createGraphQLServer = async ({
   healthCheckId = 'yoga',
   loggerConfig,
   context,
