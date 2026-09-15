@@ -4,10 +4,9 @@ import { isAbsolute, join, normalize, sep as path_sep } from 'node:path'
  * Creates a file:// URL
  * Works with linux and windows paths
  * If the passed in value is already as file:// URL, it returns that same value
- * TODO: rename to URL_fromFile
  * @param filePath
  */
-export function URL_file(filePath: string, ...parts: string[]): string {
+export function URL_fromFile(filePath: string, ...parts: string[]): string {
   if (filePath.startsWith(FILE_SCHEME)) {
     filePath = filePath.substr(FILE_SCHEME.length)
   }

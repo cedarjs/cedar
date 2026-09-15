@@ -20,7 +20,7 @@ import {
   isLayoutFileName,
   globSync,
 } from '../x/path.js'
-import { URL_file } from '../x/URL.js'
+import { URL_fromFile } from '../x/URL.js'
 
 import { RWCell } from './RWCell.js'
 import { RWComponent } from './RWComponent.js'
@@ -50,7 +50,7 @@ export class RWProject extends BaseNode {
   parent = undefined
 
   @lazy() get id() {
-    return URL_file(this.pathHelper.base)
+    return URL_fromFile(this.pathHelper.base)
   }
 
   children() {
