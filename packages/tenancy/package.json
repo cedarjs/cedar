@@ -43,7 +43,7 @@
     "@cedarjs/graphql-server": "workspace:*"
   },
   "devDependencies": {
-    "@apollo/client": "4.2.12",
+    "@apollo/client": "4.3.0",
     "@arethetypeswrong/cli": "0.18.5",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/framework-tools": "workspace:*",
@@ -73,7 +73,7 @@
     "zx": "8.8.5"
   },
   "peerDependencies": {
-    "@apollo/client": "4.2.12",
+    "@apollo/client": "4.3.0",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/router": "workspace:*",
     "@cedarjs/web": "workspace:*",

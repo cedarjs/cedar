@@ -169,9 +169,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/client@npm:4.2.12, @apollo/client@npm:^4.0.0":
-  version: 4.2.12
-  resolution: "@apollo/client@npm:4.2.12"
+"@apollo/client@npm:4.3.0, @apollo/client@npm:^4.0.0":
+  version: 4.3.0
+  resolution: "@apollo/client@npm:4.3.0"
   dependencies:
     "@graphql-typed-document-node/core": "npm:^3.1.1"
     "@wry/caches": "npm:^1.0.0"
@@ -196,7 +196,7 @@ __metadata:
       optional: true
     subscriptions-transport-ws:
       optional: true
-  checksum: 10c0/97852e2a88231ea15b3cc6f1cef307f0df655d96d8f96531717f764cb8440b0a8931ca13b8a73623b6fffe156cccdfaf75f940e0d72f928fbc68edad6345e301
+  checksum: 10c0/6fb4030482d88b9d1e4c96faf09f600fc5c4bd8973ea568ccdb579387b698ce8ad8a8e08989b9e725d02733c89f4d9ae95b930e4d09abd3f1da7bba50c35c356
   languageName: node
   linkType: hard
 
@@ -3715,7 +3715,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/tenancy@workspace:packages/tenancy"
   dependencies:
-    "@apollo/client": "npm:4.2.12"
+    "@apollo/client": "npm:4.3.0"
     "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/auth": "workspace:*"
@@ -3747,7 +3747,7 @@ __metadata:
     vitest: "npm:4.1.11"
     zx: "npm:8.8.5"
   peerDependencies:
-    "@apollo/client": 4.2.12
+    "@apollo/client": 4.3.0
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/router": "workspace:*"
     "@cedarjs/web": "workspace:*"
@@ -3828,7 +3828,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/uploads@workspace:packages/uploads"
   dependencies:
-    "@apollo/client": "npm:4.2.12"
+    "@apollo/client": "npm:4.3.0"
     "@arethetypeswrong/cli": "npm:0.18.5"
     "@aws-sdk/client-s3": "npm:3.1131.0"
     "@aws-sdk/s3-request-presigner": "npm:3.1131.0"
@@ -3869,7 +3869,7 @@ __metadata:
     vitest: "npm:4.1.11"
     zx: "npm:8.8.5"
   peerDependencies:
-    "@apollo/client": 4.2.12
+    "@apollo/client": 4.3.0
     "@aws-sdk/client-s3": ^3.0.0
     "@aws-sdk/s3-request-presigner": ^3.0.0
     "@cedarjs/web": "workspace:*"
@@ -4033,7 +4033,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/web@workspace:packages/web"
   dependencies:
-    "@apollo/client": "npm:4.2.12"
+    "@apollo/client": "npm:4.3.0"
     "@apollo/client-react-streaming": "npm:0.14.5"
     "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/auth": "npm:6.0.0"
