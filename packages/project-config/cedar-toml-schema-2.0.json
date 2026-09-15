@@ -135,6 +135,15 @@
       },
       "required": ["basePort"]
     },
+    "test": {
+      "type": "object",
+      "properties": {
+        "autoConsentToDbReset": {
+          "type": "boolean",
+          "description": "Automatically supply Prisma's PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION for `cedar test api`'s destructive database reset, once the reset target has passed Cedar's test-database identity guard. Off by default."
+        }
+      }
+    },
     "experimental": {
       "type": "object",
       "properties": {

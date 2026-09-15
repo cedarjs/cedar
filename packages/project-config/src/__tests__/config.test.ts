@@ -127,6 +127,9 @@ describe('getConfig', () => {
             },
           },
         },
+        "test": {
+          "autoConsentToDbReset": false,
+        },
         "web": {
           "a11y": true,
           "apiUrl": "/.api/functions",
