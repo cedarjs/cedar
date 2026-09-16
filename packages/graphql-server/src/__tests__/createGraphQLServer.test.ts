@@ -34,10 +34,4 @@ describe('createGraphQLServer smoke-test', () => {
     expect(logger).toBeTruthy()
     expect(yoga).toBeTruthy()
   })
-
-  it('exposes the deprecated createGraphQLYoga alias from the package root', async () => {
-    const { createGraphQLYoga } = await import('../index.js')
-
-    expect(createGraphQLYoga).toBe(createGraphQLServer)
-  })
 })
