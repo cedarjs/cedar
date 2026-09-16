@@ -98,7 +98,7 @@
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/framework-tools": "workspace:*",
     "@cedarjs/internal": "workspace:*",
-    "@testing-library/dom": "10.4.1",
+    "@testing-library/dom": "10.4.2",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.3",
     "@types/apollo-upload-client": "^19",
