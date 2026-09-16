@@ -205,6 +205,16 @@ describe('checkTestDatabaseIdentity', () => {
     ).not.toThrow()
   })
 
+  it('treats `database` and `Initial Catalog` as the same SQL Server identity field', () => {
+    expect(() =>
+      checkTestDatabaseIdentity(
+        'sqlserver://host:1433;database=myapp',
+        'sqlserver://host:1433;Initial Catalog=myapp',
+        false,
+      ),
+    ).toThrow(/points at the same database as DATABASE_URL/)
+  })
+
   it('throws when two sqlite URLs resolve to the same file', () => {
     expect(() =>
       checkTestDatabaseIdentity('file:./db/dev.db', 'file:./db/dev.db', false),

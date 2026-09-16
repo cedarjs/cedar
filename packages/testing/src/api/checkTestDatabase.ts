@@ -120,7 +120,12 @@ function parseSqlServerIdentity(url: string): DatabaseIdentity | undefined {
   }
 
   const [, scheme, host, port] = match
-  const databaseParam = params.find((param) => /^\s*database\s*=/i.test(param))
+  // Prisma's SQL Server connection strings accept `Initial Catalog` as an
+  // alias for `database`, so both need to resolve to the same identity
+  // field for two URLs naming the same database to compare as equal.
+  const databaseParam = params.find((param) =>
+    /^\s*(?:database|initial\s+catalog)\s*=/i.test(param),
+  )
   const database = databaseParam?.slice(databaseParam.indexOf('=') + 1).trim()
 
   return {
