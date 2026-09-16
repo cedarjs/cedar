@@ -52,7 +52,10 @@ function createAuthImplementation(auth0Client: Auth0Client) {
           prompt: 'login',
         },
       }),
-    getToken: () => auth0Client.getTokenSilently(),
+    getToken: async () => {
+      const token = await auth0Client.getTokenSilently()
+      return token ?? null
+    },
     getUserMetadata: async () => {
       const user = await auth0Client.getUser()
       return user || null
