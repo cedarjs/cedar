@@ -3,7 +3,7 @@ import { vi, describe, expect, it } from 'vitest'
 
 import { createLogger } from '@cedarjs/api/logger'
 
-import * as yogaFactoryModule from '../../createGraphQLYoga.js'
+import * as yogaFactoryModule from '../../createGraphQLServer.js'
 import { createGraphQLHandler } from '../../functions/graphql.js'
 
 interface MockLambdaParams {
@@ -38,7 +38,10 @@ const mockLambdaEvent = ({
 
 describe('createGraphQLHandler caching', () => {
   it('only initializes yoga once across multiple invocations', async () => {
-    const createGraphQLYoga = vi.spyOn(yogaFactoryModule, 'createGraphQLYoga')
+    const createGraphQLServer = vi.spyOn(
+      yogaFactoryModule,
+      'createGraphQLServer',
+    )
 
     const handler = createGraphQLHandler({
       loggerConfig: { logger: createLogger({}), options: {} },
@@ -56,11 +59,11 @@ describe('createGraphQLHandler caching', () => {
       httpMethod: 'GET',
     })
 
-    // Even when calling the handler twice createGraphQLYoga() should only be
+    // Even when calling the handler twice createGraphQLServer() should only be
     // called once
     await handler(mockedEvent, {} as Context)
     await handler(mockedEvent, {} as Context)
 
-    expect(createGraphQLYoga).toHaveBeenCalledTimes(1)
+    expect(createGraphQLServer).toHaveBeenCalledTimes(1)
   })
 })
