@@ -12753,7 +12753,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tar@npm:^7.5.19":
+"tar@npm:7.5.22":
   version: 7.5.22
   resolution: "tar@npm:7.5.22"
   dependencies:
