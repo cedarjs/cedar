@@ -23,6 +23,9 @@
       "last 1 safari version"
     ]
   },
+  "resolutions": {
+    "node-gyp@latest": "13.0.2"
+  },
   "dependencies": {
     "@docusaurus/core": "3.10.2",
     "@docusaurus/faster": "3.10.2",
