@@ -14,7 +14,7 @@ import {
 } from 'vitest'
 
 import { buildCedarContext } from '@cedarjs/api/runtime'
-import { createGraphQLYoga } from '@cedarjs/graphql-server'
+import { createGraphQLServer } from '@cedarjs/graphql-server'
 import type * as GraphqlServerModule from '@cedarjs/graphql-server'
 import type {
   CedarGraphQLServer,
@@ -38,14 +38,14 @@ vi.mock('@cedarjs/graphql-server', async (importOriginal) => {
 
   return {
     ...actual,
-    createGraphQLYoga: vi.fn(actual.createGraphQLYoga),
+    createGraphQLServer: vi.fn(actual.createGraphQLServer),
   }
 })
 
 // Test double: `cedarFastifyGraphQLServer` only reads `yoga.graphqlEndpoint`,
 // calls `yoga.handle`, and builds the context to hand it with
 // `buildRequestContext`, so that's all this fake needs to implement. Safe
-// because it's only ever passed to the mocked `createGraphQLYoga` above.
+// because it's only ever passed to the mocked `createGraphQLServer` above.
 function fakeYogaResult(handle: () => Promise<Response>) {
   return {
     yoga: { graphqlEndpoint: '/graphql', handle },
@@ -53,7 +53,7 @@ function fakeYogaResult(handle: () => Promise<Response>) {
   } as CedarGraphQLServer
 }
 
-// createGraphQLYoga is mocked in these tests, so its input is never actually
+// createGraphQLServer is mocked in these tests, so its input is never actually
 // read — only used to satisfy cedarFastifyGraphQLServer's option type and
 // skip the fixture-based `dist/functions/graphql.js` lookup, which has no
 // `__cedar_graphqlOptions` export.
@@ -140,14 +140,14 @@ describe('GraphQL route handler client-disconnect handling', () => {
   let fastifyInstance: Awaited<ReturnType<typeof createFastifyInstance>>
 
   afterEach(async () => {
-    vi.mocked(createGraphQLYoga).mockClear()
+    vi.mocked(createGraphQLServer).mockClear()
     await fastifyInstance?.close()
   })
 
   it('responds 499 when yoga.handle throws a recognized disconnect error', async () => {
     fastifyInstance = await createFastifyInstance()
 
-    vi.mocked(createGraphQLYoga).mockResolvedValueOnce(
+    vi.mocked(createGraphQLServer).mockResolvedValueOnce(
       fakeYogaResult(() =>
         Promise.reject(
           new DOMException('This operation was aborted', 'AbortError'),
@@ -171,7 +171,7 @@ describe('GraphQL route handler client-disconnect handling', () => {
   it('keeps the normal failure path (500) for unrelated errors', async () => {
     fastifyInstance = await createFastifyInstance()
 
-    vi.mocked(createGraphQLYoga).mockResolvedValueOnce(
+    vi.mocked(createGraphQLServer).mockResolvedValueOnce(
       fakeYogaResult(() => Promise.reject(new Error('boom'))),
     )
 
@@ -244,13 +244,13 @@ describe('configureApiServer / configureGraphQLServer scoping (issue #2304)', ()
     // Mock the GraphQL Yoga creation so we get a real /graphql route without
     // needing a full GraphQL schema. Defaults to a small `{}` response, but
     // callers (e.g. the compression test below) can override the body.
-    vi.mocked(createGraphQLYoga).mockResolvedValue(fakeYogaResult(yogaHandle))
+    vi.mocked(createGraphQLServer).mockResolvedValue(fakeYogaResult(yogaHandle))
 
     return createServerFn(options)
   }
 
   afterEach(async () => {
-    vi.mocked(createGraphQLYoga).mockClear()
+    vi.mocked(createGraphQLServer).mockClear()
     await server?.close()
   })
 

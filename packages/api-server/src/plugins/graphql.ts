@@ -13,7 +13,7 @@ import type {
 import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers.js'
-import { createGraphQLYoga } from '@cedarjs/graphql-server'
+import { createGraphQLServer } from '@cedarjs/graphql-server'
 import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
 import { getPaths } from '@cedarjs/project-config'
 
@@ -86,7 +86,7 @@ export async function cedarFastifyGraphQLServer(
       method.push('PUT')
     }
 
-    const graphqlServer = await createGraphQLYoga(graphqlOptions)
+    const graphqlServer = await createGraphQLServer(graphqlOptions)
 
     const graphqlEndpoint = trimSlashes(graphqlServer.yoga.graphqlEndpoint)
 

@@ -107,7 +107,7 @@ export const useCedarTrustedDocuments = (
   // operation without ever touching the body again.
   //
   // Keying on the `Request` assumes Yoga's request batching stays disabled
-  // (`createGraphQLYoga` never enables it and doesn't let apps do so either).
+  // (`createGraphQLServer` never enables it and doesn't let apps do so either).
   // With batching, several operations share one `Request`, and this last-write-
   // wins map could hand the allow-list the wrong operation's params. If the
   // framework ever exposes Yoga's `batching` option, this needs a per-operation

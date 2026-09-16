@@ -8,7 +8,7 @@ import * as cookie from 'cookie'
 import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 
-import { createGraphQLYoga } from '../createGraphQLYoga.js'
+import { createGraphQLServer } from '../createGraphQLServer.js'
 import { resolveServerAuthState } from '../serverAuthState.js'
 import type { GraphQLHandlerOptions } from '../types.js'
 
@@ -92,7 +92,7 @@ export const createGraphQLHandler = ({
   // Eager initialization of GraphQL Yoga. It starts immediately when the
   // handler is first created and is awaited on each request. Initialization is
   // shared across all Lambda invocations within the same process lifecycle.
-  const yogaAndLoggerPromise = createGraphQLYoga({
+  const yogaAndLoggerPromise = createGraphQLServer({
     healthCheckId,
     loggerConfig,
     context,

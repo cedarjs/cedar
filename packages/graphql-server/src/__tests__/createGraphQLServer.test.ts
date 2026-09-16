@@ -2,15 +2,15 @@ import { vi, describe, expect, it } from 'vitest'
 
 import { createLogger } from '@cedarjs/api/logger'
 
-import { createGraphQLYoga } from '../createGraphQLYoga.js'
+import { createGraphQLServer } from '../createGraphQLServer.js'
 
 vi.mock('@cedarjs/realtime', () => ({
   useCedarRealtime: vi.fn(() => ({ name: 'useCedarRealtime' })),
 }))
 
-describe('createGraphQLYoga smoke-test', () => {
+describe('createGraphQLServer smoke-test', () => {
   it('Should only require required parameters', async () => {
-    const { logger, yoga } = await createGraphQLYoga({
+    const { logger, yoga } = await createGraphQLServer({
       loggerConfig: { logger: createLogger({}) },
       sdls: {},
       services: {},
@@ -23,7 +23,7 @@ describe('createGraphQLYoga smoke-test', () => {
   it('should load the cedar realtime plugin when realtime options are given', async () => {
     const { useCedarRealtime } = await import('@cedarjs/realtime')
 
-    const { logger, yoga } = await createGraphQLYoga({
+    const { logger, yoga } = await createGraphQLServer({
       loggerConfig: { logger: createLogger({}) },
       sdls: {},
       services: {},
@@ -33,5 +33,11 @@ describe('createGraphQLYoga smoke-test', () => {
     expect(useCedarRealtime).toHaveBeenCalledWith({ subscriptions: {} })
     expect(logger).toBeTruthy()
     expect(yoga).toBeTruthy()
+  })
+
+  it('exposes the deprecated createGraphQLYoga alias from the package root', async () => {
+    const { createGraphQLYoga } = await import('../index.js')
+
+    expect(createGraphQLYoga).toBe(createGraphQLServer)
   })
 })
