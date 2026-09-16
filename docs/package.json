@@ -24,7 +24,7 @@
     ]
   },
   "resolutions": {
-    "tar": "7.5.22"
+    "node-gyp": "13.0.2"
   },
   "dependencies": {
     "@docusaurus/core": "3.10.2",
