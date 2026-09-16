@@ -105,6 +105,16 @@ describe('checkTestDatabaseIdentity', () => {
     ).not.toThrow()
   })
 
+  it('throws when the sqlite fallback resolves to the same file as DATABASE_URL', () => {
+    expect(() =>
+      checkTestDatabaseIdentity(
+        'file:./.cedar/test.db',
+        'file:./.cedar/test.db',
+        true,
+      ),
+    ).toThrow(/points at the same database as DATABASE_URL/)
+  })
+
   it('fails closed when there is no DATABASE_URL to compare an explicit TEST_DATABASE_URL against', () => {
     expect(() =>
       checkTestDatabaseIdentity(

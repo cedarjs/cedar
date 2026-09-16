@@ -214,19 +214,23 @@ function identitiesMatch(a: DatabaseIdentity, b: DatabaseIdentity): boolean {
  * closed rather than skipping the check: an explicit `TEST_DATABASE_URL`
  * with nothing to confirm it's not the app's real database is refused,
  * since there'd be no way to tell it apart from one that is. Cedar's own
- * generated sqlite fallback (`usedFallback`) is the one exception — it's a
- * path only Cedar controls, so it's safe regardless of `DATABASE_URL`.
+ * generated sqlite fallback (`usedFallback`) is exempt from that fail-closed
+ * refusal — it's a path only Cedar controls, so there's no need to force a
+ * `DATABASE_URL` to exist just to permit it — but it still runs through the
+ * same-database comparison below whenever a `DATABASE_URL` is present, so a
+ * project whose real database happens to live at that same generated path
+ * is still caught.
  */
 export function checkTestDatabaseIdentity(
   testDatabaseUrl: string,
   mainDatabaseUrl: string | undefined,
   usedFallback: boolean,
 ) {
-  if (usedFallback) {
-    return
-  }
-
   if (!mainDatabaseUrl) {
+    if (usedFallback) {
+      return
+    }
+
     const redactedTestUrl = redactDatabaseUrl(testDatabaseUrl)
     throw new Error(
       `TEST_DATABASE_URL (${redactedTestUrl}) is set, but there's no ` +
