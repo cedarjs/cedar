@@ -96,6 +96,19 @@ export interface Config {
     versionUpdates: string[]
   }
   studio: StudioConfig
+  test: {
+    /**
+     * When true, `cedar test api` automatically supplies Prisma's
+     * `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION` env var for the
+     * destructive test-database reset, instead of requiring a human to set
+     * it, whenever the reset target has already passed Cedar's own
+     * test-database identity guard (a check that the resolved test database
+     * isn't the same database as `DATABASE_URL`). Opt-in and off by
+     * default: this only shortcuts Prisma's AI-agent consent prompt, not
+     * Cedar's guard against resetting the wrong database.
+     */
+    autoConsentToDbReset: boolean
+  }
   experimental: {
     opentelemetry: {
       enabled: boolean
@@ -186,6 +199,9 @@ export const DEFAULT_CONFIG: Config = {
         jwtSecret: 'secret',
       },
     },
+  },
+  test: {
+    autoConsentToDbReset: false,
   },
   experimental: {
     opentelemetry: {
