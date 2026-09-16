@@ -282,3 +282,6 @@ export const createGraphQLServer = async ({
     throw e
   }
 }
+
+/** @deprecated Use `createGraphQLServer` instead. */
+export const createGraphQLYoga = createGraphQLServer
