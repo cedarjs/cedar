@@ -154,6 +154,15 @@ And if you're on an experimental release line, like canary, there's new versions
 
 If you'd like to get notified (at most, once a day) when there's a new version, set `versionUpdates` to include the version tags you're interested in.
 
+## [test]
+
+```toml title="cedar.toml"
+[test]
+  autoConsentToDbReset = false
+```
+
+`cedar test api` resets your test database before each run, which Prisma treats as a destructive, AI-agent-sensitive operation — see [Running Tests With an AI Agent](testing.md#running-tests-with-an-ai-agent) for the full picture. `autoConsentToDbReset` tunes the guard that sits in front of that reset: when `true`, Cedar automatically supplies Prisma's `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION` env var, instead of requiring a human (or an AI agent relaying a human's consent) to set it, but only once the reset target has already passed Cedar's own [test-database identity guard](testing.md#test-database-identity-guard). It's `false` by default: this setting shortcuts Prisma's consent prompt, not Cedar's own guard against resetting the wrong database, so only turn it on once you're comfortable with what that guard does and doesn't check.
+
 ## Using Environment Variables in `cedar.toml`
 
 You may find yourself wanting to change keys in `cedar.toml` based on the environment you're deploying to.
