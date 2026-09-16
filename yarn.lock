@@ -23368,7 +23368,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-gyp@npm:13.0.2":
+"node-gyp@npm:*, node-gyp@npm:13.0.2":
   version: 13.0.2
   resolution: "node-gyp@npm:13.0.2"
   dependencies:
@@ -23385,6 +23385,26 @@ __metadata:
   bin:
     node-gyp: bin/node-gyp.js
   checksum: 10c0/29d33ccf47ffeeb5e7af925550b416f698a26a72eb10975c7eb5775c1d0cecacd76d164a4aa45503d3ddcece209db65c712be00423c69381a4cd14e2e6540559
+  languageName: node
+  linkType: hard
+
+"node-gyp@npm:^12.1.0":
+  version: 12.4.0
+  resolution: "node-gyp@npm:12.4.0"
+  dependencies:
+    env-paths: "npm:^2.2.0"
+    exponential-backoff: "npm:^3.1.1"
+    graceful-fs: "npm:^4.2.6"
+    nopt: "npm:^9.0.0"
+    proc-log: "npm:^6.0.0"
+    semver: "npm:^7.3.5"
+    tar: "npm:^7.5.4"
+    tinyglobby: "npm:^0.2.12"
+    undici: "npm:^6.25.0"
+    which: "npm:^6.0.0"
+  bin:
+    node-gyp: bin/node-gyp.js
+  checksum: 10c0/9acb7c798e124275a6f9c1f7eb64b5abd6196bb885a3945fb44ee0dccf435514e88cdfb0f228ee7ff76ef25107c1f39ff37a067bf92fd00b9aff9234db29ff9e
   languageName: node
   linkType: hard
 
@@ -29214,10 +29234,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"undici@npm:^6.19.5, undici@npm:^6.23.0":
-  version: 6.28.0
-  resolution: "undici@npm:6.28.0"
-  checksum: 10c0/3029a70df06b38b5b2f30732932a1e92544c753cd82c8abdf0d35afad48e0ba91612e79fe3a442dbbb9434d6a9eba2b714d5ea28984c903dda2b5d5444f38354
+"undici@npm:^6.19.5, undici@npm:^6.23.0, undici@npm:^6.25.0":
+  version: 6.28.1
+  resolution: "undici@npm:6.28.1"
+  checksum: 10c0/9c7c277da83972f4f506d564b1d627e3e78aadf866915eab768d96fc70daeae8ff7d87d0cdb32403ae1afdf3aef0f11715e0847d66910fda62822c33c5a7e674
   languageName: node
   linkType: hard
 

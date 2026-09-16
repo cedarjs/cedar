@@ -63,7 +63,7 @@
     "eslint/minimatch": "npm:3.1.5",
     "jake/minimatch": "npm:3.1.5",
     "multimatch/minimatch": "npm:3.1.5",
-    "node-gyp": "13.0.2",
+    "node-gyp@latest": "13.0.2",
     "prettier-plugin-packagejson/sort-package-json": "3.7.1",
     "protobufjs": "7.6.6",
     "test-exclude/minimatch": "npm:3.1.5",

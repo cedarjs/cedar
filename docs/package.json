@@ -24,7 +24,7 @@
     ]
   },
   "resolutions": {
-    "node-gyp": "13.0.2"
+    "node-gyp@latest": "13.0.2"
   },
   "dependencies": {
     "@docusaurus/core": "3.10.2",
