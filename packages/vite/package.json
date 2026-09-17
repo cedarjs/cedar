@@ -113,7 +113,7 @@
     "publint": "0.3.24",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "rollup": "4.63.2",
+    "rollup": "4.63.3",
     "ts-dedent": "2.3.0",
     "typescript": "5.9.3",
     "vitest": "4.1.11"
