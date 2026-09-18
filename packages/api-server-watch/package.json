@@ -32,7 +32,7 @@
     "@cedarjs/api-server": "6.0.2",
     "@cedarjs/internal": "6.0.2",
     "@cedarjs/project-config": "6.0.2",
-    "ansis": "4.3.1",
+    "ansis": "4.4.0",
     "chokidar": "3.6.0",
     "dotenv-defaults": "5.0.2",
     "yargs": "17.7.3"
