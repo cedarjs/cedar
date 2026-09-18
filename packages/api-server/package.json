@@ -99,7 +99,7 @@
     "@cedarjs/web-server": "6.0.0",
     "@fastify/multipart": "9.4.0",
     "@fastify/url-data": "6.0.4",
-    "ansis": "4.3.1",
+    "ansis": "4.4.0",
     "dotenv-defaults": "5.0.2",
     "fast-glob": "3.3.3",
     "fast-json-parse": "1.0.3",
