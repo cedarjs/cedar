@@ -30,6 +30,8 @@ import {
 } from '@apollo/client-react-streaming'
 import { buildManualDataTransport } from '@apollo/client-react-streaming/manual-transport'
 
+import './typeOverrides.js'
+
 import type { UseAuth } from '@cedarjs/auth'
 import { useNoAuth } from '@cedarjs/auth'
 import { ServerAuthContext } from '@cedarjs/auth/dist/AuthProvider/ServerAuthProvider.js'

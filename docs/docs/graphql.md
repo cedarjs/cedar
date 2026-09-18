@@ -928,6 +928,8 @@ import { useCache } from '@cedarjs/web/apollo'
 const { cache } = useCache()
 ```
 
+The cache is typed as Apollo's `InMemoryCache`, and so are `client.cache` and the `cache` argument of mutation `update` callbacks. Cedar declares this for Apollo Client through its `TypeOverrides` interface, because `CedarApolloProvider` always creates an `InMemoryCache`. That means you can call `InMemoryCache`-specific methods without casting, and it also means a project can't declare a different cache type in `TypeOverrides` itself.
+
 ### evict
 
 Either removes a normalized object from the cache or removes a specific field from a normalized object in the cache.
