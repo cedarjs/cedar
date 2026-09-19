@@ -3569,7 +3569,7 @@ __metadata:
     "@graphql-yoga/plugin-defer-stream": "npm:3.23.0"
     "@graphql-yoga/plugin-graphql-sse": "npm:3.23.0"
     "@graphql-yoga/redis-event-target": "npm:3.0.4"
-    "@graphql-yoga/subscription": "npm:5.1.0"
+    "@graphql-yoga/subscription": "npm:5.1.1"
     "@n1ru4l/graphql-live-query": "npm:0.10.0"
     "@n1ru4l/in-memory-live-query-store": "npm:0.10.0"
     graphql: "npm:16.14.2"
@@ -6929,19 +6929,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/subscription@npm:5.1.0, @graphql-yoga/subscription@npm:^5.1.0":
-  version: 5.1.0
-  resolution: "@graphql-yoga/subscription@npm:5.1.0"
+"@graphql-yoga/subscription@npm:5.1.1, @graphql-yoga/subscription@npm:^5.1.0":
+  version: 5.1.1
+  resolution: "@graphql-yoga/subscription@npm:5.1.1"
   dependencies:
-    "@graphql-yoga/typed-event-target": "npm:^3.0.2"
+    "@graphql-yoga/typed-event-target": "npm:^3.0.3"
     "@repeaterjs/repeater": "npm:^3.0.4"
     "@whatwg-node/events": "npm:^0.1.0"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/af72f778bc97a1256b45d9a78210cc97da85071dfb1f60d576a3b879981d47ce8fb15a9d264d959d016e8672b9871c748392ab2ac39d03293667a83ca01159d7
+  checksum: 10c0/43d6abd6b2420175176db0e0d5d38ca2a61693c44c22ec57e37504f8a6519816705a865401d2bc89ae8fbf1d19e5bff057e3b059b7c133f75bbab87f34ab8397
   languageName: node
   linkType: hard
 
-"@graphql-yoga/typed-event-target@npm:^3.0.2, @graphql-yoga/typed-event-target@npm:^3.0.3":
+"@graphql-yoga/typed-event-target@npm:^3.0.3":
   version: 3.0.3
   resolution: "@graphql-yoga/typed-event-target@npm:3.0.3"
   dependencies:
