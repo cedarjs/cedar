@@ -55,7 +55,7 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@cedarjs/realtime": "workspace:*",
-    "@envelop/types": "5.2.1",
+    "@envelop/types": "5.2.2",
     "@escape.tech/graphql-armor-types": "0.7.0",
     "@types/aws-lambda": "8.10.163",
     "@types/jsonwebtoken": "9.0.10",
