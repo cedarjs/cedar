@@ -1,4 +1,4 @@
-import type { RegisterOptions } from 'react-hook-form'
+import type { FieldValues, RegisterOptions, Validate } from 'react-hook-form'
 
 /**
  * We slightly extend `react-hook-form`'s `RegisterOptions` to make working with GraphQL easier.
@@ -179,6 +179,25 @@ const JSONValidation = (val: Record<string, unknown> | null | number) =>
   typeof val === 'number' ? !isNaN(val) : true
 
 /**
+ * Key under which `setCoercion` stores `JSONValidation` in the merged
+ * `validate` object for a `valueAsJSON` field. `FieldError`'s
+ * `DEFAULT_MESSAGES` map has a matching entry so an invalid-JSON error
+ * without a custom message still renders "is not valid".
+ *
+ * `setCoercion` always keeps this key's value as `JSONValidation`, so a
+ * user-supplied validator under the same key can't disable the JSON check.
+ */
+const JSON_VALIDATION_KEY = 'validJSON'
+
+/**
+ * The shape of a single entry in a `validate` object.
+ * `RedwoodRegisterOptions` isn't parameterized with a concrete form/field
+ * type, so `Validate`'s field-value generic resolves to `any` here, same as
+ * it does for the `validate` prop itself.
+ */
+type FieldValidator = Validate<any, FieldValues>
+
+/**
  * ** setCoercion **
  * Handles the flow of coercion, providing a default if none is specified.
  * Also implements Redwood's extensions to `react-hook-form`'s `valueAs` props.
@@ -232,7 +251,26 @@ export const setCoercion = (
     // for checkboxes for now.
     return
   } else if (validation.valueAsJSON) {
-    validation.validate = JSONValidation
+    const userValidate = validation.validate
+    const userValidators: Record<string, FieldValidator> =
+      typeof userValidate === 'function'
+        ? { validate: userValidate }
+        : { ...userValidate }
+
+    // A user validator under this key would otherwise disable the JSON
+    // check by overwriting it in the object spread below, so it's dropped
+    // first.
+    delete userValidators[JSON_VALIDATION_KEY]
+
+    // The JSON-validity check is listed first: react-hook-form runs the
+    // validators in a `validate` object in key order and (with the default
+    // `criteriaMode`) stops at the first failure, so a user validator never
+    // has to handle the `NaN` sentinel that the `valueAsJSON` setValueAs
+    // functions return for unparseable input.
+    validation.validate = {
+      [JSON_VALIDATION_KEY]: JSONValidation,
+      ...userValidators,
+    }
     delete validation.valueAsJSON
     valueAs = 'valueAsJSON'
   } else if (

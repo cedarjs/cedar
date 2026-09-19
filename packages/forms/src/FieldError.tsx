@@ -17,6 +17,10 @@ const DEFAULT_MESSAGES = {
   min: 'is too low',
   max: 'is too high',
   validate: 'is not valid',
+  // Matches the key `setCoercion` (in `coercion.ts`) uses for the
+  // `valueAsJSON` validity check, so invalid JSON without a custom message
+  // still renders the same default text as a failed `validate` function.
+  validJSON: 'is not valid',
 }
 
 /**
