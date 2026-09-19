@@ -1,4 +1,5 @@
 import './global.web-auto-imports.js'
+import './apollo/typeOverrides.js'
 import './config.js'
 
 export { FatalErrorBoundary } from './components/FatalErrorBoundary.js'
