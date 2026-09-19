@@ -180,9 +180,9 @@ const JSONValidation = (val: Record<string, unknown> | null | number) =>
 
 /**
  * Key under which `setCoercion` stores `JSONValidation` in the merged
- * `validate` object for a `valueAsJSON` field. `FieldError`'s
- * `DEFAULT_MESSAGES` map has a matching entry so an invalid-JSON error
- * without a custom message still renders "is not valid".
+ * `validate` object for a `valueAsJSON` field. It becomes the `type` of an
+ * invalid-JSON error. `FieldError` has no specific default message for it, so
+ * without a custom message it renders the generic "is not valid".
  *
  * `setCoercion` always keeps this key's value as `JSONValidation`, so a
  * user-supplied validator under the same key can't disable the JSON check.
