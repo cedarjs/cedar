@@ -547,3 +547,87 @@ Renders a `<span>` containing a validation error message if the field with the s
   <!-- Renders: <span class="error-message">name is required</span> --></FieldError
 >
 ```
+
+When the failed validation rule doesn't have a message, `<FieldError>` uses a default one based on the type of the error: "name is required", "name is too short", and so on. Errors of a type it has no specific message for, like the keys of a `validate` object, get "name is not valid".
+
+### Custom rendering with `render`
+
+Pass a `render` function to render something other than a `<span>`. It's only called when there's an error, and receives:
+
+| Name       | Description                                                                                                                                         |
+| :--------- | :-------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `message`  | The error message. Falls back to the default message described above                                                                                |
+| `messages` | The message of every failed validation rule, keyed by rule. Only set when the form is configured with `criteriaMode: 'all'`                         |
+| `type`     | What caused the error: the validation rule (`required`, `minLength`, ...), the key in a `validate` object, or `server` for errors from the API side |
+
+```jsx
+<FieldError
+  name="email"
+  render={({ message }) => <Alert severity="error">{message}</Alert>}
+/>
+```
+
+By default React Hook Form stops at a field's first failed rule. With `criteriaMode: 'all'` it collects all of them, and `messages` lets you show every one:
+
+```jsx
+<Form onSubmit={onSubmit} config={{ criteriaMode: 'all' }}>
+  <PasswordField
+    name="password"
+    validation={{
+      minLength: { value: 8, message: 'Use at least 8 characters' },
+      pattern: { value: /\d/, message: 'Include a number' },
+    }}
+  />
+  <FieldError
+    name="password"
+    render={({ messages }) => (
+      <ul className="error-message">
+        {Object.entries(messages).map(([type, message]) => (
+          <li key={type}>{message}</li>
+        ))}
+      </ul>
+    )}
+  />
+</Form>
+```
+
+### Form-level errors
+
+React Hook Form keeps errors that don't belong to a field under `root`. Set one with `setError('root.<key>', ...)` and show it by giving `<FieldError>` the same name:
+
+```jsx
+import { Form, FieldError, useForm } from '@cedarjs/forms'
+
+const ContactPage = () => {
+  const formMethods = useForm()
+
+  const onSubmit = async (data) => {
+    const response = await fetch('/api/contact', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      formMethods.setError('root.server', {
+        type: 'server',
+        message: 'Something went wrong. Please try again',
+      })
+    }
+  }
+
+  return (
+    <Form formMethods={formMethods} onSubmit={onSubmit}>
+      <FieldError name="root.server" className="error-message" />
+      {/* ... */}
+    </Form>
+  )
+}
+```
+
+There are no default messages for `root` errors: without a `message` (and without `render`), `<FieldError>` renders nothing.
+
+:::info React Hook Form's `<ErrorMessage>`
+
+`@cedarjs/forms` also exports React Hook Form's own [`<ErrorMessage>`](https://react-hook-form.com/docs/useformstate/errormessage) component. It doesn't have default messages, so it renders an empty string for a rule like `required: true`, and it doesn't take `className` or `style`. Prefer `<FieldError>` unless you have a specific need for it.
+
+:::
