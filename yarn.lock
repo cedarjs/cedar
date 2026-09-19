@@ -3265,7 +3265,7 @@ __metadata:
     "@cedarjs/context": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/realtime": "workspace:*"
-    "@envelop/core": "npm:5.6.0"
+    "@envelop/core": "npm:5.6.1"
     "@envelop/disable-introspection": "npm:6.0.0"
     "@envelop/filter-operation-type": "npm:6.0.0"
     "@envelop/on-resolve": "npm:4.1.1"
@@ -3560,7 +3560,7 @@ __metadata:
   resolution: "@cedarjs/realtime@workspace:packages/realtime"
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
-    "@envelop/core": "npm:5.6.0"
+    "@envelop/core": "npm:5.6.1"
     "@envelop/live-query": "npm:7.0.0"
     "@envelop/testing": "npm:7.0.0"
     "@envelop/types": "npm:5.2.1"
@@ -4457,15 +4457,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/core@npm:5.6.0, @envelop/core@npm:^5.0.0, @envelop/core@npm:^5.4.0, @envelop/core@npm:^5.6.0":
-  version: 5.6.0
-  resolution: "@envelop/core@npm:5.6.0"
+"@envelop/core@npm:5.6.1, @envelop/core@npm:^5.0.0, @envelop/core@npm:^5.4.0, @envelop/core@npm:^5.6.0":
+  version: 5.6.1
+  resolution: "@envelop/core@npm:5.6.1"
   dependencies:
-    "@envelop/instrumentation": "npm:^1.0.0"
-    "@envelop/types": "npm:^5.2.1"
+    "@envelop/instrumentation": "npm:^1.0.1"
+    "@envelop/types": "npm:^5.2.2"
     "@whatwg-node/promise-helpers": "npm:^1.2.4"
     tslib: "npm:^2.5.0"
-  checksum: 10c0/704d91fc00f7b332a29767d4e1bd182d626f985e3a08e5373fc64636160ac4366e97180abb0d38ed9f63c6620746b2b56fc187e7a1a0d1d8d30bfa5a7db2a2ec
+  checksum: 10c0/f7fa0980933979861af53c774eb82d6fece4cb3844ac9363723b245f77eaa34ce04b64d8dfd8f97c7bfcabeeb73ca0d43c273f62a9a5eccd071bbb4d2fc1def6
   languageName: node
   linkType: hard
 
@@ -4493,13 +4493,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/instrumentation@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "@envelop/instrumentation@npm:1.0.0"
+"@envelop/instrumentation@npm:^1.0.0, @envelop/instrumentation@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@envelop/instrumentation@npm:1.0.1"
   dependencies:
     "@whatwg-node/promise-helpers": "npm:^1.2.1"
     tslib: "npm:^2.5.0"
-  checksum: 10c0/134df1ac481fb392aafc4522a22bcdc6ef0701f2d15d51b16207f3c9a4c7d3760adfa5f5bcc84f0c0ec7b011d84bcd40fff671eb471bed54bd928c165994b4e3
+  checksum: 10c0/3177b08e39eae3cbe61e343ead6fa282e011001b538fcfb52c782dc2cbf1290548ebeb3f534229b030623b856328fc3ed9067147d5cfec3a94ca8a10acf71028
   languageName: node
   linkType: hard
 
@@ -4543,13 +4543,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/types@npm:5.2.1, @envelop/types@npm:^5.2.1":
+"@envelop/types@npm:5.2.1":
   version: 5.2.1
   resolution: "@envelop/types@npm:5.2.1"
   dependencies:
     "@whatwg-node/promise-helpers": "npm:^1.0.0"
     tslib: "npm:^2.5.0"
   checksum: 10c0/2cdbb29d98350d957e18aff38ddf95670c249df894afab7fc888e2a02b43ca029fde96ca2829e5350bf83b982bc0267a5c8f7ee3ed9d353d4f145ebc0dc0b1e0
+  languageName: node
+  linkType: hard
+
+"@envelop/types@npm:^5.2.2":
+  version: 5.2.2
+  resolution: "@envelop/types@npm:5.2.2"
+  dependencies:
+    "@whatwg-node/promise-helpers": "npm:^1.0.0"
+    tslib: "npm:^2.5.0"
+  checksum: 10c0/67c7ee9ae5f274a9de84d3405e8bb64794839968185c231db68a322f3bf5f560017b877360a055cb488a750ef9b897469f80faa6fab3ef8185e12bbeb75d55b4
   languageName: node
   linkType: hard
 
