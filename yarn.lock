@@ -3568,7 +3568,7 @@ __metadata:
     "@graphql-tools/utils": "npm:10.11.0"
     "@graphql-yoga/plugin-defer-stream": "npm:3.23.0"
     "@graphql-yoga/plugin-graphql-sse": "npm:3.23.0"
-    "@graphql-yoga/redis-event-target": "npm:3.0.3"
+    "@graphql-yoga/redis-event-target": "npm:3.0.4"
     "@graphql-yoga/subscription": "npm:5.1.0"
     "@n1ru4l/graphql-live-query": "npm:0.10.0"
     "@n1ru4l/in-memory-live-query-store": "npm:0.10.0"
@@ -6927,15 +6927,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/redis-event-target@npm:3.0.3":
-  version: 3.0.3
-  resolution: "@graphql-yoga/redis-event-target@npm:3.0.3"
+"@graphql-yoga/redis-event-target@npm:3.0.4":
+  version: 3.0.4
+  resolution: "@graphql-yoga/redis-event-target@npm:3.0.4"
   dependencies:
-    "@graphql-yoga/typed-event-target": "npm:^3.0.2"
+    "@graphql-yoga/typed-event-target": "npm:^3.0.3"
     "@whatwg-node/events": "npm:^0.1.0"
   peerDependencies:
     ioredis: ^5.0.6
-  checksum: 10c0/dcb800c066d25b644f67d0ab042d3edd6895b8213a0d9b4c204950efefd4b13b5d1133ca87fadf3a5a38952e4fe27ba92e52fd9c8b0f371054c2dd47ebaa8e82
+  checksum: 10c0/b736154ec33c12bf89defd7762f7f658b73ec5a524ba1c74fee1f7ed550afb03b9af30b74feaf0b7485b7c7122d94e1381c838c2cf93bb7e0f5ff06fad637fe8
   languageName: node
   linkType: hard
 
@@ -6951,13 +6951,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/typed-event-target@npm:^3.0.2":
-  version: 3.0.2
-  resolution: "@graphql-yoga/typed-event-target@npm:3.0.2"
+"@graphql-yoga/typed-event-target@npm:^3.0.2, @graphql-yoga/typed-event-target@npm:^3.0.3":
+  version: 3.0.3
+  resolution: "@graphql-yoga/typed-event-target@npm:3.0.3"
   dependencies:
     "@repeaterjs/repeater": "npm:^3.0.4"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/51b4205aa25d47273aa887507040e702e6d9bb26fbc48c3187d38f4919f34b9fc0b22f28cdc83079c72912bf0d563619c141fae10a5d34ef69740da8b897ff81
+  checksum: 10c0/e3d47fc7a6ddb7820a2f34a9cd8cec317cbe559e4dd18df696a49afb801e0c6c00f4ae74a48854cb02438aabce2fb98d86e22f5cd709216191ed1c4595f3697a
   languageName: node
   linkType: hard
 
