@@ -41,7 +41,9 @@ export const useRegister = <
     throw Error('`name` prop must be provided')
   }
 
-  const validation = props.validation || { required: false }
+  // `setCoercion` writes to the object it's given. Clone so the caller's
+  // `validation` prop (which can be shared between fields) is left untouched.
+  const validation = { ...(props.validation || { required: false }) }
 
   setCoercion(validation, {
     type: props.type,
