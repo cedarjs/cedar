@@ -179,13 +179,10 @@ const JSONValidation = (val: Record<string, unknown> | null | number) =>
   typeof val === 'number' ? !isNaN(val) : true
 
 /**
- * Key under which `setCoercion` stores `JSONValidation` in the merged
- * `validate` object for a `valueAsJSON` field. It becomes the `type` of an
- * invalid-JSON error. `FieldError` has no specific default message for it, so
- * without a custom message it renders the generic "is not valid".
- *
- * `setCoercion` always keeps this key's value as `JSONValidation`, so a
- * user-supplied validator under the same key can't disable the JSON check.
+ * Key under which `setCoercion` stores `JSONValidation` in the `validate`
+ * object of a `valueAsJSON` field. It becomes the `type` of an invalid-JSON
+ * error. `FieldError` has no specific default message for it, so without a
+ * custom message it renders the generic "is not valid".
  */
 const JSON_VALIDATION_KEY = 'validJSON'
 
@@ -257,19 +254,32 @@ export const setCoercion = (
         ? { validate: userValidate }
         : { ...userValidate }
 
-    // A user validator under this key would otherwise disable the JSON
-    // check by overwriting it in the object spread below, so it's dropped
-    // first.
-    delete userValidators[JSON_VALIDATION_KEY]
+    // `validate` keys are the user's to pick, so the JSON check moves out of
+    // the way of a user validator that has the same key
+    let jsonValidationKey = JSON_VALIDATION_KEY
+    while (jsonValidationKey in userValidators) {
+      jsonValidationKey = `_${jsonValidationKey}`
+    }
 
-    // The JSON-validity check is listed first: react-hook-form runs the
-    // validators in a `validate` object in key order and (with the default
-    // `criteriaMode`) stops at the first failure, so a user validator never
-    // has to handle the `NaN` sentinel that the `valueAsJSON` setValueAs
-    // functions return for unparseable input.
+    // Unparseable input reaches validators as the `NaN` sentinel the
+    // `valueAsJSON` setValueAs functions return. Only the JSON check should
+    // report that, and user validators should only ever see parsed JSON.
+    // Ordering the keys can't guarantee it: with `criteriaMode: 'all'`
+    // react-hook-form runs every validator, and integer-like keys always come
+    // first in an object. So each user validator passes on unparseable input.
+    const guardedValidators = Object.fromEntries(
+      Object.entries(userValidators).map(
+        ([key, validator]): [string, FieldValidator] => [
+          key,
+          (value, formValues) =>
+            JSONValidation(value) ? validator(value, formValues) : true,
+        ],
+      ),
+    )
+
     validation.validate = {
-      [JSON_VALIDATION_KEY]: JSONValidation,
-      ...userValidators,
+      [jsonValidationKey]: JSONValidation,
+      ...guardedValidators,
     }
     delete validation.valueAsJSON
     valueAs = 'valueAsJSON'

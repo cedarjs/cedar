@@ -220,4 +220,77 @@ describe('valueAsJSON + validate', () => {
     )
     expect(mockFn).not.toHaveBeenCalled()
   })
+
+  it("never calls user validators with unparseable JSON, also with `criteriaMode: 'all'` and integer-like keys", async () => {
+    const mockFn = vi.fn()
+    const hasTheme = vi.fn(
+      (value: Record<string, unknown>) =>
+        'theme' in value || 'theme is required',
+    )
+    const integerLikeKey = vi.fn(() => 'should not run')
+
+    render(
+      <Form onSubmit={mockFn} config={{ criteriaMode: 'all' }}>
+        <TextAreaField
+          name="settings"
+          defaultValue={'{bad-json}'}
+          validation={{
+            valueAsJSON: true,
+            validate: { 0: integerLikeKey, hasTheme },
+          }}
+        />
+        <FieldError
+          name="settings"
+          render={({ messages }) => (
+            <p data-testid="settingsErrors">
+              {Object.values(messages ?? {}).join(', ')}
+            </p>
+          )}
+        />
+        <Submit>Save</Submit>
+      </Form>,
+    )
+
+    fireEvent.submit(screen.getByText('Save'))
+
+    await waitFor(() =>
+      expect(screen.getByTestId('settingsErrors')).toBeInTheDocument(),
+    )
+    expect(screen.getByTestId('settingsErrors')).toHaveTextContent(
+      /^settings is not valid$/,
+    )
+    expect(integerLikeKey).not.toHaveBeenCalled()
+    expect(hasTheme).not.toHaveBeenCalled()
+    expect(mockFn).not.toHaveBeenCalled()
+  })
+
+  it('runs a user validator that has the same key as the JSON check', async () => {
+    const mockFn = vi.fn()
+    const validJSON = vi.fn(() => 'rejected by the user validator')
+
+    render(
+      <Form onSubmit={mockFn}>
+        <TextAreaField
+          name="settings"
+          defaultValue={'{"theme":"dark"}'}
+          validation={{
+            valueAsJSON: true,
+            validate: { validJSON },
+          }}
+        />
+        <FieldError name="settings" data-testid="settingsError" />
+        <Submit>Save</Submit>
+      </Form>,
+    )
+
+    fireEvent.submit(screen.getByText('Save'))
+
+    await waitFor(() =>
+      expect(screen.getByTestId('settingsError')).toHaveTextContent(
+        'rejected by the user validator',
+      ),
+    )
+    expect(validJSON).toHaveBeenCalledWith({ theme: 'dark' }, expect.anything())
+    expect(mockFn).not.toHaveBeenCalled()
+  })
 })
