@@ -3269,7 +3269,7 @@ __metadata:
     "@envelop/disable-introspection": "npm:6.0.0"
     "@envelop/filter-operation-type": "npm:6.0.0"
     "@envelop/on-resolve": "npm:4.1.1"
-    "@envelop/types": "npm:5.2.1"
+    "@envelop/types": "npm:5.2.2"
     "@escape.tech/graphql-armor": "npm:3.0.1"
     "@escape.tech/graphql-armor-types": "npm:0.7.0"
     "@graphql-tools/merge": "npm:9.2.4"
@@ -3563,7 +3563,7 @@ __metadata:
     "@envelop/core": "npm:5.6.1"
     "@envelop/live-query": "npm:7.0.0"
     "@envelop/testing": "npm:7.0.0"
-    "@envelop/types": "npm:5.2.1"
+    "@envelop/types": "npm:5.2.2"
     "@graphql-tools/schema": "npm:10.1.1"
     "@graphql-tools/utils": "npm:10.11.0"
     "@graphql-yoga/plugin-defer-stream": "npm:3.23.0"
@@ -4543,17 +4543,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/types@npm:5.2.1":
-  version: 5.2.1
-  resolution: "@envelop/types@npm:5.2.1"
-  dependencies:
-    "@whatwg-node/promise-helpers": "npm:^1.0.0"
-    tslib: "npm:^2.5.0"
-  checksum: 10c0/2cdbb29d98350d957e18aff38ddf95670c249df894afab7fc888e2a02b43ca029fde96ca2829e5350bf83b982bc0267a5c8f7ee3ed9d353d4f145ebc0dc0b1e0
-  languageName: node
-  linkType: hard
-
-"@envelop/types@npm:^5.2.2":
+"@envelop/types@npm:5.2.2, @envelop/types@npm:^5.2.2":
   version: 5.2.2
   resolution: "@envelop/types@npm:5.2.2"
   dependencies:
