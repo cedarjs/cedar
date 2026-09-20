@@ -1,4 +1,4 @@
-import type { RegisterOptions } from 'react-hook-form'
+import type { FieldValues, RegisterOptions, Validate } from 'react-hook-form'
 
 /**
  * We slightly extend `react-hook-form`'s `RegisterOptions` to make working with GraphQL easier.
@@ -179,6 +179,22 @@ const JSONValidation = (val: Record<string, unknown> | null | number) =>
   typeof val === 'number' ? !isNaN(val) : true
 
 /**
+ * Key under which `setCoercion` stores `JSONValidation` in the `validate`
+ * object of a `valueAsJSON` field. It becomes the `type` of an invalid-JSON
+ * error. `FieldError` has no specific default message for it, so without a
+ * custom message it renders the generic "is not valid".
+ */
+const JSON_VALIDATION_KEY = 'validJSON'
+
+/**
+ * The shape of a single entry in a `validate` object.
+ * `RedwoodRegisterOptions` isn't parameterized with a concrete form/field
+ * type, so `Validate`'s field-value generic resolves to `any` here, same as
+ * it does for the `validate` prop itself.
+ */
+type FieldValidator = Validate<any, FieldValues>
+
+/**
  * ** setCoercion **
  * Handles the flow of coercion, providing a default if none is specified.
  * Also implements Redwood's extensions to `react-hook-form`'s `valueAs` props.
@@ -232,7 +248,39 @@ export const setCoercion = (
     // for checkboxes for now.
     return
   } else if (validation.valueAsJSON) {
-    validation.validate = JSONValidation
+    const userValidate = validation.validate
+    const userValidators: Record<string, FieldValidator> =
+      typeof userValidate === 'function'
+        ? { validate: userValidate }
+        : { ...userValidate }
+
+    // `validate` keys are the user's to pick, so the JSON check moves out of
+    // the way of a user validator that has the same key
+    let jsonValidationKey = JSON_VALIDATION_KEY
+    while (jsonValidationKey in userValidators) {
+      jsonValidationKey = `_${jsonValidationKey}`
+    }
+
+    // Unparseable input reaches validators as the `NaN` sentinel the
+    // `valueAsJSON` setValueAs functions return. Only the JSON check should
+    // report that, and user validators should only ever see parsed JSON.
+    // Ordering the keys can't guarantee it: with `criteriaMode: 'all'`
+    // react-hook-form runs every validator, and integer-like keys always come
+    // first in an object. So each user validator passes on unparseable input.
+    const guardedValidators = Object.fromEntries(
+      Object.entries(userValidators).map(
+        ([key, validator]): [string, FieldValidator] => [
+          key,
+          (value, formValues) =>
+            JSONValidation(value) ? validator(value, formValues) : true,
+        ],
+      ),
+    )
+
+    validation.validate = {
+      [jsonValidationKey]: JSONValidation,
+      ...guardedValidators,
+    }
     delete validation.valueAsJSON
     valueAs = 'valueAsJSON'
   } else if (
