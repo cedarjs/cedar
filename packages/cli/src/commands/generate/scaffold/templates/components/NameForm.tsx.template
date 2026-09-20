@@ -11,10 +11,17 @@ import {
 } from '@cedarjs/forms'
 
 <% if (fieldsToImport.includes('DatetimeLocalField')) { %>
-const formatDatetime = (value) => {
+/**
+ * Formats a DateTime string from the API for use as the value of a
+ * `datetime-local` input, which takes `YYYY-MM-DDTHH:mm`, with no seconds,
+ * milliseconds or timezone
+ */
+function formatDatetime(value?: string | null): string | undefined {
   if (value) {
     return value.replace(/:\d{2}\.\d{3}\w/, '')
   }
+
+  return undefined
 }
 <% } %>
 

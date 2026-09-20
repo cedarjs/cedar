@@ -25,10 +25,17 @@ exports[`in javascript (default) mode > creates a form component 1`] = `
   Submit,
 } from '@cedarjs/forms'
 
-const formatDatetime = (value) => {
+/**
+ * Formats a DateTime string from the API for use as the value of a
+ * \`datetime-local\` input, which takes \`YYYY-MM-DDTHH:mm\`, with no seconds,
+ * milliseconds or timezone
+ */
+function formatDatetime(value) {
   if (value) {
     return value.replace(/:\\d{2}\\.\\d{3}\\w/, '')
   }
+
+  return undefined
 }
 
 const PostForm = (props) => {
@@ -1223,10 +1230,17 @@ import {
   Submit,
 } from '@cedarjs/forms'
 
-const formatDatetime = (value) => {
+/**
+ * Formats a DateTime string from the API for use as the value of a
+ * \`datetime-local\` input, which takes \`YYYY-MM-DDTHH:mm\`, with no seconds,
+ * milliseconds or timezone
+ */
+function formatDatetime(value?: string | null): string | undefined {
   if (value) {
     return value.replace(/:\\d{2}\\.\\d{3}\\w/, '')
   }
+
+  return undefined
 }
 
 type FormPost = NonNullable<EditPostById['post']>
