@@ -650,7 +650,7 @@ export const jsonTruncate = (obj) => {
   return truncate(JSON.stringify(obj, null, 2))
 }
 
-export const timeTag = (dateTime) => {
+export function timeTag(dateTime) {
   let output = ''
 
   if (dateTime) {
@@ -2313,7 +2313,7 @@ export const jsonTruncate = (obj: unknown) => {
   return truncate(JSON.stringify(obj, null, 2))
 }
 
-export const timeTag = (dateTime?: string) => {
+export function timeTag(dateTime?: string) {
   let output: string | React.JSX.Element = ''
 
   if (dateTime) {
