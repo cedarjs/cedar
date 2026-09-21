@@ -744,6 +744,12 @@ Apollo Client's cache then parses every `DateTime` field into a `Date` when it r
 - **Scaffolds generated before you changed the setting.** Their `formatDatetime` helper in the form component and the `timeTag` function in `web/src/lib/formatters` take strings. Regenerate the scaffold, or change those two functions to take a `Date`. Scaffolds generated with the setting on already do.
 - **An `InMemoryCache` you create yourself.** Apollo Client's types require the `scalars` option once a scalar is parsed. `CedarApolloProvider` passes it for the caches it creates.
 
+:::note Prerendering
+
+Prerendering doesn't support `graphql.parsedScalars` yet. A prerendered Cell gets the raw GraphQL response, so a parsed scalar would be a string while prerendering and a `Date` in the browser. `yarn cedar prerender` and `yarn cedar build` stop with an error when a route is marked `prerender` and a scalar is parsed. Remove the `prerender` prop from your routes, or remove `graphql.parsedScalars`, to build.
+
+:::
+
 ## Custom Scalars
 
 GraphQL scalar types give data meaning and validate that their values makes sense. Out of the box, GraphQL comes with `Int`, `Float`, `String`, `Boolean` and `ID`. While those can cover a wide variety of use cases, you may need more specific scalar types to better describe and validate your application's data.
