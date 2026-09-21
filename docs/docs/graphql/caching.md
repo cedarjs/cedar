@@ -27,7 +27,7 @@ const CacheExample = () => {
 
 #### cache
 
-The cache object itself.
+The cache object itself, typed as Apollo's `InMemoryCache`.
 
 With `cache` you can access methods on the cache not exposed as helpers here, such as `readQuery` or `gc` for garbage collections. See Apollo's [caching interaction](https://www.apollographql.com/docs/react/caching/cache-interaction) documentation.
 

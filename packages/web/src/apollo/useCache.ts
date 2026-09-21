@@ -1,6 +1,6 @@
 import type {
-  ApolloCache,
   ApolloClient,
+  InMemoryCache,
   NormalizedCacheObject,
   Reference,
   StoreObject,
@@ -8,7 +8,7 @@ import type {
 import { useApolloClient } from '@apollo/client/react'
 
 type useCacheType = {
-  cache: ApolloCache
+  cache: InMemoryCache
   evict: (object: StoreObject | Reference) => boolean
   extract: (optimistic?: boolean) => NormalizedCacheObject
   identify: (object: StoreObject | Reference) => { id: string | undefined }
@@ -34,7 +34,7 @@ export const useCache = (): useCacheType => {
    *  Returns a serialized representation of the cache's current contents
    */
   const extract = (optimistic = false): NormalizedCacheObject =>
-    cache.extract(optimistic) as NormalizedCacheObject
+    cache.extract(optimistic)
 
   /**
    * If a type in your cache uses a custom cache ID (or even if it doesn't),
