@@ -302,6 +302,88 @@ describe('in javascript (default) mode', () => {
     }
   })
 
+  test('the form sends the stored DateTime back when its field is unchanged', () => {
+    const form =
+      files[
+        path.normalize(
+          '/path/to/project/web/src/components/Post/PostForm/PostForm.jsx',
+        )
+      ]
+    const formatSource = form.match(/function formatDatetime[\s\S]*?\n}\n/)?.[0]
+    const onSubmitSource = form.match(/const onSubmit = [\s\S]*?\n {2}}\n/)?.[0]
+
+    expect(formatSource).toBeDefined()
+    expect(onSubmitSource).toBeDefined()
+
+    // Runs the generated `onSubmit` with the given stored post and the form
+    // data that `@cedarjs/forms` produces, and returns what it passes to
+    // `onSave`
+    const submit = (
+      post: { postedAt: string } | undefined,
+      data: Record<string, unknown>,
+    ) => {
+      let sent: Record<string, unknown> | undefined
+
+      vm.runInNewContext(`${formatSource}\n${onSubmitSource}\nonSubmit(data)`, {
+        data,
+        props: {
+          post,
+          onSave: (saved: Record<string, unknown>) => {
+            sent = saved
+          },
+        },
+      })
+
+      return sent
+    }
+
+    const originalTz = process.env.TZ
+
+    try {
+      process.env.TZ = 'America/New_York'
+
+      // The second 01:30 on the day daylight saving time ends. The form reads
+      // the input's `2024-11-03T01:30` back as the first 01:30, an hour earlier
+      const repeatedHour = '2024-11-03T06:30:45.123Z'
+      expect(
+        submit(
+          { postedAt: repeatedHour },
+          { postedAt: new Date('2024-11-03T01:30') },
+        )?.postedAt,
+      ).toBe(repeatedHour)
+
+      // Seconds and milliseconds are not part of the input's value
+      const withSeconds = '2026-09-21T14:30:45.123Z'
+      expect(
+        submit(
+          { postedAt: withSeconds },
+          { postedAt: new Date('2026-09-21T10:30') },
+        )?.postedAt,
+      ).toBe(withSeconds)
+
+      // An edited field keeps the value the form read from the input
+      const edited = new Date('2026-09-21T11:00')
+      expect(
+        submit({ postedAt: withSeconds }, { postedAt: edited })?.postedAt,
+      ).toBe(edited)
+
+      // A cleared field stays cleared
+      expect(
+        submit({ postedAt: withSeconds }, { postedAt: null })?.postedAt,
+      ).toBeNull()
+
+      // A new record has nothing stored to send back
+      const created = new Date('2026-09-21T10:30')
+      expect(submit(undefined, { postedAt: created })?.postedAt).toBe(created)
+    } finally {
+      if (originalTz === undefined) {
+        delete process.env.TZ
+      } else {
+        process.env.TZ = originalTz
+      }
+    }
+  })
+
   test('creates an index component', async () => {
     expect(
       files[
