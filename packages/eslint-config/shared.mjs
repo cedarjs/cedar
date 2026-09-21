@@ -31,9 +31,15 @@ const sharedConfigs = [
   // Base recommended config
   js.configs.recommended,
 
-  // React recommended config, with jsx-runtime for React 17+
+  // React recommended config. react/jsx-uses-react keeps an explicit
+  // `import React` from being flagged as unused, while disabling only
+  // react/react-in-jsx-scope means JSX without that import is also fine.
   reactPlugin.configs.flat.recommended,
-  reactPlugin.configs.flat['jsx-runtime'],
+  {
+    rules: {
+      'react/react-in-jsx-scope': 'off',
+    },
+  },
 
   // Prettier plugin recommended config (runs Prettier as an ESLint rule)
   // TODO: In a future major version, switch to eslint-config-prettier and run Prettier separately
