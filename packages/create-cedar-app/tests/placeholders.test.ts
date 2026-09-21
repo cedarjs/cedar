@@ -38,10 +38,7 @@ it('replaces package manager placeholders in a json file', async () => {
     packageManager: 'pnpm',
   })
 
-  const content = vol.readFileSync(
-    path.join(TEST_DIR, 'package.json'),
-    'utf-8',
-  )
+  const content = vol.readFileSync(path.join(TEST_DIR, 'package.json'), 'utf-8')
   const parsed = JSON.parse(content)
 
   expect(parsed.packageManager).toBe('pnpm')
