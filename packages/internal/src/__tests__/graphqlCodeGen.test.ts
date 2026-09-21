@@ -15,6 +15,10 @@ const { mockPrismaClientPath } = await vi.hoisted(async () => {
   return { mockPrismaClientPath }
 })
 
+const mockConfig = vi.hoisted((): { parsedScalars: { DateTime?: 'Date' } } => ({
+  parsedScalars: {},
+}))
+
 import {
   beforeAll,
   afterAll,
@@ -48,6 +52,7 @@ afterAll(() => {
 
 afterEach(() => {
   vi.restoreAllMocks()
+  mockConfig.parsedScalars = {}
 })
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
@@ -57,6 +62,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     ...originalProjectConfig,
     resolveGeneratedPrismaClient: () =>
       Promise.resolve({ clientPath: mockPrismaClientPath, error: undefined }),
+    getParsedScalars: () => mockConfig.parsedScalars,
   }
 })
 
@@ -233,6 +239,66 @@ describe('user provided codegen scalars', () => {
       expectBuiltInScalars(gqlTypes)
     },
   )
+})
+
+describe('graphql.parsedScalars', () => {
+  const apolloScalarsDeclaration = "declare module '@apollo/client'"
+
+  async function generate(
+    generateTypeDefs: typeof generateTypeDefGraphQLApi,
+  ): Promise<string> {
+    await generateGraphQLSchema()
+
+    const {
+      typeDefFiles: [outputPath],
+    } = await generateTypeDefs()
+
+    return fs.readFileSync(outputPath, 'utf-8')
+  }
+
+  test('DateTime is a string on the web side by default', async () => {
+    const gqlTypes = await generate(generateTypeDefGraphQLWeb)
+
+    expect(gqlTypes).toContain('DateTime: { input: string; output: string; }')
+    expect(gqlTypes).not.toContain(apolloScalarsDeclaration)
+  })
+
+  test('DateTime is a Date on the web side when it is parsed', async () => {
+    mockConfig.parsedScalars = { DateTime: 'Date' }
+
+    const gqlTypes = await generate(generateTypeDefGraphQLWeb)
+
+    // A Date, or a string, is what Apollo Client can serialize for a variable
+    expect(gqlTypes).toContain(
+      'DateTime: { input: Date | string; output: Date; }',
+    )
+    // The other date scalars stay strings
+    expect(gqlTypes).toContain('Date: { input: string; output: string; }')
+    expect(gqlTypes).toContain('Time: { input: string; output: string; }')
+  })
+
+  test('the web types tell Apollo Client that DateTime is parsed', async () => {
+    mockConfig.parsedScalars = { DateTime: 'Date' }
+
+    const gqlTypes = await generate(generateTypeDefGraphQLWeb)
+
+    expect(gqlTypes).toContain(apolloScalarsDeclaration)
+    expect(gqlTypes).toContain('DateTime: { serialized: string; parsed: Date }')
+  })
+
+  test('the api types are the same when DateTime is parsed', async () => {
+    const withoutSetting = await generate(generateTypeDefGraphQLApi)
+
+    mockConfig.parsedScalars = { DateTime: 'Date' }
+
+    const withSetting = await generate(generateTypeDefGraphQLApi)
+
+    expect(withSetting).toEqual(withoutSetting)
+    expect(withSetting).toContain(
+      'DateTime: { input: Date | string; output: Date | string; }',
+    )
+    expect(withSetting).not.toContain(apolloScalarsDeclaration)
+  })
 })
 
 test("Doesn't throw or print any errors with empty project", async () => {

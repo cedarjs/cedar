@@ -1,7 +1,7 @@
 import { fs as memfs, vol } from 'memfs'
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
 
-import { getConfig, getRawConfig } from '../config'
+import { getConfig, getParsedScalars, getRawConfig } from '../config'
 
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
@@ -111,6 +111,7 @@ describe('getConfig', () => {
           "includeScalars": {
             "File": true,
           },
+          "parsedScalars": {},
           "trustedDocuments": false,
         },
         "notifications": {
@@ -222,6 +223,65 @@ describe('getConfig', () => {
 
         expect(config.graphql.trustedDocuments).toEqual(false)
         expect(config.graphql.fragments).toEqual(false)
+      })
+
+      it('does not parse any scalars', () => {
+        vol.fromJSON({ 'cedar.toml': '[web]\nport = 8888' }, '/cedar-app')
+
+        expect(getConfig().graphql.parsedScalars).toEqual({})
+        expect(getParsedScalars()).toEqual({})
+      })
+    })
+
+    describe('parsedScalars', () => {
+      it('reads DateTime = "Date"', () => {
+        vol.fromJSON(
+          {
+            'cedar.toml': `
+              [graphql.parsedScalars]
+                DateTime = "Date"
+              `,
+          },
+          '/cedar-app',
+        )
+
+        expect(getParsedScalars()).toEqual({ DateTime: 'Date' })
+      })
+
+      it('rejects a value the scalar cannot be parsed into', () => {
+        vol.fromJSON(
+          {
+            'cedar.toml': `
+              [graphql.parsedScalars]
+                DateTime = "Temporal"
+              `,
+          },
+          '/cedar-app',
+        )
+
+        expect(() => getParsedScalars()).toThrow(
+          '"Temporal" is not a supported value for ' +
+            'graphql.parsedScalars.DateTime in cedar.toml. Use "Date", or ' +
+            'remove it to keep the scalar as a string.',
+        )
+      })
+
+      it('rejects a scalar that cannot be parsed', () => {
+        vol.fromJSON(
+          {
+            'cedar.toml': `
+              [graphql.parsedScalars]
+                BigInt = "Date"
+              `,
+          },
+          '/cedar-app',
+        )
+
+        expect(() => getParsedScalars()).toThrow(
+          '"BigInt" can\'t be set in graphql.parsedScalars in cedar.toml. ' +
+            'Only DateTime can be parsed. Remove it to keep the scalar as a ' +
+            'string.',
+        )
       })
     })
 

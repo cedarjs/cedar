@@ -724,6 +724,26 @@ Currently we allow you to control whether or not the `File` scalar is included a
 
 With those two config values added your schema will no longer contain the `File` scalar by default and you are free to add your own or continue without one.
 
+## Parsing DateTime as a Date
+
+On the web side, a `DateTime` field arrives as an ISO string, like `"2026-09-21T14:30:45.123Z"`. To get `Date` objects instead, set `graphql.parsedScalars.DateTime` in your `cedar.toml`:
+
+```toml
+[graphql.parsedScalars]
+  DateTime = "Date"
+```
+
+Apollo Client's cache then parses every `DateTime` field into a `Date` when it reads a response, and turns a `Date` back into an ISO string when you pass one in a query's variables. Cedar finds the fields by reading your GraphQL schema, so a new `DateTime` field is picked up the next time the schema is generated, without a restart of the dev server. The generated types in `web/types/graphql.d.ts` say `Date` for these fields, and the cache still stores and extracts plain JSON, so the state that prerendering hands to the browser is unchanged.
+
+`DateTime` is the only scalar you can set. The `Date` and `Time` scalars stay strings because a JavaScript `Date` can't tell a date without a time, or a time without a date, from a moment in time.
+
+### What to update when you turn it on
+
+- **Code that treats a `DateTime` as a string.** Calls like `createdAt.slice(0, 10)` or passing `createdAt` to a function that takes a string are now type errors. `new Date(createdAt)` keeps working.
+- **Cell mocks.** Use `Date` objects for `DateTime` fields in your mock data, like `createdAt: new Date('2022-01-17T13:57:51.607Z')`. The same mock works when you render `<Success {...standard()} />` directly and when a test goes through the mock service worker, which sends the `Date` as an ISO string that the cache parses again.
+- **Scaffolds generated before you changed the setting.** Their `formatDatetime` helper in the form component and the `timeTag` function in `web/src/lib/formatters` take strings. Regenerate the scaffold, or change those two functions to take a `Date`. Scaffolds generated with the setting on already do.
+- **An `InMemoryCache` you create yourself.** Apollo Client's types require the `scalars` option once a scalar is parsed. `CedarApolloProvider` passes it for the caches it creates.
+
 ## Custom Scalars
 
 GraphQL scalar types give data meaning and validate that their values makes sense. Out of the box, GraphQL comes with `Int`, `Float`, `String`, `Boolean` and `ID`. While those can cover a wide variety of use cases, you may need more specific scalar types to better describe and validate your application's data.

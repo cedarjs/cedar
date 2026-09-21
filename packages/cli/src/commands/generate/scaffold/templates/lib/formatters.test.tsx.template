@@ -83,14 +83,25 @@ describe('jsonTruncate', () => {
 
 describe('timeTag', () => {
   it('renders a date', async () => {
+<% if (parsedDateTime) { %>
+    render(<div>{timeTag(new Date('1970-08-20'))}</div>)
+<% } else { %>
     render(<div>{timeTag(new Date('1970-08-20').toUTCString())}</div>)
+<% } %>
 
     await waitFor(() => screen.getByText(/1970.*00:00:00/))
   })
 
+<% if (parsedDateTime) { %>
+  it('can take an empty input', async () => {
+    expect(timeTag(null)).toEqual('')
+    expect(timeTag(undefined)).toEqual('')
+  })
+<% } else { %>
   it('can take an empty input string', async () => {
     expect(timeTag('')).toEqual('')
   })
+<% } %>
 })
 
 describe('jsonDisplay', () => {
