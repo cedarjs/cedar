@@ -51,7 +51,7 @@
     "mime-types": "2.1.35"
   },
   "devDependencies": {
-    "@apollo/client": "4.3.0",
+    "@apollo/client": "4.3.1",
     "@arethetypeswrong/cli": "0.18.5",
     "@aws-sdk/client-s3": "3.1135.0",
     "@aws-sdk/s3-request-presigner": "3.1135.0",
@@ -87,7 +87,7 @@
     "zx": "8.8.5"
   },
   "peerDependencies": {
-    "@apollo/client": "4.3.0",
+    "@apollo/client": "4.3.1",
     "@aws-sdk/client-s3": "^3.0.0",
     "@aws-sdk/s3-request-presigner": "^3.0.0",
     "@cedarjs/web": "workspace:*",
