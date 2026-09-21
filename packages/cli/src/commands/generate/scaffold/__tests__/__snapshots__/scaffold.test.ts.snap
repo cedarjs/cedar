@@ -353,10 +353,17 @@ exports[`in javascript (default) mode > creates a form component 1`] = `
   Submit,
 } from '@cedarjs/forms'
 
-const formatDatetime = (value) => {
+/**
+ * Formats a DateTime string from the API for use as the value of a
+ * \`datetime-local\` input, which takes \`YYYY-MM-DDTHH:mm\`, with no seconds,
+ * milliseconds or timezone
+ */
+function formatDatetime(value) {
   if (value) {
     return value.replace(/:\\d{2}\\.\\d{3}\\w/, '')
   }
+
+  return undefined
 }
 
 const PostForm = (props) => {
@@ -643,7 +650,7 @@ export const jsonTruncate = (obj) => {
   return truncate(JSON.stringify(obj, null, 2))
 }
 
-export const timeTag = (dateTime) => {
+export function timeTag(dateTime) {
   let output = ''
 
   if (dateTime) {
@@ -2000,10 +2007,17 @@ import {
   Submit,
 } from '@cedarjs/forms'
 
-const formatDatetime = (value) => {
+/**
+ * Formats a DateTime string from the API for use as the value of a
+ * \`datetime-local\` input, which takes \`YYYY-MM-DDTHH:mm\`, with no seconds,
+ * milliseconds or timezone
+ */
+function formatDatetime(value: string | undefined | null) {
   if (value) {
     return value.replace(/:\\d{2}\\.\\d{3}\\w/, '')
   }
+
+  return undefined
 }
 
 type FormPost = NonNullable<EditPostById['post']>
@@ -2299,7 +2313,7 @@ export const jsonTruncate = (obj: unknown) => {
   return truncate(JSON.stringify(obj, null, 2))
 }
 
-export const timeTag = (dateTime?: string) => {
+export function timeTag(dateTime: string | undefined | null) {
   let output: string | React.JSX.Element = ''
 
   if (dateTime) {
