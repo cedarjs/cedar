@@ -104,7 +104,7 @@
     "@cedarjs/framework-tools": "6.0.2",
     "@cedarjs/internal": "6.0.2",
     "@rollup/plugin-babel": "6.1.0",
-    "@testing-library/dom": "10.4.1",
+    "@testing-library/dom": "10.4.2",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.3",
     "@types/apollo-upload-client": "^18",
