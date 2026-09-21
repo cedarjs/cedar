@@ -54,3 +54,21 @@ const resendClient = resendHandler.internal().client
 
 You should be able to use this newly configured handler like any other previous
 handler and it should require no changes to your mailer code.
+
+## Error Handling
+
+`mailer.send()` rejects when Resend does not accept the email, for example
+because of an invalid API key, an unverified sender domain, or a rate limit. The
+error message contains Resend's error name and message, and the error response
+from Resend is available as the `cause` of the thrown error.
+
+```typescript
+try {
+  await mailer.send(/* ... */)
+} catch (error) {
+  if (error instanceof Error) {
+    // For example: { name: 'rate_limit_exceeded', message: '...' }
+    console.error(error.cause)
+  }
+}
+```

@@ -87,8 +87,20 @@ export class ResendMailHandler extends AbstractMailHandler {
       tags: handlerOptions?.tags ?? [],
     })
 
+    // The Resend SDK resolves with `{ data: null, error }` when the API rejects
+    // a request (invalid API key, unverified sender domain, rate limit, network
+    // failure, ...). Throwing here makes a rejected send fail the same way for
+    // callers as it does with every other mail handler.
+    if (result.error) {
+      throw new Error(
+        `Resend failed to send the email: ${result.error.name}: ` +
+          result.error.message,
+        { cause: result.error },
+      )
+    }
+
     return {
-      messageID: result.data?.id,
+      messageID: result.data.id,
       handlerInformation: result,
     }
   }
