@@ -10,19 +10,7 @@ import { replacePlaceholders } from '../src/placeholders.js'
 vi.mock('node:fs', async () => {
   const { fs: memfs } = await import('memfs')
 
-  // memfs glob returns Promise<string[]> but Node's fs.promises.glob returns
-  // AsyncIterator<string>. Wrap it to match the expected interface.
-  // See: https://github.com/streamich/memfs/issues/1161
-  async function* glob(
-    ...args: Parameters<typeof memfs.promises.glob>
-  ): AsyncGenerator<string> {
-    yield* await memfs.promises.glob(...args)
-  }
-
-  const patchedPromises = { ...memfs.promises, glob }
-  const patchedFs = { ...memfs, promises: patchedPromises }
-
-  return { default: patchedFs, ...patchedFs }
+  return { default: memfs, ...memfs }
 })
 
 const DEFAULT_VALUES: ReplacementValues = {
