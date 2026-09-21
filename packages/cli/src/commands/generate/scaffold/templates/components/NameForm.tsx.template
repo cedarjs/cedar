@@ -16,7 +16,7 @@ import {
  * `datetime-local` input, which takes `YYYY-MM-DDTHH:mm`, with no seconds,
  * milliseconds or timezone
  */
-function formatDatetime(value?: string | null): string | undefined {
+function formatDatetime(value: string | undefined | null) {
   if (value) {
     return value.replace(/:\d{2}\.\d{3}\w/, '')
   }

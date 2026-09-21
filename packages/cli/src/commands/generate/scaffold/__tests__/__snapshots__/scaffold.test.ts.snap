@@ -2012,7 +2012,7 @@ import {
  * \`datetime-local\` input, which takes \`YYYY-MM-DDTHH:mm\`, with no seconds,
  * milliseconds or timezone
  */
-function formatDatetime(value?: string | null): string | undefined {
+function formatDatetime(value: string | undefined | null) {
   if (value) {
     return value.replace(/:\\d{2}\\.\\d{3}\\w/, '')
   }
@@ -2313,7 +2313,7 @@ export const jsonTruncate = (obj: unknown) => {
   return truncate(JSON.stringify(obj, null, 2))
 }
 
-export function timeTag(dateTime?: string) {
+export function timeTag(dateTime: string | undefined | null) {
   let output: string | React.JSX.Element = ''
 
   if (dateTime) {
