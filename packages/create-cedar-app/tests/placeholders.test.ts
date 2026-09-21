@@ -1,17 +1,12 @@
-import fs from 'node:fs'
 import path from 'node:path'
 
-import { vol } from 'memfs'
+import { fs as memfs, vol } from 'memfs'
 import { afterEach, expect, it, vi } from 'vitest'
 
 import type { ReplacementValues } from '../src/placeholders.js'
 import { replacePlaceholders } from '../src/placeholders.js'
 
-vi.mock('node:fs', async () => {
-  const { fs: memfs } = await import('memfs')
-
-  return { default: memfs, ...memfs }
-})
+vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
 const DEFAULT_VALUES: ReplacementValues = {
   packageManager: 'yarn',
@@ -43,7 +38,7 @@ it('replaces package manager placeholders in a json file', async () => {
     packageManager: 'pnpm',
   })
 
-  const content = await fs.promises.readFile(
+  const content = vol.readFileSync(
     path.join(TEST_DIR, 'package.json'),
     'utf-8',
   )
@@ -72,10 +67,7 @@ it('replaces database URL placeholders in a .env file', async () => {
     directDatabaseUrl,
   })
 
-  const content = await fs.promises.readFile(
-    path.join(TEST_DIR, '.env'),
-    'utf-8',
-  )
+  const content = vol.readFileSync(path.join(TEST_DIR, '.env'), 'utf-8')
 
   expect(content).toContain(`DATABASE_URL=${databaseUrl}`)
   expect(content).toContain(`DIRECT_URL=${directDatabaseUrl}`)
@@ -98,10 +90,7 @@ it('replaces Neon claim placeholders in a ts file', async () => {
     neonClaimUrl,
   })
 
-  const content = await fs.promises.readFile(
-    path.join(TEST_DIR, 'neon.ts'),
-    'utf-8',
-  )
+  const content = vol.readFileSync(path.join(TEST_DIR, 'neon.ts'), 'utf-8')
 
   expect(content).toContain(`"${neonClaimExpiry}"`)
   expect(content).toContain(`"${neonClaimUrl}"`)
