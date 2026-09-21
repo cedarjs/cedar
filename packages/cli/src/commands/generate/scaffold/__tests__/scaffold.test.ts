@@ -2,6 +2,7 @@ globalThis.__dirname = import.meta.dirname
 
 import type * as NodeFs from 'node:fs'
 import path from 'node:path'
+import vm from 'node:vm'
 
 import { vol, fs as memfs } from 'memfs'
 import { ufs } from 'unionfs'
@@ -240,6 +241,53 @@ describe('in javascript (default) mode', () => {
         )
       ],
     ).toMatchSnapshot()
+  })
+
+  test('the form formats a DateTime in the local timezone, so saving an unchanged form keeps the stored time', () => {
+    const form =
+      files[
+        path.normalize(
+          '/path/to/project/web/src/components/Post/PostForm/PostForm.jsx',
+        )
+      ]
+    const source = form.match(/function formatDatetime[\s\S]*?\n}\n/)?.[0]
+
+    expect(source).toBeDefined()
+
+    // The generated helper is plain JavaScript, so it can be evaluated as is
+    const formatDatetime = vm.runInNewContext(`${source}; formatDatetime`)
+    const stored = '2026-09-21T14:30:00.000Z'
+    const originalTz = process.env.TZ
+
+    try {
+      const expectedInputValues = {
+        UTC: '2026-09-21T14:30',
+        'Europe/Stockholm': '2026-09-21T16:30',
+        'America/New_York': '2026-09-21T10:30',
+        'Asia/Kolkata': '2026-09-21T20:00',
+      }
+
+      for (const [tz, expected] of Object.entries(expectedInputValues)) {
+        process.env.TZ = tz
+
+        const inputValue = formatDatetime(stored)
+
+        expect(inputValue).toBe(expected)
+        // A `datetime-local` input's value is read back as local time when the
+        // form is submitted, which is what `new Date()` does with it
+        expect(new Date(inputValue).toISOString()).toBe(stored)
+      }
+
+      expect(formatDatetime(null)).toBeUndefined()
+      expect(formatDatetime(undefined)).toBeUndefined()
+      expect(formatDatetime('not a date')).toBeUndefined()
+    } finally {
+      if (originalTz === undefined) {
+        delete process.env.TZ
+      } else {
+        process.env.TZ = originalTz
+      }
+    }
   })
 
   test('creates an index component', async () => {
