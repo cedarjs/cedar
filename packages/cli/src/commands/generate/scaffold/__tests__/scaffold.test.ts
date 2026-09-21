@@ -255,7 +255,19 @@ describe('in javascript (default) mode', () => {
     expect(source).toBeDefined()
 
     // The generated helper is plain JavaScript, so it can be evaluated as is
-    const formatDatetime = vm.runInNewContext(`${source}; formatDatetime`)
+    const isFormatDatetime = (
+      value: unknown,
+    ): value is (value: string | null | undefined) => string | undefined =>
+      typeof value === 'function'
+    const generatedFormatter: unknown = vm.runInNewContext(
+      `${source}; formatDatetime`,
+    )
+
+    if (!isFormatDatetime(generatedFormatter)) {
+      throw new Error('The generated form does not define formatDatetime')
+    }
+
+    const formatDatetime = generatedFormatter
     const stored = '2026-09-21T14:30:00.000Z'
     const originalTz = process.env.TZ
 
