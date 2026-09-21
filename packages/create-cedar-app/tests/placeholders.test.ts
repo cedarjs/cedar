@@ -1,29 +1,12 @@
-import fs from 'node:fs'
 import path from 'node:path'
 
-import { vol } from 'memfs'
+import { fs as memfs, vol } from 'memfs'
 import { afterEach, expect, it, vi } from 'vitest'
 
 import type { ReplacementValues } from '../src/placeholders.js'
 import { replacePlaceholders } from '../src/placeholders.js'
 
-vi.mock('node:fs', async () => {
-  const { fs: memfs } = await import('memfs')
-
-  // memfs glob returns Promise<string[]> but Node's fs.promises.glob returns
-  // AsyncIterator<string>. Wrap it to match the expected interface.
-  // See: https://github.com/streamich/memfs/issues/1161
-  async function* glob(
-    ...args: Parameters<typeof memfs.promises.glob>
-  ): AsyncGenerator<string> {
-    yield* await memfs.promises.glob(...args)
-  }
-
-  const patchedPromises = { ...memfs.promises, glob }
-  const patchedFs = { ...memfs, promises: patchedPromises }
-
-  return { default: patchedFs, ...patchedFs }
-})
+vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
 const DEFAULT_VALUES: ReplacementValues = {
   packageManager: 'yarn',
@@ -55,10 +38,7 @@ it('replaces package manager placeholders in a json file', async () => {
     packageManager: 'pnpm',
   })
 
-  const content = await fs.promises.readFile(
-    path.join(TEST_DIR, 'package.json'),
-    'utf-8',
-  )
+  const content = vol.readFileSync(path.join(TEST_DIR, 'package.json'), 'utf-8')
   const parsed = JSON.parse(content)
 
   expect(parsed.packageManager).toBe('pnpm')
@@ -84,10 +64,7 @@ it('replaces database URL placeholders in a .env file', async () => {
     directDatabaseUrl,
   })
 
-  const content = await fs.promises.readFile(
-    path.join(TEST_DIR, '.env'),
-    'utf-8',
-  )
+  const content = vol.readFileSync(path.join(TEST_DIR, '.env'), 'utf-8')
 
   expect(content).toContain(`DATABASE_URL=${databaseUrl}`)
   expect(content).toContain(`DIRECT_URL=${directDatabaseUrl}`)
@@ -110,10 +87,7 @@ it('replaces Neon claim placeholders in a ts file', async () => {
     neonClaimUrl,
   })
 
-  const content = await fs.promises.readFile(
-    path.join(TEST_DIR, 'neon.ts'),
-    'utf-8',
-  )
+  const content = vol.readFileSync(path.join(TEST_DIR, 'neon.ts'), 'utf-8')
 
   expect(content).toContain(`"${neonClaimExpiry}"`)
   expect(content).toContain(`"${neonClaimUrl}"`)
