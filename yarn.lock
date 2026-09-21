@@ -3221,6 +3221,7 @@ __metadata:
     "@cedarjs/mailer-core": "npm:6.0.2"
     resend: "npm:4.8.0"
     typescript: "npm:5.9.3"
+    vitest: "npm:4.1.11"
   languageName: unknown
   linkType: soft
 
