@@ -78,7 +78,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@apollo/client": "4.3.0",
+    "@apollo/client": "4.3.1",
     "@cedarjs/server-store": "workspace:*",
     "@dr.pogodin/react-helmet": "2.0.4",
     "@whatwg-node/fetch": "0.10.13",
