@@ -59,6 +59,17 @@ function formatDatetime(value) {
 
 const PostForm = (props) => {
   const onSubmit = (data) => {
+    // The input only holds minutes, so an untouched field is sent back as the
+    // stored value, keeping its seconds, milliseconds and, when daylight
+    // saving time ends, which of the two repeated hours it was in
+    if (
+      data.postedAt &&
+      props.post?.postedAt &&
+      formatDatetime(data.postedAt) === formatDatetime(props.post.postedAt)
+    ) {
+      data.postedAt = props.post.postedAt
+    }
+
     props.onSave(data, props?.post?.id)
   }
 
@@ -1292,6 +1303,17 @@ interface PostFormProps {
 
 const PostForm = (props: PostFormProps) => {
   const onSubmit = (data: FormPost) => {
+    // The input only holds minutes, so an untouched field is sent back as the
+    // stored value, keeping its seconds, milliseconds and, when daylight
+    // saving time ends, which of the two repeated hours it was in
+    if (
+      data.postedAt &&
+      props.post?.postedAt &&
+      formatDatetime(data.postedAt) === formatDatetime(props.post.postedAt)
+    ) {
+      data.postedAt = props.post.postedAt
+    }
+
     props.onSave(data, props?.post?.id)
   }
 
