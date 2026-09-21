@@ -162,17 +162,13 @@ test('respects user provided codegen config', async () => {
 describe('user provided codegen scalars', () => {
   const customCodegenConfigPath = path.join(FIXTURE_PATH, 'codegen.yml')
 
-  // Runs `generate` with a codegen.yml that sets `DateTime` as its only
-  // scalar, and returns the generated types
-  async function generateWithDateTimeScalar(
+  // Runs `generate` with the given `codegen.yml` and returns the generated
+  // types
+  async function generateWithCodegenConfig(
     generate: typeof generateTypeDefGraphQLApi,
+    codegenConfig: string,
   ) {
-    fs.writeFileSync(
-      customCodegenConfigPath,
-      `config:
-  scalars:
-    DateTime: Date`,
-    )
+    fs.writeFileSync(customCodegenConfigPath, codegenConfig)
 
     // Wrapping in `try` to make sure codegen.yml is always deleted, even if
     // the test fails
@@ -189,28 +185,52 @@ describe('user provided codegen scalars', () => {
     }
   }
 
-  test.each([
+  // The scalars Cedar maps itself, which must not fall back to `any`
+  function expectBuiltInScalars(gqlTypes: string) {
+    expect(gqlTypes).toContain('BigInt: { input: number; output: number; }')
+    expect(gqlTypes).toContain(
+      'JSON: { input: Prisma.JsonValue; output: Prisma.JsonValue; }',
+    )
+    expect(gqlTypes).toContain(
+      'JSONObject: { input: Prisma.JsonObject; output: Prisma.JsonObject; }',
+    )
+    expect(gqlTypes).toContain(
+      'Byte: { input: Uint8Array; output: Uint8Array; }',
+    )
+  }
+
+  const sides = [
     ['api', generateTypeDefGraphQLApi],
     ['web', generateTypeDefGraphQLWeb],
-  ])(
+  ] as const
+
+  test.each(sides)(
     'a scalar in the %s codegen config is merged with the built-in scalars',
     async (_side, generate) => {
-      const gqlTypes = await generateWithDateTimeScalar(generate)
+      const gqlTypes = await generateWithCodegenConfig(
+        generate,
+        `config:
+  scalars:
+    DateTime: Date`,
+      )
 
       // The scalar from the user's config
       expect(gqlTypes).toContain('DateTime: { input: Date; output: Date; }')
+      expectBuiltInScalars(gqlTypes)
+    },
+  )
 
-      // The built-in scalars are still mapped instead of falling back to `any`
-      expect(gqlTypes).toContain('BigInt: { input: number; output: number; }')
-      expect(gqlTypes).toContain(
-        'JSON: { input: Prisma.JsonValue; output: Prisma.JsonValue; }',
+  test.each(sides)(
+    'an empty scalars key in the %s codegen config keeps the built-in scalars',
+    async (_side, generate) => {
+      // YAML reads a key without a value as `null`
+      const gqlTypes = await generateWithCodegenConfig(
+        generate,
+        `config:
+  scalars:`,
       )
-      expect(gqlTypes).toContain(
-        'JSONObject: { input: Prisma.JsonObject; output: Prisma.JsonObject; }',
-      )
-      expect(gqlTypes).toContain(
-        'Byte: { input: Uint8Array; output: Uint8Array; }',
-      )
+
+      expectBuiltInScalars(gqlTypes)
     },
   )
 })
