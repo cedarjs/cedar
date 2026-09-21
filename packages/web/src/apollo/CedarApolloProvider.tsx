@@ -1,6 +1,6 @@
 import React from 'react'
 
-import type { ApolloCache, DocumentNode, setLogVerbosity } from '@apollo/client'
+import type { DocumentNode, setLogVerbosity } from '@apollo/client'
 import { InMemoryCache } from '@apollo/client'
 
 import type { UseAuth } from '@cedarjs/auth'
@@ -11,6 +11,7 @@ import { FetchConfigProvider } from '../components/FetchConfigProvider.js'
 import type { GraphQLClientConfigProp } from './apolloLinkTypes.js'
 import { ApolloProviderWithFetchConfig } from './ApolloProviderWithFetchConfig.js'
 import { fragmentRegistry } from './fragmentRegistry.js'
+import './typeOverrides.js'
 
 export type {
   ApolloClientCacheConfig,
@@ -49,7 +50,7 @@ export function CedarApolloProvider({
   // `useCreateApolloClient` builds, so every client (the app client and any
   // per-organization client created from it) uses the same cache
   // configuration and fragment registry.
-  const createCache = (): ApolloCache => {
+  const createCache = (): InMemoryCache => {
     return new InMemoryCache({
       fragments: fragmentRegistry,
       possibleTypes: cacheConfig?.possibleTypes,

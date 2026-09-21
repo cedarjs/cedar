@@ -1,8 +1,8 @@
 import type {
-  ApolloCache,
   ApolloClient,
   ApolloLink,
   HttpLink,
+  InMemoryCache,
   InMemoryCacheConfig,
 } from '@apollo/client'
 
@@ -32,7 +32,12 @@ export type GraphQLClientConfigProp = Omit<
   ApolloClient.Options,
   'cache' | 'link'
 > & {
-  cache?: ApolloCache
+  /**
+   * Replace the `InMemoryCache` that `CedarApolloProvider` creates with one
+   * of your own. Apollo Client is told (via `TypeOverrides`) that its cache
+   * is always an `InMemoryCache`, so a cache passed here has to be one too.
+   */
+  cache?: InMemoryCache
   /**
    * Configuration for Apollo Client's `InMemoryCache`.
    * See https://www.apollographql.com/docs/react/caching/cache-configuration/.

@@ -1,6 +1,10 @@
 import React from 'react'
 
-import type { ApolloCache, DocumentNode, setLogVerbosity } from '@apollo/client'
+import type {
+  DocumentNode,
+  InMemoryCache,
+  setLogVerbosity,
+} from '@apollo/client'
 import {
   ApolloClient,
   ApolloLink,
@@ -64,14 +68,14 @@ interface DocumentNodeWithMeta extends DocumentNode {
 
 interface Props {
   config: Omit<GraphQLClientConfigProp, 'cacheConfig' | 'cache'> & {
-    cache: ApolloCache
+    cache: InMemoryCache
   }
   /**
    * Builds a fresh cache from the same cache configuration and fragment
    * registry as `config.cache`. Used to give every client
    * `useCreateApolloClient` creates its own cache.
    */
-  createCache: () => ApolloCache
+  createCache: () => InMemoryCache
   useAuth?: UseAuth
   logLevel: ReturnType<typeof setLogVerbosity>
   children: React.ReactNode
