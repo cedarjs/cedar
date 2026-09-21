@@ -179,6 +179,30 @@ export const generateTypeDefGraphQLWeb = async (): Promise<TypeDefResult> => {
   }
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+/**
+ * Merges the `scalars` from a user's codegen config into Cedar's, one scalar at
+ * a time, so that a scalar the user doesn't list keeps Cedar's mapping instead
+ * of becoming `any`. An unset `scalars`, which is `undefined` in a JavaScript
+ * config and `null` for an empty key in YAML, leaves Cedar's mappings as they
+ * are. Any other value that isn't a map is returned as is, for codegen to
+ * report.
+ */
+function mergeScalars(cedarScalars: unknown, userScalars: unknown): unknown {
+  if (userScalars === undefined || userScalars === null) {
+    return cedarScalars
+  }
+
+  if (isRecord(cedarScalars) && isRecord(userScalars)) {
+    return { ...cedarScalars, ...userScalars }
+  }
+
+  return userScalars
+}
+
 /**
  * This is the function used internally by generateTypeDefGraphQLApi and generateTypeDefGraphQLWeb
  * And contains the base configuration for generating gql types with codegen
@@ -197,10 +221,14 @@ async function runCodegenGraphQL(
 
   const pluginConfig = await getPluginConfig(side)
 
+  const { scalars: userScalars, ...userPluginConfig } =
+    userCodegenConfig?.config?.config ?? {}
+
   // Merge in user codegen config with the rw built-in one
-  const mergedConfig = {
+  const mergedConfig: CodegenTypes.PluginConfig = {
     ...pluginConfig,
-    ...userCodegenConfig?.config?.config,
+    ...userPluginConfig,
+    scalars: mergeScalars(pluginConfig.scalars, userScalars),
   }
 
   const options = getCodegenOptions(documents, mergedConfig, extraPlugins)
