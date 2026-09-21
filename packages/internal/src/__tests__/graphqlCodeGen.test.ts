@@ -159,6 +159,62 @@ test('respects user provided codegen config', async () => {
   }
 })
 
+describe('user provided codegen scalars', () => {
+  const customCodegenConfigPath = path.join(FIXTURE_PATH, 'codegen.yml')
+
+  // Runs `generate` with a codegen.yml that sets `DateTime` as its only
+  // scalar, and returns the generated types
+  async function generateWithDateTimeScalar(
+    generate: typeof generateTypeDefGraphQLApi,
+  ) {
+    fs.writeFileSync(
+      customCodegenConfigPath,
+      `config:
+  scalars:
+    DateTime: Date`,
+    )
+
+    // Wrapping in `try` to make sure codegen.yml is always deleted, even if
+    // the test fails
+    try {
+      await generateGraphQLSchema()
+
+      const {
+        typeDefFiles: [outputPath],
+      } = await generate()
+
+      return fs.readFileSync(outputPath, 'utf-8')
+    } finally {
+      fs.rmSync(customCodegenConfigPath)
+    }
+  }
+
+  test.each([
+    ['api', generateTypeDefGraphQLApi],
+    ['web', generateTypeDefGraphQLWeb],
+  ])(
+    'a scalar in the %s codegen config is merged with the built-in scalars',
+    async (_side, generate) => {
+      const gqlTypes = await generateWithDateTimeScalar(generate)
+
+      // The scalar from the user's config
+      expect(gqlTypes).toContain('DateTime: { input: Date; output: Date; }')
+
+      // The built-in scalars are still mapped instead of falling back to `any`
+      expect(gqlTypes).toContain('BigInt: { input: number; output: number; }')
+      expect(gqlTypes).toContain(
+        'JSON: { input: Prisma.JsonValue; output: Prisma.JsonValue; }',
+      )
+      expect(gqlTypes).toContain(
+        'JSONObject: { input: Prisma.JsonObject; output: Prisma.JsonObject; }',
+      )
+      expect(gqlTypes).toContain(
+        'Byte: { input: Uint8Array; output: Uint8Array; }',
+      )
+    },
+  )
+})
+
 test("Doesn't throw or print any errors with empty project", async () => {
   const fixturePath = path.resolve(
     __dirname,

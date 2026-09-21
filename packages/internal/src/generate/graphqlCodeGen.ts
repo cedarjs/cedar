@@ -179,6 +179,10 @@ export const generateTypeDefGraphQLWeb = async (): Promise<TypeDefResult> => {
   }
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
 /**
  * This is the function used internally by generateTypeDefGraphQLApi and generateTypeDefGraphQLWeb
  * And contains the base configuration for generating gql types with codegen
@@ -197,10 +201,22 @@ async function runCodegenGraphQL(
 
   const pluginConfig = await getPluginConfig(side)
 
+  const userPluginConfig = userCodegenConfig?.config?.config
+
   // Merge in user codegen config with the rw built-in one
-  const mergedConfig = {
+  const mergedConfig: CodegenTypes.PluginConfig = {
     ...pluginConfig,
-    ...userCodegenConfig?.config?.config,
+    ...userPluginConfig,
+  }
+
+  // `scalars` is merged per scalar. Replacing the whole map would leave every
+  // scalar the user doesn't list, like `BigInt` and `JSON`, mapped to `any`. A
+  // value that isn't a map is left for codegen to report.
+  const cedarScalars: unknown = pluginConfig.scalars
+  const userScalars: unknown = userPluginConfig?.scalars
+
+  if (isRecord(cedarScalars) && isRecord(userScalars)) {
+    mergedConfig.scalars = { ...cedarScalars, ...userScalars }
   }
 
   const options = getCodegenOptions(documents, mergedConfig, extraPlugins)
