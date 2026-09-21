@@ -26,16 +26,35 @@ exports[`in javascript (default) mode > creates a form component 1`] = `
 } from '@cedarjs/forms'
 
 /**
- * Formats a DateTime string from the API for use as the value of a
- * \`datetime-local\` input, which takes \`YYYY-MM-DDTHH:mm\`, with no seconds,
- * milliseconds or timezone
+ * Formats a DateTime string from the API, which is a UTC timestamp, for use as
+ * the value of a \`datetime-local\` input. The input takes \`YYYY-MM-DDTHH:mm\` in
+ * the user's local time, with no seconds, milliseconds or timezone, and the
+ * form reads its value back as local time when it is submitted.
  */
 function formatDatetime(value) {
-  if (value) {
-    return value.replace(/:\\d{2}\\.\\d{3}\\w/, '')
+  if (!value) {
+    return undefined
   }
 
-  return undefined
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return undefined
+  }
+
+  const pad = (n) => String(n).padStart(2, '0')
+
+  return (
+    date.getFullYear() +
+    '-' +
+    pad(date.getMonth() + 1) +
+    '-' +
+    pad(date.getDate()) +
+    'T' +
+    pad(date.getHours()) +
+    ':' +
+    pad(date.getMinutes())
+  )
 }
 
 const PostForm = (props) => {
@@ -1231,16 +1250,35 @@ import {
 } from '@cedarjs/forms'
 
 /**
- * Formats a DateTime string from the API for use as the value of a
- * \`datetime-local\` input, which takes \`YYYY-MM-DDTHH:mm\`, with no seconds,
- * milliseconds or timezone
+ * Formats a DateTime string from the API, which is a UTC timestamp, for use as
+ * the value of a \`datetime-local\` input. The input takes \`YYYY-MM-DDTHH:mm\` in
+ * the user's local time, with no seconds, milliseconds or timezone, and the
+ * form reads its value back as local time when it is submitted.
  */
 function formatDatetime(value: string | undefined | null) {
-  if (value) {
-    return value.replace(/:\\d{2}\\.\\d{3}\\w/, '')
+  if (!value) {
+    return undefined
   }
 
-  return undefined
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return undefined
+  }
+
+  const pad = (n: number) => String(n).padStart(2, '0')
+
+  return (
+    date.getFullYear() +
+    '-' +
+    pad(date.getMonth() + 1) +
+    '-' +
+    pad(date.getDate()) +
+    'T' +
+    pad(date.getHours()) +
+    ':' +
+    pad(date.getMinutes())
+  )
 }
 
 type FormPost = NonNullable<EditPostById['post']>
