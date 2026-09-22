@@ -54,7 +54,8 @@ export function CedarApolloProvider({
   const createCache = (): InMemoryCache => {
     return new InMemoryCache({
       fragments: fragmentRegistry,
-      possibleTypes: cacheConfig?.possibleTypes,
+      // Includes possibleTypes, along with every other option the caller set
+      // in cacheConfig
       ...withParsedScalars(cacheConfig),
     })
   }
