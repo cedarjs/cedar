@@ -63,5 +63,35 @@ export function cedarParsedScalarsPlugin(): Plugin | undefined {
 
       return `import '${VIRTUAL_MODULE_ID}'\n${code}`
     },
+
+    // `this.addWatchFile` in `load` only reruns the virtual module for a
+    // change to a file it has already watched. The schema doesn't exist yet
+    // on a clean `cedar dev` (the web server and `cedar-gen-watch` start
+    // concurrently), so its first appearance is a 'create' event on a path
+    // nothing has watched yet, and reaches here without an `addWatchFile`
+    // call ever having registered it. Reload the virtual module for exactly
+    // that file, on every event type, so the app picks up the first schema
+    // once `cedar-gen-watch` writes it, the same way it already does for a
+    // later edit.
+    hotUpdate(options) {
+      if (options.file !== getPaths().generated.schema) {
+        return
+      }
+
+      const moduleGraph = this.environment.moduleGraph
+      const module = moduleGraph.getModuleById(RESOLVED_VIRTUAL_MODULE_ID)
+
+      if (!module) {
+        return
+      }
+
+      // The default HMR update only pushes an update to connected clients.
+      // It doesn't clear the module's cached transform result, so a fresh
+      // request for the module (a full page load, or a client that wasn't
+      // connected yet) would still get the stale, pre-schema content
+      moduleGraph.invalidateModule(module)
+
+      return [module]
+    },
   }
 }

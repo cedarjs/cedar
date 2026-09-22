@@ -733,7 +733,7 @@ On the web side, a `DateTime` field arrives as an ISO string, like `"2026-09-21T
   DateTime = "Date"
 ```
 
-Apollo Client's cache then parses every `DateTime` field into a `Date` when it reads a response, and turns a `Date` back into an ISO string when you pass one in a query's variables. Cedar finds the fields by reading your GraphQL schema, so a new `DateTime` field is picked up the next time the schema is generated, without a restart of the dev server. The generated types in `web/types/graphql.d.ts` say `Date` for these fields, and the cache still stores and extracts plain JSON, so a `Date` field survives a round trip through `JSON.stringify`/`JSON.parse` unchanged.
+Apollo Client's cache then parses every `DateTime` field into a `Date` when it reads a response, and turns a `Date` back into an ISO string when you pass one in a query's variables. Cedar finds the fields by reading your GraphQL schema, so a new `DateTime` field is picked up the next time the schema is generated, without a restart of the dev server. The generated types in `web/types/graphql.d.ts` say `Date` for these fields. `client.cache.extract()` still returns the field as its serialized ISO string, not a `Date` object, so its result stays plain JSON and survives `JSON.stringify`/`JSON.parse` unchanged; `client.cache.restore()` parses it back into a `Date` the next time it's read.
 
 `DateTime` is the only scalar you can set. The `Date` and `Time` scalars stay strings because a JavaScript `Date` can't tell a date without a time, or a time without a date, from a moment in time.
 

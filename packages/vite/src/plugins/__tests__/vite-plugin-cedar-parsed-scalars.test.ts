@@ -132,4 +132,67 @@ describe('cedarParsedScalarsPlugin', () => {
 
     expect(callHook(transform, {}, 'export default App', id)).toBeNull()
   })
+
+  describe('hotUpdate', () => {
+    const schemaPath = '/cedar-app/.cedar/schema.graphql'
+    const virtualModule = { id: '\0virtual:cedar-parsed-scalars' }
+
+    function callHotUpdate(
+      file: string,
+      type: 'create' | 'update' | 'delete',
+      moduleGraph: {
+        getModuleById: (id: string) => unknown
+        invalidateModule: (mod: unknown) => void
+      },
+    ) {
+      const { hotUpdate } = getPlugin()
+
+      return callHook(hotUpdate, { environment: { moduleGraph } }, {
+        file,
+        type,
+      } as never)
+    }
+
+    it.each(['create', 'update', 'delete'] as const)(
+      "reloads the virtual module for a schema '%s' event, invalidating its cached transform",
+      (type) => {
+        const getModuleById = vi.fn().mockReturnValue(virtualModule)
+        const invalidateModule = vi.fn()
+
+        const result = callHotUpdate(schemaPath, type, {
+          getModuleById,
+          invalidateModule,
+        })
+
+        expect(getModuleById).toHaveBeenCalledWith(virtualModule.id)
+        expect(invalidateModule).toHaveBeenCalledWith(virtualModule)
+        expect(result).toEqual([virtualModule])
+      },
+    )
+
+    it('does nothing for a file other than the schema', () => {
+      const getModuleById = vi.fn()
+      const invalidateModule = vi.fn()
+
+      const result = callHotUpdate('/cedar-app/web/src/App.tsx', 'update', {
+        getModuleById,
+        invalidateModule,
+      })
+
+      expect(getModuleById).not.toHaveBeenCalled()
+      expect(result).toBeUndefined()
+    })
+
+    it('does nothing when the virtual module has not been loaded yet', () => {
+      const invalidateModule = vi.fn()
+
+      const result = callHotUpdate(schemaPath, 'create', {
+        getModuleById: () => undefined,
+        invalidateModule,
+      })
+
+      expect(invalidateModule).not.toHaveBeenCalled()
+      expect(result).toBeUndefined()
+    })
+  })
 })
