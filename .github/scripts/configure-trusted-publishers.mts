@@ -43,7 +43,9 @@ function getWorkflowFileArg(): string {
   }
 
   const value = process.argv[flagIndex + 1]
-  if (!value) {
+  // A missing value, or the next flag (e.g. `--file --dry-run`), both mean
+  // no file name was actually given.
+  if (!value || value.startsWith('-')) {
     throw new Error(
       '--file requires a workflow file name, e.g. --file release.yml',
     )

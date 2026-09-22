@@ -52,8 +52,12 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         # `fetch-depth`—number of commits to fetch. `0` fetches all history for all branches and tags.
         #  This is required because we use git tags to determine the version.
+        # `persist-credentials: false`—the lint/test/publish steps below run
+        # arbitrary repo code; the comment step gets its own token via
+        # `GH_TOKEN` instead of relying on one left in git credentials.
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up job
         uses: ./.github/actions/set-up-job
@@ -101,9 +105,10 @@ jobs:
       github.repository == 'cedarjs/cedar' &&
       (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
+    # No id-token: this job only removes dist-tags with NPM_AUTH_TOKEN and
+    # never calls `npm publish`, so it has no use for an OIDC token.
     permissions:
       contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
