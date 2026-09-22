@@ -2,11 +2,16 @@
 import type { NormalizedCacheObject } from '@apollo/client'
 import type { HelmetServerState } from '@dr.pogodin/react-helmet'
 
+import type { ParsedScalarsCacheConfig } from './src/apollo/parsedScalars.js'
+
 declare global {
   var __REDWOOD__PRERENDERING: boolean
   var __REDWOOD__HELMET_CONTEXT: { helmet?: HelmetServerState }
   var __REDWOOD__APP_TITLE: string
   var __CEDAR__APOLLO_STATE: NormalizedCacheObject
+  // Provided by `vite-plugin-cedar-parsed-scalars`, when a scalar is set in
+  // `graphql.parsedScalars`
+  var __CEDAR__PARSED_SCALARS: ParsedScalarsCacheConfig | undefined
 
   // Provided by Vite.config
   var RWJS_ENV: {

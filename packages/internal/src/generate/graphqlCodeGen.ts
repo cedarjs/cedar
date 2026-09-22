@@ -21,6 +21,7 @@ import { Kind, type DocumentNode } from 'graphql'
 import {
   getPaths,
   getConfig,
+  getParsedScalars,
   resolveGeneratedPrismaClient,
 } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
@@ -142,7 +143,10 @@ export const generateTypeDefGraphQLWeb = async (): Promise<TypeDefResult> => {
     {
       name: 'add',
       options: {
-        content: `import { Prisma } from "$api/src/lib/db"`,
+        content: [
+          `import { Prisma } from "$api/src/lib/db"`,
+          ...getApolloScalarDeclarations(),
+        ],
         placement: 'prepend',
       },
       codegenPlugin: addPlugin,
@@ -201,6 +205,32 @@ function mergeScalars(cedarScalars: unknown, userScalars: unknown): unknown {
   }
 
   return userScalars
+}
+
+/**
+ * Tells Apollo Client which scalars its cache parses, and into what, for the
+ * scalars in `graphql.parsedScalars`. Apollo Client only accepts a scalar in
+ * the cache config, and in a field policy, when it's declared here. Declaring
+ * a scalar also makes `InMemoryCache` require its `scalars` option.
+ */
+function getApolloScalarDeclarations() {
+  const declarations: string[] = []
+
+  if (getParsedScalars().DateTime === 'Date') {
+    declarations.push(
+      [
+        "declare module '@apollo/client' {",
+        '  namespace ApolloCache {',
+        '    interface Scalars {',
+        '      DateTime: { serialized: string; parsed: Date }',
+        '    }',
+        '  }',
+        '}',
+      ].join('\n'),
+    )
+  }
+
+  return declarations
 }
 
 /**
@@ -435,6 +465,11 @@ async function getPluginConfig(side: CodegenSide) {
       `MergePrismaWithSdlTypes<Prisma${key}, MakeRelationsOptional<${key}, AllMappedModels>, AllMappedModels>`
   })
 
+  interface ScalarInputOutput {
+    input: string
+    output: string
+  }
+
   type ScalarKeys =
     | 'BigInt'
     | 'DateTime'
@@ -444,11 +479,16 @@ async function getPluginConfig(side: CodegenSide) {
     | 'Time'
     | 'Byte'
     | 'File'
-  const scalars: Partial<Record<ScalarKeys, string>> = {
+  const scalars: Partial<Record<ScalarKeys, string | ScalarInputOutput>> = {
     // We need these, otherwise these scalars are mapped to any
     BigInt: 'number',
-    // @Note: DateTime fields can be valid Date-strings, or the Date object in the api side. They're always strings on the web side.
-    DateTime: side === CodegenSide.WEB ? 'string' : 'Date | string',
+    // @Note: DateTime fields can be valid Date-strings, or the Date object in the api side. They're strings on the web side, unless `graphql.parsedScalars.DateTime` is set. Then they are Date objects when the web side reads them, and Apollo Client accepts a Date or a string when they're sent.
+    DateTime:
+      side === CodegenSide.WEB
+        ? getParsedScalars().DateTime === 'Date'
+          ? { input: 'Date | string', output: 'Date' }
+          : 'string'
+        : 'Date | string',
     Date: side === CodegenSide.WEB ? 'string' : 'Date | string',
     JSON: 'Prisma.JsonValue',
     JSONObject: 'Prisma.JsonObject',

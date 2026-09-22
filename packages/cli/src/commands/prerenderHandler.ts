@@ -7,7 +7,7 @@ import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import type * as Prerender from '@cedarjs/prerender'
-import { getConfig, getPaths } from '@cedarjs/project-config'
+import { getConfig, getParsedScalars, getPaths } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 import type { QueryInfo } from '@cedarjs/web'
 
@@ -200,6 +200,22 @@ export const getTasks = async (
 
     // Don't error out
     return []
+  }
+
+  // A prerendered Cell gets its data straight from the executed query, so
+  // scalars that the browser's Apollo Client cache parses would still be
+  // strings during prerendering
+  const parsedScalars = Object.keys(getParsedScalars())
+
+  if (parsedScalars.length > 0) {
+    throw new Error(
+      'Prerendering does not support `graphql.parsedScalars` yet. A ' +
+        'prerendered Cell gets the raw GraphQL response, so ' +
+        parsedScalars.join(', ') +
+        ' would be a string when prerendering and parsed in the browser. ' +
+        'Either remove the `prerender` prop from your routes, or remove ' +
+        '`graphql.parsedScalars` from cedar.toml.',
+    )
   }
 
   // TODO: This should come before we even bother detecting routes to prerender

@@ -87,6 +87,12 @@
         "types": "./dist/generate/gqlormSchema.d.ts",
         "default": "./dist/generate/gqlormSchema.js"
       }
+    },
+    "./dist/generate/parsedScalars.js": {
+      "default": {
+        "types": "./dist/generate/parsedScalars.d.ts",
+        "default": "./dist/generate/parsedScalars.js"
+      }
     }
   },
   "types": "dist/index.d.ts",

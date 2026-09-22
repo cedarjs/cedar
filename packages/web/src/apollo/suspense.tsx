@@ -58,6 +58,7 @@ import {
   createTokenLink,
   createUpdateDataLink,
 } from './links.js'
+import { withParsedScalars } from './parsedScalars.js'
 
 export type ApolloClientCacheConfig = InMemoryCacheConfig
 
@@ -256,7 +257,7 @@ export const CedarApolloProvider: React.FunctionComponent<{
   const createCache = (): InMemoryCache => {
     return new InMemoryCache({
       fragments: fragmentRegistry,
-      ...cacheConfig,
+      ...withParsedScalars(cacheConfig),
     })
   }
 
