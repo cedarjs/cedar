@@ -3,19 +3,26 @@
  * publishable package in the monorepo, via the `npm trust` CLI command
  * (npm CLI >= 11.15.0).
  *
- * This is a one-time (or occasional, e.g. for a newly added package)
- * maintenance step, run locally by a maintainer -- not part of CI. It
- * requires write access to every package and 2FA enabled on the npm
- * account. `npm trust` re-authenticates with an OTP periodically, so
- * packages are configured serially with a short delay between calls to
- * avoid tripping the registry's rate limits and to fit comfortably inside
- * one OTP's validity window.
+ * This is a one-time (or occasional, e.g. for a newly added package, or for
+ * moving to a new workflow file) maintenance step, run locally by a
+ * maintainer -- not part of CI. It requires write access to every package
+ * and 2FA enabled on the npm account. `npm trust` re-authenticates with an
+ * OTP periodically, so packages are configured serially with a short delay
+ * between calls to avoid tripping the registry's rate limits and to fit
+ * comfortably inside one OTP's validity window.
  *
- * Every package is pointed at the same workflow (`publish.yml`) with no
- * environment, since only the `release` job inside it uses one -- see
+ * Every package is pointed at the same workflow file with no environment,
+ * since only the `release` job inside it uses one -- see
  * docs/implementation-plans/trusted-publishing.md.
  *
- * Usage: node .github/scripts/configure-trusted-publishers.mts [--dry-run]
+ * npm allows more than one trusted-publisher configuration per package, so
+ * moving to a new workflow file doesn't need an atomic cutover: run this
+ * script for the new file name while the old one's config is still in
+ * place, verify the new file publishes successfully, then remove the old
+ * configuration for every package (`npm trust list <package>` to find its
+ * id, then `npm trust revoke <package> --id=<id>`).
+ *
+ * Usage: node .github/scripts/configure-trusted-publishers.mts [--dry-run] [--file <workflow-file>]
  */
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -24,10 +31,30 @@ import { setTimeout } from 'node:timers/promises'
 
 const REPO_ROOT = process.cwd()
 const REPO = 'cedarjs/cedar'
-const WORKFLOW_FILE = 'publish.yml'
+const DEFAULT_WORKFLOW_FILE = 'release.yml'
 const DELAY_BETWEEN_CALLS_MS = 2000
 
 const isDryRun = process.argv.includes('--dry-run')
+
+function getWorkflowFileArg(): string {
+  const flagIndex = process.argv.indexOf('--file')
+  if (flagIndex === -1) {
+    return DEFAULT_WORKFLOW_FILE
+  }
+
+  const value = process.argv[flagIndex + 1]
+  // A missing value, or the next flag (e.g. `--file --dry-run`), both mean
+  // no file name was actually given.
+  if (!value || value.startsWith('-')) {
+    throw new Error(
+      '--file requires a workflow file name, e.g. --file release.yml',
+    )
+  }
+
+  return value
+}
+
+const workflowFile = getWorkflowFileArg()
 
 interface WorkspaceInfo {
   name: string
@@ -77,7 +104,9 @@ function getPublishablePackageNames(): string[] {
 
 async function main() {
   const packages = getPublishablePackageNames()
-  log(`Configuring trusted publishing for ${packages.length} packages`)
+  log(
+    `Configuring trusted publishing for ${packages.length} packages (file: ${workflowFile})`,
+  )
 
   const failures: string[] = []
 
@@ -91,7 +120,7 @@ async function main() {
       '--repo',
       REPO,
       '--file',
-      WORKFLOW_FILE,
+      workflowFile,
       '--allow-publish',
       '--yes',
     ]

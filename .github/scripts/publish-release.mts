@@ -1,5 +1,5 @@
 /**
- * Publishes a stable Cedar release (vX.Y.Z) to npm, from the publish.yml
+ * Publishes a stable Cedar release (vX.Y.Z) to npm, from the release.yml
  * workflow. The commit being released is prepared by the release tooling
  * (https://github.com/cedarjs/release-tooling) and already has every
  * package's version bumped, in-monorepo dependencies pinned, and the
