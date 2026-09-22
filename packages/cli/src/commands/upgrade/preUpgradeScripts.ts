@@ -11,17 +11,17 @@ import semver from 'semver'
 /**
  * Prerelease tags published from `main` rather than from a release branch.
  *
- * Canaries are published by `publish-prerelease.yml`, which runs on `main`.
+ * Canaries are published by the `prerelease` job in `canary.yml`, which runs on `main`.
  * That's a different line of development from the branch a release is cut
  * from, so `canary.ts` can legitimately need to say something quite different
  * from the current `<major>.x.ts`, and the version-scoped scripts must not run
  * for it.
  *
- * Release candidates are the opposite case. `publish-release-candidate.yml`
- * runs on `release/**`, the same branch the release itself will be cut from, so
- * `6.0.0-rc.312` needs exactly what 6.0.0 will need and gets `6.x.ts` like any
- * other v6 release. Same for `next` prereleases, published from the `next`
- * branch.
+ * Release candidates are the opposite case. The `release-candidate` job in
+ * `release.yml` runs on `release/**`, the same branch the release itself will
+ * be cut from, so `6.0.0-rc.312` needs exactly what 6.0.0 will need and gets
+ * `6.x.ts` like any other v6 release. Same for `next` prereleases, published
+ * from the `next` branch.
  */
 const MAIN_BRANCH_PRERELEASE_TAGS = ['canary']
 
