@@ -1,3 +1,5 @@
+import type * as Vite from 'vite'
+import type { HotUpdateOptions } from 'vite'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { loadParsedScalarsCacheConfig } from '@cedarjs/internal/dist/generate/parsedScalars.js'
@@ -139,18 +141,25 @@ describe('cedarParsedScalarsPlugin', () => {
 
     function callHotUpdate(
       file: string,
-      type: 'create' | 'update' | 'delete',
+      type: HotUpdateOptions['type'],
       moduleGraph: {
         getModuleById: (id: string) => unknown
         invalidateModule: (mod: unknown) => void
       },
     ) {
       const { hotUpdate } = getPlugin()
-
-      return callHook(hotUpdate, { environment: { moduleGraph } }, {
+      const options: HotUpdateOptions = {
         file,
         type,
-      } as never)
+        timestamp: Date.now(),
+        modules: [],
+        read: () => '',
+        // A full `ViteDevServer` isn't needed since the hook only reads
+        // `file`, `type` and `this.environment`
+        server: {} as HotUpdateOptions['server'],
+      }
+
+      return callHook(hotUpdate, { environment: { moduleGraph } }, options)
     }
 
     it.each(['create', 'update', 'delete'] as const)(
@@ -194,5 +203,52 @@ describe('cedarParsedScalarsPlugin', () => {
       expect(invalidateModule).not.toHaveBeenCalled()
       expect(result).toBeUndefined()
     })
+  })
+})
+
+// A separate suite, since it needs its own mock of `getPaths()` (a
+// Windows-style path) and of `vite`'s `normalizePath` (real `isWindows`
+// gating means it only converts backslashes when the test itself runs on
+// Windows, which most CI jobs don't)
+describe('cedarParsedScalarsPlugin hotUpdate on Windows-style paths', () => {
+  beforeEach(() => {
+    vi.resetModules()
+  })
+
+  it('matches the schema path Vite reports (always forward slashes) against getPaths() (OS-native separators)', async () => {
+    vi.doMock('vite', async (importOriginal) => ({
+      ...(await importOriginal<typeof Vite>()),
+      normalizePath: (id: string) => id.replace(/\\/g, '/'),
+    }))
+    vi.doMock('@cedarjs/project-config', () => ({
+      getParsedScalars: () => ({ DateTime: 'Date' }),
+      getPaths: () => ({
+        generated: { schema: 'D:\\a\\cedar-app\\.cedar\\schema.graphql' },
+      }),
+    }))
+    vi.doMock('@cedarjs/internal/dist/generate/parsedScalars.js', () => ({
+      loadParsedScalarsCacheConfig: () => undefined,
+    }))
+
+    const { cedarParsedScalarsPlugin: plugin } =
+      await import('../vite-plugin-cedar-parsed-scalars.js')
+    const { hotUpdate } = plugin()!
+    const virtualModule = { id: '\0virtual:cedar-parsed-scalars' }
+    const getModuleById = vi.fn().mockReturnValue(virtualModule)
+    const invalidateModule = vi.fn()
+
+    const result = callHook(
+      hotUpdate,
+      { environment: { moduleGraph: { getModuleById, invalidateModule } } },
+      {
+        // What Vite's own watcher hands the hook: always forward slashes,
+        // regardless of the OS
+        file: 'D:/a/cedar-app/.cedar/schema.graphql',
+        type: 'create',
+      } as never,
+    )
+
+    expect(invalidateModule).toHaveBeenCalledWith(virtualModule)
+    expect(result).toEqual([virtualModule])
   })
 })

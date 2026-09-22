@@ -1,4 +1,5 @@
 import type { Plugin } from 'vite'
+import { normalizePath } from 'vite'
 
 import { loadParsedScalarsCacheConfig } from '@cedarjs/internal/dist/generate/parsedScalars.js'
 import { getParsedScalars, getPaths } from '@cedarjs/project-config'
@@ -74,7 +75,11 @@ export function cedarParsedScalarsPlugin(): Plugin | undefined {
     // once `cedar-gen-watch` writes it, the same way it already does for a
     // later edit.
     hotUpdate(options) {
-      if (options.file !== getPaths().generated.schema) {
+      // Vite normalizes `options.file` to forward slashes before this hook
+      // runs, but `getPaths().generated.schema` is built with `path.join`,
+      // which keeps the OS-native separator, so an unnormalized comparison
+      // never matches on Windows
+      if (options.file !== normalizePath(getPaths().generated.schema)) {
         return
       }
 
