@@ -1,7 +1,6 @@
 import type { Plugin } from 'vite'
 import { normalizePath } from 'vite'
 
-import { loadParsedScalarsCacheConfig } from '@cedarjs/internal/dist/generate/parsedScalars.js'
 import { getParsedScalars, getPaths } from '@cedarjs/project-config'
 
 const VIRTUAL_MODULE_ID = 'virtual:cedar-parsed-scalars'
@@ -26,7 +25,9 @@ const VITEST_WEB_SETUP_FILE_REGEXP = /[\\/]vitest-web\.setup\.(ts|js)$/
  * setup file import the module so that every entry point that renders the
  * provider has it. The module is a
  * dependency of the generated schema file, so a change to the schema reloads
- * the app.
+ * the app. The generated schema is only read, and `graphql` and its schema
+ * loader only imported, when the virtual module is actually resolved, so a
+ * project that doesn't use this setting doesn't pay for loading them.
  */
 export function cedarParsedScalarsPlugin(): Plugin | undefined {
   // Also checks that the setting has values Cedar supports
@@ -45,13 +46,18 @@ export function cedarParsedScalarsPlugin(): Plugin | undefined {
       return null
     },
 
-    load(id) {
+    async load(id) {
       if (id !== RESOLVED_VIRTUAL_MODULE_ID) {
         return null
       }
 
       this.addWatchFile(getPaths().generated.schema)
 
+      // Dynamic so that merely importing this plugin — every consumer of
+      // `@cedarjs/vite`'s barrel does, whether or not it uses this plugin —
+      // doesn't also eagerly load `graphql` and the schema loader
+      const { loadParsedScalarsCacheConfig } =
+        await import('@cedarjs/internal/dist/generate/parsedScalars.js')
       const config = loadParsedScalarsCacheConfig()
 
       return `globalThis.__CEDAR__PARSED_SCALARS = ${JSON.stringify(config)}`

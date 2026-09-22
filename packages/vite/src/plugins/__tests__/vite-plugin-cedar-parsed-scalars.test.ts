@@ -76,11 +76,11 @@ describe('cedarParsedScalarsPlugin', () => {
     expect(callHook(resolveId, {}, './other', undefined, {})).toBeNull()
   })
 
-  it('builds the cache config into the virtual module and watches the schema', () => {
+  it('builds the cache config into the virtual module and watches the schema', async () => {
     const { load } = getPlugin()
     const addWatchFile = vi.fn()
 
-    const code = callHook(
+    const code = await callHook(
       load,
       { addWatchFile },
       '\0virtual:cedar-parsed-scalars',
@@ -94,10 +94,10 @@ describe('cedarParsedScalarsPlugin', () => {
     )
   })
 
-  it('leaves other modules alone', () => {
+  it('leaves other modules alone', async () => {
     const { load } = getPlugin()
 
-    expect(callHook(load, {}, '/cedar-app/web/src/index.ts')).toBeNull()
+    expect(await callHook(load, {}, '/cedar-app/web/src/index.ts')).toBeNull()
   })
 
   it.each([
