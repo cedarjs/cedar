@@ -4,7 +4,7 @@ import path from 'path'
 import ansis from 'ansis'
 import boxen from 'boxen'
 import latestVersion from 'latest-version'
-import { isGreater, isValid } from 'verkit'
+import { isGreaterThan, isValid } from 'verkit'
 
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { getNodeRunnerArgs } from '@cedarjs/cli-helpers/packageManager/exec'
@@ -203,7 +203,7 @@ export function shouldShow() {
 
   let newerVersion = false
   data.remoteVersions.forEach((version) => {
-    newerVersion ||= isGreater(version, localVersion)
+    newerVersion ||= isGreaterThan(version, localVersion)
   })
   return data.shownAt < new Date().getTime() - SHOW_PERIOD && newerVersion
 }
@@ -230,7 +230,7 @@ function getUpdateMessage() {
   let updateCount = 0
   let message = ` New updates to Cedar are available via \`${formatCedarCommand(['upgrade#REPLACEME#'])}\` `
   data.remoteVersions.forEach((version, tag) => {
-    if (isGreater(version, data.localVersion)) {
+    if (isGreaterThan(version, data.localVersion)) {
       updateCount += 1
 
       if (tag === localTag) {

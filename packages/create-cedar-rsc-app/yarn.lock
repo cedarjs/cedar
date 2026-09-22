@@ -1490,7 +1490,7 @@ __metadata:
     typescript: "npm:5.9.3"
     typescript-eslint: "npm:^8.0.0"
     untildify: "npm:5.0.0"
-    verkit: "npm:0.4.0"
+    verkit: "npm:0.5.0"
     which: "npm:6.0.1"
     yauzl-promise: "npm:4.0.0"
     zx: "npm:8.8.5"
@@ -3596,10 +3596,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"verkit@npm:0.4.0":
-  version: 0.4.0
-  resolution: "verkit@npm:0.4.0"
-  checksum: 10c0/a3b794fa0902a3643ee2ae073eeb6fcc50e1245aa339f888aab7e02120d9d195beae9894fd1a8f8ea0fc2c0b20f089459d6d1aecfebe889e94bf8bf70f01c60e
+"verkit@npm:0.5.0":
+  version: 0.5.0
+  resolution: "verkit@npm:0.5.0"
+  checksum: 10c0/0bad45304bd0b3d2e56e4bdb422a43863c7a86902741eb632adb104ea37e1213706e08be4eaa7b3e28f843658be56ace16081d3ed3478477a5872f94a83ef7d0
   languageName: node
   linkType: hard
 

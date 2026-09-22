@@ -1,4 +1,4 @@
-import { clean, isGreaterOrEqual } from 'verkit'
+import { clean, isGreaterThanOrEqual } from 'verkit'
 
 import { colors as c } from '@cedarjs/cli-helpers/colors'
 
@@ -22,7 +22,7 @@ export function checkNodeVersion(): NodeVersionCheck {
     return checks
   }
 
-  if (isGreaterOrEqual(pVersionC, LOWER_BOUND)) {
+  if (isGreaterThanOrEqual(pVersionC, LOWER_BOUND)) {
     return checks
   }
 

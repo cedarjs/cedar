@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { Listr } from 'listr2'
-import { coerce, isGreaterOrEqual } from 'verkit'
+import { coerce, isGreaterThanOrEqual } from 'verkit'
 
 import { colors as c } from '@cedarjs/cli-helpers/colors'
 import {
@@ -63,7 +63,7 @@ export const handler = async (options: Opts) => {
           const coercedReactVersion = coerce(reactVersion)
           if (
             !coercedReactVersion ||
-            !isGreaterOrEqual(coercedReactVersion, '19.0.0')
+            !isGreaterThanOrEqual(coercedReactVersion, '19.0.0')
           ) {
             throw new Error(
               'You need to be using at least React version 19 to enable the React Compiler',

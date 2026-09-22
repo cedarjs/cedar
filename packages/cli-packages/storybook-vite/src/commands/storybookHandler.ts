@@ -4,7 +4,7 @@ import process from 'node:process'
 
 import type { ExecaError } from 'execa'
 import execa from 'execa'
-import { isGreaterOrEqual, isLess, tryParse } from 'verkit'
+import { isGreaterThanOrEqual, isLessThan, tryParse } from 'verkit'
 
 import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { transformTSToJS } from '@cedarjs/cli-helpers/fileHelpers'
@@ -165,8 +165,8 @@ export async function handler({
 
   if (
     tryParse(process.version) !== null &&
-    isLess(process.version, '22.0.0') &&
-    isGreaterOrEqual(process.version, '20.19.0')
+    isLessThan(process.version, '22.0.0') &&
+    isGreaterThanOrEqual(process.version, '20.19.0')
   ) {
     env.NODE_OPTIONS = '--no-experimental-require-module'
   }

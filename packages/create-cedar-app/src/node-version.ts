@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { terminalLink } from 'termi-link'
-import { findMinimumForRange, isLess, satisfies } from 'verkit'
+import { findMinimumForRange, isLessThan, satisfies } from 'verkit'
 
 import { ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 
@@ -35,7 +35,7 @@ export async function executeNodeCompatibilityCheck(templateDir: string) {
 
   const minRequired = findMinimumForRange(nodeRange)
   const nodeVersionIsTooOld =
-    minRequired && isLess(process.version, minRequired)
+    minRequired && isLessThan(process.version, minRequired)
 
   if (nodeVersionIsTooOld) {
     tui.stopReactive(true)
