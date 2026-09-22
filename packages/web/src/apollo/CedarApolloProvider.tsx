@@ -11,6 +11,7 @@ import { FetchConfigProvider } from '../components/FetchConfigProvider.js'
 import type { GraphQLClientConfigProp } from './apolloLinkTypes.js'
 import { ApolloProviderWithFetchConfig } from './ApolloProviderWithFetchConfig.js'
 import { fragmentRegistry } from './fragmentRegistry.js'
+import { withParsedScalars } from './parsedScalars.js'
 import './typeOverrides.js'
 
 export type {
@@ -54,7 +55,7 @@ export function CedarApolloProvider({
     return new InMemoryCache({
       fragments: fragmentRegistry,
       possibleTypes: cacheConfig?.possibleTypes,
-      ...cacheConfig,
+      ...withParsedScalars(cacheConfig),
     })
   }
 

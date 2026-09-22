@@ -39,15 +39,27 @@ export const jsonTruncate = (obj: unknown) => {
   return truncate(JSON.stringify(obj, null, 2))
 }
 
-export function timeTag(dateTime: string | undefined | null) {
+export function timeTag(dateTime: <%= parsedDateTime ? 'Date' : 'string' %> | undefined | null) {
   let output: string | React.JSX.Element = ''
 
   if (dateTime) {
+<% if (parsedDateTime) { %>
+    if (!Number.isNaN(dateTime.getTime())) {
+      const isoString = dateTime.toISOString()
+
+      output = (
+        <time dateTime={isoString} title={isoString}>
+          {dateTime.toUTCString()}
+        </time>
+      )
+    }
+<% } else { %>
     output = (
       <time dateTime={dateTime} title={dateTime}>
         {new Date(dateTime).toUTCString()}
       </time>
     )
+<% } %>
   }
 
   return output

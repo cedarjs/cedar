@@ -94,6 +94,13 @@
           "properties": {
             "File": { "type": "boolean" }
           }
+        },
+        "parsedScalars": {
+          "type": "object",
+          "properties": {
+            "DateTime": { "enum": ["Date"] }
+          },
+          "additionalProperties": false
         }
       }
     },

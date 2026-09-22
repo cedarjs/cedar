@@ -69,6 +69,18 @@ interface AuthImpersonationConfig {
   roles?: string[]
 }
 
+/**
+ * The GraphQL scalars that the web side parses into a richer type than the
+ * string they arrive as, and the type to parse each one into. A scalar that is
+ * not listed stays a string.
+ */
+export interface ParsedScalarsConfig {
+  /**
+   * Parses `DateTime` values into `Date` objects.
+   */
+  DateTime?: 'Date'
+}
+
 interface StudioConfig {
   basePort: number
   graphiql?: GraphiQLStudioConfig
@@ -91,6 +103,7 @@ export interface Config {
     includeScalars: {
       File: boolean
     }
+    parsedScalars: ParsedScalarsConfig
   }
   notifications: {
     versionUpdates: string[]
@@ -200,6 +213,7 @@ export const DEFAULT_CONFIG: Config = {
     fragments: false,
     trustedDocuments: false,
     includeScalars: { File: true },
+    parsedScalars: {},
   },
   browser: {
     open: false,
@@ -279,6 +293,70 @@ export const DEFAULT_CONFIG: Config = {
 export function getConfig(configPath?: string): Config {
   const config = merge(DEFAULT_CONFIG, getRawConfig(configPath))
   return config
+}
+
+/**
+ * The value each parsed scalar can be set to in `cedar.toml`
+ */
+const SUPPORTED_PARSED_SCALARS: Record<string, readonly string[]> = {
+  DateTime: ['Date'],
+}
+
+/**
+ * Returns the `graphql.parsedScalars` setting from `cedar.toml`, checked
+ * against the values Cedar supports. A scalar that is not in the returned
+ * object is not parsed and stays a string.
+ *
+ * @param config The project config. Defaults to the config of the current
+ *   project
+ * @throws When the setting names a scalar that can't be parsed, or a value
+ *   the scalar can't be parsed into
+ */
+export function getParsedScalars(
+  config: Config = getConfig(),
+): ParsedScalarsConfig {
+  // `cedar.toml` is not type checked, so any value can show up here, and
+  // `Object.entries` silently returns no entries for a non-object like
+  // `false` instead of a type error
+  const parsedScalars: unknown = config.graphql.parsedScalars
+
+  if (
+    typeof parsedScalars !== 'object' ||
+    parsedScalars === null ||
+    Array.isArray(parsedScalars)
+  ) {
+    throw new Error(
+      `graphql.parsedScalars in cedar.toml must be a table, for example ` +
+        `[graphql.parsedScalars]\n  DateTime = "Date", not ` +
+        `${JSON.stringify(parsedScalars)}.`,
+    )
+  }
+
+  const entries: [string, unknown][] = Object.entries(parsedScalars)
+
+  for (const [scalar, value] of entries) {
+    const supportedValues = SUPPORTED_PARSED_SCALARS[scalar]
+
+    if (!supportedValues) {
+      throw new Error(
+        `"${scalar}" can't be set in graphql.parsedScalars in cedar.toml. ` +
+          'Only ' +
+          Object.keys(SUPPORTED_PARSED_SCALARS).join(', ') +
+          ' can be parsed. Remove it to keep the scalar as a string.',
+      )
+    }
+
+    if (typeof value !== 'string' || !supportedValues.includes(value)) {
+      throw new Error(
+        `${JSON.stringify(value)} is not a supported value for ` +
+          `graphql.parsedScalars.${scalar} in cedar.toml. Use ` +
+          supportedValues.map((v) => JSON.stringify(v)).join(' or ') +
+          ', or remove it to keep the scalar as a string.',
+      )
+    }
+  }
+
+  return config.graphql.parsedScalars
 }
 
 /**

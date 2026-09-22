@@ -160,6 +160,9 @@ Vite plugins: cell transform | entry injection | html env | data-uri-to-buffer s
   auto-imports | import-dir | directory-named-import | merged config |
   api-babel-transform | cedar-routes-auto-loader | cedar-universal-deploy |
   cedar-wait-for-api-server | resolve-cedar-style-imports |
+  cedar-parsed-scalars (delivers the `graphql.parsedScalars` cache config to
+    `CedarApolloProvider` through a virtual module imported from `App` and the
+    Vitest web setup file; a no-op when the setting is unset) |
   cedar-api-import-guard (pre; errors on `$api/` imports in the client
     environment, so api-side code can't be bundled into the browser)
   *test mode (Vitest, mode === 'test'): adds router-import-transform |

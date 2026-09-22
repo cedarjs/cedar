@@ -28,6 +28,7 @@ import { cedarDataUriShim } from './plugins/vite-plugin-cedar-data-uri-shim.js'
 import { cedarEntryInjectionPlugin } from './plugins/vite-plugin-cedar-entry-injection.js'
 import { cedarHtmlEnvPlugin } from './plugins/vite-plugin-cedar-html-env.js'
 import { cedarMockCellDataPlugin } from './plugins/vite-plugin-cedar-mock-cell-data.js'
+import { cedarParsedScalarsPlugin } from './plugins/vite-plugin-cedar-parsed-scalars.js'
 import { cedarRemoveDevFatalErrorPage } from './plugins/vite-plugin-cedar-remove-dev-fatal-error-page.js'
 import { cedarRemoveFromBundle } from './plugins/vite-plugin-cedar-remove-from-bundle.js'
 import { cedarRoutesAutoLoaderPlugin } from './plugins/vite-plugin-cedar-routes-auto-loader.js'
@@ -58,6 +59,7 @@ export { cedarRemoveFromBundle } from './plugins/vite-plugin-cedar-remove-from-b
 export { cedarjsResolveCedarStyleImportsPlugin } from './plugins/vite-plugin-cedarjs-resolve-cedar-style-imports.js'
 export { cedarjsJobPathInjectorPlugin } from './plugins/vite-plugin-cedarjs-job-path-injector.js'
 export { cedarMockCellDataPlugin } from './plugins/vite-plugin-cedar-mock-cell-data.js'
+export { cedarParsedScalarsPlugin } from './plugins/vite-plugin-cedar-parsed-scalars.js'
 export { cedarMergedConfig } from './plugins/vite-plugin-merged-config.js'
 export { cedarSwapApolloProvider } from './plugins/vite-plugin-swap-apollo-provider.js'
 export { cedarUniversalDeployPlugin } from './plugins/vite-plugin-cedar-universal-deploy.js'
@@ -109,6 +111,7 @@ export function cedar({ mode, babel }: PluginOptions = {}): PluginOption[] {
     cedarMergedConfig(),
     cedarjsResolveCedarStyleImportsPlugin(),
     cedarSwapApolloProvider(),
+    cedarParsedScalarsPlugin(),
     cedarCellTransform(),
     cedarRemoveFromBundle(),
     cedarRemoveDevFatalErrorPage(),

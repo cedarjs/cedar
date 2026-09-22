@@ -16,7 +16,7 @@ import {
 } from '@cedarjs/cli-helpers/packageManager/packages'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
-import { getConfig } from '@cedarjs/project-config'
+import { getConfig, getParsedScalars } from '@cedarjs/project-config'
 import { pluralize, singularize } from '@cedarjs/utils/cedarPluralize'
 
 import {
@@ -300,6 +300,13 @@ const assetFiles = async (name: string, tailwind: boolean) => {
   return fileList
 }
 
+/**
+ * Whether the web side gets `DateTime` values as `Date` objects, which is
+ * what `graphql.parsedScalars.DateTime = "Date"` in `cedar.toml` sets. The
+ * generated code handles `DateTime` values as strings otherwise.
+ */
+const isDateTimeParsed = () => getParsedScalars().DateTime === 'Date'
+
 const formatters = async (name: string, isTypescript: boolean) => {
   const outputPath = path.join(
     getPaths().web.src,
@@ -325,6 +332,7 @@ const formatters = async (name: string, isTypescript: boolean) => {
     }),
     {
       name,
+      parsedDateTime: isDateTimeParsed(),
     },
   )
 
@@ -336,6 +344,7 @@ const formatters = async (name: string, isTypescript: boolean) => {
     }),
     {
       name,
+      parsedDateTime: isDateTimeParsed(),
     },
   )
 
@@ -514,6 +523,7 @@ const modelRelatedVariables = (model: ScaffoldModel) => {
     editableColumns,
     listFormattersImports,
     formattersImports,
+    parsedDateTime: isDateTimeParsed(),
   }
 }
 
