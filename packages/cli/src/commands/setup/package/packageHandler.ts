@@ -1,5 +1,5 @@
 import enq from 'enquirer'
-import { isGreaterOrEqual, isLess, tryParse } from 'verkit'
+import { isGreaterThanOrEqual, isLessThan, tryParse } from 'verkit'
 
 import { dlx } from '@cedarjs/cli-helpers/packageManager/exec'
 import { getCompatibilityData } from '@cedarjs/cli-helpers/version'
@@ -29,7 +29,10 @@ export async function handler({
     console.log(
       'No compatibility check will be performed because you used the --force flag.',
     )
-    if (tryParse(packageVersion) !== null && isLess(packageVersion, '1.0.0')) {
+    if (
+      tryParse(packageVersion) !== null &&
+      isLessThan(packageVersion, '1.0.0')
+    ) {
       console.log(
         'Be aware that this package is under version 1.0.0 and so should be considered experimental.',
       )
@@ -121,7 +124,7 @@ async function showExperimentalWarning(version: string | undefined) {
   if (
     version === undefined ||
     tryParse(version) === null ||
-    isGreaterOrEqual(version, '1.0.0')
+    isGreaterThanOrEqual(version, '1.0.0')
   ) {
     return
   }
