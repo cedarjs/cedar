@@ -16834,10 +16834,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"empathic@npm:2.0.1":
-  version: 2.0.1
-  resolution: "empathic@npm:2.0.1"
-  checksum: 10c0/577f2868bfcad4ffbf911b57c75016125eb8cc8a7d32cf2d3e9fbcb31bfe6e9e6b66d9457ac34ccb2cd38bff353b3af34287899e0360b8c561ff6d4a048aca62
+"empathic@npm:2.1.0":
+  version: 2.1.0
+  resolution: "empathic@npm:2.1.0"
+  checksum: 10c0/cf13e2919d680a22140d7cd1637a01f6cf9a727f21d3a54b23489ec01c80eab548b9d832d2e167d00e124a54377660c1d6fd2b5947d905366e4d22fde7b9e082
   languageName: node
   linkType: hard
 
@@ -27935,7 +27935,7 @@ __metadata:
     "@storybook/react": "npm:8.6.18"
     "@storybook/types": "npm:8.6.14"
     "@types/node": "npm:24.10.4"
-    empathic: "npm:2.0.1"
+    empathic: "npm:2.1.0"
     magic-string: "npm:0.30.21"
     react-docgen: "npm:7.1.1"
     tsconfig-paths: "npm:4.2.0"
