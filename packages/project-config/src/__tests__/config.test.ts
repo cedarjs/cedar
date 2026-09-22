@@ -283,6 +283,22 @@ describe('getConfig', () => {
             'string.',
         )
       })
+
+      it('rejects a parsedScalars value that is not a table', () => {
+        vol.fromJSON(
+          {
+            'cedar.toml': `
+              [graphql]
+                parsedScalars = false
+              `,
+          },
+          '/cedar-app',
+        )
+
+        expect(() => getParsedScalars()).toThrow(
+          'graphql.parsedScalars in cedar.toml must be a table',
+        )
+      })
     })
 
     it('merges graphql configs', () => {

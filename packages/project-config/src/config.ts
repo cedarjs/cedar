@@ -315,10 +315,24 @@ const SUPPORTED_PARSED_SCALARS: Record<string, readonly string[]> = {
 export function getParsedScalars(
   config: Config = getConfig(),
 ): ParsedScalarsConfig {
-  // `cedar.toml` is not type checked, so any value can show up here
-  const entries: [string, unknown][] = Object.entries(
-    config.graphql.parsedScalars,
-  )
+  // `cedar.toml` is not type checked, so any value can show up here, and
+  // `Object.entries` silently returns no entries for a non-object like
+  // `false` instead of a type error
+  const parsedScalars: unknown = config.graphql.parsedScalars
+
+  if (
+    typeof parsedScalars !== 'object' ||
+    parsedScalars === null ||
+    Array.isArray(parsedScalars)
+  ) {
+    throw new Error(
+      `graphql.parsedScalars in cedar.toml must be a table, for example ` +
+        `[graphql.parsedScalars]\n  DateTime = "Date", not ` +
+        `${JSON.stringify(parsedScalars)}.`,
+    )
+  }
+
+  const entries: [string, unknown][] = Object.entries(parsedScalars)
 
   for (const [scalar, value] of entries) {
     const supportedValues = SUPPORTED_PARSED_SCALARS[scalar]

@@ -44,13 +44,15 @@ export function timeTag(dateTime: <%= parsedDateTime ? 'Date' : 'string' %> | un
 
   if (dateTime) {
 <% if (parsedDateTime) { %>
-    const isoString = dateTime.toISOString()
+    if (!Number.isNaN(dateTime.getTime())) {
+      const isoString = dateTime.toISOString()
 
-    output = (
-      <time dateTime={isoString} title={isoString}>
-        {dateTime.toUTCString()}
-      </time>
-    )
+      output = (
+        <time dateTime={isoString} title={isoString}>
+          {dateTime.toUTCString()}
+        </time>
+      )
+    }
 <% } else { %>
     output = (
       <time dateTime={dateTime} title={dateTime}>

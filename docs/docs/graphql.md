@@ -733,7 +733,7 @@ On the web side, a `DateTime` field arrives as an ISO string, like `"2026-09-21T
   DateTime = "Date"
 ```
 
-Apollo Client's cache then parses every `DateTime` field into a `Date` when it reads a response, and turns a `Date` back into an ISO string when you pass one in a query's variables. Cedar finds the fields by reading your GraphQL schema, so a new `DateTime` field is picked up the next time the schema is generated, without a restart of the dev server. The generated types in `web/types/graphql.d.ts` say `Date` for these fields, and the cache still stores and extracts plain JSON, so the state that prerendering hands to the browser is unchanged.
+Apollo Client's cache then parses every `DateTime` field into a `Date` when it reads a response, and turns a `Date` back into an ISO string when you pass one in a query's variables. Cedar finds the fields by reading your GraphQL schema, so a new `DateTime` field is picked up the next time the schema is generated, without a restart of the dev server. The generated types in `web/types/graphql.d.ts` say `Date` for these fields, and the cache still stores and extracts plain JSON, so a `Date` field survives a round trip through `JSON.stringify`/`JSON.parse` unchanged.
 
 `DateTime` is the only scalar you can set. The `Date` and `Time` scalars stay strings because a JavaScript `Date` can't tell a date without a time, or a time without a date, from a moment in time.
 
@@ -741,7 +741,7 @@ Apollo Client's cache then parses every `DateTime` field into a `Date` when it r
 
 - **Code that treats a `DateTime` as a string.** Calls like `createdAt.slice(0, 10)` or passing `createdAt` to a function that takes a string are now type errors. `new Date(createdAt)` keeps working.
 - **Cell mocks.** Use `Date` objects for `DateTime` fields in your mock data, like `createdAt: new Date('2022-01-17T13:57:51.607Z')`. The same mock works when you render `<Success {...standard()} />` directly and when a test goes through the mock service worker, which sends the `Date` as an ISO string that the cache parses again.
-- **Scaffolds generated before you changed the setting.** Their `formatDatetime` helper in the form component and the `timeTag` function in `web/src/lib/formatters` take strings. Regenerate the scaffold, or change those two functions to take a `Date`. Scaffolds generated with the setting on already do.
+- **A scaffold whose `formatDatetime` and `timeTag` still take a string.** Regenerate the scaffold, or change the two functions to take a `Date`, to match a form or list that reads the field from the cache.
 - **An `InMemoryCache` you create yourself.** Apollo Client's types require the `scalars` option once a scalar is parsed. `CedarApolloProvider` passes it for the caches it creates.
 
 :::note Prerendering

@@ -39,6 +39,10 @@ afterEach(() => {
   delete globalThis.__CEDAR__PARSED_SCALARS
 })
 
+function isDate(value: unknown): value is Date {
+  return value instanceof Date
+}
+
 describe('withParsedScalars', () => {
   it('returns the cache config as it is when no scalar is parsed', () => {
     const cacheConfig = { possibleTypes: { A: ['B'] } }
@@ -79,10 +83,10 @@ describe('withParsedScalars', () => {
         variables: { id: 1 },
       })
 
-      expect(data?.post.postedAt).toBeInstanceOf(Date)
-      expect((data?.post.postedAt as unknown as Date).toISOString()).toBe(
-        postedAt,
-      )
+      const value: unknown = data?.post.postedAt
+
+      expect(isDate(value)).toBe(true)
+      expect(isDate(value) && value.toISOString()).toBe(postedAt)
     })
 
     it('extracts serialized values and parses them again when they are restored', async () => {
@@ -113,10 +117,10 @@ describe('withParsedScalars', () => {
         variables: { id: 1 },
       })
 
-      expect(restored?.post.postedAt).toBeInstanceOf(Date)
-      expect((restored?.post.postedAt as unknown as Date).toISOString()).toBe(
-        postedAt,
-      )
+      const value: unknown = restored?.post.postedAt
+
+      expect(isDate(value)).toBe(true)
+      expect(isDate(value) && value.toISOString()).toBe(postedAt)
     })
 
     it('serializes Date objects in the variables', async () => {
@@ -144,7 +148,7 @@ describe('withParsedScalars', () => {
       expect(data?.updatePost.postedAt).toBeInstanceOf(Date)
     })
 
-    it('keeps the field policies and scalars the app configured', () => {
+    it('keeps the field policies and scalars the app configured, on a field without a parsed scalar', () => {
       globalThis.__CEDAR__PARSED_SCALARS = parsedScalarsConfig
 
       const merge = () => 'merged'
@@ -154,7 +158,7 @@ describe('withParsedScalars', () => {
         typePolicies: {
           Post: {
             keyFields: ['slug'],
-            fields: { postedAt: { merge }, title: read },
+            fields: { title: { merge }, body: read },
           },
           Comment: { keyFields: false },
         },
@@ -164,24 +168,71 @@ describe('withParsedScalars', () => {
         Post: {
           keyFields: ['slug'],
           fields: {
-            postedAt: { merge, scalar: 'DateTime' },
-            title: read,
+            title: { merge },
+            body: read,
+            postedAt: { scalar: 'DateTime' },
           },
         },
         Comment: { keyFields: false },
       })
     })
 
-    it('adds the scalar to a field the app configured with a read function', () => {
+    it('adds the scalar to a field the app configured without a read or merge', () => {
       globalThis.__CEDAR__PARSED_SCALARS = parsedScalarsConfig
 
-      const read = () => 'read'
       const config = withParsedScalars({
-        typePolicies: { Post: { fields: { postedAt: read } } },
+        typePolicies: { Post: { fields: { postedAt: { keyArgs: false } } } },
       })
 
       expect(config?.typePolicies?.Post.fields).toEqual({
-        postedAt: { read, scalar: 'DateTime' },
+        postedAt: { keyArgs: false, scalar: 'DateTime' },
+      })
+    })
+
+    it('throws when the app configures a read function on a field that also holds a parsed scalar', () => {
+      globalThis.__CEDAR__PARSED_SCALARS = parsedScalarsConfig
+
+      const read = () => 'read'
+
+      expect(() =>
+        withParsedScalars({
+          typePolicies: { Post: { fields: { postedAt: read } } },
+        }),
+      ).toThrow(
+        'Post.postedAt holds a parsed DateTime scalar and has a `read` or ' +
+          '`merge` field policy.',
+      )
+    })
+
+    it('throws when the app configures a merge function on a field that also holds a parsed scalar', () => {
+      globalThis.__CEDAR__PARSED_SCALARS = parsedScalarsConfig
+
+      const merge = () => 'merged'
+
+      expect(() =>
+        withParsedScalars({
+          typePolicies: { Post: { fields: { postedAt: { merge } } } },
+        }),
+      ).toThrow(
+        'Post.postedAt holds a parsed DateTime scalar and has a `read` or ' +
+          '`merge` field policy.',
+      )
+    })
+
+    it("keeps the app's mapping for a field, and Cedar's for the other fields of the same input object", () => {
+      globalThis.__CEDAR__PARSED_SCALARS = parsedScalarsConfig
+
+      const config = withParsedScalars({
+        inputObjects: {
+          // Overriding one field must not drop Cedar's `postedAt` mapping
+          UpdatePostInput: { fields: { title: 'MyCustomString' } },
+        },
+      })
+
+      expect(config?.inputObjects).toEqual({
+        UpdatePostInput: {
+          fields: { postedAt: 'DateTime', title: 'MyCustomString' },
+        },
       })
     })
 

@@ -1,3 +1,5 @@
+import fs from 'node:fs'
+
 import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader'
 import { loadSchemaSync } from '@graphql-tools/load'
 import type { GraphQLSchema, GraphQLType } from 'graphql'
@@ -155,7 +157,18 @@ export function loadParsedScalarsCacheConfig():
     return undefined
   }
 
-  const schema = loadSchemaSync(getPaths().generated.schema, {
+  const schemaPath = getPaths().generated.schema
+
+  // The dev server can start before the schema has been generated for the
+  // first time. `loadSchemaSync` throws when the file doesn't exist, so this
+  // returns `undefined`, same as when no scalar is parsed, rather than
+  // failing the whole app. A later schema generation reloads the app, so a
+  // schema that appears afterward still takes effect
+  if (!fs.existsSync(schemaPath)) {
+    return undefined
+  }
+
+  const schema = loadSchemaSync(schemaPath, {
     loaders: [new GraphQLFileLoader()],
     sort: true,
   })

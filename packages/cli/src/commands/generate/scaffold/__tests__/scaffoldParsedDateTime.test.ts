@@ -82,6 +82,9 @@ describe('with graphql.parsedScalars.DateTime = "Date"', () => {
     )
     expect(formatters).toContain('dateTime.toISOString()')
     expect(formatters).toContain('dateTime.toUTCString()')
+    // `toISOString()` throws on an invalid Date, unlike `toUTCString()`, so
+    // the generated code checks validity before calling it
+    expect(formatters).toContain('if (!Number.isNaN(dateTime.getTime())) {')
   })
 
   test('the timeTag tests pass a Date', () => {
