@@ -75,7 +75,7 @@
     "@actions/exec": "2.0.0",
     "@actions/glob": "0.6.1",
     "@babel/generator": "7.29.8",
-    "@babel/parser": "7.29.8",
+    "@babel/parser": "7.29.9",
     "@babel/traverse": "7.29.8",
     "@babel/types": "7.29.8",
     "@npmcli/arborist": "9.9.1",
