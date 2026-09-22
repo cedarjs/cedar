@@ -1,0 +1,125 @@
+name: 🦜 Publish Prerelease
+
+# Publishes canary/next prereleases to npm and sweeps orphaned staging
+# dist-tags left behind by cancelled prerelease runs.
+#
+# Jobs:
+#   - prerelease:            canary/next versions, on every push to main/next
+#   - cleanup-staging-tags:  nightly sweep of orphaned staging dist-tags
+#
+# Both jobs move dist-tags (publish under a staging tag, then flip every
+# package to `canary`/`next`), which npm's trusted publishing does not cover
+# (https://github.com/npm/cli/issues/8547), so they run with NPM_AUTH_TOKEN
+# rather than OIDC.
+
+on:
+  push:
+    branches: [main, next]
+    # No need to run on docs-only changes.
+    paths-ignore: ['docs/**']
+  schedule:
+    - cron: '30 3 * * *' # daily at 03:30 UTC
+  workflow_dispatch:
+
+# Branch pushes cancel in-progress runs for the same branch. The nightly
+# cleanup and manual runs are queued into their own group instead, since a
+# scheduled run and a push both resolve to the default branch's ref and would
+# otherwise be treated as the same run and cancel each other.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'schedule' && 'cleanup' || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'push' && github.ref_type == 'branch' }}
+
+permissions: {}
+
+jobs:
+  # ── Canary / next ──────────────────────────────────────────────────────────
+
+  prerelease:
+    name: 🦜 Publish Prerelease
+    if: >-
+      github.repository == 'cedarjs/cedar' &&
+      github.event_name == 'push' &&
+      github.ref_type == 'branch' &&
+      (github.ref_name == 'main' || github.ref_name == 'next')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    outputs:
+      version: ${{ steps.get-version.outputs.value }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        # `fetch-depth`—number of commits to fetch. `0` fetches all history for all branches and tags.
+        #  This is required because we use git tags to determine the version.
+        with:
+          fetch-depth: 0
+
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - name: 🔎 Lint
+        run: yarn lint
+
+      - name: 🧪 Test
+        run: yarn test
+
+      - name: 🚢 Publish
+        run: node .github/scripts/publish-prerelease.mts
+        env:
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+
+      - name: 🏷 Get version
+        id: get-version
+        uses: sergeysova/jq-action@a3f0d4ff59cc1dddf023fc0b325dd75b10deec58 # v2.3.0
+        with:
+          cmd: 'jq .version packages/core/package.json -r'
+
+      - name: 💬 Comment on PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=$(gh pr list --search "${{ github.sha }}" --state merged --json number --jq '.[0].number')
+          if [ "$PR_NUMBER" != "null" ] && [ -n "$PR_NUMBER" ]; then
+            VERSION="${{ steps.get-version.outputs.value }}"
+            # Strip build metadata/commit hash suffix that starts with '+'
+            VERSION="${VERSION%%+*}"
+            COMMENT_BODY=$(printf "%s\n\n%s\n\n%s" \
+              "The changes in this PR are now available on npm." \
+              "Try them out by running \`yarn cedar upgrade -t $VERSION\`" \
+              "Or try it in a new app with \`yarn dlx create-cedar-app@$VERSION\`")
+            gh pr comment $PR_NUMBER --body "$COMMENT_BODY"
+          else
+            echo "No PR found for commit ${{ github.sha }}"
+          fi
+
+  # ── Nightly cleanup ────────────────────────────────────────────────────────
+
+  cleanup-staging-tags:
+    name: 🧹 Cleanup staging dist-tags
+    if: >-
+      github.repository == 'cedarjs/cedar' &&
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: ⬢ Enable Corepack
+        run: corepack enable
+
+      - name: ⬢ Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+
+      # No install or build. The script only needs `yarn workspaces list` to
+      # find the published packages, then talks to the registry directly.
+      - name: 🧹 Remove orphaned staging dist-tags
+        run: node .github/scripts/cleanup-staging-tags.mts
+        env:
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}

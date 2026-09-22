@@ -8,7 +8,7 @@
  * consumer (e.g. `yarn cedar upgrade -t canary`) resolves the "canary" tag to
  * a version that isn't fully published across all packages yet.
  *
- * Used in the publish-prerelease.yml GitHub Action workflow.
+ * Used in the `prerelease` job of `.github/workflows/canary.yml`.
  *
  * Usage: node .github/scripts/publish-prerelease.mts
  * Environment variables required: GITHUB_REF_NAME and NPM_AUTH_TOKEN. The

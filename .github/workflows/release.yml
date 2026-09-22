@@ -1,0 +1,171 @@
+name: 🚢 Publish Release
+
+# Publishes release candidates and stable releases to npm with npm trusted
+# publishing (OIDC): `id-token: write` lets npm mint a short-lived credential
+# scoped to this workflow file (and attach provenance), with no npm token
+# involved.
+#
+# Jobs:
+#   - release-candidate:  RCs, on every push to a release/** branch
+#   - release:             stable releases: a packages-only run dispatched by
+#                          the release tooling, then the vX.Y.Z tag push
+#
+# npm allows more than one trusted-publisher configuration per package, so
+# this file's name is not load-bearing the way a single, consolidated
+# workflow's would be: a rename here only needs a new trusted-publisher
+# config (repo + this file name) added on npmjs.com for every published
+# package before the rename lands, and the old config removed once the new
+# one is confirmed working. See docs/implementation-plans/trusted-publishing.md.
+
+on:
+  push:
+    branches: ['release/**']
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+    # No need to run on docs-only changes. (Path filters are ignored for tag
+    # pushes, so this can't accidentally skip a release.)
+    paths-ignore: ['docs/**']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'The vX.Y.Z tag to publish. With packages-only or dry-run, any ref (e.g. a release branch) works'
+        type: string
+        required: false
+      packages-only:
+        description: 'Publish every package except create-cedar-app, from `tag`. The release tooling dispatches this against the release branch before tagging'
+        type: boolean
+        required: false
+        default: false
+      dry-run:
+        description: 'Run every check, verify the trusted publisher config for every package, `npm publish --dry-run`, publish nothing'
+        type: boolean
+        required: false
+        default: true
+
+# Branch pushes cancel in-progress runs for the same branch, as before. Tag
+# pushes and manual runs are queued instead: cancelling a release halfway
+# through is the one thing we never want to do.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'push' && github.ref_type == 'branch' }}
+
+permissions: {}
+
+jobs:
+  # ── Release candidates ─────────────────────────────────────────────────────
+
+  check-git-tags:
+    name: 🏷 Check git tags
+    if: >-
+      github.repository == 'cedarjs/cedar' &&
+      github.event_name == 'push' &&
+      github.ref_type == 'branch' &&
+      startsWith(github.ref_name, 'release/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        # Required because we use git tags to determine the version.
+        with:
+          fetch-depth: 0
+
+      - name: Enable Corepack
+        run: npm install --global corepack
+
+      - name: ⬢ Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+
+      - name: 🏷 Check git tags
+        run: |
+          CURRENT_TAG=$(git tag -l 'v*' | grep -E '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' | sort -V | tail -n 1)
+
+          # `github.ref_name` is something like `release/minor/v1.1.0`.
+          # `basename` gets us `v1.1.0`
+          BRANCH_TAG=$(basename ${{ github.ref_name }})
+
+          echo
+          echo "Current tag is $CURRENT_TAG"
+          echo "Branch tag is $BRANCH_TAG"
+          echo "Comparing tags with \"yarn dlx semver-compare-cli $CURRENT_TAG lt $BRANCH_TAG\""
+          echo
+
+          # See if the current tag is less than the branch's tag.
+          # If it is, we're good to keep going. (If it isn't, the release has
+          # already been tagged and this push is the release branch being
+          # pushed alongside the tag, so there's no RC to publish.)
+          yarn dlx semver-compare-cli $CURRENT_TAG lt $BRANCH_TAG
+
+  release-candidate:
+    name: 🏎 Publish Release Candidate
+    needs: check-git-tags
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          # `fetch-depth`—number of commits to fetch. `0` fetches all history for all branches and tags.
+          #  This is required because we use git tags to determine the version.
+          fetch-depth: 0
+
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - name: 🔎 Lint
+        run: yarn lint
+
+      - name: 🧪 Test
+        run: yarn test
+
+      - name: 🚢 Publish Release Candidate
+        run: node .github/scripts/publish-release-candidate.mts
+        env:
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+
+  # ── Stable releases ────────────────────────────────────────────────────────
+
+  release:
+    name: 🚀 Publish Release
+    if: >-
+      github.repository == 'cedarjs/cedar' &&
+      (
+        (github.event_name == 'push' && github.ref_type == 'tag') ||
+        github.event_name == 'workflow_dispatch'
+      )
+    runs-on: ubuntu-latest
+    # Protection rules for this environment (required reviewers, etc.) are
+    # configured in the repo settings. Leave the environment field blank in the
+    # trusted publisher config on npmjs.com, since the other job in this file
+    # doesn't use one.
+    environment: npm-release
+    # One release at a time, whichever ref triggered it. Two releases writing
+    # the same dist-tag at once could leave it pointing at different versions
+    # across packages. Never cancelled: a half-finished release is the one
+    # thing that must run to completion.
+    concurrency:
+      group: npm-release
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+          # Tags are needed to verify that HEAD is the tagged commit
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - name: 🚀 Publish Release
+        run: >-
+          node .github/scripts/publish-release.mts
+          ${{ github.event_name == 'workflow_dispatch' && inputs.packages-only && '--packages-only' || '' }}
+          ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run && '--dry-run' || '' }}
+        env:
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}

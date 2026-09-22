@@ -25,7 +25,7 @@ exactly the atomicity the staging flip was built to get.
 
 ## Background: how canaries work today
 
-`publish.yml` (job `prerelease`) runs on every push to `main` and `next`, after
+`canary.yml` (job `prerelease`) runs on every push to `main` and `next`, after
 lint and tests. `.github/scripts/publish-prerelease.mts`:
 
 1. Computes a version from the latest `vX.Y.Z` git tag and the number of commits
@@ -158,8 +158,8 @@ version; see "Open questions".
 
 ### CI
 
-`publish.yml` loses the `prerelease` and `cleanup-staging-tags` jobs. A new
-workflow, `.github/workflows/canary.yml`, runs on push to `main` and `next`:
+`canary.yml`'s `prerelease` and `cleanup-staging-tags` jobs are replaced by a
+single `canary` job that runs on push to `main` and `next`:
 
 ```yaml
 on:
@@ -307,11 +307,11 @@ CLI people have installed today only knows how to ask npm.
 
 ### Phase 3 — Switch
 
-1. Remove the `prerelease` and `cleanup-staging-tags` jobs from `publish.yml`,
+1. Remove the `prerelease` and `cleanup-staging-tags` jobs from `canary.yml`,
    delete `publish-prerelease.mts` and `cleanup-staging-tags.mts`. The `token`
    mode and `forDistTag` in `lib/npm-auth.mts` go with them: nothing writes
-   dist-tags any more, and the RC and release jobs only need `npm publish`,
-   which does the OIDC exchange itself.
+   dist-tags any more, and the RC and release jobs in `release.yml` only need
+   `npm publish`, which does the OIDC exchange itself.
 2. The npm `canary` and `next` dist-tags freeze at their last versions. Those
    versions contain the Phase 1 resolver, so a project on an older canary CLI
    gets there in two steps: the first `yarn cedar upgrade -t canary` lands on
@@ -373,8 +373,7 @@ CLI people have installed today only knows how to ask npm.
 
 CI and scripts:
 
-- `.github/workflows/canary.yml` (new)
-- `.github/workflows/publish.yml` (remove `prerelease`, `cleanup-staging-tags`)
+- `.github/workflows/canary.yml` (remove `prerelease`, `cleanup-staging-tags`, add `canary`)
 - `.github/scripts/publish-canary.mts` (new)
 - `.github/scripts/publish-prerelease.mts`,
   `.github/scripts/cleanup-staging-tags.mts` (delete)
