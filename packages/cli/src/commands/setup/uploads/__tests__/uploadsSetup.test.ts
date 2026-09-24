@@ -10,10 +10,7 @@ import {
   uploadsServerRegistration,
 } from '../serverFile.js'
 import { toTargetChoices } from '../uploads.js'
-import {
-  transformGitignore,
-  UPLOADS_GITIGNORE_ENTRY,
-} from '../gitignore.js'
+import { transformGitignore, UPLOADS_GITIGNORE_ENTRY } from '../gitignore.js'
 
 const SCHEMA = `datasource db {
   provider = "sqlite"
@@ -86,9 +83,9 @@ node_modules
 
     expect(transformGitignore(withEntry)).toBe(withEntry)
     // Also when it appears as a substring of a longer path
-    expect(
-      transformGitignore(`dev.db*\napi/.uploads-local\n`),
-    ).not.toContain(`${UPLOADS_GITIGNORE_ENTRY}\n`)
+    expect(transformGitignore(`dev.db*\napi/.uploads-local\n`)).not.toContain(
+      `${UPLOADS_GITIGNORE_ENTRY}\n`,
+    )
   })
 })
 
