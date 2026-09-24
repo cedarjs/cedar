@@ -28,6 +28,7 @@ import {
   detectServerAuth,
   hasUploadsPlugin,
 } from './serverFile.js'
+import { transformGitignore } from './gitignore.js'
 import type { TargetChoice } from './uploads.js'
 
 const UPPY_VERSION = '^6.0.0'
@@ -322,6 +323,28 @@ export const handler = async ({ targets, force }: UploadsOptions) => {
               'Bucket direct uploads land in.',
             )
           }
+        },
+      },
+      {
+        title: 'Adding the fs upload directory to .gitignore...',
+        skip: () => (wantsFs ? false : 'No fs target selected; skipping.'),
+        task: (_ctx, task) => {
+          const gitignorePath = path.join(paths.base, '.gitignore')
+
+          if (!fs.existsSync(gitignorePath)) {
+            task.skip('No .gitignore found; skipping.')
+            return
+          }
+
+          const source = fs.readFileSync(gitignorePath, 'utf-8')
+          const updated = transformGitignore(source)
+
+          if (updated === source) {
+            task.skip('.gitignore already up to date')
+            return
+          }
+
+          fs.writeFileSync(gitignorePath, updated, 'utf-8')
         },
       },
       {

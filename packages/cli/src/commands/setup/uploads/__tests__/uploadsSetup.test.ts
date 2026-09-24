@@ -10,6 +10,10 @@ import {
   uploadsServerRegistration,
 } from '../serverFile.js'
 import { toTargetChoices } from '../uploads.js'
+import {
+  transformGitignore,
+  UPLOADS_GITIGNORE_ENTRY,
+} from '../gitignore.js'
 
 const SCHEMA = `datasource db {
   provider = "sqlite"
@@ -50,6 +54,43 @@ async function main() {
 
 main()
 `
+
+describe('transformGitignore', () => {
+  const GITIGNORE = `.DS_Store
+.env*
+dev.db*
+dist
+node_modules
+`
+
+  it('inserts the entry after dev.db* when present', () => {
+    const result = transformGitignore(GITIGNORE)
+
+    expect(result).toBe(`.DS_Store
+.env*
+dev.db*
+${UPLOADS_GITIGNORE_ENTRY}
+dist
+node_modules
+`)
+  })
+
+  it('appends at the end when dev.db* is absent', () => {
+    const result = transformGitignore('dist\nnode_modules')
+
+    expect(result).toBe(`dist\nnode_modules\n${UPLOADS_GITIGNORE_ENTRY}\n`)
+  })
+
+  it('leaves .gitignore alone when the entry is already there', () => {
+    const withEntry = `${GITIGNORE}${UPLOADS_GITIGNORE_ENTRY}\n`
+
+    expect(transformGitignore(withEntry)).toBe(withEntry)
+    // Also when it appears as a substring of a longer path
+    expect(
+      transformGitignore(`dev.db*\napi/.uploads-local\n`),
+    ).not.toContain(`${UPLOADS_GITIGNORE_ENTRY}\n`)
+  })
+})
 
 describe('detectServerAuth', () => {
   it("recognizes dbAuth's decoder factory", () => {
