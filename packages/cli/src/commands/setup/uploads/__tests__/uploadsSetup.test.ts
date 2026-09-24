@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { transformGitignore, UPLOADS_GITIGNORE_ENTRY } from '../gitignore.js'
 import { addUploadModel, hasModel, UPLOAD_MODEL } from '../schemaPrisma.js'
 import {
   addUploadsPlugin,
@@ -10,7 +11,6 @@ import {
   uploadsServerRegistration,
 } from '../serverFile.js'
 import { toTargetChoices } from '../uploads.js'
-import { transformGitignore, UPLOADS_GITIGNORE_ENTRY } from '../gitignore.js'
 
 const SCHEMA = `datasource db {
   provider = "sqlite"

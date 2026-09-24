@@ -22,13 +22,13 @@ import { isTypeScriptProject } from '../../../lib/project.js'
 import { generateSecret } from '../../generate/secret/secret.js'
 import { setupServerFileTasks } from '../server-file/serverFileHandler.js'
 
+import { transformGitignore } from './gitignore.js'
 import { addUploadModel } from './schemaPrisma.js'
 import {
   addUploadsPlugin,
   detectServerAuth,
   hasUploadsPlugin,
 } from './serverFile.js'
-import { transformGitignore } from './gitignore.js'
 import type { TargetChoice } from './uploads.js'
 
 const UPPY_VERSION = '^6.0.0'
