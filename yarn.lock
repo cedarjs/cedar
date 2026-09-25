@@ -12674,9 +12674,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@universal-deploy/node@npm:^0.1.10":
-  version: 0.1.10
-  resolution: "@universal-deploy/node@npm:0.1.10"
+"@universal-deploy/node@npm:^0.1.12":
+  version: 0.1.12
+  resolution: "@universal-deploy/node@npm:0.1.12"
   dependencies:
     "@universal-deploy/store": "npm:^0.2.2"
     magic-string: "npm:^0.30.21"
@@ -12686,7 +12686,7 @@ __metadata:
   peerDependenciesMeta:
     vite:
       optional: true
-  checksum: 10c0/0e9dd02ae26da020271dad897015b53b7030ffbfb2fed7cc1e5bddfa8addf5037a049b4c35a5a1b7e3a593976def4e3b059158b3c2427e2f50494bf4c5016b67
+  checksum: 10c0/4655089548a05c79d05cbfff1270f702edd4e21bef429b7ddb249fe9be328a0bd6fa50155dae81237184c1a6c24b1017590f75105cc4c27b2f6aefa383475342
   languageName: node
   linkType: hard
 
@@ -12706,11 +12706,11 @@ __metadata:
   linkType: hard
 
 "@universal-deploy/vite@npm:^0.1.9":
-  version: 0.1.11
-  resolution: "@universal-deploy/vite@npm:0.1.11"
+  version: 0.1.13
+  resolution: "@universal-deploy/vite@npm:0.1.13"
   dependencies:
     "@universal-deploy/netlify": "npm:^0.2.3"
-    "@universal-deploy/node": "npm:^0.1.10"
+    "@universal-deploy/node": "npm:^0.1.12"
     "@universal-deploy/store": "npm:^0.2.2"
     "@universal-middleware/express": "npm:^0.4.31"
     magic-string: "npm:^0.30.21"
@@ -12720,7 +12720,7 @@ __metadata:
   peerDependenciesMeta:
     vite:
       optional: true
-  checksum: 10c0/38e689c18c0ee473d220a29a031176f9b3aaaf29836d38c534bcfa89ad6ef046b924ccc7008ef0ad13f5bc5aae89e3c50bb9302014052d2003ebfee8590528c3
+  checksum: 10c0/defed5101f7a19df270cc50092bb79d51aa86d643ce612d33564d0b85547c2badcd285a56ffa92a70d88dd3d085bfae88f8cc2833d1cc9315b2b1c91d9b48884
   languageName: node
   linkType: hard
 
