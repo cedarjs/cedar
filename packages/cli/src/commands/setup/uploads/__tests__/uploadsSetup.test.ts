@@ -82,10 +82,32 @@ node_modules
     const withEntry = `${GITIGNORE}${UPLOADS_GITIGNORE_ENTRY}\n`
 
     expect(transformGitignore(withEntry)).toBe(withEntry)
-    // Also when it appears as a substring of a longer path
-    expect(transformGitignore(`dev.db*\napi/.uploads-local\n`)).not.toContain(
-      `${UPLOADS_GITIGNORE_ENTRY}\n`,
-    )
+  })
+
+  it('adds the entry when only a longer path is present', () => {
+    const withLongerPath = `dev.db*\napi/.uploads-local\n`
+
+    const result = transformGitignore(withLongerPath)
+
+    // A standalone rule for the upload directory is added next to it
+    expect(result).toContain(`\n${UPLOADS_GITIGNORE_ENTRY}\n`)
+  })
+
+  it('adds the entry when it only appears in a comment', () => {
+    const withComment = `dev.db*\n# api/.uploads\n`
+
+    const result = transformGitignore(withComment)
+
+    expect(result).toContain(`${UPLOADS_GITIGNORE_ENTRY}\n`)
+    expect(result).not.toContain(`#${UPLOADS_GITIGNORE_ENTRY}`)
+  })
+
+  it('adds the entry when it only appears with leading whitespace', () => {
+    const indented = `dev.db*\n  api/.uploads\n`
+
+    const result = transformGitignore(indented)
+
+    expect(result).toContain(`${UPLOADS_GITIGNORE_ENTRY}\n`)
   })
 })
 

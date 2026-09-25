@@ -7,7 +7,12 @@ export const UPLOADS_GITIGNORE_ENTRY = 'api/.uploads'
  * Returns the same string if no change was needed.
  */
 export function transformGitignore(source: string): string {
-  if (source.includes(UPLOADS_GITIGNORE_ENTRY)) {
+  const activeLines = source
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0 && !line.startsWith('#'))
+
+  if (activeLines.includes(UPLOADS_GITIGNORE_ENTRY)) {
     return source
   }
 
