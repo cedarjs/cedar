@@ -167,7 +167,7 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "6.0.0",
     "@jridgewell/trace-mapping": "0.3.31",
-    "@oxc-project/types": "^0.150.0",
+    "@oxc-project/types": "^0.151.0",
     "concurrently": "9.2.4",
     "graphql-tag": "2.12.7",
     "memfs": "4.78.1",
