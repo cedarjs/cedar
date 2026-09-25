@@ -98,8 +98,7 @@ node_modules
 
     const result = transformGitignore(withComment)
 
-    expect(result).toContain(`${UPLOADS_GITIGNORE_ENTRY}\n`)
-    expect(result).not.toContain(`#${UPLOADS_GITIGNORE_ENTRY}`)
+    expect(result).toBe(`dev.db*\n${UPLOADS_GITIGNORE_ENTRY}\n# api/.uploads\n`)
   })
 
   it('adds the entry when it only appears with leading whitespace', () => {
@@ -107,7 +106,7 @@ node_modules
 
     const result = transformGitignore(indented)
 
-    expect(result).toContain(`${UPLOADS_GITIGNORE_ENTRY}\n`)
+    expect(result).toBe(`dev.db*\n${UPLOADS_GITIGNORE_ENTRY}\n  api/.uploads\n`)
   })
 })
 

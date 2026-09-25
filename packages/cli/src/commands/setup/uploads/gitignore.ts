@@ -9,7 +9,9 @@ export const UPLOADS_GITIGNORE_ENTRY = 'api/.uploads'
 export function transformGitignore(source: string): string {
   const activeLines = source
     .split('\n')
-    .map((line) => line.trim())
+    // Keep leading whitespace: git treats it as part of the pattern, so an
+    // indented `api/.uploads` line does not ignore the upload directory
+    .map((line) => line.trimEnd())
     .filter((line) => line.length > 0 && !line.startsWith('#'))
 
   if (activeLines.includes(UPLOADS_GITIGNORE_ENTRY)) {
