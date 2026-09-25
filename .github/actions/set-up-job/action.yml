@@ -49,7 +49,15 @@ runs:
         # shipped upstream in Node 24.21.0 (via libuv/libuv#5152 /
         # nodejs/node#65118), so all platforms can track the same floating
         # major version again.
+        #
+        # check-latest is required here: GitHub's Windows runner images
+        # pre-cache a specific Node 24.x build (currently 24.20.0, one
+        # release behind the libuv fix), and setup-node prefers that cache
+        # over checking for a newer release unless told otherwise. Without
+        # this, a floating '24' spec silently resolves to the stale cached
+        # build and the libuv assertion resurfaces.
         node-version: '24'
+        check-latest: true
 
     # We have to enable Corepack again for Windows. 🤷
     # In general, we're waiting on [this issue](https://github.com/actions/setup-node/issues/531)
