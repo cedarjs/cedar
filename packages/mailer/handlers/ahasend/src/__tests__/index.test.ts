@@ -129,6 +129,35 @@ describe('AhaSendMailHandler', () => {
     })
   })
 
+  test("returns the first recipient's message ID when each copy has its own", async () => {
+    // What AhaSend returns for a conversation (checked against the live API
+    // in sandbox mode): every recipient's copy has a message ID of its own.
+    const response = {
+      object: 'list',
+      data: [
+        recipientResult('to@example.com', '<id-to@ahasend>'),
+        recipientResult('other@example.com', '<id-other@ahasend>'),
+        recipientResult('cc@example.com', '<id-cc@ahasend>'),
+        recipientResult('bcc@example.com', '<id-bcc@ahasend>'),
+      ],
+    }
+    const handler = new AhaSendMailHandler({
+      apiKey: 'aha-sk-test',
+      accountId,
+      fetch: mockAhaSendApi(202, response),
+    })
+
+    const result = await handler.send(content, {
+      ...sendOptions,
+      to: ['to@example.com', 'other@example.com'],
+      cc: ['cc@example.com'],
+      bcc: ['bcc@example.com'],
+    })
+
+    expect(result.messageID).toBe('<id-to@ahasend>')
+    expect(result.handlerInformation).toEqual(response)
+  })
+
   test('resolves when AhaSend accepts only some recipients', async () => {
     const response = {
       object: 'list',

@@ -169,10 +169,12 @@ export class AhaSendMailHandler extends AbstractMailHandler {
     let response: SendMessageResponse
 
     try {
-      // `sendConversation` sends a single message that all To, Cc and Bcc
-      // recipients share, which is what a Cedar mail with several recipients
-      // is. `messages.send` would instead send a separate message to each
-      // recipient.
+      // `sendConversation` sends one email that every To and Cc recipient
+      // sees addressed to all of them (Bcc stays hidden), which is what a
+      // Cedar mail with several recipients is. AhaSend still delivers a
+      // separate copy to each recipient, and each copy gets its own message
+      // ID. `messages.send` would instead send unrelated emails that each
+      // show only their own recipient.
       response = await this.client.messages.sendConversation(
         {
           ...messageOptions,
@@ -222,6 +224,9 @@ export class AhaSendMailHandler extends AbstractMailHandler {
       )
     }
 
+    // A mail result has room for one message ID, but every recipient's copy
+    // has its own. Return the first accepted recipient's; all of them are in
+    // `handlerInformation`.
     return {
       messageID: accepted[0].id ?? undefined,
       handlerInformation: response,
