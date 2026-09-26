@@ -3965,7 +3965,7 @@ __metadata:
     "@universal-deploy/vite": "npm:^0.1.9"
     "@vitejs/plugin-react": "npm:4.7.0"
     "@whatwg-node/fetch": "npm:0.12.0"
-    "@whatwg-node/server": "npm:0.11.0"
+    "@whatwg-node/server": "npm:0.13.0"
     acorn: "npm:8.18.0"
     acorn-loose: "npm:8.5.2"
     ansis: "npm:4.4.0"
@@ -13325,7 +13325,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/fetch@npm:0.12.0":
+"@whatwg-node/fetch@npm:0.12.0, @whatwg-node/fetch@npm:^0.12.0":
   version: 0.12.0
   resolution: "@whatwg-node/fetch@npm:0.12.0"
   dependencies:
@@ -13387,7 +13387,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/server@npm:0.11.0, @whatwg-node/server@npm:^0.11.0":
+"@whatwg-node/server@npm:0.13.0":
+  version: 0.13.0
+  resolution: "@whatwg-node/server@npm:0.13.0"
+  dependencies:
+    "@envelop/instrumentation": "npm:^1.0.0"
+    "@whatwg-node/disposablestack": "npm:^0.1.0"
+    "@whatwg-node/fetch": "npm:^0.12.0"
+    "@whatwg-node/promise-helpers": "npm:^2.0.0"
+    tslib: "npm:^2.6.3"
+  checksum: 10c0/d3631b0021e441bd3d944ad20233118ac94f9b1d3779664a93dfdf4e043b67426451cbd214c064b4da81b8a7dfd8ef675b9a078597159327f9b91c7bbe43b85e
+  languageName: node
+  linkType: hard
+
+"@whatwg-node/server@npm:^0.11.0":
   version: 0.11.0
   resolution: "@whatwg-node/server@npm:0.11.0"
   dependencies:
