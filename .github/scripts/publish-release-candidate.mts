@@ -2,9 +2,10 @@
  * This script handles the multi-phase publishing process for Cedar release
  * candidates
  *
- * Usage: yarn tsx .github/scripts/publish-release-candidate.mts [--dry-run]
- * Environment variables required: NPM_AUTH_TOKEN (not needed for dry-run),
- * GITHUB_REF_NAME
+ * Usage: node .github/scripts/publish-release-candidate.mts [--dry-run]
+ * Environment variables required: GITHUB_REF_NAME. Authentication is npm
+ * trusted publishing (OIDC) in CI, or NPM_AUTH_TOKEN as a fallback (see
+ * lib/npm-auth.mts). Not needed for dry-run.
  */
 
 import { execSync } from 'node:child_process'
@@ -17,6 +18,9 @@ import {
   generatePnpmLockfile,
   generateYarnLockfile,
 } from '../../packages/create-cedar-app/scripts/generateLockfile.js'
+
+import { createNpmAuth, isOidcAvailable } from './lib/npm-auth.mts'
+import type { NpmAuth } from './lib/npm-auth.mts'
 
 const REPO_ROOT = process.cwd()
 const CREATE_CEDAR_APP_DIR = path.join(REPO_ROOT, 'packages/create-cedar-app')
@@ -55,6 +59,7 @@ function execCommand(
   command: string,
   cwd: string = REPO_ROOT,
   input?: string,
+  env: NodeJS.ProcessEnv = process.env,
 ): string {
   log(`Executing: ${command}`)
 
@@ -64,6 +69,7 @@ function execCommand(
   try {
     return execSync(command, {
       cwd,
+      env,
       encoding: 'utf-8',
       input: input,
       stdio: [input ? 'pipe' : 'inherit', 'pipe', 'inherit'],
@@ -333,19 +339,14 @@ function updateJavaScriptTemplates() {
 
 async function main() {
   let restoreWorkspaces: (() => void) | null = null
+  let auth: NpmAuth | null = null
 
   try {
-    // Check if NPM_AUTH_TOKEN is set (not required for dry-run)
-    if (!isDryRun && !process.env.NPM_AUTH_TOKEN) {
-      throw new Error('NPM_AUTH_TOKEN environment variable is not set')
+    // Fail early if there are no credentials at all (not needed for dry-run)
+    if (!isDryRun) {
+      auth = createNpmAuth()
+      log(`npm auth mode: ${auth.mode}`)
     }
-
-    // Set up .npmrc for publishing
-    log('Setting up npm authentication')
-    fs.writeFileSync(
-      path.join(REPO_ROOT, '.npmrc'),
-      `//registry.npmjs.org/:_authToken=${process.env.NPM_AUTH_TOKEN}\n`,
-    )
 
     // Set up git configuration for CI environment
     log('Setting up git configuration')
@@ -441,22 +442,12 @@ async function main() {
 
     log('Step 7: Publishing RC versions of all packages')
 
-    await publishPackages('rc', isDryRun)
+    await publishPackages('rc', isDryRun, auth)
 
     log('Step 8: Restoring workspaces configuration')
     if (restoreWorkspaces) {
       restoreWorkspaces()
       restoreWorkspaces = null // Mark as cleaned up
-    }
-
-    // Recreate .npmrc file after git reset (which removed it)
-    if (!isDryRun) {
-      log('Recreating .npmrc file after workspace restoration')
-      fs.writeFileSync(
-        path.join(REPO_ROOT, '.npmrc'),
-        `//registry.npmjs.org/:_authToken=${process.env.NPM_AUTH_TOKEN}\n`,
-      )
-      log('✅ Recreated .npmrc file')
     }
 
     log('Step 9: Waiting for packages to be available on npm')
@@ -612,7 +603,7 @@ async function main() {
     )
     log('✅ Committed create-cedar-app version update')
 
-    if (isDryRun) {
+    if (isDryRun || !auth) {
       log('✅ Dry-run completed - would have published create-cedar-app')
     } else {
       const ccaPkgJsonPath = path.join(CREATE_CEDAR_APP_DIR, 'package.json')
@@ -620,9 +611,15 @@ async function main() {
         fs.readFileSync(ccaPkgJsonPath, 'utf-8'),
       )
       const ccaPackageName = ccaPkgJson.name || 'create-cedar-app'
-      log(`Publishing ${ccaPackageName}@${versionToPublish}...`)
-      execCommand(`npm publish --tag rc --access public`, CREATE_CEDAR_APP_DIR)
-      log('✅ Published create-cedar-app')
+
+      await publishPackage(
+        ccaPackageName,
+        versionToPublish,
+        'rc',
+        CREATE_CEDAR_APP_DIR,
+        false,
+        auth,
+      )
     }
 
     log('🎉 Release candidate publishing completed successfully!')
@@ -642,6 +639,8 @@ async function main() {
     }
 
     process.exit(1)
+  } finally {
+    auth?.dispose()
   }
 }
 
@@ -731,8 +730,9 @@ async function publishPackage(
   distTag: string,
   packageDir: string,
   dryRun: boolean,
+  auth: NpmAuth | null,
 ) {
-  if (dryRun) {
+  if (dryRun || !auth) {
     log(`Dry-run: would publish ${packageName}@${version} --tag ${distTag}`)
     return
   }
@@ -743,12 +743,26 @@ async function publishPackage(
     return
   }
 
+  // With trusted publishing npm adds provenance on its own. Asking for it
+  // explicitly makes a token-based publish from CI do the same, and turns a
+  // silent downgrade into a loud failure.
+  const provenanceFlag = isOidcAvailable() ? ' --provenance' : ''
+
   log(`Publishing ${packageName}@${version}...`)
-  execCommand(`npm publish --tag ${distTag} --access public`, packageDir)
+  execCommand(
+    `npm publish --tag ${distTag} --access public${provenanceFlag}`,
+    packageDir,
+    undefined,
+    await auth.forPublish(packageName),
+  )
   log(`✅ Published ${packageName}@${version}`)
 }
 
-async function publishPackages(distTag: string, dryRun: boolean) {
+async function publishPackages(
+  distTag: string,
+  dryRun: boolean,
+  auth: NpmAuth | null,
+) {
   const workspacesOutput = execCommand('yarn workspaces list --json')
   const workspaces: WorkspaceInfo[] = workspacesOutput
     .split('\n')
@@ -772,6 +786,7 @@ async function publishPackages(distTag: string, dryRun: boolean) {
         distTag,
         path.join(REPO_ROOT, workspace.location),
         dryRun,
+        auth,
       )
     } catch (e) {
       log(`❌ Failed to publish ${workspace.location}: ${e}`)
