@@ -69,7 +69,7 @@
     "@universal-deploy/store": "^0.2.1",
     "@universal-deploy/vite": "^0.1.9",
     "@vitejs/plugin-react": "4.7.0",
-    "@whatwg-node/fetch": "0.10.13",
+    "@whatwg-node/fetch": "0.12.0",
     "@whatwg-node/server": "0.11.0",
     "acorn": "8.18.0",
     "acorn-loose": "8.5.2",
