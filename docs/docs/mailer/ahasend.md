@@ -3,9 +3,9 @@
 ## Prerequisites
 
 We assume you have the basic boilerplate for Cedar Mailer present. We also
-assume that you have signed up with [AhaSend](https://ahasend.com/), verified
-a sending domain, and have an API key with permission to send messages, along
-with your account ID.
+assume that you have signed up with [AhaSend](https://ahasend.com/), verified a
+sending domain, and have an API key with permission to send messages, along with
+your account ID.
 
 ## Setup
 
@@ -41,10 +41,10 @@ export const mailer = new Mailer({
 ```
 
 The handler accepts every option of the `AhaSendClient` from
-[`@ahasend/sdk`](https://github.com/AhaSend/ahasend-ts), such as `timeoutMs`
-and `retry`. By default the client retries failed requests up to three times
-and sends an idempotency key with every request, so a retry never delivers the
-same email twice.
+[`@ahasend/sdk`](https://github.com/AhaSend/ahasend-ts), such as `timeoutMs` and
+`retry`. By default the client retries failed requests up to three times and
+sends an idempotency key with every request, so a retry never delivers the same
+email twice.
 
 If you need access to the underlying AhaSend client to perform more specific
 behavior the SDK exposes you can always access this using the `internal`
@@ -60,9 +60,9 @@ const ahasendClient = ahasendHandler.internal().client
 You should be able to use this newly configured handler like any other previous
 handler and it should require no changes to your mailer code.
 
-Each email is sent as a single message that all `to`, `cc` and `bcc`
-recipients share, with `bcc` recipients hidden from the others. AhaSend allows
-at most 50 recipients per email.
+Each email is sent as a single message that all `to`, `cc` and `bcc` recipients
+share, with `bcc` recipients hidden from the others. AhaSend allows at most 50
+recipients per email.
 
 You can pass AhaSend specific options as the third argument to `mailer.send()`:
 
@@ -79,23 +79,23 @@ await mailer.send(
 
 The available options are `tags`, `sandbox`, `sandbox_result`, `tracking`,
 `retention`, `schedule` and `idempotencyKey`. See the
-[AhaSend API reference](https://ahasend.com/docs/api-reference) for what each
-of them does. `sandbox: true` is useful for testing your setup, because AhaSend
+[AhaSend API reference](https://ahasend.com/docs/api-reference) for what each of
+them does. `sandbox: true` is useful for testing your setup, because AhaSend
 accepts the email without delivering it.
 
 ### Attachments
 
 Every attachment needs a filename, either set as `filename` or taken from
-`path`. The attachment's content type is derived from the file extension.
-String `content` is sent as UTF-8 text, and `Buffer` content is sent as binary
-data. A `path` can be a local file or an `http(s)` URL.
+`path`. The attachment's content type is derived from the file extension. String
+`content` is sent as UTF-8 text, and `Buffer` content is sent as binary data. A
+`path` can be a local file or an `http(s)` URL.
 
 ## Error Handling
 
 `mailer.send()` rejects when AhaSend does not accept the email, for example
-because of an invalid API key, an unverified sender domain, or a network
-failure that persists through the client's retries. The error from the AhaSend
-SDK is available as the `cause` of the thrown error.
+because of an invalid API key, an unverified sender domain, or a network failure
+that persists through the client's retries. The error from the AhaSend SDK is
+available as the `cause` of the thrown error.
 
 AhaSend reports a result for each recipient. `mailer.send()` also rejects when
 AhaSend accepts none of the recipients, with the per-recipient results as the
@@ -105,8 +105,8 @@ When AhaSend accepts some recipients and rejects others, for example because
 they are on your suppression list, `mailer.send()` resolves. The email has
 already been queued for the accepted recipients, so retrying the send would
 deliver it to them a second time. The result's `messageID` is the ID of the
-first accepted recipient's message, and `handlerInformation` contains the
-result for every recipient:
+first accepted recipient's message, and `handlerInformation` contains the result
+for every recipient:
 
 ```typescript
 const result = await mailer.send(/* ... */)
