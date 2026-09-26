@@ -43,9 +43,7 @@ export interface WhereAST extends ASTNode {
 }
 
 export type WhereCondition =
-  | FieldCondition
-  | LogicalCondition
-  | RelationCondition
+  FieldCondition | LogicalCondition | RelationCondition
 
 export interface FieldCondition extends ASTNode {
   type: 'FieldCondition'

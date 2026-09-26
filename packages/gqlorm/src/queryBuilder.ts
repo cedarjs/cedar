@@ -32,9 +32,7 @@ export class QueryBuilderError extends Error {
 }
 
 type GenericQueryArgs =
-  | FindManyArgs<unknown>
-  | FindUniqueArgs<unknown>
-  | FindFirstArgs<unknown>
+  FindManyArgs<unknown> | FindUniqueArgs<unknown> | FindFirstArgs<unknown>
 
 export interface QueryBuilderOptions {
   /**

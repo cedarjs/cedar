@@ -111,8 +111,7 @@ interface TransformerDirectiveOptions {
 }
 
 export type DirectivePluginOptions =
-  | ValidatorDirectiveOptions
-  | TransformerDirectiveOptions
+  ValidatorDirectiveOptions | TransformerDirectiveOptions
 
 export function hasDirective(info: GraphQLResolveInfo): boolean {
   try {

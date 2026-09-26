@@ -47,6 +47,4 @@ export function normalizePage(
 }
 
 export type PageType =
-  | Spec
-  | React.ComponentType<any>
-  | ((props: any) => JSX.Element)
+  Spec | React.ComponentType<any> | ((props: any) => JSX.Element)

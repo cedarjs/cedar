@@ -26,8 +26,7 @@ type PrismaTypeWithOptionalKeysAndNullableValues<
   TSdl extends AnyObject,
 > = {
   [k in keyof PrismaTypeWithOptionalKeysFromSdl<TPrisma, TSdl>]?:
-    | PrismaTypeWithOptionalKeysFromSdl<TPrisma, TSdl>[k]
-    | null // Note: if we ever change the type of Maybe in codegen, it might be worth changing this to Maybe<T>
+    PrismaTypeWithOptionalKeysFromSdl<TPrisma, TSdl>[k] | null // Note: if we ever change the type of Maybe in codegen, it might be worth changing this to Maybe<T>
 }
 
 // Object with all the required keys
@@ -45,9 +44,9 @@ type OptionalsAndSdlOnly<
 
 export type MakeRelationsOptional<T, TAllMappedModels> = {
   //object with optional relation keys
-  [key in keyof T as T[key] extends TAllMappedModels
-    ? key
-    : never]?: MakeRelationsOptional<T[key], TAllMappedModels>
+  [
+    key in keyof T as T[key] extends TAllMappedModels ? key : never
+  ]?: MakeRelationsOptional<T[key], TAllMappedModels>
 } & {
   // object without the relation keys
   [key in keyof T as T[key] extends TAllMappedModels ? never : key]: T[key]

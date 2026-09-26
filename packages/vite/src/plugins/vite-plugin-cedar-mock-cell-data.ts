@@ -57,9 +57,7 @@ export function cedarMockCellDataPlugin(): Plugin {
         ExportNamedDeclaration(p: any) {
           const d = p.node.declaration
           let mockFunction:
-            | t.ArrowFunctionExpression
-            | t.FunctionExpression
-            | null = null
+            t.ArrowFunctionExpression | t.FunctionExpression | null = null
 
           switch (d?.type) {
             case 'VariableDeclaration': {

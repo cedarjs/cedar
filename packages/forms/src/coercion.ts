@@ -26,10 +26,7 @@ const isValueEmpty = (val: string): boolean => val === ''
 export type EmptyAsValue = null | 'undefined' | 0 | ''
 
 type ValueAsType =
-  | 'valueAsDate'
-  | 'valueAsJSON'
-  | 'valueAsNumber'
-  | 'valueAsString'
+  'valueAsDate' | 'valueAsJSON' | 'valueAsNumber' | 'valueAsString'
 
 type SetValueAsFn = (val: string) => any
 /*

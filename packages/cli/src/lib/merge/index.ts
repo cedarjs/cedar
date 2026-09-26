@@ -253,8 +253,7 @@ function mergeAST(
         },
         exit(path: NodePath) {
           const exts = extractProperty(identity(path), identities) as
-            | NodePath[]
-            | undefined
+            NodePath[] | undefined
           if (exts) {
             const proxyPath = makeProxy(path)
             exts.map(makeProxy).forEach((ext) => {

@@ -103,9 +103,7 @@ import type { UserProfileQuery, UserProfileQueryVariables } from 'types/graphql'
 
 mockGraphQLQuery<UserProfileQuery, UserProfileQueryVariables>(
   'UserProfileQuery',
-  {
-    /*... */
-  }
+  {/*... */}
 )
 ```
 
@@ -120,10 +118,7 @@ mockGraphQLQuery <
       name: string,
     },
   } >
-  ('UserProfileQuery',
-  {
-    /*... */
-  })
+  ('UserProfileQuery', {/*... */})
 ```
 
 ## Global mock-requests vs local mock-requests

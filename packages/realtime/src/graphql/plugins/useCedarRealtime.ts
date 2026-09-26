@@ -38,8 +38,7 @@ export const liveDirectiveTypeDefs = print(
 )
 
 export type LiveQueryStorageMechanism =
-  | RedisLiveQueryStore
-  | InMemoryLiveQueryStore
+  RedisLiveQueryStore | InMemoryLiveQueryStore
 
 export type PublishClientType = CreateRedisEventTargetArgs['publishClient']
 export type SubscribeClientType = CreateRedisEventTargetArgs['subscribeClient']

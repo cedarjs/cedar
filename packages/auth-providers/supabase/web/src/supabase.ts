@@ -120,10 +120,7 @@ function createAuthImplementation({
         | SignInWithSSOOptions,
     ): Promise<AuthResponse | OAuthResponse | SSOResponse> => {
       let result:
-        | AuthTokenResponse
-        | AuthOtpResponse
-        | OAuthResponse
-        | SSOResponse
+        AuthTokenResponse | AuthOtpResponse | OAuthResponse | SSOResponse
 
       switch (credentials.authMethod) {
         /**
