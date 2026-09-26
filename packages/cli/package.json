@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@babel/core": "^7.26.10",
-    "@babel/parser": "7.29.8",
+    "@babel/parser": "7.29.9",
     "@babel/preset-typescript": "7.29.7",
     "@babel/traverse": "7.29.8",
     "@babel/types": "7.29.8",
@@ -86,7 +86,7 @@
     "smol-toml": "1.8.0",
     "srvx": "0.12.8",
     "string-env-interpolation": "1.0.1",
-    "systeminformation": "5.33.11",
+    "systeminformation": "5.33.13",
     "termi-link": "1.1.0",
     "title-case": "3.0.3",
     "unionfs": "4.6.0",
