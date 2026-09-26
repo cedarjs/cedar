@@ -41,7 +41,7 @@
     "@prisma/internals": "7.10.0",
     "deepmerge": "4.3.1",
     "fast-glob": "3.3.3",
-    "smol-toml": "1.8.0",
+    "smol-toml": "1.9.0",
     "string-env-interpolation": "1.0.1"
   },
   "devDependencies": {
