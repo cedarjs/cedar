@@ -20,8 +20,8 @@ https://www.apollographql.com/docs/react/migration/3.x-to-4.x
 Apollo Client 4.3 deprecates the `skip` option on `useQuery` and
 `useSubscription`. `skip` still works, but `skipToken` is more type-safe:
 passing it as the whole options argument, instead of
-`{ skip: true, variables: {...} }`, lets TypeScript narrow `data` to `undefined`
-when the query is skipped.
+`{ skip: true, variables: {...} }`, keeps required variables type-safe without
+a non-null assertion like `id!` or a placeholder value.
 
 ```tsx
 import { skipToken } from '@apollo/client/react'
@@ -33,7 +33,7 @@ const { data } = useQuery(query, id ? { variables: { id } } : skipToken)
 `@cedarjs/web` doesn't re-export `skipToken`, so import it from
 `@apollo/client/react`. Cells accept `skipToken` from `beforeQuery` too. See
 Apollo's
-[`skipToken` docs](https://www.apollographql.com/docs/react/api/react/hooks#skiptoken)
+[`skipToken` docs](https://www.apollographql.com/docs/react/api/react/skipToken)
 for the full API.
 
 ## ESM-only projects
