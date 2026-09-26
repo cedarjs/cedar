@@ -442,7 +442,7 @@ async function main() {
 
     log('Step 7: Publishing RC versions of all packages')
 
-    await publishPackages('rc', isDryRun, auth)
+    const publishedPackageNames = await publishPackages('rc', isDryRun, auth)
 
     log('Step 8: Restoring workspaces configuration')
     if (restoreWorkspaces) {
@@ -457,10 +457,12 @@ async function main() {
     log('Waiting 10 seconds for NPM publishing and registry propagation...')
     await setTimeout(10_000)
 
-    // Make sure the three main packages are available
-    const packagesToWaitFor = ['@cedarjs/core', '@cedarjs/cli', '@cedarjs/api']
-
-    for (const packageName of packagesToWaitFor) {
+    // Wait for every package published above, not just a few of the main
+    // ones: the overlay lockfiles generated below resolve all of them, and
+    // with trusted publishing npm processes each new version for a while
+    // (provenance) before it can be installed, so packages published late in
+    // the run can still be missing from the registry at this point
+    for (const packageName of publishedPackageNames) {
       if (isDryRun) {
         log(`Dry-run - skip waitForNpm for ${packageName}`)
         continue
@@ -675,7 +677,7 @@ async function isPublished(packageName: string, version: string) {
 }
 
 async function waitForNpm(packageName: string, version: string) {
-  const maxWaitTime = 20_000 // 20 seconds
+  const maxWaitTime = 300_000 // 5 minutes
   const startTime = Date.now()
   let packageAvailable = false
 
@@ -748,6 +750,7 @@ async function publishPackages(
   dryRun: boolean,
   auth: NpmAuth | null,
 ) {
+  const publishedPackageNames: string[] = []
   const workspacesOutput = execCommand('yarn workspaces list --json')
   const workspaces: WorkspaceInfo[] = workspacesOutput
     .split('\n')
@@ -773,11 +776,14 @@ async function publishPackages(
         dryRun,
         auth,
       )
+      publishedPackageNames.push(pkgJson.name)
     } catch (e) {
       log(`❌ Failed to publish ${workspace.location}: ${e}`)
       throw e
     }
   }
+
+  return publishedPackageNames
 }
 
 // Run the script
