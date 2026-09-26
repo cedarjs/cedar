@@ -198,6 +198,7 @@ module.exports = {
           },
           items: [
             { type: 'doc', label: 'Introduction', id: 'mailer' },
+            { type: 'doc', label: 'AhaSend', id: 'mailer/ahasend' },
             { type: 'doc', label: 'Resend', id: 'mailer/resend' },
           ],
         },

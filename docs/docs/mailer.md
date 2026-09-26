@@ -49,6 +49,7 @@ Mailer currently offers the following handlers:
 - [@cedarjs/mailer-handler-nodemailer](https://github.com/cedarjs/cedar/tree/main/packages/mailer/handlers/nodemailer), which uses [Nodemailer](https://nodemailer.com/).
 - [@cedarjs/mailer-handler-studio](https://github.com/cedarjs/cedar/tree/main/packages/mailer/handlers/studio), which sends emails to the CedarJS Studio using nodemailer internally.
 - [@cedarjs/mailer-handler-resend](mailer/resend), which uses [Resend](https://resend.com/).
+- [@cedarjs/mailer-handler-ahasend](mailer/ahasend), which uses [AhaSend](https://ahasend.com/).
 
 You can find community-maintained handlers by searching across npm, our Discord, and other community spaces.
 

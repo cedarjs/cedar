@@ -146,6 +146,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@ahasend/sdk@npm:0.2.1":
+  version: 0.2.1
+  resolution: "@ahasend/sdk@npm:0.2.1"
+  checksum: 10c0/8c8f6b4501a0828f5315e68be5376a00d1c57556e8ab30d6497f22b308831d9a46b3c0dd7610317d546cd26a373c7682be64c43dce773f1bad8d5b330275ff8b
+  languageName: node
+  linkType: hard
+
 "@andrewbranch/untar.js@npm:^1.0.3":
   version: 1.0.3
   resolution: "@andrewbranch/untar.js@npm:1.0.3"
@@ -3389,6 +3396,18 @@ __metadata:
   dependencies:
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
+    typescript: "npm:5.9.3"
+    vitest: "npm:4.1.11"
+  languageName: unknown
+  linkType: soft
+
+"@cedarjs/mailer-handler-ahasend@workspace:packages/mailer/handlers/ahasend":
+  version: 0.0.0-use.local
+  resolution: "@cedarjs/mailer-handler-ahasend@workspace:packages/mailer/handlers/ahasend"
+  dependencies:
+    "@ahasend/sdk": "npm:0.2.1"
+    "@cedarjs/framework-tools": "workspace:*"
+    "@cedarjs/mailer-core": "workspace:*"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.11"
   languageName: unknown
