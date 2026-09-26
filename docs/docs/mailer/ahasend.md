@@ -63,9 +63,15 @@ const ahasendClient = ahasendHandler.internal().client
 You should be able to use this newly configured handler like any other previous
 handler and it should require no changes to your mailer code.
 
-Each email is sent as a single message that all `to`, `cc` and `bcc` recipients
-share, with `bcc` recipients hidden from the others. AhaSend allows at most 50
-recipients per email.
+Each email is sent as one conversation: every `to` and `cc` recipient sees it
+addressed to all of them, and `bcc` recipients are hidden from the others.
+AhaSend allows at most 50 recipients per email.
+
+AhaSend delivers a separate copy to each recipient, and each copy has its own
+message ID. The `messageID` that `mailer.send()` returns is the ID of the first
+accepted recipient's copy. To match a bounce, delivery event or reply to the
+right recipient, use the per-recipient IDs in `handlerInformation` (see
+[Error Handling](#error-handling)).
 
 You can pass AhaSend specific options as the third argument to `mailer.send()`:
 
@@ -107,9 +113,9 @@ AhaSend accepts none of the recipients, with the per-recipient results as the
 When AhaSend accepts some recipients and rejects others, for example because
 they are on your suppression list, `mailer.send()` resolves. The email has
 already been queued for the accepted recipients, so retrying the send would
-deliver it to them a second time. The result's `messageID` is the ID of the
-first accepted recipient's message, and `handlerInformation` contains the result
-for every recipient:
+deliver it to them a second time. As for any send, the result's `messageID` is
+the ID of the first accepted recipient's copy, and `handlerInformation` contains
+the result for every recipient, including each copy's own message ID:
 
 ```typescript
 const result = await mailer.send(/* ... */)
