@@ -3406,8 +3406,8 @@ __metadata:
   resolution: "@cedarjs/mailer-handler-ahasend@workspace:packages/mailer/handlers/ahasend"
   dependencies:
     "@ahasend/sdk": "npm:0.2.1"
-    "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/mailer-core": "workspace:*"
+    "@cedarjs/framework-tools": "npm:6.0.0"
+    "@cedarjs/mailer-core": "npm:6.0.0"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.11"
   languageName: unknown

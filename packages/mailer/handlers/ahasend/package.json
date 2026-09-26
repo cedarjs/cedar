@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/mailer-handler-ahasend",
-  "version": "6.0.1",
+  "version": "6.0.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -24,10 +24,10 @@
   },
   "dependencies": {
     "@ahasend/sdk": "0.2.1",
-    "@cedarjs/mailer-core": "workspace:*"
+    "@cedarjs/mailer-core": "6.0.0"
   },
   "devDependencies": {
-    "@cedarjs/framework-tools": "workspace:*",
+    "@cedarjs/framework-tools": "6.0.0",
     "typescript": "5.9.3",
     "vitest": "4.1.11"
   },
