@@ -53,15 +53,21 @@ const contentTypesByExtension: Record<string, string> = {
  * `email@example.com` or `Name <email@example.com>`, into an AhaSend address
  */
 function toAhaSendAddress(address: string): Address {
-  const match = address.match(/^\s*(.*?)\s*<([^<>]+)>\s*$/)
+  const trimmed = address.trim()
+  const open = trimmed.lastIndexOf('<')
 
-  if (!match) {
-    return { email: address.trim() }
+  if (open === -1 || !trimmed.endsWith('>')) {
+    return { email: trimmed }
   }
 
-  const name = match[1].replace(/^"(.*)"$/, '$1')
+  const email = trimmed.slice(open + 1, -1).trim()
+  let name = trimmed.slice(0, open).trim()
 
-  return name ? { name, email: match[2].trim() } : { email: match[2].trim() }
+  if (name.length >= 2 && name.startsWith('"') && name.endsWith('"')) {
+    name = name.slice(1, -1)
+  }
+
+  return name ? { name, email } : { email }
 }
 
 /**

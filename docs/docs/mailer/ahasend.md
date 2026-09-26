@@ -43,7 +43,10 @@ export const mailer = new Mailer({
 The handler accepts every option of the `AhaSendClient` from
 [`@ahasend/sdk`](https://github.com/AhaSend/ahasend-ts), such as `timeoutMs` and
 `retry`. By default the client retries failed requests up to three times and
-sends an idempotency key with every request, so a retry never delivers the same
+reuses one idempotency key across those retries. AhaSend stores the outcome of
+every request it accepts or rejects for 24 hours and replays it when a retry
+uses the same key, so such a retry does not queue the email again. Server
+errors are not stored, so a retry after a server error can still deliver the
 email twice.
 
 If you need access to the underlying AhaSend client to perform more specific

@@ -1,4 +1,4 @@
-import { mkdtemp, writeFile } from 'node:fs/promises'
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
@@ -237,6 +237,7 @@ describe('AhaSendMailHandler', () => {
       })
     } finally {
       vi.unstubAllGlobals()
+      await rm(directory, { recursive: true, force: true })
     }
 
     const request = new Request(...fetchMock.mock.calls[1])
