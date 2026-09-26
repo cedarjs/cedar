@@ -63,7 +63,7 @@ yarn install
 
 You'll almost always want to test the functionality of your changes to the Cedar Framework in a Cedar Project. When it comes to getting a Cedar Project to test your changes out in, you have several options:
 
-- [***Recommended for 90% of cases***] Create a functional test project. See section below for steps.
+- [_**Recommended for 90% of cases**_] Create a functional test project. See section below for steps.
 - Run `yarn create cedar-app <project directory>`
 - `git clone` the [Cedar Tutorial Blog](https://github.com/cedarjs/cedar-tutorial)
 - Use a project you've already created

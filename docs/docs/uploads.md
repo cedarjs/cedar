@@ -95,9 +95,7 @@ const UPDATE_PROFILE_MUTATION = gql`
 const EditProfile = ({ profile }) => {
   const [updateProfile, { loading, error }] = useMutation(
     UPDATE_PROFILE_MUTATION,
-    {
-      /*..*/
-    }
+    {/*..*/}
   )
 
   const onSave = (formData: UpdateProfileInput) => {

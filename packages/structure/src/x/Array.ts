@@ -1,10 +1,5 @@
 export type ArrayLike<T> =
-  | T[]
-  | Promise<T[]>
-  | IterableIterator<T>
-  | undefined
-  | void
-  | null
+  T[] | Promise<T[]> | IterableIterator<T> | undefined | void | null
 
 export async function ArrayLike_normalize<T>(x: ArrayLike<T>): Promise<T[]> {
   if (x instanceof Promise) {

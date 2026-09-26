@@ -212,11 +212,7 @@ export function getRouteRegexAndParams(
  */
 export function parseSearch(
   search:
-    | string
-    | string[][]
-    | Record<string, string>
-    | URLSearchParams
-    | undefined,
+    string | string[][] | Record<string, string> | URLSearchParams | undefined,
 ) {
   const searchParams = new URLSearchParams(search)
 

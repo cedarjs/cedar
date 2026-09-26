@@ -70,14 +70,12 @@ type InputVarProps<T> = T extends { [key: string]: never } ? unknown : T
 
 export type CellLoadingProps<TVariables extends OperationVariables = any> = {
   queryResult?:
-    | NonSuspenseCellQueryResult<TVariables, any>
-    | SuspenseCellQueryResult
+    NonSuspenseCellQueryResult<TVariables, any> | SuspenseCellQueryResult
 } & InputVarProps<TVariables>
 
 export type CellFailureProps<TVariables extends OperationVariables = any> = {
   queryResult?:
-    | NonSuspenseCellQueryResult<TVariables, any>
-    | SuspenseCellQueryResult
+    NonSuspenseCellQueryResult<TVariables, any> | SuspenseCellQueryResult
   error?: QueryResult['error'] | Error // for tests and storybook
 
   /**
@@ -130,8 +128,7 @@ export type CellSuccessProps<
   TVariables extends OperationVariables = any,
 > = {
   queryResult?:
-    | NonSuspenseCellQueryResult<TVariables, TData>
-    | SuspenseCellQueryResult
+    NonSuspenseCellQueryResult<TVariables, TData> | SuspenseCellQueryResult
   updating?: boolean
 } & InputVarProps<TVariables> &
   // pre-computing makes the types more readable on hover

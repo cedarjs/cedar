@@ -192,9 +192,7 @@ generates extra support files when converting from ES modules to CJS:
 ```ts
 const server = await createServer({
   logger,
-  fastifyServerOptions: {
-    /*...*/
-  },
+  fastifyServerOptions: {/*...*/},
   discoverFunctionsGlob: [
     'app/functions/**/*.js',
     // exclude all *.2.js files, e.g: exclude
