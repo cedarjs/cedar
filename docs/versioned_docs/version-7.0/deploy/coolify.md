@@ -1,0 +1,78 @@
+---
+description: Self-host Cedar on Coolify, with the recommended two-service topology
+---
+
+# Deploy to Coolify
+
+[Coolify](https://coolify.io) is a self-hosted alternative to
+Heroku/Railway-style PaaS platforms — you run it on your own server(s) and it
+manages builds and deploys for you. It's the best fit on the
+[any container host](./any-container-host.md) list for anyone self-hosting: it's
+free, open source, and — uniquely among the platforms Cedar documents — its
+build packs can natively express the
+[recommended two-service topology](./introduction.md#two-topologies-and-which-to-pick)
+instead of forcing single-container.
+
+## Single-service (start here)
+
+1. Create a new Coolify application from your Cedar repo.
+2. Leave the build pack on its default (Nixpacks or Railpack). Coolify finds
+   `build` and `start` in `package.json` and runs them with no configuration.
+3. Add a Postgres database from Coolify's resource catalog, and set
+   `DATABASE_URL` on the application to point at it.
+4. Deploy.
+
+This runs the
+[single-container topology](./introduction.md#two-topologies-and-which-to-pick)
+— the fastest way to get a working deploy.
+
+## Migrations
+
+Coolify doesn't have a dedicated pre-deploy hook the way Railway does. Run
+migrations as part of your build command, or as a one-off command against the
+running container:
+
+```shell
+yarn cedar prisma migrate deploy
+```
+
+## Custom server file
+
+If your app has a custom [server file](../server-file.md) (`api/src/server.ts`),
+single-service won't work — a custom server file is a Fastify concept with no
+equivalent in the single-container in-process server, so `start` refuses to
+start rather than silently skipping what you configured (Realtime, custom
+plugins, custom middleware). Skip straight to
+[scaling up to two services](#scaling-up-two-services-the-coolify-way) below,
+and set the api service's start command to `yarn start:api` — that path does
+run the server file.
+
+## Scaling up: two services, the Coolify way
+
+This is what sets Coolify apart from the other platforms on the
+[any container host](./any-container-host.md) list: alongside Nixpacks/Railpack,
+Coolify also has a **Static** build pack. That means you can express Cedar's
+recommended topology — static `web/dist` served separately from a Node api
+process — as two Coolify resources instead of one, without reaching for a
+Dockerfile:
+
+1. **api service** — Nixpacks/Railpack build pack, start command
+   `yarn start:api`.
+2. **web service** — Static build pack, pointed at `web/dist` after running
+   `yarn build`. Coolify serves it directly rather than running a Node process
+   for it.
+
+Because the web service is static, there's no Node process for it to proxy
+requests through — `--apiProxyTarget` is a Fastify feature, and Fastify only
+runs under `start:web`. Instead, before running `yarn build`, set `apiUrl` in
+`cedar.toml` to the api service's fully-qualified Coolify-provided domain (e.g.
+`https://api.yourapp.example`, not a relative path like the single-service
+setup uses). Cedar bakes `apiUrl` into the web bundle at build time, so the
+browser calls the api service directly — no proxy needed. This makes the two
+services cross-origin, so you'll also need to [configure CORS](../cors.md) on
+the api side.
+
+This is the one platform in this doc set where the recommended topology doesn't
+cost you anything extra to set up — no reverse proxy, nginx config, or Node
+process to run for the web side, since Coolify's Static build pack and a
+fully-qualified `apiUrl` cover it between them.
