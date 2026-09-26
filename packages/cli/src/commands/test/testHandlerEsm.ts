@@ -119,6 +119,9 @@ export const handler = async ({
     const cacheDirDb = `file:${ensurePosixPath(
       rwjsPaths.generated.base,
     )}/test.db`
+    // Captured before it's overwritten below, so CedarApiVitestEnv can tell
+    // the test database apart from the app's real one.
+    const mainDatabaseUrl = process.env.DATABASE_URL
     const DATABASE_URL = process.env.TEST_DATABASE_URL || cacheDirDb
 
     if (sides.includes('api') && !dbPush) {
@@ -134,7 +137,15 @@ export const handler = async ({
       await runBin('vitest', vitestArgs, {
         cwd: rwjsPaths.base,
         stdio: 'inherit',
-        env: { ...process.env, DATABASE_URL },
+        env: {
+          ...process.env,
+          DATABASE_URL,
+          // Always set, even to '', so CedarApiVitestEnv can tell "there's
+          // no real DATABASE_URL to compare against" apart from "this isn't
+          // running through `cedar test` at all" (e.g. a direct `vitest`
+          // invocation, whose own DATABASE_URL hasn't been touched yet).
+          CEDAR_APP_DATABASE_URL: mainDatabaseUrl ?? '',
+        },
       })
     }
 
