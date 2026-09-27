@@ -611,6 +611,35 @@ A few things to know about fragment Cells:
   `posts { author { ...AuthorCell_author } }` can render one
   `<AuthorCell author={post.author} />` per post, still with a single request.
 
+## Importing a Cell
+
+Import a Cell by its directory, not by the Cell file inside it:
+
+```jsx
+// Do this
+import AuthorCell from 'src/components/AuthorCell'
+
+// Not this
+import AuthorCell from 'src/components/AuthorCell/AuthorCell'
+```
+
+The Cell file itself only has named exports (`QUERY`, `Success`, etc.). The
+default export, the actual `<AuthorCell>` component, is added by Cedar at build
+time by wrapping those exports in `createCell`. To give TypeScript a matching
+type, Cedar generates a "mirror" type definition for the Cell's directory in
+`.cedar/types/mirror` (see [Generated Types](typescript/generated-types.md)).
+That generated type is only picked up when you import the directory.
+
+If you import the Cell file directly, TypeScript reads the file as you wrote it
+and reports an error like this one:
+
+```
+TS1192: Module '".../src/components/AuthorCell/AuthorCell"' has no default export.
+```
+
+The fix is to change the import to the directory form. Watch out for editor
+auto-imports, as they sometimes pick the file path.
+
 ## How Does Cedar Know a Cell is a Cell?
 
 You just have to end a filename in "Cell" right? Well, while that's basically correct, there is one other thing you should know.
