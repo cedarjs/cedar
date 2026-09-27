@@ -14,7 +14,7 @@
     "start:web": "cedarjs-server web"
   },
   "dependencies": {
-    "@cedarjs/api-server": "5.0.6"
+    "@cedarjs/api-server": "7.0.0"
   },
   "devDependencies": {
     "prisma": "7.10.0",
