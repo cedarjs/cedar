@@ -274,6 +274,16 @@ export const rollbackTasks = (
           .filter((dir) => releaseDirRegExp.test(dir))
 
         const deployedIndex = dirs.indexOf(currentLink ?? '')
+
+        // Rollback counts back from the active release, so it needs to be one
+        // of the timestamp-named release directories
+        if (deployedIndex === -1) {
+          throw new Error(
+            `Cannot rollback: \`current\` points to "${currentLink}", which ` +
+              'is not a timestamp-named release directory',
+          )
+        }
+
         const rollbackIndex = deployedIndex + rollbackCount
 
         if (dirs[rollbackIndex]) {
@@ -286,7 +296,7 @@ export const rollbackTasks = (
         } else {
           throw new Error(
             `Cannot rollback ${rollbackCount} release(s): ${
-              dirs.length - dirs.indexOf(currentLink ?? '') - 1
+              dirs.length - deployedIndex - 1
             } previous release(s) available`,
           )
         }

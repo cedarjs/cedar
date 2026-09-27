@@ -316,6 +316,33 @@ describe('rollbackTasks', () => {
       'Cannot rollback 1 release(s): 0 previous release(s) available',
     )
   })
+
+  it('does not roll back when current is not a release directory', async () => {
+    const execSpy = vi
+      .spyOn(sshExecutor, 'exec')
+      .mockImplementation(async (_path, command) => {
+        const stdout =
+          command === 'readlink'
+            ? '/var/www/app/my-release'
+            : command === 'ls'
+              ? 'current\nmy-release\n20220409120000\n20220408120000\n'
+              : ''
+
+        return { stdout, stderr: '', code: 0, signal: null }
+      })
+
+    const tasks = baremetal.rollbackTasks(1, sshExecutor, createServerConfig())
+
+    execSpy.mockClear()
+
+    await expect(() => tasks[0].task()).rejects.toThrowError(
+      '`current` points to "my-release", which is not a timestamp-named release directory',
+    )
+    expect(execSpy.mock.calls).toEqual([
+      ['/var/www/app', 'readlink', ['-f', 'current']],
+      ['/var/www/app', 'ls', ['-t']],
+    ])
+  })
 })
 
 describe('serverConfigWithDefaults', () => {
