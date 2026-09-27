@@ -21,6 +21,15 @@ const SYMLINK_FLAGS = '-nsf'
 const CURRENT_RELEASE_SYMLINK_NAME = 'current'
 const LIFECYCLE_HOOKS = ['before', 'after'] as const
 
+/**
+ * Matches the release directory names created by `cedar deploy baremetal`.
+ * The default `releaseDir` is a UTC timestamp formatted as `YYYYMMDDHHmmss`
+ * (see the `releaseDir` option in `../baremetal.ts`). Only directories matching
+ * this pattern are removed when cleaning up old releases.
+ */
+export const RELEASE_DIR_PATTERN = '^[0-9]{14}$'
+const releaseDirRegExp = new RegExp(RELEASE_DIR_PATTERN)
+
 export const DEFAULT_SERVER_CONFIG = {
   port: 22,
   branch: 'main',
@@ -262,9 +271,19 @@ export const rollbackTasks = (
           .pop()
         const dirs = (await ssh.exec(serverConfig.path, 'ls', ['-t'])).stdout
           .split('\n')
-          .filter((dirs) => !dirs.match(/current/))
+          .filter((dir) => releaseDirRegExp.test(dir))
 
         const deployedIndex = dirs.indexOf(currentLink ?? '')
+
+        // Rollback counts back from the active release, so it needs to be one
+        // of the timestamp-named release directories
+        if (deployedIndex === -1) {
+          throw new Error(
+            `Cannot rollback: \`current\` points to "${currentLink}", which ` +
+              'is not a timestamp-named release directory',
+          )
+        }
+
         const rollbackIndex = deployedIndex + rollbackCount
 
         if (dirs[rollbackIndex]) {
@@ -277,7 +296,7 @@ export const rollbackTasks = (
         } else {
           throw new Error(
             `Cannot rollback ${rollbackCount} release(s): ${
-              dirs.length - dirs.indexOf(currentLink ?? '') - 1
+              dirs.length - deployedIndex - 1
             } previous release(s) available`,
           )
         }
@@ -608,12 +627,17 @@ export const deployTasks = (
       command: {
         title: `Cleaning up old deploys...`,
         task: async () => {
-          // add 2 to skip `current` and start on the keepReleases + 1th release
-          const fileStartIndex = serverConfig.keepReleases + 2
+          // Only release directories are candidates for deletion. Anything
+          // else in `serverConfig.path` (the `current` symlink, `.env`, or
+          // user data such as an `uploads` directory) is left untouched.
+          // `tail -n +N` starts printing at line N, so this keeps the
+          // `keepReleases` newest releases. `xargs -r` skips running `rm`
+          // when there is nothing to delete.
+          const fileStartIndex = serverConfig.keepReleases + 1
 
           await ssh.exec(
             serverConfig.path,
-            `ls -t | tail -n +${fileStartIndex} | xargs rm -rf`,
+            `ls -t | grep -E '${RELEASE_DIR_PATTERN}' | tail -n +${fileStartIndex} | xargs -r rm -rf`,
           )
         },
       },
