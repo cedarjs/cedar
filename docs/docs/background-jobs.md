@@ -433,8 +433,9 @@ being retried are skipped.
 
 For a recurring job, `attempts` and `maxAttempts` count consecutive failures of
 a single run: every successful run resets `attempts` to 0. If a run fails
-`maxAttempts` times in a row, the job is permanently failed like any other job,
-its schedule stops, and the worker logs an error saying so. To restart the
+`maxAttempts` times in a row, or a run exceeds `maxRuntime`, the job is
+permanently failed like any other job, its schedule stops, and the worker logs
+an error saying so. To restart the
 schedule, fix the problem and schedule the job again with
 `later(NightlyReportJob, { cron: '0 0 * * *' })`.
 

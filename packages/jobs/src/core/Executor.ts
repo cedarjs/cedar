@@ -167,10 +167,8 @@ export class Executor {
       // followed by `failure()`) because `error()` unlocks the job right
       // away, and a two-step write would leave a moment where another worker
       // could claim the job before `failure()` marks it as permanently failed
-      this.logger.warn(
-        this.job,
-        `[CedarJS Jobs] Failed job ${this.jobIdentifier}: exceeded max ` +
-          `runtime (${this.maxRuntime} seconds)`,
+      this.#logPermanentFailure(
+        `exceeded max runtime (${this.maxRuntime} seconds)`,
       )
 
       return this.#adapterWrite(() =>
@@ -196,24 +194,7 @@ export class Executor {
       return errorRecorded
     }
 
-    if (this.job.cron) {
-      // A permanently failed recurring job is not rescheduled, so its cron
-      // schedule stops until the job is scheduled again
-      this.logger.error(
-        this.job,
-        `[CedarJS Jobs] Failed job ${this.jobIdentifier}: reached max ` +
-          `attempts (${this.maxAttempts}). Its recurring schedule ` +
-          `(cron: '${this.job.cron}') has stopped and the job will not run ` +
-          `again. To restart it, schedule the job again with ` +
-          `\`later(job, args, { cron: '${this.job.cron}' })\``,
-      )
-    } else {
-      this.logger.warn(
-        this.job,
-        `[CedarJS Jobs] Failed job ${this.jobIdentifier}: reached max ` +
-          `attempts (${this.maxAttempts})`,
-      )
-    }
+    this.#logPermanentFailure(`reached max attempts (${this.maxAttempts})`)
 
     // `failure()` is called even when `error()` threw, so the job is still
     // marked as failed and isn't retried
@@ -225,6 +206,28 @@ export class Executor {
     )
 
     return errorRecorded && failureRecorded
+  }
+
+  /**
+   * Logs that the job is permanently failed for the given `reason`. A
+   * permanently failed recurring (cron) job is not rescheduled, so its
+   * schedule stops until the job is scheduled again. That is logged at error
+   * level, together with how to restart the schedule
+   */
+  #logPermanentFailure(reason: string) {
+    const message = `[CedarJS Jobs] Failed job ${this.jobIdentifier}: ${reason}`
+
+    if (this.job.cron) {
+      this.logger.error(
+        this.job,
+        `${message}. Its recurring schedule (cron: '${this.job.cron}') has ` +
+          `stopped and the job will not run again. To restart it, schedule ` +
+          `the job again with ` +
+          `\`later(job, args, { cron: '${this.job.cron}' })\``,
+      )
+    } else {
+      this.logger.warn(this.job, message)
+    }
   }
 
   /**

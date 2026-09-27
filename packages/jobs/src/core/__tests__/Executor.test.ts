@@ -569,6 +569,85 @@ describe('perform', () => {
     expect(context?.signal.aborted).toEqual(true)
   })
 
+  it('logs a warning when a non-recurring job times out', async () => {
+    const mockAdapter = new MockAdapter()
+    const mockJob = {
+      id: 1,
+      name: 'TestJob',
+      path: 'TestJob/TestJob',
+      args: ['foo'],
+      attempts: 1,
+
+      perform: vi.fn(() => new Promise<void>(() => {})),
+    }
+    const executor = new Executor({
+      adapter: mockAdapter,
+      logger: mockLogger,
+      job: mockJob,
+      maxRuntime: 10,
+    })
+
+    const loggerWarnSpy = vi.spyOn(mockLogger, 'warn')
+    loadersMockFns.loadJob.mockImplementation(() => mockJob)
+
+    const performPromise = executor.perform()
+    await vi.advanceTimersByTimeAsync(10_000)
+    await performPromise
+
+    expect(loggerWarnSpy).toHaveBeenCalledWith(
+      mockJob,
+      '[CedarJS Jobs] Failed job 1 (TestJob/TestJob:TestJob): exceeded max ' +
+        'runtime (10 seconds)',
+    )
+  })
+
+  it('logs an error that the schedule stopped when a recurring job times out', async () => {
+    const mockAdapter = new MockAdapter()
+    const mockJob = {
+      id: 1,
+      name: 'TestJob',
+      path: 'TestJob/TestJob',
+      args: ['foo'],
+      attempts: 1,
+      cron: '*/10 * * * *',
+
+      perform: vi.fn(() => new Promise<void>(() => {})),
+    }
+    const executor = new Executor({
+      adapter: mockAdapter,
+      logger: mockLogger,
+      job: mockJob,
+      maxRuntime: 10,
+    })
+
+    const adapterFailureSpy = vi.spyOn(mockAdapter, 'failure')
+    const loggerErrorSpy = vi.spyOn(mockLogger, 'error')
+    const loggerWarnSpy = vi.spyOn(mockLogger, 'warn')
+    loadersMockFns.loadJob.mockImplementation(() => mockJob)
+
+    const performPromise = executor.perform()
+    await vi.advanceTimersByTimeAsync(10_000)
+    await performPromise
+
+    expect(adapterFailureSpy).toHaveBeenCalledWith({
+      job: mockJob,
+      deleteJob: false,
+      error: expect.any(errors.JobTimeoutError),
+    })
+    expect(loggerErrorSpy).toHaveBeenCalledWith(
+      mockJob,
+      '[CedarJS Jobs] Failed job 1 (TestJob/TestJob:TestJob): exceeded max ' +
+        "runtime (10 seconds). Its recurring schedule (cron: '*/10 * * * *') " +
+        'has stopped and the job will not run again. To restart it, ' +
+        'schedule the job again with ' +
+        "`later(job, args, { cron: '*/10 * * * *' })`",
+    )
+    expect(loggerWarnSpy).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringContaining('exceeded max runtime'),
+    )
+  })
+
   it('does not time out a job that completes before `maxRuntime`', async () => {
     const mockAdapter = new MockAdapter()
     const mockJob = {
