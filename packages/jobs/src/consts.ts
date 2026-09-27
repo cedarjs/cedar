@@ -14,6 +14,15 @@ export const DEFAULT_MAX_RUNTIME = 14_400
 export const MAX_RUNTIME_GRACE_PERIOD = 60
 /** 5 seconds */
 export const DEFAULT_SLEEP_DELAY = 5
+/**
+ * Upper bound, in milliseconds, for the delay before a failed job is retried
+ * (7 days). The backoff grows with the fourth power of the number of attempts,
+ * so without a cap a job with a very high `maxAttempts` would get a `runAt` so
+ * far in the future that it can't be represented as a `Date`. The cap is above
+ * the longest delay reached with the default `maxAttempts` (23 ** 4 seconds,
+ * about 3.2 days), so it only affects jobs with a higher `maxAttempts`
+ */
+export const MAX_BACKOFF_MS = 7 * 24 * 60 * 60 * 1000
 
 export const DEFAULT_DELETE_SUCCESSFUL_JOBS = true
 export const DEFAULT_DELETE_FAILED_JOBS = false
