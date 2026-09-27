@@ -121,8 +121,15 @@ async function execCommandAsync(
 // packages at the same time, the nightly staging-tag cleanup racing a
 // canary run, or a release overlapping a canary run — and it clears within
 // seconds, so it's retried the same as the others.
+//
+// Status codes are only matched on npm's own error lines (`npm error code
+// E409`, `npm error 503 Service Unavailable - PUT ...`), never as a bare
+// number: the error message starts with the failed command, and a canary
+// version like `7.0.1-next.409` in `npm view <pkg>@<version>` would otherwise
+// turn that version's "not published yet" 404 into a retried, and then
+// thrown, "transient" error.
 const TRANSIENT_NPM_ERROR_PATTERN =
-  /\b(429|5\d\d|409|E409)\b|too many requests|ETIMEDOUT|ECONNRESET|ENOTFOUND|EAI_AGAIN/i
+  /npm (?:error|ERR!) code E(?:429|409|5\d\d)\b|npm (?:error|ERR!) (?:429|409|5\d\d) |too many requests|ETIMEDOUT|ECONNRESET|ENOTFOUND|EAI_AGAIN/i
 
 async function withRetry<T>(
   fn: () => Promise<T>,
