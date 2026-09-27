@@ -73,3 +73,53 @@ test('keeps Directive in name', async () => {
 
   expect(name).toEqual('BazingaDirective')
 })
+
+const parseDirectiveArgs = (args: string) => {
+  return new Promise<{
+    error: Error | undefined
+    argv: Record<string, unknown>
+  }>((resolve) => {
+    yargs()
+      .command('directive <name>', false, directive.builder)
+      .strict()
+      .exitProcess(false)
+      .parse(args, {}, (error, argv) => {
+        resolve({ error: error ?? undefined, argv })
+      })
+  })
+}
+
+test('accepts --type validator', async () => {
+  const { error, argv } = await parseDirectiveArgs(
+    'directive requireAdmin --type validator',
+  )
+
+  expect(error).toBeUndefined()
+  expect(argv.type).toEqual('validator')
+})
+
+test('accepts --type transformer', async () => {
+  const { error, argv } = await parseDirectiveArgs(
+    'directive requireAdmin --type transformer',
+  )
+
+  expect(error).toBeUndefined()
+  expect(argv.type).toEqual('transformer')
+})
+
+test('leaves type undefined when --type is omitted', async () => {
+  const { error, argv } = await parseDirectiveArgs('directive requireAdmin')
+
+  expect(error).toBeUndefined()
+  expect(argv.type).toBeUndefined()
+  expect(argv.force).toEqual(false)
+  expect(argv).toHaveProperty('typescript')
+})
+
+test('rejects an invalid --type value', async () => {
+  const { error } = await parseDirectiveArgs(
+    'directive requireAdmin --type bogus',
+  )
+
+  expect(error?.message).toMatch(/Invalid values/)
+})
