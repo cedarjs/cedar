@@ -155,6 +155,34 @@ interface ResetPasswordFlowOptions<TUser = UserType> {
   }
 }
 
+interface ChangePasswordFlowOptions<TUser = UserType> {
+  /**
+   * Allow logged in users to change their password by providing their current
+   * one. Defaults to true when the `changePassword` option is present.
+   * Needs to be explicitly set to false to disable the flow
+   */
+  enabled?: boolean
+  /**
+   * Invoked after the new password has been saved. This is where you can
+   * notify the user that their password was changed. Returning anything
+   * truthy keeps the user logged in. Returning anything falsy logs them out.
+   */
+  handler: (user: TUser) => boolean | Promise<boolean>
+  /**
+   * If `false` (the default) the new password MUST be different from the
+   * current one
+   */
+  allowReusedPassword?: boolean
+  errors?: {
+    currentPasswordRequired?: string
+    newPasswordRequired?: string
+    incorrectCurrentPassword?: string
+    passwordNotSet?: string
+    reusedPassword?: string
+    flowNotEnabled?: string
+  }
+}
+
 interface WebAuthnFlowOptions {
   enabled: boolean
   expires: number
@@ -233,6 +261,11 @@ export interface DbAuthHandlerOptions<
     challenge?: string
   }
   /**
+   * Object containing change password options. The change password flow is
+   * only available when this option is set
+   */
+  changePassword?: ChangePasswordFlowOptions<TUser> | { enabled: false }
+  /**
    * Object containing cookie config options
    */
   cookie?: DbAuthCookieConfig
@@ -284,6 +317,7 @@ export interface SignupHandlerOptions<TUserAttributes> {
 }
 
 export type AuthMethodNames =
+  | 'changePassword'
   | 'forgotPassword'
   | 'getToken'
   | 'login'
@@ -301,6 +335,8 @@ type Params = AuthenticationResponseJSON &
     username?: string
     password?: string
     resetToken?: string
+    currentPassword?: string
+    newPassword?: string
     method: AuthMethodNames
     [key: string]: any
   } & {
@@ -358,6 +394,7 @@ export class DbAuthHandler<
   // class constant: list of auth methods that are supported
   static get METHODS(): AuthMethodNames[] {
     return [
+      'changePassword',
       'forgotPassword',
       'getToken',
       'login',
@@ -375,6 +412,7 @@ export class DbAuthHandler<
   // class constant: maps the auth functions to their required HTTP verb for access
   static get VERBS() {
     return {
+      changePassword: 'POST',
       forgotPassword: 'POST',
       getToken: 'GET',
       login: 'POST',
@@ -598,6 +636,119 @@ export class DbAuthHandler<
       this.normalizedRequest.headers,
       isFetchApiRequest(this.event) ? this.event.url : undefined,
     )
+  }
+
+  async changePassword(): Promise<AuthMethodOutput> {
+    // Read as the non-generic options shape, like the other flows do, because
+    // the handler is called with a sanitized user rather than a full `TUser`.
+    // The `{ enabled: false }` variant is handled by the check right below
+    const options = this.options.changePassword as
+      ChangePasswordFlowOptions | undefined
+
+    if (!options || options.enabled === false) {
+      throw new DbAuthError.FlowNotEnabledError(
+        options?.errors?.flowNotEnabled ||
+          `Change password flow is not enabled`,
+      )
+    }
+
+    const sessionUserId = this.session?.[this.options.authFields.id]
+
+    if (!sessionUserId) {
+      throw new DbAuthError.NotLoggedInError()
+    }
+
+    const { currentPassword, newPassword } =
+      this.normalizedRequest.jsonBody || {}
+
+    if (currentPassword == null || String(currentPassword).trim() === '') {
+      throw new DbAuthError.PasswordRequiredError(
+        options.errors?.currentPasswordRequired ||
+          'Current password is required',
+      )
+    }
+
+    if (newPassword == null || String(newPassword).trim() === '') {
+      throw new DbAuthError.PasswordRequiredError(
+        options.errors?.newPasswordRequired || 'New password is required',
+      )
+    }
+
+    // check if the new password is valid using signup criteria
+    ;(this.options.signup as SignupFlowOptions).passwordValidation?.(
+      newPassword,
+    )
+
+    let user
+
+    try {
+      user = await this.dbAccessor.findUnique({
+        where: { [this.options.authFields.id]: sessionUserId },
+      })
+    } catch {
+      throw new DbAuthError.GenericError()
+    }
+
+    if (!user) {
+      throw new DbAuthError.UserNotFoundError()
+    }
+
+    // Accounts created through OAuth or WebAuthn can exist without a password
+    if (!user[this.options.authFields.hashedPassword]) {
+      throw new DbAuthError.PasswordNotSetError(options.errors?.passwordNotSet)
+    }
+
+    try {
+      await this._verifyPassword(user, currentPassword)
+    } catch (e) {
+      if (e instanceof DbAuthError.IncorrectPasswordError) {
+        throw new DbAuthError.IncorrectPasswordError(
+          user[this.options.authFields.username],
+          options.errors?.incorrectCurrentPassword ||
+            'Current password is incorrect',
+        )
+      }
+
+      throw e
+    }
+
+    if (
+      !options.allowReusedPassword &&
+      this._passwordMatches(user, newPassword)
+    ) {
+      throw new DbAuthError.ReusedPasswordError(options.errors?.reusedPassword)
+    }
+
+    const [hashedPassword, salt] = hashPassword(newPassword)
+
+    try {
+      // A reset token that is still outstanding would let whoever holds it
+      // replace the password that was just chosen, so it is cleared here too
+      user = await this.dbAccessor.update({
+        where: {
+          [this.options.authFields.id]: user[this.options.authFields.id],
+        },
+        data: {
+          [this.options.authFields.hashedPassword]: hashedPassword,
+          [this.options.authFields.salt]: salt,
+          [this.options.authFields.resetToken]: null,
+          [this.options.authFields.resetTokenExpiresAt]: null,
+        },
+      })
+    } catch {
+      throw new DbAuthError.GenericError()
+    }
+
+    // call the user-defined handler so they can decide what to do with this user
+    const response = await options.handler(this._sanitizeUser(user))
+
+    // returning anything truthy from the handler keeps the user logged in, with
+    // a freshly issued session cookie
+    if (response) {
+      return this._loginResponse(user)
+    } else {
+      return this._logoutResponse({})
+    }
   }
 
   async forgotPassword(): Promise<AuthMethodOutput> {
@@ -1173,6 +1324,16 @@ export class DbAuthHandler<
       throw new DbAuthError.NoResetPasswordHandlerError()
     }
 
+    // must have a change password handler to define what to do with user once
+    // password changed
+    if (
+      this.options?.changePassword &&
+      this.options.changePassword.enabled !== false &&
+      !this.options.changePassword.handler
+    ) {
+      throw new DbAuthError.NoChangePasswordHandlerError()
+    }
+
     // must have webAuthn config if credentialModelAccessor present and vice versa
     if (
       (this.options?.credentialModelAccessor && !this.options?.webAuthn) ||
@@ -1405,6 +1566,21 @@ export class DbAuthHandler<
       user[this.options.authFields.username] as string,
       (this.options.login as LoginFlowOptions)?.errors?.incorrectPassword,
     )
+  }
+
+  // compares a plain text password with the user's stored hash, using the
+  // same algorithm and options the stored hash was created with. Unlike
+  // `_verifyPassword` this has no side effects and does not throw
+  _passwordMatches(user: Record<string, unknown>, password: string) {
+    const storedHash = user[this.options.authFields.hashedPassword] as string
+    const salt = user[this.options.authFields.salt] as string
+    const options = extractHashingOptions(storedHash)
+
+    const [hashedPassword] = Object.keys(options).length
+      ? hashPassword(password, { salt, options })
+      : legacyHashPassword(password, salt)
+
+    return hashedPassword === storedHash
   }
 
   // gets the user from the database and returns only its ID

@@ -16,6 +16,11 @@ export interface ResetPasswordAttributes {
   password: string
 }
 
+export interface ChangePasswordAttributes {
+  currentPassword: string
+  newPassword: string
+}
+
 export type SignupAttributes = Record<string, unknown> & LoginAttributes
 
 const TOKEN_CACHE_TIME = 5000
@@ -93,6 +98,17 @@ export function createDbAuthClient({
   const resetTokenCache = () => {
     lastTokenCheckAt = new Date('1970-01-01T00:00:00')
     cachedToken = null
+  }
+
+  const changePassword = async (attributes: ChangePasswordAttributes) => {
+    const response = await resetAndFetch(getDbAuthUrl(), {
+      credentials,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...attributes, method: 'changePassword' }),
+    })
+
+    return response.json()
   }
 
   const forgotPassword = async (username: string) => {
@@ -214,6 +230,7 @@ export function createDbAuthClient({
     forgotPassword,
     resetPassword,
     validateResetToken,
+    changePassword,
     // New methods for middleware auth:
     // This is so we can get the dbAuthUrl in getCurrentUserFromMiddleware
     getAuthUrl: getDbAuthUrl,

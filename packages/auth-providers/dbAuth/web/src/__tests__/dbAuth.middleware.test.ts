@@ -141,6 +141,25 @@ describe('dbAuth web ~ cookie/middleware auth', () => {
     )
   })
 
+  it('calls change password at the correct endpoint', async () => {
+    const auth = getMwDbAuth().current
+
+    await act(
+      async () =>
+        await auth.changePassword({
+          currentPassword: 'password',
+          newPassword: 'new-password',
+        }),
+    )
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      '/middleware/dbauth',
+      expect.objectContaining({
+        body: '{"currentPassword":"password","newPassword":"new-password","method":"changePassword"}',
+      }),
+    )
+  })
+
   it('passes through fetchOptions to signup calls', async () => {
     const auth = getMwDbAuth().current
 

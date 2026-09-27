@@ -25,6 +25,8 @@ export function createAuthentication<
   TResetPassword,
   TValidateResetToken,
   TClient,
+  TChangePasswordOptions = unknown,
+  TChangePassword = unknown,
 >(
   authImplementation: AuthImplementation<
     TUser,
@@ -39,7 +41,9 @@ export function createAuthentication<
     TResetPasswordOptions,
     TResetPassword,
     TValidateResetToken,
-    TClient
+    TClient,
+    TChangePasswordOptions,
+    TChangePassword
   >,
   customProviderHooks?: {
     useCurrentUser?: () => Promise<CurrentUser>
@@ -60,7 +64,9 @@ export function createAuthentication<
     TResetPasswordOptions,
     TResetPassword,
     TValidateResetToken,
-    TClient
+    TClient,
+    TChangePasswordOptions,
+    TChangePassword
   >()
   const useAuth = createUseAuth(AuthContext)
   const AuthProvider = createAuthProvider(

@@ -7,6 +7,7 @@ import type { AuthImplementation } from '../AuthImplementation.js'
 import type { AuthProviderState } from './AuthProviderState.js'
 import { spaDefaultAuthProviderState } from './AuthProviderState.js'
 import { ServerAuthContext } from './ServerAuthProvider.js'
+import { useChangePassword } from './useChangePassword.js'
 import { useCurrentUser } from './useCurrentUser.js'
 import { useForgotPassword } from './useForgotPassword.js'
 import { useHasRole } from './useHasRole.js'
@@ -36,6 +37,8 @@ export function createAuthProvider<
   TResetPassword,
   TValidateResetToken,
   TClient,
+  TChangePasswordOptions = unknown,
+  TChangePassword = unknown,
 >(
   AuthContext: React.Context<
     | AuthContextInterface<
@@ -50,7 +53,9 @@ export function createAuthProvider<
         TResetPasswordOptions,
         TResetPassword,
         TValidateResetToken,
-        TClient
+        TClient,
+        TChangePasswordOptions,
+        TChangePassword
       >
     | undefined
   >,
@@ -67,7 +72,9 @@ export function createAuthProvider<
     TResetPasswordOptions,
     TResetPassword,
     TValidateResetToken,
-    TClient
+    TClient,
+    TChangePasswordOptions,
+    TChangePassword
   >,
   customProviderHooks?: {
     useCurrentUser?: () => Promise<CurrentUser>
@@ -120,6 +127,7 @@ export function createAuthProvider<
     const forgotPassword = useForgotPassword(authImplementation)
     const resetPassword = useResetPassword(authImplementation)
     const validateResetToken = useValidateResetToken(authImplementation)
+    const changePassword = useChangePassword(authImplementation)
     const type = authImplementation.type
     const client = authImplementation.client
 
@@ -158,6 +166,7 @@ export function createAuthProvider<
           forgotPassword,
           resetPassword,
           validateResetToken,
+          changePassword,
           client,
           type,
         }}
