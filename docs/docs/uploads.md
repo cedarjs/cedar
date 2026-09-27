@@ -187,6 +187,8 @@ Swap `useS3Upload` for `useFsUpload` to upload through the api server. Both retu
 
 Behind the scenes, `useS3Upload` asks the `createPresignedUploadUrl` mutation for a URL per file (sending the token in the `x-upload-token` header), PUTs the bytes there, then calls `confirmUpload`. `useFsUpload` posts each file to `/upload/fs` with the token in the same header. `useFsUpload` reads the api origin from `RWJS_API_URL`; pass `endpoint` to override it.
 
+Both hooks keep track of how many files the current token has been used for and when it expires, and fetch a fresh token when it has no files left or is about to expire. A mounted component can upload any number of times, including with a `maxFiles: 1` profile.
+
 ### Database targets
 
 Small files go through GraphQL as base64. `useDbUpload` and `<DbInput>` read files in the browser and validate them against the profile's constraints; the generated `uploadFile` mutation stores them:
