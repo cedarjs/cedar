@@ -28,6 +28,7 @@ const LIFECYCLE_HOOKS = ['before', 'after'] as const
  * this pattern are removed when cleaning up old releases.
  */
 export const RELEASE_DIR_PATTERN = '^[0-9]{14}$'
+const releaseDirRegExp = new RegExp(RELEASE_DIR_PATTERN)
 
 export const DEFAULT_SERVER_CONFIG = {
   port: 22,
@@ -270,7 +271,7 @@ export const rollbackTasks = (
           .pop()
         const dirs = (await ssh.exec(serverConfig.path, 'ls', ['-t'])).stdout
           .split('\n')
-          .filter((dirs) => !dirs.match(/current/))
+          .filter((dir) => releaseDirRegExp.test(dir))
 
         const deployedIndex = dirs.indexOf(currentLink ?? '')
         const rollbackIndex = deployedIndex + rollbackCount
