@@ -4073,7 +4073,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@my-org/validators@workspace:packages/validators"
   dependencies:
-    "@cedarjs/testing": "npm:2.2.1"
+    "@cedarjs/testing": "npm:7.0.0"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -7130,11 +7130,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "api@workspace:api"
   dependencies:
-    "@cedarjs/api": "npm:6.0.0"
-    "@cedarjs/auth-dbauth-api": "npm:6.0.0"
-    "@cedarjs/context": "npm:6.0.0"
-    "@cedarjs/graphql-server": "npm:6.0.0"
-    "@cedarjs/vite": "npm:6.0.0"
+    "@cedarjs/api": "npm:7.0.0"
+    "@cedarjs/auth-dbauth-api": "npm:7.0.0"
+    "@cedarjs/context": "npm:7.0.0"
+    "@cedarjs/graphql-server": "npm:7.0.0"
+    "@cedarjs/vite": "npm:7.0.0"
     "@my-org/validators": "workspace:*"
     "@prisma/adapter-better-sqlite3": "npm:7.8.0"
     "@prisma/client": "npm:7.8.0"
@@ -14942,11 +14942,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
-    "@cedarjs/api-server": "npm:6.0.0"
-    "@cedarjs/core": "npm:6.0.0"
-    "@cedarjs/eslint-config": "npm:6.0.0"
-    "@cedarjs/project-config": "npm:6.0.0"
-    "@cedarjs/testing": "npm:6.0.0"
+    "@cedarjs/api-server": "npm:7.0.0"
+    "@cedarjs/core": "npm:7.0.0"
+    "@cedarjs/eslint-config": "npm:7.0.0"
+    "@cedarjs/project-config": "npm:7.0.0"
+    "@cedarjs/testing": "npm:7.0.0"
     prettier-plugin-tailwindcss: "npm:^0.8.0"
     prisma: "npm:7.8.0"
     vitest: "npm:4.1.10"
@@ -17031,12 +17031,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "web@workspace:web"
   dependencies:
-    "@cedarjs/auth-dbauth-web": "npm:6.0.0"
-    "@cedarjs/forms": "npm:6.0.0"
-    "@cedarjs/router": "npm:6.0.0"
-    "@cedarjs/testing": "npm:6.0.0"
-    "@cedarjs/vite": "npm:6.0.0"
-    "@cedarjs/web": "npm:6.0.0"
+    "@cedarjs/auth-dbauth-web": "npm:7.0.0"
+    "@cedarjs/forms": "npm:7.0.0"
+    "@cedarjs/router": "npm:7.0.0"
+    "@cedarjs/testing": "npm:7.0.0"
+    "@cedarjs/vite": "npm:7.0.0"
+    "@cedarjs/web": "npm:7.0.0"
     "@my-org/validators": "workspace:*"
     "@testing-library/jest-dom": "npm:6.9.1"
     "@testing-library/react": "npm:16.3.2"
