@@ -201,14 +201,18 @@ async function execCommandAsync(
   }
 }
 
-// Rate limiting and other transient/network errors, as opposed to a
-// definitive rejection like "cannot publish over previously published
-// version" or a failing prepublish build, which retrying won't fix. Anchored
-// on npm's own error lines (`npm error code E429`, `npm error 503 Service
-// Unavailable - PUT ...`) rather than any bare 3-digit number, which would
-// also match digits in file paths and timestamps.
+// Rate limiting, 409 conflicts, and other transient/network errors, as
+// opposed to a definitive rejection like "cannot publish over previously
+// published version" or a failing prepublish build, which retrying won't
+// fix. A 409 means another write to the same package is already in
+// progress — e.g. this release overlapping a canary run or the nightly
+// staging-tag cleanup — and it clears within seconds, so it's retried the
+// same as the others. Anchored on npm's own error lines (`npm error code
+// E429`, `npm error 503 Service Unavailable - PUT ...`, `npm error code
+// E409`) rather than any bare 3-digit number, which would also match digits
+// in file paths and timestamps.
 const TRANSIENT_NPM_ERROR_PATTERN =
-  /npm error code E(429|5\d\d)\b|npm error (429|5\d\d) |ETIMEDOUT|ECONNRESET|ENOTFOUND|EAI_AGAIN|socket hang up/i
+  /npm (?:error|ERR!) code E(?:429|409|5\d\d)\b|npm (?:error|ERR!) (?:429|409|5\d\d) |ETIMEDOUT|ECONNRESET|ENOTFOUND|EAI_AGAIN|socket hang up/i
 
 async function withRetry<T>(
   fn: () => Promise<T>,
