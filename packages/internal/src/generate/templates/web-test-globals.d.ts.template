@@ -1,7 +1,18 @@
-// Import other mocking function globals
-import '@cedarjs/testing'
+import type { vi as _vi } from 'vitest'
+
+import type {
+  mockGraphQLMutation as _mockGraphQLMutation,
+  mockGraphQLQuery as _mockGraphQLQuery,
+} from '@cedarjs/testing/web'
+
 import { InferredCurrentUser } from './all-currentUser.js'
 
 declare global {
+  // describe, it, expect etc. are typed by @types/jest. Referencing
+  // vitest/globals here would conflict with those declarations, so only vi
+  // is declared
+  const vi: typeof _vi
   const mockCurrentUser: (currentUser: InferredCurrentUser) => void
+  const mockGraphQLQuery: typeof _mockGraphQLQuery
+  const mockGraphQLMutation: typeof _mockGraphQLMutation
 }
