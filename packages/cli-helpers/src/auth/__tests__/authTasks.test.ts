@@ -80,6 +80,7 @@ import {
   removeAuthProvider,
   replaceStubRequireAuthTestCase,
   updateRequireAuthTest,
+  writesApiAuthLib,
 } from '../authTasks.js'
 
 import {
@@ -741,6 +742,7 @@ describe('authTasks', () => {
       provider: 'dbAuth',
       setupMode: 'FORCE',
       force: false,
+      apiAuthLibWritten: true,
     }
 
     const createCedarAppTemplatesPath = path.resolve(
@@ -821,6 +823,23 @@ describe('authTasks', () => {
       )
     })
 
+    it('leaves the stub test alone when the auth lib file is kept', async () => {
+      const testPath = requireAuthTestPath('ts')
+      const stubTest = await readTemplateTest('ts')
+      vol.fromJSON({ ...vol.toJSON(), [testPath]: stubTest })
+
+      const task = mockTask()
+      // @ts-expect-error - Only the parts of the task wrapper that
+      // updateRequireAuthTest uses are mocked
+      updateRequireAuthTest().task({ ...ctx, apiAuthLibWritten: false }, task)
+
+      expect(fs.readFileSync(testPath, 'utf-8')).toEqual(stubTest)
+      expect(task.skip).toHaveBeenCalledWith(
+        'Keeping the requireAuth directive test as is, because the existing ' +
+          'requireAuth implementation is kept',
+      )
+    })
+
     it('skips when there is no requireAuth test', () => {
       const task = mockTask()
       // @ts-expect-error - Only the parts of the task wrapper that
@@ -830,6 +849,45 @@ describe('authTasks', () => {
       expect(task.skip).toHaveBeenCalledWith(
         'No requireAuth directive test found',
       )
+    })
+
+    describe('writesApiAuthLib', () => {
+      const authLibPath = () => path.join(getPaths().api.src, 'lib', 'auth.ts')
+      const otherPath = () =>
+        path.join(getPaths().api.src, 'functions', 'auth.ts')
+
+      afterEach(() => {
+        fs.rmSync(authLibPath(), { force: true })
+      })
+
+      function filesRecord() {
+        return { [authLibPath()]: 'auth lib', [otherPath()]: 'auth function' }
+      }
+
+      it('is false when the user declines overwriting an existing auth lib', () => {
+        vol.fromJSON({ ...vol.toJSON(), [authLibPath()]: 'stub requireAuth' })
+
+        expect(writesApiAuthLib(filesRecord(), 'SKIP')).toBe(false)
+      })
+
+      it('is true when overwriting an existing auth lib', () => {
+        vol.fromJSON({ ...vol.toJSON(), [authLibPath()]: 'stub requireAuth' })
+
+        expect(writesApiAuthLib(filesRecord(), 'OVERWRITE')).toBe(true)
+      })
+
+      it('is true when there is no existing auth lib', () => {
+        expect(writesApiAuthLib(filesRecord(), 'SKIP')).toBe(true)
+      })
+
+      it('is false when the auth lib is written under a different name', () => {
+        vol.fromJSON({ ...vol.toJSON(), [authLibPath()]: 'stub requireAuth' })
+        const renamedRecord = {
+          [path.join(getPaths().api.src, 'lib', 'dbAuthAuth.ts')]: 'auth lib',
+        }
+
+        expect(writesApiAuthLib(renamedRecord, 'FAIL')).toBe(false)
+      })
     })
 
     it('keeps CRLF line endings', async () => {

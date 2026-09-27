@@ -504,11 +504,35 @@ export const generateAuthApiFiles = <Renderer extends typeof ListrRenderer>(
         existingFiles = 'FAIL'
       }
 
+      ctx.apiAuthLibWritten = writesApiAuthLib(filesRecord, existingFiles)
+
       return writeFilesTask(filesRecord, {
         existingFiles,
       })
     },
   }
+}
+
+/**
+ * Exported for testing
+ *
+ * @returns `true` if writing `filesRecord` with the given `existingFiles`
+ *   strategy writes `api/src/lib/auth.{ts,js}`, which is where the auth
+ *   provider's `requireAuth` function lives
+ */
+export function writesApiAuthLib(
+  filesRecord: Record<string, string>,
+  existingFiles: ExistingFiles,
+) {
+  const authLibPaths = ['ts', 'js'].map((ext) =>
+    path.join(getPaths().api.src, 'lib', `auth.${ext}`),
+  )
+
+  return Object.keys(filesRecord).some(
+    (filePath) =>
+      authLibPaths.includes(filePath) &&
+      (existingFiles === 'OVERWRITE' || !fs.existsSync(filePath)),
+  )
 }
 
 /** Returns a map of file names (not full paths) that already exist */
@@ -553,6 +577,12 @@ export interface AuthGeneratorCtx {
   setupMode: AuthSetupMode
   provider: string
   force: boolean
+  /**
+   * Set by `generateAuthApiFiles`. `true` when setup writes the auth
+   * provider's `api/src/lib/auth.{ts,js}` file, replacing any existing
+   * `requireAuth` implementation
+   */
+  apiAuthLibWritten?: boolean
 }
 
 export const setAuthSetupMode = <
@@ -667,7 +697,9 @@ export const replaceStubRequireAuthTestCase = (content: string) => {
  * New Cedar apps ship with a test for the `requireAuth` directive that
  * asserts the behavior of the stub `requireAuth` function. Setting up auth
  * replaces that stub, so this task replaces the stub test case with test
- * cases matching the real implementation. Test files that don't contain the
+ * cases matching the real implementation. The test is only updated when
+ * setup writes `api/src/lib/auth.{ts,js}` (for example, not when the user
+ * declines overwriting existing files). Test files that don't contain the
  * unmodified stub test case are left as they are.
  */
 export const updateRequireAuthTest = <
@@ -676,9 +708,17 @@ export const updateRequireAuthTest = <
 >() => ({
   title: 'Updating requireAuth directive test...',
   task: (
-    _ctx: AuthGeneratorCtx,
+    ctx: AuthGeneratorCtx,
     task: ListrTaskWrapper<AuthGeneratorCtx, Renderer, FallbackRenderer>,
   ) => {
+    if (!ctx.apiAuthLibWritten) {
+      task.skip(
+        'Keeping the requireAuth directive test as is, because the existing ' +
+          'requireAuth implementation is kept',
+      )
+      return
+    }
+
     const testFilePath = ['ts', 'js']
       .map((ext) =>
         path.join(
