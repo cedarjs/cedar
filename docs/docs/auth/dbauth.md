@@ -290,7 +290,7 @@ This handler is invoked after the password has been successfully changed in the 
 
 Lets a user who is already logged in change their password by entering their current password along with the new one. This is a different flow from `forgotPassword`/`resetPassword`: a reset proves that the user controls their email inbox, while a change proves that they know their current password. Requiring the current password means that someone who gets hold of a logged in session (an unlocked device, a leaked session cookie) can't use it to lock the real owner out of their account.
 
-The change password flow is only available when the `changePassword` option is passed to `DbAuthHandler`. Apps set up with `yarn cedar setup auth dbAuth` get it in `api/src/functions/auth.js`:
+`DbAuthHandler` requires a `changePassword` option, just like `login`, `signup`, `forgotPassword` and `resetPassword`. Apps set up with `yarn cedar setup auth dbAuth` get it in `api/src/functions/auth.js`:
 
 ```javascript
 const changePasswordOptions = {
@@ -342,7 +342,7 @@ Accounts can exist without a password: users who signed up through [OAuth](#oaut
 
 ### changePassword.enabled
 
-Defaults to true when the `changePassword` option is present. Set it to false to turn the flow off while keeping the rest of the config around.
+Allow logged in users to change their password. Defaults to true. Needs to be explicitly set to false to disable the flow. `{ enabled: false }` on its own is a complete `changePassword` option for apps that don't offer the flow.
 
 ```javascript
 changePassword: {

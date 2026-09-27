@@ -158,7 +158,7 @@ interface ResetPasswordFlowOptions<TUser = UserType> {
 interface ChangePasswordFlowOptions<TUser = UserType> {
   /**
    * Allow logged in users to change their password by providing their current
-   * one. Defaults to true when the `changePassword` option is present.
+   * one. Defaults to true.
    * Needs to be explicitly set to false to disable the flow
    */
   enabled?: boolean
@@ -261,10 +261,9 @@ export interface DbAuthHandlerOptions<
     challenge?: string
   }
   /**
-   * Object containing change password options. The change password flow is
-   * only available when this option is set
+   * Object containing change password options
    */
-  changePassword?: ChangePasswordFlowOptions<TUser> | { enabled: false }
+  changePassword: ChangePasswordFlowOptions<TUser> | { enabled: false }
   /**
    * Object containing cookie config options
    */
@@ -641,7 +640,8 @@ export class DbAuthHandler<
   async changePassword(): Promise<AuthMethodOutput> {
     // Read as the non-generic options shape, like the other flows do, because
     // the handler is called with a sanitized user rather than a full `TUser`.
-    // The `{ enabled: false }` variant is handled by the check right below
+    // The `{ enabled: false }` variant is handled by the check right below, and
+    // so is a missing option, which only JavaScript apps can end up with
     const options = this.options.changePassword as
       ChangePasswordFlowOptions | undefined
 
