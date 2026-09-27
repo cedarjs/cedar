@@ -17,6 +17,8 @@ export interface AuthContextInterface<
   TResetPassword,
   TValidateResetToken,
   TClient,
+  TChangePasswordOptions = unknown,
+  TChangePassword = unknown,
 > {
   /** Determining your current authentication state */
   loading: boolean
@@ -72,6 +74,12 @@ export interface AuthContextInterface<
   resetPassword(options?: TResetPasswordOptions): Promise<TResetPassword>
   validateResetToken(resetToken: string | null): Promise<TValidateResetToken>
   /**
+   * Changes the password of the currently logged in user. Auth providers
+   * that support it verify the user's current password before setting the
+   * new one.
+   */
+  changePassword(options?: TChangePasswordOptions): Promise<TChangePassword>
+  /**
    * A reference to auth service provider sdk "client", which is useful if we
    * do not support some specific functionality.
    */
@@ -94,6 +102,8 @@ export function createAuthContext<
   TResetPassword,
   TValidateResetToken,
   TClient,
+  TChangePasswordOptions = unknown,
+  TChangePassword = unknown,
 >() {
   return React.createContext<
     | AuthContextInterface<
@@ -108,7 +118,9 @@ export function createAuthContext<
         TResetPasswordOptions,
         TResetPassword,
         TValidateResetToken,
-        TClient
+        TClient,
+        TChangePasswordOptions,
+        TChangePassword
       >
     | undefined
   >(undefined)

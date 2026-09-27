@@ -222,6 +222,30 @@ describe('dbAuth web client', () => {
     )
   })
 
+  it('passes through fetchOptions to changePassword calls', async () => {
+    const auth = getDbAuth().current
+    await act(
+      async () =>
+        await auth.changePassword({
+          currentPassword: 'password',
+          newPassword: 'new-password',
+        }),
+    )
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      `${globalThis.RWJS_API_URL}/auth`,
+      expect.objectContaining({
+        credentials: 'include',
+        method: 'POST',
+        body: JSON.stringify({
+          currentPassword: 'password',
+          newPassword: 'new-password',
+          method: 'changePassword',
+        }),
+      }),
+    )
+  })
+
   it('passes through fetchOptions to signup calls', async () => {
     const auth = getDbAuth().current
     await act(

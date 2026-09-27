@@ -42,6 +42,13 @@ export class NoResetPasswordHandlerError extends Error {
   }
 }
 
+export class NoChangePasswordHandlerError extends Error {
+  constructor() {
+    super('dbAuth requires a change password handler in order to notify user')
+    this.name = 'NoChangePasswordHandlerError'
+  }
+}
+
 export class NoWebAuthnConfigError extends Error {
   constructor() {
     super(
@@ -211,6 +218,15 @@ export class ReusedPasswordError extends Error {
   constructor(message = 'Must choose a new password') {
     super(message)
     this.name = 'ReusedPasswordError'
+  }
+}
+
+export class PasswordNotSetError extends Error {
+  constructor(
+    message = 'This account does not have a password. Use "Forgot password" to set one',
+  ) {
+    super(message)
+    this.name = 'PasswordNotSetError'
   }
 }
 

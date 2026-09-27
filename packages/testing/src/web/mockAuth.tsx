@@ -46,6 +46,7 @@ export function useAuth() {
     forgotPassword: async () => {},
     resetPassword: async () => {},
     validateResetToken: async () => {},
+    changePassword: async () => {},
     type: 'default',
     client: undefined,
     hasError: false,

@@ -215,6 +215,7 @@ export const handler = async (
       attributes: cookieAttributes,
       name: cookieName,
     },
+    changePassword: { enabled: false },
     forgotPassword: forgotPasswordOptions,
     login: loginOptions,
     resetPassword: resetPasswordOptions,

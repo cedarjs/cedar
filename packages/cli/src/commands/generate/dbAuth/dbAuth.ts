@@ -5,9 +5,14 @@ import { getYargsDefaults, createHandler } from '../yargsCommandHelpers.js'
 
 export const command = 'dbAuth'
 export const description =
-  'Generate Login, Signup and Forgot Password pages for dbAuth'
+  'Generate Login, Signup, Forgot Password, Reset Password and Change Password pages for dbAuth'
 export const builder = (yargs: Argv) => {
   yargs
+    .option('skip-change', {
+      description: 'Skip generating the Change Password page',
+      type: 'boolean',
+      default: false,
+    })
     .option('skip-forgot', {
       description: 'Skip generating the Forgot Password page',
       type: 'boolean',

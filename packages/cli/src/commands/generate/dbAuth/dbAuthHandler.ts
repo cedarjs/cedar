@@ -23,15 +23,41 @@ import {
 import { prepareForRollback } from '../../../lib/rollback.js'
 import { templateForComponentFile } from '../yargsHandlerHelpers.js'
 
-const ROUTES = [
-  `<Route path="/login" page={LoginPage} name="login" />`,
-  `<Route path="/signup" page={SignupPage} name="signup" />`,
-  `<Route path="/forgot-password" page={ForgotPasswordPage} name="forgotPassword" />`,
-  `<Route path="/reset-password" page={ResetPasswordPage} name="resetPassword" />`,
-]
+/**
+ * The routes for the pages that are generated. A skipped page doesn't get a
+ * route, since a route to a page that doesn't exist breaks the build
+ */
+function routesFor({
+  skipChange,
+  skipForgot,
+  skipLogin,
+  skipReset,
+  skipSignup,
+}: Pick<
+  DbAuthFilesOptions,
+  'skipChange' | 'skipForgot' | 'skipLogin' | 'skipReset' | 'skipSignup'
+>) {
+  return [
+    !skipLogin && `<Route path="/login" page={LoginPage} name="login" />`,
+    !skipSignup && `<Route path="/signup" page={SignupPage} name="signup" />`,
+    !skipForgot &&
+      `<Route path="/forgot-password" page={ForgotPasswordPage} name="forgotPassword" />`,
+    !skipReset &&
+      `<Route path="/reset-password" page={ResetPasswordPage} name="resetPassword" />`,
+    !skipChange &&
+      `<Route path="/change-password" page={ChangePasswordPage} name="changePassword" />`,
+  ].filter((route): route is string => typeof route === 'string')
+}
+
+function pascalCase(str: string) {
+  const camelCased = camelCase(str)
+
+  return camelCased.charAt(0).toUpperCase() + camelCased.slice(1)
+}
 
 export interface DbAuthFilesOptions {
   typescript?: boolean
+  skipChange?: boolean
   skipForgot?: boolean
   skipLogin?: boolean
   skipReset?: boolean
@@ -63,9 +89,11 @@ function getPostInstallMessage(isDbAuthSetup: boolean) {
     '       navigate(routes.home())',
     '     }\n',
     '   and change the route to where you want them to go if the user is already',
-    '   logged in. Also take a look in the onSubmit() functions in ForgotPasswordPage',
-    '   and ResetPasswordPage to change where the user redirects to after submitting',
-    '   those forms.\n',
+    '   logged in. Also take a look in the onSubmit() functions in ForgotPasswordPage,',
+    '   ResetPasswordPage and ChangePasswordPage to change where the user redirects',
+    '   to after submitting those forms.\n',
+    '   ChangePasswordPage is for users who are already logged in. Link to it from',
+    '   wherever your app lets users manage their account.\n',
     !isDbAuthSetup &&
       "   Oh, and if you haven't already, add the necessary dbAuth functions and\n" +
         '   app setup by running:\n\n' +
@@ -87,9 +115,11 @@ function getPostInstallWebauthnMessage(isDbAuthSetup: boolean) {
     '       navigate(routes.home())',
     '     }\n',
     '   and change the route to where you want them to go if the user is already',
-    '   logged in. Also take a look in the onSubmit() functions in ForgotPasswordPage',
-    '   and ResetPasswordPage to change where the user redirects to after submitting',
-    '   those forms.\n',
+    '   logged in. Also take a look in the onSubmit() functions in ForgotPasswordPage,',
+    '   ResetPasswordPage and ChangePasswordPage to change where the user redirects',
+    '   to after submitting those forms.\n',
+    '   ChangePasswordPage is for users who are already logged in. Link to it from',
+    '   wherever your app lets users manage their account.\n',
     !isDbAuthSetup &&
       "   Oh, and if you haven't already, add the necessary dbAuth functions and\n" +
         '   app setup by running:\n\n' +
@@ -102,6 +132,7 @@ function getPostInstallWebauthnMessage(isDbAuthSetup: boolean) {
 
 export const files = async ({
   typescript,
+  skipChange,
   skipForgot,
   skipLogin,
   skipReset,
@@ -125,6 +156,7 @@ export const files = async ({
     passwordLowerCase: passwordLabel.toLowerCase(),
     passwordCamelCase: camelCase(passwordLabel),
     passwordTitleCase: titleCase(passwordLabel),
+    passwordPascalCase: pascalCase(passwordLabel),
   }
 
   if (!skipForgot) {
@@ -164,6 +196,20 @@ export const files = async ({
         webPathSection: 'pages',
         generator: 'dbAuth',
         templatePath: 'resetPassword.tsx.template',
+        templateVars,
+      }),
+    )
+  }
+
+  if (!skipChange) {
+    filesList.push(
+      await templateForComponentFile({
+        name: 'ChangePassword',
+        suffix: 'Page',
+        extension: typescript ? '.tsx' : '.jsx',
+        webPathSection: 'pages',
+        generator: 'dbAuth',
+        templatePath: 'changePassword.tsx.template',
         templateVars,
       }),
     )
@@ -231,6 +277,7 @@ const tasks = ({
   listr2,
   force,
   typescript,
+  skipChange,
   skipForgot,
   skipLogin,
   skipReset,
@@ -362,6 +409,7 @@ const tasks = ({
         task: async () => {
           const filesObj = await files({
             typescript,
+            skipChange,
             skipForgot,
             skipLogin,
             skipReset,
@@ -379,7 +427,15 @@ const tasks = ({
       {
         title: 'Adding routes...',
         task: async () => {
-          addRoutesToRouterTask(ROUTES)
+          addRoutesToRouterTask(
+            routesFor({
+              skipChange,
+              skipForgot,
+              skipLogin,
+              skipReset,
+              skipSignup,
+            }),
+          )
         },
       },
       {
@@ -415,6 +471,7 @@ export const handler = async (
 ) => {
   recordTelemetryAttributes({
     command: 'generate dbAuth',
+    skipChange: yargs.skipChange,
     skipForgot: yargs.skipForgot,
     skipLogin: yargs.skipLogin,
     skipReset: yargs.skipReset,

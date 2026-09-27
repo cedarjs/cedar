@@ -104,7 +104,7 @@ Renaming these fields also means the SDL and scaffold generators no longer recog
 
 ## Scaffolding Login/Signup/Forgot Password Pages
 
-If you don't want to create your own login, signup and forgot password pages from scratch we've got a generator for that:
+If you don't want to create your own login, signup, forgot password, reset password and change password pages from scratch we've got a generator for that:
 
 ```bash
 yarn cedar g dbAuth
@@ -112,7 +112,7 @@ yarn cedar g dbAuth
 
 Once again you will be asked if you want to create a WebAuthn-enabled version of the LoginPage. If so, enter `y` and follow the setup instructions.
 
-The default routes will make them available at `/login`, `/signup`, `/forgot-password`, and `/reset-password` but that's easy enough to change. Again, check the post-install instructions for one change you need to make to those pages: where to redirect the user to once their login/signup is successful.
+The default routes will make them available at `/login`, `/signup`, `/forgot-password`, `/reset-password` and `/change-password` but that's easy enough to change. Again, check the post-install instructions for one change you need to make to those pages: where to redirect the user to once their login/signup is successful.
 
 If you'd rather create your own, you might want to start from the generated pages anyway as they'll contain the other code you need to actually submit the login credentials or signup fields to the server for processing.
 
@@ -286,6 +286,80 @@ resetPassword: {
 
 This handler is invoked after the password has been successfully changed in the database. Returning something truthy (like `return user`) will automatically log the user in after their password is changed. If you'd like to return them to the login page and make them log in manually, `return false` and redirect the user in the Reset Password page.
 
+### changePassword
+
+Lets a user who is already logged in change their password by entering their current password along with the new one. This is a different flow from `forgotPassword`/`resetPassword`: a reset proves that the user controls their email inbox, while a change proves that they know their current password. Requiring the current password means that someone who gets hold of a logged in session (an unlocked device, a leaked session cookie) can't use it to lock the real owner out of their account.
+
+`DbAuthHandler` requires a `changePassword` option, just like `login`, `signup`, `forgotPassword` and `resetPassword`. Apps set up with `yarn cedar setup auth dbAuth` get it in `api/src/functions/auth.js`:
+
+```javascript
+const changePasswordOptions = {
+  handler: (user) => {
+    // Let the user know that their password was changed
+    return true
+  },
+  allowReusedPassword: false,
+  errors: {
+    currentPasswordRequired: 'Current password is required',
+    newPasswordRequired: 'New password is required',
+    incorrectCurrentPassword: 'Current password is incorrect',
+    passwordNotSet:
+      'This account does not have a password. Use "Forgot password" to set one',
+    reusedPassword: 'Must choose a new password',
+  },
+}
+
+const authHandler = new DbAuthHandler(event, context, {
+  // ...
+  changePassword: changePasswordOptions,
+})
+```
+
+On the web side, call `changePassword()` from `useAuth()`:
+
+```javascript
+const { changePassword } = useAuth()
+
+const response = await changePassword({
+  currentPassword: 'hunter2',
+  newPassword: 'correct horse battery staple',
+})
+
+if (response.error) {
+  // show the error to the user
+}
+```
+
+When the user is logged in and `currentPassword` matches their stored password, the new password is checked with [`signup.passwordValidation()`](#signuppasswordvalidation), hashed with a new salt and saved. Any outstanding reset token from a `forgotPassword` request is cleared at the same time, so an older password reset link can't be used to overwrite the password that was just chosen.
+
+`yarn cedar g dbAuth` generates a `ChangePasswordPage` at `/change-password`. The page sends users who aren't logged in to the login page. The api side refuses the request without a logged in session regardless, so you can also move the route inside a `<PrivateSet>` if you prefer. To generate only the Change Password page in an app that already has the other dbAuth pages, skip the rest:
+
+```bash
+yarn cedar g dbAuth --skip-forgot --skip-login --skip-reset --skip-signup
+```
+
+Accounts can exist without a password: users who signed up through [OAuth](#oauth), for example. For those, `changePassword()` returns the `passwordNotSet` error. They can set a password with the forgot password flow.
+
+### changePassword.enabled
+
+Allow logged in users to change their password. Defaults to true. Needs to be explicitly set to false to disable the flow. `{ enabled: false }` on its own is a complete `changePassword` option for apps that don't offer the flow.
+
+```javascript
+changePassword: {
+  enabled: false
+}
+```
+
+### changePassword.handler()
+
+This handler is invoked after the new password has been saved to the database, with the (sanitized) user as its argument. It's a good place to send the user an email letting them know their password was changed, so they can react if it wasn't them. Returning something truthy keeps the user logged in, with a freshly issued session cookie. Return `false` to log them out instead, and redirect them to the login page from the Change Password page.
+
+dbAuth sessions are encrypted cookies that aren't tracked in the database, so changing the password doesn't end sessions that are already logged in on other browsers or devices. They stay valid until their cookie expires, as set by `login.expires`.
+
+### changePassword.allowReusedPassword
+
+If `false` (the default) the new password must be different from the current one.
+
 ### usernameMatch
 
 This configuration allows you to perform a case insensitive check on a username at the point of db check. You will need to provide the configuration of your choice for both signup and login.
@@ -365,8 +439,9 @@ There are several error messages that can be displayed, including:
 - Username/email not found
 - Incorrect password
 - Expired reset password token
+- Incorrect current password when changing password
 
-We've got some default error messages that sound nice, but may not fit the tone of your site. You can customize these error messages in `api/src/functions/auth.js` in the `errors` prop of each of the `login`, `signup`, `forgotPassword` and `resetPassword` config objects. The generated file contains tons of comments explaining when each particular error message may be shown.
+We've got some default error messages that sound nice, but may not fit the tone of your site. You can customize these error messages in `api/src/functions/auth.js` in the `errors` prop of each of the `login`, `signup`, `forgotPassword`, `resetPassword` and `changePassword` config objects. The generated file contains tons of comments explaining when each particular error message may be shown.
 
 ### WebAuthn Config
 

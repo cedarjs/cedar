@@ -1698,6 +1698,100 @@ describe('dbAuth', () => {
     })
   })
 
+  describe('changePassword', () => {
+    const changePasswordRequest = (userId, body) => {
+      return new Request('http://localhost:8910/_rw_mw', {
+        method: 'POST',
+        headers: {
+          cookie: encryptToCookie(JSON.stringify({ id: userId }) + ';token'),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ method: 'changePassword', ...body }),
+      })
+    }
+
+    beforeEach(() => {
+      options.changePassword = {
+        handler: (user) => user,
+      }
+    })
+
+    it('changes the password and keeps the user logged in', async () => {
+      const user = await createDbUser()
+      const dbAuth = new DbAuthHandler(
+        changePasswordRequest(user.id, {
+          currentPassword: 'password',
+          newPassword: 'new-password',
+        }),
+        context,
+        options,
+      )
+      await dbAuth.init()
+
+      const response = await dbAuth.changePassword()
+
+      expectLoggedInResponse(response)
+      await expect(
+        dbAuth._verifyUser(user.email, 'new-password'),
+      ).resolves.toBeTruthy()
+    })
+
+    it('rejects an incorrect current password', async () => {
+      const user = await createDbUser()
+      const dbAuth = new DbAuthHandler(
+        changePasswordRequest(user.id, {
+          currentPassword: 'wrong-password',
+          newPassword: 'new-password',
+        }),
+        context,
+        options,
+      )
+      await dbAuth.init()
+
+      await expect(dbAuth.changePassword()).rejects.toThrow(
+        'Current password is incorrect',
+      )
+    })
+
+    it('requires a logged in user', async () => {
+      await createDbUser()
+      const dbAuth = new DbAuthHandler(
+        new Request('http://localhost:8910/_rw_mw', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            method: 'changePassword',
+            currentPassword: 'password',
+            newPassword: 'new-password',
+          }),
+        }),
+        context,
+        options,
+      )
+      await dbAuth.init()
+
+      await expect(dbAuth.changePassword()).rejects.toThrow(
+        dbAuthError.NotLoggedInError,
+      )
+    })
+
+    it('is reachable through invoke()', async () => {
+      const user = await createDbUser()
+      const dbAuth = new DbAuthHandler(
+        changePasswordRequest(user.id, {
+          currentPassword: 'password',
+          newPassword: 'new-password',
+        }),
+        context,
+        options,
+      )
+
+      const response = await dbAuth.invoke()
+
+      expect(response.statusCode).toEqual(200)
+    })
+  })
+
   describe('resetPassword', () => {
     it('throws default error when not enabled', async () => {
       const body = JSON.stringify({

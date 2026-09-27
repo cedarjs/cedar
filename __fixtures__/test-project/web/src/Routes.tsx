@@ -23,6 +23,7 @@ const Routes = () => {
       <Route path="/signup" page={SignupPage} name="signup" />
       <Route path="/forgot-password" page={ForgotPasswordPage} name="forgotPassword" />
       <Route path="/reset-password" page={ResetPasswordPage} name="resetPassword" />
+      <Route path="/change-password" page={ChangePasswordPage} name="changePassword" />
       <Set wrap={ScaffoldLayout} title="Contacts" titleTo="contacts" buttonLabel="New Contact" buttonTo="newContact">
         <Route path="/contacts/new" page={ContactNewContactPage} name="newContact" prerender />
         <Route path="/contacts/{id:Int}/edit" page={ContactEditContactPage} name="editContact" />

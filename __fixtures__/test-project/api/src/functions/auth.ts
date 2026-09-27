@@ -102,6 +102,42 @@ export const handler = async (
     },
   }
 
+  const changePasswordOptions: DbAuthHandlerOptions['changePassword'] = {
+    // handler() is invoked after a logged in user has entered their current
+    // password correctly and the new password has been saved to the database.
+    // This is a good place to let the user know, by email for example, that
+    // their password was changed.
+    //
+    // Returning anything truthy keeps the user logged in. Return `false` to
+    // log them out, and in the Change Password page redirect the user to the
+    // login page.
+    handler: (_user) => {
+      // TODO: Send an email/message to the user letting them know that their
+      // password was changed. When you implement this, change `_user` to
+      // `user` in the function arguments above.
+
+      return true
+    },
+
+    // If `false` then the new password MUST be different from the current one
+    allowReusedPassword: false,
+
+    errors: {
+      // the current password was not provided
+      currentPasswordRequired: 'Current password is required',
+      // the new password was not provided
+      newPasswordRequired: 'New password is required',
+      // the current password is not correct
+      incorrectCurrentPassword: 'Current password is incorrect',
+      // the user doesn't have a password yet (they signed up with a third
+      // party login provider, for example)
+      passwordNotSet:
+        'This account does not have a password. Use "Forgot password" to set one',
+      // new password is the same as the current password
+      reusedPassword: 'Must choose a new password',
+    },
+  }
+
   interface UserAttributes {
     'full-name': string
   }
@@ -192,6 +228,7 @@ export const handler = async (
       name: cookieName,
     },
 
+    changePassword: changePasswordOptions,
     forgotPassword: forgotPasswordOptions,
     login: loginOptions,
     resetPassword: resetPasswordOptions,

@@ -20,6 +20,7 @@ export interface CustomTestAuthClient {
   forgotPassword: (username: string) => void
   resetPassword: (password: string) => boolean
   validateResetToken: (resetToken: string | null) => ValidateResetTokenResponse
+  changePassword: (newPassword: string) => boolean
 }
 
 export function createCustomTestAuth(
@@ -68,5 +69,7 @@ function createCustomTestAuthImplementation(
       customTest.resetPassword(password),
     validateResetToken: async (resetToken: string | null) =>
       customTest.validateResetToken(resetToken),
+    changePassword: async (newPassword: string) =>
+      customTest.changePassword(newPassword),
   }
 }

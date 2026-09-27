@@ -526,6 +526,30 @@ describe('dbAuth', () => {
       ).not.toThrow(dbAuthError.NoLoginHandlerError)
     })
 
+    it('throws an error if changePassword is set without a handler', () => {
+      expect(
+        () =>
+          new DbAuthHandler(event, context, {
+            ...options,
+            changePassword: {},
+          }),
+      ).toThrow(dbAuthError.NoChangePasswordHandlerError)
+    })
+
+    it('does not throw an error if changePassword has no handler but is disabled', () => {
+      expect(
+        () =>
+          new DbAuthHandler(event, context, {
+            ...options,
+            changePassword: { enabled: false },
+          }),
+      ).not.toThrow()
+    })
+
+    it('does not throw an error if there is no changePassword option', () => {
+      expect(() => new DbAuthHandler(event, context, options)).not.toThrow()
+    })
+
     it('throws an error if no signup.handler option', () => {
       expect(
         () =>
@@ -1515,6 +1539,518 @@ describe('dbAuth', () => {
       const response = dbAuth.logout()
 
       expectLoggedOutResponse(response)
+    })
+  })
+
+  describe('changePassword', () => {
+    const LEGACY_HASHED_PASSWORD =
+      '0c2b24e20ee76a887eac1415cc2c175ff961e7a0f057cead74789c43399dd5ba'
+    const LEGACY_SALT = '2ef27f4073c603ba8b7807c6de6d6a89'
+
+    const loggedInEvent = (userId, body) => {
+      return {
+        ...event,
+        headers: {
+          cookie: encryptToCookie(JSON.stringify({ id: userId }) + ';token'),
+        },
+        body: JSON.stringify(body),
+      }
+    }
+
+    beforeEach(() => {
+      options.changePassword = {
+        handler: (user) => user,
+      }
+    })
+
+    it('throws default error when the option is missing', async () => {
+      const user = await createDbUser()
+      delete options.changePassword
+      const dbAuth = new DbAuthHandler(
+        loggedInEvent(user.id, {
+          currentPassword: 'password',
+          newPassword: 'new-password',
+        }),
+        context,
+        options,
+      )
+      await dbAuth.init()
+
+      await expect(dbAuth.changePassword()).rejects.toThrow(
+        new dbAuthError.FlowNotEnabledError(
+          'Change password flow is not enabled',
+        ),
+      )
+    })
+
+    it('throws default error when not enabled', async () => {
+      const user = await createDbUser()
+      options.changePassword = { enabled: false }
+      const dbAuth = new DbAuthHandler(
+        loggedInEvent(user.id, {
+          currentPassword: 'password',
+          newPassword: 'new-password',
+        }),
+        context,
+        options,
+      )
+      await dbAuth.init()
+
+      await expect(dbAuth.changePassword()).rejects.toThrow(
+        'Change password flow is not enabled',
+      )
+    })
+
+    it('throws custom error when not enabled and message provided', async () => {
+      const user = await createDbUser()
+      options.changePassword = {
+        enabled: false,
+        errors: { flowNotEnabled: 'Custom flow not enabled error' },
+      }
+      const dbAuth = new DbAuthHandler(
+        loggedInEvent(user.id, {
+          currentPassword: 'password',
+          newPassword: 'new-password',
+        }),
+        context,
+        options,
+      )
+      await dbAuth.init()
+
+      await expect(dbAuth.changePassword()).rejects.toThrow(
+        'Custom flow not enabled error',
+      )
+    })
+
+    it('throws an error if the user is not logged in', async () => {
+      await createDbUser()
+      event.body = JSON.stringify({
+        currentPassword: 'password',
+        newPassword: 'new-password',
+      })
+      const dbAuth = new DbAuthHandler(event, context, options)
+      await dbAuth.init()
+
+      await expect(dbAuth.changePassword()).rejects.toThrow(
+        dbAuthError.NotLoggedInError,
+      )
+    })
+
+    it('throws an error if currentPassword is blank', async () => {
+      const user = await createDbUser()
+
+      for (const body of [
+        { newPassword: 'new-password' },
+        { currentPassword: ' ', newPassword: 'new-password' },
+      ]) {
+        const dbAuth = new DbAuthHandler(
+          loggedInEvent(user.id, body),
+          context,
+          options,
+        )
+        await dbAuth.init()
+
+        await expect(dbAuth.changePassword()).rejects.toThrow(
+          new dbAuthError.PasswordRequiredError('Current password is required'),
+        )
+      }
+    })
+
+    it('throws an error if newPassword is blank', async () => {
+      const user = await createDbUser()
+
+      for (const body of [
+        { currentPassword: 'password' },
+        { currentPassword: 'password', newPassword: ' ' },
+      ]) {
+        const dbAuth = new DbAuthHandler(
+          loggedInEvent(user.id, body),
+          context,
+          options,
+        )
+        await dbAuth.init()
+
+        await expect(dbAuth.changePassword()).rejects.toThrow(
+          new dbAuthError.PasswordRequiredError('New password is required'),
+        )
+      }
+    })
+
+    it('throws custom errors for blank passwords when messages provided', async () => {
+      const user = await createDbUser()
+      options.changePassword.errors = {
+        currentPasswordRequired: 'Custom current password required',
+        newPasswordRequired: 'Custom new password required',
+      }
+
+      let dbAuth = new DbAuthHandler(
+        loggedInEvent(user.id, { newPassword: 'new-password' }),
+        context,
+        options,
+      )
+      await dbAuth.init()
+      await expect(dbAuth.changePassword()).rejects.toThrow(
+        'Custom current password required',
+      )
+
+      dbAuth = new DbAuthHandler(
+        loggedInEvent(user.id, { currentPassword: 'password' }),
+        context,
+        options,
+      )
+      await dbAuth.init()
+      await expect(dbAuth.changePassword()).rejects.toThrow(
+        'Custom new password required',
+      )
+    })
+
+    it('throws password validation error if the new password is invalid', async () => {
+      const user = await createDbUser()
+      options.signup.passwordValidation = (password) => {
+        if (password.length < 8) {
+          throw new dbAuthError.PasswordValidationError('Password too short')
+        }
+      }
+      const dbAuth = new DbAuthHandler(
+        loggedInEvent(user.id, {
+          currentPassword: 'password',
+          newPassword: 'short',
+        }),
+        context,
+        options,
+      )
+      await dbAuth.init()
+
+      await expect(dbAuth.changePassword()).rejects.toThrow(
+        'Password too short',
+      )
+    })
+
+    it('throws an error if the logged in user no longer exists', async () => {
+      const dbAuth = new DbAuthHandler(
+        loggedInEvent(9999999999, {
+          currentPassword: 'password',
+          newPassword: 'new-password',
+        }),
+        context,
+        options,
+      )
+      await dbAuth.init()
+
+      await expect(dbAuth.changePassword()).rejects.toThrow(
+        dbAuthError.UserNotFoundError,
+      )
+    })
+
+    it('throws an error if the user has no password', async () => {
+      for (const hashedPassword of [null, '']) {
+        const user = await createDbUser({ hashedPassword, salt: null })
+        const dbAuth = new DbAuthHandler(
+          loggedInEvent(user.id, {
+            currentPassword: 'password',
+            newPassword: 'new-password',
+          }),
+          context,
+          options,
+        )
+        await dbAuth.init()
+
+        await expect(dbAuth.changePassword()).rejects.toThrow(
+          dbAuthError.PasswordNotSetError,
+        )
+      }
+    })
+
+    it('throws custom error if the user has no password and message provided', async () => {
+      const user = await createDbUser({ hashedPassword: null, salt: null })
+      options.changePassword.errors = { passwordNotSet: 'Custom no password' }
+      const dbAuth = new DbAuthHandler(
+        loggedInEvent(user.id, {
+          currentPassword: 'password',
+          newPassword: 'new-password',
+        }),
+        context,
+        options,
+      )
+      await dbAuth.init()
+
+      await expect(dbAuth.changePassword()).rejects.toThrow(
+        'Custom no password',
+      )
+    })
+
+    it('throws an error if the current password is incorrect', async () => {
+      const user = await createDbUser()
+      const dbAuth = new DbAuthHandler(
+        loggedInEvent(user.id, {
+          currentPassword: 'wrong-password',
+          newPassword: 'new-password',
+        }),
+        context,
+        options,
+      )
+      await dbAuth.init()
+
+      await expect(dbAuth.changePassword()).rejects.toThrow(
+        new dbAuthError.IncorrectPasswordError(
+          user.email,
+          'Current password is incorrect',
+        ),
+      )
+      // password was not changed
+      const dbUser = await db.user.findFirst({ where: { id: user.id } })
+      expect(dbUser.hashedPassword).toEqual(user.hashedPassword)
+    })
+
+    it('throws custom error if the current password is incorrect and message provided', async () => {
+      const user = await createDbUser()
+      options.changePassword.errors = {
+        incorrectCurrentPassword: 'Wrong password for ${username}',
+      }
+      const dbAuth = new DbAuthHandler(
+        loggedInEvent(user.id, {
+          currentPassword: 'wrong-password',
+          newPassword: 'new-password',
+        }),
+        context,
+        options,
+      )
+      await dbAuth.init()
+
+      await expect(dbAuth.changePassword()).rejects.toThrow(
+        'Wrong password for rob@cedarjs.com',
+      )
+    })
+
+    it('throws an error if the new password is the same as the current one', async () => {
+      const user = await createDbUser()
+      const dbAuth = new DbAuthHandler(
+        loggedInEvent(user.id, {
+          currentPassword: 'password',
+          newPassword: 'password',
+        }),
+        context,
+        options,
+      )
+      await dbAuth.init()
+
+      await expect(dbAuth.changePassword()).rejects.toThrow(
+        dbAuthError.ReusedPasswordError,
+      )
+    })
+
+    it('throws an error if the new password is the same as a legacy hashed current one', async () => {
+      const user = await createDbUser({
+        hashedPassword: LEGACY_HASHED_PASSWORD,
+        salt: LEGACY_SALT,
+      })
+      options.changePassword.errors = { reusedPassword: 'Custom reused' }
+      const dbAuth = new DbAuthHandler(
+        loggedInEvent(user.id, {
+          currentPassword: 'password',
+          newPassword: 'password',
+        }),
+        context,
+        options,
+      )
+      await dbAuth.init()
+
+      await expect(dbAuth.changePassword()).rejects.toThrow('Custom reused')
+    })
+
+    it('allows reusing the current password if allowReusedPassword is true', async () => {
+      const user = await createDbUser()
+      options.changePassword.allowReusedPassword = true
+      const dbAuth = new DbAuthHandler(
+        loggedInEvent(user.id, {
+          currentPassword: 'password',
+          newPassword: 'password',
+        }),
+        context,
+        options,
+      )
+      await dbAuth.init()
+
+      const response = await dbAuth.changePassword()
+
+      expectLoggedInResponse(response)
+    })
+
+    it('updates the password with a new salt and clears any reset token', async () => {
+      const user = await createDbUser({
+        resetToken: hashToken('1234'),
+        resetTokenExpiresAt: new Date(),
+      })
+      const dbAuth = new DbAuthHandler(
+        loggedInEvent(user.id, {
+          currentPassword: 'password',
+          newPassword: 'new-password',
+        }),
+        context,
+        options,
+      )
+      await dbAuth.init()
+
+      await dbAuth.changePassword()
+
+      const dbUser = await db.user.findFirst({ where: { id: user.id } })
+      expect(dbUser.hashedPassword).not.toEqual(user.hashedPassword)
+      expect(dbUser.salt).not.toEqual(user.salt)
+      expect(dbUser.resetToken).toBeNull()
+      expect(dbUser.resetTokenExpiresAt).toBeNull()
+
+      // the new password can be used to log in, the old one can't
+      await expect(
+        dbAuth._verifyUser(user.email, 'new-password'),
+      ).resolves.toBeTruthy()
+      await expect(dbAuth._verifyUser(user.email, 'password')).rejects.toThrow(
+        dbAuthError.IncorrectPasswordError,
+      )
+    })
+
+    it('updates a password hashed with the legacy algorithm', async () => {
+      const user = await createDbUser({
+        hashedPassword: LEGACY_HASHED_PASSWORD,
+        salt: LEGACY_SALT,
+      })
+      const dbAuth = new DbAuthHandler(
+        loggedInEvent(user.id, {
+          currentPassword: 'password',
+          newPassword: 'new-password',
+        }),
+        context,
+        options,
+      )
+      await dbAuth.init()
+
+      await dbAuth.changePassword()
+
+      await expect(
+        dbAuth._verifyUser(user.email, 'new-password'),
+      ).resolves.toBeTruthy()
+    })
+
+    it('invokes the handler with the sanitized user', async () => {
+      const user = await createDbUser()
+      const handlerUser = []
+      options.changePassword.handler = (user) => {
+        handlerUser.push(user)
+        return true
+      }
+      const dbAuth = new DbAuthHandler(
+        loggedInEvent(user.id, {
+          currentPassword: 'password',
+          newPassword: 'new-password',
+        }),
+        context,
+        options,
+      )
+      await dbAuth.init()
+
+      await dbAuth.changePassword()
+
+      expect(handlerUser).toEqual([{ id: user.id, email: user.email }])
+    })
+
+    it('keeps the user logged in if the handler returns something truthy', async () => {
+      const user = await createDbUser()
+      const dbAuth = new DbAuthHandler(
+        loggedInEvent(user.id, {
+          currentPassword: 'password',
+          newPassword: 'new-password',
+        }),
+        context,
+        options,
+      )
+      await dbAuth.init()
+
+      const response = await dbAuth.changePassword()
+
+      expectLoggedInResponse(response)
+      expect(response[0]).toEqual({ id: user.id, email: user.email })
+    })
+
+    it('logs the user out if the handler returns something falsy', async () => {
+      const user = await createDbUser()
+      options.changePassword.handler = () => false
+      const dbAuth = new DbAuthHandler(
+        loggedInEvent(user.id, {
+          currentPassword: 'password',
+          newPassword: 'new-password',
+        }),
+        context,
+        options,
+      )
+      await dbAuth.init()
+
+      const response = await dbAuth.changePassword()
+
+      expectLoggedOutResponse(response)
+    })
+
+    it('is reachable through invoke() with a POST request', async () => {
+      const user = await createDbUser()
+      const dbAuth = new DbAuthHandler(
+        {
+          ...loggedInEvent(user.id, {
+            method: 'changePassword',
+            currentPassword: 'password',
+            newPassword: 'new-password',
+          }),
+          httpMethod: 'POST',
+        },
+        context,
+        options,
+      )
+
+      const response = await dbAuth.invoke()
+
+      expect(response.statusCode).toEqual(200)
+      expect(JSON.parse(response.body)).toEqual({
+        id: user.id,
+        email: user.email,
+      })
+    })
+
+    it('returns a 400 through invoke() when the current password is wrong', async () => {
+      const user = await createDbUser()
+      const dbAuth = new DbAuthHandler(
+        {
+          ...loggedInEvent(user.id, {
+            method: 'changePassword',
+            currentPassword: 'wrong-password',
+            newPassword: 'new-password',
+          }),
+          httpMethod: 'POST',
+        },
+        context,
+        options,
+      )
+
+      const response = await dbAuth.invoke()
+
+      expect(response.statusCode).toEqual(400)
+      expect(JSON.parse(response.body)).toEqual({
+        error: 'Current password is incorrect',
+      })
+    })
+
+    it('is not reachable through invoke() with a GET request', async () => {
+      const user = await createDbUser()
+      const dbAuth = new DbAuthHandler(
+        {
+          ...loggedInEvent(user.id, {}),
+          body: undefined,
+          queryStringParameters: { method: 'changePassword' },
+          httpMethod: 'GET',
+        },
+        context,
+        options,
+      )
+
+      const response = await dbAuth.invoke()
+
+      expect(response.statusCode).toEqual(404)
     })
   })
 

@@ -608,7 +608,7 @@ See the [Deploy](/docs/deploy/introduction) docs.
 
 ### generate dbAuth
 
-Generate log in, sign up, forgot password and password reset pages for dbAuth
+Generate log in, sign up, forgot password, password reset and change password pages for dbAuth
 
 ```
 yarn cedar generate dbAuth
@@ -619,11 +619,17 @@ yarn cedar generate dbAuth
 | `--username-label`  | The label to give the username field on the auth forms, e.g. "Email". Defaults to "Username". If not specified you will be prompted  |
 | `--password-label`  | The label to give the password field on the auth forms, e.g. "Secret". Defaults to "Password". If not specified you will be prompted |
 | `--webAuthn`        | Whether or not to add webAuthn support to the log in page. If not specified you will be prompted                                     |
+| `--skip-change`     | Skip generating the Change Password page                                                                                             |
+| `--skip-forgot`     | Skip generating the Forgot Password page                                                                                             |
+| `--skip-login`      | Skip generating the log in page                                                                                                      |
+| `--skip-reset`      | Skip generating the Reset Password page                                                                                              |
+| `--skip-signup`     | Skip generating the sign up page                                                                                                     |
 | `--rollback`        | Rollback changes if an error occurs [default: true]                                                                                  |
 
-If you don't want to create your own log in, sign up, forgot password and
-password reset pages from scratch you can use this generator. The pages will be
-available at /login, /signup, /forgot-password, and /reset-password. Check the
+If you don't want to create your own log in, sign up, forgot password, password
+reset and change password pages from scratch you can use this generator. The
+pages will be available at /login, /signup, /forgot-password, /reset-password
+and /change-password. Check the
 post-install instructions for one change you need to make to those pages: where
 to redirect the user to once their log in/sign up is successful.
 

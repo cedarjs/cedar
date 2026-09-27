@@ -112,6 +112,7 @@ const authHandler = new DbAuthHandler(event, context, {
     SameSite: 'Lax',
     Secure: true,
   },
+  changePassword: changePasswordOptions,
   forgotPassword: forgotPasswordOptions,
   login: loginOptions,
   resetPassword: resetPasswordOptions,
