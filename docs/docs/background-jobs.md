@@ -424,6 +424,17 @@ export default async () => {
 Now you can just run that script and the job will be scheduled:
 `yarn cedar exec ScheduleCronJobs`
 
+Scheduling a recurring job doesn't run it right away. Its first run happens the
+next time the `cron` schedule matches (midnight, in the example above), and
+after each successful run the job is scheduled again for the following match. If
+a run fails, the job is retried after a backoff delay, like any other job,
+rather than at the next match.
+
+The `cron` schedule is evaluated in the local time zone of the process doing the
+scheduling: the process calling `later()` for the first run, and the job worker
+for every run after that. Run both with the same time zone (for example by
+setting `TZ=UTC`) so the job keeps running at the same time of day.
+
 CedarJS uses https://github.com/harrisiirak/cron-parser under the hood for
 parsing the `cron` schedule. So all the syntax supported by `cron-parser` is
 supported. Including, for example, the six-groups format for seconds, and their
