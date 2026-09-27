@@ -20,6 +20,7 @@ import type {
   QueueNames,
   ScheduleJobOptions,
 } from '../types.js'
+import { nextCronRunAt } from '../util.js'
 
 interface SchedulerConfig<TAdapter extends BaseAdapter> {
   adapter: TAdapter
@@ -79,7 +80,11 @@ export class Scheduler<TAdapter extends BaseAdapter> {
       path: job.path,
       args: args ?? [],
       cron,
-      runAt: this.computeRunAt({ wait, waitUntil }),
+      // A recurring job's first run happens the next time its cron schedule
+      // matches, just like all following runs
+      runAt: cron
+        ? nextCronRunAt(cron)
+        : this.computeRunAt({ wait, waitUntil }),
       queue,
       priority,
     }

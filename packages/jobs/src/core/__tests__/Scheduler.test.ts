@@ -188,6 +188,93 @@ describe('buildPayload()', () => {
     expect(payload.cron).toEqual(options.cron)
   })
 
+  it('schedules the first run of a `cron` job for the next cron match', () => {
+    vi.setSystemTime(new Date(2030, 0, 1, 12, 34, 56))
+
+    const scheduler = new Scheduler({
+      adapter: mockAdapter,
+      logger: mockLogger,
+    })
+    const job = {
+      id: 1,
+      name: 'JobName',
+      path: 'JobPath/JobPath',
+      queue: 'default',
+      priority: 25 as const,
+
+      perform: vi.fn(),
+    }
+
+    const nightly = scheduler.buildPayload({
+      job,
+      args: [],
+      options: { cron: '0 4 * * *' },
+    })
+    const quarterHourly = scheduler.buildPayload({
+      job,
+      args: [],
+      options: { cron: '*/15 * * * *' },
+    })
+
+    expect(nightly.runAt).toEqual(new Date(2030, 0, 2, 4, 0, 0))
+    expect(quarterHourly.runAt).toEqual(new Date(2030, 0, 1, 12, 45, 0))
+
+    vi.useRealTimers()
+    vi.useFakeTimers()
+  })
+
+  it('does not run a `cron` job right away when now matches the schedule', () => {
+    vi.setSystemTime(new Date(2030, 0, 1, 0, 0, 0))
+
+    const scheduler = new Scheduler({
+      adapter: mockAdapter,
+      logger: mockLogger,
+    })
+    const job = {
+      id: 1,
+      name: 'JobName',
+      path: 'JobPath/JobPath',
+      queue: 'default',
+      priority: 25 as const,
+
+      perform: vi.fn(),
+    }
+    const payload = scheduler.buildPayload({
+      job,
+      args: [],
+      options: { cron: '0 0 * * *' },
+    })
+
+    expect(payload.runAt).toEqual(new Date(2030, 0, 2, 0, 0, 0))
+
+    vi.useRealTimers()
+    vi.useFakeTimers()
+  })
+
+  it('throws for an invalid `cron` schedule', () => {
+    const scheduler = new Scheduler({
+      adapter: mockAdapter,
+      logger: mockLogger,
+    })
+    const job = {
+      id: 1,
+      name: 'JobName',
+      path: 'JobPath/JobPath',
+      queue: 'default',
+      priority: 25 as const,
+
+      perform: vi.fn(),
+    }
+
+    expect(() =>
+      scheduler.buildPayload({
+        job,
+        args: [],
+        options: { cron: 'not a cron expression' },
+      }),
+    ).toThrow()
+  })
+
   it('throws an error if cron is used with wait option', () => {
     const scheduler = new Scheduler({
       adapter: mockAdapter,
