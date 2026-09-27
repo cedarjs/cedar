@@ -61,8 +61,8 @@ vi.mock('@cedarjs/cli-helpers/packageManager/display', () => ({
 // The handler reads `package.json` through a dynamic native import, which memfs
 // cannot serve — so the base path points at a real temporary directory holding
 // that one file, while the remaining project files live in memfs at the same path.
-const BASE_PATH = vi.hoisted(() => {
-  const { mkdtempSync, writeFileSync } = require('node:fs')
+const { BASE_PATH, removeBasePath } = vi.hoisted(() => {
+  const { mkdtempSync, writeFileSync, rmSync } = require('node:fs')
   const { tmpdir } = require('node:os')
   const { join } = require('node:path')
 
@@ -71,7 +71,10 @@ const BASE_PATH = vi.hoisted(() => {
     join(basePath, 'package.json'),
     JSON.stringify({ devDependencies: { '@cedarjs/core': '1.0.0' } }),
   )
-  return basePath
+  return {
+    BASE_PATH: basePath,
+    removeBasePath: () => rmSync(basePath, { recursive: true, force: true }),
+  }
 })
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
@@ -131,6 +134,8 @@ beforeAll(() => {
 afterAll(() => {
   vi.mocked(console).log.mockRestore?.()
   vi.mocked(console).error.mockRestore?.()
+
+  removeBasePath()
 })
 
 // The handler reads its template files through the mocked `node:fs`, so the real
