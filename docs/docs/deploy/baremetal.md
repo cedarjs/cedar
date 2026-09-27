@@ -63,17 +63,18 @@ Once you're deployed and running, you'll find a directory structure that looks l
         └── myapp
             ├── .env <────────────────┐
             ├── current ───symlink──┐ │
-            └── releases            │ │
-                └── 20220420120000 <┘ │
-                    ├── .env ─symlink─┘
-                    ├── api
-                    ├── web
-                    ├── ...
+            └── 20220420120000 <────┘ │
+                ├── .env ─symlink─────┘
+                ├── api
+                ├── web
+                ├── ...
 ```
 
 There's a symlink `current` pointing to directory named for a timestamp (the timestamp of the last deploy) and within that is your codebase, the latest revision having been `clone`d. The `.env` file in that directory is then symlinked back out to the one in the root of your app path, so that it can be shared across deployments.
 
 So a reference to `/var/www/myapp/current` will always be the latest deployed version of your codebase. If you wanted to [setup nginx to serve your web side](#redwood-serves-api-nginx-serves-web-side), you would point it to `/var/www/myapp/current/web/dist` as the `root` and it will always be serving the latest code: a new deploy will change the `current` symlink and nginx will start serving the new files instantaneously.
+
+Each release directory is named with a 14-digit UTC timestamp (`YYYYMMDDHHmmss`). When cleaning up old deploys, only directories directly under `path` whose names match that format are removed, keeping the newest `keepReleases` of them. Everything else in `path`, such as the `current` symlink, the shared `.env` file, or a persistent `uploads` directory, is left alone. Keep persistent data outside of the release directories, since those are replaced on every deploy and eventually deleted. If you deploy with a custom `--releaseDir` name that doesn't match the timestamp format, that release is never removed by the cleanup step and you'll need to delete it yourself.
 
 ## App Setup
 

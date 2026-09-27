@@ -21,6 +21,14 @@ const SYMLINK_FLAGS = '-nsf'
 const CURRENT_RELEASE_SYMLINK_NAME = 'current'
 const LIFECYCLE_HOOKS = ['before', 'after'] as const
 
+/**
+ * Matches the release directory names created by `cedar deploy baremetal`.
+ * The default `releaseDir` is a UTC timestamp formatted as `YYYYMMDDHHmmss`
+ * (see the `releaseDir` option in `../baremetal.ts`). Only directories matching
+ * this pattern are removed when cleaning up old releases.
+ */
+export const RELEASE_DIR_PATTERN = '^[0-9]{14}$'
+
 export const DEFAULT_SERVER_CONFIG = {
   port: 22,
   branch: 'main',
@@ -608,12 +616,17 @@ export const deployTasks = (
       command: {
         title: `Cleaning up old deploys...`,
         task: async () => {
-          // add 2 to skip `current` and start on the keepReleases + 1th release
-          const fileStartIndex = serverConfig.keepReleases + 2
+          // Only release directories are candidates for deletion. Anything
+          // else in `serverConfig.path` (the `current` symlink, `.env`, or
+          // user data such as an `uploads` directory) is left untouched.
+          // `tail -n +N` starts printing at line N, so this keeps the
+          // `keepReleases` newest releases. `xargs -r` skips running `rm`
+          // when there is nothing to delete.
+          const fileStartIndex = serverConfig.keepReleases + 1
 
           await ssh.exec(
             serverConfig.path,
-            `ls -t | tail -n +${fileStartIndex} | xargs rm -rf`,
+            `ls -t | grep -E '${RELEASE_DIR_PATTERN}' | tail -n +${fileStartIndex} | xargs -r rm -rf`,
           )
         },
       },

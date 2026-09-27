@@ -1026,6 +1026,47 @@ describe('deployTasks', () => {
     expect(tasks[8].title).toMatch('Before cleanup: `touch before-cleanup.txt`')
     expect(tasks[9].title).toMatch('Cleaning up')
   })
+
+  it('only deletes release directories when cleaning up old deploys', async () => {
+    const execSpy = vi.spyOn(sshExecutor, 'exec').mockResolvedValue({
+      stdout: '',
+      stderr: '',
+      code: 0,
+      signal: null,
+    })
+
+    const tasks = baremetal.deployTasks(
+      defaultYargs,
+      sshExecutor,
+      createServerConfig({ keepReleases: 3 }),
+      { before: {}, after: {} },
+    )
+    const cleanupTask = tasks.find((task) =>
+      task.title.startsWith('Cleaning up'),
+    )
+
+    await cleanupTask?.task({}, mockTask)
+
+    expect(execSpy).toHaveBeenCalledExactlyOnceWith(
+      '/var/www/app',
+      "ls -t | grep -E '^[0-9]{14}$' | tail -n +4 | xargs -r rm -rf",
+    )
+  })
+})
+
+describe('RELEASE_DIR_PATTERN', () => {
+  const releaseDirRegExp = new RegExp(baremetal.RELEASE_DIR_PATTERN)
+
+  it('matches release directory names', () => {
+    expect(releaseDirRegExp.test('20220409120000')).toBe(true)
+  })
+
+  it.each(['current', 'uploads', '.env', '2022040912000', '202204091200000'])(
+    'does not match %s',
+    (name) => {
+      expect(releaseDirRegExp.test(name)).toBe(false)
+    },
+  )
 })
 
 describe('commands', () => {
