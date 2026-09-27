@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@cedarjs/api": "7.0.0",
-    "@cedarjs/auth-dbauth-oauth": "workspace:*",
+    "@cedarjs/auth-dbauth-oauth": "7.0.0",
     "@cedarjs/framework-tools": "7.0.0",
     "@cedarjs/graphql-server": "7.0.0",
     "@types/aws-lambda": "8.10.163",

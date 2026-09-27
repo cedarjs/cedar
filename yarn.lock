@@ -2290,7 +2290,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/api@npm:7.0.0, @cedarjs/api@workspace:*, @cedarjs/api@workspace:packages/api":
+"@cedarjs/api@npm:7.0.0, @cedarjs/api@workspace:packages/api":
   version: 0.0.0-use.local
   resolution: "@cedarjs/api@workspace:packages/api"
   dependencies:
@@ -2492,7 +2492,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/auth-dbauth-api@npm:7.0.0, @cedarjs/auth-dbauth-api@workspace:*, @cedarjs/auth-dbauth-api@workspace:packages/auth-providers/dbAuth/api":
+"@cedarjs/auth-dbauth-api@npm:7.0.0, @cedarjs/auth-dbauth-api@workspace:packages/auth-providers/dbAuth/api":
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-dbauth-api@workspace:packages/auth-providers/dbAuth/api"
   dependencies:
@@ -2522,7 +2522,7 @@ __metadata:
   dependencies:
     "@cedarjs/api": "npm:7.0.0"
     "@cedarjs/auth-dbauth-api": "npm:7.0.0"
-    "@cedarjs/auth-dbauth-oauth": "workspace:*"
+    "@cedarjs/auth-dbauth-oauth": "npm:7.0.0"
     "@cedarjs/framework-tools": "npm:7.0.0"
     "@cedarjs/graphql-server": "npm:7.0.0"
     "@cedarjs/web": "npm:7.0.0"
@@ -2535,13 +2535,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/auth-dbauth-oauth@workspace:*, @cedarjs/auth-dbauth-oauth@workspace:packages/auth-providers/dbAuth/oauth":
+"@cedarjs/auth-dbauth-oauth@npm:7.0.0, @cedarjs/auth-dbauth-oauth@workspace:packages/auth-providers/dbAuth/oauth":
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-dbauth-oauth@workspace:packages/auth-providers/dbAuth/oauth"
   dependencies:
-    "@cedarjs/api": "workspace:*"
-    "@cedarjs/auth-dbauth-api": "workspace:*"
-    "@cedarjs/framework-tools": "workspace:*"
+    "@cedarjs/api": "npm:7.0.0"
+    "@cedarjs/auth-dbauth-api": "npm:7.0.0"
+    "@cedarjs/framework-tools": "npm:7.0.0"
     "@types/aws-lambda": "npm:8.10.163"
     concurrently: "npm:9.2.4"
     msw: "npm:2.15.0"
@@ -2806,7 +2806,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/auth@npm:7.0.0, @cedarjs/auth@workspace:*, @cedarjs/auth@workspace:packages/auth":
+"@cedarjs/auth@npm:7.0.0, @cedarjs/auth@workspace:packages/auth":
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth@workspace:packages/auth"
   dependencies:
@@ -3061,7 +3061,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/context@npm:7.0.0, @cedarjs/context@workspace:*, @cedarjs/context@workspace:packages/context":
+"@cedarjs/context@npm:7.0.0, @cedarjs/context@workspace:packages/context":
   version: 0.0.0-use.local
   resolution: "@cedarjs/context@workspace:packages/context"
   dependencies:
@@ -3217,7 +3217,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/framework-tools@npm:7.0.0, @cedarjs/framework-tools@workspace:*, @cedarjs/framework-tools@workspace:packages/framework-tools":
+"@cedarjs/framework-tools@npm:7.0.0, @cedarjs/framework-tools@workspace:packages/framework-tools":
   version: 0.0.0-use.local
   resolution: "@cedarjs/framework-tools@workspace:packages/framework-tools"
   dependencies:
@@ -3264,7 +3264,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/graphql-server@npm:7.0.0, @cedarjs/graphql-server@workspace:*, @cedarjs/graphql-server@workspace:packages/graphql-server":
+"@cedarjs/graphql-server@npm:7.0.0, @cedarjs/graphql-server@workspace:packages/graphql-server":
   version: 0.0.0-use.local
   resolution: "@cedarjs/graphql-server@workspace:packages/graphql-server"
   dependencies:
@@ -3622,7 +3622,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/router@npm:7.0.0, @cedarjs/router@workspace:*, @cedarjs/router@workspace:packages/router":
+"@cedarjs/router@npm:7.0.0, @cedarjs/router@workspace:packages/router":
   version: 0.0.0-use.local
   resolution: "@cedarjs/router@workspace:packages/router"
   dependencies:
@@ -3737,13 +3737,13 @@ __metadata:
   dependencies:
     "@apollo/client": "npm:4.3.1"
     "@arethetypeswrong/cli": "npm:0.18.5"
-    "@cedarjs/api": "workspace:*"
-    "@cedarjs/auth": "workspace:*"
-    "@cedarjs/context": "workspace:*"
-    "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/graphql-server": "workspace:*"
-    "@cedarjs/router": "workspace:*"
-    "@cedarjs/web": "workspace:*"
+    "@cedarjs/api": "npm:7.0.0"
+    "@cedarjs/auth": "npm:7.0.0"
+    "@cedarjs/context": "npm:7.0.0"
+    "@cedarjs/framework-tools": "npm:7.0.0"
+    "@cedarjs/graphql-server": "npm:7.0.0"
+    "@cedarjs/router": "npm:7.0.0"
+    "@cedarjs/web": "npm:7.0.0"
     "@prisma/adapter-better-sqlite3": "npm:7.10.0"
     "@prisma/client": "npm:7.10.0"
     "@testing-library/dom": "npm:10.4.2"
@@ -3768,9 +3768,9 @@ __metadata:
     zx: "npm:8.8.5"
   peerDependencies:
     "@apollo/client": 4.3.1
-    "@cedarjs/auth": "workspace:*"
-    "@cedarjs/router": "workspace:*"
-    "@cedarjs/web": "workspace:*"
+    "@cedarjs/auth": 7.0.0
+    "@cedarjs/router": 7.0.0
+    "@cedarjs/web": 7.0.0
     react: 19.3.0
   peerDependenciesMeta:
     "@apollo/client":
@@ -3852,11 +3852,11 @@ __metadata:
     "@arethetypeswrong/cli": "npm:0.18.5"
     "@aws-sdk/client-s3": "npm:3.1138.0"
     "@aws-sdk/s3-request-presigner": "npm:3.1138.0"
-    "@cedarjs/api": "workspace:*"
-    "@cedarjs/context": "workspace:*"
-    "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/graphql-server": "workspace:*"
-    "@cedarjs/web": "workspace:*"
+    "@cedarjs/api": "npm:7.0.0"
+    "@cedarjs/context": "npm:7.0.0"
+    "@cedarjs/framework-tools": "npm:7.0.0"
+    "@cedarjs/graphql-server": "npm:7.0.0"
+    "@cedarjs/web": "npm:7.0.0"
     "@fastify/multipart": "npm:9.4.0"
     "@prisma/adapter-better-sqlite3": "npm:7.10.0"
     "@prisma/client": "npm:7.10.0"
@@ -3892,7 +3892,7 @@ __metadata:
     "@apollo/client": 4.3.1
     "@aws-sdk/client-s3": ^3.0.0
     "@aws-sdk/s3-request-presigner": ^3.0.0
-    "@cedarjs/web": "workspace:*"
+    "@cedarjs/web": 7.0.0
     "@uppy/aws-s3": ^6.0.0
     "@uppy/core": ^6.0.0
     "@uppy/dashboard": ^6.0.0
@@ -4049,7 +4049,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/web@npm:7.0.0, @cedarjs/web@workspace:*, @cedarjs/web@workspace:packages/web":
+"@cedarjs/web@npm:7.0.0, @cedarjs/web@workspace:packages/web":
   version: 0.0.0-use.local
   resolution: "@cedarjs/web@workspace:packages/web"
   dependencies:
