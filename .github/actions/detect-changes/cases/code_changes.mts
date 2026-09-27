@@ -39,7 +39,6 @@ function isNonCodeWorkflowOrAction(filePath: string): boolean {
 
     '.github/workflows/canary.yml',
     '.github/scripts/publish-prerelease.mts',
-    '.github/scripts/cleanup-staging-tags.mts',
 
     '.github/workflows/release.yml',
     '.github/scripts/publish-release-candidate.mts',
