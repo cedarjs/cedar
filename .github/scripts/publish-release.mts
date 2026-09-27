@@ -212,7 +212,7 @@ async function execCommandAsync(
 // E409`) rather than any bare 3-digit number, which would also match digits
 // in file paths and timestamps.
 const TRANSIENT_NPM_ERROR_PATTERN =
-  /npm error code E(429|5\d\d|409)\b|npm error (429|5\d\d|409) |ETIMEDOUT|ECONNRESET|ENOTFOUND|EAI_AGAIN|socket hang up/i
+  /npm (?:error|ERR!) code E(?:429|409|5\d\d)\b|npm (?:error|ERR!) (?:429|409|5\d\d) |ETIMEDOUT|ECONNRESET|ENOTFOUND|EAI_AGAIN|socket hang up/i
 
 async function withRetry<T>(
   fn: () => Promise<T>,
