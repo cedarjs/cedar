@@ -196,11 +196,24 @@ export class Executor {
       return errorRecorded
     }
 
-    this.logger.warn(
-      this.job,
-      `[CedarJS Jobs] Failed job ${this.jobIdentifier}: reached max ` +
-        `attempts (${this.maxAttempts})`,
-    )
+    if (this.job.cron) {
+      // A permanently failed recurring job is not rescheduled, so its cron
+      // schedule stops until the job is scheduled again
+      this.logger.error(
+        this.job,
+        `[CedarJS Jobs] Failed job ${this.jobIdentifier}: reached max ` +
+          `attempts (${this.maxAttempts}). Its recurring schedule ` +
+          `(cron: '${this.job.cron}') has stopped and the job will not run ` +
+          `again. To restart it, schedule the job again with ` +
+          `\`later(job, args, { cron: '${this.job.cron}' })\``,
+      )
+    } else {
+      this.logger.warn(
+        this.job,
+        `[CedarJS Jobs] Failed job ${this.jobIdentifier}: reached max ` +
+          `attempts (${this.maxAttempts})`,
+      )
+    }
 
     // `failure()` is called even when `error()` threw, so the job is still
     // marked as failed and isn't retried

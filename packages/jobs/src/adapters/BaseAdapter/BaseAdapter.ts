@@ -24,6 +24,11 @@ export interface BaseAdapterOptions {
 
 export interface SuccessOptions<TJob extends BaseJob = BaseJob> {
   job: TJob
+  /**
+   * When set, the job is a recurring (cron) job and has to run again at this
+   * time. The adapter must store it as the job's new `runAt` and reset the
+   * job's attempt count to 0
+   */
   runAt: Date | undefined
   deleteJob?: boolean
 }
@@ -86,7 +91,13 @@ export abstract class BaseAdapter<
   abstract find(args: FindArgs): PossibleBaseJob | Promise<PossibleBaseJob>
 
   /**
-   * Called when a job has successfully completed
+   * Called when a job has successfully completed.
+   *
+   * When `options.runAt` is set the job is a recurring (cron) job that has to
+   * run again at that time. The adapter must then store the new `runAt` and
+   * reset the job's attempt count to 0, so that `attempts` (which the worker
+   * compares against `maxAttempts` and uses for the retry backoff) counts
+   * consecutive failures of a single run rather than every run of the job
    */
   abstract success(options: SuccessOptions): void | Promise<void>
 

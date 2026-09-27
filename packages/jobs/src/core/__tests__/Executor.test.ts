@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, vi, it } from 'vitest'
 
+import { PrismaAdapter } from '../../adapters/PrismaAdapter/PrismaAdapter.js'
 import { DEFAULT_LOGGER, MAX_BACKOFF_MS } from '../../consts.js'
 import * as errors from '../../errors.js'
 import type { BaseJob } from '../../types.js'
@@ -635,6 +636,196 @@ describe('perform', () => {
       runAt: new Date(2025, 6, 8, 10, 0),
       deleteJob: false,
     })
+  })
+})
+
+describe('recurring (cron) jobs with the PrismaAdapter', () => {
+  interface JobRow {
+    id: number
+    attempts: number
+    runAt: Date | null
+    failedAt: Date | null
+    lockedAt: Date | null
+    lockedBy: string | null
+    lastError: string | null
+  }
+
+  interface RowWhere {
+    id: number
+    failedAt: null
+    attempts: number
+  }
+
+  const maxAttempts = 5
+  const cron = '*/10 * * * *'
+  let row: JobRow
+  let shouldFail: boolean
+  let adapter: PrismaAdapter
+
+  const rowMatches = (where: RowWhere) =>
+    row.id === where.id &&
+    row.failedAt === where.failedAt &&
+    row.attempts === where.attempts
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2025, 6, 7, 10, 0))
+
+    row = {
+      id: 1,
+      attempts: 0,
+      runAt: new Date(),
+      failedAt: null,
+      lockedAt: null,
+      lockedBy: null,
+      lastError: null,
+    }
+    shouldFail = false
+
+    // A minimal in-memory stand-in for a Prisma client with a single
+    // BackgroundJob row, applying the adapter's guarded writes to that row
+    const db = {
+      _activeProvider: 'sqlite',
+      backgroundJob: {
+        updateMany: vi.fn(
+          ({ where, data }: { where: RowWhere; data: Partial<JobRow> }) => {
+            if (!rowMatches(where)) {
+              return { count: 0 }
+            }
+
+            Object.assign(row, data)
+
+            return { count: 1 }
+          },
+        ),
+        deleteMany: vi.fn(() => ({ count: 0 })),
+        create: vi.fn(),
+        delete: vi.fn(),
+        findFirst: vi.fn(),
+        update: vi.fn(),
+      },
+    }
+
+    adapter = new PrismaAdapter({ db, logger: mockLogger })
+
+    loadersMockFns.loadJob.mockImplementation(() => ({
+      perform: () => {
+        if (shouldFail) {
+          throw new Error('mock error in a cron run')
+        }
+      },
+    }))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.resetAllMocks()
+  })
+
+  // Claims the job the way `PrismaAdapter.find()` does (locking it and
+  // incrementing `attempts`), then runs it
+  const runOnce = async () => {
+    row.attempts += 1
+    row.lockedAt = new Date()
+    row.lockedBy = 'worker'
+
+    const job = {
+      id: row.id,
+      name: 'CronJob',
+      path: 'CronJob/CronJob',
+      args: [],
+      attempts: row.attempts,
+      cron,
+    }
+
+    await new Executor({
+      adapter,
+      logger: mockLogger,
+      job,
+      maxAttempts,
+    }).perform()
+  }
+
+  it('keeps running after more than maxAttempts successful runs', async () => {
+    for (let i = 0; i < maxAttempts * 3; i++) {
+      await runOnce()
+
+      expect(row.attempts).toEqual(0)
+      expect(row.failedAt).toBeNull()
+      expect(row.runAt).not.toBeNull()
+    }
+  })
+
+  it('backs off based on consecutive failures after many successful runs', async () => {
+    for (let i = 0; i < maxAttempts * 3; i++) {
+      await runOnce()
+    }
+
+    shouldFail = true
+    const now = new Date()
+    await runOnce()
+
+    expect(row.failedAt).toBeNull()
+    expect(row.attempts).toEqual(1)
+    // 1 ** 4 seconds
+    expect(row.runAt).toEqual(new Date(now.getTime() + 1_000))
+
+    await runOnce()
+
+    expect(row.failedAt).toBeNull()
+    expect(row.attempts).toEqual(2)
+    // 2 ** 4 seconds
+    expect(row.runAt).toEqual(new Date(now.getTime() + 16_000))
+
+    // A successful retry resumes the schedule with a clean slate
+    shouldFail = false
+    await runOnce()
+
+    expect(row.attempts).toEqual(0)
+    expect(row.lastError).toBeNull()
+    expect(row.runAt).toEqual(new Date(2025, 6, 7, 10, 10))
+  })
+
+  it('fails permanently after maxAttempts consecutive failures and logs that the schedule stopped', async () => {
+    await runOnce()
+    await runOnce()
+
+    const loggerErrorSpy = vi.spyOn(mockLogger, 'error')
+    const loggerWarnSpy = vi.spyOn(mockLogger, 'warn')
+
+    shouldFail = true
+
+    for (let i = 1; i < maxAttempts; i++) {
+      await runOnce()
+
+      expect(row.failedAt).toBeNull()
+      expect(row.attempts).toEqual(i)
+    }
+
+    expect(loggerErrorSpy).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringContaining('recurring schedule'),
+    )
+
+    await runOnce()
+
+    expect(row.failedAt).not.toBeNull()
+    expect(row.runAt).toBeNull()
+    expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 1, cron }),
+      expect.stringContaining(
+        'reached max attempts (5). Its recurring schedule ' +
+          "(cron: '*/10 * * * *') has stopped",
+      ),
+    )
+    expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringContaining("later(job, args, { cron: '*/10 * * * *' })"),
+    )
+    expect(loggerWarnSpy).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringContaining('reached max attempts'),
+    )
   })
 })
 

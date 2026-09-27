@@ -365,6 +365,31 @@ describe('success()', () => {
         lockedBy: null,
         lastError: null,
         runAt,
+        attempts: 0,
+      },
+    })
+  })
+
+  it('does not reset attempts when the job is not rescheduled', async () => {
+    const spy = vi.spyOn(mockDb.backgroundJob, 'updateMany')
+    const adapter = new PrismaAdapter({
+      db: mockDb,
+      logger: mockLogger,
+    })
+
+    await adapter.success({
+      job: mockPrismaJob,
+      runAt: undefined,
+      deleteJob: false,
+    })
+
+    expect(spy).toHaveBeenCalledWith({
+      where: { id: mockPrismaJob.id, failedAt: null, attempts: 10 },
+      data: {
+        lockedAt: null,
+        lockedBy: null,
+        lastError: null,
+        runAt: null,
       },
     })
   })

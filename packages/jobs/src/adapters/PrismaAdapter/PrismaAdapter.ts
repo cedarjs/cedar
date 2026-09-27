@@ -337,6 +337,9 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
           lockedBy: null,
           lastError: null,
           runAt: runAt || null,
+          // A rescheduled (cron) job starts its next run with a clean slate,
+          // so `attempts` counts consecutive failures of a single run
+          ...(runAt ? { attempts: 0 } : {}),
         },
       })
     }
