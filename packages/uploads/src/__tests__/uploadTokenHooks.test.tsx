@@ -155,6 +155,30 @@ describe('useUploadToken', () => {
     expect(tokens[2]).not.toBe(tokens[0])
   })
 
+  test('counts the token lifetime from when it was requested', async () => {
+    const now = vi.spyOn(Date, 'now').mockReturnValue(1_000_000)
+    mockTokenQuery({ maxFiles: 10, lifetimeSeconds: 300 })
+    const respond = apollo.execute.getMockImplementation()
+    // The response takes a minute to arrive
+    apollo.execute.mockImplementation(async (...args: unknown[]) => {
+      now.mockReturnValue(1_000_000 + 60_000)
+      return respond?.(...args)
+    })
+
+    const { result } = renderHook(() => useUploadToken({ profile: 'docs' }))
+
+    await act(async () => {
+      await result.current.acquireToken()
+    })
+
+    now.mockReturnValue(1_000_000 + 260_000)
+    expect(result.current.hasUsableToken()).toBe(true)
+
+    // Inside the safety margin before the expiry counted from the request
+    now.mockReturnValue(1_000_000 + 280_000)
+    expect(result.current.hasUsableToken()).toBe(false)
+  })
+
   test('concurrent callers share one fetch while the token has room', async () => {
     mockTokenQuery({ maxFiles: 2 })
     const { result } = renderHook(() => useUploadToken({ profile: 'docs' }))
@@ -236,6 +260,11 @@ function recordFsUploads(uppy: CedarUppy) {
   const sent: string[] = []
 
   uppy.addUploader(async (fileIDs) => {
+    uppy.emit(
+      'upload-start',
+      fileIDs.map((id) => uppy.getFile(id)),
+    )
+
     for (const id of fileIDs) {
       const file = uppy.getFile(id)
       sent.push(headers(file)['x-upload-token'])
@@ -268,7 +297,6 @@ describe('useFsUpload', () => {
     })
 
     await act(async () => {
-      uppy.clear()
       uppy.addFile({ ...png, name: 'b.png' })
       await uppy.upload()
     })
@@ -278,6 +306,30 @@ describe('useFsUpload', () => {
     expect(sent[1]).toBeTruthy()
     expect(sent[1]).not.toBe(sent[0])
     expect(apollo.execute).toHaveBeenCalledTimes(2)
+  })
+
+  test('limits the files waiting to upload to maxFiles', async () => {
+    mockTokenQuery({ maxFiles: 1 })
+    const { result } = renderHook(() => useFsUpload({ profile: 'avatar' }))
+
+    await waitFor(() => expect(result.current.uppy).not.toBeNull())
+    const uppy = result.current.uppy as CedarUppy
+    uppy.setOptions({ autoProceed: false })
+
+    await act(async () => {
+      uppy.addFile({ name: 'a.png', type: 'image/png', data: new Blob(['a']) })
+    })
+
+    await waitFor(() =>
+      expect(() =>
+        uppy.addFile({
+          name: 'b.png',
+          type: 'image/png',
+          data: new Blob(['b']),
+        }),
+      ).toThrow(),
+    )
+    expect(uppy.getFiles()).toHaveLength(1)
   })
 
   test('adding several files at once fetches one token for the batch', async () => {
@@ -337,7 +389,6 @@ describe('useS3Upload', () => {
         data: new Blob(['a']),
       })
       await signRequest({ method: 'PUT', key: first })
-      uppy.clear()
       const second = uppy.addFile({
         name: 'b.png',
         type: 'image/png',

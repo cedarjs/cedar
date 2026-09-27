@@ -82,7 +82,7 @@ function decodeBase64Url(value: string): string {
 /**
  * Reads the lifetime (`exp - iat`, in milliseconds) from a signed token's
  * claims without verifying it. The lifetime is anchored to the client's
- * clock when the token arrives, so clock skew between browser and server
+ * clock when the token is requested, so clock skew between browser and server
  * does not matter. Returns `null` for a token whose claims cannot be read.
  */
 export function readTokenLifetimeMs(token: string): number | null {
@@ -113,14 +113,14 @@ export function readTokenLifetimeMs(token: string): number | null {
   return null
 }
 
-function expiresAtFor(token: string, receivedAt: number): number | null {
+function expiresAtFor(token: string, requestedAt: number): number | null {
   const lifetime = readTokenLifetimeMs(token)
 
   if (lifetime === null) {
     return null
   }
 
-  return receivedAt + lifetime - Math.min(EXPIRY_MARGIN_MS, lifetime / 2)
+  return requestedAt + lifetime - Math.min(EXPIRY_MARGIN_MS, lifetime / 2)
 }
 
 function canCreate(state: TokenState | null, fileCount: number) {
@@ -184,6 +184,10 @@ export function useUploadToken({
     const requestedProfile = profile
 
     const request = (async () => {
+      // The server issues the token after this point, so a lifetime counted
+      // from here ends no later than the token's real expiry, however long
+      // the response takes to arrive
+      const requestedAt = Date.now()
       const result = await execute({ variables: { profile: requestedProfile } })
 
       if (requestedProfile !== profileRef.current) {
@@ -208,7 +212,7 @@ export function useUploadToken({
         token: data.token,
         maxFiles: data.maxFiles,
         used: 0,
-        expiresAt: expiresAtFor(data.token, Date.now()),
+        expiresAt: expiresAtFor(data.token, requestedAt),
       }
       setToken(data.token)
       setConstraints({

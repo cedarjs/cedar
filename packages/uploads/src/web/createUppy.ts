@@ -64,16 +64,44 @@ export interface FsUploadResponseBody {
   uploads: { id: string; status: string; filename: string }[]
 }
 
-function restrictionsFor(constraints: UploadConstraints | null | undefined) {
-  if (!constraints) {
-    return {}
-  }
+/**
+ * Applies a profile's constraints to `uppy` as restrictions. The file-count
+ * limit is checked against the files still waiting to upload, not every file
+ * in the queue: each upload batch gets a token of its own, so files that
+ * already finished uploading do not count against the next batch. Uppy's own
+ * `maxNumberOfFiles` counts finished files too, so it is not used.
+ */
+export function applyUploadConstraints(
+  uppy: CedarUppy,
+  constraints: UploadConstraints,
+) {
+  uppy.setOptions({
+    restrictions: {
+      allowedFileTypes: constraints.allowedMimeTypes,
+      maxFileSize: constraints.maxFileSize,
+    },
+    onBeforeFileAdded: (file, files) => {
+      // Uppy's default check, which rejects a file that is already queued
+      if (Object.hasOwn(files, file.id)) {
+        return false
+      }
 
-  return {
-    allowedFileTypes: constraints.allowedMimeTypes,
-    maxFileSize: constraints.maxFileSize,
-    maxNumberOfFiles: constraints.maxFiles,
-  }
+      const pending = Object.values(files).filter(
+        (queued) => !queued.isGhost && !queued.progress.uploadComplete,
+      )
+
+      if (pending.length >= constraints.maxFiles) {
+        uppy.info(
+          uppy.i18n('youCanOnlyUploadX', { smart_count: constraints.maxFiles }),
+          'error',
+        )
+
+        return false
+      }
+
+      return true
+    },
+  })
 }
 
 /**
@@ -88,11 +116,11 @@ export async function createUppy(
 ): Promise<CedarUppy> {
   const { constraints, autoProceed = true, debug = false } = options
 
-  const uppy = new Uppy({
-    autoProceed,
-    debug,
-    restrictions: restrictionsFor(constraints),
-  })
+  const uppy = new Uppy({ autoProceed, debug })
+
+  if (constraints) {
+    applyUploadConstraints(uppy, constraints)
+  }
 
   if (options.provider === 's3') {
     const { default: AwsS3 } = await import('@uppy/aws-s3')
