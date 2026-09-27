@@ -100,7 +100,7 @@ exports[`packageHandler > files > multi-word package names > uses the provided s
     "watch": "tsc --watch"
   },
   "devDependencies": {
-    "@cedarjs/testing": "2.2.1",
+    "@cedarjs/testing": "1.2.3",
     "typescript": "5.9.3"
   }
 }
@@ -206,7 +206,7 @@ exports[`packageHandler > files > single word package name > infers package scop
     "watch": "tsc --watch"
   },
   "devDependencies": {
-    "@cedarjs/testing": "2.2.1",
+    "@cedarjs/testing": "1.2.3",
     "typescript": "5.9.3"
   }
 }
