@@ -11,6 +11,7 @@ import {
   DEFAULT_DELETE_FAILED_JOBS,
   DEFAULT_DELETE_SUCCESSFUL_JOBS,
   DEFAULT_LOGGER,
+  MAX_BACKOFF_MS,
 } from '../consts.js'
 import {
   AdapterRequiredError,
@@ -140,53 +141,75 @@ export class Executor {
       this.logger.error(errorMessage)
       this.logger.error(error.stack)
 
-      if (timedOut) {
-        // A timed out job is failed immediately instead of being retried: its
-        // previous attempt may still be holding on to resources, so silently
-        // re-running it could mean two copies of the job running at once.
-        // It's failed in a single `failure()` call (rather than `error()`
-        // followed by `failure()`) because `error()` unlocks the job, and a
-        // two-step write would leave a moment where another worker could
-        // claim the job before `failure()` marks it as permanently failed
-        this.logger.warn(
-          this.job,
-          `[CedarJS Jobs] Failed job ${this.jobIdentifier}: exceeded max ` +
-            `runtime (${this.maxRuntime} seconds)`,
+      try {
+        await this.#recordError(error, timedOut)
+      } catch (rawAdapterError) {
+        // Logging the problem, rather than throwing, keeps the worker running
+        // instead of crashing it. The job is left in the state it was in when
+        // it was claimed, so it will be attempted again later, with this
+        // attempt counting towards `maxAttempts`
+        const adapterError =
+          rawAdapterError instanceof Error
+            ? rawAdapterError
+            : new Error(String(rawAdapterError))
+
+        this.logger.error(
+          `[CedarJS Jobs] Could not record the error for job ` +
+            `${this.jobIdentifier}: ${adapterError.message}`,
         )
-
-        await this.adapter.failure({
-          job: this.job,
-          deleteJob: this.deleteFailedJobs,
-          error,
-        })
-      } else {
-        await this.adapter.error({
-          job: this.job,
-          runAt: new Date(
-            new Date().getTime() + this.backoffMilliseconds(this.job.attempts),
-          ),
-          error,
-        })
-
-        if (this.job.attempts >= this.maxAttempts) {
-          this.logger.warn(
-            this.job,
-            `[CedarJS Jobs] Failed job ${this.jobIdentifier}: reached max ` +
-              `attempts (${this.maxAttempts})`,
-          )
-
-          await this.adapter.failure({
-            job: this.job,
-            deleteJob: this.deleteFailedJobs,
-          })
-        }
+        this.logger.error(adapterError.stack)
       }
     } finally {
       clearTimeout(timeoutId)
     }
   }
 
+  async #recordError(error: Error, timedOut: boolean) {
+    if (timedOut) {
+      // A timed out job is failed immediately instead of being retried: its
+      // previous attempt may still be holding on to resources, so silently
+      // re-running it could mean two copies of the job running at once
+      this.logger.warn(
+        this.job,
+        `[CedarJS Jobs] Failed job ${this.jobIdentifier}: exceeded max ` +
+          `runtime (${this.maxRuntime} seconds)`,
+      )
+    } else if (this.job.attempts >= this.maxAttempts) {
+      // The job won't be retried, so there's no retry to schedule
+      this.logger.warn(
+        this.job,
+        `[CedarJS Jobs] Failed job ${this.jobIdentifier}: reached max ` +
+          `attempts (${this.maxAttempts})`,
+      )
+    } else {
+      await this.adapter.error({
+        job: this.job,
+        runAt: new Date(
+          new Date().getTime() + this.backoffMilliseconds(this.job.attempts),
+        ),
+        error,
+      })
+
+      return
+    }
+
+    // The job is failed in a single `failure()` call (rather than `error()`
+    // followed by `failure()`) because `error()` unlocks the job, and a
+    // two-step write would leave a moment where another worker could claim
+    // the job before `failure()` marks it as permanently failed
+    await this.adapter.failure({
+      job: this.job,
+      deleteJob: this.deleteFailedJobs,
+      error,
+    })
+  }
+
+  /**
+   * The number of milliseconds to wait before retrying a job that has been
+   * attempted `attempts` times: `attempts ** 4` seconds, capped at
+   * `MAX_BACKOFF_MS`
+   */
   backoffMilliseconds(attempts: number) {
-    return 1000 * attempts ** 4
+    return Math.min(1000 * attempts ** 4, MAX_BACKOFF_MS)
   }
 }

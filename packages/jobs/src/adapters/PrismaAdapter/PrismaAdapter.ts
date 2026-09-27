@@ -361,8 +361,8 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
   }
 
   // The job will not be retried: it has either had too many attempts or
-  // exceeded maxRuntime (in which case `error` is set so the timeout can be
-  // recorded in the same single write that marks the job as failed)
+  // exceeded maxRuntime. `error`, when set, is the error from the final
+  // attempt, recorded in the same single write that marks the job as failed
   override async failure({ job, deleteJob, error }: FailureOptions<PrismaJob>) {
     if (deleteJob) {
       await this.accessor.deleteMany({
