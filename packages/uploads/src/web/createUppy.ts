@@ -50,8 +50,11 @@ export interface FsUppyOptions extends BaseUppyOptions {
   provider: 'fs'
   /** Full URL of the api's `POST {prefix}/fs` route, or a function returning it. */
   endpoint: string | (() => string)
-  /** The upload token to send. Called per request so a refreshed token is used. */
-  getUploadToken: () => string | null
+  /**
+   * The upload token to send with `file`. Called per request, so each file
+   * can carry a different token.
+   */
+  getUploadToken: (file: Pick<CedarUppyFile, 'id'>) => string | null
 }
 
 export type CreateUppyOptions = S3UppyOptions | FsUppyOptions
@@ -61,16 +64,69 @@ export interface FsUploadResponseBody {
   uploads: { id: string; status: string; filename: string }[]
 }
 
-function restrictionsFor(constraints: UploadConstraints | null | undefined) {
-  if (!constraints) {
-    return {}
+type BeforeFileAdded = NonNullable<CedarUppy['opts']['onBeforeFileAdded']>
+
+/**
+ * The `onBeforeFileAdded` callback each Uppy instance had before Cedar's
+ * file-count check wrapped it, keyed by the wrapper Cedar installed.
+ */
+const wrappedCallbacks = new WeakMap<BeforeFileAdded, BeforeFileAdded>()
+
+/**
+ * Applies a profile's constraints to `uppy` as restrictions. The file-count
+ * limit is checked against the files still waiting to upload, not every file
+ * in the queue: each upload batch gets a token of its own, so files that
+ * already finished uploading do not count against the next batch. Uppy's own
+ * `maxNumberOfFiles` counts finished files too, so it is not used.
+ *
+ * The limit is added on top of the instance's current `onBeforeFileAdded`
+ * callback, which still runs first: returning `false` from it rejects the
+ * file, and returning a file object adds that file instead. Calling this
+ * again with new constraints replaces the limit without wrapping the same
+ * callback twice.
+ */
+export function applyUploadConstraints(
+  uppy: CedarUppy,
+  constraints: UploadConstraints,
+) {
+  const current = uppy.opts.onBeforeFileAdded
+  const inner = current ? (wrappedCallbacks.get(current) ?? current) : undefined
+
+  const onBeforeFileAdded: BeforeFileAdded = (file, files) => {
+    // With no callback of its own, Uppy rejects a file that is already queued
+    const result = inner ? inner(file, files) : !Object.hasOwn(files, file.id)
+
+    if (result === false) {
+      return false
+    }
+
+    const pending = Object.values(files).filter(
+      (queued) => !queued.isGhost && !queued.progress.uploadComplete,
+    )
+
+    if (pending.length >= constraints.maxFiles) {
+      uppy.info(
+        uppy.i18n('youCanOnlyUploadX', { smart_count: constraints.maxFiles }),
+        'error',
+      )
+
+      return false
+    }
+
+    return result
   }
 
-  return {
-    allowedFileTypes: constraints.allowedMimeTypes,
-    maxFileSize: constraints.maxFileSize,
-    maxNumberOfFiles: constraints.maxFiles,
+  if (inner) {
+    wrappedCallbacks.set(onBeforeFileAdded, inner)
   }
+
+  uppy.setOptions({
+    restrictions: {
+      allowedFileTypes: constraints.allowedMimeTypes,
+      maxFileSize: constraints.maxFileSize,
+    },
+    onBeforeFileAdded,
+  })
 }
 
 /**
@@ -85,11 +141,11 @@ export async function createUppy(
 ): Promise<CedarUppy> {
   const { constraints, autoProceed = true, debug = false } = options
 
-  const uppy = new Uppy({
-    autoProceed,
-    debug,
-    restrictions: restrictionsFor(constraints),
-  })
+  const uppy = new Uppy({ autoProceed, debug })
+
+  if (constraints) {
+    applyUploadConstraints(uppy, constraints)
+  }
 
   if (options.provider === 's3') {
     const { default: AwsS3 } = await import('@uppy/aws-s3')
@@ -134,9 +190,9 @@ export async function createUppy(
     formData: true,
     fieldName: 'file',
     bundle: false,
-    headers: () => {
+    headers: (file) => {
       const headers: Record<string, string> = {}
-      const token = options.getUploadToken()
+      const token = options.getUploadToken(file)
 
       if (token) {
         headers[UPLOAD_TOKEN_HEADER] = token

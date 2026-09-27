@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
-import { getCedarUploadId } from '../createUppy.js'
+import { applyUploadConstraints, getCedarUploadId } from '../createUppy.js'
 import type { CedarUppy, CedarUppyFile } from '../createUppy.js'
 import type { UploadConstraints } from '../graphql.js'
 
@@ -75,13 +75,7 @@ export function useUppyUpload(
       return
     }
 
-    uppy.setOptions({
-      restrictions: {
-        allowedFileTypes: constraints.allowedMimeTypes,
-        maxFileSize: constraints.maxFileSize,
-        maxNumberOfFiles: constraints.maxFiles,
-      },
-    })
+    applyUploadConstraints(uppy, constraints)
   }, [uppy, constraints])
 
   useEffect(() => {
