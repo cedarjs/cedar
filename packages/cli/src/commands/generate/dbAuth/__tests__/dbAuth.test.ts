@@ -376,6 +376,30 @@ describe('dbAuth', () => {
       expect(signupPage).toMatchSnapshot()
     })
 
+    it('does not add routes for skipped pages', async () => {
+      await dbAuth.handler({
+        listr2: { silentRendererCondition: true },
+        usernameLabel: 'email',
+        passwordLabel: 'password',
+        webauthn: false,
+        skipChange: true,
+        skipForgot: true,
+      })
+
+      const routes = fs.readFileSync(getPaths().web.routes).toString()
+      expect(routes).toContain('name="login"')
+      expect(routes).toContain('name="resetPassword"')
+      expect(routes).not.toContain('name="changePassword"')
+      expect(routes).not.toContain('name="forgotPassword"')
+      expect(
+        fs.existsSync(
+          path.normalize(
+            '/path/to/project/web/src/pages/ChangePasswordPage/ChangePasswordPage.jsx',
+          ),
+        ),
+      ).toBe(false)
+    })
+
     it('produces the correct files with custom username set via flag', async () => {
       const customEnquirer = new Enquirer()
       customEnquirer.on('prompt', (prompt) => {

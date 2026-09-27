@@ -23,13 +23,31 @@ import {
 import { prepareForRollback } from '../../../lib/rollback.js'
 import { templateForComponentFile } from '../yargsHandlerHelpers.js'
 
-const ROUTES = [
-  `<Route path="/login" page={LoginPage} name="login" />`,
-  `<Route path="/signup" page={SignupPage} name="signup" />`,
-  `<Route path="/forgot-password" page={ForgotPasswordPage} name="forgotPassword" />`,
-  `<Route path="/reset-password" page={ResetPasswordPage} name="resetPassword" />`,
-  `<Route path="/change-password" page={ChangePasswordPage} name="changePassword" />`,
-]
+/**
+ * The routes for the pages that are generated. A skipped page doesn't get a
+ * route, since a route to a page that doesn't exist breaks the build
+ */
+function routesFor({
+  skipChange,
+  skipForgot,
+  skipLogin,
+  skipReset,
+  skipSignup,
+}: Pick<
+  DbAuthFilesOptions,
+  'skipChange' | 'skipForgot' | 'skipLogin' | 'skipReset' | 'skipSignup'
+>) {
+  return [
+    !skipLogin && `<Route path="/login" page={LoginPage} name="login" />`,
+    !skipSignup && `<Route path="/signup" page={SignupPage} name="signup" />`,
+    !skipForgot &&
+      `<Route path="/forgot-password" page={ForgotPasswordPage} name="forgotPassword" />`,
+    !skipReset &&
+      `<Route path="/reset-password" page={ResetPasswordPage} name="resetPassword" />`,
+    !skipChange &&
+      `<Route path="/change-password" page={ChangePasswordPage} name="changePassword" />`,
+  ].filter((route): route is string => typeof route === 'string')
+}
 
 function pascalCase(str: string) {
   const camelCased = camelCase(str)
@@ -409,7 +427,15 @@ const tasks = ({
       {
         title: 'Adding routes...',
         task: async () => {
-          addRoutesToRouterTask(ROUTES)
+          addRoutesToRouterTask(
+            routesFor({
+              skipChange,
+              skipForgot,
+              skipLogin,
+              skipReset,
+              skipSignup,
+            }),
+          )
         },
       },
       {
