@@ -122,7 +122,7 @@ async function execCommandAsync(
 // canary run, or a release overlapping a canary run — and it clears within
 // seconds, so it's retried the same as the others.
 const TRANSIENT_NPM_ERROR_PATTERN =
-  /\b(429|5\d\d|409|E409)\b|too many requests|conflict|ETIMEDOUT|ECONNRESET|ENOTFOUND|EAI_AGAIN/i
+  /\b(429|5\d\d|409|E409)\b|too many requests|ETIMEDOUT|ECONNRESET|ENOTFOUND|EAI_AGAIN/i
 
 async function withRetry<T>(
   fn: () => Promise<T>,
