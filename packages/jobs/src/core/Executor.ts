@@ -2,8 +2,6 @@
 
 import { setTimeout, clearTimeout } from 'node:timers'
 
-import { CronExpressionParser } from 'cron-parser'
-
 import type { BaseAdapter } from '../adapters/BaseAdapter/BaseAdapter.js'
 import {
   DEFAULT_MAX_ATTEMPTS,
@@ -19,6 +17,7 @@ import {
 } from '../errors.js'
 import { loadJob } from '../loaders.js'
 import type { BaseJob, BasicLogger } from '../types.js'
+import { nextCronRunAt } from '../util.js'
 
 import { executionContext } from './executionContext.js'
 
@@ -114,9 +113,7 @@ export class Executor {
 
       await Promise.race([performPromise, timeoutPromise])
 
-      const runAt = this.job.cron
-        ? CronExpressionParser.parse(this.job.cron).next().toDate()
-        : undefined
+      const runAt = this.job.cron ? nextCronRunAt(this.job.cron) : undefined
 
       await this.adapter.success({
         job: this.job,
