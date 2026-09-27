@@ -119,6 +119,7 @@ function createUseAuth(state: AuthState): UseAuth {
       forgotPassword: async () => null,
       resetPassword: async () => null,
       validateResetToken: async () => null,
+      changePassword: async () => null,
     }
 
     return values

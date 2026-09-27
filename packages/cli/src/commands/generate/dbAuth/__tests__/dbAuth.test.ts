@@ -27,6 +27,7 @@ const actualFs = await vi.importActual<typeof NodeFs>('node:fs')
 const mockFiles: Record<string, string> = {}
 
 const dbAuthTemplateFiles = [
+  'changePassword.tsx.template',
   'forgotPassword.tsx.template',
   'login.tsx.template',
   'login.webAuthn.tsx.template',
@@ -95,6 +96,40 @@ describe('dbAuth', () => {
     ])
   })
 
+  it('creates a change password page', async () => {
+    expect(await dbAuth.files({ typescript: true })).toHaveProperty([
+      path.normalize(
+        '/path/to/project/web/src/pages/ChangePasswordPage/ChangePasswordPage.tsx',
+      ),
+    ])
+  })
+
+  it('skips the change password page with skipChange', async () => {
+    expect(
+      await dbAuth.files({ typescript: true, skipChange: true }),
+    ).not.toHaveProperty([
+      path.normalize(
+        '/path/to/project/web/src/pages/ChangePasswordPage/ChangePasswordPage.tsx',
+      ),
+    ])
+  })
+
+  it('creates a change password page with a multi-word password label', async () => {
+    const files = await dbAuth.files({
+      typescript: true,
+      usernameLabel: 'email',
+      passwordLabel: 'secret phrase',
+    })
+
+    expect(
+      files[
+        path.normalize(
+          '/path/to/project/web/src/pages/ChangePasswordPage/ChangePasswordPage.tsx',
+        )
+      ],
+    ).toMatchSnapshot()
+  })
+
   it('creates a scaffold CSS file', async () => {
     expect(await dbAuth.files(true, false)).toHaveProperty([
       path.normalize('/path/to/project/web/src/scaffold.css'),
@@ -119,6 +154,7 @@ describe('dbAuth', () => {
           usernameLabel: 'email',
           passwordLabel: 'password',
           webauthn: false,
+          skipChange: true,
           skipForgot: true,
           skipLogin: true,
           skipReset: true,
@@ -316,6 +352,20 @@ describe('dbAuth', () => {
         .toString()
       expect(resetPasswordPage).toMatchSnapshot()
 
+      const changePasswordPage = fs
+        .readFileSync(
+          path.normalize(
+            '/path/to/project/web/src/pages/ChangePasswordPage/ChangePasswordPage.jsx',
+          ),
+        )
+        .toString()
+      expect(changePasswordPage).toMatchSnapshot()
+
+      const routes = fs.readFileSync(getPaths().web.routes).toString()
+      expect(routes).toContain(
+        '<Route path="/change-password" page={ChangePasswordPage} name="changePassword" />',
+      )
+
       const signupPage = fs
         .readFileSync(
           path.normalize(
@@ -324,6 +374,30 @@ describe('dbAuth', () => {
         )
         .toString()
       expect(signupPage).toMatchSnapshot()
+    })
+
+    it('does not add routes for skipped pages', async () => {
+      await dbAuth.handler({
+        listr2: { silentRendererCondition: true },
+        usernameLabel: 'email',
+        passwordLabel: 'password',
+        webauthn: false,
+        skipChange: true,
+        skipForgot: true,
+      })
+
+      const routes = fs.readFileSync(getPaths().web.routes).toString()
+      expect(routes).toContain('name="login"')
+      expect(routes).toContain('name="resetPassword"')
+      expect(routes).not.toContain('name="changePassword"')
+      expect(routes).not.toContain('name="forgotPassword"')
+      expect(
+        fs.existsSync(
+          path.normalize(
+            '/path/to/project/web/src/pages/ChangePasswordPage/ChangePasswordPage.jsx',
+          ),
+        ),
+      ).toBe(false)
     })
 
     it('produces the correct files with custom username set via flag', async () => {

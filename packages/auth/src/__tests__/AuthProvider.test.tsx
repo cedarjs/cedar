@@ -67,6 +67,7 @@ const mockedTestAuthClient = {
   forgotPassword: () => {},
   resetPassword: () => true,
   validateResetToken: () => ({}),
+  changePassword: () => true,
 } satisfies CustomTestAuthClient
 
 async function getCustomTestAuth() {
@@ -631,6 +632,23 @@ describe('Custom auth provider', () => {
 
     await act(async () => {
       await auth.validateResetToken('12345')
+    })
+
+    expect.assertions(1)
+  })
+
+  test('proxies changePassword() calls to client', async () => {
+    // @ts-expect-error We're testing this
+    mockedTestAuthClient.changePassword = (newPassword: string) => {
+      expect(newPassword).toEqual('new-password')
+
+      return true
+    }
+
+    const auth = await getCustomTestAuth()
+
+    await act(async () => {
+      await auth.changePassword('new-password')
     })
 
     expect.assertions(1)

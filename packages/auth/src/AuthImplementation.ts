@@ -12,6 +12,8 @@ export interface AuthImplementation<
   TResetPassword = unknown,
   TValidateResetToken = unknown,
   TClient = unknown,
+  TChangePasswordOptions = unknown,
+  TChangePassword = unknown,
 > {
   type: string
   client?: TClient
@@ -24,6 +26,7 @@ export interface AuthImplementation<
   forgotPassword?(username: string): Promise<TForgotPassword>
   resetPassword?(options?: TResetPasswordOptions): Promise<TResetPassword>
   validateResetToken?(token: string | null): Promise<TValidateResetToken>
+  changePassword?(options?: TChangePasswordOptions): Promise<TChangePassword>
   clientHasLoaded?(): boolean
 
   /**

@@ -15,6 +15,8 @@ export function createUseAuth<
   TResetPassword,
   TValidateResetToken,
   TClient,
+  TChangePasswordOptions = unknown,
+  TChangePassword = unknown,
 >(
   AuthContext: React.Context<
     | AuthContextInterface<
@@ -29,7 +31,9 @@ export function createUseAuth<
         TResetPasswordOptions,
         TResetPassword,
         TValidateResetToken,
-        TClient
+        TClient,
+        TChangePasswordOptions,
+        TChangePassword
       >
     | undefined
   >,
@@ -46,7 +50,9 @@ export function createUseAuth<
     TResetPasswordOptions,
     TResetPassword,
     TValidateResetToken,
-    TClient
+    TClient,
+    TChangePasswordOptions,
+    TChangePassword
   > => {
     const context = React.useContext(AuthContext)
 
@@ -72,7 +78,9 @@ export function useNoAuth(): AuthContextInterface<
   void,
   void,
   void,
-  undefined
+  undefined,
+  void,
+  void
 > {
   return {
     loading: false,
@@ -89,6 +97,7 @@ export function useNoAuth(): AuthContextInterface<
     forgotPassword: async () => {},
     resetPassword: async () => {},
     validateResetToken: async () => {},
+    changePassword: async () => {},
     type: 'default',
     client: undefined,
     hasError: false,
@@ -96,6 +105,8 @@ export function useNoAuth(): AuthContextInterface<
 }
 
 export type UseAuth = () => AuthContextInterface<
+  unknown,
+  unknown,
   unknown,
   unknown,
   unknown,

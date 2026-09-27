@@ -133,3 +133,23 @@ pointing to this command:
 ```shell
 yarn workspace api add -D @babel/core@^7 @babel/preset-typescript@^7
 ```
+
+## dbAuth requires a `changePassword` option
+
+`DbAuthHandler` has a change password flow for users who are already logged
+in, and its `changePassword` option is required, like `login`, `signup`,
+`forgotPassword` and `resetPassword`. A TypeScript auth function without it
+fails type-check. The pre-upgrade check run by `yarn cedar upgrade` lists the
+files that need it and prints the code to add.
+
+To keep the flow turned off, add this to the options passed to
+`new DbAuthHandler(...)` in `api/src/functions/auth`:
+
+```ts
+changePassword: { enabled: false },
+```
+
+To offer it, pass the full options instead (see the
+[dbAuth docs](https://cedarjs.com/docs/auth/dbauth#changepassword)) and
+generate the page with
+`yarn cedar g dbAuth --skip-forgot --skip-login --skip-reset --skip-signup`.
