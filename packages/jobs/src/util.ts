@@ -10,7 +10,7 @@ export function makeFilePath(path: string) {
 /**
  * Returns the next time after now that the given cron expression matches.
  * Used both when a recurring job is first scheduled and when it's rescheduled
- * after a run, so that every run of the job lines up with its cron schedule.
+ * after a successful run, so that both line up with its cron schedule.
  */
 export function nextCronRunAt(cron: string) {
   return CronExpressionParser.parse(cron).next().toDate()
