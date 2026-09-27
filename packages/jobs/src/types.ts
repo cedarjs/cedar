@@ -174,7 +174,7 @@ export interface JobDefinition<
   queue: TQueues[number]
 
   /**
-   * The priority of the job in the range of 0-100. The lower the number, the
+   * The priority of the job in the range of 1-100. The lower the number, the
    * higher the priority. The default is 50.
    * @default 50
    */
