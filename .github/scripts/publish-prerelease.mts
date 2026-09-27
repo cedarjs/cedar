@@ -113,11 +113,16 @@ async function execCommandAsync(
   }
 }
 
-// Matches rate-limiting and other transient/network errors from npm — as
-// opposed to a definitive rejection like "404 not found" or "cannot publish
-// over previously published version", which retrying won't fix.
+// Matches rate-limiting, 409 conflicts, and other transient/network errors
+// from npm — as opposed to a definitive rejection like "404 not found" or
+// "cannot publish over previously published version", which retrying won't
+// fix. A 409 means another write to the same package is already in
+// progress — e.g. the main and next canary runs publishing/flipping the same
+// packages at the same time, the nightly staging-tag cleanup racing a
+// canary run, or a release overlapping a canary run — and it clears within
+// seconds, so it's retried the same as the others.
 const TRANSIENT_NPM_ERROR_PATTERN =
-  /\b(429|5\d\d)\b|too many requests|ETIMEDOUT|ECONNRESET|ENOTFOUND|EAI_AGAIN/i
+  /\b(429|5\d\d|409|E409)\b|too many requests|conflict|ETIMEDOUT|ECONNRESET|ENOTFOUND|EAI_AGAIN/i
 
 async function withRetry<T>(
   fn: () => Promise<T>,
@@ -144,8 +149,17 @@ async function withRetry<T>(
 
       const delay =
         baseDelayMs * 2 ** (attempt - 1) + Math.floor(Math.random() * 500)
+      // Includes the first line of npm's own error output (e.g. "npm error
+      // 409 Conflict - PUT .../dist-tags/next") so a 409 retry — caused by
+      // another write to the same package, such as an overlapping canary
+      // run — is visible in the logs, not just "Transient npm error".
+      const errorSummary = `${stderr}\n${message}`
+        .split('\n')
+        .find((line) => line.trim())
+        ?.trim()
       log(
-        `  Transient npm error, retrying in ${delay}ms (attempt ${attempt}/${retries})...`,
+        `  Transient npm error${errorSummary ? ` (${errorSummary})` : ''}, ` +
+          `retrying in ${delay}ms (attempt ${attempt}/${retries})...`,
       )
       await new Promise((resolve) => setTimeout(resolve, delay))
     }
@@ -495,9 +509,11 @@ async function rollBackFlips(
     }
 
     try {
-      await execCommandAsync(
-        `npm dist-tag add ${pkg.name}@${previousVersion} ${finalTag}`,
-        { env: await auth.forDistTag(pkg.name) },
+      await withRetry(async () =>
+        execCommandAsync(
+          `npm dist-tag add ${pkg.name}@${previousVersion} ${finalTag}`,
+          { env: await auth.forDistTag(pkg.name) },
+        ),
       )
       log(`  ↩️ Rolled back ${pkg.name} to ${previousVersion}`)
     } catch {
@@ -511,7 +527,10 @@ async function rollBackFlips(
 
 // Best-effort cleanup of the staging tag now that the final tag points at
 // the same version. Failures here don't affect the published packages, so
-// they're not fatal.
+// they're not fatal — but a transient 409 (e.g. racing the nightly
+// staging-tag cleanup or another canary run) is still worth a retry before
+// giving up; a non-transient failure (e.g. a 403) is not retried and just
+// falls through to the existing "ignoring" behaviour.
 async function removeStagingTag(
   packages: PublishablePackage[],
   stagingTag: string,
@@ -521,9 +540,11 @@ async function removeStagingTag(
 
   await runWithConcurrency(packages, DIST_TAG_CONCURRENCY, async (pkg) => {
     try {
-      await execCommandAsync(`npm dist-tag rm ${pkg.name} ${stagingTag}`, {
-        env: await auth.forDistTag(pkg.name),
-      })
+      await withRetry(async () =>
+        execCommandAsync(`npm dist-tag rm ${pkg.name} ${stagingTag}`, {
+          env: await auth.forDistTag(pkg.name),
+        }),
+      )
     } catch {
       log(`  Could not remove staging tag for ${pkg.name}, ignoring`)
     }
