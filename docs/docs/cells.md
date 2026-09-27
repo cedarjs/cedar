@@ -613,7 +613,7 @@ A few things to know about fragment Cells:
 
 ## Importing a Cell
 
-Always import a Cell by its directory, not by the Cell file inside it:
+Import a Cell by its directory, not by the Cell file inside it:
 
 ```jsx
 // Do this
