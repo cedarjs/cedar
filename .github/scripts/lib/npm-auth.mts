@@ -8,8 +8,8 @@
  *   Trusted publishing only covers `npm publish`. It cannot write dist-tags
  *   (https://github.com/npm/cli/issues/8547), so `forDistTag()` refuses to
  *   run in this mode rather than letting `npm dist-tag` fail with a bare 401.
- *   Scripts that move dist-tags (the prerelease publish and the staging-tag
- *   cleanup) have to run with a token.
+ *   The script that moves dist-tags (the prerelease publish) has to run
+ *   with a token.
  *
  * - `token`: a classic `NPM_AUTH_TOKEN`. Used by the jobs that need
  *   dist-tag writes, and available as a fallback for the others so the
