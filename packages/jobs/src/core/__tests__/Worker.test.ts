@@ -468,4 +468,73 @@ describe('run', async () => {
 
     expect(Executor.prototype.perform).toHaveBeenCalled()
   })
+
+  it('looks for the next job right away when the outcome was recorded', async () => {
+    const adapter = new MockAdapter()
+    adapter.find.mockImplementation(() => ({
+      id: 1,
+      name: 'mockJobName',
+      path: 'mockJobPath',
+      args: [],
+      attempts: 0,
+    }))
+    const worker = new Worker({
+      adapter,
+      logger: mockLogger,
+      processName: 'mockProcessName',
+      queues: ['*'],
+      sleepDelay: 60,
+      forever: true,
+    })
+    vi.mocked(Executor.prototype.perform).mockImplementation(async () => {
+      if (adapter.find.mock.calls.length >= 2) {
+        worker.forever = false
+      }
+
+      return true
+    })
+
+    await worker.run()
+
+    expect(adapter.find).toHaveBeenCalledTimes(2)
+  })
+
+  it('sleeps before looking for the next job when the outcome could not be recorded', async () => {
+    vi.useFakeTimers()
+
+    const adapter = new MockAdapter()
+    adapter.find.mockImplementation(() => ({
+      id: 1,
+      name: 'mockJobName',
+      path: 'mockJobPath',
+      args: [],
+      attempts: 0,
+    }))
+    vi.mocked(Executor.prototype.perform).mockResolvedValue(false)
+    const worker = new Worker({
+      adapter,
+      logger: mockLogger,
+      processName: 'mockProcessName',
+      queues: ['*'],
+      sleepDelay: 60,
+      forever: true,
+    })
+
+    const runPromise = worker.run()
+
+    await vi.waitFor(() => expect(adapter.find).toHaveBeenCalledTimes(1))
+    await vi.advanceTimersByTimeAsync(59_000)
+    expect(adapter.find).toHaveBeenCalledTimes(1)
+
+    await vi.advanceTimersByTimeAsync(1_000)
+    await vi.waitFor(() => expect(adapter.find).toHaveBeenCalledTimes(2))
+
+    worker.forever = false
+    await vi.advanceTimersByTimeAsync(60_000)
+    await runPromise
+
+    expect(adapter.find).toHaveBeenCalledTimes(2)
+
+    vi.useRealTimers()
+  })
 })
