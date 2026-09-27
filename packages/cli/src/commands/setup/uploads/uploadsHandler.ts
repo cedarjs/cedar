@@ -331,12 +331,9 @@ export const handler = async ({ targets, force }: UploadsOptions) => {
         task: (_ctx, task) => {
           const gitignorePath = path.join(paths.base, '.gitignore')
 
-          if (!fs.existsSync(gitignorePath)) {
-            task.skip('No .gitignore found; skipping.')
-            return
-          }
-
-          const source = fs.readFileSync(gitignorePath, 'utf-8')
+          const source = fs.existsSync(gitignorePath)
+            ? fs.readFileSync(gitignorePath, 'utf-8')
+            : ''
           const updated = transformGitignore(source)
 
           if (updated === source) {
