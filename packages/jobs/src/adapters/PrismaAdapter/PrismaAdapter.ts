@@ -307,31 +307,51 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
     return undefined
   }
 
+  /**
+   * The `where` clause that matches the job's row only while it is still
+   * locked by the claim that `find()` returned as `job`.
+   *
+   * `lockedAt` identifies the claim: every claim sets it to the time of
+   * locking, and `find()` returns the value read back from the database, so
+   * it compares equal to the stored value regardless of the column's
+   * precision. Nothing else changes `lockedAt` while the job is locked, and
+   * a newer claim of the same job sets its own, different `lockedAt`. `attempts` alone
+   * is not unique per claim, because a successful run of a recurring job
+   * resets it to 0, and `lockedBy` is not unique either, because worker
+   * process names are deterministic and reused across restarts
+   */
+  #claimedBy(job: PrismaJob) {
+    return {
+      id: job.id,
+      failedAt: null,
+      attempts: job.attempts,
+      lockedAt: job.lockedAt,
+    }
+  }
+
   // Prisma queries are lazily evaluated and only sent to the db when they are
   // awaited, so do the await here to ensure they actually run (if the user
   // doesn't await the Promise then the queries will never be executed!)
   //
   // All of these updates/deletes are done with updateMany/deleteMany guarded
-  // on `failedAt: null` and on `attempts` still being this attempt's value,
-  // so the in-flight attempt's outcome can't overwrite or delete the row
-  // when:
+  // on `failedAt: null` and on the job still being locked by this attempt's
+  // claim (see `#claimedBy()`), so the in-flight attempt's outcome can't
+  // overwrite or delete the row when:
   // - the job was cancelled (or otherwise permanently failed) while this
   //   attempt was running (`failedAt` is no longer null), or
   // - the job was reclaimed by another worker because this attempt stalled
-  //   past `maxRuntime` plus the grace period (relocking increments
-  //   `attempts`, so this attempt's remembered value no longer matches).
-  // `lockedBy` can't serve as that second fence because worker process names
-  // are deterministic and reused across restarts
+  //   past `maxRuntime` plus the grace period, whether or not that newer
+  //   claim has finished by the time this attempt's outcome is written
   override async success({ job, runAt, deleteJob }: SuccessOptions<PrismaJob>) {
     this.logger.debug(`[CedarJS Jobs] Job ${job.id} success`)
 
     if (deleteJob) {
       await this.accessor.deleteMany({
-        where: { id: job.id, failedAt: null, attempts: job.attempts },
+        where: this.#claimedBy(job),
       })
     } else {
       await this.accessor.updateMany({
-        where: { id: job.id, failedAt: null, attempts: job.attempts },
+        where: this.#claimedBy(job),
         data: {
           lockedAt: null,
           lockedBy: null,
@@ -358,7 +378,7 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
     }
 
     await this.accessor.updateMany({
-      where: { id: job.id, failedAt: null, attempts: job.attempts },
+      where: this.#claimedBy(job),
       data,
     })
   }
@@ -369,7 +389,7 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
   override async failure({ job, deleteJob, error }: FailureOptions<PrismaJob>) {
     if (deleteJob) {
       await this.accessor.deleteMany({
-        where: { id: job.id, failedAt: null, attempts: job.attempts },
+        where: this.#claimedBy(job),
       })
     } else {
       const data: { failedAt: Date; runAt: null; lastError?: string } = {
@@ -382,7 +402,7 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
       }
 
       await this.accessor.updateMany({
-        where: { id: job.id, failedAt: null, attempts: job.attempts },
+        where: this.#claimedBy(job),
         data,
       })
     }

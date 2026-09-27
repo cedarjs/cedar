@@ -159,60 +159,55 @@ export class Executor {
    * `false` if any of the adapter calls threw
    */
   async #recordError(error: Error, timedOut: boolean) {
-    if (timedOut) {
-      // A timed out job is failed immediately instead of being retried: its
-      // previous attempt may still be holding on to resources, so silently
-      // re-running it could mean two copies of the job running at once.
-      // It's failed in a single `failure()` call (rather than `error()`
-      // followed by `failure()`) because `error()` unlocks the job right
-      // away, and a two-step write would leave a moment where another worker
-      // could claim the job before `failure()` marks it as permanently failed
-      this.#logPermanentFailure(
-        `exceeded max runtime (${this.maxRuntime} seconds)`,
-      )
+    // A timed out job is failed immediately instead of being retried: its
+    // previous attempt may still be holding on to resources, so silently
+    // re-running it could mean two copies of the job running at once
+    const failureReason = timedOut
+      ? `exceeded max runtime (${this.maxRuntime} seconds)`
+      : this.job.attempts >= this.maxAttempts
+        ? `reached max attempts (${this.maxAttempts})`
+        : undefined
 
+    if (!failureReason) {
       return this.#adapterWrite(() =>
-        this.adapter.failure({
+        this.adapter.error({
           job: this.job,
-          deleteJob: this.deleteFailedJobs,
+          runAt: new Date(
+            new Date().getTime() + this.backoffMilliseconds(this.job.attempts),
+          ),
           error,
         }),
       )
     }
 
-    const errorRecorded = await this.#adapterWrite(() =>
-      this.adapter.error({
-        job: this.job,
-        runAt: new Date(
-          new Date().getTime() + this.backoffMilliseconds(this.job.attempts),
-        ),
-        error,
-      }),
-    )
-
-    if (this.job.attempts < this.maxAttempts) {
-      return errorRecorded
-    }
-
-    this.#logPermanentFailure(`reached max attempts (${this.maxAttempts})`)
-
-    // `failure()` is called even when `error()` threw, so the job is still
-    // marked as failed and isn't retried
+    // A job that won't be retried is failed in a single `failure()` call that
+    // also records the error, rather than `error()` followed by `failure()`:
+    // `error()` unlocks the job, so a two-step write would leave a moment
+    // where another worker could claim the job before `failure()` marks it
+    // as permanently failed, and `failure()` would no longer match this
+    // attempt's claim
     const failureRecorded = await this.#adapterWrite(() =>
       this.adapter.failure({
         job: this.job,
         deleteJob: this.deleteFailedJobs,
+        error,
       }),
     )
 
-    return errorRecorded && failureRecorded
+    if (failureRecorded) {
+      this.#logPermanentFailure(failureReason)
+    }
+
+    return failureRecorded
   }
 
   /**
-   * Logs that the job is permanently failed for the given `reason`. A
-   * permanently failed recurring (cron) job is not rescheduled, so its
-   * schedule stops until the job is scheduled again. That is logged at error
-   * level, together with how to restart the schedule
+   * Logs that the job is permanently failed for the given `reason`. It's
+   * called only after `failure()` has recorded that (a throwing `failure()`
+   * is logged by `#adapterWrite()` instead). A permanently failed recurring
+   * (cron) job is not rescheduled, so its schedule stops until the job is
+   * scheduled again. That is logged at error level, together with how to
+   * restart the schedule
    */
   #logPermanentFailure(reason: string) {
     const message = `[CedarJS Jobs] Failed job ${this.jobIdentifier}: ${reason}`
