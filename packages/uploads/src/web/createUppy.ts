@@ -50,8 +50,11 @@ export interface FsUppyOptions extends BaseUppyOptions {
   provider: 'fs'
   /** Full URL of the api's `POST {prefix}/fs` route, or a function returning it. */
   endpoint: string | (() => string)
-  /** The upload token to send. Called per request so a refreshed token is used. */
-  getUploadToken: () => string | null
+  /**
+   * The upload token to send with `file`. Called per request, so each file
+   * can carry a different token.
+   */
+  getUploadToken: (file: Pick<CedarUppyFile, 'id'>) => string | null
 }
 
 export type CreateUppyOptions = S3UppyOptions | FsUppyOptions
@@ -134,9 +137,9 @@ export async function createUppy(
     formData: true,
     fieldName: 'file',
     bundle: false,
-    headers: () => {
+    headers: (file) => {
       const headers: Record<string, string> = {}
-      const token = options.getUploadToken()
+      const token = options.getUploadToken(file)
 
       if (token) {
         headers[UPLOAD_TOKEN_HEADER] = token

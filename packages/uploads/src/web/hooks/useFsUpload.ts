@@ -40,7 +40,12 @@ export function useFsUpload({
   onUploadComplete,
   onUploadError,
 }: UseFsUploadOptions): UseFsUploadResult {
-  const { requestToken, getToken, constraints } = useUploadToken({ profile })
+  const { requestToken, acquireToken, hasUsableToken, constraints } =
+    useUploadToken({ profile })
+  // The token each file is sent with, assigned when its upload starts. A
+  // later batch may move on to a fresh token while this one is still
+  // uploading, so the token is recorded per file.
+  const fileTokens = useRef(new Map<string, string>())
   // The Uppy instance is created once; the endpoint is read per request
   // through this ref, updated in an effect
   const endpointRef = useRef(endpoint ?? defaultEndpoint())
@@ -55,7 +60,7 @@ export function useFsUpload({
         provider: 'fs',
         constraints,
         endpoint: () => endpointRef.current,
-        getUploadToken: getToken,
+        getUploadToken: (file) => fileTokens.current.get(file.id) ?? null,
       }),
     constraints,
     { onUploadComplete, onUploadError },
@@ -68,32 +73,47 @@ export function useFsUpload({
       return
     }
 
-    // The XHR plugin reads headers when the request starts, so the token
-    // has to exist before `upload()` runs. Fetch it on the first file and
-    // hold the upload until it is there. `requestToken` shares one in-flight
-    // request, so these two callers never race.
+    // The XHR plugin reads headers when the request starts, so every file
+    // needs its token before `upload()` runs. Fetch one early when a file is
+    // added, so the profile's restrictions apply sooner, and assign tokens
+    // to the batch in a preprocessor. `requestToken` shares one in-flight
+    // request, so these callers never race.
     const onFileAdded = () => {
-      if (!getToken()) {
+      if (!hasUsableToken()) {
         requestToken().catch((e: unknown) => {
           onUploadError?.(e instanceof Error ? e : new Error(String(e)))
         })
       }
     }
 
-    const ensureToken = async () => {
-      if (!getToken()) {
-        await requestToken()
+    const assignTokens = async (fileIDs: string[]) => {
+      if (fileIDs.length === 0) {
+        return
+      }
+
+      const token = await acquireToken(fileIDs.length)
+
+      for (const fileID of fileIDs) {
+        fileTokens.current.set(fileID, token)
+      }
+    }
+
+    const onFileRemoved = (file: { id: string } | undefined) => {
+      if (file) {
+        fileTokens.current.delete(file.id)
       }
     }
 
     uppy.on('file-added', onFileAdded)
-    uppy.addPreProcessor(ensureToken)
+    uppy.on('file-removed', onFileRemoved)
+    uppy.addPreProcessor(assignTokens)
 
     return () => {
       uppy.off('file-added', onFileAdded)
-      uppy.removePreProcessor(ensureToken)
+      uppy.off('file-removed', onFileRemoved)
+      uppy.removePreProcessor(assignTokens)
     }
-  }, [uppy, getToken, requestToken, onUploadError])
+  }, [uppy, acquireToken, hasUsableToken, requestToken, onUploadError])
 
   return { ...upload, requestToken }
 }
