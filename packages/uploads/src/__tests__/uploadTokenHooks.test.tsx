@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 import { act, renderHook, waitFor } from '@testing-library/react'
+import Uppy from '@uppy/core'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
+import { applyUploadConstraints } from '../web/createUppy.js'
 import type { CedarUppy } from '../web/createUppy.js'
 import { useFsUpload } from '../web/hooks/useFsUpload.js'
 import { useS3Upload } from '../web/hooks/useS3Upload.js'
@@ -278,6 +280,96 @@ function recordFsUploads(uppy: CedarUppy) {
 
   return sent
 }
+
+describe('applyUploadConstraints', () => {
+  const constraints = {
+    allowedMimeTypes: ['image/png'],
+    maxFileSize: 1000,
+    maxFiles: 2,
+  }
+
+  function png(name: string) {
+    return { name, type: 'image/png', data: new Blob([name]) }
+  }
+
+  test('runs a callback set before the constraints are applied', () => {
+    const uppy = new Uppy()
+    const consumer = vi.fn(() => true)
+    uppy.setOptions({ onBeforeFileAdded: consumer })
+
+    applyUploadConstraints(uppy, constraints)
+    uppy.addFile(png('a.png'))
+
+    expect(consumer).toHaveBeenCalledTimes(1)
+    expect(uppy.getFiles()).toHaveLength(1)
+  })
+
+  test('runs a callback set after the constraints are applied, once they are applied again', () => {
+    const uppy = new Uppy()
+    applyUploadConstraints(uppy, constraints)
+
+    const consumer = vi.fn(() => true)
+    uppy.setOptions({ onBeforeFileAdded: consumer })
+    applyUploadConstraints(uppy, { ...constraints, maxFiles: 1 })
+
+    uppy.addFile(png('a.png'))
+    expect(() => uppy.addFile(png('b.png'))).toThrow()
+
+    expect(consumer).toHaveBeenCalledTimes(2)
+    expect(uppy.getFiles()).toHaveLength(1)
+  })
+
+  test('honors a rejection from the callback', () => {
+    const uppy = new Uppy()
+    uppy.setOptions({
+      onBeforeFileAdded: (file) => file.name !== 'rejected.png',
+    })
+    applyUploadConstraints(uppy, constraints)
+
+    expect(() => uppy.addFile(png('rejected.png'))).toThrow()
+    uppy.addFile(png('a.png'))
+
+    expect(uppy.getFiles().map((file) => file.name)).toEqual(['a.png'])
+  })
+
+  test('adds the file the callback returns', () => {
+    const uppy = new Uppy()
+    uppy.setOptions({
+      onBeforeFileAdded: (file) => ({ ...file, name: `renamed-${file.name}` }),
+    })
+    applyUploadConstraints(uppy, constraints)
+
+    uppy.addFile(png('a.png'))
+
+    expect(uppy.getFiles().map((file) => file.name)).toEqual(['renamed-a.png'])
+  })
+
+  test('applying the constraints again does not stack the checks', () => {
+    const uppy = new Uppy()
+    const consumer = vi.fn(() => true)
+    uppy.setOptions({ onBeforeFileAdded: consumer })
+
+    applyUploadConstraints(uppy, constraints)
+    applyUploadConstraints(uppy, constraints)
+    applyUploadConstraints(uppy, { ...constraints, maxFiles: 3 })
+
+    uppy.addFiles([png('a.png'), png('b.png'), png('c.png')])
+    expect(() => uppy.addFile(png('d.png'))).toThrow()
+
+    expect(consumer).toHaveBeenCalledTimes(4)
+    expect(uppy.getFiles()).toHaveLength(3)
+  })
+
+  test('still rejects a file that is already queued', () => {
+    const uppy = new Uppy()
+    applyUploadConstraints(uppy, constraints)
+
+    uppy.addFile(png('a.png'))
+
+    expect(() => uppy.addFile(png('a.png'))).toThrow()
+    expect(uppy.getFiles()).toHaveLength(1)
+  })
+})
 
 describe('useFsUpload', () => {
   test('sends a fresh token with each upload of a maxFiles: 1 profile', async () => {
