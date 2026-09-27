@@ -188,8 +188,10 @@ export class Worker {
         queues: this.queues,
       })
 
+      let outcomeRecorded = true
+
       if (job) {
-        await new Executor({
+        outcomeRecorded = await new Executor({
           adapter: this.adapter,
           logger: this.logger,
           job,
@@ -203,8 +205,12 @@ export class Worker {
         break
       }
 
-      // sleep if there were no jobs found, otherwise get back to work
-      if (!job && this.forever) {
+      // Sleep if there were no jobs found, otherwise get back to work. Also
+      // sleep if the adapter couldn't record the outcome of the job: the job
+      // can then still be locked by this worker, and `find()` hands a job
+      // locked by this worker straight back, so without the sleep the job
+      // would be re-run in a tight loop
+      if ((!job || !outcomeRecorded) && this.forever) {
         const millsSinceLastCheck =
           new Date().getTime() - this.lastCheckTime.getTime()
 

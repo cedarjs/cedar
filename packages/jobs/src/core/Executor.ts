@@ -84,7 +84,15 @@ export class Executor {
     return `${this.job.id} (${this.job.path}:${this.job.name})`
   }
 
-  async perform() {
+  /**
+   * Runs the job and records its outcome with the adapter.
+   *
+   * Resolves to `false` if the adapter threw while recording the outcome of a
+   * failed attempt. The job can then still be locked by this worker, and the
+   * adapter may hand the same job straight back, so the caller should wait
+   * before looking for its next job
+   */
+  async perform(): Promise<boolean> {
     this.logger.info(`[CedarJS Jobs] Started job ${this.jobIdentifier}`)
 
     const abortController = new AbortController()
@@ -124,6 +132,8 @@ export class Executor {
         runAt,
         deleteJob: !runAt && this.deleteSuccessfulJobs,
       })
+
+      return true
     } catch (rawError) {
       const error =
         rawError instanceof Error ? rawError : new Error(String(rawError))
@@ -141,67 +151,96 @@ export class Executor {
       this.logger.error(errorMessage)
       this.logger.error(error.stack)
 
-      try {
-        await this.#recordError(error, timedOut)
-      } catch (rawAdapterError) {
-        // Logging the problem, rather than throwing, keeps the worker running
-        // instead of crashing it. The job is left in the state it was in when
-        // it was claimed, so it will be attempted again later, with this
-        // attempt counting towards `maxAttempts`
-        const adapterError =
-          rawAdapterError instanceof Error
-            ? rawAdapterError
-            : new Error(String(rawAdapterError))
-
-        this.logger.error(
-          `[CedarJS Jobs] Could not record the error for job ` +
-            `${this.jobIdentifier}: ${adapterError.message}`,
-        )
-        this.logger.error(adapterError.stack)
-      }
+      return await this.#recordError(error, timedOut)
     } finally {
       clearTimeout(timeoutId)
     }
   }
 
+  /**
+   * Records the outcome of a failed attempt with the adapter. Resolves to
+   * `false` if any of the adapter calls threw
+   */
   async #recordError(error: Error, timedOut: boolean) {
     if (timedOut) {
       // A timed out job is failed immediately instead of being retried: its
       // previous attempt may still be holding on to resources, so silently
-      // re-running it could mean two copies of the job running at once
+      // re-running it could mean two copies of the job running at once.
+      // It's failed in a single `failure()` call (rather than `error()`
+      // followed by `failure()`) because `error()` unlocks the job right
+      // away, and a two-step write would leave a moment where another worker
+      // could claim the job before `failure()` marks it as permanently failed
       this.logger.warn(
         this.job,
         `[CedarJS Jobs] Failed job ${this.jobIdentifier}: exceeded max ` +
           `runtime (${this.maxRuntime} seconds)`,
       )
-    } else if (this.job.attempts >= this.maxAttempts) {
-      // The job won't be retried, so there's no retry to schedule
-      this.logger.warn(
-        this.job,
-        `[CedarJS Jobs] Failed job ${this.jobIdentifier}: reached max ` +
-          `attempts (${this.maxAttempts})`,
+
+      return this.#adapterWrite(() =>
+        this.adapter.failure({
+          job: this.job,
+          deleteJob: this.deleteFailedJobs,
+          error,
+        }),
       )
-    } else {
-      await this.adapter.error({
+    }
+
+    const errorRecorded = await this.#adapterWrite(() =>
+      this.adapter.error({
         job: this.job,
         runAt: new Date(
           new Date().getTime() + this.backoffMilliseconds(this.job.attempts),
         ),
         error,
-      })
+      }),
+    )
 
-      return
+    if (this.job.attempts < this.maxAttempts) {
+      return errorRecorded
     }
 
-    // The job is failed in a single `failure()` call (rather than `error()`
-    // followed by `failure()`) because `error()` unlocks the job, and a
-    // two-step write would leave a moment where another worker could claim
-    // the job before `failure()` marks it as permanently failed
-    await this.adapter.failure({
-      job: this.job,
-      deleteJob: this.deleteFailedJobs,
-      error,
-    })
+    this.logger.warn(
+      this.job,
+      `[CedarJS Jobs] Failed job ${this.jobIdentifier}: reached max ` +
+        `attempts (${this.maxAttempts})`,
+    )
+
+    // `failure()` is called even when `error()` threw, so the job is still
+    // marked as failed and isn't retried
+    const failureRecorded = await this.#adapterWrite(() =>
+      this.adapter.failure({
+        job: this.job,
+        deleteJob: this.deleteFailedJobs,
+      }),
+    )
+
+    return errorRecorded && failureRecorded
+  }
+
+  /**
+   * Runs a single adapter write. An error thrown by the write is logged
+   * rather than rethrown, so a failing write can't crash the worker. Resolves
+   * to `false` if the write threw
+   */
+  async #adapterWrite(write: () => void | Promise<void>) {
+    try {
+      await write()
+
+      return true
+    } catch (rawAdapterError) {
+      const adapterError =
+        rawAdapterError instanceof Error
+          ? rawAdapterError
+          : new Error(String(rawAdapterError))
+
+      this.logger.error(
+        `[CedarJS Jobs] Could not record the error for job ` +
+          `${this.jobIdentifier}: ${adapterError.message}`,
+      )
+      this.logger.error(adapterError.stack)
+
+      return false
+    }
   }
 
   /**

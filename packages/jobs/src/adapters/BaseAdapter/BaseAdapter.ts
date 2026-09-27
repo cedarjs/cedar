@@ -38,10 +38,10 @@ export interface FailureOptions<TJob extends BaseJob = BaseJob> {
   job: TJob
   deleteJob?: boolean
   /**
-   * The error from the job's final attempt (either the timeout error when
-   * the job exceeded `maxRuntime`, or the error thrown on its last allowed
-   * attempt), so the adapter can record what went wrong in the same write
-   * that marks the job as failed
+   * Present when the job is failed directly, without a preceding `error()`
+   * call for the same attempt (currently: when the job exceeded
+   * `maxRuntime`), so the adapter can record what went wrong in a single
+   * write
    */
   error?: Error
 }
@@ -96,10 +96,9 @@ export abstract class BaseAdapter<
   abstract error(options: ErrorOptions): void | Promise<void>
 
   /**
-   * Called when a job will not be retried: it has either errored
-   * maxAttempts times, or exceeded maxRuntime. `options.error`, when present,
-   * contains the error to record for the job's final attempt. `error()` is
-   * not called for that attempt
+   * Called when a job will not be retried: it has either errored more than
+   * maxAttempts times, or exceeded maxRuntime (in which case
+   * `options.error` contains the timeout error to record)
    */
   abstract failure(options: FailureOptions): void | Promise<void>
 

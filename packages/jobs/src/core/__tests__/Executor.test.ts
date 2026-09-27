@@ -146,7 +146,7 @@ describe('perform', () => {
     // mock the `loadJob` loader to return the job mock
     loadersMockFns.loadJob.mockImplementation(() => mockJob)
 
-    await executor.perform()
+    await expect(executor.perform()).resolves.toBe(true)
 
     expect(adapterSpy).toHaveBeenCalledWith({
       job: options.job,
@@ -294,17 +294,21 @@ describe('perform', () => {
     const date = new Date(2025, 6, 7, 10, 50)
     vi.setSystemTime(date)
 
-    await executor.perform()
+    await expect(executor.perform()).resolves.toBe(true)
 
-    expect(adapterErrorSpy).not.toHaveBeenCalled()
+    expect(adapterErrorSpy).toHaveBeenCalledWith({
+      job: options.job,
+      runAt: new Date(date.getTime() + 625_000),
+      error: mockError,
+    })
+
     expect(adapterFailureSpy).toHaveBeenCalledWith({
       job: options.job,
       deleteJob: true,
-      error: mockError,
     })
   })
 
-  it('fails a job with a huge number of attempts without scheduling a retry', async () => {
+  it('records the error and fails a job with a huge number of attempts', async () => {
     const mockAdapter = new MockAdapter()
     const mockError = new Error('mock error in the job perform method')
     const mockJob = {
@@ -330,13 +334,19 @@ describe('perform', () => {
     const adapterFailureSpy = vi.spyOn(mockAdapter, 'failure')
     loadersMockFns.loadJob.mockImplementation(() => mockJob)
 
-    await expect(executor.perform()).resolves.toBeUndefined()
+    const date = new Date(2025, 6, 7, 10, 50)
+    vi.setSystemTime(date)
 
-    expect(adapterErrorSpy).not.toHaveBeenCalled()
+    await expect(executor.perform()).resolves.toBe(true)
+
+    expect(adapterErrorSpy).toHaveBeenCalledWith({
+      job: options.job,
+      runAt: new Date(date.getTime() + MAX_BACKOFF_MS),
+      error: mockError,
+    })
     expect(adapterFailureSpy).toHaveBeenCalledWith({
       job: options.job,
       deleteJob: false,
-      error: mockError,
     })
   })
 
@@ -403,7 +413,7 @@ describe('perform', () => {
     const loggerErrorSpy = vi.spyOn(mockLogger, 'error')
     loadersMockFns.loadJob.mockImplementation(() => mockJob)
 
-    await expect(executor.perform()).resolves.toBeUndefined()
+    await expect(executor.perform()).resolves.toBe(false)
 
     expect(loggerErrorSpy).toHaveBeenCalledWith(
       expect.stringContaining('Could not record the error for job 1'),
@@ -412,6 +422,41 @@ describe('perform', () => {
       expect.stringContaining('mock database error'),
     )
     expect(loggerErrorSpy).toHaveBeenCalledWith(adapterError.stack)
+  })
+
+  it('still fails a job at maxAttempts when the adapter fails to record its error', async () => {
+    const mockAdapter = new MockAdapter()
+    const mockError = new Error('mock error in the job perform method')
+    const mockJob = {
+      id: 1,
+      name: 'TestJob',
+      path: 'TestJob/TestJob',
+      args: ['foo'],
+      attempts: 24,
+
+      perform: vi.fn(() => {
+        throw mockError
+      }),
+    }
+    const options: ExecutorOptions = {
+      adapter: mockAdapter,
+      logger: mockLogger,
+      job: mockJob,
+    }
+    const executor = new Executor(options)
+
+    vi.spyOn(mockAdapter, 'error').mockRejectedValue(
+      new Error('mock database error'),
+    )
+    const adapterFailureSpy = vi.spyOn(mockAdapter, 'failure')
+    loadersMockFns.loadJob.mockImplementation(() => mockJob)
+
+    await expect(executor.perform()).resolves.toBe(false)
+
+    expect(adapterFailureSpy).toHaveBeenCalledWith({
+      job: options.job,
+      deleteJob: false,
+    })
   })
 
   it('logs, instead of throwing, when the adapter fails to mark a job as failed', async () => {
@@ -440,7 +485,7 @@ describe('perform', () => {
     const loggerErrorSpy = vi.spyOn(mockLogger, 'error')
     loadersMockFns.loadJob.mockImplementation(() => mockJob)
 
-    await expect(executor.perform()).resolves.toBeUndefined()
+    await expect(executor.perform()).resolves.toBe(false)
 
     expect(loggerErrorSpy).toHaveBeenCalledWith(
       expect.stringContaining('Could not record the error for job 1'),
