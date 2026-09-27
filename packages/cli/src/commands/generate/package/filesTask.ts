@@ -1,6 +1,9 @@
 import path from 'node:path'
 
-import { transformTSToJS } from '../../../lib/index.js'
+import {
+  getInstalledCedarVersion,
+  transformTSToJS,
+} from '../../../lib/index.js'
 import { templateForFile } from '../yargsHandlerHelpers.js'
 
 /**
@@ -74,7 +77,12 @@ export const files = async ({
     side: 'packages',
     generator: 'package',
     templatePath: 'package.json.template',
-    templateVars: { packageName, ...rest },
+    // Pin @cedarjs/testing to the Cedar version the project is on
+    templateVars: {
+      packageName,
+      cedarVersion: await getInstalledCedarVersion(),
+      ...rest,
+    },
     outputPath: path.join(folderName, 'package.json'),
   })
 
