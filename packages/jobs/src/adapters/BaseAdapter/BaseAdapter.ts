@@ -61,7 +61,7 @@ export interface CancelOptions {
  */
 export abstract class BaseAdapter<
   TOptions extends BaseAdapterOptions = BaseAdapterOptions,
-  TScheduleReturn = void | Promise<void>,
+  TScheduleReturn = unknown,
 > {
   options: TOptions
   logger: NonNullable<TOptions['logger']>
@@ -71,10 +71,12 @@ export abstract class BaseAdapter<
     this.logger = options?.logger ?? DEFAULT_LOGGER
   }
 
-  // It's up to the subclass to decide what to return for these functions.
-  // The job engine itself doesn't care about the return value, but the user may
-  // want to do something with the result depending on the adapter type, so make
-  // it `any` to allow for the subclass to return whatever it wants.
+  // It's up to the subclass to decide what `schedule()` returns. The job engine
+  // itself doesn't care about the return value, but the user may want to do
+  // something with the result depending on the adapter type. `TScheduleReturn`
+  // defaults to `unknown` so that every concrete adapter, whatever its
+  // `schedule()` returns, is assignable to a plain `BaseAdapter` (which is what
+  // the `Adapters` map and the job engine internals use).
 
   abstract schedule(payload: SchedulePayload): TScheduleReturn
 

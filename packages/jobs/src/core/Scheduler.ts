@@ -93,7 +93,7 @@ export class Scheduler<TAdapter extends BaseAdapter> {
     job: TJob
     args: Parameters<TJob['perform']> | never[]
     options?: ScheduleJobOptions
-  }) {
+  }): Promise<Awaited<ReturnType<TAdapter['schedule']>>> {
     const payload = this.buildPayload({
       job,
       args,
@@ -103,7 +103,17 @@ export class Scheduler<TAdapter extends BaseAdapter> {
     this.logger.info(payload, `[CedarJS Jobs] Scheduling ${job.name}`)
 
     try {
-      return await this.adapter.schedule(payload)
+      // TypeScript resolves method calls on a generic `TAdapter` through its
+      // `BaseAdapter` constraint, which types the result as `unknown`. The
+      // call is always to `TAdapter`'s own `schedule()`, so its return type is
+      // `ReturnType<TAdapter['schedule']>`
+      const scheduled = this.adapter.schedule(payload) as ReturnType<
+        TAdapter['schedule']
+      >
+
+      // `schedule()` may return a plain value or a promise, so it's wrapped in
+      // `Promise.resolve()` to be able to await both
+      return await Promise.resolve(scheduled)
     } catch (e) {
       const error = e instanceof Error ? e : new Error(String(e))
 
