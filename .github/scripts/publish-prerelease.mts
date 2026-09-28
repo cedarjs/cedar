@@ -1,12 +1,22 @@
 /**
  * Publishes canary (or "next") versions of all public Cedar packages to npm.
  *
- * Packages are first published in parallel under a staging dist-tag unique
- * to the version being published. Only once every package has been published
- * under that staging tag do we flip each package's dist-tag over to the real
- * "canary" or "next" tag (also in parallel). This avoids a race where a
- * consumer (e.g. `yarn cedar upgrade -t canary`) resolves the "canary" tag to
- * a version that isn't fully published across all packages yet.
+ * Packages are first published in parallel under a staging dist-tag fixed
+ * per branch (`staging-canary` on main, `staging-next` on next). Only once
+ * every package has been published under that staging tag do we flip each
+ * package's dist-tag over to the real "canary" or "next" tag (also in
+ * parallel). This avoids a race where a consumer (e.g. `yarn cedar upgrade
+ * -t canary`) resolves the "canary" tag to a version that isn't fully
+ * published across all packages yet.
+ *
+ * The staging tag is fixed rather than unique to the version because
+ * `NPM_AUTH_TOKEN` is a 2FA-bypass granular token, and npm doesn't let those
+ * delete dist-tags — every `npm dist-tag rm` from CI fails with a 403. A
+ * fixed tag is simply overwritten by the next run on that branch instead of
+ * needing to be deleted. If a run is cancelled or fails after publishing but
+ * before the flip, the staging tag is left pointing at a partially
+ * published version until the next run on that branch moves it — harmless,
+ * since consumers resolve `canary`/`next`, never the staging tag.
  *
  * Used in the `prerelease` job of `.github/workflows/canary.yml`.
  *
@@ -113,11 +123,22 @@ async function execCommandAsync(
   }
 }
 
-// Matches rate-limiting and other transient/network errors from npm — as
-// opposed to a definitive rejection like "404 not found" or "cannot publish
-// over previously published version", which retrying won't fix.
+// Matches rate-limiting, 409 conflicts, and other transient/network errors
+// from npm — as opposed to a definitive rejection like "404 not found" or
+// "cannot publish over previously published version", which retrying won't
+// fix. A 409 means another write to the same package is already in
+// progress — e.g. the main and next canary runs publishing/flipping the same
+// packages at the same time, or a release overlapping a canary run — and it
+// clears within seconds, so it's retried the same as the others.
+//
+// Status codes are only matched on npm's own error lines (`npm error code
+// E409`, `npm error 503 Service Unavailable - PUT ...`), never as a bare
+// number: the error message starts with the failed command, and a canary
+// version like `7.0.1-next.409` in `npm view <pkg>@<version>` would otherwise
+// turn that version's "not published yet" 404 into a retried, and then
+// thrown, "transient" error.
 const TRANSIENT_NPM_ERROR_PATTERN =
-  /\b(429|5\d\d)\b|too many requests|ETIMEDOUT|ECONNRESET|ENOTFOUND|EAI_AGAIN/i
+  /npm (?:error|ERR!) code E(?:429|409|5\d\d)\b|npm (?:error|ERR!) (?:429|409|5\d\d) |too many requests|ETIMEDOUT|ECONNRESET|ENOTFOUND|EAI_AGAIN/i
 
 async function withRetry<T>(
   fn: () => Promise<T>,
@@ -144,8 +165,17 @@ async function withRetry<T>(
 
       const delay =
         baseDelayMs * 2 ** (attempt - 1) + Math.floor(Math.random() * 500)
+      // Includes the first line of npm's own error output (e.g. "npm error
+      // 409 Conflict - PUT .../dist-tags/next") so a 409 retry — caused by
+      // another write to the same package, such as an overlapping canary
+      // run — is visible in the logs, not just "Transient npm error".
+      const errorSummary = `${stderr}\n${message}`
+        .split('\n')
+        .find((line) => line.trim())
+        ?.trim()
       log(
-        `  Transient npm error, retrying in ${delay}ms (attempt ${attempt}/${retries})...`,
+        `  Transient npm error${errorSummary ? ` (${errorSummary})` : ''}, ` +
+          `retrying in ${delay}ms (attempt ${attempt}/${retries})...`,
       )
       await new Promise((resolve) => setTimeout(resolve, delay))
     }
@@ -374,10 +404,10 @@ async function isPackagePublished(
   }
 }
 
-// Publishes every public package under a staging tag unique to the version
-// being published, in parallel (bounded by PUBLISH_CONCURRENCY). Nothing else
-// in the registry references this tag, so partially-completed runs are
-// invisible to consumers watching the real "canary"/"next" tag.
+// Publishes every public package under a staging tag fixed per branch, in
+// parallel (bounded by PUBLISH_CONCURRENCY). Nothing else in the registry
+// references this tag, so partially-completed runs are invisible to
+// consumers watching the real "canary"/"next" tag.
 async function publishPackagesToStagingTag(
   packages: PublishablePackage[],
   stagingTag: string,
@@ -495,9 +525,11 @@ async function rollBackFlips(
     }
 
     try {
-      await execCommandAsync(
-        `npm dist-tag add ${pkg.name}@${previousVersion} ${finalTag}`,
-        { env: await auth.forDistTag(pkg.name) },
+      await withRetry(async () =>
+        execCommandAsync(
+          `npm dist-tag add ${pkg.name}@${previousVersion} ${finalTag}`,
+          { env: await auth.forDistTag(pkg.name) },
+        ),
       )
       log(`  ↩️ Rolled back ${pkg.name} to ${previousVersion}`)
     } catch {
@@ -505,27 +537,6 @@ async function rollBackFlips(
         `  ⚠️ Failed to roll back ${pkg.name} — it is still pointing at ` +
           `${finalTag} = ${pkg.version}. Manual intervention required.`,
       )
-    }
-  })
-}
-
-// Best-effort cleanup of the staging tag now that the final tag points at
-// the same version. Failures here don't affect the published packages, so
-// they're not fatal.
-async function removeStagingTag(
-  packages: PublishablePackage[],
-  stagingTag: string,
-  auth: NpmAuth,
-): Promise<void> {
-  log(`Cleaning up staging tag ${stagingTag}`)
-
-  await runWithConcurrency(packages, DIST_TAG_CONCURRENCY, async (pkg) => {
-    try {
-      await execCommandAsync(`npm dist-tag rm ${pkg.name} ${stagingTag}`, {
-        env: await auth.forDistTag(pkg.name),
-      })
-    } catch {
-      log(`  Could not remove staging tag for ${pkg.name}, ignoring`)
     }
   })
 }
@@ -584,12 +595,11 @@ async function main() {
   // ── Publish all packages under a staging tag, then flip to the real tag ──
 
   const packages = getPublishablePackages(workspaces)
-  const stagingTag = `staging-${canaryVersion}`
+  const stagingTag = `staging-${tag}`
 
   try {
     await publishPackagesToStagingTag(packages, stagingTag, auth)
     await flipToFinalTag(packages, tag, auth)
-    await removeStagingTag(packages, stagingTag, auth)
   } finally {
     auth.dispose()
   }

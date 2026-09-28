@@ -272,6 +272,77 @@ describe('rollbackTasks', () => {
 
     expect(tasks2[0].title).toMatch('Rolling back 5')
   })
+
+  it('only rolls back to release directories', async () => {
+    const execSpy = vi
+      .spyOn(sshExecutor, 'exec')
+      .mockImplementation(async (_path, command) => {
+        const stdout =
+          command === 'readlink'
+            ? '/var/www/app/20220409120000'
+            : command === 'ls'
+              ? 'current\nuploads\n20220409120000\nbackups\n20220408120000\n'
+              : ''
+
+        return { stdout, stderr: '', code: 0, signal: null }
+      })
+
+    const tasks = baremetal.rollbackTasks(1, sshExecutor, createServerConfig())
+
+    await tasks[0].task()
+
+    expect(execSpy.mock.calls).toEqual([
+      ['/var/www/app', 'readlink', ['-f', 'current']],
+      ['/var/www/app', 'ls', ['-t']],
+      ['/var/www/app', 'ln', ['-nsf', '20220408120000', 'current']],
+    ])
+  })
+
+  it('does not roll back past the oldest release directory', async () => {
+    vi.spyOn(sshExecutor, 'exec').mockImplementation(async (_path, command) => {
+      const stdout =
+        command === 'readlink'
+          ? '/var/www/app/20220409120000'
+          : command === 'ls'
+            ? 'current\n20220409120000\nuploads\n'
+            : ''
+
+      return { stdout, stderr: '', code: 0, signal: null }
+    })
+
+    const tasks = baremetal.rollbackTasks(1, sshExecutor, createServerConfig())
+
+    await expect(() => tasks[0].task()).rejects.toThrowError(
+      'Cannot rollback 1 release(s): 0 previous release(s) available',
+    )
+  })
+
+  it('does not roll back when current is not a release directory', async () => {
+    const execSpy = vi
+      .spyOn(sshExecutor, 'exec')
+      .mockImplementation(async (_path, command) => {
+        const stdout =
+          command === 'readlink'
+            ? '/var/www/app/my-release'
+            : command === 'ls'
+              ? 'current\nmy-release\n20220409120000\n20220408120000\n'
+              : ''
+
+        return { stdout, stderr: '', code: 0, signal: null }
+      })
+
+    const tasks = baremetal.rollbackTasks(1, sshExecutor, createServerConfig())
+
+    execSpy.mockClear()
+
+    await expect(() => tasks[0].task()).rejects.toThrowError(
+      '`current` points to "my-release", which is not a timestamp-named release directory',
+    )
+    expect(execSpy.mock.calls).toEqual([
+      ['/var/www/app', 'readlink', ['-f', 'current']],
+      ['/var/www/app', 'ls', ['-t']],
+    ])
+  })
 })
 
 describe('serverConfigWithDefaults', () => {
@@ -1026,6 +1097,47 @@ describe('deployTasks', () => {
     expect(tasks[8].title).toMatch('Before cleanup: `touch before-cleanup.txt`')
     expect(tasks[9].title).toMatch('Cleaning up')
   })
+
+  it('only deletes release directories when cleaning up old deploys', async () => {
+    const execSpy = vi.spyOn(sshExecutor, 'exec').mockResolvedValue({
+      stdout: '',
+      stderr: '',
+      code: 0,
+      signal: null,
+    })
+
+    const tasks = baremetal.deployTasks(
+      defaultYargs,
+      sshExecutor,
+      createServerConfig({ keepReleases: 3 }),
+      { before: {}, after: {} },
+    )
+    const cleanupTask = tasks.find((task) =>
+      task.title.startsWith('Cleaning up'),
+    )
+
+    await cleanupTask?.task({}, mockTask)
+
+    expect(execSpy).toHaveBeenCalledExactlyOnceWith(
+      '/var/www/app',
+      "ls -t | grep -E '^[0-9]{14}$' | tail -n +4 | xargs -r rm -rf",
+    )
+  })
+})
+
+describe('RELEASE_DIR_PATTERN', () => {
+  const releaseDirRegExp = new RegExp(baremetal.RELEASE_DIR_PATTERN)
+
+  it('matches release directory names', () => {
+    expect(releaseDirRegExp.test('20220409120000')).toBe(true)
+  })
+
+  it.each(['current', 'uploads', '.env', '2022040912000', '202204091200000'])(
+    'does not match %s',
+    (name) => {
+      expect(releaseDirRegExp.test(name)).toBe(false)
+    },
+  )
 })
 
 describe('commands', () => {

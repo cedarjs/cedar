@@ -192,6 +192,7 @@ export const handler = async (
       name: cookieName,
     },
 
+    changePassword: { enabled: false },
     forgotPassword: forgotPasswordOptions,
     login: loginOptions,
     resetPassword: resetPasswordOptions,

@@ -20,6 +20,7 @@ import type {
   QueueNames,
   ScheduleJobOptions,
 } from '../types.js'
+import { nextCronRunAt } from '../util.js'
 
 interface SchedulerConfig<TAdapter extends BaseAdapter> {
   adapter: TAdapter
@@ -79,7 +80,11 @@ export class Scheduler<TAdapter extends BaseAdapter> {
       path: job.path,
       args: args ?? [],
       cron,
-      runAt: this.computeRunAt({ wait, waitUntil }),
+      // A recurring job's first run happens the next time its cron schedule
+      // matches, just like all following runs
+      runAt: cron
+        ? nextCronRunAt(cron)
+        : this.computeRunAt({ wait, waitUntil }),
       queue,
       priority,
     }
@@ -93,7 +98,7 @@ export class Scheduler<TAdapter extends BaseAdapter> {
     job: TJob
     args: Parameters<TJob['perform']> | never[]
     options?: ScheduleJobOptions
-  }) {
+  }): Promise<Awaited<ReturnType<TAdapter['schedule']>>> {
     const payload = this.buildPayload({
       job,
       args,
@@ -103,7 +108,17 @@ export class Scheduler<TAdapter extends BaseAdapter> {
     this.logger.info(payload, `[CedarJS Jobs] Scheduling ${job.name}`)
 
     try {
-      return await this.adapter.schedule(payload)
+      // TypeScript resolves method calls on a generic `TAdapter` through its
+      // `BaseAdapter` constraint, which types the result as `unknown`. The
+      // call is always to `TAdapter`'s own `schedule()`, so its return type is
+      // `ReturnType<TAdapter['schedule']>`
+      const scheduled = this.adapter.schedule(payload) as ReturnType<
+        TAdapter['schedule']
+      >
+
+      // `schedule()` may return a plain value or a promise, so it's wrapped in
+      // `Promise.resolve()` to be able to await both
+      return await Promise.resolve(scheduled)
     } catch (e) {
       const error = e instanceof Error ? e : new Error(String(e))
 

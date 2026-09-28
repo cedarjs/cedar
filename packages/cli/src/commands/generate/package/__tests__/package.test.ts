@@ -16,6 +16,7 @@ vi.mock('../../../../lib/index.js', async (importOriginal) => {
 
   return {
     ...originalProjectConfig,
+    getInstalledCedarVersion: async () => '1.2.3',
     getPaths: () => {
       return {
         base: mockBase.path,

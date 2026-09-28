@@ -4,13 +4,13 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@cedarjs/router": "4.2.0",
-    "@cedarjs/web": "4.2.0",
+    "@cedarjs/router": "7.0.0",
+    "@cedarjs/web": "7.0.0",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
   "devDependencies": {
-    "@cedarjs/vite": "4.2.0",
+    "@cedarjs/vite": "7.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0"
   }

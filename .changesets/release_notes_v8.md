@@ -15,6 +15,27 @@ Client 4:
 See Apollo's migration guide for the full list:
 https://www.apollographql.com/docs/react/migration/3.x-to-4.x
 
+### `skip` is deprecated in favor of `skipToken`
+
+Apollo Client 4.3 deprecates the `skip` option on `useQuery` and
+`useSubscription`. `skip` still works, but `skipToken` is more type-safe:
+passing it as the whole options argument, instead of
+`{ skip: true, variables: {...} }`, keeps required variables type-safe without
+a non-null assertion like `id!` or a placeholder value.
+
+```tsx
+import { skipToken } from '@apollo/client/react'
+import { useQuery } from '@cedarjs/web'
+
+const { data } = useQuery(query, id ? { variables: { id } } : skipToken)
+```
+
+`@cedarjs/web` doesn't re-export `skipToken`, so import it from
+`@apollo/client/react`. Cells accept `skipToken` from `beforeQuery` too. See
+Apollo's
+[`skipToken` docs](https://www.apollographql.com/docs/react/api/react/skipToken)
+for the full API.
+
 ## ESM-only projects
 
 Cedar projects are ESM-only. Every side's `package.json` must have
@@ -112,3 +133,23 @@ pointing to this command:
 ```shell
 yarn workspace api add -D @babel/core@^7 @babel/preset-typescript@^7
 ```
+
+## dbAuth requires a `changePassword` option
+
+`DbAuthHandler` has a change password flow for users who are already logged
+in, and its `changePassword` option is required, like `login`, `signup`,
+`forgotPassword` and `resetPassword`. A TypeScript auth function without it
+fails type-check. The pre-upgrade check run by `yarn cedar upgrade` lists the
+files that need it and prints the code to add.
+
+To keep the flow turned off, add this to the options passed to
+`new DbAuthHandler(...)` in `api/src/functions/auth`:
+
+```ts
+changePassword: { enabled: false },
+```
+
+To offer it, pass the full options instead (see the
+[dbAuth docs](https://cedarjs.com/docs/auth/dbauth#changepassword)) and
+generate the page with
+`yarn cedar g dbAuth --skip-forgot --skip-login --skip-reset --skip-signup`.

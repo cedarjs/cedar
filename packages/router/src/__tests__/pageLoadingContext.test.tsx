@@ -88,6 +88,7 @@ function createDummyAuthContextValues(
     forgotPassword: async () => null,
     resetPassword: async () => null,
     validateResetToken: async () => null,
+    changePassword: async () => null,
   }
 
   return { ...authContextValues, ...partial }

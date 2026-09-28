@@ -14,13 +14,13 @@
     "start:web": "cedarjs-server web"
   },
   "dependencies": {
-    "@cedarjs/api-server": "6.0.0"
+    "@cedarjs/api-server": "7.0.0"
   },
   "devDependencies": {
-    "@cedarjs/core": "6.0.0",
-    "@cedarjs/eslint-config": "6.0.0",
-    "@cedarjs/project-config": "6.0.0",
-    "@cedarjs/testing": "6.0.0",
+    "@cedarjs/core": "7.0.0",
+    "@cedarjs/eslint-config": "7.0.0",
+    "@cedarjs/project-config": "7.0.0",
+    "@cedarjs/testing": "7.0.0",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "prisma": "7.10.0",
     "vitest": "4.1.11"
@@ -77,6 +77,7 @@
     "@cedarjs/mailer-renderer-mjml-react": "file:../packages/mailer/renderers/mjml-react/cedarjs-mailer-renderer-mjml-react.tgz",
     "@cedarjs/mailer-core": "file:../packages/mailer/core/cedarjs-mailer-core.tgz",
     "@cedarjs/mailer-handler-studio": "file:../packages/mailer/handlers/studio/cedarjs-mailer-handler-studio.tgz",
+    "@cedarjs/mailer-handler-ahasend": "file:../packages/mailer/handlers/ahasend/cedarjs-mailer-handler-ahasend.tgz",
     "@cedarjs/mailer-handler-nodemailer": "file:../packages/mailer/handlers/nodemailer/cedarjs-mailer-handler-nodemailer.tgz",
     "@cedarjs/mailer-handler-resend": "file:../packages/mailer/handlers/resend/cedarjs-mailer-handler-resend.tgz",
     "@cedarjs/mailer-handler-in-memory": "file:../packages/mailer/handlers/in-memory/cedarjs-mailer-handler-in-memory.tgz",

@@ -110,6 +110,11 @@ node_modules
   })
 })
 
+/** Everything in a server file before its `main()` function */
+function importSection(source: string) {
+  return source.slice(0, source.indexOf('async function main'))
+}
+
 describe('detectServerAuth', () => {
   it("recognizes dbAuth's decoder factory", () => {
     expect(
@@ -140,11 +145,10 @@ describe('addUploadsPlugin', () => {
     const result = addUploadsPlugin(SERVER)
 
     expect(result).toBe(`import { createServer } from '@cedarjs/api-server'
-
-import { logger } from 'src/lib/logger'
 import { cedarUploadsPlugin } from '@cedarjs/uploads'
 
 import { db } from 'src/lib/db'
+import { logger } from 'src/lib/logger'
 import { targets } from 'src/lib/uploads'
 
 async function main() {
@@ -182,6 +186,116 @@ main()
     expect(result).toContain(
       'authenticate: createUploadAuthenticator({ authDecoder, getCurrentUser }),',
     )
+  })
+
+  it('sorts the dbAuth imports into their groups', () => {
+    const result = addUploadsPlugin(SERVER, {
+      auth: { decoderPackage: '@cedarjs/auth-dbauth-api', usesFactory: true },
+    })
+
+    expect(importSection(result))
+      .toBe(`import { createServer } from '@cedarjs/api-server'
+import { createAuthDecoder } from '@cedarjs/auth-dbauth-api'
+import { cedarUploadsPlugin, createUploadAuthenticator } from '@cedarjs/uploads'
+
+import { cookieName, getCurrentUser } from 'src/lib/auth'
+import { db } from 'src/lib/db'
+import { logger } from 'src/lib/logger'
+import { targets } from 'src/lib/uploads'
+
+`)
+  })
+
+  it('starts a src/ group in a server file with only package imports', () => {
+    const packagesOnly = `import { createServer } from '@cedarjs/api-server'
+
+async function main() {
+  const server = await createServer()
+
+  await server.start()
+}
+`
+
+    expect(addUploadsPlugin(packagesOnly))
+      .toBe(`import { createServer } from '@cedarjs/api-server'
+import { cedarUploadsPlugin } from '@cedarjs/uploads'
+
+import { db } from 'src/lib/db'
+import { targets } from 'src/lib/uploads'
+
+async function main() {
+  const server = await createServer()
+
+${uploadsServerRegistration(packagesOnly, null)}
+  await server.start()
+}
+`)
+  })
+
+  it('places imports among builtins, packages, and multi-line imports', () => {
+    const mixed = `import path from 'node:path'
+
+import fastifyStatic from '@fastify/static'
+import { z } from 'zod'
+
+import {
+  createServer,
+  type Server,
+} from '@cedarjs/api-server'
+import { mailer } from '@cedarjs/mailer'
+
+import { logger } from 'src/lib/logger'
+import { tracer } from 'src/lib/tracer'
+
+import { helper } from './helper'
+
+async function main() {
+  const server: Server = await createServer({ logger })
+
+  await server.start()
+}
+`
+
+    expect(importSection(addUploadsPlugin(mixed)))
+      .toBe(`import path from 'node:path'
+
+import fastifyStatic from '@fastify/static'
+import { z } from 'zod'
+
+import {
+  createServer,
+  type Server,
+} from '@cedarjs/api-server'
+import { mailer } from '@cedarjs/mailer'
+import { cedarUploadsPlugin } from '@cedarjs/uploads'
+
+import { db } from 'src/lib/db'
+import { logger } from 'src/lib/logger'
+import { tracer } from 'src/lib/tracer'
+import { targets } from 'src/lib/uploads'
+
+import { helper } from './helper'
+
+`)
+  })
+
+  it('adds a package group when a server file imports only src/ modules', () => {
+    const srcOnly = `import { db } from 'src/lib/db'
+import { server } from 'src/lib/server'
+
+async function main() {
+  await server.start()
+}
+`
+
+    expect(importSection(addUploadsPlugin(srcOnly)))
+      .toBe(`import { cedarUploadsPlugin } from '@cedarjs/uploads'
+
+import { db } from 'src/lib/db'
+import { server } from 'src/lib/server'
+import { targets } from 'src/lib/uploads'
+
+`)
   })
 
   it('wires the authenticator for a provider that exports authDecoder', () => {
@@ -224,12 +338,11 @@ main()
 
     expect(result).toBe(`import { createServer } from '@cedarjs/api-server'
 import { createAuthDecoder } from '@cedarjs/auth-dbauth-api'
+import { cedarUploadsPlugin, createUploadAuthenticator } from '@cedarjs/uploads'
 
 import { cookieName, getCurrentUser } from 'src/lib/auth'
 import { db } from 'src/lib/db'
 import { logger } from 'src/lib/logger'
-import { cedarUploadsPlugin, createUploadAuthenticator } from '@cedarjs/uploads'
-
 import { targets } from 'src/lib/uploads'
 
 const authDecoder = createAuthDecoder(cookieName)

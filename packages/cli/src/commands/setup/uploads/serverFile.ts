@@ -6,6 +6,8 @@
  * when the plugin is already registered.
  */
 
+import { isBuiltin } from 'node:module'
+
 /**
  * How the app builds its auth decoder, detected from
  * `api/src/functions/graphql`. dbAuth exposes a `createAuthDecoder(cookieName)`
@@ -107,33 +109,36 @@ interface ImportSpec {
   from: string
 }
 
+interface ServerImport {
+  line: string
+  from: string
+}
+
 /**
- * The import lines the registration needs, minus any name `source` already
- * binds. Package imports come first, then `src/` imports, separated by a
- * blank line, matching the layout of a generated server file.
+ * The import statements the registration needs, minus any name `source`
+ * already binds, each with the module it imports from.
  */
 export function uploadsServerImports(
   source: string,
   auth: UploadsServerAuth | null,
-): string[] {
-  const packageSpecs: ImportSpec[] = []
-  const srcSpecs: ImportSpec[] = []
+): ServerImport[] {
+  const specs: ImportSpec[] = []
 
   if (auth) {
     if (auth.usesFactory) {
       // With `authDecoder` already declared there is nothing to build it from
       if (!hasBinding(source, 'authDecoder')) {
-        packageSpecs.push({
+        specs.push({
           names: ['createAuthDecoder'],
           from: auth.decoderPackage,
         })
       }
     } else {
-      packageSpecs.push({ names: ['authDecoder'], from: auth.decoderPackage })
+      specs.push({ names: ['authDecoder'], from: auth.decoderPackage })
     }
   }
 
-  packageSpecs.push({
+  specs.push({
     names: auth
       ? ['cedarUploadsPlugin', 'createUploadAuthenticator']
       : ['cedarUploadsPlugin'],
@@ -147,29 +152,158 @@ export function uploadsServerImports(
       authNames.unshift('cookieName')
     }
 
-    srcSpecs.push({ names: authNames, from: 'src/lib/auth' })
+    specs.push({ names: authNames, from: 'src/lib/auth' })
   }
 
-  srcSpecs.push({ names: ['db'], from: 'src/lib/db' })
-  srcSpecs.push({ names: ['targets'], from: 'src/lib/uploads' })
+  specs.push({ names: ['db'], from: 'src/lib/db' })
+  specs.push({ names: ['targets'], from: 'src/lib/uploads' })
 
-  const render = (specs: ImportSpec[]) =>
-    specs
-      .map((spec) => ({
-        ...spec,
-        names: spec.names.filter((name) => !hasBinding(source, name)),
-      }))
-      .filter((spec) => spec.names.length > 0)
-      .map((spec) => `import { ${spec.names.join(', ')} } from '${spec.from}'`)
+  return specs
+    .map((spec) => ({
+      ...spec,
+      names: spec.names.filter((name) => !hasBinding(source, name)),
+    }))
+    .filter((spec) => spec.names.length > 0)
+    .map((spec) => ({
+      line: `import { ${spec.names.join(', ')} } from '${spec.from}'`,
+      from: spec.from,
+    }))
+}
 
-  const packageLines = render(packageSpecs)
-  const srcLines = render(srcSpecs)
+interface ImportStatement {
+  /** Index of the statement's first line */
+  start: number
+  /** Index of the statement's last line */
+  end: number
+  from: string
+}
 
-  if (packageLines.length > 0 && srcLines.length > 0) {
-    return [...packageLines, '', ...srcLines]
+/**
+ * Top-level import statements in `lines`, including ones that span several
+ * lines.
+ */
+function findImports(lines: string[]): ImportStatement[] {
+  const imports: ImportStatement[] = []
+
+  for (let start = 0; start < lines.length; start++) {
+    if (!/^import\b/.test(lines[start])) {
+      continue
+    }
+
+    const sideEffect = /^import\s*['"]([^'"]+)['"]/.exec(lines[start])
+
+    if (sideEffect) {
+      imports.push({ start, end: start, from: sideEffect[1] })
+      continue
+    }
+
+    for (let end = start; end < lines.length; end++) {
+      const from = /\bfrom\s*['"]([^'"]+)['"]/.exec(lines[end])
+
+      if (from) {
+        imports.push({ start, end, from: from[1] })
+        start = end
+        break
+      }
+    }
   }
 
-  return [...packageLines, ...srcLines]
+  return imports
+}
+
+/**
+ * The rank of an import's group in the `import-x/order` config of
+ * `@cedarjs/eslint-config`: builtins, `react`, other packages, `@cedarjs/`
+ * packages, `src/` modules matched by the services/directives/sdl path
+ * group, other `src/` modules, then parent, sibling, and index imports.
+ */
+function importGroup(from: string): number {
+  if (isBuiltin(from)) {
+    return 0
+  }
+
+  if (from === 'react') {
+    return 1
+  }
+
+  if (from.startsWith('@cedarjs/')) {
+    return 3
+  }
+
+  if (from.startsWith('src/')) {
+    return /^src\/[^/]+\/.+\.(?:sdl\.)?(?:js|ts)$/.test(from) ? 4 : 5
+  }
+
+  if (from === '..' || from.startsWith('../')) {
+    return 6
+  }
+
+  if (/^\.\/?(?:index(?:\.[jt]sx?)?)?$/.test(from)) {
+    return 8
+  }
+
+  if (from.startsWith('./')) {
+    return 7
+  }
+
+  return 2
+}
+
+/**
+ * Compares module specifiers the way `import-x/order`'s case-insensitive,
+ * ascending `alphabetize` option does: segment by segment, with a path
+ * sorting before a longer one that starts with the same segments.
+ */
+function compareSpecifiers(a: string, b: string): number {
+  const segmentsA = a.toLowerCase().split('/')
+  const segmentsB = b.toLowerCase().split('/')
+
+  for (let i = 0; i < Math.min(segmentsA.length, segmentsB.length); i++) {
+    if (segmentsA[i] !== segmentsB[i]) {
+      return segmentsA[i] < segmentsB[i] ? -1 : 1
+    }
+  }
+
+  return segmentsA.length - segmentsB.length
+}
+
+/**
+ * Inserts `serverImport` where `import-x/order` expects it: alphabetically
+ * within the imports of its group, or as a new group separated by blank
+ * lines when the file has no imports of that group yet.
+ */
+function insertImport(lines: string[], serverImport: ServerImport): string[] {
+  const imports = findImports(lines)
+  const group = importGroup(serverImport.from)
+  const sameGroup = imports.filter((i) => importGroup(i.from) === group)
+
+  if (sameGroup.length > 0) {
+    const next = sameGroup.find(
+      (i) => compareSpecifiers(i.from, serverImport.from) > 0,
+    )
+    const at = next ? next.start : sameGroup[sameGroup.length - 1].end + 1
+
+    return [...lines.slice(0, at), serverImport.line, ...lines.slice(at)]
+  }
+
+  const earlier = imports.filter((i) => importGroup(i.from) < group)
+
+  if (earlier.length > 0) {
+    const at = Math.max(...earlier.map((i) => i.end)) + 1
+    const inserted = ['', serverImport.line]
+
+    // Keeps a blank line between the new group and whatever follows it
+    if (at < lines.length && lines[at].trim() !== '') {
+      inserted.push('')
+    }
+
+    return [...lines.slice(0, at), ...inserted, ...lines.slice(at)]
+  }
+
+  const later = imports.find((i) => importGroup(i.from) > group)
+  const at = later ? later.start : 0
+
+  return [...lines.slice(0, at), serverImport.line, '', ...lines.slice(at)]
 }
 
 export function uploadsServerRegistration(
@@ -230,20 +364,9 @@ export function addUploadsPlugin(
     throw new Error('CEDAR_UPLOADS_ERR_NO_START')
   }
 
-  const lines = source.split('\n')
-  let lastImport = -1
-
-  for (const [index, line] of lines.entries()) {
-    if (/^import\s/.test(line)) {
-      lastImport = index
-    }
-  }
-
-  const withImports = [
-    ...lines.slice(0, lastImport + 1),
-    ...uploadsServerImports(source, auth),
-    ...lines.slice(lastImport + 1),
-  ].join('\n')
+  const withImports = uploadsServerImports(source, auth)
+    .reduce(insertImport, source.split('\n'))
+    .join('\n')
 
   return withImports.replace(
     START_LINE,

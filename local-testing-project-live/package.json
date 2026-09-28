@@ -68,6 +68,7 @@
     "@cedarjs/internal": "file:../packages/internal/cedarjs-internal.tgz",
     "@cedarjs/jobs": "file:../packages/jobs/cedarjs-jobs.tgz",
     "@cedarjs/mailer-core": "file:../packages/mailer/core/cedarjs-mailer-core.tgz",
+    "@cedarjs/mailer-handler-ahasend": "file:../packages/mailer/handlers/ahasend/cedarjs-mailer-handler-ahasend.tgz",
     "@cedarjs/mailer-handler-in-memory": "file:../packages/mailer/handlers/in-memory/cedarjs-mailer-handler-in-memory.tgz",
     "@cedarjs/mailer-handler-nodemailer": "file:../packages/mailer/handlers/nodemailer/cedarjs-mailer-handler-nodemailer.tgz",
     "@cedarjs/mailer-handler-resend": "file:../packages/mailer/handlers/resend/cedarjs-mailer-handler-resend.tgz",

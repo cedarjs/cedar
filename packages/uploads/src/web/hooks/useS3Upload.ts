@@ -44,7 +44,8 @@ export function useS3Upload({
   onUploadComplete,
   onUploadError,
 }: UseS3UploadOptions): UseS3UploadResult {
-  const { requestToken, getToken, constraints } = useUploadToken({ profile })
+  const { requestToken, acquireToken, hasUsableToken, constraints } =
+    useUploadToken({ profile })
 
   const [createPresignedUploadUrl] = useMutation<
     CreatePresignedUploadUrlData,
@@ -58,7 +59,8 @@ export function useS3Upload({
 
   const getUploadParameters = useCallback(
     async (file: CedarUppyFile): Promise<PresignedUploadParameters> => {
-      const uploadToken = getToken() ?? (await requestToken())
+      // Each presigned URL creates one pending upload against the token
+      const uploadToken = await acquireToken()
 
       const result = await createPresignedUploadUrl({
         variables: {
@@ -79,7 +81,7 @@ export function useS3Upload({
 
       return data
     },
-    [createPresignedUploadUrl, getToken, requestToken],
+    [createPresignedUploadUrl, acquireToken],
   )
 
   // The Uppy instance is created once and reads the latest callback through
@@ -111,7 +113,7 @@ export function useS3Upload({
     // Fetch a token as soon as files are added so restrictions apply before
     // the upload starts
     const onFileAdded = () => {
-      if (!getToken()) {
+      if (!hasUsableToken()) {
         requestToken().catch((e: unknown) => {
           onUploadError?.(e instanceof Error ? e : new Error(String(e)))
         })
@@ -160,7 +162,14 @@ export function useS3Upload({
       uppy.off('file-added', onFileAdded)
       uppy.removePostProcessor(confirmAll)
     }
-  }, [uppy, confirm, confirmUpload, getToken, requestToken, onUploadError])
+  }, [
+    uppy,
+    confirm,
+    confirmUpload,
+    hasUsableToken,
+    requestToken,
+    onUploadError,
+  ])
 
   return { ...upload, requestToken }
 }

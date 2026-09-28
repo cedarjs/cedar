@@ -1,5 +1,11 @@
+import type { vi as _vi } from 'vitest'
+
 import type { CurrentUser } from '@cedarjs/auth'
 
 declare global {
+  // describe, it, expect etc. are typed by @types/jest. Referencing
+  // vitest/globals here would conflict with those declarations, so only vi
+  // is declared
+  const vi: typeof _vi
   const mockCurrentUser: (currentUser: CurrentUser) => void
 }

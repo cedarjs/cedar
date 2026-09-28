@@ -424,6 +424,17 @@ export default async () => {
 Now you can just run that script and the job will be scheduled:
 `yarn cedar exec ScheduleCronJobs`
 
+Scheduling a recurring job doesn't run it right away. Its first run happens the
+next time the `cron` schedule matches (midnight, in the example above), and
+after each successful run the job is scheduled again for the following match. If
+a run fails, the job is retried after a backoff delay, like any other job,
+rather than at the next match.
+
+The `cron` schedule is evaluated in the local time zone of the process doing the
+scheduling: the process calling `later()` for the first run, and the job worker
+for every run after that. Run both with the same time zone (for example by
+setting `TZ=UTC`) so the job keeps running at the same time of day.
+
 CedarJS uses https://github.com/harrisiirak/cron-parser under the hood for
 parsing the `cron` schedule. So all the syntax supported by `cron-parser` is
 supported. Including, for example, the six-groups format for seconds, and their
@@ -581,7 +592,7 @@ This is an array of objects. Each object represents the config for a single "gro
 - `logger`: the logger to use when working on jobs. If not provided, defaults to the `logger` set on the `JobManager`. You can use this logger in the `perform()` function of your job by accessing `jobs.logger`
 - queue: **[required]** the named queue(s) in which this worker group will watch for jobs. There is a reserved `'*'` value you can use which means "all queues." This can be an array of queues as well: `['default', 'email']` for example.
 - `count`: **[required]** the number of workers to start with this config.
-- `maxAttempts`: the maximum number of times to retry a job before giving up. A job that throws an error will be set to retry in the future with an exponential backoff in time equal to the number of previous attempts \*\* 4. After this number, a job is considered "failed" and will not be re-attempted. Default: `24`.
+- `maxAttempts`: the maximum number of times to retry a job before giving up. A job that throws an error will be set to retry in the future with a backoff of (number of previous attempts) \*\* 4 seconds, capped at 7 days. After this number, a job is considered "failed" and will not be re-attempted. Default: `24`.
 - `maxRuntime`: the maximum amount of time, in seconds, that a job is allowed to run. A job that runs longer than this is marked as **failed** (it will not be retried, and the timeout is recorded in `lastError`) and the worker moves on to the next job. The job is told to stop what it's doing via an `AbortSignal`—see [Job timeouts](#job-timeouts). This is also how long a job's lock is honored if the worker that locked it crashed without cleaning up after itself: once `maxRuntime` (plus a one-minute grace period, so a live worker always gets to record the timeout first) has passed, another worker is allowed to pick the job up again. Default: `14_400` (4 hours).
 - `deleteFailedJobs`: when a job has failed (maximum number of retries has occurred) you can keep the job in the database, or delete it. Default: `false`.
 - `deleteSuccessfulJobs`: when a job has succeeded, you can keep the job in the database, or delete it. It's generally assumed that your jobs _will_ succeed so it usually makes sense to clear them out and keep the queue lean. Default: `true`.
@@ -732,7 +743,7 @@ Jobs sometimes don't complete as expected, either because of an error in our cod
 
 If you're using the `PrismaAdapter` and an uncaught error occurs while the worker is executing your `perform` function, three things happen:
 
-1. The job's `runAt` time is set to a new time in the future, based on an incremental backoff computed from the number of previous attempts at running the job (by default it's `attempts ** 4`)
+1. The job's `runAt` time is set to a new time in the future, based on an incremental backoff computed from the number of previous attempts at running the job (`attempts ** 4` seconds, capped at 7 days)
 2. The error message and backtrace is recorded in the `lastError` field
 3. The job is unlocked so that it's available for another worker to pick up when the time comes
 
