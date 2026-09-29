@@ -8,6 +8,7 @@ import { getPaths } from '@cedarjs/project-config'
 import {
   description as webDescription,
   builder as webBuilder,
+  handler as webHandler,
 } from '@cedarjs/web-server'
 
 import {
@@ -62,8 +63,8 @@ yargs(hideBin(process.argv))
   .command(
     'web',
     webDescription,
+    // @ts-expect-error The yargs types seem wrong; it's ok for builder to be a function
     webBuilder,
-    // @ts-expect-error The web handler type does not line up with yargs' inferred argv
     webHandler,
   )
   .parse()
