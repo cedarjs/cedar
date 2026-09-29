@@ -3181,7 +3181,7 @@ __metadata:
     "@cedarjs/project-config": "workspace:*"
     "@fastify/compress": "npm:9.2.0"
     "@fastify/http-proxy": "npm:11.6.3"
-    "@fastify/static": "npm:10.1.4"
+    "@fastify/static": "npm:10.1.5"
     "@fastify/url-data": "npm:6.0.4"
     fast-glob: "npm:3.3.3"
     fastify: "npm:5.12.5"
@@ -5470,9 +5470,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fastify/static@npm:10.1.4":
-  version: 10.1.4
-  resolution: "@fastify/static@npm:10.1.4"
+"@fastify/static@npm:10.1.5":
+  version: 10.1.5
+  resolution: "@fastify/static@npm:10.1.5"
   dependencies:
     "@fastify/accept-negotiator": "npm:^2.0.0"
     "@fastify/error": "npm:^4.0.0"
@@ -5481,7 +5481,7 @@ __metadata:
     fastify-plugin: "npm:^6.0.0"
     fastq: "npm:^1.17.1"
     glob: "npm:^13.0.0"
-  checksum: 10c0/9d26acd52103c66cc1695539c7d06d39accf2060a15e83eac648c9249a0a28ec8e5145fe235f34aa99423191ee427ff46f5d1d0ff9f7f8c6043938eb8e9674a6
+  checksum: 10c0/6f9c3f7cbbc8edbbc1fb9590adf054e9580d1a76996ad6ea4ddee18e620dea29ac139f5131d6f31a3f1b41b5b0d96baa97aed5d4cb9ef0de947feaf2d1c27524
   languageName: node
   linkType: hard
 
