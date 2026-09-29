@@ -8,19 +8,16 @@ import { getPaths } from '@cedarjs/project-config'
 import {
   description as webDescription,
   builder as webBuilder,
-  handler as webHandler,
 } from '@cedarjs/web-server'
 
 import {
   description as apiDescription,
   builder as apiBuilder,
 } from './apiCLIConfig.js'
-import { handler as apiHandler } from './apiCLIConfigHandler.js'
 import {
   description as bothDescription,
   builder as bothBuilder,
 } from './bothCLIConfig.js'
-import { handler as bothHandler } from './bothCLIConfigHandler.js'
 
 if (!process.env.CEDAR_ENV_FILES_LOADED) {
   config({
@@ -44,20 +41,29 @@ yargs(hideBin(process.argv))
     bothDescription,
     // @ts-expect-error The yargs types seem wrong; it's ok for builder to be a function
     bothBuilder,
-    bothHandler,
+    // The API handlers import Fastify and the app's own modules, so they are
+    // loaded lazily: the OpenTelemetry setup they import must be able to run
+    // first through the preload flags placed on this process.
+    async (argv: never) => {
+      const { handler } = await import('./bothCLIConfigHandler.js')
+      await handler(argv)
+    },
   )
   .command(
     'api',
     apiDescription,
     // @ts-expect-error The yargs types seem wrong; it's ok for builder to be a function
     apiBuilder,
-    apiHandler,
+    async (argv: never) => {
+      const { handler } = await import('./apiCLIConfigHandler.js')
+      await handler(argv)
+    },
   )
   .command(
     'web',
     webDescription,
-    // @ts-expect-error The yargs types seem wrong; it's ok for builder to be a function
     webBuilder,
+    // @ts-expect-error The web handler type does not line up with yargs' inferred argv
     webHandler,
   )
   .parse()

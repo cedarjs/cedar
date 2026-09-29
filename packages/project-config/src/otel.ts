@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import { getConfig } from './config.js'
 import { getPaths } from './paths.js'
@@ -12,7 +13,8 @@ import { getPaths } from './paths.js'
  * The setup file is the built `api/dist/opentelemetry.js`. Preloading it via
  * `--import` (rather than `--require`) is the ESM-correct flag: Cedar apps
  * are `"type": "module"`, and a setup file using top-level await cannot be
- * loaded through `require`.
+ * loaded through `require`. The path is returned as a file URL, which Node
+ * resolves as an ESM specifier on every platform.
  *
  * Returns nothing when the current directory is not a Cedar project: these
  * args are consumed by process launchers (the dev server watcher, the
@@ -41,5 +43,5 @@ export function getOTelImportArgs(): string[] {
     return []
   }
 
-  return [`--import=${setupFilePath}`]
+  return [`--import=${pathToFileURL(setupFilePath).href}`]
 }

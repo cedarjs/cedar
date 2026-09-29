@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
 
@@ -28,7 +29,11 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  process.env.CEDAR_CWD = CEDAR_CWD
+  if (CEDAR_CWD === undefined) {
+    delete process.env.CEDAR_CWD
+  } else {
+    process.env.CEDAR_CWD = CEDAR_CWD
+  }
   fs.rmSync(path.dirname(SETUP_FILE), { recursive: true, force: true })
 })
 
@@ -51,7 +56,9 @@ describe('getOTelImportArgs', () => {
         ),
       )
 
-      expect(getOTelImportArgs()).toEqual([`--import=${SETUP_FILE}`])
+      expect(getOTelImportArgs()).toEqual([
+        `--import=${pathToFileURL(SETUP_FILE).href}`,
+      ])
     } finally {
       fs.writeFileSync(configPath, originalConfig)
     }

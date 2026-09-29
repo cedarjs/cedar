@@ -64,6 +64,15 @@ async function startUDServer(
   host: string,
   port: number,
 ): Promise<ReturnType<typeof serveSrvx>> {
+  // The OpenTelemetry SDK setup must be imported before the built Universal
+  // Deploy Fetchable is loaded, or the instrumentations can't patch it. The
+  // `--import` entries `getOTelImportArgs()` returns are for child processes;
+  // here the entry is stripped down to the URL and imported in-process.
+  const { getOTelImportArgs } = await import('@cedarjs/project-config')
+  for (const arg of getOTelImportArgs()) {
+    await import(arg.slice('--import='.length))
+  }
+
   const mod = await import(pathToFileURL(entryPath).href)
   const fetchable = mod.default ?? mod
 

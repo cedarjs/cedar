@@ -12,7 +12,7 @@ import {
 } from '@cedarjs/api-server/cliHelpers'
 import { formatRunBinCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
-import { getConfig, getPaths } from '@cedarjs/project-config'
+import { getConfig, getOTelImportArgs, getPaths } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { exitWithError } from '../lib/exit.js'
@@ -72,7 +72,7 @@ export const bothServerFileHandler = async (argv: ServeBothArgv) => {
       [
         {
           name: 'api',
-          command: `${formatRunBinCommand('node', [path.join('dist', 'server.js'), '--apiPort', String(argv.apiPort), '--apiHost', argv.apiHost, '--apiRootPath', apiRootPath])}`,
+          command: `${formatRunBinCommand('node', [...getOTelImportArgs(), path.join('dist', 'server.js'), '--apiPort', String(argv.apiPort), '--apiHost', argv.apiHost, '--apiRootPath', apiRootPath])}`,
           cwd: getPaths().api.base,
           prefixColor: 'cyan',
         },
