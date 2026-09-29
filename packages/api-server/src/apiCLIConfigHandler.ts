@@ -1,6 +1,7 @@
 import ansis from 'ansis'
 
 import { coerceRootPath } from '@cedarjs/fastify-web'
+import { getOTelImportArgs } from '@cedarjs/project-config'
 
 import { createServer } from './createServer.js'
 import { apiDistServerFileExists, runApiDistServerFile } from './serverFile.js'
@@ -13,6 +14,15 @@ export async function handler(options: APIParsedOptions = {}) {
   if (apiDistServerFileExists()) {
     await runApiDistServerFile(options)
     return
+  }
+
+  // The OpenTelemetry SDK setup must be imported before Fastify, Prisma and
+  // the app's own modules are loaded, or the instrumentations can't patch
+  // them. `getOTelImportArgs()` returns the setup file's path as
+  // `--import=<path>` argv entries for spawned child processes; here, in the
+  // same process, the entry is stripped down to the path and imported.
+  for (const arg of getOTelImportArgs()) {
+    await import(arg.slice('--import='.length))
   }
 
   const timeStart = Date.now()

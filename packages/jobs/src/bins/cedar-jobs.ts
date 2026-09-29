@@ -13,6 +13,8 @@ import { setTimeout } from 'node:timers'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
+import { getOTelImportArgs } from '@cedarjs/project-config'
+
 import { DEFAULT_LOGGER, PROCESS_TITLE_PREFIX } from '../consts.js'
 import { loadJobsManager } from '../loaders.js'
 import { setupEnv } from '../setupEnv.js'
@@ -134,6 +136,9 @@ export const startWorkers = ({
       detached: detach,
       stdio: detach ? 'ignore' : 'inherit',
       env: process.env,
+      // The OpenTelemetry SDK setup must be loaded before the app's own
+      // modules are imported, or the instrumentations can't patch them
+      execArgv: process.execArgv.concat(getOTelImportArgs()),
     })
 
     if (detach) {

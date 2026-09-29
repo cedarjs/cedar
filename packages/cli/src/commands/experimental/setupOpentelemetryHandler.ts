@@ -146,6 +146,22 @@ export const handler = async ({
       rendererOptions: { persistentOutput: true },
     },
     addApiPackages(opentelemetryPackages),
+    {
+      title: 'Notice: running under your own process manager...',
+      task: (_ctx: unknown, task: { output: string }) => {
+        task.output = [
+          'The setup file is loaded automatically by `cedar dev`, `cedar serve api`, `cedarjs-server api` and the job workers.',
+          'If you run the API or the job workers under your own process manager, load it yourself:',
+          '',
+          c.info(
+            'node --import ./api/dist/opentelemetry.js path/to/your/server.js',
+          ),
+          '',
+          '(or set the same flag in NODE_OPTIONS)',
+        ].join('\n')
+      },
+      rendererOptions: { persistentOutput: true },
+    },
   ]
 
   const prismaTasks = [
