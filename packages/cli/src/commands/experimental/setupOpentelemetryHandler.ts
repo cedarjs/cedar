@@ -150,7 +150,7 @@ export const handler = async ({
       title: 'Notice: running under your own process manager...',
       task: (_ctx: unknown, task: { output: string }) => {
         task.output = [
-          'The setup file is loaded automatically by `cedar dev`, `cedar serve api`, `cedarjs-server api` and the job workers.',
+          'The setup file is loaded automatically by `cedar dev` (including `--ud`), `cedar serve api`, `cedar serve`, `cedarjs-server api` and the job workers.',
           'If you run the API or the job workers under your own process manager, load it yourself:',
           '',
           c.info(
