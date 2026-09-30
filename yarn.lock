@@ -3180,8 +3180,8 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@fastify/compress": "npm:9.2.0"
-    "@fastify/http-proxy": "npm:11.6.2"
-    "@fastify/static": "npm:10.1.4"
+    "@fastify/http-proxy": "npm:11.6.3"
+    "@fastify/static": "npm:10.1.5"
     "@fastify/url-data": "npm:6.0.4"
     fast-glob: "npm:3.3.3"
     fastify: "npm:5.12.5"
@@ -4013,7 +4013,7 @@ __metadata:
     vite-plugin-graphql-tag: "npm:0.1.1"
     vite-tsconfig-paths: "npm:^6.1.1"
     vitest: "npm:4.1.11"
-    ws: "npm:8.21.3"
+    ws: "npm:8.22.0"
     yargs-parser: "npm:21.1.1"
   peerDependencies:
     "@cedarjs/auth": "workspace:*"
@@ -5398,15 +5398,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fastify/http-proxy@npm:11.6.2":
-  version: 11.6.2
-  resolution: "@fastify/http-proxy@npm:11.6.2"
+"@fastify/http-proxy@npm:11.6.3":
+  version: 11.6.3
+  resolution: "@fastify/http-proxy@npm:11.6.3"
   dependencies:
     "@fastify/reply-from": "npm:^12.6.2"
     fast-querystring: "npm:^1.1.2"
     fastify-plugin: "npm:^6.0.0"
     ws: "npm:^8.18.3"
-  checksum: 10c0/d02a234b4001783932c5d2d67e755bc3aa3962ce9e3a790f74e8764fc27e23cced2adbd9b012c429d4e39ff2e381dc58af233e4d19b066619dc624d8c01b0415
+  checksum: 10c0/47ac8cb1f6121a386e61d004fac233b334569eba4ec3189118b3a9f2cab9eda6ebccc78f78a0598e05a8cf24cf3a66366e7fd5b4b166b4a3ad7d694912165b37
   languageName: node
   linkType: hard
 
@@ -5470,9 +5470,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fastify/static@npm:10.1.4":
-  version: 10.1.4
-  resolution: "@fastify/static@npm:10.1.4"
+"@fastify/static@npm:10.1.5":
+  version: 10.1.5
+  resolution: "@fastify/static@npm:10.1.5"
   dependencies:
     "@fastify/accept-negotiator": "npm:^2.0.0"
     "@fastify/error": "npm:^4.0.0"
@@ -5481,7 +5481,7 @@ __metadata:
     fastify-plugin: "npm:^6.0.0"
     fastq: "npm:^1.17.1"
     glob: "npm:^13.0.0"
-  checksum: 10c0/9d26acd52103c66cc1695539c7d06d39accf2060a15e83eac648c9249a0a28ec8e5145fe235f34aa99423191ee427ff46f5d1d0ff9f7f8c6043938eb8e9674a6
+  checksum: 10c0/6f9c3f7cbbc8edbbc1fb9590adf054e9580d1a76996ad6ea4ddee18e620dea29ac139f5131d6f31a3f1b41b5b0d96baa97aed5d4cb9ef0de947feaf2d1c27524
   languageName: node
   linkType: hard
 
@@ -27025,7 +27025,7 @@ __metadata:
     typescript: "npm:5.9.3"
     typescript-eslint: "npm:8.70.1"
     vitest: "npm:4.1.11"
-    ws: "npm:8.21.3"
+    ws: "npm:8.22.0"
     yargs: "npm:17.7.3"
     zx: "npm:8.8.5"
   dependenciesMeta:
@@ -30354,9 +30354,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ws@npm:8.21.3, ws@npm:^8.18.3, ws@npm:^8.19.0, ws@npm:^8.2.3":
-  version: 8.21.3
-  resolution: "ws@npm:8.21.3"
+"ws@npm:8.22.0, ws@npm:^8.18.3, ws@npm:^8.19.0, ws@npm:^8.2.3":
+  version: 8.22.0
+  resolution: "ws@npm:8.22.0"
   peerDependencies:
     bufferutil: ^4.0.1
     utf-8-validate: ">=5.0.2"
@@ -30365,7 +30365,7 @@ __metadata:
       optional: true
     utf-8-validate:
       optional: true
-  checksum: 10c0/7b28dc2863ea0e2cece68d142a3eee90361021b73f750431e6d8076bb7dede5fdfdb75b3d29534b62f411261147b76b1bc80fb5cc63ab0aabd467280e85b22e0
+  checksum: 10c0/7304d14ef38898dd366a528a85e2da389c4eebf30f4ce8a007bd2dce6025f9b619cefe44fe2354f0bad0ec541b1c9a4da06a3f3e046ab56f01fd52d5784ecfb2
   languageName: node
   linkType: hard
 
