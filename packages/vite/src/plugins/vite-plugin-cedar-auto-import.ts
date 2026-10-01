@@ -58,7 +58,14 @@ export function cedarAutoImportsPlugin() {
     }),
     autoImport({
       // targets to transform
-      include: [/\.[tj]sx?$/],
+      //
+      // This must stay scoped to api/ only. @cedarjs/context relies on
+      // Node's AsyncLocalStorage, which isn't available in the browser.
+      // If this ever matches web/ files too, an unrelated identifier
+      // named `context` in a web-side file (e.g. a function parameter)
+      // would get auto-imported from @cedarjs/context, pulling
+      // AsyncLocalStorage into the web build and breaking it. See #2892.
+      include: [/api\/.*\.[tj]sx?$/],
 
       // global imports to register
       imports: [
