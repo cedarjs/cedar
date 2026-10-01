@@ -12725,8 +12725,8 @@ __metadata:
   linkType: hard
 
 "@universal-deploy/vite@npm:^0.1.9":
-  version: 0.1.13
-  resolution: "@universal-deploy/vite@npm:0.1.13"
+  version: 0.1.14
+  resolution: "@universal-deploy/vite@npm:0.1.14"
   dependencies:
     "@universal-deploy/netlify": "npm:^0.2.3"
     "@universal-deploy/node": "npm:^0.1.12"
@@ -12739,7 +12739,7 @@ __metadata:
   peerDependenciesMeta:
     vite:
       optional: true
-  checksum: 10c0/defed5101f7a19df270cc50092bb79d51aa86d643ce612d33564d0b85547c2badcd285a56ffa92a70d88dd3d085bfae88f8cc2833d1cc9315b2b1c91d9b48884
+  checksum: 10c0/5a288685e88cf861e0de1f438219240c420024419ce0aa39a7396fbb6210ca0a3f4eed9b549f8e2785327aae61013cac3e86ff79c7570dd2e7e9123293aa411b
   languageName: node
   linkType: hard
 
