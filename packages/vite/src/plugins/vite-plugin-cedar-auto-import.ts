@@ -21,6 +21,10 @@ import {
   importStatementPath,
 } from '@cedarjs/project-config'
 
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 export function cedarAutoImportsPlugin() {
   // Need the project config to know if trusted graphql documents is being used
   // and decide to use the gql tag import or the trusted document gql function
@@ -28,6 +32,13 @@ export function cedarAutoImportsPlugin() {
   const config = getConfig()
   const cedarPaths = getPaths()
   const useTrustedDocumentsGqlTag = config?.graphql?.trustedDocuments
+
+  // Match any file under the api/ workspace root, anchored to that exact
+  // directory rather than any path that happens to contain "api/" as a
+  // substring (which would also match e.g. web/src/api/ or a project
+  // directory named myapi/).
+  const apiBase = cedarPaths.api.base.replace(/\\/g, '/')
+  const apiSrcPattern = new RegExp(`^${escapeRegExp(apiBase)}/.*\\.[tj]sx?$`)
 
   return [
     autoImport({
@@ -65,7 +76,7 @@ export function cedarAutoImportsPlugin() {
       // named `context` in a web-side file (e.g. a function parameter)
       // would get auto-imported from @cedarjs/context, pulling
       // AsyncLocalStorage into the web build and breaking it. See #2892.
-      include: [/api\/.*\.[tj]sx?$/],
+      include: [apiSrcPattern],
 
       // global imports to register
       imports: [
@@ -79,7 +90,7 @@ export function cedarAutoImportsPlugin() {
     }),
     autoImport({
       // targets to transform
-      include: [/api\/.*\.[tj]sx?$/],
+      include: [apiSrcPattern],
 
       // global imports to register
       imports: [
