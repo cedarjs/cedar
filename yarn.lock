@@ -3868,8 +3868,8 @@ __metadata:
     "@types/mime-types": "npm:2.1.4"
     "@types/react": "npm:^19.2.0"
     "@types/react-dom": "npm:^19.2.0"
-    "@uppy/aws-s3": "npm:6.1.0"
-    "@uppy/core": "npm:6.0.1"
+    "@uppy/aws-s3": "npm:6.2.1"
+    "@uppy/core": "npm:6.1.0"
     "@uppy/dashboard": "npm:6.0.0"
     "@uppy/drag-drop": "npm:6.0.0"
     "@uppy/react": "npm:6.0.0"
@@ -12936,12 +12936,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@uppy/aws-s3@npm:6.1.0":
-  version: 6.1.0
-  resolution: "@uppy/aws-s3@npm:6.1.0"
+"@uppy/aws-s3@npm:6.2.1":
+  version: 6.2.1
+  resolution: "@uppy/aws-s3@npm:6.2.1"
   peerDependencies:
-    "@uppy/core": ^6.0.1
-  checksum: 10c0/93194f2fc1993a202682291286ef4bd9423718c3908dea379e26830bf5e2068f1c7691541ffbcbd9eed00f4b04302e652fd29f1aa9637b873249ef0d742bb5ea
+    "@uppy/core": ^6.1.0
+  checksum: 10c0/f1a41d0ddf0fde6d71b1f2340aff588b07da93b6ce5587f6e6148e89b904bcd292ab85330181fe864cc9089bd05b304db6ef1eab2d6e7b8efd00a062fae9f3c8
   languageName: node
   linkType: hard
 
@@ -12971,20 +12971,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@uppy/core@npm:6.0.1":
-  version: 6.0.1
-  resolution: "@uppy/core@npm:6.0.1"
+"@uppy/core@npm:6.1.0":
+  version: 6.1.0
+  resolution: "@uppy/core@npm:6.1.0"
   dependencies:
     "@transloadit/prettier-bytes": "npm:^2.0.0"
     classnames: "npm:^2.5.1"
     lodash: "npm:^4.18.1"
     mime-match: "npm:^1.0.2"
     namespace-emitter: "npm:^2.0.1"
-    nanoid: "npm:^5.1.11"
+    nanoid: "npm:^6.0.1"
     p-queue: "npm:^9.3.3"
     p-retry: "npm:^6.1.0"
     preact: "npm:^10.29.2"
-  checksum: 10c0/220f06fa513e7f8d8b0110cdf9ab1500aac2a507727da9d9a209dc94bfece29991df923d722e46dbd8723f7cfeb6cee9810722c7f2dfa28060023f4c6269e26d
+  checksum: 10c0/ef593e13be0b004c0cc320dda1e628c10747ad5c72ec290f1b29d6ca44f311c79cf0d2d1cab3b80c28b5c648ee8391987cdbeb68e3d9b10fb2c53923523a6987
   languageName: node
   linkType: hard
 
@@ -23278,6 +23278,15 @@ __metadata:
   bin:
     nanoid: bin/nanoid.js
   checksum: 10c0/04b4f96237f5639716da0e98f453361b313bebaf458bb67dea2d384724fc8b3340a28f032a4373052150bcf3b801d122e291d81ae4fc522969f55c134f4401a3
+  languageName: node
+  linkType: hard
+
+"nanoid@npm:^6.0.1":
+  version: 6.0.1
+  resolution: "nanoid@npm:6.0.1"
+  bin:
+    nanoid: bin/nanoid.js
+  checksum: 10c0/5b362ad9822388dfebdf655849c76d3539e074d1003fbe6eb5dff8687faf93a9abbb19bdc5d134b9b8599f875f9b091feacfd7099b34b5fef23bc3f5be41dd10
   languageName: node
   linkType: hard
 
