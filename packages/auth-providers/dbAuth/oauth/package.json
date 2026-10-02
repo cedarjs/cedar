@@ -38,7 +38,7 @@
   "devDependencies": {
     "@cedarjs/api": "7.0.0",
     "@cedarjs/framework-tools": "7.0.0",
-    "@types/aws-lambda": "8.10.163",
+    "@types/aws-lambda": "8.10.164",
     "concurrently": "9.2.4",
     "msw": "2.15.0",
     "oauth2-mock-server": "9.2.0",
