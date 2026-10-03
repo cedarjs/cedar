@@ -50,7 +50,7 @@ export function cedarNetlifySkewProtectionPlugin(
       // forcing a chunk here Vite would tree-shake the module away and the
       // deploy token would never actually make it into the bundle this
       // phase promises to stamp.
-      if (this.environment.name !== 'ssr') {
+      if (this.environment?.name !== 'ssr') {
         return
       }
 
@@ -88,7 +88,7 @@ export function cedarNetlifySkewProtectionPlugin(
       // where `.netlify/v1/` needs to live. Only the client build's
       // writeBundle fires with that as its output — the api/ssr builds emit
       // elsewhere (api/dist, api/dist/ud).
-      if (this.environment.name !== 'client') {
+      if (this.environment?.name !== 'client') {
         return
       }
 
