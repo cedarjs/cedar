@@ -13,6 +13,47 @@ import {
   redactDatabaseUrl,
 } from '../checkTestDatabase.js'
 
+/**
+ * The most relevant part of a failing command's output is usually at the end
+ * (Prisma prints its error last), so long output is trimmed from the start.
+ */
+const MAX_ERROR_OUTPUT_LENGTH = 4000
+
+function joinOutput(stdout: string | undefined, stderr: string | undefined) {
+  return [stdout, stderr]
+    .map((stream) => stream?.trim())
+    .filter((stream): stream is string => Boolean(stream))
+    .join('\n')
+}
+
+/**
+ * Builds the message for the error thrown when the test database couldn't be
+ * reset, so the reason is the first thing the developer sees in Vitest's
+ * error report.
+ */
+function formatDbResetError(
+  command: string,
+  exitCode: number | undefined,
+  output: string,
+) {
+  const exitInfo =
+    typeof exitCode === 'number' ? ` (exit code ${exitCode})` : ''
+  const lines = [
+    `Failed to reset the test database${exitInfo}.`,
+    `Command: ${command}`,
+  ]
+
+  if (output) {
+    const trimmedOutput =
+      output.length > MAX_ERROR_OUTPUT_LENGTH
+        ? '...\n' + output.slice(-MAX_ERROR_OUTPUT_LENGTH)
+        : output
+    lines.push('', 'Output:', trimmedOutput)
+  }
+
+  return lines.join('\n')
+}
+
 const CedarApiVitestEnvironment: Environment = {
   name: 'cedar-api',
   viteEnvironment: 'ssr',
@@ -91,11 +132,39 @@ const CedarApiVitestEnvironment: Environment = {
         "true, and the reset target passed Cedar's test-database identity guard."
     }
 
-    execa.sync(pmExec, ['cedar', ...command], {
+    // Output is captured rather than inherited: this runs inside a Vitest
+    // pool worker, where inherited output doesn't reliably reach the
+    // developer's terminal. The thrown error, however, is always reported, so
+    // on failure the captured output is included in its message.
+    const result = execa.sync(pmExec, ['cedar', ...command], {
       cwd: cedarPaths.api.base,
-      stdio: 'inherit',
       env,
+      reject: false,
     })
+
+    if (result.failed) {
+      const output = joinOutput(result.stdout, result.stderr)
+
+      if (output) {
+        console.error(output)
+      }
+
+      throw new Error(
+        formatDbResetError(
+          result.command,
+          result.exitCode,
+          output || (result instanceof Error ? result.message : ''),
+        ),
+      )
+    }
+
+    if (result.stdout) {
+      console.log(result.stdout)
+    }
+
+    if (result.stderr) {
+      console.error(result.stderr)
+    }
 
     return {
       teardown() {},
