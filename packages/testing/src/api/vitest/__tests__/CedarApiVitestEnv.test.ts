@@ -201,4 +201,77 @@ describe('setup', () => {
       '',
     )
   })
+
+  it('captures the reset command output instead of inheriting stdio', async () => {
+    getPrismaDatasourceProvider.mockResolvedValue('sqlite')
+    const CedarApiVitestEnvironment = await loadEnvironment()
+
+    await CedarApiVitestEnvironment.setup()
+
+    const [, , options] = vi.mocked(execa.sync).mock.calls[0]
+    expect(options?.stdio).toBeUndefined()
+    expect(options?.reject).toBe(false)
+  })
+
+  it('includes the command and its output in the error when the reset fails', async () => {
+    getPrismaDatasourceProvider.mockResolvedValue('sqlite')
+    // Only the fields the environment reads are provided; the remaining
+    // ExecaSyncReturnValue fields (signal, timedOut, ...) aren't used.
+    vi.mocked(execa.sync).mockReturnValueOnce({
+      failed: true,
+      exitCode: 1,
+      command: 'npx cedar prisma db push --force-reset --accept-data-loss',
+      stdout: 'Prisma schema loaded from schema.prisma',
+      stderr: "Error: P1001: Can't reach database server at `localhost:5432`",
+    } as execa.ExecaSyncReturnValue)
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const CedarApiVitestEnvironment = await loadEnvironment()
+
+    const setupPromise = CedarApiVitestEnvironment.setup()
+
+    await expect(setupPromise).rejects.toThrow(
+      /Failed to reset the test database \(exit code 1\)/,
+    )
+    await expect(setupPromise).rejects.toThrow(
+      'npx cedar prisma db push --force-reset --accept-data-loss',
+    )
+    await expect(setupPromise).rejects.toThrow(
+      "Error: P1001: Can't reach database server",
+    )
+    await expect(setupPromise).rejects.toThrow(
+      'Prisma schema loaded from schema.prisma',
+    )
+    expect(consoleError).toHaveBeenCalledWith(
+      expect.stringContaining("Error: P1001: Can't reach database server"),
+    )
+
+    consoleError.mockRestore()
+  })
+
+  it('keeps the end of very long output in the error message', async () => {
+    getPrismaDatasourceProvider.mockResolvedValue('sqlite')
+    const longOutput = 'x'.repeat(10_000) + '\nthe actual error'
+    // Only the fields the environment reads are provided; the remaining
+    // ExecaSyncReturnValue fields (signal, timedOut, ...) aren't used.
+    vi.mocked(execa.sync).mockReturnValueOnce({
+      failed: true,
+      exitCode: 1,
+      command: 'npx cedar prisma db push',
+      stdout: '',
+      stderr: longOutput,
+    } as execa.ExecaSyncReturnValue)
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const CedarApiVitestEnvironment = await loadEnvironment()
+
+    const error: unknown = await CedarApiVitestEnvironment.setup().catch(
+      (e: unknown) => e,
+    )
+
+    expect(error).toBeInstanceOf(Error)
+    const message = error instanceof Error ? error.message : ''
+    expect(message).toContain('the actual error')
+    expect(message.length).toBeLessThan(longOutput.length)
+
+    vi.mocked(console.error).mockRestore()
+  })
 })
