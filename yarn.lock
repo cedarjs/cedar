@@ -3868,12 +3868,12 @@ __metadata:
     "@types/mime-types": "npm:2.1.4"
     "@types/react": "npm:^19.2.0"
     "@types/react-dom": "npm:^19.2.0"
-    "@uppy/aws-s3": "npm:6.2.1"
-    "@uppy/core": "npm:6.1.0"
-    "@uppy/dashboard": "npm:6.0.0"
+    "@uppy/aws-s3": "npm:6.2.2"
+    "@uppy/core": "npm:6.2.0"
+    "@uppy/dashboard": "npm:6.0.1"
     "@uppy/drag-drop": "npm:6.0.0"
     "@uppy/react": "npm:6.0.0"
-    "@uppy/xhr-upload": "npm:6.0.0"
+    "@uppy/xhr-upload": "npm:6.0.1"
     better-sqlite3: "npm:12.11.1"
     concurrently: "npm:9.2.4"
     esbuild: "npm:0.28.2"
@@ -12381,13 +12381,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/retry@npm:0.12.2":
-  version: 0.12.2
-  resolution: "@types/retry@npm:0.12.2"
-  checksum: 10c0/07481551a988cc90b423351919928b9ddcd14e3f5591cac3ab950851bb20646e55a10e89141b38bc3093d2056d4df73700b22ff2612976ac86a6367862381884
-  languageName: node
-  linkType: hard
-
 "@types/send@npm:*":
   version: 0.17.6
   resolution: "@types/send@npm:0.17.6"
@@ -12934,12 +12927,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@uppy/aws-s3@npm:6.2.1":
-  version: 6.2.1
-  resolution: "@uppy/aws-s3@npm:6.2.1"
+"@uppy/aws-s3@npm:6.2.2":
+  version: 6.2.2
+  resolution: "@uppy/aws-s3@npm:6.2.2"
   peerDependencies:
-    "@uppy/core": ^6.1.0
-  checksum: 10c0/f1a41d0ddf0fde6d71b1f2340aff588b07da93b6ce5587f6e6148e89b904bcd292ab85330181fe864cc9089bd05b304db6ef1eab2d6e7b8efd00a062fae9f3c8
+    "@uppy/core": ^6.2.0
+  checksum: 10c0/bef98862cde21a6b06d8fbec81938ee418d3de8afd41f2d67f7d7125b24ac2d9ac440a294af674ff530ceee398517b2980be420253e6e06d930d1b6effe1b56b
   languageName: node
   linkType: hard
 
@@ -12969,9 +12962,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@uppy/core@npm:6.1.0":
-  version: 6.1.0
-  resolution: "@uppy/core@npm:6.1.0"
+"@uppy/core@npm:6.2.0":
+  version: 6.2.0
+  resolution: "@uppy/core@npm:6.2.0"
   dependencies:
     "@transloadit/prettier-bytes": "npm:^2.0.0"
     classnames: "npm:^2.5.1"
@@ -12980,26 +12973,26 @@ __metadata:
     namespace-emitter: "npm:^2.0.1"
     nanoid: "npm:^6.0.1"
     p-queue: "npm:^9.3.3"
-    p-retry: "npm:^6.1.0"
+    p-retry: "npm:^8.0.0"
     preact: "npm:^10.29.2"
-  checksum: 10c0/ef593e13be0b004c0cc320dda1e628c10747ad5c72ec290f1b29d6ca44f311c79cf0d2d1cab3b80c28b5c648ee8391987cdbeb68e3d9b10fb2c53923523a6987
+  checksum: 10c0/dfde6684ba6347ffc3a3e280193b256715ccba5773b9c49cb2efad6830af7c4728b5a2d743e3dc497ad11015af89146e8f16185382fac4fe0dd80f31a57f74ca
   languageName: node
   linkType: hard
 
-"@uppy/dashboard@npm:6.0.0":
-  version: 6.0.0
-  resolution: "@uppy/dashboard@npm:6.0.0"
+"@uppy/dashboard@npm:6.0.1":
+  version: 6.0.1
+  resolution: "@uppy/dashboard@npm:6.0.1"
   dependencies:
     "@transloadit/prettier-bytes": "npm:^2.0.0"
-    "@uppy/thumbnail-generator": "npm:^6.0.0"
+    "@uppy/thumbnail-generator": "npm:^6.0.1"
     classnames: "npm:^2.5.1"
     lodash: "npm:^4.18.1"
-    nanoid: "npm:^5.1.11"
+    nanoid: "npm:^6.0.1"
     preact: "npm:^10.29.2"
     shallow-equal: "npm:^3.1.0"
   peerDependencies:
-    "@uppy/core": ^6.0.0
-  checksum: 10c0/ba14b5e1138ea775c2a356afe791783e5eba494c6aca8597bf5c62e02f755b2f07db0ff4d2c82fabe985c67c16dc73cb2a6b84fd52abe43e96e3f127eea49b87
+    "@uppy/core": ^6.2.0
+  checksum: 10c0/5cc75176e03c214fdc25bd1285f93ad66a72fc188a486e81b9bdf51fbb6b0439371f4ddad08ab2ac3a4ec77b98fa8b731ce61dd469172848fd234d120bc5b356
   languageName: node
   linkType: hard
 
@@ -13042,23 +13035,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@uppy/thumbnail-generator@npm:^6.0.0":
-  version: 6.0.0
-  resolution: "@uppy/thumbnail-generator@npm:6.0.0"
+"@uppy/thumbnail-generator@npm:^6.0.1":
+  version: 6.0.1
+  resolution: "@uppy/thumbnail-generator@npm:6.0.1"
   dependencies:
     exifr: "npm:^7.1.3"
   peerDependencies:
-    "@uppy/core": ^6.0.0
-  checksum: 10c0/a4d7d238223424543e36c73ae85e1649ddd71dc24b877a3b62126e78c05d1baf3f0e0e61b7ccea9c466a0888b418de56125a8de35453f16530db985f179694b8
+    "@uppy/core": ^6.2.0
+  checksum: 10c0/7fdd69b76020ca9952f7d5983193a8bbdc5de24ca9672681262fd27264cccfe8267fd8f2b9d6962b4144c2af9a8f7351bef6ce2d5a4f94b170822ea12da40df2
   languageName: node
   linkType: hard
 
-"@uppy/xhr-upload@npm:6.0.0":
-  version: 6.0.0
-  resolution: "@uppy/xhr-upload@npm:6.0.0"
+"@uppy/xhr-upload@npm:6.0.1":
+  version: 6.0.1
+  resolution: "@uppy/xhr-upload@npm:6.0.1"
   peerDependencies:
-    "@uppy/core": ^6.0.0
-  checksum: 10c0/b667bbcd6c6e65f4c0fde5fce7f3658e81ca891680e7605909025c27ef5ed3c2f88161b9c586eb094376350a9c0e97abb5f2ce98f3fbe199578f2084d85f39a3
+    "@uppy/core": ^6.2.0
+  checksum: 10c0/7abec2f16b5078fdf8213011ba78dcdff9cf3232fd7a2ce0237f097cc2cdab977c7059bdd1651cc194e82be4d40069749ac0c7f276633b3b709aefe86c58de3e
   languageName: node
   linkType: hard
 
@@ -20347,7 +20340,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"is-network-error@npm:^1.0.0":
+"is-network-error@npm:^1.3.0":
   version: 1.3.2
   resolution: "is-network-error@npm:1.3.2"
   checksum: 10c0/37edc576497b21d022754b49203358ee80fdac4a11a71a09687f38ad789ec437dd930c223301df39f1c920566692b31345e0108ae720996e592cab3879eca74f
@@ -23263,15 +23256,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nanoid@npm:^5.1.11":
-  version: 5.1.16
-  resolution: "nanoid@npm:5.1.16"
-  bin:
-    nanoid: bin/nanoid.js
-  checksum: 10c0/04b4f96237f5639716da0e98f453361b313bebaf458bb67dea2d384724fc8b3340a28f032a4373052150bcf3b801d122e291d81ae4fc522969f55c134f4401a3
-  languageName: node
-  linkType: hard
-
 "nanoid@npm:^6.0.1":
   version: 6.0.1
   resolution: "nanoid@npm:6.0.1"
@@ -24579,14 +24563,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"p-retry@npm:^6.1.0":
-  version: 6.2.1
-  resolution: "p-retry@npm:6.2.1"
+"p-retry@npm:^8.0.0":
+  version: 8.0.1
+  resolution: "p-retry@npm:8.0.1"
   dependencies:
-    "@types/retry": "npm:0.12.2"
-    is-network-error: "npm:^1.0.0"
-    retry: "npm:^0.13.1"
-  checksum: 10c0/10d014900107da2c7071ad60fffe4951675f09930b7a91681643ea224ae05649c05001d9e78436d902fe8b116d520dd1f60e72e091de097e2640979d56f3fb60
+    is-network-error: "npm:^1.3.0"
+  checksum: 10c0/3ce078a179ba2303d29d516db57abed71abd940c29aff292f97f64e2682777b0cb2b03321f4e3badb8185137a3a85cc003ba8060a769b179a5ba8059e7ecdd2c
   languageName: node
   linkType: hard
 
