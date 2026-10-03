@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { catchAllEntry } from '@universal-deploy/store'
 import type { Plugin } from 'vite'
 
 import { getPaths } from '@cedarjs/project-config'
@@ -43,22 +44,26 @@ export function cedarNetlifySkewProtectionPlugin(
     name: 'cedar-netlify-skew-protection',
     apply: 'build',
 
-    buildStart() {
-      // Only run during the 'ssr' build (the UD SSR/Functions bundle).
+    transform(code, id) {
       // Nothing imports virtual:cedar-netlify-skew-token yet — that lands
-      // with the runtime cookie/header propagation follow-up — so without
-      // forcing a chunk here Vite would tree-shake the module away and the
-      // deploy token would never actually make it into the bundle this
-      // phase promises to stamp.
-      if (this.environment?.name !== 'ssr') {
-        return
+      // with the runtime cookie/header propagation follow-up. Netlify's own
+      // function bundler traces reachability from the SSR entry it detects
+      // in api/dist/ud (built from virtual:ud:catch-all, Universal Deploy's
+      // single server entry), so force-emitting the token module as a
+      // standalone chunk isn't enough: an unreferenced file in Vite's output
+      // can still be dropped when Netlify packages the function. Splicing a
+      // real import into the catch-all entry's own source instead gives
+      // Rollup — and therefore Netlify's bundler — a genuine, traceable
+      // reference to the token module, so it's guaranteed to end up in the
+      // bundled index.js.
+      if (this.environment?.name !== 'ssr' || id !== catchAllEntry) {
+        return undefined
       }
 
-      this.emitFile({
-        type: 'chunk',
-        id: RESOLVED_SKEW_TOKEN_ID,
-        fileName: 'chunks/cedar-skew-token.js',
-      })
+      return {
+        code: `import ${JSON.stringify(VIRTUAL_SKEW_TOKEN_ID)}\n${code}`,
+        map: null,
+      }
     },
 
     resolveId(id) {
