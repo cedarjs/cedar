@@ -70,14 +70,18 @@ function addNetlifyPluginsToViteConfigTask(): ListrTask {
       const hasNetlifyCompat = content.includes(
         '@universal-deploy/netlify/vite',
       )
-      const hasSkewProtection = content.includes(
+      const hasSkewProtectionImport = content.includes(
         'cedarNetlifySkewProtectionPlugin',
+      )
+      const hasSkewProtectionCall = content.includes(
+        'cedarNetlifySkewProtectionPlugin(',
       )
 
       if (
         hasNetlifyPlugin &&
         hasNetlifyCompat &&
-        hasSkewProtection &&
+        hasSkewProtectionImport &&
+        hasSkewProtectionCall &&
         content.includes('netlifyCompat(')
       ) {
         task.skip('Netlify plugins are already configured.')
@@ -85,7 +89,7 @@ function addNetlifyPluginsToViteConfigTask(): ListrTask {
       }
 
       // Add import statements
-      if (!hasNetlifyPlugin || !hasNetlifyCompat || !hasSkewProtection) {
+      if (!hasNetlifyPlugin || !hasNetlifyCompat || !hasSkewProtectionImport) {
         const newContent = content.replace(
           /(import\s+\{[^}]*\}\s+from\s+['"]vite['"];?)/,
           (match) => {
@@ -99,7 +103,7 @@ function addNetlifyPluginsToViteConfigTask(): ListrTask {
               result = `import netlifyCompat from '@universal-deploy/netlify/vite'\n${result}`
             }
 
-            if (!hasSkewProtection) {
+            if (!hasSkewProtectionImport) {
               result = `import { cedarNetlifySkewProtectionPlugin } from '@cedarjs/vite'\n${result}`
             }
 
@@ -120,7 +124,7 @@ function addNetlifyPluginsToViteConfigTask(): ListrTask {
               "import netlifyCompat from '@universal-deploy/netlify/vite'\n"
           }
 
-          if (!hasSkewProtection) {
+          if (!hasSkewProtectionImport) {
             prepend +=
               "import { cedarNetlifySkewProtectionPlugin } from '@cedarjs/vite'\n"
           }
@@ -145,7 +149,7 @@ function addNetlifyPluginsToViteConfigTask(): ListrTask {
         if (result) {
           content = result
         }
-      } else if (!hasSkewProtection) {
+      } else if (!hasSkewProtectionCall) {
         const result = insertPluginsBeforeCedar({
           content,
           pluginCodes: ['cedarNetlifySkewProtectionPlugin()'],
