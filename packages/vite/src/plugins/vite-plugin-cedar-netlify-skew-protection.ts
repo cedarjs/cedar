@@ -10,6 +10,14 @@ export interface CedarNetlifySkewProtectionPluginOptions {
   headerName?: string
   queryName?: string
   cookieName?: string
+  /**
+   * How long (in seconds) the skew-token cookie should pin a client to this
+   * deploy before expiring. Netlify's own guidance is to keep this short to
+   * minimize the window where a client could end up pinned to a deploy
+   * that's since been cleaned up — but long enough to outlast a normal
+   * session. Defaults to 4 hours.
+   */
+  cookieMaxAge?: number
 }
 
 const VIRTUAL_SKEW_TOKEN_ID = 'virtual:cedar-netlify-skew-token'
@@ -27,7 +35,14 @@ const RESOLVED_SKEW_TOKEN_ID = '\0' + VIRTUAL_SKEW_TOKEN_ID
  * platform-specific `context` forwarded through, so we can't read the
  * runtime-provided token. Instead we stamp the build-time value (identical
  * to the runtime one — both describe the same deploy) into the bundle as a
- * virtual module, consumed by the runtime cookie/header propagation code.
+ * virtual module, then wrap Universal Deploy's catch-all Fetchable so every
+ * response pins the client to this deploy via a `Set-Cookie`. Cookies are
+ * the only one of Netlify's three skew-protection sources (cookie, header,
+ * query) that propagates for free — the browser resends them on every
+ * same-origin request without any client-side code having to attach
+ * anything, so that's the only mechanism this phase implements. Header/query
+ * propagation would only matter for requests that don't carry cookies (e.g.
+ * cross-origin calls), which is a narrower, separate follow-up.
  */
 export function cedarNetlifySkewProtectionPlugin(
   options: CedarNetlifySkewProtectionPluginOptions = {},
@@ -36,6 +51,7 @@ export function cedarNetlifySkewProtectionPlugin(
     headerName = 'cedar-skew-token',
     queryName = 'skew',
     cookieName = 'cedar-skew-token',
+    cookieMaxAge = 60 * 60 * 4,
   } = options
 
   const skewToken = process.env.NETLIFY_SKEW_PROTECTION_TOKEN ?? ''
@@ -45,23 +61,74 @@ export function cedarNetlifySkewProtectionPlugin(
     apply: 'build',
 
     transform(code, id) {
-      // Nothing imports virtual:cedar-netlify-skew-token yet — that lands
-      // with the runtime cookie/header propagation follow-up. Netlify's own
-      // function bundler traces reachability from the SSR entry it detects
-      // in api/dist/ud (built from virtual:ud:catch-all, Universal Deploy's
-      // single server entry), so force-emitting the token module as a
-      // standalone chunk isn't enough: an unreferenced file in Vite's output
-      // can still be dropped when Netlify packages the function. Splicing a
-      // real import into the catch-all entry's own source instead gives
-      // Rollup — and therefore Netlify's bundler — a genuine, traceable
-      // reference to the token module, so it's guaranteed to end up in the
-      // bundled index.js.
+      // Netlify's own function bundler traces reachability from the SSR
+      // entry it detects in api/dist/ud (built from virtual:ud:catch-all,
+      // Universal Deploy's single server entry). Wrapping that entry's
+      // exported Fetchable here — rather than force-emitting the token
+      // module as a standalone chunk — gives Rollup (and therefore
+      // Netlify's bundler) a genuine, traceable reference to the token
+      // module, and is also the one place every response from every UD
+      // route passes through, so it's the natural place to stamp the
+      // skew-token cookie onto all of them.
       if (this.environment?.name !== 'ssr' || id !== catchAllEntry) {
         return undefined
       }
 
+      // The generated catch-all module (see @universal-deploy/vite's
+      // `catchAll()`) always ends in a single `export default { ...,
+      // async fetch(request, ...args) {...} }`. Renaming that to a local
+      // const lets us wrap `.fetch` below before re-exporting it, without
+      // needing to parse/regenerate the rest of the (otherwise opaque,
+      // externally-owned) module body.
+      const wrappedCode = code.replace(
+        /^export default \{/m,
+        'const __cedarSkewCatchAllHandler = {',
+      )
+
+      if (wrappedCode === code) {
+        this.warn(
+          'cedar-netlify-skew-protection: expected "export default {" in ' +
+            'the Universal Deploy catch-all entry but did not find it — ' +
+            'skipping runtime skew-token cookie propagation. This likely ' +
+            'means @universal-deploy/vite changed how it generates the ' +
+            'catch-all entry.',
+        )
+        return undefined
+      }
+
       return {
-        code: `import ${JSON.stringify(VIRTUAL_SKEW_TOKEN_ID)}\n${code}`,
+        code: [
+          `import { CEDAR_SKEW_TOKEN, CEDAR_SKEW_COOKIE_NAME } from ${JSON.stringify(VIRTUAL_SKEW_TOKEN_ID)}`,
+          wrappedCode,
+          '',
+          'const __cedarSkewOriginalFetch =',
+          '  __cedarSkewCatchAllHandler.fetch.bind(__cedarSkewCatchAllHandler)',
+          '',
+          '__cedarSkewCatchAllHandler.fetch = async (request, ...args) => {',
+          '  const response = await __cedarSkewOriginalFetch(request, ...args)',
+          '',
+          '  // No token (e.g. a local `cedar build --ud` run outside a',
+          '  // Netlify build) or no response (an unmatched route) — nothing',
+          '  // to stamp.',
+          '  if (!CEDAR_SKEW_TOKEN || !response) {',
+          '    return response',
+          '  }',
+          '',
+          '  const headers = new Headers(response.headers)',
+          '  headers.append(',
+          '    "set-cookie",',
+          `    \`\${CEDAR_SKEW_COOKIE_NAME}=\${CEDAR_SKEW_TOKEN}; Path=/; Max-Age=${cookieMaxAge}; HttpOnly; Secure; SameSite=Lax\`,`,
+          '  )',
+          '',
+          '  return new Response(response.body, {',
+          '    status: response.status,',
+          '    statusText: response.statusText,',
+          '    headers,',
+          '  })',
+          '}',
+          '',
+          'export default __cedarSkewCatchAllHandler',
+        ].join('\n'),
         map: null,
       }
     },
