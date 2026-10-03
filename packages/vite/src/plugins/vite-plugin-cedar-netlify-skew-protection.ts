@@ -43,6 +43,24 @@ export function cedarNetlifySkewProtectionPlugin(
     name: 'cedar-netlify-skew-protection',
     apply: 'build',
 
+    buildStart() {
+      // Only run during the 'ssr' build (the UD SSR/Functions bundle).
+      // Nothing imports virtual:cedar-netlify-skew-token yet — that lands
+      // with the runtime cookie/header propagation follow-up — so without
+      // forcing a chunk here Vite would tree-shake the module away and the
+      // deploy token would never actually make it into the bundle this
+      // phase promises to stamp.
+      if (this.environment?.name !== 'ssr') {
+        return
+      }
+
+      this.emitFile({
+        type: 'chunk',
+        id: RESOLVED_SKEW_TOKEN_ID,
+        fileName: 'chunks/cedar-skew-token.js',
+      })
+    },
+
     resolveId(id) {
       if (id === VIRTUAL_SKEW_TOKEN_ID) {
         return RESOLVED_SKEW_TOKEN_ID
