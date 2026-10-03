@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, vi, it } from 'vitest'
 
+import { PrismaAdapter } from '../../adapters/PrismaAdapter/PrismaAdapter.js'
 import { DEFAULT_LOGGER, MAX_BACKOFF_MS } from '../../consts.js'
 import * as errors from '../../errors.js'
 import type { BaseJob } from '../../types.js'
@@ -296,15 +297,12 @@ describe('perform', () => {
 
     await expect(executor.perform()).resolves.toBe(true)
 
-    expect(adapterErrorSpy).toHaveBeenCalledWith({
-      job: options.job,
-      runAt: new Date(date.getTime() + 625_000),
-      error: mockError,
-    })
-
+    // The final attempt is recorded in the single `failure()` write
+    expect(adapterErrorSpy).not.toHaveBeenCalled()
     expect(adapterFailureSpy).toHaveBeenCalledWith({
       job: options.job,
       deleteJob: true,
+      error: mockError,
     })
   })
 
@@ -339,14 +337,11 @@ describe('perform', () => {
 
     await expect(executor.perform()).resolves.toBe(true)
 
-    expect(adapterErrorSpy).toHaveBeenCalledWith({
-      job: options.job,
-      runAt: new Date(date.getTime() + MAX_BACKOFF_MS),
-      error: mockError,
-    })
+    expect(adapterErrorSpy).not.toHaveBeenCalled()
     expect(adapterFailureSpy).toHaveBeenCalledWith({
       job: options.job,
       deleteJob: false,
+      error: mockError,
     })
   })
 
@@ -422,41 +417,6 @@ describe('perform', () => {
       expect.stringContaining('mock database error'),
     )
     expect(loggerErrorSpy).toHaveBeenCalledWith(adapterError.stack)
-  })
-
-  it('still fails a job at maxAttempts when the adapter fails to record its error', async () => {
-    const mockAdapter = new MockAdapter()
-    const mockError = new Error('mock error in the job perform method')
-    const mockJob = {
-      id: 1,
-      name: 'TestJob',
-      path: 'TestJob/TestJob',
-      args: ['foo'],
-      attempts: 24,
-
-      perform: vi.fn(() => {
-        throw mockError
-      }),
-    }
-    const options: ExecutorOptions = {
-      adapter: mockAdapter,
-      logger: mockLogger,
-      job: mockJob,
-    }
-    const executor = new Executor(options)
-
-    vi.spyOn(mockAdapter, 'error').mockRejectedValue(
-      new Error('mock database error'),
-    )
-    const adapterFailureSpy = vi.spyOn(mockAdapter, 'failure')
-    loadersMockFns.loadJob.mockImplementation(() => mockJob)
-
-    await expect(executor.perform()).resolves.toBe(false)
-
-    expect(adapterFailureSpy).toHaveBeenCalledWith({
-      job: options.job,
-      deleteJob: false,
-    })
   })
 
   it('logs, instead of throwing, when the adapter fails to mark a job as failed', async () => {
@@ -568,6 +528,197 @@ describe('perform', () => {
     expect(context?.signal.aborted).toEqual(true)
   })
 
+  it('logs a warning when a non-recurring job times out', async () => {
+    const mockAdapter = new MockAdapter()
+    const mockJob = {
+      id: 1,
+      name: 'TestJob',
+      path: 'TestJob/TestJob',
+      args: ['foo'],
+      attempts: 1,
+
+      perform: vi.fn(() => new Promise<void>(() => {})),
+    }
+    const executor = new Executor({
+      adapter: mockAdapter,
+      logger: mockLogger,
+      job: mockJob,
+      maxRuntime: 10,
+    })
+
+    const loggerWarnSpy = vi.spyOn(mockLogger, 'warn')
+    loadersMockFns.loadJob.mockImplementation(() => mockJob)
+
+    const performPromise = executor.perform()
+    await vi.advanceTimersByTimeAsync(10_000)
+    await performPromise
+
+    expect(loggerWarnSpy).toHaveBeenCalledWith(
+      mockJob,
+      '[CedarJS Jobs] Failed job 1 (TestJob/TestJob:TestJob): exceeded max ' +
+        'runtime (10 seconds)',
+    )
+  })
+
+  it('logs an error that the schedule stopped when a recurring job times out', async () => {
+    const mockAdapter = new MockAdapter()
+    const mockJob = {
+      id: 1,
+      name: 'TestJob',
+      path: 'TestJob/TestJob',
+      args: ['foo'],
+      attempts: 1,
+      cron: '*/10 * * * *',
+
+      perform: vi.fn(() => new Promise<void>(() => {})),
+    }
+    const executor = new Executor({
+      adapter: mockAdapter,
+      logger: mockLogger,
+      job: mockJob,
+      maxRuntime: 10,
+    })
+
+    const adapterFailureSpy = vi.spyOn(mockAdapter, 'failure')
+    const loggerErrorSpy = vi.spyOn(mockLogger, 'error')
+    const loggerWarnSpy = vi.spyOn(mockLogger, 'warn')
+    loadersMockFns.loadJob.mockImplementation(() => mockJob)
+
+    const performPromise = executor.perform()
+    await vi.advanceTimersByTimeAsync(10_000)
+    await performPromise
+
+    expect(adapterFailureSpy).toHaveBeenCalledWith({
+      job: mockJob,
+      deleteJob: false,
+      error: expect.any(errors.JobTimeoutError),
+    })
+    expect(loggerErrorSpy).toHaveBeenCalledWith(
+      mockJob,
+      '[CedarJS Jobs] Failed job 1 (TestJob/TestJob:TestJob): exceeded max ' +
+        "runtime (10 seconds). Its recurring schedule (cron: '*/10 * * * *') " +
+        'has stopped and the job will not run again. To restart it, ' +
+        'schedule the job again with ' +
+        "`later(job, args, { cron: '*/10 * * * *' })`",
+    )
+    expect(loggerWarnSpy).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringContaining('exceeded max runtime'),
+    )
+  })
+
+  it('logs that the schedule stopped only after the timeout is recorded', async () => {
+    const mockAdapter = new MockAdapter()
+    const mockJob = {
+      id: 1,
+      name: 'TestJob',
+      path: 'TestJob/TestJob',
+      args: ['foo'],
+      attempts: 1,
+      cron: '*/10 * * * *',
+
+      perform: vi.fn(() => new Promise<void>(() => {})),
+    }
+    const executor = new Executor({
+      adapter: mockAdapter,
+      logger: mockLogger,
+      job: mockJob,
+      maxRuntime: 10,
+    })
+
+    const adapterFailureSpy = vi.spyOn(mockAdapter, 'failure')
+    const loggerErrorSpy = vi.spyOn(mockLogger, 'error')
+    loadersMockFns.loadJob.mockImplementation(() => mockJob)
+
+    const performPromise = executor.perform()
+    await vi.advanceTimersByTimeAsync(10_000)
+    await performPromise
+
+    const stoppedLogIndex = loggerErrorSpy.mock.calls.findIndex((call) =>
+      String(call[1]).includes('has stopped'),
+    )
+
+    expect(stoppedLogIndex).not.toEqual(-1)
+    expect(
+      loggerErrorSpy.mock.invocationCallOrder[stoppedLogIndex],
+    ).toBeGreaterThan(adapterFailureSpy.mock.invocationCallOrder[0])
+  })
+
+  it('does not log that the schedule stopped when recording a timeout throws', async () => {
+    const mockAdapter = new MockAdapter()
+    const mockJob = {
+      id: 1,
+      name: 'TestJob',
+      path: 'TestJob/TestJob',
+      args: ['foo'],
+      attempts: 1,
+      cron: '*/10 * * * *',
+
+      perform: vi.fn(() => new Promise<void>(() => {})),
+    }
+    const executor = new Executor({
+      adapter: mockAdapter,
+      logger: mockLogger,
+      job: mockJob,
+      maxRuntime: 10,
+    })
+
+    vi.spyOn(mockAdapter, 'failure').mockRejectedValue(
+      new Error('mock database error'),
+    )
+    const loggerErrorSpy = vi.spyOn(mockLogger, 'error')
+    loadersMockFns.loadJob.mockImplementation(() => mockJob)
+
+    const performPromise = executor.perform()
+    await vi.advanceTimersByTimeAsync(10_000)
+
+    await expect(performPromise).resolves.toBe(false)
+    expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Could not record the error for job 1'),
+    )
+    expect(loggerErrorSpy).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringContaining('has stopped'),
+    )
+  })
+
+  it('does not log that the schedule stopped when recording max attempts throws', async () => {
+    const mockAdapter = new MockAdapter()
+    const mockJob = {
+      id: 1,
+      name: 'TestJob',
+      path: 'TestJob/TestJob',
+      args: ['foo'],
+      attempts: 24,
+      cron: '*/10 * * * *',
+
+      perform: vi.fn(() => {
+        throw new Error('mock error in the job perform method')
+      }),
+    }
+    const executor = new Executor({
+      adapter: mockAdapter,
+      logger: mockLogger,
+      job: mockJob,
+    })
+
+    vi.spyOn(mockAdapter, 'failure').mockRejectedValue(
+      new Error('mock database error'),
+    )
+    const loggerErrorSpy = vi.spyOn(mockLogger, 'error')
+    loadersMockFns.loadJob.mockImplementation(() => mockJob)
+
+    await expect(executor.perform()).resolves.toBe(false)
+
+    expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Could not record the error for job 1'),
+    )
+    expect(loggerErrorSpy).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringContaining('has stopped'),
+    )
+  })
+
   it('does not time out a job that completes before `maxRuntime`', async () => {
     const mockAdapter = new MockAdapter()
     const mockJob = {
@@ -635,6 +786,274 @@ describe('perform', () => {
       runAt: new Date(2025, 6, 8, 10, 0),
       deleteJob: false,
     })
+  })
+})
+
+describe('recurring (cron) jobs with the PrismaAdapter', () => {
+  interface JobRow {
+    id: number
+    attempts: number
+    runAt: Date | null
+    failedAt: Date | null
+    lockedAt: Date | null
+    lockedBy: string | null
+    lastError: string | null
+  }
+
+  interface RowWhere {
+    id: number
+    failedAt: null
+    attempts: number
+    lockedAt: Date | null
+  }
+
+  const maxAttempts = 5
+  const cron = '*/10 * * * *'
+  let row: JobRow | null
+  let shouldFail: boolean
+  let adapter: PrismaAdapter
+
+  // Compares like the database does: dates by value
+  const sameValue = (a: Date | null, b: Date | null) =>
+    a instanceof Date && b instanceof Date
+      ? a.getTime() === b.getTime()
+      : a === b
+
+  const rowMatches = (where: RowWhere) =>
+    row !== null &&
+    row.id === where.id &&
+    row.failedAt === where.failedAt &&
+    row.attempts === where.attempts &&
+    sameValue(row.lockedAt, where.lockedAt)
+
+  const getRow = () => {
+    if (!row) {
+      throw new Error('The job row has been deleted')
+    }
+
+    return row
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2025, 6, 7, 10, 0))
+
+    row = {
+      id: 1,
+      attempts: 0,
+      runAt: new Date(),
+      failedAt: null,
+      lockedAt: null,
+      lockedBy: null,
+      lastError: null,
+    }
+    shouldFail = false
+
+    // A minimal in-memory stand-in for a Prisma client with a single
+    // BackgroundJob row, applying the adapter's guarded writes to that row
+    const db = {
+      _activeProvider: 'sqlite',
+      backgroundJob: {
+        updateMany: vi.fn(
+          ({ where, data }: { where: RowWhere; data: Partial<JobRow> }) => {
+            if (!rowMatches(where)) {
+              return { count: 0 }
+            }
+
+            Object.assign(getRow(), data)
+
+            return { count: 1 }
+          },
+        ),
+        deleteMany: vi.fn(({ where }: { where: RowWhere }) => {
+          if (!rowMatches(where)) {
+            return { count: 0 }
+          }
+
+          row = null
+
+          return { count: 1 }
+        }),
+        create: vi.fn(),
+        delete: vi.fn(),
+        findFirst: vi.fn(),
+        update: vi.fn(),
+      },
+    }
+
+    adapter = new PrismaAdapter({ db, logger: mockLogger })
+
+    loadersMockFns.loadJob.mockImplementation(() => ({
+      perform: () => {
+        if (shouldFail) {
+          throw new Error('mock error in a cron run')
+        }
+      },
+    }))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.resetAllMocks()
+  })
+
+  // Claims the job the way `PrismaAdapter.find()` does (locking it and
+  // incrementing `attempts`) and returns the claimed job
+  const claim = () => {
+    const claimed = getRow()
+    claimed.attempts += 1
+    claimed.lockedAt = new Date()
+    claimed.lockedBy = 'worker'
+
+    return {
+      ...claimed,
+      handler: '',
+      cron,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      name: 'CronJob',
+      path: 'CronJob/CronJob',
+      args: [],
+    }
+  }
+
+  const run = async (job: ReturnType<typeof claim>) => {
+    await new Executor({
+      adapter,
+      logger: mockLogger,
+      job,
+      maxAttempts,
+    }).perform()
+  }
+
+  const runOnce = async () => {
+    await run(claim())
+  }
+
+  it('keeps running after more than maxAttempts successful runs', async () => {
+    for (let i = 0; i < maxAttempts * 3; i++) {
+      await runOnce()
+
+      expect(getRow().attempts).toEqual(0)
+      expect(getRow().failedAt).toBeNull()
+      expect(getRow().runAt).not.toBeNull()
+    }
+  })
+
+  it('backs off based on consecutive failures after many successful runs', async () => {
+    for (let i = 0; i < maxAttempts * 3; i++) {
+      await runOnce()
+    }
+
+    shouldFail = true
+    const now = new Date()
+    await runOnce()
+
+    expect(getRow().failedAt).toBeNull()
+    expect(getRow().attempts).toEqual(1)
+    // 1 ** 4 seconds
+    expect(getRow().runAt).toEqual(new Date(now.getTime() + 1_000))
+
+    await runOnce()
+
+    expect(getRow().failedAt).toBeNull()
+    expect(getRow().attempts).toEqual(2)
+    // 2 ** 4 seconds
+    expect(getRow().runAt).toEqual(new Date(now.getTime() + 16_000))
+
+    // A successful retry resumes the schedule with a clean slate
+    shouldFail = false
+    await runOnce()
+
+    expect(getRow().attempts).toEqual(0)
+    expect(getRow().lastError).toBeNull()
+    expect(getRow().runAt).toEqual(new Date(2025, 6, 7, 10, 10))
+  })
+
+  it('fails permanently after maxAttempts consecutive failures and logs that the schedule stopped', async () => {
+    await runOnce()
+    await runOnce()
+
+    const loggerErrorSpy = vi.spyOn(mockLogger, 'error')
+    const loggerWarnSpy = vi.spyOn(mockLogger, 'warn')
+
+    shouldFail = true
+
+    for (let i = 1; i < maxAttempts; i++) {
+      await runOnce()
+
+      expect(getRow().failedAt).toBeNull()
+      expect(getRow().attempts).toEqual(i)
+    }
+
+    expect(loggerErrorSpy).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringContaining('recurring schedule'),
+    )
+
+    await runOnce()
+
+    expect(getRow().failedAt).not.toBeNull()
+    expect(getRow().runAt).toBeNull()
+    expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 1, cron }),
+      expect.stringContaining(
+        'reached max attempts (5). Its recurring schedule ' +
+          "(cron: '*/10 * * * *') has stopped",
+      ),
+    )
+    expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringContaining("later(job, args, { cron: '*/10 * * * *' })"),
+    )
+    expect(loggerWarnSpy).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringContaining('reached max attempts'),
+    )
+  })
+
+  it("ignores a stalled claim's late outcome once the job has been claimed again", async () => {
+    // Worker A claims the job and stalls
+    const staleJob = claim()
+
+    // Worker B reclaims it once A's lock is stale, and the run succeeds,
+    // resetting `attempts` to 0
+    vi.advanceTimersByTime(60_000)
+    await run(claim())
+
+    expect(getRow().attempts).toEqual(0)
+
+    // The next run is claimed, and has the same `attempts` as A's claim
+    vi.advanceTimersByTime(60_000)
+    const currentJob = claim()
+
+    expect(currentJob.attempts).toEqual(staleJob.attempts)
+
+    const lockedRow = { ...getRow() }
+
+    // A's late outcome, whichever it is, doesn't touch the current claim
+    await adapter.success({
+      job: staleJob,
+      runAt: new Date(),
+      deleteJob: false,
+    })
+    await adapter.success({ job: staleJob, runAt: undefined, deleteJob: true })
+    await adapter.error({
+      job: staleJob,
+      runAt: new Date(),
+      error: new Error('late error'),
+    })
+    await adapter.failure({ job: staleJob, deleteJob: false })
+    await adapter.failure({ job: staleJob, deleteJob: true })
+
+    expect(getRow()).toEqual(lockedRow)
+
+    // The current claim's own outcome is still recorded
+    await run(currentJob)
+
+    expect(getRow().lockedAt).toBeNull()
+    expect(getRow().attempts).toEqual(0)
+    expect(getRow().runAt).not.toBeNull()
   })
 })
 
