@@ -428,7 +428,16 @@ Scheduling a recurring job doesn't run it right away. Its first run happens the
 next time the `cron` schedule matches (midnight, in the example above), and
 after each successful run the job is scheduled again for the following match. If
 a run fails, the job is retried after a backoff delay, like any other job,
-rather than at the next match.
+rather than at the next match. Matches of the schedule that pass while a run is
+being retried are skipped.
+
+For a recurring job, `attempts` and `maxAttempts` count consecutive failures of
+a single run: every successful run resets `attempts` to 0. If a run fails
+`maxAttempts` times in a row, or a run exceeds `maxRuntime`, the job is
+permanently failed like any other job, its schedule stops, and the worker logs
+an error saying so. To restart the
+schedule, fix the problem and schedule the job again with
+`later(NightlyReportJob, { cron: '0 0 * * *' })`.
 
 The `cron` schedule is evaluated in the local time zone of the process doing the
 scheduling: the process calling `later()` for the first run, and the job worker
@@ -592,7 +601,7 @@ This is an array of objects. Each object represents the config for a single "gro
 - `logger`: the logger to use when working on jobs. If not provided, defaults to the `logger` set on the `JobManager`. You can use this logger in the `perform()` function of your job by accessing `jobs.logger`
 - queue: **[required]** the named queue(s) in which this worker group will watch for jobs. There is a reserved `'*'` value you can use which means "all queues." This can be an array of queues as well: `['default', 'email']` for example.
 - `count`: **[required]** the number of workers to start with this config.
-- `maxAttempts`: the maximum number of times to retry a job before giving up. A job that throws an error will be set to retry in the future with a backoff of (number of previous attempts) \*\* 4 seconds, capped at 7 days. After this number, a job is considered "failed" and will not be re-attempted. Default: `24`.
+- `maxAttempts`: the maximum number of times to retry a job before giving up. A job that throws an error will be set to retry in the future with a backoff of (number of previous attempts) \*\* 4 seconds, capped at 7 days. After this number, a job is considered "failed" and will not be re-attempted. For [recurring jobs](#recurring-jobs) this counts consecutive failures of a single run. Default: `24`.
 - `maxRuntime`: the maximum amount of time, in seconds, that a job is allowed to run. A job that runs longer than this is marked as **failed** (it will not be retried, and the timeout is recorded in `lastError`) and the worker moves on to the next job. The job is told to stop what it's doing via an `AbortSignal`—see [Job timeouts](#job-timeouts). This is also how long a job's lock is honored if the worker that locked it crashed without cleaning up after itself: once `maxRuntime` (plus a one-minute grace period, so a live worker always gets to record the timeout first) has passed, another worker is allowed to pick the job up again. Default: `14_400` (4 hours).
 - `deleteFailedJobs`: when a job has failed (maximum number of retries has occurred) you can keep the job in the database, or delete it. Default: `false`.
 - `deleteSuccessfulJobs`: when a job has succeeded, you can keep the job in the database, or delete it. It's generally assumed that your jobs _will_ succeed so it usually makes sense to clear them out and keep the queue lean. Default: `true`.
@@ -853,9 +862,9 @@ The general gist of the required functions:
 
 - `find()` should find a job to be run, lock it and return it (minimum return of an object containing `id`, `name`, `path`, `args` and `attempts` properties)
 - `schedule()` accepts `name`, `path`, `args`, `runAt`, `queue` and `priority` and should store the job. Whatever it returns is returned from `later()`, so return at least an object with the stored job's `id` so users can cancel it or check on it later
-- `success()` accepts the same job object returned from `find()` and a `deleteJob` boolean for whether the job should be deleted upon success.
+- `success()` accepts the same job object returned from `find()`, a `runAt` date and a `deleteJob` boolean for whether the job should be deleted upon success. `runAt` is set for recurring (cron) jobs: store it as the job's next run time and reset the job's `attempts` to 0.
 - `error()` accepts the same job object returned from `find()` and an error instance. Does whatever failure means to you (like unlock the job and reschedule a time for it to run again in the future)
-- `failure()` is called when the job has reached `maxAttempts` or exceeded `maxRuntime`. Accepts the job object, a `deleteJob` boolean that says whether the job should be deleted, and—when the job is failed directly without a preceding `error()` call (a timeout)—an `error` that should be recorded in the same write that marks the job as failed.
+- `failure()` is called, instead of `error()`, when the job has reached `maxAttempts` or exceeded `maxRuntime`. Accepts the job object, a `deleteJob` boolean that says whether the job should be deleted, and the `error` of the failed attempt, which should be recorded in the same write that marks the job as failed.
 - `clear()` remove all jobs from the queue (mostly used in development).
 - `cancel()` (optional) accepts an object with a `jobId` property and should make sure that job never runs (or is never retried, if it's currently running). Return `true` if a job was cancelled, `false` otherwise. If you don't implement this function, `later.cancel()` will throw a `CancelNotImplementedError`.
 
