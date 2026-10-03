@@ -15,10 +15,20 @@ import BlogLayout from 'src/layouts/BlogLayout'
 const Routes = () => {
   return (
     <Router>
-      <Set wrap={ScaffoldLayout} title="Posts" titleTo="posts" buttonLabel="New Post" buttonTo="newPost">
+      <Set
+        wrap={ScaffoldLayout}
+        title="Posts"
+        titleTo="posts"
+        buttonLabel="New Post"
+        buttonTo="newPost"
+      >
         // highlight-start
         <Route path="/admin/posts/new" page={PostNewPostPage} name="newPost" />
-        <Route path="/admin/posts/{id:Int}/edit" page={PostEditPostPage} name="editPost" />
+        <Route
+          path="/admin/posts/{id:Int}/edit"
+          page={PostEditPostPage}
+          name="editPost"
+        />
         <Route path="/admin/posts/{id:Int}" page={PostPostPage} name="post" />
         <Route path="/admin/posts" page={PostPostsPage} name="posts" />
         // highlight-end
@@ -48,10 +58,20 @@ import BlogLayout from 'src/layouts/BlogLayout'
 const Routes = () => {
   return (
     <Router>
-      <Set wrap={ScaffoldLayout} title="Posts" titleTo="posts" buttonLabel="New Post" buttonTo="newPost">
+      <Set
+        wrap={ScaffoldLayout}
+        title="Posts"
+        titleTo="posts"
+        buttonLabel="New Post"
+        buttonTo="newPost"
+      >
         // highlight-start
         <Route path="/admin/posts/new" page={PostNewPostPage} name="newPost" />
-        <Route path="/admin/posts/{id:Int}/edit" page={PostEditPostPage} name="editPost" />
+        <Route
+          path="/admin/posts/{id:Int}/edit"
+          page={PostEditPostPage}
+          name="editPost"
+        />
         <Route path="/admin/posts/{id:Int}" page={PostPostPage} name="post" />
         <Route path="/admin/posts" page={PostPostsPage} name="posts" />
         // highlight-end
@@ -216,13 +236,27 @@ const Routes = () => {
     <Router useAuth={useAuth}>
       // highlight-next-line
       <PrivateSet unauthenticated="home">
-        <Set wrap={ScaffoldLayout} title="Posts" titleTo="posts" buttonLabel="New Post" buttonTo="newPost">
-          <Route path="/admin/posts/new" page={PostNewPostPage} name="newPost" />
-          <Route path="/admin/posts/{id:Int}/edit" page={PostEditPostPage} name="editPost" />
+        <Set
+          wrap={ScaffoldLayout}
+          title="Posts"
+          titleTo="posts"
+          buttonLabel="New Post"
+          buttonTo="newPost"
+        >
+          <Route
+            path="/admin/posts/new"
+            page={PostNewPostPage}
+            name="newPost"
+          />
+          <Route
+            path="/admin/posts/{id:Int}/edit"
+            page={PostEditPostPage}
+            name="editPost"
+          />
           <Route path="/admin/posts/{id:Int}" page={PostPostPage} name="post" />
           <Route path="/admin/posts" page={PostPostsPage} name="posts" />
         </Set>
-      // highlight-next-line
+        // highlight-next-line
       </PrivateSet>
       <Set wrap={BlogLayout}>
         <Route path="/article/{id:Int}" page={ArticlePage} name="article" />
@@ -255,13 +289,27 @@ const Routes = () => {
     <Router useAuth={useAuth}>
       // highlight-next-line
       <PrivateSet unauthenticated="home">
-        <Set wrap={ScaffoldLayout} title="Posts" titleTo="posts" buttonLabel="New Post" buttonTo="newPost">
-          <Route path="/admin/posts/new" page={PostNewPostPage} name="newPost" />
-          <Route path="/admin/posts/{id:Int}/edit" page={PostEditPostPage} name="editPost" />
+        <Set
+          wrap={ScaffoldLayout}
+          title="Posts"
+          titleTo="posts"
+          buttonLabel="New Post"
+          buttonTo="newPost"
+        >
+          <Route
+            path="/admin/posts/new"
+            page={PostNewPostPage}
+            name="newPost"
+          />
+          <Route
+            path="/admin/posts/{id:Int}/edit"
+            page={PostEditPostPage}
+            name="editPost"
+          />
           <Route path="/admin/posts/{id:Int}" page={PostPostPage} name="post" />
           <Route path="/admin/posts" page={PostPostsPage} name="posts" />
         </Set>
-      // highlight-next-line
+        // highlight-next-line
       </PrivateSet>
       <Set wrap={BlogLayout}>
         <Route path="/article/{id:Int}" page={ArticlePage} name="article" />

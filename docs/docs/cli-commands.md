@@ -1165,10 +1165,26 @@ const Routes = () => {
   return (
     <Router>
       <Set wrap={UsersLayout}>
-        <Route path="/admin/users/new" page={AdminUserNewUserPage} name="adminNewUser" />
-        <Route path="/admin/users/{id:Int}/edit" page={AdminUserEditUserPage} name="adminEditUser" />
-        <Route path="/admin/users/{id:Int}" page={AdminUserUserPage} name="adminUser" />
-        <Route path="/admin/users" page={AdminUserUsersPage} name="adminUsers" />
+        <Route
+          path="/admin/users/new"
+          page={AdminUserNewUserPage}
+          name="adminNewUser"
+        />
+        <Route
+          path="/admin/users/{id:Int}/edit"
+          page={AdminUserEditUserPage}
+          name="adminEditUser"
+        />
+        <Route
+          path="/admin/users/{id:Int}"
+          page={AdminUserUserPage}
+          name="adminUser"
+        />
+        <Route
+          path="/admin/users"
+          page={AdminUserUsersPage}
+          name="adminUsers"
+        />
       </Set>
       <Route notfound page={NotFoundPage} />
     </Router>
