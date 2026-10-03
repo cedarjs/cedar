@@ -2,8 +2,6 @@
 // debug messages. CedarJS's Jobs will fallback to use `console` if no logger is
 // passed in to CedarJS or any adapter.
 
-import type { IntRange } from 'type-fest' with { 'resolution-mode': 'import' }
-
 import type { BaseAdapter } from './adapters/BaseAdapter/BaseAdapter.js'
 
 /** CedarJS's logger and the standard console logger conform to this shape. */
@@ -240,7 +238,19 @@ export type ScheduleJobOptions =
       cron: string
     }
 
-type PriorityValue = IntRange<1, 101>
+/**
+ * A union of the integers from 0 up to, but not including, `TEnd`. `TEnd` must
+ * be a non-negative integer literal.
+ */
+type NumbersBelow<
+  TEnd extends number,
+  TAcc extends number[] = [],
+> = TAcc['length'] extends TEnd
+  ? TAcc[number]
+  : NumbersBelow<TEnd, [...TAcc, TAcc['length']]>
+
+/** An integer from 1 to 100, inclusive */
+type PriorityValue = Exclude<NumbersBelow<101>, 0>
 
 /**
  * If the job has no arguments:
