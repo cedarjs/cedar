@@ -229,7 +229,12 @@ export function insertPluginsBeforeCedar({
     return null
   }
 
-  const pluginsProp = configArg.properties.find(t.isObjectProperty)
+  const pluginsProp = configArg.properties.find(
+    (prop): prop is t.ObjectProperty =>
+      t.isObjectProperty(prop) &&
+      ((!prop.computed && t.isIdentifier(prop.key, { name: 'plugins' })) ||
+        t.isStringLiteral(prop.key, { value: 'plugins' })),
+  )
 
   if (!t.isArrayExpression(pluginsProp?.value)) {
     return null
