@@ -171,7 +171,7 @@
     "concurrently": "9.2.4",
     "graphql-tag": "2.12.7",
     "memfs": "4.80.0",
-    "publint": "0.3.24",
+    "publint": "0.3.25",
     "ts-dedent": "2.3.0",
     "vitest": "4.1.11"
   },
