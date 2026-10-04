@@ -2301,7 +2301,7 @@ __metadata:
     "@types/memjs": "npm:1"
     "@types/pascalcase": "npm:1.0.3"
     "@types/split2": "npm:4.2.3"
-    "@whatwg-node/fetch": "npm:0.12.0"
+    "@whatwg-node/fetch": "npm:0.12.1"
     concurrently: "npm:9.2.4"
     cookie: "npm:1.1.1"
     humanize-string: "npm:2.1.0"
@@ -3040,7 +3040,7 @@ __metadata:
     "@types/babel__core": "npm:7.20.5"
     "@types/jscodeshift": "npm:17.3.0"
     "@types/yargs": "npm:17.0.35"
-    "@whatwg-node/fetch": "npm:0.12.0"
+    "@whatwg-node/fetch": "npm:0.12.1"
     cheerio: "npm:1.2.0"
     deepmerge: "npm:4.3.1"
     execa: "npm:5.1.1"
@@ -3534,7 +3534,7 @@ __metadata:
     "@swc/core": "npm:1.16.13"
     "@types/mime-types": "npm:2.1.4"
     "@types/react": "npm:^19.2.0"
-    "@whatwg-node/fetch": "npm:0.12.0"
+    "@whatwg-node/fetch": "npm:0.12.1"
     cheerio: "npm:1.2.0"
     concurrently: "npm:9.2.4"
     graphql: "npm:16.14.2"
@@ -3720,7 +3720,7 @@ __metadata:
     "@cedarjs/structure": "workspace:*"
     "@types/envinfo": "npm:7.8.4"
     "@types/yargs": "npm:17.0.35"
-    "@whatwg-node/fetch": "npm:0.12.0"
+    "@whatwg-node/fetch": "npm:0.12.1"
     ci-info: "npm:4.4.0"
     envinfo: "npm:7.21.0"
     systeminformation: "npm:5.33.15"
@@ -3983,7 +3983,7 @@ __metadata:
     "@universal-deploy/store": "npm:^0.2.1"
     "@universal-deploy/vite": "npm:^0.1.9"
     "@vitejs/plugin-react": "npm:4.7.0"
-    "@whatwg-node/fetch": "npm:0.12.0"
+    "@whatwg-node/fetch": "npm:0.12.1"
     "@whatwg-node/server": "npm:0.13.0"
     acorn: "npm:8.18.0"
     acorn-loose: "npm:8.5.2"
@@ -4067,7 +4067,7 @@ __metadata:
     "@types/apollo-upload-client": "npm:^19"
     "@types/react": "npm:^19.2.0"
     "@types/react-dom": "npm:^19.2.0"
-    "@whatwg-node/fetch": "npm:0.12.0"
+    "@whatwg-node/fetch": "npm:0.12.1"
     apollo-upload-client: "npm:19.0.0"
     concurrently: "npm:9.2.4"
     cookie: "npm:1.1.1"
@@ -13328,13 +13328,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/fetch@npm:0.12.0, @whatwg-node/fetch@npm:^0.12.0":
-  version: 0.12.0
-  resolution: "@whatwg-node/fetch@npm:0.12.0"
+"@whatwg-node/fetch@npm:0.12.1, @whatwg-node/fetch@npm:^0.12.0":
+  version: 0.12.1
+  resolution: "@whatwg-node/fetch@npm:0.12.1"
   dependencies:
-    "@whatwg-node/node-fetch": "npm:^0.9.0"
+    "@whatwg-node/node-fetch": "npm:^0.9.1"
     urlpattern-polyfill: "npm:^10.0.0"
-  checksum: 10c0/c4d530162a040a21ae7fedaf3b382964f5e3f76a72b08e4f65774eb37be7291159587493cd28f30543bff3d1612fd8a338919159bbe5efdf985124aa74aca574
+  checksum: 10c0/721bcbf992adcf5245aef3d1c6cca348d69abc115bbb04f3a3a9a8df9972d842693ef35278dc6ba88a36bcf7e6ed61823277154ae8be475723a0399a8afa4626
   languageName: node
   linkType: hard
 
@@ -13360,15 +13360,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/node-fetch@npm:^0.9.0":
-  version: 0.9.0
-  resolution: "@whatwg-node/node-fetch@npm:0.9.0"
+"@whatwg-node/node-fetch@npm:^0.9.1":
+  version: 0.9.1
+  resolution: "@whatwg-node/node-fetch@npm:0.9.1"
   dependencies:
     "@fastify/busboy": "npm:^3.1.1"
     "@whatwg-node/disposablestack": "npm:^0.1.0"
     "@whatwg-node/promise-helpers": "npm:^2.0.0"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/1e26e0e39510ef1fe4b4ffca5725f84faec7656f9c1bb20edcfb2bd57bf0a1288accffff9214c2e261afac2ad0899812dc863150f8039d57ac59f96365c5013b
+  checksum: 10c0/a670513c0446d998f45d7249280f7b376e15f17d889fbbfc417d68a5774eb8c02fc88dcef5c97149255617e11968f8a95f0b6ad4aa278d26e00cf74da84413db
   languageName: node
   linkType: hard
 
