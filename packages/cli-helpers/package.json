@@ -127,7 +127,7 @@
   "dependencies": {
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/telemetry": "workspace:*",
-    "@listr2/prompt-adapter-enquirer": "4.3.2",
+    "@listr2/prompt-adapter-enquirer": "4.3.3",
     "@opentelemetry/api": "1.9.1",
     "ansis": "4.4.0",
     "dotenv": "16.6.1",
