@@ -2606,7 +2606,6 @@ __metadata:
     msw: "npm:2.15.0"
     publint: "npm:0.3.24"
     react: "npm:18.3.1"
-    type-fest: "npm:5.10.0"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.11"
   peerDependencies:
@@ -3170,7 +3169,6 @@ __metadata:
     concurrently: "npm:9.2.4"
     cron-parser: "npm:5.10.1"
     publint: "npm:0.3.24"
-    type-fest: "npm:5.10.0"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.11"
   bin:
