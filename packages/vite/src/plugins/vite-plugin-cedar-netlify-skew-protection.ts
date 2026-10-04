@@ -33,16 +33,31 @@ const RESOLVED_SKEW_TOKEN_ID = '\0' + VIRTUAL_SKEW_TOKEN_ID
  * on the Functions/Edge Functions `context` object. Cedar's universal-deploy
  * entries are plain `(request: Request) => Response` Fetchables with no
  * platform-specific `context` forwarded through, so we can't read the
- * runtime-provided token. Instead we stamp the build-time value (identical
- * to the runtime one — both describe the same deploy) into the bundle as a
- * virtual module, then wrap Universal Deploy's catch-all Fetchable so every
- * response pins the client to this deploy via a `Set-Cookie`. Cookies are
- * the only one of Netlify's three skew-protection sources (cookie, header,
- * query) that propagates for free — the browser resends them on every
- * same-origin request without any client-side code having to attach
- * anything, so that's the only mechanism this phase implements. Header/query
- * propagation would only matter for requests that don't carry cookies (e.g.
- * cross-origin calls), which is a narrower, separate follow-up.
+ * runtime-provided token there. Instead we stamp the build-time value
+ * (identical to the runtime one — both describe the same deploy) into the
+ * bundle as a virtual module, then wrap Universal Deploy's catch-all
+ * Fetchable so every response pins the client to this deploy via a
+ * `Set-Cookie`. Cookies are the only one of Netlify's three skew-protection
+ * sources (cookie, header, query) that propagates for free — the browser
+ * resends them on every same-origin request without any client-side code
+ * having to attach anything, so that's the only mechanism this phase
+ * implements. Header/query propagation would only matter for requests that
+ * don't carry cookies (e.g. cross-origin calls), which is a narrower,
+ * separate follow-up.
+ *
+ * The UD wrapper above only covers requests that actually reach the UD
+ * Fetchable, though — a visitor's very first request, for the static HTML
+ * document itself, is served straight out of Netlify's CDN from `web/dist`
+ * and never reaches it. Netlify's own `_headers`-based custom headers
+ * explicitly warn that `Set-Cookie` there "may be overridden by Netlify
+ * cookie handling", so this also emits a small framework-authored Edge
+ * Function (via `.netlify/v1/edge-functions/`, auto-registered, no
+ * `netlify.toml` entry needed) that runs on every request, calls
+ * `context.next()`, and stamps the same cookie using the genuinely
+ * runtime-provided `context.deploy.skewProtectionToken` — which Edge
+ * Functions, unlike UD's Fetchables, do have access to. It skips responses
+ * that already carry our cookie (set by the UD wrapper above) so the two
+ * layers don't double-stamp the same request.
  */
 export function cedarNetlifySkewProtectionPlugin(
   options: CedarNetlifySkewProtectionPluginOptions = {},
@@ -109,8 +124,23 @@ export function cedarNetlifySkewProtectionPlugin(
           '',
           '  // No token (e.g. a local `cedar build --ud` run outside a',
           '  // Netlify build) or no response (an unmatched route) — nothing',
-          '  // to stamp.',
-          '  if (!CEDAR_SKEW_TOKEN || !response) {',
+          '  // to stamp. Statuses outside 200-599 (e.g. 101 for a WebSocket',
+          '  // upgrade) make the Response constructor below throw, and 204/304',
+          '  // responses have no body semantics worth re-wrapping — leave all',
+          '  // of those untouched. Also skip if a `Set-Cookie` for our cookie',
+          '  // name is already present (e.g. set further up the handler chain,',
+          '  // or by the edge function below) to avoid sending a duplicate.',
+          '  if (',
+          '    !CEDAR_SKEW_TOKEN ||',
+          '    !response ||',
+          '    response.status < 200 ||',
+          '    response.status > 599 ||',
+          '    response.status === 204 ||',
+          '    response.status === 304 ||',
+          '    (response.headers.get("set-cookie") ?? "").includes(',
+          '      `${CEDAR_SKEW_COOKIE_NAME}=`,',
+          '    )',
+          '  ) {',
           '    return response',
           '  }',
           '',
@@ -188,6 +218,69 @@ export function cedarNetlifySkewProtectionPlugin(
       fs.writeFileSync(
         path.join(netlifyV1Dir, 'skew-protection.json'),
         JSON.stringify(manifest, null, 2) + '\n',
+      )
+
+      // The UD wrapper (see `transform` above) only stamps the cookie on
+      // requests that reach the UD Fetchable. A visitor's first request —
+      // for the HTML document itself — is served straight from Netlify's
+      // CDN and never reaches it, so it needs its own, edge-level stamping.
+      // Framework-authored Edge Functions placed under
+      // `.netlify/v1/edge-functions/` are auto-registered, no
+      // `netlify.toml` entry required.
+      const edgeFunctionsDir = path.join(netlifyV1Dir, 'edge-functions')
+      fs.mkdirSync(edgeFunctionsDir, { recursive: true })
+
+      fs.writeFileSync(
+        path.join(edgeFunctionsDir, 'cedar-skew-cookie.js'),
+        [
+          '// Generated by @cedarjs/vite — stamps the skew-protection cookie',
+          "// on requests that don't reach Universal Deploy's catch-all",
+          '// Fetchable (most notably the initial HTML document load, served',
+          "// directly from Netlify's CDN). See",
+          '// vite-plugin-cedar-netlify-skew-protection.ts for the full picture.',
+          'export default async (request, context) => {',
+          '  const response = await context.next()',
+          '',
+          `  const cookieName = ${JSON.stringify(cookieName)}`,
+          '',
+          '  // Statuses outside 200-599 (e.g. 101 for a WebSocket upgrade)',
+          '  // make the Response constructor below throw, and 204/304',
+          '  // responses have no body semantics worth re-wrapping. Also skip',
+          '  // if already stamped — either by the UD wrapper further down the',
+          '  // chain, or (if this ran twice somehow) by this function itself.',
+          '  if (',
+          '    response.status < 200 ||',
+          '    response.status > 599 ||',
+          '    response.status === 204 ||',
+          '    response.status === 304 ||',
+          '    (response.headers.get("set-cookie") ?? "").includes(`${cookieName}=`)',
+          '  ) {',
+          '    return response',
+          '  }',
+          '',
+          '  const token = context.deploy?.skewProtectionToken',
+          '  if (!token) {',
+          '    return response',
+          '  }',
+          '',
+          '  const headers = new Headers(response.headers)',
+          '  headers.append(',
+          '    "set-cookie",',
+          `    \`\${cookieName}=\${token}; Path=/; Max-Age=${cookieMaxAge}; HttpOnly; Secure; SameSite=Lax\`,`,
+          '  )',
+          '',
+          '  return new Response(response.body, {',
+          '    status: response.status,',
+          '    statusText: response.statusText,',
+          '    headers,',
+          '  })',
+          '}',
+          '',
+          'export const config = {',
+          '  path: "/*",',
+          '}',
+          '',
+        ].join('\n'),
       )
     },
   }
