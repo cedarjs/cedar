@@ -64,7 +64,7 @@
     "graphql": "16.14.2",
     "jsdom": "27.4.0",
     "prisma": "7.10.0",
-    "publint": "0.3.24",
+    "publint": "0.3.25",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "tstyche": "5.0.2",

@@ -64,7 +64,7 @@
     "concurrently": "9.2.4",
     "fastify": "5.12.5",
     "jsonwebtoken": "9.0.3",
-    "publint": "0.3.24",
+    "publint": "0.3.25",
     "typescript": "5.9.3",
     "vitest": "4.1.11"
   },
