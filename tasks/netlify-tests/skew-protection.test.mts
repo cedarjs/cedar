@@ -11,6 +11,7 @@ import { describe, expect, it } from 'vitest'
  * - OLD_ASSET: an asset path (e.g. /assets/AboutPage-abc123.js) that only
  *   exists in the first deploy
  * - NEW_ASSET: the corresponding asset path in the second deploy
+ * - OLD_ENTRY / NEW_ENTRY: the `index-*.js` entry asset path of each deploy
  *
  * Both deploys must be built by `netlify deploy` (not `--no-build`), because
  * Netlify only provides NETLIFY_SKEW_PROTECTION_TOKEN to builds it runs.
@@ -52,20 +53,25 @@ describe.skipIf(!process.env.NETLIFY_SKEW_PROTECTION_E2E)(
         expect(skewTokenFromResponse(res)).toBeTruthy()
       })
 
-      it('sets the skew cookie on API function responses', async () => {
+      it('sets the same skew cookie on every static HTML page', async () => {
+        const homeToken = skewTokenFromResponse(await fetch(url('/')))
+        const aboutToken = skewTokenFromResponse(await fetch(url('/about')))
+
+        expect(aboutToken).toBeTruthy()
+        expect(aboutToken).toEqual(homeToken)
+      })
+
+      it('does not set the skew cookie on API responses', async () => {
         const res = await fetch(url('/.api/functions/hello'))
 
         expect(res.status).toEqual(200)
-        expect(skewTokenFromResponse(res)).toBeTruthy()
+        expect(skewTokenFromResponse(res)).toBeUndefined()
       })
 
-      it('uses the same token for HTML and API responses', async () => {
-        const htmlToken = skewTokenFromResponse(await fetch(url('/')))
-        const apiToken = skewTokenFromResponse(
-          await fetch(url('/.api/functions/hello')),
-        )
+      it('does not set the skew cookie on assets', async () => {
+        const res = await fetch(url(requiredEnv('NEW_ASSET')))
 
-        expect(htmlToken).toEqual(apiToken)
+        expect(skewTokenFromResponse(res)).toBeUndefined()
       })
 
       it('uses a different token than the previous deploy', async () => {
@@ -81,7 +87,45 @@ describe.skipIf(!process.env.NETLIFY_SKEW_PROTECTION_E2E)(
       })
     })
 
-    describe('previous deploy', () => {
+    describe('clients with the previous deploy’s token', () => {
+      function withOldToken() {
+        return {
+          headers: {
+            cookie: `${COOKIE_NAME}=${requiredEnv('OLD_SKEW_TOKEN')}`,
+          },
+        }
+      }
+
+      it('get the latest deploy’s HTML on page loads', async () => {
+        const res = await fetch(url('/'), withOldToken())
+        const html = await res.text()
+
+        expect(html).toContain(requiredEnv('NEW_ENTRY'))
+        expect(html).not.toContain(requiredEnv('OLD_ENTRY'))
+      })
+
+      it('get the latest deploy’s token on page loads', async () => {
+        const res = await fetch(url('/'), withOldToken())
+        const token = skewTokenFromResponse(res)
+
+        expect(token).toBeTruthy()
+        expect(token).not.toEqual(requiredEnv('OLD_SKEW_TOKEN'))
+      })
+
+      it('have their API requests served by the previous deploy', async () => {
+        // The workflow changes the greeting returned by the `hello` function
+        // between the two deploys
+        const oldRes = await fetch(url('/.api/functions/hello'), withOldToken())
+        const newRes = await fetch(url('/.api/functions/hello'))
+
+        expect(await oldRes.json()).toMatchObject({ data: 'hello from cedar' })
+        expect(await newRes.json()).toMatchObject({
+          data: 'hello from cedar, redeployed',
+        })
+      })
+    })
+
+    describe('previous deploy’s assets', () => {
       it('does not serve old assets without a token', async () => {
         const res = await fetch(url(requiredEnv('OLD_ASSET')))
 

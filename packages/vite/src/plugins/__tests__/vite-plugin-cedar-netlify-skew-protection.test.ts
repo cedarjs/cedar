@@ -4,9 +4,15 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 import { catchAllEntry } from '@universal-deploy/store'
+import type { ResolvedConfig } from 'vite'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 
-import { cedarNetlifySkewProtectionPlugin } from '../vite-plugin-cedar-netlify-skew-protection.js'
+import type { CedarRouteRecord } from '@cedarjs/api/runtime'
+
+import {
+  cedarNetlifySkewProtectionPlugin,
+  getSkewProtectionPaths,
+} from '../vite-plugin-cedar-netlify-skew-protection.js'
 
 const RESOLVED_SKEW_TOKEN_ID = '\0virtual:cedar-netlify-skew-token'
 
@@ -25,7 +31,18 @@ vi.mock('@cedarjs/project-config', () => ({
 const FAKE_CATCH_ALL_SOURCE = `
 export default {
   async fetch(request, ...args) {
-    return new Response('ok', { headers: { 'content-type': 'text/plain' } })
+    return new Response('<p>ok</p>', {
+      headers: { 'content-type': 'text/html; charset=utf-8' },
+    })
+  }
+}`
+
+const FAKE_CATCH_ALL_SOURCE_JSON = `
+export default {
+  async fetch(request, ...args) {
+    return new Response('{"ok":true}', {
+      headers: { 'content-type': 'application/json' },
+    })
   }
 }`
 
@@ -56,11 +73,51 @@ export default {
 const FAKE_CATCH_ALL_SOURCE_WITH_EXISTING_COOKIE = `
 export default {
   async fetch(request, ...args) {
-    return new Response('ok', {
-      headers: { 'set-cookie': 'cedar-skew-token=already-set' },
+    return new Response('<p>ok</p>', {
+      headers: {
+        'content-type': 'text/html',
+        'set-cookie': 'cedar-skew-token=already-set',
+      },
     })
   }
 }`
+
+type SkewProtectionConfig = Parameters<typeof getSkewProtectionPaths>[0]
+
+function route(routePath: string): CedarRouteRecord {
+  return {
+    id: routePath,
+    path: routePath,
+    methods: [],
+    type: 'function',
+    entry: `/project/api/dist/functions${routePath}.js`,
+  }
+}
+
+/**
+ * Builds the parts of Vite's resolved config that `getSkewProtectionPaths`
+ * reads. `routes` become the `api` of a fake cedarUniversalDeployPlugin.
+ */
+function fakeConfig({
+  base = '/',
+  assetsDir = 'assets',
+  routes,
+}: {
+  base?: string
+  assetsDir?: string
+  routes?: CedarRouteRecord[]
+}): SkewProtectionConfig {
+  const plugins = routes
+    ? [{ name: 'cedar-universal-deploy', api: { routes } }]
+    : []
+
+  // Only `base`, `build.assetsDir` and the plugins' `name`/`api` are read, so
+  // a partial object stands in for Vite's much larger resolved config types
+  return { base, build: { assetsDir }, plugins } as unknown as Pick<
+    ResolvedConfig,
+    'base' | 'build' | 'plugins'
+  >
+}
 
 function withEnvironment(name: string) {
   return { environment: { name }, warn: () => {} }
@@ -108,7 +165,7 @@ async function loadWrappedHandler(
 
 describe('cedarNetlifySkewProtectionPlugin', () => {
   describe('transform', () => {
-    it('stamps the skew-token cookie onto responses when a build-time token is present', async () => {
+    it('stamps the skew-token cookie onto HTML responses when a build-time token is present', async () => {
       const plugin = cedarNetlifySkewProtectionPlugin()
 
       if (typeof plugin.transform !== 'function') {
@@ -139,8 +196,39 @@ describe('cedarNetlifySkewProtectionPlugin', () => {
       expect(response.headers.get('set-cookie')).toContain('HttpOnly')
       expect(response.headers.get('set-cookie')).toContain('Secure')
       // The original response's own headers must survive the wrap.
-      expect(response.headers.get('content-type')).toBe('text/plain')
-      await expect(response.text()).resolves.toBe('ok')
+      expect(response.headers.get('content-type')).toBe(
+        'text/html; charset=utf-8',
+      )
+      await expect(response.text()).resolves.toBe('<p>ok</p>')
+    })
+
+    it('does not stamp the cookie onto non-HTML responses', async () => {
+      const plugin = cedarNetlifySkewProtectionPlugin()
+
+      if (typeof plugin.transform !== 'function') {
+        expect.fail('Expected plugin to have a transform function')
+      }
+
+      const result = await plugin.transform.call(
+        withEnvironment('ssr') as ThisParameterType<typeof plugin.transform>,
+        FAKE_CATCH_ALL_SOURCE_JSON,
+        catchAllEntry,
+        {},
+      )
+
+      if (!isResultWithCode(result)) {
+        throw new Error('transform should have returned a result with code')
+      }
+
+      const handler = await loadWrappedHandler(result.code, {
+        token: 'deploy-abc',
+        cookieName: 'cedar-skew-token',
+      })
+
+      const response = await handler.fetch(new Request('http://localhost/'))
+
+      expect(response.headers.get('set-cookie')).toBeNull()
+      await expect(response.text()).resolves.toBe('{"ok":true}')
     })
 
     it('passes the response through unchanged when there is no build-time token', async () => {
@@ -169,7 +257,9 @@ describe('cedarNetlifySkewProtectionPlugin', () => {
       const response = await handler.fetch(new Request('http://localhost/'))
 
       expect(response.headers.get('set-cookie')).toBeNull()
-      expect(response.headers.get('content-type')).toBe('text/plain')
+      expect(response.headers.get('content-type')).toBe(
+        'text/html; charset=utf-8',
+      )
     })
 
     it('leaves non-catch-all modules untouched, even in the ssr environment', async () => {
@@ -402,6 +492,18 @@ describe('cedarNetlifySkewProtectionPlugin', () => {
       return dir
     }
 
+    function resolveConfig(
+      plugin: ReturnType<typeof cedarNetlifySkewProtectionPlugin>,
+      config: SkewProtectionConfig,
+    ) {
+      if (typeof plugin.configResolved !== 'function') {
+        expect.fail('Expected plugin to have a configResolved function')
+      }
+
+      // The hook only reads the fields `fakeConfig` provides
+      plugin.configResolved.call({} as never, config as ResolvedConfig)
+    }
+
     function withClientEnvironment() {
       return {
         environment: { name: 'client' },
@@ -422,6 +524,10 @@ describe('cedarNetlifySkewProtectionPlugin', () => {
         expect.fail('Expected plugin to have a writeBundle function')
       }
 
+      resolveConfig(
+        plugin,
+        fakeConfig({ routes: [route('/.api/functions/graphql')] }),
+      )
       await plugin.writeBundle.call(withClientEnvironment(), {} as never, {})
 
       const netlifyV1Dir = path.join(dir, '.netlify', 'v1')
@@ -433,7 +539,7 @@ describe('cedarNetlifySkewProtectionPlugin', () => {
         ),
       )
       expect(manifest).toEqual({
-        patterns: ['.*'],
+        patterns: ['^/assets/', '^/\\.api/functions/graphql(/.*)?$'],
         sources: [
           { type: 'header', name: 'cedar-skew-token' },
           { type: 'query', name: 'skew' },
@@ -450,6 +556,9 @@ describe('cedarNetlifySkewProtectionPlugin', () => {
       )
       expect(edgeFunctionCode).toContain('export const config = {')
       expect(edgeFunctionCode).toContain('path: "/*"')
+      expect(edgeFunctionCode).toContain(
+        'excludedPath: ["/assets/*","/.api/functions/graphql","/.api/functions/graphql/*"]',
+      )
       expect(edgeFunctionCode).toContain('cedar-skew-token')
     })
 
@@ -544,9 +653,29 @@ describe('cedarNetlifySkewProtectionPlugin', () => {
         const handler = await generate('deploy-xyz')
 
         const response = await handler(new Request('http://localhost/'), {
-          next: async () => new Response('<html></html>'),
+          next: async () =>
+            new Response('<html></html>', {
+              headers: { 'content-type': 'text/html' },
+            }),
           deploy: {},
         })
+
+        expect(response.headers.get('set-cookie')).toBeNull()
+      })
+
+      it('does not stamp the cookie onto non-HTML responses', async () => {
+        const handler = await generate('deploy-xyz')
+
+        const response = await handler(
+          new Request('http://localhost/assets/index-abc123.js'),
+          {
+            next: async () =>
+              new Response('export {}', {
+                headers: { 'content-type': 'application/javascript' },
+              }),
+            deploy: { skewProtectionToken: 'deploy-runtime-token' },
+          },
+        )
 
         expect(response.headers.get('set-cookie')).toBeNull()
       })
@@ -557,7 +686,10 @@ describe('cedarNetlifySkewProtectionPlugin', () => {
         const response = await handler(new Request('http://localhost/'), {
           next: async () =>
             new Response('<html></html>', {
-              headers: { 'set-cookie': 'cedar-skew-token=already-set' },
+              headers: {
+                'content-type': 'text/html',
+                'set-cookie': 'cedar-skew-token=already-set',
+              },
             }),
           deploy: { skewProtectionToken: 'deploy-runtime-token' },
         })
@@ -581,6 +713,96 @@ describe('cedarNetlifySkewProtectionPlugin', () => {
           expect(response.headers.get('set-cookie')).toBeNull()
         },
       )
+    })
+  })
+
+  describe('getSkewProtectionPaths', () => {
+    it('pins the assets directory and every API route', () => {
+      const paths = getSkewProtectionPaths(
+        fakeConfig({
+          routes: [
+            route('/.api/functions/graphql'),
+            route('/.api/functions/hello'),
+          ],
+        }),
+      )
+
+      expect(paths).toEqual({
+        patterns: [
+          '^/assets/',
+          '^/\\.api/functions/graphql(/.*)?$',
+          '^/\\.api/functions/hello(/.*)?$',
+        ],
+        excludedPaths: [
+          '/assets/*',
+          '/.api/functions/graphql',
+          '/.api/functions/graphql/*',
+          '/.api/functions/hello',
+          '/.api/functions/hello/*',
+        ],
+      })
+    })
+
+    it('does not match page paths', () => {
+      const { patterns } = getSkewProtectionPaths(
+        fakeConfig({ routes: [route('/.api/functions/graphql')] }),
+      )
+      const regexes = patterns.map((pattern) => new RegExp(pattern))
+      const matches = (pathname: string) =>
+        regexes.some((regex) => regex.test(pathname))
+
+      expect(matches('/')).toBe(false)
+      expect(matches('/about')).toBe(false)
+      expect(matches('/posts/1')).toBe(false)
+      expect(matches('/assets-page')).toBe(false)
+      expect(matches('/.api/functions/graphqlx')).toBe(false)
+
+      expect(matches('/assets/AboutPage-abc123.js')).toBe(true)
+      expect(matches('/.api/functions/graphql')).toBe(true)
+      expect(matches('/.api/functions/graphql/health')).toBe(true)
+    })
+
+    it('pins root-level API routes when apiRootPath is /', () => {
+      const { patterns } = getSkewProtectionPaths(
+        fakeConfig({ routes: [route('/graphql'), route('/auth')] }),
+      )
+
+      expect(patterns).toEqual([
+        '^/assets/',
+        '^/graphql(/.*)?$',
+        '^/auth(/.*)?$',
+      ])
+    })
+
+    it('respects a custom base and assetsDir', () => {
+      const { patterns, excludedPaths } = getSkewProtectionPaths(
+        fakeConfig({ base: '/app/', assetsDir: 'static' }),
+      )
+
+      expect(patterns).toEqual(['^/app/static/'])
+      expect(excludedPaths).toEqual(['/app/static/*'])
+    })
+
+    it('does not pin assets when base is not a path on this site', () => {
+      const { patterns } = getSkewProtectionPaths(
+        fakeConfig({ base: 'https://cdn.example.com/' }),
+      )
+
+      expect(patterns).toEqual([])
+    })
+
+    it('only pins assets when the Universal Deploy plugin is not registered', () => {
+      const { patterns } = getSkewProtectionPaths(fakeConfig({}))
+
+      expect(patterns).toEqual(['^/assets/'])
+    })
+
+    it('skips wildcard routes', () => {
+      const { patterns } = getSkewProtectionPaths(
+        fakeConfig({ routes: [route('/**')] }),
+      )
+
+      expect(patterns).toEqual(['^/assets/'])
     })
   })
 })

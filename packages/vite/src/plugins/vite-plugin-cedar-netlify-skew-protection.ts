@@ -2,62 +2,132 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { catchAllEntry } from '@universal-deploy/store'
-import type { Plugin } from 'vite'
+import type { Plugin, ResolvedConfig } from 'vite'
 
 import { getPaths } from '@cedarjs/project-config'
+
+import { CEDAR_UNIVERSAL_DEPLOY_PLUGIN_NAME } from './vite-plugin-cedar-universal-deploy.js'
+import type { CedarUniversalDeployPluginApi } from './vite-plugin-cedar-universal-deploy.js'
 
 export interface CedarNetlifySkewProtectionPluginOptions {
   headerName?: string
   queryName?: string
   cookieName?: string
   /**
-   * How long (in seconds) the skew-token cookie should pin a client to this
-   * deploy before expiring. Netlify's own guidance is to keep this short to
-   * minimize the window where a client could end up pinned to a deploy
-   * that's since been cleaned up — but long enough to outlast a normal
-   * session. Defaults to 4 hours.
+   * How long (in seconds) the skew-token cookie pins a client's asset and API
+   * requests to the deploy it last loaded a page from. Page loads are never
+   * pinned and always refresh the cookie, so a long value can't keep anyone
+   * on an old version; it only bounds how long an open tab can keep loading
+   * lazy chunks from the deploy it started on. Defaults to 24 hours.
    */
   cookieMaxAge?: number
+}
+
+/**
+ * The paths Netlify should route to a client's pinned deploy, and the paths
+ * the edge function doesn't need to run on.
+ */
+export interface SkewProtectionPaths {
+  /** Regexes for Netlify's `skew-protection.json` `patterns` */
+  patterns: string[]
+  /** Globs for the edge function's `excludedPath` */
+  excludedPaths: string[]
 }
 
 const VIRTUAL_SKEW_TOKEN_ID = 'virtual:cedar-netlify-skew-token'
 const RESOLVED_SKEW_TOKEN_ID = '\0' + VIRTUAL_SKEW_TOKEN_ID
 
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function isUniversalDeployPluginApi(
+  api: unknown,
+): api is CedarUniversalDeployPluginApi {
+  return (
+    typeof api === 'object' &&
+    api !== null &&
+    'routes' in api &&
+    Array.isArray(api.routes)
+  )
+}
+
 /**
- * Generates Netlify's `.netlify/v1/skew-protection.json` build output and
- * stamps the current deploy's skew token into the SSR bundle.
+ * Pins hashed build assets (the lazy-loaded chunks an already-open tab
+ * requests after a new deploy) and Cedar's API routes (so an old client keeps
+ * talking to the API it was built against). Page loads are not pinned, so a
+ * reload or a fresh visit always gets the latest deploy.
+ */
+export function getSkewProtectionPaths(
+  config: Pick<ResolvedConfig, 'base' | 'build' | 'plugins'>,
+): SkewProtectionPaths {
+  const patterns: string[] = []
+  const excludedPaths: string[] = []
+
+  // A `base` that isn't a path (e.g. a CDN URL) means assets aren't served
+  // from this site, so there's nothing to pin for them here.
+  if (config.base.startsWith('/')) {
+    const assetsPath = path.posix.join(config.base, config.build.assetsDir)
+    patterns.push(`^${escapeRegExp(assetsPath)}/`)
+    excludedPaths.push(`${assetsPath}/*`)
+  }
+
+  const udApi = config.plugins.find(
+    (plugin) => plugin.name === CEDAR_UNIVERSAL_DEPLOY_PLUGIN_NAME,
+  )?.api
+
+  if (isUniversalDeployPluginApi(udApi)) {
+    for (const route of udApi.routes) {
+      if (route.path.includes('*')) {
+        continue
+      }
+
+      patterns.push(`^${escapeRegExp(route.path)}(/.*)?$`)
+      excludedPaths.push(route.path, `${route.path}/*`)
+    }
+  }
+
+  return { patterns, excludedPaths }
+}
+
+/**
+ * Generates Netlify's `.netlify/v1/skew-protection.json` build output, an
+ * edge function that stamps the skew-token cookie on static HTML, and wraps
+ * Universal Deploy's catch-all Fetchable so server-rendered HTML gets the
+ * same cookie.
  *
  * Background: https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1skew-protectionjson
- * Netlify exposes the current deploy's unique fingerprint at build time via
- * `NETLIFY_SKEW_PROTECTION_TOKEN`, and at runtime via `context.deploy.skewProtectionToken`
- * on the Functions/Edge Functions `context` object. Cedar's universal-deploy
- * entries are plain `(request: Request) => Response` Fetchables with no
- * platform-specific `context` forwarded through, so we can't read the
- * runtime-provided token there. Instead we stamp the build-time value
- * (identical to the runtime one — both describe the same deploy) into the
- * bundle as a virtual module, then wrap Universal Deploy's catch-all
- * Fetchable so every response pins the client to this deploy via a
- * `Set-Cookie`. Cookies are the only one of Netlify's three skew-protection
- * sources (cookie, header, query) that propagates for free — the browser
- * resends them on every same-origin request without any client-side code
- * having to attach anything, so that's the only mechanism this phase
- * implements. Header/query propagation would only matter for requests that
- * don't carry cookies (e.g. cross-origin calls), which is a narrower,
- * separate follow-up.
  *
- * The UD wrapper above only covers requests that actually reach the UD
- * Fetchable, though — a visitor's very first request, for the static HTML
- * document itself, is served straight out of Netlify's CDN from `web/dist`
- * and never reaches it. Netlify's own `_headers`-based custom headers
- * explicitly warn that `Set-Cookie` there "may be overridden by Netlify
- * cookie handling", so this also emits a small framework-authored Edge
- * Function (via `.netlify/v1/edge-functions/`, auto-registered, no
- * `netlify.toml` entry needed) that runs on every request, calls
- * `context.next()`, and stamps the same cookie using the genuinely
- * runtime-provided `context.deploy.skewProtectionToken` — which Edge
- * Functions, unlike UD's Fetchables, do have access to. It skips responses
- * that already carry our cookie (set by the UD wrapper above) so the two
- * layers don't double-stamp the same request.
+ * How it works:
+ * - Every HTML response sets `Set-Cookie: <cookieName>=<deploy token>`.
+ *   Netlify exposes the token at build time as `NETLIFY_SKEW_PROTECTION_TOKEN`
+ *   and at runtime as `context.deploy.skewProtectionToken`.
+ * - Requests matching `patterns` (build assets and API routes, see
+ *   `getSkewProtectionPaths`) that carry the cookie are served by the deploy
+ *   the token belongs to. A tab that loaded an old build keeps loading its
+ *   own lazy chunks after a new deploy, instead of getting 404s.
+ * - Page loads don't match `patterns`, so they're always served by the
+ *   latest deploy, and its HTML sets the latest token. Reloading is therefore
+ *   always enough to get the newest version.
+ * - Only HTML responses set the cookie. Pinned asset and API responses come
+ *   from the old deploy and would otherwise renew the old token.
+ *
+ * The cookie is set in two places:
+ * - Static HTML (prerendered pages and the SPA shell) is served from
+ *   Netlify's CDN and never reaches Cedar's server code. A framework-authored
+ *   edge function (`.netlify/v1/edge-functions/`, registered automatically)
+ *   stamps it using `context.deploy.skewProtectionToken`.
+ * - Server-rendered HTML comes from Universal Deploy's catch-all Fetchable.
+ *   Fetchables are plain `(request: Request) => Response` functions that
+ *   don't get Netlify's `context`, so the build-time token (identical to the
+ *   runtime one, both describe the same deploy) is stamped into the SSR
+ *   bundle as a virtual module, and the Fetchable is wrapped to set the
+ *   cookie.
+ *
+ * Cookies are the only one of Netlify's three token sources (cookie, header,
+ * query) that browsers send automatically, so they're the only one Cedar
+ * sets. The header and query sources are registered so clients that can't
+ * use cookies can still pin requests by sending the token themselves.
  */
 export function cedarNetlifySkewProtectionPlugin(
   options: CedarNetlifySkewProtectionPluginOptions = {},
@@ -66,25 +136,31 @@ export function cedarNetlifySkewProtectionPlugin(
     headerName = 'cedar-skew-token',
     queryName = 'skew',
     cookieName = 'cedar-skew-token',
-    cookieMaxAge = 60 * 60 * 4,
+    cookieMaxAge = 60 * 60 * 24,
   } = options
 
   const skewToken = process.env.NETLIFY_SKEW_PROTECTION_TOKEN ?? ''
+
+  let skewProtectionPaths: SkewProtectionPaths = {
+    patterns: [],
+    excludedPaths: [],
+  }
 
   return {
     name: 'cedar-netlify-skew-protection',
     apply: 'build',
 
+    configResolved(config) {
+      skewProtectionPaths = getSkewProtectionPaths(config)
+    },
+
     transform(code, id) {
       // Netlify's own function bundler traces reachability from the SSR
       // entry it detects in api/dist/ud (built from virtual:ud:catch-all,
       // Universal Deploy's single server entry). Wrapping that entry's
-      // exported Fetchable here — rather than force-emitting the token
-      // module as a standalone chunk — gives Rollup (and therefore
-      // Netlify's bundler) a genuine, traceable reference to the token
-      // module, and is also the one place every response from every UD
-      // route passes through, so it's the natural place to stamp the
-      // skew-token cookie onto all of them.
+      // exported Fetchable gives Rollup (and therefore Netlify's bundler) a
+      // genuine, traceable reference to the token module, and it's the one
+      // place every response from every UD route passes through.
       if (this.environment?.name !== 'ssr' || id !== catchAllEntry) {
         return undefined
       }
@@ -104,9 +180,9 @@ export function cedarNetlifySkewProtectionPlugin(
         this.warn(
           'cedar-netlify-skew-protection: expected "export default {" in ' +
             'the Universal Deploy catch-all entry but did not find it — ' +
-            'skipping runtime skew-token cookie propagation. This likely ' +
-            'means @universal-deploy/vite changed how it generates the ' +
-            'catch-all entry.',
+            'skipping skew-token cookie stamping on server-rendered HTML. ' +
+            'This likely means @universal-deploy/vite changed how it ' +
+            'generates the catch-all entry.',
         )
         return undefined
       }
@@ -122,14 +198,14 @@ export function cedarNetlifySkewProtectionPlugin(
           '__cedarSkewCatchAllHandler.fetch = async (request, ...args) => {',
           '  const response = await __cedarSkewOriginalFetch(request, ...args)',
           '',
-          '  // No token (e.g. a local `cedar build --ud` run outside a',
-          '  // Netlify build) or no response (an unmatched route) — nothing',
-          '  // to stamp. Statuses outside 200-599 (e.g. 101 for a WebSocket',
-          '  // upgrade) make the Response constructor below throw, and 204/304',
-          '  // responses have no body semantics worth re-wrapping — leave all',
-          '  // of those untouched. Also skip if a `Set-Cookie` for our cookie',
-          '  // name is already present (e.g. set further up the handler chain,',
-          '  // or by the edge function below) to avoid sending a duplicate.',
+          '  // Only HTML responses set the cookie (see',
+          '  // vite-plugin-cedar-netlify-skew-protection.ts). Nothing to stamp',
+          '  // without a token (e.g. a local `cedar build --ud` run outside a',
+          '  // Netlify build) or a response (an unmatched route). Statuses',
+          '  // outside 200-599 (e.g. 101 for a WebSocket upgrade) make the',
+          '  // Response constructor below throw, and 204/304 responses have no',
+          '  // body worth re-wrapping. Responses that already set our cookie',
+          '  // are left alone to avoid a duplicate.',
           '  if (',
           '    !CEDAR_SKEW_TOKEN ||',
           '    !response ||',
@@ -137,6 +213,7 @@ export function cedarNetlifySkewProtectionPlugin(
           '    response.status > 599 ||',
           '    response.status === 204 ||',
           '    response.status === 304 ||',
+          '    !(response.headers.get("content-type") ?? "").includes("text/html") ||',
           '    (response.headers.get("set-cookie") ?? "").includes(',
           '      `${CEDAR_SKEW_COOKIE_NAME}=`,',
           '    )',
@@ -205,10 +282,7 @@ export function cedarNetlifySkewProtectionPlugin(
       fs.mkdirSync(netlifyV1Dir, { recursive: true })
 
       const manifest = {
-        // Match every path: Cedar can't assume a fixed static-asset
-        // directory convention, and Netlify's own docs example matches
-        // assets too, so there's no correctness reason to narrow this.
-        patterns: ['.*'],
+        patterns: skewProtectionPaths.patterns,
         sources: [
           { type: 'header', name: headerName },
           { type: 'query', name: queryName },
@@ -221,39 +295,31 @@ export function cedarNetlifySkewProtectionPlugin(
         JSON.stringify(manifest, null, 2) + '\n',
       )
 
-      // The UD wrapper (see `transform` above) only stamps the cookie on
-      // requests that reach the UD Fetchable. A visitor's first request —
-      // for the HTML document itself — is served straight from Netlify's
-      // CDN and never reaches it, so it needs its own, edge-level stamping.
-      // Framework-authored Edge Functions placed under
-      // `.netlify/v1/edge-functions/` are auto-registered, no
-      // `netlify.toml` entry required.
       const edgeFunctionsDir = path.join(netlifyV1Dir, 'edge-functions')
       fs.mkdirSync(edgeFunctionsDir, { recursive: true })
 
       fs.writeFileSync(
         path.join(edgeFunctionsDir, 'cedar-skew-cookie.js'),
         [
-          '// Generated by @cedarjs/vite — stamps the skew-protection cookie',
-          "// on requests that don't reach Universal Deploy's catch-all",
-          '// Fetchable (most notably the initial HTML document load, served',
-          "// directly from Netlify's CDN). See",
+          '// Generated by @cedarjs/vite. Stamps the skew-protection cookie on',
+          "// static HTML served from Netlify's CDN. See",
           '// vite-plugin-cedar-netlify-skew-protection.ts for the full picture.',
           'export default async (request, context) => {',
           '  const response = await context.next()',
           '',
           `  const cookieName = ${JSON.stringify(cookieName)}`,
           '',
-          '  // Statuses outside 200-599 (e.g. 101 for a WebSocket upgrade)',
-          '  // make the Response constructor below throw, and 204/304',
-          '  // responses have no body semantics worth re-wrapping. Also skip',
-          '  // if already stamped — either by the UD wrapper further down the',
-          '  // chain, or (if this ran twice somehow) by this function itself.',
+          '  // Only HTML responses set the cookie. Statuses outside 200-599',
+          '  // (e.g. 101 for a WebSocket upgrade) make the Response',
+          '  // constructor below throw, and 204/304 responses have no body',
+          '  // worth re-wrapping. Responses that already set our cookie (from',
+          '  // the Universal Deploy wrapper) are left alone.',
           '  if (',
           '    response.status < 200 ||',
           '    response.status > 599 ||',
           '    response.status === 204 ||',
           '    response.status === 304 ||',
+          '    !(response.headers.get("content-type") ?? "").includes("text/html") ||',
           '    (response.headers.get("set-cookie") ?? "").includes(`${cookieName}=`)',
           '  ) {',
           '    return response',
@@ -279,6 +345,7 @@ export function cedarNetlifySkewProtectionPlugin(
           '',
           'export const config = {',
           '  path: "/*",',
+          `  excludedPath: ${JSON.stringify(skewProtectionPaths.excludedPaths)},`,
           '}',
           '',
         ].join('\n'),
