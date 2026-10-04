@@ -1,3 +1,4 @@
+import { dedent } from 'ts-dedent'
 import { describe, expect, it } from 'vitest'
 
 import { transformGitignore, UPLOADS_GITIGNORE_ENTRY } from '../gitignore.js'
@@ -53,29 +54,35 @@ main()
 `
 
 describe('transformGitignore', () => {
-  const GITIGNORE = `.DS_Store
-.env*
-dev.db*
-dist
-node_modules
-`
+  const GITIGNORE = dedent`
+    .DS_Store
+    .env*
+    dev.db*
+    dist
+    node_modules\n
+  `
 
   it('inserts the entry after dev.db* when present', () => {
     const result = transformGitignore(GITIGNORE)
 
-    expect(result).toBe(`.DS_Store
-.env*
-dev.db*
-${UPLOADS_GITIGNORE_ENTRY}
-dist
-node_modules
-`)
+    expect(result).toBe(dedent`
+      .DS_Store
+      .env*
+      dev.db*
+      ${UPLOADS_GITIGNORE_ENTRY}
+      dist
+      node_modules\n
+    `)
   })
 
   it('appends at the end when dev.db* is absent', () => {
     const result = transformGitignore('dist\nnode_modules')
 
     expect(result).toBe(`dist\nnode_modules\n${UPLOADS_GITIGNORE_ENTRY}\n`)
+  })
+
+  it('writes just the entry for an empty .gitignore', () => {
+    expect(transformGitignore('')).toBe(`${UPLOADS_GITIGNORE_ENTRY}\n`)
   })
 
   it('leaves .gitignore alone when the entry is already there', () => {
@@ -89,8 +96,9 @@ node_modules
 
     const result = transformGitignore(withLongerPath)
 
-    // A standalone rule for the upload directory is added next to it
-    expect(result).toContain(`\n${UPLOADS_GITIGNORE_ENTRY}\n`)
+    expect(result).toBe(
+      `dev.db*\n${UPLOADS_GITIGNORE_ENTRY}\napi/.uploads-local\n`,
+    )
   })
 
   it('adds the entry when it only appears in a comment', () => {

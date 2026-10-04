@@ -24,7 +24,7 @@ export function transformGitignore(source: string): string {
     return source.replace(/^(dev\.db\*)$/m, `$1\n${UPLOADS_GITIGNORE_ENTRY}`)
   }
 
-  // Fall back to appending at the end, ensuring a trailing newline
-  const withTrailingNewline = source.endsWith('\n') ? source : source + '\n'
-  return withTrailingNewline + UPLOADS_GITIGNORE_ENTRY + '\n'
+  // Fall back to appending at the end, on a line of its own
+  const prefix = source === '' || source.endsWith('\n') ? source : source + '\n'
+  return prefix + UPLOADS_GITIGNORE_ENTRY + '\n'
 }
