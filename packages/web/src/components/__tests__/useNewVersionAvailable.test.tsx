@@ -366,6 +366,27 @@ describe('useNewVersionAvailable', () => {
     expect(third.result.current).toBe(true)
   })
 
+  it('lets slow checks finish on short intervals', async () => {
+    fetchMock.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          setTimeout(
+            () =>
+              resolve(htmlResponse(htmlWithEntry('/assets/index-NEW456.js'))),
+            8_000,
+          )
+        }),
+    )
+
+    const { result } = renderHook(() =>
+      useNewVersionAvailable({ intervalMs: 5_000 }),
+    )
+    await advance(5_000 + 8_000)
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(result.current).toBe(true)
+  })
+
   it('starts a fresh checker after the last component unmounts', async () => {
     fetchMock.mockImplementation(async () =>
       htmlResponse(htmlWithEntry('/assets/index-NEW456.js')),

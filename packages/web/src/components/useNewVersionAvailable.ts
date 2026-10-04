@@ -17,6 +17,13 @@ interface VersionChecker {
 const DEFAULT_INTERVAL_MS = 60_000
 
 /**
+ * A check that hasn't settled after this long is aborted, so a stalled
+ * request can't block later checks. Checks that are due while one is still
+ * running are skipped, so slow responses still complete.
+ */
+const CHECK_TIMEOUT_MS = 30_000
+
+/**
  * The URL this tab's document was loaded from, captured when `@cedarjs/web`
  * is first evaluated, before any client-side navigation. Within one build,
  * the same URL always serves the same module scripts: prerendered pages and
@@ -95,10 +102,8 @@ function createVersionChecker(
 
     checkInFlight = true
 
-    // Aborting a request that hasn't settled by halfway to the next check
-    // keeps a stalled request from blocking later checks
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), intervalMs / 2)
+    const timeoutId = setTimeout(() => controller.abort(), CHECK_TIMEOUT_MS)
 
     try {
       const requestUrl = new URL(url)
