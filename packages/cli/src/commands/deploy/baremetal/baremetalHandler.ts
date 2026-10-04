@@ -20,6 +20,10 @@ const CONFIG_FILENAME = 'deploy.toml'
 const SYMLINK_FLAGS = '-nsf'
 const CURRENT_RELEASE_SYMLINK_NAME = 'current'
 const LIFECYCLE_HOOKS = ['before', 'after'] as const
+const WEB_DIST_DIR = 'web/dist'
+const BUILD_MANIFEST_FILENAME = 'client-build-manifest.json'
+// Number of files passed to a single `ln` command when keeping web assets
+const LINK_BATCH_SIZE = 100
 
 /**
  * Matches the release directory names created by `cedar deploy baremetal`.
@@ -81,6 +85,7 @@ export interface BaremetalYargs {
   build?: boolean
   restart?: boolean
   cleanup?: boolean
+  keepAssets?: boolean
   gitCheck?: boolean
   verbose?: boolean
 }
@@ -370,6 +375,172 @@ export const commandWithLifecycleEvents = ({
 }
 
 /**
+ * Lists the files a Vite build manifest refers to: every chunk's output file
+ * plus the CSS and other assets that chunk imports. Paths are relative to the
+ * build output directory, for example `assets/index-C3xKbB2f.js`.
+ */
+export const manifestAssetFiles = (manifestJson: string): string[] => {
+  const manifest: unknown = JSON.parse(manifestJson)
+  const files = new Set<string>()
+
+  if (!manifest || typeof manifest !== 'object') {
+    return []
+  }
+
+  for (const entry of Object.values(manifest)) {
+    if (!entry || typeof entry !== 'object') {
+      continue
+    }
+
+    if ('file' in entry && typeof entry.file === 'string') {
+      files.add(entry.file)
+    }
+
+    for (const key of ['css', 'assets'] as const) {
+      if (!(key in entry) || !Array.isArray(entry[key])) {
+        continue
+      }
+
+      for (const item of entry[key]) {
+        if (typeof item === 'string') {
+          files.add(item)
+        }
+      }
+    }
+  }
+
+  return [...files]
+}
+
+// Wraps a value in single quotes for use as a shell argument
+const shellQuote = (value: string) => `'${value.replaceAll("'", `'\\''`)}'`
+
+/**
+ * Reads the files listed in a release's web build manifest. Returns
+ * `undefined` when the release has no readable manifest, for example because
+ * its web side was never built.
+ */
+const readBuildManifest = async (ssh: SshExecutor, releasePath: string) => {
+  try {
+    const { stdout } = await ssh.exec(
+      pathJoin(releasePath, WEB_DIST_DIR),
+      'cat',
+      [BUILD_MANIFEST_FILENAME],
+    )
+
+    return manifestAssetFiles(stdout)
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * Hardlinks the hashed web build output of the newest `keepReleases - 1`
+ * previous releases into the new release's `web/dist`.
+ *
+ * Cedar's router lazy-loads pages, so a browser tab that loaded an older
+ * release keeps requesting that release's chunks after `current` points at
+ * the new one. With the links in place those requests keep succeeding until
+ * the tab's release ages out of `keepReleases`. Vite names build output by
+ * content hash, so a file with the same name has the same content in every
+ * release. Only files listed in a release's own build manifest are linked, so
+ * a release never passes on files it received from an earlier release, and
+ * the new release holds at most `keepReleases` builds' worth of assets.
+ * Hardlinks share the on-disk data with the release they came from, and the
+ * data stays available after that release directory is deleted.
+ *
+ * Returns the number of linked files, or `undefined` when the new release has
+ * no build manifest to compare against. Problems with an individual previous
+ * release are reported through `warn` and don't stop the other releases from
+ * being linked.
+ */
+export const keepPreviousAssets = async (
+  yargs: BaremetalYargs,
+  ssh: SshExecutor,
+  serverConfig: ServerConfig,
+  warn: (message: string) => void,
+) => {
+  const newReleasePath = pathJoin(serverConfig.path, yargs.releaseDir)
+  const newReleaseFiles = await readBuildManifest(ssh, newReleasePath)
+
+  if (!newReleaseFiles) {
+    return undefined
+  }
+
+  const { stdout } = await ssh.exec(serverConfig.path, 'ls')
+  const previousReleases = stdout
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((dir) => releaseDirRegExp.test(dir) && dir !== yargs.releaseDir)
+    .sort()
+    .reverse()
+    .slice(0, Math.max(serverConfig.keepReleases - 1, 0))
+
+  const presentFiles = new Set(newReleaseFiles)
+  let linkedCount = 0
+
+  for (const release of previousReleases) {
+    const releasePath = pathJoin(serverConfig.path, release)
+    const releaseFiles = await readBuildManifest(ssh, releasePath)
+
+    if (!releaseFiles) {
+      warn(`Release ${release} has no web build manifest, skipping its assets`)
+      continue
+    }
+
+    const missingFiles = releaseFiles.filter((file) => !presentFiles.has(file))
+
+    if (missingFiles.length === 0) {
+      continue
+    }
+
+    const filesByDir = new Map<string, string[]>()
+
+    for (const file of missingFiles) {
+      const dir = path.posix.dirname(file)
+      filesByDir.set(dir, [...(filesByDir.get(dir) ?? []), file])
+    }
+
+    try {
+      for (const [dir, files] of filesByDir) {
+        const targetDir = pathJoin(newReleasePath, WEB_DIST_DIR, dir)
+
+        await ssh.exec(newReleasePath, 'mkdir', ['-p', shellQuote(targetDir)])
+
+        for (let i = 0; i < files.length; i += LINK_BATCH_SIZE) {
+          const sources = files
+            .slice(i, i + LINK_BATCH_SIZE)
+            .map((file) =>
+              shellQuote(pathJoin(releasePath, WEB_DIST_DIR, file)),
+            )
+
+          // `-f` replaces a link that an interrupted earlier run of this step
+          // left behind. A file with the same hashed name has the same content
+          // in every release, so replacing it changes nothing.
+          await ssh.exec(newReleasePath, 'ln', [
+            '-f',
+            ...sources,
+            shellQuote(targetDir),
+          ])
+        }
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e)
+      warn(`Could not keep the web assets of release ${release}: ${message}`)
+      continue
+    }
+
+    for (const file of missingFiles) {
+      presentFiles.add(file)
+    }
+
+    linkedCount += missingFiles.length
+  }
+
+  return linkedCount
+}
+
+/**
  * Builds the list of Listr tasks for a full deploy sequence.
  */
 export const deployTasks = (
@@ -550,6 +721,46 @@ export const deployTasks = (
       }),
     )
   }
+
+  tasks.push(
+    ...commandWithLifecycleEvents({
+      name: 'keepAssets',
+      config,
+      skip:
+        !yargs.keepAssets ||
+        !yargs.build ||
+        !serverConfig.sides.includes('web'),
+      command: {
+        title: `Keeping web assets of previous releases...`,
+        task: async (
+          _ctx: unknown,
+          task: { output: string; skip: (msg: string) => void },
+        ) => {
+          const linkedCount = await keepPreviousAssets(
+            yargs,
+            ssh,
+            serverConfig,
+            (message) => {
+              task.output = c.warning(message)
+            },
+          )
+
+          if (linkedCount === undefined) {
+            return task.skip(
+              c.warning(
+                `Warning: No ${BUILD_MANIFEST_FILENAME} in ` +
+                  `${yargs.releaseDir}/${WEB_DIST_DIR}, not keeping the web ` +
+                  'assets of previous releases',
+              ),
+            )
+          }
+
+          // This will only show if --verbose is passed
+          task.output = `Linked ${linkedCount} file(s) from previous releases`
+        },
+      },
+    }),
+  )
 
   tasks.push(
     ...commandWithLifecycleEvents({

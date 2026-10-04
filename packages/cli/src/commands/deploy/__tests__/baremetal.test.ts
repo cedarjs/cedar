@@ -69,6 +69,7 @@ function createBaremetalYargs(
     build: true,
     restart: true,
     cleanup: true,
+    keepAssets: true,
     ...overrides,
   }
 }
@@ -781,7 +782,7 @@ describe('deployTasks', () => {
       { before: {}, after: {} },
     )
 
-    expect(Object.keys(tasks).length).toEqual(9)
+    expect(Object.keys(tasks).length).toEqual(10)
     expect(tasks[0].title).toEqual('Checking available disk space...')
     expect(tasks[0].skip?.()).toEqual(false)
     expect(tasks[1].title).toMatch('Cloning')
@@ -794,12 +795,15 @@ describe('deployTasks', () => {
     expect(tasks[4].skip?.()).toEqual(false)
     expect(tasks[5].title).toMatch('Building api')
     expect(tasks[5].skip?.()).toEqual(false)
-    expect(tasks[6].title).toMatch('Symlinking current')
-    expect(tasks[6].skip?.()).toEqual(false)
-    expect(tasks[7].title).toMatch('Restarting serve')
+    expect(tasks[6].title).toMatch('Keeping web assets')
+    // The web side isn't deployed to this server, so there are no assets to keep
+    expect(tasks[6].skip?.()).toEqual(true)
+    expect(tasks[7].title).toMatch('Symlinking current')
     expect(tasks[7].skip?.()).toEqual(false)
-    expect(tasks[8].title).toMatch('Cleaning up')
+    expect(tasks[8].title).toMatch('Restarting serve')
     expect(tasks[8].skip?.()).toEqual(false)
+    expect(tasks[9].title).toMatch('Cleaning up')
+    expect(tasks[9].skip?.()).toEqual(false)
   })
 
   it('skips the available space check if --no-df is passed', () => {
@@ -922,9 +926,11 @@ describe('deployTasks', () => {
       { before: {}, after: {} },
     )
 
-    expect(Object.keys(tasks).length).toEqual(10)
+    expect(Object.keys(tasks).length).toEqual(11)
     expect(tasks[5].title).toMatch('Building api')
     expect(tasks[6].title).toMatch('Building web')
+    expect(tasks[7].title).toMatch('Keeping web assets')
+    expect(tasks[7].skip?.()).toEqual(false)
   })
 
   it('skips migrations if migrate = false in config', () => {
@@ -935,7 +941,7 @@ describe('deployTasks', () => {
       { before: {}, after: {} },
     )
 
-    expect(Object.keys(tasks).length).toEqual(9)
+    expect(Object.keys(tasks).length).toEqual(10)
     expect(tasks[4].skip?.()).toEqual(true)
   })
 
@@ -947,9 +953,9 @@ describe('deployTasks', () => {
       { before: {}, after: {} },
     )
 
-    expect(Object.keys(tasks).length).toEqual(10)
-    expect(tasks[7].title).toMatch('Starting serve')
-    expect(tasks[8].title).toMatch('Saving serve')
+    expect(Object.keys(tasks).length).toEqual(11)
+    expect(tasks[8].title).toMatch('Starting serve')
+    expect(tasks[9].title).toMatch('Saving serve')
   })
 
   it('skips clone and symlinks if --no-update flag passed', () => {
@@ -962,7 +968,7 @@ describe('deployTasks', () => {
 
     expect(tasks[1].skip?.()).toEqual(true)
     expect(tasks[2].skip?.()).toEqual(true)
-    expect(tasks[6].skip?.()).toEqual(true)
+    expect(tasks[7].skip?.()).toEqual(true)
   })
 
   it('skips install if --no-install flag passed', () => {
@@ -1006,7 +1012,7 @@ describe('deployTasks', () => {
       { before: {}, after: {} },
     )
 
-    expect(tasks[7].skip?.()).toEqual(true)
+    expect(tasks[8].skip?.()).toEqual(true)
   })
 
   it('skips cleanup if --no-cleanup flag passed', () => {
@@ -1017,7 +1023,65 @@ describe('deployTasks', () => {
       { before: {}, after: {} },
     )
 
-    expect(tasks[8].skip?.()).toEqual(true)
+    expect(tasks[9].skip?.()).toEqual(true)
+  })
+
+  it('skips keeping web assets if --no-keep-assets flag passed', () => {
+    const tasks = baremetal.deployTasks(
+      { ...defaultYargs, keepAssets: false },
+      sshExecutor,
+      { ...defaultServerConfig, sides: ['api', 'web'] },
+      { before: {}, after: {} },
+    )
+
+    expect(tasks[7].title).toMatch('Keeping web assets')
+    expect(tasks[7].skip?.()).toEqual(true)
+  })
+
+  it('skips keeping web assets if --no-build flag passed', () => {
+    const tasks = baremetal.deployTasks(
+      { ...defaultYargs, build: false },
+      sshExecutor,
+      { ...defaultServerConfig, sides: ['api', 'web'] },
+      { before: {}, after: {} },
+    )
+
+    expect(tasks[7].title).toMatch('Keeping web assets')
+    expect(tasks[7].skip?.()).toEqual(true)
+  })
+
+  it('skips keeping web assets with a warning if the new release has no build manifest', async () => {
+    vi.spyOn(sshExecutor, 'exec').mockRejectedValue(
+      new Error('cat: client-build-manifest.json: No such file or directory'),
+    )
+
+    const tasks = baremetal.deployTasks(
+      defaultYargs,
+      sshExecutor,
+      { ...defaultServerConfig, sides: ['api', 'web'] },
+      { before: {}, after: {} },
+    )
+
+    await tasks[7].task({}, mockTask)
+
+    expect(mockTask.skip).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'No client-build-manifest.json in 20220409120000/web/dist',
+      ),
+    )
+  })
+
+  it('injects lifecycle events for keepAssets', () => {
+    const tasks = baremetal.deployTasks(
+      defaultYargs,
+      sshExecutor,
+      defaultServerConfig,
+      { before: { keepAssets: ['touch before-keep.txt'] }, after: {} },
+    )
+
+    expect(Object.keys(tasks).length).toEqual(11)
+    expect(tasks[6].title).toMatch('Before keepAssets: `touch before-keep.txt`')
+    expect(tasks[7].title).toMatch('Keeping web assets')
   })
 
   it('injects lifecycle events for update', () => {
@@ -1028,7 +1092,7 @@ describe('deployTasks', () => {
       { before: { update: ['touch before-update.txt'] }, after: {} },
     )
 
-    expect(Object.keys(tasks).length).toEqual(10)
+    expect(Object.keys(tasks).length).toEqual(11)
     expect(tasks[1].title).toMatch('Before update: `touch before-update.txt`')
     expect(tasks[2].title).toMatch('Cloning')
   })
@@ -1041,7 +1105,7 @@ describe('deployTasks', () => {
       { before: { install: ['touch before-install.txt'] }, after: {} },
     )
 
-    expect(Object.keys(tasks).length).toEqual(10)
+    expect(Object.keys(tasks).length).toEqual(11)
     expect(tasks[3].title).toMatch('Before install: `touch before-install.txt`')
     expect(tasks[4].title).toMatch('Install')
   })
@@ -1054,7 +1118,7 @@ describe('deployTasks', () => {
       { before: { migrate: ['touch before-migrate.txt'] }, after: {} },
     )
 
-    expect(Object.keys(tasks).length).toEqual(10)
+    expect(Object.keys(tasks).length).toEqual(11)
     expect(tasks[4].title).toMatch('Before migrate: `touch before-migrate.txt`')
     expect(tasks[5].title).toMatch('DB Migrations')
   })
@@ -1067,7 +1131,7 @@ describe('deployTasks', () => {
       { before: { build: ['touch before-build.txt'] }, after: {} },
     )
 
-    expect(Object.keys(tasks).length).toEqual(10)
+    expect(Object.keys(tasks).length).toEqual(11)
     expect(tasks[5].title).toMatch('Before build: `touch before-build.txt`')
     expect(tasks[6].title).toMatch('Building api')
   })
@@ -1080,9 +1144,9 @@ describe('deployTasks', () => {
       { before: { restart: ['touch before-restart.txt'] }, after: {} },
     )
 
-    expect(Object.keys(tasks).length).toEqual(10)
-    expect(tasks[7].title).toMatch('Before restart: `touch before-restart.txt`')
-    expect(tasks[8].title).toMatch('Restarting')
+    expect(Object.keys(tasks).length).toEqual(11)
+    expect(tasks[8].title).toMatch('Before restart: `touch before-restart.txt`')
+    expect(tasks[9].title).toMatch('Restarting')
   })
 
   it('injects lifecycle events for cleanup', () => {
@@ -1093,9 +1157,9 @@ describe('deployTasks', () => {
       { before: { cleanup: ['touch before-cleanup.txt'] }, after: {} },
     )
 
-    expect(Object.keys(tasks).length).toEqual(10)
-    expect(tasks[8].title).toMatch('Before cleanup: `touch before-cleanup.txt`')
-    expect(tasks[9].title).toMatch('Cleaning up')
+    expect(Object.keys(tasks).length).toEqual(11)
+    expect(tasks[9].title).toMatch('Before cleanup: `touch before-cleanup.txt`')
+    expect(tasks[10].title).toMatch('Cleaning up')
   })
 
   it('only deletes release directories when cleaning up old deploys', async () => {
@@ -1121,6 +1185,349 @@ describe('deployTasks', () => {
     expect(execSpy).toHaveBeenCalledExactlyOnceWith(
       '/var/www/app',
       "ls -t | grep -E '^[0-9]{14}$' | tail -n +4 | xargs -r rm -rf",
+    )
+  })
+})
+
+describe('manifestAssetFiles', () => {
+  it('lists chunk files with their css and other assets, without duplicates', () => {
+    const manifest = JSON.stringify({
+      'index.html': {
+        file: 'assets/index-C3xKbB2f.js',
+        css: ['assets/index-D8a2kQ1x.css'],
+        assets: ['assets/logo-B1x2y3z4.png'],
+        isEntry: true,
+      },
+      'src/pages/AboutPage/AboutPage.tsx': {
+        file: 'assets/AboutPage-Kq9w8e7r.js',
+        assets: ['assets/logo-B1x2y3z4.png'],
+      },
+      'src/assets/font.woff2': {
+        file: 'assets/font-Zx1c2v3b.woff2',
+      },
+    })
+
+    expect(baremetal.manifestAssetFiles(manifest)).toEqual([
+      'assets/index-C3xKbB2f.js',
+      'assets/index-D8a2kQ1x.css',
+      'assets/logo-B1x2y3z4.png',
+      'assets/AboutPage-Kq9w8e7r.js',
+      'assets/font-Zx1c2v3b.woff2',
+    ])
+  })
+
+  it('ignores entries and values that are not shaped like a manifest', () => {
+    const manifest = JSON.stringify({
+      a: null,
+      b: 'not an entry',
+      c: { file: 42, css: 'not a list', assets: [1, 'assets/ok-Abc12345.png'] },
+    })
+
+    expect(baremetal.manifestAssetFiles(manifest)).toEqual([
+      'assets/ok-Abc12345.png',
+    ])
+    expect(baremetal.manifestAssetFiles('[]')).toEqual([])
+    expect(baremetal.manifestAssetFiles('null')).toEqual([])
+  })
+})
+
+describe('keepPreviousAssets', () => {
+  const NEW_RELEASE = '20220409120000'
+  const PREVIOUS_RELEASE = '20220408120000'
+  const OLDER_RELEASE = '20220407120000'
+  const OLDEST_RELEASE = '20220406120000'
+
+  const yargs = createBaremetalYargs({ releaseDir: NEW_RELEASE })
+  const serverConfig = createServerConfig({ sides: ['api', 'web'] })
+  const warn = vi.fn()
+
+  const sshResponse = (stdout: string) => ({
+    stdout,
+    stderr: '',
+    code: 0,
+    signal: null,
+  })
+
+  const manifestFor = (...files: string[]) =>
+    JSON.stringify(
+      Object.fromEntries(files.map((file, i) => [`entry-${i}`, { file }])),
+    )
+
+  const defaultManifests: Record<string, string | undefined> = {
+    [NEW_RELEASE]: manifestFor(
+      'assets/index-New00000.js',
+      'assets/AboutPage-Shared00.js',
+    ),
+    [PREVIOUS_RELEASE]: manifestFor(
+      'assets/index-Prev00000.js',
+      'assets/AboutPage-Shared00.js',
+      'assets/logo-Prev00000.png',
+    ),
+    [OLDER_RELEASE]: manifestFor(
+      'assets/index-Older0000.js',
+      'assets/AboutPage-Shared00.js',
+    ),
+    [OLDEST_RELEASE]: manifestFor('assets/index-Oldest000.js'),
+  }
+
+  /**
+   * Fakes a server with the four releases above plus the usual non-release
+   * entries in the app directory. `cat` returns the release's manifest or
+   * fails when the release has none. `failLinksFor` makes `ln` fail for files
+   * from that release.
+   */
+  const mockServer = ({
+    manifests = defaultManifests,
+    failLinksFor,
+  }: {
+    manifests?: Record<string, string | undefined>
+    failLinksFor?: string
+  } = {}) =>
+    vi
+      .spyOn(sshExecutor, 'exec')
+      .mockImplementation(async (path, command, args) => {
+        if (command === 'ls') {
+          return sshResponse(
+            [
+              '.env',
+              OLDEST_RELEASE,
+              OLDER_RELEASE,
+              PREVIOUS_RELEASE,
+              NEW_RELEASE,
+              'current',
+              'uploads',
+            ].join('\n') + '\n',
+          )
+        }
+
+        if (command === 'cat') {
+          const release = path.match(/\/(\d{14})\/web\/dist$/)?.[1]
+          const manifest = release && manifests[release]
+
+          if (!manifest) {
+            throw new Error(`cat: ${args?.[0]}: No such file or directory`)
+          }
+
+          return sshResponse(manifest)
+        }
+
+        if (
+          command === 'ln' &&
+          failLinksFor &&
+          args?.some((arg) => arg.includes(`/${failLinksFor}/`))
+        ) {
+          throw new Error('ln: failed to create hard link')
+        }
+
+        return sshResponse('')
+      })
+
+  const linkCalls = (execSpy: ReturnType<typeof mockServer>) =>
+    execSpy.mock.calls
+      .filter(([, command]) => command === 'ln')
+      .map(([, , args]) => args)
+
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
+  it('links the files of previous releases that the new release does not have', async () => {
+    const execSpy = mockServer()
+
+    const linkedCount = await baremetal.keepPreviousAssets(
+      yargs,
+      sshExecutor,
+      serverConfig,
+      warn,
+    )
+
+    expect(linkedCount).toEqual(4)
+    expect(warn).not.toHaveBeenCalled()
+    expect(execSpy).toHaveBeenCalledWith(
+      `/var/www/app/${NEW_RELEASE}`,
+      'mkdir',
+      ['-p', `'/var/www/app/${NEW_RELEASE}/web/dist/assets'`],
+    )
+    expect(linkCalls(execSpy)).toEqual([
+      [
+        '-f',
+        `'/var/www/app/${PREVIOUS_RELEASE}/web/dist/assets/index-Prev00000.js'`,
+        `'/var/www/app/${PREVIOUS_RELEASE}/web/dist/assets/logo-Prev00000.png'`,
+        `'/var/www/app/${NEW_RELEASE}/web/dist/assets'`,
+      ],
+      [
+        '-f',
+        `'/var/www/app/${OLDER_RELEASE}/web/dist/assets/index-Older0000.js'`,
+        `'/var/www/app/${NEW_RELEASE}/web/dist/assets'`,
+      ],
+      [
+        '-f',
+        `'/var/www/app/${OLDEST_RELEASE}/web/dist/assets/index-Oldest000.js'`,
+        `'/var/www/app/${NEW_RELEASE}/web/dist/assets'`,
+      ],
+    ])
+  })
+
+  it('only considers the newest `keepReleases - 1` previous releases', async () => {
+    const execSpy = mockServer()
+
+    const linkedCount = await baremetal.keepPreviousAssets(
+      yargs,
+      sshExecutor,
+      { ...serverConfig, keepReleases: 2 },
+      warn,
+    )
+
+    expect(linkedCount).toEqual(2)
+    expect(linkCalls(execSpy)).toHaveLength(1)
+    expect(linkCalls(execSpy)[0]?.[1]).toContain(PREVIOUS_RELEASE)
+    expect(execSpy).not.toHaveBeenCalledWith(
+      `/var/www/app/${OLDER_RELEASE}/web/dist`,
+      'cat',
+      expect.anything(),
+    )
+  })
+
+  it('links nothing when only one release is kept', async () => {
+    const execSpy = mockServer()
+
+    const linkedCount = await baremetal.keepPreviousAssets(
+      yargs,
+      sshExecutor,
+      { ...serverConfig, keepReleases: 1 },
+      warn,
+    )
+
+    expect(linkedCount).toEqual(0)
+    expect(linkCalls(execSpy)).toHaveLength(0)
+  })
+
+  it('returns undefined without listing releases when the new release has no manifest', async () => {
+    const execSpy = mockServer({
+      manifests: { ...defaultManifests, [NEW_RELEASE]: undefined },
+    })
+
+    const linkedCount = await baremetal.keepPreviousAssets(
+      yargs,
+      sshExecutor,
+      serverConfig,
+      warn,
+    )
+
+    expect(linkedCount).toBeUndefined()
+    expect(execSpy).not.toHaveBeenCalledWith('/var/www/app', 'ls')
+  })
+
+  it('warns about a previous release without a manifest and keeps going', async () => {
+    const execSpy = mockServer({
+      manifests: { ...defaultManifests, [PREVIOUS_RELEASE]: undefined },
+    })
+
+    const linkedCount = await baremetal.keepPreviousAssets(
+      yargs,
+      sshExecutor,
+      serverConfig,
+      warn,
+    )
+
+    expect(warn).toHaveBeenCalledExactlyOnceWith(
+      `Release ${PREVIOUS_RELEASE} has no web build manifest, skipping its assets`,
+    )
+    expect(linkedCount).toEqual(2)
+    expect(linkCalls(execSpy)[0]?.[1]).toContain(OLDER_RELEASE)
+    expect(linkCalls(execSpy)[1]?.[1]).toContain(OLDEST_RELEASE)
+  })
+
+  it('warns when linking fails for a release and lets an older release provide the same files', async () => {
+    const execSpy = mockServer({
+      manifests: {
+        ...defaultManifests,
+        [PREVIOUS_RELEASE]: manifestFor(
+          'assets/index-Prev00000.js',
+          'assets/common-Abcdef00.js',
+        ),
+        [OLDER_RELEASE]: manifestFor('assets/common-Abcdef00.js'),
+      },
+      failLinksFor: PREVIOUS_RELEASE,
+    })
+
+    const linkedCount = await baremetal.keepPreviousAssets(
+      yargs,
+      sshExecutor,
+      serverConfig,
+      warn,
+    )
+
+    expect(warn).toHaveBeenCalledExactlyOnceWith(
+      expect.stringContaining(
+        `Could not keep the web assets of release ${PREVIOUS_RELEASE}: ` +
+          'ln: failed to create hard link',
+      ),
+    )
+    // `common-Abcdef00.js` from the older release plus the oldest release's
+    // own file
+    expect(linkedCount).toEqual(2)
+    expect(linkCalls(execSpy)).toContainEqual([
+      '-f',
+      `'/var/www/app/${OLDER_RELEASE}/web/dist/assets/common-Abcdef00.js'`,
+      `'/var/www/app/${NEW_RELEASE}/web/dist/assets'`,
+    ])
+  })
+
+  it('links files in batches of 100 per directory', async () => {
+    const manyFiles = Array.from(
+      { length: 150 },
+      (_, i) => `assets/chunk-${String(i).padStart(8, '0')}.js`,
+    )
+    const execSpy = mockServer({
+      manifests: {
+        [NEW_RELEASE]: manifestFor('assets/index-New00000.js'),
+        [PREVIOUS_RELEASE]: manifestFor(
+          ...manyFiles,
+          'fonts/font-Abc12345.woff2',
+        ),
+      },
+    })
+
+    const linkedCount = await baremetal.keepPreviousAssets(
+      yargs,
+      sshExecutor,
+      { ...serverConfig, keepReleases: 2 },
+      warn,
+    )
+
+    expect(linkedCount).toEqual(151)
+    expect(execSpy).toHaveBeenCalledWith(
+      `/var/www/app/${NEW_RELEASE}`,
+      'mkdir',
+      ['-p', `'/var/www/app/${NEW_RELEASE}/web/dist/fonts'`],
+    )
+    const calls = linkCalls(execSpy)
+    // `-f`, the sources, and the target directory
+    expect(calls.map((args) => args?.length)).toEqual([102, 52, 3])
+    expect(calls[2]?.[1]).toContain('fonts/font-Abc12345.woff2')
+    expect(calls[2]?.[2]).toEqual(
+      `'/var/www/app/${NEW_RELEASE}/web/dist/fonts'`,
+    )
+  })
+
+  it('quotes paths for the shell', async () => {
+    const execSpy = mockServer({
+      manifests: {
+        [NEW_RELEASE]: manifestFor('assets/index-New00000.js'),
+        [PREVIOUS_RELEASE]: manifestFor("assets/it's-Abc12345.png"),
+      },
+    })
+
+    await baremetal.keepPreviousAssets(
+      yargs,
+      sshExecutor,
+      { ...serverConfig, keepReleases: 2 },
+      warn,
+    )
+
+    expect(linkCalls(execSpy)[0]?.[1]).toEqual(
+      `'/var/www/app/${PREVIOUS_RELEASE}/web/dist/assets/it'\\''s-Abc12345.png'`,
     )
   })
 })
@@ -1176,7 +1583,7 @@ describe('commands', () => {
     const tasks = servers[0].task().tasks
 
     expect(tasks[0].title).toMatch('Connecting')
-    expect(tasks[10].title).toMatch('Disconnecting')
+    expect(tasks[11].title).toMatch('Disconnecting')
   })
 
   it('contains deploy tasks by default', () => {
