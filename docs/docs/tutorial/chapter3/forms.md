@@ -112,6 +112,7 @@ And then use the `BlogLayout` for the `ContactPage` by making sure its wrapped b
 <Tabs groupId="js-ts">
 <TabItem value="js" label="JavaScript">
 
+<!-- prettier-ignore -->
 ```jsx title="web/src/Routes.jsx"
 import { Router, Route, Set } from '@cedarjs/router'
 import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
@@ -120,19 +121,9 @@ import BlogLayout from 'src/layouts/BlogLayout'
 const Routes = () => {
   return (
     <Router>
-      <Set
-        wrap={ScaffoldLayout}
-        title="Posts"
-        titleTo="posts"
-        buttonLabel="New Post"
-        buttonTo="newPost"
-      >
+      <Set wrap={ScaffoldLayout} title="Posts" titleTo="posts" buttonLabel="New Post" buttonTo="newPost">
         <Route path="/posts/new" page={PostNewPostPage} name="newPost" />
-        <Route
-          path="/posts/{id:Int}/edit"
-          page={PostEditPostPage}
-          name="editPost"
-        />
+        <Route path="/posts/{id:Int}/edit" page={PostEditPostPage} name="editPost" />
         <Route path="/posts/{id:Int}" page={PostPostPage} name="post" />
         <Route path="/posts" page={PostPostsPage} name="posts" />
       </Set>
@@ -154,6 +145,7 @@ export default Routes
 </TabItem>
 <TabItem value="ts" label="TypeScript">
 
+<!-- prettier-ignore -->
 ```tsx title="web/src/Routes.tsx"
 import { Router, Route, Set } from '@cedarjs/router'
 import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
@@ -162,19 +154,9 @@ import BlogLayout from 'src/layouts/BlogLayout'
 const Routes = () => {
   return (
     <Router>
-      <Set
-        wrap={ScaffoldLayout}
-        title="Posts"
-        titleTo="posts"
-        buttonLabel="New Post"
-        buttonTo="newPost"
-      >
+      <Set wrap={ScaffoldLayout} title="Posts" titleTo="posts" buttonLabel="New Post" buttonTo="newPost">
         <Route path="/posts/new" page={PostNewPostPage} name="newPost" />
-        <Route
-          path="/posts/{id:Int}/edit"
-          page={PostEditPostPage}
-          name="editPost"
-        />
+        <Route path="/posts/{id:Int}/edit" page={PostEditPostPage} name="editPost" />
         <Route path="/posts/{id:Int}" page={PostPostPage} name="post" />
         <Route path="/posts" page={PostPostsPage} name="posts" />
       </Set>
