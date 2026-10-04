@@ -1160,7 +1160,8 @@ Done in 1.21s.
 
 The routes wrapped in the [`Set`](router.md#sets-of-routes) component with generated layout will be nested too:
 
-```jsx {6-11} title="./web/src/Routes.js"
+<!-- prettier-ignore -->
+```jsx {5-8} title="./web/src/Routes.js"
 const Routes = () => {
   return (
     <Router>

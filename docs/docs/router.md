@@ -116,6 +116,7 @@ Conceptually, this fits with how we think about Context and Layouts as things th
 
 There's a lot of flexibility here. You can even nest `Sets` to great effect:
 
+<!-- prettier-ignore -->
 ```jsx title="Routes.jsx"
 import { Router, Route, Set } from '@cedarjs/router'
 import BlogContext from 'src/contexts/BlogContext'
@@ -189,6 +190,7 @@ To protect private routes for access by a single role:
 
 To protect private routes for access by multiple roles:
 
+<!-- prettier-ignore -->
 ```jsx title="Routes.jsx"
 <Router useAuth={useAuth}>
   <PrivateSet unauthenticated="forbidden" roles={['admin', 'editor', 'publisher']}>
@@ -319,7 +321,9 @@ const MainMenu = () => {
 import { Link, routes, useMatch } from '@cedarjs/router'
 
 const CustomLink = ({ to, ...rest }) => {
-  const matchInfo = useMatch(to, { searchParams: [{ tab: 'tutorial' }, 'page'] })
+  const matchInfo = useMatch(to, {
+    searchParams: [{ tab: 'tutorial' }, 'page'],
+  })
 
   return <SomeStyledComponent as={Link} to={to} isActive={matchInfo.match} />
 }
@@ -342,6 +346,7 @@ To get the path you need to pass to `useMatch` you can use
 
 Here's an example:
 
+<!-- prettier-ignore -->
 ```jsx
 <Route path="/{animal}/{name}" page={AnimalPage} name="animal" />
 
@@ -438,6 +443,7 @@ In this example, we want to take everything after `/file/` and have it sent to t
 
 You can use multiple globs in your paths:
 
+<!-- prettier-ignore -->
 ```jsx title="Routes.jsx"
 <Route path="/from/{fromDate...}/to/{toDate...}" page={DatePage} name="dateRange" />
 ```
@@ -539,7 +545,11 @@ Example usage:
 ```jsx
 const routePaths = useRoutePaths()
 
-return <pre><code>{JSON.stringify(routePaths, undefined, 2)}</code></pre>
+return (
+  <pre>
+    <code>{JSON.stringify(routePaths, undefined, 2)}</code>
+  </pre>
+)
 ```
 
 Example output:
@@ -703,6 +713,7 @@ Because lazily-loaded pages can take a non-negligible amount of time to load (de
 
 In order to show a loader as your page chunks are loading, you simply add the `whileLoadingPage` prop to your route, `Set` or `PrivateSet` component.
 
+<!-- prettier-ignore -->
 ```jsx title="Routes.jsx"
 import SkeletonLoader from 'src/components/SkeletonLoader'
 <Router>
@@ -948,7 +959,7 @@ export default () => (
         </h1>
       </section>
     </main>
-  // highlight-next-line
+    // highlight-next-line
   </MainLayout>
 )
 ```

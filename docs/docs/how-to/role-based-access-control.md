@@ -268,6 +268,7 @@ const Routes = () => {
 
 To protect a `PrivateSet` route for access by a multiple roles:
 
+<!-- prettier-ignore -->
 ```jsx
 import { Router, Route, PrivateSet } from '@cedarjs/router'
 

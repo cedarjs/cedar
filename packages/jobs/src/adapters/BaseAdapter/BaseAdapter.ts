@@ -24,6 +24,11 @@ export interface BaseAdapterOptions {
 
 export interface SuccessOptions<TJob extends BaseJob = BaseJob> {
   job: TJob
+  /**
+   * When set, the job is a recurring (cron) job and has to run again at this
+   * time. The adapter must store it as the job's new `runAt` and reset the
+   * job's attempt count to 0
+   */
   runAt: Date | undefined
   deleteJob?: boolean
 }
@@ -38,10 +43,10 @@ export interface FailureOptions<TJob extends BaseJob = BaseJob> {
   job: TJob
   deleteJob?: boolean
   /**
-   * Present when the job is failed directly, without a preceding `error()`
-   * call for the same attempt (currently: when the job exceeded
-   * `maxRuntime`), so the adapter can record what went wrong in a single
-   * write
+   * The error of the attempt that failed the job (it exceeded `maxRuntime`,
+   * or it was the `maxAttempts`th attempt). There is no preceding `error()`
+   * call for that attempt, so the adapter records the error in the same
+   * write that marks the job as failed
    */
   error?: Error
 }
@@ -86,21 +91,28 @@ export abstract class BaseAdapter<
   abstract find(args: FindArgs): PossibleBaseJob | Promise<PossibleBaseJob>
 
   /**
-   * Called when a job has successfully completed
+   * Called when a job has successfully completed.
+   *
+   * When `options.runAt` is set the job is a recurring (cron) job that has to
+   * run again at that time. The adapter must then store the new `runAt` and
+   * reset the job's attempt count to 0, so that `attempts` (which the worker
+   * compares against `maxAttempts` and uses for the retry backoff) counts
+   * consecutive failures of a single run rather than every run of the job
    */
   abstract success(options: SuccessOptions): void | Promise<void>
 
   /**
-   * Called when an attempt to run a job produced an error.
+   * Called when an attempt to run a job produced an error and the job will
+   * be retried.
    * This should update the stored job with the new `options.runAt` so that it
    * will be retried
    */
   abstract error(options: ErrorOptions): void | Promise<void>
 
   /**
-   * Called when a job will not be retried: it has either errored more than
-   * maxAttempts times, or exceeded maxRuntime (in which case
-   * `options.error` contains the timeout error to record)
+   * Called, instead of `error()`, when a job will not be retried: it has
+   * either errored maxAttempts times, or exceeded maxRuntime.
+   * `options.error` contains the error to record
    */
   abstract failure(options: FailureOptions): void | Promise<void>
 

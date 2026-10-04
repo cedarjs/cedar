@@ -41,6 +41,7 @@ const mockedPathGenerator = (app: string, routes: string) => {
       functions: '',
       src: '',
       lib: '',
+      directives: path.join(basedir, 'api/src/directives'),
       graphql: path.join(basedir, 'api/src/functions/graphql.ts'),
     },
     web: {
@@ -56,7 +57,16 @@ import fs from 'node:fs'
 import path from 'path'
 
 import { vol } from 'memfs'
-import { vi, afterAll, beforeEach, describe, it, expect, test } from 'vitest'
+import {
+  vi,
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  it,
+  expect,
+  test,
+} from 'vitest'
 
 import { getPaths } from '../../lib/paths.js'
 import { isTypeScriptProject } from '../../lib/project.js'
@@ -68,6 +78,9 @@ import {
   createWebAuth,
   hasAuthProvider,
   removeAuthProvider,
+  replaceStubRequireAuthTestCase,
+  updateRequireAuthTest,
+  writesApiAuthLib,
 } from '../authTasks.js'
 
 import {
@@ -722,5 +735,170 @@ describe('authTasks', () => {
     expect(
       fs.readFileSync(path.join(getPaths().web.src, 'auth.js'), 'utf-8'),
     ).toMatchSnapshot()
+  })
+
+  describe('updateRequireAuthTest', () => {
+    const ctx: AuthGeneratorCtx = {
+      provider: 'dbAuth',
+      setupMode: 'FORCE',
+      force: false,
+      apiAuthLibWritten: true,
+    }
+
+    const createCedarAppTemplatesPath = path.resolve(
+      import.meta.dirname,
+      '../../../../create-cedar-app/templates',
+    )
+
+    async function readTemplateTest(lang: 'ts' | 'js') {
+      const actualFs = await vi.importActual<typeof fs>('node:fs')
+
+      return actualFs.readFileSync(
+        path.join(
+          createCedarAppTemplatesPath,
+          lang,
+          'api/src/directives/requireAuth',
+          `requireAuth.test.${lang}`,
+        ),
+        'utf-8',
+      )
+    }
+
+    function requireAuthTestPath(ext: 'ts' | 'js') {
+      return path.join(
+        getPaths().api.directives,
+        'requireAuth',
+        `requireAuth.test.${ext}`,
+      )
+    }
+
+    function mockTask() {
+      return { skip: vi.fn() }
+    }
+
+    // The mocked file system isn't reset between tests
+    afterEach(() => {
+      fs.rmSync(requireAuthTestPath('ts'), { force: true })
+      fs.rmSync(requireAuthTestPath('js'), { force: true })
+    })
+
+    it.each(['ts', 'js'] as const)(
+      'replaces the stub test case in the %s app template',
+      async (lang) => {
+        const testPath = requireAuthTestPath(lang)
+        vol.fromJSON({
+          ...vol.toJSON(),
+          [testPath]: await readTemplateTest(lang),
+        })
+
+        const task = mockTask()
+        // @ts-expect-error - Only the parts of the task wrapper that
+        // updateRequireAuthTest uses are mocked
+        updateRequireAuthTest().task(ctx, task)
+
+        const content = fs.readFileSync(testPath, 'utf-8')
+
+        expect(task.skip).not.toHaveBeenCalled()
+        expect(content).not.toContain('stub implementation')
+        expect(content).toMatchSnapshot()
+      },
+    )
+
+    it('leaves a customized test alone', async () => {
+      const testPath = requireAuthTestPath('ts')
+      const customizedTest = (await readTemplateTest('ts')).replace(
+        '{ context: {} }',
+        "{ context: { currentUser: { id: 1, email: 'a@b.com' } } }",
+      )
+      vol.fromJSON({ ...vol.toJSON(), [testPath]: customizedTest })
+
+      const task = mockTask()
+      // @ts-expect-error - Only the parts of the task wrapper that
+      // updateRequireAuthTest uses are mocked
+      updateRequireAuthTest().task(ctx, task)
+
+      expect(fs.readFileSync(testPath, 'utf-8')).toEqual(customizedTest)
+      expect(task.skip).toHaveBeenCalledWith(
+        'Keeping the customized requireAuth directive test as is',
+      )
+    })
+
+    it('leaves the stub test alone when the auth lib file is kept', async () => {
+      const testPath = requireAuthTestPath('ts')
+      const stubTest = await readTemplateTest('ts')
+      vol.fromJSON({ ...vol.toJSON(), [testPath]: stubTest })
+
+      const task = mockTask()
+      // @ts-expect-error - Only the parts of the task wrapper that
+      // updateRequireAuthTest uses are mocked
+      updateRequireAuthTest().task({ ...ctx, apiAuthLibWritten: false }, task)
+
+      expect(fs.readFileSync(testPath, 'utf-8')).toEqual(stubTest)
+      expect(task.skip).toHaveBeenCalledWith(
+        'Keeping the requireAuth directive test as is, because the existing ' +
+          'requireAuth implementation is kept',
+      )
+    })
+
+    it('skips when there is no requireAuth test', () => {
+      const task = mockTask()
+      // @ts-expect-error - Only the parts of the task wrapper that
+      // updateRequireAuthTest uses are mocked
+      updateRequireAuthTest().task(ctx, task)
+
+      expect(task.skip).toHaveBeenCalledWith(
+        'No requireAuth directive test found',
+      )
+    })
+
+    describe('writesApiAuthLib', () => {
+      const authLibPath = () => path.join(getPaths().api.src, 'lib', 'auth.ts')
+      const otherPath = () =>
+        path.join(getPaths().api.src, 'functions', 'auth.ts')
+
+      afterEach(() => {
+        fs.rmSync(authLibPath(), { force: true })
+      })
+
+      function filesRecord() {
+        return { [authLibPath()]: 'auth lib', [otherPath()]: 'auth function' }
+      }
+
+      it('is false when the user declines overwriting an existing auth lib', () => {
+        vol.fromJSON({ ...vol.toJSON(), [authLibPath()]: 'stub requireAuth' })
+
+        expect(writesApiAuthLib(filesRecord(), 'SKIP')).toBe(false)
+      })
+
+      it('is true when overwriting an existing auth lib', () => {
+        vol.fromJSON({ ...vol.toJSON(), [authLibPath()]: 'stub requireAuth' })
+
+        expect(writesApiAuthLib(filesRecord(), 'OVERWRITE')).toBe(true)
+      })
+
+      it('is true when there is no existing auth lib', () => {
+        expect(writesApiAuthLib(filesRecord(), 'SKIP')).toBe(true)
+      })
+
+      it('is false when the auth lib is written under a different name', () => {
+        vol.fromJSON({ ...vol.toJSON(), [authLibPath()]: 'stub requireAuth' })
+        const renamedRecord = {
+          [path.join(getPaths().api.src, 'lib', 'dbAuthAuth.ts')]: 'auth lib',
+        }
+
+        expect(writesApiAuthLib(renamedRecord, 'FAIL')).toBe(false)
+      })
+    })
+
+    it('keeps CRLF line endings', async () => {
+      const stubTest = await readTemplateTest('ts')
+      const crlfStubTest = stubTest.replaceAll('\n', '\r\n')
+
+      const newContent = replaceStubRequireAuthTestCase(crlfStubTest)
+
+      expect(newContent).toEqual(
+        replaceStubRequireAuthTestCase(stubTest)?.replaceAll('\n', '\r\n'),
+      )
+    })
   })
 })

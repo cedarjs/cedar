@@ -71,6 +71,35 @@ yarn cedar setup deploy netlify --ud
 
 This installs `@netlify/vite-plugin` and `@universal-deploy/netlify`, adds the required Vite plugins, and writes a `netlify.toml` configured for Universal Deploy.
 
+#### Skew protection
+
+Setup also adds `cedarNetlifySkewProtectionPlugin()`, which turns on Netlify's
+[skew protection](https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1skew-protectionjson).
+Cedar lazy-loads pages, so after a new deploy, a browser tab running the
+previous build still requests that build's hashed chunks when the user
+navigates. Skew protection serves those requests from the deploy the tab was
+loaded from, instead of returning 404s.
+
+- Every HTML response sets a `cedar-skew-token` cookie identifying the deploy
+  it came from.
+- Requests for build assets (`/assets/*`) and API routes that carry the cookie
+  are served by that deploy. An open tab keeps loading its own chunks and
+  keeps talking to the API it was built against.
+- Page loads are always served by the latest deploy, and update the cookie. A
+  reload or a fresh visit always gets the newest version.
+
+The plugin accepts these options:
+
+| Option         | Default            | Description                                                                                                            |
+| -------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| `cookieName`   | `cedar-skew-token` | Name of the cookie that carries the deploy token                                                                       |
+| `cookieMaxAge` | `86400` (24 hours) | How long, in seconds, an open tab can keep loading assets and calling the API of the deploy it last loaded a page from |
+| `headerName`   | `cedar-skew-token` | Request header Netlify accepts the deploy token from                                                                   |
+| `queryName`    | `skew`             | Query parameter Netlify accepts the deploy token from                                                                  |
+
+Netlify only provides the deploy token to builds it runs itself. Deploys made
+with `netlify deploy --no-build` don't get skew protection.
+
 ### Vercel
 
 ```shell
