@@ -7,6 +7,8 @@ export {
   FetchConfigProvider,
   useFetchConfig,
 } from './components/FetchConfigProvider.js'
+export { useNewVersionAvailable } from './components/useNewVersionAvailable.js'
+export type { UseNewVersionAvailableOptions } from './components/useNewVersionAvailable.js'
 export {
   useQuery,
   useMutation,
