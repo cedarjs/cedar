@@ -39,8 +39,7 @@
   "dependencies": {
     "@cedarjs/cli-helpers": "7.0.0",
     "@cedarjs/project-config": "7.0.0",
-    "cron-parser": "5.10.1",
-    "type-fest": "5.10.0"
+    "cron-parser": "5.10.1"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "7.0.0",
