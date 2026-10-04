@@ -340,7 +340,12 @@ describe('success()', () => {
     // guarded on `failedAt: null` so a job that was cancelled while running
     // is not deleted when the in-flight attempt completes
     expect(spy).toHaveBeenCalledWith({
-      where: { id: 1, failedAt: null, attempts: 10 },
+      where: {
+        id: 1,
+        failedAt: null,
+        attempts: 10,
+        lockedAt: mockPrismaJob.lockedAt,
+      },
     })
   })
 
@@ -359,12 +364,47 @@ describe('success()', () => {
     })
 
     expect(spy).toHaveBeenCalledWith({
-      where: { id: mockPrismaJob.id, failedAt: null, attempts: 10 },
+      where: {
+        id: mockPrismaJob.id,
+        failedAt: null,
+        attempts: 10,
+        lockedAt: mockPrismaJob.lockedAt,
+      },
       data: {
         lockedAt: null,
         lockedBy: null,
         lastError: null,
         runAt,
+        attempts: 0,
+      },
+    })
+  })
+
+  it('does not reset attempts when the job is not rescheduled', async () => {
+    const spy = vi.spyOn(mockDb.backgroundJob, 'updateMany')
+    const adapter = new PrismaAdapter({
+      db: mockDb,
+      logger: mockLogger,
+    })
+
+    await adapter.success({
+      job: mockPrismaJob,
+      runAt: undefined,
+      deleteJob: false,
+    })
+
+    expect(spy).toHaveBeenCalledWith({
+      where: {
+        id: mockPrismaJob.id,
+        failedAt: null,
+        attempts: 10,
+        lockedAt: mockPrismaJob.lockedAt,
+      },
+      data: {
+        lockedAt: null,
+        lockedBy: null,
+        lastError: null,
+        runAt: null,
       },
     })
   })
@@ -382,7 +422,12 @@ describe('error()', () => {
 
     expect(spy).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: 1, failedAt: null, attempts: 10 },
+        where: {
+          id: 1,
+          failedAt: null,
+          attempts: 10,
+          lockedAt: mockPrismaJob.lockedAt,
+        },
       }),
     )
   })
@@ -448,7 +493,12 @@ describe('failure()', () => {
     await adapter.failure({ job: mockPrismaJob, deleteJob: false })
 
     expect(spy).toHaveBeenCalledWith({
-      where: { id: 1, failedAt: null, attempts: 10 },
+      where: {
+        id: 1,
+        failedAt: null,
+        attempts: 10,
+        lockedAt: mockPrismaJob.lockedAt,
+      },
       data: {
         failedAt: new Date(),
         runAt: null,
@@ -466,7 +516,12 @@ describe('failure()', () => {
     })
 
     expect(spy).toHaveBeenCalledWith({
-      where: { id: 1, failedAt: null, attempts: 10 },
+      where: {
+        id: 1,
+        failedAt: null,
+        attempts: 10,
+        lockedAt: mockPrismaJob.lockedAt,
+      },
       data: {
         failedAt: new Date(),
         runAt: null,
@@ -481,7 +536,12 @@ describe('failure()', () => {
     await adapter.failure({ job: mockPrismaJob, deleteJob: true })
 
     expect(spy).toHaveBeenCalledWith({
-      where: { id: 1, failedAt: null, attempts: 10 },
+      where: {
+        id: 1,
+        failedAt: null,
+        attempts: 10,
+        lockedAt: mockPrismaJob.lockedAt,
+      },
     })
   })
 })
