@@ -7,6 +7,7 @@ Having the admin screens at `/admin` is a reasonable thing to do. Let's update t
 <Tabs groupId="js-ts">
 <TabItem value="js" label="JavaScript">
 
+<!-- prettier-ignore -->
 ```jsx title="web/src/Routes.jsx"
 import { Router, Route, Set } from '@cedarjs/router'
 import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
@@ -15,20 +16,10 @@ import BlogLayout from 'src/layouts/BlogLayout'
 const Routes = () => {
   return (
     <Router>
-      <Set
-        wrap={ScaffoldLayout}
-        title="Posts"
-        titleTo="posts"
-        buttonLabel="New Post"
-        buttonTo="newPost"
-      >
+      <Set wrap={ScaffoldLayout} title="Posts" titleTo="posts" buttonLabel="New Post" buttonTo="newPost">
         // highlight-start
         <Route path="/admin/posts/new" page={PostNewPostPage} name="newPost" />
-        <Route
-          path="/admin/posts/{id:Int}/edit"
-          page={PostEditPostPage}
-          name="editPost"
-        />
+        <Route path="/admin/posts/{id:Int}/edit" page={PostEditPostPage} name="editPost" />
         <Route path="/admin/posts/{id:Int}" page={PostPostPage} name="post" />
         <Route path="/admin/posts" page={PostPostsPage} name="posts" />
         // highlight-end
@@ -50,6 +41,7 @@ export default Routes
 </TabItem>
 <TabItem value="ts" label="TypeScript">
 
+<!-- prettier-ignore -->
 ```jsx title="web/src/Routes.tsx"
 import { Router, Route, Set } from '@cedarjs/router'
 import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
@@ -58,20 +50,10 @@ import BlogLayout from 'src/layouts/BlogLayout'
 const Routes = () => {
   return (
     <Router>
-      <Set
-        wrap={ScaffoldLayout}
-        title="Posts"
-        titleTo="posts"
-        buttonLabel="New Post"
-        buttonTo="newPost"
-      >
+      <Set wrap={ScaffoldLayout} title="Posts" titleTo="posts" buttonLabel="New Post" buttonTo="newPost">
         // highlight-start
         <Route path="/admin/posts/new" page={PostNewPostPage} name="newPost" />
-        <Route
-          path="/admin/posts/{id:Int}/edit"
-          page={PostEditPostPage}
-          name="editPost"
-        />
+        <Route path="/admin/posts/{id:Int}/edit" page={PostEditPostPage} name="editPost" />
         <Route path="/admin/posts/{id:Int}" page={PostPostPage} name="post" />
         <Route path="/admin/posts" page={PostPostsPage} name="posts" />
         // highlight-end
@@ -222,6 +204,7 @@ Going to the admin section now prevents a non-logged in user from seeing posts, 
 <Tabs groupId="js-ts">
 <TabItem value="js" label="JavaScript">
 
+<!-- prettier-ignore -->
 ```jsx title="web/src/Routes.jsx"
 // highlight-next-line
 import { PrivateSet, Router, Route, Set } from '@cedarjs/router'
@@ -236,23 +219,9 @@ const Routes = () => {
     <Router useAuth={useAuth}>
       // highlight-next-line
       <PrivateSet unauthenticated="home">
-        <Set
-          wrap={ScaffoldLayout}
-          title="Posts"
-          titleTo="posts"
-          buttonLabel="New Post"
-          buttonTo="newPost"
-        >
-          <Route
-            path="/admin/posts/new"
-            page={PostNewPostPage}
-            name="newPost"
-          />
-          <Route
-            path="/admin/posts/{id:Int}/edit"
-            page={PostEditPostPage}
-            name="editPost"
-          />
+        <Set wrap={ScaffoldLayout} title="Posts" titleTo="posts" buttonLabel="New Post" buttonTo="newPost">
+          <Route path="/admin/posts/new" page={PostNewPostPage} name="newPost" />
+          <Route path="/admin/posts/{id:Int}/edit" page={PostEditPostPage} name="editPost" />
           <Route path="/admin/posts/{id:Int}" page={PostPostPage} name="post" />
           <Route path="/admin/posts" page={PostPostsPage} name="posts" />
         </Set>
@@ -275,6 +244,7 @@ export default Routes
 </TabItem>
 <TabItem value="ts" label="TypeScript">
 
+<!-- prettier-ignore -->
 ```jsx title="web/src/Routes.tsx"
 // highlight-next-line
 import { PrivateSet, Router, Route, Set } from '@cedarjs/router'
@@ -289,23 +259,9 @@ const Routes = () => {
     <Router useAuth={useAuth}>
       // highlight-next-line
       <PrivateSet unauthenticated="home">
-        <Set
-          wrap={ScaffoldLayout}
-          title="Posts"
-          titleTo="posts"
-          buttonLabel="New Post"
-          buttonTo="newPost"
-        >
-          <Route
-            path="/admin/posts/new"
-            page={PostNewPostPage}
-            name="newPost"
-          />
-          <Route
-            path="/admin/posts/{id:Int}/edit"
-            page={PostEditPostPage}
-            name="editPost"
-          />
+        <Set wrap={ScaffoldLayout} title="Posts" titleTo="posts" buttonLabel="New Post" buttonTo="newPost">
+          <Route path="/admin/posts/new" page={PostNewPostPage} name="newPost" />
+          <Route path="/admin/posts/{id:Int}/edit" page={PostEditPostPage} name="editPost" />
           <Route path="/admin/posts/{id:Int}" page={PostPostPage} name="post" />
           <Route path="/admin/posts" page={PostPostsPage} name="posts" />
         </Set>
