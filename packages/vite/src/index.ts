@@ -61,6 +61,7 @@ export { cedarjsJobPathInjectorPlugin } from './plugins/vite-plugin-cedarjs-job-
 export { cedarMockCellDataPlugin } from './plugins/vite-plugin-cedar-mock-cell-data.js'
 export { cedarParsedScalarsPlugin } from './plugins/vite-plugin-cedar-parsed-scalars.js'
 export { cedarMergedConfig } from './plugins/vite-plugin-merged-config.js'
+export { cedarNetlifySkewProtectionPlugin } from './plugins/vite-plugin-cedar-netlify-skew-protection.js'
 export { cedarSwapApolloProvider } from './plugins/vite-plugin-swap-apollo-provider.js'
 export { cedarUniversalDeployPlugin } from './plugins/vite-plugin-cedar-universal-deploy.js'
 export { cedarWaitForApiServer } from './plugins/vite-plugin-cedar-wait-for-api-server.js'

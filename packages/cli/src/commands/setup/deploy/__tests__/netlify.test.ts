@@ -197,6 +197,7 @@ describe('netlify with --ud', () => {
     expect(filesystem['/cedar-app/web/vite.config.ts']).toMatchInlineSnapshot(`
       "import dns from 'dns'
 
+      import { cedarNetlifySkewProtectionPlugin } from '@cedarjs/vite'
       import netlifyCompat from '@universal-deploy/netlify/vite'
       import netlify from '@netlify/vite-plugin'
       import { defineConfig } from 'vite'
@@ -212,6 +213,7 @@ describe('netlify with --ud', () => {
           myPlugin(),
           netlify({ build: { enabled: true } }),
           netlifyCompat(),
+          cedarNetlifySkewProtectionPlugin(),
           cedar(),
           cedarUniversalDeployPlugin(),
         ],
@@ -237,7 +239,8 @@ describe('netlify with --ud', () => {
     const filesystem = vol.toJSON()
 
     expect(filesystem['/cedar-app/web/vite.config.ts']).toMatchInlineSnapshot(`
-      "import netlifyCompat from '@universal-deploy/netlify/vite'
+      "import { cedarNetlifySkewProtectionPlugin } from '@cedarjs/vite'
+      import netlifyCompat from '@universal-deploy/netlify/vite'
       import netlify from '@netlify/vite-plugin'
       import { defineConfig } from 'vite'
 
@@ -247,6 +250,7 @@ describe('netlify with --ud', () => {
         plugins: [
           netlify({ build: { enabled: true } }),
           netlifyCompat(),
+          cedarNetlifySkewProtectionPlugin(),
           cedar(),
           cedarUniversalDeployPlugin(),
         ],
@@ -281,6 +285,7 @@ describe('netlify with --ud', () => {
     expect(filesystem['/cedar-app/web/vite.config.ts']).toMatchInlineSnapshot(`
       "import dns from 'node:dns'
 
+      import { cedarNetlifySkewProtectionPlugin } from '@cedarjs/vite'
       import netlifyCompat from '@universal-deploy/netlify/vite'
       import netlify from '@netlify/vite-plugin'
       import { defineConfig } from 'vite'
@@ -293,6 +298,7 @@ describe('netlify with --ud', () => {
         plugins: [
           netlify({ build: { enabled: true } }),
           netlifyCompat(),
+          cedarNetlifySkewProtectionPlugin(),
           cedar({ mode }),
           cedarUniversalDeployPlugin(),
         ],
@@ -323,7 +329,8 @@ describe('netlify with --ud', () => {
     const filesystem = vol.toJSON()
 
     expect(filesystem['/cedar-app/web/vite.config.ts']).toMatchInlineSnapshot(`
-      "import netlifyCompat from '@universal-deploy/netlify/vite'
+      "import { cedarNetlifySkewProtectionPlugin } from '@cedarjs/vite'
+      import netlifyCompat from '@universal-deploy/netlify/vite'
       import netlify from '@netlify/vite-plugin'
       import { defineConfig } from 'vite'
 
@@ -334,6 +341,7 @@ describe('netlify with --ud', () => {
           plugins: [
             netlify({ build: { enabled: true } }),
             netlifyCompat(),
+            cedarNetlifySkewProtectionPlugin(),
             cedar({ mode }),
             cedarUniversalDeployPlugin(),
           ],
@@ -362,7 +370,8 @@ describe('netlify with --ud', () => {
     const filesystem = vol.toJSON()
 
     expect(filesystem['/cedar-app/web/vite.config.ts']).toMatchInlineSnapshot(`
-      "import netlifyCompat from '@universal-deploy/netlify/vite'
+      "import { cedarNetlifySkewProtectionPlugin } from '@cedarjs/vite'
+      import netlifyCompat from '@universal-deploy/netlify/vite'
       import netlify from '@netlify/vite-plugin'
       import { defineConfig } from 'vite'
 
@@ -373,6 +382,7 @@ describe('netlify with --ud', () => {
           plugins: [
             netlify({ build: { enabled: true } }),
             netlifyCompat(),
+            cedarNetlifySkewProtectionPlugin(),
             cedar({ mode }),
             cedarUniversalDeployPlugin(),
           ],
