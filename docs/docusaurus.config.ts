@@ -21,6 +21,12 @@ const config: Config = {
   baseUrl: '/',
   onBrokenLinks: 'throw',
   markdown: {
+    // Prettier only recognizes `<!-- prettier-ignore -->` comments in
+    // Markdown, but MDX (which Docusaurus compiles .md files with) doesn't
+    // allow HTML comments when `future.v4` is enabled. Removing those lines
+    // before compiling lets the docs use Prettier's ignore comments.
+    preprocessor: ({ fileContent }) =>
+      fileContent.replace(/^<!-- prettier-ignore(-start|-end)? -->\r?\n/gm, ''),
     hooks: {
       onBrokenMarkdownLinks: 'warn',
     },
