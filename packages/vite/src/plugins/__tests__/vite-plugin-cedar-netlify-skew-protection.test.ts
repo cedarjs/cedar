@@ -10,16 +10,16 @@ import { cedarNetlifySkewProtectionPlugin } from '../vite-plugin-cedar-netlify-s
 
 const RESOLVED_SKEW_TOKEN_ID = '\0virtual:cedar-netlify-skew-token'
 
-// writeBundle() only ever reads `getPaths().web.dist`, so a minimal mock
+// writeBundle() only ever reads `getPaths().web.base`, so a minimal mock
 // (rather than mocking the whole real, filesystem-anchored implementation)
 // keeps these tests from depending on being run inside an actual Cedar
 // project. `vi.hoisted` is required because `vi.mock` factories run before
 // the rest of this module's top-level code (including plain `let`
 // declarations) due to ESM import hoisting.
-const mockPaths = vi.hoisted(() => ({ webDist: '' }))
+const mockPaths = vi.hoisted(() => ({ webBase: '' }))
 
 vi.mock('@cedarjs/project-config', () => ({
-  getPaths: () => ({ web: { dist: mockPaths.webDist } }),
+  getPaths: () => ({ web: { base: mockPaths.webBase } }),
 }))
 
 const FAKE_CATCH_ALL_SOURCE = `
@@ -393,12 +393,12 @@ describe('cedarNetlifySkewProtectionPlugin', () => {
       )
     })
 
-    async function makeTmpWebDist() {
+    async function makeTmpWebBase() {
       const dir = await fs.mkdtemp(
         path.join(os.tmpdir(), 'cedar-skew-protection-writebundle-'),
       )
       tmpDirs.push(dir)
-      mockPaths.webDist = dir
+      mockPaths.webBase = dir
       return dir
     }
 
@@ -414,7 +414,7 @@ describe('cedarNetlifySkewProtectionPlugin', () => {
 
     it('writes the skew-protection manifest and edge function when a build-time token is present', async () => {
       process.env.NETLIFY_SKEW_PROTECTION_TOKEN = 'deploy-xyz'
-      const dir = await makeTmpWebDist()
+      const dir = await makeTmpWebBase()
 
       const plugin = cedarNetlifySkewProtectionPlugin()
 
@@ -454,7 +454,7 @@ describe('cedarNetlifySkewProtectionPlugin', () => {
     })
 
     it('does nothing when there is no build-time token', async () => {
-      const dir = await makeTmpWebDist()
+      const dir = await makeTmpWebBase()
 
       const plugin = cedarNetlifySkewProtectionPlugin()
 
@@ -469,7 +469,7 @@ describe('cedarNetlifySkewProtectionPlugin', () => {
 
     it('does nothing outside the client environment', async () => {
       process.env.NETLIFY_SKEW_PROTECTION_TOKEN = 'deploy-xyz'
-      const dir = await makeTmpWebDist()
+      const dir = await makeTmpWebBase()
 
       const plugin = cedarNetlifySkewProtectionPlugin()
 
@@ -511,7 +511,7 @@ describe('cedarNetlifySkewProtectionPlugin', () => {
 
       async function generate(token: string) {
         process.env.NETLIFY_SKEW_PROTECTION_TOKEN = token
-        const dir = await makeTmpWebDist()
+        const dir = await makeTmpWebBase()
 
         const plugin = cedarNetlifySkewProtectionPlugin()
         if (typeof plugin.writeBundle !== 'function') {

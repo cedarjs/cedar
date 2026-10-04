@@ -186,10 +186,11 @@ export function cedarNetlifySkewProtectionPlugin(
     },
 
     writeBundle() {
-      // web/dist is the directory Netlify actually publishes, so that's
-      // where `.netlify/v1/` needs to live. Only the client build's
-      // writeBundle fires with that as its output — the api/ssr builds emit
-      // elsewhere (api/dist, api/dist/ud).
+      // Netlify reads Frameworks API output from `.netlify/v1/` relative to
+      // the package being built (`web/`), not from the publish directory
+      // (`web/dist`). It's the same directory `@netlify/vite-plugin` writes
+      // its functions to. Only the client build's writeBundle needs to emit
+      // these files.
       if (this.environment?.name !== 'client') {
         return
       }
@@ -200,7 +201,7 @@ export function cedarNetlifySkewProtectionPlugin(
         return
       }
 
-      const netlifyV1Dir = path.join(getPaths().web.dist, '.netlify', 'v1')
+      const netlifyV1Dir = path.join(getPaths().web.base, '.netlify', 'v1')
       fs.mkdirSync(netlifyV1Dir, { recursive: true })
 
       const manifest = {
