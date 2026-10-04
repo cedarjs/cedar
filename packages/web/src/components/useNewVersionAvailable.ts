@@ -77,6 +77,7 @@ function createVersionChecker(
   url: string,
   intervalMs: number,
   runningScripts: Set<string>,
+  lifecycle: { onActive: () => void; onIdle: () => void },
 ): VersionChecker {
   const listeners = new Set<() => void>()
   let newVersionAvailable = false
@@ -94,6 +95,11 @@ function createVersionChecker(
 
     checkInFlight = true
 
+    // Aborting a request that hasn't settled by halfway to the next check
+    // keeps a stalled request from blocking later checks
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), intervalMs / 2)
+
     try {
       const requestUrl = new URL(url)
       requestUrl.hash = ''
@@ -104,6 +110,7 @@ function createVersionChecker(
       const response = await fetch(requestUrl.href, {
         cache: 'no-store',
         credentials: 'omit',
+        signal: controller.signal,
       })
 
       // A redirect (e.g. to a login page) serves a different page, whose
@@ -133,9 +140,10 @@ function createVersionChecker(
         notify()
       }
     } catch {
-      // Network errors are expected (offline, flaky connections). The next
-      // check tries again
+      // Network errors and timeouts are expected (offline, flaky
+      // connections). The next check tries again
     } finally {
+      clearTimeout(timeoutId)
       checkInFlight = false
     }
   }
@@ -170,8 +178,12 @@ function createVersionChecker(
     subscribe: (listener) => {
       listeners.add(listener)
 
-      if (listeners.size === 1 && !newVersionAvailable) {
-        start()
+      if (listeners.size === 1) {
+        lifecycle.onActive()
+
+        if (!newVersionAvailable) {
+          start()
+        }
       }
 
       return () => {
@@ -179,6 +191,7 @@ function createVersionChecker(
 
         if (listeners.size === 0) {
           stop()
+          lifecycle.onIdle()
         }
       }
     },
@@ -205,16 +218,31 @@ function getVersionChecker(intervalMs: number) {
     return undefined
   }
 
-  let checker = checkers.get(intervalMs)
+  const existingChecker = checkers.get(intervalMs)
 
-  if (!checker) {
-    checker = createVersionChecker(
-      initialDocumentUrl,
-      intervalMs,
-      runningModuleScripts,
-    )
-    checkers.set(intervalMs, checker)
+  if (existingChecker) {
+    return existingChecker
   }
+
+  const checker: VersionChecker = createVersionChecker(
+    initialDocumentUrl,
+    intervalMs,
+    runningModuleScripts,
+    {
+      onActive: () => {
+        checkers.set(intervalMs, checker)
+      },
+      // A checker that found a new version is kept, so components mounting
+      // later see `true` right away. Idle checkers are dropped, so intervals
+      // that are no longer used don't accumulate
+      onIdle: () => {
+        if (!checker.getSnapshot()) {
+          checkers.delete(intervalMs)
+        }
+      },
+    },
+  )
+  checkers.set(intervalMs, checker)
 
   return checker
 }

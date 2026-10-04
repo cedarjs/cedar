@@ -259,8 +259,31 @@ describe('useNewVersionAvailable', () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       new URL('/about?tab=team', document.baseURI).href,
-      { cache: 'no-store', credentials: 'omit' },
+      expect.objectContaining({ cache: 'no-store', credentials: 'omit' }),
     )
+  })
+
+  it('recovers when a check never settles', async () => {
+    fetchMock
+      .mockImplementationOnce(
+        (_url, init) =>
+          new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener('abort', () =>
+              reject(init.signal?.reason),
+            )
+          }),
+      )
+      .mockResolvedValue(htmlResponse(htmlWithEntry('/assets/index-NEW456.js')))
+
+    const { result } = renderHook(() => useNewVersionAvailable())
+    await advance(60_000)
+
+    expect(result.current).toBe(false)
+
+    await advance(60_000)
+
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(result.current).toBe(true)
   })
 
   it('respects a custom interval', async () => {
@@ -341,6 +364,25 @@ describe('useNewVersionAvailable', () => {
     const third = renderHook(() => useNewVersionAvailable())
 
     expect(third.result.current).toBe(true)
+  })
+
+  it('starts a fresh checker after the last component unmounts', async () => {
+    fetchMock.mockImplementation(async () =>
+      htmlResponse(htmlWithEntry('/assets/index-NEW456.js')),
+    )
+
+    const first = renderHook(() =>
+      useNewVersionAvailable({ intervalMs: 5_000 }),
+    )
+    first.unmount()
+
+    const second = renderHook(() =>
+      useNewVersionAvailable({ intervalMs: 5_000 }),
+    )
+    await advance(5_000)
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(second.result.current).toBe(true)
   })
 
   it('stops polling when the last component unmounts', async () => {
