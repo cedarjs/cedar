@@ -116,6 +116,7 @@ Conceptually, this fits with how we think about Context and Layouts as things th
 
 There's a lot of flexibility here. You can even nest `Sets` to great effect:
 
+<!-- prettier-ignore -->
 ```jsx title="Routes.jsx"
 import { Router, Route, Set } from '@cedarjs/router'
 import BlogContext from 'src/contexts/BlogContext'
@@ -130,11 +131,7 @@ const Routes = () => {
         <Route path="/about" page={AboutPage} name="about" />
         <Route path="/contact" page={ContactPage} name="contact" />
         <Set wrap={BlogNavLayout}>
-          <Route
-            path="/blog-post/{id:Int}"
-            page={BlogPostPage}
-            name="blogPost"
-          />
+          <Route path="/blog-post/{id:Int}" page={BlogPostPage} name="blogPost" />
         </Set>
       </Set>
     </Router>
@@ -193,17 +190,11 @@ To protect private routes for access by a single role:
 
 To protect private routes for access by multiple roles:
 
+<!-- prettier-ignore -->
 ```jsx title="Routes.jsx"
 <Router useAuth={useAuth}>
-  <PrivateSet
-    unauthenticated="forbidden"
-    roles={['admin', 'editor', 'publisher']}
-  >
-    <Route
-      path="/admin/posts/{id:Int}/edit"
-      page={EditPostPage}
-      name="editPost"
-    />
+  <PrivateSet unauthenticated="forbidden" roles={['admin', 'editor', 'publisher']}>
+    <Route path="/admin/posts/{id:Int}/edit" page={EditPostPage} name="editPost" />
   </PrivateSet>
 
   <Route path="/forbidden" page={ForbiddenPage} name="forbidden" />
@@ -452,12 +443,9 @@ In this example, we want to take everything after `/file/` and have it sent to t
 
 You can use multiple globs in your paths:
 
+<!-- prettier-ignore -->
 ```jsx title="Routes.jsx"
-<Route
-  path="/from/{fromDate...}/to/{toDate...}"
-  page={DatePage}
-  name="dateRange"
-/>
+<Route path="/from/{fromDate...}/to/{toDate...}" page={DatePage} name="dateRange" />
 ```
 
 This will match a path like `/from/2021/11/03/to/2021/11/17`. Note that for this to work, there must be some static string between the globs so the router can determine where the boundaries of the matches should be.

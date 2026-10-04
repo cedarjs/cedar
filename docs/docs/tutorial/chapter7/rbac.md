@@ -164,22 +164,13 @@ The easiest way to prevent access to an entire URL is via the Router. The `<Priv
 <Tabs groupId="js-ts">
 <TabItem value="js" label="JavaScript">
 
+<!-- prettier-ignore -->
 ```jsx title="web/src/Routes.jsx"
 // highlight-next-line
 <PrivateSet unauthenticated="home" roles="admin">
-  <Set
-    wrap={ScaffoldLayout}
-    title="Posts"
-    titleTo="posts"
-    buttonLabel="New Post"
-    buttonTo="newPost"
-  >
+  <Set wrap={ScaffoldLayout} title="Posts" titleTo="posts" buttonLabel="New Post" buttonTo="newPost">
     <Route path="/admin/posts/new" page={PostNewPostPage} name="newPost" />
-    <Route
-      path="/admin/posts/{id:Int}/edit"
-      page={PostEditPostPage}
-      name="editPost"
-    />
+    <Route path="/admin/posts/{id:Int}/edit" page={PostEditPostPage} name="editPost" />
     <Route path="/admin/posts/{id:Int}" page={PostPostPage} name="post" />
     <Route path="/admin/posts" page={PostPostsPage} name="posts" />
   </Set>
@@ -189,22 +180,13 @@ The easiest way to prevent access to an entire URL is via the Router. The `<Priv
 </TabItem>
 <TabItem value="ts" label="TypeScript">
 
+<!-- prettier-ignore -->
 ```tsx title="web/src/Routes.tsx"
 // highlight-next-line
 <PrivateSet unauthenticated="home" roles="admin">
-  <Set
-    wrap={ScaffoldLayout}
-    title="Posts"
-    titleTo="posts"
-    buttonLabel="New Post"
-    buttonTo="newPost"
-  >
+  <Set wrap={ScaffoldLayout} title="Posts" titleTo="posts" buttonLabel="New Post" buttonTo="newPost">
     <Route path="/admin/posts/new" page={PostNewPostPage} name="newPost" />
-    <Route
-      path="/admin/posts/{id:Int}/edit"
-      page={PostEditPostPage}
-      name="editPost"
-    />
+    <Route path="/admin/posts/{id:Int}/edit" page={PostEditPostPage} name="editPost" />
     <Route path="/admin/posts/{id:Int}" page={PostPostPage} name="post" />
     <Route path="/admin/posts" page={PostPostsPage} name="posts" />
   </Set>
