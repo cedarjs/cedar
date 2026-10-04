@@ -24,3 +24,7 @@ Therefore, **please follow the [Tutorial Deployment section](tutorial/chapter4/d
 ## Netlify Complete Deploy Walkthrough
 
 For the complete deployment process on Netlify, see the [Tutorial Deployment section](tutorial/chapter4/deployment.md).
+
+:::tip
+Netlify deploys set up through [universal deploy](universal-deploy.md) get [skew protection](universal-deploy.md#skew-protection), which keeps open browser tabs on the deploy they started on while new deploys roll out.
+:::

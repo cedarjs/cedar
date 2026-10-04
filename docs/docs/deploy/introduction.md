@@ -167,6 +167,29 @@ Any environment variables used locally, e.g. in your `env.defaults` or `.env`, m
 
 Additionally, if your application uses env vars on the Web Side, you must configure Cedar's build process to make them available in production. See the [Cedar Environment Variables doc](environment-variables.md) for instructions.
 
+## Recovering from a stale build
+
+Cedar's router lazy-loads pages. After a deploy, a tab that is still running the previous build requests hashed chunks (for example `/assets/AboutPage-<hash>.js`) that are no longer on the server, and the navigation would otherwise fail without any visible feedback.
+
+`@cedarjs/web` listens for Vite's [`vite:preloadError`](https://vite.dev/guide/build#load-error-handling) event and does a full page reload when a chunk fails to load, so the user gets the latest deploy and lands on the page they navigated to. This works on any host and needs no setup.
+
+To avoid a reload loop when a chunk is missing even on the latest deploy, Cedar marks the reload in `sessionStorage` (`cedar:preload-error-reload`). If the reloaded page also fails to load a chunk within its first minute, the error surfaces through your app's normal error handling instead. When `sessionStorage` is unavailable, Cedar doesn't reload at all.
+
+Cedar leaves events that were already handled alone. To handle chunk load errors yourself, register a listener that calls `event.preventDefault()` with `{ capture: true }`, so it runs before Cedar's:
+
+```js
+window.addEventListener(
+  'vite:preloadError',
+  (event) => {
+    event.preventDefault()
+    // Your own handling
+  },
+  { capture: true }
+)
+```
+
+The reload only happens when a user navigates to a page whose chunk is gone. To tell users about a new deploy before that, see the next section.
+
 ## Detecting new deploys
 
 Users can keep a tab open for a long time, running a build that is older than the one you've just deployed. The `useNewVersionAvailable()` hook from `@cedarjs/web` returns `true` once the server is serving a newer build than the one running in the tab, so you can ask the user to reload:
