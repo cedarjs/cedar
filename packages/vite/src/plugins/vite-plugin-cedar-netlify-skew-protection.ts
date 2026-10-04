@@ -64,10 +64,14 @@ export function getSkewProtectionPaths(
   const patterns: string[] = []
   const excludedPaths: string[] = []
 
-  // A `base` that isn't a path (e.g. a CDN URL) means assets aren't served
-  // from this site, so there's nothing to pin for them here.
-  if (config.base.startsWith('/')) {
-    const assetsPath = path.posix.join(config.base, config.build.assetsDir)
+  // A full URL `base` (e.g. a CDN) means assets aren't served from this site,
+  // so there's nothing to pin for them here. Relative bases (`./`, `''`)
+  // serve assets from the site root.
+  const baseIsUrl = /^([a-z][a-z\d+.-]*:)?\/\//i.test(config.base)
+
+  if (!baseIsUrl) {
+    const basePath = config.base.startsWith('/') ? config.base : '/'
+    const assetsPath = path.posix.join(basePath, config.build.assetsDir)
     patterns.push(`^${escapeRegExp(assetsPath)}/`)
     excludedPaths.push(`${assetsPath}/*`)
   }

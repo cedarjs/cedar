@@ -830,6 +830,23 @@ describe('cedarNetlifySkewProtectionPlugin', () => {
       expect(excludedPaths).toEqual(['/app/static/*'])
     })
 
+    it.each(['./', ''])(
+      'pins assets at the site root for the relative base %j',
+      (base) => {
+        const { patterns } = getSkewProtectionPaths(fakeConfig({ base }))
+
+        expect(patterns).toEqual(['^/assets/'])
+      },
+    )
+
+    it('does not pin assets for a protocol-relative CDN base', () => {
+      const { patterns } = getSkewProtectionPaths(
+        fakeConfig({ base: '//cdn.example.com/' }),
+      )
+
+      expect(patterns).toEqual([])
+    })
+
     it('does not pin assets when base is not a path on this site', () => {
       const { patterns } = getSkewProtectionPaths(
         fakeConfig({ base: 'https://cdn.example.com/' }),
