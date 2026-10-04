@@ -7,6 +7,9 @@ declare global {
   var __REDWOOD__HELMET_CONTEXT: { helmet?: HelmetServerState }
   var __REDWOOD__APP_TITLE: string
   var __CEDAR__APOLLO_STATE: NormalizedCacheObject
+  // Set by `registerPreloadErrorReload` once its `vite:preloadError` listener
+  // is attached, so the listener is only added once per page load
+  var __CEDAR__PRELOAD_ERROR_RELOAD_REGISTERED: boolean | undefined
 
   // Provided by Vite.config
   var RWJS_ENV: {
