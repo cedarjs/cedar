@@ -58,31 +58,66 @@ jobs:
         working-directory: ../cedar-test-app
         run: yarn cedar setup deploy netlify --ud
 
-      - name: 🏗️ Build locally
-        working-directory: ../cedar-test-app
-        run: |
-          yarn cedar build --ud --apiRootPath=/.api/functions
-          yarn cedar prisma migrate deploy
-          yarn cedar data-migrate up
-
       - name: 🚀 Deploy to Netlify
         id: netlify-deploy
         working-directory: ../cedar-test-app
+        # `netlify deploy` (without `--no-build`) runs the build command from
+        # netlify.toml. Netlify only provides NETLIFY_SKEW_PROTECTION_TOKEN to
+        # builds it runs itself, and the skew protection tests need it.
         run: |
           DATABASE_URL="$(sed -n 's/^DATABASE_URL=//p' .env)"
           DIRECT_DATABASE_URL="$(sed -n 's/^DIRECT_DATABASE_URL=//p' .env)"
           export DATABASE_URL DIRECT_DATABASE_URL
           npx netlify env:set DATABASE_URL "$DATABASE_URL" --filter web
           npx netlify env:set DIRECT_DATABASE_URL "$DIRECT_DATABASE_URL" --filter web
-          OUTPUT=$(npx netlify deploy --filter web --prod --json --no-build)
+          OUTPUT=$(npx netlify deploy --filter web --prod --json)
           echo "$OUTPUT"
-          echo "deploy-url=$(echo "$OUTPUT" | jq -r '.url')" >> "$GITHUB_OUTPUT"
+          DEPLOY_URL="$(echo "$OUTPUT" | jq -r '.url')"
+          echo "deploy-url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+
+          # Record what the skew protection tests need from this deploy:
+          # an asset that only exists in it, and its skew token.
+          ASSET="/assets/$(basename web/dist/assets/AboutPage-*.js)"
+          TOKEN="$(curl -sfI "$DEPLOY_URL/" | tr -d '\r' | sed -n 's/^set-cookie: cedar-skew-token=\([^;]*\).*/\1/Ip')"
+          if [ -z "$TOKEN" ]; then
+            echo "::error::The first deploy did not set a cedar-skew-token cookie on /"
+            exit 1
+          fi
+          echo "asset=$ASSET" >> "$GITHUB_OUTPUT"
+          echo "skew-token=$TOKEN" >> "$GITHUB_OUTPUT"
 
       - name: 🧪 Run Netlify e2e tests
         run: yarn vitest run
         working-directory: tasks/netlify-tests
         env:
           NETLIFY_DEPLOY_URL: ${{ steps.netlify-deploy.outputs.deploy-url }}
+
+      - name: 🚀 Deploy a change to Netlify
+        id: netlify-redeploy
+        working-directory: ../cedar-test-app
+        # Changing AboutPage changes its asset hash, so the first deploy's
+        # AboutPage asset no longer exists in the latest deploy.
+        run: |
+          sed -i 's/mastery/MASTERY/' web/src/pages/AboutPage/AboutPage.tsx
+          grep -q MASTERY web/src/pages/AboutPage/AboutPage.tsx
+          OUTPUT=$(npx netlify deploy --filter web --prod --json)
+          echo "$OUTPUT"
+          ASSET="/assets/$(basename web/dist/assets/AboutPage-*.js)"
+          if [ "$ASSET" = "${{ steps.netlify-deploy.outputs.asset }}" ]; then
+            echo "::error::AboutPage asset hash did not change between deploys"
+            exit 1
+          fi
+          echo "asset=$ASSET" >> "$GITHUB_OUTPUT"
+
+      - name: 🧪 Run Netlify skew protection e2e tests
+        run: yarn vitest run skew-protection
+        working-directory: tasks/netlify-tests
+        env:
+          NETLIFY_DEPLOY_URL: ${{ steps.netlify-deploy.outputs.deploy-url }}
+          NETLIFY_SKEW_PROTECTION_E2E: 1
+          OLD_SKEW_TOKEN: ${{ steps.netlify-deploy.outputs.skew-token }}
+          OLD_ASSET: ${{ steps.netlify-deploy.outputs.asset }}
+          NEW_ASSET: ${{ steps.netlify-redeploy.outputs.asset }}
 
       - name: 🧹 Delete Netlify site
         if: always() && steps.create-site.outputs.site-id != ''
