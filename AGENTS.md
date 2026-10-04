@@ -105,15 +105,16 @@ Write for readers who see only the **current** state of the code and have no his
   - `vitest.config.mts` — vitest runner config (setupFiles, include patterns)
   - `vitest.setup.mts` — validates `NETLIFY_DEPLOY_URL` env var, sets `process.env.DEPLOY_URL`
   - `netlify.test.mts` — tests API `handleRequest`, legacy handlers, and web SPA shell against deployed Netlify URL
+  - `skew-protection.test.mts` — tests skew protection cookies and old-asset routing (cookie, header, query) across two deploys
 - CI workflow in `.github/workflows/e2e-netlify.yml`:
   - Uses `__fixtures__/test-project/` as the test project (ESM, needed by Netlify vite plugin)
   - Runs tarsync to link local packages
   - Removes SQLite migrations (`rm -rf api/db/migrations`), then runs `yarn cedar setup neon` to provision a fresh Neon Postgres database and create Postgres baseline migration
   - Links site with `netlify link --id "$SITE_ID" --filter web`
   - Runs `yarn cedar setup deploy universal-deploy`, then `yarn cedar setup deploy netlify --ud`
-  - Builds locally (`yarn cedar build --ud --apiRootPath=/.api/functions`, then `yarn cedar prisma migrate deploy`, then `yarn cedar data-migrate up`) using `.env` database URLs
   - Sets `DATABASE_URL` and `DIRECT_DATABASE_URL` on the Netlify site via `netlify env:set --filter web` for runtime access
-  - Deploys via `npx netlify deploy --filter web --prod --json --no-build`
+  - Deploys via `npx netlify deploy --filter web --prod --json` (no `--no-build`), which runs the `netlify.toml` build command (`yarn cedar build --ud --apiRootPath=/.api/functions && yarn cedar prisma migrate deploy && yarn cedar data-migrate up`). Netlify only sets `NETLIFY_SKEW_PROTECTION_TOKEN` for builds it runs, so this is required for skew protection
+  - Records the first deploy's `AboutPage-*.js` asset and `cedar-skew-token` cookie, runs `netlify.test.mts`, then changes `AboutPage`, deploys again, and runs `skew-protection.test.mts` (skipped unless `NETLIFY_SKEW_PROTECTION_E2E=1`) to check old assets are only served with the old token
   - All test-project commands use `working-directory: ../cedar-test-app` (not `CEDAR_CWD`)
 - CI orchestration in `.github/workflows/ci.yml` — `e2e-netlify` job calls the workflow, runs only on `cedarjs/cedar` repo
 - API function URLs on Netlify use `/.api/functions/<name>` (configured via `apiRootPath`; routed through the `server` function from `@netlify/vite-plugin` which has `path: "/*"`)
