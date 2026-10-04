@@ -78,12 +78,14 @@ jobs:
           # Record what the skew protection tests need from this deploy:
           # an asset that only exists in it, and its skew token.
           ASSET="/assets/$(basename web/dist/assets/AboutPage-*.js)"
+          ENTRY="/assets/$(basename web/dist/assets/index-*.js)"
           TOKEN="$(curl -sfI "$DEPLOY_URL/" | tr -d '\r' | sed -n 's/^set-cookie: cedar-skew-token=\([^;]*\).*/\1/Ip')"
           if [ -z "$TOKEN" ]; then
             echo "::error::The first deploy did not set a cedar-skew-token cookie on /"
             exit 1
           fi
           echo "asset=$ASSET" >> "$GITHUB_OUTPUT"
+          echo "entry=$ENTRY" >> "$GITHUB_OUTPUT"
           echo "skew-token=$TOKEN" >> "$GITHUB_OUTPUT"
 
       - name: 🧪 Run Netlify e2e tests
@@ -96,10 +98,13 @@ jobs:
         id: netlify-redeploy
         working-directory: ../cedar-test-app
         # Changing AboutPage changes its asset hash, so the first deploy's
-        # AboutPage asset no longer exists in the latest deploy.
+        # AboutPage asset no longer exists in the latest deploy. Changing the
+        # greeting lets the tests tell which deploy served an API request.
         run: |
           sed -i 's/mastery/MASTERY/' web/src/pages/AboutPage/AboutPage.tsx
           grep -q MASTERY web/src/pages/AboutPage/AboutPage.tsx
+          sed -i "s/'hello from cedar'/'hello from cedar, redeployed'/" api/src/lib/greeting.ts
+          grep -q 'hello from cedar, redeployed' api/src/lib/greeting.ts
           OUTPUT=$(npx netlify deploy --filter web --prod --json)
           echo "$OUTPUT"
           ASSET="/assets/$(basename web/dist/assets/AboutPage-*.js)"
@@ -108,6 +113,7 @@ jobs:
             exit 1
           fi
           echo "asset=$ASSET" >> "$GITHUB_OUTPUT"
+          echo "entry=/assets/$(basename web/dist/assets/index-*.js)" >> "$GITHUB_OUTPUT"
 
       - name: 🧪 Run Netlify skew protection e2e tests
         run: yarn vitest run skew-protection
@@ -118,6 +124,8 @@ jobs:
           OLD_SKEW_TOKEN: ${{ steps.netlify-deploy.outputs.skew-token }}
           OLD_ASSET: ${{ steps.netlify-deploy.outputs.asset }}
           NEW_ASSET: ${{ steps.netlify-redeploy.outputs.asset }}
+          OLD_ENTRY: ${{ steps.netlify-deploy.outputs.entry }}
+          NEW_ENTRY: ${{ steps.netlify-redeploy.outputs.entry }}
 
       - name: 🧹 Delete Netlify site
         if: always() && steps.create-site.outputs.site-id != ''

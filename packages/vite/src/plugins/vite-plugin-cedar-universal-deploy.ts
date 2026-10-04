@@ -23,6 +23,17 @@ export interface CedarUniversalDeployPluginOptions {
   apiRootPath?: string
 }
 
+/**
+ * Exposed as the plugin's `api` property so other plugins (e.g.
+ * `cedarNetlifySkewProtectionPlugin`) can find the API routes this plugin
+ * registers.
+ */
+export interface CedarUniversalDeployPluginApi {
+  routes: CedarRouteRecord[]
+}
+
+export const CEDAR_UNIVERSAL_DEPLOY_PLUGIN_NAME = 'cedar-universal-deploy'
+
 const VIRTUAL_CEDAR_FN_PREFIX = 'virtual:cedar-api:fn:'
 const RESOLVED_CEDAR_FN_PREFIX = '\0virtual:cedar-api:fn:'
 
@@ -140,9 +151,12 @@ export function cedarUniversalDeployPlugin(
     process.env.CEDAR_API_ROOT_PATH ?? options.apiRootPath
   const routes = discoverCedarRoutes(effectiveApiRootPath ?? '/')
 
+  const api: CedarUniversalDeployPluginApi = { routes }
+
   return {
-    name: 'cedar-universal-deploy',
+    name: CEDAR_UNIVERSAL_DEPLOY_PLUGIN_NAME,
     apply: 'build',
+    api,
 
     config: {
       order: 'pre',
