@@ -192,6 +192,6 @@ const NewVersionBanner = () => {
 export default NewVersionBanner
 ```
 
-The hook compares the hashed `<script type="module">` entry files of the running page with the ones in a freshly fetched copy of your app's HTML. It checks every 60 seconds, when the tab becomes visible again and when the browser comes back online. Both the URL and the interval are configurable: `useNewVersionAvailable({ url: '/', intervalMs: 60_000 })`. The hook always returns `false` in development and during server rendering.
+The hook fetches the URL the tab was loaded from and compares the content-hashed `<script type="module">` files in the response with the ones in the running page. It checks every 60 seconds, when the tab becomes visible again and when the browser comes back online. To check at a different interval, pass `intervalMs`: `useNewVersionAvailable({ intervalMs: 5 * 60_000 })`. The hook always returns `false` in development and during server rendering.
 
-On Netlify with skew protection enabled, a tab keeps loading assets from the deploy it started on. The hook's check doesn't send cookies, so it always sees the latest deploy, and reloading the page always gets the latest deploy too.
+On Netlify with skew protection enabled, an open tab keeps loading lazy chunks from the deploy it started on. The hook's check doesn't send cookies, so it always sees the latest deploy, and reloading the page gets the latest deploy too.

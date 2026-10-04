@@ -2,12 +2,6 @@ import { useSyncExternalStore } from 'react'
 
 export interface UseNewVersionAvailableOptions {
   /**
-   * URL of the app's HTML document to check for a new version.
-   *
-   * @default '/'
-   */
-  url?: string
-  /**
    * How often to check for a new version, in milliseconds.
    *
    * @default 60000
@@ -20,8 +14,17 @@ interface VersionChecker {
   getSnapshot: () => boolean
 }
 
-const DEFAULT_URL = '/'
 const DEFAULT_INTERVAL_MS = 60_000
+
+/**
+ * The URL this tab's document was loaded from, captured when `@cedarjs/web`
+ * is first evaluated, before any client-side navigation. Within one build,
+ * the same URL always serves the same module scripts: prerendered pages and
+ * server-rendered routes add a page-specific chunk next to the app entry, so
+ * different URLs can serve different scripts even when nothing was deployed.
+ */
+const initialDocumentUrl =
+  typeof document === 'undefined' ? undefined : document.URL
 
 /**
  * Pathnames of the module scripts in the document that is running in this
@@ -31,11 +34,10 @@ const DEFAULT_INTERVAL_MS = 60_000
 let runningModuleScripts: Set<string> | undefined
 
 /**
- * One checker per url + interval combination, shared by every component that
- * uses the hook with those options, so there is only ever one polling loop for
- * each combination.
+ * One checker per interval, shared by every component that uses the hook
+ * with that interval, so there is only ever one polling loop for each.
  */
-const checkers = new Map<string, VersionChecker>()
+const checkers = new Map<number, VersionChecker>()
 
 function getModuleScriptPathnames(doc: Document, baseUrl: string) {
   const pathnames = new Set<string>()
@@ -93,17 +95,20 @@ function createVersionChecker(
     checkInFlight = true
 
     try {
-      const requestUrl = new URL(url, document.baseURI).href
+      const requestUrl = new URL(url)
+      requestUrl.hash = ''
 
       // `credentials: 'omit'` keeps cookies off the request. Hosts with skew
       // protection (like Netlify) pin requests that carry a deploy cookie to
       // the deploy the tab was loaded from, which would hide new deploys
-      const response = await fetch(requestUrl, {
+      const response = await fetch(requestUrl.href, {
         cache: 'no-store',
         credentials: 'omit',
       })
 
-      if (!response.ok) {
+      // A redirect (e.g. to a login page) serves a different page, whose
+      // scripts can't be compared with the running ones
+      if (response.redirected) {
         return
       }
 
@@ -111,11 +116,13 @@ function createVersionChecker(
       const fetchedDocument = new DOMParser().parseFromString(html, 'text/html')
       const fetchedScripts = getModuleScriptPathnames(
         fetchedDocument,
-        response.url || requestUrl,
+        response.url || requestUrl.href,
       )
 
-      // A document without module scripts (an error page, a captive portal
-      // etc.) says nothing about which build is deployed
+      // A document without module scripts (a host's error page, a captive
+      // portal etc.) says nothing about which build is deployed. The status
+      // code isn't checked: a page the app renders with an error status (its
+      // 404 page, for example) still identifies the build
       if (fetchedScripts.size === 0) {
         return
       }
@@ -179,9 +186,9 @@ function createVersionChecker(
   }
 }
 
-function getVersionChecker(url: string, intervalMs: number) {
+function getVersionChecker(intervalMs: number) {
   // Nothing to check on the server (SSR, prerendering)
-  if (typeof window === 'undefined') {
+  if (typeof window === 'undefined' || !initialDocumentUrl) {
     return undefined
   }
 
@@ -198,12 +205,15 @@ function getVersionChecker(url: string, intervalMs: number) {
     return undefined
   }
 
-  const key = `${intervalMs}:${url}`
-  let checker = checkers.get(key)
+  let checker = checkers.get(intervalMs)
 
   if (!checker) {
-    checker = createVersionChecker(url, intervalMs, runningModuleScripts)
-    checkers.set(key, checker)
+    checker = createVersionChecker(
+      initialDocumentUrl,
+      intervalMs,
+      runningModuleScripts,
+    )
+    checkers.set(intervalMs, checker)
   }
 
   return checker
@@ -218,9 +228,11 @@ const getFalse = () => false
  *
  * The running build is identified by the `<script type="module" src="...">`
  * elements in the current document, which Vite gives content-hashed file
- * names. The hook periodically fetches the app's HTML (and also checks when
- * the tab becomes visible again or the browser comes back online) and
- * compares its module scripts with the running ones. Once a new version is
+ * names. The hook periodically fetches the URL the tab was loaded from (and
+ * also checks when the tab becomes visible again or the browser comes back
+ * online) and compares the module scripts in the response with the running
+ * ones. The request is sent without cookies, so hosts with skew protection
+ * (like Netlify) answer with the latest deploy. Once a new version is
  * detected the hook returns `true` and stops checking.
  *
  * The hook always returns `false` during server rendering, in development
@@ -252,9 +264,8 @@ const getFalse = () => false
 export function useNewVersionAvailable(
   options: UseNewVersionAvailableOptions = {},
 ): boolean {
-  const url = options.url ?? DEFAULT_URL
   const intervalMs = options.intervalMs ?? DEFAULT_INTERVAL_MS
-  const checker = getVersionChecker(url, intervalMs)
+  const checker = getVersionChecker(intervalMs)
 
   return useSyncExternalStore(
     checker?.subscribe ?? subscribeNoop,

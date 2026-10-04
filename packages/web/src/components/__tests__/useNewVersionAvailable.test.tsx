@@ -5,8 +5,12 @@ import type { useNewVersionAvailable as UseNewVersionAvailable } from '../useNew
 
 const RUNNING_ENTRY = '/assets/index-OLD123.js'
 
-const htmlWithEntry = (src: string) =>
-  `<!doctype html><html><head><script type="module" src="${src}"></script></head><body></body></html>`
+const htmlWithScripts = (...srcs: string[]) =>
+  `<!doctype html><html><head>${srcs
+    .map((src) => `<script type="module" src="${src}"></script>`)
+    .join('')}</head><body></body></html>`
+
+const htmlWithEntry = (src: string) => htmlWithScripts(src)
 
 const htmlResponse = (html: string, status = 200) =>
   new Response(html, { status, headers: { 'Content-Type': 'text/html' } })
@@ -26,10 +30,18 @@ async function loadHook() {
   useNewVersionAvailable = mod.useNewVersionAvailable
 }
 
+function setRunningScripts(...srcs: string[]) {
+  document.head.innerHTML = srcs
+    .map((src) => `<script type="module" src="${src}"></script>`)
+    .join('')
+}
+
 function setRunningEntry(src: string | undefined) {
-  document.head.innerHTML = src
-    ? `<script type="module" src="${src}"></script>`
-    : ''
+  if (src) {
+    setRunningScripts(src)
+  } else {
+    setRunningScripts()
+  }
 }
 
 async function advance(ms: number) {
@@ -56,6 +68,7 @@ describe('useNewVersionAvailable', () => {
   })
 
   afterEach(() => {
+    window.history.replaceState(null, '', '/')
     vi.useRealTimers()
     vi.unstubAllGlobals()
     vi.unstubAllEnvs()
@@ -123,16 +136,60 @@ describe('useNewVersionAvailable', () => {
     expect(result.current).toBe(true)
   })
 
-  it('ignores non-OK responses', async () => {
+  it('compares pages the app renders with an error status', async () => {
     fetchMock.mockImplementation(async () =>
-      htmlResponse(htmlWithEntry('/assets/index-NEW456.js'), 503),
+      htmlResponse(htmlWithEntry('/assets/index-NEW456.js'), 404),
     )
+
+    const { result } = renderHook(() => useNewVersionAvailable())
+    await advance(60_000)
+
+    expect(result.current).toBe(true)
+  })
+
+  it('ignores redirected responses', async () => {
+    fetchMock.mockImplementation(async () => {
+      const response = htmlResponse(htmlWithEntry('/assets/index-NEW456.js'))
+      Object.defineProperty(response, 'redirected', { value: true })
+
+      return response
+    })
 
     const { result } = renderHook(() => useNewVersionAvailable())
     await advance(60_000)
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(result.current).toBe(false)
+  })
+
+  it('stays false for an unchanged page with a page-specific chunk', async () => {
+    // Prerendered pages and server-rendered routes add a chunk for the page
+    // next to the app entry
+    setRunningScripts('/assets/AboutPage-ABC.js', RUNNING_ENTRY)
+    await loadHook()
+    fetchMock.mockImplementation(async () =>
+      htmlResponse(htmlWithScripts('/assets/AboutPage-ABC.js', RUNNING_ENTRY)),
+    )
+
+    const { result } = renderHook(() => useNewVersionAvailable())
+    await advance(60_000)
+
+    expect(result.current).toBe(false)
+  })
+
+  it('returns true when a page with a page-specific chunk was redeployed', async () => {
+    setRunningScripts('/assets/AboutPage-ABC.js', RUNNING_ENTRY)
+    await loadHook()
+    fetchMock.mockImplementation(async () =>
+      htmlResponse(
+        htmlWithScripts('/assets/AboutPage-ABC.js', '/assets/index-NEW456.js'),
+      ),
+    )
+
+    const { result } = renderHook(() => useNewVersionAvailable())
+    await advance(60_000)
+
+    expect(result.current).toBe(true)
   })
 
   it('ignores HTML without module scripts', async () => {
@@ -187,16 +244,21 @@ describe('useNewVersionAvailable', () => {
     expect(result.current).toBe(true)
   })
 
-  it('fetches without the cache and without cookies', async () => {
+  it('fetches the URL the tab was loaded from, without the cache or cookies', async () => {
+    window.history.replaceState(null, '', '/about?tab=team#history')
+    await loadHook()
+    // A client-side navigation after the page loaded doesn't change what's
+    // fetched
+    window.history.pushState(null, '', '/contact')
     fetchMock.mockImplementation(async () =>
       htmlResponse(htmlWithEntry(RUNNING_ENTRY)),
     )
 
-    renderHook(() => useNewVersionAvailable({ url: '/index.html' }))
+    renderHook(() => useNewVersionAvailable())
     await advance(60_000)
 
     expect(fetchMock).toHaveBeenCalledWith(
-      new URL('/index.html', document.baseURI).href,
+      new URL('/about?tab=team', document.baseURI).href,
       { cache: 'no-store', credentials: 'omit' },
     )
   })
