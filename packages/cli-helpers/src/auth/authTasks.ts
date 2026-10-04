@@ -504,11 +504,35 @@ export const generateAuthApiFiles = <Renderer extends typeof ListrRenderer>(
         existingFiles = 'FAIL'
       }
 
+      ctx.apiAuthLibWritten = writesApiAuthLib(filesRecord, existingFiles)
+
       return writeFilesTask(filesRecord, {
         existingFiles,
       })
     },
   }
+}
+
+/**
+ * Exported for testing
+ *
+ * @returns `true` if writing `filesRecord` with the given `existingFiles`
+ *   strategy writes `api/src/lib/auth.{ts,js}`, which is where the auth
+ *   provider's `requireAuth` function lives
+ */
+export function writesApiAuthLib(
+  filesRecord: Record<string, string>,
+  existingFiles: ExistingFiles,
+) {
+  const authLibPaths = ['ts', 'js'].map((ext) =>
+    path.join(getPaths().api.src, 'lib', `auth.${ext}`),
+  )
+
+  return Object.keys(filesRecord).some(
+    (filePath) =>
+      authLibPaths.includes(filePath) &&
+      (existingFiles === 'OVERWRITE' || !fs.existsSync(filePath)),
+  )
 }
 
 /** Returns a map of file names (not full paths) that already exist */
@@ -553,6 +577,12 @@ export interface AuthGeneratorCtx {
   setupMode: AuthSetupMode
   provider: string
   force: boolean
+  /**
+   * Set by `generateAuthApiFiles`. `true` when setup writes the auth
+   * provider's `api/src/lib/auth.{ts,js}` file, replacing any existing
+   * `requireAuth` implementation
+   */
+  apiAuthLibWritten?: boolean
 }
 
 export const setAuthSetupMode = <
@@ -609,3 +639,109 @@ export const setAuthSetupMode = <
     },
   }
 }
+
+/**
+ * The test case that new Cedar apps ship with for the `requireAuth` directive.
+ * It asserts the behavior of the stub `requireAuth` function in
+ * `api/src/lib/auth.{ts,js}`, which lets every request through.
+ */
+const STUB_REQUIRE_AUTH_TEST_CASE = `  it('requireAuth has stub implementation. Should not throw when current user', () => {
+    // If you want to set values in context, pass it through e.g.
+    // mockRedwoodDirective(requireAuth, { context: { currentUser: { id: 1, name: 'Lebron McGretzky' } }})
+    const mockExecution = mockRedwoodDirective(requireAuth, { context: {} })
+
+    expect(mockExecution).not.toThrowError()
+  })`
+
+/**
+ * Test cases matching the `requireAuth` function that every auth provider's
+ * setup generates. It throws when there is no current user.
+ */
+const REQUIRE_AUTH_TEST_CASES = `  it('throws when there is no current user', () => {
+    const mockExecution = mockRedwoodDirective(requireAuth, { context: {} })
+
+    expect(mockExecution).toThrowError("You don't have permission to do that.")
+  })
+
+  it('does not throw when there is a current user', () => {
+    // The mocked user should have the same shape as what getCurrentUser()
+    // in api/src/lib/auth returns
+    const mockExecution = mockRedwoodDirective(requireAuth, {
+      context: { currentUser: { id: 1 } },
+    })
+
+    expect(mockExecution).not.toThrowError()
+  })`
+
+/**
+ * Exported for testing
+ *
+ * @param content - The contents of requireAuth.test.{ts,js}
+ * @returns The content with the stub test case replaced, or `undefined` if
+ *   the unmodified stub test case isn't part of the content
+ */
+export const replaceStubRequireAuthTestCase = (content: string) => {
+  const eol = content.includes('\r\n') ? '\r\n' : '\n'
+  const normalizedContent = content.replaceAll('\r\n', '\n')
+
+  if (!normalizedContent.includes(STUB_REQUIRE_AUTH_TEST_CASE)) {
+    return undefined
+  }
+
+  return normalizedContent
+    .replace(STUB_REQUIRE_AUTH_TEST_CASE, REQUIRE_AUTH_TEST_CASES)
+    .replaceAll('\n', eol)
+}
+
+/**
+ * New Cedar apps ship with a test for the `requireAuth` directive that
+ * asserts the behavior of the stub `requireAuth` function. Setting up auth
+ * replaces that stub, so this task replaces the stub test case with test
+ * cases matching the real implementation. The test is only updated when
+ * setup writes `api/src/lib/auth.{ts,js}` (for example, not when the user
+ * declines overwriting existing files). Test files that don't contain the
+ * unmodified stub test case are left as they are.
+ */
+export const updateRequireAuthTest = <
+  Renderer extends typeof ListrRenderer,
+  FallbackRenderer extends typeof ListrRenderer,
+>() => ({
+  title: 'Updating requireAuth directive test...',
+  task: (
+    ctx: AuthGeneratorCtx,
+    task: ListrTaskWrapper<AuthGeneratorCtx, Renderer, FallbackRenderer>,
+  ) => {
+    if (!ctx.apiAuthLibWritten) {
+      task.skip(
+        'Keeping the requireAuth directive test as is, because the existing ' +
+          'requireAuth implementation is kept',
+      )
+      return
+    }
+
+    const testFilePath = ['ts', 'js']
+      .map((ext) =>
+        path.join(
+          getPaths().api.directives,
+          'requireAuth',
+          `requireAuth.test.${ext}`,
+        ),
+      )
+      .find((filePath) => fs.existsSync(filePath))
+
+    if (!testFilePath) {
+      task.skip('No requireAuth directive test found')
+      return
+    }
+
+    const content = fs.readFileSync(testFilePath, 'utf-8')
+    const newContent = replaceStubRequireAuthTestCase(content)
+
+    if (newContent === undefined) {
+      task.skip('Keeping the customized requireAuth directive test as is')
+      return
+    }
+
+    fs.writeFileSync(testFilePath, newContent)
+  },
+})

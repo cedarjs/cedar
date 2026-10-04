@@ -500,6 +500,66 @@ export const handler = createGraphQLHandler({
 "
 `;
 
+exports[`authTasks > updateRequireAuthTest > replaces the stub test case in the js app template 1`] = `
+"import { mockRedwoodDirective, getDirectiveName } from '@cedarjs/testing/api'
+
+import requireAuth from './requireAuth.js'
+
+describe('requireAuth directive', () => {
+  it('declares the directive sdl as schema, with the correct name', () => {
+    expect(requireAuth.schema).toBeTruthy()
+    expect(getDirectiveName(requireAuth.schema)).toBe('requireAuth')
+  })
+
+  it('throws when there is no current user', () => {
+    const mockExecution = mockRedwoodDirective(requireAuth, { context: {} })
+
+    expect(mockExecution).toThrowError("You don't have permission to do that.")
+  })
+
+  it('does not throw when there is a current user', () => {
+    // The mocked user should have the same shape as what getCurrentUser()
+    // in api/src/lib/auth returns
+    const mockExecution = mockRedwoodDirective(requireAuth, {
+      context: { currentUser: { id: 1 } },
+    })
+
+    expect(mockExecution).not.toThrowError()
+  })
+})
+"
+`;
+
+exports[`authTasks > updateRequireAuthTest > replaces the stub test case in the ts app template 1`] = `
+"import { mockRedwoodDirective, getDirectiveName } from '@cedarjs/testing/api'
+
+import requireAuth from './requireAuth.js'
+
+describe('requireAuth directive', () => {
+  it('declares the directive sdl as schema, with the correct name', () => {
+    expect(requireAuth.schema).toBeTruthy()
+    expect(getDirectiveName(requireAuth.schema)).toBe('requireAuth')
+  })
+
+  it('throws when there is no current user', () => {
+    const mockExecution = mockRedwoodDirective(requireAuth, { context: {} })
+
+    expect(mockExecution).toThrowError("You don't have permission to do that.")
+  })
+
+  it('does not throw when there is a current user', () => {
+    // The mocked user should have the same shape as what getCurrentUser()
+    // in api/src/lib/auth returns
+    const mockExecution = mockRedwoodDirective(requireAuth, {
+      context: { currentUser: { id: 1 } },
+    })
+
+    expect(mockExecution).not.toThrowError()
+  })
+})
+"
+`;
+
 exports[`authTasks > writes an auth.js file for JS projects 1`] = `"// web auth template"`;
 
 exports[`authTasks > writes an auth.ts file for TS projects 1`] = `"// web auth template"`;

@@ -20,6 +20,7 @@ import {
   setAuthSetupMode,
   createWebAuth,
   generateAuthApiFiles,
+  updateRequireAuthTest,
 } from './authTasks.js'
 
 export type { AuthGeneratorCtx }
@@ -93,6 +94,7 @@ export const standardAuthHandler = async ({
     [
       setAuthSetupMode(forceArg),
       generateAuthApiFiles(basedir, webAuthn, oauth),
+      updateRequireAuthTest(),
 
       addConfigToWebApp(),
       createWebAuth(basedir, webAuthn),

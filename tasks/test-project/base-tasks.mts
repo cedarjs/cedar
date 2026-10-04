@@ -975,14 +975,13 @@ async function addDbAuth(
     )
   fs.writeFileSync(libAuthPath, newLibAuthContent)
 
-  // update requireAuth test
+  // Make the mocked user in the requireAuth test match what getCurrentUser()
+  // returns, so tsc doesn't complain
   const pathRequireAuth = `${getOutputPath()}/api/src/directives/requireAuth/requireAuth.test.ts`
   const contentRequireAuth = fs.readFileSync(pathRequireAuth).toString()
   const resultsRequireAuth = contentRequireAuth.replace(
-    /const mockExecution([^}]*){} }\)/,
-    `const mockExecution = mockRedwoodDirective(requireAuth, {
-      context: { currentUser: { id: '4c3d3e8e-2b1a-4f5c-8c7d-9e0f1a2b3c4d', roles: 'ADMIN', email: 'b@zinga.com' } },
-    })`,
+    'context: { currentUser: { id: 1 } },',
+    `context: { currentUser: { id: '4c3d3e8e-2b1a-4f5c-8c7d-9e0f1a2b3c4d', roles: 'ADMIN', email: 'b@zinga.com' } },`,
   )
   fs.writeFileSync(pathRequireAuth, resultsRequireAuth)
 
