@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer'
+import type { SendMailOptions, Transporter } from 'nodemailer'
 import type SMTPTransport from 'nodemailer/lib/smtp-transport/index.js'
 
 import { AbstractMailHandler } from '@cedarjs/mailer-core'
@@ -13,10 +14,10 @@ export type HandlerConfig = {
   defaults?: SMTPTransport.Options
 }
 
-export type HandlerOptions = nodemailer.SendMailOptions
+export type HandlerOptions = SendMailOptions
 
 export class NodemailerMailHandler extends AbstractMailHandler {
-  protected transporter: nodemailer.Transporter
+  protected transporter: Transporter
 
   constructor(protected config: HandlerConfig) {
     super()
