@@ -46,3 +46,10 @@ export * from './routeHooks.types.js'
 export * from './components/ServerInject.js'
 
 export type { TypedDocumentNode } from '@apollo/client'
+
+import { registerPreloadErrorReload } from './reloadOnPreloadError.js'
+
+// Runs once per page load, when the app first imports `@cedarjs/web`, so
+// every Cedar app recovers from stale chunks after a deploy without changes
+// to its own code
+registerPreloadErrorReload()

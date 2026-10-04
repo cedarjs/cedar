@@ -1,0 +1,32 @@
+- feat(web): Reload the page when a lazy-loaded chunk fails to load by @Tobbe
+
+Cedar's router lazy-loads pages. After a new deploy, a browser tab that is still
+running the previous build requests hashed chunks (for example
+`/assets/AboutPage-<hash>.js`) that are no longer on the server, and the
+navigation fails without any visible feedback.
+
+`@cedarjs/web` listens for Vite's
+[`vite:preloadError`](https://vite.dev/guide/build#load-error-handling) event
+and does a full page reload when a chunk fails to load, so the user gets the
+latest deploy and lands on the page they navigated to. This works on any host
+and needs no changes to your app.
+
+To avoid a reload loop when a chunk is missing even on the latest deploy, the
+page is reloaded at most once every 10 seconds. A second failure within that
+window surfaces through your app's normal error handling. The timestamp of the
+last reload is stored in `sessionStorage` under `cedar:preload-error-reload-at`.
+
+Cedar leaves events that were already handled alone. To handle chunk load errors
+yourself, register a listener that calls `event.preventDefault()` with
+`{ capture: true }`, so it runs before Cedar's:
+
+```js
+window.addEventListener(
+  'vite:preloadError',
+  (event) => {
+    event.preventDefault()
+    // Your own handling
+  },
+  { capture: true },
+)
+```
