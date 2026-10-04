@@ -166,3 +166,32 @@ yarn cedar prisma migrate dev # creates and applies a new Prisma DB migration
 Any environment variables used locally, e.g. in your `env.defaults` or `.env`, must also be added to your hosting provider settings. (See documentation specific to your provider.)
 
 Additionally, if your application uses env vars on the Web Side, you must configure Cedar's build process to make them available in production. See the [Cedar Environment Variables doc](environment-variables.md) for instructions.
+
+## Detecting new deploys
+
+Users can keep a tab open for a long time, running a build that is older than the one you've just deployed. The `useNewVersionAvailable()` hook from `@cedarjs/web` returns `true` once the server is serving a newer build than the one running in the tab, so you can ask the user to reload:
+
+```jsx title="web/src/components/NewVersionBanner/NewVersionBanner.jsx"
+import { useNewVersionAvailable } from '@cedarjs/web'
+
+const NewVersionBanner = () => {
+  const newVersionAvailable = useNewVersionAvailable()
+
+  if (!newVersionAvailable) {
+    return null
+  }
+
+  return (
+    <div role="status">
+      A new version of the app is available.
+      <button onClick={() => window.location.reload()}>Reload</button>
+    </div>
+  )
+}
+
+export default NewVersionBanner
+```
+
+The hook compares the hashed `<script type="module">` entry files of the running page with the ones in a freshly fetched copy of your app's HTML. It checks every 60 seconds, when the tab becomes visible again and when the browser comes back online. Both the URL and the interval are configurable: `useNewVersionAvailable({ url: '/', intervalMs: 60_000 })`. The hook always returns `false` in development and during server rendering.
+
+On Netlify with skew protection enabled, a tab keeps loading assets from the deploy it started on. The hook's check doesn't send cookies, so it always sees the latest deploy, and reloading the page always gets the latest deploy too.
