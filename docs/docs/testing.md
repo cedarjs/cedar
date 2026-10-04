@@ -796,10 +796,9 @@ describe('ProjectsCell', () => {
 
     render(<Success projects={[{ id: 1, name: 'Website redesign' }]} />)
 
-    expect(screen.getByRole('link', { name: 'Website redesign' })).toHaveAttribute(
-      'href',
-      '/org/acme/projects/1'
-    )
+    expect(
+      screen.getByRole('link', { name: 'Website redesign' })
+    ).toHaveAttribute('href', '/org/acme/projects/1')
   })
 })
 ```

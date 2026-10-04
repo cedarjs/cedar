@@ -21,7 +21,7 @@ Cedar currently supports prerendering at _build_ time. So before you deploy your
 Prerendering a page is as easy as it gets. Just add the `prerender` prop to the Route that you want to prerender:
 
 ```jsx {3} title="Routes.js"
-<Route path="/" page={HomePage} name="home" prerender/>
+<Route path="/" page={HomePage} name="home" prerender />
 ```
 
 Then run `yarn cedar build` and enjoy the performance boost!
@@ -58,7 +58,13 @@ For Private Routes, Cedar prerenders your Private Routes' `whileLoadingAuth` pro
 ```jsx
 <PrivateSet>
   // Loading is shown while we're checking to see if the user's logged in
-  <Route path="/super-secret-admin-dashboard" page={SuperSecretAdminDashboard} name="ssad" whileLoadingAuth={() => <Loading />} prerender/>
+  <Route
+    path="/super-secret-admin-dashboard"
+    page={SuperSecretAdminDashboard}
+    name="ssad"
+    whileLoadingAuth={() => <Loading />}
+    prerender
+  />
 </PrivateSet>
 ```
 
@@ -196,7 +202,11 @@ const MySpecialComponent = () => {
     <div className="my-4 p-5 rounded-lg border-gray-200 border">
       <h1 className="text-xl font-bold">Render info:</h1>
 
-      {browser ? <h2 className="text-green-500">Browser</h2> : <h2 className="text-red-500">Prerendered</h2>}
+      {browser ? (
+        <h2 className="text-green-500">Browser</h2>
+      ) : (
+        <h2 className="text-red-500">Prerendered</h2>
+      )}
     </div>
   )
 }

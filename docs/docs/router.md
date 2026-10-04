@@ -130,7 +130,11 @@ const Routes = () => {
         <Route path="/about" page={AboutPage} name="about" />
         <Route path="/contact" page={ContactPage} name="contact" />
         <Set wrap={BlogNavLayout}>
-          <Route path="/blog-post/{id:Int}" page={BlogPostPage} name="blogPost" />
+          <Route
+            path="/blog-post/{id:Int}"
+            page={BlogPostPage}
+            name="blogPost"
+          />
         </Set>
       </Set>
     </Router>
@@ -191,8 +195,15 @@ To protect private routes for access by multiple roles:
 
 ```jsx title="Routes.jsx"
 <Router useAuth={useAuth}>
-  <PrivateSet unauthenticated="forbidden" roles={['admin', 'editor', 'publisher']}>
-    <Route path="/admin/posts/{id:Int}/edit" page={EditPostPage} name="editPost" />
+  <PrivateSet
+    unauthenticated="forbidden"
+    roles={['admin', 'editor', 'publisher']}
+  >
+    <Route
+      path="/admin/posts/{id:Int}/edit"
+      page={EditPostPage}
+      name="editPost"
+    />
   </PrivateSet>
 
   <Route path="/forbidden" page={ForbiddenPage} name="forbidden" />
@@ -319,7 +330,9 @@ const MainMenu = () => {
 import { Link, routes, useMatch } from '@cedarjs/router'
 
 const CustomLink = ({ to, ...rest }) => {
-  const matchInfo = useMatch(to, { searchParams: [{ tab: 'tutorial' }, 'page'] })
+  const matchInfo = useMatch(to, {
+    searchParams: [{ tab: 'tutorial' }, 'page'],
+  })
 
   return <SomeStyledComponent as={Link} to={to} isActive={matchInfo.match} />
 }
@@ -342,6 +355,7 @@ To get the path you need to pass to `useMatch` you can use
 
 Here's an example:
 
+<!-- prettier-ignore -->
 ```jsx
 <Route path="/{animal}/{name}" page={AnimalPage} name="animal" />
 
@@ -439,7 +453,11 @@ In this example, we want to take everything after `/file/` and have it sent to t
 You can use multiple globs in your paths:
 
 ```jsx title="Routes.jsx"
-<Route path="/from/{fromDate...}/to/{toDate...}" page={DatePage} name="dateRange" />
+<Route
+  path="/from/{fromDate...}/to/{toDate...}"
+  page={DatePage}
+  name="dateRange"
+/>
 ```
 
 This will match a path like `/from/2021/11/03/to/2021/11/17`. Note that for this to work, there must be some static string between the globs so the router can determine where the boundaries of the matches should be.
@@ -539,7 +557,11 @@ Example usage:
 ```jsx
 const routePaths = useRoutePaths()
 
-return <pre><code>{JSON.stringify(routePaths, undefined, 2)}</code></pre>
+return (
+  <pre>
+    <code>{JSON.stringify(routePaths, undefined, 2)}</code>
+  </pre>
+)
 ```
 
 Example output:
@@ -703,6 +725,7 @@ Because lazily-loaded pages can take a non-negligible amount of time to load (de
 
 In order to show a loader as your page chunks are loading, you simply add the `whileLoadingPage` prop to your route, `Set` or `PrivateSet` component.
 
+<!-- prettier-ignore -->
 ```jsx title="Routes.jsx"
 import SkeletonLoader from 'src/components/SkeletonLoader'
 <Router>
@@ -948,7 +971,7 @@ export default () => (
         </h1>
       </section>
     </main>
-  // highlight-next-line
+    // highlight-next-line
   </MainLayout>
 )
 ```

@@ -31,7 +31,6 @@ const HomePage = () => {
   return (
     <>
       <Metadata title="Home" description="Home page" />
-
       // highlight-start
       <header>
         <h1>Cedar Blog</h1>
@@ -63,7 +62,6 @@ const HomePage = () => {
   return (
     <>
       <Metadata title="Home" description="Home page" />
-
       // highlight-start
       <header>
         <h1>Cedar Blog</h1>
@@ -111,7 +109,6 @@ const AboutPage = () => {
   return (
     <>
       <Metadata title="About" description="About page" />
-
       // highlight-start
       <header>
         <h1>Cedar Blog</h1>
@@ -149,7 +146,6 @@ const AboutPage = () => {
   return (
     <>
       <Metadata title="About" description="About page" />
-
       // highlight-start
       <header>
         <h1>Cedar Blog</h1>

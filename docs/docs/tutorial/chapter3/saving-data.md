@@ -1093,7 +1093,6 @@ const ContactPage = () => {
   return (
     <>
       <Metadata title="Contact" description="Contact page" />
-
       // highlight-next-line
       <Toaster />
       <Form onSubmit={onSubmit} config={{ mode: 'onBlur' }}>
@@ -1401,13 +1400,11 @@ const ContactPage = () => {
   return (
     <>
       <Metadata title="Contact" description="Contact page" />
-
       <Toaster />
       // highlight-start
       <Form onSubmit={onSubmit} config={{ mode: 'onBlur' }} error={error}>
         <FormError error={error} wrapperClassName="form-error" />
         // highlight-end
-
         <Label name="name" errorClassName="error">
           Name
         </Label>
@@ -1417,7 +1414,6 @@ const ContactPage = () => {
           errorClassName="error"
         />
         <FieldError name="name" className="error" />
-
         <Label name="email" errorClassName="error">
           Email
         </Label>
@@ -1429,7 +1425,6 @@ const ContactPage = () => {
           errorClassName="error"
         />
         <FieldError name="email" className="error" />
-
         <Label name="message" errorClassName="error">
           Message
         </Label>
@@ -1439,7 +1434,6 @@ const ContactPage = () => {
           errorClassName="error"
         />
         <FieldError name="message" className="error" />
-
         <Submit disabled={loading}>Save</Submit>
       </Form>
     </>
