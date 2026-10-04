@@ -286,25 +286,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@auth0/auth0-auth-js@npm:^1.15.0":
-  version: 1.15.0
-  resolution: "@auth0/auth0-auth-js@npm:1.15.0"
+"@auth0/auth0-auth-js@npm:^1.16.0":
+  version: 1.16.1
+  resolution: "@auth0/auth0-auth-js@npm:1.16.1"
   dependencies:
     jose: "npm:^6.0.8"
     openid-client: "npm:^6.8.0"
-  checksum: 10c0/3f0078d3b23b1e3d3117f9ad11de337d91987df97e1107341c6eecdf7984685360222a79840be7f16b061483019c65d5db924755c9bed53e59d79058e1b5728e
+  checksum: 10c0/083e9f6395ce486714b220328657fd29a0139946c3e4af4b9240ee5af4a558abf216e35eb20ec96c36da0c704f9be331c3c4941e6f5d20d2eee4f1a90805d00f
   languageName: node
   linkType: hard
 
-"@auth0/auth0-spa-js@npm:2.27.0":
-  version: 2.27.0
-  resolution: "@auth0/auth0-spa-js@npm:2.27.0"
+"@auth0/auth0-spa-js@npm:2.28.1":
+  version: 2.28.1
+  resolution: "@auth0/auth0-spa-js@npm:2.28.1"
   dependencies:
-    "@auth0/auth0-auth-js": "npm:^1.15.0"
+    "@auth0/auth0-auth-js": "npm:^1.16.0"
     browser-tabs-lock: "npm:^1.3.0"
     dpop: "npm:^2.1.1"
     es-cookie: "npm:~1.3.2"
-  checksum: 10c0/be5d9d564d7b162206d4610ec1db8e58c3cd8d15faa3907b357e835b957425da5c691fbbd82df363dc4290967d1c4bd08397e979181def42eef3cdaffa7222c9
+  checksum: 10c0/f52520a79a08754b0070314ac9a1d5cfbc1c56f45aeaec5b427189bac62f65d7dc36c15074d2f861f5a4ae4653f998e8fb4d3e1e7d0c1b7178555e6801a7bdc6
   languageName: node
   linkType: hard
 
@@ -2369,7 +2369,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-auth0-web@workspace:packages/auth-providers/auth0/web"
   dependencies:
-    "@auth0/auth0-spa-js": "npm:2.27.0"
+    "@auth0/auth0-spa-js": "npm:2.28.1"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/react": "npm:^19.2.0"
@@ -2379,7 +2379,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.11"
   peerDependencies:
-    "@auth0/auth0-spa-js": 2.27.0
+    "@auth0/auth0-spa-js": 2.28.1
   languageName: unknown
   linkType: soft
 
