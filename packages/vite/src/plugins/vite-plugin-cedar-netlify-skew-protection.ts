@@ -109,8 +109,9 @@ export function getSkewProtectionPaths(
  * - Page loads don't match `patterns`, so they're always served by the
  *   latest deploy, and its HTML sets the latest token. Reloading is therefore
  *   always enough to get the newest version.
- * - Only HTML responses set the cookie. Pinned asset and API responses come
- *   from the old deploy and would otherwise renew the old token.
+ * - Only HTML responses to page loads set the cookie. Responses to pinned
+ *   asset and API requests can come from an old deploy and would otherwise
+ *   renew the old token.
  *
  * The cookie is set in two places:
  * - Static HTML (prerendered pages and the SPA shell) is served from
@@ -192,14 +193,22 @@ export function cedarNetlifySkewProtectionPlugin(
           `import { CEDAR_SKEW_TOKEN, CEDAR_SKEW_COOKIE_NAME } from ${JSON.stringify(VIRTUAL_SKEW_TOKEN_ID)}`,
           wrappedCode,
           '',
+          'const __cedarSkewPinnedPatterns = [',
+          ...skewProtectionPaths.patterns.map(
+            (pattern) => `  new RegExp(${JSON.stringify(pattern)}),`,
+          ),
+          ']',
+          '',
           'const __cedarSkewOriginalFetch =',
           '  __cedarSkewCatchAllHandler.fetch.bind(__cedarSkewCatchAllHandler)',
           '',
           '__cedarSkewCatchAllHandler.fetch = async (request, ...args) => {',
           '  const response = await __cedarSkewOriginalFetch(request, ...args)',
           '',
-          '  // Only HTML responses set the cookie (see',
-          '  // vite-plugin-cedar-netlify-skew-protection.ts). Nothing to stamp',
+          '  // Only HTML responses to page loads set the cookie (see',
+          '  // vite-plugin-cedar-netlify-skew-protection.ts). Requests to pinned',
+          '  // paths are never page loads, even if an API function returns',
+          '  // HTML, and may be served by an old deploy. Nothing to stamp',
           '  // without a token (e.g. a local `cedar build --ud` run outside a',
           '  // Netlify build) or a response (an unmatched route). Statuses',
           '  // outside 200-599 (e.g. 101 for a WebSocket upgrade) make the',
@@ -214,6 +223,9 @@ export function cedarNetlifySkewProtectionPlugin(
           '    response.status === 204 ||',
           '    response.status === 304 ||',
           '    !(response.headers.get("content-type") ?? "").includes("text/html") ||',
+          '    __cedarSkewPinnedPatterns.some((pattern) =>',
+          '      pattern.test(new URL(request.url).pathname),',
+          '    ) ||',
           '    (response.headers.get("set-cookie") ?? "").includes(',
           '      `${CEDAR_SKEW_COOKIE_NAME}=`,',
           '    )',

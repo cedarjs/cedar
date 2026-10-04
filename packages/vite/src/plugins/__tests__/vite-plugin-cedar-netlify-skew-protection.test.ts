@@ -202,6 +202,53 @@ describe('cedarNetlifySkewProtectionPlugin', () => {
       await expect(response.text()).resolves.toBe('<p>ok</p>')
     })
 
+    it('does not stamp the cookie onto HTML responses to pinned API routes', async () => {
+      const plugin = cedarNetlifySkewProtectionPlugin()
+
+      if (
+        typeof plugin.transform !== 'function' ||
+        typeof plugin.configResolved !== 'function'
+      ) {
+        expect.fail('Expected plugin to have transform and configResolved')
+      }
+
+      // The hook only reads the fields `fakeConfig` provides
+      plugin.configResolved.call(
+        {} as never,
+        fakeConfig({
+          routes: [route('/.api/functions/hello')],
+        }) as ResolvedConfig,
+      )
+
+      const result = await plugin.transform.call(
+        withEnvironment('ssr') as ThisParameterType<typeof plugin.transform>,
+        FAKE_CATCH_ALL_SOURCE,
+        catchAllEntry,
+        {},
+      )
+
+      if (!isResultWithCode(result)) {
+        throw new Error('transform should have returned a result with code')
+      }
+
+      const handler = await loadWrappedHandler(result.code, {
+        token: 'deploy-abc',
+        cookieName: 'cedar-skew-token',
+      })
+
+      const apiResponse = await handler.fetch(
+        new Request('http://localhost/.api/functions/hello'),
+      )
+      const pageResponse = await handler.fetch(
+        new Request('http://localhost/about'),
+      )
+
+      expect(apiResponse.headers.get('set-cookie')).toBeNull()
+      expect(pageResponse.headers.get('set-cookie')).toContain(
+        'cedar-skew-token=deploy-abc',
+      )
+    })
+
     it('does not stamp the cookie onto non-HTML responses', async () => {
       const plugin = cedarNetlifySkewProtectionPlugin()
 
