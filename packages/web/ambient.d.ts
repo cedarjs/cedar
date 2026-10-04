@@ -12,6 +12,9 @@ declare global {
   // Provided by `vite-plugin-cedar-parsed-scalars`, when a scalar is set in
   // `graphql.parsedScalars`
   var __CEDAR__PARSED_SCALARS: ParsedScalarsCacheConfig | undefined
+  // Set by `registerPreloadErrorReload` once its `vite:preloadError` listener
+  // is attached, so the listener is only added once per page load
+  var __CEDAR__PRELOAD_ERROR_RELOAD_REGISTERED: boolean | undefined
 
   // Provided by Vite.config
   var RWJS_ENV: {
