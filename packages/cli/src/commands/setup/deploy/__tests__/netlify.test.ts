@@ -258,6 +258,45 @@ describe('netlify with --ud', () => {
     `)
   })
 
+  it('finds the plugins property when another property comes first', async () => {
+    vol.fromJSON({
+      '/cedar-app/web/vite.config.ts': [
+        "import { defineConfig } from 'vite'",
+        '',
+        "import { cedar, cedarUniversalDeployPlugin } from '@cedarjs/vite'",
+        '',
+        'export default defineConfig({',
+        '  build: { sourcemap: true },',
+        '  plugins: [cedar(), cedarUniversalDeployPlugin()],',
+        '})',
+      ].join('\n'),
+    })
+
+    await handler({ force: true, ud: true })
+
+    const filesystem = vol.toJSON()
+
+    expect(filesystem['/cedar-app/web/vite.config.ts']).toMatchInlineSnapshot(`
+      "import { cedarNetlifySkewProtectionPlugin } from '@cedarjs/vite'
+      import netlifyCompat from '@universal-deploy/netlify/vite'
+      import netlify from '@netlify/vite-plugin'
+      import { defineConfig } from 'vite'
+
+      import { cedar, cedarUniversalDeployPlugin } from '@cedarjs/vite'
+
+      export default defineConfig({
+        build: { sourcemap: true },
+        plugins: [
+          netlify({ build: { enabled: true } }),
+          netlifyCompat(),
+          cedarNetlifySkewProtectionPlugin(),
+          cedar(),
+          cedarUniversalDeployPlugin(),
+        ],
+      })"
+    `)
+  })
+
   it('handles arrow-function wrapped defineConfig with destructured mode arg', async () => {
     vol.fromJSON({
       '/cedar-app/web/vite.config.ts': [
