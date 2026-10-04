@@ -37,7 +37,6 @@ import { cedarGqlormInjectPlugin } from './plugins/vite-plugin-cedar-gqlorm-inje
 import { cedarGraphqlOptionsExtractPlugin } from './plugins/vite-plugin-cedar-graphql-options-extract.js'
 import { cedarImportDirPlugin } from './plugins/vite-plugin-cedar-import-dir.js'
 import { cedarMockCellDataPlugin } from './plugins/vite-plugin-cedar-mock-cell-data.js'
-import { cedarNetlifySkewProtectionPlugin } from './plugins/vite-plugin-cedar-netlify-skew-protection.js'
 import { cedarOtelWrappingPlugin } from './plugins/vite-plugin-cedar-otel-wrapping.js'
 import { cedarjsJobPathInjectorPlugin } from './plugins/vite-plugin-cedarjs-job-path-injector.js'
 import { handlerAlsWrappingPlugin } from './plugins/vite-plugin-handler-als-wrapping.js'
@@ -370,10 +369,6 @@ export async function buildCedarApp({
     plugins.push(cedarOtelWrappingPlugin())
     plugins.push(cedarjsJobPathInjectorPlugin())
     plugins.push(handlerAlsWrappingPlugin())
-  }
-
-  if (ud) {
-    plugins.push(cedarNetlifySkewProtectionPlugin())
   }
 
   plugins.push(cedarMockCellDataPlugin())
