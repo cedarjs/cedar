@@ -45,7 +45,7 @@
     "@cedarjs/framework-tools": "workspace:*",
     "@prisma/client": "7.10.0",
     "concurrently": "9.2.4",
-    "publint": "0.3.24",
+    "publint": "0.3.25",
     "typescript": "5.9.3",
     "vitest": "4.1.11"
   },
