@@ -1,5 +1,7 @@
+import { dedent } from 'ts-dedent'
 import { describe, expect, it } from 'vitest'
 
+import { transformGitignore, UPLOADS_GITIGNORE_ENTRY } from '../gitignore.js'
 import { addUploadModel, hasModel, UPLOAD_MODEL } from '../schemaPrisma.js'
 import {
   addUploadsPlugin,
@@ -50,6 +52,71 @@ async function main() {
 
 main()
 `
+
+describe('transformGitignore', () => {
+  const GITIGNORE = dedent`
+    .DS_Store
+    .env*
+    dev.db*
+    dist
+    node_modules\n
+  `
+
+  it('inserts the entry after dev.db* when present', () => {
+    const result = transformGitignore(GITIGNORE)
+
+    expect(result).toBe(dedent`
+      .DS_Store
+      .env*
+      dev.db*
+      ${UPLOADS_GITIGNORE_ENTRY}
+      dist
+      node_modules\n
+    `)
+  })
+
+  it('appends at the end when dev.db* is absent', () => {
+    const result = transformGitignore('dist\nnode_modules')
+
+    expect(result).toBe(`dist\nnode_modules\n${UPLOADS_GITIGNORE_ENTRY}\n`)
+  })
+
+  it('writes just the entry for an empty .gitignore', () => {
+    expect(transformGitignore('')).toBe(`${UPLOADS_GITIGNORE_ENTRY}\n`)
+  })
+
+  it('leaves .gitignore alone when the entry is already there', () => {
+    const withEntry = `${GITIGNORE}${UPLOADS_GITIGNORE_ENTRY}\n`
+
+    expect(transformGitignore(withEntry)).toBe(withEntry)
+  })
+
+  it('adds the entry when only a longer path is present', () => {
+    const withLongerPath = `dev.db*\napi/.uploads-local\n`
+
+    const result = transformGitignore(withLongerPath)
+
+    expect(result).toBe(
+      `dev.db*\n${UPLOADS_GITIGNORE_ENTRY}\napi/.uploads-local\n`,
+    )
+  })
+
+  it('adds the entry when it only appears in a comment', () => {
+    const withComment = `dev.db*\n# api/.uploads\n`
+
+    const result = transformGitignore(withComment)
+
+    expect(result).toBe(`dev.db*\n${UPLOADS_GITIGNORE_ENTRY}\n# api/.uploads\n`)
+  })
+
+  it('adds the entry when it only appears with leading whitespace', () => {
+    const indented = `dev.db*\n  api/.uploads\n`
+
+    const result = transformGitignore(indented)
+
+    expect(result).toBe(`dev.db*\n${UPLOADS_GITIGNORE_ENTRY}\n  api/.uploads\n`)
+  })
+})
 
 /** Everything in a server file before its `main()` function */
 function importSection(source: string) {
