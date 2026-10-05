@@ -270,6 +270,8 @@ Note that the codebase shares a single `ecosystem.config.js` file. If you need a
 
 ## Server Setup
 
+The server needs [Node.js](https://nodejs.org/en/download) (use the version listed in your project's `.nvmrc` or the `engines` field in `package.json`), [Yarn](https://yarnpkg.com/getting-started/install), and [pm2](https://pm2.keymetrics.io/docs/usage/quick-start/) installed for the deploy user before the first deploy. Provisioning the server itself (creating the deploy user, SSH hardening, firewall, TLS certificates, database) is the same as for any Node.js app and is outside the scope of this guide. See DigitalOcean's [Initial Server Setup with Ubuntu](https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu) tutorial for a general walkthrough.
+
 You will need to create the directory in which your app code will live. This path will be the `path` var in `deploy.toml`. Make sure the username you will connect as in `deploy.toml` has permission to read/write/execute files in this directory. For example, if your `/var` dir is owned by `root`, but you're going to deploy with a user named `deploy`:
 
 ```bash
@@ -699,7 +701,7 @@ server {
     try_files $uri /200.html =404;
   }
 
-  location ^~ /static/ {
+  location ^~ /assets/ {
     gzip_static on;
     expires max;
     add_header Cache-Control public;
@@ -800,7 +802,7 @@ server {
     try_files $uri /200.html =404;
   }
 
-  location ^~ /static/ {
+  location ^~ /assets/ {
     gzip_static on;
     expires max;
     add_header Cache-Control public;
