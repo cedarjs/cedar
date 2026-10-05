@@ -188,7 +188,7 @@ window.addEventListener(
 )
 ```
 
-The reload only happens when a user navigates to a page whose chunk is gone. To tell users about a new deploy before that, see the next section.
+The reload happens when a dynamically imported chunk fails to load. Usually that's a page the user navigates to, but it also covers other chunks your app imports on demand. To tell users about a new deploy before that, see the next section.
 
 ## Detecting new deploys
 
