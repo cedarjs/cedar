@@ -26,5 +26,5 @@ Therefore, **please follow the [Tutorial Deployment section](tutorial/chapter4/d
 For the complete deployment process on Netlify, see the [Tutorial Deployment section](tutorial/chapter4/deployment.md).
 
 :::tip
-Netlify deploys set up through [universal deploy](universal-deploy.md) get [skew protection](universal-deploy.md#skew-protection), which keeps an open tab's asset and API requests on the deploy it started on while page loads always get the newest deploy. Netlify has to run the build for it to work, so deploys made with `netlify deploy --no-build` don't get it.
+Netlify deploys set up through [universal deploy](universal-deploy.md) get [skew protection](universal-deploy.md#skew-protection), which keeps tabs that are open during a deploy working.
 :::
