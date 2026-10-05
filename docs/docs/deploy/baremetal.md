@@ -42,13 +42,14 @@ The Baremetal deploy runs several commands in sequence. These can be customized,
 6. Generate Prisma client libs
 7. Runs [data migrations](/docs/data-migrations)
 8. Builds the web and/or api sides
-9. Symlink the latest deploy dir to `current` in the app dir
-10. Restart the serving process(es)
-11. Remove older deploy directories
+9. Hardlinks the hashed web assets of the previous releases into the new release (see [Skew Protection](#skew-protection))
+10. Symlink the latest deploy dir to `current` in the app dir
+11. Restart the serving process(es)
+12. Remove older deploy directories
 
 ### First Run Lifecycle
 
-If the `--first-run` flag is specified then step 7 above will execute the following commands instead:
+If the `--first-run` flag is specified then step 11 above will execute the following commands instead:
 
 - `pm2 start [service]` - starts the serving process(es)
 - `pm2 save` - saves the running services to the deploy users config file for future startup. See [Starting on Reboot](#starting-on-reboot) for further information
@@ -462,9 +463,10 @@ Baremetal supports running your own custom commands before or after the regular 
 4. `install` - `yarn install`
 5. `migrate` - database migrations
 6. `build` - `yarn build` (your custom before/after command is run for each side being built)
-7. `symlinkCurrent` - symlink the new deploy dir to `current` in the app dir
-8. `restart` - (re)starting any pm2 processes (your custom command will run before/after each process is restarted)
-9. `cleanup` - cleaning up any old releases
+7. `keepAssets` - hardlink the hashed web assets of the previous releases into the new release
+8. `symlinkCurrent` - symlink the new deploy dir to `current` in the app dir
+9. `restart` - (re)starting any pm2 processes (your custom command will run before/after each process is restarted)
+10. `cleanup` - cleaning up any old releases
 
 You can define your before/after commands in three different places:
 
@@ -578,6 +580,20 @@ yarn cedar deploy baremetal production --rollback 3
 Note that this will _not_ rollback your database—if you had a release that changed the database, that updated database will still be in effect, but with the previous version of the web and api sides. Trying to undo database migrations is a very difficult proposition and isn't even possible in many cases.
 
 Make sure to thoroughly test releases that change the database before doing it for real!
+
+## Skew Protection
+
+Cedar's router lazy-loads pages, so the browser only downloads a page's JavaScript when the user first navigates to it. Vite names those files by their content, for example `web/dist/assets/AboutPage-Kq9w8e7r.js`, and every build gets new names. A browser tab that was open when you deployed still runs the previous build, so the next page it navigates to is a file from that build. By default that request would 404 the moment `current` points at the new release, and `@cedarjs/web` would [reload the page](introduction.md#recovering-from-a-stale-build) to recover.
+
+To keep those tabs working, the `keepAssets` deploy step hardlinks the hashed web assets of the previous releases into the new release's `web/dist` before `current` is switched over. A tab that loaded any of the newest `keepReleases - 1` previous releases keeps finding its files, however many deploys happen in between. Only files listed in a release's own Vite build manifest (`web/dist/client-build-manifest.json`, or `web/dist/browser/client-build-manifest.json` for streaming SSR and RSC builds) are linked, so a release never passes on files it received from an earlier one, and the new release holds at most `keepReleases` builds' worth of assets. Every deploy reads those manifests directly from the kept release directories, so the result doesn't depend on earlier deploys having run this step.
+
+Nothing changes for how the web side is served. Nginx keeps serving from `current/web/dist`, and so does Cedar's own web server. Hardlinks share their data with the release they came from, so linking costs no disk space while that release exists. Once the `cleanup` step removes an old release directory, the assets that newer releases link to stay on disk until those releases are removed too, so expect up to `keepReleases - 1` extra builds' worth of web assets on disk compared to deploying without this step. Page loads and reloads always get the newest release, so pairing this with [`useNewVersionAvailable()`](introduction.md#detecting-new-deploys) lets you tell users that a new version is ready.
+
+Some things to be aware of:
+
+- Rolling back switches `current` to a release that was built before the one you're rolling back from, so it doesn't have that release's assets. Tabs that loaded the bad release fall back to the reload described above.
+- Only the web side is covered. The api side runs as a single process, so after a deploy an old tab talks to the new api. Keep GraphQL changes backward compatible for one deploy, or put up the [maintenance page](#maintenance-page) for a breaking change.
+- Servers that only have `api` in their `sides` skip this step. You can also skip it with `--no-keep-assets`.
 
 ## Maintenance Page
 

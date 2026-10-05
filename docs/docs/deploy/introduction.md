@@ -218,3 +218,5 @@ export default NewVersionBanner
 The hook fetches the URL the tab was loaded from and compares the content-hashed `<script type="module">` files in the response with the ones in the running page. It checks every 60 seconds, when the tab becomes visible again and when the browser comes back online. To check at a different interval, pass `intervalMs`: `useNewVersionAvailable({ intervalMs: 5 * 60_000 })`. The hook always returns `false` in development and during server rendering.
 
 On Netlify with skew protection enabled, an open tab keeps loading lazy chunks from the deploy it started on. The hook's check doesn't send cookies, so it always sees the latest deploy, and reloading the page gets the latest deploy too.
+
+On [Baremetal](baremetal.md#skew-protection), each deploy keeps the previous releases' hashed assets available, so open tabs keep working and a reload gets the newest release.
