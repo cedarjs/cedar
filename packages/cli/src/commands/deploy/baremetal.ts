@@ -63,6 +63,14 @@ export const builder = (yargs: Argv) => {
     type: 'boolean',
   })
 
+  yargs.option('keep-assets', {
+    describe:
+      "Hardlink previous releases' hashed web assets into the new release so " +
+      'open browser tabs keep working after the deploy',
+    default: true,
+    type: 'boolean',
+  })
+
   yargs.option('releaseDir', {
     describe:
       'Directory to create for the latest release, defaults to timestamp',
@@ -123,6 +131,7 @@ interface BaremetalArgs {
   build: boolean
   restart: boolean
   cleanup: boolean
+  keepAssets: boolean
   maintenance?: string
   rollback?: number
   verbose: boolean
@@ -142,6 +151,7 @@ export async function handler(yargs: BaremetalArgs) {
     build: yargs.build,
     restart: yargs.restart,
     cleanup: yargs.cleanup,
+    keepAssets: yargs.keepAssets,
     maintenance: yargs.maintenance,
     rollback: yargs.rollback,
     verbose: yargs.verbose,
