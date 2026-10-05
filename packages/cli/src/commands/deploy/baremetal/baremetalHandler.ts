@@ -20,7 +20,9 @@ const CONFIG_FILENAME = 'deploy.toml'
 const SYMLINK_FLAGS = '-nsf'
 const CURRENT_RELEASE_SYMLINK_NAME = 'current'
 const LIFECYCLE_HOOKS = ['before', 'after'] as const
-const WEB_DIST_DIR = 'web/dist'
+// Web build output directories, relative to a release. SPA and prerendered
+// builds write to the first, streaming SSR and RSC builds to the second.
+const WEB_DIST_DIRS = ['web/dist', 'web/dist/browser']
 const BUILD_MANIFEST_FILENAME = 'client-build-manifest.json'
 // Number of files passed to a single `ln` command when keeping web assets
 const LINK_BATCH_SIZE = 100
@@ -416,27 +418,50 @@ export const manifestAssetFiles = (manifestJson: string): string[] => {
 const shellQuote = (value: string) => `'${value.replaceAll("'", `'\\''`)}'`
 
 /**
- * Reads the files listed in a release's web build manifest. Returns
- * `undefined` when the release has no readable manifest, for example because
- * its web side was never built.
+ * Reads the web build manifest of a release and returns the build output
+ * directory it was found in together with the files it lists. Returns
+ * `undefined` when no manifest exists in any of the build output
+ * directories, for example because the release's web side was never built.
+ * Throws when a manifest exists but can't be parsed.
  */
 const readBuildManifest = async (ssh: SshExecutor, releasePath: string) => {
-  try {
-    const { stdout } = await ssh.exec(
-      pathJoin(releasePath, WEB_DIST_DIR),
-      'cat',
-      [BUILD_MANIFEST_FILENAME],
-    )
+  for (const distDir of WEB_DIST_DIRS) {
+    let stdout: string
 
-    return manifestAssetFiles(stdout)
-  } catch {
-    return undefined
+    try {
+      ;({ stdout } = await ssh.exec(pathJoin(releasePath, distDir), 'cat', [
+        BUILD_MANIFEST_FILENAME,
+      ]))
+    } catch {
+      continue
+    }
+
+    // Some shells print a banner before the command output (the disk space
+    // check sees "Non-interactive shell detected"), so parsing starts at the
+    // first `{`
+    const jsonStart = stdout.indexOf('{')
+    const json = jsonStart === -1 ? stdout : stdout.slice(jsonStart)
+
+    try {
+      return { distDir, files: manifestAssetFiles(json) }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e)
+      throw new Error(
+        `Could not parse ${pathJoin(releasePath, distDir, BUILD_MANIFEST_FILENAME)}: ${message}`,
+      )
+    }
   }
+
+  return undefined
 }
+
+export type KeepAssetsResult =
+  | { status: 'skipped'; reason: string }
+  | { status: 'done'; linkedCount: number; warnings: string[] }
 
 /**
  * Hardlinks the hashed web build output of the newest `keepReleases - 1`
- * previous releases into the new release's `web/dist`.
+ * previous releases into the new release's web build output directory.
  *
  * Cedar's router lazy-loads pages, so a browser tab that loaded an older
  * release keeps requesting that release's chunks after `current` points at
@@ -449,22 +474,35 @@ const readBuildManifest = async (ssh: SshExecutor, releasePath: string) => {
  * Hardlinks share the on-disk data with the release they came from, and the
  * data stays available after that release directory is deleted.
  *
- * Returns the number of linked files, or `undefined` when the new release has
- * no build manifest to compare against. Problems with an individual previous
- * release are reported through `warn` and don't stop the other releases from
- * being linked.
+ * The result is `skipped` when the new release has no readable build
+ * manifest to compare against. Problems with an individual previous release
+ * are collected as warnings and don't stop the other releases from being
+ * linked.
  */
 export const keepPreviousAssets = async (
   yargs: BaremetalYargs,
   ssh: SshExecutor,
   serverConfig: ServerConfig,
-  warn: (message: string) => void,
-) => {
+): Promise<KeepAssetsResult> => {
   const newReleasePath = pathJoin(serverConfig.path, yargs.releaseDir)
-  const newReleaseFiles = await readBuildManifest(ssh, newReleasePath)
+  let newRelease: Awaited<ReturnType<typeof readBuildManifest>>
 
-  if (!newReleaseFiles) {
-    return undefined
+  try {
+    newRelease = await readBuildManifest(ssh, newReleasePath)
+  } catch (e) {
+    const reason = e instanceof Error ? e.message : String(e)
+    return { status: 'skipped', reason }
+  }
+
+  if (!newRelease) {
+    return {
+      status: 'skipped',
+      reason:
+        `No ${BUILD_MANIFEST_FILENAME} in ` +
+        WEB_DIST_DIRS.map((dir) => pathJoin(yargs.releaseDir, dir)).join(
+          ' or ',
+        ),
+    }
   }
 
   const { stdout } = await ssh.exec(serverConfig.path, 'ls')
@@ -476,19 +514,32 @@ export const keepPreviousAssets = async (
     .reverse()
     .slice(0, Math.max(serverConfig.keepReleases - 1, 0))
 
-  const presentFiles = new Set(newReleaseFiles)
+  const presentFiles = new Set(newRelease.files)
+  const warnings: string[] = []
   let linkedCount = 0
 
   for (const release of previousReleases) {
     const releasePath = pathJoin(serverConfig.path, release)
-    const releaseFiles = await readBuildManifest(ssh, releasePath)
+    let previousRelease: Awaited<ReturnType<typeof readBuildManifest>>
 
-    if (!releaseFiles) {
-      warn(`Release ${release} has no web build manifest, skipping its assets`)
+    try {
+      previousRelease = await readBuildManifest(ssh, releasePath)
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e)
+      warnings.push(`Skipping the web assets of release ${release}: ${message}`)
       continue
     }
 
-    const missingFiles = releaseFiles.filter((file) => !presentFiles.has(file))
+    if (!previousRelease) {
+      warnings.push(
+        `Release ${release} has no web build manifest, skipping its assets`,
+      )
+      continue
+    }
+
+    const missingFiles = previousRelease.files.filter(
+      (file) => !presentFiles.has(file),
+    )
 
     if (missingFiles.length === 0) {
       continue
@@ -503,7 +554,7 @@ export const keepPreviousAssets = async (
 
     try {
       for (const [dir, files] of filesByDir) {
-        const targetDir = pathJoin(newReleasePath, WEB_DIST_DIR, dir)
+        const targetDir = pathJoin(newReleasePath, newRelease.distDir, dir)
 
         await ssh.exec(newReleasePath, 'mkdir', ['-p', shellQuote(targetDir)])
 
@@ -511,7 +562,7 @@ export const keepPreviousAssets = async (
           const sources = files
             .slice(i, i + LINK_BATCH_SIZE)
             .map((file) =>
-              shellQuote(pathJoin(releasePath, WEB_DIST_DIR, file)),
+              shellQuote(pathJoin(releasePath, previousRelease.distDir, file)),
             )
 
           // `-f` replaces a link that an interrupted earlier run of this step
@@ -526,7 +577,9 @@ export const keepPreviousAssets = async (
       }
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e)
-      warn(`Could not keep the web assets of release ${release}: ${message}`)
+      warnings.push(
+        `Could not keep the web assets of release ${release}: ${message}`,
+      )
       continue
     }
 
@@ -537,7 +590,7 @@ export const keepPreviousAssets = async (
     linkedCount += missingFiles.length
   }
 
-  return linkedCount
+  return { status: 'done', linkedCount, warnings }
 }
 
 /**
@@ -736,27 +789,22 @@ export const deployTasks = (
           _ctx: unknown,
           task: { output: string; skip: (msg: string) => void },
         ) => {
-          const linkedCount = await keepPreviousAssets(
-            yargs,
-            ssh,
-            serverConfig,
-            (message) => {
-              task.output = c.warning(message)
-            },
-          )
+          const result = await keepPreviousAssets(yargs, ssh, serverConfig)
 
-          if (linkedCount === undefined) {
+          if (result.status === 'skipped') {
             return task.skip(
               c.warning(
-                `Warning: No ${BUILD_MANIFEST_FILENAME} in ` +
-                  `${yargs.releaseDir}/${WEB_DIST_DIR}, not keeping the web ` +
-                  'assets of previous releases',
+                `Warning: ${result.reason}, not keeping the web assets of ` +
+                  'previous releases',
               ),
             )
           }
 
           // This will only show if --verbose is passed
-          task.output = `Linked ${linkedCount} file(s) from previous releases`
+          task.output = [
+            `Linked ${result.linkedCount} file(s) from previous releases`,
+            ...result.warnings.map((warning) => c.warning(warning)),
+          ].join('\n')
         },
       },
     }),

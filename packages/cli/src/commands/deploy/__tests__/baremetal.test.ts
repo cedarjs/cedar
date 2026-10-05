@@ -1071,6 +1071,53 @@ describe('deployTasks', () => {
     )
   })
 
+  it('reports linked files and warnings as task output', async () => {
+    const releaseDir = '20220409120000'
+    const previous = '20220408120000'
+    vi.spyOn(sshExecutor, 'exec').mockImplementation(async (path, command) => {
+      const ok = (stdout: string) => ({
+        stdout,
+        stderr: '',
+        code: 0,
+        signal: null,
+      })
+
+      if (command === 'ls') {
+        return ok(`20220407120000\n${previous}\n${releaseDir}\n`)
+      }
+
+      if (command === 'cat') {
+        if (path.includes(releaseDir)) {
+          return ok(JSON.stringify({ a: { file: 'assets/new-Aaaaaaaa.js' } }))
+        }
+
+        if (path.includes(previous)) {
+          return ok(JSON.stringify({ a: { file: 'assets/old-Bbbbbbbb.js' } }))
+        }
+
+        throw new Error('cat: client-build-manifest.json: No such file')
+      }
+
+      return ok('')
+    })
+    const task = { output: '', skip: vi.fn() }
+
+    const tasks = baremetal.deployTasks(
+      defaultYargs,
+      sshExecutor,
+      { ...defaultServerConfig, sides: ['api', 'web'] },
+      { before: {}, after: {} },
+    )
+
+    await tasks[7].task({}, task)
+
+    expect(task.skip).not.toHaveBeenCalled()
+    expect(task.output).toMatch(/^Linked 1 file\(s\) from previous releases\n/)
+    expect(task.output).toMatch(
+      'Release 20220407120000 has no web build manifest, skipping its assets',
+    )
+  })
+
   it('injects lifecycle events for keepAssets', () => {
     const tasks = baremetal.deployTasks(
       defaultYargs,
@@ -1239,7 +1286,6 @@ describe('keepPreviousAssets', () => {
 
   const yargs = createBaremetalYargs({ releaseDir: NEW_RELEASE })
   const serverConfig = createServerConfig({ sides: ['api', 'web'] })
-  const warn = vi.fn()
 
   const sshResponse = (stdout: string) => ({
     stdout,
@@ -1272,15 +1318,17 @@ describe('keepPreviousAssets', () => {
 
   /**
    * Fakes a server with the four releases above plus the usual non-release
-   * entries in the app directory. `cat` returns the release's manifest or
-   * fails when the release has none. `failLinksFor` makes `ln` fail for files
-   * from that release.
+   * entries in the app directory. `cat` returns the release's manifest from
+   * `distDir` or fails when the release has none. `failLinksFor` makes `ln`
+   * fail for files from that release.
    */
   const mockServer = ({
     manifests = defaultManifests,
+    distDir = 'web/dist',
     failLinksFor,
   }: {
     manifests?: Record<string, string | undefined>
+    distDir?: string
     failLinksFor?: string
   } = {}) =>
     vi
@@ -1301,7 +1349,7 @@ describe('keepPreviousAssets', () => {
         }
 
         if (command === 'cat') {
-          const release = path.match(/\/(\d{14})\/web\/dist$/)?.[1]
+          const release = path.match(new RegExp(`/(\\d{14})/${distDir}$`))?.[1]
           const manifest = release && manifests[release]
 
           if (!manifest) {
@@ -1334,15 +1382,13 @@ describe('keepPreviousAssets', () => {
   it('links the files of previous releases that the new release does not have', async () => {
     const execSpy = mockServer()
 
-    const linkedCount = await baremetal.keepPreviousAssets(
+    const result = await baremetal.keepPreviousAssets(
       yargs,
       sshExecutor,
       serverConfig,
-      warn,
     )
 
-    expect(linkedCount).toEqual(4)
-    expect(warn).not.toHaveBeenCalled()
+    expect(result).toEqual({ status: 'done', linkedCount: 4, warnings: [] })
     expect(execSpy).toHaveBeenCalledWith(
       `/var/www/app/${NEW_RELEASE}`,
       'mkdir',
@@ -1371,14 +1417,12 @@ describe('keepPreviousAssets', () => {
   it('only considers the newest `keepReleases - 1` previous releases', async () => {
     const execSpy = mockServer()
 
-    const linkedCount = await baremetal.keepPreviousAssets(
-      yargs,
-      sshExecutor,
-      { ...serverConfig, keepReleases: 2 },
-      warn,
-    )
+    const result = await baremetal.keepPreviousAssets(yargs, sshExecutor, {
+      ...serverConfig,
+      keepReleases: 2,
+    })
 
-    expect(linkedCount).toEqual(2)
+    expect(result).toEqual({ status: 'done', linkedCount: 2, warnings: [] })
     expect(linkCalls(execSpy)).toHaveLength(1)
     expect(linkCalls(execSpy)[0]?.[1]).toContain(PREVIOUS_RELEASE)
     expect(execSpy).not.toHaveBeenCalledWith(
@@ -1391,31 +1435,88 @@ describe('keepPreviousAssets', () => {
   it('links nothing when only one release is kept', async () => {
     const execSpy = mockServer()
 
-    const linkedCount = await baremetal.keepPreviousAssets(
-      yargs,
-      sshExecutor,
-      { ...serverConfig, keepReleases: 1 },
-      warn,
-    )
+    const result = await baremetal.keepPreviousAssets(yargs, sshExecutor, {
+      ...serverConfig,
+      keepReleases: 1,
+    })
 
-    expect(linkedCount).toEqual(0)
+    expect(result).toEqual({ status: 'done', linkedCount: 0, warnings: [] })
     expect(linkCalls(execSpy)).toHaveLength(0)
   })
 
-  it('returns undefined without listing releases when the new release has no manifest', async () => {
+  it('is skipped without listing releases when the new release has no manifest', async () => {
     const execSpy = mockServer({
       manifests: { ...defaultManifests, [NEW_RELEASE]: undefined },
     })
 
-    const linkedCount = await baremetal.keepPreviousAssets(
+    const result = await baremetal.keepPreviousAssets(
       yargs,
       sshExecutor,
       serverConfig,
-      warn,
     )
 
-    expect(linkedCount).toBeUndefined()
+    expect(result).toEqual({
+      status: 'skipped',
+      reason:
+        `No client-build-manifest.json in ${NEW_RELEASE}/web/dist or ` +
+        `${NEW_RELEASE}/web/dist/browser`,
+    })
     expect(execSpy).not.toHaveBeenCalledWith('/var/www/app', 'ls')
+  })
+
+  it('is skipped with the parse error when the new release has a corrupt manifest', async () => {
+    mockServer({
+      manifests: { ...defaultManifests, [NEW_RELEASE]: '{ not json' },
+    })
+
+    const result = await baremetal.keepPreviousAssets(
+      yargs,
+      sshExecutor,
+      serverConfig,
+    )
+
+    expect(result).toMatchObject({ status: 'skipped' })
+    expect(result.status === 'skipped' && result.reason).toMatch(
+      `Could not parse /var/www/app/${NEW_RELEASE}/web/dist/client-build-manifest.json: `,
+    )
+  })
+
+  it('reads the manifest from web/dist/browser for streaming SSR and RSC builds', async () => {
+    const execSpy = mockServer({ distDir: 'web/dist/browser' })
+
+    const result = await baremetal.keepPreviousAssets(yargs, sshExecutor, {
+      ...serverConfig,
+      keepReleases: 2,
+    })
+
+    expect(result).toEqual({ status: 'done', linkedCount: 2, warnings: [] })
+    expect(linkCalls(execSpy)).toEqual([
+      [
+        '-f',
+        `'/var/www/app/${PREVIOUS_RELEASE}/web/dist/browser/assets/index-Prev00000.js'`,
+        `'/var/www/app/${PREVIOUS_RELEASE}/web/dist/browser/assets/logo-Prev00000.png'`,
+        `'/var/www/app/${NEW_RELEASE}/web/dist/browser/assets'`,
+      ],
+    ])
+  })
+
+  it('ignores shell output printed before the manifest', async () => {
+    mockServer({
+      manifests: Object.fromEntries(
+        Object.entries(defaultManifests).map(([release, manifest]) => [
+          release,
+          `Non-interactive shell detected\n${manifest}`,
+        ]),
+      ),
+    })
+
+    const result = await baremetal.keepPreviousAssets(
+      yargs,
+      sshExecutor,
+      serverConfig,
+    )
+
+    expect(result).toEqual({ status: 'done', linkedCount: 4, warnings: [] })
   })
 
   it('warns about a previous release without a manifest and keeps going', async () => {
@@ -1423,19 +1524,40 @@ describe('keepPreviousAssets', () => {
       manifests: { ...defaultManifests, [PREVIOUS_RELEASE]: undefined },
     })
 
-    const linkedCount = await baremetal.keepPreviousAssets(
+    const result = await baremetal.keepPreviousAssets(
       yargs,
       sshExecutor,
       serverConfig,
-      warn,
     )
 
-    expect(warn).toHaveBeenCalledExactlyOnceWith(
-      `Release ${PREVIOUS_RELEASE} has no web build manifest, skipping its assets`,
-    )
-    expect(linkedCount).toEqual(2)
+    expect(result).toEqual({
+      status: 'done',
+      linkedCount: 2,
+      warnings: [
+        `Release ${PREVIOUS_RELEASE} has no web build manifest, skipping its assets`,
+      ],
+    })
     expect(linkCalls(execSpy)[0]?.[1]).toContain(OLDER_RELEASE)
     expect(linkCalls(execSpy)[1]?.[1]).toContain(OLDEST_RELEASE)
+  })
+
+  it('warns about a previous release with a corrupt manifest and keeps going', async () => {
+    mockServer({
+      manifests: { ...defaultManifests, [PREVIOUS_RELEASE]: 'not json' },
+    })
+
+    const result = await baremetal.keepPreviousAssets(
+      yargs,
+      sshExecutor,
+      serverConfig,
+    )
+
+    expect(result).toMatchObject({ status: 'done', linkedCount: 2 })
+    expect(result.status === 'done' && result.warnings).toHaveLength(1)
+    expect(result.status === 'done' && result.warnings[0]).toMatch(
+      `Skipping the web assets of release ${PREVIOUS_RELEASE}: Could not parse ` +
+        `/var/www/app/${PREVIOUS_RELEASE}/web/dist/client-build-manifest.json: `,
+    )
   })
 
   it('warns when linking fails for a release and lets an older release provide the same files', async () => {
@@ -1451,22 +1573,22 @@ describe('keepPreviousAssets', () => {
       failLinksFor: PREVIOUS_RELEASE,
     })
 
-    const linkedCount = await baremetal.keepPreviousAssets(
+    const result = await baremetal.keepPreviousAssets(
       yargs,
       sshExecutor,
       serverConfig,
-      warn,
     )
 
-    expect(warn).toHaveBeenCalledExactlyOnceWith(
-      expect.stringContaining(
-        `Could not keep the web assets of release ${PREVIOUS_RELEASE}: ` +
-          'ln: failed to create hard link',
-      ),
-    )
     // `common-Abcdef00.js` from the older release plus the oldest release's
     // own file
-    expect(linkedCount).toEqual(2)
+    expect(result).toEqual({
+      status: 'done',
+      linkedCount: 2,
+      warnings: [
+        `Could not keep the web assets of release ${PREVIOUS_RELEASE}: ` +
+          'ln: failed to create hard link',
+      ],
+    })
     expect(linkCalls(execSpy)).toContainEqual([
       '-f',
       `'/var/www/app/${OLDER_RELEASE}/web/dist/assets/common-Abcdef00.js'`,
@@ -1489,14 +1611,12 @@ describe('keepPreviousAssets', () => {
       },
     })
 
-    const linkedCount = await baremetal.keepPreviousAssets(
-      yargs,
-      sshExecutor,
-      { ...serverConfig, keepReleases: 2 },
-      warn,
-    )
+    const result = await baremetal.keepPreviousAssets(yargs, sshExecutor, {
+      ...serverConfig,
+      keepReleases: 2,
+    })
 
-    expect(linkedCount).toEqual(151)
+    expect(result).toEqual({ status: 'done', linkedCount: 151, warnings: [] })
     expect(execSpy).toHaveBeenCalledWith(
       `/var/www/app/${NEW_RELEASE}`,
       'mkdir',
@@ -1519,12 +1639,10 @@ describe('keepPreviousAssets', () => {
       },
     })
 
-    await baremetal.keepPreviousAssets(
-      yargs,
-      sshExecutor,
-      { ...serverConfig, keepReleases: 2 },
-      warn,
-    )
+    await baremetal.keepPreviousAssets(yargs, sshExecutor, {
+      ...serverConfig,
+      keepReleases: 2,
+    })
 
     expect(linkCalls(execSpy)[0]?.[1]).toEqual(
       `'/var/www/app/${PREVIOUS_RELEASE}/web/dist/assets/it'\\''s-Abc12345.png'`,
