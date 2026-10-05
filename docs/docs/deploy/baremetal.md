@@ -45,7 +45,8 @@ The Baremetal deploy runs several commands in sequence. These can be customized,
 9. Hardlinks the hashed web assets of the previous releases into the new release (see [Skew Protection](#skew-protection))
 10. Symlink the latest deploy dir to `current` in the app dir
 11. Restart the serving process(es)
-12. Remove older deploy directories
+12. Request the api side's health check endpoint until it responds (see [Health Check](#health-check))
+13. Remove older deploy directories
 
 ### First Run Lifecycle
 
@@ -177,6 +178,8 @@ This lists a single server, in the `production` environment, providing the hostn
 - `branch` - [optional] The branch to deploy (defaults to `main`)
 - `keepReleases` - [optional] The number of previous releases to keep on the server, including the one currently being served (defaults to 5)
 - `freeSpaceRequired` - [optional] The amount of free space required on the server in MB (defaults to 2048 MB). You can set this to `0` to skip checking.
+- `healthCheckUrl` - [optional] The URL requested on the server after its processes have been restarted, see [Health Check](#health-check). Defaults to `http://localhost:<port>/graphql/health`, where `<port>` is `[api].port` from `cedar.toml`, on servers whose `sides` include `api`. Set this to `false` to skip the check.
+- `healthCheckTimeout` - [optional] The number of seconds to keep retrying the health check before the deploy fails (defaults to 30)
 
 The easiest connection method is generally to include your own public key in the server's `~/.ssh/authorized_keys` mannually or by running `ssh-copy-id user@server.com` from your local machine, [enable agent forwarding](https://docs.github.com/en/developers/overview/using-ssh-agent-forwarding), and then set `agentForward = true` in `deploy.toml`. This will allow you to use your own credentials when pulling code from GitHub (required for private repos). Otherwise you can create a [deploy key](https://docs.github.com/en/developers/overview/managing-deploy-keys) and keep it on the server.
 
@@ -466,7 +469,8 @@ Baremetal supports running your own custom commands before or after the regular 
 7. `keepAssets` - hardlink the hashed web assets of the previous releases into the new release
 8. `symlinkCurrent` - symlink the new deploy dir to `current` in the app dir
 9. `restart` - (re)starting any pm2 processes (your custom command will run before/after each process is restarted)
-10. `cleanup` - cleaning up any old releases
+10. `healthCheck` - requesting the [health check](#health-check) URL until it responds
+11. `cleanup` - cleaning up any old releases
 
 You can define your before/after commands in three different places:
 
@@ -562,6 +566,29 @@ Would result in the commands running in this order, all before running `yarn ins
 2. `touch prod-install1.lock`
 3. `touch prod-install2.lock`
 4. `touch server-install.lock`
+
+## Health Check
+
+Restarting a process with `pm2 restart` (or `systemctl restart`) returns as soon as the process manager has been told to restart it. It doesn't say whether the new release actually started. A release that passes the build but crashes on startup, for example because the GraphQL schema fails to parse when the server merges it, leaves the process crash-looping while the `current` symlink already points at the new release, and every request to the site fails until someone notices.
+
+To catch this, the deploy requests the api side's health check endpoint on the server after the last process has been restarted. It runs `curl` on the server against `http://localhost:<port>/graphql/health`, where `<port>` is `[api].port` from `cedar.toml` (8911 by default). Both `cedar serve` and `cedar serve api` listen on that port. The request is retried every two seconds until it returns a 2xx status or `healthCheckTimeout` seconds (30 by default) have passed. A process that is still starting up passes once it's ready. A process that never comes up, or that responds with an error status, fails the deploy with the reason of the last attempt, the command to roll back, and how to change the check.
+
+The check runs after the restart during both a deploy and a `--rollback`, so rolling back to a release that doesn't start fails just as loudly. It is skipped together with the restart step when you deploy with `--no-restart`.
+
+Servers whose `sides` don't include `api` have no health check endpoint to request, so nothing is checked on them unless you set `healthCheckUrl`. You can also set `healthCheckUrl` to request a different URL, for example the public URL that goes through your reverse proxy, or a web server's root page:
+
+```toml title="deploy.toml"
+[[production.servers]]
+host = "web.server.com"
+sides = ["web"]
+processNames = ["web"]
+healthCheckUrl = "http://localhost:8910/"
+healthCheckTimeout = 60
+```
+
+Set `healthCheckUrl = false` on a server to skip the check there, for example when your app doesn't expose Cedar's GraphQL handler. `curl` needs to be installed on the server for the check to run.
+
+Failing the deploy doesn't undo anything on the server. The new release stays live as `current`, so look at the process logs (`pm2 logs`, or `journalctl` for systemd) to find out why it didn't start, and [roll back](#rollback) if you need the site up while you fix it.
 
 ## Rollback
 

@@ -19,6 +19,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     getPaths: () => ({
       base: returnEmptyBasePath ? testDir : `${testDir}/fixtures`,
     }),
+    getConfig: () => ({ api: { port: 8911 } }),
   }
 })
 
@@ -52,6 +53,7 @@ function createServerConfig(
     sides: ['api'],
     keepReleases: 5,
     freeSpaceRequired: 2048,
+    healthCheckTimeout: 30,
     ...overrides,
   }
 }
@@ -225,6 +227,31 @@ describe('verifyServerConfig', () => {
       ),
     ).toEqual(true)
   })
+
+  it('throws an error if healthCheckUrl is not a URL or false', () => {
+    expect(() => {
+      baremetal.verifyServerConfig(
+        // @ts-expect-error - Testing an invalid value from deploy.toml
+        createServerConfig({ healthCheckUrl: true }),
+      )
+    }).toThrow('"healthCheckUrl" must be a URL or `false`')
+  })
+
+  it('allows healthCheckUrl to be false', () => {
+    expect(
+      baremetal.verifyServerConfig(
+        createServerConfig({ healthCheckUrl: false }),
+      ),
+    ).toEqual(true)
+  })
+
+  it('throws an error if healthCheckTimeout is not an integer', () => {
+    expect(() => {
+      baremetal.verifyServerConfig(
+        createServerConfig({ healthCheckTimeout: '30s' }),
+      )
+    }).toThrow('"healthCheckTimeout" must be an integer >= 0')
+  })
 })
 
 describe('maintenanceTasks', () => {
@@ -261,9 +288,12 @@ describe('rollbackTasks', () => {
       createServerConfig({ processNames: ['api'] }),
     )
 
-    expect(tasks1.length).toEqual(2)
+    expect(tasks1.length).toEqual(3)
     expect(tasks1[0].title).toMatch('Rolling back 1')
     expect(tasks1[1].title).toMatch('Restarting')
+    expect(tasks1[2].title).toEqual(
+      'Checking http://localhost:8911/graphql/health...',
+    )
 
     const tasks2 = baremetal.rollbackTasks(
       5,
@@ -364,6 +394,7 @@ describe('serverConfigWithDefaults', () => {
       sides: ['native', 'cli'],
       keepReleases: 2,
       freeSpaceRequired: 1000,
+      healthCheckTimeout: 10,
     }
     const config = baremetal.serverConfigWithDefaults(
       serverConfig,
@@ -410,6 +441,16 @@ describe('serverConfigWithDefaults', () => {
       createBaremetalYargs(),
     )
     expect(config.freeSpaceRequired).toEqual(2048)
+  })
+
+  it('provides default healthCheckTimeout', () => {
+    const config = baremetal.serverConfigWithDefaults(
+      {},
+      createBaremetalYargs(),
+    )
+
+    expect(config.healthCheckTimeout).toEqual(30)
+    expect(config.healthCheckUrl).toBeUndefined()
   })
 })
 
@@ -782,7 +823,7 @@ describe('deployTasks', () => {
       { before: {}, after: {} },
     )
 
-    expect(Object.keys(tasks).length).toEqual(10)
+    expect(Object.keys(tasks).length).toEqual(11)
     expect(tasks[0].title).toEqual('Checking available disk space...')
     expect(tasks[0].skip?.()).toEqual(false)
     expect(tasks[1].title).toMatch('Cloning')
@@ -802,8 +843,12 @@ describe('deployTasks', () => {
     expect(tasks[7].skip?.()).toEqual(false)
     expect(tasks[8].title).toMatch('Restarting serve')
     expect(tasks[8].skip?.()).toEqual(false)
-    expect(tasks[9].title).toMatch('Cleaning up')
+    expect(tasks[9].title).toEqual(
+      'Checking http://localhost:8911/graphql/health...',
+    )
     expect(tasks[9].skip?.()).toEqual(false)
+    expect(tasks[10].title).toMatch('Cleaning up')
+    expect(tasks[10].skip?.()).toEqual(false)
   })
 
   it('skips the available space check if --no-df is passed', () => {
@@ -926,7 +971,7 @@ describe('deployTasks', () => {
       { before: {}, after: {} },
     )
 
-    expect(Object.keys(tasks).length).toEqual(11)
+    expect(Object.keys(tasks).length).toEqual(12)
     expect(tasks[5].title).toMatch('Building api')
     expect(tasks[6].title).toMatch('Building web')
     expect(tasks[7].title).toMatch('Keeping web assets')
@@ -941,7 +986,7 @@ describe('deployTasks', () => {
       { before: {}, after: {} },
     )
 
-    expect(Object.keys(tasks).length).toEqual(10)
+    expect(Object.keys(tasks).length).toEqual(11)
     expect(tasks[4].skip?.()).toEqual(true)
   })
 
@@ -953,7 +998,7 @@ describe('deployTasks', () => {
       { before: {}, after: {} },
     )
 
-    expect(Object.keys(tasks).length).toEqual(11)
+    expect(Object.keys(tasks).length).toEqual(12)
     expect(tasks[8].title).toMatch('Starting serve')
     expect(tasks[9].title).toMatch('Saving serve')
   })
@@ -1004,7 +1049,7 @@ describe('deployTasks', () => {
     expect(tasks[5].skip?.()).toEqual(true)
   })
 
-  it('skips restart if --no-restart flag passed', () => {
+  it('skips restart and the health check if --no-restart flag passed', () => {
     const tasks = baremetal.deployTasks(
       { ...defaultYargs, restart: false },
       sshExecutor,
@@ -1013,6 +1058,102 @@ describe('deployTasks', () => {
     )
 
     expect(tasks[8].skip?.()).toEqual(true)
+    expect(tasks[9].skip?.()).toEqual(true)
+  })
+
+  it('skips the health check if healthCheckUrl is false in config', () => {
+    const tasks = baremetal.deployTasks(
+      defaultYargs,
+      sshExecutor,
+      { ...defaultServerConfig, healthCheckUrl: false },
+      { before: {}, after: {} },
+    )
+
+    expect(tasks[9].title).toEqual('Checking health...')
+    expect(tasks[9].skip?.()).toEqual(true)
+  })
+
+  it('skips the health check on servers without the api side', () => {
+    const tasks = baremetal.deployTasks(
+      defaultYargs,
+      sshExecutor,
+      { ...defaultServerConfig, sides: ['web'] },
+      { before: {}, after: {} },
+    )
+
+    expect(tasks[9].skip?.()).toEqual(true)
+  })
+
+  it('checks a configured healthCheckUrl', () => {
+    const tasks = baremetal.deployTasks(
+      defaultYargs,
+      sshExecutor,
+      {
+        ...defaultServerConfig,
+        sides: ['web'],
+        healthCheckUrl: 'http://localhost:8910/',
+      },
+      { before: {}, after: {} },
+    )
+
+    expect(tasks[9].title).toEqual('Checking http://localhost:8910/...')
+    expect(tasks[9].skip?.()).toEqual(false)
+  })
+
+  it('runs the health check after the first start too', () => {
+    const tasks = baremetal.deployTasks(
+      { ...defaultYargs, firstRun: true },
+      sshExecutor,
+      defaultServerConfig,
+      { before: {}, after: {} },
+    )
+
+    expect(tasks[8].title).toMatch('Starting serve process for the first time')
+    expect(tasks[9].title).toMatch('Saving serve state')
+    expect(tasks[10].title).toEqual(
+      'Checking http://localhost:8911/graphql/health...',
+    )
+    expect(tasks[10].skip?.()).toEqual(false)
+  })
+
+  it('runs the health check once after all processes are restarted', () => {
+    const tasks = baremetal.deployTasks(
+      defaultYargs,
+      sshExecutor,
+      { ...defaultServerConfig, processNames: ['api', 'web'] },
+      { before: {}, after: {} },
+    )
+
+    expect(tasks[8].title).toMatch('Restarting api')
+    expect(tasks[9].title).toMatch('Restarting web')
+    expect(tasks[10].title).toMatch('Checking http://')
+    expect(tasks[11].title).toMatch('Cleaning up')
+  })
+
+  it('fails the deploy when the health check does not pass', async () => {
+    vi.spyOn(sshExecutor, 'exec').mockRejectedValue(
+      new Error('curl: (7) Failed to connect to localhost port 8911'),
+    )
+
+    const tasks = baremetal.deployTasks(
+      defaultYargs,
+      sshExecutor,
+      { ...defaultServerConfig, healthCheckTimeout: 0 },
+      { before: {}, after: {} },
+    )
+
+    await expect(tasks[9].task({}, { output: '' })).rejects.toThrow(
+      'Health check failed: http://localhost:8911/graphql/health did not ' +
+        'respond successfully within 0 seconds of restarting the serve ' +
+        'process(es).\n' +
+        'Last attempt: curl: (7) Failed to connect to localhost port 8911\n\n' +
+        'The new release is live as `current`. Check the process logs on ' +
+        'the server, or roll back to the previous release with `yarn cedar ' +
+        'deploy baremetal production --rollback`.\n' +
+        'If your app serves its health check somewhere else, set ' +
+        '`healthCheckUrl` in deploy.toml. Set it to `false` to skip the ' +
+        'check. See https://cedarjs.com/docs/deploy/baremetal#health-check',
+    )
   })
 
   it('skips cleanup if --no-cleanup flag passed', () => {
@@ -1023,7 +1164,7 @@ describe('deployTasks', () => {
       { before: {}, after: {} },
     )
 
-    expect(tasks[9].skip?.()).toEqual(true)
+    expect(tasks[10].skip?.()).toEqual(true)
   })
 
   it('skips keeping web assets if --no-keep-assets flag passed', () => {
@@ -1126,7 +1267,7 @@ describe('deployTasks', () => {
       { before: { keepAssets: ['touch before-keep.txt'] }, after: {} },
     )
 
-    expect(Object.keys(tasks).length).toEqual(11)
+    expect(Object.keys(tasks).length).toEqual(12)
     expect(tasks[6].title).toMatch('Before keepAssets: `touch before-keep.txt`')
     expect(tasks[7].title).toMatch('Keeping web assets')
   })
@@ -1139,7 +1280,7 @@ describe('deployTasks', () => {
       { before: { update: ['touch before-update.txt'] }, after: {} },
     )
 
-    expect(Object.keys(tasks).length).toEqual(11)
+    expect(Object.keys(tasks).length).toEqual(12)
     expect(tasks[1].title).toMatch('Before update: `touch before-update.txt`')
     expect(tasks[2].title).toMatch('Cloning')
   })
@@ -1152,7 +1293,7 @@ describe('deployTasks', () => {
       { before: { install: ['touch before-install.txt'] }, after: {} },
     )
 
-    expect(Object.keys(tasks).length).toEqual(11)
+    expect(Object.keys(tasks).length).toEqual(12)
     expect(tasks[3].title).toMatch('Before install: `touch before-install.txt`')
     expect(tasks[4].title).toMatch('Install')
   })
@@ -1165,7 +1306,7 @@ describe('deployTasks', () => {
       { before: { migrate: ['touch before-migrate.txt'] }, after: {} },
     )
 
-    expect(Object.keys(tasks).length).toEqual(11)
+    expect(Object.keys(tasks).length).toEqual(12)
     expect(tasks[4].title).toMatch('Before migrate: `touch before-migrate.txt`')
     expect(tasks[5].title).toMatch('DB Migrations')
   })
@@ -1178,7 +1319,7 @@ describe('deployTasks', () => {
       { before: { build: ['touch before-build.txt'] }, after: {} },
     )
 
-    expect(Object.keys(tasks).length).toEqual(11)
+    expect(Object.keys(tasks).length).toEqual(12)
     expect(tasks[5].title).toMatch('Before build: `touch before-build.txt`')
     expect(tasks[6].title).toMatch('Building api')
   })
@@ -1191,7 +1332,7 @@ describe('deployTasks', () => {
       { before: { restart: ['touch before-restart.txt'] }, after: {} },
     )
 
-    expect(Object.keys(tasks).length).toEqual(11)
+    expect(Object.keys(tasks).length).toEqual(12)
     expect(tasks[8].title).toMatch('Before restart: `touch before-restart.txt`')
     expect(tasks[9].title).toMatch('Restarting')
   })
@@ -1204,9 +1345,11 @@ describe('deployTasks', () => {
       { before: { cleanup: ['touch before-cleanup.txt'] }, after: {} },
     )
 
-    expect(Object.keys(tasks).length).toEqual(11)
-    expect(tasks[9].title).toMatch('Before cleanup: `touch before-cleanup.txt`')
-    expect(tasks[10].title).toMatch('Cleaning up')
+    expect(Object.keys(tasks).length).toEqual(12)
+    expect(tasks[10].title).toMatch(
+      'Before cleanup: `touch before-cleanup.txt`',
+    )
+    expect(tasks[11].title).toMatch('Cleaning up')
   })
 
   it('only deletes release directories when cleaning up old deploys', async () => {
@@ -1233,6 +1376,156 @@ describe('deployTasks', () => {
       '/var/www/app',
       "ls -t | grep -E '^[0-9]{14}$' | tail -n +4 | xargs -r rm -rf",
     )
+  })
+})
+
+describe('healthCheckUrl', () => {
+  it('defaults to the graphql health endpoint on the api port', () => {
+    expect(baremetal.healthCheckUrl(createServerConfig())).toEqual(
+      'http://localhost:8911/graphql/health',
+    )
+    expect(
+      baremetal.healthCheckUrl(createServerConfig({ sides: ['api', 'web'] })),
+    ).toEqual('http://localhost:8911/graphql/health')
+  })
+
+  it('has nothing to check on a server without the api side', () => {
+    expect(
+      baremetal.healthCheckUrl(createServerConfig({ sides: ['web'] })),
+    ).toBeUndefined()
+  })
+
+  it('uses a configured url on any server', () => {
+    expect(
+      baremetal.healthCheckUrl(
+        createServerConfig({
+          sides: ['web'],
+          healthCheckUrl: 'http://localhost:8910/',
+        }),
+      ),
+    ).toEqual('http://localhost:8910/')
+  })
+
+  it('is disabled with false', () => {
+    expect(
+      baremetal.healthCheckUrl(createServerConfig({ healthCheckUrl: false })),
+    ).toBeUndefined()
+  })
+})
+
+describe('waitForHealthCheck', () => {
+  const url = 'http://localhost:8911/graphql/health'
+  const ok = { stdout: '', stderr: '', code: 0, signal: null }
+
+  beforeEach(() => {
+    vi.restoreAllMocks()
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.restoreAllMocks()
+  })
+
+  it('requests the url on the server with curl', async () => {
+    const execSpy = vi.spyOn(sshExecutor, 'exec').mockResolvedValue(ok)
+
+    await baremetal.waitForHealthCheck({
+      url: "http://localhost:8911/it's-healthy",
+      timeoutSeconds: 30,
+      ssh: sshExecutor,
+      serverConfig: createServerConfig(),
+      nextSteps: [],
+    })
+
+    expect(execSpy).toHaveBeenCalledExactlyOnceWith('/var/www/app', 'curl', [
+      '--fail',
+      '--silent',
+      '--show-error',
+      '--output',
+      '/dev/null',
+      '--max-time',
+      '5',
+      "'http://localhost:8911/it'\\''s-healthy'",
+    ])
+  })
+
+  it('retries until the url responds', async () => {
+    const onFailedAttempt = vi.fn()
+    const execSpy = vi
+      .spyOn(sshExecutor, 'exec')
+      .mockRejectedValueOnce(new Error('Connection refused'))
+      .mockRejectedValueOnce(new Error('HTTP 503'))
+      .mockResolvedValue(ok)
+
+    const promise = baremetal.waitForHealthCheck({
+      url,
+      timeoutSeconds: 30,
+      ssh: sshExecutor,
+      serverConfig: createServerConfig(),
+      nextSteps: [],
+      onFailedAttempt,
+    })
+
+    await vi.advanceTimersByTimeAsync(4000)
+    await expect(promise).resolves.toBeUndefined()
+
+    expect(execSpy).toHaveBeenCalledTimes(3)
+    expect(onFailedAttempt.mock.calls).toEqual([
+      ['Connection refused'],
+      ['HTTP 503'],
+    ])
+  })
+
+  it('gives up when the timeout passes', async () => {
+    const execSpy = vi
+      .spyOn(sshExecutor, 'exec')
+      .mockRejectedValue(new Error('Connection refused'))
+
+    const promise = baremetal.waitForHealthCheck({
+      url,
+      timeoutSeconds: 5,
+      ssh: sshExecutor,
+      serverConfig: createServerConfig({ processNames: ['api', 'web'] }),
+      nextSteps: ['Do this next.'],
+    })
+    // Prevents an unhandled rejection while the timers are advanced
+    const result = promise.catch((e: unknown) => e)
+
+    await vi.advanceTimersByTimeAsync(10_000)
+
+    const error = await result
+    expect(error).toBeInstanceOf(Error)
+    expect((error as Error).message).toEqual(
+      'Health check failed: http://localhost:8911/graphql/health did not ' +
+        'respond successfully within 5 seconds of restarting the api, web ' +
+        'process(es).\n' +
+        'Last attempt: Connection refused\n\n' +
+        'Do this next.\n' +
+        'If your app serves its health check somewhere else, set ' +
+        '`healthCheckUrl` in deploy.toml. Set it to `false` to skip the ' +
+        'check. See https://cedarjs.com/docs/deploy/baremetal#health-check',
+    )
+    // Attempts at 0s, 2s and 4s. The next retry would be after the deadline
+    expect(execSpy).toHaveBeenCalledTimes(3)
+  })
+
+  it('makes a single attempt when the timeout is 0', async () => {
+    const execSpy = vi
+      .spyOn(sshExecutor, 'exec')
+      .mockRejectedValue(new Error('Connection refused'))
+
+    await expect(
+      baremetal.waitForHealthCheck({
+        url,
+        timeoutSeconds: 0,
+        ssh: sshExecutor,
+        serverConfig: createServerConfig(),
+        nextSteps: [],
+      }),
+    ).rejects.toThrow('Health check failed')
+
+    expect(execSpy).toHaveBeenCalledTimes(1)
   })
 })
 

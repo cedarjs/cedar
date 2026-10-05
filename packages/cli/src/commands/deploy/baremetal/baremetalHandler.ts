@@ -12,14 +12,21 @@ import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
-import { getPaths } from '../../../lib/index.js'
+import { getConfig, getPaths } from '../../../lib/index.js'
 
 import type { SshExecutor } from './SshExecutor.js'
 
 const CONFIG_FILENAME = 'deploy.toml'
+const DOCS_URL = 'https://cedarjs.com/docs/deploy/baremetal'
 const SYMLINK_FLAGS = '-nsf'
 const CURRENT_RELEASE_SYMLINK_NAME = 'current'
 const LIFECYCLE_HOOKS = ['before', 'after'] as const
+// Path of the health check endpoint that Cedar's GraphQL server serves
+const DEFAULT_HEALTH_CHECK_PATH = '/graphql/health'
+// Time between two attempts of the post-restart health check
+const HEALTH_CHECK_INTERVAL_MS = 2000
+// Longest a single health check request waits for a response
+const HEALTH_CHECK_REQUEST_TIMEOUT_SECONDS = 5
 // Web build output directories, relative to a release. SPA and prerendered
 // builds write to the first, streaming SSR and RSC builds to the second.
 const WEB_DIST_DIRS = ['web/dist', 'web/dist/browser']
@@ -44,11 +51,15 @@ export const DEFAULT_SERVER_CONFIG = {
   sides: ['api', 'web'],
   keepReleases: 5,
   freeSpaceRequired: 2048,
+  healthCheckTimeout: 30,
 }
 
 // force all paths to have forward slashes so that you can deploy to *nix
 // systems from a Windows system
 const pathJoin = path.posix.join
+
+// Wraps a value in single quotes for use as a shell argument
+const shellQuote = (value: string) => `'${value.replaceAll("'", `'\\''`)}'`
 
 // Shape of a server configuration entry from deploy.toml
 export interface ServerConfig {
@@ -70,6 +81,14 @@ export interface ServerConfig {
   keepReleases: number
   freeSpaceRequired: number | string
   migrate?: boolean
+  /**
+   * URL requested on the server after its processes have been restarted.
+   * Defaults to the api side's `/graphql/health` endpoint on localhost.
+   * `false` disables the health check.
+   */
+  healthCheckUrl?: string | false
+  /** Seconds to keep retrying the health check before failing the deploy */
+  healthCheckTimeout: number | string
 }
 
 // Shape of the yargs argv for baremetal deploy commands
@@ -153,6 +172,18 @@ export const verifyServerConfig = (config: ServerConfig) => {
     throw new Error('"freeSpaceRequired" must be an integer >= 0')
   }
 
+  if (
+    config.healthCheckUrl !== undefined &&
+    config.healthCheckUrl !== false &&
+    typeof config.healthCheckUrl !== 'string'
+  ) {
+    throw new Error('"healthCheckUrl" must be a URL or `false`')
+  }
+
+  if (!/^\d+$/.test(String(config.healthCheckTimeout))) {
+    throw new Error('"healthCheckTimeout" must be an integer >= 0')
+  }
+
   return true
 }
 
@@ -178,6 +209,137 @@ const restartProcessCommand = async (
     'restart',
     processName,
   ])
+}
+
+/**
+ * The URL the post-restart health check requests, or `undefined` when there
+ * is nothing to check on this server. Without an explicit `healthCheckUrl`
+ * only servers that host the api side are checked, at the `/graphql/health`
+ * endpoint Cedar's GraphQL server serves on the `[api].port` from cedar.toml.
+ * `cedar serve` and `cedar serve api` both listen on that port.
+ */
+export const healthCheckUrl = (serverConfig: ServerConfig) => {
+  if (serverConfig.healthCheckUrl === false) {
+    return undefined
+  }
+
+  if (serverConfig.healthCheckUrl) {
+    return serverConfig.healthCheckUrl
+  }
+
+  if (!serverConfig.sides.includes('api')) {
+    return undefined
+  }
+
+  return `http://localhost:${getConfig().api.port}${DEFAULT_HEALTH_CHECK_PATH}`
+}
+
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms))
+
+/**
+ * Requests `url` on the server until it responds with a 2xx status. Gives up
+ * and throws once `timeoutSeconds` have passed, with `nextSteps` appended to
+ * the error message so the message says what to do about the failure.
+ * `onFailedAttempt` is called with the reason each time an attempt fails.
+ */
+export const waitForHealthCheck = async ({
+  url,
+  timeoutSeconds,
+  ssh,
+  serverConfig,
+  nextSteps,
+  onFailedAttempt,
+}: {
+  url: string
+  timeoutSeconds: number
+  ssh: SshExecutor
+  serverConfig: ServerConfig
+  nextSteps: string[]
+  onFailedAttempt?: (reason: string) => void
+}) => {
+  const deadline = Date.now() + timeoutSeconds * 1000
+  let lastFailure = ''
+  let keepTrying = true
+
+  // Each attempt is one `curl` on the server. `--fail` makes curl exit
+  // non-zero for HTTP error statuses, so `ssh.exec` throws both when nothing
+  // is listening and when the process is up but reports itself unhealthy.
+  while (keepTrying) {
+    try {
+      await ssh.exec(serverConfig.path, 'curl', [
+        '--fail',
+        '--silent',
+        '--show-error',
+        '--output',
+        '/dev/null',
+        '--max-time',
+        String(HEALTH_CHECK_REQUEST_TIMEOUT_SECONDS),
+        shellQuote(url),
+      ])
+
+      return
+    } catch (e) {
+      lastFailure = e instanceof Error ? e.message : String(e)
+      onFailedAttempt?.(lastFailure)
+    }
+
+    // Another attempt only makes sense if it fits before the deadline
+    keepTrying = Date.now() + HEALTH_CHECK_INTERVAL_MS <= deadline
+
+    if (keepTrying) {
+      await sleep(HEALTH_CHECK_INTERVAL_MS)
+    }
+  }
+
+  throw new Error(
+    [
+      `Health check failed: ${url} did not respond successfully within ` +
+        `${timeoutSeconds} seconds of restarting the ` +
+        `${serverConfig.processNames?.join(', ')} process(es).`,
+      `Last attempt: ${lastFailure}`,
+      '',
+      ...nextSteps,
+      'If your app serves its health check somewhere else, set ' +
+        '`healthCheckUrl` in deploy.toml. Set it to `false` to skip the ' +
+        `check. See ${DOCS_URL}#health-check`,
+    ].join('\n'),
+  )
+}
+
+/**
+ * The Listr task that runs the health check once the server's processes have
+ * been restarted. `url` is `undefined` when there is nothing to check, which
+ * leaves a task that is always skipped, so the task list keeps the same shape
+ * for every server.
+ */
+const healthCheckTask = (
+  url: string | undefined,
+  ssh: SshExecutor,
+  serverConfig: ServerConfig,
+  nextSteps: string[],
+): ListrTaskObject => {
+  return {
+    title: url ? `Checking ${url}...` : 'Checking health...',
+    task: async (_ctx: unknown, task: { output: string }) => {
+      if (!url) {
+        return
+      }
+
+      await waitForHealthCheck({
+        url,
+        timeoutSeconds: parseInt(String(serverConfig.healthCheckTimeout), 10),
+        ssh,
+        serverConfig,
+        nextSteps,
+        onFailedAttempt: (reason) => {
+          // This will only show if --verbose is passed
+          task.output = reason
+        },
+      })
+    },
+    skip: () => !url,
+  }
 }
 
 export const serverConfigWithDefaults = (
@@ -325,6 +487,14 @@ export const rollbackTasks = (
         },
       })
     }
+
+    tasks.push(
+      healthCheckTask(healthCheckUrl(serverConfig), ssh, serverConfig, [
+        'The release you rolled back to is live as `current`. Check the ' +
+          'process logs on the server, or roll back one more release by ' +
+          `running the rollback again with \`--rollback ${rollbackCount + 1}\`.`,
+      ]),
+    )
   }
 
   return tasks
@@ -413,9 +583,6 @@ export const manifestAssetFiles = (manifestJson: string): string[] => {
 
   return [...files]
 }
-
-// Wraps a value in single quotes for use as a shell argument
-const shellQuote = (value: string) => `'${value.replaceAll("'", `'\\''`)}'`
 
 /**
  * Reads the web build manifest of a release and returns the build output
@@ -876,6 +1043,21 @@ export const deployTasks = (
         )
       }
     }
+
+    const url = healthCheckUrl(serverConfig)
+
+    tasks.push(
+      ...commandWithLifecycleEvents({
+        name: 'healthCheck',
+        config: { ...config, cmdPath: serverConfig.path },
+        skip: !yargs.restart || !url,
+        command: healthCheckTask(url, ssh, serverConfig, [
+          'The new release is live as `current`. Check the process logs ' +
+            'on the server, or roll back to the previous release with ' +
+            `\`${formatCedarCommand(['deploy', 'baremetal', yargs.environment, '--rollback'])}\`.`,
+        ]),
+      }),
+    )
   }
 
   tasks.push(
