@@ -703,8 +703,13 @@ server {
 
   location ^~ /assets/ {
     gzip_static on;
-    expires max;
-    add_header Cache-Control public;
+
+    # Vite names build output <name>-<hash>.<ext>, so only those files
+    # are safe to cache forever
+    location ~ "-[A-Za-z0-9_-]{8}\.[a-z0-9]+$" {
+      expires max;
+      add_header Cache-Control public;
+    }
   }
 
   location ~ /.api/functions(.*) {
@@ -714,6 +719,8 @@ server {
   }
 }
 ```
+
+The `/assets/` location and its cache rule assume Vite's default output naming: hashed files in `web/dist/assets/`, named `<name>-<hash>.<ext>`. If you customize `build.assetsDir` or the output file names in `web/vite.config.ts`, adjust both to match. Files without a hash in their name, such as anything you put in `web/public/assets/`, get nginx's default caching so a deploy that changes them takes effect.
 
 Now when you start Cedar, you're only going to start the api server:
 
@@ -804,8 +811,13 @@ server {
 
   location ^~ /assets/ {
     gzip_static on;
-    expires max;
-    add_header Cache-Control public;
+
+    # Vite names build output <name>-<hash>.<ext>, so only those files
+    # are safe to cache forever
+    location ~ "-[A-Za-z0-9_-]{8}\.[a-z0-9]+$" {
+      expires max;
+      add_header Cache-Control public;
+    }
   }
 
 // highlight-next-line
