@@ -1925,6 +1925,7 @@ yarn cedar setup deploy <provider>
 | :------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `provider`          | Deploy provider to configure. Choices are `baremetal`, `coherence`, `edgio`, `flightcontrol`, `netlify`, `render`, `vercel`, or `aws-serverless [deprecated]`, |
 | `--database, -d`    | Database deployment for Render only [choices: "none", "postgresql", "sqlite"] [default: "postgresql"]                                                          |
+| `--monitor`         | Process monitor to generate config for, Baremetal only [choices: "pm2", "systemd-user", "systemd-system"]. Asks when not given                                 |
 | `--force, -f`       | Overwrite existing configuration [default: false]                                                                                                              |
 
 #### setup deploy netlify
