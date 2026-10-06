@@ -1029,6 +1029,31 @@ export const deployTasks = (
     }),
   )
 
+  // A monitor that reads a config file on first run needs it before the new
+  // release becomes `current`, so a missing file fails the deploy while the
+  // previous release is still live
+  if (serverConfig.processNames && yargs.firstRun) {
+    const configFile = monitorAdapter(serverConfig).firstRunConfigFile
+
+    if (configFile) {
+      tasks.push({
+        title: `Checking for ${configFile}...`,
+        task: () => {
+          if (!fs.existsSync(path.join(getPaths().base, configFile))) {
+            throw new Error(
+              `${configFile} is missing. The ${serverConfig.monitor} ` +
+                'monitor reads it when starting processes for the first ' +
+                `time. Run \`${formatCedarCommand(['setup', 'deploy', 'baremetal'])}\` ` +
+                'to generate it, or deploy without `--first-run` if the ' +
+                'processes are already running.',
+            )
+          }
+        },
+        skip: () => !yargs.restart,
+      })
+    }
+  }
+
   tasks.push(
     ...commandWithLifecycleEvents({
       name: 'symlinkCurrent',
@@ -1049,26 +1074,6 @@ export const deployTasks = (
     const skipRestart = () => !yargs.restart
 
     if (yargs.firstRun) {
-      const configFile = adapter.firstRunConfigFile
-
-      if (configFile) {
-        tasks.push({
-          title: `Checking for ${configFile}...`,
-          task: () => {
-            if (!fs.existsSync(path.join(getPaths().base, configFile))) {
-              throw new Error(
-                `${configFile} is missing. The ${serverConfig.monitor} ` +
-                  'monitor reads it when starting processes for the first ' +
-                  `time. Run \`${formatCedarCommand(['setup', 'deploy', 'baremetal'])}\` ` +
-                  'to generate it, or deploy without `--first-run` if the ' +
-                  'processes are already running.',
-              )
-            }
-          },
-          skip: skipRestart,
-        })
-      }
-
       for (const command of adapter.firstRunSetup) {
         tasks.push(monitorTask(command, ssh, serverConfig, skipRestart))
       }

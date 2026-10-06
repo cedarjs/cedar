@@ -8,6 +8,12 @@ export const SYSTEMD_DIR = 'systemd'
 /** Path of the jobs worker bin, relative to the project root */
 const JOBS_WORKER_BIN = 'api/node_modules/.bin/cedar-jobs-worker'
 
+/**
+ * How long a monitor waits for a jobs worker to finish its current job after
+ * asking it to stop, before killing it
+ */
+const WORKER_STOP_TIMEOUT_SECONDS = 600
+
 const JOBS_WORKER_COMMENT = `# Runs one background jobs worker. \`--index\` picks the entry of the \`workers\`
 # array in api/src/lib/jobs.ts and \`--id\` numbers the worker within that
 # entry, so an entry with \`count: 2\` needs a second worker with \`--id=1\`.`
@@ -28,6 +34,9 @@ export const ecosystemConfig = ({ jobs }: { jobs: boolean }) => {
       cwd: 'current',
       script: '${JOBS_WORKER_BIN}',
       args: '--index=0 --id=0',
+      // pm2 stops the worker with SIGINT, which lets it finish the job it is
+      // running. This is how long pm2 waits for that (in ms) before killing it.
+      kill_timeout: ${WORKER_STOP_TIMEOUT_SECONDS * 1000},
     },`
     : ''
 
@@ -74,7 +83,11 @@ ${linger}#
 # WorkingDirectory must be the \`path\` from deploy.toml followed by \`/current\`.`
 }
 
-const unitService = (monitor: Monitor, execStart: string) => {
+const unitService = (
+  monitor: Monitor,
+  execStart: string,
+  extraDirectives = '',
+) => {
   const user = monitor === 'systemd-system' ? '\nUser=deploy' : ''
 
   return `[Service]
@@ -83,8 +96,15 @@ WorkingDirectory=/var/www/app/current
 ExecStart=/bin/bash -lc '${execStart}'
 Restart=always
 RestartSec=5
-Environment=NODE_ENV=production${user}`
+Environment=NODE_ENV=production${user}${extraDirectives}`
 }
+
+// Stopping a jobs worker with SIGINT lets it finish the job it is running
+const JOBS_STOP_DIRECTIVES = `
+# Stopping sends SIGINT so the worker finishes the job it is running before it
+# exits. systemd waits this long for that before killing the worker.
+KillSignal=SIGINT
+TimeoutStopSec=${WORKER_STOP_TIMEOUT_SECONDS}`
 
 const unitInstall = (monitor: Monitor) =>
   `[Install]
@@ -128,7 +148,7 @@ ${JOBS_WORKER_COMMENT}
 Description=${appName} background jobs worker %i (Cedar)
 After=network.target
 
-${unitService(monitor, `exec ${JOBS_WORKER_BIN} --index=%i --id=0`)}
+${unitService(monitor, `exec ${JOBS_WORKER_BIN} --index=%i --id=0`, JOBS_STOP_DIRECTIVES)}
 
 ${unitInstall(monitor)}
 `

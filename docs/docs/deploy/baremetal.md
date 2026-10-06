@@ -92,7 +92,7 @@ It asks which process monitor will run your app on the server (pass `--monitor p
 2. The monitor's process config: `ecosystem.config.js` for [PM2](https://pm2.keymetrics.io/) to know what service(s) to monitor, or unit files in `systemd/` for [systemd](#systemd-units)
 3. `web/src/maintenance.html`, the [maintenance page](#maintenance-page)
 
-If your project has [background jobs](/docs/background-jobs) set up (`api/src/lib/jobs.ts` exists), the generated config also includes a jobs worker process, so your workers are restarted on every deploy along with the app.
+If your project has [background jobs](/docs/background-jobs) set up (`api/src/lib/jobs.ts` exists), the generated config also includes a jobs worker process, so your workers are restarted on every deploy along with the app. Stopping or restarting a worker sends it `SIGINT`, which makes it finish the job it is running before it exits, and the generated config waits up to ten minutes for that before killing the worker. Raise that limit if your jobs run longer.
 
 If you see an error from `gyp` you may need to add some additional dependencies before `yarn install` will be able to complete. See the README for `node-type` for more info: https://github.com/nodejs/node-gyp#installation
 

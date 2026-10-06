@@ -1117,7 +1117,9 @@ describe('deployTasks', () => {
     )
 
     expect(Object.keys(tasks).length).toEqual(13)
-    expect(tasks[8].title).toMatch('Checking for ecosystem.config.js')
+    // The check runs before `current` is switched to the new release
+    expect(tasks[7].title).toMatch('Checking for ecosystem.config.js')
+    expect(tasks[8].title).toMatch('Symlinking current')
     expect(tasks[9].title).toMatch('Starting serve')
     expect(tasks[10].title).toMatch('Saving serve')
   })
@@ -1131,7 +1133,7 @@ describe('deployTasks', () => {
     )
 
     // The test fixtures directory has no ecosystem.config.js
-    expect(() => tasks[8].task({}, {})).toThrow(
+    expect(() => tasks[7].task({}, {})).toThrow(
       'ecosystem.config.js is missing. The pm2 monitor reads it when ' +
         'starting processes for the first time.',
     )
@@ -1147,7 +1149,7 @@ describe('deployTasks', () => {
       { before: {}, after: {} },
     )
 
-    expect(() => tasks[8].task({}, {})).not.toThrow()
+    expect(() => tasks[7].task({}, {})).not.toThrow()
     expect(existsSpy).toHaveBeenCalledWith(
       expect.stringMatching(/ecosystem\.config\.js$/),
     )

@@ -1,4 +1,10 @@
+import path from 'node:path'
+
 import { vi, describe, it, expect, beforeEach } from 'vitest'
+
+// Paths are built with `path.join`, so compare them with forward slashes on
+// every platform
+const posix = (filePath: string) => filePath.split(path.sep).join('/')
 
 const mockWriteFilesTask = vi.fn(
   (_files: Record<string, string>, _options?: unknown) => undefined,
@@ -54,11 +60,14 @@ const writtenFiles = () => {
 
   return Object.fromEntries(
     Object.entries(call[0]).map(([filePath, content]) => [
-      filePath.replace('/mock/project/My Cedar_App/', ''),
+      posix(filePath).replace('/mock/project/My Cedar_App/', ''),
       content,
     ]),
   )
 }
+
+const paths = (files: { path: string }[]) =>
+  files.map((file) => posix(file.path))
 
 describe('appNameFromPath', () => {
   it('turns the project directory name into a unit-safe name', () => {
@@ -83,7 +92,7 @@ describe('setupFiles', () => {
     })
 
     expect(processNames).toEqual(['serve'])
-    expect(files.map((file) => file.path)).toEqual([
+    expect(paths(files)).toEqual([
       '/app/deploy.toml',
       '/app/ecosystem.config.js',
       '/app/web/src/maintenance.html',
@@ -108,6 +117,7 @@ describe('setupFiles', () => {
       "script: 'api/node_modules/.bin/cedar-jobs-worker'",
     )
     expect(files[1].content).toContain("args: '--index=0 --id=0'")
+    expect(files[1].content).toContain('kill_timeout: 600000')
   })
 
   it('gives systemd user units named after the app', () => {
@@ -118,7 +128,7 @@ describe('setupFiles', () => {
     })
 
     expect(processNames).toEqual(['myapp'])
-    expect(files.map((file) => file.path)).toEqual([
+    expect(paths(files)).toEqual([
       '/app/deploy.toml',
       '/app/systemd/myapp.service',
       '/app/web/src/maintenance.html',
@@ -135,6 +145,7 @@ describe('setupFiles', () => {
     expect(unit).toContain('cp systemd/*.service ~/.config/systemd/user/')
     expect(unit).toContain('loginctl enable-linger')
     expect(unit).not.toContain('User=')
+    expect(unit).not.toContain('KillSignal')
   })
 
   it('gives systemd system units a User and multi-user target', () => {
@@ -159,7 +170,7 @@ describe('setupFiles', () => {
     })
 
     expect(processNames).toEqual(['myapp', 'myapp-jobs@0'])
-    expect(files.map((file) => file.path)).toEqual([
+    expect(paths(files)).toEqual([
       '/app/deploy.toml',
       '/app/systemd/myapp.service',
       '/app/systemd/myapp-jobs@.service',
@@ -174,6 +185,8 @@ describe('setupFiles', () => {
       "ExecStart=/bin/bash -lc 'exec api/node_modules/.bin/cedar-jobs-worker --index=%i --id=0'",
     )
     expect(jobsUnit).toContain('Description=myapp background jobs worker %i')
+    expect(jobsUnit).toContain('KillSignal=SIGINT')
+    expect(jobsUnit).toContain('TimeoutStopSec=600')
   })
 })
 
