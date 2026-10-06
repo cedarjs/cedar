@@ -234,7 +234,23 @@ describe('verifyServerConfig', () => {
         // @ts-expect-error - Testing an invalid value from deploy.toml
         createServerConfig({ healthCheckUrl: true }),
       )
-    }).toThrow('"healthCheckUrl" must be a URL or `false`')
+    }).toThrow('"healthCheckUrl" must be an http(s) URL or `false`')
+  })
+
+  it('throws an error if healthCheckUrl is not an http(s) URL', () => {
+    for (const healthCheckUrl of ['localhost:8911/health', 'ftp://x/health']) {
+      expect(() => {
+        baremetal.verifyServerConfig(createServerConfig({ healthCheckUrl }))
+      }).toThrow('"healthCheckUrl" must be an http(s) URL or `false`')
+    }
+  })
+
+  it('allows an http(s) healthCheckUrl', () => {
+    expect(
+      baremetal.verifyServerConfig(
+        createServerConfig({ healthCheckUrl: 'https://example.com/health' }),
+      ),
+    ).toEqual(true)
   })
 
   it('allows healthCheckUrl to be false', () => {
@@ -302,6 +318,26 @@ describe('rollbackTasks', () => {
     )
 
     expect(tasks2[0].title).toMatch('Rolling back 5')
+  })
+
+  it('tells the user how to roll back one more release when the health check fails', async () => {
+    const execSpy = vi
+      .spyOn(sshExecutor, 'exec')
+      .mockRejectedValue(new Error('Connection refused'))
+
+    const tasks = baremetal.rollbackTasks(
+      2,
+      sshExecutor,
+      createServerConfig({ processNames: ['api'], healthCheckTimeout: 0 }),
+    )
+
+    await expect(tasks[2].task({}, { output: '' })).rejects.toThrow(
+      'The release you rolled back to is live as `current`. Check the ' +
+        'process logs on the server, or run the rollback again with ' +
+        '`--rollback` to move one more release back.',
+    )
+
+    execSpy.mockRestore()
   })
 
   it('only rolls back to release directories', async () => {
@@ -1440,6 +1476,7 @@ describe('waitForHealthCheck', () => {
 
     expect(execSpy).toHaveBeenCalledExactlyOnceWith('/var/www/app', 'curl', [
       '--fail',
+      '--location',
       '--silent',
       '--show-error',
       '--output',

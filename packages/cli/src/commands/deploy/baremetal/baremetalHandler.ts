@@ -155,6 +155,19 @@ export const verifyConfig = (
   return true
 }
 
+const isHttpUrl = (value: unknown) => {
+  if (typeof value !== 'string') {
+    return false
+  }
+
+  try {
+    const { protocol } = new URL(value)
+    return protocol === 'http:' || protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 export const verifyServerConfig = (config: ServerConfig) => {
   if (!config.host) {
     throwMissingConfig('host')
@@ -175,9 +188,9 @@ export const verifyServerConfig = (config: ServerConfig) => {
   if (
     config.healthCheckUrl !== undefined &&
     config.healthCheckUrl !== false &&
-    typeof config.healthCheckUrl !== 'string'
+    !isHttpUrl(config.healthCheckUrl)
   ) {
-    throw new Error('"healthCheckUrl" must be a URL or `false`')
+    throw new Error('"healthCheckUrl" must be an http(s) URL or `false`')
   }
 
   if (!/^\d+$/.test(String(config.healthCheckTimeout))) {
@@ -265,10 +278,13 @@ export const waitForHealthCheck = async ({
   // Each attempt is one `curl` on the server. `--fail` makes curl exit
   // non-zero for HTTP error statuses, so `ssh.exec` throws both when nothing
   // is listening and when the process is up but reports itself unhealthy.
+  // `--location` follows redirects, so a URL that redirects (for example from
+  // http to https) is judged by the response of the final destination.
   while (keepTrying) {
     try {
       await ssh.exec(serverConfig.path, 'curl', [
         '--fail',
+        '--location',
         '--silent',
         '--show-error',
         '--output',
@@ -491,8 +507,8 @@ export const rollbackTasks = (
     tasks.push(
       healthCheckTask(healthCheckUrl(serverConfig), ssh, serverConfig, [
         'The release you rolled back to is live as `current`. Check the ' +
-          'process logs on the server, or roll back one more release by ' +
-          `running the rollback again with \`--rollback ${rollbackCount + 1}\`.`,
+          'process logs on the server, or run the rollback again with ' +
+          '`--rollback` to move one more release back.',
       ]),
     )
   }
