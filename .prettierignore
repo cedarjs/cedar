@@ -37,6 +37,10 @@ packages/testing/config
 # Ignore the .nx directory
 /.nx
 
+# Ignore Claude Code's directory. Agent worktrees are checked out under
+# .claude/worktrees/ and must not be formatted as part of this checkout
+/.claude
+
 # Ignore create-cedar-app (we don't want to mismatch between framework and project)
 /packages/create-cedar-app/templates
 /packages/create-cedar-app/tests/**/*.sh
