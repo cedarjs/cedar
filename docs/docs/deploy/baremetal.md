@@ -720,7 +720,7 @@ server {
 }
 ```
 
-The `/assets/` location and its cache rule assume Vite's default output naming: hashed files in `web/dist/assets/`, named `<name>-<hash>.<ext>`. If you customize `build.assetsDir` or the output file names in `web/vite.config.ts`, adjust both to match. Files whose names don't match that pattern get nginx's default caching, so a deploy that changes them takes effect. That covers most files you'd put in `web/public/assets/`, as long as their names don't happen to end in a dash and eight characters, like `logo-20261006.svg`, which nginx can't tell apart from a hashed file.
+The `/assets/` location and its cache rule assume Vite's default output naming: hashed files in `web/dist/assets/`, named `<name>-<hash>.<ext>`. If you customize `build.assetsDir` or the output file names in `web/vite.config.ts`, adjust both to match. Files whose names don't match that pattern don't get the long-lived cache rule. nginx serves them with its default headers (`Last-Modified` and `ETag`, no explicit max-age), so browsers revalidate them much sooner, though not necessarily on the very next request. That covers most files you'd put in `web/public/assets/`, as long as their names don't happen to end in a dash and eight characters, like `logo-20261006.svg`, which nginx can't tell apart from a hashed file.
 
 Now when you start Cedar, you're only going to start the api server:
 
