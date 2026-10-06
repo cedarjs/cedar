@@ -14,6 +14,8 @@ import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 import { getConfig, getPaths } from '../../../lib/index.js'
 
+import { MONITOR_ADAPTERS, MONITORS, isMonitor } from './monitors.js'
+import type { Monitor, MonitorAdapter, MonitorCommand } from './monitors.js'
 import type { SshExecutor } from './SshExecutor.js'
 
 const CONFIG_FILENAME = 'deploy.toml'
@@ -43,11 +45,13 @@ const LINK_BATCH_SIZE = 100
 export const RELEASE_DIR_PATTERN = '^[0-9]{14}$'
 const releaseDirRegExp = new RegExp(RELEASE_DIR_PATTERN)
 
+const DEFAULT_MONITOR: Monitor = 'pm2'
+
 export const DEFAULT_SERVER_CONFIG = {
   port: 22,
   branch: 'main',
   packageManagerCommand: getPackageManager(),
-  monitorCommand: 'pm2',
+  monitor: DEFAULT_MONITOR,
   sides: ['api', 'web'],
   keepReleases: 5,
   freeSpaceRequired: 2048,
@@ -75,6 +79,13 @@ export interface ServerConfig {
   path: string
   repo: string
   packageManagerCommand: string
+  /** Process monitor whose commands the deploy runs, see `MONITORS` */
+  monitor: Monitor
+  /**
+   * Command the monitor is invoked with. Defaults to the monitor's own command
+   * (`pm2`, `systemctl --user` or `sudo systemctl`) and can be prefixed or
+   * replaced, for example `doppler run -- pm2`.
+   */
   monitorCommand: string
   sides: string[]
   processNames?: string[]
@@ -197,6 +208,12 @@ export const verifyServerConfig = (config: ServerConfig) => {
     throw new Error('"healthCheckTimeout" must be an integer >= 0')
   }
 
+  if (!isMonitor(config.monitor)) {
+    throw new Error(
+      `"monitor" must be one of ${MONITORS.map((monitor) => `"${monitor}"`).join(', ')}`,
+    )
+  }
+
   return true
 }
 
@@ -212,16 +229,36 @@ const symlinkCurrentCommand = async (
   ])
 }
 
-const restartProcessCommand = async (
-  processName: string,
+const monitorAdapter = (serverConfig: ServerConfig): MonitorAdapter =>
+  MONITOR_ADAPTERS[serverConfig.monitor]
+
+// Runs one of the monitor adapter's commands on the server
+const runMonitorCommand = async (
+  command: MonitorCommand,
   ssh: SshExecutor,
   serverConfig: ServerConfig,
-  deployPath: string,
 ) => {
-  return await ssh.exec(deployPath, serverConfig.monitorCommand, [
-    'restart',
-    processName,
-  ])
+  return await ssh.exec(
+    serverConfig.path,
+    serverConfig.monitorCommand,
+    command.args,
+  )
+}
+
+// Listr task that runs one of the monitor adapter's commands
+const monitorTask = (
+  command: MonitorCommand,
+  ssh: SshExecutor,
+  serverConfig: ServerConfig,
+  skip?: () => boolean,
+): ListrTaskObject => {
+  return {
+    title: command.title,
+    task: async () => {
+      await runMonitorCommand(command, ssh, serverConfig)
+    },
+    ...(skip ? { skip } : {}),
+  }
 }
 
 /**
@@ -362,10 +399,19 @@ export const serverConfigWithDefaults = (
   serverConfig: Partial<ServerConfig>,
   yargs: BaremetalYargs,
 ): ServerConfig => {
+  const monitor = serverConfig.monitor ?? DEFAULT_SERVER_CONFIG.monitor
+  // An unknown monitor has no default command. `verifyServerConfig` reports
+  // the unknown monitor itself.
+  const monitorCommand =
+    serverConfig.monitorCommand ??
+    (isMonitor(monitor) ? MONITOR_ADAPTERS[monitor].defaultCommand : '')
+
   return {
     ...DEFAULT_SERVER_CONFIG,
     ...serverConfig,
     branch: yargs.branch || serverConfig.branch || DEFAULT_SERVER_CONFIG.branch,
+    monitor,
+    monitorCommand,
   } as ServerConfig
 }
 
@@ -394,26 +440,24 @@ export const maintenanceTasks = (
     })
 
     if (serverConfig.processNames) {
-      tasks.push({
-        title: `Stopping ${serverConfig.processNames.join(', ')} processes...`,
-        task: async () => {
-          await ssh.exec(serverConfig.path, serverConfig.monitorCommand, [
-            'stop',
-            serverConfig.processNames!.join(' '),
-          ])
-        },
-      })
+      tasks.push(
+        monitorTask(
+          monitorAdapter(serverConfig).stop(serverConfig.processNames),
+          ssh,
+          serverConfig,
+        ),
+      )
     }
   } else if (status === 'down') {
-    tasks.push({
-      title: `Starting ${serverConfig.processNames?.join(', ')} processes...`,
-      task: async () => {
-        await ssh.exec(serverConfig.path, serverConfig.monitorCommand, [
-          'start',
-          serverConfig.processNames!.join(' '),
-        ])
-      },
-    })
+    if (serverConfig.processNames) {
+      tasks.push(
+        monitorTask(
+          monitorAdapter(serverConfig).start(serverConfig.processNames),
+          ssh,
+          serverConfig,
+        ),
+      )
+    }
 
     if (serverConfig.processNames) {
       tasks.push({
@@ -490,18 +534,10 @@ export const rollbackTasks = (
   ]
 
   if (serverConfig.processNames) {
+    const adapter = monitorAdapter(serverConfig)
+
     for (const processName of serverConfig.processNames) {
-      tasks.push({
-        title: `Restarting ${processName} process...`,
-        task: async () => {
-          await restartProcessCommand(
-            processName,
-            ssh,
-            serverConfig,
-            serverConfig.path,
-          )
-        },
-      })
+      tasks.push(monitorTask(adapter.restart(processName), ssh, serverConfig))
     }
 
     tasks.push(
@@ -1009,52 +1045,67 @@ export const deployTasks = (
   )
 
   if (serverConfig.processNames) {
+    const adapter = monitorAdapter(serverConfig)
+    const skipRestart = () => !yargs.restart
+
+    if (yargs.firstRun) {
+      const configFile = adapter.firstRunConfigFile
+
+      if (configFile) {
+        tasks.push({
+          title: `Checking for ${configFile}...`,
+          task: () => {
+            if (!fs.existsSync(path.join(getPaths().base, configFile))) {
+              throw new Error(
+                `${configFile} is missing. The ${serverConfig.monitor} ` +
+                  'monitor reads it when starting processes for the first ' +
+                  `time. Run \`${formatCedarCommand(['setup', 'deploy', 'baremetal'])}\` ` +
+                  'to generate it, or deploy without `--first-run` if the ' +
+                  'processes are already running.',
+              )
+            }
+          },
+          skip: skipRestart,
+        })
+      }
+
+      for (const command of adapter.firstRunSetup) {
+        tasks.push(monitorTask(command, ssh, serverConfig, skipRestart))
+      }
+    }
+
     for (const processName of serverConfig.processNames) {
       if (yargs.firstRun) {
+        const [firstCommand, ...followUpCommands] =
+          adapter.firstRun(processName)
+
+        if (!firstCommand) {
+          continue
+        }
+
         tasks.push(
           ...commandWithLifecycleEvents({
             name: 'restart',
             config,
             skip: !yargs.restart,
-            command: {
-              title: `Starting ${processName} process for the first time...`,
-              task: async () => {
-                await ssh.exec(serverConfig.path, serverConfig.monitorCommand, [
-                  'start',
-                  pathJoin(CURRENT_RELEASE_SYMLINK_NAME, 'ecosystem.config.js'),
-                  '--only',
-                  processName,
-                ])
-              },
-            },
+            command: monitorTask(firstCommand, ssh, serverConfig),
           }),
         )
-        tasks.push({
-          title: `Saving ${processName} state for future startup...`,
-          task: async () => {
-            await ssh.exec(serverConfig.path, serverConfig.monitorCommand, [
-              'save',
-            ])
-          },
-          skip: () => !yargs.restart,
-        })
+
+        for (const command of followUpCommands) {
+          tasks.push(monitorTask(command, ssh, serverConfig, skipRestart))
+        }
       } else {
         tasks.push(
           ...commandWithLifecycleEvents({
             name: 'restart',
             config,
             skip: !yargs.restart,
-            command: {
-              title: `Restarting ${processName} process...`,
-              task: async () => {
-                await restartProcessCommand(
-                  processName,
-                  ssh,
-                  serverConfig,
-                  serverConfig.path,
-                )
-              },
-            },
+            command: monitorTask(
+              adapter.restart(processName),
+              ssh,
+              serverConfig,
+            ),
           }),
         )
       }
@@ -1267,11 +1318,11 @@ export const warnIfUnpushedCommits = async () => {
 export const handler = async (yargs: BaremetalYargs) => {
   const { SshExecutor } = await import('./SshExecutor.js')
 
-  // Check if baremetal has been setup
-  const tomlPath = path.join(getPaths().base, 'deploy.toml')
-  const ecosystemPath = path.join(getPaths().base, 'ecosystem.config.js')
+  // Check if baremetal has been setup. The monitor's own config file, if it
+  // has one, is checked by the deploy tasks that need it.
+  const tomlPath = path.join(getPaths().base, CONFIG_FILENAME)
 
-  if (!fs.existsSync(tomlPath) || !fs.existsSync(ecosystemPath)) {
+  if (!fs.existsSync(tomlPath)) {
     console.error(
       c.error('\nError: Baremetal deploy has not been properly setup.\n') +
         `Please run \`${formatCedarCommand(['setup', 'deploy', 'baremetal'])}\` before deploying`,

@@ -50,10 +50,10 @@ The Baremetal deploy runs several commands in sequence. These can be customized,
 
 ### First Run Lifecycle
 
-If the `--first-run` flag is specified then step 11 above will execute the following commands instead:
+If the `--first-run` flag is specified then step 11 above starts the processes for the first time instead of restarting them. What that means depends on the [`monitor`](#config-options) in `deploy.toml`:
 
-- `pm2 start [service]` - starts the serving process(es)
-- `pm2 save` - saves the running services to the deploy users config file for future startup. See [Starting on Reboot](#starting-on-reboot) for further information
+- **pm2**: `pm2 start current/ecosystem.config.js --only [service]` starts each serving process, then `pm2 save` saves the running services to the deploy user's config file for future startup. See [Starting Processes on Server Restart](#starting-processes-on-server-restart) for further information
+- **systemd**: `systemctl --user daemon-reload` (or `sudo systemctl daemon-reload` for system units) picks up the unit files you copied to the server, then `systemctl --user enable --now [unit]` starts each unit and makes it start on boot
 
 ## Directory Structure
 
@@ -86,10 +86,13 @@ Run the following to add the required config files to your codebase:
 yarn cedar setup deploy baremetal
 ```
 
-This will add dependencies to your `package.json` and create two files:
+It asks which process monitor will run your app on the server (pass `--monitor pm2`, `--monitor systemd-user` or `--monitor systemd-system` to skip the question), adds dependencies to your `package.json` and creates:
 
 1. `deploy.toml` contains server config for knowing which machines to connect to and which commands to run
-2. `ecosystem.config.js` for [PM2](https://pm2.keymetrics.io/) to know what service(s) to monitor
+2. The monitor's process config: `ecosystem.config.js` for [PM2](https://pm2.keymetrics.io/) to know what service(s) to monitor, or unit files in `systemd/` for [systemd](#systemd-units)
+3. `web/src/maintenance.html`, the [maintenance page](#maintenance-page)
+
+If your project has [background jobs](/docs/background-jobs) set up (`api/src/lib/jobs.ts` exists), the generated config also includes a jobs worker process, so your workers are restarted on every deploy along with the app.
 
 If you see an error from `gyp` you may need to add some additional dependencies before `yarn install` will be able to complete. See the README for `node-type` for more info: https://github.com/nodejs/node-gyp#installation
 
@@ -99,7 +102,7 @@ Before your first deploy you'll need to add some configuration.
 
 #### ecosystem.config.js
 
-By default, baremetal assumes you want to run the `yarn cedar serve` command, which provides both the web and api sides. The web side will be available on port 8910 unless you update your `cedar.toml` file to make it available on another port. The default generated `ecosystem.config.js` will contain this config only, within a service called "serve":
+With `--monitor pm2`, baremetal assumes you want to run the `yarn cedar serve` command, which provides both the web and api sides. The web side will be available on port 8910 unless you update your `cedar.toml` file to make it available on another port. The default generated `ecosystem.config.js` will contain this config only, within a service called "serve":
 
 ```jsx title="ecosystem.config.js"
 module.exports = {
@@ -137,6 +140,16 @@ module.exports = {
 }
 ```
 
+#### systemd units
+
+With `--monitor systemd-user` or `--monitor systemd-system`, setup generates unit files in `systemd/` instead of `ecosystem.config.js`. `<app>.service` runs `cedar serve`. When background jobs are set up, `<app>-jobs@.service` is a template unit that runs one jobs worker per instance: `<app>-jobs@0` for the first entry in the `workers` array of `api/src/lib/jobs.ts`, `<app>-jobs@1` for the second, and so on. `<app>` is your project's directory name.
+
+The units run the app from `/var/www/app/current`, so change `WorkingDirectory` if you use another `path` in `deploy.toml`. They start the app through a login shell so that `node` installed with a version manager such as nvm is on the `PATH`. Each unit runs a single process; systemd has no equivalent of pm2's cluster mode.
+
+Copy the unit files to the server once, before the first deploy. User units go in `~/.config/systemd/user/`, system units in `/etc/systemd/system/`. Your first deploy with `--first-run` then reloads systemd and enables and starts every unit listed in `processNames`.
+
+`systemd-system` runs `sudo systemctl`, so the deploy user needs passwordless `sudo` for `systemctl`, and the generated `User=` in the units must be the user that owns `path`. `systemd-user` needs no `sudo` at all, but see [Starting Processes on Server Restart](#starting-processes-on-server-restart) for the one-time step that lets user units run after a reboot.
+
 #### deploy.toml
 
 This file contains your server configuration: which servers to connect to and which commands to run on them.
@@ -148,7 +161,7 @@ username = "user"
 agentForward = true
 sides = ["api","web"]
 packageManagerCommand = "yarn"
-monitorCommand = "pm2"
+monitor = "pm2"
 path = "/var/www/app"
 processNames = ["serve"]
 repo = "git@github.com:myorg/myapp.git"
@@ -156,7 +169,7 @@ branch = "main"
 keepReleases = 5
 ```
 
-This lists a single server, in the `production` environment, providing the hostname and connection details (`username` and `agentForward`), which `sides` are hosted on this server (by default it's both web and api sides), the `path` to the app code and then which PM2 service names should be (re)started on this server.
+This lists a single server, in the `production` environment, providing the hostname and connection details (`username` and `agentForward`), which `sides` are hosted on this server (by default it's both web and api sides), the `path` to the app code, the process `monitor` and then which process names should be (re)started on this server.
 
 #### Config Options
 
@@ -170,10 +183,11 @@ This lists a single server, in the `production` environment, providing the hostn
 - `agentForward` - [optional] if you have [agent forwarding](https://docs.github.com/en/developers/overview/using-ssh-agent-forwarding) enabled, set this to `true` and your own credentials will be used for further SSH connections from the server (like when connecting to GitHub)
 - `sides` - An array of sides that will be built on this server
 - `packageManagerCommand` - The package manager bin to call, defaults to `yarn` but could be updated to be prefixed with another command first, for example: `doppler run -- yarn`
-- `monitorCommand` - The monitor bin to call, defaults to `pm2` but could be updated to be prefixed with another command first, for example: `doppler run -- pm2`
+- `monitor` - [optional] The process monitor that runs your app: `pm2` (default), `systemd-user` or `systemd-system`. Decides how processes are started for the first time, restarted and stopped
+- `monitorCommand` - [optional] The command the monitor is invoked with. Defaults to `pm2`, `systemctl --user` or `sudo systemctl` depending on `monitor`, but could be prefixed with another command first, for example: `doppler run -- pm2`
 - `path` - The absolute path to the root of the application on the server
 - `migrate` - [optional] Whether or not to run migration processes on this server, defaults to `true`
-- `processNames` - An array of service names from `ecosystem.config.js` which will be (re)started on a successful deploy
+- `processNames` - An array of pm2 app names from `ecosystem.config.js`, or systemd unit names, which will be (re)started on a successful deploy
 - `repo` - The path to the git repo to clone
 - `branch` - [optional] The branch to deploy (defaults to `main`)
 - `keepReleases` - [optional] The number of previous releases to keep on the server, including the one currently being served (defaults to 5)
@@ -273,7 +287,7 @@ Note that the codebase shares a single `ecosystem.config.js` file. If you need a
 
 ## Server Setup
 
-The server needs [pm2](https://pm2.keymetrics.io/docs/usage/quick-start/) installed for the deploy user, since it manages the app's processes. Provisioning the server itself (creating the deploy user, SSH hardening, firewall, TLS certificates, database) is the same as for any Node.js app and is outside the scope of this guide.
+The server needs the process monitor you chose during [App Setup](#app-setup): [pm2](https://pm2.keymetrics.io/docs/usage/quick-start/) has to be installed for the deploy user, while systemd is part of the operating system. Provisioning the server itself (creating the deploy user, SSH hardening, firewall, TLS certificates, database) is the same as for any Node.js app and is outside the scope of this guide.
 
 You will need to create the directory in which your app code will live. This path will be the `path` var in `deploy.toml`. Make sure the username you will connect as in `deploy.toml` has permission to read/write/execute files in this directory. For example, if your `/var` dir is owned by `root`, but you're going to deploy with a user named `deploy`:
 
@@ -385,7 +399,7 @@ You should see something like:
 
 If so then your API side is up and running! The only thing left to test is that the api side has access to the database. This call would be pretty specific to your app, but assuming you have port 8910 open to the world you could simply open a browser to click around to find a page that makes a database request.
 
-Was the problem with starting your PM2 process? That will be harder to debug here in this doc, but visit us in the [forums](https://community.redwoodjs.com) or [Discord](https://cedarjs.com/discord) and we'll try to help!
+Was the problem with starting your process? That will be harder to debug here in this doc, but visit us in the [forums](https://community.redwoodjs.com) or [Discord](https://cedarjs.com/discord) and we'll try to help!
 
 :::note[My pm2 processes are running but your app has errors, how do I see them?]
 
@@ -418,6 +432,8 @@ Note that if you have more than one process running, like we do here, requesting
 
 ## Starting Processes on Server Restart
 
+### pm2
+
 The `pm2` service requires some system "hooks" to be installed so it can boot up using your system's service manager. Otherwise, your PM2 services will need to be manually started again on a server restart. These steps only need to be run the first time you install PM2.
 
 SSH into your server and then run:
@@ -443,6 +459,16 @@ sudo env PATH=$PATH:/home/ubuntu/.nvm/versions/node/v16.13.2/bin /home/ubuntu/.n
 ```
 
 In this example, you would copy `sudo env PATH=$PATH:/home/ubuntu/.nvm/versions/node/v16.13.2/bin /home/ubuntu/.nvm/versions/node/v16.13.2/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu` and run it. You should get a bunch of output along with `[PM2] [v] Command successfully executed.` near the end. Now if your server restarts for whatever reason, your PM2 processes will be restarted once the server is back up.
+
+### systemd
+
+Enabled units start on boot, and the first deploy enables every unit in `processNames`. User units (`systemd-user`) only run while their user has a session though, so let the deploy user's services keep running without one. Run this once when provisioning the server, with your deploy user's name:
+
+```bash
+sudo loginctl enable-linger deploy
+```
+
+System units (`systemd-system`) need nothing more.
 
 ## Customizing the Deploy
 
@@ -644,6 +670,8 @@ Note that the maintenance page will automatically come down as the result of a n
 
 ## Monitoring
 
+With systemd, `systemctl --user status myapp` shows the state of a unit and `journalctl --user -u myapp -f` tails its logs. Drop `--user` and add `sudo` for system units.
+
 PM2 has a nice terminal-based dashboard for monitoring your services:
 
 ```bash
@@ -691,6 +719,8 @@ Now restart your service and it should be available on port 80:
 
 ```bash
 pm2 restart serve
+# or, with systemd
+systemctl --user restart myapp
 ```
 
 This should get your site available on port 80 (for HTTP), but you really want it available on port 443 (for HTTPS). That won't be easy if you continue to use Cedar's internal web server. See the next recipe for a solution.

@@ -811,6 +811,8 @@ Of course if you have a process monitor system watching your workers you'll want
 
 :::
 
+If you deploy with [Baremetal](deploy/baremetal.md), `yarn cedar setup deploy baremetal` generates a worker process for your monitor (a pm2 app or a systemd unit) when jobs are set up, and every deploy restarts it together with the app.
+
 ### NODE_ENV
 
 You'll need to explicitly set your `NODE_ENV` when in environments other than development or test. We like having a `.env` file in a serverfull production environment, and you just include:
@@ -875,8 +877,6 @@ There's still more to add to background jobs! Our current TODO list:
 - More adapters: Redis, SQS, RabbitMQ...
 - CedarJS Admin integration: monitor the state of your outstanding jobs,
   cancel or retry jobs from a UI, read failure logs, and more.
-- Baremetal integration: if jobs are enabled, monitor the workers with pm2 or
-  systemd
 - Lifecycle hooks: `beforePerform()`, `afterPerform()`, `afterSuccess()`,
   `afterFailure()`
 - Let us know what you need! https://cedarjs.com/discord
