@@ -28,6 +28,13 @@ export const DEPLOY = `# This file contains config for a baremetal deployment
 # * passphrase - used if your private key has a passphrase
 # * agentForward - set to \`true\` to forward the client machine's ssh credentials
 #
+# After restarting the processes, the deploy requests the api side's health
+# check endpoint on the server and fails if it doesn't respond in time:
+#
+# * healthCheckUrl - defaults to http://localhost:<[api].port>/graphql/health
+#   on servers that host the api side. Set to \`false\` to skip the check
+# * healthCheckTimeout - seconds to keep retrying, defaults to 30
+#
 # See https://cedarjs.com/docs/deploy/baremetal for more info
 
 [[production.servers]]
@@ -43,6 +50,7 @@ repo = "git@github.com:myorg/myapp.git"
 branch = "main"
 keepReleases = 5
 freeSpaceRequired = 2048
+healthCheckTimeout = 30
 
 # If you have separate api and web servers:
 #
