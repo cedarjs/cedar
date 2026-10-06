@@ -1,3 +1,5 @@
+import fs from 'node:fs'
+
 import { Listr } from 'listr2'
 import { vi, afterEach, beforeEach, describe, it, expect } from 'vitest'
 
@@ -34,6 +36,7 @@ import type {
   LifecycleHooks,
   ServerConfig,
 } from '../baremetal/baremetalHandler.js'
+import { MONITORS, MONITOR_ADAPTERS, isMonitor } from '../baremetal/monitors.js'
 import { SshExecutor } from '../baremetal/SshExecutor.js'
 
 const sshExecutor = new SshExecutor(false)
@@ -49,6 +52,7 @@ function createServerConfig(
     path: '/var/www/app',
     repo: 'git://github.com',
     packageManagerCommand: 'yarn',
+    monitor: 'pm2',
     monitorCommand: 'pm2',
     sides: ['api'],
     keepReleases: 5,
@@ -220,6 +224,15 @@ describe('verifyServerConfig', () => {
     ).toEqual(true)
   })
 
+  it('throws an error if monitor is unknown', () => {
+    // Values from deploy.toml aren't typed, so the test feeds a bad one
+    const config = createServerConfig({ monitor: 'forever' as 'pm2' })
+
+    expect(() => baremetal.verifyServerConfig(config)).toThrow(
+      '"monitor" must be one of "pm2", "systemd-user", "systemd-system"',
+    )
+  })
+
   it('returns true if no problems', () => {
     expect(
       baremetal.verifyServerConfig(
@@ -293,6 +306,42 @@ describe('maintenanceTasks', () => {
     expect(tasks.length).toEqual(2)
     expect(tasks[0].title).toMatch('Starting')
     expect(tasks[1].title).toMatch('Disabling')
+  })
+
+  it('stops and starts processes through the configured monitor', async () => {
+    const execSpy = vi.spyOn(sshExecutor, 'exec').mockResolvedValue({
+      stdout: '',
+      stderr: '',
+      code: 0,
+      signal: null,
+    })
+    const serverConfig = createServerConfig({
+      monitor: 'systemd-user',
+      monitorCommand: 'systemctl --user',
+      processNames: ['myapp', 'myapp-jobs@0'],
+    })
+
+    const upTasks = baremetal.maintenanceTasks('up', sshExecutor, serverConfig)
+    await upTasks[1].task({}, {})
+    expect(upTasks[1].title).toEqual('Stopping myapp, myapp-jobs@0...')
+    expect(execSpy).toHaveBeenLastCalledWith(
+      '/var/www/app',
+      'systemctl --user',
+      ['stop', 'myapp', 'myapp-jobs@0'],
+    )
+
+    const downTasks = baremetal.maintenanceTasks(
+      'down',
+      sshExecutor,
+      serverConfig,
+    )
+    await downTasks[0].task({}, {})
+    expect(downTasks[0].title).toEqual('Starting myapp, myapp-jobs@0...')
+    expect(execSpy).toHaveBeenLastCalledWith(
+      '/var/www/app',
+      'systemctl --user',
+      ['start', 'myapp', 'myapp-jobs@0'],
+    )
   })
 })
 
@@ -418,7 +467,10 @@ describe('serverConfigWithDefaults', () => {
       {},
       createBaremetalYargs(),
     )
-    expect(config).toEqual(baremetal.DEFAULT_SERVER_CONFIG)
+    expect(config).toEqual({
+      ...baremetal.DEFAULT_SERVER_CONFIG,
+      monitorCommand: 'pm2',
+    })
   })
 
   it('allows overriding defaults with custom settings', () => {
@@ -426,6 +478,7 @@ describe('serverConfigWithDefaults', () => {
       port: 12345,
       branch: 'venus',
       packageManagerCommand: 'npm',
+      monitor: 'systemd-user' as const,
       monitorCommand: 'god',
       sides: ['native', 'cli'],
       keepReleases: 2,
@@ -437,6 +490,35 @@ describe('serverConfigWithDefaults', () => {
       createBaremetalYargs(),
     )
     expect(config).toEqual(serverConfig)
+  })
+
+  it("uses the monitor's own command when monitorCommand is not set", () => {
+    expect(
+      baremetal.serverConfigWithDefaults({}, createBaremetalYargs())
+        .monitorCommand,
+    ).toEqual('pm2')
+    expect(
+      baremetal.serverConfigWithDefaults(
+        { monitor: 'systemd-user' },
+        createBaremetalYargs(),
+      ).monitorCommand,
+    ).toEqual('systemctl --user')
+    expect(
+      baremetal.serverConfigWithDefaults(
+        { monitor: 'systemd-system' },
+        createBaremetalYargs(),
+      ).monitorCommand,
+    ).toEqual('sudo systemctl')
+  })
+
+  it('keeps a custom monitorCommand for any monitor', () => {
+    const config = baremetal.serverConfigWithDefaults(
+      { monitor: 'systemd-system', monitorCommand: 'systemctl' },
+      createBaremetalYargs(),
+    )
+
+    expect(config.monitor).toEqual('systemd-system')
+    expect(config.monitorCommand).toEqual('systemctl')
   })
 
   it('provides default port as 22', () => {
@@ -1034,9 +1116,107 @@ describe('deployTasks', () => {
       { before: {}, after: {} },
     )
 
-    expect(Object.keys(tasks).length).toEqual(12)
-    expect(tasks[8].title).toMatch('Starting serve')
-    expect(tasks[9].title).toMatch('Saving serve')
+    expect(Object.keys(tasks).length).toEqual(13)
+    // The check runs before `current` is switched to the new release
+    expect(tasks[7].title).toMatch('Checking for ecosystem.config.js')
+    expect(tasks[8].title).toMatch('Symlinking current')
+    expect(tasks[9].title).toMatch('Starting serve')
+    expect(tasks[10].title).toMatch('Saving serve')
+  })
+
+  it('fails the first run when the pm2 ecosystem file is missing', async () => {
+    const tasks = baremetal.deployTasks(
+      { ...defaultYargs, firstRun: true },
+      sshExecutor,
+      defaultServerConfig,
+      { before: {}, after: {} },
+    )
+
+    // The test fixtures directory has no ecosystem.config.js
+    expect(() => tasks[7].task({}, {})).toThrow(
+      'ecosystem.config.js is missing. The pm2 monitor reads it when ' +
+        'starting processes for the first time.',
+    )
+  })
+
+  it('passes the ecosystem file check when the file exists', () => {
+    const existsSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(true)
+
+    const tasks = baremetal.deployTasks(
+      { ...defaultYargs, firstRun: true },
+      sshExecutor,
+      defaultServerConfig,
+      { before: {}, after: {} },
+    )
+
+    expect(() => tasks[7].task({}, {})).not.toThrow()
+    expect(existsSpy).toHaveBeenCalledWith(
+      expect.stringMatching(/ecosystem\.config\.js$/),
+    )
+    existsSpy.mockRestore()
+  })
+
+  it('enables systemd units on the first run', async () => {
+    const execSpy = vi.spyOn(sshExecutor, 'exec').mockResolvedValue({
+      stdout: '',
+      stderr: '',
+      code: 0,
+      signal: null,
+    })
+
+    const tasks = baremetal.deployTasks(
+      { ...defaultYargs, firstRun: true },
+      sshExecutor,
+      {
+        ...defaultServerConfig,
+        monitor: 'systemd-user',
+        monitorCommand: 'systemctl --user',
+        processNames: ['myapp', 'myapp-jobs@0'],
+      },
+      { before: {}, after: {} },
+    )
+
+    expect(tasks.map((task) => task.title).slice(8, 11)).toEqual([
+      'Reloading systemd unit files...',
+      'Enabling and starting myapp for the first time...',
+      'Enabling and starting myapp-jobs@0 for the first time...',
+    ])
+    expect(tasks[11].title).toMatch('Checking http://')
+
+    await tasks[8].task({}, {})
+    await tasks[9].task({}, {})
+    expect(execSpy.mock.calls).toEqual([
+      ['/var/www/app', 'systemctl --user', ['daemon-reload']],
+      ['/var/www/app', 'systemctl --user', ['enable', '--now', 'myapp']],
+    ])
+  })
+
+  it('restarts systemd units with the configured command', async () => {
+    const execSpy = vi.spyOn(sshExecutor, 'exec').mockResolvedValue({
+      stdout: '',
+      stderr: '',
+      code: 0,
+      signal: null,
+    })
+
+    const tasks = baremetal.deployTasks(
+      defaultYargs,
+      sshExecutor,
+      {
+        ...defaultServerConfig,
+        monitor: 'systemd-system',
+        monitorCommand: 'sudo systemctl',
+        processNames: ['myapp'],
+      },
+      { before: {}, after: {} },
+    )
+
+    expect(tasks[8].title).toEqual('Restarting myapp...')
+    await tasks[8].task({}, {})
+    expect(execSpy).toHaveBeenCalledWith('/var/www/app', 'sudo systemctl', [
+      'restart',
+      'myapp',
+    ])
   })
 
   it('skips clone and symlinks if --no-update flag passed', () => {
@@ -1144,12 +1324,12 @@ describe('deployTasks', () => {
       { before: {}, after: {} },
     )
 
-    expect(tasks[8].title).toMatch('Starting serve process for the first time')
-    expect(tasks[9].title).toMatch('Saving serve state')
-    expect(tasks[10].title).toEqual(
+    expect(tasks[9].title).toMatch('Starting serve process for the first time')
+    expect(tasks[10].title).toMatch('Saving serve state')
+    expect(tasks[11].title).toEqual(
       'Checking http://localhost:8911/graphql/health...',
     )
-    expect(tasks[10].skip?.()).toEqual(false)
+    expect(tasks[11].skip?.()).toEqual(false)
   })
 
   it('runs the health check once after all processes are restarted', () => {
@@ -1976,6 +2156,59 @@ describe('keepPreviousAssets', () => {
 
     expect(linkCalls(execSpy)[0]?.[1]).toEqual(
       `'/var/www/app/${PREVIOUS_RELEASE}/web/dist/assets/it'\\''s-Abc12345.png'`,
+    )
+  })
+})
+
+describe('monitor adapters', () => {
+  it('lists the supported monitors', () => {
+    expect(MONITORS).toEqual(['pm2', 'systemd-user', 'systemd-system'])
+    expect(isMonitor('pm2')).toBe(true)
+    expect(isMonitor('systemd-user')).toBe(true)
+    expect(isMonitor('forever')).toBe(false)
+    expect(isMonitor(undefined)).toBe(false)
+  })
+
+  it('pm2 starts from the ecosystem file and saves the process list on first run', () => {
+    const pm2 = MONITOR_ADAPTERS.pm2
+
+    expect(pm2.defaultCommand).toEqual('pm2')
+    expect(pm2.firstRunConfigFile).toEqual('ecosystem.config.js')
+    expect(pm2.firstRunSetup).toEqual([])
+    expect(pm2.firstRun('serve').map((command) => command.args)).toEqual([
+      ['start', 'current/ecosystem.config.js', '--only', 'serve'],
+      ['save'],
+    ])
+    expect(pm2.restart('serve').args).toEqual(['restart', 'serve'])
+    expect(pm2.stop(['api', 'web']).args).toEqual(['stop', 'api', 'web'])
+    expect(pm2.start(['api', 'web']).args).toEqual(['start', 'api', 'web'])
+  })
+
+  it('systemd reloads units once and enables each unit on first run', () => {
+    for (const monitor of ['systemd-user', 'systemd-system'] as const) {
+      const adapter = MONITOR_ADAPTERS[monitor]
+
+      expect(adapter.firstRunConfigFile).toBeUndefined()
+      expect(adapter.firstRunSetup.map((command) => command.args)).toEqual([
+        ['daemon-reload'],
+      ])
+      expect(adapter.firstRun('myapp').map((command) => command.args)).toEqual([
+        ['enable', '--now', 'myapp'],
+      ])
+      expect(adapter.restart('myapp').args).toEqual(['restart', 'myapp'])
+      expect(adapter.stop(['myapp', 'myapp-jobs@0']).args).toEqual([
+        'stop',
+        'myapp',
+        'myapp-jobs@0',
+      ])
+      expect(adapter.start(['myapp']).args).toEqual(['start', 'myapp'])
+    }
+
+    expect(MONITOR_ADAPTERS['systemd-user'].defaultCommand).toEqual(
+      'systemctl --user',
+    )
+    expect(MONITOR_ADAPTERS['systemd-system'].defaultCommand).toEqual(
+      'sudo systemctl',
     )
   })
 })
