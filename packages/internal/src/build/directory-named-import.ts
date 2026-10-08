@@ -26,10 +26,17 @@ import { importStatementPath, resolveFile } from '@cedarjs/project-config'
  * elsewhere on a line — inside a string or comment sharing that line, say —
  * isn't rewritten, and excludes dynamic `import(...)` calls (the babel
  * plugin doesn't rewrite those either).
+ *
+ * The clause between the keyword and the source string never contains `=`,
+ * `;`, `(` or `)`, so matching stops at the first of those. Without that
+ * stop, every `export const x = ...` or `export type X = { ... }` line scans
+ * ahead to the next quote character, which can be the source string of an
+ * unrelated later statement. On large generated files with few quotes (e.g.
+ * Prisma's `models/*.ts`) that scanning is quadratic and takes minutes.
  */
 
 const RELATIVE_IMPORT_RE =
-  /^(\s*(?:import|export)\s[^'"]*?)(['"])(\.\.?\/[^'"]+)\2/gm
+  /^(\s*(?:import|export)\s[^'"=;()]*?)(['"])(\.\.?\/[^'"]+)\2/gm
 
 export function applyDirectoryNamedImport(
   code: string,

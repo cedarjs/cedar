@@ -100,6 +100,32 @@ describe('applyDirectoryNamedImport', () => {
     expect(applyDirectoryNamedImport(code, FIXTURE_FILE)).toBe(code)
   })
 
+  it('does not rewrite a dynamic import() inside an exported function', () => {
+    const code = `export const load = async () => {\n  const { ImpModule } = await import('./Module')\n}`
+    expect(applyDirectoryNamedImport(code, FIXTURE_FILE)).toBe(code)
+  })
+
+  it('rewrites a re-export that follows an export without a source', () => {
+    const code = `export const items = [\n  first,\n  second,\n]\n\nexport { ExpModule } from './Module'`
+    expect(applyDirectoryNamedImport(code, FIXTURE_FILE)).toBe(
+      `export const items = [\n  first,\n  second,\n]\n\nexport { ExpModule } from './Module/Module'`,
+    )
+  })
+
+  it('handles large files with many quote-free exports quickly', () => {
+    const typeBlocks = Array.from(
+      { length: 20_000 },
+      (_, i) => `export type T${i} = {\n  id: number\n  count: number\n}\n`,
+    ).join('\n')
+    const code = `${typeBlocks}\nexport type { Thing } from 'some-package'`
+
+    const start = performance.now()
+    const result = applyDirectoryNamedImport(code, FIXTURE_FILE)
+
+    expect(performance.now() - start).toBeLessThan(2000)
+    expect(result).toBe(code)
+  })
+
   it('does not rewrite import-like text inside a string that is not at the start of a line', () => {
     const code = `const doc = "See: import { ImpModule } from './Module'"`
     expect(applyDirectoryNamedImport(code, FIXTURE_FILE)).toBe(code)
