@@ -341,7 +341,7 @@ export const handler = async ({
       !fs.existsSync(cedarPaths.api.src) ||
       !fs.existsSync(cedarPaths.web.src)
     ) {
-      console.log('api.src or web.src does not exist')
+      warnUdFallback('api.src or web.src does not exist')
       return null
     }
 
