@@ -307,8 +307,8 @@ export const handler = async ({
   const warnUdFallback = (reason: string) => {
     console.warn(
       c.warning(
-        `--ud has no effect: ${reason}. Running the classic api and web ` +
-          'dev servers instead.',
+        `--ud has no effect: ${reason}. Falling back to classic dev-server ` +
+          'mode.',
       ),
     )
   }
@@ -332,8 +332,7 @@ export const handler = async ({
     if (serverFile) {
       // Custom server files are not supported by the unified dev server
       warnUdFallback(
-        'the unified dev server does not support a custom server file ' +
-          '(api/src/server.ts)',
+        'the unified dev server does not support a custom server file',
       )
       return null
     }
