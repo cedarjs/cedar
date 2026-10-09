@@ -456,6 +456,40 @@ describe('yarn cedar dev', () => {
     expect(apiCommand?.command).toContain('--port 8911')
   })
 
+  it('Should warn when --ud falls back because of a custom server file', async () => {
+    vi.mocked(serverFileExists).mockReturnValue(true)
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    await handler({ workspace: ['api', 'web'], ud: true })
+
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('custom server file'),
+    )
+    warn.mockRestore()
+  })
+
+  it('Should warn when --ud falls back because only one workspace is requested', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    await handler({ workspace: ['web'], ud: true })
+
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('both the api and web sides'),
+    )
+    warn.mockRestore()
+  })
+
+  it('Should not warn about --ud when the unified dev server is used', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    await handler({ workspace: ['api', 'web'], ud: true })
+
+    expect(warn).not.toHaveBeenCalledWith(
+      expect.stringContaining('--ud has no effect'),
+    )
+    warn.mockRestore()
+  })
+
   it('Should not start the jobs worker when jobs are not configured', async () => {
     await handler({ workspace: ['api', 'web'] })
 
