@@ -7,6 +7,7 @@ await build({
     entryPoints: [
       './src/index.ts',
       './src/packageManager.ts',
+      './src/prismaClientOutputDirsWorker.ts',
       './src/workspaces.ts',
     ],
     format: 'esm',

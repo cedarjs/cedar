@@ -27,7 +27,11 @@ import {
   applySrcAlias,
 } from '@cedarjs/internal/dist/build/api.js'
 import { findApiFiles } from '@cedarjs/internal/dist/files.js'
-import { getConfig, getPaths } from '@cedarjs/project-config'
+import {
+  createPrismaClientFileMatcher,
+  getConfig,
+  getPaths,
+} from '@cedarjs/project-config'
 
 import { generateDiffSourceMap } from './lib/generateDiffSourceMap.js'
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
@@ -374,9 +378,14 @@ export async function buildCedarApp({
   plugins.push(cedarMockCellDataPlugin())
 
   if (workspace.includes('api')) {
+    const prismaClientFiles = createPrismaClientFileMatcher()
+
     plugins.push({
       name: 'cedar-vite-api-babel-transform',
       enforce: 'pre',
+      async buildStart() {
+        await prismaClientFiles.load()
+      },
       async transform(code: string, id: string) {
         if (!/\.(js|ts|tsx|jsx)$/.test(id)) {
           return null
@@ -388,6 +397,23 @@ export async function buildCedarApp({
 
         if (!normalizePath(id).startsWith(normalizePath(cedarPaths.api.base))) {
           return null
+        }
+
+        // A Prisma client generated into api/src only needs its import
+        // specifiers pointed at the compiled .js output. Cedar's source
+        // transforms are no-ops on generated client code, and its model files
+        // can be tens of megabytes, which makes running them slow.
+        if (await prismaClientFiles.matches(id)) {
+          const rewrittenCode = applyImportExtensions(code, id)
+
+          if (rewrittenCode === code) {
+            return null
+          }
+
+          return {
+            code: rewrittenCode,
+            map: generateDiffSourceMap(code, rewrittenCode),
+          }
         }
 
         // The Babel pass is only needed to apply a user's custom

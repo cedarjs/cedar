@@ -34,7 +34,11 @@ import type {
   GraphQLYogaOptions,
 } from '@cedarjs/graphql-server'
 import { applyGqlormInject } from '@cedarjs/internal/dist/build/api-graphql-transforms.js'
-import { getConfig, getPaths } from '@cedarjs/project-config'
+import {
+  createPrismaClientFileMatcher,
+  getConfig,
+  getPaths,
+} from '@cedarjs/project-config'
 
 import { generateDiffSourceMap } from './lib/generateDiffSourceMap.js'
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
@@ -204,6 +208,7 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
   const cedarPaths = getPaths()
   const cedarConfig = getConfig()
   const normalizedBase = normalizePath(cedarPaths.base)
+  const prismaClientFiles = createPrismaClientFileMatcher()
 
   // The Babel pass is only needed to apply a user's custom
   // api/babel.config.js: getApiSideBabelPluginsForVite() is empty (all of
@@ -275,6 +280,9 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
       {
         name: 'cedar-api-babel-transform',
         enforce: 'pre',
+        async buildStart() {
+          await prismaClientFiles.load()
+        },
         async transform(code, id) {
           if (!/\.(ts|tsx|js|jsx)$/.test(id)) {
             return null
@@ -285,6 +293,13 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
           }
 
           if (!id.startsWith(normalizedBase)) {
+            return null
+          }
+
+          // Cedar's source transforms are no-ops on a Prisma client generated
+          // into api/src, and its model files can be tens of megabytes, which
+          // makes running them slow.
+          if (await prismaClientFiles.matches(id)) {
             return null
           }
 

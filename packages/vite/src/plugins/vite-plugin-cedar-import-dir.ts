@@ -6,7 +6,11 @@ import { parseSync } from 'oxc-parser'
 import { normalizePath } from 'vite'
 import type { Plugin } from 'vite'
 
-import { importStatementPath, getPaths } from '@cedarjs/project-config'
+import {
+  createPrismaClientFileMatcher,
+  importStatementPath,
+  getPaths,
+} from '@cedarjs/project-config'
 
 /**
  * This Vite plugin will search for import statements that include a glob double
@@ -25,12 +29,21 @@ import { importStatementPath, getPaths } from '@cedarjs/project-config'
  * ```
  */
 export function cedarImportDirPlugin(): Plugin {
+  const prismaClientFiles = createPrismaClientFileMatcher()
+
   return {
     name: 'vite-plugin-cedar-import-dir',
     enforce: 'pre',
+    async buildStart() {
+      await prismaClientFiles.load()
+    },
     async transform(code, id) {
       // Check if the code contains import statements with glob patterns
       if (!code.includes('/**/')) {
+        return null
+      }
+
+      if (await prismaClientFiles.matches(id)) {
         return null
       }
 

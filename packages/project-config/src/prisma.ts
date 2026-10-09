@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { Worker } from 'node:worker_threads'
 
 import type { PrismaConfig } from 'prisma'
 
@@ -170,6 +171,113 @@ export async function getDataMigrationsPath(
   const migrationsDir = path.dirname(migrationsPath)
 
   return path.join(migrationsDir, 'dataMigrations')
+}
+
+/**
+ * Gets the absolute output directories of the project's Prisma client
+ * generators (`prisma-client` and `prisma-client-js`).
+ *
+ * Other generators are not included: third-party generators (e.g. Zod schema
+ * generators) can emit source that relies on Cedar's import transforms.
+ *
+ * Returns an empty array if the schema can't be read or no client generator
+ * has an output path.
+ */
+export async function getPrismaClientOutputDirs(): Promise<string[]> {
+  try {
+    const mod = await import('@prisma/internals')
+    // `mod.default || mod` handles ESM vs CJS interop: in ESM context
+    // @prisma/internals resolves everything onto `default`, in CJS it's
+    // directly on the module object.
+    const { getConfig } = mod.default || mod
+
+    const { schemas, schemaRootDir } = await getPrismaSchemas()
+    const config = await getConfig({ datamodel: schemas })
+
+    return config.generators
+      .filter((generator) =>
+        ['prisma-client', 'prisma-client-js'].includes(
+          generator.provider.value ?? '',
+        ),
+      )
+      .map((generator) => generator.output?.value)
+      .filter((output): output is string => Boolean(output))
+      .map((output) =>
+        path.isAbsolute(output) ? output : path.resolve(schemaRootDir, output),
+      )
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Same as `getPrismaClientOutputDirs()`, but resolved in a worker thread.
+ *
+ * Loading `@prisma/internals` has process-wide side effects that slow down a
+ * Vite build running in the same process by several seconds on large
+ * projects. A worker has its own module registry, so those side effects stay
+ * contained.
+ */
+export function getPrismaClientOutputDirsIsolated(): Promise<string[]> {
+  return new Promise((resolve) => {
+    const worker = new Worker(
+      new URL('./prismaClientOutputDirsWorker.js', import.meta.url),
+    )
+
+    worker.once('message', (outputDirs: unknown) => {
+      resolve(
+        Array.isArray(outputDirs)
+          ? outputDirs.filter((dir): dir is string => typeof dir === 'string')
+          : [],
+      )
+      void worker.terminate()
+    })
+    worker.once('error', () => resolve([]))
+    worker.once('exit', () => resolve([]))
+  })
+}
+
+/**
+ * Creates a matcher that reports whether a file is part of the project's
+ * generated Prisma client. Build pipelines use it to skip Cedar's source
+ * transforms for that code.
+ *
+ * The output directories are resolved once and reused for the lifetime of the
+ * matcher, so create a new one per build. Call `load()` from a build start
+ * hook: resolving them lazily from the first transform makes the lookup
+ * compete with module transforms, which stalls every transform waiting on it.
+ *
+ * @param resolveOutputDirs - Resolves the Prisma client output directories
+ */
+export function createPrismaClientFileMatcher(
+  resolveOutputDirs: () => Promise<
+    string[]
+  > = getPrismaClientOutputDirsIsolated,
+) {
+  let outputDirs: Promise<string[]> | undefined
+
+  const getOutputDirs = () => {
+    outputDirs ??= resolveOutputDirs()
+
+    return outputDirs
+  }
+
+  return {
+    load: async () => {
+      await getOutputDirs()
+    },
+    matches: async (filePath: string) => {
+      return (await getOutputDirs()).some((dir) => {
+        const relativePath = path.relative(dir, filePath)
+
+        return (
+          relativePath !== '' &&
+          !relativePath.startsWith('..') &&
+          !path.isAbsolute(relativePath)
+        )
+      })
+    },
+  }
 }
 
 type ResolveReturnType =

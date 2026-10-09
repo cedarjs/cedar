@@ -11,7 +11,14 @@ import {
 const TEST_CEDAR_CWD = '/Users/test/cedar-app'
 const API_SRC = path.join(TEST_CEDAR_CWD, 'api/src')
 
+const PRISMA_CLIENT_DIR = path.join(API_SRC, 'generated/prisma')
+
 vi.mock('@cedarjs/project-config', () => ({
+  createPrismaClientFileMatcher: () => ({
+    load: async () => {},
+    matches: async (filePath: string) =>
+      filePath.startsWith(PRISMA_CLIENT_DIR + path.sep),
+  }),
   getPaths: () => ({
     api: {
       src: API_SRC,
@@ -33,11 +40,11 @@ const SERVICES_DIR = path.join(API_SRC, 'services')
 const FUNCTIONS_DIR = path.join(API_SRC, 'functions')
 
 describe('cedarOtelWrappingPlugin', () => {
-  it('returns null for files outside api/src/', () => {
+  it('returns null for files outside api/src/', async () => {
     const transform = getPluginTransform()
     const code = `export const contacts = () => db.contact.findMany()`
 
-    const result = transform(
+    const result = await transform(
       code,
       path.join(TEST_CEDAR_CWD, 'web/src/pages/HomePage.tsx'),
     )
@@ -45,11 +52,23 @@ describe('cedarOtelWrappingPlugin', () => {
     expect(result).toBeNull()
   })
 
-  it('returns null for node_modules files', () => {
+  it('returns null for generated Prisma client files', async () => {
+    const transform = getPluginTransform()
+    const code = `export const UserScalarFieldEnum = () => {}`
+
+    const result = await transform(
+      code,
+      path.join(PRISMA_CLIENT_DIR, 'models/User.ts'),
+    )
+
+    expect(result).toBeNull()
+  })
+
+  it('returns null for node_modules files', async () => {
     const transform = getPluginTransform()
     const code = `export const contacts = () => {}`
 
-    const result = transform(
+    const result = await transform(
       code,
       path.join(TEST_CEDAR_CWD, 'node_modules/some-lib/index.js'),
     )
@@ -57,7 +76,7 @@ describe('cedarOtelWrappingPlugin', () => {
     expect(result).toBeNull()
   })
 
-  it('transforms files in api/src/services/', () => {
+  it('transforms files in api/src/services/', async () => {
     const transform = getPluginTransform()
     const code = dedent`
       export const contacts = () => {
@@ -65,7 +84,7 @@ describe('cedarOtelWrappingPlugin', () => {
       }
     `
 
-    const result = transform(code, path.join(SERVICES_DIR, 'contacts.ts'))
+    const result = await transform(code, path.join(SERVICES_DIR, 'contacts.ts'))
 
     expect(result).not.toBeNull()
     const output = (result as { code: string }).code
@@ -78,7 +97,7 @@ describe('cedarOtelWrappingPlugin', () => {
     expect(output).toContain("'redwoodjs:api:services:contacts'")
   })
 
-  it('transforms files in api/src/functions/', () => {
+  it('transforms files in api/src/functions/', async () => {
     const transform = getPluginTransform()
     const code = dedent`
       export const handler = async (event, context) => {
@@ -86,7 +105,7 @@ describe('cedarOtelWrappingPlugin', () => {
       }
     `
 
-    const result = transform(code, path.join(FUNCTIONS_DIR, 'custom.ts'))
+    const result = await transform(code, path.join(FUNCTIONS_DIR, 'custom.ts'))
 
     expect(result).not.toBeNull()
     const output = (result as { code: string }).code
