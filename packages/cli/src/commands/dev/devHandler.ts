@@ -304,6 +304,15 @@ export const handler = async ({
   // API via Vite's SSR environment.
   //
   // When only web is included, fall back to the standalone Vite dev server.
+  const warnUdFallback = (reason: string) => {
+    console.warn(
+      c.warning(
+        `--ud has no effect: ${reason}. Falling back to classic dev-server ` +
+          'mode.',
+      ),
+    )
+  }
+
   const buildUnifiedDevCommand = () => {
     if (!ud) {
       return null
@@ -311,15 +320,20 @@ export const handler = async ({
 
     if (streamingSsrEnabled) {
       // Streaming SSR has its own dev server setup
+      warnUdFallback('streaming SSR uses its own dev server')
       return null
     }
 
     if (!workspace.includes('api') || !workspace.includes('web')) {
+      warnUdFallback('the unified dev server needs both the api and web sides')
       return null
     }
 
     if (serverFile) {
       // Custom server files are not supported by the unified dev server
+      warnUdFallback(
+        'the unified dev server does not support a custom server file',
+      )
       return null
     }
 
@@ -327,7 +341,7 @@ export const handler = async ({
       !fs.existsSync(cedarPaths.api.src) ||
       !fs.existsSync(cedarPaths.web.src)
     ) {
-      console.log('api.src or web.src does not exist')
+      warnUdFallback('api.src or web.src does not exist')
       return null
     }
 
