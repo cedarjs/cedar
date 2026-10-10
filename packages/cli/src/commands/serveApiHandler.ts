@@ -1,5 +1,5 @@
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
-import { getPaths } from '@cedarjs/project-config'
+import { getOTelImportArgs, getPaths } from '@cedarjs/project-config'
 
 interface ServeApiArgv {
   apiRootPath?: string
@@ -7,7 +7,12 @@ interface ServeApiArgv {
 }
 
 export async function apiServerFileHandler(argv: ServeApiArgv) {
-  const args = ['server.js', '--apiRootPath', argv.apiRootPath ?? '/']
+  const args = [
+    ...getOTelImportArgs(),
+    'server.js',
+    '--apiRootPath',
+    argv.apiRootPath ?? '/',
+  ]
 
   if (argv.port) {
     args.push('--apiPort', String(argv.port))

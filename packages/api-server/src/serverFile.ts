@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { getPaths } from '@cedarjs/project-config'
+import { getOTelImportArgs, getPaths } from '@cedarjs/project-config'
 
 import type { APIParsedOptions } from './types.js'
 
@@ -44,10 +44,14 @@ export async function runApiDistServerFile(
   }
 
   await new Promise<void>((resolve, reject) => {
-    const child = spawn(process.execPath, [apiDistServerFilePath(), ...args], {
-      cwd: getPaths().api.dist,
-      stdio: 'inherit',
-    })
+    const child = spawn(
+      process.execPath,
+      [...getOTelImportArgs(), apiDistServerFilePath(), ...args],
+      {
+        cwd: getPaths().api.dist,
+        stdio: 'inherit',
+      },
+    )
 
     child.on('error', reject)
 
