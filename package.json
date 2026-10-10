@@ -76,7 +76,7 @@
     "@actions/glob": "0.6.1",
     "@babel/generator": "7.29.8",
     "@babel/parser": "7.29.9",
-    "@babel/traverse": "7.29.8",
+    "@babel/traverse": "7.29.10",
     "@babel/types": "7.29.8",
     "@npmcli/arborist": "9.9.2",
     "@playwright/test": "1.63.0",
