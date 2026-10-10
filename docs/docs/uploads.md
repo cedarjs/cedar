@@ -237,6 +237,17 @@ Resolve `avatarUrl` to the upload id (a plain `avatarUrl: (user) => user.avatarI
 
 Signed URLs default to `Content-Disposition: attachment`. The stored MIME type is whatever the client claimed, and an inline `image/svg+xml` served from your own origin is a stored cross-site-scripting vector, so inline rendering is opt-in. Pass `disposition: 'inline'` to `createWithSignedUrlDirective()` in the generated directive file when your profiles only admit types you trust to render.
 
+Filesystem targets serve files through the api's serve route, which sends active content (HTML, SVG, XML, JavaScript and PDF) as an attachment even when the signed URL asks for inline. To preview PDFs in the browser, list them in the plugin's `inlineTypes` option:
+
+```ts
+await server.register(cedarUploadsPlugin, {
+  // ...
+  inlineTypes: ['application/pdf'],
+})
+```
+
+Only list types you're comfortable rendering from your app's origin. S3 targets return presigned URLs to the bucket, so the disposition signed into the URL is always used there.
+
 You can do the same thing in a service. Object-storage targets sign a URL; a database target has no URL, so read its bytes into a `data:` URI instead:
 
 ```ts
@@ -362,7 +373,7 @@ main()
 | `/upload/webhook/s3`    | POST   | S3 event notifications via SNS (only with the `s3Webhook` option) |
 | `/upload/health`        | GET    | Lists the configured targets                                      |
 
-`authenticate` resolves the requesting user from the request's auth header using the same decoder and `getCurrentUser` the GraphQL server uses. With it configured, the upload routes reject unauthenticated requests and tokens issued to someone else, so a leaked token can't be spent by anyone but its owner. The setup command wires it up when your app has auth. Without it, the token itself is the only identity on the route, which is only appropriate for apps with no auth at all. Other options: `prefix` (default `/upload`), `bodyLimit` (an outer ceiling, default 500 MB; the effective limit per request comes from the token), and `serveCacheControl`.
+`authenticate` resolves the requesting user from the request's auth header using the same decoder and `getCurrentUser` the GraphQL server uses. With it configured, the upload routes reject unauthenticated requests and tokens issued to someone else, so a leaked token can't be spent by anyone but its owner. The setup command wires it up when your app has auth. Without it, the token itself is the only identity on the route, which is only appropriate for apps with no auth at all. Other options: `prefix` (default `/upload`), `bodyLimit` (an outer ceiling, default 500 MB; the effective limit per request comes from the token), `serveCacheControl`, and `inlineTypes` (see [Reading files back](#reading-files-back)).
 
 The FS route rejects early: a `Content-Length` beyond what the token allows is refused before any body is read, and files are aborted mid-stream once they pass the profile's `maxFileSize`. Each file's row is created before its bytes are written, so a crash in between leaves a pending row the cleanup job can find rather than an orphaned file.
 

@@ -37,10 +37,11 @@ const MULTIPART_ENVELOPE_ALLOWANCE = 64 * 1024
 
 /**
  * MIME types a browser executes or renders as a document when served
- * inline from this origin. They are always served as attachments, even when
- * the signed URL asked for inline, because the stored MIME type is
+ * inline from this origin. They are served as attachments, even when the
+ * signed URL asked for inline, because the stored MIME type is
  * client-asserted and an inline document from the app's origin is stored
- * cross-site scripting.
+ * cross-site scripting. The plugin's `inlineTypes` option exempts specific
+ * types.
  */
 const ACTIVE_CONTENT_TYPES = new Set([
   'text/html',
@@ -88,6 +89,14 @@ export interface UploadPluginOptions {
   }
   /** `Cache-Control` for served files. Defaults to `private, max-age=3600`. */
   serveCacheControl?: string
+  /**
+   * Active-content MIME types the serve route may send inline when the
+   * signed URL asks for `inline`, e.g. `['application/pdf']` to preview PDFs
+   * in the browser. Every other active type is always served as an
+   * attachment. Only list types you're comfortable rendering from the app's
+   * origin, keeping in mind that the stored MIME type is client-asserted.
+   */
+  inlineTypes?: string[]
 }
 
 function sendError(reply: FastifyReply, e: unknown) {
@@ -105,8 +114,8 @@ function headerValue(req: FastifyRequest, name: string): string | undefined {
   return Array.isArray(value) ? value[0] : value
 }
 
-function isActiveContent(mimeType: string): boolean {
-  return ACTIVE_CONTENT_TYPES.has(mimeType.split(';')[0].trim().toLowerCase())
+function normalizeMimeType(mimeType: string): string {
+  return mimeType.split(';')[0].trim().toLowerCase()
 }
 
 function contentDispositionHeader(
@@ -142,7 +151,10 @@ export async function cedarUploadsPlugin(
     authenticate,
     s3Webhook,
     serveCacheControl = 'private, max-age=3600',
+    inlineTypes = [],
   } = options
+
+  const allowedInlineTypes = new Set(inlineTypes.map(normalizeMimeType))
 
   if (!tokenSecret) {
     throw new UploadError(
@@ -343,9 +355,12 @@ export async function cedarUploadsPlugin(
           throw new UploadError('NOT_FOUND', 'File not found.', e)
         }
 
-        const disposition: ContentDisposition = isActiveContent(upload.mimeType)
-          ? 'attachment'
-          : requested
+        const mimeType = normalizeMimeType(upload.mimeType)
+        const disposition: ContentDisposition =
+          ACTIVE_CONTENT_TYPES.has(mimeType) &&
+          !allowedInlineTypes.has(mimeType)
+            ? 'attachment'
+            : requested
 
         return reply
           .code(200)
