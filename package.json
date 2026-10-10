@@ -98,9 +98,6 @@
     "boxen": "5.1.2",
     "concurrently": "9.2.4",
     "cross-env": "7.0.3",
-    "cypress": "13.17.0",
-    "cypress-fail-fast": "7.1.1",
-    "cypress-wait-until": "3.0.2",
     "dependency-cruiser": "16.10.4",
     "dotenv": "16.6.1",
     "eslint": "8.57.1",
@@ -146,9 +143,6 @@
       "built": true
     },
     "better-sqlite3": {
-      "built": true
-    },
-    "cypress": {
       "built": true
     },
     "esbuild": {

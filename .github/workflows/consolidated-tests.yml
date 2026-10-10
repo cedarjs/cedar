@@ -40,8 +40,11 @@ jobs:
           REDWOOD_REDIRECT_TELEMETRY: 'http://127.0.0.1:48619' # Random port
           YARN_ENABLE_IMMUTABLE_INSTALLS: false
 
-      - name: 🌲 Install Cypress
-        run: yarn cypress install
+      - name: 🎭 Install Playwright OS dependencies
+        run: npx playwright install-deps chromium
+
+      - name: 🎭 Install playwright dependencies
+        run: npx playwright install chromium
 
       - name: 🌲 Create a Cedar App
         id: crwa
@@ -63,9 +66,9 @@ jobs:
           yarn cedar dev --fwd="--no-open" 2>&1 | tee dev_server.log &
         working-directory: ${{ steps.crwa.outputs.project-path }}
 
-      - name: 🌲 Run Cypress
+      - name: 🌲 Run the tutorial E2E test
         env:
-          CYPRESS_RW_PATH: ${{ steps.crwa.outputs.project-path }}
+          CEDAR_TEST_PROJECT_PATH: ${{ steps.crwa.outputs.project-path }}
         working-directory: ./tasks/e2e
         run: |
           echo "Waiting for dev server..."
@@ -79,14 +82,18 @@ jobs:
             sleep 2
           done
           echo "Dev server is up"
-          npx cypress run \
-            --browser chrome \
-            --spec 'cypress/e2e/01-tutorial/*.cy.js'
+          npx playwright test
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: logs
-          path: |
-            ${{ steps.crwa.outputs.project-path }}/dev_server.log
-            ${{ steps.crwa.outputs.project-path }}/e2e.log
+          path: ${{ steps.crwa.outputs.project-path }}/dev_server.log
+
+      - name: 🎭 Upload Playwright traces
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: playwright-traces-tutorial-e2e
+          path: tasks/e2e/test-results/**
+          if-no-files-found: ignore
