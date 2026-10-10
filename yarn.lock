@@ -3977,7 +3977,7 @@ __metadata:
     "@types/react": "npm:^19.2.0"
     "@types/ws": "npm:^8"
     "@types/yargs-parser": "npm:21.0.3"
-    "@universal-deploy/store": "npm:^0.2.1"
+    "@universal-deploy/store": "npm:^0.3.0"
     "@universal-deploy/vite": "npm:^0.1.9"
     "@vitejs/plugin-react": "npm:4.7.0"
     "@whatwg-node/fetch": "npm:0.12.1"
@@ -12697,7 +12697,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@universal-deploy/store@npm:^0.2.1, @universal-deploy/store@npm:^0.2.2":
+"@universal-deploy/store@npm:^0.2.2":
   version: 0.2.2
   resolution: "@universal-deploy/store@npm:0.2.2"
   dependencies:
@@ -12709,6 +12709,20 @@ __metadata:
     srvx:
       optional: true
   checksum: 10c0/88314de33923cfde675efa2e4b897447febc202ca667d4ad2877e87e70a3e0fff79a293ab6df18d3b42eeda7a338179f6682a9d55af33959ed12c2a4c5ce8d10
+  languageName: node
+  linkType: hard
+
+"@universal-deploy/store@npm:^0.3.0":
+  version: 0.3.0
+  resolution: "@universal-deploy/store@npm:0.3.0"
+  dependencies:
+    srvx: "npm:*"
+  peerDependencies:
+    srvx: "*"
+  peerDependenciesMeta:
+    srvx:
+      optional: true
+  checksum: 10c0/6385a55cbb8a88c77a72d04033582dd45fb9098b7ffe064c5a6d732a795921ec1017d3e4804fe145714d6ee453560b9a4eda43666583690018b370a28491d19a
   languageName: node
   linkType: hard
 
