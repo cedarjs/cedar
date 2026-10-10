@@ -79,6 +79,29 @@ export const getExecaOptions = (
   }
 }
 
+/**
+ * Returns a copy of `options` whose env carries consent for Prisma's AI-agent
+ * guard, so `prisma migrate reset` can run unattended under agents like
+ * Claude Code. A value the caller already set in `process.env` is kept as-is.
+ */
+export function withPrismaResetConsent<T extends ExecaOptions>(options: T): T {
+  if ('PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION' in process.env) {
+    return options
+  }
+
+  // The test-project scripts only ever reset the SQLite dev.db of a freshly
+  // generated, throwaway project, so there is no real data to lose
+  return {
+    ...options,
+    env: {
+      ...options.env,
+      PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION:
+        "Cedar's test-project script is resetting the freshly generated, " +
+        'throwaway SQLite database of a newly created test project.',
+    },
+  }
+}
+
 // Confirmation prompt when using --no-copyFromFixture --no-link'
 export async function confirmNoFixtureNoLink(
   copyFromFixtureOption: boolean,
