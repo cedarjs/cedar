@@ -24,7 +24,7 @@ Before proposing a design for a new feature, read [`docs/design-principles.md`](
 - `yarn format` / `yarn format:check`: run Prettier write/check.
 - `yarn test`: run package tests via Nx. Use `CI=1` for non-interactive mode.
 - `yarn test:types`: run type-level tests.
-- `yarn e2e`: run end-to-end tests (requires Cypress). Use `CI=1` for headless mode.
+- `yarn e2e`: create a fresh app and run the Playwright tutorial test against it (`tasks/e2e/`).
 
 To run commands on a single package:
 
@@ -83,7 +83,7 @@ Write for readers who see only the **current** state of the code and have no his
 
 - Unit/integration tests are executed through `yarn test` (Nx targets). When running `vitest` directly, use `--run` to disable watch mode.
 - Type tests use `yarn test:types`.
-- E2E: Cypress and Playwright.
+- E2E: Playwright.
 - When adding tests, follow local package naming patterns and keep tests colocated with the package.
 - For larger changes, run `yarn build && yarn build:pack` to generate package tarballs, then run `yarn install` inside `local-testing-project` to verify your changes inside an actual Cedar application.
 

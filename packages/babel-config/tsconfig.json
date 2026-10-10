@@ -4,6 +4,5 @@
     "types": ["node", "jest"]
   },
   "include": ["ambient.d.ts", "src"],
-  // Excluding cypress types, because it interferes with expect in tests
   "references": [{ "path": "../project-config" }]
 }

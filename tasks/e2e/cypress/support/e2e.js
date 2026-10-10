@@ -1,1 +1,0 @@
-import 'cypress-fail-fast'

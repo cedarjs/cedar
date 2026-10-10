@@ -8,7 +8,8 @@ lerna-debug.log
 yarn-error.log
 **/*.tsbuildinfo
 tasks/.verdaccio
-tasks/e2e/cypress/fixtures/example.json
+tasks/e2e/test-results
+tasks/e2e/playwright-report
 tmp/
 blog-test-project/*
 .yarn/*
