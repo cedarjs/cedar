@@ -1018,7 +1018,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/parser@npm:7.29.9, @babel/parser@npm:^7.1.0, @babel/parser@npm:^7.1.6, @babel/parser@npm:^7.14.7, @babel/parser@npm:^7.20.7, @babel/parser@npm:^7.24.7, @babel/parser@npm:^7.26.10, @babel/parser@npm:^7.29.3, @babel/parser@npm:^7.29.7, @babel/parser@npm:^7.29.8, @babel/parser@npm:^7.3.2":
+"@babel/parser@npm:7.29.9, @babel/parser@npm:^7.1.0, @babel/parser@npm:^7.1.6, @babel/parser@npm:^7.14.7, @babel/parser@npm:^7.20.7, @babel/parser@npm:^7.24.7, @babel/parser@npm:^7.26.10, @babel/parser@npm:^7.29.3, @babel/parser@npm:^7.29.7, @babel/parser@npm:^7.29.8, @babel/parser@npm:^7.29.9, @babel/parser@npm:^7.3.2":
   version: 7.29.9
   resolution: "@babel/parser@npm:7.29.9"
   dependencies:
@@ -2178,18 +2178,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/traverse@npm:7.29.8, @babel/traverse@npm:^7.1.6, @babel/traverse@npm:^7.18.9, @babel/traverse@npm:^7.26.10, @babel/traverse@npm:^7.29.7":
-  version: 7.29.8
-  resolution: "@babel/traverse@npm:7.29.8"
+"@babel/traverse@npm:7.29.10, @babel/traverse@npm:^7.1.6, @babel/traverse@npm:^7.18.9, @babel/traverse@npm:^7.26.10, @babel/traverse@npm:^7.29.7":
+  version: 7.29.10
+  resolution: "@babel/traverse@npm:7.29.10"
   dependencies:
     "@babel/code-frame": "npm:^7.29.7"
     "@babel/generator": "npm:^7.29.8"
     "@babel/helper-globals": "npm:^7.29.7"
-    "@babel/parser": "npm:^7.29.8"
+    "@babel/parser": "npm:^7.29.9"
     "@babel/template": "npm:^7.29.7"
     "@babel/types": "npm:^7.29.8"
     debug: "npm:^4.3.1"
-  checksum: 10c0/87a28989c434add26d787776ac6d30f749b89cb030f2a605c89f671a516a6fa165ac0476f07e2b69feed70128b2734cae1cbbf41dfe95ccf22081bd8f8b91923
+  checksum: 10c0/dc97fc5ac9778ba3fa7df2dcff0811bca4466173ad710d9be94ffd82c9944cfa962df33d144fd59b6256fc7ab895aad30d830aade8a8a96327c8f49fbb487fda
   languageName: node
   linkType: hard
 
@@ -2837,7 +2837,7 @@ __metadata:
     "@babel/preset-react": "npm:7.29.7"
     "@babel/preset-typescript": "npm:7.29.7"
     "@babel/register": "npm:7.29.7"
-    "@babel/traverse": "npm:7.29.8"
+    "@babel/traverse": "npm:7.29.10"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@types/babel-plugin-tester": "npm:11.0.0"
@@ -2949,7 +2949,7 @@ __metadata:
     "@babel/core": "npm:^7.26.10"
     "@babel/parser": "npm:7.29.9"
     "@babel/preset-typescript": "npm:7.29.7"
-    "@babel/traverse": "npm:7.29.8"
+    "@babel/traverse": "npm:7.29.10"
     "@babel/types": "npm:7.29.8"
     "@cedarjs/api-server": "workspace:*"
     "@cedarjs/babel-config": "workspace:*"
@@ -3030,7 +3030,7 @@ __metadata:
   dependencies:
     "@babel/core": "npm:^7.26.10"
     "@babel/parser": "npm:7.29.9"
-    "@babel/traverse": "npm:7.29.8"
+    "@babel/traverse": "npm:7.29.10"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
@@ -3308,7 +3308,7 @@ __metadata:
   dependencies:
     "@babel/core": "npm:^7.26.10"
     "@babel/parser": "npm:7.29.9"
-    "@babel/traverse": "npm:7.29.8"
+    "@babel/traverse": "npm:7.29.10"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/babel-config": "workspace:*"
     "@cedarjs/cli-helpers": "workspace:*"
@@ -3516,7 +3516,7 @@ __metadata:
   dependencies:
     "@babel/generator": "npm:7.29.8"
     "@babel/parser": "npm:7.29.9"
-    "@babel/traverse": "npm:7.29.8"
+    "@babel/traverse": "npm:7.29.10"
     "@babel/types": "npm:7.29.8"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
@@ -3949,7 +3949,7 @@ __metadata:
     "@babel/generator": "npm:7.29.8"
     "@babel/parser": "npm:7.29.9"
     "@babel/preset-typescript": "npm:7.29.7"
-    "@babel/traverse": "npm:7.29.8"
+    "@babel/traverse": "npm:7.29.10"
     "@babel/types": "npm:7.29.8"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/api-server": "workspace:*"
@@ -26953,7 +26953,7 @@ __metadata:
     "@actions/glob": "npm:0.6.1"
     "@babel/generator": "npm:7.29.8"
     "@babel/parser": "npm:7.29.9"
-    "@babel/traverse": "npm:7.29.8"
+    "@babel/traverse": "npm:7.29.10"
     "@babel/types": "npm:7.29.8"
     "@npmcli/arborist": "npm:9.9.2"
     "@playwright/test": "npm:1.63.0"
