@@ -185,13 +185,13 @@ Within your Framework directory, use the following tools and commands to test yo
 2. **Syntax and Formatting**: `yarn lint`
    - to fix errors or warnings: `yarn lint:fix`
 3. **Run unit tests for each package**: `yarn test`
-4. **Run through the Cypress E2E integration tests**: `yarn e2e`
+4. **Run through the Playwright E2E tutorial test**: `yarn e2e`
 5. **Check Yarn resolutions and package.json format**: `yarn check`
 
 All of these checks are included in Cedar’s GitHub PR Continuous Integration (CI) automation. However, it’s good practice to understand what they do by using them locally. The E2E tests aren’t something we use every time anymore (because it takes a while), but you should learn how to use it because it comes in handy when your code is failing tests on GitHub and you need to diagnose.
 
 > **Heads up for Windows Devs**
-> The Cypress E2E does _not_ work on Windows. Two options are available if needed:
+> The E2E tutorial test (`yarn e2e`) does _not_ work on Windows. Two options are available if needed:
 >
 > 1. Use Gitpod (see related section for info)
 > 2. When you create a PR, just ask for help from a maintainer

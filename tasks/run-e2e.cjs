@@ -154,27 +154,20 @@ const runDevServerInBackground = () => {
   }
 }
 
-const runCypress = () => {
+const runPlaywright = () => {
   try {
-    console.log('Starting Cypress...')
-    execa.sync(
-      // do not use Yarn to run Cypress; this avoids missing binary errors
-      '../../node_modules/.bin/cypress',
-      [
-        'open',
-        `--env RW_PATH=${CEDARJS_PROJECT_DIRECTORY}`,
-        '--e2e',
-        '--browser chrome',
-      ],
-      {
-        cwd: path.join(CEDARJS_FRAMEWORK_PATH, 'tasks/e2e'),
-        shell: true,
-        stdio: 'inherit',
+    console.log('Running the Playwright tutorial test...')
+    execa.sync('yarn playwright test', {
+      cwd: path.join(CEDARJS_FRAMEWORK_PATH, 'tasks/e2e'),
+      shell: true,
+      stdio: 'inherit',
+      env: {
+        CEDAR_TEST_PROJECT_PATH: CEDARJS_PROJECT_DIRECTORY,
       },
-    )
+    })
   } catch (e) {
     if (e.signal !== 'SIGINT') {
-      console.error('There was an error with Cypress:')
+      console.error('There was an error with Playwright:')
       console.error(e)
     }
     process.exit(1)
@@ -249,7 +242,7 @@ const tasks = [
   copyFramework && runTarsync,
   autoStart && runDevServerInBackground,
   autoStart && initGit,
-  autoStart && runCypress,
+  autoStart && runPlaywright,
 ].filter(Boolean)
 
 process.on('SIGINT', () => {

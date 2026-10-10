@@ -56,8 +56,6 @@
     {
       "groupName": "chore",
       "matchPackageNames": [
-        "cypress",
-        "cypress-wait-until",
         "dependency-cruiser",
         "glob",
         "mheap/github-action-required-labels action",
