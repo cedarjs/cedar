@@ -3978,7 +3978,7 @@ __metadata:
     "@types/ws": "npm:^8"
     "@types/yargs-parser": "npm:21.0.3"
     "@universal-deploy/store": "npm:^0.2.1"
-    "@universal-deploy/vite": "npm:^0.1.9"
+    "@universal-deploy/vite": "npm:^0.2.0"
     "@vitejs/plugin-react": "npm:4.7.0"
     "@whatwg-node/fetch": "npm:0.12.1"
     "@whatwg-node/server": "npm:0.13.0"
@@ -12670,22 +12670,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@universal-deploy/netlify@npm:^0.2.3":
-  version: 0.2.3
-  resolution: "@universal-deploy/netlify@npm:0.2.3"
+"@universal-deploy/netlify@npm:^0.2.4":
+  version: 0.2.4
+  resolution: "@universal-deploy/netlify@npm:0.2.4"
   dependencies:
-    "@universal-deploy/store": "npm:^0.2.2"
+    "@universal-deploy/store": "npm:^0.3.0"
   peerDependencies:
     vite: ">=7.1"
-  checksum: 10c0/68ad45ae62dea3b3b5a578d875d3d3c35eae2b173f4f6832108b91742285efe2b983b9a95f286026687789fd572497506b126c2c215e8876dcf180679e268c5b
+  checksum: 10c0/bf836d9d493061093d7b03334bcb0198e7f670422a13f33677f6c31772b4c95d27e0a756d59480cab31ce7f0c74717e41b0c7d8e2372fefc5330267ddfa7af83
   languageName: node
   linkType: hard
 
-"@universal-deploy/node@npm:^0.1.12":
-  version: 0.1.12
-  resolution: "@universal-deploy/node@npm:0.1.12"
+"@universal-deploy/node@npm:^0.1.13":
+  version: 0.1.13
+  resolution: "@universal-deploy/node@npm:0.1.13"
   dependencies:
-    "@universal-deploy/store": "npm:^0.2.2"
+    "@universal-deploy/store": "npm:^0.3.0"
     magic-string: "npm:^0.30.21"
     srvx: "npm:^0.12.5"
   peerDependencies:
@@ -12693,11 +12693,11 @@ __metadata:
   peerDependenciesMeta:
     vite:
       optional: true
-  checksum: 10c0/4655089548a05c79d05cbfff1270f702edd4e21bef429b7ddb249fe9be328a0bd6fa50155dae81237184c1a6c24b1017590f75105cc4c27b2f6aefa383475342
+  checksum: 10c0/0109d28e24485b63b0ee93f638f280346c39e9b8640018b681c4e1a48fb8917b6907bc1603fb0292336698cb0793219f0f8a611da8c9527713cb5b98a2cc46e1
   languageName: node
   linkType: hard
 
-"@universal-deploy/store@npm:^0.2.1, @universal-deploy/store@npm:^0.2.2":
+"@universal-deploy/store@npm:^0.2.1":
   version: 0.2.2
   resolution: "@universal-deploy/store@npm:0.2.2"
   dependencies:
@@ -12712,40 +12712,54 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@universal-deploy/vite@npm:^0.1.9":
-  version: 0.1.14
-  resolution: "@universal-deploy/vite@npm:0.1.14"
+"@universal-deploy/store@npm:^0.3.0":
+  version: 0.3.0
+  resolution: "@universal-deploy/store@npm:0.3.0"
   dependencies:
-    "@universal-deploy/netlify": "npm:^0.2.3"
-    "@universal-deploy/node": "npm:^0.1.12"
-    "@universal-deploy/store": "npm:^0.2.2"
-    "@universal-middleware/express": "npm:^0.4.31"
+    srvx: "npm:*"
+  peerDependencies:
+    srvx: "*"
+  peerDependenciesMeta:
+    srvx:
+      optional: true
+  checksum: 10c0/6385a55cbb8a88c77a72d04033582dd45fb9098b7ffe064c5a6d732a795921ec1017d3e4804fe145714d6ee453560b9a4eda43666583690018b370a28491d19a
+  languageName: node
+  linkType: hard
+
+"@universal-deploy/vite@npm:^0.2.0":
+  version: 0.2.2
+  resolution: "@universal-deploy/vite@npm:0.2.2"
+  dependencies:
+    "@universal-deploy/netlify": "npm:^0.2.4"
+    "@universal-deploy/node": "npm:^0.1.13"
+    "@universal-deploy/store": "npm:^0.3.0"
+    "@universal-middleware/express": "npm:^0.5.0"
     magic-string: "npm:^0.30.21"
-    rou3: "npm:^0.8.1"
+    rou3: "npm:^1.0.0"
   peerDependencies:
     vite: ">=7.1"
   peerDependenciesMeta:
     vite:
       optional: true
-  checksum: 10c0/5a288685e88cf861e0de1f438219240c420024419ce0aa39a7396fbb6210ca0a3f4eed9b549f8e2785327aae61013cac3e86ff79c7570dd2e7e9123293aa411b
+  checksum: 10c0/836382d0cbbc4f94335b157037d525ba2008c4c38a091f49ac423441a9683fa7a209293f7111646bbe7ec48390d08c20a0e4ad980e0b506973e87e0acb8959fb
   languageName: node
   linkType: hard
 
-"@universal-middleware/core@npm:^0.4.18":
-  version: 0.4.18
-  resolution: "@universal-middleware/core@npm:0.4.18"
+"@universal-middleware/core@npm:^0.6.2":
+  version: 0.6.2
+  resolution: "@universal-middleware/core@npm:0.6.2"
   dependencies:
     regexparam: "npm:^3.0.0"
-    tough-cookie: "npm:^6.0.1"
+    tough-cookie: "npm:^6.0.2"
   peerDependencies:
-    "@cloudflare/workers-types": ^4.20260608.1
+    "@cloudflare/workers-types": ^4 || ^5
     "@hattip/core": ^0.0.49
     "@types/express": ^4 || ^5
-    "@webroute/route": ^0.8.0
-    elysia: ^1.4.28
-    fastify: ^5.8.5
-    h3: ^1.15.11
-    hono: ^4.12.23
+    "@webroute/route": ^0.8
+    elysia: ^1
+    fastify: ^5
+    h3: ^1
+    hono: ^4
     srvx: ">=0.8"
   peerDependenciesMeta:
     "@cloudflare/workers-types":
@@ -12766,26 +12780,26 @@ __metadata:
       optional: true
     srvx:
       optional: true
-  checksum: 10c0/4986667f6bcea8666575d3343109a0d884962309730d18e7329d264ba4fd81f59e5216ac84ffb317a6efeed2ebd4f38005ce897b0f53bde3c4cd6b2e49796ba5
+  checksum: 10c0/6572ce2fb2631d880b2090d33c333b2744002e6c1c6e7fc1b91aff93a4fa09efa5b6aeb658e67c5f1ffb682a1d55501018d1ba7418620514edb1dd6d6e45c90f
   languageName: node
   linkType: hard
 
-"@universal-middleware/express@npm:^0.4.31":
-  version: 0.4.31
-  resolution: "@universal-middleware/express@npm:0.4.31"
+"@universal-middleware/express@npm:^0.5.0":
+  version: 0.5.3
+  resolution: "@universal-middleware/express@npm:0.5.3"
   dependencies:
-    "@universal-middleware/core": "npm:^0.4.18"
-    "@universal-middleware/node": "npm:^0.2.2"
-  checksum: 10c0/5805c2109258d0000d95f9d1bcf7a5210cf68cfdf81c579eb235b33d5b15782ba806d645b3dae318712c725952b39e04c3ea03b12f1d4d5e6149f0e2e43ccf2a
+    "@universal-middleware/core": "npm:^0.6.2"
+    "@universal-middleware/node": "npm:^0.2.8"
+  checksum: 10c0/ef57e6f98e211d0304741d716d63b3fddbe662ff4d7cefedf9f90d47fee1e13d056c73a41bc9faa2755650806e1366013baf1df1757abef6e65281c27ee8af1e
   languageName: node
   linkType: hard
 
-"@universal-middleware/node@npm:^0.2.2":
-  version: 0.2.2
-  resolution: "@universal-middleware/node@npm:0.2.2"
+"@universal-middleware/node@npm:^0.2.8":
+  version: 0.2.8
+  resolution: "@universal-middleware/node@npm:0.2.8"
   dependencies:
-    "@universal-middleware/core": "npm:^0.4.18"
-  checksum: 10c0/ae4a696688a4ec4df2a290ac8b3cdf33cad7ed7c268d23f03dd3eba2e4227d41382a9dc86f6b9f940b8c4a2932c535a68ee1bc10828bc4838e84c57575384818
+    "@universal-middleware/core": "npm:^0.6.2"
+  checksum: 10c0/49111bfce05b8cbdc1aff49f9889cec095b77f6345fc16a1634bb9f5b88dffe5e38797191fbf2d92917a698d0d734cafc28efb83e6ab2dc2b3ba125e1292c767
   languageName: node
   linkType: hard
 
@@ -27041,6 +27055,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"rou3@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "rou3@npm:1.0.0"
+  checksum: 10c0/c3d84fbb2dc3a1a4513beaac5cfc2f22753ab368bbe891a20dbb1c9f106564f1bc21071516cb771e7c0f0689ba84a841675ae4aeba6794eb82543b6dbb3a655e
+  languageName: node
+  linkType: hard
+
 "router@npm:^2.2.0":
   version: 2.2.0
   resolution: "router@npm:2.2.0"
@@ -28851,7 +28872,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tough-cookie@npm:^6.0.0, tough-cookie@npm:^6.0.1":
+"tough-cookie@npm:^6.0.0, tough-cookie@npm:^6.0.1, tough-cookie@npm:^6.0.2":
   version: 6.0.2
   resolution: "tough-cookie@npm:6.0.2"
   dependencies:

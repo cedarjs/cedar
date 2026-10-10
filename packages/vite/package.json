@@ -67,7 +67,7 @@
     "@cedarjs/testing": "workspace:*",
     "@swc/core": "1.16.13",
     "@universal-deploy/store": "^0.2.1",
-    "@universal-deploy/vite": "^0.1.9",
+    "@universal-deploy/vite": "^0.2.0",
     "@vitejs/plugin-react": "4.7.0",
     "@whatwg-node/fetch": "0.12.1",
     "@whatwg-node/server": "0.13.0",
