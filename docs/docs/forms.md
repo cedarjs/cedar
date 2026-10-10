@@ -384,6 +384,28 @@ const RequiredField = ({ label, name, validation }) => {
 }
 ```
 
+### Nesting fields in a `<label>`
+
+Cedar's ESLint config (when `a11y` is enabled in `cedar.toml`) runs the `jsx-a11y/label-has-associated-control` rule and tells it about the labelable `@cedarjs/forms` field components (all of them except `HiddenField`, since hidden inputs can't be labelled), so a field nested inside a plain `<label>` counts as an associated control:
+
+```jsx
+<label>
+  <CheckboxField name="active" />
+  Active
+</label>
+```
+
+The rule matches components by their JSX tag name.
+If you wrap a custom input field in a `<label>` the same way, or configure the rule yourself in a stricter local ESLint config, set the rule's `controlComponents` option.
+Setting the option replaces Cedar's list, so include the `@cedarjs/forms` fields you use along with your own components:
+
+```js
+'jsx-a11y/label-has-associated-control': [
+  'error',
+  { controlComponents: ['TextField', 'CheckboxField', 'MyCustomField'] },
+],
+```
+
 ### Controlled Component Fields
 
 If you're working with a fully-featured component library, or have your own production-ready components, you may want to integrate them with Cedar's forms seamlessly.
