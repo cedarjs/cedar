@@ -26,6 +26,7 @@ import {
   getConfig,
   getPaths,
   projectSideIsEsm,
+  createPrismaClientFileMatcher,
   resolveFile,
 } from '@cedarjs/project-config'
 
@@ -76,8 +77,28 @@ export const cleanApiBuild = async () => {
 const runCedarBabelTransformsPlugin = {
   name: 'cedar-esbuild-babel-transform',
   setup(build: PluginBuild) {
+    let prismaClientFiles = createPrismaClientFileMatcher()
+
+    // Recreated on every (re)build so that a changed generator `output` in
+    // schema.prisma is picked up by `rebuildApi`
+    build.onStart(async () => {
+      prismaClientFiles = createPrismaClientFileMatcher()
+      await prismaClientFiles.load()
+    })
+
     build.onLoad({ filter: /\.(js|ts|tsx|jsx)$/ }, async (args) => {
       let fileContents = await fs.promises.readFile(args.path, 'utf-8')
+
+      // A Prisma client generated into api/src only needs its import
+      // specifiers pointed at the compiled .js output. Cedar's source
+      // transforms are no-ops on generated client code, and its model files
+      // can be tens of megabytes, which makes running them slow.
+      if (await prismaClientFiles.matches(args.path)) {
+        return {
+          contents: applyImportExtensions(fileContents, args.path),
+          loader: getEsbuildLoader(args.path),
+        }
+      }
 
       // Rewrite `src/` bare specifiers to relative paths and inject
       // auto-imports
@@ -217,14 +238,22 @@ function getEsbuildLoader(filePath: string): 'js' | 'jsx' | 'ts' | 'tsx' {
  * @cedarjs/vite).  Code duplication is intentional.
  */
 function createImportDirVitePlugin(): Plugin {
+  const prismaClientFiles = createPrismaClientFileMatcher()
+
   return {
     name: 'cedar-internal-import-dir',
     enforce: 'pre',
-    transform(code, id) {
+    async buildStart() {
+      await prismaClientFiles.load()
+    },
+    async transform(code, id) {
       if (!/\.(js|ts|tsx|jsx)$/.test(id)) {
         return null
       }
       if (id.includes('node_modules')) {
+        return null
+      }
+      if (await prismaClientFiles.matches(id)) {
         return null
       }
       const result = applyImportDir(code, id)
@@ -290,10 +319,14 @@ function createDirectoryNamedImportVitePlugin(): Plugin {
 function createCedarViteApiPlugin(): Plugin {
   const cedarConfig = getConfig()
   const isEsm = projectSideIsEsm('api')
+  const prismaClientFiles = createPrismaClientFileMatcher()
 
   return {
     name: 'cedar-vite-api-babel-transform',
     enforce: 'pre',
+    async buildStart() {
+      await prismaClientFiles.load()
+    },
     async transform(code, id) {
       if (!/\.(js|ts|tsx|jsx)$/.test(id)) {
         return null
@@ -306,6 +339,22 @@ function createCedarViteApiPlugin(): Plugin {
       const cedarPaths = getPaths()
       if (!normalizePath(id).startsWith(normalizePath(cedarPaths.api.base))) {
         return null
+      }
+
+      // A Prisma client generated into api/src only needs its import
+      // specifiers pointed at the compiled .js output. See
+      // runCedarBabelTransformsPlugin.
+      if (await prismaClientFiles.matches(id)) {
+        const outputCode = applyImportExtensions(code, id)
+
+        if (outputCode === code) {
+          return null
+        }
+
+        return {
+          code: outputCode,
+          map: new MagicString(code).generateMap({ hires: true }),
+        }
       }
 
       let sourceCode = code
