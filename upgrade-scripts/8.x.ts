@@ -24,21 +24,39 @@ function warn(title: string, lines: string[]) {
   }
 }
 
-function usesTailwindCssV3() {
-  const tailwindConfigExists = ['cjs', 'js', 'mjs', 'ts'].some((ext) =>
-    fs.existsSync(path.join(projectPaths.web.config, `tailwind.config.${ext}`)),
-  )
+/**
+ * Returns `undefined` for projects that don't use Tailwind CSS v3. For projects
+ * that do, returns the path to their Tailwind config file, relative to the
+ * project root, or `null` if only index.css shows that they use v3
+ */
+function findTailwindCssV3Config() {
+  const tailwindConfigPath = ['cjs', 'js', 'mjs', 'ts']
+    .map((ext) => path.join(projectPaths.web.config, `tailwind.config.${ext}`))
+    .find((configPath) => fs.existsSync(configPath))
+
+  if (tailwindConfigPath) {
+    return path
+      .relative(projectPaths.base, tailwindConfigPath)
+      .split(path.sep)
+      .join('/')
+  }
 
   const indexCssPath = path.join(projectPaths.web.src, 'index.css')
   const indexCssHasV3Directives =
     fs.existsSync(indexCssPath) &&
     fs.readFileSync(indexCssPath, 'utf8').includes('@tailwind ')
 
-  return tailwindConfigExists || indexCssHasV3Directives
+  return indexCssHasV3Directives ? null : undefined
 }
 
 async function main() {
-  if (usesTailwindCssV3()) {
+  const tailwindCssV3Config = findTailwindCssV3Config()
+
+  if (tailwindCssV3Config !== undefined) {
+    const upgradeCommand = tailwindCssV3Config
+      ? `npx @tailwindcss/upgrade --config ./${tailwindCssV3Config}`
+      : 'npx @tailwindcss/upgrade'
+
     warn('Tailwind CSS v3 is not supported', [
       'Cedar sets up Tailwind CSS v4 with its Vite plugin, and the scaffold\n' +
         'generator writes a scaffold.css that only works with Tailwind CSS v4.\n' +
@@ -47,7 +65,7 @@ async function main() {
       "1. Run Tailwind's upgrade tool from the root of your project. It moves\n" +
         'your Tailwind config into web/src/index.css and updates the class\n' +
         'names in your components:\n\n' +
-        '    npx @tailwindcss/upgrade --config ./web/config/tailwind.config.cjs',
+        `    ${upgradeCommand}`,
       '2. The upgrade tool adds `tailwindcss` to the root package.json. Remove\n' +
         'it from there, and remove the PostCSS packages Tailwind CSS v3 needed\n' +
         'from the web side:\n\n' +

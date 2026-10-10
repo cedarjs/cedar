@@ -71,7 +71,7 @@ const ContactUsPage = () => {
 
         <Label
           name="name"
-          className="block text-sm uppercase text-gray-700"
+          className="block text-sm text-gray-700 uppercase"
           errorClassName="block uppercase text-sm text-red-700"
         >
           Name
@@ -86,7 +86,7 @@ const ContactUsPage = () => {
 
         <Label
           name="email"
-          className="mt-8 block text-sm uppercase text-gray-700"
+          className="mt-8 block text-sm text-gray-700 uppercase"
           errorClassName="block mt-8 text-red-700 uppercase text-sm"
         >
           Email
@@ -114,7 +114,7 @@ const ContactUsPage = () => {
 
         <Label
           name="message"
-          className="mt-8 block text-sm uppercase text-gray-700"
+          className="mt-8 block text-sm text-gray-700 uppercase"
           errorClassName="block mt-8 text-red-700 uppercase text-sm"
         >
           Message
