@@ -59,7 +59,16 @@ export const getExecaOptions = (
   // `<pm> cedar prisma generate` spawn, ...) pick yarn inside npm/pnpm
   // projects. Unset it so detection falls back to lockfiles, which are
   // correct both in the framework repo (yarn) and in the test project.
-  const droppedEnvVars = ['PROJECT_CWD', 'npm_config_user_agent']
+  //
+  // Database URLs from the caller's shell take precedence over the test
+  // project's .env files. They're unset so every Prisma command, including
+  // `migrate reset`, runs against the generated project's own database
+  const droppedEnvVars = [
+    'PROJECT_CWD',
+    'npm_config_user_agent',
+    'DATABASE_URL',
+    'DIRECT_DATABASE_URL',
+  ]
   const env = Object.fromEntries(
     Object.entries(process.env).filter(
       ([key]) => !droppedEnvVars.includes(key),
@@ -76,6 +85,30 @@ export const getExecaOptions = (
     cwd,
     env,
     extendEnv: false,
+  }
+}
+
+/**
+ * Returns a copy of `options` whose env carries consent for Prisma's AI-agent
+ * guard, so `prisma migrate reset` can run unattended under agents like
+ * Claude Code. A value the caller already set in `process.env` is kept as-is.
+ */
+export function withPrismaResetConsent<T extends ExecaOptions>(options: T): T {
+  if ('PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION' in process.env) {
+    return options
+  }
+
+  // The test-project scripts only ever reset the database of a freshly
+  // generated, throwaway project (SQLite, or a newly provisioned Neon database
+  // for the live project), so there is no real data to lose
+  return {
+    ...options,
+    env: {
+      ...options.env,
+      PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION:
+        "Cedar's test-project script is resetting the database of a freshly " +
+        'generated, throwaway test project.',
+    },
   }
 }
 

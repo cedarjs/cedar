@@ -19,6 +19,7 @@ import {
   exec,
   addModel,
   createBuilder,
+  withPrismaResetConsent,
 } from './util.mts'
 
 function getPagesTasks(live = false, packageManager: PackageManager = 'yarn') {
@@ -596,7 +597,7 @@ export function apiTasksList({
         await exec(
           `${cedarBin} cedar prisma migrate reset --force`,
           [],
-          execaOptions,
+          withPrismaResetConsent(execaOptions),
         )
 
         return exec(
