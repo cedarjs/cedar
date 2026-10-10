@@ -397,19 +397,28 @@ export const handler = async ({
           const tailwindStylesheetEntry = `tailwindStylesheet: './${tailwindStylesheetPath}',`
 
           let newPrettierConfig = prettierConfig
-          const existingEntryRegExp = /tailwindStylesheet:\s*[^,\n]*,?/
+          // Only a plain string value is replaced. Any other value, like a
+          // `path.join(...)` call, is left for the user to update
+          const stringEntryRegExp = /tailwindStylesheet:\s*(['"`])[^'"`\n]*\1,?/
 
-          if (existingEntryRegExp.test(newPrettierConfig)) {
-            if (force) {
-              newPrettierConfig = newPrettierConfig.replace(
-                existingEntryRegExp,
-                tailwindStylesheetEntry,
-              )
-            } else {
+          if (newPrettierConfig.includes('tailwindStylesheet')) {
+            if (!force) {
               throw new Error(
                 'tailwindStylesheet setting already exists in prettier configuration.\nUse --force to override existing config.',
               )
             }
+
+            if (!stringEntryRegExp.test(newPrettierConfig)) {
+              throw new Error(
+                `Could not update the tailwindStylesheet setting in ${prettierConfigPath}.\n` +
+                  `Set it to './${tailwindStylesheetPath}' yourself.`,
+              )
+            }
+
+            newPrettierConfig = newPrettierConfig.replace(
+              stringEntryRegExp,
+              tailwindStylesheetEntry,
+            )
           } else {
             newPrettierConfig = newPrettierConfig.replace(
               /,(\n\s*)(\}\n?)$/,

@@ -245,6 +245,35 @@ describe('prettier config', () => {
       ].join('\n'),
     )
   })
+
+  it('leaves a stylesheet entry that is not a plain string alone', async () => {
+    const config = [
+      "const path = require('node:path')",
+      'module.exports = {',
+      "  tailwindStylesheet: path.join('web', 'src', 'index.css'),",
+      "  plugins: ['prettier-plugin-tailwindcss'],",
+      '}',
+      '',
+    ].join('\n')
+    setupDefaultProjectStructure({ 'prettier.config.cjs': config })
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {})
+    const exitSpy = vi
+      .spyOn(process, 'exit')
+      .mockImplementation(() => undefined as never)
+
+    await handler({ force: true })
+
+    expect(exitSpy).toHaveBeenCalledWith(1)
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining("Set it to './web/src/index.css' yourself."),
+    )
+    expect(readAppFile('prettier.config.cjs')).toEqual(config)
+
+    consoleErrorSpy.mockRestore()
+    exitSpy.mockRestore()
+  })
 })
 
 describe('vite config', () => {
