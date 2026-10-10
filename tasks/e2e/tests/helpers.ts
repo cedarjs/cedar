@@ -20,10 +20,16 @@ function getProjectPath() {
 }
 
 /**
- * Runs a shell command in the test project and waits for it to finish
+ * Runs a shell command in the test project and waits for it to finish.
+ * `execSync` blocks the event loop, so Playwright's own test timeout can't
+ * interrupt a stalled command; the command gets a timeout of its own instead
  */
 export function exec(command: string) {
-  execSync(command, { cwd: getProjectPath(), stdio: 'inherit' })
+  execSync(command, {
+    cwd: getProjectPath(),
+    stdio: 'inherit',
+    timeout: 2 * 60_000,
+  })
 }
 
 /**

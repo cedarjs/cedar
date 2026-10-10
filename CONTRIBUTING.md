@@ -212,6 +212,14 @@ Within your Framework directory, use the following tools and commands to test yo
 
 We use Playwright to test the steps in the [tutorial](https://cedarjs.com/docs/tutorial). You can run this end-to-end (e2e) test locally by running the following in your local copy of the Cedar Framework:
 
+The test runs in Playwright's Chromium. Install it once before the first run:
+
+```terminal
+npx playwright install chromium
+```
+
+Then run:
+
 ```terminal
 yarn e2e
 ```

@@ -133,12 +133,18 @@ const runTarsync = () => {
   }
 }
 
+/** The background `yarn cedar dev` process, see `runDevServerInBackground` */
+let devServer
+
 const runDevServerInBackground = () => {
   try {
     console.log('Starting CedarJS dev server...')
-    execa('yarn cedar dev --no-generate --fwd="--no-open"', {
+    // Detached, so the dev server and everything it starts get a process
+    // group of their own that `stopDevServer` can stop all at once
+    devServer = execa('yarn cedar dev --no-generate --fwd="--no-open"', {
       cwd: CEDARJS_PROJECT_DIRECTORY,
       shell: true,
+      detached: true,
       stdio: 'inherit',
       env: {
         CEDAR_DELAY_API_RESTART: '500',
@@ -154,10 +160,24 @@ const runDevServerInBackground = () => {
   }
 }
 
+const stopDevServer = () => {
+  if (!devServer?.pid) {
+    return
+  }
+
+  try {
+    process.kill(-devServer.pid, 'SIGTERM')
+  } catch {
+    // The dev server has already exited
+  }
+
+  devServer = undefined
+}
+
 const runPlaywright = () => {
   try {
     console.log('Running the Playwright tutorial test...')
-    execa.sync('yarn playwright test', {
+    execa.sync('npx playwright test', {
       cwd: path.join(CEDARJS_FRAMEWORK_PATH, 'tasks/e2e'),
       shell: true,
       stdio: 'inherit',
@@ -165,6 +185,7 @@ const runPlaywright = () => {
         CEDAR_TEST_PROJECT_PATH: CEDARJS_PROJECT_DIRECTORY,
       },
     })
+    stopDevServer()
   } catch (e) {
     if (e.signal !== 'SIGINT') {
       console.error('There was an error with Playwright:')
@@ -250,6 +271,7 @@ process.on('SIGINT', () => {
 })
 
 process.on('exit', () => {
+  stopDevServer()
   console.log('')
   console.log('-'.repeat(80))
   if (cleanFiles && autoStart) {
