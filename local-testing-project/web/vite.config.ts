@@ -6,10 +6,7 @@ import { defineConfig } from 'vite'
 import { cedar } from '@cedarjs/vite'
 
 export default defineConfig(({ mode }) => ({
-  plugins: [
-    tailwindcss(),
-    cedar({ mode }),
-  ],
+  plugins: [tailwindcss(), cedar({ mode })],
   test: {
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
