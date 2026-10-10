@@ -3427,7 +3427,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/mailer-core": "workspace:*"
     "@types/nodemailer": "npm:^6"
-    nodemailer: "npm:10.0.14"
+    nodemailer: "npm:10.0.16"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -23491,10 +23491,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nodemailer@npm:10.0.14":
-  version: 10.0.14
-  resolution: "nodemailer@npm:10.0.14"
-  checksum: 10c0/8965d6ccd0a69f5b439d2bf5efc67cc4bac34f4893749c7b6b6290d5541beaf03174a169546739f370e989fd0f050221eec25aa6b017544d5b16fc23be374937
+"nodemailer@npm:10.0.16":
+  version: 10.0.16
+  resolution: "nodemailer@npm:10.0.16"
+  checksum: 10c0/c2ce1f3df0b91a84807b7dc4f1e87ff05cb33d65cba678d305c2611eb71fc2df3d0ee69f47f1eadb5207f143eda7155ac437da0614a3b22d53f96aa170aa0ec0
   languageName: node
   linkType: hard
 
