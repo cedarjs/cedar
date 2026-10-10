@@ -413,6 +413,78 @@ describe('cedarUploadsPlugin', () => {
       expect(res.headers['content-disposition']).toMatch(/^attachment;/)
     })
 
+    describe('with inlineTypes', () => {
+      let inlineApp: FastifyInstance
+
+      beforeEach(async () => {
+        inlineApp = Fastify()
+        await inlineApp.register(cedarUploadsPlugin, {
+          tokenSecret: SECRET,
+          targets,
+          db,
+          inlineTypes: ['Application/PDF'],
+        })
+        await inlineApp.ready()
+      })
+
+      afterEach(async () => {
+        await inlineApp.close()
+      })
+
+      const servePdf = async (
+        server: FastifyInstance,
+        disposition: 'attachment' | 'inline',
+      ) => {
+        const upload = await storeFile(targets.local, {
+          db,
+          filename: 'report.pdf',
+          mimeType: 'application/pdf',
+          data: Buffer.from('%PDF'),
+        })
+
+        const url = await targets.local.getSignedReadUrl(upload.storageKey!, {
+          disposition,
+        })
+
+        return server.inject({ method: 'GET', url })
+      }
+
+      test('serves a listed active type inline when inline was signed', async () => {
+        const res = await servePdf(inlineApp, 'inline')
+
+        expect(res.statusCode).toBe(200)
+        expect(res.headers['content-disposition']).toMatch(/^inline;/)
+      })
+
+      test('keeps attachment when the signed URL asks for it', async () => {
+        const res = await servePdf(inlineApp, 'attachment')
+
+        expect(res.headers['content-disposition']).toMatch(/^attachment;/)
+      })
+
+      test('still forces attachment for unlisted active types', async () => {
+        const upload = await storeFile(targets.local, {
+          db,
+          filename: 'sneaky.svg',
+          mimeType: 'image/svg+xml',
+          data: Buffer.from('<svg/>'),
+        })
+
+        const url = await targets.local.getSignedReadUrl(upload.storageKey!, {
+          disposition: 'inline',
+        })
+        const res = await inlineApp.inject({ method: 'GET', url })
+
+        expect(res.headers['content-disposition']).toMatch(/^attachment;/)
+      })
+
+      test('forces attachment for PDFs when they are not listed', async () => {
+        const res = await servePdf(app, 'inline')
+
+        expect(res.headers['content-disposition']).toMatch(/^attachment;/)
+      })
+    })
+
     test('answers 404 for forged tokens, missing rows, and missing files', async () => {
       const forged = await app.inject({
         method: 'GET',
