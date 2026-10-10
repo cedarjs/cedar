@@ -45,7 +45,7 @@
     "@cedarjs/framework-tools": "7.0.0",
     "@cedarjs/router": "7.0.0",
     "@cedarjs/web": "7.0.0",
-    "@playwright/test": "1.63.0",
+    "@playwright/test": "1.64.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "ts-toolbelt": "9.6.0",
