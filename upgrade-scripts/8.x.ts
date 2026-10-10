@@ -24,7 +24,73 @@ function warn(title: string, lines: string[]) {
   }
 }
 
+/**
+ * Returns `undefined` for projects that don't use Tailwind CSS v3. For projects
+ * that do, returns the path to their Tailwind config file, relative to the
+ * project root, or `null` if only index.css shows that they use v3
+ */
+function findTailwindCssV3Config() {
+  const indexCssPath = path.join(projectPaths.web.src, 'index.css')
+  const indexCss = fs.existsSync(indexCssPath)
+    ? fs.readFileSync(indexCssPath, 'utf8')
+    : ''
+
+  // Tailwind CSS v4 projects import Tailwind in their CSS, even when they keep
+  // a JavaScript config file around through `@config`
+  if (/@import\s+['"]tailwindcss['"]/.test(indexCss)) {
+    return undefined
+  }
+
+  const tailwindConfigPath = ['cjs', 'js', 'mjs', 'ts']
+    .map((ext) => path.join(projectPaths.web.config, `tailwind.config.${ext}`))
+    .find((configPath) => fs.existsSync(configPath))
+
+  if (tailwindConfigPath) {
+    return path
+      .relative(projectPaths.base, tailwindConfigPath)
+      .split(path.sep)
+      .join('/')
+  }
+
+  return indexCss.includes('@tailwind ') ? null : undefined
+}
+
 async function main() {
+  const tailwindCssV3Config = findTailwindCssV3Config()
+
+  if (tailwindCssV3Config !== undefined) {
+    const upgradeCommand = tailwindCssV3Config
+      ? `npx @tailwindcss/upgrade --config ./${tailwindCssV3Config}`
+      : 'npx @tailwindcss/upgrade'
+
+    warn('Tailwind CSS v3 is not supported', [
+      'Cedar sets up Tailwind CSS v4 with its Vite plugin, and the scaffold\n' +
+        'generator writes a scaffold.css that only works with Tailwind CSS v4.\n' +
+        'Your project still builds with Tailwind CSS v3, but we recommend\n' +
+        'upgrading. Commit your work first, then follow these steps.',
+      "1. Run Tailwind's upgrade tool from the root of your project. It moves\n" +
+        'your Tailwind config into web/src/index.css and updates the class\n' +
+        'names in your components:\n\n' +
+        `    ${upgradeCommand}`,
+      '2. The upgrade tool adds `tailwindcss` to the root package.json. Remove\n' +
+        'it from there, and remove the PostCSS packages Tailwind CSS v3 needed\n' +
+        'from the web side:\n\n' +
+        '    yarn remove tailwindcss\n' +
+        '    yarn workspace web remove tailwindcss postcss autoprefixer\n\n' +
+        'If you use other PostCSS plugins (see step 3), leave `postcss` out of\n' +
+        'the last command.',
+      '3. Delete web/config/postcss.config.cjs. (If you use other PostCSS\n' +
+        'plugins, only remove the `tailwindcss`, `tailwindcss/nesting` and\n' +
+        '`autoprefixer` plugins from it.) Then remove the `tailwindConfig` line\n' +
+        'from prettier.config.cjs.',
+      '4. Set up Tailwind CSS v4 with its Vite plugin, and answer yes when\n' +
+        'asked about overwriting scaffold.css:\n\n' +
+        '    yarn cedar setup ui tailwindcss --force',
+      'See https://tailwindcss.com/docs/upgrade-guide for all the changes in\n' +
+        'Tailwind CSS v4.',
+    ])
+  }
+
   const filesMissingChangePassword: string[] = []
 
   if (fs.existsSync(projectPaths.api.functions)) {

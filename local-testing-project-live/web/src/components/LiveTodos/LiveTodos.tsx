@@ -33,7 +33,7 @@ const LiveTodos = () => {
           <div className="mt-1 flex items-center gap-2">
             <span
               data-testid="todo-done"
-              className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${
+              className={`inline-block rounded-sm px-2 py-0.5 text-xs font-medium ${
                 todo.done
                   ? 'bg-green-100 text-green-800'
                   : 'bg-yellow-100 text-yellow-800'

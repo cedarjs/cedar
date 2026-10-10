@@ -65,7 +65,7 @@ export const Success = ({
             {aggregatedBlogPost.title}
           </h2>
         </header>
-        <div className="mb-4 mt-2 font-light text-gray-900">
+        <div className="mt-2 mb-4 font-light text-gray-900">
           {aggregatedBlogPost.body}
         </div>
       </>

@@ -1,3 +1,9 @@
+/**
+ * Makes your app's Tailwind theme and utilities available to `@apply`
+ * without emitting any of the styles in index.css a second time
+ */
+@reference './index.css';
+
 .rw-scaffold {
   @apply bg-white text-gray-600;
 }
@@ -27,8 +33,7 @@
   @apply mx-4 pb-4;
 }
 .rw-segment {
-  @apply rounded-lg overflow-hidden w-full border border-gray-200;
-  scrollbar-color: theme('colors.zinc.400') transparent;
+  @apply rounded-lg overflow-hidden w-full border border-gray-200 scrollbar-thumb-zinc-400 scrollbar-track-transparent;
 }
 .rw-segment::-webkit-scrollbar {
   height: initial;
@@ -80,7 +85,7 @@
 }
 .rw-cell-error,
 .rw-form-error-wrapper {
-  @apply p-4 bg-red-50 text-red-600 border border-red-100 rounded my-4;
+  @apply p-4 bg-red-50 text-red-600 border border-red-100 rounded-sm my-4;
 }
 .rw-form-error-title {
   @apply m-0 font-semibold;
@@ -89,13 +94,13 @@
   @apply mt-2 list-disc list-inside;
 }
 .rw-button {
-  @apply flex justify-center py-1 px-4 border-0 rounded bg-gray-200 text-gray-500 text-xs font-semibold uppercase tracking-wide leading-loose no-underline cursor-pointer transition duration-100;
+  @apply flex justify-center py-1 px-4 border-0 rounded-sm bg-gray-200 text-gray-500 text-xs font-semibold uppercase tracking-wide leading-loose no-underline cursor-pointer transition duration-100;
 }
 .rw-button:hover {
   @apply bg-gray-500 text-white;
 }
 .rw-button.rw-button-small {
-  @apply text-xs rounded-sm py-1 px-2;
+  @apply text-xs rounded-xs py-1 px-2;
 }
 .rw-button.rw-button-green {
   @apply bg-green-500 text-white;
@@ -134,7 +139,7 @@
   @apply text-red-600;
 }
 .rw-input {
-  @apply block mt-2 w-full p-2 bg-white border border-gray-200 rounded outline-none;
+  @apply block mt-2 w-full p-2 bg-white border border-gray-200 rounded-sm outline-hidden;
 }
 .rw-check-radio-items {
   @apply flex justify-items-center;
@@ -153,7 +158,7 @@
   @apply border-red-600 text-red-600;
 }
 .rw-input-error:focus {
-  @apply border-red-600 outline-none;
+  @apply border-red-600 outline-hidden;
   box-shadow: 0 0 5px #c53030;
 }
 .rw-field-error {
