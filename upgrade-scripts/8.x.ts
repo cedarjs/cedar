@@ -30,6 +30,17 @@ function warn(title: string, lines: string[]) {
  * project root, or `null` if only index.css shows that they use v3
  */
 function findTailwindCssV3Config() {
+  const indexCssPath = path.join(projectPaths.web.src, 'index.css')
+  const indexCss = fs.existsSync(indexCssPath)
+    ? fs.readFileSync(indexCssPath, 'utf8')
+    : ''
+
+  // Tailwind CSS v4 projects import Tailwind in their CSS, even when they keep
+  // a JavaScript config file around through `@config`
+  if (/@import\s+['"]tailwindcss['"]/.test(indexCss)) {
+    return undefined
+  }
+
   const tailwindConfigPath = ['cjs', 'js', 'mjs', 'ts']
     .map((ext) => path.join(projectPaths.web.config, `tailwind.config.${ext}`))
     .find((configPath) => fs.existsSync(configPath))
@@ -41,12 +52,7 @@ function findTailwindCssV3Config() {
       .join('/')
   }
 
-  const indexCssPath = path.join(projectPaths.web.src, 'index.css')
-  const indexCssHasV3Directives =
-    fs.existsSync(indexCssPath) &&
-    fs.readFileSync(indexCssPath, 'utf8').includes('@tailwind ')
-
-  return indexCssHasV3Directives ? null : undefined
+  return indexCss.includes('@tailwind ') ? null : undefined
 }
 
 async function main() {
@@ -70,7 +76,9 @@ async function main() {
         'it from there, and remove the PostCSS packages Tailwind CSS v3 needed\n' +
         'from the web side:\n\n' +
         '    yarn remove tailwindcss\n' +
-        '    yarn workspace web remove tailwindcss postcss autoprefixer',
+        '    yarn workspace web remove tailwindcss postcss autoprefixer\n\n' +
+        'If you use other PostCSS plugins (see step 3), leave `postcss` out of\n' +
+        'the last command.',
       '3. Delete web/config/postcss.config.cjs. (If you use other PostCSS\n' +
         'plugins, only remove the `tailwindcss`, `tailwindcss/nesting` and\n' +
         '`autoprefixer` plugins from it.) Then remove the `tailwindConfig` line\n' +

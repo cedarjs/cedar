@@ -365,7 +365,9 @@ export const handler = async ({
             newSettingsJson = {
               ...originalSettingsJson,
               ['files.associations']: {
-                ...(typeof existingAssociations === 'object'
+                ...(existingAssociations &&
+                typeof existingAssociations === 'object' &&
+                !Array.isArray(existingAssociations)
                   ? existingAssociations
                   : {}),
                 ...fileAssociations,
@@ -395,7 +397,7 @@ export const handler = async ({
           const tailwindStylesheetEntry = `tailwindStylesheet: './${tailwindStylesheetPath}',`
 
           let newPrettierConfig = prettierConfig
-          const existingEntryRegExp = /tailwindStylesheet: .*(,)?/
+          const existingEntryRegExp = /tailwindStylesheet:\s*[^,\n]*,?/
 
           if (existingEntryRegExp.test(newPrettierConfig)) {
             if (force) {

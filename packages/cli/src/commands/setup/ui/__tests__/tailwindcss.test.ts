@@ -223,6 +223,28 @@ describe('prettier config', () => {
       ].join('\n'),
     )
   })
+
+  it('only replaces the stylesheet entry when called with --force', async () => {
+    setupDefaultProjectStructure({
+      'prettier.config.cjs': [
+        'module.exports = {',
+        "  tailwindStylesheet: './old.css', plugins: ['prettier-plugin-tailwindcss'],",
+        '}',
+        '',
+      ].join('\n'),
+    })
+
+    await handler({ force: true })
+
+    expect(readAppFile('prettier.config.cjs')).toEqual(
+      [
+        'module.exports = {',
+        "  tailwindStylesheet: './web/src/index.css', plugins: ['prettier-plugin-tailwindcss'],",
+        '}',
+        '',
+      ].join('\n'),
+    )
+  })
 })
 
 describe('vite config', () => {
