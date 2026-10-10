@@ -10,6 +10,39 @@ import { getConfig } from '@cedarjs/project-config'
 
 import sharedConfigs from './shared.mjs'
 
+/**
+ * Components from `@cedarjs/forms` (see packages/forms/src/index.tsx) that
+ * render an `<input>`, `<select>` or `<textarea>` a `<label>` can be
+ * associated with. `HiddenField` is left out because hidden inputs can't be
+ * labelled.
+ */
+const cedarFormsControlComponents = [
+  'ButtonField',
+  'CheckboxField',
+  'ColorField',
+  'DateField',
+  'DatetimeLocalField',
+  'EmailField',
+  'FileField',
+  'ImageField',
+  'InputField',
+  'MonthField',
+  'NumberField',
+  'PasswordField',
+  'RadioField',
+  'RangeField',
+  'ResetField',
+  'SearchField',
+  'SelectField',
+  'SubmitField',
+  'TelField',
+  'TextAreaField',
+  'TextField',
+  'TimeField',
+  'UrlField',
+  'WeekField',
+]
+
 // Note: This config is async to support getConfig()
 /** @returns {Promise<import('eslint').Linter.FlatConfig[]>} */
 export default async function createConfig() {
@@ -48,6 +81,14 @@ export default async function createConfig() {
       },
       rules: {
         ...jsxA11yPlugin.configs.recommended.rules,
+        // The rule only recognizes native controls by tag name, so it can't
+        // tell that a nested `<TextField />` renders an `<input>`
+        'jsx-a11y/label-has-associated-control': [
+          'error',
+          {
+            controlComponents: cedarFormsControlComponents,
+          },
+        ],
       },
     })
   }
