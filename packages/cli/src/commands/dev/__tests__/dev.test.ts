@@ -3,7 +3,8 @@ import type FS from 'fs'
 import type { ConcurrentlyCommandInput } from 'concurrently'
 import concurrently from 'concurrently'
 import find from 'lodash/find.js'
-import { vi, describe, afterEach, it, expect } from 'vitest'
+import { vi, describe, beforeEach, afterEach, it, expect } from 'vitest'
+import type { MockInstance } from 'vitest'
 
 import { getConfig } from '@cedarjs/project-config'
 import type * as ProjectConfig from '@cedarjs/project-config'
@@ -454,6 +455,68 @@ describe('yarn cedar dev', () => {
     // The configured API port must still be forwarded in the command.
     const { apiCommand } = findSeparateCommands()
     expect(apiCommand?.command).toContain('--port 8911')
+  })
+
+  describe('--ud fallback warning', () => {
+    let warn: MockInstance<typeof console.warn>
+
+    beforeEach(() => {
+      warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    })
+
+    afterEach(() => {
+      warn.mockRestore()
+    })
+
+    it('Should warn when --ud falls back because of a custom server file', async () => {
+      vi.mocked(serverFileExists).mockReturnValue(true)
+
+      await handler({ workspace: ['api', 'web'], ud: true })
+
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('custom server file'),
+      )
+    })
+
+    it('Should warn when --ud falls back because only one workspace is requested', async () => {
+      await handler({ workspace: ['web'], ud: true })
+
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('both the api and web sides'),
+      )
+    })
+
+    it('Should warn when --ud falls back because streaming SSR is enabled', async () => {
+      const config = await defaultConfig()
+
+      vi.mocked(getConfig).mockReturnValue({
+        ...config,
+        experimental: {
+          ...config.experimental,
+          streamingSsr: {
+            enabled: true,
+          },
+        },
+      })
+
+      await handler({ workspace: ['api', 'web'], ud: true })
+
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('streaming SSR'),
+      )
+
+      const { apiCommand, webCommand } = findSeparateCommands()
+      expect(apiCommand).toBeDefined()
+      expect(webCommand).toBeDefined()
+    })
+
+    it('Should not warn when the unified dev server is used', async () => {
+      await handler({ workspace: ['api', 'web'], ud: true })
+
+      expect(warn).not.toHaveBeenCalledWith(
+        expect.stringContaining('--ud has no effect'),
+      )
+    })
   })
 
   it('Should not start the jobs worker when jobs are not configured', async () => {
