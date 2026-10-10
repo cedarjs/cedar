@@ -24,7 +24,47 @@ function warn(title: string, lines: string[]) {
   }
 }
 
+function usesTailwindCssV3() {
+  const tailwindConfigExists = ['cjs', 'js', 'mjs', 'ts'].some((ext) =>
+    fs.existsSync(path.join(projectPaths.web.config, `tailwind.config.${ext}`)),
+  )
+
+  const indexCssPath = path.join(projectPaths.web.src, 'index.css')
+  const indexCssHasV3Directives =
+    fs.existsSync(indexCssPath) &&
+    fs.readFileSync(indexCssPath, 'utf8').includes('@tailwind ')
+
+  return tailwindConfigExists || indexCssHasV3Directives
+}
+
 async function main() {
+  if (usesTailwindCssV3()) {
+    warn('Tailwind CSS v3 is not supported', [
+      'Cedar sets up Tailwind CSS v4 with its Vite plugin, and the scaffold\n' +
+        'generator writes a scaffold.css that only works with Tailwind CSS v4.\n' +
+        'Your project still builds with Tailwind CSS v3, but we recommend\n' +
+        'upgrading. Commit your work first, then follow these steps.',
+      "1. Run Tailwind's upgrade tool from the root of your project. It moves\n" +
+        'your Tailwind config into web/src/index.css and updates the class\n' +
+        'names in your components:\n\n' +
+        '    npx @tailwindcss/upgrade --config ./web/config/tailwind.config.cjs',
+      '2. The upgrade tool adds `tailwindcss` to the root package.json. Remove\n' +
+        'it from there, and remove the PostCSS packages Tailwind CSS v3 needed\n' +
+        'from the web side:\n\n' +
+        '    yarn remove tailwindcss\n' +
+        '    yarn workspace web remove tailwindcss postcss autoprefixer',
+      '3. Delete web/config/postcss.config.cjs. (If you use other PostCSS\n' +
+        'plugins, only remove the `tailwindcss`, `tailwindcss/nesting` and\n' +
+        '`autoprefixer` plugins from it.) Then remove the `tailwindConfig` line\n' +
+        'from prettier.config.cjs.',
+      '4. Set up Tailwind CSS v4 with its Vite plugin, and answer yes when\n' +
+        'asked about overwriting scaffold.css:\n\n' +
+        '    yarn cedar setup ui tailwindcss --force',
+      'See https://tailwindcss.com/docs/upgrade-guide for all the changes in\n' +
+        'Tailwind CSS v4.',
+    ])
+  }
+
   const filesMissingChangePassword: string[] = []
 
   if (fs.existsSync(projectPaths.api.functions)) {

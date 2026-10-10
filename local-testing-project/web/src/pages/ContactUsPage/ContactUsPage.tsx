@@ -79,8 +79,8 @@ const ContactUsPage = () => {
         <TextField
           name="name"
           validation={{ required: true }}
-          className="rounded-sm border px-2 py-1 outline-none"
-          errorClassName="border rounded-sm px-2 py-1 border-red-700 outline-none"
+          className="rounded-xs border px-2 py-1 outline-hidden"
+          errorClassName="border rounded-xs px-2 py-1 border-red-700 outline-hidden"
         />
         <FieldError name="name" className="block text-red-700" />
 
@@ -107,8 +107,8 @@ const ContactUsPage = () => {
               return true
             },
           }}
-          className="rounded-sm border px-2 py-1"
-          errorClassName="border rounded-sm px-2 py-1 border-red-700 outline-none"
+          className="rounded-xs border px-2 py-1"
+          errorClassName="border rounded-xs px-2 py-1 border-red-700 outline-hidden"
         />
         <FieldError name="email" className="block text-red-700" />
 
@@ -122,13 +122,13 @@ const ContactUsPage = () => {
         <TextAreaField
           name="message"
           validation={{ required: true }}
-          className="block rounded-sm border px-2 py-1"
-          errorClassName="block border rounded-sm px-2 py-1 border-red-700 outline-none"
+          className="block rounded-xs border px-2 py-1"
+          errorClassName="block border rounded-xs px-2 py-1 border-red-700 outline-hidden"
         />
         <FieldError name="message" className="block text-red-700" />
 
         <Submit
-          className="mt-8 block rounded bg-blue-700 px-4 py-2 text-white"
+          className="mt-8 block rounded-sm bg-blue-700 px-4 py-2 text-white"
           disabled={loading}
         >
           Save

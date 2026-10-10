@@ -171,13 +171,32 @@ const getTemplateStrings = (
   }
 }
 
+const webDependsOnTailwindCSS = () => {
+  const webPackageJsonPath = path.join(getPaths().web.base, 'package.json')
+
+  if (!fs.existsSync(webPackageJsonPath)) {
+    return false
+  }
+
+  // JSON.parse returns `any`; we assert the subset of the package.json shape
+  // we read here. Both fields are optional, so missing ones are handled
+  const { dependencies, devDependencies } = JSON.parse(
+    fs.readFileSync(webPackageJsonPath, 'utf-8'),
+  ) as {
+    dependencies?: Record<string, string>
+    devDependencies?: Record<string, string>
+  }
+
+  return Boolean(
+    dependencies?.['tailwindcss'] || devDependencies?.['tailwindcss'],
+  )
+}
+
 // Checks whether Tailwind is installed, and if the `flag` argument is not
 // already set, returns true. Otherwise just returns `flag`
 export const shouldUseTailwindCSS = (flag: boolean | undefined) => {
   if (flag === undefined) {
-    return fs.existsSync(
-      path.join(getPaths().web.config, 'tailwind.config.cjs'),
-    )
+    return webDependsOnTailwindCSS()
   } else {
     return flag
   }

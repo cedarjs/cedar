@@ -35,7 +35,7 @@ If you do not want a TypeScript project, omit the `--ts` flag.
 
 > **Important:** CedarJS prefers yarn over npm because a project is monorepo with api and web workspaces. You will install tremor and other web packages using yarn workspaces.
 
-Use the Cedar setup command to install `TailwindCSS`, its peer dependencies, and create the `tailwind.config.cjs` file.
+Use the Cedar setup command to install `TailwindCSS` and its peer dependencies, and to import Tailwind in `web/src/index.css`.
 
 ```bash
 yarn cedar setup ui tailwindcss
@@ -53,23 +53,14 @@ Install `heroicons version 1.0.6` from your command line via yarn.
 yarn workspace web add @heroicons/react@1.0.6
 ```
 
-Update tailwind config `web/config/tailwind.config.cjs` **including the path to the tremor** module.
+Tell Tailwind to also scan **the tremor module** for class names by adding an `@source` directive right after the Tailwind import in `web/src/index.css`.
 
-```js
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-  content: [
-    'src/**/*.{js,jsx,ts,tsx}',
-    '../node_modules/@tremor/**/*.{js,ts,jsx,tsx}',
-  ],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
-}
+```css filename="web/src/index.css"
+@import 'tailwindcss';
+@source '../../node_modules/@tremor/**/*.{js,ts,jsx,tsx}';
 ```
 
-> **Note:** the path for node_modules is `../` because the web workspace is in a subdirectory of the root directory.
+> **Note:** the path is relative to `index.css`, and `node_modules` is in the root directory of your project.
 
 ## Add a Dashboard Page
 

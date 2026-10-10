@@ -1,3 +1,9 @@
+/**
+ * Makes your app's Tailwind theme and utilities available to `@apply`
+ * without emitting any of the styles in index.css a second time
+ */
+@reference './index.css';
+
 .rw-scaffold {
   @apply bg-white text-gray-600;
 }
@@ -27,14 +33,13 @@
   @apply mx-4 pb-4;
 }
 .rw-segment {
-  @apply w-full overflow-hidden rounded-lg border border-gray-200;
-  scrollbar-color: theme('colors.zinc.400') transparent;
+  @apply w-full scrollbar-thumb-zinc-400 scrollbar-track-transparent overflow-hidden rounded-lg border border-gray-200;
 }
 .rw-segment::-webkit-scrollbar {
   height: initial;
 }
 .rw-segment::-webkit-scrollbar-track {
-  @apply rounded-b-[10px] rounded-t-none border-0 border-t border-solid border-gray-200 bg-transparent p-[2px];
+  @apply rounded-t-none rounded-b-[10px] border-0 border-t border-solid border-gray-200 bg-transparent p-[2px];
 }
 .rw-segment::-webkit-scrollbar-thumb {
   @apply rounded-full border-[3px] border-solid border-transparent bg-zinc-400 bg-clip-content;
@@ -80,7 +85,7 @@
 }
 .rw-cell-error,
 .rw-form-error-wrapper {
-  @apply my-4 rounded border border-red-100 bg-red-50 p-4 text-red-600;
+  @apply my-4 rounded-sm border border-red-100 bg-red-50 p-4 text-red-600;
 }
 .rw-form-error-title {
   @apply m-0 font-semibold;
@@ -89,13 +94,13 @@
   @apply mt-2 list-inside list-disc;
 }
 .rw-button {
-  @apply flex cursor-pointer justify-center rounded border-0 bg-gray-200 px-4 py-1 text-xs font-semibold uppercase leading-loose tracking-wide text-gray-500 no-underline transition duration-100;
+  @apply flex cursor-pointer justify-center rounded-sm border-0 bg-gray-200 px-4 py-1 text-xs leading-loose font-semibold tracking-wide text-gray-500 uppercase no-underline transition duration-100;
 }
 .rw-button:hover {
   @apply bg-gray-500 text-white;
 }
 .rw-button.rw-button-small {
-  @apply rounded-sm px-2 py-1 text-xs;
+  @apply rounded-xs px-2 py-1 text-xs;
 }
 .rw-button.rw-button-green {
   @apply bg-green-500 text-white;
@@ -134,7 +139,7 @@
   @apply text-red-600;
 }
 .rw-input {
-  @apply mt-2 block w-full rounded border border-gray-200 bg-white p-2 outline-none;
+  @apply mt-2 block w-full rounded-sm border border-gray-200 bg-white p-2 outline-hidden;
 }
 .rw-check-radio-items {
   @apply flex justify-items-center;
@@ -144,7 +149,7 @@
 }
 .rw-input[type='checkbox'],
 .rw-input[type='radio'] {
-  @apply ml-0 mr-1 mt-1 inline w-4;
+  @apply mt-1 mr-1 ml-0 inline w-4;
 }
 .rw-input:focus {
   @apply border-gray-400;
@@ -153,11 +158,11 @@
   @apply border-red-600 text-red-600;
 }
 .rw-input-error:focus {
-  @apply border-red-600 outline-none;
+  @apply border-red-600 outline-hidden;
   box-shadow: 0 0 5px #c53030;
 }
 .rw-field-error {
-  @apply mt-1 block text-xs font-semibold uppercase text-red-600;
+  @apply mt-1 block text-xs font-semibold text-red-600 uppercase;
 }
 .rw-table-wrapper-responsive {
   @apply overflow-x-auto;

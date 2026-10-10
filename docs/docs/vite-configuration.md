@@ -97,9 +97,12 @@ And if you want to use Tailwind CSS, just run the setup command:
 yarn cedar setup ui tailwindcss
 ```
 
-> Note: The setup command `yarn cedar setup ui tailwindcss` installs Tailwind
-> CSS v3.x by default. Cedar also works with Tailwind v4.x, but the setup
-> helper does not currently install that version or its configuration.
+The setup command installs Tailwind CSS v4 and adds its Vite plugin,
+`@tailwindcss/vite`, to `web/vite.config.ts`. Tailwind is loaded by
+`@import 'tailwindcss';` at the top of `web/src/index.css`, and that's also
+where you customize it, using Tailwind's CSS-first configuration (`@theme`,
+`@source`, `@plugin`, etc.). See the
+[Tailwind CSS docs](https://tailwindcss.com/docs/theme) for details.
 
 ## Vite Dev Server
 

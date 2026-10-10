@@ -1,13 +1,11 @@
 /**
  * START --- SETUP TAILWINDCSS EDIT
  *
- * `yarn cedar setup ui tailwindcss` placed these directives here
+ * `yarn cedar setup ui tailwindcss` placed this import here
  * to inject Tailwind's styles into your CSS.
  * For more information, see: https://tailwindcss.com/docs/installation
  */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 /**
  * END --- SETUP TAILWINDCSS EDIT
  */

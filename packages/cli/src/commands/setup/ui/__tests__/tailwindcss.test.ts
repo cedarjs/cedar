@@ -1,25 +1,5 @@
 vi.mock('node:fs', async () => ({ ...memfsFs, default: { ...memfsFs } }))
 
-vi.mock('@cedarjs/cli-helpers/packageManager/exec', () => ({
-  runBin: (_bin: string, args: string[] = []) => {
-    // Create an empty config file when `tailwindcss init` is called.
-    // If we don't do this, later stages of the setup will fail.
-    if (args[0] === 'init') {
-      memfsFs.writeFileSync(args[args.length - 1], '')
-    }
-  },
-  runBinSync: (_bin: string, args: string[] = []) => {
-    if (args[0] === 'init') {
-      memfsFs.writeFileSync(args[args.length - 1], '')
-    }
-  },
-  runScript: () => {},
-  runScriptSync: () => {},
-  runWorkspaceScript: () => {},
-  runWorkspaceBin: () => {},
-  dlx: () => {},
-}))
-
 vi.mock('@cedarjs/cli-helpers/packageManager/packages', () => ({
   addRootPackages: () => {},
   addWorkspacePackages: () => {},
@@ -123,19 +103,15 @@ describe('tasks that should be skipped', () => {
     )
   })
 
-  it("should skip adding directives to index.css if they're already in there", async () => {
+  it("should skip adding the import to index.css if it's already in there", async () => {
     setupDefaultProjectStructure({
-      'web/src/index.css': [
-        '@tailwind base;',
-        '@tailwind components;',
-        '@tailwind utilities;',
-      ].join('\n'),
+      'web/src/index.css': '@import "tailwindcss";\n',
     })
 
     await handler({})
 
     expect(Listr2Mock.skippedTaskTitles).toContain(
-      'Directives already exist in index.css',
+      'Tailwind CSS import already exists in index.css',
     )
   })
 
@@ -211,7 +187,109 @@ describe('tasks that should be skipped', () => {
   })
 })
 
+describe('index.css', () => {
+  it('adds the tailwind import at the top of index.css', async () => {
+    setupDefaultProjectStructure({
+      'web/src/index.css': 'body {\n  margin: 0;\n}\n',
+    })
+
+    await handler({})
+
+    const indexCss = readAppFile('web/src/index.css')
+    expect(indexCss.startsWith('/**')).toBe(true)
+    expect(indexCss).toContain("@import 'tailwindcss';")
+    expect(indexCss.endsWith('body {\n  margin: 0;\n}\n')).toBe(true)
+  })
+})
+
+describe('prettier config', () => {
+  const prettierConfig = ['module.exports = {', '  semi: false,', '}', ''].join(
+    '\n',
+  )
+
+  it('adds the tailwind stylesheet and plugin', async () => {
+    setupDefaultProjectStructure({ 'prettier.config.cjs': prettierConfig })
+
+    await handler({})
+
+    expect(readAppFile('prettier.config.cjs')).toEqual(
+      [
+        'module.exports = {',
+        '  semi: false,',
+        "  tailwindStylesheet: './web/src/index.css',",
+        "  plugins: ['prettier-plugin-tailwindcss'],",
+        '}',
+        '',
+      ].join('\n'),
+    )
+  })
+})
+
+describe('vite config', () => {
+  it('adds the Tailwind CSS plugin and its import', async () => {
+    setupDefaultProjectStructure()
+
+    await handler({})
+
+    expect(readAppFile('web/vite.config.ts')).toEqual(
+      [
+        '/// <reference types="vitest/config" />',
+        '',
+        "import tailwindcss from '@tailwindcss/vite'",
+        "import { defineConfig } from 'vite'",
+        '',
+        "import { cedar } from '@cedarjs/vite'",
+        '',
+        'export default defineConfig(({ mode }) => ({',
+        '  plugins: [',
+        '    tailwindcss(),',
+        '    cedar({ mode }),',
+        '  ],',
+        '}))',
+        '',
+      ].join('\n'),
+    )
+  })
+
+  it('skips adding the plugin if it is already there', async () => {
+    const viteConfig = [
+      "import tailwindcss from '@tailwindcss/vite'",
+      "import { defineConfig } from 'vite'",
+      '',
+      "import { cedar } from '@cedarjs/vite'",
+      '',
+      'export default defineConfig({',
+      '  plugins: [tailwindcss(), cedar()],',
+      '})',
+      '',
+    ].join('\n')
+    setupDefaultProjectStructure({ 'web/vite.config.ts': viteConfig })
+
+    await handler({})
+
+    expect(Listr2Mock.skippedTaskTitles).toContain(
+      'The Tailwind CSS Vite plugin is already configured',
+    )
+    expect(readAppFile('web/vite.config.ts')).toEqual(viteConfig)
+  })
+})
+
 describe('tailwindcss intellisense settings', () => {
+  it('associates css files with tailwindcss, keeping other associations', async () => {
+    setupDefaultProjectStructure({
+      '.vscode/settings.json': JSON.stringify({
+        'files.associations': { '*.mdx': 'markdown' },
+      }),
+    })
+
+    await handler({})
+
+    expect(JSON.parse(readVsCodeSettings())['files.associations']).toEqual({
+      '*.mdx': 'markdown',
+      '*.css': 'tailwindcss',
+    })
+  })
+
   it('creates a new settings file when none exists', async () => {
     setupDefaultProjectStructure({
       '.vscode/': null, // empty directory
@@ -240,7 +318,7 @@ describe('tailwindcss intellisense settings', () => {
     const settingsJson = JSON.parse(readVsCodeSettings())
     const twClassAttributes = settingsJson['tailwindCSS.classAttributes']
 
-    expect(Object.keys(settingsJson).length).toBe(1)
+    expect(Object.keys(settingsJson).length).toBe(2)
     expect(Array.isArray(twClassAttributes)).toBe(true)
     expect(twClassAttributes).toContain('class')
     expect(twClassAttributes).toContain('className')
@@ -266,7 +344,7 @@ describe('tailwindcss intellisense settings', () => {
     const settingsJson = JSON.parse(readVsCodeSettings())
     const twClassAttributes = settingsJson['tailwindCSS.classAttributes']
 
-    expect(Object.keys(settingsJson).length).toBe(3)
+    expect(Object.keys(settingsJson).length).toBe(4)
     expect(Array.isArray(twClassAttributes)).toBe(true)
     expect(twClassAttributes).toContain('class')
     expect(twClassAttributes).toContain('className')
@@ -293,7 +371,7 @@ describe('tailwindcss intellisense settings', () => {
     const settingsJson = JSON.parse(readVsCodeSettings())
     const twClassAttributes = settingsJson['tailwindCSS.classAttributes']
 
-    expect(Object.keys(settingsJson).length).toBe(4)
+    expect(Object.keys(settingsJson).length).toBe(5)
     expect(settingsJson['tailwindCSS.emmetCompletions']).toBeTruthy()
     expect(Array.isArray(twClassAttributes)).toBe(true)
     expect(twClassAttributes).toContain('class')
@@ -328,7 +406,7 @@ describe('tailwindcss intellisense settings', () => {
     const settingsJson = JSON.parse(readVsCodeSettings())
     const twClassAttributes = settingsJson['tailwindCSS.classAttributes']
 
-    expect(Object.keys(settingsJson).length).toBe(4)
+    expect(Object.keys(settingsJson).length).toBe(5)
     expect(settingsJson['tailwindCSS.emmetCompletions']).toBeTruthy()
     expect(Array.isArray(twClassAttributes)).toBe(true)
     expect(twClassAttributes).toContain('class')
@@ -357,7 +435,18 @@ function setupDefaultProjectStructure(
         '  }',
         '}',
       ].join('\n'),
-      [path.join(__dirname, '../templates/postcss.config.cjs.template')]: '',
+      'web/vite.config.ts': [
+        '/// <reference types="vitest/config" />',
+        '',
+        "import { defineConfig } from 'vite'",
+        '',
+        "import { cedar } from '@cedarjs/vite'",
+        '',
+        'export default defineConfig(({ mode }) => ({',
+        '  plugins: [cedar({ mode })],',
+        '}))',
+        '',
+      ].join('\n'),
     },
     APP_PATH,
   )
@@ -365,6 +454,12 @@ function setupDefaultProjectStructure(
   if (volOverride) {
     vol.fromJSON(volOverride, APP_PATH)
   }
+}
+
+function readAppFile(filePath: string) {
+  // The types are wrong for memfs.fs.readFileSync, so we cast it to string
+  // See https://github.com/streamich/memfs/issues/702
+  return memfsFs.readFileSync(path.join(APP_PATH, filePath), 'utf-8') as string
 }
 
 function readVsCodeSettings() {

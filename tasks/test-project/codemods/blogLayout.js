@@ -16,8 +16,8 @@ return (
         <ul className="relative flex items-center font-light">
           <li>
             <NavLink
-              className="py-2 px-4 hover:bg-blue-600 transition duration-100 rounded"
-              activeClassName="py-2 px-4 hover:bg-blue-600 transition duration-100 rounded underline underline-offset-4"
+              className="py-2 px-4 hover:bg-blue-600 transition duration-100 rounded-sm"
+              activeClassName="py-2 px-4 hover:bg-blue-600 transition duration-100 rounded-sm underline underline-offset-4"
               to={routes.about()}
             >
               About
@@ -25,8 +25,8 @@ return (
           </li>
           <li>
             <NavLink
-              className="py-2 px-4 hover:bg-blue-600 transition duration-100 rounded"
-              activeClassName="py-2 px-4 hover:bg-blue-600 transition duration-100 rounded underline underline-offset-4"
+              className="py-2 px-4 hover:bg-blue-600 transition duration-100 rounded-sm"
+              activeClassName="py-2 px-4 hover:bg-blue-600 transition duration-100 rounded-sm underline underline-offset-4"
               to={routes.contactUs()}
             >
               Contact Us
@@ -34,8 +34,8 @@ return (
           </li>
           <li>
             <NavLink
-              className="py-2 px-4 hover:bg-blue-600 transition duration-100 rounded"
-              activeClassName="py-2 px-4 hover:bg-blue-600 transition duration-100 rounded underline underline-offset-4"
+              className="py-2 px-4 hover:bg-blue-600 transition duration-100 rounded-sm"
+              activeClassName="py-2 px-4 hover:bg-blue-600 transition duration-100 rounded-sm underline underline-offset-4"
               to={routes.posts()}
             >
               Admin
@@ -44,8 +44,8 @@ return (
           {isAuthenticated && (
             <li>
               <NavLink
-                className="py-2 px-4 hover:bg-blue-600 transition duration-100 rounded"
-                activeClassName="py-2 px-4 hover:bg-blue-600 transition duration-100 rounded underline underline-offset-4"
+                className="py-2 px-4 hover:bg-blue-600 transition duration-100 rounded-sm"
+                activeClassName="py-2 px-4 hover:bg-blue-600 transition duration-100 rounded-sm underline underline-offset-4"
                 onClick={logOut}
                 to={''}
               >
@@ -56,8 +56,8 @@ return (
           {!isAuthenticated && (
             <li>
               <NavLink
-                className="py-2 px-4 hover:bg-blue-600 transition duration-100 rounded"
-                activeClassName="py-2 px-4 hover:bg-blue-600 transition duration-100 rounded underline underline-offset-4"
+                className="py-2 px-4 hover:bg-blue-600 transition duration-100 rounded-sm"
+                activeClassName="py-2 px-4 hover:bg-blue-600 transition duration-100 rounded-sm underline underline-offset-4"
                 to={routes.login()}
               >
                 Log In

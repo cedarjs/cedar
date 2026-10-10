@@ -23,7 +23,7 @@ export const builder = (yargs: Argv) => {
     })
     .option('tailwind', {
       description:
-        'Generate TailwindCSS version of scaffold.css (automatically set to `true` if TailwindCSS config exists)',
+        'Generate TailwindCSS version of scaffold.css (automatically set to `true` if the web side depends on `tailwindcss`)',
       type: 'boolean',
     })
     .option('rollback', {
