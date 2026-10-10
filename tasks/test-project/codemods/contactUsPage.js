@@ -23,8 +23,8 @@ const body = `
   <TextField
     name="name"
     validation={{ required: true }}
-    className="border rounded-sm px-2 py-1 outline-none"
-    errorClassName="border rounded-sm px-2 py-1 border-red-700 outline-none"
+    className="border rounded-xs px-2 py-1 outline-hidden"
+    errorClassName="border rounded-xs px-2 py-1 border-red-700 outline-hidden"
   />
   <FieldError name="name" className="block text-red-700" />
 
@@ -51,8 +51,8 @@ const body = `
         return true
       },
     }}
-    className="border rounded-sm px-2 py-1"
-    errorClassName="border rounded-sm px-2 py-1 border-red-700 outline-none"
+    className="border rounded-xs px-2 py-1"
+    errorClassName="border rounded-xs px-2 py-1 border-red-700 outline-hidden"
   />
   <FieldError name="email" className="block text-red-700" />
 
@@ -66,12 +66,12 @@ const body = `
   <TextAreaField
     name="message"
     validation={{ required: true }}
-    className="block border rounded-sm px-2 py-1"
-    errorClassName="block border rounded-sm px-2 py-1 border-red-700 outline-none"
+    className="block border rounded-xs px-2 py-1"
+    errorClassName="block border rounded-xs px-2 py-1 border-red-700 outline-hidden"
   />
   <FieldError name="message" className="block text-red-700" />
 
-  <Submit className="block bg-blue-700 text-white mt-8 px-4 py-2 rounded" disabled={loading}>
+  <Submit className="block bg-blue-700 text-white mt-8 px-4 py-2 rounded-sm" disabled={loading}>
     Save
   </Submit>
 </Form>`

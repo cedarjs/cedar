@@ -23,13 +23,13 @@ export async function smokeTest({ page }: PlaywrightTestArgs) {
 
   // CSS checks. We saw this break when we switched bundlers, so while it's not comprehensive, it's at least something.
   // While playwright recommends against using locators that are too-closely tied to the DOM, `#cedar-app` is a stable ID.
-  const bgBlue700 = 'rgb(29, 78, 216)'
+  const bgBlue700 = 'oklch(0.488 0.243 264.376)'
   await expect(page.locator('#cedar-app > header')).toHaveCSS(
     'background-color',
     bgBlue700,
   )
 
-  const textBlue400 = 'rgb(96, 165, 250)'
+  const textBlue400 = 'oklch(0.707 0.165 254.624)'
   await expect(page.getByRole('link', { name: 'Cedar Blog' })).toHaveCSS(
     'color',
     textBlue400,

@@ -1074,7 +1074,7 @@ details.
 | `model`              | Model to scaffold. You can also use `<path/model>` to nest files by type at the given path directory (or directories). For example, `redwood g scaffold admin/post`                                   |
 | `--docs`             | Use or set to `true` to generated comments in SDL to use in self-documentating your app's GraphQL API. See: [Self-Documenting GraphQL API](./graphql.md#self-documenting-graphql-api) [default:false] |
 | `--force, -f`        | Overwrite existing files                                                                                                                                                                              |
-| `--tailwind`         | Generate TailwindCSS version of scaffold.css (automatically set to `true` if TailwindCSS config exists)                                                                                               |
+| `--tailwind`         | Generate TailwindCSS version of scaffold.css (automatically set to `true` if the web side depends on `tailwindcss`)                                                                                   |
 | `--typescript, --ts` | Generate TypeScript files Enabled by default if we detect your project is TypeScript                                                                                                                  |
 | `--rollback`         | Rollback changes if an error occurs [default: true]                                                                                                                                                   |
 

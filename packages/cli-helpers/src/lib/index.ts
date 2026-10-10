@@ -50,11 +50,11 @@ export const getPrettierOptions = async () => {
       pathToFileURL(prettierConfigPath).href
     )
 
-    if (options.tailwindConfig?.startsWith('.')) {
+    if (options.tailwindStylesheet?.startsWith('.')) {
       // Make this work with --cwd
-      options.tailwindConfig = path.join(
+      options.tailwindStylesheet = path.join(
         process.env.CEDAR_CWD ?? process.env.RWJS_CWD ?? process.cwd(),
-        options.tailwindConfig,
+        options.tailwindStylesheet,
       )
     }
 

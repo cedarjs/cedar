@@ -8,7 +8,6 @@ import { terminalLink } from 'termi-link'
 
 import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
-import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 import {
   addRootPackages,
   addWorkspacePackages,
@@ -17,42 +16,29 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { getPaths, usingVSCode } from '../../../../lib/index.js'
+import { insertPluginsBeforeCedar } from '../../deploy/helpers/index.js'
 
-const tailwindDirectives = [
-  '@tailwind base;',
-  '@tailwind components;',
-  '@tailwind utilities;',
-]
+const tailwindImport = "@import 'tailwindcss';"
 
-const tailwindDirectivesExist = (indexCSS: string) =>
-  tailwindDirectives.every((tailwindDirective) =>
-    indexCSS.includes(tailwindDirective),
-  )
+const tailwindImportRegExp = /@import\s+['"]tailwindcss['"]/
 
-const tailwindImportsAndNotes = [
+const tailwindImportAndNotes = [
   '/**',
   ' * START --- SETUP TAILWINDCSS EDIT',
   ' *',
-  ` * \`${formatCedarCommand(['setup', 'ui', 'tailwindcss'])}\` placed these directives here`,
+  ` * \`${formatCedarCommand(['setup', 'ui', 'tailwindcss'])}\` placed this import here`,
   " * to inject Tailwind's styles into your CSS.",
   ' * For more information, see: https://tailwindcss.com/docs/installation',
   ' */',
-  ...tailwindDirectives,
+  tailwindImport,
   '/**',
   ' * END --- SETUP TAILWINDCSS EDIT',
   ' */\n',
 ]
 
-const recommendedVSCodeExtensions: string[] = [
-  'csstools.postcss',
-  'bradlc.vscode-tailwindcss',
-]
+const recommendedVSCodeExtensions: string[] = ['bradlc.vscode-tailwindcss']
 
 const recommendationTexts: Record<string, string> = {
-  'csstools.postcss': terminalLink(
-    'PostCSS Language Support',
-    'https://marketplace.visualstudio.com/items?itemName=csstools.postcss',
-  ),
   'bradlc.vscode-tailwindcss': terminalLink(
     'Tailwind CSS IntelliSense',
     'https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss',
@@ -110,9 +96,8 @@ export const handler = async ({
   const projectPackages = ['prettier-plugin-tailwindcss@^0.8.0']
 
   const webWorkspacePackages = [
-    'postcss',
-    'tailwindcss@^3.4.17',
-    'autoprefixer',
+    'tailwindcss@^4.3.3',
+    '@tailwindcss/vite@^4.3.3',
   ]
 
   const tasks = new Listr(
@@ -164,83 +149,65 @@ export const handler = async ({
         },
       },
       {
-        title: 'Configuring PostCSS...',
-        task: () => {
-          /**
-           * Check if PostCSS config already exists.
-           * If it exists, throw an error.
-           */
-          const postCSSConfigPath = rwPaths.web.postcss
+        title: 'Adding the Tailwind CSS plugin to the Vite config...',
+        task: (_ctx: unknown, task: { skip: (msg?: string) => void }) => {
+          // `resolveFile` returns null when there is no vite config, even
+          // though the `Paths` type says `string`
+          const viteConfigPath: string | null = rwPaths.web.viteConfig
 
-          if (!force && fs.existsSync(postCSSConfigPath)) {
-            throw new Error(
-              'PostCSS config already exists.\nUse --force to override existing config.',
-            )
-          } else {
-            const postCSSConfig = fs.readFileSync(
-              path.join(
-                import.meta.dirname,
-                '../templates/postcss.config.cjs.template',
-              ),
-              'utf-8',
-            )
-
-            fs.mkdirSync(path.dirname(postCSSConfigPath), { recursive: true })
-
-            return fs.writeFileSync(postCSSConfigPath, postCSSConfig)
-          }
-        },
-      },
-      {
-        title: 'Initializing Tailwind CSS...',
-        task: async () => {
-          const tailwindConfigPath = path.join(
-            rwPaths.web.config,
-            'tailwind.config.cjs',
-          )
-
-          if (fs.existsSync(tailwindConfigPath)) {
-            if (force) {
-              // `tailwindcss init` will fail if these files already exists
-              fs.unlinkSync(tailwindConfigPath)
-            } else {
-              throw new Error(
-                'Tailwind CSS config already exists.\nUse --force to override existing config.',
-              )
-            }
+          if (!viteConfigPath || !fs.existsSync(viteConfigPath)) {
+            throw new Error('Could not find web/vite.config.{ts,js}')
           }
 
-          await runBin('tailwindcss', ['init', tailwindConfigPath], {
-            cwd: rwPaths.web.base,
+          const viteConfig = fs.readFileSync(viteConfigPath, 'utf-8')
+
+          if (viteConfig.includes('@tailwindcss/vite')) {
+            task.skip('The Tailwind CSS Vite plugin is already configured')
+            return
+          }
+
+          const viteConfigWithPlugin = insertPluginsBeforeCedar({
+            content: viteConfig,
+            pluginCodes: ['tailwindcss()'],
           })
 
-          // Replace `content`.
-          const tailwindConfig = fs.readFileSync(tailwindConfigPath, 'utf-8')
-          const newTailwindConfig =
-            'const { join } = require("node:path");\n\n' +
-            tailwindConfig
-              .replace(
-                'content: []',
-                "content: [join(__dirname, '../src/**/*.{js,jsx,ts,tsx}')]",
-              )
-              // `tailwindcss init` will generate ESM syntax when it detects
-              // `"type": "module"` in package.json, even though the config
-              // file is .cjs. So we change it back to CJS syntax after it's
-              // been generated.
-              .replace('export default {', 'module.exports = {')
-          fs.writeFileSync(tailwindConfigPath, newTailwindConfig)
+          if (!viteConfigWithPlugin) {
+            throw new Error(
+              `Could not find \`cedar()\` in the plugins array in ${viteConfigPath}.\n` +
+                "Add `import tailwindcss from '@tailwindcss/vite'` to the top " +
+                'of the file and `tailwindcss()` to the plugins array ' +
+                'yourself, and then run this command again.',
+            )
+          }
+
+          const tailwindPluginImport =
+            "import tailwindcss from '@tailwindcss/vite'\n"
+          // Keep imports sorted by placing the plugin import right above the
+          // import from 'vite', or above the first import if there is none.
+          // Triple-slash directives at the top of the file must stay first
+          const importAnchor =
+            /^import .* from ['"]vite['"]/m.exec(viteConfigWithPlugin) ??
+            /^import /m.exec(viteConfigWithPlugin)
+          const insertAt = importAnchor?.index ?? 0
+
+          fs.writeFileSync(
+            viteConfigPath,
+            viteConfigWithPlugin.slice(0, insertAt) +
+              tailwindPluginImport +
+              viteConfigWithPlugin.slice(insertAt),
+          )
         },
       },
       {
-        title: 'Adding directives to index.css...',
+        title: 'Adding Tailwind CSS import to index.css...',
         task: (_ctx: unknown, task: { skip: (msg?: string) => void }) => {
           const INDEX_CSS_PATH = path.join(rwPaths.web.src, 'index.css')
           const indexCSS = fs.readFileSync(INDEX_CSS_PATH, 'utf-8')
 
-          if (tailwindDirectivesExist(indexCSS)) {
-            task.skip('Directives already exist in index.css')
+          if (tailwindImportRegExp.test(indexCSS)) {
+            task.skip('Tailwind CSS import already exists in index.css')
           } else {
-            const newIndexCSS = tailwindImportsAndNotes.join('\n') + indexCSS
+            const newIndexCSS = tailwindImportAndNotes.join('\n') + indexCSS
             fs.writeFileSync(INDEX_CSS_PATH, newIndexCSS)
           }
         },
@@ -347,6 +314,9 @@ export const handler = async ({
           //   ]
           // The default value for this setting is:
           //   ["class", "className", "ngClass", "class:list"]
+          //
+          // Also associates .css files with Tailwind's CSS language mode, so
+          // VS Code understands directives like `@theme` and `@reference`
 
           const VS_CODE_SETTINGS_PATH = path.join(
             rwPaths.base,
@@ -360,7 +330,10 @@ export const handler = async ({
             'errorClassName',
           ]
 
+          const fileAssociations = { '*.css': 'tailwindcss' }
+
           let newSettingsJson: Record<string, unknown> = {
+            ['files.associations']: fileAssociations,
             ['tailwindCSS.classAttributes']: classAttributes,
           }
 
@@ -386,8 +359,19 @@ export const handler = async ({
               new Set([...classAttributes, ...originalTwClassAttributesJson]),
             )
 
+            const existingAssociations =
+              originalSettingsJson['files.associations']
+
             newSettingsJson = {
               ...originalSettingsJson,
+              ['files.associations']: {
+                ...(existingAssociations &&
+                typeof existingAssociations === 'object' &&
+                !Array.isArray(existingAssociations)
+                  ? existingAssociations
+                  : {}),
+                ...fileAssociations,
+              },
               ['tailwindCSS.classAttributes']: mergedClassAttributes,
             }
           }
@@ -399,37 +383,46 @@ export const handler = async ({
         },
       },
       {
-        title: 'Adding tailwind config entry in prettier...',
+        title: 'Adding tailwind stylesheet entry in prettier...',
         task: async (_ctx: unknown) => {
           const prettierConfigPath = path.join(
             rwPaths.base,
             'prettier.config.cjs',
           )
-          // Add tailwindcss ordering plugin to prettier
+          // Point the tailwindcss ordering plugin to the CSS entry point
           const prettierConfig = fs.readFileSync(prettierConfigPath, 'utf-8')
-          const tailwindConfigPath = path
-            .relative(
-              rwPaths.base,
-              path.posix.join(rwPaths.web.config, 'tailwind.config.cjs'),
-            )
+          const tailwindStylesheetPath = path
+            .relative(rwPaths.base, path.join(rwPaths.web.src, 'index.css'))
             .replaceAll('\\', '/')
+          const tailwindStylesheetEntry = `tailwindStylesheet: './${tailwindStylesheetPath}',`
 
           let newPrettierConfig = prettierConfig
-          if (newPrettierConfig.includes('tailwindConfig: ')) {
-            if (force) {
-              newPrettierConfig = newPrettierConfig.replace(
-                /tailwindConfig: .*(,)?/,
-                `tailwindConfig: './${tailwindConfigPath}',`,
-              )
-            } else {
+          // Only a plain string value is replaced. Any other value, like a
+          // `path.join(...)` call, is left for the user to update
+          const stringEntryRegExp = /tailwindStylesheet:\s*(['"`])[^'"`\n]*\1,?/
+
+          if (newPrettierConfig.includes('tailwindStylesheet')) {
+            if (!force) {
               throw new Error(
-                'tailwindConfig setting already exists in prettier configuration.\nUse --force to override existing config.',
+                'tailwindStylesheet setting already exists in prettier configuration.\nUse --force to override existing config.',
               )
             }
+
+            if (!stringEntryRegExp.test(newPrettierConfig)) {
+              throw new Error(
+                `Could not update the tailwindStylesheet setting in ${prettierConfigPath}.\n` +
+                  `Set it to './${tailwindStylesheetPath}' yourself.`,
+              )
+            }
+
+            newPrettierConfig = newPrettierConfig.replace(
+              stringEntryRegExp,
+              tailwindStylesheetEntry,
+            )
           } else {
             newPrettierConfig = newPrettierConfig.replace(
               /,(\n\s*)(\}\n?)$/,
-              `,\n  tailwindConfig: './${tailwindConfigPath}',$1$2`,
+              `,\n  ${tailwindStylesheetEntry}$1$2`,
             )
           }
 
