@@ -218,11 +218,12 @@ export async function getPrismaClientOutputDirs(): Promise<string[]> {
  * projects. A worker has its own module registry, so those side effects stay
  * contained.
  */
-export function getPrismaClientOutputDirsIsolated(): Promise<string[]> {
+export async function getPrismaClientOutputDirsIsolated(): Promise<string[]> {
+  const { prismaClientOutputDirsWorkerUrl } =
+    await import('./prismaClientOutputDirsWorkerUrl.js')
+
   return new Promise((resolve) => {
-    const worker = new Worker(
-      new URL('./prismaClientOutputDirsWorker.js', import.meta.url),
-    )
+    const worker = new Worker(prismaClientOutputDirsWorkerUrl)
 
     worker.once('message', (outputDirs: unknown) => {
       resolve(
