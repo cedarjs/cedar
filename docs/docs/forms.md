@@ -386,7 +386,7 @@ const RequiredField = ({ label, name, validation }) => {
 
 ### Nesting fields in a `<label>`
 
-Cedar's ESLint config (when `a11y` is enabled in `cedar.toml`) runs the `jsx-a11y/label-has-associated-control` rule and tells it about every `@cedarjs/forms` field component, so a field nested inside a plain `<label>` counts as an associated control:
+Cedar's ESLint config (when `a11y` is enabled in `cedar.toml`) runs the `jsx-a11y/label-has-associated-control` rule and tells it about the labelable `@cedarjs/forms` field components (all of them except `HiddenField`, since hidden inputs can't be labelled), so a field nested inside a plain `<label>` counts as an associated control:
 
 ```jsx
 <label>
