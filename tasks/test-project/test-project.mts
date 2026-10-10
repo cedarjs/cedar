@@ -12,7 +12,12 @@ import yargs from 'yargs/yargs'
 
 import { streamingTasks } from './streaming-tasks.mts'
 import { apiTasks, webTasks } from './tasks.mts'
-import { confirmNoFixtureNoLink, getExecaOptions, getCfwBin } from './util.mts'
+import {
+  confirmNoFixtureNoLink,
+  getExecaOptions,
+  getCfwBin,
+  withPrismaResetConsent,
+} from './util.mts'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -229,7 +234,7 @@ const globalTasks = () =>
           return execa(
             'yarn cedar prisma migrate reset',
             ['--force'],
-            getExecaOptions(OUTPUT_PROJECT_PATH),
+            withPrismaResetConsent(getExecaOptions(OUTPUT_PROJECT_PATH)),
           )
         },
       },

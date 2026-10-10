@@ -20,6 +20,7 @@ import {
   getExecaOptions as utilGetExecaOptions,
   ExecaError,
   exec,
+  withPrismaResetConsent,
 } from './util.mts'
 
 function recommendedNodeVersion() {
@@ -874,7 +875,7 @@ async function rebuildTestProject() {
       return exec(
         `${cedarBin} cedar prisma migrate reset --force`,
         [],
-        getExecaOptions(OUTPUT_PROJECT_PATH),
+        withPrismaResetConsent(getExecaOptions(OUTPUT_PROJECT_PATH)),
       )
     },
   })
