@@ -7,7 +7,10 @@ import { parseSync } from 'oxc-parser'
 import type { Plugin } from 'vite'
 import { normalizePath } from 'vite'
 
-import { getPaths } from '@cedarjs/project-config'
+import {
+  createPrismaClientFileMatcher,
+  getPaths,
+} from '@cedarjs/project-config'
 
 /**
  * Vite plugin that wraps exported API functions with OpenTelemetry spans to
@@ -39,10 +42,16 @@ import { getPaths } from '@cedarjs/project-config'
  * the function as `async` if it returns or awaits Promises.
  */
 export function cedarOtelWrappingPlugin(): Plugin {
+  const prismaClientFiles = createPrismaClientFileMatcher()
+
   return {
     name: 'cedar-otel-wrapping',
 
-    transform(code, id) {
+    async buildStart() {
+      await prismaClientFiles.load()
+    },
+
+    async transform(code, id) {
       let apiSrc: string
       try {
         apiSrc = normalizePath(getPaths().api.src)
@@ -51,6 +60,10 @@ export function cedarOtelWrappingPlugin(): Plugin {
       }
 
       if (!normalizePath(id).startsWith(apiSrc + '/')) {
+        return null
+      }
+
+      if (await prismaClientFiles.matches(id)) {
         return null
       }
 
