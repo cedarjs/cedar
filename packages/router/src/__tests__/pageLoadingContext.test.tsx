@@ -38,6 +38,7 @@ import {
 import { useLocation } from '../location.js'
 import type { Spec, PageType } from '../page.js'
 import { usePageLoadingContext } from '../PageLoadingContext.js'
+import type { WrapperProps } from '../Set.js'
 
 // Running into intermittent test timeout behavior in
 // https://github.com/redwoodjs/redwood/pull/4992
@@ -141,10 +142,6 @@ const mockUseAuth =
     })
   }
 
-interface LayoutProps {
-  children: React.ReactNode
-}
-
 const HomePage = () => <h1>Home Page</h1>
 const LoginPage = () => <h1>Login Page</h1>
 const AboutPage = () => <h1>About Page</h1>
@@ -179,7 +176,7 @@ const RedirectPagePlaceholder = () => <>RedirectPagePlaceholder</>
 const PrivatePagePlaceholder = () => <>PrivatePagePlaceholder</>
 const LoginPagePlaceholder = () => <>LoginPagePlaceholder</>
 
-const PageLoadingContextLayout = ({ children }: LayoutProps) => {
+const PageLoadingContextLayout = ({ children }: WrapperProps) => {
   const { loading } = usePageLoadingContext()
 
   return (

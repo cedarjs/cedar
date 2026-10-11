@@ -461,7 +461,6 @@ function wrapWithSet(
   layout: string,
   routes: string[],
   newLineAndIndent: string,
-  props: Record<string, string> = {},
   privateSetProps?: Record<string, string>,
 ) {
   const [_, indentOne, indentTwo] = routesContent.match(
@@ -469,18 +468,13 @@ function wrapWithSet(
   ) || ['', '', '']
   const oneLevelIndent = indentTwo.slice(0, indentTwo.length - indentOne.length)
 
-  // converts { foo: 'bar' } to `foo="bar"`
-  const propsString = Object.entries(props)
-    .map((values) => `${values[0]}="${values[1]}"`)
-    .join(' ')
-
   if (!privateSetProps) {
     const newRoutesWithExtraIndent = routes.map(
       (route) => oneLevelIndent + route,
     )
 
     return [
-      `<Set wrap={${layout}}${propsString && ' ' + propsString}>`,
+      `<Set wrap={${layout}}>`,
       ...newRoutesWithExtraIndent,
       `</Set>`,
     ].join(newLineAndIndent)
@@ -496,7 +490,7 @@ function wrapWithSet(
 
   return [
     `<PrivateSet${privateSetPropsString && ' ' + privateSetPropsString}>`,
-    `${oneLevelIndent}<Set wrap={${layout}}${propsString && ' ' + propsString}>`,
+    `${oneLevelIndent}<Set wrap={${layout}}>`,
     ...newRoutesWithExtraIndent,
     `${oneLevelIndent}</Set>`,
     `</PrivateSet>`,
@@ -507,7 +501,6 @@ function wrapWithSet(
 export function addRoutesToRouterTask(
   routes: string[],
   layout?: string,
-  setProps: Record<string, string> = {},
   privateSetProps?: Record<string, string>,
 ) {
   const cedarPaths = getPaths()
@@ -541,7 +534,6 @@ export function addRoutesToRouterTask(
           layout,
           newRoutes,
           newLineAndIndent,
-          setProps,
           privateSetProps,
         )
       : newRoutes.join(newLineAndIndent)
@@ -590,6 +582,17 @@ function removeEmtpySet(routesContent: string, layout: string) {
   if (child.length > 0) {
     return routesContent
   }
+
+  // Scaffolds in apps with auth are wrapped in a <PrivateSet>. Remove that
+  // <PrivateSet> too if the layout's <Set> was the only thing in it
+  const privateSetWithLayoutReg = new RegExp(
+    `\\s*<PrivateSet[^>]*>\\s*<Set[^>]*wrap={${layout}}[^<]*>\\s*<\/Set>\\s*<\/PrivateSet>`,
+  )
+
+  if (privateSetWithLayoutReg.test(routesContent)) {
+    return routesContent.replace(privateSetWithLayoutReg, '')
+  }
+
   return routesContent.replace(setWithLayoutReg, '')
 }
 

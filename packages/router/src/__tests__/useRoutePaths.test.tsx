@@ -7,6 +7,7 @@ import { navigate } from '../history.js'
 import { Route } from '../Route.js'
 import { Router } from '../router.js'
 import { Set } from '../Set.js'
+import type { WrapperProps } from '../Set.js'
 import { useRoutePaths, useRoutePath } from '../useRoutePaths.js'
 
 test('useRoutePaths and useRoutePath', async () => {
@@ -25,11 +26,7 @@ test('useRoutePaths and useRoutePath', async () => {
     )
   }
 
-  interface LayoutProps {
-    children: React.ReactNode
-  }
-
-  const Layout = ({ children }: LayoutProps) => {
+  const Layout = ({ children }: WrapperProps) => {
     // No name means current route
     const routePath = useRoutePath()
 

@@ -151,8 +151,9 @@ Here's what happened when we ran that `yarn cedar g scaffold post` command:
   - `NewPostPage` for creating a new post
   - `PostPage` for showing the detail of a post
   - `PostsPage` for listing all the posts
-- Created a _layout_ file in `web/src/layouts/ScaffoldLayout/ScaffoldLayout.{jsx,tsx}` that serves as a container for pages with common elements like page heading and "New Posts" button
-- Created routes wrapped in the `Set` component with the layout as `ScaffoldLayout` for those pages in `web/src/Routes.{jsx,tsx}`
+- Created a _layout_ file in `web/src/layouts/ScaffoldLayout/ScaffoldLayout.{jsx,tsx}` that serves as a container for pages with common elements like page heading and a "New" button. All scaffolds share this layout
+- Created a _layout_ file in `web/src/layouts/PostsScaffoldLayout/PostsScaffoldLayout.{jsx,tsx}` that renders `ScaffoldLayout` with the heading, links and "New Post" button for posts
+- Created routes wrapped in the `Set` component with the layout as `PostsScaffoldLayout` for those pages in `web/src/Routes.{jsx,tsx}`
 - Created three _cells_ in `web/src/components/Post`:
   - `EditPostCell` gets the post to edit in the database
   - `PostCell` gets the post to display

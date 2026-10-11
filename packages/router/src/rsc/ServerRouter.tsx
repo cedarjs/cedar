@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import React from 'react'
 
 import { getAuthState, getLocation } from '@cedarjs/server-store'
@@ -8,6 +8,7 @@ import type { Wrappers } from '../analyzeRoutes.js'
 import { namedRoutes } from '../namedRoutes.js'
 import { normalizePage } from '../page.js'
 import type { RouterContextProviderProps } from '../router-context.js'
+import { wrapWithSetWrappers } from '../Set.js'
 import { SplashPage } from '../splash-page.js'
 import type { TrailingSlashesTypes } from '../util.js'
 import { matchPath, parseSearch, replaceParams, validatePath } from '../util.js'
@@ -184,7 +185,9 @@ interface WrappedPageProps {
     isPrivate: boolean
     props: {
       private?: boolean
-      [key: string]: unknown
+      unauthenticated?: string
+      roles?: string | string[]
+      whileLoadingAuth?: () => ReactElement | null
     }
   }[]
 }
@@ -208,23 +211,14 @@ const WrappedPage = ({ routeLoaderElement, sets }: WrappedPageProps) => {
   }
 
   return sets.reduceRight<ReactNode | undefined>((acc, set) => {
-    // For each set in `sets`, if you have `<Set wrap={[a,b,c]} p="p" />` then
+    // For each set in `sets`, if you have `<Set wrap={[A, B, C]} />` then
     // this will return
-    // <a p="p"><b p="p"><c p="p"><routeLoaderElement /></c></b></a>
-    // If you have `<PrivateSet wrap={[a,b,c]} p="p" />` instead it will return
+    // <A><B><C><routeLoaderElement /></C></B></A>
+    // If you have `<PrivateSet wrap={[A, B, C]} />` instead it will return
     // <AuthenticatedRoute>
-    //   <a p="p"><b p="p"><c p="p"><routeLoaderElement /></c></b></a>
+    //   <A><B><C><routeLoaderElement /></C></B></A>
     // </AuthenticatedRoute>
-
-    // Bundle up all the wrappers into a single element with each wrapper as a
-    // child of the previous (that's why we do reduceRight)
-    let wrapped = set.wrappers.reduceRight((acc, Wrapper, index) => {
-      return React.createElement(
-        Wrapper,
-        { ...set.props, key: set.id + '-' + index },
-        acc,
-      )
-    }, acc)
+    let wrapped = wrapWithSetWrappers(set.wrappers, set.id, acc)
 
     // If set is private, wrap it in AuthenticatedRoute
     if (set.isPrivate) {
@@ -238,7 +232,11 @@ const WrappedPage = ({ routeLoaderElement, sets }: WrappedPageProps) => {
       // We do this last, to make sure that none of the wrapper elements are
       // rendered if the user isn't authenticated
       wrapped = (
-        <AuthenticatedRoute {...set.props} unauthenticated={unauthenticated}>
+        <AuthenticatedRoute
+          unauthenticated={unauthenticated}
+          roles={set.props.roles}
+          whileLoadingAuth={set.props.whileLoadingAuth}
+        >
           {wrapped}
         </AuthenticatedRoute>
       )

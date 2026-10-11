@@ -115,13 +115,13 @@ And then use the `BlogLayout` for the `ContactPage` by making sure its wrapped b
 <!-- prettier-ignore -->
 ```jsx title="web/src/Routes.jsx"
 import { Router, Route, Set } from '@cedarjs/router'
-import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
+import PostsScaffoldLayout from 'src/layouts/PostsScaffoldLayout'
 import BlogLayout from 'src/layouts/BlogLayout'
 
 const Routes = () => {
   return (
     <Router>
-      <Set wrap={ScaffoldLayout} title="Posts" titleTo="posts" buttonLabel="New Post" buttonTo="newPost">
+      <Set wrap={PostsScaffoldLayout}>
         <Route path="/posts/new" page={PostNewPostPage} name="newPost" />
         <Route path="/posts/{id:Int}/edit" page={PostEditPostPage} name="editPost" />
         <Route path="/posts/{id:Int}" page={PostPostPage} name="post" />
@@ -148,13 +148,13 @@ export default Routes
 <!-- prettier-ignore -->
 ```tsx title="web/src/Routes.tsx"
 import { Router, Route, Set } from '@cedarjs/router'
-import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
+import PostsScaffoldLayout from 'src/layouts/PostsScaffoldLayout'
 import BlogLayout from 'src/layouts/BlogLayout'
 
 const Routes = () => {
   return (
     <Router>
-      <Set wrap={ScaffoldLayout} title="Posts" titleTo="posts" buttonLabel="New Post" buttonTo="newPost">
+      <Set wrap={PostsScaffoldLayout}>
         <Route path="/posts/new" page={PostNewPostPage} name="newPost" />
         <Route path="/posts/{id:Int}/edit" page={PostEditPostPage} name="editPost" />
         <Route path="/posts/{id:Int}" page={PostPostPage} name="post" />

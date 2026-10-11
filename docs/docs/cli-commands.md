@@ -1058,6 +1058,71 @@ A scaffold quickly creates a CRUD for a model by generating the following files 
 
 The content of the generated components is different from what you'd get by running them individually.
 
+The scaffold generates two layouts. `ScaffoldLayout` is shared by all scaffolds, and renders the page heading, the link back to the list page and the "New" button. It takes the heading and the route names to link to as props. The second layout is specific to the model, like `PostsScaffoldLayout` for `post`. It renders `ScaffoldLayout` with the props for posts, and it's the layout the scaffold's routes are wrapped in:
+
+<Tabs groupId="js-ts">
+<TabItem value="js" label="JavaScript">
+
+```jsx title="./web/src/layouts/PostsScaffoldLayout/PostsScaffoldLayout.jsx"
+import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
+
+function PostsScaffoldLayout({ children }) {
+  return (
+    <ScaffoldLayout
+      title="Posts"
+      titleTo="posts"
+      buttonLabel="New Post"
+      buttonTo="newPost"
+    >
+      {children}
+    </ScaffoldLayout>
+  )
+}
+
+export default PostsScaffoldLayout
+```
+
+```jsx title="./web/src/Routes.jsx"
+<Set wrap={PostsScaffoldLayout}>
+  <Route path="/posts/new" page={PostNewPostPage} name="newPost" />
+  {/* ... */}
+</Set>
+```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+```tsx title="./web/src/layouts/PostsScaffoldLayout/PostsScaffoldLayout.tsx"
+import type { WrapperProps } from '@cedarjs/router'
+
+import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
+
+function PostsScaffoldLayout({ children }: WrapperProps) {
+  return (
+    <ScaffoldLayout
+      title="Posts"
+      titleTo="posts"
+      buttonLabel="New Post"
+      buttonTo="newPost"
+    >
+      {children}
+    </ScaffoldLayout>
+  )
+}
+
+export default PostsScaffoldLayout
+```
+
+```tsx title="./web/src/Routes.tsx"
+<Set wrap={PostsScaffoldLayout}>
+  <Route path="/posts/new" page={PostNewPostPage} name="newPost" />
+  {/* ... */}
+</Set>
+```
+
+</TabItem>
+</Tabs>
+
 Like [generate sdl](#generate-sdl), the scaffold generator never includes dbAuth's sensitive fields (`hashedPassword`, `salt`, `resetToken`, `resetTokenExpiresAt`, `webAuthnChallenge`) in the generated SDL, forms, cells or display pages. As with `generate sdl`, `salt` is only excluded when the model has at least one of the other auth fields too — a standalone `salt` field is kept.
 
 Also like `generate sdl`, if the model has relations to models that don't have
@@ -1088,13 +1153,14 @@ By default, redwood will nest the components and pages in a directory named as p
 `yarn cedar g scaffold post`
 will output the following files, with the components and pages nested in a `Post` directory:
 
-```plaintext {9-20}
+```plaintext {10-21}
   √ Generating scaffold files...
     √ Successfully wrote file `./api/src/graphql/posts.sdl.js`
     √ Successfully wrote file `./api/src/services/posts/posts.js`
     √ Successfully wrote file `./api/src/services/posts/posts.scenarios.js`
     √ Successfully wrote file `./api/src/services/posts/posts.test.js`
-    √ Successfully wrote file `./web/src/layouts/PostsLayout/PostsLayout.js`
+    √ Successfully wrote file `./web/src/layouts/ScaffoldLayout/ScaffoldLayout.js`
+    √ Successfully wrote file `./web/src/layouts/PostsScaffoldLayout/PostsScaffoldLayout.js`
     √ Successfully wrote file `./web/src/pages/Post/EditPostPage/EditPostPage.js`
     √ Successfully wrote file `./web/src/pages/Post/PostPage/PostPage.js`
     √ Successfully wrote file `./web/src/pages/Post/PostsPage/PostsPage.js`
@@ -1139,7 +1205,8 @@ $ /cedar-app/node_modules/.bin/cedar g scaffold admin/user
     ✔ Successfully wrote file `./api/src/services/users/users.js`
     ✔ Successfully wrote file `./api/src/services/users/users.scenarios.js`
     ✔ Successfully wrote file `./api/src/services/users/users.test.js`
-    ✔ Successfully wrote file `./web/src/layouts/Admin/UsersLayout/UsersLayout.js`
+    ✔ Successfully wrote file `./web/src/layouts/ScaffoldLayout/ScaffoldLayout.js`
+    ✔ Successfully wrote file `./web/src/layouts/Admin/UsersScaffoldLayout/UsersScaffoldLayout.js`
     ✔ Successfully wrote file `./web/src/pages/Admin/User/EditUserPage/EditUserPage.js`
     ✔ Successfully wrote file `./web/src/pages/Admin/User/UserPage/UserPage.js`
     ✔ Successfully wrote file `./web/src/pages/Admin/User/UsersPage/UsersPage.js`
@@ -1158,14 +1225,17 @@ $ /cedar-app/node_modules/.bin/cedar g scaffold admin/user
 Done in 1.21s.
 ```
 
-The routes wrapped in the [`Set`](router.md#sets-of-routes) component with generated layout will be nested too:
+The routes wrapped in the [`Set`](router.md#sets-of-routes) component with the generated layout will be nested too. The layout for `admin/user` is in `web/src/layouts/Admin/UsersScaffoldLayout/`. Routes imports it as `AdminUsersScaffoldLayout`, so it doesn't clash with the layout of a `user` scaffold. Pages get the same `Admin` prefix, like `AdminUserUsersPage`:
+
+<Tabs groupId="js-ts">
+<TabItem value="js" label="JavaScript">
 
 <!-- prettier-ignore -->
-```jsx {5-8} title="./web/src/Routes.js"
+```jsx {5-8} title="./web/src/Routes.jsx"
 const Routes = () => {
   return (
     <Router>
-      <Set wrap={UsersLayout}>
+      <Set wrap={AdminUsersScaffoldLayout}>
         <Route path="/admin/users/new" page={AdminUserNewUserPage} name="adminNewUser" />
         <Route path="/admin/users/{id:Int}/edit" page={AdminUserEditUserPage} name="adminEditUser" />
         <Route path="/admin/users/{id:Int}" page={AdminUserUserPage} name="adminUser" />
@@ -1176,6 +1246,29 @@ const Routes = () => {
   )
 }
 ```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+<!-- prettier-ignore -->
+```tsx {5-8} title="./web/src/Routes.tsx"
+const Routes = () => {
+  return (
+    <Router>
+      <Set wrap={AdminUsersScaffoldLayout}>
+        <Route path="/admin/users/new" page={AdminUserNewUserPage} name="adminNewUser" />
+        <Route path="/admin/users/{id:Int}/edit" page={AdminUserEditUserPage} name="adminEditUser" />
+        <Route path="/admin/users/{id:Int}" page={AdminUserUserPage} name="adminUser" />
+        <Route path="/admin/users" page={AdminUserUsersPage} name="adminUsers" />
+      </Set>
+      <Route notfound page={NotFoundPage} />
+    </Router>
+  )
+}
+```
+
+</TabItem>
+</Tabs>
 
 Notes:
 

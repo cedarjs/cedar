@@ -54,28 +54,26 @@ afterEach(() => {
 test('wraps routes with just <Set> when no privateSetProps are given', () => {
   addRoutesToRouterTask(
     ['<Route path="/posts" page={PostsPage} name="posts" />'],
-    'ScaffoldLayout',
-    { title: 'Posts' },
+    'PostsScaffoldLayout',
   )
 
   const content = fs.readFileSync(routesPath, 'utf8')
 
-  expect(content).toContain('<Set wrap={ScaffoldLayout} title="Posts">')
+  expect(content).toContain('<Set wrap={PostsScaffoldLayout}>')
   expect(content).not.toContain('<PrivateSet')
 })
 
 test('wraps routes with <PrivateSet> around <Set> when privateSetProps are given', () => {
   addRoutesToRouterTask(
     ['<Route path="/posts" page={PostsPage} name="posts" />'],
-    'ScaffoldLayout',
-    { title: 'Posts' },
+    'PostsScaffoldLayout',
     { unauthenticated: 'login' },
   )
 
   const content = fs.readFileSync(routesPath, 'utf8')
 
   expect(content).toContain('<PrivateSet unauthenticated="login">')
-  expect(content).toContain('<Set wrap={ScaffoldLayout} title="Posts">')
+  expect(content).toContain('<Set wrap={PostsScaffoldLayout}>')
   expect(content).toContain('</Set>')
   expect(content).toContain('</PrivateSet>')
 

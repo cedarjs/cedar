@@ -1,9 +1,8 @@
+import { parse } from '@babel/parser'
 import { Listr } from 'listr2'
-import pascalcase from 'pascalcase'
 
 import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
-import { pluralize } from '@cedarjs/utils/cedarPluralize'
 
 import {
   deleteFilesTask,
@@ -15,6 +14,7 @@ import {
 import { verifyModelName } from '../../../lib/schemaHelpers.js'
 import {
   files,
+  getScaffoldLayoutNames,
   routes as scaffoldRoutes,
   splitPathAndModel,
 } from '../../generate/scaffold/scaffoldHandler.js'
@@ -35,33 +35,107 @@ const removeRoutesWithSet = async ({
 > => {
   const routes = await scaffoldRoutes({ model, path, nestScaffoldByModel })
   const routeNames = routes.map(extractRouteName)
-  const pluralPascalName = pascalcase(pluralize(model))
-  const layoutName = `${pluralPascalName}Layout`
-  return removeRoutesFromRouterTask(routeNames, layoutName)
+  const { importName } = getScaffoldLayoutNames(model, path)
+  return removeRoutesFromRouterTask(routeNames, importName)
+}
+
+/**
+ * Removes `name` from the imports of `source` in `code`. The file is parsed to
+ * find the exact text to remove, and everything else, including formatting
+ * and comments, is kept as it is. An import that only has `name` is removed
+ * completely
+ */
+const removeNamedImport = (code: string, source: string, name: string) => {
+  const program = parse(code, {
+    sourceType: 'module',
+    plugins: ['jsx', 'typescript'],
+  }).program
+
+  for (const statement of program.body) {
+    if (
+      statement.type !== 'ImportDeclaration' ||
+      statement.source.value !== source
+    ) {
+      continue
+    }
+
+    const specifiers = statement.specifiers
+    // Aliased imports (`Set as RouteSet`) are left alone, since the code
+    // still uses the alias
+    const index = specifiers.findIndex(
+      (specifier) =>
+        specifier.type === 'ImportSpecifier' &&
+        specifier.imported.type === 'Identifier' &&
+        specifier.imported.name === name &&
+        specifier.local.name === name,
+    )
+
+    if (index === -1) {
+      continue
+    }
+
+    const specifier = specifiers[index]
+    let start: number
+    let end: number
+
+    if (specifiers.length === 1) {
+      // The whole import, and the line break after it
+      start = statement.start ?? 0
+      end = statement.end ?? 0
+      if (code[end] === '\n') {
+        end++
+      }
+    } else if (index === specifiers.length - 1) {
+      // The last name, and the comma before it
+      start = specifiers[index - 1].end ?? 0
+      end = specifier.end ?? 0
+    } else {
+      // Any other name, up to the next one
+      start = specifier.start ?? 0
+      end = specifiers[index + 1].start ?? 0
+    }
+
+    return code.slice(0, start) + code.slice(end)
+  }
+
+  return code
 }
 
 const removeSetImport = (): string => {
   const routesPath = getPaths().web.routes
   const routesContent = readFile(routesPath).toString()
-  if (routesContent.match('<Set')) {
+
+  // The scaffold generator adds `Set`, and `PrivateSet` in apps with auth.
+  // Each is removed from the router import once nothing renders it
+  const unusedNames = ['Set', 'PrivateSet'].filter(
+    (name) => !new RegExp(`<${name}\\b`).test(routesContent),
+  )
+
+  if (unusedNames.length === 0) {
     return 'Skipping removal of Set import in Routes.{jsx,tsx}'
   }
 
-  const cedarRouterImportMatch = routesContent.match(
-    /import {[^]*} from '@cedarjs\/router'/,
-  )
-  if (!cedarRouterImportMatch) {
-    return 'No @cedarjs/router import found in Routes.{jsx,tsx}'
+  let newRoutesContent = routesContent
+
+  try {
+    for (const name of unusedNames) {
+      newRoutesContent = removeNamedImport(
+        newRoutesContent,
+        '@cedarjs/router',
+        name,
+      )
+    }
+  } catch {
+    return "Skipping removal of Set import, Routes.{jsx,tsx} couldn't be parsed"
   }
-  const [cedarRouterImport] = cedarRouterImportMatch
-  const removedSetImport = cedarRouterImport.replace(/,*\s*Set,*/, '')
-  const newRoutesContent = routesContent.replace(
-    cedarRouterImport,
-    removedSetImport,
-  )
+
+  if (newRoutesContent === routesContent) {
+    return 'No unused Set or PrivateSet import found in Routes.{jsx,tsx}'
+  }
+
   writeFile(routesPath, newRoutesContent, { overwriteExisting: true })
 
-  return 'Removed Set import in Routes.{jsx,tsx}'
+  return 'Removed unused Set and PrivateSet imports in Routes.{jsx,tsx}'
 }
 
 const removeLayoutImport = ({
@@ -71,20 +145,15 @@ const removeLayoutImport = ({
   model: string
   path?: string
 }): string => {
-  const pluralPascalName = pascalcase(pluralize(name))
-  const pascalScaffoldPath =
-    scaffoldPath === ''
-      ? scaffoldPath
-      : scaffoldPath.split('/').map(pascalcase).join('/') + '/'
-  const layoutName = `${pluralPascalName}Layout`
-  const importLayout = `import ${pluralPascalName}Layout from 'src/layouts/${pascalScaffoldPath}${layoutName}'`
+  const { importName, importPath } = getScaffoldLayoutNames(name, scaffoldPath)
   const routesPath = getPaths().web.routes
   const routesContent = readFile(routesPath).toString()
 
-  const newRoutesContent = routesContent.replace(
-    new RegExp(`\\s*${importLayout}`),
-    '',
+  // Matches the import with either quote style and an optional semicolon
+  const importLayout = new RegExp(
+    `\\s*import ${importName} from (['"])${importPath}\\1;?`,
   )
+  const newRoutesContent = routesContent.replace(importLayout, '')
 
   writeFile(routesPath, newRoutesContent, { overwriteExisting: true })
 
