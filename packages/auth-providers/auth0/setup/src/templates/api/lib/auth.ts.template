@@ -3,9 +3,10 @@ import { AuthenticationError, ForbiddenError } from '@cedarjs/graphql-server'
 
 /**
  * Represents the user attributes returned by the decoding the
- * Authentication provider's JWT together with an optional list of roles.
+ * Authentication provider's JWT together with an optional role or list of
+ * roles.
  */
-type RedwoodUser = Record<string, unknown> & { roles?: string[] }
+type RedwoodUser = Record<string, unknown> & { roles?: string | string[] }
 
 /**
  * getCurrentUser returns the user information together with
@@ -38,7 +39,11 @@ export const getCurrentUser = async (
 
   const roles = decoded[process.env.AUTH0_AUDIENCE + '/roles']
 
-  if (roles) {
+  if (
+    typeof roles === 'string' ||
+    (Array.isArray(roles) &&
+      roles.every((role): role is string => typeof role === 'string'))
+  ) {
     return { ...decoded, roles }
   }
 

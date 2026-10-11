@@ -114,6 +114,18 @@ The `wrap` prop accepts a single component or an array of components. Components
 
 Conceptually, this fits with how we think about Context and Layouts as things that wrap Pages and contain content that’s outside the scope of the Pages themselves. Crucially, since they're higher in the tree, `BlogContext` and `BlogLayout` won't rerender across Pages in the same Set.
 
+In TypeScript, type the props of a component in `wrap` with `WrapperProps` from `@cedarjs/router`:
+
+```tsx title="web/src/layouts/BlogLayout/BlogLayout.tsx"
+import type { WrapperProps } from '@cedarjs/router'
+
+function BlogLayout({ children }: WrapperProps) {
+  return <main>{children}</main>
+}
+
+export default BlogLayout
+```
+
 There's a lot of flexibility here. You can even nest `Sets` to great effect:
 
 <!-- prettier-ignore -->

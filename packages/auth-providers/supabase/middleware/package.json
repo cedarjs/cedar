@@ -40,7 +40,7 @@
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/framework-tools": "workspace:*",
     "@cedarjs/graphql-server": "workspace:*",
-    "concurrently": "9.2.4",
+    "concurrently": "9.2.5",
     "publint": "0.3.25",
     "typescript": "5.9.3",
     "vitest": "4.1.11"
