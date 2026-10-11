@@ -200,10 +200,11 @@ and exports are made more precise.
 
 `<Set>`, `<PrivateSet>` and `<Private>` render the components in `wrap` with
 the wrapped routes as `children`, and no other props. Props on a Set are only
-the Set's own props: `wrap`, `prerender`, `whileLoadingPage`, and for private
-sets `unauthenticated`, `roles` and `whileLoadingAuth`. TypeScript reports an
-error for any other prop, and in development the router logs a warning about
-them. `Set`, `PrivateSet` and `Private` take no type argument, and
+the Set's own props: `wrap`, `prerender`, `whileLoadingPage`, and the
+authentication props `unauthenticated`, `roles` and `whileLoadingAuth` (with
+`<PrivateSet>`, or with the deprecated `private` prop on `<Set>`). TypeScript
+reports an error for any other prop, and in development the router logs a
+warning about them. `Set`, `PrivateSet` and `Private` take no type argument, and
 `WrapperType` (exported from `@cedarjs/router`) is the type of a component in
 `wrap`, without a type argument.
 

@@ -307,6 +307,78 @@ describe('rw destroy scaffold', () => {
         ].join('\n'),
       )
     })
+    test('keeps PrivateSet in the router import when removing Set', async () => {
+      fs.writeFileSync(
+        getPaths().web.routes,
+        [
+          "import { Router, Route, PrivateSet, Set } from '@cedarjs/router'",
+          '',
+          'const Routes = () => (',
+          '  <Router>',
+          '    <PrivateSet unauthenticated="home">',
+          '      <Route path="/admin" page={AdminPage} name="admin" />',
+          '    </PrivateSet>',
+          '  </Router>',
+          ')',
+        ].join('\n'),
+      )
+
+      const t = tasks({
+        model: 'Post',
+        tests: false,
+        nestScaffoldByModel: true,
+      })
+      t.options.renderer = 'silent'
+
+      // Removing the Set import
+      await t.tasks[2].run()
+
+      expect(fs.readFileSync(getPaths().web.routes, 'utf-8')).toContain(
+        "import { Router, Route, PrivateSet } from '@cedarjs/router'",
+      )
+    })
+
+    test('only removes the PrivateSet around the scaffold Set', async () => {
+      fs.writeFileSync(
+        getPaths().web.routes,
+        [
+          "import { Router, Route, Set, PrivateSet } from '@cedarjs/router'",
+          '',
+          "import PostsScaffoldLayout from 'src/layouts/PostsScaffoldLayout'",
+          '',
+          'const Routes = () => {',
+          '  return (',
+          '    <Router>',
+          '      <PrivateSet unauthenticated="home">',
+          '      </PrivateSet>',
+          '      <PrivateSet unauthenticated="login">',
+          '        <Set wrap={PostsScaffoldLayout}>',
+          '          <Route path="/posts" page={PostPostsPage} name="posts" />',
+          '        </Set>',
+          '      </PrivateSet>',
+          '      <Route path="/" page={HomePage} name="home" />',
+          '    </Router>',
+          '  )',
+          '}',
+        ].join('\n'),
+      )
+
+      const t = tasks({
+        model: 'Post',
+        tests: false,
+        nestScaffoldByModel: true,
+      })
+      t.options.renderer = 'silent'
+
+      // Cleaning up routes
+      await t.tasks[1].run()
+
+      const routes = fs.readFileSync(getPaths().web.routes, 'utf-8')
+      expect(routes).toContain('<PrivateSet unauthenticated="home">')
+      expect(routes).not.toContain('<PrivateSet unauthenticated="login">')
+      expect(routes).not.toContain('PostsScaffoldLayout}')
+    })
+
     test('removes a double-quoted layout import', async () => {
       fs.writeFileSync(
         getPaths().web.routes,

@@ -141,7 +141,7 @@ const Routes = () => {
 
 ### Layouts with props
 
-The router renders every component in `wrap` with the wrapped Routes as `children`, and no other props. `<Set>` itself only accepts its own props (`wrap`, `prerender`, `whileLoadingPage`, and for `PrivateSet` also `unauthenticated`, `roles` and `whileLoadingAuth`), and TypeScript reports an error for any other prop.
+The router renders every component in `wrap` with the wrapped Routes as `children`, and no other props. `<Set>` itself only accepts its own props: `wrap`, `prerender`, `whileLoadingPage`, and the authentication props `unauthenticated`, `roles` and `whileLoadingAuth` (with `<PrivateSet>`, or with the deprecated `private` prop on `<Set>`). TypeScript reports an error for any other prop.
 
 To use a layout that needs props, create a layout component that renders it with those props, and use that component in `wrap`:
 

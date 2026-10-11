@@ -583,11 +583,17 @@ function removeEmtpySet(routesContent: string, layout: string) {
     return routesContent
   }
 
-  // Scaffolds in apps with auth are wrapped in a <PrivateSet>. Remove it too
-  // if the layout's <Set> was the only thing in it
-  return routesContent
-    .replace(setWithLayoutReg, '')
-    .replace(/\s*<PrivateSet[^>]*>\s*<\/PrivateSet>/, '')
+  // Scaffolds in apps with auth are wrapped in a <PrivateSet>. Remove that
+  // <PrivateSet> too if the layout's <Set> was the only thing in it
+  const privateSetWithLayoutReg = new RegExp(
+    `\\s*<PrivateSet[^>]*>\\s*<Set[^>]*wrap={${layout}}[^<]*>\\s*<\/Set>\\s*<\/PrivateSet>`,
+  )
+
+  if (privateSetWithLayoutReg.test(routesContent)) {
+    return routesContent.replace(privateSetWithLayoutReg, '')
+  }
+
+  return routesContent.replace(setWithLayoutReg, '')
 }
 
 /**
