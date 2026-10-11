@@ -44,7 +44,7 @@
     "@types/pascalcase": "1.0.3",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
-    "concurrently": "9.2.4",
+    "concurrently": "9.2.5",
     "nodemon": "3.1.14",
     "publint": "0.3.25",
     "react": "19.3.0",
