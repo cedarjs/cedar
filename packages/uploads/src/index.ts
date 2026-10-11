@@ -14,6 +14,12 @@ export type {
   UploadProfile,
   UploadProfiles,
 } from './profiles.js'
+export {
+  acceptedContentType,
+  DETECT_CONTENT_TYPE_BYTES,
+  DETECTABLE_CONTENT_TYPES,
+  detectContentType,
+} from './detectContentType.js'
 export { createFsProvider } from './providers/fs.js'
 export type { FsProviderOptions } from './providers/fs.js'
 export { createDbProvider } from './providers/db.js'

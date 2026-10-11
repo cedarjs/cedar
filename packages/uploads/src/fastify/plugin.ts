@@ -5,6 +5,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 
 import type { UploadAuthenticator } from '../authenticator.js'
 import { deleteFile } from '../deleteFile.js'
+import { acceptedContentType, detectContentType } from '../detectContentType.js'
 import { UploadError } from '../errors.js'
 import { generateStorageKey, trimTrailingSlashes } from '../keys.js'
 import {
@@ -101,6 +102,16 @@ export interface UploadPluginOptions {
    * origin, keeping in mind that the stored MIME type is client-asserted.
    */
   inlineTypes?: string[]
+  /**
+   * Checks each file's type against the upload profile's `allowedMimeTypes`
+   * by what its bytes are, using `acceptedContentType()`, instead of trusting
+   * the type the client claimed. A file the detector recognises is accepted
+   * when its detected type is allowed, and stored with that type. A file it
+   * doesn't recognise is accepted only when its claimed type is listed
+   * exactly (not through a wildcard) in `allowedMimeTypes`. Defaults to
+   * `false`, which checks the claimed type only.
+   */
+  verifyContentType?: boolean
 }
 
 function sendError(reply: FastifyReply, e: unknown) {
@@ -120,6 +131,37 @@ function headerValue(req: FastifyRequest, name: string): string | undefined {
 
 function normalizeMimeType(mimeType: string): string {
   return mimeType.split(';')[0].trim().toLowerCase()
+}
+
+/**
+ * The type a file is stored with under `verifyContentType`: what its bytes
+ * are, when the token allows that. Throws `MIME_TYPE_NOT_ALLOWED` otherwise.
+ */
+function verifiedContentType(
+  payload: UploadTokenPayload,
+  data: Uint8Array,
+  claimedType: string,
+): string {
+  const mimeType = acceptedContentType(
+    data,
+    payload.allowedMimeTypes,
+    claimedType,
+  )
+
+  if (mimeType) {
+    return mimeType
+  }
+
+  const detected = detectContentType(data)
+  const what = detected
+    ? `'${detected}'`
+    : `of a type that couldn't be recognised (claimed '${claimedType}')`
+
+  throw new UploadError(
+    'MIME_TYPE_NOT_ALLOWED',
+    `File is ${what}, which is not allowed for upload profile ` +
+      `'${payload.profile}'.`,
+  )
 }
 
 function contentDispositionHeader(
@@ -156,6 +198,7 @@ export async function cedarUploadsPlugin(
     s3Webhook,
     serveCacheControl = 'private, max-age=3600',
     inlineTypes = [],
+    verifyContentType = false,
   } = options
 
   const allowedInlineTypes = new Set(inlineTypes.map(normalizeMimeType))
@@ -244,7 +287,15 @@ export async function cedarUploadsPlugin(
           continue
         }
 
-        assertTokenAllowsFile(payload, { contentType: part.mimetype, size: 0n })
+        // With `verifyContentType` the claimed type is not checked here: the
+        // bytes decide once they are read, and browsers often claim
+        // `application/octet-stream` for formats they don't know, like HEIC
+        if (!verifyContentType) {
+          assertTokenAllowsFile(payload, {
+            contentType: part.mimetype,
+            size: 0n,
+          })
+        }
 
         let data: Buffer
 
@@ -268,9 +319,12 @@ export async function cedarUploadsPlugin(
         }
 
         const size = BigInt(data.byteLength)
-        assertTokenAllowsFile(payload, { contentType: part.mimetype, size })
+        const mimeType = verifyContentType
+          ? verifiedContentType(payload, data, part.mimetype)
+          : part.mimetype
+        assertTokenAllowsFile(payload, { contentType: mimeType, size })
 
-        const storageKey = generateStorageKey(part.mimetype)
+        const storageKey = generateStorageKey(mimeType)
 
         // Row first: a crash between the row and the write leaves a pending
         // row the cleanup job can find, whereas bytes-first would leave an
@@ -279,13 +333,13 @@ export async function cedarUploadsPlugin(
           db,
           payload,
           filename: part.filename,
-          mimeType: part.mimetype,
+          mimeType,
           size,
           storageKey,
         })
         stored.push({ target: payload.target, upload })
 
-        await target.write(storageKey, data, { contentType: part.mimetype })
+        await target.write(storageKey, data, { contentType: mimeType })
 
         const { count } = await db.upload.updateMany({
           where: { id: upload.id, status: 'pending' },

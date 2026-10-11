@@ -347,6 +347,112 @@ describe('cedarUploadsPlugin', () => {
       expect(res.statusCode).toBe(400)
       expect(res.json().error.code).toBe('NOT_SUPPORTED')
     })
+
+    test('trusts the claimed type without verifyContentType', async () => {
+      const body = multipart([
+        { filename: 'a.png', type: 'image/png', content: '<html></html>' },
+      ])
+
+      const res = await app.inject({
+        method: 'POST',
+        url: '/upload/fs',
+        headers: { ...body.headers, 'x-upload-token': tokenFor() },
+        payload: body.payload,
+      })
+
+      expect(res.statusCode).toBe(201)
+      expect(res.json().uploads[0].mimeType).toBe('image/png')
+    })
+
+    describe('with verifyContentType', () => {
+      let verifyingApp: FastifyInstance
+
+      const PNG = Buffer.from([
+        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0x0d,
+      ])
+
+      beforeEach(async () => {
+        verifyingApp = Fastify()
+        await verifyingApp.register(cedarUploadsPlugin, {
+          tokenSecret: SECRET,
+          targets,
+          db,
+          verifyContentType: true,
+        })
+        await verifyingApp.ready()
+      })
+
+      afterEach(async () => {
+        await verifyingApp.close()
+      })
+
+      const upload = (parts: Part[], token = tokenFor()) => {
+        const body = multipart(parts)
+
+        return verifyingApp.inject({
+          method: 'POST',
+          url: '/upload/fs',
+          headers: { ...body.headers, 'x-upload-token': token },
+          payload: body.payload,
+        })
+      }
+
+      test('stores a file under the type its bytes are, whatever was claimed', async () => {
+        const res = await upload([
+          {
+            filename: 'photo',
+            type: 'application/octet-stream',
+            content: PNG,
+          },
+        ])
+
+        expect(res.statusCode).toBe(201)
+        const [stored] = res.json().uploads
+        expect(stored.mimeType).toBe('image/png')
+        expect(stored.storageKey).toMatch(/\.png$/)
+        expect(await prisma.upload.findFirst()).toMatchObject({
+          mimeType: 'image/png',
+        })
+      })
+
+      test('rejects a file whose bytes are not an allowed type', async () => {
+        const res = await upload([
+          {
+            filename: 'a.png',
+            type: 'image/png',
+            content: '<html><script>alert(1)</script></html>',
+          },
+        ])
+
+        expect(res.statusCode).toBe(415)
+        expect(res.json().error.code).toBe('MIME_TYPE_NOT_ALLOWED')
+        expect(await prisma.upload.count()).toBe(0)
+      })
+
+      test('rejects a recognised type the profile does not allow', async () => {
+        const res = await upload([
+          { filename: 'a.pdf', type: 'image/png', content: '%PDF-1.7\n' },
+        ])
+
+        expect(res.statusCode).toBe(415)
+        expect(res.json().error.message).toContain("'application/pdf'")
+      })
+
+      test('admits an unrecognisable type only when it is listed exactly', async () => {
+        const text = { filename: 'a.txt', type: 'text/plain', content: 'hi' }
+
+        // `text/*` from the default token is a wildcard
+        expect((await upload([text])).statusCode).toBe(415)
+
+        const res = await upload(
+          [text],
+          tokenFor({ allowedMimeTypes: ['image/png', 'text/plain'] }),
+        )
+
+        expect(res.statusCode).toBe(201)
+        expect(res.json().uploads[0].mimeType).toBe('text/plain')
+      })
+    })
   })
 
   describe('GET /upload/serve', () => {

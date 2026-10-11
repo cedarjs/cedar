@@ -14,6 +14,9 @@ File uploads and storage for CedarJS apps.
   uploads, and confirming them.
 - **Lifecycle utilities** (`storeFile`, `deleteFile`, `cleanupStaleUploads`) for
   server-generated files and explicit cleanup.
+- **Content detection** (`detectContentType`, `acceptedContentType`) that
+  checks what an uploaded file really is from its bytes, not from its name or
+  the type the browser claimed.
 - **Web hooks and components** at `@cedarjs/uploads/web`, built on Uppy.
 
 ```bash

@@ -221,6 +221,66 @@ const ThumbnailInput = () => {
 
 The client-side checks are for feedback only. The `uploadFile` service validates the MIME type and size again and `storeFile()` enforces the 1 MB default cap for database targets.
 
+## Checking what a file really is
+
+An upload's MIME type, and its filename, are whatever the client sent. Checking `allowedMimeTypes` against them keeps honest users on track, but anyone can upload an HTML page named `cat.png` and claimed to be `image/png`. Anything that relies on a file's type for safety, like handing it to an image decoder, generating a thumbnail, or serving it inline, should look at the bytes instead.
+
+`detectContentType()` tells what a file is from its first bytes (its "magic bytes", also called content sniffing):
+
+```ts
+import { detectContentType } from '@cedarjs/uploads'
+
+detectContentType(bytes) // 'image/heic', 'video/mp4', … or null
+```
+
+It returns a MIME type, or `null` for anything it doesn't recognise. It never throws, and needs no more than the first `DETECT_CONTENT_TYPE_BYTES` (4 KB) of a file, so for large files in object storage a ranged read of the head is enough.
+
+| Detected type                                        | Format                                  |
+| :--------------------------------------------------- | :-------------------------------------- |
+| `image/jpeg`, `image/png`, `image/gif`, `image/webp` | JPEG, PNG, GIF, WebP                    |
+| `image/bmp`, `image/tiff`                            | BMP, TIFF                               |
+| `image/heic`, `image/heif`, `image/avif`             | HEIC (iPhone photos), other HEIF, AVIF  |
+| `image/heic-sequence`, `image/heif-sequence`         | HEIC/HEIF image sequences               |
+| `application/pdf`                                    | PDF                                     |
+| `video/mp4`, `audio/mp4`, `video/quicktime`          | MP4, M4A, QuickTime/MOV                 |
+| `video/webm`, `video/x-matroska`                     | WebM, Matroska (MKV), reported as video |
+
+SVG is deliberately not detected: it is XML, can carry script, and shouldn't pass as a safe image. Text formats (CSV, JSON, HTML) have no reliable signature, and ZIP-based formats like `.docx` aren't told apart from other ZIP files.
+
+To check a file against an accept list, use `acceptedContentType()`. It returns the type to store the file under, or `null` when the file isn't accepted:
+
+- When the bytes are recognised, the detected type must match the list, wildcards included, and is what's returned. The claimed type is ignored, so a HEIC photo a browser sent as `application/octet-stream` is accepted as `image/heic`.
+- When they aren't, the claimed type is trusted only if it is listed exactly (a wildcard isn't enough) and isn't a type the detector knows. `['image/*']` admits only images the detector recognises; `['image/*', 'text/csv']` also admits files claimed to be CSV.
+
+The upload plugin applies this to every file posted to `/upload/fs` when you turn on `verifyContentType`, and stores each file under the type returned:
+
+```ts
+await server.register(cedarUploadsPlugin, {
+  // ...
+  verifyContentType: true,
+})
+```
+
+Without it, the plugin checks the claimed type only. For database targets, do the same in the `uploadFile` service, in place of the `isMimeTypeAllowed()` check:
+
+```ts title="api/src/services/uploads/uploads.ts"
+const data = Buffer.from(input.data, 'base64')
+const mimeType = acceptedContentType(
+  data,
+  profile.allowedMimeTypes,
+  input.mimeType
+)
+
+if (!mimeType) {
+  throw new UploadError(
+    'MIME_TYPE_NOT_ALLOWED',
+    `That file is not allowed for upload profile '${profile.name}'.`
+  )
+}
+```
+
+Files uploaded straight to S3 never pass through your api, so check those where you read them back, for example in the job that makes their thumbnails.
+
 ## Reading files back
 
 Store the `Upload` id on your model, then let a directive turn it into something a browser can load:
@@ -373,7 +433,7 @@ main()
 | `/upload/webhook/s3`    | POST   | S3 event notifications via SNS (only with the `s3Webhook` option) |
 | `/upload/health`        | GET    | Lists the configured targets                                      |
 
-`authenticate` resolves the requesting user from the request's auth header using the same decoder and `getCurrentUser` the GraphQL server uses. With it configured, the upload routes reject unauthenticated requests and tokens issued to someone else, so a leaked token can't be spent by anyone but its owner. The setup command wires it up when your app has auth. Without it, the token itself is the only identity on the route, which is only appropriate for apps with no auth at all. Other options: `prefix` (default `/upload`), `bodyLimit` (an outer ceiling, default 500 MB; the effective limit per request comes from the token), `serveCacheControl`, and `inlineTypes` (see [Reading files back](#reading-files-back)).
+`authenticate` resolves the requesting user from the request's auth header using the same decoder and `getCurrentUser` the GraphQL server uses. With it configured, the upload routes reject unauthenticated requests and tokens issued to someone else, so a leaked token can't be spent by anyone but its owner. The setup command wires it up when your app has auth. Without it, the token itself is the only identity on the route, which is only appropriate for apps with no auth at all. Other options: `prefix` (default `/upload`), `bodyLimit` (an outer ceiling, default 500 MB; the effective limit per request comes from the token), `serveCacheControl`, `inlineTypes` (see [Reading files back](#reading-files-back)), and `verifyContentType` (see [Checking what a file really is](#checking-what-a-file-really-is)).
 
 The FS route rejects early: a `Content-Length` beyond what the token allows is refused before any body is read, and files are aborted mid-stream once they pass the profile's `maxFileSize`. Each file's row is created before its bytes are written, so a crash in between leaves a pending row the cleanup job can find rather than an orphaned file.
 
