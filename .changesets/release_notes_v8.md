@@ -175,8 +175,8 @@ the changes v4 makes to utilities and configuration.
 
 ## More precise generated types
 
-A few of the types Cedar generates and exports are more precise. TypeScript's
-`strict` mode relies on them.
+To better support TypeScript's strict mode a few of the types Cedar generates
+and exports are made more precise.
 
 - `QueryResolvers` and `MutationResolvers` fields are required properties, so
   service functions typed with them (`QueryResolvers['posts']`) aren't
@@ -187,8 +187,6 @@ A few of the types Cedar generates and exports are more precise. TypeScript's
 - `@cedarjs/auth` exports a new `LoggedInUser` type: the user
   `getCurrentUser` returns when someone is logged in. `CurrentUser` is
   `LoggedInUser | null`, matching what `getCurrentUser` returns.
-  `context.currentUser` on the api side is optional and can be `null`, so code
-  checks that someone is logged in before using it
 - `<Set wrap={...}>` and `<PrivateSet wrap={...}>` infer the forwarded props
   from the wrapper components, so props like `titleTo="posts"` are checked
   against the wrapper's prop types. Passing a prop the wrapper components
