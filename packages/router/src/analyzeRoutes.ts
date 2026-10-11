@@ -9,6 +9,7 @@ import {
   isValidRoute,
 } from './route-validators.js'
 import { isPrivateNode, isPrivateSetNode, isSetNode } from './Set.js'
+import type { WrapperType } from './Set.js'
 import {
   matchPath,
   replaceParams,
@@ -26,16 +27,61 @@ export type GeneratedRoutesMap = {
   ) => string
 }
 
-export type Wrappers = ((props: any) => ReactNode)[]
+export type Wrappers = readonly WrapperType[]
+
+/**
+ * The props of a `<Set>`, `<PrivateSet>` or `<Private>` that the router needs
+ * when rendering a route in it
+ */
+interface SetRenderProps {
+  private?: boolean
+  unauthenticated?: string
+  roles?: string | string[]
+  whileLoadingAuth?: () => ReactElement | null
+}
 
 interface Set {
   id: string
   wrappers: Wrappers
   isPrivate: boolean
-  props: {
-    private?: boolean
-    [key: string]: unknown
+  props: SetRenderProps
+}
+
+/** Copies the props the router needs to render routes in a set */
+function pickSetRenderProps(props: SetRenderProps) {
+  const picked: SetRenderProps = {}
+
+  if (props.private !== undefined) {
+    picked.private = props.private
   }
+
+  if (props.unauthenticated !== undefined) {
+    picked.unauthenticated = props.unauthenticated
+  }
+
+  if (props.roles !== undefined) {
+    picked.roles = props.roles
+  }
+
+  if (props.whileLoadingAuth !== undefined) {
+    picked.whileLoadingAuth = props.whileLoadingAuth
+  }
+
+  return picked
+}
+
+function toWrappersArray(wrap: WrapperType | Wrappers | undefined): Wrappers {
+  if (!wrap) {
+    return []
+  }
+
+  // Array.isArray doesn't narrow readonly arrays, so we check for the single
+  // wrapper case instead
+  return isSingleWrapper(wrap) ? [wrap] : wrap
+}
+
+function isSingleWrapper(wrap: WrapperType | Wrappers): wrap is WrapperType {
+  return !Array.isArray(wrap)
 }
 
 type RoutePath = string
@@ -187,15 +233,7 @@ export function analyzeRoutes(
           children,
           whileLoadingPage: whileLoadingPageFromCurrentSet,
           wrap: wrapFromCurrentSet,
-          ...otherPropsFromCurrentSet
         } = node.props
-
-        let wrapperComponentsArray: Wrappers = []
-        if (wrapFromCurrentSet) {
-          wrapperComponentsArray = Array.isArray(wrapFromCurrentSet)
-            ? wrapFromCurrentSet
-            : [wrapFromCurrentSet]
-        }
 
         nextSetId = nextSetId + 1
 
@@ -210,14 +248,14 @@ export function analyzeRoutes(
             ...previousSets,
             {
               id: createSetId(nextSetId, previousSets),
-              wrappers: wrapperComponentsArray,
+              wrappers: toWrappersArray(wrapFromCurrentSet),
               isPrivate:
                 isPrivateSetNode(node) ||
                 // The following two conditions can be removed when we remove
                 // the deprecated private prop
                 isPrivateNode(node) ||
-                !!otherPropsFromCurrentSet.private,
-              props: otherPropsFromCurrentSet,
+                !!node.props.private,
+              props: pickSetRenderProps(node.props),
             },
           ],
         })

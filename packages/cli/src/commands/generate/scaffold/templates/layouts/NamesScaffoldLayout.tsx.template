@@ -1,0 +1,18 @@
+import type { WrapperProps } from '@cedarjs/router'
+
+import ScaffoldLayout from '${importLayoutNames}'
+
+function ${pluralPascalName}ScaffoldLayout({ children }: WrapperProps) {
+  return (
+    <ScaffoldLayout
+      title="${pluralPascalName}"
+      titleTo="${pluralRouteName}"
+      buttonLabel="New ${singularPascalName}"
+      buttonTo="${newRouteName}"
+    >
+      {children}
+    </ScaffoldLayout>
+  )
+}
+
+export default ${pluralPascalName}ScaffoldLayout

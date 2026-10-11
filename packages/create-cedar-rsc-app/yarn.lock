@@ -1243,19 +1243,19 @@ __metadata:
   linkType: hard
 
 "concurrently@npm:^9.0.0":
-  version: 9.2.4
-  resolution: "concurrently@npm:9.2.4"
+  version: 9.2.5
+  resolution: "concurrently@npm:9.2.5"
   dependencies:
     chalk: "npm:4.1.2"
     rxjs: "npm:7.8.2"
-    shell-quote: "npm:1.9.0"
+    shell-quote: "npm:1.12.0"
     supports-color: "npm:8.1.1"
     tree-kill: "npm:1.2.2"
     yargs: "npm:17.7.2"
   bin:
     conc: dist/bin/concurrently.js
     concurrently: dist/bin/concurrently.js
-  checksum: 10c0/97816b61985a746727bed2a7c360461f15438d7e09933d4f5bfbeb42351541609aded93aca64d58dcacfd9a4650f11238490fabf0d58bb93b6d2eaa2071ba8ac
+  checksum: 10c0/1592a28728beeeb75483deb04ef0313f9a02be935edfcdb5944f50c660be20397fb5a0d713cf1a6f16ee8dd9857acaa0306e2adea9fb851dbff22a42bbe31034
   languageName: node
   linkType: hard
 
@@ -3038,10 +3038,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"shell-quote@npm:1.9.0":
-  version: 1.9.0
-  resolution: "shell-quote@npm:1.9.0"
-  checksum: 10c0/a39960107eb086b02394cfceb3c732bd3bf567b568719ff47101448fc3f1bf4a59ecfdd8960ff7ea564d749ef8bda70f2c82a768f22d8c7aeeabf2b64f53b7e8
+"shell-quote@npm:1.12.0":
+  version: 1.12.0
+  resolution: "shell-quote@npm:1.12.0"
+  checksum: 10c0/1605a4ed6a758bf13de7cb8197a4184d8015f7a4dbdcd6cd4a717d5b30b3ae7666300cc4ae7f3155cf80ace9739e9e82061ee5aa1a648f53f5fab31a220816d0
   languageName: node
   linkType: hard
 

@@ -5,6 +5,7 @@ import { test } from 'vitest'
 
 import { Route, Router, navigate } from '../index.js'
 import { Set } from '../Set.js'
+import type { WrapperProps } from '../Set.js'
 
 const HomePage = () => {
   return <p>Home Page</p>
@@ -17,7 +18,7 @@ interface ContextState {
 
 const SetContext = React.createContext<ContextState | undefined>(undefined)
 
-const SetContextProvider = ({ children }: { children: React.ReactNode }) => {
+const SetContextProvider = ({ children }: WrapperProps) => {
   const [contextValue, setContextValue] = React.useState('initialSetValue')
 
   return (

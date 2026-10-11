@@ -54,7 +54,7 @@ const getCurrentUser = async ({ decoded }): Promise<MyCurrentUser | null> => {
 - `LoggedInUser` is the user when someone is logged in: the `MyCurrentUser` interface.
 - `CurrentUser` is what `getCurrentUser` returns: `LoggedInUser | null`.
 
-`useAuth().currentUser` on the web side is a `CurrentUser`. `context.currentUser` on the api side is a `LoggedInUser`, `null` or `undefined`, so check that someone is logged in before you use it.
+`useAuth().currentUser` on the web side is a `CurrentUser`. `context.currentUser` on the api side is a `CurrentUser` or `undefined`, so check that someone is logged in before you use it.
 
 ```ts
 import type { CurrentUser, LoggedInUser } from '@cedarjs/auth'

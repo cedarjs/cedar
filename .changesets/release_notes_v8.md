@@ -190,15 +190,15 @@ the common ones.
 
 Code generated into a project without strict mode keeps working as before.
 
-Strict mode relies on the types described in "More precise generated types".
-The SDL generator also writes Prisma scalar and enum lists with
+Strict mode relies on the types described in "More precise generated types"
+below. The SDL generator also writes Prisma scalar and enum lists with
 non-nullable items (`tags: [String!]!`), because Prisma lists never contain
 `null`.
 
 ## More precise generated types
 
-A few of the types Cedar generates and exports are more precise. TypeScript's
-`strict` mode relies on them.
+To better support TypeScript's strict mode a few of the types Cedar generates
+and exports are made more precise.
 
 - `QueryResolvers` and `MutationResolvers` fields are required properties, so
   service functions typed with them (`QueryResolvers['posts']`) aren't
@@ -209,12 +209,6 @@ A few of the types Cedar generates and exports are more precise. TypeScript's
 - `@cedarjs/auth` exports a new `LoggedInUser` type: the user
   `getCurrentUser` returns when someone is logged in. `CurrentUser` is
   `LoggedInUser | null`, matching what `getCurrentUser` returns.
-  `context.currentUser` on the api side is optional and can be `null`, so code
-  checks that someone is logged in before using it
-- `<Set wrap={...}>` and `<PrivateSet wrap={...}>` infer the forwarded props
-  from the wrapper components, so props like `titleTo="posts"` are checked
-  against the wrapper's prop types. Passing a prop the wrapper components
-  don't accept is a type error
 
 ### Upgrading
 
@@ -223,5 +217,55 @@ A few of the types Cedar generates and exports are more precise. TypeScript's
   this only matters in projects with `strict` (or `strictNullChecks`) on
 - If you extend `CurrentUser` with `declare module '@cedarjs/auth'`, extend
   `LoggedInUser` instead. `CurrentUser` is a type alias and can't be extended
-- `<Set>` and `<PrivateSet>`: remove props that none of the `wrap` components
-  accept, or add them to the wrapper's props
+
+## `<Set>` wrappers only get `children`
+
+`<Set>`, `<PrivateSet>` and `<Private>` render the components in `wrap` with
+the wrapped routes as `children`, and no other props, so props meant for the
+wrappers are a type error on a Set. `Set`, `PrivateSet` and `Private` take no
+type argument. `@cedarjs/router` exports `WrapperProps`, the props a component
+in `wrap` gets (`children`), and `WrapperType`, the type of such a component,
+without a type argument.
+
+`yarn cedar g scaffold post` generates a `PostsScaffoldLayout` that renders the
+shared `ScaffoldLayout` with the title and links for posts, and wraps the
+routes in `<Set wrap={PostsScaffoldLayout}>`. The layout's props, like
+`titleTo`, are type checked against your route names, also with TypeScript's
+`strict` mode turned on. `yarn cedar d scaffold post` removes the layout again.
+
+The pre-upgrade check run by `yarn cedar upgrade` lists every Set that has
+props for its wrappers, with its file, line, wrappers and props, and stops the
+upgrade until they're fixed. For each of them, create a layout component that
+renders the wrapper with those props, and use it in `wrap`:
+
+```tsx title="web/src/layouts/PostsScaffoldLayout/PostsScaffoldLayout.tsx"
+import type { WrapperProps } from '@cedarjs/router'
+
+import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
+
+function PostsScaffoldLayout({ children }: WrapperProps) {
+  return (
+    <ScaffoldLayout
+      title="Posts"
+      titleTo="posts"
+      buttonLabel="New Post"
+      buttonTo="newPost"
+    >
+      {children}
+    </ScaffoldLayout>
+  )
+}
+
+export default PostsScaffoldLayout
+```
+
+```diff title="web/src/Routes.tsx"
+-import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
++import PostsScaffoldLayout from 'src/layouts/PostsScaffoldLayout'
+
+-<Set wrap={ScaffoldLayout} title="Posts" titleTo="posts" buttonLabel="New Post" buttonTo="newPost">
++<Set wrap={PostsScaffoldLayout}>
+```
+
+`WrapperProps` is available in Cedar v7.x too, so you can make this change
+before upgrading.
