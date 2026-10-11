@@ -26,7 +26,7 @@ export const useCurrentUser = (authImplementation: AuthImplementation) => {
 
     if (response.ok) {
       const { data } = await response.json()
-      return data?.cedar?.currentUser
+      return data?.cedar?.currentUser ?? null
     } else {
       throw new Error(
         `Could not fetch current user: ${response.statusText} (${response.status})`,
