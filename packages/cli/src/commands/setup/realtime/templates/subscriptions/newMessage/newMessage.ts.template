@@ -48,7 +48,7 @@ const newMessage = {
 
       return pubSub.subscribe('newMessage', roomId)
     },
-    resolve: (payload) => {
+    resolve: (payload: NewMessageChannel['newMessage'][1]) => {
       logger.debug({ payload }, 'newMessage subscription resolve')
 
       return payload

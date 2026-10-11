@@ -38,7 +38,10 @@ export const getCurrentUser = async (
 
   const roles = decoded[process.env.AUTH0_AUDIENCE + '/roles']
 
-  if (roles) {
+  if (
+    Array.isArray(roles) &&
+    roles.every((role): role is string => typeof role === 'string')
+  ) {
     return { ...decoded, roles }
   }
 
