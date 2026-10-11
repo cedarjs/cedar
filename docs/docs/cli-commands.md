@@ -1225,7 +1225,7 @@ $ /cedar-app/node_modules/.bin/cedar g scaffold admin/user
 Done in 1.21s.
 ```
 
-The routes wrapped in the [`Set`](router.md#sets-of-routes) component with the generated layout will be nested too. The layout is imported as `AdminUsersScaffoldLayout`, with the path as a prefix, like the pages are:
+The routes wrapped in the [`Set`](router.md#sets-of-routes) component with the generated layout will be nested too. The layout for `admin/user` is in `web/src/layouts/Admin/UsersScaffoldLayout/`. Routes imports it as `AdminUsersScaffoldLayout`, so it doesn't clash with the layout of a `user` scaffold. Pages get the same `Admin` prefix, like `AdminUserUsersPage`:
 
 <Tabs groupId="js-ts">
 <TabItem value="js" label="JavaScript">
