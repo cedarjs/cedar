@@ -292,6 +292,8 @@ export const MonthlyReportJob = async ({ month }: { month: string }) => {
 
 Pass `userId` when the file belongs to someone, so the ownership checks that guard user uploads apply to it too, and `organizationId` in multi-tenant apps.
 
+Thumbnails and previews of an upload are better kept as [variants](#derived-files-thumbnails-previews-and-other-variants), which Cedar links to their source and deletes with it.
+
 ## Deleting files
 
 Deleting an `Upload` row does nothing to the bytes, by design. `deleteFile()` deletes the object first and then the row, so a crash in between leaves a visible row rather than an unreachable object, and a missing object is tolerated, so it's safe to retry.
@@ -315,6 +317,161 @@ export const deleteReport = async ({ id }: { id: string }) => {
   return db.report.delete({ where: { id } })
 }
 ```
+
+## Derived files: thumbnails, previews and other variants
+
+:::caution Experimental
+
+Variants are experimental. The API may change until a second app, or a different kind of file such as video, has used it.
+
+:::
+
+A photo's thumbnails, a PDF's drawn first page, a video's poster frame: files made from another upload are its **variants**, or derived files. Each one is an `Upload` row of its own, linked to the file it was made from and given a name such as `thumb-164` or `preview`. Your app writes only the function that turns the source's bytes into the new file. Cedar keeps the bookkeeping:
+
+- a variant is made the first time it's asked for, and only once, even when two requests or two processes ask at the same moment
+- a variant that can't be made is remembered, and not tried again until `retryFailedAfter` has passed
+- `regenerateVariants('preview')` remakes every `preview` after you fix its generator, and leaves the other variants alone
+- deleting the source with `deleteFile()` deletes its variants and their stored files
+
+`@cedarjs/uploads` makes no images itself. A generator can use sharp, pdf.js, ffmpeg or a third-party service; the package depends on none of them.
+
+### Schema
+
+Add two columns, a self-relation and a unique index to the `Upload` model, then create a migration:
+
+```prisma title="api/db/schema.prisma"
+model Upload {
+  // ...the existing fields...
+
+  /// The upload this one was made from (a thumbnail's photo), or null
+  sourceId String?
+  /// Name of the derived file, such as "thumb-164" or "preview"
+  variant  String?
+  source   Upload?  @relation("UploadVariants", fields: [sourceId], references: [id], onDelete: Restrict)
+  variants Upload[] @relation("UploadVariants")
+
+  @@unique([sourceId, variant])
+}
+```
+
+The unique index is what lets only one process make a given variant. `onDelete: Restrict` means a source row can't be deleted while it still has variants, so their files can't be orphaned by accident; see [deleting](#deleting-a-source-and-its-variants) below.
+
+Your own models keep referencing only the original upload. They need no columns for thumbnails, no "thumbnail failed at" timestamp, and no relation per variant.
+
+### Declaring variants
+
+```ts title="api/src/lib/uploadVariants.ts"
+import { defineUploadVariants } from '@cedarjs/uploads'
+import type { UploadVariantGenerator } from '@cedarjs/uploads'
+import sharp from 'sharp'
+
+import { db } from 'src/lib/db'
+import { targets } from 'src/lib/uploads'
+
+const square =
+  (size: number): UploadVariantGenerator =>
+  async ({ readSource }) => ({
+    data: await sharp(await readSource())
+      .resize(size, size)
+      .webp()
+      .toBuffer(),
+    mimeType: 'image/webp',
+  })
+
+export const uploadVariants = defineUploadVariants({
+  db,
+  targets,
+  // Where variant files are stored, unless a variant names its own target
+  target: targets.thumbnails,
+  variants: {
+    'thumb-164': square(164),
+    'thumb-328': square(328),
+    preview: { generate: drawFirstPage, target: targets.previews },
+  },
+})
+```
+
+A generator receives the source's `Upload` row (`source`), the variant's name, `readSource()` for the source's bytes, and `readVariant(name)` for another variant of the same source. It returns `{ data, mimeType, filename? }`, or `null` when this source can't have this variant (a file type it doesn't handle). A returned `null` and a thrown error are both remembered as a failure. A thrown error is also passed to `onError`, which logs by default.
+
+Make one variant from another with `readVariant()`. A PDF's thumbnail can be cut from its drawn first page, which is drawn once and shared:
+
+```ts
+'pdf-thumb': async ({ source, readVariant }) => {
+  if (source.mimeType !== 'application/pdf') {
+    return null
+  }
+
+  const page = await readVariant('preview')
+  return page ? { data: await cutSquare(page), mimeType: 'image/webp' } : null
+},
+```
+
+Variants are made from original uploads only, not from other variants, and a variant that ends up depending on itself is refused.
+
+### Reading variants
+
+```ts
+// The variant's Upload row, made now if it doesn't exist yet. null when it
+// couldn't be made (and retryFailedAfter hasn't passed)
+const thumb = await uploadVariants.getVariant(photo.uploadId, 'thumb-164')
+
+// Its bytes, or a URL a browser can load (a signed URL, or a data: URI for
+// database targets)
+const read = await uploadVariants.readVariant(photo.uploadId, 'thumb-164')
+const url = await uploadVariants.getVariantUrl(photo.uploadId, 'thumb-164', {
+  expiresIn: 600,
+  disposition: 'inline',
+})
+
+// Only if it has already been made; never makes anything
+const made = await uploadVariants.findVariant(photo.uploadId, 'thumb-164')
+const byPhoto = await uploadVariants.findVariants(uploadIds, 'thumb-164')
+```
+
+A variant is an ordinary `Upload` row, so the `@withSignedUrl` and `@withDataUri` directives work on its id too. On a list page, use `findVariants()` so one query covers every row and nothing is made while the page waits, and make missing variants ahead of time from a job:
+
+```ts title="api/src/jobs/ThumbnailJob/ThumbnailJob.ts"
+export const ThumbnailJob = jobs.createJob({
+  queue: 'default',
+  perform: async ({ uploadId }: { uploadId: string }) => {
+    await uploadVariants.getVariant(uploadId, 'thumb-164')
+    await uploadVariants.getVariant(uploadId, 'thumb-328')
+  },
+})
+```
+
+Making a variant is safe to start from several places at once. In one process, concurrent calls share a single attempt. Across processes, the variant's own `Upload` row, created in `pending` status, is the claim: the unique index lets only one process create it, and the others wait (checking every `pollInterval`, 250 ms by default) until it is `completed` or `failed`. A claim older than `claimTimeout` (ten minutes by default) is treated as abandoned by a process that died, and taken over.
+
+A variant that couldn't be made keeps its row, in `failed` status, with no file. It's tried again on the first request after `retryFailedAfter` (one day by default) has passed since the failure.
+
+### Remaking variants
+
+After fixing a generator, remake every variant of that name:
+
+```ts title="scripts/redrawPreviews.ts"
+import { uploadVariants } from 'api/src/lib/uploadVariants'
+
+export default async () => {
+  const result = await uploadVariants.regenerateVariants('preview')
+  console.info(result) // { deleted, made, failed, errors }
+}
+```
+
+Each old file is deleted and the variant made again, including those remembered as failed. Pass `remake: false` to only delete them and let each be made on its next read.
+
+### Deleting a source and its variants
+
+Pass `targets` to `deleteFile()` and it deletes the upload's variants (bytes, then rows) before the upload itself:
+
+```ts
+await deleteFile(resolveTarget(targets, upload.target), {
+  db,
+  upload,
+  targets,
+})
+```
+
+Without `targets`, deleting an upload that has variants throws an `UploadError` with code `HAS_VARIANTS`, because the variant rows still reference it. Call again with `targets` to finish. `deleteVariants(upload, { db, targets })` deletes only the variants.
 
 ## Cleaning up stale uploads
 
