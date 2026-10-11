@@ -10,21 +10,18 @@ const memJsFormattedLogger = {
   log: (msg: string) => logger.error(msg),
 }
 
-export let client: InMemoryClient | MemcachedClient
+// The client connects to Memcached the first time it's used. If it can't
+// connect, the error is logged and `cache()` runs the uncached function
+// instead
+export const client =
+  process.env.NODE_ENV === 'test'
+    ? new InMemoryClient()
+    : new MemcachedClient(process.env.CACHE_HOST, {
+        logger: memJsFormattedLogger,
+      })
 
-if (process.env.NODE_ENV === 'test') {
-  client = new InMemoryClient()
-} else {
-  try {
-    client = new MemcachedClient(process.env.CACHE_HOST, {
-      logger: memJsFormattedLogger,
-    })
-  } catch (e) {
-    logger.error(`Could not connect to cache: ${e.message}`)
-  }
-}
-
-export const { cache, cacheFindMany, cacheClient, deleteCacheKey } = createCache(client, {
-  logger,
-  timeout: 500,
-})
+export const { cache, cacheFindMany, cacheClient, deleteCacheKey } =
+  createCache(client, {
+    logger,
+    timeout: 500,
+  })

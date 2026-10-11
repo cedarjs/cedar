@@ -77,7 +77,7 @@ function addInvitationTokenToUserAttributes(root: ReturnType<typeof j>): void {
  *     const user = await db.user.create({ ... })
  *     await ensureDefaultOrganization({
  *       currentUser: { id: user.id, memberships: [] },
- *       invitationToken: userAttributes.invitationToken,
+ *       invitationToken: userAttributes?.invitationToken,
  *     })
  *     return user
  *   }
@@ -109,7 +109,8 @@ function wrapCreateCall(fn: { async?: boolean; body: unknown }): void {
           ),
           j.objectProperty(
             j.identifier('invitationToken'),
-            j.memberExpression(
+            // `userAttributes` is optional in dbAuth's signup handler options
+            j.optionalMemberExpression(
               j.identifier('userAttributes'),
               j.identifier('invitationToken'),
             ),
