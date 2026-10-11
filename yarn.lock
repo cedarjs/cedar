@@ -321,9 +321,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aws-sdk/client-s3@npm:3.1147.0":
-  version: 3.1147.0
-  resolution: "@aws-sdk/client-s3@npm:3.1147.0"
+"@aws-sdk/client-s3@npm:3.1148.0":
+  version: 3.1148.0
+  resolution: "@aws-sdk/client-s3@npm:3.1148.0"
   dependencies:
     "@aws-sdk/checksums": "npm:^3.1001.1"
     "@aws-sdk/core": "npm:^3.978.1"
@@ -336,7 +336,7 @@ __metadata:
     "@smithy/node-http-handler": "npm:^4.12.1"
     "@smithy/types": "npm:^4.19.0"
     tslib: "npm:^2.6.2"
-  checksum: 10c0/7b6f1b0b8a851eb578d5e6eeb3a36d3c764e522377b7450f7bfd36445aceb463b90d3e5842eaae14b8984ebeb82d643c395a5f922afdd9a4b4d43b08450099a4
+  checksum: 10c0/837fec0ecb6ea7434784845a60fd9cf5b29694d49d01ad497ca82250ef16ec754e251c168a1972517c7921fcb35c05932417c4a65eaad39c541b8e06e2055b81
   languageName: node
   linkType: hard
 
@@ -510,9 +510,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aws-sdk/s3-request-presigner@npm:3.1147.0":
-  version: 3.1147.0
-  resolution: "@aws-sdk/s3-request-presigner@npm:3.1147.0"
+"@aws-sdk/s3-request-presigner@npm:3.1148.0":
+  version: 3.1148.0
+  resolution: "@aws-sdk/s3-request-presigner@npm:3.1148.0"
   dependencies:
     "@aws-sdk/core": "npm:^3.978.1"
     "@aws-sdk/signature-v4-multi-region": "npm:^3.996.47"
@@ -520,7 +520,7 @@ __metadata:
     "@smithy/core": "npm:^3.35.0"
     "@smithy/types": "npm:^4.19.0"
     tslib: "npm:^2.6.2"
-  checksum: 10c0/a569b5c90d929ff904636ea9c21c2a23f708b29367b586106ff0dcbdeddf69dcdee7e608767d79699639e82bfcd4acbecd5aad6a9936cce0956a85ed82390942
+  checksum: 10c0/f1edeeb673821ec08952850b0b8cff42fd2f931c0fc8863c735957c198475b6cce7b9bf79a77c571baeeceae3e388892892030155d2c08cc64fec4d5b371974c
   languageName: node
   linkType: hard
 
@@ -3847,8 +3847,8 @@ __metadata:
   dependencies:
     "@apollo/client": "npm:4.3.3"
     "@arethetypeswrong/cli": "npm:0.18.5"
-    "@aws-sdk/client-s3": "npm:3.1147.0"
-    "@aws-sdk/s3-request-presigner": "npm:3.1147.0"
+    "@aws-sdk/client-s3": "npm:3.1148.0"
+    "@aws-sdk/s3-request-presigner": "npm:3.1148.0"
     "@cedarjs/api": "npm:7.0.0"
     "@cedarjs/context": "npm:7.0.0"
     "@cedarjs/framework-tools": "npm:7.0.0"
