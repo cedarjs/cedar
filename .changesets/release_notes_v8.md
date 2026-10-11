@@ -173,6 +173,29 @@ npx @tailwindcss/upgrade --config ./web/config/tailwind.config.cjs
 See Tailwind's [upgrade guide](https://tailwindcss.com/docs/upgrade-guide) for
 the changes v4 makes to utilities and configuration.
 
+## More precise generated types
+
+To better support TypeScript's strict mode a few of the types Cedar generates
+and exports are made more precise.
+
+- `QueryResolvers` and `MutationResolvers` fields are required properties, so
+  service functions typed with them (`QueryResolvers['posts']`) aren't
+  possibly `undefined` when you call them in tests
+- On the api side, `JSON` and `JSONObject` inputs are typed as Prisma's
+  `InputJsonValue` and `InputJsonObject`, the types Prisma accepts for `Json`
+  fields
+- `@cedarjs/auth` exports a new `LoggedInUser` type: the user
+  `getCurrentUser` returns when someone is logged in. `CurrentUser` is
+  `LoggedInUser | null`, matching what `getCurrentUser` returns.
+
+### Upgrading
+
+- Where your code uses `CurrentUser` for a user that's known to be logged in,
+  use `LoggedInUser` instead. Without strict mode TypeScript ignores `null`, so
+  this only matters in projects with `strict` (or `strictNullChecks`) on
+- If you extend `CurrentUser` with `declare module '@cedarjs/auth'`, extend
+  `LoggedInUser` instead. `CurrentUser` is a type alias and can't be extended
+
 ## `<Set>` wrappers only get `children`
 
 `<Set>`, `<PrivateSet>` and `<Private>` render the components in `wrap` with
