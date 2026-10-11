@@ -373,6 +373,36 @@ describe('rw destroy scaffold', () => {
       )
     })
 
+    test('removes an import of only Set', async () => {
+      fs.writeFileSync(
+        getPaths().web.routes,
+        [
+          "import { Set } from '@cedarjs/router'",
+          "import HomePage from 'src/pages/HomePage'",
+          '',
+          'const Routes = () => <Router />',
+        ].join('\n'),
+      )
+
+      const t = tasks({
+        model: 'Post',
+        tests: false,
+        nestScaffoldByModel: true,
+      })
+      t.options.renderer = 'silent'
+
+      // Removing the Set import
+      await t.tasks[2].run()
+
+      expect(fs.readFileSync(getPaths().web.routes, 'utf-8')).toEqual(
+        [
+          "import HomePage from 'src/pages/HomePage'",
+          '',
+          'const Routes = () => <Router />',
+        ].join('\n'),
+      )
+    })
+
     test('only removes the PrivateSet around the scaffold Set', async () => {
       fs.writeFileSync(
         getPaths().web.routes,

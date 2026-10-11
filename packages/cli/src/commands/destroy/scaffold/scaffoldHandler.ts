@@ -55,14 +55,22 @@ const removeSetImport = (): string => {
   // Remove the `Set` name itself, not the `Set` at the end of `PrivateSet`.
   // When it's the last name, the comma before it goes too, otherwise the comma
   // after it. Comments and line breaks in the import are left as they are
+  // An import of only `Set` is removed completely
   const setName = '(?<![\\w$])Set(?![\\w$])'
-  const removedSetImport = cedarRouterImport
-    .replace(new RegExp(`,\\s*${setName}(?=\\s*})`), '')
-    .replace(new RegExp(`${setName}[ \\t]*,[ \\t]*`), '')
-  const newRoutesContent = routesContent.replace(
-    cedarRouterImport,
-    removedSetImport,
-  )
+  const removedSetImport = /^import\s*{\s*Set\s*}/.test(cedarRouterImport)
+    ? ''
+    : cedarRouterImport
+        .replace(new RegExp(`,\\s*${setName}(?=\\s*})`), '')
+        .replace(new RegExp(`${setName}[ \\t]*,[ \\t]*`), '')
+  // When the whole import is removed, its line break goes too
+  const newRoutesContent = removedSetImport
+    ? routesContent.replace(cedarRouterImport, removedSetImport)
+    : routesContent.replace(
+        routesContent.includes(cedarRouterImport + '\n')
+          ? cedarRouterImport + '\n'
+          : cedarRouterImport,
+        '',
+      )
   writeFile(routesPath, newRoutesContent, { overwriteExisting: true })
 
   return 'Removed Set import in Routes.{jsx,tsx}'
