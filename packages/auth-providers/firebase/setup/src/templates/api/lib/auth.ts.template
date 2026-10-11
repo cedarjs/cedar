@@ -1,5 +1,6 @@
 import admin from 'firebase-admin'
 
+import type { Decoded } from '@cedarjs/api'
 import { AuthenticationError } from '@cedarjs/graphql-server'
 
 // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
@@ -23,13 +24,7 @@ const adminApp = admin.initializeApp({
  *
  * @see https://github.com/cedarjs/cedar/tree/main/packages/auth for examples
  */
-export const getCurrentUser = async (
-  decoded,
-  /* eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars */
-  { token, type },
-  /* eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars */
-  { event, context }
-) => {
+export const getCurrentUser = async (decoded: Decoded) => {
   return decoded
 }
 
@@ -52,7 +47,11 @@ export const isAuthenticated = (): boolean => {
  *
  * @see https://github.com/cedarjs/cedar/tree/main/packages/auth for examples
  */
-export const requireAuth = () => {
+export const requireAuth = (
+  // The @requireAuth directive passes the roles it was given. Checking them
+  // needs a custom RBAC implementation, see below
+  _options: { roles?: string | string[] } = {}
+) => {
   if (!isAuthenticated()) {
     throw new AuthenticationError("You don't have permission to do that.")
   }

@@ -973,7 +973,11 @@ yarn cedar setup cache redis
 This generates the following (memcached example shown):
 
 ```js title="api/src/lib/cache.js"
-import { createCache, MemcachedClient } from '@cedarjs/api/cache'
+import {
+  createCache,
+  InMemoryClient,
+  MemcachedClient,
+} from '@cedarjs/api/cache'
 
 import { logger } from './logger'
 
@@ -981,22 +985,24 @@ const memJsFormattedLogger = {
   log: (msg) => logger.error(msg),
 }
 
-let client
-try {
-  client = new MemcachedClient('localhost:11211', {
-    logger: memJsFormattedLogger,
-  })
-} catch (e) {
-  console.error(`Could not connect to cache: ${e.message}`)
-}
+// The client connects to Memcached the first time it's used. If it can't
+// connect, the error is logged and `cache()` runs the uncached function
+// instead
+export const client =
+  process.env.NODE_ENV === 'test'
+    ? new InMemoryClient()
+    : new MemcachedClient(process.env.CACHE_HOST, {
+        logger: memJsFormattedLogger,
+      })
 
-export const { cache, cacheFindMany } = createCache(client, {
-  logger,
-  timeout: 500,
-})
+export const { cache, cacheFindMany, cacheClient, deleteCacheKey } =
+  createCache(client, {
+    logger,
+    timeout: 500,
+  })
 ```
 
-When the time comes, you can replace the hardcoded `localhost:11211` with an ENV var that can be set per-environment.
+Set `CACHE_HOST` per environment to point at your cache server. For Memcached it defaults to `localhost:11211`.
 
 #### Logging
 

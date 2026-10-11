@@ -1,8 +1,16 @@
+import type { BidInput } from 'types/graphql'
+
 import type { LiveQueryStorageMechanism } from '@cedarjs/realtime'
 
 import { logger } from 'src/lib/logger'
 
-const auctions = [
+interface AuctionData {
+  id: string
+  title: string
+  bids: { amount: number }[]
+}
+
+const auctions: AuctionData[] = [
   { id: '1', title: 'RedwoodJS Logo Shirt', bids: [{ amount: 20 }] },
   { id: '2', title: 'RedwoodJS Lapel Pin', bids: [{ amount: 5 }] },
   { id: '3', title: 'RedwoodJS Beanie', bids: [{ amount: 15 }] },
@@ -34,14 +42,14 @@ const auctions = [
  *   }
  * }
  */
-export const auction = async ({ id }) => {
+export const auction = async ({ id }: { id: string }) => {
   const foundAuction = auctions.find((a) => a.id === id)
   logger.debug({ id, auction: foundAuction }, 'auction')
   return foundAuction
 }
 
 export const bid = async (
-  { input },
+  { input }: { input: BidInput },
   { context }: { context: { liveQueryStore: LiveQueryStorageMechanism } }
 ) => {
   const { auctionId, amount } = input
@@ -62,7 +70,7 @@ export const bid = async (
 }
 
 export const Auction = {
-  highestBid: (obj, { root }) => {
+  highestBid: (obj: unknown, { root }: { root: AuctionData }) => {
     const [max] = root.bids.sort((a, b) => b.amount - a.amount)
 
     logger.debug({ obj, root }, 'highestBid')
