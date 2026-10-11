@@ -71,6 +71,8 @@ const QUICKTIME_BRAND = 'qt  '
 
 /** EBML element IDs, with their length marker bits kept. */
 const EBML_DOC_TYPE_ID = 0x4282
+/** Longest `DocType` read, with room for NUL padding after `matroska`. */
+const MAX_DOC_TYPE_LENGTH = 32
 
 function hasBytesAt(bytes: Uint8Array, offset: number, expected: number[]) {
   if (bytes.length < offset + expected.length) {
@@ -328,10 +330,20 @@ function detectEbml(bytes: Uint8Array): string | null {
     const dataStart = offset + id.length + size.length
 
     if (id.value === EBML_DOC_TYPE_ID) {
-      const docType = ascii(bytes, dataStart, dataStart + size.value)
+      // Every DocType this function knows is short, so a long one is not one
+      // of them, and is never copied out of the input
+      let docTypeEnd = dataStart + size.value
+
+      if (size.value > MAX_DOC_TYPE_LENGTH || docTypeEnd > bytes.length) {
+        return null
+      }
 
       // EBML strings may be padded with trailing NULs
-      switch (docType?.replace(/\0+$/, '')) {
+      while (docTypeEnd > dataStart && bytes[docTypeEnd - 1] === 0) {
+        docTypeEnd--
+      }
+
+      switch (ascii(bytes, dataStart, docTypeEnd)) {
         case 'webm':
           return 'video/webm'
         case 'matroska':

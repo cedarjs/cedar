@@ -251,6 +251,15 @@ describe('detectContentType', () => {
         bytes([0x1a, 0x45, 0xdf, 0xa3, 0x00], [0x42, 0x82, 0x84], 'webm'),
       ],
       [
+        'a DocType too long to be a known one',
+        bytes(
+          [0x1a, 0x45, 0xdf, 0xa3, 0x40, 0x2b],
+          [0x42, 0x82, 0xa8],
+          'webm',
+          new Array(36).fill(0),
+        ),
+      ],
+      [
         'a DocType longer than the input',
         bytes([0x1a, 0x45, 0xdf, 0xa3, 0x87], [0x42, 0x82, 0x88], 'webm'),
       ],
