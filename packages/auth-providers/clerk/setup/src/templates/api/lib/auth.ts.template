@@ -1,4 +1,4 @@
-import type { Decoded } from '@cedarjs/api'
+import type { AuthContextPayload, Decoded } from '@cedarjs/api'
 import { AuthenticationError, ForbiddenError } from '@cedarjs/graphql-server'
 
 import { logger } from 'src/lib/logger'
@@ -15,7 +15,13 @@ import { logger } from 'src/lib/logger'
  *
  * @see https://github.com/cedarjs/cedar/tree/main/packages/auth for examples
  */
-export const getCurrentUser = async (decoded: Decoded) => {
+export const getCurrentUser = async (
+  decoded: Decoded,
+  /* eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars */
+  { token, type }: AuthContextPayload[1],
+  /* eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars */
+  { event, context }: Partial<AuthContextPayload[2]> = {}
+) => {
   if (!decoded) {
     logger.warn('Missing decoded user')
     return null
