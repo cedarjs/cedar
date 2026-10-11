@@ -168,7 +168,7 @@
     "@cedarjs/framework-tools": "workspace:*",
     "@jridgewell/trace-mapping": "0.3.31",
     "@oxc-project/types": "^0.153.0",
-    "concurrently": "9.2.4",
+    "concurrently": "9.2.5",
     "graphql-tag": "2.12.7",
     "memfs": "4.80.0",
     "publint": "0.3.25",
