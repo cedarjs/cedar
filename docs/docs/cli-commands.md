@@ -1060,6 +1060,9 @@ The content of the generated components is different from what you'd get by runn
 
 The scaffold generates two layouts. `ScaffoldLayout` is shared by all scaffolds, and renders the page heading, the link back to the list page and the "New" button. It takes the heading and the route names to link to as props. The second layout is specific to the model, like `PostsScaffoldLayout` for `post`. It renders `ScaffoldLayout` with the props for posts, and it's the layout the scaffold's routes are wrapped in:
 
+<Tabs groupId="js-ts">
+<TabItem value="js" label="JavaScript">
+
 ```jsx title="./web/src/layouts/PostsScaffoldLayout/PostsScaffoldLayout.jsx"
 import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
 
@@ -1085,6 +1088,40 @@ export default PostsScaffoldLayout
   {/* ... */}
 </Set>
 ```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+```tsx title="./web/src/layouts/PostsScaffoldLayout/PostsScaffoldLayout.tsx"
+import type { WrapperProps } from '@cedarjs/router'
+
+import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
+
+function PostsScaffoldLayout({ children }: WrapperProps) {
+  return (
+    <ScaffoldLayout
+      title="Posts"
+      titleTo="posts"
+      buttonLabel="New Post"
+      buttonTo="newPost"
+    >
+      {children}
+    </ScaffoldLayout>
+  )
+}
+
+export default PostsScaffoldLayout
+```
+
+```tsx title="./web/src/Routes.tsx"
+<Set wrap={PostsScaffoldLayout}>
+  <Route path="/posts/new" page={PostNewPostPage} name="newPost" />
+  {/* ... */}
+</Set>
+```
+
+</TabItem>
+</Tabs>
 
 Like [generate sdl](#generate-sdl), the scaffold generator never includes dbAuth's sensitive fields (`hashedPassword`, `salt`, `resetToken`, `resetTokenExpiresAt`, `webAuthnChallenge`) in the generated SDL, forms, cells or display pages. As with `generate sdl`, `salt` is only excluded when the model has at least one of the other auth fields too — a standalone `salt` field is kept.
 
@@ -1190,8 +1227,11 @@ Done in 1.21s.
 
 The routes wrapped in the [`Set`](router.md#sets-of-routes) component with the generated layout will be nested too. The layout is imported as `AdminUsersScaffoldLayout`, with the path as a prefix, like the pages are:
 
+<Tabs groupId="js-ts">
+<TabItem value="js" label="JavaScript">
+
 <!-- prettier-ignore -->
-```jsx {5-8} title="./web/src/Routes.js"
+```jsx {5-8} title="./web/src/Routes.jsx"
 const Routes = () => {
   return (
     <Router>
@@ -1206,6 +1246,29 @@ const Routes = () => {
   )
 }
 ```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+<!-- prettier-ignore -->
+```tsx {5-8} title="./web/src/Routes.tsx"
+const Routes = () => {
+  return (
+    <Router>
+      <Set wrap={AdminUsersScaffoldLayout}>
+        <Route path="/admin/users/new" page={AdminUserNewUserPage} name="adminNewUser" />
+        <Route path="/admin/users/{id:Int}/edit" page={AdminUserEditUserPage} name="adminEditUser" />
+        <Route path="/admin/users/{id:Int}" page={AdminUserUserPage} name="adminUser" />
+        <Route path="/admin/users" page={AdminUserUsersPage} name="adminUsers" />
+      </Set>
+      <Route notfound page={NotFoundPage} />
+    </Router>
+  )
+}
+```
+
+</TabItem>
+</Tabs>
 
 Notes:
 
