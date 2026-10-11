@@ -48,7 +48,7 @@
     "@types/better-sqlite3": "7.6.13",
     "@types/mime-types": "2.1.4",
     "better-sqlite3": "12.11.1",
-    "concurrently": "9.2.4",
+    "concurrently": "9.2.5",
     "esbuild": "0.28.2",
     "prisma": "7.10.0",
     "publint": "0.3.25",

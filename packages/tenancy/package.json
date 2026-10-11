@@ -59,7 +59,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "better-sqlite3": "12.11.1",
-    "concurrently": "9.2.4",
+    "concurrently": "9.2.5",
     "esbuild": "0.28.2",
     "graphql": "16.14.2",
     "jsdom": "27.4.0",

@@ -45,7 +45,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
     "@cedarjs/framework-tools": "7.0.0",
-    "concurrently": "9.2.4",
+    "concurrently": "9.2.5",
     "publint": "0.3.25",
     "typescript": "5.9.3"
   },

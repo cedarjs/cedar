@@ -96,7 +96,7 @@
     "@yarnpkg/types": "4.0.1",
     "ansis": "4.4.0",
     "boxen": "5.1.2",
-    "concurrently": "9.2.4",
+    "concurrently": "9.2.5",
     "cross-env": "7.0.3",
     "dependency-cruiser": "16.10.4",
     "dotenv": "16.6.1",

@@ -55,7 +55,7 @@
     "@testing-library/dom": "10.4.2",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.3",
-    "concurrently": "9.2.4",
+    "concurrently": "9.2.5",
     "msw": "2.15.0",
     "publint": "0.3.25",
     "react": "19.3.0",

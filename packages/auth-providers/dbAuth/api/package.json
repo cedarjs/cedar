@@ -67,7 +67,7 @@
     "@simplewebauthn/server": "13.3.3",
     "@types/aws-lambda": "8.10.164",
     "@types/md5": "2.3.6",
-    "concurrently": "9.2.4",
+    "concurrently": "9.2.5",
     "publint": "0.3.25",
     "typescript": "5.9.3",
     "vitest": "4.1.11"
