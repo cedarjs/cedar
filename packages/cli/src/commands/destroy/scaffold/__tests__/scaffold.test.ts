@@ -338,6 +338,41 @@ describe('rw destroy scaffold', () => {
       )
     })
 
+    test('keeps comments in the router import when removing Set', async () => {
+      fs.writeFileSync(
+        getPaths().web.routes,
+        [
+          'import {',
+          '  Router,',
+          '  Route,',
+          '  Set, // route groups',
+          "} from '@cedarjs/router'",
+          '',
+          'const Routes = () => <Router />',
+        ].join('\n'),
+      )
+
+      const t = tasks({
+        model: 'Post',
+        tests: false,
+        nestScaffoldByModel: true,
+      })
+      t.options.renderer = 'silent'
+
+      // Removing the Set import
+      await t.tasks[2].run()
+
+      expect(fs.readFileSync(getPaths().web.routes, 'utf-8')).toContain(
+        [
+          'import {',
+          '  Router,',
+          '  Route,',
+          '  // route groups',
+          "} from '@cedarjs/router'",
+        ].join('\n'),
+      )
+    })
+
     test('only removes the PrivateSet around the scaffold Set', async () => {
       fs.writeFileSync(
         getPaths().web.routes,

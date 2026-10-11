@@ -52,18 +52,13 @@ const removeSetImport = (): string => {
     return 'No @cedarjs/router import found in Routes.{jsx,tsx}'
   }
   const [cedarRouterImport] = cedarRouterImportMatch
-  // Remove the `Set` name itself, not the `Set` at the end of `PrivateSet`
-  const removedSetImport = cedarRouterImport.replace(
-    /{([^}]*)}/,
-    (_match, names: string) => {
-      const keptNames = names
-        .split(',')
-        .map((name) => name.trim())
-        .filter((name) => name && name !== 'Set')
-
-      return `{ ${keptNames.join(', ')} }`
-    },
-  )
+  // Remove the `Set` name itself, not the `Set` at the end of `PrivateSet`.
+  // When it's the last name, the comma before it goes too, otherwise the comma
+  // after it. Comments and line breaks in the import are left as they are
+  const setName = '(?<![\\w$])Set(?![\\w$])'
+  const removedSetImport = cedarRouterImport
+    .replace(new RegExp(`,\\s*${setName}(?=\\s*})`), '')
+    .replace(new RegExp(`${setName}[ \\t]*,[ \\t]*`), '')
   const newRoutesContent = routesContent.replace(
     cedarRouterImport,
     removedSetImport,
