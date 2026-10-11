@@ -24,7 +24,7 @@ export {
   isPrivateSetNode,
   isPrivateNode,
 } from './Set.js'
-export type { WrapperType } from './Set.js'
+export type { WrapperProps, WrapperType } from './Set.js'
 
 export { default as RouteAnnouncement } from './route-announcement.js'
 export * from './route-announcement.js'
