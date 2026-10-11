@@ -176,8 +176,7 @@ the changes v4 makes to utilities and configuration.
 ## More precise generated types
 
 A few of the types Cedar generates and exports are more precise. TypeScript's
-`strict` mode relies on them. Without strict mode they make no difference in
-most projects:
+`strict` mode relies on them.
 
 - `QueryResolvers` and `MutationResolvers` fields are required properties, so
   service functions typed with them (`QueryResolvers['posts']`) aren't
@@ -185,8 +184,9 @@ most projects:
 - On the api side, `JSON` and `JSONObject` inputs are typed as Prisma's
   `InputJsonValue` and `InputJsonObject`, the types Prisma accepts for `Json`
   fields
-- The `CurrentUser` type doesn't include `null` when `getCurrentUser` can
-  return `null`
+- `CurrentUser` is typed as the user `getCurrentUser` returns, without
+  `null`. `context.currentUser` is optional and can be `null`, so code still
+  checks that someone is logged in
 - `<Set wrap={...}>` and `<PrivateSet wrap={...}>` infer the forwarded props
   from the wrapper components, so props like `titleTo="posts"` are checked
   against the wrapper's prop types. Passing a prop the wrapper components
