@@ -2,20 +2,28 @@ import type { ComponentType, ReactElement, ReactNode } from 'react'
 import React from 'react'
 
 /**
+ * The props `<Set>` gives each component in its `wrap` prop: the wrapped
+ * routes as `children`, and nothing else
+ */
+export interface WrapperProps {
+  children: ReactNode
+}
+
+/**
  * A component in a `<Set wrap>` prop, like a layout. The router renders it
- * with the wrapped routes as `children` and no other props, so it can't have
- * any other required props. Optional props are fine.
+ * with {@link WrapperProps}, so it can't have any other required props.
+ * Optional props are fine.
  *
  * To render a layout with props, create a component that renders it with
  * those props, and use that component in `wrap`:
  *
- *   function PostsScaffoldLayout({ children }: { children: ReactNode }) {
+ *   function PostsScaffoldLayout({ children }: WrapperProps) {
  *     return <ScaffoldLayout title="Posts" titleTo="posts">{children}</ScaffoldLayout>
  *   }
  *
  *   <Set wrap={PostsScaffoldLayout}>
  */
-export type WrapperType = ComponentType<{ children: ReactNode }>
+export type WrapperType = ComponentType<WrapperProps>
 
 interface SetProps {
   /**
@@ -51,21 +59,6 @@ interface SetProps {
   whileLoadingAuth?: () => ReactElement | null
   whileLoadingPage?: () => ReactElement | null
 }
-
-/**
- * The names of all props `<Set>`, `<PrivateSet>` and `<Private>` accept. Any
- * other prop is ignored.
- */
-export const setPropNames: readonly string[] = [
-  'wrap',
-  'private',
-  'unauthenticated',
-  'roles',
-  'prerender',
-  'children',
-  'whileLoadingAuth',
-  'whileLoadingPage',
-] satisfies (keyof SetProps)[]
 
 /**
  * Groups routes, to wrap them all in the same layouts or other components, or

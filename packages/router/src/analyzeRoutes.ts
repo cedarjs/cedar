@@ -8,12 +8,7 @@ import {
   isStandardRoute,
   isValidRoute,
 } from './route-validators.js'
-import {
-  isPrivateNode,
-  isPrivateSetNode,
-  isSetNode,
-  setPropNames,
-} from './Set.js'
+import { isPrivateNode, isPrivateSetNode, isSetNode } from './Set.js'
 import type { WrapperType } from './Set.js'
 import {
   matchPath,
@@ -50,40 +45,6 @@ interface Set {
   wrappers: Wrappers
   isPrivate: boolean
   props: SetRenderProps
-}
-
-const warnedUnknownSetProps = new globalThis.Set<string>()
-
-/**
- * `<Set>` only uses its own props. Wrappers are rendered with just
- * `children`, so any other prop on a Set does nothing. TypeScript catches
- * this, but JavaScript projects don't get type errors, so we warn about it in
- * development.
- */
-function warnAboutUnknownSetProps(props: object) {
-  if (process.env.NODE_ENV === 'production') {
-    return
-  }
-
-  const unknownProps = Object.keys(props).filter(
-    (propName) => !setPropNames.includes(propName),
-  )
-
-  if (unknownProps.length === 0) {
-    return
-  }
-
-  const message =
-    'Unknown <Set> props: ' +
-    unknownProps.join(', ') +
-    '. <Set> only gives its wrappers `children`. Create a layout ' +
-    'component that renders your layout with these props, and use it in ' +
-    '`wrap`.'
-
-  if (!warnedUnknownSetProps.has(message)) {
-    warnedUnknownSetProps.add(message)
-    console.warn(message)
-  }
 }
 
 /** Copies the props the router needs to render routes in a set */
@@ -273,8 +234,6 @@ export function analyzeRoutes(
           whileLoadingPage: whileLoadingPageFromCurrentSet,
           wrap: wrapFromCurrentSet,
         } = node.props
-
-        warnAboutUnknownSetProps(node.props)
 
         nextSetId = nextSetId + 1
 

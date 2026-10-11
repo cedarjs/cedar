@@ -1,10 +1,8 @@
+import type { WrapperProps } from '@cedarjs/router'
+
 import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
 
-type PostsScaffoldLayoutProps = {
-  children: React.ReactNode
-}
-
-function PostsScaffoldLayout({ children }: PostsScaffoldLayoutProps) {
+function PostsScaffoldLayout({ children }: WrapperProps) {
   return (
     <ScaffoldLayout
       title="Posts"

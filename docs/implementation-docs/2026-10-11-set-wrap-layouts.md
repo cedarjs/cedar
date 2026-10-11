@@ -10,7 +10,7 @@ that needs props gets them from a small, self-contained layout component that
 renders it with those props hard-coded:
 
 ```tsx
-function PostsScaffoldLayout({ children }: { children: React.ReactNode }) {
+function PostsScaffoldLayout({ children }: WrapperProps) {
   return (
     <ScaffoldLayout
       title="Posts"
@@ -331,15 +331,19 @@ direction.
   `children`, and no other props.
 - `AuthenticatedRoute` gets `unauthenticated`, `roles` and `whileLoadingAuth`
   explicitly.
-- In development (`NODE_ENV !== 'production'`), `analyzeRoutes` logs a
-  `console.warn` listing a Set's unknown props, once per distinct message.
-  TypeScript apps get a type error for those props, but JavaScript apps don't,
-  and without the warning the props would silently do nothing.
+- There's no runtime check for other props on a Set. TypeScript apps get a
+  type error for them. For JavaScript apps, the pre-upgrade check lists every
+  Set with props for its wrappers.
 
 ### Types
 
 ```ts
-export type WrapperType = ComponentType<{ children: ReactNode }>
+/** The props <Set> passes to each component in `wrap` */
+export interface WrapperProps {
+  children: ReactNode
+}
+
+export type WrapperType = ComponentType<WrapperProps>
 
 interface SetProps {
   wrap?: WrapperType | readonly WrapperType[]

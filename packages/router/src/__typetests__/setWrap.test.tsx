@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { expect, test } from 'tstyche'
 
 import { Private, PrivateSet, Set } from '@cedarjs/router'
-import type { WrapperType } from '@cedarjs/router'
+import type { WrapperProps, WrapperType } from '@cedarjs/router'
 
 const MainLayout = ({ children }: { children: ReactNode }) => (
   <main>{children}</main>
@@ -34,7 +34,7 @@ const ScaffoldLayout = ({
   </div>
 )
 
-function PostsScaffoldLayout({ children }: { children: ReactNode }) {
+function PostsScaffoldLayout({ children }: WrapperProps) {
   return (
     <ScaffoldLayout title="Posts" titleTo="posts">
       {children}
@@ -154,4 +154,9 @@ test('Private rejects props it does not use', () => {
       {null}
     </Private>,
   ).type.toRaiseError("Property 'theme' does not exist")
+})
+
+test('a component typed with WrapperProps is a WrapperType', () => {
+  expect(PostsScaffoldLayout).type.toBeAssignableTo<WrapperType>()
+  expect<WrapperProps>().type.toBe<{ children: ReactNode }>()
 })

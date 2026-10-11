@@ -1,10 +1,8 @@
+import type { WrapperProps } from '@cedarjs/router'
+
 import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
 
-type ContactsScaffoldLayoutProps = {
-  children: React.ReactNode
-}
-
-function ContactsScaffoldLayout({ children }: ContactsScaffoldLayoutProps) {
+function ContactsScaffoldLayout({ children }: WrapperProps) {
   return (
     <ScaffoldLayout
       title="Contacts"

@@ -1,12 +1,8 @@
+import type { WrapperProps } from '@cedarjs/router'
+
 import ScaffoldLayout from '${importLayoutNames}'
 
-type ${pluralPascalName}ScaffoldLayoutProps = {
-  children: React.ReactNode
-}
-
-function ${pluralPascalName}ScaffoldLayout({
-  children,
-}: ${pluralPascalName}ScaffoldLayoutProps) {
+function ${pluralPascalName}ScaffoldLayout({ children }: WrapperProps) {
   return (
     <ScaffoldLayout
       title="${pluralPascalName}"

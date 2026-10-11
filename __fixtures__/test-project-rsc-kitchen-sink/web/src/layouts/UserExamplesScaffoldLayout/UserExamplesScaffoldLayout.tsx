@@ -1,12 +1,8 @@
+import type { WrapperProps } from '@cedarjs/router'
+
 import ScaffoldLayout from '../ScaffoldLayout/ScaffoldLayout'
 
-type UserExamplesScaffoldLayoutProps = {
-  children: React.ReactNode
-}
-
-function UserExamplesScaffoldLayout({
-  children,
-}: UserExamplesScaffoldLayoutProps) {
+function UserExamplesScaffoldLayout({ children }: WrapperProps) {
   return (
     <ScaffoldLayout
       title="UserExamples"

@@ -1,10 +1,8 @@
+import type { WrapperProps } from '@cedarjs/router'
+
 import ScaffoldLayout from '../ScaffoldLayout/ScaffoldLayout'
 
-type EmptyUsersScaffoldLayoutProps = {
-  children: React.ReactNode
-}
-
-function EmptyUsersScaffoldLayout({ children }: EmptyUsersScaffoldLayoutProps) {
+function EmptyUsersScaffoldLayout({ children }: WrapperProps) {
   return (
     <ScaffoldLayout
       title="EmptyUsers"

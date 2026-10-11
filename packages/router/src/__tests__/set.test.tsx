@@ -175,9 +175,7 @@ test('renders layout components that give props to other layouts', async () => {
   `)
 })
 
-test('does not pass Set props to wrappers, and warns about them', async () => {
-  const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-
+test('does not pass Set props to wrappers', async () => {
   const PropsWrapper = (props: Record<string, unknown>) => (
     <div>
       <p>Props: {Object.keys(props).sort().join(',')}</p>
@@ -201,11 +199,6 @@ test('does not pass Set props to wrappers, and warns about them', async () => {
   await waitFor(() => screen.getByText('ChildA'))
 
   expect(screen.getByText('Props: children')).toBeInTheDocument()
-  expect(consoleWarnSpy).toHaveBeenCalledWith(
-    expect.stringContaining('Unknown <Set> props: title.'),
-  )
-
-  consoleWarnSpy.mockRestore()
 })
 
 describe('Navigating Sets', () => {

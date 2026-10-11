@@ -265,13 +265,11 @@ export default ScaffoldLayout
 `;
 
 exports[`custom templates > creates a scaffold specific layout 1`] = `
-"import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
+"import type { WrapperProps } from '@cedarjs/router'
 
-type PostsScaffoldLayoutProps = {
-  children: React.ReactNode
-}
+import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
 
-function PostsScaffoldLayout({ children }: PostsScaffoldLayoutProps) {
+function PostsScaffoldLayout({ children }: WrapperProps) {
   return (
     <ScaffoldLayout
       title="Posts"
@@ -2812,13 +2810,11 @@ export default NewPostPage
 `;
 
 exports[`in typescript mode > creates a scaffold specific layout 1`] = `
-"import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
+"import type { WrapperProps } from '@cedarjs/router'
 
-type PostsScaffoldLayoutProps = {
-  children: React.ReactNode
-}
+import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
 
-function PostsScaffoldLayout({ children }: PostsScaffoldLayoutProps) {
+function PostsScaffoldLayout({ children }: WrapperProps) {
   return (
     <ScaffoldLayout
       title="Posts"

@@ -203,10 +203,10 @@ the wrapped routes as `children`, and no other props. Props on a Set are only
 the Set's own props: `wrap`, `prerender`, `whileLoadingPage`, and the
 authentication props `unauthenticated`, `roles` and `whileLoadingAuth` (with
 `<PrivateSet>`, or with the deprecated `private` prop on `<Set>`). TypeScript
-reports an error for any other prop, and in development the router logs a
-warning about them. `Set`, `PrivateSet` and `Private` take no type argument, and
-`WrapperType` (exported from `@cedarjs/router`) is the type of a component in
-`wrap`, without a type argument.
+reports an error for any other prop. `Set`, `PrivateSet` and `Private` take no
+type argument. `@cedarjs/router` exports `WrapperProps`, the props a component
+in `wrap` gets (`children`), and `WrapperType`, the type of such a component,
+without a type argument.
 
 `yarn cedar g scaffold post` generates a `PostsScaffoldLayout` that renders the
 shared `ScaffoldLayout` with the title and links for posts, and wraps the
@@ -220,13 +220,11 @@ upgrade until they're fixed. For each of them, create a layout component that
 renders the wrapper with those props, and use it in `wrap`:
 
 ```tsx title="web/src/layouts/PostsScaffoldLayout/PostsScaffoldLayout.tsx"
+import type { WrapperProps } from '@cedarjs/router'
+
 import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
 
-type PostsScaffoldLayoutProps = {
-  children: React.ReactNode
-}
-
-function PostsScaffoldLayout({ children }: PostsScaffoldLayoutProps) {
+function PostsScaffoldLayout({ children }: WrapperProps) {
   return (
     <ScaffoldLayout
       title="Posts"
