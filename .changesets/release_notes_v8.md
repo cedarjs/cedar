@@ -245,6 +245,5 @@ export default PostsScaffoldLayout
 +<Set wrap={PostsScaffoldLayout}>
 ```
 
-For a Set with several wrappers, give each layout component only the props
-that wrapper uses. `WrapperProps` is available in Cedar v7.x too, so you can
-make this change before upgrading.
+`WrapperProps` is available in Cedar v7.x too, so you can make this change
+before upgrading.
