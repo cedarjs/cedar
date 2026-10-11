@@ -39,8 +39,8 @@ export type Scalars = {
   Date: { input: Date | string; output: Date | string; }
   DateTime: { input: Date | string; output: Date | string; }
   File: { input: File; output: File; }
-  JSON: { input: Prisma.JsonValue; output: Prisma.JsonValue; }
-  JSONObject: { input: Prisma.JsonObject; output: Prisma.JsonObject; }
+  JSON: { input: Prisma.InputJsonValue; output: Prisma.JsonValue; }
+  JSONObject: { input: Prisma.InputJsonObject; output: Prisma.JsonObject; }
   Time: { input: Date | string; output: Date | string; }
 };
 
@@ -277,9 +277,9 @@ export interface JSONObjectScalarConfig extends GraphQLScalarTypeConfig<Resolver
 }
 
 export type MutationResolvers<ContextType = CedarGraphQLContext, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
-  createTodo?: Resolver<Maybe<ResolversTypes['Todo']>, ParentType, ContextType, RequireFields<MutationcreateTodoArgs, 'body'>>;
-  renameTodo?: Resolver<Maybe<ResolversTypes['Todo']>, ParentType, ContextType, RequireFields<MutationrenameTodoArgs, 'body' | 'id'>>;
-  updateTodoStatus?: Resolver<Maybe<ResolversTypes['Todo']>, ParentType, ContextType, RequireFields<MutationupdateTodoStatusArgs, 'id' | 'status'>>;
+  createTodo: Resolver<Maybe<ResolversTypes['Todo']>, ParentType, ContextType, RequireFields<MutationcreateTodoArgs, 'body'>>;
+  renameTodo: Resolver<Maybe<ResolversTypes['Todo']>, ParentType, ContextType, RequireFields<MutationrenameTodoArgs, 'body' | 'id'>>;
+  updateTodoStatus: Resolver<Maybe<ResolversTypes['Todo']>, ParentType, ContextType, RequireFields<MutationupdateTodoStatusArgs, 'id' | 'status'>>;
 };
 
 export type MutationRelationResolvers<ContextType = CedarGraphQLContext, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
@@ -289,11 +289,11 @@ export type MutationRelationResolvers<ContextType = CedarGraphQLContext, ParentT
 };
 
 export type QueryResolvers<ContextType = CedarGraphQLContext, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  cedar?: OptArgsResolverFn<Maybe<ResolversTypes['Cedar']>, ParentType, ContextType>;
-  currentUser?: OptArgsResolverFn<Maybe<ResolversTypes['JSON']>, ParentType, ContextType>;
-  redwood?: OptArgsResolverFn<Maybe<ResolversTypes['Redwood']>, ParentType, ContextType>;
-  todos?: OptArgsResolverFn<Maybe<Array<Maybe<ResolversTypes['Todo']>>>, ParentType, ContextType>;
-  todosCount?: OptArgsResolverFn<ResolversTypes['Int'], ParentType, ContextType>;
+  cedar: OptArgsResolverFn<Maybe<ResolversTypes['Cedar']>, ParentType, ContextType>;
+  currentUser: OptArgsResolverFn<Maybe<ResolversTypes['JSON']>, ParentType, ContextType>;
+  redwood: OptArgsResolverFn<Maybe<ResolversTypes['Redwood']>, ParentType, ContextType>;
+  todos: OptArgsResolverFn<Maybe<Array<Maybe<ResolversTypes['Todo']>>>, ParentType, ContextType>;
+  todosCount: OptArgsResolverFn<ResolversTypes['Int'], ParentType, ContextType>;
 };
 
 export type QueryRelationResolvers<ContextType = CedarGraphQLContext, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {

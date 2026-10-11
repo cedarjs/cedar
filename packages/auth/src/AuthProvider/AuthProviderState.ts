@@ -4,7 +4,7 @@ export type AuthProviderState<TUser, TClient = unknown> = {
   loading: boolean
   isAuthenticated: boolean
   userMetadata: null | TUser
-  currentUser: null | CurrentUser
+  currentUser: CurrentUser
   hasError: boolean
   error?: Error
   client?: TClient

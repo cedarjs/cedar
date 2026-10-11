@@ -57,8 +57,12 @@ const ACTIVE_CONTENT_TYPES = new Set([
 ])
 
 export interface UploadPluginOptions {
-  /** Secret upload tokens and serve URLs are signed with. */
-  tokenSecret: string
+  /**
+   * Secret upload tokens and serve URLs are signed with. Usually
+   * `process.env.UPLOAD_TOKEN_SECRET`; the plugin throws a configuration
+   * error when it's missing.
+   */
+  tokenSecret: string | undefined
   /** The app's storage targets. */
   targets: StorageTargets
   db: UploadDatabase

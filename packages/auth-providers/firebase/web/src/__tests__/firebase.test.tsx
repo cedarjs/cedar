@@ -148,7 +148,7 @@ beforeEach(() => {
 function getFirebaseAuth(customProviderHooks?: {
   useCurrentUser?: () => Promise<CurrentUser>
   useHasRole?: (
-    currentUser: CurrentUser | null,
+    currentUser: CurrentUser,
   ) => (rolesToCheck: string | string[]) => boolean
 }) {
   const { useAuth, AuthProvider } = createAuth(
@@ -236,7 +236,7 @@ describe('firebaseAuth', () => {
   })
 
   it('can specify custom hasRole function', async () => {
-    function useHasRole(currentUser: CurrentUser | null) {
+    function useHasRole(currentUser: CurrentUser) {
       return (rolesToCheck: string | string[]) => {
         if (!currentUser || typeof rolesToCheck !== 'string') {
           return false
