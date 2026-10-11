@@ -429,8 +429,16 @@ export const generateViteClientTypesDirective = () => {
 function generateStubStorybookTypes() {
   const stubStorybookTypesFileContent = `\
 declare module '@storybook/react' {
-  export type Meta<T = any> = any
-  export type StoryObj<T = any> = any
+  // Loose stand-ins for when Storybook isn't installed. \`render\` is spelled
+  // out so that its parameters are typed in stories, which keeps them valid
+  // with \`noImplicitAny\`
+  interface StubStoryAnnotations {
+    [key: string]: any
+    render?: (args: any, context: any) => any
+  }
+
+  export type Meta<T = any> = StubStoryAnnotations
+  export type StoryObj<T = any> = StubStoryAnnotations
 }
 `
 

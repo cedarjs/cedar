@@ -1,7 +1,7 @@
 import type { FastifyRequest } from 'fastify'
 
 import { getAuthenticationContext } from '@cedarjs/api'
-import type { Decoder } from '@cedarjs/api'
+import type { Decoded, Decoder } from '@cedarjs/api'
 
 /** The identity an upload route resolves for a request. */
 export interface UploadRequestUser {
@@ -21,7 +21,7 @@ export interface CreateUploadAuthenticatorOptions {
    * receives the decoded session exactly as the GraphQL server passes it.
    */
   getCurrentUser: (
-    decoded: unknown,
+    decoded: Decoded,
     raw: { type: string; schema: string; token: string },
     req: { event: Request; request: Request },
   ) => Promise<unknown>
