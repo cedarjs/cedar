@@ -141,9 +141,7 @@ const Routes = () => {
 
 ### Layouts with props
 
-The router renders every component in `wrap` with the wrapped Routes as `children`, and no other props. `<Set>` itself only accepts its own props: `wrap`, `prerender`, `whileLoadingPage`, and the authentication props `unauthenticated`, `roles` and `whileLoadingAuth` (with `<PrivateSet>`, or with the deprecated `private` prop on `<Set>`). TypeScript reports an error for any other prop.
-
-To use a layout that needs props, create a layout component that renders it with those props, and use that component in `wrap`:
+The router renders every component in `wrap` with the wrapped Routes as `children`, and no other props. To use a layout that needs props, create a layout component that renders it with those props, and use that component in `wrap`:
 
 ```jsx title="web/src/layouts/DarkMainLayout/DarkMainLayout.jsx"
 import MainLayout from 'src/layouts/MainLayout'
@@ -160,10 +158,6 @@ export default DarkMainLayout
   <Route path="/" page={HomePage} name="home" />
 </Set>
 ```
-
-Each layout component says exactly which props it gives which layout, and TypeScript checks those props like it does in any other component. This is what the scaffold generator does too: `yarn cedar g scaffold post` creates a `PostsScaffoldLayout` that renders the shared `ScaffoldLayout` with the title and links for posts.
-
-A component in `wrap` can have optional props, but not required ones (other than `children`), because the router doesn't give it any.
 
 ### `PrivateSet`
 
