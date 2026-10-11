@@ -70,14 +70,14 @@ const removeLayoutImport = ({
   path?: string
 }): string => {
   const { importName, importPath } = getScaffoldLayoutNames(name, scaffoldPath)
-  const importLayout = `import ${importName} from '${importPath}'`
   const routesPath = getPaths().web.routes
   const routesContent = readFile(routesPath).toString()
 
-  const newRoutesContent = routesContent.replace(
-    new RegExp(`\\s*${importLayout}`),
-    '',
+  // Matches the import with either quote style and an optional semicolon
+  const importLayout = new RegExp(
+    `\\s*import ${importName} from (['"])${importPath}\\1;?`,
   )
+  const newRoutesContent = routesContent.replace(importLayout, '')
 
   writeFile(routesPath, newRoutesContent, { overwriteExisting: true })
 

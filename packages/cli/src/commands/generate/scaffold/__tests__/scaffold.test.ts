@@ -1180,3 +1180,59 @@ describe('custom templates', () => {
     ).toMatchSnapshot()
   })
 })
+
+describe('custom layout templates', () => {
+  let tsFiles: Record<string, string>
+  let originalCedarCwd: string | undefined
+
+  beforeAll(async () => {
+    originalCedarCwd = process.env.CEDAR_CWD
+    process.env.CEDAR_CWD = '/path/to/project'
+
+    vol.fromJSON(
+      {
+        'redwood.toml': '',
+        'generatorTemplates/web/scaffold/layouts/ScaffoldLayout.tsx.template':
+          "import './ScaffoldLayout.css'\nexport default function CustomScaffoldLayout() { return null }",
+        'generatorTemplates/web/scaffold/layouts/ScaffoldLayout.css.template':
+          '.custom-scaffold { color: green; }',
+      },
+      process.env.CEDAR_CWD,
+    )
+
+    tsFiles = await scaffoldHandler.files({
+      force: false,
+      docs: false,
+      model: 'Post',
+      typescript: true,
+      tests: true,
+      nestScaffoldByModel: true,
+    })
+  })
+
+  afterAll(() => {
+    vol.reset()
+    process.env.CEDAR_CWD = originalCedarCwd
+  })
+
+  test('creates every file in the custom layouts directory', () => {
+    const layoutDir = '/path/to/project/web/src/layouts/ScaffoldLayout'
+
+    expect(
+      tsFiles[path.normalize(`${layoutDir}/ScaffoldLayout.tsx`)],
+    ).toContain('CustomScaffoldLayout')
+    expect(
+      tsFiles[path.normalize(`${layoutDir}/ScaffoldLayout.css`)],
+    ).toContain('.custom-scaffold')
+  })
+
+  test('falls back to the default scaffold specific layout', () => {
+    expect(
+      tsFiles[
+        path.normalize(
+          '/path/to/project/web/src/layouts/PostsScaffoldLayout/PostsScaffoldLayout.tsx',
+        )
+      ],
+    ).toContain('PostsScaffoldLayout')
+  })
+})

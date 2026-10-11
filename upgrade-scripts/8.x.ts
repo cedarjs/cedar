@@ -133,6 +133,15 @@ function findSetsWithWrapperPropsInFile(
         const props: string[] = []
 
         for (const attribute of node.attributes) {
+          // A spread can carry props for the wrappers, and which props it
+          // holds isn't known statically, so it's always reported
+          if (attribute.type === 'JSXSpreadAttribute') {
+            props.push(
+              `{...${code.slice(attribute.argument.start, attribute.argument.end)}}`,
+            )
+            continue
+          }
+
           if (
             attribute.type !== 'JSXAttribute' ||
             attribute.name.type !== 'JSXIdentifier'

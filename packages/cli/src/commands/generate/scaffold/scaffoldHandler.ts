@@ -601,26 +601,48 @@ const layoutFiles = async (
       },
     )
 
-    fileList[outputPath] = generateTypescript
-      ? template
-      : await transformTSToJS(outputPath, template)
+    fileList[outputPath] =
+      generateTypescript || !outputPath.endsWith('.jsx')
+        ? template
+        : await transformTSToJS(outputPath, template)
   }
 
   const sharedLayoutDir = path.join(getPaths().web.layouts, 'ScaffoldLayout')
-  const sharedLayoutPath = path.join(
-    sharedLayoutDir,
-    'ScaffoldLayout' + extension,
-  )
-  // Check all extensions, so `destroy scaffold` (which lists the files to
-  // delete with this function) never lists the shared layout when it exists
-  const sharedLayoutExists = ['.tsx', '.jsx', '.ts', '.js'].some((ext) =>
-    fs.existsSync(path.join(sharedLayoutDir, 'ScaffoldLayout' + ext)),
-  )
 
-  // Since the ScaffoldLayout is shared by all scaffolds, don't overwrite it by
-  // default
-  if (!sharedLayoutExists || force) {
-    await renderLayout('ScaffoldLayout.tsx.template', sharedLayoutPath)
+  // Every file in the (custom or default) layouts template directory goes into
+  // the shared ScaffoldLayout directory, except the per-model layout, which is
+  // rendered below
+  const sharedLayoutTemplates = fs
+    .readdirSync(
+      customOrDefaultTemplatePath({
+        side: 'web',
+        generator: 'scaffold',
+        templatePath: 'layouts',
+      }),
+    )
+    .filter((template) => template !== 'NamesScaffoldLayout.tsx.template')
+
+  for (const template of sharedLayoutTemplates) {
+    const isComponent = template.endsWith('.tsx.template')
+    const outputName = isComponent
+      ? template.replace(/\.tsx\.template$/, extension)
+      : template.replace(/\.template$/, '')
+    // For components, check all extensions, so `destroy scaffold` (which lists
+    // the files to delete with this function) never lists a shared layout that
+    // exists
+    const exists = isComponent
+      ? ['.tsx', '.jsx', '.ts', '.js'].some((ext) =>
+          fs.existsSync(
+            path.join(sharedLayoutDir, outputName.replace(extension, ext)),
+          ),
+        )
+      : fs.existsSync(path.join(sharedLayoutDir, outputName))
+
+    // The shared layout files are used by all scaffolds, so don't overwrite
+    // them by default
+    if (!exists || force) {
+      await renderLayout(template, path.join(sharedLayoutDir, outputName))
+    }
   }
 
   const { directoryName, pathParts } = getScaffoldLayoutNames(
@@ -698,9 +720,10 @@ const pageFiles = async (
       },
     )
 
-    fileList[outputPath] = generateTypescript
-      ? template
-      : await transformTSToJS(outputPath, template)
+    fileList[outputPath] =
+      generateTypescript || !outputPath.endsWith('.jsx')
+        ? template
+        : await transformTSToJS(outputPath, template)
   }
 
   return fileList
@@ -770,9 +793,10 @@ const componentFiles = async (
       },
     )
 
-    fileList[outputPath] = generateTypescript
-      ? template
-      : await transformTSToJS(outputPath, template)
+    fileList[outputPath] =
+      generateTypescript || !outputPath.endsWith('.jsx')
+        ? template
+        : await transformTSToJS(outputPath, template)
   }
 
   return fileList

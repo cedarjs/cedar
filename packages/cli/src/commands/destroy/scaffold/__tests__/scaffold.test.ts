@@ -307,6 +307,35 @@ describe('rw destroy scaffold', () => {
         ].join('\n'),
       )
     })
+    test('removes a double-quoted layout import', async () => {
+      fs.writeFileSync(
+        getPaths().web.routes,
+        [
+          'import { Router, Route } from "@cedarjs/router";',
+          'import PostsScaffoldLayout from "src/layouts/PostsScaffoldLayout";',
+          '',
+          'const Routes = () => <Router />',
+        ].join('\n'),
+      )
+
+      const t = tasks({
+        model: 'Post',
+        tests: false,
+        nestScaffoldByModel: true,
+      })
+      t.options.renderer = 'silent'
+
+      // Removing the layout import
+      await t.tasks[3].run()
+
+      expect(fs.readFileSync(getPaths().web.routes, 'utf-8')).toEqual(
+        [
+          'import { Router, Route } from "@cedarjs/router";',
+          '',
+          'const Routes = () => <Router />',
+        ].join('\n'),
+      )
+    })
   })
 
   describe('destroy namespaced scaffold post', () => {

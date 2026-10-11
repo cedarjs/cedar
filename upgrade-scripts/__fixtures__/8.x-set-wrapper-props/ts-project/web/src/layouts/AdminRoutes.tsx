@@ -7,3 +7,11 @@ export const adminRoutes = (
     <Route path="/admin/users" page={UsersPage} name="users" />
   </Set>
 )
+
+const layoutProps = { level: 3 }
+
+export const reportRoutes = (
+  <Set wrap={AdminLayout} {...layoutProps}>
+    <Route path="/admin/reports" page={ReportsPage} name="reports" />
+  </Set>
+)
