@@ -3,12 +3,7 @@ import '@cedarjs/auth'
 
 import { getCurrentUser } from '../../../api/src/lib/auth.js'
 
-// getCurrentUser() usually returns null when no user is found, but
-// currentUser is only set for logged in users, so the user type itself never
-// includes null
-export type InferredCurrentUser = NonNullable<
-  Awaited<ReturnType<typeof getCurrentUser>>
->
+export type InferredCurrentUser = Awaited<ReturnType<typeof getCurrentUser>>
 
 type UndefinedRoles = {
   /**

@@ -12,6 +12,6 @@ export const user: QueryResolvers['user'] = ({ id }) => {
 
 export const User: UserRelationResolvers = {
   posts: (_obj, { root }) => {
-    return db.user.findUniqueOrThrow({ where: { id: root.id } }).posts()
+    return db.user.findUnique({ where: { id: root?.id } }).posts()
   },
 }

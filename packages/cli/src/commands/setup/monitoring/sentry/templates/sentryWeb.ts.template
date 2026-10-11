@@ -1,12 +1,9 @@
 import * as Sentry from '@sentry/react'
 
-const sentryDsn =
-  typeof process === 'undefined' ? undefined : process.env?.SENTRY_DSN
-
 let dsn = ''
 let environment = 'development'
 
-if (!sentryDsn) {
+if (typeof process === 'undefined' || !process.env?.SENTRY_DSN) {
   console.error(
     'Missing SENTRY_DSN environment variable. Did you forget to add it to ' +
       'your cedar.toml (or redwood.toml) in `includeEnvironmentVariables`?'
@@ -20,14 +17,14 @@ if (!sentryDsn) {
   `)
   console.error('Sentry is disabled for now')
 } else {
-  dsn = sentryDsn
-  environment = process.env.NODE_ENV ?? 'development'
+  dsn = process.env.SENTRY_DSN
+  environment = process.env.NODE_ENV
 }
 
 Sentry.init({
   dsn,
   environment,
-  integrations: [Sentry.browserTracingIntegration()],
+  integrations: [ Sentry.browserTracingIntegration() ],
   tracesSampleRate: 1.0,
 })
 

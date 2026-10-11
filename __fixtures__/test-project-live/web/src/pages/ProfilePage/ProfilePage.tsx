@@ -10,10 +10,6 @@ const ProfilePage = () => {
     return <p>Loading...</p>
   }
 
-  if (!currentUser) {
-    return <p>Not logged in</p>
-  }
-
   return (
     <>
       <Metadata title="Profile" description="Profile page" og />

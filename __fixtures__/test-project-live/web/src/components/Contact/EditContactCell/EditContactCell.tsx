@@ -1,7 +1,6 @@
 import type {
   EditContactById,
   UpdateContactInput,
-  UpdateContactMutation,
   UpdateContactMutationVariables,
 } from 'types/graphql'
 
@@ -29,7 +28,7 @@ export const QUERY: TypedDocumentNode<EditContactById> = gql`
 `
 
 const UPDATE_CONTACT_MUTATION: TypedDocumentNode<
-  UpdateContactMutation,
+  EditContactById,
   UpdateContactMutationVariables
 > = gql`
   mutation UpdateContactMutation($id: Int!, $input: UpdateContactInput!) {
@@ -63,15 +62,18 @@ export const Success = ({ contact }: CellSuccessProps<EditContactById>) => {
     }
   )
 
-  const onSave = (input: UpdateContactInput) => {
-    updateContact({ variables: { id: contact.id, input } })
+  const onSave = (
+    input: UpdateContactInput,
+    id: EditContactById['contact']['id']
+  ) => {
+    updateContact({ variables: { id, input } })
   }
 
   return (
     <div className="rw-segment">
       <header className="rw-segment-header">
         <h2 className="rw-heading rw-heading-secondary">
-          Edit Contact {contact.id}
+          Edit Contact {contact?.id}
         </h2>
       </header>
       <div className="rw-segment-main">

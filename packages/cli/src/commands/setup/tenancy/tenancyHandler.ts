@@ -65,7 +65,7 @@ const SIGNUP_SNIPPET = `
 
     await ensureDefaultOrganization({
       currentUser: user,
-      invitationToken: userAttributes?.invitationToken,
+      invitationToken: userAttributes.invitationToken,
     })
 
     return user

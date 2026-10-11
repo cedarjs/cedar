@@ -7,15 +7,7 @@ export class MemcachedClient extends BaseClient {
   servers
   options
 
-  /**
-   * @param servers - The memcached servers to connect to. When this is
-   * undefined memjs falls back to the `MEMCACHIER_SERVERS` and
-   * `MEMCACHE_SERVERS` environment variables, and then to `localhost:11211`
-   */
-  constructor(
-    servers: string | undefined,
-    options?: ClientOptions & ServerOptions,
-  ) {
+  constructor(servers: string, options?: ClientOptions & ServerOptions) {
     super()
     this.servers = servers
     this.options = options

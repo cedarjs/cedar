@@ -12,6 +12,6 @@ type Story = StoryObj<typeof WaterfallPage>
 
 export const Primary: Story = {
   render: (args) => {
-    return <WaterfallPage {...args} id={42} />
+    return <WaterfallPage id={42} {...args} />
   },
 }

@@ -7,24 +7,14 @@ export type WrapperType<WTProps> = (
   },
 ) => ReactElement | null
 
-/**
- * The components passed to `wrap`. They get the props forwarded by the Set
- * plus its `children`.
- */
-type SetWrapper<P> = (
-  props: P & {
-    children: ReactNode
-  },
-) => ReactElement | null
-
-interface SetOwnProps<P> {
+type SetProps<P> = P & {
   /**
    * P is the interface for the props that are forwarded to the wrapper
    * components. TypeScript will most likely infer this for you, but if you
    * need to you can specify it yourself in your JSX like so:
    *   <Set<{theme: string}> wrap={ThemableLayout} theme="dark">
    */
-  wrap?: SetWrapper<P> | SetWrapper<P>[]
+  wrap?: WrapperType<P> | WrapperType<P>[]
   /**
    *`Routes` nested in a `<Set>` with `private` specified require
    * authentication. When a user is not authenticated and attempts to visit
@@ -53,13 +43,6 @@ interface SetOwnProps<P> {
 }
 
 /**
- * `P` is inferred from the `wrap` components only. The props the Set forwards
- * are then checked against `P`, so string props like `titleTo="posts"` keep
- * their literal types and can be checked against route names.
- */
-type SetProps<P> = NoInfer<P> & SetOwnProps<P>
-
-/**
  * TypeScript will often infer the type of the props you can forward to the
  * wrappers for you, but if you need to you can specify it yourself in your
  * JSX like so:
@@ -71,8 +54,8 @@ export function Set<WrapperProps>(props: SetProps<WrapperProps>) {
   return <>{props.children}</>
 }
 
-type PrivateSetProps<P> = NoInfer<P> &
-  Omit<SetOwnProps<P>, 'private' | 'unauthenticated'> & {
+type PrivateSetProps<P> = P &
+  Omit<SetProps<P>, 'private' | 'unauthenticated'> & {
     /** The page name where a user will be redirected when not authenticated */
     unauthenticated: string
   }

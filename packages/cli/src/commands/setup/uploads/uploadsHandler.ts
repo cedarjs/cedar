@@ -53,12 +53,6 @@ const S3_CLIENT = `
 export const s3Client = new S3Client({
   region: process.env.AWS_REGION,
 })
-
-const s3Bucket = process.env.S3_BUCKET_UPLOADS
-
-if (!s3Bucket) {
-  throw new Error('Set S3_BUCKET_UPLOADS in .env to use the S3 storage target')
-}
 `
 
 const TARGET_BLOCKS: Record<TargetChoice, string> = {
@@ -76,7 +70,7 @@ const TARGET_BLOCKS: Record<TargetChoice, string> = {
   s3: `  // Files uploaded straight from the browser to S3 with presigned URLs.
   files: createS3Provider({
     client: s3Client,
-    bucket: s3Bucket,
+    bucket: process.env.S3_BUCKET_UPLOADS,
     region: process.env.AWS_REGION,
     keyPrefix: 'uploads/',
   }),

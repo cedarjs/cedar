@@ -1,4 +1,3 @@
-import type { Decoded } from '@cedarjs/api'
 import { parseJWT } from '@cedarjs/api'
 import { AuthenticationError, ForbiddenError } from '@cedarjs/graphql-server'
 
@@ -29,8 +28,12 @@ type RedwoodUser = Record<string, unknown> & { roles?: string[] }
  * @returns RedwoodUser
  */
 export const getCurrentUser = async (
-  decoded: Decoded
-): Promise<RedwoodUser | null> => {
+  decoded,
+  /* eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars */
+  { token, type },
+  /* eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars */
+  { event, context }
+): Promise<RedwoodUser> => {
   if (!decoded) {
     return null
   }

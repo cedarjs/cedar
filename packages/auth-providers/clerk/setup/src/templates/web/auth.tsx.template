@@ -47,13 +47,6 @@ const ClerkProviderWrapper = ({
 export const AuthProvider = ({ children }: Props) => {
   const publishableKey = process.env.CLERK_PUBLISHABLE_KEY
 
-  if (!publishableKey) {
-    throw new Error(
-      'Missing CLERK_PUBLISHABLE_KEY. Set it in your .env file and add it to ' +
-        '`includeEnvironmentVariables` in cedar.toml'
-    )
-  }
-
   return (
     <ClerkRwAuthProvider>
       <ClerkProviderWrapper clerkOptions={{ publishableKey }}>

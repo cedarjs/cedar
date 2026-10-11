@@ -7,7 +7,7 @@ import requireMembership from './requireMembership.js'
  * selects more fields than these tests need.
  */
 const asCurrentUser = (user: { id: string; memberships?: unknown[] }) =>
-  user as unknown as NonNullable<typeof context.currentUser>
+  user as unknown as typeof context.currentUser
 
 describe('requireMembership directive', () => {
   it('declares the directive sdl as schema, with the correct name', () => {

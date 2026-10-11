@@ -7,10 +7,7 @@ export const fastField = async () => {
   return 'I am fast'
 }
 
-export const slowField = async (
-  _: unknown,
-  { waitFor = 5000 }: { waitFor?: number }
-) => {
+export const slowField = async (_, { waitFor = 5000 }) => {
   logger.debug('waiting on slowField')
   await wait(waitFor)
   return 'I am slow'

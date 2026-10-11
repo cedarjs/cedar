@@ -37,7 +37,7 @@ export const handler = async (
           memberships: [],
         },
 
-        invitationToken: userAttributes?.invitationToken,
+        invitationToken: userAttributes.invitationToken,
       })
 
       return user

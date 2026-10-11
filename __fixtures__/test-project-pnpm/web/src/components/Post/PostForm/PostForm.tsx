@@ -1,4 +1,4 @@
-import type { EditPostById, CreatePostInput } from 'types/graphql'
+import type { EditPostById, UpdatePostInput } from 'types/graphql'
 
 import type { RWGqlError } from '@cedarjs/forms'
 import {
@@ -14,14 +14,14 @@ type FormPost = NonNullable<EditPostById['post']>
 
 interface PostFormProps {
   post?: EditPostById['post']
-  onSave: (data: CreatePostInput) => void
-  error?: RWGqlError
+  onSave: (data: UpdatePostInput, id?: FormPost['id']) => void
+  error: RWGqlError
   loading: boolean
 }
 
 const PostForm = (props: PostFormProps) => {
   const onSubmit = (data: FormPost) => {
-    props.onSave(data)
+    props.onSave(data, props?.post?.id)
   }
 
   return (
