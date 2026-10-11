@@ -108,11 +108,17 @@ const removeSetImport = (): string => {
     return 'Skipping removal of Set import in Routes.{jsx,tsx}'
   }
 
-  const newRoutesContent = removeNamedImport(
-    routesContent,
-    '@cedarjs/router',
-    'Set',
-  )
+  let newRoutesContent: string
+
+  try {
+    newRoutesContent = removeNamedImport(
+      routesContent,
+      '@cedarjs/router',
+      'Set',
+    )
+  } catch {
+    return "Skipping removal of Set import, Routes.{jsx,tsx} couldn't be parsed"
+  }
 
   if (newRoutesContent === routesContent) {
     return 'No Set import from @cedarjs/router found in Routes.{jsx,tsx}'

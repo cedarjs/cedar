@@ -249,5 +249,6 @@ export default PostsScaffoldLayout
 ```
 
 For a Set with several wrappers, give each layout component only the props
-that wrapper uses. This change works with Cedar v7 too, so you can make it
-before upgrading.
+that wrapper uses. `WrapperProps` is new in v8. To make this change on Cedar v7,
+before upgrading, type the layout's props as `{ children: React.ReactNode }`
+instead, and switch to `WrapperProps` after the upgrade.
