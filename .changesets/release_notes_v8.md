@@ -172,3 +172,36 @@ npx @tailwindcss/upgrade --config ./web/config/tailwind.config.cjs
 
 See Tailwind's [upgrade guide](https://tailwindcss.com/docs/upgrade-guide) for
 the changes v4 makes to utilities and configuration.
+
+## TypeScript strict mode in new projects
+
+New TypeScript projects created with `yarn create cedar-app` have TypeScript's
+`strict` mode turned on in `web/tsconfig.json`, `api/tsconfig.json` and
+`scripts/tsconfig.json`. The code Cedar's generators and setup commands write
+type-checks with `strict` on.
+
+Existing projects aren't changed: your tsconfig files keep their current
+settings. To turn strict mode on in an existing project, add
+`"strict": true` to `compilerOptions` in each of those tsconfig files, then run
+`yarn cedar g types` and `yarn cedar type-check`. Code generated before v8 may
+need a few changes; see
+[TypeScript Strict Mode](https://cedarjs.com/docs/typescript/strict-mode) for
+the common ones.
+
+Code generated into a project without strict mode keeps working as before.
+
+A few generated types are more precise, which strict mode relies on. Without
+strict mode they make no difference in most projects:
+
+- `QueryResolvers` and `MutationResolvers` fields are required properties, so
+  service functions typed with them (`QueryResolvers['posts']`) aren't
+  possibly `undefined` when you call them in tests
+- On the api side, `JSON` and `JSONObject` inputs are typed as Prisma's
+  `InputJsonValue` and `InputJsonObject`, the types Prisma accepts for `Json`
+  fields
+- The `CurrentUser` type doesn't include `null` when `getCurrentUser` can
+  return `null`
+- `<Set wrap={...}>` and `<PrivateSet wrap={...}>` infer the forwarded props
+  from the wrapper components, so props like `titleTo="posts"` are checked
+  against the wrapper's prop types. Passing a prop the wrapper components
+  don't accept is a type error

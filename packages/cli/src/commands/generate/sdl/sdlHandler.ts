@@ -22,7 +22,11 @@ import {
   getEnum,
   verifyModelName,
 } from '../../../lib/schemaHelpers.js'
-import { redactedModelFields, relationsForModel } from '../helpers.js'
+import {
+  DEFAULT_IGNORE_FIELDS_FOR_INPUT,
+  redactedModelFields,
+  relationsForModel,
+} from '../helpers.js'
 import { files as serviceFiles } from '../service/serviceHandler.js'
 import { templateForFile } from '../yargsHandlerHelpers.js'
 
@@ -31,8 +35,6 @@ import {
   missingRelatedModels,
   writeFilesWithStubsTask,
 } from './stubFiles.js'
-
-const DEFAULT_IGNORE_FIELDS_FOR_INPUT = ['createdAt', 'updatedAt']
 
 const missingIdConsoleMessage = () => {
   const line1 =

@@ -1,4 +1,4 @@
-import type { Edit${singularPascalName}By${pascalIdName}, Update${singularPascalName}Input } from 'types/graphql'
+import type { Edit${singularPascalName}By${pascalIdName}, Create${singularPascalName}Input } from 'types/graphql'
 
 import type { RWGqlError } from '@cedarjs/forms'
 import {
@@ -48,8 +48,8 @@ type Form${singularPascalName} = NonNullable<Edit${singularPascalName}By${pascal
 
 interface ${singularPascalName}FormProps {
   ${singularCamelName}?: Edit${singularPascalName}By${pascalIdName}['${singularCamelName}']
-  onSave: (data: Update${singularPascalName}Input, ${idName}?: Form${singularPascalName}['${idName}']) => void
-  error: RWGqlError
+  onSave: (data: Create${singularPascalName}Input) => void
+  error?: RWGqlError
   loading: boolean
 }
 
@@ -70,7 +70,8 @@ const ${singularPascalName}Form = (props: ${singularPascalName}FormProps) => {
       }
     <% } %>
     <% if (column.isEnum && !column.isList && !column.isRequired) { %>
-      if (data.${column.name} === '') {
+      // The "None" option has an empty value
+      if (!data.${column.name}) {
         data.${column.name} = null
       }
     <% } %>
@@ -80,7 +81,7 @@ const ${singularPascalName}Form = (props: ${singularPascalName}FormProps) => {
       }
     <% } %>
   <% }) %>
-    props.onSave(data, props?.${singularCamelName}?.${idName})
+    props.onSave(data)
   }
 
   return (
@@ -136,7 +137,7 @@ const ${singularPascalName}Form = (props: ${singularPascalName}FormProps) => {
         <% } else { %>
           <${column.component}
             name="${column.name}"
-            ${column.defaultProp}={${column.deserializeFunction && column.deserializeFunction + '('}props.${singularCamelName}?.<%= column.name %>${column.deserializeFunction && ')'}}
+            ${column.defaultProp}={${column.deserializeFunction && column.deserializeFunction + '('}props.${singularCamelName}?.<%= column.name %>${column.deserializeFunction && ')'}<%= !column.deserializeFunction && !column.isRequired ? ' ?? undefined' : '' %>}
             className="rw-input"
             errorClassName="rw-input rw-input-error"
             <%= !column.validation ? '' : `validation=${column.validation}` %>

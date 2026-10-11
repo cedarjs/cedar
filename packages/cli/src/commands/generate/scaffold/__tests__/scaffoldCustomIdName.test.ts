@@ -68,6 +68,9 @@ describe('support custom @id name', () => {
 
     const cell = files[path.normalize(customIdFieldEditCellPath)]
     expect(cell).toContain('query EditCustomIdFieldByUuid($uuid: String!)')
+    expect(cell).toContain(
+      'updateCustomIdField({ variables: { uuid: customIdField.uuid, input } })',
+    )
   })
 
   test('creates a component with the custom id name', async () => {
@@ -78,14 +81,6 @@ describe('support custom @id name', () => {
     expect(cell).toContain('DeleteCustomIdFieldMutation($uuid: String!)')
     expect(cell).toContain('deleteCustomIdField(uuid: $uuid)')
     expect(cell).toContain('deleteCustomIdField({ variables: { uuid } })')
-  })
-
-  test('creates a form with the custom id name', async () => {
-    const customIdFieldFormPath =
-      '/path/to/project/web/src/components/CustomIdField/CustomIdFieldForm/CustomIdFieldForm.tsx'
-
-    const cell = files[path.normalize(customIdFieldFormPath)]
-    expect(cell).toContain('props.onSave(data, props?.customIdField?.uuid)')
   })
 
   test('creates a sdl with the custom id name', async () => {
