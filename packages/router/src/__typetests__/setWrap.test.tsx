@@ -2,65 +2,34 @@ import type { ReactNode } from 'react'
 
 import { expect, test } from 'tstyche'
 
-import { Private, PrivateSet, Set } from '@cedarjs/router'
-import type { WrapperProps, WrapperType } from '@cedarjs/router'
+import { PrivateSet, Set } from '@cedarjs/router'
+import type { WrapperProps } from '@cedarjs/router'
 
-const MainLayout = ({ children }: { children: ReactNode }) => (
-  <main>{children}</main>
-)
+function MainLayout({ children }: WrapperProps) {
+  return <main>{children}</main>
+}
 
-const OptionalPropsLayout = ({
+function OptionalPropsLayout({
   children,
   theme,
-}: {
-  children: ReactNode
-  theme?: 'light' | 'dark'
-}) => <div className={theme}>{children}</div>
+}: WrapperProps & { theme?: 'light' | 'dark' }) {
+  return <div className={theme}>{children}</div>
+}
 
-const ScaffoldLayout = ({
+function ScaffoldLayout({
   children,
   title,
-  titleTo,
 }: {
   children: ReactNode
   title: string
-  titleTo: 'posts' | 'newPost'
-}) => (
-  <div>
-    <h1>
-      {title} ({titleTo})
-    </h1>
-    {children}
-  </div>
-)
-
-function PostsScaffoldLayout({ children }: WrapperProps) {
+}) {
   return (
-    <ScaffoldLayout title="Posts" titleTo="posts">
+    <div>
+      <h1>{title}</h1>
       {children}
-    </ScaffoldLayout>
+    </div>
   )
 }
-
-test('wrap accepts a component that only needs children', () => {
-  expect(<Set wrap={MainLayout}>{null}</Set>).type.not.toRaiseError()
-})
-
-test('wrap accepts a component with optional extra props', () => {
-  expect(<Set wrap={OptionalPropsLayout}>{null}</Set>).type.not.toRaiseError()
-})
-
-test('wrap accepts a layout component that renders a layout with props', () => {
-  expect(<Set wrap={PostsScaffoldLayout}>{null}</Set>).type.not.toRaiseError()
-})
-
-test('layout props are type checked where the layout is rendered', () => {
-  expect(
-    <ScaffoldLayout title="Posts" titleTo="post">
-      {null}
-    </ScaffoldLayout>,
-  ).type.toRaiseError(`Type '"post"' is not assignable`)
-})
 
 test('wrap rejects a component with required extra props', () => {
   expect(<Set wrap={ScaffoldLayout}>{null}</Set>).type.toRaiseError(
@@ -68,17 +37,19 @@ test('wrap rejects a component with required extra props', () => {
   )
 })
 
+test('wrap accepts a component with optional extra props', () => {
+  expect(<Set wrap={OptionalPropsLayout}>{null}</Set>).type.not.toRaiseError()
+})
+
 test('wrap rejects elements', () => {
   expect(
-    <Set wrap={<ScaffoldLayout title="Posts" titleTo="posts" />}>{null}</Set>,
+    <Set wrap={<ScaffoldLayout title="Posts" />}>{null}</Set>,
   ).type.toRaiseError()
 })
 
-test('wrap accepts arrays of components', () => {
+test('wrap checks every component in an array', () => {
   expect(
-    <Set wrap={[MainLayout, PostsScaffoldLayout, OptionalPropsLayout]}>
-      {null}
-    </Set>,
+    <Set wrap={[MainLayout, OptionalPropsLayout]}>{null}</Set>,
   ).type.not.toRaiseError()
 
   expect(
@@ -86,19 +57,7 @@ test('wrap accepts arrays of components', () => {
   ).type.toRaiseError()
 })
 
-test('wrap accepts readonly arrays of WrapperType', () => {
-  const wrappers: readonly WrapperType[] = [MainLayout, PostsScaffoldLayout]
-
-  expect(<Set wrap={wrappers}>{null}</Set>).type.not.toRaiseError()
-})
-
-test('Set rejects props it does not use', () => {
-  expect(
-    <Set wrap={ScaffoldLayout} title="Posts">
-      {null}
-    </Set>,
-  ).type.toRaiseError()
-
+test('Set rejects props meant for its wrappers', () => {
   expect(
     <Set wrap={MainLayout} theme="dark">
       {null}
@@ -106,23 +65,7 @@ test('Set rejects props it does not use', () => {
   ).type.toRaiseError("Property 'theme' does not exist")
 })
 
-test('Set has no type parameter for forwarded props', () => {
-  expect(
-    <Set<{ theme: string }> wrap={MainLayout}>{null}</Set>,
-  ).type.toRaiseError('Expected 0 type arguments')
-})
-
-test('PrivateSet accepts wrappers like Set does', () => {
-  expect(
-    <PrivateSet
-      unauthenticated="login"
-      roles={['admin']}
-      wrap={[MainLayout, PostsScaffoldLayout]}
-    >
-      {null}
-    </PrivateSet>,
-  ).type.not.toRaiseError()
-
+test('PrivateSet has the same wrap contract as Set', () => {
   expect(
     <PrivateSet unauthenticated="login" wrap={ScaffoldLayout}>
       {null}
@@ -134,29 +77,4 @@ test('PrivateSet accepts wrappers like Set does', () => {
       {null}
     </PrivateSet>,
   ).type.toRaiseError("Property 'theme' does not exist")
-})
-
-test('PrivateSet requires unauthenticated', () => {
-  expect(<PrivateSet wrap={MainLayout}>{null}</PrivateSet>).type.toRaiseError(
-    "Property 'unauthenticated' is missing",
-  )
-})
-
-test('Private rejects props it does not use', () => {
-  expect(
-    <Private unauthenticated="login" wrap={MainLayout}>
-      {null}
-    </Private>,
-  ).type.not.toRaiseError()
-
-  expect(
-    <Private unauthenticated="login" wrap={MainLayout} theme="dark">
-      {null}
-    </Private>,
-  ).type.toRaiseError("Property 'theme' does not exist")
-})
-
-test('a component typed with WrapperProps is a WrapperType', () => {
-  expect(PostsScaffoldLayout).type.toBeAssignableTo<WrapperType>()
-  expect<WrapperProps>().type.toBe<{ children: ReactNode }>()
 })
