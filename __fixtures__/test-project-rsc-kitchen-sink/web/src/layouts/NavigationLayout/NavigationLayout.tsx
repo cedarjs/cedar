@@ -11,13 +11,9 @@ import './NavigationLayout.css'
 
 type NavigationLayoutProps = {
   children?: React.ReactNode
-  rnd?: number
 }
 
-const NavigationLayout = ({
-  children,
-  rnd = Math.random(),
-}: NavigationLayoutProps) => {
+const NavigationLayout = ({ children }: NavigationLayoutProps) => {
   const { pathname } = getLocation()
   const { isAuthenticated } = getAuthState()
 
@@ -73,7 +69,6 @@ const NavigationLayout = ({
       </nav>
       {!isAuthRoute && !isBlogRoute && (
         <>
-          <div id="rnd">{Math.round(rnd * 100)}</div>
           <ReadFileServerCell />
           <p>Layout end</p>
           <hr />

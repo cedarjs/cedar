@@ -22,10 +22,6 @@ test('Check that homepage has content fully rendered from the server, without JS
   // Appears when the navigation layout has successfully rendered
   await page.waitForSelector('main')
 
-  // The NavigationLayout should have a random number in it
-  const rnd = await page.locator('div#rnd').innerHTML()
-  expect(rnd).toMatch(/\s*\d+\s*/)
-
   // expect there to only be one h1 heading element on the page
   await expect(page.locator('h1')).toHaveCount(1)
   await expect(page.locator('h1').first()).toHaveText('Hello Anonymous!!')
