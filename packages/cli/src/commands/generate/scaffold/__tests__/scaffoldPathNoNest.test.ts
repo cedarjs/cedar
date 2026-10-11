@@ -38,8 +38,8 @@ describe('admin/Post', () => {
   })
 
   describe('creates the correct files with the correct imports', () => {
-    test('returns exactly 19 files', () => {
-      expect(Object.keys(filesLower).length).toEqual(19)
+    test('returns exactly 20 files', () => {
+      expect(Object.keys(filesLower).length).toEqual(20)
     })
 
     // Layout
@@ -47,6 +47,14 @@ describe('admin/Post', () => {
       expect(filesLower).toHaveProperty([
         path.normalize(
           '/path/to/project/web/src/layouts/ScaffoldLayout/ScaffoldLayout.jsx',
+        ),
+      ])
+    })
+
+    test('creates a scaffold specific layout', async () => {
+      expect(filesLower).toHaveProperty([
+        path.normalize(
+          '/path/to/project/web/src/layouts/Admin/PostsScaffoldLayout/PostsScaffoldLayout.jsx',
         ),
       ])
     })
@@ -373,8 +381,8 @@ describe('Admin/Post', () => {
   })
 
   describe('creates the correct files with the correct imports', () => {
-    test('returns exactly 19 files', () => {
-      expect(Object.keys(filesUpper).length).toEqual(19)
+    test('returns exactly 20 files', () => {
+      expect(Object.keys(filesUpper).length).toEqual(20)
     })
 
     // Layout
@@ -383,6 +391,14 @@ describe('Admin/Post', () => {
       expect(filesUpper).toHaveProperty([
         path.normalize(
           '/path/to/project/web/src/layouts/ScaffoldLayout/ScaffoldLayout.jsx',
+        ),
+      ])
+    })
+
+    test('creates a scaffold specific layout', async () => {
+      expect(filesUpper).toHaveProperty([
+        path.normalize(
+          '/path/to/project/web/src/layouts/Admin/PostsScaffoldLayout/PostsScaffoldLayout.jsx',
         ),
       ])
     })

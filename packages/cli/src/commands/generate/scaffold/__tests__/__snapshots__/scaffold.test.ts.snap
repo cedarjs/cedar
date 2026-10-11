@@ -264,6 +264,28 @@ export default ScaffoldLayout
 "
 `;
 
+exports[`custom templates > creates a scaffold specific layout 1`] = `
+"import type { WrapperProps } from '@cedarjs/router'
+
+import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
+
+function PostsScaffoldLayout({ children }: WrapperProps) {
+  return (
+    <ScaffoldLayout
+      title="Posts"
+      titleTo="posts"
+      buttonLabel="New Post"
+      buttonTo="newPost"
+    >
+      {children}
+    </ScaffoldLayout>
+  )
+}
+
+export default PostsScaffoldLayout
+"
+`;
+
 exports[`custom templates > creates an sdl 1`] = `
 "export const schema = gql\`
   type Post {
@@ -1043,6 +1065,26 @@ const NewPostPage = () => {
 }
 
 export default NewPostPage
+"
+`;
+
+exports[`in javascript (default) mode > creates a scaffold specific layout 1`] = `
+"import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
+
+function PostsScaffoldLayout({ children }) {
+  return (
+    <ScaffoldLayout
+      title="Posts"
+      titleTo="posts"
+      buttonLabel="New Post"
+      buttonTo="newPost"
+    >
+      {children}
+    </ScaffoldLayout>
+  )
+}
+
+export default PostsScaffoldLayout
 "
 `;
 
@@ -2764,6 +2806,28 @@ const NewPostPage = () => {
 }
 
 export default NewPostPage
+"
+`;
+
+exports[`in typescript mode > creates a scaffold specific layout 1`] = `
+"import type { WrapperProps } from '@cedarjs/router'
+
+import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
+
+function PostsScaffoldLayout({ children }: WrapperProps) {
+  return (
+    <ScaffoldLayout
+      title="Posts"
+      titleTo="posts"
+      buttonLabel="New Post"
+      buttonTo="newPost"
+    >
+      {children}
+    </ScaffoldLayout>
+  )
+}
+
+export default PostsScaffoldLayout
 "
 `;
 

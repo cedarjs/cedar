@@ -232,11 +232,12 @@ web/src/pages/Post/
   NewPostPage.tsx     ← new
   PostsPage.tsx       ← list
 
-web/src/layouts/ScaffoldLayout/ScaffoldLayout.tsx  ← shared layout (if not exists)
-web/src/lib/formatters.tsx                         ← formatting helpers
-web/src/scaffold.css                               ← styles
+web/src/layouts/ScaffoldLayout/ScaffoldLayout.tsx            ← shared layout (if not exists)
+web/src/layouts/PostsScaffoldLayout/PostsScaffoldLayout.tsx  ← renders ScaffoldLayout with the Post values
+web/src/lib/formatters.tsx                                   ← formatting helpers
+web/src/scaffold.css                                         ← styles
 
-Routes.tsx ← 4 routes added inside <Set wrap={ScaffoldLayout} title="Posts" ...>
+Routes.tsx ← 4 routes added inside <Set wrap={PostsScaffoldLayout}>
 ```
 
 ## PACKAGES (behavioral)
