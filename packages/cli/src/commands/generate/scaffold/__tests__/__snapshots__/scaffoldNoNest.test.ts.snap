@@ -419,7 +419,7 @@ export default NewPostPage
 exports[`in javascript (default) mode > creates a scaffold specific layout 1`] = `
 "import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
 
-const PostsScaffoldLayout = ({ children }) => {
+function PostsScaffoldLayout({ children }) {
   return (
     <ScaffoldLayout
       title="Posts"
@@ -1705,7 +1705,7 @@ type PostsScaffoldLayoutProps = {
   children: React.ReactNode
 }
 
-const PostsScaffoldLayout = ({ children }: PostsScaffoldLayoutProps) => {
+function PostsScaffoldLayout({ children }: PostsScaffoldLayoutProps) {
   return (
     <ScaffoldLayout
       title="Posts"

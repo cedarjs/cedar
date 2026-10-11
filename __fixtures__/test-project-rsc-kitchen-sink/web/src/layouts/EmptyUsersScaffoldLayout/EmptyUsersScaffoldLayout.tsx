@@ -4,9 +4,7 @@ type EmptyUsersScaffoldLayoutProps = {
   children: React.ReactNode
 }
 
-const EmptyUsersScaffoldLayout = ({
-  children,
-}: EmptyUsersScaffoldLayoutProps) => {
+function EmptyUsersScaffoldLayout({ children }: EmptyUsersScaffoldLayoutProps) {
   return (
     <ScaffoldLayout
       title="EmptyUsers"

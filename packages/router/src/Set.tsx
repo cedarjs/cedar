@@ -9,9 +9,9 @@ import React from 'react'
  * To render a layout with props, create a component that renders it with
  * those props, and use that component in `wrap`:
  *
- *   const PostsScaffoldLayout = ({ children }: { children: ReactNode }) => (
- *     <ScaffoldLayout title="Posts" titleTo="posts">{children}</ScaffoldLayout>
- *   )
+ *   function PostsScaffoldLayout({ children }: { children: ReactNode }) {
+ *     return <ScaffoldLayout title="Posts" titleTo="posts">{children}</ScaffoldLayout>
+ *   }
  *
  *   <Set wrap={PostsScaffoldLayout}>
  */

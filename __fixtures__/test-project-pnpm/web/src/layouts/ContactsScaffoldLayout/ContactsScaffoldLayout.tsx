@@ -4,7 +4,7 @@ type ContactsScaffoldLayoutProps = {
   children: React.ReactNode
 }
 
-const ContactsScaffoldLayout = ({ children }: ContactsScaffoldLayoutProps) => {
+function ContactsScaffoldLayout({ children }: ContactsScaffoldLayoutProps) {
   return (
     <ScaffoldLayout
       title="Contacts"

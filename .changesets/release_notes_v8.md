@@ -202,7 +202,7 @@ type PostsScaffoldLayoutProps = {
   children: React.ReactNode
 }
 
-const PostsScaffoldLayout = ({ children }: PostsScaffoldLayoutProps) => {
+function PostsScaffoldLayout({ children }: PostsScaffoldLayoutProps) {
   return (
     <ScaffoldLayout
       title="Posts"

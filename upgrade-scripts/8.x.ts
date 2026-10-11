@@ -263,16 +263,18 @@ async function main() {
         'create a layout component that renders the wrapper with the props\n' +
         'it needs, and use that layout component in `wrap` instead. This is\n' +
         'what the scaffold generator does:\n\n' +
-        '    const PostsScaffoldLayout = ({ children }) => (\n' +
-        '      <ScaffoldLayout\n' +
-        '        title="Posts"\n' +
-        '        titleTo="posts"\n' +
-        '        buttonLabel="New Post"\n' +
-        '        buttonTo="newPost"\n' +
-        '      >\n' +
-        '        {children}\n' +
-        '      </ScaffoldLayout>\n' +
-        '    )\n\n' +
+        '    function PostsScaffoldLayout({ children }) {\n' +
+        '      return (\n' +
+        '        <ScaffoldLayout\n' +
+        '          title="Posts"\n' +
+        '          titleTo="posts"\n' +
+        '          buttonLabel="New Post"\n' +
+        '          buttonTo="newPost"\n' +
+        '        >\n' +
+        '          {children}\n' +
+        '        </ScaffoldLayout>\n' +
+        '      )\n' +
+        '    }\n\n' +
         '    <Set wrap={PostsScaffoldLayout}>',
       'Then remove the props from the Set. This works with your current\n' +
         'Cedar version too, so make the change before you upgrade, and run\n' +

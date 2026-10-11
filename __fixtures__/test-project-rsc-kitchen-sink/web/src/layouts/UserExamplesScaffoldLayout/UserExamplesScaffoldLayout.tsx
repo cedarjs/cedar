@@ -4,9 +4,9 @@ type UserExamplesScaffoldLayoutProps = {
   children: React.ReactNode
 }
 
-const UserExamplesScaffoldLayout = ({
+function UserExamplesScaffoldLayout({
   children,
-}: UserExamplesScaffoldLayoutProps) => {
+}: UserExamplesScaffoldLayoutProps) {
   return (
     <ScaffoldLayout
       title="UserExamples"

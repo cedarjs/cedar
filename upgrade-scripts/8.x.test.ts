@@ -68,7 +68,7 @@ describe('8.x: Sets with props for their wrappers', () => {
       '    wrap: (none)',
       '    props: title',
     ])
-    assert.match(stdout, /const PostsScaffoldLayout = /)
+    assert.match(stdout, /function PostsScaffoldLayout\(/)
   })
 
   test('reports Sets with props in JS files', () => {

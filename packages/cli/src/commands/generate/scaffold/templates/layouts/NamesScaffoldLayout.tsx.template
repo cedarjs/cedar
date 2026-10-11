@@ -4,9 +4,9 @@ type ${pluralPascalName}ScaffoldLayoutProps = {
   children: React.ReactNode
 }
 
-const ${pluralPascalName}ScaffoldLayout = ({
+function ${pluralPascalName}ScaffoldLayout({
   children,
-}: ${pluralPascalName}ScaffoldLayoutProps) => {
+}: ${pluralPascalName}ScaffoldLayoutProps) {
   return (
     <ScaffoldLayout
       title="${pluralPascalName}"

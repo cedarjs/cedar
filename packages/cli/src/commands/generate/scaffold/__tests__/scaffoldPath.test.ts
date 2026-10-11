@@ -67,7 +67,7 @@ describe('admin/post', () => {
           )
         ]
 
-      expect(layout).toContain('const PostsScaffoldLayout = ')
+      expect(layout).toContain('function PostsScaffoldLayout(')
       expect(layout).toContain('title="Posts"')
       expect(layout).toContain('titleTo="adminPosts"')
       expect(layout).toContain('buttonLabel="New Post"')

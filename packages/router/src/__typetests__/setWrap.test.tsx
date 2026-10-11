@@ -34,11 +34,13 @@ const ScaffoldLayout = ({
   </div>
 )
 
-const PostsScaffoldLayout = ({ children }: { children: ReactNode }) => (
-  <ScaffoldLayout title="Posts" titleTo="posts">
-    {children}
-  </ScaffoldLayout>
-)
+function PostsScaffoldLayout({ children }: { children: ReactNode }) {
+  return (
+    <ScaffoldLayout title="Posts" titleTo="posts">
+      {children}
+    </ScaffoldLayout>
+  )
+}
 
 test('wrap accepts a component that only needs children', () => {
   expect(<Set wrap={MainLayout}>{null}</Set>).type.not.toRaiseError()

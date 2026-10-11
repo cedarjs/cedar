@@ -10,16 +10,18 @@ that needs props gets them from a small, self-contained layout component that
 renders it with those props hard-coded:
 
 ```tsx
-const PostsScaffoldLayout = ({ children }: { children: React.ReactNode }) => (
-  <ScaffoldLayout
-    title="Posts"
-    titleTo="posts"
-    buttonLabel="New Post"
-    buttonTo="newPost"
-  >
-    {children}
-  </ScaffoldLayout>
-)
+function PostsScaffoldLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <ScaffoldLayout
+      title="Posts"
+      titleTo="posts"
+      buttonLabel="New Post"
+      buttonTo="newPost"
+    >
+      {children}
+    </ScaffoldLayout>
+  )
+}
 
 <Set wrap={PostsScaffoldLayout}>
 ```

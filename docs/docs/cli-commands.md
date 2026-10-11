@@ -1063,7 +1063,7 @@ The scaffold generates two layouts. `ScaffoldLayout` is shared by all scaffolds,
 ```jsx title="./web/src/layouts/PostsScaffoldLayout/PostsScaffoldLayout.jsx"
 import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
 
-const PostsScaffoldLayout = ({ children }) => {
+function PostsScaffoldLayout({ children }) {
   return (
     <ScaffoldLayout
       title="Posts"

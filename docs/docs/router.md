@@ -148,7 +148,7 @@ To use a layout that needs props, create a layout component that renders it with
 ```jsx title="web/src/layouts/DarkMainLayout/DarkMainLayout.jsx"
 import MainLayout from 'src/layouts/MainLayout'
 
-const DarkMainLayout = ({ children }) => {
+function DarkMainLayout({ children }) {
   return <MainLayout theme="dark">{children}</MainLayout>
 }
 
