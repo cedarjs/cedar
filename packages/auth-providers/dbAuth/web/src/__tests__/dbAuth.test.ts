@@ -376,7 +376,7 @@ describe('dbAuth web client', () => {
   })
 
   it('can specify custom hasRole function', async () => {
-    function useHasRole(currentUser: CurrentUser | null) {
+    function useHasRole(currentUser: CurrentUser) {
       return (rolesToCheck: string | string[]) => {
         if (!currentUser || typeof rolesToCheck !== 'string') {
           return false

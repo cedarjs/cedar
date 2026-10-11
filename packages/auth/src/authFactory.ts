@@ -7,7 +7,7 @@ import { createUseAuth } from './useAuth.js'
 export type CustomProviderHooks = {
   useCurrentUser?: () => Promise<CurrentUser>
   useHasRole?: (
-    currentUser: CurrentUser | null,
+    currentUser: CurrentUser,
   ) => (rolesToCheck: string | string[]) => boolean
 }
 
@@ -48,7 +48,7 @@ export function createAuthentication<
   customProviderHooks?: {
     useCurrentUser?: () => Promise<CurrentUser>
     useHasRole?: (
-      currentUser: CurrentUser | null,
+      currentUser: CurrentUser,
     ) => (rolesToCheck: string | string[]) => boolean
   },
 ) {

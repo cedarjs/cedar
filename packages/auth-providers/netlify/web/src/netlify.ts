@@ -16,7 +16,7 @@ export function createAuth(
   customProviderHooks?: {
     useCurrentUser?: () => Promise<CurrentUser>
     useHasRole?: (
-      currentUser: CurrentUser | null,
+      currentUser: CurrentUser,
     ) => (rolesToCheck: string | string[]) => boolean
   },
 ) {

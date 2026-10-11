@@ -104,7 +104,7 @@ beforeEach(() => {
 function getClerkAuth(customProviderHooks?: {
   useCurrentUser?: () => Promise<CurrentUser>
   useHasRole?: (
-    currentUser: CurrentUser | null,
+    currentUser: CurrentUser,
   ) => (rolesToCheck: string | string[]) => boolean
 }) {
   const { useAuth, AuthProvider } = createAuth(customProviderHooks)
@@ -176,7 +176,7 @@ describe('Clerk', () => {
   })
 
   it('can specify custom hasRole function', async () => {
-    function useHasRole(currentUser: CurrentUser | null) {
+    function useHasRole(currentUser: CurrentUser) {
       return (rolesToCheck: string | string[]) => {
         if (!currentUser || typeof rolesToCheck !== 'string') {
           return false

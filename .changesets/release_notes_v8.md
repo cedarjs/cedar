@@ -198,8 +198,7 @@ non-nullable items (`tags: [String!]!`), because Prisma lists never contain
 ## More precise generated types
 
 A few of the types Cedar generates and exports are more precise. TypeScript's
-`strict` mode relies on them. Without strict mode they make no difference in
-most projects:
+`strict` mode relies on them.
 
 - `QueryResolvers` and `MutationResolvers` fields are required properties, so
   service functions typed with them (`QueryResolvers['posts']`) aren't
@@ -207,9 +206,22 @@ most projects:
 - On the api side, `JSON` and `JSONObject` inputs are typed as Prisma's
   `InputJsonValue` and `InputJsonObject`, the types Prisma accepts for `Json`
   fields
-- The `CurrentUser` type doesn't include `null` when `getCurrentUser` can
-  return `null`
+- `@cedarjs/auth` exports a new `LoggedInUser` type: the user
+  `getCurrentUser` returns when someone is logged in. `CurrentUser` is
+  `LoggedInUser | null`, matching what `getCurrentUser` returns.
+  `context.currentUser` on the api side is optional and can be `null`, so code
+  checks that someone is logged in before using it
 - `<Set wrap={...}>` and `<PrivateSet wrap={...}>` infer the forwarded props
   from the wrapper components, so props like `titleTo="posts"` are checked
   against the wrapper's prop types. Passing a prop the wrapper components
   don't accept is a type error
+
+### Upgrading
+
+- Where your code uses `CurrentUser` for a user that's known to be logged in,
+  use `LoggedInUser` instead. Without strict mode TypeScript ignores `null`, so
+  this only matters in projects with `strict` (or `strictNullChecks`) on
+- If you extend `CurrentUser` with `declare module '@cedarjs/auth'`, extend
+  `LoggedInUser` instead. `CurrentUser` is a type alias and can't be extended
+- `<Set>` and `<PrivateSet>`: remove props that none of the `wrap` components
+  accept, or add them to the wrapper's props
