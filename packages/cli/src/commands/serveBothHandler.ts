@@ -72,7 +72,11 @@ export const bothServerFileHandler = async (argv: ServeBothArgv) => {
       [
         {
           name: 'api',
-          command: `${formatRunBinCommand('node', [...getOTelImportArgs(), path.join('dist', 'server.js'), '--apiPort', String(argv.apiPort), '--apiHost', argv.apiHost, '--apiRootPath', apiRootPath])}`,
+          // The `--import` argument is a `file://` URL, which can contain
+          // characters that are special to the shell `concurrently` runs
+          // this command through (spaces are escaped, but `&`, `(`, `)`,
+          // `'`, `$` and `;` are not), so it has to be quoted.
+          command: `${formatRunBinCommand('node', [...getOTelImportArgs().map((arg) => `'${arg}'`), path.join('dist', 'server.js'), '--apiPort', String(argv.apiPort), '--apiHost', argv.apiHost, '--apiRootPath', apiRootPath])}`,
           cwd: getPaths().api.base,
           prefixColor: 'cyan',
         },

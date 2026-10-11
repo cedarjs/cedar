@@ -123,6 +123,11 @@ export const startWorkers = ({
 }) => {
   logger.warn(`Starting ${numWorkers.length} worker(s)...`)
 
+  // Computed once here instead of inside the `map` below, so `cedar.toml`
+  // isn't parsed and the setup file checked once per worker, and a missing
+  // setup file doesn't warn once per worker.
+  const otelImportArgs = getOTelImportArgs()
+
   return numWorkers.map(([index, id]) => {
     // list of args to send to the forked worker script
     const workerArgs = ['--index', index.toString(), '--id', id.toString()]
@@ -138,7 +143,7 @@ export const startWorkers = ({
       env: process.env,
       // The OpenTelemetry SDK setup must be loaded before the app's own
       // modules are imported, or the instrumentations can't patch them
-      execArgv: process.execArgv.concat(getOTelImportArgs()),
+      execArgv: process.execArgv.concat(otelImportArgs),
     })
 
     if (detach) {

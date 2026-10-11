@@ -1,6 +1,9 @@
 import ansis from 'ansis'
 
-import { getOTelImportArgs } from '@cedarjs/project-config'
+import {
+  getOTelSetupFileUrl,
+  isCLITelemetryActive,
+} from '@cedarjs/project-config'
 
 import { getWebHost, getWebPort, getAPIHost, getAPIPort } from './cliHelpers.js'
 import { apiDistServerFileExists } from './serverFile.js'
@@ -29,10 +32,18 @@ export async function handler(options: BothParsedOptions) {
 
   // The OpenTelemetry SDK setup must be imported before Fastify, Prisma and
   // the app's own modules are loaded, or the instrumentations can't patch
-  // them. Fastify and the server factories are imported afterwards for the
-  // same reason.
-  for (const arg of getOTelImportArgs()) {
-    await import(arg.slice('--import='.length))
+  // them. When this runs in its own process (`cedarjs-server`, started with
+  // the `--import` flag) the setup is already loaded, and importing it again
+  // is a no-op. When it runs inside the `cedar` CLI process (`cedar serve`
+  // without a server file), CLI telemetry may already have registered a
+  // global tracer provider, in which case the app's setup can't become the
+  // global provider and is skipped: its spans would be misrouted into the
+  // CLI's telemetry exporter. Fastify and the server factories are imported
+  // after the setup for the same reason.
+  const otelSetupFileUrl = getOTelSetupFileUrl()
+
+  if (otelSetupFileUrl !== undefined && !isCLITelemetryActive()) {
+    await import(otelSetupFileUrl)
   }
 
   const { redwoodFastifyWeb, coerceRootPath } =

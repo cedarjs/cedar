@@ -28,6 +28,13 @@ export async function startTelemetry() {
   }
   isStarted = true
 
+  // Mark this process as having the CLI's tracer provider registered
+  // globally, so in-process server launches know to skip importing the
+  // project's own OpenTelemetry setup file (it could not become the global
+  // provider here, and its spans would be misrouted into CLI telemetry).
+  // See `isCLITelemetryActive()` in `@cedarjs/project-config`.
+  globalThis.__CEDAR_CLI_TELEMETRY__ = true
+
   try {
     diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.ERROR)
 
