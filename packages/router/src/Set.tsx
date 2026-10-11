@@ -1,6 +1,20 @@
 import type { ReactElement, ReactNode } from 'react'
 import React from 'react'
 
+/**
+ * The props of a layout or other component in a `<Set wrap>` prop that only
+ * needs the wrapped routes, which it gets as `children`:
+ *
+ *   function MainLayout({ children }: WrapperProps) {
+ *     return <main>{children}</main>
+ *   }
+ *
+ *   <Set wrap={MainLayout}>
+ */
+export interface WrapperProps {
+  children: ReactNode
+}
+
 export type WrapperType<WTProps> = (
   props: Omit<WTProps, 'wrap' | 'children'> & {
     children: ReactNode
