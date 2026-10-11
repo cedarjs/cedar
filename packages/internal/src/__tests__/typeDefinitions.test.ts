@@ -295,7 +295,7 @@ test('generate test mock globals', () => {
       // vitest/globals here would conflict with those declarations, so only vi
       // is declared
       const vi: typeof _vi
-      const mockCurrentUser: (currentUser: InferredLoggedInUser) => void
+      const mockCurrentUser: (currentUser: InferredLoggedInUser | null) => void
       const mockGraphQLQuery: typeof _mockGraphQLQuery
       const mockGraphQLMutation: typeof _mockGraphQLMutation
     }
