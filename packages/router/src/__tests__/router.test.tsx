@@ -27,6 +27,7 @@ import {
 } from '../index.js'
 import { useParams } from '../params.js'
 import { Set } from '../Set.js'
+import type { WrapperProps } from '../Set.js'
 
 type UnknownAuthContextInterface = AuthContextInterface<
   unknown,
@@ -119,10 +120,6 @@ const mockUseAuth =
       hasRole: typeof hasRole === 'boolean' ? () => hasRole : hasRole,
     })
   }
-
-interface LayoutProps {
-  children: React.ReactNode
-}
 
 const HomePage = () => <h1>Home Page</h1>
 const LoginPage = () => <h1>Login Page</h1>
@@ -537,7 +534,7 @@ test('inits routes two private routes with a space in between and loads as expec
 })
 
 test('supports <Set>', async () => {
-  const GlobalLayout = ({ children }: LayoutProps) => (
+  const GlobalLayout = ({ children }: WrapperProps) => (
     <div>
       <h1>Global Layout</h1>
       {children}
@@ -568,7 +565,7 @@ test('supports <Set>', async () => {
 })
 
 test('can use named routes for navigating', async () => {
-  const MainLayout = ({ children }: LayoutProps) => {
+  const MainLayout = ({ children }: WrapperProps) => {
     return (
       <div>
         <h1>Main Layout</h1>
@@ -600,7 +597,7 @@ test('can use named routes for navigating', async () => {
 })
 
 test('renders only active path', async () => {
-  const AboutLayout = ({ children }: LayoutProps) => {
+  const AboutLayout = ({ children }: WrapperProps) => {
     return (
       <div>
         <h1>About Layout</h1>
@@ -610,7 +607,7 @@ test('renders only active path', async () => {
     )
   }
 
-  const LoginLayout = ({ children }: LayoutProps) => {
+  const LoginLayout = ({ children }: WrapperProps) => {
     return (
       <div>
         <h1>Login Layout</h1>
@@ -770,7 +767,7 @@ test('params should never be an empty object in Set', async () => {
     return <div>Param Page</div>
   }
 
-  const SetWithUseParams = ({ children }: LayoutProps) => {
+  const SetWithUseParams = ({ children }: WrapperProps) => {
     const params = useParams()
     expect(params).not.toEqual({})
     return <>{children}</>
@@ -795,7 +792,7 @@ test('params should never be an empty object in Set with waitFor (I)', async () 
     return <>documentId: {documentId}</>
   }
 
-  const SetWithUseParams = ({ children }: LayoutProps) => {
+  const SetWithUseParams = ({ children }: WrapperProps) => {
     const params = useParams()
     // 1st run: { documentId: '1' }
     // 2nd run: { documentId: '2' }
@@ -825,7 +822,7 @@ test('params should never be an empty object in Set without waitFor (II)', async
     return <>documentId: {documentId}</>
   }
 
-  const SetWithUseParams = ({ children }: LayoutProps) => {
+  const SetWithUseParams = ({ children }: WrapperProps) => {
     const params = useParams()
     // 1st run: { documentId: '1' }
     // 2nd run: { documentId: '2' }
@@ -855,7 +852,7 @@ test('Set is not rendered for unauthenticated user.', async () => {
     return null
   }
 
-  const SetWithUseParams = ({ children }: LayoutProps) => {
+  const SetWithUseParams = ({ children }: WrapperProps) => {
     // This should never be called. We should be redirected to login instead.
     expect(false).toBe(true)
     return <>{children}</>
@@ -888,7 +885,7 @@ test('Set is not rendered for unauthenticated user on direct navigation', async 
     return null
   }
 
-  const SetWithUseParams = ({ children }: LayoutProps) => {
+  const SetWithUseParams = ({ children }: WrapperProps) => {
     // This should never be called. We should be redirected to login instead.
     expect(false).toBe(true)
     return <>{children}</>
@@ -925,7 +922,7 @@ test('Private is an alias for Set private', async () => {
     </div>
   )
 
-  const DarkPrivateLayout = ({ children }: { children: React.ReactNode }) => (
+  const DarkPrivateLayout = ({ children }: WrapperProps) => (
     <PrivateLayout theme="dark">{children}</PrivateLayout>
   )
 
@@ -1228,7 +1225,7 @@ describe('Multiple nested private sets', () => {
     </div>
   )
 
-  const Level1Layout = ({ children }: { children: React.ReactNode }) => (
+  const Level1Layout = ({ children }: WrapperProps) => (
     <LevelLayout level="1">{children}</LevelLayout>
   )
 
@@ -1357,7 +1354,7 @@ describe('Multiple nested sets', () => {
     )
   }
 
-  const Level1DebugLayout = ({ children }: { children: React.ReactNode }) => (
+  const Level1DebugLayout = ({ children }: WrapperProps) => (
     <DebugLayout level="1" theme="blue">
       {children}
     </DebugLayout>

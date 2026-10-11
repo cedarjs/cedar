@@ -8,30 +8,28 @@ import { navigate } from '../history.js'
 import { Route } from '../Route.js'
 import { Router } from '../router.js'
 import { Set } from '../Set.js'
+import type { WrapperProps } from '../Set.js'
 
 // SETUP
-interface LayoutProps {
-  children: ReactNode
-}
 
 const ChildA = () => <h1>ChildA</h1>
 const ChildB = () => <h1>ChildB</h1>
 const ChildC = () => <h1>ChildC</h1>
-const GlobalLayout = ({ children }: LayoutProps) => (
+const GlobalLayout = ({ children }: WrapperProps) => (
   <div>
     <h1>Global Layout</h1>
     {children}
     <footer>This is a footer</footer>
   </div>
 )
-const CustomWrapper = ({ children }: LayoutProps) => (
+const CustomWrapper = ({ children }: WrapperProps) => (
   <div>
     <h1>Custom Wrapper</h1>
     {children}
     <p>Custom Wrapper End</p>
   </div>
 )
-const BLayout = ({ children }: LayoutProps) => (
+const BLayout = ({ children }: WrapperProps) => (
   <div>
     <h1>Layout for B</h1>
     {children}
@@ -112,7 +110,7 @@ test('renders layout components that give props to other layouts', async () => {
     </div>
   )
 
-  const PropWrapperTwo = ({ children }: LayoutProps) => (
+  const PropWrapperTwo = ({ children }: WrapperProps) => (
     <div>
       <h1>Prop Wrapper Two</h1>
       {children}
@@ -120,7 +118,7 @@ test('renders layout components that give props to other layouts', async () => {
     </div>
   )
 
-  const FrenchPropWrapper = ({ children }: LayoutProps) => (
+  const FrenchPropWrapper = ({ children }: WrapperProps) => (
     <PropWrapper propOne="une" propTwo="deux">
       {children}
     </PropWrapper>
@@ -209,7 +207,7 @@ describe('Navigating Sets', () => {
     const layoutOneMount = vi.fn()
     const layoutOneUnmount = vi.fn()
 
-    const Layout1 = ({ children }: LayoutProps) => {
+    const Layout1 = ({ children }: WrapperProps) => {
       React.useEffect(() => {
         // Called on mount and re-mount of this layout
         layoutOneMount()
@@ -258,7 +256,7 @@ describe('Navigating Sets', () => {
     const layoutOneMount = vi.fn()
     const layoutOneUnmount = vi.fn()
 
-    const Layout1 = ({ children }: LayoutProps) => {
+    const Layout1 = ({ children }: WrapperProps) => {
       React.useEffect(() => {
         // Called on mount and re-mount of this layout
         layoutOneMount()
