@@ -1,6 +1,6 @@
 import admin from 'firebase-admin'
 
-import type { Decoded } from '@cedarjs/api'
+import type { AuthContextPayload, Decoded } from '@cedarjs/api'
 import { AuthenticationError } from '@cedarjs/graphql-server'
 
 // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
@@ -24,7 +24,13 @@ const adminApp = admin.initializeApp({
  *
  * @see https://github.com/cedarjs/cedar/tree/main/packages/auth for examples
  */
-export const getCurrentUser = async (decoded: Decoded) => {
+export const getCurrentUser = async (
+  decoded: Decoded,
+  /* eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars */
+  { token, type }: AuthContextPayload[1],
+  /* eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars */
+  { event, context }: Partial<AuthContextPayload[2]> = {}
+) => {
   return decoded
 }
 

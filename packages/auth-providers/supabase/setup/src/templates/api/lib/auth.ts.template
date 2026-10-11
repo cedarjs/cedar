@@ -1,4 +1,4 @@
-import type { Decoded } from '@cedarjs/api'
+import type { AuthContextPayload, Decoded } from '@cedarjs/api'
 import { parseJWT } from '@cedarjs/api'
 import { AuthenticationError, ForbiddenError } from '@cedarjs/graphql-server'
 
@@ -29,7 +29,11 @@ type RedwoodUser = Record<string, unknown> & { roles?: string[] }
  * @returns RedwoodUser
  */
 export const getCurrentUser = async (
-  decoded: Decoded
+  decoded: Decoded,
+  /* eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars */
+  { token, type }: AuthContextPayload[1],
+  /* eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars */
+  { event, context }: Partial<AuthContextPayload[2]> = {}
 ): Promise<RedwoodUser | null> => {
   if (!decoded) {
     return null
