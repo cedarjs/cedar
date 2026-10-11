@@ -70,6 +70,18 @@ jobs:
         if: needs.detect-changes.outputs.code == 'true'
         run: yarn check
 
+      # docs/ is a separate Yarn project that Netlify installs with an
+      # immutable lockfile. This catches a docs/package.json change that isn't
+      # reflected in docs/yarn.lock before it breaks the docs deploy.
+      - name: 🔒 Check docs lockfile is up to date
+        working-directory: docs
+        run: |
+          yarn install --mode=update-lockfile
+          if ! git diff --exit-code yarn.lock; then
+            echo "::error::docs/yarn.lock is out of date. Run \`yarn install\` in docs/ and commit the result."
+            exit 1
+          fi
+
   build-lint-test:
     needs: detect-changes
     if: needs.detect-changes.outputs.code == 'true'
