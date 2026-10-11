@@ -604,3 +604,33 @@ describe('compound `@@id` models', () => {
     ).rejects.toThrow(/compound primary key/)
   })
 })
+
+describe('relation resolvers', () => {
+  const serviceContent = async (name: string, fileName: string) => {
+    const files = await serviceHandler.files({
+      ...getDefaultArgs(service.getDefaultOptions()),
+      typescript: true,
+      name,
+      crud: true,
+      tests: false,
+    })
+
+    return files[
+      path.normalize(
+        `/path/to/project/api/src/services/${fileName}/${fileName}.ts`,
+      )
+    ]
+  }
+
+  test('optional to-one relations return null for a missing parent', async () => {
+    expect(await serviceContent('Pet', 'pets')).toContain(
+      'return db.pet.findUnique({ where: { id: root.id } }).owner()',
+    )
+  })
+
+  test('list relations throw for a missing parent', async () => {
+    expect(await serviceContent('PetOwner', 'petOwners')).toContain(
+      'return db.petOwner.findUniqueOrThrow({ where: { id: root.id } }).pets()',
+    )
+  })
+})

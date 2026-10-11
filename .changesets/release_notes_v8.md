@@ -205,3 +205,5 @@ strict mode they make no difference in most projects:
   from the wrapper components, so props like `titleTo="posts"` are checked
   against the wrapper's prop types. Passing a prop the wrapper components
   don't accept is a type error
+- `yarn cedar g sdl` writes Prisma scalar and enum lists with non-nullable
+  items (`tags: [String!]!`), because Prisma lists never contain `null`

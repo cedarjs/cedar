@@ -172,6 +172,20 @@ export const relationsForModel = (model: Model | undefined) => {
     })
 }
 
+/**
+ * Returns the optional to-one relations of a model.
+ *
+ * The generated relation resolvers return `null` for these when the parent
+ * record doesn't exist, for example when a relation is selected from a
+ * `delete<Model>` mutation. Every other relation is non-nullable in the
+ * generated SDL, so its resolver throws instead.
+ */
+export const nullableRelationsForModel = (model: InputModel) => {
+  return model.fields
+    .filter((f) => f.kind === 'object' && !f.isList && !f.isRequired)
+    .map((f) => f.name)
+}
+
 // Returns only relations that are of datatype Int
 export const intForeignKeysForModel = (model: Model) => {
   return model.fields

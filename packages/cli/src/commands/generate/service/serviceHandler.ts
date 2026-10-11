@@ -9,6 +9,7 @@ import { getSchema, verifyModelName } from '../../../lib/schemaHelpers.js'
 import {
   DEFAULT_IGNORE_FIELDS_FOR_INPUT,
   nullableJsonFieldsInInput,
+  nullableRelationsForModel,
   redactedModelFields,
   relationsForModel,
   requiredFieldsInUpdateInput,
@@ -473,12 +474,14 @@ export const files = async ({
   let modelRelations: string[] | undefined
   let updateInputRequiredFields: string[] = []
   let nullableJsonFields: string[] = []
+  let nullableRelations: string[] = []
 
   const schemaResult = await getSchema(model)
 
   if (isServiceModel(schemaResult)) {
     updateInputRequiredFields = requiredFieldsInUpdateInput(schemaResult)
     nullableJsonFields = nullableJsonFieldsInInput(schemaResult)
+    nullableRelations = nullableRelationsForModel(schemaResult)
   }
 
   if (relations) {
@@ -500,6 +503,7 @@ export const files = async ({
       prismaImportSource,
       updateInputRequiredFields,
       nullableJsonFields,
+      nullableRelations,
       ...rest,
     },
   })

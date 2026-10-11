@@ -111,3 +111,16 @@ model PartStock {
 
   @@id([partId, warehouseId])
 }
+
+model Pet {
+  id      Int       @id @default(autoincrement())
+  name    String
+  ownerId Int?
+  owner   PetOwner? @relation(fields: [ownerId], references: [id])
+}
+
+model PetOwner {
+  id   Int    @id @default(autoincrement())
+  name String
+  pets Pet[]
+}

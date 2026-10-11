@@ -85,7 +85,7 @@ interface ModelSchema {
   documentation?: string
 }
 
-const modelFieldToSDL = ({
+export const modelFieldToSDL = ({
   field,
   required = true,
   docs = false,
@@ -109,7 +109,11 @@ const modelFieldToSDL = ({
   }
 
   const gqlType = prismaTypeToGraphqlType[field.type] || field.type
-  const type = field.isList ? `[${gqlType}]` : gqlType
+  // Prisma scalar and enum lists never contain null, so their items are
+  // non-nullable. Strict mode needs this for the generated inputs to match
+  // Prisma's input types
+  const listItemType = field.kind === 'object' ? gqlType : `${gqlType}!`
+  const type = field.isList ? `[${listItemType}]` : gqlType
   // lists and id fields are always required (lists can be empty, that's fine)
   const isRequired =
     (field.isRequired && required) || field.isList || field.isId

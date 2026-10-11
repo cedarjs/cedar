@@ -60,6 +60,6 @@ export const delete${singularPascalName}: MutationResolvers['delete${singularPas
 
 export const ${singularPascalName}: ${singularPascalName}RelationResolvers = {<% relations.forEach(relation => { %>
   ${relation}: (_obj, { root }) => {
-    return db.${singularCamelName}.findUniqueOrThrow({ where: { ${idWhereFromRoot} } }).${relation}()
+    return db.${singularCamelName}.findUnique<%= nullableRelations.includes(relation) ? '' : 'OrThrow' %>({ where: { ${idWhereFromRoot} } }).${relation}()
   },<% }) %>
 }<% } %>
