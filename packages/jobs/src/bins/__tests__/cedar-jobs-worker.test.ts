@@ -14,12 +14,14 @@ vi.mock('@cedarjs/cli-helpers/loadEnvFiles', () => {
 const mocks = vi.hoisted(() => {
   return {
     loadJobsManager: vi.fn(),
+    loadAllJobs: vi.fn(),
   }
 })
 
 vi.mock('../../loaders.js', () => {
   return {
     loadJobsManager: mocks.loadJobsManager,
+    loadAllJobs: mocks.loadAllJobs,
   }
 })
 
@@ -40,6 +42,7 @@ describe('processName', () => {
 describe('getWorker', () => {
   beforeEach(() => {
     vi.resetAllMocks()
+    mocks.loadAllJobs.mockResolvedValue([])
   })
 
   it('returns an instance of Worker', async () => {
@@ -106,6 +109,67 @@ describe('getWorker', () => {
       workoff: false,
       clear: false,
       processName: 'cedar-jobs-worker.*.0',
+    })
+  })
+
+  describe('syncing declared schedules', () => {
+    const managerWithJobs = () =>
+      new JobManager({
+        adapters: {
+          test: new MockAdapter(),
+        },
+        logger: mockLogger,
+        queues: ['default'] as const,
+        workers: [
+          {
+            adapter: 'test',
+            logger: mockLogger,
+            queue: '*',
+            count: 1,
+          },
+        ],
+      })
+
+    it('syncs before a long-running worker starts', async () => {
+      const manager = managerWithJobs()
+      mocks.loadJobsManager.mockResolvedValue(manager)
+      const spy = vi.spyOn(manager, 'syncSchedules').mockResolvedValue({
+        created: [],
+        updated: [],
+        removed: [],
+        unchanged: [],
+      })
+
+      await getWorker({ index: 0, id: 0, workoff: false, clear: false })
+
+      expect(spy).toHaveBeenCalledOnce()
+    })
+
+    it.each([
+      ['workoff', { workoff: true, clear: false }],
+      ['clear', { workoff: false, clear: true }],
+    ])("doesn't sync in %s mode", async (_mode, flags) => {
+      const manager = managerWithJobs()
+      mocks.loadJobsManager.mockResolvedValue(manager)
+      const spy = vi.spyOn(manager, 'syncSchedules')
+
+      await getWorker({ index: 0, id: 0, ...flags })
+
+      expect(spy).not.toHaveBeenCalled()
+    })
+
+    it("doesn't start the worker when the sync fails", async () => {
+      const manager = managerWithJobs()
+      mocks.loadJobsManager.mockResolvedValue(manager)
+      vi.spyOn(manager, 'syncSchedules').mockRejectedValue(
+        new Error('Sync failed'),
+      )
+      const spy = vi.spyOn(manager, 'createWorker')
+
+      await expect(
+        getWorker({ index: 0, id: 0, workoff: false, clear: false }),
+      ).rejects.toThrow('Sync failed')
+      expect(spy).not.toHaveBeenCalled()
     })
   })
 })

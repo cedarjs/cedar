@@ -33,6 +33,15 @@ export const DEFAULT_PRIORITY = 50
 export const DEFAULT_WAIT = 0
 export const DEFAULT_WAIT_UNTIL = null
 export const PROCESS_TITLE_PREFIX = 'cedar-jobs-worker'
+/** Job keys starting with this are reserved for keys Cedar creates itself */
+export const RESERVED_KEY_PREFIX = 'cedar:'
+/**
+ * Keys of stored declared schedules start with this, followed by the job's
+ * name and the schedule's own key: `cedar:schedule:ReportJob:nightly`
+ */
+export const SCHEDULE_KEY_PREFIX = `${RESERVED_KEY_PREFIX}schedule:`
+/** The key of a job's schedule when the job has one and it has no `key` */
+export const DEFAULT_SCHEDULE_KEY = 'default'
 // TODO: Change this to 'backgroundJob' in the next major release
 export const DEFAULT_MODEL_NAME = 'BackgroundJob'
 

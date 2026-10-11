@@ -5,7 +5,7 @@ import type {
   SchedulePayload,
 } from '../../adapters/BaseAdapter/BaseAdapter.js'
 import { BaseAdapter } from '../../adapters/BaseAdapter/BaseAdapter.js'
-import type { PrismaJob } from '../../adapters/PrismaAdapter/PrismaAdapter.js'
+import type { ScheduledPrismaJob } from '../../adapters/PrismaAdapter/PrismaAdapter.js'
 import { PrismaAdapter } from '../../adapters/PrismaAdapter/PrismaAdapter.js'
 import type { Adapters, BasicLogger, PossibleBaseJob } from '../../types.js'
 import { JobManager } from '../JobManager.js'
@@ -67,7 +67,7 @@ describe('JobManager adapters', () => {
     const later = jobs.createScheduler({ adapter: 'prisma' })
     const job = jobs.createJob({ queue: 'default', perform: () => {} })
 
-    expectTypeOf(later(job)).toEqualTypeOf<Promise<PrismaJob>>()
+    expectTypeOf(later(job)).toEqualTypeOf<Promise<ScheduledPrismaJob>>()
   })
 
   it('accepts a custom adapter with its own schedule() return type', () => {

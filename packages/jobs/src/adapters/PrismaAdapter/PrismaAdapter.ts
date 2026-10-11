@@ -5,10 +5,14 @@ import {
   DEFAULT_MODEL_NAME,
   MAX_RUNTIME_GRACE_PERIOD,
 } from '../../consts.js'
+import { CedarJSJobsError } from '../../errors.js'
 import type { BaseJob } from '../../types.js'
 import type {
   BaseAdapterOptions,
   SchedulePayload,
+  ScheduleDefinition,
+  SyncSchedulesOptions,
+  SyncSchedulesResult,
   FindArgs,
   SuccessOptions,
   ErrorOptions,
@@ -17,11 +21,13 @@ import type {
 } from '../BaseAdapter/BaseAdapter.js'
 import { BaseAdapter } from '../BaseAdapter/BaseAdapter.js'
 
-import { ModelNameError } from './errors.js'
+import { KeyColumnMissingError, ModelNameError } from './errors.js'
 
 export interface PrismaJob extends BaseJob {
   id: number
   handler: string
+  queue: string
+  priority: number
   /** Null once the job has completed or permanently failed */
   runAt: Date | null
   cron: string | null | undefined
@@ -33,7 +39,30 @@ export interface PrismaJob extends BaseJob {
   failedAt: Date | null
   createdAt: Date
   updatedAt: Date
+  /**
+   * The job's unique key. Only queued jobs and active recurring jobs hold
+   * their key, it's null once a worker has picked up a non-recurring job.
+   * Undefined when the model has no `key` column
+   */
+  key?: string | null
 }
+
+/** What `schedule()` returns: the stored job */
+export interface ScheduledPrismaJob extends PrismaJob {
+  /**
+   * `true` when the job was scheduled with a `key` and a job with that key
+   * was already queued. No new job was added, and this is the queued job
+   */
+  alreadyQueued: boolean
+}
+
+/**
+ * How many times `schedule()` and `syncSchedules()` retry when the job that
+ * holds a key releases it between their insert and their read. Each retry
+ * means another worker picked up (or removed) the job in that moment, so
+ * running out of retries takes a very busy key
+ */
+const MAX_KEY_RETRIES = 5
 
 interface PrismaAdapterDelegate {
   findFirst(args: Record<string, unknown>): Promise<any>
@@ -42,6 +71,8 @@ interface PrismaAdapterDelegate {
   update(args: Record<string, unknown>): Promise<unknown>
   create(args: Record<string, unknown>): Promise<unknown>
   deleteMany(args?: Record<string, unknown>): Promise<unknown>
+  /** Every Prisma delegate has it. Only `syncSchedules()` uses it */
+  findMany?(args: Record<string, unknown>): Promise<any[]>
 }
 
 // TODO: See if we can tighten up this interface later once we've moved to
@@ -102,6 +133,43 @@ function getActiveProvider(db: object) {
   }
 
   return provider
+}
+
+/** Whether `e` is Prisma's unique constraint violation error */
+function isUniqueViolation(e: unknown) {
+  return (
+    typeof e === 'object' && e !== null && 'code' in e && e.code === 'P2002'
+  )
+}
+
+/**
+ * Whether `e` is the error Prisma throws for a query that uses a `key` field
+ * the model doesn't have
+ */
+function isMissingKeyColumn(e: unknown) {
+  return (
+    e instanceof Error &&
+    e.name === 'PrismaClientValidationError' &&
+    /Unknown (argument|field) `key`/.test(e.message)
+  )
+}
+
+/**
+ * The `key: null` that releases a job's key, if it holds one. Spread into a
+ * write's `data`, so a model without a `key` column never sees the field
+ */
+function releaseKey(job: { key?: string | null }) {
+  return job.key != null ? { key: null } : {}
+}
+
+/**
+ * Turns a stored row into a job: the row plus the `name`, `path` and `args`
+ * stored in its `handler`
+ */
+function rowToJob(row: Omit<PrismaJob, 'name' | 'path' | 'args'>): PrismaJob {
+  const { name, path, args } = JSON.parse(row.handler)
+
+  return { ...row, name, path, args }
 }
 
 export interface PrismaAdapterOptions<
@@ -172,8 +240,10 @@ interface FailureData {
  */
 export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
   PrismaAdapterOptions<TDb>,
-  Promise<PrismaJob>
+  Promise<ScheduledPrismaJob>
 > {
+  override readonly supportsUniqueKeys = true
+
   db: TDb
   model: DelegateKey<TDb> | string
   accessor: PrismaAdapterDelegate
@@ -269,8 +339,9 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
     // Actually query the DB
     // TODO: there may be more optimized versions of the locking queries in
     // Postgres and MySQL
+    // The whole row is read (no `select`) so `key` is included only when the
+    // model has that column
     const job = await this.accessor.findFirst({
-      select: { id: true, attempts: true },
       where: whereWithQueue,
       orderBy: [{ priority: 'asc' }, { runAt: 'asc' }],
       take: 1,
@@ -284,21 +355,24 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
         AND: [...whereWithQueue.AND, { id: job.id }],
       })
 
-      // Update and increment the attempts count
+      // Update and increment the attempts count. A non-recurring job releases
+      // its unique key in the same write, so as soon as it's picked up a new
+      // job with the same key can be queued. A recurring job keeps its key:
+      // the same row is rescheduled after every run
       const { count } = await this.accessor.updateMany({
         where: whereWithQueueAndId,
         data: {
           lockedAt: new Date(),
           lockedBy: processName,
           attempts: job.attempts + 1,
+          ...(job.cron ? {} : releaseKey(job)),
         },
       })
 
       // Assuming the update worked, return the full details of the job
       if (count) {
         const data = await this.accessor.findFirst({ where: { id: job.id } })
-        const { name, path, args } = JSON.parse(data.handler)
-        return { ...data, name, path, args }
+        return rowToJob(data)
       }
     }
 
@@ -392,9 +466,17 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
         where: this.#claimedBy(job),
       })
     } else {
-      const data: { failedAt: Date; runAt: null; lastError?: string } = {
+      // A recurring job holds its key until here. Releasing it lets the job
+      // be scheduled again (for a declared schedule: by the next sync)
+      const data: {
+        failedAt: Date
+        runAt: null
+        lastError?: string
+        key?: null
+      } = {
         failedAt: new Date(),
         runAt: null,
+        ...releaseKey(job),
       }
 
       if (error) {
@@ -408,9 +490,16 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
     }
   }
 
-  // Schedules a job by creating a new record in the background job table.
-  // Returns the created job so that callers get access to its `id` (to cancel
-  // it later, poll its status, etc.)
+  /**
+   * Schedules a job by creating a new record in the background job table.
+   * Returns the created job so that callers get access to its `id` (to cancel
+   * it later, poll its status, etc.)
+   *
+   * With a `key`, the `key` column's unique constraint makes sure only one
+   * queued job holds the key, also when several processes schedule at once.
+   * If the insert hits the constraint, the job that holds the key is
+   * returned with `alreadyQueued: true` instead
+   */
   override async schedule({
     name,
     path,
@@ -419,22 +508,200 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
     cron,
     queue,
     priority,
-  }: SchedulePayload): Promise<PrismaJob> {
-    const data = await this.accessor.create({
-      data: {
-        handler: JSON.stringify({ name, path, args }),
-        runAt,
-        cron,
-        queue,
-        priority,
-      },
-    })
+    key,
+  }: SchedulePayload): Promise<ScheduledPrismaJob> {
+    const job = { name, path, args }
+    const data = {
+      handler: JSON.stringify(job),
+      runAt,
+      cron,
+      queue,
+      priority,
+      ...(key !== undefined ? { key } : {}),
+    }
+
+    if (key === undefined) {
+      return { ...(await this.#create(data, job)), alreadyQueued: false }
+    }
+
+    for (let attempt = 0; attempt <= MAX_KEY_RETRIES; attempt++) {
+      try {
+        return { ...(await this.#create(data, job)), alreadyQueued: false }
+      } catch (e) {
+        if (!isUniqueViolation(e)) {
+          throw e
+        }
+      }
+
+      const queued = await this.accessor.findFirst({ where: { key } })
+
+      if (queued) {
+        return { ...rowToJob(queued), alreadyQueued: true }
+      }
+
+      // The job that held the key was picked up (or removed) between the
+      // insert and the read, so the key is free again: try again
+    }
+
+    throw new CedarJSJobsError(
+      `Could not schedule ${name} with the key \`${key}\`: the key was ` +
+        `taken and released again ${MAX_KEY_RETRIES + 1} times in a row`,
+    )
+  }
+
+  async #create(
+    data: Record<string, unknown>,
+    job: Pick<PrismaJob, 'name' | 'path' | 'args'>,
+  ): Promise<PrismaJob> {
+    let row
+
+    try {
+      row = await this.accessor.create({ data })
+    } catch (e) {
+      if (isMissingKeyColumn(e)) {
+        throw new KeyColumnMissingError(String(this.model))
+      }
+
+      throw e
+    }
 
     // The delegate is untyped, but the shape of the created row is guaranteed
     // by the schema contract documented on this class
-    const row = data as Omit<PrismaJob, 'name' | 'path' | 'args'>
+    return { ...(row as Omit<PrismaJob, 'name' | 'path' | 'args'>), ...job }
+  }
 
-    return { ...row, name, path, args }
+  /**
+   * Makes the stored declared schedules match `schedules`. Each schedule is
+   * one row, identified by its unique `key`, so concurrent syncs can't create
+   * duplicates: an insert that hits the unique constraint compares against
+   * (and if needed updates) the row the other sync created instead
+   */
+  override async syncSchedules({
+    schedules,
+    keyPrefix,
+  }: SyncSchedulesOptions): Promise<SyncSchedulesResult> {
+    const result: SyncSchedulesResult = {
+      created: [],
+      updated: [],
+      removed: [],
+      unchanged: [],
+    }
+
+    if (!this.accessor.findMany) {
+      throw new ModelNameError(String(this.model))
+    }
+
+    let stored: PrismaJob[]
+
+    try {
+      stored = await this.accessor.findMany({
+        where: { key: { startsWith: keyPrefix } },
+      })
+    } catch (e) {
+      if (!isMissingKeyColumn(e)) {
+        throw e
+      }
+
+      // Without a `key` column no schedules can be stored, so with none
+      // declared there's nothing to do
+      if (schedules.length === 0) {
+        return result
+      }
+
+      throw new KeyColumnMissingError(String(this.model))
+    }
+
+    const storedByKey = new Map(stored.map((row) => [row.key, row]))
+
+    for (const schedule of schedules) {
+      const outcome = await this.#syncSchedule(
+        schedule,
+        storedByKey.get(schedule.key),
+      )
+      result[outcome].push(schedule.key)
+    }
+
+    const declared = new Set(schedules.map((schedule) => schedule.key))
+    const undeclared = stored
+      .map((row) => row.key)
+      .filter((key): key is string => !!key && !declared.has(key))
+
+    if (undeclared.length > 0) {
+      await this.accessor.deleteMany({ where: { key: { in: undeclared } } })
+      result.removed.push(...undeclared)
+    }
+
+    return result
+  }
+
+  async #syncSchedule(
+    schedule: ScheduleDefinition,
+    stored: PrismaJob | undefined,
+  ): Promise<'created' | 'updated' | 'unchanged'> {
+    const { name, path, args, cron, runAt, queue, priority, key } = schedule
+    const handler = JSON.stringify({ name, path, args })
+    let row = stored
+
+    for (let attempt = 0; attempt <= MAX_KEY_RETRIES; attempt++) {
+      if (!row) {
+        try {
+          await this.accessor.create({
+            data: { handler, runAt, cron, queue, priority, key },
+          })
+
+          return 'created'
+        } catch (e) {
+          if (!isUniqueViolation(e)) {
+            throw e
+          }
+        }
+
+        // Another worker created it first. Make sure it matches
+        row = await this.accessor.findFirst({ where: { key } })
+
+        if (!row) {
+          continue
+        }
+      }
+
+      const changes: Record<string, unknown> = {}
+
+      if (row.handler !== handler) {
+        changes.handler = handler
+      }
+
+      if (row.queue !== queue) {
+        changes.queue = queue
+      }
+
+      if (row.priority !== priority) {
+        changes.priority = priority
+      }
+
+      if (row.cron !== cron) {
+        changes.cron = cron
+
+        // A running job gets its next `runAt` when it finishes. Its worker
+        // computes it from the cron it read when it picked up the job, so the
+        // new cron applies from the run after that
+        if (!row.lockedAt) {
+          changes.runAt = runAt
+        }
+      }
+
+      if (Object.keys(changes).length === 0) {
+        return 'unchanged'
+      }
+
+      await this.accessor.updateMany({ where: { id: row.id }, data: changes })
+
+      return 'updated'
+    }
+
+    throw new CedarJSJobsError(
+      `Could not sync the schedule \`${key}\`: it was created and removed ` +
+        `again ${MAX_KEY_RETRIES + 1} times in a row`,
+    )
   }
 
   /**
@@ -455,12 +722,21 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
     // completed job that's kept in the database has its `runAt` set to null,
     // while every active state (queued, running, awaiting retry, rescheduled
     // cron) has a non-null `runAt`
+    //
+    // The row is read first to see whether it holds a unique key, which the
+    // cancelled job releases (the `key` column is optional, so it can't be
+    // written unconditionally)
+    const job: PrismaJob | null = await this.accessor.findFirst({
+      where: { id: jobId },
+    })
+
     const { count } = await this.accessor.updateMany({
       where: { id: jobId, failedAt: null, runAt: { not: null } },
       data: {
         failedAt: new Date(),
         lastError: 'Job cancelled by user',
         runAt: null,
+        ...releaseKey(job ?? {}),
       },
     })
 

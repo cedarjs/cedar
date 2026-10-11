@@ -10,6 +10,41 @@ export interface SchedulePayload {
   runAt: Date
   queue: string
   priority: number
+  /**
+   * The job's unique key, if it was scheduled with one. Only passed to
+   * adapters that set `supportsUniqueKeys`. While a job with this key is
+   * still queued, the adapter must not add another one (see
+   * `ScheduleJobOptions['key']`)
+   */
+  key?: string | undefined
+}
+
+/** A recurring schedule declared in code, as passed to `syncSchedules()` */
+export interface ScheduleDefinition extends SchedulePayload {
+  cron: string
+  /**
+   * The schedule's identity: `SCHEDULE_KEY_PREFIX`, the job's name and the
+   * schedule's own key, like `cedar:schedule:ReportJob:nightly`
+   */
+  key: string
+}
+
+export interface SyncSchedulesOptions {
+  /** Every schedule declared in the app's code */
+  schedules: ScheduleDefinition[]
+  /**
+   * Every schedule key starts with this prefix. Stored schedules with this
+   * prefix that are not in `schedules` must be removed
+   */
+  keyPrefix: string
+}
+
+/** The keys of the schedules `syncSchedules()` touched, by what it did */
+export interface SyncSchedulesResult {
+  created: string[]
+  updated: string[]
+  removed: string[]
+  unchanged: string[]
 }
 
 export interface FindArgs {
@@ -71,6 +106,13 @@ export abstract class BaseAdapter<
   options: TOptions
   logger: NonNullable<TOptions['logger']>
 
+  /**
+   * Whether `schedule()` honors `payload.key` (see `SchedulePayload['key']`).
+   * Scheduling a job with a `key` through an adapter that doesn't throws a
+   * `UniqueKeysNotSupportedError`, so a key is never silently ignored
+   */
+  readonly supportsUniqueKeys: boolean = false
+
   constructor(options: TOptions) {
     this.options = options
     this.logger = options?.logger ?? DEFAULT_LOGGER
@@ -131,4 +173,23 @@ export abstract class BaseAdapter<
    * cancellation and `later.cancel()` will throw a `CancelNotImplementedError`
    */
   cancel?(options: CancelOptions): boolean | Promise<boolean>
+
+  /**
+   * Makes the stored recurring schedules match `options.schedules`, the ones
+   * declared in code. Called by every job worker when it starts, so several
+   * calls can run at the same time and must not create duplicates:
+   * - a declared schedule without a stored job is created, with its `runAt`
+   *   at the next match of its `cron`
+   * - a stored schedule whose job name, path, args, queue, priority or cron
+   *   differ from the declaration is updated
+   * - a stored schedule (key starting with `options.keyPrefix`) that is not
+   *   declared any more is removed
+   *
+   * This method is optional: declaring `schedules` on a job with an adapter
+   * that doesn't implement it makes the workers throw a
+   * `SchedulesNotSupportedError` when they start
+   */
+  syncSchedules?(
+    options: SyncSchedulesOptions,
+  ): SyncSchedulesResult | Promise<SyncSchedulesResult>
 }

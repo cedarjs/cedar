@@ -152,6 +152,7 @@ describe('schedule()', () => {
 
     expect(job).toEqual({
       ...mockRow,
+      alreadyQueued: false,
       name: 'RedwoodJob',
       path: 'RedwoodJob/RedwoodJob',
       args: ['foo', 'bar'],

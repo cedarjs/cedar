@@ -23,6 +23,11 @@ export interface BaseJob {
   args: unknown[]
   attempts: number
   cron?: string | undefined | null
+  /**
+   * The job's unique key, for adapters that support keys. Declared schedules
+   * have a key starting with `cedar:schedule:`
+   */
+  key?: string | undefined | null
 }
 export type PossibleBaseJob = BaseJob | undefined
 
@@ -143,6 +148,13 @@ export interface JobManagerConfig<
    * An array of worker configurations that define how jobs should be processed.
    */
   workers: WorkerConfig<TAdapters, TQueues>[]
+
+  /**
+   * The name of the adapter that stores the recurring schedules jobs declare
+   * with `schedules` in `createJob()`. Can be left out when there is only one
+   * adapter.
+   */
+  scheduleAdapter?: keyof TAdapters
 }
 
 export interface CreateSchedulerConfig<
@@ -181,12 +193,74 @@ export interface JobDefinition<
   priority?: PriorityValue
 
   /**
+   * The recurring schedules this job runs on, declared in code. Every job
+   * worker syncs the declared schedules to the adapter when it starts: missing
+   * schedules are added, changed ones are updated and schedules that are no
+   * longer declared are removed. There's no script to run after changing a
+   * schedule, restarting the workers (which every deploy does) is enough.
+   *
+   * Each schedule has a `key` that identifies it, so one job can run on
+   * several schedules with different arguments. The key can be left out when
+   * the job has a single schedule.
+   *
+   * Declared schedules need an adapter that implements `syncSchedules()`,
+   * like the `PrismaAdapter`.
+   *
+   * @example
+   * ```ts
+   * export const ReportJob = jobs.createJob({
+   *   queue: 'default',
+   *   schedules: [
+   *     { key: 'hourly', cron: '0 * * * *', args: ['summary'] },
+   *     { key: 'nightly', cron: '0 3 * * *', args: ['full'] },
+   *   ],
+   *   perform: async (kind: 'summary' | 'full') => {
+   *     // ...
+   *   },
+   * })
+   * ```
+   */
+  schedules?: readonly JobSchedule<NoInfer<TArgs>>[]
+
+  /**
    * The function to run when this job is executed.
    *
    * @param args The arguments that were passed when the job was scheduled.
    */
   perform: (...args: TArgs) => Promise<void> | void
 }
+
+/**
+ * One recurring schedule of a job, declared in the job's `schedules` array.
+ */
+export type JobSchedule<TArgs extends unknown[] = unknown[]> = {
+  /**
+   * Identifies this schedule among the job's schedules. The job's name and
+   * this key together are the schedule's identity in the adapter: changing
+   * the `cron` or `args` of a schedule updates it, changing its `key`
+   * replaces it with a new one.
+   *
+   * Required when the job has more than one schedule.
+   *
+   * @default 'default'
+   */
+  key?: string
+
+  /**
+   * When the job runs, in the format described in the [cron-parser
+   * documentation](https://github.com/harrisiirak/cron-parser#cron-format).
+   * Evaluated in the time zone of the job worker.
+   */
+  cron: string
+} & ([] extends TArgs
+  ? {
+      /** The arguments `perform()` gets on every run of this schedule */
+      args?: TArgs
+    }
+  : {
+      /** The arguments `perform()` gets on every run of this schedule */
+      args: TArgs
+    })
 
 export type JobComputedProperties = {
   /**
@@ -205,7 +279,14 @@ export type Job<
   TArgs extends unknown[] = [],
 > = JobDefinition<TQueues, TArgs> & JobComputedProperties
 
-export type ScheduleJobOptions =
+/** When a scheduled job runs */
+export type ScheduleJobTiming =
+  | {
+      /** Without `wait`, `waitUntil` or `cron` the job runs right away */
+      wait?: never
+      waitUntil?: never
+      cron?: never
+    }
   | {
       /**
        * The number of seconds to wait before scheduling this job. This is
@@ -239,6 +320,32 @@ export type ScheduleJobOptions =
     }
 
 /**
+ * Options for scheduling a job with `later()`: when it runs (`wait`,
+ * `waitUntil` or `cron`) and, optionally, a unique `key`.
+ */
+export type ScheduleJobOptions = ScheduleJobTiming & {
+  /**
+   * Makes the job unique while it's queued: if a job scheduled with the same
+   * key is still waiting to run, no new job is added and the adapter returns
+   * the queued one instead (the `PrismaAdapter` returns it with
+   * `alreadyQueued: true`).
+   *
+   * A job holds its key until a worker picks it up. From then on a new job
+   * with the same key can be queued, so work requested while the job runs
+   * isn't lost. A recurring (`cron`) job holds its key for as long as its
+   * schedule is active.
+   *
+   * The key alone decides uniqueness: the arguments of the queued job are not
+   * compared, so put whatever must be distinct into the key, like
+   * `` `thumbnails:${caseId}` ``. Keys starting with `cedar:` are reserved.
+   *
+   * Needs an adapter that supports unique keys, like the `PrismaAdapter`
+   * (which needs a `key String? @unique` column on its model).
+   */
+  key?: string
+}
+
+/**
  * A union of the integers from 0 up to, but not including, `TEnd`. `TEnd` must
  * be a non-negative integer literal.
  */
@@ -260,7 +367,7 @@ type PriorityValue = Exclude<NumbersBelow<101>, 0>
  * If the job has arguments:
  *  - you must pass the arguments and then optionally pass the scheduler options
  */
-export type CreateSchedulerArgs<TJob extends Job<QueueNames>> =
+export type CreateSchedulerArgs<TJob extends Job<QueueNames, any[]>> =
   Parameters<TJob['perform']> extends []
     ? [ScheduleJobOptions?] | [[], ScheduleJobOptions?]
     : [Parameters<TJob['perform']>, ScheduleJobOptions?]
