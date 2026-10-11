@@ -124,3 +124,16 @@ model PetOwner {
   name String
   pets Pet[]
 }
+
+model ManualTimestamp {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime
+}
+
+model AutoTimestamp {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

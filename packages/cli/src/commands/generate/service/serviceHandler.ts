@@ -54,6 +54,7 @@ export interface PrismaField {
   isId: boolean
   isUnique?: boolean
   hasDefaultValue?: boolean
+  isUpdatedAt?: boolean
   relationName?: string
   relationFromFields?: string[]
   enumValues?: { name: string; dbName?: string }[]
@@ -277,11 +278,15 @@ export const fieldsToInput = async (model: string) => {
 
   // `scalarFields` only contains required fields without defaults, so if any
   // of them is a field the SDL generator excludes from the GraphQL input
-  // types (see `redactedModelFields`), creating a record through the
-  // generated create input can't succeed. Skip the create test entirely.
+  // types (see `redactedModelFields` and `DEFAULT_IGNORE_FIELDS_FOR_INPUT`),
+  // creating a record through the generated create input can't succeed. Skip
+  // the create test entirely. `@updatedAt` fields are fine, Prisma sets them
   if (
-    scalarFields.some((field: PrismaField) =>
-      redactedFields.includes(field.name),
+    scalarFields.some(
+      (field: PrismaField) =>
+        redactedFields.includes(field.name) ||
+        (DEFAULT_IGNORE_FIELDS_FOR_INPUT.includes(field.name) &&
+          !field.isUpdatedAt),
     )
   ) {
     return false

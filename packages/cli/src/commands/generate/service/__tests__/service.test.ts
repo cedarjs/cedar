@@ -634,3 +634,15 @@ describe('relation resolvers', () => {
     )
   })
 })
+
+describe('fieldsToInput', () => {
+  test('skips the create test when a required timestamp has no default', async () => {
+    expect(await serviceHandler.fieldsToInput('ManualTimestamp')).toBe(false)
+  })
+
+  test('leaves out timestamps the database or Prisma sets', async () => {
+    expect(await serviceHandler.fieldsToInput('AutoTimestamp')).toEqual({
+      name: 'String',
+    })
+  })
+})
