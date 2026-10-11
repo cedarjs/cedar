@@ -153,7 +153,7 @@ const Routes = () => {
 
 ### Layouts with props
 
-The router renders every component in `wrap` with the wrapped Routes as `children`, and no other props. To use a layout that needs props, create a layout component that renders it with those props, and use that component in `wrap`:
+The router renders every component in `wrap` with the wrapped Routes as `children`, and no other props. So if `MainLayout` takes a `theme` prop, create a `DarkMainLayout` component that renders `<MainLayout theme="dark">`, and use `DarkMainLayout` in `wrap`:
 
 ```jsx title="web/src/layouts/DarkMainLayout/DarkMainLayout.jsx"
 import MainLayout from 'src/layouts/MainLayout'

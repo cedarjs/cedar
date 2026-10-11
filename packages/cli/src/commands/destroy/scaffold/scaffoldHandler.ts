@@ -104,29 +104,38 @@ const removeNamedImport = (code: string, source: string, name: string) => {
 const removeSetImport = (): string => {
   const routesPath = getPaths().web.routes
   const routesContent = readFile(routesPath).toString()
-  if (routesContent.match('<Set')) {
+
+  // The scaffold generator adds `Set`, and `PrivateSet` in apps with auth.
+  // Each is removed from the router import once nothing renders it
+  const unusedNames = ['Set', 'PrivateSet'].filter(
+    (name) => !new RegExp(`<${name}\\b`).test(routesContent),
+  )
+
+  if (unusedNames.length === 0) {
     return 'Skipping removal of Set import in Routes.{jsx,tsx}'
   }
 
-  let newRoutesContent: string
+  let newRoutesContent = routesContent
 
   try {
-    newRoutesContent = removeNamedImport(
-      routesContent,
-      '@cedarjs/router',
-      'Set',
-    )
+    for (const name of unusedNames) {
+      newRoutesContent = removeNamedImport(
+        newRoutesContent,
+        '@cedarjs/router',
+        name,
+      )
+    }
   } catch {
     return "Skipping removal of Set import, Routes.{jsx,tsx} couldn't be parsed"
   }
 
   if (newRoutesContent === routesContent) {
-    return 'No Set import from @cedarjs/router found in Routes.{jsx,tsx}'
+    return 'No unused Set or PrivateSet import found in Routes.{jsx,tsx}'
   }
 
   writeFile(routesPath, newRoutesContent, { overwriteExisting: true })
 
-  return 'Removed Set import in Routes.{jsx,tsx}'
+  return 'Removed unused Set and PrivateSet imports in Routes.{jsx,tsx}'
 }
 
 const removeLayoutImport = ({
