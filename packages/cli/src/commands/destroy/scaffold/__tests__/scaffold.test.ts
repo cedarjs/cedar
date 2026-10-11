@@ -366,8 +366,7 @@ describe('rw destroy scaffold', () => {
         [
           'import {',
           '  Router,',
-          '  Route,',
-          '  // route groups',
+          '  Route, // route groups',
           "} from '@cedarjs/router'",
         ].join('\n'),
       )
@@ -397,6 +396,38 @@ describe('rw destroy scaffold', () => {
       expect(fs.readFileSync(getPaths().web.routes, 'utf-8')).toEqual(
         [
           "import HomePage from 'src/pages/HomePage'",
+          '',
+          'const Routes = () => <Router />',
+        ].join('\n'),
+      )
+    })
+
+    test('only removes the Set import when the router is imported twice', async () => {
+      fs.writeFileSync(
+        getPaths().web.routes,
+        [
+          "import { Set } from '@cedarjs/router'",
+          "import HomePage from 'src/pages/HomePage'",
+          "import { Router, Route } from '@cedarjs/router'",
+          '',
+          'const Routes = () => <Router />',
+        ].join('\n'),
+      )
+
+      const t = tasks({
+        model: 'Post',
+        tests: false,
+        nestScaffoldByModel: true,
+      })
+      t.options.renderer = 'silent'
+
+      // Removing the Set import
+      await t.tasks[2].run()
+
+      expect(fs.readFileSync(getPaths().web.routes, 'utf-8')).toEqual(
+        [
+          "import HomePage from 'src/pages/HomePage'",
+          "import { Router, Route } from '@cedarjs/router'",
           '',
           'const Routes = () => <Router />',
         ].join('\n'),
