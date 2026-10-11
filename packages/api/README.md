@@ -39,6 +39,16 @@ Note: CedarJS logging is setup for its api side only. For browser and web side e
 
 For detailed logger configuration, see the CedarJS logger package [README](./src/logger/README.md).
 
+### Sandbox
+
+`@cedarjs/api/sandbox` runs a Node script on untrusted input — an uploaded
+photo, a third party's PDF — in a locked-down child process: no environment
+variables, read access only to the packages it needs, no writes, no child
+processes, a heap cap, a timeout and output limits. Use it for parsing,
+decoding or converting files you didn't create (sharp, pdf.js, …). It's
+defense in depth on top of Node's permission model, not a security boundary.
+See the sandbox [README](./src/sandbox/README.md).
+
 ## Contributing
 
 `@cedarjs/api` uses a few things you should be familiar with:
