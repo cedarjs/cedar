@@ -60,11 +60,14 @@ const removeNamedImport = (code: string, source: string, name: string) => {
     }
 
     const specifiers = statement.specifiers
+    // Aliased imports (`Set as RouteSet`) are left alone, since the code
+    // still uses the alias
     const index = specifiers.findIndex(
       (specifier) =>
         specifier.type === 'ImportSpecifier' &&
         specifier.imported.type === 'Identifier' &&
-        specifier.imported.name === name,
+        specifier.imported.name === name &&
+        specifier.local.name === name,
     )
 
     if (index === -1) {
