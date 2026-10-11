@@ -1,20 +1,30 @@
-import type { ReactElement, ReactNode } from 'react'
+import type { ComponentType, ReactElement, ReactNode } from 'react'
 import React from 'react'
 
-export type WrapperType<WTProps> = (
-  props: Omit<WTProps, 'wrap' | 'children'> & {
-    children: ReactNode
-  },
-) => ReactElement | null
+/**
+ * A component in a `<Set wrap>` prop, like a layout. The router renders it
+ * with the wrapped routes as `children` and no other props, so it can't have
+ * any other required props. Optional props are fine.
+ *
+ * To render a layout with props, create a component that renders it with
+ * those props, and use that component in `wrap`:
+ *
+ *   const PostsScaffoldLayout = ({ children }: { children: ReactNode }) => (
+ *     <ScaffoldLayout title="Posts" titleTo="posts">{children}</ScaffoldLayout>
+ *   )
+ *
+ *   <Set wrap={PostsScaffoldLayout}>
+ */
+export type WrapperType = ComponentType<{ children: ReactNode }>
 
-type SetProps<P> = P & {
+interface SetProps {
   /**
-   * P is the interface for the props that are forwarded to the wrapper
-   * components. TypeScript will most likely infer this for you, but if you
-   * need to you can specify it yourself in your JSX like so:
-   *   <Set<{theme: string}> wrap={ThemableLayout} theme="dark">
+   * Components to wrap all routes in this set with, like layouts. The first
+   * one in an array is the outermost one.
+   *
+   *   <Set wrap={[MainLayout, DarkThemeLayout]}>
    */
-  wrap?: WrapperType<P> | WrapperType<P>[]
+  wrap?: WrapperType | readonly WrapperType[]
   /**
    *`Routes` nested in a `<Set>` with `private` specified require
    * authentication. When a user is not authenticated and attempts to visit
@@ -43,25 +53,41 @@ type SetProps<P> = P & {
 }
 
 /**
- * TypeScript will often infer the type of the props you can forward to the
- * wrappers for you, but if you need to you can specify it yourself in your
- * JSX like so:
- *   <Set<{theme: string}> wrap={ThemeableLayout} theme="dark">
+ * The names of all props `<Set>`, `<PrivateSet>` and `<Private>` accept. Any
+ * other prop is ignored.
  */
-export function Set<WrapperProps>(props: SetProps<WrapperProps>) {
+export const setPropNames: readonly string[] = [
+  'wrap',
+  'private',
+  'unauthenticated',
+  'roles',
+  'prerender',
+  'children',
+  'whileLoadingAuth',
+  'whileLoadingPage',
+] satisfies (keyof SetProps)[]
+
+/**
+ * Groups routes, to wrap them all in the same layouts or other components, or
+ * to give them all the same `whileLoadingPage` or `prerender` setting.
+ *
+ *   <Set wrap={MainLayout}>
+ *     <Route path="/" page={HomePage} name="home" />
+ *   </Set>
+ */
+export function Set(props: SetProps) {
   // @MARK: Virtual Component, this is actually never rendered
   // See analyzeRoutes in utils.tsx, inside the isSetNode block
   return <>{props.children}</>
 }
 
-type PrivateSetProps<P> = P &
-  Omit<SetProps<P>, 'private' | 'unauthenticated'> & {
-    /** The page name where a user will be redirected when not authenticated */
-    unauthenticated: string
-  }
+type PrivateSetProps = Omit<SetProps, 'private' | 'unauthenticated'> & {
+  /** The page name where a user will be redirected when not authenticated */
+  unauthenticated: string
+}
 
 /** @deprecated Please use `<PrivateSet>` instead */
-export function Private<WrapperProps>(props: PrivateSetProps<WrapperProps>) {
+export function Private(props: PrivateSetProps) {
   // @MARK Virtual Component, this is actually never rendered
   // See analyzeRoutes in utils.tsx, inside the isSetNode block
   return <>{props.children}</>
@@ -75,17 +101,15 @@ export function Private<WrapperProps>(props: PrivateSetProps<WrapperProps>) {
  * Coming from React Router or a similar library and looking for something
  * like `RequireAuth` or `ProtectedRoute`? This is the Cedar equivalent.
  */
-export function PrivateSet<WrapperProps>(props: PrivateSetProps<WrapperProps>) {
+export function PrivateSet(props: PrivateSetProps) {
   // @MARK Virtual Component, this is actually never rendered
   // See analyzeRoutes in utils.tsx, inside the isSetNode block
   return <>{props.children}</>
 }
 
-export const isSetNode = (
-  node: ReactNode,
-): node is ReactElement<SetProps<Record<string, unknown>>> => {
+export const isSetNode = (node: ReactNode): node is ReactElement<SetProps> => {
   return (
-    React.isValidElement<SetProps<Record<string, unknown>>>(node) &&
+    React.isValidElement<SetProps>(node) &&
     (node.type === Set || node.type === PrivateSet || node.type === Private) &&
     // Don't even bother including Sets without children. They're useless.
     !!node.props.children
@@ -94,13 +118,30 @@ export const isSetNode = (
 
 export const isPrivateSetNode = (
   node: ReactNode,
-): node is ReactElement<PrivateSetProps<unknown>> => {
+): node is ReactElement<PrivateSetProps> => {
   return React.isValidElement(node) && node.type === PrivateSet
 }
 
 // Only identifies <Private> nodes, not <Set private> nodes
 export const isPrivateNode = (
   node: ReactNode,
-): node is ReactElement<SetProps<any>> => {
+): node is ReactElement<PrivateSetProps> => {
   return React.isValidElement(node) && node.type === Private
+}
+
+/**
+ * Wraps `children` in all `wrappers`, with the first wrapper as the outermost
+ * one. Every wrapper gets `children` as its only prop.
+ *
+ *   wrapWithSetWrappers([A, B], '1', <Page />)
+ *   // => <A><B><Page /></B></A>
+ */
+export function wrapWithSetWrappers(
+  wrappers: readonly WrapperType[],
+  setId: string,
+  children: ReactNode,
+) {
+  return wrappers.reduceRight<ReactNode>((acc, Wrapper, index) => {
+    return <Wrapper key={setId + '-' + index}>{acc}</Wrapper>
+  }, children)
 }

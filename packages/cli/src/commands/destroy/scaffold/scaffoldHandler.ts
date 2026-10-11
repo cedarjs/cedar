@@ -1,9 +1,7 @@
 import { Listr } from 'listr2'
-import pascalcase from 'pascalcase'
 
 import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
-import { pluralize } from '@cedarjs/utils/cedarPluralize'
 
 import {
   deleteFilesTask,
@@ -15,6 +13,7 @@ import {
 import { verifyModelName } from '../../../lib/schemaHelpers.js'
 import {
   files,
+  getScaffoldLayoutNames,
   routes as scaffoldRoutes,
   splitPathAndModel,
 } from '../../generate/scaffold/scaffoldHandler.js'
@@ -35,9 +34,8 @@ const removeRoutesWithSet = async ({
 > => {
   const routes = await scaffoldRoutes({ model, path, nestScaffoldByModel })
   const routeNames = routes.map(extractRouteName)
-  const pluralPascalName = pascalcase(pluralize(model))
-  const layoutName = `${pluralPascalName}Layout`
-  return removeRoutesFromRouterTask(routeNames, layoutName)
+  const { importName } = getScaffoldLayoutNames(model, path)
+  return removeRoutesFromRouterTask(routeNames, importName)
 }
 
 const removeSetImport = (): string => {
@@ -71,13 +69,8 @@ const removeLayoutImport = ({
   model: string
   path?: string
 }): string => {
-  const pluralPascalName = pascalcase(pluralize(name))
-  const pascalScaffoldPath =
-    scaffoldPath === ''
-      ? scaffoldPath
-      : scaffoldPath.split('/').map(pascalcase).join('/') + '/'
-  const layoutName = `${pluralPascalName}Layout`
-  const importLayout = `import ${pluralPascalName}Layout from 'src/layouts/${pascalScaffoldPath}${layoutName}'`
+  const { importName, importPath } = getScaffoldLayoutNames(name, scaffoldPath)
+  const importLayout = `import ${importName} from '${importPath}'`
   const routesPath = getPaths().web.routes
   const routesContent = readFile(routesPath).toString()
 

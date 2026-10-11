@@ -172,3 +172,60 @@ npx @tailwindcss/upgrade --config ./web/config/tailwind.config.cjs
 
 See Tailwind's [upgrade guide](https://tailwindcss.com/docs/upgrade-guide) for
 the changes v4 makes to utilities and configuration.
+
+## `<Set>` wrappers only get `children`
+
+`<Set>`, `<PrivateSet>` and `<Private>` render the components in `wrap` with
+the wrapped routes as `children`, and no other props. Props on a Set are only
+the Set's own props: `wrap`, `prerender`, `whileLoadingPage`, and for private
+sets `unauthenticated`, `roles` and `whileLoadingAuth`. TypeScript reports an
+error for any other prop, and in development the router logs a warning about
+them. `Set`, `PrivateSet` and `Private` take no type argument, and
+`WrapperType` (exported from `@cedarjs/router`) is the type of a component in
+`wrap`, without a type argument.
+
+`yarn cedar g scaffold post` generates a `PostsScaffoldLayout` that renders the
+shared `ScaffoldLayout` with the title and links for posts, and wraps the
+routes in `<Set wrap={PostsScaffoldLayout}>`. The layout's props, like
+`titleTo`, are type checked against your route names, also with TypeScript's
+`strict` mode turned on. `yarn cedar d scaffold post` removes the layout again.
+
+The pre-upgrade check run by `yarn cedar upgrade` lists every Set that has
+props for its wrappers, with its file, line, wrappers and props, and stops the
+upgrade until they're fixed. For each of them, create a layout component that
+renders the wrapper with those props, and use it in `wrap`:
+
+```tsx title="web/src/layouts/PostsScaffoldLayout/PostsScaffoldLayout.tsx"
+import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
+
+type PostsScaffoldLayoutProps = {
+  children: React.ReactNode
+}
+
+const PostsScaffoldLayout = ({ children }: PostsScaffoldLayoutProps) => {
+  return (
+    <ScaffoldLayout
+      title="Posts"
+      titleTo="posts"
+      buttonLabel="New Post"
+      buttonTo="newPost"
+    >
+      {children}
+    </ScaffoldLayout>
+  )
+}
+
+export default PostsScaffoldLayout
+```
+
+```diff title="web/src/Routes.tsx"
+-import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
++import PostsScaffoldLayout from 'src/layouts/PostsScaffoldLayout'
+
+-<Set wrap={ScaffoldLayout} title="Posts" titleTo="posts" buttonLabel="New Post" buttonTo="newPost">
++<Set wrap={PostsScaffoldLayout}>
+```
+
+For a Set with several wrappers, give each layout component only the props
+that wrapper uses. This change works with Cedar v7 too, so you can make it
+before upgrading.

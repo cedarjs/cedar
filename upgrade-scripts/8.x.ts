@@ -1,6 +1,9 @@
+// @dependency: oxc-parser@0.144.0
 import fs from 'node:fs'
 import path from 'node:path'
 import util from 'node:util'
+
+import { parseSync, Visitor } from 'oxc-parser'
 
 import { getPaths } from '@cedarjs/project-config'
 
@@ -11,6 +14,23 @@ const projectPaths = getPaths()
 const apiFunctionPatterns = ['**/*.{js,ts}']
 
 const exclude = ['**/node_modules/**', '**/dist/**']
+
+/**
+ * Reports a problem that blocks the upgrade. Callers must also set
+ * `shouldAbort`, which makes the script exit non-zero.
+ *
+ * Writes to stdout, even though this is an error. The CLI reads a failed
+ * script's stdout into the message it shows the user and only surfaces stderr
+ * under `--verbose`, so anything written to stderr here would be invisible in
+ * the default output.
+ */
+function fail(title: string, lines: string[]) {
+  console.log(util.styleText('red', title) + '\n')
+
+  for (const line of lines) {
+    console.log(line + '\n')
+  }
+}
 
 /**
  * Reports a breaking change that the user has to act on, without aborting the
@@ -55,7 +75,177 @@ function findTailwindCssV3Config() {
   return indexCss.includes('@tailwind ') ? null : undefined
 }
 
+// The props <Set>, <PrivateSet> and <Private> use themselves. Wrapper
+// components only get `children`
+const setOwnProps = [
+  'wrap',
+  'private',
+  'unauthenticated',
+  'roles',
+  'prerender',
+  'whileLoadingAuth',
+  'whileLoadingPage',
+  'children',
+  'key',
+]
+
+const setComponents = ['Set', 'PrivateSet', 'Private']
+
+// Routes live in web/src/Routes.{jsx,tsx}, but Sets can be written in other
+// files too
+const webSrcPatterns = ['**/*.{js,jsx,ts,tsx}']
+
+interface SetWithWrapperProps {
+  file: string
+  line: number
+  setName: string
+  wrappers: string
+  props: string[]
+}
+
+/**
+ * Finds every <Set>, <PrivateSet> and <Private> in `code` that has props other
+ * than the Set's own props
+ */
+function findSetsWithWrapperPropsInFile(
+  filePath: string,
+  code: string,
+): Omit<SetWithWrapperProps, 'file'>[] {
+  const sets: Omit<SetWithWrapperProps, 'file'>[] = []
+
+  try {
+    const { program, errors } = parseSync(filePath, code)
+
+    if (errors.length > 0) {
+      return []
+    }
+
+    const visitor = new Visitor({
+      JSXOpeningElement(node) {
+        if (
+          node.name.type !== 'JSXIdentifier' ||
+          !setComponents.includes(node.name.name)
+        ) {
+          return
+        }
+
+        let wrappers = '(none)'
+        const props: string[] = []
+
+        for (const attribute of node.attributes) {
+          if (
+            attribute.type !== 'JSXAttribute' ||
+            attribute.name.type !== 'JSXIdentifier'
+          ) {
+            continue
+          }
+
+          if (attribute.name.name === 'wrap') {
+            const value = attribute.value
+
+            wrappers =
+              value?.type === 'JSXExpressionContainer'
+                ? code.slice(value.expression.start, value.expression.end)
+                : '(unknown)'
+          } else if (!setOwnProps.includes(attribute.name.name)) {
+            props.push(attribute.name.name)
+          }
+        }
+
+        if (props.length > 0) {
+          sets.push({
+            line: code.slice(0, node.start).split('\n').length,
+            setName: node.name.name,
+            wrappers,
+            props,
+          })
+        }
+      },
+    })
+
+    visitor.visit(program)
+  } catch {
+    return []
+  }
+
+  return sets
+}
+
+async function findSetsWithWrapperProps() {
+  const sets: SetWithWrapperProps[] = []
+
+  if (!fs.existsSync(projectPaths.web.src)) {
+    return sets
+  }
+
+  for await (const file of fs.promises.glob(webSrcPatterns, {
+    cwd: projectPaths.web.src,
+    exclude,
+  })) {
+    const filePath = path.join(projectPaths.web.src, file)
+    const code = await fs.promises.readFile(filePath, 'utf8')
+
+    if (!/<(Set|PrivateSet|Private)\b/.test(code)) {
+      continue
+    }
+
+    for (const set of findSetsWithWrapperPropsInFile(filePath, code)) {
+      sets.push({
+        file: path
+          .relative(projectPaths.base, filePath)
+          .split(path.sep)
+          .join('/'),
+        ...set,
+      })
+    }
+  }
+
+  return sets.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line)
+}
+
 async function main() {
+  // Set by any check that has found something the user must fix before
+  // upgrading. Checked once at the end so every problem gets reported in one
+  // pass, rather than the user fixing one and rerunning to find the next
+  let shouldAbort = false
+
+  const setsWithWrapperProps = await findSetsWithWrapperProps()
+
+  if (setsWithWrapperProps.length > 0) {
+    shouldAbort = true
+
+    fail('<Set> props for wrapper components', [
+      'Found <Set>, <PrivateSet> or <Private> components with props that are\n' +
+        'meant for their wrapper components:\n\n' +
+        setsWithWrapperProps
+          .map(
+            (set) =>
+              `  ${set.file}:${set.line} <${set.setName}>\n` +
+              `    wrap: ${set.wrappers}\n` +
+              `    props: ${set.props.join(', ')}`,
+          )
+          .join('\n'),
+      'Wrapper components only get `children`. For each of these Sets,\n' +
+        'create a layout component that renders the wrapper with the props\n' +
+        'it needs, and use that layout component in `wrap` instead. This is\n' +
+        'what the scaffold generator does:\n\n' +
+        '    const PostsScaffoldLayout = ({ children }) => (\n' +
+        '      <ScaffoldLayout\n' +
+        '        title="Posts"\n' +
+        '        titleTo="posts"\n' +
+        '        buttonLabel="New Post"\n' +
+        '        buttonTo="newPost"\n' +
+        '      >\n' +
+        '        {children}\n' +
+        '      </ScaffoldLayout>\n' +
+        '    )\n\n' +
+        '    <Set wrap={PostsScaffoldLayout}>',
+      'Then remove the props from the Set. This works with your current\n' +
+        'Cedar version too, so make the change before you upgrade, and run\n' +
+        'the upgrade again.',
+    ])
+  }
+
   const tailwindCssV3Config = findTailwindCssV3Config()
 
   if (tailwindCssV3Config !== undefined) {
@@ -140,6 +330,14 @@ async function main() {
       'See https://cedarjs.com/docs/auth/dbauth#changepassword for all\n' +
         'options.',
     ])
+  }
+
+  if (shouldAbort) {
+    // Set exitCode and return rather than calling process.exit() directly,
+    // so pending stdout writes from the console.log calls above aren't
+    // truncated before the process terminates.
+    process.exitCode = 1
+    return
   }
 }
 

@@ -925,14 +925,14 @@ test('Private is an alias for Set private', async () => {
     </div>
   )
 
+  const DarkPrivateLayout = ({ children }: { children: React.ReactNode }) => (
+    <PrivateLayout theme="dark">{children}</PrivateLayout>
+  )
+
   const TestRouter = () => (
     <Router useAuth={mockUseAuth({ isAuthenticated: true })}>
       <Route path="/" page={HomePage} name="home" />
-      <Private<PrivateLayoutProps>
-        wrap={PrivateLayout}
-        unauthenticated="home"
-        theme="dark"
-      >
+      <Private wrap={DarkPrivateLayout} unauthenticated="home">
         <Route path="/private" page={PrivatePage} name="private" />
       </Private>
     </Router>
@@ -1228,14 +1228,14 @@ describe('Multiple nested private sets', () => {
     </div>
   )
 
+  const Level1Layout = ({ children }: { children: React.ReactNode }) => (
+    <LevelLayout level="1">{children}</LevelLayout>
+  )
+
   const TestRouter = ({ useAuthMock }: { useAuthMock: UseAuth }) => (
     <Router useAuth={useAuthMock}>
       <Route path="/" page={HomePage} name="home" />
-      <PrivateSet<LevelLayoutProps>
-        unauthenticated="home"
-        level="1"
-        wrap={LevelLayout}
-      >
+      <PrivateSet unauthenticated="home" wrap={Level1Layout}>
         <Route
           path="/no-roles-assigned"
           page={PrivateNoRolesAssigned}
@@ -1357,14 +1357,20 @@ describe('Multiple nested sets', () => {
     )
   }
 
+  const Level1DebugLayout = ({ children }: { children: React.ReactNode }) => (
+    <DebugLayout level="1" theme="blue">
+      {children}
+    </DebugLayout>
+  )
+
   const TestRouter = () => (
     <Router>
       <Route path="/" page={HomePage} name="home" />
-      <Set<DebugLayoutProps> level="1" theme="blue" wrap={DebugLayout}>
+      <Set wrap={Level1DebugLayout}>
         <Route path="/level1" page={Page} name="level1" />
-        <Set level="2" theme="red" otherProp="bazinga">
+        <Set>
           <Route path="/level2" page={Page} name="level2" />
-          <Set level="3" theme="green">
+          <Set>
             <Route path="/level3" page={Page} name="level3" />
           </Set>
         </Set>
@@ -1384,7 +1390,7 @@ describe('Multiple nested sets', () => {
     })
   })
 
-  test('level 2, should not affect level 1 set props', async () => {
+  test('level 2, renders the level 1 wrapper', async () => {
     act(() => navigate('/level2'))
 
     const screen = render(<TestRouter />)
@@ -1397,7 +1403,7 @@ describe('Multiple nested sets', () => {
     })
   })
 
-  test('level 3, should override level 1 & 2 and pass through other props', async () => {
+  test('level 3, renders the level 1 wrapper', async () => {
     const screen = render(<TestRouter />)
 
     act(() => navigate('/level3'))

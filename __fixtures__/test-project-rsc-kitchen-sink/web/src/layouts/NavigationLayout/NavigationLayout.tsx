@@ -14,7 +14,10 @@ type NavigationLayoutProps = {
   rnd?: number
 }
 
-const NavigationLayout = ({ children, rnd }: NavigationLayoutProps) => {
+const NavigationLayout = ({
+  children,
+  rnd = Math.random(),
+}: NavigationLayoutProps) => {
   const { pathname } = getLocation()
   const { isAuthenticated } = getAuthState()
 

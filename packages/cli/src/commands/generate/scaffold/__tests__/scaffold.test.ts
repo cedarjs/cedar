@@ -42,8 +42,8 @@ describe('in javascript (default) mode', () => {
     })
   })
 
-  test('returns exactly 19 files', async () => {
-    expect(Object.keys(files).length).toEqual(19)
+  test('returns exactly 20 files', async () => {
+    expect(Object.keys(files).length).toEqual(20)
   })
   // SDL
 
@@ -82,6 +82,16 @@ describe('in javascript (default) mode', () => {
       files[
         path.normalize(
           '/path/to/project/web/src/layouts/ScaffoldLayout/ScaffoldLayout.jsx',
+        )
+      ],
+    ).toMatchSnapshot()
+  })
+
+  test('creates a scaffold specific layout', async () => {
+    expect(
+      files[
+        path.normalize(
+          '/path/to/project/web/src/layouts/PostsScaffoldLayout/PostsScaffoldLayout.jsx',
         )
       ],
     ).toMatchSnapshot()
@@ -615,8 +625,8 @@ describe('in typescript mode', () => {
     })
   })
 
-  test('returns exactly 19 files', () => {
-    expect(Object.keys(tsFiles).length).toEqual(19)
+  test('returns exactly 20 files', () => {
+    expect(Object.keys(tsFiles).length).toEqual(20)
   })
 
   // SDL
@@ -656,6 +666,16 @@ describe('in typescript mode', () => {
       tsFiles[
         path.normalize(
           '/path/to/project/web/src/layouts/ScaffoldLayout/ScaffoldLayout.tsx',
+        )
+      ],
+    ).toMatchSnapshot()
+  })
+
+  test('creates a scaffold specific layout', async () => {
+    expect(
+      tsFiles[
+        path.normalize(
+          '/path/to/project/web/src/layouts/PostsScaffoldLayout/PostsScaffoldLayout.tsx',
         )
       ],
     ).toMatchSnapshot()
@@ -1062,8 +1082,8 @@ describe('custom templates', () => {
     process.env.CEDAR_CWD = originalCedarCwd
   })
 
-  test('returns exactly 19 files', () => {
-    expect(Object.keys(tsFiles).length).toEqual(19)
+  test('returns exactly 20 files', () => {
+    expect(Object.keys(tsFiles).length).toEqual(20)
   })
 
   test('creates an Edit page', async () => {
@@ -1145,6 +1165,16 @@ describe('custom templates', () => {
       tsFiles[
         path.normalize(
           '/path/to/project/web/src/layouts/ScaffoldLayout/ScaffoldLayout.tsx',
+        )
+      ],
+    ).toMatchSnapshot()
+  })
+
+  test('creates a scaffold specific layout', async () => {
+    expect(
+      tsFiles[
+        path.normalize(
+          '/path/to/project/web/src/layouts/PostsScaffoldLayout/PostsScaffoldLayout.tsx',
         )
       ],
     ).toMatchSnapshot()

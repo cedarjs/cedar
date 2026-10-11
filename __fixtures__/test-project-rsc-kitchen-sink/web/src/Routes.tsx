@@ -14,13 +14,14 @@ import { Set, PrivateSet } from '@cedarjs/router/Set'
 import { useAuth } from './auth'
 import AuthLayout from './layouts/AuthLayout/AuthLayout'
 import BlogLayout from './layouts/BlogLayout/BlogLayout'
+import EmptyUsersScaffoldLayout from './layouts/EmptyUsersScaffoldLayout/EmptyUsersScaffoldLayout'
 import NavigationLayout from './layouts/NavigationLayout/NavigationLayout'
-import ScaffoldLayout from './layouts/ScaffoldLayout/ScaffoldLayout'
+import UserExamplesScaffoldLayout from './layouts/UserExamplesScaffoldLayout/UserExamplesScaffoldLayout'
 
 const Routes = () => {
   return (
     <Router useAuth={useAuth}>
-      <Set wrap={NavigationLayout} rnd={0.7}>
+      <Set wrap={NavigationLayout}>
         <Route path="/" page={HomePage} name="home" />
         <Route path="/about" page={AboutPage} name="about" />
         <Route path="/multi-cell" page={MultiCellPage} name="multiCell" />
@@ -43,14 +44,14 @@ const Routes = () => {
           </PrivateSet>
         </Set>
 
-        <Set wrap={ScaffoldLayout} title="EmptyUsers" titleTo="emptyUsers" buttonLabel="New EmptyUser" buttonTo="newEmptyUser">
+        <Set wrap={EmptyUsersScaffoldLayout}>
           <Route path="/empty-users/new" page={EmptyUserNewEmptyUserPage} name="newEmptyUser" />
           <Route path="/empty-users/{id:Int}/edit" page={EmptyUserEditEmptyUserPage} name="editEmptyUser" />
           <Route path="/empty-users/{id:Int}" page={EmptyUserEmptyUserPage} name="emptyUser" />
           <Route path="/empty-users" page={EmptyUserEmptyUsersPage} name="emptyUsers" />
         </Set>
 
-        <Set wrap={ScaffoldLayout} title="UserExamples" titleTo="userExamples" buttonLabel="New UserExample" buttonTo="newUserExample">
+        <Set wrap={UserExamplesScaffoldLayout}>
           <Route path="/user-examples/new" page={UserExampleNewUserExamplePage} name="newUserExample" />
           <Route path="/user-examples/{id:Int}/edit" page={UserExampleEditUserExamplePage} name="editUserExample" />
           <Route path="/user-examples/{id:Int}" page={UserExampleUserExamplePage} name="userExample" />

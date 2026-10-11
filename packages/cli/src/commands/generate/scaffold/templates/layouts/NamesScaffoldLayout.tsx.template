@@ -1,0 +1,22 @@
+import ScaffoldLayout from '${importLayoutNames}'
+
+type ${pluralPascalName}ScaffoldLayoutProps = {
+  children: React.ReactNode
+}
+
+const ${pluralPascalName}ScaffoldLayout = ({
+  children,
+}: ${pluralPascalName}ScaffoldLayoutProps) => {
+  return (
+    <ScaffoldLayout
+      title="${pluralPascalName}"
+      titleTo="${pluralRouteName}"
+      buttonLabel="New ${singularPascalName}"
+      buttonTo="${newRouteName}"
+    >
+      {children}
+    </ScaffoldLayout>
+  )
+}
+
+export default ${pluralPascalName}ScaffoldLayout

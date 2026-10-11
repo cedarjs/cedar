@@ -185,6 +185,25 @@ describe('rw destroy scaffold', () => {
           )
         })
       })
+
+      test('keeps the shared ScaffoldLayout', async () => {
+        const unlinkSpy = vi.spyOn(fs, 'unlinkSync')
+        const t = tasks({
+          model: 'Post',
+          tests: false,
+          nestScaffoldByModel: true,
+        })
+        t.options.renderer = 'silent'
+
+        await t.tasks[0].run()
+
+        const deletedFiles = unlinkSpy.mock.calls.map((call) => String(call[0]))
+        expect(
+          deletedFiles.filter((file) =>
+            file.includes(path.join('layouts', 'ScaffoldLayout')),
+          ),
+        ).toEqual([])
+      })
     })
 
     test('cleans up routes from Routes.js', async () => {
@@ -206,6 +225,87 @@ describe('rw destroy scaffold', () => {
           ].join('\n'),
         )
       })
+    })
+
+    test('destroys the scaffold specific layout, but not the shared one', async () => {
+      const unlinkSpy = vi.spyOn(fs, 'unlinkSync')
+      const t = tasks({
+        model: 'Post',
+        tests: false,
+        nestScaffoldByModel: true,
+      })
+      t.options.renderer = 'silent'
+
+      await t.tasks[0].run()
+
+      expect(unlinkSpy).toHaveBeenCalledWith(
+        path.join(
+          getPaths().web.layouts,
+          'PostsScaffoldLayout',
+          'PostsScaffoldLayout.jsx',
+        ),
+      )
+      expect(unlinkSpy).not.toHaveBeenCalledWith(
+        path.join(
+          getPaths().web.layouts,
+          'ScaffoldLayout',
+          'ScaffoldLayout.jsx',
+        ),
+      )
+    })
+
+    test('removes the scaffold Set, PrivateSet and layout import', async () => {
+      fs.writeFileSync(
+        getPaths().web.routes,
+        [
+          "import { Router, Route, Set, PrivateSet } from '@cedarjs/router'",
+          '',
+          "import PostsScaffoldLayout from 'src/layouts/PostsScaffoldLayout'",
+          '',
+          'const Routes = () => {',
+          '  return (',
+          '    <Router>',
+          '      <PrivateSet unauthenticated="login">',
+          '        <Set wrap={PostsScaffoldLayout}>',
+          '          <Route path="/posts/new" page={PostNewPostPage} name="newPost" />',
+          '          <Route path="/posts/{id:Int}/edit" page={PostEditPostPage} name="editPost" />',
+          '          <Route path="/posts/{id:Int}" page={PostPostPage} name="post" />',
+          '          <Route path="/posts" page={PostPostsPage} name="posts" />',
+          '        </Set>',
+          '      </PrivateSet>',
+          '      <Route path="/" page={HomePage} name="home" />',
+          '      <Route notfound page={NotFoundPage} />',
+          '    </Router>',
+          '  )',
+          '}',
+        ].join('\n'),
+      )
+
+      const t = tasks({
+        model: 'Post',
+        tests: false,
+        nestScaffoldByModel: true,
+      })
+      t.options.renderer = 'silent'
+
+      // Cleaning up routes and removing the layout import
+      await t.tasks[1].run()
+      await t.tasks[3].run()
+
+      expect(fs.readFileSync(getPaths().web.routes, 'utf-8')).toEqual(
+        [
+          "import { Router, Route, Set, PrivateSet } from '@cedarjs/router'",
+          '',
+          'const Routes = () => {',
+          '  return (',
+          '    <Router>',
+          '      <Route path="/" page={HomePage} name="home" />',
+          '      <Route notfound page={NotFoundPage} />',
+          '    </Router>',
+          '  )',
+          '}',
+        ].join('\n'),
+      )
     })
   })
 

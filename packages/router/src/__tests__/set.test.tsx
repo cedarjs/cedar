@@ -96,7 +96,7 @@ test('wraps components in other components', async () => {
   `)
 })
 
-test('passes props to wrappers', async () => {
+test('renders layout components that give props to other layouts', async () => {
   interface Props {
     propOne: string
     propTwo: string
@@ -112,7 +112,7 @@ test('passes props to wrappers', async () => {
     </div>
   )
 
-  const PropWrapperTwo = ({ children }: Props) => (
+  const PropWrapperTwo = ({ children }: LayoutProps) => (
     <div>
       <h1>Prop Wrapper Two</h1>
       {children}
@@ -120,9 +120,15 @@ test('passes props to wrappers', async () => {
     </div>
   )
 
+  const FrenchPropWrapper = ({ children }: LayoutProps) => (
+    <PropWrapper propOne="une" propTwo="deux">
+      {children}
+    </PropWrapper>
+  )
+
   const TestSet = () => (
     <Router>
-      <Set wrap={[PropWrapper, PropWrapperTwo]} propOne="une" propTwo="deux">
+      <Set wrap={[FrenchPropWrapper, PropWrapperTwo]}>
         <Route path="/" page={ChildA} name="childA" />
       </Set>
     </Router>
@@ -167,6 +173,39 @@ test('passes props to wrappers', async () => {
       </div>
     </div>
   `)
+})
+
+test('does not pass Set props to wrappers, and warns about them', async () => {
+  const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+  const PropsWrapper = (props: Record<string, unknown>) => (
+    <div>
+      <p>Props: {Object.keys(props).sort().join(',')}</p>
+      {props.children as ReactNode}
+    </div>
+  )
+
+  // JavaScript projects can put any prop on a Set. This mimics that
+  const jsSetProps: Record<string, unknown> = { title: 'Posts' }
+
+  const TestSet = () => (
+    <Router>
+      <Set wrap={PropsWrapper} {...jsSetProps}>
+        <Route path="/" page={ChildA} name="childA" />
+      </Set>
+    </Router>
+  )
+
+  const screen = render(<TestSet />)
+
+  await waitFor(() => screen.getByText('ChildA'))
+
+  expect(screen.getByText('Props: children')).toBeInTheDocument()
+  expect(consoleWarnSpy).toHaveBeenCalledWith(
+    expect.stringContaining('Unknown <Set> props: title.'),
+  )
+
+  consoleWarnSpy.mockRestore()
 })
 
 describe('Navigating Sets', () => {

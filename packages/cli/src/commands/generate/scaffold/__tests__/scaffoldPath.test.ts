@@ -38,8 +38,8 @@ describe('admin/post', () => {
   })
 
   describe('creates the correct files with the correct imports', () => {
-    it('returns exactly 19 files', () => {
-      expect(Object.keys(filesLower).length).toEqual(19)
+    it('returns exactly 20 files', () => {
+      expect(Object.keys(filesLower).length).toEqual(20)
     })
 
     // Layout
@@ -49,6 +49,29 @@ describe('admin/post', () => {
           '/path/to/project/web/src/layouts/ScaffoldLayout/ScaffoldLayout.jsx',
         ),
       ])
+    })
+
+    test('creates a scaffold specific layout', async () => {
+      expect(filesLower).toHaveProperty([
+        path.normalize(
+          '/path/to/project/web/src/layouts/Admin/PostsScaffoldLayout/PostsScaffoldLayout.jsx',
+        ),
+      ])
+    })
+
+    test('links the scaffold specific layout to the nested routes', async () => {
+      const layout =
+        filesLower[
+          path.normalize(
+            '/path/to/project/web/src/layouts/Admin/PostsScaffoldLayout/PostsScaffoldLayout.jsx',
+          )
+        ]
+
+      expect(layout).toContain('const PostsScaffoldLayout = ')
+      expect(layout).toContain('title="Posts"')
+      expect(layout).toContain('titleTo="adminPosts"')
+      expect(layout).toContain('buttonLabel="New Post"')
+      expect(layout).toContain('buttonTo="adminNewPost"')
     })
 
     // Pages
@@ -376,8 +399,8 @@ describe('Admin/Post', () => {
   })
 
   describe('creates the correct files with the correct imports', () => {
-    it('returns exactly 19 files', () => {
-      expect(Object.keys(filesUpper).length).toEqual(19)
+    it('returns exactly 20 files', () => {
+      expect(Object.keys(filesUpper).length).toEqual(20)
     })
 
     // Layout
@@ -386,6 +409,14 @@ describe('Admin/Post', () => {
       expect(filesUpper).toHaveProperty([
         path.normalize(
           '/path/to/project/web/src/layouts/ScaffoldLayout/ScaffoldLayout.jsx',
+        ),
+      ])
+    })
+
+    test('creates a scaffold specific layout', async () => {
+      expect(filesUpper).toHaveProperty([
+        path.normalize(
+          '/path/to/project/web/src/layouts/Admin/PostsScaffoldLayout/PostsScaffoldLayout.jsx',
         ),
       ])
     })

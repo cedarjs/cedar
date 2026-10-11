@@ -104,8 +104,6 @@ describe('AnalyzeRoutes: with homePage and Children', () => {
 describe('setWrapper', () => {
   interface WrapperXProps {
     children: React.ReactNode
-    id: string
-    passThruProp: string
   }
 
   const WrapperX = ({ children }: WrapperXProps) => (
@@ -117,8 +115,6 @@ describe('setWrapper', () => {
 
   interface WrapperYProps {
     children: React.ReactNode
-    id: string
-    theme: string
   }
 
   const WrapperY = ({ children }: WrapperYProps) => (
@@ -130,9 +126,9 @@ describe('setWrapper', () => {
 
   const Simple = (
     <Router>
-      <Set wrap={[WrapperX]} id="set-one" passThruProp="bazinga">
+      <Set wrap={[WrapperX]} roles="admin">
         <Route path="/a" name="routeA" page={FakePage} />
-        <Set wrap={[WrapperY]} id="set-two" theme="blue">
+        <Set wrap={[WrapperY]} roles={['editor']}>
           <Route name="routeB" path="/b" page={FakePage} />
           <Route name="routeC" path="/c" page={FakePage} />
         </Set>
@@ -157,8 +153,7 @@ describe('setWrapper', () => {
             wrappers: [WrapperX],
             isPrivate: false,
             props: {
-              id: 'set-one',
-              passThruProp: 'bazinga',
+              roles: 'admin',
             },
           },
         ],
@@ -177,17 +172,15 @@ describe('setWrapper', () => {
             wrappers: [WrapperX],
             isPrivate: false,
             props: {
-              id: 'set-one',
-              passThruProp: 'bazinga',
+              roles: 'admin',
             },
           },
           {
             id: '1.1',
-            isPrivate: false,
             wrappers: [WrapperY],
+            isPrivate: false,
             props: {
-              id: 'set-two',
-              theme: 'blue',
+              roles: ['editor'],
             },
           },
         ],
@@ -206,8 +199,7 @@ describe('setWrapper', () => {
             wrappers: [WrapperX],
             isPrivate: false,
             props: {
-              id: 'set-one',
-              passThruProp: 'bazinga',
+              roles: 'admin',
             },
           },
           {
@@ -215,8 +207,7 @@ describe('setWrapper', () => {
             wrappers: [WrapperY],
             isPrivate: false,
             props: {
-              id: 'set-two',
-              theme: 'blue',
+              roles: ['editor'],
             },
           },
         ],
@@ -237,8 +228,7 @@ describe('setWrapper', () => {
             wrappers: [WrapperX],
             isPrivate: false,
             props: {
-              id: 'set-one',
-              passThruProp: 'bazinga',
+              roles: 'admin',
             },
           },
         ],
@@ -257,8 +247,7 @@ describe('setWrapper', () => {
             wrappers: [WrapperX],
             isPrivate: false,
             props: {
-              id: 'set-one',
-              passThruProp: 'bazinga',
+              roles: 'admin',
             },
           },
           {
@@ -266,8 +255,7 @@ describe('setWrapper', () => {
             wrappers: [WrapperY],
             isPrivate: false,
             props: {
-              id: 'set-two',
-              theme: 'blue',
+              roles: ['editor'],
             },
           },
         ],
@@ -286,8 +274,7 @@ describe('setWrapper', () => {
             wrappers: [WrapperX],
             isPrivate: false,
             props: {
-              id: 'set-one',
-              passThruProp: 'bazinga',
+              roles: 'admin',
             },
           },
           {
@@ -295,8 +282,7 @@ describe('setWrapper', () => {
             wrappers: [WrapperY],
             isPrivate: false,
             props: {
-              id: 'set-two',
-              theme: 'blue',
+              roles: ['editor'],
             },
           },
         ],
