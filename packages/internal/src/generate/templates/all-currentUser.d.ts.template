@@ -3,11 +3,12 @@ import '@cedarjs/auth'
 
 import { getCurrentUser } from '../../../api/src/lib/auth.js'
 
-// The user getCurrentUser() returns. getCurrentUser() returns null when it
-// can't find the user; GlobalContext's currentUser type below covers that
-// case. CurrentUser below extends this type, and with strictNullChecks an
-// interface can't extend a type that includes null.
-export type InferredCurrentUser = NonNullable<
+// The logged-in user getCurrentUser() returns. getCurrentUser() returns null
+// when nobody is logged in; @cedarjs/auth's CurrentUser type and
+// GlobalContext's currentUser type below cover that case. LoggedInUser below
+// extends this type, and with strictNullChecks an interface can't extend a
+// type that includes null.
+export type InferredLoggedInUser = NonNullable<
   Awaited<ReturnType<typeof getCurrentUser>>
 >
 
@@ -29,10 +30,10 @@ declare module '@cedarjs/context' {
   interface GlobalContext {
     // Not set when nobody is logged in. Functions wrapped in useRequireAuth
     // set it to whatever getCurrentUser() returned, including null
-    currentUser?: Overwrite<UndefinedRoles, InferredCurrentUser> | null
+    currentUser?: Overwrite<UndefinedRoles, InferredLoggedInUser> | null
   }
 }
 
 declare module '@cedarjs/auth' {
-  interface CurrentUser extends InferredCurrentUser {}
+  interface LoggedInUser extends InferredLoggedInUser {}
 }

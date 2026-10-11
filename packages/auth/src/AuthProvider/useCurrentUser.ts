@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 
+import type { CurrentUser } from '../AuthContext.js'
 import type { AuthImplementation } from '../AuthImplementation.js'
 
 import { useToken } from './useToken.js'
@@ -7,7 +8,7 @@ import { useToken } from './useToken.js'
 export const useCurrentUser = (authImplementation: AuthImplementation) => {
   const getToken = useToken(authImplementation)
 
-  return useCallback(async (): Promise<Record<string, unknown>> => {
+  return useCallback(async (): Promise<CurrentUser> => {
     // Always get a fresh token, rather than use the one in state
     const token = await getToken()
     const response = await globalThis.fetch(globalThis.RWJS_API_GRAPHQL_URL, {
