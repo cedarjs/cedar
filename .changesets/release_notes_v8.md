@@ -187,10 +187,6 @@ and exports are made more precise.
 - `@cedarjs/auth` exports a new `LoggedInUser` type: the user
   `getCurrentUser` returns when someone is logged in. `CurrentUser` is
   `LoggedInUser | null`, matching what `getCurrentUser` returns.
-- `<Set wrap={...}>` and `<PrivateSet wrap={...}>` infer the forwarded props
-  from the wrapper components, so props like `titleTo="posts"` are checked
-  against the wrapper's prop types. Passing a prop the wrapper components
-  don't accept is a type error
 
 ### Upgrading
 
@@ -199,5 +195,3 @@ and exports are made more precise.
   this only matters in projects with `strict` (or `strictNullChecks`) on
 - If you extend `CurrentUser` with `declare module '@cedarjs/auth'`, extend
   `LoggedInUser` instead. `CurrentUser` is a type alias and can't be extended
-- `<Set>` and `<PrivateSet>`: remove props that none of the `wrap` components
-  accept, or add them to the wrapper's props
