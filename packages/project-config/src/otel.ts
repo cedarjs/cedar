@@ -87,6 +87,28 @@ export function getOTelImportArgs(): string[] {
 }
 
 /**
+ * Quote the `--import` argv entries from `getOTelImportArgs()` for a command
+ * string that will be run through a shell (`sh -c` on macOS/Linux,
+ * `cmd.exe /s /c` on Windows, as `concurrently` does).
+ *
+ * On POSIX a single-quoted string protects everything except a single quote
+ * itself, which is closed and re-escaped as `'\''`. On Windows `cmd.exe`
+ * treats single quotes as literal characters, so double quotes are used
+ * there; a double quote cannot appear in a file URL (it is percent-encoded
+ * by `pathToFileURL`), which is what these arguments wrap.
+ */
+export function quoteOTelImportArgs(
+  args: string[],
+  platform: NodeJS.Platform = process.platform,
+): string[] {
+  if (platform === 'win32') {
+    return args.map((arg) => `"${arg}"`)
+  }
+
+  return args.map((arg) => `'${arg.replaceAll("'", `'\\''`)}'`)
+}
+
+/**
  * Whether the Cedar CLI's own telemetry has registered a global tracer
  * provider in this process.
  *

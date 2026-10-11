@@ -5,7 +5,11 @@ import { pathToFileURL } from 'node:url'
 
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
 
-import { getOTelImportArgs, getOTelSetupFileUrl } from '../otel'
+import {
+  getOTelImportArgs,
+  getOTelSetupFileUrl,
+  quoteOTelImportArgs,
+} from '../otel'
 import { getPaths } from '../paths'
 
 const CEDAR_CWD = process.env.CEDAR_CWD
@@ -132,5 +136,33 @@ describe('getOTelSetupFileUrl', () => {
 
   it('returns undefined when opentelemetry is disabled', () => {
     expect(getOTelSetupFileUrl()).toBeUndefined()
+  })
+})
+
+describe('quoteOTelImportArgs', () => {
+  it('single-quotes each argument for POSIX shells', () => {
+    expect(quoteOTelImportArgs(['--import=file:///a/b.js'], 'darwin')).toEqual([
+      `'--import=file:///a/b.js'`,
+    ])
+  })
+
+  it('escapes single quotes in the argument for POSIX shells', () => {
+    // A project directory such as "O'Brien" keeps its apostrophe in the
+    // file URL, which would close a plain single-quoted argument.
+    expect(
+      quoteOTelImportArgs([`--import=file:///a/O'Brien/b.js`], 'linux'),
+    ).toEqual(["'--import=file:///a/O'\\''Brien/b.js'"])
+  })
+
+  it('double-quotes each argument for Windows cmd.exe', () => {
+    // cmd.exe treats single quotes as literal characters, not quoting.
+    expect(quoteOTelImportArgs(['--import=file:///a/b.js'], 'win32')).toEqual([
+      `"--import=file:///a/b.js"`,
+    ])
+  })
+
+  it('returns the empty list unchanged', () => {
+    expect(quoteOTelImportArgs([], 'darwin')).toEqual([])
+    expect(quoteOTelImportArgs([], 'win32')).toEqual([])
   })
 })

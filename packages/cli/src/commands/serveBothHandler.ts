@@ -12,7 +12,12 @@ import {
 } from '@cedarjs/api-server/cliHelpers'
 import { formatRunBinCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
-import { getConfig, getOTelImportArgs, getPaths } from '@cedarjs/project-config'
+import {
+  getConfig,
+  getOTelImportArgs,
+  getPaths,
+  quoteOTelImportArgs,
+} from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { exitWithError } from '../lib/exit.js'
@@ -74,9 +79,11 @@ export const bothServerFileHandler = async (argv: ServeBothArgv) => {
           name: 'api',
           // The `--import` argument is a `file://` URL, which can contain
           // characters that are special to the shell `concurrently` runs
-          // this command through (spaces are escaped, but `&`, `(`, `)`,
-          // `'`, `$` and `;` are not), so it has to be quoted.
-          command: `${formatRunBinCommand('node', [...getOTelImportArgs().map((arg) => `'${arg}'`), path.join('dist', 'server.js'), '--apiPort', String(argv.apiPort), '--apiHost', argv.apiHost, '--apiRootPath', apiRootPath])}`,
+          // this command through. `quoteOTelImportArgs` picks the quoting
+          // that suits the platform's shell: single quotes (with embedded
+          // quotes escaped) for POSIX `sh`, double quotes for Windows
+          // `cmd.exe`.
+          command: `${formatRunBinCommand('node', [...quoteOTelImportArgs(getOTelImportArgs()), path.join('dist', 'server.js'), '--apiPort', String(argv.apiPort), '--apiHost', argv.apiHost, '--apiRootPath', apiRootPath])}`,
           cwd: getPaths().api.base,
           prefixColor: 'cyan',
         },
