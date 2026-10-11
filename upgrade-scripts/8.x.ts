@@ -105,19 +105,19 @@ interface SetWithWrapperProps {
 
 /**
  * Finds every <Set>, <PrivateSet> and <Private> in `code` that has props other
- * than the Set's own props
+ * than the Set's own props. Returns `null` when `code` can't be parsed
  */
 function findSetsWithWrapperPropsInFile(
   filePath: string,
   code: string,
-): Omit<SetWithWrapperProps, 'file'>[] {
+): Omit<SetWithWrapperProps, 'file'>[] | null {
   const sets: Omit<SetWithWrapperProps, 'file'>[] = []
 
   try {
     const { program, errors } = parseSync(filePath, code)
 
     if (errors.length > 0) {
-      return []
+      return null
     }
 
     const visitor = new Visitor({
@@ -174,7 +174,7 @@ function findSetsWithWrapperPropsInFile(
 
     visitor.visit(program)
   } catch {
-    return []
+    return null
   }
 
   return sets
@@ -182,9 +182,11 @@ function findSetsWithWrapperPropsInFile(
 
 async function findSetsWithWrapperProps() {
   const sets: SetWithWrapperProps[] = []
+  // Files with a Set that couldn't be parsed, so they couldn't be checked
+  const unparsedFiles: string[] = []
 
   if (!fs.existsSync(projectPaths.web.src)) {
-    return sets
+    return { sets, unparsedFiles }
   }
 
   for await (const file of fs.promises.glob(webSrcPatterns, {
@@ -198,18 +200,26 @@ async function findSetsWithWrapperProps() {
       continue
     }
 
-    for (const set of findSetsWithWrapperPropsInFile(filePath, code)) {
-      sets.push({
-        file: path
-          .relative(projectPaths.base, filePath)
-          .split(path.sep)
-          .join('/'),
-        ...set,
-      })
+    const relativePath = path
+      .relative(projectPaths.base, filePath)
+      .split(path.sep)
+      .join('/')
+    const setsInFile = findSetsWithWrapperPropsInFile(filePath, code)
+
+    if (setsInFile === null) {
+      unparsedFiles.push(relativePath)
+      continue
+    }
+
+    for (const set of setsInFile) {
+      sets.push({ file: relativePath, ...set })
     }
   }
 
-  return sets.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line)
+  return {
+    sets: sets.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line),
+    unparsedFiles: unparsedFiles.sort(),
+  }
 }
 
 async function main() {
@@ -218,7 +228,22 @@ async function main() {
   // pass, rather than the user fixing one and rerunning to find the next
   let shouldAbort = false
 
-  const setsWithWrapperProps = await findSetsWithWrapperProps()
+  const { sets: setsWithWrapperProps, unparsedFiles } =
+    await findSetsWithWrapperProps()
+
+  if (unparsedFiles.length > 0) {
+    warn('Files with <Set> components that could not be checked', [
+      'These files contain <Set>, <PrivateSet> or <Private>, but they could\n' +
+        'not be parsed, so they were not checked for props meant for wrapper\n' +
+        'components:\n\n' +
+        unparsedFiles.map((file) => `  ${file}`).join('\n'),
+      'Wrapper components only get `children`. Check the Sets in these files\n' +
+        'by hand. For a Set with props other than `wrap`, `private`,\n' +
+        '`unauthenticated`, `roles`, `prerender`, `whileLoadingAuth` and\n' +
+        '`whileLoadingPage`, create a layout component that renders the\n' +
+        'wrapper with those props, and use it in `wrap` instead.',
+    ])
+  }
 
   if (setsWithWrapperProps.length > 0) {
     shouldAbort = true

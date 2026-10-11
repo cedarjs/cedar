@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
+import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { describe, test } from 'node:test'
 import { stripVTControlCharacters } from 'node:util'
@@ -11,13 +13,17 @@ const fixturesPath = path.join(
 )
 
 function runScript(projectName: string) {
+  return runScriptIn(path.join(fixturesPath, projectName))
+}
+
+function runScriptIn(projectPath: string) {
   const result = spawnSync(
     process.execPath,
     [path.join(import.meta.dirname, '8.x.ts')],
     {
       env: {
         ...process.env,
-        CEDAR_CWD: path.join(fixturesPath, projectName),
+        CEDAR_CWD: projectPath,
       },
       encoding: 'utf8',
     },
@@ -81,5 +87,44 @@ describe('8.x: Sets with props for their wrappers', () => {
 
     assert.equal(status, 0)
     assert.doesNotMatch(stdout, /<Set> props for wrapper components/)
+  })
+
+  test('warns about files with Sets that cannot be parsed', () => {
+    // Created at runtime, because a file with a syntax error can't be
+    // committed as a fixture without failing the repo's formatting checks
+    const projectPath = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'cedar-8x-unparsable-'),
+    )
+
+    try {
+      fs.writeFileSync(path.join(projectPath, 'cedar.toml'), '')
+      fs.mkdirSync(path.join(projectPath, 'web', 'src'), { recursive: true })
+      fs.writeFileSync(
+        path.join(projectPath, 'web', 'src', 'Routes.tsx'),
+        [
+          "import { Router, Route, Set } from '@cedarjs/router'",
+          '',
+          'const Routes = () => (',
+          '  <Router>',
+          '    <Set wrap={ScaffoldLayout} title="Posts">',
+          '      <Route path="/posts" page={PostsPage} name="posts" />',
+          '    </Set',
+          '  </Router>',
+          ')',
+        ].join('\n'),
+      )
+
+      const { status, stdout } = runScriptIn(projectPath)
+
+      assert.equal(status, 0)
+      assert.match(
+        stdout,
+        /Files with <Set> components that could not be checked/,
+      )
+      assert.match(stdout, / {2}web\/src\/Routes\.tsx\n/)
+      assert.doesNotMatch(stdout, /<Set> props for wrapper components/)
+    } finally {
+      fs.rmSync(projectPath, { recursive: true, force: true })
+    }
   })
 })
