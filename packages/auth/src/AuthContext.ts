@@ -1,8 +1,19 @@
 import React from 'react'
 
-export interface CurrentUser {
+/**
+ * The user returned by your app's `getCurrentUser` function on the api side,
+ * when someone is logged in. Cedar generates the fields from your
+ * `getCurrentUser` function
+ */
+export interface LoggedInUser {
   [key: string]: unknown
 }
+
+/**
+ * What `getCurrentUser` returns: the logged-in user, or `null` when nobody is
+ * logged in
+ */
+export type CurrentUser = LoggedInUser | null
 
 export interface AuthContextInterface<
   TUser,
@@ -24,7 +35,7 @@ export interface AuthContextInterface<
   loading: boolean
   isAuthenticated: boolean
   /** The current user's data from the `getCurrentUser` function on the api side */
-  currentUser: null | CurrentUser
+  currentUser: CurrentUser
   /**
    * The user's metadata from the auth service provider
    *
@@ -58,7 +69,7 @@ export interface AuthContextInterface<
    * Fetches the "currentUser" from the api side,
    * but does not update the current user state.
    */
-  getCurrentUser(): Promise<null | CurrentUser>
+  getCurrentUser(): Promise<CurrentUser>
   /**
    * Checks if the "currentUser" from the api side
    * is assigned a role or one of a list of roles.

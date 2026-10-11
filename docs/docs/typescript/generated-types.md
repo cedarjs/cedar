@@ -30,7 +30,7 @@ If you're curious, you can find the generated types in the `.cedar/types`, `web/
 4. types for testing, `currentUser`, etc.
 5. types for certain functions like `routes.pageName()` and `useAuth()`
 
-## CurrentUser
+## CurrentUser and LoggedInUser
 
 If you've setup auth, the type for the current user on both the web and the api side gets automatically "inferred" from the `getCurrentUser` function in `api/src/lib/auth.ts`.
 
@@ -44,12 +44,21 @@ interface MyCurrentUser {
   projectId: number
 }
 
-const getCurrentUser = ({ decoded }): MyCurrentUser => {
+const getCurrentUser = async ({ decoded }): Promise<MyCurrentUser | null> => {
   //..
 }
 ```
 
-The types for both `useAuth().currentUser` on the web side and `context.currentUser` on the api side will be the same—the `MyCurrentUser` interface.
+...then `@cedarjs/auth` exports two types based on it:
+
+- `LoggedInUser` is the user when someone is logged in: the `MyCurrentUser` interface.
+- `CurrentUser` is what `getCurrentUser` returns: `LoggedInUser | null`.
+
+`useAuth().currentUser` on the web side is a `CurrentUser`. `context.currentUser` on the api side is a `CurrentUser` or `undefined`, so check that someone is logged in before you use it.
+
+```ts
+import type { CurrentUser, LoggedInUser } from '@cedarjs/auth'
+```
 
 :::info[Type of `context.currentUser` unknown?]
 This usually happens when you don't have the various generated and utility types in your project.
