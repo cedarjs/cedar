@@ -112,9 +112,7 @@ describe('vendorSandboxChildPackages', () => {
     const q = path.join(childrenDir, 'node_modules', 'q')
     expect(versionAt(q)).toBe('1.0.0')
     expect(versionAt(q, 'node_modules', 'p')).toBe('2.0.0')
-    expect(versionAt(q, 'node_modules', 'r', 'node_modules', 'p')).toBe(
-      '1.0.0',
-    )
+    expect(versionAt(q, 'node_modules', 'r', 'node_modules', 'p')).toBe('1.0.0')
   })
 
   it('fails when two versions would need the same place', () => {
