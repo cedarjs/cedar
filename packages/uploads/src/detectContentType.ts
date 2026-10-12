@@ -1,3 +1,8 @@
+import {
+  canonicalContentType,
+  isContentTypeListed,
+  isScriptableContentType,
+} from './contentTypes.js'
 import { isMimeTypeAllowed } from './profiles.js'
 
 /**
@@ -6,14 +11,56 @@ import { isMimeTypeAllowed } from './profiles.js'
  * the head of a large file, e.g. with a ranged GET. Fewer bytes still work for
  * most formats. An ISO-BMFF file (MP4, HEIC…) whose type depends on a
  * compatible brand needs its whole `ftyp` box, and is reported as `null`
- * when the box is cut off.
+ * when the box is cut off. Office files (`.docx`, `.xlsx`, `.pptx`) also
+ * need the end of the file; see `DETECT_CONTENT_TYPE_TAIL_BYTES`.
  */
 export const DETECT_CONTENT_TYPE_BYTES = 4096
 
 /**
- * Every MIME type `detectContentType()` can return. A claimed type in this
- * set is one the bytes can confirm or refute, which is what
- * `acceptedContentType()` relies on.
+ * How many bytes from the end of a file to pass as `tail` to
+ * `detectContentType()` when `bytes` is only the head of the file. Only ZIP
+ * files (head starts with `PK\x03\x04`) need it: telling a `.docx` from a
+ * `.docm` or any other ZIP means reading the archive's central directory,
+ * which is at the end.
+ *
+ * The end-of-central-directory record is 22 bytes, plus an archive comment
+ * that office files don't have. Each directory entry is 46 bytes plus its
+ * name (and an extra field some tools add), about 100 bytes for a typical
+ * office part, so 64 KiB holds a directory of 600 or so entries: every
+ * ordinary document and workbook, and slide decks of a few hundred slides.
+ * A directory that doesn't fit is reported as `null`, never guessed.
+ */
+export const DETECT_CONTENT_TYPE_TAIL_BYTES = 64 * 1024
+
+export interface DetectContentTypeOptions {
+  /**
+   * The last bytes of the file, when `bytes` is only its head (for example
+   * from two ranged reads of an object in storage). Without it, the end of
+   * `bytes` is taken as the end of the file, which is right when `bytes` is
+   * the whole file. Read `DETECT_CONTENT_TYPE_TAIL_BYTES`, or the whole file
+   * when it is smaller. Only ZIP-based formats use it.
+   */
+  tail?: Uint8Array
+}
+
+const DOCX =
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+const XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+const PPTX =
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+// Registered as `…macroEnabled.12`; MIME types are case-insensitive, and
+// every type here is lower case so comparisons can be exact
+const DOCM = 'application/vnd.ms-word.document.macroenabled.12'
+const XLSM = 'application/vnd.ms-excel.sheet.macroenabled.12'
+const PPTM = 'application/vnd.ms-powerpoint.presentation.macroenabled.12'
+const ODT = 'application/vnd.oasis.opendocument.text'
+const ODS = 'application/vnd.oasis.opendocument.spreadsheet'
+const ODP = 'application/vnd.oasis.opendocument.presentation'
+
+/**
+ * Every MIME type `detectContentType()` can return, in its canonical
+ * spelling. A claimed type in this set (or an alias of one) is one the bytes
+ * can confirm or refute, which is what `acceptedContentType()` relies on.
  */
 export const DETECTABLE_CONTENT_TYPES: ReadonlySet<string> = new Set([
   'image/jpeg',
@@ -32,7 +79,16 @@ export const DETECTABLE_CONTENT_TYPES: ReadonlySet<string> = new Set([
   'audio/mp4',
   'video/quicktime',
   'video/webm',
-  'video/x-matroska',
+  'video/matroska',
+  DOCX,
+  XLSX,
+  PPTX,
+  DOCM,
+  XLSM,
+  PPTM,
+  ODT,
+  ODS,
+  ODP,
 ])
 
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
@@ -347,7 +403,7 @@ function detectEbml(bytes: Uint8Array): string | null {
         case 'webm':
           return 'video/webm'
         case 'matroska':
-          return 'video/x-matroska'
+          return 'video/matroska'
         default:
           return null
       }
@@ -380,6 +436,207 @@ function detectBmp(bytes: Uint8Array): string | null {
   return null
 }
 
+const ZIP_LOCAL_HEADER = [0x50, 0x4b, 0x03, 0x04]
+const ZIP_CENTRAL_HEADER = [0x50, 0x4b, 0x01, 0x02]
+const ZIP_END_OF_DIRECTORY = [0x50, 0x4b, 0x05, 0x06]
+const ZIP_LOCAL_HEADER_SIZE = 30
+const ZIP_CENTRAL_HEADER_SIZE = 46
+const ZIP_END_OF_DIRECTORY_SIZE = 22
+const ZIP_MAX_COMMENT_LENGTH = 0xffff
+
+/** The OpenDocument types `detectOpenDocument()` reports. */
+const OPEN_DOCUMENT_TYPES = new Set([ODT, ODS, ODP])
+
+function readUint16LE(bytes: Uint8Array, offset: number) {
+  if (bytes.length < offset + 2) {
+    return null
+  }
+
+  return bytes[offset] + bytes[offset + 1] * 0x100
+}
+
+/**
+ * An OpenDocument file is a ZIP whose first entry is an uncompressed file
+ * named `mimetype` holding the document's MIME type. That is all in the
+ * first local file header, so the head of the file decides on its own.
+ */
+function detectOpenDocument(bytes: Uint8Array): string | null {
+  const flags = readUint16LE(bytes, 6)
+  const method = readUint16LE(bytes, 8)
+  const compressedSize = readUint32LE(bytes, 18)
+  const size = readUint32LE(bytes, 22)
+  const nameLength = readUint16LE(bytes, 26)
+  const extraLength = readUint16LE(bytes, 28)
+
+  if (
+    flags === null ||
+    method === null ||
+    compressedSize === null ||
+    size === null ||
+    nameLength === null ||
+    extraLength === null
+  ) {
+    return null
+  }
+
+  // Stored (method 0), with its sizes in the header rather than in a data
+  // descriptor after the data (flag bit 3)
+  if (method !== 0 || flags & 0x08 || compressedSize !== size || size > 64) {
+    return null
+  }
+
+  const nameEnd = ZIP_LOCAL_HEADER_SIZE + nameLength
+
+  if (ascii(bytes, ZIP_LOCAL_HEADER_SIZE, nameEnd) !== 'mimetype') {
+    return null
+  }
+
+  const contentStart = nameEnd + extraLength
+  const content = ascii(bytes, contentStart, contentStart + size)
+
+  return content !== null && OPEN_DOCUMENT_TYPES.has(content) ? content : null
+}
+
+/**
+ * The entry names in a ZIP's central directory, found through the
+ * end-of-central-directory record at the very end of `end`. `null` when the
+ * record or the whole directory isn't in `end`, or isn't well formed. ZIP64
+ * and multi-disk archives are `null` too; office files are neither.
+ */
+function readZipEntryNames(end: Uint8Array): string[] | null {
+  const last = end.length - ZIP_END_OF_DIRECTORY_SIZE
+  const first = Math.max(0, last - ZIP_MAX_COMMENT_LENGTH)
+
+  // The record is followed only by its comment, so it is the one whose
+  // comment ends exactly at the end of the file
+  for (let offset = last; offset >= first; offset--) {
+    if (
+      hasBytesAt(end, offset, ZIP_END_OF_DIRECTORY) &&
+      readUint16LE(end, offset + 20) === last - offset
+    ) {
+      return readCentralDirectory(end, offset)
+    }
+  }
+
+  return null
+}
+
+function readCentralDirectory(
+  end: Uint8Array,
+  recordOffset: number,
+): string[] | null {
+  const disk = readUint16LE(end, recordOffset + 4)
+  const directoryDisk = readUint16LE(end, recordOffset + 6)
+  const entries = readUint16LE(end, recordOffset + 10)
+  const directorySize = readUint32LE(end, recordOffset + 12)
+
+  if (
+    disk !== 0 ||
+    directoryDisk !== 0 ||
+    entries === null ||
+    entries === 0xffff ||
+    directorySize === null ||
+    directorySize === 0xffffffff
+  ) {
+    return null
+  }
+
+  // The directory sits right before the record. Locating it this way, rather
+  // than by its recorded offset, works on a tail without knowing the file's
+  // size; the entry walk below checks that it really is a directory.
+  let offset = recordOffset - directorySize
+
+  if (offset < 0) {
+    return null
+  }
+
+  const names: string[] = []
+
+  for (let i = 0; i < entries; i++) {
+    if (!hasBytesAt(end, offset, ZIP_CENTRAL_HEADER)) {
+      return null
+    }
+
+    const nameLength = readUint16LE(end, offset + 28)
+    const extraLength = readUint16LE(end, offset + 30)
+    const commentLength = readUint16LE(end, offset + 32)
+
+    if (nameLength === null || extraLength === null || commentLength === null) {
+      return null
+    }
+
+    const nameStart = offset + ZIP_CENTRAL_HEADER_SIZE
+    const name = ascii(end, nameStart, nameStart + nameLength)
+    offset = nameStart + nameLength + extraLength + commentLength
+
+    if (name === null || offset > recordOffset) {
+      return null
+    }
+
+    names.push(name)
+  }
+
+  return offset === recordOffset ? names : null
+}
+
+/**
+ * Office Open XML files (`.docx`, `.xlsx`, `.pptx`) are ZIPs with a
+ * `[Content_Types].xml` entry and their parts under `word/`, `xl/` or `ppt/`.
+ * Macro-enabled files (`.docm`, `.xlsm`, `.pptm`) have the same layout plus
+ * a VBA project or Excel 4.0 macro sheets, and are reported as their own
+ * types so that an accept list of `.docx` never admits macros. Templates and
+ * slide shows (`.dotx`, `.xltx`, `.potx`, `.ppsx`) differ only inside
+ * `[Content_Types].xml` and are reported as the document type.
+ */
+function classifyOfficeOpenXml(entryNames: string[]): string | null {
+  const names = entryNames.map((name) => name.toLowerCase())
+
+  if (!names.includes('[content_types].xml')) {
+    return null
+  }
+
+  const families = [
+    { prefix: 'word/', plain: DOCX, macro: DOCM },
+    { prefix: 'xl/', plain: XLSX, macro: XLSM },
+    { prefix: 'ppt/', plain: PPTX, macro: PPTM },
+  ].filter(({ prefix }) => names.some((name) => name.startsWith(prefix)))
+
+  // None, or a mix that no Office application writes
+  if (families.length !== 1) {
+    return null
+  }
+
+  const hasMacros = names.some(
+    (name) =>
+      name.endsWith('vbaproject.bin') ||
+      name.endsWith('vbadata.xml') ||
+      name.startsWith('xl/macrosheets/'),
+  )
+
+  return hasMacros ? families[0].macro : families[0].plain
+}
+
+/**
+ * ZIP-based office formats. OpenDocument is decided by the head alone;
+ * Office Open XML needs the central directory, from `tail` or, without one,
+ * from the end of `bytes`. Any other ZIP is `null`.
+ */
+function detectZip(bytes: Uint8Array, tail?: Uint8Array): string | null {
+  if (!hasBytesAt(bytes, 0, ZIP_LOCAL_HEADER)) {
+    return null
+  }
+
+  const openDocument = detectOpenDocument(bytes)
+
+  if (openDocument) {
+    return openDocument
+  }
+
+  const names = readZipEntryNames(tail ?? bytes)
+
+  return names ? classifyOfficeOpenXml(names) : null
+}
+
 /**
  * Tells what kind of file `bytes` is from its contents (its magic bytes), not
  * from a filename or the type a browser claimed. This is content sniffing, in
@@ -392,22 +649,29 @@ function detectBmp(bytes: Uint8Array): string | null {
  * by whoever sent it.
  *
  * Returns a MIME type, or `null` when the format isn't one this function
- * recognises. It never throws and never reads past the end of `bytes`, so
- * truncated or garbage input returns `null`. Passing the first
- * `DETECT_CONTENT_TYPE_BYTES` bytes is enough; passing the whole file works
- * too.
+ * recognises. It never throws and never reads past the end of its input, so
+ * truncated or garbage input returns `null`. Pass the whole file, or its
+ * first `DETECT_CONTENT_TYPE_BYTES` bytes plus, for a ZIP, its last
+ * `DETECT_CONTENT_TYPE_TAIL_BYTES` as `tail`. Without the tail, a `.docx`,
+ * `.xlsx` or `.pptx` whose head is all there is returns `null`.
  *
  * Recognised: JPEG, PNG, GIF, WebP, BMP, TIFF, AVIF, HEIC/HEIF (stills and
  * sequences), PDF, MP4 (video, and `audio/mp4` for `.m4a`), QuickTime/MOV,
- * WebM and Matroska. MP4, MOV, HEIC and AVIF share the ISO-BMFF `ftyp` box
- * and are told apart by its brands; WebM and Matroska share the EBML header
- * and are told apart by its `DocType`. WebM and Matroska are always reported
- * as video, because the header doesn't say whether there is a video track.
+ * WebM, Matroska, OpenDocument (`.odt`, `.ods`, `.odp`) and Office Open XML
+ * (`.docx`, `.xlsx`, `.pptx`, and their macro-enabled `.docm`, `.xlsm`,
+ * `.pptm`, which are reported as their own types). MP4, MOV, HEIC and AVIF
+ * share the ISO-BMFF `ftyp` box and are told apart by its brands; WebM and
+ * Matroska share the EBML header and are told apart by its `DocType`. WebM
+ * and Matroska are always reported as video, because the header doesn't say
+ * whether there is a video track.
+ *
+ * Returned types are the canonical spellings (`image/jpeg`, `video/matroska`,
+ * `audio/mp4`); see `CONTENT_TYPE_ALIASES` for the others.
  *
  * Not recognised, deliberately: SVG and other text formats (an SVG is XML that
  * can carry script, so it must never pass as a safe image, and text has no
- * reliable signature), and ZIP-based formats such as `.docx` (telling them
- * apart means reading the archive's directory). See `DETECTABLE_CONTENT_TYPES`
+ * reliable signature), ZIPs that aren't one of the office formats above, and
+ * legacy binary Office files (`.doc`, `.xls`). See `DETECTABLE_CONTENT_TYPES`
  * for the full list of possible results.
  *
  * @example
@@ -418,8 +682,15 @@ function detectBmp(bytes: Uint8Array): string | null {
  * if (type !== 'image/jpeg' && type !== 'image/png') {
  *   throw new Error('Only JPEG and PNG images can be thumbnailed')
  * }
+ *
+ * @example
+ * // A large object in storage: its head, and its tail when it is a ZIP
+ * const type = detectContentType(head, { tail })
  */
-export function detectContentType(bytes: Uint8Array): string | null {
+export function detectContentType(
+  bytes: Uint8Array,
+  options: DetectContentTypeOptions = {},
+): string | null {
   if (hasBytesAt(bytes, 0, [0xff, 0xd8, 0xff])) {
     return 'image/jpeg'
   }
@@ -448,29 +719,63 @@ export function detectContentType(bytes: Uint8Array): string | null {
     return 'image/tiff'
   }
 
-  return detectIsoBmff(bytes) ?? detectEbml(bytes) ?? detectBmp(bytes)
+  return (
+    detectIsoBmff(bytes) ??
+    detectEbml(bytes) ??
+    detectBmp(bytes) ??
+    detectZip(bytes, options.tail)
+  )
 }
 
-function normalize(mimeType: string) {
-  return mimeType.split(';')[0].trim().toLowerCase()
+/**
+ * Whether a claimed type may be accepted before the file's bytes are seen,
+ * as when issuing a presigned upload URL: allowed by `accept`, not a
+ * wildcard, and, for a type that can carry script, listed exactly. The bytes
+ * still have to be checked once they arrive.
+ */
+export function isClaimedContentTypeAllowed(
+  accept: string[],
+  claimedType: string,
+): boolean {
+  const claimed = canonicalContentType(claimedType)
+
+  if (!claimed || claimed.includes('*')) {
+    return false
+  }
+
+  return isScriptableContentType(claimed)
+    ? isContentTypeListed(accept, claimed)
+    : isMimeTypeAllowed(accept, claimed)
 }
 
 /**
  * Decides whether a file is one of the `accept`ed types by what its bytes
  * are, and returns the content type to record for it, or `null` when the
  * file is not accepted. `accept` takes the same entries as an upload
- * profile's `allowedMimeTypes`: exact types and `type/*` wildcards.
+ * profile's `allowedMimeTypes`: exact types and `type/*` wildcards, with
+ * either spelling of an aliased type (`CONTENT_TYPE_ALIASES`).
  *
  * - When `detectContentType()` recognises the bytes, the detected type must
  *   match `accept`, and is what's returned. The claimed type doesn't matter,
  *   so a HEIC photo a browser sent as `application/octet-stream` is accepted
  *   as `image/heic`.
  * - When it doesn't, the file is accepted on the strength of `claimedType`
- *   only if that type is listed in `accept` exactly (a wildcard isn't
- *   enough) and isn't one of `DETECTABLE_CONTENT_TYPES` (a real PNG would
- *   have been recognised). So `['image/*']` admits only images the detector
- *   recognises, and `['image/*', 'text/csv']` also admits files claimed to
- *   be CSV.
+ *   when that matches `accept`, wildcards included, except:
+ *   - a claimed type in `DETECTABLE_CONTENT_TYPES` is refused: a real PNG
+ *     would have been recognised, so the claim is false;
+ *   - a type that can carry script (`SCRIPTABLE_CONTENT_TYPES`, and any XML
+ *     type) must be listed exactly. `['image/*']` never admits an SVG, and
+ *     `['text/*']` never admits HTML.
+ *
+ *   No claimed type means not accepted.
+ *
+ * The returned type is canonical: lower-cased, without parameters, and with
+ * aliases resolved, so a JPEG claimed as `image/jpg` is stored as
+ * `image/jpeg`.
+ *
+ * Pass the whole file, or its head with `options.tail` (see
+ * `detectContentType()`). An office file checked by its head alone isn't
+ * recognised, and its claimed type is then refused as false.
  *
  * @example
  * import { acceptedContentType, storeFile } from '@cedarjs/uploads'
@@ -487,8 +792,9 @@ export function acceptedContentType(
   bytes: Uint8Array,
   accept: string[],
   claimedType?: string,
+  options: DetectContentTypeOptions = {},
 ): string | null {
-  const detected = detectContentType(bytes)
+  const detected = detectContentType(bytes, options)
 
   if (detected) {
     return isMimeTypeAllowed(accept, detected) ? detected : null
@@ -498,11 +804,13 @@ export function acceptedContentType(
     return null
   }
 
-  const claimed = normalize(claimedType)
+  const claimed = canonicalContentType(claimedType)
 
-  if (!claimed || DETECTABLE_CONTENT_TYPES.has(claimed)) {
+  // A type the detector knows would have been recognised, so the claim is
+  // false
+  if (DETECTABLE_CONTENT_TYPES.has(claimed)) {
     return null
   }
 
-  return accept.some((entry) => normalize(entry) === claimed) ? claimed : null
+  return isClaimedContentTypeAllowed(accept, claimed) ? claimed : null
 }

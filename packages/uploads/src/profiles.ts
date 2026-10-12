@@ -1,5 +1,6 @@
 import type { SignedTokenExpiresIn } from '@cedarjs/api'
 
+import { canonicalContentType } from './contentTypes.js'
 import { UploadError } from './errors.js'
 
 /**
@@ -20,7 +21,11 @@ export interface UploadProfile {
   target: string
   /**
    * MIME types the profile accepts. Exact types (`image/png`) and wildcard
-   * subtypes (`image/*`) are supported.
+   * subtypes (`image/*`) are supported, and either spelling of an aliased
+   * type (`image/jpeg` or `image/jpg`) matches both. When files are checked
+   * by their bytes (`verifyContentType`, on by default), types that can carry
+   * script, such as `image/svg+xml` or `text/html`, are only accepted when
+   * listed exactly; see `SCRIPTABLE_CONTENT_TYPES`.
    */
   allowedMimeTypes: string[]
   /** Largest file the profile accepts, in bytes. */
@@ -106,12 +111,14 @@ export function resolveProfile(
 /**
  * Whether `mimeType` matches one of `allowed`. Matching is case-insensitive
  * and ignores parameters such as `; charset=utf-8`. An entry of `image/*`
- * matches every `image/` subtype.
+ * matches every `image/` subtype. Aliases in `CONTENT_TYPE_ALIASES` are the
+ * same type, so `image/jpg` matches an entry of `image/jpeg` and the other
+ * way round.
  */
 export function isMimeTypeAllowed(allowed: string[], mimeType: string) {
-  const normalized = mimeType.split(';')[0].trim().toLowerCase()
+  const type = canonicalContentType(mimeType)
 
-  if (!normalized) {
+  if (!type) {
     return false
   }
 
@@ -123,9 +130,9 @@ export function isMimeTypeAllowed(allowed: string[], mimeType: string) {
     }
 
     if (pattern.endsWith('/*')) {
-      return normalized.startsWith(pattern.slice(0, -1))
+      return type.startsWith(pattern.slice(0, -1))
     }
 
-    return pattern === normalized
+    return canonicalContentType(pattern) === type
   })
 }

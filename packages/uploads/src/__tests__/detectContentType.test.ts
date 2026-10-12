@@ -3,9 +3,25 @@ import { describe, expect, test } from 'vitest'
 import {
   acceptedContentType,
   DETECT_CONTENT_TYPE_BYTES,
+  DETECT_CONTENT_TYPE_TAIL_BYTES,
   DETECTABLE_CONTENT_TYPES,
   detectContentType,
+  isClaimedContentTypeAllowed,
 } from '../detectContentType.js'
+
+import { officeOpenXml, openDocument, zip } from './helpers/zip.js'
+
+const DOCX =
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+const XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+const PPTX =
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+const DOCM = 'application/vnd.ms-word.document.macroenabled.12'
+const XLSM = 'application/vnd.ms-excel.sheet.macroenabled.12'
+const PPTM = 'application/vnd.ms-powerpoint.presentation.macroenabled.12'
+const ODT = 'application/vnd.oasis.opendocument.text'
+const ODS = 'application/vnd.oasis.opendocument.spreadsheet'
+const ODP = 'application/vnd.oasis.opendocument.presentation'
 
 // Every fixture is a minimal header built here, not a copy of a real file
 
@@ -103,7 +119,51 @@ const RECOGNISED: [string, Uint8Array, string][] = [
   ['TIFF (big-endian)', bytes('MM', [0, 0x2a, 0, 0, 0, 8]), 'image/tiff'],
   ['PDF', bytes('%PDF-1.7\n%\xe2\xe3\xcf\xd3\n'), 'application/pdf'],
   ['WebM', ebml('webm'), 'video/webm'],
-  ['Matroska', ebml('matroska'), 'video/x-matroska'],
+  ['Matroska', ebml('matroska'), 'video/matroska'],
+  ['OpenDocument text', openDocument(ODT), ODT],
+  ['OpenDocument spreadsheet', openDocument(ODS), ODS],
+  ['OpenDocument presentation', openDocument(ODP), ODP],
+]
+
+/**
+ * Office Open XML files, recognised by their central directory, so only as
+ * whole files (or with a tail).
+ */
+const OFFICE: [string, Uint8Array, string][] = [
+  ['DOCX', officeOpenXml('word'), DOCX],
+  ['XLSX', officeOpenXml('xl'), XLSX],
+  ['PPTX', officeOpenXml('ppt'), PPTX],
+  [
+    'DOCM',
+    officeOpenXml('word', [{ name: 'word/vbaProject.bin', data: 'vba' }]),
+    DOCM,
+  ],
+  [
+    'XLSM',
+    officeOpenXml('xl', [{ name: 'xl/vbaProject.bin', data: 'vba' }]),
+    XLSM,
+  ],
+  [
+    'XLSM with only Excel 4.0 macro sheets',
+    officeOpenXml('xl', [{ name: 'xl/macrosheets/sheet1.xml', data: '<x/>' }]),
+    XLSM,
+  ],
+  [
+    'PPTM',
+    officeOpenXml('ppt', [{ name: 'ppt/vbaProject.bin', data: 'vba' }]),
+    PPTM,
+  ],
+  [
+    'DOCX with an archive comment',
+    zip(
+      [
+        { name: '[Content_Types].xml', data: '<Types/>' },
+        { name: 'word/document.xml', data: '<w/>' },
+      ],
+      { comment: 'PK\x05\x06 lookalike in the comment' },
+    ),
+    DOCX,
+  ],
 ]
 
 /** ISO-BMFF files, by brand family. */
@@ -133,7 +193,7 @@ const BRANDS: [string, Uint8Array, string][] = [
 ]
 
 describe('detectContentType', () => {
-  test.each([...RECOGNISED, ...BRANDS])(
+  test.each([...RECOGNISED, ...BRANDS, ...OFFICE])(
     'recognises %s',
     (_name, data, expected) => {
       expect(detectContentType(strict(data))).toBe(expected)
@@ -145,7 +205,7 @@ describe('detectContentType', () => {
   })
 
   test('only returns types listed in DETECTABLE_CONTENT_TYPES', () => {
-    for (const [, data, expected] of [...RECOGNISED, ...BRANDS]) {
+    for (const [, data, expected] of [...RECOGNISED, ...BRANDS, ...OFFICE]) {
       expect(DETECTABLE_CONTENT_TYPES.has(expected)).toBe(true)
       expect(detectContentType(data)).toBe(expected)
     }
@@ -170,7 +230,12 @@ describe('detectContentType', () => {
     ['HTML', bytes('<!doctype html><script>alert(1)</script>')],
     ['plain text', bytes('hello, world')],
     ['a RIFF WAVE file', bytes('RIFF', [0x24, 0, 0, 0], 'WAVEfmt ')],
-    ['a ZIP archive (e.g. .docx)', bytes('PK', [3, 4, 20, 0, 0, 0])],
+    ['the start of a ZIP archive', bytes('PK', [3, 4, 20, 0, 0, 0])],
+    ['a ZIP archive', zip([{ name: 'notes.txt', data: 'hello' }])],
+    [
+      'a legacy OLE .doc',
+      bytes([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]),
+    ],
     ['empty input', new Uint8Array(0)],
   ])('does not recognise %s', (_name, data) => {
     expect(detectContentType(strict(data))).toBeNull()
@@ -278,7 +343,11 @@ describe('detectContentType', () => {
   })
 
   test('every prefix of every fixture is either recognised the same or not at all', () => {
-    for (const [name, data, expected] of [...RECOGNISED, ...BRANDS]) {
+    for (const [name, data, expected] of [
+      ...RECOGNISED,
+      ...BRANDS,
+      ...OFFICE,
+    ]) {
       for (let length = 0; length <= data.length; length++) {
         const prefix = strict(data.slice(0, length))
         const detected = detectContentType(prefix)
@@ -300,7 +369,9 @@ describe('detectContentType', () => {
       return seed
     }
 
-    const headers = [...RECOGNISED, ...BRANDS].map(([, data]) => data)
+    const headers = [...RECOGNISED, ...BRANDS, ...OFFICE].map(
+      ([, data]) => data,
+    )
 
     for (let i = 0; i < 2000; i++) {
       const data = new Uint8Array(random() % 64)
@@ -320,8 +391,158 @@ describe('detectContentType', () => {
   })
 })
 
+describe('ZIP-based office formats', () => {
+  /** A DOCX big enough that its head and tail don't overlap. */
+  function bigDocx(padding = DETECT_CONTENT_TYPE_BYTES * 4) {
+    return zip([
+      { name: '[Content_Types].xml', data: '<Types/>' },
+      { name: 'word/media/image1.png', data: new Uint8Array(padding) },
+      { name: 'word/document.xml', data: '<w/>' },
+    ])
+  }
+
+  test('recognises OpenDocument from the head alone', () => {
+    const data = openDocument(ODS, [
+      { name: 'Pictures/a.png', data: new Uint8Array(10_000) },
+    ])
+
+    expect(
+      detectContentType(strict(data.subarray(0, DETECT_CONTENT_TYPE_BYTES))),
+    ).toBe(ODS)
+  })
+
+  test.each([
+    [
+      'a compressed mimetype entry',
+      zip([{ name: 'mimetype', data: ODT, method: 8 }]),
+    ],
+    [
+      'a mimetype entry that is not first',
+      zip([
+        { name: 'content.xml', data: '<x/>' },
+        { name: 'mimetype', data: ODT },
+      ]),
+    ],
+    [
+      'an OpenDocument type it does not report (EPUB)',
+      zip([{ name: 'mimetype', data: 'application/epub+zip' }]),
+    ],
+    [
+      'an OpenDocument type it does not report (graphics)',
+      openDocument('application/vnd.oasis.opendocument.graphics'),
+    ],
+  ])('does not recognise %s', (_name, data) => {
+    expect(detectContentType(strict(data))).toBeNull()
+  })
+
+  test('does not guess Office Open XML from the head alone', () => {
+    const data = bigDocx()
+    const head = data.subarray(0, DETECT_CONTENT_TYPE_BYTES)
+
+    expect(detectContentType(strict(head))).toBeNull()
+  })
+
+  test('recognises Office Open XML from its head plus its tail', () => {
+    const data = bigDocx()
+    const head = data.subarray(0, DETECT_CONTENT_TYPE_BYTES)
+    const tail = data.subarray(data.length - DETECT_CONTENT_TYPE_TAIL_BYTES)
+
+    expect(detectContentType(strict(head), { tail: strict(tail) })).toBe(DOCX)
+  })
+
+  test('does not guess when the tail does not hold the whole directory', () => {
+    const data = bigDocx()
+    const tail = data.subarray(data.length - 60)
+
+    expect(
+      detectContentType(data.subarray(0, 100), { tail: strict(tail) }),
+    ).toBeNull()
+  })
+
+  test('ignores the tail for anything that is not a ZIP', () => {
+    expect(detectContentType(PNG, { tail: officeOpenXml('word') })).toBe(
+      'image/png',
+    )
+    expect(
+      detectContentType(bytes('hello'), { tail: officeOpenXml('word') }),
+    ).toBeNull()
+  })
+
+  test.each([
+    [
+      'no [Content_Types].xml',
+      zip([{ name: 'word/document.xml', data: '<w/>' }]),
+    ],
+    [
+      'parts of more than one kind of document',
+      zip([
+        { name: '[Content_Types].xml', data: '<Types/>' },
+        { name: 'word/document.xml', data: '<w/>' },
+        { name: 'xl/workbook.xml', data: '<x/>' },
+      ]),
+    ],
+    [
+      'a ZIP64 end of central directory',
+      (() => {
+        const data = officeOpenXml('word')
+        // Total entries 0xFFFF means "see the ZIP64 record"
+        data[data.length - 12] = 0xff
+        data[data.length - 11] = 0xff
+        return data
+      })(),
+    ],
+    [
+      'a directory size that does not match its entries',
+      (() => {
+        const data = officeOpenXml('word')
+        data[data.length - 10] += 1
+        return data
+      })(),
+    ],
+  ])('does not recognise a ZIP with %s', (_name, data) => {
+    expect(detectContentType(strict(data))).toBeNull()
+  })
+
+  test('never throws or reads past the end of a random central directory', () => {
+    let seed = 0x5eed
+    const random = () => {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff
+      return seed
+    }
+
+    const head = officeOpenXml('word').subarray(0, 30)
+
+    for (let i = 0; i < 2000; i++) {
+      const tail = new Uint8Array(22 + (random() % 200))
+
+      for (let j = 0; j < tail.length; j++) {
+        tail[j] = random() & 0xff
+      }
+
+      // A well-placed end-of-central-directory signature, with random fields
+      // and a comment length that reaches the end
+      const record = tail.length - 22
+      tail.set([0x50, 0x4b, 0x05, 0x06, 0, 0, 0, 0], record)
+      tail[record + 20] = 0
+      tail[record + 21] = 0
+
+      // Half of them point at a run of central-directory signatures
+      if (i % 2 === 0) {
+        for (let j = 0; j + 4 <= record; j += 46) {
+          tail.set([0x50, 0x4b, 0x01, 0x02], j)
+        }
+      }
+
+      expect(() =>
+        detectContentType(strict(head), { tail: strict(tail) }),
+      ).not.toThrow()
+    }
+  })
+})
+
 describe('acceptedContentType', () => {
   const HTML = bytes('<!doctype html><script>alert(1)</script>')
+  const CSV = bytes('name,email\n')
 
   test('returns the detected type when it is accepted, whatever was claimed', () => {
     expect(
@@ -340,32 +561,124 @@ describe('acceptedContentType', () => {
     ).toBeNull()
   })
 
-  test('rejects unrecognised bytes claimed to be a detectable type', () => {
-    expect(acceptedContentType(HTML, ['image/png'], 'image/png')).toBeNull()
-    expect(acceptedContentType(HTML, ['image/*'], 'image/png')).toBeNull()
+  test('accepts a detected type through either spelling of its alias', () => {
+    const jpeg = bytes([0xff, 0xd8, 0xff, 0xe0])
+
+    expect(acceptedContentType(jpeg, ['image/jpg'], 'image/jpg')).toBe(
+      'image/jpeg',
+    )
+    expect(acceptedContentType(ebml('matroska'), ['video/x-matroska'])).toBe(
+      'video/matroska',
+    )
+    expect(acceptedContentType(ebml('matroska'), ['video/matroska'])).toBe(
+      'video/matroska',
+    )
+    expect(acceptedContentType(ftyp('M4A '), ['audio/x-m4a'])).toBe('audio/mp4')
   })
 
-  test('accepts unrecognised bytes only for a claimed type listed exactly', () => {
-    const csv = bytes('name,email\n')
+  describe('bytes it does not recognise', () => {
+    test('are refused when claimed as a type it can detect', () => {
+      expect(acceptedContentType(HTML, ['image/png'], 'image/png')).toBeNull()
+      expect(acceptedContentType(HTML, ['image/*'], 'image/png')).toBeNull()
+      // An alias of a detectable type is a detectable type
+      expect(acceptedContentType(HTML, ['*/*'], 'image/jpg')).toBeNull()
+      expect(acceptedContentType(HTML, ['*/*'], DOCX)).toBeNull()
+    })
 
-    expect(acceptedContentType(csv, ['text/*'], 'text/csv')).toBeNull()
-    expect(acceptedContentType(csv, ['*/*'], 'text/csv')).toBeNull()
-    expect(acceptedContentType(csv, ['image/*', 'Text/CSV'], 'text/csv')).toBe(
-      'text/csv',
+    test('are accepted under a claimed type that matches, wildcards included', () => {
+      expect(acceptedContentType(CSV, ['text/csv'], 'text/csv')).toBe(
+        'text/csv',
+      )
+      expect(acceptedContentType(CSV, ['text/*'], 'text/csv')).toBe('text/csv')
+      expect(acceptedContentType(CSV, ['*/*'], 'text/csv')).toBe('text/csv')
+      expect(
+        acceptedContentType(bytes('{}'), ['application/*'], 'application/json'),
+      ).toBe('application/json')
+      expect(acceptedContentType(CSV, ['image/*'], 'text/csv')).toBeNull()
+    })
+
+    test('are stored under the canonical spelling of the claimed type', () => {
+      expect(
+        acceptedContentType(CSV, ['text/csv'], 'TEXT/CSV; charset=utf-8'),
+      ).toBe('text/csv')
+    })
+
+    test.each([
+      ['image/svg+xml', ['image/*']],
+      ['text/html', ['text/*']],
+      ['application/xhtml+xml', ['application/*']],
+      ['text/javascript', ['text/*']],
+      ['application/javascript', ['application/*']],
+      ['text/xml', ['*/*']],
+      ['application/xml', ['application/*']],
+      ['application/rss+xml', ['*/*']],
+    ])('are never accepted as %s through a wildcard', (type, accept) => {
+      expect(acceptedContentType(HTML, accept, type)).toBeNull()
+    })
+
+    test('are accepted as a type that can carry script when it is listed exactly', () => {
+      const svg = bytes('<svg xmlns="http://www.w3.org/2000/svg"></svg>')
+
+      expect(
+        acceptedContentType(svg, ['image/*', 'image/svg+xml'], 'image/svg+xml'),
+      ).toBe('image/svg+xml')
+      expect(acceptedContentType(HTML, ['text/html'], 'text/html')).toBe(
+        'text/html',
+      )
+    })
+
+    test('are refused without a claimed type, or with a wildcard one', () => {
+      expect(acceptedContentType(HTML, ['text/html'])).toBeNull()
+      expect(acceptedContentType(HTML, ['text/html'], ' ')).toBeNull()
+      expect(acceptedContentType(CSV, ['text/*'], 'text/*')).toBeNull()
+      expect(acceptedContentType(CSV, ['*/*'], '*/*')).toBeNull()
+    })
+  })
+
+  describe('office files', () => {
+    test('are accepted from the whole file', () => {
+      expect(acceptedContentType(officeOpenXml('word'), [DOCX], DOCX)).toBe(
+        DOCX,
+      )
+    })
+
+    test('are refused from the head alone, and accepted with the tail', () => {
+      const data = zip([
+        { name: '[Content_Types].xml', data: '<Types/>' },
+        { name: 'xl/media/a.png', data: new Uint8Array(20_000) },
+        { name: 'xl/workbook.xml', data: '<x/>' },
+      ])
+      const head = data.subarray(0, DETECT_CONTENT_TYPE_BYTES)
+      const tail = data.subarray(-DETECT_CONTENT_TYPE_TAIL_BYTES)
+
+      expect(acceptedContentType(head, [XLSX], XLSX)).toBeNull()
+      expect(acceptedContentType(head, [XLSX], XLSX, { tail })).toBe(XLSX)
+    })
+
+    test('with macros are not accepted as their macro-free type', () => {
+      const docm = officeOpenXml('word', [
+        { name: 'word/vbaProject.bin', data: 'vba' },
+      ])
+
+      expect(acceptedContentType(docm, [DOCX], DOCX)).toBeNull()
+      expect(acceptedContentType(docm, [DOCX, DOCM], DOCX)).toBe(DOCM)
+    })
+  })
+})
+
+describe('isClaimedContentTypeAllowed', () => {
+  test('applies the wildcard rules without looking at bytes', () => {
+    expect(isClaimedContentTypeAllowed(['image/*'], 'image/png')).toBe(true)
+    expect(isClaimedContentTypeAllowed(['image/jpeg'], 'image/jpg')).toBe(true)
+    expect(isClaimedContentTypeAllowed(['text/*'], 'text/csv')).toBe(true)
+    expect(isClaimedContentTypeAllowed(['image/*'], 'image/svg+xml')).toBe(
+      false,
     )
     expect(
-      acceptedContentType(csv, ['text/csv'], 'TEXT/CSV; charset=utf-8'),
-    ).toBe('text/csv')
-  })
-
-  test('rejects unrecognised bytes without a claimed type', () => {
-    expect(acceptedContentType(HTML, ['text/html'])).toBeNull()
-    expect(acceptedContentType(HTML, ['text/html'], ' ')).toBeNull()
-  })
-
-  test('never accepts SVG through an image wildcard', () => {
-    const svg = bytes('<svg xmlns="http://www.w3.org/2000/svg"></svg>')
-
-    expect(acceptedContentType(svg, ['image/*'], 'image/svg+xml')).toBeNull()
+      isClaimedContentTypeAllowed(['image/svg+xml'], 'image/svg+xml'),
+    ).toBe(true)
+    expect(isClaimedContentTypeAllowed(['*/*'], 'text/html')).toBe(false)
+    expect(isClaimedContentTypeAllowed(['image/*'], 'image/*')).toBe(false)
+    expect(isClaimedContentTypeAllowed(['image/*'], '')).toBe(false)
   })
 })
