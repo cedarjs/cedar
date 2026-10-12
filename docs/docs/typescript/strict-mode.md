@@ -60,6 +60,20 @@ export const updateUser: MutationResolvers['updateUser'] = ({ id, input }) => {
 }
 ```
 
+`removeNulls` returns a copy of `input` where every top-level `null` is `undefined`, and its return type says so, so TypeScript still checks the result against Prisma's types.
+Nested values, like the contents of a `Json` field, are passed through as they are.
+
+Because `undefined` leaves a field unchanged, `removeNulls` also turns a `null` for a nullable field into "leave unchanged".
+If clients should be able to clear a nullable field, pass that field's `null` through:
+
+```ts
+data: {
+  ...removeNulls(input),
+  // highlight-next-line
+  bio: input.bio,
+},
+```
+
 ### Relation resolvers in services
 
 Let's say you have a `Post` model in your `schema.prisma` that has an `author` field which is a relation to the `Author` model. It's a required field.

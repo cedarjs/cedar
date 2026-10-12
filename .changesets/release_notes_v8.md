@@ -247,3 +247,15 @@ export default PostsScaffoldLayout
 
 `WrapperProps` is available in Cedar v7.x too, so you can make this change
 before upgrading.
+
+## `removeNulls` is typed and only changes top-level fields
+
+`removeNulls` from `@cedarjs/api` returns a copy of its input where every
+top-level `null` is `undefined`, typed as `RemoveNulls<T>`. TypeScript checks
+`db.post.update({ data: removeNulls(input) })` against Prisma's types, also in
+strict mode, so a field with the wrong type is a type error.
+
+Nested objects and arrays are passed through as they are, so `null`s inside a
+`Json` field value are kept. The input object is left unchanged. If your code
+relies on `removeNulls` also converting `null`s in nested objects, call
+`removeNulls` on those objects yourself.
