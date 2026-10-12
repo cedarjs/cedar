@@ -67,16 +67,20 @@ const readPackageJson = (dir: string): PackageJson => {
 }
 
 /**
- * Package `name`'s real folder, found the way Node finds a bare import
- * from a file in `dir`. Reads no `exports` map, so it also finds packages
- * that don't export their `package.json`.
+ * Package `name`, found the way Node finds a bare import from a file in
+ * `dir`: its real folder, and the folder whose `node_modules` it was found
+ * in (`dir` or one above it). Reads no `exports` map, so it also finds
+ * packages that don't export their `package.json`.
  */
-const findPackageDir = (name: string, dir: string): string | null => {
+const findPackage = (
+  name: string,
+  dir: string,
+): { realDir: string; foundIn: string } | null => {
   let current = dir
   for (;;) {
     const candidate = path.join(current, 'node_modules', name)
     if (fs.existsSync(path.join(candidate, 'package.json'))) {
-      return fs.realpathSync(candidate)
+      return { realDir: fs.realpathSync(candidate), foundIn: current }
     }
     const parent = path.dirname(current)
     if (parent === current) {
@@ -103,58 +107,39 @@ export interface SandboxChildImports {
  * Follows each package's `dependencies`, and the `optionalDependencies`
  * and `peerDependencies` that are installed, which is how native packages
  * ship their platform's binaries (`@img/sharp-linux-x64`,
- * `@img/sharp-libvips-linux-x64`). Packages go in `node_modules` at the
- * top, or nested under the package that needs them when two versions are
- * needed. Throws when a package or a regular dependency isn't installed:
- * the child couldn't import it either.
+ * `@img/sharp-libvips-linux-x64`).
+ *
+ * The copy keeps the installed layout, so each package finds the same
+ * versions it does in the app: a dependency nested in a package's own
+ * `node_modules` is copied into the copy's `node_modules`, and one found
+ * in a `node_modules` higher up goes in the copy of that level (the top,
+ * for the app's own `node_modules` folders). When two versions of a
+ * package would need the same place (one in `api/node_modules`, another in
+ * the root `node_modules`, both needed), it throws instead of letting one
+ * overwrite the other. So does a package or regular dependency that isn't
+ * installed: the child couldn't import it either.
  */
 export function vendorSandboxChildPackages(
   childrenDir: string,
   children: SandboxChildImports[],
 ) {
-  const nodeModules = path.join(childrenDir, 'node_modules')
-  // Real package folder → the folders it was copied to
-  const copies = new Map<string, string[]>()
-  // Folder copied to → the real package folder copied there
-  const occupied = new Map<string, string>()
+  // Real package folder → where it was copied
+  const copyOf = new Map<string, string>()
+  // Folder copied to → the real package folder copied there, and why
+  const occupied = new Map<string, { realDir: string; neededBy: string }>()
 
-  const place = (realDir: string, name: string, dependentCopy: string) => {
-    const top = path.join(nodeModules, name)
-    const nested = path.join(dependentCopy, 'node_modules', name)
-
-    // A copy that Node would find from the dependent: at the top, unless
-    // a different version is nested under the dependent
-    const target =
-      occupied.get(nested) === realDir ||
-      (!occupied.has(nested) && occupied.get(top) === realDir)
-        ? null
-        : !occupied.has(top)
-          ? top
-          : nested
-    if (!target) {
-      return null
-    }
-
-    occupied.set(target, realDir)
-    copies.set(realDir, [...(copies.get(realDir) ?? []), target])
-    fs.cpSync(realDir, target, {
-      recursive: true,
-      dereference: true,
-      // Its own node_modules are copied as dependencies, when they're needed
-      filter: (src) => src !== path.join(realDir, 'node_modules'),
-    })
-    return target
-  }
+  // Where a folder of the app is in the copy: a copied package's copy, or
+  // the top for the folders above them (api/src, api, the app's root)
+  const copyOfFolder = (dir: string) => copyOf.get(dir) ?? childrenDir
 
   const visit = (
     name: string,
     fromDir: string,
-    dependentCopy: string,
     required: boolean,
     dependent: string,
   ) => {
-    const realDir = findPackageDir(name, fromDir)
-    if (!realDir) {
+    const found = findPackage(name, fromDir)
+    if (!found) {
       if (required) {
         throw new Error(
           `Can't find package "${name}", which ${dependent} imports, in a ` +
@@ -164,10 +149,31 @@ export function vendorSandboxChildPackages(
       return
     }
 
-    const target = place(realDir, name, dependentCopy)
-    if (!target) {
-      return
+    const { realDir, foundIn } = found
+    const target = path.join(copyOfFolder(foundIn), 'node_modules', name)
+    const there = occupied.get(target)
+    if (there) {
+      if (there.realDir === realDir) {
+        return
+      }
+      throw new Error(
+        `Sandboxed child scripts need two versions of "${name}" in one ` +
+          `place: ${there.realDir} (for ${there.neededBy}) and ${realDir} ` +
+          `(for ${dependent}). Install a single version of it, or move the ` +
+          'children so their imports resolve the same way.',
+      )
     }
+
+    occupied.set(target, { realDir, neededBy: dependent })
+    if (!copyOf.has(realDir)) {
+      copyOf.set(realDir, target)
+    }
+    fs.cpSync(realDir, target, {
+      recursive: true,
+      dereference: true,
+      // Its own node_modules are copied as dependencies, when they're needed
+      filter: (src) => src !== path.join(realDir, 'node_modules'),
+    })
 
     const pkg = readPackageJson(realDir)
     const optional = new Set([
@@ -175,10 +181,10 @@ export function vendorSandboxChildPackages(
       ...Object.keys(pkg.peerDependencies ?? {}),
     ])
     for (const dep of Object.keys(pkg.dependencies ?? {})) {
-      visit(dep, realDir, target, !optional.has(dep), name)
+      visit(dep, realDir, !optional.has(dep), name)
     }
     for (const dep of optional) {
-      visit(dep, realDir, target, false, name)
+      visit(dep, realDir, false, name)
     }
   }
 
@@ -189,8 +195,7 @@ export function vendorSandboxChildPackages(
       }
       visit(
         packageName(specifier),
-        path.dirname(source),
-        childrenDir,
+        fs.realpathSync(path.dirname(source)),
         true,
         path.basename(source),
       )

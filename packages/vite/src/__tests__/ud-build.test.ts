@@ -72,11 +72,16 @@ describe('UD build against fixture', () => {
     it('copies the packages a child imports, and their dependencies', () => {
       const nodeModules = join(childrenDir, 'node_modules')
       expect(readdirSync(nodeModules).sort()).toEqual([
-        'decamelize',
         'humanize-string',
-        // decamelize's dependency
+        // decamelize's dependency, hoisted in the monorepo
         'xregexp',
       ])
+      // Nested in humanize-string's own node_modules, as it's installed
+      expect(
+        existsSync(
+          join(nodeModules, 'humanize-string/node_modules/decamelize'),
+        ),
+      ).toBe(true)
     })
 
     it('lets findChildScript find the child from code in the bundle', () => {
