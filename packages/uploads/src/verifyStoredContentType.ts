@@ -2,6 +2,7 @@ import {
   acceptedContentType,
   DETECT_CONTENT_TYPE_BYTES,
   DETECT_CONTENT_TYPE_TAIL_BYTES,
+  findZipCentralDirectory,
 } from './detectContentType.js'
 import type { StorageProvider } from './types.js'
 
@@ -28,7 +29,9 @@ async function readRange(
  * type was checked against the upload profile then, and is the
  * `Content-Type` the object was stored with, so the bytes must be that type
  * (or an alias of it). Reads the first `DETECT_CONTENT_TYPE_BYTES`, plus the
- * last `DETECT_CONTENT_TYPE_TAIL_BYTES` when the head is a ZIP.
+ * last `DETECT_CONTENT_TYPE_TAIL_BYTES` when the head is a ZIP, plus the
+ * start of the ZIP's central directory when that begins before the tail
+ * (at most `MAX_ZIP_DIRECTORY_BYTES`).
  *
  * Returns the canonical type to record, or `null` when the bytes aren't the
  * declared type.
@@ -48,7 +51,30 @@ export async function verifyStoredContentType(
 
   if (isZip && size > head.length) {
     const tailLength = Math.min(size, DETECT_CONTENT_TYPE_TAIL_BYTES)
-    tail = await readRange(target, key, size - tailLength, tailLength)
+    const tailStart = size - tailLength
+    tail = await readRange(target, key, tailStart, tailLength)
+
+    // A big directory starts before the tail: read exactly the missing part.
+    // Only when the directory really reaches into the tail, which bounds the
+    // read by the directory size `findZipCentralDirectory()` caps.
+    const directory = findZipCentralDirectory(tail)
+
+    if (
+      directory &&
+      directory.offset < tailStart &&
+      directory.offset + directory.size > tailStart
+    ) {
+      const missing = await readRange(
+        target,
+        key,
+        directory.offset,
+        tailStart - directory.offset,
+      )
+      const joined = new Uint8Array(missing.length + tail.length)
+      joined.set(missing)
+      joined.set(tail, missing.length)
+      tail = joined
+    }
   }
 
   return acceptedContentType(head, [declaredType], declaredType, { tail })

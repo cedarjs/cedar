@@ -147,3 +147,27 @@ export function openDocument(mimeType: string, extra: ZipEntry[] = []) {
     ...extra,
   ])
 }
+
+/**
+ * A PPTX whose central directory is larger than
+ * `DETECT_CONTENT_TYPE_TAIL_BYTES` (64 KiB): the parts of 1,000 slides,
+ * with the bulk of the file before the directory.
+ */
+export function bigDirectoryPptx(): Uint8Array {
+  const slides: ZipEntry[] = []
+
+  for (let i = 1; i <= 1000; i++) {
+    slides.push({ name: `ppt/slides/slide${i}.xml`, data: '<p:sld/>' })
+    slides.push({
+      name: `ppt/slides/_rels/slide${i}.xml.rels`,
+      data: '<Relationships/>',
+    })
+  }
+
+  return zip([
+    { name: '[Content_Types].xml', data: CONTENT_TYPES },
+    { name: 'ppt/media/image1.png', data: new Uint8Array(100_000) },
+    { name: 'ppt/presentation.xml', data: '<p:presentation/>' },
+    ...slides,
+  ])
+}

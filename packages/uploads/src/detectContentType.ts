@@ -28,9 +28,18 @@ export const DETECT_CONTENT_TYPE_BYTES = 4096
  * name (and an extra field some tools add), about 100 bytes for a typical
  * office part, so 64 KiB holds a directory of 600 or so entries: every
  * ordinary document and workbook, and slide decks of a few hundred slides.
- * A directory that doesn't fit is reported as `null`, never guessed.
+ * A directory that doesn't fit is reported as `null`, never guessed; use
+ * `findZipCentralDirectory()` to read the rest of it.
  */
 export const DETECT_CONTENT_TYPE_TAIL_BYTES = 64 * 1024
+
+/**
+ * The largest ZIP central directory `detectContentType()` reads: 4 MiB, some
+ * 40,000 entries, far beyond any real office file. A ZIP with a bigger
+ * directory is reported as `null`, so a crafted archive can't make detection
+ * walk (or a caller read) an unbounded directory.
+ */
+export const MAX_ZIP_DIRECTORY_BYTES = 4 * 1024 * 1024
 
 export interface DetectContentTypeOptions {
   /**
@@ -497,13 +506,23 @@ function detectOpenDocument(bytes: Uint8Array): string | null {
   return content !== null && OPEN_DOCUMENT_TYPES.has(content) ? content : null
 }
 
+interface ZipEndRecord {
+  /** Where the record starts in the bytes it was found in. */
+  recordOffset: number
+  entries: number
+  /** Size of the central directory, in bytes. */
+  directorySize: number
+  /** Where the central directory starts, from the start of the file. */
+  directoryOffset: number
+}
+
 /**
- * The entry names in a ZIP's central directory, found through the
- * end-of-central-directory record at the very end of `end`. `null` when the
- * record or the whole directory isn't in `end`, or isn't well formed. ZIP64
- * and multi-disk archives are `null` too; office files are neither.
+ * The end-of-central-directory record at the very end of `end`, or `null`
+ * when there is none, or it describes a ZIP64 or multi-disk archive (office
+ * files are neither), or a directory larger than
+ * `MAX_ZIP_DIRECTORY_BYTES`.
  */
-function readZipEntryNames(end: Uint8Array): string[] | null {
+function findZipEndRecord(end: Uint8Array): ZipEndRecord | null {
   const last = end.length - ZIP_END_OF_DIRECTORY_SIZE
   const first = Math.max(0, last - ZIP_MAX_COMMENT_LENGTH)
 
@@ -514,32 +533,69 @@ function readZipEntryNames(end: Uint8Array): string[] | null {
       hasBytesAt(end, offset, ZIP_END_OF_DIRECTORY) &&
       readUint16LE(end, offset + 20) === last - offset
     ) {
-      return readCentralDirectory(end, offset)
+      const disk = readUint16LE(end, offset + 4)
+      const directoryDisk = readUint16LE(end, offset + 6)
+      const entries = readUint16LE(end, offset + 10)
+      const directorySize = readUint32LE(end, offset + 12)
+      const directoryOffset = readUint32LE(end, offset + 16)
+
+      // 0xFFFF and 0xFFFFFFFF mean "see the ZIP64 record"
+      if (
+        disk !== 0 ||
+        directoryDisk !== 0 ||
+        entries === null ||
+        entries === 0xffff ||
+        directorySize === null ||
+        directorySize === 0xffffffff ||
+        directorySize > MAX_ZIP_DIRECTORY_BYTES ||
+        directoryOffset === null ||
+        directoryOffset === 0xffffffff
+      ) {
+        return null
+      }
+
+      return { recordOffset: offset, entries, directorySize, directoryOffset }
     }
   }
 
   return null
 }
 
-function readCentralDirectory(
-  end: Uint8Array,
-  recordOffset: number,
-): string[] | null {
-  const disk = readUint16LE(end, recordOffset + 4)
-  const directoryDisk = readUint16LE(end, recordOffset + 6)
-  const entries = readUint16LE(end, recordOffset + 10)
-  const directorySize = readUint32LE(end, recordOffset + 12)
+/**
+ * Where a ZIP's central directory is, from the start of the file, read from
+ * the end-of-central-directory record at the very end of `tail` (the last
+ * bytes of the file). `null` when `tail` has no such record, or the archive
+ * is one `detectContentType()` won't read (ZIP64, multi-disk, or a directory
+ * over `MAX_ZIP_DIRECTORY_BYTES`).
+ *
+ * For callers that read a large file in ranges: when `detectContentType(head,
+ * { tail })` returns `null` for a ZIP because the directory starts before the
+ * tail, read the bytes from `offset` up to where the tail starts, and pass
+ * them and the tail joined together as the new `tail`.
+ */
+export function findZipCentralDirectory(
+  tail: Uint8Array,
+): { offset: number; size: number } | null {
+  const record = findZipEndRecord(tail)
 
-  if (
-    disk !== 0 ||
-    directoryDisk !== 0 ||
-    entries === null ||
-    entries === 0xffff ||
-    directorySize === null ||
-    directorySize === 0xffffffff
-  ) {
+  return record
+    ? { offset: record.directoryOffset, size: record.directorySize }
+    : null
+}
+
+/**
+ * The entry names in a ZIP's central directory, found through the
+ * end-of-central-directory record at the very end of `end`. `null` when the
+ * record or the whole directory isn't in `end`, or isn't well formed.
+ */
+function readZipEntryNames(end: Uint8Array): string[] | null {
+  const record = findZipEndRecord(end)
+
+  if (!record) {
     return null
   }
+
+  const { recordOffset, entries, directorySize } = record
 
   // The directory sits right before the record. Locating it this way, rather
   // than by its recorded offset, works on a tail without knowing the file's

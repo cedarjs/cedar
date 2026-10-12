@@ -4,11 +4,17 @@ import {
   DETECT_CONTENT_TYPE_BYTES,
   DETECT_CONTENT_TYPE_TAIL_BYTES,
 } from '../detectContentType.js'
+import {
+  findZipCentralDirectory,
+  MAX_ZIP_DIRECTORY_BYTES,
+} from '../detectContentType.js'
 import { verifyStoredContentType } from '../verifyStoredContentType.js'
 
 import { createMemoryProvider } from './helpers/memoryProvider.js'
-import { zip } from './helpers/zip.js'
+import { bigDirectoryPptx, officeOpenXml, zip } from './helpers/zip.js'
 
+const PPTX =
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation'
 const DOCX =
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 const PNG = Buffer.concat([
@@ -60,6 +66,55 @@ describe('verifyStoredContentType', () => {
         length: DETECT_CONTENT_TYPE_TAIL_BYTES,
       },
     ])
+  })
+
+  test('reads exactly the missing part of a directory larger than the tail', async () => {
+    const pptx = bigDirectoryPptx()
+    const { target, size } = store(pptx)
+    const tailStart = size - DETECT_CONTENT_TYPE_TAIL_BYTES
+    const directory = findZipCentralDirectory(pptx)!
+
+    expect(
+      await verifyStoredContentType(target, 'key', {
+        size,
+        declaredType: PPTX,
+      }),
+    ).toBe(PPTX)
+    expect(target.ranges).toEqual([
+      { key: 'key', offset: 0, length: DETECT_CONTENT_TYPE_BYTES },
+      {
+        key: 'key',
+        offset: tailStart,
+        length: DETECT_CONTENT_TYPE_TAIL_BYTES,
+      },
+      {
+        key: 'key',
+        offset: directory.offset,
+        length: tailStart - directory.offset,
+      },
+    ])
+  })
+
+  test('does not read a directory larger than MAX_ZIP_DIRECTORY_BYTES', async () => {
+    // A small DOCX padded past the tail, with its directory size forged
+    const docx = officeOpenXml('word')
+    const data = new Uint8Array(200_000)
+    data.set(docx.subarray(0, 30))
+    data.set(docx, data.length - docx.length)
+    new DataView(data.buffer).setUint32(
+      data.length - 22 + 12,
+      MAX_ZIP_DIRECTORY_BYTES + 1,
+      true,
+    )
+    const { target, size } = store(data)
+
+    expect(
+      await verifyStoredContentType(target, 'key', {
+        size,
+        declaredType: DOCX,
+      }),
+    ).toBeNull()
+    expect(target.ranges).toHaveLength(2)
   })
 
   test('reads a small object once, whole', async () => {
