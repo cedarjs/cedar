@@ -228,6 +228,14 @@ export type RemoveNulls<T> = {
  * See {@link https://www.prisma.io/docs/orm/prisma-client/special-fields-and-types/null-and-undefined Prisma docs: null vs undefined}
  */
 export function removeNulls<T extends object>(input: T): RemoveNulls<T> {
+  if (Array.isArray(input)) {
+    // RemoveNulls maps an array type to an array of its element types with
+    // null changed to undefined, which is what this returns
+    return input.map((value) =>
+      value === null ? undefined : value,
+    ) as RemoveNulls<T>
+  }
+
   const result: Record<string, unknown> = {}
 
   for (const [key, value] of Object.entries(input)) {

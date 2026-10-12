@@ -263,6 +263,6 @@ separately:
 ```ts
 data: {
   ...removeNulls(input),
-  address: input.address && removeNulls(input.address),
+  address: input.address == null ? undefined : removeNulls(input.address),
 },
 ```

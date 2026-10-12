@@ -56,3 +56,7 @@ test('the result is type checked against Prisma', () => {
     updatePost({ data: { ...removeNulls(input), titel: 'x' } }),
   ).type.toRaiseError()
 })
+
+test('RemoveNulls keeps arrays as arrays', () => {
+  expect(removeNulls([1, null])).type.toBe<(number | undefined)[]>()
+})

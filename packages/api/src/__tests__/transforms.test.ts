@@ -52,6 +52,13 @@ describe('removeNulls utility', () => {
     expect(result.list).toStrictEqual([null])
   })
 
+  it('changes nulls in an array to undefined', () => {
+    const result = removeNulls([1, null, 'x'])
+
+    expect(Array.isArray(result)).toBe(true)
+    expect(result).toStrictEqual([1, undefined, 'x'])
+  })
+
   it('returns a copy and leaves the input unchanged', () => {
     const input = { a: null, b: 'b' }
 
