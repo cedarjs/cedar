@@ -242,7 +242,6 @@ const config: Config = {
             },
             'redwood8.x': {
               label: 'Redwood 8.x',
-              path: '8.x',
             },
           },
         },
