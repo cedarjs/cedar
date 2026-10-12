@@ -17,8 +17,14 @@ const attempt = async (name: string, fn: () => Promise<unknown>) => {
     })
     results[name] = `ALLOWED: ${String(got)}`
   } catch (e) {
+    // fetch() wraps the reason: on Node 25+ it's the cause's code
+    const codeOf = (err: unknown) =>
+      err && typeof err === 'object' && 'code' in err
+        ? String(err.code)
+        : undefined
     const code =
-      e && typeof e === 'object' && 'code' in e ? String(e.code) : undefined
+      codeOf(e) ??
+      codeOf(e && typeof e === 'object' && 'cause' in e ? e.cause : undefined)
     results[name] =
       `refused: ${code ?? (e instanceof Error ? e.message : String(e))}`
   } finally {
