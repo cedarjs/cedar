@@ -242,6 +242,7 @@ describe('confirmUpload', () => {
       tokenPayload: {
         ...basePayload,
         allowedMimeTypes: ['image/png', 'image/jpeg', 'text/*'],
+        maxFileSize: 1024 * 1024,
         jti: 'jti_1',
         target: 'avatars',
         sub: '42',
