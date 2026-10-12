@@ -34,6 +34,11 @@ import {
 } from '@cedarjs/project-config'
 
 import { generateDiffSourceMap } from './lib/generateDiffSourceMap.js'
+import {
+  copySandboxChildrenIntoVercelFunctions,
+  findSandboxChildScripts,
+  SANDBOX_CHILDREN_DIR,
+} from './lib/sandboxChildren.js'
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
 import { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
 import { cedarDirectoryNamedImportPlugin } from './plugins/vite-plugin-cedar-directory-named-import.js'
@@ -42,6 +47,7 @@ import { cedarGraphqlOptionsExtractPlugin } from './plugins/vite-plugin-cedar-gr
 import { cedarImportDirPlugin } from './plugins/vite-plugin-cedar-import-dir.js'
 import { cedarMockCellDataPlugin } from './plugins/vite-plugin-cedar-mock-cell-data.js'
 import { cedarOtelWrappingPlugin } from './plugins/vite-plugin-cedar-otel-wrapping.js'
+import { cedarSandboxChildrenPlugin } from './plugins/vite-plugin-cedar-sandbox-children.js'
 import { cedarjsJobPathInjectorPlugin } from './plugins/vite-plugin-cedarjs-job-path-injector.js'
 import { handlerAlsWrappingPlugin } from './plugins/vite-plugin-handler-als-wrapping.js'
 
@@ -87,6 +93,7 @@ export async function buildCedarApp({
   const cedarConfig = getConfig()
 
   const environments: Record<string, EnvironmentOptions> = {}
+  let sandboxChildren: Record<string, string> = {}
 
   if (workspace.includes('web')) {
     environments.client = {
@@ -136,15 +143,20 @@ export async function buildCedarApp({
     }
 
     if (ud) {
+      // Sandboxed child scripts (`*.child.ts`) aren't imported by anything,
+      // so they're entries of their own, each as
+      // sandbox-children/<name>.child.js; see cedarSandboxChildrenPlugin
+      sandboxChildren = findSandboxChildScripts(cedarPaths.api.src)
+
       environments['ssr'] = {
         build: {
           ssr: true,
           outDir: path.join(cedarPaths.api.dist, 'ud'),
           emptyOutDir: true,
           rollupOptions: {
-            input: catchAllEntry,
+            input: { index: catchAllEntry, ...sandboxChildren },
             output: {
-              entryFileNames: 'index.js',
+              entryFileNames: '[name].js',
             },
             external: (id: string) => {
               if (id.startsWith('virtual:')) {
@@ -304,6 +316,13 @@ export async function buildCedarApp({
 
   if (ud) {
     plugins.push(catchAll())
+
+    plugins.push(
+      cedarSandboxChildrenPlugin({
+        environment: 'ssr',
+        children: sandboxChildren,
+      }),
+    )
 
     plugins.push({
       name: 'cedar-ud-verify-routes',
@@ -525,5 +544,21 @@ export async function buildCedarApp({
     plugins,
   })
 
-  return builder.buildApp()
+  await builder.buildApp()
+
+  // vite-plugin-vercel bundles each API function into a file of its own
+  // in .vercel/output/functions/<name>.func, with nothing else of the app.
+  // Code in those bundles finds its sandboxed children next to it
+  const vercelNode = builder.environments['vercel_node']
+  if (ud && vercelNode && Object.keys(sandboxChildren).length > 0) {
+    const outDir = path.resolve(
+      vercelNode.config.root,
+      vercelNode.config.build.outDir,
+    )
+    copySandboxChildrenIntoVercelFunctions({
+      appRoot: cedarPaths.base,
+      childrenDir: path.join(cedarPaths.api.dist, 'ud', SANDBOX_CHILDREN_DIR),
+      functionsDir: path.join(outDir, 'functions'),
+    })
+  }
 }
