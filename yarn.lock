@@ -11805,11 +11805,11 @@ __metadata:
   linkType: hard
 
 "@types/busboy@npm:^1":
-  version: 1.5.4
-  resolution: "@types/busboy@npm:1.5.4"
+  version: 1.5.5
+  resolution: "@types/busboy@npm:1.5.5"
   dependencies:
     "@types/node": "npm:*"
-  checksum: 10c0/0bdd209069a445d5a71277e558978ec0db1b1a3d108335da96477d017177ae349c4d81d604db0bea19e3c99c10af2d60dbac20e36cef7cb7a517e5a4760738bd
+  checksum: 10c0/d4a7f9a0e1f2a091542a9b8f0cca5bab07afc5fb80b49ce2b310593793ea3946003b944144ac9373c42ec432944112cdc87a7c49062389f2ca41084fe8a51d22
   languageName: node
   linkType: hard
 
