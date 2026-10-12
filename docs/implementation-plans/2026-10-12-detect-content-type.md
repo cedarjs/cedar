@@ -61,6 +61,10 @@ DETECT_CONTENT_TYPE_TAIL_BYTES: number // 65536
 CONTENT_TYPE_ALIASES: ReadonlyMap<string, string> // alias → canonical
 canonicalContentType(type: string): string
 SCRIPTABLE_CONTENT_TYPES: ReadonlySet<string>
+MACRO_CONTENT_TYPES: ReadonlySet<string>
+isExplicitOnlyContentType(type: string): boolean
+findZipCentralDirectory(tail: Uint8Array): { offset: number; size: number } | null
+MAX_ZIP_DIRECTORY_BYTES: number // 4 MiB
 isScriptableContentType(type: string): boolean
 ```
 
@@ -152,8 +156,10 @@ Both are ZIP archives (`PK\x03\x04`).
   of the file, found through the end-of-central-directory record (22 bytes plus
   a comment). The directory is located right before that record (record offset
   minus directory size), which works on a tail without knowing the file size,
-  and every entry is walked and must end exactly at the record. ZIP64 and
-  multi-disk archives are `null`.
+  and every entry is walked and must end exactly at the record. ZIP64 (any
+  0xFFFF/0xFFFFFFFF field pointing to the ZIP64 record) and multi-disk archives
+  are `null`: office files under 4 GB with fewer than 65,535 parts never need
+  it.
 - **Macros.** A file with a VBA project (`vbaProject.bin`, `vbaData.xml`) or
   Excel 4.0 macro sheets (`xl/macrosheets/`) is reported as its macro-enabled
   type (`application/vnd.ms-word.document.macroenabled.12` and so on), never as
@@ -167,8 +173,17 @@ Both are ZIP archives (`PK\x03\x04`).
 - **`DETECT_CONTENT_TYPE_TAIL_BYTES` = 64 KiB.** The end record is 22 bytes
   (office files have no comment). A directory entry is 46 bytes plus its name,
   about 100 bytes for a typical office part, so 64 KiB holds about 600 entries:
-  every ordinary document and workbook, and decks of a few hundred slides. A
-  directory that doesn't fit is `null`.
+  every ordinary document and workbook, and decks of a few hundred slides.
+- **Directories bigger than the tail.** Decided: read the rest, rather than
+  refusing a real large deck now that checking is on by default.
+  `findZipCentralDirectory(tail)` returns the directory's offset and size from
+  the end record; the caller reads from that offset up to where its tail
+  starts and passes the two joined as `tail`. The S3 check does exactly that,
+  one more ranged read, and only when the directory really reaches into the
+  tail (so the read is bounded by the directory size). For a whole file it is
+  already all there. `MAX_ZIP_DIRECTORY_BYTES` (4 MiB, about 40,000 entries)
+  caps it; a larger directory is `null`, so a crafted archive can't make
+  detection walk, or a caller read, an unbounded directory.
 - Templates and slide shows (`.dotx`, `.xltx`, `.potx`, `.ppsx`) differ only
   inside `[Content_Types].xml`, which is usually compressed, and are reported
   as the document type.
@@ -220,13 +235,25 @@ so storage keys look the extension up under every spelling (`.mkv`).
     `SCRIPTABLE_CONTENT_TYPES` (`image/svg+xml`, `text/html`,
     `application/xhtml+xml`, `text/xml`, `application/xml`, `text/xsl`, the
     JavaScript/ECMAScript types) and any type ending in `+xml`;
+  - a type that can carry macros must be listed exactly (below);
   - a claimed wildcard (`image/*`) is never a file's type.
 
   No claimed type means not accepted.
 
-So `['text/*']` admits CSV but not HTML, `['image/*']` never admits SVG, and
+**Macro-capable types are explicit-only**, detected or claimed:
+`MACRO_CONTENT_TYPES` holds the macro-enabled Office Open XML types (`.docm`,
+`.xlsm`, `.pptm`, their template, add-in and slide-show variants, and `.xlsb`)
+and the legacy OLE types `application/msword`, `application/vnd.ms-excel` and
+`application/vnd.ms-powerpoint`. Neither `application/*` nor `*/*` admits them.
+Decided because macros run in Office on the downloader's machine, which makes
+an accepted file a way to deliver malware to the app's other users (not an XSS
+risk like the scriptable types), and a "documents" profile almost never means
+files with macros. An app that wants them lists them.
+
+So `['text/*']` admits CSV but not HTML, `['image/*']` never admits SVG,
+`['application/*']` admits a `.docx` but not a `.docm` or a `.doc`, and
 `['*/*']` admits anything that isn't lying about being a detectable type and
-isn't scriptable.
+can't carry script or macros.
 
 The earlier rule (unrecognised bytes accepted only when the claim was listed
 exactly) made default-on unsafe for existing apps: profiles allowing `text/*`,
@@ -297,6 +324,13 @@ against `unzip -t` and `file` while writing it):
   wildcard and accepted when listed exactly; canonical spelling stored; wildcard
   claims refused; office files from head only, with tail, and macro-enabled
   files not passing as macro-free.
+- Macro-enabled files and legacy OLE claims refused through `application/*`
+  and `*/*`, accepted when listed exactly (either spelling of `macroEnabled`).
+- Directories over 64 KiB (a generated 1,000-slide PPTX): recognised whole,
+  `null` from a cut-off tail, recognised with the missing range joined; a
+  directory size over `MAX_ZIP_DIRECTORY_BYTES` and a ZIP64 offset are `null`.
+  `verifyStoredContentType.test.ts` checks the S3 path makes exactly one extra
+  ranged read of the missing range, and none past the cap.
 - `isMimeTypeAllowed()` aliases (`profilesAndTokens.test.ts`).
 - `verifyStoredContentType.test.ts`: head-only read for non-ZIPs, head and tail
   for ZIPs, a single read for small objects, the `read()` fallback, canonical
@@ -331,18 +365,19 @@ The open questions from the first version of this plan:
 7. **More formats.** Office formats added (OpenDocument, Office Open XML). 3GP,
    JPEG XL, ICO and `ftyp`-less MOV stay on demand.
 
-## Open questions
+And the questions raised in review of the second version:
 
-1. **Profile on the row.** S3 uploads are checked against the declared type
-   because the row doesn't record its profile. Storing the profile name (a
-   schema change) would let a `*/*` profile accept a HEIC declared as
-   `application/octet-stream`. Worth it?
-2. **Directories larger than 64 KiB.** Very large decks are `null` and refused.
-   A second ranged read sized from the end record would fix it; add it if
-   anyone hits it?
-3. **OpenDocument macros.** ODF has no separate macro type; an `.odt` with Basic
-   macros is reported as `.odt`. Look for `Basic/` entries when the directory
-   is available?
+8. **S3 uploads are checked against the declared type, not the profile.**
+   Decided to document rather than change: the `Upload` row has no profile
+   name, and the declared type was checked against the profile at presign
+   time. A recognised file declared `application/octet-stream` is refused even
+   under `*/*`. Storing the profile name on the row would need a schema change.
+9. **ZIP directories larger than the tail.** Decided: read the missing range
+   (see Office files), capped at `MAX_ZIP_DIRECTORY_BYTES`.
+10. **OpenDocument macros.** Decided to document rather than change: ODF has no
+    separate macro type, so an `.odt` with Basic macros is reported as `.odt`.
+11. **Macro-capable Office types.** Decided: explicit-only, like scriptable
+    types (`MACRO_CONTENT_TYPES`).
 
 ## Follow-ups (not in this PR)
 
