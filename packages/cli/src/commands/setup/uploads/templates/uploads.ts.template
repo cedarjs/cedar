@@ -1,8 +1,8 @@
 import {
+  acceptedContentType,
   confirmUpload as confirmUploadRecord,
   createPresignedUpload,
   getUploadTokenPayload,
-  isMimeTypeAllowed,
   issueUploadToken,
   resolveProfile,
   resolveTarget,
@@ -71,18 +71,27 @@ export const uploadFile = async ({
     )
   }
 
-  if (!isMimeTypeAllowed(profile.allowedMimeTypes, input.mimeType)) {
+  // Checked by what the bytes are, not the type the client claimed, and
+  // stored under the type returned
+  const data = Buffer.from(input.data, 'base64')
+  const mimeType = acceptedContentType(
+    data,
+    profile.allowedMimeTypes,
+    input.mimeType,
+  )
+
+  if (!mimeType) {
     throw new UploadError(
       'MIME_TYPE_NOT_ALLOWED',
-      `File type '${input.mimeType}' is not allowed for upload profile '${profile.name}'.`,
+      `That file is not a type allowed for upload profile '${profile.name}'.`,
     )
   }
 
   return storeFile(target, {
     db,
     filename: input.filename,
-    mimeType: input.mimeType,
-    data: Buffer.from(input.data, 'base64'),
+    mimeType,
+    data,
     maxSize: profile.maxFileSize,
     userId: context.currentUser ? String(context.currentUser.id) : undefined,
   })
