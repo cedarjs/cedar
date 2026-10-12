@@ -256,13 +256,6 @@ top-level `null` is `undefined`, typed as `RemoveNulls<T>`. TypeScript checks
 strict mode, so a field with the wrong type is a type error.
 
 Nested objects and arrays are passed through as they are, so `null`s inside a
-`Json` field value are kept. The input object is left unchanged. If you use
-`removeNulls` on inputs with nested input types, convert their `null`s
-separately:
-
-```ts
-data: {
-  ...removeNulls(input),
-  address: input.address == null ? undefined : removeNulls(input.address),
-},
-```
+`Json` field value are kept. The input object is left unchanged. If your code
+relies on `removeNulls` also converting `null`s in nested objects, call
+`removeNulls` on those objects yourself.
