@@ -1,7 +1,7 @@
 import {
   canonicalContentType,
   isContentTypeListed,
-  isScriptableContentType,
+  isExplicitOnlyContentType,
 } from './contentTypes.js'
 import { isMimeTypeAllowed } from './profiles.js'
 
@@ -786,8 +786,8 @@ export function detectContentType(
 /**
  * Whether a claimed type may be accepted before the file's bytes are seen,
  * as when issuing a presigned upload URL: allowed by `accept`, not a
- * wildcard, and, for a type that can carry script, listed exactly. The bytes
- * still have to be checked once they arrive.
+ * wildcard, and, for a type that can carry script or macros, listed exactly.
+ * The bytes still have to be checked once they arrive.
  */
 export function isClaimedContentTypeAllowed(
   accept: string[],
@@ -799,7 +799,7 @@ export function isClaimedContentTypeAllowed(
     return false
   }
 
-  return isScriptableContentType(claimed)
+  return isExplicitOnlyContentType(claimed)
     ? isContentTypeListed(accept, claimed)
     : isMimeTypeAllowed(accept, claimed)
 }
@@ -814,14 +814,17 @@ export function isClaimedContentTypeAllowed(
  * - When `detectContentType()` recognises the bytes, the detected type must
  *   match `accept`, and is what's returned. The claimed type doesn't matter,
  *   so a HEIC photo a browser sent as `application/octet-stream` is accepted
- *   as `image/heic`.
+ *   as `image/heic`. A macro-enabled Office file (`MACRO_CONTENT_TYPES`)
+ *   must be listed exactly: `['application/*']` never admits a `.docm`.
  * - When it doesn't, the file is accepted on the strength of `claimedType`
  *   when that matches `accept`, wildcards included, except:
  *   - a claimed type in `DETECTABLE_CONTENT_TYPES` is refused: a real PNG
  *     would have been recognised, so the claim is false;
  *   - a type that can carry script (`SCRIPTABLE_CONTENT_TYPES`, and any XML
- *     type) must be listed exactly. `['image/*']` never admits an SVG, and
- *     `['text/*']` never admits HTML.
+ *     type) or macros (`MACRO_CONTENT_TYPES`, which includes the legacy
+ *     `.doc`, `.xls` and `.ppt` types) must be listed exactly. `['image/*']`
+ *     never admits an SVG, `['text/*']` never admits HTML, and `['*\/*']`
+ *     never admits a `.doc`.
  *
  *   No claimed type means not accepted.
  *
@@ -853,7 +856,12 @@ export function acceptedContentType(
   const detected = detectContentType(bytes, options)
 
   if (detected) {
-    return isMimeTypeAllowed(accept, detected) ? detected : null
+    // A macro-enabled file needs naming exactly, whatever the wildcards say
+    const allowed = isExplicitOnlyContentType(detected)
+      ? isContentTypeListed(accept, detected)
+      : isMimeTypeAllowed(accept, detected)
+
+    return allowed ? detected : null
   }
 
   if (!claimedType) {

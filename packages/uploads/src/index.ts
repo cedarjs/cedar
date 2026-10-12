@@ -20,13 +20,17 @@ export {
   DETECT_CONTENT_TYPE_TAIL_BYTES,
   DETECTABLE_CONTENT_TYPES,
   detectContentType,
+  findZipCentralDirectory,
   isClaimedContentTypeAllowed,
+  MAX_ZIP_DIRECTORY_BYTES,
 } from './detectContentType.js'
 export type { DetectContentTypeOptions } from './detectContentType.js'
 export {
   canonicalContentType,
   CONTENT_TYPE_ALIASES,
+  isExplicitOnlyContentType,
   isScriptableContentType,
+  MACRO_CONTENT_TYPES,
   SCRIPTABLE_CONTENT_TYPES,
 } from './contentTypes.js'
 export { createFsProvider } from './providers/fs.js'

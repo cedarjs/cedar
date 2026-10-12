@@ -56,6 +56,37 @@ export const SCRIPTABLE_CONTENT_TYPES: ReadonlySet<string> = new Set([
   'application/ecmascript',
 ])
 
+/**
+ * Office types that can carry macros. Macros run in Office on the machine of
+ * whoever downloads the file, so accepting one is a way to deliver malware
+ * to the app's other users, not an XSS risk, and a profile meant for
+ * "documents" almost never means files with macros. `acceptedContentType()`
+ * accepts these only when an accept list names them exactly, never through
+ * a wildcard such as `application/*` or `*\/*`, whether the type was
+ * detected from the bytes or claimed for bytes it doesn't recognise.
+ *
+ * The macro-enabled Office Open XML types (documents, templates, add-ins and
+ * slide shows, and the binary `.xlsb` workbook), and the legacy binary
+ * `.doc`, `.xls` and `.ppt` types, which can carry VBA too and which
+ * detection doesn't recognise. Lower case, like every canonical type.
+ */
+export const MACRO_CONTENT_TYPES: ReadonlySet<string> = new Set([
+  'application/vnd.ms-word.document.macroenabled.12',
+  'application/vnd.ms-word.template.macroenabled.12',
+  'application/vnd.ms-excel.sheet.macroenabled.12',
+  'application/vnd.ms-excel.template.macroenabled.12',
+  'application/vnd.ms-excel.addin.macroenabled.12',
+  'application/vnd.ms-excel.sheet.binary.macroenabled.12',
+  'application/vnd.ms-powerpoint.presentation.macroenabled.12',
+  'application/vnd.ms-powerpoint.template.macroenabled.12',
+  'application/vnd.ms-powerpoint.slideshow.macroenabled.12',
+  'application/vnd.ms-powerpoint.addin.macroenabled.12',
+  'application/vnd.ms-powerpoint.slide.macroenabled.12',
+  'application/msword',
+  'application/vnd.ms-excel',
+  'application/vnd.ms-powerpoint',
+])
+
 /** `type/subtype`, lower-cased, without parameters such as `charset`. */
 export function normalizeContentType(contentType: string): string {
   return contentType.split(';')[0].trim().toLowerCase()
@@ -92,6 +123,18 @@ export function isScriptableContentType(contentType: string): boolean {
   const type = canonicalContentType(contentType)
 
   return SCRIPTABLE_CONTENT_TYPES.has(type) || type.endsWith('+xml')
+}
+
+/**
+ * Whether `contentType` is only accepted when listed exactly, never through a
+ * wildcard: a type that can carry script (`isScriptableContentType()`) or
+ * macros (`MACRO_CONTENT_TYPES`).
+ */
+export function isExplicitOnlyContentType(contentType: string): boolean {
+  return (
+    isScriptableContentType(contentType) ||
+    MACRO_CONTENT_TYPES.has(canonicalContentType(contentType))
+  )
 }
 
 /**

@@ -6,10 +6,17 @@ import {
   DETECT_CONTENT_TYPE_TAIL_BYTES,
   DETECTABLE_CONTENT_TYPES,
   detectContentType,
+  findZipCentralDirectory,
   isClaimedContentTypeAllowed,
+  MAX_ZIP_DIRECTORY_BYTES,
 } from '../detectContentType.js'
 
-import { officeOpenXml, openDocument, zip } from './helpers/zip.js'
+import {
+  bigDirectoryPptx,
+  officeOpenXml,
+  openDocument,
+  zip,
+} from './helpers/zip.js'
 
 const DOCX =
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -503,6 +510,68 @@ describe('ZIP-based office formats', () => {
     expect(detectContentType(strict(data))).toBeNull()
   })
 
+  describe('a central directory larger than the tail', () => {
+    const data = bigDirectoryPptx()
+    const head = data.subarray(0, DETECT_CONTENT_TYPE_BYTES)
+    const tailStart = data.length - DETECT_CONTENT_TYPE_TAIL_BYTES
+    const tail = data.subarray(tailStart)
+
+    test('is bigger than the tail, so the fixture tests what it should', () => {
+      const directory = findZipCentralDirectory(tail)
+
+      expect(directory).not.toBeNull()
+      expect(directory!.size).toBeGreaterThan(DETECT_CONTENT_TYPE_TAIL_BYTES)
+      expect(directory!.offset).toBeLessThan(tailStart)
+    })
+
+    test('is recognised in the whole file', () => {
+      expect(detectContentType(strict(data))).toBe(PPTX)
+    })
+
+    test('is not guessed from a tail that cuts it off', () => {
+      expect(detectContentType(strict(head), { tail: strict(tail) })).toBeNull()
+    })
+
+    test('is recognised once the missing part is read and joined to the tail', () => {
+      const directory = findZipCentralDirectory(tail)!
+      const joined = data.subarray(directory.offset)
+
+      expect(directory.offset + directory.size).toBeGreaterThan(tailStart)
+      expect(detectContentType(strict(head), { tail: strict(joined) })).toBe(
+        PPTX,
+      )
+    })
+  })
+
+  test('does not read a directory larger than MAX_ZIP_DIRECTORY_BYTES', () => {
+    const data = officeOpenXml('word')
+    const sizeField = data.length - 22 + 12
+    new DataView(data.buffer).setUint32(
+      sizeField,
+      MAX_ZIP_DIRECTORY_BYTES + 1,
+      true,
+    )
+
+    expect(findZipCentralDirectory(data)).toBeNull()
+    expect(detectContentType(strict(data))).toBeNull()
+  })
+
+  test('reports where the directory is, and nothing for ZIP64', () => {
+    const data = officeOpenXml('xl')
+    const view = new DataView(data.buffer)
+    const record = data.length - 22
+
+    expect(findZipCentralDirectory(data)).toEqual({
+      offset: view.getUint32(record + 16, true),
+      size: view.getUint32(record + 12, true),
+    })
+
+    view.setUint32(record + 16, 0xffffffff, true)
+    expect(findZipCentralDirectory(data)).toBeNull()
+    expect(detectContentType(data)).toBeNull()
+    expect(findZipCentralDirectory(bytes('not a zip'))).toBeNull()
+  })
+
   test('never throws or reads past the end of a random central directory', () => {
     let seed = 0x5eed
     const random = () => {
@@ -655,6 +724,45 @@ describe('acceptedContentType', () => {
       expect(acceptedContentType(head, [XLSX], XLSX, { tail })).toBe(XLSX)
     })
 
+    test('with macros are accepted only when listed exactly, never through a wildcard', () => {
+      const docm = officeOpenXml('word', [
+        { name: 'word/vbaProject.bin', data: 'vba' },
+      ])
+
+      expect(acceptedContentType(docm, ['application/*'], DOCM)).toBeNull()
+      expect(acceptedContentType(docm, ['*/*'], DOCM)).toBeNull()
+      expect(acceptedContentType(docm, ['application/*', DOCM], DOCM)).toBe(
+        DOCM,
+      )
+      // The registered spelling is accepted as the same type
+      expect(
+        acceptedContentType(
+          docm,
+          ['application/vnd.ms-word.document.macroEnabled.12'],
+          DOCM,
+        ),
+      ).toBe(DOCM)
+      // Macro-free office files still pass a wildcard
+      expect(
+        acceptedContentType(officeOpenXml('word'), ['application/*']),
+      ).toBe(DOCX)
+    })
+
+    test.each([
+      'application/msword',
+      'application/vnd.ms-excel',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.ms-word.template.macroenabled.12',
+      'application/vnd.ms-excel.addin.macroenabled.12',
+    ])('claimed as %s are accepted only when listed exactly', (type) => {
+      // Legacy OLE files aren't recognised, so the claim decides
+      const ole = bytes([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1])
+
+      expect(acceptedContentType(ole, ['application/*'], type)).toBeNull()
+      expect(acceptedContentType(ole, ['*/*'], type)).toBeNull()
+      expect(acceptedContentType(ole, [type], type)).toBe(type)
+    })
+
     test('with macros are not accepted as their macro-free type', () => {
       const docm = officeOpenXml('word', [
         { name: 'word/vbaProject.bin', data: 'vba' },
@@ -679,6 +787,12 @@ describe('isClaimedContentTypeAllowed', () => {
     ).toBe(true)
     expect(isClaimedContentTypeAllowed(['*/*'], 'text/html')).toBe(false)
     expect(isClaimedContentTypeAllowed(['image/*'], 'image/*')).toBe(false)
+    expect(isClaimedContentTypeAllowed(['application/*'], DOCM)).toBe(false)
+    expect(
+      isClaimedContentTypeAllowed(['application/*'], 'application/msword'),
+    ).toBe(false)
+    expect(isClaimedContentTypeAllowed([DOCM], DOCM)).toBe(true)
+    expect(isClaimedContentTypeAllowed(['application/*'], DOCX)).toBe(true)
     expect(isClaimedContentTypeAllowed(['image/*'], '')).toBe(false)
   })
 })
