@@ -22,9 +22,8 @@ const writePackage = (
 }
 
 const versionAt = (...segments: string[]) =>
-  JSON.parse(
-    fs.readFileSync(path.join(...segments, 'package.json'), 'utf8'),
-  ).version
+  JSON.parse(fs.readFileSync(path.join(...segments, 'package.json'), 'utf8'))
+    .version
 
 beforeEach(() => {
   app = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-vendor-')))
@@ -60,14 +59,69 @@ describe('vendorSandboxChildPackages', () => {
     expect(fs.existsSync(path.join(copied, 'r', 'node_modules'))).toBe(false)
   })
 
-  it('fails when two versions would need the same place', () => {
-    // api/node_modules has p@2, the root p@1, and a hoisted package needs
-    // the root's: both would be at the top of the copy
+  it('keeps a hoisted package on the version it uses when the top has another', () => {
+    // api/node_modules has p@2, which the child imports; the root has p@1,
+    // which a hoisted package needs
     writePackage(path.join(app, 'api', 'node_modules', 'p'), 'p', '2.0.0')
     writePackage(path.join(app, 'node_modules', 'p'), 'p', '1.0.0')
     writePackage(path.join(app, 'node_modules', 'r'), 'r', '1.0.0', {
       p: '1',
     })
+
+    const childrenDir = path.join(app, 'api', 'dist', 'ud', 'sandbox-children')
+    vendorSandboxChildPackages(childrenDir, [
+      {
+        source: path.join(app, 'api', 'src', 'lib', 'a.child.ts'),
+        imports: ['p', 'r'],
+      },
+    ])
+
+    const copied = path.join(childrenDir, 'node_modules')
+    expect(versionAt(copied, 'p')).toBe('2.0.0')
+    expect(versionAt(copied, 'r', 'node_modules', 'p')).toBe('1.0.0')
+  })
+
+  it("keeps pnpm's layout: each package's dependencies beside it", () => {
+    const store = path.join(app, 'node_modules', '.pnpm')
+    const pkgIn = (id: string, name: string) =>
+      path.join(store, id, 'node_modules', name)
+    // q@1 -> p@2 and r@1 -> p@1, each linked beside its dependent
+    writePackage(pkgIn('p@1', 'p'), 'p', '1.0.0')
+    writePackage(pkgIn('p@2', 'p'), 'p', '2.0.0')
+    writePackage(pkgIn('q@1', 'q'), 'q', '1.0.0', { p: '2', r: '1' })
+    writePackage(pkgIn('r@1', 'r'), 'r', '1.0.0', { p: '1', q: '1' })
+    const link = (target: string, at: string) => {
+      fs.mkdirSync(path.dirname(at), { recursive: true })
+      fs.symlinkSync(target, at, 'junction')
+    }
+    link(pkgIn('p@2', 'p'), pkgIn('q@1', 'p'))
+    link(pkgIn('r@1', 'r'), pkgIn('q@1', 'r'))
+    link(pkgIn('p@1', 'p'), pkgIn('r@1', 'p'))
+    // A cycle back to q
+    link(pkgIn('q@1', 'q'), pkgIn('r@1', 'q'))
+    link(pkgIn('q@1', 'q'), path.join(app, 'node_modules', 'q'))
+
+    const childrenDir = path.join(app, 'api', 'dist', 'ud', 'sandbox-children')
+    vendorSandboxChildPackages(childrenDir, [
+      {
+        source: path.join(app, 'api', 'src', 'lib', 'a.child.ts'),
+        imports: ['q'],
+      },
+    ])
+
+    const q = path.join(childrenDir, 'node_modules', 'q')
+    expect(versionAt(q)).toBe('1.0.0')
+    expect(versionAt(q, 'node_modules', 'p')).toBe('2.0.0')
+    expect(versionAt(q, 'node_modules', 'r', 'node_modules', 'p')).toBe(
+      '1.0.0',
+    )
+  })
+
+  it('fails when two versions would need the same place', () => {
+    // Two children whose own imports of p resolve to different versions
+    writePackage(path.join(app, 'api', 'node_modules', 'p'), 'p', '2.0.0')
+    writePackage(path.join(app, 'node_modules', 'p'), 'p', '1.0.0')
+    fs.mkdirSync(path.join(app, 'scripts'), { recursive: true })
 
     expect(() =>
       vendorSandboxChildPackages(
@@ -75,7 +129,11 @@ describe('vendorSandboxChildPackages', () => {
         [
           {
             source: path.join(app, 'api', 'src', 'lib', 'a.child.ts'),
-            imports: ['p', 'r'],
+            imports: ['p'],
+          },
+          {
+            source: path.join(app, 'scripts', 'b.child.ts'),
+            imports: ['p'],
           },
         ],
       ),

@@ -109,32 +109,49 @@ export interface SandboxChildImports {
  * ship their platform's binaries (`@img/sharp-linux-x64`,
  * `@img/sharp-libvips-linux-x64`).
  *
- * The copy keeps the installed layout, so each package finds the same
- * versions it does in the app: a dependency nested in a package's own
- * `node_modules` is copied into the copy's `node_modules`, and one found
- * in a `node_modules` higher up goes in the copy of that level (the top,
- * for the app's own `node_modules` folders). When two versions of a
- * package would need the same place (one in `api/node_modules`, another in
- * the root `node_modules`, both needed), it throws instead of letting one
- * overwrite the other. So does a package or regular dependency that isn't
- * installed: the child couldn't import it either.
+ * The copy keeps each package's choices, so it finds the same versions
+ * it does in the app: a dependency nested in a package's own
+ * `node_modules` is copied into the copy's `node_modules`; one beside it
+ * in a `node_modules` (pnpm's layout), or shadowed in the copy by another
+ * version, goes next to the dependent's copy; one in the app's own
+ * `node_modules` folders goes at the top. A package already reachable from
+ * the dependent's copy is reused. When two versions would still need the
+ * same place, it throws instead of letting one overwrite the other. So
+ * does a package or regular dependency that isn't installed: the child
+ * couldn't import it either.
  */
 export function vendorSandboxChildPackages(
   childrenDir: string,
   children: SandboxChildImports[],
 ) {
-  // Real package folder → where it was copied
+  // Real package folder → where it was first copied
   const copyOf = new Map<string, string>()
   // Folder copied to → the real package folder copied there, and why
   const occupied = new Map<string, { realDir: string; neededBy: string }>()
 
-  // Where a folder of the app is in the copy: a copied package's copy, or
-  // the top for the folders above them (api/src, api, the app's root)
-  const copyOfFolder = (dir: string) => copyOf.get(dir) ?? childrenDir
+  // A folder of the app that has packages of its own installed below it is
+  // inside a node_modules (a package, or pnpm's .pnpm/<package> folder);
+  // the others are the app's own folders (api/src, api, the root)
+  const inNodeModules = (dir: string) =>
+    dir.split(path.sep).includes('node_modules')
+
+  // What Node would find for `name` from a package copied to `copy`: the
+  // nearest copy in a node_modules from there up to the children's folder
+  const reachableFrom = (copy: string, name: string) => {
+    let dir = copy
+    for (;;) {
+      const there = occupied.get(path.join(dir, 'node_modules', name))
+      if (there || dir === childrenDir) {
+        return there?.realDir
+      }
+      dir = path.dirname(dir)
+    }
+  }
 
   const visit = (
     name: string,
     fromDir: string,
+    dependentCopy: string,
     required: boolean,
     dependent: string,
   ) => {
@@ -150,12 +167,26 @@ export function vendorSandboxChildPackages(
     }
 
     const { realDir, foundIn } = found
-    const target = path.join(copyOfFolder(foundIn), 'node_modules', name)
+    const reachable = reachableFrom(dependentCopy, name)
+    if (reachable === realDir) {
+      return
+    }
+
+    // Where the app has it, mirrored in the copy: in a copied package's own
+    // node_modules; next to the dependent when found beside it in a
+    // node_modules (pnpm's .pnpm/<package>/node_modules); at the top when
+    // it's in one of the app's own node_modules folders. When the top
+    // already has another version, next to the dependent too
+    const copiedFolder = copyOf.get(foundIn)
+    const besideDependent = path.join(dependentCopy, 'node_modules', name)
+    const target = copiedFolder
+      ? path.join(copiedFolder, 'node_modules', name)
+      : inNodeModules(foundIn) || reachable
+        ? besideDependent
+        : path.join(childrenDir, 'node_modules', name)
+
     const there = occupied.get(target)
     if (there) {
-      if (there.realDir === realDir) {
-        return
-      }
       throw new Error(
         `Sandboxed child scripts need two versions of "${name}" in one ` +
           `place: ${there.realDir} (for ${there.neededBy}) and ${realDir} ` +
@@ -181,10 +212,10 @@ export function vendorSandboxChildPackages(
       ...Object.keys(pkg.peerDependencies ?? {}),
     ])
     for (const dep of Object.keys(pkg.dependencies ?? {})) {
-      visit(dep, realDir, !optional.has(dep), name)
+      visit(dep, realDir, target, !optional.has(dep), name)
     }
     for (const dep of optional) {
-      visit(dep, realDir, false, name)
+      visit(dep, realDir, target, false, name)
     }
   }
 
@@ -196,6 +227,7 @@ export function vendorSandboxChildPackages(
       visit(
         packageName(specifier),
         fs.realpathSync(path.dirname(source)),
+        childrenDir,
         true,
         path.basename(source),
       )
