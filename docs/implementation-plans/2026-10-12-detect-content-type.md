@@ -121,7 +121,9 @@ four-character major brand, a minor version, and compatible brands up to the end
 of the box. Telling them apart:
 
 1. The box must be well formed: size at least 16 and a multiple of four. Sizes 0
-   and 1 (valid for other boxes) are rejected.
+   and 1 (valid for other boxes) are rejected, and so are sizes over 1 KiB
+   (252 brands; real boxes are tens of bytes), so a forged size can't make the
+   brand scan walk a whole large upload.
 2. A specific major brand decides on its own: AVIF, then HEIC, then HEIC
    sequence, then QuickTime, then MP4 audio, then MP4.
 3. Otherwise the major brand is generic (`mif1`/`msf1` only say "some HEIF") or
@@ -138,8 +140,8 @@ of the box. Telling them apart:
 Both start with an EBML header element (`1A 45 DF A3`). Its children are walked
 as variable-length-integer IDs and sizes until the `DocType` element (`42 82`),
 whose string value (`webm` or `matroska`, NUL padding allowed) decides. Unknown
-sizes, invalid length bytes, IDs longer than four bytes and values running past
-the input all return `null`. The header doesn't say whether there is a video
+sizes, invalid length bytes, IDs longer than four bytes, and IDs, sizes or
+values running past the declared header or the input all return `null`. The header doesn't say whether there is a video
 track, so both are reported as video.
 
 ### Office files: OpenDocument and Office Open XML
@@ -156,7 +158,11 @@ Both are ZIP archives (`PK\x03\x04`).
   of the file, found through the end-of-central-directory record (22 bytes plus
   a comment). The directory is located right before that record (record offset
   minus directory size), which works on a tail without knowing the file size,
-  and every entry is walked and must end exactly at the record. ZIP64 (any
+  and every entry is walked and must end exactly at the record. An archive
+  comment can contain an end-record lookalike nearer the end than the real
+  record, so candidates are tried nearest-first until one leads to a directory
+  that identifies a document (at most 16, which bounds the work a crafted
+  comment can cause). ZIP64 (any
   0xFFFF/0xFFFFFFFF field pointing to the ZIP64 record) and multi-disk archives
   are `null`: office files under 4 GB with fewer than 65,535 parts never need
   it.

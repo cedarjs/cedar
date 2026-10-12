@@ -279,6 +279,21 @@ describe('detectContentType', () => {
       expect(detectContentType(strict(data))).toBeNull()
     })
 
+    test('does not scan a box bigger than a real ftyp ever is', () => {
+      // A generic major brand, so the compatible brands would decide, and a
+      // box size covering a large upload
+      const huge = new Uint8Array(1 << 20)
+      huge.set(bytes(uint32BE(huge.length), 'ftyp', 'mif1', [0, 0, 0, 0]))
+      expect(detectContentType(strict(huge))).toBeNull()
+
+      expect(
+        detectContentType(ftyp('mif1', ...new Array(252).fill('avif'))),
+      ).toBe('image/avif')
+      expect(
+        detectContentType(ftyp('mif1', ...new Array(253).fill('avif'))),
+      ).toBeNull()
+    })
+
     test('needs only the major brand when that decides', () => {
       const data = bytes(uint32BE(64), 'ftyp', 'heic', [0, 0, 0, 0])
 
@@ -298,8 +313,8 @@ describe('detectContentType', () => {
     test('accepts multi-byte element sizes', () => {
       const data = bytes(
         [0x1a, 0x45, 0xdf, 0xa3],
-        // Header size 7, written in two bytes
-        [0x40, 0x07],
+        // Header size 8, written in two bytes
+        [0x40, 0x08],
         // DocType, size 4, written in two bytes
         [0x42, 0x82, 0x40, 0x04],
         'webm',
@@ -330,6 +345,10 @@ describe('detectContentType', () => {
           'webm',
           new Array(36).fill(0),
         ),
+      ],
+      [
+        'a child running past a one-byte header',
+        bytes([0x1a, 0x45, 0xdf, 0xa3, 0x81, 0x42, 0x82, 0x84], 'webm'),
       ],
       [
         'a DocType longer than the input',
@@ -541,6 +560,21 @@ describe('ZIP-based office formats', () => {
         PPTX,
       )
     })
+  })
+
+  test('looks past an end-record lookalike in the archive comment', () => {
+    // A comment ending in a signature plus 18 zero bytes looks like a record
+    // of an empty directory, nearer the end than the real one
+    const data = zip(
+      [
+        { name: '[Content_Types].xml', data: '<Types/>' },
+        { name: 'word/document.xml', data: '<w/>' },
+      ],
+      { comment: 'note PK\x05\x06' + '\0'.repeat(18) },
+    )
+
+    expect(detectContentType(strict(data))).toBe(DOCX)
+    expect(findZipCentralDirectory(data)?.size).toBeGreaterThan(0)
   })
 
   test('does not read a directory larger than MAX_ZIP_DIRECTORY_BYTES', () => {

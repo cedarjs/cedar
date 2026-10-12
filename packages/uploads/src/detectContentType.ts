@@ -133,6 +133,11 @@ const MP4_BRANDS = new Set([
 /** ISO-BMFF brands of MPEG-4 audio files (`.m4a`, `.m4b`). */
 const MP4_AUDIO_BRANDS = new Set(['M4A ', 'M4B '])
 const QUICKTIME_BRAND = 'qt  '
+/**
+ * Largest `ftyp` box read: 1 KiB, room for 252 compatible brands. Real ones
+ * list a handful, so they are tens of bytes.
+ */
+const MAX_FTYP_BOX_SIZE = 1024
 
 /** EBML element IDs, with their length marker bits kept. */
 const EBML_DOC_TYPE_ID = 0x4282
@@ -203,8 +208,15 @@ function detectIsoBmff(bytes: Uint8Array): string | null {
 
   // Header, major brand and minor version are 16 bytes, and brands are four
   // bytes each. Sizes 0 ("to end of file") and 1 (64-bit size follows) are
-  // valid for other boxes but never seen on a real `ftyp`.
-  if (boxSize === null || boxSize < 16 || boxSize % 4 !== 0) {
+  // valid for other boxes but never seen on a real `ftyp`, and neither is
+  // one bigger than `MAX_FTYP_BOX_SIZE`, which would otherwise have the
+  // brand scan below walk a whole large upload.
+  if (
+    boxSize === null ||
+    boxSize < 16 ||
+    boxSize % 4 !== 0 ||
+    boxSize > MAX_FTYP_BOX_SIZE
+  ) {
     return null
   }
 
@@ -376,13 +388,15 @@ function detectEbml(bytes: Uint8Array): string | null {
   }
 
   const headerStart = EBML_SIGNATURE.length + headerSize.length
-  const headerEnd = Math.min(headerStart + headerSize.value, bytes.length)
+  const headerEnd = headerStart + headerSize.value
   let offset = headerStart
 
-  while (offset < headerEnd) {
+  // Every child must lie wholly inside the header the file declares; one
+  // that runs past it means the header is broken
+  while (offset < Math.min(headerEnd, bytes.length)) {
     const id = readVint(bytes, offset, true)
 
-    if (!id || id.length > 4) {
+    if (!id || id.length > 4 || offset + id.length > headerEnd) {
       return null
     }
 
@@ -393,6 +407,10 @@ function detectEbml(bytes: Uint8Array): string | null {
     }
 
     const dataStart = offset + id.length + size.length
+
+    if (dataStart + size.value > headerEnd) {
+      return null
+    }
 
     if (id.value === EBML_DOC_TYPE_ID) {
       // Every DocType this function knows is short, so a long one is not one
@@ -517,56 +535,70 @@ interface ZipEndRecord {
 }
 
 /**
- * The end-of-central-directory record at the very end of `end`, or `null`
- * when there is none, or it describes a ZIP64 or multi-disk archive (office
- * files are neither), or a directory larger than
- * `MAX_ZIP_DIRECTORY_BYTES`.
+ * Most end-of-central-directory candidates tried per file. A real record is
+ * normally the first one found; more only appear when an archive comment
+ * happens to contain the signature, and this bounds the work a crafted
+ * comment full of them can cause.
  */
-function findZipEndRecord(end: Uint8Array): ZipEndRecord | null {
+const MAX_ZIP_END_RECORD_CANDIDATES = 16
+
+/**
+ * End-of-central-directory record candidates at the end of `end`, nearest
+ * the end first. A candidate is a record signature whose comment length
+ * reaches exactly the end of `end`. An archive comment may itself contain
+ * something that looks like one, so callers keep trying candidates until one
+ * leads to a directory. Candidates describing a ZIP64 or multi-disk archive
+ * (office files are neither), or a directory larger than
+ * `MAX_ZIP_DIRECTORY_BYTES`, are skipped.
+ */
+function* zipEndRecords(end: Uint8Array): Generator<ZipEndRecord> {
   const last = end.length - ZIP_END_OF_DIRECTORY_SIZE
   const first = Math.max(0, last - ZIP_MAX_COMMENT_LENGTH)
+  let candidates = 0
 
-  // The record is followed only by its comment, so it is the one whose
-  // comment ends exactly at the end of the file
   for (let offset = last; offset >= first; offset--) {
     if (
-      hasBytesAt(end, offset, ZIP_END_OF_DIRECTORY) &&
-      readUint16LE(end, offset + 20) === last - offset
+      !hasBytesAt(end, offset, ZIP_END_OF_DIRECTORY) ||
+      readUint16LE(end, offset + 20) !== last - offset
     ) {
-      const disk = readUint16LE(end, offset + 4)
-      const directoryDisk = readUint16LE(end, offset + 6)
-      const entries = readUint16LE(end, offset + 10)
-      const directorySize = readUint32LE(end, offset + 12)
-      const directoryOffset = readUint32LE(end, offset + 16)
-
-      // 0xFFFF and 0xFFFFFFFF mean "see the ZIP64 record"
-      if (
-        disk !== 0 ||
-        directoryDisk !== 0 ||
-        entries === null ||
-        entries === 0xffff ||
-        directorySize === null ||
-        directorySize === 0xffffffff ||
-        directorySize > MAX_ZIP_DIRECTORY_BYTES ||
-        directoryOffset === null ||
-        directoryOffset === 0xffffffff
-      ) {
-        return null
-      }
-
-      return { recordOffset: offset, entries, directorySize, directoryOffset }
+      continue
     }
-  }
 
-  return null
+    if (++candidates > MAX_ZIP_END_RECORD_CANDIDATES) {
+      return
+    }
+
+    const disk = readUint16LE(end, offset + 4)
+    const directoryDisk = readUint16LE(end, offset + 6)
+    const entries = readUint16LE(end, offset + 10)
+    const directorySize = readUint32LE(end, offset + 12)
+    const directoryOffset = readUint32LE(end, offset + 16)
+
+    // 0xFFFF and 0xFFFFFFFF mean "see the ZIP64 record"
+    if (
+      disk !== 0 ||
+      directoryDisk !== 0 ||
+      entries === null ||
+      entries === 0xffff ||
+      directorySize === null ||
+      directorySize === 0xffffffff ||
+      directorySize > MAX_ZIP_DIRECTORY_BYTES ||
+      directoryOffset === null ||
+      directoryOffset === 0xffffffff
+    ) {
+      continue
+    }
+
+    yield { recordOffset: offset, entries, directorySize, directoryOffset }
+  }
 }
 
 /**
  * Where a ZIP's central directory is, from the start of the file, read from
  * the end-of-central-directory record at the very end of `tail` (the last
- * bytes of the file). `null` when `tail` has no such record, or the archive
- * is one `detectContentType()` won't read (ZIP64, multi-disk, or a directory
- * over `MAX_ZIP_DIRECTORY_BYTES`).
+ * bytes of the file). `null` when `tail` has no such record describing a
+ * non-empty directory, or the archive is one `detectContentType()` won't
+ * read (ZIP64, multi-disk, or a directory over `MAX_ZIP_DIRECTORY_BYTES`).
  *
  * For callers that read a large file in ranges: when `detectContentType(head,
  * { tail })` returns `null` for a ZIP because the directory starts before the
@@ -576,27 +608,26 @@ function findZipEndRecord(end: Uint8Array): ZipEndRecord | null {
 export function findZipCentralDirectory(
   tail: Uint8Array,
 ): { offset: number; size: number } | null {
-  const record = findZipEndRecord(tail)
+  // An empty directory identifies nothing, and is what a lookalike in an
+  // archive comment (signature plus zeros) usually describes
+  for (const record of zipEndRecords(tail)) {
+    if (record.entries > 0 && record.directorySize > 0) {
+      return { offset: record.directoryOffset, size: record.directorySize }
+    }
+  }
 
-  return record
-    ? { offset: record.directoryOffset, size: record.directorySize }
-    : null
+  return null
 }
 
 /**
- * The entry names in a ZIP's central directory, found through the
- * end-of-central-directory record at the very end of `end`. `null` when the
- * record or the whole directory isn't in `end`, or isn't well formed.
+ * The entry names in the central directory an end-of-central-directory
+ * `record` describes. `null` when the whole directory isn't in `end`, or
+ * isn't well formed.
  */
-function readZipEntryNames(end: Uint8Array): string[] | null {
-  const record = findZipEndRecord(end)
-
-  if (!record) {
-    return null
-  }
-
-  const { recordOffset, entries, directorySize } = record
-
+function readZipEntryNames(
+  end: Uint8Array,
+  { recordOffset, entries, directorySize }: ZipEndRecord,
+): string[] | null {
   // The directory sits right before the record. Locating it this way, rather
   // than by its recorded offset, works on a tail without knowing the file's
   // size; the entry walk below checks that it really is a directory.
@@ -688,9 +719,18 @@ function detectZip(bytes: Uint8Array, tail?: Uint8Array): string | null {
     return openDocument
   }
 
-  const names = readZipEntryNames(tail ?? bytes)
+  const end = tail ?? bytes
 
-  return names ? classifyOfficeOpenXml(names) : null
+  for (const record of zipEndRecords(end)) {
+    const names = readZipEntryNames(end, record)
+    const type = names && classifyOfficeOpenXml(names)
+
+    if (type) {
+      return type
+    }
+  }
+
+  return null
 }
 
 /**
