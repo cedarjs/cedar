@@ -49,6 +49,20 @@ afterAll(() => {
   fs.rmSync(tmp, { recursive: true, force: true })
 })
 
+const WINDOWS_REQUIRED_VARS = [
+  'HOMEDRIVE',
+  'HOMEPATH',
+  'LOGONSERVER',
+  'PATH',
+  'SYSTEMDRIVE',
+  'SYSTEMROOT',
+  'TEMP',
+  'USERDOMAIN',
+  'USERNAME',
+  'USERPROFILE',
+  'WINDIR',
+]
+
 describe('runSandboxedChild', () => {
   it('sends the input on stdin and returns stdout, byte for byte', async () => {
     const input = Buffer.from([0, 1, 2, 255, 254, 10, 13, 0])
@@ -84,9 +98,17 @@ describe('runSandboxedChild', () => {
       const env: Record<string, string> = JSON.parse(
         result.ok ? result.output.toString() : '{}',
       )
-      // macOS adds __CF_USER_TEXT_ENCODING to every process; nothing else
-      // may be there
-      const keys = Object.keys(env).filter((k) => !k.startsWith('__CF'))
+      // macOS adds __CF_USER_TEXT_ENCODING to every process, and on Windows
+      // libuv always passes on these system variables (its `required_vars`),
+      // whatever env it's given. Nothing else may be there
+      const keys = Object.keys(env).filter(
+        (k) =>
+          !k.startsWith('__CF') &&
+          !(
+            process.platform === 'win32' &&
+            WINDOWS_REQUIRED_VARS.includes(k.toUpperCase())
+          ),
+      )
       expect(keys).toEqual([])
       expect(JSON.stringify(env)).not.toContain('hunter2')
     } finally {

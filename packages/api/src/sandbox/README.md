@@ -22,7 +22,7 @@ import {
 
 | The child…                                             | How                                                     |
 | ------------------------------------------------------ | ------------------------------------------------------- |
-| has no environment variables (no `DATABASE_URL`, keys) | spawned with `env: {}`                                  |
+| has no environment variables (no `DATABASE_URL`, keys) | spawned with `env: {}` (on Windows, see below)          |
 | reads only its script and the `readable` paths         | Node's permission model, `--allow-fs-read`              |
 | can't write files                                      | permission model (no `--allow-fs-write`)                |
 | can't start processes or worker threads                | permission model (no `--allow-child-process`/`-worker`) |
@@ -30,6 +30,10 @@ import {
 | loads native addons only if you allow it               | `allowAddons` → `--allow-addons`                        |
 | gets the input on stdin, returns the result on stdout  | output counts only on exit code 0                       |
 | is bounded                                             | heap cap, timeout (SIGKILL), input and output caps      |
+
+On Windows the child still gets a few system variables (`PATH`, `SYSTEMROOT`,
+`TEMP`, `USERNAME`, `USERPROFILE` and the like): Node's process library
+(libuv) always passes them on. None of your app's own variables reach it.
 
 Every failure is a result, never a rejection: `{ ok: false, failure, message }`,
 where `failure` is `'input-too-large'`, `'timeout'`, `'output-too-large'`,
