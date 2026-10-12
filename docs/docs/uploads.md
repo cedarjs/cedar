@@ -292,6 +292,8 @@ export const MonthlyReportJob = async ({ month }: { month: string }) => {
 
 Pass `userId` when the file belongs to someone, so the ownership checks that guard user uploads apply to it too, and `organizationId` in multi-tenant apps.
 
+When you make a file from an upload, a thumbnail of a photo or a preview of a PDF, decode the upload in a sandboxed child process with `@cedarjs/api/sandbox`, so a crafted file that exploits the decoder can't reach your secrets. See [Untrusted Files](security.md#untrusted-files).
+
 ## Deleting files
 
 Deleting an `Upload` row does nothing to the bytes, by design. `deleteFile()` deletes the object first and then the row, so a crash in between leaves a visible row rather than an unreachable object, and a missing object is tolerated, so it's safe to retry.

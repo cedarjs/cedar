@@ -43,11 +43,12 @@ For detailed logger configuration, see the CedarJS logger package [README](./src
 
 `@cedarjs/api/sandbox` runs a Node script on untrusted input — an uploaded
 photo, a third party's PDF — in a locked-down child process: no environment
-variables, read access only to the packages it needs, no writes, no child
-processes, a heap cap, a timeout and output limits. Use it for parsing,
-decoding or converting files you didn't create (sharp, pdf.js, …). It's
-defense in depth on top of Node's permission model, not a security boundary.
-See the sandbox [README](./src/sandbox/README.md).
+variables, read access only to its script and `node_modules`, no writes, no
+child processes, no network, a heap cap, a timeout and output limits. Use it
+for parsing, decoding or converting files you didn't create (sharp, pdf.js,
+…). It's defense in depth on top of Node's permission model, not a security
+boundary, and native addons aren't limited by that model. See the sandbox
+[README](./src/sandbox/README.md).
 
 ## Contributing
 
