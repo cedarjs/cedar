@@ -180,15 +180,12 @@ New TypeScript projects created with `yarn create cedar-app` have TypeScript's
 `scripts/tsconfig.json`. The code Cedar's generators and setup commands write
 type-checks with `strict` on.
 
-Existing projects aren't changed: your tsconfig files keep their current
-settings. To turn strict mode on in an existing project, add
-`"strict": true` to `compilerOptions` in each of those tsconfig files, then run
+It's recommended to turn strict mode on in your existing project by adding
+`"strict": true` to `compilerOptions` in each of your tsconfig files. Then run
 `yarn cedar g types` and `yarn cedar type-check`. Code generated before v8 may
 need a few changes; see
 [TypeScript Strict Mode](https://cedarjs.com/docs/typescript/strict-mode) for
 the common ones.
-
-Code generated into a project without strict mode keeps working as before.
 
 Strict mode relies on the types described in "More precise generated types"
 below. The SDL generator also writes Prisma scalar and enum lists with
