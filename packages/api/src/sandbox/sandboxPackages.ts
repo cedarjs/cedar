@@ -3,7 +3,6 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 
 interface PackageJson {
-  name?: string
   dependencies?: Record<string, string>
   optionalDependencies?: Record<string, string>
   peerDependencies?: Record<string, string>
@@ -23,13 +22,13 @@ const findPackage = (name: string, fromFile: string) => {
     if (!fs.existsSync(path.join(found, 'package.json'))) {
       continue
     }
+    // Whatever its manifest's name: an alias (`"img": "npm:sharp@…"`) is
+    // installed under the name it's imported by
     const realDir = fs.realpathSync(found)
     const pkg: PackageJson = JSON.parse(
       fs.readFileSync(path.join(realDir, 'package.json'), 'utf8'),
     )
-    if (pkg.name === name) {
-      return { found, realDir, pkg }
-    }
+    return { found, realDir, pkg }
   }
   return null
 }

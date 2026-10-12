@@ -60,6 +60,21 @@ describe('sandboxPackagePaths', () => {
     ])
   })
 
+  it('finds a package installed under an alias', () => {
+    const { script, nm } = newApp('alias')
+    // "image-lib": "npm:real-image-lib@1"
+    writePackage(path.join(nm, 'image-lib'), {
+      name: 'real-image-lib',
+      dependencies: { helper: '1' },
+    })
+    writePackage(path.join(nm, 'helper'), { name: 'helper' })
+
+    expect(sandboxPackagePaths(['image-lib'], script)).toEqual([
+      path.join(nm, 'image-lib'),
+      path.join(nm, 'helper'),
+    ])
+  })
+
   it('gives each package the nested version it uses', () => {
     const { script, nm } = newApp('nested')
     writePackage(path.join(nm, 'p'), { name: 'p', version: '1.0.0' })

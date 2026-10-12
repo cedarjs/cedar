@@ -129,7 +129,8 @@ each named package's folder and, recursively, those of its `dependencies` and
 its installed `optionalDependencies` and `peerDependencies`. Each one is
 resolved from the folder of the package that needs it (the first from the
 script's folder) by Node's own lookup list (`createRequire(…).resolve.paths()`),
-taking the first `<dir>/<name>` whose `package.json` has that `name`. So nested
+taking the first `<dir>/<name>` with a `package.json`, as Node does (whatever
+the manifest's `name`, so npm aliases work). So nested
 versions, pnpm's `.pnpm/<pkg>/node_modules` siblings and hoisting resolve as
 they will at run time; cycles are guarded; optional and peer dependencies that
 aren't installed (sharp's other platforms) are skipped; a missing package or
