@@ -157,6 +157,7 @@ model BackgroundJob {
   lastError String?
   failedAt  DateTime?
   key       String?   @unique
+  pausedAt  DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -165,6 +166,8 @@ model BackgroundJob {
 :::info[Adding the `key` column to an existing app]
 
 The `key` column stores the keys of [unique jobs](#unique-jobs) and of [declared schedules](#recurring-jobs). Apps that set up jobs before the column existed keep working without it, until they schedule a job with a `key` or a job declares `schedules`, which throw a `KeyColumnMissingError` until it's there. To add it, add `key String? @unique` to your `BackgroundJob` model and run `yarn cedar prisma migrate dev`. The column is nullable, so existing rows don't need a value.
+
+The `pausedAt` column stores [paused schedules](#pausing-a-schedule). Without it everything else works, and pausing or resuming a schedule throws a `PausedAtColumnMissingError`. Add `pausedAt DateTime?` the same way to be able to pause schedules.
 
 :::
 
@@ -514,6 +517,52 @@ Some details worth knowing:
 - A declared schedule that fails `maxAttempts` times in a row, or that you cancel with `later.cancel()`, stops until the next time the workers start, which recreates it.
 
 If you schedule recurring jobs with a script that calls `later(job, args, { cron })`, declare them with `schedules` instead and delete the rows that script created (they have a `cron` and no `key`) once, for example with `db.backgroundJob.deleteMany({ where: { cron: { not: null }, key: null } })` in `yarn cedar console`.
+
+### Pausing a Schedule
+
+To stop a declared schedule from running without changing your code or deploying, for example to stop a nightly job during an incident, pause it:
+
+```bash
+yarn cedar jobs pause ReportJob:nightly
+```
+
+Name the schedule as `JobName:key`, or just `JobName` when the job has a single schedule. Workers don't pick up a paused schedule until you resume it:
+
+```bash
+yarn cedar jobs resume ReportJob:nightly
+```
+
+A resumed schedule runs next the next time its `cron` matches. Runs it missed while it was paused are not made up for.
+
+`yarn cedar jobs schedules` lists the stored schedules with their cron, and their next run or since when they're paused:
+
+```
+CleanupJob:default  17 * * * *  next run 2026-10-12T13:17:00.000Z
+ReportJob:hourly    0 * * * *   next run 2026-10-12T13:00:00.000Z
+ReportJob:nightly   0 3 * * *   paused since 2026-10-12T12:41:07.512Z
+```
+
+Like `yarn cedar jobs work`, these commands load your jobs from the built api side (`api/dist`), so run them where the api side is built, like on your server.
+
+The same is available in code, on the object `JobManager` created:
+
+```ts
+import { jobs } from 'src/lib/jobs'
+import { ReportJob } from 'src/jobs/ReportJob/ReportJob'
+
+const { alreadyPaused } = await jobs.pauseSchedule(ReportJob, 'nightly')
+const { wasPaused, runAt } = await jobs.resumeSchedule(ReportJob, 'nightly')
+const schedules = await jobs.listSchedules()
+```
+
+How a pause behaves:
+
+- The pause is stored with the schedule, so it holds across worker restarts and deploys. Every worker logs a warning listing the paused schedules when it starts, so a forgotten pause shows up.
+- A run that's in progress when you pause finishes, and its next run stays paused.
+- Changing a paused schedule's `cron` or `args` in code updates it, and it stays paused. Removing it from the code removes it, paused or not.
+- Only declared schedules can be paused. A schedule that's declared but not stored yet (the workers haven't started since you declared it) can't be paused until they have.
+
+Pausing needs an adapter that implements `pauseSchedule()` and `resumeSchedule()`, like the `PrismaAdapter`, and the [`pausedAt` column](#installation).
 
 ### Scheduling a Recurring Job by Hand
 
@@ -985,7 +1034,9 @@ The general gist of the required functions:
 - `failure()` is called, instead of `error()`, when the job has reached `maxAttempts` or exceeded `maxRuntime`. Accepts the job object, a `deleteJob` boolean that says whether the job should be deleted, and the `error` of the failed attempt, which should be recorded in the same write that marks the job as failed.
 - `clear()` remove all jobs from the queue (mostly used in development).
 - `supportsUniqueKeys` (optional) set it to `true` if `schedule()` honors the payload's `key`: while a job with that key is queued it must not add another one. Scheduling with a `key` through an adapter without it throws a `UniqueKeysNotSupportedError`.
-- `syncSchedules()` (optional) accepts the declared `schedules` (each a `schedule()` payload with a `cron` and a `key`) and a `keyPrefix`, and makes the stored schedules match them: create missing ones, update changed ones and remove stored ones with a key starting with `keyPrefix` that aren't declared. Several workers call it at once, so it must not create duplicates. Without it, jobs can't declare `schedules`.
+- `syncSchedules()` (optional) accepts the declared `schedules` (each a `schedule()` payload with a `cron` and a `key`) and a `keyPrefix`, and makes the stored schedules match them: create missing ones, update changed ones and remove stored ones with a key starting with `keyPrefix` that aren't declared. Several workers call it at once, so it must not create duplicates. Without it, jobs can't declare `schedules`. It may return the keys of the paused declared schedules as `paused`, which the workers log.
+- `pauseSchedule()` and `resumeSchedule()` (optional) accept the `key` of a stored declared schedule. A paused schedule must not be returned by `find()`, and must stay paused when `success()` or `error()` reschedule a run that was in progress, and through `syncSchedules()`. `resumeSchedule()` also gets the schedule's next `runAt`. Both return `null` when no schedule with the key is stored. Without them, `jobs.pauseSchedule()` and `jobs.resumeSchedule()` throw a `SchedulePausingNotSupportedError`.
+- `listSchedules()` (optional) accepts a `keyPrefix` and returns the stored declared schedules, with their `key`, `cron`, `runAt`, `pausedAt` and whether they're `running`. Used by `yarn cedar jobs schedules`.
 - `cancel()` (optional) accepts an object with a `jobId` property and should make sure that job never runs (or is never retried, if it's currently running). Return `true` if a job was cancelled, `false` otherwise. If you don't implement this function, `later.cancel()` will throw a `CancelNotImplementedError`.
 
 ## The Future
