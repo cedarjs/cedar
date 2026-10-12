@@ -33,8 +33,8 @@ and Vercel.
 
 - **Empty environment.** The child is spawned with `env: {}`.
 - **Node's permission model.** `--permission`, with `--allow-fs-read` only for
-  the child's script, the `node_modules` folders from the script's folder up,
-  and the folders it's given. No `--allow-fs-write`, `--allow-child-process`,
+  the child's script, the folders of the `packages` it imports (and their
+  dependencies), and the folders it's given. No `--allow-fs-write`, `--allow-child-process`,
   `--allow-worker`, `--allow-wasi` or `--allow-inspector`. `--allow-addons` only
   when the caller opts in (`allowAddons`), since sharp-like libraries are
   native.
@@ -68,6 +68,7 @@ const limit = createConcurrencyLimiter(2)
 const result = await limit(() =>
   runSandboxedChild({
     script: findChildScript(import.meta.dirname, 'thumbnail.child'),
+    packages: ['sharp'],
     allowAddons: true,
     heapMb: 128,
     input: bytes,
@@ -121,34 +122,49 @@ when the script is missing, and a bundled build fails when a child imports app
 code or two children share a name, rather than deploying something that fails
 at run time.
 
-### The child reads every `node_modules` from its script up, not a package list
+### The child reads the packages it names, resolved the way Node will
 
-The child may read each `node_modules` folder in its script's folder and every
-folder above it: the folders Node looks in for the child's imports. A
-`node_modules` that is a symlink is allowed by both its paths (Node reads a
-package's `package.json` through the path it looked in, and its modules through
-their real paths), and packages linked from it to somewhere outside (workspace
-packages) by their real folders, except the workspace the script itself is in
-and its siblings: a workspace manager links the app's own `api` and `web` sides
-too, and those hold the app's source and maybe a SQLite database. pnpm's links point inside
-`node_modules` and need nothing extra.
+`runSandboxedChild({ script, packages: ['sharp'], … })`: the child may read
+each named package's folder and, recursively, those of its `dependencies` and
+its installed `optionalDependencies` and `peerDependencies`. Each one is
+resolved from the folder of the package that needs it (the first from the
+script's folder) by Node's own lookup list (`createRequire(…).resolve.paths()`),
+taking the first `<dir>/<name>` whose `package.json` has that `name`. So nested
+versions, pnpm's `.pnpm/<pkg>/node_modules` siblings and hoisting resolve as
+they will at run time; cycles are guarded; optional and peer dependencies that
+aren't installed (sharp's other platforms) are skipped; a missing package or
+regular dependency is a `'spawn-error'` with a clear message.
 
-A precise list of the packages a child imports (walking each package's
-`dependencies` and installed optional ones) adds nothing for the children that
-matter most: the permission model doesn't restrict native addons, so for an
-`allowAddons` child like sharp, the list limits only JavaScript that has no
-reason to read other packages anyway. It's fragile too: sharp 0.35 doesn't
-export its `package.json`, which breaks the obvious resolution, and each new
-packaging scheme needs a fix. `node_modules` holds no app secrets, while the
-app's root (`.env`), its `api` and `web` sides and its data stay unreadable
-(linked workspace packages from elsewhere, like `packages/*`, are readable),
-which is what the sandbox is for. There is no `sandboxReadPaths()` in the public API;
-`nodeModulesFrom` changes where the walk starts, or turns it off. The walk
-starts at the script, not the working directory, because that's where Node
-resolves the child's imports from, and in a bundled build the copied packages
-sit next to the children (below), which a walk from the working directory
-misses. Yarn Plug'n'Play is not supported; Cedar apps use the `node-modules`
-linker.
+- **Looked up, not resolved through `exports`.** The package's `package.json`
+  is read from disk in the folders Node looks in, so it doesn't matter what
+  its `exports` allow: sharp 0.35 doesn't export `package.json`, and some
+  packages have only an `import` condition, which `require.resolve()` refuses.
+  Resolving the main entry and walking up would need both paths (CJS and ESM)
+  and still miss packages with no main; the lookup also gives the path Node
+  finds the package at, which the grant needs (next point).
+- **Both paths of a symlinked package.** Node reads a package's
+  `package.json` through the path it found it at and its modules through their
+  real path, so a package reached through a symlink (pnpm, a workspace
+  package, a linked store) is granted at both. Checked: without the found path,
+  sharp linked into an app's `node_modules` fails with `FileSystemRead`.
+- **Peer dependencies when installed.** A package loads its peers from its
+  own folder at run time, so an installed peer can be needed; one that isn't
+  installed is skipped.
+- **An option, not a helper.** `packages` resolves from the script, which is
+  the only correct starting point and one a caller can't get wrong. In a
+  bundled build that's `api/dist/ud/sandbox-children/<name>.child.js`, so the
+  packages resolve from the copies next to it (below), not from wherever the
+  caller's bundle runs.
+
+**Why not every `node_modules`?** Granting whole `node_modules` folders is
+less code per package but more code overall and grants far more: the
+permission model follows a symlink inside a granted folder wherever it leads,
+and a workspace manager links the app's own workspaces from `node_modules`
+(`node_modules/api`, `node_modules/web`), so `node_modules/web/.env` and the
+app's source became readable. Excluding those means scanning and classifying
+every link and granting the rest by name prefix. Naming the packages grants
+only what the child imports. Yarn Plug'n'Play is not supported; Cedar apps use
+the `node-modules` linker.
 
 ### No network on Node 24: a preload, as a `data:` URL
 
@@ -262,9 +278,11 @@ Each probe is a real child script run through `runSandboxedChild`:
   absent);
 - it can read the folders it's given, and not a file outside them (a `.env` next
   to them), nor the folder its own script is in;
-- `nodeModulesReadPaths` finds every `node_modules` from a folder up, follows a
-  symlinked workspace package but not the workspace the script is in, and never
-  includes the app's root;
+- the packages it may read are exactly those named and their dependencies:
+  found whatever their `exports` allow (none for `package.json`, `import`
+  only), each package's nested version, pnpm's layout at both the linked and
+  real paths, optional dependencies skipped when not installed, a cycle
+  survived, and a missing package or dependency reported;
 - it can't write a file, spawn a process, start a worker thread, `eval`, or
   `dlopen` a native addon without `allowAddons`;
 - network, on every Node CI runs: a probe child tries TCP to a server in the
@@ -288,18 +306,23 @@ Each probe is a real child script run through `runSandboxedChild`:
   `current -> releases/…` link);
 - the limiter caps concurrency, runs waiting tasks in order, and frees a slot on
   rejection;
-- **sharp in the child**, in an app laid out like a Cedar app (`node_modules` a
-  symlink, a `.env` next to it): the child decodes a PNG and encodes a WebP
-  reading only `node_modules`; it can't read the `.env`; it fails without
-  `allowAddons` (`ERR_DLOPEN_DISABLED`) and without `node_modules`. sharp is a
+- **sharp in the child**, in an app laid out like a Cedar app (sharp linked
+  into `node_modules`, the `web` side and a workspace package linked there too,
+  a `.env` at the root): a `.ts` child with a bare `import sharp` and
+  `packages: ['sharp']` decodes a PNG and encodes a WebP; it can't read the
+  `.env`, `node_modules/web/.env` through the link, the web side's source or
+  the workspace package (directly or through its link); it fails without
+  `allowAddons` (`ERR_DLOPEN_DISABLED`), without `packages`, and with a package
+  that isn't installed (`'spawn-error'`). sharp is a
   devDependency of `@cedarjs/api` for this (prebuilt binaries via optional
   packages, no build step);
 - **the bundled build** (`packages/vite/src/__tests__/ud-build.test.ts`, on
   `__fixtures__/cedar-ud-app`, whose `humanize.child.ts` imports
   `humanize-string`): the child is emitted on its own, importing only the
   package; the package and its dependencies are copied next to it;
-  `findChildScript` finds it from `api/dist/ud` and its chunks; it runs in the
-  sandbox; and the regular build's child next to its caller runs too.
+  `findChildScript` finds it from `api/dist/ud` and its chunks;
+  `packages: ['humanize-string']` grants exactly those copies (not the
+  monorepo's `node_modules`); it runs in the sandbox; and the regular build's child next to its caller runs too.
   `tasks/ud-tests` call a function that runs it under `cedar serve api --ud`
   and `cedar dev --ud`;
 - **Netlify and Vercel** (`e2e-netlify.yml`, `e2e-vercel.yml`): a function from
@@ -328,8 +351,10 @@ Each probe is a real child script run through `runSandboxedChild`:
 
 - **Network on Node 24.** A preload on Node 24, the permission model on Node
   25+. See Decisions.
-- **Read paths.** Every `node_modules` from the script up, not a per-package
-  list, and no `sandboxReadPaths()`. See Decisions.
+- **Read paths.** The packages the child names (`packages`) and their
+  dependencies, resolved the way Node will; not whole `node_modules` folders,
+  which the permission model would follow into linked workspaces. See
+  Decisions.
 - **Child script location in builds.** Bundled builds (`--ud`), Netlify and
   Vercel are supported: children are emitted to
   `api/dist/ud/sandbox-children` with their packages. See Decisions.

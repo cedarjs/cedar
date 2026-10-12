@@ -83,7 +83,7 @@ For details on how to keep your incoming webhooks secure and how to sign your ou
 
 Parsing a file you didn't create, like an uploaded photo, a third party's PDF or an archive, runs a large parser (libvips, pdf.js, an unpacker) on bytes an attacker may have crafted to exploit a bug in it. In your api process, such an exploit can reach everything: `DATABASE_URL` and your keys in the environment, `.env` on disk, every stored upload, your database over the network.
 
-`@cedarjs/api/sandbox` runs that work in a locked-down child process instead. The child gets the input on stdin and returns its result on stdout. It gets none of your app's environment variables (on Windows, a few system ones such as `PATH` remain), can read only its own script, `node_modules` and the paths you allow, can't write files or start processes, has no network, and is killed at a heap cap, a timeout or an output cap.
+`@cedarjs/api/sandbox` runs that work in a locked-down child process instead. The child gets the input on stdin and returns its result on stdout. It gets none of your app's environment variables (on Windows, a few system ones such as `PATH` remain), can read only its own script, the packages you name with their dependencies, and the paths you allow, can't write files or start processes, has no network, and is killed at a heap cap, a timeout or an output cap.
 
 ```ts title="api/src/lib/thumbnail.ts"
 import {
@@ -99,6 +99,8 @@ export const makeThumbnail = async (image: Uint8Array) => {
     runSandboxedChild({
       // api/src/lib/thumbnail.child.ts: reads stdin, writes stdout
       script: findChildScript(import.meta.dirname, 'thumbnail.child'),
+      // sharp and its dependencies are all the child may read of node_modules
+      packages: ['sharp'],
       allowAddons: true,
       input: image,
     })

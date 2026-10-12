@@ -3,8 +3,8 @@
 `@cedarjs/api/sandbox` runs a Node script on untrusted bytes — an uploaded
 photo, a PDF from a third party, an archive, a spreadsheet — in a sandboxed
 child process. If a crafted file exploits a bug in the parser, it lands in a
-process that has none of your secrets, can read only its script, `node_modules`
-and the paths you allow, can't write files, and has no network (all of which
+process that has none of your secrets, can read only its script, the packages
+it imports and the paths you allow, can't write files, and has no network (all of which
 holds for JavaScript; see what it doesn't cover for native addons).
 
 Use it whenever your API side parses, decodes or converts a file it didn't
@@ -24,7 +24,7 @@ import {
 | The child…                                                                  | How                                                        |
 | --------------------------------------------------------------------------- | ---------------------------------------------------------- |
 | has no environment variables (no `DATABASE_URL`, keys)                      | spawned with `env: {}` (on Windows, see below)             |
-| reads only its script, `node_modules` and `readable`                        | Node's permission model, `--allow-fs-read`                 |
+| reads only its script, its `packages` and `readable`                        | Node's permission model, `--allow-fs-read`                 |
 | can't write files                                                           | permission model (no `--allow-fs-write`)                   |
 | can't start processes or worker threads                                     | permission model (no `--allow-child-process`/`-worker`)    |
 | has no network: no sockets, no `fetch`, no DNS                              | permission model on Node 25+; a preload on Node 24 (below) |
@@ -70,6 +70,8 @@ export const makeThumbnail = async (image: Uint8Array) => {
     runSandboxedChild({
       // thumbnail.child.ts next to this file, in every kind of build
       script: findChildScript(import.meta.dirname, 'thumbnail.child'),
+      // What the child imports: sharp, its dependencies and its binaries
+      packages: ['sharp'],
       // sharp is a native addon
       allowAddons: true,
       heapMb: 128,
@@ -93,8 +95,8 @@ export const makeThumbnail = async (image: Uint8Array) => {
 ```
 
 The child, next to it. It's run by plain Node, so it can't use path aliases like
-`src/…` or TypeScript-only syntax such as enums, and it may import packages and
-Node builtins only, never your app's own modules:
+`src/…` or TypeScript-only syntax such as enums, and it may import packages (the
+ones in `packages`) and Node builtins only, never your app's own modules:
 
 ```ts
 // api/src/lib/thumbnail.child.ts
@@ -135,20 +137,22 @@ The permission model checks every file the child opens, including each
 child may read:
 
 - its own script (not the folder it's in);
-- every `node_modules` folder in the script's folder and each folder above it,
-  which is where Node looks for its imports (`nodeModulesFrom` to start
-  elsewhere, `false` for none). A `node_modules` that is a symlink is allowed
-  by both its paths, and packages linked from it to somewhere else (workspace
-  packages such as `packages/*`) by their real folders, except the workspace
-  the script is in and its siblings (the app's `api` and `web` sides). Since
-  the permission model follows a symlink in a granted folder, a `node_modules`
-  that links to those is granted package by package (as name prefixes), so
-  `node_modules/web/.env` stays unreadable too;
+- the `packages` you name, and everything they depend on: their
+  `dependencies`, and their `optionalDependencies` and `peerDependencies` that
+  are installed (native packages keep their platform's binaries in optional
+  ones, like sharp's `@img/sharp-<platform>`). Each is resolved from the folder
+  of the package that needs it, starting at the script's folder, the way Node
+  will resolve the child's imports, so nested versions and pnpm's layout work.
+  A package reached through a symlink is allowed at the path Node finds it and
+  at its real folder;
 - whatever you pass as `readable`.
 
-Nothing else: not your app's root, so not `.env`, and not your source, your
-database file or uploaded files, unless they're in a folder you allow (through
-`readable`, or a linked package you keep them in).
+Nothing else: not the rest of `node_modules`, not your app's root, so not
+`.env`, and not your source, your database file, other workspaces or uploaded
+files. The whole of `node_modules` is not granted on purpose: the permission
+model follows a symlink in a granted folder wherever it leads, and a workspace
+manager links the app's own workspaces (`api`, `web`) from `node_modules`, so
+`node_modules/web/.env` would be readable.
 
 ## Child scripts in every build
 
@@ -168,8 +172,9 @@ doesn't change between them:
   children import (with their dependencies and their installed optional
   dependencies, which is where native packages keep their binaries) into
   `api/dist/ud/sandbox-children/node_modules`. `findChildScript` looks for that
-  folder from its caller's folder up. Child script names must be unique in
-  `api/src`, and the build fails when a child imports your app's own code.
+  folder from its caller's folder up, and `packages` resolve from the copies
+  next to it. Child script names must be unique in `api/src`, and the build
+  fails when a child imports your app's own code.
   - **Netlify**: `cedar setup deploy netlify --ud` adds
     `included_files = ["api/dist/ud/sandbox-children/**"]` to `[functions]` in
     `netlify.toml`, because Netlify ships only the files it can trace from your
@@ -247,7 +252,7 @@ killed at the heap cap, the timeout or the output cap.
 
 - `runSandboxedChild(options)` — run a script on `input`, get
   `{ ok: true, output }` or `{ ok: false, failure, message }`. Options:
-  `script`, `input`, `readable`, `nodeModulesFrom` (the script's folder),
+  `script`, `input`, `packages`, `readable`,
   `allowAddons`, `heapMb` (256), `args`, `timeoutMs` (10 000), `maxInputBytes`
   (25 MiB), `maxOutputBytes` (25 MiB), `cwd` (the script's folder).
 - `findChildScript(dir, baseName)` — the child script for a caller in `dir`, in
