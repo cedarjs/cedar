@@ -83,20 +83,66 @@ describe('nodeModulesReadPaths', () => {
       'junction',
     )
 
-    const expected = [
-      path.join(app, 'api', 'node_modules'),
-      path.join(root, 'node_modules'),
-      workspacePackage,
-    ]
+    fs.writeFileSync(path.join(store, 'dep', 'index.js'), 'dep')
+    fs.writeFileSync(path.join(workspacePackage, 'index.js'), 'shared')
+    fs.writeFileSync(path.join(app, 'web', '.env'), 'WEB_SECRET=1')
+    fs.writeFileSync(path.join(app, 'api', '.env'), 'API_SECRET=1')
+
     const found = nodeModulesReadPaths(path.join(lib, 'resize.child.js'))
-    // Any node_modules above the temporary folder are the machine's own
-    expect(found.slice(0, 3)).toEqual(expected)
+    expect(found).toContain(path.join(app, 'api', 'node_modules'))
+    expect(found).toContain(workspacePackage)
     expect(found).not.toContain(app)
     expect(found).not.toContain(path.join(app, 'api'))
     expect(found).not.toContain(path.join(app, 'web'))
-    expect(nodeModulesReadPaths(pathToFileURL(lib)).slice(0, 3)).toEqual(
-      expected,
+    // The root node_modules links to api and web, so it's granted by
+    // prefixes that leave those links out, not as a whole
+    expect(found).not.toContain(path.join(root, 'node_modules'))
+    expect(nodeModulesReadPaths(pathToFileURL(lib))).toEqual(found)
+  })
+
+  it('lets a child read packages, but not workspaces through their links', async () => {
+    const root = path.join(tmp, 'monorepo')
+    const lib = path.join(root, 'app', 'api', 'src', 'lib')
+    const nm = path.join(root, 'node_modules')
+    // A package whose name starts like the excluded web link
+    fs.mkdirSync(path.join(nm, 'web-vitals'))
+    fs.writeFileSync(path.join(nm, 'web-vitals', 'index.js'), 'vitals')
+    const reads = {
+      dep: path.join(nm, 'dep', 'index.js'),
+      webVitals: path.join(nm, 'web-vitals', 'index.js'),
+      shared: path.join(nm, '@scope', 'shared', 'index.js'),
+      webThroughLink: path.join(nm, 'web', '.env'),
+      apiThroughLink: path.join(nm, 'api', '.env'),
+      appEnv: path.join(root, 'app', '.env'),
+    }
+    fs.writeFileSync(
+      path.join(lib, 'reads.child.mjs'),
+      `import fs from 'node:fs'
+       const reads = ${JSON.stringify(reads)}
+       const got = {}
+       for (const [name, file] of Object.entries(reads)) {
+         try {
+           got[name] = fs.readFileSync(file, 'utf8')
+         } catch (e) {
+           got[name] = e.code
+         }
+       }
+       process.stdout.write(JSON.stringify(got))`,
     )
+
+    const result = await runSandboxedChild({
+      script: path.join(lib, 'reads.child.mjs'),
+      input: Buffer.alloc(0),
+    })
+
+    expect(result.ok ? JSON.parse(result.output.toString()) : result).toEqual({
+      dep: 'dep',
+      webVitals: 'vitals',
+      shared: 'shared',
+      webThroughLink: 'ERR_ACCESS_DENIED',
+      apiThroughLink: 'ERR_ACCESS_DENIED',
+      appEnv: 'ERR_ACCESS_DENIED',
+    })
   })
 
   it('walks up from the real folder too, when `from` is under a symlink', () => {

@@ -140,7 +140,10 @@ child may read:
   elsewhere, `false` for none). A `node_modules` that is a symlink is allowed
   by both its paths, and packages linked from it to somewhere else (workspace
   packages such as `packages/*`) by their real folders, except the workspace
-  the script is in and its siblings (the app's `api` and `web` sides);
+  the script is in and its siblings (the app's `api` and `web` sides). Since
+  the permission model follows a symlink in a granted folder, a `node_modules`
+  that links to those is granted package by package (as name prefixes), so
+  `node_modules/web/.env` stays unreadable too;
 - whatever you pass as `readable`.
 
 Nothing else: not your app's root, so not `.env`, and not your source, your
