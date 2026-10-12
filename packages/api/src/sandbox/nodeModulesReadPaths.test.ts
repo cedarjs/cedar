@@ -61,6 +61,13 @@ describe('nodeModulesReadPaths', () => {
       path.join(root, 'node_modules', 'api'),
       'junction',
     )
+    // ...and its sibling, the app's web side: not readable either
+    fs.mkdirSync(path.join(app, 'web'))
+    fs.symlinkSync(
+      path.join(app, 'web'),
+      path.join(root, 'node_modules', 'web'),
+      'junction',
+    )
     // A pnpm-style link that stays inside node_modules: covered already
     const store = path.join(
       root,
@@ -86,6 +93,7 @@ describe('nodeModulesReadPaths', () => {
     expect(found.slice(0, 3)).toEqual(expected)
     expect(found).not.toContain(app)
     expect(found).not.toContain(path.join(app, 'api'))
+    expect(found).not.toContain(path.join(app, 'web'))
     expect(nodeModulesReadPaths(pathToFileURL(lib)).slice(0, 3)).toEqual(
       expected,
     )

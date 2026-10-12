@@ -25,15 +25,16 @@ const realpathOrNull = (p: string) => {
 /**
  * The real paths of the packages in `nodeModules` (and in its `@scope`
  * folders) that are symlinks to a folder outside it: workspace packages,
- * `yarn link`ed or `file:` packages. Not one that holds `from`: that's the
- * app's own workspace (its `api` side), with its source and maybe a
- * database file, which a workspace manager links too.
+ * `yarn link`ed or `file:` packages. Not the workspace that holds `from`
+ * (the app's `api` side, with its source and maybe a database file, which
+ * a workspace manager links too), nor its sibling workspaces (`web`): only
+ * packages from other folders, like `packages/*`.
  */
 const symlinkedPackagesOutside = (
   nodeModules: string,
   from: string,
 ): string[] => {
-  const found: string[] = []
+  const targets: string[] = []
 
   const visit = (dir: string, scoped: boolean) => {
     let entries: fs.Dirent[]
@@ -49,21 +50,23 @@ const symlinkedPackagesOutside = (
         visit(entryPath, true)
       } else if (entry.isSymbolicLink()) {
         const target = realpathOrNull(entryPath)
-        const inside = (dir: string) =>
-          !!target && (dir === target || dir.startsWith(target + path.sep))
-        if (
-          target &&
-          !target.startsWith(nodeModules + path.sep) &&
-          !inside(from)
-        ) {
-          found.push(target)
+        if (target && !target.startsWith(nodeModules + path.sep)) {
+          targets.push(target)
         }
       }
     }
   }
 
   visit(nodeModules, false)
-  return found
+
+  const ownWorkspace = targets.find(
+    (target) => from === target || from.startsWith(target + path.sep),
+  )
+  const workspacesFolder = ownWorkspace && path.dirname(ownWorkspace)
+  return targets.filter(
+    (target) =>
+      target !== ownWorkspace && path.dirname(target) !== workspacesFolder,
+  )
 }
 
 /**
@@ -71,7 +74,8 @@ const symlinkedPackagesOutside = (
  * `node_modules` folder in `from` and in each folder above it, which is
  * where Node looks for a bare import, plus the folder of every package in
  * them that's a symlink to somewhere outside (a workspace package, a
- * linked one), except the workspace `from` is in. A `node_modules` that is a symlink is there under both
+ * linked one), except the workspace `from` is in and its siblings. A
+ * `node_modules` that is a symlink is there under both
  * its paths, since Node reads through both; pnpm's symlinks point inside
  * `node_modules` and are covered by it.
  *
