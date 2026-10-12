@@ -3,8 +3,9 @@
 `@cedarjs/api/sandbox` runs a Node script on untrusted bytes — an uploaded
 photo, a PDF from a third party, an archive, a spreadsheet — in a sandboxed
 child process. If a crafted file exploits a bug in the parser, it lands in a
-process that has none of your secrets, can't read your app or write files, and
-has no network.
+process that has none of your secrets, can read only its script, `node_modules`
+and the paths you allow, can't write files, and has no network (all of which
+holds for JavaScript; see what it doesn't cover for native addons).
 
 Use it whenever your API side parses, decodes or converts a file it didn't
 create: resizing images with sharp (libvips), rendering PDF pages with pdf.js,
@@ -138,12 +139,13 @@ child may read:
   which is where Node looks for its imports (`nodeModulesFrom` to start
   elsewhere, `false` for none). A `node_modules` that is a symlink is allowed
   by both its paths, and packages linked from it to somewhere else (workspace
-  packages) by their real folders, except the workspace the script is in (the
-  app's `api` side);
+  packages such as `packages/*`) by their real folders, except the workspace
+  the script is in and its siblings (the app's `api` and `web` sides);
 - whatever you pass as `readable`.
 
-Not your app's root, so not `.env`, and not your source, your database file or
-uploaded files.
+Nothing else: not your app's root, so not `.env`, and not your source, your
+database file or uploaded files, unless they're in a folder you allow (through
+`readable`, or a linked package you keep them in).
 
 ## Child scripts in every build
 
@@ -213,8 +215,8 @@ instead of it.
 
 It protects against a parser bug that runs **JavaScript** in the child (a
 crafted PDF that exploits pdf.js, an archive that exploits a pure-JS unpacker):
-that code finds no secrets in its environment; can't read your app, `.env`,
-database files or other uploads; can't write files or start processes; can't
+that code finds no secrets in its environment; can't read `.env`, your source,
+database files or other uploads outside the paths it's allowed; can't write files or start processes; can't
 reach your database or a cloud metadata endpoint over the network; and is
 killed at the heap cap, the timeout or the output cap.
 

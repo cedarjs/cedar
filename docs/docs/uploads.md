@@ -292,7 +292,7 @@ export const MonthlyReportJob = async ({ month }: { month: string }) => {
 
 Pass `userId` when the file belongs to someone, so the ownership checks that guard user uploads apply to it too, and `organizationId` in multi-tenant apps.
 
-When you make a file from an upload, a thumbnail of a photo or a preview of a PDF, decode the upload in a sandboxed child process with `@cedarjs/api/sandbox`, so a crafted file that exploits the decoder can't reach your secrets. See [Untrusted Files](security.md#untrusted-files).
+When you make a file from an upload, a thumbnail of a photo or a preview of a PDF, decode the upload in a sandboxed child process with `@cedarjs/api/sandbox`, so a crafted file that exploits a JavaScript decoder (pdf.js, say) can't reach your secrets. A native decoder (sharp's libvips, with `allowAddons`) isn't limited by Node's file and network permissions: there the sandbox still keeps your environment variables out of the child, and full isolation needs an OS-level sandbox. See [Untrusted Files](security.md#untrusted-files).
 
 ## Deleting files
 

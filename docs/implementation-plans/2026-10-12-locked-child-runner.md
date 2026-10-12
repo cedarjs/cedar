@@ -128,9 +128,9 @@ folder above it: the folders Node looks in for the child's imports. A
 `node_modules` that is a symlink is allowed by both its paths (Node reads a
 package's `package.json` through the path it looked in, and its modules through
 their real paths), and packages linked from it to somewhere outside (workspace
-packages) by their real folders, except the workspace the script itself is in:
-a workspace manager links the app's own `api` side too, and that holds the
-app's source and maybe a SQLite database. pnpm's links point inside
+packages) by their real folders, except the workspace the script itself is in
+and its siblings: a workspace manager links the app's own `api` and `web` sides
+too, and those hold the app's source and maybe a SQLite database. pnpm's links point inside
 `node_modules` and need nothing extra.
 
 A precise list of the packages a child imports (walking each package's
@@ -140,8 +140,9 @@ matter most: the permission model doesn't restrict native addons, so for an
 reason to read other packages anyway. It's fragile too: sharp 0.35 doesn't
 export its `package.json`, which breaks the obvious resolution, and each new
 packaging scheme needs a fix. `node_modules` holds no app secrets, while the
-app's root (`.env`), its source and its data stay unreadable, which is what the
-sandbox is for. There is no `sandboxReadPaths()` in the public API;
+app's root (`.env`), its `api` and `web` sides and its data stay unreadable
+(linked workspace packages from elsewhere, like `packages/*`, are readable),
+which is what the sandbox is for. There is no `sandboxReadPaths()` in the public API;
 `nodeModulesFrom` changes where the walk starts, or turns it off. The walk
 starts at the script, not the working directory, because that's where Node
 resolves the child's imports from, and in a bundled build the copied packages
