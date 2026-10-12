@@ -380,9 +380,10 @@ const waiting = await jobs.listJobs({ limit: 20 })
 
 How a pause behaves:
 
-- Workers don't pick up a paused job. A run that's in progress when you pause finishes, and if the job is recurring its next run stays paused. A run that fails and is retried stays paused too.
+- Workers don't pick up a paused job. A run that's in progress when you pause finishes, and if the job is recurring its next run stays paused. A run that fails and is retried stays paused too. If the worker running a paused job crashes, the job stays locked; once you resume it, a worker started with the same process name reclaims it right away and runs it again, without waiting for its next run time.
 - **Resuming a recurring job** schedules its next run at the next time its `cron` matches from now. Runs it missed while it was paused are not made up for.
 - **Resuming a one-off job** keeps its run time: if that's still in the future it runs then, and if it passed while the job was paused it runs as soon as a worker is free.
+- When a worker starts (`yarn cedar jobs work` or `start`, not `workoff`), it logs a warning listing the paused jobs in its queues, so a forgotten pause shows up.
 - Pausing a paused job, or resuming one that isn't paused, changes nothing and says so. Jobs that have completed or failed for good (including cancelled ones) can't be paused or resumed.
 - `yarn cedar jobs list` lists the jobs that are waiting to run, running or paused, the ones that run next first, 100 at most (`--limit` changes that). If your `JobManager` has several adapters, pass `--adapter` to these commands (or `{ adapter }` to the functions). Like `yarn cedar jobs work`, the commands load your jobs config from the built api side.
 
@@ -921,7 +922,7 @@ The general gist of the required functions:
 - `clear()` remove all jobs from the queue (mostly used in development).
 - `cancel()` (optional) accepts an object with a `jobId` property and should make sure that job never runs (or is never retried, if it's currently running). Return `true` if a job was cancelled, `false` otherwise. If you don't implement this function, `later.cancel()` will throw a `CancelNotImplementedError`.
 - `pause()` and `resume()` (optional) accept an object with a `jobId` property. A paused job must not be returned by `find()`, and must stay paused when `success()` or `error()` reschedule a run that was in progress. `resume()` gives a recurring job its next `runAt` at the next match of its cron from now, and leaves a one-off job's `runAt` alone. They return `{ alreadyPaused, pausedAt }` and `{ wasPaused, runAt }`, and throw a `JobIdNotFoundError` for an unknown id and a `JobNotActiveError` for a job that has completed or failed for good. Without them, `jobs.pauseJob()` and `jobs.resumeJob()` throw a `PauseNotImplementedError`.
-- `list()` (optional) accepts an object with a `limit` and returns the jobs that are waiting to run, running or paused, the ones that run next first, each with its `id`, `name`, `queue`, `cron`, `runAt`, `pausedAt`, `attempts` and whether it's `running`. Used by `yarn cedar jobs list`.
+- `list()` (optional) accepts an object with a `limit`, and optionally `queues` and `paused: true` (which a starting worker uses to warn about paused jobs), and returns the jobs that are waiting to run, running or paused, the ones that run next first, each with its `id`, `name`, `queue`, `cron`, `runAt`, `pausedAt`, `attempts` and whether it's `running`. Used by `yarn cedar jobs list`.
 
 ## The Future
 

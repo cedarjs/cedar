@@ -119,6 +119,9 @@ schema's SQL, so no `prisma db push` is needed. The schema has the
   adapters without a name
 - a model without `pausedAt`: jobs are scheduled and run, pause/resume throw,
   listing works
+- a starting worker warns about paused jobs in its own queues only, names
+  the first 10 and counts the rest, stays quiet with none, in `workoff`,
+  without the column or without `list()`, and starts when the check fails
 
 Mutation checks: removing the `pausedAt` filter from `find()` fails six tests;
 moving a one-off job's `runAt` on resume fails two; resetting `attempts` on a
@@ -139,15 +142,22 @@ command's own arguments; it forwarded only the last positional, which dropped
 - Running the CLI without a built api side (Unified Dev): it loads `api/dist`
   like the workers do.
 
-## Open questions
+## Decided after review
 
-1. **Make a forgotten pause visible.** Workers could log the paused jobs when
-   they start (with declared schedules, the sync can do this for free).
-2. **A crashed run on a paused job.** If the worker dies mid-run and the job is
-   paused, the row stays locked. After resuming, a worker with the same process
-   name reclaims its own lock right away, as it would without the pause, so the
-   run is retried before the next cron match.
-3. **Who paused it, and why.** Only the time is stored. A `pausedReason` could
-   be shown by `yarn cedar jobs list`.
-4. **Pausing queues or job types**, for example all mail during a provider
-   outage.
+1. **Workers log paused jobs at start.** A long-running worker (not `workoff`
+   or `clear`) lists the paused jobs in its queues through the adapter's
+   `list({ paused: true, queues })` and logs one warning: the count, the first
+   10 ids and job names, "and N more", and how to resume. Nothing is logged
+   without paused jobs, without a `pausedAt` column, or with an adapter that
+   can't list. A failed query is logged and the worker starts anyway.
+2. **A crashed run on a paused job is documented, not changed.** If the worker
+   dies mid-run while the job is paused, the row stays locked. After resuming,
+   a worker with the same process name reclaims its own lock right away, as
+   it would without the pause, so the run is retried before its next run time.
+
+## Follow-ups
+
+- **Who paused a job, and why** (`pausedReason`): not now. It fits with a UI
+  for jobs.
+- **Pausing whole queues or job types**, for example all mail during a
+  provider outage: out of scope here.
