@@ -420,10 +420,9 @@ describe('runSandboxedChild', () => {
     ['maxOutputBytes', Number.NaN],
     ['maxOutputBytes', Number.POSITIVE_INFINITY],
   ])('starts no child when %s is %s', async (name, value) => {
-    const result = await probe(
-      `process.stdout.write('started')`,
-      { [name]: value },
-    )
+    const result = await probe(`process.stdout.write('started')`, {
+      [name]: value,
+    })
 
     expect(result).toMatchObject({
       ok: false,
@@ -442,6 +441,20 @@ describe('runSandboxedChild', () => {
     )
 
     expect(result).toMatchObject({ ok: false, failure: 'output-too-large' })
+  })
+
+  it('fails a child whose output is over the cap even when it exits at once', async () => {
+    // Only the last byte is over the cap, so it's read after the child has
+    // exited more often than not
+    const size = 8 * 1024 * 1024
+    for (let i = 0; i < 5; i++) {
+      const result = await probe(
+        `process.stdout.write(Buffer.alloc(${size}, 1), () => process.exit(0))`,
+        { maxOutputBytes: size - 1 },
+      )
+
+      expect(result).toMatchObject({ ok: false, failure: 'output-too-large' })
+    }
   })
 
   it('refuses input over the cap without starting a child', async () => {

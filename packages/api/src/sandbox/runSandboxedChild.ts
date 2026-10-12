@@ -408,6 +408,19 @@ export const runSandboxedChild = ({
     })
 
     child.on('close', (exitCode, signal) => {
+      // The output can go over the cap (or the timer fire) after the child
+      // has exited, while its last output is still being read: that's
+      // still a failure, never a cut-off output reported as success
+      if (killedFor) {
+        settle(
+          fail(killedFor.failure, killedFor.message, {
+            stderr: stderrTail(),
+            exitCode,
+            signal,
+          }),
+        )
+        return
+      }
       if (exitCode === 0) {
         settle({
           ok: true,
