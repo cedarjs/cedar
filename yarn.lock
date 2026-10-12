@@ -3374,12 +3374,17 @@ __metadata:
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
+    "@prisma/adapter-better-sqlite3": "npm:7.10.0"
     "@prisma/client": "npm:7.10.0"
+    "@types/better-sqlite3": "npm:7.6.13"
+    better-sqlite3: "npm:12.11.1"
     concurrently: "npm:9.2.5"
     cron-parser: "npm:5.10.1"
+    prisma: "npm:7.10.0"
     publint: "npm:0.3.25"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.11"
+    zx: "npm:8.8.5"
   bin:
     cedar-jobs: ./dist/bins/cedar-jobs.js
     cedar-jobs-worker: ./dist/bins/cedar-jobs-worker.js

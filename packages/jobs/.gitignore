@@ -1,0 +1,3 @@
+src/__tests__/prisma-client
+src/__tests__/*.db*
+src/__tests__/unit-test-schema.sql
