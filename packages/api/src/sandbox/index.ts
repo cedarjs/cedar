@@ -8,7 +8,6 @@ export {
   DEFAULT_SANDBOX_MAX_OUTPUT_BYTES,
   DEFAULT_SANDBOX_TIMEOUT_MS,
   runSandboxedChild,
-  sandboxBlocksNetwork,
   sandboxedChildArgs,
 } from './runSandboxedChild.js'
 export type {
@@ -19,6 +18,5 @@ export type {
 } from './runSandboxedChild.js'
 export { createConcurrencyLimiter } from './concurrencyLimiter.js'
 export type { ConcurrencyLimiter } from './concurrencyLimiter.js'
-export { sandboxReadPaths } from './sandboxReadPaths.js'
-export type { SandboxReadPathsOptions } from './sandboxReadPaths.js'
+export { permissionModelBlocksNetwork } from './noNetworkPreload.js'
 export { findChildScript } from './findChildScript.js'

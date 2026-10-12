@@ -3,6 +3,12 @@ import type { ChildProcess } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { nodeModulesReadPaths } from './nodeModulesReadPaths.js'
+import {
+  noNetworkPreloadArg,
+  permissionModelBlocksNetwork,
+} from './noNetworkPreload.js'
+
 const MIB = 1024 * 1024
 
 /** The heap cap for a sandboxed child, in MB, unless `heapMb` is given */
@@ -25,11 +31,22 @@ export interface SandboxedChildArgsOptions {
   script: string
   /**
    * Files and directories (and everything under them) the child may read
-   * besides its own script, e.g. the folders of the packages it imports.
-   * See `sandboxReadPaths()` for resolving those. Everything else on disk
-   * is unreadable to the child: `.env`, your app's source, uploaded files.
+   * besides its own script and the `node_modules` folders (see
+   * `nodeModulesFrom`). Everything else on disk is unreadable to the
+   * child: `.env`, your app's source, uploaded files.
    */
   readable?: string[]
+  /**
+   * The child may read every `node_modules` folder in this folder and in
+   * each folder above it, so it can import packages: the same folders Node
+   * looks in for an import in a file there. Symlinked packages (workspace
+   * packages) are followed to their real folders. A path, a `file:` URL,
+   * or `false` for no `node_modules` at all.
+   *
+   * Default: the script's folder, where Node resolves the child's imports
+   * from.
+   */
+  nodeModulesFrom?: string | URL | false
   /**
    * Whether the child may load native addons (`.node` files), as a library
    * like sharp needs. Off by default. Node's permission model does not
@@ -45,35 +62,33 @@ export interface SandboxedChildArgsOptions {
 }
 
 /**
- * Whether this Node's permission model also restricts network access.
- * When it does, a sandboxed child can't open sockets (no `--allow-net` is
- * passed). When it doesn't (Node 24), a sandboxed child *can* make network
- * connections; see the README.
- */
-export const sandboxBlocksNetwork = () =>
-  process.allowedNodeEnvironmentFlags.has('--allow-net')
-
-/**
  * The `node` command-line arguments for running `script` as a sandboxed
  * child process: Node's permission model (`--permission`) with read access
- * to `script` and `readable` only, a heap cap, and code generation from
+ * to `script`, the `node_modules` folders (see `nodeModulesFrom`) and
+ * `readable` only, no network, a heap cap, and code generation from
  * strings (`eval`, `new Function`) turned off. No file writes, no child
  * processes, no worker threads, no WASI, no inspector, and native addons
  * only with `allowAddons`.
  *
- * `runSandboxedChild()` uses this; it's exported for spawning the child
- * yourself (e.g. with `spawnSync` in a test probing what the child can do).
- * Pass an empty `env` when you do: the arguments restrict what the child
- * may touch, not what it inherits.
+ * On Node 25 and later the permission model blocks the network. On Node 24
+ * it doesn't, so the arguments also load a preload that takes the network
+ * away from JavaScript in the child (see `permissionModelBlocksNetwork()`).
  *
- * Paths are resolved to their real paths, since that's what the permission
- * model checks (an app deployed behind a `current -> releases/…` symlink
- * would otherwise be refused its own files). Throws if a path doesn't
- * exist.
+ * `runSandboxedChild()` uses this; it's exported for spawning the child
+ * yourself (e.g. in a test probing what the child can do). Pass an empty
+ * `env` when you do: the arguments restrict what the child may touch, not
+ * what it inherits.
+ *
+ * The permission model checks the path a file is opened by, and Node opens
+ * the script and the modules it imports by their real paths, so the
+ * script is given by its real path, and other paths by both (an app
+ * deployed behind a `current -> releases/…` symlink would otherwise be
+ * refused its own files). Throws if a path doesn't exist.
  */
 export const sandboxedChildArgs = ({
   script,
   readable = [],
+  nodeModulesFrom,
   allowAddons = false,
   heapMb = DEFAULT_SANDBOX_HEAP_MB,
   args = [],
@@ -83,8 +98,18 @@ export const sandboxedChildArgs = ({
   }
 
   const realScript = fs.realpathSync(script)
+  const nodeModules =
+    nodeModulesFrom === false
+      ? []
+      : nodeModulesReadPaths(nodeModulesFrom ?? path.dirname(realScript))
   const readPaths = [
-    ...new Set([realScript, ...readable.map((p) => fs.realpathSync(p))]),
+    ...new Set([
+      realScript,
+      ...nodeModules,
+      // Node may read a file through the path it was given or through
+      // its real path
+      ...readable.flatMap((p) => [path.resolve(p), fs.realpathSync(p)]),
+    ]),
   ]
 
   return [
@@ -96,6 +121,7 @@ export const sandboxedChildArgs = ({
     // --allow-addons; the warnings would end up in the failure message
     '--no-warnings',
     ...readPaths.map((p) => `--allow-fs-read=${p}`),
+    ...(permissionModelBlocksNetwork() ? [] : [noNetworkPreloadArg()]),
     realScript,
     ...args,
   ]
@@ -166,10 +192,12 @@ export type SandboxedChildResult =
  *
  * - gets an **empty environment** — no `DATABASE_URL`, no API keys, none of
  *   your `.env`;
- * - runs under **Node's permission model**: it may read its own script and
- *   the `readable` paths, nothing else; it may not write files, spawn
- *   processes, start workers, or `eval`; it may load native addons only
- *   with `allowAddons`;
+ * - runs under **Node's permission model**: it may read its own script,
+ *   the `node_modules` folders it imports from and the `readable` paths,
+ *   nothing else; it may not write files, spawn processes, start workers,
+ *   or `eval`; it may load native addons only with `allowAddons`;
+ * - has **no network**: no sockets, no `fetch`, no DNS (on Node 24 through
+ *   a preload, see `permissionModelBlocksNetwork()`);
  * - gets the input on **stdin**, and its **stdout** is the result, used only
  *   if it exits with code 0;
  * - is **bounded**: a heap cap, a hard timeout (SIGKILL), and caps on input
@@ -185,26 +213,25 @@ export type SandboxedChildResult =
  *
  * **This is defense in depth, not a security boundary.** Node documents
  * that its permission model does not protect against malicious code that
- * is already running in the process. It doesn't constrain native code at
- * all: a native addon, or an external binary like ffmpeg, needs an
- * OS-level sandbox (a container, seccomp, a separate user). On Node 24 the
- * permission model doesn't restrict network access (see
- * `sandboxBlocksNetwork()`).
+ * is already running in the process. None of it constrains native code: a
+ * native addon (`allowAddons`), or an exploit in one, makes its own system
+ * calls, so for those children what holds is the empty environment, the
+ * separate process and its limits. An external binary like ffmpeg needs an
+ * OS-level sandbox (a container, seccomp, a separate user).
  *
  * @example
  * ```ts
  * import {
  *   createConcurrencyLimiter,
+ *   findChildScript,
  *   runSandboxedChild,
- *   sandboxReadPaths,
  * } from '@cedarjs/api/sandbox'
  *
  * const limit = createConcurrencyLimiter(2)
  *
  * const result = await limit(() =>
  *   runSandboxedChild({
- *     script: path.join(import.meta.dirname, 'resize.child.js'),
- *     readable: sandboxReadPaths(['sharp'], { from: import.meta.url }),
+ *     script: findChildScript(import.meta.dirname, 'resize.child'),
  *     allowAddons: true,
  *     input: uploadedBytes,
  *     timeoutMs: 10_000,

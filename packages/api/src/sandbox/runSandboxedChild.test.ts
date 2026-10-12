@@ -1,3 +1,4 @@
+import dgram from 'node:dgram'
 import fs from 'node:fs'
 import net from 'node:net'
 import os from 'node:os'
@@ -5,11 +6,8 @@ import path from 'node:path'
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import {
-  runSandboxedChild,
-  sandboxBlocksNetwork,
-  sandboxedChildArgs,
-} from './runSandboxedChild.js'
+import { permissionModelBlocksNetwork } from './noNetworkPreload.js'
+import { runSandboxedChild, sandboxedChildArgs } from './runSandboxedChild.js'
 
 // What a crafted input that took over the parser in the child could try to
 // reach. Each probe is a small script run exactly as an app's child script
@@ -48,6 +46,110 @@ beforeAll(() => {
 afterAll(() => {
   fs.rmSync(tmp, { recursive: true, force: true })
 })
+
+/**
+ * Tries every way from JavaScript to the network, and prints what each got.
+ * The last one, if it isn't refused, crashes the child (Node asserts on the
+ * fake connect request), which fails the test loudly too.
+ */
+const NETWORK_PROBE = `
+import { createRequire } from 'node:module'
+
+const [port, socketPath, udpPort] = process.argv.slice(2)
+const require = createRequire(import.meta.url)
+const routes = {}
+// Some refusals are thrown asynchronously (on Node 25+, listen() throws on
+// the next tick), so an uncaught exception counts as the attempt's error
+const attempt = async (name, fn) => {
+  let onUncaught
+  try {
+    const got = await new Promise((resolve, reject) => {
+      onUncaught = reject
+      process.once('uncaughtException', onUncaught)
+      Promise.resolve().then(fn).then(resolve, reject)
+    })
+    routes[name] = 'ALLOWED: ' + got
+  } catch (e) {
+    routes[name] = 'refused: ' + (e.code ?? e.message)
+  } finally {
+    process.off('uncaughtException', onUncaught)
+  }
+}
+const connected = (socket) =>
+  new Promise((resolve, reject) => {
+    socket.on('connect', () => resolve('connected'))
+    socket.on('error', reject)
+  })
+
+await attempt('tcp', async () =>
+  connected((await import('node:net')).connect(Number(port), '127.0.0.1')))
+await attempt('unix socket', async () =>
+  connected((await import('node:net')).connect(socketPath)))
+await attempt('getBuiltinModule', async () =>
+  connected(process.getBuiltinModule('node:net').connect(Number(port), '127.0.0.1')))
+await attempt('require http', () =>
+  new Promise((resolve, reject) => {
+    require('http')
+      .get('http://127.0.0.1:' + port + '/', (res) => resolve(res.statusCode))
+      .on('error', reject)
+  }))
+await attempt('require tls', () =>
+  connected(require('node:tls').connect(Number(port), '127.0.0.1')))
+await attempt('fetch', async () =>
+  (await fetch('http://127.0.0.1:' + port + '/')).status)
+await attempt('WebSocket', () =>
+  new Promise((resolve, reject) => {
+    const ws = new WebSocket('ws://127.0.0.1:' + port + '/')
+    ws.onopen = () => resolve('open')
+    ws.onerror = () => reject(new Error('error event'))
+  }))
+await attempt('udp', async () => {
+  const socket = (await import('node:dgram')).createSocket('udp4')
+  await new Promise((resolve, reject) => {
+    socket.on('error', reject)
+    socket.send('hello', Number(udpPort), '127.0.0.1', (e) => (e ? reject(e) : resolve()))
+  })
+  return 'sent'
+})
+await attempt('dns', async () =>
+  (await (await import('node:dns/promises')).lookup('localhost')).address)
+await attempt('listen', () =>
+  new Promise((resolve, reject) => {
+    const server = require('node:net').createServer()
+    server.on('error', reject)
+    server.listen(0, '127.0.0.1', () => resolve('listening'))
+  }))
+await attempt('stdout socket', async () =>
+  connected(new process.stdout.constructor().connect(Number(port), '127.0.0.1')))
+await attempt('process.binding', async () => typeof process.binding('tcp_wrap'))
+await attempt('stdout handle', async () => {
+  const Handle = process.stdout._handle.constructor
+  // Returns an error (or a negative error number) when refused
+  const err = new Handle(0).connect({}, socketPath)
+  if (err) {
+    throw typeof err === 'object' ? err : new Error('connect returned ' + err)
+  }
+  return 'connecting'
+})
+
+process.stdout.write(JSON.stringify(routes))
+`
+
+const NETWORK_ROUTES = [
+  'tcp',
+  'unix socket',
+  'getBuiltinModule',
+  'require http',
+  'require tls',
+  'fetch',
+  'WebSocket',
+  'udp',
+  'dns',
+  'listen',
+  'stdout socket',
+  'process.binding',
+  'stdout handle',
+]
 
 const WINDOWS_REQUIRED_VARS = [
   'HOMEDRIVE',
@@ -202,41 +304,69 @@ describe('runSandboxedChild', () => {
     expect(!result.ok && result.stderr).toContain('ERR_DLOPEN_DISABLED')
   })
 
-  it(
-    sandboxBlocksNetwork()
-      ? 'may not open network connections'
-      : 'may open network connections (this Node has no network permission)',
-    async () => {
-      // A server in the parent, standing in for anything on the network the
-      // server can reach: a database, a cloud metadata endpoint
-      const server = net.createServer((socket) => socket.end('hello'))
-      await new Promise<void>((resolve) =>
-        server.listen(0, '127.0.0.1', resolve),
+  it('may not reach the network, by any route', async () => {
+    // Servers in the parent, standing in for anything on the network the
+    // server can reach: a database on a port or a Unix socket, a cloud
+    // metadata endpoint
+    let connections = 0
+    const count = () => {
+      connections += 1
+    }
+    const tcp = net.createServer((socket) => {
+      count()
+      socket.end('HTTP/1.1 200 OK\r\ncontent-length: 0\r\n\r\n')
+    })
+    await new Promise<void>((resolve) => tcp.listen(0, '127.0.0.1', resolve))
+    const tcpAddress = tcp.address()
+    const port =
+      typeof tcpAddress === 'object' && tcpAddress ? tcpAddress.port : 0
+
+    // Short: macOS caps a Unix socket's path at about 100 characters
+    const socketPath =
+      process.platform === 'win32'
+        ? `\\\\.\\pipe\\cedar-sandbox-${process.pid}`
+        : `/tmp/cedar-sandbox-${process.pid}.sock`
+    if (process.platform !== 'win32') {
+      fs.rmSync(socketPath, { force: true })
+    }
+    const unix = net.createServer((socket) => {
+      count()
+      socket.end()
+    })
+    await new Promise<void>((resolve) => unix.listen(socketPath, resolve))
+
+    const udp = dgram.createSocket('udp4')
+    udp.on('message', count)
+    await new Promise<void>((resolve) => udp.bind(0, '127.0.0.1', resolve))
+    const udpPort = udp.address().port
+
+    try {
+      const result = await probe(NETWORK_PROBE, {
+        args: [String(port), socketPath, String(udpPort)],
+        nodeModulesFrom: false,
+      })
+
+      expect(result.ok ? '' : result.stderr).toBe('')
+      const routes: Record<string, string> = JSON.parse(
+        result.ok ? result.output.toString() : '{}',
       )
-      const address = server.address()
-      const port = typeof address === 'object' && address ? address.port : 0
-
-      try {
-        const result = await probe(
-          `import net from 'node:net'
-           const socket = net.connect(${port}, '127.0.0.1')
-           socket.on('data', (d) => process.stdout.write(d))
-           socket.on('error', (e) => { console.error(e.code ?? e.message); process.exit(1) })`,
-        )
-
-        if (sandboxBlocksNetwork()) {
-          expect(result.ok).toBe(false)
-        } else {
-          // Documents the gap rather than hiding it: on a Node without
-          // network permission the child can connect. When CI's Node gains
-          // it, the test above takes over
-          expect(result.ok && result.output.toString()).toBe('hello')
-        }
-      } finally {
-        await new Promise((resolve) => server.close(resolve))
+      expect(Object.keys(routes)).toEqual(NETWORK_ROUTES)
+      for (const [route, got] of Object.entries(routes)) {
+        expect({ route, got }).toEqual({
+          route,
+          got: expect.stringMatching(/^refused: /),
+        })
       }
-    },
-  )
+
+      // Give anything that did get through time to arrive
+      await new Promise((resolve) => setTimeout(resolve, 200))
+      expect(connections).toBe(0)
+    } finally {
+      await new Promise((resolve) => tcp.close(resolve))
+      await new Promise((resolve) => unix.close(resolve))
+      await new Promise<void>((resolve) => udp.close(() => resolve()))
+    }
+  })
 
   it('kills the child at the timeout', async () => {
     const started = Date.now()
@@ -311,33 +441,51 @@ describe('runSandboxedChild', () => {
 describe('sandboxedChildArgs', () => {
   it('locks the child down, and resolves symlinks', () => {
     const real = path.join(tmp, 'releases', 'v1')
-    fs.mkdirSync(real, { recursive: true })
+    fs.mkdirSync(path.join(real, 'node_modules'), { recursive: true })
     fs.writeFileSync(path.join(real, 'child.mjs'), '')
     const current = path.join(tmp, 'current')
     fs.symlinkSync(real, current, 'junction')
+    const data = path.join(tmp, 'data')
+    fs.mkdirSync(data)
 
     const args = sandboxedChildArgs({
       script: path.join(current, 'child.mjs'),
-      readable: [current],
+      readable: [data],
       heapMb: 64,
       args: ['x'],
     })
 
-    expect(args).toEqual([
+    const preload = args.filter((arg) => arg.startsWith('--import=data:'))
+    expect(args.filter((arg) => !preload.includes(arg))).toEqual([
       '--max-old-space-size=64',
       '--disallow-code-generation-from-strings',
       '--permission',
       '--no-warnings',
       `--allow-fs-read=${path.join(real, 'child.mjs')}`,
-      `--allow-fs-read=${real}`,
+      // The node_modules next to the script, not the folder it's in
+      `--allow-fs-read=${path.join(real, 'node_modules')}`,
+      `--allow-fs-read=${data}`,
       path.join(real, 'child.mjs'),
       'x',
     ])
+    // The no-network preload, before the script, when Node's permission
+    // model doesn't block the network itself
+    expect(preload).toHaveLength(permissionModelBlocksNetwork() ? 0 : 1)
+    expect(args.indexOf(preload[0])).toBe(
+      permissionModelBlocksNetwork() ? -1 : args.length - 3,
+    )
+
     expect(
       sandboxedChildArgs({
         script: path.join(real, 'child.mjs'),
         allowAddons: true,
       }),
     ).toContain('--allow-addons')
+    expect(
+      sandboxedChildArgs({
+        script: path.join(real, 'child.mjs'),
+        nodeModulesFrom: false,
+      }),
+    ).not.toContain(`--allow-fs-read=${path.join(real, 'node_modules')}`)
   })
 })
