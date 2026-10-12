@@ -50,6 +50,32 @@ describe('createS3Provider', () => {
     expect((await provider.read('a.txt')).toString()).toBe('hi')
   })
 
+  test('reads a byte range with a Range header', async () => {
+    const { client, send } = makeClient()
+    send.mockResolvedValue({
+      Body: { transformToByteArray: async () => new Uint8Array([1, 2, 3]) },
+    } as never)
+    const provider = createS3Provider({ client, bucket: 'b', keyPrefix: 'p/' })
+
+    const head = await provider.readRange!('a.zip', { offset: 0, length: 3 })
+    expect([...head]).toEqual([1, 2, 3])
+    expect(send.mock.calls[0][0].constructor.name).toBe('GetObjectCommand')
+    expect(commandInput(send)).toMatchObject({
+      Bucket: 'b',
+      Key: 'p/a.zip',
+      Range: 'bytes=0-2',
+    })
+
+    await provider.readRange!('a.zip', { offset: 100, length: 50 })
+    expect(commandInput(send, 1)).toMatchObject({ Range: 'bytes=100-149' })
+
+    // Nothing to read means no request
+    expect(
+      (await provider.readRange!('a.zip', { offset: 0, length: 0 })).length,
+    ).toBe(0)
+    expect(send).toHaveBeenCalledTimes(2)
+  })
+
   test('reports size, existence, and not-found from HeadObject', async () => {
     const { client, send } = makeClient()
     const provider = createS3Provider({ client, bucket: 'b' })

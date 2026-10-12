@@ -242,4 +242,22 @@ describe('uploadsHandler', () => {
     )
     expect(gitignore).toBe(`${GITIGNORE}\n`)
   })
+
+  it('generates an uploadFile service that checks content types by their bytes', async () => {
+    await uploadsHandler.handler({ targets: ['db'], force: false })
+
+    const service = vol.readFileSync(
+      path.join(BASE_PATH, 'api/src/services/uploads/uploads.ts'),
+      'utf-8',
+    )
+
+    expect(service).toContain('acceptedContentType,')
+    expect(service).not.toContain('isMimeTypeAllowed')
+    expect(service).toMatch(
+      /const mimeType = acceptedContentType\(\s*data,\s*profile\.allowedMimeTypes,\s*input\.mimeType,?\s*\)/,
+    )
+    // The returned type is what's stored, not the claimed one
+    expect(service).toMatch(/storeFile\(target, \{[^}]*\n\s*mimeType,\n/)
+    expect(service).not.toContain('mimeType: input.mimeType')
+  })
 })
