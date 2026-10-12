@@ -6,6 +6,7 @@ import { pathToFileURL } from 'node:url'
 import sharp from 'sharp'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { findChildScript } from './findChildScript.js'
 import { nodeModulesReadPaths } from './nodeModulesReadPaths.js'
 import { runSandboxedChild } from './runSandboxedChild.js'
 
@@ -89,6 +90,21 @@ describe('nodeModulesReadPaths', () => {
       expected,
     )
   })
+
+  it('walks up from the real folder too, when `from` is under a symlink', () => {
+    // releases/node_modules is above the real folder only
+    const releases = path.join(tmp, 'releases')
+    const v1 = path.join(releases, 'v1', 'api', 'dist', 'lib')
+    fs.mkdirSync(v1, { recursive: true })
+    fs.mkdirSync(path.join(releases, 'node_modules'))
+    const current = path.join(tmp, 'deploy', 'current')
+    fs.mkdirSync(path.dirname(current))
+    fs.symlinkSync(path.join(releases, 'v1'), current, 'junction')
+
+    expect(
+      nodeModulesReadPaths(path.join(current, 'api', 'dist', 'lib')),
+    ).toContain(path.join(releases, 'node_modules'))
+  })
 })
 
 // A real native library in the child, in an app laid out like a Cedar app.
@@ -127,6 +143,21 @@ describe('sharp in a sandboxed child', () => {
          .toBuffer()
        process.stdout.write(webp)`,
     )
+    // The documented form: a .ts child next to its caller, with a bare
+    // import, run by Node stripping its types
+    fs.writeFileSync(
+      path.join(lib, 'thumbnail.child.ts'),
+      `import sharp from 'sharp'
+
+       const chunks: Buffer[] = []
+       for await (const chunk of process.stdin) {
+         chunks.push(chunk)
+       }
+       const size: number = Number(process.argv[2])
+       process.stdout.write(
+         await sharp(Buffer.concat(chunks)).resize(size, size).webp().toBuffer(),
+       )`,
+    )
     fs.writeFileSync(
       path.join(lib, 'env.child.mjs'),
       `import fs from 'node:fs'
@@ -160,6 +191,21 @@ describe('sharp in a sandboxed child', () => {
     expect(output.toString('latin1', 8, 12)).toBe('WEBP')
     const { width, height } = await sharp(output).metadata()
     expect([width, height]).toEqual([8, 8])
+  })
+
+  it('runs a .ts child with a bare import, found by findChildScript', async () => {
+    const result = await runSandboxedChild({
+      script: findChildScript(lib, 'thumbnail.child'),
+      allowAddons: true,
+      input: await png(),
+      args: ['4'],
+      timeoutMs: 20_000,
+    })
+
+    expect(result.ok ? '' : result.stderr).toBe('')
+    const output = result.ok ? result.output : Buffer.alloc(0)
+    const { width, format } = await sharp(output).metadata()
+    expect([format, width]).toEqual(['webp', 4])
   })
 
   it('cannot read the .env next to node_modules', async () => {

@@ -20,6 +20,9 @@ export const DEFAULT_SANDBOX_MAX_INPUT_BYTES = 25 * MIB
 /** The most bytes read back from a sandboxed child, unless `maxOutputBytes` is given */
 export const DEFAULT_SANDBOX_MAX_OUTPUT_BYTES = 25 * MIB
 
+/** The longest timeout `setTimeout` supports */
+const MAX_TIMEOUT_MS = 2 ** 31 - 1
+
 /** How much of the child's stderr is kept for the failure message */
 const MAX_STDERR_CHARS = 4000
 
@@ -132,7 +135,9 @@ export interface RunSandboxedChildOptions extends SandboxedChildArgsOptions {
   input: Uint8Array
   /**
    * The child is killed (SIGKILL) if it hasn't exited after this many
-   * milliseconds. Default 10 000.
+   * milliseconds. Default 10 000. Like the byte limits, it must be a finite
+   * number from 0 up; anything else (`NaN` from a missing setting, say) is
+   * a `'spawn-error'` and no child is started.
    */
   timeoutMs?: number
   /**
@@ -158,7 +163,7 @@ export type SandboxedChildFailure =
   | 'output-too-large'
   /** The child exited non-zero or was killed by a signal */
   | 'exit'
-  /** The child couldn't be started */
+  /** The child couldn't be started, or a limit isn't a valid number */
   | 'spawn-error'
 
 export type SandboxedChildResult =
@@ -271,6 +276,29 @@ export const runSandboxedChild = ({
     signal: rest.signal ?? null,
   })
 
+  // A limit that isn't a number (say, from a missing environment variable)
+  // would turn the cap off; refuse to start instead
+  const invalidLimit = [
+    ['timeoutMs', timeoutMs, MAX_TIMEOUT_MS],
+    ['maxInputBytes', maxInputBytes, Number.MAX_SAFE_INTEGER],
+    ['maxOutputBytes', maxOutputBytes, Number.MAX_SAFE_INTEGER],
+  ].find(
+    ([, value, max]) =>
+      typeof value !== 'number' ||
+      !Number.isFinite(value) ||
+      value < 0 ||
+      value > Number(max),
+  )
+  if (invalidLimit) {
+    const [name, value, max] = invalidLimit
+    return Promise.resolve(
+      fail(
+        'spawn-error',
+        `${name} must be a number from 0 to ${max}, got ${String(value)}`,
+      ),
+    )
+  }
+
   if (input.length > maxInputBytes) {
     return Promise.resolve(
       fail(
@@ -303,9 +331,19 @@ export const runSandboxedChild = ({
       resolve(result)
     }
 
+    // Why the child was killed. The result waits until it has exited, so a
+    // concurrency limiter doesn't start the next child while this one is
+    // still alive
+    let killedFor: { failure: SandboxedChildFailure; message: string } | null =
+      null
+
     const kill = (failure: SandboxedChildFailure, message: string) => {
+      if (killedFor || settled) {
+        return
+      }
+      killedFor = { failure, message }
+      clearTimeout(timer)
       child?.kill('SIGKILL')
-      settle(fail(failure, message, { stderr: stderrTail() }))
     }
 
     const timer = setTimeout(
@@ -330,7 +368,7 @@ export const runSandboxedChild = ({
     const output: Buffer[] = []
     let outputSize = 0
     child.stdout?.on('data', (chunk: Buffer) => {
-      if (settled) {
+      if (settled || killedFor) {
         return
       }
       outputSize += chunk.length
@@ -350,7 +388,23 @@ export const runSandboxedChild = ({
     })
 
     child.on('error', (e) => {
-      settle(fail('spawn-error', e.message, { stderr: stderrTail() }))
+      // With a pid, the process exists and 'exit' settles; without one it
+      // never started
+      if (child?.pid === undefined) {
+        settle(fail('spawn-error', e.message, { stderr: stderrTail() }))
+      }
+    })
+
+    child.on('exit', (exitCode, signal) => {
+      if (killedFor) {
+        settle(
+          fail(killedFor.failure, killedFor.message, {
+            stderr: stderrTail(),
+            exitCode,
+            signal,
+          }),
+        )
+      }
     })
 
     child.on('close', (exitCode, signal) => {

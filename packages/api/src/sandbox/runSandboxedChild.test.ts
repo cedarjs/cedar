@@ -6,6 +6,7 @@ import path from 'node:path'
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { createConcurrencyLimiter } from './concurrencyLimiter.js'
 import { permissionModelBlocksNetwork } from './noNetworkPreload.js'
 import { runSandboxedChild, sandboxedChildArgs } from './runSandboxedChild.js'
 
@@ -377,6 +378,60 @@ describe('runSandboxedChild', () => {
 
     expect(result).toMatchObject({ ok: false, failure: 'timeout' })
     expect(Date.now() - started).toBeLessThan(5000)
+  })
+
+  it('reports a killed child only once it has exited, so a slot stays taken', async () => {
+    const isAlive = (pid: number) => {
+      try {
+        process.kill(pid, 0)
+        return true
+      } catch {
+        return false
+      }
+    }
+    const limit = createConcurrencyLimiter(1)
+    const looping = `console.error('pid', process.pid)
+       setInterval(() => {}, 1000)`
+
+    let firstPid = 0
+    let firstAliveWhenSecondStarted: boolean | undefined
+    const first = limit(async () => {
+      const result = await probe(looping, { timeoutMs: 1500 })
+      firstPid = Number(/pid (\d+)/.exec(result.stderr)?.[1])
+      return result
+    })
+    const second = limit(async () => {
+      firstAliveWhenSecondStarted = isAlive(firstPid)
+      return probe(`process.exit(0)`)
+    })
+
+    expect(await first).toMatchObject({ ok: false, failure: 'timeout' })
+    expect(firstPid).toBeGreaterThan(0)
+    expect(await second).toMatchObject({ ok: true })
+    expect(firstAliveWhenSecondStarted).toBe(false)
+  })
+
+  it.each([
+    ['timeoutMs', Number.NaN],
+    ['timeoutMs', -1],
+    ['timeoutMs', 2 ** 31],
+    ['maxInputBytes', Number.NaN],
+    ['maxInputBytes', -1],
+    ['maxOutputBytes', Number.NaN],
+    ['maxOutputBytes', Number.POSITIVE_INFINITY],
+  ])('starts no child when %s is %s', async (name, value) => {
+    const result = await probe(
+      `process.stdout.write('started')`,
+      { [name]: value },
+    )
+
+    expect(result).toMatchObject({
+      ok: false,
+      failure: 'spawn-error',
+      exitCode: null,
+      signal: null,
+    })
+    expect(!result.ok && result.message).toContain(name)
   })
 
   it('kills the child as soon as its output is over the cap', async () => {

@@ -83,27 +83,34 @@ const symlinkedPackagesOutside = (
  */
 export const nodeModulesReadPaths = (from: string | URL): string[] => {
   const found = new Set<string>()
-  let dir = startDir(from)
-  const realFrom = realpathOrNull(dir) ?? dir
+  const start = startDir(from)
+  const realFrom = realpathOrNull(start) ?? start
 
-  for (;;) {
-    const nodeModules = path.join(dir, 'node_modules')
-    const real = realpathOrNull(nodeModules)
-    if (real && fs.statSync(real).isDirectory()) {
-      // Node reads a package's package.json through the path it looked
-      // in, and its modules through their real paths, so a node_modules
-      // that is itself a symlink needs both
-      found.add(nodeModules)
-      found.add(real)
-      for (const target of symlinkedPackagesOutside(real, realFrom)) {
-        found.add(target)
+  // From `from` as given and from its real path: a child resolves its
+  // imports from its real location, and `from` may be under a symlink
+  // (`current -> releases/…`) with node_modules above either
+  for (let dir of new Set([start, realFrom])) {
+    for (;;) {
+      const nodeModules = path.join(dir, 'node_modules')
+      const real = realpathOrNull(nodeModules)
+      if (real && fs.statSync(real).isDirectory()) {
+        // Node reads a package's package.json through the path it looked
+        // in, and its modules through their real paths, so a node_modules
+        // that is itself a symlink needs both
+        found.add(nodeModules)
+        found.add(real)
+        for (const target of symlinkedPackagesOutside(real, realFrom)) {
+          found.add(target)
+        }
       }
-    }
 
-    const parent = path.dirname(dir)
-    if (parent === dir) {
-      return [...found]
+      const parent = path.dirname(dir)
+      if (parent === dir) {
+        break
+      }
+      dir = parent
     }
-    dir = parent
   }
+
+  return [...found]
 }
