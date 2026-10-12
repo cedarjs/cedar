@@ -296,15 +296,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@auth0/auth0-spa-js@npm:2.28.2":
-  version: 2.28.2
-  resolution: "@auth0/auth0-spa-js@npm:2.28.2"
+"@auth0/auth0-spa-js@npm:2.28.3":
+  version: 2.28.3
+  resolution: "@auth0/auth0-spa-js@npm:2.28.3"
   dependencies:
     "@auth0/auth0-auth-js": "npm:^1.16.1"
     browser-tabs-lock: "npm:^1.3.0"
     dpop: "npm:^2.1.1"
     es-cookie: "npm:~1.3.2"
-  checksum: 10c0/4f31922eaa2a280fe8d66e2d2caa9466ab50f8a95240823131b13982642c62ea61c9a4a2fc1f4eecc62581aea54a0f270724833eb7f8d210067747a9e9a143b9
+  checksum: 10c0/3b778afdab790a3d836511c87cee031a0ba69caae751ee7590c97e898c58b9c5a99bd0f3eb8b2fff3432f048f49cf5b4e46e3174b8705ac7c8d26a5fd0ed63ea
   languageName: node
   linkType: hard
 
@@ -2369,7 +2369,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-auth0-web@workspace:packages/auth-providers/auth0/web"
   dependencies:
-    "@auth0/auth0-spa-js": "npm:2.28.2"
+    "@auth0/auth0-spa-js": "npm:2.28.3"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/react": "npm:^19.2.0"
@@ -2379,7 +2379,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.11"
   peerDependencies:
-    "@auth0/auth0-spa-js": 2.28.2
+    "@auth0/auth0-spa-js": 2.28.3
   languageName: unknown
   linkType: soft
 
@@ -2912,7 +2912,7 @@ __metadata:
     prettier: "npm:3.9.9"
     prettier-plugin-tailwindcss: "npm:0.8.1"
     prompts: "npm:2.4.2"
-    smol-toml: "npm:1.9.0"
+    smol-toml: "npm:1.9.1"
     sucrase: "npm:3.35.1"
     termi-link: "npm:1.1.0"
     typescript: "npm:5.9.3"
@@ -3002,7 +3002,7 @@ __metadata:
     prettier: "npm:3.9.9"
     prisma: "npm:7.10.0"
     prompts: "npm:2.4.2"
-    smol-toml: "npm:1.9.0"
+    smol-toml: "npm:1.9.1"
     srvx: "npm:0.12.8"
     string-env-interpolation: "npm:1.0.1"
     systeminformation: "npm:5.33.15"
@@ -3376,7 +3376,7 @@ __metadata:
     "@cedarjs/project-config": "workspace:*"
     "@prisma/client": "npm:7.10.0"
     concurrently: "npm:9.2.5"
-    cron-parser: "npm:5.10.1"
+    cron-parser: "npm:5.10.2"
     publint: "npm:0.3.25"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.11"
@@ -3565,7 +3565,7 @@ __metadata:
     prisma: "npm:7.10.0"
     publint: "npm:0.3.25"
     rimraf: "npm:6.1.3"
-    smol-toml: "npm:1.9.0"
+    smol-toml: "npm:1.9.1"
     string-env-interpolation: "npm:1.0.1"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.11"
@@ -3701,7 +3701,7 @@ __metadata:
     line-column: "npm:1.0.2"
     lodash: "npm:4.18.1"
     lru-cache: "npm:11.5.3"
-    smol-toml: "npm:1.9.0"
+    smol-toml: "npm:1.9.1"
     ts-morph: "npm:23.0.0"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.11"
@@ -15524,12 +15524,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cron-parser@npm:5.10.1":
-  version: 5.10.1
-  resolution: "cron-parser@npm:5.10.1"
+"cron-parser@npm:5.10.2":
+  version: 5.10.2
+  resolution: "cron-parser@npm:5.10.2"
   dependencies:
     luxon: "npm:^3.7.2"
-  checksum: 10c0/e5150167be9a5dddeaf2a8b27a52d6d449f3f2c99222cab1e4773973eb935117a9218ea050438b869183f00a7af6cdb2638f601172da57ba828ed1b5bc5165a5
+  checksum: 10c0/b1aefe64a0fcea39f36e1bcf06b8f4c97780fc982524a67389e4a6268163e863bebaca096e6c7b0536a5f14d1b977d820523170ddfa8c322455b786b5e5fe5cc
   languageName: node
   linkType: hard
 
@@ -27018,10 +27018,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"smol-toml@npm:1.9.0, smol-toml@npm:^1.8.0":
-  version: 1.9.0
-  resolution: "smol-toml@npm:1.9.0"
-  checksum: 10c0/9a15a7560e15d050961f12cffab502f8b42af9d9e4713218181d10d3bda5e0265c4c81a92d6877e7d4e73145fc44d7fbc7cce997d9317b855fea974fc3bbc238
+"smol-toml@npm:1.9.1, smol-toml@npm:^1.8.0":
+  version: 1.9.1
+  resolution: "smol-toml@npm:1.9.1"
+  checksum: 10c0/8acccf7bbc063f29405f58f5014ab39bf4eb9d7f0e000e5e3f140f7d4d6ead5696681a7c15260d1f2910213012c0af43b31a05bf94f704b0bdf39989fba08c02
   languageName: node
   linkType: hard
 

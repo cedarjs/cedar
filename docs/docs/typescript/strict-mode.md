@@ -92,7 +92,34 @@ export const updateWidget: MutationResolvers['updateWidget'] = ({
 }
 ```
 
-`@cedarjs/api` also has a `removeNulls` utility that turns every `null` into `undefined`, but its return type isn't tied to your input type, so TypeScript won't check what you pass to Prisma.
+If you have services that pass the input straight to Prisma, the `removeNulls` utility function from `@cedarjs/api` is a quick way to make them type-check:
+
+```ts title="api/src/services/users/users.ts"
+// highlight-next-line
+import { removeNulls } from '@cedarjs/api'
+
+export const updateUser: MutationResolvers['updateUser'] = ({ id, input }) => {
+  return db.user.update({
+    // highlight-next-line
+    data: removeNulls(input),
+    where: { id },
+  })
+}
+```
+
+`removeNulls` returns a copy of `input` where every top-level `null` is `undefined`, and its return type says so, so TypeScript still checks the result against Prisma's types.
+Nested values, like the contents of a `Json` field, are passed through as they are.
+
+Because `undefined` leaves a field unchanged, `removeNulls` also turns a `null` for a nullable field into "leave unchanged".
+If clients should be able to clear a nullable field, pass that field's `null` through:
+
+```ts
+data: {
+  ...removeNulls(input),
+  // highlight-next-line
+  bio: input.bio,
+},
+```
 
 ### Relation resolvers in services
 
