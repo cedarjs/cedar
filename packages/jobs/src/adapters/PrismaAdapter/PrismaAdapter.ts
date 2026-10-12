@@ -5,9 +5,17 @@ import {
   DEFAULT_MODEL_NAME,
   MAX_RUNTIME_GRACE_PERIOD,
 } from '../../consts.js'
+import { JobIdNotFoundError, JobNotActiveError } from '../../errors.js'
 import type { BaseJob } from '../../types.js'
+import { nextCronRunAt } from '../../util.js'
 import type {
   BaseAdapterOptions,
+  ListedJob,
+  ListJobsOptions,
+  PauseOptions,
+  PauseResult,
+  ResumeOptions,
+  ResumeResult,
   SchedulePayload,
   FindArgs,
   SuccessOptions,
@@ -17,11 +25,13 @@ import type {
 } from '../BaseAdapter/BaseAdapter.js'
 import { BaseAdapter } from '../BaseAdapter/BaseAdapter.js'
 
-import { ModelNameError } from './errors.js'
+import { ModelNameError, PausedAtColumnMissingError } from './errors.js'
 
 export interface PrismaJob extends BaseJob {
   id: number
   handler: string
+  queue: string
+  priority: number
   /** Null once the job has completed or permanently failed */
   runAt: Date | null
   cron: string | null | undefined
@@ -31,6 +41,11 @@ export interface PrismaJob extends BaseJob {
   lockedBy: string | null
   lastError: string | null
   failedAt: Date | null
+  /**
+   * When the job was paused, or null when it isn't. Workers don't pick up a
+   * paused job. Undefined when the model has no `pausedAt` column
+   */
+  pausedAt?: Date | null
   createdAt: Date
   updatedAt: Date
 }
@@ -42,6 +57,8 @@ interface PrismaAdapterDelegate {
   update(args: Record<string, unknown>): Promise<unknown>
   create(args: Record<string, unknown>): Promise<unknown>
   deleteMany(args?: Record<string, unknown>): Promise<unknown>
+  /** Every Prisma delegate has it. Only `list()` uses it */
+  findMany?(args: Record<string, unknown>): Promise<any[]>
 }
 
 // TODO: See if we can tighten up this interface later once we've moved to
@@ -102,6 +119,18 @@ function getActiveProvider(db: object) {
   }
 
   return provider
+}
+
+/**
+ * Whether `e` is the error Prisma throws for a query that uses a `pausedAt`
+ * field the model doesn't have
+ */
+function isMissingPausedAtColumn(e: unknown) {
+  return (
+    e instanceof Error &&
+    e.name === 'PrismaClientValidationError' &&
+    /Unknown (argument|field) `pausedAt`/.test(e.message)
+  )
 }
 
 export interface PrismaAdapterOptions<
@@ -165,6 +194,7 @@ interface FailureData {
  *   lockedBy  String?
  *   lastError String?
  *   failedAt  DateTime?
+ *   pausedAt  DateTime?
  *   createdAt DateTime  \@default(now())
  *   updatedAt DateTime  \@updatedAt
  * }
@@ -178,6 +208,13 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
   model: DelegateKey<TDb> | string
   accessor: PrismaAdapterDelegate
   provider: string
+
+  /**
+   * Whether the model has a `pausedAt` column, so `find()` has to leave out
+   * paused jobs. Unknown until the first `find()`, which finds out by
+   * filtering on the column
+   */
+  #hasPausedAtColumn: boolean | undefined
 
   constructor(options: PrismaAdapterOptions<TDb>) {
     super(options)
@@ -228,65 +265,82 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
     // - is either not locked, or was locked more than `maxRuntime` ago,
     //   or was already locked by this exact process and never cleaned up
     // - doesn't have a failedAt, meaning we will stop retrying
+    // - isn't paused (only when the model has a `pausedAt` column)
+    // - is in one of the worker's queues, unless it works on all queues
     // Translates to:
     //   ((runAt <= ? AND (lockedAt IS NULL OR lockedAt < ?)) OR lockedBy = ?)
-    //   AND failedAt IS NULL
-    const where = {
-      AND: [
-        {
-          OR: [
-            {
-              AND: [
-                { runAt: { lte: new Date() } },
-                {
-                  OR: [
-                    { lockedAt: null },
-                    {
-                      lockedAt: {
-                        lt: maxRuntimeExpire,
-                      },
+    //   AND failedAt IS NULL AND pausedAt IS NULL AND queue IN (?)
+    const conditions = (withPausedAt: boolean): Record<string, unknown>[] => [
+      {
+        OR: [
+          {
+            AND: [
+              { runAt: { lte: new Date() } },
+              {
+                OR: [
+                  { lockedAt: null },
+                  {
+                    lockedAt: {
+                      lt: maxRuntimeExpire,
                     },
-                  ],
-                },
-              ],
-            },
-            { lockedBy: processName },
-          ],
-        },
-        { failedAt: null },
-      ],
-    }
-
-    // If queues is ['*'] then skip, otherwise add a WHERE...IN for the array of
-    // queue names
-    const whereWithQueue = where
-    if (queues.length > 1 || queues[0] !== '*') {
-      Object.assign(whereWithQueue, {
-        AND: [...where.AND, { queue: { in: queues } }],
-      })
-    }
+                  },
+                ],
+              },
+            ],
+          },
+          { lockedBy: processName },
+        ],
+      },
+      { failedAt: null },
+      ...(withPausedAt ? [{ pausedAt: null }] : []),
+      // If queues is ['*'] then skip, otherwise add a WHERE...IN for the
+      // array of queue names
+      ...(queues.length > 1 || queues[0] !== '*'
+        ? [{ queue: { in: queues } }]
+        : []),
+    ]
 
     // Actually query the DB
     // TODO: there may be more optimized versions of the locking queries in
     // Postgres and MySQL
-    const job = await this.accessor.findFirst({
-      select: { id: true, attempts: true },
-      where: whereWithQueue,
-      orderBy: [{ priority: 'asc' }, { runAt: 'asc' }],
-      take: 1,
-    })
+    const findCandidate = (withPausedAt: boolean) =>
+      this.accessor.findFirst({
+        select: { id: true, attempts: true },
+        where: { AND: conditions(withPausedAt) },
+        orderBy: [{ priority: 'asc' }, { runAt: 'asc' }],
+        take: 1,
+      })
+
+    let job
+
+    if (this.#hasPausedAtColumn === false) {
+      job = await findCandidate(false)
+    } else {
+      try {
+        job = await findCandidate(true)
+        this.#hasPausedAtColumn = true
+      } catch (e) {
+        if (!isMissingPausedAtColumn(e)) {
+          throw e
+        }
+
+        // A model without the column has no paused jobs to leave out
+        this.#hasPausedAtColumn = false
+        job = await findCandidate(false)
+      }
+    }
 
     if (job) {
       // If one was found, try to lock it by updating the record with the
-      // same WHERE clause as above (if another locked it in the meantime it
-      // won't find any record to update)
-      const whereWithQueueAndId = Object.assign(whereWithQueue, {
-        AND: [...whereWithQueue.AND, { id: job.id }],
-      })
+      // same WHERE clause as above (if another locked it in the meantime, or
+      // it was paused, it won't find any record to update)
+      const whereWithId = {
+        AND: [...conditions(this.#hasPausedAtColumn === true), { id: job.id }],
+      }
 
       // Update and increment the attempts count
       const { count } = await this.accessor.updateMany({
-        where: whereWithQueueAndId,
+        where: whereWithId,
         data: {
           lockedAt: new Date(),
           lockedBy: processName,
@@ -465,6 +519,126 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
     })
 
     return count > 0
+  }
+
+  /**
+   * Pauses a job by setting its `pausedAt`, which `find()` leaves out. A run
+   * in progress finishes, and `success()` and `error()` keep `pausedAt` when
+   * they reschedule the job
+   */
+  override async pause({ jobId }: PauseOptions): Promise<PauseResult> {
+    const row = await this.#findActive(jobId)
+
+    if (row.pausedAt) {
+      return { alreadyPaused: true, pausedAt: row.pausedAt }
+    }
+
+    const pausedAt = new Date()
+    const { count } = await this.accessor.updateMany({
+      where: { id: row.id, pausedAt: null, failedAt: null },
+      data: { pausedAt },
+    })
+
+    if (count === 0) {
+      // Paused, failed or removed by someone else since it was read
+      const current = await this.#findActive(jobId)
+
+      return { alreadyPaused: true, pausedAt: current.pausedAt ?? pausedAt }
+    }
+
+    return { alreadyPaused: false, pausedAt }
+  }
+
+  /**
+   * Resumes a paused job. A recurring job runs next at the next match of its
+   * cron from now, and, unless it's running, starts that run with a clean
+   * slate (`attempts` reset to 0, like after a successful run). A running
+   * job keeps its `attempts`, which identify the run's claim (see
+   * `#claimedBy()`), and gets its next run time from the worker when the run
+   * finishes. A one-off job keeps its `runAt`
+   */
+  override async resume({ jobId }: ResumeOptions): Promise<ResumeResult> {
+    const row = await this.#findActive(jobId)
+
+    if (!row.pausedAt) {
+      return { wasPaused: false, runAt: row.runAt }
+    }
+
+    const runAt = row.cron ? nextCronRunAt(row.cron) : row.runAt
+    const { count } = await this.accessor.updateMany({
+      where: { id: row.id, pausedAt: { not: null }, failedAt: null },
+      data: {
+        pausedAt: null,
+        ...(row.cron ? { runAt } : {}),
+        ...(row.cron && !row.lockedAt ? { attempts: 0 } : {}),
+      },
+    })
+
+    if (count === 0) {
+      // Resumed, failed or removed by someone else since it was read
+      const current = await this.#findActive(jobId)
+
+      return { wasPaused: false, runAt: current.runAt }
+    }
+
+    return { wasPaused: true, runAt }
+  }
+
+  /**
+   * Reads a job that can be paused or resumed: one that hasn't completed or
+   * failed for good. The whole row is read, so `pausedAt` is on it exactly
+   * when the model has the column
+   */
+  async #findActive(jobId: string | number): Promise<PrismaJob> {
+    const row: PrismaJob | null = await this.accessor.findFirst({
+      where: { id: jobId },
+    })
+
+    if (!row) {
+      throw new JobIdNotFoundError(jobId)
+    }
+
+    if (!('pausedAt' in row)) {
+      throw new PausedAtColumnMissingError(String(this.model))
+    }
+
+    if (row.failedAt) {
+      throw new JobNotActiveError(jobId, 'failed')
+    }
+
+    // A completed job that's kept in the database has no `runAt`
+    if (!row.runAt) {
+      throw new JobNotActiveError(jobId, 'completed')
+    }
+
+    return row
+  }
+
+  /**
+   * Lists the jobs that haven't completed or failed for good, the ones that
+   * run next first
+   */
+  override async list({ limit }: ListJobsOptions): Promise<ListedJob[]> {
+    if (!this.accessor.findMany) {
+      throw new ModelNameError(String(this.model))
+    }
+
+    const rows: PrismaJob[] = await this.accessor.findMany({
+      where: { failedAt: null, runAt: { not: null } },
+      orderBy: [{ runAt: 'asc' }, { id: 'asc' }],
+      take: limit,
+    })
+
+    return rows.map((row) => ({
+      id: row.id,
+      name: JSON.parse(row.handler).name,
+      queue: row.queue,
+      cron: row.cron ?? null,
+      runAt: row.runAt,
+      pausedAt: row.pausedAt ?? null,
+      running: !!row.lockedAt,
+      attempts: row.attempts,
+    }))
   }
 
   override async clear() {

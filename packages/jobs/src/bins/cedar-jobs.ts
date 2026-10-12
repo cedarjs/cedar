@@ -14,6 +14,7 @@ import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
 import { DEFAULT_LOGGER, PROCESS_TITLE_PREFIX } from '../consts.js'
+import type { JobManager } from '../core/JobManager.js'
 import { loadJobsManager } from '../loaders.js'
 import { setupEnv } from '../setupEnv.js'
 import type {
@@ -31,7 +32,7 @@ process.title = 'cedar-jobs'
 
 const WORKER_PATH = path.join(import.meta.dirname, 'cedar-jobs-worker.js')
 
-const parseArgs = (argv: string[]) => {
+export const parseArgs = (argv: string[]) => {
   const commandString = hideBin(argv)
 
   if (commandString.length === 1 && commandString[0] === 'jobs') {
@@ -49,6 +50,23 @@ const parseArgs = (argv: string[]) => {
     .command('stop', 'Stop any daemonized job workers')
     .command('restart', 'Stop and start any daemonized job workers')
     .command('clear', 'Clear the job queue')
+    .command('pause <id>', 'Pause a job, so no worker picks it up')
+    .command('resume <id>', 'Resume a paused job')
+    .command(
+      'list',
+      'List the jobs that are waiting to run, running or paused, with their ids',
+    )
+    .option('adapter', {
+      type: 'string',
+      description:
+        'pause, resume, list: the adapter that stores the jobs, when the ' +
+        'JobManager has several',
+    })
+    .option('limit', {
+      type: 'number',
+      default: 100,
+      description: 'list: the most jobs to list',
+    })
     .demandCommand(1, 'You must specify a mode to start in')
     .example(
       'cedar jobs work',
@@ -60,6 +78,10 @@ const parseArgs = (argv: string[]) => {
       'Start the job workers using the job config and detach, running in ' +
         'daemon mode',
     )
+    .example(
+      'cedar jobs pause 42',
+      'Stop job 42 from running until `cedar jobs resume 42`',
+    )
     .help()
     .parse(commandString, (_err: any, _argv: any, output: any) => {
       if (output) {
@@ -68,7 +90,108 @@ const parseArgs = (argv: string[]) => {
       }
     })
 
-  return { command: parsed._[0] }
+  return {
+    command: parsed._[0],
+    id: parseJobId(parsed.id),
+    adapter: typeof parsed.adapter === 'string' ? parsed.adapter : undefined,
+    limit: typeof parsed.limit === 'number' ? parsed.limit : 100,
+  }
+}
+
+/**
+ * A job id from the command line: a number when it looks like one (the
+ * `PrismaAdapter`'s ids are), otherwise the string as given
+ */
+export const parseJobId = (value: unknown): string | number | undefined => {
+  if (typeof value === 'number') {
+    return value
+  }
+
+  if (typeof value !== 'string' || value === '') {
+    return undefined
+  }
+
+  return /^\d+$/.test(value) ? Number(value) : value
+}
+
+/**
+ * `cedar jobs pause`, `resume` and `list`. Returns what to print
+ */
+export const runPauseCommand = async ({
+  command,
+  id,
+  adapter,
+  limit = 100,
+  manager,
+}: {
+  command: 'pause' | 'resume' | 'list'
+  id?: string | number | undefined
+  adapter?: string | undefined
+  limit?: number
+  manager: JobManager<Adapters, QueueNames, BasicLogger>
+}): Promise<string> => {
+  if (command === 'list') {
+    const listed = await manager.listJobs({ adapter, limit })
+
+    if (listed.length === 0) {
+      return 'No jobs are waiting to run'
+    }
+
+    const rows = [
+      ['ID', 'JOB', 'QUEUE', 'CRON', 'STATUS'],
+      ...listed.map((job) => [
+        String(job.id),
+        job.name,
+        job.queue,
+        job.cron ?? '-',
+        [
+          job.pausedAt ? `paused since ${job.pausedAt.toISOString()}` : '',
+          job.running ? 'running' : '',
+          !job.pausedAt && !job.running
+            ? `next run ${job.runAt?.toISOString() ?? '-'}`
+            : '',
+        ]
+          .filter(Boolean)
+          .join(', '),
+      ]),
+    ]
+    const widths = rows[0].map((_, column) =>
+      Math.max(...rows.map((row) => row[column].length)),
+    )
+    const lines = rows.map((row) =>
+      row
+        .map((cell, column) =>
+          column === row.length - 1 ? cell : cell.padEnd(widths[column]),
+        )
+        .join('  '),
+    )
+
+    if (listed.length === limit) {
+      lines.push(`(the first ${limit}, use --limit to see more)`)
+    }
+
+    return lines.join('\n')
+  }
+
+  if (id === undefined) {
+    throw new Error(`Say which job to ${command} by its id`)
+  }
+
+  if (command === 'pause') {
+    const result = await manager.pauseJob(id, { adapter })
+
+    return result.alreadyPaused
+      ? `Job ${id} was already paused (since ${result.pausedAt.toISOString()})`
+      : `Paused job ${id}. It doesn't run until you resume it with ` +
+          `\`yarn cedar jobs resume ${id}\``
+  }
+
+  const result = await manager.resumeJob(id, { adapter })
+  const nextRun = result.runAt?.toISOString() ?? '-'
+
+  return result.wasPaused
+    ? `Resumed job ${id}. Its next run is at ${nextRun}`
+    : `Job ${id} isn't paused. Its next run is at ${nextRun}`
 }
 
 // Builds up an array of arrays, with the worker config index and id based on
@@ -265,7 +388,7 @@ const findWorkerProcesses = async (id?: number): Promise<number[]> => {
 }
 
 const main = async () => {
-  const { command } = parseArgs(process.argv)
+  const { command, id, adapter, limit } = parseArgs(process.argv)
   let jobsConfig
 
   try {
@@ -273,6 +396,25 @@ const main = async () => {
   } catch (e) {
     console.error(e)
     process.exit(1)
+  }
+
+  if (command === 'pause' || command === 'resume' || command === 'list') {
+    try {
+      console.log(
+        await runPauseCommand({
+          command,
+          id,
+          adapter,
+          limit,
+          manager: jobsConfig,
+        }),
+      )
+    } catch (e) {
+      console.error(e instanceof Error ? e.message : String(e))
+      process.exit(1)
+    }
+
+    return process.exit(0)
   }
 
   const workerConfig: WorkerConfig<Adapters, QueueNames>[] = jobsConfig.workers
