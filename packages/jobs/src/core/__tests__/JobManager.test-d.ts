@@ -1,6 +1,11 @@
 import { describe, it, expectTypeOf } from 'vitest'
 
 import type { JobDefinition } from '../../types.js'
+import type {
+  ListedSchedule,
+  PausedSchedule,
+  ResumedSchedule,
+} from '../JobManager.js'
 import { JobManager } from '../JobManager.js'
 
 import { MockAdapter, mockLogger } from './mocks.js'
@@ -307,6 +312,49 @@ describe('JobManager Type Tests', () => {
     it('should still reject combining timing options', () => {
       // @ts-expect-error - wait and cron are mutually exclusive
       scheduler(job, [1], { key: 'job:1', wait: 30, cron: '0 * * * *' })
+    })
+  })
+
+  describe('pausing declared schedules', () => {
+    const job = manager.createJob({
+      queue: 'default',
+      schedules: [
+        { key: 'day', cron: '*/15 * * * *', args: [1] },
+        { key: 'night', cron: '45 4 * * *', args: [14] },
+      ],
+      perform: (_days: number) => {},
+    })
+
+    it('should take a job and an optional schedule key', () => {
+      expectTypeOf(manager.pauseSchedule(job, 'night')).toEqualTypeOf<
+        Promise<PausedSchedule>
+      >()
+      expectTypeOf(manager.resumeSchedule(job)).toEqualTypeOf<
+        Promise<ResumedSchedule>
+      >()
+      expectTypeOf(manager.listSchedules()).toEqualTypeOf<
+        Promise<ListedSchedule[]>
+      >()
+    })
+
+    it('should return whether anything changed', () => {
+      expectTypeOf<PausedSchedule>().toEqualTypeOf<{
+        key: string
+        alreadyPaused: boolean
+        pausedAt: Date
+      }>()
+      expectTypeOf<ResumedSchedule>().toEqualTypeOf<{
+        key: string
+        wasPaused: boolean
+        runAt: Date | null
+      }>()
+    })
+
+    it('should reject what is not a job or a key', () => {
+      // @ts-expect-error - the job name is not a job
+      void manager.pauseSchedule('ReportJob')
+      // @ts-expect-error - the key is a string
+      void manager.resumeSchedule(job, 1)
     })
   })
 })

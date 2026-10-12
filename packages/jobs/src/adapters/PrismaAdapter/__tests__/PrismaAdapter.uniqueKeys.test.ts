@@ -262,6 +262,7 @@ describe('a model without a `key` column', () => {
       updated: [],
       removed: [],
       unchanged: [],
+      paused: [],
     })
   })
 

@@ -14,11 +14,15 @@ import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
 import { DEFAULT_LOGGER, PROCESS_TITLE_PREFIX } from '../consts.js'
-import { loadJobsManager } from '../loaders.js'
+import type { JobManager } from '../core/JobManager.js'
+import { scheduleName } from '../core/JobManager.js'
+import { ScheduleNotFoundError } from '../errors.js'
+import { loadAllJobs, loadJobsManager } from '../loaders.js'
 import { setupEnv } from '../setupEnv.js'
 import type {
   Adapters,
   BasicLogger,
+  Job,
   WorkerConfig,
   QueueNames,
 } from '../types.js'
@@ -31,7 +35,7 @@ process.title = 'cedar-jobs'
 
 const WORKER_PATH = path.join(import.meta.dirname, 'cedar-jobs-worker.js')
 
-const parseArgs = (argv: string[]) => {
+export const parseArgs = (argv: string[]) => {
   const commandString = hideBin(argv)
 
   if (commandString.length === 1 && commandString[0] === 'jobs') {
@@ -49,6 +53,15 @@ const parseArgs = (argv: string[]) => {
     .command('stop', 'Stop any daemonized job workers')
     .command('restart', 'Stop and start any daemonized job workers')
     .command('clear', 'Clear the job queue')
+    .command(
+      'pause <schedule>',
+      "Pause a job's declared schedule, given as JobName or JobName:key",
+    )
+    .command(
+      'resume <schedule>',
+      'Resume a paused declared schedule, given as JobName or JobName:key',
+    )
+    .command('schedules', 'List the declared schedules')
     .demandCommand(1, 'You must specify a mode to start in')
     .example(
       'cedar jobs work',
@@ -60,6 +73,11 @@ const parseArgs = (argv: string[]) => {
       'Start the job workers using the job config and detach, running in ' +
         'daemon mode',
     )
+    .example(
+      'cedar jobs pause ReportJob:nightly',
+      'Stop the `nightly` schedule of ReportJob from running until it is ' +
+        'resumed with `cedar jobs resume ReportJob:nightly`',
+    )
     .help()
     .parse(commandString, (_err: any, _argv: any, output: any) => {
       if (output) {
@@ -68,7 +86,114 @@ const parseArgs = (argv: string[]) => {
       }
     })
 
-  return { command: parsed._[0] }
+  return {
+    command: parsed._[0],
+    schedule:
+      typeof parsed.schedule === 'string' || typeof parsed.schedule === 'number'
+        ? String(parsed.schedule)
+        : undefined,
+  }
+}
+
+/**
+ * Splits a schedule given on the command line, `JobName` or `JobName:key`,
+ * into the job's name and the schedule's key. Job names are identifiers, so
+ * everything after the first `:` is the key
+ */
+export const parseScheduleArg = (value: string) => {
+  const separator = value.indexOf(':')
+
+  if (separator === -1) {
+    return { jobName: value, key: undefined }
+  }
+
+  return {
+    jobName: value.slice(0, separator),
+    key: value.slice(separator + 1) || undefined,
+  }
+}
+
+type AnyJobManager = JobManager<Adapters, QueueNames, BasicLogger>
+
+/**
+ * `cedar jobs pause`, `resume` and `schedules`. Returns what to print
+ */
+export const runScheduleCommand = async ({
+  command,
+  schedule,
+  manager,
+  loadJobs = loadAllJobs,
+}: {
+  command: 'pause' | 'resume' | 'schedules'
+  schedule?: string | undefined
+  manager: AnyJobManager
+  loadJobs?: () => Promise<Job<QueueNames, unknown[]>[]>
+}): Promise<string> => {
+  if (command === 'schedules') {
+    const schedules = await manager.listSchedules()
+
+    if (schedules.length === 0) {
+      return 'No declared schedules are stored'
+    }
+
+    const rows = schedules.map((stored) => [
+      scheduleName(stored.key),
+      stored.cron ?? '',
+      stored.pausedAt
+        ? `paused since ${stored.pausedAt.toISOString()}`
+        : stored.running
+          ? 'running'
+          : `next run ${stored.runAt?.toISOString() ?? '-'}`,
+    ])
+    const widths = [0, 1].map((column) =>
+      Math.max(...rows.map((row) => row[column].length)),
+    )
+
+    return rows
+      .map((row) =>
+        [row[0].padEnd(widths[0]), row[1].padEnd(widths[1]), row[2]].join('  '),
+      )
+      .join('\n')
+  }
+
+  if (!schedule) {
+    throw new ScheduleNotFoundError(
+      `Say which schedule to ${command}: JobName or JobName:key`,
+    )
+  }
+
+  const { jobName, key } = parseScheduleArg(schedule)
+  const jobs = await loadJobs()
+  const job = jobs.find((candidate) => candidate.name === jobName)
+
+  if (!job) {
+    const withSchedules = jobs
+      .filter((candidate) => candidate.schedules?.length)
+      .map((candidate) => candidate.name)
+
+    throw new ScheduleNotFoundError(
+      `There is no job named ${jobName}. Jobs with declared schedules: ` +
+        (withSchedules.join(', ') || 'none'),
+    )
+  }
+
+  if (command === 'pause') {
+    const result = await manager.pauseSchedule(job, key)
+    const name = scheduleName(result.key)
+
+    return result.alreadyPaused
+      ? `${name} was already paused (since ${result.pausedAt.toISOString()})`
+      : `Paused ${name}. It doesn't run until you resume it with ` +
+          `\`yarn cedar jobs resume ${name}\``
+  }
+
+  const result = await manager.resumeSchedule(job, key)
+  const name = scheduleName(result.key)
+
+  return result.wasPaused
+    ? `Resumed ${name}. Its next run is at ${result.runAt?.toISOString()}`
+    : `${name} isn't paused. Its next run is at ` +
+        `${result.runAt?.toISOString() ?? '-'}`
 }
 
 // Builds up an array of arrays, with the worker config index and id based on
@@ -265,7 +390,7 @@ const findWorkerProcesses = async (id?: number): Promise<number[]> => {
 }
 
 const main = async () => {
-  const { command } = parseArgs(process.argv)
+  const { command, schedule } = parseArgs(process.argv)
   let jobsConfig
 
   try {
@@ -273,6 +398,19 @@ const main = async () => {
   } catch (e) {
     console.error(e)
     process.exit(1)
+  }
+
+  if (command === 'pause' || command === 'resume' || command === 'schedules') {
+    try {
+      console.log(
+        await runScheduleCommand({ command, schedule, manager: jobsConfig }),
+      )
+    } catch (e) {
+      console.error(e instanceof Error ? e.message : String(e))
+      process.exit(1)
+    }
+
+    return process.exit(0)
   }
 
   const workerConfig: WorkerConfig<Adapters, QueueNames>[] = jobsConfig.workers

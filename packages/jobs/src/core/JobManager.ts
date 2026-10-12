@@ -1,11 +1,17 @@
 import type {
+  BaseAdapter,
+  PauseScheduleResult,
+  ResumeScheduleResult,
   ScheduleDefinition,
+  StoredSchedule,
   SyncSchedulesResult,
 } from '../adapters/BaseAdapter/BaseAdapter.js'
 import { DEFAULT_SCHEDULE_KEY, SCHEDULE_KEY_PREFIX } from '../consts.js'
 import {
   AdapterNotFoundError,
   ScheduleConfigError,
+  ScheduleNotFoundError,
+  SchedulePausingNotSupportedError,
   SchedulesNotSupportedError,
 } from '../errors.js'
 import { loadAllJobs } from '../loaders.js'
@@ -16,6 +22,7 @@ import type {
   CreateSchedulerConfig,
   Job,
   JobDefinition,
+  JobSchedule,
   JobManagerConfig,
   QueueNames,
   WorkerConfig,
@@ -25,6 +32,35 @@ import { nextCronRunAt } from '../util.js'
 import { Scheduler } from './Scheduler.js'
 import type { WorkerOptions } from './Worker.js'
 import { Worker } from './Worker.js'
+
+/** What `jobs.pauseSchedule()` returns */
+export interface PausedSchedule extends PauseScheduleResult {
+  /** The stored key of the schedule, like `cedar:schedule:ReportJob:nightly` */
+  key: string
+}
+
+/** What `jobs.resumeSchedule()` returns */
+export interface ResumedSchedule extends ResumeScheduleResult {
+  /** The stored key of the schedule, like `cedar:schedule:ReportJob:nightly` */
+  key: string
+}
+
+/** A stored declared schedule, as `jobs.listSchedules()` returns it */
+export interface ListedSchedule extends StoredSchedule {
+  /** The name of the job the schedule runs */
+  jobName: string
+  /** The schedule's own key, `default` for a job's only schedule */
+  scheduleKey: string
+}
+
+/**
+ * How a declared schedule is named on the command line and in logs:
+ * `ReportJob:nightly`
+ */
+export const scheduleName = (storedKey: string) =>
+  storedKey.startsWith(SCHEDULE_KEY_PREFIX)
+    ? storedKey.slice(SCHEDULE_KEY_PREFIX.length)
+    : storedKey
 
 export interface CreateWorkerArgs {
   index: number
@@ -117,12 +153,7 @@ export class JobManager<
     jobs?: Job<TQueues, any[]>[],
   ): Promise<SyncSchedulesResult | undefined> {
     const allJobs = jobs ?? (await loadAllJobs())
-    const adapterName = this.#scheduleAdapterName()
-    const adapter = this.adapters[adapterName]
-
-    if (!adapter) {
-      throw new AdapterNotFoundError(String(adapterName))
-    }
+    const { adapter, adapterName } = this.#scheduleAdapter()
 
     const schedules = this.#scheduleDefinitions(allJobs, adapter)
 
@@ -156,7 +187,205 @@ export class JobManager<
       )
     }
 
+    // A warning rather than info, so a pause that was forgotten shows up in
+    // the logs of every worker start, also with production log levels
+    if (result.paused && result.paused.length > 0) {
+      const names = result.paused.map(scheduleName)
+
+      this.logger.warn(
+        `[CedarJS Jobs] Paused declared schedules, which don't run until ` +
+          `they're resumed: ${names.join(', ')}. Resume one with ` +
+          `\`yarn cedar jobs resume ${names[0]}\``,
+      )
+    }
+
     return result
+  }
+
+  /**
+   * Pauses one of the schedules a job declares, without a deploy: no worker
+   * picks it up until it's resumed with `resumeSchedule()`. A run that's in
+   * progress finishes. The pause is stored with the schedule, so it holds
+   * across worker restarts and schedule syncs. A schedule that's no longer
+   * declared is still removed by the next sync, paused or not.
+   *
+   * Also available as `yarn cedar jobs pause ReportJob:nightly`.
+   *
+   * @param job The job that declares the schedule
+   * @param key The schedule's key. Can be left out when the job declares a
+   * single schedule
+   *
+   * @returns The schedule's stored key, whether it was paused already and
+   * since when it's paused
+   *
+   * @example
+   * ```ts
+   * await jobs.pauseSchedule(ReportJob, 'nightly')
+   * ```
+   */
+  async pauseSchedule(
+    job: Job<TQueues, any[]>,
+    key?: string,
+  ): Promise<PausedSchedule> {
+    const { storedKey } = this.#declaredSchedule(job, key)
+    const { adapter, adapterName } = this.#scheduleAdapter()
+
+    if (!adapter.pauseSchedule) {
+      throw new SchedulePausingNotSupportedError(adapterName, 'pauseSchedule')
+    }
+
+    const result = await adapter.pauseSchedule({ key: storedKey })
+
+    if (!result) {
+      throw this.#notStoredError(storedKey)
+    }
+
+    this.logger.info(
+      result.alreadyPaused
+        ? `[CedarJS Jobs] Schedule ${scheduleName(storedKey)} was already ` +
+            `paused (since ${result.pausedAt.toISOString()})`
+        : `[CedarJS Jobs] Paused schedule ${scheduleName(storedKey)}`,
+    )
+
+    return { ...result, key: storedKey }
+  }
+
+  /**
+   * Resumes a schedule paused with `pauseSchedule()`. Its next run is the
+   * next time its `cron` matches from now: runs missed while it was paused
+   * are not made up for. Resuming a schedule that isn't paused changes
+   * nothing.
+   *
+   * Also available as `yarn cedar jobs resume ReportJob:nightly`.
+   *
+   * @param job The job that declares the schedule
+   * @param key The schedule's key. Can be left out when the job declares a
+   * single schedule
+   *
+   * @returns The schedule's stored key, whether it was paused and when it
+   * runs next
+   */
+  async resumeSchedule(
+    job: Job<TQueues, any[]>,
+    key?: string,
+  ): Promise<ResumedSchedule> {
+    const { schedule, storedKey } = this.#declaredSchedule(job, key)
+    const { adapter, adapterName } = this.#scheduleAdapter()
+
+    if (!adapter.resumeSchedule) {
+      throw new SchedulePausingNotSupportedError(adapterName, 'resumeSchedule')
+    }
+
+    const result = await adapter.resumeSchedule({
+      key: storedKey,
+      runAt: nextCronRunAt(schedule.cron),
+    })
+
+    if (!result) {
+      throw this.#notStoredError(storedKey)
+    }
+
+    this.logger.info(
+      result.wasPaused
+        ? `[CedarJS Jobs] Resumed schedule ${scheduleName(storedKey)}, next ` +
+            `run at ${result.runAt?.toISOString()}`
+        : `[CedarJS Jobs] Schedule ${scheduleName(storedKey)} isn't paused`,
+    )
+
+    return { ...result, key: storedKey }
+  }
+
+  /**
+   * Lists the declared schedules the schedule adapter stores, with their
+   * next run and whether they're paused. Also available as
+   * `yarn cedar jobs schedules`
+   */
+  async listSchedules(): Promise<ListedSchedule[]> {
+    const { adapter, adapterName } = this.#scheduleAdapter()
+
+    if (!adapter.listSchedules) {
+      throw new SchedulePausingNotSupportedError(adapterName, 'listSchedules')
+    }
+
+    const stored = await adapter.listSchedules({
+      keyPrefix: SCHEDULE_KEY_PREFIX,
+    })
+
+    return stored.map((schedule) => {
+      const name = scheduleName(schedule.key)
+      const separator = name.indexOf(':')
+
+      return {
+        ...schedule,
+        jobName: separator === -1 ? name : name.slice(0, separator),
+        scheduleKey: separator === -1 ? '' : name.slice(separator + 1),
+      }
+    })
+  }
+
+  #scheduleAdapter(): { adapter: BaseAdapter; adapterName: string } {
+    const adapterName = this.#scheduleAdapterName()
+    const adapter = this.adapters[adapterName]
+
+    if (!adapter) {
+      throw new AdapterNotFoundError(String(adapterName))
+    }
+
+    return { adapter, adapterName: String(adapterName) }
+  }
+
+  /**
+   * Finds the schedule `job` declares with `key`, or its only schedule when
+   * `key` is left out
+   */
+  #declaredSchedule(
+    job: Job<TQueues, any[]>,
+    key: string | undefined,
+  ): { schedule: JobSchedule<any[]>; storedKey: string } {
+    const schedules = job.schedules ?? []
+    const keyOf = (schedule: JobSchedule<any[]>) =>
+      schedule.key ?? DEFAULT_SCHEDULE_KEY
+    const declaredKeys = schedules.map(keyOf).join(', ')
+
+    if (schedules.length === 0) {
+      throw new ScheduleNotFoundError(`${job.name} declares no schedules`)
+    }
+
+    let schedule: JobSchedule<any[]> | undefined
+
+    if (key === undefined) {
+      if (schedules.length > 1) {
+        throw new ScheduleNotFoundError(
+          `${job.name} declares ${schedules.length} schedules ` +
+            `(${declaredKeys}), so say which one by its key`,
+        )
+      }
+
+      schedule = schedules[0]
+    } else {
+      schedule = schedules.find((candidate) => keyOf(candidate) === key)
+    }
+
+    if (!schedule) {
+      throw new ScheduleNotFoundError(
+        `${job.name} declares no schedule with the key \`${key}\` ` +
+          `(its schedules: ${declaredKeys})`,
+      )
+    }
+
+    return {
+      schedule,
+      storedKey: `${SCHEDULE_KEY_PREFIX}${job.name}:${keyOf(schedule)}`,
+    }
+  }
+
+  #notStoredError(storedKey: string) {
+    return new ScheduleNotFoundError(
+      `The schedule ${scheduleName(storedKey)} is declared but not stored. ` +
+        'Job workers store the declared schedules when they start, so ' +
+        'start (or restart) them and try again. A schedule that failed for ' +
+        'good, or was cancelled, is stored again by the next worker start too',
+    )
   }
 
   #scheduleAdapterName(): keyof TAdapters {
@@ -184,7 +413,7 @@ export class JobManager<
    */
   #scheduleDefinitions(
     jobs: Job<TQueues, any[]>[],
-    adapter: TAdapters[keyof TAdapters],
+    adapter: BaseAdapter,
   ): ScheduleDefinition[] {
     const scheduler = new Scheduler({ adapter, logger: this.logger })
     const definitions: ScheduleDefinition[] = []

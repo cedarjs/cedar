@@ -255,3 +255,29 @@ export class ScheduleConfigError extends CedarJSJobsError {
     super(`[CedarJS Jobs] ${message}`)
   }
 }
+
+/**
+ * Thrown when pausing or resuming a declared schedule that doesn't exist:
+ * the job declares no schedule with that key, or the schedule isn't stored
+ * (yet)
+ */
+export class ScheduleNotFoundError extends CedarJSJobsError {
+  constructor(message: string) {
+    super(`[CedarJS Jobs] ${message}`)
+  }
+}
+
+/**
+ * Thrown when pausing, resuming or listing declared schedules through an
+ * adapter that doesn't implement `pauseSchedule()`, `resumeSchedule()` or
+ * `listSchedules()`
+ */
+export class SchedulePausingNotSupportedError extends CedarJSJobsError {
+  constructor(adapterName: string, method: string) {
+    super(
+      `The \`${adapterName}\` adapter does not implement \`${method}()\`, ` +
+        'so its declared schedules cannot be paused, resumed or listed. Use ' +
+        'an adapter that does, like the PrismaAdapter',
+    )
+  }
+}

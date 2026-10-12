@@ -143,6 +143,7 @@ describe('syncing declared schedules', () => {
         'cedar:schedule:ReportJob:nightly',
         'cedar:schedule:CleanupJob:default',
       ],
+      paused: [],
     })
     expect(await storedSchedules()).toEqual(before)
   })

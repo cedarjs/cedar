@@ -45,6 +45,59 @@ export interface SyncSchedulesResult {
   updated: string[]
   removed: string[]
   unchanged: string[]
+  /**
+   * The keys of the declared schedules that are stored as paused (see
+   * `pauseSchedule()`). Optional: adapters that can't pause schedules leave
+   * it out
+   */
+  paused?: string[]
+}
+
+export interface PauseScheduleOptions {
+  /** The stored key of the schedule, like `cedar:schedule:ReportJob:nightly` */
+  key: string
+}
+
+export interface PauseScheduleResult {
+  /** `true` when the schedule was paused already, and nothing changed */
+  alreadyPaused: boolean
+  /** When the schedule was paused */
+  pausedAt: Date
+}
+
+export interface ResumeScheduleOptions {
+  /** The stored key of the schedule, like `cedar:schedule:ReportJob:nightly` */
+  key: string
+  /**
+   * The schedule's next run: the next match of its `cron` after now, so runs
+   * missed while it was paused are not made up for
+   */
+  runAt: Date
+}
+
+export interface ResumeScheduleResult {
+  /** `false` when the schedule wasn't paused, and nothing changed */
+  wasPaused: boolean
+  /** When the schedule runs next */
+  runAt: Date | null
+}
+
+export interface ListSchedulesOptions {
+  /** List the stored schedules with a key that starts with this */
+  keyPrefix: string
+}
+
+/** A stored declared schedule, as `listSchedules()` returns it */
+export interface StoredSchedule {
+  /** The stored key, like `cedar:schedule:ReportJob:nightly` */
+  key: string
+  cron: string | null
+  /** When the schedule runs next */
+  runAt: Date | null
+  /** When the schedule was paused, or `null` when it isn't */
+  pausedAt: Date | null
+  /** Whether a worker is running the job right now */
+  running: boolean
 }
 
 export interface FindArgs {
@@ -192,4 +245,38 @@ export abstract class BaseAdapter<
   syncSchedules?(
     options: SyncSchedulesOptions,
   ): SyncSchedulesResult | Promise<SyncSchedulesResult>
+
+  /**
+   * Pauses a stored declared schedule, so no worker picks it up until it's
+   * resumed. A run that's in progress finishes, and its rescheduling must
+   * keep the schedule paused. `syncSchedules()` must keep a schedule paused
+   * too, even when it updates its cron or args.
+   *
+   * Returns `null` when no schedule with `options.key` is stored.
+   *
+   * This method is optional, together with `resumeSchedule()`: without them
+   * `jobs.pauseSchedule()` and `jobs.resumeSchedule()` throw a
+   * `SchedulePausingNotSupportedError`
+   */
+  pauseSchedule?(
+    options: PauseScheduleOptions,
+  ): PauseScheduleResult | null | Promise<PauseScheduleResult | null>
+
+  /**
+   * Resumes a paused declared schedule: its next run is at `options.runAt`.
+   * A schedule that isn't paused is left as it is.
+   *
+   * Returns `null` when no schedule with `options.key` is stored
+   */
+  resumeSchedule?(
+    options: ResumeScheduleOptions,
+  ): ResumeScheduleResult | null | Promise<ResumeScheduleResult | null>
+
+  /**
+   * Lists the stored declared schedules (the jobs with a key starting with
+   * `options.keyPrefix`), for `yarn cedar jobs schedules`. Optional
+   */
+  listSchedules?(
+    options: ListSchedulesOptions,
+  ): StoredSchedule[] | Promise<StoredSchedule[]>
 }
