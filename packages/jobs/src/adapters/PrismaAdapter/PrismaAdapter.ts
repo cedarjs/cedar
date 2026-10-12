@@ -618,16 +618,38 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
    * Lists the jobs that haven't completed or failed for good, the ones that
    * run next first
    */
-  override async list({ limit }: ListJobsOptions): Promise<ListedJob[]> {
+  override async list({
+    limit,
+    queues,
+    paused,
+  }: ListJobsOptions): Promise<ListedJob[]> {
     if (!this.accessor.findMany) {
       throw new ModelNameError(String(this.model))
     }
 
-    const rows: PrismaJob[] = await this.accessor.findMany({
-      where: { failedAt: null, runAt: { not: null } },
-      orderBy: [{ runAt: 'asc' }, { id: 'asc' }],
-      take: limit,
-    })
+    let rows: PrismaJob[]
+
+    try {
+      rows = await this.accessor.findMany({
+        where: {
+          failedAt: null,
+          runAt: { not: null },
+          ...(queues && !(queues.length === 1 && queues[0] === '*')
+            ? { queue: { in: queues } }
+            : {}),
+          ...(paused ? { pausedAt: { not: null } } : {}),
+        },
+        orderBy: [{ runAt: 'asc' }, { id: 'asc' }],
+        take: limit,
+      })
+    } catch (e) {
+      // Without a `pausedAt` column no job is paused
+      if (paused && isMissingPausedAtColumn(e)) {
+        return []
+      }
+
+      throw e
+    }
 
     return rows.map((row) => ({
       id: row.id,

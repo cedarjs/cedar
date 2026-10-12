@@ -83,6 +83,15 @@ export interface ResumeResult {
 export interface ListJobsOptions {
   /** The most jobs to return, the ones that run next first */
   limit: number
+  /**
+   * Only list jobs in these queues. All queues when left out or `['*']`
+   */
+  queues?: string[]
+  /**
+   * Only list paused jobs. A worker uses this when it starts, to warn about
+   * paused jobs in its queues
+   */
+  paused?: boolean
 }
 
 /** A job waiting to run, running or paused, as `list()` returns it */

@@ -14,6 +14,7 @@ import {
 } from '../../errors.js'
 import { nextCronRunAt } from '../../util.js'
 import { JobManager } from '../JobManager.js'
+import { Worker } from '../Worker.js'
 
 import { MockAdapter, mockLogger } from './mocks.js'
 
@@ -78,6 +79,7 @@ beforeEach(async () => {
   await db.backgroundJob.deleteMany()
   await db.legacyBackgroundJob.deleteMany()
   vi.mocked(mockLogger.info).mockClear()
+  vi.mocked(mockLogger.warn).mockClear()
 })
 
 describe('a paused job', () => {
@@ -402,5 +404,136 @@ describe('a model without a `pausedAt` column', () => {
     expect(await legacy.listJobs()).toEqual([
       expect.objectContaining({ id: job.id, pausedAt: null }),
     ])
+  })
+})
+
+describe('a starting worker', () => {
+  const workerFor = (
+    queues: string[],
+    options: { workoff?: boolean; model?: string } = {},
+  ) =>
+    new Worker({
+      adapter: options.model
+        ? new PrismaAdapter({ db, model: options.model, logger: mockLogger })
+        : adapter,
+      logger: mockLogger,
+      processName: 'worker.0',
+      queues,
+      forever: false,
+      workoff: options.workoff,
+    })
+
+  const LowJob = named(
+    jobs.createJob({ queue: 'default', perform: async () => {} }),
+    'LowJob',
+  )
+
+  it('warns about the paused jobs in its queues', async () => {
+    const report = await later(ReportJob, { cron: NIGHTLY })
+    const email = await later(EmailJob, ['a@example.com'], { wait: 60 })
+    await later(EmailJob, ['b@example.com'], { wait: 60 })
+    await jobs.pauseJob(report.id)
+    await jobs.pauseJob(email.id)
+
+    await workerFor(['*']).run()
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      `[worker.0] 2 paused job(s) in queue(s) all (*) won't run until ` +
+        `resumed: ${email.id} (EmailJob), ${report.id} (ReportJob). Resume ` +
+        'one with `yarn cedar jobs resume <id>`',
+    )
+  })
+
+  it('names the first 10 and counts the rest', async () => {
+    for (let i = 0; i < 12; i++) {
+      const job = await later(EmailJob, [`${i}@example.com`], { wait: 60 + i })
+      await jobs.pauseJob(job.id)
+    }
+
+    await workerFor(['default']).logPausedJobs()
+
+    const [message] = vi.mocked(mockLogger.warn).mock.calls[0]
+    expect(message).toMatch(
+      /^\[worker\.0\] 12 paused job\(s\) in queue\(s\) default/,
+    )
+    expect(message).toMatch(/EmailJob\) and 2 more\. Resume one/)
+    expect(String(message).match(/\(EmailJob\)/g)).toHaveLength(10)
+  })
+
+  it('only counts its own queues', async () => {
+    const job = await later(LowJob, { wait: 60 })
+    await db.backgroundJob.update({
+      where: { id: job.id },
+      data: { queue: 'low' },
+    })
+    await jobs.pauseJob(job.id)
+
+    await workerFor(['default']).logPausedJobs()
+    expect(mockLogger.warn).not.toHaveBeenCalled()
+
+    await workerFor(['default', 'low']).logPausedJobs()
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining(`${job.id} (LowJob)`),
+    )
+  })
+
+  it('says nothing when no job is paused', async () => {
+    await later(EmailJob, ['a@example.com'], { wait: 60 })
+
+    await workerFor(['*']).run()
+
+    expect(mockLogger.warn).not.toHaveBeenCalled()
+  })
+
+  it("doesn't check when working off the queue", async () => {
+    const job = await later(EmailJob, ['a@example.com'], { wait: 60 })
+    await jobs.pauseJob(job.id)
+
+    await workerFor(['*'], { workoff: true }).run()
+
+    expect(mockLogger.warn).not.toHaveBeenCalled()
+  })
+
+  it('says nothing without a `pausedAt` column', async () => {
+    await workerFor(['*'], { model: 'legacyBackgroundJob' }).run()
+
+    expect(mockLogger.warn).not.toHaveBeenCalled()
+  })
+
+  it('starts anyway when the check fails', async () => {
+    const failing = new PrismaAdapter({ db, logger: mockLogger })
+    failing.list = async () => {
+      throw new Error('Connection lost')
+    }
+    const worker = new Worker({
+      adapter: failing,
+      logger: mockLogger,
+      processName: 'worker.0',
+      queues: ['*'],
+      forever: false,
+    })
+    const job = await later(EmailJob, ['a@example.com'])
+
+    await worker.run()
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      '[worker.0] Could not check for paused jobs: Connection lost',
+    )
+    // The worker went on to work
+    expect((await row(job.id))?.attempts).toBe(1)
+  })
+
+  it('says nothing when the adapter cannot list jobs', async () => {
+    const worker = new Worker({
+      adapter: new MockAdapter(),
+      logger: mockLogger,
+      processName: 'worker.0',
+      queues: ['*'],
+      forever: false,
+    })
+
+    await worker.logPausedJobs()
+
+    expect(mockLogger.warn).not.toHaveBeenCalled()
   })
 })

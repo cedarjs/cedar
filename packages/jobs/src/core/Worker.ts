@@ -16,6 +16,11 @@ import type { BasicLogger, WorkerSharedOptions } from '../types.js'
 
 import { Executor } from './Executor.js'
 
+/** How many paused jobs a starting worker reads to warn about */
+const PAUSED_JOBS_LIMIT = 1000
+/** How many paused jobs a starting worker names in its warning */
+const PAUSED_JOBS_SHOWN = 10
+
 export interface WorkerOptions extends WorkerSharedOptions {
   // required
 
@@ -156,9 +161,62 @@ export class Worker {
   run() {
     if (this.clear) {
       return this.#clearQueue()
-    } else {
+    } else if (this.workoff) {
       return this.#work()
+    } else {
+      return this.logPausedJobs().then(() => this.#work())
     }
+  }
+
+  /**
+   * Logs a warning listing the paused jobs in this worker's queues, so a
+   * pause that was forgotten shows up whenever a long-running worker starts.
+   * Does nothing when the adapter can't list jobs or there are no paused
+   * ones, and never throws: a failed query is logged and the worker starts
+   * anyway
+   */
+  async logPausedJobs() {
+    if (!this.adapter.list) {
+      return
+    }
+
+    let paused
+
+    try {
+      paused = await this.adapter.list({
+        limit: PAUSED_JOBS_LIMIT,
+        queues: this.queues,
+        paused: true,
+      })
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e)
+
+      this.logger.warn(
+        `[${this.processName}] Could not check for paused jobs: ${message}`,
+      )
+
+      return
+    }
+
+    if (paused.length === 0) {
+      return
+    }
+
+    const shown = paused
+      .slice(0, PAUSED_JOBS_SHOWN)
+      .map((job) => `${job.id} (${job.name})`)
+    const more = paused.length - shown.length
+    const count =
+      paused.length === PAUSED_JOBS_LIMIT
+        ? `${PAUSED_JOBS_LIMIT} or more`
+        : String(paused.length)
+
+    this.logger.warn(
+      `[${this.processName}] ${count} paused job(s) in queue(s) ` +
+        `${this.queueNames} won't run until resumed: ${shown.join(', ')}` +
+        (more > 0 ? ` and ${more} more` : '') +
+        `. Resume one with \`yarn cedar jobs resume <id>\``,
+    )
   }
 
   get queueNames() {
