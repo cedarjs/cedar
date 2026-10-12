@@ -70,7 +70,6 @@
     "check:package": "concurrently npm:check:attw yarn:publint",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
-    "test:types": "tstyche",
     "test:watch": "vitest watch"
   },
   "dependencies": {
@@ -97,7 +96,6 @@
     "redis": "6.3.0",
     "split2": "4.2.0",
     "ts-toolbelt": "9.6.0",
-    "tstyche": "5.0.2",
     "typescript": "5.9.3",
     "vitest": "4.1.11"
   },
