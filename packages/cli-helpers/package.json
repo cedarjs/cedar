@@ -148,7 +148,7 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@types/dotenv-defaults": "^5.0.0",
-    "@types/lodash": "4.17.25",
+    "@types/lodash": "4.17.26",
     "@types/pascalcase": "1.0.3",
     "@types/yargs": "17.0.35",
     "@types/yargs-parser": "21.0.3",
