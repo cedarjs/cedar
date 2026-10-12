@@ -1,3 +1,4 @@
+import { isClaimedContentTypeAllowed } from './detectContentType.js'
 import { UploadError } from './errors.js'
 import { generateStorageKey } from './keys.js'
 import {
@@ -10,12 +11,14 @@ import type { UploadProfiles } from './profiles.js'
 import { resolveTarget } from './targets.js'
 import type {
   PresignedUploadUrl,
+  StorageProvider,
   StorageTargets,
   UploadDatabase,
   UploadRecord,
 } from './types.js'
 import { createUploadToken } from './uploadToken.js'
 import type { UploadTokenPayload } from './uploadToken.js'
+import { verifyStoredContentType } from './verifyStoredContentType.js'
 
 /** The identity a token is issued to. */
 export interface UploadActor {
@@ -98,6 +101,16 @@ export interface CreatePresignedUploadOptions {
   /** The validated token, as attached to context by `@requireUploadToken`. */
   tokenPayload: UploadTokenPayload
   input: CreatePresignedUploadInput
+  /**
+   * Holds the declared type to the rules `acceptedContentType()` applies to
+   * a type it can't check by bytes: no wildcard types, and types that can
+   * carry script (`SCRIPTABLE_CONTENT_TYPES`) only when the profile lists
+   * them exactly. Pair it with `verifyContentType` on `confirmUpload` (and
+   * the S3 webhook), which checks the bytes against the declared type.
+   * Defaults to `true`; `false` checks the declared type with
+   * `isMimeTypeAllowed()` only.
+   */
+  verifyContentType?: boolean
 }
 
 export interface PresignedUploadResponse {
@@ -125,10 +138,26 @@ export async function createPresignedUpload({
   targets,
   tokenPayload,
   input,
+  verifyContentType = true,
 }: CreatePresignedUploadOptions): Promise<PresignedUploadResponse> {
   const size = toBigInt(input.size, 'file size')
 
   assertTokenAllowsFile(tokenPayload, { contentType: input.contentType, size })
+
+  if (
+    verifyContentType &&
+    !isClaimedContentTypeAllowed(
+      tokenPayload.allowedMimeTypes,
+      input.contentType,
+    )
+  ) {
+    throw new UploadError(
+      'MIME_TYPE_NOT_ALLOWED',
+      `File type '${input.contentType}' is not allowed for upload profile ` +
+        `'${tokenPayload.profile}'. Types that can carry script must be ` +
+        'listed exactly, not through a wildcard.',
+    )
+  }
 
   const target = resolveTarget(targets, tokenPayload.target)
   const storageKey = generateStorageKey(input.contentType)
@@ -166,20 +195,48 @@ export interface ConfirmUploadOptions {
   targets: StorageTargets
   uploadId: string
   currentUser: UploadActor | null | undefined
+  /**
+   * Checks the object's bytes against the type the client declared for it
+   * when it asked for the upload URL, with a ranged read of its head (and of
+   * its tail for ZIPs), and records the canonical spelling of that type. A
+   * mismatch fails the row and deletes the object. Defaults to `true`.
+   */
+  verifyContentType?: boolean
+}
+
+/**
+ * Claims a pending row `failed` and deletes its object. Leaves a row some
+ * other path settled first alone.
+ */
+async function failUpload(
+  db: UploadDatabase,
+  target: StorageProvider,
+  upload: UploadRecord & { storageKey: string },
+) {
+  const { count } = await db.upload.updateMany({
+    where: { id: upload.id, status: 'pending' },
+    data: { status: 'failed' },
+  })
+
+  if (count === 1) {
+    await target.delete(upload.storageKey)
+  }
 }
 
 /**
  * Client-side confirmation of a direct upload. Verifies that the object
- * exists in storage and that its size matches what the token authorized,
- * then flips the row `pending` to `completed`. On a size mismatch the row is
- * claimed `failed` and the object deleted. Only the user (and organization)
- * the upload was issued to can confirm it.
+ * exists in storage, that its size matches what the token authorized, and
+ * (with `verifyContentType`, the default) that its bytes are the type the
+ * client declared, then flips the row `pending` to `completed`. On a
+ * mismatch the row is claimed `failed` and the object deleted. Only the user
+ * (and organization) the upload was issued to can confirm it.
  */
 export async function confirmUpload({
   db,
   targets,
   uploadId,
   currentUser,
+  verifyContentType = true,
 }: ConfirmUploadOptions): Promise<UploadRecord> {
   const upload = await db.upload.findFirst({
     where: { id: uploadId },
@@ -204,17 +261,12 @@ export async function confirmUpload({
 
   const actualSize = await target.getObjectSize(upload.storageKey)
 
+  const storedUpload = { ...upload, storageKey: upload.storageKey }
+
   if (actualSize === null || BigInt(actualSize) !== upload.size) {
     // Claim the row before touching bytes; if a concurrent path settled it
     // first, leave the settled state alone
-    const { count } = await db.upload.updateMany({
-      where: { id: uploadId, status: 'pending' },
-      data: { status: 'failed' },
-    })
-
-    if (count === 1) {
-      await target.delete(upload.storageKey)
-    }
+    await failUpload(db, target, storedUpload)
 
     throw new UploadError(
       'SIZE_MISMATCH',
@@ -223,11 +275,40 @@ export async function confirmUpload({
     )
   }
 
+  let mimeType = upload.mimeType
+
+  if (verifyContentType) {
+    const verified = await verifyStoredContentType(target, upload.storageKey, {
+      size: actualSize,
+      declaredType: upload.mimeType,
+    })
+
+    if (!verified) {
+      await failUpload(db, target, storedUpload)
+
+      throw new UploadError(
+        'MIME_TYPE_NOT_ALLOWED',
+        `Uploaded file is not of the type '${upload.mimeType}' it was ` +
+          'declared as, so it was deleted.',
+      )
+    }
+
+    // The object keeps the Content-Type it was uploaded with, which is the
+    // declared type: the presigned URL signs it. That differs from
+    // `verified` at most in spelling (`image/jpg` for `image/jpeg`), since
+    // the bytes had to be the declared type, so the object's metadata needs
+    // no rewrite, and S3 never serves it as a type its bytes aren't.
+    mimeType = verified
+  }
+
   // Conditional transition: a row the cleanup job already claimed stays
   // failed instead of being resurrected
   const { count } = await db.upload.updateMany({
     where: { id: uploadId, status: 'pending' },
-    data: { status: 'completed' },
+    data: {
+      status: 'completed',
+      ...(mimeType !== upload.mimeType ? { mimeType } : {}),
+    },
   })
 
   const confirmed = await db.upload.findFirst({

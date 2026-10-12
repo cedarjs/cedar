@@ -59,6 +59,7 @@ export interface UploadWhere {
 export interface UploadUpdateData {
   status?: UploadStatus
   size?: bigint
+  mimeType?: string
   storageKey?: string | null
 }
 
@@ -140,6 +141,16 @@ export interface StorageProvider {
 
   /** Read the whole object into memory. */
   read(key: string): Promise<Buffer>
+
+  /**
+   * Read `length` bytes starting at `offset` (fewer when the object ends
+   * first). Optional; checking a direct upload's content type falls back to
+   * `read()` when a provider does not implement it.
+   */
+  readRange?(
+    key: string,
+    range: { offset: number; length: number },
+  ): Promise<Buffer>
 
   /**
    * Stream the object. Optional; the serve route falls back to `read()` when
