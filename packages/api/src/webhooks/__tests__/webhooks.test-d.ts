@@ -11,7 +11,7 @@ import type {
   signPayload,
   VerifyOptions,
   SupportedVerifierTypes,
-} from './index.js'
+} from '../index.js'
 
 describe('webhooks type tests', () => {
   describe('VerifyOptions type', () => {
