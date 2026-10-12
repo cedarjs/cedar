@@ -103,13 +103,19 @@ export interface UploadPluginOptions {
    */
   inlineTypes?: string[]
   /**
-   * Checks each file's type against the upload profile's `allowedMimeTypes`
-   * by what its bytes are, using `acceptedContentType()`, instead of trusting
-   * the type the client claimed. A file the detector recognises is accepted
-   * when its detected type is allowed, and stored with that type. A file it
-   * doesn't recognise is accepted only when its claimed type is listed
-   * exactly (not through a wildcard) in `allowedMimeTypes`. Defaults to
-   * `false`, which checks the claimed type only.
+   * Checks each file's type by what its bytes are, using
+   * `acceptedContentType()`, instead of trusting the type the client
+   * claimed. On `POST {prefix}/fs`, a file the detector recognises is
+   * accepted when its detected type is in the profile's `allowedMimeTypes`;
+   * one it doesn't recognise is accepted on its claimed type, through a
+   * wildcard too, except that a claimed type the detector would have
+   * recognised is refused, and a type that can carry script (SVG, HTML,
+   * JavaScript, XML) must be listed exactly. Files are stored under the
+   * canonical spelling of the accepted type (`image/jpeg` for a claimed
+   * `image/jpg`). The S3 webhook checks objects' bytes against their
+   * declared type the same way `confirmUpload` does.
+   *
+   * Defaults to `true`. `false` checks the claimed type only.
    */
   verifyContentType?: boolean
 }
@@ -198,7 +204,7 @@ export async function cedarUploadsPlugin(
     s3Webhook,
     serveCacheControl = 'private, max-age=3600',
     inlineTypes = [],
-    verifyContentType = false,
+    verifyContentType = true,
   } = options
 
   const allowedInlineTypes = new Set(inlineTypes.map(normalizeMimeType))
@@ -457,6 +463,7 @@ export async function cedarUploadsPlugin(
           topicArn: s3Webhook.topicArn,
           fetchCertificate: s3Webhook.fetchCertificate,
           fetch: s3Webhook.fetch,
+          verifyContentType,
         })
 
         return reply.code(200).send(result)
