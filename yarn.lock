@@ -2315,6 +2315,7 @@ __metadata:
     split2: "npm:4.2.0"
     title-case: "npm:3.0.3"
     ts-toolbelt: "npm:9.6.0"
+    tstyche: "npm:5.0.2"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.11"
   peerDependencies:

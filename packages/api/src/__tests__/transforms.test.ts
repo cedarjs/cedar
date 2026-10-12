@@ -28,37 +28,36 @@ describe('requestToBaseEvent', () => {
 })
 
 describe('removeNulls utility', () => {
-  it('Changes nulls to undefined', () => {
-    const input = {
-      a: null,
+  it('changes top-level nulls to undefined', () => {
+    const myDate = new Date('2020-01-01')
+
+    const result = removeNulls({ a: null, b: 'b', c: 0, d: false, myDate })
+
+    expect(result).toStrictEqual({
+      a: undefined,
       b: 'b',
-      c: {
-        d: null, // nested null
-        e: 3,
-        f: {
-          g: null, // deeply nested null
-          h: [null, null], // array of nulls is also transformed
-          i: [1, 2, null, 4],
-        },
-      },
-      myDate: new Date('2020-01-01'),
-    }
+      c: 0,
+      d: false,
+      myDate,
+    })
+  })
+
+  it('leaves nested values, like Json field values, as they are', () => {
+    const meta = { d: null, e: [1, null] }
+
+    const result = removeNulls({ meta, list: [null] })
+
+    expect(result.meta).toBe(meta)
+    expect(result.meta).toStrictEqual({ d: null, e: [1, null] })
+    expect(result.list).toStrictEqual([null])
+  })
+
+  it('returns a copy and leaves the input unchanged', () => {
+    const input = { a: null, b: 'b' }
 
     const result = removeNulls(input)
 
-    expect(result).toEqual({
-      a: undefined,
-      b: 'b',
-      c: {
-        d: undefined,
-        e: 3,
-        f: {
-          g: undefined,
-          h: [undefined, undefined],
-          i: [1, 2, undefined, 4],
-        },
-      },
-      myDate: new Date('2020-01-01'),
-    })
+    expect(result).not.toBe(input)
+    expect(input).toStrictEqual({ a: null, b: 'b' })
   })
 })
