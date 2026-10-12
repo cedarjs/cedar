@@ -4,7 +4,11 @@ import { fileURLToPath } from 'node:url'
 
 import { describe, it, expect, beforeAll } from 'vitest'
 
-import { findChildScript, runSandboxedChild } from '@cedarjs/api/sandbox'
+import {
+  findChildScript,
+  runSandboxedChild,
+  sandboxedChildArgs,
+} from '@cedarjs/api/sandbox'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const fixtureDir = join(
@@ -92,9 +96,28 @@ describe('UD build against fixture', () => {
       )
     })
 
+    it("resolves the child's packages from the copies next to it", () => {
+      const script = findChildScript(join(udDir, 'chunks'), 'humanize.child')
+      const reads = sandboxedChildArgs({
+        script,
+        packages: ['humanize-string'],
+      })
+        .filter((arg) => arg.startsWith('--allow-fs-read='))
+        .map((arg) => arg.slice('--allow-fs-read='.length))
+        .slice(1)
+
+      const nodeModules = join(childrenDir, 'node_modules')
+      expect(reads).toEqual([
+        join(nodeModules, 'humanize-string'),
+        join(nodeModules, 'humanize-string/node_modules/decamelize'),
+        join(nodeModules, 'xregexp'),
+      ])
+    })
+
     it('runs the bundled child in the sandbox', async () => {
       const result = await runSandboxedChild({
         script: findChildScript(join(udDir, 'chunks'), 'humanize.child'),
+        packages: ['humanize-string'],
         input: Buffer.from('sandboxed_childScript'),
       })
 
@@ -110,6 +133,7 @@ describe('UD build against fixture', () => {
 
       const result = await runSandboxedChild({
         script,
+        packages: ['humanize-string'],
         input: Buffer.from('sandboxed_childScript'),
       })
 

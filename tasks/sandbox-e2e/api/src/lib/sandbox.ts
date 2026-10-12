@@ -41,6 +41,7 @@ export async function runSandboxChecks() {
 
   const thumbnail = await runSandboxedChild({
     script: findChildScript(import.meta.dirname, 'sandboxThumbnail.child'),
+    packages: ['sharp'],
     allowAddons: true,
     input: PNG,
     timeoutMs: 20_000,

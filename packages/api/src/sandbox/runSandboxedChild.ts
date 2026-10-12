@@ -3,11 +3,11 @@ import type { ChildProcess } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { nodeModulesReadPaths } from './nodeModulesReadPaths.js'
 import {
   noNetworkPreloadArg,
   permissionModelBlocksNetwork,
 } from './noNetworkPreload.js'
+import { sandboxPackagePaths } from './sandboxPackages.js'
 
 const MIB = 1024 * 1024
 
@@ -33,23 +33,21 @@ export interface SandboxedChildArgsOptions {
    */
   script: string
   /**
+   * The packages the child imports, by name (`['sharp']`). The child may
+   * read each one's folder and those of everything it depends on
+   * (dependencies, and installed optional and peer dependencies, which is
+   * where native packages keep their platform's binaries), resolved from
+   * the script's folder the way Node will resolve its imports. Nothing
+   * else in `node_modules` is readable. A package that isn't installed
+   * there fails the run (`'spawn-error'`) before a child starts.
+   */
+  packages?: string[]
+  /**
    * Files and directories (and everything under them) the child may read
-   * besides its own script and the `node_modules` folders (see
-   * `nodeModulesFrom`). Everything else on disk is unreadable to the
-   * child: `.env`, your app's source, uploaded files.
+   * besides its own script and its `packages`. Everything else on disk is
+   * unreadable to the child: `.env`, your app's source, uploaded files.
    */
   readable?: string[]
-  /**
-   * The child may read every `node_modules` folder in this folder and in
-   * each folder above it, so it can import packages: the same folders Node
-   * looks in for an import in a file there. Symlinked packages (workspace
-   * packages) are followed to their real folders. A path, a `file:` URL,
-   * or `false` for no `node_modules` at all.
-   *
-   * Default: the script's folder, where Node resolves the child's imports
-   * from.
-   */
-  nodeModulesFrom?: string | URL | false
   /**
    * Whether the child may load native addons (`.node` files), as a library
    * like sharp needs. Off by default. Node's permission model does not
@@ -67,8 +65,7 @@ export interface SandboxedChildArgsOptions {
 /**
  * The `node` command-line arguments for running `script` as a sandboxed
  * child process: Node's permission model (`--permission`) with read access
- * to `script`, the `node_modules` folders (see `nodeModulesFrom`) and
- * `readable` only, no network, a heap cap, and code generation from
+ * to `script`, its `packages` and `readable` only, no network, a heap cap, and code generation from
  * strings (`eval`, `new Function`) turned off. No file writes, no child
  * processes, no worker threads, no WASI, no inspector, and native addons
  * only with `allowAddons`.
@@ -90,8 +87,8 @@ export interface SandboxedChildArgsOptions {
  */
 export const sandboxedChildArgs = ({
   script,
+  packages = [],
   readable = [],
-  nodeModulesFrom,
   allowAddons = false,
   heapMb = DEFAULT_SANDBOX_HEAP_MB,
   args = [],
@@ -101,14 +98,10 @@ export const sandboxedChildArgs = ({
   }
 
   const realScript = fs.realpathSync(script)
-  const nodeModules =
-    nodeModulesFrom === false
-      ? []
-      : nodeModulesReadPaths(nodeModulesFrom ?? path.dirname(realScript))
   const readPaths = [
     ...new Set([
       realScript,
-      ...nodeModules,
+      ...sandboxPackagePaths(packages, realScript),
       // Node may read a file through the path it was given or through
       // its real path
       ...readable.flatMap((p) => [path.resolve(p), fs.realpathSync(p)]),
@@ -198,7 +191,7 @@ export type SandboxedChildResult =
  * - gets an **empty environment** — no `DATABASE_URL`, no API keys, none of
  *   your `.env`;
  * - runs under **Node's permission model**: it may read its own script,
- *   the `node_modules` folders it imports from and the `readable` paths,
+ *   the `packages` it imports and the `readable` paths,
  *   nothing else; it may not write files, spawn processes, start workers,
  *   or `eval`; it may load native addons only with `allowAddons`;
  * - has **no network**: no sockets, no `fetch`, no DNS (on Node 24 through
@@ -237,6 +230,7 @@ export type SandboxedChildResult =
  * const result = await limit(() =>
  *   runSandboxedChild({
  *     script: findChildScript(import.meta.dirname, 'resize.child'),
+ *     packages: ['sharp'],
  *     allowAddons: true,
  *     input: uploadedBytes,
  *     timeoutMs: 10_000,

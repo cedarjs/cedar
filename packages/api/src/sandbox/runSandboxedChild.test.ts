@@ -344,7 +344,6 @@ describe('runSandboxedChild', () => {
     try {
       const result = await probe(NETWORK_PROBE, {
         args: [String(port), socketPath, String(udpPort)],
-        nodeModulesFrom: false,
       })
 
       expect(result.ok ? '' : result.stderr).toBe('')
@@ -530,8 +529,7 @@ describe('sandboxedChildArgs', () => {
       '--permission',
       '--no-warnings',
       `--allow-fs-read=${path.join(real, 'child.mjs')}`,
-      // The node_modules next to the script, not the folder it's in
-      `--allow-fs-read=${path.join(real, 'node_modules')}`,
+      // Not the folder the script is in, nor the node_modules next to it
       `--allow-fs-read=${data}`,
       path.join(real, 'child.mjs'),
       'x',
@@ -549,11 +547,5 @@ describe('sandboxedChildArgs', () => {
         allowAddons: true,
       }),
     ).toContain('--allow-addons')
-    expect(
-      sandboxedChildArgs({
-        script: path.join(real, 'child.mjs'),
-        nodeModulesFrom: false,
-      }),
-    ).not.toContain(`--allow-fs-read=${path.join(real, 'node_modules')}`)
   })
 })
