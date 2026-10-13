@@ -240,7 +240,7 @@ const config: Config = {
               path: 'canary',
               banner: 'unreleased',
             },
-            '8.x': {
+            'redwood8.x': {
               label: 'Redwood 8.x',
             },
           },

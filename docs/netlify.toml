@@ -272,7 +272,17 @@ status = 301
 
 [[redirects]]
 from = "/docs/8.6/*"
-to = "/docs/8.x/:splat"
+to = "/docs/redwood8.x/:splat"
+status = 301
+
+# Transitional redirect: the legacy RedwoodJS 8.x docs moved to the
+# permanent /docs/redwood8.x/ URL to free up the /docs/8.x/ slug for
+# Cedar's own v8.x docs (collapsed at the v9 release). Gives external
+# links/search engines time to update. Remove this once Cedar publishes
+# its own docs at /docs/8.x/.
+[[redirects]]
+from = "/docs/8.x/*"
+to = "/docs/redwood8.x/:splat"
 status = 301
 
 [[redirects]]

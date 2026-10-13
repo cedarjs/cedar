@@ -347,6 +347,130 @@ describe('cedarUploadsPlugin', () => {
       expect(res.statusCode).toBe(400)
       expect(res.json().error.code).toBe('NOT_SUPPORTED')
     })
+
+    test('trusts the claimed type with verifyContentType: false', async () => {
+      const trusting = Fastify()
+      await trusting.register(cedarUploadsPlugin, {
+        tokenSecret: SECRET,
+        targets,
+        db,
+        verifyContentType: false,
+      })
+      await trusting.ready()
+
+      const body = multipart([
+        { filename: 'a.png', type: 'image/png', content: '<html></html>' },
+      ])
+
+      const res = await trusting.inject({
+        method: 'POST',
+        url: '/upload/fs',
+        headers: { ...body.headers, 'x-upload-token': tokenFor() },
+        payload: body.payload,
+      })
+
+      expect(res.statusCode).toBe(201)
+      expect(res.json().uploads[0].mimeType).toBe('image/png')
+
+      await trusting.close()
+    })
+
+    describe('checking content types (the default)', () => {
+      const PNG = Buffer.from([
+        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0x0d,
+      ])
+
+      const upload = (parts: Part[], token = tokenFor()) => {
+        const body = multipart(parts)
+
+        return app.inject({
+          method: 'POST',
+          url: '/upload/fs',
+          headers: { ...body.headers, 'x-upload-token': token },
+          payload: body.payload,
+        })
+      }
+
+      test('stores a file under the type its bytes are, whatever was claimed', async () => {
+        const res = await upload([
+          {
+            filename: 'photo',
+            type: 'application/octet-stream',
+            content: PNG,
+          },
+        ])
+
+        expect(res.statusCode).toBe(201)
+        const [stored] = res.json().uploads
+        expect(stored.mimeType).toBe('image/png')
+        expect(stored.storageKey).toMatch(/\.png$/)
+        expect(await prisma.upload.findFirst()).toMatchObject({
+          mimeType: 'image/png',
+        })
+      })
+
+      test('stores the canonical spelling of an aliased type', async () => {
+        const res = await upload(
+          [
+            {
+              filename: 'a.jpg',
+              type: 'image/jpg',
+              content: Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0x10]),
+            },
+          ],
+          tokenFor({ allowedMimeTypes: ['image/jpg'] }),
+        )
+
+        expect(res.statusCode).toBe(201)
+        expect(res.json().uploads[0].mimeType).toBe('image/jpeg')
+      })
+
+      test('rejects a file whose bytes are not an allowed type', async () => {
+        const res = await upload([
+          {
+            filename: 'a.png',
+            type: 'image/png',
+            content: '<html><script>alert(1)</script></html>',
+          },
+        ])
+
+        expect(res.statusCode).toBe(415)
+        expect(res.json().error.code).toBe('MIME_TYPE_NOT_ALLOWED')
+        expect(await prisma.upload.count()).toBe(0)
+      })
+
+      test('rejects a recognised type the profile does not allow', async () => {
+        const res = await upload([
+          { filename: 'a.pdf', type: 'image/png', content: '%PDF-1.7\n' },
+        ])
+
+        expect(res.statusCode).toBe(415)
+        expect(res.json().error.message).toContain("'application/pdf'")
+      })
+
+      test('admits an unrecognisable type through a wildcard, except types that can carry script', async () => {
+        // The default token allows `text/*`
+        const text = await upload([
+          { filename: 'a.txt', type: 'text/plain', content: 'hi' },
+        ])
+        expect(text.statusCode).toBe(201)
+        expect(text.json().uploads[0].mimeType).toBe('text/plain')
+
+        const html = {
+          filename: 'a.html',
+          type: 'text/html',
+          content: '<p>hi</p>',
+        }
+        expect((await upload([html])).statusCode).toBe(415)
+
+        const listed = await upload(
+          [html],
+          tokenFor({ allowedMimeTypes: ['text/*', 'text/html'] }),
+        )
+        expect(listed.statusCode).toBe(201)
+        expect(listed.json().uploads[0].mimeType).toBe('text/html')
+      })
+    })
   })
 
   describe('GET /upload/serve', () => {

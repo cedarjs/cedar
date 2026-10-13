@@ -51,9 +51,9 @@
   "dependencies": {
     "@cedarjs/testing": "workspace:*",
     "@rollup/pluginutils": "5.4.0",
-    "@storybook/addon-essentials": "8.6.14",
-    "@storybook/builder-vite": "8.6.18",
-    "@storybook/react": "8.6.18",
+    "@storybook/addon-essentials": "8.6.19",
+    "@storybook/builder-vite": "8.6.19",
+    "@storybook/react": "8.6.19",
     "empathic": "2.1.0",
     "magic-string": "0.30.21",
     "react-docgen": "7.1.1",
@@ -61,7 +61,7 @@
     "unplugin-auto-import": "19.3.0"
   },
   "devDependencies": {
-    "@storybook/types": "8.6.14",
+    "@storybook/types": "8.6.19",
     "@types/node": "24.10.4",
     "typescript": "5.9.3",
     "vite": "7.3.7",
@@ -72,7 +72,7 @@
     "@cedarjs/router": "workspace:*",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "storybook": "8.6.18"
+    "storybook": "8.6.19"
   },
   "engines": {
     "node": "24.x"

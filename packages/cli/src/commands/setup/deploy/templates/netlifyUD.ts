@@ -14,6 +14,9 @@ NODE_VERSION = "24"
 
 [functions]
 directory = "api/dist/ud"
+# Sandboxed child scripts (\`@cedarjs/api/sandbox\`) and the packages they
+# import. Nothing imports them, so Netlify's file tracing can't find them
+included_files = ["api/dist/ud/sandbox-children/**"]
 
 # To use Netlify Dev, install Netlify's CLI (\`netlify-cli\`) from NPM and use
 # \`netlify link\` to connect your local project to a site on Netlify. Then run

@@ -7,5 +7,8 @@ export default defineConfig({
     },
     setupFiles: ['./vitest.setup.mts'],
     logHeapUsage: true,
+    typecheck: {
+      enabled: true,
+    },
   },
 })

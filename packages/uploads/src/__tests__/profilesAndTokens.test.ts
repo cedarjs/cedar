@@ -77,6 +77,19 @@ describe('isMimeTypeAllowed', () => {
     expect(isMimeTypeAllowed(['image/*'], 'text/html')).toBe(false)
     expect(isMimeTypeAllowed(['image/*'], '')).toBe(false)
   })
+
+  test('treats aliases as the same type, whichever spelling is listed', () => {
+    expect(isMimeTypeAllowed(['image/jpeg'], 'image/jpg')).toBe(true)
+    expect(isMimeTypeAllowed(['image/jpg'], 'image/jpeg')).toBe(true)
+    expect(isMimeTypeAllowed(['video/x-matroska'], 'video/matroska')).toBe(true)
+    expect(isMimeTypeAllowed(['video/matroska'], 'Video/X-Matroska')).toBe(true)
+    expect(isMimeTypeAllowed(['audio/mp4'], 'audio/x-m4a')).toBe(true)
+    expect(isMimeTypeAllowed(['image/x-ms-bmp'], 'image/bmp')).toBe(true)
+    expect(isMimeTypeAllowed(['application/x-pdf'], 'application/pdf')).toBe(
+      true,
+    )
+    expect(isMimeTypeAllowed(['image/jpeg'], 'image/png')).toBe(false)
+  })
 })
 
 describe('upload tokens', () => {

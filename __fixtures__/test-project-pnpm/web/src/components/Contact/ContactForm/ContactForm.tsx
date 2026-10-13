@@ -1,4 +1,4 @@
-import type { EditContactById, UpdateContactInput } from 'types/graphql'
+import type { EditContactById, CreateContactInput } from 'types/graphql'
 
 import type { RWGqlError } from '@cedarjs/forms'
 import {
@@ -14,14 +14,14 @@ type FormContact = NonNullable<EditContactById['contact']>
 
 interface ContactFormProps {
   contact?: EditContactById['contact']
-  onSave: (data: UpdateContactInput, id?: FormContact['id']) => void
-  error: RWGqlError
+  onSave: (data: CreateContactInput) => void
+  error?: RWGqlError
   loading: boolean
 }
 
 const ContactForm = (props: ContactFormProps) => {
   const onSubmit = (data: FormContact) => {
-    props.onSave(data, props?.contact?.id)
+    props.onSave(data)
   }
 
   return (

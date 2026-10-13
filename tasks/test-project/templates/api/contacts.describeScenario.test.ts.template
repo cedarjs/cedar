@@ -58,6 +58,6 @@ describeScenario<StandardScenario>('contacts', (getScenario) => {
       }
     })
 
-    expect(contactCreatedInAboveTest.message).toEqual('Describe scenario works!')
+    expect(contactCreatedInAboveTest?.message).toEqual('Describe scenario works!')
   })
 })

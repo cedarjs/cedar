@@ -107,7 +107,7 @@ export const profiles = defineUploadProfiles({
 })
 ```
 
-`allowedMimeTypes` accepts exact types and `type/*` wildcards. `maxFiles` is enforced per token across every request that uses it, not just per batch. Profiles can also set `expiresIn` for their tokens; the default is five minutes. Per-user variation, like bigger limits for paying accounts, is plain code in the `requestUploadToken` resolver.
+`allowedMimeTypes` accepts exact types and `type/*` wildcards, and is checked against what each file's bytes are, not just the type the client claimed (see [Checking what a file really is](#checking-what-a-file-really-is)). Types that can carry script, like SVG and HTML, only match when listed exactly. `maxFiles` is enforced per token across every request that uses it, not just per batch. Profiles can also set `expiresIn` for their tokens; the default is five minutes. Per-user variation, like bigger limits for paying accounts, is plain code in the `requestUploadToken` resolver.
 
 ## The `Upload` model
 
@@ -221,6 +221,76 @@ const ThumbnailInput = () => {
 
 The client-side checks are for feedback only. The `uploadFile` service validates the MIME type and size again and `storeFile()` enforces the 1 MB default cap for database targets.
 
+## Checking what a file really is
+
+An upload's MIME type, and its filename, are whatever the client sent. Checking `allowedMimeTypes` against them keeps honest users on track, but anyone can upload an HTML page named `cat.png` and claimed to be `image/png`. So uploads check what each file's bytes are as well (the plugin's `verifyContentType`, on by default), and anything of your own that relies on a file's type for safety, like handing it to an image decoder or serving it inline, should do the same.
+
+`detectContentType()` tells what a file is from its bytes (its "magic bytes", also called content sniffing):
+
+```ts
+import { detectContentType } from '@cedarjs/uploads'
+
+detectContentType(bytes) // 'image/heic', 'video/mp4', … or null
+```
+
+It returns a MIME type, or `null` for anything it doesn't recognise. It never throws. Pass the whole file, or for a large file in object storage its first `DETECT_CONTENT_TYPE_BYTES` (4 KB) plus, when those start a ZIP, its last `DETECT_CONTENT_TYPE_TAIL_BYTES` (64 KB): `detectContentType(head, { tail })`.
+
+| Detected type                                         | Format                                  |
+| :---------------------------------------------------- | :-------------------------------------- |
+| `image/jpeg`, `image/png`, `image/gif`, `image/webp`  | JPEG, PNG, GIF, WebP                    |
+| `image/bmp`, `image/tiff`                             | BMP, TIFF                               |
+| `image/heic`, `image/heif`, `image/avif`              | HEIC (iPhone photos), other HEIF, AVIF  |
+| `image/heic-sequence`, `image/heif-sequence`          | HEIC/HEIF image sequences               |
+| `application/pdf`                                     | PDF                                     |
+| `video/mp4`, `audio/mp4`, `video/quicktime`           | MP4, M4A, QuickTime/MOV                 |
+| `video/webm`, `video/matroska`                        | WebM, Matroska (MKV), reported as video |
+| `application/vnd.oasis.opendocument.text` (and so on) | OpenDocument `.odt`, `.ods`, `.odp`     |
+| `application/vnd.openxmlformats-officedocument.…`     | Office `.docx`, `.xlsx`, `.pptx`        |
+| `application/vnd.ms-word.document.macroenabled.12` …  | Macro-enabled `.docm`, `.xlsm`, `.pptm` |
+
+Office files are ZIP archives, told apart from other ZIPs by their entries, which are listed in the archive's central directory at the end of the file. That's why a `.docx` needs the tail; from its head alone it is `null`. When the directory is bigger than the tail (a deck with hundreds of slides), `findZipCentralDirectory(tail)` says where it starts: read from there up to the tail, join the two, and pass that as `tail`. Uploads do this for you. Directories over `MAX_ZIP_DIRECTORY_BYTES` (4 MB, tens of thousands of entries) and ZIP64 archives aren't read, and are `null`.
+
+A file with macros is reported as the macro-enabled type, so a profile that allows `.docx` never admits a `.docm`. Templates and slide shows (`.dotx`, `.ppsx`, …) are reported as the document type. Old binary Office files (`.doc`, `.xls`) and other ZIPs aren't recognised. OpenDocument has no separate type for files with macros, so an `.odt` with Basic macros is reported as `.odt`.
+
+SVG is deliberately not detected: it is XML, can carry script, and shouldn't pass as a safe image. Text formats (CSV, JSON, HTML) have no reliable signature.
+
+### Spellings
+
+Some types have more than one name in use. Uploads treat these as the same type wherever types are compared, so a profile listing either spelling accepts both, and files are stored under the first (canonical) one:
+
+| Stored as         | Also accepted as                |
+| :---------------- | :------------------------------ |
+| `image/jpeg`      | `image/jpg`, `image/pjpeg`      |
+| `image/png`       | `image/x-png`                   |
+| `image/bmp`       | `image/x-ms-bmp`, `image/x-bmp` |
+| `application/pdf` | `application/x-pdf`             |
+| `video/matroska`  | `video/x-matroska`              |
+| `audio/mp4`       | `audio/x-m4a`                   |
+| `video/mp4`       | `video/x-m4v`                   |
+
+The table is exported as `CONTENT_TYPE_ALIASES`, and `canonicalContentType()` resolves a type to its stored spelling.
+
+### Accept rules
+
+`acceptedContentType(bytes, accept, claimedType)` checks a file against an accept list and returns the type to store it under, or `null` when the file isn't accepted:
+
+- When the bytes are recognised, the detected type must match the list, wildcards included, and is what's returned. The claimed type is ignored, so a HEIC photo a browser sent as `application/octet-stream` is accepted as `image/heic`.
+- When they aren't, the claimed type is accepted if it matches the list, wildcards included, so `['text/*']` admits CSV and `['*/*']` admits anything. Two exceptions:
+  - A claimed type the detector knows is refused. A real PNG would have been recognised, so bytes that weren't, claimed as `image/png`, are lying.
+  - A type that can carry script must be listed exactly: SVG (`image/svg+xml`), HTML and XHTML, JavaScript, and XML types (`text/xml`, `application/xml`, and anything ending in `+xml`). `['image/*']` never admits an SVG. List `image/svg+xml` if you want SVGs, and sanitize them before serving them inline. The list is exported as `SCRIPTABLE_CONTENT_TYPES`.
+
+Office types that can carry macros must be listed exactly too, whether detected from the bytes or claimed: the macro-enabled `.docm`, `.xlsm`, `.pptm` (and their template, add-in and slide-show variants), and the old binary `.doc`, `.xls` and `.ppt` (`application/msword`, `application/vnd.ms-excel`, `application/vnd.ms-powerpoint`). Macros run in Office on the machine of whoever downloads the file, so accepting them is a way to deliver malware to your other users, and a "documents" profile allowing `application/*` almost never means them. List the type if you do want it. The list is exported as `MACRO_CONTENT_TYPES`.
+
+A file a profile accepts as one type is never accepted as another because its bytes say so: a `.docx` is a ZIP, but a profile that allows only `application/zip` refuses it, because its bytes say it is a Word document.
+
+### Where uploads check
+
+- **`POST /upload/fs`** checks every file with `acceptedContentType()` against the profile and stores it under the type returned.
+- **Direct uploads to S3** never pass through your api, so the bytes are checked when the upload is settled, by `confirmUpload` or the S3 webhook (see [Confirming S3 uploads](#confirming-s3-uploads)). The object's head (and, for a ZIP, its tail) is read with a ranged GET and must be the type the client declared when it asked for the upload URL. That type was checked against the profile then, with the same exceptions as above. The bytes are checked against the declared type, not the profile, because the `Upload` row doesn't record which profile it was made for. A mismatch fails the upload and deletes the object.
+- **Database targets** go through the `uploadFile` service the setup command generates, which calls `acceptedContentType()` on the decoded bytes and stores the type it returns.
+
+Turn it off with `verifyContentType: false` on the plugin (which covers `/upload/fs` and the S3 webhook), on `confirmUpload()` and on `createPresignedUpload()`. Uploads then trust the claimed type, as they did before.
+
 ## Reading files back
 
 Store the `Upload` id on your model, then let a directive turn it into something a browser can load:
@@ -291,6 +361,8 @@ export const MonthlyReportJob = async ({ month }: { month: string }) => {
 ```
 
 Pass `userId` when the file belongs to someone, so the ownership checks that guard user uploads apply to it too, and `organizationId` in multi-tenant apps.
+
+When you make a file from an upload, a thumbnail of a photo or a preview of a PDF, decode the upload in a sandboxed child process with `@cedarjs/api/sandbox`, so a crafted file that exploits a JavaScript decoder (pdf.js, say) can't reach your secrets. A native decoder (sharp's libvips, with `allowAddons`) isn't limited by Node's file and network permissions: there the sandbox still keeps your environment variables out of the child, and full isolation needs an OS-level sandbox. See [Untrusted Files](security.md#untrusted-files).
 
 ## Deleting files
 
@@ -373,7 +445,7 @@ main()
 | `/upload/webhook/s3`    | POST   | S3 event notifications via SNS (only with the `s3Webhook` option) |
 | `/upload/health`        | GET    | Lists the configured targets                                      |
 
-`authenticate` resolves the requesting user from the request's auth header using the same decoder and `getCurrentUser` the GraphQL server uses. With it configured, the upload routes reject unauthenticated requests and tokens issued to someone else, so a leaked token can't be spent by anyone but its owner. The setup command wires it up when your app has auth. Without it, the token itself is the only identity on the route, which is only appropriate for apps with no auth at all. Other options: `prefix` (default `/upload`), `bodyLimit` (an outer ceiling, default 500 MB; the effective limit per request comes from the token), `serveCacheControl`, and `inlineTypes` (see [Reading files back](#reading-files-back)).
+`authenticate` resolves the requesting user from the request's auth header using the same decoder and `getCurrentUser` the GraphQL server uses. With it configured, the upload routes reject unauthenticated requests and tokens issued to someone else, so a leaked token can't be spent by anyone but its owner. The setup command wires it up when your app has auth. Without it, the token itself is the only identity on the route, which is only appropriate for apps with no auth at all. Other options: `prefix` (default `/upload`), `bodyLimit` (an outer ceiling, default 500 MB; the effective limit per request comes from the token), `serveCacheControl`, `inlineTypes` (see [Reading files back](#reading-files-back)), and `verifyContentType` (see [Checking what a file really is](#checking-what-a-file-really-is)).
 
 The FS route rejects early: a `Content-Length` beyond what the token allows is refused before any body is read, and files are aborted mid-stream once they pass the profile's `maxFileSize`. Each file's row is created before its bytes are written, so a crash in between leaves a pending row the cleanup job can find rather than an orphaned file.
 
@@ -381,7 +453,9 @@ The FS route rejects early: a `Content-Length` beyond what the token allows is r
 
 A presigned PUT goes straight to S3, so the api has to learn when it finished. Two paths:
 
-**Client confirmation (default).** After the PUT succeeds, `useS3Upload` calls the `confirmUpload` mutation. The service checks that the object exists, that the caller is the user the upload was issued to, and that the object's size matches the size the token authorized, then flips the row to `completed`. A presigned PUT cannot cap the body size, so this size check is what enforces `maxFileSize` on the S3 path: an oversized object is deleted and its row marked `failed`, and it is never served.
+**Client confirmation (default).** After the PUT succeeds, `useS3Upload` calls the `confirmUpload` mutation. The service checks that the object exists, that the caller is the user the upload was issued to, that the object's size matches the size the token authorized, and that its bytes are the type the client declared, then flips the row to `completed`. A presigned PUT cannot cap the body size or check what the bytes are, so these checks are what enforce `maxFileSize` and `allowedMimeTypes` on the S3 path: an object that fails them is deleted and its row marked `failed`, and it is never served.
+
+The type check reads only the object's first 4 KB (and its last 64 KB when it is a ZIP, plus the start of its central directory when that is bigger), with ranged GETs. The row is stored under the canonical spelling of the declared type. The object keeps the `Content-Type` it was uploaded with, which the presigned URL pins to the declared type, so S3 never serves it as something its bytes aren't. A browser that can't name a file's type declares `application/octet-stream`; on this path that only passes for a profile that allows it and for bytes the detector doesn't recognise, since the declared type, not the profile, is what the bytes are checked against: the `Upload` row has no profile name to check against.
 
 **S3 event notifications (recommended for production).** Configure the bucket to publish `s3:ObjectCreated:*` events to an SNS topic with an HTTPS subscription pointing at `/upload/webhook/s3`, and enable the route:
 
