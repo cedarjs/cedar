@@ -48,6 +48,11 @@ export interface UploadCreateData {
 
 export interface UploadWhere {
   id?: string | { in: string[] }
+  /**
+   * Only exists when the `Upload` model has the variant columns. A query
+   * that uses it must handle the error Prisma raises without them.
+   */
+  sourceId?: string
   target?: string
   status?: string | { in: string[] }
   storageKey?: string | null | { not: null }
@@ -210,4 +215,82 @@ export interface SerializedUpload {
   organizationId: string | null
   createdAt: string
   updatedAt: string
+}
+
+/**
+ * An `Upload` row in a schema that has the two variant columns, `sourceId`
+ * and `variant`. A derived file (a thumbnail, a preview, a video's poster
+ * frame) is an `Upload` row of its own whose `sourceId` points at the file
+ * it was made from and whose `variant` names what it is (`'thumb-164'`,
+ * `'preview'`). Original files have both set to `null`.
+ */
+export interface UploadVariantRecord extends UploadRecord {
+  sourceId: string | null
+  variant: string | null
+}
+
+export interface UploadVariantWhere {
+  id?: string | { in?: string[]; notIn?: string[] }
+  sourceId?: string | null | { in: string[] }
+  variant?: string | null
+  status?: string
+  tokenId?: string | null
+  storageKey?: string | null
+  createdAt?: { lt?: Date; lte?: Date }
+  updatedAt?: { lt?: Date }
+}
+
+export interface UploadVariantCreateData extends UploadCreateData {
+  sourceId: string
+  variant: string
+}
+
+export interface UploadVariantUpdateData {
+  status?: UploadStatus
+  target?: string
+  size?: bigint
+  storageKey?: string | null
+  filename?: string
+  mimeType?: string
+  // See `UploadCreateData.data` for why the buffer type is narrowed
+  data?: Uint8Array<ArrayBuffer> | null
+  tokenId?: string | null
+}
+
+/**
+ * The subset of Prisma's generated `Upload` delegate that derived files
+ * (variants) need. A generated client satisfies it once the `Upload` model
+ * has the `sourceId` and `variant` columns described in the uploads docs.
+ */
+export interface UploadVariantDelegate {
+  create(args: { data: UploadVariantCreateData }): Promise<UploadVariantRecord>
+  findUnique(args: {
+    where: { id: string }
+    omit?: { data?: boolean }
+  }): Promise<UploadVariantRecord | null>
+  findFirst(args: {
+    where: UploadVariantWhere
+    omit?: { data?: boolean }
+    orderBy?: { createdAt: 'asc' | 'desc' }
+  }): Promise<UploadVariantRecord | null>
+  findMany(args: {
+    where: UploadVariantWhere
+    omit?: { data?: boolean }
+    orderBy?: { createdAt: 'asc' | 'desc' }
+    take?: number
+  }): Promise<UploadVariantRecord[]>
+  updateMany(args: {
+    where: UploadVariantWhere
+    data: UploadVariantUpdateData
+  }): Promise<{ count: number }>
+  deleteMany(args: { where: UploadVariantWhere }): Promise<{ count: number }>
+}
+
+/**
+ * The subset of a Prisma client that derived files (variants) need. Any
+ * generated client whose `Upload` model has the `sourceId` and `variant`
+ * columns satisfies it.
+ */
+export interface UploadVariantDatabase {
+  upload: UploadVariantDelegate
 }
