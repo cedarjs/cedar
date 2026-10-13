@@ -197,6 +197,13 @@ export const runPauseCommand = async ({
   const result = await manager.resumeJob(id, { adapter })
   const nextRun = result.runAt?.toISOString() ?? '-'
 
+  if (result.wasPaused && !result.runAt) {
+    return (
+      `Resumed job ${id}. Its next run time is set when the current run ` +
+      'finishes'
+    )
+  }
+
   return result.wasPaused
     ? `Resumed job ${id}. Its next run is at ${nextRun}`
     : `Job ${id} isn't paused. Its next run is at ${nextRun}`

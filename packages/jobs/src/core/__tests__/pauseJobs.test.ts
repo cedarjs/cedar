@@ -196,6 +196,19 @@ describe('pauseJob()', () => {
     expect((await row(job.id))?.pausedAt).toBeNull()
   })
 
+  it('pauses a job that is resumed again while it is being paused', async () => {
+    const job = await later(EmailJob, ['a@example.com'], { wait: 60 })
+    // Another pause and resume land between this pause's read and its write
+    vi.spyOn(adapter.accessor, 'updateMany').mockResolvedValueOnce({
+      count: 0,
+    })
+
+    const result = await jobs.pauseJob(job.id)
+
+    expect(result).toEqual({ alreadyPaused: false, pausedAt: expect.any(Date) })
+    expect((await row(job.id))?.pausedAt).toEqual(result.pausedAt)
+  })
+
   it('pauses a job that is waiting to be retried', async () => {
     const job = await later(EmailJob, ['a@example.com'])
     const running = await findJob()
@@ -264,7 +277,11 @@ describe('resumeJob()', () => {
     const running = await runningCronJob()
     await jobs.pauseJob(running.id)
 
-    await jobs.resumeJob(running.id)
+    // The worker sets the next run time when the run finishes
+    expect(await jobs.resumeJob(running.id)).toEqual({
+      wasPaused: true,
+      runAt: null,
+    })
     expect((await row(running.id))?.attempts).toBe(1)
 
     const runAt = nextCronRunAt(NIGHTLY)
@@ -292,6 +309,17 @@ describe('resumeJob()', () => {
       runAt,
       attempts: 0,
     })
+  })
+
+  it("doesn't resume a one-off job that completes while it's being resumed", async () => {
+    const job = await later(EmailJob, ['a@example.com'])
+    const running = await findJob()
+    await jobs.pauseJob(job.id)
+    afterNextRead(() => adapter.success({ job: running!, runAt: undefined }))
+
+    await expect(jobs.resumeJob(job.id)).rejects.toThrow(
+      new JobNotActiveError(job.id, 'completed'),
+    )
   })
 
   it('changes nothing for a job that is not paused', async () => {

@@ -545,10 +545,15 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
     })
 
     if (count === 0) {
-      // Paused, completed, failed or removed since it was read
+      // Paused, completed, failed or removed since it was read. A job that
+      // was paused and resumed again in that time is paused again
       const current = await this.#findActive(jobId)
 
-      return { alreadyPaused: true, pausedAt: current.pausedAt ?? pausedAt }
+      if (!current.pausedAt) {
+        return this.pause({ jobId })
+      }
+
+      return { alreadyPaused: true, pausedAt: current.pausedAt }
     }
 
     return { alreadyPaused: false, pausedAt }
@@ -561,7 +566,8 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
    * job keeps its `attempts` and `runAt`: `attempts` identifies the run's
    * claim (see `#claimedBy()`), and the worker sets the next run time when
    * the run finishes, so a run that finishes while this write is under way
-   * keeps the run time it set. A one-off job keeps its `runAt`
+   * keeps the run time it set, and the result's `runAt` is `null`. A one-off
+   * job keeps its `runAt`
    */
   override async resume({ jobId }: ResumeOptions): Promise<ResumeResult> {
     const row = await this.#findActive(jobId)
@@ -570,19 +576,30 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
       return { wasPaused: false, runAt: row.runAt }
     }
 
-    const runAt = row.cron ? nextCronRunAt(row.cron) : row.runAt
+    const running = !!row.lockedAt
+    const runAt = !row.cron
+      ? row.runAt
+      : running
+        ? null
+        : nextCronRunAt(row.cron)
     // Workers don't claim a paused job, so a job that isn't locked now stays
-    // unlocked until this write lands
+    // unlocked until this write lands. `runAt` is null once a one-off job
+    // completes
     const { count } = await this.accessor.updateMany({
-      where: { id: row.id, pausedAt: { not: null }, failedAt: null },
+      where: {
+        id: row.id,
+        pausedAt: { not: null },
+        failedAt: null,
+        runAt: { not: null },
+      },
       data: {
         pausedAt: null,
-        ...(row.cron && !row.lockedAt ? { runAt, attempts: 0 } : {}),
+        ...(row.cron && !running ? { runAt, attempts: 0 } : {}),
       },
     })
 
     if (count === 0) {
-      // Resumed, failed or removed by someone else since it was read
+      // Resumed, completed, failed or removed by someone else since it was read
       const current = await this.#findActive(jobId)
 
       return { wasPaused: false, runAt: current.runAt }

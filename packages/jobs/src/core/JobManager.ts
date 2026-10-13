@@ -163,10 +163,13 @@ export class JobManager<
 
     const result = await adapter.resume({ jobId })
 
+    const nextRun = result.runAt
+      ? `next run at ${result.runAt.toISOString()}`
+      : 'next run time set when the current run finishes'
+
     this.logger.info(
       result.wasPaused
-        ? `[CedarJS Jobs] Resumed job ${jobId}, next run at ` +
-            `${result.runAt?.toISOString()}`
+        ? `[CedarJS Jobs] Resumed job ${jobId}, ${nextRun}`
         : `[CedarJS Jobs] Job ${jobId} isn't paused`,
     )
 

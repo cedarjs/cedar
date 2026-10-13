@@ -76,7 +76,10 @@ export interface ResumeOptions {
 export interface ResumeResult {
   /** `false` when the job wasn't paused, and nothing changed */
   wasPaused: boolean
-  /** When the job runs next */
+  /**
+   * When the job runs next. `null` for a recurring job with a run in
+   * progress: the worker sets its next run time when that run finishes
+   */
   runAt: Date | null
 }
 
