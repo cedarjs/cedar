@@ -520,15 +520,6 @@ A common task for a background job is that it does something on a schedule: run
 reports every night at midnight, check for abandoned carts every 15 minutes,
 that sort of thing. We call these recurring jobs.
 
-There are two ways to set one up:
-
-- [Declare its schedules](#declaring-schedules) on the job, for recurring work
-  that's part of your app, like nightly reports or cleanup. This is what you
-  want for almost every recurring job.
-- [Schedule it at runtime](#scheduling-recurring-jobs-at-runtime) with
-  `later()`, for schedules that come from your data, like a digest each customer
-  gets at a time they pick.
-
 ### Declaring Schedules
 
 Declare when a job runs with `schedules`, next to the rest of the job:
@@ -572,32 +563,44 @@ Some details worth knowing:
 - Declared schedules need an adapter that implements `syncSchedules()`, like the `PrismaAdapter`, and the [`key` column](#installation). If your `JobManager` has more than one adapter, set `scheduleAdapter` to the one that stores them.
 - A declared schedule that fails `maxAttempts` times in a row, or that you cancel with `later.cancel()`, stops until the next time the workers start, which recreates it.
 
-If you schedule recurring jobs with a script that calls `later(job, args, { cron })`, declare them with `schedules` instead and delete the rows that script created (they have a `cron` and no `key`) once, for example with `db.backgroundJob.deleteMany({ where: { cron: { not: null }, key: null } })` in `yarn cedar console`.
+### Schedules That Depend on Your Data
 
-### Scheduling Recurring Jobs at Runtime
+Some schedules come from your data rather than your code, like a digest that each customer gets at a time they pick. Store that schedule with the data, and declare one job that runs often and queues the work that's due:
 
-Declared schedules are fixed in your code. When a schedule depends on your data instead, pass a `cron` schedule to `later()` from your app code, and give it a [`key`](#unique-jobs) that identifies it:
-
-```js title="api/src/services/digests/digests.js"
+```js title="api/src/jobs/QueueDigestsJob/QueueDigestsJob.js"
 import { DigestJob } from 'src/jobs/DigestJob/DigestJob'
 import { db } from 'src/lib/db'
-import { later } from 'src/lib/jobs'
+import { jobs, later } from 'src/lib/jobs'
 
-export const enableDigest = async ({ customerId, cron }) => {
-  const job = await later(DigestJob, [customerId], {
-    cron,
-    key: `digest:${customerId}`,
-  })
+export const QueueDigestsJob = jobs.createJob({
+  queue: 'default',
+  schedules: [{ cron: '*/15 * * * *' }],
+  perform: async () => {
+    const due = await db.customer.findMany({
+      where: { nextDigestAt: { lte: new Date() } },
+      select: { id: true },
+    })
 
-  // Hold on to the id to stop the digest later with `later.cancel(id)`
-  return db.customer.update({
-    where: { id: customerId },
-    data: { digestJobId: job.id },
-  })
-}
+    for (const customer of due) {
+      await later(DigestJob, [customer.id], { key: `digest:${customer.id}` })
+    }
+  },
+})
 ```
 
-The key makes the call safe to repeat: while the schedule is active, calling `later()` again with the same key adds nothing and returns the job that's already scheduled, with `alreadyQueued: true`. To change the schedule, cancel the job and schedule it again. A job scheduled like this isn't synced with your code. It runs until it fails for good or you [cancel it](#cancelling-jobs).
+`DigestJob` sends the digest and sets the customer's `nextDigestAt` to the next time it's due. Changing when a customer gets their digest is an update to that column, and turning it off is setting it to `null`. The [`key`](#unique-jobs) makes sure a customer's digest isn't queued again while one is still waiting to run.
+
+### Scheduling a Recurring Job with `later()`
+
+`later()` also takes a `cron` schedule, which stores a recurring job directly:
+
+```js
+await later(NightlyReportJob, { cron: '0 0 * * *' })
+```
+
+A job scheduled like this isn't synced with your code: it runs until it fails for good or you [cancel it](#cancelling-jobs), and calling `later()` again adds a second one unless you give it a [`key`](#unique-jobs).
+
+If you schedule recurring jobs with a script that calls `later(job, args, { cron })`, declare them with `schedules` instead and delete the rows that script created (they have a `cron` and no `key`) once, for example with `db.backgroundJob.deleteMany({ where: { cron: { not: null }, key: null } })` in `yarn cedar console`.
 
 ### How Recurring Jobs Run
 
@@ -614,11 +617,11 @@ a single run: every successful run resets `attempts` to 0. If a run fails
 permanently failed like any other job, its schedule stops, and the worker logs
 an error saying so. To restart the schedule, fix the problem and restart the
 workers (for a declared schedule) or call `later()` with the `cron` schedule
-again (for one scheduled at runtime).
+again.
 
 The `cron` schedule is evaluated in the local time zone of the process doing the
 scheduling: the job worker for declared schedules, the process calling `later()`
-for the first run of a job scheduled at runtime, and the job worker for every run
+for the first run of a job it schedules, and the job worker for every run
 after that. Run them with the same time zone (for example by setting `TZ=UTC`)
 so the job keeps running at the same time of day.
 
