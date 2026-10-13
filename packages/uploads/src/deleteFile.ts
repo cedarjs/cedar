@@ -34,6 +34,25 @@ function isPrismaError(e: unknown, code: string): boolean {
   return typeof e === 'object' && e !== null && 'code' in e && e.code === code
 }
 
+// A schema without the variant columns rejects the query, and then there are
+// no variants
+function hasVariantRows(db: UploadDatabase, id: string): Promise<boolean> {
+  return db.upload.count({ where: { sourceId: id } }).then(
+    (count) => count > 0,
+    () => false,
+  )
+}
+
+function hasVariantsError(id: string, cause?: unknown) {
+  return new UploadError(
+    'HAS_VARIANTS',
+    `Upload '${id}' has derived files (variants), so its row cannot be ` +
+      'deleted on its own. Pass `targets` to deleteFile() to delete the ' +
+      'variants with it, or call deleteVariants() first.',
+    cause,
+  )
+}
+
 /**
  * Deletes a stored file: bytes first, then the `Upload` row. Bytes-first
  * ordering means a crash between the two steps leaves a row whose object is
@@ -50,6 +69,12 @@ export async function deleteFile(
   options: DeleteFileOptions,
 ): Promise<void> {
   const { upload } = options
+
+  // Checked before anything is deleted, so a refused delete leaves the file
+  // in place. The catch below handles a variant made after this check
+  if (!options.targets && (await hasVariantRows(options.db, upload.id))) {
+    throw hasVariantsError(upload.id)
+  }
 
   if (upload.storageKey) {
     await target.delete(upload.storageKey)
@@ -76,26 +101,12 @@ export async function deleteFile(
       }
 
       if (!options.targets) {
-        // Another model referencing the upload raises the same error, and
-        // a schema without the variant columns rejects the query
-        const hasVariants = await options.db.upload
-          .count({ where: { sourceId: upload.id } })
-          .then(
-            (count) => count > 0,
-            () => false,
-          )
-
-        if (!hasVariants) {
+        // Another model referencing the upload raises the same error
+        if (!(await hasVariantRows(options.db, upload.id))) {
           throw e
         }
 
-        throw new UploadError(
-          'HAS_VARIANTS',
-          `Upload '${upload.id}' has derived files (variants), so its row ` +
-            'cannot be deleted on its own. Pass `targets` to deleteFile() to ' +
-            'delete the variants with it, or call deleteVariants() first.',
-          e,
-        )
+        throw hasVariantsError(upload.id, e)
       }
 
       if (round >= MAX_VARIANT_ROUNDS) {

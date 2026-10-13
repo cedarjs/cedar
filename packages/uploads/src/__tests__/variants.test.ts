@@ -446,6 +446,34 @@ describe('defineUploadVariants', () => {
       'database down',
     )
     expect(targets.thumbs.objects.size).toBe(0)
+    // The claim is released, so the next caller makes the variant instead
+    // of waiting for `claimTimeout`
+    expect(await prisma.upload.count({ where: { sourceId: source.id } })).toBe(
+      0,
+    )
+  })
+
+  test('rejects a variant target that is not in `targets`', () => {
+    const targets = makeTargets()
+    const unregistered = defineStorageTargets({
+      thumbs: createMemoryProvider(),
+    })
+
+    expect(() =>
+      defineUploadVariants({
+        db,
+        targets,
+        target: targets.thumbs,
+        variants: {
+          small: { generate: upperCase('s'), target: unregistered.thumbs },
+        },
+      }),
+    ).toThrow(
+      expect.objectContaining({
+        code: 'CONFIGURATION',
+        message: expect.stringContaining("Variant 'small'"),
+      }),
+    )
   })
 
   test('a retry stores the target it wrote to', async () => {
@@ -757,6 +785,8 @@ describe('deleting a source', () => {
       code: 'HAS_VARIANTS',
       message: expect.stringContaining('Pass `targets` to deleteFile()'),
     })
+    // The refused delete leaves the source's file in place
+    expect(targets.files.objects.has(source.storageKey!)).toBe(true)
 
     // Calling again with targets finishes the job
     await deleteFile(targets.files, { db, upload: source, targets })

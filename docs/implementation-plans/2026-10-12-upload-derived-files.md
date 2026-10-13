@@ -192,8 +192,9 @@ Why this shape:
   real owners: a variant's owner is its source.
 - **The unique index is the lock.** `(sourceId, variant)` lets exactly one
   process create the pending row that claims a variant. Original uploads have
-  `NULL` in both columns, and SQL unique indexes treat `NULL`s as distinct, so
-  originals never collide.
+  `NULL` in both columns, and PostgreSQL, MySQL and SQLite unique indexes
+  treat `NULL`s as distinct, so originals never collide. SQL Server treats
+  them as equal and needs a filtered index (`WHERE sourceId IS NOT NULL`).
 - **`onDelete: Restrict`, not `Cascade`.** A cascade would delete the variant
   rows inside the database and leave their bytes in storage with nothing
   referencing them: exactly the silent orphaning the uploads design avoids.

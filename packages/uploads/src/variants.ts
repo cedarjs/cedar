@@ -383,11 +383,22 @@ export function defineUploadVariants<Name extends string>(
     }
 
     const definition = typeof value === 'function' ? { generate: value } : value
+    const target = definition.target ?? defaultTarget
 
-    definitions.set(name, {
-      generate: definition.generate,
-      target: definition.target ?? defaultTarget,
-    })
+    // Variant rows record their target by name, and reads and deletes look
+    // it up in `targets`, so a target missing from there would leave files
+    // that can't be read or deleted
+    if (
+      !Object.hasOwn(targets, target.name) ||
+      targets[target.name] !== target
+    ) {
+      throw new UploadError(
+        'CONFIGURATION',
+        `Variant '${name}' uses a storage target that isn't in \`targets\`.`,
+      )
+    }
+
+    definitions.set(name, { generate: definition.generate, target })
   }
 
   const names = [...definitions.keys()] as Name[]
@@ -614,6 +625,10 @@ export function defineUploadVariants<Name extends string>(
         if (storageKey) {
           await target.delete(storageKey).catch(() => undefined)
         }
+
+        // Releases the claim, so other callers don't wait for
+        // `claimTimeout` on a variant nobody is making
+        await db.upload.deleteMany({ where: ours }).catch(() => undefined)
 
         throw e
       })

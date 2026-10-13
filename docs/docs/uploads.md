@@ -426,7 +426,7 @@ model Upload {
 }
 ```
 
-The unique index is what lets only one process make a given variant. `onDelete: Restrict` means a source row can't be deleted while it still has variants, so their files can't be orphaned by accident; see [deleting](#deleting-a-source-and-its-variants) below.
+The unique index is what lets only one process make a given variant. Original uploads have `NULL` in both columns, which PostgreSQL, MySQL and SQLite treat as distinct in a unique index. SQL Server treats `NULL`s as equal, so there you need a filtered unique index (`WHERE sourceId IS NOT NULL`) in a manual migration instead of `@@unique`. `onDelete: Restrict` means a source row can't be deleted while it still has variants, so their files can't be orphaned by accident; see [deleting](#deleting-a-source-and-its-variants) below.
 
 Your own models keep referencing only the original upload. They need no columns for thumbnails, no "thumbnail failed at" timestamp, and no relation per variant.
 
