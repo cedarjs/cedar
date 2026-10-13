@@ -21,4 +21,10 @@ model Upload {
   organizationId String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  sourceId       String?
+  variant        String?
+  source         Upload?  @relation("UploadVariants", fields: [sourceId], references: [id], onDelete: Restrict)
+  variants       Upload[] @relation("UploadVariants")
+
+  @@unique([sourceId, variant])
 }

@@ -41,6 +41,17 @@ export { storeFile } from './storeFile.js'
 export type { StoreFileOptions } from './storeFile.js'
 export { deleteFile } from './deleteFile.js'
 export type { DeleteFileOptions } from './deleteFile.js'
+export { defineUploadVariants, deleteVariants } from './variants.js'
+export type {
+  DefineUploadVariantsOptions,
+  RegenerateVariantsResult,
+  UploadVariantContext,
+  UploadVariantDefinition,
+  UploadVariantFile,
+  UploadVariantGenerator,
+  UploadVariants,
+  UploadVariantSource,
+} from './variants.js'
 export { cleanupStaleUploads } from './cleanupStaleUploads.js'
 export type {
   CleanupStaleUploadsOptions,

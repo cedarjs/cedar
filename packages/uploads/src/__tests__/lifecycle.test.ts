@@ -167,6 +167,7 @@ describe('cleanupStaleUploads', () => {
         size: 1n,
         storageKey: 'landed.txt',
         createdAt: old,
+        updatedAt: old,
       },
     })
     targets.files.objects.set('landed.txt', Buffer.from('x'))
@@ -180,6 +181,7 @@ describe('cleanupStaleUploads', () => {
         size: 1n,
         storageKey: 'never-landed.txt',
         createdAt: old,
+        updatedAt: old,
       },
     })
 
@@ -262,6 +264,7 @@ describe('cleanupStaleUploads', () => {
         size: 1n,
         storageKey: 'ancient.txt',
         createdAt: ancient,
+        updatedAt: ancient,
       },
     })
     targets.files.objects.set('ancient.txt', Buffer.from('x'))
@@ -301,6 +304,7 @@ describe('cleanupStaleUploads', () => {
         size: 1n,
         storageKey: 'orphan.txt',
         createdAt: old,
+        updatedAt: old,
       },
     })
     await prisma.upload.create({
@@ -312,6 +316,7 @@ describe('cleanupStaleUploads', () => {
         size: 1n,
         storageKey: 'fine.txt',
         createdAt: old,
+        updatedAt: old,
       },
     })
     targets.files.objects.set('fine.txt', Buffer.from('x'))

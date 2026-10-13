@@ -1,13 +1,55 @@
-import type { StorageProvider, UploadDatabase, UploadRecord } from './types.js'
+import { UploadError } from './errors.js'
+import type {
+  StorageProvider,
+  StorageTargets,
+  UploadDatabase,
+  UploadRecord,
+  UploadVariantDatabase,
+} from './types.js'
+import { deleteVariants } from './variants.js'
 
-export interface DeleteFileOptions {
-  db: UploadDatabase
-  upload: Pick<UploadRecord, 'id' | 'storageKey'>
+export type DeleteFileOptions =
+  | {
+      db: UploadDatabase
+      upload: Pick<UploadRecord, 'id' | 'storageKey'>
+      targets?: undefined
+    }
+  | {
+      db: UploadDatabase & UploadVariantDatabase
+      upload: Pick<UploadRecord, 'id' | 'storageKey'>
+      /**
+       * Every configured storage target. When given, the upload's derived
+       * files (variants: thumbnails, previews) are deleted first, from
+       * whichever targets hold them. Required for an upload that has
+       * variants.
+       */
+      targets: StorageTargets
+    }
+
+// A concurrent request can claim a new variant between deleting the
+// variants and deleting the source; this many rounds settle that
+const MAX_VARIANT_ROUNDS = 3
+
+function isPrismaError(e: unknown, code: string): boolean {
+  return typeof e === 'object' && e !== null && 'code' in e && e.code === code
 }
 
-function isRecordNotFound(e: unknown): boolean {
-  return (
-    typeof e === 'object' && e !== null && 'code' in e && e.code === 'P2025'
+// A schema without the variant columns rejects the query, and then there are
+// no variants
+function hasVariantRows(db: UploadDatabase, id: string): Promise<boolean> {
+  return db.upload.count({ where: { sourceId: id } }).then(
+    (count) => count > 0,
+    () => false,
+  )
+}
+
+function hasVariantsError(id: string, cause?: unknown) {
+  return new UploadError(
+    'HAS_VARIANTS',
+    `Upload '${id}' has derived files (variants), so its row cannot be ` +
+      'deleted on its own. Pass `targets` to deleteFile() to delete the ' +
+      'variants with it, or call deleteVariants() first.',
+    cause,
   )
 }
 
@@ -17,20 +59,59 @@ function isRecordNotFound(e: unknown): boolean {
  * gone, which the app can see and fix by calling again, whereas the reverse
  * order would leave an unreachable object nothing references. A missing
  * object or row is tolerated, so the call is idempotent.
+ *
+ * Pass `targets` to delete the upload's derived files (variants) with it.
+ * Without it, deleting an upload that has variants throws an `UploadError`
+ * with code `HAS_VARIANTS`, because the variant rows reference their source.
  */
 export async function deleteFile(
   target: StorageProvider,
-  { db, upload }: DeleteFileOptions,
+  options: DeleteFileOptions,
 ): Promise<void> {
+  const { upload } = options
+
+  // Checked before anything is deleted, so a refused delete leaves the file
+  // in place. The catch below handles a variant made after this check
+  if (!options.targets && (await hasVariantRows(options.db, upload.id))) {
+    throw hasVariantsError(upload.id)
+  }
+
   if (upload.storageKey) {
     await target.delete(upload.storageKey)
   }
 
-  try {
-    await db.upload.delete({ where: { id: upload.id } })
-  } catch (e) {
-    if (!isRecordNotFound(e)) {
-      throw e
+  for (let round = 1; ; round++) {
+    if (options.targets) {
+      await deleteVariants(upload, {
+        db: options.db,
+        targets: options.targets,
+      })
+    }
+
+    try {
+      await options.db.upload.delete({ where: { id: upload.id } })
+      return
+    } catch (e) {
+      if (isPrismaError(e, 'P2025')) {
+        return
+      }
+
+      if (!isPrismaError(e, 'P2003')) {
+        throw e
+      }
+
+      if (!options.targets) {
+        // Another model referencing the upload raises the same error
+        if (!(await hasVariantRows(options.db, upload.id))) {
+          throw e
+        }
+
+        throw hasVariantsError(upload.id, e)
+      }
+
+      if (round >= MAX_VARIANT_ROUNDS) {
+        throw e
+      }
     }
   }
 }
