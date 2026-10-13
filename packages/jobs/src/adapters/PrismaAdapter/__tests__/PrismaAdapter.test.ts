@@ -199,6 +199,29 @@ describe('find()', () => {
     })
   })
 
+  it('returns undefined if the locked job was removed before it was read', async () => {
+    const mockJob = {
+      id: 1,
+      handler: JSON.stringify({
+        name: 'TestJob',
+        path: 'TestJob/TestJob',
+        args: [],
+      }),
+    }
+    vi.spyOn(mockDb.backgroundJob, 'findFirst')
+      .mockReturnValueOnce(mockJob)
+      .mockReturnValueOnce(null)
+    vi.spyOn(mockDb.backgroundJob, 'updateMany').mockReturnValue({ count: 1 })
+    const adapter = new PrismaAdapter({ db: mockDb, logger: mockLogger })
+    const job = await adapter.find({
+      processName: 'test',
+      maxRuntime: 1000,
+      queues: ['default'],
+    })
+
+    expect(job).toBeUndefined()
+  })
+
   it('increments the `attempts` count on the found job', async () => {
     const mockJob = {
       id: 1,

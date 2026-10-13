@@ -369,10 +369,15 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
         },
       })
 
-      // Assuming the update worked, return the full details of the job
+      // Assuming the update worked, return the full details of the job. A
+      // schedule sync in another process can remove an undeclared schedule's
+      // row right after it's locked, and then there's no job to return
       if (count) {
         const data = await this.accessor.findFirst({ where: { id: job.id } })
-        return rowToJob(data)
+
+        if (data) {
+          return rowToJob(data)
+        }
       }
     }
 

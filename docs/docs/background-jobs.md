@@ -164,7 +164,7 @@ model BackgroundJob {
 
 :::info[Adding the `key` column to an existing app]
 
-The `key` column stores the keys of [unique jobs](#unique-jobs) and of [declared schedules](#recurring-jobs). Apps that set up jobs before the column existed keep working without it, until they schedule a job with a `key` or a job declares `schedules`, which throw a `KeyColumnMissingError` until it's there. To add it, add `key String? @unique` to your `BackgroundJob` model and run `yarn cedar prisma migrate dev`. The column is nullable, so existing rows don't need a value.
+The `key` column stores the keys of [unique jobs](#unique-jobs) and of [declared schedules](#recurring-jobs). Apps that set up jobs before the column existed keep working without it, until they schedule a job with a `key` or a job declares `schedules`. Until it's there, a keyed `later()` call rejects with a `SchedulingError` whose `originalError` is a `KeyColumnMissingError`, and syncing declared schedules throws a `KeyColumnMissingError`. To add it, add `key String? @unique` to your `BackgroundJob` model and run `yarn cedar prisma migrate dev`. The column is nullable, so existing rows don't need a value.
 
 :::
 
