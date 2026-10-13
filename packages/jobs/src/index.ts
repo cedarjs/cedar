@@ -9,8 +9,14 @@ export type { JobExecutionContext } from './core/executionContext.js'
 
 export { BaseAdapter } from './adapters/BaseAdapter/BaseAdapter.js'
 export { PrismaAdapter } from './adapters/PrismaAdapter/PrismaAdapter.js'
-export type { PrismaJob } from './adapters/PrismaAdapter/PrismaAdapter.js'
-export { PausedAtColumnMissingError } from './adapters/PrismaAdapter/errors.js'
+export type {
+  PrismaJob,
+  ScheduledPrismaJob,
+} from './adapters/PrismaAdapter/PrismaAdapter.js'
+export {
+  KeyColumnMissingError,
+  PausedAtColumnMissingError,
+} from './adapters/PrismaAdapter/errors.js'
 export type {
   ListedJob,
   ListJobsOptions,
@@ -18,9 +24,18 @@ export type {
   PauseResult,
   ResumeOptions,
   ResumeResult,
+  ScheduleDefinition,
+  SyncSchedulesOptions,
+  SyncSchedulesResult,
 } from './adapters/BaseAdapter/BaseAdapter.js'
 
-export { loadJobsManager, setJobLoaderOverrides } from './loaders.js'
+export {
+  isJobModuleFile,
+  jobsFromModules,
+  loadAllJobs,
+  loadJobsManager,
+  setJobLoaderOverrides,
+} from './loaders.js'
 export type { JobLoaderOverrides } from './loaders.js'
 
 export type * from './types.js'

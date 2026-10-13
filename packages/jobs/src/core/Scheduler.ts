@@ -7,12 +7,15 @@ import {
   DEFAULT_PRIORITY,
   DEFAULT_WAIT,
   DEFAULT_WAIT_UNTIL,
+  RESERVED_KEY_PREFIX,
 } from '../consts.js'
 import {
   AdapterNotConfiguredError,
   CancelNotImplementedError,
   QueueNotDefinedError,
+  ReservedKeyError,
   SchedulingError,
+  UniqueKeysNotSupportedError,
 } from '../errors.js'
 import type {
   BasicLogger,
@@ -64,6 +67,7 @@ export class Scheduler<TAdapter extends BaseAdapter> {
     const wait = options?.wait ?? DEFAULT_WAIT
     const waitUntil = options?.waitUntil ?? DEFAULT_WAIT_UNTIL
     const cron = options?.cron
+    const key = options?.key
 
     if (!queue) {
       throw new QueueNotDefinedError()
@@ -73,6 +77,11 @@ export class Scheduler<TAdapter extends BaseAdapter> {
       throw new Error(
         'Cannot schedule a cron job with wait or waitUntil options',
       )
+    }
+
+    // Case-insensitive, like the `key` column can be (for example in MySQL)
+    if (key?.toLowerCase().startsWith(RESERVED_KEY_PREFIX)) {
+      throw new ReservedKeyError(key, RESERVED_KEY_PREFIX)
     }
 
     return {
@@ -87,6 +96,9 @@ export class Scheduler<TAdapter extends BaseAdapter> {
         : this.computeRunAt({ wait, waitUntil }),
       queue,
       priority,
+      // Only set when given, so adapters without unique key support never
+      // see the property
+      ...(key !== undefined ? { key } : {}),
     }
   }
 
@@ -104,6 +116,10 @@ export class Scheduler<TAdapter extends BaseAdapter> {
       args,
       options,
     })
+
+    if (payload.key !== undefined && !this.adapter.supportsUniqueKeys) {
+      throw new UniqueKeysNotSupportedError()
+    }
 
     this.logger.info(payload, `[CedarJS Jobs] Scheduling ${job.name}`)
 
