@@ -111,6 +111,11 @@ function step3setupUniversalDeployAndVercel() {
   log('Setting up Vercel deploy (UD)...')
   run('yarn cedar setup deploy vercel --ud', { cwd: testProjectDir })
 
+  log('Adding the sandboxed child functions...')
+  run(`node tasks/sandbox-e2e/addToProject.mts "${testProjectDir}"`, {
+    cwd: REPO_ROOT,
+  })
+
   // Override vite-plugin-vercel with local tarball if provided
   const vercelPluginTarball = process.env.VERCEL_PLUGIN_TARBALL
   if (vercelPluginTarball) {
