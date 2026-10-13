@@ -146,6 +146,40 @@ describe('createPresignedUpload', () => {
     expect(await prisma.upload.count()).toBe(0)
   })
 
+  test('refuses a type that can carry script through a wildcard', async () => {
+    const targets = makeTargets()
+    // `basePayload` allows `text/*`
+    const input = { filename: 'x.html', contentType: 'text/html', size: 1 }
+
+    await expect(
+      createPresignedUpload({ db, targets, tokenPayload, input }),
+    ).rejects.toMatchObject({ code: 'MIME_TYPE_NOT_ALLOWED' })
+    await expect(
+      createPresignedUpload({
+        db,
+        targets,
+        tokenPayload,
+        input: { ...input, contentType: 'text/*' },
+      }),
+    ).rejects.toMatchObject({ code: 'MIME_TYPE_NOT_ALLOWED' })
+    expect(await prisma.upload.count()).toBe(0)
+
+    await createPresignedUpload({
+      db,
+      targets,
+      tokenPayload: { ...tokenPayload, allowedMimeTypes: ['text/html'] },
+      input,
+    })
+    await createPresignedUpload({
+      db,
+      targets,
+      tokenPayload: { ...tokenPayload, jti: 'jti_2' },
+      input,
+      verifyContentType: false,
+    })
+    expect(await prisma.upload.count()).toBe(2)
+  })
+
   test('releases the token slot when the target cannot presign', async () => {
     const targets = defineStorageTargets({
       avatars: createMemoryProvider({ providerType: 'fs' }),
@@ -192,20 +226,28 @@ describe('confirmUpload', () => {
     vi.restoreAllMocks()
   })
 
+  const PNG = Buffer.from([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0x0d,
+  ])
+  const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0x10, 0x4a, 0x46])
+
   async function pendingUpload(
     targets: ReturnType<typeof makeTargets>,
-    size = 3,
+    size = PNG.length,
+    contentType = 'image/png',
   ) {
     const { uploadId } = await createPresignedUpload({
       db,
       targets,
       tokenPayload: {
         ...basePayload,
+        allowedMimeTypes: ['image/png', 'image/jpeg', 'text/*'],
+        maxFileSize: 1024 * 1024,
         jti: 'jti_1',
         target: 'avatars',
         sub: '42',
       },
-      input: { filename: 'me.png', contentType: 'image/png', size },
+      input: { filename: 'me.png', contentType, size },
     })
 
     return db.upload.findUniqueOrThrow({ where: { id: uploadId } })
@@ -214,7 +256,7 @@ describe('confirmUpload', () => {
   test('completes a pending upload whose object matches the authorized size', async () => {
     const targets = makeTargets()
     const upload = await pendingUpload(targets)
-    targets.avatars.objects.set(upload.storageKey!, Buffer.from('abc'))
+    targets.avatars.objects.set(upload.storageKey!, PNG)
 
     const confirmed = await confirmUpload({
       db,
@@ -269,10 +311,79 @@ describe('confirmUpload', () => {
     ).toBe('failed')
   })
 
+  test('fails the row and deletes the object when its bytes are not the declared type', async () => {
+    const targets = makeTargets()
+    const html = Buffer.from('<html><script>alert(1)</script></html>')
+    const upload = await pendingUpload(targets, html.length)
+    targets.avatars.objects.set(upload.storageKey!, html)
+
+    await expect(
+      confirmUpload({ db, targets, uploadId: upload.id, currentUser: user }),
+    ).rejects.toMatchObject({ code: 'MIME_TYPE_NOT_ALLOWED' })
+
+    expect(targets.avatars.objects.has(upload.storageKey!)).toBe(false)
+    expect(
+      (await prisma.upload.findUniqueOrThrow({ where: { id: upload.id } }))
+        .status,
+    ).toBe('failed')
+  })
+
+  test('reads only the head of the object', async () => {
+    const targets = makeTargets()
+    const big = Buffer.concat([PNG, Buffer.alloc(100_000)])
+    const upload = await pendingUpload(targets, big.length)
+    targets.avatars.objects.set(upload.storageKey!, big)
+
+    await confirmUpload({ db, targets, uploadId: upload.id, currentUser: user })
+
+    expect(targets.avatars.ranges).toEqual([
+      { key: upload.storageKey, offset: 0, length: 4096 },
+    ])
+  })
+
+  test('records the canonical spelling of the declared type', async () => {
+    const targets = makeTargets()
+    const upload = await pendingUpload(targets, JPEG.length, 'image/jpg')
+    targets.avatars.objects.set(upload.storageKey!, JPEG)
+
+    const confirmed = await confirmUpload({
+      db,
+      targets,
+      uploadId: upload.id,
+      currentUser: user,
+    })
+
+    expect(upload.mimeType).toBe('image/jpg')
+    expect(confirmed).toMatchObject({
+      status: 'completed',
+      mimeType: 'image/jpeg',
+    })
+  })
+
+  test('trusts the declared type with verifyContentType: false', async () => {
+    const targets = makeTargets()
+    const upload = await pendingUpload(targets, 3)
+    targets.avatars.objects.set(upload.storageKey!, Buffer.from('abc'))
+
+    const confirmed = await confirmUpload({
+      db,
+      targets,
+      uploadId: upload.id,
+      currentUser: user,
+      verifyContentType: false,
+    })
+
+    expect(confirmed).toMatchObject({
+      status: 'completed',
+      mimeType: 'image/png',
+    })
+    expect(targets.avatars.ranges).toEqual([])
+  })
+
   test('does not report success when cleanup claimed the row first', async () => {
     const targets = makeTargets()
     const upload = await pendingUpload(targets)
-    targets.avatars.objects.set(upload.storageKey!, Buffer.from('abc'))
+    targets.avatars.objects.set(upload.storageKey!, PNG)
 
     // Simulate the cleanup job claiming the row between the read and the
     // conditional completion update

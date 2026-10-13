@@ -490,8 +490,17 @@ async function getPluginConfig(side: CodegenSide) {
           : 'string'
         : 'Date | string',
     Date: side === CodegenSide.WEB ? 'string' : 'Date | string',
-    JSON: 'Prisma.JsonValue',
-    JSONObject: 'Prisma.JsonObject',
+    // On the api side JSON inputs use Prisma's input types, so they can be
+    // passed straight to Prisma. These don't include a top-level null; a
+    // nullable JSON argument is typed as `InputMaybe<...>` instead
+    JSON:
+      side === CodegenSide.WEB
+        ? 'Prisma.JsonValue'
+        : { input: 'Prisma.InputJsonValue', output: 'Prisma.JsonValue' },
+    JSONObject:
+      side === CodegenSide.WEB
+        ? 'Prisma.JsonObject'
+        : { input: 'Prisma.InputJsonObject', output: 'Prisma.JsonObject' },
     Time: side === CodegenSide.WEB ? 'string' : 'Date | string',
     Byte: 'Uint8Array',
   }
@@ -517,6 +526,11 @@ async function getPluginConfig(side: CodegenSide) {
       // see https://github.com/redwoodjs/redwood/pull/6222#issuecomment-1230156868
       // Look at type or source https://shrtm.nu/2BA0 for possible config, not well documented
       resolvers: true,
+      // `resolvers` doesn't cover the root types, so Query and Mutation
+      // resolvers need their own flags for services to export non-optional
+      // resolver functions
+      query: true,
+      mutation: true,
     },
     contextType: `@cedarjs/graphql-server/dist/types#CedarGraphQLContext`,
   }

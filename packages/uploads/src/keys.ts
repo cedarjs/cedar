@@ -2,15 +2,20 @@ import { randomUUID } from 'node:crypto'
 
 import mime from 'mime-types'
 
+import { canonicalContentType, contentTypeSpellings } from './contentTypes.js'
 import { UploadError } from './errors.js'
 
 /**
  * A fresh storage key: a random id plus the extension that matches
  * `mimeType`, when one is known. Keys never derive from the client's
- * filename.
+ * filename. Aliased types are looked up under every spelling, so the
+ * registered `video/matroska` gets the `.mkv` the database only knows for
+ * `video/x-matroska`.
  */
 export function generateStorageKey(mimeType: string): string {
-  const ext = mime.extension(mimeType.split(';')[0].trim())
+  const ext = contentTypeSpellings(canonicalContentType(mimeType))
+    .map((type) => mime.extension(type))
+    .find(Boolean)
 
   return ext ? `${randomUUID()}.${ext}` : randomUUID()
 }

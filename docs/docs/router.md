@@ -114,6 +114,18 @@ The `wrap` prop accepts a single component or an array of components. Components
 
 Conceptually, this fits with how we think about Context and Layouts as things that wrap Pages and contain content that’s outside the scope of the Pages themselves. Crucially, since they're higher in the tree, `BlogContext` and `BlogLayout` won't rerender across Pages in the same Set.
 
+In TypeScript, type the props of a component in `wrap` with `WrapperProps` from `@cedarjs/router`:
+
+```tsx title="web/src/layouts/BlogLayout/BlogLayout.tsx"
+import type { WrapperProps } from '@cedarjs/router'
+
+function BlogLayout({ children }: WrapperProps) {
+  return <main>{children}</main>
+}
+
+export default BlogLayout
+```
+
 There's a lot of flexibility here. You can even nest `Sets` to great effect:
 
 <!-- prettier-ignore -->
@@ -139,24 +151,24 @@ const Routes = () => {
 }
 ```
 
-### Forwarding props
+### Layouts with props
 
-All props you give to `<Set>` (except for `wrap`) will be passed to the wrapper components.
+The router renders every component in `wrap` with the wrapped Routes as `children`, and no other props. So if `MainLayout` takes a `theme` prop, create a `DarkMainLayout` component that renders `<MainLayout theme="dark">`, and use `DarkMainLayout` in `wrap`:
 
-So this...
+```jsx title="web/src/layouts/DarkMainLayout/DarkMainLayout.jsx"
+import MainLayout from 'src/layouts/MainLayout'
 
-```jsx
-<Set wrap={MainLayout} theme="dark">
-  <Route path="/" page={HomePage} name="home" />
-</Set>
+function DarkMainLayout({ children }) {
+  return <MainLayout theme="dark">{children}</MainLayout>
+}
+
+export default DarkMainLayout
 ```
 
-becomes...
-
-```jsx
-<MainLayout theme="dark">
+```jsx title="Routes.jsx"
+<Set wrap={DarkMainLayout}>
   <Route path="/" page={HomePage} name="home" />
-</MainLayout>
+</Set>
 ```
 
 ### `PrivateSet`

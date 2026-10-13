@@ -89,6 +89,26 @@ export function createS3Provider(opts: S3ProviderOptions): StorageProvider {
       return Buffer.from(await res.Body.transformToByteArray())
     },
 
+    async readRange(key, { offset, length }) {
+      if (length <= 0) {
+        return Buffer.alloc(0)
+      }
+
+      const res = await client.send(
+        new GetObjectCommand({
+          Bucket: bucket,
+          Key: fullKey(key),
+          Range: `bytes=${offset}-${offset + length - 1}`,
+        }),
+      )
+
+      if (!res.Body) {
+        return Buffer.alloc(0)
+      }
+
+      return Buffer.from(await res.Body.transformToByteArray())
+    },
+
     async readStream(key) {
       const res = await client.send(
         new GetObjectCommand({ Bucket: bucket, Key: fullKey(key) }),

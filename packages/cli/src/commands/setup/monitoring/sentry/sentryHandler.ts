@@ -96,7 +96,6 @@ export const handler = async ({ force }: Args) => {
           'export const handler = createGraphQLHandler({',
           'extraPlugins: [useSentry({',
           '  includeRawResult: true,',
-          '  includeResolverArgs: true,',
           '  includeExecuteVariables: true,',
           '})],',
         )
@@ -143,7 +142,11 @@ export const handler = async ({ force }: Args) => {
         contentLines.splice(
           boundaryOpenIndex,
           1,
-          '<Sentry.ErrorBoundary fallback={FatalErrorPage}>',
+          '<Sentry.ErrorBoundary',
+          '  fallback={({ error }) => (',
+          '    <FatalErrorPage error={error instanceof Error ? error : undefined} />',
+          '  )}',
+          '>',
         )
 
         const boundaryCloseIndex = contentLines.findLastIndex((line) =>

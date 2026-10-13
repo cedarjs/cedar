@@ -138,6 +138,29 @@ const getImportComponentNames = (
   }
 }
 
+/**
+ * Every scaffold gets its own layout component that renders the shared
+ * `ScaffoldLayout` with the scaffold's title and links. For `g scaffold post`
+ * that's `PostsScaffoldLayout` in `src/layouts/PostsScaffoldLayout`, and for
+ * `g scaffold admin/post` it's `src/layouts/Admin/PostsScaffoldLayout`,
+ * imported as `AdminPostsScaffoldLayout` (like nested scaffold pages get their
+ * path as a prefix).
+ */
+export const getScaffoldLayoutNames = (name: string, scaffoldPath = '') => {
+  const pluralPascalName = pascalcase(pluralize(name))
+  const directoryName = `${pluralPascalName}ScaffoldLayout`
+  const pathParts =
+    scaffoldPath === '' ? [] : scaffoldPath.split('/').map(pascalcase)
+
+  return {
+    directoryName,
+    pathParts,
+    // The name to import the layout as in Routes.{jsx,tsx}
+    importName: pascalcase(scaffoldPath) + directoryName,
+    importPath: ['src/layouts', ...pathParts, directoryName].join('/'),
+  }
+}
+
 // Includes imports from getImportComponentNames()
 const getTemplateStrings = (
   name: string,
@@ -264,7 +287,13 @@ export const files = async ({
     })),
     ...(await assetFiles(name, tailwind)),
     ...(await formatters(name, typescript)),
-    ...(await layoutFiles(name, force, typescript, templateStrings)),
+    ...(await layoutFiles(
+      name,
+      scaffoldPath,
+      force,
+      typescript,
+      templateStrings,
+    )),
     ...(await pageFiles(
       name,
       pascalScaffoldPath,
@@ -550,52 +579,86 @@ type TemplateStrings = ReturnType<typeof getTemplateStrings>
 
 const layoutFiles = async (
   name: string,
+  scaffoldPath: string,
   force: boolean,
   generateTypescript: boolean,
   templateStrings: TemplateStrings,
 ) => {
   const fileList: Record<string, string> = {}
+  const extension = generateTypescript ? '.tsx' : '.jsx'
 
-  const layouts = fs.readdirSync(
-    customOrDefaultTemplatePath({
-      side: 'web',
-      generator: 'scaffold',
-      templatePath: 'layouts',
-    }),
-  )
-
-  for (const layout of layouts) {
-    const outputLayoutName = layout.replace(
-      /\.tsx\.template/,
-      generateTypescript ? '.tsx' : '.jsx',
+  const renderLayout = async (templateName: string, outputPath: string) => {
+    const template = await generateTemplate(
+      customOrDefaultTemplatePath({
+        side: 'web',
+        generator: 'scaffold',
+        templatePath: path.join('layouts', templateName),
+      }),
+      {
+        name,
+        pascalScaffoldPath: '',
+        ...templateStrings,
+      },
     )
 
-    const outputPath = path.join(
-      getPaths().web.layouts,
-      'ScaffoldLayout',
-      outputLayoutName,
-    )
-
-    // Since the ScaffoldLayout is shared, don't overwrite by default
-    if (!fs.existsSync(outputPath) || force) {
-      const template = await generateTemplate(
-        customOrDefaultTemplatePath({
-          side: 'web',
-          generator: 'scaffold',
-          templatePath: path.join('layouts', layout),
-        }),
-        {
-          name,
-          pascalScaffoldPath: '',
-          ...templateStrings,
-        },
-      )
-
-      fileList[outputPath] = generateTypescript
+    fileList[outputPath] =
+      generateTypescript || !outputPath.endsWith('.jsx')
         ? template
         : await transformTSToJS(outputPath, template)
+  }
+
+  const sharedLayoutDir = path.join(getPaths().web.layouts, 'ScaffoldLayout')
+
+  // Every file in the (custom or default) layouts template directory goes into
+  // the shared ScaffoldLayout directory, except the per-model layout, which is
+  // rendered below
+  const sharedLayoutTemplates = fs
+    .readdirSync(
+      customOrDefaultTemplatePath({
+        side: 'web',
+        generator: 'scaffold',
+        templatePath: 'layouts',
+      }),
+    )
+    .filter((template) => template !== 'NamesScaffoldLayout.tsx.template')
+
+  for (const template of sharedLayoutTemplates) {
+    const isComponent = template.endsWith('.tsx.template')
+    const outputName = isComponent
+      ? template.replace(/\.tsx\.template$/, extension)
+      : template.replace(/\.template$/, '')
+    // For components, check all extensions, so `destroy scaffold` (which lists
+    // the files to delete with this function) never lists a shared layout that
+    // exists
+    const exists = isComponent
+      ? ['.tsx', '.jsx', '.ts', '.js'].some((ext) =>
+          fs.existsSync(
+            path.join(sharedLayoutDir, outputName.replace(extension, ext)),
+          ),
+        )
+      : fs.existsSync(path.join(sharedLayoutDir, outputName))
+
+    // The shared layout files are used by all scaffolds, so don't overwrite
+    // them by default
+    if (!exists || force) {
+      await renderLayout(template, path.join(sharedLayoutDir, outputName))
     }
   }
+
+  const { directoryName, pathParts } = getScaffoldLayoutNames(
+    name,
+    scaffoldPath,
+  )
+
+  await renderLayout(
+    'NamesScaffoldLayout.tsx.template',
+    path.join(
+      getPaths().web.layouts,
+      ...pathParts,
+      directoryName,
+      directoryName + extension,
+    ),
+  )
 
   return fileList
 }
@@ -657,9 +720,10 @@ const pageFiles = async (
       },
     )
 
-    fileList[outputPath] = generateTypescript
-      ? template
-      : await transformTSToJS(outputPath, template)
+    fileList[outputPath] =
+      generateTypescript || !outputPath.endsWith('.jsx')
+        ? template
+        : await transformTSToJS(outputPath, template)
   }
 
   return fileList
@@ -729,9 +793,10 @@ const componentFiles = async (
       },
     )
 
-    fileList[outputPath] = generateTypescript
-      ? template
-      : await transformTSToJS(outputPath, template)
+    fileList[outputPath] =
+      generateTypescript || !outputPath.endsWith('.jsx')
+        ? template
+        : await transformTSToJS(outputPath, template)
   }
 
   return fileList
@@ -779,8 +844,9 @@ export const routes = async ({
   ]
 }
 
-const addLayoutImport = () => {
-  const importLayout = `import ScaffoldLayout from 'src/layouts/ScaffoldLayout'`
+const addLayoutImport = (model: string, scaffoldPath: string) => {
+  const { importName, importPath } = getScaffoldLayoutNames(model, scaffoldPath)
+  const importLayout = `import ${importName} from '${importPath}'`
   const routesPath = getPaths().web.routes
   const routesContent = readFile(routesPath).toString()
 
@@ -956,19 +1022,11 @@ const addSetImport = (task: AnyListrTask) => {
 }
 
 const addScaffoldSetToRouter = async (model: string, scaffoldPath: string) => {
-  const templateNames = getTemplateStrings(model, scaffoldPath)
-  const nameVars = nameVariants(model)
-  const title = nameVars.pluralPascalName
-  const titleTo = templateNames.pluralRouteName
-  const buttonLabel = `New ${nameVars.singularPascalName}`
-  const buttonTo = templateNames.newRouteName
-
   const unauthenticatedRoute = getUnauthenticatedRedirectRoute()
 
   return addRoutesToRouterTask(
     await routes({ model, path: scaffoldPath }),
-    'ScaffoldLayout',
-    { title, titleTo, buttonLabel, buttonTo },
+    getScaffoldLayoutNames(model, scaffoldPath).importName,
     unauthenticatedRoute
       ? { unauthenticated: unauthenticatedRoute }
       : undefined,
@@ -1024,7 +1082,7 @@ export const tasks = ({
       },
       {
         title: 'Adding layout import...',
-        task: async () => addLayoutImport(),
+        task: async () => addLayoutImport(model, path),
       },
       {
         title: 'Adding set import...',

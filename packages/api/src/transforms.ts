@@ -203,25 +203,45 @@ export async function normalizeRequest(
   }
 }
 
-// Internal note:  Equivalent to dnull package on npm, which seems to have import issues in latest versions
+/**
+ * The type of `T` after `removeNulls`: each field that can be `null` can be
+ * `undefined` instead.
+ */
+export type RemoveNulls<T> = {
+  [K in keyof T]: null extends T[K] ? Exclude<T[K], null> | undefined : T[K]
+}
 
 /**
- * Useful for removing nulls from an object, such as an input from a GraphQL mutation used directly in a Prisma query
- * @param input - Object to remove nulls from
- * See {@link https://www.prisma.io/docs/concepts/components/prisma-client/null-and-undefined Prisma docs: null vs undefined}
+ * Returns a copy of `input` with every `null` field set to `undefined`.
+ *
+ * GraphQL input types make every field nullable, but Prisma doesn't accept
+ * `null` for required fields. `undefined` leaves the field unchanged, so this
+ * lets you pass a GraphQL mutation input straight to Prisma:
+ *
+ * ```ts
+ * db.post.update({ data: removeNulls(input), where: { id } })
+ * ```
+ *
+ * Only top-level fields are changed. Nested objects, such as `Json` field
+ * values, are passed through as they are.
+ *
+ * See {@link https://www.prisma.io/docs/orm/prisma-client/special-fields-and-types/null-and-undefined Prisma docs: null vs undefined}
  */
-export const removeNulls = (input: Record<number | symbol | string, any>) => {
-  for (const key in input) {
-    if (input[key] === null) {
-      input[key] = undefined
-    } else if (
-      typeof input[key] === 'object' &&
-      !(input[key] instanceof Date) // dates are objects too
-    ) {
-      // Note arrays are also typeof object!
-      input[key] = removeNulls(input[key])
-    }
+export function removeNulls<T extends object>(input: T): RemoveNulls<T> {
+  if (Array.isArray(input)) {
+    // RemoveNulls maps an array type to an array of its element types with
+    // null changed to undefined, which is what this returns
+    return input.map((value) =>
+      value === null ? undefined : value,
+    ) as RemoveNulls<T>
   }
 
-  return input
+  const result: Record<string, unknown> = {}
+
+  for (const [key, value] of Object.entries(input)) {
+    result[key] = value === null ? undefined : value
+  }
+
+  // Every null value is now undefined, which is what RemoveNulls<T> describes
+  return result as RemoveNulls<T>
 }

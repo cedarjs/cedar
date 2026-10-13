@@ -41,13 +41,13 @@
     "@prisma/internals": "7.10.0",
     "deepmerge": "4.3.1",
     "fast-glob": "3.3.3",
-    "smol-toml": "1.9.0",
+    "smol-toml": "1.9.1",
     "string-env-interpolation": "1.0.1"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
     "@cedarjs/framework-tools": "workspace:*",
-    "concurrently": "9.2.4",
+    "concurrently": "9.2.5",
     "prisma": "7.10.0",
     "publint": "0.3.25",
     "rimraf": "6.1.3",

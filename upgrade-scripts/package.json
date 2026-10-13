@@ -10,6 +10,6 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "test": "node --test manifest.test.ts"
+    "test": "node --test manifest.test.ts 8.x.test.ts"
   }
 }

@@ -6,22 +6,19 @@ import { analyzeRoutes } from '../analyzeRoutes.js'
 import { Route } from '../Route.js'
 import { Router } from '../router.js'
 import { Private, PrivateSet, Set } from '../Set.js'
+import type { WrapperProps } from '../Set.js'
 
 const FakePage = () => <h1>Fake Page</h1>
 
-interface LayoutProps {
-  children: React.ReactNode
-}
-
-const FakeLayout1 = ({ children }: LayoutProps) => (
+const FakeLayout1 = ({ children }: WrapperProps) => (
   <div className="layout1">{children}</div>
 )
 
-const FakeLayout2 = ({ children }: LayoutProps) => (
+const FakeLayout2 = ({ children }: WrapperProps) => (
   <div className="layout2">{children}</div>
 )
 
-const FakeLayout3 = ({ children }: LayoutProps) => (
+const FakeLayout3 = ({ children }: WrapperProps) => (
   <div className="layout2">{children}</div>
 )
 
@@ -102,26 +99,14 @@ describe('AnalyzeRoutes: with homePage and Children', () => {
 })
 
 describe('setWrapper', () => {
-  interface WrapperXProps {
-    children: React.ReactNode
-    id: string
-    passThruProp: string
-  }
-
-  const WrapperX = ({ children }: WrapperXProps) => (
+  const WrapperX = ({ children }: WrapperProps) => (
     <>
       <h1>WrapperX</h1>
       {children}
     </>
   )
 
-  interface WrapperYProps {
-    children: React.ReactNode
-    id: string
-    theme: string
-  }
-
-  const WrapperY = ({ children }: WrapperYProps) => (
+  const WrapperY = ({ children }: WrapperProps) => (
     <>
       <h1>WrapperY</h1>
       {children}
@@ -130,9 +115,9 @@ describe('setWrapper', () => {
 
   const Simple = (
     <Router>
-      <Set wrap={[WrapperX]} id="set-one" passThruProp="bazinga">
+      <Set wrap={[WrapperX]} roles="admin">
         <Route path="/a" name="routeA" page={FakePage} />
-        <Set wrap={[WrapperY]} id="set-two" theme="blue">
+        <Set wrap={[WrapperY]} roles={['editor']}>
           <Route name="routeB" path="/b" page={FakePage} />
           <Route name="routeC" path="/c" page={FakePage} />
         </Set>
@@ -157,8 +142,7 @@ describe('setWrapper', () => {
             wrappers: [WrapperX],
             isPrivate: false,
             props: {
-              id: 'set-one',
-              passThruProp: 'bazinga',
+              roles: 'admin',
             },
           },
         ],
@@ -177,17 +161,15 @@ describe('setWrapper', () => {
             wrappers: [WrapperX],
             isPrivate: false,
             props: {
-              id: 'set-one',
-              passThruProp: 'bazinga',
+              roles: 'admin',
             },
           },
           {
             id: '1.1',
-            isPrivate: false,
             wrappers: [WrapperY],
+            isPrivate: false,
             props: {
-              id: 'set-two',
-              theme: 'blue',
+              roles: ['editor'],
             },
           },
         ],
@@ -206,8 +188,7 @@ describe('setWrapper', () => {
             wrappers: [WrapperX],
             isPrivate: false,
             props: {
-              id: 'set-one',
-              passThruProp: 'bazinga',
+              roles: 'admin',
             },
           },
           {
@@ -215,8 +196,7 @@ describe('setWrapper', () => {
             wrappers: [WrapperY],
             isPrivate: false,
             props: {
-              id: 'set-two',
-              theme: 'blue',
+              roles: ['editor'],
             },
           },
         ],
@@ -237,8 +217,7 @@ describe('setWrapper', () => {
             wrappers: [WrapperX],
             isPrivate: false,
             props: {
-              id: 'set-one',
-              passThruProp: 'bazinga',
+              roles: 'admin',
             },
           },
         ],
@@ -257,8 +236,7 @@ describe('setWrapper', () => {
             wrappers: [WrapperX],
             isPrivate: false,
             props: {
-              id: 'set-one',
-              passThruProp: 'bazinga',
+              roles: 'admin',
             },
           },
           {
@@ -266,8 +244,7 @@ describe('setWrapper', () => {
             wrappers: [WrapperY],
             isPrivate: false,
             props: {
-              id: 'set-two',
-              theme: 'blue',
+              roles: ['editor'],
             },
           },
         ],
@@ -286,8 +263,7 @@ describe('setWrapper', () => {
             wrappers: [WrapperX],
             isPrivate: false,
             props: {
-              id: 'set-one',
-              passThruProp: 'bazinga',
+              roles: 'admin',
             },
           },
           {
@@ -295,8 +271,7 @@ describe('setWrapper', () => {
             wrappers: [WrapperY],
             isPrivate: false,
             props: {
-              id: 'set-two',
-              theme: 'blue',
+              roles: ['editor'],
             },
           },
         ],
@@ -654,7 +629,7 @@ test('Nested sets, and authentication logic', () => {
 })
 
 test('Give correct ids to root sets', () => {
-  const Layout = ({ children }: LayoutProps) => <>{children}</>
+  const Layout = ({ children }: WrapperProps) => <>{children}</>
 
   const Routes = (
     <Router>

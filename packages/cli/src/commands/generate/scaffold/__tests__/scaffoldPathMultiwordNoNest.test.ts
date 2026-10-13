@@ -39,8 +39,8 @@ describe('AdminPages/Post', () => {
   })
 
   describe('creates the correct files with the correct imports', () => {
-    test('returns exactly 19 files', () => {
-      expect(Object.keys(filesMultiwordUpper).length).toEqual(19)
+    test('returns exactly 20 files', () => {
+      expect(Object.keys(filesMultiwordUpper).length).toEqual(20)
     })
 
     // Layout
@@ -49,6 +49,14 @@ describe('AdminPages/Post', () => {
       expect(filesMultiwordUpper).toHaveProperty([
         path.normalize(
           '/path/to/project/web/src/layouts/ScaffoldLayout/ScaffoldLayout.jsx',
+        ),
+      ])
+    })
+
+    test('creates a scaffold specific layout', async () => {
+      expect(filesMultiwordUpper).toHaveProperty([
+        path.normalize(
+          '/path/to/project/web/src/layouts/AdminPages/PostsScaffoldLayout/PostsScaffoldLayout.jsx',
         ),
       ])
     })
@@ -378,8 +386,8 @@ describe('admin-pages/Post', () => {
   })
 
   describe('creates the correct files with the correct imports', () => {
-    test('returns exactly 19 files', () => {
-      expect(Object.keys(filesMultiwordDash).length).toEqual(19)
+    test('returns exactly 20 files', () => {
+      expect(Object.keys(filesMultiwordDash).length).toEqual(20)
     })
 
     // Layout
@@ -388,6 +396,14 @@ describe('admin-pages/Post', () => {
       expect(filesMultiwordDash).toHaveProperty([
         path.normalize(
           '/path/to/project/web/src/layouts/ScaffoldLayout/ScaffoldLayout.jsx',
+        ),
+      ])
+    })
+
+    test('creates a scaffold specific layout', async () => {
+      expect(filesMultiwordDash).toHaveProperty([
+        path.normalize(
+          '/path/to/project/web/src/layouts/AdminPages/PostsScaffoldLayout/PostsScaffoldLayout.jsx',
         ),
       ])
     })
@@ -717,8 +733,8 @@ describe('admin_pages/Post', () => {
   })
 
   describe('creates the correct files with the correct imports', () => {
-    test('returns exactly 19 files', () => {
-      expect(Object.keys(filesMultiwordUnderscore).length).toEqual(19)
+    test('returns exactly 20 files', () => {
+      expect(Object.keys(filesMultiwordUnderscore).length).toEqual(20)
     })
 
     // Layout
@@ -727,6 +743,14 @@ describe('admin_pages/Post', () => {
       expect(filesMultiwordUnderscore).toHaveProperty([
         path.normalize(
           '/path/to/project/web/src/layouts/ScaffoldLayout/ScaffoldLayout.jsx',
+        ),
+      ])
+    })
+
+    test('creates a scaffold specific layout', async () => {
+      expect(filesMultiwordUnderscore).toHaveProperty([
+        path.normalize(
+          '/path/to/project/web/src/layouts/AdminPages/PostsScaffoldLayout/PostsScaffoldLayout.jsx',
         ),
       ])
     })

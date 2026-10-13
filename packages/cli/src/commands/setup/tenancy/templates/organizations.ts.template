@@ -321,7 +321,7 @@ export const removeMember: MutationResolvers['removeMember'] = async ({
 
 export const Membership: MembershipRelationResolvers = {
   organization: (_obj, { root }) =>
-    db.membership.findUnique({ where: { id: root?.id } }).organization(),
+    db.membership.findUniqueOrThrow({ where: { id: root.id } }).organization(),
 }
 
 interface EnsureDefaultOrganizationArgs {

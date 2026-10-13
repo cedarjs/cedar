@@ -1,5 +1,6 @@
 import { UploadError } from '../errors.js'
 import type { StorageTargets, UploadDatabase } from '../types.js'
+import { verifyStoredContentType } from '../verifyStoredContentType.js'
 
 import {
   assertTrustedSnsUrl,
@@ -77,17 +78,28 @@ function matchTarget(
     : null
 }
 
+export interface ProcessS3EventRecordOptions {
+  db: UploadDatabase
+  targets: StorageTargets
+  /**
+   * Checks the object's bytes against the type declared when the upload URL
+   * was issued, as `confirmUpload` does. Defaults to `true`.
+   */
+  verifyContentType?: boolean
+}
+
 /**
  * Settles the `pending` row for one `s3:ObjectCreated:*` record. The row is
  * matched on target plus storage key, the object's size is compared with
- * the size authorized at presign time, and the row is flipped `pending` to
- * `completed` (or claimed `failed` and the object deleted on a mismatch).
- * Both transitions are conditional, so a duplicate notification or a row
- * the cleanup job already claimed is left alone.
+ * the size authorized at presign time and, with `verifyContentType` (the
+ * default), its bytes with the type declared then, and the row is flipped
+ * `pending` to `completed` (or claimed `failed` and the object deleted on a
+ * mismatch). Both transitions are conditional, so a duplicate notification
+ * or a row the cleanup job already claimed is left alone.
  */
 export async function processS3EventRecord(
   record: S3EventRecord,
-  { db, targets }: { db: UploadDatabase; targets: StorageTargets },
+  { db, targets, verifyContentType = true }: ProcessS3EventRecordOptions,
 ): Promise<S3EventOutcome> {
   if (!record.eventName.startsWith('ObjectCreated')) {
     return 'ignored'
@@ -121,7 +133,7 @@ export async function processS3EventRecord(
       ? reportedSize
       : await target.getObjectSize(match.storageKey)
 
-  if (actualSize === null || BigInt(actualSize) !== upload.size) {
+  const fail = async () => {
     const { count } = await db.upload.updateMany({
       where: { id: upload.id, status: 'pending' },
       data: { status: 'failed' },
@@ -131,12 +143,35 @@ export async function processS3EventRecord(
       await target.delete(match.storageKey)
     }
 
-    return 'failed'
+    return 'failed' as const
+  }
+
+  if (actualSize === null || BigInt(actualSize) !== upload.size) {
+    return fail()
+  }
+
+  let mimeType = upload.mimeType
+
+  if (verifyContentType) {
+    const verified = await verifyStoredContentType(target, match.storageKey, {
+      size: actualSize,
+      declaredType: upload.mimeType,
+    })
+
+    if (!verified) {
+      return fail()
+    }
+
+    mimeType = verified
   }
 
   const { count } = await db.upload.updateMany({
     where: { id: upload.id, status: 'pending' },
-    data: { status: 'completed', size: BigInt(actualSize) },
+    data: {
+      status: 'completed',
+      size: BigInt(actualSize),
+      ...(mimeType !== upload.mimeType ? { mimeType } : {}),
+    },
   })
 
   return count === 1 ? 'completed' : 'ignored'
@@ -145,6 +180,8 @@ export async function processS3EventRecord(
 export interface S3WebhookOptions {
   db: UploadDatabase
   targets: StorageTargets
+  /** See `ProcessS3EventRecordOptions`. Defaults to `true`. */
+  verifyContentType?: boolean
   /** The trusted SNS topic. Messages from any other topic are rejected. */
   topicArn: string
   fetchCertificate?: FetchCertificate

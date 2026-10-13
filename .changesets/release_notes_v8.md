@@ -172,3 +172,109 @@ npx @tailwindcss/upgrade --config ./web/config/tailwind.config.cjs
 
 See Tailwind's [upgrade guide](https://tailwindcss.com/docs/upgrade-guide) for
 the changes v4 makes to utilities and configuration.
+
+## TypeScript strict mode in new projects
+
+New TypeScript projects created with `yarn create cedar-app` have TypeScript's
+`strict` mode turned on in `web/tsconfig.json`, `api/tsconfig.json` and
+`scripts/tsconfig.json`. The code Cedar's generators and setup commands write
+type-checks with `strict` on.
+
+It's recommended to turn strict mode on in your existing project by adding
+`"strict": true` to `compilerOptions` in each of your tsconfig files. Then run
+`yarn cedar g types` and `yarn cedar type-check`. Code generated before v8 may
+need a few changes; see
+[TypeScript Strict Mode](https://cedarjs.com/docs/typescript/strict-mode) for
+the common ones.
+
+Strict mode relies on the types described in "More precise generated types"
+below. The SDL generator also writes Prisma scalar and enum lists with
+non-nullable items (`tags: [String!]!`), because Prisma lists never contain
+`null`.
+
+## More precise generated types
+
+To better support TypeScript's strict mode a few of the types Cedar generates
+and exports are made more precise.
+
+- `QueryResolvers` and `MutationResolvers` fields are required properties, so
+  service functions typed with them (`QueryResolvers['posts']`) aren't
+  possibly `undefined` when you call them in tests
+- On the api side, `JSON` and `JSONObject` inputs are typed as Prisma's
+  `InputJsonValue` and `InputJsonObject`, the types Prisma accepts for `Json`
+  fields
+- `@cedarjs/auth` exports a new `LoggedInUser` type: the user
+  `getCurrentUser` returns when someone is logged in. `CurrentUser` is
+  `LoggedInUser | null`, matching what `getCurrentUser` returns.
+
+### Upgrading
+
+- Where your code uses `CurrentUser` for a user that's known to be logged in,
+  use `LoggedInUser` instead. Without strict mode TypeScript ignores `null`, so
+  this only matters in projects with `strict` (or `strictNullChecks`) on
+- If you extend `CurrentUser` with `declare module '@cedarjs/auth'`, extend
+  `LoggedInUser` instead. `CurrentUser` is a type alias and can't be extended
+
+## `<Set>` wrappers only get `children`
+
+`<Set>`, `<PrivateSet>` and `<Private>` render the components in `wrap` with
+the wrapped routes as `children`, and no other props, so props meant for the
+wrappers are a type error on a Set. `Set`, `PrivateSet` and `Private` take no
+type argument. `@cedarjs/router` exports `WrapperProps`, the props a component
+in `wrap` gets (`children`), and `WrapperType`, the type of such a component,
+without a type argument.
+
+`yarn cedar g scaffold post` generates a `PostsScaffoldLayout` that renders the
+shared `ScaffoldLayout` with the title and links for posts, and wraps the
+routes in `<Set wrap={PostsScaffoldLayout}>`. The layout's props, like
+`titleTo`, are type checked against your route names, also with TypeScript's
+`strict` mode turned on. `yarn cedar d scaffold post` removes the layout again.
+
+The pre-upgrade check run by `yarn cedar upgrade` lists every Set that has
+props for its wrappers, with its file, line, wrappers and props, and stops the
+upgrade until they're fixed. For each of them, create a layout component that
+renders the wrapper with those props, and use it in `wrap`:
+
+```tsx title="web/src/layouts/PostsScaffoldLayout/PostsScaffoldLayout.tsx"
+import type { WrapperProps } from '@cedarjs/router'
+
+import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
+
+function PostsScaffoldLayout({ children }: WrapperProps) {
+  return (
+    <ScaffoldLayout
+      title="Posts"
+      titleTo="posts"
+      buttonLabel="New Post"
+      buttonTo="newPost"
+    >
+      {children}
+    </ScaffoldLayout>
+  )
+}
+
+export default PostsScaffoldLayout
+```
+
+```diff title="web/src/Routes.tsx"
+-import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
++import PostsScaffoldLayout from 'src/layouts/PostsScaffoldLayout'
+
+-<Set wrap={ScaffoldLayout} title="Posts" titleTo="posts" buttonLabel="New Post" buttonTo="newPost">
++<Set wrap={PostsScaffoldLayout}>
+```
+
+`WrapperProps` is available in Cedar v7.x too, so you can make this change
+before upgrading.
+
+## `removeNulls` is typed and only changes top-level fields
+
+`removeNulls` from `@cedarjs/api` returns a copy of its input where every
+top-level `null` is `undefined`, typed as `RemoveNulls<T>`. TypeScript checks
+`db.post.update({ data: removeNulls(input) })` against Prisma's types, also in
+strict mode, so a field with the wrong type is a type error.
+
+Nested objects and arrays are passed through as they are, so `null`s inside a
+`Json` field value are kept. The input object is left unchanged. If your code
+relies on `removeNulls` also converting `null`s in nested objects, call
+`removeNulls` on those objects yourself.

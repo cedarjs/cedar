@@ -42,7 +42,7 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@types/yargs": "17.0.35",
-    "concurrently": "9.2.4",
+    "concurrently": "9.2.5",
     "publint": "0.3.25",
     "typescript": "5.9.3"
   },

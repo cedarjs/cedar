@@ -1,11 +1,11 @@
 import * as React from 'react'
-import type { ReactNode } from 'react'
 
 import { act, render } from '@testing-library/react'
 import { beforeEach, beforeAll, afterAll, test, expect, vi } from 'vitest'
 
 import { navigate, Route, Router } from '../index.js'
 import { Private, Set } from '../Set.js'
+import type { WrapperProps } from '../Set.js'
 
 // Heads-up, in this test we're not mocking LazyComponent because all the tests
 // explicitly define the pages in the router.
@@ -16,10 +16,6 @@ import { Private, Set } from '../Set.js'
 
 const HomePage = () => <h1>Home Page</h1>
 const Page = () => <h1>Page</h1>
-
-interface LayoutProps {
-  children: ReactNode
-}
 
 beforeEach(() => {
   window.history.pushState({}, '', '/')
@@ -38,7 +34,7 @@ afterAll(() => {
 })
 
 test('Sets nested in Private should not error out if no authenticated prop provided', () => {
-  const Layout1 = ({ children }: LayoutProps) => (
+  const Layout1 = ({ children }: WrapperProps) => (
     <div>
       <p>Layout1</p>
       {children}
@@ -79,7 +75,7 @@ test('Sets nested in Private should not error out if no authenticated prop provi
 })
 
 test('Sets nested in `<Set private>` should not error out if no authenticated prop provided', () => {
-  const Layout1 = ({ children }: { children: ReactNode }) => (
+  const Layout1 = ({ children }: WrapperProps) => (
     <div>
       <p>Layout1</p>
       {children}
@@ -123,7 +119,7 @@ test('Nested sets should not cause a re-mount of parent wrap components', async 
   const layoutTwoMount = vi.fn()
   const layoutTwoUnmount = vi.fn()
 
-  const Layout1 = ({ children }: LayoutProps) => {
+  const Layout1 = ({ children }: WrapperProps) => {
     React.useEffect(() => {
       // Called on mount and re-mount of this layout
       layoutOneMount()
@@ -141,7 +137,7 @@ test('Nested sets should not cause a re-mount of parent wrap components', async 
     )
   }
 
-  const Layout2 = ({ children }: LayoutProps) => {
+  const Layout2 = ({ children }: WrapperProps) => {
     React.useEffect(() => {
       // Called on mount and re-mount of this layout
       layoutTwoMount()

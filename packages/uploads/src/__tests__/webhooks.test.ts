@@ -21,6 +21,8 @@ const fetchCertificate = async () => publicPem
 
 const TOPIC = 'arn:aws:sns:us-east-1:123456789012:uploads'
 
+const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+
 function snsMessage(
   overrides: Partial<SnsMessage> & { Message: string },
 ): SnsMessage {
@@ -135,14 +137,15 @@ describe('processS3EventRecord', () => {
     })
   }
 
-  test('completes a pending row whose size matches', async () => {
+  test('completes a pending row whose size and type match', async () => {
     const targets = makeTargets()
-    const row = await pending(3n)
+    const row = await pending(8n)
+    targets.files.objects.set('obj.png', PNG)
 
     const outcome = await processS3EventRecord(
       {
         eventName: 'ObjectCreated:Put',
-        s3: { bucket: { name: 'bucket' }, object: { key: 'obj.png', size: 3 } },
+        s3: { bucket: { name: 'bucket' }, object: { key: 'obj.png', size: 8 } },
       },
       { db, targets },
     )
@@ -159,14 +162,15 @@ describe('processS3EventRecord', () => {
         getConfig: () => ({ bucket: 'bucket', keyPrefix: 'avatars/' }),
       }),
     })
-    const row = await pending(3n, 'my file.png')
+    const row = await pending(8n, 'my file.png')
+    targets.files.objects.set('my file.png', PNG)
 
     const outcome = await processS3EventRecord(
       {
         eventName: 'ObjectCreated:Put',
         s3: {
           bucket: { name: 'bucket' },
-          object: { key: 'avatars/my+file.png', size: 3 },
+          object: { key: 'avatars/my+file.png', size: 8 },
         },
       },
       { db, targets },
@@ -193,17 +197,18 @@ describe('processS3EventRecord', () => {
         status: 'pending',
         filename: 'a.png',
         mimeType: 'image/png',
-        size: 3n,
+        size: 8n,
         storageKey: 'a.png',
       },
     })
+    targets.avatars.objects.set('a.png', PNG)
 
     const outcome = await processS3EventRecord(
       {
         eventName: 'ObjectCreated:Put',
         s3: {
           bucket: { name: 'bucket' },
-          object: { key: 'avatars/a.png', size: 3 },
+          object: { key: 'avatars/a.png', size: 8 },
         },
       },
       { db, targets },
@@ -236,6 +241,74 @@ describe('processS3EventRecord', () => {
     expect(
       (await prisma.upload.findUniqueOrThrow({ where: { id: row.id } })).status,
     ).toBe('failed')
+  })
+
+  test('fails the row and deletes the object when its bytes are not the declared type', async () => {
+    const targets = makeTargets()
+    const html = Buffer.from('<html></html>')
+    const row = await pending(BigInt(html.length))
+    targets.files.objects.set('obj.png', html)
+
+    const record = {
+      eventName: 'ObjectCreated:Put',
+      s3: {
+        bucket: { name: 'bucket' },
+        object: { key: 'obj.png', size: html.length },
+      },
+    }
+
+    expect(await processS3EventRecord(record, { db, targets })).toBe('failed')
+    expect(targets.files.objects.has('obj.png')).toBe(false)
+    expect(
+      (await prisma.upload.findUniqueOrThrow({ where: { id: row.id } })).status,
+    ).toBe('failed')
+  })
+
+  test('records the canonical spelling of the declared type', async () => {
+    const targets = makeTargets()
+    const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0])
+    const row = await prisma.upload.create({
+      data: {
+        target: 'files',
+        status: 'pending',
+        filename: 'a.jpg',
+        mimeType: 'image/jpg',
+        size: 4n,
+        storageKey: 'a.jpg',
+      },
+    })
+    targets.files.objects.set('a.jpg', jpeg)
+
+    const outcome = await processS3EventRecord(
+      {
+        eventName: 'ObjectCreated:Put',
+        s3: { bucket: { name: 'bucket' }, object: { key: 'a.jpg', size: 4 } },
+      },
+      { db, targets },
+    )
+
+    expect(outcome).toBe('completed')
+    expect(
+      await prisma.upload.findUniqueOrThrow({ where: { id: row.id } }),
+    ).toMatchObject({ status: 'completed', mimeType: 'image/jpeg' })
+  })
+
+  test('trusts the declared type with verifyContentType: false', async () => {
+    const targets = makeTargets()
+    const row = await pending(3n)
+
+    const outcome = await processS3EventRecord(
+      {
+        eventName: 'ObjectCreated:Put',
+        s3: { bucket: { name: 'bucket' }, object: { key: 'obj.png', size: 3 } },
+      },
+      { db, targets, verifyContentType: false },
+    )
+
+    expect(outcome).toBe('completed')
+    expect(
+      (await prisma.upload.findUniqueOrThrow({ where: { id: row.id } })).status,
+    ).toBe('completed')
   })
 
   test('ignores non-create events, unknown buckets, and settled rows', async () => {
@@ -319,13 +392,14 @@ describe('handleS3Webhook', () => {
         status: 'pending',
         filename: 'a.png',
         mimeType: 'image/png',
-        size: 3n,
+        size: 8n,
         storageKey: 'obj.png',
       },
     })
+    targets.files.objects.set('obj.png', PNG)
 
     const result = await handleS3Webhook(
-      JSON.stringify(snsMessage({ Message: s3Event('obj.png', 3) })),
+      JSON.stringify(snsMessage({ Message: s3Event('obj.png', 8) })),
       { db, targets, topicArn: TOPIC, fetchCertificate },
     )
 
@@ -333,6 +407,48 @@ describe('handleS3Webhook', () => {
     expect(
       (await prisma.upload.findUniqueOrThrow({ where: { id: row.id } })).status,
     ).toBe('completed')
+  })
+
+  test("passes the plugin's verifyContentType through to the webhook", async () => {
+    const row = await prisma.upload.create({
+      data: {
+        target: 'files',
+        status: 'pending',
+        filename: 'a.png',
+        mimeType: 'image/png',
+        size: 3n,
+        storageKey: 'unchecked.png',
+      },
+    })
+    targets.files.objects.set('unchecked.png', Buffer.from('abc'))
+
+    const app = Fastify()
+    await app.register(cedarUploadsPlugin, {
+      tokenSecret: SECRET,
+      targets,
+      db,
+      s3Webhook: { topicArn: TOPIC, fetchCertificate },
+      verifyContentType: false,
+    })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/upload/webhook/s3',
+      headers: { 'content-type': 'text/plain; charset=UTF-8' },
+      payload: JSON.stringify(
+        snsMessage({ Message: s3Event('unchecked.png', 3) }),
+      ),
+    })
+
+    expect(res.json()).toEqual({
+      type: 'Notification',
+      outcomes: ['completed'],
+    })
+    expect(
+      (await prisma.upload.findUniqueOrThrow({ where: { id: row.id } })).status,
+    ).toBe('completed')
+
+    await app.close()
   })
 
   test('rejects bodies that are not SNS messages', async () => {

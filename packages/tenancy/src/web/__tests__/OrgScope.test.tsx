@@ -554,10 +554,17 @@ describe('OrgScope', () => {
 
       const OrgPage = () => <ProjectsView />
 
+      // Like the OrgScope `yarn cedar setup tenancy` generates in apps
+      const AppOrgScope = ({ children }: { children: React.ReactNode }) => (
+        <OrgScope useAuth={useAuth} notAMember="not a member">
+          {children}
+        </OrgScope>
+      )
+
       render(
         <CedarApolloProvider>
           <Router>
-            <Set wrap={OrgScope} useAuth={useAuth} notAMember="not a member">
+            <Set wrap={AppOrgScope}>
               <Route path="/org/{orgSlug}" page={OrgPage} name="org" />
             </Set>
           </Router>

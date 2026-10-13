@@ -6,19 +6,32 @@ import type { StorageProvider } from '../../types.js'
  * `getPresignedUploadUrl` works (S3-like) or throws (FS-like).
  */
 export function createMemoryProvider(
-  options: { providerType?: string; presign?: boolean; bucket?: string } = {},
-): StorageProvider & { objects: Map<string, Buffer> } {
+  options: {
+    providerType?: string
+    presign?: boolean
+    bucket?: string
+    /** Whether `readRange` is implemented. Defaults to `true`. */
+    ranged?: boolean
+  } = {},
+): StorageProvider & {
+  objects: Map<string, Buffer>
+  /** Every `readRange` call, in order. */
+  ranges: { key: string; offset: number; length: number }[]
+} {
   const {
     providerType = 'memory',
     presign = false,
     bucket = 'bucket',
+    ranged = true,
   } = options
   const objects = new Map<string, Buffer>()
+  const ranges: { key: string; offset: number; length: number }[] = []
 
-  const provider: StorageProvider & { objects: Map<string, Buffer> } = {
+  const provider: ReturnType<typeof createMemoryProvider> = {
     name: '',
     providerType,
     objects,
+    ranges,
 
     async write(key, data) {
       objects.set(key, Buffer.from(data))
@@ -33,6 +46,20 @@ export function createMemoryProvider(
 
       return data
     },
+
+    ...(ranged
+      ? {
+          async readRange(
+            key: string,
+            range: { offset: number; length: number },
+          ) {
+            ranges.push({ key, ...range })
+            const data = await provider.read(key)
+
+            return data.subarray(range.offset, range.offset + range.length)
+          },
+        }
+      : {}),
 
     async delete(key) {
       objects.delete(key)
