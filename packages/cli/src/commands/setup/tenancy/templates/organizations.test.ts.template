@@ -199,7 +199,6 @@ describe('organizations service', () => {
             email: 'second-owner@example.com',
             hashedPassword: 'x',
             salt: 'x',
-            fullName: 'Second Owner',
           },
         })
         await db.membership.create({
@@ -233,7 +232,6 @@ describe('organizations service', () => {
             email: 'invitee@example.com',
             hashedPassword: 'x',
             salt: 'x',
-            fullName: 'Invitee',
           },
         })
 
@@ -255,7 +253,6 @@ describe('organizations service', () => {
             email: 'invitee@example.com',
             hashedPassword: 'x',
             salt: 'x',
-            fullName: 'Invitee',
           },
         })
 
@@ -278,7 +275,6 @@ describe('organizations service', () => {
             email: 'first@example.com',
             hashedPassword: 'x',
             salt: 'x',
-            fullName: 'First User',
           },
         })
         const secondUser = await db.user.create({
@@ -286,7 +282,6 @@ describe('organizations service', () => {
             email: 'second@example.com',
             hashedPassword: 'x',
             salt: 'x',
-            fullName: 'Second User',
           },
         })
 
@@ -308,7 +303,6 @@ describe('organizations service', () => {
             email: 'invitee@example.com',
             hashedPassword: 'x',
             salt: 'x',
-            fullName: 'Invitee',
           },
         })
 
@@ -355,7 +349,6 @@ describe('organizations service', () => {
           email: 'invitee@example.com',
           hashedPassword: 'x',
           salt: 'x',
-          fullName: 'Invitee',
         },
       })
 
@@ -375,7 +368,6 @@ describe('organizations service', () => {
         email: 'brand-new@example.com',
         hashedPassword: 'x',
         salt: 'x',
-        fullName: 'Brand New',
       },
     })
 
