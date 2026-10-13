@@ -28,3 +28,7 @@ For the complete deployment process on Netlify, see the [Tutorial Deployment sec
 :::tip
 Netlify deploys set up through [universal deploy](universal-deploy.md) get [skew protection](universal-deploy.md#skew-protection), which keeps tabs that are open during a deploy working.
 :::
+
+:::note
+Netlify ships only the files it can trace from your API's imports. If your app runs [sandboxed child scripts](security.md#untrusted-files), which nothing imports, `netlify.toml` needs `included_files = ["api/dist/ud/sandbox-children/**"]` under `[functions]`. `yarn cedar setup deploy netlify --ud` writes it; add it yourself to a `netlify.toml` written before.
+:::

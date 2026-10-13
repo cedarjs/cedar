@@ -76,7 +76,7 @@ const body = `
   </Submit>
 </Form>`
 
-const functions = `const formMethods = useForm()
+const functions = `const formMethods = useForm<CreateContactInput>()
 const [isSubmitting, setIsSubmitting] = useState(false)
 const blocker = useBlocker({ when: formMethods.formState.isDirty && !isSubmitting, })
 
@@ -89,7 +89,7 @@ const [create, { loading, error }] = useMutation(CREATE_CONTACT, {
   },
 })
 
-const onSubmit = async (data) => {
+const onSubmit = async (data: CreateContactInput) => {
   setIsSubmitting(true)
   try {
     await create({ variables: { input: data } })
@@ -114,6 +114,16 @@ export default (file, api) => {
   const root = j(file.source)
 
   const imports = [
+    j.importDeclaration(
+      [
+        j.importSpecifier(
+          j.identifier('CreateContactInput'),
+          j.identifier('CreateContactInput'),
+        ),
+      ],
+      j.stringLiteral('types/graphql'),
+      'type',
+    ),
     j.importDeclaration(
       [
         j.importSpecifier(j.identifier('Form'), j.identifier('Form')),

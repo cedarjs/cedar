@@ -4,6 +4,12 @@ import { fileURLToPath } from 'node:url'
 
 import { describe, it, expect, beforeAll } from 'vitest'
 
+import {
+  findChildScript,
+  runSandboxedChild,
+  sandboxedChildArgs,
+} from '@cedarjs/api/sandbox'
+
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const fixtureDir = join(
   __dirname,
@@ -53,5 +59,87 @@ describe('UD build against fixture', () => {
     expect(existsSync(htmlFile)).toBe(true)
     const content = readFileSync(htmlFile, 'utf-8')
     expect(content).toContain('id="cedar-app"')
+  })
+
+  describe('sandboxed child scripts', () => {
+    const udDir = join(fixtureDir, 'api', 'dist', 'ud')
+    const childrenDir = join(udDir, 'sandbox-children')
+
+    it('emits each child as its own file, importing only packages', () => {
+      const child = join(childrenDir, 'humanize.child.js')
+      expect(existsSync(child)).toBe(true)
+      const code = readFileSync(child, 'utf-8')
+      expect(code).toMatch(/from ["']humanize-string["']/)
+      expect(code).not.toMatch(/from ["']\.{1,2}\//)
+    })
+
+    it('copies the packages a child imports, and their dependencies', () => {
+      const nodeModules = join(childrenDir, 'node_modules')
+      expect(readdirSync(nodeModules).sort()).toEqual([
+        'humanize-string',
+        // decamelize's dependency, hoisted in the monorepo
+        'xregexp',
+      ])
+      // Nested in humanize-string's own node_modules, as it's installed
+      expect(
+        existsSync(
+          join(nodeModules, 'humanize-string/node_modules/decamelize'),
+        ),
+      ).toBe(true)
+    })
+
+    it('lets findChildScript find the child from code in the bundle', () => {
+      const expected = join(childrenDir, 'humanize.child.js')
+      expect(findChildScript(udDir, 'humanize.child')).toBe(expected)
+      expect(findChildScript(join(udDir, 'chunks'), 'humanize.child')).toBe(
+        expected,
+      )
+    })
+
+    it("resolves the child's packages from the copies next to it", () => {
+      const script = findChildScript(join(udDir, 'chunks'), 'humanize.child')
+      const reads = sandboxedChildArgs({
+        script,
+        packages: ['humanize-string'],
+      })
+        .filter((arg) => arg.startsWith('--allow-fs-read='))
+        .map((arg) => arg.slice('--allow-fs-read='.length))
+        .slice(1)
+
+      const nodeModules = join(childrenDir, 'node_modules')
+      expect(reads).toEqual([
+        join(nodeModules, 'humanize-string'),
+        join(nodeModules, 'humanize-string/node_modules/decamelize'),
+        join(nodeModules, 'xregexp'),
+      ])
+    })
+
+    it('runs the bundled child in the sandbox', async () => {
+      const result = await runSandboxedChild({
+        script: findChildScript(join(udDir, 'chunks'), 'humanize.child'),
+        packages: ['humanize-string'],
+        input: Buffer.from('sandboxed_childScript'),
+      })
+
+      expect(result.ok ? result.output.toString() : result.stderr).toBe(
+        'Sandboxed child script',
+      )
+    })
+
+    it('runs the child of the regular build, next to its caller', async () => {
+      const libDir = join(fixtureDir, 'api', 'dist', 'lib')
+      const script = findChildScript(libDir, 'humanize.child')
+      expect(script).toBe(join(libDir, 'humanize.child.js'))
+
+      const result = await runSandboxedChild({
+        script,
+        packages: ['humanize-string'],
+        input: Buffer.from('sandboxed_childScript'),
+      })
+
+      expect(result.ok ? result.output.toString() : result.stderr).toBe(
+        'Sandboxed child script',
+      )
+    })
   })
 })

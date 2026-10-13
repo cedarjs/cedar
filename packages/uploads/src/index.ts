@@ -14,6 +14,25 @@ export type {
   UploadProfile,
   UploadProfiles,
 } from './profiles.js'
+export {
+  acceptedContentType,
+  DETECT_CONTENT_TYPE_BYTES,
+  DETECT_CONTENT_TYPE_TAIL_BYTES,
+  DETECTABLE_CONTENT_TYPES,
+  detectContentType,
+  findZipCentralDirectory,
+  isClaimedContentTypeAllowed,
+  MAX_ZIP_DIRECTORY_BYTES,
+} from './detectContentType.js'
+export type { DetectContentTypeOptions } from './detectContentType.js'
+export {
+  canonicalContentType,
+  CONTENT_TYPE_ALIASES,
+  isExplicitOnlyContentType,
+  isScriptableContentType,
+  MACRO_CONTENT_TYPES,
+  SCRIPTABLE_CONTENT_TYPES,
+} from './contentTypes.js'
 export { createFsProvider } from './providers/fs.js'
 export type { FsProviderOptions } from './providers/fs.js'
 export { createDbProvider } from './providers/db.js'
@@ -83,6 +102,7 @@ export { cedarUploadsPlugin } from './fastify/plugin.js'
 export type { UploadPluginOptions } from './fastify/plugin.js'
 export { handleS3Webhook, processS3EventRecord } from './webhooks/s3.js'
 export type {
+  ProcessS3EventRecordOptions,
   S3Event,
   S3EventOutcome,
   S3EventRecord,

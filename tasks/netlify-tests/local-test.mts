@@ -110,6 +110,11 @@ function step3setupUniversalDeployAndNetlify() {
 
   log('Setting up Netlify deploy (UD)...')
   run('yarn cedar setup deploy netlify --ud', { cwd: testProjectDir })
+
+  log('Adding the sandboxed child functions...')
+  run(`node tasks/sandbox-e2e/addToProject.mts "${testProjectDir}"`, {
+    cwd: REPO_ROOT,
+  })
 }
 
 function step4SetupNeon() {

@@ -51,6 +51,8 @@ const UPDATE_POST_MUTATION = gql\`
 
 export const Loading = () => <div>Loading...</div>
 
+export const Empty = () => <div>Post not found</div>
+
 export const Failure = ({ error }) => (
   <div className="rw-cell-error">{error?.message}</div>
 )
@@ -66,16 +68,14 @@ export const Success = ({ post }) => {
     },
   })
 
-  const onSave = (input, id) => {
-    updatePost({ variables: { id, input } })
+  const onSave = (input) => {
+    updatePost({ variables: { id: post.id, input } })
   }
 
   return (
     <div className="rw-segment">
       <header className="rw-segment-header">
-        <h2 className="rw-heading rw-heading-secondary">
-          Edit Post {post?.id}
-        </h2>
+        <h2 className="rw-heading rw-heading-secondary">Edit Post {post.id}</h2>
       </header>
       <div className="rw-segment-main">
         <PostForm post={post} onSave={onSave} error={error} loading={loading} />
@@ -420,7 +420,7 @@ const PostForm = (props) => {
       data.postedAt = props.post.postedAt
     }
 
-    props.onSave(data, props?.post?.id)
+    props.onSave(data)
   }
 
   return (
@@ -515,7 +515,7 @@ const PostForm = (props) => {
 
         <TextField
           name="image"
-          defaultValue={props.post?.image}
+          defaultValue={props.post?.image ?? undefined}
           className="rw-input"
           errorClassName="rw-input rw-input-error"
         />
@@ -584,7 +584,7 @@ const PostForm = (props) => {
 
         <TextField
           name="rating"
-          defaultValue={props.post?.rating}
+          defaultValue={props.post?.rating ?? undefined}
           className="rw-input"
           errorClassName="rw-input rw-input-error"
           validation={{ valueAsNumber: true }}
@@ -717,7 +717,7 @@ export function timeTag(dateTime) {
 }
 
 export const checkboxInputTag = (checked) => {
-  return <input type="checkbox" checked={checked} disabled />
+  return <input type="checkbox" checked={!!checked} disabled />
 }
 "
 `;
@@ -1692,6 +1692,8 @@ const UPDATE_USER_PROFILE_MUTATION = gql\`
 
 export const Loading = () => <div>Loading...</div>
 
+export const Empty = () => <div>UserProfile not found</div>
+
 export const Failure = ({ error }) => (
   <div className="rw-cell-error">{error?.message}</div>
 )
@@ -1710,15 +1712,15 @@ export const Success = ({ userProfile }) => {
     }
   )
 
-  const onSave = (input, id) => {
-    updateUserProfile({ variables: { id, input } })
+  const onSave = (input) => {
+    updateUserProfile({ variables: { id: userProfile.id, input } })
   }
 
   return (
     <div className="rw-segment">
       <header className="rw-segment-header">
         <h2 className="rw-heading rw-heading-secondary">
-          Edit UserProfile {userProfile?.id}
+          Edit UserProfile {userProfile.id}
         </h2>
       </header>
       <div className="rw-segment-main">
@@ -1912,11 +1914,12 @@ exports[`in javascript (default) mode > generated form matches expectations 1`] 
 
 const PixelForm = (props) => {
   const onSubmit = (data) => {
-    if (data.geometry === '') {
+    // The "None" option has an empty value
+    if (!data.geometry) {
       data.geometry = null
     }
 
-    props.onSave(data, props?.pixel?.id)
+    props.onSave(data)
   }
 
   return (
@@ -2063,7 +2066,7 @@ export default EditPostPage
 `;
 
 exports[`in typescript mode > creates a form component 1`] = `
-"import type { EditPostById, UpdatePostInput } from 'types/graphql'
+"import type { EditPostById, CreatePostInput } from 'types/graphql'
 
 import type { RWGqlError } from '@cedarjs/forms'
 import {
@@ -2115,8 +2118,8 @@ type FormPost = NonNullable<EditPostById['post']>
 
 interface PostFormProps {
   post?: EditPostById['post']
-  onSave: (data: UpdatePostInput, id?: FormPost['id']) => void
-  error: RWGqlError
+  onSave: (data: CreatePostInput) => void
+  error?: RWGqlError
   loading: boolean
 }
 
@@ -2133,7 +2136,7 @@ const PostForm = (props: PostFormProps) => {
       data.postedAt = props.post.postedAt
     }
 
-    props.onSave(data, props?.post?.id)
+    props.onSave(data)
   }
 
   return (
@@ -2228,7 +2231,7 @@ const PostForm = (props: PostFormProps) => {
 
         <TextField
           name="image"
-          defaultValue={props.post?.image}
+          defaultValue={props.post?.image ?? undefined}
           className="rw-input"
           errorClassName="rw-input rw-input-error"
         />
@@ -2297,7 +2300,7 @@ const PostForm = (props: PostFormProps) => {
 
         <TextField
           name="rating"
-          defaultValue={props.post?.rating}
+          defaultValue={props.post?.rating ?? undefined}
           className="rw-input"
           errorClassName="rw-input rw-input-error"
           validation={{ valueAsNumber: true }}
@@ -2401,7 +2404,7 @@ export const jsonDisplay = (obj: unknown) => {
   )
 }
 
-export const truncate = (value: string | number) => {
+export const truncate = (value: string | number | null | undefined) => {
   let output = value?.toString() ?? ''
 
   if (output.length > MAX_STRING_LENGTH) {
@@ -2429,8 +2432,8 @@ export function timeTag(dateTime: string | undefined | null) {
   return output
 }
 
-export const checkboxInputTag = (checked: boolean) => {
-  return <input type="checkbox" checked={checked} disabled />
+export const checkboxInputTag = (checked: boolean | null | undefined) => {
+  return <input type="checkbox" checked={!!checked} disabled />
 }
 "
 `;
@@ -3434,6 +3437,7 @@ exports[`in typescript mode > creates an edit cell 1`] = `
 "import type {
   EditPostById,
   UpdatePostInput,
+  UpdatePostMutation,
   UpdatePostMutationVariables,
 } from 'types/graphql'
 
@@ -3469,7 +3473,7 @@ export const QUERY: TypedDocumentNode<EditPostById> = gql\`
 \`
 
 const UPDATE_POST_MUTATION: TypedDocumentNode<
-  EditPostById,
+  UpdatePostMutation,
   UpdatePostMutationVariables
 > = gql\`
   mutation UpdatePostMutation($id: Int!, $input: UpdatePostInput!) {
@@ -3493,6 +3497,8 @@ const UPDATE_POST_MUTATION: TypedDocumentNode<
 
 export const Loading = () => <div>Loading...</div>
 
+export const Empty = () => <div>Post not found</div>
+
 export const Failure = ({ error }: CellFailureProps) => (
   <div className="rw-cell-error">{error?.message}</div>
 )
@@ -3508,16 +3514,14 @@ export const Success = ({ post }: CellSuccessProps<EditPostById>) => {
     },
   })
 
-  const onSave = (input: UpdatePostInput, id: EditPostById['post']['id']) => {
-    updatePost({ variables: { id, input } })
+  const onSave = (input: UpdatePostInput) => {
+    updatePost({ variables: { id: post.id, input } })
   }
 
   return (
     <div className="rw-segment">
       <header className="rw-segment-header">
-        <h2 className="rw-heading rw-heading-secondary">
-          Edit Post {post?.id}
-        </h2>
+        <h2 className="rw-heading rw-heading-secondary">Edit Post {post.id}</h2>
       </header>
       <div className="rw-segment-main">
         <PostForm post={post} onSave={onSave} error={error} loading={loading} />
@@ -3532,6 +3536,7 @@ exports[`in typescript mode > creates an edit component with int foreign keys co
 "import type {
   EditUserProfileById,
   UpdateUserProfileInput,
+  UpdateUserProfileMutation,
   UpdateUserProfileMutationVariables,
 } from 'types/graphql'
 
@@ -3557,7 +3562,7 @@ export const QUERY: TypedDocumentNode<EditUserProfileById> = gql\`
 \`
 
 const UPDATE_USER_PROFILE_MUTATION: TypedDocumentNode<
-  EditUserProfileById,
+  UpdateUserProfileMutation,
   UpdateUserProfileMutationVariables
 > = gql\`
   mutation UpdateUserProfileMutation(
@@ -3573,6 +3578,8 @@ const UPDATE_USER_PROFILE_MUTATION: TypedDocumentNode<
 \`
 
 export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>UserProfile not found</div>
 
 export const Failure = ({ error }: CellFailureProps) => (
   <div className="rw-cell-error">{error?.message}</div>
@@ -3594,18 +3601,15 @@ export const Success = ({
     }
   )
 
-  const onSave = (
-    input: UpdateUserProfileInput,
-    id: EditUserProfileById['userProfile']['id']
-  ) => {
-    updateUserProfile({ variables: { id, input } })
+  const onSave = (input: UpdateUserProfileInput) => {
+    updateUserProfile({ variables: { id: userProfile.id, input } })
   }
 
   return (
     <div className="rw-segment">
       <header className="rw-segment-header">
         <h2 className="rw-heading rw-heading-secondary">
-          Edit UserProfile {userProfile?.id}
+          Edit UserProfile {userProfile.id}
         </h2>
       </header>
       <div className="rw-segment-main">
@@ -3807,7 +3811,7 @@ export default PostsList
 `;
 
 exports[`in typescript mode > generated form matches expectations 1`] = `
-"import type { EditPixelById, UpdatePixelInput } from 'types/graphql'
+"import type { EditPixelById, CreatePixelInput } from 'types/graphql'
 
 import type { RWGqlError } from '@cedarjs/forms'
 import {
@@ -3823,18 +3827,19 @@ type FormPixel = NonNullable<EditPixelById['pixel']>
 
 interface PixelFormProps {
   pixel?: EditPixelById['pixel']
-  onSave: (data: UpdatePixelInput, id?: FormPixel['id']) => void
-  error: RWGqlError
+  onSave: (data: CreatePixelInput) => void
+  error?: RWGqlError
   loading: boolean
 }
 
 const PixelForm = (props: PixelFormProps) => {
   const onSubmit = (data: FormPixel) => {
-    if (data.geometry === '') {
+    // The "None" option has an empty value
+    if (!data.geometry) {
       data.geometry = null
     }
 
-    props.onSave(data, props?.pixel?.id)
+    props.onSave(data)
   }
 
   return (
