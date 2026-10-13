@@ -45,6 +45,8 @@ const UPDATE_POST_MUTATION: TypedDocumentNode<
 
 export const Loading = () => <div>Loading...</div>
 
+export const Empty = () => <div>Post not found</div>
+
 export const Failure = ({ error }: CellFailureProps) => (
   <div className="rw-cell-error">{error?.message}</div>
 )
