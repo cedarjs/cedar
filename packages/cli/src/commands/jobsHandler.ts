@@ -16,9 +16,15 @@ export const handler = async ({
   commands: _commands,
   ...options
 }: JobsHandlerArgs) => {
-  const positionalArgs = Array.isArray(_) ? [..._] : []
-  const commandArg = positionalArgs.pop()
-  const args = [commandArg == null ? '' : String(commandArg)]
+  // Everything after `jobs` is forwarded: the command and its own
+  // positionals, like `pause 42`
+  const positionalArgs = (Array.isArray(_) ? _ : []).map(String)
+
+  if (positionalArgs[0] === 'jobs') {
+    positionalArgs.shift()
+  }
+
+  const args = positionalArgs.length > 0 ? positionalArgs : ['']
 
   for (const [name, value] of Object.entries(options)) {
     // Allow both long and short form commands, e.g. --name and -n
