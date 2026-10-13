@@ -68,6 +68,8 @@ describe('parsing the command line', () => {
     expect(parseJobId('42')).toBe(42)
     expect(parseJobId(42)).toBe(42)
     expect(parseJobId('job_8f3a')).toBe('job_8f3a')
+    expect(parseJobId('00042')).toBe('00042')
+    expect(parseJobId('12345678901234567890')).toBe('12345678901234567890')
     expect(parseJobId(undefined)).toBeUndefined()
   })
 })

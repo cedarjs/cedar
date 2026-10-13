@@ -99,8 +99,10 @@ export const parseArgs = (argv: string[]) => {
 }
 
 /**
- * A job id from the command line: a number when it looks like one (the
- * `PrismaAdapter`'s ids are), otherwise the string as given
+ * A job id from the command line: a number when it's a non-negative integer
+ * written the way JavaScript writes it (the `PrismaAdapter`'s ids are),
+ * otherwise the string as given, so ids like `00042` or ones past
+ * `Number.MAX_SAFE_INTEGER` reach the adapter unchanged
  */
 export const parseJobId = (value: unknown): string | number | undefined => {
   if (typeof value === 'number') {
@@ -111,7 +113,13 @@ export const parseJobId = (value: unknown): string | number | undefined => {
     return undefined
   }
 
-  return /^\d+$/.test(value) ? Number(value) : value
+  const number = Number(value)
+
+  return /^\d+$/.test(value) &&
+    Number.isSafeInteger(number) &&
+    String(number) === value
+    ? number
+    : value
 }
 
 /**
