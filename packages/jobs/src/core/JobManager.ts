@@ -111,12 +111,27 @@ export class JobManager<
    * see to know which stored schedules are no longer declared.
    *
    * @returns What the sync did, or `undefined` if there was nothing to sync:
-   * no job declares schedules and the adapter can't store them
+   * no job declares schedules, and either the adapter can't store them or
+   * there are several adapters and no `scheduleAdapter` names one
    */
   async syncSchedules(
     jobs?: Job<TQueues, any[]>[],
   ): Promise<SyncSchedulesResult | undefined> {
     const allJobs = jobs ?? (await loadAllJobs())
+    const declaresSchedules = allJobs.some(
+      (job) => (job.schedules?.length ?? 0) > 0,
+    )
+
+    // Apps with several adapters only have to pick one when they use
+    // declared schedules
+    if (
+      !declaresSchedules &&
+      this.scheduleAdapter === undefined &&
+      Object.keys(this.adapters).length !== 1
+    ) {
+      return undefined
+    }
+
     const adapterName = this.#scheduleAdapterName()
     const adapter = this.adapters[adapterName]
 

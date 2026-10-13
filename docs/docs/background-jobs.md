@@ -616,7 +616,7 @@ This is an array of objects, each defining a "group" of workers. When will you n
 
 #### `scheduleAdapter`
 
-The name of the adapter that stores the schedules jobs declare (see [Recurring Jobs](#recurring-jobs)). It can be left out when you have a single adapter.
+The name of the adapter that stores the schedules jobs declare (see [Recurring Jobs](#recurring-jobs)). It can be left out when you have a single adapter, or when no job declares schedules.
 
 ### Adapter Config
 

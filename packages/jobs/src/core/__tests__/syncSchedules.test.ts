@@ -378,6 +378,20 @@ describe('the schedule adapter', () => {
     )
   })
 
+  it("doesn't have to be named when no job declares schedules", async () => {
+    const manager = new JobManager({
+      adapters: {
+        prisma: new PrismaAdapter({ db, logger: mockLogger }),
+        mock: new MockAdapter(),
+      },
+      queues: ['default'] as const,
+      logger: mockLogger,
+      workers: [],
+    })
+
+    expect(await manager.syncSchedules([makeJob('Other', [])])).toBe(undefined)
+  })
+
   it('is the one named by `scheduleAdapter`', async () => {
     const manager = new JobManager({
       adapters: {
