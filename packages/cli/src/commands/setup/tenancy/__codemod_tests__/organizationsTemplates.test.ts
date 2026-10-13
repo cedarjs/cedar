@@ -21,7 +21,11 @@ const TEMPLATES = [
 // See #3006.
 const ALLOWED_USER_FIELDS = ['email', 'hashedPassword', 'salt']
 
-const SCALAR_FIELD = /^\s*(\w+):\s*'[^']*',?\s*$/
+// Matches any single-line `key: <scalar value>,` field, not just single-quoted
+// strings, so a future `isAdmin: true` or `displayName: "Owner"` can't slip
+// past the matcher unnoticed (see review on #3046).
+const SCALAR_FIELD =
+  /^\s*(\w+):\s*(?:'[^']*'|"[^"]*"|`[^`]*`|-?\d+(?:\.\d+)?|true|false|null|undefined),?\s*$/
 
 // Groups consecutive `key: 'value',` lines together, the way they appear
 // inside a `{ ... }` object literal, so each group represents the scalar
@@ -55,8 +59,8 @@ describe.each(TEMPLATES)('%s', (templateName) => {
   )
 
   it('only sets fields that exist on a plain dbAuth User model', () => {
-    const userFieldGroups = scalarFieldGroups(templateSource).filter(
-      (fields) => fields.includes('email'),
+    const userFieldGroups = scalarFieldGroups(templateSource).filter((fields) =>
+      fields.includes('email'),
     )
 
     expect(userFieldGroups.length).toBeGreaterThan(0)
