@@ -20,6 +20,11 @@ File uploads and storage for CedarJS apps.
   to their source, made once on first read even under concurrency, failures
   remembered with a retry-after, `regenerateVariants()` to remake one name,
   and deletion with the source.
+- **Content detection** (`detectContentType`, `acceptedContentType`) that
+  checks what an uploaded file really is from its bytes, not from its name or
+  the type the browser claimed: images, PDF, audio/video, and OpenDocument and
+  Office files. Uploads use it by default (`verifyContentType`), and store
+  each file under one canonical spelling of its type.
 - **Web hooks and components** at `@cedarjs/uploads/web`, built on Uppy.
 
 ```bash

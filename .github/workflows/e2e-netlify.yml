@@ -58,6 +58,11 @@ jobs:
         working-directory: ../cedar-test-app
         run: yarn cedar setup deploy netlify --ud
 
+      - name: 🧒 Add a function that runs sandboxed child scripts
+        # tasks/sandbox-e2e: a pure-JS child that tries to reach the network,
+        # and a sharp child. tasks/netlify-tests/sandbox.test.mts checks them
+        run: node tasks/sandbox-e2e/addToProject.mts ../cedar-test-app
+
       - name: 🚀 Deploy to Netlify
         id: netlify-deploy
         working-directory: ../cedar-test-app

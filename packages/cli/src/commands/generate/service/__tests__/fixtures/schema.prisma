@@ -111,3 +111,29 @@ model PartStock {
 
   @@id([partId, warehouseId])
 }
+
+model Pet {
+  id      Int       @id @default(autoincrement())
+  name    String
+  ownerId Int?
+  owner   PetOwner? @relation(fields: [ownerId], references: [id])
+}
+
+model PetOwner {
+  id   Int    @id @default(autoincrement())
+  name String
+  pets Pet[]
+}
+
+model ManualTimestamp {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime
+}
+
+model AutoTimestamp {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

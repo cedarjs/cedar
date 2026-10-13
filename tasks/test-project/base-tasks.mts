@@ -942,7 +942,7 @@ async function addDbAuth(
   const resultsContactsSdl = contentContactsSdl
     .replace(
       'createContact(input: CreateContactInput!): Contact! @requireAuth',
-      `createContact(input: CreateContactInput!): Contact @skipAuth`,
+      `createContact(input: CreateContactInput!): Contact! @skipAuth`,
     )
     .replace(
       /deleteContact\(id: Int!\): Contact! @requireAuth(?=\s)/,
@@ -1019,7 +1019,7 @@ async function addDbAuth(
     .replace('userAttributes: _userAttributes', 'userAttributes')
     .replace(
       '// name: userAttributes.name',
-      "fullName: userAttributes['full-name']",
+      "fullName: userAttributes?.['full-name'] ?? ''",
     )
 
   fs.writeFileSync(pathAuthTs, resultsAuthTs)
