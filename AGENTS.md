@@ -106,6 +106,7 @@ Write for readers who see only the **current** state of the code and have no his
   - `vitest.setup.mts` — validates `NETLIFY_DEPLOY_URL` env var, sets `process.env.DEPLOY_URL`
   - `netlify.test.mts` — tests API `handleRequest`, legacy handlers, and web SPA shell against deployed Netlify URL
   - `skew-protection.test.mts` — tests skew protection across two deploys: the cookie is only set on HTML, old assets and API routes are served by the old deploy for its token (cookie, header, query), page loads always get the latest deploy
+  - `sandbox.test.mts` — calls `/.api/functions/sandbox`, which runs `@cedarjs/api/sandbox` children on the deployed function: a pure-JS one that must be refused the network, the environment and the server's code, and a sharp one that must make a thumbnail. The function and children live in `tasks/sandbox-e2e/` and are added to the test project by `node tasks/sandbox-e2e/addToProject.mts` (also used by `e2e-vercel.yml` and `tasks/vercel-tests/sandbox.test.mts`)
 - CI workflow in `.github/workflows/e2e-netlify.yml`:
   - Uses `__fixtures__/test-project/` as the test project (ESM, needed by Netlify vite plugin)
   - Runs tarsync to link local packages
