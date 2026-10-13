@@ -202,3 +202,50 @@ export class WorkerConfigIndexNotFoundError extends CedarJSJobsError {
     super(`Worker index ${index} not found in jobs config`)
   }
 }
+
+/**
+ * Thrown when pausing, resuming or listing jobs through an adapter that
+ * doesn't implement `pause()`, `resume()` or `list()`
+ */
+export class PauseNotImplementedError extends CedarJSJobsError {
+  constructor(method: 'pause' | 'resume' | 'list') {
+    super(
+      `The configured adapter does not implement \`${method}()\`, so it ` +
+        'does not support pausing, resuming or listing jobs',
+    )
+  }
+}
+
+/** Thrown when pausing or resuming a job id that no job has */
+export class JobIdNotFoundError extends CedarJSJobsError {
+  constructor(jobId: string | number) {
+    super(`No job with the id ${jobId} was found`)
+  }
+}
+
+/**
+ * Thrown when pausing or resuming a job that has completed or failed for
+ * good (which includes cancelled jobs)
+ */
+export class JobNotActiveError extends CedarJSJobsError {
+  constructor(jobId: string | number, state: 'completed' | 'failed') {
+    super(
+      state === 'failed'
+        ? `Job ${jobId} has failed for good (or was cancelled), so it can't ` +
+            'be paused or resumed'
+        : `Job ${jobId} has completed, so it can't be paused or resumed`,
+    )
+  }
+}
+
+/**
+ * Thrown when it's unclear which adapter to use: the `JobManager` has
+ * several and none was named
+ */
+export class AdapterNameRequiredError extends CedarJSJobsError {
+  constructor(names: string[]) {
+    super(
+      `Name the adapter to use, the JobManager has several: ${names.join(', ')}`,
+    )
+  }
+}

@@ -151,14 +151,22 @@ model BackgroundJob {
   queue     String
   priority  Int
   runAt     DateTime?
+  cron      String?
   lockedAt  DateTime?
   lockedBy  String?
   lastError String?
   failedAt  DateTime?
+  pausedAt  DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
 ```
+
+:::info[Adding the `pausedAt` column to an existing app]
+
+The `pausedAt` column stores [paused jobs](#pausing-jobs). Apps that set up jobs before the column existed keep working without it; only pausing and resuming jobs throw a `PausedAtColumnMissingError` until it's there. To add it, add `pausedAt DateTime?` to your `BackgroundJob` model and run `yarn cedar prisma migrate dev`. The column is nullable, so existing rows don't need a value.
+
+:::
 
 Let's look at the config file that was generated. Comments have been removed for brevity:
 
@@ -342,6 +350,50 @@ What cancelling means depends on the state of the job:
 - **Currently running**: the in-progress attempt is _not_ interrupted (see [Job Timeouts](#job-timeouts)—the worker will stop waiting on it once `maxRuntime` is exceeded), but the job will not be retried if it errors, and no other worker will pick it up. Even if the in-progress attempt finishes successfully, the job record keeps its cancelled state (it won't be deleted by `deleteSuccessfulJobs`).
 
 Cancellation requires an adapter that implements the optional `cancel()` function. The `PrismaAdapter` does; for a custom adapter that doesn't, `later.cancel()` throws a `CancelNotImplementedError`.
+
+### Pausing Jobs
+
+To stop a job from running for a while without changing your code or deploying, for example to stop a nightly job during an incident, pause it. Find its id with `yarn cedar jobs list`:
+
+```
+ID  JOB               QUEUE    CRON       STATUS
+17  SendDigestJob     default  -          next run 2026-10-12T13:05:00.000Z
+3   NightlyReportJob  default  0 0 * * *  next run 2026-10-13T00:00:00.000Z
+```
+
+Then pause it, and resume it when you're ready:
+
+```bash
+yarn cedar jobs pause 3
+yarn cedar jobs resume 3
+```
+
+The same is available in code, on the `JobManager`:
+
+```js
+import { jobs } from 'src/lib/jobs'
+
+const { alreadyPaused, pausedAt } = await jobs.pauseJob(3)
+const { wasPaused, runAt } = await jobs.resumeJob(3)
+const waiting = await jobs.listJobs({ limit: 20 })
+```
+
+How a pause behaves:
+
+- Workers don't pick up a paused job. A run that's in progress when you pause finishes, and if the job is recurring its next run stays paused. A run that fails and is retried stays paused too. If the worker running a paused job crashes, the job stays locked; once you resume it, a worker started with the same process name reclaims it right away and runs it again, without waiting for its next run time.
+- **Resuming a recurring job** schedules its next run at the next time its `cron` matches from now. Runs it missed while it was paused are not made up for.
+- **Resuming a one-off job** keeps its run time: if that's still in the future it runs then, and if it passed while the job was paused it runs as soon as a worker is free.
+- When a worker starts (`yarn cedar jobs work` or `start`, not `workoff`), it logs a warning listing the paused jobs in its queues, so a forgotten pause shows up.
+- Pausing a paused job, or resuming one that isn't paused, changes nothing and says so. Jobs that have completed or failed for good (including cancelled ones) can't be paused or resumed.
+- `yarn cedar jobs list` lists the jobs that are waiting to run, running or paused, the ones that run next first, 100 at most (`--limit` changes that). If your `JobManager` has several adapters, pass `--adapter` to these commands (or `{ adapter }` to the functions). Like `yarn cedar jobs work`, the commands load your jobs config from the built api side.
+
+:::caution[A pause lives on the job's row]
+
+The pause is stored on the job's row in the database, so it holds across worker restarts and deploys. But if your code deletes and recreates its recurring jobs, like a script that schedules them again on every deploy, the new rows aren't paused. Pause again after such a script runs, or don't run it while a job should stay paused. [Declared schedules](https://github.com/cedarjs/cedar/pull/3021), proposed separately, are meant to fix this by keeping a recurring job's row across deploys.
+
+:::
+
+Pausing requires an adapter that implements the optional `pause()` and `resume()` functions (and `list()` for listing), like the `PrismaAdapter`, and the [`pausedAt` column](#installation). With an adapter that doesn't, they throw a `PauseNotImplementedError`.
 
 ### Executing Jobs
 
@@ -869,6 +921,8 @@ The general gist of the required functions:
 - `failure()` is called, instead of `error()`, when the job has reached `maxAttempts` or exceeded `maxRuntime`. Accepts the job object, a `deleteJob` boolean that says whether the job should be deleted, and the `error` of the failed attempt, which should be recorded in the same write that marks the job as failed.
 - `clear()` remove all jobs from the queue (mostly used in development).
 - `cancel()` (optional) accepts an object with a `jobId` property and should make sure that job never runs (or is never retried, if it's currently running). Return `true` if a job was cancelled, `false` otherwise. If you don't implement this function, `later.cancel()` will throw a `CancelNotImplementedError`.
+- `pause()` and `resume()` (optional) accept an object with a `jobId` property. A paused job must not be returned by `find()`, and must stay paused when `success()` or `error()` reschedule a run that was in progress. `resume()` gives a recurring job its next `runAt` at the next match of its cron from now, and leaves a one-off job's `runAt` alone. They return `{ alreadyPaused, pausedAt }` and `{ wasPaused, runAt }`, and throw a `JobIdNotFoundError` for an unknown id and a `JobNotActiveError` for a job that has completed or failed for good. Without them, `jobs.pauseJob()` and `jobs.resumeJob()` throw a `PauseNotImplementedError`.
+- `list()` (optional) accepts an object with a `limit`, and optionally `queues` and `paused: true` (which a starting worker uses to warn about paused jobs), and returns the jobs that are waiting to run, running or paused, the ones that run next first, each with its `id`, `name`, `queue`, `cron`, `runAt`, `pausedAt`, `attempts` and whether it's `running`. Used by `yarn cedar jobs list`.
 
 ## The Future
 

@@ -33,6 +33,7 @@
     "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",
     "prepublishOnly": "NODE_ENV=production yarn build",
+    "setup:test": "npx prisma generate --config ./src/__tests__/prisma.config.ts && npx prisma migrate diff --config ./src/__tests__/prisma.config.ts --from-empty --to-schema ./src/__tests__/unit-test-schema.prisma --script -o ./src/__tests__/unit-test-schema.sql",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -43,11 +44,16 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "7.0.0",
+    "@prisma/adapter-better-sqlite3": "7.10.0",
     "@prisma/client": "7.10.0",
+    "@types/better-sqlite3": "7.6.13",
+    "better-sqlite3": "12.11.1",
     "concurrently": "9.2.5",
+    "prisma": "7.10.0",
     "publint": "0.3.25",
     "typescript": "5.9.3",
-    "vitest": "4.1.11"
+    "vitest": "4.1.11",
+    "zx": "8.8.5"
   },
   "engines": {
     "node": ">=24"
