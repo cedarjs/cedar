@@ -520,6 +520,15 @@ A common task for a background job is that it does something on a schedule: run
 reports every night at midnight, check for abandoned carts every 15 minutes,
 that sort of thing. We call these recurring jobs.
 
+There are two ways to set one up:
+
+- [Declare its schedules](#declaring-schedules) on the job, for recurring work
+  that's part of your app, like nightly reports or cleanup. This is what you
+  want for almost every recurring job.
+- [Schedule it at runtime](#scheduling-recurring-jobs-at-runtime) with
+  `later()`, for schedules that come from your data, like a digest each customer
+  gets at a time they pick.
+
 ### Declaring Schedules
 
 Declare when a job runs with `schedules`, next to the rest of the job:
@@ -565,25 +574,35 @@ Some details worth knowing:
 
 If you schedule recurring jobs with a script that calls `later(job, args, { cron })`, declare them with `schedules` instead and delete the rows that script created (they have a `cron` and no `key`) once, for example with `db.backgroundJob.deleteMany({ where: { cron: { not: null }, key: null } })` in `yarn cedar console`.
 
-### Scheduling a Recurring Job by Hand
+### Scheduling Recurring Jobs at Runtime
 
-You can also start a recurring job by passing a `cron` schedule when scheduling it, for example from a script:
+Declared schedules are fixed in your code. When a schedule depends on your data instead, pass a `cron` schedule to `later()` from your app code, and give it a [`key`](#unique-jobs) that identifies it:
 
-```ts
-import { NightlyReportJob } from 'api/src/jobs/NightlyReportJob/NightlyReportJob'
-import { later } from 'api/src/lib/jobs'
+```js title="api/src/services/digests/digests.js"
+import { DigestJob } from 'src/jobs/DigestJob/DigestJob'
+import { db } from 'src/lib/db'
+import { later } from 'src/lib/jobs'
 
-export default async () => {
-  await later(NightlyReportJob, { cron: '0 0 * * *' })
+export const enableDigest = async ({ customerId, cron }) => {
+  const job = await later(DigestJob, [customerId], {
+    cron,
+    key: `digest:${customerId}`,
+  })
+
+  // Hold on to the id to stop the digest later with `later.cancel(id)`
+  return db.customer.update({
+    where: { id: customerId },
+    data: { digestJobId: job.id },
+  })
 }
 ```
 
-A job scheduled like this isn't synced: it runs until it fails for good or you cancel it, and running the script again adds a second one, unless you give it a [`key`](#unique-jobs). Prefer declaring schedules.
+The key makes the call safe to repeat: while the schedule is active, calling `later()` again with the same key adds nothing and returns the job that's already scheduled, with `alreadyQueued: true`. To change the schedule, cancel the job and schedule it again. A job scheduled like this isn't synced with your code. It runs until it fails for good or you [cancel it](#cancelling-jobs).
 
 ### How Recurring Jobs Run
 
 Scheduling a recurring job doesn't run it right away. Its first run happens the
-next time the `cron` schedule matches (midnight, in the example above), and
+next time the `cron` schedule matches (midnight, for `NightlyReportJob` above), and
 after each successful run the job is scheduled again for the following match. If
 a run fails, the job is retried after a backoff delay, like any other job,
 rather than at the next match. Matches of the schedule that pass while a run is
@@ -594,12 +613,12 @@ a single run: every successful run resets `attempts` to 0. If a run fails
 `maxAttempts` times in a row, or a run exceeds `maxRuntime`, the job is
 permanently failed like any other job, its schedule stops, and the worker logs
 an error saying so. To restart the schedule, fix the problem and restart the
-workers (for a declared schedule) or schedule the job again with
-`later(NightlyReportJob, { cron: '0 0 * * *' })`.
+workers (for a declared schedule) or call `later()` with the `cron` schedule
+again (for one scheduled at runtime).
 
 The `cron` schedule is evaluated in the local time zone of the process doing the
 scheduling: the job worker for declared schedules, the process calling `later()`
-for the first run of a job scheduled by hand, and the job worker for every run
+for the first run of a job scheduled at runtime, and the job worker for every run
 after that. Run them with the same time zone (for example by setting `TZ=UTC`)
 so the job keeps running at the same time of day.
 
@@ -607,9 +626,8 @@ CedarJS uses https://github.com/harrisiirak/cron-parser under the hood for
 parsing the `cron` schedule. So all the syntax supported by `cron-parser` is
 supported. Including, for example, the six-groups format for seconds, and their
 [predefined expressions](https://github.com/harrisiirak/cron-parser#predefined-expressions)
-like `@hourly`, `@daily`, `@weekends`, etc. So the cron schedule from the
-example above could also have been written as `cron: '0 0 0 * * *'` and
-`cron: '@daily'`.
+like `@hourly`, `@daily`, `@weekends`, etc. So `NightlyReportJob`'s schedule
+could also have been written as `cron: '0 0 0 * * *'` and `cron: '@daily'`.
 
 When you schedule recurring jobs you can only specify the `cron` option. Other
 options, like `wait` or `waitUntil`, are not supported. These options don't make
