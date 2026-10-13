@@ -27,7 +27,7 @@
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/telemetry": "workspace:*",
     "execa": "5.1.1",
-    "storybook": "8.6.18",
+    "storybook": "8.6.19",
     "storybook-framework-cedarjs": "workspace:*",
     "termi-link": "1.1.0",
     "verkit": "0.5.0",

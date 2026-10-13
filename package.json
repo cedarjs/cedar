@@ -119,7 +119,7 @@
     "npm-packlist": "10.0.4",
     "nx": "23.2.1",
     "ora": "9.4.1",
-    "prettier": "3.9.9",
+    "prettier": "3.9.10",
     "prettier-plugin-curly": "0.4.1",
     "prettier-plugin-packagejson": "3.0.2",
     "prettier-plugin-sh": "0.20.2",
