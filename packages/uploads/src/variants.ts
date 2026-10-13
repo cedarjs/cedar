@@ -261,17 +261,41 @@ async function readBytes(
 /**
  * Deletes one variant: its bytes, then its row. A missing object or row is
  * tolerated.
+ *
+ * The row is deleted only in the state its bytes were deleted for. A
+ * generator that finishes in between saves its file to the row, so the row
+ * is read again and that file deleted too.
  */
 async function deleteVariantRow(
   db: UploadVariantDatabase,
   targets: StorageTargets,
   row: UploadVariantRecord,
 ) {
-  if (row.storageKey) {
-    await resolveTarget(targets, row.target).delete(row.storageKey)
-  }
+  let current: UploadVariantRecord | null = row
 
-  await db.upload.deleteMany({ where: { id: row.id } })
+  while (current) {
+    if (current.storageKey) {
+      await resolveTarget(targets, current.target).delete(current.storageKey)
+    }
+
+    const { count } = await db.upload.deleteMany({
+      where: {
+        id: current.id,
+        status: current.status,
+        tokenId: current.tokenId,
+        storageKey: current.storageKey,
+      },
+    })
+
+    if (count === 1) {
+      return
+    }
+
+    current = await db.upload.findUnique({
+      where: { id: current.id },
+      omit: { data: true },
+    })
+  }
 }
 
 /**
@@ -371,6 +395,67 @@ export function defineUploadVariants<Name extends string>(
   // One attempt per source and variant in this process; other callers
   // share its promise
   const inFlight = new Map<string, Promise<UploadVariantRecord | null>>()
+  // The attempts each in-flight attempt is waiting for through
+  // `readVariant()`, to refuse a dependency cycle between attempts that
+  // started separately
+  const waitingFor = new Map<string, string[]>()
+
+  const keyOf = (sourceId: string, name: string) => `${sourceId}\0${name}`
+
+  const isWaitingFor = (from: string, to: string): boolean => {
+    const seen = new Set<string>()
+    const stack = [from]
+
+    for (let key = stack.pop(); key !== undefined; key = stack.pop()) {
+      if (key === to) {
+        return true
+      }
+
+      if (!seen.has(key)) {
+        seen.add(key)
+        stack.push(...(waitingFor.get(key) ?? []))
+      }
+    }
+
+    return false
+  }
+
+  /** `obtain()` for a generator's `readVariant()`, recording the wait. */
+  const obtainFor = async (
+    waiter: string,
+    sourceId: string,
+    name: string,
+    chain: string[],
+  ) => {
+    const key = keyOf(sourceId, name)
+
+    // `obtain()` refuses a cycle within one chain of reads with the whole
+    // chain in its message
+    if (
+      !chain.includes(name) &&
+      inFlight.has(key) &&
+      isWaitingFor(key, waiter)
+    ) {
+      throw new UploadError(
+        'CONFIGURATION',
+        `Variant '${name}' and the variant reading it depend on each other.`,
+      )
+    }
+
+    const waits = waitingFor.get(waiter) ?? []
+    waitingFor.set(waiter, [...waits, key])
+
+    try {
+      return await obtain(sourceId, name, chain)
+    } finally {
+      const rest = waitingFor.get(waiter) ?? []
+      rest.splice(rest.indexOf(key), 1)
+
+      if (rest.length === 0) {
+        waitingFor.delete(waiter)
+      }
+    }
+  }
 
   const definitionOf = (name: string) => {
     const definition = definitions.get(name)
@@ -448,7 +533,12 @@ export function defineUploadVariants<Name extends string>(
         variant: name,
         readSource: () => readBytes(db, targets, source),
         readVariant: async (other) => {
-          const made = await obtain(source.id, other, [...chain, name])
+          const made = await obtainFor(
+            keyOf(source.id, name),
+            source.id,
+            other,
+            [...chain, name],
+          )
           return made ? readBytes(db, targets, made) : null
         },
       })
@@ -498,22 +588,35 @@ export function defineUploadVariants<Name extends string>(
       }
     }
 
-    const { count } = await db.upload.updateMany({
-      where: ours,
-      data: {
-        status: 'completed',
-        storageKey,
-        size: BigInt(file.data.byteLength),
-        mimeType: file.mimeType,
-        filename:
-          file.filename ??
-          defaultFilename(source.filename, name, file.mimeType),
-        // Copying gives Prisma the plain-ArrayBuffer-backed array its
-        // `Bytes` input requires
-        data: isDbTarget ? new Uint8Array(file.data) : null,
-        tokenId: null,
-      },
-    })
+    const { count } = await db.upload
+      .updateMany({
+        where: ours,
+        data: {
+          status: 'completed',
+          // A retry or a takeover writes to the variant's current target,
+          // which is not necessarily the one the row was created for
+          target: target.name,
+          storageKey,
+          size: BigInt(file.data.byteLength),
+          mimeType: file.mimeType,
+          filename:
+            file.filename ??
+            defaultFilename(source.filename, name, file.mimeType),
+          // Copying gives Prisma the plain-ArrayBuffer-backed array its
+          // `Bytes` input requires
+          data: isDbTarget ? new Uint8Array(file.data) : null,
+          tokenId: null,
+        },
+      })
+      .catch(async (e: unknown) => {
+        // No row references the file, so nothing could find it to delete
+        // it later
+        if (storageKey) {
+          await target.delete(storageKey).catch(() => undefined)
+        }
+
+        throw e
+      })
 
     if (count !== 1) {
       // The claim was lost while generating: the source or the variant was
@@ -653,7 +756,7 @@ export function defineUploadVariants<Name extends string>(
       )
     }
 
-    const key = `${sourceId}\0${name}`
+    const key = keyOf(sourceId, name)
     const running = inFlight.get(key)
 
     if (running) {
@@ -808,6 +911,10 @@ export function defineUploadVariants<Name extends string>(
         }
 
         if (remake) {
+          // An attempt still running here for the deleted row finds the row
+          // gone and makes nothing. Let it end, so the variant is made anew
+          await inFlight.get(keyOf(sourceId, name))?.catch(() => null)
+
           const made = await getVariant(sourceId, name).catch((e: unknown) => {
             onError(e, { sourceId, variant: name })
             return null

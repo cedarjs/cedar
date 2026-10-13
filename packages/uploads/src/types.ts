@@ -48,6 +48,11 @@ export interface UploadCreateData {
 
 export interface UploadWhere {
   id?: string | { in: string[] }
+  /**
+   * Only exists when the `Upload` model has the variant columns. A query
+   * that uses it must handle the error Prisma raises without them.
+   */
+  sourceId?: string
   target?: string
   status?: string | { in: string[] }
   storageKey?: string | null | { not: null }
@@ -230,6 +235,7 @@ export interface UploadVariantWhere {
   variant?: string | null
   status?: string
   tokenId?: string | null
+  storageKey?: string | null
   createdAt?: { lt?: Date; lte?: Date }
   updatedAt?: { lt?: Date }
 }
@@ -241,6 +247,7 @@ export interface UploadVariantCreateData extends UploadCreateData {
 
 export interface UploadVariantUpdateData {
   status?: UploadStatus
+  target?: string
   size?: bigint
   storageKey?: string | null
   filename?: string

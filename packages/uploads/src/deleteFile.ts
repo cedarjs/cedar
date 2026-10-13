@@ -76,6 +76,19 @@ export async function deleteFile(
       }
 
       if (!options.targets) {
+        // Another model referencing the upload raises the same error, and
+        // a schema without the variant columns rejects the query
+        const hasVariants = await options.db.upload
+          .count({ where: { sourceId: upload.id } })
+          .then(
+            (count) => count > 0,
+            () => false,
+          )
+
+        if (!hasVariants) {
+          throw e
+        }
+
         throw new UploadError(
           'HAS_VARIANTS',
           `Upload '${upload.id}' has derived files (variants), so its row ` +

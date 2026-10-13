@@ -2,12 +2,14 @@ import { setTimeout as sleep } from 'node:timers/promises'
 
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
+import { cleanupStaleUploads } from '../cleanupStaleUploads.js'
 import { deleteFile } from '../deleteFile.js'
 import { createDbProvider } from '../providers/db.js'
 import { storeFile } from '../storeFile.js'
 import { defineStorageTargets } from '../targets.js'
+import type { UploadVariantDatabase, UploadVariantDelegate } from '../types.js'
 import type { UploadVariantGenerator } from '../variants.js'
-import { defineUploadVariants } from '../variants.js'
+import { defineUploadVariants, deleteVariants } from '../variants.js'
 
 import { createMemoryProvider } from './helpers/memoryProvider.js'
 import { prisma, resetTestDb, variantDb as db } from './helpers/testDb.js'
@@ -43,6 +45,25 @@ async function storeSource(targets: Targets, text = 'photo') {
     userId: 'user_1',
     organizationId: 'org_1',
   })
+}
+
+/** The test database, with some `Upload` calls replaced. */
+function withUpload(
+  overrides: Partial<UploadVariantDelegate>,
+): UploadVariantDatabase {
+  const base: UploadVariantDatabase = db
+
+  return {
+    upload: {
+      create: (args) => base.upload.create(args),
+      findUnique: (args) => base.upload.findUnique(args),
+      findFirst: (args) => base.upload.findFirst(args),
+      findMany: (args) => base.upload.findMany(args),
+      updateMany: (args) => base.upload.updateMany(args),
+      deleteMany: (args) => base.upload.deleteMany(args),
+      ...overrides,
+    },
+  }
 }
 
 async function backdate(id: string, ms: number) {
@@ -404,6 +425,146 @@ describe('defineUploadVariants', () => {
 
     expect([...found.keys()].sort()).toEqual([one.id, three.id].sort())
   })
+
+  test('a variant whose save fails leaves no file behind', async () => {
+    const targets = makeTargets()
+    const source = await storeSource(targets)
+    const failing = withUpload({
+      updateMany: (args) =>
+        args.data.status === 'completed'
+          ? Promise.reject(new Error('database down'))
+          : withUpload({}).upload.updateMany(args),
+    })
+    const variants = defineUploadVariants({
+      db: failing,
+      targets,
+      target: targets.thumbs,
+      variants: { small: upperCase('s') },
+    })
+
+    await expect(variants.getVariant(source, 'small')).rejects.toThrow(
+      'database down',
+    )
+    expect(targets.thumbs.objects.size).toBe(0)
+  })
+
+  test('a retry stores the target it wrote to', async () => {
+    const targets = makeTargets()
+    const source = await storeSource(targets)
+    const before = defineUploadVariants({
+      db,
+      targets,
+      target: targets.thumbs,
+      variants: { small: () => null },
+    })
+
+    expect(await before.getVariant(source, 'small')).toBeNull()
+    const failed = await prisma.upload.findFirstOrThrow({
+      where: { sourceId: source.id },
+    })
+    expect(failed.target).toBe('thumbs')
+    await backdate(failed.id, 2 * DAY)
+
+    // The variant's target changed between the attempts
+    const after = defineUploadVariants({
+      db,
+      targets,
+      target: targets.files,
+      variants: { small: upperCase('s') },
+    })
+
+    expect(await after.getVariant(source, 'small')).toMatchObject({
+      target: 'files',
+    })
+    expect((await after.readVariant(source, 'small'))?.data.toString()).toBe(
+      's:PHOTO',
+    )
+    expect(targets.thumbs.objects.size).toBe(0)
+  })
+
+  test('cleanup leaves a retry of an old failed variant alone', async () => {
+    const targets = makeTargets()
+    const source = await storeSource(targets)
+    let broken = true
+    const started = Promise.withResolvers<void>()
+    const release = Promise.withResolvers<void>()
+    const variants = defineUploadVariants({
+      db,
+      targets,
+      target: targets.thumbs,
+      variants: {
+        small: async (context) => {
+          if (broken) {
+            return null
+          }
+
+          started.resolve()
+          await release.promise
+          return upperCase('s')(context)
+        },
+      },
+    })
+
+    expect(await variants.getVariant(source, 'small')).toBeNull()
+    const failed = await prisma.upload.findFirstOrThrow({
+      where: { sourceId: source.id },
+    })
+    const old = new Date(Date.now() - 2 * DAY)
+    await prisma.upload.update({
+      where: { id: failed.id },
+      data: { createdAt: old, updatedAt: old },
+    })
+
+    broken = false
+    const making = variants.getVariant(source, 'small')
+    await started.promise
+
+    expect(await cleanupStaleUploads({ db, targets })).toMatchObject({
+      claimed: 0,
+    })
+
+    release.resolve()
+    expect(await making).toMatchObject({ status: 'completed' })
+  })
+
+  test('variants that read each other, started together, are refused', async () => {
+    const targets = makeTargets()
+    const source = await storeSource(targets)
+    const onError = vi.fn()
+    let started = 0
+    const bothStarted = Promise.withResolvers<void>()
+    const readsOther =
+      (other: 'a' | 'b'): UploadVariantGenerator =>
+      async ({ readVariant }) => {
+        started += 1
+
+        if (started === 2) {
+          bothStarted.resolve()
+        }
+
+        await bothStarted.promise
+        const bytes = await readVariant(other)
+        return bytes ? { data: bytes, mimeType: 'text/plain' } : null
+      }
+    const variants = defineUploadVariants({
+      db,
+      targets,
+      target: targets.thumbs,
+      variants: { a: readsOther('b'), b: readsOther('a') },
+      onError,
+    })
+
+    expect(
+      await Promise.all([
+        variants.getVariant(source, 'a'),
+        variants.getVariant(source, 'b'),
+      ]),
+    ).toEqual([null, null])
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({ code: 'CONFIGURATION' }),
+      expect.anything(),
+    )
+  })
 })
 
 describe('regenerateVariants', () => {
@@ -487,6 +648,58 @@ describe('regenerateVariants', () => {
       status: 'completed',
     })
   })
+
+  test('remakes a variant that was being made when it was deleted', async () => {
+    const targets = makeTargets()
+    const source = await storeSource(targets)
+    let version = 1
+    const started = Promise.withResolvers<void>()
+    const release = Promise.withResolvers<void>()
+    const variants = defineUploadVariants({
+      db,
+      targets,
+      target: targets.thumbs,
+      variants: {
+        small: async ({ readSource }) => {
+          const made = version
+
+          if (made === 1) {
+            started.resolve()
+            await release.promise
+          }
+
+          return {
+            data: Buffer.from(`v${made}:${await readSource()}`),
+            mimeType: 'text/plain',
+          }
+        },
+      },
+    })
+
+    const making = variants.getVariant(source, 'small')
+    await started.promise
+
+    version = 2
+    const regenerating = variants.regenerateVariants('small')
+    await vi.waitFor(async () => {
+      expect(
+        await prisma.upload.count({ where: { sourceId: source.id } }),
+      ).toBe(0)
+    })
+    release.resolve()
+
+    expect(await regenerating).toEqual({
+      deleted: 1,
+      made: 1,
+      failed: 0,
+      errors: 0,
+    })
+    expect(await making).toBeNull()
+    expect((await variants.readVariant(source, 'small'))?.data.toString()).toBe(
+      'v2:photo',
+    )
+    expect(targets.thumbs.objects.size).toBe(1)
+  })
 })
 
 describe('deleting a source', () => {
@@ -549,6 +762,64 @@ describe('deleting a source', () => {
     await deleteFile(targets.files, { db, upload: source, targets })
     expect(await prisma.upload.count()).toBe(0)
     expect(targets.thumbs.objects.size).toBe(0)
+  })
+
+  test('deleteFile without targets passes on a reference that is not a variant', async () => {
+    const targets = makeTargets()
+    const source = await storeSource(targets)
+    const referenced = Object.assign(new Error('foreign key'), {
+      code: 'P2003',
+    })
+    vi.spyOn(prisma.upload, 'delete').mockRejectedValueOnce(referenced)
+
+    await expect(
+      deleteFile(targets.files, { db, upload: source }),
+    ).rejects.toBe(referenced)
+  })
+
+  test('deleting a variant that is finished meanwhile deletes its file too', async () => {
+    const targets = makeTargets()
+    const source = await storeSource(targets)
+    const started = Promise.withResolvers<void>()
+    const release = Promise.withResolvers<void>()
+    const variants = defineUploadVariants({
+      db,
+      targets,
+      target: targets.thumbs,
+      variants: {
+        small: async (context) => {
+          const bytes = await upperCase('s')(context)
+          started.resolve()
+          await release.promise
+          return bytes
+        },
+      },
+    })
+
+    const making = variants.getVariant(source, 'small')
+    await started.promise
+
+    // The variant is saved after its pending row was read for deletion, and
+    // before that row is deleted
+    let raced = false
+    const racing = withUpload({
+      deleteMany: async (args) => {
+        if (!raced) {
+          raced = true
+          release.resolve()
+          await making
+        }
+
+        return withUpload({}).upload.deleteMany(args)
+      },
+    })
+
+    expect(await deleteVariants(source, { db: racing, targets })).toBe(1)
+    expect(await making).toMatchObject({ status: 'completed' })
+    expect(targets.thumbs.objects.size).toBe(0)
+    expect(await prisma.upload.count({ where: { sourceId: source.id } })).toBe(
+      0,
+    )
   })
 
   test('a variant finished after its source was deleted leaves no file behind', async () => {
