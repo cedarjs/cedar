@@ -52,6 +52,8 @@ const UPDATE_POST_MUTATION = gql\`
 
 export const Loading = () => <div>Loading...</div>
 
+export const Empty = () => <div>Post not found</div>
+
 export const Failure = ({ error }) => (
   <div className="rw-cell-error">{error?.message}</div>
 )
@@ -1655,6 +1657,8 @@ const UPDATE_USER_PROFILE_MUTATION = gql\`
 \`
 
 export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>UserProfile not found</div>
 
 export const Failure = ({ error }) => (
   <div className="rw-cell-error">{error?.message}</div>
@@ -3443,6 +3447,8 @@ const UPDATE_POST_MUTATION: TypedDocumentNode<
 
 export const Loading = () => <div>Loading...</div>
 
+export const Empty = () => <div>Post not found</div>
+
 export const Failure = ({ error }: CellFailureProps) => (
   <div className="rw-cell-error">{error?.message}</div>
 )
@@ -3523,6 +3529,8 @@ const UPDATE_USER_PROFILE_MUTATION: TypedDocumentNode<
 \`
 
 export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>UserProfile not found</div>
 
 export const Failure = ({ error }: CellFailureProps) => (
   <div className="rw-cell-error">{error?.message}</div>

@@ -36,6 +36,8 @@ const UPDATE_${singularConstantName}_MUTATION: TypedDocumentNode<
 
 export const Loading = () => <div>Loading...</div>
 
+export const Empty = () => <div>${singularPascalName} not found</div>
+
 export const Failure = ({ error }: CellFailureProps) => (
   <div className="rw-cell-error">{error?.message}</div>
 )
