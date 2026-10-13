@@ -535,12 +535,17 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
 
     const pausedAt = new Date()
     const { count } = await this.accessor.updateMany({
-      where: { id: row.id, pausedAt: null, failedAt: null },
+      where: {
+        id: row.id,
+        pausedAt: null,
+        failedAt: null,
+        runAt: { not: null },
+      },
       data: { pausedAt },
     })
 
     if (count === 0) {
-      // Paused, failed or removed by someone else since it was read
+      // Paused, completed, failed or removed since it was read
       const current = await this.#findActive(jobId)
 
       return { alreadyPaused: true, pausedAt: current.pausedAt ?? pausedAt }
@@ -553,9 +558,10 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
    * Resumes a paused job. A recurring job runs next at the next match of its
    * cron from now, and, unless it's running, starts that run with a clean
    * slate (`attempts` reset to 0, like after a successful run). A running
-   * job keeps its `attempts`, which identify the run's claim (see
-   * `#claimedBy()`), and gets its next run time from the worker when the run
-   * finishes. A one-off job keeps its `runAt`
+   * job keeps its `attempts` and `runAt`: `attempts` identifies the run's
+   * claim (see `#claimedBy()`), and the worker sets the next run time when
+   * the run finishes, so a run that finishes while this write is under way
+   * keeps the run time it set. A one-off job keeps its `runAt`
    */
   override async resume({ jobId }: ResumeOptions): Promise<ResumeResult> {
     const row = await this.#findActive(jobId)
@@ -565,12 +571,13 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
     }
 
     const runAt = row.cron ? nextCronRunAt(row.cron) : row.runAt
+    // Workers don't claim a paused job, so a job that isn't locked now stays
+    // unlocked until this write lands
     const { count } = await this.accessor.updateMany({
       where: { id: row.id, pausedAt: { not: null }, failedAt: null },
       data: {
         pausedAt: null,
-        ...(row.cron ? { runAt } : {}),
-        ...(row.cron && !row.lockedAt ? { attempts: 0 } : {}),
+        ...(row.cron && !row.lockedAt ? { runAt, attempts: 0 } : {}),
       },
     })
 

@@ -75,7 +75,26 @@ const runningCronJob = async () => {
   return running!
 }
 
+/**
+ * Runs `between` right after the adapter's next read of a job row, before the
+ * write that follows it, like a worker or another command would when it gets
+ * in between the two
+ */
+const afterNextRead = (between: () => Promise<unknown>) => {
+  const findFirst = adapter.accessor.findFirst.bind(adapter.accessor)
+
+  vi.spyOn(adapter.accessor, 'findFirst').mockImplementationOnce(
+    async (args) => {
+      const result = await findFirst(args)
+      await between()
+
+      return result
+    },
+  )
+}
+
 beforeEach(async () => {
+  vi.restoreAllMocks()
   await db.backgroundJob.deleteMany()
   await db.legacyBackgroundJob.deleteMany()
   vi.mocked(mockLogger.info).mockClear()
@@ -91,6 +110,14 @@ describe('a paused job', () => {
     expect((await findJob('worker.0'))?.id).toBe(other.id)
     expect(await findJob('worker.1')).toBeUndefined()
     expect((await row(paused.id))?.lockedAt).toBeNull()
+  })
+
+  it('is not claimed when it is paused after a worker selected it', async () => {
+    const job = await later(EmailJob, ['a@example.com'])
+    afterNextRead(() => jobs.pauseJob(job.id))
+
+    expect(await findJob()).toBeUndefined()
+    expect(await row(job.id)).toMatchObject({ lockedAt: null, attempts: 0 })
   })
 
   it('is not picked up again by the worker that had it locked', async () => {
@@ -156,6 +183,17 @@ describe('pauseJob()', () => {
       alreadyPaused: true,
       pausedAt: first.pausedAt,
     })
+  })
+
+  it("doesn't pause a one-off job that completes while it's being paused", async () => {
+    const job = await later(EmailJob, ['a@example.com'])
+    const running = await findJob()
+    afterNextRead(() => adapter.success({ job: running!, runAt: undefined }))
+
+    await expect(jobs.pauseJob(job.id)).rejects.toThrow(
+      new JobNotActiveError(job.id, 'completed'),
+    )
+    expect((await row(job.id))?.pausedAt).toBeNull()
   })
 
   it('pauses a job that is waiting to be retried', async () => {
@@ -234,6 +272,22 @@ describe('resumeJob()', () => {
     expect(await row(running.id)).toMatchObject({
       lockedAt: null,
       lockedBy: null,
+      pausedAt: null,
+      runAt,
+      attempts: 0,
+    })
+  })
+
+  it('keeps the next run time a run that finishes during the resume sets', async () => {
+    const running = await runningCronJob()
+    await jobs.pauseJob(running.id)
+
+    const runAt = new Date(Date.now() + 7 * 86_400_000)
+    afterNextRead(() => adapter.success({ job: running, runAt }))
+    await jobs.resumeJob(running.id)
+
+    expect(await row(running.id)).toMatchObject({
+      lockedAt: null,
       pausedAt: null,
       runAt,
       attempts: 0,
@@ -521,6 +575,28 @@ describe('a starting worker', () => {
     )
     // The worker went on to work
     expect((await row(job.id))?.attempts).toBe(1)
+  })
+
+  it("doesn't start a job when it's stopped during the check", async () => {
+    const job = await later(EmailJob, ['a@example.com'])
+    const checking = new PrismaAdapter({ db, logger: mockLogger })
+    const worker = new Worker({
+      adapter: checking,
+      logger: mockLogger,
+      processName: 'worker.0',
+      queues: ['*'],
+      forever: true,
+    })
+    checking.list = async () => {
+      // What the worker process does on SIGINT
+      worker.forever = false
+
+      return []
+    }
+
+    await worker.run()
+
+    expect(await row(job.id)).toMatchObject({ lockedAt: null, attempts: 0 })
   })
 
   it('says nothing when the adapter cannot list jobs', async () => {

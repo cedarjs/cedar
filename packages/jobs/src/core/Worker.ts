@@ -164,7 +164,17 @@ export class Worker {
     } else if (this.workoff) {
       return this.#work()
     } else {
-      return this.logPausedJobs().then(() => this.#work())
+      const forever = this.forever
+
+      return this.logPausedJobs().then(() => {
+        // A stop requested during the check (`forever` set to false) comes
+        // before any job has started, so the worker doesn't start one
+        if (forever && !this.forever) {
+          return
+        }
+
+        return this.#work()
+      })
     }
   }
 

@@ -33,10 +33,10 @@ const { wasPaused, runAt } = await jobs.resumeJob(42)
 const waiting = await jobs.listJobs({ limit: 20 })
 ```
 
-```bash
+```text
 yarn cedar jobs list [--limit 100] [--adapter name]
-yarn cedar jobs pause name] < id > [--adapter
-yarn cedar jobs resume name] < id > [--adapter
+yarn cedar jobs pause <id> [--adapter name]
+yarn cedar jobs resume <id> [--adapter name]
 ```
 
 - On the `JobManager` (the `jobs` object), named `pauseJob`/`resumeJob`/
