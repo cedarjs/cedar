@@ -108,6 +108,16 @@ export const getWorker = async ({
     throw new WorkerConfigIndexNotFoundError(index)
   }
 
+  // A long-running worker syncs the schedules jobs declare before it starts
+  // working, so schedules follow the code on every deploy. Every worker does
+  // it, which is safe because the sync is idempotent and can't create
+  // duplicates. A sync that fails throws, and the worker doesn't start: a
+  // worker running without the declared schedules would be a recurring job
+  // silently never running
+  if (!clear && !workoff) {
+    await manager.syncSchedules()
+  }
+
   return manager.createWorker({
     index,
     clear,

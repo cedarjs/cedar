@@ -156,15 +156,21 @@ model BackgroundJob {
   lockedBy  String?
   lastError String?
   failedAt  DateTime?
+  key       String?   @unique
   pausedAt  DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
 ```
 
-:::info[Adding the `pausedAt` column to an existing app]
+:::info[Adding the `key` and `pausedAt` columns to an existing app]
 
-The `pausedAt` column stores [paused jobs](#pausing-jobs). Apps that set up jobs before the column existed keep working without it; only pausing and resuming jobs throw a `PausedAtColumnMissingError` until it's there. To add it, add `pausedAt DateTime?` to your `BackgroundJob` model and run `yarn cedar prisma migrate dev`. The column is nullable, so existing rows don't need a value.
+The `key` column stores the keys of [unique jobs](#unique-jobs) and of [declared schedules](#recurring-jobs), and the `pausedAt` column stores [paused jobs](#pausing-jobs). Apps that set up jobs before these columns existed keep working without them, until they use what needs them:
+
+- Without `key`, a keyed `later()` call rejects with a `SchedulingError` whose `originalError` is a `KeyColumnMissingError`, and syncing declared schedules throws a `KeyColumnMissingError`.
+- Without `pausedAt`, pausing and resuming jobs throw a `PausedAtColumnMissingError`.
+
+To add them, add `key String? @unique` and `pausedAt DateTime?` to your `BackgroundJob` model and run `yarn cedar prisma migrate dev`. Both columns are nullable, so existing rows don't need a value.
 
 :::
 
@@ -351,6 +357,64 @@ What cancelling means depends on the state of the job:
 
 Cancellation requires an adapter that implements the optional `cancel()` function. The `PrismaAdapter` does; for a custom adapter that doesn't, `later.cancel()` throws a `CancelNotImplementedError`.
 
+### Unique Jobs
+
+Sometimes the same work gets requested many times in a row: every time someone opens a page you want to refresh its thumbnails, but one refresh that's still waiting to run covers all of those requests. Give the job a `key` and only one job with that key will be queued at a time:
+
+```js
+const job = await later(RefreshThumbnailsJob, [page.id], {
+  key: `thumbnails:${page.id}`,
+  wait: 30,
+})
+
+if (job.alreadyQueued) {
+  // A job with this key was already waiting to run. No new job was added,
+  // and `job` is the one that's queued
+}
+```
+
+What "already queued" means, exactly:
+
+- A job holds its key from when it's scheduled until a worker picks it up. While it's waiting to run, scheduling another job with the same key adds nothing and returns the queued job, with `alreadyQueued: true`.
+- Once a worker has picked the job up, the key is free: a new job with the same key can be queued while the first one runs. Work requested while the job runs may need another run, so it isn't skipped. The same goes for a job that's waiting to be retried after an error, and for a cancelled job.
+- Only the key is compared. The queued job keeps its own arguments and run time, and the `wait` you pass for the skipped job is ignored. Put whatever must be distinct into the key, like the record's id above.
+- A recurring (`cron`) job scheduled with a key holds it for as long as its schedule is active, so `later(NightlyReportJob, { cron: '0 0 * * *', key: 'nightly-report' })` is safe to run more than once.
+- The guarantee comes from the database: the `key` column is `@unique`, so it holds when several processes schedule the same key at the same time.
+
+Keys starting with `cedar:` are reserved for Cedar's own keys. Unique keys need the [`key` column](#installation) and an adapter that supports them, like the `PrismaAdapter`; with an adapter that doesn't, scheduling with a `key` throws a `UniqueKeysNotSupportedError`.
+
+### Long Jobs That Continue Later
+
+A worker runs one job at a time, so a job that runs for a long time keeps every job behind it on the same queue waiting. If a job works through a long list, have it stop after a time budget and queue its own continuation, so other jobs get their turn in between:
+
+```js
+const BUDGET_MS = 45_000
+
+export const ProcessImportJob = jobs.createJob({
+  queue: 'default',
+  perform: async (importId, afterId = null) => {
+    const deadline = Date.now() + BUDGET_MS
+    const rows = await db.importRow.findMany({
+      where: { importId, id: afterId ? { gt: afterId } : undefined },
+      orderBy: { id: 'asc' },
+    })
+
+    for (const row of rows) {
+      if (Date.now() >= deadline) {
+        // Pick up after the last row this run finished
+        await later(ProcessImportJob, [importId, afterId])
+        return
+      }
+
+      await processRow(row)
+      afterId = row.id
+    }
+  },
+})
+```
+
+Pass the continuation where to start (like `afterId` above) so it doesn't redo work, and keep the budget well below the worker's `maxRuntime`. More workers for the queue also help, see [Multiple Workers](#multiple-workers).
+
 ### Pausing Jobs
 
 To stop a job from running for a while without changing your code or deploying, for example to stop a nightly job during an incident, pause it. Find its id with `yarn cedar jobs list`:
@@ -389,7 +453,7 @@ How a pause behaves:
 
 :::caution[A pause lives on the job's row]
 
-The pause is stored on the job's row in the database, so it holds across worker restarts and deploys. But if your code deletes and recreates its recurring jobs, like a script that schedules them again on every deploy, the new rows aren't paused. Pause again after such a script runs, or don't run it while a job should stay paused. [Declared schedules](https://github.com/cedarjs/cedar/pull/3021), proposed separately, are meant to fix this by keeping a recurring job's row across deploys.
+The pause is stored on the job's row in the database, so it holds across worker restarts and deploys. But if your code deletes and recreates its recurring jobs, like a script that schedules them again on every deploy, the new rows aren't paused. Pause again after such a script runs, or don't run it while a job should stay paused. [Declared schedules](#declaring-schedules) keep their rows across deploys: a sync updates a paused schedule's cron, arguments, queue and priority, and it stays paused.
 
 :::
 
@@ -456,28 +520,92 @@ A common task for a background job is that it does something on a schedule: run
 reports every night at midnight, check for abandoned carts every 15 minutes,
 that sort of thing. We call these recurring jobs.
 
-CedarJS's job system has native support for these kinds of jobs by specifying a
-`cron` schedule when scheduling a job. The easiest way to schedule a cron job
-locally is probably to have a script do it. So first generate a script:
-`yarn cedar generate script ScheduleCronJobs`. Then update the script to look
-something like this:
+### Declaring Schedules
 
-```ts
-import { NightlyReportJob } from 'api/src/jobs/NightlyReportJob/NightlyReportJob'
-import { later } from 'api/src/lib/jobs'
+Declare when a job runs with `schedules`, next to the rest of the job:
 
-export default async () => {
-  console.log('Scheduling Nightly Report Job')
-
-  await later(NightlyReportJob, { cron: '0 0 * * *' })
-}
+```js
+export const NightlyReportJob = jobs.createJob({
+  queue: 'default',
+  schedules: [{ cron: '0 0 * * *' }],
+  perform: async () => {
+    // ...
+  },
+})
 ```
 
-Now you can just run that script and the job will be scheduled:
-`yarn cedar exec ScheduleCronJobs`
+That's all: every job worker syncs the declared schedules when it starts. A schedule that isn't stored yet is added, a changed one is updated, and a stored schedule that's no longer declared (because you removed it, or the whole job) is removed. Deploying restarts the workers, so schedules follow your code on every deploy without a script to remember. `yarn cedar jobs workoff` and `clear` don't sync.
+
+A job can run on several schedules, with different arguments. Give each schedule a `key` to tell them apart:
+
+```ts
+export const ThumbnailsJob = jobs.createJob({
+  queue: 'default',
+  schedules: [
+    // Recent pages often during the day
+    { key: 'day', cron: '*/15 * * * *', args: [{ days: 1 }] },
+    // Everything from the last two weeks once a night
+    { key: 'night', cron: '45 4 * * *', args: [{ days: 14 }] },
+  ],
+  perform: async ({ days }: { days: number }) => {
+    // ...
+  },
+})
+```
+
+A schedule's identity is the job's name and the schedule's `key` (which can be left out when the job has a single schedule). Changing a schedule's `cron` or `args` updates it in place, changing its key replaces it. In TypeScript, each schedule's `args` are type checked against `perform()`'s parameters.
+
+Some details worth knowing:
+
+- Schedules are declared in code, so they can differ between environments like any other code: `cron: process.env.SYNC_CRON ?? '*/5 * * * *'`, or `schedules: process.env.REPORTS_ENABLED ? [...] : []`. Each environment's workers sync their own database.
+- Every worker process syncs, and several syncing at once is safe: each schedule is one row with a unique key, so no duplicates are created. During a rolling deploy the workers started last decide what's stored.
+- The sync removes every declared schedule it doesn't find in your code, so it assumes one app per jobs table. A sync imports every module in your jobs directory to find the schedules. If a module fails to import, or a declaration is invalid (a bad cron expression, two schedules with the same key, several schedules without keys), the sync throws and the worker doesn't start, rather than silently running without a schedule.
+- Declared schedules need an adapter that implements `syncSchedules()`, like the `PrismaAdapter`, and the [`key` column](#installation). If your `JobManager` has more than one adapter, set `scheduleAdapter` to the one that stores them.
+- A declared schedule that fails `maxAttempts` times in a row, or that you cancel with `later.cancel()`, stops until the next time the workers start, which recreates it.
+
+### Schedules That Depend on Your Data
+
+Some schedules come from your data rather than your code, like a digest that each customer gets at a time they pick. Store that schedule with the data, and declare one job that runs often and queues the work that's due:
+
+```js title="api/src/jobs/QueueDigestsJob/QueueDigestsJob.js"
+import { DigestJob } from 'src/jobs/DigestJob/DigestJob'
+import { db } from 'src/lib/db'
+import { jobs, later } from 'src/lib/jobs'
+
+export const QueueDigestsJob = jobs.createJob({
+  queue: 'default',
+  schedules: [{ cron: '*/15 * * * *' }],
+  perform: async () => {
+    const due = await db.customer.findMany({
+      where: { nextDigestAt: { lte: new Date() } },
+      select: { id: true },
+    })
+
+    for (const customer of due) {
+      await later(DigestJob, [customer.id], { key: `digest:${customer.id}` })
+    }
+  },
+})
+```
+
+`DigestJob` sends the digest and sets the customer's `nextDigestAt` to the next time it's due. Changing when a customer gets their digest is an update to that column, and turning it off is setting it to `null`. The [`key`](#unique-jobs) makes sure a customer's digest isn't queued again while one is still waiting to run.
+
+### Scheduling a Recurring Job with `later()`
+
+`later()` also takes a `cron` schedule, which stores a recurring job directly:
+
+```js
+await later(NightlyReportJob, { cron: '0 0 * * *' })
+```
+
+A job scheduled like this isn't synced with your code: it runs until it fails for good or you [cancel it](#cancelling-jobs), and calling `later()` again adds a second one unless you give it a [`key`](#unique-jobs).
+
+If you schedule recurring jobs with a script that calls `later(job, args, { cron })`, declare them with `schedules` instead and delete the rows that script created (they have a `cron` and no `key`) once, for example with `db.backgroundJob.deleteMany({ where: { cron: { not: null }, key: null } })` in `yarn cedar console`.
+
+### How Recurring Jobs Run
 
 Scheduling a recurring job doesn't run it right away. Its first run happens the
-next time the `cron` schedule matches (midnight, in the example above), and
+next time the `cron` schedule matches (midnight, for `NightlyReportJob` above), and
 after each successful run the job is scheduled again for the following match. If
 a run fails, the job is retried after a backoff delay, like any other job,
 rather than at the next match. Matches of the schedule that pass while a run is
@@ -487,22 +615,22 @@ For a recurring job, `attempts` and `maxAttempts` count consecutive failures of
 a single run: every successful run resets `attempts` to 0. If a run fails
 `maxAttempts` times in a row, or a run exceeds `maxRuntime`, the job is
 permanently failed like any other job, its schedule stops, and the worker logs
-an error saying so. To restart the
-schedule, fix the problem and schedule the job again with
-`later(NightlyReportJob, { cron: '0 0 * * *' })`.
+an error saying so. To restart the schedule, fix the problem and restart the
+workers (for a declared schedule) or call `later()` with the `cron` schedule
+again.
 
 The `cron` schedule is evaluated in the local time zone of the process doing the
-scheduling: the process calling `later()` for the first run, and the job worker
-for every run after that. Run both with the same time zone (for example by
-setting `TZ=UTC`) so the job keeps running at the same time of day.
+scheduling: the job worker for declared schedules, the process calling `later()`
+for the first run of a job it schedules, and the job worker for every run
+after that. Run them with the same time zone (for example by setting `TZ=UTC`)
+so the job keeps running at the same time of day.
 
 CedarJS uses https://github.com/harrisiirak/cron-parser under the hood for
 parsing the `cron` schedule. So all the syntax supported by `cron-parser` is
 supported. Including, for example, the six-groups format for seconds, and their
 [predefined expressions](https://github.com/harrisiirak/cron-parser#predefined-expressions)
-like `@hourly`, `@daily`, `@weekends`, etc. So the cron schedule from the
-example above could also have been written as `cron: '0 0 0 * * *'` and
-`cron: '@daily'`.
+like `@hourly`, `@daily`, `@weekends`, etc. So `NightlyReportJob`'s schedule
+could also have been written as `cron: '0 0 0 * * *'` and `cron: '@daily'`.
 
 When you schedule recurring jobs you can only specify the `cron` option. Other
 options, like `wait` or `waitUntil`, are not supported. These options don't make
@@ -557,6 +685,10 @@ The logger object for all internal logging of the job system itself and will fal
 
 This is an array of objects, each defining a "group" of workers. When will you need more than one group? If you need workers to work on different queues, or use different adapters. Read more about this in the [Job Workers](#job-workers) section.
 
+#### `scheduleAdapter`
+
+The name of the adapter that stores the schedules jobs declare (see [Recurring Jobs](#recurring-jobs)). It can be left out when you have a single adapter, or when no job declares schedules.
+
 ### Adapter Config
 
 Adapters are added as key/value pairs to the `adapters` object given to the `JobManager` upon initialization. The key of the property (like `prisma` in the example below) is the name you'll use in your scheduler when you tell it which adapter to use to schedule your jobs. Adapters accept an object of options when they are initialized.
@@ -600,12 +732,14 @@ later(SampleJob, [user.id], { wait: 300 })
 
 - `wait`: number of seconds to wait before the job will run
 - `waitUntil`: a specific `Date` in the future to run at
+- `cron`: a schedule to run the job on, again and again (see [Recurring Jobs](#recurring-jobs))
+- `key`: makes the job unique while it's queued (see [Unique Jobs](#unique-jobs))
 
 If you don't pass any options then the job will be defaulted to run as soon as possible, ie: `new Date()`
 
 ### Job Config
 
-There are two configuration options you can define in the object that describes your job:
+There are three configuration options you can define in the object that describes your job:
 
 ```js
 import { jobs } from 'src/lib/jobs'
@@ -622,6 +756,7 @@ export const SendWelcomeEmailJob = jobs.createJob({
 ```
 
 - `queue` : **[required]** the name of the queue that this job will be placed in. Must be one of the strings you assigned to the `queues` array when you set up the `JobManager`.
+- `schedules` : the recurring schedules the job runs on, each with a `cron` expression, the `args` to run with and, if the job has more than one, a `key`. See [Recurring Jobs](#recurring-jobs).
 - `priority` : within a queue you can have jobs that are more or less important. The workers will pull jobs off the queue with a higher priority before working on ones with a lower priority. A lower number is _higher_ in priority than a higher number. Ie. the workers will work on a job with a priority of `1` before they work on one with a priority of `100`. If you don't override it here, the default priority is `50`.
 
 ### Worker Config
@@ -920,6 +1055,8 @@ The general gist of the required functions:
 - `error()` accepts the same job object returned from `find()` and an error instance. Does whatever failure means to you (like unlock the job and reschedule a time for it to run again in the future)
 - `failure()` is called, instead of `error()`, when the job has reached `maxAttempts` or exceeded `maxRuntime`. Accepts the job object, a `deleteJob` boolean that says whether the job should be deleted, and the `error` of the failed attempt, which should be recorded in the same write that marks the job as failed.
 - `clear()` remove all jobs from the queue (mostly used in development).
+- `supportsUniqueKeys` (optional) set it to `true` if `schedule()` honors the payload's `key`: while a job with that key is queued it must not add another one. Scheduling with a `key` through an adapter without it throws a `UniqueKeysNotSupportedError`.
+- `syncSchedules()` (optional) accepts the declared `schedules` (each a `schedule()` payload with a `cron` and a `key`) and a `keyPrefix`, and makes the stored schedules match them: create missing ones, update changed ones and remove stored ones with a key starting with `keyPrefix` that aren't declared. Several workers call it at once, so it must not create duplicates. Without it, jobs can't declare `schedules`.
 - `cancel()` (optional) accepts an object with a `jobId` property and should make sure that job never runs (or is never retried, if it's currently running). Return `true` if a job was cancelled, `false` otherwise. If you don't implement this function, `later.cancel()` will throw a `CancelNotImplementedError`.
 - `pause()` and `resume()` (optional) accept an object with a `jobId` property. A paused job must not be returned by `find()`, and must stay paused when `success()` or `error()` reschedule a run that was in progress. `resume()` gives a recurring job its next `runAt` at the next match of its cron from now, and leaves a one-off job's `runAt` alone. They return `{ alreadyPaused, pausedAt }` and `{ wasPaused, runAt }`, and throw a `JobIdNotFoundError` for an unknown id and a `JobNotActiveError` for a job that has completed or failed for good. Without them, `jobs.pauseJob()` and `jobs.resumeJob()` throw a `PauseNotImplementedError`.
 - `list()` (optional) accepts an object with a `limit`, and optionally `queues` and `paused: true` (which a starting worker uses to warn about paused jobs), and returns the jobs that are waiting to run, running or paused, the ones that run next first, each with its `id`, `name`, `queue`, `cron`, `runAt`, `pausedAt`, `attempts` and whether it's `running`. Used by `yarn cedar jobs list`.

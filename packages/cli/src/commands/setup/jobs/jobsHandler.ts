@@ -28,6 +28,7 @@ model BackgroundJob {
   lockedBy  String?
   lastError String?
   failedAt  DateTime?
+  key       String?   @unique
   pausedAt  DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
