@@ -21,12 +21,13 @@ model BackgroundJob {
   lastError String?
   failedAt  DateTime?
   key       String?   @unique
+  pausedAt  DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
 
-// The same model without the `key` column, as in apps set up before unique
-// keys and declared schedules existed
+// The same model without the `key` and `pausedAt` columns, as in apps set
+// up before unique keys, declared schedules and pausing jobs existed
 model LegacyBackgroundJob {
   id        Int       @id @default(autoincrement())
   attempts  Int       @default(0)

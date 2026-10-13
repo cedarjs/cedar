@@ -1,6 +1,7 @@
 export * from './errors.js'
 
 export { JobManager } from './core/JobManager.js'
+export type { JobAdapterOptions } from './core/JobManager.js'
 export { Executor } from './core/Executor.js'
 export { Worker } from './core/Worker.js'
 export { getJobExecutionContext } from './core/executionContext.js'
@@ -12,8 +13,17 @@ export type {
   PrismaJob,
   ScheduledPrismaJob,
 } from './adapters/PrismaAdapter/PrismaAdapter.js'
-export { KeyColumnMissingError } from './adapters/PrismaAdapter/errors.js'
+export {
+  KeyColumnMissingError,
+  PausedAtColumnMissingError,
+} from './adapters/PrismaAdapter/errors.js'
 export type {
+  ListedJob,
+  ListJobsOptions,
+  PauseOptions,
+  PauseResult,
+  ResumeOptions,
+  ResumeResult,
   ScheduleDefinition,
   SyncSchedulesOptions,
   SyncSchedulesResult,

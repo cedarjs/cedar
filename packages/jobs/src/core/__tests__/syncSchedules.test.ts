@@ -198,6 +198,21 @@ describe('syncing declared schedules', () => {
     expect(after.lockedAt).toEqual(lockedAt)
   })
 
+  it('keeps a paused schedule paused when it updates it', async () => {
+    await jobs.syncSchedules([CleanupJob()])
+    const [before] = await storedSchedules()
+    const { pausedAt } = await jobs.pauseJob(before.id)
+
+    const result = await jobs.syncSchedules([
+      makeJob('CleanupJob', [{ cron: '*/5 * * * *' }]),
+    ])
+
+    expect(result?.updated).toEqual(['cedar:schedule:CleanupJob:default'])
+    const [after] = await storedSchedules()
+    expect(after.cron).toBe('*/5 * * * *')
+    expect(after.pausedAt).toEqual(pausedAt)
+  })
+
   it('removes schedules that are no longer declared', async () => {
     await jobs.syncSchedules([ReportJob(), CleanupJob()])
 

@@ -1,5 +1,10 @@
 import { describe, it, expectTypeOf } from 'vitest'
 
+import type {
+  ListedJob,
+  PauseResult,
+  ResumeResult,
+} from '../../adapters/BaseAdapter/BaseAdapter.js'
 import type { JobDefinition } from '../../types.js'
 import { JobManager } from '../JobManager.js'
 
@@ -307,6 +312,34 @@ describe('JobManager Type Tests', () => {
     it('should still reject combining timing options', () => {
       // @ts-expect-error - wait and cron are mutually exclusive
       scheduler(job, [1], { key: 'job:1', wait: 30, cron: '0 * * * *' })
+    })
+  })
+
+  describe('pausing jobs', () => {
+    it('should take a job id and return what changed', () => {
+      expectTypeOf(manager.pauseJob(1)).toEqualTypeOf<Promise<PauseResult>>()
+      expectTypeOf(manager.resumeJob('job_1')).toEqualTypeOf<
+        Promise<ResumeResult>
+      >()
+      expectTypeOf(manager.listJobs({ limit: 10 })).toEqualTypeOf<
+        Promise<ListedJob[]>
+      >()
+      expectTypeOf<PauseResult>().toEqualTypeOf<{
+        alreadyPaused: boolean
+        pausedAt: Date
+      }>()
+      expectTypeOf<ResumeResult>().toEqualTypeOf<{
+        wasPaused: boolean
+        runAt: Date | null
+      }>()
+    })
+
+    it('should only accept adapter names', () => {
+      void manager.pauseJob(1, { adapter: 'mock' })
+      // @ts-expect-error - not one of the adapters
+      void manager.pauseJob(1, { adapter: 'prisma' })
+      // @ts-expect-error - a job id is a string or a number
+      void manager.resumeJob({ id: 1 })
     })
   })
 })

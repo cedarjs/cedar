@@ -91,6 +91,63 @@ export interface CancelOptions {
   jobId: string | number
 }
 
+export interface PauseOptions {
+  /** The id of the job to pause, as returned by `schedule()` */
+  jobId: string | number
+}
+
+export interface PauseResult {
+  /** `true` when the job was paused already, and nothing changed */
+  alreadyPaused: boolean
+  /** When the job was paused */
+  pausedAt: Date
+}
+
+export interface ResumeOptions {
+  /** The id of the job to resume, as returned by `schedule()` */
+  jobId: string | number
+}
+
+export interface ResumeResult {
+  /** `false` when the job wasn't paused, and nothing changed */
+  wasPaused: boolean
+  /**
+   * When the job runs next. `null` for a recurring job with a run in
+   * progress: the worker sets its next run time when that run finishes
+   */
+  runAt: Date | null
+}
+
+export interface ListJobsOptions {
+  /** The most jobs to return, the ones that run next first */
+  limit: number
+  /**
+   * Only list jobs in these queues. All queues when left out or `['*']`
+   */
+  queues?: string[]
+  /**
+   * Only list paused jobs. A worker uses this when it starts, to warn about
+   * paused jobs in its queues
+   */
+  paused?: boolean
+}
+
+/** A job waiting to run, running or paused, as `list()` returns it */
+export interface ListedJob {
+  id: string | number
+  name: string
+  queue: string
+  /** Set for a recurring job */
+  cron: string | null
+  /** When the job runs next (or would, if it weren't paused) */
+  runAt: Date | null
+  /** When the job was paused, or `null` when it isn't */
+  pausedAt: Date | null
+  /** Whether a worker is running the job right now */
+  running: boolean
+  attempts: number
+}
+
 /**
  * Base class for all job adapters. Provides a common interface for scheduling
  * jobs. At a minimum, you must implement the `schedule` method in your adapter.
@@ -192,4 +249,35 @@ export abstract class BaseAdapter<
   syncSchedules?(
     options: SyncSchedulesOptions,
   ): SyncSchedulesResult | Promise<SyncSchedulesResult>
+
+  /**
+   * Pause a job, so that no worker picks it up until it's resumed. A run in
+   * progress finishes, and a recurring job's next run stays paused: `success()`
+   * and `error()` must keep the pause when they reschedule the job.
+   *
+   * Throws a `JobIdNotFoundError` when no job has the id, and a
+   * `JobNotActiveError` when the job has completed or failed for good.
+   *
+   * This method is optional, together with `resume()`: adapters that don't
+   * implement it don't support pausing, and `jobs.pauseJob()` throws a
+   * `PauseNotImplementedError`
+   */
+  pause?(options: PauseOptions): PauseResult | Promise<PauseResult>
+
+  /**
+   * Resume a paused job. A recurring job runs next at the next match of its
+   * cron from now, so runs missed while it was paused are not made up for. A
+   * one-off job keeps its run time, so it runs right away when that has
+   * passed. A job that isn't paused is left as it is.
+   *
+   * Throws like `pause()`
+   */
+  resume?(options: ResumeOptions): ResumeResult | Promise<ResumeResult>
+
+  /**
+   * List the jobs that are waiting to run, running or paused (not the
+   * completed or failed ones), the ones that run next first. Used by
+   * `yarn cedar jobs list` to find a job's id. Optional
+   */
+  list?(options: ListJobsOptions): ListedJob[] | Promise<ListedJob[]>
 }
