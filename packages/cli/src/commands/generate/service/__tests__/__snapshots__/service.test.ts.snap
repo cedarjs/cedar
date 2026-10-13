@@ -21,11 +21,11 @@ export const partStock: QueryResolvers['partStock'] = ({
 export const PartStock: PartStockRelationResolvers = {
   part: (_obj, { root }) => {
     return db.partStock
-      .findUnique({
+      .findUniqueOrThrow({
         where: {
           partId_warehouseId: {
-            partId: root?.partId,
-            warehouseId: root?.warehouseId,
+            partId: root.partId,
+            warehouseId: root.warehouseId,
           },
         },
       })
@@ -33,11 +33,11 @@ export const PartStock: PartStockRelationResolvers = {
   },
   warehouse: (_obj, { root }) => {
     return db.partStock
-      .findUnique({
+      .findUniqueOrThrow({
         where: {
           partId_warehouseId: {
-            partId: root?.partId,
-            warehouseId: root?.warehouseId,
+            partId: root.partId,
+            warehouseId: root.warehouseId,
           },
         },
       })
@@ -83,7 +83,13 @@ export const updatePartStock: MutationResolvers['updatePartStock'] = ({
   input,
 }) => {
   return db.partStock.update({
-    data: input,
+    data: {
+      ...input,
+      // Every field in the GraphQL input is nullable, but Prisma doesn't
+      // accept null for required fields. undefined leaves the field unchanged
+      partId: input.partId ?? undefined,
+      warehouseId: input.warehouseId ?? undefined,
+    },
     where: { partId_warehouseId: { partId, warehouseId } },
   })
 }
@@ -100,11 +106,11 @@ export const deletePartStock: MutationResolvers['deletePartStock'] = ({
 export const PartStock: PartStockRelationResolvers = {
   part: (_obj, { root }) => {
     return db.partStock
-      .findUnique({
+      .findUniqueOrThrow({
         where: {
           partId_warehouseId: {
-            partId: root?.partId,
-            warehouseId: root?.warehouseId,
+            partId: root.partId,
+            warehouseId: root.warehouseId,
           },
         },
       })
@@ -112,11 +118,11 @@ export const PartStock: PartStockRelationResolvers = {
   },
   warehouse: (_obj, { root }) => {
     return db.partStock
-      .findUnique({
+      .findUniqueOrThrow({
         where: {
           partId_warehouseId: {
-            partId: root?.partId,
-            warehouseId: root?.warehouseId,
+            partId: root.partId,
+            warehouseId: root.warehouseId,
           },
         },
       })
@@ -141,7 +147,7 @@ export const userProfile = ({ id }) => {
 
 export const UserProfile = {
   user: (_obj, { root }) => {
-    return db.userProfile.findUnique({ where: { id: root?.id } }).user()
+    return db.userProfile.findUniqueOrThrow({ where: { id: root.id } }).user()
   },
 }
 "
@@ -259,7 +265,7 @@ describe('scalarTypes', () => {
       input: {
         email: 'foo@bar.com',
         date: '2022-09-30T09:50:00.000Z',
-        bigInt: 1234567n,
+        bigInt: 1234567,
         integer: 1234567,
         boolean: true,
       },
@@ -317,7 +323,13 @@ export const createUser = ({ input }) => {
 
 export const updateUser = ({ id, input }) => {
   return db.user.update({
-    data: input,
+    data: {
+      ...input,
+      // Every field in the GraphQL input is nullable, but Prisma doesn't
+      // accept null for required fields. undefined leaves the field unchanged
+      email: input.email ?? undefined,
+      isAdmin: input.isAdmin ?? undefined,
+    },
     where: { id },
   })
 }
@@ -330,10 +342,10 @@ export const deleteUser = ({ id }) => {
 
 export const User = {
   profiles: (_obj, { root }) => {
-    return db.user.findUnique({ where: { id: root?.id } }).profiles()
+    return db.user.findUniqueOrThrow({ where: { id: root.id } }).profiles()
   },
   transactions: (_obj, { root }) => {
-    return db.user.findUnique({ where: { id: root?.id } }).transactions()
+    return db.user.findUniqueOrThrow({ where: { id: root.id } }).transactions()
   },
 }
 "
@@ -360,7 +372,18 @@ export const createPost = ({ input }) => {
 
 export const updatePost = ({ id, input }) => {
   return db.post.update({
-    data: input,
+    data: {
+      ...input,
+      // Every field in the GraphQL input is nullable, but Prisma doesn't
+      // accept null for required fields. undefined leaves the field unchanged
+      title: input.title ?? undefined,
+      slug: input.slug ?? undefined,
+      author: input.author ?? undefined,
+      body: input.body ?? undefined,
+      isPinned: input.isPinned ?? undefined,
+      readTime: input.readTime ?? undefined,
+      metadata: input.metadata ?? undefined,
+    },
     where: { id },
   })
 }
@@ -373,7 +396,7 @@ export const deletePost = ({ id }) => {
 
 export const Post = {
   favorites: (_obj, { root }) => {
-    return db.post.findUnique({ where: { id: root?.id } }).favorites()
+    return db.post.findUniqueOrThrow({ where: { id: root.id } }).favorites()
   },
 }
 "
@@ -394,7 +417,7 @@ export const user = ({ id }) => {
 
 export const User = {
   identity: (_obj, { root }) => {
-    return db.user.findUnique({ where: { id: root?.id } }).identity()
+    return db.user.findUniqueOrThrow({ where: { id: root.id } }).identity()
   },
 }
 "
@@ -415,7 +438,7 @@ export const user = ({ id }) => {
 
 export const User = {
   userProfiles: (_obj, { root }) => {
-    return db.user.findUnique({ where: { id: root?.id } }).userProfiles()
+    return db.user.findUniqueOrThrow({ where: { id: root.id } }).userProfiles()
   },
 }
 "
@@ -436,10 +459,10 @@ export const user = ({ id }) => {
 
 export const User = {
   userProfiles: (_obj, { root }) => {
-    return db.user.findUnique({ where: { id: root?.id } }).userProfiles()
+    return db.user.findUniqueOrThrow({ where: { id: root.id } }).userProfiles()
   },
   identity: (_obj, { root }) => {
-    return db.user.findUnique({ where: { id: root?.id } }).identity()
+    return db.user.findUniqueOrThrow({ where: { id: root.id } }).identity()
   },
 }
 "
@@ -525,7 +548,7 @@ export const userProfile: QueryResolvers['userProfile'] = ({ id }) => {
 
 export const UserProfile: UserProfileRelationResolvers = {
   user: (_obj, { root }) => {
-    return db.userProfile.findUnique({ where: { id: root?.id } }).user()
+    return db.userProfile.findUniqueOrThrow({ where: { id: root.id } }).user()
   },
 }
 "
@@ -658,7 +681,7 @@ describe('scalarTypes', () => {
       input: {
         email: 'foo@bar.com',
         date: '2022-09-30T09:50:00.000Z',
-        bigInt: 1234567n,
+        bigInt: 1234567,
         integer: 1234567,
         boolean: true,
       },
@@ -722,7 +745,13 @@ export const createUser: MutationResolvers['createUser'] = ({ input }) => {
 
 export const updateUser: MutationResolvers['updateUser'] = ({ id, input }) => {
   return db.user.update({
-    data: input,
+    data: {
+      ...input,
+      // Every field in the GraphQL input is nullable, but Prisma doesn't
+      // accept null for required fields. undefined leaves the field unchanged
+      email: input.email ?? undefined,
+      isAdmin: input.isAdmin ?? undefined,
+    },
     where: { id },
   })
 }
@@ -735,10 +764,10 @@ export const deleteUser: MutationResolvers['deleteUser'] = ({ id }) => {
 
 export const User: UserRelationResolvers = {
   profiles: (_obj, { root }) => {
-    return db.user.findUnique({ where: { id: root?.id } }).profiles()
+    return db.user.findUniqueOrThrow({ where: { id: root.id } }).profiles()
   },
   transactions: (_obj, { root }) => {
-    return db.user.findUnique({ where: { id: root?.id } }).transactions()
+    return db.user.findUniqueOrThrow({ where: { id: root.id } }).transactions()
   },
 }
 "
@@ -771,7 +800,18 @@ export const createPost: MutationResolvers['createPost'] = ({ input }) => {
 
 export const updatePost: MutationResolvers['updatePost'] = ({ id, input }) => {
   return db.post.update({
-    data: input,
+    data: {
+      ...input,
+      // Every field in the GraphQL input is nullable, but Prisma doesn't
+      // accept null for required fields. undefined leaves the field unchanged
+      title: input.title ?? undefined,
+      slug: input.slug ?? undefined,
+      author: input.author ?? undefined,
+      body: input.body ?? undefined,
+      isPinned: input.isPinned ?? undefined,
+      readTime: input.readTime ?? undefined,
+      metadata: input.metadata ?? undefined,
+    },
     where: { id },
   })
 }
@@ -784,7 +824,7 @@ export const deletePost: MutationResolvers['deletePost'] = ({ id }) => {
 
 export const Post: PostRelationResolvers = {
   favorites: (_obj, { root }) => {
-    return db.post.findUnique({ where: { id: root?.id } }).favorites()
+    return db.post.findUniqueOrThrow({ where: { id: root.id } }).favorites()
   },
 }
 "
@@ -807,7 +847,7 @@ export const user: QueryResolvers['user'] = ({ id }) => {
 
 export const User: UserRelationResolvers = {
   identity: (_obj, { root }) => {
-    return db.user.findUnique({ where: { id: root?.id } }).identity()
+    return db.user.findUniqueOrThrow({ where: { id: root.id } }).identity()
   },
 }
 "
@@ -830,7 +870,7 @@ export const user: QueryResolvers['user'] = ({ id }) => {
 
 export const User: UserRelationResolvers = {
   userProfiles: (_obj, { root }) => {
-    return db.user.findUnique({ where: { id: root?.id } }).userProfiles()
+    return db.user.findUniqueOrThrow({ where: { id: root.id } }).userProfiles()
   },
 }
 "
@@ -853,10 +893,10 @@ export const user: QueryResolvers['user'] = ({ id }) => {
 
 export const User: UserRelationResolvers = {
   userProfiles: (_obj, { root }) => {
-    return db.user.findUnique({ where: { id: root?.id } }).userProfiles()
+    return db.user.findUniqueOrThrow({ where: { id: root.id } }).userProfiles()
   },
   identity: (_obj, { root }) => {
-    return db.user.findUnique({ where: { id: root?.id } }).identity()
+    return db.user.findUniqueOrThrow({ where: { id: root.id } }).identity()
   },
 }
 "
