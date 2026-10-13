@@ -485,6 +485,13 @@ describe('unique keys', () => {
         options: { key: 'cedar:schedule:JobName:default' },
       }),
     ).toThrow(errors.ReservedKeyError)
+    expect(() =>
+      scheduler.buildPayload({
+        job,
+        args: [],
+        options: { key: 'Cedar:Schedule:JobName:default' },
+      }),
+    ).toThrow(errors.ReservedKeyError)
   })
 })
 

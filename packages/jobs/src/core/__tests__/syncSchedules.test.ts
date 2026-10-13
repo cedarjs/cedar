@@ -1,7 +1,7 @@
 // Declared schedules, synced by `JobManager.syncSchedules()` through the
 // PrismaAdapter into a real (SQLite) database
 
-import { afterAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createTestDb } from '../../__tests__/helpers/testDb.js'
 import { PrismaAdapter } from '../../adapters/PrismaAdapter/PrismaAdapter.js'
@@ -211,6 +211,26 @@ describe('syncing declared schedules', () => {
     const [after] = await storedSchedules()
     expect(after.cron).toBe('*/5 * * * *')
     expect(after.pausedAt).toEqual(pausedAt)
+  })
+
+  it('creates a schedule again when it is removed while it is updated', async () => {
+    await jobs.syncSchedules([CleanupJob()])
+    const accessor = jobs.adapters.prisma.accessor
+    const updateMany = accessor.updateMany.bind(accessor)
+    // Another sync removes the row between this sync's read and its update
+    vi.spyOn(accessor, 'updateMany').mockImplementationOnce(async (args) => {
+      await db.backgroundJob.deleteMany()
+
+      return updateMany(args)
+    })
+
+    const result = await jobs.syncSchedules([
+      makeJob('CleanupJob', [{ cron: '*/5 * * * *' }]),
+    ])
+
+    expect(result?.created).toEqual(['cedar:schedule:CleanupJob:default'])
+    const [after] = await storedSchedules()
+    expect(after.cron).toBe('*/5 * * * *')
   })
 
   it('removes schedules that are no longer declared', async () => {

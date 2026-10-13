@@ -755,9 +755,17 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
         return 'unchanged'
       }
 
-      await this.accessor.updateMany({ where: { id: row.id }, data: changes })
+      const { count } = await this.accessor.updateMany({
+        where: { id: row.id },
+        data: changes,
+      })
 
-      return 'updated'
+      if (count > 0) {
+        return 'updated'
+      }
+
+      // Removed since it was read: create it again
+      row = undefined
     }
 
     throw new CedarJSJobsError(

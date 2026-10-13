@@ -79,7 +79,8 @@ export class Scheduler<TAdapter extends BaseAdapter> {
       )
     }
 
-    if (key?.startsWith(RESERVED_KEY_PREFIX)) {
+    // Case-insensitive, like the `key` column can be (for example in MySQL)
+    if (key?.toLowerCase().startsWith(RESERVED_KEY_PREFIX)) {
       throw new ReservedKeyError(key, RESERVED_KEY_PREFIX)
     }
 
