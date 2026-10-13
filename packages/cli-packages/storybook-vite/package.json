@@ -27,7 +27,7 @@
     "@cedarjs/project-config": "7.0.0",
     "@cedarjs/telemetry": "7.0.0",
     "execa": "5.1.1",
-    "storybook": "8.6.18",
+    "storybook": "8.6.19",
     "storybook-framework-cedarjs": "7.0.0",
     "termi-link": "1.1.0",
     "verkit": "0.5.0",
