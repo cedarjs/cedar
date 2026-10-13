@@ -95,6 +95,74 @@ export const redactedModelFields = (fieldNames: string[]) => {
   return sensitive
 }
 
+/**
+ * Fields the SDL generator leaves out of the create and update input types,
+ * because the database sets them
+ */
+export const DEFAULT_IGNORE_FIELDS_FOR_INPUT = ['createdAt', 'updatedAt']
+
+/**
+ * Returns the fields in the generated `Update<Model>Input` type that are
+ * nullable in GraphQL but required in the Prisma model.
+ *
+ * GraphQL can't express "optional, but not null", so every field in the update
+ * input is nullable. Prisma doesn't accept `null` for required fields, so the
+ * generated `update<Model>` service turns `null` into `undefined` for these
+ * fields, which Prisma treats as "leave unchanged".
+ */
+export const requiredFieldsInUpdateInput = (model: InputModel) => {
+  return inputFields(model)
+    .filter((field) => {
+      // Lists and ids are always non-nullable in the generated input types
+      return field.isRequired && !field.isList && !field.isId
+    })
+    .map((field) => field.name)
+}
+
+/**
+ * Returns the nullable Json fields in the generated create and update input
+ * types.
+ *
+ * Prisma doesn't accept `null` for Json fields. The generated services pass
+ * `Prisma.DbNull` instead, which sets the column to NULL.
+ */
+export const nullableJsonFieldsInInput = (model: InputModel) => {
+  return inputFields(model)
+    .filter((field) => {
+      return field.type === 'Json' && !field.isRequired && !field.isList
+    })
+    .map((field) => field.name)
+}
+
+interface InputModel {
+  fields: readonly {
+    name: string
+    type: string
+    kind: string
+    isRequired: boolean
+    isList: boolean
+    isId: boolean
+  }[]
+}
+
+/**
+ * The model fields that the SDL generator can include in the create and
+ * update input types
+ */
+const inputFields = (model: InputModel) => {
+  const redactedFields = redactedModelFields(
+    model.fields.map((field) => field.name),
+  )
+
+  return model.fields.filter((field) => {
+    return (
+      field.kind !== 'object' &&
+      !DEFAULT_IGNORE_FIELDS_FOR_INPUT.includes(field.name) &&
+      !redactedFields.includes(field.name)
+    )
+  })
+}
+
 // Returns all relations to other models
 export const relationsForModel = (model: Model | undefined) => {
   return model?.fields
@@ -102,6 +170,20 @@ export const relationsForModel = (model: Model | undefined) => {
     .map((field: ModelField) => {
       return field.name
     })
+}
+
+/**
+ * Returns the optional to-one relations of a model.
+ *
+ * The generated relation resolvers return `null` for these when the parent
+ * record doesn't exist, for example when a relation is selected from a
+ * `delete<Model>` mutation. Every other relation is non-nullable in the
+ * generated SDL, so its resolver throws instead.
+ */
+export const nullableRelationsForModel = (model: InputModel) => {
+  return model.fields
+    .filter((f) => f.kind === 'object' && !f.isList && !f.isRequired)
+    .map((f) => f.name)
 }
 
 // Returns only relations that are of datatype Int

@@ -173,6 +173,25 @@ npx @tailwindcss/upgrade --config ./web/config/tailwind.config.cjs
 See Tailwind's [upgrade guide](https://tailwindcss.com/docs/upgrade-guide) for
 the changes v4 makes to utilities and configuration.
 
+## TypeScript strict mode in new projects
+
+New TypeScript projects created with `yarn create cedar-app` have TypeScript's
+`strict` mode turned on in `web/tsconfig.json`, `api/tsconfig.json` and
+`scripts/tsconfig.json`. The code Cedar's generators and setup commands write
+type-checks with `strict` on.
+
+It's recommended to turn strict mode on in your existing project by adding
+`"strict": true` to `compilerOptions` in each of your tsconfig files. Then run
+`yarn cedar g types` and `yarn cedar type-check`. Code generated before v8 may
+need a few changes; see
+[TypeScript Strict Mode](https://cedarjs.com/docs/typescript/strict-mode) for
+the common ones.
+
+Strict mode relies on the types described in "More precise generated types"
+below. The SDL generator also writes Prisma scalar and enum lists with
+non-nullable items (`tags: [String!]!`), because Prisma lists never contain
+`null`.
+
 ## More precise generated types
 
 To better support TypeScript's strict mode a few of the types Cedar generates

@@ -2,7 +2,7 @@ export const data = async () => {
   return new Date()
 }
 
-export const output = ({ data }) => {
+export const output = ({ data }: { data: Date }) => {
   return (
     <>
       <h1>${pageName} og:image</h1>

@@ -1,6 +1,6 @@
 import type { QueryResolvers<% if (crud) { %>, MutationResolvers<% } %><% if (relations.length) { %>, ${singularPascalName}RelationResolvers<% } %> } from 'types/graphql'
 
-import { db } from 'src/lib/db'
+import { db<% if (crud && nullableJsonFields.length) { %>, Prisma<% } %> } from 'src/lib/db'
 <%
   // A compound `@@id([...])` key comes through as `{ fields, whereArg }`
   // instead of a single field name -- build the destructure/where-clause
@@ -13,8 +13,8 @@ import { db } from 'src/lib/db'
     ? `${idName.whereArg}: { ${idFields.join(', ')} }`
     : idName
   const idWhereFromRoot = idIsComposite
-    ? `${idName.whereArg}: { ${idFields.map((f) => `${f}: root?.${f}`).join(', ')} }`
-    : `${idName}: root?.${idName}`
+    ? `${idName.whereArg}: { ${idFields.map((f) => `${f}: root.${f}`).join(', ')} }`
+    : `${idName}: root.${idName}`
 %>
 export const ${pluralCamelName}: QueryResolvers['${pluralCamelName}'] = () => {
   return db.${singularCamelName}.findMany()
@@ -27,14 +27,27 @@ export const ${singularCamelName}: QueryResolvers['${singularCamelName}'] = ({ $
 }<% } %><% if (crud) { %>
 
 export const create${singularPascalName}: MutationResolvers['create${singularPascalName}'] = ({ input }) => {
-  return db.${singularCamelName}.create({
-    data: input,
+  return db.${singularCamelName}.create({<% if (nullableJsonFields.length) { %>
+    data: {
+      ...input,
+      // Prisma uses Prisma.DbNull, not null, to set a Json field to NULL<% nullableJsonFields.forEach((field) => { %>
+      ${field}: input.${field} === null ? Prisma.DbNull : input.${field},<% }) %>
+    },<% } else { %>
+    data: input,<% } %>
   })
 }
 
 export const update${singularPascalName}: MutationResolvers['update${singularPascalName}'] = ({ ${idArgs}, input }) => {
-  return db.${singularCamelName}.update({
-    data: input,
+  return db.${singularCamelName}.update({<% if (updateInputRequiredFields.length || nullableJsonFields.length) { %>
+    data: {
+      ...input,<% if (updateInputRequiredFields.length) { %>
+      // Every field in the GraphQL input is nullable, but Prisma doesn't
+      // accept null for required fields. undefined leaves the field unchanged<% updateInputRequiredFields.forEach((field) => { %>
+      ${field}: input.${field} ?? undefined,<% }) %><% } %><% if (nullableJsonFields.length) { %>
+      // Prisma uses Prisma.DbNull, not null, to set a Json field to NULL<% nullableJsonFields.forEach((field) => { %>
+      ${field}: input.${field} === null ? Prisma.DbNull : input.${field},<% }) %><% } %>
+    },<% } else { %>
+    data: input,<% } %>
     where: { ${idWhere} },
   })
 }
@@ -47,6 +60,6 @@ export const delete${singularPascalName}: MutationResolvers['delete${singularPas
 
 export const ${singularPascalName}: ${singularPascalName}RelationResolvers = {<% relations.forEach(relation => { %>
   ${relation}: (_obj, { root }) => {
-    return db.${singularCamelName}.findUnique({ where: { ${idWhereFromRoot} } }).${relation}()
+    return db.${singularCamelName}.findUnique<%= nullableRelations.includes(relation) ? '' : 'OrThrow' %>({ where: { ${idWhereFromRoot} } }).${relation}()
   },<% }) %>
 }<% } %>
