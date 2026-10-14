@@ -65,7 +65,7 @@
     "@cedarjs/server-store": "7.0.0",
     "@cedarjs/structure": "7.0.0",
     "@cedarjs/testing": "7.0.0",
-    "@swc/core": "1.16.13",
+    "@swc/core": "1.16.18",
     "@universal-deploy/store": "^0.3.0",
     "@universal-deploy/vite": "^0.2.0",
     "@vitejs/plugin-react": "4.7.0",
