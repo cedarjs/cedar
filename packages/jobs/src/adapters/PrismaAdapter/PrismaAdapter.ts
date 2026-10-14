@@ -453,8 +453,9 @@ export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
    * precision. Nothing else changes `lockedAt` while the job is locked, and
    * a newer claim of the same job sets its own, different `lockedAt`. `attempts` alone
    * is not unique per claim, because a successful run of a recurring job
-   * resets it to 0, and `lockedBy` is not unique either, because worker
-   * process names are deterministic and reused across restarts
+   * resets it to 0, and `lockedBy` is not unique either, because it names
+   * the worker process, which claims many jobs and can claim the same job
+   * again
    */
   #claimedBy(job: PrismaJob) {
     return {

@@ -1,3 +1,5 @@
+import { hostname } from 'node:os'
+
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { JobNotFoundError } from '@cedarjs/jobs'
@@ -92,9 +94,9 @@ describe('startJobsDevWorkers', () => {
     expect(pool).not.toBeNull()
     expect(jobsManager.createWorker).toHaveBeenCalledTimes(3)
     expect(createdWorkers.map((w) => w.processName)).toEqual([
-      'ud-jobs.default.0',
-      'ud-jobs.default.1',
-      'ud-jobs.critical.0',
+      `ud-jobs.default.0 host:${hostname()} pid:${process.pid}`,
+      `ud-jobs.default.1 host:${hostname()} pid:${process.pid}`,
+      `ud-jobs.critical.0 host:${hostname()} pid:${process.pid}`,
     ])
     createdWorkers.forEach((w) => expect(w.run).toHaveBeenCalledTimes(1))
 
