@@ -1,9 +1,11 @@
+import { hostname } from 'node:os'
+
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { MockAdapter, mockLogger } from '../../core/__tests__/mocks.js'
 import { JobManager } from '../../core/JobManager.js'
 import { Worker } from '../../core/Worker.js'
-import { getWorker, processName } from '../cedar-jobs-worker.js'
+import { getWorker, lockName, processName } from '../cedar-jobs-worker.js'
 
 vi.mock('@cedarjs/cli-helpers/loadEnvFiles', () => {
   return {
@@ -36,6 +38,16 @@ describe('processName', () => {
     const title = processName({ id: 1, queues: ['default', 'email'] })
 
     expect(title).toEqual('cedar-jobs-worker.default-email.1')
+  })
+})
+
+describe('lockName', () => {
+  it('is the process name plus the host and process id', () => {
+    const name = lockName({ id: 1, queues: ['default', 'email'] })
+
+    expect(name).toEqual(
+      `cedar-jobs-worker.default-email.1 host:${hostname()} pid:${process.pid}`,
+    )
   })
 })
 
@@ -108,7 +120,7 @@ describe('getWorker', () => {
       index: 0,
       workoff: false,
       clear: false,
-      processName: 'cedar-jobs-worker.*.0',
+      processName: `cedar-jobs-worker.*.0 host:${hostname()} pid:${process.pid}`,
     })
   })
 

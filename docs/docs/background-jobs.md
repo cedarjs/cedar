@@ -444,7 +444,7 @@ const waiting = await jobs.listJobs({ limit: 20 })
 
 How a pause behaves:
 
-- Workers don't pick up a paused job. A run that's in progress when you pause finishes, and if the job is recurring its next run stays paused. A run that fails and is retried stays paused too. If the worker running a paused job crashes, the job stays locked; once you resume it, a worker started with the same process name reclaims it right away and runs it again, without waiting for its next run time.
+- Workers don't pick up a paused job. A run that's in progress when you pause finishes, and if the job is recurring its next run stays paused. A run that fails and is retried stays paused too. If the worker running a paused job crashes, the job stays locked; once you resume it, any worker picks it up after `maxRuntime` (plus a one-minute grace period) has passed since it was locked.
 - **Resuming a recurring job** schedules its next run at the next time its `cron` matches from now. Runs it missed while it was paused are not made up for.
 - **Resuming a one-off job** keeps its run time: if that's still in the future it runs then, and if it passed while the job was paused it runs as soon as a worker is free.
 - When a worker starts (`yarn cedar jobs work` or `start`, not `workoff`), it logs a warning listing the paused jobs in its queues, so a forgotten pause shows up.
@@ -798,7 +798,7 @@ See the next section for advanced usage examples, like multiple worker groups.
 
 ## Job Workers
 
-A job worker actually executes your jobs. The workers will ask the adapter to find a job to work on. The adapter will mark the job as locked (the process name and a timestamp is set on the job) and then the worker will call `perform()` on your job, passing in any args that were given when you scheduled it. The behavior of what happens when the job succeeds or fails depends on the config options you set in the `JobManager`. By default, successful jobs are removed from storage and failed jobs and kept around so you can diagnose what happened.
+A job worker actually executes your jobs. The workers will ask the adapter to find a job to work on. The adapter will mark the job as locked (the worker's lock name and a timestamp are set on the job: the lock name is the process title plus the host name and process id, like `cedar-jobs-worker.default.0 host:app-1 pid:4242`, so no two running workers share one) and then the worker will call `perform()` on your job, passing in any args that were given when you scheduled it. The behavior of what happens when the job succeeds or fails depends on the config options you set in the `JobManager`. By default, successful jobs are removed from storage and failed jobs and kept around so you can diagnose what happened.
 
 The runner has several modes it can start in depending on how you want it to behave.
 
@@ -810,7 +810,7 @@ These modes are ideal when you're creating a job and want to be sure it runs cor
 yarn cedar jobs work
 ```
 
-This process will stay attached to the console and continually look for new jobs and execute them as they are found. The log level is set to `debug` by default so you'll see everything. Pressing `Ctrl-C` to cancel the process (sending `SIGINT`) will start a graceful shutdown: the workers will complete any work they're in the middle of before exiting. To cancel immediately, hit `Ctrl-C` again (or send `SIGTERM`) and they'll stop in the middle of what they're doing. Note that this could leave locked jobs in the database, but they will be picked back up again if a new worker starts with the same name as the one that locked the process. They'll also be picked up automatically after `maxRuntime` (plus a one-minute grace period) has expired, even if they are still locked.
+This process will stay attached to the console and continually look for new jobs and execute them as they are found. The log level is set to `debug` by default so you'll see everything. Pressing `Ctrl-C` to cancel the process (sending `SIGINT`) will start a graceful shutdown: the workers will complete any work they're in the middle of before exiting. To cancel immediately, hit `Ctrl-C` again (or send `SIGTERM`) and they'll stop in the middle of what they're doing. Note that this could leave locked jobs in the database. They'll be picked up again once `maxRuntime` (plus a one-minute grace period) has expired, even though they are still locked.
 
 To work on whatever outstanding jobs there are and then automatically exit use the `workoff` mode:
 
@@ -1041,7 +1041,7 @@ Your process monitor can now restart the workers automatically if they crash sin
 
 ### What Happens if a Worker Crashes?
 
-If a worker crashes because of circumstances outside of your control the job will remain locked in the storage system: the worker couldn't finish work and clean up after itself. When this happens, the job will be picked up again immediately if a new worker starts with the same process title, otherwise when `maxRuntime` (plus a one-minute grace period) has passed it's eligible for any worker to pick up and re-lock.
+If a worker crashes because of circumstances outside of your control the job will remain locked in the storage system: the worker couldn't finish work and clean up after itself. When this happens, the job becomes eligible for any worker to pick up and re-lock once `maxRuntime` (plus a one-minute grace period) has passed. A worker only takes back a job locked under its own lock name, which includes its host name and process id, so two running workers never take a job from each other.
 
 ## Creating Your Own Adapter
 
