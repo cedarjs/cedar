@@ -7,7 +7,7 @@ import { context } from '@cedarjs/context'
  * Represents the user attributes returned by the decoding the
  * Authentication provider's JWT together with an optional list of roles.
  */
-type RedwoodUser = Record<string, unknown> & { roles?: string[] }
+type CedarUser = Record<string, unknown> & { roles?: string[] }
 
 /**
  * getCurrentUser returns the user information together with
@@ -27,12 +27,12 @@ type RedwoodUser = Record<string, unknown> & { roles?: string[] }
  *
  * @see https://github.com/cedarjs/cedar/tree/main/packages/auth for examples
  *
- * @returns RedwoodUser
+ * @returns CedarUser
  */
 export const getCurrentUser = async (
   decoded: Decoded,
   { token: _token, type: _type }: { token: string; type: string },
-): Promise<RedwoodUser | null> => {
+): Promise<CedarUser | null> => {
   if (!decoded) {
     return null
   }
