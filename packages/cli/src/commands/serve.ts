@@ -90,9 +90,16 @@ async function startUDServer(
   // The baremetal deploy's health check reads this file on the server to find
   // the api, whose port can come from `--apiPort`, `CEDAR_API_PORT` or `PORT`
   // rather than cedar.toml. The root path is set when the Fetchable is built,
-  // so it isn't known here
+  // so it isn't known here. The address is read from the server, because port
+  // `0` makes it pick a free port
+  const address = server.node?.server?.address()
+
   try {
-    writeApiProcessMeta({ port, host })
+    writeApiProcessMeta(
+      address && typeof address !== 'string'
+        ? { port: address.port, host: address.address }
+        : { port, host },
+    )
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
     console.warn(

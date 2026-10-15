@@ -17,7 +17,7 @@ import {
 import type { ApiProcessMeta } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
-import { getPaths } from '../../../lib/index.js'
+import { getConfig, getPaths } from '../../../lib/index.js'
 
 import { MONITOR_ADAPTERS, MONITORS, isMonitor } from './monitors.js'
 import type { Monitor, MonitorAdapter, MonitorCommand } from './monitors.js'
@@ -306,6 +306,58 @@ export const describeHealthCheckTarget = (target: HealthCheckTarget) => {
   return 'url' in target ? target.url : `${target.apiPath} on the api server`
 }
 
+// The api process meta file of the `current` release, in each of the
+// generated data directories it can be in, relative to the deploy path
+const API_PROCESS_META_FILES = GENERATED_DATA_DIRS.map((dir) =>
+  [
+    CURRENT_RELEASE_SYMLINK_NAME,
+    dir,
+    PROCESS_META_DIR_NAME,
+    API_PROCESS_META_FILE_NAME,
+  ].join('/'),
+)
+
+// Where a release's `@cedarjs/api-server` can be installed, relative to the
+// deploy path: hoisted to the project root, or in the api side's own
+// `node_modules` (pnpm)
+const API_SERVER_DIST_DIRS = [
+  'node_modules/@cedarjs/api-server/dist',
+  'api/node_modules/@cedarjs/api-server/dist',
+].map((dir) => `${CURRENT_RELEASE_SYMLINK_NAME}/${dir}`)
+
+/**
+ * Whether the `current` release's api server writes its process meta file.
+ * Releases deployed with a Cedar version from before it did never write it.
+ * Throws if the server can't be asked
+ */
+export const releaseWritesApiProcessMeta = async (
+  ssh: SshExecutor,
+  serverConfig: ServerConfig,
+) => {
+  try {
+    // `grep` exits with 0 when it finds a match, 1 when it doesn't, and 2
+    // when a directory is missing
+    await ssh.exec(serverConfig.path, 'grep', [
+      '-rqs',
+      'writeApiProcessMeta',
+      ...API_SERVER_DIST_DIRS,
+    ])
+
+    return true
+  } catch (e) {
+    if (
+      typeof e === 'object' &&
+      e !== null &&
+      'exitCode' in e &&
+      typeof e.exitCode === 'number'
+    ) {
+      return false
+    }
+
+    throw e
+  }
+}
+
 /**
  * Reads what the `current` release's api server recorded about itself once it
  * started listening. The file is in the release itself, so it can't come from
@@ -315,14 +367,7 @@ export const readApiProcessMeta = async (
   ssh: SshExecutor,
   serverConfig: ServerConfig,
 ): Promise<Pick<ApiProcessMeta, 'port' | 'host' | 'rootPath'>> => {
-  const [preferredFile, fallbackFile] = GENERATED_DATA_DIRS.map((dir) =>
-    [
-      CURRENT_RELEASE_SYMLINK_NAME,
-      dir,
-      PROCESS_META_DIR_NAME,
-      API_PROCESS_META_FILE_NAME,
-    ].join('/'),
-  )
+  const [preferredFile, fallbackFile] = API_PROCESS_META_FILES
 
   let contents = ''
 
@@ -342,10 +387,13 @@ export const readApiProcessMeta = async (
     )
   }
 
+  // Some shells print a banner before the command output, so parsing starts
+  // at the first `{`
+  const jsonStart = contents.indexOf('{')
   let meta: unknown
 
   try {
-    meta = JSON.parse(contents)
+    meta = JSON.parse(jsonStart === -1 ? contents : contents.slice(jsonStart))
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
     throw new Error(`${preferredFile} isn't valid JSON: ${message}`)
@@ -424,6 +472,28 @@ export const waitForHealthCheck = async ({
   const deadline = Date.now() + timeoutSeconds * 1000
   let lastFailure = ''
   let keepTrying = true
+  let writesApiProcessMeta: boolean | undefined
+
+  // A release deployed with a Cedar version from before the api server wrote
+  // its process meta file never writes it. Such a release is checked on the
+  // `[api].port` from this machine's cedar.toml, the way those versions check
+  // it
+  const apiProcessMeta = async () => {
+    try {
+      return await readApiProcessMeta(ssh, serverConfig)
+    } catch (e) {
+      writesApiProcessMeta ??= await releaseWritesApiProcessMeta(
+        ssh,
+        serverConfig,
+      )
+
+      if (writesApiProcessMeta) {
+        throw e
+      }
+
+      return { port: getConfig().api.port, host: '' }
+    }
+  }
 
   // Each attempt is one `curl` on the server. `--fail` makes curl exit
   // non-zero for HTTP error statuses, so `ssh.exec` throws both when nothing
@@ -437,10 +507,7 @@ export const waitForHealthCheck = async ({
       const url =
         'url' in target
           ? target.url
-          : apiServerUrl(
-              await readApiProcessMeta(ssh, serverConfig),
-              target.apiPath,
-            )
+          : apiServerUrl(await apiProcessMeta(), target.apiPath)
 
       await ssh.exec(serverConfig.path, 'curl', [
         '--fail',
@@ -648,6 +715,14 @@ export const rollbackTasks = (
             ssh,
             serverConfig.path,
           )
+
+          // The release has the api process meta file from when it last ran.
+          // It's removed so the health check waits for the restarted api
+          // server to write it again
+          await ssh.exec(serverConfig.path, 'rm', [
+            '-f',
+            ...API_PROCESS_META_FILES,
+          ])
         } else {
           throw new Error(
             `Cannot rollback ${rollbackCount} release(s): ${

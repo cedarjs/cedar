@@ -21,6 +21,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     getPaths: () => ({
       base: returnEmptyBasePath ? testDir : `${testDir}/fixtures`,
     }),
+    getConfig: () => ({ api: { port: 8911 } }),
   }
 })
 
@@ -410,6 +411,16 @@ describe('rollbackTasks', () => {
       ['/var/www/app', 'readlink', ['-f', 'current']],
       ['/var/www/app', 'ls', ['-t']],
       ['/var/www/app', 'ln', ['-nsf', '20220408120000', 'current']],
+      // The release's process meta file from when it last ran
+      [
+        '/var/www/app',
+        'rm',
+        [
+          '-f',
+          'current/.cedar/process-meta/api.json',
+          'current/.redwood/process-meta/api.json',
+        ],
+      ],
     ])
   })
 
@@ -1685,6 +1696,18 @@ describe('readApiProcessMeta', () => {
     ])
   })
 
+  it('ignores a banner the shell prints before the file', async () => {
+    vi.spyOn(sshExecutor, 'exec').mockResolvedValue(
+      catResult(
+        'Non-interactive shell detected\n{ "port": 8921, "host": "::" }',
+      ),
+    )
+
+    await expect(
+      baremetal.readApiProcessMeta(sshExecutor, createServerConfig()),
+    ).resolves.toEqual({ port: 8921, host: '::' })
+  })
+
   it('leaves out rootPath when the file has none', async () => {
     vi.spyOn(sshExecutor, 'exec').mockResolvedValue(
       catResult('{ "port": 8911, "host": "::" }'),
@@ -1727,6 +1750,60 @@ describe('readApiProcessMeta', () => {
       `${metaFile} doesn't hold the api server's port and host: ` +
         '{ "port": "8911" }',
     )
+  })
+})
+
+describe('releaseWritesApiProcessMeta', () => {
+  const execError = (exitCode: number | null) =>
+    Object.assign(new Error('grep failed'), { exitCode })
+
+  beforeEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it("looks for the writer in the release's api server", async () => {
+    const execSpy = vi.spyOn(sshExecutor, 'exec').mockResolvedValue({
+      stdout: '',
+      stderr: '',
+      code: 0,
+      signal: null,
+    })
+
+    await expect(
+      baremetal.releaseWritesApiProcessMeta(sshExecutor, createServerConfig()),
+    ).resolves.toBe(true)
+
+    expect(execSpy).toHaveBeenCalledExactlyOnceWith('/var/www/app', 'grep', [
+      '-rqs',
+      'writeApiProcessMeta',
+      'current/node_modules/@cedarjs/api-server/dist',
+      'current/api/node_modules/@cedarjs/api-server/dist',
+    ])
+  })
+
+  it("is false when grep doesn't find it or the directories are missing", async () => {
+    for (const exitCode of [1, 2]) {
+      vi.spyOn(sshExecutor, 'exec').mockRejectedValueOnce(execError(exitCode))
+
+      await expect(
+        baremetal.releaseWritesApiProcessMeta(
+          sshExecutor,
+          createServerConfig(),
+        ),
+      ).resolves.toBe(false)
+    }
+  })
+
+  it("throws when the server can't be asked", async () => {
+    vi.spyOn(sshExecutor, 'exec').mockRejectedValue(execError(null))
+
+    await expect(
+      baremetal.releaseWritesApiProcessMeta(sshExecutor, createServerConfig()),
+    ).rejects.toThrow('grep failed')
   })
 })
 
@@ -1868,7 +1945,11 @@ describe('waitForHealthCheck', () => {
   it('requests the api path where the api server says it listens', async () => {
     const execSpy = vi
       .spyOn(sshExecutor, 'exec')
+      // cat
       .mockRejectedValueOnce(new Error('cat: No such file or directory'))
+      // grep finds that the release writes the file
+      .mockResolvedValueOnce(ok)
+      // cat
       .mockResolvedValueOnce({
         ...ok,
         stdout: '{ "port": 8921, "host": "::", "rootPath": "/api/" }',
@@ -1894,11 +1975,36 @@ describe('waitForHealthCheck', () => {
       "The api server hasn't written current/.cedar/process-meta/api.json " +
         "yet. It does that once it's listening.",
     )
-    expect(execSpy).toHaveBeenCalledTimes(3)
+    expect(execSpy).toHaveBeenCalledTimes(4)
     expect(execSpy).toHaveBeenLastCalledWith(
       '/var/www/app',
       'curl',
       expect.arrayContaining(["'http://localhost:8921/api/graphql/health'"]),
+    )
+  })
+
+  it("checks a release that doesn't write the file on cedar.toml's api port", async () => {
+    const execSpy = vi
+      .spyOn(sshExecutor, 'exec')
+      // cat
+      .mockRejectedValueOnce(new Error('cat: No such file or directory'))
+      // grep doesn't find the writer in the release's api server
+      .mockRejectedValueOnce(Object.assign(new Error('grep'), { exitCode: 1 }))
+      .mockResolvedValue(ok)
+
+    await baremetal.waitForHealthCheck({
+      target: { apiPath: '/graphql/health' },
+      timeoutSeconds: 30,
+      ssh: sshExecutor,
+      serverConfig: createServerConfig(),
+      nextSteps: [],
+    })
+
+    expect(execSpy).toHaveBeenCalledTimes(3)
+    expect(execSpy).toHaveBeenLastCalledWith(
+      '/var/www/app',
+      'curl',
+      expect.arrayContaining(["'http://localhost:8911/graphql/health'"]),
     )
   })
 
