@@ -514,7 +514,7 @@ The image is turned the right way up by its EXIF orientation, and the made file 
 
 #### Running sharp in a sandbox
 
-`sharpVariant()` runs sharp in your API process. For images from people or systems you don't trust, you can run sharp in a [sandboxed child process](#server-generated-files) instead, with a generator of your own. sharp's libvips is native code, which Node's permission model doesn't limit, so for sharp the sandbox gives you an empty environment (none of your secrets), a separate process (a crash in libvips doesn't take your server down), and caps on memory, time and output size.
+`sharpVariant()` runs sharp in your API process. For images from people or systems you don't trust, you can run sharp in a [sandboxed child process](#server-generated-files) instead, with a generator of your own. sharp's libvips is native code, which Node's permission model doesn't limit, so for sharp the sandbox gives you an empty environment (none of your secrets), a separate process (a crash in libvips doesn't take your server down), and caps on its JavaScript heap, time and output size. The heap cap doesn't limit the memory libvips uses to decode an image; that needs an operating-system limit, such as a container's.
 
 The child script lives in your `api/src`, where every kind of build finds it and ships it with sharp, `cedar build --ud` too:
 

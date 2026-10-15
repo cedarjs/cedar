@@ -63,6 +63,25 @@ describe('sharpVariant', () => {
     })
   })
 
+  test('reads GIF, WebP, AVIF and TIFF too', async () => {
+    const generate = sharpVariant({ width: 32 })
+
+    for (const format of ['gif', 'webp', 'avif', 'tiff'] as const) {
+      const input = await sharp({
+        create: { width: 64, height: 48, channels: 3, background: '#c00' },
+      })
+        .toFormat(format)
+        .toBuffer()
+      const file = await made(generate, input)
+
+      expect(file.metadata).toMatchObject({
+        format: 'webp',
+        width: 32,
+        height: 32,
+      })
+    }
+  })
+
   test('crops to width × height', async () => {
     const file = await made(
       sharpVariant({ width: 120, height: 80 }),
