@@ -9,7 +9,7 @@ import fastify from 'fastify'
 
 import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
-import { getConfig, getPaths } from '@cedarjs/project-config'
+import { getConfig, getPaths, writeApiPortFile } from '@cedarjs/project-config'
 
 import { resolveOptions } from './createServerHelpers.js'
 import type {
@@ -200,6 +200,21 @@ export async function createServer(options: CreateServerOptions = {}) {
         `${server.listeningOrigin}${apiRootPath}`,
       )}`,
     )
+
+    // The baremetal deploy's health check reads this file on the server to
+    // find the port, which can come from `--apiPort`, `CEDAR_API_PORT` or
+    // `PORT` rather than cedar.toml
+    const port = server.addresses()[0]?.port
+
+    if (port) {
+      try {
+        writeApiPortFile(port)
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e)
+        server.log.warn(`Could not write the api port file: ${message}`)
+      }
+    }
+
     done()
   })
 

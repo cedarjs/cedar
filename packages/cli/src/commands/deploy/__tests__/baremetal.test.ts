@@ -21,7 +21,6 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     getPaths: () => ({
       base: returnEmptyBasePath ? testDir : `${testDir}/fixtures`,
     }),
-    getConfig: () => ({ api: { port: 8911 } }),
   }
 })
 
@@ -357,7 +356,7 @@ describe('rollbackTasks', () => {
     expect(tasks1[0].title).toMatch('Rolling back 1')
     expect(tasks1[1].title).toMatch('Restarting')
     expect(tasks1[2].title).toEqual(
-      'Checking http://localhost:8911/graphql/health...',
+      'Checking /graphql/health on the api server...',
     )
 
     const tasks2 = baremetal.rollbackTasks(
@@ -962,7 +961,7 @@ describe('deployTasks', () => {
     expect(tasks[8].title).toMatch('Restarting serve')
     expect(tasks[8].skip?.()).toEqual(false)
     expect(tasks[9].title).toEqual(
-      'Checking http://localhost:8911/graphql/health...',
+      'Checking /graphql/health on the api server...',
     )
     expect(tasks[9].skip?.()).toEqual(false)
     expect(tasks[10].title).toMatch('Cleaning up')
@@ -1181,7 +1180,7 @@ describe('deployTasks', () => {
       'Enabling and starting myapp for the first time...',
       'Enabling and starting myapp-jobs@0 for the first time...',
     ])
-    expect(tasks[11].title).toMatch('Checking http://')
+    expect(tasks[11].title).toMatch('Checking /graphql/health')
 
     await tasks[8].task({}, {})
     await tasks[9].task({}, {})
@@ -1327,7 +1326,7 @@ describe('deployTasks', () => {
     expect(tasks[9].title).toMatch('Starting serve process for the first time')
     expect(tasks[10].title).toMatch('Saving serve state')
     expect(tasks[11].title).toEqual(
-      'Checking http://localhost:8911/graphql/health...',
+      'Checking /graphql/health on the api server...',
     )
     expect(tasks[11].skip?.()).toEqual(false)
   })
@@ -1342,14 +1341,18 @@ describe('deployTasks', () => {
 
     expect(tasks[8].title).toMatch('Restarting api')
     expect(tasks[9].title).toMatch('Restarting web')
-    expect(tasks[10].title).toMatch('Checking http://')
+    expect(tasks[10].title).toMatch('Checking /graphql/health')
     expect(tasks[11].title).toMatch('Cleaning up')
   })
 
   it('fails the deploy when the health check does not pass', async () => {
-    vi.spyOn(sshExecutor, 'exec').mockRejectedValue(
-      new Error('curl: (7) Failed to connect to localhost port 8911'),
-    )
+    vi.spyOn(sshExecutor, 'exec').mockImplementation(async (_path, command) => {
+      if (command === 'cat') {
+        return { stdout: '8911\n', stderr: '', code: 0, signal: null }
+      }
+
+      throw new Error('curl: (7) Failed to connect to localhost port 8911')
+    })
 
     const tasks = baremetal.deployTasks(
       defaultYargs,
@@ -1359,7 +1362,7 @@ describe('deployTasks', () => {
     )
 
     await expect(tasks[9].task({}, { output: '' })).rejects.toThrow(
-      'Health check failed: http://localhost:8911/graphql/health did not ' +
+      'Health check failed: /graphql/health on the api server did not ' +
         'respond successfully within 0 seconds of restarting the serve ' +
         'process(es).\n' +
         'Last attempt: curl: (7) Failed to connect to localhost port 8911\n\n' +
@@ -1595,42 +1598,103 @@ describe('deployTasks', () => {
   })
 })
 
-describe('healthCheckUrl', () => {
-  it('defaults to the graphql health endpoint on the api port', () => {
-    expect(baremetal.healthCheckUrl(createServerConfig())).toEqual(
-      'http://localhost:8911/graphql/health',
-    )
+describe('healthCheckTarget', () => {
+  it("defaults to the graphql health endpoint on the api server's port", () => {
+    expect(baremetal.healthCheckTarget(createServerConfig())).toEqual({
+      apiPath: '/graphql/health',
+    })
     expect(
-      baremetal.healthCheckUrl(createServerConfig({ sides: ['api', 'web'] })),
-    ).toEqual('http://localhost:8911/graphql/health')
+      baremetal.healthCheckTarget(
+        createServerConfig({ sides: ['api', 'web'] }),
+      ),
+    ).toEqual({ apiPath: '/graphql/health' })
   })
 
   it('has nothing to check on a server without the api side', () => {
     expect(
-      baremetal.healthCheckUrl(createServerConfig({ sides: ['web'] })),
+      baremetal.healthCheckTarget(createServerConfig({ sides: ['web'] })),
     ).toBeUndefined()
   })
 
   it('uses a configured url on any server', () => {
     expect(
-      baremetal.healthCheckUrl(
+      baremetal.healthCheckTarget(
         createServerConfig({
           sides: ['web'],
           healthCheckUrl: 'http://localhost:8910/',
         }),
       ),
-    ).toEqual('http://localhost:8910/')
+    ).toEqual({ url: 'http://localhost:8910/' })
   })
 
   it('is disabled with false', () => {
     expect(
-      baremetal.healthCheckUrl(createServerConfig({ healthCheckUrl: false })),
+      baremetal.healthCheckTarget(
+        createServerConfig({ healthCheckUrl: false }),
+      ),
     ).toBeUndefined()
   })
 })
 
+describe('readServerApiPort', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it("reads the port from the current release's api port file", async () => {
+    const execSpy = vi.spyOn(sshExecutor, 'exec').mockResolvedValue({
+      stdout: '8921\n',
+      stderr: '',
+      code: 0,
+      signal: null,
+    })
+
+    await expect(
+      baremetal.readServerApiPort(sshExecutor, createServerConfig()),
+    ).resolves.toEqual('8921')
+
+    expect(execSpy).toHaveBeenCalledExactlyOnceWith('/var/www/app', 'cat', [
+      'current/.cedar/api-port',
+      '2>/dev/null',
+      '||',
+      'cat',
+      'current/.redwood/api-port',
+    ])
+  })
+
+  it("says the api server hasn't written the file yet when it's missing", async () => {
+    vi.spyOn(sshExecutor, 'exec').mockRejectedValue(
+      new Error('cat: current/.redwood/api-port: No such file or directory'),
+    )
+
+    await expect(
+      baremetal.readServerApiPort(sshExecutor, createServerConfig()),
+    ).rejects.toThrow(
+      "The api server hasn't written the port it listens on to " +
+        "current/.cedar/api-port. It does that once it's listening.",
+    )
+  })
+
+  it("rejects a file that doesn't contain a port", async () => {
+    vi.spyOn(sshExecutor, 'exec').mockResolvedValue({
+      stdout: '',
+      stderr: '',
+      code: 0,
+      signal: null,
+    })
+
+    await expect(
+      baremetal.readServerApiPort(sshExecutor, createServerConfig()),
+    ).rejects.toThrow('current/.cedar/api-port doesn\'t contain a port: ""')
+  })
+})
+
 describe('waitForHealthCheck', () => {
-  const url = 'http://localhost:8911/graphql/health'
+  const target = { url: 'http://localhost:8911/graphql/health' }
   const ok = { stdout: '', stderr: '', code: 0, signal: null }
 
   beforeEach(() => {
@@ -1647,7 +1711,7 @@ describe('waitForHealthCheck', () => {
     const execSpy = vi.spyOn(sshExecutor, 'exec').mockResolvedValue(ok)
 
     await baremetal.waitForHealthCheck({
-      url: "http://localhost:8911/it's-healthy",
+      target: { url: "http://localhost:8911/it's-healthy" },
       timeoutSeconds: 30,
       ssh: sshExecutor,
       serverConfig: createServerConfig(),
@@ -1676,7 +1740,7 @@ describe('waitForHealthCheck', () => {
       .mockResolvedValue(ok)
 
     const promise = baremetal.waitForHealthCheck({
-      url,
+      target,
       timeoutSeconds: 30,
       ssh: sshExecutor,
       serverConfig: createServerConfig(),
@@ -1700,7 +1764,7 @@ describe('waitForHealthCheck', () => {
       .mockRejectedValue(new Error('Connection refused'))
 
     const promise = baremetal.waitForHealthCheck({
-      url,
+      target,
       timeoutSeconds: 5,
       ssh: sshExecutor,
       serverConfig: createServerConfig({ processNames: ['api', 'web'] }),
@@ -1727,6 +1791,39 @@ describe('waitForHealthCheck', () => {
     expect(execSpy).toHaveBeenCalledTimes(3)
   })
 
+  it('requests the api path at the port the api server wrote', async () => {
+    const execSpy = vi
+      .spyOn(sshExecutor, 'exec')
+      .mockRejectedValueOnce(new Error('cat: No such file or directory'))
+      .mockResolvedValueOnce({ ...ok, stdout: '8921\n' })
+      .mockResolvedValue(ok)
+    const onFailedAttempt = vi.fn()
+
+    const promise = baremetal.waitForHealthCheck({
+      target: { apiPath: '/graphql/health' },
+      timeoutSeconds: 30,
+      ssh: sshExecutor,
+      serverConfig: createServerConfig(),
+      nextSteps: [],
+      onFailedAttempt,
+    })
+
+    await vi.advanceTimersByTimeAsync(2000)
+    await expect(promise).resolves.toBeUndefined()
+
+    // The first attempt finds no port file and doesn't request anything
+    expect(onFailedAttempt).toHaveBeenCalledExactlyOnceWith(
+      "The api server hasn't written the port it listens on to " +
+        "current/.cedar/api-port. It does that once it's listening.",
+    )
+    expect(execSpy).toHaveBeenCalledTimes(3)
+    expect(execSpy).toHaveBeenLastCalledWith(
+      '/var/www/app',
+      'curl',
+      expect.arrayContaining(["'http://localhost:8921/graphql/health'"]),
+    )
+  })
+
   it('makes a single attempt when the timeout is 0', async () => {
     const execSpy = vi
       .spyOn(sshExecutor, 'exec')
@@ -1734,7 +1831,7 @@ describe('waitForHealthCheck', () => {
 
     await expect(
       baremetal.waitForHealthCheck({
-        url,
+        target,
         timeoutSeconds: 0,
         ssh: sshExecutor,
         serverConfig: createServerConfig(),

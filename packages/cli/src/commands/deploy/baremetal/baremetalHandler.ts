@@ -10,9 +10,10 @@ import { titleCase } from 'title-case'
 
 import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
+import { API_PORT_FILE_NAME } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
-import { getConfig, getPaths } from '../../../lib/index.js'
+import { getPaths } from '../../../lib/index.js'
 
 import { MONITOR_ADAPTERS, MONITORS, isMonitor } from './monitors.js'
 import type { Monitor, MonitorAdapter, MonitorCommand } from './monitors.js'
@@ -25,6 +26,9 @@ const CURRENT_RELEASE_SYMLINK_NAME = 'current'
 const LIFECYCLE_HOOKS = ['before', 'after'] as const
 // Path of the health check endpoint that Cedar's GraphQL server serves
 const DEFAULT_HEALTH_CHECK_PATH = '/graphql/health'
+// Generated data directories a release's api server writes its port file to,
+// in the order the api server picks them
+const GENERATED_DATA_DIRS = ['.cedar', '.redwood']
 // Time between two attempts of the post-restart health check
 const HEALTH_CHECK_INTERVAL_MS = 2000
 // Longest a single health check request waits for a response
@@ -262,46 +266,96 @@ const monitorTask = (
 }
 
 /**
- * The URL the post-restart health check requests, or `undefined` when there
- * is nothing to check on this server. Without an explicit `healthCheckUrl`
- * only servers that host the api side are checked, at the `/graphql/health`
- * endpoint Cedar's GraphQL server serves on the `[api].port` from cedar.toml.
- * `cedar serve` and `cedar serve api` both listen on that port.
+ * What the post-restart health check requests: either a `url`, or an
+ * `apiPath` on localhost at the port the release's api server listens on
  */
-export const healthCheckUrl = (serverConfig: ServerConfig) => {
+export type HealthCheckTarget = { url: string } | { apiPath: string }
+
+/**
+ * What the post-restart health check requests, or `undefined` when there is
+ * nothing to check on this server. Without an explicit `healthCheckUrl` only
+ * servers that host the api side are checked, at the `/graphql/health`
+ * endpoint Cedar's GraphQL server serves. The port is read on the server,
+ * because `--apiPort`, `CEDAR_API_PORT` or `PORT` can set it there
+ */
+export const healthCheckTarget = (
+  serverConfig: ServerConfig,
+): HealthCheckTarget | undefined => {
   if (serverConfig.healthCheckUrl === false) {
     return undefined
   }
 
   if (serverConfig.healthCheckUrl) {
-    return serverConfig.healthCheckUrl
+    return { url: serverConfig.healthCheckUrl }
   }
 
   if (!serverConfig.sides.includes('api')) {
     return undefined
   }
 
-  return `http://localhost:${getConfig().api.port}${DEFAULT_HEALTH_CHECK_PATH}`
+  return { apiPath: DEFAULT_HEALTH_CHECK_PATH }
+}
+
+export const describeHealthCheckTarget = (target: HealthCheckTarget) => {
+  return 'url' in target ? target.url : `${target.apiPath} on the api server`
+}
+
+/**
+ * Reads the port the `current` release's api server listens on from the file
+ * it writes once it's listening. The file is in the release itself, so it
+ * can't come from another app's api server on the same machine
+ */
+export const readServerApiPort = async (
+  ssh: SshExecutor,
+  serverConfig: ServerConfig,
+) => {
+  const [preferredFile, fallbackFile] = GENERATED_DATA_DIRS.map((dir) =>
+    [CURRENT_RELEASE_SYMLINK_NAME, dir, API_PORT_FILE_NAME].join('/'),
+  )
+
+  let port = ''
+
+  try {
+    const result = await ssh.exec(serverConfig.path, 'cat', [
+      preferredFile,
+      '2>/dev/null',
+      '||',
+      'cat',
+      fallbackFile,
+    ])
+    port = result.stdout.trim()
+  } catch {
+    throw new Error(
+      `The api server hasn't written the port it listens on to ` +
+        `${preferredFile}. It does that once it's listening.`,
+    )
+  }
+
+  if (!/^\d+$/.test(port)) {
+    throw new Error(`${preferredFile} doesn't contain a port: "${port}"`)
+  }
+
+  return port
 }
 
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms))
 
 /**
- * Requests `url` on the server until it responds with a 2xx status. Gives up
- * and throws once `timeoutSeconds` have passed, with `nextSteps` appended to
+ * Requests `target` on the server until it responds with a 2xx status. Gives
+ * up and throws once `timeoutSeconds` have passed, with `nextSteps` appended to
  * the error message so the message says what to do about the failure.
  * `onFailedAttempt` is called with the reason each time an attempt fails.
  */
 export const waitForHealthCheck = async ({
-  url,
+  target,
   timeoutSeconds,
   ssh,
   serverConfig,
   nextSteps,
   onFailedAttempt,
 }: {
-  url: string
+  target: HealthCheckTarget
   timeoutSeconds: number
   ssh: SshExecutor
   serverConfig: ServerConfig
@@ -319,6 +373,14 @@ export const waitForHealthCheck = async ({
   // http to https) is judged by the response of the final destination.
   while (keepTrying) {
     try {
+      // The api server writes its port once it's listening, so the port is
+      // read again on every attempt until it's there
+      const url =
+        'url' in target
+          ? target.url
+          : `http://localhost:${await readServerApiPort(ssh, serverConfig)}` +
+            target.apiPath
+
       await ssh.exec(serverConfig.path, 'curl', [
         '--fail',
         '--location',
@@ -347,7 +409,8 @@ export const waitForHealthCheck = async ({
 
   throw new Error(
     [
-      `Health check failed: ${url} did not respond successfully within ` +
+      `Health check failed: ${describeHealthCheckTarget(target)} did not ` +
+        'respond successfully within ' +
         `${timeoutSeconds} seconds of restarting the ` +
         `${serverConfig.processNames?.join(', ')} process(es).`,
       `Last attempt: ${lastFailure}`,
@@ -362,25 +425,27 @@ export const waitForHealthCheck = async ({
 
 /**
  * The Listr task that runs the health check once the server's processes have
- * been restarted. `url` is `undefined` when there is nothing to check, which
+ * been restarted. `target` is `undefined` when there is nothing to check, which
  * leaves a task that is always skipped, so the task list keeps the same shape
  * for every server.
  */
 const healthCheckTask = (
-  url: string | undefined,
+  target: HealthCheckTarget | undefined,
   ssh: SshExecutor,
   serverConfig: ServerConfig,
   nextSteps: string[],
 ): ListrTaskObject => {
   return {
-    title: url ? `Checking ${url}...` : 'Checking health...',
+    title: target
+      ? `Checking ${describeHealthCheckTarget(target)}...`
+      : 'Checking health...',
     task: async (_ctx: unknown, task: { output: string }) => {
-      if (!url) {
+      if (!target) {
         return
       }
 
       await waitForHealthCheck({
-        url,
+        target,
         timeoutSeconds: parseInt(String(serverConfig.healthCheckTimeout), 10),
         ssh,
         serverConfig,
@@ -391,7 +456,7 @@ const healthCheckTask = (
         },
       })
     },
-    skip: () => !url,
+    skip: () => !target,
   }
 }
 
@@ -541,7 +606,7 @@ export const rollbackTasks = (
     }
 
     tasks.push(
-      healthCheckTask(healthCheckUrl(serverConfig), ssh, serverConfig, [
+      healthCheckTask(healthCheckTarget(serverConfig), ssh, serverConfig, [
         'The release you rolled back to is live as `current`. Check the ' +
           'process logs on the server, or run the rollback again with ' +
           '`--rollback` to move one more release back.',
@@ -1116,14 +1181,14 @@ export const deployTasks = (
       }
     }
 
-    const url = healthCheckUrl(serverConfig)
+    const target = healthCheckTarget(serverConfig)
 
     tasks.push(
       ...commandWithLifecycleEvents({
         name: 'healthCheck',
         config: { ...config, cmdPath: serverConfig.path },
-        skip: !yargs.restart || !url,
-        command: healthCheckTask(url, ssh, serverConfig, [
+        skip: !yargs.restart || !target,
+        command: healthCheckTask(target, ssh, serverConfig, [
           'The new release is live as `current`. Check the process logs ' +
             'on the server, or roll back to the previous release with ' +
             `\`${formatCedarCommand(['deploy', 'baremetal', yargs.environment, '--rollback'])}\`.`,
