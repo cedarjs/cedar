@@ -8,10 +8,9 @@ export interface CleanupStaleUploadsOptions {
   db: UploadDatabase
   targets: StorageTargets
   /**
-   * Rows that have been `pending` and unchanged for this many milliseconds
-   * are claimed as `failed`. Measured from the row's last update, so a
-   * variant whose retry claimed an old row gets the full time. Defaults to
-   * one hour, well past the five-minute validity of a presigned upload URL.
+   * Rows still `pending` after this many milliseconds are claimed as
+   * `failed`. Defaults to one hour, well past the five-minute validity of a
+   * presigned upload URL.
    */
   olderThan?: number
   /**
@@ -64,7 +63,6 @@ export async function cleanupStaleUploads({
     console.error(`[cedar uploads] cleanup failed for ${upload.id}:`, error),
 }: CleanupStaleUploadsOptions): Promise<CleanupStaleUploadsResult> {
   const now = Date.now()
-  const staleBefore = new Date(now - olderThan)
   let claimed = 0
   let deleted = 0
   let errors = 0
@@ -100,7 +98,7 @@ export async function cleanupStaleUploads({
   }
 
   const stale = await db.upload.findMany({
-    where: { status: 'pending', updatedAt: { lt: staleBefore } },
+    where: { status: 'pending', createdAt: { lt: new Date(now - olderThan) } },
     omit: { data: true },
     orderBy: { createdAt: 'asc' },
     take: batchSize,
@@ -108,12 +106,7 @@ export async function cleanupStaleUploads({
 
   for (const upload of stale) {
     const { count } = await db.upload.updateMany({
-      // A row claimed again since it was read is not stale any more
-      where: {
-        id: upload.id,
-        status: 'pending',
-        updatedAt: { lt: staleBefore },
-      },
+      where: { id: upload.id, status: 'pending' },
       data: { status: 'failed' },
     })
 

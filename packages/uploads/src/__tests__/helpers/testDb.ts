@@ -1,6 +1,6 @@
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 
-import type { UploadDatabase, UploadVariantDatabase } from '../../types.js'
+import type { DerivedFileDatabase, UploadDatabase } from '../../types.js'
 import { PrismaClient } from '../prisma-client/client.js'
 
 const adapter = new PrismaBetterSqlite3({
@@ -14,12 +14,10 @@ export const prisma = new PrismaClient({ adapter })
 // this line stops compiling.
 export const db: UploadDatabase = prisma
 
-// The same check for the variant columns (`sourceId`, `variant`)
-export const variantDb: UploadDatabase & UploadVariantDatabase = prisma
+// The same check for the `DerivedFile` model
+export const derivedDb: DerivedFileDatabase = prisma
 
 export async function resetTestDb() {
-  // Variants reference their source with `onDelete: Restrict`, so they go
-  // first
-  await prisma.upload.deleteMany({ where: { sourceId: { not: null } } })
+  await prisma.derivedFile.deleteMany()
   await prisma.upload.deleteMany()
 }

@@ -1,28 +1,31 @@
-# Upload derived files (variants)
+# Derived files (variants)
 
-Derived files for `@cedarjs/uploads`: an upload can have **variants**, files
-made from it such as thumbnails, previews or a video's poster frame. Cedar keeps
-track of them; the app supplies only the function that makes one.
+Derived files for `@cedarjs/uploads`: files made from another file, such as
+thumbnails, previews or a video's poster frame. The file they are made from can
+be an upload, or a file stored somewhere else, such as a document fetched from a
+third-party API when it is needed. Cedar keeps track of them; the app supplies
+the function that makes each kind (a **variant**), and any source beyond
+uploads.
 
 Status: implemented as **experimental**. It stays experimental in the docs until
 a second app, or video, has used it.
 
 This plan applies the principles in
 [`docs/design-principles.md`](../design-principles.md): the lifecycle stays
-explicit (deleting variants is part of the `deleteFile()` call, not a Prisma
-hook), the schema fails closed (`onDelete: Restrict` refuses to delete a source
-row that still has variants), and that refusal names its alternatives
-(`HAS_VARIANTS`: pass `targets` to `deleteFile()`, or call `deleteVariants()`
-first).
+explicit (deleting derived files is a call, `deleteFor()`, which `deleteFile()`
+makes for uploads, not a Prisma hook), and refusals name their alternatives
+(an unknown source lists the configured ones; a source that can't key a
+reference says to add `key()`; `deleteFile()` with derived files that have no
+upload source says how to add one).
 
 It is one of three related proposals that came out of the same work on a
-production app (Effibo):
+production app:
 
 1. **This one:** derived files in `@cedarjs/uploads`.
 2. **Declarative recurring jobs and unique jobs** in `@cedarjs/jobs`.
 3. **A "locked child" runner**: parsing untrusted files (PDFs, images, video) in
-   a sandboxed Node child process. Variant generators that parse untrusted files
-   would run inside it; this plan does not depend on it.
+   a sandboxed Node child process. Generators that parse untrusted files would
+   run inside it; this plan does not depend on it.
 
 ## Table of contents
 
@@ -30,15 +33,13 @@ production app (Effibo):
 - [Decisions](#decisions)
 - [How it fits what uploads already has](#how-it-fits-what-uploads-already-has)
 - [API](#api)
-- [Schema and storage](#schema-and-storage)
-- [Making a variant once](#making-a-variant-once)
+- [Schema](#schema)
+- [Making a file once](#making-a-file-once)
 - [Failures and retry](#failures-and-retry)
-- [Regenerating](#regenerating)
+- [Resetting](#resetting)
 - [Deleting](#deleting)
 - [What the tests guard](#what-the-tests-guard)
-- [Discoverability](#discoverability)
 - [Follow-ups](#follow-ups)
-- [Open questions](#open-questions)
 
 ## The problem
 
@@ -49,324 +50,320 @@ image making:
 - **The same fields on every model.** Three models each got `thumbnailUpload`,
   `thumbnail2xUpload` and a failure timestamp, and two of them also
   `previewUpload`, plus a back-relation on `Upload` for every one of those
-  relations: eight of the eleven back-relations on `Upload` are derived files.
-- **A hand-kept owner list.** The job that sweeps orphaned uploads needs to know
-  every relation through which something can own an `Upload`. That list is
-  updated by hand for every new relation; forget one and the files are swept
-  after a day, or leak forever.
-- **A race-fix helper.** Two processes (a background job and a backfill script,
-  or two requests from two api processes) can make the same derived file at the
-  same moment. Each create function stores its files, then does a conditional
-  update, and throws its files away if it lost. A helper exists only to do
-  "create the row, or fill it if the field is still empty" without a
-  unique-constraint crash. On top of that, an in-process map of in-flight
-  promises keeps two tiles of one page from making the same thumbnail twice.
-- **A failure memo, by hand.** "Could not be made, try again after a day" is a
-  `...FailedAt` column per kind of derived file and a check in every create
-  function.
-- **Remaking all of one kind is a script per model.** After a fix to PDF
-  drawing, a script cleared the fields, deleted the uploads and remade them, one
-  model at a time.
-- **"Without thumbnails" queries per model**, for backfills.
+  relations.
+- **A hand-kept owner list** for the job that sweeps orphaned uploads.
+- **A race-fix helper** so two processes making the same file at the same
+  moment don't crash on a unique constraint, plus an in-process map of
+  in-flight promises.
+- **A failure memo, by hand**: a `...FailedAt` column per kind of file.
+- **A script per model** to remake all of one kind after a fix.
 
-If uploads knew that one upload can be derived from another, each with a name
-(`thumb-164`, `thumb-328`, `preview`), all of that collapses: the derived files
-go when the source goes; making a missing one happens once even with two
-requests at the same moment; "couldn't be made, try again after N" is tracked;
-"remake every `preview`" is one call. The app keeps only the function that turns
-bytes into the new file.
+The same app also needs thumbnails and previews of files it never stores as
+uploads: documents in a third-party system, fetched from its API on demand.
+Tying derived files to `Upload` rows leaves those out.
 
 ## Decisions
 
-- **A real implementation with tests, not an RFC.** Tests fail when things
-  change; docs don't.
-- **Small.** Cedar owns the bookkeeping: the relation to the source, deletion
-  with the source, once-only making under concurrency, the failure memo with
-  retry-after, regenerate-all for one variant name, and reading and serving. The
-  app passes generator functions: `variants: { 'thumb-164': makeThumb }`.
-- **No media dependencies.** Video is the "is this generic?" test: a poster
-  frame made with ffmpeg is just another generator. The package does not depend
-  on sharp, pdf.js or ffmpeg, and the tests use trivial generators.
-- **Experimental** in the docs until a second app or video uses it.
-- **Built on uploads, not beside it**: see the next section.
-- **`acquire*` for methods that may make a variant, `find*` for methods that
-  only look.** `acquireVariant()`, `acquireVariantData()`,
-  `acquireVariantUrl()` and a generator's `acquireVariantData(name)` make the
-  variant when it is missing: they can run a slow generator and write to
-  storage and the database. A `get*` or `read*` name would hide those side
-  effects behind what reads like a lookup. `acquire` is the verb Cedar uses for
-  "return it, creating it first if needed" (as in cedar-pg's `acquire*`), so a
-  public `get*` never creates anything. `findVariant()` and `findVariants()`
-  never make anything and keep `find`; `regenerateVariants()` and
-  `deleteVariants()` already name what they change.
+- **Derived files are not tied to uploads.** A source is anything with a
+  `read(ref)`: `uploadSource()` for uploads, or the app's own function for a
+  third-party API. Why: the production app's third-party documents are never
+  uploads, and storing each original first, only to thumbnail it, would copy a
+  third party's files into the app's storage.
+- **A separate, opt-in `DerivedFile` table**; the `Upload` model needs nothing.
+  Why: a source that isn't a row can't be a foreign key, so the bookkeeping
+  needs a table keyed by a string (`upload:<id>`, `remote:<org>/<doc>`).
+  It also leaves the `Upload` model and every app that doesn't use derived
+  files untouched. The made file is still an ordinary `Upload` row, so storage,
+  serving, directives and tenancy work on it unchanged.
+- **The claim has its own column, `claimId`.** Why: `Upload.tokenId` means "the
+  upload token that created this row"; using it for claims gave one column two
+  meanings.
+- **A thrown error is temporary; `null` from a generator is permanent.** A
+  throw is retried once per entry in `retryDelays`, each retry allowed that
+  long after the attempt before, counted in `attempts`. `null` from a
+  generator, or a made file `storeFile()` refuses, is failed at once. Failed
+  stays failed until `resetVariants()`. Why: network failures (a third-party
+  API being down) are common for remote sources and shouldn't be remembered
+  for a day, while "this file type has no preview" never changes. This
+  replaces `retryFailedAfter`.
+- **Retries span hours, not minutes: 1 min, 5 min, 30 min, 2 h, 6 h.** Five
+  retries, so six attempts, and a file that still fails is failed about 8.5
+  hours after the first attempt. Why: the first defaults (three attempts, one
+  minute then two) failed every file asked for during a third-party outage
+  longer than about three minutes, until someone ran `resetVariants()`. A
+  temporary failure should be retried more than once, but not forever: these
+  ride out an outage of a few hours and give up within a day. A doubling
+  `retryDelay` can't express that spread, so the option is a list,
+  `retryDelays`, one retry per entry, and it replaces both `retryDelay` and
+  `maxAttempts` (the number of attempts is the list's length plus one, so the
+  two can't disagree). There is no separate "exhausted" state: an exhausted
+  file is `failed`, like a `null`, and `resetVariants()` clears both.
+- **A source file that doesn't exist throws `NOT_FOUND`, and nothing is
+  recorded.** A source's `read()` returning `null` means "doesn't exist";
+  `uploadSource()` returns it for an id with no `Upload` row. The attempt then
+  deletes the row it claimed, and `acquireVariant()` (and
+  `acquireVariantData()`) throws an `UploadError` with code `NOT_FOUND` naming
+  the source key and what to do: pass a reference to an existing file, or
+  catch it where one may have been deleted. "Exists but this variant can't be
+  made" is a generator's `null`, which is still remembered as failed. The
+  check is on the `null` itself, outside the path that treats a throw as
+  temporary (a throw from `read()` is retried), and holds however the
+  generator handles the failed read (catching it and returning `null`, or
+  rethrowing something else). The row is still created first, as the claim,
+  so two processes never read the same source at once; it is deleted under
+  that claim. Why: a typo'd or deleted id is the caller's bug, and
+  remembering it as `failed` without a log line hid it (design principles:
+  fail closed, and a refusal names the way out). It also doesn't fill the
+  table with rows for ids that never existed, and an id that appears later
+  (a file that hadn't reached the third party yet) is made on the next
+  acquire. Custom sources behave the same way; a source that wants a missing
+  file retried instead throws from `read()`.
+- **No orphan sweep in Cedar.** Nothing deletes the made files of an external
+  source that went away without `deleteFor()`. Why: a sweep needs a way to ask
+  the source which keys still exist, which is app-specific (a third-party API
+  may have no batch lookup, or rate-limit it); an app that needs one writes it
+  over its own `DerivedFile` rows and `deleteFor()`.
+- **The owner is copied from a read, with no `describe()` for now.** A made
+  file gets the source's `userId` and `organizationId` from `read()`, so a
+  generator that never calls `readSource()` still causes one read. Why: the
+  read is memoized per attempt, so it costs nothing extra in the usual case,
+  a generator that reads the bytes; it only costs a download for a generator
+  that works from the reference alone (calling a remote service by
+  reference, say). If one needs that, an optional `describe(ref)` on sources,
+  returning only owner and filename, can be added later without breaking
+  anything.
+- **No job integration.** Generation stays a function call: an app that wants
+  files made in the background calls `acquireVariant()` from any job. Why: it
+  works with any job runner, and `@cedarjs/uploads` stays independent of
+  `@cedarjs/jobs`.
+- **No waiting for another process.** When another process holds the claim,
+  `acquireVariant()` returns `pending` at once instead of polling. Why: polling
+  was the most complex part of the code and held requests open; a caller can
+  show a placeholder and ask again. Concurrent calls in one process still share
+  one attempt. `pollInterval` is gone; `claimTimeout` stays, so a claim left by
+  a process that died is taken over.
+- **No variant made from another variant.** `readVariant()` in the generator
+  context, and the dependency-cycle detection it needed, are gone. Why: it was a
+  large share of the code for one use (a PDF thumbnail cut from its drawn
+  page), which a generator can do by drawing the page itself.
+- **No `onDelete: Restrict`, no `HAS_VARIANTS`.** Deleting is a call,
+  `deleteFor(source)`, and `deleteFile()` makes it when given `derivedFiles`.
+  Why: there is no foreign key to restrict on. The trade-off: nothing in the
+  database stops a source file going away while its derived files stay. For
+  uploads, `deleteFile({ derivedFiles })` covers it; for other sources the app
+  must call `deleteFor()`, or the made files are orphaned.
+- **`resetVariants()` deletes, it doesn't remake.** Why: a source key can't be
+  turned back into the app's reference, so Cedar can't call a source's `read()`
+  for a key alone. Each file is made again on its next acquire, or by the app's
+  own backfill.
+- **Names.** "acquire" for anything that may create (`acquireVariant`,
+  `acquireVariantData`), plain reads are `find*`. There is no public `get*` that
+  creates. `getVariantUrl()` is not carried over: the made file is an `Upload`,
+  so `@withSignedUrl` and `@withDataUri` serve it.
+- **Owners.** `uploadSource()` copies the upload's `userId` and
+  `organizationId` to the made files; other sources return them from `read()`.
+  Whether a viewer may see a derived file is the caller's to check, as it is for
+  any upload.
+- **No `cedar.toml` flag.** Opting in is calling `defineDerivedFiles()`; Cedar's
+  flags are for framework behavior.
+- **Streaming later.** A source's `read()` returns the whole file. A generator
+  gets a context object with `readSource()`, so `openSource()` (a stream) or
+  `sourcePath()` (a temp file) can be added without breaking generators, and a
+  source can grow an optional streaming method next to `read()`.
+- **No migration recipe** from the first, upload-only schema: it was
+  experimental and short-lived.
+- **`cleanupStaleUploads()` measures pending rows from `createdAt`.** No
+  `Upload` row is reclaimed by derived files, so it has no reason to measure
+  from `updatedAt`.
+- **No media dependencies.** A poster frame made with ffmpeg is just another
+  generator; the tests use trivial generators.
 
 ## How it fits what uploads already has
 
-`@cedarjs/uploads` has no processors, hooks, or Prisma extension: services call
+`@cedarjs/uploads` has no processors, hooks or Prisma extension: services call
 `storeFile()` and `deleteFile()` explicitly, and every file has one row in a
-single `Upload` table, with bytes on a named storage target (`StorageProvider`:
-S3, filesystem, or inline in the row for DB targets). Variants reuse every part
-of that:
+single `Upload` table. Derived files reuse that:
 
-- **A variant is an `Upload` row.** Same table, same `target` / `storageKey` /
-  `data` columns, same providers, same `generateStorageKey()`, the same 1 MB cap
-  for DB targets. It copies its source's `userId` and `organizationId`, so
-  ownership checks and tenancy scoping apply to it as to any upload.
-- **Serving is unchanged.** A variant's id works with `@withSignedUrl` and
-  `@withDataUri`; `acquireVariantUrl()` is the same logic for service code.
-- **Deletion stays explicit.** `deleteFile()` gains an optional `targets`
-  option; with it, the upload's variants are deleted (bytes, then rows) before
-  the upload. Nothing happens inside a Prisma query, in line with the uploads
-  plan's two-gate test.
-- **Status is reused for bookkeeping.** `pending` is the claim while a variant
-  is being made, `completed` is made, `failed` is the failure memo.
-  `cleanupStaleUploads()` already ignores `failed` rows with no `storageKey`,
-  and claims `pending` rows older than an hour as `failed`, which turns a claim
-  abandoned by a crashed process into a remembered failure: the behavior we want
-  anyway.
-- **`tokenId` holds the claim id** while a variant is `pending`. For an upload
-  made through the upload routes it is the id of the token that created the row;
-  for a variant it is the id of the attempt that is making it. Both say "what is
-  creating this row", and it is cleared on completion.
+- **A made file is stored with `storeFile()`**: same providers, same
+  `generateStorageKey()`, same MIME check and 1 MB cap for DB targets.
+- **Serving is unchanged.** A made file's id works with `@withSignedUrl` and
+  `@withDataUri`.
+- **Deleting is explicit**: `deleteFor()` deletes made files with
+  `deleteFile()`, then their bookkeeping rows.
 
 ## API
 
 ```ts
-import { defineUploadVariants, deleteFile } from '@cedarjs/uploads'
+import {
+  defineDerivedFiles,
+  deleteFile,
+  uploadSource,
+} from '@cedarjs/uploads'
 
-export const uploadVariants = defineUploadVariants({
+export const derivedFiles = defineDerivedFiles({
   db,
   targets,
   target: targets.thumbnails,
+  sources: {
+    upload: uploadSource({ db, targets }),
+    remote: { key: (ref: RemoteDocRef) => keyOf(ref), read: fetchRemoteDocument },
+  },
   variants: {
     'thumb-164': makeSquare(164),
-    'thumb-328': makeSquare(328),
     preview: { generate: drawFirstPage, target: targets.previews },
-    poster: makePosterFrame, // ffmpeg, in the app
   },
-  retryFailedAfter: 24 * 60 * 60 * 1000, // default: one day
-  claimTimeout: 10 * 60 * 1000, // default: ten minutes
-  pollInterval: 250, // default
-  onError: (error, { sourceId, variant }) => logger.warn(...),
+  retryDelays: [MINUTE, 5 * MINUTE, 30 * MINUTE, 2 * HOUR, 6 * HOUR], // default
+  claimTimeout: 10 * 60 * 1000, // default
+  onError: (error, { source, variant }) => logger.warn(...),
 })
 
-await uploadVariants.acquireVariant(uploadId, 'thumb-164') // row, made if missing; null if failed
-await uploadVariants.acquireVariantData(uploadId, 'thumb-164') // { upload, data } | null
-await uploadVariants.acquireVariantUrl(uploadId, 'thumb-164', { expiresIn: 600 })
-await uploadVariants.findVariant(uploadId, 'thumb-164') // only if made; never makes
-await uploadVariants.findVariants(uploadIds, 'thumb-164') // Map<sourceId, row>
-await uploadVariants.regenerateVariants('preview') // { deleted, made, failed, errors }
-await uploadVariants.deleteVariants(uploadId)
+await derivedFiles.acquireVariant({ upload: id }, 'thumb-164')
+// { status: 'completed', upload } | { status: 'pending' } | { status: 'failed' }
+await derivedFiles.acquireVariantData({ remote: ref }, 'preview') // { upload, data } | null
+await derivedFiles.findVariant({ upload: id }, 'thumb-164') // never makes
+await derivedFiles.findVariants(refs, 'thumb-164') // (Upload | null)[], in order
+await derivedFiles.resetVariants('preview') // { deleted, errors }
+await derivedFiles.deleteFor({ remote: ref })
 
-await deleteFile(target, { db, upload, targets }) // source and its variants
+await deleteFile(target, { db, upload, derivedFiles }) // upload and its derived files
 ```
 
-A generator gets `{ source, variant, readSource(), acquireVariantData(name) }`
-and returns `{ data, mimeType, filename? }` or `null`:
+A source is `{ key?(ref): string; read(ref) }`. `read()` returns
+`{ data, mimeType?, filename?, userId?, organizationId? }`, or `null` when the
+file doesn't exist, which makes the acquire throw `NOT_FOUND`. `key()` is optional for string references. A generator gets
+`{ source: { name, key, ref }, variant, readSource() }` and returns
+`{ data, mimeType, filename? }` or `null`.
 
-- `readSource()` reads the source's bytes from whichever target holds them.
-- `acquireVariantData(name)` reads another variant of the same source, making
-  it first if needed. This is how a PDF's thumbnail is cut from its drawn first
-  page, which the real app does. A variant that ends up depending on itself is
-  refused with a `CONFIGURATION` error.
-- `null` means "this source cannot have this variant" (a file type the generator
-  does not handle). It is remembered like a failure.
+Source names are letters, digits, `_` and `-` (they start every key, so no `:`).
+Variant names are letters, digits, `.`, `_` and `-`, because they end up in
+filenames and logs.
 
-Variant names are restricted to letters, digits, `.`, `_` and `-`, because they
-end up in filenames and logs. Variants are made from original uploads only;
-asking for a variant of a variant is `NOT_SUPPORTED`, which keeps deletion one
-level deep.
-
-## Schema and storage
-
-Two nullable columns, a self-relation and a unique index on `Upload`:
+## Schema
 
 ```prisma
-sourceId String?
-variant  String?
-source   Upload?  @relation("UploadVariants", fields: [sourceId], references: [id], onDelete: Restrict)
-variants Upload[] @relation("UploadVariants")
+model DerivedFile {
+  id        String   @id @default(cuid())
+  source    String
+  variant   String
+  uploadId  String?
+  status    String   @default("pending")
+  claimId   String?
+  attempts  Int      @default(0)
+  updatedAt DateTime @updatedAt
 
-@@unique([sourceId, variant])
+  @@unique([source, variant])
+}
 ```
 
-Why this shape:
+- **The unique index is the lock**: one process creates the row that claims a
+  file.
+- **`uploadId` is not a relation.** A relation would need a back-relation field
+  on `Upload`. A made file deleted some other way is noticed on the next
+  acquire and made again.
+- **The failure memo is the row**: `failed`, with `updatedAt` as when.
 
-- **Variants in the `Upload` table, not a side table.** Everything that works on
-  uploads (providers, directives, serialization, tenancy, the cleanup job) works
-  on variants unchanged. A separate `UploadVariant` table would need its own
-  copy of each.
-- **No columns on the app's models.** The app's `Document.uploadId` stays the
-  only reference. The per-model thumbnail fields, failure timestamps and
-  back-relations go away, and an orphan sweep's owner list shrinks to the app's
-  real owners: a variant's owner is its source.
-- **The unique index is the lock.** `(sourceId, variant)` lets exactly one
-  process create the pending row that claims a variant. Original uploads have
-  `NULL` in both columns, and PostgreSQL, MySQL and SQLite unique indexes
-  treat `NULL`s as distinct, so originals never collide. SQL Server treats
-  them as equal and needs a filtered index (`WHERE sourceId IS NOT NULL`).
-- **`onDelete: Restrict`, not `Cascade`.** A cascade would delete the variant
-  rows inside the database and leave their bytes in storage with nothing
-  referencing them: exactly the silent orphaning the uploads design avoids.
-  Restrict makes a forgotten variant a loud error instead.
-- **The failure memo is the row.** A `failed` variant row with no file;
-  `updatedAt` is when it failed. No `failedAt` column is needed.
+`DerivedFileDatabase` is the structural subset of a generated client the code
+uses; the test helper assigns the generated client to it, so the types can't
+drift.
 
-The types are structural, like the rest of the package: `UploadVariantDatabase`
-is the subset of a generated client that variants use. The base `UploadDatabase`
-is unchanged, so apps that do not add the columns are not affected.
+## Making a file once
 
-## Making a variant once
+`acquireVariant(source, name)` finds the row for `(source key, variant)`:
 
-`acquireVariant(source, name)`:
+- none: create it as `pending` with a random `claimId` and `attempts: 1`, and
+  make the file. If the source's `read()` returns `null`, delete the row
+  again and throw `NOT_FOUND`. A unique violation means another process got there first:
+  `pending`.
+- `completed`: return its `Upload` row (or, if that row is gone, claim and make
+  it again).
+- `failed`: `failed`.
+- `pending` without a claim (waiting for a retry): `pending` until the backoff
+  has passed, then claim it with a conditional update and try again.
+- `pending` with a claim: `pending`, unless the claim is older than
+  `claimTimeout`; then take it over, or mark it failed if that was the last
+  attempt allowed.
 
-1. **In this process**, concurrent calls for the same source and name share one
-   promise.
-2. **Across processes**, the variant's own row is the claim. A caller finds the
-   row for `(sourceId, variant)`:
-   - none: create it as `pending` with a random claim id in `tokenId`. A unique
-     violation means another process won; look again.
-   - `completed`: return it.
-   - `failed`: see below.
-   - `pending` and fresh: another process is making it; wait `pollInterval` and
-     look again.
-   - `pending` and older than `claimTimeout`: its maker died; take the claim
-     over with a conditional update on the old claim id.
-3. The claim holder runs the generator, writes the bytes under a new storage
-   key, and completes the row with a conditional update on its own claim id. If
-   that update matches nothing (the source was deleted, a regenerate removed the
-   row, or another process took over a claim it thought abandoned), the bytes it
-   wrote are deleted again.
-
-A storage write that fails releases the claim rather than recording a failure:
-storage being down is not the source file's fault.
+The claim holder runs the generator, stores the file with `storeFile()`, and
+completes the row with a conditional update on its own `claimId`. If that
+matches nothing (the row was deleted or taken over meanwhile), it deletes the
+file it made.
 
 ## Failures and retry
 
-A generator that throws or returns `null`, or returns an invalid MIME type or a
-file too big for a DB target, leaves the row `failed` with no file. Requests
-within `retryFailedAfter` of `updatedAt` get `null` without calling the
-generator. The first request after that claims the row with a conditional update
-(`failed` and older than the cutoff, to `pending`) and tries again. Thrown
-errors go to `onError`.
+A thrown error from the source or the generator, or from storing (a storage
+outage), goes to `onError` and releases the claim with `attempts` counted; the
+next acquire after `retryDelays[attempts - 1]` tries again, until the list
+runs out. `null` from a generator, or a made file `storeFile()` refuses
+(`MIME_TYPE_NOT_ALLOWED`, `FILE_TOO_LARGE`), fails the row at once. `null`
+from a source's `read()`, on any attempt, deletes the row and throws
+`NOT_FOUND` to the caller, without `onError`.
 
-## Regenerating
+Claims and retries compare `updatedAt`, an absolute timestamp, with the
+process's clock: time zones don't matter, but the processes' clocks should be
+roughly in sync (NTP).
 
-`regenerateVariants(name)` remakes every variant of one name, made or failed,
-and leaves every other name alone. The run's cutoff is the newest existing row's
-`createdAt`, read from the database so the run ends on the database's clock
-rather than the process's. Rows are handled oldest first in batches: delete the
-bytes and the row, then make it again with `acquireVariant()` (or, with
-`remake: false`, leave it to the next `acquireVariant*()` call). A row that
-cannot be deleted is reported through `onError` and skipped, so the loop always
-ends.
+## Resetting
+
+`resetVariants(name)` deletes every row of one variant, made or failed, with its
+made file, in id order and batches. An attempt still running for a deleted row
+finds its claim gone and deletes what it made. A row that can't be deleted is
+reported through `onError` and counted in `errors`.
 
 ## Deleting
 
-`deleteFile(target, { db, upload, targets })` deletes the upload's bytes, then
-each variant's bytes and row, then the upload's row. A variant claimed by a
-concurrent request in between makes the row delete fail on the foreign key; the
-variants are deleted again, up to three rounds.
-
-Without `targets`, a source with variants cannot be deleted: the foreign key
-refuses, and `deleteFile()` turns that into `UploadError('HAS_VARIANTS')` naming
-both ways out. Calling again with `targets` finishes the job, since
-`deleteFile()` is idempotent.
-
-A variant still being made when its source is deleted loses its claim (its row
-is gone), and deletes the bytes it wrote.
+`deleteFor(source)` deletes each derived file's made file (bytes, then `Upload`
+row), then its `DerivedFile` row, the latter only in the state the file was
+deleted for: an attempt that completes in between is seen, and its file
+deleted too. `deleteFile(target, { db, upload, derivedFiles })` calls
+`deleteForUpload()` before and after deleting the upload. Before, so a refusal
+(with `derivedFiles` but no `uploadSource()` configured, naming the fix) leaves
+everything in place. After, because an attempt claims its row before it reads
+its source: any attempt that read the upload before it was deleted has its row
+by then, so the second pass deletes it, and the attempt finds its claim gone
+and deletes what it made. For other sources the same holds when the app calls
+`deleteFor()` after the source file is gone.
 
 ## What the tests guard
 
-`packages/uploads/src/__tests__/variants.test.ts`, against the package's real
-SQLite test database:
+`packages/uploads/src/__tests__/derivedFiles.test.ts`, against the package's
+real SQLite test database:
 
-- A variant that doesn't exist yet is made when acquired, stored on the
-  variant's target, linked to its source (`sourceId`, `variant`), with the
-  source's owner and organization; later calls find it without calling the
-  generator.
-- DB targets store variants inline and serve them as `data:` URIs; object
-  storage serves signed URLs.
-- Two concurrent requests in one process run the generator once.
-- Two concurrent requests from two separate instances (two "processes" sharing
-  only the database) run the generator once and return the same row.
-- A claim whose maker died (a stale `pending` row) is taken over.
-- A generator failure is remembered: not retried before `retryFailedAfter`
-  passes, retried and made after it. `null` is remembered the same way.
-- One variant made from another with `acquireVariantData()`, and a
-  self-dependency refused.
-- Unknown and invalid variant names, variants of variants, and missing sources
-  are refused with the right error codes.
-- `findVariants()` returns made variants of many sources in one query.
-- `regenerateVariants()` remakes one name and leaves the others (same row, same
-  file); it also retries remembered failures; `remake: false` only deletes.
-- Deleting a source with `targets` deletes its variants and their stored files
-  on every target, and leaves other sources' variants alone.
-- Deleting a source without `targets` is refused with `HAS_VARIANTS`, and
-  calling again with `targets` finishes.
-- A variant finished after its source was deleted leaves no file behind.
-
-The test helper also assigns the generated Prisma client to
-`UploadDatabase & UploadVariantDatabase`, so the structural types cannot drift
-from what Prisma generates.
-
-## Discoverability
-
-Names use the words people search for: `defineUploadVariants`, `acquireVariant`,
-`regenerateVariants`, `deleteVariants`, `UploadVariant*` types, with JSDoc
-mentioning derived files, thumbnails, previews and poster frames. The uploads
-docs have a "Derived files: thumbnails, previews and other variants" section,
-and the package README a bullet.
-
-Lint rules that point at variants (for example, flagging a model with
-`thumbnailUpload` / `...FailedAt` columns) are a later step. Cedar's linting is
-moving to oxlint (see
-[the oxlint and oxfmt migration plan](2026-09-12-oxlint-and-oxfmt-migration.md)),
-so any such rule would be written for oxlint.
+- A file is made on acquire, stored as an `Upload` with the source's owner and
+  organization, and found later without calling the generator again.
+- A source outside uploads, with an object reference and a `key()`.
+- DB targets store made files inline.
+- Concurrent acquires in one process run the generator once; a second
+  "process" gets `pending` instead of waiting.
+- A stale claim is taken over after `claimTimeout`, and failed if it was the
+  last attempt.
+- A throwing generator is retried after 1 min, 5 min, 30 min, 2 h and 6 h,
+  then failed, and stays failed; `retryDelays` changes that, and `[]` never
+  retries; a retry can succeed. A not-yet-completed upload is retried.
+- `null` from a generator fails at once, without `onError`, until
+  `resetVariants()`; a made file `storeFile()` refuses fails at once.
+- A missing upload id, or a custom source's `null`, throws `NOT_FOUND` naming
+  the source key, leaves no row and no `onError`, and the file is made once it
+  exists; the same holds on a retry of a source deleted meanwhile, and for a
+  generator that catches the failed read and returns `null`.
+- Invalid names, unknown variants and sources, two sources in one reference,
+  and a non-string reference without `key()` are refused, naming the fix.
+- `findVariants()` returns files in the order given.
+- A file whose completion can't be saved leaves nothing behind and releases
+  its claim; a made file deleted some other way is made again, and two
+  processes doing that at once keep one tracked file.
+- `resetVariants()` clears one variant and leaves others; a file being made
+  during a reset leaves nothing behind.
+- `deleteFile()` with `derivedFiles` deletes an upload's derived files and only
+  those; without an upload source it refuses before deleting anything; a file
+  finished during or after a delete, or whose attempt started while the upload
+  was being deleted, leaves nothing behind.
 
 ## Follow-ups
 
-- **Sniff a file's type by its bytes**, not the client's claimed MIME type, in
-  uploads itself. Generators would get the sniffed type, and serving and upload
-  profiles could use it too. Not built here.
+- **Streaming sources**: `openSource()` / `sourcePath()` in the generator
+  context, and an optional streaming method on sources, when a video generator
+  needs them.
 - **Sandboxed generators**: run generators that parse untrusted files in the
   "locked child" runner (proposal 3).
-- **Setup command**: `yarn cedar setup uploads` could add the variant columns
-  once the feature is no longer experimental.
-- **Recurring/unique jobs** (proposal 2) would make "make missing variants in
-  the background" a declared job rather than app code.
-
-## Open questions
-
-- **Schema.** Should the variant columns be part of the `Upload` model that
-  `yarn cedar setup uploads` writes, or stay opt-in? Today they are opt-in and
-  documented; apps add them and create a migration. Adding them for everyone
-  costs two nullable columns and an index and avoids a migration later.
-- **Migrating existing apps.** An app with per-model thumbnail relations can
-  move by setting `sourceId` and `variant` on its existing thumbnail `Upload`
-  rows in a data migration, then dropping its own columns. Worth a documented
-  recipe once a second app does it.
-- **Sync vs. job-based generation.** `acquireVariant()` makes on demand, in the
-  request. Apps that cannot afford that call it from a job and use
-  `findVariant()` / `findVariants()` in requests. Should the package offer a
-  "queue it" mode tied to `@cedarjs/jobs` (proposal 2), or is this split enough?
-- **Transient vs. permanent failures.** Every generator failure is remembered
-  for `retryFailedAfter`. A generator that fetches from a network may want
-  "don't remember this one". A named escape (an error class the generator throws
-  to release the claim) is cheap to add when a second use asks for it.
-- **Large sources.** `readSource()` buffers the whole file. A video generator
-  may prefer a stream or a temp file; it can read the provider directly today
-  (`resolveTarget(targets, source.target).readStream`). Should the context offer
-  a stream?
-- **Serving private files.** Variants inherit their source's `userId` and
-  `organizationId`, and `acquireVariantUrl()` signs a URL for whoever calls it.
-  Authorization is the caller's, as for any upload. Should variant URLs be
-  checked against the source's owner automatically, or is that the app's?
-- **Sources outside uploads.** The production app also thumbnails files that
-  live in a third-party system and are never stored as uploads. Those have no
-  source row, so this design does not cover them; storing the original first (or
-  a "remote source" row) would.
-- **Clocks.** The failure memo and the claim timeout compare `updatedAt`, which
-  Prisma sets in the client, with the process's clock. Across processes with
-  skewed clocks a retry can come slightly early or late; a claim timeout well
-  above the slowest generator keeps that harmless.
+- **Recurring/unique jobs** (proposal 2) would make "make missing files in the
+  background" a declared job rather than app code.
