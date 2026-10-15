@@ -16,6 +16,7 @@ import type {
 } from './types.js'
 
 const MINUTE = 60 * 1000
+const HOUR = 60 * MINUTE
 
 // Variant names end up in filenames and logs, so keep them plain. Source
 // names start every source key (`upload:<id>`), so they have no `.` or `:`
@@ -41,9 +42,10 @@ export interface DerivedFileSource<Ref = string> {
   /** A stable string for a reference. Not needed for string references. */
   key?: (ref: Ref) => string
   /**
-   * Reads the whole source file. `null` means it does not exist (a
-   * permanent failure); a thrown error is temporary and retried. A streaming
-   * variant can be added next to this later without changing it.
+   * Reads the whole source file. `null` means it does not exist: the
+   * acquire throws an `UploadError` with code `NOT_FOUND` and nothing is
+   * remembered. A thrown error is temporary and retried. A streaming variant
+   * can be added next to this later without changing it.
    */
   read: (
     ref: Ref,
@@ -111,10 +113,13 @@ export interface DefineDerivedFilesOptions<Sources, Name extends string> {
   sources: Sources
   /** By name: `{ 'thumb-164': makeThumb, preview: { generate, target } }`. */
   variants: Record<Name, DerivedFileGenerator | DerivedFileDefinition>
-  /** Attempts before a throwing generator or source is failed. Default 3. */
-  maxAttempts?: number
-  /** Wait before the second attempt, doubling after it. Default one minute. */
-  retryDelay?: number
+  /**
+   * How long to wait before each retry of a throwing generator or source:
+   * one retry per entry, then it is failed. Default 1 min, 5 min, 30 min,
+   * 2 h and 6 h, so it gives up about 8.5 hours after the first attempt.
+   * `[]` never retries.
+   */
+  retryDelays?: readonly number[]
   /**
    * After this long, an attempt is assumed to have died and the next acquire
    * starts a new one. Default ten minutes; keep it above the slowest
@@ -128,12 +133,18 @@ export interface DefineDerivedFilesOptions<Sources, Name extends string> {
 /** Derived files of uploads and of other sources. Experimental. */
 export interface DerivedFiles<Sources, Name extends string> {
   names: readonly Name[]
-  /** Where the variant stands, starting to make it if nobody has. */
+  /**
+   * Where the variant stands, starting to make it if nobody has. Throws an
+   * `UploadError` with code `NOT_FOUND` if the source file doesn't exist.
+   */
   acquireVariant(
     source: DerivedFileSourceRef<Sources>,
     name: Name,
   ): Promise<DerivedFileResult>
-  /** The variant's row and bytes, made now if needed; `null` if not ready or failed. */
+  /**
+   * The variant's row and bytes, made now if needed; `null` if not ready or
+   * failed. Throws like `acquireVariant()` if the source file doesn't exist.
+   */
   acquireVariantData(
     source: DerivedFileSourceRef<Sources>,
     name: Name,
@@ -168,6 +179,14 @@ const uploadSources = new WeakSet<object>()
 // A source's `read()` returned `null`
 class SourceGone extends Error {}
 
+const DEFAULT_RETRY_DELAYS = [
+  MINUTE,
+  5 * MINUTE,
+  30 * MINUTE,
+  2 * HOUR,
+  6 * HOUR,
+]
+
 const PENDING = { status: 'pending' } as const
 const FAILED = { status: 'failed' } as const
 
@@ -193,7 +212,9 @@ async function readBytes(
 
 /**
  * Uploads as a source of derived files: `{ upload: id }`. Made files get
- * the upload's owner and organization. Pass `derivedFiles` to `deleteFile()`
+ * the upload's owner and organization. An id with no `Upload` row reads as
+ * `null`, so acquiring its variants throws `NOT_FOUND`; an upload that isn't
+ * completed yet throws, and is retried. Pass `derivedFiles` to `deleteFile()`
  * to delete an upload's derived files with it.
  */
 export function uploadSource({
@@ -230,8 +251,9 @@ export function uploadSource({
  *
  * Each made file is an ordinary `Upload` row; its bookkeeping is a row in
  * the `DerivedFile` table. A file is made on first acquire, by one process
- * at a time. A thrown error is retried `maxAttempts` times with backoff; a
- * `null` is remembered as failed until `resetVariants()`.
+ * at a time. A thrown error is retried after each of `retryDelays`; a
+ * `null` from a generator is remembered as failed until `resetVariants()`.
+ * A source file that doesn't exist throws `NOT_FOUND` and isn't remembered.
  *
  * @example
  * export const derivedFiles = defineDerivedFiles({
@@ -257,8 +279,7 @@ export function defineDerivedFiles<
     db,
     targets,
     sources,
-    maxAttempts = 3,
-    retryDelay = MINUTE,
+    retryDelays = DEFAULT_RETRY_DELAYS,
     claimTimeout = 10 * MINUTE,
     onError = (error, { source, variant }) =>
       console.error(
@@ -266,6 +287,8 @@ export function defineDerivedFiles<
         error,
       ),
   } = options
+  // The first attempt, and one retry per delay
+  const maxAttempts = retryDelays.length + 1
   const sourceNames = Object.keys(sources)
   const definitions = new Map<string, Required<DerivedFileDefinition>>()
 
@@ -401,10 +424,28 @@ export function defineDerivedFiles<
       return status === 'failed' ? FAILED : PENDING
     }
 
+    // Whether `read()` returned `null`, however the generator handled it
+    let gone = false
+    const notFound = async () => {
+      // Not a failure to remember: drop the claimed row, and tell the caller,
+      // who passed a reference to nothing
+      await db.derivedFile.deleteMany({ where: { id, claimId } })
+
+      throw new UploadError(
+        'NOT_FOUND',
+        `Can't make '${name}' of ${source.key}: the source file doesn't ` +
+          "exist (its source's read() returned null). Pass a reference to " +
+          'an existing file, or catch this error where the file may have ' +
+          'been deleted. Nothing was recorded, so a later acquire tries ' +
+          'again.',
+      )
+    }
+
     let read: ReturnType<DerivedFileContext['readSource']> | undefined
     const readSource = () =>
       (read ??= Promise.resolve(source.read(source.ref)).then((file) => {
         if (!file) {
+          gone = true
           throw new SourceGone()
         }
 
@@ -436,8 +477,8 @@ export function defineDerivedFiles<
         })
       }
     } catch (e) {
-      if (e instanceof SourceGone) {
-        return settle('failed')
+      if (gone) {
+        return notFound()
       }
 
       onError(e, info)
@@ -451,7 +492,7 @@ export function defineDerivedFiles<
     }
 
     if (!made) {
-      return settle('failed')
+      return gone ? notFound() : settle('failed')
     }
 
     const madeId = made.id
@@ -465,7 +506,7 @@ export function defineDerivedFiles<
       .catch(async (e: unknown) => {
         await dropMade()
         // Settled like any thrown error, so the next attempt waits for
-        // `retryDelay` rather than `claimTimeout`
+        // its retry delay rather than `claimTimeout`
         await settle(attempts >= maxAttempts ? 'failed' : 'pending').catch(
           () => undefined,
         )
@@ -551,7 +592,7 @@ export function defineDerivedFiles<
       return FAILED
     } else if (row.claimId === null) {
       // Waiting for its retry
-      const wait = retryDelay * 2 ** (row.attempts - 1)
+      const wait = retryDelays[row.attempts - 1] ?? 0
       return age < wait ? PENDING : claim(row, row.attempts + 1)
     } else if (age < claimTimeout) {
       // Another attempt is making it

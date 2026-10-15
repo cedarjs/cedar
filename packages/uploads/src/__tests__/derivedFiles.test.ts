@@ -58,6 +58,7 @@ function setup<Name extends string>(
     db?: DerivedFileDatabase
     onError?: (error: unknown) => void
     documents?: Map<string, string>
+    retryDelays?: number[]
   } = {},
 ) {
   const documents = options.documents ?? new Map<string, string>()
@@ -87,6 +88,7 @@ function setup<Name extends string>(
     },
     variants,
     onError: options.onError ?? (() => undefined),
+    retryDelays: options.retryDelays,
   })
 }
 
@@ -269,7 +271,7 @@ describe('defineDerivedFiles', () => {
 
     for (const [upload, attempts] of [
       [one, 1],
-      [two, 3],
+      [two, 6],
     ] as const) {
       await prisma.derivedFile.create({
         data: {
@@ -325,28 +327,52 @@ describe('defineDerivedFiles', () => {
       attempts: 1,
     })
 
-    // Not before the retry delay: one minute, then two
-    expect(await acquire()).toEqual({ status: 'pending' })
-    expect(generate).toHaveBeenCalledTimes(1)
+    // Each retry waits its delay: 1 min, 5 min, 30 min, 2 h and 6 h
+    for (const [attempt, delay] of [1, 5, 30, 120, 360].entries()) {
+      await backdate(key, (delay - 0.5) * MINUTE)
+      expect(await acquire()).toEqual({ status: 'pending' })
+      expect(generate).toHaveBeenCalledTimes(attempt + 1)
 
-    await backdate(key, 1.5 * MINUTE)
-    expect(await acquire()).toEqual({ status: 'pending' })
-    expect(generate).toHaveBeenCalledTimes(2)
+      await backdate(key, (delay + 0.5) * MINUTE)
+      expect(await acquire()).toEqual({
+        status: attempt === 4 ? 'failed' : 'pending',
+      })
+      expect(generate).toHaveBeenCalledTimes(attempt + 2)
+    }
 
-    await backdate(key, 1.5 * MINUTE)
-    expect(await acquire()).toEqual({ status: 'pending' })
-    expect(generate).toHaveBeenCalledTimes(2)
-
-    // The third and last attempt
-    await backdate(key, 2.5 * MINUTE)
+    // The sixth attempt was the last. Failed stays failed
+    await backdate(key, 24 * 60 * MINUTE)
     expect(await acquire()).toEqual({ status: 'failed' })
-    expect(generate).toHaveBeenCalledTimes(3)
-
-    // Failed stays failed
-    await backdate(key, 60 * MINUTE)
-    expect(await acquire()).toEqual({ status: 'failed' })
-    expect(generate).toHaveBeenCalledTimes(3)
+    expect(generate).toHaveBeenCalledTimes(6)
     expect(await prisma.upload.count()).toBe(1)
+  })
+
+  test('retryDelays sets the retries, and [] never retries', async () => {
+    const targets = makeTargets()
+    const one = await storeSource(targets, 'one')
+    const two = await storeSource(targets, 'two')
+    const generate = vi.fn<DerivedFileGenerator>(() => {
+      throw new Error('service down')
+    })
+
+    const once = setup(targets, { small: generate }, { retryDelays: [] })
+    expect(await once.acquireVariant({ upload: one.id }, 'small')).toEqual({
+      status: 'failed',
+    })
+
+    const twice = setup(
+      targets,
+      { small: generate },
+      { retryDelays: [10 * MINUTE] },
+    )
+    const acquire = () => twice.acquireVariant({ upload: two.id }, 'small')
+
+    expect(await acquire()).toEqual({ status: 'pending' })
+    await backdate(`upload:${two.id}`, 9 * MINUTE)
+    expect(await acquire()).toEqual({ status: 'pending' })
+    await backdate(`upload:${two.id}`, 11 * MINUTE)
+    expect(await acquire()).toEqual({ status: 'failed' })
+    expect(generate).toHaveBeenCalledTimes(3)
   })
 
   test('a retried attempt can succeed', async () => {
@@ -375,7 +401,7 @@ describe('defineDerivedFiles', () => {
     ).toBe('completed')
   })
 
-  test('null from a generator or a source is a permanent failure, until resetVariants', async () => {
+  test('null from a generator is a permanent failure, until resetVariants', async () => {
     const targets = makeTargets()
     const source = await storeSource(targets)
     const onError = vi.fn()
@@ -389,21 +415,99 @@ describe('defineDerivedFiles', () => {
 
     expect(await acquire()).toEqual({ status: 'failed' })
     expect(await acquire()).toEqual({ status: 'failed' })
-    expect(
-      await derived.acquireVariant(
-        { doc: { org: 'o', doc: 'gone' } },
-        'poster',
-      ),
-    ).toEqual({ status: 'failed' })
-    expect(generate).toHaveBeenCalledTimes(2)
+    expect(generate).toHaveBeenCalledTimes(1)
     expect(onError).not.toHaveBeenCalled()
 
     handles = true
     expect(await derived.resetVariants('poster')).toEqual({
-      deleted: 2,
+      deleted: 1,
       errors: 0,
     })
     expect((await acquire()).status).toBe('completed')
+  })
+
+  test('a source file that does not exist throws NOT_FOUND and is not remembered', async () => {
+    const targets = makeTargets()
+    const documents = new Map<string, string>()
+    const onError = vi.fn()
+    const generate = vi.fn(upperCase('p'))
+    const derived = setup(
+      targets,
+      { preview: generate },
+      { onError, documents },
+    )
+    const ref = { doc: { org: 'o', doc: 'd1' } }
+
+    await expect(
+      derived.acquireVariant({ upload: 'no-such-id' }, 'preview'),
+    ).rejects.toMatchObject({
+      name: 'UploadError',
+      code: 'NOT_FOUND',
+      message: expect.stringContaining('upload:no-such-id'),
+    })
+    await expect(
+      derived.acquireVariantData(ref, 'preview'),
+    ).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+      message: expect.stringContaining('doc:o/d1'),
+    })
+    expect(await prisma.derivedFile.count()).toBe(0)
+    expect(onError).not.toHaveBeenCalled()
+
+    // Not remembered: once the file exists, it is made
+    documents.set('d1', 'invoice')
+    expect(
+      (await derived.acquireVariantData(ref, 'preview'))?.data.toString(),
+    ).toBe('p:INVOICE')
+  })
+
+  test('a source file gone before a retry, or hidden by its generator, still throws NOT_FOUND', async () => {
+    const targets = makeTargets()
+    const documents = new Map([['d1', 'invoice']])
+    const ref = { doc: { org: 'o', doc: 'd1' } }
+    let broken = true
+    const derived = setup(
+      targets,
+      {
+        preview: async (context) => {
+          if (broken) {
+            throw new Error('blip')
+          }
+
+          return upperCase('p')(context)
+        },
+        // Catches the failed read and returns null, as if no variant could
+        // be made
+        careless: async ({ readSource }) => {
+          try {
+            await readSource()
+          } catch {
+            return null
+          }
+
+          return { data: Buffer.from('x'), mimeType: 'text/plain' }
+        },
+      },
+      { documents },
+    )
+
+    expect(await derived.acquireVariant(ref, 'preview')).toEqual({
+      status: 'pending',
+    })
+
+    documents.delete('d1')
+    broken = false
+    await backdate('doc:o/d1', 2 * MINUTE)
+
+    await expect(derived.acquireVariant(ref, 'preview')).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+    })
+    await expect(derived.acquireVariant(ref, 'careless')).rejects.toMatchObject(
+      {
+        code: 'NOT_FOUND',
+      },
+    )
+    expect(await prisma.derivedFile.count()).toBe(0)
   })
 
   test('a made file that cannot be stored is a permanent failure', async () => {

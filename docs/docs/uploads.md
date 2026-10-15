@@ -401,7 +401,7 @@ Derived files are experimental. The API may change until a second app, or a diff
 A photo's thumbnails, a PDF's drawn first page, a video's poster frame: files made from another file are **derived files**, and each kind (`thumb-164`, `preview`) is a **variant**. The file they're made from can be an upload, or a file that lives somewhere else entirely, such as a document your app fetches from a third-party API when it needs it. Your app writes the function that makes each variant; Cedar keeps the bookkeeping:
 
 - a derived file is made the first time it's asked for, by one process at a time
-- a generator that throws is tried again a few times, with backoff; one that returns `null` is remembered as failed
+- a generator that throws is tried again a few times over several hours; one that returns `null` is remembered as failed
 - `resetVariants('preview')` clears every `preview` after you fix its generator, so each is made again when next asked for
 - `deleteFor(source)` deletes a source file's derived files, and `deleteFile()` does it for you for uploads
 
@@ -483,15 +483,16 @@ export const derivedFiles = defineDerivedFiles({
 })
 ```
 
-A source has a `read()` that returns the file (`{ data, mimeType?, filename?, userId?, organizationId? }`), or `null` when it doesn't exist, and a `key()` that turns your reference into a stable string. References that are strings already don't need `key()`. `uploadSource()` reads an upload from whichever target holds it and gives the made files the upload's owner and organization. Whether a viewer may see a derived file is for your code to check, as it is for any upload.
+A source has a `read()` that returns the file (`{ data, mimeType?, filename?, userId?, organizationId? }`), or `null` when it doesn't exist, and a `key()` that turns your reference into a stable string. References that are strings already don't need `key()`. `uploadSource()` reads an upload from whichever target holds it and gives the made files the upload's owner and organization; an id with no `Upload` row reads as `null`. Whether a viewer may see a derived file is for your code to check, as it is for any upload.
 
 A generator receives `source` (its name, its key, and your reference), the variant's name, and `readSource()`, which reads the source file once however often you call it. It returns `{ data, mimeType, filename? }`, or `null` when this source can't have this variant (a file type it doesn't handle).
 
 ### Failures
 
-- **A thrown error is temporary.** A network error or a service that is down is reported to `onError` (which logs by default), and the next request after `retryDelay` (one minute, doubling each time) tries again. After `maxAttempts` (three) it is remembered as failed.
-- **`null` is permanent**, from a generator or from a source's `read()`, and so is a made file that can't be stored (an invalid MIME type, or too big for a database target).
+- **A thrown error is temporary.** A network error or a service that is down is reported to `onError` (which logs by default), and the first request after the next of `retryDelays` has passed tries again. By default that is five retries, 1 minute, 5 minutes, 30 minutes, 2 hours and 6 hours after the attempt before, so an outage of a few hours at a third-party source heals by itself, and a file that still can't be made is remembered as failed about 8.5 hours after the first attempt. Pass `retryDelays: [...]` (in milliseconds, one retry per entry) to change it, or `[]` to never retry.
+- **`null` from a generator is permanent**: this source can't have this variant. So is a made file that can't be stored (an invalid MIME type, or too big for a database target).
 - **Failed stays failed** until you call `resetVariants()`.
+- **A source file that doesn't exist is an error, not a failure.** When a source's `read()` returns `null`, such as for an upload id with no row, `acquireVariant()` and `acquireVariantData()` throw an `UploadError` with code `NOT_FOUND` that names the source key (`upload:<id>`), and nothing is recorded: no `DerivedFile` row is left, so a typo or a deleted file isn't remembered as failed, and a later acquire tries again. Catch it where a source may have been deleted. Only an attempt reads the source, so a file that was already made, or already failed, is reported as such until you delete it with `deleteFor()`.
 
 ### Acquiring derived files
 
@@ -516,7 +517,7 @@ const byPhoto = await derivedFiles.findVariants(
 )
 ```
 
-`acquireVariant()` returns `completed` with the made file's `Upload` row, `failed`, or `pending`. Pending means it isn't ready: another process is making it right now, or an attempt failed and is waiting for its retry. It doesn't wait for another process; show a placeholder and ask again later. Within one process, concurrent calls for the same file share one attempt.
+`acquireVariant()` returns `completed` with the made file's `Upload` row, `failed`, or `pending`, and throws `NOT_FOUND` for a source file that doesn't exist. Pending means it isn't ready: another process is making it right now, or an attempt failed and is waiting for its retry. It doesn't wait for another process; show a placeholder and ask again later. Within one process, concurrent calls for the same file share one attempt.
 
 The made file is an ordinary `Upload` row, so the `@withSignedUrl` and `@withDataUri` directives work on its id. On a list page, use `findVariants()` so two queries cover every row and nothing is made while the page waits, and make missing files ahead of time from a job:
 
@@ -563,6 +564,8 @@ For other sources, call `deleteFor()` once the source file is gone, for example 
 ```ts
 await derivedFiles.deleteFor({ osdoc: ref })
 ```
+
+Cedar doesn't sweep for derived files whose source went away without a `deleteFor()`: only your app knows how to ask a third party which files still exist. If you need a sweep, write it as a job that reads your `DerivedFile` rows for that source, checks them against the source, and calls `deleteFor()` for the gone ones.
 
 ## Cleaning up stale uploads
 
