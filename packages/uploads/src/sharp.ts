@@ -52,11 +52,6 @@ const MAX_SIZE = 16383
 
 const require = createRequire(import.meta.url)
 
-let loaded: Promise<typeof SharpConstructor> | undefined
-
-const loadSharp = () =>
-  (loaded ??= import('sharp').then((module) => module.default))
-
 const invalid = (message: string) => new UploadError('CONFIGURATION', message)
 
 /**
@@ -67,7 +62,7 @@ const invalid = (message: string) => new UploadError('CONFIGURATION', message)
  * Turns the image the right way up (its EXIF orientation), drops its
  * metadata, and returns `null`, a permanent failure, for anything that isn't
  * a JPEG, PNG, WebP, GIF, AVIF or TIFF by its bytes. Images over 100
- * megapixels are refused.
+ * megapixels are refused, and so is a `cover` size over 100 megapixels.
  *
  * It runs sharp in your API process. For images from untrusted sources,
  * consider a generator that runs sharp in `@cedarjs/api/sandbox` instead;
@@ -116,6 +111,16 @@ export function sharpVariant(
     )
   }
 
+  // A cover image is exactly width × height, however small the input
+  if (fit === 'cover' && width * height > MAX_INPUT_PIXELS) {
+    throw invalid(
+      `sharpVariant() with fit 'cover' makes images of exactly width × ` +
+        `height, which can be at most ${MAX_INPUT_PIXELS / 1_000_000} ` +
+        `megapixels; ${width} × ${height} is ` +
+        `${Math.round((width * height) / 1_000_000)}.`,
+    )
+  }
+
   if (!Object.hasOwn(MIME_TYPES, format)) {
     throw invalid(
       `sharpVariant() format must be one of ` +
@@ -130,20 +135,10 @@ export function sharpVariant(
     )
   }
 
-  // Checked here, when the app starts, rather than on the first image: a
-  // missing package would otherwise fail every file asked for until
-  // resetVariants()
-  try {
-    require.resolve('sharp')
-  } catch (e) {
-    throw new UploadError(
-      'CONFIGURATION',
-      "sharpVariant() needs the 'sharp' package, which isn't installed. " +
-        'Add it to your api side with `yarn workspace api add sharp`, or ' +
-        'write your own generator.',
-      e,
-    )
-  }
+  // Loaded here, when the app starts, rather than on the first image: a
+  // missing package, or its native library missing for this platform,
+  // would otherwise fail every file asked for until resetVariants()
+  const sharp = loadSharp()
 
   return async ({ readSource }) => {
     const { data } = await readSource()
@@ -152,8 +147,10 @@ export function sharpVariant(
       return null
     }
 
-    const sharp = await loadSharp()
     const image = sharp(data, {
+      // Not sharp's default, 'warning': libjpeg warns about JPEGs that some
+      // phones and cameras write, such as extra bytes before the end marker,
+      // and that every browser shows. A broken or truncated file still fails
       failOn: 'error',
       limitInputPixels: MAX_INPUT_PIXELS,
     })
@@ -166,5 +163,33 @@ export function sharpVariant(
     ).toBuffer()
 
     return { data: output, mimeType: MIME_TYPES[format] }
+  }
+}
+
+/** Loads sharp, and its native library, or says how to fix it. */
+function loadSharp(): typeof SharpConstructor {
+  try {
+    require.resolve('sharp')
+  } catch (e) {
+    throw new UploadError(
+      'CONFIGURATION',
+      "sharpVariant() needs the 'sharp' package, which isn't installed. " +
+        'Add it to your api side with `yarn workspace api add sharp`, or ' +
+        'write your own generator.',
+      e,
+    )
+  }
+
+  try {
+    return require('sharp') as typeof SharpConstructor
+  } catch (e) {
+    throw new UploadError(
+      'CONFIGURATION',
+      "sharpVariant() can't load the 'sharp' package, which is installed. " +
+        'Usually its native library for this platform is missing; see ' +
+        'https://sharp.pixelplumbing.com/install. sharp says: ' +
+        (e instanceof Error ? e.message : String(e)),
+      e,
+    )
   }
 }

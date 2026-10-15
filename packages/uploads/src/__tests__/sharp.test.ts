@@ -167,6 +167,8 @@ describe('sharpVariant', () => {
       [{ width: 10, fit: 'fill' }, "fit must be 'cover' or 'inside'"],
       [{ width: 10, format: 'gif' }, 'format must be one of webp, jpeg'],
       [{ width: 10, quality: 101 }, 'quality must be a whole number'],
+      [{ width: 16383 }, '16383 × 16383 is 268'],
+      [{ width: 10_001, height: 10_000 }, 'at most 100 megapixels'],
     ] as const
 
     for (const [options, message] of invalid) {
@@ -175,19 +177,15 @@ describe('sharpVariant', () => {
     }
 
     expect(() => sharpVariant({ width: -1 })).toThrow(UploadError)
+    // An inside image is never bigger than the input, which is capped
+    expect(() => sharpVariant({ width: 16383, fit: 'inside' })).not.toThrow()
+    expect(() => sharpVariant({ width: 10_000, height: 10_000 })).not.toThrow()
   })
 
-  test('says how to install sharp when it is missing', async () => {
+  /** The error sharpVariant() throws when `createRequire()` gives `fake`. */
+  async function errorWith(fake: unknown) {
     vi.resetModules()
-    vi.doMock('node:module', () => ({
-      createRequire: () => ({
-        resolve: () => {
-          throw Object.assign(new Error("Cannot find module 'sharp'"), {
-            code: 'MODULE_NOT_FOUND',
-          })
-        },
-      }),
-    }))
+    vi.doMock('node:module', () => ({ createRequire: () => fake }))
 
     try {
       const { sharpVariant: withoutSharp } = await import('../sharp.js')
@@ -202,11 +200,40 @@ describe('sharpVariant', () => {
 
       expect(error).toBeInstanceOf(FreshUploadError)
       expect(error).toMatchObject({ code: 'CONFIGURATION' })
-      expect(String(error)).toContain('yarn workspace api add sharp')
+
+      return String(error)
     } finally {
       vi.doUnmock('node:module')
       vi.resetModules()
     }
+  }
+
+  test('says how to install sharp when it is missing', async () => {
+    const notFound = () => {
+      throw Object.assign(new Error("Cannot find module 'sharp'"), {
+        code: 'MODULE_NOT_FOUND',
+      })
+    }
+
+    expect(
+      await errorWith(Object.assign(notFound, { resolve: notFound })),
+    ).toContain('yarn workspace api add sharp')
+  })
+
+  test('says when sharp is installed but its native library is not', async () => {
+    const fake = Object.assign(
+      () => {
+        throw new Error(
+          'Could not load the "sharp" module using the linux-x64 runtime',
+        )
+      },
+      { resolve: () => '/app/node_modules/sharp/dist/index.cjs' },
+    )
+
+    const message = await errorWith(fake)
+
+    expect(message).toContain('https://sharp.pixelplumbing.com/install')
+    expect(message).toContain('using the linux-x64 runtime')
   })
 
   describe('with defineDerivedFiles()', () => {

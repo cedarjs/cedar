@@ -510,7 +510,7 @@ variants: {
 | `format`  | `'webp'`   | `'webp'`, `'jpeg'`, `'png'` or `'avif'`                                                                                                                 |
 | `quality` | `80`       | 1–100, for WebP, JPEG and AVIF                                                                                                                          |
 
-The image is turned the right way up by its EXIF orientation, and the made file carries no metadata (no GPS position, no camera). Only JPEG, PNG, WebP, GIF, AVIF and TIFF files are decoded, told apart by their bytes, not by the type a source claims: anything else, such as a PDF, gets `null` and is remembered as failed. Images over 100 megapixels are refused. Without sharp installed, `sharpVariant()` throws when your app starts, saying how to add it, rather than failing every file later.
+The image is turned the right way up by its EXIF orientation, and the made file carries no metadata (no GPS position, no camera). Only JPEG, PNG, WebP, GIF, AVIF and TIFF files are decoded, told apart by their bytes, not by the type a source claims: anything else, such as a PDF, gets `null` and is remembered as failed. Images over 100 megapixels are refused. A `'cover'` image is exactly `width` × `height`, however small the photo, so that can be at most 100 megapixels too. Without sharp installed, or with sharp unable to load its native library on your platform, `sharpVariant()` throws when your app starts, saying how to fix it, rather than failing every file later.
 
 #### Running sharp in a sandbox
 
@@ -535,6 +535,7 @@ sharp.unblock({
 })
 
 const webp = await sharp(Buffer.concat(chunks), {
+  // 'warning' also refuses JPEGs some phones write slightly off
   failOn: 'error',
   limitInputPixels: 100_000_000,
 })

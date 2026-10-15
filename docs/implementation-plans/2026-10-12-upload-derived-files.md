@@ -180,8 +180,9 @@ Tying derived files to `Upload` rows leaves those out.
 - **One built-in generator, for sharp.** `sharpVariant()` from
   `@cedarjs/uploads/sharp`, with `width`, `height`, `fit` (`cover` or
   `inside`), `format` and `quality`, makes image thumbnails and resizes.
-  `sharp` is an optional peer dependency, and `sharpVariant()` throws when the
-  app starts if it isn't installed, naming the command that adds it. Why a subpath: the main entry never imports sharp. It decodes only
+  `sharp` is an optional peer dependency, and `sharpVariant()` loads it when the
+  app starts, throwing if it isn't installed (naming the command that adds it)
+  or can't load its native library. Why a subpath: the main entry never imports sharp. It decodes only
   JPEG, PNG, WebP, GIF, AVIF and TIFF, by their bytes, and returns `null` for
   anything else.
 - **The sharp generator runs in-process, not in the sandbox.** Why: a child
