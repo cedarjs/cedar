@@ -91,6 +91,47 @@ describe('sharpVariant', () => {
     expect(file.metadata).toMatchObject({ width: 120, height: 80 })
   })
 
+  test('keeps the part of the image position names', async () => {
+    // Red on top, green in the middle, blue at the bottom
+    const band = (background: string) => ({
+      input: {
+        create: { width: 60, height: 60, channels: 3 as const, background },
+      },
+    })
+    const striped = await sharp({
+      create: { width: 60, height: 180, channels: 3, background: '#000' },
+    })
+      .composite([
+        { ...band('#f00'), top: 0, left: 0 },
+        { ...band('#0f0'), top: 60, left: 0 },
+        { ...band('#00f'), top: 120, left: 0 },
+      ])
+      .png()
+      .toBuffer()
+
+    const colour = async (generate: ReturnType<typeof sharpVariant>) => {
+      const { data } = await made(generate, striped)
+      const { channels } = await sharp(data).stats()
+
+      // Lossy WebP is close to the colour, not exactly it
+      return channels.map((channel) => Math.round(channel.mean / 255))
+    }
+    const [red, green, blue] = [
+      [1, 0, 0],
+      [0, 1, 0],
+      [0, 0, 1],
+    ]
+
+    // Each crop is a 60 × 60 square of one band, so all of one colour
+    expect(await colour(sharpVariant({ width: 30, position: 'top' }))).toEqual(
+      red,
+    )
+    expect(await colour(sharpVariant({ width: 30 }))).toEqual(green)
+    expect(
+      await colour(sharpVariant({ width: 30, position: 'bottom' })),
+    ).toEqual(blue)
+  })
+
   test("fits within width × height with 'inside', never enlarging", async () => {
     const fit = sharpVariant({ width: 100, height: 100, fit: 'inside' })
 
@@ -167,6 +208,11 @@ describe('sharpVariant', () => {
       [{ width: 10, fit: 'fill' }, "fit must be 'cover' or 'inside'"],
       [{ width: 10, format: 'gif' }, 'format must be one of webp, jpeg'],
       [{ width: 10, quality: 101 }, 'quality must be a whole number'],
+      [{ width: 10, position: 'middle' }, "position must be one of 'centre'"],
+      [
+        { width: 10, fit: 'inside', position: 'top' },
+        "position is for fit 'cover'",
+      ],
       [{ width: 16383 }, '16383 × 16383 is 268'],
       [{ width: 10_001, height: 10_000 }, 'at most 100 megapixels'],
     ] as const

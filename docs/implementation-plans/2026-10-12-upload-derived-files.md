@@ -179,12 +179,20 @@ Tying derived files to `Upload` rows leaves those out.
   generator; the tests use trivial generators.
 - **One built-in generator, for sharp.** `sharpVariant()` from
   `@cedarjs/uploads/sharp`, with `width`, `height`, `fit` (`cover` or
-  `inside`), `format` and `quality`, makes image thumbnails and resizes.
-  `sharp` is an optional peer dependency, and `sharpVariant()` loads it when the
-  app starts, throwing if it isn't installed (naming the command that adds it)
-  or can't load its native library. Why a subpath: the main entry never imports sharp. It decodes only
+  `inside`), `position` (which part `cover` keeps), `format` and `quality`,
+  makes image thumbnails and resizes. `sharp` is an optional peer dependency,
+  pinned to the version `@cedarjs/api` uses, as Cedar pins its peers, and
+  `sharpVariant()` loads it when the app starts, throwing if it isn't
+  installed (naming the command that adds it) or can't load its native
+  library. Why a subpath: the main entry never imports sharp. It decodes only
   JPEG, PNG, WebP, GIF, AVIF and TIFF, by their bytes, and returns `null` for
   anything else.
+- **No HEIC in Cedar.** sharp's prebuilt libvips has no HEVC decoder, so
+  `sharpVariant()` returns `null` for HEIC. Why not decode it in Cedar: it
+  would take a decoder dependency (heic-decode's WebAssembly libheif) for one
+  format. The uploads docs show an app's own generator that decodes HEIC with
+  heic-decode and resizes with sharp, and hands everything else to
+  `sharpVariant()`.
 - **The sharp generator runs in-process, not in the sandbox.** Why: a child
   script must live in the app's `api/src` for `cedar build --ud` to emit it
   and ship sharp next to it, and one that imported `@cedarjs/uploads` would
@@ -370,10 +378,11 @@ real SQLite test database:
 - `resetVariants()` clears one variant and leaves others; a file being made
   during a reset leaves nothing behind.
 - `sharpVariant()` (`sharp.test.ts`, with real sharp): square and `inside`
-  sizes, formats and quality, EXIF orientation applied and metadata dropped,
-  `null` for bytes that aren't a supported image, invalid options and a
-  missing `sharp` refused with errors naming the fix, and a thumbnail made
-  through `defineDerivedFiles()`.
+  sizes, `position` choosing the part a crop keeps, formats and quality,
+  EXIF orientation applied and metadata dropped, `null` for bytes that aren't
+  a supported image, invalid options and a missing or unloadable `sharp`
+  refused with errors naming the fix, and a thumbnail made through
+  `defineDerivedFiles()`.
 - `deleteFile()` with `derivedFiles` deletes an upload's derived files and only
   those; without an upload source it refuses before deleting anything; a file
   finished during or after a delete, or whose attempt started while the upload

@@ -9,17 +9,40 @@ import { UploadError } from './errors.js'
 /** The formats `sharpVariant()` writes. */
 export type SharpVariantFormat = 'webp' | 'jpeg' | 'png' | 'avif'
 
+/**
+ * Which part of the image `cover` keeps: an edge or corner, the middle
+ * (`centre`), or the part sharp finds most detailed (`entropy`) or most
+ * eye-catching (`attention`).
+ */
+export type SharpVariantPosition =
+  | 'centre'
+  | 'top'
+  | 'right top'
+  | 'right'
+  | 'right bottom'
+  | 'bottom'
+  | 'left bottom'
+  | 'left'
+  | 'left top'
+  | 'entropy'
+  | 'attention'
+
 export interface SharpVariantOptions {
   /** Width in pixels. */
   width: number
   /** Height in pixels. Default: `width`, a square. */
   height?: number
   /**
-   * `cover` (default) crops the middle to exactly `width` × `height`, as a
-   * thumbnail tile needs. `inside` fits the whole image within them, keeping
+   * `cover` (default) crops to exactly `width` × `height`, as a thumbnail
+   * tile needs, keeping the middle unless `position` says otherwise. `inside` fits the whole image within them, keeping
    * its shape, and never makes it bigger than it is.
    */
   fit?: 'cover' | 'inside'
+  /**
+   * For `cover`: which part of the image is kept. Default `centre`; `top`
+   * suits document pages.
+   */
+  position?: SharpVariantPosition
   /** Default `webp`. */
   format?: SharpVariantFormat
   /** 1–100, for `webp`, `jpeg` and `avif`. Default 80. */
@@ -32,6 +55,20 @@ const MIME_TYPES: Record<SharpVariantFormat, string> = {
   png: 'image/png',
   avif: 'image/avif',
 }
+
+const POSITIONS: readonly SharpVariantPosition[] = [
+  'centre',
+  'top',
+  'right top',
+  'right',
+  'right bottom',
+  'bottom',
+  'left bottom',
+  'left',
+  'left top',
+  'entropy',
+  'attention',
+]
 
 // Only bytes that are one of these reach libvips, so it uses no other
 // decoder (SVG, PDF, HEIC…) on them, whatever the source claims they are
@@ -72,6 +109,8 @@ const invalid = (message: string) => new UploadError('CONFIGURATION', message)
  * variants: {
  *   // A 164 × 164 WebP, cropped from the middle
  *   'thumb-164': sharpVariant({ width: 164 }),
+ *   // A page's top, 164 × 232
+ *   'page-top': sharpVariant({ width: 164, height: 232, position: 'top' }),
  *   // At most 1600 × 1200, as a JPEG
  *   large: sharpVariant({
  *     width: 1600,
@@ -89,6 +128,7 @@ export function sharpVariant(
     width,
     height = width,
     fit = 'cover',
+    position,
     format = 'webp',
     quality = 80,
   } = options
@@ -109,6 +149,23 @@ export function sharpVariant(
     throw invalid(
       `sharpVariant() fit must be 'cover' or 'inside', got '${String(fit)}'.`,
     )
+  }
+
+  if (position !== undefined) {
+    if (fit !== 'cover') {
+      throw invalid(
+        "sharpVariant() position is for fit 'cover', which crops; " +
+          "fit 'inside' keeps the whole image.",
+      )
+    }
+
+    if (!POSITIONS.includes(position)) {
+      throw invalid(
+        `sharpVariant() position must be one of ` +
+          `${POSITIONS.map((p) => `'${p}'`).join(', ')}, got ` +
+          `'${String(position)}'.`,
+      )
+    }
   }
 
   // A cover image is exactly width × height, however small the input
@@ -155,7 +212,11 @@ export function sharpVariant(
       limitInputPixels: MAX_INPUT_PIXELS,
     })
       .autoOrient()
-      .resize(width, height, { fit, withoutEnlargement: fit === 'inside' })
+      .resize(width, height, {
+        fit,
+        position: position ?? 'centre',
+        withoutEnlargement: fit === 'inside',
+      })
 
     // A PNG's `quality` would make it a palette image
     const output = await (

@@ -502,15 +502,62 @@ variants: {
 },
 ```
 
-| Option    | Default    | What it does                                                                                                                                            |
-| --------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `width`   | (required) | Width in pixels                                                                                                                                         |
-| `height`  | `width`    | Height in pixels                                                                                                                                        |
-| `fit`     | `'cover'`  | `'cover'` crops the middle to exactly `width` × `height`, as a thumbnail tile needs. `'inside'` fits the whole image within them, and never enlarges it |
-| `format`  | `'webp'`   | `'webp'`, `'jpeg'`, `'png'` or `'avif'`                                                                                                                 |
-| `quality` | `80`       | 1–100, for WebP, JPEG and AVIF                                                                                                                          |
+| Option     | Default    | What it does                                                                                                                                                                                                                                                       |
+| ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `width`    | (required) | Width in pixels                                                                                                                                                                                                                                                    |
+| `height`   | `width`    | Height in pixels                                                                                                                                                                                                                                                   |
+| `fit`      | `'cover'`  | `'cover'` crops to exactly `width` × `height`, as a thumbnail tile needs, keeping the middle unless `position` says otherwise. `'inside'` fits the whole image within them, and never enlarges it                                                                  |
+| `position` | `'centre'` | For `'cover'`, the part kept: `'top'`, `'right top'`, `'right'`, `'right bottom'`, `'bottom'`, `'left bottom'`, `'left'`, `'left top'`, `'centre'`, or `'entropy'` (the most detailed part) or `'attention'` (the most eye-catching). `'top'` suits document pages |
+| `format`   | `'webp'`   | `'webp'`, `'jpeg'`, `'png'` or `'avif'`                                                                                                                                                                                                                            |
+| `quality`  | `80`       | 1–100, for WebP, JPEG and AVIF                                                                                                                                                                                                                                     |
 
 The image is turned the right way up by its EXIF orientation, and the made file carries no metadata (no GPS position, no camera). Only JPEG, PNG, WebP, GIF, AVIF and TIFF files are decoded, told apart by their bytes, not by the type a source claims: anything else, such as a PDF, gets `null` and is remembered as failed. Images over 100 megapixels are refused. A `'cover'` image is exactly `width` × `height`, however small the photo, so that can be at most 100 megapixels too. Without sharp installed, or with sharp unable to load its native library on your platform, `sharpVariant()` throws when your app starts, saying how to fix it, rather than failing every file later.
+
+#### HEIC photos
+
+`sharpVariant()` doesn't read HEIC files, the format iPhones take photos in by default: sharp's prebuilt libvips has no HEVC decoder, for licensing reasons. A HEIC file gets `null`, and is remembered as failed, like a PDF. To make thumbnails of HEIC photos, decode them with a package of your own, such as [heic-decode](https://www.npmjs.com/package/heic-decode), and hand everything else to `sharpVariant()`:
+
+```bash
+yarn workspace api add heic-decode
+yarn workspace api add -D @types/heic-decode
+```
+
+```ts title="api/src/lib/derivedFiles.ts"
+import decodeHeic from 'heic-decode'
+import sharp from 'sharp'
+
+import { detectContentType } from '@cedarjs/uploads'
+import type { DerivedFileGenerator } from '@cedarjs/uploads'
+import { sharpVariant } from '@cedarjs/uploads/sharp'
+
+// A size × size WebP from HEIC too
+const thumb = (size: number): DerivedFileGenerator => {
+  const fromSharp = sharpVariant({ width: size })
+
+  return async (context) => {
+    const { data } = await context.readSource()
+
+    if (detectContentType(data) !== 'image/heic') {
+      return fromSharp(context)
+    }
+
+    const { width, height, data: rgba } = await decodeHeic({ buffer: data })
+
+    return {
+      data: await sharp(Buffer.from(rgba), {
+        raw: { width, height, channels: 4 },
+        limitInputPixels: 100_000_000,
+      })
+        .resize(size, size, { fit: 'cover' })
+        .webp()
+        .toBuffer(),
+      mimeType: 'image/webp',
+    }
+  }
+}
+```
+
+Then use `thumb(164)` in `variants` instead of `sharpVariant({ width: 164 })`. `readSource()` reads the file once, so calling it here and again in `sharpVariant()` costs nothing. heic-decode decodes the whole image before sharp sees its size, so a huge HEIC uses that much memory first; for HEIC from untrusted sources, consider decoding it in a [sandboxed child process](#server-generated-files).
 
 #### Running sharp in a sandbox
 
