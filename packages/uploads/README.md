@@ -14,12 +14,13 @@ File uploads and storage for CedarJS apps.
   uploads, and confirming them.
 - **Lifecycle utilities** (`storeFile`, `deleteFile`, `cleanupStaleUploads`) for
   server-generated files and explicit cleanup.
-- **Derived files (variants)**, experimental: thumbnails, previews, a video's
-  poster frame. `defineUploadVariants()` takes one generator function per
-  variant name and keeps the bookkeeping: variants are `Upload` rows linked
-  to their source, made once when first acquired (`acquireVariant()`) even
-  under concurrency, failures remembered with a retry-after,
-  `regenerateVariants()` to remake one name, and deletion with the source.
+- **Derived files**, experimental: thumbnails, previews, a video's poster
+  frame, made from uploads or from files stored elsewhere (a third-party
+  API). `defineDerivedFiles()` takes pluggable sources and one generator per
+  variant, and keeps the bookkeeping in a `DerivedFile` table: each file
+  made once on first acquire, thrown errors retried with backoff, failures
+  remembered, `resetVariants()` to remake one variant, and `deleteFor()` (or
+  `deleteFile()` for uploads) to delete them with their source.
 - **Content detection** (`detectContentType`, `acceptedContentType`) that
   checks what an uploaded file really is from its bytes, not from its name or
   the type the browser claimed: images, PDF, audio/video, and OpenDocument and

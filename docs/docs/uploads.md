@@ -362,7 +362,7 @@ export const MonthlyReportJob = async ({ month }: { month: string }) => {
 
 Pass `userId` when the file belongs to someone, so the ownership checks that guard user uploads apply to it too, and `organizationId` in multi-tenant apps.
 
-Thumbnails and previews of an upload are better kept as [variants](#derived-files-thumbnails-previews-and-other-variants), which Cedar links to their source and deletes with it.
+Thumbnails and previews are better kept as [derived files](#derived-files-thumbnails-previews-and-other-variants), which Cedar makes once, keeps track of, and deletes with their source.
 
 When you make a file from an upload, a thumbnail of a photo or a preview of a PDF, decode the upload in a sandboxed child process with `@cedarjs/api/sandbox`, so a crafted file that exploits a JavaScript decoder (pdf.js, say) can't reach your secrets. A native decoder (sharp's libvips, with `allowAddons`) isn't limited by Node's file and network permissions: there the sandbox still keeps your environment variables out of the child, and full isolation needs an OS-level sandbox. See [Untrusted Files](security.md#untrusted-files).
 
@@ -394,67 +394,87 @@ export const deleteReport = async ({ id }: { id: string }) => {
 
 :::caution Experimental
 
-Variants are experimental. The API may change until a second app, or a different kind of file such as video, has used it.
+Derived files are experimental. The API may change until a second app, or a different kind of file such as video, has used it.
 
 :::
 
-A photo's thumbnails, a PDF's drawn first page, a video's poster frame: files made from another upload are its **variants**, or derived files. Each one is an `Upload` row of its own, linked to the file it was made from and given a name such as `thumb-164` or `preview`. Your app writes only the function that turns the source's bytes into the new file. Cedar keeps the bookkeeping:
+A photo's thumbnails, a PDF's drawn first page, a video's poster frame: files made from another file are **derived files**, and each kind (`thumb-164`, `preview`) is a **variant**. The file they're made from can be an upload, or a file that lives somewhere else entirely, such as a document your app fetches from a third-party API when it needs it. Your app writes the function that makes each variant; Cedar keeps the bookkeeping:
 
-- a variant is made the first time it's asked for, and only once, even when two requests or two processes ask at the same moment
-- a variant that can't be made is remembered, and not tried again until `retryFailedAfter` has passed
-- `regenerateVariants('preview')` remakes every `preview` after you fix its generator, and leaves the other variants alone
-- deleting the source with `deleteFile()` deletes its variants and their stored files
+- a derived file is made the first time it's asked for, by one process at a time
+- a generator that throws is tried again a few times, with backoff; one that returns `null` is remembered as failed
+- `resetVariants('preview')` clears every `preview` after you fix its generator, so each is made again when next asked for
+- `deleteFor(source)` deletes a source file's derived files, and `deleteFile()` does it for you for uploads
 
-`@cedarjs/uploads` makes no images itself. A generator can use sharp, pdf.js, ffmpeg or a third-party service; the package depends on none of them. A generator decodes bytes a user uploaded, so the advice on [decoding in a sandbox](#server-generated-files) applies to it too.
+Each made file is an ordinary `Upload` row, stored on a target like any other file. `@cedarjs/uploads` makes no images itself: a generator can use sharp, pdf.js, ffmpeg or a third-party service, and the package depends on none of them. A generator decodes bytes someone else made, so the advice on [decoding in a sandbox](#server-generated-files) applies to it too.
 
 ### Schema
 
-Add two columns, a self-relation and a unique index to the `Upload` model, then create a migration:
+Add a `DerivedFile` model to keep track of derived files, then create a migration. The `Upload` model stays as it is.
 
 ```prisma title="api/db/schema.prisma"
-model Upload {
-  // ...the existing fields...
+model DerivedFile {
+  id        String   @id @default(cuid())
+  /// The source file, such as "upload:<id>" or "osdoc:<org>/<case>/<doc>"
+  source    String
+  /// Name of the variant, such as "thumb-164" or "preview"
+  variant   String
+  /// The made file's Upload row
+  uploadId  String?
+  status    String   @default("pending")
+  claimId   String?
+  attempts  Int      @default(0)
+  updatedAt DateTime @updatedAt
 
-  /// The upload this one was made from (a thumbnail's photo), or null
-  sourceId String?
-  /// Name of the derived file, such as "thumb-164" or "preview"
-  variant  String?
-  source   Upload?  @relation("UploadVariants", fields: [sourceId], references: [id], onDelete: Restrict)
-  variants Upload[] @relation("UploadVariants")
-
-  @@unique([sourceId, variant])
+  @@unique([source, variant])
 }
 ```
 
-The unique index is what lets only one process make a given variant. Original uploads have `NULL` in both columns, which PostgreSQL, MySQL and SQLite treat as distinct in a unique index. SQL Server treats `NULL`s as equal, so there you need a filtered unique index (`WHERE sourceId IS NOT NULL`) in a manual migration instead of `@@unique`. `onDelete: Restrict` means a source row can't be deleted while it still has variants, so their files can't be orphaned by accident; see [deleting](#deleting-a-source-and-its-variants) below.
+The unique index is what lets only one process start making a given file. `source` is a plain string, not a relation, because the source doesn't have to be a row in your database. That means nothing in the database stops a source file from going away while its derived files stay behind: call `deleteFor()` when you delete a source file. For uploads, `deleteFile()` does that when you pass it `derivedFiles`.
 
-Your own models keep referencing only the original upload. They need no columns for thumbnails, no "thumbnail failed at" timestamp, and no relation per variant.
+Your own models keep referencing only the original file. They need no columns for thumbnails, no "thumbnail failed at" timestamp, and no relation per variant.
 
-### Declaring variants
+### Declaring derived files
 
-```ts title="api/src/lib/uploadVariants.ts"
-import { defineUploadVariants } from '@cedarjs/uploads'
-import type { UploadVariantGenerator } from '@cedarjs/uploads'
+```ts title="api/src/lib/derivedFiles.ts"
+import { defineDerivedFiles, uploadSource } from '@cedarjs/uploads'
+import type { DerivedFileGenerator } from '@cedarjs/uploads'
 import sharp from 'sharp'
 
 import { db } from 'src/lib/db'
 import { targets } from 'src/lib/uploads'
 
 const square =
-  (size: number): UploadVariantGenerator =>
+  (size: number): DerivedFileGenerator =>
   async ({ readSource }) => ({
-    data: await sharp(await readSource())
+    data: await sharp((await readSource()).data)
       .resize(size, size)
       .webp()
       .toBuffer(),
     mimeType: 'image/webp',
   })
 
-export const uploadVariants = defineUploadVariants({
+export const derivedFiles = defineDerivedFiles({
   db,
   targets,
-  // Where variant files are stored, unless a variant names its own target
+  // Where made files are stored, unless a variant names its own target
   target: targets.thumbnails,
+  sources: {
+    upload: uploadSource({ db, targets }),
+    // Files that live elsewhere: read() fetches one by your reference
+    osdoc: {
+      key: (ref: OsDocRef) => `${ref.org}/${ref.caseId}/${ref.docId}`,
+      read: async (ref: OsDocRef) => {
+        const doc = await fetchOrdrestyringDocument(ref)
+        return (
+          doc && {
+            data: doc.bytes,
+            filename: doc.name,
+            organizationId: ref.org,
+          }
+        )
+      },
+    },
+  },
   variants: {
     'thumb-164': square(164),
     'thumb-328': square(328),
@@ -463,94 +483,86 @@ export const uploadVariants = defineUploadVariants({
 })
 ```
 
-A generator receives the source's `Upload` row (`source`), the variant's name, `readSource()` for the source's bytes, and `acquireVariantData(name)` for another variant of the same source. It returns `{ data, mimeType, filename? }`, or `null` when this source can't have this variant (a file type it doesn't handle). A returned `null` and a thrown error are both remembered as a failure. A thrown error is also passed to `onError`, which logs by default.
+A source has a `read()` that returns the file (`{ data, mimeType?, filename?, userId?, organizationId? }`), or `null` when it doesn't exist, and a `key()` that turns your reference into a stable string. References that are strings already don't need `key()`. `uploadSource()` reads an upload from whichever target holds it and gives the made files the upload's owner and organization. Whether a viewer may see a derived file is for your code to check, as it is for any upload.
 
-Make one variant from another with `acquireVariantData()`. A PDF's thumbnail can be cut from its drawn first page, which is drawn once and shared:
+A generator receives `source` (its name, its key, and your reference), the variant's name, and `readSource()`, which reads the source file once however often you call it. It returns `{ data, mimeType, filename? }`, or `null` when this source can't have this variant (a file type it doesn't handle).
 
-```ts
-'pdf-thumb': async ({ source, acquireVariantData }) => {
-  if (source.mimeType !== 'application/pdf') {
-    return null
-  }
+### Failures
 
-  const page = await acquireVariantData('preview')
-  return page ? { data: await cutSquare(page), mimeType: 'image/webp' } : null
-},
-```
+- **A thrown error is temporary.** A network error or a service that is down is reported to `onError` (which logs by default), and the next request after `retryDelay` (one minute, doubling each time) tries again. After `maxAttempts` (three) it is remembered as failed.
+- **`null` is permanent**, from a generator or from a source's `read()`, and so is a made file that can't be stored (an invalid MIME type, or too big for a database target).
+- **Failed stays failed** until you call `resetVariants()`.
 
-Variants are made from original uploads only, not from other variants, and a variant that ends up depending on itself is refused.
-
-### Reading variants
+### Acquiring derived files
 
 ```ts
-// The variant's Upload row, made now if it doesn't exist yet. null when it
-// couldn't be made (and retryFailedAfter hasn't passed)
-const thumb = await uploadVariants.acquireVariant(photo.uploadId, 'thumb-164')
-
-// Its bytes, or a URL a browser can load (a signed URL, or a data: URI for
-// database targets)
-const read = await uploadVariants.acquireVariantData(
-  photo.uploadId,
+const result = await derivedFiles.acquireVariant(
+  { upload: photo.uploadId },
   'thumb-164'
 )
-const url = await uploadVariants.acquireVariantUrl(
-  photo.uploadId,
-  'thumb-164',
-  {
-    expiresIn: 600,
-    disposition: 'inline',
-  }
-)
+
+if (result.status === 'completed') {
+  // result.upload is the made file's Upload row
+}
+
+// The row and its bytes, or null when not ready or failed
+const read = await derivedFiles.acquireVariantData({ osdoc: ref }, 'preview')
 
 // Only if it has already been made; never makes anything
-const made = await uploadVariants.findVariant(photo.uploadId, 'thumb-164')
-const byPhoto = await uploadVariants.findVariants(uploadIds, 'thumb-164')
+const made = await derivedFiles.findVariant({ upload: id }, 'thumb-164')
+const byPhoto = await derivedFiles.findVariants(
+  photos.map((photo) => ({ upload: photo.uploadId })),
+  'thumb-164'
+)
 ```
 
-A variant is an ordinary `Upload` row, so the `@withSignedUrl` and `@withDataUri` directives work on its id too. On a list page, use `findVariants()` so one query covers every row and nothing is made while the page waits, and make missing variants ahead of time from a job:
+`acquireVariant()` returns `completed` with the made file's `Upload` row, `failed`, or `pending`. Pending means it isn't ready: another process is making it right now, or an attempt failed and is waiting for its retry. It doesn't wait for another process; show a placeholder and ask again later. Within one process, concurrent calls for the same file share one attempt.
+
+The made file is an ordinary `Upload` row, so the `@withSignedUrl` and `@withDataUri` directives work on its id. On a list page, use `findVariants()` so two queries cover every row and nothing is made while the page waits, and make missing files ahead of time from a job:
 
 ```ts title="api/src/jobs/ThumbnailJob/ThumbnailJob.ts"
 export const ThumbnailJob = jobs.createJob({
   queue: 'default',
   perform: async ({ uploadId }: { uploadId: string }) => {
-    await uploadVariants.acquireVariant(uploadId, 'thumb-164')
-    await uploadVariants.acquireVariant(uploadId, 'thumb-328')
+    await derivedFiles.acquireVariant({ upload: uploadId }, 'thumb-164')
+    await derivedFiles.acquireVariant({ upload: uploadId }, 'thumb-328')
   },
 })
 ```
 
-Making a variant is safe to start from several places at once. In one process, concurrent calls share a single attempt. Across processes, the variant's own `Upload` row, created in `pending` status, is the claim: the unique index lets only one process create it, and the others wait (checking every `pollInterval`, 250 ms by default) until it is `completed` or `failed`. A claim older than `claimTimeout` (ten minutes by default) is treated as abandoned by a process that died, and taken over.
+An attempt holds a claim on its `DerivedFile` row while it runs. A claim older than `claimTimeout` (ten minutes) is treated as left behind by a process that died, and the next request starts a new attempt. Claims and retries use absolute timestamps, so time zones don't matter, but your servers' clocks should be roughly in sync (NTP).
 
-A variant that couldn't be made keeps its row, in `failed` status, with no file. It's tried again on the first request after `retryFailedAfter` (one day by default) has passed since the failure.
+### Remaking derived files
 
-### Remaking variants
-
-After fixing a generator, remake every variant of that name:
+After fixing a generator, clear every file of that variant:
 
 ```ts title="scripts/redrawPreviews.ts"
-import { uploadVariants } from 'api/src/lib/uploadVariants'
+import { derivedFiles } from 'api/src/lib/derivedFiles'
 
 export default async () => {
-  const result = await uploadVariants.regenerateVariants('preview')
-  console.info(result) // { deleted, made, failed, errors }
+  console.info(await derivedFiles.resetVariants('preview')) // { deleted, errors }
 }
 ```
 
-Each old file is deleted and the variant made again, including those remembered as failed. Pass `remake: false` to only delete them and let each be made the next time it is acquired.
+Made and failed files alike are deleted, and each is made again the next time it's acquired. To make them right away, acquire them from a script or a job.
 
-### Deleting a source and its variants
+### Deleting a source and its derived files
 
-Pass `targets` to `deleteFile()` and it deletes the upload's variants (bytes, then rows) before the upload itself:
+Pass `derivedFiles` to `deleteFile()` and it deletes the upload's derived files (bytes, `Upload` rows and bookkeeping) before the upload itself:
 
 ```ts
 await deleteFile(resolveTarget(targets, upload.target), {
   db,
   upload,
-  targets,
+  derivedFiles,
 })
 ```
 
-Without `targets`, deleting an upload that has variants throws an `UploadError` with code `HAS_VARIANTS`, because the variant rows still reference it. Call again with `targets` to finish. `deleteVariants(upload, { db, targets })` deletes only the variants.
+For other sources, call `deleteFor()` when the source file goes away, for example when your app learns a third-party document was deleted:
+
+```ts
+await derivedFiles.deleteFor({ osdoc: ref })
+```
 
 ## Cleaning up stale uploads
 
