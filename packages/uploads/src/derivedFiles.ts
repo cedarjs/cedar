@@ -464,9 +464,11 @@ export function defineDerivedFiles<
       })
       .catch(async (e: unknown) => {
         await dropMade()
-        // Released like any thrown error, so the next attempt waits for
+        // Settled like any thrown error, so the next attempt waits for
         // `retryDelay` rather than `claimTimeout`
-        await settle('pending').catch(() => undefined)
+        await settle(attempts >= maxAttempts ? 'failed' : 'pending').catch(
+          () => undefined,
+        )
         throw e
       })
 
