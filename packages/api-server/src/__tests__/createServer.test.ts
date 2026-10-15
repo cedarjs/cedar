@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import path from 'path'
 
 import { pino } from 'pino'
@@ -33,6 +34,12 @@ beforeAll(async () => {
 })
 
 afterAll(() => {
+  // Written by every server started in this file
+  fs.rmSync(path.join(process.env.CEDAR_CWD ?? '', '.cedar', 'process-meta'), {
+    recursive: true,
+    force: true,
+  })
+
   process.env.CEDAR_CWD = original_CEDAR_CWD
 })
 
@@ -235,6 +242,29 @@ describe('createServer', () => {
       }
 
       expect(address.port).toBe(8920)
+    })
+
+    it('writes the port it listens on to .cedar/process-meta/api.json', async () => {
+      setEnvVar('CEDAR_API_PORT', '8925')
+
+      startedServer = await createServer()
+      await startedServer.start()
+
+      const metaPath = path.join(
+        process.env.CEDAR_CWD ?? '',
+        '.cedar',
+        'process-meta',
+        'api.json',
+      )
+
+      expect(JSON.parse(fs.readFileSync(metaPath, 'utf-8'))).toEqual({
+        version: 1,
+        port: 8925,
+        host: expect.any(String),
+        rootPath: '/',
+        pid: process.pid,
+        startedAt: expect.any(String),
+      })
     })
 
     it('the deprecated `REDWOOD_API_PORT` env var still works', async () => {

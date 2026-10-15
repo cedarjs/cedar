@@ -10,6 +10,11 @@ import { titleCase } from 'title-case'
 
 import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
+import {
+  API_PROCESS_META_FILE_NAME,
+  PROCESS_META_DIR_NAME,
+} from '@cedarjs/project-config'
+import type { ApiProcessMeta } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 import { getConfig, getPaths } from '../../../lib/index.js'
@@ -25,6 +30,9 @@ const CURRENT_RELEASE_SYMLINK_NAME = 'current'
 const LIFECYCLE_HOOKS = ['before', 'after'] as const
 // Path of the health check endpoint that Cedar's GraphQL server serves
 const DEFAULT_HEALTH_CHECK_PATH = '/graphql/health'
+// Generated data directories a release's api server writes its process meta
+// file to, in the order the api server picks them
+const GENERATED_DATA_DIRS = ['.cedar', '.redwood']
 // Time between two attempts of the post-restart health check
 const HEALTH_CHECK_INTERVAL_MS = 2000
 // Longest a single health check request waits for a response
@@ -262,46 +270,201 @@ const monitorTask = (
 }
 
 /**
- * The URL the post-restart health check requests, or `undefined` when there
- * is nothing to check on this server. Without an explicit `healthCheckUrl`
- * only servers that host the api side are checked, at the `/graphql/health`
- * endpoint Cedar's GraphQL server serves on the `[api].port` from cedar.toml.
- * `cedar serve` and `cedar serve api` both listen on that port.
+ * What the post-restart health check requests: either a `url`, or an
+ * `apiPath` on the release's api server, at the address, port and root path
+ * it recorded in its process meta file
  */
-export const healthCheckUrl = (serverConfig: ServerConfig) => {
+export type HealthCheckTarget = { url: string } | { apiPath: string }
+
+/**
+ * What the post-restart health check requests, or `undefined` when there is
+ * nothing to check on this server. Without an explicit `healthCheckUrl` only
+ * servers that host the api side are checked, at the `/graphql/health`
+ * endpoint Cedar's GraphQL server serves. Where the api server listens is read
+ * on the server, because `--apiPort`, `CEDAR_API_PORT` or `PORT` can set the
+ * port there
+ */
+export const healthCheckTarget = (
+  serverConfig: ServerConfig,
+): HealthCheckTarget | undefined => {
   if (serverConfig.healthCheckUrl === false) {
     return undefined
   }
 
   if (serverConfig.healthCheckUrl) {
-    return serverConfig.healthCheckUrl
+    return { url: serverConfig.healthCheckUrl }
   }
 
   if (!serverConfig.sides.includes('api')) {
     return undefined
   }
 
-  return `http://localhost:${getConfig().api.port}${DEFAULT_HEALTH_CHECK_PATH}`
+  return { apiPath: DEFAULT_HEALTH_CHECK_PATH }
+}
+
+export const describeHealthCheckTarget = (target: HealthCheckTarget) => {
+  return 'url' in target ? target.url : `${target.apiPath} on the api server`
+}
+
+// The api process meta file of the `current` release, in each of the
+// generated data directories it can be in, relative to the deploy path
+const API_PROCESS_META_FILES = GENERATED_DATA_DIRS.map((dir) =>
+  [
+    CURRENT_RELEASE_SYMLINK_NAME,
+    dir,
+    PROCESS_META_DIR_NAME,
+    API_PROCESS_META_FILE_NAME,
+  ].join('/'),
+)
+
+// Where a release's `@cedarjs/api-server` can be installed, relative to the
+// deploy path: hoisted to the project root, or in the api side's own
+// `node_modules` (pnpm)
+const API_SERVER_DIST_DIRS = [
+  'node_modules/@cedarjs/api-server/dist',
+  'api/node_modules/@cedarjs/api-server/dist',
+].map((dir) => `${CURRENT_RELEASE_SYMLINK_NAME}/${dir}`)
+
+/**
+ * Whether the `current` release's api server writes its process meta file.
+ * Releases deployed with a Cedar version from before it did never write it.
+ * Throws if the server can't be asked
+ */
+export const releaseWritesApiProcessMeta = async (
+  ssh: SshExecutor,
+  serverConfig: ServerConfig,
+) => {
+  try {
+    // `grep -q` exits with 0 when it finds a match, 1 when it doesn't, and 2
+    // when it doesn't and also hit an error, like one of the directories
+    // being missing. Any other exit code, like 127 when `grep` isn't
+    // installed, says nothing about the release
+    await ssh.exec(serverConfig.path, 'grep', [
+      '-rqs',
+      'writeApiProcessMeta',
+      ...API_SERVER_DIST_DIRS,
+    ])
+
+    return true
+  } catch (e) {
+    if (
+      typeof e === 'object' &&
+      e !== null &&
+      'exitCode' in e &&
+      (e.exitCode === 1 || e.exitCode === 2)
+    ) {
+      return false
+    }
+
+    throw e
+  }
+}
+
+/**
+ * Reads what the `current` release's api server recorded about itself once it
+ * started listening. The file is in the release itself, so it can't come from
+ * another app's api server on the same machine
+ */
+export const readApiProcessMeta = async (
+  ssh: SshExecutor,
+  serverConfig: ServerConfig,
+): Promise<Pick<ApiProcessMeta, 'port' | 'host' | 'rootPath'>> => {
+  const [preferredFile, fallbackFile] = API_PROCESS_META_FILES
+
+  let contents = ''
+
+  try {
+    const result = await ssh.exec(serverConfig.path, 'cat', [
+      preferredFile,
+      '2>/dev/null',
+      '||',
+      'cat',
+      fallbackFile,
+    ])
+    contents = result.stdout
+  } catch {
+    throw new Error(
+      `The api server hasn't written ${preferredFile} yet. It does that ` +
+        "once it's listening.",
+    )
+  }
+
+  // Some shells print a banner before the command output, so parsing starts
+  // at the first `{`
+  const jsonStart = contents.indexOf('{')
+  let meta: unknown
+
+  try {
+    meta = JSON.parse(jsonStart === -1 ? contents : contents.slice(jsonStart))
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e)
+    throw new Error(`${preferredFile} isn't valid JSON: ${message}`)
+  }
+
+  if (
+    typeof meta !== 'object' ||
+    meta === null ||
+    !('port' in meta) ||
+    !Number.isInteger(meta.port) ||
+    !('host' in meta) ||
+    typeof meta.host !== 'string' ||
+    ('rootPath' in meta && typeof meta.rootPath !== 'string')
+  ) {
+    throw new Error(
+      `${preferredFile} doesn't hold the api server's port and host: ` +
+        contents.trim(),
+    )
+  }
+
+  return {
+    port: Number(meta.port),
+    host: meta.host,
+    ...('rootPath' in meta && typeof meta.rootPath === 'string'
+      ? { rootPath: meta.rootPath }
+      : {}),
+  }
+}
+
+/**
+ * The URL of `apiPath` on the api server described by `meta`, as seen from
+ * the server itself. An api server listening on every address is reached on
+ * `localhost`
+ */
+export const apiServerUrl = (
+  {
+    port,
+    host,
+    rootPath = '/',
+  }: Pick<ApiProcessMeta, 'port' | 'host' | 'rootPath'>,
+  apiPath: string,
+) => {
+  const hostname = ['', '::', '0.0.0.0'].includes(host)
+    ? 'localhost'
+    : host.includes(':')
+      ? `[${host}]`
+      : host
+
+  return `http://${hostname}:${port}${rootPath.replace(/\/+$/, '')}${apiPath}`
 }
 
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms))
 
 /**
- * Requests `url` on the server until it responds with a 2xx status. Gives up
- * and throws once `timeoutSeconds` have passed, with `nextSteps` appended to
+ * Requests `target` on the server until it responds with a 2xx status. Gives
+ * up and throws once `timeoutSeconds` have passed, with `nextSteps` appended to
  * the error message so the message says what to do about the failure.
  * `onFailedAttempt` is called with the reason each time an attempt fails.
  */
 export const waitForHealthCheck = async ({
-  url,
+  target,
   timeoutSeconds,
   ssh,
   serverConfig,
   nextSteps,
   onFailedAttempt,
 }: {
-  url: string
+  target: HealthCheckTarget
   timeoutSeconds: number
   ssh: SshExecutor
   serverConfig: ServerConfig
@@ -311,6 +474,28 @@ export const waitForHealthCheck = async ({
   const deadline = Date.now() + timeoutSeconds * 1000
   let lastFailure = ''
   let keepTrying = true
+  let writesApiProcessMeta: boolean | undefined
+
+  // A release deployed with a Cedar version from before the api server wrote
+  // its process meta file never writes it. Such a release is checked on the
+  // `[api].port` from this machine's cedar.toml, the way those versions check
+  // it
+  const apiProcessMeta = async () => {
+    try {
+      return await readApiProcessMeta(ssh, serverConfig)
+    } catch (e) {
+      writesApiProcessMeta ??= await releaseWritesApiProcessMeta(
+        ssh,
+        serverConfig,
+      )
+
+      if (writesApiProcessMeta) {
+        throw e
+      }
+
+      return { port: getConfig().api.port, host: '' }
+    }
+  }
 
   // Each attempt is one `curl` on the server. `--fail` makes curl exit
   // non-zero for HTTP error statuses, so `ssh.exec` throws both when nothing
@@ -319,6 +504,13 @@ export const waitForHealthCheck = async ({
   // http to https) is judged by the response of the final destination.
   while (keepTrying) {
     try {
+      // The api server writes its process meta file once it's listening, so
+      // the file is read again on every attempt until it's there
+      const url =
+        'url' in target
+          ? target.url
+          : apiServerUrl(await apiProcessMeta(), target.apiPath)
+
       await ssh.exec(serverConfig.path, 'curl', [
         '--fail',
         '--location',
@@ -347,7 +539,8 @@ export const waitForHealthCheck = async ({
 
   throw new Error(
     [
-      `Health check failed: ${url} did not respond successfully within ` +
+      `Health check failed: ${describeHealthCheckTarget(target)} did not ` +
+        'respond successfully within ' +
         `${timeoutSeconds} seconds of restarting the ` +
         `${serverConfig.processNames?.join(', ')} process(es).`,
       `Last attempt: ${lastFailure}`,
@@ -362,25 +555,27 @@ export const waitForHealthCheck = async ({
 
 /**
  * The Listr task that runs the health check once the server's processes have
- * been restarted. `url` is `undefined` when there is nothing to check, which
+ * been restarted. `target` is `undefined` when there is nothing to check, which
  * leaves a task that is always skipped, so the task list keeps the same shape
  * for every server.
  */
 const healthCheckTask = (
-  url: string | undefined,
+  target: HealthCheckTarget | undefined,
   ssh: SshExecutor,
   serverConfig: ServerConfig,
   nextSteps: string[],
 ): ListrTaskObject => {
   return {
-    title: url ? `Checking ${url}...` : 'Checking health...',
+    title: target
+      ? `Checking ${describeHealthCheckTarget(target)}...`
+      : 'Checking health...',
     task: async (_ctx: unknown, task: { output: string }) => {
-      if (!url) {
+      if (!target) {
         return
       }
 
       await waitForHealthCheck({
-        url,
+        target,
         timeoutSeconds: parseInt(String(serverConfig.healthCheckTimeout), 10),
         ssh,
         serverConfig,
@@ -391,7 +586,7 @@ const healthCheckTask = (
         },
       })
     },
-    skip: () => !url,
+    skip: () => !target,
   }
 }
 
@@ -522,6 +717,14 @@ export const rollbackTasks = (
             ssh,
             serverConfig.path,
           )
+
+          // The release has the api process meta file from when it last ran.
+          // It's removed so the health check waits for the restarted api
+          // server to write it again
+          await ssh.exec(serverConfig.path, 'rm', [
+            '-f',
+            ...API_PROCESS_META_FILES,
+          ])
         } else {
           throw new Error(
             `Cannot rollback ${rollbackCount} release(s): ${
@@ -541,7 +744,7 @@ export const rollbackTasks = (
     }
 
     tasks.push(
-      healthCheckTask(healthCheckUrl(serverConfig), ssh, serverConfig, [
+      healthCheckTask(healthCheckTarget(serverConfig), ssh, serverConfig, [
         'The release you rolled back to is live as `current`. Check the ' +
           'process logs on the server, or run the rollback again with ' +
           '`--rollback` to move one more release back.',
@@ -1116,14 +1319,14 @@ export const deployTasks = (
       }
     }
 
-    const url = healthCheckUrl(serverConfig)
+    const target = healthCheckTarget(serverConfig)
 
     tasks.push(
       ...commandWithLifecycleEvents({
         name: 'healthCheck',
         config: { ...config, cmdPath: serverConfig.path },
-        skip: !yargs.restart || !url,
-        command: healthCheckTask(url, ssh, serverConfig, [
+        skip: !yargs.restart || !target,
+        command: healthCheckTask(target, ssh, serverConfig, [
           'The new release is live as `current`. Check the process logs ' +
             'on the server, or roll back to the previous release with ' +
             `\`${formatCedarCommand(['deploy', 'baremetal', yargs.environment, '--rollback'])}\`.`,

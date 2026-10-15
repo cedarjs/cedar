@@ -9,7 +9,11 @@ import fastify from 'fastify'
 
 import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
-import { getConfig, getPaths } from '@cedarjs/project-config'
+import {
+  getConfig,
+  getPaths,
+  writeApiProcessMeta,
+} from '@cedarjs/project-config'
 
 import { resolveOptions } from './createServerHelpers.js'
 import type {
@@ -200,6 +204,25 @@ export async function createServer(options: CreateServerOptions = {}) {
         `${server.listeningOrigin}${apiRootPath}`,
       )}`,
     )
+
+    // The baremetal deploy's health check reads this file on the server to
+    // find the api, whose port can come from `--apiPort`, `CEDAR_API_PORT` or
+    // `PORT` rather than cedar.toml
+    const address = server.addresses()[0]
+
+    if (address) {
+      try {
+        writeApiProcessMeta({
+          port: address.port,
+          host: address.address,
+          rootPath: apiRootPath,
+        })
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e)
+        server.log.warn(`Could not write the api process meta file: ${message}`)
+      }
+    }
+
     done()
   })
 
