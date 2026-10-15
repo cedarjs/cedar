@@ -10,7 +10,7 @@ import * as apiServerCLIConfig from '@cedarjs/api-server/apiCliConfig'
 import * as bothServerCLIConfig from '@cedarjs/api-server/bothCliConfig'
 import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
-import { writeApiPortFile } from '@cedarjs/project-config'
+import { writeApiProcessMeta } from '@cedarjs/project-config'
 import * as webServerCLIConfig from '@cedarjs/web-server'
 
 // @ts-expect-error - Types not available for JS files
@@ -88,13 +88,16 @@ async function startUDServer(
   await server.ready()
 
   // The baremetal deploy's health check reads this file on the server to find
-  // the port, which can come from `--apiPort`, `CEDAR_API_PORT` or `PORT`
-  // rather than cedar.toml
+  // the api, whose port can come from `--apiPort`, `CEDAR_API_PORT` or `PORT`
+  // rather than cedar.toml. The root path is set when the Fetchable is built,
+  // so it isn't known here
   try {
-    writeApiPortFile(port)
+    writeApiProcessMeta({ port, host })
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
-    console.warn(c.warning(`Could not write the api port file: ${message}`))
+    console.warn(
+      c.warning(`Could not write the api process meta file: ${message}`),
+    )
   }
 
   return server

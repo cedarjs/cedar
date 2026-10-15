@@ -35,7 +35,8 @@ beforeAll(async () => {
 
 afterAll(() => {
   // Written by every server started in this file
-  fs.rmSync(path.join(process.env.CEDAR_CWD ?? '', '.cedar', 'api-port'), {
+  fs.rmSync(path.join(process.env.CEDAR_CWD ?? '', '.cedar', 'process-meta'), {
+    recursive: true,
     force: true,
   })
 
@@ -243,19 +244,27 @@ describe('createServer', () => {
       expect(address.port).toBe(8920)
     })
 
-    it('writes the port it listens on to .cedar/api-port', async () => {
+    it('writes the port it listens on to .cedar/process-meta/api.json', async () => {
       setEnvVar('CEDAR_API_PORT', '8925')
 
       startedServer = await createServer()
       await startedServer.start()
 
-      const apiPortFile = path.join(
+      const metaPath = path.join(
         process.env.CEDAR_CWD ?? '',
         '.cedar',
-        'api-port',
+        'process-meta',
+        'api.json',
       )
 
-      expect(fs.readFileSync(apiPortFile, 'utf-8')).toEqual('8925\n')
+      expect(JSON.parse(fs.readFileSync(metaPath, 'utf-8'))).toEqual({
+        version: 1,
+        port: 8925,
+        host: expect.any(String),
+        rootPath: '/',
+        pid: process.pid,
+        startedAt: expect.any(String),
+      })
     })
 
     it('the deprecated `REDWOOD_API_PORT` env var still works', async () => {

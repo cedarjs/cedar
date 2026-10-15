@@ -1348,7 +1348,12 @@ describe('deployTasks', () => {
   it('fails the deploy when the health check does not pass', async () => {
     vi.spyOn(sshExecutor, 'exec').mockImplementation(async (_path, command) => {
       if (command === 'cat') {
-        return { stdout: '8911\n', stderr: '', code: 0, signal: null }
+        return {
+          stdout: '{ "port": 8911, "host": "::" }',
+          stderr: '',
+          code: 0,
+          signal: null,
+        }
       }
 
       throw new Error('curl: (7) Failed to connect to localhost port 8911')
@@ -1636,7 +1641,15 @@ describe('healthCheckTarget', () => {
   })
 })
 
-describe('readServerApiPort', () => {
+describe('readApiProcessMeta', () => {
+  const metaFile = 'current/.cedar/process-meta/api.json'
+  const catResult = (stdout: string) => ({
+    stdout,
+    stderr: '',
+    code: 0,
+    signal: null,
+  })
+
   beforeEach(() => {
     vi.restoreAllMocks()
   })
@@ -1645,51 +1658,112 @@ describe('readServerApiPort', () => {
     vi.restoreAllMocks()
   })
 
-  it("reads the port from the current release's api port file", async () => {
-    const execSpy = vi.spyOn(sshExecutor, 'exec').mockResolvedValue({
-      stdout: '8921\n',
-      stderr: '',
-      code: 0,
-      signal: null,
-    })
+  it("reads the current release's api process meta file", async () => {
+    const execSpy = vi.spyOn(sshExecutor, 'exec').mockResolvedValue(
+      catResult(
+        JSON.stringify({
+          version: 1,
+          port: 8921,
+          host: '::',
+          rootPath: '/api/',
+          pid: 4242,
+          startedAt: '2026-10-15T07:00:00.000Z',
+        }),
+      ),
+    )
 
     await expect(
-      baremetal.readServerApiPort(sshExecutor, createServerConfig()),
-    ).resolves.toEqual('8921')
+      baremetal.readApiProcessMeta(sshExecutor, createServerConfig()),
+    ).resolves.toEqual({ port: 8921, host: '::', rootPath: '/api/' })
 
     expect(execSpy).toHaveBeenCalledExactlyOnceWith('/var/www/app', 'cat', [
-      'current/.cedar/api-port',
+      metaFile,
       '2>/dev/null',
       '||',
       'cat',
-      'current/.redwood/api-port',
+      'current/.redwood/process-meta/api.json',
     ])
+  })
+
+  it('leaves out rootPath when the file has none', async () => {
+    vi.spyOn(sshExecutor, 'exec').mockResolvedValue(
+      catResult('{ "port": 8911, "host": "::" }'),
+    )
+
+    await expect(
+      baremetal.readApiProcessMeta(sshExecutor, createServerConfig()),
+    ).resolves.toEqual({ port: 8911, host: '::' })
   })
 
   it("says the api server hasn't written the file yet when it's missing", async () => {
     vi.spyOn(sshExecutor, 'exec').mockRejectedValue(
-      new Error('cat: current/.redwood/api-port: No such file or directory'),
+      new Error('cat: No such file or directory'),
     )
 
     await expect(
-      baremetal.readServerApiPort(sshExecutor, createServerConfig()),
+      baremetal.readApiProcessMeta(sshExecutor, createServerConfig()),
     ).rejects.toThrow(
-      "The api server hasn't written the port it listens on to " +
-        "current/.cedar/api-port. It does that once it's listening.",
+      `The api server hasn't written ${metaFile} yet. It does that once ` +
+        "it's listening.",
     )
   })
 
-  it("rejects a file that doesn't contain a port", async () => {
-    vi.spyOn(sshExecutor, 'exec').mockResolvedValue({
-      stdout: '',
-      stderr: '',
-      code: 0,
-      signal: null,
-    })
+  it('rejects a file that is not JSON', async () => {
+    vi.spyOn(sshExecutor, 'exec').mockResolvedValue(catResult('89{'))
 
     await expect(
-      baremetal.readServerApiPort(sshExecutor, createServerConfig()),
-    ).rejects.toThrow('current/.cedar/api-port doesn\'t contain a port: ""')
+      baremetal.readApiProcessMeta(sshExecutor, createServerConfig()),
+    ).rejects.toThrow(`${metaFile} isn't valid JSON`)
+  })
+
+  it("rejects a file that doesn't hold a port and host", async () => {
+    vi.spyOn(sshExecutor, 'exec').mockResolvedValue(
+      catResult('{ "port": "8911" }'),
+    )
+
+    await expect(
+      baremetal.readApiProcessMeta(sshExecutor, createServerConfig()),
+    ).rejects.toThrow(
+      `${metaFile} doesn't hold the api server's port and host: ` +
+        '{ "port": "8911" }',
+    )
+  })
+})
+
+describe('apiServerUrl', () => {
+  it('uses localhost for an api server listening on every address', () => {
+    for (const host of ['::', '0.0.0.0', '']) {
+      expect(
+        baremetal.apiServerUrl({ port: 8921, host }, '/graphql/health'),
+      ).toEqual('http://localhost:8921/graphql/health')
+    }
+  })
+
+  it('uses the address an api server listens on', () => {
+    expect(
+      baremetal.apiServerUrl(
+        { port: 8911, host: '127.0.0.1' },
+        '/graphql/health',
+      ),
+    ).toEqual('http://127.0.0.1:8911/graphql/health')
+    expect(
+      baremetal.apiServerUrl({ port: 8911, host: '::1' }, '/graphql/health'),
+    ).toEqual('http://[::1]:8911/graphql/health')
+  })
+
+  it('puts the path under the root path', () => {
+    expect(
+      baremetal.apiServerUrl(
+        { port: 8911, host: '::', rootPath: '/api/' },
+        '/graphql/health',
+      ),
+    ).toEqual('http://localhost:8911/api/graphql/health')
+    expect(
+      baremetal.apiServerUrl(
+        { port: 8911, host: '::', rootPath: '/' },
+        '/graphql/health',
+      ),
+    ).toEqual('http://localhost:8911/graphql/health')
   })
 })
 
@@ -1791,11 +1865,14 @@ describe('waitForHealthCheck', () => {
     expect(execSpy).toHaveBeenCalledTimes(3)
   })
 
-  it('requests the api path at the port the api server wrote', async () => {
+  it('requests the api path where the api server says it listens', async () => {
     const execSpy = vi
       .spyOn(sshExecutor, 'exec')
       .mockRejectedValueOnce(new Error('cat: No such file or directory'))
-      .mockResolvedValueOnce({ ...ok, stdout: '8921\n' })
+      .mockResolvedValueOnce({
+        ...ok,
+        stdout: '{ "port": 8921, "host": "::", "rootPath": "/api/" }',
+      })
       .mockResolvedValue(ok)
     const onFailedAttempt = vi.fn()
 
@@ -1811,16 +1888,17 @@ describe('waitForHealthCheck', () => {
     await vi.advanceTimersByTimeAsync(2000)
     await expect(promise).resolves.toBeUndefined()
 
-    // The first attempt finds no port file and doesn't request anything
+    // The first attempt finds no process meta file and doesn't request
+    // anything
     expect(onFailedAttempt).toHaveBeenCalledExactlyOnceWith(
-      "The api server hasn't written the port it listens on to " +
-        "current/.cedar/api-port. It does that once it's listening.",
+      "The api server hasn't written current/.cedar/process-meta/api.json " +
+        "yet. It does that once it's listening.",
     )
     expect(execSpy).toHaveBeenCalledTimes(3)
     expect(execSpy).toHaveBeenLastCalledWith(
       '/var/www/app',
       'curl',
-      expect.arrayContaining(["'http://localhost:8921/graphql/health'"]),
+      expect.arrayContaining(["'http://localhost:8921/api/graphql/health'"]),
     )
   })
 

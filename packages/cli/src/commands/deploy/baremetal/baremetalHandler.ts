@@ -10,7 +10,11 @@ import { titleCase } from 'title-case'
 
 import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
-import { API_PORT_FILE_NAME } from '@cedarjs/project-config'
+import {
+  API_PROCESS_META_FILE_NAME,
+  PROCESS_META_DIR_NAME,
+} from '@cedarjs/project-config'
+import type { ApiProcessMeta } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 import { getPaths } from '../../../lib/index.js'
@@ -26,8 +30,8 @@ const CURRENT_RELEASE_SYMLINK_NAME = 'current'
 const LIFECYCLE_HOOKS = ['before', 'after'] as const
 // Path of the health check endpoint that Cedar's GraphQL server serves
 const DEFAULT_HEALTH_CHECK_PATH = '/graphql/health'
-// Generated data directories a release's api server writes its port file to,
-// in the order the api server picks them
+// Generated data directories a release's api server writes its process meta
+// file to, in the order the api server picks them
 const GENERATED_DATA_DIRS = ['.cedar', '.redwood']
 // Time between two attempts of the post-restart health check
 const HEALTH_CHECK_INTERVAL_MS = 2000
@@ -267,7 +271,8 @@ const monitorTask = (
 
 /**
  * What the post-restart health check requests: either a `url`, or an
- * `apiPath` on localhost at the port the release's api server listens on
+ * `apiPath` on the release's api server, at the address, port and root path
+ * it recorded in its process meta file
  */
 export type HealthCheckTarget = { url: string } | { apiPath: string }
 
@@ -275,8 +280,9 @@ export type HealthCheckTarget = { url: string } | { apiPath: string }
  * What the post-restart health check requests, or `undefined` when there is
  * nothing to check on this server. Without an explicit `healthCheckUrl` only
  * servers that host the api side are checked, at the `/graphql/health`
- * endpoint Cedar's GraphQL server serves. The port is read on the server,
- * because `--apiPort`, `CEDAR_API_PORT` or `PORT` can set it there
+ * endpoint Cedar's GraphQL server serves. Where the api server listens is read
+ * on the server, because `--apiPort`, `CEDAR_API_PORT` or `PORT` can set the
+ * port there
  */
 export const healthCheckTarget = (
   serverConfig: ServerConfig,
@@ -301,19 +307,24 @@ export const describeHealthCheckTarget = (target: HealthCheckTarget) => {
 }
 
 /**
- * Reads the port the `current` release's api server listens on from the file
- * it writes once it's listening. The file is in the release itself, so it
- * can't come from another app's api server on the same machine
+ * Reads what the `current` release's api server recorded about itself once it
+ * started listening. The file is in the release itself, so it can't come from
+ * another app's api server on the same machine
  */
-export const readServerApiPort = async (
+export const readApiProcessMeta = async (
   ssh: SshExecutor,
   serverConfig: ServerConfig,
-) => {
+): Promise<Pick<ApiProcessMeta, 'port' | 'host' | 'rootPath'>> => {
   const [preferredFile, fallbackFile] = GENERATED_DATA_DIRS.map((dir) =>
-    [CURRENT_RELEASE_SYMLINK_NAME, dir, API_PORT_FILE_NAME].join('/'),
+    [
+      CURRENT_RELEASE_SYMLINK_NAME,
+      dir,
+      PROCESS_META_DIR_NAME,
+      API_PROCESS_META_FILE_NAME,
+    ].join('/'),
   )
 
-  let port = ''
+  let contents = ''
 
   try {
     const result = await ssh.exec(serverConfig.path, 'cat', [
@@ -323,19 +334,67 @@ export const readServerApiPort = async (
       'cat',
       fallbackFile,
     ])
-    port = result.stdout.trim()
+    contents = result.stdout
   } catch {
     throw new Error(
-      `The api server hasn't written the port it listens on to ` +
-        `${preferredFile}. It does that once it's listening.`,
+      `The api server hasn't written ${preferredFile} yet. It does that ` +
+        "once it's listening.",
     )
   }
 
-  if (!/^\d+$/.test(port)) {
-    throw new Error(`${preferredFile} doesn't contain a port: "${port}"`)
+  let meta: unknown
+
+  try {
+    meta = JSON.parse(contents)
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e)
+    throw new Error(`${preferredFile} isn't valid JSON: ${message}`)
   }
 
-  return port
+  if (
+    typeof meta !== 'object' ||
+    meta === null ||
+    !('port' in meta) ||
+    !Number.isInteger(meta.port) ||
+    !('host' in meta) ||
+    typeof meta.host !== 'string' ||
+    ('rootPath' in meta && typeof meta.rootPath !== 'string')
+  ) {
+    throw new Error(
+      `${preferredFile} doesn't hold the api server's port and host: ` +
+        contents.trim(),
+    )
+  }
+
+  return {
+    port: Number(meta.port),
+    host: meta.host,
+    ...('rootPath' in meta && typeof meta.rootPath === 'string'
+      ? { rootPath: meta.rootPath }
+      : {}),
+  }
+}
+
+/**
+ * The URL of `apiPath` on the api server described by `meta`, as seen from
+ * the server itself. An api server listening on every address is reached on
+ * `localhost`
+ */
+export const apiServerUrl = (
+  {
+    port,
+    host,
+    rootPath = '/',
+  }: Pick<ApiProcessMeta, 'port' | 'host' | 'rootPath'>,
+  apiPath: string,
+) => {
+  const hostname = ['', '::', '0.0.0.0'].includes(host)
+    ? 'localhost'
+    : host.includes(':')
+      ? `[${host}]`
+      : host
+
+  return `http://${hostname}:${port}${rootPath.replace(/\/+$/, '')}${apiPath}`
 }
 
 const sleep = (ms: number) =>
@@ -373,13 +432,15 @@ export const waitForHealthCheck = async ({
   // http to https) is judged by the response of the final destination.
   while (keepTrying) {
     try {
-      // The api server writes its port once it's listening, so the port is
-      // read again on every attempt until it's there
+      // The api server writes its process meta file once it's listening, so
+      // the file is read again on every attempt until it's there
       const url =
         'url' in target
           ? target.url
-          : `http://localhost:${await readServerApiPort(ssh, serverConfig)}` +
-            target.apiPath
+          : apiServerUrl(
+              await readApiProcessMeta(ssh, serverConfig),
+              target.apiPath,
+            )
 
       await ssh.exec(serverConfig.path, 'curl', [
         '--fail',
