@@ -51,9 +51,10 @@ export interface UploadVariantContext {
    * Reads another variant of the same source, making it first if it does
    * not exist yet. Returns `null` when that variant could not be made. This
    * is how one derived file is made from another, for example a PDF's
-   * thumbnail cut from its drawn first page (`readVariant('preview')`).
+   * thumbnail cut from its drawn first page
+   * (`acquireVariantData('preview')`).
    */
-  readVariant(name: string): Promise<Buffer | null>
+  acquireVariantData(name: string): Promise<Buffer | null>
 }
 
 /**
@@ -149,7 +150,7 @@ export interface UploadVariants<Name extends string> {
    * one attempt, and across processes a claim row decides who makes it
    * while the others wait for the result.
    */
-  getVariant(
+  acquireVariant(
     source: UploadVariantSource,
     name: Name,
   ): Promise<UploadVariantRecord | null>
@@ -174,7 +175,7 @@ export interface UploadVariants<Name extends string> {
    * The variant's row and bytes, made now if it does not exist yet, or
    * `null` when it could not be made.
    */
-  readVariant(
+  acquireVariantData(
     source: UploadVariantSource,
     name: Name,
   ): Promise<{ upload: UploadVariantRecord; data: Buffer } | null>
@@ -183,7 +184,7 @@ export interface UploadVariants<Name extends string> {
    * exist yet: a signed URL for object storage, a `data:` URI for database
    * targets. `null` when the variant could not be made.
    */
-  getVariantUrl(
+  acquireVariantUrl(
     source: UploadVariantSource,
     name: Name,
     options?: { expiresIn?: number; disposition?: ContentDisposition },
@@ -192,7 +193,8 @@ export interface UploadVariants<Name extends string> {
    * Remakes every variant called `name`, for every source that has one
    * (made or failed), and leaves other variants alone. Use it after fixing
    * a generator. Each old file is deleted, then the variant is made again
-   * unless `remake` is `false`, in which case it is made on its next read.
+   * unless `remake` is `false`, in which case it is made the next time it
+   * is acquired.
    */
   regenerateVariants(
     name: Name,
@@ -326,12 +328,15 @@ export async function deleteVariants(
  *
  * The app supplies only the generators. The uploads package keeps the
  * bookkeeping: each variant is an `Upload` row linked to its source by
- * `sourceId` and named by `variant`; it is made on first read, once even
- * when several requests or processes ask at the same moment; a variant
- * that cannot be made is remembered and tried again after
- * `retryFailedAfter`; `regenerateVariants()` remakes every variant of one
- * name; and `deleteFile()` with `targets` deletes a source's variants with
- * it.
+ * `sourceId` and named by `variant`; it is made the first time it is
+ * acquired, once even when several requests or processes ask at the same
+ * moment; a variant that cannot be made is remembered and tried again
+ * after `retryFailedAfter`; `regenerateVariants()` remakes every variant of
+ * one name; and `deleteFile()` with `targets` deletes a source's variants
+ * with it.
+ *
+ * Methods that make a variant when it is missing are named `acquire*`;
+ * `find*` only looks and never makes anything.
  *
  * The package does not make images or read videos itself. A generator is
  * any function from source bytes to new bytes, using sharp, pdf.js, ffmpeg
@@ -350,7 +355,7 @@ export async function deleteVariants(
  *   },
  * })
  *
- * const thumb = await uploadVariants.getVariant(photo.uploadId, 'thumb-164')
+ * const thumb = await uploadVariants.acquireVariant(photo.uploadId, 'thumb-164')
  */
 export function defineUploadVariants<Name extends string>(
   options: DefineUploadVariantsOptions<Name>,
@@ -407,8 +412,8 @@ export function defineUploadVariants<Name extends string>(
   // share its promise
   const inFlight = new Map<string, Promise<UploadVariantRecord | null>>()
   // The attempts each in-flight attempt is waiting for through
-  // `readVariant()`, to refuse a dependency cycle between attempts that
-  // started separately
+  // `acquireVariantData()`, to refuse a dependency cycle between attempts
+  // that started separately
   const waitingFor = new Map<string, string[]>()
 
   const keyOf = (sourceId: string, name: string) => `${sourceId}\0${name}`
@@ -431,7 +436,7 @@ export function defineUploadVariants<Name extends string>(
     return false
   }
 
-  /** `obtain()` for a generator's `readVariant()`, recording the wait. */
+  /** `obtain()` for a generator's `acquireVariantData()`, recording the wait. */
   const obtainFor = async (
     waiter: string,
     sourceId: string,
@@ -500,7 +505,7 @@ export function defineUploadVariants<Name extends string>(
       throw new UploadError(
         'NOT_SUPPORTED',
         `Upload '${sourceId}' is itself a variant. Variants are made from ` +
-          'original uploads only; use `readVariant()` in a generator to ' +
+          'original uploads only; use `acquireVariantData()` in a generator to ' +
           'make one variant from another.',
       )
     }
@@ -543,7 +548,7 @@ export function defineUploadVariants<Name extends string>(
         source,
         variant: name,
         readSource: () => readBytes(db, targets, source),
-        readVariant: async (other) => {
+        acquireVariantData: async (other) => {
           const made = await obtainFor(
             keyOf(source.id, name),
             source.id,
@@ -791,7 +796,7 @@ export function defineUploadVariants<Name extends string>(
     return attempt
   }
 
-  const getVariant = (source: UploadVariantSource, name: Name) =>
+  const acquireVariant = (source: UploadVariantSource, name: Name) =>
     obtain(idOf(source), name, [])
 
   const findVariant = async (source: UploadVariantSource, name: Name) => {
@@ -828,8 +833,11 @@ export function defineUploadVariants<Name extends string>(
     return bySource
   }
 
-  const readVariant = async (source: UploadVariantSource, name: Name) => {
-    const upload = await getVariant(source, name)
+  const acquireVariantData = async (
+    source: UploadVariantSource,
+    name: Name,
+  ) => {
+    const upload = await acquireVariant(source, name)
 
     if (!upload) {
       return null
@@ -838,12 +846,12 @@ export function defineUploadVariants<Name extends string>(
     return { upload, data: await readBytes(db, targets, upload) }
   }
 
-  const getVariantUrl = async (
+  const acquireVariantUrl = async (
     source: UploadVariantSource,
     name: Name,
     urlOptions: { expiresIn?: number; disposition?: ContentDisposition } = {},
   ) => {
-    const upload = await getVariant(source, name)
+    const upload = await acquireVariant(source, name)
 
     if (!upload) {
       return null
@@ -930,10 +938,12 @@ export function defineUploadVariants<Name extends string>(
           // gone and makes nothing. Let it end, so the variant is made anew
           await inFlight.get(keyOf(sourceId, name))?.catch(() => null)
 
-          const made = await getVariant(sourceId, name).catch((e: unknown) => {
-            onError(e, { sourceId, variant: name })
-            return null
-          })
+          const made = await acquireVariant(sourceId, name).catch(
+            (e: unknown) => {
+              onError(e, { sourceId, variant: name })
+              return null
+            },
+          )
 
           if (made) {
             result.made += 1
@@ -953,11 +963,11 @@ export function defineUploadVariants<Name extends string>(
 
   return {
     names,
-    getVariant,
+    acquireVariant,
     findVariant,
     findVariants,
-    readVariant,
-    getVariantUrl,
+    acquireVariantData,
+    acquireVariantUrl,
     regenerateVariants,
     deleteVariants: (source) => deleteVariants(source, { db, targets }),
   }

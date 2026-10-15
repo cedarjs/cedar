@@ -89,6 +89,16 @@ bytes into the new file.
   on sharp, pdf.js or ffmpeg, and the tests use trivial generators.
 - **Experimental** in the docs until a second app or video uses it.
 - **Built on uploads, not beside it**: see the next section.
+- **`acquire*` for methods that may make a variant, `find*` for methods that
+  only look.** `acquireVariant()`, `acquireVariantData()`,
+  `acquireVariantUrl()` and a generator's `acquireVariantData(name)` make the
+  variant when it is missing: they can run a slow generator and write to
+  storage and the database. A `get*` or `read*` name would hide those side
+  effects behind what reads like a lookup. `acquire` is the verb Cedar uses for
+  "return it, creating it first if needed" (as in cedar-pg's `acquire*`), so a
+  public `get*` never creates anything. `findVariant()` and `findVariants()`
+  never make anything and keep `find`; `regenerateVariants()` and
+  `deleteVariants()` already name what they change.
 
 ## How it fits what uploads already has
 
@@ -103,7 +113,7 @@ of that:
   for DB targets. It copies its source's `userId` and `organizationId`, so
   ownership checks and tenancy scoping apply to it as to any upload.
 - **Serving is unchanged.** A variant's id works with `@withSignedUrl` and
-  `@withDataUri`; `getVariantUrl()` is the same logic for service code.
+  `@withDataUri`; `acquireVariantUrl()` is the same logic for service code.
 - **Deletion stays explicit.** `deleteFile()` gains an optional `targets`
   option; with it, the upload's variants are deleted (bytes, then rows) before
   the upload. Nothing happens inside a Prisma query, in line with the uploads
@@ -140,9 +150,9 @@ export const uploadVariants = defineUploadVariants({
   onError: (error, { sourceId, variant }) => logger.warn(...),
 })
 
-await uploadVariants.getVariant(uploadId, 'thumb-164') // row, made if missing; null if failed
-await uploadVariants.readVariant(uploadId, 'thumb-164') // { upload, data } | null
-await uploadVariants.getVariantUrl(uploadId, 'thumb-164', { expiresIn: 600 })
+await uploadVariants.acquireVariant(uploadId, 'thumb-164') // row, made if missing; null if failed
+await uploadVariants.acquireVariantData(uploadId, 'thumb-164') // { upload, data } | null
+await uploadVariants.acquireVariantUrl(uploadId, 'thumb-164', { expiresIn: 600 })
 await uploadVariants.findVariant(uploadId, 'thumb-164') // only if made; never makes
 await uploadVariants.findVariants(uploadIds, 'thumb-164') // Map<sourceId, row>
 await uploadVariants.regenerateVariants('preview') // { deleted, made, failed, errors }
@@ -151,14 +161,14 @@ await uploadVariants.deleteVariants(uploadId)
 await deleteFile(target, { db, upload, targets }) // source and its variants
 ```
 
-A generator gets `{ source, variant, readSource(), readVariant(name) }` and
-returns `{ data, mimeType, filename? }` or `null`:
+A generator gets `{ source, variant, readSource(), acquireVariantData(name) }`
+and returns `{ data, mimeType, filename? }` or `null`:
 
 - `readSource()` reads the source's bytes from whichever target holds them.
-- `readVariant(name)` reads another variant of the same source, making it first
-  if needed. This is how a PDF's thumbnail is cut from its drawn first page,
-  which the real app does. A variant that ends up depending on itself is refused
-  with a `CONFIGURATION` error.
+- `acquireVariantData(name)` reads another variant of the same source, making
+  it first if needed. This is how a PDF's thumbnail is cut from its drawn first
+  page, which the real app does. A variant that ends up depending on itself is
+  refused with a `CONFIGURATION` error.
 - `null` means "this source cannot have this variant" (a file type the generator
   does not handle). It is remembered like a failure.
 
@@ -208,7 +218,7 @@ is unchanged, so apps that do not add the columns are not affected.
 
 ## Making a variant once
 
-`getVariant(source, name)`:
+`acquireVariant(source, name)`:
 
 1. **In this process**, concurrent calls for the same source and name share one
    promise.
@@ -246,9 +256,10 @@ errors go to `onError`.
 and leaves every other name alone. The run's cutoff is the newest existing row's
 `createdAt`, read from the database so the run ends on the database's clock
 rather than the process's. Rows are handled oldest first in batches: delete the
-bytes and the row, then make it again with `getVariant()` (or, with
-`remake: false`, leave it to the next read). A row that cannot be deleted is
-reported through `onError` and skipped, so the loop always ends.
+bytes and the row, then make it again with `acquireVariant()` (or, with
+`remake: false`, leave it to the next `acquireVariant*()` call). A row that
+cannot be deleted is reported through `onError` and skipped, so the loop always
+ends.
 
 ## Deleting
 
@@ -270,9 +281,10 @@ is gone), and deletes the bytes it wrote.
 `packages/uploads/src/__tests__/variants.test.ts`, against the package's real
 SQLite test database:
 
-- A variant that doesn't exist yet is made on read, stored on the variant's
-  target, linked to its source (`sourceId`, `variant`), with the source's owner
-  and organization; later reads find it without calling the generator.
+- A variant that doesn't exist yet is made when acquired, stored on the
+  variant's target, linked to its source (`sourceId`, `variant`), with the
+  source's owner and organization; later calls find it without calling the
+  generator.
 - DB targets store variants inline and serve them as `data:` URIs; object
   storage serves signed URLs.
 - Two concurrent requests in one process run the generator once.
@@ -281,8 +293,8 @@ SQLite test database:
 - A claim whose maker died (a stale `pending` row) is taken over.
 - A generator failure is remembered: not retried before `retryFailedAfter`
   passes, retried and made after it. `null` is remembered the same way.
-- One variant made from another with `readVariant()`, and a self-dependency
-  refused.
+- One variant made from another with `acquireVariantData()`, and a
+  self-dependency refused.
 - Unknown and invalid variant names, variants of variants, and missing sources
   are refused with the right error codes.
 - `findVariants()` returns made variants of many sources in one query.
@@ -300,7 +312,7 @@ from what Prisma generates.
 
 ## Discoverability
 
-Names use the words people search for: `defineUploadVariants`, `getVariant`,
+Names use the words people search for: `defineUploadVariants`, `acquireVariant`,
 `regenerateVariants`, `deleteVariants`, `UploadVariant*` types, with JSDoc
 mentioning derived files, thumbnails, previews and poster frames. The uploads
 docs have a "Derived files: thumbnails, previews and other variants" section,
@@ -334,7 +346,7 @@ so any such rule would be written for oxlint.
   move by setting `sourceId` and `variant` on its existing thumbnail `Upload`
   rows in a data migration, then dropping its own columns. Worth a documented
   recipe once a second app does it.
-- **Sync vs. job-based generation.** `getVariant()` makes on demand, in the
+- **Sync vs. job-based generation.** `acquireVariant()` makes on demand, in the
   request. Apps that cannot afford that call it from a job and use
   `findVariant()` / `findVariants()` in requests. Should the package offer a
   "queue it" mode tied to `@cedarjs/jobs` (proposal 2), or is this split enough?
@@ -347,7 +359,7 @@ so any such rule would be written for oxlint.
   (`resolveTarget(targets, source.target).readStream`). Should the context offer
   a stream?
 - **Serving private files.** Variants inherit their source's `userId` and
-  `organizationId`, and `getVariantUrl()` signs a URL for whoever calls it.
+  `organizationId`, and `acquireVariantUrl()` signs a URL for whoever calls it.
   Authorization is the caller's, as for any upload. Should variant URLs be
   checked against the source's owner automatically, or is that the app's?
 - **Sources outside uploads.** The production app also thumbnails files that
