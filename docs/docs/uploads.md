@@ -463,17 +463,17 @@ export const uploadVariants = defineUploadVariants({
 })
 ```
 
-A generator receives the source's `Upload` row (`source`), the variant's name, `readSource()` for the source's bytes, and `readVariant(name)` for another variant of the same source. It returns `{ data, mimeType, filename? }`, or `null` when this source can't have this variant (a file type it doesn't handle). A returned `null` and a thrown error are both remembered as a failure. A thrown error is also passed to `onError`, which logs by default.
+A generator receives the source's `Upload` row (`source`), the variant's name, `readSource()` for the source's bytes, and `acquireVariantData(name)` for another variant of the same source. It returns `{ data, mimeType, filename? }`, or `null` when this source can't have this variant (a file type it doesn't handle). A returned `null` and a thrown error are both remembered as a failure. A thrown error is also passed to `onError`, which logs by default.
 
-Make one variant from another with `readVariant()`. A PDF's thumbnail can be cut from its drawn first page, which is drawn once and shared:
+Make one variant from another with `acquireVariantData()`. A PDF's thumbnail can be cut from its drawn first page, which is drawn once and shared:
 
 ```ts
-'pdf-thumb': async ({ source, readVariant }) => {
+'pdf-thumb': async ({ source, acquireVariantData }) => {
   if (source.mimeType !== 'application/pdf') {
     return null
   }
 
-  const page = await readVariant('preview')
+  const page = await acquireVariantData('preview')
   return page ? { data: await cutSquare(page), mimeType: 'image/webp' } : null
 },
 ```
@@ -485,15 +485,22 @@ Variants are made from original uploads only, not from other variants, and a var
 ```ts
 // The variant's Upload row, made now if it doesn't exist yet. null when it
 // couldn't be made (and retryFailedAfter hasn't passed)
-const thumb = await uploadVariants.getVariant(photo.uploadId, 'thumb-164')
+const thumb = await uploadVariants.acquireVariant(photo.uploadId, 'thumb-164')
 
 // Its bytes, or a URL a browser can load (a signed URL, or a data: URI for
 // database targets)
-const read = await uploadVariants.readVariant(photo.uploadId, 'thumb-164')
-const url = await uploadVariants.getVariantUrl(photo.uploadId, 'thumb-164', {
-  expiresIn: 600,
-  disposition: 'inline',
-})
+const read = await uploadVariants.acquireVariantData(
+  photo.uploadId,
+  'thumb-164'
+)
+const url = await uploadVariants.acquireVariantUrl(
+  photo.uploadId,
+  'thumb-164',
+  {
+    expiresIn: 600,
+    disposition: 'inline',
+  }
+)
 
 // Only if it has already been made; never makes anything
 const made = await uploadVariants.findVariant(photo.uploadId, 'thumb-164')
@@ -506,8 +513,8 @@ A variant is an ordinary `Upload` row, so the `@withSignedUrl` and `@withDataUri
 export const ThumbnailJob = jobs.createJob({
   queue: 'default',
   perform: async ({ uploadId }: { uploadId: string }) => {
-    await uploadVariants.getVariant(uploadId, 'thumb-164')
-    await uploadVariants.getVariant(uploadId, 'thumb-328')
+    await uploadVariants.acquireVariant(uploadId, 'thumb-164')
+    await uploadVariants.acquireVariant(uploadId, 'thumb-328')
   },
 })
 ```
@@ -529,7 +536,7 @@ export default async () => {
 }
 ```
 
-Each old file is deleted and the variant made again, including those remembered as failed. Pass `remake: false` to only delete them and let each be made on its next read.
+Each old file is deleted and the variant made again, including those remembered as failed. Pass `remake: false` to only delete them and let each be made the next time it is acquired.
 
 ### Deleting a source and its variants
 

@@ -76,7 +76,7 @@ async function backdate(id: string, ms: number) {
 describe('defineUploadVariants', () => {
   beforeEach(resetTestDb)
 
-  test('makes a variant that does not exist yet on read, and stores it linked to its source', async () => {
+  test('makes a variant that does not exist yet when acquired, and stores it linked to its source', async () => {
     const targets = makeTargets()
     const source = await storeSource(targets)
     const generate = vi.fn(upperCase('small'))
@@ -89,7 +89,7 @@ describe('defineUploadVariants', () => {
 
     expect(await variants.findVariant(source, 'small')).toBeNull()
 
-    const read = await variants.readVariant(source.id, 'small')
+    const read = await variants.acquireVariantData(source.id, 'small')
 
     expect(read?.data.toString()).toBe('small:PHOTO')
     expect(read?.upload).toMatchObject({
@@ -106,8 +106,8 @@ describe('defineUploadVariants', () => {
     })
     expect(targets.thumbs.objects.size).toBe(1)
 
-    // Made once; later reads find it
-    expect((await variants.getVariant(source, 'small'))?.id).toBe(
+    // Made once; later calls find it
+    expect((await variants.acquireVariant(source, 'small'))?.id).toBe(
       read?.upload.id,
     )
     expect(await variants.findVariant(source, 'small')).toMatchObject({
@@ -126,7 +126,7 @@ describe('defineUploadVariants', () => {
       variants: { small: upperCase('s') },
     })
 
-    const url = await variants.getVariantUrl(source, 'small')
+    const url = await variants.acquireVariantUrl(source, 'small')
 
     expect(url).toBe(
       `data:text/plain;base64,${Buffer.from('s:PHOTO').toString('base64')}`,
@@ -143,7 +143,7 @@ describe('defineUploadVariants', () => {
       variants: { small: upperCase('s') },
     })
 
-    const url = await variants.getVariantUrl(source, 'small', {
+    const url = await variants.acquireVariantUrl(source, 'small', {
       disposition: 'inline',
     })
     const upload = await variants.findVariant(source, 'small')
@@ -169,8 +169,8 @@ describe('defineUploadVariants', () => {
     })
 
     const [a, b] = await Promise.all([
-      variants.getVariant(source, 'small'),
-      variants.getVariant(source, 'small'),
+      variants.acquireVariant(source, 'small'),
+      variants.acquireVariant(source, 'small'),
     ])
 
     expect(calls).toBe(1)
@@ -205,8 +205,8 @@ describe('defineUploadVariants', () => {
     })
 
     const [a, b] = await Promise.all([
-      processA.getVariant(source, 'small'),
-      processB.getVariant(source, 'small'),
+      processA.acquireVariant(source, 'small'),
+      processB.acquireVariant(source, 'small'),
     ])
 
     expect(calls).toBe(1)
@@ -242,7 +242,7 @@ describe('defineUploadVariants', () => {
     })
     await backdate(abandoned.id, 120_000)
 
-    const made = await variants.getVariant(source, 'small')
+    const made = await variants.acquireVariant(source, 'small')
 
     expect(made).toMatchObject({ id: abandoned.id, status: 'completed' })
   })
@@ -268,7 +268,7 @@ describe('defineUploadVariants', () => {
       onError,
     })
 
-    expect(await variants.getVariant(source, 'small')).toBeNull()
+    expect(await variants.acquireVariant(source, 'small')).toBeNull()
     expect(onError).toHaveBeenCalledWith(expect.any(Error), {
       sourceId: source.id,
       variant: 'small',
@@ -281,13 +281,13 @@ describe('defineUploadVariants', () => {
 
     // Fixed, but the failure is remembered: not tried again yet
     broken = false
-    expect(await variants.getVariant(source, 'small')).toBeNull()
-    expect(await variants.readVariant(source, 'small')).toBeNull()
+    expect(await variants.acquireVariant(source, 'small')).toBeNull()
+    expect(await variants.acquireVariantData(source, 'small')).toBeNull()
     expect(generate).toHaveBeenCalledTimes(1)
 
     // Once retryFailedAfter has passed it is tried again, and made
     await backdate(memo.id, DAY + 1000)
-    const made = await variants.getVariant(source, 'small')
+    const made = await variants.acquireVariant(source, 'small')
 
     expect(generate).toHaveBeenCalledTimes(2)
     expect(made).toMatchObject({ id: memo.id, status: 'completed' })
@@ -307,13 +307,13 @@ describe('defineUploadVariants', () => {
       onError,
     })
 
-    expect(await variants.getVariant(source, 'poster')).toBeNull()
-    expect(await variants.getVariant(source, 'poster')).toBeNull()
+    expect(await variants.acquireVariant(source, 'poster')).toBeNull()
+    expect(await variants.acquireVariant(source, 'poster')).toBeNull()
     expect(generate).toHaveBeenCalledTimes(1)
     expect(onError).not.toHaveBeenCalled()
   })
 
-  test('makes one variant from another with readVariant', async () => {
+  test('makes one variant from another with acquireVariantData', async () => {
     const targets = makeTargets()
     const source = await storeSource(targets, 'pdf')
     const drawPage = vi.fn(upperCase('page'))
@@ -323,8 +323,8 @@ describe('defineUploadVariants', () => {
       target: targets.thumbs,
       variants: {
         preview: drawPage,
-        thumb: async ({ readVariant }) => {
-          const page = await readVariant('preview')
+        thumb: async ({ acquireVariantData }) => {
+          const page = await acquireVariantData('preview')
           return page
             ? { data: Buffer.from(`thumb of ${page}`), mimeType: 'text/plain' }
             : null
@@ -332,11 +332,11 @@ describe('defineUploadVariants', () => {
       },
     })
 
-    const thumb = await variants.readVariant(source, 'thumb')
+    const thumb = await variants.acquireVariantData(source, 'thumb')
 
     expect(thumb?.data.toString()).toBe('thumb of page:PDF')
     expect(
-      (await variants.readVariant(source, 'preview'))?.data.toString(),
+      (await variants.acquireVariantData(source, 'preview'))?.data.toString(),
     ).toBe('page:PDF')
     expect(drawPage).toHaveBeenCalledTimes(1)
   })
@@ -350,15 +350,15 @@ describe('defineUploadVariants', () => {
       targets,
       target: targets.thumbs,
       variants: {
-        a: async ({ readVariant }) => {
-          await readVariant('a')
+        a: async ({ acquireVariantData }) => {
+          await acquireVariantData('a')
           return null
         },
       },
       onError,
     })
 
-    expect(await variants.getVariant(source, 'a')).toBeNull()
+    expect(await variants.acquireVariant(source, 'a')).toBeNull()
     expect(onError.mock.calls[0][0]).toMatchObject({
       code: 'CONFIGURATION',
       message: expect.stringContaining('a -> a'),
@@ -387,20 +387,22 @@ describe('defineUploadVariants', () => {
 
     await expect(
       // @ts-expect-error - 'large' is not a configured variant
-      variants.getVariant(source, 'large'),
+      variants.acquireVariant(source, 'large'),
     ).rejects.toMatchObject({
       code: 'CONFIGURATION',
       message: expect.stringContaining('Configured variants: small'),
     })
 
-    const small = await variants.getVariant(source, 'small')
+    const small = await variants.acquireVariant(source, 'small')
 
-    await expect(variants.getVariant(small!, 'small')).rejects.toMatchObject({
+    await expect(
+      variants.acquireVariant(small!, 'small'),
+    ).rejects.toMatchObject({
       code: 'NOT_SUPPORTED',
     })
-    await expect(variants.getVariant('missing', 'small')).rejects.toMatchObject(
-      { code: 'NOT_FOUND' },
-    )
+    await expect(
+      variants.acquireVariant('missing', 'small'),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' })
   })
 
   test('findVariants returns made variants of many sources in one call', async () => {
@@ -415,8 +417,8 @@ describe('defineUploadVariants', () => {
       variants: { small: upperCase('s') },
     })
 
-    await variants.getVariant(one, 'small')
-    await variants.getVariant(three, 'small')
+    await variants.acquireVariant(one, 'small')
+    await variants.acquireVariant(three, 'small')
 
     const found = await variants.findVariants(
       [one.id, two.id, three.id],
@@ -442,7 +444,7 @@ describe('defineUploadVariants', () => {
       variants: { small: upperCase('s') },
     })
 
-    await expect(variants.getVariant(source, 'small')).rejects.toThrow(
+    await expect(variants.acquireVariant(source, 'small')).rejects.toThrow(
       'database down',
     )
     expect(targets.thumbs.objects.size).toBe(0)
@@ -486,7 +488,7 @@ describe('defineUploadVariants', () => {
       variants: { small: () => null },
     })
 
-    expect(await before.getVariant(source, 'small')).toBeNull()
+    expect(await before.acquireVariant(source, 'small')).toBeNull()
     const failed = await prisma.upload.findFirstOrThrow({
       where: { sourceId: source.id },
     })
@@ -501,12 +503,12 @@ describe('defineUploadVariants', () => {
       variants: { small: upperCase('s') },
     })
 
-    expect(await after.getVariant(source, 'small')).toMatchObject({
+    expect(await after.acquireVariant(source, 'small')).toMatchObject({
       target: 'files',
     })
-    expect((await after.readVariant(source, 'small'))?.data.toString()).toBe(
-      's:PHOTO',
-    )
+    expect(
+      (await after.acquireVariantData(source, 'small'))?.data.toString(),
+    ).toBe('s:PHOTO')
     expect(targets.thumbs.objects.size).toBe(0)
   })
 
@@ -533,7 +535,7 @@ describe('defineUploadVariants', () => {
       },
     })
 
-    expect(await variants.getVariant(source, 'small')).toBeNull()
+    expect(await variants.acquireVariant(source, 'small')).toBeNull()
     const failed = await prisma.upload.findFirstOrThrow({
       where: { sourceId: source.id },
     })
@@ -544,7 +546,7 @@ describe('defineUploadVariants', () => {
     })
 
     broken = false
-    const making = variants.getVariant(source, 'small')
+    const making = variants.acquireVariant(source, 'small')
     await started.promise
 
     expect(await cleanupStaleUploads({ db, targets })).toMatchObject({
@@ -563,7 +565,7 @@ describe('defineUploadVariants', () => {
     const bothStarted = Promise.withResolvers<void>()
     const readsOther =
       (other: 'a' | 'b'): UploadVariantGenerator =>
-      async ({ readVariant }) => {
+      async ({ acquireVariantData }) => {
         started += 1
 
         if (started === 2) {
@@ -571,7 +573,7 @@ describe('defineUploadVariants', () => {
         }
 
         await bothStarted.promise
-        const bytes = await readVariant(other)
+        const bytes = await acquireVariantData(other)
         return bytes ? { data: bytes, mimeType: 'text/plain' } : null
       }
     const variants = defineUploadVariants({
@@ -584,8 +586,8 @@ describe('defineUploadVariants', () => {
 
     expect(
       await Promise.all([
-        variants.getVariant(source, 'a'),
-        variants.getVariant(source, 'b'),
+        variants.acquireVariant(source, 'a'),
+        variants.acquireVariant(source, 'b'),
       ]),
     ).toEqual([null, null])
     expect(onError).toHaveBeenCalledWith(
@@ -615,21 +617,21 @@ describe('regenerateVariants', () => {
       variants: { small, large },
     })
 
-    const oldSmall = await variants.getVariant(one, 'small')
-    await variants.getVariant(two, 'small')
-    const oldLarge = await variants.getVariant(one, 'large')
+    const oldSmall = await variants.acquireVariant(one, 'small')
+    await variants.acquireVariant(two, 'small')
+    const oldLarge = await variants.acquireVariant(one, 'large')
     expect(targets.thumbs.objects.size).toBe(3)
 
     version = 2
     const result = await variants.regenerateVariants('small')
 
     expect(result).toEqual({ deleted: 2, made: 2, failed: 0, errors: 0 })
-    expect((await variants.readVariant(one, 'small'))?.data.toString()).toBe(
-      'v2:one',
-    )
-    expect((await variants.readVariant(two, 'small'))?.data.toString()).toBe(
-      'v2:two',
-    )
+    expect(
+      (await variants.acquireVariantData(one, 'small'))?.data.toString(),
+    ).toBe('v2:one')
+    expect(
+      (await variants.acquireVariantData(two, 'small'))?.data.toString(),
+    ).toBe('v2:two')
     // The old file is gone from storage, the other variant untouched
     expect(targets.thumbs.objects.has(oldSmall!.storageKey!)).toBe(false)
     expect(targets.thumbs.objects.size).toBe(3)
@@ -641,7 +643,7 @@ describe('regenerateVariants', () => {
     expect(small).toHaveBeenCalledTimes(4)
   })
 
-  test('also retries remembered failures, and can leave remaking to the next read', async () => {
+  test('also retries remembered failures, and can leave remaking to the next acquire', async () => {
     const targets = makeTargets()
     const source = await storeSource(targets)
     let broken = true
@@ -661,7 +663,7 @@ describe('regenerateVariants', () => {
       onError: () => undefined,
     })
 
-    expect(await variants.getVariant(source, 'small')).toBeNull()
+    expect(await variants.acquireVariant(source, 'small')).toBeNull()
 
     broken = false
     const result = await variants.regenerateVariants('small', {
@@ -672,7 +674,7 @@ describe('regenerateVariants', () => {
     expect(await prisma.upload.count({ where: { sourceId: source.id } })).toBe(
       0,
     )
-    expect(await variants.getVariant(source, 'small')).toMatchObject({
+    expect(await variants.acquireVariant(source, 'small')).toMatchObject({
       status: 'completed',
     })
   })
@@ -704,7 +706,7 @@ describe('regenerateVariants', () => {
       },
     })
 
-    const making = variants.getVariant(source, 'small')
+    const making = variants.acquireVariant(source, 'small')
     await started.promise
 
     version = 2
@@ -723,9 +725,9 @@ describe('regenerateVariants', () => {
       errors: 0,
     })
     expect(await making).toBeNull()
-    expect((await variants.readVariant(source, 'small'))?.data.toString()).toBe(
-      'v2:photo',
-    )
+    expect(
+      (await variants.acquireVariantData(source, 'small'))?.data.toString(),
+    ).toBe('v2:photo')
     expect(targets.thumbs.objects.size).toBe(1)
   })
 })
@@ -748,10 +750,10 @@ describe('deleting a source', () => {
       },
     })
 
-    await variants.getVariant(source, 'small')
-    await variants.getVariant(source, 'large')
-    await variants.getVariant(source, 'inline')
-    const kept = await variants.getVariant(other, 'small')
+    await variants.acquireVariant(source, 'small')
+    await variants.acquireVariant(source, 'large')
+    await variants.acquireVariant(source, 'inline')
+    const kept = await variants.acquireVariant(other, 'small')
     expect(targets.thumbs.objects.size).toBe(3)
 
     await deleteFile(targets.files, { db, upload: source, targets })
@@ -777,7 +779,7 @@ describe('deleting a source', () => {
       variants: { small: upperCase('s') },
     })
 
-    await variants.getVariant(source, 'small')
+    await variants.acquireVariant(source, 'small')
 
     await expect(
       deleteFile(targets.files, { db, upload: source }),
@@ -826,7 +828,7 @@ describe('deleting a source', () => {
       },
     })
 
-    const making = variants.getVariant(source, 'small')
+    const making = variants.acquireVariant(source, 'small')
     await started.promise
 
     // The variant is saved after its pending row was read for deletion, and
@@ -873,7 +875,7 @@ describe('deleting a source', () => {
       },
     })
 
-    const making = variants.getVariant(source, 'small')
+    const making = variants.acquireVariant(source, 'small')
     await started.promise
 
     await deleteFile(targets.files, { db, upload: source, targets })
