@@ -40,7 +40,6 @@ production app (Effibo):
 - [Deleting](#deleting)
 - [What the tests guard](#what-the-tests-guard)
 - [Follow-ups](#follow-ups)
-- [Open questions](#open-questions)
 
 ## The problem
 
@@ -79,14 +78,64 @@ on demand. Tying derived files to `Upload` rows leaves those out.
 - **The claim has its own column, `claimId`.** Why: `Upload.tokenId` means "the
   upload token that created this row"; using it for claims gave one column two
   meanings.
-- **A thrown error is temporary; `null` is permanent.** A throw is retried up to
-  `maxAttempts` (3) times, the next attempt allowed `retryDelay` (one minute)
-  after the last, doubling, counted in `attempts`. `null` from a generator or a
-  source, or a made file `storeFile()` refuses, is failed at once. Failed stays
-  failed until `resetVariants()`. Why: network failures (a third-party API
-  being down) are common for remote sources and shouldn't be remembered for a
-  day, while "this file type has no preview" never changes. This replaces
-  `retryFailedAfter`.
+- **A thrown error is temporary; `null` from a generator is permanent.** A
+  throw is retried once per entry in `retryDelays`, each retry allowed that
+  long after the attempt before, counted in `attempts`. `null` from a
+  generator, or a made file `storeFile()` refuses, is failed at once. Failed
+  stays failed until `resetVariants()`. Why: network failures (a third-party
+  API being down) are common for remote sources and shouldn't be remembered
+  for a day, while "this file type has no preview" never changes. This
+  replaces `retryFailedAfter`.
+- **Retries span hours, not minutes: 1 min, 5 min, 30 min, 2 h, 6 h.** Five
+  retries, so six attempts, and a file that still fails is failed about 8.5
+  hours after the first attempt. Why: the first defaults (three attempts, one
+  minute then two) failed every file asked for during a third-party outage
+  longer than about three minutes, until someone ran `resetVariants()`. A
+  temporary failure should be retried more than once, but not forever: these
+  ride out an outage of a few hours and give up within a day. A doubling
+  `retryDelay` can't express that spread, so the option is a list,
+  `retryDelays`, one retry per entry, and it replaces both `retryDelay` and
+  `maxAttempts` (the number of attempts is the list's length plus one, so the
+  two can't disagree). There is no separate "exhausted" state: an exhausted
+  file is `failed`, like a `null`, and `resetVariants()` clears both.
+- **A source file that doesn't exist throws `NOT_FOUND`, and nothing is
+  recorded.** A source's `read()` returning `null` means "doesn't exist";
+  `uploadSource()` returns it for an id with no `Upload` row. The attempt then
+  deletes the row it claimed, and `acquireVariant()` (and
+  `acquireVariantData()`) throws an `UploadError` with code `NOT_FOUND` naming
+  the source key and what to do: pass a reference to an existing file, or
+  catch it where one may have been deleted. "Exists but this variant can't be
+  made" is a generator's `null`, which is still remembered as failed. The
+  check is on the `null` itself, outside the path that treats a throw as
+  temporary (a throw from `read()` is retried), and holds however the
+  generator handles the failed read (catching it and returning `null`, or
+  rethrowing something else). The row is still created first, as the claim,
+  so two processes never read the same source at once; it is deleted under
+  that claim. Why: a typo'd or deleted id is the caller's bug, and
+  remembering it as `failed` without a log line hid it (design principles:
+  fail closed, and a refusal names the way out). It also doesn't fill the
+  table with rows for ids that never existed, and an id that appears later
+  (a file that hadn't reached the third party yet) is made on the next
+  acquire. Custom sources behave the same way; a source that wants a missing
+  file retried instead throws from `read()`.
+- **No orphan sweep in Cedar.** Nothing deletes the made files of an external
+  source that went away without `deleteFor()`. Why: a sweep needs a way to ask
+  the source which keys still exist, which is app-specific (a third-party API
+  may have no batch lookup, or rate-limit it); an app that needs one writes it
+  over its own `DerivedFile` rows and `deleteFor()`.
+- **The owner is copied from a read, with no `describe()` for now.** A made
+  file gets the source's `userId` and `organizationId` from `read()`, so a
+  generator that never calls `readSource()` still causes one read. Why: the
+  read is memoized per attempt, so it costs nothing extra in the usual case,
+  a generator that reads the bytes; it only costs a download for a generator
+  that works from the reference alone (calling a remote service by
+  reference, say). If one needs that, an optional `describe(ref)` on sources,
+  returning only owner and filename, can be added later without breaking
+  anything.
+- **No job integration.** Generation stays a function call: an app that wants
+  files made in the background calls `acquireVariant()` from any job. Why: it
+  works with any job runner, and `@cedarjs/uploads` stays independent of
+  `@cedarjs/jobs`.
 - **No waiting for another process.** When another process holds the claim,
   `acquireVariant()` returns `pending` at once instead of polling. Why: polling
   was the most complex part of the code and held requests open; a caller can
@@ -163,8 +212,7 @@ export const derivedFiles = defineDerivedFiles({
     'thumb-164': makeSquare(164),
     preview: { generate: drawFirstPage, target: targets.previews },
   },
-  maxAttempts: 3, // default
-  retryDelay: 60 * 1000, // default, doubling
+  retryDelays: [MINUTE, 5 * MINUTE, 30 * MINUTE, 2 * HOUR, 6 * HOUR], // default
   claimTimeout: 10 * 60 * 1000, // default
   onError: (error, { source, variant }) => logger.warn(...),
 })
@@ -182,7 +230,7 @@ await deleteFile(target, { db, upload, derivedFiles }) // upload and its derived
 
 A source is `{ key?(ref): string; read(ref) }`. `read()` returns
 `{ data, mimeType?, filename?, userId?, organizationId? }`, or `null` when the
-file doesn't exist. `key()` is optional for string references. A generator gets
+file doesn't exist, which makes the acquire throw `NOT_FOUND`. `key()` is optional for string references. A generator gets
 `{ source: { name, key, ref }, variant, readSource() }` and returns
 `{ data, mimeType, filename? }` or `null`.
 
@@ -223,7 +271,8 @@ drift.
 `acquireVariant(source, name)` finds the row for `(source key, variant)`:
 
 - none: create it as `pending` with a random `claimId` and `attempts: 1`, and
-  make the file. A unique violation means another process got there first:
+  make the file. If the source's `read()` returns `null`, delete the row
+  again and throw `NOT_FOUND`. A unique violation means another process got there first:
   `pending`.
 - `completed`: return its `Upload` row (or, if that row is gone, claim and make
   it again).
@@ -243,9 +292,11 @@ file it made.
 
 A thrown error from the source or the generator, or from storing (a storage
 outage), goes to `onError` and releases the claim with `attempts` counted; the
-next acquire after `retryDelay * 2^(attempts - 1)` tries again, until
-`maxAttempts`. `null`, or a made file `storeFile()` refuses
-(`MIME_TYPE_NOT_ALLOWED`, `FILE_TOO_LARGE`), fails the row at once.
+next acquire after `retryDelays[attempts - 1]` tries again, until the list
+runs out. `null` from a generator, or a made file `storeFile()` refuses
+(`MIME_TYPE_NOT_ALLOWED`, `FILE_TOO_LARGE`), fails the row at once. `null`
+from a source's `read()`, on any attempt, deletes the row and throws
+`NOT_FOUND` to the caller, without `onError`.
 
 Claims and retries compare `updatedAt`, an absolute timestamp, with the
 process's clock: time zones don't matter, but the processes' clocks should be
@@ -285,10 +336,15 @@ real SQLite test database:
   "process" gets `pending` instead of waiting.
 - A stale claim is taken over after `claimTimeout`, and failed if it was the
   last attempt.
-- A throwing generator is retried with backoff, then failed, and stays failed;
-  a retry can succeed. A not-yet-completed upload is retried.
-- `null` from a generator or a source fails at once, without `onError`, until
+- A throwing generator is retried after 1 min, 5 min, 30 min, 2 h and 6 h,
+  then failed, and stays failed; `retryDelays` changes that, and `[]` never
+  retries; a retry can succeed. A not-yet-completed upload is retried.
+- `null` from a generator fails at once, without `onError`, until
   `resetVariants()`; a made file `storeFile()` refuses fails at once.
+- A missing upload id, or a custom source's `null`, throws `NOT_FOUND` naming
+  the source key, leaves no row and no `onError`, and the file is made once it
+  exists; the same holds on a retry of a source deleted meanwhile, and for a
+  generator that catches the failed read and returns `null`.
 - Invalid names, unknown variants and sources, two sources in one reference,
   and a non-string reference without `key()` are refused, naming the fix.
 - `findVariants()` returns files in the order given.
@@ -311,23 +367,3 @@ real SQLite test database:
   "locked child" runner (proposal 3).
 - **Recurring/unique jobs** (proposal 2) would make "make missing files in the
   background" a declared job rather than app code.
-
-## Open questions
-
-- **Retry defaults.** Three attempts, one minute then two, means a third-party
-  outage longer than about three minutes fails every file requested during it
-  until `resetVariants()`. Should the delay be longer, or should exhausted
-  retries be distinguishable from `null` so they can be reset on their own?
-- **Orphans for external sources.** An app that forgets `deleteFor()` leaves
-  made files behind. Is a sweep worth adding (an optional `exists(keys)` on a
-  source, and a `deleteOrphans()` that checks it)?
-- **A missing upload** (`{ upload: 'typo' }`) is remembered as failed, like any
-  source whose `read()` returns `null`, and logged nowhere. Should
-  `uploadSource()` throw for an id that never existed instead?
-- **Owner without a read.** A generator that returns a file without calling
-  `readSource()` still causes one read, to copy the source's owner to the made
-  file. Fine for uploads; worth a separate, cheaper "describe" on sources if a
-  remote source minds.
-- **Sync vs. job-based generation.** `acquireVariant()` makes on demand, in the
-  request. Should the package offer a "queue it" mode tied to `@cedarjs/jobs`,
-  or is acquiring from a job enough?
