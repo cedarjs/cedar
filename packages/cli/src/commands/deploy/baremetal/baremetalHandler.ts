@@ -17,7 +17,7 @@ import {
 import type { ApiProcessMeta } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
-import { getConfig, getPaths } from '../../../lib/index.js'
+import { getPaths } from '../../../lib/index.js'
 
 import { MONITOR_ADAPTERS, MONITORS, isMonitor } from './monitors.js'
 import type { Monitor, MonitorAdapter, MonitorCommand } from './monitors.js'
@@ -317,48 +317,11 @@ const API_PROCESS_META_FILES = GENERATED_DATA_DIRS.map((dir) =>
   ].join('/'),
 )
 
-// Where a release's `@cedarjs/api-server` can be installed, relative to the
-// deploy path: hoisted to the project root, or in the api side's own
-// `node_modules` (pnpm)
-const API_SERVER_DIST_DIRS = [
-  'node_modules/@cedarjs/api-server/dist',
-  'api/node_modules/@cedarjs/api-server/dist',
-].map((dir) => `${CURRENT_RELEASE_SYMLINK_NAME}/${dir}`)
-
 /**
- * Whether the `current` release's api server writes its process meta file.
- * Releases deployed with a Cedar version from before it did never write it.
- * Throws if the server can't be asked
+ * Thrown by `readApiProcessMeta` when the `current` release's api server
+ * hasn't written its process meta file
  */
-export const releaseWritesApiProcessMeta = async (
-  ssh: SshExecutor,
-  serverConfig: ServerConfig,
-) => {
-  try {
-    // `grep -q` exits with 0 when it finds a match, 1 when it doesn't, and 2
-    // when it doesn't and also hit an error, like one of the directories
-    // being missing. Any other exit code, like 127 when `grep` isn't
-    // installed, says nothing about the release
-    await ssh.exec(serverConfig.path, 'grep', [
-      '-rqs',
-      'writeApiProcessMeta',
-      ...API_SERVER_DIST_DIRS,
-    ])
-
-    return true
-  } catch (e) {
-    if (
-      typeof e === 'object' &&
-      e !== null &&
-      'exitCode' in e &&
-      (e.exitCode === 1 || e.exitCode === 2)
-    ) {
-      return false
-    }
-
-    throw e
-  }
-}
+export class ApiProcessMetaMissingError extends Error {}
 
 /**
  * Reads what the `current` release's api server recorded about itself once it
@@ -383,7 +346,7 @@ export const readApiProcessMeta = async (
     ])
     contents = result.stdout
   } catch {
-    throw new Error(
+    throw new ApiProcessMetaMissingError(
       `The api server hasn't written ${preferredFile} yet. It does that ` +
         "once it's listening.",
     )
@@ -474,28 +437,7 @@ export const waitForHealthCheck = async ({
   const deadline = Date.now() + timeoutSeconds * 1000
   let lastFailure = ''
   let keepTrying = true
-  let writesApiProcessMeta: boolean | undefined
-
-  // A release deployed with a Cedar version from before the api server wrote
-  // its process meta file never writes it. Such a release is checked on the
-  // `[api].port` from this machine's cedar.toml, the way those versions check
-  // it
-  const apiProcessMeta = async () => {
-    try {
-      return await readApiProcessMeta(ssh, serverConfig)
-    } catch (e) {
-      writesApiProcessMeta ??= await releaseWritesApiProcessMeta(
-        ssh,
-        serverConfig,
-      )
-
-      if (writesApiProcessMeta) {
-        throw e
-      }
-
-      return { port: getConfig().api.port, host: '' }
-    }
-  }
+  let apiProcessMetaMissing = false
 
   // Each attempt is one `curl` on the server. `--fail` makes curl exit
   // non-zero for HTTP error statuses, so `ssh.exec` throws both when nothing
@@ -509,7 +451,10 @@ export const waitForHealthCheck = async ({
       const url =
         'url' in target
           ? target.url
-          : apiServerUrl(await apiProcessMeta(), target.apiPath)
+          : apiServerUrl(
+              await readApiProcessMeta(ssh, serverConfig),
+              target.apiPath,
+            )
 
       await ssh.exec(serverConfig.path, 'curl', [
         '--fail',
@@ -525,6 +470,7 @@ export const waitForHealthCheck = async ({
 
       return
     } catch (e) {
+      apiProcessMetaMissing = e instanceof ApiProcessMetaMissingError
       lastFailure = e instanceof Error ? e.message : String(e)
       onFailedAttempt?.(lastFailure)
     }
@@ -544,6 +490,17 @@ export const waitForHealthCheck = async ({
         `${timeoutSeconds} seconds of restarting the ` +
         `${serverConfig.processNames?.join(', ')} process(es).`,
       `Last attempt: ${lastFailure}`,
+      // TODO: Remove this hint in the next major, when the releases kept on
+      // servers are all built with a Cedar version that writes the process
+      // meta file
+      ...(apiProcessMetaMissing
+        ? [
+            'Releases built with a Cedar version from before the api server ' +
+              'wrote this file never write it. This includes a release you ' +
+              'rolled back to from before you upgraded Cedar. Set ' +
+              '`healthCheckUrl` in deploy.toml to check such a release.',
+          ]
+        : []),
       '',
       ...nextSteps,
       'If your app serves its health check somewhere else, set ' +
