@@ -21,10 +21,17 @@ model Upload {
   organizationId String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-  sourceId       String?
-  variant        String?
-  source         Upload?  @relation("UploadVariants", fields: [sourceId], references: [id], onDelete: Restrict)
-  variants       Upload[] @relation("UploadVariants")
+}
 
-  @@unique([sourceId, variant])
+model DerivedFile {
+  id        String   @id @default(cuid())
+  source    String
+  variant   String
+  uploadId  String?
+  status    String   @default("pending")
+  claimId   String?
+  attempts  Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([source, variant])
 }

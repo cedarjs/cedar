@@ -48,11 +48,6 @@ export interface UploadCreateData {
 
 export interface UploadWhere {
   id?: string | { in: string[] }
-  /**
-   * Only exists when the `Upload` model has the variant columns. A query
-   * that uses it must handle the error Prisma raises without them.
-   */
-  sourceId?: string
   target?: string
   status?: string | { in: string[] }
   storageKey?: string | null | { not: null }
@@ -218,79 +213,78 @@ export interface SerializedUpload {
 }
 
 /**
- * An `Upload` row in a schema that has the two variant columns, `sourceId`
- * and `variant`. A derived file (a thumbnail, a preview, a video's poster
- * frame) is an `Upload` row of its own whose `sourceId` points at the file
- * it was made from and whose `variant` names what it is (`'thumb-164'`,
- * `'preview'`). Original files have both set to `null`.
+ * One row of the opt-in `DerivedFile` table: the bookkeeping for one derived
+ * file (a thumbnail, a preview, a poster frame) of one source. The made file
+ * itself is an ordinary `Upload` row, referenced by `uploadId`.
  */
-export interface UploadVariantRecord extends UploadRecord {
-  sourceId: string | null
-  variant: string | null
-}
-
-export interface UploadVariantWhere {
-  id?: string | { in?: string[]; notIn?: string[] }
-  sourceId?: string | null | { in: string[] }
-  variant?: string | null
-  status?: string
-  tokenId?: string | null
-  storageKey?: string | null
-  createdAt?: { lt?: Date; lte?: Date }
-  updatedAt?: { lt?: Date }
-}
-
-export interface UploadVariantCreateData extends UploadCreateData {
-  sourceId: string
+export interface DerivedFileRecord {
+  id: string
+  /** The source's key, such as `upload:<id>` or `osdoc:<org>/<case>/<doc>`. */
+  source: string
+  /** Name of the derived file, such as `thumb-164` or `preview`. */
   variant: string
+  /** The made file's `Upload` id, once it is made. */
+  uploadId: string | null
+  /** `pending` while being made or waiting to retry, then `completed` or `failed`. */
+  status: string
+  /** Id of the attempt making the file right now, or `null`. */
+  claimId: string | null
+  /** How many attempts have been started. */
+  attempts: number
+  updatedAt: Date
 }
 
-export interface UploadVariantUpdateData {
-  status?: UploadStatus
-  target?: string
-  size?: bigint
-  storageKey?: string | null
-  filename?: string
-  mimeType?: string
-  // See `UploadCreateData.data` for why the buffer type is narrowed
-  data?: Uint8Array<ArrayBuffer> | null
-  tokenId?: string | null
+export interface DerivedFileWhere {
+  id?: string | { gt: string }
+  source?: string | { in: string[] }
+  variant?: string
+  status?: string
+  claimId?: string | null
+  uploadId?: string | null
+  attempts?: number
+  updatedAt?: Date | { lt: Date }
 }
 
 /**
- * The subset of Prisma's generated `Upload` delegate that derived files
- * (variants) need. A generated client satisfies it once the `Upload` model
- * has the `sourceId` and `variant` columns described in the uploads docs.
+ * The subset of Prisma's generated `DerivedFile` delegate that derived files
+ * need. A generated client satisfies it once the schema has the
+ * `DerivedFile` model described in the uploads docs.
  */
-export interface UploadVariantDelegate {
-  create(args: { data: UploadVariantCreateData }): Promise<UploadVariantRecord>
-  findUnique(args: {
-    where: { id: string }
-    omit?: { data?: boolean }
-  }): Promise<UploadVariantRecord | null>
+export interface DerivedFileDelegate {
+  create(args: {
+    data: {
+      source: string
+      variant: string
+      status: string
+      claimId: string
+      attempts: number
+    }
+  }): Promise<DerivedFileRecord>
   findFirst(args: {
-    where: UploadVariantWhere
-    omit?: { data?: boolean }
-    orderBy?: { createdAt: 'asc' | 'desc' }
-  }): Promise<UploadVariantRecord | null>
+    where: DerivedFileWhere
+  }): Promise<DerivedFileRecord | null>
   findMany(args: {
-    where: UploadVariantWhere
-    omit?: { data?: boolean }
-    orderBy?: { createdAt: 'asc' | 'desc' }
+    where: DerivedFileWhere
+    orderBy?: { id: 'asc' | 'desc' }
     take?: number
-  }): Promise<UploadVariantRecord[]>
+  }): Promise<DerivedFileRecord[]>
   updateMany(args: {
-    where: UploadVariantWhere
-    data: UploadVariantUpdateData
+    where: DerivedFileWhere
+    data: {
+      status?: string
+      claimId?: string | null
+      uploadId?: string | null
+      attempts?: number
+    }
   }): Promise<{ count: number }>
-  deleteMany(args: { where: UploadVariantWhere }): Promise<{ count: number }>
+  deleteMany(args: { where: DerivedFileWhere }): Promise<{ count: number }>
 }
 
 /**
- * The subset of a Prisma client that derived files (variants) need. Any
- * generated client whose `Upload` model has the `sourceId` and `variant`
- * columns satisfies it.
+ * The subset of a Prisma client that derived files need: the `Upload`
+ * delegate for the made files, and the `DerivedFile` delegate for their
+ * bookkeeping.
  */
-export interface UploadVariantDatabase {
-  upload: UploadVariantDelegate
+export interface DerivedFileDatabase extends UploadDatabase {
+  derivedFile: DerivedFileDelegate
 }

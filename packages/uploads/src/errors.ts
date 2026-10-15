@@ -17,7 +17,6 @@ export type UploadErrorCode =
   | 'NOT_IN_STORAGE'
   | 'SIZE_MISMATCH'
   | 'INVALID_KEY'
-  | 'HAS_VARIANTS'
 
 const STATUS_CODES: Record<UploadErrorCode, number> = {
   CONFIGURATION: 500,
@@ -38,7 +37,6 @@ const STATUS_CODES: Record<UploadErrorCode, number> = {
   NOT_IN_STORAGE: 409,
   SIZE_MISMATCH: 409,
   INVALID_KEY: 400,
-  HAS_VARIANTS: 409,
 }
 
 /**
