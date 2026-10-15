@@ -152,7 +152,10 @@ export interface DerivedFiles<Sources, Name extends string> {
    * Deletes every file of one variant, made or failed, so each is made again
    * on its next acquire. Use it after fixing a generator.
    */
-  resetVariants(name: Name): Promise<{ deleted: number; errors: number }>
+  resetVariants(
+    name: Name,
+    options?: { batchSize?: number },
+  ): Promise<{ deleted: number; errors: number }>
   /** Deletes a source file's derived files. Returns how many. */
   deleteFor(source: DerivedFileSourceRef<Sources>): Promise<number>
   /** `deleteFor()` through `uploadSource()`; what `deleteFile()` calls. */
@@ -461,6 +464,9 @@ export function defineDerivedFiles<
       })
       .catch(async (e: unknown) => {
         await dropMade()
+        // Released like any thrown error, so the next attempt waits for
+        // `retryDelay` rather than `claimTimeout`
+        await settle('pending').catch(() => undefined)
         throw e
       })
 
@@ -489,9 +495,16 @@ export function defineDerivedFiles<
     })
     const claimId = randomUUID()
     const claim = async (current: DerivedFileRecord, attempts: number) => {
-      const { id, status, attempts: before } = current
+      const { id, status, uploadId, attempts: before } = current
       const { count } = await db.derivedFile.updateMany({
-        where: { id, status, claimId: current.claimId, attempts: before },
+        // All of it, so a row remade or retried meanwhile isn't claimed again
+        where: {
+          id,
+          status,
+          uploadId,
+          claimId: current.claimId,
+          attempts: before,
+        },
         data: { status: 'pending', claimId, attempts, uploadId: null },
       })
 
@@ -623,7 +636,7 @@ export function defineDerivedFiles<
     },
     findVariant: async (ref, name) => (await findVariants([ref], name))[0],
     findVariants,
-    resetVariants: async (name) => {
+    resetVariants: async (name, { batchSize = 100 } = {}) => {
       definitionOf(name)
 
       const result = { deleted: 0, errors: 0 }
@@ -633,7 +646,7 @@ export function defineDerivedFiles<
         const rows = await db.derivedFile.findMany({
           where: { variant: name, ...(after && { id: { gt: after } }) },
           orderBy: { id: 'asc' },
-          take: 100,
+          take: batchSize,
         })
 
         if (rows.length === 0) {

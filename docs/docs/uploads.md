@@ -548,7 +548,7 @@ Made and failed files alike are deleted, and each is made again the next time it
 
 ### Deleting a source and its derived files
 
-Pass `derivedFiles` to `deleteFile()` and it deletes the upload's derived files (bytes, `Upload` rows and bookkeeping) before the upload itself:
+Pass `derivedFiles` to `deleteFile()` and it deletes the upload's derived files (bytes, `Upload` rows and bookkeeping) with it. It looks for them both before and after deleting the upload, so a derived file another request started making in between is deleted too:
 
 ```ts
 await deleteFile(resolveTarget(targets, upload.target), {
@@ -558,7 +558,7 @@ await deleteFile(resolveTarget(targets, upload.target), {
 })
 ```
 
-For other sources, call `deleteFor()` when the source file goes away, for example when your app learns a third-party document was deleted:
+For other sources, call `deleteFor()` once the source file is gone, for example when your app learns a third-party document was deleted. Calling it after, not before, means an attempt that read the file just before it went away is caught too:
 
 ```ts
 await derivedFiles.deleteFor({ osdoc: ref })

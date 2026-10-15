@@ -26,17 +26,16 @@ function isRecordNotFound(e: unknown): boolean {
  * order would leave an unreachable object nothing references. A missing
  * object or row is tolerated, so the call is idempotent.
  *
- * Pass `derivedFiles` to delete the upload's derived files with it. They
- * go first, so a crash part-way leaves the upload in place to call again
- * for.
+ * Pass `derivedFiles` to delete the upload's derived files with it, both
+ * before and after the upload itself, so a derived file being made from it
+ * at the same moment is deleted too.
  */
 export async function deleteFile(
   target: StorageProvider,
   { db, upload, derivedFiles }: DeleteFileOptions,
 ): Promise<void> {
-  if (derivedFiles) {
-    await derivedFiles.deleteForUpload(upload)
-  }
+  // Before, so a refusal leaves everything in place
+  await derivedFiles?.deleteForUpload(upload)
 
   if (upload.storageKey) {
     await target.delete(upload.storageKey)
@@ -49,4 +48,8 @@ export async function deleteFile(
       throw e
     }
   }
+
+  // And after: an attempt that read the upload before it was deleted has
+  // its row by now, and finds its claim gone when it finishes
+  await derivedFiles?.deleteForUpload(upload)
 }

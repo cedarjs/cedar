@@ -264,8 +264,13 @@ reported through `onError` and counted in `errors`.
 row), then its `DerivedFile` row, the latter only in the state the file was
 deleted for: an attempt that completes in between is seen, and its file
 deleted too. `deleteFile(target, { db, upload, derivedFiles })` calls
-`deleteForUpload()` first, then deletes the upload; with `derivedFiles` but no
-`uploadSource()` configured it refuses before deleting anything, naming the fix.
+`deleteForUpload()` before and after deleting the upload. Before, so a refusal
+(with `derivedFiles` but no `uploadSource()` configured, naming the fix) leaves
+everything in place. After, because an attempt claims its row before it reads
+its source: any attempt that read the upload before it was deleted has its row
+by then, so the second pass deletes it, and the attempt finds its claim gone
+and deletes what it made. For other sources the same holds when the app calls
+`deleteFor()` after the source file is gone.
 
 ## What the tests guard
 
@@ -287,13 +292,15 @@ real SQLite test database:
 - Invalid names, unknown variants and sources, two sources in one reference,
   and a non-string reference without `key()` are refused, naming the fix.
 - `findVariants()` returns files in the order given.
-- A file whose completion can't be saved leaves nothing behind; a made file
-  deleted some other way is made again.
+- A file whose completion can't be saved leaves nothing behind and releases
+  its claim; a made file deleted some other way is made again, and two
+  processes doing that at once keep one tracked file.
 - `resetVariants()` clears one variant and leaves others; a file being made
   during a reset leaves nothing behind.
 - `deleteFile()` with `derivedFiles` deletes an upload's derived files and only
   those; without an upload source it refuses before deleting anything; a file
-  finished during or after a delete leaves nothing behind.
+  finished during or after a delete, or whose attempt started while the upload
+  was being deleted, leaves nothing behind.
 
 ## Follow-ups
 

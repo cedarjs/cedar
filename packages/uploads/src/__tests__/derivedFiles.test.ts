@@ -51,9 +51,9 @@ async function storeSource(targets: Targets, text = 'photo') {
   })
 }
 
-function setup(
+function setup<Name extends string>(
   targets: Targets,
-  variants: Record<string, DerivedFileGenerator>,
+  variants: Record<Name, DerivedFileGenerator>,
   options: {
     db?: DerivedFileDatabase
     onError?: (error: unknown) => void
@@ -558,6 +558,57 @@ describe('defineDerivedFiles', () => {
     ).rejects.toThrow('database down')
     expect(targets.thumbs.objects.size).toBe(0)
     expect(await prisma.upload.count()).toBe(1)
+    // The claim is released, so the next attempt waits for `retryDelay`,
+    // not `claimTimeout`
+    expect(await prisma.derivedFile.findFirstOrThrow()).toMatchObject({
+      status: 'pending',
+      claimId: null,
+      attempts: 1,
+    })
+  })
+
+  test('two processes remaking a lost file keep one file, and track it', async () => {
+    const targets = makeTargets()
+    const source = await storeSource(targets)
+    const ref = { upload: source.id }
+    const processA = setup(targets, { small: upperCase('s') })
+
+    const first = await processA.acquireVariant(ref, 'small')
+
+    if (first.status === 'completed') {
+      await deleteFile(targets.thumbs, { db, upload: first.upload })
+    }
+
+    // Process B reads the row with its file missing, then stalls before
+    // claiming it, while process A remakes the file
+    const read = Promise.withResolvers<void>()
+    const resume = Promise.withResolvers<void>()
+    const processB = setup(
+      targets,
+      { small: upperCase('s') },
+      {
+        db: withDerivedFile({
+          findFirst: async (args) => {
+            const row = await db.derivedFile.findFirst(args)
+            read.resolve()
+            await resume.promise
+            return row
+          },
+        }),
+      },
+    )
+
+    const stalled = processB.acquireVariant(ref, 'small')
+    await read.promise
+    const remade = await processA.acquireVariant(ref, 'small')
+    resume.resolve()
+
+    expect(remade.status).toBe('completed')
+    expect(await stalled).toEqual({ status: 'pending' })
+    expect(await processA.acquireVariant(ref, 'small')).toEqual(remade)
+    // The source and the one remade file
+    expect(await prisma.upload.count()).toBe(2)
+    expect(targets.thumbs.objects.size).toBe(1)
   })
 
   test('a made file deleted some other way is made again', async () => {
@@ -753,6 +804,47 @@ describe('deleting', () => {
     expect(targets.thumbs.objects.size).toBe(0)
     expect(await prisma.derivedFile.count()).toBe(0)
     expect(await prisma.upload.count()).toBe(1)
+  })
+
+  test('a file whose attempt starts while its upload is being deleted leaves nothing behind', async () => {
+    const targets = makeTargets()
+    const source = await storeSource(targets)
+    const started = Promise.withResolvers<void>()
+    const release = Promise.withResolvers<void>()
+    const derived = setup(targets, {
+      small: async (context) => {
+        const made = await upperCase('s')(context)
+        started.resolve()
+        await release.promise
+        return made
+      },
+    })
+    let making: Promise<unknown> | undefined
+
+    await deleteFile(targets.files, {
+      db,
+      upload: source,
+      derivedFiles: {
+        deleteForUpload: async (upload) => {
+          const deleted = await derived.deleteForUpload(upload)
+
+          // Between the first look for derived files and the upload's
+          // deletion, another request starts making one
+          if (!making) {
+            making = derived.acquireVariant({ upload: source.id }, 'small')
+            await started.promise
+          }
+
+          return deleted
+        },
+      },
+    })
+    release.resolve()
+
+    expect(await making).toEqual({ status: 'pending' })
+    expect(targets.thumbs.objects.size).toBe(0)
+    expect(await prisma.upload.count()).toBe(0)
+    expect(await prisma.derivedFile.count()).toBe(0)
   })
 
   test('a file finished after its source was deleted leaves nothing behind', async () => {
