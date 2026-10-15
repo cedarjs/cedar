@@ -21,6 +21,12 @@
         "default": "./dist/s3.js"
       }
     },
+    "./sharp": {
+      "default": {
+        "types": "./dist/sharp.d.ts",
+        "default": "./dist/sharp.js"
+      }
+    },
     "./web": {
       "default": {
         "types": "./dist/web/index.d.ts",
@@ -82,6 +88,7 @@
     "publint": "0.3.25",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "sharp": "0.35.5",
     "typescript": "5.9.3",
     "vitest": "4.1.11",
     "zx": "8.8.5"
@@ -98,7 +105,8 @@
     "@uppy/react": "^6.0.0",
     "@uppy/xhr-upload": "^6.0.0",
     "fastify": "5.12.5",
-    "react": "19.3.0"
+    "react": "19.3.0",
+    "sharp": ">=0.34.0"
   },
   "peerDependenciesMeta": {
     "@apollo/client": {
@@ -135,6 +143,9 @@
       "optional": true
     },
     "react": {
+      "optional": true
+    },
+    "sharp": {
       "optional": true
     }
   },

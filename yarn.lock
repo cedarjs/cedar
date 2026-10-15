@@ -3888,6 +3888,7 @@ __metadata:
     publint: "npm:0.3.25"
     react: "npm:19.3.0"
     react-dom: "npm:19.3.0"
+    sharp: "npm:0.35.5"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.11"
     zx: "npm:8.8.5"
@@ -3904,6 +3905,7 @@ __metadata:
     "@uppy/xhr-upload": ^6.0.0
     fastify: 5.12.5
     react: 19.3.0
+    sharp: ">=0.34.0"
   peerDependenciesMeta:
     "@apollo/client":
       optional: true
@@ -3928,6 +3930,8 @@ __metadata:
     fastify:
       optional: true
     react:
+      optional: true
+    sharp:
       optional: true
   languageName: unknown
   linkType: soft
