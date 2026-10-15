@@ -371,7 +371,10 @@ export function defineDerivedFiles<
       )
     }
 
-    return { name, ref: value, key: `${name}:${id}`, read: source.read }
+    // Called on the source, so a source whose read() uses `this` works
+    const read = (ref: unknown) => source.read(ref)
+
+    return { name, ref: value, key: `${name}:${id}`, read }
   }
 
   const findUpload = (id: string) =>
@@ -711,9 +714,12 @@ export function defineDerivedFiles<
     },
     deleteFor,
     deleteForUpload: async (upload) => {
-      const name = sourceNames.find((n) => uploadSources.has(sources[n]))
+      // Every upload source, as each name gives the upload its own key
+      const uploadNames = sourceNames.filter((n) =>
+        uploadSources.has(sources[n]),
+      )
 
-      if (!name) {
+      if (uploadNames.length === 0) {
         throw new UploadError(
           'CONFIGURATION',
           'These derived files have no upload source, so none can be ' +
@@ -723,7 +729,13 @@ export function defineDerivedFiles<
         )
       }
 
-      return deleteFor({ [name]: upload })
+      let deleted = 0
+
+      for (const name of uploadNames) {
+        deleted += await deleteFor({ [name]: upload })
+      }
+
+      return deleted
     },
   }
 }

@@ -187,6 +187,33 @@ describe('defineDerivedFiles', () => {
     expect(targets.thumbs.objects.size).toBe(0)
   })
 
+  test('calls read() on the source, so a class-based source works', async () => {
+    const targets = makeTargets()
+
+    class Documents {
+      private texts = new Map([['d1', 'invoice']])
+
+      read(ref: string) {
+        const text = this.texts.get(ref)
+        return text === undefined ? null : { data: Buffer.from(text) }
+      }
+    }
+
+    const derived = defineDerivedFiles({
+      db,
+      targets,
+      target: targets.thumbs,
+      sources: { doc: new Documents() },
+      variants: { preview: upperCase('p') },
+    })
+
+    expect(
+      (
+        await derived.acquireVariantData({ doc: 'd1' }, 'preview')
+      )?.data.toString(),
+    ).toBe('p:INVOICE')
+  })
+
   test('stores files inline on a database target', async () => {
     const targets = makeTargets()
     const source = await storeSource(targets)
@@ -843,6 +870,35 @@ describe('deleting', () => {
     expect(await prisma.derivedFile.count()).toBe(1)
     expect(await prisma.upload.count()).toBe(2)
     expect(targets.thumbs.objects.size).toBe(1)
+  })
+
+  test('deleteFile deletes derived files made through every upload source', async () => {
+    const targets = makeTargets()
+    const source = await storeSource(targets)
+    const derived = defineDerivedFiles({
+      db,
+      targets,
+      target: targets.thumbs,
+      sources: {
+        upload: uploadSource({ db, targets }),
+        photo: uploadSource({ db, targets }),
+      },
+      variants: { small: upperCase('s') },
+    })
+
+    await derived.acquireVariant({ upload: source.id }, 'small')
+    await derived.acquireVariant({ photo: source.id }, 'small')
+    expect(targets.thumbs.objects.size).toBe(2)
+
+    await deleteFile(targets.files, {
+      db,
+      upload: source,
+      derivedFiles: derived,
+    })
+
+    expect(await prisma.derivedFile.count()).toBe(0)
+    expect(await prisma.upload.count()).toBe(0)
+    expect(targets.thumbs.objects.size).toBe(0)
   })
 
   test('deleteFile with derived files that have no upload source refuses before deleting anything', async () => {
