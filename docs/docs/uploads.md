@@ -561,7 +561,7 @@ Then use `thumb(164)` in `variants` instead of `sharpVariant({ width: 164 })`. `
 
 #### Running sharp in a sandbox
 
-`sharpVariant()` runs sharp in your API process. For images from people or systems you don't trust, you can run sharp in a [sandboxed child process](#server-generated-files) instead, with a generator of your own. sharp's libvips is native code, which Node's permission model doesn't limit, so for sharp the sandbox gives you an empty environment (none of your secrets), a separate process (a crash in libvips doesn't take your server down), and caps on its JavaScript heap, time and output size. The heap cap doesn't limit the memory libvips uses to decode an image; that needs an operating-system limit, such as a container's.
+`sharpVariant()` runs sharp in your API process. For images from people or systems you don't trust, you can run sharp in a [sandboxed child process](#server-generated-files) instead, with a generator of your own. sharp's libvips is native code: Node's permission model only decides whether a native addon may load at all (sharp needs `allowAddons: true`) and doesn't confine what it does once loaded, so for sharp the sandbox gives you an empty environment (none of your secrets), a separate process (a crash in libvips doesn't take your server down), and caps on its JavaScript heap, time and output size. The heap cap doesn't limit the memory libvips uses to decode an image; that needs an operating-system limit, such as a container's.
 
 The child script lives in your `api/src`, where every kind of build finds it and ships it with sharp, `cedar build --ud` too:
 

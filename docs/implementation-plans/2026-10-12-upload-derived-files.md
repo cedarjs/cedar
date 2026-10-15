@@ -197,8 +197,9 @@ Tying derived files to `Upload` rows leaves those out.
   script must live in the app's `api/src` for `cedar build --ud` to emit it
   and ship sharp next to it, and one that imported `@cedarjs/uploads` would
   copy the whole package and its dependencies into the sandbox. sharp is
-  native code, which Node's permission model doesn't limit, so what the
-  sandbox adds for it is the empty environment, the separate process and the
+  native code: Node's permission model only gates loading an addon
+  (`allowAddons`), and doesn't confine one once it runs, so what the sandbox
+  adds for it is the empty environment, the separate process and the
   limits. The uploads docs give a sandboxed generator (a child script plus
   `runSandboxedChild()`) for images from untrusted sources.
 
