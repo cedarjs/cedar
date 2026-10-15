@@ -490,9 +490,9 @@ export const waitForHealthCheck = async ({
         `${timeoutSeconds} seconds of restarting the ` +
         `${serverConfig.processNames?.join(', ')} process(es).`,
       `Last attempt: ${lastFailure}`,
-      // TODO: Remove this hint in the next major, when the releases kept on
-      // servers are all built with a Cedar version that writes the process
-      // meta file
+      // TODO: Remove this hint in the next major. By then the releases kept
+      // on servers have had plenty of time to all be built with a Cedar
+      // version that writes the process meta file
       ...(apiProcessMetaMissing
         ? [
             'Releases built with a Cedar version from before the api server ' +
