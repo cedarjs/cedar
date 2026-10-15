@@ -21,6 +21,9 @@ File uploads and storage for CedarJS apps.
   made once on first acquire, thrown errors retried with backoff, failures
   remembered, `resetVariants()` to remake one variant, and `deleteFor()` (or
   `deleteFile()` for uploads) to delete them with their source.
+  `sharpVariant()` from `@cedarjs/uploads/sharp` is a ready-made generator
+  for image thumbnails and resizes; it needs `sharp`, which your app
+  installs (`yarn workspace api add sharp`).
 - **Content detection** (`detectContentType`, `acceptedContentType`) that
   checks what an uploaded file really is from its bytes, not from its name or
   the type the browser claimed: images, PDF, audio/video, and OpenDocument and
