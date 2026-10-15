@@ -336,7 +336,8 @@ export const releaseWritesApiProcessMeta = async (
 ) => {
   try {
     // `grep` exits with 0 when it finds a match, 1 when it doesn't, and 2
-    // when a directory is missing
+    // when a directory is missing. Any other exit code, like 127 when `grep`
+    // isn't installed, says nothing about the release
     await ssh.exec(serverConfig.path, 'grep', [
       '-rqs',
       'writeApiProcessMeta',
@@ -349,7 +350,7 @@ export const releaseWritesApiProcessMeta = async (
       typeof e === 'object' &&
       e !== null &&
       'exitCode' in e &&
-      typeof e.exitCode === 'number'
+      (e.exitCode === 1 || e.exitCode === 2)
     ) {
       return false
     }

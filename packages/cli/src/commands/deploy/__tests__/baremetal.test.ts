@@ -1799,11 +1799,16 @@ describe('releaseWritesApiProcessMeta', () => {
   })
 
   it("throws when the server can't be asked", async () => {
-    vi.spyOn(sshExecutor, 'exec').mockRejectedValue(execError(null))
+    for (const exitCode of [null, 126, 127, 255]) {
+      vi.spyOn(sshExecutor, 'exec').mockRejectedValueOnce(execError(exitCode))
 
-    await expect(
-      baremetal.releaseWritesApiProcessMeta(sshExecutor, createServerConfig()),
-    ).rejects.toThrow('grep failed')
+      await expect(
+        baremetal.releaseWritesApiProcessMeta(
+          sshExecutor,
+          createServerConfig(),
+        ),
+      ).rejects.toThrow('grep failed')
+    }
   })
 })
 
