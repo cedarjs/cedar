@@ -145,13 +145,14 @@ child may read:
   will resolve the child's imports, so nested versions and pnpm's layout work.
   A package reached through a symlink is allowed at the path Node finds it and
   at its real folder;
-- the `node_modules` folders that exist on the way to a package but don't hold
-  it, like the `api/node_modules` Vite and Vitest create for their caches. A
-  `require()` or `require.resolve()` in the child (pdf.js loading its canvas,
-  a CommonJS package loading its dependencies) checks each one, and under the
-  permission model a folder it can't read throws `ERR_ACCESS_DENIED` instead
-  of being skipped. The folder that holds the package stays closed apart from
-  the packages themselves;
+- the `<name>/package.json` path in each `node_modules` folder that exists on
+  the way to a package but doesn't hold it, like the `api/node_modules` Vite
+  and Vitest create for their caches. A `require()` or `require.resolve()` in
+  the child (pdf.js loading its canvas, a CommonJS package loading its
+  dependencies) checks that path, and under the permission model a path it
+  can't read throws `ERR_ACCESS_DENIED` instead of being skipped. Only that
+  one path is allowed, which doesn't exist, so the rest of the folder stays
+  closed;
 - whatever you pass as `readable`.
 
 Nothing else: not the rest of `node_modules`, not your app's root, so not
