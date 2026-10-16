@@ -345,7 +345,18 @@ export const readApiProcessMeta = async (
       fallbackFile,
     ])
     contents = result.stdout
-  } catch {
+  } catch (e) {
+    // `cat` exits with 1 when the file is missing. Anything else, like the
+    // SSH connection dropping, is passed on as it is
+    if (
+      typeof e !== 'object' ||
+      e === null ||
+      !('exitCode' in e) ||
+      e.exitCode !== 1
+    ) {
+      throw e
+    }
+
     throw new ApiProcessMetaMissingError(
       `The api server hasn't written ${preferredFile} yet. It does that ` +
         "once it's listening.",

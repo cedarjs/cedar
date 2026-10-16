@@ -1719,7 +1719,9 @@ describe('readApiProcessMeta', () => {
 
   it("says the api server hasn't written the file yet when it's missing", async () => {
     vi.spyOn(sshExecutor, 'exec').mockRejectedValue(
-      new Error('cat: No such file or directory'),
+      Object.assign(new Error('cat: No such file or directory'), {
+        exitCode: 1,
+      }),
     )
 
     await expect(
@@ -1728,6 +1730,16 @@ describe('readApiProcessMeta', () => {
       `The api server hasn't written ${metaFile} yet. It does that once ` +
         "it's listening.",
     )
+  })
+
+  it("passes on errors that don't mean the file is missing", async () => {
+    vi.spyOn(sshExecutor, 'exec').mockRejectedValue(
+      Object.assign(new Error('Connection lost'), { exitCode: null }),
+    )
+
+    await expect(
+      baremetal.readApiProcessMeta(sshExecutor, createServerConfig()),
+    ).rejects.toThrow('Connection lost')
   })
 
   it('rejects a file that is not JSON', async () => {
@@ -1891,7 +1903,11 @@ describe('waitForHealthCheck', () => {
     const execSpy = vi
       .spyOn(sshExecutor, 'exec')
       // cat
-      .mockRejectedValueOnce(new Error('cat: No such file or directory'))
+      .mockRejectedValueOnce(
+        Object.assign(new Error('cat: No such file or directory'), {
+          exitCode: 1,
+        }),
+      )
       // cat
       .mockResolvedValueOnce({
         ...ok,
@@ -1928,7 +1944,9 @@ describe('waitForHealthCheck', () => {
 
   it('says why when the api server never writes the file', async () => {
     vi.spyOn(sshExecutor, 'exec').mockRejectedValue(
-      new Error('cat: No such file or directory'),
+      Object.assign(new Error('cat: No such file or directory'), {
+        exitCode: 1,
+      }),
     )
 
     const promise = baremetal.waitForHealthCheck({
