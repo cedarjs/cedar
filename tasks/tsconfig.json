@@ -8,9 +8,5 @@
     "noEmit": true,
     "rootDir": "."
   },
-  "exclude": [
-    "test-project/templates",
-    // App code for a Cedar test project, type-checked there
-    "sandbox-e2e/api"
-  ]
+  "exclude": ["test-project/templates"]
 }

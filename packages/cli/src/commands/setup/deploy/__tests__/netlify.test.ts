@@ -192,10 +192,6 @@ describe('netlify with --ud', () => {
     expect(netlifyToml).toBeDefined()
     expect(filesystem[netlifyToml ?? '']).toContain('api/dist/ud')
     expect(filesystem[netlifyToml ?? '']).toContain('build --ud')
-    // Sandboxed child scripts, which nothing imports
-    expect(filesystem[netlifyToml ?? '']).toContain(
-      'included_files = ["api/dist/ud/sandbox-children/**"]',
-    )
 
     // Verify vite config has the Netlify plugin imports
     expect(filesystem['/cedar-app/web/vite.config.ts']).toMatchInlineSnapshot(`

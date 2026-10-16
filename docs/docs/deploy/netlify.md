@@ -30,5 +30,5 @@ Netlify deploys set up through [universal deploy](universal-deploy.md) get [skew
 :::
 
 :::note
-Netlify ships only the files it can trace from your API's imports. If your app runs [sandboxed child scripts](security.md#untrusted-files), which nothing imports, `netlify.toml` needs `included_files = ["api/dist/ud/sandbox-children/**"]` under `[functions]`. `yarn cedar setup deploy netlify --ud` writes it; add it yourself to a `netlify.toml` written before.
+Netlify ships only the files it can trace from your API's imports. If your app runs child scripts with [`@cedarjs/locked-child`](https://github.com/cedarjs/locked-child), which nothing imports, `netlify.toml` needs `included_files = ["api/dist/ud/locked-children/**"]` under `[functions]`.
 :::
