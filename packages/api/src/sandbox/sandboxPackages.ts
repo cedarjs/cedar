@@ -15,11 +15,22 @@ interface PackageJson {
  * allow (sharp 0.35 doesn't export its `package.json`; some packages have
  * only an `import` condition). Returns the path Node finds it at and its
  * real folder, which differ when it's a symlink (pnpm, workspaces).
+ *
+ * Also returns the `node_modules` folders that exist on the way but don't
+ * hold the package. A CommonJS lookup in the child (`require()`,
+ * `require.resolve()`) checks each, and under the permission model one
+ * that exists but can't be read throws ERR_ACCESS_DENIED instead of being
+ * passed over. Vite and Vitest create `api/node_modules` for their caches,
+ * and an inner `node_modules` holds a second version of a dependency.
  */
 const findPackage = (name: string, fromFile: string) => {
+  const passed: string[] = []
   for (const dir of createRequire(fromFile).resolve.paths(name) ?? []) {
     const found = path.join(dir, name)
     if (!fs.existsSync(path.join(found, 'package.json'))) {
+      if (path.basename(dir) === 'node_modules' && fs.existsSync(dir)) {
+        passed.push(dir)
+      }
       continue
     }
     // Whatever its manifest's name: an alias (`"img": "npm:sharp@…"`) is
@@ -28,7 +39,7 @@ const findPackage = (name: string, fromFile: string) => {
     const pkg: PackageJson = JSON.parse(
       fs.readFileSync(path.join(realDir, 'package.json'), 'utf8'),
     )
-    return { found, realDir, pkg }
+    return { found, realDir, pkg, passed }
   }
   return null
 }
@@ -63,6 +74,9 @@ export const sandboxPackagePaths = (packages: string[], fromFile: string) => {
       return
     }
     paths.add(found.found).add(found.realDir)
+    for (const dir of found.passed) {
+      paths.add(dir).add(fs.realpathSync(dir))
+    }
     if (visited.has(found.realDir)) {
       return
     }

@@ -150,6 +150,59 @@ describe('sandboxPackagePaths', () => {
       `Can't find package "gone" (needed by lonely)`,
     )
   })
+
+  it('includes the node_modules folders Node passes on its way to a package, not the one it finds it in', () => {
+    const { script, nm } = newApp('passed')
+    writePackage(path.join(nm, 'lib-a'), { name: 'lib-a' })
+    // What Vite and Vitest leave in api/node_modules: no packages, a cache
+    const apiNm = path.join(path.dirname(nm), 'api', 'node_modules')
+    fs.mkdirSync(path.join(apiNm, '.vite'), { recursive: true })
+
+    const paths = sandboxPackagePaths(['lib-a'], script)
+
+    expect(paths).toContain(apiNm)
+    expect(paths).toContain(path.join(nm, 'lib-a'))
+    expect(paths).not.toContain(nm)
+  })
+})
+
+// A CommonJS lookup in the child (`require()`, `require.resolve()` — what
+// pdf.js does for its canvas, and a CJS package for its own dependencies)
+// stats every node_modules folder on its way. Under the permission model
+// one that exists but isn't readable throws ERR_ACCESS_DENIED instead of
+// being passed over — and Vite and Vitest make api/node_modules locally.
+describe('require() in a sandboxed child', () => {
+  let lib: string
+
+  beforeAll(() => {
+    const app = path.join(tmp, 'require-app')
+    lib = path.join(app, 'api', 'src', 'lib')
+    fs.mkdirSync(lib, { recursive: true })
+    const pkg = path.join(app, 'node_modules', 'cjs-lib')
+    writePackage(pkg, { name: 'cjs-lib', main: 'index.js' })
+    fs.writeFileSync(path.join(pkg, 'index.js'), "exports.hello = 'hi'")
+    fs.mkdirSync(path.join(app, 'api', 'node_modules', '.vite'), {
+      recursive: true,
+    })
+    fs.writeFileSync(
+      path.join(lib, 'require.child.ts'),
+      `import { createRequire } from 'node:module'
+       const require = createRequire(import.meta.url)
+       require.resolve('cjs-lib/package.json')
+       process.stdout.write(require('cjs-lib').hello)`,
+    )
+  })
+
+  it('finds its package past an api/node_modules holding only a cache', async () => {
+    const result = await runSandboxedChild({
+      script: findChildScript(lib, 'require.child'),
+      packages: ['cjs-lib'],
+      input: Buffer.alloc(0),
+    })
+
+    expect(result.ok ? '' : result.stderr).toBe('')
+    expect(result.ok && result.output.toString()).toBe('hi')
+  })
 })
 
 /** The monorepo's own node_modules, where sharp is installed */
