@@ -21,7 +21,6 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     getPaths: () => ({
       base: returnEmptyBasePath ? testDir : `${testDir}/fixtures`,
     }),
-    getConfig: () => ({ api: { port: 8911 } }),
   }
 })
 
@@ -1720,7 +1719,9 @@ describe('readApiProcessMeta', () => {
 
   it("says the api server hasn't written the file yet when it's missing", async () => {
     vi.spyOn(sshExecutor, 'exec').mockRejectedValue(
-      new Error('cat: No such file or directory'),
+      Object.assign(new Error('cat: No such file or directory'), {
+        exitCode: 1,
+      }),
     )
 
     await expect(
@@ -1729,6 +1730,16 @@ describe('readApiProcessMeta', () => {
       `The api server hasn't written ${metaFile} yet. It does that once ` +
         "it's listening.",
     )
+  })
+
+  it("passes on errors that don't mean the file is missing", async () => {
+    vi.spyOn(sshExecutor, 'exec').mockRejectedValue(
+      Object.assign(new Error('Connection lost'), { exitCode: null }),
+    )
+
+    await expect(
+      baremetal.readApiProcessMeta(sshExecutor, createServerConfig()),
+    ).rejects.toThrow('Connection lost')
   })
 
   it('rejects a file that is not JSON', async () => {
@@ -1750,65 +1761,6 @@ describe('readApiProcessMeta', () => {
       `${metaFile} doesn't hold the api server's port and host: ` +
         '{ "port": "8911" }',
     )
-  })
-})
-
-describe('releaseWritesApiProcessMeta', () => {
-  const execError = (exitCode: number | null) =>
-    Object.assign(new Error('grep failed'), { exitCode })
-
-  beforeEach(() => {
-    vi.restoreAllMocks()
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
-  it("looks for the writer in the release's api server", async () => {
-    const execSpy = vi.spyOn(sshExecutor, 'exec').mockResolvedValue({
-      stdout: '',
-      stderr: '',
-      code: 0,
-      signal: null,
-    })
-
-    await expect(
-      baremetal.releaseWritesApiProcessMeta(sshExecutor, createServerConfig()),
-    ).resolves.toBe(true)
-
-    expect(execSpy).toHaveBeenCalledExactlyOnceWith('/var/www/app', 'grep', [
-      '-rqs',
-      'writeApiProcessMeta',
-      'current/node_modules/@cedarjs/api-server/dist',
-      'current/api/node_modules/@cedarjs/api-server/dist',
-    ])
-  })
-
-  it("is false when grep doesn't find it or the directories are missing", async () => {
-    for (const exitCode of [1, 2]) {
-      vi.spyOn(sshExecutor, 'exec').mockRejectedValueOnce(execError(exitCode))
-
-      await expect(
-        baremetal.releaseWritesApiProcessMeta(
-          sshExecutor,
-          createServerConfig(),
-        ),
-      ).resolves.toBe(false)
-    }
-  })
-
-  it("throws when the server can't be asked", async () => {
-    for (const exitCode of [null, 126, 127, 255]) {
-      vi.spyOn(sshExecutor, 'exec').mockRejectedValueOnce(execError(exitCode))
-
-      await expect(
-        baremetal.releaseWritesApiProcessMeta(
-          sshExecutor,
-          createServerConfig(),
-        ),
-      ).rejects.toThrow('grep failed')
-    }
   })
 })
 
@@ -1951,9 +1903,11 @@ describe('waitForHealthCheck', () => {
     const execSpy = vi
       .spyOn(sshExecutor, 'exec')
       // cat
-      .mockRejectedValueOnce(new Error('cat: No such file or directory'))
-      // grep finds that the release writes the file
-      .mockResolvedValueOnce(ok)
+      .mockRejectedValueOnce(
+        Object.assign(new Error('cat: No such file or directory'), {
+          exitCode: 1,
+        }),
+      )
       // cat
       .mockResolvedValueOnce({
         ...ok,
@@ -1980,7 +1934,7 @@ describe('waitForHealthCheck', () => {
       "The api server hasn't written current/.cedar/process-meta/api.json " +
         "yet. It does that once it's listening.",
     )
-    expect(execSpy).toHaveBeenCalledTimes(4)
+    expect(execSpy).toHaveBeenCalledTimes(3)
     expect(execSpy).toHaveBeenLastCalledWith(
       '/var/www/app',
       'curl',
@@ -1988,28 +1942,42 @@ describe('waitForHealthCheck', () => {
     )
   })
 
-  it("checks a release that doesn't write the file on cedar.toml's api port", async () => {
-    const execSpy = vi
-      .spyOn(sshExecutor, 'exec')
-      // cat
-      .mockRejectedValueOnce(new Error('cat: No such file or directory'))
-      // grep doesn't find the writer in the release's api server
-      .mockRejectedValueOnce(Object.assign(new Error('grep'), { exitCode: 1 }))
-      .mockResolvedValue(ok)
+  it('says why when the api server never writes the file', async () => {
+    vi.spyOn(sshExecutor, 'exec').mockRejectedValue(
+      Object.assign(new Error('cat: No such file or directory'), {
+        exitCode: 1,
+      }),
+    )
 
-    await baremetal.waitForHealthCheck({
+    const promise = baremetal.waitForHealthCheck({
       target: { apiPath: '/graphql/health' },
-      timeoutSeconds: 30,
+      timeoutSeconds: 2,
       ssh: sshExecutor,
-      serverConfig: createServerConfig(),
-      nextSteps: [],
+      serverConfig: createServerConfig({ processNames: ['api'] }),
+      nextSteps: ['Do this next.'],
     })
+    // Prevents an unhandled rejection while the timers are advanced
+    const result = promise.catch((e: unknown) => e)
 
-    expect(execSpy).toHaveBeenCalledTimes(3)
-    expect(execSpy).toHaveBeenLastCalledWith(
-      '/var/www/app',
-      'curl',
-      expect.arrayContaining(["'http://localhost:8911/graphql/health'"]),
+    await vi.advanceTimersByTimeAsync(4000)
+
+    const error = await result
+    expect(error).toBeInstanceOf(Error)
+    expect((error as Error).message).toEqual(
+      'Health check failed: /graphql/health on the api server did not ' +
+        'respond successfully within 2 seconds of restarting the api ' +
+        'process(es).\n' +
+        "Last attempt: The api server hasn't written " +
+        "current/.cedar/process-meta/api.json yet. It does that once it's " +
+        'listening.\n' +
+        'Releases built with a Cedar version from before the api server ' +
+        'wrote this file never write it. This includes a release you rolled ' +
+        'back to from before you upgraded Cedar. Set `healthCheckUrl` in ' +
+        'deploy.toml to check such a release.\n\n' +
+        'Do this next.\n' +
+        'If your app serves its health check somewhere else, set ' +
+        '`healthCheckUrl` in deploy.toml. Set it to `false` to skip the ' +
+        'check. See https://cedarjs.com/docs/deploy/baremetal#health-check',
     )
   })
 
