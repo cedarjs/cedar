@@ -407,6 +407,8 @@ A photo's thumbnails, a PDF's drawn first page, a video's poster frame: files ma
 
 Each made file is an ordinary `Upload` row, stored on a target like any other file. `@cedarjs/uploads` makes no images itself: a generator can use sharp, pdf.js, ffmpeg or a third-party service, and the package depends on none of them. A generator decodes bytes someone else made, so the advice on [decoding in a sandbox](#server-generated-files) applies to it too.
 
+For image thumbnails and resizes, [`@cedarjs/uploads-sharp`](https://github.com/cedarjs/uploads-sharp) has a ready-made generator built on sharp: `sharpVariant({ width: 164 })` is a 164 × 164 WebP cropped from the middle, turned the right way up and written without metadata. Install it and sharp on your api side with `yarn workspace api add @cedarjs/uploads-sharp sharp`. Its README lists the options, and shows how to handle HEIC photos and how to run sharp in a sandbox.
+
 ### Schema
 
 Add a `DerivedFile` model to keep track of derived files, then create a migration. The `Upload` model stays as it is.
