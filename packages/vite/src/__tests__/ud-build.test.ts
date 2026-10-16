@@ -111,6 +111,9 @@ describe('UD build against fixture', () => {
         join(nodeModules, 'humanize-string'),
         join(nodeModules, 'humanize-string/node_modules/decamelize'),
         join(nodeModules, 'xregexp'),
+        // decamelize's lookup of xregexp checks humanize-string's
+        // node_modules on the way
+        join(nodeModules, 'humanize-string/node_modules/xregexp/package.json'),
       ])
     })
 
