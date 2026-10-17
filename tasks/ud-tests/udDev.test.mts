@@ -74,13 +74,6 @@ describe('cedar dev --ud', () => {
     expect(legacyRes.status).toEqual(200)
     expect(legacyRes.body).toEqual({ data: 'hello from legacy handler' })
 
-    // 5b. A function that runs a sandboxed child script, from source
-    const sandboxRes = await fetchJson(
-      `${BASE_URL}/.api/functions/sandboxHumanize`,
-    )
-    expect(sandboxRes.status).toEqual(200)
-    expect(sandboxRes.body).toEqual({ data: 'Sandboxed child script' })
-
     // 6. GraphQL endpoint
     const gqlRes = await fetchJson(`${BASE_URL}/.api/functions/graphql`, {
       method: 'POST',

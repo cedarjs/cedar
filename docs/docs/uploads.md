@@ -364,7 +364,7 @@ Pass `userId` when the file belongs to someone, so the ownership checks that gua
 
 Thumbnails and previews are better kept as [derived files](#derived-files-thumbnails-previews-and-other-variants), which Cedar makes once, keeps track of, and deletes with their source.
 
-When you make a file from an upload, a thumbnail of a photo or a preview of a PDF, decode the upload in a sandboxed child process with `@cedarjs/api/sandbox`, so a crafted file that exploits a JavaScript decoder (pdf.js, say) can't reach your secrets. A native decoder (sharp's libvips, with `allowAddons`) isn't limited by Node's file and network permissions: there the sandbox still keeps your environment variables out of the child, and full isolation needs an OS-level sandbox. See [Untrusted Files](security.md#untrusted-files).
+When you make a file from an upload, a thumbnail of a photo or a preview of a PDF, consider decoding the upload in a locked-down child process with [`@cedarjs/locked-child`](https://github.com/cedarjs/locked-child), so a crafted file that exploits a JavaScript decoder (pdf.js, say) can't reach your secrets. A native decoder (sharp's libvips) isn't limited by Node's file and network permissions: there the child process still keeps your environment variables out of reach, and full isolation needs an OS-level sandbox. See [Untrusted Files](security.md#untrusted-files).
 
 ## Deleting files
 
