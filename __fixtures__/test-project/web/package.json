@@ -18,8 +18,8 @@
     "@cedarjs/web": "7.0.0",
     "@my-org/validators": "workspace:*",
     "humanize-string": "2.1.0",
-    "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   },
   "devDependencies": {
     "@cedarjs/testing": "7.0.0",
