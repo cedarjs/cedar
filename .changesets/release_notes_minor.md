@@ -54,6 +54,6 @@ devices on your network or from outside a container.
 ## Major dependency updates for security fixes
 
 `@cedarjs/mailer-handler-nodemailer` uses nodemailer 10, and
-`@cedarjs/graphql-server` and `@cedarjs/realtime` use `@graphql-tools/utils`
-12. Both are updated for security fixes. Your app's own copies of these
-packages, if it has any, aren't affected.
+`@cedarjs/graphql-server` and `@cedarjs/realtime` use version 12 of
+`@graphql-tools/utils`. Both are updated for security fixes. Your app's own
+copies of these packages, if it has any, aren't affected.
