@@ -6,8 +6,8 @@
   "dependencies": {
     "@cedarjs/router": "7.0.0",
     "@cedarjs/web": "7.0.0",
-    "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   },
   "devDependencies": {
     "@cedarjs/vite": "7.0.0",

@@ -107,16 +107,16 @@
     "concurrently": "9.2.5",
     "nodemon": "3.1.14",
     "publint": "0.3.25",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "tstyche": "5.0.2",
     "typescript": "5.9.3",
     "vitest": "4.1.11"
   },
   "peerDependencies": {
     "@cedarjs/auth": "workspace:*",
-    "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   },
   "engines": {
     "node": ">=24"
