@@ -70,8 +70,8 @@
   "peerDependencies": {
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/router": "workspace:*",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "storybook": "8.6.19"
   },
   "engines": {
