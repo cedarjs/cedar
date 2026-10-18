@@ -58,12 +58,12 @@
     "concurrently": "9.2.5",
     "msw": "2.15.0",
     "publint": "0.3.25",
-    "react": "19.3.0",
+    "react": "19.3.1",
     "typescript": "5.9.3",
     "vitest": "4.1.12"
   },
   "peerDependencies": {
-    "react": "19.3.0"
+    "react": "19.3.1"
   },
   "engines": {
     "node": ">=24"
