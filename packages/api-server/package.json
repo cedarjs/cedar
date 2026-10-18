@@ -126,7 +126,7 @@
     "pino-abstract-transport": "3.0.0",
     "publint": "0.3.25",
     "typescript": "5.9.3",
-    "vitest": "4.1.11"
+    "vitest": "4.1.12"
   },
   "peerDependencies": {
     "@cedarjs/graphql-server": "workspace:*"

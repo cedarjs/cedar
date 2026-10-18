@@ -16,6 +16,6 @@
   },
   "devDependencies": {
     "@cedarjs/vite": "7.0.0",
-    "vitest": "4.1.11"
+    "vitest": "4.1.12"
   }
 }

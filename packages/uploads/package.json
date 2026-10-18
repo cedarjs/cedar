@@ -83,7 +83,7 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "typescript": "5.9.3",
-    "vitest": "4.1.11",
+    "vitest": "4.1.12",
     "zx": "8.8.5"
   },
   "peerDependencies": {

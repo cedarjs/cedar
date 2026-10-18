@@ -17,7 +17,7 @@
     "@cedarjs/project-config": "7.0.0",
     "@cedarjs/testing": "7.0.0",
     "prisma": "7.10.0",
-    "vitest": "4.1.11"
+    "vitest": "4.1.12"
   },
   "engines": {
     "node": "24.x",
