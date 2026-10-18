@@ -49,7 +49,7 @@
     "react": "19.3.0",
     "supertokens-auth-react": "0.51.3",
     "typescript": "5.9.3",
-    "vitest": "4.1.11"
+    "vitest": "4.1.12"
   },
   "peerDependencies": {
     "supertokens-auth-react": "0.51.3"

@@ -116,7 +116,7 @@
     "rollup": "4.64.6",
     "ts-dedent": "2.3.0",
     "typescript": "5.9.3",
-    "vitest": "4.1.11"
+    "vitest": "4.1.12"
   },
   "peerDependencies": {
     "@cedarjs/auth": "workspace:*",

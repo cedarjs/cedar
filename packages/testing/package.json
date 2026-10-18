@@ -80,13 +80,13 @@
     "concurrently": "9.2.5",
     "publint": "0.3.25",
     "typescript": "5.9.3",
-    "vitest": "4.1.11"
+    "vitest": "4.1.12"
   },
   "peerDependencies": {
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/router": "workspace:*",
     "@cedarjs/web": "workspace:*",
-    "vitest": "4.1.11"
+    "vitest": "4.1.12"
   },
   "peerDependenciesMeta": {
     "vitest": {
