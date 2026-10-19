@@ -27,7 +27,7 @@
   "dependencies": {
     "@cedarjs/api": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
-    "@prisma/client": "7.10.0",
+    "@prisma/client": "7.10.1",
     "camelcase": "6.3.0"
   },
   "devDependencies": {
