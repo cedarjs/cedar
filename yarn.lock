@@ -2970,7 +2970,7 @@ __metadata:
     "@opentelemetry/resources": "npm:2.12.0"
     "@opentelemetry/sdk-trace-node": "npm:2.12.0"
     "@opentelemetry/semantic-conventions": "npm:1.43.0"
-    "@prisma/dmmf": "npm:7.10.0"
+    "@prisma/dmmf": "npm:7.10.1"
     "@prisma/internals": "npm:7.10.0"
     "@types/archiver": "npm:^7.0.0"
     ansis: "npm:4.4.0"
@@ -3335,7 +3335,7 @@ __metadata:
     "@graphql-tools/merge": "npm:9.2.8"
     "@jridgewell/trace-mapping": "npm:0.3.31"
     "@oxc-project/types": "npm:^0.154.0"
-    "@prisma/dmmf": "npm:7.10.0"
+    "@prisma/dmmf": "npm:7.10.1"
     "@prisma/internals": "npm:7.10.0"
     "@sdl-codegen/node": "npm:2.0.1"
     ansis: "npm:4.4.0"
@@ -9822,6 +9822,13 @@ __metadata:
   version: 7.10.0
   resolution: "@prisma/dmmf@npm:7.10.0"
   checksum: 10c0/bd8cace732d9715830747c08592fc03287ce12dda4b0cdd066fab20720459d3456af60864fa62d4674cfbad87ca13dd24b15c5a4c2850d172b77ee7e87a32910
+  languageName: node
+  linkType: hard
+
+"@prisma/dmmf@npm:7.10.1":
+  version: 7.10.1
+  resolution: "@prisma/dmmf@npm:7.10.1"
+  checksum: 10c0/f1422ae819bc44b2b15f1906c4f96034be48413a7dae86ef1b8bed0b362637a487eb1ac00169a5d92f1a2bdc318d8e7b71b395e982d70f3b71de364402c81ab8
   languageName: node
   linkType: hard
 
