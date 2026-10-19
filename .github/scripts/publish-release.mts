@@ -146,8 +146,12 @@ const CREATE_CEDAR_APP_LOCKFILES = [
 // registry rate limits.
 const PUBLISH_CONCURRENCY = 4
 
-/** How long to wait for the registry to serve every published version */
-const REGISTRY_PROPAGATION_TIMEOUT_MS = 5 * 60 * 1000
+/**
+ * How long to wait for the registry to serve every published version. With
+ * trusted publishing, npm processes each new version (provenance) before it
+ * serves it, and that alone can take more than five minutes
+ */
+const REGISTRY_PROPAGATION_TIMEOUT_MS = 20 * 60 * 1000
 
 function log(message: string) {
   const prefix = isDryRun ? '[DRY-RUN]' : '•'
