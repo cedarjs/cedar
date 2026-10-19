@@ -95,7 +95,7 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@prisma/dmmf": "7.10.0",
+    "@prisma/dmmf": "7.10.1",
     "@types/archiver": "^7.0.0",
     "memfs": "4.80.0",
     "node-ssh": "13.2.1",
