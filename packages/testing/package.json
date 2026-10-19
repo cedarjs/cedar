@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/testing",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "description": "Tools, wrappers and configuration for testing a Cedar project.",
   "repository": {
     "type": "git",
@@ -120,10 +120,10 @@
   },
   "dependencies": {
     "@babel/preset-env": "7.29.7",
-    "@cedarjs/babel-config": "7.0.0",
-    "@cedarjs/context": "7.0.0",
-    "@cedarjs/graphql-server": "7.0.0",
-    "@cedarjs/project-config": "7.0.0",
+    "@cedarjs/babel-config": "7.1.0",
+    "@cedarjs/context": "7.1.0",
+    "@cedarjs/graphql-server": "7.1.0",
+    "@cedarjs/project-config": "7.1.0",
     "@testing-library/dom": "10.4.2",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.3",
@@ -145,10 +145,10 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
-    "@cedarjs/auth": "7.0.0",
-    "@cedarjs/framework-tools": "7.0.0",
-    "@cedarjs/router": "7.0.0",
-    "@cedarjs/web": "7.0.0",
+    "@cedarjs/auth": "7.1.0",
+    "@cedarjs/framework-tools": "7.1.0",
+    "@cedarjs/router": "7.1.0",
+    "@cedarjs/web": "7.1.0",
     "concurrently": "9.2.4",
     "jsdom": "27.4.0",
     "publint": "0.3.24",
@@ -156,9 +156,9 @@
     "vitest": "4.1.11"
   },
   "peerDependencies": {
-    "@cedarjs/auth": "7.0.0",
-    "@cedarjs/router": "7.0.0",
-    "@cedarjs/web": "7.0.0",
+    "@cedarjs/auth": "7.1.0",
+    "@cedarjs/router": "7.1.0",
+    "@cedarjs/web": "7.1.0",
     "vitest": "4.1.11"
   },
   "peerDependenciesMeta": {
