@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@prisma/adapter-better-sqlite3": "7.10.0",
+    "@prisma/adapter-better-sqlite3": "7.10.1",
     "@prisma/client": "7.10.0",
     "@types/better-sqlite3": "7.6.13",
     "better-sqlite3": "12.11.1",
