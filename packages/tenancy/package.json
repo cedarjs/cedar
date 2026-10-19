@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/tenancy",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -38,17 +38,17 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/api": "7.0.0",
-    "@cedarjs/context": "7.0.0",
-    "@cedarjs/graphql-server": "7.0.0"
+    "@cedarjs/api": "7.1.0",
+    "@cedarjs/context": "7.1.0",
+    "@cedarjs/graphql-server": "7.1.0"
   },
   "devDependencies": {
     "@apollo/client": "4.3.3",
     "@arethetypeswrong/cli": "0.18.5",
-    "@cedarjs/auth": "7.0.0",
-    "@cedarjs/framework-tools": "7.0.0",
-    "@cedarjs/router": "7.0.0",
-    "@cedarjs/web": "7.0.0",
+    "@cedarjs/auth": "7.1.0",
+    "@cedarjs/framework-tools": "7.1.0",
+    "@cedarjs/router": "7.1.0",
+    "@cedarjs/web": "7.1.0",
     "@prisma/adapter-better-sqlite3": "7.10.0",
     "@prisma/client": "7.10.0",
     "@testing-library/dom": "10.4.2",
@@ -74,9 +74,9 @@
   },
   "peerDependencies": {
     "@apollo/client": "4.3.3",
-    "@cedarjs/auth": "7.0.0",
-    "@cedarjs/router": "7.0.0",
-    "@cedarjs/web": "7.0.0",
+    "@cedarjs/auth": "7.1.0",
+    "@cedarjs/router": "7.1.0",
+    "@cedarjs/web": "7.1.0",
     "react": "19.3.0"
   },
   "peerDependenciesMeta": {

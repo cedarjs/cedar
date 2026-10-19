@@ -12,18 +12,18 @@
     ]
   },
   "dependencies": {
-    "@cedarjs/auth-dbauth-web": "7.0.0",
-    "@cedarjs/forms": "7.0.0",
-    "@cedarjs/router": "7.0.0",
-    "@cedarjs/web": "7.0.0",
+    "@cedarjs/auth-dbauth-web": "7.1.0",
+    "@cedarjs/forms": "7.1.0",
+    "@cedarjs/router": "7.1.0",
+    "@cedarjs/web": "7.1.0",
     "@my-org/validators": "workspace:*",
     "humanize-string": "2.1.0",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
   "devDependencies": {
-    "@cedarjs/testing": "7.0.0",
-    "@cedarjs/vite": "7.0.0",
+    "@cedarjs/testing": "7.1.0",
+    "@cedarjs/vite": "7.1.0",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.3",

@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/jobs",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -38,12 +38,12 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@cedarjs/cli-helpers": "7.0.0",
-    "@cedarjs/project-config": "7.0.0",
+    "@cedarjs/cli-helpers": "7.1.0",
+    "@cedarjs/project-config": "7.1.0",
     "cron-parser": "5.10.2"
   },
   "devDependencies": {
-    "@cedarjs/framework-tools": "7.0.0",
+    "@cedarjs/framework-tools": "7.1.0",
     "@prisma/adapter-better-sqlite3": "7.10.0",
     "@prisma/client": "7.10.0",
     "@types/better-sqlite3": "7.6.13",
