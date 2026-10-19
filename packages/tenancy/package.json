@@ -49,7 +49,7 @@
     "@cedarjs/framework-tools": "workspace:*",
     "@cedarjs/router": "workspace:*",
     "@cedarjs/web": "workspace:*",
-    "@prisma/adapter-better-sqlite3": "7.10.0",
+    "@prisma/adapter-better-sqlite3": "7.10.1",
     "@prisma/client": "7.10.0",
     "@testing-library/dom": "10.4.2",
     "@testing-library/jest-dom": "6.9.1",

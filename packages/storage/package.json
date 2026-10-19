@@ -43,7 +43,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
     "@cedarjs/framework-tools": "workspace:*",
-    "@prisma/adapter-better-sqlite3": "7.10.0",
+    "@prisma/adapter-better-sqlite3": "7.10.1",
     "@prisma/client": "7.10.0",
     "@types/better-sqlite3": "7.6.13",
     "@types/mime-types": "2.1.4",

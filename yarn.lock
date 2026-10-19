@@ -3374,7 +3374,7 @@ __metadata:
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
-    "@prisma/adapter-better-sqlite3": "npm:7.10.0"
+    "@prisma/adapter-better-sqlite3": "npm:7.10.1"
     "@prisma/client": "npm:7.10.0"
     "@types/better-sqlite3": "npm:7.6.13"
     better-sqlite3: "npm:12.11.1"
@@ -3673,7 +3673,7 @@ __metadata:
     "@arethetypeswrong/cli": "npm:0.18.5"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
-    "@prisma/adapter-better-sqlite3": "npm:7.10.0"
+    "@prisma/adapter-better-sqlite3": "npm:7.10.1"
     "@prisma/client": "npm:7.10.0"
     "@types/better-sqlite3": "npm:7.6.13"
     "@types/mime-types": "npm:2.1.4"
@@ -3746,7 +3746,7 @@ __metadata:
     "@cedarjs/graphql-server": "workspace:*"
     "@cedarjs/router": "workspace:*"
     "@cedarjs/web": "workspace:*"
-    "@prisma/adapter-better-sqlite3": "npm:7.10.0"
+    "@prisma/adapter-better-sqlite3": "npm:7.10.1"
     "@prisma/client": "npm:7.10.0"
     "@testing-library/dom": "npm:10.4.2"
     "@testing-library/jest-dom": "npm:6.9.1"
@@ -3860,7 +3860,7 @@ __metadata:
     "@cedarjs/graphql-server": "workspace:*"
     "@cedarjs/web": "workspace:*"
     "@fastify/multipart": "npm:9.4.0"
-    "@prisma/adapter-better-sqlite3": "npm:7.10.0"
+    "@prisma/adapter-better-sqlite3": "npm:7.10.1"
     "@prisma/client": "npm:7.10.0"
     "@testing-library/dom": "npm:10.4.2"
     "@testing-library/jest-dom": "npm:6.9.1"
@@ -9700,13 +9700,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prisma/adapter-better-sqlite3@npm:7.10.0":
-  version: 7.10.0
-  resolution: "@prisma/adapter-better-sqlite3@npm:7.10.0"
+"@prisma/adapter-better-sqlite3@npm:7.10.1":
+  version: 7.10.1
+  resolution: "@prisma/adapter-better-sqlite3@npm:7.10.1"
   dependencies:
-    "@prisma/driver-adapter-utils": "npm:7.10.0"
+    "@prisma/driver-adapter-utils": "npm:7.10.1"
     better-sqlite3: "npm:^12.6.0"
-  checksum: 10c0/1e60af06c70401433573a49d22a69ef436a4707bb859dac212d79a0815c10aa6c00b6bc7875f650045650407f97259ca1c1f2061586daffa8100b3f8a699e8d4
+  checksum: 10c0/92487b0d7b02781bf26aea194362d49b7bbdc36b256ab60d7bdd0d129982f6498da95048bc07971f9c20c304c190296dce04794817ad1f546382650fef3919e1
   languageName: node
   linkType: hard
 
@@ -9750,6 +9750,13 @@ __metadata:
   version: 7.10.0
   resolution: "@prisma/debug@npm:7.10.0"
   checksum: 10c0/612f310dcde0642fec6c2781251b3b4c049c130a361a26a350677d268340fc8857f368cfbec3923e3898439e65e0ee87462e6390aeeaddccedd4654c075ef628
+  languageName: node
+  linkType: hard
+
+"@prisma/debug@npm:7.10.1":
+  version: 7.10.1
+  resolution: "@prisma/debug@npm:7.10.1"
+  checksum: 10c0/a220e5706241257375dc6d59df0863d7855caa09ef548af596436fcd620d37ac155b8443f9cf317947de950f4c34b1f748fa0567404977be84f4e575c1085b20
   languageName: node
   linkType: hard
 
@@ -9824,6 +9831,15 @@ __metadata:
   dependencies:
     "@prisma/debug": "npm:7.10.0"
   checksum: 10c0/f037e8ad4fea53eb63fa1655930c9846410a0549e10a37067821864a801225be49ae1ca2325021dc6eb44ac517d75684842f4095f56f74af6057753c1a5c92e0
+  languageName: node
+  linkType: hard
+
+"@prisma/driver-adapter-utils@npm:7.10.1":
+  version: 7.10.1
+  resolution: "@prisma/driver-adapter-utils@npm:7.10.1"
+  dependencies:
+    "@prisma/debug": "npm:7.10.1"
+  checksum: 10c0/faba8c0d820a4a8702f52e3bd985a12463a8aebead5d4fb0480cf0f0d22e6dcd148712c7f4fc28969a56d2c27dba5129ac29225b09c88e3b61b5e3c8d5ce51c4
   languageName: node
   linkType: hard
 
