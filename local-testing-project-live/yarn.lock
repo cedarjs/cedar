@@ -4656,7 +4656,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@my-org/validators@workspace:packages/validators"
   dependencies:
-    "@cedarjs/testing": "npm:2.2.1"
+    "@cedarjs/testing": "npm:7.1.0"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -7123,11 +7123,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "api@workspace:api"
   dependencies:
-    "@cedarjs/api": "npm:3.1.0"
-    "@cedarjs/api-server": "npm:3.1.0"
-    "@cedarjs/auth-dbauth-api": "npm:3.1.0"
-    "@cedarjs/graphql-server": "npm:3.1.0"
-    "@cedarjs/realtime": "npm:3.1.0"
+    "@cedarjs/api": "npm:7.1.0"
+    "@cedarjs/api-server": "npm:7.1.0"
+    "@cedarjs/auth-dbauth-api": "npm:7.1.0"
+    "@cedarjs/graphql-server": "npm:7.1.0"
+    "@cedarjs/realtime": "npm:7.1.0"
     "@my-org/validators": "workspace:*"
     "@prisma/adapter-pg": "npm:7.7.0"
     ioredis: "npm:^5"
@@ -16731,10 +16731,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
-    "@cedarjs/core": "npm:3.1.0"
-    "@cedarjs/eslint-config": "npm:3.1.0"
-    "@cedarjs/project-config": "npm:3.1.0"
-    "@cedarjs/testing": "npm:3.1.0"
+    "@cedarjs/core": "npm:7.1.0"
+    "@cedarjs/eslint-config": "npm:7.1.0"
+    "@cedarjs/project-config": "npm:7.1.0"
+    "@cedarjs/testing": "npm:7.1.0"
     prettier-plugin-tailwindcss: "npm:^0.7.0"
   languageName: unknown
   linkType: soft
@@ -18928,12 +18928,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "web@workspace:web"
   dependencies:
-    "@cedarjs/auth-dbauth-web": "npm:3.1.0"
-    "@cedarjs/forms": "npm:3.1.0"
-    "@cedarjs/gqlorm": "npm:3.1.0"
-    "@cedarjs/router": "npm:3.1.0"
-    "@cedarjs/vite": "npm:3.1.0"
-    "@cedarjs/web": "npm:3.1.0"
+    "@cedarjs/auth-dbauth-web": "npm:7.1.0"
+    "@cedarjs/forms": "npm:7.1.0"
+    "@cedarjs/gqlorm": "npm:7.1.0"
+    "@cedarjs/router": "npm:7.1.0"
+    "@cedarjs/vite": "npm:7.1.0"
+    "@cedarjs/web": "npm:7.1.0"
     "@my-org/validators": "workspace:*"
     "@types/react": "npm:^18.2.55"
     "@types/react-dom": "npm:^18.2.19"
