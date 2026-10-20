@@ -3280,7 +3280,7 @@ __metadata:
     "@graphql-tools/merge": "npm:9.2.8"
     "@graphql-tools/schema": "npm:10.1.5"
     "@graphql-tools/utils": "npm:12.1.0"
-    "@graphql-yoga/plugin-persisted-operations": "npm:3.24.5"
+    "@graphql-yoga/plugin-persisted-operations": "npm:3.24.6"
     "@opentelemetry/api": "npm:1.9.1"
     "@types/aws-lambda": "npm:8.10.164"
     "@types/jsonwebtoken": "npm:9.0.10"
@@ -6898,15 +6898,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/plugin-persisted-operations@npm:3.24.5":
-  version: 3.24.5
-  resolution: "@graphql-yoga/plugin-persisted-operations@npm:3.24.5"
+"@graphql-yoga/plugin-persisted-operations@npm:3.24.6":
+  version: 3.24.6
+  resolution: "@graphql-yoga/plugin-persisted-operations@npm:3.24.6"
   dependencies:
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0 || ^17.0.0
-    graphql-yoga: ^5.24.5
-  checksum: 10c0/d131b039eb314635c86043cb1c5320fd10cba662109f58e08e1eccad60724f0cc43dbab524e7f210b5a972f1c9a94cae0eae609ea75054a6c29c7b2d0f927348
+    graphql-yoga: ^5.24.6
+  checksum: 10c0/c24392b89879c6701121e21c96d627493f3f8e9bf34ee8d65a0eb4bc34abd16bf99a9e043db298699cb280ae248b095ea92805b3be2df8c6e30a08ccf4339620
   languageName: node
   linkType: hard
 
