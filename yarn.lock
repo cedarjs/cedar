@@ -3480,7 +3480,7 @@ __metadata:
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/mailer-core": "workspace:*"
-    "@react-email/render": "npm:2.1.0"
+    "@react-email/render": "npm:2.1.1"
     react: "npm:19.3.1"
     react-dom: "npm:19.3.1"
     typescript: "npm:5.9.3"
@@ -10282,9 +10282,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-email/render@npm:2.1.0":
-  version: 2.1.0
-  resolution: "@react-email/render@npm:2.1.0"
+"@react-email/render@npm:2.1.1":
+  version: 2.1.1
+  resolution: "@react-email/render@npm:2.1.1"
   dependencies:
     entities: "npm:^4.5.0"
     html-to-text: "npm:^9.0.5"
@@ -10293,7 +10293,7 @@ __metadata:
   peerDependencies:
     react: ^18.0 || ^19.0 || ^19.0.0-rc
     react-dom: ^18.0 || ^19.0 || ^19.0.0-rc
-  checksum: 10c0/d117fb48711fb491f8f958806278c23f5d816e5baf999faef9d93922581d5c9128c7b320418317c486f9a68760deb32a1aa97efde946f4027a7aadda18aab7fc
+  checksum: 10c0/5e2c6d773c022edbdc190fb1abb31277d484b846c5b5c9dbdcaa1bb3564040796cd21cb556ab3483eb0701ead5f1213796835088f8c864cf17cc9f417912103d
   languageName: node
   linkType: hard
 
