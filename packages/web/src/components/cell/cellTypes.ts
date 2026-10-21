@@ -42,6 +42,26 @@ type CellPropsVariables<Cell, GQLVariables> = Cell extends {
     : GQLVariables
 
 /**
+ * The `[result, variables]` types carried by a Cell's `QUERY`. Works for typed
+ * documents (`TypedDocumentNode`, gql.tada's `graphql()` documents, or any
+ * other document with the `__apiType` decoration) and for functions that
+ * return one. An untyped `DocumentNode` resolves to `[any, any]`, so Cells
+ * whose `QUERY` isn't typed keep accepting any props.
+ *
+ * Generated Cell mirror types use this to type the Cell's props from its
+ * `QUERY` when the query isn't a tagged template literal.
+ */
+export type CellQueryTypes<Query> =
+  (
+    Query extends (...args: never[]) => infer Document ? Document : Query
+  ) extends Pick<
+    TypedDocumentNode<infer GQLResult, infer GQLVariables>,
+    '__apiType'
+  >
+    ? [GQLResult, GQLVariables]
+    : [any, any]
+
+/**
  * Cell component props which is the combination of query variables and Success props.
  */
 export type CellProps<

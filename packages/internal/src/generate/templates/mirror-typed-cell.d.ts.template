@@ -1,10 +1,8 @@
 import * as Cell from './${name}.js'
-import type { CellProps, TypedDocumentNode } from '@cedarjs/web'
+import type { CellProps, CellQueryTypes } from '@cedarjs/web'
 
 type SuccessType = typeof Cell.Success
-type QueryOf<Q> = Q extends (...args: never[]) => infer D ? D : Q
-type CellQuery = QueryOf<typeof Cell.QUERY>
-type QueryTypes = CellQuery extends Pick<TypedDocumentNode<infer R, infer V>, '__apiType'> ? [R, V] : [any, any]
+type QueryTypes = CellQueryTypes<typeof Cell.QUERY>
 
 export * from './${name}.js'
 
