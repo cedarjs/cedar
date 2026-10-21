@@ -34,7 +34,7 @@
     "listr2": "10.2.2",
     "termi-link": "1.1.0",
     "vite": "7.3.7",
-    "yargs": "17.7.3"
+    "yargs": "18.2.0"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",

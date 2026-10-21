@@ -32,7 +32,7 @@
     "termi-link": "1.1.0",
     "verkit": "0.5.0",
     "vitest": "4.1.12",
-    "yargs": "17.7.3"
+    "yargs": "18.2.0"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",

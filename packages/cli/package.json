@@ -91,7 +91,7 @@
     "unionfs": "4.6.0",
     "uuid": "11.1.1",
     "verkit": "0.5.0",
-    "yargs": "17.7.3"
+    "yargs": "18.2.0"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
