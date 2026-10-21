@@ -11,6 +11,26 @@ describe('babel plugin redwood mock cell data', () => {
   pluginTester({
     plugin,
     tests: {
+      'cell with a graphql() query and fragment arguments': {
+        fixture: path.join(
+          __dirname,
+          '__fixtures__/mock-cell-data/TypedQueryCell/TypedQueryCell.mock.js',
+        ),
+        outputFixture: path.join(
+          __dirname,
+          '__fixtures__/mock-cell-data/output_TypedQueryCell.mock.js',
+        ),
+      },
+      'cell with a graphql() query wrapped in a type assertion': {
+        fixture: path.join(
+          __dirname,
+          '__fixtures__/mock-cell-data/WrappedQueryCell/WrappedQueryCell.mock.js',
+        ),
+        outputFixture: path.join(
+          __dirname,
+          '__fixtures__/mock-cell-data/output_WrappedQueryCell.mock.js',
+        ),
+      },
       'cell with afterQuery': {
         fixture: path.join(
           __fixtures__,

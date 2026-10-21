@@ -174,6 +174,88 @@ describe('cedarMockCellDataPlugin', () => {
     expect(result?.code).toContain('export const standard')
   })
 
+  it('uses the graphql() QUERY operation, ignoring fragment arguments and other calls', async () => {
+    const cell = [
+      'export const QUERY = graphql(',
+      '  `query FindTypedUser($id: Int!) { user(id: $id) { id } }`,',
+      '  [graphql(`fragment UserFields on User { id }`)],',
+      ')',
+      'const anotherDocument = graphql(`query IgnoreMe { users { id } }`)',
+      'function nestedQuery() {',
+      '  const QUERY = graphql(`query NestedDecoy { users { id } }`)',
+      '  return QUERY',
+      '}',
+      'export const Success = ({ user }) => <div>{user.id}</div>',
+    ].join('\n')
+    vol.fromJSON({ [CELL_FILE]: cell })
+    // @ts-expect-error Plugin type
+    const result = await plugin.transform(MOCK_ARROW, MOCK_FILE)
+
+    expect(result?.code).toContain('mockGraphQLQuery("FindTypedUser",')
+    expect(result?.code).toContain('export const standard')
+  })
+
+  it('uses the operation of a graphql() QUERY wrapped in a type assertion', async () => {
+    const cell = [
+      'export const QUERY = graphql(',
+      '  `query FindAssertedUser($id: Int!) { user(id: $id) { id } }`,',
+      ') as TypedDocumentNode<FindUser, FindUserVariables>',
+      'export const Success = ({ user }) => <div>{user.id}</div>',
+    ].join('\n')
+    vol.fromJSON({ [CELL_FILE]: cell })
+    // @ts-expect-error Plugin type
+    const result = await plugin.transform(MOCK_ARROW, MOCK_FILE)
+
+    expect(result?.code).toContain('mockGraphQLQuery("FindAssertedUser",')
+  })
+
+  it('uses the operation of a graphql() QUERY wrapped in satisfies', async () => {
+    const cell = [
+      'export const QUERY = graphql(',
+      '  `query FindSatisfiedUser($id: Int!) { user(id: $id) { id } }`,',
+      ') satisfies DocumentNode',
+      'export const Success = ({ user }) => <div>{user.id}</div>',
+    ].join('\n')
+    vol.fromJSON({ [CELL_FILE]: cell })
+    // @ts-expect-error Plugin type
+    const result = await plugin.transform(MOCK_ARROW, MOCK_FILE)
+
+    expect(result?.code).toContain('mockGraphQLQuery("FindSatisfiedUser",')
+  })
+
+  it('uses the operation of a graphql() QUERY with a string argument', async () => {
+    const cell = [
+      "export const QUERY = graphql('query FindStringUser { user { id } }')",
+      'export const Success = ({ user }) => <div>{user.id}</div>',
+    ].join('\n')
+    vol.fromJSON({ [CELL_FILE]: cell })
+    // @ts-expect-error Plugin type
+    const result = await plugin.transform(MOCK_ARROW, MOCK_FILE)
+
+    expect(result?.code).toContain('mockGraphQLQuery("FindStringUser",')
+  })
+
+  it('treats a QUERY call that is not GraphQL as an unnamed operation', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const cell = [
+      'export const QUERY = buildQuery(`users`)',
+      'export const Success = ({ user }) => <div>{user.id}</div>',
+    ].join('\n')
+    vol.fromJSON({ [CELL_FILE]: cell })
+
+    try {
+      // @ts-expect-error Plugin type
+      const result = await plugin.transform(MOCK_ARROW, MOCK_FILE)
+
+      expect(result).toBeNull()
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('unnamed GraphQL operation'),
+      )
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
   it('wraps with afterQuery when the cell exports afterQuery', async () => {
     vol.fromJSON({ [CELL_FILE]: CELL_WITH_QUERY_AND_AFTER_QUERY })
     // @ts-expect-error Plugin type
