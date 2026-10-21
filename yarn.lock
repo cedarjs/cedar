@@ -3870,11 +3870,11 @@ __metadata:
     "@types/mime-types": "npm:2.1.4"
     "@types/react": "npm:^19.2.0"
     "@types/react-dom": "npm:^19.2.0"
-    "@uppy/aws-s3": "npm:6.2.2"
-    "@uppy/core": "npm:6.2.0"
-    "@uppy/dashboard": "npm:6.0.1"
-    "@uppy/drag-drop": "npm:6.0.0"
-    "@uppy/react": "npm:6.0.0"
+    "@uppy/aws-s3": "npm:6.3.0"
+    "@uppy/core": "npm:6.3.0"
+    "@uppy/dashboard": "npm:6.0.2"
+    "@uppy/drag-drop": "npm:6.0.1"
+    "@uppy/react": "npm:6.1.0"
     "@uppy/xhr-upload": "npm:6.0.1"
     better-sqlite3: "npm:12.11.1"
     concurrently: "npm:9.2.5"
@@ -12912,30 +12912,30 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@uppy/aws-s3@npm:6.2.2":
-  version: 6.2.2
-  resolution: "@uppy/aws-s3@npm:6.2.2"
+"@uppy/aws-s3@npm:6.3.0":
+  version: 6.3.0
+  resolution: "@uppy/aws-s3@npm:6.3.0"
   peerDependencies:
-    "@uppy/core": ^6.2.0
-  checksum: 10c0/bef98862cde21a6b06d8fbec81938ee418d3de8afd41f2d67f7d7125b24ac2d9ac440a294af674ff530ceee398517b2980be420253e6e06d930d1b6effe1b56b
+    "@uppy/core": ^6.3.0
+  checksum: 10c0/732bf61cc4b17444f14c9ae6b8cc12ec2187931f575066b9bd09e1c4fcccefeca805037ac67efde29f1a667139aadfd9022d72cbc12001aa070f11c92f1f7248
   languageName: node
   linkType: hard
 
-"@uppy/components@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "@uppy/components@npm:2.0.0"
+"@uppy/components@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "@uppy/components@npm:2.1.0"
   dependencies:
     clsx: "npm:^2.1.1"
     dequal: "npm:^2.0.3"
     preact: "npm:^10.29.2"
     pretty-bytes: "npm:^7.1.0"
   peerDependencies:
-    "@uppy/core": ^6.0.0
+    "@uppy/core": ^6.3.0
     "@uppy/google-drive-picker": ^2.0.0
     "@uppy/google-photos-picker": ^2.0.0
-    "@uppy/image-editor": ^5.0.0
-    "@uppy/screen-capture": ^6.0.0
-    "@uppy/webcam": ^6.0.0
+    "@uppy/image-editor": ^5.0.1
+    "@uppy/screen-capture": ^6.0.2
+    "@uppy/webcam": ^6.0.2
   peerDependenciesMeta:
     "@uppy/image-editor":
       optional: true
@@ -12943,13 +12943,13 @@ __metadata:
       optional: true
     "@uppy/webcam":
       optional: true
-  checksum: 10c0/b81fb89b5eb8d3c8c04f61060f920009821ff7b7698be7b71cd94cb5c806c191cd8de531d953c588936a70da1ee7791989528055d3e96cd59a13752233fb77e2
+  checksum: 10c0/e78c26b493424a30cf19784b09c6511b50224da9a846dcaf554cbe3977e398da09ef76de36a20be71c1952c011f077eea731ab95240007a39c09c21da66dde77
   languageName: node
   linkType: hard
 
-"@uppy/core@npm:6.2.0":
-  version: 6.2.0
-  resolution: "@uppy/core@npm:6.2.0"
+"@uppy/core@npm:6.3.0":
+  version: 6.3.0
+  resolution: "@uppy/core@npm:6.3.0"
   dependencies:
     "@transloadit/prettier-bytes": "npm:^2.0.0"
     classnames: "npm:^2.5.1"
@@ -12960,13 +12960,13 @@ __metadata:
     p-queue: "npm:^9.3.3"
     p-retry: "npm:^8.0.0"
     preact: "npm:^10.29.2"
-  checksum: 10c0/dfde6684ba6347ffc3a3e280193b256715ccba5773b9c49cb2efad6830af7c4728b5a2d743e3dc497ad11015af89146e8f16185382fac4fe0dd80f31a57f74ca
+  checksum: 10c0/c82dd86cb1c1db3360239e777c88843fe061b08d11e52c88e08da66493d73ccb75046043211c9810a5daa32a8c561f7bef86127e747f785cb9ea0ede2e39034c
   languageName: node
   linkType: hard
 
-"@uppy/dashboard@npm:6.0.1":
-  version: 6.0.1
-  resolution: "@uppy/dashboard@npm:6.0.1"
+"@uppy/dashboard@npm:6.0.2":
+  version: 6.0.2
+  resolution: "@uppy/dashboard@npm:6.0.2"
   dependencies:
     "@transloadit/prettier-bytes": "npm:^2.0.0"
     "@uppy/thumbnail-generator": "npm:^6.0.1"
@@ -12976,35 +12976,34 @@ __metadata:
     preact: "npm:^10.29.2"
     shallow-equal: "npm:^3.1.0"
   peerDependencies:
-    "@uppy/core": ^6.2.0
-  checksum: 10c0/5cc75176e03c214fdc25bd1285f93ad66a72fc188a486e81b9bdf51fbb6b0439371f4ddad08ab2ac3a4ec77b98fa8b731ce61dd469172848fd234d120bc5b356
+    "@uppy/core": ^6.3.0
+  checksum: 10c0/454c9d4c3f7f83d238465cebbf62016dc4486c25fbd1813dd9206d44207f37576c31a97635275cf4ea720857cbb7b79308ec63b84648d4465ce8a2e5950f8999
   languageName: node
   linkType: hard
 
-"@uppy/drag-drop@npm:6.0.0":
-  version: 6.0.0
-  resolution: "@uppy/drag-drop@npm:6.0.0"
+"@uppy/drag-drop@npm:6.0.1":
+  version: 6.0.1
+  resolution: "@uppy/drag-drop@npm:6.0.1"
   dependencies:
     preact: "npm:^10.29.2"
   peerDependencies:
-    "@uppy/core": ^6.0.0
-  checksum: 10c0/a2127e8dfb72056437ae742ce3b286b2179bac3a4884bf5ac9ed6888130f5d86a09e032b21248c26b939fbcb18bf9f5f6b9c5889543d507e8134f76de92b078c
+    "@uppy/core": ^6.3.0
+  checksum: 10c0/36d38dfcc04edc983e322c81c596174acdca403de5f714417e24892851c428957db629989e4cd4a5edb1eead2c865c8c91bf04406c727ea5a74b882f80a0153f
   languageName: node
   linkType: hard
 
-"@uppy/react@npm:6.0.0":
-  version: 6.0.0
-  resolution: "@uppy/react@npm:6.0.0"
+"@uppy/react@npm:6.1.0":
+  version: 6.1.0
+  resolution: "@uppy/react@npm:6.1.0"
   dependencies:
-    "@uppy/components": "npm:^2.0.0"
-    preact: "npm:^10.29.2"
+    "@uppy/components": "npm:^2.1.0"
     use-sync-external-store: "npm:^1.6.0"
   peerDependencies:
-    "@uppy/core": ^6.0.0
-    "@uppy/dashboard": ^6.0.0
-    "@uppy/screen-capture": ^6.0.0
-    "@uppy/status-bar": ^6.0.0
-    "@uppy/webcam": ^6.0.0
+    "@uppy/core": ^6.3.0
+    "@uppy/dashboard": ^6.0.2
+    "@uppy/screen-capture": ^6.0.2
+    "@uppy/status-bar": ^6.0.1
+    "@uppy/webcam": ^6.0.2
     react: ^18.0.0 || ^19.0.0
     react-dom: ^18.0.0 || ^19.0.0
   peerDependenciesMeta:
@@ -13016,7 +13015,7 @@ __metadata:
       optional: true
     "@uppy/webcam":
       optional: true
-  checksum: 10c0/396cb52cd75b1d5fde19075eef36454ef777039a4dbd7a7a0dc9206c1dec5f5767aca744f6e5ffc3202a0c6828d6a2feaee3aff5bae741a68767e07c93d6c541
+  checksum: 10c0/6b8dd989ebbf89a9412a524f6aa0e25bb7ba2ad44f66c20172716542cd16f1de182cdc7a7b3f9360c7cb93538e1bf1ec72e8299105d455bbbfcf153a87532a37
   languageName: node
   linkType: hard
 
