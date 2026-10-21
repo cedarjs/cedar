@@ -24,7 +24,6 @@ export { createFragmentCell } from './components/cell/createFragmentCell.js'
 
 export type {
   CellProps,
-  CellQueryTypes,
   CellFailureProps,
   CellLoadingProps,
   CellSuccessProps,

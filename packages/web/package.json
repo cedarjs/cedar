@@ -17,6 +17,10 @@
       "types": "./dist/components/ServerInject.d.ts",
       "default": "./dist/components/ServerInject.js"
     },
+    "./cellTypes": {
+      "types": "./dist/components/cell/cellTypes.d.ts",
+      "default": "./dist/components/cell/cellTypes.js"
+    },
     "./request": {
       "types": "./dist/server/request.d.ts",
       "default": "./dist/server/request.js"

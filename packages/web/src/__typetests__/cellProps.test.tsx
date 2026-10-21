@@ -11,10 +11,10 @@ import type {
   CellFailureProps,
   CellLoadingProps,
   CellProps,
-  CellQueryTypes,
   CellSuccessProps,
   TypedDocumentNode,
 } from '@cedarjs/web'
+import type { CellQueryTypes } from '@cedarjs/web/cellTypes'
 
 type ExampleQueryVariables = {
   category: string

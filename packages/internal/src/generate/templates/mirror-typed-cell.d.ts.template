@@ -1,5 +1,6 @@
 import * as Cell from './${name}.js'
-import type { CellProps, CellQueryTypes } from '@cedarjs/web'
+import type { CellProps } from '@cedarjs/web'
+import type { CellQueryTypes } from '@cedarjs/web/cellTypes'
 
 type SuccessType = typeof Cell.Success
 type QueryTypes = CellQueryTypes<typeof Cell.QUERY>
