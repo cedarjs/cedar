@@ -7,6 +7,18 @@ import { describe, it, expect } from 'vitest'
 const BASE_DIR = path.resolve(import.meta.dirname, '..', '..', '..', '..')
 const CLI = path.join(BASE_DIR, 'packages', 'cli', 'dist', 'index.js')
 
+// Node sometimes emits its own warnings to stderr (e.g. experimental-feature
+// notices, deprecation warnings) that have nothing to do with the CLI's own
+// output. Strip them out so these tests assert on what the CLI actually
+// printed, not on Node runtime noise that can vary by Node version or
+// environment (e.g. proxy env vars triggering an EnvHttpProxyAgent warning).
+function stripNodeWarnings(stderr: string) {
+  return stderr
+    .replace(/^\(node:\d+\) .*Warning:.*$/gm, '')
+    .replace(/^\(Use `node --trace-warnings .*$/gm, '')
+    .trim()
+}
+
 function cedar(args: string[], options?: SpawnSyncOptions) {
   const { status, stdout, stderr } = spawnSync('node', [CLI, ...args], {
     cwd: BASE_DIR,
@@ -16,7 +28,7 @@ function cedar(args: string[], options?: SpawnSyncOptions) {
   return {
     status,
     stdout: stdout.toString().trim(),
-    stderr: stderr.toString().trim(),
+    stderr: stripNodeWarnings(stderr.toString()),
   }
 }
 
