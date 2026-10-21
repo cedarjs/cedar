@@ -6,6 +6,7 @@ import babelGenerator from '@babel/generator'
 import { parse as babelParse } from '@babel/parser'
 import type { ParserPlugin } from '@babel/parser'
 import babelTraverse from '@babel/traverse'
+import type { NodePath } from '@babel/traverse'
 import * as t from '@babel/types'
 import fg from 'fast-glob'
 import { parse as graphqlParse, Kind } from 'graphql'
@@ -14,6 +15,8 @@ import type { Plugin } from 'vite'
 // Handle default export interop for CommonJS/ESM dual usage
 const traverse = (babelTraverse as any).default ?? babelTraverse
 const generate = (babelGenerator as any).default ?? babelGenerator
+
+const QUERY_EXPORT_NAME = 'QUERY'
 
 /**
  * Vite plugin that automatically wraps the `standard` export in Cell mock files
@@ -261,14 +264,30 @@ export const getCellMetadata = (p: string) => {
       }
     },
     TaggedTemplateExpression(path: any) {
-      if (path.parent?.id?.name !== 'QUERY') {
+      if (path.parent?.id?.name !== QUERY_EXPORT_NAME) {
         return
       }
       operation = path.node.quasi.quasis[0].value.raw
     },
+    CallExpression(queryPath: NodePath<t.CallExpression>) {
+      const declaration = queryPath.parent
+      const template = queryPath.node.arguments[0]
+      if (
+        declaration.type !== 'VariableDeclarator' ||
+        declaration.id.type !== 'Identifier' ||
+        declaration.id.name !== QUERY_EXPORT_NAME ||
+        template?.type !== 'TemplateLiteral'
+      ) {
+        return
+      }
+
+      operation = template.quasis[0].value.raw
+    },
   })
 
-  const hasQueryExport = namedExports.find(({ name }) => name === 'QUERY')
+  const hasQueryExport = namedExports.find(
+    ({ name }) => name === QUERY_EXPORT_NAME,
+  )
   const hasAfterQueryExport = namedExports.find(
     ({ name }) => name === 'afterQuery',
   )

@@ -14,6 +14,8 @@ import { parse as graphqlParse, Kind } from 'graphql'
 // it the same way packages/internal/src/ast.ts does.
 const traverse = babelTraverse.default || babelTraverse
 
+const QUERY_EXPORT_NAME = 'QUERY'
+
 export default function ({ types: t }: { types: typeof types }): PluginObj {
   let nodesToRemove: any[] = []
   let nodesToInsert: any[] = []
@@ -234,15 +236,31 @@ export const getCellMetadata = (p: string) => {
     },
     TaggedTemplateExpression(path) {
       // @ts-expect-error wip
-      if (path.parent?.id?.name !== 'QUERY') {
+      if (path.parent?.id?.name !== QUERY_EXPORT_NAME) {
         return
       }
 
       operation = path.node.quasi.quasis[0].value.raw
     },
+    CallExpression(queryPath) {
+      const declaration = queryPath.parent
+      const template = queryPath.node.arguments[0]
+      if (
+        declaration.type !== 'VariableDeclarator' ||
+        declaration.id.type !== 'Identifier' ||
+        declaration.id.name !== QUERY_EXPORT_NAME ||
+        template?.type !== 'TemplateLiteral'
+      ) {
+        return
+      }
+
+      operation = template.quasis[0].value.raw
+    },
   })
 
-  const hasQueryExport = namedExports.find(({ name }) => name === 'QUERY')
+  const hasQueryExport = namedExports.find(
+    ({ name }) => name === QUERY_EXPORT_NAME,
+  )
   const hasAfterQueryExport = namedExports.find(
     ({ name }) => name === 'afterQuery',
   )

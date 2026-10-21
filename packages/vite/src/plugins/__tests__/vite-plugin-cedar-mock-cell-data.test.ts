@@ -174,6 +174,23 @@ describe('cedarMockCellDataPlugin', () => {
     expect(result?.code).toContain('export const standard')
   })
 
+  it('uses the graphql() QUERY operation, ignoring fragment arguments and other calls', async () => {
+    const cell = [
+      'export const QUERY = graphql(',
+      '  `query FindTypedUser($id: Int!) { user(id: $id) { id } }`,',
+      '  [graphql(`fragment UserFields on User { id }`)],',
+      ')',
+      'const anotherDocument = graphql(`query IgnoreMe { users { id } }`)',
+      'export const Success = ({ user }) => <div>{user.id}</div>',
+    ].join('\n')
+    vol.fromJSON({ [CELL_FILE]: cell })
+    // @ts-expect-error Plugin type
+    const result = await plugin.transform(MOCK_ARROW, MOCK_FILE)
+
+    expect(result?.code).toContain('mockGraphQLQuery("FindTypedUser",')
+    expect(result?.code).toContain('export const standard')
+  })
+
   it('wraps with afterQuery when the cell exports afterQuery', async () => {
     vol.fromJSON({ [CELL_FILE]: CELL_WITH_QUERY_AND_AFTER_QUERY })
     // @ts-expect-error Plugin type
