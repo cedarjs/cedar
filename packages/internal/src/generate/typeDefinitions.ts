@@ -175,8 +175,12 @@ export const generateMirrorCell = (p: string, rwjsPaths = getPaths()) => {
   const { name } = path.parse(p)
 
   const fileContents = fileToAst(p)
+  const exportedComponents = getNamedExports(fileContents)
+  const hasQuery = exportedComponents.some(
+    (component) => component.name === 'QUERY',
+  )
   const cellQuery = getCellGqlQuery(fileContents)
-  const cellFragment = cellQuery ? undefined : getCellGqlFragment(fileContents)
+  const cellFragment = hasQuery ? undefined : getCellGqlFragment(fileContents)
   const cellFragmentName = cellFragment
     ? parseGqlFragmentName(cellFragment)
     : undefined
@@ -184,14 +188,20 @@ export const generateMirrorCell = (p: string, rwjsPaths = getPaths()) => {
     ? parseGqlFragmentPropName(cellFragment)
     : undefined
 
+  let typeDefContents: string
+
   if (cellQuery) {
     const gqlDoc = parseGqlQueryToAst(cellQuery)[0]
 
-    writeTemplate('templates/mirror-cell.d.ts.template', typeDefPath, {
-      name,
-      queryResultType: `${gqlDoc?.name}`,
-      queryVariablesType: `${gqlDoc?.name}Variables`,
-    })
+    typeDefContents = writeTemplate(
+      'templates/mirror-cell.d.ts.template',
+      typeDefPath,
+      {
+        name,
+        queryResultType: `${gqlDoc?.name}`,
+        queryVariablesType: `${gqlDoc?.name}Variables`,
+      },
+    )
   } else if (cellFragmentName && cellFragmentPropName) {
     // Fragment Cells don't have a QUERY. They receive their data through the
     // prop named after their fragment instead, typed by the fragment they
@@ -199,18 +209,34 @@ export const generateMirrorCell = (p: string, rwjsPaths = getPaths()) => {
     // graphql-codegen is configured with `namingConvention: 'keep'` and
     // `omitOperationSuffix: true`, so the generated type is named exactly
     // like the fragment
-    writeTemplate('templates/mirror-cell-fragment.d.ts.template', typeDefPath, {
-      name,
-      fragmentType: cellFragmentName,
-      fragmentPropName: cellFragmentPropName,
-    })
+    typeDefContents = writeTemplate(
+      'templates/mirror-cell-fragment.d.ts.template',
+      typeDefPath,
+      {
+        name,
+        fragmentType: cellFragmentName,
+        fragmentPropName: cellFragmentPropName,
+      },
+    )
+  } else if (hasQuery) {
+    typeDefContents = writeTemplate(
+      'templates/mirror-typed-cell.d.ts.template',
+      typeDefPath,
+      {
+        name,
+      },
+    )
   } else {
     // If for some reason we can't parse the query, generated the mirror cell anyway
-    writeTemplate('templates/mirror-cell.d.ts.template', typeDefPath, {
-      name,
-      queryResultType: 'any',
-      queryVariablesType: 'any',
-    })
+    typeDefContents = writeTemplate(
+      'templates/mirror-cell.d.ts.template',
+      typeDefPath,
+      {
+        name,
+        queryResultType: 'any',
+        queryVariablesType: 'any',
+      },
+    )
   }
 
   // We add a source map to allow "go to definition" to avoid ending in the .d.ts file
@@ -218,7 +244,6 @@ export const generateMirrorCell = (p: string, rwjsPaths = getPaths()) => {
   // to the Success component
   try {
     // Get the location of the Success component
-    const exportedComponents = getNamedExports(fileContents)
     const successComponent = exportedComponents.find(
       (x) => x.name === 'Success',
     )
@@ -230,9 +255,18 @@ export const generateMirrorCell = (p: string, rwjsPaths = getPaths()) => {
     const map = new SourceMapGenerator({
       file: 'index.d.ts',
     })
+    // The default export is what "go to definition" on the Cell lands on
+    const defaultExportIndex = typeDefContents
+      .split('\n')
+      .findIndex((line) => line.startsWith('export default function'))
+    if (defaultExportIndex === -1) {
+      throw new Error('No default export found in the generated mirror type')
+    }
+
     map.addMapping({
       generated: {
-        line: 12,
+        // Source map lines are 1-based
+        line: defaultExportIndex + 1,
         column: 0,
       },
       source: path.relative(path.dirname(typeDefPath), p),

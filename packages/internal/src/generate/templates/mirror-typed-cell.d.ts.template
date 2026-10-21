@@ -1,0 +1,14 @@
+import * as Cell from './${name}.js'
+import type { CellProps } from '@cedarjs/web'
+import type { CellQueryTypes } from '@cedarjs/web/cellTypes'
+
+type SuccessType = typeof Cell.Success
+type QueryTypes = CellQueryTypes<typeof Cell.QUERY>
+
+export * from './${name}.js'
+
+type CellInputs = CellProps<SuccessType, QueryTypes[0], typeof Cell, QueryTypes[1]>
+
+export default function (props: CellInputs): ReturnType<SuccessType>
+
+//# sourceMappingURL=index.d.ts.map
