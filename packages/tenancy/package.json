@@ -63,7 +63,7 @@
     "esbuild": "0.28.2",
     "graphql": "16.14.2",
     "jsdom": "27.4.0",
-    "prisma": "7.10.0",
+    "prisma": "7.10.1",
     "publint": "0.3.25",
     "react": "19.3.1",
     "react-dom": "19.3.1",

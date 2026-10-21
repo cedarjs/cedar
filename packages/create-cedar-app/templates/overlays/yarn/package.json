@@ -20,7 +20,7 @@
     "@cedarjs/eslint-config": "7.1.0",
     "@cedarjs/project-config": "7.1.0",
     "@cedarjs/testing": "7.1.0",
-    "prisma": "7.10.0",
+    "prisma": "7.10.1",
     "vitest": "4.1.12"
   },
   "engines": {
