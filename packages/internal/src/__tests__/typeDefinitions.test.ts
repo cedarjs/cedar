@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import ts from 'typescript'
 import { beforeAll, afterAll, test, expect } from 'vitest'
 
 import { ensurePosixPath } from '@cedarjs/project-config'
@@ -120,6 +121,65 @@ test('infers mirror types from a graphql() QUERY, including when FRAGMENT is exp
   expect(
     generatedContent.replace('//# sourceMappingURL', '//_# sourceMappingURL'),
   ).toMatchSnapshot()
+})
+
+test.each([
+  { kind: 'document', factory: false, untyped: false },
+  { kind: 'function', factory: true, untyped: false },
+  { kind: 'untyped', factory: false, untyped: true },
+])('type-checks the generated $kind QUERY mirror', ({ factory, untyped }) => {
+  const fixtureDir = path.join(__dirname, '__fixtures__/typed-query-cell')
+  const cellPath = path.join(fixtureDir, 'TypedQueryCell.tsx')
+  const mirrorPath = generateMirrorCell(cellPath)
+  // Keep the temporary project beneath the package so its declared web and
+  // GraphQL dependencies resolve just as they do in an application.
+  const projectDir = fs.mkdtempSync(path.join(__dirname, 'typed-cell-'))
+
+  try {
+    let cellSource = fs.readFileSync(cellPath, 'utf-8')
+    if (factory) {
+      cellSource = cellSource.replace(
+        'export const QUERY = graphql(',
+        'export const QUERY = () => graphql(',
+      )
+    }
+    if (untyped) {
+      cellSource = cellSource.replace(
+        'TypedDocumentNode<UserQuery, UserVariables>',
+        "import('graphql').DocumentNode",
+      )
+    } else {
+      // gql.tada documents carry this optional decoration without requiring
+      // the complete TypedDocumentNode interface.
+      cellSource = cellSource.replace(
+        'TypedDocumentNode<UserQuery, UserVariables>',
+        "import('graphql').DocumentNode & { __apiType?: (variables: UserVariables) => UserQuery }",
+      )
+    }
+    fs.writeFileSync(path.join(projectDir, 'TypedQueryCell.tsx'), cellSource)
+    fs.copyFileSync(mirrorPath, path.join(projectDir, 'index.d.ts'))
+    const consumerPath = path.join(projectDir, 'consumer.tsx')
+    const consumerName = untyped ? 'untyped-consumer.tsx' : 'typed-consumer.tsx'
+    fs.copyFileSync(path.join(fixtureDir, consumerName), consumerPath)
+
+    const program = ts.createProgram([consumerPath], {
+      noEmit: true,
+      strict: true,
+      skipLibCheck: true,
+      jsx: ts.JsxEmit.ReactJSX,
+      module: ts.ModuleKind.NodeNext,
+      moduleResolution: ts.ModuleResolutionKind.NodeNext,
+      types: [],
+    })
+    const diagnostics = ts.getPreEmitDiagnostics(program)
+    expect(
+      diagnostics.map((diagnostic) =>
+        ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'),
+      ),
+    ).toEqual([])
+  } finally {
+    fs.rmSync(projectDir, { recursive: true, force: true })
+  }
 })
 
 test('generate the correct mirror types for directory named modules', () => {

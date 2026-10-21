@@ -1,11 +1,10 @@
 import * as Cell from './${name}.js'
-import type { CellProps } from '@cedarjs/web'
-import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core'
+import type { CellProps, TypedDocumentNode } from '@cedarjs/web'
 
 type SuccessType = typeof Cell.Success
 type QueryOf<Q> = Q extends (...args: never[]) => infer D ? D : Q
 type CellQuery = QueryOf<typeof Cell.QUERY>
-type QueryTypes = CellQuery extends DocumentTypeDecoration<infer R, infer V> ? [R, V] : [any, any]
+type QueryTypes = CellQuery extends Pick<TypedDocumentNode<infer R, infer V>, '__apiType'> ? [R, V] : [any, any]
 
 export * from './${name}.js'
 
