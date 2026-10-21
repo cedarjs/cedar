@@ -98,6 +98,7 @@ async function main() {
   const filesWithMswImports: string[] = []
   const filesWithWhatwgFetch: string[] = []
   const filesWithRedwoodProvider: string[] = []
+  const filesWithRedwoodUserType: string[] = []
   const filesMissingChangePassword: string[] = []
 
   const removedGraphQLTypesRegex =
@@ -146,6 +147,10 @@ async function main() {
 
     if (content.includes('RedwoodProvider')) {
       filesWithRedwoodProvider.push(file)
+    }
+
+    if (/\bRedwoodUser\b/.test(content)) {
+      filesWithRedwoodUserType.push(file)
     }
 
     if (
@@ -279,6 +284,18 @@ async function main() {
         'kept as a deprecated alias for now, but will be removed in a\n' +
         'future release. Update your imports and JSX usage to\n' +
         'CedarProvider.',
+    ])
+  }
+
+  if (filesWithRedwoodUserType.length > 0) {
+    info('Outdated type name detected: RedwoodUser', [
+      'Found RedwoodUser in: ' + filesWithRedwoodUserType.join(', '),
+      'The auth setup templates now name the getCurrentUser return type\n' +
+        'CedarUser instead of RedwoodUser. This is just a local type alias\n' +
+        'in your own api/src/lib/auth.ts (not exported from any Cedar\n' +
+        'package), so nothing breaks if you keep the old name. Renaming it\n' +
+        'to CedarUser keeps your project in sync with the current Cedar\n' +
+        'templates.',
     ])
   }
 
