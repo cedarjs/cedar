@@ -45,6 +45,19 @@ function warn(title: string, lines: string[]) {
 }
 
 /**
+ * Like `warn`, but for things that don't break anything and that the user can
+ * safely ignore. Deliberately not colored, so it doesn't compete with the
+ * warnings and failures above it for attention
+ */
+function info(title: string, lines: string[]) {
+  console.log(title + '\n')
+
+  for (const line of lines) {
+    console.log(line + '\n')
+  }
+}
+
+/**
  * Returns `undefined` for projects that don't use Tailwind CSS v3. For projects
  * that do, returns the path to their Tailwind config file, relative to the
  * project root, or `null` if only index.css shows that they use v3
@@ -365,6 +378,36 @@ async function main() {
         '    },',
       'See https://cedarjs.com/docs/auth/dbauth#changepassword for all\n' +
         'options.',
+    ])
+  }
+
+  const filesWithRedwoodUserType: string[] = []
+
+  if (fs.existsSync(projectPaths.api.lib)) {
+    for await (const file of fs.promises.glob(apiFunctionPatterns, {
+      cwd: projectPaths.api.lib,
+      exclude,
+    })) {
+      const filePath = path.join(projectPaths.api.lib, file)
+      const content = await fs.promises.readFile(filePath, 'utf8')
+
+      if (/\bRedwoodUser\b/.test(content)) {
+        filesWithRedwoodUserType.push(
+          path.relative(projectPaths.base, filePath),
+        )
+      }
+    }
+  }
+
+  if (filesWithRedwoodUserType.length > 0) {
+    info('Outdated type name detected: RedwoodUser', [
+      'Found RedwoodUser in: ' + filesWithRedwoodUserType.join(', '),
+      'The auth setup templates now name the getCurrentUser return type\n' +
+        'CedarUser instead of RedwoodUser. This is just a local type alias\n' +
+        'in your own api/src/lib/auth.ts (not exported from any Cedar\n' +
+        'package), so nothing breaks if you keep the old name. Renaming it\n' +
+        'to CedarUser keeps your project in sync with the current Cedar\n' +
+        'templates.',
     ])
   }
 
