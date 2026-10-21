@@ -6,7 +6,7 @@ import { AuthenticationError, ForbiddenError } from '@cedarjs/graphql-server'
  * Authentication provider's JWT together with an optional role or list of
  * roles.
  */
-type RedwoodUser = Record<string, unknown> & { roles?: string | string[] }
+type CedarUser = Record<string, unknown> & { roles?: string | string[] }
 
 /**
  * getCurrentUser returns the user information together with
@@ -28,11 +28,11 @@ type RedwoodUser = Record<string, unknown> & { roles?: string | string[] }
  * @param { APIGatewayEvent event, Context context } - An optional object which
  *   contains information from the invoker such as headers and cookies, and the
  *   context information about the invocation such as IP Address
- * @returns RedwoodUser
+ * @returns CedarUser
  */
 export const getCurrentUser = async (
   decoded: Decoded
-): Promise<RedwoodUser | null> => {
+): Promise<CedarUser | null> => {
   if (!decoded) {
     return null
   }
