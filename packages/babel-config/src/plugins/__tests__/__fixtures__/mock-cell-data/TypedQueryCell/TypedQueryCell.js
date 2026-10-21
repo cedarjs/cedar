@@ -5,5 +5,10 @@ export const QUERY = graphql(
 
 const anotherDocument = graphql(`query IgnoreMe { users { id } }`)
 
+function nestedQuery() {
+  const QUERY = graphql(`query NestedDecoy { users { id } }`)
+  return QUERY
+}
+
 export const Loading = () => <div>Loading...</div>
 export const Success = ({ user }) => <div>{user.id}</div>

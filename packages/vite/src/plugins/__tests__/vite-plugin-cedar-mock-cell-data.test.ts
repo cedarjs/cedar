@@ -181,6 +181,10 @@ describe('cedarMockCellDataPlugin', () => {
       '  [graphql(`fragment UserFields on User { id }`)],',
       ')',
       'const anotherDocument = graphql(`query IgnoreMe { users { id } }`)',
+      'function nestedQuery() {',
+      '  const QUERY = graphql(`query NestedDecoy { users { id } }`)',
+      '  return QUERY',
+      '}',
       'export const Success = ({ user }) => <div>{user.id}</div>',
     ].join('\n')
     vol.fromJSON({ [CELL_FILE]: cell })

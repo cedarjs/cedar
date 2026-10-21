@@ -243,6 +243,14 @@ export const getCellMetadata = (p: string) => {
       operation = path.node.quasi.quasis[0].value.raw
     },
     CallExpression(queryPath) {
+      const exportPath = queryPath.parentPath.parentPath?.parentPath
+      if (
+        !exportPath?.isExportNamedDeclaration() ||
+        !exportPath.parentPath?.isProgram()
+      ) {
+        return
+      }
+
       const declaration = queryPath.parent
       const template = queryPath.node.arguments[0]
       if (
