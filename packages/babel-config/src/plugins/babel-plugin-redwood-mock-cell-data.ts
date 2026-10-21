@@ -181,6 +181,40 @@ export default function ({ types: t }: { types: typeof types }): PluginObj {
   }
 }
 
+/**
+ * The GraphQL source passed to a document factory call, like gql.tada's or
+ * graphql-codegen's `graphql()`, that initializes `QUERY`. Type-only wrappers
+ * around the call (`as`, `satisfies` and `!`) are skipped. Only the first
+ * argument is read, and only when it's a string literal or a template literal
+ * without substitutions.
+ */
+const getQueryCallSource = (
+  init: types.Expression | null | undefined,
+): string | undefined => {
+  let expression = init
+  while (
+    expression?.type === 'TSAsExpression' ||
+    expression?.type === 'TSSatisfiesExpression' ||
+    expression?.type === 'TSNonNullExpression'
+  ) {
+    expression = expression.expression
+  }
+
+  if (expression?.type !== 'CallExpression') {
+    return undefined
+  }
+
+  const [source] = expression.arguments
+  if (source?.type === 'StringLiteral') {
+    return source.value
+  }
+  if (source?.type === 'TemplateLiteral' && source.expressions.length === 0) {
+    return source.quasis[0].value.raw
+  }
+
+  return undefined
+}
+
 export const getCellMetadata = (p: string) => {
   const ast = getCellAst(p)
 
@@ -216,6 +250,16 @@ export const getCellMetadata = (p: string) => {
       }
 
       if (declaration.type === 'VariableDeclaration') {
+        const queryDeclarator = declaration.declarations.find(
+          (declarator) =>
+            declarator.id.type === 'Identifier' &&
+            declarator.id.name === QUERY_EXPORT_NAME,
+        )
+        const querySource = getQueryCallSource(queryDeclarator?.init)
+        if (querySource !== undefined) {
+          operation = querySource
+        }
+
         const id = declaration.declarations[0].id as types.Identifier
 
         namedExports.push({
@@ -242,28 +286,6 @@ export const getCellMetadata = (p: string) => {
 
       operation = path.node.quasi.quasis[0].value.raw
     },
-    CallExpression(queryPath) {
-      const exportPath = queryPath.parentPath.parentPath?.parentPath
-      if (
-        !exportPath?.isExportNamedDeclaration() ||
-        !exportPath.parentPath?.isProgram()
-      ) {
-        return
-      }
-
-      const declaration = queryPath.parent
-      const template = queryPath.node.arguments[0]
-      if (
-        declaration.type !== 'VariableDeclarator' ||
-        declaration.id.type !== 'Identifier' ||
-        declaration.id.name !== QUERY_EXPORT_NAME ||
-        template?.type !== 'TemplateLiteral'
-      ) {
-        return
-      }
-
-      operation = template.quasis[0].value.raw
-    },
   })
 
   const hasQueryExport = namedExports.find(
@@ -276,15 +298,22 @@ export const getCellMetadata = (p: string) => {
   let operationName = ''
 
   if (operation) {
-    const document = graphqlParse(operation)
+    try {
+      const document = graphqlParse(operation)
 
-    for (const definition of document.definitions) {
-      if (
-        definition.kind === Kind.OPERATION_DEFINITION &&
-        definition.name?.value
-      ) {
-        operationName = definition.name.value
+      for (const definition of document.definitions) {
+        if (
+          definition.kind === Kind.OPERATION_DEFINITION &&
+          definition.name?.value
+        ) {
+          operationName = definition.name.value
+        }
       }
+    } catch {
+      // QUERY isn't a GraphQL document that can be read on its own, e.g. a
+      // template with substitutions or a call to something other than a
+      // document factory. The mock is then handled like one for an unnamed
+      // operation
     }
   }
 
