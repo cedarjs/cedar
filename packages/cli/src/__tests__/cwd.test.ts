@@ -15,7 +15,7 @@ const CLI = path.join(BASE_DIR, 'packages', 'cli', 'dist', 'index.js')
 function stripNodeWarnings(stderr: string) {
   return stderr
     .replace(/^\(node:\d+\) .*Warning:.*$/gm, '')
-    .replace(/^\(Use `node --trace-warnings .*$/gm, '')
+    .replace(/^\(Use `node --trace-(?:warnings|deprecation) .*$/gm, '')
     .trim()
 }
 
