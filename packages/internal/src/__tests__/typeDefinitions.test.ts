@@ -8,6 +8,7 @@ import { ensurePosixPath } from '@cedarjs/project-config'
 import { findCells, findDirectoryNamedModules } from '../files.js'
 import {
   generateMirrorCells,
+  generateMirrorCell,
   generateMirrorDirectoryNamedModules,
   generateTypeDefRouterPages,
   generateTypeDefCurrentUser,
@@ -106,6 +107,19 @@ test('generate the correct mirror types for cells', () => {
     //_# sourceMappingURL=index.d.ts.map
     "
   `)
+})
+
+test('infers mirror types from a graphql() QUERY, including when FRAGMENT is exported', () => {
+  const cellPath = path.join(
+    __dirname,
+    '__fixtures__/typed-query-cell/TypedQueryCell.tsx',
+  )
+  const mirrorPath = generateMirrorCell(cellPath)
+  const generatedContent = fs.readFileSync(mirrorPath, 'utf-8')
+
+  expect(
+    generatedContent.replace('//# sourceMappingURL', '//_# sourceMappingURL'),
+  ).toMatchSnapshot()
 })
 
 test('generate the correct mirror types for directory named modules', () => {

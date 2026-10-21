@@ -175,8 +175,12 @@ export const generateMirrorCell = (p: string, rwjsPaths = getPaths()) => {
   const { name } = path.parse(p)
 
   const fileContents = fileToAst(p)
+  const exportedComponents = getNamedExports(fileContents)
+  const hasQuery = exportedComponents.some(
+    (component) => component.name === 'QUERY',
+  )
   const cellQuery = getCellGqlQuery(fileContents)
-  const cellFragment = cellQuery ? undefined : getCellGqlFragment(fileContents)
+  const cellFragment = hasQuery ? undefined : getCellGqlFragment(fileContents)
   const cellFragmentName = cellFragment
     ? parseGqlFragmentName(cellFragment)
     : undefined
@@ -204,6 +208,10 @@ export const generateMirrorCell = (p: string, rwjsPaths = getPaths()) => {
       fragmentType: cellFragmentName,
       fragmentPropName: cellFragmentPropName,
     })
+  } else if (hasQuery) {
+    writeTemplate('templates/mirror-typed-cell.d.ts.template', typeDefPath, {
+      name,
+    })
   } else {
     // If for some reason we can't parse the query, generated the mirror cell anyway
     writeTemplate('templates/mirror-cell.d.ts.template', typeDefPath, {
@@ -218,7 +226,6 @@ export const generateMirrorCell = (p: string, rwjsPaths = getPaths()) => {
   // to the Success component
   try {
     // Get the location of the Success component
-    const exportedComponents = getNamedExports(fileContents)
     const successComponent = exportedComponents.find(
       (x) => x.name === 'Success',
     )
@@ -230,9 +237,13 @@ export const generateMirrorCell = (p: string, rwjsPaths = getPaths()) => {
     const map = new SourceMapGenerator({
       file: 'index.d.ts',
     })
+    const defaultExportLine = fs
+      .readFileSync(typeDefPath, 'utf-8')
+      .split('\n')
+      .findIndex((line) => line.startsWith('export default function'))
     map.addMapping({
       generated: {
-        line: 12,
+        line: defaultExportLine + 1,
         column: 0,
       },
       source: path.relative(path.dirname(typeDefPath), p),
