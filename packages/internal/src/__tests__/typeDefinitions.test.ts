@@ -1,9 +1,10 @@
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 
 import { beforeAll, afterAll, test, expect } from 'vitest'
 
-import { ensurePosixPath } from '@cedarjs/project-config'
+import { ensurePosixPath, getPaths } from '@cedarjs/project-config'
 
 import { findCells, findDirectoryNamedModules } from '../files.js'
 import {
@@ -114,12 +115,28 @@ test('infers mirror types from a graphql() QUERY, including when FRAGMENT is exp
     __dirname,
     '__fixtures__/typed-query-cell/TypedQueryCell.tsx',
   )
-  const mirrorPath = generateMirrorCell(cellPath)
-  const generatedContent = fs.readFileSync(mirrorPath, 'utf-8')
+  // The fixture Cell isn't part of the example project, so its mirror is
+  // generated into a temporary directory instead of the project's .cedar
+  const mirrorRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-mirror-'))
 
-  expect(
-    generatedContent.replace('//# sourceMappingURL', '//_# sourceMappingURL'),
-  ).toMatchSnapshot()
+  try {
+    const paths = getPaths()
+    const mirrorPath = generateMirrorCell(cellPath, {
+      ...paths,
+      base: path.dirname(cellPath),
+      generated: {
+        ...paths.generated,
+        types: { ...paths.generated.types, mirror: mirrorRoot },
+      },
+    })
+    const generatedContent = fs.readFileSync(mirrorPath, 'utf-8')
+
+    expect(
+      generatedContent.replace('//# sourceMappingURL', '//_# sourceMappingURL'),
+    ).toMatchSnapshot()
+  } finally {
+    fs.rmSync(mirrorRoot, { recursive: true, force: true })
+  }
 })
 
 test('generate the correct mirror types for directory named modules', () => {
