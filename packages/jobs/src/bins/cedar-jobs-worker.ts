@@ -3,7 +3,6 @@
 // The process that actually starts an instance of Worker to process jobs.
 // Can be run independently with `yarn cedar-jobs-worker` but by default is forked
 // by `yarn cedar-jobs` and either monitored, or detached to run independently.
-import { hostname } from 'node:os'
 import process from 'node:process'
 
 import { hideBin } from 'yargs/helpers'
@@ -14,6 +13,7 @@ import type { Worker } from '../core/Worker.js'
 import { WorkerConfigIndexNotFoundError } from '../errors.js'
 import { loadJobsManager } from '../loaders.js'
 import { setupEnv } from '../setupEnv.js'
+import { lockName as buildLockName } from '../util.js'
 
 setupEnv()
 
@@ -61,11 +61,8 @@ export const processName = ({
 }
 
 /**
- * The name a worker locks jobs with (`lockedBy`). A worker takes back any job
- * locked under its own name, so the name has to be unique to this process:
- * the process name alone is the same for the same worker config in every
- * app server, on every host, and two workers sharing it would both run a job,
- * and each one's result would hand the job back to the other to run again
+ * The name this worker locks jobs with (`lockedBy`). See `lockName()` in
+ * `../util.ts` for why it needs the host name and process id.
  */
 export const lockName = ({
   id,
@@ -74,7 +71,7 @@ export const lockName = ({
   id: number
   queues: string | string[]
 }) => {
-  return `${processName({ id, queues })} host:${hostname()} pid:${process.pid}`
+  return buildLockName(processName({ id, queues }))
 }
 
 const setupSignals = ({ worker }: { worker: Worker }) => {

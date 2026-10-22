@@ -25,7 +25,6 @@
 // synced when the workers start.
 
 import fs from 'node:fs'
-import { hostname } from 'node:os'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
@@ -37,6 +36,7 @@ import {
   JobNotFoundError,
   JobsLibNotFoundError,
   jobsFromModules,
+  lockName,
   setJobLoaderOverrides,
 } from '@cedarjs/jobs'
 import type {
@@ -196,12 +196,13 @@ export async function startJobsDevWorkers(
 
   const workers: Worker[] = numWorkers.map(([index, id]) => {
     const workerConfig = jobsManager.workers[index]
-    // Like `lockName()` in `cedar-jobs-worker.ts`, the name a worker locks
-    // jobs with includes the host name and process id. Two dev servers on one
-    // database would otherwise share it, and both run the same job
-    const processName =
-      `ud-jobs.${[workerConfig.queue].flat().join('-')}.${id} ` +
-      `host:${hostname()} pid:${process.pid}`
+    // Shares `@cedarjs/jobs`'s `lockName()` with `cedar-jobs-worker.ts`'s
+    // workers, so the host name and process id suffix that keeps lock names
+    // unique per process can't drift between the two. Two dev servers on one
+    // database would otherwise share a lock name, and both run the same job
+    const processName = lockName(
+      `ud-jobs.${[workerConfig.queue].flat().join('-')}.${id}`,
+    )
 
     return jobsManager.createWorker({
       index,
