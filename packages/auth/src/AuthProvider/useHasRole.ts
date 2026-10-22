@@ -21,9 +21,14 @@ export const useHasRole = (currentUser: CurrentUser) => {
       // `LoggedInUser` has no index signature, so `roles` isn't guaranteed to
       // exist on it. It's only present when an app's `getCurrentUser` return
       // type includes it, which isn't something we can express generically
-      // here, so narrow locally instead of widening the shared type.
+      // here, so narrow locally instead of widening the shared type. Without
+      // the index signature, `CurrentUser` also accepts primitives (e.g. a
+      // string), and `in` throws on anything that isn't an object, so guard
+      // on `typeof` before using it.
       const roles =
-        currentUser && 'roles' in currentUser ? currentUser.roles : undefined
+        currentUser && typeof currentUser === 'object' && 'roles' in currentUser
+          ? currentUser.roles
+          : undefined
 
       if (roles) {
         if (typeof rolesToCheck === 'string') {

@@ -33,8 +33,11 @@ export function useAuth() {
     getCurrentUser: async () => mockedUserMeta.currentUser,
     hasRole: (roles: string | string[]) => {
       const user = mockedUserMeta.currentUser
+      // `CurrentUser` accepts primitives now that `LoggedInUser` has no index
+      // signature, and `in` throws on anything that isn't an object, so
+      // guard on `typeof` before using it (see useHasRole.ts).
       const currentUserRoles = makeArray(
-        user && 'roles' in user
+        user && typeof user === 'object' && 'roles' in user
           ? (user.roles as string | string[] | undefined)
           : undefined,
       )
