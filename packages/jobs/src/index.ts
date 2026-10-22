@@ -38,4 +38,6 @@ export {
 } from './loaders.js'
 export type { JobLoaderOverrides } from './loaders.js'
 
+export { lockName } from './util.js'
+
 export type * from './types.js'
