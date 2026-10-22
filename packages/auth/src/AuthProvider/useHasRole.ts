@@ -18,30 +18,33 @@ export const useHasRole = (currentUser: CurrentUser) => {
    */
   return useCallback(
     (rolesToCheck: string | string[]): boolean => {
-      if (currentUser?.roles) {
+      // `LoggedInUser` has no index signature, so `roles` isn't guaranteed to
+      // exist on it. It's only present when an app's `getCurrentUser` return
+      // type includes it, which isn't something we can express generically
+      // here, so narrow locally instead of widening the shared type.
+      const roles =
+        currentUser && 'roles' in currentUser ? currentUser.roles : undefined
+
+      if (roles) {
         if (typeof rolesToCheck === 'string') {
-          if (typeof currentUser.roles === 'string') {
-            // rolesToCheck is a string, currentUser.roles is a string
-            return currentUser.roles === rolesToCheck
-          } else if (Array.isArray(currentUser.roles)) {
-            // rolesToCheck is a string, currentUser.roles is an array
-            return currentUser.roles?.some(
-              (allowedRole) => rolesToCheck === allowedRole,
-            )
+          if (typeof roles === 'string') {
+            // rolesToCheck is a string, roles is a string
+            return roles === rolesToCheck
+          } else if (Array.isArray(roles)) {
+            // rolesToCheck is a string, roles is an array
+            return roles.some((allowedRole) => rolesToCheck === allowedRole)
           }
         }
 
         if (Array.isArray(rolesToCheck)) {
-          if (Array.isArray(currentUser.roles)) {
-            // rolesToCheck is an array, currentUser.roles is an array
-            return currentUser.roles?.some((allowedRole) =>
+          if (Array.isArray(roles)) {
+            // rolesToCheck is an array, roles is an array
+            return roles.some((allowedRole) =>
               rolesToCheck.includes(allowedRole),
             )
-          } else if (typeof currentUser.roles === 'string') {
-            // rolesToCheck is an array, currentUser.roles is a string
-            return rolesToCheck.some(
-              (allowedRole) => currentUser?.roles === allowedRole,
-            )
+          } else if (typeof roles === 'string') {
+            // rolesToCheck is an array, roles is a string
+            return rolesToCheck.some((allowedRole) => roles === allowedRole)
           }
         }
       }

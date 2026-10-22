@@ -32,8 +32,11 @@ export function useAuth() {
     getToken: async () => null,
     getCurrentUser: async () => mockedUserMeta.currentUser,
     hasRole: (roles: string | string[]) => {
+      const user = mockedUserMeta.currentUser
       const currentUserRoles = makeArray(
-        mockedUserMeta.currentUser?.roles as string | string[] | undefined,
+        user && 'roles' in user
+          ? (user.roles as string | string[] | undefined)
+          : undefined,
       )
 
       if (currentUserRoles) {
