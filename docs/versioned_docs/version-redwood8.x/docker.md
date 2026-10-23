@@ -251,10 +251,14 @@ COPY --chown=node:node .env.defaults .env.defaults
 
 COPY --chown=node:node --from=api_build /home/node/app/api/dist /home/node/app/api/dist
 COPY --chown=node:node --from=api_build /home/node/app/api/db /home/node/app/api/db
+COPY --chown=node:node --from=api_build /home/node/app/node_modules/.prisma /home/node/app/node_modules/.prisma
 ```
 
 Here's where we really take advantage of multi-stage builds by copying from the `api_build` stage.
 At this point all the building has been done. Now we can just grab the artifacts without having to lug around the dev dependencies.
+
+There's one more thing that was built: the prisma client in `node_modules/.prisma`.
+We need to grab it, too.
 
 Lastly, the default command is to start the api server using the bin from the `@cedarjs/api-server` package.
 You can override this command if you have more specific needs.
