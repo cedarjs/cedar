@@ -3078,8 +3078,6 @@ __metadata:
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
     cookie: "npm:1.1.1"
-    esbuild: "npm:0.28.2"
-    fast-glob: "npm:3.3.3"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.12"
   languageName: unknown
