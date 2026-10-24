@@ -67,8 +67,16 @@ export function OrgScope({
 
   const orgSlug = orgSlugProp ?? params['orgSlug']
   const memberships = getMemberships(currentUser)
+  // `LoggedInUser` has no index signature (see @cedarjs/auth), so `id` isn't
+  // guaranteed to exist on it, and `CurrentUser` also accepts primitives
+  // now, which `in` throws on. Narrow locally instead of asserting a shape.
   const userId =
-    typeof currentUser?.['id'] === 'string' ? currentUser['id'] : undefined
+    currentUser &&
+    typeof currentUser === 'object' &&
+    'id' in currentUser &&
+    typeof currentUser.id === 'string'
+      ? currentUser.id
+      : undefined
 
   const membershipSignature = memberships
     .map((m) => `${m.organizationId}:${m.role}`)

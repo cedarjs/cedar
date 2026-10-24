@@ -3,6 +3,8 @@ import { bypass, delay, graphql, HttpResponse } from 'msw'
 import type { RequestHandler, SharedOptions } from 'msw'
 import type { StartOptions as StartMSWWorkerOptions } from 'msw/browser'
 
+import type { CurrentUser } from '@cedarjs/auth'
+
 // The APIs returned by `setupWorker()` (msw/browser) and `setupServer()`
 // (msw/node) resolve to ESM- or CJS-flavored type declarations depending on
 // which build of this package is being produced, and the two declaration sets
@@ -313,11 +315,11 @@ export const mockGraphQLMutation = <
   return mockGraphQL('mutation', operation, data, responseEnhancer)
 }
 
-export const mockedUserMeta: { currentUser: Record<string, unknown> | null } = {
+export const mockedUserMeta: { currentUser: CurrentUser } = {
   currentUser: null,
 }
 
-export const mockCurrentUser = (user: Record<string, unknown> | null) => {
+export const mockCurrentUser = (user: CurrentUser) => {
   mockedUserMeta.currentUser = user
   mockGraphQLQuery('__CEDAR__AUTH_GET_CURRENT_USER', () => {
     return {
