@@ -15,6 +15,20 @@ export interface LoggedInUser {
  */
 export type CurrentUser = LoggedInUser | null
 
+/**
+ * The app's permission names, as keys. Cedar generates them from the app's
+ * permission definitions (`packages/permissions`, set up by
+ * `cedar setup tenancy`). Empty when there are none, and then
+ * `hasPermission` takes any string.
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface AvailablePermissions {}
+
+/** A permission name `hasPermission` takes: see `AvailablePermissions` */
+export type PermissionName = [keyof AvailablePermissions] extends [never]
+  ? string
+  : Extract<keyof AvailablePermissions, string>
+
 export interface AuthContextInterface<
   TUser,
   TLogInOptions,
@@ -82,7 +96,7 @@ export interface AuthContextInterface<
    * `false` outside a scope that provides permissions, such as `OrgScope`
    * from `@cedarjs/tenancy/web`.
    */
-  hasPermission(permission: string): boolean
+  hasPermission(permission: PermissionName): boolean
   /**
    * Redetermine authentication state and update the state.
    */

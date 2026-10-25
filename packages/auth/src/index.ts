@@ -1,7 +1,9 @@
 export type {
   AuthContextInterface,
+  AvailablePermissions,
   CurrentUser,
   LoggedInUser,
+  PermissionName,
 } from './AuthContext.js'
 export type { AuthProviderProps } from './AuthProvider/AuthProvider.js'
 export { HasPermissionContext } from './HasPermissionContext.js'
