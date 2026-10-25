@@ -56,6 +56,9 @@
     "typescript": "5.9.3",
     "vitest": "4.1.12"
   },
+  "peerDependencies": {
+    "@prisma/client": "7.10.1"
+  },
   "engines": {
     "node": ">=24"
   },

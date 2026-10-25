@@ -77,6 +77,7 @@
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/router": "workspace:*",
     "@cedarjs/web": "workspace:*",
+    "@prisma/client": "7.10.1",
     "react": "19.3.1"
   },
   "peerDependenciesMeta": {
@@ -90,6 +91,9 @@
       "optional": true
     },
     "@cedarjs/web": {
+      "optional": true
+    },
+    "@prisma/client": {
       "optional": true
     },
     "react": {

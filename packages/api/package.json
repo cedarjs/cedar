@@ -73,7 +73,6 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@prisma/client": "7.10.1",
     "@whatwg-node/fetch": "0.12.1",
     "cookie": "1.1.1",
     "humanize-string": "2.1.0",
@@ -85,6 +84,7 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
+    "@prisma/client": "7.10.1",
     "@types/aws-lambda": "8.10.164",
     "@types/jsonwebtoken": "9.0.10",
     "@types/memjs": "1",

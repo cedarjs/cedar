@@ -134,6 +134,12 @@ export const handler = async (upgradeOptions: UpgradeOptions) => {
           !!ctx.versionToUpgradeTo && notBlockedByPreUpgradeChecks(ctx),
       },
       {
+        title: 'Updating Prisma to the version CedarJS supports',
+        task: (ctx, task) => updatePrismaDeps(ctx, task, { dryRun, verbose }),
+        enabled: (ctx) =>
+          !!ctx.versionToUpgradeTo && notBlockedByPreUpgradeChecks(ctx),
+      },
+      {
         title: 'Updating other packages in your package.json(s)',
         task: (ctx) =>
           updatePackageVersionsFromTemplate(ctx, { dryRun, verbose }),
@@ -423,6 +429,147 @@ function updateCedarJSDepsForAllSides(
       }
     }),
   )
+}
+
+/**
+ * Fetches the `prisma` version that `@cedarjs/cli@<cedarVersion>` declares as
+ * its peer dependency. Returns `undefined` for CedarJS versions that don't
+ * declare `prisma` as a peer.
+ */
+export async function fetchPrismaPeerVersion(
+  cedarVersion: string,
+): Promise<string | undefined> {
+  // Registry URLs don't include build metadata, like the `+dd79f1726` in
+  // '4.0.0-rc.428+dd79f1726'
+  const version = cedarVersion.split('+')[0]
+  const url = `https://registry.npmjs.org/@cedarjs/cli/${version}`
+  const res = await fetch(url)
+
+  if (!res.ok) {
+    throw new Error(
+      `Failed to fetch @cedarjs/cli@${version} from the npm registry: ` +
+        res.statusText,
+    )
+  }
+
+  const manifest: unknown = await res.json()
+
+  if (
+    typeof manifest !== 'object' ||
+    manifest === null ||
+    !('peerDependencies' in manifest) ||
+    typeof manifest.peerDependencies !== 'object' ||
+    manifest.peerDependencies === null ||
+    !('prisma' in manifest.peerDependencies) ||
+    typeof manifest.peerDependencies.prisma !== 'string'
+  ) {
+    return undefined
+  }
+
+  return manifest.peerDependencies.prisma
+}
+
+/**
+ * Whether `depName` is a Prisma package that's released together with the
+ * `prisma` CLI, and so shares its version
+ */
+function isPrismaReleasePackage(depName: string) {
+  return (
+    depName === 'prisma' ||
+    depName === '@prisma/client' ||
+    depName.startsWith('@prisma/adapter-')
+  )
+}
+
+/**
+ * Sets every Prisma package in the `dependencies` and `devDependencies` of
+ * `pkg` to `prismaVersion`, collecting a line into `messages` for every change.
+ * Only packages `pkg` already declares are updated.
+ */
+export function updatePrismaDependencies(
+  pkg: TemplatePackageJson,
+  prismaVersion: string,
+  messages: string[],
+  { dryRun, verbose }: { dryRun?: boolean; verbose?: boolean } = {},
+) {
+  let updated = false
+
+  for (const field of ['dependencies', 'devDependencies'] as const) {
+    const deps = pkg[field] ?? {}
+
+    for (const [depName, depVersion] of Object.entries(deps)) {
+      if (!isPrismaReleasePackage(depName) || depVersion === prismaVersion) {
+        continue
+      }
+
+      if (verbose || dryRun) {
+        messages.push(` - ${depName}: ${depVersion} => ${prismaVersion}`)
+      }
+
+      deps[depName] = prismaVersion
+      updated = true
+    }
+  }
+
+  return updated
+}
+
+/**
+ * Sets the project's Prisma packages to the version the CedarJS release being
+ * upgraded to declares as its `prisma` peer dependency. CedarJS uses the
+ * project's copy of Prisma, so the versions need to match.
+ */
+async function updatePrismaDeps(
+  ctx: Record<string, unknown>,
+  task: { title: string; skip: (message: string) => void },
+  { dryRun, verbose }: { dryRun?: boolean; verbose?: boolean },
+) {
+  if (!ctx.versionToUpgradeTo) {
+    throw new Error('Failed to upgrade')
+  }
+
+  const prismaVersion = await fetchPrismaPeerVersion(
+    String(ctx.versionToUpgradeTo),
+  )
+
+  if (!prismaVersion) {
+    task.skip(
+      `CedarJS ${ctx.versionToUpgradeTo} doesn't declare a Prisma version`,
+    )
+    return
+  }
+
+  const messages: string[] = []
+
+  for (const basePath of [getPaths().base, getPaths().api.base]) {
+    const pkgJsonPath = path.join(basePath, 'package.json')
+
+    if (!fs.existsSync(pkgJsonPath)) {
+      continue
+    }
+
+    const pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8'))
+    const pkgMessages: string[] = []
+
+    if (
+      updatePrismaDependencies(pkg, prismaVersion, pkgMessages, {
+        dryRun,
+        verbose,
+      })
+    ) {
+      if (pkgMessages.length > 0) {
+        messages.push(`Updating ${pkgJsonPath}`, ...pkgMessages)
+      }
+
+      if (!dryRun) {
+        fs.writeFileSync(pkgJsonPath, JSON.stringify(pkg, undefined, 2))
+      }
+    }
+  }
+
+  if (messages.length > 0) {
+    task.title = task.title + '\n' + messages.join('\n')
+  }
 }
 
 interface TemplatePackageJson {

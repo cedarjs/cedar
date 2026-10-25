@@ -311,6 +311,125 @@ function enforceSingleGraphqlVersion() {
 }
 
 /**
+ * `@prisma/*` packages with their own version line, separate from the
+ * `prisma` CLI release version
+ */
+const INDEPENDENTLY_VERSIONED_PRISMA_PACKAGES = new Set([
+  '@prisma/dev',
+  '@prisma/engines-version',
+  '@prisma/studio-core',
+])
+
+/**
+ * @param {string} ident
+ */
+function isPrismaReleasePackage(ident) {
+  return (
+    ident === 'prisma' ||
+    (ident.startsWith('@prisma/') &&
+      !INDEPENDENTLY_VERSIONED_PRISMA_PACKAGES.has(ident))
+  )
+}
+
+/**
+ * @param {string} dir
+ * @returns {string[]}
+ */
+function findPackageJsonFiles(dir) {
+  if (!fs.existsSync(dir)) {
+    return []
+  }
+
+  /** @type {string[]} */
+  const files = []
+
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name === 'node_modules') {
+      continue
+    }
+
+    const entryPath = path.join(dir, entry.name)
+
+    if (entry.isDirectory()) {
+      files.push(...findPackageJsonFiles(entryPath))
+    } else if (entry.name === 'package.json') {
+      files.push(entryPath)
+    }
+  }
+
+  return files
+}
+
+/**
+ * This rule will enforce that `prisma` and all `@prisma/*` packages released
+ * together with it use one exact version, across all workspaces (dependencies,
+ * devDependencies and peerDependencies) and the create-cedar-app templates.
+ *
+ * Apps install the only copy of `prisma` and `@prisma/client`, and Cedar
+ * declares them as pinned peer dependencies. Prisma packages on different
+ * versions install duplicate copies of Prisma and its engines in apps, and
+ * produce peer dependency warnings.
+ *
+ * The reference version is the `prisma` peer dependency of `@cedarjs/cli`,
+ * which is also the version `yarn cedar upgrade` sets in apps.
+ *
+ * @param {Context} context
+ */
+function enforceSinglePrismaVersion({ Yarn }) {
+  const cliWorkspace = Yarn.workspace({ ident: '@cedarjs/cli' })
+  const prismaVersion = cliWorkspace?.manifest.peerDependencies?.prisma
+
+  if (!cliWorkspace || !prismaVersion) {
+    throw new Error(
+      'Prisma version constraint failed: @cedarjs/cli must declare `prisma` ' +
+        'as a peer dependency',
+    )
+  }
+
+  for (const dependency of Yarn.dependencies()) {
+    if (isPrismaReleasePackage(dependency.ident)) {
+      dependency.update(prismaVersion)
+    }
+  }
+
+  const createCedarAppDir = path.join(__dirname, 'packages', 'create-cedar-app')
+  const templateFiles = [
+    ...findPackageJsonFiles(path.join(createCedarAppDir, 'templates')),
+    ...findPackageJsonFiles(path.join(createCedarAppDir, 'database-overlays')),
+  ]
+
+  /** @type {string[]} */
+  const violations = []
+
+  for (const file of templateFiles) {
+    const manifest = JSON.parse(fs.readFileSync(file, 'utf-8'))
+
+    for (const type of [
+      'dependencies',
+      'devDependencies',
+      'peerDependencies',
+    ]) {
+      for (const [ident, range] of Object.entries(manifest[type] || {})) {
+        if (isPrismaReleasePackage(ident) && range !== prismaVersion) {
+          violations.push(
+            `  ${path.relative(__dirname, file)}: ${type}.${ident} is ` +
+              `${range}`,
+          )
+        }
+      }
+    }
+  }
+
+  if (violations.length > 0) {
+    throw new Error(
+      `Prisma version constraint failed: create-cedar-app templates must ` +
+        `use the same Prisma version as @cedarjs/cli's \`prisma\` peer ` +
+        `dependency (${prismaVersion}).\n\n${violations.join('\n')}`,
+    )
+  }
+}
+
+/**
  * This rule will enforce that the specified fields are present in the
  * `package.json` of all workspaces.
  *
@@ -367,6 +486,7 @@ module.exports = defineConfig({
     }
     enforceNotProdAndDevDependencies(ctx)
     enforceSingleGraphqlVersion()
+    enforceSinglePrismaVersion(ctx)
     enforceFieldsOnAllWorkspaces(ctx, [
       'name',
       'version',
