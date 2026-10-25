@@ -5,7 +5,6 @@ import path from 'path'
 import { fetch } from '@whatwg-node/fetch'
 import ci from 'ci-info'
 import envinfo from 'envinfo'
-import system from 'systeminformation'
 import { v4 as uuidv4 } from 'uuid'
 import yargsParser from 'yargs/yargs'
 
@@ -98,14 +97,23 @@ const getInfo = async (presets: Args = {}) => {
     info.System.Shell.name = info.System.Shell.path.split('\\').pop()
   }
 
-  const cpu = await system.cpu()
-  const mem = await system.mem()
+  // `systeminformation` is an optional peer dependency - telemetry is
+  // best-effort, so fall back to omitting the system metric if it's missing.
+  let systemMetric: string | undefined = undefined
+  try {
+    const system = await import('systeminformation')
+    const cpu = await system.default.cpu()
+    const mem = await system.default.mem()
+    systemMetric = `${cpu.physicalCores}.${Math.round(mem.total / 1073741824)}`
+  } catch {
+    // Not installed - skip system metric.
+  }
 
   // Returns a list of all enabled experiments
   // This detects all top level [experimental.X] and returns all X's, ignoring all Y's for any [experimental.X.Y]
   const experiments = Object.keys(getRawConfig()['experimental'] || {})
 
-  return {
+  const result: Record<string, unknown> = {
     os: info.System?.OS?.split(' ')[0],
     osVersion: info.System?.OS?.split(' ')[1],
     shell: info.System?.Shell?.name,
@@ -115,9 +123,14 @@ const getInfo = async (presets: Args = {}) => {
     vsCodeVersion: info.IDEs?.VSCode?.version,
     cedarVersion:
       presets.cedarVersion || info.npmPackages?.['@cedarjs/core']?.installed,
-    system: `${cpu.physicalCores}.${Math.round(mem.total / 1073741824)}`,
     experiments,
   }
+
+  if (systemMetric !== undefined) {
+    result.system = systemMetric
+  }
+
+  return result
 }
 
 // removes potentially sensitive information from an array of argv strings

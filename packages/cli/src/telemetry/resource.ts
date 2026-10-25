@@ -98,7 +98,7 @@ export async function getResources() {
   ].join('.')
   const sides = project.sides.join(',')
 
-  return {
+  const resources = {
     [SemanticResourceAttributes.SERVICE_NAME]: packageName,
     [SemanticResourceAttributes.SERVICE_VERSION]: packageVersion,
     [SemanticResourceAttributes.OS_TYPE]: info.System?.OS?.split(' ')[0],
@@ -108,8 +108,6 @@ export async function getResources() {
     'yarn.version': info.Binaries?.Yarn?.version,
     'npm.version': info.Binaries?.npm?.version,
     'vscode.version': info.IDEs?.VSCode?.version,
-    'cpu.count': cpu.physicalCores,
-    'memory.gb': Math.round(mem.total / 1073741824),
     'env.node_env': process.env.NODE_ENV || undefined,
     'ci.redwood': !!process.env.CEDAR_CI,
     'ci.isci': ci.isCI,
@@ -118,5 +116,14 @@ export async function getResources() {
     sides,
     experiments: JSON.stringify(experiments),
     uid: UID,
+  } as Record<string, string | number | boolean | undefined>
+
+  if (cpu.physicalCores !== undefined) {
+    resources['cpu.count'] = cpu.physicalCores
   }
+  if (mem.total !== undefined) {
+    resources['memory.gb'] = Math.round(mem.total / 1073741824)
+  }
+
+  return resources
 }
