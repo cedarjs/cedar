@@ -3,8 +3,9 @@ import type { ScenarioData } from '@cedarjs/testing/api'
 import type { Membership, Organization, Prisma } from 'src/lib/db'
 
 // This scenario assumes a dbAuth-style `User` model (`email`,
-// `hashedPassword`, `salt`). Adjust the `user` fixture below to match your
-// app's actual `User` fields if you use a different auth provider.
+// `hashedPassword`, `salt`), plus placeholders for any other fields your
+// `User` requires. Adjust the `user` fixtures below if you use a different
+// auth provider.
 export const standard = defineScenario<
   Prisma.OrganizationCreateArgs | Prisma.MembershipCreateArgs
 >({

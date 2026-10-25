@@ -13,7 +13,10 @@ import {
   addWebPackages,
 } from '@cedarjs/cli-helpers/installHelpers'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
-import { runTransitiveBin } from '@cedarjs/cli-helpers/packageManager/exec'
+import {
+  runBinSync,
+  runTransitiveBin,
+} from '@cedarjs/cli-helpers/packageManager/exec'
 import { getDataMigrationsPath, getSchemaPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -27,10 +30,12 @@ import {
   noUserModelMessage,
 } from './preflight.js'
 import {
+  addRequiredUserFields,
   editSchema,
   hasModel,
   MEMBERSHIP_MODEL,
   ORGANIZATION_MODEL,
+  requiredUserFields,
 } from './schemaPrisma.js'
 import type { EditSchemaResult, ModelsExistOutcome } from './schemaPrisma.js'
 
@@ -122,10 +127,14 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
     fs.existsSync(functionsAuthPath) &&
     fs.readFileSync(functionsAuthPath, 'utf-8').includes('DbAuthHandler')
 
+  // Everything this command writes from a template, to format and lint
+  const writtenFiles: string[] = []
+
   const writeTemplateFile = async (
     templateFile: string,
     outputPath: string,
     replacements: Record<string, string> = {},
+    transform: (content: string) => string = (content) => content,
   ) => {
     const dirname = import.meta.dirname
     const templatePath = path.resolve(dirname, 'templates', templateFile)
@@ -135,9 +144,13 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
       templateContent = templateContent.replaceAll(token, value)
     }
 
+    templateContent = transform(templateContent)
+
     const content = projectIsTypescript
       ? templateContent
       : await transformTSToJS(outputPath, templateContent)
+
+    writtenFiles.push(outputPath)
 
     return writeFile(outputPath, content, { overwriteExisting: force })
   }
@@ -366,6 +379,17 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
         task: async () => {
           const serviceDir = path.join(paths.api.services, 'organizations')
 
+          // The tests and scenarios create users: give them every field
+          // the app's User requires, not just dbAuth's
+          const userFields = requiredUserFields(
+            fs.readFileSync(
+              await getSchemaPath(paths.api.prismaConfig),
+              'utf-8',
+            ),
+          )
+          const withUserFields = (content: string) =>
+            addRequiredUserFields(content, userFields)
+
           await writeTemplateFile(
             'organizations.ts.template',
             path.join(serviceDir, `organizations.${ext}`),
@@ -373,10 +397,14 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
           await writeTemplateFile(
             'organizations.test.ts.template',
             path.join(serviceDir, `organizations.test.${ext}`),
+            {},
+            withUserFields,
           )
           await writeTemplateFile(
             'organizations.scenarios.ts.template',
             path.join(serviceDir, `organizations.scenarios.${ext}`),
+            {},
+            withUserFields,
           )
           await writeTemplateFile(
             'organizations.sdl.ts.template',
@@ -411,6 +439,10 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
                 'migrate',
                 'dev',
               ]),
+              __PRISMA_GENERATE_COMMAND__: formatCedarCommand([
+                'prisma',
+                'generate',
+              ]),
             },
           )
         },
@@ -437,36 +469,47 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
         },
       },
       {
-        title: 'Prettifying changed files',
+        title: 'Formatting and linting changed files...',
         task: async (_ctx, task) => {
-          const prettifyPaths = [
-            path.join(paths.api.lib, 'db.js'),
-            path.join(paths.api.lib, 'db.ts'),
-            path.join(paths.api.lib, 'auth.js'),
-            path.join(paths.api.lib, 'auth.ts'),
-            path.join(paths.api.functions, 'graphql.js'),
-            path.join(paths.api.functions, 'graphql.ts'),
-            path.join(paths.api.functions, 'auth.js'),
-            path.join(paths.api.functions, 'auth.ts'),
+          const changedFiles = [
+            ...writtenFiles,
+            ...['db', 'auth'].map((name) => path.join(paths.api.lib, name)),
+            ...['graphql', 'auth'].map((name) =>
+              path.join(paths.api.functions, name),
+            ),
           ]
+            .flatMap((file) =>
+              path.extname(file) ? [file] : [`${file}.js`, `${file}.ts`],
+            )
+            .filter((file) => fs.existsSync(file))
 
-          for (const prettifyPath of prettifyPaths) {
+          const prettierOptions = await getPrettierOptions()
+
+          for (const file of changedFiles) {
             try {
-              if (!fs.existsSync(prettifyPath)) {
-                continue
-              }
-              const source = fs.readFileSync(prettifyPath, 'utf-8')
-              const prettierOptions = await getPrettierOptions()
-              const prettifiedApp = await format(source, {
+              const source = fs.readFileSync(file, 'utf-8')
+              const formatted = await format(source, {
                 ...prettierOptions,
                 parser: 'babel-ts',
               })
 
-              fs.writeFileSync(prettifyPath, prettifiedApp, 'utf-8')
+              fs.writeFileSync(file, formatted, 'utf-8')
             } catch {
               task.output =
                 "Couldn't prettify the changes. Please reformat the files manually if needed."
             }
+          }
+
+          // Sorts the imports the codemods added the way the app's lint
+          // rules want them, as `cedar generate package` does
+          try {
+            runBinSync('eslint', ['--fix', ...changedFiles], {
+              cwd: paths.base,
+            })
+          } catch {
+            task.output = `Some of the changed files still have lint errors. Run ${c.highlight(
+              formatCedarCommand(['lint']),
+            )} to see them.`
           }
         },
       },
@@ -478,6 +521,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
             'migrate',
             'dev',
           ])
+          const generateCommand = formatCedarCommand(['prisma', 'generate'])
           const dataMigrateCommand = formatCedarCommand(['data-migrate', 'up'])
 
           const modelsExistWarning =
@@ -496,8 +540,9 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
           ${c.success('\nMulti-tenancy configured!\n')}
           ${modelsExistWarning}
           1. Run ${c.highlight(migrateCommand)} to create the Organization/Membership
-             tables, then ${c.highlight(dataMigrateCommand)} to give every existing
-             user a default organization.
+             tables and ${c.highlight(generateCommand)} to update the Prisma client,
+             then ${c.highlight(dataMigrateCommand)} to give every existing user a
+             default organization.
           2. \`db.ts\`'s tenancy extension scopes every model except
              User/Organization/Membership. For each existing model (e.g.
              Contact) whose rows belong to one organization, add ${c.highlight('organizationId String')} plus ${c.highlight('@@index([organizationId])')}

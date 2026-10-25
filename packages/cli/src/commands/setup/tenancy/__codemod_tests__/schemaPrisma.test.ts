@@ -2,11 +2,13 @@ import { describe, it, expect } from 'vitest'
 
 import {
   addDataMigrationModel,
+  addRequiredUserFields,
   addTenancyModels,
   editSchema,
   hasModel,
   MEMBERSHIP_MODEL,
   ORGANIZATION_MODEL,
+  requiredUserFields,
 } from '../schemaPrisma.js'
 
 const BASE_SCHEMA = `datasource db {
@@ -155,5 +157,99 @@ describe('appending is idempotent', () => {
 
     expect(twice).toEqual(once)
     expect(twice.outcome).toBe('added')
+  })
+})
+
+describe('editSchema after prisma format', () => {
+  // What `prisma format` does to the appended models: re-aligns columns
+  const realign = (schema: string) =>
+    schema.replace(/^( {2}\w+)( +)/gm, (_, field: string) =>
+      field.padEnd(20, ' '),
+    )
+
+  it('recognizes its own models however they are aligned', () => {
+    const { schema: once } = editSchema(BASE_SCHEMA, { force: false })
+    const formatted = realign(once)
+
+    expect(formatted).not.toBe(once)
+
+    for (const force of [false, true]) {
+      const { schema: twice, outcome } = editSchema(formatted, { force })
+
+      expect(outcome).toBe('added')
+      expect(twice).toBe(formatted)
+    }
+  })
+})
+
+describe('requiredUserFields', () => {
+  const schema = `model User {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  hashedPassword String
+  salt           String
+  fullName       String
+  username       String    @unique // a comment
+  age            Int
+  nickname       String?
+  roles          String    @default("user")
+  tags           String[]
+  plan           Plan
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  team           Team      @relation(fields: [teamId], references: [id])
+  teamId         String
+}
+
+enum Plan {
+  // The free one
+  FREE
+  PRO
+}`
+
+  it("finds the required fields without a default that setup doesn't fill", () => {
+    expect(requiredUserFields(schema)).toEqual([
+      { name: 'fullName', value: "'fullName __N__'" },
+      { name: 'username', value: "'username __N__'" },
+      { name: 'age', value: '__N__' },
+      { name: 'plan', value: "'FREE'" },
+    ])
+  })
+
+  it('finds none for a plain dbAuth User', () => {
+    expect(requiredUserFields(BASE_SCHEMA)).toEqual([])
+  })
+})
+
+describe('addRequiredUserFields', () => {
+  it('sets the fields on every user, numbered', () => {
+    const source = [
+      '        user: {',
+      '          create: {',
+      "            salt: 'x',",
+      '          },',
+      '        },',
+      "      salt: 'x',",
+    ].join('\n')
+
+    expect(
+      addRequiredUserFields(source, [
+        { name: 'fullName', value: "'fullName __N__'" },
+        { name: 'age', value: '__N__' },
+      ]),
+    ).toBe(
+      [
+        '        user: {',
+        '          create: {',
+        "            salt: 'x',",
+        "            fullName: 'fullName 1',",
+        '            age: 1,',
+        '          },',
+        '        },',
+        "      salt: 'x',",
+        "      fullName: 'fullName 2',",
+        '      age: 2,',
+      ].join('\n'),
+    )
   })
 })
