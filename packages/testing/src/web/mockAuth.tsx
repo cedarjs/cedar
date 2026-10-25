@@ -4,6 +4,8 @@ import React from 'react'
 // override exports with the same name
 export * from '@cedarjs/auth'
 
+import { HasPermissionContext, HasRoleContext } from '@cedarjs/auth'
+
 import { mockedUserMeta } from './mockRequests.js'
 
 interface Props {
@@ -19,8 +21,13 @@ function makeArray<T>(input?: T | T[]) {
 }
 
 // When running tests, this is what they'll get when they import `useAuth`
-// thanks to the router import transform in the Vitest setup
+// thanks to the router import transform in the Vitest setup. Like the real
+// `useAuth`, `hasRole` and `hasPermission` come from a scope above when one
+// provides them (`OrgScope` from `@cedarjs/tenancy/web` does).
 export function useAuth() {
+  const scopedHasRole = React.useContext(HasRoleContext)
+  const scopedHasPermission = React.useContext(HasPermissionContext)
+
   return {
     loading: false,
     isAuthenticated: !!mockedUserMeta.currentUser,
@@ -31,18 +38,22 @@ export function useAuth() {
     userMetadata: mockedUserMeta.currentUser,
     getToken: async () => null,
     getCurrentUser: async () => mockedUserMeta.currentUser,
-    hasRole: (roles: string | string[]) => {
-      const currentUserRoles = makeArray(
-        mockedUserMeta.currentUser?.roles as string | string[] | undefined,
-      )
+    hasRole:
+      scopedHasRole ??
+      ((roles: string | string[]) => {
+        const currentUserRoles = makeArray(
+          mockedUserMeta.currentUser?.roles as string | string[] | undefined,
+        )
 
-      if (currentUserRoles) {
-        return makeArray(roles).some((role) => currentUserRoles.includes(role))
-      }
+        if (currentUserRoles) {
+          return makeArray(roles).some((role) =>
+            currentUserRoles.includes(role),
+          )
+        }
 
-      return false
-    },
-    hasPermission: () => false,
+        return false
+      }),
+    hasPermission: scopedHasPermission ?? (() => false),
     reauthenticate: async () => {},
     forgotPassword: async () => {},
     resetPassword: async () => {},
