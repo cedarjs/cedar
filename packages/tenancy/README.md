@@ -76,23 +76,36 @@ import {
 ## Auth helpers
 
 ```ts
-import { hasOrgRole, requireMembership } from '@cedarjs/tenancy'
+// api/src/lib/auth.ts, in place of the single-tenant hasRole/requireAuth
+import { createTenancyAuth } from '@cedarjs/tenancy'
+
+export const { hasRole, requireAuth, hasOrgRole } = createTenancyAuth({
+  defaultRoles: ['owner', 'admin', 'member'],
+})
 
 // In a service:
-requireMembership({ roles: ['owner', 'admin'] })
+requireAuth({ roles: ['owner', 'admin'] }) // in the current organization
+requireAuth({ scope: 'USER' }) // signed in, no organization needed
 
 // Anywhere:
-if (hasOrgRole('owner')) { ... }
+if (hasRole('owner')) { ... }
 ```
 
-`requireMembership` throws `AuthenticationError` with no current user and
-`ForbiddenError` with no current organization or a role mismatch — the same
-error types `requireAuth` uses.
+`requireAuth` (and the `@requireAuth` directive, which `setup tenancy` gives a
+`scope` argument) is about the current organization by default: it throws
+`AuthenticationError` with no current user, and `ForbiddenError` with no
+current organization or when the user's role there isn't one of `roles`, or of
+`defaultRoles` when none are given. `scope: 'USER'` is for fields about the
+user rather than an organization. `hasRole` checks `getCurrentRoles()`: the
+membership's role in the current organization, or `currentUser.roles` outside
+one.
 
 ## Web
 
 `@cedarjs/tenancy/web` exports `OrgScope`, `useCurrentOrg`, `OrgContext` and
 `getMemberships`/`hasOrgRole` for the client side: a per-organization Apollo
 client provided under organization routes, keyed by the immutable organization
-id so switching organizations never mixes caches. See the how-to for the full
+id so switching organizations never mixes caches. Under `OrgScope`,
+`useAuth().hasRole` checks the user's role in that organization, and
+`OrgScope`'s `roles` and `unauthorized` props guard routes by it. See the how-to for the full
 `<Set wrap={OrgScope}>` setup `yarn cedar setup tenancy` generates.
