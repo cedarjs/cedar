@@ -67,8 +67,11 @@ export function OrgScope({
 
   const orgSlug = orgSlugProp ?? params['orgSlug']
   const memberships = getMemberships(currentUser)
+  // `id` only exists when the app's `getCurrentUser` returns it
   const userId =
-    typeof currentUser?.['id'] === 'string' ? currentUser['id'] : undefined
+    currentUser && 'id' in currentUser && typeof currentUser.id === 'string'
+      ? currentUser.id
+      : undefined
 
   const membershipSignature = memberships
     .map((m) => `${m.organizationId}:${m.role}`)

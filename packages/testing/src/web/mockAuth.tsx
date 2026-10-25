@@ -4,6 +4,8 @@ import React from 'react'
 // override exports with the same name
 export * from '@cedarjs/auth'
 
+import { currentUserHasRole } from '@cedarjs/auth/currentUserHasRole'
+
 import { mockedUserMeta } from './mockRequests.js'
 
 interface Props {
@@ -12,10 +14,6 @@ interface Props {
 
 const AuthProvider: React.FC<Props> = ({ children }) => {
   return <>{children}</>
-}
-
-function makeArray<T>(input?: T | T[]) {
-  return !input ? [] : Array.isArray(input) ? input : [input]
 }
 
 // When running tests, this is what they'll get when they import `useAuth`
@@ -31,17 +29,8 @@ export function useAuth() {
     userMetadata: mockedUserMeta.currentUser,
     getToken: async () => null,
     getCurrentUser: async () => mockedUserMeta.currentUser,
-    hasRole: (roles: string | string[]) => {
-      const currentUserRoles = makeArray(
-        mockedUserMeta.currentUser?.roles as string | string[] | undefined,
-      )
-
-      if (currentUserRoles) {
-        return makeArray(roles).some((role) => currentUserRoles.includes(role))
-      }
-
-      return false
-    },
+    hasRole: (roles: string | string[]) =>
+      currentUserHasRole(mockedUserMeta.currentUser, roles),
     reauthenticate: async () => {},
     forgotPassword: async () => {},
     resetPassword: async () => {},
