@@ -107,12 +107,12 @@ one.
 import { definePermissions } from '@cedarjs/tenancy/permissions'
 
 export const permissions = definePermissions({
-  permissions: {
-    'projects.read': { description: 'See projects' },
-    'projects.edit': { description: 'Change projects' },
-    'members.manage': { description: 'Invite and remove members' },
-    'account.manage': { description: 'Change your own account' },
-  },
+  permissions: [
+    'projects.read',
+    'projects.edit',
+    'members.manage',
+    'account.manage',
+  ],
   roles: {
     owner: ['projects.read', 'projects.edit', 'members.manage'],
     member: ['projects.read'],
@@ -134,8 +134,7 @@ export const { hasPermission, requirePermission, withPermissions } =
 Roles map to permissions in one place; fields ask for a permission with
 `@requirePermission(permission: "projects.edit")` or `requirePermission()`.
 A role only gets what its list says, so a new role is one entry. Permission
-names are typed from the definitions, and each has a description, for a page
-that lists them. `withPermissions` in `getCurrentUser` gives each
+names are typed from the definitions. `withPermissions` in `getCurrentUser` gives each
 membership its permissions, which `useAuth().hasPermission()` checks inside
 `OrgScope`.
 

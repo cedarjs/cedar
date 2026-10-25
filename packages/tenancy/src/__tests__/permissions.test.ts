@@ -10,13 +10,13 @@ const run = (fn: () => void | Promise<void>) =>
   getAsyncStoreInstance().run(new Map(), async () => fn())
 
 const definitions = definePermissions({
-  permissions: {
-    'projects.read': { description: 'See projects' },
-    'projects.edit': { description: 'Change projects' },
-    'members.manage': { description: 'Invite and remove members' },
-    'reports.sign': { description: 'Sign reports' },
-    'account.manage': { description: 'Change your own account' },
-  },
+  permissions: [
+    'projects.read',
+    'projects.edit',
+    'members.manage',
+    'reports.sign',
+    'account.manage',
+  ],
   roles: {
     owner: ['projects.read', 'projects.edit', 'members.manage'],
     member: ['projects.read'],
@@ -46,7 +46,7 @@ describe('definePermissions', () => {
   it('throws for a role listing a permission that is not defined', () => {
     expect(() =>
       definePermissions({
-        permissions: { 'projects.read': { description: 'See projects' } },
+        permissions: ['projects.read'],
         // @ts-expect-error - a typo is a type error too
         roles: { owner: ['projects.raed'] },
       }),
@@ -56,7 +56,7 @@ describe('definePermissions', () => {
   it('throws for a user permission that is not defined', () => {
     expect(() =>
       definePermissions({
-        permissions: { 'projects.read': { description: 'See projects' } },
+        permissions: ['projects.read'],
         roles: {},
         // @ts-expect-error - a typo is a type error too
         user: ['account.manage'],
@@ -69,16 +69,10 @@ describe('createPermissions', () => {
   it('checks the definitions too', () => {
     expect(() =>
       createPermissions({
-        permissions: { 'projects.read': { description: 'See projects' } },
+        permissions: ['projects.read'],
         roles: { owner: ['projects.raed' as 'projects.read'] },
       }),
     ).toThrow('Unknown permission "projects.raed" in role "owner"')
-  })
-
-  it('exposes the definitions, for an admin page', () => {
-    expect(permissions.definitions['members.manage']).toEqual({
-      description: 'Invite and remove members',
-    })
   })
 
   describe('hasPermission', () => {

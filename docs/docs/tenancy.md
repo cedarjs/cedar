@@ -440,8 +440,8 @@ repeating role lists.
 ### The definitions
 
 `setup tenancy` generates `packages/permissions`, a package that both sides
-share: the api checks the permissions, and the web can import their names and
-descriptions, e.g. for a page that lists them. It turns on
+share: the api checks the permissions, and the web can import their names. It
+turns on
 `experimental.packagesWorkspace` in `cedar.toml` for it.
 
 ```ts title="packages/permissions/src/index.ts"
@@ -449,14 +449,7 @@ import { definePermissions } from '@cedarjs/tenancy/permissions'
 import type { PermissionName } from '@cedarjs/tenancy/permissions'
 
 export const permissions = definePermissions({
-  permissions: {
-    'organization.read': {
-      description: 'See the organization and its members',
-    },
-    'members.manage': {
-      description: 'Invite members and remove them',
-    },
-  },
+  permissions: ['organization.read', 'members.manage'],
   roles: {
     owner: ['organization.read', 'members.manage'],
     admin: ['organization.read', 'members.manage'],
@@ -468,9 +461,10 @@ export const permissions = definePermissions({
 export type Permission = PermissionName<typeof permissions>
 ```
 
-- `permissions`: every permission the app checks, by name, each with a
-  `description`. Fields, services and the web ask for these names, so they're
-  defined in code.
+- `permissions`: every permission the app checks, by name. Fields, services
+  and the web ask for these names, so they're defined in code. A name is a
+  stable id, so it can also key what the app shows for it, such as a
+  translated label.
 - `roles`: what each built-in role may do in an organization. A permission
   listed here needs a current organization, and the user's role there must
   have it. A role that isn't listed has no permissions.
@@ -507,7 +501,6 @@ export function createPermissions(definitions: PermissionDefinitions): {
   withPermissions<User extends { memberships: { role: string }[] }>(
     user: User | null
   ): (User & { memberships: { permissions: Permission[] }[] }) | null
-  definitions: Record<Permission, PermissionDetails>
 }
 ```
 

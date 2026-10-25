@@ -13,19 +13,11 @@ import type { PermissionName } from '@cedarjs/tenancy/permissions'
  * user, in any organization or none (their own account, say).
  *
  * This package is shared: the api checks these permissions
- * (api/src/lib/permissions), and the web can import the names and
- * descriptions, e.g. for a page that lists them. The web gets each
+ * (api/src/lib/permissions), and the web can import the names. The web gets each
  * membership's permissions from the api, through `getCurrentUser`.
  */
 export const permissions = definePermissions({
-  permissions: {
-    'organization.read': {
-      description: 'See the organization and its members',
-    },
-    'members.manage': {
-      description: 'Invite members and remove them',
-    },
-  },
+  permissions: ['organization.read', 'members.manage'],
   roles: {
     owner: ['organization.read', 'members.manage'],
     admin: ['organization.read', 'members.manage'],

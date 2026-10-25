@@ -147,9 +147,8 @@ export function permissionsPackageFiles({
 
 /**
  * Adds `packages/permissions`, the app's permission definitions, which both
- * the api (to check them) and the web (for their names and descriptions)
- * import. It's a package in the experimental packages workspace, which this
- * turns on.
+ * the api (to check them) and the web (for their names) import. It's a
+ * package in the experimental packages workspace, which this turns on.
  */
 export function addPermissionsPackageTasks({
   cedarVersion,

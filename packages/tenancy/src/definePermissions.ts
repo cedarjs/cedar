@@ -1,24 +1,16 @@
 /**
- * What an app shows for a permission, e.g. in an admin page that lists them
- */
-export interface PermissionDetails {
-  /** What the permission lets a user do, in a sentence */
-  description: string
-}
-
-/**
  * Every permission an app checks, and what the built-in roles may do.
  *
  * Plain data with no api code in it, so both sides can import it: the api to
- * check permissions (`createPermissions`), and the web for the names and
- * descriptions.
+ * check permissions (`createPermissions`), and the web for the names.
  */
 export interface PermissionDefinitions<Name extends string = string> {
   /**
    * Every permission the app checks, by name. Fields, services and the web
-   * ask for these names, so they're defined in code.
+   * ask for these names, so they're defined in code. A name is a stable id,
+   * so it can also key what an app shows for it, such as translations.
    */
-  permissions: Readonly<Record<Name, PermissionDetails>>
+  permissions: readonly Name[]
   /**
    * What each built-in role may do in an organization. A role that isn't
    * listed has no permissions.
@@ -43,7 +35,7 @@ export type PermissionName<Definitions> =
 export function assertPermissionDefinitions(
   definitions: PermissionDefinitions,
 ) {
-  const defined = new Set(Object.keys(definitions.permissions))
+  const defined = new Set(definitions.permissions)
   const listed = [
     ...Object.entries(definitions.roles).map(
       ([role, names]) => [`role "${role}"`, names] as const,
@@ -64,16 +56,13 @@ export function assertPermissionDefinitions(
 }
 
 /**
- * Defines an app's permissions: each with a description, and what each
- * built-in role may do. Permission names are typed from `permissions`, so a
- * role listing a name that isn't defined is a type error.
+ * Defines an app's permissions, and what each built-in role may do.
+ * Permission names are typed from `permissions`, so a role listing a name
+ * that isn't defined is a type error.
  *
  * ```ts
  * export const permissions = definePermissions({
- *   permissions: {
- *     'projects.read': { description: 'See projects' },
- *     'members.manage': { description: 'Invite and remove members' },
- *   },
+ *   permissions: ['projects.read', 'members.manage'],
  *   roles: {
  *     owner: ['projects.read', 'members.manage'],
  *     member: ['projects.read'],
@@ -84,7 +73,7 @@ export function assertPermissionDefinitions(
  * Pass the result to `createPermissions` on the api.
  */
 export function definePermissions<const Name extends string>(definitions: {
-  permissions: Readonly<Record<Name, PermissionDetails>>
+  permissions: readonly Name[]
   roles: Readonly<Record<string, readonly NoInfer<Name>[]>>
   user?: readonly NoInfer<Name>[]
 }): PermissionDefinitions<Name> {

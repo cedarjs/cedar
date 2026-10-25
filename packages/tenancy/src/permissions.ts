@@ -3,15 +3,11 @@ import { AuthenticationError, ForbiddenError } from '@cedarjs/graphql-server'
 
 import { getCurrentOrg, isUserWithMemberships } from './context.js'
 import { assertPermissionDefinitions } from './definePermissions.js'
-import type {
-  PermissionDefinitions,
-  PermissionDetails,
-} from './definePermissions.js'
+import type { PermissionDefinitions } from './definePermissions.js'
 
 export { definePermissions } from './definePermissions.js'
 export type {
   PermissionDefinitions,
-  PermissionDetails,
   PermissionName,
 } from './definePermissions.js'
 
@@ -62,8 +58,6 @@ export interface Permissions<Permission extends string> {
         memberships: WithPermissions<User['memberships'][number], Permission>[]
       })
     | null
-  /** Every permission, with its details, e.g. for an admin page */
-  definitions: Readonly<Record<Permission, PermissionDetails>>
 }
 
 /**
@@ -94,7 +88,7 @@ export function createPermissions<const Permission extends string>(
   const userPermissions: readonly Permission[] = definitions.user ?? []
 
   const assertDefined = (permission: string) => {
-    if (!Object.hasOwn(definitions.permissions, permission)) {
+    if (!(definitions.permissions as readonly string[]).includes(permission)) {
       throw new Error(
         `Unknown permission "${permission}". Add it to \`permissions\` in ` +
           'your permission definitions before using it.',
@@ -167,7 +161,6 @@ export function createPermissions<const Permission extends string>(
     hasPermission,
     permissionsOf,
     withPermissions,
-    definitions: definitions.permissions,
     requirePermission({ permission }) {
       assertDefined(permission)
 

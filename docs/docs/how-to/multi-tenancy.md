@@ -712,20 +712,13 @@ any error handling you already have on the web side keeps working.
 ### Permissions
 
 `setup tenancy` also generates `packages/permissions`, a package shared by the
-api and web sides that defines every permission (with a description) and what
+api and web sides that defines every permission and what
 each role may do, `api/src/lib/permissions.ts`, which checks them, and an
 `@requirePermission` directive that asks for one of those permissions:
 
 ```ts title="packages/permissions/src/index.ts"
 export const permissions = definePermissions({
-  permissions: {
-    'organization.read': {
-      description: 'See the organization and its members',
-    },
-    'members.manage': {
-      description: 'Invite members and remove them',
-    },
-  },
+  permissions: ['organization.read', 'members.manage'],
   roles: {
     owner: ['organization.read', 'members.manage'],
     admin: ['organization.read', 'members.manage'],
