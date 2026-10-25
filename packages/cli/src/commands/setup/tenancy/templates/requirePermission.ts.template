@@ -1,0 +1,36 @@
+import { gql } from 'graphql-tag'
+
+import type { ValidatorDirectiveFunc } from '@cedarjs/graphql-server'
+import { createValidatorDirective } from '@cedarjs/graphql-server'
+
+import { requirePermission as applicationRequirePermission } from 'src/lib/permissions'
+
+export const schema = gql`
+  """
+  Use to check that the signed-in user may do something: that their role in
+  the current organization has the permission (see api/src/lib/permissions),
+  or that it's a permission every signed-in user has.
+  """
+  directive @requirePermission(permission: String!) on FIELD_DEFINITION
+`
+
+type Permission = Parameters<
+  typeof applicationRequirePermission
+>[0]['permission']
+
+// Optional to fit `ValidatorDirectiveFunc`; the SDL makes it required
+type RequirePermissionValidate = ValidatorDirectiveFunc<{
+  permission?: string
+}>
+
+const validate: RequirePermissionValidate = ({ directiveArgs }) => {
+  // A name the permissions map doesn't know throws, so a typo in the SDL is
+  // an error rather than a field nobody can use
+  applicationRequirePermission({
+    permission: directiveArgs.permission as Permission,
+  })
+}
+
+const requirePermission = createValidatorDirective(schema, validate)
+
+export default requirePermission

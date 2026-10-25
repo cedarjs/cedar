@@ -57,6 +57,77 @@ function findExportedConst(root: j.Collection, name: string) {
   })
 }
 
+const USER_LOOKUP = {
+  callee: {
+    type: 'MemberExpression',
+    object: {
+      type: 'MemberExpression',
+      object: { name: 'db' },
+      property: { name: 'user' },
+    },
+    property: { name: 'findUnique' },
+  },
+} as const
+
+/**
+ * Wraps `getCurrentUser`'s `db.user.findUnique(...)` in `withPermissions`
+ * from `api/src/lib/permissions`, so each membership the web gets carries
+ * its permissions (`useCan()`). A lookup that's already wrapped is left
+ * alone.
+ */
+function addWithPermissions(root: j.Collection) {
+  const isWithPermissionsCall = (node: unknown) =>
+    j.CallExpression.check(node) &&
+    j.Identifier.check(node.callee) &&
+    node.callee.name === 'withPermissions'
+
+  root.find(j.CallExpression, USER_LOOKUP).forEach((path) => {
+    const awaited = j.AwaitExpression.check(path.parent.node)
+      ? path.parent
+      : null
+
+    if (isWithPermissionsCall((awaited ?? path).parent.node)) {
+      return
+    }
+
+    if (awaited) {
+      awaited.replace(
+        j.callExpression(j.identifier('withPermissions'), [awaited.node]),
+      )
+    } else {
+      // `return db.user.findUnique(...)`, a promise
+      path.replace(
+        j.callExpression(j.memberExpression(path.node, j.identifier('then')), [
+          j.identifier('withPermissions'),
+        ]),
+      )
+    }
+  })
+}
+
+/**
+ * Imports `withPermissions` on the line after the `db` import, from beside
+ * it. On the printed source rather than the AST, as recast would put a
+ * blank line around a single inserted import.
+ */
+function addPermissionsImport(source: string): string {
+  if (/import \{[^}]*\bwithPermissions\b[^}]*\} from/.test(source)) {
+    return source
+  }
+
+  const dbImport = /^import \{ db \} from (['"])(.*?)db(\.js)?\1;?\n/m
+
+  if (dbImport.test(source)) {
+    return source.replace(
+      dbImport,
+      (line, quote, dir, ext = '') =>
+        `${line}import { withPermissions } from ${quote}${dir}permissions${ext}${quote}\n`,
+    )
+  }
+
+  return `import { withPermissions } from 'src/lib/permissions'\n${source}`
+}
+
 /**
  * Wires `api/src/lib/auth.ts` for tenancy:
  *
@@ -69,6 +140,8 @@ function findExportedConst(root: j.Collection, name: string) {
  *   roles come from the membership in the current organization, and
  *   `requireAuth` needs one unless told `scope: 'USER'`. The `AllowedRoles`
  *   type and the error imports go too when nothing else uses them.
+ * - Wraps the user lookup in `withPermissions`, so each membership carries
+ *   its permissions from `api/src/lib/permissions`.
  *
  * Throws `CEDAR_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND` when `db.user.findUnique`'s
  * `select` object cannot be located, and
@@ -137,12 +210,14 @@ export default function transform(fileInfo: j.FileInfo) {
     throw new Error('CEDAR_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND')
   }
 
+  addWithPermissions(root)
+
   const alreadyWired =
     root.find(j.ImportSpecifier, { imported: { name: 'createTenancyAuth' } })
       .length > 0
 
   if (alreadyWired) {
-    return root.toSource()
+    return addPermissionsImport(root.toSource())
   }
 
   const hasRole = findExportedConst(root, 'hasRole')
@@ -209,5 +284,5 @@ export default function transform(fileInfo: j.FileInfo) {
     })
   }
 
-  return root.toSource()
+  return addPermissionsImport(root.toSource())
 }

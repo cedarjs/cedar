@@ -44,8 +44,10 @@ const DEFAULT_TENANT_FIELD = 'organizationId'
 const AUTH_SNIPPET = `
   import { createTenancyAuth } from '@cedarjs/tenancy'
 
+  import { withPermissions } from 'src/lib/permissions'
+
   export const getCurrentUser = async (session) => {
-    return await db.user.findUnique({
+    return withPermissions(await db.user.findUnique({
       where: { id: session.id },
       select: {
         // ...your existing fields...
@@ -58,7 +60,7 @@ const AUTH_SNIPPET = `
           },
         },
       },
-    })
+    }))
   }
 
   // In place of your hasRole and requireAuth
@@ -377,6 +379,29 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
         },
       },
       {
+        title: 'Adding permissions and the requirePermission directive...',
+        task: async () => {
+          await writeTemplateFile(
+            'permissions.ts.template',
+            path.join(paths.api.lib, `permissions.${ext}`),
+          )
+
+          const directiveDir = path.join(
+            paths.api.directives,
+            'requirePermission',
+          )
+
+          await writeTemplateFile(
+            'requirePermission.ts.template',
+            path.join(directiveDir, `requirePermission.${ext}`),
+          )
+          await writeTemplateFile(
+            'requirePermission.test.ts.template',
+            path.join(directiveDir, `requirePermission.test.${ext}`),
+          )
+        },
+      },
+      {
         title: 'Adding the organizations service...',
         task: async () => {
           const serviceDir = path.join(paths.api.services, 'organizations')
@@ -535,7 +560,11 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
              tenant-owned models with ${c.highlight('withTenancy')} from ${c.highlight(
                '@cedarjs/tenancy',
              )}.
-          5. ${c.highlight('@requireAuth')} is now about the current organization: it needs
+          5. What each role may do is in ${c.highlight('api/src/lib/permissions')}. Guard
+             organization fields with ${c.highlight('@requirePermission(permission: "...")')}
+             (or ${c.highlight('@requireAuth(roles: [...])')}), and check permissions on the
+             web with ${c.highlight('useCan()')} from ${c.highlight('@cedarjs/tenancy/web')}.
+          6. ${c.highlight('@requireAuth')} is now about the current organization: it needs
              one, and checks the user's role in it. Add ${c.highlight('scope: USER')} to
              your fields that are about the signed-in user instead (their
              account, their settings), e.g.

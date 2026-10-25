@@ -10,8 +10,14 @@ export interface OrgScopeProps {
   /** Only members with one of these roles in the organization get in. */
   roles?: string | string[]
   /**
-   * The name of the route a member without one of `roles` is sent to. It
-   * gets the `orgSlug` param when its path has one.
+   * Only members whose role has this permission (api/src/lib/permissions)
+   * get in.
+   */
+  permission?: string
+  /**
+   * The name of the route a member without one of `roles`, or without
+   * `permission`, is sent to. It gets the `orgSlug` param when its path has
+   * one.
    */
   unauthorized?: string
   children: ReactNode
@@ -28,16 +34,16 @@ export interface OrgScopeProps {
  *
  * Under it, `useAuth().hasRole` checks the user's role in the organization.
  * For pages only some roles may open, wrap them in a component that passes
- * `roles`:
+ * `permission` (or `roles`):
  *
- *   const OwnersOnly = ({ children }: { children: ReactNode }) => (
- *     <OrgScope roles="owner" unauthorized="projects">
+ *   const MemberManagers = ({ children }: { children: ReactNode }) => (
+ *     <OrgScope permission="members.manage" unauthorized="projects">
  *       {children}
  *     </OrgScope>
  *   )
  *
- *   <Set wrap={OwnersOnly}>
- *     <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
+ *   <Set wrap={MemberManagers}>
+ *     <Route path="/org/{orgSlug}/members" page={MembersPage} name="members" />
  *   </Set>
  *
  * Routes under `OrgScope` must not carry `prerender`: `OrgScope`'s nested
@@ -47,6 +53,7 @@ export interface OrgScopeProps {
 export const OrgScope = ({
   orgSlug,
   roles,
+  permission,
   unauthorized,
   children,
 }: OrgScopeProps) => {
@@ -55,6 +62,7 @@ export const OrgScope = ({
       useAuth={useAuth}
       orgSlug={orgSlug}
       roles={roles}
+      permission={permission}
       unauthorized={unauthorized}
       notAMember={
         <div>

@@ -10,7 +10,7 @@ import { runTransform } from '../../../../lib/runTransform.js'
 describe.skipIf(process.env.CI && process.platform === 'win32')(
   'tenancy authCodemod',
   () => {
-    it('adds a memberships select and replaces hasRole/requireAuth with createTenancyAuth', async () => {
+    it('adds a memberships select, withPermissions, and createTenancyAuth for hasRole/requireAuth', async () => {
       await matchTransformSnapshot('authCodemod', 'defaultAuth')
     })
 
@@ -25,8 +25,12 @@ describe.skipIf(process.env.CI && process.platform === 'win32')(
       expect(transformResult.error).toContain('ERR_AUTH_CHECKS_NOT_FOUND')
     })
 
-    it('leaves an auth file that already uses createTenancyAuth as it is', async () => {
+    it('only adds withPermissions to an auth file that already uses createTenancyAuth', async () => {
       await matchTransformSnapshot('authCodemod', 'wiredAuth')
+    })
+
+    it('changes nothing the second time', async () => {
+      await matchTransformSnapshot('authCodemod', 'fullyWiredAuth')
     })
 
     it('throws CEDAR_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND when getCurrentUser has no recognizable select', async () => {
