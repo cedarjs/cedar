@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
+import { dedent } from 'ts-dedent'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import {
@@ -12,19 +13,30 @@ import {
 
 describe('enablePackagesWorkspace', () => {
   it('adds the table when there is none', () => {
-    expect(enablePackagesWorkspace('[web]\n  port = 8910\n')).toBe(
-      '[web]\n  port = 8910\n\n[experimental.packagesWorkspace]\n  enabled = true\n',
+    const toml = dedent`
+      [web]
+        port = 8910
+    `
+
+    expect(enablePackagesWorkspace(toml + '\n')).toBe(
+      dedent`
+        [web]
+          port = 8910
+
+        [experimental.packagesWorkspace]
+          enabled = true
+      ` + '\n',
     )
   })
 
   it('turns it on when it is off', () => {
-    const toml = [
-      '[experimental.packagesWorkspace]',
-      '  enabled = false',
-      '',
-      '[api]',
-      '  port = 8911',
-    ].join('\n')
+    const toml = dedent`
+      [experimental.packagesWorkspace]
+        enabled = false
+
+      [api]
+        port = 8911
+    `
 
     expect(enablePackagesWorkspace(toml)).toBe(
       toml.replace('enabled = false', 'enabled = true'),
@@ -32,58 +44,57 @@ describe('enablePackagesWorkspace', () => {
   })
 
   it("adds enabled to a table that doesn't have it", () => {
-    const toml = [
-      '[experimental.packagesWorkspace]',
-      '[experimental.packagesWorkspace.pipeline]',
-      '  skipWatchWarning = true',
-    ].join('\n')
+    const toml = dedent`
+      [experimental.packagesWorkspace]
+      [experimental.packagesWorkspace.pipeline]
+        skipWatchWarning = true
+    `
 
-    expect(enablePackagesWorkspace(toml)).toBe(
-      [
-        '[experimental.packagesWorkspace]',
-        '  enabled = true',
-        '[experimental.packagesWorkspace.pipeline]',
-        '  skipWatchWarning = true',
-      ].join('\n'),
-    )
+    expect(enablePackagesWorkspace(toml)).toBe(dedent`
+      [experimental.packagesWorkspace]
+        enabled = true
+      [experimental.packagesWorkspace.pipeline]
+        skipWatchWarning = true
+    `)
   })
 
   it('only changes enabled in its own table', () => {
-    const toml = [
-      '[experimental.packagesWorkspace]',
-      '  enabled = false',
-      '[experimental.realtime]',
-      '  enabled = false',
-    ].join('\n')
+    const toml = dedent`
+      [experimental.packagesWorkspace]
+        enabled = false
+      [experimental.realtime]
+        enabled = false
+    `
 
-    expect(enablePackagesWorkspace(toml)).toBe(
-      [
-        '[experimental.packagesWorkspace]',
-        '  enabled = true',
-        '[experimental.realtime]',
-        '  enabled = false',
-      ].join('\n'),
-    )
+    expect(enablePackagesWorkspace(toml)).toBe(dedent`
+      [experimental.packagesWorkspace]
+        enabled = true
+      [experimental.realtime]
+        enabled = false
+    `)
   })
 
   it('returns null when it is already on', () => {
     expect(
-      enablePackagesWorkspace(
-        '[experimental.packagesWorkspace]\n  enabled = true\n',
-      ),
+      enablePackagesWorkspace(dedent`
+        [experimental.packagesWorkspace]
+          enabled = true
+      `),
     ).toBe(null)
     expect(
-      enablePackagesWorkspace(
-        '[experimental]\n  packagesWorkspace.enabled = true\n',
-      ),
+      enablePackagesWorkspace(dedent`
+        [experimental]
+          packagesWorkspace.enabled = true
+      `),
     ).toBe(null)
   })
 
   it('throws rather than editing a setting it did not find a table for', () => {
     expect(() =>
-      enablePackagesWorkspace(
-        '[experimental]\n  packagesWorkspace.enabled = false\n',
-      ),
+      enablePackagesWorkspace(dedent`
+        [experimental]
+          packagesWorkspace.enabled = false
+      `),
     ).toThrow('CEDAR_TENANCY_ERR_PACKAGES_WORKSPACE')
   })
 })
