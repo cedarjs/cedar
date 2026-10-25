@@ -10,11 +10,9 @@ describe('LoggedInUser', () => {
 
   test('an interface-typed custom user is assignable to CurrentUser', () => {
     // This is the shape the generated-types docs show for a project's own
-    // `getCurrentUser` return type. Before the index signature was removed,
-    // an interface like this (as opposed to a type alias) wasn't assignable
-    // to `LoggedInUser`/`CurrentUser` because TypeScript only lets an
-    // interface satisfy a type with an index signature when the interface
-    // declares one too.
+    // `getCurrentUser` return type. TypeScript only lets an interface satisfy
+    // a type with an index signature when the interface declares one too, so
+    // this checks that `LoggedInUser` has no index signature.
     interface MyCurrentUser {
       id: number
       email: string

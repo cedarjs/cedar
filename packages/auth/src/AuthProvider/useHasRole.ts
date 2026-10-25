@@ -18,13 +18,10 @@ export const useHasRole = (currentUser: CurrentUser) => {
    */
   return useCallback(
     (rolesToCheck: string | string[]): boolean => {
-      // `LoggedInUser` has no index signature, so `roles` isn't guaranteed to
-      // exist on it. It's only present when an app's `getCurrentUser` return
-      // type includes it, which isn't something we can express generically
-      // here, so narrow locally instead of widening the shared type. Without
-      // the index signature, `CurrentUser` also accepts primitives (e.g. a
-      // string), and `in` throws on anything that isn't an object, so guard
-      // on `typeof` before using it.
+      // `roles` only exists when the app's `getCurrentUser` returns it, so
+      // check for it before reading it. `CurrentUser` also accepts primitives
+      // (e.g. a string), and `in` throws on anything that isn't an object, so
+      // check `typeof` first.
       const roles =
         currentUser && typeof currentUser === 'object' && 'roles' in currentUser
           ? currentUser.roles
