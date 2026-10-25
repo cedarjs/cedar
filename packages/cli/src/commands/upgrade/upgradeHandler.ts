@@ -134,12 +134,6 @@ export const handler = async (upgradeOptions: UpgradeOptions) => {
           !!ctx.versionToUpgradeTo && notBlockedByPreUpgradeChecks(ctx),
       },
       {
-        title: 'Updating Prisma to the version CedarJS supports',
-        task: (ctx, task) => updatePrismaDeps(ctx, task, { dryRun, verbose }),
-        enabled: (ctx) =>
-          !!ctx.versionToUpgradeTo && notBlockedByPreUpgradeChecks(ctx),
-      },
-      {
         title: 'Updating other packages in your package.json(s)',
         task: (ctx) =>
           updatePackageVersionsFromTemplate(ctx, { dryRun, verbose }),
@@ -153,6 +147,14 @@ export const handler = async (upgradeOptions: UpgradeOptions) => {
         enabled: (ctx) =>
           String(ctx.versionToUpgradeTo).includes('canary') &&
           notBlockedByPreUpgradeChecks(ctx),
+      },
+      {
+        title: 'Updating Prisma to the version CedarJS supports',
+        // Runs after the canary template sync, so the Prisma versions come
+        // from the target release rather than from the template on main
+        task: (ctx, task) => updatePrismaDeps(ctx, task, { dryRun, verbose }),
+        enabled: (ctx) =>
+          !!ctx.versionToUpgradeTo && notBlockedByPreUpgradeChecks(ctx),
       },
       {
         title: 'Downloading yarn patches',
