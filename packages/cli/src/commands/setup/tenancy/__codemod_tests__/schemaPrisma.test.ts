@@ -1,3 +1,4 @@
+import { dedent } from 'ts-dedent'
 import { describe, it, expect } from 'vitest'
 
 import {
@@ -183,31 +184,33 @@ describe('editSchema after prisma format', () => {
 })
 
 describe('requiredUserFields', () => {
-  const schema = `model User {
-  id             String    @id @default(uuid())
-  email          String    @unique
-  hashedPassword String
-  salt           String
-  fullName       String
-  username       String    @unique // a comment
-  age            Int
-  nickname       String?
-  roles          String    @default("user")
-  tags           String[]
-  plan           Plan
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  team           Team      @relation(fields: [teamId], references: [id])
-  teamId         String
-}
+  const schema = dedent`
+    model User {
+      id             String    @id @default(uuid())
+      email          String    @unique
+      hashedPassword String
+      salt           String
+      fullName       String
+      username       String    @unique // a comment
+      age            Int
+      nickname       String?
+      roles          String    @default("user")
+      tags           String[]
+      plan           Plan
+      createdAt      DateTime  @default(now())
+      updatedAt      DateTime  @updatedAt
+      team           Team      @relation(fields: [teamId], references: [id])
+      teamId         String
+    }
 
-enum Plan {
-  // The free one
-  FREE @map("free")
-  PRO  @map("pro")
+    enum Plan {
+      // The free one
+      FREE @map("free")
+      PRO  @map("pro")
 
-  @@map("plans")
-}`
+      @@map("plans")
+    }
+  `
 
   it("finds the required fields without a default that setup doesn't fill", () => {
     expect(requiredUserFields(schema)).toEqual([
@@ -233,41 +236,42 @@ describe('addRequiredUserFields', () => {
   it('numbers from firstNumber, so two files can keep their users apart', () => {
     expect(
       addRequiredUserFields(
-        "  salt: 'x',",
+        "salt: 'x',",
         [{ name: 'username', value: "'username __N__'" }],
         { firstNumber: 101 },
       ),
-    ).toBe("  salt: 'x',\n  username: 'username 101',")
+    ).toBe(dedent`
+      salt: 'x',
+      username: 'username 101',
+    `)
   })
 
   it('sets the fields on every user, numbered', () => {
-    const source = [
-      '        user: {',
-      '          create: {',
-      "            salt: 'x',",
-      '          },',
-      '        },',
-      "      salt: 'x',",
-    ].join('\n')
+    const source = dedent`
+        user: {
+          create: {
+            salt: 'x',
+          },
+        },
+      salt: 'x',
+    `
 
     expect(
       addRequiredUserFields(source, [
         { name: 'fullName', value: "'fullName __N__'" },
         { name: 'age', value: '__N__' },
       ]),
-    ).toBe(
-      [
-        '        user: {',
-        '          create: {',
-        "            salt: 'x',",
-        "            fullName: 'fullName 1',",
-        '            age: 1,',
-        '          },',
-        '        },',
-        "      salt: 'x',",
-        "      fullName: 'fullName 2',",
-        '      age: 2,',
-      ].join('\n'),
-    )
+    ).toBe(dedent`
+        user: {
+          create: {
+            salt: 'x',
+            fullName: 'fullName 1',
+            age: 1,
+          },
+        },
+      salt: 'x',
+      fullName: 'fullName 2',
+      age: 2,
+    `)
   })
 })
