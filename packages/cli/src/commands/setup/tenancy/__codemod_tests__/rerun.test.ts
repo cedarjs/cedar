@@ -66,6 +66,21 @@ describe('running the tenancy codemods again', () => {
 
   const count = (source: string, text: string) => source.split(text).length - 1
 
+  it.each([
+    ['authCodemod', 'defaultAuth.output.ts'],
+    ['dbCodemod', 'defaultDb.output.ts'],
+    ['graphqlCodemod', 'defaultGraphql.output.ts'],
+    ['signupCodemod', 'defaultSignupAuth.output.ts'],
+  ])(
+    '%s leaves an already wired file with CRLF line endings as it is',
+    async (codemod, name) => {
+      // How git checks the fixtures out on Windows
+      const wired = fixture(name).replace(/\r?\n/g, '\r\n')
+
+      expect(await runOn(codemod, wired)).toBe(wired)
+    },
+  )
+
   it('dbCodemod wires db when only the import is there', async () => {
     const output = await runOn(
       'dbCodemod',
