@@ -16,8 +16,21 @@ const supabaseMockClient = {
   auth: mockSupabaseAuthClient,
 }
 
+const hasAuthProviderCookie = () => {
+  return document.cookie
+    .split(';')
+    .some((cookie) => cookie.trim() === 'auth-provider=supabase')
+}
+
 const fetchMock = vi.fn()
 fetchMock.mockImplementation(async (_url, options) => {
+  // With an auth-provider cookie the api side looks for a cookie session
+  // instead of using the Bearer token. There is no such session outside of
+  // middleware mode, so the request fails
+  if (hasAuthProviderCookie()) {
+    throw new Error('No Supabase session found')
+  }
+
   const body = options?.body ? JSON.parse(options.body) : {}
 
   if (
@@ -48,9 +61,13 @@ beforeAll(() => {
   globalThis.RWJS_ENV = {}
 })
 
+const cookieSetSpy = vi.spyOn(document, 'cookie', 'set')
+
 beforeEach(() => {
   fetchMock.mockClear()
   mockSupabaseAuthClient.__testOnly__setMockUser(null)
+  document.cookie = 'auth-provider=; Max-Age=0; Path=/'
+  cookieSetSpy.mockClear()
 })
 
 function getSupabaseAuth(customProviderHooks?: {
@@ -77,6 +94,73 @@ describe('Supabase Authentication', () => {
 
     await act(async () => {
       expect(authRef.current.isAuthenticated).toBeFalsy()
+    })
+  })
+
+  describe('auth-provider cookie', () => {
+    it('does not set the auth-provider cookie when signing up', async () => {
+      const authRef = getSupabaseAuth()
+
+      await act(async () => {
+        await authRef.current.signUp({
+          email: 'jane.doe@example.com',
+          password: 'ThereIsNoSpoon',
+        })
+      })
+
+      expect(hasAuthProviderCookie()).toBe(false)
+      expect(cookieSetSpy).not.toHaveBeenCalled()
+      expect(authRef.current.hasError).toBe(false)
+      expect(authRef.current.isAuthenticated).toBe(true)
+      expect(authRef.current.currentUser?.email).toEqual('jane.doe@example.com')
+    })
+
+    it('clears a stray auth-provider cookie when restoring auth state', async () => {
+      document.cookie = 'auth-provider=supabase; Path=/'
+
+      await act(async () => {
+        getSupabaseAuth()
+      })
+
+      expect(hasAuthProviderCookie()).toBe(false)
+    })
+
+    it('clears a stray auth-provider cookie when logging out', async () => {
+      const authRef = getSupabaseAuth()
+
+      await act(async () => {
+        await authRef.current.logIn({
+          authMethod: 'password',
+          email: 'john.doe@example.com',
+          password: 'ThereIsNoSpoon',
+        })
+      })
+
+      document.cookie = 'auth-provider=supabase; Path=/'
+
+      await act(async () => {
+        await authRef.current.logOut()
+      })
+
+      expect(hasAuthProviderCookie()).toBe(false)
+    })
+
+    it('leaves cookies alone when there is no auth-provider cookie', async () => {
+      const authRef = getSupabaseAuth()
+
+      await act(async () => {
+        await authRef.current.logIn({
+          authMethod: 'password',
+          email: 'john.doe@example.com',
+          password: 'ThereIsNoSpoon',
+        })
+      })
+
+      await act(async () => {
+        await authRef.current.logOut()
+      })
+
+      expect(cookieSetSpy).not.toHaveBeenCalled()
     })
   })
 
