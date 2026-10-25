@@ -1,9 +1,8 @@
+import type { Permission } from '__PERMISSIONS_PACKAGE__'
 import { gql } from 'graphql-tag'
 
 import type { ValidatorDirectiveFunc } from '@cedarjs/graphql-server'
 import { createValidatorDirective } from '@cedarjs/graphql-server'
-
-import type { Permission } from '__PERMISSIONS_PACKAGE__'
 
 import { requirePermission as applicationRequirePermission } from 'src/lib/permissions'
 

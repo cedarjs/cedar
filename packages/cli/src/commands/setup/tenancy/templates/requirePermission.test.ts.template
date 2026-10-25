@@ -19,9 +19,7 @@ const currentOrg = (role: string) => ({
 describe('requirePermission directive', () => {
   it('declares the directive sdl as schema, with the correct name', () => {
     expect(requirePermission.schema).toBeTruthy()
-    expect(getDirectiveName(requirePermission.schema)).toBe(
-      'requirePermission',
-    )
+    expect(getDirectiveName(requirePermission.schema)).toBe('requirePermission')
   })
 
   it('throws when there is no current user', () => {

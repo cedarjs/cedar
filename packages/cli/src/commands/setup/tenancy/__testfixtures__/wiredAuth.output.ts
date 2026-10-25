@@ -1,4 +1,5 @@
 import type { Decoded } from '@cedarjs/api'
+import { context } from '@cedarjs/context'
 import { createTenancyAuth } from '@cedarjs/tenancy'
 
 import { db } from './db.js'

@@ -70,6 +70,64 @@ const USER_LOOKUP = {
 } as const
 
 /**
+ * Imports `context` from `@cedarjs/context` when the file uses it but
+ * nothing declares it. On the api side `context` is a global, but the web
+ * side type-checks this file too (for `currentUser`'s type), and there the
+ * global only came along with the `@cedarjs/graphql-server` import, which
+ * goes once `AuthenticationError` and `ForbiddenError` are unused.
+ */
+function addContextImport(root: j.Collection) {
+  const usesContext =
+    root
+      .find(j.Identifier, { name: 'context' })
+      .filter(
+        (path) =>
+          !(
+            j.MemberExpression.check(path.parent.node) &&
+            path.parent.node.property === path.node &&
+            !path.parent.node.computed
+          ) &&
+          !(
+            j.ObjectProperty.check(path.parent.node) &&
+            path.parent.node.key === path.node
+          ),
+      ).length > 0
+
+  const declaresContext =
+    root.find(j.ImportDeclaration, {
+      source: { value: '@cedarjs/graphql-server' },
+    }).length > 0 ||
+    root.find(j.ImportSpecifier, { local: { name: 'context' } }).length > 0 ||
+    root.find(j.VariableDeclarator, { id: { name: 'context' } }).length > 0
+
+  if (!usesContext || declaresContext) {
+    return
+  }
+
+  const contextImport = j
+    .withParser('ts')(`import { context } from '@cedarjs/context'\n`)
+    .find(j.ImportDeclaration)
+    .nodes()[0]
+
+  const cedarImports = root
+    .find(j.ImportDeclaration)
+    .filter((path) => String(path.node.source.value).startsWith('@cedarjs/'))
+  const before = cedarImports.filter(
+    (path) => String(path.node.source.value) > '@cedarjs/context',
+  )
+
+  if (before.length > 0) {
+    before.at(0).insertBefore(contextImport)
+  } else if (cedarImports.length > 0) {
+    cedarImports.at(cedarImports.length - 1).insertAfter(contextImport)
+  } else {
+    root.find(j.Program).forEach((path) => {
+      path.node.body.unshift(contextImport)
+    })
+  }
+}
+
+/**
  * Wraps `getCurrentUser`'s `db.user.findUnique(...)` in `withPermissions`
  * from `api/src/lib/permissions`, so each membership the web gets carries
  * its permissions (`useAuth().hasPermission()`). A lookup that's already wrapped is left
@@ -217,6 +275,7 @@ export default function transform(fileInfo: j.FileInfo) {
       .length > 0
 
   if (alreadyWired) {
+    addContextImport(root)
     return addPermissionsImport(root.toSource())
   }
 
@@ -283,6 +342,8 @@ export default function transform(fileInfo: j.FileInfo) {
       path.node.body.unshift(tenancyImport)
     })
   }
+
+  addContextImport(root)
 
   return addPermissionsImport(root.toSource())
 }

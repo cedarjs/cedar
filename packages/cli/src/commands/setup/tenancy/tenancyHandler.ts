@@ -26,6 +26,7 @@ import {
   addPermissionsPackageTasks,
   permissionsPackageName,
 } from './permissionsPackage.js'
+import type { PermissionsPackageCtx } from './permissionsPackage.js'
 import {
   authNotSetUpMessage,
   hasWebAuthFile,
@@ -34,6 +35,7 @@ import {
 import {
   addScopeToRequireAuthDirective,
   REQUIRE_AUTH_DIRECTIVE_SNIPPET,
+  updateRequireAuthTest,
 } from './requireAuthDirective.js'
 import {
   editSchema,
@@ -90,7 +92,7 @@ interface TenancyOptions {
   force: boolean
 }
 
-interface TenancyCtx {
+interface TenancyCtx extends PermissionsPackageCtx {
   /** Set once the schema-editing task runs; read by the "Next steps" task. */
   modelsExistOutcome?: ModelsExistOutcome
 }
@@ -379,7 +381,33 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
             )
           } catch {
             task.output = byHand
+            return
           }
+
+          // Its test expected any signed-in user to pass
+          const testPath = path.join(
+            paths.api.directives,
+            'requireAuth',
+            `requireAuth.test.${ext}`,
+          )
+
+          if (!fs.existsSync(testPath)) {
+            return
+          }
+
+          const updatedTest = updateRequireAuthTest(
+            fs.readFileSync(testPath, 'utf-8'),
+            { typescript: projectIsTypescript },
+          )
+
+          if (updatedTest === undefined) {
+            task.output =
+              'Please check api/src/directives/requireAuth/requireAuth.test: ' +
+              'a bare @requireAuth now needs a current organization.'
+            return
+          }
+
+          fs.writeFileSync(testPath, updatedTest)
         },
       },
       {
@@ -517,6 +545,16 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
             path.join(paths.api.functions, 'auth.ts'),
             path.join(paths.api.directives, 'requireAuth', 'requireAuth.js'),
             path.join(paths.api.directives, 'requireAuth', 'requireAuth.ts'),
+            path.join(
+              paths.api.directives,
+              'requireAuth',
+              'requireAuth.test.js',
+            ),
+            path.join(
+              paths.api.directives,
+              'requireAuth',
+              'requireAuth.test.ts',
+            ),
           ]
 
           for (const prettifyPath of prettifyPaths) {
@@ -588,8 +626,12 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
                '@cedarjs/tenancy',
              )}.
           5. Your permissions, and what each role may do, are in
-             ${c.highlight('packages/permissions')}, shared by the api and web sides (this
-             turned on ${c.highlight('experimental.packagesWorkspace')} in cedar.toml). Guard
+             ${c.highlight('packages/permissions')}, shared by the api and web sides${
+               ctx.packagesWorkspaceTurnedOn
+                 ? ` (this
+             turned on ${c.highlight('experimental.packagesWorkspace')} in cedar.toml)`
+                 : ''
+             }. Guard
              organization fields with ${c.highlight('@requirePermission(permission: "...")')}
              (or ${c.highlight('@requireAuth(roles: [...])')}), and check permissions on the
              web with ${c.highlight('useAuth().hasPermission()')}.

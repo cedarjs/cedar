@@ -1,6 +1,6 @@
-import { createPermissions } from '@cedarjs/tenancy'
-
 import { permissions } from '__PERMISSIONS_PACKAGE__'
+
+import { createPermissions } from '@cedarjs/tenancy'
 
 /**
  * Checks the permissions defined in __PERMISSIONS_PACKAGE__
@@ -12,5 +12,9 @@ import { permissions } from '__PERMISSIONS_PACKAGE__'
  * Who may grant which role is `ROLE_GRANTS` in
  * api/src/services/organizations/organizations.
  */
-export const { hasPermission, requirePermission, permissionsOf, withPermissions } =
-  createPermissions(permissions)
+export const {
+  hasPermission,
+  requirePermission,
+  permissionsOf,
+  withPermissions,
+} = createPermissions(permissions)

@@ -1,8 +1,13 @@
-import { describe, expect, it } from 'vitest'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+
+import { afterEach, describe, expect, it } from 'vitest'
 
 import {
   enablePackagesWorkspace,
   permissionsPackageFiles,
+  permissionsPackageName,
 } from '../permissionsPackage.js'
 
 describe('enablePackagesWorkspace', () => {
@@ -101,5 +106,55 @@ describe('permissionsPackageFiles', () => {
 
   it('writes the index source as is', () => {
     expect(files['src/index.ts']).toBe('export const permissions = {}\n')
+  })
+})
+
+describe('permissionsPackageName', () => {
+  const dirs: string[] = []
+
+  const packagesDir = (packages: Record<string, string>) => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-packages-'))
+    dirs.push(dir)
+
+    for (const [folder, name] of Object.entries(packages)) {
+      fs.mkdirSync(path.join(dir, folder))
+      fs.writeFileSync(
+        path.join(dir, folder, 'package.json'),
+        JSON.stringify({ name }),
+      )
+    }
+
+    return dir
+  }
+
+  afterEach(() => {
+    for (const dir of dirs.splice(0)) {
+      fs.rmSync(dir, { recursive: true, force: true })
+    }
+  })
+
+  it("uses the scope of the app's other packages", () => {
+    expect(
+      permissionsPackageName(packagesDir({ validators: '@my-org/validators' })),
+    ).toBe('@my-org/permissions')
+  })
+
+  it("keeps the permissions package's own name", () => {
+    expect(
+      permissionsPackageName(
+        packagesDir({
+          permissions: '@acme/permissions',
+          validators: '@my-org/validators',
+        }),
+      ),
+    ).toBe('@acme/permissions')
+  })
+
+  it('skips unscoped packages', () => {
+    expect(
+      permissionsPackageName(
+        packagesDir({ a: 'plain', b: '@my-org/validators' }),
+      ),
+    ).toBe('@my-org/permissions')
   })
 })

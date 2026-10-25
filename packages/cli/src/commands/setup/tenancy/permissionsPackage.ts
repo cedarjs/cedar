@@ -78,9 +78,47 @@ export function enablePackagesWorkspace(tomlContent: string): string | null {
   return lines.join('\n')
 }
 
-/** The permissions package's name, e.g. `@my-app/permissions` */
-export function permissionsPackageName() {
-  return nameVariants(PERMISSIONS_PACKAGE_FOLDER).packageName
+const packageNameIn = (packageDir: string): string | undefined => {
+  try {
+    const { name } = JSON.parse(
+      fs.readFileSync(path.join(packageDir, 'package.json'), 'utf-8'),
+    ) as { name?: unknown }
+
+    return typeof name === 'string' ? name : undefined
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * The permissions package's name, e.g. `@my-app/permissions`: its own name
+ * when it's already there, else in the scope the app's other packages use,
+ * else in one named after the app's folder (as `cedar generate package`
+ * does).
+ */
+export function permissionsPackageName(
+  packagesDir = path.join(getPaths().base, 'packages'),
+) {
+  const existing = packageNameIn(
+    path.join(packagesDir, PERMISSIONS_PACKAGE_FOLDER),
+  )
+
+  if (existing) {
+    return existing
+  }
+
+  const otherPackages = fs.existsSync(packagesDir)
+    ? fs.readdirSync(packagesDir, { withFileTypes: true })
+    : []
+  const scope = otherPackages
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => packageNameIn(path.join(packagesDir, entry.name)))
+    .find((name) => name?.startsWith('@') && name.includes('/'))
+    ?.split('/')[0]
+
+  return scope
+    ? `${scope}/${PERMISSIONS_PACKAGE_FOLDER}`
+    : nameVariants(PERMISSIONS_PACKAGE_FOLDER).packageName
 }
 
 /**
@@ -145,6 +183,11 @@ export function permissionsPackageFiles({
   }
 }
 
+export interface PermissionsPackageCtx {
+  /** Whether this turned on `experimental.packagesWorkspace` */
+  packagesWorkspaceTurnedOn?: boolean
+}
+
 /**
  * Adds `packages/permissions`, the app's permission definitions, which both
  * the api (to check them) and the web (for their names) import. It's a
@@ -167,10 +210,10 @@ export function addPermissionsPackageTasks({
   )
   const packageName = permissionsPackageName()
 
-  return new Listr([
+  return new Listr<PermissionsPackageCtx>([
     {
       title: 'Turning on the packages workspace in cedar.toml...',
-      task: (_ctx, task) => {
+      task: (ctx, task) => {
         const configPath = getConfigPath()
         const updated = enablePackagesWorkspace(
           fs.readFileSync(configPath, 'utf-8'),
@@ -182,6 +225,7 @@ export function addPermissionsPackageTasks({
         }
 
         fs.writeFileSync(configPath, updated)
+        ctx.packagesWorkspaceTurnedOn = true
       },
     },
     {
