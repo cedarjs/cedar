@@ -184,19 +184,20 @@ no-op, `--force` or not.
 
 ### What `setup tenancy` changes
 
-| File                                                                | Change                                                                                                                                             |
-| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `api/db/schema.prisma`                                              | Adds `Organization` and `Membership`, adds `memberships Membership[]` to `User`, adds `RW_DataMigration` if `data-migrate install` has not run yet |
-| `api/src/lib/db.ts`                                                 | Wraps `db` in `createTenancyExtension`                                                                                                             |
-| `api/src/lib/auth.ts`                                               | Adds `memberships` to the `getCurrentUser()` select, replaces `hasRole` / `requireAuth` with `createTenancyAuth`                                   |
-| `api/src/functions/graphql.ts`                                      | Adds a `context` function that resolves `currentOrg` per request                                                                                   |
-| `api/src/functions/auth.ts`                                         | (dbAuth only) Wraps `signup.handler` to call `ensureDefaultOrganization`                                                                           |
-| `api/src/directives/requireAuth/`                                   | Adds a `scope` argument to `@requireAuth`                                                                                                          |
-| `api/src/services/organizations/`                                   | Generates the organizations service and SDL                                                                                                        |
-| `api/db/dataMigrations/<timestamp>-ensure-default-organizations.ts` | Backfills memberships for existing users                                                                                                           |
-| `web/src/components/OrgScope/OrgScope.tsx`                          | Generates the app-owned `OrgScope` wrapper                                                                                                         |
-| `web/src/pages/InvitePage/InvitePage.tsx`                           | Generates the invitation landing page                                                                                                              |
-| `api/package.json`, `web/package.json`                              | Adds `@cedarjs/tenancy`                                                                                                                            |
+| File                                                                  | Change                                                                                                                                             |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `api/db/schema.prisma`                                                | Adds `Organization` and `Membership`, adds `memberships Membership[]` to `User`, adds `RW_DataMigration` if `data-migrate install` has not run yet |
+| `api/src/lib/db.ts`                                                   | Wraps `db` in `createTenancyExtension`                                                                                                             |
+| `api/src/lib/auth.ts`                                                 | Adds `memberships` to the `getCurrentUser()` select, replaces `hasRole` / `requireAuth` with `createTenancyAuth`                                   |
+| `api/src/functions/graphql.ts`                                        | Adds a `context` function that resolves `currentOrg` per request                                                                                   |
+| `api/src/functions/auth.ts`                                           | (dbAuth only) Wraps `signup.handler` to call `ensureDefaultOrganization`                                                                           |
+| `api/src/directives/requireAuth/`                                     | Adds a `scope` argument to `@requireAuth`                                                                                                          |
+| `api/src/lib/permissions.ts`, `api/src/directives/requirePermission/` | Generates the permissions map and the `@requirePermission` directive                                                                               |
+| `api/src/services/organizations/`                                     | Generates the organizations service and SDL                                                                                                        |
+| `api/db/dataMigrations/<timestamp>-ensure-default-organizations.ts`   | Backfills memberships for existing users                                                                                                           |
+| `web/src/components/OrgScope/OrgScope.tsx`                            | Generates the app-owned `OrgScope` wrapper                                                                                                         |
+| `web/src/pages/InvitePage/InvitePage.tsx`                             | Generates the invitation landing page                                                                                                              |
+| `api/package.json`, `web/package.json`                                | Adds `@cedarjs/tenancy`                                                                                                                            |
 
 `db.ts` gains the tenancy extension, chained after any existing extensions (such
 as `@cedarjs/storage`'s):
@@ -707,6 +708,46 @@ there's no `context.currentOrg` or the user's role in it isn't one of `roles`
 (or of `defaultRoles`, when the field lists none). With `scope: USER`, it needs
 a signed-in user only. These are the error types `requireAuth` always threw, so
 any error handling you already have on the web side keeps working.
+
+### Permissions
+
+`setup tenancy` also generates `api/src/lib/permissions.ts`, which maps each
+role to what it may do, and an `@requirePermission` directive that asks for one
+of those permissions:
+
+```ts title="api/src/lib/permissions.ts"
+export const { can, requirePermission, permissionsOf, withPermissions } =
+  createPermissions({
+    roles: {
+      owner: ['organization.read', 'members.manage'],
+      admin: ['organization.read', 'members.manage'],
+      member: ['organization.read'],
+    },
+    user: [],
+  })
+```
+
+The generated organizations SDL uses it: `inviteMember` and `removeMember` are
+`@requirePermission(permission: "members.manage")`. Say you add a `viewer`
+role later that may only read: add `viewer: ['organization.read']` here, and
+it can read the organization and nothing else, including every field added
+after it, without touching the SDL. With role lists on each field you'd find
+and edit every field it should reach, and a field written later would be open
+or closed to it depending on whether its author remembered it.
+
+`getCurrentUser` returns each membership with its `permissions`
+(`withPermissions`), so the web asks the same question with `useCan()`:
+
+```tsx
+import { useCan } from '@cedarjs/tenancy/web'
+
+const MembersPage = () => {
+  const canManage = useCan('members.manage')
+  // ...
+}
+```
+
+See [Permissions](../tenancy.md#permissions) in the reference.
 
 ### Web hooks: `OrgScope`, `useCurrentOrg`, `hasOrgRole`
 

@@ -430,6 +430,97 @@ a user-level `@requireAuth`. They're gone. To upgrade an app set up with them:
 4. Rename `@requireMembership` to `@requireAuth`, and `requireMembership()` to
    `requireAuth()`, then delete `api/src/directives/requireMembership/`.
 
+## Permissions
+
+Roles map to permissions in one place, and fields ask for a permission instead
+of listing roles. Adding a role is then one entry in the map instead of an edit
+to every field it should reach, and the web reads the same answers instead of
+repeating role lists.
+
+From `@cedarjs/tenancy`:
+
+```ts
+export function createPermissions(config: {
+  roles: Record<string, readonly string[]>
+  user?: readonly string[]
+}): {
+  can(permission: Permission): boolean
+  requirePermission(options: { permission: Permission }): void
+  permissionsOf(role: string): Permission[]
+  withPermissions<User extends { memberships: { role: string }[] }>(
+    user: User | null
+  ): (User & { memberships: { permissions: Permission[] }[] }) | null
+}
+```
+
+`Permission` is the union of every name in the map, so a typo in a service is
+a type error.
+
+`setup tenancy` generates the map in `api/src/lib/permissions.ts`:
+
+```ts title="api/src/lib/permissions.ts"
+export const { can, requirePermission, permissionsOf, withPermissions } =
+  createPermissions({
+    roles: {
+      owner: ['organization.read', 'members.manage'],
+      admin: ['organization.read', 'members.manage'],
+      member: ['organization.read'],
+    },
+    user: [],
+  })
+```
+
+- `roles`: what each role may do in an organization. A permission listed here
+  needs a current organization, and the user's role there must have it. A role
+  missing from the map has no permissions.
+- `user`: what every signed-in user may do, in any organization or none (their
+  own account, say). These need no organization.
+
+`can(permission)` answers for the current request. `requirePermission()`
+throws `AuthenticationError` when no one is signed in and `ForbiddenError` when
+`can()` is false, with a message saying an organization is needed when that's
+why. Both throw a plain `Error` for a name that isn't in the map, so a typo in
+an SDL directive (which TypeScript can't see) is a loud error rather than a
+field nobody can use.
+
+Permissions fail closed by construction: a field asks for one permission, and
+only the roles that list it get in. A new role starts with nothing.
+
+### `@requirePermission`
+
+Generated at `api/src/directives/requirePermission/requirePermission.ts`:
+
+```graphql
+directive @requirePermission(permission: String!) on FIELD_DEFINITION
+```
+
+```graphql
+type Mutation {
+  inviteMember(input: InviteMemberInput!): Invitation!
+    @requirePermission(permission: "members.manage")
+}
+```
+
+It sits beside `@requireAuth`. Use whichever reads better per field; the
+generated organizations SDL uses `@requirePermission` for organization fields
+and `@requireAuth(scope: USER)` for user-level ones.
+
+### Permissions on the web
+
+`withPermissions(user)` adds each membership's permissions (its role's, plus
+the `user` ones) to the user `getCurrentUser` returns. `setup tenancy` wraps the
+lookup in it:
+
+```ts title="api/src/lib/auth.ts"
+return withPermissions(
+  await db.user.findUnique({ where: { id: session.id }, select: { ... } })
+)
+```
+
+So `currentUser.memberships[n].permissions` reaches the web with the rest of
+the memberships, and the web can check permissions without a copy of the map.
+Like roles, it's a snapshot refreshed by `reauthenticate()`.
+
 ## Web API
 
 From `@cedarjs/tenancy/web`:
@@ -439,6 +530,8 @@ export interface OrgMembership {
   id: string
   organizationId: string
   role: string
+  /** Added by `withPermissions`; missing when the app doesn't use it */
+  permissions?: string[]
   organization: { id: string; slug: string; name: string }
 }
 
@@ -448,6 +541,7 @@ export interface CurrentOrgSummary {
   name: string
   role: string
   membershipId: string
+  permissions: string[]
 }
 
 export function hasOrgRole(
@@ -465,7 +559,9 @@ export interface OrgScopeProps {
   notAMember?: React.ReactNode
   /** Only members with one of these roles in the organization get in. */
   roles?: string | string[]
-  /** The route a member without one of `roles` is redirected to. */
+  /** Only members whose membership has this permission get in. */
+  permission?: string
+  /** The route a member without one of `roles`, or `permission`, is redirected to. */
   unauthorized?: string
   children: React.ReactNode
 }
@@ -476,8 +572,11 @@ export function useCurrentOrg(): {
   org: CurrentOrgSummary | undefined
   memberships: OrgMembership[]
   hasOrgRole(roles: string | string[], organizationId?: string): boolean
+  can(permission: string): boolean
   setOrg(idOrSlug: string): void
 }
+
+export function useCan(permission: string): boolean
 
 export const OrgContext: React.Context<...>
 
@@ -555,12 +654,35 @@ which gets the organization's `orgSlug` when its path has an `{orgSlug}`. With
 no `unauthorized`, they get `notAMember`. As with every check on the web, this
 only decides what to show: the api's `@requireAuth` is what protects the data.
 
+`permission` works the same way, against the membership's
+[permissions](#permissions-on-the-web):
+`<OrgScope permission="members.manage" unauthorized="projects">`.
+
 ### `useCurrentOrg()`
 
 Reads `OrgContext`. `setOrg(idOrSlug)` navigates to the current route with a new
 `orgSlug` param (using `navigate` and `routes` from `@cedarjs/router`) by
 default; when `OrgScope` is given an `onSetOrg` prop, `setOrg` calls that
 instead.
+
+### `useCan(permission)`
+
+Whether the membership in the current organization has `permission`: the same
+as `useCurrentOrg().can(permission)`, but `false` outside an `OrgScope` rather
+than throwing, so a check in the wrong place hides rather than shows. Reads the
+`permissions` that `withPermissions` added to the membership.
+
+```tsx
+const MembersPage = () => {
+  const canManage = useCan('members.manage')
+
+  return <MemberList editable={canManage} />
+}
+```
+
+Like every check on the web, this only decides what to show; the api's
+`@requirePermission` is the guard. For a page only some may open, give `OrgScope`
+a `permission` (see [Guarding routes by role](#guarding-routes-by-role)).
 
 ### `hasOrgRole` (web)
 
