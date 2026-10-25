@@ -32,6 +32,10 @@
     "./dist/AuthProvider/ServerAuthProvider.js": {
       "types": "./dist/AuthProvider/ServerAuthProvider.d.ts",
       "default": "./dist/AuthProvider/ServerAuthProvider.js"
+    },
+    "./currentUserHasRole": {
+      "types": "./dist/currentUserHasRole.d.ts",
+      "default": "./dist/currentUserHasRole.js"
     }
   },
   "types": "./dist/index.d.ts",
