@@ -433,38 +433,30 @@ a user-level `@requireAuth`. They're gone. To upgrade an app set up with them:
 ## Permissions
 
 Roles map to permissions in one place, and fields ask for a permission instead
-of listing roles. Adding a role is then one entry in the map instead of an edit
+of listing roles. Adding a role is then one entry in the definitions instead of an edit
 to every field it should reach, and the web reads the same answers instead of
 repeating role lists.
 
-From `@cedarjs/tenancy`:
+### The definitions
 
-```ts
-export function createPermissions(config: {
-  roles: Record<string, readonly string[]>
-  user?: readonly string[]
-}): {
-  hasPermission(permission: Permission): boolean
-  requirePermission(options: { permission: Permission }): void
-  permissionsOf(role: string): Permission[]
-  withPermissions<User extends { memberships: { role: string }[] }>(
-    user: User | null
-  ): (User & { memberships: { permissions: Permission[] }[] }) | null
-}
-```
+`setup tenancy` generates `packages/permissions`, a package that both sides
+share: the api checks the permissions, and the web can import their names and
+descriptions, e.g. for a page that lists them. It turns on
+`experimental.packagesWorkspace` in `cedar.toml` for it.
 
-`Permission` is the union of every name in the map, so a typo in a service is
-a type error.
+```ts title="packages/permissions/src/index.ts"
+import { definePermissions } from '@cedarjs/tenancy/permissions'
+import type { PermissionName } from '@cedarjs/tenancy/permissions'
 
-`setup tenancy` generates the map in `api/src/lib/permissions.ts`:
-
-```ts title="api/src/lib/permissions.ts"
-export const {
-  hasPermission,
-  requirePermission,
-  permissionsOf,
-  withPermissions,
-} = createPermissions({
+export const permissions = definePermissions({
+  permissions: {
+    'organization.read': {
+      description: 'See the organization and its members',
+    },
+    'members.manage': {
+      description: 'Invite members and remove them',
+    },
+  },
   roles: {
     owner: ['organization.read', 'members.manage'],
     admin: ['organization.read', 'members.manage'],
@@ -472,20 +464,67 @@ export const {
   },
   user: [],
 })
+
+export type Permission = PermissionName<typeof permissions>
 ```
 
-- `roles`: what each role may do in an organization. A permission listed here
-  needs a current organization, and the user's role there must have it. A role
-  missing from the map has no permissions.
+- `permissions`: every permission the app checks, by name, each with a
+  `description`. Fields, services and the web ask for these names, so they're
+  defined in code.
+- `roles`: what each built-in role may do in an organization. A permission
+  listed here needs a current organization, and the user's role there must
+  have it. A role that isn't listed has no permissions.
 - `user`: what every signed-in user may do, in any organization or none (their
   own account, say). These need no organization.
 
-`hasPermission(permission)` answers for the current request. `requirePermission()`
-throws `AuthenticationError` when no one is signed in and `ForbiddenError` when
-`hasPermission()` is false, with a message saying an organization is needed when that's
-why. Both throw a plain `Error` for a name that isn't in the map, so a typo in
-an SDL directive (which TypeScript can't see) is a loud error rather than a
-field nobody can use.
+A role or `user` listing a name that `permissions` doesn't define is a type
+error, and `definePermissions` throws for it at runtime too.
+`@cedarjs/tenancy/permissions` has no api code in it, so the web can import
+the package.
+
+### Checking permissions on the api
+
+```ts title="api/src/lib/permissions.ts"
+import { createPermissions } from '@cedarjs/tenancy'
+
+import { permissions } from '@my-app/permissions'
+
+export const {
+  hasPermission,
+  requirePermission,
+  permissionsOf,
+  withPermissions,
+} = createPermissions(permissions)
+```
+
+From `@cedarjs/tenancy`:
+
+```ts
+export function createPermissions(definitions: PermissionDefinitions): {
+  hasPermission(permission: Permission): boolean
+  requirePermission(options: { permission: Permission }): void
+  permissionsOf(membership: { role: string }): Permission[]
+  withPermissions<User extends { memberships: { role: string }[] }>(
+    user: User | null
+  ): (User & { memberships: { permissions: Permission[] }[] }) | null
+  definitions: Record<Permission, PermissionDetails>
+}
+```
+
+`Permission` is the union of the defined names, so a typo in a service is a
+type error.
+
+`hasPermission(permission)` answers for the current request.
+`requirePermission()` throws `AuthenticationError` when no one is signed in and
+`ForbiddenError` when `hasPermission()` is false, with a message saying an
+organization is needed when that's why. Both throw a plain `Error` for a name
+that isn't defined, so a typo in an SDL directive (which TypeScript can't see)
+is a loud error rather than a field nobody can use.
+
+`permissionsOf(membership)` is the one place a membership's permissions are
+worked out: its role's, plus the `user` ones. `hasPermission`,
+`requirePermission` and `withPermissions` all use it, and `hasPermission`
+passes it the membership as `getCurrentUser` returned it.
 
 Permissions fail closed by construction: a field asks for one permission, and
 only the roles that list it get in. A new role starts with nothing.
@@ -522,7 +561,8 @@ return withPermissions(
 ```
 
 So `currentUser.memberships[n].permissions` reaches the web with the rest of
-the memberships, and the web can check permissions without a copy of the map.
+the memberships, and the web checks those rather than working them out from a
+role.
 Like roles, it's a snapshot refreshed by `reauthenticate()`.
 
 ## Web API

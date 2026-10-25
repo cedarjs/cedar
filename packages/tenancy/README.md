@@ -103,21 +103,39 @@ one.
 ## Permissions
 
 ```ts
+// packages/permissions/src/index.ts, shared by the api and web sides
+import { definePermissions } from '@cedarjs/tenancy/permissions'
+
+export const permissions = definePermissions({
+  permissions: {
+    'projects.read': { description: 'See projects' },
+    'projects.edit': { description: 'Change projects' },
+    'members.manage': { description: 'Invite and remove members' },
+    'account.manage': { description: 'Change your own account' },
+  },
+  roles: {
+    owner: ['projects.read', 'projects.edit', 'members.manage'],
+    member: ['projects.read'],
+  },
+  user: ['account.manage'],
+})
+```
+
+```ts
 // api/src/lib/permissions.ts
+import { createPermissions } from '@cedarjs/tenancy'
+
+import { permissions } from '@my-app/permissions'
+
 export const { hasPermission, requirePermission, withPermissions } =
-  createPermissions({
-    roles: {
-      owner: ['projects.read', 'projects.edit', 'members.manage'],
-      member: ['projects.read'],
-    },
-    user: ['account.manage'],
-  })
+  createPermissions(permissions)
 ```
 
 Roles map to permissions in one place; fields ask for a permission with
 `@requirePermission(permission: "projects.edit")` or `requirePermission()`.
 A role only gets what its list says, so a new role is one entry. Permission
-names are typed from the map. `withPermissions` in `getCurrentUser` gives each
+names are typed from the definitions, and each has a description, for a page
+that lists them. `withPermissions` in `getCurrentUser` gives each
 membership its permissions, which `useAuth().hasPermission()` checks inside
 `OrgScope`.
 

@@ -711,17 +711,21 @@ any error handling you already have on the web side keeps working.
 
 ### Permissions
 
-`setup tenancy` also generates `api/src/lib/permissions.ts`, which maps each
-role to what it may do, and an `@requirePermission` directive that asks for one
-of those permissions:
+`setup tenancy` also generates `packages/permissions`, a package shared by the
+api and web sides that defines every permission (with a description) and what
+each role may do, `api/src/lib/permissions.ts`, which checks them, and an
+`@requirePermission` directive that asks for one of those permissions:
 
-```ts title="api/src/lib/permissions.ts"
-export const {
-  hasPermission,
-  requirePermission,
-  permissionsOf,
-  withPermissions,
-} = createPermissions({
+```ts title="packages/permissions/src/index.ts"
+export const permissions = definePermissions({
+  permissions: {
+    'organization.read': {
+      description: 'See the organization and its members',
+    },
+    'members.manage': {
+      description: 'Invite members and remove them',
+    },
+  },
   roles: {
     owner: ['organization.read', 'members.manage'],
     admin: ['organization.read', 'members.manage'],
@@ -731,9 +735,18 @@ export const {
 })
 ```
 
+```ts title="api/src/lib/permissions.ts"
+export const {
+  hasPermission,
+  requirePermission,
+  permissionsOf,
+  withPermissions,
+} = createPermissions(permissions)
+```
+
 The generated organizations SDL uses it: `inviteMember` and `removeMember` are
 `@requirePermission(permission: "members.manage")`. Say you add a `viewer`
-role later that may only read: add `viewer: ['organization.read']` here, and
+role later that may only read: add `viewer: ['organization.read']` to `roles`, and
 it can read the organization and nothing else, including every field added
 after it, without touching the SDL. With role lists on each field you'd find
 and edit every field it should reach, and a field written later would be open
