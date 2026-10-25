@@ -278,3 +278,22 @@ Nested objects and arrays are passed through as they are, so `null`s inside a
 `Json` field value are kept. The input object is left unchanged. If your code
 relies on `removeNulls` also converting `null`s in nested objects, call
 `removeNulls` on those objects yourself.
+
+## `currentUser` is typed as exactly what `getCurrentUser` returns
+
+`CurrentUser` and `LoggedInUser` from `@cedarjs/auth` have exactly the fields
+of your `getCurrentUser` return type, with no extra `[key: string]: unknown`
+fields. Misspelled fields like `currentUser.emial` are type errors, and an
+`interface` you use as the return type of `getCurrentUser` is accepted
+anywhere a `CurrentUser` is expected.
+
+Reading a field that `getCurrentUser` doesn't return is a type error:
+
+```
+Property 'organizationId' does not exist on type 'LoggedInUser'.
+```
+
+To fix it, add the field to what `getCurrentUser` returns (for example to
+the `select` in your `db.user.findUnique` call), or stop reading it. The same
+applies to `mockCurrentUser()` in tests: the object you pass must match the
+`getCurrentUser` return type.
