@@ -18,14 +18,9 @@ export const useHasRole = (currentUser: CurrentUser) => {
    */
   return useCallback(
     (rolesToCheck: string | string[]): boolean => {
-      // `roles` only exists when the app's `getCurrentUser` returns it, so
-      // check for it before reading it. `CurrentUser` also accepts primitives
-      // (e.g. a string), and `in` throws on anything that isn't an object, so
-      // check `typeof` first.
+      // `roles` only exists when the app's `getCurrentUser` returns it
       const roles =
-        currentUser && typeof currentUser === 'object' && 'roles' in currentUser
-          ? currentUser.roles
-          : undefined
+        currentUser && 'roles' in currentUser ? currentUser.roles : undefined
 
       if (roles) {
         if (typeof rolesToCheck === 'string') {

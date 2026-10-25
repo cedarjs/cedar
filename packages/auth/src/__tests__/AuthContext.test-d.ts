@@ -21,6 +21,11 @@ describe('LoggedInUser', () => {
     expectTypeOf<MyCurrentUser>().toMatchTypeOf<CurrentUser>()
   })
 
+  test('primitives are not assignable to CurrentUser', () => {
+    expectTypeOf<string>().not.toMatchTypeOf<CurrentUser>()
+    expectTypeOf<number>().not.toMatchTypeOf<CurrentUser>()
+  })
+
   test('object literals and type aliases are still assignable', () => {
     type MyCurrentUser = { id: number; email: string }
 

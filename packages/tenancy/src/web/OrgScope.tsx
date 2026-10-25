@@ -67,14 +67,9 @@ export function OrgScope({
 
   const orgSlug = orgSlugProp ?? params['orgSlug']
   const memberships = getMemberships(currentUser)
-  // `id` only exists when the app's `getCurrentUser` returns it, and
-  // `CurrentUser` accepts primitives, which `in` throws on, so narrow before
-  // reading it.
+  // `id` only exists when the app's `getCurrentUser` returns it
   const userId =
-    currentUser &&
-    typeof currentUser === 'object' &&
-    'id' in currentUser &&
-    typeof currentUser.id === 'string'
+    currentUser && 'id' in currentUser && typeof currentUser.id === 'string'
       ? currentUser.id
       : undefined
 
