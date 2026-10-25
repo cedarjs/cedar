@@ -129,6 +129,8 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
 
   // Everything this command writes from a template, to format and lint
   const writtenFiles: string[] = []
+  // Template files that were already there, so weren't written
+  const keptFiles: string[] = []
 
   const writeTemplateFile = async (
     templateFile: string,
@@ -149,6 +151,12 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
     const content = projectIsTypescript
       ? templateContent
       : await transformTSToJS(outputPath, templateContent)
+
+    // From an earlier run, or the app's own: kept unless --force
+    if (fs.existsSync(outputPath) && !force) {
+      keptFiles.push(outputPath)
+      return
+    }
 
     writtenFiles.push(outputPath)
 
@@ -238,18 +246,12 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
           // would break loudly at type-check in every generated app, but
           // verify anyway so a formatter that exits 0 without adding the
           // field stops here with instructions rather than a runtime crash.
-          // `Organization` already declares `memberships Membership[]`, so
-          // the count should rise by one when the formatter adds the
-          // back-relation to `User`.
-          const membershipsOccurrences = (schema: string): number =>
-            (schema.match(/memberships\s+Membership\[\]/g) ?? []).length
-
+          // On a re-run the field is already there, which is fine too.
           const formattedSchema = fs.readFileSync(schemaPath, 'utf-8')
+          const userModel =
+            formattedSchema.match(/\bmodel\s+User\s*\{[\s\S]*?\n\}/)?.[0] ?? ''
 
-          if (
-            membershipsOccurrences(formattedSchema) <=
-            membershipsOccurrences(editResult.schema)
-          ) {
+          if (!/^\s*memberships\s+Membership\[\]/m.test(userModel)) {
             if (editResult.outcome === 'forced') {
               task.output =
                 'The `memberships` relation was not added to the `User` model, likely because of the clash from --force. Continuing with the rest of the setup; see "Next steps" for how to merge the appended models by hand.'
@@ -414,10 +416,24 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
       },
       {
         title: 'Adding a data migration to backfill existing users...',
-        task: async () => {
+        task: async (_ctx, task) => {
           const dataMigrationsPath = await getDataMigrationsPath(
             paths.api.prismaConfig,
           )
+
+          // Its name has a timestamp, so an earlier run's has another name
+          const existing =
+            fs.existsSync(dataMigrationsPath) &&
+            fs
+              .readdirSync(dataMigrationsPath)
+              .find((file) =>
+                /-ensure-default-organizations\.[jt]s$/.test(file),
+              )
+
+          if (existing) {
+            task.skip(`Already added: ${existing}`)
+            return
+          }
           const timestamp = new Date()
             .toISOString()
             .split('.')[0]
@@ -545,8 +561,9 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
              default organization.
           2. \`db.ts\`'s tenancy extension scopes every model except
              User/Organization/Membership. For each existing model (e.g.
-             Contact) whose rows belong to one organization, add ${c.highlight('organizationId String')} plus ${c.highlight('@@index([organizationId])')}
-             to it in schema.prisma; for each one that stays global, add it
+             Contact) whose rows belong to one organization, add
+             ${c.highlight('organizationId String')} plus ${c.highlight('@@index([organizationId])')} to it in
+             schema.prisma; for each one that stays global, add it
              to the ${c.highlight('allExcept')} list in api/src/lib/db instead.
           3. Wrap your organization routes with the generated OrgScope in
              web/src/Routes.tsx:
@@ -564,7 +581,16 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
                '@cedarjs/tenancy',
              )}.
 
-          Check out the docs for more info:
+${
+  keptFiles.length > 0
+    ? `
+          Kept these existing files rather than overwriting them (run with
+          ${c.highlight('--force')} to overwrite):
+${keptFiles.map((file) => `            ${path.relative(paths.base, file)}`).join('\n')}
+
+`
+    : ''
+}          Check out the docs for more info:
           ${terminalLink('', 'https://cedarjs.com/docs/tenancy')}
 
         `

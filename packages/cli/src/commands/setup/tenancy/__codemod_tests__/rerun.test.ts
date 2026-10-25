@@ -13,6 +13,7 @@ describe.skipIf(process.env.CI && process.platform === 'win32')(
   'running the tenancy codemods again',
   () => {
     it.each([
+      ['authCodemod', 'defaultAuth.output.ts'],
       ['dbCodemod', 'defaultDb.output.ts'],
       ['graphqlCodemod', 'defaultGraphql.output.ts'],
       ['signupCodemod', 'defaultSignupAuth.output.ts'],

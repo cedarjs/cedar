@@ -118,9 +118,17 @@ export default function transform(fileInfo: j.FileInfo) {
     .find(j.ExportNamedDeclaration)
     .nodes()[0]
 
-  root.find(j.Program).forEach((path) => {
-    path.node.body.push(tenancyExport)
-  })
+  // Not again on a re-run
+  const alreadyExported =
+    root.find(j.ExportNamedDeclaration, {
+      source: { value: '@cedarjs/tenancy' },
+    }).length > 0
+
+  if (!alreadyExported) {
+    root.find(j.Program).forEach((path) => {
+      path.node.body.push(tenancyExport)
+    })
+  }
 
   return root.toSource()
 }
