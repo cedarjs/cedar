@@ -56,7 +56,6 @@
     "@opentelemetry/semantic-conventions": "1.43.0",
     "@prisma/internals": "7.10.1",
     "ansis": "4.4.0",
-    "archiver": "7.0.1",
     "boxen": "5.1.2",
     "camel-case": "4.1.2",
     "camelcase": "6.3.0",
@@ -97,11 +96,20 @@
     "@cedarjs/framework-tools": "workspace:*",
     "@prisma/dmmf": "7.10.1",
     "@types/archiver": "^7.0.0",
+    "archiver": "7.0.1",
     "memfs": "4.80.0",
     "node-ssh": "13.2.1",
     "ts-dedent": "2.3.0",
     "typescript": "5.9.3",
     "vitest": "4.1.12"
+  },
+  "peerDependencies": {
+    "archiver": "7.0.1"
+  },
+  "peerDependenciesMeta": {
+    "archiver": {
+      "optional": true
+    }
   },
   "engines": {
     "node": ">=24"

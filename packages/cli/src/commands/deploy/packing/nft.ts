@@ -3,7 +3,7 @@ import path from 'node:path'
 
 // @ts-expect-error - @vercel/nft has no bundled type declarations
 import { nodeFileTrace } from '@vercel/nft'
-import archiver from 'archiver'
+import type Archiver from 'archiver'
 
 import { findApiDistFunctions } from '@cedarjs/internal/dist/files'
 import { ensurePosixPath, getPaths } from '@cedarjs/project-config'
@@ -12,7 +12,29 @@ import * as nftPacker from '../packing/nft.js'
 
 const ZIPBALL_DIR = './api/dist/zipball'
 
-export function zipDirectory(source: string, out: string): Promise<void> {
+export async function zipDirectory(source: string, out: string): Promise<void> {
+  // archiver (like @vercel/nft above) is only added to a project's own
+  // devDependencies when `cedar setup deploy serverless` is run, so it's an
+  // optional peer dependency here rather than a hard dependency of the CLI.
+  let archiver: typeof Archiver
+  try {
+    archiver = (await import('archiver')).default
+  } catch (e) {
+    if (
+      e instanceof Error &&
+      'code' in e &&
+      e.code === 'ERR_MODULE_NOT_FOUND'
+    ) {
+      throw new Error(
+        "Could not find the 'archiver' package, which this command needs " +
+          'to pack your functions. Install it with `npm i -D archiver` (or ' +
+          'the yarn/pnpm equivalent) and try again.',
+      )
+    }
+
+    throw e
+  }
+
   const archive = archiver('zip', { zlib: { level: 5 } })
   const stream = fs.createWriteStream(out)
 
