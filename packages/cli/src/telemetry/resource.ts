@@ -4,7 +4,6 @@ import path from 'path'
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import ci from 'ci-info'
 import envinfo from 'envinfo'
-import system from 'systeminformation'
 import { v4 as uuidv4, validate as validateUUID } from 'uuid'
 
 import { getPaths, getRawConfig } from '@cedarjs/project-config'
@@ -60,8 +59,17 @@ export async function getResources() {
   } else if (shell?.path.match('\\')) {
     info.System.Shell.name = info.System.Shell.path.split('\\').pop()
   }
-  const cpu = await system.cpu()
-  const mem = await system.mem()
+  // `systeminformation` is an optional peer dependency - telemetry is
+  // best-effort, so fall back to omitting these two metrics if it's missing.
+  let cpu: { physicalCores?: number } = {}
+  let mem: { total?: number } = {}
+  try {
+    const system = await import('systeminformation')
+    cpu = await system.default.cpu()
+    mem = await system.default.mem()
+  } catch {
+    // Not installed - skip cpu/memory metrics.
+  }
 
   // Record any specific development environment
   let developmentEnvironment: string | undefined = undefined

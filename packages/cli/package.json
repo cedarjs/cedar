@@ -85,7 +85,6 @@
     "smol-toml": "1.9.1",
     "srvx": "0.12.8",
     "string-env-interpolation": "1.0.1",
-    "systeminformation": "5.33.16",
     "termi-link": "1.1.0",
     "title-case": "3.0.3",
     "unionfs": "4.6.0",
@@ -99,9 +98,18 @@
     "@types/archiver": "^7.0.0",
     "memfs": "4.80.0",
     "node-ssh": "13.2.1",
+    "systeminformation": "5.33.16",
     "ts-dedent": "2.3.0",
     "typescript": "5.9.3",
     "vitest": "4.1.12"
+  },
+  "peerDependencies": {
+    "systeminformation": "5.33.16"
+  },
+  "peerDependenciesMeta": {
+    "systeminformation": {
+      "optional": true
+    }
   },
   "engines": {
     "node": ">=24"
