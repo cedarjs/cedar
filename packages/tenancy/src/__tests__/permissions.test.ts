@@ -4,12 +4,19 @@ import { setContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store.js'
 import { AuthenticationError, ForbiddenError } from '@cedarjs/graphql-server'
 
-import { createPermissions } from '../permissions.js'
+import { createPermissions, definePermissions } from '../permissions.js'
 
 const run = (fn: () => void | Promise<void>) =>
   getAsyncStoreInstance().run(new Map(), async () => fn())
 
-const permissions = createPermissions({
+const definitions = definePermissions({
+  permissions: {
+    'projects.read': { description: 'See projects' },
+    'projects.edit': { description: 'Change projects' },
+    'members.manage': { description: 'Invite and remove members' },
+    'reports.sign': { description: 'Sign reports' },
+    'account.manage': { description: 'Change your own account' },
+  },
   roles: {
     owner: ['projects.read', 'projects.edit', 'members.manage'],
     member: ['projects.read'],
@@ -17,6 +24,8 @@ const permissions = createPermissions({
   },
   user: ['account.manage'],
 })
+
+const permissions = createPermissions(definitions)
 
 const currentUser = {
   id: 'user1',
@@ -33,7 +42,45 @@ const inOrg1 = {
   membershipId: 'membership1',
 }
 
+describe('definePermissions', () => {
+  it('throws for a role listing a permission that is not defined', () => {
+    expect(() =>
+      definePermissions({
+        permissions: { 'projects.read': { description: 'See projects' } },
+        // @ts-expect-error - a typo is a type error too
+        roles: { owner: ['projects.raed'] },
+      }),
+    ).toThrow('Unknown permission "projects.raed" in role "owner"')
+  })
+
+  it('throws for a user permission that is not defined', () => {
+    expect(() =>
+      definePermissions({
+        permissions: { 'projects.read': { description: 'See projects' } },
+        roles: {},
+        // @ts-expect-error - a typo is a type error too
+        user: ['account.manage'],
+      }),
+    ).toThrow('Unknown permission "account.manage" in user')
+  })
+})
+
 describe('createPermissions', () => {
+  it('checks the definitions too', () => {
+    expect(() =>
+      createPermissions({
+        permissions: { 'projects.read': { description: 'See projects' } },
+        roles: { owner: ['projects.raed' as 'projects.read'] },
+      }),
+    ).toThrow('Unknown permission "projects.raed" in role "owner"')
+  })
+
+  it('exposes the definitions, for an admin page', () => {
+    expect(permissions.definitions['members.manage']).toEqual({
+      description: 'Invite and remove members',
+    })
+  })
+
   describe('hasPermission', () => {
     it("checks the role's permissions in the current organization", async () => {
       await run(() => {
@@ -66,7 +113,7 @@ describe('createPermissions', () => {
       })
     })
 
-    it('is false for a role the map does not list', async () => {
+    it('is false for a role the definitions do not list', async () => {
       await run(() => {
         setContext({
           currentUser,
@@ -76,7 +123,7 @@ describe('createPermissions', () => {
       })
     })
 
-    it('throws for a permission the map does not know', async () => {
+    it('throws for a permission that is not defined', async () => {
       await run(() => {
         setContext({ currentUser, currentOrg: inOrg1 })
         // @ts-expect-error - a typo is a type error too
@@ -125,6 +172,18 @@ describe('createPermissions', () => {
           permissions.requirePermission({ permission: 'account.manage' }),
         ).not.toThrow()
       })
+    })
+  })
+
+  describe('permissionsOf', () => {
+    it("is the membership's role's permissions, with the user's", () => {
+      expect(permissions.permissionsOf({ role: 'member' })).toEqual([
+        'projects.read',
+        'account.manage',
+      ])
+      expect(permissions.permissionsOf({ role: 'constructor' })).toEqual([
+        'account.manage',
+      ])
     })
   })
 

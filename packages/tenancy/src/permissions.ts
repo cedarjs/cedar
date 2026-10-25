@@ -1,24 +1,23 @@
 import { context } from '@cedarjs/context'
 import { AuthenticationError, ForbiddenError } from '@cedarjs/graphql-server'
 
-import { getCurrentOrg } from './context.js'
+import { getCurrentOrg, isUserWithMemberships } from './context.js'
+import { assertPermissionDefinitions } from './definePermissions.js'
+import type {
+  PermissionDefinitions,
+  PermissionDetails,
+} from './definePermissions.js'
 
-type RolePermissions = Record<string, readonly string[]>
+export { definePermissions } from './definePermissions.js'
+export type {
+  PermissionDefinitions,
+  PermissionDetails,
+  PermissionName,
+} from './definePermissions.js'
 
-export interface PermissionsConfig<
-  Roles extends RolePermissions,
-  UserPermissions extends readonly string[],
-> {
-  /**
-   * What each role may do in an organization: the permissions a membership
-   * with that role has there. A role that isn't listed has none.
-   */
-  roles: Roles
-  /**
-   * What every signed-in user may do, in any organization or none: things
-   * about their own account. No organization is needed for these.
-   */
-  user?: UserPermissions
+/** What `permissionsOf` needs to know about a membership */
+export interface MembershipForPermissions {
+  role: string
 }
 
 /** A membership as `getCurrentUser` returns it, with its permissions */
@@ -31,7 +30,7 @@ export interface Permissions<Permission extends string> {
   /**
    * Whether the signed-in user may do `permission` in this request: a user
    * permission needs only a signed-in user; any other needs a current
-   * organization whose membership's role has it.
+   * organization whose membership has it.
    */
   hasPermission(permission: Permission): boolean
   /**
@@ -40,81 +39,100 @@ export interface Permissions<Permission extends string> {
    * when they may not.
    */
   requirePermission(options: { permission: Permission }): void
-  /** The permissions a membership with `role` has: its role's, and the user's */
-  permissionsOf(role: string): Permission[]
+  /**
+   * What a membership may do: its role's permissions, and the user's. The
+   * one place a membership's permissions are worked out, which
+   * `hasPermission`, `requirePermission` and `withPermissions` all use.
+   */
+  permissionsOf(membership: MembershipForPermissions): Permission[]
   /**
    * `user` with each of its memberships' permissions added, for
-   * `getCurrentUser` to return, so the web knows them without a copy of
-   * this map (`useAuth().hasPermission`).
+   * `getCurrentUser` to return, so the web gets them with the memberships
+   * (`useAuth().hasPermission`).
    */
-  withPermissions<User extends { memberships: { role: string }[] }>(
+  withPermissions<User extends { memberships: MembershipForPermissions[] }>(
     user: User,
   ): Omit<User, 'memberships'> & {
     memberships: WithPermissions<User['memberships'][number], Permission>[]
   }
-  withPermissions<User extends { memberships: { role: string }[] }>(
+  withPermissions<User extends { memberships: MembershipForPermissions[] }>(
     user: User | null,
   ):
     | (Omit<User, 'memberships'> & {
         memberships: WithPermissions<User['memberships'][number], Permission>[]
       })
     | null
+  /** Every permission, with its details, e.g. for an admin page */
+  definitions: Readonly<Record<Permission, PermissionDetails>>
 }
 
 /**
  * Permissions on top of roles: roles map to permissions in one place, and
  * fields and services ask for a permission instead of listing roles, so
- * adding a role is one entry here instead of an edit to every field it
- * should reach.
+ * adding a role is one entry in the definitions instead of an edit to every
+ * field it should reach.
  *
  * ```ts
  * // api/src/lib/permissions.ts
+ * import { permissions } from '@my-app/permissions'
+ *
  * export const { hasPermission, requirePermission, withPermissions } =
- *   createPermissions({
- *     roles: {
- *       owner: ['projects.read', 'projects.edit', 'members.manage'],
- *       admin: ['projects.read', 'projects.edit', 'members.manage'],
- *       member: ['projects.read'],
- *     },
- *     user: ['account.manage'],
- *   })
+ *   createPermissions(permissions)
  * ```
  *
- * Fails closed: a role without the permission is refused, as is a role
- * that isn't in the map. Permission names are typed from the map, so a
- * typo in a service is a type error; a name the map doesn't know (a typo
- * in an SDL directive) throws instead of quietly refusing everyone.
+ * `permissions` comes from `definePermissions`. Fails closed: a role without
+ * the permission is refused, as is a role the definitions don't list.
+ * Permission names are typed, so a typo in a service is a type error; a
+ * name that isn't defined (a typo in an SDL directive) throws instead of
+ * quietly refusing everyone.
  */
-export function createPermissions<
-  const Roles extends RolePermissions,
-  const UserPermissions extends readonly string[] = readonly [],
->(
-  config: PermissionsConfig<Roles, UserPermissions>,
-): Permissions<Roles[keyof Roles][number] | UserPermissions[number]> {
-  type Permission = Roles[keyof Roles][number] | UserPermissions[number]
+export function createPermissions<const Permission extends string>(
+  definitions: PermissionDefinitions<Permission>,
+): Permissions<Permission> {
+  assertPermissionDefinitions(definitions)
 
-  const userPermissions = [...(config.user ?? [])] as Permission[]
-  const known = new Set<string>([
-    ...userPermissions,
-    ...Object.values(config.roles).flat(),
-  ])
+  const userPermissions: readonly Permission[] = definitions.user ?? []
 
-  const rolePermissions = (role: string): Permission[] =>
-    Object.hasOwn(config.roles, role)
-      ? ([...config.roles[role]] as Permission[])
-      : []
-
-  const assertKnown = (permission: string) => {
-    if (!known.has(permission)) {
+  const assertDefined = (permission: string) => {
+    if (!Object.hasOwn(definitions.permissions, permission)) {
       throw new Error(
-        `Unknown permission "${permission}". Add it to the permissions map ` +
-          '(createPermissions) before using it.',
+        `Unknown permission "${permission}". Add it to \`permissions\` in ` +
+          'your permission definitions before using it.',
       )
     }
   }
 
+  const permissionsOf = (membership: MembershipForPermissions) => {
+    const rolePermissions = Object.hasOwn(definitions.roles, membership.role)
+      ? definitions.roles[membership.role]
+      : []
+
+    return [...new Set([...rolePermissions, ...userPermissions])]
+  }
+
+  /**
+   * The signed-in user's membership in the current organization, as
+   * `getCurrentUser` returned it, so `permissionsOf` sees everything that
+   * was loaded with it
+   */
+  const currentMembership = (): MembershipForPermissions | undefined => {
+    const currentOrg = getCurrentOrg()
+
+    if (!currentOrg) {
+      return undefined
+    }
+
+    const currentUser = context.currentUser
+    const membership = isUserWithMemberships(currentUser)
+      ? currentUser.memberships.find((m) => m.id === currentOrg.membershipId)
+      : undefined
+
+    // `currentOrg.role` is the role this request was resolved with
+    return { ...membership, role: currentOrg.role }
+  }
+
   const hasPermission = (permission: Permission): boolean => {
-    assertKnown(permission)
+    assertDefined(permission)
 
     if (!context.currentUser) {
       return false
@@ -124,18 +142,14 @@ export function createPermissions<
       return true
     }
 
-    const currentOrg = getCurrentOrg()
+    const membership = currentMembership()
 
-    return !!currentOrg && rolePermissions(currentOrg.role).includes(permission)
+    return !!membership && permissionsOf(membership).includes(permission)
   }
 
-  const permissionsOf = (role: string): Permission[] => [
-    ...new Set([...rolePermissions(role), ...userPermissions]),
-  ]
-
-  function withPermissions<User extends { memberships: { role: string }[] }>(
-    user: User | null,
-  ) {
+  function withPermissions<
+    User extends { memberships: MembershipForPermissions[] },
+  >(user: User | null) {
     if (!user) {
       return null
     }
@@ -144,7 +158,7 @@ export function createPermissions<
       ...user,
       memberships: user.memberships.map((membership) => ({
         ...membership,
-        permissions: permissionsOf(membership.role),
+        permissions: permissionsOf(membership),
       })),
     }
   }
@@ -153,8 +167,9 @@ export function createPermissions<
     hasPermission,
     permissionsOf,
     withPermissions,
+    definitions: definitions.permissions,
     requirePermission({ permission }) {
-      assertKnown(permission)
+      assertDefined(permission)
 
       if (!context.currentUser) {
         throw new AuthenticationError("You don't have permission to do that.")
