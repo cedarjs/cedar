@@ -12177,7 +12177,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/mjml-core@npm:*":
+"@types/mjml-core@npm:~5.1":
   version: 5.1.0
   resolution: "@types/mjml-core@npm:5.1.0"
   checksum: 10c0/30806ad342f3e58fc602015ba1545e969733cb77c8967d7b41d0ef83d599351fcac45a302e63aec5996d01cc30263bd8daf73d16d17c88580dbbe14ede7f1af0
@@ -12185,11 +12185,11 @@ __metadata:
   linkType: hard
 
 "@types/mjml@npm:5":
-  version: 5.0.0
-  resolution: "@types/mjml@npm:5.0.0"
+  version: 5.4.1
+  resolution: "@types/mjml@npm:5.4.1"
   dependencies:
-    "@types/mjml-core": "npm:*"
-  checksum: 10c0/76b54e3ad2842a1d0bec6ff212885df4fedb4dbbde6f12e2eb1494a0d220679edf45525d2079fb740964d4f4beb08011e55e6072abbd05df9ab0109cff591832
+    "@types/mjml-core": "npm:~5.1"
+  checksum: 10c0/d3da3c574589fd11313839bcba8325bd0105a1eecb72672bc9e55559874caf34d4f4f08e7ac066cd7c27babb9f7b8f49a4d2b6c01eba63873eb508e9ba84b384
   languageName: node
   linkType: hard
 
