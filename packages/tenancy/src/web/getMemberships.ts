@@ -18,8 +18,12 @@ function isOrgMembership(value: unknown): value is OrgMembership {
   }
 
   const org = organization as Record<string, unknown>
+  const permissions = membership['permissions']
 
   return (
+    (permissions === undefined ||
+      (Array.isArray(permissions) &&
+        permissions.every((permission) => typeof permission === 'string'))) &&
     typeof membership['id'] === 'string' &&
     typeof membership['organizationId'] === 'string' &&
     typeof membership['role'] === 'string' &&

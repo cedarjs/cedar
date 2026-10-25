@@ -35,9 +35,15 @@ export interface OrgScopeProps {
    */
   roles?: string | string[]
   /**
-   * The name of the route a member without one of `roles` is redirected to.
-   * It gets the `orgSlug` param when its path has one, so it can be a page
-   * of the same organization. Without it, they get `notAMember`.
+   * Only members whose membership has this permission get in (see
+   * `createPermissions` in `@cedarjs/tenancy`). Checked like `roles`.
+   */
+  permission?: string
+  /**
+   * The name of the route a member without one of `roles`, or without
+   * `permission`, is redirected to. It gets the `orgSlug` param when its
+   * path has one, so it can be a page of the same organization. Without
+   * it, they get `notAMember`.
    */
   unauthorized?: string
   /**
@@ -101,6 +107,7 @@ export function OrgScope({
   orgSlug: orgSlugProp,
   notAMember = null,
   roles,
+  permission,
   unauthorized,
   useAuth = useNoAuth,
   onSetOrg,
@@ -218,7 +225,12 @@ export function OrgScope({
     return <>{notAMember}</>
   }
 
-  if (roles !== undefined && !hasRole(roles)) {
+  const permissions = membership.permissions ?? []
+  const allowed =
+    (roles === undefined || hasRole(roles)) &&
+    (permission === undefined || permissions.includes(permission))
+
+  if (!allowed) {
     if (!unauthorized) {
       return <>{notAMember}</>
     }
@@ -242,6 +254,7 @@ export function OrgScope({
     name: membership.organization.name,
     role: membership.role,
     membershipId: membership.id,
+    permissions,
   }
 
   const orgClient = getOrgClient({
@@ -258,6 +271,7 @@ export function OrgScope({
     memberships,
     hasOrgRole: (roles, organizationId) =>
       hasOrgRole(memberships, roles, organizationId ?? org.id),
+    can: (permissionToCheck) => permissions.includes(permissionToCheck),
     setOrg,
   }
 

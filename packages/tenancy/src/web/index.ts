@@ -9,4 +9,5 @@ export type {
   OrgContextValue,
   OrgMembership,
 } from './types.js'
+export { useCan } from './useCan.js'
 export { useCurrentOrg } from './useCurrentOrg.js'
