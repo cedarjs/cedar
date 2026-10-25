@@ -199,6 +199,15 @@ export default function transform(fileInfo: j.FileInfo) {
   // can't parse.
   const root = j.withParser('tsx')(fileInfo.source)
 
+  // Already wired, by an earlier run
+  if (
+    root.find(j.ImportSpecifier, {
+      imported: { name: 'ensureDefaultOrganization' },
+    }).length > 0
+  ) {
+    return fileInfo.source
+  }
+
   const signupOptionsDeclarators = root.find(j.VariableDeclarator, {
     id: { name: 'signupOptions' },
   })

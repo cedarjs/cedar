@@ -33,8 +33,14 @@ export default function transform(
   // can't parse.
   const root = j.withParser('tsx')(fileInfo.source)
 
-  const tenantField =
-    typeof options.tenantField === 'string' ? options.tenantField : undefined
+  // Already wired, by an earlier run
+  if (
+    root.find(j.ImportSpecifier, {
+      imported: { name: 'createTenancyExtension' },
+    }).length > 0
+  ) {
+    return fileInfo.source
+  }
 
   const imports = root.find(j.ImportDeclaration)
   imports
@@ -45,6 +51,9 @@ export default function transform(
         j.literal('@cedarjs/tenancy'),
       ),
     )
+
+  const tenantField =
+    typeof options.tenantField === 'string' ? options.tenantField : undefined
 
   const configProperties = [
     ...(tenantField
