@@ -5,13 +5,13 @@ import { Listr } from 'listr2'
 import { format } from 'prettier'
 
 import { getPrettierOptions } from '@cedarjs/cli-helpers/fileHelpers'
-import { addWebPackages } from '@cedarjs/cli-helpers/installHelpers'
+import {
+  addRootPackages,
+  addWebPackages,
+} from '@cedarjs/cli-helpers/installHelpers'
 import { getConfig, getPaths } from '@cedarjs/project-config'
 
-import {
-  ensureJscodeshiftAvailable,
-  runTransform,
-} from '../../../../lib/runTransform.js'
+import { runTransform } from '../../../../lib/runTransform.js'
 
 export async function handler({ force }: { force: boolean }) {
   const rwPaths = getPaths()
@@ -24,10 +24,8 @@ export async function handler({ force }: { force: boolean }) {
   const tasks = new Listr(
     [
       {
-        title: 'Checking for jscodeshift...',
-        task: async () => {
-          await ensureJscodeshiftAvailable()
-        },
+        ...addRootPackages(['jscodeshift@17.4.0'], true),
+        title: 'Installing jscodeshift...',
       },
       {
         title: 'Check prerequisites',

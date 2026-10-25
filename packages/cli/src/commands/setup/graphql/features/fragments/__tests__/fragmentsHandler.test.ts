@@ -3,12 +3,17 @@ vi.mock('execa')
 // The jscodeshift parts are tested by another test
 vi.mock('../../../../../../lib/runTransform', () => {
   return {
-    ensureJscodeshiftAvailable: () => {},
     runTransform: () => {
       return {}
     },
   }
 })
+vi.mock('@cedarjs/cli-helpers/installHelpers', () => ({
+  addRootPackages: () => ({
+    title: 'Installing jscodeshift...',
+    task: async () => {},
+  }),
+}))
 
 import { vol, fs as memfsFs } from 'memfs'
 import { vi, beforeAll, afterAll, test, expect } from 'vitest'
@@ -42,7 +47,7 @@ test('all tasks are being called', async () => {
 
   expect(Listr2Mock.executedTaskTitles).toMatchInlineSnapshot(`
     [
-      "Checking for jscodeshift...",
+      "Installing jscodeshift...",
       "Update Redwood Project Configuration to enable GraphQL Fragments",
       "Generate possibleTypes.ts",
       "Import possibleTypes in App.tsx",
@@ -64,7 +69,7 @@ test('redwood.toml update is skipped if fragments are already enabled', async ()
 
   expect(Listr2Mock.executedTaskTitles).toMatchInlineSnapshot(`
     [
-      "Checking for jscodeshift...",
+      "Installing jscodeshift...",
       "Generate possibleTypes.ts",
       "Import possibleTypes in App.tsx",
       "Add possibleTypes to the GraphQL cache config",

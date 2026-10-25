@@ -2,8 +2,13 @@ vi.mock('node:fs', async () => ({ ...memfsFs, default: { ...memfsFs } }))
 vi.mock('execa')
 // The jscodeshift parts are tested by another test
 vi.mock('../../../../../../lib/runTransform', () => ({
-  ensureJscodeshiftAvailable: () => {},
   runTransform: () => ({}),
+}))
+vi.mock('@cedarjs/cli-helpers/installHelpers', () => ({
+  addRootPackages: () => ({
+    title: 'Installing jscodeshift...',
+    task: async () => {},
+  }),
 }))
 
 vi.mock('listr2', () => ({
@@ -88,7 +93,7 @@ describe('Trusted documents setup', () => {
 
     expect(Listr2Mock.executedTaskTitles).toMatchInlineSnapshot(`
       [
-        "Checking for jscodeshift...",
+        "Installing jscodeshift...",
         "Update Redwood Project Configuration to enable GraphQL Trusted Documents ...",
         "Generating Trusted Documents store ...",
         "Configuring the GraphQL Handler to use a Trusted Documents store ...",

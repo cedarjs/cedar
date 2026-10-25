@@ -22,16 +22,6 @@ const args = yargs(hideBin(process.argv))
 async function runCommand() {
   const OUTPUT_PROJECT_PATH = path.resolve(String(args._))
 
-  // jscodeshift is an optional peer dependency of @cedarjs/cli (only needed
-  // by codemod-based `setup` commands), so generated projects don't have it
-  // installed by default. Install it here, same as a real user would after
-  // hitting the "Could not find the 'jscodeshift' package" error.
-  await exec(
-    'yarn add -D jscodeshift',
-    [],
-    getExecaOptions(OUTPUT_PROJECT_PATH),
-  )
-
   await exec(
     'yarn cedar setup graphql trusted-documents',
     [],

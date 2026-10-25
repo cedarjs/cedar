@@ -10,6 +10,7 @@ import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { getPrettierOptions } from '@cedarjs/cli-helpers/fileHelpers'
 import {
   addApiPackages,
+  addRootPackages,
   addWebPackages,
 } from '@cedarjs/cli-helpers/installHelpers'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
@@ -20,7 +21,6 @@ import { errorTelemetry } from '@cedarjs/telemetry'
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject } from '../../../lib/project.js'
 import {
-  ensureJscodeshiftAvailable,
   runTransform,
 } from '../../../lib/runTransform.js'
 
@@ -148,10 +148,8 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
   const tasks = new Listr<TenancyCtx>(
     [
       {
-        title: 'Checking for jscodeshift...',
-        task: async () => {
-          await ensureJscodeshiftAvailable()
-        },
+        ...addRootPackages(['jscodeshift@17.4.0'], true),
+        title: 'Installing jscodeshift...',
       },
       {
         ...addApiPackages([`@cedarjs/tenancy@${cedarVersion}`]),

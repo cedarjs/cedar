@@ -69,17 +69,6 @@ async function importJscodeshiftRunner(): Promise<typeof JscodeshiftRunner> {
   }
 }
 
-/**
- * `setup` commands that run jscodeshift-based codemods should call this as
- * their first step, before any other step mutates the project (toggling
- * config, installing packages, etc.). Otherwise, if jscodeshift isn't
- * installed, those earlier steps will already have taken effect by the time
- * the codemod step discovers it's missing, leaving the project half set up.
- */
-export async function ensureJscodeshiftAvailable() {
-  await importJscodeshiftRunner()
-}
-
 export const runTransform = async ({
   transformPath,
   targetPaths,
