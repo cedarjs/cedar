@@ -3,8 +3,14 @@ import React from 'react'
 import { ApolloProvider } from '@apollo/client/react'
 
 import type { UseAuth } from '@cedarjs/auth'
-import { useNoAuth } from '@cedarjs/auth'
-import { navigate, useLocation, useParams } from '@cedarjs/router'
+import { HasRoleContext, useNoAuth } from '@cedarjs/auth'
+import {
+  navigate,
+  Redirect,
+  routes,
+  useLocation,
+  useParams,
+} from '@cedarjs/router'
 import { useCreateApolloClient } from '@cedarjs/web/apollo'
 
 import { getMemberships } from './getMemberships.js'
@@ -23,6 +29,18 @@ export interface OrgScopeProps {
   /** Rendered when the user has no membership matching the slug. */
   notAMember?: React.ReactNode
   /**
+   * Only members with one of these roles in the organization get in.
+   * Checked after the organization is resolved, which `<PrivateSet roles>`
+   * around `OrgScope` can't do.
+   */
+  roles?: string | string[]
+  /**
+   * The name of the route a member without one of `roles` is redirected to.
+   * It gets the `orgSlug` param when its path has one, so it can be a page
+   * of the same organization. Without it, they get `notAMember`.
+   */
+  unauthorized?: string
+  /**
    * The app's `useAuth`, so `OrgScope` can read `currentUser.memberships`
    * without importing app code. Defaults to `useNoAuth`.
    */
@@ -33,6 +51,30 @@ export interface OrgScopeProps {
    */
   onSetOrg?: (idOrSlug: string) => void
   children: React.ReactNode
+}
+
+const toList = (roles: string | string[]) =>
+  Array.isArray(roles) ? roles : [roles]
+
+const REPLACE = { replace: true }
+
+/**
+ * The `unauthorized` route's path: with the organization's `orgSlug` when
+ * the route needs one (a page of the same organization), else without.
+ */
+function unauthorizedPath(
+  route: (params?: Record<string, string>) => string,
+  orgSlug: string,
+): string {
+  try {
+    return route()
+  } catch (e) {
+    if (e instanceof Error && e.message.includes('Missing parameter')) {
+      return route({ orgSlug })
+    }
+
+    throw e
+  }
 }
 
 /**
@@ -49,13 +91,17 @@ function membershipRoleMap(
  * Provides the per-organization Apollo client and `OrgContext` for the
  * organization matching `orgSlug` (a prop, or else the `orgSlug` route
  * param). Renders `notAMember` when the current user has no membership in
- * that organization; otherwise wraps `children` in that organization's own
- * `ApolloProvider`, so every Cell, `useQuery` and `useMutation` under it
- * carries the `cedar-org` header and reads from that organization's cache.
+ * that organization (or not one with `roles`, see `unauthorized`);
+ * otherwise wraps `children` in that organization's own `ApolloProvider`,
+ * so every Cell, `useQuery` and `useMutation` under it carries the
+ * `cedar-org` header and reads from that organization's cache. Under it,
+ * `useAuth().hasRole` checks the user's role in that organization.
  */
 export function OrgScope({
   orgSlug: orgSlugProp,
   notAMember = null,
+  roles,
+  unauthorized,
   useAuth = useNoAuth,
   onSetOrg,
   children,
@@ -158,9 +204,36 @@ export function OrgScope({
   const membership = orgSlug
     ? memberships.find((m) => m.organization.slug === orgSlug)
     : undefined
+  const role = membership?.role
 
-  if (!membership || !userId) {
+  // `useAuth().hasRole` below this point: the role in this organization,
+  // not `currentUser.roles`
+  const hasRole = React.useCallback(
+    (rolesToCheck: string | string[]) =>
+      role !== undefined && toList(rolesToCheck).includes(role),
+    [role],
+  )
+
+  if (!membership || !userId || !orgSlug) {
     return <>{notAMember}</>
+  }
+
+  if (roles !== undefined && !hasRole(roles)) {
+    if (!unauthorized) {
+      return <>{notAMember}</>
+    }
+
+    const namedRoutes = routes as Record<
+      string,
+      ((params?: Record<string, string>) => string) | undefined
+    >
+    const route = namedRoutes[unauthorized]
+
+    if (!route) {
+      throw new Error(`We could not find a route named ${unauthorized}`)
+    }
+
+    return <Redirect to={unauthorizedPath(route, orgSlug)} options={REPLACE} />
   }
 
   const org: CurrentOrgSummary = {
@@ -190,7 +263,11 @@ export function OrgScope({
 
   return (
     <ApolloProvider client={orgClient}>
-      <OrgContext.Provider value={contextValue}>{children}</OrgContext.Provider>
+      <OrgContext.Provider value={contextValue}>
+        <HasRoleContext.Provider value={hasRole}>
+          {children}
+        </HasRoleContext.Provider>
+      </OrgContext.Provider>
     </ApolloProvider>
   )
 }
