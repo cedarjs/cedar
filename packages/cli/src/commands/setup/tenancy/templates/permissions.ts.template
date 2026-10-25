@@ -1,30 +1,16 @@
 import { createPermissions } from '@cedarjs/tenancy'
 
+import { permissions } from '__PERMISSIONS_PACKAGE__'
+
 /**
- * What each role may do. Fields ask for a permission
- * (`@requirePermission(permission: "members.manage")`, or
- * `requirePermission()` in a service) instead of listing roles, so a new
- * role is one entry here: it can do exactly what its list says, and a
- * field added later is closed to it unless its permission is on the list.
- *
- * `roles` are per organization: a membership's role decides what the user
- * may do in that organization. `user` permissions are for every signed-in
- * user, in any organization or none (their own account, say).
- *
- * `getCurrentUser` adds each membership's permissions with
- * `withPermissions`, so the web can check them with
- * `useAuth().hasPermission()` without a copy of this map. The web only decides
- * what to show; these checks are the guard.
+ * Checks the permissions defined in __PERMISSIONS_PACKAGE__
+ * (packages/permissions). `getCurrentUser` adds each membership's
+ * permissions with `withPermissions`, so the web can check them with
+ * `useAuth().hasPermission()`. The web only decides what to show; these
+ * checks are the guard.
  *
  * Who may grant which role is `ROLE_GRANTS` in
  * api/src/services/organizations/organizations.
  */
 export const { hasPermission, requirePermission, permissionsOf, withPermissions } =
-  createPermissions({
-    roles: {
-      owner: ['organization.read', 'members.manage'],
-      admin: ['organization.read', 'members.manage'],
-      member: ['organization.read'],
-    },
-    user: [],
-  })
+  createPermissions(permissions)

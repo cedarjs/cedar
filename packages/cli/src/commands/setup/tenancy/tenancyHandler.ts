@@ -23,6 +23,10 @@ import { runTransform } from '../../../lib/runTransform.js'
 
 import { TENANCY_AUTH_EXPORT } from './authCodemod.js'
 import {
+  addPermissionsPackageTasks,
+  permissionsPackageName,
+} from './permissionsPackage.js'
+import {
   authNotSetUpMessage,
   hasWebAuthFile,
   noUserModelMessage,
@@ -379,11 +383,33 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
         },
       },
       {
-        title: 'Adding permissions and the requirePermission directive...',
+        title: 'Adding the permissions package...',
+        task: () =>
+          addPermissionsPackageTasks({
+            cedarVersion,
+            indexSource: fs.readFileSync(
+              path.resolve(
+                import.meta.dirname,
+                'templates',
+                'permissionsPackage.index.ts.template',
+              ),
+              'utf-8',
+            ),
+            force,
+          }),
+      },
+      {
+        title:
+          'Adding permission checks and the requirePermission directive...',
         task: async () => {
+          const replacements = {
+            __PERMISSIONS_PACKAGE__: permissionsPackageName(),
+          }
+
           await writeTemplateFile(
             'permissions.ts.template',
             path.join(paths.api.lib, `permissions.${ext}`),
+            replacements,
           )
 
           const directiveDir = path.join(
@@ -394,6 +420,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
           await writeTemplateFile(
             'requirePermission.ts.template',
             path.join(directiveDir, `requirePermission.${ext}`),
+            replacements,
           )
           await writeTemplateFile(
             'requirePermission.test.ts.template',
@@ -560,7 +587,9 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
              tenant-owned models with ${c.highlight('withTenancy')} from ${c.highlight(
                '@cedarjs/tenancy',
              )}.
-          5. What each role may do is in ${c.highlight('api/src/lib/permissions')}. Guard
+          5. Your permissions, and what each role may do, are in
+             ${c.highlight('packages/permissions')}, shared by the api and web sides (this
+             turned on ${c.highlight('experimental.packagesWorkspace')} in cedar.toml). Guard
              organization fields with ${c.highlight('@requirePermission(permission: "...")')}
              (or ${c.highlight('@requireAuth(roles: [...])')}), and check permissions on the
              web with ${c.highlight('useAuth().hasPermission()')}.
