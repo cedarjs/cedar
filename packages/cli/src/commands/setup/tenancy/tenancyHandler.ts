@@ -21,11 +21,16 @@ import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject } from '../../../lib/project.js'
 import { runTransform } from '../../../lib/runTransform.js'
 
+import { TENANCY_AUTH_EXPORT } from './authCodemod.js'
 import {
   authNotSetUpMessage,
   hasWebAuthFile,
   noUserModelMessage,
 } from './preflight.js'
+import {
+  addScopeToRequireAuthDirective,
+  REQUIRE_AUTH_DIRECTIVE_SNIPPET,
+} from './requireAuthDirective.js'
 import {
   editSchema,
   hasModel,
@@ -37,6 +42,8 @@ import type { EditSchemaResult, ModelsExistOutcome } from './schemaPrisma.js'
 const DEFAULT_TENANT_FIELD = 'organizationId'
 
 const AUTH_SNIPPET = `
+  import { createTenancyAuth } from '@cedarjs/tenancy'
+
   export const getCurrentUser = async (session) => {
     return await db.user.findUnique({
       where: { id: session.id },
@@ -54,8 +61,8 @@ const AUTH_SNIPPET = `
     })
   }
 
-  export { hasOrgRole, requireMembership } from '@cedarjs/tenancy'
-`
+  // In place of your hasRole and requireAuth
+  ${TENANCY_AUTH_EXPORT}`
 
 const SIGNUP_SNIPPET = `
   handler: async ({ username, hashedPassword, salt, userAttributes }) => {
@@ -283,7 +290,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
       },
       {
         title:
-          'Adding memberships to getCurrentUser and re-exporting tenancy helpers...',
+          'Adding memberships to getCurrentUser and organization roles to requireAuth...',
         task: async (_ctx, task) => {
           if (!fs.existsSync(authPath)) {
             task.skip('No api/src/lib/auth file found; skipping.')
@@ -344,21 +351,29 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
           isDbAuthProject ? false : 'Not a dbAuth project; skipping.',
       },
       {
-        title: 'Adding the requireMembership directive...',
-        task: async () => {
-          const directiveDir = path.join(
+        title: 'Adding a scope to the requireAuth directive...',
+        task: async (_ctx, task) => {
+          const directivePath = path.join(
             paths.api.directives,
-            'requireMembership',
+            'requireAuth',
+            `requireAuth.${ext}`,
           )
+          const byHand = `Please update api/src/directives/requireAuth by hand:\n${REQUIRE_AUTH_DIRECTIVE_SNIPPET}`
 
-          await writeTemplateFile(
-            'requireMembership.ts.template',
-            path.join(directiveDir, `requireMembership.${ext}`),
-          )
-          await writeTemplateFile(
-            'requireMembership.test.ts.template',
-            path.join(directiveDir, `requireMembership.test.${ext}`),
-          )
+          if (!fs.existsSync(directivePath)) {
+            task.output = byHand
+            return
+          }
+
+          try {
+            const source = fs.readFileSync(directivePath, 'utf-8')
+            fs.writeFileSync(
+              directivePath,
+              addScopeToRequireAuthDirective(source),
+            )
+          } catch {
+            task.output = byHand
+          }
         },
       },
       {
@@ -518,6 +533,11 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
              tenant-owned models with ${c.highlight('withTenancy')} from ${c.highlight(
                '@cedarjs/tenancy',
              )}.
+          5. ${c.highlight('@requireAuth')} is now about the current organization: it needs
+             one, and checks the user's role in it. Add ${c.highlight('scope: USER')} to
+             your fields that are about the signed-in user instead (their
+             account, their settings), e.g.
+             ${c.highlight('me: User! @requireAuth(scope: USER)')}.
 
           Check out the docs for more info:
           ${terminalLink('', 'https://cedarjs.com/docs/tenancy')}
