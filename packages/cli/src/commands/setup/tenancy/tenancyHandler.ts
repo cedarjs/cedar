@@ -19,7 +19,10 @@ import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject } from '../../../lib/project.js'
-import { runTransform } from '../../../lib/runTransform.js'
+import {
+  ensureJscodeshiftAvailable,
+  runTransform,
+} from '../../../lib/runTransform.js'
 
 import {
   authNotSetUpMessage,
@@ -144,6 +147,12 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
 
   const tasks = new Listr<TenancyCtx>(
     [
+      {
+        title: 'Checking for jscodeshift...',
+        task: async () => {
+          await ensureJscodeshiftAvailable()
+        },
+      },
       {
         ...addApiPackages([`@cedarjs/tenancy@${cedarVersion}`]),
         title: 'Adding @cedarjs/tenancy to your api side...',

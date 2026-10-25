@@ -8,7 +8,10 @@ import { getPrettierOptions } from '@cedarjs/cli-helpers/fileHelpers'
 import { addWebPackages } from '@cedarjs/cli-helpers/installHelpers'
 import { getConfig, getPaths } from '@cedarjs/project-config'
 
-import { runTransform } from '../../../../lib/runTransform.js'
+import {
+  ensureJscodeshiftAvailable,
+  runTransform,
+} from '../../../../lib/runTransform.js'
 
 export async function handler({ force }: { force: boolean }) {
   const rwPaths = getPaths()
@@ -20,6 +23,12 @@ export async function handler({ force }: { force: boolean }) {
   const notes: string[] = ['']
   const tasks = new Listr(
     [
+      {
+        title: 'Checking for jscodeshift...',
+        task: async () => {
+          await ensureJscodeshiftAvailable()
+        },
+      },
       {
         title: 'Check prerequisites',
         skip: force,

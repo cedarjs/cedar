@@ -9,11 +9,20 @@ import { runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
 import { setTomlSetting } from '@cedarjs/cli-helpers/project'
 import { getConfig, getPaths, resolveFile } from '@cedarjs/project-config'
 
-import { runTransform } from '../../../../../lib/runTransform.js'
+import {
+  ensureJscodeshiftAvailable,
+  runTransform,
+} from '../../../../../lib/runTransform.js'
 
 export async function handler({ force }: { force: boolean }) {
   const tasks = new Listr(
     [
+      {
+        title: 'Checking for jscodeshift...',
+        task: async () => {
+          await ensureJscodeshiftAvailable()
+        },
+      },
       {
         title:
           'Update Redwood Project Configuration to enable GraphQL Trusted Documents ...',

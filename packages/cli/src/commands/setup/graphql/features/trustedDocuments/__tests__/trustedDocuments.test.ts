@@ -2,6 +2,7 @@ vi.mock('node:fs', async () => ({ ...memfsFs, default: { ...memfsFs } }))
 vi.mock('execa')
 // The jscodeshift parts are tested by another test
 vi.mock('../../../../../../lib/runTransform', () => ({
+  ensureJscodeshiftAvailable: () => {},
   runTransform: () => ({}),
 }))
 
@@ -86,12 +87,13 @@ describe('Trusted documents setup', () => {
     await handler({ force: false })
 
     expect(Listr2Mock.executedTaskTitles).toMatchInlineSnapshot(`
-    [
-      "Update Redwood Project Configuration to enable GraphQL Trusted Documents ...",
-      "Generating Trusted Documents store ...",
-      "Configuring the GraphQL Handler to use a Trusted Documents store ...",
-    ]
-  `)
+      [
+        "Checking for jscodeshift...",
+        "Update Redwood Project Configuration to enable GraphQL Trusted Documents ...",
+        "Generating Trusted Documents store ...",
+        "Configuring the GraphQL Handler to use a Trusted Documents store ...",
+      ]
+    `)
   })
 
   describe('Project toml configuration updates', () => {

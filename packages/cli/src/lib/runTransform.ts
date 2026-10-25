@@ -49,22 +49,44 @@ export interface RunTransform {
   options?: Partial<Record<OptionKeys, any>> & Record<string, unknown>
 }
 
+async function importJscodeshiftRunner(): Promise<typeof JscodeshiftRunner> {
+  try {
+    return await import('jscodeshift/src/Runner.js')
+  } catch (e) {
+    if (
+      e instanceof Error &&
+      'code' in e &&
+      e.code === 'ERR_MODULE_NOT_FOUND'
+    ) {
+      throw new Error(
+        "Could not find the 'jscodeshift' package, which this command needs " +
+          'to run its codemod. Install it with `npm i -D jscodeshift` (or the ' +
+          'yarn/pnpm equivalent) and try again.',
+      )
+    }
+
+    throw e
+  }
+}
+
+/**
+ * `setup` commands that run jscodeshift-based codemods should call this as
+ * their first step, before any other step mutates the project (toggling
+ * config, installing packages, etc.). Otherwise, if jscodeshift isn't
+ * installed, those earlier steps will already have taken effect by the time
+ * the codemod step discovers it's missing, leaving the project half set up.
+ */
+export async function ensureJscodeshiftAvailable() {
+  await importJscodeshiftRunner()
+}
+
 export const runTransform = async ({
   transformPath,
   targetPaths,
   parser = 'tsx',
   options = {},
 }: RunTransform) => {
-  let jscodeshift: typeof JscodeshiftRunner
-  try {
-    jscodeshift = await import('jscodeshift/src/Runner.js')
-  } catch {
-    throw new Error(
-      "Could not find the 'jscodeshift' package, which this command needs " +
-        'to run its codemod. Install it with `npm i -D jscodeshift` (or the ' +
-        'yarn/pnpm equivalent) and try again.',
-    )
-  }
+  const jscodeshift = await importJscodeshiftRunner()
 
   // We have to do this here for the tests, because jscodeshift.run actually
   // spawns a different process. If we use getPaths() in the transform, it
